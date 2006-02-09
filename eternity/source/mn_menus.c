@@ -677,9 +677,6 @@ static menuitem_t mn_advanced_items[] =
    YSHEAR_FIXME: this feature may return after EDF for weapons
    {it_toggle,   "allow mlook with bfg",       "bfglook"},
    */
-   {it_toggle,   "allow autoaim",              "autoaim"},
-   {it_variable, "weapon change time",         "weapspeed"},
-   {it_gap},
    {it_toggle,   "variable friction",          "varfriction"},
    {it_toggle,   "boom pusher objects",        "pushers"},
    {it_toggle,   "damaging floors",            "nukage"},
@@ -2139,36 +2136,81 @@ CONSOLE_COMMAND(mn_automap, 0)
 // work. See other notes for info about bfg type and autoaiming.
 //
 
+extern menu_t menu_weapons;
+extern menu_t menu_weapons_pref;
+
+static const char *mn_weapons_names[] =
+{
+   "options",
+   "preferences",
+   NULL
+};
+
+static menu_t *mn_weapons_pages[] =
+{
+   &menu_weapons,
+   &menu_weapons_pref,
+   NULL
+};
+
 static menuitem_t mn_weapons_items[] =
 {
    {it_title,      FC_GOLD "weapons",                NULL, "M_WEAP"},
    {it_gap},
-   {it_info,       FC_GOLD "weapon options"},
+   {it_info,       FC_GOLD "options", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
    {it_toggle,     "bfg type",                       "bfgtype"},
    {it_toggle,     "bobbing",                        "bobbing"},
    {it_toggle,     "recoil",                         "recoil"},
-   {it_toggle,     "weapon toggles",                 "doom_weapon_toggles"},
+   {it_toggle,     "fist/ssg toggle",                "doom_weapon_toggles"},
+   {it_toggle,     "autoaiming",                     "autoaim"},
+   {it_variable,   "change time",                    "weapspeed"},
    {it_gap},
-   {it_info,       FC_GOLD "weapon prefs."},
-   {it_variable,   "1st choice",                     "weappref_1"},
-   {it_variable,   "2nd choice",                     "weappref_2"},
-   {it_variable,   "3rd choice",                     "weappref_3"},
-   {it_variable,   "4th choice",                     "weappref_4"},
-   {it_variable,   "5th choice",                     "weappref_5"},
-   {it_variable,   "6th choice",                     "weappref_6"},
-   {it_variable,   "7th choice",                     "weappref_7"},
-   {it_variable,   "8th choice",                     "weappref_8"},
-   {it_variable,   "9th choice",                     "weappref_9"},
    {it_end},
 };
 
 menu_t menu_weapons =
 {
    mn_weapons_items,
-   NULL, NULL,                          // pages
+   NULL, 
+   &menu_weapons_pref,                  // next page
    200, 15,                             // x,y offset
-   3,                                   // starting item
+   4,                                   // starting item
    mf_background,                       // full screen
+   NULL,                                // no drawer
+   mn_weapons_names,                    // TOC stuff
+   mn_weapons_pages,
+};
+
+static menuitem_t mn_weapons_pref_items[] =
+{
+   {it_title,      FC_GOLD "weapons",       NULL, "M_WEAP"},
+   {it_gap},
+   {it_info,       FC_GOLD "preferences", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+   {it_variable,   "1",                     "weappref_1"},
+   {it_variable,   "2",                     "weappref_2"},
+   {it_variable,   "3",                     "weappref_3"},
+   {it_variable,   "4",                     "weappref_4"},
+   {it_variable,   "5",                     "weappref_5"},
+   {it_variable,   "6",                     "weappref_6"},
+   {it_variable,   "7",                     "weappref_7"},
+   {it_variable,   "8",                     "weappref_8"},
+   {it_variable,   "9",                     "weappref_9"},
+   {it_end},
+};
+
+menu_t menu_weapons_pref =
+{
+   mn_weapons_pref_items,         // items
+   &menu_weapons,                 // previous page
+   NULL,                          // next page
+   88, 15,                       // coords
+   4,                             // first item
+   mf_background|mf_leftaligned,  // flags
+   NULL,                          // no drawer
+   mn_weapons_names,              // TOC stuff
+   mn_weapons_pages,
 };
 
 CONSOLE_COMMAND(mn_weapons, 0)
