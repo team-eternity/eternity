@@ -721,6 +721,8 @@ void R_StoreWallRange(const int start, const int stop)
 
 
 #ifdef R_PORTALS
+      // SoM: some portal types should be rendered even if the player is above or below the
+      // ceiling or floor plane.
       if(markfloor && backsector->f_portal != frontsector->f_portal)
       {
          if(frontsector->f_portal &&
@@ -1025,6 +1027,7 @@ boolean R_ClipSeg(int *start, int *stop)
       bottomfrac = (centeryfrac>>4) - FixedMul(worldbottom, scale1);
       stopfrac = (centeryfrac>>4) - FixedMul(worldbottom, scale2);
 
+      // SoM 2/7/2006: was < made <= to fix a bad slimetrail bug
       for(x = *start; x <= *stop; ++x)
       {
          if(floorclip[x] < ceilingclip[x] || 
