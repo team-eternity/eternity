@@ -57,7 +57,7 @@ static boolean shadowChar = false;
 void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
 {
    patch_t *patch = NULL;   // patch for current character
-   int     w, h;            // width, height of patch
+   int     w;               // width of patch
    
    const unsigned char *ch; // pointer to string
    unsigned int c;          // current character
@@ -164,24 +164,12 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       }
 
       // check against screen bounds
+      // haleyjd 12/29/05: text is now clipped by patch drawing code
 
       w = SHORT(patch->width);
 
       // possibly adjust x coordinate for centering
       tx = (font->centered ? cx + (font->cw >> 1) - (w >> 1) : cx);
-
-      // haleyjd 12/29/05: text is now clipped by patch drawing code
-      /*
-      if(tx < 0 || tx+w > SCREENWIDTH)
-         continue;
-      */
-      
-      h = SHORT(patch->height);
-
-      /*
-      if(cy < 0 || cy+h > SCREENHEIGHT)
-         continue;
-      */
       
       // draw character
       if(tl)

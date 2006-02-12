@@ -1516,6 +1516,13 @@ default_t defaults[] =
       "1 to allow players to look up/down"
    },
 
+   {
+      "menu_toggleisback",
+      &menu_toggleisback, NULL,
+      0, {0, 1}, dt_number, ss_none, wad_no,
+      "1 to make menu toggle action back up one level (like zdoom)"
+   },
+
    { NULL }         // last entry
 };
 

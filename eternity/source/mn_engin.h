@@ -199,6 +199,7 @@ extern int menutime;
 
 // haleyjd
 extern int quickSaveSlot;
+extern boolean menu_toggleisback;
 
 #endif
                             

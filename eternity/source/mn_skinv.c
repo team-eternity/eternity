@@ -199,7 +199,6 @@ static void MN_SkinInstructions(void)
       gameModeInfo->shadowTitles ? V_WriteTextBigShadowed : V_WriteTextBig;
   
    // draw a title at the top, too
-   //V_WriteText(msg, 160 - V_StringWidth(msg)/2, 8);
 
    textfunc(msg, 160 - V_StringWidthBig(msg)/2, 8);
 

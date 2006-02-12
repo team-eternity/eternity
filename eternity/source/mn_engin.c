@@ -56,6 +56,10 @@ boolean inhelpscreens; // indicates we are in or just left a help screen
 char menu_error_message[128];
 int menu_error_time = 0;
 
+// haleyjd 02/12/06: option to allow the toggle menu action to back up 
+// through menus instead of exiting directly, to emulate ports like zdoom.
+boolean menu_toggleisback; 
+
         // input for typing in new value
 static command_t *input_command = NULL;       // NULL if not typing in
 
@@ -797,12 +801,17 @@ boolean MN_Responder(event_t *ev)
    {
       // toggle menu
       action_menu_toggle = false;
-      
+
       // start up main menu or kill menu
       if(menuactive)
       {
-         MN_ClearMenus();
-         S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
+         if(menu_toggleisback) // haleyjd 02/12/06: allow zdoom-style navigation
+            MN_PrevMenu();
+         else
+         {
+            MN_ClearMenus();
+            S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
+         }
       }
       else 
          MN_StartControlPanel();      
@@ -1538,6 +1547,9 @@ static void MN_ShowContents(void)
 // Console Commands
 //
 
+VARIABLE_BOOLEAN(menu_toggleisback, NULL, yesno);
+CONSOLE_VARIABLE(mn_toggleisback, menu_toggleisback, 0) {}
+
 extern void MN_AddMenus(void);              // mn_menus.c
 extern void MN_AddMiscCommands(void);       // mn_misc.c
 
@@ -1546,6 +1558,7 @@ void MN_AddCommands(void)
    C_AddCommand(mn_clearmenus);
    C_AddCommand(mn_prevmenu);
    C_AddCommand(forceload);
+   C_AddCommand(mn_toggleisback);
    
    MN_AddMenus();               // add commands to call the menus
    MN_AddMiscCommands();
