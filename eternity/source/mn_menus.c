@@ -1851,17 +1851,20 @@ static void MN_HUDPg2Drawer(void);
 static const char *mn_hud_names[] =
 {
    "messages / BOOM HUD",
-   "crosshair / automap / misc",
+   "crosshair / automap",
+   "miscellaneous",
    NULL
 };
 
 extern menu_t menu_hud;
 extern menu_t menu_hud_pg2;
+extern menu_t menu_hud_pg3;
 
 static menu_t *mn_hud_pages[] =
 {
    &menu_hud,
    &menu_hud_pg2,
+   &menu_hud_pg3,
    NULL
 };
 
@@ -1870,13 +1873,13 @@ static menuitem_t mn_hud_items[] =
    {it_title,      FC_GOLD "hud settings",         NULL,      "m_hud"},
    {it_gap},
    {it_info,       FC_GOLD "message options"},
-   {it_toggle,     "messages",                     "messages"},
-   {it_toggle,     "message colour",               "mess_colour"},
-   {it_toggle,     "messages scroll",              "mess_scrollup"},
-   {it_toggle,     "message lines",                "mess_lines"},
-   {it_variable,   "message time (ms)",            "mess_timer"},
-   {it_toggle,     "obituaries",                   "obituaries"},
-   {it_toggle,     "obituary colour",              "obcolour"},
+   {it_toggle,     "messages",                     "hu_messages"},
+   {it_toggle,     "message colour",               "hu_messagecolor"},
+   {it_toggle,     "messages scroll",              "hu_messagescroll"},
+   {it_toggle,     "message lines",                "hu_messagelines"},
+   {it_variable,   "message time (ms)",            "hu_messagetime"},
+   {it_toggle,     "obituaries",                   "hu_obituaries"},
+   {it_toggle,     "obituary colour",              "hu_obitcolor"},
    {it_gap},
    {it_info,       FC_GOLD "BOOM HUD options"},
    {it_toggle,     "display type",                 "hu_overlay"},
@@ -1889,16 +1892,30 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_title,      FC_GOLD "hud settings",         NULL,      "m_hud"},
    {it_gap},
    {it_info,       FC_GOLD "crosshair options"},
-   {it_toggle,     "crosshair type",               "crosshair"},
-   {it_toggle,     "monster highlighting",         "crosshair_hilite"},
+   {it_toggle,     "crosshair type",               "hu_crosshair"},
+   {it_toggle,     "monster highlighting",         "hu_crosshair_hilite"},
    {it_gap},
    {it_info,       FC_GOLD "automap options"},
-   {it_toggle,     "coordinates follow pointer",   "map_coords"},
-   {it_gap},
-   {it_info,       FC_GOLD "misc options"},
-   {it_toggle,     "show frags in DM",             "show_scores"},
+   {it_toggle,     "show coords widget",           "hu_showcoords"},
+   {it_toggle,     "coords follow pointer",        "map_coords"},
+   {it_toggle,     "coords color",                 "hu_coordscolor"},
+   {it_toggle,     "show level time widget",       "hu_showtime"},
+   {it_toggle,     "level time color",             "hu_timecolor"},
+   {it_toggle,     "level name color",             "hu_levelnamecolor"},
    {it_end}
 };
+
+static menuitem_t mn_hud_pg3_items[] =
+{
+   {it_title,      FC_GOLD "hud settings",         NULL,     "m_hud"},
+   {it_gap},
+   {it_info,       FC_GOLD "miscellaneous"},
+   {it_toggle,     "show frags in DM",             "show_scores"},
+   {it_toggle,     "show vpo indicator",           "hu_showvpo"},
+   {it_variable,   "vpo threshold",                "hu_vpo_threshold"},
+   {it_end}
+};
+
 
 menu_t menu_hud =
 {
@@ -1917,11 +1934,24 @@ menu_t menu_hud_pg2 =
 {
    mn_hud_pg2_items,
    &menu_hud,             // previous page
-   NULL,
+   &menu_hud_pg3,         // next page
    200, 15,               // x,y offset
    3,
    mf_background,
    MN_HUDPg2Drawer,       // drawer
+   mn_hud_names,          // TOC stuff
+   mn_hud_pages,
+};
+
+menu_t menu_hud_pg3 =
+{
+   mn_hud_pg3_items,
+   &menu_hud_pg2,         // previous page
+   NULL,                  // next page
+   200, 15,               // x,y offset
+   3,
+   mf_background,
+   NULL,                  // no drawer
    mn_hud_names,          // TOC stuff
    mn_hud_pages,
 };

@@ -74,6 +74,13 @@ void HU_Erase(void);
 extern int crosshairnum;       // 0= none
 extern boolean crosshair_hilite;
 
+// haleyjd 02/12/06: lost and new options
+extern boolean hu_showtime;
+extern boolean hu_showcoords;
+extern int hu_timecolor;
+extern int hu_levelnamecolor;
+extern int hu_coordscolor;
+
 #endif
 
 // EOF

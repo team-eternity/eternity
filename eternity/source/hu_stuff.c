@@ -861,7 +861,7 @@ enum
 
 typedef struct hu_textwidget_s
 {
-   hu_widget_t widget; // parent widget
+   hu_widget_t widget;   // parent widget
    
    int x, y;             // coords on screen
    vfont_t *font;        // font object
@@ -870,6 +870,7 @@ typedef struct hu_textwidget_s
    int cleartic;         // gametic in which to clear the widget (0=never)
    tw_erase_t erasedata; // rect area to erase
    int flags;            // special flags
+   int color;            // 02/12/06: needed to allow colored text drawing (col # + 1)
 } hu_textwidget_t;
 
 //
@@ -898,7 +899,12 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
    }
 
    if(tw->message && (!tw->cleartic || leveltime < tw->cleartic))
-      V_FontWriteText(tw->font, tw->message, tw->x, tw->y);
+   {
+      if(tw->color)
+         V_FontWriteTextColored(tw->font, tw->message, tw->color - 1, tw->x, tw->y);
+      else
+         V_FontWriteText(tw->font, tw->message, tw->x, tw->y);
+   }
 }
 
 //
@@ -937,19 +943,20 @@ static void HU_UpdateEraseData(hu_textwidget_t *tw)
    // haleyjd 10/08/05: boxed text support
    if(tw->flags & TW_BOXED)
    {
-      x = x - 4;
-      y = y - 4;
+      x -= 4;
+      y -= 4;
       w += 8;
       h += 8;
    }
 
-   if(tw->x < tw->erasedata.x1)
+   // haleyjd 02/12/06: use proper variables here (yikes!)
+   if(x < tw->erasedata.x1)
       tw->erasedata.x1 = x;
-   if(tw->y < tw->erasedata.y1)
+   if(y < tw->erasedata.y1)
       tw->erasedata.y1 = y;
-   if(tw->x + w > tw->erasedata.x2)
+   if(x + w - 1 > tw->erasedata.x2)
       tw->erasedata.x2 = x + w - 1;
-   if(tw->y + h > tw->erasedata.y2)
+   if(y + h - 1 > tw->erasedata.y2)
       tw->erasedata.y2 = y + h - 1;
 
    // haleyjd 12/29/05: must bound to screen edges
@@ -1173,6 +1180,10 @@ void HU_CenterMessageTimed(const char *s, int tics)
 
 static hu_textwidget_t leveltime_widget;
 
+// haleyjd 02/12/06: configuration variables
+boolean hu_showtime;       // enable/disable flag for level time
+int hu_timecolor;          // color of time text
+
 //
 // HU_LevelTimeTick
 //
@@ -1184,7 +1195,7 @@ static void HU_LevelTimeTick(hu_widget_t *widget)
    int seconds;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
    
-   if(!automapactive)
+   if(!automapactive || !hu_showtime)
    {
       tw->message = NULL;
       return;
@@ -1193,8 +1204,8 @@ static void HU_LevelTimeTick(hu_widget_t *widget)
    seconds = levelTime / 35;
    timestr[0] = '\0';
    
-   psnprintf(timestr, sizeof(timestr), "%02i:%02i:%02i", 
-             seconds/3600, (seconds%3600)/60, seconds%60);
+   psnprintf(timestr, sizeof(timestr), "%c%02i:%02i:%02i", 
+             hu_timecolor + 128, seconds/3600, (seconds%3600)/60, seconds%60);
    
    tw->message = timestr;        
 }
@@ -1241,6 +1252,9 @@ static void HU_InitLevelTime(void)
 
 static hu_textwidget_t levelname_widget;
 
+// haleyjd 02/12/06: configuration variables
+int hu_levelnamecolor;
+
 //
 // HU_LevelNameTick
 //
@@ -1248,8 +1262,10 @@ static hu_textwidget_t levelname_widget;
 //
 static void HU_LevelNameTick(hu_widget_t *widget)
 {
-   ((hu_textwidget_t *)widget)->message = 
-      automapactive ? LevelInfo.levelName : NULL;
+   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
+
+   tw->message = automapactive ? LevelInfo.levelName : NULL;
+   tw->color   = hu_levelnamecolor + 1;
 }
 
 //
@@ -1426,6 +1442,10 @@ static hu_textwidget_t coordx_widget;
 static hu_textwidget_t coordy_widget;
 static hu_textwidget_t coordz_widget;
 
+// haleyjd 02/12/06: configuration variables
+boolean hu_showcoords;
+int hu_coordscolor;
+
 //
 // HU_CoordTick
 //
@@ -1443,7 +1463,7 @@ static void HU_CoordTick(hu_widget_t *widget)
    static char coordystr[16];
    static char coordzstr[16];
 
-   if(!automapactive)
+   if(!automapactive || !hu_showcoords)
    {
       tw->message = NULL;
       return;
@@ -1454,17 +1474,17 @@ static void HU_CoordTick(hu_widget_t *widget)
 
    if(tw == &coordx_widget)
    {
-      sprintf(coordxstr, "X: %-5d", x >> FRACBITS);
+      sprintf(coordxstr, "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
       tw->message = coordxstr;
    }
    else if(tw == &coordy_widget)
    {
-      sprintf(coordystr, "Y: %-5d", y >> FRACBITS);
+      sprintf(coordystr, "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
       tw->message = coordystr;
    }
    else
    {
-      sprintf(coordzstr, "Z: %-5d", z >> FRACBITS);
+      sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
       tw->message = coordzstr;
    }
 }
@@ -1583,12 +1603,19 @@ VARIABLE_INT(vpo_threshold,     NULL, 1, 128,      NULL);
 VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
 VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
 
+// haleyjd 02/12/06: lost/new hud options
+VARIABLE_BOOLEAN(hu_showtime,   NULL,                   yesno);
+VARIABLE_BOOLEAN(hu_showcoords, NULL,                   yesno);
+VARIABLE_INT(hu_timecolor,      NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_LIMIT-1,    textcolours);
+
 VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
 VARIABLE_BOOLEAN(crosshair_hilite,  NULL,               onoff);
 
-CONSOLE_VARIABLE(obituaries, obituaries, 0) {}
-CONSOLE_VARIABLE(obcolour, obcolour, 0) {}
-CONSOLE_VARIABLE(crosshair, crosshairnum, 0)
+CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
+CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
+CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0)
 {
    int a;
    
@@ -1597,11 +1624,11 @@ CONSOLE_VARIABLE(crosshair, crosshairnum, 0)
    crosshair_widget.patch = a ? crosshairs[a - 1] : NULL;
    crosshairnum = a;
 }
-CONSOLE_VARIABLE(crosshair_hilite, crosshair_hilite, 0) {}
-CONSOLE_VARIABLE(show_vpo, show_vpo, 0) {}
-CONSOLE_VARIABLE(vpo_threshold, vpo_threshold, 0) {}
-CONSOLE_VARIABLE(messages, showMessages, 0) {}
-CONSOLE_VARIABLE(mess_colour, mess_colour, 0) {}
+CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
+CONSOLE_VARIABLE(hu_showvpo, show_vpo, 0) {}
+CONSOLE_VARIABLE(hu_vpo_threshold, vpo_threshold, 0) {}
+CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
+CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
    S_StartSound(NULL, gameModeInfo->c_ChatSound);
@@ -1609,29 +1636,40 @@ CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
    doom_printf("%s: %s", players[cmdsrc].name, c_args);
 }
 
-CONSOLE_VARIABLE(mess_lines, hud_msg_lines, 0) {}
-CONSOLE_VARIABLE(mess_scrollup, hud_msg_scrollup, 0) {}
-CONSOLE_VARIABLE(mess_timer, message_timer, 0) {}
+CONSOLE_VARIABLE(hu_messagelines, hud_msg_lines, 0) {}
+CONSOLE_VARIABLE(hu_messagescroll, hud_msg_scrollup, 0) {}
+CONSOLE_VARIABLE(hu_messagetime, message_timer, 0) {}
+
+// haleyjd 02/12/06: lost/new hud options
+CONSOLE_VARIABLE(hu_showtime, hu_showtime, 0) {}
+CONSOLE_VARIABLE(hu_showcoords, hu_showcoords, 0) {}
+CONSOLE_VARIABLE(hu_timecolor, hu_timecolor, 0) {}
+CONSOLE_VARIABLE(hu_levelnamecolor, hu_levelnamecolor, 0) {}
+CONSOLE_VARIABLE(hu_coordscolor, hu_coordscolor, 0) {}
+
 
 extern void HU_FragsAddCommands(void);
 extern void HU_OverAddCommands(void);
 
 void HU_AddCommands(void)
 {
-   C_AddCommand(obituaries);
-   C_AddCommand(obcolour);
-   C_AddCommand(crosshair);
-   C_AddCommand(crosshair_hilite);
-   C_AddCommand(show_vpo);
-   C_AddCommand(messages);
-   C_AddCommand(mess_colour);
-   C_AddCommand(say);
-   
-   C_AddCommand(mess_lines);
-   C_AddCommand(mess_scrollup);
-   C_AddCommand(mess_timer);
-
-   C_AddCommand(vpo_threshold);
+   C_AddCommand(hu_obituaries);
+   C_AddCommand(hu_obitcolor);
+   C_AddCommand(hu_crosshair);
+   C_AddCommand(hu_crosshair_hilite);
+   C_AddCommand(hu_showvpo);
+   C_AddCommand(hu_vpo_threshold);
+   C_AddCommand(hu_messages);
+   C_AddCommand(hu_messagecolor);
+   C_AddCommand(say);   
+   C_AddCommand(hu_messagelines);
+   C_AddCommand(hu_messagescroll);
+   C_AddCommand(hu_messagetime);
+   C_AddCommand(hu_showtime);
+   C_AddCommand(hu_showcoords);
+   C_AddCommand(hu_timecolor);
+   C_AddCommand(hu_levelnamecolor);
+   C_AddCommand(hu_coordscolor);
    
    HU_FragsAddCommands();
    HU_OverAddCommands();

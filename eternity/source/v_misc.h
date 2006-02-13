@@ -62,7 +62,7 @@ extern patch_t *v_font[V_FONTSIZE];
 #define FC_ORANGE       "\x88"
 #define FC_YELLOW       "\x89"
 // haleyjd: translucent text support
-#define FC_TRANS	"\x8a"
+#define FC_TRANS	      "\x8a"
 // haleyjd 08/20/02: new characters for internal color usage
 #define FC_NORMAL       "\x8b"
 #define FC_HI           "\x8c"

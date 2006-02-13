@@ -1227,6 +1227,41 @@ default_t defaults[] =
       "hide kills/items/secrets info on fullscreen hud"
    },
 
+   {
+      "hu_showtime",
+      &hu_showtime, NULL,
+      1, {0,1}, dt_number, ss_mess, wad_yes,
+      "display current level time on automap"
+   },
+
+   {
+      "hu_showcoords",
+      &hu_showcoords, NULL,
+      1, {0,1}, dt_number, ss_mess, wad_yes,
+      "display player/pointer coordinates on automap"
+   },
+
+   {
+      "hu_timecolor",
+      &hu_timecolor, NULL,
+      CR_RED, {0, CR_LIMIT-1}, dt_number, ss_mess, wad_yes,
+      "color of automap level time widget"
+   },
+
+   {
+      "hu_levelnamecolor",
+      &hu_levelnamecolor, NULL,
+      CR_RED, {0, CR_LIMIT-1}, dt_number, ss_mess, wad_yes,
+      "color of automap level name widget"
+   },
+
+   {
+      "hu_coordscolor",
+      &hu_coordscolor, NULL,
+      CR_RED, {0, CR_LIMIT-1}, dt_number, ss_mess, wad_yes,
+      "color of automap coordinates widget"
+   },
+
    { // below is red
       "health_red",
       &health_red, NULL,
