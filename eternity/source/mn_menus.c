@@ -432,6 +432,7 @@ CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 // Access to new SMMU features
 //
 
+/*
 static menuitem_t mn_features_items[] =
 {
    {it_title, FC_GOLD "features", NULL,         "M_FEAT"},
@@ -464,6 +465,8 @@ CONSOLE_COMMAND(mn_features, 0)
 {
    MN_StartMenu(&menu_features);
 }
+
+*/
 
 ////////////////////////////////////////////////
 //
@@ -963,17 +966,18 @@ menu_t menu_player =
 };
 
 #define SPRITEBOX_X 200
-#define SPRITEBOX_Y 80
+#define SPRITEBOX_Y (menu_player.menuitems[7].y + 16)
 
 void MN_PlayerDrawer(void)
 {
-   int lump;
+   int lump, w, h, toff, loff;
    spritedef_t *sprdef;
    spriteframe_t *sprframe;
    patch_t *patch;
-   
-   V_DrawBox(SPRITEBOX_X, SPRITEBOX_Y, 80, 80);
-   
+
+   if(!(menu_player.menuitems[7].flags & MENUITEM_POSINIT))
+      return;
+
    sprdef = &sprites[players[consoleplayer].skin->sprite];
 
    // haleyjd 08/15/02
@@ -985,11 +989,18 @@ void MN_PlayerDrawer(void)
    
    patch = W_CacheLumpNum(lump + firstspritelump, PU_CACHE);
 
+   w    = SHORT(patch->width);
+   h    = SHORT(patch->height);
+   toff = SHORT(patch->topoffset);
+   loff = SHORT(patch->leftoffset);
+   
+   V_DrawBox(SPRITEBOX_X, SPRITEBOX_Y, w + 16, h + 16);
+
    // haleyjd 01/12/04: changed translation handling
    V_DrawPatchTranslated
       (
-       SPRITEBOX_X + 40,
-       SPRITEBOX_Y + 70,
+       SPRITEBOX_X + 8 + loff,
+       SPRITEBOX_Y + 8 + toff,
        &vbscreen,
        patch,
        players[consoleplayer].colormap ?
@@ -1975,15 +1986,17 @@ static void MN_HUDPg2Drawer(void)
   
    // approximately center box on "crosshair" item in menu
    y = menu_hud_pg2.menuitems[3].y - 5;
-   V_DrawBox(270, y, 20, 20);
+   V_DrawBox(270, y, 24, 24);
 
    if(patch)
    {
-      short w = SHORT(patch->width);
-      short h = SHORT(patch->height);
+      short w  = SHORT(patch->width);
+      short h  = SHORT(patch->height);
+      short to = SHORT(patch->topoffset);
+      short lo = SHORT(patch->leftoffset);
 
-      V_DrawPatchTL(270 + 11 - (w >> 1), 
-                    y + 11 - (h >> 1), 
+      V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
+                    y + 12 - (h >> 1) + to, 
                     &vbscreen, patch, NULL, FTRANLEVEL);
    }
 }
@@ -2855,7 +2868,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_load);
    C_AddCommand(mn_savegame);
 
-   C_AddCommand(mn_features);
+   //C_AddCommand(mn_features);
    C_AddCommand(mn_loadwad);
    C_AddCommand(mn_wadname);
    C_AddCommand(mn_demos);
