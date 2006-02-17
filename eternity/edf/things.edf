@@ -1674,6 +1674,28 @@ thingtype EEMapSpotGravity {
   dehackednum = 153
 }
 
+// Polyobject spots
+
+thingtype EEPolyobjAnchor {
+  doomednum = 9300
+  spawnstate = S_TNT1
+  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+  dehackednum = 154
+}
+
+thingtype EEPolyobjSpawnSpot {
+  doomednum = 9301
+  spawnstate = S_TNT1
+  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+  dehackednum = 155
+}
+
+thingtype EEPolyobjSpawnSpotCrush {
+  doomednum = 9302
+  spawnstate = S_TNT1
+  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+  dehackednum = 156
+}
 
 // Begin Heretic gamemode objects
 

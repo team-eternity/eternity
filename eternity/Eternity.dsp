@@ -606,6 +606,10 @@ SOURCE=.\Source\info.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\polyobj.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\psnprntf.c
 # End Source File
 # Begin Source File
@@ -1115,6 +1119,10 @@ SOURCE=.\Source\info.h
 # Begin Source File
 
 SOURCE=.\Source\osdefs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\polyobj.h
 # End Source File
 # Begin Source File
 
