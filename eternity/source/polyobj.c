@@ -105,6 +105,46 @@ int numPolyObjects;
 // Static Functions
 //
 
+static void Polyobj_addSeg(polyobj_t *po, seg_t *seg)
+{
+}
+
+static void Polyobj_findSegs(polyobj_t *po, seg_t *seg, int count)
+{
+   static int startx, starty;
+   int i;
+
+   // on first seg, save the initial vertex
+   if(count == 0)
+   {
+      startx = seg->v1->x;
+      starty = seg->v1->y;
+   }
+
+   // terminal case: we have reached a seg where v2 is the same as v1 of the
+   // initial seg
+   if(seg->v2->x == startx && seg->v2->y == starty
+      return;
+
+   // search the segs for one whose starting vertex is equal to the current
+   // seg's ending vertex.
+   for(i = 0; i < numsegs; ++i)
+   {
+      if(segs[i].v1->x == seg->v2->x && segs[i].v1->y == seg->v2->y)
+      {
+         // add the new seg and recurse
+         Polyobj_addSeg(po, &segs[i]);
+         Polyobj_findSegs(po, &segs[i], count + 1);
+         return;
+      }
+   }
+
+   // error: if we reach here, the seg search never found another seg to
+   // continue the loop, and thus the polyobject is open. This isn't allowed.
+   po->isBad = true;
+   doom_printf("polyobject %d is unclosed", po->id);
+}
+
 //
 // Polyobj_spawnPolyObj
 //
