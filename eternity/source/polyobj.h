@@ -56,6 +56,10 @@ typedef struct polyobj_s
    int first; // for hashing: index of first polyobject in this hash chain
    int next;  // for hashing: next polyobject in this hash chain
 
+   int segCount;      // number of segs in polyobject
+   int numSegsAlloc;  // number of segs allocated
+   seg_t **segs;      // the segs, a reallocating array.
+
    mobj_t *spawnSpot; // spawn spot object
 
    boolean isBad; // a bad polyobject: should not be rendered

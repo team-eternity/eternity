@@ -105,14 +105,39 @@ int numPolyObjects;
 // Static Functions
 //
 
+//
+// Polyobj_addSeg
+//
+// Adds a single seg to a polyobject's reallocating seg pointer array.
+// Most polyobjects will have between 4 and 16 segs, so the array size
+// begins much smaller than usual.
+//
 static void Polyobj_addSeg(polyobj_t *po, seg_t *seg)
 {
+   if(po->segCount >= po->numSegsAlloc)
+   {
+      po->numSegsAlloc = po->numSegsAlloc ? po->numSegsAlloc * 2 : 4;
+      po->segs = (seg_t **)Z_Realloc(po->segs, 
+                                     po->numSegsAlloc * sizeof(seg_t *),
+                                     PU_LEVEL, NULL);
+   }
+   (po->segs)[po->segCount++] = seg;
 }
 
+//
+// Polyobj_findSegs
+//
+// This method adds segs to a polyobject by following segs from vertex to
+// vertex.  The process stops when the original starting point is reached
+// or if a particular search ends unexpectedly (ie, the polyobject is not
+// closed).
+//
 static void Polyobj_findSegs(polyobj_t *po, seg_t *seg)
 {
    int startx, starty;
    int i;
+
+   Polyobj_addSeg(po, seg);
 
    // on first seg, save the initial vertex
    startx = seg->v1->x;
@@ -142,7 +167,16 @@ newseg:
    // error: if we reach here, the seg search never found another seg to
    // continue the loop, and thus the polyobject is open. This isn't allowed.
    po->isBad = true;
-   doom_printf("polyobject %d is unclosed", po->id);
+   doom_printf("polyobject %d is not closed", po->id);
+}
+
+//
+// Polyobj_findExplicit
+//
+// Searches for segs to put into a polyobject in an explicitly provided order.
+//
+static void Polyobj_findExplicit(polyobj_t *po)
+{
 }
 
 //
@@ -152,19 +186,39 @@ newseg:
 //
 static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
 {
+   int i;
    polyobj_t *po = &PolyObjects[num];
+
+   po->id = id;
+
+   // 1. Search segs for "line start" special with tag matching this 
+   //    polyobject's id number. If found, iterate through segs which
+   //    share common vertices and record them into the polyobject.
+   for(i = 0; i < numsegs; ++i)
+   {
+      seg_t *seg = &segs[i];
+
+      // is it a START line with this polyobject's id?
+      if(seg->linedef->special == FIXME && seg->linedef->args[0] == po->id)
+         Polyobj_findSegs(po, seg);
+   }
+
+   // if an error occurred above, quit processing this object
+   if(po->isBad)
+      return;
+
+   // 2. If no such line existed in the first step, look for a seg with the 
+   //    "explicit" special with tag matching this polyobject's id number. If
+   //    found, continue to search for all such lines, storing them in a 
+   //    temporary list of segs which is then copied into the polyobject in 
+   //    sorted order.
+   if(po->segCount == 0)
+   {
+   }
 
 /*
   TODO:
 
-  1. Search segs for "line start" special with tag matching this polyobject's
-     id number. If found, iterate through segs which share common vertices and
-     record them into the polyobject.
-
-  2. If no such line existed in the first step, look for a seg with the
-     "explicit" special with tag matching this polyobject's id number. If found,
-     continue to search for all such lines, sorting them into a temporary list
-     of segs which is then copied into the polyobject in sorted order.
 
   3. If the polyobject is still empty, it is erroneous and should be marked
      as such (allowing the game to continue if possible).
@@ -174,7 +228,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    po->spawnSpot = spawnSpot;
 
    // hash the polyobject by its numeric id
-   if(Polyobj_GetForNum(id))
+   if(Polyobj_GetForNum(po->id))
    {
       // bad polyobject due to id conflict
       po->isBad = true;
@@ -182,8 +236,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    }
    else
    {
-      int hashkey = id % numPolyObjects;
-      po->id = id;      
+      int hashkey = po->id % numPolyObjects;
       po->next = PolyObjects[hashkey].first;
       PolyObjects[hashkey].first = num;
    }
