@@ -109,23 +109,23 @@ static void Polyobj_addSeg(polyobj_t *po, seg_t *seg)
 {
 }
 
-static void Polyobj_findSegs(polyobj_t *po, seg_t *seg, int count)
+static void Polyobj_findSegs(polyobj_t *po, seg_t *seg)
 {
-   static int startx, starty;
+   int startx, starty;
    int i;
 
    // on first seg, save the initial vertex
-   if(count == 0)
-   {
-      startx = seg->v1->x;
-      starty = seg->v1->y;
-   }
+   startx = seg->v1->x;
+   starty = seg->v1->y;
+
+   // use goto instead of recursion for maximum efficiency - thanks to lament
+newseg:
 
    // terminal case: we have reached a seg where v2 is the same as v1 of the
    // initial seg
-   if(seg->v2->x == startx && seg->v2->y == starty
+   if(seg->v2->x == startx && seg->v2->y == starty)
       return;
-
+      
    // search the segs for one whose starting vertex is equal to the current
    // seg's ending vertex.
    for(i = 0; i < numsegs; ++i)
@@ -134,8 +134,8 @@ static void Polyobj_findSegs(polyobj_t *po, seg_t *seg, int count)
       {
          // add the new seg and recurse
          Polyobj_addSeg(po, &segs[i]);
-         Polyobj_findSegs(po, &segs[i], count + 1);
-         return;
+         seg = &segs[i];
+         goto newseg;
       }
    }
 
