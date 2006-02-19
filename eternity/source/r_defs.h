@@ -46,9 +46,15 @@ typedef struct patch_s patch_t;
 // SECTORS do store MObjs anyway.
 #include "p_mobj.h"
 
+
+// SoM: I had to move this for linked portals.
+typedef struct sector_s sector_t;
 #ifdef R_PORTALS
 // Portals
 #include "r_portal.h"
+#ifdef R_LINKEDPORTALS
+#include "p_portal.h"
+#endif
 #endif
 
 #include "p_partcl.h"
@@ -88,14 +94,19 @@ typedef struct
 {
   thinker_t thinker;  // not used for anything
   fixed_t x, y, z;
+
+#ifdef R_LINKEDPORTALS
+  // SoM: yes Quasar, this is entirely necessary
+  int     groupid; // The group the sound opriginated in
+#endif
 } degenmobj_t;
 
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
-
-typedef struct
+// SoM: moved the definition of sector_t to by the r_portal.h include
+struct sector_s
 {
    fixed_t floorheight;
    fixed_t ceilingheight;
@@ -171,6 +182,7 @@ typedef struct
 #ifdef R_PORTALS
    rportal_t *c_portal;
    rportal_t *f_portal;
+   int groupid;
 #endif
 
    // haleyjd 03/12/03: Heretic wind specials
@@ -179,7 +191,7 @@ typedef struct
    fixed_t hticPushForce;
 
    struct particle_s *ptcllist; // haleyjd 02/20/04: list of particles in sector
-} sector_t;
+};
 
 //
 // The SideDef.

@@ -35,6 +35,9 @@ typedef struct camera_s
    angle_t angle;
    fixed_t pitch;
    int heightsec;  // haleyjd: for deep water handling
+#ifdef R_LINKEDPORTALS
+   int groupid;
+#endif
 } camera_t;
 
 

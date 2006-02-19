@@ -152,6 +152,9 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 {
    fixed_t adx, ady, dist;
    angle_t angle;
+   // SoM: I could put this inside an R_LINKEDPORTALS ifdef but I don't want to have
+   // to write two versions of the function
+   fixed_t sx, sy;
 
    // haleyjd 08/12/04: we cannot adjust a sound for a NULL listener.
    // haleyjd 07/13/05: we cannot adjust a sound for a NULL source.
@@ -163,9 +166,27 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    //
    // killough 11/98: scale coordinates down before calculations start
    // killough 12/98: use exact distance formula instead of approximation
-   
-   adx = D_abs((listener->x >> FRACBITS) - (source->x >> FRACBITS));
-   ady = D_abs((listener->y >> FRACBITS) - (source->y >> FRACBITS));
+
+   sx = source->x;
+   sy = source->y;
+
+#ifdef R_LINKEDPORTALS
+   if(useportalgroups && listener->groupid != R_NOGROUP && source->groupid != R_NOGROUP && 
+      listener->groupid != source->groupid)
+   {
+      // The listener and the source are not in the same subspace, so offset the sound origin
+      // so it will sound correct to the player.
+      linkoffset_t *link = P_GetLinkOffset(listener->groupid, source->groupid);
+      if(link)
+      {
+         sx += link->x;
+         sy += link->y;
+      }
+   }
+#endif
+
+   adx = D_abs((listener->x >> FRACBITS) - (sx >> FRACBITS));
+   ady = D_abs((listener->y >> FRACBITS) - (sy >> FRACBITS));
 
    if(ady > adx)
       dist = adx, adx = ady, ady = dist;
@@ -199,7 +220,7 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    // angle of source to listener
    // sf: use listenx, listeny
    
-   angle = R_PointToAngle2(listener->x, listener->y, source->x, source->y);
+   angle = R_PointToAngle2(listener->x, listener->y, sx, sy);
 
    if(angle <= listener->angle)
       angle += 0xffffffff;
@@ -336,6 +357,9 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx)
          playercam.y = mo->y; 
          playercam.z = mo->z;
          playercam.angle = mo->angle;
+#ifdef R_LINKEDPORTALS
+         playercam.groupid = mo->groupid;
+#endif
       }
    }
 
@@ -498,6 +522,9 @@ void S_UpdateSounds(const mobj_t *listener)
          playercam.y = listener->y;
          playercam.z = listener->z;
          playercam.angle = listener->angle;
+#ifdef R_LINKEDPORTALS
+         playercam.groupid = listener->groupid;
+#endif
       }      
    }
 

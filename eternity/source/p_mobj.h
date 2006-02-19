@@ -331,6 +331,11 @@ struct mobj_s
   fixed_t             y;
   fixed_t             z;
   
+#ifdef R_LINKEDPORTALS
+  // SoM: yes Quasar, this is entirely necessary (see degenmobj_t)
+  int     groupid; // The group the sound opriginated in
+#endif
+
   // More list: links in sector (if needed)
   struct mobj_s*      snext;
   struct mobj_s**     sprev; // killough 8/10/98: change to ptr-to-ptr

@@ -520,6 +520,14 @@ static struct exlinespec
    { 341, "Stairs_BuildDownDoom" },
    { 342, "Stairs_BuildUpDoomSync" },
    { 343, "Stairs_BuildDownDoomSync" },
+
+   // SoM: linked portal types
+#ifdef R_LINKEDPORTALS
+   { 344, "Portal_LinkedCeiling" },
+   { 345, "Portal_LinkedFloor" },
+   { 346, "Portal_LinkedAnchorLine" },
+   { 347, "Portal_LinkedAnchorLineFloor" },
+#endif
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

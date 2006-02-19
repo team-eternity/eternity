@@ -305,6 +305,7 @@ void P_LoadSectors (int lump)
 
 #ifdef R_PORTALS
       ss->c_portal = ss->f_portal = NULL;
+      ss->groupid = R_NOGROUP;
 #endif
       ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
    }
@@ -1071,6 +1072,10 @@ void P_GroupLines (void)
                             sector->blockbox[BOXLEFT])/2;
       sector->soundorg.y = (sector->blockbox[BOXTOP] + 
                             sector->blockbox[BOXBOTTOM])/2;
+#ifdef R_LINKEDPORTALS
+      // SoM: same for group id.
+      sector->soundorg.groupid = sector->groupid;
+#endif
 
       // adjust bounding box to map blocks
       block = (sector->blockbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;

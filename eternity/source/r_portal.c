@@ -36,7 +36,11 @@
 
 static rportal_t *portals = NULL, *last = NULL;
 
+// This flag is set when a portal is being rendered. This flag is checked in r_bsp.c when
+// rendering camera portals (skybox, anchored, linked) so that an extra function (R_ClipSeg) is
+// called to prevent certain types of HOM in portals.
 boolean portalrender = false;
+
 
 //
 // R_ClearPortal
@@ -108,7 +112,6 @@ rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
    cameraportal_t cam;
 
    memset(&cam, 0, sizeof(cam));
-   cam.mobj = NULL;
    cam.deltax = deltax;
    cam.deltay = deltay;
    cam.deltaz = deltaz;
@@ -363,7 +366,7 @@ void R_PortalAdd(rportal_t *portal, int x, int ytop, int ybottom)
 //
 void R_InitPortals(void)
 {
-   portals = last = NULL;   
+   portals = last = NULL;
 }
 
 //
@@ -518,7 +521,11 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 {
    fixed_t lastx, lasty, lastz;
 
+#ifdef R_LINKEDPORTALS
+   if(portal->type != R_ANCHORED && portal->type != R_LINKED)
+#else
    if(portal->type != R_ANCHORED)
+#endif
       return;
 
    if(portal->maxx < portal->minx)
@@ -600,6 +607,9 @@ void R_RenderPortals(void)
             R_RenderSkyboxPortal(r);
             break;
          case R_ANCHORED:
+#ifdef R_LINKEDPORTALS
+         case R_LINKED:
+#endif
             R_RenderAnchoredPortal(r);
             break;
          }
@@ -615,6 +625,36 @@ void R_RenderPortals(void)
    }
 }
 
+
+#ifdef R_LINKEDPORTALS
+// ------------------------------------------------------------------------------------------
+// SoM: Begin linked portals
+
+rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, int groupid)
+{
+   rportal_t *rover, *ret;
+   cameraportal_t cam;
+
+   memset(&cam, 0, sizeof(cam));
+   cam.deltax = deltax;
+   cam.deltay = deltay;
+   cam.deltaz = deltaz;
+   cam.groupid = groupid;
+
+   for(rover = portals; rover; rover = rover->next)
+   {
+      if(rover->type != R_LINKED || memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+         continue;
+
+      return rover;
+   }
+
+   ret = R_CreatePortal();
+   ret->type = R_LINKED;
+   ret->data.camera = cam;
+   return ret;
+}
+#endif
 #endif
 
 //----------------------------------------------------------------------------

@@ -345,6 +345,10 @@ void P_UnsetThingPosition (mobj_t *thing)
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
    }
+
+#ifdef R_LINKEDPORTALS
+   thing->groupid = R_NOGROUP;
+#endif
 }
 
 //
@@ -359,6 +363,10 @@ void P_SetThingPosition(mobj_t *thing)
 {                                                      // link into subsector
    subsector_t *ss = thing->subsector = 
       R_PointInSubsector(thing->x, thing->y);
+
+#ifdef R_LINKEDPORTALS
+   thing->groupid = ss->sector->groupid;
+#endif
 
    if(!(thing->flags & MF_NOSECTOR))
    {

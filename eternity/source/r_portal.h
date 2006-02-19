@@ -35,12 +35,18 @@ typedef enum
    R_ANCHORED,
    R_HORIZON,
    R_PLANE,
+#ifdef R_LINKEDPORTALS
+   R_LINKED, // SoM: interactive portals  
+#endif
 } rportaltype_e;
 
 typedef struct
 {
    mobj_t    *mobj;
    fixed_t   deltax, deltay, deltaz;
+#ifdef R_LINKEDPORTALS
+   int       groupid; // SoM: linked portals are camera portals
+#endif
 } cameraportal_t;
 
 typedef struct
@@ -92,6 +98,11 @@ void R_RenderPortals(void);
 
 // SoM 3/14/2004: flag if we are rendering portals.
 extern boolean portalrender;
+
+#ifdef R_LINKEDPORTALS
+// SoM 2/13/2006: Thus marks the beginning of my work on linked portals
+rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, int groupid);
+#endif
 #endif
 
 //----------------------------------------------------------------------------

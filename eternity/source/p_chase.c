@@ -45,6 +45,9 @@ camera_t chasecam;
 long chaseviewz;
 int chasecam_active = 0;
 long targetx, targety, targetz;
+#ifdef R_LINKEDPORTALS
+int targetgroupid;
+#endif
 int chasecam_turnoff = 0;
 
 void P_ChaseSetupFrame(void)
@@ -81,6 +84,10 @@ void P_GetChasecamTarget(void)
    targetx = playermobj->x - chasecam_dist * cos;
    targety = playermobj->y - chasecam_dist * sin;
    targetz = playermobj->z + aimfor;
+
+#ifdef R_LINKEDPORTALS
+   targetgroupid = playermobj->groupid;
+#endif
 
    // the intersections test mucks up the first time, but
    // aiming at something seems to cure it
@@ -276,6 +283,10 @@ void P_ResetChasecam(void)
    chasecam.y = targety;
    chasecam.z = targetz;
    
+#ifdef R_LINKEDPORTALS
+   chasecam.groupid = targetgroupid;
+#endif
+
    // haleyjd
    chasecam.heightsec = 
       R_PointInSubsector(chasecam.x, chasecam.y)->sector->heightsec;

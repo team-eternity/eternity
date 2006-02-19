@@ -1100,6 +1100,10 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    mobj->effects = info->particlefx;  // haleyjd 07/13/03
    mobj->damage  = info->damage;      // haleyjd 08/02/04
 
+#ifdef R_LINKEDPORTALS
+   mobj->groupid = R_NOGROUP;
+#endif
+
    // haleyjd 09/26/04: rudimentary support for monster skins
    if(info->altsprite != NUMSPRITES)
       mobj->skin = P_GetMonsterSkin(info->altsprite);

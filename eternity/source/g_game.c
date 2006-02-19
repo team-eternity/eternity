@@ -626,7 +626,11 @@ void G_SetGameMapName(const char *s)
 extern gamestate_t wipegamestate;
 extern gamestate_t oldgamestate;
 
+#ifdef R_LINKEDPORTALS
+extern void P_InitPortals(void);
+#elif defined R_PORTALS
 extern void R_InitPortals(void);
+#endif
 
 static void G_DoLoadLevel(void)
 {
@@ -650,7 +654,9 @@ static void G_DoLoadLevel(void)
 
    R_ClearParticles();
 
-#ifdef R_PORTALS
+#ifdef R_LINKEDPORTALS
+   P_InitPortals();
+#elif defined R_PORTALS
    R_InitPortals();
 #endif
    P_SetupLevel(gamemapname, 0, gameskill);
@@ -3389,6 +3395,9 @@ void G_CoolViewPoint(void)
       intercam.y = cam->y;
       intercam.angle = cam->angle;
       intercam.pitch = 0;
+#ifdef R_LINKEDPORTALS
+      intercam.groupid = cam->groupid;
+#endif
       
       // haleyjd: fix for deep water sectors
       {
