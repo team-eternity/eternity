@@ -84,13 +84,13 @@ extern int r_blockmap;
 // Note: transformed values not buffered locally,
 // like some DOOM-alikes ("wt", "WebView") do.
 //
-typedef struct
+typedef struct vertex_s
 {
   fixed_t x, y;
 } vertex_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.
-typedef struct
+typedef struct degenmobj_s
 {
   thinker_t thinker;  // not used for anything
   fixed_t x, y, z;
@@ -100,6 +100,10 @@ typedef struct
   int     groupid; // The group the sound opriginated in
 #endif
 } degenmobj_t;
+
+#ifdef POLYOBJECTS
+#include "polyobj.h"
+#endif
 
 //
 // The SECTORS record, at runtime.
@@ -263,6 +267,9 @@ typedef struct subsector_s
 {
   sector_t *sector;
   short numlines, firstline;
+#ifdef POLYOBJECTS
+  struct polyobj_s *polyList; // haleyjd 02/19/06: list of polyobjects
+#endif
 } subsector_t;
 
 // phares 3/14/98
@@ -295,7 +302,7 @@ typedef struct msecnode_s
 //
 // The LineSeg.
 //
-typedef struct
+typedef struct seg_s
 {
   vertex_t *v1, *v2;
   fixed_t offset;

@@ -31,11 +31,15 @@
 // haleyjd: temporary define
 #ifdef POLYOBJECTS
 
-#include "z_malloc.h"
+#include "z_zone.h"
 
+#include "doomstat.h"
 #include "g_game.h"
+#include "m_bbox.h"
 #include "m_queue.h"
 #include "polyobj.h"
+#include "r_main.h"
+#include "r_state.h"
 
 /*
    Theory behind Polyobjects:
@@ -105,12 +109,113 @@ int numPolyObjects;
 // Static Functions
 //
 
+d_inline static void Polyobj_bboxAdd(int *bbox, int x, int y)
+{
+   bbox[BOXTOP]    += y;
+   bbox[BOXBOTTOM] += y;
+   bbox[BOXLEFT]   += x;
+   bbox[BOXTOP]    += x;
+}
+
+d_inline static void Polyobj_bboxSub(int *bbox, int x, int y)
+{
+   bbox[BOXTOP]    -= y;
+   bbox[BOXBOTTOM] -= y;
+   bbox[BOXLEFT]   -= x;
+   bbox[BOXTOP]    -= x;
+}
+
+d_inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
+{
+   dst->x -= sub->x;
+   dst->y -= sub->y;
+}
+
+d_inline static void Polyobj_vecSub2(vertex_t *dst, vertex_t *v1, vertex_t *v2)
+{
+   dst->x = v1->x - v2->x;
+   dst->y = v1->y - v2->y;
+}
+
+// Reallocating array maintenance
+
+//
+// Polyobj_addVertex
+//
+// Adds a vertex to a polyobject's reallocating vertex arrays, provided
+// that such a vertex isn't already in the array. Each vertex must only
+// be translated once during polyobject movement. Keeping track of them
+// this way results in much more clear and efficient code than what
+// Hexen used.
+//
+static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
+{
+   int i;
+
+   // First: search the existing vertex pointers for a match. If one is found,
+   // do not add this vertex again.
+   for(i = 0; i < po->numVertices; ++i)
+   {
+      if(po->vertices[i] == v)
+         return;
+   }
+
+   // add the vertex to both arrays (translation for origVerts is done later)
+   if(po->numVertices >= po->numVerticesAlloc)
+   {
+      po->numVerticesAlloc = po->numVerticesAlloc ? po->numVerticesAlloc * 2 : 4;
+      po->vertices = 
+         (vertex_t **)Z_Realloc(po->vertices,
+                                po->numVerticesAlloc * sizeof(vertex_t *),
+                                PU_LEVEL, NULL);
+      po->origVerts =
+         (vertex_t *)Z_Realloc(po->origVerts,
+                               po->numVerticesAlloc * sizeof(vertex_t),
+                               PU_LEVEL, NULL);
+   }
+   po->vertices[po->numVertices] = v;
+   po->origVerts[po->numVertices] = *v;
+   po->numVertices++;
+}
+
+//
+// Polyobj_addLine
+//
+// Adds a linedef to a polyobject's reallocating linedefs array, provided
+// that such a linedef isn't already in the array. Each linedef must only
+// be adjusted once during polyobject movement. Keeping track of them
+// this way provides the same benefits as for vertices.
+//
+static void Polyobj_addLine(polyobj_t *po, line_t *l)
+{
+   int i;
+
+   // First: search the existing line pointers for a match. If one is found,
+   // do not add this line again.
+   for(i = 0; i < po->numLines; ++i)
+   {
+      if(po->lines[i] == l)
+         return;
+   }
+
+   // add the vertex to both arrays (translation for origVerts is done later)
+   if(po->numLines >= po->numLinesAlloc)
+   {
+      po->numLinesAlloc = po->numLinesAlloc ? po->numLinesAlloc * 2 : 4;
+      po->lines = (line_t **)Z_Realloc(po->lines, 
+                                       po->numLinesAlloc * sizeof(line_t *),
+                                       PU_LEVEL, NULL);
+   }
+   po->lines[po->numLines++] = l;
+}
+
 //
 // Polyobj_addSeg
 //
 // Adds a single seg to a polyobject's reallocating seg pointer array.
 // Most polyobjects will have between 4 and 16 segs, so the array size
-// begins much smaller than usual.
+// begins much smaller than usual. Calls Polyobj_addVertex and Polyobj_addLine
+// to add those respective structures for this seg, as well.
 //
 static void Polyobj_addSeg(polyobj_t *po, seg_t *seg)
 {
@@ -121,8 +226,18 @@ static void Polyobj_addSeg(polyobj_t *po, seg_t *seg)
                                      po->numSegsAlloc * sizeof(seg_t *),
                                      PU_LEVEL, NULL);
    }
-   (po->segs)[po->segCount++] = seg;
+   po->segs[po->segCount++] = seg;
+
+   // possibly add the lines and vertices for this seg. It may be technically
+   // unnecessary to add the v2 vertex of segs, but this makes sure that even
+   // erroneously open "explicit" segs will have both vertices added and will
+   // reduce problems.
+   Polyobj_addVertex(po, seg->v1);
+   Polyobj_addVertex(po, seg->v2);
+   Polyobj_addLine(po, seg->linedef);
 }
+
+// Seg-finding functions
 
 //
 // Polyobj_findSegs
@@ -170,6 +285,26 @@ newseg:
    doom_printf("polyobject %d is not closed", po->id);
 }
 
+// structure used to store segs during explicit search process
+typedef struct segitem_s
+{
+   seg_t *seg;
+   int   num;
+} segitem_t;
+
+//
+// Polyobj_segCompare
+//
+// Callback for qsort that compares two segitems.
+//
+static int Polyobj_segCompare(const void *s1, const void *s2)
+{
+   segitem_t *si1 = (segitem_t *)s1;
+   segitem_t *si2 = (segitem_t *)s2;
+
+   return (si1->num < si2->num) ? -1 : (si1->num > si2->num) ? 1 : 0;
+}
+
 //
 // Polyobj_findExplicit
 //
@@ -177,7 +312,51 @@ newseg:
 //
 static void Polyobj_findExplicit(polyobj_t *po)
 {
+   // temporary dynamic seg array
+   segitem_t *segitems = NULL;
+   int numSegItems = 0;
+   int numSegItemsAlloc = 0;
+
+   int i;
+
+   // first loop: save off all segs with polyobject's id number
+   for(i = 0; i < numsegs; ++i)
+   {
+      if(segs[i].linedef->special == POLYOBJ_EXPLICIT_LINE  && 
+         segs[i].linedef->args[0] == po->id &&
+         segs[i].linedef->args[1] > 0)
+      {
+         if(numSegItems >= numSegItemsAlloc)
+         {
+            numSegItemsAlloc = numSegItemsAlloc ? numSegItemsAlloc*2 : 4;
+            segitems = realloc(segitems, numSegItemsAlloc*sizeof(segitem_t));
+         }
+         segitems[numSegItems].seg = &segs[i];
+         segitems[numSegItems].num = segs[i].linedef->args[1];
+         ++numSegItems;
+      }
+   }
+
+   // make sure array isn't empty
+   if(numSegItems == 0)
+   {
+      po->isBad = true;
+      doom_printf("polyobject %d is empty", po->id);
+      return;
+   }
+
+   // sort the array
+   qsort(segitems, numSegItems, sizeof(segitem_t), Polyobj_segCompare);
+
+   // second loop: put the sorted segs into the polyobject
+   for(i = 0; i < numSegItems; ++i)
+      Polyobj_addSeg(po, segitems[i].seg);
+
+   // free the temporary array
+   free(segitems);
 }
+
+// Setup functions
 
 //
 // Polyobj_spawnPolyObj
@@ -199,8 +378,12 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
       seg_t *seg = &segs[i];
 
       // is it a START line with this polyobject's id?
-      if(seg->linedef->special == FIXME && seg->linedef->args[0] == po->id)
+      if(seg->linedef->special == POLYOBJ_START_LINE && 
+         seg->linedef->args[0] == po->id)
+      {
          Polyobj_findSegs(po, seg);
+         break;
+      }
    }
 
    // if an error occurred above, quit processing this object
@@ -213,19 +396,15 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    //    temporary list of segs which is then copied into the polyobject in 
    //    sorted order.
    if(po->segCount == 0)
-   {
-   }
+      Polyobj_findExplicit(po);
 
-/*
-  TODO:
-
-
-  3. If the polyobject is still empty, it is erroneous and should be marked
-     as such (allowing the game to continue if possible).
-*/
+   // if an error occurred above, quit processing this object
+   if(po->isBad)
+      return;
 
    // set the polyobject's spawn spot
-   po->spawnSpot = spawnSpot;
+   po->spawnSpot.x = spawnSpot->x;
+   po->spawnSpot.y = spawnSpot->y;
 
    // hash the polyobject by its numeric id
    if(Polyobj_GetForNum(po->id))
@@ -242,6 +421,102 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    }
 }
 
+//
+// Polyobj_moveToSpawnSpot
+//
+// Translates the polyobject's vertices with respect to the difference between
+// the anchor and spawn spots. Updates linedef bounding boxes as well.
+//
+static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
+{
+   polyobj_t *po;
+   vertex_t  dist, sspot;
+   int i;
+
+   if(!(po = Polyobj_GetForNum(anchor->angle)))
+   {
+      doom_printf("bad polyobject %d for anchor point", anchor->angle);
+      return;
+   }
+
+   // don't move any bad polyobject that may have gotten through
+   if(po->isBad)
+      return;
+
+   sspot.x = po->spawnSpot.x;
+   sspot.y = po->spawnSpot.y;
+
+   // calculate distance from anchor to spawn spot
+   dist.x = (anchor->x << FRACBITS) - sspot.x;
+   dist.y = (anchor->y << FRACBITS) - sspot.y;
+
+   // update linedef bounding boxes
+   for(i = 0; i < po->numLines; ++i)
+      Polyobj_bboxSub(po->lines[i]->bbox, dist.x, dist.y);
+
+   // translate vertices and record original coordinates relative to spawn spot
+   for(i = 0; i < po->numVertices; ++i)
+   {
+      Polyobj_vecSub(po->vertices[i], &dist);
+
+      Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &sspot);
+   }
+
+   // all polyobjects start flagged as having moved
+   po->hasMoved = true;
+}
+
+//
+// Polyobj_attachToSubsec
+//
+// Attaches a polyobject to its appropriate subsector.
+//
+static void Polyobj_attachToSubsec(polyobj_t *po)
+{
+   subsector_t *ss;
+   double center_x = 0.0, center_y = 0.0;
+   int i;
+
+   // the center point calculation is only necessary if the polyobject has
+   // moved since the last time it was attached.
+   if(po->hasMoved)
+   {
+      po->hasMoved = false;
+
+      for(i = 0; i < po->numVertices; ++i)
+      {
+         center_x += (double)(po->vertices[i]->x) / FRACUNIT;
+         center_y += (double)(po->vertices[i]->y) / FRACUNIT;
+      }
+
+      center_x /= po->numVertices;
+      center_y /= po->numVertices;
+
+      po->centerPt.x = (fixed_t)(center_x * FRACUNIT);
+      po->centerPt.y = (fixed_t)(center_y * FRACUNIT);
+   }
+
+   ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
+
+   M_DLListInsert((mdllistitem_t *)&po->link, 
+                  &((mdllistitem_t *)ss->polyList));
+
+   po->attached = true;
+}
+
+//
+// Polyobj_removeFromSubsec
+//
+// Removes a polyobject from the subsector to which it is attached.
+//
+static void Polyobj_removeFromSubsec(polyobj_t *po)
+{
+   if(po->attached)
+   {
+      M_DLListRemove(&po->link);
+      po->attached = false;
+   }
+}
 
 //
 // Global Functions
@@ -265,7 +540,7 @@ polyobj_t *Polyobj_GetForNum(int id)
 
 
 // structure used to queue up mobj pointers in Polyobj_InitLevel
-typedef struct mo_qitem_s
+typedef struct mobjqitem_s
 {
    mqueueitem_t mqitem;
    mobj_t *mo;
@@ -280,11 +555,17 @@ typedef struct mo_qitem_s
 void Polyobj_InitLevel(void)
 {
    thinker_t   *th;
-   mqueue_t    mobjqueue;
+   mqueue_t    spawnqueue;
+   mqueue_t    anchorqueue;
    mobjqitem_t *qitem;
-   int i;
+   int i, numAnchors = 0;
 
-   M_QueueInit(&mobjqueue);
+   M_QueueInit(&spawnqueue);
+   M_QueueInit(&anchorqueue);
+
+   // get rid of values from previous level
+   PolyObjects    = NULL;
+   numPolyObjects = 0;
 
    // run down the thinker list, count the number of spawn points, and save
    // the mobj_t pointers on a queue for use below.
@@ -296,20 +577,28 @@ void Polyobj_InitLevel(void)
 
          if(mo->info->doomednum == POLYOBJ_SPAWN_DOOMEDNUM ||
             mo->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM)
+         {
             ++numPolyObjects;
+            
+            qitem = malloc(sizeof(mobjqitem_t));
+            memset(qitem, 0, sizeof(mobjqitem_t));
+            qitem->mo = mo;
+            M_QueueInsert(&(qitem->mqitem), &spawnqueue);
+         }
+         else if(mo->info->doomednum == POLYOBJ_ANCHOR_DOOMEDNUM)
+         {
+            ++numAnchors;
 
-         qitem = malloc(sizeof(mobjqitem_t));
-         memset(qitem, 0, sizeof(mobjqitem_t));
-         qitem->mo = mo;
-         M_QueueInsert(&(qitem->mqitem), &mobjqueue);
+            qitem = malloc(sizeof(mobjqitem_t));
+            memset(qitem, 0, sizeof(mobjqitem_t));
+            qitem->mo = mo;
+            M_QueueInsert(&(qitem->mqitem), &anchorqueue);
+         }
       }
    }
 
    if(!numPolyObjects) // no polyobjects?
-   {
-      PolyObjects = NULL;
       return;
-   }
 
    // allocate the PolyObjects array
    PolyObjects = Z_Malloc(numPolyObjects * sizeof(polyobj_t), PU_LEVEL, NULL);
@@ -322,17 +611,44 @@ void Polyobj_InitLevel(void)
    // setup polyobjects
    for(i = 0; i < numPolyObjects; ++i)
    {
-      qitem = (mobjqitem_t *)M_QueueIterator(&mobjqueue);
+      qitem = (mobjqitem_t *)M_QueueIterator(&spawnqueue);
 
       Polyobj_spawnPolyObj(i, qitem->mo, qitem->mo->spawnpoint.angle);
    }
 
-   // TODO: move polyobjects to anchor points
+   // move polyobjects to spawn points
+   for(i = 0; i < numAnchors; ++i)
+   {
+      qitem = (mobjqitem_t *)M_QueueIterator(&anchorqueue);
 
-   // done with mobjqueue
-   M_QueueFree(&mobjqueue);
+      Polyobj_moveToSpawnSpot(&(qitem->mo->spawnpoint));
+   }
+
+   // done with mobj queues
+   M_QueueFree(&spawnqueue);
+   M_QueueFree(&anchorqueue);
 
    // TODO: setup polyobject clipping
+}
+
+//
+// Polyobj_Ticker
+//
+// Called from P_Ticker after thinkers run. Removes polyobjects from their
+// current subsectors and reattaches them to the appropriate subsectors.
+//
+void Polyobj_Ticker(void)
+{
+   int i;
+   polyobj_t *po;
+
+   for(i = 0; i < numPolyObjects; ++i)
+   {
+      po = &PolyObjects[i];
+
+      Polyobj_removeFromSubsec(po);      
+      Polyobj_attachToSubsec(po);
+   }
 }
 
 #endif // ifdef POLYOBJECTS

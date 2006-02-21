@@ -34,7 +34,9 @@
 // haleyjd: temporary define
 #ifdef POLYOBJECTS
 
+#include "m_dllist.h"
 #include "p_mobj.h"
+#include "r_defs.h"
 
 //
 // Defines
@@ -46,21 +48,38 @@
 #define POLYOBJ_SPAWN_DOOMEDNUM      9301
 #define POLYOBJ_SPAWNCRUSH_DOOMEDNUM 9302
 
+#define POLYOBJ_START_LINE    348
+#define POLYOBJ_EXPLICIT_LINE 349
+
 //
 // Polyobject Structure
 //
 
 typedef struct polyobj_s
 {
+   mdllistitem_t link; // for subsector links
+
    int id;    // numeric id
    int first; // for hashing: index of first polyobject in this hash chain
    int next;  // for hashing: next polyobject in this hash chain
 
-   int segCount;      // number of segs in polyobject
-   int numSegsAlloc;  // number of segs allocated
-   seg_t **segs;      // the segs, a reallocating array.
+   int segCount;        // number of segs in polyobject
+   int numSegsAlloc;    // number of segs allocated
+   struct seg_s **segs; // the segs, a reallocating array.
 
-   mobj_t *spawnSpot; // spawn spot object
+   int numVertices;            // number of vertices (generally == segCount)
+   int numVerticesAlloc;       // number of vertices allocated
+   struct vertex_s *origVerts; // original positions relative to spawn spot
+   struct vertex_s **vertices; // vertices this polyobject must move   
+   
+   int numLines;          // number of linedefs (generally <= segCount)
+   int numLinesAlloc;     // number of linedefs allocated
+   struct line_s **lines; // linedefs this polyobject must move
+
+   struct degenmobj_s spawnSpot; // location of spawn spot
+   struct vertex_s    centerPt;  // center point
+   boolean     hasMoved;  // if true, need to recalculate center pt
+   boolean     attached;  // if true, is attached to a subsector
 
    boolean isBad; // a bad polyobject: should not be rendered
 } polyobj_t;
@@ -71,6 +90,7 @@ typedef struct polyobj_s
 
 polyobj_t *Polyobj_GetForNum(int id);
 void Polyobj_InitLevel(void);
+void Polyobj_Ticker(void);
 
 #endif // ifdef POLYOBJECTS
 

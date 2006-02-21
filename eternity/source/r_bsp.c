@@ -701,6 +701,31 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    return true;
 }
 
+#ifdef POLYOBJECTS
+//
+// R_AddPolyObjects
+//
+// haleyjd 02/19/06
+// Adds all segs in all polyobjects in the given subsector.
+//
+static void R_AddPolyObjects(subsector_t *sub)
+{
+   polyobj_t *po = sub->polyList;
+   int i;
+
+   while(po)
+   {
+      if(!po->isBad)
+      {
+         for(i = 0; i < po->segCount; ++i)
+            R_AddLine(po->segs[i]);
+      }
+
+      po = (polyobj_t *)(po->link.next);
+   }
+}
+#endif
+
 //
 // R_Subsector
 //
@@ -781,6 +806,11 @@ static void R_Subsector(int num)
    // like passing it as an argument.
 
    R_AddSprites(sub->sector, (floorlightlevel+ceilinglightlevel)/2);
+
+#ifdef POLYOBJECTS
+   // haleyjd 02/19/06: draw polyobjects before static lines
+   R_AddPolyObjects(sub);
+#endif
 
    while(count--)
       R_AddLine(line++);

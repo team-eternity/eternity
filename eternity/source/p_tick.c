@@ -35,6 +35,7 @@ rcsid[] = "$Id: p_tick.c,v 1.7 1998/05/15 00:37:56 killough Exp $";
 #include "p_tick.h"
 #include "p_anim.h"  // haleyjd
 #include "p_partcl.h"
+#include "polyobj.h"
 
 int leveltime;
 boolean reset_viewz;
@@ -249,6 +250,10 @@ void P_Ticker(void)
    P_RespawnSpecials();
    if(demo_version >= 329)
       P_AnimateSurfaces(); // haleyjd 04/14/99
+#ifdef POLYOBJECTS
+   Polyobj_Ticker();      // haleyjd 02/20/06
+#endif
+   
    leveltime++;                       // for par times
 
    // sf: on original doom, sometimes if you activated a hyperlift

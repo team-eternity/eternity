@@ -528,6 +528,10 @@ static struct exlinespec
    { 346, "Portal_LinkedAnchorLine" },
    { 347, "Portal_LinkedAnchorLineFloor" },
 #endif
+#ifdef POLYOBJECTS
+   { 348, "Polyobj_StartLine" },
+   { 349, "Polyobj_ExplicitLine" },
+#endif
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

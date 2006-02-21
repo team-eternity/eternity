@@ -65,6 +65,7 @@ rcsid[] = "$Id: p_spec.c,v 1.56 1998/05/25 10:40:30 killough Exp $";
 #include "e_ttypes.h"
 #include "e_exdata.h"
 #include "a_small.h"
+#include "polyobj.h"
 
 //
 // Animating textures and planes
@@ -2490,7 +2491,7 @@ int             levelTime;              // sf
 int             levelTimeLimit;
 int             levelFragLimit; // Ty 03/18/98 Added -frags support
 
-void P_UpdateSpecials (void)
+void P_UpdateSpecials(void)
 {
    anim_t *anim;
    int    pic;
@@ -2761,6 +2762,11 @@ void P_SpawnSpecials(void)
 #ifdef R_LINKEDPORTALS
    // SoM: This seems like the place to put this.
    P_BuildLinkTable();
+#endif
+
+#ifdef POLYOBJECTS
+   // haleyjd 02/20/06: spawn polyobjects
+   Polyobj_InitLevel();
 #endif
 }
 
