@@ -267,13 +267,6 @@ static boolean P_CheckLinkedPortal(rportal_t *portal, sector_t *sec)
    {
       P_AddLinkOffset(sec->groupid, portal->data.camera.groupid, portal->data.camera.deltax,
                       portal->data.camera.deltay, portal->data.camera.deltaz);
-
-      /*link = (linkoffset_t *)Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0);
-      linktable[sec->groupid * groupcount + portal->data.camera.groupid] = link;
-
-      link->x = portal->data.camera.deltax;
-      link->y = portal->data.camera.deltay;
-      link->z = portal->data.camera.deltaz;*/
    }
    else
    {
@@ -342,7 +335,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, int fro
 
 void P_BuildLinkTable()
 {
-   int i, p, x, y;
+   int i, p;
    sector_t *sec;
    linkoffset_t *link, *backlink;
 
@@ -384,7 +377,6 @@ void P_BuildLinkTable()
    // every link is two-way.
    for(i = 0; i < groupcount; i++)
    {
-      y = i * groupcount;
       for(p = 0; p < groupcount; p++)
       {
          if(p == i)

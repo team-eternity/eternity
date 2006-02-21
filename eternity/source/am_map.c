@@ -42,6 +42,10 @@ static const char rcsid[] =
 #include "d_deh.h"    // Ty 03/27/98 - externalizations
 #include "d_gi.h"
 #include "g_bind.h"
+#ifdef R_LINKEDPORTALS
+#include "r_portal.h"
+#endif
+
 
 //jff 1/7/98 default automap colors added
 int mapcolor_back;    // map background
@@ -356,8 +360,23 @@ void AM_restoreScaleAndLoc(void)
    }
    else
    {
+#ifdef R_LINKEDPORTALS
+      linkoffset_t *link;
+
+      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      {
+         m_x = plr->mo->x + link->x - m_w/2;
+         m_y = plr->mo->y + link->y - m_h/2;
+      }
+      else
+      {
+         m_x = plr->mo->x - m_w/2;
+         m_y = plr->mo->y - m_h/2;
+      }
+#else
       m_x = plr->mo->x - m_w/2;
       m_y = plr->mo->y - m_h/2;
+#endif
    }
    m_x2 = m_x + m_w;
    m_y2 = m_y + m_h;
@@ -503,8 +522,27 @@ void AM_initVariables(void)
    }
          
    plr = &players[pnum];
+
+#ifdef R_LINKEDPORTALS
+   {
+      linkoffset_t *link;
+
+      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      {
+         m_x = plr->mo->x + link->x - m_w/2;
+         m_y = plr->mo->y + link->y - m_h/2;
+      }
+      else
+      {
+         m_x = plr->mo->x - m_w/2;
+         m_y = plr->mo->y - m_h/2;
+      }
+   }
+#else
    m_x = plr->mo->x - m_w/2;
    m_y = plr->mo->y - m_h/2;
+#endif
+
    AM_changeWindowLoc();
          
    // for saving & restoring
@@ -958,8 +996,22 @@ void AM_doFollowPlayer(void)
 {
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
+#ifdef R_LINKEDPORTALS
+      linkoffset_t *link;
+      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      {
+         m_x = FTOM(MTOF(plr->mo->x + link->x)) - m_w/2;
+         m_y = FTOM(MTOF(plr->mo->y + link->y)) - m_h/2;
+      }
+      else
+      {
+         m_x = FTOM(MTOF(plr->mo->x)) - m_w/2;
+         m_y = FTOM(MTOF(plr->mo->y)) - m_h/2;
+      }
+#else
       m_x = FTOM(MTOF(plr->mo->x)) - m_w/2;
       m_y = FTOM(MTOF(plr->mo->y)) - m_h/2;
+#endif
       m_x2 = m_x + m_w;
       m_y2 = m_y + m_h;
       f_oldloc.x = plr->mo->x;
@@ -1522,6 +1574,21 @@ void AM_drawWalls(void)
       l.b.x = line->v2->x;
       l.b.y = line->v2->y;
 
+#ifdef R_LINKEDPORTALS
+      if(useportalgroups && line->frontsector && line->frontsector->groupid > 0)
+      {
+         linkoffset_t *link;
+
+         if(link = P_GetLinkOffset(0, line->frontsector->groupid))
+         {
+            l.a.x += link->x;
+            l.a.y += link->y;
+            l.b.x += link->x;
+            l.b.y += link->y;
+         }
+      }
+#endif
+
       // if line has been seen or IDDT has been used
       if(ddt_cheating || (line->flags & ML_MAPPED))
       {
@@ -1732,9 +1799,27 @@ void AM_drawPlayers(void)
    player_t* p;
    int   their_color = -1;
    int   color;
+   // SoM: player x and y
+   fixed_t px, py;
+#ifdef R_LINKEDPORTALS
+   linkoffset_t *link;
+#endif
 
    if(!netgame)
    {
+#ifdef R_LINKEDPORTALS
+      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      {
+         px = plr->mo->x + link->x;
+         py = plr->mo->y + link->y;
+      }
+      else
+#endif
+      {
+         px = plr->mo->x;
+         py = plr->mo->y;
+      }
+
       if(ddt_cheating)
       {
          AM_drawLineCharacter
@@ -1744,8 +1829,8 @@ void AM_drawPlayers(void)
             0,
             plr->mo->angle,
             mapcolor_sngl,      //jff color
-            plr->mo->x,
-            plr->mo->y
+            px,
+            py
           );
       }
       else
@@ -1757,8 +1842,8 @@ void AM_drawPlayers(void)
             0,
             plr->mo->angle,
             mapcolor_sngl,      //jff color
-            plr->mo->x,
-            plr->mo->y
+            px,
+            py
           );
       }
       return;
@@ -1768,7 +1853,7 @@ void AM_drawPlayers(void)
    {
       their_color = players[i].colormap;
       p = &players[i];
-      
+
       // killough 9/29/98: use !demoplayback so internal demos are no different
       if((GameType == gt_dm && !demoplayback) && p != plr)
          continue;
@@ -1776,6 +1861,19 @@ void AM_drawPlayers(void)
       if(!playeringame[i])
          continue;
       
+#ifdef R_LINKEDPORTALS
+      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      {
+         px = p->mo->x + link->x;
+         py = p->mo->y + link->y;
+      }
+      else
+#endif
+      {
+         px = p->mo->x;
+         py = p->mo->y;
+      }
+
       // haleyjd: add total invisibility
       
       if(p->powers[pw_invisibility] || p->powers[pw_totalinvis])
@@ -1804,8 +1902,8 @@ void AM_drawPlayers(void)
          0,
          p->mo->angle,
          color,
-         p->mo->x,
-         p->mo->y
+         px,
+         py
        );
    }
 }
@@ -1822,13 +1920,30 @@ void AM_drawThings(int colors, int colorrange)
 {
    int     i;
    mobj_t *t;
+   fixed_t tx, ty; // SoM: Moved the thing coords to these variables for linked portals
    
    // for all sectors
    for(i = 0; i < numsectors; ++i)
    {
       t = sectors[i].thinglist;
+
       while(t) // for all things in that sector
       {
+         tx = t->x;
+         ty = t->y;
+
+#ifdef R_LINKEDPORTALS
+         if(useportalgroups && t->subsector->sector->groupid > 0)
+         {
+            linkoffset_t *link;
+
+            if(link = P_GetLinkOffset(0, t->subsector->sector->groupid))
+            {
+               tx += link->x;
+               ty += link->y;
+            }
+         }
+#endif
          // FIXME / HTIC_TODO: Heretic support and EDF editing?
 
          //jff 1/5/98 case over doomednum of thing being drawn
@@ -1845,8 +1960,8 @@ void AM_drawThings(int colors, int colorrange)
                    16<<FRACBITS,
                    t->angle,
                    mapcolor_rkey!=-1? mapcolor_rkey : mapcolor_sprt,
-                   t->x,
-                   t->y
+                   tx,
+                   ty
                   );
                t = t->snext;
                continue;
@@ -1858,8 +1973,8 @@ void AM_drawThings(int colors, int colorrange)
                    16<<FRACBITS,
                    t->angle,
                    mapcolor_ykey!=-1? mapcolor_ykey : mapcolor_sprt,
-                   t->x,
-                   t->y
+                   tx,
+                   ty
                   );
                t = t->snext;
                continue;
@@ -1871,8 +1986,8 @@ void AM_drawThings(int colors, int colorrange)
                    16<<FRACBITS,
                    t->angle,
                    mapcolor_bkey!=-1? mapcolor_bkey : mapcolor_sprt,
-                   t->x,
-                   t->y
+                   tx,
+                   ty
                   );
                t = t->snext;
                continue;
@@ -1891,8 +2006,8 @@ void AM_drawThings(int colors, int colorrange)
              t->angle,
              // killough 8/8/98: mark friends specially
              t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt,
-             t->x,
-             t->y
+             tx,
+             ty
             );
          t = t->snext;
       } // end if
