@@ -96,6 +96,7 @@ static fixed_t P_InterceptVector2(const divline_t *v2,
    return 0;
 }
 
+#ifdef POLYOBJECTS
 static boolean P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
 {
    int i;
@@ -141,6 +142,7 @@ static boolean P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
    
    return true;
 }
+#endif
 
 //
 // P_CrossSubsector
