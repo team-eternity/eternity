@@ -78,11 +78,26 @@ typedef struct polyobj_s
 
    struct degenmobj_s spawnSpot; // location of spawn spot
    struct vertex_s    centerPt;  // center point
-   boolean     hasMoved;  // if true, need to recalculate center pt
-   boolean     attached;  // if true, is attached to a subsector
+   boolean hasMoved;             // if true, need to recalculate center pt
+   boolean attached;             // if true, is attached to a subsector
+
+   fixed_t blockbox[4]; // bounding box for clipping
+   boolean linked;      // is linked to blockmap
+   int validcount;      // for clipping: prevents multiple checks
 
    boolean isBad; // a bad polyobject: should not be rendered
 } polyobj_t;
+
+//
+// Polyobject Blockmap Link Structure
+//
+
+typedef struct polymaplink_s
+{
+   mdllistitem_t link; // for blockmap links
+   polyobj_t *po;      // pointer to polyobject
+} polymaplink_t;
+
 
 //
 // Functions
@@ -91,6 +106,13 @@ typedef struct polyobj_s
 polyobj_t *Polyobj_GetForNum(int id);
 void Polyobj_InitLevel(void);
 void Polyobj_Ticker(void);
+
+
+//
+// External Variables
+//
+
+extern polymaplink_t **polyblocklinks; // polyobject blockmap
 
 #endif // ifdef POLYOBJECTS
 

@@ -37,6 +37,8 @@
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_queue.h"
+#include "p_maputl.h"
+#include "p_setup.h"
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_state.h"
@@ -95,14 +97,20 @@
 
 // TODO: make anything static that ends up only being used in here.
 
-// The Polyobjects
-polyobj_t *PolyObjects;
-int numPolyObjects;
+// Polyobject Blockmap -- initialized in P_LoadBlockMap
+polymaplink_t **polyblocklinks;
 
 
 //
 // Static Data
 //
+
+// The Polyobjects
+static polyobj_t *PolyObjects;
+static int numPolyObjects;
+
+// Polyobject Blockmap
+static polymaplink_t *bmap_freelist; // free list of blockmap links
 
 
 //
@@ -114,7 +122,7 @@ d_inline static void Polyobj_bboxAdd(int *bbox, int x, int y)
    bbox[BOXTOP]    += y;
    bbox[BOXBOTTOM] += y;
    bbox[BOXLEFT]   += x;
-   bbox[BOXTOP]    += x;
+   bbox[BOXRIGHT]  += x;
 }
 
 d_inline static void Polyobj_bboxSub(int *bbox, int x, int y)
@@ -122,7 +130,7 @@ d_inline static void Polyobj_bboxSub(int *bbox, int x, int y)
    bbox[BOXTOP]    -= y;
    bbox[BOXBOTTOM] -= y;
    bbox[BOXLEFT]   -= x;
-   bbox[BOXTOP]    -= x;
+   bbox[BOXRIGHT]  -= x;
 }
 
 d_inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
@@ -370,6 +378,13 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
 
    po->id = id;
 
+   // don't spawn a polyobject more than once
+   if(po->segCount)
+   {
+      doom_printf("polyobj %d has more than one spawn spot", po->id);
+      return;
+   }
+
    // 1. Search segs for "line start" special with tag matching this 
    //    polyobject's id number. If found, iterate through segs which
    //    share common vertices and record them into the polyobject.
@@ -421,6 +436,8 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    }
 }
 
+static void Polyobj_attachToSubsec(polyobj_t *po);
+
 //
 // Polyobj_moveToSpawnSpot
 //
@@ -443,6 +460,13 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    if(po->isBad)
       return;
 
+   // don't move any polyobject more than once
+   if(po->attached)
+   {
+      doom_printf("polyobj %d has more than one anchor", po->id);
+      return;
+   }
+
    sspot.x = po->spawnSpot.x;
    sspot.y = po->spawnSpot.y;
 
@@ -464,6 +488,8 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 
    // all polyobjects start flagged as having moved
    po->hasMoved = true;
+
+   Polyobj_attachToSubsec(po);
 }
 
 //
@@ -476,6 +502,10 @@ static void Polyobj_attachToSubsec(polyobj_t *po)
    subsector_t *ss;
    double center_x = 0.0, center_y = 0.0;
    int i;
+
+   // never attach a bad polyobject
+   if(po->isBad)
+      return;
 
    // the center point calculation is only necessary if the polyobject has
    // moved since the last time it was attached.
@@ -498,8 +528,7 @@ static void Polyobj_attachToSubsec(polyobj_t *po)
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
-   M_DLListInsert((mdllistitem_t *)&po->link, 
-                  &((mdllistitem_t *)ss->polyList));
+   M_DLListInsert(&po->link, &((mdllistitem_t *)ss->polyList));
 
    po->attached = true;
 }
@@ -516,6 +545,135 @@ static void Polyobj_removeFromSubsec(polyobj_t *po)
       M_DLListRemove(&po->link);
       po->attached = false;
    }
+}
+
+// Blockmap Functions
+
+//
+// Polyobj_getLink
+//
+// Retrieves a polymaplink object from the free list or creates a new one.
+//
+static polymaplink_t *Polyobj_getLink(void)
+{
+   polymaplink_t *l;
+
+   if(bmap_freelist)
+   {
+      l = bmap_freelist;
+      bmap_freelist = (polymaplink_t *)(l->link.next);
+   }
+   else
+   {
+      l = Z_Malloc(sizeof(*l), PU_LEVEL, NULL);
+      memset(l, 0, sizeof(*l));
+   }
+
+   return l;
+}
+
+//
+// Polyobj_putLink
+//
+// Puts a polymaplink object into the free list.
+//
+static void Polyobj_putLink(polymaplink_t *l)
+{
+   memset(l, 0, sizeof(*l));
+   l->link.next = (mdllistitem_t *)bmap_freelist;
+   bmap_freelist = l;
+}
+
+//
+// Polyobj_linkToBlockmap
+//
+// Inserts a polyobject into the polyobject blockmap. Unlike, mobj_t's,
+// polyobjects need to be linked into every blockmap cell which their
+// bounding box intersects. This ensures the accurate level of clipping
+// which is present with linedefs but absent from most mobj interactions.
+//
+static void Polyobj_linkToBlockmap(polyobj_t *po)
+{
+   fixed_t *blockbox = po->blockbox;
+   int i, x, y;
+   
+   // never link a bad polyobject or a polyobject already linked
+   if(po->isBad || po->linked)
+      return;
+   
+   // clear out the polyobject's bounding box
+   M_ClearBox(blockbox);
+   
+   // add all vertices to the bounding box
+   for(i = 0; i < po->numVertices; ++i)
+      M_AddToBox(blockbox, po->vertices[i]->x, po->vertices[i]->y);
+   
+   // adjust bounding box relative to blockmap 
+   blockbox[BOXRIGHT]  = (blockbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
+   blockbox[BOXLEFT]   = (blockbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
+   blockbox[BOXTOP]    = (blockbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
+   blockbox[BOXBOTTOM] = (blockbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   
+   // link polyobject to every block its bounding box intersects
+   for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)
+   {
+      for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)
+      {
+         if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+         {
+            polymaplink_t  *l = Polyobj_getLink();
+            polymaplink_t **b = &(polyblocklinks[y * bmapwidth + x]);
+            
+            l->po = po;
+            
+            M_DLListInsert(&l->link, (mdllistitem_t **)b);
+         }
+      }
+   }
+
+   po->linked = true;
+}
+
+//
+// Polyobj_removeFromBlockmap
+//
+// Unlinks a polyobject from all blockmap cells it intersects and returns
+// its polymaplink objects to the free list.
+//
+static void Polyobj_removeFromBlockmap(polyobj_t *po)
+{
+   polymaplink_t *rover;
+   fixed_t *blockbox = po->blockbox;
+   int x, y;
+
+   // don't bother trying to unlink one that's not linked
+   if(!po->linked)
+      return;
+
+   // search all cells the polyobject touches
+   for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)
+   {
+      for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)
+      {
+         if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+         {
+            rover = polyblocklinks[y * bmapwidth + x];
+
+            while(rover && rover->po != po)
+               rover = (polymaplink_t *)(rover->link.next);
+
+            // polyobject not in this cell? go on to next.
+            if(!rover)
+               continue;
+
+            // remove this link from the blockmap and put it on the freelist
+            M_DLListRemove(&rover->link);
+            Polyobj_putLink(rover);
+         }
+      }
+   }
+
+   po->linked = false;
 }
 
 //
@@ -564,8 +722,11 @@ void Polyobj_InitLevel(void)
    M_QueueInit(&anchorqueue);
 
    // get rid of values from previous level
+   // note: as with msecnodes, it is very important to clear out the blockmap
+   // node freelist, otherwise it may contain dangling pointers to old objects
    PolyObjects    = NULL;
    numPolyObjects = 0;
+   bmap_freelist  = NULL;
 
    // run down the thinker list, count the number of spawn points, and save
    // the mobj_t pointers on a queue for use below.
@@ -597,38 +758,74 @@ void Polyobj_InitLevel(void)
       }
    }
 
-   if(!numPolyObjects) // no polyobjects?
-      return;
-
-   // allocate the PolyObjects array
-   PolyObjects = Z_Malloc(numPolyObjects * sizeof(polyobj_t), PU_LEVEL, NULL);
-   memset(PolyObjects, 0, numPolyObjects * sizeof(polyobj_t));
-
-   // setup hash fields
-   for(i = 0; i < numPolyObjects; ++i)
-      PolyObjects[i].first = PolyObjects[i].next = numPolyObjects;
-
-   // setup polyobjects
-   for(i = 0; i < numPolyObjects; ++i)
+   if(numPolyObjects)
    {
-      qitem = (mobjqitem_t *)M_QueueIterator(&spawnqueue);
+      // allocate the PolyObjects array
+      PolyObjects = Z_Malloc(numPolyObjects * sizeof(polyobj_t), 
+                             PU_LEVEL, NULL);
+      memset(PolyObjects, 0, numPolyObjects * sizeof(polyobj_t));
 
-      Polyobj_spawnPolyObj(i, qitem->mo, qitem->mo->spawnpoint.angle);
+      // setup hash fields
+      for(i = 0; i < numPolyObjects; ++i)
+         PolyObjects[i].first = PolyObjects[i].next = numPolyObjects;
+
+      // setup polyobjects
+      for(i = 0; i < numPolyObjects; ++i)
+      {
+         qitem = (mobjqitem_t *)M_QueueIterator(&spawnqueue);
+         
+         Polyobj_spawnPolyObj(i, qitem->mo, qitem->mo->spawnpoint.angle);
+      }
+
+      // move polyobjects to spawn points
+      for(i = 0; i < numAnchors; ++i)
+      {
+         qitem = (mobjqitem_t *)M_QueueIterator(&anchorqueue);
+         
+         Polyobj_moveToSpawnSpot(&(qitem->mo->spawnpoint));
+      }
+
+      // setup polyobject clipping
+      for(i = 0; i < numPolyObjects; ++i)
+         Polyobj_linkToBlockmap(&PolyObjects[i]);
    }
 
-   // move polyobjects to spawn points
-   for(i = 0; i < numAnchors; ++i)
+#if 0
+   // haleyjd 02/22/06: temporary debug
+   printf("DEBUG: numPolyObjects = %d\n", numPolyObjects);
+   for(i = 0; i < numPolyObjects; ++i)
    {
-      qitem = (mobjqitem_t *)M_QueueIterator(&anchorqueue);
+      int j;
+      polyobj_t *po = &PolyObjects[i];
 
-      Polyobj_moveToSpawnSpot(&(qitem->mo->spawnpoint));
+      printf("polyobj %d:\n", i);
+      printf("id = %d, first = %d, next = %d\n", po->id, po->first, po->next);
+      printf("segCount = %d, numSegsAlloc = %d\n", po->segCount, po->numSegsAlloc);
+      for(j = 0; j < po->segCount; ++j)
+         printf("\tseg %d: %p\n", j, po->segs[j]);
+      printf("numVertices = %d, numVerticesAlloc = %d\n", po->numVertices, po->numVerticesAlloc);
+      for(j = 0; j < po->numVertices; ++j)
+      {
+         printf("\tvtx %d: (%d, %d) / orig: (%d, %d)\n",
+                j, po->vertices[j]->x>>FRACBITS, po->vertices[j]->y>>FRACBITS,
+                po->origVerts[j].x>>FRACBITS, po->origVerts[j].y>>FRACBITS);
+      }
+      printf("numLines = %d, numLinesAlloc = %d\n", po->numLines, po->numLinesAlloc);
+      for(j = 0; j < po->numLines; ++j)
+         printf("\tline %d: %p\n", j, po->lines[j]);
+      printf("spawnSpot = (%d, %d)\n", po->spawnSpot.x >> FRACBITS, po->spawnSpot.y >> FRACBITS);
+      printf("centerPt = (%d, %d)\n", po->centerPt.x >> FRACBITS, po->centerPt.y >> FRACBITS);
+      printf("hasMoved = %d, attached = %d, linked = %d, validcount = %d, isBad = %d\n",
+             po->hasMoved, po->attached, po->linked, po->validcount, po->isBad);
+      printf("blockbox: [%d, %d, %d, %d]\n", 
+             po->blockbox[BOXLEFT], po->blockbox[BOXRIGHT], po->blockbox[BOXBOTTOM],
+             po->blockbox[BOXTOP]);
    }
+#endif
 
    // done with mobj queues
    M_QueueFree(&spawnqueue);
    M_QueueFree(&anchorqueue);
-
-   // TODO: setup polyobject clipping
 }
 
 //

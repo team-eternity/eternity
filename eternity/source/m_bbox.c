@@ -32,24 +32,22 @@ rcsid[] = "$Id: m_bbox.c,v 1.4 1998/05/05 19:55:56 phares Exp $";
 
 #include "m_bbox.h"
 
-void M_ClearBox (fixed_t *box)
+void M_ClearBox(fixed_t *box)
 {
-  box[BOXTOP] = box[BOXRIGHT] = D_MININT;
-  box[BOXBOTTOM] = box[BOXLEFT] = D_MAXINT;
+   box[BOXTOP]    = box[BOXRIGHT] = D_MININT;
+   box[BOXBOTTOM] = box[BOXLEFT]  = D_MAXINT;
 }
 
-void M_AddToBox(fixed_t* box,fixed_t x,fixed_t y)
+void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y)
 {
-  if (x<box[BOXLEFT])
-    box[BOXLEFT] = x;
-  else
-    if (x>box[BOXRIGHT])
+   if(x < box[BOXLEFT])
+      box[BOXLEFT] = x;
+   else if(x > box[BOXRIGHT])
       box[BOXRIGHT] = x;
-
-  if (y<box[BOXBOTTOM])
-    box[BOXBOTTOM] = y;
-  else
-    if (y>box[BOXTOP])
+      
+   if(y < box[BOXBOTTOM])
+      box[BOXBOTTOM] = y;
+   else if(y > box[BOXTOP])
       box[BOXTOP] = y;
 }
 

@@ -715,11 +715,8 @@ static void R_AddPolyObjects(subsector_t *sub)
 
    while(po)
    {
-      if(!po->isBad)
-      {
-         for(i = 0; i < po->segCount; ++i)
-            R_AddLine(po->segs[i]);
-      }
+      for(i = 0; i < po->segCount; ++i)
+         R_AddLine(po->segs[i]);
 
       po = (polyobj_t *)(po->link.next);
    }

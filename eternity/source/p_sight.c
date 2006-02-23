@@ -96,22 +96,74 @@ static fixed_t P_InterceptVector2(const divline_t *v2,
    return 0;
 }
 
+static boolean P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
+{
+   int i;
+
+   for(i = 0; i < po->numLines; ++i)
+   {
+      line_t *line = po->lines[i];
+      divline_t divl;
+      const vertex_t *v1,*v2;
+      
+      // already checked other side?
+      if(line->validcount == validcount)
+         continue;
+
+      line->validcount = validcount;
+      
+      // OPTIMIZE: killough 4/20/98: Added quick bounding-box rejection test
+      if(line->bbox[BOXLEFT  ] > los->bbox[BOXRIGHT ] ||
+         line->bbox[BOXRIGHT ] < los->bbox[BOXLEFT  ] ||
+         line->bbox[BOXBOTTOM] > los->bbox[BOXTOP   ] ||
+         line->bbox[BOXTOP]    < los->bbox[BOXBOTTOM])
+         continue;
+
+      v1 = line->v1;
+      v2 = line->v2;
+      
+      // line isn't crossed?
+      if(P_DivlineSide(v1->x, v1->y, &los->strace) ==
+         P_DivlineSide(v2->x, v2->y, &los->strace))
+         continue;
+
+      divl.dx = v2->x - (divl.x = v1->x);
+      divl.dy = v2->y - (divl.y = v1->y);
+      
+      // line isn't crossed?
+      if(P_DivlineSide(los->strace.x, los->strace.y, &divl) ==
+         P_DivlineSide(los->t2x, los->t2y, &divl))
+         continue;
+
+      // stop because it is not two sided
+      return false;
+   }
+   
+   return true;
+}
+
 //
 // P_CrossSubsector
-// Returns true
-//  if strace crosses the given subsector successfully.
+// 
+// Returns true if strace crosses the given subsector successfully.
 //
 // killough 4/19/98: made static and cleaned up
-
+//
 static boolean P_CrossSubsector(int num, register los_t *los)
 {
-   seg_t *seg = segs + subsectors[num].firstline;
+   seg_t *seg;
    int count;
+#ifdef POLYOBJECTS
+   polyobj_t *po; // haleyjd 02/23/06
+#endif
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
       I_Error("P_CrossSubsector: ss %i with numss = %i", num, numsubsectors);
 #endif
+
+   // haleyjd 02/23/06: this assignment should be after the above check
+   seg = segs + subsectors[num].firstline;
 
    for(count = subsectors[num].numlines; --count >= 0; seg++)  // check lines
    {
@@ -122,7 +174,7 @@ static boolean P_CrossSubsector(int num, register los_t *los)
       const vertex_t *v1,*v2;
       fixed_t frac;
       
-      // allready checked other side?
+      // already checked other side?
       if(line->validcount == validcount)
          continue;
 
@@ -200,6 +252,24 @@ static boolean P_CrossSubsector(int num, register los_t *los)
       if (los->topslope <= los->bottomslope)
          return false;               // stop
    }
+
+#ifdef POLYOBJECTS
+   // haleyjd 02/23/06: check polyobject lines
+   if((po = subsectors[num].polyList))
+   {
+      while(po)
+      {
+         if(po->validcount != validcount)
+         {
+            po->validcount = validcount;
+            if(!P_CrossSubsecPolyObj(po, los))
+               return false;
+         }
+         po = (polyobj_t *)(po->link.next);
+      }
+   }
+#endif
+
    // passed the subsector ok
    return true;
 }
@@ -270,9 +340,16 @@ boolean P_CheckSight(mobj_t *t1, mobj_t *t2)
 
    // killough 11/98: shortcut for melee situations
    // same subsector? obviously visible
-   // haleyjd: compatibility optioned for old demos -- thanks to cph   
-   if((t1->subsector == t2->subsector) && !demo_compatibility)
+   // haleyjd: compatibility optioned for old demos -- thanks to cph
+#ifndef POLYOBJECTS
+   if(!demo_compatibility && t1->subsector == t2->subsector)
       return true;
+#else
+   // haleyjd 02/23/06: can't do this if there are polyobjects in the subsec
+   if(!demo_compatibility && !t1->subsector->polyList && 
+      t1->subsector == t2->subsector)
+      return true;
+#endif
 
    // An unobstructed LOS is possible.
    // Now look from eyes of t1 to any part of t2.

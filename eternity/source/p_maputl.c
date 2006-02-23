@@ -36,6 +36,7 @@ rcsid[] = "$Id: p_maputl.c,v 1.13 1998/05/03 22:16:48 killough Exp $";
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_setup.h"
+#include "polyobj.h"
 
 // haleyjd
 extern int tmfloorpic;
@@ -485,22 +486,52 @@ boolean ThingIsOnLine(mobj_t *t, line_t *l)
 boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 {
    int        offset;
-   const long *list;   // killough 3/1/98: for removal of blockmap limit
+   const long *list;     // killough 3/1/98: for removal of blockmap limit
+   polymaplink_t *plink; // haleyjd 02/22/06
    
-   if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
+   if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
-   offset = y*bmapwidth+x;
-   offset = *(blockmap+offset);
-   list = blockmaplump+offset;  // original was reading         // phares
-                                // delimiting 0 as linedef 0    // phares
+   offset = y * bmapwidth + x;
+
+#ifdef POLYOBJECTS
+   // haleyjd 02/22/06: consider polyobject lines
+   plink = polyblocklinks[offset];
+
+   while(plink)
+   {
+      polyobj_t *po = plink->po;
+
+      if(po->validcount != validcount) // if polyobj hasn't been checked
+      {
+         int i;
+         po->validcount = validcount;
+         
+         for(i = 0; i < po->numLines; ++i)
+         {
+            if(po->lines[i]->validcount == validcount) // line has been checked
+               continue;
+            po->lines[i]->validcount = validcount;
+            if(!func(po->lines[i]))
+               return false;
+         }
+      }
+      plink = (polymaplink_t *)(plink->link.next);
+   }
+#endif
+
+   // original was reading delimiting 0 as linedef 0 -- phares
+   offset = *(blockmap + offset);
+   list = blockmaplump + offset;
 
    // killough 1/31/98: for compatibility we need to use the old method.
    // Most demos go out of sync, and maybe other problems happen, if we
    // don't consider linedef 0. For safety this should be qualified.
 
-   if(!demo_compatibility) // killough 2/22/98: demo_compatibility check
-      list++;     // skip 0 starting delimiter                 // phares
-   for( ; *list != -1 ; list++)                                // phares
+   // killough 2/22/98: demo_compatibility check
+   // skip 0 starting delimiter -- phares
+   if(!demo_compatibility)
+      list++;     
+   for( ; *list != -1; list++)
    {
       line_t *ld = &lines[*list];
       if(ld->validcount == validcount)

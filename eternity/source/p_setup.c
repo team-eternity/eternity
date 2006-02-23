@@ -61,6 +61,7 @@ rcsid[] = "$Id: p_setup.c,v 1.16 1998/05/07 00:56:49 killough Exp $";
 #include "a_small.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_ttypes.h"
+#include "polyobj.h"
 
 //
 // MAP related Lookup tables.
@@ -598,10 +599,11 @@ void P_LoadHexenLineDefs(int lump)
 
       ld->flags = SHORT(mld->flags);
 
-      ld->special = (short)mld->special;
+      // haleyjd 02/22/06: ensure the special and args won't be sign-extended
+      ld->special = ((short)mld->special) & 0xFF;
       
       for(argnum = 0; argnum < 5; ++argnum)
-         ld->args[argnum] = (long)(mld->args[argnum]);
+         ld->args[argnum] = ((long)mld->args[argnum]) & 0xFF;
 
       ld->tag = 0;
 
@@ -948,8 +950,7 @@ static void P_CreateBlockMap(void)
 //
 // killough 3/30/98: Rewritten to remove blockmap limit
 //
-
-void P_LoadBlockMap (int lump)
+void P_LoadBlockMap(int lump)
 {
    long count;
    
@@ -965,7 +966,7 @@ void P_LoadBlockMap (int lump)
       long i;
       short *wadblockmaplump = W_CacheLumpNum (lump, PU_LEVEL);
       blockmaplump = Z_Malloc(sizeof(*blockmaplump) * count,
-                              PU_LEVEL, 0);
+                              PU_LEVEL, NULL);
 
       // killough 3/1/98: Expand wad blockmap into larger internal one,
       // by treating all offsets except -1 as unsigned and zero-extending
@@ -985,17 +986,24 @@ void P_LoadBlockMap (int lump)
 
       Z_Free(wadblockmaplump);
 
-      bmaporgx = blockmaplump[0]<<FRACBITS;
-      bmaporgy = blockmaplump[1]<<FRACBITS;
-      bmapwidth = blockmaplump[2];
+      bmaporgx   = blockmaplump[0] << FRACBITS;
+      bmaporgy   = blockmaplump[1] << FRACBITS;
+      bmapwidth  = blockmaplump[2];
       bmapheight = blockmaplump[3];
    }
 
    // clear out mobj chains
-   count = sizeof(*blocklinks)* bmapwidth*bmapheight;
-   blocklinks = Z_Malloc(count,PU_LEVEL, 0);
+   count = sizeof(*blocklinks) * bmapwidth * bmapheight;
+   blocklinks = Z_Malloc(count, PU_LEVEL, NULL);
    memset(blocklinks, 0, count);
-   blockmap = blockmaplump+4;
+   blockmap = blockmaplump + 4;
+
+#ifdef POLYOBJECTS
+   // haleyjd 2/22/06: setup polyobject blockmap
+   count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
+   polyblocklinks = Z_Malloc(count, PU_LEVEL, NULL);
+   memset(polyblocklinks, 0, count);
+#endif
 }
 
 //
