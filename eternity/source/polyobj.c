@@ -37,6 +37,8 @@
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_queue.h"
+#include "p_inter.h"
+#include "p_map.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "polyobj.h"
@@ -117,20 +119,26 @@ static polymaplink_t *bmap_freelist; // free list of blockmap links
 // Static Functions
 //
 
-d_inline static void Polyobj_bboxAdd(int *bbox, int x, int y)
+d_inline static void Polyobj_bboxAdd(int *bbox, vertex_t *add)
 {
-   bbox[BOXTOP]    += y;
-   bbox[BOXBOTTOM] += y;
-   bbox[BOXLEFT]   += x;
-   bbox[BOXRIGHT]  += x;
+   bbox[BOXTOP]    += add->y;
+   bbox[BOXBOTTOM] += add->y;
+   bbox[BOXLEFT]   += add->x;
+   bbox[BOXRIGHT]  += add->x;
 }
 
-d_inline static void Polyobj_bboxSub(int *bbox, int x, int y)
+d_inline static void Polyobj_bboxSub(int *bbox, vertex_t *sub)
 {
-   bbox[BOXTOP]    -= y;
-   bbox[BOXBOTTOM] -= y;
-   bbox[BOXLEFT]   -= x;
-   bbox[BOXRIGHT]  -= x;
+   bbox[BOXTOP]    -= sub->y;
+   bbox[BOXBOTTOM] -= sub->y;
+   bbox[BOXLEFT]   -= sub->x;
+   bbox[BOXRIGHT]  -= sub->x;
+}
+
+d_inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
+{
+   dst->x += add->x;
+   dst->y += add->y;
 }
 
 d_inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
@@ -376,14 +384,18 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    int i;
    polyobj_t *po = &PolyObjects[num];
 
-   po->id = id;
-
    // don't spawn a polyobject more than once
    if(po->segCount)
    {
       doom_printf("polyobj %d has more than one spawn spot", po->id);
       return;
    }
+
+   po->id = id;
+
+   // TODO: support customized damage somehow?
+   if(spawnSpot->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM)
+      po->damage = 3;
 
    // 1. Search segs for "line start" special with tag matching this 
    //    polyobject's id number. If found, iterate through segs which
@@ -476,7 +488,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 
    // update linedef bounding boxes
    for(i = 0; i < po->numLines; ++i)
-      Polyobj_bboxSub(po->lines[i]->bbox, dist.x, dist.y);
+      Polyobj_bboxSub(po->lines[i]->bbox, &dist);
 
    // translate vertices and record original coordinates relative to spawn spot
    for(i = 0; i < po->numVertices; ++i)
@@ -529,6 +541,11 @@ static void Polyobj_attachToSubsec(polyobj_t *po)
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
    M_DLListInsert(&po->link, &((mdllistitem_t *)ss->polyList));
+
+#ifdef R_LINKEDPORTALS
+   // set spawnSpot's groupid for correct portal sound behavior
+   po->spawnSpot.groupid = ss->sector->groupid;
+#endif
 
    po->attached = true;
 }
@@ -674,6 +691,166 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
    }
 
    po->linked = false;
+}
+
+// Movement functions
+
+//
+// Polyobj_untouched
+//
+// A version of Lee's routine from p_maputl.c that accepts an mobj pointer
+// argument instead of using tmthing. Returns true if the line isn't contacted
+// and false otherwise.
+//
+static boolean Polyobj_untouched(line_t *ld, mobj_t *mo)
+{
+   fixed_t x, y, tmbbox[4];
+
+   return
+      (tmbbox[BOXRIGHT]  = (x = mo->x) + mo->radius) <= ld->bbox[BOXLEFT]   ||
+      (tmbbox[BOXLEFT]   =           x - mo->radius) >= ld->bbox[BOXRIGHT]  ||
+      (tmbbox[BOXTOP]    = (y = mo->y) + mo->radius) <= ld->bbox[BOXBOTTOM] ||
+      (tmbbox[BOXBOTTOM] =           y - mo->radius) >= ld->bbox[BOXTOP]    ||
+      P_BoxOnLineSide(tmbbox, ld) != -1;
+}
+
+//
+// Polyobj_pushThing
+//
+// Inflicts thrust and possibly damage on a thing which has been found to be
+// blocking the motion of a polyobject. The default thrust amount is only one
+// unit, but the motion of the polyobject can be used to change this.
+//
+static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
+{
+   angle_t lineangle;
+   fixed_t momx, momy;
+   fixed_t thrust = FRACUNIT;
+
+   // TODO: change thrust factor depending on polyobj motion type
+   
+   // calculate angle of line and subtract 90 degrees to get normal
+   lineangle = R_PointToAngle2(0, 0, line->dx, line->dy) - ANG90;
+   lineangle >>= ANGLETOFINESHIFT;
+   momx = FixedMul(thrust, finecosine[lineangle]);
+   momy = FixedMul(thrust, finesine[lineangle]);
+   mo->momx += momx;
+   mo->momy += momy;
+
+   // if object doesn't fit at desired location, possibly hurt it
+   if(po->damage)
+   {
+      if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
+         P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+   }
+}
+
+//
+// Polyobj_clipThings
+//
+// Checks for things that are in the way of a polyobject line move.
+//
+static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
+{
+   boolean hitthing = false;
+   fixed_t linebox[4];
+   int x, y;
+
+   // adjust linedef bounding box to blockmap, extend by MAXRADIUS
+   linebox[BOXLEFT]   = (line->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   linebox[BOXRIGHT]  = (line->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   linebox[BOXBOTTOM] = (line->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   linebox[BOXTOP]    = (line->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+
+   // check all mobj blockmap cells the line contacts
+   for(x = linebox[BOXLEFT]; x <= linebox[BOXRIGHT]; ++x)
+   {
+      for(y = linebox[BOXBOTTOM]; y <= linebox[BOXTOP]; ++y)
+      {
+         if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+         {
+            mobj_t *mo = blocklinks[y * bmapwidth + x];
+
+            for(; mo; mo = mo->bnext)
+            {
+               // always push players even if not solid
+               if(!((mo->flags & MF_SOLID) || mo->player))
+                  continue;
+
+               if(Polyobj_untouched(line, mo))
+                  continue;
+
+               Polyobj_pushThing(po, line, mo);
+               hitthing = true;
+            }
+         } // end if
+      } // end for(y)
+   } // end for(x)
+
+   return hitthing;
+}
+
+//
+// Polyobj_moveXY
+//
+// Moves a polyobject on the x-y plane.
+//
+static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
+{
+   int i, j;
+   vertex_t vec;
+
+   vec.x = x;
+   vec.y = y;
+
+   // don't move bad polyobjects
+   if(po->isBad)
+      return false;
+
+   // unlink it from the blockmap
+   Polyobj_removeFromBlockmap(po);
+
+   // translate all vertices, since it's not easy to tell what vertices
+   // belong to what lines, and to be frank, this is fast anyways.
+   for(i = 0; i < po->numVertices; ++i)
+      Polyobj_vecAdd(po->vertices[i], &vec);
+
+   // translate each line
+   for(i = 0; i < po->numLines; ++i)
+   {
+      // translate the line's bounding box
+      Polyobj_bboxAdd(po->lines[i]->bbox, &vec);
+
+      // if the move for this line is blocked, we must undo everything that
+      // has been done and return false to indicate the whole move is blocked
+      if(!Polyobj_clipThings(po, po->lines[i]))
+      {
+         // reset vertices
+         for(j = 0; j < po->numVertices; ++j)
+            Polyobj_vecSub(po->vertices[j], &vec);
+
+         // reset lines that have been moved
+         for(j = i; j >= 0; --j)
+            Polyobj_bboxSub(po->lines[j]->bbox, &vec);
+
+         // relink to blockmap at old location
+         Polyobj_linkToBlockmap(po);
+
+         // move failed
+         return false;
+      }
+   }
+
+   // translate the spawnSpot as well
+   po->spawnSpot.x += vec.x;
+   po->spawnSpot.y += vec.y;
+
+   // relink to blockmap at new location
+   Polyobj_linkToBlockmap(po);
+
+   po->hasMoved = true;
+
+   return true;
 }
 
 //

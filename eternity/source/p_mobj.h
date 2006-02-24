@@ -333,7 +333,7 @@ struct mobj_s
   
 #ifdef R_LINKEDPORTALS
   // SoM: yes Quasar, this is entirely necessary (see degenmobj_t)
-  int     groupid; // The group the sound opriginated in
+  int     groupid; // The group the sound originated in
 #endif
 
   // More list: links in sector (if needed)

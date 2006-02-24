@@ -84,6 +84,7 @@ typedef struct polyobj_s
    fixed_t blockbox[4]; // bounding box for clipping
    boolean linked;      // is linked to blockmap
    int validcount;      // for clipping: prevents multiple checks
+   int damage;          // damage to inflict on stuck things
 
    boolean isBad; // a bad polyobject: should not be rendered
 } polyobj_t;

@@ -487,7 +487,9 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 {
    int        offset;
    const long *list;     // killough 3/1/98: for removal of blockmap limit
+#ifdef POLYOBJECTS
    polymaplink_t *plink; // haleyjd 02/22/06
+#endif
    
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;

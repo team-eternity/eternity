@@ -167,6 +167,23 @@ static boolean P_CrossSubsector(int num, register los_t *los)
    // haleyjd 02/23/06: this assignment should be after the above check
    seg = segs + subsectors[num].firstline;
 
+#ifdef POLYOBJECTS
+   // haleyjd 02/23/06: check polyobject lines
+   if((po = subsectors[num].polyList))
+   {
+      while(po)
+      {
+         if(po->validcount != validcount)
+         {
+            po->validcount = validcount;
+            if(!P_CrossSubsecPolyObj(po, los))
+               return false;
+         }
+         po = (polyobj_t *)(po->link.next);
+      }
+   }
+#endif
+
    for(count = subsectors[num].numlines; --count >= 0; seg++)  // check lines
    {
       line_t *line = seg->linedef;
@@ -254,23 +271,6 @@ static boolean P_CrossSubsector(int num, register los_t *los)
       if (los->topslope <= los->bottomslope)
          return false;               // stop
    }
-
-#ifdef POLYOBJECTS
-   // haleyjd 02/23/06: check polyobject lines
-   if((po = subsectors[num].polyList))
-   {
-      while(po)
-      {
-         if(po->validcount != validcount)
-         {
-            po->validcount = validcount;
-            if(!P_CrossSubsecPolyObj(po, los))
-               return false;
-         }
-         po = (polyobj_t *)(po->link.next);
-      }
-   }
-#endif
 
    // passed the subsector ok
    return true;
