@@ -187,47 +187,47 @@ void P_CalcHeight(player_t *player)
 
 void P_MovePlayer (player_t* player)
 {
-  ticcmd_t *cmd = &player->cmd;
-  mobj_t *mo = player->mo;
-
-  mo->angle += cmd->angleturn << 16;
-  onground = mo->z <= mo->floorz;
-
-  // killough 10/98:
-  //
-  // We must apply thrust to the player and bobbing separately, to avoid
-  // anomalies. The thrust applied to bobbing is always the same strength on
-  // ice, because the player still "works just as hard" to move, while the
-  // thrust applied to the movement varies with 'movefactor'.
-
-  if (cmd->forwardmove | cmd->sidemove) // killough 10/98
-    {
+   ticcmd_t *cmd = &player->cmd;
+   mobj_t *mo = player->mo;
+   
+   mo->angle += cmd->angleturn << 16;
+   onground = mo->z <= mo->floorz;
+   
+   // killough 10/98:
+   //
+   // We must apply thrust to the player and bobbing separately, to avoid
+   // anomalies. The thrust applied to bobbing is always the same strength on
+   // ice, because the player still "works just as hard" to move, while the
+   // thrust applied to the movement varies with 'movefactor'.
+   
+   if (cmd->forwardmove | cmd->sidemove) // killough 10/98
+   {
       if (onground || mo->flags & MF_BOUNCES) // killough 8/9/98
-	{
-	  int friction, movefactor = P_GetMoveFactor(mo, &friction);
+      {
+         int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
-	  // killough 11/98:
-	  // On sludge, make bobbing depend on efficiency.
-	  // On ice, make it depend on effort.
+         // killough 11/98:
+         // On sludge, make bobbing depend on efficiency.
+         // On ice, make it depend on effort.
+         
+         int bobfactor =
+            friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
 
-	  int bobfactor =
-	    friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
-
-	  if (cmd->forwardmove)
-	    {
-	      P_Bob(player,mo->angle,cmd->forwardmove*bobfactor);
-	      P_Thrust(player,mo->angle,cmd->forwardmove*movefactor);
-	    }
-
-	  if (cmd->sidemove)
-	    {
-	      P_Bob(player,mo->angle-ANG90,cmd->sidemove*bobfactor);
-	      P_Thrust(player,mo->angle-ANG90,cmd->sidemove*movefactor);
-	    }
-	}
+         if (cmd->forwardmove)
+         {
+            P_Bob(player,mo->angle,cmd->forwardmove*bobfactor);
+            P_Thrust(player,mo->angle,cmd->forwardmove*movefactor);
+         }
+         
+         if (cmd->sidemove)
+         {
+            P_Bob(player,mo->angle-ANG90,cmd->sidemove*bobfactor);
+            P_Thrust(player,mo->angle-ANG90,cmd->sidemove*movefactor);
+         }
+      }
       if (mo->state == states+E_SafeState(S_PLAY))
-	P_SetMobjState(mo,E_SafeState(S_PLAY_RUN1));
-    }
+         P_SetMobjState(mo,E_SafeState(S_PLAY_RUN1));
+   }
 }
 
 #define ANG5 (ANG90/18)

@@ -176,7 +176,7 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
          return;
    }
 
-   // add the vertex to both arrays (translation for origVerts is done later)
+   // add the vertex to all arrays (translation for origVerts is done later)
    if(po->numVertices >= po->numVerticesAlloc)
    {
       po->numVerticesAlloc = po->numVerticesAlloc ? po->numVerticesAlloc * 2 : 4;
@@ -186,6 +186,11 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
                                 PU_LEVEL, NULL);
       po->origVerts =
          (vertex_t *)Z_Realloc(po->origVerts,
+                               po->numVerticesAlloc * sizeof(vertex_t),
+                               PU_LEVEL, NULL);
+
+      po->tmpVerts =
+         (vertex_t *)Z_Realloc(po->tmpVerts,
                                po->numVerticesAlloc * sizeof(vertex_t),
                                PU_LEVEL, NULL);
    }
@@ -618,11 +623,12 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
    if(po->isBad || po->linked)
       return;
    
-   // clear out the polyobject's bounding box
-   M_ClearBox(blockbox);
+   // 2/26/06: start line box with values of first vertex, not MININT/MAXINT
+   blockbox[BOXLEFT]   = blockbox[BOXRIGHT] = po->vertices[0]->x;
+   blockbox[BOXBOTTOM] = blockbox[BOXTOP]   = po->vertices[0]->y;
    
    // add all vertices to the bounding box
-   for(i = 0; i < po->numVertices; ++i)
+   for(i = 1; i < po->numVertices; ++i)
       M_AddToBox(blockbox, po->vertices[i]->x, po->vertices[i]->y);
    
    // adjust bounding box relative to blockmap 
@@ -702,7 +708,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
 // argument instead of using tmthing. Returns true if the line isn't contacted
 // and false otherwise.
 //
-static boolean Polyobj_untouched(line_t *ld, mobj_t *mo)
+d_inline static boolean Polyobj_untouched(line_t *ld, mobj_t *mo)
 {
    fixed_t x, y, tmbbox[4];
 
@@ -749,6 +755,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
 // Polyobj_clipThings
 //
 // Checks for things that are in the way of a polyobject line move.
+// Returns true if something was hit.
 //
 static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
 {
@@ -797,8 +804,9 @@ static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
 //
 static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
 {
-   int i, j;
+   int i;
    vertex_t vec;
+   boolean hitthing = false;
 
    vec.x = x;
    vec.y = y;
@@ -810,47 +818,41 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
    // unlink it from the blockmap
    Polyobj_removeFromBlockmap(po);
 
-   // translate all vertices, since it's not easy to tell what vertices
-   // belong to what lines, and to be frank, this is fast anyways.
+   // translate vertices
    for(i = 0; i < po->numVertices; ++i)
       Polyobj_vecAdd(po->vertices[i], &vec);
 
    // translate each line
    for(i = 0; i < po->numLines; ++i)
-   {
-      // translate the line's bounding box
       Polyobj_bboxAdd(po->lines[i]->bbox, &vec);
 
-      // if the move for this line is blocked, we must undo everything that
-      // has been done and return false to indicate the whole move is blocked
-      if(!Polyobj_clipThings(po, po->lines[i]))
-      {
-         // reset vertices
-         for(j = 0; j < po->numVertices; ++j)
-            Polyobj_vecSub(po->vertices[j], &vec);
+   // check for blocking things (yes, it needs to be done separately)
+   for(i = 0; i < po->numLines; ++i)
+      hitthing |= Polyobj_clipThings(po, po->lines[i]);
 
-         // reset lines that have been moved
-         for(j = i; j >= 0; --j)
-            Polyobj_bboxSub(po->lines[j]->bbox, &vec);
-
-         // relink to blockmap at old location
-         Polyobj_linkToBlockmap(po);
-
-         // move failed
-         return false;
-      }
+   if(hitthing)
+   {
+      // reset vertices
+      for(i = 0; i < po->numVertices; ++i)
+         Polyobj_vecSub(po->vertices[i], &vec);
+      
+      // reset lines that have been moved
+      for(i = 0; i < po->numLines; ++i)
+         Polyobj_bboxSub(po->lines[i]->bbox, &vec);      
+   }
+   else
+   {
+      // translate the spawnSpot as well
+      po->spawnSpot.x += vec.x;
+      po->spawnSpot.y += vec.y;    
+      
+      po->hasMoved = true;
    }
 
-   // translate the spawnSpot as well
-   po->spawnSpot.x += vec.x;
-   po->spawnSpot.y += vec.y;
-
-   // relink to blockmap at new location
+   // relink to blockmap
    Polyobj_linkToBlockmap(po);
 
-   po->hasMoved = true;
-
-   return true;
+   return !hitthing;
 }
 
 //
@@ -861,8 +863,7 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
 // http://www.inversereality.org/tutorials/graphics%20programming/2dtransformations.html
 // It is, of course, just a vector-matrix multiplication.
 //
-d_inline static boolean Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, 
-                                            int ang)
+d_inline static void Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, int ang)
 {
    vertex_t tmp;
 
@@ -870,15 +871,126 @@ d_inline static boolean Polyobj_rotatePoint(vertex_t *v, const vertex_t *c,
    tmp.y = v->y;
 
    v->x = FixedMul(tmp.x, finecosine[ang]) - FixedMul(tmp.y,   finesine[ang]);
-   v->y = FixedMul(tmp.x,   finesine[ang]) - FixedMul(tmp.y, finecosine[ang]);
+   v->y = FixedMul(tmp.x,   finesine[ang]) + FixedMul(tmp.y, finecosine[ang]);
 
    v->x += c->x;
    v->y += c->y;
 }
 
-static boolean Polyobj_rotate(polyobj_t *po)
+//
+// Polyobj_rotateLine
+//
+// Taken from P_LoadLineDefs; simply updates the linedef's dx, dy, slopetype,
+// and bounding box to be consistent with its vertices.
+//
+static void Polyobj_rotateLine(line_t *ld)
 {
-   return true;
+   vertex_t *v1, *v2;
+
+   v1 = ld->v1;
+   v2 = ld->v2;
+
+   // set dx, dy
+   ld->dx = v2->x - v1->x;
+   ld->dy = v2->y - v1->y;
+
+   // determine slopetype
+   ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
+      FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
+
+   // update bounding box
+   if(v1->x < v2->x)
+   {
+      ld->bbox[BOXLEFT]  = v1->x;
+      ld->bbox[BOXRIGHT] = v2->x;
+   }
+   else
+   {
+      ld->bbox[BOXLEFT]  = v2->x;
+      ld->bbox[BOXRIGHT] = v1->x;
+   }
+      
+   if(v1->y < v2->y)
+   {
+      ld->bbox[BOXBOTTOM] = v1->y;
+      ld->bbox[BOXTOP]    = v2->y;
+   }
+   else
+   {
+      ld->bbox[BOXBOTTOM] = v2->y;
+      ld->bbox[BOXTOP]    = v1->y;
+   }
+}
+
+//
+// Polyobj_rotate
+//
+// Rotates a polyobject around its start point.
+//
+static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
+{
+   int i, angle;
+   vertex_t origin;
+   boolean hitthing = false;
+
+   // don't move bad polyobjects
+   if(po->isBad)
+      return false;
+
+   // unlink it from the blockmap
+   Polyobj_removeFromBlockmap(po);
+
+   angle = (po->angle + delta) >> ANGLETOFINESHIFT;
+
+   // point about which to rotate is the spawn spot
+   origin.x = po->spawnSpot.x;
+   origin.y = po->spawnSpot.y;
+
+   // save current positions and rotate all vertices
+   for(i = 0; i < po->numVertices; ++i)
+   {
+      po->tmpVerts[i] = *(po->vertices[i]);
+
+      // use original pts to rotate to new position
+      *(po->vertices[i]) = po->origVerts[i];
+
+      Polyobj_rotatePoint(po->vertices[i], &origin, angle);
+   }
+
+   // rotate lines
+   for(i = 0; i < po->numLines; ++i)
+      Polyobj_rotateLine(po->lines[i]);
+
+   // check for blocking things
+   for(i = 0; i < po->numLines; ++i)
+      hitthing |= Polyobj_clipThings(po, po->lines[i]);
+
+   if(hitthing)
+   {
+      // reset vertices to previous positions
+      for(i = 0; i < po->numVertices; ++i)
+         *(po->vertices[i]) = po->tmpVerts[i];
+
+      // reset lines
+      for(i = 0; i < po->numLines; ++i)
+         Polyobj_rotateLine(po->lines[i]);
+   }
+   else
+   {
+      // update seg angles (used only by renderer)
+      for(i = 0; i < po->segCount; ++i)
+         po->segs[i]->angle += delta;
+
+      // update polyobject's angle
+      po->angle += delta;
+
+      po->hasMoved = true;
+   }
+
+   // relink to blockmap
+   Polyobj_linkToBlockmap(po);
+
+   return !hitthing;
 }
 
 //
@@ -1047,6 +1159,9 @@ void Polyobj_Ticker(void)
    for(i = 0; i < numPolyObjects; ++i)
    {
       po = &PolyObjects[i];
+
+      // haleyjd: test
+      Polyobj_rotate(po, ANGLE_1*5);
 
       Polyobj_removeFromSubsec(po);      
       Polyobj_attachToSubsec(po);

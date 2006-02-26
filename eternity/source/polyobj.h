@@ -70,6 +70,7 @@ typedef struct polyobj_s
    int numVertices;            // number of vertices (generally == segCount)
    int numVerticesAlloc;       // number of vertices allocated
    struct vertex_s *origVerts; // original positions relative to spawn spot
+   struct vertex_s *tmpVerts;  // temporary vertex backups for rotation
    struct vertex_s **vertices; // vertices this polyobject must move   
    
    int numLines;          // number of linedefs (generally <= segCount)
@@ -78,6 +79,7 @@ typedef struct polyobj_s
 
    struct degenmobj_s spawnSpot; // location of spawn spot
    struct vertex_s    centerPt;  // center point
+   angle_t angle;                // for rotation
    boolean hasMoved;             // if true, need to recalculate center pt
    boolean attached;             // if true, is attached to a subsector
 
@@ -86,7 +88,7 @@ typedef struct polyobj_s
    int validcount;      // for clipping: prevents multiple checks
    int damage;          // damage to inflict on stuck things
 
-   boolean isBad; // a bad polyobject: should not be rendered
+   boolean isBad; // a bad polyobject: should not be rendered/manipulated
 } polyobj_t;
 
 //
