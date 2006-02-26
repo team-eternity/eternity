@@ -186,6 +186,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    /*
    open3dmidtex = false; // haleyjd: clear this flag before each line
    */
+   fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
 
    if(linedef->sidenum[1] == -1)      // single sided line
    {
@@ -195,16 +196,27 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    
    openfrontsector = linedef->frontsector;
    openbacksector = linedef->backsector;
-   
-   if(openfrontsector->ceilingheight < openbacksector->ceilingheight)
-      opentop = openfrontsector->ceilingheight;
-   else
-      opentop = openbacksector->ceilingheight;
-   
-   if(openfrontsector->floorheight > openbacksector->floorheight)
+
    {
-      openbottom = openfrontsector->floorheight;
-      lowfloor = openbacksector->floorheight;
+      frontceilz = openfrontsector->ceilingheight;
+      backceilz = openbacksector->ceilingheight;
+   }
+
+
+   {
+      frontfloorz = openfrontsector->floorheight;
+      backfloorz = openbacksector->floorheight;
+   }
+   
+   if(frontceilz < backceilz)
+      opentop = frontceilz;
+   else
+      opentop = backceilz;
+   
+   if(frontfloorz > backfloorz)
+   {
+      openbottom = frontfloorz;
+      lowfloor = backfloorz;
       // haleyjd
       tmfloorpic = openfrontsector->floorpic;
       // haleyjd
@@ -212,8 +224,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    }
    else
    {
-      openbottom = openbacksector->floorheight;
-      lowfloor = openfrontsector->floorheight;
+      openbottom = backfloorz;
+      lowfloor = frontfloorz;
       // haleyjd
       tmfloorpic = openbacksector->floorpic;
       // haleyjd
@@ -722,6 +734,10 @@ boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 // for all lines.
 //
 // killough 5/3/98: reformatted, cleaned up
+#ifdef R_LINKEDPORTALS
+extern boolean tracerhitportal;
+#endif
+
 
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                        int flags, boolean trav(intercept_t *))
@@ -734,6 +750,8 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    int     mapx, mapy;
    int     mapxstep, mapystep;
    int     count;
+   // SoM: just a little bit-o-change...
+   boolean result;
 
    validcount++;
    intercept_p = intercepts;
@@ -837,8 +855,19 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       }
    }
 
+#ifdef R_LINKEDPORTALS
+   tracerhitportal = false;
+#endif
    // go through the sorted list
-   return P_TraverseIntercepts(trav, FRACUNIT);
+   // SoM: just store this for a sec
+   result = P_TraverseIntercepts(trav, FRACUNIT);
+
+#ifdef R_LINKEDPORTALS
+   if(!result && tracerhitportal)
+      result = P_PathTraverse(trace.x, trace.y, trace.x + trace.dx, trace.y + trace.dy, flags, trav);
+#endif
+
+   return result;
 }
 
 //----------------------------------------------------------------------------

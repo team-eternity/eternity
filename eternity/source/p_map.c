@@ -2184,6 +2184,10 @@ fixed_t   aimslope;
 static fixed_t  topslope;
 static fixed_t  bottomslope;
 
+#ifdef R_LINKEDPORTALS
+boolean tracerhitportal = false;
+#endif
+
 //
 // PTR_AimTraverse
 // Sets linetaget and aimslope when a target is aimed at.
@@ -2373,12 +2377,41 @@ static boolean PTR_ShootTraverse(intercept_t *in)
             if(z < sidesector->floorheight)
             {
                if(sidesector->floorpic == skyflatnum ||
-                  sidesector->floorpic == sky2flatnum
-#ifdef R_PORTALS
-                  || sidesector->f_portal
-#endif
-                  )
+                  sidesector->floorpic == sky2flatnum) // SoM: don't check for portals here anymore
                   return false;
+#ifdef R_PORTALS
+               if(sidesector->f_portal)
+               {
+#ifdef R_LINKEDPORTALS
+                  if(useportalgroups && sidesector->f_portal->type == R_LINKED)
+                  {
+                     int group1, group2;
+                     linkoffset_t *link;
+
+                     group1 = sidesector->groupid;
+                     group2 = sidesector->f_portal->data.camera.groupid;
+                     link = P_GetLinkOffset(group1, group2);
+
+                     // SoM: for now...
+                     if(!link)
+                        I_Error("linked portals exist without a link. Linked portals SHOULD have been be disabled. Contact Team Eternity.\n");
+
+                     zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
+                                       D_abs(z - startz));
+                     x += FixedMul(trace.x - x, zdiff);
+                     y += FixedMul(trace.y - y, zdiff);
+                     z = sidesector->floorheight;
+
+                     trace.x = x - link->x;
+                     trace.y = y - link->y;
+                     startz = z - link->z;
+                     shootz = z - link->z;
+                     tracerhitportal = true;
+                  }
+#endif
+                  return false;
+               }
+#endif
                zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
                                 D_abs(z - startz));
                x += FixedMul(trace.x - x, zdiff);
@@ -2390,12 +2423,41 @@ static boolean PTR_ShootTraverse(intercept_t *in)
             else if(z > sidesector->ceilingheight)
             {
                if(sidesector->ceilingpic == skyflatnum ||
-                  sidesector->ceilingpic == sky2flatnum
-#ifdef R_PORTALS
-                  || sidesector->c_portal
-#endif
-                  )
+                  sidesector->ceilingpic == sky2flatnum) // SoM
                   return false;
+#ifdef R_PORTALS
+               if(sidesector->c_portal)
+               {
+#ifdef R_LINKEDPORTALS
+                  if(useportalgroups && sidesector->c_portal->type == R_LINKED)
+                  {
+                     int group1, group2;
+                     linkoffset_t *link;
+
+                     group1 = sidesector->groupid;
+                     group2 = sidesector->c_portal->data.camera.groupid;
+                     link = P_GetLinkOffset(group1, group2);
+
+                     // SoM: for now...
+                     if(!link)
+                        I_Error("linked portals exist without a link. Linked portals SHOULD have been be disabled. Contact Team Eternity.\n");
+
+                     zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
+                                       D_abs(z - startz));
+                     x += FixedMul(trace.x - x, zdiff);
+                     y += FixedMul(trace.y - y, zdiff);
+                     z = sidesector->ceilingheight;
+
+                     trace.x = x - link->x;
+                     trace.y = y - link->y;
+                     startz = z - link->z;
+                     shootz = z - link->z;
+                     tracerhitportal = true;
+                  }
+#endif
+                  return false;
+               }
+#endif
                zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
                                 D_abs(z - startz));
                x += FixedMul(trace.x - x, zdiff);
