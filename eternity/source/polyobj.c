@@ -1160,9 +1160,6 @@ void Polyobj_Ticker(void)
    {
       po = &PolyObjects[i];
 
-      // haleyjd: test
-      Polyobj_rotate(po, ANGLE_1*5);
-
       Polyobj_removeFromSubsec(po);      
       Polyobj_attachToSubsec(po);
    }
