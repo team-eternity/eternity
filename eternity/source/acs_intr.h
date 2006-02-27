@@ -73,6 +73,9 @@ typedef struct acsthinker_s
    int stack[ACS_STACK_LEN];  // value stack
    int stp;                   // stack pointer
    int locals[ACS_NUMLOCALS]; // local variables and arguments
+
+   // misc
+   int delay;                 // counter for script delays
 } acsthinker_t;
 
 //
