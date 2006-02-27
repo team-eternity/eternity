@@ -570,6 +570,10 @@ SOURCE=.\Source\v_video.c
 # End Group
 # Begin Source File
 
+SOURCE=.\source\acs_intr.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\am_color.c
 # End Source File
 # Begin Source File
@@ -1067,6 +1071,10 @@ SOURCE=.\Source\v_video.h
 # Begin Source File
 
 SOURCE=.\Source\a_small.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\acs_intr.h
 # End Source File
 # Begin Source File
 
