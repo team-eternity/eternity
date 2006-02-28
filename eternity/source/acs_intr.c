@@ -35,21 +35,16 @@
 // Local Enumerations
 //
 
-// script states for T_ACSThinker
-enum
-{
-   ACTION_CONTINUE,
-   ACTION_TERMINATE,
-   ACTION_SUSPEND,
-};
-
 // script states for acscript sreg
 enum
 {
-   ACS_STATE_STOPPED,   // not running
-   ACS_STATE_RUNNING,   // currently running
-   ACS_STATE_SUSPEND,   // suspended by instruction
-   ACS_STATE_TERMINATE, // will be stopped
+   ACS_STATE_STOPPED,    // not running
+   ACS_STATE_RUNNING,    // currently running
+   ACS_STATE_SUSPEND,    // suspended by instruction
+   ACS_STATE_WAITTAG,    // waiting on a tag
+   ACS_STATE_WAITSCRIPT, // waiting on a script
+   ACS_STATE_WAITPOLY,   // waiting on a polyobject
+   ACS_STATE_TERMINATE,  // will be stopped on next thinking turn
 };
 
 // opcode IDs
@@ -164,6 +159,9 @@ enum
 // Static Variables
 //
 
+// pointer to the ACS lump, to which jumps are relative
+static byte *acsdata;
+
 // The scripts, as read from the ACS header.
 static acscript_t *scripts;
 
@@ -189,9 +187,24 @@ static int ACSworldvars[64];
 #define ST_BINOP(x) stack[stp-2] = (x); --stp
 
 
+// script states for T_ACSThinker
+enum
+{
+   ACTION_RUN,       // default: keep running opcodes
+   ACTION_STOP,      // stop execution for current tic
+   ACTION_ENDSCRIPT, // end script execution on cmd or error
+};
+
 //
 // Global Functions
 //
+
+static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
+{
+   acscript->sreg = ACS_STATE_STOPPED;
+   // TODO: notify waiting scripts that this script has ended
+   P_RemoveThinker(&script->thinker);
+}
 
 void T_ACSThinker(acsthinker_t *script)
 {
@@ -201,17 +214,12 @@ void T_ACSThinker(acsthinker_t *script)
    register int *stack = script->stack;
 
    acscript_t *acscript = &scripts[script->internalNum];
-   int action = ACTION_CONTINUE;
-   int opcode, temp;
+   int action = ACTION_RUN;
+   int opcode, temp, count = 0;
 
    // should the script terminate?
    if(acscript->sreg == ACS_STATE_TERMINATE)
-   {
-      acscript->sreg = ACS_STATE_STOPPED;
-      // TODO: notify waiting scripts that this script has ended
-      // TODO: remove thinker
-      return;
-   }
+      ACS_stopScript(script, acscript);
 
    // is the script running?
    if(acscript->sreg != ACS_STATE_RUNNING)
@@ -224,20 +232,27 @@ void T_ACSThinker(acsthinker_t *script)
       return;
    }
   
-   // run opcodes
+   // run opcodes until action != ACTION_RUN
    do
    {
+      // count instructions to end unbounded loops
+      if(++count >= 100000)
+      {
+         action = ACTION_ENDSCRIPT;
+         break;
+      }
+      
       opcode = *ip++;
       switch(opcode)
       {
       case OP_NOP:
          break;
       case OP_TERMINATE:
-         action = ACTION_TERMINATE;
+         action = ACTION_ENDSCRIPT;
          break;
       case OP_SUSPEND:
          acscript->sreg = ACS_STATE_SUSPEND;
-         action = ACTION_SUSPEND;
+         action = ACTION_STOP;
          break;
       case OP_PUSHNUMBER:
          PUSH(*ip);
@@ -275,7 +290,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIV:
          if(!(temp = ST_OP2))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          ST_BINOP(ST_OP1 / temp);
@@ -283,7 +298,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MOD:
          if(!(temp = ST_OP2))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          ST_BINOP(ST_OP1 % temp);
@@ -368,7 +383,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIVSCRIPTVAR:
          if(!(temp = POP()))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          script->locals[*ip] /= temp;
@@ -377,7 +392,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIVMAPVAR:
          if(!(temp = POP()))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          ACSmapvars[*ip] /= temp;
@@ -386,7 +401,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIVWORLDVAR:
          if(!(temp = POP()))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          ACSworldvars[*ip] /= temp;
@@ -395,7 +410,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MODSCRIPTVAR:
          if(!(temp = POP()))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          script->locals[*ip] %= temp;
@@ -404,7 +419,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MODMAPVAR:
          if(!(temp = POP()))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          ACSmapvars[*ip] %= temp;
@@ -413,7 +428,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MODWORLDVAR:
          if(!(temp = POP()))
          {
-            action = ACTION_TERMINATE;
+            action = ACTION_ENDSCRIPT;
             break;
          }
          ACSworldvars[*ip] %= temp;
@@ -444,34 +459,66 @@ void T_ACSThinker(acsthinker_t *script)
          ++ip;
          break;
       case OP_BRANCH:
-         ip = acscript->code + *ip;
+         ip = (int *)(acsdata + *ip);
          break;
       case OP_BRANCHNOTZERO:
          if((temp = POP()))
-            ip = acscript->code + *ip;
+            ip = (int *)(acsdata + *ip);
+         else
+            ++ip;
          break;
       case OP_DECSTP:
          DECSTP();
          break;
       case OP_DELAY:
+         script->delay = POP();
+         action = ACTION_STOP;
          break;
       case OP_DELAY_IMM:
+         script->delay = *ip++;
+         action = ACTION_STOP;
          break;
       case OP_RANDOM:
+         {
+            int min, max;
+            max = POP();
+            min = POP();
+
+            PUSH((P_Random(pr_script) % (max - min + 1)) + min);
+         }
          break;
       case OP_RANDOM_IMM:
+         {
+            int min, max;
+            min = *ip++;
+            max = *ip++;
+
+            PUSH((P_Random(pr_script) % (max - min + 1)) + min);
+         }
          break;
       case OP_THINGCOUNT:
          break;
       case OP_THINGCOUNT_IMM:
          break;
       case OP_TAGWAIT:
+         acscript->sreg  = ACS_STATE_WAITTAG;
+         acscript->sdata = POP(); // get sector tag
+         action = ACTION_STOP;
          break;
       case OP_TAGWAIT_IMM:
+         acscript->sreg  = ACS_STATE_WAITTAG;
+         acscript->sdata = *ip++; // get sector tag
+         action = ACTION_STOP;
          break;
       case OP_POLYWAIT:
+         acscript->sreg  = ACS_STATE_WAITPOLY;
+         acscript->sdata = POP(); // get poly tag
+         action = ACTION_STOP;
          break;
       case OP_POLYWAIT_IMM:
+         acscript->sreg  = ACS_STATE_WAITPOLY;
+         acscript->sdata = *ip++; // get poly tag
+         action = ACTION_STOP;
          break;
       case OP_CHANGEFLOOR:
          break;
@@ -515,23 +562,32 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_BRANCHZERO:
          if(!(temp = POP()))
-            ip = acscript->code + *ip;
+            ip = (int *)(acsdata + *ip);
+         else
+            ++ip;
          break;
       case OP_LINESIDE:
          break;
       case OP_SCRIPTWAIT:
+         acscript->sreg  = ACS_STATE_WAITSCRIPT;
+         acscript->sdata = POP(); // get script num
+         action = ACTION_STOP;
          break;
       case OP_SCRIPTWAIT_IMM:
+         acscript->sreg  = ACS_STATE_WAITSCRIPT;
+         acscript->sdata = *ip++; // get script num
+         action = ACTION_STOP;
          break;
       case OP_CLEARLINESPECIAL:
          break;
       case OP_CASEJUMP:
-         temp = PEEK();
-         if(temp == *ip++)
+         if(PEEK() == *ip++) // compare top of stack against op+1
          {
-            DECSTP();
-            ip = acscript->code + *ip;
+            DECSTP(); // take the value off the stack
+            ip = (int *)(acsdata + *ip); // jump to op+2
          }
+         else
+            ++ip; // increment past offset at op+2, leave value on stack
          break;
       case OP_STARTPRINT:
          break;
@@ -570,10 +626,24 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       default:
          // unknown opcode, must stop execution
-         action = ACTION_TERMINATE;
+         action = ACTION_ENDSCRIPT;
          break;
       }
-   } while(action == ACTION_CONTINUE);
+   } while(action == ACTION_RUN);
+
+   // check for special actions flagged in loop above
+   switch(action)
+   {
+   case ACTION_ENDSCRIPT:
+      // end the script
+      ACS_stopScript(script, acscript);
+      break;
+   default:
+      // copy fields back into script
+      script->ip  = ip;
+      script->stp = stp;
+      break;
+   }
 }
 
 #endif

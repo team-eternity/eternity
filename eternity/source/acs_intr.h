@@ -34,7 +34,7 @@
 // Defines
 //
 
-#define ACS_STACK_LEN 128
+#define ACS_STACK_LEN 128 
 #define ACS_NUMLOCALS 10
 
 //
@@ -53,6 +53,7 @@ typedef struct acscript_s
    int numArgs;  // number of arguments this script wants
    int *code;    // bytecode entry point
    int sreg;     // state register
+   int sdata;    // sepcial data for state
 } acscript_t;
 
 //
