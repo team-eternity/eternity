@@ -1128,6 +1128,8 @@ static void HU_InitCenterMessage(void)
    centermessage_widget.cleartic = 0;
 }
 
+static char *centermsg_color;
+
 //
 // HU_CenterMessage
 //
@@ -1147,6 +1149,13 @@ void HU_CenterMessage(const char *s)
    }
    else
       M_QStrClear(&qstr);
+
+   // haleyjd 02/28/06: colored center message
+   if(centermsg_color)
+   {
+      M_QStrCat(&qstr, centermsg_color);
+      centermsg_color = NULL;
+   }
    
    M_QStrCat(&qstr, s);
   
@@ -1172,6 +1181,17 @@ void HU_CenterMessageTimed(const char *s, int tics)
 {
    HU_CenterMessage(s);
    centermessage_widget.cleartic = leveltime + tics;
+}
+
+//
+// HU_CenterMessageTimedColor
+//
+// haleyjd: as above but with special coloration. For ACS.
+//
+void HU_CenterMsgTimedColor(const char *s, const char *color, int tics)
+{
+   centermsg_color = color;
+   HU_CenterMessageTimed(s, tics);
 }
 
 //

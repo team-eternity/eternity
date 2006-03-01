@@ -77,6 +77,9 @@ typedef struct acsthinker_s
 
    // misc
    int delay;                 // counter for script delays
+   mobj_t *trigger;           // thing that activated
+   line_t *line;              // line that activated
+   int    lineSide;           // line side of activation
 } acsthinker_t;
 
 //
