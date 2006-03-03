@@ -57,11 +57,13 @@
 
 typedef struct polyobj_s
 {
-   mdllistitem_t link; // for subsector links
+   mdllistitem_t link; // for subsector links; must be first
 
    int id;    // numeric id
    int first; // for hashing: index of first polyobject in this hash chain
    int next;  // for hashing: next polyobject in this hash chain
+
+   int mirror; // numeric id of a mirroring polyobject
 
    int segCount;        // number of segs in polyobject
    int numSegsAlloc;    // number of segs allocated
@@ -88,6 +90,8 @@ typedef struct polyobj_s
    int validcount;      // for clipping: prevents multiple checks
    int damage;          // damage to inflict on stuck things
 
+   thinker_t *thinker;  // pointer to a thinker affecting this polyobj
+
    boolean isBad; // a bad polyobject: should not be rendered/manipulated
 } polyobj_t;
 
@@ -101,6 +105,100 @@ typedef struct polymaplink_s
    polyobj_t *po;      // pointer to polyobject
 } polymaplink_t;
 
+//
+// Polyobject Special Thinkers
+//
+
+typedef struct polyrotate_s
+{
+   thinker_t thinker; // must be first
+
+   int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
+   int speed;         // speed of movement per frame
+   int distance;      // distance to move
+} polyrotate_t;
+
+typedef struct polymove_s
+{
+   thinker_t thinker; // must be first
+
+   int polyObjNum;    // numeric id of polyobject
+   int speed;         // resultant velocity
+   int momx;          // x component of speed along angle
+   int momy;          // y component of speed along angle
+   int distance;      // total distance to move
+   int angle;         // angle along which to move
+} polymove_t;
+
+typedef struct polyslidedoor_s
+{
+   thinker_t thinker; // must be first
+
+   int polyObjNum;    // numeric id of affected polyobject
+   int delay;         // delay time
+   int delayCount;    // delay counter
+   int initSpeed;     // initial speed 
+   int speed;         // speed of motion
+   int initDistance;  // initial distance to travel
+   int distance;      // current distance to travel
+   int angle;         // angle of motion
+   int momx;          // x component of speed along angle
+   int momy;          // y component of speed along angle
+   boolean closing;   // if true, is closing
+} polyslidedoor_t;
+
+typedef struct polyswingdoor_s
+{
+   thinker_t thinker; // must be first
+
+   int polyObjNum;    // numeric id of affected polyobject
+   int delay;         // delay time
+   int delayCount;    // delay counter
+   int initSpeed;     // initial speed
+   int speed;         // speed of rotation
+   int initDistance;  // initial distance to travel
+   int distance;      // current distance to travel
+   boolean closing;   // if true, is closing
+} polyswingdoor_t;
+
+//
+// Line Activation Data Structures
+//
+
+typedef struct polyrotdata_s
+{
+   int polyObjNum;   // numeric id of polyobject to affect
+   int direction;    // direction of rotation
+   int speed;        // angular speed
+   int distance;     // distance to move
+   boolean overRide; // if true, will override any action on the object
+} polyrotdata_t;
+
+typedef struct polymovedata_s
+{
+   int polyObjNum;   // numeric id of polyobject to affect
+   fixed_t distance; // distance to move
+   fixed_t speed;    // linear speed
+   int angle;        // angle of movement
+   boolean overRide; // if true, will override any action on the object
+} polymovedata_t;
+
+// polyobject door types
+typedef enum
+{
+   POLY_DOOR_SLIDE,
+   POLY_DOOR_SWING,
+} polydoor_e;
+
+typedef struct polydoordata_s
+{
+   int polyObjNum;   // numeric id of polyobject to affect
+   int doorType;     // polyobj door type
+   int speed;        // linear or angular speed
+   int angle;        // for slide door only, angle of motion
+   int distance;     // distance to move
+   int delay;        // delay time after opening
+} polydoordata_t;
 
 //
 // Functions
@@ -109,6 +207,10 @@ typedef struct polymaplink_s
 polyobj_t *Polyobj_GetForNum(int id);
 void Polyobj_InitLevel(void);
 void Polyobj_Ticker(void);
+
+int EV_DoPolyDoor(polydoordata_t *);
+int EV_DoPolyObjMove(polymovedata_t *);
+int EV_DoPolyObjRotate(polyrotdata_t *);
 
 
 //

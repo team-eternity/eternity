@@ -531,6 +531,14 @@ static struct exlinespec
 #ifdef POLYOBJECTS
    { 348, "Polyobj_StartLine" },
    { 349, "Polyobj_ExplicitLine" },
+   { 350, "Polyobj_DoorSlide" },
+   { 351, "Polyobj_DoorSwing" },
+   { 352, "Polyobj_Move" },
+   { 353, "Polyobj_OR_Move" },
+   { 354, "Polyobj_RotateRight" },
+   { 355, "Polyobj_OR_RotateRight" },
+   { 356, "Polyobj_RotateLeft" },
+   { 357, "Polyobj_OR_RotateLeft" },
 #endif
 };
 
@@ -1640,6 +1648,14 @@ boolean E_IsParamSpecial(short special)
    case 341: // Stairs_BuildDownDoom
    case 342: // Stairs_BuildUpDoomSync
    case 343: // Stairs_BuildDownDoomSync
+   case 350: // Polyobj_DoorSlide
+   case 351: // Polyobj_DoorSwing
+   case 352: // Polyobj_Move
+   case 353: // Polyobj_OR_Move
+   case 354: // Polyobj_RotateRight
+   case 355: // Polyobj_OR_RotateRight
+   case 356: // Polyobj_RotateLeft
+   case 357: // Polyobj_OR_RotateLeft
       return true;
    default:
       return false;

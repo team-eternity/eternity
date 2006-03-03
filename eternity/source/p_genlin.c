@@ -1812,6 +1812,85 @@ static boolean pspec_Stairs(line_t *line, long *args, short special,
    return EV_DoParamStairs(line, args[0], &sd);
 }
 
+// haleyjd: temporary define
+#ifdef POLYOBJECTS
+
+//
+// pspec_PolyDoor
+//
+// Parses arguments for parameterized polyobject door types
+//
+static boolean pspec_PolyDoor(long *args, short special)
+{
+   polydoordata_t pdd;
+
+   pdd.polyObjNum = args[0]; // polyobject id
+   
+   switch(special)
+   {
+   case 350: // Polyobj_DoorSlide
+      pdd.doorType = POLY_DOOR_SLIDE;
+      pdd.speed    = args[1] * FRACUNIT / 8;
+      pdd.angle    = args[2]; // angle of motion (byte angle)
+      pdd.distance = args[3] * FRACUNIT;
+      pdd.delay    = args[4]; // delay in tics
+      break;
+   case 351: // Polyobj_DoorSwing
+      pdd.doorType = POLY_DOOR_SWING;
+      pdd.speed    = args[1]; // angular speed (byte angle)
+      pdd.distance = args[2]; // angular distance (byte angle)
+      pdd.delay    = args[3]; // delay in tics
+      break;
+   default:
+      return 0; // ???
+   }
+
+   return EV_DoPolyDoor(&pdd);
+}
+
+//
+// pspec_PolyMove
+//
+// Parses arguments for parameterized polyobject move specials
+//
+static boolean pspec_PolyMove(long *args, short special)
+{
+   polymovedata_t pmd;
+
+   pmd.polyObjNum = args[0];
+   pmd.speed      = args[1] * FRACUNIT / 8;
+   pmd.angle      = args[2]; // byteangle
+   pmd.distance   = args[3] * FRACUNIT;
+
+   pmd.overRide = (special == 353); // Polyobj_OR_Move
+
+   return EV_DoPolyObjMove(&pmd);
+}
+
+//
+// pspec_PolyRotate
+//
+// Parses arguments for parameterized polyobject rotate specials
+//
+static boolean pspec_PolyRotate(long *args, short special)
+{
+   polyrotdata_t prd;
+
+   prd.polyObjNum = args[0];
+   prd.speed      = args[1]; // angular speed (byteangle)
+   prd.distance   = args[2]; // angular distance (byteangle)
+
+   // Polyobj_(OR_)RotateRight have dir == -1
+   prd.direction = (special == 354 || special == 355) ? -1 : 1;
+   
+   // Polyobj_OR types have override set to true
+   prd.overRide  = (special == 355 || special == 357);
+
+   return EV_DoPolyObjRotate(&prd);
+}
+
+#endif // ifdef POLYOBJECTS
+
 //
 // P_ExecParamLineSpec
 //
@@ -1885,6 +1964,22 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 343: // Stairs_BuildDownDoomSync
       success = pspec_Stairs(line, args, special, trigger_type);
       break;
+#ifdef POLYOBJECTS
+   case 350: // Polyobj_DoorSlide
+   case 351: // Polyobj_DoorSwing
+      success = pspec_PolyDoor(args, special);
+      break;
+   case 352: // Polyobj_Move
+   case 353: // Polyobj_OR_Move
+      success = pspec_PolyMove(args, special);
+      break;
+   case 354: // Polyobj_RotateRight
+   case 355: // Polyobj_OR_RotateRight
+   case 356: // Polyobj_RotateLeft
+   case 357: // Polyobj_OR_RotateLeft
+      success = pspec_PolyRotate(args, special);
+      break;
+#endif
    default:
       break;
    }
@@ -2090,54 +2185,74 @@ SCRIPT_SPEC(340, stairs_buildupdoom)
 SCRIPT_SPEC(341, stairs_builddowndoom)
 SCRIPT_SPEC(342, stairs_buildupdoomsync)
 SCRIPT_SPEC(343, stairs_builddowndoomsync)
+#ifdef POLYOBJECTS
+SCRIPT_SPEC(350, polyobj_doorslide)
+SCRIPT_SPEC(351, polyobj_doorswing)
+SCRIPT_SPEC(352, polyobj_move)
+SCRIPT_SPEC(353, polyobj_or_move)
+SCRIPT_SPEC(354, polyobj_rotateright)
+SCRIPT_SPEC(355, polyobj_or_rotateright)
+SCRIPT_SPEC(356, polyobj_rotateleft)
+SCRIPT_SPEC(357, polyobj_or_rotateleft)
+#endif
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
-   { "_SpecialMode",            sm_specialmode            },
-   { "_Door_Raise",             sm_door_raise             },
-   { "_Door_Open",              sm_door_open              },
-   { "_Door_Close",             sm_door_close             },
-   { "_Door_CloseWaitOpen",     sm_door_closewaitopen     },
-   { "_Door_WaitRaise",         sm_door_waitraise         },
-   { "_Door_WaitClose",         sm_door_waitclose         },
-   { "_Floor_RaiseToHighest",   sm_floor_raisetohighest   },
-   { "_Floor_LowerToHighest",   sm_floor_lowertohighest   },
-   { "_Floor_RaiseToLowest",    sm_floor_raisetolowest    },
-   { "_Floor_LowerToLowest",    sm_floor_lowertolowest    },
-   { "_Floor_RaiseToNearest",   sm_floor_raisetonearest   },
-   { "_Floor_LowerToNearest",   sm_floor_lowertonearest   },
-   { "_Floor_RaiseToLowestCeiling", sm_floor_raisetolowestceiling },
-   { "_Floor_LowerToLowestCeiling", sm_floor_lowertolowestceiling },
-   { "_Floor_RaiseToCeiling",   sm_floor_raisetoceiling   },
-   { "_Floor_RaiseByTexture",   sm_floor_raisebytexture   },
-   { "_Floor_LowerByTexture",   sm_floor_lowerbytexture   },
-   { "_Floor_RaiseByValue",     sm_floor_raisebyvalue     },
-   { "_Floor_LowerByValue",     sm_floor_lowerbyvalue     },
-   { "_Floor_MoveToValue",      sm_floor_movetovalue      },
-   { "_Floor_RaiseInstant",     sm_floor_raiseinstant     },
-   { "_Floor_LowerInstant",     sm_floor_lowerinstant     },
-   { "_Floor_ToCeilingInstant", sm_floor_toceilinginstant },
-   { "_Ceiling_RaiseToHighest", sm_ceiling_raisetohighest },
-   { "_Ceiling_ToHighestInstant", sm_ceiling_tohighestinstant },
-   { "_Ceiling_RaiseToNearest", sm_ceiling_raisetonearest },
-   { "_Ceiling_LowerToNearest", sm_ceiling_lowertonearest },
-   { "_Ceiling_RaiseToLowest",  sm_ceiling_raisetolowest  },
-   { "_Ceiling_LowerToLowest",  sm_ceiling_lowertolowest  },
+   { "_SpecialMode",                 sm_specialmode                 },
+   { "_Door_Raise",                  sm_door_raise                  },
+   { "_Door_Open",                   sm_door_open                   },
+   { "_Door_Close",                  sm_door_close                  },
+   { "_Door_CloseWaitOpen",          sm_door_closewaitopen          },
+   { "_Door_WaitRaise",              sm_door_waitraise              },
+   { "_Door_WaitClose",              sm_door_waitclose              },
+   { "_Floor_RaiseToHighest",        sm_floor_raisetohighest        },
+   { "_Floor_LowerToHighest",        sm_floor_lowertohighest        },
+   { "_Floor_RaiseToLowest",         sm_floor_raisetolowest         },
+   { "_Floor_LowerToLowest",         sm_floor_lowertolowest         },
+   { "_Floor_RaiseToNearest",        sm_floor_raisetonearest        },
+   { "_Floor_LowerToNearest",        sm_floor_lowertonearest        },
+   { "_Floor_RaiseToLowestCeiling",  sm_floor_raisetolowestceiling  },
+   { "_Floor_LowerToLowestCeiling",  sm_floor_lowertolowestceiling  },
+   { "_Floor_RaiseToCeiling",        sm_floor_raisetoceiling        },
+   { "_Floor_RaiseByTexture",        sm_floor_raisebytexture        },
+   { "_Floor_LowerByTexture",        sm_floor_lowerbytexture        },
+   { "_Floor_RaiseByValue",          sm_floor_raisebyvalue          },
+   { "_Floor_LowerByValue",          sm_floor_lowerbyvalue          },
+   { "_Floor_MoveToValue",           sm_floor_movetovalue           },
+   { "_Floor_RaiseInstant",          sm_floor_raiseinstant          },
+   { "_Floor_LowerInstant",          sm_floor_lowerinstant          },
+   { "_Floor_ToCeilingInstant",      sm_floor_toceilinginstant      },
+   { "_Ceiling_RaiseToHighest",      sm_ceiling_raisetohighest      },
+   { "_Ceiling_ToHighestInstant",    sm_ceiling_tohighestinstant    },
+   { "_Ceiling_RaiseToNearest",      sm_ceiling_raisetonearest      },
+   { "_Ceiling_LowerToNearest",      sm_ceiling_lowertonearest      },
+   { "_Ceiling_RaiseToLowest",       sm_ceiling_raisetolowest       },
+   { "_Ceiling_LowerToLowest",       sm_ceiling_lowertolowest       },
    { "_Ceiling_RaiseToHighestFloor", sm_ceiling_raisetohighestfloor },
    { "_Ceiling_LowerToHighestFloor", sm_ceiling_lowertohighestfloor },
-   { "_Ceiling_ToFloorInstant", sm_ceiling_tofloorinstant },
-   { "_Ceiling_LowerToFloor",   sm_ceiling_lowertofloor   },
-   { "_Ceiling_RaiseByTexture", sm_ceiling_raisebytexture },
-   { "_Ceiling_LowerByTexture", sm_ceiling_lowerbytexture },
-   { "_Ceiling_RaiseByValue",   sm_ceiling_raisebyvalue   },
-   { "_Ceiling_LowerByValue",   sm_ceiling_lowerbyvalue   },
-   { "_Ceiling_MoveToValue",    sm_ceiling_movetovalue    },
-   { "_Ceiling_RaiseInstant",   sm_ceiling_raiseinstant   },
-   { "_Ceiling_LowerInstant",   sm_ceiling_lowerinstant   },
-   { "_Stairs_BuildUpDoom",     sm_stairs_buildupdoom     },
-   { "_Stairs_BuildDownDoom",   sm_stairs_builddowndoom   },
-   { "_Stairs_BuildUpDoomSync", sm_stairs_buildupdoomsync },
-   { "_Stairs_BuildDownDoomSync", sm_stairs_builddowndoomsync },
+   { "_Ceiling_ToFloorInstant",      sm_ceiling_tofloorinstant      },
+   { "_Ceiling_LowerToFloor",        sm_ceiling_lowertofloor        },
+   { "_Ceiling_RaiseByTexture",      sm_ceiling_raisebytexture      },
+   { "_Ceiling_LowerByTexture",      sm_ceiling_lowerbytexture      },
+   { "_Ceiling_RaiseByValue",        sm_ceiling_raisebyvalue        },
+   { "_Ceiling_LowerByValue",        sm_ceiling_lowerbyvalue        },
+   { "_Ceiling_MoveToValue",         sm_ceiling_movetovalue         },
+   { "_Ceiling_RaiseInstant",        sm_ceiling_raiseinstant        },
+   { "_Ceiling_LowerInstant",        sm_ceiling_lowerinstant        },
+   { "_Stairs_BuildUpDoom",          sm_stairs_buildupdoom          },
+   { "_Stairs_BuildDownDoom",        sm_stairs_builddowndoom        },
+   { "_Stairs_BuildUpDoomSync",      sm_stairs_buildupdoomsync      },
+   { "_Stairs_BuildDownDoomSync",    sm_stairs_builddowndoomsync    },
+#ifdef POLYOBJECTS
+   { "_Polyobj_DoorSlide",           sm_polyobj_doorslide           },
+   { "_Polyobj_DoorSwing",           sm_polyobj_doorswing           },
+   { "_Polyobj_Move",                sm_polyobj_move                },
+   { "_Polyobj_OR_Move",             sm_polyobj_or_move             },
+   { "_Polyobj_RotateRight",         sm_polyobj_rotateright         },
+   { "_Polyobj_OR_RotateRight",      sm_polyobj_or_rotateright      },
+   { "_Polyobj_RotateLeft",          sm_polyobj_rotateleft          },
+   { "_Polyobj_OR_RotateLeft",       sm_polyobj_or_rotateleft       },
+#endif
    { NULL, NULL }
 };
 

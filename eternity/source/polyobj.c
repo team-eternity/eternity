@@ -41,9 +41,11 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_setup.h"
+#include "p_tick.h"
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "v_misc.h"
 
 /*
    Theory behind Polyobjects:
@@ -92,6 +94,13 @@
    subsector, as well as allowing the BSP tree to impose its natural 
    ordering on polyobjects amongst all subsectors.
 */
+
+//
+// Defines
+//
+
+#define REVERSE_ANGLE(x) ((ANG360 >> ANGLETOFINESHIFT) - (x))
+#define BYTEANGLEMUL     (ANG90/64)
 
 //
 // Globals
@@ -392,7 +401,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    // don't spawn a polyobject more than once
    if(po->segCount)
    {
-      doom_printf("polyobj %d has more than one spawn spot", po->id);
+      doom_printf(FC_ERROR "polyobj %d has more than one spawn spot", po->id);
       return;
    }
 
@@ -414,6 +423,10 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
          seg->linedef->args[0] == po->id)
       {
          Polyobj_findSegs(po, seg);
+         po->mirror = seg->linedef->args[1];
+         if(po->mirror == po->id) // do not allow a self-reference
+            po->mirror = -1;
+         // TODO: sound sequence is in args[2]
          break;
       }
    }
@@ -428,11 +441,17 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    //    temporary list of segs which is then copied into the polyobject in 
    //    sorted order.
    if(po->segCount == 0)
+   {
       Polyobj_findExplicit(po);
+      // if an error occurred above, quit processing this object
+      if(po->isBad)
+         return;
+      po->mirror = po->segs[0]->linedef->args[2];
+      if(po->mirror == po->id) // do not allow a self-reference
+         po->mirror = -1;
+      // TODO: sound sequence is in args[3]
+   }
 
-   // if an error occurred above, quit processing this object
-   if(po->isBad)
-      return;
 
    // set the polyobject's spawn spot
    po->spawnSpot.x = spawnSpot->x;
@@ -1013,6 +1032,16 @@ polyobj_t *Polyobj_GetForNum(int id)
    return curidx == numPolyObjects ? NULL : &PolyObjects[curidx];
 }
 
+//
+// Polyobj_GetMirror
+//
+// Retrieves the mirroring polyobject if one exists. Returns NULL
+// otherwise.
+//
+polyobj_t *Polyobj_GetMirror(polyobj_t *po)
+{
+   return (po && po->mirror != -1) ? Polyobj_GetForNum(po->mirror) : NULL;
+}
 
 // structure used to queue up mobj pointers in Polyobj_InitLevel
 typedef struct mobjqitem_s
@@ -1163,6 +1192,553 @@ void Polyobj_Ticker(void)
       Polyobj_removeFromSubsec(po);      
       Polyobj_attachToSubsec(po);
    }
+}
+
+// Thinker Functions
+
+//
+// T_PolyObjRotate
+//
+// Thinker function for PolyObject rotation.
+//
+void T_PolyObjRotate(polyrotate_t *th)
+{
+   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+
+#ifdef RANGECHECK
+   if(!po)
+      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", th->polyObjNum);
+#endif
+
+   // rotate by 'speed' angle per frame
+   // if distance == -1, this polyobject rotates perpetually
+   if(Polyobj_rotate(po, th->speed) && th->distance != -1)
+   {
+      int avel = D_abs(th->speed);
+
+      // decrement distance by the amount it moved
+      th->distance -= avel;
+
+      // are we at or past the destination?
+      if(th->distance <= 0)
+      {
+         // remove thinker
+         if(po->thinker == &th->thinker)
+            po->thinker = NULL;
+         P_RemoveThinker(&th->thinker);
+
+         // TODO: notify scripts
+         // TODO: sound sequence stop event
+      }
+      else if(th->distance < avel)
+      {
+         // we have less than one multiple of 'speed' left to go,
+         // so change the speed so that it doesn't pass the destination
+         th->speed = th->speed >= 0 ? th->distance : -th->distance;
+      }
+   }
+}
+
+//
+// Polyobj_componentSpeed
+//
+// Calculates the speed components from the desired resultant velocity.
+//
+d_inline static void Polyobj_componentSpeed(int resVel, int angle, 
+                                            int *xVel, int *yVel)
+{
+   *xVel = FixedMul(resVel, finecosine[angle]);
+   *yVel = FixedMul(resVel,   finesine[angle]);
+}
+
+void T_PolyObjMove(polymove_t *th)
+{
+   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+
+#ifdef RANGECHECK
+   if(!po)
+      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", th->polyObjNum);
+#endif
+
+   // move the polyobject one step along its movement angle
+   if(Polyobj_moveXY(po, th->momx, th->momy))
+   {
+      int avel = D_abs(th->speed);
+
+      // decrement distance by the amount it moved
+      th->distance -= avel;
+
+      // are we at or past the destination?
+      if(th->distance <= 0)
+      {
+         // remove thinker
+         if(po->thinker == &th->thinker)
+            po->thinker = NULL;
+         P_RemoveThinker(&th->thinker);
+
+         // TODO: notify scripts
+         // TODO: sound sequence stop event
+      }
+      else if(th->distance < avel)
+      {
+         // we have less than one multiple of 'speed' left to go,
+         // so change the speed so that it doesn't pass the destination
+         th->speed = th->speed >= 0 ? th->distance : -th->distance;
+         Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+      }
+   }
+}
+
+void T_PolyDoorSlide(polyslidedoor_t *th)
+{
+   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+
+#ifdef RANGECHECK
+   if(!po)
+      I_Error("T_PolyDoorSlide: thinker has invalid id %d\n", th->polyObjNum);
+#endif
+
+   // count down wait period
+   if(th->delayCount)
+   {
+      if(--th->delayCount == 0)
+         ; // TODO: start sound sequence event
+      return;
+   }
+
+      // move the polyobject one step along its movement angle
+   if(Polyobj_moveXY(po, th->momx, th->momy))
+   {
+      int avel = D_abs(th->speed);
+      
+      // decrement distance by the amount it moved
+      th->distance -= avel;
+      
+      // are we at or past the destination?
+      if(th->distance <= 0)
+      {
+         // does it need to close?
+         if(!th->closing)
+         {
+            th->closing = true;
+            
+            // reset distance and speed
+            th->distance = th->initDistance;
+            th->speed    = th->initSpeed;
+            
+            // start delay
+            th->delayCount = th->delay;
+            
+            // reverse angle
+            th->angle = (ANG360 >> ANGLETOFINESHIFT) - th->angle;
+            
+            // reset component speeds
+            Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+         } 
+         else
+         {
+            // remove thinker
+            if(po->thinker == &th->thinker)
+               po->thinker = NULL;
+            P_RemoveThinker(&th->thinker);
+            // TODO: notify scripts
+         }
+         // TODO: sound sequence stop event
+      }
+      else if(th->distance < avel)
+      {
+         // we have less than one multiple of 'speed' left to go,
+         // so change the speed so that it doesn't pass the destination
+         th->speed = th->speed >= 0 ? th->distance : -th->distance;
+         Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+      }
+   }
+   else if(po->damage == 0 || th->closing) // only if not crushing, or closing
+   {
+      // move was blocked, special handling required -- make it reopen
+
+      th->distance = th->initDistance - th->distance;
+      th->speed    = th->initSpeed;
+      th->angle    = REVERSE_ANGLE(th->angle);
+      th->momx     = -th->momx;
+      th->momy     = -th->momy;
+      th->closing  = false;
+
+      // TODO: sound sequence start event
+   }
+}
+
+void T_PolyDoorSwing(polyswingdoor_t *th)
+{
+   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+
+#ifdef RANGECHECK
+   if(!po)
+      I_Error("T_PolyDoorSwing: thinker has invalid id %d\n", th->polyObjNum);
+#endif
+
+   // count down wait period
+   if(th->delayCount)
+   {
+      if(--th->delayCount == 0)
+         ; // TODO: start sound sequence event
+      return;
+   }
+
+   // rotate by 'speed' angle per frame
+   // if distance == -1, this polyobject rotates perpetually
+   if(Polyobj_rotate(po, th->speed) && th->distance != -1)
+   {
+      int avel = D_abs(th->speed);
+
+      // decrement distance by the amount it moved
+      th->distance -= avel;
+
+      // are we at or past the destination?
+      if(th->distance <= 0)
+      {
+         // does it need to close?
+         if(!th->closing)
+         {
+            th->closing = true;
+            
+            // reset distance and speed
+            th->distance =  th->initDistance;
+            th->speed    = -th->initSpeed; // reverse speed on close
+            
+            // start delay
+            th->delayCount = th->delay;            
+         } 
+         else
+         {
+            // remove thinker
+            if(po->thinker == &th->thinker)
+               po->thinker = NULL;
+            P_RemoveThinker(&th->thinker);
+            // TODO: notify scripts
+         }
+         // TODO: sound sequence stop event
+      }
+      else if(th->distance < avel)
+      {
+         // we have less than one multiple of 'speed' left to go,
+         // so change the speed so that it doesn't pass the destination
+         th->speed = th->speed >= 0 ? th->distance : -th->distance;
+      }
+   }
+   else if(po->damage == 0 || th->closing) // only if not crushing, or closing
+   {
+      // move was blocked, special handling required -- make it reopen
+
+      th->distance = th->initDistance - th->distance;
+      th->speed    = -th->initSpeed;
+      th->closing  = false;
+
+      // TODO: sound sequence start event
+   }
+}
+
+// Linedef Handlers
+
+int EV_DoPolyObjRotate(polyrotdata_t *prdata)
+{
+   polyobj_t *po;
+   polyrotate_t *th;
+   int diracc = -1;
+
+   if(!(po = Polyobj_GetForNum(prdata->polyObjNum)))
+   {
+      doom_printf(FC_ERROR "EV_DoPolyObjRotate: bad polyobj %d", 
+                  prdata->polyObjNum);
+      return 0;
+   }
+
+   // don't allow line actions to affect bad polyobjects
+   if(po->isBad)
+      return 0;
+
+   // check for override if this polyobj already has a thinker
+   if(po->thinker && !prdata->overRide)
+      return 0;
+
+   // create a new thinker
+   th = Z_Malloc(sizeof(polyrotate_t), PU_LEVSPEC, NULL);
+   th->thinker.function = T_PolyObjRotate;
+   P_AddThinker(&th->thinker);
+   po->thinker = &th->thinker;
+
+   // set fields
+   th->polyObjNum = prdata->polyObjNum;
+   
+   // use Hexen-style byte angles for speed and distance
+   th->speed = (prdata->speed * prdata->direction * BYTEANGLEMUL) >> 3;
+
+   if(prdata->distance == 255)    // 255 means perpetual
+      th->distance = -1;
+   else if(prdata->distance == 0) // 0 means 360 degrees
+      th->distance = ANG360 - 1;
+   else
+      th->distance = prdata->distance * BYTEANGLEMUL;
+
+   // TODO: start sound sequence event
+
+   // apply action to mirroring polyobjects as well
+   while((po = Polyobj_GetMirror(po)))
+   {
+      if(po->isBad)
+         break;
+
+      // check for override if this polyobj already has a thinker
+      if(po->thinker && !prdata->overRide)
+         break;
+      
+      // create a new thinker
+      th = Z_Malloc(sizeof(polyrotate_t), PU_LEVSPEC, NULL);
+      th->thinker.function = T_PolyObjRotate;
+      P_AddThinker(&th->thinker);
+      po->thinker = &th->thinker;
+      
+      // set fields
+      th->polyObjNum = po->id;
+      
+      // use opposite direction for mirroring polyobjects
+      // alternate the direction for each successive mirror
+      th->speed = 
+         (prdata->speed * diracc * prdata->direction * BYTEANGLEMUL) >> 3;
+      diracc = (diracc > 0) ? -1 : 1;
+      
+      if(prdata->distance == 255)    // 255 means perpetual
+         th->distance = -1;
+      else if(prdata->distance == 0) // 0 means approx. 360 degrees
+         th->distance = ANG360 - 1;
+      else
+         th->distance = prdata->distance * BYTEANGLEMUL;
+
+      // TODO: start sound sequence event
+   }
+
+   // action was successful
+   return 1;
+}
+
+int EV_DoPolyObjMove(polymovedata_t *pmdata)
+{
+   polyobj_t *po;
+   polymove_t *th;
+   int angadd = ANG180;
+
+   if(!(po = Polyobj_GetForNum(pmdata->polyObjNum)))
+   {
+      doom_printf(FC_ERROR "EV_DoPolyObjMove: bad polyobj %d", 
+                  pmdata->polyObjNum);
+      return 0;
+   }
+
+   // don't allow line actions to affect bad polyobjects
+   if(po->isBad)
+      return 0;
+
+   // check for override if this polyobj already has a thinker
+   if(po->thinker && !pmdata->overRide)
+      return 0;
+
+   // create a new thinker
+   th = Z_Malloc(sizeof(polymove_t), PU_LEVSPEC, NULL);
+   th->thinker.function = T_PolyObjMove;
+   P_AddThinker(&th->thinker);
+   po->thinker = &th->thinker;
+
+   // set fields
+   th->polyObjNum = pmdata->polyObjNum;
+   th->distance   = pmdata->distance;
+   th->speed      = pmdata->speed;
+   th->angle      = (pmdata->angle * BYTEANGLEMUL) >> ANGLETOFINESHIFT;
+
+   // set component speeds
+   Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+
+   // TODO: start sound sequence event
+
+   // apply action to mirroring polyobjects as well
+   while((po = Polyobj_GetMirror(po)))
+   {
+      if(po->isBad)
+         break;
+
+      // check for override if this polyobject already has a thinker
+      if(po->thinker && !pmdata->overRide)
+         break;
+
+      // create a new thinker
+      th = Z_Malloc(sizeof(polymove_t), PU_LEVSPEC, NULL);
+      th->thinker.function = T_PolyObjMove;
+      P_AddThinker(&th->thinker);
+      po->thinker = &th->thinker;
+      
+      // set fields
+      th->polyObjNum = po->id;
+      th->distance   = pmdata->distance;
+      th->speed      = pmdata->speed;
+      
+      // use opposite angle for every other mirror
+      th->angle = ((pmdata->angle * BYTEANGLEMUL) + angadd) >> ANGLETOFINESHIFT;
+      angadd = angadd ? 0 : ANG180;
+      
+      // set component speeds
+      Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+      
+      // TODO: start sound sequence event
+   }
+
+   // action was successful
+   return 1;
+}
+
+static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
+{
+   polyslidedoor_t *th;
+   int angadd = ANG180;
+
+   // allocate and add a new slide door thinker
+   th = Z_Malloc(sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
+   th->thinker.function = T_PolyDoorSlide;
+   P_AddThinker(&th->thinker);
+   
+   // point the polyobject to this thinker
+   po->thinker = &th->thinker;
+
+   // setup fields of the thinker
+   th->polyObjNum = po->id;
+   th->closing    = false;
+   th->delay      = doordata->delay;
+   th->delayCount = 0;
+   th->distance   = th->initDistance = doordata->distance;
+   th->speed      = th->initSpeed    = doordata->speed;
+   th->angle      = (doordata->angle * BYTEANGLEMUL) >> ANGLETOFINESHIFT;
+   
+   Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+
+   // TODO: sound sequence start event
+
+   // start action on mirroring polyobjects as well
+   while((po = Polyobj_GetMirror(po)))
+   {
+      // don't allow line actions to affect bad polyobjects;
+      // polyobject doors don't allow action overrides
+      if(po->isBad || po->thinker)
+         break;
+
+      th = Z_Malloc(sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
+      th->thinker.function = T_PolyDoorSlide;
+      P_AddThinker(&th->thinker);
+
+      // point the polyobject to this thinker
+      po->thinker = &th->thinker;
+
+      th->polyObjNum = po->id;
+      th->closing    = false;
+      th->delay      = doordata->delay;
+      th->delayCount = 0;
+      th->distance   = th->initDistance = doordata->distance;
+      th->speed      = th->initSpeed    = doordata->speed;
+      
+      // alternate angle for each successive mirror
+      th->angle = ((doordata->angle * BYTEANGLEMUL) + angadd) >> ANGLETOFINESHIFT;
+      angadd = angadd ? 0 : ANG180;
+
+      Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+
+      // TODO: sound sequence start event
+   }
+}
+
+static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
+{
+   polyswingdoor_t *th;
+   int diracc = -1;
+
+   // allocate and add a new swing door thinker
+   th = Z_Malloc(sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
+   th->thinker.function = T_PolyDoorSwing;
+   P_AddThinker(&th->thinker);
+   
+   // point the polyobject to this thinker
+   po->thinker = &th->thinker;
+
+   // setup fields of the thinker
+   th->polyObjNum   = po->id;
+   th->closing      = false;
+   th->delay        = doordata->delay;
+   th->delayCount   = 0;
+   th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
+   th->speed        = (doordata->speed * BYTEANGLEMUL) >> 3;
+   th->initSpeed    = th->speed;
+   
+   // TODO: sound sequence start event
+
+   // start action on mirroring polyobjects as well
+   while((po = Polyobj_GetMirror(po)))
+   {
+      // don't allow line actions to affect bad polyobjects;
+      // polyobject doors don't allow action overrides
+      if(po->isBad || po->thinker)
+         break;
+
+      th = Z_Malloc(sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
+      th->thinker.function = T_PolyDoorSwing;
+      P_AddThinker(&th->thinker);
+
+      // point the polyobject to this thinker
+      po->thinker = &th->thinker;
+
+      // setup fields of the thinker
+      th->polyObjNum   = po->id;
+      th->closing      = false;
+      th->delay        = doordata->delay;
+      th->delayCount   = 0;
+      th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
+
+      // alternate direction with each mirror
+      th->speed = (doordata->speed * BYTEANGLEMUL * diracc) >> 3;
+      diracc = (diracc > 0) ? -1 : 1;
+
+      th->initSpeed = th->speed;
+
+      // TODO: sound sequence start event
+   }
+}
+
+int EV_DoPolyDoor(polydoordata_t *doordata)
+{
+   polyobj_t *po;
+
+   if(!(po = Polyobj_GetForNum(doordata->polyObjNum)))
+   {
+      doom_printf(FC_ERROR "EV_DoPolyDoor: bad polyobj %d", 
+                  doordata->polyObjNum);
+      return 0;
+   }
+
+   // don't allow line actions to affect bad polyobjects;
+   // polyobject doors don't allow action overrides
+   if(po->isBad || po->thinker)
+      return 0;
+
+   switch(doordata->doorType)
+   {
+   case POLY_DOOR_SLIDE:
+      Polyobj_doSlideDoor(po, doordata);
+      break;
+   case POLY_DOOR_SWING:
+      Polyobj_doSwingDoor(po, doordata);
+      break;
+   default:
+      doom_printf(FC_ERROR "EV_DoPolyDoor: unknown door type %d", 
+                  doordata->doorType);
+      return 0;
+   }
+
+   return 1;
 }
 
 #endif // ifdef POLYOBJECTS

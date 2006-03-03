@@ -1128,7 +1128,7 @@ static void HU_InitCenterMessage(void)
    centermessage_widget.cleartic = 0;
 }
 
-static char *centermsg_color;
+static const char *centermsg_color;
 
 //
 // HU_CenterMessage
