@@ -250,9 +250,6 @@ void P_Ticker(void)
    P_RespawnSpecials();
    if(demo_version >= 329)
       P_AnimateSurfaces(); // haleyjd 04/14/99
-#ifdef POLYOBJECTS
-   Polyobj_Ticker();      // haleyjd 02/20/06
-#endif
    
    leveltime++;                       // for par times
 

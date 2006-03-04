@@ -81,8 +81,8 @@ typedef struct polyobj_s
 
    struct degenmobj_s spawnSpot; // location of spawn spot
    struct vertex_s    centerPt;  // center point
+   fixed_t zdist;                // viewz distance for sorting
    angle_t angle;                // for rotation
-   boolean hasMoved;             // if true, need to recalculate center pt
    boolean attached;             // if true, is attached to a subsector
 
    fixed_t blockbox[4]; // bounding box for clipping
@@ -206,7 +206,6 @@ typedef struct polydoordata_s
 
 polyobj_t *Polyobj_GetForNum(int id);
 void Polyobj_InitLevel(void);
-void Polyobj_Ticker(void);
 
 int EV_DoPolyDoor(polydoordata_t *);
 int EV_DoPolyObjMove(polymovedata_t *);

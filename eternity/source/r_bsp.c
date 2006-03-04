@@ -702,6 +702,65 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
 }
 
 #ifdef POLYOBJECTS
+
+static int numpolys;        // number of polyobjects in current subsector
+static int num_po_ptrs;     // number of polyobject pointers allocated
+static polyobj_t **po_ptrs; // temp ptr array to sort polyobject pointers
+
+//
+// R_PolyobjCompare
+//
+// Callback for qsort that compares the z distance of two polyobjects.
+// Returns the difference such that the closer polyobject will be
+// sorted first.
+//
+static int R_PolyobjCompare(const void *p1, const void *p2)
+{
+   const polyobj_t *po1 = *(polyobj_t **)p1;
+   const polyobj_t *po2 = *(polyobj_t **)p2;
+
+   return po1->zdist - po2->zdist;
+}
+
+//
+// R_SortPolyObjects
+//
+// haleyjd 03/03/06: Here's the REAL meat of Eternity's polyobject system.
+// Hexen just figured this was impossible, but as mentioned in polyobj.c,
+// it is perfectly doable within the confines of the BSP tree. Polyobjects
+// must be sorted to draw in DOOM's front-to-back order within individual
+// subsectors. This is a modified version of R_SortVisSprites.
+//
+static void R_SortPolyObjects(subsector_t *sub)
+{
+   if(numpolys)
+   {
+      polyobj_t *po;
+      int i = 0;
+
+      // allocate twice the number needed to minimize allocations
+      if(num_po_ptrs < numpolys*2)
+      {
+         // use free instead realloc since faster (thanks Lee ^_^)
+         free(po_ptrs);
+         po_ptrs = malloc((num_po_ptrs = numpolys*2) * sizeof(*po_ptrs));
+      }
+
+      po = sub->polyList;
+
+      while(po)
+      {
+         po->zdist = R_PointToDist2(viewx, viewy, 
+                                    po->centerPt.x, po->centerPt.y);
+         po_ptrs[i++] = po;
+         po = (polyobj_t *)(po->link.next);
+      }
+
+      // the polyobjects are NOT in any particular order, so use qsort
+      qsort(po_ptrs, numpolys, sizeof(polyobj_t *), R_PolyobjCompare);
+   }
+}
+
 //
 // R_AddPolyObjects
 //
@@ -711,14 +770,26 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
 static void R_AddPolyObjects(subsector_t *sub)
 {
    polyobj_t *po = sub->polyList;
-   int i;
 
+   int i, j;
+
+   numpolys = 0;
+
+   // count polyobjects
    while(po)
    {
-      for(i = 0; i < po->segCount; ++i)
-         R_AddLine(po->segs[i]);
-
+      ++numpolys;
       po = (polyobj_t *)(po->link.next);
+   }
+
+   // sort polyobjects
+   R_SortPolyObjects(sub);
+
+   // render polyobjects
+   for(i = 0; i < numpolys; ++i)
+   {
+      for(j = 0; j < po_ptrs[i]->segCount; ++j)
+         R_AddLine(po_ptrs[i]->segs[j]);
    }
 }
 #endif

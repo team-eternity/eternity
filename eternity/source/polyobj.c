@@ -522,9 +522,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &sspot);
    }
 
-   // all polyobjects start flagged as having moved
-   po->hasMoved = true;
-
+   // attach to subsector
    Polyobj_attachToSubsec(po);
 }
 
@@ -535,7 +533,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 //
 static void Polyobj_attachToSubsec(polyobj_t *po)
 {
-   subsector_t *ss;
+   subsector_t  *ss;
    double center_x = 0.0, center_y = 0.0;
    int i;
 
@@ -543,24 +541,17 @@ static void Polyobj_attachToSubsec(polyobj_t *po)
    if(po->isBad)
       return;
 
-   // the center point calculation is only necessary if the polyobject has
-   // moved since the last time it was attached.
-   if(po->hasMoved)
+   for(i = 0; i < po->numVertices; ++i)
    {
-      po->hasMoved = false;
-
-      for(i = 0; i < po->numVertices; ++i)
-      {
-         center_x += (double)(po->vertices[i]->x) / FRACUNIT;
-         center_y += (double)(po->vertices[i]->y) / FRACUNIT;
-      }
-
-      center_x /= po->numVertices;
-      center_y /= po->numVertices;
-
-      po->centerPt.x = (fixed_t)(center_x * FRACUNIT);
-      po->centerPt.y = (fixed_t)(center_y * FRACUNIT);
+      center_x += (double)(po->vertices[i]->x) / FRACUNIT;
+      center_y += (double)(po->vertices[i]->y) / FRACUNIT;
    }
+   
+   center_x /= po->numVertices;
+   center_y /= po->numVertices;
+   
+   po->centerPt.x = (fixed_t)(center_x * FRACUNIT);
+   po->centerPt.y = (fixed_t)(center_y * FRACUNIT);
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
@@ -837,6 +828,9 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
    // unlink it from the blockmap
    Polyobj_removeFromBlockmap(po);
 
+   // unlink it from its subsector
+   Polyobj_removeFromSubsec(po);
+
    // translate vertices
    for(i = 0; i < po->numVertices; ++i)
       Polyobj_vecAdd(po->vertices[i], &vec);
@@ -863,13 +857,14 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
    {
       // translate the spawnSpot as well
       po->spawnSpot.x += vec.x;
-      po->spawnSpot.y += vec.y;    
-      
-      po->hasMoved = true;
+      po->spawnSpot.y += vec.y;          
    }
 
    // relink to blockmap
    Polyobj_linkToBlockmap(po);
+
+   // relink to subsector
+   Polyobj_attachToSubsec(po);
 
    return !hitthing;
 }
@@ -959,6 +954,9 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
    // unlink it from the blockmap
    Polyobj_removeFromBlockmap(po);
 
+   // remove from subsector
+   Polyobj_removeFromSubsec(po);
+
    angle = (po->angle + delta) >> ANGLETOFINESHIFT;
 
    // point about which to rotate is the spawn spot
@@ -1002,12 +1000,13 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
 
       // update polyobject's angle
       po->angle += delta;
-
-      po->hasMoved = true;
    }
 
    // relink to blockmap
    Polyobj_linkToBlockmap(po);
+
+   // relink to subsector
+   Polyobj_attachToSubsec(po);
 
    return !hitthing;
 }
@@ -1161,8 +1160,8 @@ void Polyobj_InitLevel(void)
          printf("\tline %d: %p\n", j, po->lines[j]);
       printf("spawnSpot = (%d, %d)\n", po->spawnSpot.x >> FRACBITS, po->spawnSpot.y >> FRACBITS);
       printf("centerPt = (%d, %d)\n", po->centerPt.x >> FRACBITS, po->centerPt.y >> FRACBITS);
-      printf("hasMoved = %d, attached = %d, linked = %d, validcount = %d, isBad = %d\n",
-             po->hasMoved, po->attached, po->linked, po->validcount, po->isBad);
+      printf("attached = %d, linked = %d, validcount = %d, isBad = %d\n",
+             po->attached, po->linked, po->validcount, po->isBad);
       printf("blockbox: [%d, %d, %d, %d]\n", 
              po->blockbox[BOXLEFT], po->blockbox[BOXRIGHT], po->blockbox[BOXBOTTOM],
              po->blockbox[BOXTOP]);
@@ -1172,26 +1171,6 @@ void Polyobj_InitLevel(void)
    // done with mobj queues
    M_QueueFree(&spawnqueue);
    M_QueueFree(&anchorqueue);
-}
-
-//
-// Polyobj_Ticker
-//
-// Called from P_Ticker after thinkers run. Removes polyobjects from their
-// current subsectors and reattaches them to the appropriate subsectors.
-//
-void Polyobj_Ticker(void)
-{
-   int i;
-   polyobj_t *po;
-
-   for(i = 0; i < numPolyObjects; ++i)
-   {
-      po = &PolyObjects[i];
-
-      Polyobj_removeFromSubsec(po);      
-      Polyobj_attachToSubsec(po);
-   }
 }
 
 // Thinker Functions
