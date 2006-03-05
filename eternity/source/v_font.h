@@ -70,6 +70,7 @@ void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map
 void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
 int  V_FontStringHeight(vfont_t *font, const unsigned char *s);
 int  V_FontStringWidth(vfont_t *font, const unsigned char *s);
+void V_FontSetAbsCentered(void);
 
 vfont_t *V_FontSelect(int fontnum);
 

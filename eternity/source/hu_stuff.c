@@ -871,6 +871,7 @@ typedef struct hu_textwidget_s
    tw_erase_t erasedata; // rect area to erase
    int flags;            // special flags
    int color;            // 02/12/06: needed to allow colored text drawing (col # + 1)
+   boolean absCentered;  // 03/04/06: if true, text is absolutely centered
 } hu_textwidget_t;
 
 //
@@ -900,6 +901,10 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
 
    if(tw->message && (!tw->cleartic || leveltime < tw->cleartic))
    {
+      // 03/04/06: absolute centering
+      if(tw->absCentered)
+         V_FontSetAbsCentered();
+
       if(tw->color)
          V_FontWriteTextColored(tw->font, tw->message, tw->color - 1, tw->x, tw->y);
       else
@@ -1018,6 +1023,7 @@ static void HU_TextWidgetClear(hu_widget_t *widget)
    }
    
    tw->message = NULL;
+   tw->absCentered = false;
 }
 
 //
@@ -1092,6 +1098,7 @@ static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
       newtw->font = V_FontSelect(VFONT_SMALL);
    newtw->cleartic = cleartic;
    newtw->flags = flags;
+   newtw->absCentered = false;
 
    // set message
    newtw->message = newtw->alloc = strdup(message);
@@ -1990,17 +1997,44 @@ static cell AMX_NATIVE_CALL sm_centermsgtimed(AMX *amx, cell *params)
    return 0;
 }
 
+static cell AMX_NATIVE_CALL sm_setwidgetabscenter(AMX *amx, cell *params)
+{
+   int err;
+   char *name;
+   hu_widget_t *widget;
+   hu_textwidget_t *tw;
+
+   // get name of widget
+   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   {
+      amx_RaiseError(amx, err);
+      return -1;
+   }
+
+   if((widget = HU_WidgetForName(name)) && widget->type == WIDGET_TEXT)
+   {
+      tw = (hu_textwidget_t *)widget;
+
+      tw->absCentered = params[2] ? true : false;
+   }
+
+   free(name);
+
+   return 0;
+}
+
 AMX_NATIVE_INFO hustuff_Natives[] =
 {
-   { "_MoveWidget",       sm_movewidget       },
-   { "_NewPatchWidget",   sm_newpatchwidget   },
-   { "_SetWidgetPatch",   sm_setwidgetpatch   },
-   { "_PatchWidgetColor", sm_patchwidgetcolor },
-   { "_NewTextWidget",    sm_newtextwidget    },
-   { "_GetWidgetText",    sm_getwidgettext    },
-   { "_SetWidgetText",    sm_setwidgettext    },
-   { "_ToggleWidget",     sm_togglewidget     },
-   { "_CenterMsgTimed",   sm_centermsgtimed   },
+   { "_MoveWidget",         sm_movewidget         },
+   { "_NewPatchWidget",     sm_newpatchwidget     },
+   { "_SetWidgetPatch",     sm_setwidgetpatch     },
+   { "_PatchWidgetColor",   sm_patchwidgetcolor   },
+   { "_NewTextWidget",      sm_newtextwidget      },
+   { "_GetWidgetText",      sm_getwidgettext      },
+   { "_SetWidgetText",      sm_setwidgettext      },
+   { "_ToggleWidget",       sm_togglewidget       },
+   { "_CenterMsgTimed",     sm_centermsgtimed     },
+   { "_SetWidgetAbsCenter", sm_setwidgetabscenter },
    { NULL, NULL }
 };
 

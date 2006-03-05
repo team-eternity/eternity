@@ -120,31 +120,33 @@ typedef struct polyrotate_s
 
 typedef struct polymove_s
 {
-   thinker_t thinker; // must be first
+   thinker_t thinker;  // must be first
 
-   int polyObjNum;    // numeric id of polyobject
-   int speed;         // resultant velocity
-   int momx;          // x component of speed along angle
-   int momy;          // y component of speed along angle
-   int distance;      // total distance to move
-   int angle;         // angle along which to move
+   int polyObjNum;     // numeric id of polyobject
+   int speed;          // resultant velocity
+   int momx;           // x component of speed along angle
+   int momy;           // y component of speed along angle
+   int distance;       // total distance to move
+   unsigned int angle; // angle along which to move
 } polymove_t;
 
 typedef struct polyslidedoor_s
 {
-   thinker_t thinker; // must be first
+   thinker_t thinker;      // must be first
 
-   int polyObjNum;    // numeric id of affected polyobject
-   int delay;         // delay time
-   int delayCount;    // delay counter
-   int initSpeed;     // initial speed 
-   int speed;         // speed of motion
-   int initDistance;  // initial distance to travel
-   int distance;      // current distance to travel
-   int angle;         // angle of motion
-   int momx;          // x component of speed along angle
-   int momy;          // y component of speed along angle
-   boolean closing;   // if true, is closing
+   int polyObjNum;         // numeric id of affected polyobject
+   int delay;              // delay time
+   int delayCount;         // delay counter
+   int initSpeed;          // initial speed 
+   int speed;              // speed of motion
+   int initDistance;       // initial distance to travel
+   int distance;           // current distance to travel
+   unsigned int initAngle; // intial angle
+   unsigned int angle;     // angle of motion
+   unsigned int revAngle;  // reversed angle to avoid roundoff error
+   int momx;               // x component of speed along angle
+   int momy;               // y component of speed along angle
+   boolean closing;        // if true, is closing
 } polyslidedoor_t;
 
 typedef struct polyswingdoor_s
@@ -176,11 +178,11 @@ typedef struct polyrotdata_s
 
 typedef struct polymovedata_s
 {
-   int polyObjNum;   // numeric id of polyobject to affect
-   fixed_t distance; // distance to move
-   fixed_t speed;    // linear speed
-   int angle;        // angle of movement
-   boolean overRide; // if true, will override any action on the object
+   int polyObjNum;     // numeric id of polyobject to affect
+   fixed_t distance;   // distance to move
+   fixed_t speed;      // linear speed
+   unsigned int angle; // angle of movement
+   boolean overRide;   // if true, will override any action on the object
 } polymovedata_t;
 
 // polyobject door types
@@ -192,12 +194,12 @@ typedef enum
 
 typedef struct polydoordata_s
 {
-   int polyObjNum;   // numeric id of polyobject to affect
-   int doorType;     // polyobj door type
-   int speed;        // linear or angular speed
-   int angle;        // for slide door only, angle of motion
-   int distance;     // distance to move
-   int delay;        // delay time after opening
+   int polyObjNum;     // numeric id of polyobject to affect
+   int doorType;       // polyobj door type
+   int speed;          // linear or angular speed
+   unsigned int angle; // for slide door only, angle of motion
+   int distance;       // distance to move
+   int delay;          // delay time after opening
 } polydoordata_t;
 
 //

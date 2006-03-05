@@ -43,6 +43,44 @@ static boolean fixedColor = false;
 static int fixedColNum = 0;
 static char *altMap = NULL;
 static boolean shadowChar = false;
+static boolean absCentered = false; // 03/04/06: every line will be centered
+
+
+//
+// V_FontLineWidth
+//
+// Finds the width of the string up to the first \n or the end.
+//
+static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
+{
+   int length = 0;        // current line width
+   unsigned char c;
+   patch_t *patch = NULL;
+   
+   for(; *s; s++)
+   {
+      c = *s;
+
+      if(c >= 128) // color code
+         continue;
+      
+      if(c == '\n') // newline
+         break;
+
+      // normalize character
+      if(font->upper)
+         c = toupper(c) - font->start;
+      else
+         c = c - font->start;
+
+      if(c >= font->size || !(patch = font->fontgfx[c]))
+         length += font->space;
+      else
+         length += (SHORT(patch->width) - font->dw);
+   }   
+   
+   return length;
+}
 
 //
 // V_FontWriteText
@@ -58,6 +96,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
 {
    patch_t *patch = NULL;   // patch for current character
    int     w;               // width of patch
+   int     sw;              
    
    const unsigned char *ch; // pointer to string
    unsigned int c;          // current character
@@ -89,9 +128,11 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       altMap = NULL;
       useAltMap = true;
    }
-   
+
+   sw = (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1;
+      
    ch = (const unsigned char *)s;
-   cx = x;
+   cx = absCentered ? sw : x;
    cy = y;
    
    while((c = *ch++))
@@ -128,7 +169,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
             if(colnum < 0 || colnum >= CR_LIMIT)
             {
                C_Printf("V_WriteText: invalid colour %i\n", colnum);
-               return;
+               continue;
             }
             else
                color = colrngs[colnum];
@@ -145,7 +186,8 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       }
       if(c == '\n')
       {
-         cx = x;
+         sw = (SCREENWIDTH - V_FontLineWidth(font, ch+1)) >> 1;
+         cx = absCentered ? sw : x;
          cy += font->cy;
          continue;
       }
@@ -192,6 +234,9 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    
    // reset text shadowing on exit
    shadowChar = false;
+
+   // reset absCentered on exit
+   absCentered = false;
 }
 
 //
@@ -233,6 +278,16 @@ void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y)
 {
    shadowChar = true;
    V_FontWriteText(font, s, x, y);
+}
+
+//
+// V_FontSetAbsCentered
+//
+// Sets the next string to be printed with absolute centering.
+//
+void V_FontSetAbsCentered(void)
+{
+   absCentered = true;
 }
 
 //

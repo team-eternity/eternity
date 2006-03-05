@@ -99,8 +99,8 @@
 // Defines
 //
 
-#define REVERSE_ANGLE(x) ((ANG360 >> ANGLETOFINESHIFT) - (x))
 #define BYTEANGLEMUL     (ANG90/64)
+#define B64_ANG360       0x100000000
 
 //
 // Globals
@@ -1309,7 +1309,7 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
             th->delayCount = th->delay;
             
             // reverse angle
-            th->angle = (ANG360 >> ANGLETOFINESHIFT) - th->angle;
+            th->angle = th->revAngle;
             
             // reset component speeds
             Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
@@ -1332,17 +1332,14 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
          Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
       }
    }
-   else if(po->damage == 0 || th->closing) // only if not crushing, or closing
+   else if(th->closing && !po->damage && th->distance != th->initDistance)
    {
       // move was blocked, special handling required -- make it reopen
-
       th->distance = th->initDistance - th->distance;
       th->speed    = th->initSpeed;
-      th->angle    = REVERSE_ANGLE(th->angle);
-      th->momx     = -th->momx;
-      th->momy     = -th->momy;
+      th->angle    = th->initAngle;
+      Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
       th->closing  = false;
-
       // TODO: sound sequence start event
    }
 }
@@ -1504,7 +1501,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
 {
    polyobj_t *po;
    polymove_t *th;
-   int angadd = ANG180;
+   unsigned int angadd = ANG180;
 
    if(!(po = Polyobj_GetForNum(pmdata->polyObjNum)))
    {
@@ -1576,7 +1573,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
 static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
 {
    polyslidedoor_t *th;
-   int angadd = ANG180;
+   unsigned int angtemp, angadd = ANG180;
 
    // allocate and add a new slide door thinker
    th = Z_Malloc(sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
@@ -1593,7 +1590,13 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    th->delayCount = 0;
    th->distance   = th->initDistance = doordata->distance;
    th->speed      = th->initSpeed    = doordata->speed;
-   th->angle      = (doordata->angle * BYTEANGLEMUL) >> ANGLETOFINESHIFT;
+   
+   // haleyjd: do angle reverse calculation in full precision to avoid
+   // drift due to ANGLETOFINESHIFT.
+   angtemp       = doordata->angle * BYTEANGLEMUL;
+   th->angle     = angtemp >> ANGLETOFINESHIFT;
+   th->initAngle = th->angle;
+   th->revAngle  = (angtemp + ANG180) >> ANGLETOFINESHIFT;
    
    Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
@@ -1622,7 +1625,10 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       th->speed      = th->initSpeed    = doordata->speed;
       
       // alternate angle for each successive mirror
-      th->angle = ((doordata->angle * BYTEANGLEMUL) + angadd) >> ANGLETOFINESHIFT;
+      angtemp       = doordata->angle * BYTEANGLEMUL + angadd;
+      th->angle     = angtemp >> ANGLETOFINESHIFT;
+      th->initAngle = th->angle;
+      th->revAngle  = (angtemp + ANG180) >> ANGLETOFINESHIFT;
       angadd = angadd ? 0 : ANG180;
 
       Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
