@@ -491,7 +491,7 @@ int EV_LightTurnOnPartway(int tag, fixed_t level)
       level = 0;
    if(level > FRACUNIT)
       level = FRACUNIT;
-   
+
    // search all sectors for ones with same tag as activating line
    for(i = -1; (i = P_FindSectorFromTag(tag,i)) >= 0;)
    {
