@@ -73,3 +73,6 @@ native _ToggleWidget(const name[], bool:disable);
 
 // Moves the indicated widget, if it exists.
 native _MoveWidget(const name[], x, y);
+
+// Sets a text widget to use absolute centering until the HUD is reset.
+native _SetWidgetAbsCenter(const name[], bool:centered)
