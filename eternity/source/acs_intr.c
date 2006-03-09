@@ -310,7 +310,7 @@ static int ACS_countThings(int type, int tid)
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function = P_MobjThinker)
+      if(th->function == P_MobjThinker)
       {
          mobj_t *mo = (mobj_t *)th;
 
@@ -318,7 +318,7 @@ static int ACS_countThings(int type, int tid)
          {
             // don't count killable things that are dead
             if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) &&
-               mo->health < 0)
+               mo->health <= 0)
                continue;
             ++count;
          }
