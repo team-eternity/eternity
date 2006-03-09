@@ -56,7 +56,8 @@ void Wipe_Initwipe(void)
    
    // SoM 2-4-04: ANYRES
    // use console height
-   starting_height = (current_height * globalyscale) >> FRACBITS;
+   // SoM: wtf? Why did I scale this before??? This should be within the 320x200 space unscaled!
+   starting_height = current_height;
    
    worms[0] = starting_height - M_Random()%16;
    
