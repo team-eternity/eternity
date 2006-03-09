@@ -102,6 +102,7 @@ void D_OpenFile(DWFILE *infile, const char *filename, char *mode)
 {
    infile->inp  = (byte *)fopen(filename, mode);
    infile->lump = NULL;
+   infile->lumpnum = -1;
 }
 
 //
@@ -116,6 +117,7 @@ void D_OpenLump(DWFILE *infile, int lumpnum)
 
    infile->size = infile->origsize = W_LumpLength(lumpnum);
    infile->inp = infile->lump = W_CacheLumpNum(lumpnum, PU_STATIC);
+   infile->lumpnum = lumpnum;
 }
 
 //
@@ -165,6 +167,18 @@ size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file)
 
       return numbytesread;
    }
+}
+
+//
+// D_FileLength
+//
+// haleyjd 03/08/06: returns the length of the file.
+//
+size_t D_FileLength(DWFILE *file)
+{
+   return 
+      !file->lump ? W_FileLength(fileno((FILE *)(file->inp))) :
+                    W_LumpLength(file->lumpnum);
 }
 
 // EOF

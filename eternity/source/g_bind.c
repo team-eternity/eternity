@@ -735,6 +735,17 @@ void G_LoadDefaults(void)
    if(!D_IsOpen(file))
       I_Error("G_LoadDefaults: couldn't open default key bindings\n");
 
+   // haleyjd 03/08/06: test for zero length
+   if(!D_IsLump(file) && D_FileLength(file) == 0)
+   {
+      // try the lump because the file is zero-length...
+      C_Printf("keys.csc is zero length, trying KEYDEFS\n");
+      D_Fclose(file);
+      D_OpenLump(file, W_GetNumForName("KEYDEFS"));
+      if(!D_IsOpen(file) || D_FileLength(file) == 0)
+         I_Error("G_LoadDefaults: KEYDEFS lump is empty\n");
+   }
+
    C_RunScript(file);
 
    D_Fclose(file);

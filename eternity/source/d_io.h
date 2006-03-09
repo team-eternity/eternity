@@ -59,6 +59,7 @@ typedef struct
   byte *inp, *lump; // Pointer to string or FILE
   long size;
   long origsize;    // for ungetc
+  long lumpnum;     // haleyjd 03/08/06: need to save this
 } DWFILE;
 
 char *D_Fgets(char *buf, size_t n, DWFILE *fp);
@@ -69,6 +70,7 @@ void D_OpenFile(DWFILE *infile, const char *filename, char *mode);
 void D_OpenLump(DWFILE *infile, int lumpnum);
 void D_Fclose(DWFILE *dwfile);
 size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file);
+size_t D_FileLength(DWFILE *file);
 
 d_inline static boolean D_IsOpen(DWFILE *dwfile)
 {
