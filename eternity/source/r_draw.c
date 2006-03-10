@@ -1535,7 +1535,6 @@ byte *ds_source;
 
 #ifndef USEASM      // killough 2/15/98
 
-#if 1
 void R_DrawSpan (void) 
 { 
   unsigned xposition;
@@ -1549,8 +1548,8 @@ void R_DrawSpan (void)
   unsigned count;
   unsigned spot; 
                 
-  xposition = ds_xfrac; yposition = ds_yfrac;
-  xstep = ds_xstep; ystep = ds_ystep;
+  xposition = ds_xfrac << 10; yposition = ds_yfrac << 10;
+  xstep = ds_xstep << 10; ystep = ds_ystep << 10;
                   
   source = ds_source;
   colormap = ds_colormap;
@@ -1559,22 +1558,22 @@ void R_DrawSpan (void)
   
   while (count >= 4)
   {      
-      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
       dest[0] = colormap[source[spot]]; 
       xposition += xstep;
       yposition += ystep;
 
-      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
       dest[1] = colormap[source[spot]]; 
       xposition += xstep;
       yposition += ystep;
 
-      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
       dest[2] = colormap[source[spot]]; 
       xposition += xstep;
       yposition += ystep;
 
-      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
       dest[3] = colormap[source[spot]]; 
       xposition += xstep;
       yposition += ystep;
@@ -1585,14 +1584,14 @@ void R_DrawSpan (void)
    }
    while (count--)
    { 
-      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
       *dest++ = colormap[source[spot]]; 
       xposition += xstep;
       yposition += ystep;
    } 
 } 
-#else
-void R_DrawSpan (void) 
+
+/*void R_DrawSpan (void) 
 { 
   register unsigned position;
   unsigned step;
@@ -1658,8 +1657,7 @@ void R_DrawSpan (void)
       *dest++ = colormap[source[spot]]; 
       count--;
     } 
-} 
-#endif
+}*/
 #endif
 
 //
