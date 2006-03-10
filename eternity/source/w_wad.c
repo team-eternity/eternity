@@ -52,7 +52,8 @@ int        numlumps;       // killough
 int        iwadhandle;     // sf: the handle of the main iwad
 int        firstWadHandle = -1; // haleyjd: track handle of first wad added
 
-static int W_FileLength(int handle)
+// SoM: you can't use this function in other files (d_io.c) if it's STATIC
+int W_FileLength(int handle)
 {
    struct stat fileinfo;
    if(fstat(handle, &fileinfo) == -1)
