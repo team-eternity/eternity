@@ -1535,6 +1535,63 @@ byte *ds_source;
 
 #ifndef USEASM      // killough 2/15/98
 
+#if 1
+void R_DrawSpan (void) 
+{ 
+  unsigned xposition;
+  unsigned yposition;
+  unsigned xstep, ystep;
+
+  byte *source;
+  byte *colormap;
+  byte *dest;
+    
+  unsigned count;
+  unsigned spot; 
+                
+  xposition = ds_xfrac; yposition = ds_yfrac;
+  xstep = ds_xstep; ystep = ds_ystep;
+                  
+  source = ds_source;
+  colormap = ds_colormap;
+  dest = ylookup[ds_y] + columnofs[ds_x1];       
+  count = ds_x2 - ds_x1 + 1; 
+  
+  while (count >= 4)
+  {      
+      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      dest[0] = colormap[source[spot]]; 
+      xposition += xstep;
+      yposition += ystep;
+
+      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      dest[1] = colormap[source[spot]]; 
+      xposition += xstep;
+      yposition += ystep;
+
+      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      dest[2] = colormap[source[spot]]; 
+      xposition += xstep;
+      yposition += ystep;
+
+      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      dest[3] = colormap[source[spot]]; 
+      xposition += xstep;
+      yposition += ystep;
+
+      dest += 4;
+      count -= 4;
+
+   }
+   while (count--)
+   { 
+      spot = ((xposition >> 10) & 0xFC0) | ((yposition >> 16) & 0x3F);
+      *dest++ = colormap[source[spot]]; 
+      xposition += xstep;
+      yposition += ystep;
+   } 
+} 
+#else
 void R_DrawSpan (void) 
 { 
   register unsigned position;
@@ -1548,7 +1605,7 @@ void R_DrawSpan (void)
   unsigned spot; 
   unsigned xtemp;
   unsigned ytemp;
-                
+
   position = ((ds_xfrac<<10)&0xffff0000) | ((ds_yfrac>>6)&0xffff);
   step = ((ds_xstep<<10)&0xffff0000) | ((ds_ystep>>6)&0xffff);
                 
@@ -1602,7 +1659,7 @@ void R_DrawSpan (void)
       count--;
     } 
 } 
-
+#endif
 #endif
 
 //
