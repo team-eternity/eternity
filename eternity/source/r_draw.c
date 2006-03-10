@@ -1535,6 +1535,8 @@ byte *ds_source;
 
 #ifndef USEASM      // killough 2/15/98
 
+// SoM: This is the high precision flat renderer, it will not distort the flat when looking down
+// or dying.
 void R_DrawSpan (void) 
 { 
   unsigned xposition;
@@ -1546,35 +1548,40 @@ void R_DrawSpan (void)
   byte *dest;
     
   unsigned count;
-  unsigned spot; 
-                
+  
+  // SoM: we only need 6 bits for the integer part (0 thru 63) so the rest
+  // can be used for the fraction part. This allows calculation of the memory address in the
+  // texture with two shifts, an OR and one AND. (see below)
+  // for texture sizes > 64 the amount of precision we can allow will decrease, but only by one
+  // bit per power of two (obviously)
+  // Ok, because I was able to eliminate the variable spot below, this function is now FASTER
+  // than doom's original span renderer. Whodathunkit?
   xposition = ds_xfrac << 10; yposition = ds_yfrac << 10;
   xstep = ds_xstep << 10; ystep = ds_ystep << 10;
                   
   source = ds_source;
   colormap = ds_colormap;
   dest = ylookup[ds_y] + columnofs[ds_x1];       
-  count = ds_x2 - ds_x1 + 1; 
-  
+  count = ds_x2 - ds_x1 + 1;
+
   while (count >= 4)
-  {      
-      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
-      dest[0] = colormap[source[spot]]; 
+  {
+      // SoM: Why didn't I see this earlier? the spot variable is a waste now because we don't
+      // have the uber complicated math to calculate it now, so that was a memory write we didn't
+      // need!
+      dest[0] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
-      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
-      dest[1] = colormap[source[spot]]; 
+      dest[1] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
-      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
-      dest[2] = colormap[source[spot]]; 
+      dest[2] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
-      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
-      dest[3] = colormap[source[spot]]; 
+      dest[3] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
@@ -1584,14 +1591,65 @@ void R_DrawSpan (void)
    }
    while (count--)
    { 
-      spot = ((xposition >> 20) & 0xFC0) | ((yposition >> 26) & 0x3F);
-      *dest++ = colormap[source[spot]]; 
+      *dest++ = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
    } 
-} 
+}
 
-/*void R_DrawSpan (void) 
+
+// This is the optimized version of the original flat drawing function.
+void R_DrawSpan_OLD (void) 
+{ 
+  register unsigned position;
+  unsigned step;
+
+  byte *source;
+  byte *colormap;
+  byte *dest;
+    
+  unsigned count;
+
+  position = ((ds_xfrac<<10)&0xffff0000) | ((ds_yfrac>>6)&0xffff);
+  step = ((ds_xstep<<10)&0xffff0000) | ((ds_ystep>>6)&0xffff);
+                
+  source = ds_source;
+  colormap = ds_colormap;
+  dest = ylookup[ds_y] + columnofs[ds_x1];       
+  count = ds_x2 - ds_x1 + 1; 
+
+  // SoM: So I went back and realized the error of ID's ways and this is even faster now!
+  // This is by far the fastest way because it uses the exact same number of ops mine does
+  // except it only has one addition and one memory write for the position variable.
+  // Now we only have two writes to memory (one for the pixel, one for position) 
+  while (count >= 4)
+    { 
+      dest[0] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      position += step;
+
+      dest[1] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      position += step;
+        
+      dest[2] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      position += step;
+        
+      dest[3] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      position += step;
+                
+      dest += 4;
+      count -= 4;
+    } 
+
+  while (count)
+    { 
+      *dest++ = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
+      position += step;
+      count--;
+    } 
+}
+
+
+void R_DrawSpan_ORIGIONAL (void) 
 { 
   register unsigned position;
   unsigned step;
@@ -1657,7 +1715,7 @@ void R_DrawSpan (void)
       *dest++ = colormap[source[spot]]; 
       count--;
     } 
-}*/
+}
 #endif
 
 //
