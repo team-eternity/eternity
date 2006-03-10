@@ -433,6 +433,10 @@ SOURCE=.\Source\sdl\i_net.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\Win32\i_opndir.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\sdl\i_sound.c
 # End Source File
 # Begin Source File
@@ -766,6 +770,10 @@ SOURCE=.\Source\Win32\i_fnames.h
 # Begin Source File
 
 SOURCE=.\Source\i_net.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\Win32\i_opndir.h
 # End Source File
 # Begin Source File
 
