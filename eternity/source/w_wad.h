@@ -88,6 +88,7 @@ int W_AddNewFile(char *filename);
 // killough 4/17/98: if W_CheckNumForName() called with only
 // one argument, pass ns_global as the default namespace
 
+int W_FileLength(int handle);
 #define W_CheckNumForName(name) (W_CheckNumForName)(name, ns_global)
 int     (W_CheckNumForName)(const char* name, int);   // killough 4/17/98
 int     W_GetNumForName(const char* name);

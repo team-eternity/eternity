@@ -52,7 +52,13 @@ int        numlumps;       // killough
 int        iwadhandle;     // sf: the handle of the main iwad
 int        firstWadHandle = -1; // haleyjd: track handle of first wad added
 
-// SoM: you can't use this function in other files (d_io.c) if it's STATIC
+// 
+// W_FileLength
+//
+// Gets the length of a file given its handle.
+// FIXME/TODO: don't use POSIX fstat; is slower and less portable
+// haleyjd 03/09/06: made global
+//
 int W_FileLength(int handle)
 {
    struct stat fileinfo;
