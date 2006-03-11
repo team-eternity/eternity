@@ -520,7 +520,7 @@ CONSOLE_COMMAND(listskins, 0)
 #define isvowel(c)              \
         ( (c)=='a' || (c)=='e' || (c)=='i' || (c)=='o' || (c)=='u' )
 
-VARIABLE_STRING(default_skin, NULL, 50);
+VARIABLE_STRING(default_skin, NULL, 256);
 
         // player skin
 CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)

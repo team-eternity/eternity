@@ -31,6 +31,7 @@
 
 #include "../z_zone.h"
 #include "../d_io.h"
+#include "../d_dwfile.h"
 #include "../w_wad.h"
 #include "../m_qstr.h"
 

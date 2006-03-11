@@ -43,6 +43,7 @@ rcsid[] = "$Id: m_misc.c,v 1.60 1998/06/03 20:32:12 jim Exp $";
 #include "m_argv.h"
 #include "g_game.h"
 #include "mn_engin.h"
+#include "mn_files.h"
 #include "am_map.h"
 #include "w_wad.h"
 #include "i_system.h"
@@ -1556,6 +1557,13 @@ default_t defaults[] =
       &menu_toggleisback, NULL,
       0, {0, 1}, dt_number, ss_none, wad_no,
       "1 to make menu toggle action back up one level (like zdoom)"
+   },
+
+   {
+      "wad_directory",
+      (int *)&wad_directory, NULL,
+      (int) ".", {0}, dt_string, ss_none, wad_no,
+      "user's default wad directory"
    },
 
    { NULL }         // last entry

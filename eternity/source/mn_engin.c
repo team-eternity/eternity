@@ -710,6 +710,8 @@ void MN_Drawer(void)
 
 static void MN_ShowContents(void);
 
+extern const char *shiftxform;
+
 //
 // MN_Responder
 //
@@ -722,6 +724,7 @@ boolean MN_Responder(event_t *ev)
    unsigned char ch;
    int *menuSounds = gameModeInfo->menuSounds; // haleyjd
    static boolean ctrldown = false;
+   static boolean shiftdown = false;
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
@@ -730,6 +733,10 @@ boolean MN_Responder(event_t *ev)
    // haleyjd 10/07/05
    if(ev->data1 == KEYD_RCTRL)
       ctrldown = (ev->type == ev_keydown);
+
+   // haleyjd 03/11/06
+   if(ev->data1 == KEYD_RSHIFT)
+      shiftdown = (ev->type == ev_keydown);
 
    // we only care about key presses
    if(ev->type != ev_keydown)
@@ -778,6 +785,7 @@ boolean MN_Responder(event_t *ev)
       
       // only care about valid characters
       // dont allow too many characters on one command line
+      ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
 
       if((ch > 31 && ch < 127) && 
          strlen(input_buffer) <=
@@ -1132,6 +1140,8 @@ void MN_StartMenu(menu_t *menu)
 {
    if(!menuactive)
    {
+      C_InstaPopup();          // haleyjd 03/11/06: get rid of console...
+      console_enabled = false; // ...and don't allow it to be reopened
       MN_ActivateMenu();
       current_menu = menu;
       menu_history_num = 0;  // reset history
@@ -1188,6 +1198,7 @@ void MN_PrevMenu(void)
 //
 void MN_ClearMenus(void)
 {
+   console_enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
    redrawsbar = redrawborder = true;  // need redraw
 }

@@ -38,6 +38,7 @@
 #include "d_keywds.h"
 #include "doomtype.h"
 #include "d_io.h"
+#include "d_dwfile.h"
 #include "w_wad.h"
 
 char *D_Fgets(char *buf, size_t n, DWFILE *fp)

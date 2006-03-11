@@ -53,6 +53,7 @@
 #include "w_wad.h"
 #include "am_map.h"
 #include "d_gi.h"
+#include "d_io.h"
 #include "m_qstr.h"
 #include "a_small.h"
 #include "d_dehtbl.h"

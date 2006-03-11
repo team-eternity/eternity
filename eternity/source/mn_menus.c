@@ -51,6 +51,7 @@
 #include "mn_htic.h"
 #include "mn_engin.h"
 #include "mn_misc.h"
+#include "mn_files.h"
 #include "r_defs.h"
 #include "r_draw.h"
 #include "s_sound.h"
@@ -525,9 +526,10 @@ static menuitem_t mn_loadwad_items[] =
    {it_gap},
    {it_info,      FC_GOLD "load wad"},
    {it_variable,  "wad name",          "mn_wadname"},
+   {it_variable,  "wad directory",     "wad_directory"},
    {it_runcmd,    "select wad...",     "mn_selectwad"},
    {it_gap},
-   {it_runcmd,    "load wad",          "addfile %mn_wadname; starttitle"},
+   {it_runcmd,    "load wad",          "endgame; mn_clearmenus; map %mn_wadname"},
    {it_end},
 };
 
@@ -535,13 +537,13 @@ menu_t menu_loadwad =
 {
    mn_loadwad_items,            // menu items
    NULL, NULL,                  // pages
-   150, 40,                     // x,y offsets
+   150, 15,                     // x,y offsets
    3,                           // starting item
    mf_background                // full screen 
 };
 
-VARIABLE_STRING(mn_wadname,     NULL,           15);
-CONSOLE_VARIABLE(mn_wadname,    mn_wadname,     0) {}
+VARIABLE_STRING(mn_wadname,  NULL,       PATH_MAX);
+CONSOLE_VARIABLE(mn_wadname, mn_wadname,        0) {}
 
 CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 {
@@ -639,7 +641,7 @@ menu_t menu_gamesettings =
 };
 
         // level to start on
-VARIABLE_STRING(startlevel,    NULL,   8);
+VARIABLE_STRING(startlevel,    NULL,   9);
 CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
 {
    char *newvalue = c_argv[0];
@@ -2943,6 +2945,9 @@ void MN_AddMenus(void)
    MN_AddHMenus();
    
    MN_CreateSaveCmds();
+
+   // haleyjd 03/11/06: file dialog cmds
+   MN_File_AddCommands();
 }
 
 // EOF

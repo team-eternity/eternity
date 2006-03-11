@@ -361,14 +361,14 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 }
 
         // player name
-VARIABLE_STRING(default_name, NULL,             18);
+VARIABLE_STRING(default_name, NULL,             20);
 CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 {
    int playernum;
    
    playernum = cmdsrc;
    
-   strncpy(players[playernum].name, c_argv[0], 18);
+   strncpy(players[playernum].name, c_argv[0], 20);
    if(playernum == consoleplayer)
    {
       free(default_name);

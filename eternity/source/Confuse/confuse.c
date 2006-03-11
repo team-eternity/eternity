@@ -28,6 +28,7 @@
 
 #include "../z_zone.h"
 #include "../d_io.h"
+#include "../d_dwfile.h"
 #include "../i_system.h"
 #include "../w_wad.h"
 

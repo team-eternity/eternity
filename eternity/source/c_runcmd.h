@@ -22,7 +22,7 @@
 #ifndef __C_RUNCMD_H__
 #define __C_RUNCMD_H__
 
-#include "d_io.h"
+#include "d_dwfile.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
 // variables need tweaks and extensions to fully support archiving in

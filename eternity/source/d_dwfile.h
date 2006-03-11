@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2006 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,44 +20,46 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//  IO. Deals with the differences between VC++ and other languages.
+//
+// Separated DWFILE functions from d_io.h
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_IO_H__
-#define __D_IO_H__
+#ifndef D_DWFILE_H__
+#define D_DWFILE_H__
 
-// SoM 3/12/2002: Take all of this out of the source files themselves
+#include "doomtype.h"
+#include "d_keywds.h"
 
-#ifdef _MSC_VER
+typedef struct 
+{
+   byte *inp, *lump; // Pointer to string or FILE
+   long size;
+   long origsize;    // for ungetc
+   long lumpnum;     // haleyjd 03/08/06: need to save this
+} DWFILE;
 
-  #include <direct.h>
-  #include <io.h>
-  #define F_OK 0
-  #define W_OK 2
-  #define R_OK 4
-  #define S_ISDIR(x) (((sbuf.st_mode & S_IFDIR)==S_IFDIR)?1:0)
-  #ifndef TRUE
-     #define TRUE true
-  #endif
-  #ifndef FALSE
-     #define FALSE false
-  #endif
-  #define strcasecmp _stricmp
-  #define strncasecmp _strnicmp
-  #ifndef PATH_MAX
-     #define PATH_MAX _MAX_PATH
-  #endif
+char  *D_Fgets(char *buf, size_t n, DWFILE *fp);
+int    D_Feof(DWFILE *fp);
+int    D_Fgetc(DWFILE *fp);
+int    D_Ungetc(int c, DWFILE *fp);
+void   D_OpenFile(DWFILE *infile, const char *filename, char *mode);
+void   D_OpenLump(DWFILE *infile, int lumpnum);
+void   D_Fclose(DWFILE *dwfile);
+size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file);
+size_t D_FileLength(DWFILE *file);
 
-#else
-#include <unistd.h>
+d_inline static boolean D_IsOpen(DWFILE *dwfile)
+{
+   return !!(dwfile->inp);
+}
+
+d_inline static boolean D_IsLump(DWFILE *dwfile)
+{
+   return !!(dwfile->lump);
+}
+
 #endif
 
-#endif
+// EOF
 
-//----------------------------------------------------------------------------
-//
-// $Log: d_io.h,v $
-//
-//
-//----------------------------------------------------------------------------
