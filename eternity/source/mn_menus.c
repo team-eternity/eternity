@@ -520,33 +520,89 @@ CONSOLE_COMMAND(mn_demos, cf_notnet)
 // Using SMMU dynamic wad loading
 //
 
+extern menu_t menu_loadwad;
+extern menu_t menu_wadmisc;
+
+static const char *mn_wad_names[] =
+{
+   "file selection",
+   "misc settings",
+   NULL
+};
+
+static menu_t *mn_wad_pages[] =
+{
+   &menu_loadwad,
+   &menu_wadmisc,
+   NULL
+};
+
 static menuitem_t mn_loadwad_items[] =
 {
-   {it_title,     FC_GOLD "load wad",    NULL,                   "M_WAD"},
+   {it_title,    FC_GOLD "load wad",    NULL,                   "M_WAD"},
    {it_gap},
-   {it_info,      FC_GOLD "load wad"},
-   {it_variable,  "wad name",          "mn_wadname"},
-   {it_variable,  "wad directory",     "wad_directory"},
-   {it_runcmd,    "select wad...",     "mn_selectwad"},
+   {it_info,     FC_GOLD "file selection", NULL,                NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_runcmd,    "load wad",          "endgame; mn_clearmenus; map %mn_wadname"},
+   {it_variable, "wad name:",            "mn_wadname" },
+   {it_variable, "wad directory:",       "wad_directory" },
+   {it_runcmd,   "select wad...",        "mn_selectwad" },
+   {it_gap},
+   {it_runcmd,   "load wad",             "mn_loadwaditem",      NULL, MENUITEM_CENTERED },
+   {it_end},
+};
+
+static menuitem_t mn_wadmisc_items[] =
+{
+   {it_title,    FC_GOLD "wad options", NULL,                   "M_WADOPT"},
+   {it_gap},
+   {it_info,     FC_GOLD "misc settings", NULL,                 NULL, MENUITEM_CENTERED },
+   {it_gap},
+   {it_toggle,   "use start map",        "use_startmap" },
+   {it_toggle,   "start on 1st new map", "startonnewmap" },
    {it_end},
 };
 
 menu_t menu_loadwad =
 {
    mn_loadwad_items,            // menu items
-   NULL, NULL,                  // pages
-   150, 15,                     // x,y offsets
-   3,                           // starting item
-   mf_background                // full screen 
+   NULL, 
+   &menu_wadmisc,               // pages
+   120, 15,                     // x,y offsets
+   4,                           // starting item
+   mf_background,               // full screen 
+   NULL,
+   mn_wad_names,
+   mn_wad_pages,
+};
+
+menu_t menu_wadmisc =
+{
+   mn_wadmisc_items,
+   &menu_loadwad,
+   NULL,
+   200, 15,
+   4,
+   mf_background,
+   NULL,
+   mn_wad_names,
+   mn_wad_pages,
 };
 
 VARIABLE_STRING(mn_wadname,  NULL,       PATH_MAX);
 CONSOLE_VARIABLE(mn_wadname, mn_wadname,        0) {}
 
 CONSOLE_COMMAND(mn_loadwad, cf_notnet)
+{   
+   MN_StartMenu(&menu_loadwad);
+}
+
+CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 {
+   char filename[PATH_MAX];
+
+   // haleyjd 03/12/06: this is much more resilient than the 
+   // chain of console commands that was used by SMMU
+
    // haleyjd: generalized to all shareware modes
    if(gameModeInfo->flags & GIF_SHAREWARE)
    {
@@ -556,8 +612,22 @@ CONSOLE_COMMAND(mn_loadwad, cf_notnet)
                "%s", s_PRESSKEY);
       return;
    }
-   
-   MN_StartMenu(&menu_loadwad);
+
+   if(!mn_wadname || strlen(mn_wadname) == 0)
+   {
+      MN_ErrorMsg("Invalid wad file name");
+      return;
+   }
+
+   psnprintf(filename, sizeof(filename), "%s/%s", wad_directory, mn_wadname);
+
+   if(D_AddNewFile(filename))
+   {
+      MN_ClearMenus();
+      G_DeferedInitNew(gameskill, firstlevel);
+   }
+   else
+      MN_ErrorMsg("Failed to load wad file");
 }
 
 //////////////////////////////////////////////////////////////
@@ -623,7 +693,6 @@ static menuitem_t mn_gamesettings_items[] =
    {it_toggle,   "skill level",                "skill"},
    {it_runcmd,   "advanced...",                "mn_advanced"},
    {it_runcmd,   "deathmatch flags...",        "mn_dmflags"},
-   {it_runcmd,   "eternity options...",        "mn_etccompat"},
    {it_gap},
    {it_info,     FC_GOLD "dm auto-exit"},
    {it_variable, "time limit",                 "timelimit"},
@@ -2370,8 +2439,6 @@ static menuitem_t mn_etccompat_items[] =
 {
    {it_title, FC_GOLD "eternity options", NULL, "M_ETCOPT" },
    {it_gap},
-   {it_toggle, "use start map",                    "use_startmap"},
-   {it_toggle, "new game starts on first new map", "startonnewmap"},
    {it_toggle, "text mode startup",                "textmode_startup"},
    {it_end}
 };
@@ -2870,8 +2937,8 @@ void MN_AddMenus(void)
    C_AddCommand(mn_load);
    C_AddCommand(mn_savegame);
 
-   //C_AddCommand(mn_features);
    C_AddCommand(mn_loadwad);
+   C_AddCommand(mn_loadwaditem);
    C_AddCommand(mn_wadname);
    C_AddCommand(mn_demos);
    C_AddCommand(mn_demoname);

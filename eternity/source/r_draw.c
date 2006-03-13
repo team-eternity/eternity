@@ -1649,7 +1649,7 @@ void R_DrawSpan_OLD (void)
 }
 
 
-void R_DrawSpan_ORIGIONAL (void) 
+void R_DrawSpan_ORIGINAL (void) 
 { 
   register unsigned position;
   unsigned step;

@@ -104,6 +104,17 @@ static int smallptr_dir = 1;
 static int smallptr_coords[2][2];
 
 //
+// MN_DrawSmallPtr
+//
+// An external routine for other modules that need to draw a small menu
+// pointer for purposes other than its normal use.
+//
+void MN_DrawSmallPtr(int x, int y)
+{
+   V_DrawPatch(x, y, &vbscreen, smallptrs[smallptr_idx]);
+}
+
+//
 // MN_GetItemVariable
 //
 static void MN_GetItemVariable(menuitem_t *item)

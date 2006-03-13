@@ -24,7 +24,7 @@
 // eg. For selecting a wad to load or demo to play
 //
 // By Simon Howard
-// Revisions by James Haley
+// Revisions by James Haley (taken from SMMU v3.30 8/11/00 build)
 //
 //---------------------------------------------------------------------------
 
@@ -63,6 +63,7 @@ static boolean filecmp(const char *filename, const char *wildcard)
    boolean res = true;
    int i = 0;
   
+   // haleyjd: must be case insensitive
    filename_main = M_Strupr(strdup(filename));
    wildcard_main = M_Strupr(strdup(wildcard));
    
@@ -112,34 +113,40 @@ static boolean filecmp(const char *filename, const char *wildcard)
       ++i;
    }
 
-   i = 0;
-
-   while(wildcard_ext[i])
+   // if first part of comparison fails, don't do 2nd part
+   if(res)
    {
-      boolean exitloop = false;
+      i = 0;
 
-      switch(wildcard_ext[i])
+      // compare extension
+      while(wildcard_ext[i])
       {
-      case '?':
-         continue;
-      case '*':
-         exitloop = true;
-         break;
-      default:
-         if(wildcard_ext[i] != filename_ext[i])
+         boolean exitloop = false;
+         
+         switch(wildcard_ext[i])
          {
-            res = false;
+         case '?':
+            continue;
+         case '*':
             exitloop = true;
+            break;
+         default:
+            if(wildcard_ext[i] != filename_ext[i])
+            {
+               res = false;
+               exitloop = true;
+            }
+            break;
          }
-         break;
+         
+         if(exitloop)
+            break;
+         
+         ++i;
       }
-
-      if(exitloop)
-         break;
-
-      ++i;
    }
 
+   // done with temporary strings
    free(filename_main);
    free(wildcard_main);
 
@@ -218,7 +225,7 @@ static void MN_sortFiles(void)
 // Uses POSIX opendir to read the indicated directory and saves off all file
 // names within it that match the provided wildcard string.
 //
-// Note: for Visual C++, a customized version of MinGW's opendir functions
+// Note: for Visual C++, customized versions of MinGW's opendir functions
 // are used, which are implemented in i_opndir.c.
 //
 static int MN_readDirectory(const char *read_dir, const char *read_wildcard)
@@ -260,10 +267,6 @@ static int MN_readDirectory(const char *read_dir, const char *read_wildcard)
 // to load: eg. lmps, wads
 //
 
-//#define PAGESIZE 16 /* number of filenames to draw in selector window */
-//#define FILEWIN_X 60
-//#define FILEWIN_Y 40
-
 static void MN_FileDrawer(void);
 static boolean MN_FileResponder(event_t *ev);
 
@@ -275,9 +278,20 @@ static char *variable_name;
 static char *help_description;
 static int numfileboxlines;
 
+//
+// MN_FileDrawer
+//
+// Drawer for the file selection dialog box. Easily the most complex
+// graphical widget in the game engine so far. Significantly different
+// than it was in SMMU 3.30.
+//
 static void MN_FileDrawer(void)
 {
-   int i, bbot, btop, bleft, bright, w, h, x, y, min, max, lheight;
+   int i;
+   int bbot, btop, bleft, bright, w, h; // color box coords and dimensions
+   int x, y;                            // text drawing coordinates
+   int min, max, lheight;               // first & last line, and height of a
+                                        // single line
 
    // draw a background
    V_DrawBackground(gameModeInfo->menuBackground, &vbscreen);
@@ -335,56 +349,41 @@ static void MN_FileDrawer(void)
 
       // if this is the selected item, use the appropriate color
       if(i == selected_item)
+      {
          color = gameModeInfo->selectColor;
+         MN_DrawSmallPtr(x, y + lheight / 2 - 4);
+      }
       else
          color = gameModeInfo->unselectColor;
 
       // draw it!
-      MN_WriteTextColoured(mn_filelist[i], color, x, y);
+      MN_WriteTextColoured(mn_filelist[i], color, x + 11, y);
 
       // step by the height of one line
       y += lheight;
    }
-
-
-   /*
-   int i, item;
-   
-   // draw background first
-   
-   V_DrawBackground(gameModeInfo->menuBackground, &vbscreen);
-   
-   // draw help description
-   
-   if(help_description)
-      MN_WriteTextColoured(help_description, CR_GOLD, FILEWIN_X, 20);
-      
-   // draw filenames   
-   for(i = 0, item = selected_item - 6; i < PAGESIZE; ++i, ++item)
-   {
-      int color;
-
-      if(item < 0 || item >= num_mn_files)
-         continue;
-
-      if(item == selected_item)
-         color = gameModeInfo->selectColor;
-      else
-         color = gameModeInfo->unselectColor;
-      
-      MN_WriteTextColoured(mn_filelist[item], color, FILEWIN_X, FILEWIN_Y + i*8);
-   }
-   */
 }
 
+//
+// MN_FileResponder
+//
+// Responds to events for the file selection dialog widget. Uses
+// keybinding actions rather than key constants like in SMMU. Also
+// added sounds to give a more consistent UI feel.
+//
 static boolean MN_FileResponder(event_t *ev)
 {
+   unsigned char ch;
+
    if(action_menu_up || action_menu_left)
    {
       action_menu_up = action_menu_left = false;
+
       if(selected_item > 0) 
+      {
          selected_item--;
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+      }
       return true;
    }
   
@@ -392,8 +391,10 @@ static boolean MN_FileResponder(event_t *ev)
    {
       action_menu_down = action_menu_right = false;
       if(selected_item < (num_mn_files-1)) 
+      {
          selected_item++;
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+      }
       return true;
    }
    
@@ -404,53 +405,81 @@ static boolean MN_FileResponder(event_t *ev)
       {
          selected_item -= numfileboxlines;
          if(selected_item < 0)
+         {
             selected_item = 0;
-         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+            S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+         }
       }
       return true;
    }
   
-  if(action_menu_pagedown)
-  {
-     action_menu_pagedown = false;
-     if(numfileboxlines)
-     {
-        selected_item += numfileboxlines;
-        if(selected_item >= num_mn_files) 
-           selected_item = num_mn_files - 1;
-        S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
-     }
-     return true;
-  }
+   if(action_menu_pagedown)
+   {
+      action_menu_pagedown = false;
+      if(numfileboxlines)
+      {
+         selected_item += numfileboxlines;
+         if(selected_item >= num_mn_files) 
+         {
+            selected_item = num_mn_files - 1;
+            S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+         }
+      }
+      return true;
+   }
+   
+   if(action_menu_toggle || action_menu_previous)
+   {
+      action_menu_toggle = action_menu_previous = false;
+      current_menuwidget = NULL; // cancel widget
+      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      return true;
+   }
   
-  if(action_menu_toggle || action_menu_previous)
-  {
-     action_menu_toggle = action_menu_previous = false;
-     current_menuwidget = NULL; // cancel widget
-     S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-     return true;
-  }
-  
-  if(action_menu_confirm)
-  {
-     action_menu_confirm = false;
-     
-     // set variable to new value
-     if(variable_name)
-     {
-        char tempstr[128];
-        psnprintf(tempstr, sizeof(tempstr), 
-           "%s \"%s/%s\"", variable_name, mn_filedir, 
-           mn_filelist[selected_item]);
-        cmdtype = c_menu;
-        C_RunTextCmd(tempstr);
-        S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_COMMAND]);
-     }
-     current_menuwidget = NULL; // cancel widget
-     return true;
-  }
-  
-  return false;
+   if(action_menu_confirm)
+   {
+      action_menu_confirm = false;
+      
+      // set variable to new value
+      if(variable_name)
+      {
+         char tempstr[128];
+         psnprintf(tempstr, sizeof(tempstr), 
+            "%s \"%s\"", variable_name, mn_filelist[selected_item]);
+         cmdtype = c_menu;
+         C_RunTextCmd(tempstr);
+         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_COMMAND]);
+      }
+      current_menuwidget = NULL; // cancel widget
+      return true;
+   }
+
+   // search for matching item in file list
+   ch = tolower(ev->data1);
+   if(ch >= 'a' && ch <= 'z')
+   {  
+      int n = selected_item;
+      
+      do
+      {
+         n++;
+         if(n >= num_mn_files) 
+            n = 0; // loop round
+         
+         if(tolower(mn_filelist[n][0]) == ch)
+         {
+            // found a matching item!
+            if(n != selected_item) // only make sound if actually moving
+            {
+               selected_item = n;
+               S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+            }
+            return true; // eat key
+         }
+      } while(n != selected_item);
+   }
+   
+   return false; // not interested
 }
 
 char *wad_directory; // directory where user keeps wads
@@ -459,6 +488,8 @@ VARIABLE_STRING(wad_directory,  NULL,          PATH_MAX);
 CONSOLE_VARIABLE(wad_directory, wad_directory, 0)
 {
    char *a;
+
+   // normalize slashes
    for(a = wad_directory; *a; ++a)
       if(*a == '\\') *a = '/';
 }
@@ -467,14 +498,16 @@ CONSOLE_COMMAND(mn_selectwad, 0)
 {
    int ret = MN_readDirectory(wad_directory, "*.wad");
 
+   // check for standard errors
    if(ret)
    {
       const char *msg = strerror(ret);
 
-      MN_ErrorMsg("opendir error: %s", msg);
+      MN_ErrorMsg("opendir error: %d (%s)", ret, msg);
       return;
    }
 
+   // empty directory?
    if(num_mn_files < 1)
    {
       MN_ErrorMsg("no files found");

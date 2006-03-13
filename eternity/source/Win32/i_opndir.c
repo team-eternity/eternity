@@ -1,21 +1,11 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 James Haley
+// 03/10/2006 James Haley
 //
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// For this module only: 
+// This code is public domain. No change sufficient enough to constitute a
+// significant or original work has been made, and thus it remains as such.
 //
 //----------------------------------------------------------------------------
 //
@@ -144,8 +134,8 @@ DIR *opendir(const _TCHAR *szPath)
    nd->dd_stat = 0;
 
    /* Initialize the dirent structure. ino and reclen are invalid under
-   * Win32, and name simply points at the appropriate part of the
-   * findfirst_t structure. */
+    * Win32, and name simply points at the appropriate part of the
+    * findfirst_t structure. */
    nd->dd_dir.d_ino = 0;
    nd->dd_dir.d_reclen = 0;
    nd->dd_dir.d_namlen = 0;

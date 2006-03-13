@@ -335,113 +335,109 @@ static void R_RenderSegLoop(void)
       if(linedef->portal)
          R_PortalAdd(linedef->portal, rw_x, yl-1, yh+1);
       else
-#endif
-      // texturecolumn and lighting are independent of wall tiers
-      if(segtextured)
       {
-         unsigned index;
-         
-         // calculate texture offset
-         angle_t angle =(rw_centerangle+xtoviewangle[rw_x])>>ANGLETOFINESHIFT;
-         texturecolumn = rw_offset-FixedMul(finetangent[angle],rw_distance);
-         texturecolumn >>= FRACBITS;
-
-         // calculate lighting
-         // SoM: ANYRES
-         index = rw_scale >> (LIGHTSCALESHIFT + addscaleshift);
-         
-         if(index >=  MAXLIGHTSCALE)
-            index = MAXLIGHTSCALE - 1;
-         dc_colormap = walllights[index];
-         dc_x = rw_x;
-         dc_iscale = 0xffffffffu / (unsigned)rw_scale;
-      }
-
-      // draw the wall tiers
-#ifdef R_PORTALS
-      if(midtexture && !linedef->portal)
-#else
-      if(midtexture)
 #endif
-      {
-         dc_yl = yl;     // single sided line
-         dc_yh = yh;
-         dc_texturemid = rw_midtexturemid;
-         dc_source = R_GetColumn(midtexture, texturecolumn);
-         dc_texheight = textureheight[midtexture] >> FRACBITS; // killough
-         colfunc();
-         ceilingclip[rw_x] = viewheight;
-         floorclip[rw_x] = -1;
-      }
-#ifdef R_PORTALS
-      else if(!midtexture && !linedef->portal)
-#else
-      else
-#endif
-      {
-         // two sided line
-         if(toptexture)
+         // texturecolumn and lighting are independent of wall tiers
+         if(segtextured)
          {
-            // top wall
-            int mid = pixhigh >> HEIGHTBITS;
-            pixhigh += pixhighstep;
-               
-            if(mid >= floorclip[rw_x])
-               mid = floorclip[rw_x] - 1;
-               
-            if(mid >= yl)
-            {
-               dc_yl = yl;
-               dc_yh = mid;
-               dc_texturemid = rw_toptexturemid;
-               dc_source = R_GetColumn(toptexture, texturecolumn);
-               dc_texheight = textureheight[toptexture] >> FRACBITS;//killough
-               colfunc();
-               ceilingclip[rw_x] = mid;
-            }
-            else
-               ceilingclip[rw_x] = yl - 1;
-         }
-         else
-         {  
-            // no top wall
-            if(markceiling)
-               ceilingclip[rw_x] = yl - 1;
-         }
-
-         if(bottomtexture)          // bottom wall
-         {
-            int mid = (pixlow + HEIGHTUNIT - 1) >> HEIGHTBITS;
-            pixlow += pixlowstep;
-               
-            // no space above wall?
-            if(mid <= ceilingclip[rw_x])
-               mid = ceilingclip[rw_x] + 1;
-               
-            if(mid <= yh)
-            {
-               dc_yl = mid;
-               dc_yh = yh;
-               dc_texturemid = rw_bottomtexturemid;
-               dc_source = R_GetColumn(bottomtexture, texturecolumn);
-               dc_texheight = textureheight[bottomtexture] >> FRACBITS; // killough
-               colfunc();
-               floorclip[rw_x] = mid;
-            }
-            else
-               floorclip[rw_x] = yh + 1;
-         }
-         else
-         {
-            // no bottom wall
-            if(markfloor)
-               floorclip[rw_x] = yh + 1;
-         }
+            unsigned index;
             
-         // save texturecol for backdrawing of masked mid texture
-         if (maskedtexture)
-            maskedtexturecol[rw_x] = texturecolumn;
-      }
+            // calculate texture offset
+            angle_t angle =(rw_centerangle+xtoviewangle[rw_x])>>ANGLETOFINESHIFT;
+            texturecolumn = rw_offset-FixedMul(finetangent[angle],rw_distance);
+            texturecolumn >>= FRACBITS;
+            
+            // calculate lighting
+            // SoM: ANYRES
+            index = rw_scale >> (LIGHTSCALESHIFT + addscaleshift);
+            
+            if(index >=  MAXLIGHTSCALE)
+               index = MAXLIGHTSCALE - 1;
+            dc_colormap = walllights[index];
+            dc_x = rw_x;
+            dc_iscale = 0xffffffffu / (unsigned)rw_scale;
+         }
+
+         // draw the wall tiers
+         if(midtexture)
+         {
+            dc_yl = yl;     // single sided line
+            dc_yh = yh;
+            dc_texturemid = rw_midtexturemid;
+            dc_source = R_GetColumn(midtexture, texturecolumn);
+            dc_texheight = textureheight[midtexture] >> FRACBITS; // killough
+            colfunc();
+            ceilingclip[rw_x] = viewheight;
+            floorclip[rw_x] = -1;
+         }
+         else
+         {
+            // two sided line
+            if(toptexture)
+            {
+               // top wall
+               int mid = pixhigh >> HEIGHTBITS;
+               pixhigh += pixhighstep;
+               
+               if(mid >= floorclip[rw_x])
+                  mid = floorclip[rw_x] - 1;
+               
+               if(mid >= yl)
+               {
+                  dc_yl = yl;
+                  dc_yh = mid;
+                  dc_texturemid = rw_toptexturemid;
+                  dc_source = R_GetColumn(toptexture, texturecolumn);
+                  dc_texheight = textureheight[toptexture] >> FRACBITS;//killough
+                  colfunc();
+                  ceilingclip[rw_x] = mid;
+               }
+               else
+                  ceilingclip[rw_x] = yl - 1;
+            }
+            else
+            {  
+               // no top wall
+               if(markceiling)
+                  ceilingclip[rw_x] = yl - 1;
+            }
+
+            if(bottomtexture)          // bottom wall
+            {
+               int mid = (pixlow + HEIGHTUNIT - 1) >> HEIGHTBITS;
+               pixlow += pixlowstep;
+               
+               // no space above wall?
+               if(mid <= ceilingclip[rw_x])
+                  mid = ceilingclip[rw_x] + 1;
+               
+               if(mid <= yh)
+               {
+                  dc_yl = mid;
+                  dc_yh = yh;
+                  dc_texturemid = rw_bottomtexturemid;
+                  dc_source = R_GetColumn(bottomtexture, texturecolumn);
+                  dc_texheight = textureheight[bottomtexture] >> FRACBITS; // killough
+                  colfunc();
+                  floorclip[rw_x] = mid;
+               }
+               else
+                  floorclip[rw_x] = yh + 1;
+            }
+            else
+            {
+               // no bottom wall
+               if(markfloor)
+                  floorclip[rw_x] = yh + 1;
+            }
+            
+            // save texturecol for backdrawing of masked mid texture
+            if (maskedtexture)
+               maskedtexturecol[rw_x] = texturecolumn;
+         } // !midtexture
+#ifdef R_PORTALS
+      } // !linedef->portal
+#endif
       
       rw_scale += rw_scalestep;
       topfrac += topstep;
@@ -573,17 +569,10 @@ void R_StoreWallRange(const int start, const int stop)
       markfloor = markceiling = true;
 
 #ifdef R_PORTALS
-      if(frontsector->f_portal &&
-         (frontsector->f_portal->type == R_SKYBOX ||
-          frontsector->f_portal->type == R_ANCHORED ||
-          frontsector->f_portal->type == R_HORIZON ||
-          frontsector->f_portal->type == R_PLANE))
+      // haleyjd 03/12/06: inverted predicates to simplify
+      if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED)
          f_portalignore = true;
-      if(frontsector->c_portal &&
-         (frontsector->c_portal->type == R_SKYBOX ||
-          frontsector->c_portal->type == R_ANCHORED ||
-          frontsector->c_portal->type == R_HORIZON ||
-          frontsector->c_portal->type == R_PLANE))
+      if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED)
          c_portalignore = true;
 #endif
       
@@ -723,23 +712,16 @@ void R_StoreWallRange(const int start, const int stop)
 #ifdef R_PORTALS
       // SoM: some portal types should be rendered even if the player is above or below the
       // ceiling or floor plane.
+      // haleyjd 03/12/06: inverted predicates to simplify
       if(markfloor && backsector->f_portal != frontsector->f_portal)
       {
-         if(frontsector->f_portal &&
-            (frontsector->f_portal->type == R_SKYBOX ||
-             frontsector->f_portal->type == R_ANCHORED ||
-             frontsector->f_portal->type == R_HORIZON ||
-             frontsector->f_portal->type == R_PLANE))
+         if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED)
             f_portalignore = true;
       }
 
       if(markceiling && backsector->c_portal != frontsector->c_portal)
       {
-         if(frontsector->c_portal &&
-            (frontsector->c_portal->type == R_SKYBOX ||
-             frontsector->c_portal->type == R_ANCHORED ||
-             frontsector->c_portal->type == R_HORIZON ||
-             frontsector->c_portal->type == R_PLANE))
+         if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED)
             c_portalignore = true;
       }
 #endif

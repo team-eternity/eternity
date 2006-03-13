@@ -334,8 +334,10 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    
    // check for .wad files
    // i'm not particularly a fan of this myself, but..
+
+   // haleyjd 03/12/06: no .wad loading in netgames
    
-   if(strlen(c_argv[0]) > 4)
+   if(!netgame && strlen(c_argv[0]) > 4)
    {
       char *extension;
       extension = c_argv[0] + strlen(c_argv[0]) - 4;

@@ -183,6 +183,7 @@ void MN_SetupBoxWidget(const char *, const char **, int, menu_t **,
                        const char **);
 void MN_ShowBoxWidget(void);
 
+void MN_DrawSmallPtr(int x, int y); // haleyjd 03/13/06
 
 extern menu_t *current_menu;                  // current menu being drawn
 extern menuwidget_t *current_menuwidget;      // current widget being drawn
