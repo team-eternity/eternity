@@ -68,6 +68,7 @@
 #include "info.h"
 #include "m_argv.h"
 #include "m_misc.h"
+#include "mn_engin.h"
 #include "p_enemy.h"
 #include "p_pspr.h"
 #include "f_finale.h"
@@ -84,6 +85,7 @@
 #include "e_things.h"
 #include "e_states.h"
 #include "e_ttypes.h"
+#include "mn_emenu.h"
 
 // EDF Keywords used by features implemented in this module
 
@@ -290,6 +292,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_MENU,      edf_menu_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_STR(SEC_CASTORDER,     0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,     0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,     0,                 CFGF_LIST), // schepe
@@ -432,6 +435,15 @@ static cfg_opt_t terrain_lump_opts[] =
    LUMP_FUNCTIONS,
    CFG_END()
 };
+
+// Options for stuff in EMENUS lump
+static cfg_opt_t menu_lump_opts[] =
+{
+   CFG_SEC(EDF_SEC_MENU, edf_menu_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   LUMP_FUNCTIONS,
+   CFG_END()
+};
+
 
 //
 // Error Reporting and Logging
@@ -1091,6 +1103,32 @@ static void E_ProcessTerrainLump(void)
    }
 
    E_ProcessTerrainTypes(cfg);
+
+   cfg_free(cfg);
+}
+
+
+//
+// E_ProcessMenuLump
+//
+// Parses the EMENUS lumps, which may optionally include the next
+// EMENUS lump down the chain by using the include_prev function.
+// This allows cascading behavior to be optional at the discretion
+// of the EDF author.
+//
+static void E_ProcessMenuLump(void)
+{
+   cfg_t *cfg;
+
+   E_EDFLogPuts("\tParsing EMENUS lump...\n");
+
+   if(!(cfg = E_ParseEDFLumpOptional("EMENUS", menu_lump_opts)))
+   {
+      E_EDFLogPuts("\tNo EMENUS lump found.\n");
+      return;
+   }
+
+   MN_ProcessMenus(cfg);
 
    cfg_free(cfg);
 }
@@ -1817,6 +1855,9 @@ void E_ProcessEDFLumps(void)
 
    // process ETERRAIN
    E_ProcessTerrainLump();
+
+   // process EMENUS
+   E_ProcessMenuLump();
 }
 
 //
@@ -1898,6 +1939,9 @@ void E_ProcessEDF(const char *filename)
 
    // 08/23/05: process TerrainTypes
    E_ProcessTerrainTypes(cfg);
+
+   // 03/13/05: process dynamic menus
+   MN_ProcessMenus(cfg);
 
    // 01/11/04: process misc vars
    E_ProcessMiscVars(cfg);

@@ -485,7 +485,6 @@ static menuitem_t mn_demos_items[] =
    {it_variable,   "demo name",              "mn_demoname"},
    {it_gap},
    {it_runcmd,     "play demo",              "mn_clearmenus; playdemo %mn_demoname"},
-   {it_runcmd,     "time demo",              "mn_clearmenus; timedemo %mn_demoname 1"},
    {it_runcmd,     "stop playing demo",      "mn_clearmenus; stopdemo"},
    {it_gap},
    {it_info,       FC_GOLD "cameras"},
@@ -500,7 +499,7 @@ menu_t menu_demos =
 {
    mn_demos_items,    // menu items
    NULL, NULL,        // pages
-   150, 40,           // x,y
+   200, 15,           // x,y
    3,                 // start item
    mf_background,     // full screen
 };
@@ -559,6 +558,15 @@ static menuitem_t mn_wadmisc_items[] =
    {it_gap},
    {it_toggle,   "use start map",        "use_startmap" },
    {it_toggle,   "start on 1st new map", "startonnewmap" },
+   {it_gap},
+   {it_info,     FC_GOLD "autoloaded files", NULL,              NULL, MENUITEM_CENTERED },
+   {it_gap},
+   {it_variable, "wad file 1:",         "auto_wad_1",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "wad file 2:",         "auto_wad_2",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "deh file 1:",         "auto_deh_1",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "deh file 2:",         "auto_deh_2",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "csc file 1:",         "auto_csc_1",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "csc file 2:",         "auto_csc_2",          NULL, MENUITEM_LALIGNED },
    {it_end},
 };
 
@@ -652,15 +660,15 @@ static menuitem_t mn_multiplayer_items[] =
    {it_gap},
    {it_gap},
    {it_info,   FC_GOLD "connect:"},
-   {it_runcmd, "serial/modem...",         "mn_serial"},
-   {it_runcmd, "tcp/ip...",               "mn_tcpip"},
+   //{it_runcmd, "serial/modem...",         "mn_serial"},
+   //{it_runcmd, "tcp/ip...",               "mn_tcpip"},
    {it_gap},
-   {it_runcmd, "disconnect",              "disconnect"},
+   ///{it_runcmd, "disconnect",              "disconnect"},
    {it_gap},
    {it_info,   FC_GOLD "setup"},
    {it_runcmd, "chat macros...",          "mn_chatmacros"},
-   {it_runcmd, "player setup...",         "mn_player"},
-   {it_runcmd, "game settings...",        "mn_gset"},
+   //{it_runcmd, "player setup...",         "mn_player"},
+   //{it_runcmd, "game settings...",        "mn_gset"},
    {it_end}
 };
 
@@ -888,6 +896,7 @@ CONSOLE_COMMAND(mn_dfrespsupr, cf_server|cf_hidden)
 // NETCODE_FIXME: Ditch this.
 //
 
+/*
 static menuitem_t mn_tcpip_items[] =
 {
    {it_title,  FC_GOLD "TCP/IP",            NULL,           "M_TCPIP"},
@@ -910,6 +919,7 @@ CONSOLE_COMMAND(mn_tcpip, 0)
 {
    MN_StartMenu(&menu_tcpip);
 }
+*/
 
 /////////////////////////////////////////////////////////////////
 //
@@ -920,6 +930,7 @@ CONSOLE_COMMAND(mn_tcpip, 0)
 // NETCODE_FIXME: Ditch this.
 //
 
+/*
 static menuitem_t mn_serial_items[] =
 {
    {it_title,  FC_GOLD "Serial/modem",          NULL,           "M_SERIAL"},
@@ -969,6 +980,7 @@ CONSOLE_COMMAND(mn_udpserv, 0)              // udp start server
    C_SetConsole();               // dont want demos interfering
    C_RunTextCmd("connect");
 }
+*/
 
 /////////////////////////////////////////////////////////////////
 //
@@ -2944,9 +2956,9 @@ void MN_AddMenus(void)
    C_AddCommand(mn_demoname);
    
    C_AddCommand(mn_multi);
-   C_AddCommand(mn_serial);
-   C_AddCommand(mn_phonenum);
-   C_AddCommand(mn_tcpip);
+   //C_AddCommand(mn_serial);
+   //C_AddCommand(mn_phonenum);
+   //C_AddCommand(mn_tcpip);
    C_AddCommand(mn_chatmacros);
    C_AddCommand(mn_player);
    C_AddCommand(mn_advanced);
@@ -2960,9 +2972,9 @@ void MN_AddMenus(void)
    C_AddCommand(mn_dfrespsupr);
    
    // different connect types
-   C_AddCommand(mn_ser_answer);
-   C_AddCommand(mn_ser_connect);
-   C_AddCommand(mn_udpserv);
+   //C_AddCommand(mn_ser_answer);
+   //C_AddCommand(mn_ser_connect);
+   //C_AddCommand(mn_udpserv);
    C_AddCommand(mn_gset);
    
    C_AddCommand(mn_options);

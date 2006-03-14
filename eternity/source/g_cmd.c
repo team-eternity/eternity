@@ -28,6 +28,7 @@
 //---------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_io.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "d_main.h"
@@ -458,7 +459,7 @@ void G_AddChatMacros(void)
       variable->v_default = NULL;
       variable->type = vt_string;      // string value
       variable->min = 0;
-      variable->max = 128;              // 40 chars is enough
+      variable->max = 128;
       variable->defines = NULL;
       
       // now the command
@@ -537,6 +538,67 @@ void G_AddWeapPrefs(void)
       command->flags = cf_handlerset;
       command->variable = variable;
       command->handler = G_WeapPrefHandler;
+      command->netcmd = 0;
+
+      (C_AddCommand)(command); // hook into cmdlist
+   }
+}
+
+///////////////////////////////////////////////////////////////
+//
+// Autoloaded Files
+//
+// haleyjd 03/13/06
+//
+
+static char *autoload_names[] =
+{
+   "auto_wad_1",
+   "auto_wad_2",
+   "auto_deh_1",
+   "auto_deh_2",
+   "auto_csc_1",
+   "auto_csc_2",
+};
+
+extern char *wad_files[];
+extern char *deh_files[];
+extern char *csc_files[];
+
+static char **autoload_ptrs[] =
+{
+   &wad_files[0],
+   &wad_files[1],
+   &deh_files[0],
+   &deh_files[1],
+   &csc_files[0],
+   &csc_files[1],
+};
+
+void G_AddAutoloadFiles(void)
+{
+   variable_t *variable;
+   command_t *command;
+   int i;
+   
+   for(i = 0; i < 6; ++i)
+   {
+      // create the variable first
+      variable = malloc(sizeof(*variable));
+      variable->variable = autoload_ptrs[i];
+      variable->v_default = NULL;
+      variable->type = vt_string;
+      variable->min = 0;
+      variable->max = PATH_MAX;
+      variable->defines = NULL;
+      
+      // now the command
+      command = malloc(sizeof(*command));
+      command->name = autoload_names[i];
+      command->type = ct_variable;
+      command->flags = 0;
+      command->variable = variable;
+      command->handler = NULL;
       command->netcmd = 0;
 
       (C_AddCommand)(command); // hook into cmdlist
@@ -682,7 +744,7 @@ void G_AddCommands(void)
    C_AddCommand(shot_type);
    C_AddCommand(alwaysmlook);
    C_AddCommand(bobbing);
-	C_AddCommand(doom_weapon_toggles);
+   C_AddCommand(doom_weapon_toggles);
    C_AddCommand(sens_vert);
    C_AddCommand(sens_horiz);
    C_AddCommand(invertmouse);
@@ -717,6 +779,7 @@ void G_AddCommands(void)
    G_AddChatMacros();
    G_AddWeapPrefs();
    G_AddCompat();
+   G_AddAutoloadFiles(); // haleyjd
    P_AddEventVars(); // haleyjd
 }
 

@@ -43,6 +43,7 @@
 #define MENUITEM_POSINIT  0x00000001
 #define MENUITEM_BIGFONT  0x00000002
 #define MENUITEM_CENTERED 0x00000004
+#define MENUITEM_LALIGNED 0x00000008
 
 typedef struct menuitem_s
 {
@@ -116,6 +117,10 @@ typedef struct menu_s
    struct menu_s **content_pages;
    
    int gap_override;        // haleyjd 10/09/05: override gap size
+
+   // internal fields
+   char name[33];           // haleyjd 03/14/06: for dynamic menus
+   struct menu_s *dynanext;
 } menu_t;
 
 // menu 'widgets':

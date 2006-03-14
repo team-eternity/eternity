@@ -351,7 +351,7 @@ static void MN_FileDrawer(void)
       if(i == selected_item)
       {
          color = gameModeInfo->selectColor;
-         MN_DrawSmallPtr(x, y + lheight / 2 - 4);
+         MN_DrawSmallPtr(x + 1, y + lheight / 2 - 4);
       }
       else
          color = gameModeInfo->unselectColor;

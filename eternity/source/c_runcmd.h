@@ -122,6 +122,12 @@ typedef struct variable_s variable_t;
         variable_t var_ ## name = { &name, defaultvar,       \
                         vt_string, 0, max, NULL};
 
+// haleyjd 03/13/06: support static strings as cvars
+
+#define VARIABLE_CHARARRAY(name, defaultvar, max)            \
+        variable_t var_ ## name = { name, defaultvar,        \
+                        vt_chararray, 0, max, NULL};
+
 // Boolean. Note that although the name here is boolean, the
 // actual type is int.
 
@@ -184,6 +190,7 @@ enum    // variable type
   vt_int,                // normal integer 
   vt_float,              // decimal               NOT IMPLEMENTED
   vt_string,             // string
+  vt_chararray,          // char array -- haleyjd 03/13/06
   vt_toggle              // on/off value          NOT IMPLEMENTED
 };
 

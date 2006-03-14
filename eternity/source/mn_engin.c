@@ -39,6 +39,7 @@
 #include "hu_over.h"
 #include "i_video.h"
 #include "mn_engin.h"
+#include "mn_emenu.h"
 #include "mn_menus.h"
 #include "mn_misc.h"
 #include "r_defs.h"
@@ -64,7 +65,7 @@ boolean menu_toggleisback;
 static command_t *input_command = NULL;       // NULL if not typing in
 
 // haleyjd 04/29/02: needs to be unsigned
-static unsigned char input_buffer[128] = "";
+static unsigned char input_buffer[1024] = "";
 
 // haleyjd: menu font, most attributes are copied from the small font
 static vfont_t menu_font;
@@ -180,6 +181,7 @@ static void MN_DrawSlider(int x, int y, int pct)
 //
 static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
 {
+   int desc_width = 0;
    boolean centeraligned = drawing_menu->flags & mf_centeraligned;
    boolean leftaligned =
       ((drawing_menu->flags & mf_skullmenu) ||
@@ -260,15 +262,17 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
    else
    {
       int item_x;
-      int string_w = 
+      desc_width = 
          item->flags & MENUITEM_BIGFONT ?
             V_StringWidthBig(item->description) 
             : MN_StringWidth(item->description);
       
       if(item->flags & MENUITEM_CENTERED || centeraligned)
-         item_x = (SCREENWIDTH - string_w) >> 1;
+         item_x = (SCREENWIDTH - desc_width) >> 1;
+      else if(item->flags & MENUITEM_LALIGNED)
+         item_x = 12;
       else
-         item_x = x - (leftaligned ? 0 : string_w);
+         item_x = x - (leftaligned ? 0 : desc_width);
 
       // write description
       if(item->flags & MENUITEM_BIGFONT)
@@ -281,10 +285,10 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
 
       // haleyjd 02/04/06: set coordinates for small pointers
       // left pointer:
-      smallptr_coords[0][0] = item_x - 10;
+      smallptr_coords[0][0] = item_x - 9;
       smallptr_coords[0][1] = y + item_height / 2 - 4;
       // right pointer:
-      smallptr_coords[1][0] = item_x + string_w + 1;
+      smallptr_coords[1][0] = item_x + desc_width + 2;
       smallptr_coords[1][1] = smallptr_coords[0][1];
    }
 
@@ -306,17 +310,17 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
             // include gap on fullscreen menus
             x += GAP;
             // adjust colour for different coloured variables
-            if(colour == gameModeInfo->unselectColor) 
+            if(colour == gameModeInfo->unselectColor)
                colour = gameModeInfo->variableColor;
          }
          
          // write variable value text
          MN_WriteTextColoured
             (
-            boundkeys,
-            colour,
-            x + (leftaligned ? MN_StringWidth(item->description): 0),
-            y
+               boundkeys,
+               colour,
+               x + (leftaligned ? MN_StringWidth(item->description): 0),
+               y
             );
          
          break;
@@ -343,7 +347,10 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          if(drawing_menu->flags & mf_background)
          {
             // include gap on fullscreen menus
-            x += GAP;
+            if(item->flags & MENUITEM_LALIGNED)
+               x = 8 + desc_width + 16;
+            else
+               x += GAP;
             // adjust colour for different coloured variables
             if(colour == gameModeInfo->unselectColor) 
                colour = gameModeInfo->variableColor;
@@ -352,10 +359,10 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          // draw it
          MN_WriteTextColoured
             (
-            varvalue,
-            colour,
-            x + (leftaligned ? MN_StringWidth(item->description) : 0),
-            y
+               varvalue,
+               colour,
+               x + (leftaligned ? MN_StringWidth(item->description) : 0),
+               y
             );
          break;
       }
@@ -772,18 +779,18 @@ boolean MN_Responder(event_t *ev)
       
       if(ev->data1 == KEYD_ENTER && input_buffer[0])
       {
-         unsigned char *temp;
-         
-         // place " marks round the new value
-         temp = strdup(input_buffer);
-         psnprintf(input_buffer, sizeof(input_buffer), "\"%s\"", temp);
-         free(temp);
-         
-         // set the command
-         cmdtype = c_menu;
-         C_RunCommand(input_command, input_buffer);
-         input_command = NULL;
-         return true; // eat key
+            unsigned char *temp;
+            
+            // place " marks round the new value
+            temp = strdup(input_buffer);
+            psnprintf(input_buffer, sizeof(input_buffer), "\"%s\"", temp);
+            free(temp);
+            
+            // set the command
+            cmdtype = c_menu;
+            C_RunCommand(input_command, input_buffer);
+            input_command = NULL;
+            return true; // eat key
       }
 
       // check for backspace
@@ -801,7 +808,7 @@ boolean MN_Responder(event_t *ev)
       if((ch > 31 && ch < 127) && 
          strlen(input_buffer) <=
          ((var->type == vt_string) ? (unsigned)var->max :
-          (var->type == vt_int) ? 10 : 20))
+          (var->type == vt_int) ? 33 : 20))
       {
          input_buffer[strlen(input_buffer) + 1] = 0;
          input_buffer[strlen(input_buffer)] = ch;
@@ -1584,6 +1591,7 @@ void MN_AddCommands(void)
    
    MN_AddMenus();               // add commands to call the menus
    MN_AddMiscCommands();
+   MN_AddDynaMenuCommands();    // haleyjd 03/13/06
 }
 
 // EOF

@@ -292,6 +292,10 @@ SOURCE=.\Source\m_random.c
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\source\mn_emenu.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\mn_engin.c
 # End Source File
 # Begin Source File
@@ -859,6 +863,10 @@ SOURCE=.\Source\m_swap.h
 # Begin Group "Mn"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\mn_emenu.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\mn_engin.h

@@ -396,6 +396,11 @@ const char *C_VariableValue(variable_t *variable)
       else
          return "null";
       break;
+
+   case vt_chararray:
+      // haleyjd 03/13/06: static string support
+      sprintf(value, "%s", (char *)variable->variable);
+      break;
       
    default:
       return "(unknown)";
@@ -554,6 +559,7 @@ static void C_SetVariable(command_t *command)
       break;
       
    case vt_string:
+   case vt_chararray:
       size = strlen(c_argv[0]);
       break;
       
@@ -568,6 +574,7 @@ static void C_SetVariable(command_t *command)
       errormsg = "value too big";
    if(size < variable->min)
       errormsg = "value too small";
+   
    if(errormsg)
    {
       MN_ErrorMsg(errormsg);
@@ -600,6 +607,17 @@ static void C_SetVariable(command_t *command)
          {
             free(*(char**)variable->v_default);
             *(char**)variable->v_default = strdup(c_argv[0]);
+         }
+         break;
+
+      case vt_chararray:
+         // haleyjd 03/13/06: static strings
+         memset(variable->variable, 0, variable->max+1);
+         strcpy((char *)variable->variable, c_argv[0]);
+         if(variable->v_default && cmdsrc==c_typed)
+         {
+            memset(variable->v_default, 0, variable->max+1);
+            strcpy((char *)variable->v_default, c_argv[0]);
          }
          break;
          
