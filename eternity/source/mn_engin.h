@@ -45,6 +45,12 @@
 #define MENUITEM_CENTERED 0x00000004
 #define MENUITEM_LALIGNED 0x00000008
 
+// whether a menu item is a 'gap' item
+// ie. one that cannot be selected
+
+#define is_a_gap(it) \
+   ((it)->type == it_gap  || (it)->type == it_title || (it)->type == it_info)
+
 typedef struct menuitem_s
 {
   // item types

@@ -720,12 +720,6 @@ void MN_Drawer(void)
    MN_DrawMenu(current_menu);  
 }
 
-// whether a menu item is a 'gap' item
-// ie. one that cannot be selected
-
-#define is_a_gap(it) \
-   ((it)->type == it_gap  || (it)->type == it_title || (it)->type == it_info)
-
 static void MN_ShowContents(void);
 
 extern const char *shiftxform;

@@ -47,9 +47,11 @@
 #include "hu_over.h"
 #include "hu_stuff.h" // haleyjd
 #include "i_video.h"
+#include "m_misc.h"
 #include "m_random.h"
 #include "mn_htic.h"
 #include "mn_engin.h"
+#include "mn_emenu.h"
 #include "mn_misc.h"
 #include "mn_files.h"
 #include "r_defs.h"
@@ -91,6 +93,8 @@ char *savegamenames[SAVESLOTS];
 boolean savegamepresent[SAVESLOTS];
 
 static void MN_PatchOldMainMenu(void);
+static void MN_InitCustomMenu(void);
+static void MN_InitSearchStr(void);
 
 void MN_InitMenus(void)
 {
@@ -109,6 +113,9 @@ void MN_InitMenus(void)
 
    if(gamemode == commercial)
       MN_PatchOldMainMenu(); // haleyjd 05/16/04
+
+   MN_InitCustomMenu();      // haleyjd 03/14/06
+   MN_InitSearchStr();       // haleyjd 03/15/06
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1491,41 +1498,114 @@ CONSOLE_COMMAND(qsave, cf_hidden)
 // Massively re-organised from the original version
 //
 
+extern menu_t menu_options;
+extern menu_t menu_optionsp2;
+
+static const char *mn_optionpg_names[] =
+{
+   "io / game options / widgets",
+   "multiplayer / files / menus / info",
+   NULL
+};
+
+static menu_t *mn_options_pages[] =
+{
+   &menu_options,
+   &menu_optionsp2,
+   NULL
+};
+
 static menuitem_t mn_options_items[] =
 {
    {it_title,  FC_GOLD "options",       NULL,             "M_OPTION"},
    {it_gap},
    {it_info,   FC_GOLD "input/output"},
-   {it_runcmd, "key bindings",          "mn_movekeys"},
-   {it_runcmd, "mouse / gamepad",       "mn_mouse"},
-   {it_runcmd, "video options",         "mn_video"},
-   {it_runcmd, "sound options",         "mn_sound"},
+   {it_runcmd, "key bindings",          "mn_movekeys" },
+   {it_runcmd, "mouse / gamepad",       "mn_mouse"    },
+   {it_runcmd, "video options",         "mn_video"    },
+   {it_runcmd, "sound options",         "mn_sound"    },
    {it_gap},
    {it_info,   FC_GOLD "game options"},
-   {it_runcmd, "compatibility",         "mn_compat"},
-   {it_runcmd, "enemies",               "mn_enemies"},
-   {it_runcmd, "weapons",               "mn_weapons"},
+   {it_runcmd, "compatibility",         "mn_compat"   },
+   {it_runcmd, "enemies",               "mn_enemies"  },
+   {it_runcmd, "weapons",               "mn_weapons"  },
    {it_gap},
    {it_info,   FC_GOLD "game widgets"},
-   {it_runcmd, "hud settings",          "mn_hud"},
-   {it_runcmd, "status bar",            "mn_status"},
-   {it_runcmd, "automap",               "mn_automap"},
+   {it_runcmd, "hud settings",          "mn_hud"      },
+   {it_runcmd, "status bar",            "mn_status"   },
+   {it_runcmd, "automap",               "mn_automap"  },
+   {it_end}
+};
+
+static menuitem_t mn_optionsp2_items[] =
+{
+   {it_title,  FC_GOLD "options",        NULL,             "M_OPTION"},
+   {it_gap},
+   {it_info,   FC_GOLD "multiplayer"},
+   {it_runcmd, "player setup",           "mn_player"  },
+   {it_runcmd, "game settings",          "mn_gset"    },
+   {it_gap},
+   {it_info,   FC_GOLD "game files"},
+   {it_runcmd, "wad options",            "mn_loadwad" },
+   {it_runcmd, "demo settings",          "mn_demos"   },
+   {it_gap},
+   {it_info,   FC_GOLD "menus"},
+   {it_runcmd, "menu options",           "mn_menus"   },
+   {it_runcmd, "custom menu",            "mn_dynamenu _MN_Custom" },
+   {it_gap},
+   {it_info,   FC_GOLD "information"},
+   {it_runcmd, "about eternity",         "credits"    },
    {it_end}
 };
 
 menu_t menu_options =
 {
    mn_options_items,
-   NULL, NULL,                           // pages
+   NULL, 
+   &menu_optionsp2,                      // pages
    100, 15,                              // x,y offsets
    3,                                    // starting item: first selectable
    mf_background|mf_centeraligned,       // draw background: not a skull menu
+   NULL,                                 // no drawer
+   mn_optionpg_names,                    // TOC stuff
+   mn_options_pages
 };
 
 CONSOLE_COMMAND(mn_options, 0)
 {
    MN_StartMenu(&menu_options);
 }
+
+//
+// MN_InitCustomMenu
+//
+// Checks to see if the user has defined a _MN_Custom menu.
+// If not, the "custom menu" item on the second page of the
+// options menu will be disabled.
+//
+static void MN_InitCustomMenu(void)
+{
+   menu_t *menu;
+
+   if(!(menu = MN_DynamicMenuForName("_MN_Custom")))
+   {
+      mn_optionsp2_items[12].type        = it_info;
+      mn_optionsp2_items[12].description = FC_BRICK "custom menu";
+   }
+}
+
+menu_t menu_optionsp2 =
+{
+   mn_optionsp2_items,
+   &menu_options,
+   NULL,
+   100, 15,
+   3,
+   mf_background|mf_centeraligned,
+   NULL,
+   mn_optionpg_names,
+   mn_options_pages
+};
 
 CONSOLE_COMMAND(mn_endgame, 0)
 {
@@ -2923,6 +3003,175 @@ CONSOLE_COMMAND(mn_automapkeys, 0)
    MN_StartMenu(&menu_automapkeys);
 }
 
+//----------------------------------------------------------------------------
+//
+// "Menus" menu -- for menu options related to the menus themselves :)
+//
+// haleyjd 03/14/06
+//
+
+static char *mn_searchstr;
+static menuitem_t *lastMatch;
+
+
+VARIABLE_STRING(mn_searchstr, NULL, 32);
+CONSOLE_VARIABLE(mn_searchstr, mn_searchstr, 0)
+{
+   // any change to mn_searchstr resets the search index
+   lastMatch = NULL;
+}
+
+static void MN_InitSearchStr(void)
+{
+   mn_searchstr = strdup("");
+}
+
+// haleyjd: searchable menus
+extern menu_t menu_movekeys;
+extern menu_t menu_mouse;
+extern menu_t menu_video;
+extern menu_t menu_sound;
+extern menu_t menu_compat1;
+extern menu_t menu_enemies;
+extern menu_t menu_weapons;
+extern menu_t menu_hud;
+extern menu_t menu_statusbar;
+extern menu_t menu_automapcol1;
+extern menu_t menu_player;
+extern menu_t menu_gamesettings;
+extern menu_t menu_loadwad;
+extern menu_t menu_demos;
+
+static menu_t *mn_search_menus[] =
+{
+   &menu_movekeys,
+   &menu_mouse,
+   &menu_video,
+   &menu_sound,
+   &menu_compat1,
+   &menu_enemies,
+   &menu_weapons,
+   &menu_hud,
+   &menu_statusbar,
+   &menu_automapcol1,
+   &menu_player,
+   &menu_gamesettings,
+   &menu_loadwad,
+   &menu_demos,
+   NULL
+};
+
+CONSOLE_COMMAND(mn_search, 0)
+{
+   int i = 0;
+   menu_t *curMenu;
+   boolean pastLast;
+
+   // if lastMatch is set, set pastLast to false so that we'll seek
+   // forward until we pass the last item that was matched
+   pastLast = !lastMatch;
+
+   if(!mn_searchstr || !mn_searchstr[0])
+   {
+      MN_ErrorMsg("invalid search string");
+      return;
+   }
+
+   M_Strlwr(mn_searchstr);
+
+   // run through every menu in the search list...
+   while((curMenu = mn_search_menus[i++]))
+   {
+      menu_t *curPage = curMenu;
+
+      // run through every page of the menu
+      while(curPage)
+      {
+         int j = 0;
+         menuitem_t *item; 
+
+         // run through items
+         while((item = &(curPage->menuitems[j++])))
+         {
+            char *desc;
+
+            if(item->type == it_end)
+               break;
+
+            if(!item->description)
+               continue;
+
+            // keep seeking until we pass the last item found
+            if(item == lastMatch)
+            {
+               pastLast = true;
+               continue;
+            }            
+            if(!pastLast)
+               continue;
+
+            desc = M_Strlwr(strdup(item->description));
+
+            // found a match
+            if(strstr(desc, mn_searchstr))
+            {
+               // go to it
+               lastMatch = item;
+               MN_StartMenu(curPage);
+               MN_ErrorMsg("found: %s", desc);
+               if(!is_a_gap(item))
+                  curPage->selected = j - 1;
+               free(desc);
+               return;
+            }
+            free(desc);
+         }
+
+         curPage = curPage->nextpage;
+      }
+   }
+
+   if(lastMatch) // if doing a valid search, reset it now
+   {
+      lastMatch = NULL;
+      MN_ErrorMsg("reached end of search");
+   }
+   else
+      MN_ErrorMsg("no match found for '%s'", mn_searchstr);
+}
+
+static menuitem_t mn_menus_items[] =
+{
+   {it_title,    FC_GOLD "menu options",   NULL, "M_MENUS"},
+   {it_gap},
+   {it_info,     FC_GOLD "general"},
+   {it_toggle,   "toggle action backs up", "mn_toggleisback"},
+   {it_gap},
+   {it_info,     FC_GOLD "compatibility"},
+   {it_toggle,   "use doom's main menu",   "use_traditional_menu"},
+   {it_gap},
+   {it_info,     FC_GOLD "utilities"},
+   {it_variable, "search string:",         "mn_searchstr"},
+   {it_runcmd,   "search in menus...",     "mn_search"},
+   {it_end},
+};
+
+menu_t menu_menuopts =
+{
+   mn_menus_items,
+   NULL,                    // prev page
+   NULL,                    // next page
+   200, 15,                 // x,y offsets
+   3,                       // first item
+   mf_background,           // draw background: not a skull menu
+   NULL,                    // no drawer
+};
+
+CONSOLE_COMMAND(mn_menus, 0)
+{
+   MN_StartMenu(&menu_menuopts);
+}
+
 //
 // Skin Viewer Command
 //
@@ -3004,6 +3253,11 @@ void MN_AddMenus(void)
    // prompt messages
    C_AddCommand(mn_quit);
    C_AddCommand(mn_endgame);
+
+   // haleyjd 03/15/06: the "menu" menu
+   C_AddCommand(mn_menus);
+   C_AddCommand(mn_searchstr);
+   C_AddCommand(mn_search);
    
    // haleyjd: quicksave, quickload
    C_AddCommand(quicksave);

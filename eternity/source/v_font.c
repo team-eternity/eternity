@@ -144,6 +144,10 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          {
             tl ^= true;
          }
+         else if(c == 142) // shadow toggle
+         {
+            shadowChar ^= true;
+         }
          else if(font->color && !useAltMap) // not all fonts support translations
          {
             int colnum;

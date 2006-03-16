@@ -41,15 +41,22 @@
 // * things.edf ... Contains the mobjinfo structures
 //                  See e_things.c for implementation.
 // * cast.edf ..... Contains DOOM II cast call definitions
+// * terrain.edf .. Contains terrain-related structures.
+//                  See e_ttypes.c for implementation.
 // * misc.edf ..... Miscellaneous stuff
 //
 // EDF can also be loaded from WAD lumps, starting from the newest
 // lump named "EDFROOT". EDF lumps currently take total precedence
 // over any EDF file specified via GFS or command-line.
 //
-// Other sources of EDF data include:
+// Other separately processed sources of EDF data include:
+//
 // * ESTRINGS ..... Lump chain that can define more string objects.
 //                  See e_string.c for implementation.
+// * ETERRAIN ..... Lump chain that can define terrain-related objects.
+//                  See e_ttypes.c for implementation.
+// * EMENUS ....... Lump chain that can define menu objects.
+//                  See mn_emenu.c for implementation.
 //
 // By James Haley
 //
@@ -308,6 +315,7 @@ static cfg_opt_t edf_opts[] =
    CFG_FUNC("lumpinclude",    E_LumpInclude),
    CFG_FUNC("include_prev",   E_IncludePrev),
    CFG_FUNC("stdinclude",     E_StdInclude),
+   CFG_FUNC("userinclude",    E_UserInclude),
    CFG_FUNC("bexinclude",     bex_include),
    CFG_FUNC("ifenabled",      edf_ifenabled),
    CFG_FUNC("ifenabledany",   edf_ifenabledany),
@@ -327,6 +335,7 @@ static cfg_opt_t edf_opts[] =
    CFG_FUNC("lumpinclude",   E_LumpInclude), \
    CFG_FUNC("include_prev",  E_IncludePrev), \
    CFG_FUNC("stdinclude",    E_StdInclude), \
+   CFG_FUNC("userinclude",   E_UserInclude), \
    CFG_FUNC("bexinclude",    bex_include), \
    CFG_FUNC("ifenabled",     edf_ifenabled), \
    CFG_FUNC("ifenabledany",  edf_ifenabledany), \
@@ -406,6 +415,7 @@ static cfg_opt_t terrain_only_opts[] =
    CFG_FUNC("lumpinclude",   E_LumpInclude), \
    CFG_FUNC("include_prev",  E_IncludePrev), \
    CFG_FUNC("stdinclude",    E_StdInclude), \
+   CFG_FUNC("userinclude",   E_UserInclude), \
    CFG_FUNC("ifenabled",     edf_ifenabled), \
    CFG_FUNC("ifenabledany",  edf_ifenabledany), \
    CFG_FUNC("ifdisabled",    edf_ifdisabled), \
@@ -530,6 +540,13 @@ void E_EDFLogPrintf(const char *msg, ...)
    }
 }
 
+//
+// E_EDFLoggedErr
+//
+// Primary EDF processing error function. Includes the ability to
+// output "lv" number of tabs before the error message in the verbose
+// log file to maintain proper formatting.
+//
 void E_EDFLoggedErr(int lv, const char *msg, ...)
 {
    va_list v;

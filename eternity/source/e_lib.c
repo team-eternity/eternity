@@ -213,6 +213,31 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 }
 
 //
+// E_UserInclude
+//
+// Like stdinclude, but checks to see if the file exists before parsing it.
+// If it doesn't exist, it's not an error.
+// haleyjd 03/14/06
+//
+int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
+{
+   const char *filename;
+
+   if(argc != 1)
+   {
+      cfg_error(cfg, "wrong number of args to userinclude()");
+      return 1;
+   }
+
+   filename = E_BuildDefaultFn(argv[0]);
+
+   if(!access(filename, R_OK))
+      return cfg_lexer_include(cfg, filename, -1);
+   else
+      return 0;
+}
+
+//
 // Enables
 //
 

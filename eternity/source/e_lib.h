@@ -43,6 +43,7 @@ int E_Include    (cfg_t *, cfg_opt_t *, int, const char **);
 int E_LumpInclude(cfg_t *, cfg_opt_t *, int, const char **);
 int E_IncludePrev(cfg_t *, cfg_opt_t *, int, const char **);
 int E_StdInclude (cfg_t *, cfg_opt_t *, int, const char **);
+int E_UserInclude(cfg_t *, cfg_opt_t *, int, const char **);
 int E_Endif      (cfg_t *, cfg_opt_t *, int, const char **);
 
 // value-parsing callbacks

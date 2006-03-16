@@ -223,6 +223,35 @@ include:
                   case 'b':
                      M_QStrPutc(&qstring, '\b');
                      break;
+                     // haleyjd 03/14/06: color codes
+                  case '0':
+                  case '1':
+                  case '2':
+                  case '3':
+                  case '4':
+                  case '5':
+                  case '6':
+                  case '7':
+                  case '8':
+                  case '9':
+                     M_QStrPutc(&qstring, (char)((s - '0') + 128));
+                     break;
+                     // haleyjd 03/14/06: special codes
+                  case 'T': // translucency
+                     M_QStrPutc(&qstring, (char)138);
+                     break;
+                  case 'N': // normal
+                     M_QStrPutc(&qstring, (char)139);
+                     break;
+                  case 'H': // hi
+                     M_QStrPutc(&qstring, (char)140);
+                     break;
+                  case 'E': // error
+                     M_QStrPutc(&qstring, (char)141);
+                     break;
+                  case 'S': // shadowed
+                     M_QStrPutc(&qstring, (char)142);
+                     break;
                   default:
                      M_QStrPutc(&qstring, s);
                      break;

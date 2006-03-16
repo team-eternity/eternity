@@ -1014,19 +1014,19 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 #define E extern
 #define U unsigned
 #define C char
+#define K const
 #define I int
 #define V void
 #define F for
 #define Z FC_BROWN
 #define C_W C_SCREENWIDTH
 #define C_H C_SCREENHEIGHT
-#define s0 screens[0]
-#define WT HU_WriteText
+#define WT HU_CenterMessageTimed
 #define bd backdrop
 
-V Egg(V){C *os;I x,y;E U C egg[];F(x=0;x<C_W;x++)F(y=0;y<C_H
+V Egg(V){E WT(K C*,I);I x,y;E U C egg[];F(x=0;x<C_W;x++)F(y=0;y<C_H
 ;y++){U C *s=egg+((y%44)*42)+(x%42);if(*s!=247)bd[y*C_W+x]=*
-s;}os=s0;s0=bd;WT(Z"my hair looks much too\n dark in this p"
-"ic.\noh well, have fun!\n      -- fraggle",160,168);s0=os;}
+s;}WT(Z"my hair looks much too\ndark in this p"
+"ic.\noh well, have fun!\n      -- fraggle", 6*35);}
 
 // EOF

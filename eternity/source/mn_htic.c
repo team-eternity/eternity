@@ -54,7 +54,7 @@ int HSkullLumpNums[NUM_HSKULL];
 
 // Main Heretic Menu
 
-void MN_HMainMenuDrawer(void);
+static void MN_HMainMenuDrawer(void);
 
 static menuitem_t mn_hmain_items[] =
 {
@@ -91,7 +91,7 @@ void MN_HInitSkull(void)
    }
 }
 
-void MN_HMainMenuDrawer(void)
+static void MN_HMainMenuDrawer(void)
 {
    int skullIndex;
 

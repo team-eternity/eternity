@@ -67,6 +67,8 @@ extern patch_t *v_font[V_FONTSIZE];
 #define FC_NORMAL       "\x8b"
 #define FC_HI           "\x8c"
 #define FC_ERROR        "\x8d"
+// haleyjd 03/14/06: shadow toggle via text
+#define FC_SHADOW       "\x8e"
 
 void V_WriteText(const char *s, int x, int y);
 void V_WriteTextColoured(const char *s, int colour, int x, int y);
