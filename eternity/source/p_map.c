@@ -2889,6 +2889,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
       return true;   // keep checking
    }
 
+
 #ifdef OVER_UNDER
    if(demo_version >= 331 && !comp[comp_overunder])
    {

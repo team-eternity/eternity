@@ -127,6 +127,10 @@ rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
    ret = R_CreatePortal();
    ret->type = R_ANCHORED;
    ret->data.camera = cam;
+
+   // haleyjd: temporary debug
+   ret->tainted = 0;
+
    return ret;
 }
 
@@ -531,6 +535,14 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    if(portal->maxx < portal->minx)
       return;
 
+   // haleyjd: temporary debug
+   if(portal->tainted > v_width)
+   {
+      portal->tainted++;
+      doom_printf("refused to draw portal %p (t=%d)", portal, portal->tainted);
+      return;
+   }
+
 #ifdef RANGECHECK
    {
       int i;
@@ -546,6 +558,9 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 
    if(!R_SetupPortalClipsegs(portal->top, portal->bottom))
       return;
+
+   // haleyjd: temporary debug
+   portal->tainted++;
 
    floorclip = portal->bottom;
    ceilingclip = portal->top;
@@ -575,6 +590,19 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 
    if(portal->child)
       R_RenderAnchoredPortal(portal->child);
+}
+
+// haleyjd: temporary debug
+void R_UntaintPortals(void)
+{
+   rportal_t *r;
+
+   for(r = portals; r; r = r->next)
+   {
+      r->tainted = 0;
+      if(r->child)
+         r->child->tainted = 0;
+   }
 }
 
 //

@@ -36,7 +36,8 @@ typedef enum
 {
   NoState = -1,
   StatCount,
-  ShowNextLoc
+  ShowNextLoc,
+  IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
 } stateenum_t;
 
 // haleyjd: DOOM intermission object

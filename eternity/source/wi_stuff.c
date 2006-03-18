@@ -903,6 +903,14 @@ static void WI_updateNoState(void)
    {
       WI_End();
       G_WorldDone();
+
+      // haleyjd 03/16/06: bug found by fraggle: WI_End sets the 
+      // intermission resources to PU_CACHE. Most of the time this is 
+      // fine, but if any other memory operations occur before the time 
+      // G_DoWorldDone runs, the game may crash.
+
+      // Fix: made a new state that draws nothing.
+      state = IntrEnding;
    }
 }
 
@@ -1809,6 +1817,9 @@ static void WI_Ticker(void)
    case NoState:
       WI_updateNoState();
       break;
+
+   case IntrEnding: // haleyjd 03/16/06
+      break;
    }
 }
 
@@ -2032,6 +2043,9 @@ static void WI_Drawer(void)
       
    case NoState:
       WI_drawNoState();
+      break;
+
+   case IntrEnding: // haleyjd 03/16/06
       break;
    }
 }

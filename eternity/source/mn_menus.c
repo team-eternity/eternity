@@ -661,21 +661,16 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 // a launcher utility, like for most other ports.
 //
 
+/*
 static menuitem_t mn_multiplayer_items[] =
 {
    {it_title,  FC_GOLD "multiplayer",  NULL,                "M_MULTI"},
    {it_gap},
-   {it_gap},
    {it_info,   FC_GOLD "connect:"},
-   //{it_runcmd, "serial/modem...",         "mn_serial"},
-   //{it_runcmd, "tcp/ip...",               "mn_tcpip"},
+   {it_runcmd, "serial/modem...",         "mn_serial"},
+   {it_runcmd, "tcp/ip...",               "mn_tcpip"},
    {it_gap},
-   ///{it_runcmd, "disconnect",              "disconnect"},
-   {it_gap},
-   {it_info,   FC_GOLD "setup"},
-   {it_runcmd, "chat macros...",          "mn_chatmacros"},
-   //{it_runcmd, "player setup...",         "mn_player"},
-   //{it_runcmd, "game settings...",        "mn_gset"},
+   {it_runcmd, "disconnect",              "disconnect"},
    {it_end}
 };
 
@@ -692,22 +687,44 @@ CONSOLE_COMMAND(mn_multi, 0)
 {
    MN_StartMenu(&menu_multiplayer);
 }
-  
+*/
+
 /////////////////////////////////////////////////////////////////
 //
 // Multiplayer Game settings
 //
 
+static const char *mn_gset_names[] =
+{
+   "general / dm auto-exit",
+   "monsters / boom features",
+   "deathmatch flags",
+   "chat macros",
+   NULL,
+};
+
+extern menu_t menu_gamesettings;
+extern menu_t menu_advanced;
+extern menu_t menu_dmflags;
+extern menu_t menu_chatmacros;
+
+static menu_t *mn_gset_pages[] =
+{
+   &menu_gamesettings,
+   &menu_advanced,
+   &menu_dmflags,
+   &menu_chatmacros,
+   NULL,
+};
+
 static menuitem_t mn_gamesettings_items[] =
 {
    {it_title,    FC_GOLD "game settings",        NULL,       "M_GSET"},
    {it_gap},
-   {it_info,     FC_GOLD "game settings"},
+   {it_info,     FC_GOLD "general"},
    {it_toggle,   "game type",                  "gametype"},
    {it_variable, "starting level",             "startlevel"},
    {it_toggle,   "skill level",                "skill"},
-   {it_runcmd,   "advanced...",                "mn_advanced"},
-   {it_runcmd,   "deathmatch flags...",        "mn_dmflags"},
    {it_gap},
    {it_info,     FC_GOLD "dm auto-exit"},
    {it_variable, "time limit",                 "timelimit"},
@@ -718,10 +735,14 @@ static menuitem_t mn_gamesettings_items[] =
 menu_t menu_gamesettings =
 {
    mn_gamesettings_items,
-   NULL, NULL,                   // pages
-   170, 15,
+   NULL, 
+   &menu_advanced,               // pages
+   164, 15,
    3,                            // start
    mf_background,                // full screen
+   NULL,                         // no drawer
+   mn_gset_names,                // TOC stuff
+   mn_gset_pages,
 };
 
         // level to start on
@@ -732,7 +753,7 @@ CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
    
    // check for a valid level
    if(W_CheckNumForName(newvalue) == -1)
-      MN_ErrorMsg("level not found!");
+      MN_ErrorMsg("level not found");
    else
    {
       if(startlevel)
@@ -754,37 +775,39 @@ CONSOLE_COMMAND(mn_gset, 0)            // just setting options from menu
 
 static menuitem_t mn_advanced_items[] =
 {
-   {it_title,    FC_GOLD "advanced",           NULL,             "M_MULTI"},
+   {it_title,    FC_GOLD "game settings",           NULL,             "M_GSET"},
    {it_gap},
-   {it_runcmd,   "done...",                    "mn_prevmenu"},
-   {it_gap},
+   {it_info,     FC_GOLD "monsters"},
    {it_toggle,   "no monsters",                "nomonsters"},
    {it_toggle,   "fast monsters",              "fast"},
    {it_toggle,   "respawning monsters",        "respawn"},
    {it_gap},
-   /*
-   YSHEAR_FIXME: this feature may return after EDF for weapons
-   {it_toggle,   "allow mlook with bfg",       "bfglook"},
-   */
+   {it_info,     FC_GOLD "BOOM features"},
    {it_toggle,   "variable friction",          "varfriction"},
-   {it_toggle,   "boom pusher objects",        "pushers"},
-   {it_toggle,   "damaging floors",            "nukage"},
+   {it_toggle,   "boom push effects",          "pushers"},
+   {it_toggle,   "nukage enabled",             "nukage"},
    {it_end}
 };
 
 menu_t menu_advanced =
 {
    mn_advanced_items,
-   NULL, NULL,                   // pages
-   170, 15,
-   2,                            // start
+   &menu_gamesettings, 
+   &menu_dmflags,                // pages
+   200, 15,
+   3,                            // start
    mf_background,                // full screen
+   NULL,                         // no drawer
+   mn_gset_names,                // TOC stuff
+   mn_gset_pages,
 };
 
+/*
 CONSOLE_COMMAND(mn_advanced, cf_server)
 {
    MN_StartMenu(&menu_advanced);
 }
+*/
 
 //
 // Deathmatch Flags Menu
@@ -800,32 +823,35 @@ static menuitem_t mn_dmflags_items[] =
 {
    {it_title,    FC_GOLD "deathmatch flags",   NULL,            "M_DMFLAG"},
    {it_gap},
-   {it_runcmd,   "done...",                    "mn_prevmenu" },
-   {it_gap},
    {it_runcmd,   "items respawn",              "mn_dfitem"},
    {it_runcmd,   "weapons stay",               "mn_dfweapstay"},
    {it_runcmd,   "respawning barrels",         "mn_dfbarrel"},
    {it_runcmd,   "players drop items",         "mn_dfplyrdrop"},
    {it_runcmd,   "respawning super items",     "mn_dfrespsupr"},
    {it_gap},
-   {it_info,     FC_GOLD "dmflags =" },
+   {it_info,     FC_GOLD "dmflags =",          NULL,            NULL, MENUITEM_CENTERED},
    {it_end}
 };
 
 menu_t menu_dmflags =
 {
    mn_dmflags_items,
-   NULL, NULL,        // pages
-   170, 15,
+   &menu_advanced, 
+   &menu_chatmacros,  // pages
+   200, 15,
    2,
    mf_background,     // full screen
-   MN_DMFlagsDrawer
+   MN_DMFlagsDrawer,
+   mn_gset_names,     // TOC stuff
+   mn_gset_pages,
 };
 
+/*
 CONSOLE_COMMAND(mn_dmflags, cf_server)
 {
    MN_StartMenu(&menu_dmflags);
 }
+*/
 
 // haleyjd 04/14/03: dmflags menu drawer (a big hack, mostly)
 
@@ -837,10 +863,10 @@ static void MN_DMFlagsDrawer(void)
    menuitem_t *menuitem;
 
    // don't draw anything before the menu has been initialized
-   if(!(menu_dmflags.menuitems[10].flags & MENUITEM_POSINIT))
+   if(!(menu_dmflags.menuitems[8].flags & MENUITEM_POSINIT))
       return;
 
-   for(i = 4; i < 9; i++)
+   for(i = 2; i < 7; i++)
    {
       menuitem = &(menu_dmflags.menuitems[i]);
                   
@@ -853,7 +879,7 @@ static void MN_DMFlagsDrawer(void)
         );
    }
 
-   menuitem = &(menu_dmflags.menuitems[10]);
+   menuitem = &(menu_dmflags.menuitems[8]);
    // draw dmflags value
    psnprintf(buf, sizeof(buf), FC_GOLD "%lu", dmflags);
    V_WriteText(buf, menuitem->x + 4, menuitem->y);
@@ -891,6 +917,49 @@ CONSOLE_COMMAND(mn_dfrespsupr, cf_server|cf_hidden)
 {
    toggle_dm_flag(DM_RESPAWNSUPER);
 }
+
+
+/////////////////////////////////////////////////////////////////
+//
+// Chat Macros
+//
+
+static menuitem_t mn_chatmacros_items[] =
+{
+   {it_title,    FC_GOLD "chat macros", NULL,         "M_CHATM"},
+   {it_gap},
+   {it_variable, "0:",                  "chatmacro0"},
+   {it_variable, "1:",                  "chatmacro1"},
+   {it_variable, "2:",                  "chatmacro2"},
+   {it_variable, "3:",                  "chatmacro3"},
+   {it_variable, "4:",                  "chatmacro4"},
+   {it_variable, "5:",                  "chatmacro5"},
+   {it_variable, "6:",                  "chatmacro6"},
+   {it_variable, "7:",                  "chatmacro7"},
+   {it_variable, "8:",                  "chatmacro8"},
+   {it_variable, "9:",                  "chatmacro9"},
+   {it_end}
+};
+
+menu_t menu_chatmacros =
+{
+   mn_chatmacros_items,
+   &menu_dmflags, 
+   NULL,                                 // pages
+   25, 15,                               // x, y offset
+   2,                                    // chatmacro0 at start
+   mf_background,                        // full-screen
+   NULL,                                 // no drawer
+   mn_gset_names,                        // TOC stuff
+   mn_gset_pages,
+};
+
+/*
+CONSOLE_COMMAND(mn_chatmacros, 0)
+{
+   MN_StartMenu(&menu_chatmacros);
+}
+*/
 
 /////////////////////////////////////////////////////////////////
 //
@@ -991,42 +1060,6 @@ CONSOLE_COMMAND(mn_udpserv, 0)              // udp start server
 
 /////////////////////////////////////////////////////////////////
 //
-// Chat Macros
-//
-
-static menuitem_t mn_chatmacros_items[] =
-{
-   {it_title,  FC_GOLD "chat macros",  NULL,         "M_CHATM"},
-   {it_gap},
-   {it_variable,       "0",            "chatmacro0"},
-   {it_variable,       "1",            "chatmacro1"},
-   {it_variable,       "2",            "chatmacro2"},
-   {it_variable,       "3",            "chatmacro3"},
-   {it_variable,       "4",            "chatmacro4"},
-   {it_variable,       "5",            "chatmacro5"},
-   {it_variable,       "6",            "chatmacro6"},
-   {it_variable,       "7",            "chatmacro7"},
-   {it_variable,       "8",            "chatmacro8"},
-   {it_variable,       "9",            "chatmacro9"},
-   {it_end}
-};
-
-menu_t menu_chatmacros =
-{
-   mn_chatmacros_items,
-   NULL, NULL,                           // pages
-   20,5,                                 // x, y offset
-   2,                                    // chatmacro0 at start
-   mf_background,                        // full-screen
-};
-
-CONSOLE_COMMAND(mn_chatmacros, 0)
-{
-   MN_StartMenu(&menu_chatmacros);
-}
-
-/////////////////////////////////////////////////////////////////
-//
 // Player Setup
 //
 
@@ -1049,7 +1082,7 @@ menu_t menu_player =
 {
    mn_player_items,
    NULL, NULL,                           // pages
-   150,5,                                // x, y offset
+   180, 5,                                // x, y offset
    2,                                    // chatmacro0 at start
    mf_background,                        // full-screen
    MN_PlayerDrawer
@@ -1714,7 +1747,7 @@ static menuitem_t mn_video_items[] =
    {it_gap},
    {it_info,         FC_GOLD "misc."},
 #ifndef _SDL_VER
-   {it_toggle,       "\"loading\" disk icon",   "v_diskicon"},
+   {it_toggle,       "loading disk icon",       "v_diskicon"},
 #endif
    {it_toggle,       "screenshot format",       "shot_type"},   
    {it_end}
@@ -2359,6 +2392,11 @@ static menu_t *mn_weapons_pages[] =
    NULL
 };
 
+/*
+YSHEAR_FIXME: this feature may return after EDF for weapons
+{it_toggle,   "allow mlook with bfg",       "bfglook"},
+*/
+
 static menuitem_t mn_weapons_items[] =
 {
    {it_title,      FC_GOLD "weapons",                NULL, "M_WEAP"},
@@ -2535,6 +2573,7 @@ static menuitem_t mn_etccompat_items[] =
    {it_end}
 };
 
+/*
 // haleyjd: New compatibility/functionality options for Eternity
 menu_t menu_etccompat =
 {
@@ -2549,6 +2588,7 @@ CONSOLE_COMMAND(mn_etccompat, 0)
 {
    MN_StartMenu(&menu_etccompat);
 }
+*/
 
 /////////////////////////////////////////////////////////////////
 //
@@ -3145,7 +3185,7 @@ static menuitem_t mn_menus_items[] =
    {it_title,    FC_GOLD "menu options",   NULL, "M_MENUS"},
    {it_gap},
    {it_info,     FC_GOLD "general"},
-   {it_toggle,   "toggle action backs up", "mn_toggleisback"},
+   {it_toggle,   "toggle key backs up",    "mn_toggleisback"},
    {it_gap},
    {it_info,     FC_GOLD "compatibility"},
    {it_toggle,   "use doom's main menu",   "use_traditional_menu"},
@@ -3204,16 +3244,16 @@ void MN_AddMenus(void)
    C_AddCommand(mn_demos);
    C_AddCommand(mn_demoname);
    
-   C_AddCommand(mn_multi);
+   //C_AddCommand(mn_multi);
    //C_AddCommand(mn_serial);
    //C_AddCommand(mn_phonenum);
    //C_AddCommand(mn_tcpip);
-   C_AddCommand(mn_chatmacros);
+   //C_AddCommand(mn_chatmacros);
    C_AddCommand(mn_player);
-   C_AddCommand(mn_advanced);
+   //C_AddCommand(mn_advanced);
 
    // haleyjd: dmflags
-   C_AddCommand(mn_dmflags);
+   //C_AddCommand(mn_dmflags);
    C_AddCommand(mn_dfitem);
    C_AddCommand(mn_dfweapstay);
    C_AddCommand(mn_dfbarrel);
@@ -3234,7 +3274,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_sound);
    C_AddCommand(mn_weapons);
    C_AddCommand(mn_compat);
-   C_AddCommand(mn_etccompat); // haleyjd: new eternity options menu
+   //C_AddCommand(mn_etccompat); // haleyjd: new eternity options menu
    C_AddCommand(mn_enemies);
    C_AddCommand(mn_hud);
    C_AddCommand(mn_status);

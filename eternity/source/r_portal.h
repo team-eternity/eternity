@@ -84,6 +84,9 @@ typedef struct rportal_s
    fixed_t  vx, vy, vz;
 
    struct rportal_s *next, *child;
+
+   // haleyjd: temporary debug
+   short tainted;
 } rportal_t;
 
 rportal_t *R_GetSkyBoxPortal(mobj_t *camera);

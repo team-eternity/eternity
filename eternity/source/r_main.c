@@ -656,6 +656,9 @@ static int render_ticker = 0;
 
 extern void R_ResetColumnBuffer(void);
 
+// haleyjd: temporary debug
+extern void R_UntaintPortals(void);
+
 //
 // R_RenderView
 //
@@ -663,6 +666,9 @@ void R_RenderPlayerView (player_t* player, camera_t *camerapoint)
 {
    R_SetupFrame(player, camerapoint);
    
+   // haleyjd: temporary debug
+   R_UntaintPortals();
+
    // Clear buffers.
    R_ClearClipSegs();
    R_ClearDrawSegs();
