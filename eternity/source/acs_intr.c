@@ -216,23 +216,23 @@ static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
 //
 static void ACS_runOpenScript(acscript_t *acs, int iNum)
 {
-	acsthinker_t *newScript;
+   acsthinker_t *newScript;
 
-	newScript = Z_Malloc(sizeof(acsthinker_t), PU_LEVSPEC, 0);
-	memset(script, 0, sizeof(acsthinker_t));
+   newScript = Z_Malloc(sizeof(acsthinker_t), PU_LEVSPEC, 0);
+   memset(script, 0, sizeof(acsthinker_t));
 	
    newScript->scriptNum   = acs->number;
    newScript->internalNum = iNum;
 
    // open scripts wait one second before running
-	newScript->delay = TICRATE;
+   newScript->delay = TICRATE;
 
    // set ip to entry point
-	newScript->ip = acs->code;
+   newScript->ip = acs->code;
 
    // set up thinker
    newScript->thinker.function = T_ACSThinker;
-	P_AddThinker(&newScript->thinker);
+   P_AddThinker(&newScript->thinker);
 
    // mark as running
    acs->sreg = ACS_STATE_RUNNING;
@@ -383,14 +383,14 @@ static int ACS_countPlayers(void)
 //
 static void ACS_setLineTexture(const char *texture, int pos, int side, int tag)
 {
-	line_t *l;
-	int linenum, texnum;
+   line_t *l;
+   int linenum, texnum;
 
-	texnum = R_TextureNumForName(texture);
-	linenum = -1;
+   texnum = R_TextureNumForName(texture);
+   linenum = -1;
 
-	while((l = P_FindLine(tag, &linenum)) != NULL)
-	{
+   while((l = P_FindLine(tag, &linenum)) != NULL)
+   {
       if(l->sidenum[side] == -1)
          continue;
 
@@ -406,7 +406,7 @@ static void ACS_setLineTexture(const char *texture, int pos, int side, int tag)
          sides[l->sidenum[side]].bottomtexture = texnum;
          break;
       }
-	}
+   }
 }
 
 //
@@ -1152,31 +1152,31 @@ boolean ACS_StartScript(int scrnum, int map, int *args,
    if(!acsLoaded)
       return false;
 
-	if(map > 0 && map != gamemap)
-	{
+   if(map > 0 && map != gamemap)
+   {
       // TODO: add to deferred scripts instead of running
       return true;
-	}
+   }
 
    if((internalNum = ACS_indexForNum(scrnum)) == acsNumScripts)
-	{
+   {
       // tink!
       C_Printf(FC_ERROR "ACS_StartScript: no such script %d\a\n", scrnum);
       return false;
-	}
+   }
 
    scrData = &scripts[internalNum];
 
    // if the script is suspended, restart it
-	if(scrData->sreg == ACS_STATE_SUSPEND)
-	{ 
-		scrData->sreg = ACS_STATE_RUNNING;
-		return true;
-	}
+   if(scrData->sreg == ACS_STATE_SUSPEND)
+   { 
+      scrData->sreg = ACS_STATE_RUNNING;
+      return true;
+   }
 
    // if the script is already running, we can't do anything
-	if(scrData->sreg != ACS_STATE_STOPPED)
-		return false;
+   if(scrData->sreg != ACS_STATE_STOPPED)
+      return false;
 
    // setup the new script thinker
    newScript = Z_Malloc(sizeof(acsthinker_t), PU_LEVSPEC, NULL);	
