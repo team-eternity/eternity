@@ -452,6 +452,11 @@ static void I_GetEvent(void)
       mouseevent.data1 = buttons;
       D_PostEvent(&mouseevent);
    }
+
+   // SoM: if paused, delay for a short amount of time to allow other threads to process on the 
+   // system. Otherwise eternity will use almost 100% of the CPU even while paused.
+   if(paused)
+      I_WaitVBL(1);
 }
 
 //
