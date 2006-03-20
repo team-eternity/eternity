@@ -455,7 +455,7 @@ static void I_GetEvent(void)
 
    // SoM: if paused, delay for a short amount of time to allow other threads to process on the 
    // system. Otherwise eternity will use almost 100% of the CPU even while paused.
-   if(paused)
+   if(paused && !window_focused)
       I_WaitVBL(1);
 }
 
