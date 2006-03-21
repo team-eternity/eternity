@@ -1582,14 +1582,26 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
          if(thingzl >= mobj->z + mobj->height)
          {
             if(mobj->z + mobj->height > thing->floorz)
+            {
                thing->floorz = mobj->z + mobj->height;
+
+               // haleyjd 03/19/06: update other thing too
+               if(mobj->ceilingz > thing->z)
+                  mobj->ceilingz = thing->z;
+            }
          }
          else if(thingzh <= mobj->z)
          {
             // SoM 11/29/02: For corpses never set a ceiling from
             // another thing.
             if(!(thing->flags & MF_CORPSE) && mobj->z < thing->ceilingz)
+            {
                thing->ceilingz = mobj->z;
+
+               // haleyjd 03/19/06: update other thing too
+               if(mobj->floorz < thing->z)
+                  mobj->floorz = thing->z;
+            }
          }
       }
    }
@@ -2890,6 +2902,10 @@ static boolean PIT_ChangeSector(mobj_t *thing)
    }
 
 
+   // haleyjd 03/19/06: purpose of this change is unclear, and code
+   // inside is incorrect, and also highly suspect due to use of 
+   // tmthing. Disabling it for now.
+   /*
 #ifdef OVER_UNDER
    if(demo_version >= 331 && !comp[comp_overunder])
    {
@@ -2899,6 +2915,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
    }
    else
 #endif
+   */
    if(!(thing->flags & MF_SHOOTABLE))
       return true;        // assume it is bloody gibs or something
 

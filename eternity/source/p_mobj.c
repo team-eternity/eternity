@@ -230,9 +230,9 @@ void P_ThrustMobj(mobj_t *mo, angle_t angle, fixed_t move)
 //
 // killough 11/98: minor restructuring
 
-void P_XYMovement (mobj_t* mo)
+void P_XYMovement(mobj_t* mo)
 {
-   player_t *player;
+   player_t *player = mo->player;
    fixed_t xmove, ymove;
 
    if(!(mo->momx | mo->momy)) // Any momentum?
@@ -247,32 +247,8 @@ void P_XYMovement (mobj_t* mo)
          P_SetMobjState(mo, mo->info->spawnstate);
       }
 
-      /*
-      // haleyjd 08/16/04: crashstate needs to be entered here
-      // as well
-      if(mo->info->crashstate != NullStateNum && mo->flags & MF_CORPSE &&
-         !(mo->intflags & MIF_CRASHED) &&
-         mo->z <= mo->floorz)
-      {
-         mo->intflags |= MIF_CRASHED;
-         P_SetMobjState(mo, mo->info->crashstate);
-      }
-      */
-
       return;
    }
-
-   // haleyjd 03/12/03: Heretic Wind transfer specials
-   if(demo_version >= 331 && (mo->flags3 & MF3_WINDTHRUST) &&
-      !(mo->flags & MF_NOCLIP))
-   {
-      sector_t *sec = mo->subsector->sector;
-
-      if(sec->hticPushType >= 40 && sec->hticPushType <= 51)
-         P_ThrustMobj(mo, sec->hticPushAngle, sec->hticPushForce);
-   }
-
-   player = mo->player;
    
    if(mo->momx > MAXMOVE)
       mo->momx = MAXMOVE;
@@ -313,7 +289,7 @@ void P_XYMovement (mobj_t* mo)
 
       // killough 3/15/98: Allow objects to drop off
       
-      if (!P_TryMove(mo, ptryx, ptryy, true))
+      if(!P_TryMove(mo, ptryx, ptryy, true))
       {
          // blocked move
          
@@ -344,7 +320,7 @@ void P_XYMovement (mobj_t* mo)
                // if under gravity, slow down in
                // direction perpendicular to wall.
                
-               if (!(mo->flags & MF_NOGRAVITY))
+               if(!(mo->flags & MF_NOGRAVITY))
                {
                   mo->momx = (mo->momx + x)/2;
                   mo->momy = (mo->momy + y)/2;
@@ -410,10 +386,9 @@ void P_XYMovement (mobj_t* mo)
                   // against the sky.
                   // Does not handle sky floors.
                   
-                  // haleyjd: in fact, doesn't handle sky
-                  // ceilings either -- this fix is for "sky
-                  // hack walls" only apparently -- see 
-                  // P_ExplodeMissile for my real sky fix
+                  // haleyjd: in fact, doesn't handle sky ceilings either -- 
+                  // this fix is for "sky hack walls" only apparently -- 
+                  // see P_ExplodeMissile for my real sky fix
                   
                   P_RemoveMobj(mo);
                   return;
@@ -428,7 +403,7 @@ void P_XYMovement (mobj_t* mo)
          }
       }
    }
-   while (xmove | ymove);
+   while(xmove | ymove);
 
    // slow down
 
@@ -767,15 +742,6 @@ floater:
       if(!correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz;
 
-      /*
-      // haleyjd 08/07/04: crashstate
-      if(mo->info->crashstate != NullStateNum && mo->flags & MF_CORPSE &&
-         !(mo->intflags & MIF_CRASHED))
-      {
-         mo->intflags |= MIF_CRASHED;
-         P_SetMobjState(mo, mo->info->crashstate);
-      }
-      */
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
@@ -945,7 +911,18 @@ void P_MobjThinker(mobj_t *mobj)
    }
    else
       waterstate = 0;
-   
+
+   // haleyjd 03/12/03: Heretic Wind transfer specials
+   // haleyjd 03/19/06: moved here from P_XYMovement
+   if(demo_version >= 331 && (mobj->flags3 & MF3_WINDTHRUST) && 
+      !(mobj->flags & MF_NOCLIP))
+   {
+      sector_t *sec = mobj->subsector->sector;
+      
+      if(sec->hticPushType >= 40 && sec->hticPushType <= 51)
+         P_ThrustMobj(mobj, sec->hticPushAngle, sec->hticPushForce);
+   }
+
    // momentum movement
    if(mobj->momx | mobj->momy || mobj->flags & MF_SKULLFLY)
    {
@@ -1067,7 +1044,7 @@ void P_MobjSetZPos(mobj_t *mobj, fixed_t delta)
 #ifdef OVER_UNDER
    // SoM 11/5/02: Set these at spawn.
    mobj->secfloorz = mobj->passfloorz = mobj->floorz;
-   mobj->secceilz = mobj->passceilz = mobj->ceilingz;
+   mobj->secceilz  = mobj->passceilz  = mobj->ceilingz;
    
    if(demo_version >= 331 && !comp[comp_overunder])
       P_ThingMovez(mobj, delta);

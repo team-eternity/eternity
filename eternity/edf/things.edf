@@ -1601,7 +1601,7 @@ thingtype EESkyboxCam {
 thingtype EEParticleFountain {
   spawnstate = S_TNT1
   height = 0.0
-  flags = NOBLOCKMAP
+  //flags = NOBLOCKMAP
 }
 
 thingtype EETerrainLavaSplash {
@@ -1961,14 +1961,16 @@ thingtype KeyGizmoOrb {
 thingtype TeleGlitterGenRed {
   doomednum = 7074
   spawnstate = S_TELEGLITGEN1
-  flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
+  //flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
+  cflags = NODRAW
   dehackednum = 330
 }
 
 thingtype TeleGlitterGenBlue {
   doomednum = 7052
   spawnstate = S_TELEGLITGEN2
-  flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
+  //flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
+  cflags = NODRAW
   dehackednum = 331
 }
 
@@ -2440,14 +2442,16 @@ thingtype HereticYellowKey {
 thingtype HereticAmbienceWind {
   doomednum = 7042
   spawnstate = S_SND_WIND
-  flags = NOSECTOR|NOBLOCKMAP
+  //flags = NOSECTOR|NOBLOCKMAP
+  cflags = NODRAW
   dehackednum = 365
 }
 
 thingtype HereticAmbienceWater {
   doomednum = 7041
   spawnstate = S_SND_WATERFALL
-  flags = NOSECTOR|NOBLOCKMAP
+  //flags = NOSECTOR|NOBLOCKMAP
+  cflags = NODRAW
   dehackednum = 366
 }
 
@@ -2780,13 +2784,13 @@ thingtype HereticImpLeader {
 
 thingtype HereticImpChunk1 {
   spawnstate = S_IMP_CHUNKA1
-  cflags = NOBLOCKMAP
+  //cflags = NOBLOCKMAP
   dehackednum = 395
 }
 
 thingtype HereticImpChunk2 {
   spawnstate = S_IMP_CHUNKB1
-  cflags = NOBLOCKMAP
+  //cflags = NOBLOCKMAP
   dehackednum = 396
 }
 
