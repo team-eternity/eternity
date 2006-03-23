@@ -1569,19 +1569,19 @@ void R_DrawSpan (void)
       // SoM: Why didn't I see this earlier? the spot variable is a waste now because we don't
       // have the uber complicated math to calculate it now, so that was a memory write we didn't
       // need!
-      dest[0] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
+      dest[0] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
-      dest[1] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
+      dest[1] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
-      dest[2] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
+      dest[2] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
-      dest[3] = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
+      dest[3] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
 
@@ -1591,7 +1591,7 @@ void R_DrawSpan (void)
    }
    while (count--)
    { 
-      *dest++ = colormap[source[((xposition >> 20) & 0xFC0) | (yposition >> 26)]]; 
+      *dest++ = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
       xposition += xstep;
       yposition += ystep;
    } 
