@@ -689,7 +689,10 @@ void I_InitMusic(void)
 void I_PlaySong(int handle, int looping)
 {
    if(CHECK_MUSIC(handle) && Mix_PlayMusic(music, looping ? -1 : 0) == -1)
-      I_Error("I_PlaySong: Mix_PlayMusic failed\n");
+   {
+      doom_printf("I_PlaySong: Mix_PlayMusic failed\n");
+      return;
+   }
    
    // haleyjd 10/28/05: make sure volume settings remain consistent
    I_SetMusicVolume(snd_MusicVolume);
@@ -700,19 +703,34 @@ void I_SetMusicVolume(int volume)
    Mix_VolumeMusic(volume*8);
 }
 
+static int paused_midi_volume;
+
 void I_PauseSong(int handle)
 {
-   // Not for mids
-   // TODO/FIXME: set music volume to zero for MIDI
-   if(CHECK_MUSIC(handle) && Mix_GetMusicType(music) != MUS_MID)
-      Mix_PauseMusic();
+   if(CHECK_MUSIC(handle))
+   {
+      // Not for mids
+      if(Mix_GetMusicType(music) != MUS_MID)
+         Mix_PauseMusic();
+      else
+      {
+         // haleyjd 03/21/06: set MIDI volume to zero on pause
+         paused_midi_volume = Mix_VolumeMusic(-1);
+         Mix_VolumeMusic(0);
+      }
+   }
 }
 
 void I_ResumeSong(int handle)
 {
-   // Not for mids
-   if(CHECK_MUSIC(handle) && Mix_GetMusicType(music) != MUS_MID)
-      Mix_ResumeMusic();
+   if(CHECK_MUSIC(handle))
+   {
+      // Not for mids
+      if(Mix_GetMusicType(music) != MUS_MID)
+         Mix_ResumeMusic();
+      else
+         Mix_VolumeMusic(paused_midi_volume);
+   }
 }
 
 void I_StopSong(int handle)

@@ -236,6 +236,47 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
    sfx_dehchains[hash] = sfx;
 }
 
+// haleyjd 03/22/06: automatic dehnum allocation
+//
+// Automatic allocation of dehacked numbers allows sounds to be used with
+// parameterized codepointers without having had a DeHackEd number explicitly
+// assigned to them by the EDF author. This was requested by several users
+// after v3.33.02.
+//
+
+// allocation starts at D_MAXINT and works toward 0
+static int edf_alloc_sound_dehnum = D_MAXINT;
+
+boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
+{
+   unsigned int key;
+   int dehnum;
+
+#ifdef RANGECHECK
+   if(sfx->dehackednum != -1)
+      I_Error("E_AutoAllocSoundDEHNum: called for sound with valid dehnum\n");
+#endif
+
+   // cannot assign because we're out of dehnums?
+   if(edf_alloc_sound_dehnum <= 0)
+      return false;
+
+   do
+   {
+      dehnum = edf_alloc_sound_dehnum--;
+   } while(dehnum > 0 && E_SoundForDEHNum(dehnum) != NULL);
+
+   // ran out while searching for an unused number?
+   if(dehnum <= 0)
+      return false;
+
+   // assign it!
+   E_AddSoundToDEHHash(sfx);
+
+   return true;
+}
+
+
 //
 // E_NewWadSound
 //

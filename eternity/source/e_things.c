@@ -335,6 +335,50 @@ int E_GetThingNumForName(const char *name)
    return thingnum;
 }
 
+// haleyjd 03/22/06: automatic dehnum allocation
+//
+// Automatic allocation of dehacked numbers allows things to be used with
+// parameterized codepointers without having had a DeHackEd number explicitly
+// assigned to them by the EDF author. This was requested by several users
+// after v3.33.02.
+//
+
+// allocation starts at D_MAXINT and works toward 0
+static int edf_alloc_thing_dehnum = D_MAXINT;
+
+boolean E_AutoAllocThingDEHNum(int thingnum)
+{
+   unsigned int key;
+   int dehnum;
+   mobjinfo_t *mi = &mobjinfo[thingnum];
+
+#ifdef RANGECHECK
+   if(mi->dehnum != -1)
+      I_Error("E_AutoAllocThingDEHNum: called for thing with valid dehnum\n");
+#endif
+
+   // cannot assign because we're out of dehnums?
+   if(edf_alloc_thing_dehnum < 0)
+      return false;
+
+   do
+   {
+      dehnum = edf_alloc_thing_dehnum--;
+   } while(dehnum >= 0 && E_ThingNumForDEHNum(dehnum) != NUMMOBJTYPES);
+
+   // ran out while looking for an unused number?
+   if(dehnum < 0)
+      return false;
+
+   // assign it!
+   mi->dehnum = dehnum;
+   key = dehnum % NUMTHINGCHAINS;
+   mi->dehnext = thing_dehchains[key];
+   thing_dehchains[key] = thingnum;
+
+   return true;
+}
+
 // 
 // Processing Functions
 //
@@ -428,15 +472,15 @@ static void E_ThingSound(const char *data, const char *fieldname,
                      mobjinfo[thingnum].name, fieldname, data);
    }
    
-   if(sfx->dehackednum == -1)
+   // haleyjd 03/22/06: support auto-allocation of dehnums where possible
+   if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
+      *target = sfx->dehackednum;
+   else
    {
-      // print a warning and set the sound to zero
-      E_EDFLogPrintf("\t\tWarning: sound %s has no DeHackEd number\n",
-                     sfx->mnemonic);
+      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
+                     "for sound %s\n", sfx->mnemonic);
       *target = 0;
    }
-   else
-      *target = sfx->dehackednum;
 }
 
 //

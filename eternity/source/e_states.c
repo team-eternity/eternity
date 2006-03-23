@@ -205,6 +205,50 @@ int E_GetStateNumForName(const char *name)
    return statenum;
 }
 
+// haleyjd 03/22/06: automatic dehnum allocation
+//
+// Automatic allocation of dehacked numbers allows states to be used with
+// parameterized codepointers without having had a DeHackEd number explicitly
+// assigned to them by the EDF author. This was requested by several users
+// after v3.33.02.
+//
+
+// allocation starts at D_MAXINT and works toward 0
+static int edf_alloc_state_dehnum = D_MAXINT;
+
+boolean E_AutoAllocStateDEHNum(int statenum)
+{
+   unsigned int key;
+   int dehnum;
+   state_t *st = &states[statenum];
+
+#ifdef RANGECHECK
+   if(st->dehnum != -1)
+      I_Error("E_AutoAllocStateDEHNum: called for state with valid dehnum\n");
+#endif
+
+   // cannot assign because we're out of dehnums?
+   if(edf_alloc_state_dehnum < 0)
+      return false;
+
+   do
+   {
+      dehnum = edf_alloc_state_dehnum--;
+   } while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) != NUMSTATES);
+
+   // ran out while looking for an unused number?
+   if(dehnum < 0)
+      return false;
+
+   // assign it!
+   st->dehnum = dehnum;
+   key = dehnum % NUMSTATECHAINS;
+   st->dehnext = state_dehchains[key];
+   state_dehchains[key] = statenum;
+
+   return true;
+}
+
 //
 // EDF Processing Routines
 //
@@ -382,14 +426,15 @@ static void E_ParseMiscField(char *value, long *target)
             }
             
             // 09/19/03: add check for no dehacked number
-            if(states[framenum].dehnum == -1)
+            // 03/22/06: auto-allocate dehacked numbers where possible
+            if(states[framenum].dehnum != -1 || E_AutoAllocStateDEHNum(framenum))
+               *target = states[framenum].dehnum;
+            else
             {
-               E_EDFLogPrintf("\t\tWarning: frame %s has no DeHackEd number\n",
-                              strval);
+               E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
+                              "for frame %s\n", strval);
                *target = NullStateNum;
             }
-            else
-               *target = states[framenum].dehnum;
          }
          break;
       case PREFIX_THING:
@@ -402,14 +447,15 @@ static void E_ParseMiscField(char *value, long *target)
             }
 
             // 09/19/03: add check for no dehacked number
-            if(mobjinfo[thingnum].dehnum == -1)
+            // 03/22/06: auto-allocate dehacked numbers where possible
+            if(mobjinfo[thingnum].dehnum != -1 || E_AutoAllocThingDEHNum(thingnum))
+               *target = mobjinfo[thingnum].dehnum;
+            else
             {
-               E_EDFLogPrintf("\t\tWarning: thing %s has no DeHackEd number\n",
-                              strval);
+               E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
+                              "for thing %s\n", strval);
                *target = UnknownThingType;
             }
-            else
-               *target = mobjinfo[thingnum].dehnum;
          }
          break;
       case PREFIX_SOUND:
@@ -421,15 +467,15 @@ static void E_ParseMiscField(char *value, long *target)
                               strval);
             }
 
-            if(sfx->dehackednum == -1)
+            // 03/22/06: auto-allocate dehacked numbers where possible
+            if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
+               *target = sfx->dehackednum;
+            else
             {
-               // print a warning in this case, and set the sound to zero
-               E_EDFLogPrintf("\t\tWarning: sound %s has no DeHackEd number\n",
-                              sfx->mnemonic);
+               E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
+                              "for sound %s\n", strval);
                *target = 0;
             }
-            else
-               *target = sfx->dehackednum;         
          }
          break;
       case PREFIX_FLAGS:

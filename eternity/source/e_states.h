@@ -45,9 +45,10 @@ extern int NullStateNum;
 extern cfg_opt_t edf_frame_opts[];
 extern cfg_opt_t edf_fdelta_opts[];
 
-void E_CollectStates(cfg_t *scfg);
-void E_ProcessStates(cfg_t *cfg);
-void E_ProcessStateDeltas(cfg_t *cfg);
+void    E_CollectStates(cfg_t *scfg);
+void    E_ProcessStates(cfg_t *cfg);
+void    E_ProcessStateDeltas(cfg_t *cfg);
+boolean E_AutoAllocStateDEHNum(int statenum)
 
 #endif
 

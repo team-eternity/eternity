@@ -1693,11 +1693,25 @@ static void E_ProcessCast(cfg_t *cfg)
 
          // name of sound to play
          name = cfg_getstr(soundsec, ITEM_CAST_SOUNDNAME);
-         if((sfx = E_EDFSoundForName(name)) == NULL ||
-            sfx->dehackednum == -1)
+         
+         // haleyjd 03/22/06: modified to support dehnum auto-allocation
+         if((sfx = E_EDFSoundForName(name)) == NULL)
+         {
+            E_EDFLogPrintf("\t\tWarning: cast member references invalid sound %s\n",
+                           name);
             castorder[i].sounds[j].sound = 0;
+         }
          else
-            castorder[i].sounds[j].sound = sfx->dehackednum;
+         {
+            if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
+               castorder[i].sounds[j].sound = sfx->dehackednum;
+            else
+            {
+               E_EDFLogPrintf("\t\tWarning: could not auto-allocate a DeHackEd number "
+                              "for sound %s\n", name);
+               castorder[i].sounds[j].sound = 0;
+            }
+         }
 
          // name of frame that triggers sound event
          name = cfg_getstr(soundsec, ITEM_CAST_SOUNDFRAME);

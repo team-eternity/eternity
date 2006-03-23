@@ -41,8 +41,10 @@ void E_PreCacheSounds(void);
 #ifdef NEED_EDF_DEFINITIONS
 extern cfg_opt_t edf_sound_opts[];
 extern cfg_opt_t edf_sdelta_opts[];
-void E_ProcessSounds(cfg_t *cfg);
-void E_ProcessSoundDeltas(cfg_t *cfg);
+
+void    E_ProcessSounds(cfg_t *cfg);
+void    E_ProcessSoundDeltas(cfg_t *cfg);
+boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 
 #define EDF_SEC_SOUND  "sound"
 #define EDF_SEC_SDELTA "sounddelta"
