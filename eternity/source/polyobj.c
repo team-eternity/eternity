@@ -106,8 +106,6 @@
 // Globals
 //
 
-// TODO: make anything static that ends up only being used in here.
-
 // Polyobject Blockmap -- initialized in P_LoadBlockMap
 polymaplink_t **polyblocklinks;
 
@@ -410,6 +408,10 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    // TODO: support customized damage somehow?
    if(spawnSpot->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM)
       po->damage = 3;
+
+   // set to default thrust; may be modified by attached thinkers
+   // TODO: support customized thrust?
+   po->thrust = FRACUNIT;
 
    // 1. Search segs for "line start" special with tag matching this 
    //    polyobject's id number. If found, iterate through segs which
@@ -741,20 +743,18 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
 {
    angle_t lineangle;
    fixed_t momx, momy;
-   fixed_t thrust = FRACUNIT;
-
-   // TODO: change thrust factor depending on polyobj motion type
+   fixed_t thrust;
    
    // calculate angle of line and subtract 90 degrees to get normal
    lineangle = R_PointToAngle2(0, 0, line->dx, line->dy) - ANG90;
    lineangle >>= ANGLETOFINESHIFT;
-   momx = FixedMul(thrust, finecosine[lineangle]);
-   momy = FixedMul(thrust, finesine[lineangle]);
+   momx = FixedMul(po->thrust, finecosine[lineangle]);
+   momy = FixedMul(po->thrust, finesine[lineangle]);
    mo->momx += momx;
    mo->momy += momy;
 
    // if object doesn't fit at desired location, possibly hurt it
-   if(po->damage)
+   if(po->damage && mo->flags & MF_SHOOTABLE)
    {
       if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
          P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
@@ -1189,6 +1189,19 @@ void T_PolyObjRotate(polyrotate_t *th)
       I_Error("T_PolyObjRotate: thinker has invalid id %d\n", th->polyObjNum);
 #endif
 
+   // check for displacement due to override and reattach when possible
+   if(po->thinker == NULL)
+   {
+      po->thinker = &th->thinker;
+      
+      // reset polyobject's thrust
+      po->thrust = th->speed >> 8;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
+   }
+
    // rotate by 'speed' angle per frame
    // if distance == -1, this polyobject rotates perpetually
    if(Polyobj_rotate(po, th->speed) && th->distance != -1)
@@ -1203,7 +1216,10 @@ void T_PolyObjRotate(polyrotate_t *th)
       {
          // remove thinker
          if(po->thinker == &th->thinker)
+         {
             po->thinker = NULL;
+            po->thrust = FRACUNIT;
+         }
          P_RemoveThinker(&th->thinker);
 
          // TODO: notify scripts
@@ -1239,6 +1255,19 @@ void T_PolyObjMove(polymove_t *th)
       I_Error("T_PolyObjRotate: thinker has invalid id %d\n", th->polyObjNum);
 #endif
 
+   // check for displacement due to override and reattach when possible
+   if(po->thinker == NULL)
+   {
+      po->thinker = &th->thinker;
+      
+      // reset polyobject's thrust
+      po->thrust = th->speed >> 3;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
+   }
+
    // move the polyobject one step along its movement angle
    if(Polyobj_moveXY(po, th->momx, th->momy))
    {
@@ -1252,7 +1281,10 @@ void T_PolyObjMove(polymove_t *th)
       {
          // remove thinker
          if(po->thinker == &th->thinker)
+         {
             po->thinker = NULL;
+            po->thrust = FRACUNIT;
+         }
          P_RemoveThinker(&th->thinker);
 
          // TODO: notify scripts
@@ -1276,6 +1308,19 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
    if(!po)
       I_Error("T_PolyDoorSlide: thinker has invalid id %d\n", th->polyObjNum);
 #endif
+
+   // check for displacement due to override and reattach when possible
+   if(po->thinker == NULL)
+   {
+      po->thinker = &th->thinker;
+      
+      // reset polyobject's thrust
+      po->thrust = th->speed >> 3;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
+   }
 
    // count down wait period
    if(th->delayCount)
@@ -1318,7 +1363,10 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
          {
             // remove thinker
             if(po->thinker == &th->thinker)
+            {
                po->thinker = NULL;
+               po->thrust = FRACUNIT;
+            }
             P_RemoveThinker(&th->thinker);
             // TODO: notify scripts
          }
@@ -1352,6 +1400,19 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
    if(!po)
       I_Error("T_PolyDoorSwing: thinker has invalid id %d\n", th->polyObjNum);
 #endif
+
+   // check for displacement due to override and reattach when possible
+   if(po->thinker == NULL)
+   {
+      po->thinker = &th->thinker;
+      
+      // reset polyobject's thrust
+      po->thrust = th->speed >> 3;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
+   }
 
    // count down wait period
    if(th->delayCount)
@@ -1389,7 +1450,10 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
          {
             // remove thinker
             if(po->thinker == &th->thinker)
+            {
                po->thinker = NULL;
+               po->thrust = FRACUNIT;
+            }
             P_RemoveThinker(&th->thinker);
             // TODO: notify scripts
          }
@@ -1456,6 +1520,13 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    else
       th->distance = prdata->distance * BYTEANGLEMUL;
 
+   // set polyobject's thrust
+   po->thrust = th->speed >> 8;
+   if(po->thrust < FRACUNIT)
+      po->thrust = FRACUNIT;
+   else if(po->thrust > 4*FRACUNIT)
+      po->thrust = 4*FRACUNIT;
+
    // TODO: start sound sequence event
 
    // apply action to mirroring polyobjects as well
@@ -1489,6 +1560,13 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
          th->distance = ANG360 - 1;
       else
          th->distance = prdata->distance * BYTEANGLEMUL;
+
+      // set polyobject's thrust
+      po->thrust = th->speed >> 8;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
 
       // TODO: start sound sequence event
    }
@@ -1533,6 +1611,13 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    // set component speeds
    Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
+   // set polyobject's thrust
+   po->thrust = th->speed >> 3;
+   if(po->thrust < FRACUNIT)
+      po->thrust = FRACUNIT;
+   else if(po->thrust > 4*FRACUNIT)
+      po->thrust = 4*FRACUNIT;
+
    // TODO: start sound sequence event
 
    // apply action to mirroring polyobjects as well
@@ -1563,6 +1648,13 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       // set component speeds
       Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
       
+      // set polyobject's thrust
+      po->thrust = th->speed >> 3;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
+
       // TODO: start sound sequence event
    }
 
@@ -1600,6 +1692,13 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    
    Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
+   // set polyobject's thrust
+   po->thrust = th->speed >> 3;
+   if(po->thrust < FRACUNIT)
+      po->thrust = FRACUNIT;
+   else if(po->thrust > 4*FRACUNIT)
+      po->thrust = 4*FRACUNIT;
+
    // TODO: sound sequence start event
 
    // start action on mirroring polyobjects as well
@@ -1633,6 +1732,13 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
 
       Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
+      // set polyobject's thrust
+      po->thrust = th->speed >> 3;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
+      
       // TODO: sound sequence start event
    }
 }
@@ -1658,6 +1764,13 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
    th->speed        = (doordata->speed * BYTEANGLEMUL) >> 3;
    th->initSpeed    = th->speed;
+
+   // set polyobject's thrust
+   po->thrust = th->speed >> 3;
+   if(po->thrust < FRACUNIT)
+      po->thrust = FRACUNIT;
+   else if(po->thrust > 4*FRACUNIT)
+      po->thrust = 4*FRACUNIT;
    
    // TODO: sound sequence start event
 
@@ -1688,6 +1801,13 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       diracc = (diracc > 0) ? -1 : 1;
 
       th->initSpeed = th->speed;
+
+      // set polyobject's thrust
+      po->thrust = th->speed >> 3;
+      if(po->thrust < FRACUNIT)
+         po->thrust = FRACUNIT;
+      else if(po->thrust > 4*FRACUNIT)
+         po->thrust = 4*FRACUNIT;
 
       // TODO: sound sequence start event
    }

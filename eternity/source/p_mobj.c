@@ -1833,7 +1833,7 @@ fixed_t P_MissileMomz(fixed_t dx, fixed_t dy, fixed_t dz, int speed)
    // if projectiles with zero speed are spawned -- use a suitable
    // default instead.
    if(speed == 0)
-      speed = 10*FRACUNIT;
+      speed = FRACUNIT;
 
    dist = dist / speed;
 

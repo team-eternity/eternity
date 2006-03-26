@@ -1670,7 +1670,7 @@ thingtype EEMapSpot {
 thingtype EEMapSpotGravity {
   doomednum = 9013
   spawnstate = S_TNT1
-  cflags = NODRAW
+  cflags = DONTDRAW
   dehackednum = 153
 }
 
@@ -1962,7 +1962,7 @@ thingtype TeleGlitterGenRed {
   doomednum = 7074
   spawnstate = S_TELEGLITGEN1
   //flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
-  cflags = NODRAW
+  cflags = DONTDRAW
   dehackednum = 330
 }
 
@@ -1970,7 +1970,7 @@ thingtype TeleGlitterGenBlue {
   doomednum = 7052
   spawnstate = S_TELEGLITGEN2
   //flags = NOSECTOR|NOBLOCKMAP|NOGRAVITY
-  cflags = NODRAW
+  cflags = DONTDRAW
   dehackednum = 331
 }
 
@@ -2443,7 +2443,7 @@ thingtype HereticAmbienceWind {
   doomednum = 7042
   spawnstate = S_SND_WIND
   //flags = NOSECTOR|NOBLOCKMAP
-  cflags = NODRAW
+  cflags = DONTDRAW
   dehackednum = 365
 }
 
@@ -2451,7 +2451,7 @@ thingtype HereticAmbienceWater {
   doomednum = 7041
   spawnstate = S_SND_WATERFALL
   //flags = NOSECTOR|NOBLOCKMAP
-  cflags = NODRAW
+  cflags = DONTDRAW
   dehackednum = 366
 }
 

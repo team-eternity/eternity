@@ -1364,7 +1364,7 @@ void A_SnakeAttack(mobj_t *actor)
    if(!actor->target)
    {
       // avoid going through other attack frames if target is gone
-      P_SetMobjState(actor, actor->info->seestate);
+      P_SetMobjState(actor, actor->info->spawnstate);
       return;
    }
 
@@ -1379,7 +1379,7 @@ void A_SnakeAttack2(mobj_t *actor)
    if(!actor->target)
    {
       // avoid going through other attack frames if target is gone
-      P_SetMobjState(actor, actor->info->seestate);
+      P_SetMobjState(actor, actor->info->spawnstate);
       return;
    }
 
@@ -2076,9 +2076,15 @@ void A_MissileAttack(mobj_t *actor)
 
    // adjust angle -> BAM (must adjust negative angles too)
    if(a >= 360)
-      a = a - 360;
+   {
+      while(a >= 360)
+         a -= 360;
+   }
    else if(a < 0)
-      a = 360 + a;
+   {
+      while(a < 0)
+         a += 360;
+   }
 
    ang = (angle_t)(((ULong64)a << 32) / 360);
 
@@ -2148,9 +2154,15 @@ void A_MissileSpread(mobj_t *actor)
 
    // adjust angle -> BAM (must adjust negative angles too)
    if(a >= 360)
-      a = a - 360;
+   {
+      while(a >= 360)
+         a -= 360;
+   }
    else if(a < 0)
-      a = 360 + a;
+   {
+      while(a < 0)
+         a += 360;
+   }
 
    angsweep = (angle_t)(((ULong64)a << 32) / 360);
 
@@ -2410,7 +2422,6 @@ void A_ShowMessage(mobj_t *actor)
 {
    int msgnum = (int)(actor->state->args[0]);
    int type   = (int)(actor->state->args[1]);
-   int player = (int)(actor->state->args[2]);
    edf_string_t *msg;
 
    // find the message
@@ -2420,10 +2431,10 @@ void A_ShowMessage(mobj_t *actor)
    switch(type)
    {
    case 0:
-      C_Printf(msg->string);
+      C_Printf("%s", msg->string);
       break;
    case 1:
-      doom_printf(msg->string);
+      doom_printf("%s", msg->string);
       break;
    case 2:
       HU_CenterMessage(msg->string);
