@@ -1486,7 +1486,7 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
          th->speed = th->speed >= 0 ? th->distance : -th->distance;
       }
    }
-   else if(po->damage == 0 || th->closing) // only if not crushing, or closing
+   else if(th->closing && !po->damage && th->distance != th->initDistance)
    {
       // move was blocked, special handling required -- make it reopen
 
