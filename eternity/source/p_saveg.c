@@ -595,10 +595,14 @@ enum {
    tc_flash,
    tc_strobe,
    tc_glow,
-   tc_elevator,    //jff 2/22/98 new elevator type thinker
-   tc_scroll,      // killough 3/7/98: new scroll effect thinker
-   tc_pusher,      // phares 3/22/98:  new push/pull effect thinker
-   tc_flicker,     // killough 10/4/98
+   tc_elevator,      // jff 2/22/98 new elevator type thinker
+   tc_scroll,        // killough 3/7/98: new scroll effect thinker
+   tc_pusher,        // phares 3/22/98:  new push/pull effect thinker
+   tc_flicker,       // killough 10/4/98
+   tc_polyrotate,    // haleyjd 03/26/06: polyobjects
+   tc_polymove,
+   tc_polyslidedoor,
+   tc_polyswingdoor,
    tc_endspecials
 } specials_e;
 
@@ -616,6 +620,10 @@ enum {
 // T_Scroll                                                 // killough 3/7/98
 // T_Pusher                                                 // phares 3/22/98
 // T_FireFlicker                                            // killough 10/4/98
+// T_PolyObjRotate                                          // haleyjd 03/26/06:
+// T_PolyObjMove                                            //      
+// T_PolyDoorSlide                                          // polyobjects
+// T_PolyDoorSwing                                          //      
 //
 
 void P_ArchiveSpecials (void)
@@ -652,17 +660,21 @@ void P_ArchiveSpecials (void)
       else
       {
          size +=
-            th->function == T_MoveCeiling  ? 4+sizeof(ceiling_t)     :
-            th->function == T_VerticalDoor ? 4+sizeof(vldoor_t)      :
-            th->function == T_MoveFloor    ? 4+sizeof(floormove_t)   :
-            th->function == T_PlatRaise    ? 4+sizeof(plat_t)        :
-            th->function == T_LightFlash   ? 4+sizeof(lightflash_t)  :
-            th->function == T_StrobeFlash  ? 4+sizeof(strobe_t)      :
-            th->function == T_Glow         ? 4+sizeof(glow_t)        :
-            th->function == T_MoveElevator ? 4+sizeof(elevator_t)    :
-            th->function == T_Scroll       ? 4+sizeof(scroll_t)      :
-            th->function == T_Pusher       ? 4+sizeof(pusher_t)      :
-            th->function == T_FireFlicker  ? 4+sizeof(fireflicker_t) :
+            th->function == T_MoveCeiling   ? 4+sizeof(ceiling_t)       :
+            th->function == T_VerticalDoor  ? 4+sizeof(vldoor_t)        :
+            th->function == T_MoveFloor     ? 4+sizeof(floormove_t)     :
+            th->function == T_PlatRaise     ? 4+sizeof(plat_t)          :
+            th->function == T_LightFlash    ? 4+sizeof(lightflash_t)    :
+            th->function == T_StrobeFlash   ? 4+sizeof(strobe_t)        :
+            th->function == T_Glow          ? 4+sizeof(glow_t)          :
+            th->function == T_MoveElevator  ? 4+sizeof(elevator_t)      :
+            th->function == T_Scroll        ? 4+sizeof(scroll_t)        :
+            th->function == T_Pusher        ? 4+sizeof(pusher_t)        :
+            th->function == T_FireFlicker   ? 4+sizeof(fireflicker_t)   :
+            th->function == T_PolyObjRotate ? 4+sizeof(polyrotate_t)    :
+            th->function == T_PolyObjMove   ? 4+sizeof(polymove_t)      :
+            th->function == T_PolyDoorSlide ? 4+sizeof(polyslidedoor_t) :
+            th->function == T_PolyDoorSwing ? 4+sizeof(polyswingdoor_t) :
             0;
       }
    }
@@ -827,6 +839,39 @@ void P_ArchiveSpecials (void)
          *save_p++ = tc_pusher;
          memcpy(save_p, th, sizeof(pusher_t));
          save_p += sizeof(pusher_t);
+         continue;
+      }
+
+      // haleyjd 03/26/06: PolyObject thinkers
+      if(th->function == T_PolyObjRotate)
+      {
+         *save_p++ = tc_polyrotate;
+         memcpy(save_p, th, sizeof(polyrotate_t));
+         save_p += sizeof(polyrotate_t);
+         continue;
+      }
+
+      if(th->function == T_PolyObjMove)
+      {
+         *save_p++ = tc_polymove;
+         memcpy(save_p, th, sizeof(polymove_t));
+         save_p += sizeof(polymove_t);
+         continue;
+      }
+
+      if(th->function == T_PolyDoorSlide)
+      {
+         *save_p++ = tc_polyslidedoor;
+         memcpy(save_p, th, sizeof(polyslidedoor_t));
+         save_p += sizeof(polyslidedoor_t);
+         continue;
+      }
+
+      if(th->function == T_PolyDoorSwing)
+      {
+         *save_p++ = tc_polyswingdoor;
+         memcpy(save_p, th, sizeof(polyswingdoor_t));
+         save_p += sizeof(polyswingdoor_t);
          continue;
       }
    }
@@ -1004,6 +1049,52 @@ void P_UnArchiveSpecials (void)
             break;
          }
 
+         // haleyjd 03/26/06: PolyObjects
+
+      case tc_polyrotate: 
+         {
+            polyrotate_t *polyrot =
+               Z_Malloc(sizeof(polyrotate_t), PU_LEVEL, NULL);
+            memcpy(polyrot, save_p, sizeof(polyrotate_t));
+            save_p += sizeof(polyrotate_t);
+            polyrot->thinker.function = T_PolyObjRotate;
+            P_AddThinker(&polyrot->thinker);
+            break;
+         }
+
+      case tc_polymove:
+         {
+            polymove_t *polymove =
+               Z_Malloc(sizeof(polymove_t), PU_LEVEL, NULL);
+            memcpy(polymove, save_p, sizeof(polymove_t));
+            save_p += sizeof(polymove_t);
+            polymove->thinker.function = T_PolyObjMove;
+            P_AddThinker(&polymove->thinker);
+            break;
+         }
+
+      case tc_polyslidedoor:
+         {
+            polyslidedoor_t *psldoor =
+               Z_Malloc(sizeof(polyslidedoor_t), PU_LEVEL, NULL);
+            memcpy(psldoor, save_p, sizeof(polyslidedoor_t));
+            save_p += sizeof(polyslidedoor_t);
+            psldoor->thinker.function = T_PolyDoorSlide;
+            P_AddThinker(&psldoor->thinker);
+            break;
+         }
+
+      case tc_polyswingdoor:
+         {
+            polyswingdoor_t *pswdoor =
+               Z_Malloc(sizeof(polyswingdoor_t), PU_LEVEL, NULL);
+            memcpy(pswdoor, save_p, sizeof(polyswingdoor_t));
+            save_p += sizeof(polyswingdoor_t);
+            pswdoor->thinker.function = T_PolyDoorSwing;
+            P_AddThinker(&pswdoor->thinker);
+            break;
+         }
+
       default:
          I_Error("P_UnArchiveSpecials: Unknown tclass %i in savegame",
                  tclass);
@@ -1077,6 +1168,84 @@ void P_UnArchiveMap(void)
       memcpy(markpoints, save_p, markpointnum * sizeof *markpoints);
       save_p += markpointnum * sizeof *markpoints;
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// 
+// haleyjd 03/26/06: PolyObject saving code
+//
+
+static void P_ArchivePolyObj(polyobj_t *po)
+{
+   size_t poSize = sizeof(po->id) + sizeof(po->angle) + sizeof(po->spawnSpot);
+
+   CheckSaveGame(poSize);
+
+   memcpy(save_p, &po->id, sizeof(po->id));
+   save_p += sizeof(po->id);
+
+   memcpy(save_p, &po->angle, sizeof(po->angle));
+   save_p += sizeof(po->angle);
+
+   memcpy(save_p, &po->spawnSpot, sizeof(po->spawnSpot));
+   save_p += sizeof(po->spawnSpot);
+}
+
+static void P_UnArchivePolyObj(polyobj_t *po)
+{
+   int id;
+   unsigned int angle;
+   degenmobj_t spawnSpot;
+
+   // nullify all polyobject thinker pointers;
+   // the thinkers themselves will fight over who gets the field
+   // when they first start to run.
+   po->thinker = NULL;
+
+   memcpy(&id, save_p, sizeof(id));
+   save_p += sizeof(id);
+
+   memcpy(&angle, save_p, sizeof(angle));
+   save_p += sizeof(angle);
+
+   memcpy(&spawnSpot, save_p, sizeof(spawnSpot));
+   save_p += sizeof(spawnSpot);
+
+   // if the object is bad or isn't in the id hash, we can do nothing more
+   // with it, so return now
+   if(po->isBad || po != Polyobj_GetForNum(id))
+      return;
+
+   // rotate and translate polyobject
+   Polyobj_MoveOnLoad(po, angle, spawnSpot.x, spawnSpot.y);
+}
+
+void P_ArchivePolyObjects(void)
+{
+   int i;
+
+   CheckSaveGame(sizeof(numPolyObjects));
+
+   // save number of polyobjects
+   memcpy(save_p, &numPolyObjects, sizeof(numPolyObjects));
+   save_p += sizeof(numPolyObjects);
+
+   for(i = 0; i < numPolyObjects; ++i)
+      P_ArchivePolyObj(&PolyObjects[i]);
+}
+
+void P_UnArchivePolyObjects(void)
+{
+   int i, numSavedPolys;
+
+   memcpy(&numSavedPolys, save_p, sizeof(numSavedPolys));
+   save_p += sizeof(numSavedPolys);
+
+   if(numSavedPolys != numPolyObjects)
+      I_Error("P_UnArchivePolyObjects: polyobj count inconsistency\n");
+
+   for(i = 0; i < numSavedPolys; ++i)
+      P_UnArchivePolyObj(&PolyObjects[i]);
 }
 
 /*******************************

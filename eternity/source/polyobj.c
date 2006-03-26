@@ -106,6 +106,10 @@
 // Globals
 //
 
+// The Polyobjects
+polyobj_t *PolyObjects;
+int numPolyObjects;
+
 // Polyobject Blockmap -- initialized in P_LoadBlockMap
 polymaplink_t **polyblocklinks;
 
@@ -113,10 +117,6 @@ polymaplink_t **polyblocklinks;
 //
 // Static Data
 //
-
-// The Polyobjects
-static polyobj_t *PolyObjects;
-static int numPolyObjects;
 
 // Polyobject Blockmap
 static polymaplink_t *bmap_freelist; // free list of blockmap links
@@ -743,7 +743,6 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
 {
    angle_t lineangle;
    fixed_t momx, momy;
-   fixed_t thrust;
    
    // calculate angle of line and subtract 90 degrees to get normal
    lineangle = R_PointToAngle2(0, 0, line->dx, line->dy) - ANG90;
@@ -1173,6 +1172,27 @@ void Polyobj_InitLevel(void)
    M_QueueFree(&anchorqueue);
 }
 
+//
+// Polyobj_MoveOnLoad
+//
+// Called when a savegame is being loaded. Rotates and translates an
+// existing polyobject to its position when the game was saved.
+//
+void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
+{
+   fixed_t dx, dy;
+   
+   // first, rotate to the saved angle
+   Polyobj_rotate(po, angle);
+   
+   // determine component distances to translate
+   dx = x - po->spawnSpot.x;
+   dy = y - po->spawnSpot.y;
+
+   // translate
+   Polyobj_moveXY(po, dx, dy);
+}
+
 // Thinker Functions
 
 //
@@ -1471,7 +1491,7 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
       // move was blocked, special handling required -- make it reopen
 
       th->distance = th->initDistance - th->distance;
-      th->speed    = -th->initSpeed;
+      th->speed    = th->initSpeed;
       th->closing  = false;
 
       // TODO: sound sequence start event

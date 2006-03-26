@@ -209,6 +209,13 @@ typedef struct polydoordata_s
 
 polyobj_t *Polyobj_GetForNum(int id);
 void Polyobj_InitLevel(void);
+void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
+
+// thinkers (needed in p_saveg.c)
+void T_PolyObjRotate(polyrotate_t *);
+void T_PolyObjMove  (polymove_t *);
+void T_PolyDoorSlide(polyslidedoor_t *);
+void T_PolyDoorSwing(polyswingdoor_t *);
 
 int EV_DoPolyDoor(polydoordata_t *);
 int EV_DoPolyObjMove(polymovedata_t *);
@@ -219,6 +226,8 @@ int EV_DoPolyObjRotate(polyrotdata_t *);
 // External Variables
 //
 
+extern polyobj_t *PolyObjects;
+extern int numPolyObjects;
 extern polymaplink_t **polyblocklinks; // polyobject blockmap
 
 #endif // ifdef POLYOBJECTS

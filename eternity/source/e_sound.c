@@ -249,7 +249,6 @@ static int edf_alloc_sound_dehnum = D_MAXINT;
 
 boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
 {
-   unsigned int key;
    int dehnum;
 
 #ifdef RANGECHECK
