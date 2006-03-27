@@ -100,7 +100,6 @@
 //
 
 #define BYTEANGLEMUL     (ANG90/64)
-#define B64_ANG360       0x100000000
 
 //
 // Globals
@@ -226,7 +225,7 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
          return;
    }
 
-   // add the vertex to both arrays (translation for origVerts is done later)
+   // add the line to the array
    if(po->numLines >= po->numLinesAlloc)
    {
       po->numLinesAlloc = po->numLinesAlloc ? po->numLinesAlloc * 2 : 4;
@@ -330,7 +329,7 @@ static int Polyobj_segCompare(const void *s1, const void *s2)
    segitem_t *si1 = (segitem_t *)s1;
    segitem_t *si2 = (segitem_t *)s2;
 
-   return (si1->num < si2->num) ? -1 : (si1->num > si2->num) ? 1 : 0;
+   return si2->num - si1->num;
 }
 
 //
@@ -824,12 +823,6 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
    if(po->isBad)
       return false;
 
-   // unlink it from the blockmap
-   Polyobj_removeFromBlockmap(po);
-
-   // unlink it from its subsector
-   Polyobj_removeFromSubsec(po);
-
    // translate vertices
    for(i = 0; i < po->numVertices; ++i)
       Polyobj_vecAdd(po->vertices[i], &vec);
@@ -857,13 +850,13 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       // translate the spawnSpot as well
       po->spawnSpot.x += vec.x;
       po->spawnSpot.y += vec.y;          
+
+      
+      Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
+      Polyobj_removeFromSubsec(po);   // unlink it from its subsector
+      Polyobj_linkToBlockmap(po);     // relink to blockmap
+      Polyobj_attachToSubsec(po);     // relink to subsector
    }
-
-   // relink to blockmap
-   Polyobj_linkToBlockmap(po);
-
-   // relink to subsector
-   Polyobj_attachToSubsec(po);
 
    return !hitthing;
 }
@@ -878,10 +871,7 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
 //
 d_inline static void Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, int ang)
 {
-   vertex_t tmp;
-
-   tmp.x = v->x;
-   tmp.y = v->y;
+   vertex_t tmp = *v;
 
    v->x = FixedMul(tmp.x, finecosine[ang]) - FixedMul(tmp.y,   finesine[ang]);
    v->y = FixedMul(tmp.x,   finesine[ang]) + FixedMul(tmp.y, finecosine[ang]);
@@ -950,12 +940,6 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
    if(po->isBad)
       return false;
 
-   // unlink it from the blockmap
-   Polyobj_removeFromBlockmap(po);
-
-   // remove from subsector
-   Polyobj_removeFromSubsec(po);
-
    angle = (po->angle + delta) >> ANGLETOFINESHIFT;
 
    // point about which to rotate is the spawn spot
@@ -999,13 +983,12 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
 
       // update polyobject's angle
       po->angle += delta;
+
+      Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
+      Polyobj_removeFromSubsec(po);   // remove from subsector
+      Polyobj_linkToBlockmap(po);     // relink to blockmap
+      Polyobj_attachToSubsec(po);     // relink to subsector
    }
-
-   // relink to blockmap
-   Polyobj_linkToBlockmap(po);
-
-   // relink to subsector
-   Polyobj_attachToSubsec(po);
 
    return !hitthing;
 }
@@ -1215,7 +1198,7 @@ void T_PolyObjRotate(polyrotate_t *th)
       po->thinker = &th->thinker;
       
       // reset polyobject's thrust
-      po->thrust = th->speed >> 8;
+      po->thrust = D_abs(th->speed) >> 8;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1281,7 +1264,7 @@ void T_PolyObjMove(polymove_t *th)
       po->thinker = &th->thinker;
       
       // reset polyobject's thrust
-      po->thrust = th->speed >> 3;
+      po->thrust = D_abs(th->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1335,7 +1318,7 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
       po->thinker = &th->thinker;
       
       // reset polyobject's thrust
-      po->thrust = th->speed >> 3;
+      po->thrust = D_abs(th->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1400,7 +1383,7 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
          Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
       }
    }
-   else if(th->closing && !po->damage && th->distance != th->initDistance)
+   else if(th->closing && th->distance != th->initDistance)
    {
       // move was blocked, special handling required -- make it reopen
       th->distance = th->initDistance - th->distance;
@@ -1427,7 +1410,7 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
       po->thinker = &th->thinker;
       
       // reset polyobject's thrust
-      po->thrust = th->speed >> 3;
+      po->thrust = D_abs(th->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1486,7 +1469,7 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
          th->speed = th->speed >= 0 ? th->distance : -th->distance;
       }
    }
-   else if(th->closing && !po->damage && th->distance != th->initDistance)
+   else if(th->closing && th->distance != th->initDistance)
    {
       // move was blocked, special handling required -- make it reopen
 
@@ -1541,7 +1524,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       th->distance = prdata->distance * BYTEANGLEMUL;
 
    // set polyobject's thrust
-   po->thrust = th->speed >> 8;
+   po->thrust = D_abs(th->speed) >> 8;
    if(po->thrust < FRACUNIT)
       po->thrust = FRACUNIT;
    else if(po->thrust > 4*FRACUNIT)
@@ -1582,7 +1565,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
          th->distance = prdata->distance * BYTEANGLEMUL;
 
       // set polyobject's thrust
-      po->thrust = th->speed >> 8;
+      po->thrust = D_abs(th->speed) >> 8;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1632,7 +1615,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
    // set polyobject's thrust
-   po->thrust = th->speed >> 3;
+   po->thrust = D_abs(th->speed) >> 3;
    if(po->thrust < FRACUNIT)
       po->thrust = FRACUNIT;
    else if(po->thrust > 4*FRACUNIT)
@@ -1669,7 +1652,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
       
       // set polyobject's thrust
-      po->thrust = th->speed >> 3;
+      po->thrust = D_abs(th->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1713,7 +1696,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
    // set polyobject's thrust
-   po->thrust = th->speed >> 3;
+   po->thrust = D_abs(th->speed) >> 3;
    if(po->thrust < FRACUNIT)
       po->thrust = FRACUNIT;
    else if(po->thrust > 4*FRACUNIT)
@@ -1753,7 +1736,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
 
       // set polyobject's thrust
-      po->thrust = th->speed >> 3;
+      po->thrust = D_abs(th->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1786,7 +1769,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    th->initSpeed    = th->speed;
 
    // set polyobject's thrust
-   po->thrust = th->speed >> 3;
+   po->thrust = D_abs(th->speed) >> 3;
    if(po->thrust < FRACUNIT)
       po->thrust = FRACUNIT;
    else if(po->thrust > 4*FRACUNIT)
@@ -1823,7 +1806,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       th->initSpeed = th->speed;
 
       // set polyobject's thrust
-      po->thrust = th->speed >> 3;
+      po->thrust = D_abs(th->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)

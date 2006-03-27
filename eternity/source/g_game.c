@@ -1762,6 +1762,8 @@ void G_SaveCurrentLevel(char *filename, char *description)
    Z_CheckHeap();
    P_ArchiveWorld();
    Z_CheckHeap();
+   P_ArchivePolyObjects(); // haleyjd 03/27/06
+   Z_CheckHeap();
    P_ArchiveThinkers();
    Z_CheckHeap();
    P_ArchiveSpecials();
@@ -1913,6 +1915,7 @@ static void G_DoLoadGame(void)
    // dearchive all the modifications
    P_UnArchivePlayers();
    P_UnArchiveWorld();
+   P_UnArchivePolyObjects(); // haleyjd 03/27/06
    P_UnArchiveThinkers();
    P_UnArchiveSpecials();
    P_UnArchiveRNG();    // killough 1/18/98: load RNG information

@@ -77,7 +77,7 @@ static int config_help;         //jff 3/3/98
 int usemouse;
 int usejoystick;
 int screenshot_pcx; //jff 3/30/98: option to output screenshot as pcx or bmp
-static int screenshot_gamma; // haleyjd 11/16/04: allow disabling gamma correction in screenshots
+int screenshot_gamma; // haleyjd 11/16/04: allow disabling gamma correction in screenshots
 
 extern int mousebstrafe;
 extern int mousebforward;
@@ -1514,7 +1514,7 @@ default_t defaults[] =
       &endoomdelay, NULL,
       350, {35, 3500}, dt_number, ss_none, wad_no,
       "Amount of time to display ENDOOM when shown"
-	},
+   },
 #endif
 
    {

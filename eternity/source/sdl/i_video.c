@@ -58,7 +58,7 @@ static const char rcsid[] = "$Id: i_video.c,v 1.12 1998/05/03 22:40:35 killough 
 // haleyjd 10/08/05: Chocolate DOOM application focus state code added
 
 // Grab the mouse? (int type for config code)
-int grabmouse = 1;
+int grabmouse;
 
 // Flag indicating whether the screen is currently visible:
 // when the screen isnt visible, don't render the screen
@@ -910,8 +910,8 @@ CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
    V_ResetMode();
 }
 
-VARIABLE_INT(usemouse, NULL,            0, 1, yesno);
-VARIABLE_INT(usejoystick, NULL,         0, 1, yesno);
+VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
+VARIABLE_BOOLEAN(usejoystick, NULL, yesno);
 
 CONSOLE_VARIABLE(use_mouse, usemouse, 0) {}
 CONSOLE_VARIABLE(use_joystick, usejoystick, 0) {}
@@ -923,6 +923,10 @@ VARIABLE_INT(joystickSens_y, NULL, -32768, 32767, NULL);
 CONSOLE_VARIABLE(joySens_x, joystickSens_x, 0) {}
 CONSOLE_VARIABLE(joySens_y, joystickSens_y, 0) {}
 
+// haleyjd 03/27/06: mouse grabbing
+VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
+CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
+
 void I_Video_AddCommands(void)
 {
    C_AddCommand(use_mouse);
@@ -933,6 +937,8 @@ void I_Video_AddCommands(void)
    
    C_AddCommand(joySens_x);
    C_AddCommand(joySens_y);
+
+   C_AddCommand(i_grabmouse);
 }
 
 //----------------------------------------------------------------------------

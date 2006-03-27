@@ -490,15 +490,19 @@ static menuitem_t mn_demos_items[] =
    {it_gap},
    {it_info,       FC_GOLD "play demo"},
    {it_variable,   "demo name",              "mn_demoname"},
+   {it_runcmd,     "play demo...",           "mn_clearmenus; playdemo %mn_demoname"},
+   {it_runcmd,     "stop demo...",           "mn_clearmenus; stopdemo"},
    {it_gap},
-   {it_runcmd,     "play demo",              "mn_clearmenus; playdemo %mn_demoname"},
-   {it_runcmd,     "stop playing demo",      "mn_clearmenus; stopdemo"},
+   {it_info,       FC_GOLD "sync"},
+   {it_toggle,     "demo insurance",         "demo_insurance"},
    {it_gap},
    {it_info,       FC_GOLD "cameras"},
    {it_toggle,     "viewpoint changes",      "cooldemo"},
-   {it_toggle,     "chasecam",               "chasecam"},
    {it_toggle,     "walkcam",                "walkcam"},
-   {it_gap},
+   {it_toggle,     "chasecam",               "chasecam"},
+   {it_variable,   "chasecam height",        "chasecam_height"},
+   {it_variable,   "chasecam speed %",       "chasecam_speed"},
+   {it_variable,   "chasecam distance",      "chasecam_dist"},
    {it_end}
 };
 
@@ -1712,11 +1716,13 @@ CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 //
 
 extern menu_t menu_video;
+extern menu_t menu_sysvideo;
 extern menu_t menu_particles;
 
 static const char *mn_vidpage_names[] =
 {
    "mode / rendering / misc",
+   "system / console / screenshots",
    "particles",
    NULL
 };
@@ -1724,6 +1730,7 @@ static const char *mn_vidpage_names[] =
 static menu_t *mn_vidpage_menus[] =
 {
    &menu_video,
+   &menu_sysvideo,
    &menu_particles,
    NULL
 };
@@ -1746,10 +1753,7 @@ static menuitem_t mn_video_items[] =
    {it_variable,     "translucency percentage", "r_tranpct"},
    {it_gap},
    {it_info,         FC_GOLD "misc."},
-#ifndef _SDL_VER
    {it_toggle,       "loading disk icon",       "v_diskicon"},
-#endif
-   {it_toggle,       "screenshot format",       "shot_type"},   
    {it_end}
 };
 
@@ -1757,7 +1761,7 @@ menu_t menu_video =
 {
    mn_video_items,
    NULL,                 // prev page
-   &menu_particles,      // next page
+   &menu_sysvideo,       // next page
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
@@ -1800,6 +1804,42 @@ CONSOLE_COMMAND(mn_video, 0)
    MN_StartMenu(&menu_video);
 }
 
+static menuitem_t mn_sysvideo_items[] =
+{
+   {it_title,    FC_GOLD "video options",   NULL, "m_video"},
+   {it_gap},
+   {it_info,     FC_GOLD "system"},
+   {it_toggle,   "textmode startup",        "textmode_startup"},
+#ifdef _SDL_VER
+   {it_toggle,   "wait at exit",            "i_waitatexit"},
+   {it_toggle,   "window grabs mouse",      "i_grabmouse"},
+   {it_toggle,   "show endoom",             "i_showendoom"},
+   {it_variable, "endoom delay",            "i_endoomdelay"},
+#endif
+   {it_gap},
+   {it_info,     FC_GOLD "console"},
+   {it_variable, "console speed",           "c_speed"},
+   {it_variable, "console height",          "c_height"},
+   {it_gap},
+   {it_info,     FC_GOLD "screenshots"},
+   {it_toggle,   "screenshot format",       "shot_type"},
+   {it_toggle,   "gamma correct shots",     "shot_gamma"},
+   {it_end}
+};
+
+menu_t menu_sysvideo =
+{
+   mn_sysvideo_items,
+   &menu_video,          // prev page
+   &menu_particles,      // next page
+   200, 15,              // x,y offset
+   3,                    // start on first selectable
+   mf_background,        // full-screen menu
+   NULL,
+   mn_vidpage_names,
+   mn_vidpage_menus
+};
+
 static menuitem_t mn_particles_items[] =
 {
    {it_title,  FC_GOLD "video options", NULL,              "m_video"},
@@ -1822,7 +1862,7 @@ static menuitem_t mn_particles_items[] =
 menu_t menu_particles =
 {
    mn_particles_items,   // menu items
-   &menu_video,          // previous page
+   &menu_sysvideo,       // previous page
    NULL,                 // next page
    200, 15,              // x,y offset
    3,                    // start on first selectable
@@ -2561,10 +2601,8 @@ CONSOLE_COMMAND(mn_compat, 0)
    MN_StartMenu(&menu_compat1);
 }
 
-//
-// MENU_TODO: eliminate etccompat menu
-//
 
+/*
 static menuitem_t mn_etccompat_items[] =
 {
    {it_title, FC_GOLD "eternity options", NULL, "M_ETCOPT" },
@@ -2572,6 +2610,7 @@ static menuitem_t mn_etccompat_items[] =
    {it_toggle, "text mode startup",                "textmode_startup"},
    {it_end}
 };
+*/
 
 /*
 // haleyjd: New compatibility/functionality options for Eternity

@@ -55,6 +55,7 @@ extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 extern int automlook;
 extern int invert_mouse;
 extern int screenshot_pcx;
+extern int screenshot_gamma;
 extern boolean sendpause;
 extern int forwardmove[2];
 extern int sidemove[2];
@@ -384,6 +385,9 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 char *str_pcx[] = {"bmp", "pcx"};
 VARIABLE_BOOLEAN(screenshot_pcx, NULL,     str_pcx);
 CONSOLE_VARIABLE(shot_type,     screenshot_pcx, 0) {}
+
+VARIABLE_BOOLEAN(screenshot_gamma, NULL, yesno);
+CONSOLE_VARIABLE(shot_gamma, screenshot_gamma, 0) {}
 
 // textmode startup
 
@@ -742,6 +746,7 @@ void G_AddCommands(void)
    C_AddCommand(animshot);
    C_AddCommand(screenshot);
    C_AddCommand(shot_type);
+   C_AddCommand(shot_gamma);
    C_AddCommand(alwaysmlook);
    C_AddCommand(bobbing);
    C_AddCommand(doom_weapon_toggles);

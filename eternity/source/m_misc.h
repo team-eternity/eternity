@@ -55,6 +55,7 @@ char *M_Itoa(int value, char *string, int radix);
 void M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
 
 extern int screenshot_pcx;                               // killough 10/98
+extern int screenshot_gamma;                             // haleyjd  03/06
 
 // phares 4/21/98:
 // Moved from m_misc.c so m_menu.c could see it.
