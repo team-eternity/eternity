@@ -1592,10 +1592,10 @@ thingtype Unknown {
 thingtype EESkyboxCam {
   doomednum = 5006
   spawnstate = S_TNT1
-  radius = 1.0
-  height = 1.0
+  radius = 10.0
+  height = 10.0
   mass = 10
-  flags = NOBLOCKMAP|NOGRAVITY|NOCLIP
+  flags = NOBLOCKMAP|NOGRAVITY
 }
 
 thingtype EEParticleFountain {
@@ -1670,7 +1670,7 @@ thingtype EEMapSpot {
 thingtype EEMapSpotGravity {
   doomednum = 9013
   spawnstate = S_TNT1
-  cflags = DONTDRAW
+  cflags = DONTDRAW|NOSPLASH
   dehackednum = 153
 }
 
