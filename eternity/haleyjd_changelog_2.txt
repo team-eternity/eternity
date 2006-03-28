@@ -2,6 +2,580 @@
 Changes since Eternity Engine v3.33.02
 =====================================================================
 =====================================================================
+03/27/06
+
+Added several cvars for system-specific stuff and added another new
+page to the video options menu.
+
+Performed some optimization of the polyobject code, and tested out
+polyobject saving. It helps to actually CALL functions after you
+define them <:D  (another sheepish grin)
+
+=====================================================================
+03/26/06
+
+Completed savegame support for PolyObjects. Several fields of each
+PolyObject as well as any PolyObject action thinkers must be saved.
+
+Had to apply numerous fixes to the previously untested polyobject
+swinging doors for which joe made a test map. Some of the problems
+were the same as the ones which sliding doors initially suffered,
+while others were wholly unique.
+
+=====================================================================
+03/25/06
+
+Fixed several EDF problems accumulated through some of my previous
+commits; I've gotten lazy with actually compiling before I commit :P
+
+Made angle adjustments in several parameterized codepointers more
+robust, so that they can handle "superangles" > 720 or < -720 
+properly.
+
+Implemented variable polyobject thrust. My system is more robust than
+Hexen's in that it attempts to keep polyobjects from forgetting about
+overridden actions and suddenly start pushing things more slowly. It
+actually still isn't foolproof, but it's better.
+
+=====================================================================
+03/22/06
+
+Added DeHackEd number auto-allocation to EDF, by user request. This
+means that if you now use a thing, frame, or sound with a parameter-
+ized codepointer but didn't supply it a unique DeHackEd number
+yourself, it will be automatically assigned one by the game engine.
+This removes a major irritant in EDF authoring, and almost obsoletes
+DeHackEd numbers' direct uses altogether.
+
+=====================================================================
+03/21/06
+
+Applied workaround to the MIDI code to set the music volume to zero
+when the game is paused, by user request. This is necessary because
+SDL_mixer still doesn't support proper pausing of MIDI under Win32.
+
+=====================================================================
+03/19/06
+
+I believed I had found a grievous problem in 3D object clipping, but
+it turned out that DOOM has always ignored MF_NOBLOCKMAP objects when
+moving sector floors. This leaves any object bearing that flag hanging
+in midair if a lift drops underneath it, which looks ridiculous.
+
+In response, I removed the NOBLOCKMAP flag from all Heretic objects
+which should not really have it. NOBLOCKMAP is *only* for missiles
+and control points where the z position is irrelevant. Any other use
+of NOBLOCKMAP is simply redundant over exclusion of the SOLID flag,
+and will lead to bad side effects such as the aforementioned 
+floating. I cannot fix the DOOM objects which inappropriately bear
+this flag, unfortunately, as it would affect compatibility.
+
+This being said, however, I did start an experimental implementation
+of 3D object clipping in a fork of WinMBF, and I found several ways
+to improve and make more robust our own system, including properly
+updating the z coordinates of all things affected by a move, and
+ways to get stuff like the MF_TOUCHY flag working properly with 
+full 3D clipping (land on a barrel, kaboom!).
+
+Also found a 3D object clipping bug related to crushers. There was
+some really weird, out-of-place, and incorrect code in 
+PIT_ChangeSector which caused inert objects to bleed when crushed.
+Fixed by commenting out the crazy code in preference for the code
+which was there previously.
+
+Heretic wind handling was moved to P_MobjThinker for the same sort
+of reasons that crashstate handling was moved there. A thing should
+not have to already possess momentum to be affected by wind. This was
+a bug acquired once again by paying a wee bit too much attention to
+Raven's code (I should have learned my lesson by now, eh?).
+
+=====================================================================
+03/18/06
+
+The menu system redesign is now 99.9% finished!
+
+=====================================================================
+03/16/06
+
+Fixed an old DOOM bug fraggle found in the intermission. Turns out
+the EXTREMELY rare crashes that Eternity sometimes suffers between
+maps were because of this problem, and had nothing to do with MIDI
+music all along ::sheepish grin::
+
+The problem? WI_End sets all the intermission graphics to PU_CACHE,
+meaning they could be freed at any time. But, WI_Drawer doesn't quit
+getting called until the gamestate is set to GS_LEVEL, which may
+not occur for an arbitrary number of game loops. During that time, 
+the game engine is accessing what is essentially freed memory to keep
+drawing the intermission screen, and if any other memory allocations
+are made (particularly, by bringing up the menus or bringing down
+the console during this time), the potential for a crash is good.
+
+Fixed in Eternity by simply not drawing any more after the resources
+are freed. This is what Heretic's intermission already did, and it's
+good enough for me. Fraggle devised a more elaborate fix for Choco
+Doom, but I didn't have the patience myself.
+
+=====================================================================
+03/15/06
+
+Awesome menu search feature added. This allows you to enter a string
+on the "menu options" menu and then search for substring occurrences 
+of it within most of Eternity's native menus. The search process
+takes you to each match as it is found. To find the next search, you
+back up one to return to the menu options and hit search again. Once
+the search is exhausted, you are told so in a menu error message.
+Hitting search again at that point starts the search over from the
+beginning.
+
+=====================================================================
+03/14/06
+
+Added support for a user.edf file, which is now included from
+Eternity's root.edf using a new function called userinclude. This
+function is identical to stdinclude, except that it is NOT for use
+by editors, and that it will be totally ignored if the file it tries
+to include does not exist. This means that the user can now create a
+user.edf file and change the game however they like (including, most
+importantly, by adding a menu called _MN_Custom), and have those
+changes autoload into the game on startup.
+
+This isn't really meant to be used to hack objects or frames or
+whatever, but to support things like the custom user menu, whose
+definitions are totally dependent upon the person using Eternity.
+
+Added support for the _MN_Custom menu on the second page of the 
+options menu. If _MN_Custom is defined via EDF, this menu option
+automatically activates itself and will take the player right to
+their own menu (which in turn could link to any number of other
+user-defined or native menus via use of the proper console commands).
+If _MN_Custom is NOT defined, the menu item is "bricked out" and 
+cannot be selected.
+
+Added color/translucency/shadow escape character support to the
+custom libConfuse parser, enabling them to be used in all the
+Eternity extension module languages.
+
+Other misc menu work was also done.
+
+=====================================================================
+03/13/06
+
+Added static string array support to cvars. They only worked with
+dynamically allocated strings previously. This feature is currently
+unused, however.
+
+Added dynamic EDF menu support, as long promised. However, the normal
+menus are not dynamic nor are they even editable. Instead, there is
+a custom user menu, and there will be hooks added that allow an
+editor to override some of the built-in, native menus, such as the
+episode selection menu.
+
+Restored the autoloaded files menu options from MBF to a new page of
+the wad options menu.
+
+Also did other minor menu work.
+
+=====================================================================
+03/12/06
+
+Implemented SMMU v3.30's wad loading dialog and then refined it into
+a very fancy UI.
+
+Disabled loading of wad files in netgames, because the path sent to
+the "map" command is not portable across many machines, even if the
+game COULD stay in sync during an R_Init call (something I find
+unlikely).
+
+Inverted and optimized several portal-related branch predicates in 
+r_segs.c, as they tested redundant conditions several times.
+
+=====================================================================
+03/11/06
+
+Enabled the shift key in MN_Responder, as it is needed to input
+special characters (like :) into file path variables. Hopefully the
+old bugs with shift inserting color codes have been fixed and will
+not reappear because of this...
+
+Adapted MinGW's POSIX opendir implementation for use in Visual C++,
+due to its ridiculous lack of basic POSIX features in preference of
+non-portable Win32 API functions (read: MS says "screw you, UNIX").
+This code will be needed to provide a consistent API to the SMMU
+v3.30 wad loading menu dialog, which is due to be added next.
+
+Had to split part of d_io.h off into d_dwfile.h to keep data type
+declarations from conflicting inside of i_opndir.c (you can't
+include any Win32 headers into a module along with doomtype.h
+because they both try to get dibs on stuff like TRUE, FALSE, byte,
+boolean, etc).
+
+=====================================================================
+03/10/06
+
+Adjusted PolyObject qsort call to only be made when it is actually
+required (no use sorting one object, right?).
+
+=====================================================================
+03/09/06
+
+SoM found a bug in the screen wipe code that's been there since the
+high-res work was done; it caused occasional crashes but was easily
+repaired.
+
+I myself fixed several bugs in some of the ACS opcode handlers.
+
+=====================================================================
+03/08/06
+
+Added D_FileLength to the DWFILE IO abstraction to fix problems
+occuring with zero-length keys.csc files.
+
+=====================================================================
+03/04/06
+
+Added absolute text centering for HUD widgets. This crap is a hack
+right now though, and needs to be reimplemented in a more reliable
+manner. I'll refrain from even discussing how it works right now so
+that people won't get confused later.
+
+=====================================================================
+03/03/06
+
+Added R_SortPolyObjects, as my previous assumption was indeed 
+correct. If the drawing order for polyobjects within the same
+subsector was inverted, one would indeed be drawn "through" the 
+other, giving a very strange appearance. Easily remedied by imple-
+menting the previously discussed z-sort by distance (determined from
+viewx and viewy using R_PointToDist2).  However, this does require
+polyobjects to be attached to subsectors at all times, and thus I
+had to change some of my previous code that made certain assumptions
+rendered no longer safe.
+
+This largely completes the implementation of PolyObjects, along with
+the implementation of parameterized line specials corresponding to
+the ones found in Hexen. All of this still needs significant testing,
+as I expect numerous bugs.
+
+=====================================================================
+03/01/06
+
+ACS interpreter is largely complete, but will not be able to function
+until Hexen support is well under way, so finishing it has been put
+off til later. I don't think it even compiles right now, so don't
+try it. 
+
+Added HU_CenterMsgTimedColor to support ACS's "bold" printing.
+
+=====================================================================
+02/27/06
+
+More minor PolyObject work. Started on a custom ACS interpreter which
+will be needed for proper Hexen support.
+
+=====================================================================
+02/26/06
+
+Had to rewrite PolyObject blockbox calculation completely, because I
+was doing it completely wrong :P  The bounding box must start out
+fully populated by the coordinates of the first vertex, or else the
+addition of later vertices becomes opportunistic: ie, the coords fall
+into the first field where they fit, rather than the field they
+should logically end up in at the end of the comparison process.
+
+=====================================================================
+02/24/06
+
+Started code to move PolyObjects, including translation, rotation,
+and complex door actions.
+
+=====================================================================
+02/23/06
+
+PolyObject line-of-sight blocking is now implemented. I couldn't use
+anything even slightly resembling Hexen's solution, as they were 
+using what is apparently (according to Graf Zahl) DOOM v1.2's 
+tracer-based visibility determination which is faster, but by
+default bug-ridden (this same code is what caused zdoom monsters to
+wake up from half-way across the map when they couldn't possibly see
+you for about 200 different versions of that port).  I figured out
+how to test for PolyObject LOS blocking using the BSP without too 
+much trouble.
+
+Moved down an assignment made in P_CrossSubsector which was above 
+the debugging rangecheck done on the subsector index. No use having
+stuff like that if you can already crash the game before it is even
+tested.
+
+Figured out pretty quickly that you must disable Lee Killough's
+P_CheckSight optimization that assumes things within the same 
+subsector MUST be able to see each other when you're dealing with a
+subsector that contains PolyObjects. Otherwise, the LOS check gets
+short-circuited way early and monsters see right through them all the
+time.
+
+=====================================================================
+02/22/06
+
+Ensured that Hexen-format maps' line specials and arg values will not
+be sign-extended when converted to signed integers.
+
+=====================================================================
+02/20/06
+
+Basic PolyObject integration with the game engine has been completed.
+A test map containing a single square PolyObject renders perfectly,
+but doesn't yet do any clipping of movement, bullets, LOS, etc.
+
+=====================================================================
+02/19/06
+
+Wrote R_AddPolyObjects, a function that is called from R_Subsector to
+add all the lines in every polyobject inside the subsector. Added a
+polyList member to subsector_t to allow subsector linking (this uses
+the generic double-linked list with **prev code).
+
+PolyObjects are not yet z-sorted as I discussed below because I've
+not yet tested what happens when they are not z-sorted. Based on the
+behavior of walls in the vicinity of a polyobject's original map
+location, however, I am going to assume that z-sorting WILL be
+necessary. DOOM's screenspace clipping algorithm seems to assume 
+(rightly for its normal jobs) that a 1S wall attempting to be drawn
+after another 1S wall cannot possibly be in front of the latter
+(DOOM's normal drawing order is front-to-back).
+
+=====================================================================
+02/17/06 - 02/18/06
+
+Minor PolyObject work on these days. The system is coming along very
+nicely.
+
+=====================================================================
+02/16/06
+
+After re-reading the BSP FAQ, on a whim I decided to start Eternity's
+long-promised implementation of PolyObjects. I intend to write my own
+implementation using as little reference to Hexen's as is humanly
+possible (of course since I have seen Hexen's, I am tainted by it no
+matter how hard I try to get around it).
+
+Because of certain qualities of dynamic BSP theory, I have surmised 
+that Hexen's one-polyobj-per-subsector limit and its inability to
+move polyobjects between subsectors are both naive and unnecessary
+limitations. If necessary, it should be possible to support multiple
+polyobjects within a single subsector by z-sorting the polyobjects
+with respect to their distance from the viewer, much in the same way
+that vissprites are sorted.
+
+Thus, my implementation promises to be significantly more robust and
+widely applicable than that found in a certain other source port
+which shall remain unnamed ;)
+
+=====================================================================
+02/15/06
+
+Fixed the sprite box on the player options menu to draw with the
+proper size and at the proper location, and tweaked the crosshair
+display on the HUD options menu.
+
+=====================================================================
+02/12/06
+
+Enabled colored text support in internal HUD text widgets. Fixed 
+several bugs in text widget erasing, including one where a completely
+incorrect variable was being used (missed it in an earlier rewrite).
+
+Added back many lost HUD options from BOOM/MBF, and added even more
+corresponding to the newer SMMU and Eternity automap widgets,
+including enable/disable and text color options for all the widgets.
+
+Renamed several HUD cvars to be more consistent and meaningful.
+
+Added "Toggle is back" option to menu system by user request. This
+enables the ESC key, or whatever other key the user has bound to the
+menu_toggle action, to move back only one menu instead of exiting the
+entire menu system. This makes Eternity capable of emulating zdoom's
+menu navigation semantics, as opposed to the default, which is the
+same as BOOM/MBF/SMMU/PrBoom (ESC to exit, Backspace to back up).
+
+Removed some dead code in mn_skinv.c and v_font.c.
+
+=====================================================================
+02/08/06
+
+Eternity now has a SVN repository, thanks to Manc! Yay for real open
+source! ^_^
+
+Paginated the weapons menu and moved two settings from the 
+"advanced multiplayer options" menu to the weapons menu.
+
+=====================================================================
+02/04/06
+
+Added a small menu pointer graphic for background menus, a feature 
+which has been requested practically since the first version of
+Eternity was released (v3.29 Public Beta 1). This is made necessary
+by the penchant that old TCs had for replacing the DOOM font with
+graphics that use an entirely different color range. When the BOOM
+team decided to make menu selection indication color-based only, they
+did a very bad thing.
+
+=====================================================================
+01/15/06
+
+Fixed a possible MF_JUSTHIT flag incompatibility that stemmed from
+friendly creature AI logic changes made in MBF.
+
+=====================================================================
+01/12/06
+
+SoM believes he has finally really fixed 3DMidTex clipping for
+monsters. My previous fix made a grotesque mess of things because I
+accidentally left some now-useless code sitting around. I thought I
+had tested it thoroughly, but I was mistaken :P
+
+=====================================================================
+12/29/05
+
+Completely new patch engine written, based on the code that displays
+player gun sprites. Patches can now be clipped against the screen,
+allowing widgets, text, etc. to extend partway (or all the way) off
+without errors or without simply abruptly disappearing because they
+are one pixel too far over. Patches are also uniformly scaled,
+meaning that the error incurred in scaling to non-normal aspect
+ratios is distributed throughout the patch rather than accumulated at
+the ends of columns. This forever gets rid of the horrible looking
+jaggies we've had since the high-res implementation was finished.
+
+=====================================================================
+12/08/05
+
+Scripted HUD widget erasings must be clipped to the framebuffer or
+else users will find themselves staring at the SDL Parachute if a
+widget extends off the screen.
+
+=====================================================================
+11/13/05
+
+Moved down the CD-ROM mode notification message so that it can
+actually use the BEX string defined for it. It was being printed
+before BEX processing, and therefore actually used a stupid duplicate
+of the BEX string's initial value, making the BEX string itself 
+useless.
+
+=====================================================================
+11/12/05
+
+Made CD-ROM mode determination handled at one point instead of in 200
+different places scattered throughout the source code, and moved all
+cdrom mode stuff inside of #ifdef EE_CDROM_SUPPORT defines so that it
+can easily be disabled on ports like Linux where it is currently 
+broken to some goofy calls to stuff like mkdir.
+
+=====================================================================
+11/06/05
+
+Added a netcmd id for the dogjumping command, which is sync critical
+despite whatever fraggle thought, and eliminated some unnecessary
+code I added to its command handler ages ago when I had no idea how
+the console even worked.
+
+Moved crashstate monitoring code out of P_XYMovement and P_ZMovement
+after I noticed Gargoyles hitting the ground without ever crashing
+several times while playtesting Eternity. Turned out there were
+STILL opportunities for the code inside those two functions to never
+execute. 
+
+Note for future development: Events a thing must be checked for 
+every frame should be handled in P_MobjThinker, NOT inside P_XY or
+P_Z movement functions, because those are only called when the 
+respective momenta fields are non-zero.
+
+=====================================================================
+10/28/05
+
+Fully integrated Julian's new Eternity music engine, which enables us
+to support MOD, OGG, MP3, and any other music format that SDL_mixer
+can load. Unfortunately, this requires a CVS build of SDL_mixer 1.2.9
+which has finally added support for loading music from memory instead
+of from files. This means that eetemp.mid is gone forever, yay!
+
+I added a bit to Julian's code that forces the music volume to stay
+consistent with Eternity's setting, so that the music is always
+playing at the indicated volume even at startup. Realized this was
+sorely needed after it came on blasting me at full-volume on my new
+Athlon 64 2 GHz/512 MB RAM/80 GB HD/ATi Radeon Xpress eMachines box.
+
+=====================================================================
+10/17/05
+
+Found a long-standing bug in the skin code that was caused by changes
+made to add EDF-in-wad capability -- skins were trying to resolve
+their default sound names before EDF was processed. The empty sound
+hash thus returned NULL and all the sound names ended up as "none".
+
+=====================================================================
+10/16/05
+
+Keydown flags needed to be cleared in G_BindResponder.
+
+Moved all the "buttons" code to p_switch.c where it belongs. Buttons
+really should be handled as thinkers, and they also need to be saved
+into savegames. The former feature will break demo compatibility
+however, and thus may not come to pass. The problem? Even simply
+introducing non-interactive thinkers onto the thinker list in old
+demos can cause a desync due to certain code segments related to
+enemy AI and scanning of the thinker list.
+
+=====================================================================
+10/15/05
+
+Optimized V_ColorBlockTL for opaque and invisible cases by having
+it either call V_ColorBlock or simply return immediately.
+
+Coded a generalized box widget for the menu system which can display
+a list of console commands or menu names, and can execute the
+commands or take you to the indicated menu. This is needed both for
+the new menu "table-of-contents" feature, which allows immediate and
+easy browsing of multi-page menus, and to clean up the various menus
+which were sloppily being generated at runtime to display stuff such
+as video modes and joystick drivers. The keybindings menu is now
+paginated and has its own table of contents.
+
+Adaptations to include Chocolate Doom's ENDOOM code accidentally
+broke I_ShutdownVideo, causing a mysterious looking crash in DirectX
+when changing video modes during gameplay. Repaired by making an
+I_ShutdownVideoPartway function that does NOT call SDL_QuitSubSystem
+on SDL_INIT_VIDEO.
+
+=====================================================================
+10/14/05
+
+Finalized P_ConvertHereticSpecials by completing the parameterized
+stair specials for "DOOM" type stair iteration. All the Heretic line
+and sector types are now 100% accurately implemented, excepting some
+lingering sound issues that must wait until sound sequences are
+implemented to get fixed.
+
+=====================================================================
+10/13/05
+
+Added a special version recognition capability for FreeDoom, so that
+Eternity actually tells you you're using it instead of pretending it
+is standard DOOM II. This is enabled by the FREEDOOM lump, which
+fraggle added to it long ago on my behest.
+
+Finished up code for delayed and resetting stairs to support
+parameterized stair specials ala Hexen. Hexen's method of tagging
+stair sectors is not yet supported, however.
+
+Fraggle said that Lost Souls don't bounce in the original DOOM v1.9,
+but only in Ultimate Doom, so for demo comp purposes, Lost Soul
+bouncing must be disabled if demo_version is 19 but gamemode is not
+retail (ie, Ultimate Doom). People playing demos with the wrong IWAD
+are out of luck here.
+
+=====================================================================
 10/10/05
 
 Fixed three more bugs for Shareware Heretic:

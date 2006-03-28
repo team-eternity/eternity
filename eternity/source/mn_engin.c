@@ -797,15 +797,17 @@ boolean MN_Responder(event_t *ev)
       
       // only care about valid characters
       // dont allow too many characters on one command line
-      ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
-
-      if((ch > 31 && ch < 127) && 
-         strlen(input_buffer) <=
-         ((var->type == vt_string) ? (unsigned)var->max :
-          (var->type == vt_int) ? 33 : 20))
+      if(ch > 31 && ch < 127)
       {
-         input_buffer[strlen(input_buffer) + 1] = 0;
-         input_buffer[strlen(input_buffer)] = ch;
+         ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+
+         if(strlen(input_buffer) <=
+            ((var->type == vt_string) ? (unsigned)var->max :
+             (var->type == vt_int) ? 33 : 20))
+         {
+            input_buffer[strlen(input_buffer) + 1] = 0;
+            input_buffer[strlen(input_buffer)] = ch;
+         }
       }
       
       return true;
