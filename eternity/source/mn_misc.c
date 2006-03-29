@@ -33,6 +33,7 @@
 #include "d_main.h"
 #include "m_qstr.h"
 #include "s_sound.h"
+#include "v_font.h"
 #include "v_video.h"
 #include "v_misc.h"
 #include "w_wad.h"
