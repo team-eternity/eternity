@@ -252,6 +252,9 @@ include:
                   case 'S': // shadowed
                      M_QStrPutc(&qstring, (char)142);
                      break;
+                  case 'C': // absCentered
+                     M_QStrPutc(&qstring, (char)143);
+                     break;
                   default:
                      M_QStrPutc(&qstring, s);
                      break;

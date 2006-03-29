@@ -2,6 +2,18 @@
 Changes since Eternity Engine v3.33.02
 =====================================================================
 =====================================================================
+03/29/06
+
+Rolled back my "absolute centered" HUD text widget hackery and
+replaced it with a new control character that can toggle absolute
+centering from within strings themselves.
+
+Also fixed the menu question and alert widgets to use the vfont_t
+absh field to space the lines vertically instead of assuming that a
+height of seven is sufficient. Dunno how this got missed during both
+the font system and menu system rewrites, but oh well.
+
+=====================================================================
 03/27/06
 
 Added several cvars for system-specific stuff and added another new

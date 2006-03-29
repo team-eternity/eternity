@@ -81,12 +81,15 @@ static void WriteCentredText(char *message)
 {
    static qstring_t qstring;
    static qstring_t *pqstr = NULL;
+   vfont_t *font;
    char *rover;
    const char *buffer;
    int x, y;
 
    if(!pqstr)
       pqstr = M_QStrCreate(&qstring);
+
+   font = V_FontSelect(VFONT_SMALL);
    
    // rather than reallocate memory every time we draw it,
    // use one buffer and increase the size as neccesary
@@ -104,13 +107,12 @@ static void WriteCentredText(char *message)
          x = (SCREENWIDTH - V_StringWidth(buffer)) / 2;
          V_WriteText(buffer, x, y);         
          M_QStrClear(pqstr); // clear buffer
-         y += 7; // next line
+         y += font->absh; // next line
       }
       else      // add next char
-      {
          M_QStrPutc(pqstr, *rover);
-      }
-      rover++;
+
+      ++rover;
    }
 
    // dont forget the last line.. prob. not \n terminated

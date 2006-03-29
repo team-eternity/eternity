@@ -96,7 +96,6 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
 {
    patch_t *patch = NULL;   // patch for current character
    int     w;               // width of patch
-   int     sw;              
    
    const unsigned char *ch; // pointer to string
    unsigned int c;          // current character
@@ -128,11 +127,15 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       altMap = NULL;
       useAltMap = true;
    }
-
-   sw = (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1;
       
    ch = (const unsigned char *)s;
-   cx = absCentered ? sw : x;
+
+   // haleyjd 03/29/06: special treatment - if first character is 143
+   // (abscenter toggle), then toggle absCentered now.
+   if(*ch == 143)
+      absCentered ^= true;
+
+   cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1 : x;
    cy = y;
    
    while((c = *ch++))
@@ -147,6 +150,10 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          else if(c == 142) // shadow toggle
          {
             shadowChar ^= true;
+         }
+         else if(c == 143) // abscenter toggle
+         {
+            absCentered ^= true;
          }
          else if(font->color && !useAltMap) // not all fonts support translations
          {
@@ -190,8 +197,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       }
       if(c == '\n')
       {
-         sw = (SCREENWIDTH - V_FontLineWidth(font, ch+1)) >> 1;
-         cx = absCentered ? sw : x;
+         cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, ch+1)) >> 1 : x;
          cy += font->cy;
          continue;
       }
