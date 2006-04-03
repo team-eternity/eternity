@@ -2797,7 +2797,7 @@ void A_CounterOp(mobj_t *mo)
    int c_oper1_num = mo->state->args[0];
    int c_oper2_num = mo->state->args[1];
    int c_dest_num  = mo->state->args[2];   
-   int specialop = mo->state->args[2];
+   int specialop   = mo->state->args[3];
    
    short *c_oper1, *c_oper2, *c_dest;
 
@@ -2947,6 +2947,362 @@ void A_TargetJump(mobj_t *mo)
       !((mo->flags & mo->target->flags & MF_FRIEND) && 
         mo->flags3 & MF3_SUPERFRIEND))
       P_SetMobjState(mo, statenum);
+}
+
+//
+// Weapon Frame Scripting
+//
+// These are versions of the above, crafted especially to use the new
+// weapon counters.
+// haleyjd 03/31/06
+//
+
+// stuff from p_pspr.c:
+void P_SetPsprite(player_t *player, int position, statenum_t stnum);
+
+//
+// A_WeaponCtrJump
+//
+// Parameterized codepointer for branching based on comparisons
+// against a weapon's counter values.
+//
+// args[0] : state number
+// args[1] : comparison type
+// args[2] : immediate value OR counter number
+// args[3] : counter # to use
+// args[4] : psprite to affect (weapon or flash)
+//
+void A_WeaponCtrJump(player_t *player, pspdef_t *pspr)
+{
+   boolean branch = false;
+   int statenum   = pspr->state->args[0];
+   int checktype  = pspr->state->args[1];
+   short value    = (short)(pspr->state->args[2]);
+   int cnum       = pspr->state->args[3];
+   int psprnum    = pspr->state->args[4];
+   short *counter;
+   
+   // validate state number
+   statenum = E_StateNumForDEHNum(statenum);
+   if(statenum == NUMSTATES)
+      return;
+
+   // validate psprite number
+   if(psprnum < 0 || psprnum >= NUMPSPRITES)
+      return;
+
+   switch(cnum)
+   {
+   case 0:
+   case 1:
+   case 2:
+      counter = &(player->weaponctrs[player->readyweapon][cnum]); break;
+   default:
+      return;
+   }
+
+   // 08/02/04:
+   // support getting check value from a counter
+   // if checktype is greater than the last immediate operator,
+   // then the comparison value is actually a counter number
+
+   if(checktype >= CPC_NUMIMMEDIATE)
+   {
+      // turn it into the corresponding immediate operation
+      checktype -= CPC_NUMIMMEDIATE;
+
+      switch(value)
+      {
+      case 0:
+      case 1:
+      case 2:
+         value = player->weaponctrs[player->readyweapon][value];
+         break;
+      default:
+         return; // invalid counter number
+      }
+   }
+
+   switch(checktype)
+   {
+   case CPC_LESS:
+      branch = (*counter < value); break;
+   case CPC_LESSOREQUAL:
+      branch = (*counter <= value); break;
+   case CPC_GREATER:
+      branch = (*counter > value); break;
+   case CPC_GREATEROREQUAL:
+      branch = (*counter >= value); break;
+   case CPC_EQUAL:
+      branch = (*counter == value); break;
+   case CPC_NOTEQUAL:
+      branch = (*counter != value); break;
+   case CPC_BITWISEAND:
+      branch = (*counter & value); break;
+   default:
+      break;
+   }
+
+   if(branch)
+      P_SetPsprite(player, psprnum, statenum);
+      
+}
+
+//
+// A_WeaponCtrSwitch
+//
+// This powerful codepointer can branch to one of N states
+// depending on the value of the indicated counter, and it
+// remains totally safe at all times. If the entire indicated
+// frame set is not valid, no actions will be taken.
+//
+// args[0] : counter # to use
+// args[1] : DeHackEd number of first frame in consecutive set
+// args[2] : number of frames in consecutive set
+// args[3] : psprite to affect (weapon or flash)
+//
+void A_WeaponCtrSwitch(player_t *player, pspdef_t *pspr)
+{
+   int cnum       = pspr->state->args[0];
+   int startstate = pspr->state->args[1];
+   int numstates  = pspr->state->args[2] - 1;
+   int psprnum    = pspr->state->args[3];
+   short *counter;
+
+      // validate psprite number
+   if(psprnum < 0 || psprnum >= NUMPSPRITES)
+      return;
+
+   // get counter
+   switch(cnum)
+   {
+   case 0:
+   case 1:
+   case 2:
+      counter = &(player->weaponctrs[player->readyweapon][cnum]); 
+      break;
+   default:
+      return;
+   }
+
+   // verify startstate
+   startstate = E_StateNumForDEHNum(startstate);
+   if(startstate == NUMSTATES)
+      return;
+
+   // verify last state is < NUMSTATES
+   if(startstate + numstates >= NUMSTATES)
+      return;
+
+   // verify counter is in range
+   if(*counter < 0 || *counter > numstates)
+      return;
+
+   // jump!
+   P_SetPsprite(player, psprnum, startstate + *counter);
+}
+
+//
+// A_WeaponSetCtr
+//
+// Sets the value of the indicated counter variable for the thing.
+// Can perform numerous operations -- this is more like a virtual
+// machine than a codepointer ;)
+//
+// args[0] : counter # to set
+// args[1] : value to utilize
+// args[2] : operation to perform
+//
+void A_WeaponSetCtr(player_t *player, pspdef_t *pspr)
+{
+   int cnum      = pspr->state->args[0];
+   short value   = (short)(pspr->state->args[1]);
+   int specialop = pspr->state->args[2];
+   short *counter;
+
+   switch(cnum)
+   {
+   case 0:
+   case 1:
+   case 2:
+      counter = &(player->weaponctrs[player->readyweapon][cnum]); break;
+   default:
+      return;
+   }
+
+   switch(specialop)
+   {
+   case CPOP_ASSIGN:
+      *counter = value; break;
+   case CPOP_ADD:
+      *counter += value; break;
+   case CPOP_SUB:
+      *counter -= value; break;
+   case CPOP_MUL:
+      *counter *= value; break;
+   case CPOP_DIV:
+      if(value) // don't divide by zero
+         *counter /= value;
+      break;
+   case CPOP_MOD:
+      if(value > 0) // only allow modulus by positive values
+         *counter %= value;
+      break;
+   case CPOP_AND:
+      *counter &= value; break;
+   case CPOP_ANDNOT:
+      *counter &= ~value; break; // compound and-not operation
+   case CPOP_OR:
+      *counter |= value; break;
+   case CPOP_XOR:
+      *counter ^= value; break;
+   case CPOP_RND:
+      *counter = P_Random(pr_weapsetctr); break;
+   case CPOP_RNDMOD:
+      if(value > 0)
+         *counter = P_Random(pr_weapsetctr) % value; break;
+   case CPOP_SHIFTLEFT:
+      *counter <<= value; break;
+   case CPOP_SHIFTRIGHT:
+      *counter >>= value; break;
+   default:
+      break;
+   }
+}
+
+//
+// A_WeaponCtrOp
+//
+// Sets the value of the indicated counter variable for the weapon
+// using two (possibly the same) counters as operands.
+//
+// args[0] : counter operand #1
+// args[1] : counter operand #2
+// args[2] : counter destination
+// args[3] : operation to perform
+//
+void A_WeaponCtrOp(player_t *player, pspdef_t *pspr)
+{
+   int c_oper1_num = pspr->state->args[0];
+   int c_oper2_num = pspr->state->args[1];
+   int c_dest_num  = pspr->state->args[2];   
+   int specialop   = pspr->state->args[3];
+
+   short *c_oper1, *c_oper2, *c_dest;
+
+   switch(c_oper1_num)
+   {
+   case 0:
+   case 1:
+   case 2:
+      c_oper1 = &(player->weaponctrs[player->readyweapon][c_oper1_num]);
+      break;
+   default:
+      return;
+   }
+
+   switch(c_oper2_num)
+   {
+   case 0:
+   case 1:
+   case 2:
+      c_oper2 = &(player->weaponctrs[player->readyweapon][c_oper2_num]);
+      break;
+   default:
+      return;
+   }
+
+   switch(c_dest_num)
+   {
+   case 0:
+   case 1:
+   case 2:
+      c_dest = &(player->weaponctrs[player->readyweapon][c_dest_num]); break;
+   default:
+      return;
+   }
+
+   switch(specialop)
+   {
+   case CPOP_ADD:
+      *c_dest = *c_oper1 + *c_oper2; break;
+   case CPOP_SUB:
+      *c_dest = *c_oper1 - *c_oper2; break;
+   case CPOP_MUL:
+      *c_dest = *c_oper1 * *c_oper2; break;
+   case CPOP_DIV:
+      if(c_oper2) // don't divide by zero
+         *c_dest = *c_oper1 / *c_oper2;
+      break;
+   case CPOP_MOD:
+      if(*c_oper2 > 0) // only allow modulus by positive values
+         *c_dest = *c_oper1 % *c_oper2;
+      break;
+   case CPOP_AND:
+      *c_dest = *c_oper1 & *c_oper2; break;
+   case CPOP_OR:
+      *c_dest = *c_oper1 | *c_oper2; break;
+   case CPOP_XOR:
+      *c_dest = *c_oper1 ^ *c_oper2; break;
+   case CPOP_DAMAGE:
+      // do a HITDICE-style calculation
+      if(*c_oper2 > 0) // the modulus must be positive
+         *c_dest = *c_oper1 * ((P_Random(pr_weapsetctr) % *c_oper2) + 1);
+      break;
+   case CPOP_SHIFTLEFT:
+      *c_dest = *c_oper1 << *c_oper2; break;
+   case CPOP_SHIFTRIGHT:
+      *c_dest = *c_oper1 >> *c_oper2; break;
+
+      // unary operations (c_oper2 is unused for these)
+   case CPOP_ABS:
+      *c_dest = (short)(abs(*c_oper1)); break;
+   case CPOP_NEGATE:
+      *c_dest = -(*c_oper1); break;
+   case CPOP_NOT:
+      *c_dest = !(*c_oper1); break;
+   case CPOP_INVERT:
+      *c_dest = ~(*c_oper1); break;
+   default:
+      break;
+   }
+}
+
+//
+// A_WeaponCopyCtr
+//
+// Copies the value of one counter into another.
+//
+// args[0] : source counter #
+// args[1] : destination counter #
+//
+void A_WeaponCopyCtr(player_t *player, pspdef_t *pspr)
+{
+   int cnum1   = pspr->state->args[0];
+   int cnum2   = pspr->state->args[1];
+   short *src, *dest;
+
+   switch(cnum1)
+   {
+   case 0:
+   case 1:
+   case 2:
+      src = &(player->weaponctrs[player->readyweapon][cnum1]); break;
+   default:
+      return;
+   }
+
+   switch(cnum2)
+   {
+   case 0:
+   case 1:
+   case 2:
+      dest = &(player->weaponctrs[player->readyweapon][cnum2]); break;
+   default:
+      return;
+   }
+
+   *dest = *src;
 }
 
 // EOF

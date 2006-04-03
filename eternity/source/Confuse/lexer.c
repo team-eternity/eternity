@@ -222,9 +222,14 @@ include:
                      break;
                   case 'b':
                      M_QStrPutc(&qstring, '\b');
+                     break;                     
+                  case '0':
+                     M_QStrPutc(&qstring, '\0');
                      break;
                      // haleyjd 03/14/06: color codes
-                  case '0':
+                  case 'K':
+                     M_QStrPutc(&qstring, (char)128);
+                     break;
                   case '1':
                   case '2':
                   case '3':

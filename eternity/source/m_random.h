@@ -189,7 +189,7 @@ typedef enum {
   pr_rndwnewdir, // RandomWalk rngs
   pr_rndwmovect,
   pr_rndwspawn,
-
+  pr_weapsetctr, // WeaponSetCtr
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

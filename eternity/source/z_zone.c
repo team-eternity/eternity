@@ -804,15 +804,15 @@ void Z_PrintZoneHeap(void)
       if(block->tag != PU_FREE && block->id != ZONEID)
          fputs("\tWARNING: block does not have ZONEID\n", outfile);
 #endif
-      if(block->next->prev != block || block->prev->next != block)
-         fputs("\tWARNING: block pointer inconsistency\n", outfile);
-      if(!block->vm && block->next != zone &&
-         (memblock_t *)((char *)block + HEADER_SIZE + block->size) != block->next)
-         fputs("\tWARNING: block size doesn't touch next block\n", outfile);
       if(!block->user && block->tag >= PU_PURGELEVEL)
          fputs("\tWARNING: purgable block with no user\n", outfile);
       if(block->tag >= PU_MAX)
          fputs("\tWARNING: invalid cache level\n", outfile);
+      if(!block->vm && block->next != zone &&
+         (memblock_t *)((char *)block + HEADER_SIZE + block->size) != block->next)
+         fputs("\tWARNING: block size doesn't touch next block\n", outfile);
+      if(block->next->prev != block || block->prev->next != block)
+         fputs("\tWARNING: block pointer inconsistency\n", outfile);
 
       fflush(outfile);
    }

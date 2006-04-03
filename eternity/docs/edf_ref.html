@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 
-<h2>Eternity Engine EDF Reference v1.5 -- 09/12/05</h2>
+<h2>Eternity Engine EDF Reference v1.6 -- 04/02/06</h2>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -16,14 +16,16 @@
 <li><a name="contents"><b>Table of Contents</b></a>
     <ul>
     <li><a href="#intro">Introduction to EDF</a>
-    <li><a href="#changes">Changes in EDF 1.5</a>
+    <li><a href="#changes">Changes in EDF 1.6</a>
     <li><a href="#gensyn">General Syntax</a>
+    <li><a href="#reserved">Reserved Identifiers</a>
     <li><a href="#files">Files</a>
         <ul>
         <li><a href="#root">Specifying the Root EDF File</a>
         <li><a href="#lump">Loading EDF From a WAD Lump</a>
         <li><a href="#estrings">ESTRINGS Lump</a>
         <li><a href="#eterrain">ETERRAIN Lump</a>
+        <li><a href="#emenus">EMENUS Lump</a>
         <li><a href="#inc">Including Files</a>
         <li><a href="#inclump">Including Lumps</a>
         <li><a href="#bex">Including BEX Files</a>
@@ -51,6 +53,7 @@
         <li><a href="#floors">Floor Objects</a>
         <li><a href="#tertypes">TERTYPES Lump Processing</a>
         </ul>
+    <li><a href="#menus">Dynamic Menus</a>
     <li><a href="#delta">Delta Structures</a>
     <li><a href="#misc">Miscellaneous Settings</a>
     </ul>
@@ -89,33 +92,16 @@ This documentation will be regularly updated to reflect all changes and addition
 <p>
 <a name="changes">
 <hr>
-<b>Changes in EDF 1.5</b>
+<b>Changes in EDF 1.6</b>
 <hr>
 </a>
 <br>
 <ul>
-<li> Added correct_height field for thingtypes.
-<li> Added FLIESONDEATH particle effect.
-<li> Added custom sound attenuation properties.
-<li> Added include_prev function to enable cascading lumps.
-<li> ESTRINGS lump processing.
-<li> Textual values for thingtype mod field now available.
-<li> TerrainTypes
-     <ul>
-     <li> New terrain.edf module.
-     <li> ETERRAIN lump processing.
-     <li> splash, terrain, and floor sections.
-     <li> TERTYPES lump now deprecated and absorbed into new system.
-     </ul>
-<li> Improved ifenabled function and added new functions:
-     <ul>
-     <li> ifenabledany
-     <li> ifdisabled
-     <li> ifdisabledany
-     <li> ifgametype
-     <li> ifngametype
-     </ul>
-<li> Added ability for compressed frames to contain some other fields.
+<li> EDF Menu definitions.
+<li> Support for userinclude function and user.edf added.
+<li> Color, translucency, shadowing, and absolute centering escape characters added.
+<li> DeHackEd numbers can now be auto-allocated for things, frames, and sounds.
+<li> Added information on reserved identifiers.
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -205,10 +191,27 @@ This documentation will be regularly updated to reflect all changes and addition
      <li> \\ : Literal \ character.
      <li> \" : Literal ", necessary to use in double-quoted strings only
      <li> \' : Literal ', necessary to use in single-quoted strings only
+     <li> \0 : Null character
+     <li> \K : Changes text color to "brick" range where supported. 
+     <li> \1 : Changes text color to "tan" range where supported.
+     <li> \2 : Changes text color to "gray" range where supported.
+     <li> \3 : Changes text color to "green" range where supported.
+     <li> \4 : Changes text color to "brown" range where supported.
+     <li> \5 : Changes text color to "gold" range where supported.
+     <li> \6 : Changes text color to "red" range where supported.
+     <li> \7 : Changes text color to "blue" range where supported.
+     <li> \8 : Changes text color to "orange" range where supported.
+     <li> \9 : Changes text color to "yellow" range where supported.
+     <li> \N : Changes text color to gamemode "normal" range where supported.
+     <li> \H : Changes text color to gamemode "hilite" range where supported.
+     <li> \E : Changes text color to gamemode "error" range where supported.
+     <li> \S : Toggles text shadowing where supported.
+     <li> \C : Toggles absolute centering of text where supported.
      </ul>
      <br><br>
      If \ is followed by any other character, the slash is discarded and the next character
-     is treated normally (ie, \d becomes d).
+     is treated normally (ie, \d becomes d). Avoid doing this, however, to maintain forward
+     compatibility.
      <br><br>
      Examples:
      <pre>
@@ -261,6 +264,37 @@ This documentation will be regularly updated to reflect all changes and addition
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
+<a name="reserved">
+<hr>
+<b>Reserved Identifiers</b>
+<hr>
+</a>
+<br>
+This section is new to EDF 1.6 and describes classes of identifiers (such as thing,
+frame, and sound mnemonics) which are considered reserved by the Eternity Engine.
+You should avoid using any identifier in the following classes for objects which
+you define yourself. Failure to do so could result in incompatibility of your
+project with future versions of the Eternity Engine, due to conflicts with newly
+added game engine features.
+<ul>
+<li> All identifiers beginning with _ (underscore)
+<li> All identifiers beginning with EE or ee (this prefix means "Eternity Engine"
+     and is therefore reserved for use by the source port's authors only).
+<li> All identifiers containing ANY non-alphanumeric character excepting
+     non-leading underscores (ex: $ is reserved).
+</ul>
+
+For maximum safety, it is recommended that you develop a consistent and unique
+naming scheme for objects you create yourself. A simplistic example would be
+prefixing the word My to mnemonics, such as "MyNewThingType". Such names are
+more or less guaranteed to never conflict with anything defined by the game
+engine itself. The Chex Quest III project uses the prefix "CQ" for this purpose.
+As a side effect, this also improves the ability of your EDF patches to combine
+with those of others.
+<br><br>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
 <a name="files">
 <hr>
 <b>Files</b>
@@ -274,7 +308,8 @@ This documentation will be regularly updated to reflect all changes and addition
 </a>
 <br>
 Eternity supports several methods for locating the root EDF file, which is the only EDF file
-loaded directly for parsing.
+loaded directly for parsing. Excepting special lump chains documented below, all other EDF
+files must be included through the root EDF.
 <ul>
 <li> Default -- root.edf
      <br><br>
@@ -362,6 +397,24 @@ can be a dummy which is never used, however.
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
+<a name="emenus">
+<hr>
+<b>EMENUS Lump</b>
+<hr>
+</a>
+<br>
+The EMENUS lump is an optional EDF lump which can contain any number of <b>menu</b>
+definitions. All definitions are additive, and if definitions of the same name already
+exist, they will overwrite. EMENUS lumps do not cascade by default, but can be made to
+do so by using the <b>include_prev</b> function documented below.
+<br><br>
+Note: it is inappropriate to include an EMENUS lump from EDFROOT or from any file
+included by it, because EMENUS will be processed separately after the root EDF has
+been processed. Doing this will cause the definitions to be processed twice.
+<br><br>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
 <a name="inc">
 <hr>
 <b>Including Files</b>
@@ -412,6 +465,20 @@ spritenames =
 Note that for maximum compatibility, you should limit EDF file names to MS-DOS 8.3 format 
 and use only alphanumeric characters (ie, no spaces). This is not required for Windows or
 Linux, but the DOS port of Eternity cannot use long file names.
+<br><br>
+New to EDF 1.6 (Eternity Engine v3.33.33), the <b>userinclude</b> function allows the
+optional inclusion of a file from Eternity's folder. This function is identical to 
+<b>stdinclude</b>, except that it will test to see if the file exists beforehand, and
+if it does not, no error will occur. This function is not for use by EDF editors in 
+projects. This function is intended for end-user modification of EDF settings, including
+but not limited to the custom user menu. Example:
+<pre>
+userinclude("user.edf")
+</pre>
+
+This example can be found in Eternity's root.edf, where it exists to include the optional
+user-defined "user.edf" file. You should never attempt to overwrite the user.edf file with
+one from your own project, as this is outside the scope of its purpose.
 <br><br>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -486,7 +553,7 @@ lump, and an error message will be given if this is attempted.
 </a>
 <br>
 This section explains the contents of each of the standard default EDF modules as of
-Eternity Engine v3.33.02.
+Eternity Engine v3.33.33.
 <ul>
 <li> root.edf -- includes all other modules
 <li> sprites.edf -- contains the sprite names list and sprite-based pickup item definitions
@@ -496,6 +563,7 @@ Eternity Engine v3.33.02.
 <li> cast.edf -- contains DOOM II cast call definitions
 <li> misc.edf -- contains the default list of DOOM II Boss Spawner thing types
 <li> terrain.edf -- contains default TerrainTypes definitions
+<li> user.edf -- optional user-defined EDF file which may contain any definitions
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -1044,10 +1112,11 @@ For the original frames, these happen to be the same as their order.
 <br><br>
 User frames that need to be accessible from DeHackEd or from parameterized codepointers can 
 define a <b>unique</b> DeHackEd number, which for purposes of forward compatibility, should 
-be greater than or equal to 10000, and less than 32768. User frames not needing access via 
-DeHackEd can be given a DeHackEd number of -1. This causes them to be inaccessible to these
-features. It is the user's responsibility to allocate and keep track of custom DeHackEd 
-numbers -- any frame can be given one, but most will not need it.
+be greater than or equal to 10000, and less than 32768. Beginning with EDF 1.6, DeHackEd 
+numbers will be automatically allocated to frames which are used in misc or args fields 
+using the "frame:" prefix if they have a DeHackEd number of -1. The previous behavior in
+this case was to post a warning message and replace the frame with frame 0. This change
+makes it unnecessary in many cases to assign and keep track of DeHackEd numbers yourself.
 <br><br>
 Syntax:
 <pre>
@@ -1149,10 +1218,12 @@ Explanation of fields:
 <li><b>dehackednum</b><br>
     Default = -1<br>
     As explained above, this is the number which must be used to refer to this frame in
-    DeHackEd patches. -1 means that the frame is not accessible from DeHackEd, or by 
-    parameterized codepointers that require a frame DeHackEd number. User-defined frames
+    DeHackEd patches and arguments to parameterized codepointers. User-defined frames
     should currently only use DeHackEd numbers between 10000 and 32768, or simply use -1
     if no DeHackEd functionality is required. This number must be unique unless it is -1.
+    As of EDF 1.6, if a frame is referred to by name in a misc or args field and has a 
+    DeHackEd number of -1, it will be automatically allocated a unique number by the game
+    engine.
 <li><b>cmp</b><br>
     Default = none<br>
     The cmp field is used to provide a compressed definition for the normal fields of this
@@ -1476,10 +1547,11 @@ thing types, these happen to be the same as their order.
 User thing types that need to be accessible from DeHackEd or by parameterized codepointers can 
 define a <b>unique</b> DeHackEd number, which for purposes of forward compatibility, should be
 greater than or equal to 10000 and less than 32768. User types not needing access via DeHackEd 
-or by parameterized codepointers can be given a DeHackEd number of -1. This causes them to be
-inaccessible to DeHackEd and to parameterized codepointers. It is the user's responsibility to
-allocate and assign DeHackEd numbers to thingtypes. All custom thingtypes may be given a
-DeHackEd number, but most will not need one.
+or by parameterized codepointers can be given a DeHackEd number of -1. Beginning with EDF 1.6,
+if a thingtype with a DeHackEd number of -1 is used by name in a misc or args field using the
+"thing:" prefix, it will be automatically assigned a unique DeHackEd number by the game engine.
+The previous behavior was to post a warning message and replace the thing with the "Unknown"
+type. This largely removes the need for users to assign and keep track of DeHackEd numbers.
 <br><br>
 Syntax:
 <pre>
@@ -1956,10 +2028,11 @@ Explanation of fields:
 <li><b>dehackednum</b><br>
     Default = -1<br>
     As explained above, this is the number which must be used to refer to this thing type in
-    DeHackEd patches. -1 means that the thing type is not accessible from DeHackEd, or by 
-    parameterized codepointers that require a thing type DeHackEd number. User-defined thing
-    types should currently only use DeHackEd numbers between 10000 and 32768, or simply use 
-    -1 if no DeHackEd functionality is required. This number must be unique unless it is -1.
+    DeHackEd patches. -1 means that the thing type is not accessible from DeHackEd. 
+    User-defined thing types should currently only use DeHackEd numbers between 10000 and 32768,
+    or simply use  -1 if no DeHackEd functionality is required. This number must be unique unless
+    it is -1. As of EDF 1.6, if a thing with a DeHackEd number of -1 is used in a misc or args
+    field, it will be automatically allocated a unique number by the game engine.
 </ul>
 
 Restrictions and Caveats:
@@ -2457,9 +2530,12 @@ Explanation of Fields:
     a unique DeHackEd number. The value zero is reserved and cannot be used. In order to avoid
     conflict, and to remain compatible with future versions of the Eternity Engine, user sounds
     should either use DeHackEd numbers between 10000 and 32768, or simply use the value -1 if
-    no thing/frame or DeHackEd access is necessary. Note that if a thing or frame later attempts
-    to use a sound with no unique DeHackEd number via its mnemonic, a warning will be printed
-    to the verbose EDF log, and the sound field in question will be set to "none".
+    no thing/frame or DeHackEd access is necessary. As of EDF 1.6, if a sound with no
+    DeHackEd number is used by name (such as with the "sound:" prefix in a misc or args field),
+    the game engine will automatically allocate a unique DeHackEd number to the sound. The
+    previous behavior was to print a warning to the verbose EDF log and set the sound field in 
+    question to "none". This eliminates most need to assign and keep track of DeHackEd numbers
+    yourself.
 </ul>
 
 Restrictions and Caveats:
@@ -2475,10 +2551,10 @@ Restrictions and Caveats:
      name, but no lump name is provided, then the sound entry will not be able to play, and
      the default replacement sound for the game mode will play instead.
 <li> All sounds with a DeHackEd number not equal to -1 must have a unique DeHackEd number.
-     Any sounds with a non-unique DeHackEd number will be inaccessible to things, frames, and
-     editing via DeHackEd. Such sounds may still be referenced via their mnemonic in scripts
-     and MapInfo, however. The DeHackEd number 0 (zero) is reserved for sounds and cannot be
-     used in an EDF sound definition.
+     As of EDF 1.6, if a sound with no unique DeHackEd number is used by a thing, frame, or
+     other section, it will be automatically allocated a unique number by the game engine.
+     The DeHackEd number 0 (zero) is reserved for sounds and cannot be used in an EDF sound
+     definition.
 </ul>
 
 Replacing Existing Sounds:
@@ -2924,6 +3000,234 @@ thus any TERTYPES-derived definitions may override EDF floor objects that affect
 flats.
 <br><br>
 <a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="menus">
+<hr>
+<b>Dynamic Menus</b>
+<hr>
+</a>
+<br>
+New to EDF 1.6, dynamic menus allow the Eternity Engine's menu system to be
+customized in various ways, including through the definition of the custom user
+menu and via overriding of specific menus within the native menu heirarchy.
+<br><br>
+Remember that all fields are optional and may be provided in any order. Note that
+the order of <b>item</b> sections within a menu is important, however.
+<br><br>
+Syntax:
+<pre>
+menu &lt;unique mnemonic&gt;
+{
+   # one or more item sections can exist; the items appear on the menu in the
+   # order they are defined within their parent menu section
+   item
+   {
+      type  = &lt;menu item type name&gt;
+      text  = &lt;string&gt;
+      cmd   = &lt;string&gt;
+      patch = &lt;string&gt;
+      flags = &lt;menu item flags string&gt;
+   }
+   
+   prevpage = &lt;menu mnemonic&gt;
+   nextpage = &lt;menu mnemonic&gt;
+   x        = &lt;number&gt;
+   y        = &lt;number&gt;
+   first    = &lt;number&gt;
+   flags    = &lt;menu flags string&gt;
+}
+</pre>
+Explanation of Fields:
+<ul>
+<li><b>item</b><br>
+    Default = No default<br>
+    One or more items must be defined in every menu. There is no upper limit on the number
+    of item sections. The items will appear in the menu in the same order in which they were
+    defined in EDF.<br>
+    Explanation of menu item fields:
+    <ul>
+    <li><b>type</b><br>
+        Default = info<br>
+        One of the following values with the given meanings:
+        <ul>
+        <li> <b>info</b> - The item is an informational string. It cannot be selected or
+             execute a command, even if one is provided. This type of item is used as a
+             section title. It is usual for the text to be given gold coloration, but this
+             is up to the user.
+        <li> <b>gap</b> - The item is a gap of blank space. It cannot be selected or execute
+             a command. The amount of space is determined by the font used by the menu.
+        <li> <b>runcmd</b> - This item type executes a command when the key bound to
+             menu_confirm is pressed while it is selected. Only the text description is
+             displayed; there is no value or other graphic to the right. If the command 
+             provided to this item is invalid, this item will be disabled.
+        <li> <b>variable</b> - This item type allows editing of a console variable's
+             value directly. The value editing must be done by typing in the new value.
+             The value will appear to the right of the text description of this item at a
+             distance determined by the layout of the menu. If the variable provided to this
+             item is invalid, it will be disabled.
+        <li> <b>toggle</b> - This item allows editing of a console variable's value using
+             the menu_left or menu_right actions to scroll through its possible set of
+             values. This type of item is only appropriate for console variables which are
+             of "yes/no", "on/off", or "named value" types. The value of the variable will
+             to the right of the text description of this item at a distance determined by
+             the layout of the menu. If the variable provided to this item is invalid, it will
+             be disabled.
+        <li> <b>title</b> - This item type is appropriate only for use as the main title of
+             the menu. Titles are drawn using the gamemode's "Big" font if no graphic patch
+             is available for them. In Heretic, menu title text is also shadowed by default.
+             This type of item has no value, is not selectable, and cannot execute a command.
+        <li> <b>slider</b> - This item type allows editing of a console variable's value using
+             a slider. The slider will appear to the right of the text description at a distance
+             determined by the menu's layout. If the variable assigned to this item is invalid,
+             the slider will be disabled. Sliders are only appropriate for use with ranged
+             integer console variables.
+        <li> <b>automap</b> - This item is an automap color selector.
+        <li> <b>binding</b> - This item is a keybinding. The value provided to the <b>cmd</b>
+             field must be a key action name instead of a console command. The keys currently
+             bound to the action will appear to the right of text description at a distance
+             determined by the menu's layout.
+        </ul>
+    <li><b>text</b><br>
+        Default = ""<br>
+        This is the textual description of the menu item, which is drawn for all item types
+        unless a valid <b>patch</b> graphic is specified, in which case it will be drawn
+        instead. The height of the menu item is determined by the text or graphic used by
+        the item, and item spacing is performed automatically by the menu engine.
+    <li><b>cmd</b><br>
+        Default = No default<br>
+        This is the console command, console variable, or other special value which this item
+        will execute or set a value to when it is activated. This field only has meaning for
+        item types which are selectable. Non-selectable types will ignore it entirely. If a
+        runcmd, variable, toggle, slider, automap, or binding item type is given an invalid
+        console command or variable, the item will be disabled by the menu engine.
+    <li><b>patch</b><br>
+        Default = No default<br>
+        If specified, this field will override the text description with a patch graphic
+        of the given name. If the patch named doesn't exist amongst all loaded WAD files,
+        the text description will appear instead. If the graphic named exists but is not
+        a valid patch graphic lump, behavior is undefined.
+    <li><b>flags</b><br>
+        A BEX-format flags field which can accept any combination of the following
+        values. All values are off by default.
+        <pre>
+         Flag name       Effect
+        --------------------------------------------------------------------
+         BIGFONT         Item uses the gamemode's "big" font
+         CENTERED        Menu item is centered. Useful only for info items.
+         LALIGNED        Menu item is aligned to the left.
+        --------------------------------------------------------------------
+        </pre>
+        Example:
+        <pre>
+        menu foo
+        {
+           item { type = info; text = "Hello EDF!"; flags = BIGFONT|CENTERED }
+        }
+        </pre>
+        As with all other BEX-format flag fields, if the field's value contains whitespace,
+        commas, or other characters disallowed in unquoted strings, you must surround the
+        entire field value in single or double quotation marks.
+    </ul>
+<li><b>prevpage</b><br>
+    Default = No default<br>
+    This field specifies the previous page of this menu. Menus may be attached to each
+    other in a circular chain of pages, which can be perused either by pressing Ctrl plus
+    the keys bound to menu_left or menu_right, or by pressing the keys bound to menu_pageup or
+    menu_pagedown. The default value means that there is no previous page. If the menu named
+    by this field does not exist, there will also be no previous page. Table of contents 
+    functionality is not available for dynamic menus.
+<li><b>nextpage</b><br>
+    Default = No default<br>
+    This field specifies the next page of this menu. It is otherwise identical to the
+    <b>prevpage</b> field above.
+<li><b>x</b><br>
+    Default = 200<br>
+    Specifies the x offset of the menu starting from the upper lefthand corner of the
+    screen. Menu coordinates are relative to a 320x200 screen and are scaled at runtime
+    by the game engine. All patches are clipped to the screen, so it is not harmful if a
+    menu or any items on it extend off the framebuffer. Note that this value specifies
+    the right end of description strings for normal menu items. Item values will be
+    drawn further to the right of this.
+<li><b>y</b><br>
+    Default = 15<br>
+    Specifies the y offset of the menu starting from the upper lefthand corner of the
+    screen. Menu coordinates are relative to a 320x200 screen and are scaled at runtime
+    by the game engine.
+<li><b>first</b><br>
+    Default = 0<br>
+    Zero-based index of the first item that should be selected on the menu. If this value
+    is out of range or is set to a normally unselectable item, the selection pointer will
+    not appear until the user moves to a new item, at which point it will appear to jump
+    to the proper item. On most native menus, the first selectable item is at index 3. This
+    is due to a title, gap, and info item usually being the first three items on the menu.
+<li><b>flags</b><br>
+     A BEX-format flags field which can accept any combination of the following
+     values. All values are off by default.
+     <pre>
+      Flag name       Effect
+     ------------------------------------------------------------------------
+      skullmenu       This menu uses the large skull pointer.
+      background      This menu has a background and uses the small pointer.
+      leftaligned     This menu is aligned to the left. Does not work with
+                      all item types.
+      centeraligned   All items on this menu are centered. Not useful for
+                      menus that contain anything other than title, gap,
+                      info, or command items.
+     ------------------------------------------------------------------------
+     </pre>
+     Example:
+     <pre>
+     menu foo
+     {
+        item { type = info; text = "Hello EDF!"; flags = BIGFONT }
+        
+        flags = skullmenu|leftaligned
+     }
+     </pre>
+     As with all other BEX-format flag fields, if the field's value contains whitespace,
+     commas, or other characters disallowed in unquoted strings, you must surround the
+     entire field value in single or double quotation marks.
+</ul>
+
+Restrictions and Caveats:
+<ul>
+<li> All menus must have a unique mnemonic no longer than 32 characters. They should only 
+     contain alphanumeric characters and underscores. Length will be verified, but format will 
+     not (non-unique mnemonics will overwrite previous definitions).
+</ul>
+
+Replacing Existing Menus:
+<br><br>
+To replace the values of an existing EDF menu definition, simply define a new menu
+with the exact same mnemonic value (as stated above, all menus need a unique mnemonic, so 
+duplicate mnemonics serve to indicate that an existing menu should be replaced).
+<br><br>
+Example:
+<pre>
+/*
+
+  Define the reserved _MN_Custom menu, which is automatically made available on
+  the second page of Eternity's main options menu when it is defined.
+  This is a great use for the new optional "user.edf" file. Note that by using
+  the new "mn_dynamenu" command, it is possible to create your own inter-menu
+  links and form a complete heirarchy of custom menus. See the console reference
+  for full information.
+  
+*/ 
+menu _MN_Custom
+{
+   item { type = title;  text = "my custom menu" }
+   item { type = gap }
+   item { type = info;   text = "\Hitems here" }
+   item { type = runcmd; text = "get outta here!"; cmd = "mn_prevmenu" }
+   
+   first = 3
+   flags = background
+}
+</pre>
+<a href="#contents">Return to Table of Contents</a>
+
 
 <p>
 <a name="delta">

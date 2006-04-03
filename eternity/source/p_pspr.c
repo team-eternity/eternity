@@ -90,8 +90,9 @@ static const int recoil_values[] = {    // phares
 //
 // P_SetPsprite
 //
-
-static void P_SetPsprite(player_t *player, int position, statenum_t stnum)
+// haleyjd 03/31/06: Removed static.
+//
+void P_SetPsprite(player_t *player, int position, statenum_t stnum)
 {
    pspdef_t *psp = &player->psprites[position];
    
@@ -522,7 +523,7 @@ void A_GunFlash(player_t *player, pspdef_t *psp)
 {
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
    
-   A_FireSomething(player,0);                               // phares
+   A_FireSomething(player, 0);                               // phares
 }
 
 //

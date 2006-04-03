@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 <hr>
-<b>The Eternity Engine v3.33 Console Reference -- 05/26/05</b>
+<b>The Eternity Engine v3.33.33 Console Reference -- 04/02/06</b>
 <hr>
 
 <p>
@@ -26,17 +26,17 @@ the Eternity console, as well as pointers on console command syntax.
    <li><a href="#commands">Console Commands</a>
       <ul>
       <li><a href="#cmdcore">Core Commands</a><br>
-           flood, delay, alias, cmdlist, quote, echo, dumplog, openlog, closelog
+           flood, delay, alias, cmdlist, quote, echo, dumplog, openlog, closelog, dir
       <li><a href="#cmdmenus">Menus</a><br>
-           mn_clearmenus, mn_newgame, mn_quit, mn_episode, mn_multi,
-           mn_prevmenu, mn_etccompat, mn_advanced, newgame,
-           mn_weaponkeys, mn_keybindings, mn_features, mn_tcpip, mn_demos,
+           mn_clearmenus, mn_newgame, mn_quit, mn_episode,
+           mn_prevmenu, newgame,
+           mn_weaponkeys, mn_keybindings, mn_demos,
            mn_weapons, mn_loadwad, mn_status, mn_hud, mn_mouse, mn_sound,
            mn_vidmode, mn_particle, mn_video, mn_endgame, mn_options,
-           mn_savegame, mn_load, mn_player, mn_envkeys, mn_chatmacros,
-           mn_serial, credits, help, mn_enemies, mn_compat, mn_automap,
-           quickload, quicksave, mn_joymenu, mn_hnewgame, mn_hepis, mn_hfeatures,
-           mn_optfeat, skinviewer, mn_dmflags
+           mn_savegame, mn_load, mn_player, mn_envkeys,
+           credits, help, mn_enemies, mn_compat, mn_automap,
+           quickload, quicksave, mn_joymenu, mn_hnewgame, mn_hepis,
+           skinviewer, mn_dynamenu, mn_selectwad, mn_search, mn_menus
       <li><a href="#cmdkeybindings">Keybindings</a><br>
       	  listactions, bind, unbindall, unbind, listkeys, bindings
       <li><a href="#cmdnetworking">Networking</a><br>
@@ -70,7 +70,8 @@ the Eternity console, as well as pointers on console command syntax.
       <li><a href="#vardemo">Demo options</a><br>
           cooldemo, demo_insurance
       <li><a href="#varplayer">Player variables</a><br>
-          name, skin, colour, walkcam, chasecam, numhelpers
+          name, skin, colour, walkcam, chasecam, chasecam_height, chasecam_dist,
+          chasecam_speed, numhelpers
       <li><a href="#varinput">Input options</a><br>
           alwaysmlook, invertmouse, sens_horiz, sens_vert, smooth_turning,
           use_joystick, use_mouse, joysens_x, joysens_y
@@ -81,21 +82,23 @@ the Eternity console, as well as pointers on console command syntax.
           mon_infight, mon_avoid, mon_climb, mon_friction, mon_remember,
           mon_backing, mon_helpfriends, mon_distfriend
       <li><a href="#varheadsup">Heads-up System variables</a><br>
-          messages, mess_colour, mess_lines, mess_timer, mess_scrollup,
-          hu_overlay, hu_hidesecrets, show_scores, obituaries, ob_colour,
-          crosshair
+          hu_overlay, hu_hidesecrets, hu_obituaries, hu_obitcolor, hu_crosshair,
+          hu_crosshair_hilite, hu_showvpo, hu_vpo_threshold, hu_messages,
+          hu_messagecolor, hu_messagelines, hu_messagescroll, hu_messagetime,
+          hu_showtime, hu_showcoords, hu_timecolor, hu_levelnamecolor,
+          hu_coordscolor, show_scores, map_coords
       <li><a href="#varautomap">Automap variables</a><br>
           mapcolor_rkey, mapcolor_bkey, mapcolor_ykey, mapcolor_rdor, 
           mapcolor_bdor, mapcolor_ydor, mapcolor_frnd, mapcolor_wall, 
           mapcolor_clsd, mapcolor_tele, mapcolor_secr, mapcolor_exit,
           mapcolor_unsn, mapcolor_sprt, mapcolor_hair, mapcolor_sngl, 
-          mapcolor_back, mapcolor_fchg, map_coords
+          mapcolor_back, mapcolor_fchg
       <li><a href="#varstatus">Status Bar variables</a><br>
           ammo_red, ammo_yellow, health_red, health_yellow, health_green,
           armor_red, armor_yellow, armor_green, st_rednum, st_singlekey,
           st_graypct
       <li><a href="#varmenus">Menu variables</a><br>
-          use_traditional_menu
+          use_traditional_menu, wad_directory, mn_toggleisback, mn_searchstr
       <li><a href="#varrendering">Rendering variables</a><br>
           r_showgun, r_showhom, r_blockmap, r_homflash, r_planeview, r_zoom, 
           r_stretchsky, r_precache, r_trans, r_tranpct, r_swirl, gamma,
@@ -104,8 +107,7 @@ the Eternity console, as well as pointers on console command syntax.
       <li><a href="#varparticle">Particle Events</a><br>
           pevt_rexpl, pevt_bfgexpl
       <li><a href="#varvideo">Video variables</a><br>
-          v_diskicon, v_retrace, v_mode, v_ticker, show_vpo, vpo_threshold,
-          shot_type, screensize
+          v_diskicon, v_retrace, v_mode, v_ticker, shot_type, shot_gamma, screensize
       <li><a href="#varsound">Sound options</a><br>
           detect_voices, snd_card, mus_card, sfx_volume, music_volume,
           s_flippan, s_precache, s_pitched, snd_channels
@@ -123,7 +125,8 @@ the Eternity console, as well as pointers on console command syntax.
           comp_zerotags, comp_terrain, comp_respawnfix, comp_fallingdmg, 
           comp_soul, comp_overunder
       <li><a href="#varmisc">Misc. Configuration</a><br>
-          use_startmap, i_gamespeed, i_ledsoff, startonnewmap, i_waitatexit
+          use_startmap, i_gamespeed, i_ledsoff, startonnewmap, i_waitatexit,
+          i_showendoom, i_endoomdelay, i_grabmouse
       <li><a href="#varconstants">Constants</a><br>
           rngseed, creator, version, ver_date, ver_name, ver_time
       </ul>
@@ -238,7 +241,7 @@ Synopsis of Commands:
 	* delay		* dumplog
 	* alias 	* openlog
 	* cmdlist	* closelog
-	* quote
+	* quote         * dir
 </pre>
 
 <ul>	
@@ -300,6 +303,9 @@ Synopsis of Commands:
   occuring, this command does nothing. This command doesn't apply to files used by
   dumplog, as they are closed immediately, so it doesn't need to be used with the
   dumplog command.
+  <br><br>
+<li> dir<br><br>
+  Lists the contents of the current working directory to the console.
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -313,26 +319,49 @@ Synopsis of Commands:
 These commands display and affect various aspects of the menu system.
 <br><br>
 Synopsis of Commands:
-<pre>	
-	* mn_clearmenus * mn_prevmenu   * mn_weaponkeys
-	* mn_newgame	* mn_etccompat  * mn_keybindings
-	* mn_quit       * mn_features   * mn_episode
-	* mn_advanced   * mn_tcpip      * mn_multi
-	* newgame       * mn_demos      * mn_weapons
-	
-	* mn_sound      * mn_options    * mn_chatmacros
-	* mn_loadwad    * mn_vidmode    * mn_savegame	
-	* mn_serial     * mn_status     * mn_particle
-	* mn_load       * credits       * mn_hud        
-	* mn_video      * mn_player     * help
-	* mn_mouse      * mn_endgame    * mn_envkeys
-	
-	* mn_enemies    * mn_compat     * mn_hnewgame
-	* mn_automap    * mn_hepis      * quickload
-	* mn_hfeatures  * quicksave     * mn_joymenu
-	* mn_optfeat    * skinviewer
-</pre>
+<ul>
+<li> mn_clearmenus 
+<li> mn_newgame 
+<li> mn_quit 
+<li> mn_episode
+<li> mn_prevmenu 
+<li> newgame
+<li> mn_weaponkeys 
+<li> mn_keybindings 
+<li> mn_demos
+<li> mn_weapons 
+<li> mn_loadwad 
+<li> mn_status 
+<li> mn_hud 
+<li> mn_mouse 
+<li> mn_sound
+<li> mn_vidmode 
+<li> mn_particle 
+<li> mn_video 
+<li> mn_endgame 
+<li> mn_options
+<li> mn_savegame 
+<li> mn_load 
+<li> mn_player 
+<li> mn_envkeys
+<li> credits 
+<li> help 
+<li> mn_enemies 
+<li> mn_compat 
+<li> mn_automap
+<li> quickload 
+<li> quicksave 
+<li> mn_joymenu 
+<li> mn_hnewgame 
+<li> mn_hepis
+<li> skinviewer 
+<li> mn_dynamenu 
+<li> mn_selectwad 
+<li> mn_search 
+<li> mn_menus
+</ul>
 
+<p>
 <ul>
 <li> mn_clearmenus<br><br>
 
@@ -352,27 +381,10 @@ Synopsis of Commands:
   Displays the episode selection screen for Ultimate DOOM.<br>
   Flags: not in network games
   <br><br>
-<li> mn_multi<br><br>
-
-  Displays the multiplayer options menu.
-  <br><br>
 <li> mn_prevmenu<br><br>
 
   Returns user to the last menu they viewed, or to the game if the present
   menu is the highest-most in that chain.
-  <br><br>
-<li> mn_etccompat<br><br>
-
-  Displays the Eternity Compatibility Options menu.
-  <br><br>
-<li> mn_multigame<br><br>
-
-  Displays a setup menu for multiplayer sessions.
-  <br><br>
-<li> mn_advanced<br><br>
-
-  Displays multiplayer advanced options menu.<br>
-  Flags: server-only
   <br><br>
 <li> newgame<br><br>
 
@@ -387,14 +399,6 @@ Synopsis of Commands:
 
   Displays primary keybindings menu.
   <br><br>
-<li> mn_features<br><br>
-
-  Displays the Features menu.
-  <br><br>
-<li> mn_tcpip<br><br>
-
-  Displays the (functionless) TCP/IP options menu.
-  <br><br>
 <li> mn_demos<br><br>
 
   Displays the Demos menu<br>
@@ -406,9 +410,7 @@ Synopsis of Commands:
   <br><br>
 <li> mn_loadwad<br><br>
 
-  Displays the WAD file loading menu.  Does not function if the
-  shareware IWAD is in use. <br>
-  Flags: not in a network game
+  Displays the wad/file options menu.
   <br><br>
 <li> mn_status<br><br>
 
@@ -466,14 +468,6 @@ Synopsis of Commands:
 
   Displays the environment keybindings menu.
   <br><br>
-<li> mn_chatmacros<br><br>
-
-  Displays the chat macros menu.
-  <br><br>
-<li> mn_serial<br><br>
-
-  Displays the serial connection setup menu.
-  <br><br>
 <li> credits<br><br>
 
   Displays game engine / game credits.
@@ -520,14 +514,6 @@ Synopsis of Commands:
 
   Brings up the Heretic episode selection menu.
   <br><br>
-<li> mn_hfeatures<br><br>
-
-  Brings up a Heretic-specific version of the Eternity "Features" menu.
-  <br><br>
-<li> mn_optfeat<br><br>
-
-  Brings up an intermediate options/features menu.
-  <br><br>
 <li> skinviewer<br><br>
 
   Brings up the skin viewer menu widget.
@@ -535,6 +521,26 @@ Synopsis of Commands:
 <li> mn_dmflags<br><br>
   
   Brings up the deathmatch flags configuration menu.
+  <br><br>
+<li> mn_dynamenu menuname<br><br>
+  
+  Brings up the EDF dynamic menu with the given mnemonic. If no such
+  menu exists, an error message will appear in the console.
+  <br><br>
+<li> mn_selectwad<br><br>
+  
+  Brings up the wad selection dialog box. The selected wad cannot be loaded
+  if the current gamemode is a shareware game.
+  Flags: not in a netgame
+  <br><br>
+<li> mn_search<br><br>
+  
+  Begins or continues a menu search operation. This command uses the value
+  of the "mn_searchstr" console variable to carry out its search.
+  <br><br>
+<li> mn_menus<br><br>
+  
+  Brings up the menu options menu.
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -1198,10 +1204,10 @@ Synopsis:
 <p>
 Synopsis:
 <pre>
-	* name		* numhelpers
-	* skin
-	* colour
-	* walkcam
+	* name		* chasecam_height
+	* skin          * chasecam_dist
+	* colour        * chasecam_speed
+	* walkcam       * numhelpers
 	* chasecam
 </pre>
 <ul>
@@ -1233,6 +1239,21 @@ Synopsis:
 	type: on / off<br>
 	on  = the player views himself from a following camera<br>
 	off = the player has a normal viewpoint<br>
+	<br>
+<li> chasecam_height<br>
+	type: integer<br>
+	value range: -31 - 100
+	value = preferred height of the chasecam above the player's viewheight<br>
+	<br>
+<li> chasecam_dist<br>
+	type: integer<br>
+	value range: 10 - 1024
+	value = preferred distance from chasecam to player<br>
+	<br>
+<li> chasecam_speed<br>
+	type: integer<br>
+	value range: 1 - 100
+	value = percentage of distance to target chasecam moves per gametic<br>
 	<br>
 <li> numhelpers<br>
 	type: integer<br>
@@ -1457,39 +1478,31 @@ Synopsis:
 </a>
 <p>
 Synopsis:
-<pre>
-	* messages	* hu_overlay	 * crosshair
-	* mess_colour	* hu_hidesecrets
-	* mess_lines	* show_scores
-	* mess_timer	* obituaries
-	* mess_scrollup	* ob_colour
-</pre>	
 <ul>
-<li> messages<br>
-	type: on / off<br>
-	on  = HUD messages will be displayed in the upper left corner<br>
-	off = HUD messages are not displayed<br>
-<br>
-<li> mess_colour<br>
-	type: named values<br>
-	values: brick, tan, gray, green, brown, gold, red, blue, orange, yellow<br>
-	value = color of normal HUD messages<br>
-	<br>
-<li> mess_lines<br>
-	type: integer<br>
-	value range: 0 - 14<br>
-	value = number of lines in the HUD message widget<br>
-		<br>
-<li> mess_timer<br>
-	type: integer<br>
-	value range: 0 - 100000<br>
-	value = length of time messages appear<br>
-	<br>
-<li> mess_scrollup<br>
-	type: yes / no<br>
-	yes = the HUD message widget can be scrolled to see previous messages<br>
-	no  = the HUD message widget cannot be scrolled<br>
-	<br>
+<li> hu_overlay
+<li> hu_hidesecrets
+<li> hu_obituaries
+<li> hu_obitcolor
+<li> hu_crosshair
+<li> hu_crosshair_hilite
+<li> hu_showvpo
+<li> hu_vpo_threshold
+<li> hu_messages
+<li> hu_messagecolor
+<li> hu_messagelines
+<li> hu_messagescroll
+<li> hu_messagetime
+<li> hu_showtime
+<li> hu_showcoords
+<li> hu_timecolor
+<li> hu_levelnamecolor
+<li> hu_coordscolor
+<li> show_scores
+<li> map_coords
+</ul>
+
+<p>
+<ul>
 <li> hu_overlay<br>
 	type: named values<br>
 	values: off, "boom style", flat, distributed, graphical<br>
@@ -1500,25 +1513,105 @@ Synopsis:
 	yes = kills/items/secrets statistics are not displayed on the HUD<br>
 	no  = kills/items/secrets statistics are displayed on the HUD<br>
 	<br>
-<li> show_scores<br>
-	type: on / off<br>
-	on  = a player frags chart will be show when you die<br>
-	off = no frags chart is displayed<br>
-<br>
-<li> obituaries<br>
+<li> hu_obituaries<br>
 	type: on / off<br>
 	on  = obituaries are shown when a player dies<br>
 	off = no obituaries are shown<br>
 		<br>
-<li> obcolour<br>
+<li> hu_obitcolor<br>
 	type: named values<br>
 	values: brick, tan, gray, green, brown, gold, red, blue, orange, yellow<br>
 	value = color of obituary messages<br>
 	<br>
-<li> crosshair<br>
+<li> hu_crosshair<br>
 	type: named values<br>
 	values: none, cross, angle<br>
 	value = shape / presence of the aiming crosshairs<br>
+	<br>
+<li> hu_crosshair_hilite<br>
+	type: on / off<br>
+	on  = crosshair will highlight when player is aiming at a monster or friend<br>
+	off = crosshair remains the default color at all times<br>
+	<br>
+<li> hu_showvpo<br>
+	type: yes / no<br>
+	yes = a VPO indicator will be displayed when the number of visplanes
+	      is at or above the level set in the 'hu_vpo_threshold' variable.<br>
+	no  = no VPO indicator will be shown<br>
+	<br>
+	* NOTE: Due to a more efficient visplane splitting algorithm
+	        developed in BOOM, Eternity uses fewer visplanes than DOOM
+	        did. Due to this discrepancy, Eternity uses a customizable
+	        number to set the level at which a VPO warning is issued. The
+	        default value of 85 is reasonable, but is not perfect. The 
+	        appearance of the VPO indicator is only to be taken as a 
+	        warning that the threshold may be near, and not that a VPO
+	        will occur at an exact location.<br>
+		<br>
+<li> hu_vpo_threshold<br>
+        type: integer<br>
+        value range: 1 - 128<br>
+        value = number of visplanes required for the VPO indicator to be displayed.<br>
+        <br>
+<li> hu_messages<br>
+	type: on / off<br>
+	on  = HUD messages will be displayed in the upper left corner<br>
+	off = HUD messages are not displayed<br>
+<br>
+<li> hu_messagecolor<br>
+	type: named values<br>
+	values: brick, tan, gray, green, brown, gold, red, blue, orange, yellow<br>
+	value = color of normal HUD messages<br>
+	<br>
+<li> hu_messagelines<br>
+	type: integer<br>
+	value range: 0 - 14<br>
+	value = number of lines in the HUD message widget<br>
+	<br>
+<li> hu_messagescroll<br>
+	type: yes / no<br>
+	yes = the HUD message widget can be scrolled to see previous messages<br>
+	no  = the HUD message widget cannot be scrolled<br>
+	<br>
+<li> hu_messagetime<br>
+	type: integer<br>
+	value range: 0 - 100000<br>
+	value = length of time messages appear<br>
+	<br>
+<li> hu_showtime<br>
+	type: yes / no<br>
+	yes = level timer is displayed on the automap<br>
+	no  = level timer is not displayed<br>
+	<br>
+<li> hu_showcoords<br>
+	type: yes / no<br>
+	yes = player/pointer coordinates are displayed on the automap<br>
+	no  = player/pointer coordinates are not displayed<br>
+	<br>
+<li> hu_timecolor<br>
+	type: named values<br>
+	values: brick, tan, gray, green, brown, gold, red, blue, orange, yellow<br>
+	value = color of automap level time HUD widget text<br>
+	<br>
+<li> hu_levelnamecolor<br>
+	type: named values<br>
+	values: brick, tan, gray, green, brown, gold, red, blue, orange, yellow<br>
+	value = color of automap level name HUD widget text<br>
+	<br>
+<li> hu_coordscolor<br>
+	type: named values<br>
+	values: brick, tan, gray, green, brown, gold, red, blue, orange, yellow<br>
+	value = color of automap player/pointer coordinates HUD widget text<br>
+	<br>
+<li> show_scores<br>
+	type: on / off<br>
+	on  = a player frags chart will be shown when you die<br>
+	off = no frags chart is displayed<br>
+	<br>
+<li> map_coords<br>
+	type: on / off<br>
+	on  = automap coordinates follow the pointer in non-follow mode<br>
+	off = automap coordinates always show player coordinates<br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 	
@@ -1627,11 +1720,6 @@ Synopsis:
 	type: integer<br>
 	value range: 0 - 255<br>
 	value = color of lines at floor height changes<br>
-	<br>
-<li> map_coords<br>
-	type: on / off<br>
-	on  = automap coordinates follow the pointer in non-follow mode<br>
-	off = automap coordinates always show player coordinates<br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 	
@@ -1723,6 +1811,9 @@ Synopsis:
 Synopsis:
 <pre>
 	* use_traditional_menu
+	* wad_directory
+	* mn_toggleisback
+	* mn_searchstr
 </pre>	
 <ul>	
 <li> use_traditional_menu<br>
@@ -1730,8 +1821,21 @@ Synopsis:
 	yes = DOOM / DOOM II original main menu will be emulated<br>
 	no  = Eternity's main menu behavior is used<br>
 	<br>
-	* NOTE: This variable has no effect on game modes other than
-	  DOOM or DOOM II.
+	* NOTE: This variable has no effect on game modes other than DOOM or DOOM II.
+	<br><br>
+<li> wad_directory<br>
+	type: string<br>	
+	value = user's wad directory, which will be listed in the wad loading dialog.<br>
+	<br>
+<li> mn_toggleisback<br>
+	type: yes / no<br>	
+	yes = "menu_toggle" keybinding action goes back one menu instead of exiting<br>
+	no  = "menu_toggle" keybinding action exits the menu system<br>
+	<br>
+<li> mn_searchstr<br>
+	type: string<br>	
+	value = string to search for in menus via mn_search command<br>
+	<br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -1912,9 +2016,8 @@ Synopsis:
 	* v_retrace
 	* v_mode
 	* v_ticker
-	* show_vpo
-	* vpo_threshold
 	* shot_type
+	* shot_gamma
 	* screensize
 </pre>	
 <ul>	
@@ -1935,35 +2038,20 @@ Synopsis:
 	<br>
 <li> v_ticker<br>
 	type: named values<br>
-	values: off, chart, classic<br>
+	values: off, chart, classic, text<br>
 	value = presence / appearance of an FPS ticker<br>
 	        classic is the original FPS ticker enabled through -devparm
 	        in DOOM<br>
 	<br>
-<li> show_vpo<br>
-	type: yes / no<br>
-	yes = a VPO indicator will be displayed when the number of visplanes
-	      is at or above the level set in the 'vpo_threshold' variable.<br>
-	no  = no VPO indicator will be shown<br>
-	<br>
-	* NOTE: Due to a more efficient visplane splitting algorithm
-	        developed in BOOM, Eternity uses fewer visplanes than DOOM
-	        did. Due to this discrepancy, Eternity uses a customizable
-	        number to set the level at which a VPO warning is issued. The
-	        default value of 85 is reasonable, but is not perfect. The 
-	        appearance of the VPO indicator is only to be taken as a 
-	        warning that the threshold may be near, and not that a VPO
-	        will occur at an exact location.<br>
-		<br>
-<li> vpo_threshold<br>
-        type: integer<br>
-        value range: 1 - 128<br>
-        value = number of visplanes required for the VPO indicator to be displayed.<br>
-        <br>
 <li> shot_type<br>
 	type: named values<br>
 	values: bmp, pcx<br>
 	value = file type written when screenshots are taken<br>
+	<br>
+<li> shot_gamma<br>
+	type: yes / no<br>
+        yes = gamma correction will be applied to screenshots.<br>
+        no  = no gamma correction will be applied to screenshots.<br>
 	<br>
 <li> screensize<br>
 	type: integer<br>
@@ -2208,6 +2296,9 @@ Synopsis:
 	* i_ledsoff
 	* startonnewmap
 	* i_waitatexit
+	* i_showendoom
+	* i_endoomdelay
+	* i_grabmouse
 </pre>	
 <ul>	
 <li> use_startmap<br>
@@ -2243,7 +2334,28 @@ Synopsis:
 	yes = game will wait for input after exiting<br>
 	no  = console window will shut immediately on exit<br>
 	<br>
-	* NOTE: this variable does not exist in the DOS version of Eternity.
+	* NOTE: this variable does not exist in the DOS version of Eternity.<br>
+	<br>
+<li> i_showendoom<br>
+	type: yes / no<br>
+	yes = ENDOOM will be displayed in a textmode emulator window on exit<br>
+	no  = ENDOOM is not displayed<br>
+	<br>
+	* NOTE: this variable does not exist in the DOS version of Eternity.<br>
+	<br>
+<li> i_endoomdelay<br>
+	type: integer<br>
+	value range: 35 - 3500
+	value = time in gametics to display the ENDOOM in the textmode emulator<br>
+	<br>
+	* NOTE: this variable does not exist in the DOS version of Eternity.<br>
+	<br>
+<li> i_grabmouse<br>
+	type: yes / no<br>
+	yes = window grabs mouse input<br>
+	no  = window does not grab mouse input<br>
+	<br>
+	* NOTE: this variable does not exist in the DOS version of Eternity.<br>
 </ul>	
 <a href="#contents">Return to Table of Contents</a>
 
