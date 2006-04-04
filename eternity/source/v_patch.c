@@ -64,8 +64,8 @@ static void V_DrawPatchColumn(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x >= (unsigned)vc_buffer->width || 
-      vc_yl < 0 || vc_yh >= vc_buffer->height) 
+   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
+      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
       I_Error("V_DrawPatchColumn: %i to %i at %i", vc_yl, vc_yh, vc_x); 
 #endif 
 
@@ -142,9 +142,9 @@ static void V_DrawPatchColumnTR(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x >= (unsigned)vc_buffer->width || 
-      vc_yl < 0 || vc_yh >= vc_buffer->height) 
-      I_Error("V_DrawPatchColumn: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
+      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
+      I_Error("V_DrawPatchColumnTR: %i to %i at %i", vc_yl, vc_yh, vc_x); 
 #endif 
 
    // Framebuffer destination address.
@@ -228,8 +228,8 @@ void V_DrawPatchColumnTL(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x >= (unsigned)vc_buffer->width || 
-      vc_yl < 0 || vc_yh >= vc_buffer->height) 
+   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
+      (unsigned)vc_yl >= (unsigned) vc_buffer->height) 
       I_Error("V_DrawPatchColumnTL: %i to %i at %i", vc_yl, vc_yh, vc_x); 
 #endif 
 
@@ -320,8 +320,8 @@ void V_DrawPatchColumnTRTL(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x >= (unsigned)vc_buffer->width || 
-      vc_yl < 0 || vc_yh >= vc_buffer->height) 
+   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
+      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
       I_Error("V_DrawPatchColumnTRTL: %i to %i at %i", vc_yl, vc_yh, vc_x); 
 #endif 
 
@@ -417,9 +417,9 @@ void V_DrawPatchColumnAdd(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x >= (unsigned)vc_buffer->width || 
-      vc_yl < 0 || vc_yh >= vc_buffer->height) 
-      I_Error("V_DrawPatchColumnTL: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
+      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
+      I_Error("V_DrawPatchColumnAdd: %i to %i at %i", vc_yl, vc_yh, vc_x); 
 #endif 
 
    // Framebuffer destination address.
@@ -497,7 +497,7 @@ void V_DrawPatchColumnAdd(void)
    *dest = RGB8k[0][0][(a >> 5) & (a >> 19)]
 
 //
-// V_DrawPatchColumnAdd
+// V_DrawPatchColumnAddTR
 //
 // Draws a patch column with additive translucency and
 // translation.
@@ -514,9 +514,9 @@ void V_DrawPatchColumnAddTR(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x >= (unsigned)vc_buffer->width || 
-      vc_yl < 0 || vc_yh >= vc_buffer->height) 
-      I_Error("V_DrawPatchColumnTL: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
+      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
+      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i", vc_yl, vc_yh, vc_x); 
 #endif 
 
    // Framebuffer destination address.

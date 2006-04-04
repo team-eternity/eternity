@@ -286,7 +286,7 @@ static void E_ProcessSplashes(cfg_t *cfg)
    unsigned int numSplashes = cfg_size(cfg, EDF_SEC_SPLASH);
 
    E_EDFLogPrintf("\t\t* Processing splashes\n"
-                  "\t\t\t%d splashed defined\n", numSplashes);
+                  "\t\t\t%d splashes defined\n", numSplashes);
 
    for(i = 0; i < numSplashes; ++i)
    {

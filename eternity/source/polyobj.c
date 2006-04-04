@@ -372,8 +372,9 @@ static void Polyobj_findExplicit(polyobj_t *po)
       return;
    }
 
-   // sort the array
-   qsort(segitems, numSegItems, sizeof(segitem_t), Polyobj_segCompare);
+   // sort the array if necessary
+   if(numSegItems >= 2)
+      qsort(segitems, numSegItems, sizeof(segitem_t), Polyobj_segCompare);
 
    // second loop: put the sorted segs into the polyobject
    for(i = 0; i < numSegItems; ++i)
