@@ -57,7 +57,10 @@ extern int firstflat;
 
 // for global animation
 extern int *flattranslation;    
-extern int *texturetranslation; 
+extern int *texturetranslation;
+
+// SoM: flat lump size
+extern int *flatsize;
 
 // Sprite....
 extern int firstspritelump;

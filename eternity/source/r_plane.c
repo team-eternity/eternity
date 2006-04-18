@@ -116,8 +116,18 @@ static fixed_t pviewx, pviewy, pviewz;
 
 fixed_t *yslope;
 fixed_t origyslope[MAX_SCREENHEIGHT*2];
+
 fixed_t distscale[MAX_SCREENWIDTH];
 int     visplane_view=0;
+
+// BIG FLATS
+void R_Throw(void)
+{
+   I_Error("R_Throw called.\n");
+}
+
+void (*flatfunc)(void) = R_Throw;
+
 
 //
 // R_InitPlanes
@@ -201,7 +211,8 @@ static void R_MapPlane(int y, int x1, int x2)
    ds_x1 = x1;
    ds_x2 = x2;
    
-   R_DrawSpan();
+   // BIG FLATS
+   flatfunc();
 
   // visplane viewing -- sf
   if(visplane_view)
@@ -222,6 +233,10 @@ static void R_MapPlane(int y, int x1, int x2)
 // R_ClearPlanes
 // At begining of frame.
 //
+// SoM: uses double floating point for calculation of the global scales because it is
+// much more accurate. This is done only once per frame so this really has no effect on 
+// speed.
+
 void R_ClearPlanes(void)
 {
    int i, a;
@@ -639,12 +654,15 @@ static void do_draw_plane(visplane_t *pl)
    {
       int stop, light;
       int swirling = 0;
+      // SoM: flat lump size. This will eventually be stored in a table I hope
+      int size;
 
       swirling = flattranslation[pl->picnum] == -1;
       
       if(swirling)
       {
          ds_source = R_DistortedFlat(pl->picnum);
+         size = W_LumpLength(firstflat + pl->picnum);
       }
       else
       {
@@ -652,6 +670,22 @@ static void do_draw_plane(visplane_t *pl)
             W_CacheLumpNum(firstflat + flattranslation[pl->picnum],
                            PU_STATIC);
       }
+
+      // SoM: support for flats of different sizes!!
+      switch(flatsize[flattranslation[pl->picnum]])
+      {
+         case 16384:
+            flatfunc = R_DrawSpan_128;
+            break;
+         case 65536:
+            flatfunc = R_DrawSpan_256;
+            break;
+         case 262144:
+            flatfunc = R_DrawSpan_512;
+            break;
+         default:
+            flatfunc = R_DrawSpan_64;
+      };
         
       // haleyjd: ?? - inconsequential
       // trans = swirling;

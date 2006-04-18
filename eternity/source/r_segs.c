@@ -570,9 +570,11 @@ void R_StoreWallRange(const int start, const int stop)
 
 #ifdef R_PORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
-      if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED)
+      if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED && 
+         frontsector->f_portal->type != R_TWOWAY)
          f_portalignore = true;
-      if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED)
+      if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED && 
+         frontsector->c_portal->type != R_TWOWAY)
          c_portalignore = true;
 #endif
       

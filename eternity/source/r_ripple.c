@@ -81,6 +81,9 @@ char *R_DistortedFlat(int flatnum)
    int leveltic = gametic;
    
    // built this tic?
+   // SoM: different flat sizes?
+   if(flatsize[flatnum] != 4096)
+      return W_CacheLumpNum(firstflat + flatnum, PU_STATIC);
 
    if(gametic != swirltic)
    {

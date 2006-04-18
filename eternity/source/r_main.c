@@ -419,7 +419,7 @@ void R_SetupViewScaling(void)
 void R_ExecuteSetViewSize (void)
 {
    int i;
-   
+
    setsizeneeded = false;
    
    R_SetupViewScaling();
@@ -446,6 +446,7 @@ void R_ExecuteSetViewSize (void)
       // sf: zooming
       origyslope[i] = FixedMul(yaspectmul, FixedDiv(viewwidth*zoom*(FRACUNIT/2), dy));
    }
+
    yslope = origyslope + (viewheight/2);
         
    for(i = 0; i < viewwidth; ++i)

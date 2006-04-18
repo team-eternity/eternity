@@ -520,14 +520,14 @@ static struct exlinespec
    { 341, "Stairs_BuildDownDoom" },
    { 342, "Stairs_BuildUpDoomSync" },
    { 343, "Stairs_BuildDownDoomSync" },
-
-   // SoM: linked portal types
-#ifdef R_LINKEDPORTALS
-   { 344, "Portal_LinkedCeiling" },
-   { 345, "Portal_LinkedFloor" },
-   { 346, "Portal_LinkedAnchorLine" },
-   { 347, "Portal_LinkedAnchorLineFloor" },
+#ifdef R_PORTALS
+   // SoM: two-way portals
+   { 344, "Portal_TwowayCeiling" },
+   { 345, "Portal_TwowayFloor" },
+   { 346, "Portal_TwowayAnchorLine" },
+   { 347, "Portal_TwowayAnchorLineFloor" },
 #endif
+
 #ifdef POLYOBJECTS
    { 348, "Polyobj_StartLine" },
    { 349, "Polyobj_ExplicitLine" },
@@ -539,6 +539,14 @@ static struct exlinespec
    { 355, "Polyobj_OR_RotateRight" },
    { 356, "Polyobj_RotateLeft" },
    { 357, "Polyobj_OR_RotateLeft" },
+#endif
+
+   // SoM: linked portal types
+#ifdef R_LINKEDPORTALS
+   { 358, "Portal_LinkedCeiling" },
+   { 359, "Portal_LinkedFloor" },
+   { 360, "Portal_LinkedAnchorLine" },
+   { 361, "Portal_LinkedAnchorLineFloor" },
 #endif
 };
 

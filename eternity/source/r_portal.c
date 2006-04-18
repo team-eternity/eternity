@@ -134,6 +134,46 @@ rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
    return ret;
 }
 
+
+
+
+//
+// R_GetAnchoredPortal
+//
+// Either finds a matching existing anchored portal matching the
+// parameters, or creates a new one. Used in p_spec.c.
+//
+rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
+{
+   rportal_t *rover, *ret;
+   cameraportal_t cam;
+
+   memset(&cam, 0, sizeof(cam));
+   cam.deltax = deltax;
+   cam.deltay = deltay;
+   cam.deltaz = deltaz;
+
+   for(rover = portals; rover; rover = rover->next)
+   {
+      if(rover->type != R_TWOWAY || memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+         continue;
+
+      return rover;
+   }
+
+   ret = R_CreatePortal();
+   ret->type = R_TWOWAY;
+   ret->data.camera = cam;
+
+   // haleyjd: temporary debug
+   ret->tainted = 0;
+
+   return ret;
+}
+
+
+
+
 //
 // R_GetSkyBoxPortal
 //
@@ -526,9 +566,9 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    fixed_t lastx, lasty, lastz;
 
 #ifdef R_LINKEDPORTALS
-   if(portal->type != R_ANCHORED && portal->type != R_LINKED)
+   if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && portal->type != R_LINKED)
 #else
-   if(portal->type != R_ANCHORED)
+   if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
 #endif
       return;
 
@@ -635,6 +675,7 @@ void R_RenderPortals(void)
             R_RenderSkyboxPortal(r);
             break;
          case R_ANCHORED:
+         case R_TWOWAY:
 #ifdef R_LINKEDPORTALS
          case R_LINKED:
 #endif

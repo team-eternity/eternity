@@ -109,6 +109,9 @@ byte      **texturecomposite;
 int       *flattranslation;             // for global animation
 int       *texturetranslation;
 
+// SoM: large flats
+int       *flatsize;
+
 // needed for pre-rendering
 fixed_t   *spritewidth, *spriteoffset, *spritetopoffset;
 
@@ -662,9 +665,14 @@ void R_InitFlats(void)
    
    flattranslation =
       Z_Malloc((numflats+1)*sizeof(*flattranslation), PU_STATIC, 0);
+
+   flatsize = Z_Malloc((numflats+1) * sizeof(*flatsize), PU_STATIC, 0);
    
    for(i=0 ; i<numflats ; i++)
+   {
       flattranslation[i] = i;
+      flatsize[i] = W_LumpLength(firstflat + i);
+   }
 }
 
 //
@@ -1119,7 +1127,8 @@ void R_FreeData(void)
    Z_Free(spritetopoffset);
    
    Z_Free(flattranslation);
-   
+   Z_Free(flatsize);
+
    Z_Free(main_tranmap);
 }
 

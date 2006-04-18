@@ -35,6 +35,7 @@ typedef enum
    R_ANCHORED,
    R_HORIZON,
    R_PLANE,
+   R_TWOWAY, // SoM: two-way non-linked anchored portals
 #ifdef R_LINKEDPORTALS
    R_LINKED, // SoM: interactive portals  
 #endif
@@ -91,6 +92,7 @@ typedef struct rportal_s
 
 rportal_t *R_GetSkyBoxPortal(mobj_t *camera);
 rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
+rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
 rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, fixed_t *floorz, fixed_t *ceilingz, short *floorlight, short *ceilinglight, fixed_t *floorxoff, fixed_t *flooryoff, fixed_t *ceilingxoff, fixed_t *ceilingyoff);
 rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta, short *lightlevel, fixed_t *xoff, fixed_t *yoff);
 

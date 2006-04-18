@@ -76,7 +76,12 @@ extern byte *dc_translation;
 extern fixed_t dc_translevel; // haleyjd: zdoom style trans level
 
 // Span blitting for rows, floor/ceiling. No Spectre effect needed.
-void R_DrawSpan(void);
+// BIG FLATS
+void R_DrawSpan_64(void);
+void R_DrawSpan_128(void);
+void R_DrawSpan_256(void);
+void R_DrawSpan_512(void);
+
 void R_DrawTLSpan(void);
 
 void R_InitBuffer(int width, int height);

@@ -122,6 +122,7 @@ typedef enum
    portal_horizon,
    portal_skybox,
    portal_anchored,
+   portal_twoway,
 #ifdef R_LINKEDPORTALS
    portal_linked
 #endif
@@ -2749,11 +2750,15 @@ void P_SpawnSpecials(void)
       case 297:
          P_SpawnPortal(&lines[i], portal_anchored, lines[i].special - 295);
          break;
-#endif
-#ifdef R_LINKEDPORTALS
       case 344:
       case 345:
-         P_SpawnPortal(&lines[i], portal_linked, lines[i].special - 344);
+         P_SpawnPortal(&lines[i], portal_twoway, lines[i].special - 344);
+         break;
+#endif
+#ifdef R_LINKEDPORTALS
+      case 358:
+      case 359:
+         P_SpawnPortal(&lines[i], portal_linked, lines[i].special - 358);
          break;
 #endif
       }
@@ -4044,7 +4049,39 @@ static void P_SpawnPortal(line_t *line,
 
       portal = R_GetAnchoredPortal(deltax, deltay, deltaz);
       break;
-#ifdef R_LINKEDPORTALS
+   case portal_twoway:
+      // two way and linked portals can only be applied to either the floor or ceiling.
+      if(line->special == 344)
+         anchortype = 346;
+      else
+         anchortype = 347;
+
+      frontsector = line->frontsector;
+      if(!frontsector) 
+         frontsector = line->backsector;
+
+      // find anchor line
+      for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+      {
+         // SoM 3-10-04: Two different anchor linedef codes so I can tag 
+         // two anchored portals to the same sector.
+         if(line == &lines[s] || lines[s].special != anchortype)          
+            continue;
+
+         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) - ((line->v1->x + line->v2->x) / 2);
+         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) - ((line->v1->y + line->v2->y) / 2);
+         deltaz = 0; /// ???
+         break;
+      }
+      if(s < 0)
+      {
+         C_Printf(FC_ERROR"No anchor line for portal.\n");
+         return;
+      }
+
+      portal = R_GetTwoWayPortal(deltax, deltay, deltaz);
+      break;
+/*#ifdef R_LINKEDPORTALS
    case portal_linked:
       // linked portals can only be applied to either the floor or ceiling.
       if(line->special == 344)
@@ -4077,7 +4114,7 @@ static void P_SpawnPortal(line_t *line,
 
       portal = R_GetLinkedPortal(deltax, deltay, deltaz, P_CreatePortalGroup(frontsector));
       break;
-#endif
+#endif*/
    default:
       I_Error("P_SpawnPortal: unknown portal type\n");
    }
