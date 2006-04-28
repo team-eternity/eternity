@@ -191,9 +191,8 @@ void D_ProcessEvents(void)
    {
       event_t *evt = events + eventtail;
       
-      // haleyjd 10/07/06: test -- changed responder order
-      if(!C_Responder(evt))
-         if(!MN_Responder(evt))
+      if(!MN_Responder(evt))
+         if(!C_Responder(evt))
             G_Responder(evt);
    }
 }
@@ -360,28 +359,27 @@ void D_PageDrawer(void)
    byte *t;
 
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
-   {
-      // haleyjd 08/15/02: handle Heretic pages
-      if(gameModeInfo->flags & GIF_PAGERAW)
-      {
-         t = (byte *)W_CacheLumpNum(l, PU_CACHE);
-         V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,t);
-         
-         if(gameModeInfo->hasAdvisory)
-         {
-            if(demosequence == 1)
-            {
-               l = W_GetNumForName("ADVISOR");
-               t = (byte *)W_CacheLumpNum(l, PU_CACHE);
-               V_DrawPatch(4, 160, &vbscreen, (patch_t *)t);
-            }
-         }
+   {      
+      t = W_CacheLumpNum(l, PU_CACHE);
 
-         return;
+      // haleyjd 08/15/02: handle Heretic pages
+      // haleyjd 04/22/06: use lump size of 64000 to distinguish raw pages.
+      // Valid fullscreen patch graphics should be larger than this.
+
+      if(W_LumpLength(l) == 64000)
+         V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT, t);
+      else
+         V_DrawPatch(0, 0, &vbscreen, (patch_t *)t);
+
+      if(gameModeInfo->hasAdvisory && demosequence == 1)
+      {
+         l = W_GetNumForName("ADVISOR");
+         t = W_CacheLumpNum(l, PU_CACHE);
+         V_DrawPatch(4, 160, &vbscreen, (patch_t *)t);
       }
-      
+              
       // SoM 2-4-04: ANYRES 
-      // TODO/FIXME: reimplement higher resolution titlescreen
+      // TODO/FIXME: reimplement higher resolution titlescreen?
       /*if(hires) // check for original title screen
       {
          long checksum = W_LumpCheckSum(l);
@@ -396,11 +394,6 @@ void D_PageDrawer(void)
             return;
          }
       }*/
-
-      // otherwise draw simple 320x200 pic
-      // sf: removed useless crap (purpose ???)
-      t = W_CacheLumpNum(l, PU_CACHE);
-      V_DrawPatch(0, 0, &vbscreen, (patch_t *)t);
    }
    else
       MN_DrawCredits();  
@@ -1781,8 +1774,9 @@ extern int levelFragLimit;
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
-        "Copyright 2005 James Haley and Steven McGranahan\n"
-        "http://www.doomworld.com/eternity\n\n"
+        "Copyright 2006 James Haley and Steven McGranahan\n"
+        "http://www.doomworld.com/eternity\n"
+        "\n"
         "This program is free software distributed under the terms of\n"
         "the GNU General Public License. See the file \"COPYING\" for\n"
         "full details. Commercial sale or distribution of this product\n"
@@ -1958,7 +1952,7 @@ static void D_DoomInit(void)
           version_time);    // killough 2/1/98
 #else
    // haleyjd: always provide version date/time
-   printf("\nBuilt on %s at %s\n", version_date, version_time);
+   printf("Built on %s at %s\n", version_date, version_time);
 #endif /* GAMEBAR */
 
    if(devparm)
@@ -1972,7 +1966,7 @@ static void D_DoomInit(void)
    // haleyjd: FIXME
    if(cdrom_mode)
    {
-#ifndef DJGPP
+#ifdef _MSC_VER
       mkdir("c:/doomdata");
 #else
       mkdir("c:/doomdata", 0);

@@ -1676,21 +1676,21 @@ thingtype EEMapSpotGravity {
 
 // Polyobject spots
 
-thingtype EEPolyobjAnchor {
+thingtype EEPolyObjAnchor {
   doomednum = 9300
   spawnstate = S_TNT1
   cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
   dehackednum = 154
 }
 
-thingtype EEPolyobjSpawnSpot {
+thingtype EEPolyObjSpawnSpot {
   doomednum = 9301
   spawnstate = S_TNT1
   cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
   dehackednum = 155
 }
 
-thingtype EEPolyobjSpawnSpotCrush {
+thingtype EEPolyObjSpawnSpotCrush {
   doomednum = 9302
   spawnstate = S_TNT1
   cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY

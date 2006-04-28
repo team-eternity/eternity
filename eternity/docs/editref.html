@@ -9,7 +9,7 @@ content="text/html; charset=iso-8859-1">
 
 <body bgcolor="#CECECE">
 
-<h2>Eternity Engine Editing Reference v1.81 -- 9/12/05</h2>
+<h2>Eternity Engine Editing Reference v1.82 -- 4/15/06</h2>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -105,7 +105,13 @@ content="text/html; charset=iso-8859-1">
             <li><a href="#line289">289: Portal transfer</a>
             </ul>
         <li><a href="#scripts">Section 14. Script Control Linedefs</a>
-        <li><a href="#genlines">Section 15. Detailed Generalized Linedef Specification</a>
+        <li><a href="#polyobj">Section 15. PolyObjects</a>
+            <ul>
+            <li><a href="#polyobj_create">15.1 Creating PolyObjects</a>
+            <li><a href="#polyobj_move">15.2 Moving PolyObjects</a>
+            <li><a href="#polyobj_door">15.3 PolyObject Doors</a>
+            </ul>
+        <li><a href="#genlines">Section 16. Detailed Generalized Linedef Specification</a>
             <ul>
             <li><a href="#ranges">Line ranges/nomenclature</a>
             <li><a href="#genfloors">Floors</a>
@@ -116,19 +122,26 @@ content="text/html; charset=iso-8859-1">
             <li><a href="#genstairs">Stairs</a>
             <li><a href="#gencrush">Crushers</a>
             </ul>
-        <li><a href="#paramlines">Section 16. Detailed Parameterized Linedef Specification</a>
+        <li><a href="#paramlines">Section 17. Detailed Parameterized Linedef Specification</a>
             <ul>
             <li><a href="#paramfloors">Floors</a>
             <li><a href="#paramceils">Ceilings</a>
             <li><a href="#paramdoors">Doors</a>
             <li><a href="#paramstairs">Stairs</a>
-            <li><a href="#parampolyobj">Polyobjects</a>
+            <li><a href="#parampolyobj">PolyObjects</a>
+            </ul>
+        <li><a href="#extradata">Section 18. ExtraData</a>
+            <ul>
+            <li><a href="#edintro">18.1 ExtraData Introduction</a>
+            <li><a href="#edthing">18.2 ExtraData Control Objects</a>
+            <li><a href="#edlines">18.3 ExtraData Control Linedefs</a>
+            <li>
             </ul>
         </ul>
     <li><a href="#part2">Part II Sector Types</a>
         <ul>
-        <li><a href="#sectors">Section 17. Regular sector types</a>
-        <li><a href="#gensectors">Section 18. Generalized sector types</a>
+        <li><a href="#sectors">Section 19. Regular sector types</a>
+        <li><a href="#gensectors">Section 20. Generalized sector types</a>
         </ul>
     <li><a href="#part3">Part III Linedef Flags</a>
     <li><a href="#part4">Part IV Thing Flags</a>
@@ -754,7 +767,7 @@ Tx0 = Texture copied and Type->0   Num = Numeric Model
 TxTy = Texture and Type copied
 </pre>
 
-There are currently sixteen types of parameterized floor specials, each 
+There are currently seventeen types of parameterized floor specials, each 
 performing a different type of floor action. See the 
 <a href="#paramfloors">Parameterized Floor Types</a> section for full information
 on how to use these specials.
@@ -864,6 +877,20 @@ boundary of the sector, in the ceiling direction. Instant motion
 is not possible with this type. In the case that there is no
 surrounding texture the motion is to -32000 or +32000 depending
 on direction.
+<br>
+<li> Up/Down Absolute Param
+<br>
+Only available to parameterized ceiling specials, this target moves 
+the ceiling in its indicated direction by the number of units provided
+as a special argument.<br>
+<br>
+<li> To Absolute Height
+<br>
+Only available to parameterized ceiling specials, this target moves the
+ceiling to an exact height which is provided as a parameter. This ceiling
+type always moves either up or down to the given height depending on
+whether it is higher or lower than the ceiling's current position. This
+means that instantaneous motion is not possible.
 </ul>
  
 
@@ -978,6 +1005,36 @@ Tx = Texture copied only           Trg = Trigger Model
 Tx0 = Texture copied and Type->0   Num = Numeric Model
 TxTy = Texture and Type copied
 </pre>
+
+There are currently seventeen types of parameterized ceiling specials, each 
+performing a different type of ceiling action. See the 
+<a href="#paramceils">Parameterized Ceiling Types</a> section for full 
+information on how to use these specials.
+<pre>
+Parameterized Ceiling Types
+-------------------------------------------------------------------------------
+#        Class   Function                           ExtraData Name
+
+323      Param   Up to Highest Neighbor Ceiling     Ceiling_RaiseToHighest
+324      Param   Up to HnC Instant                  Ceiling_ToHighestInstant
+325      Param   Up to Nearest Neighbor Ceiling     Ceiling_RaiseToNearest
+326      Param   Down to Nearest Neighbor Ceiling   Ceiling_LowerToNearest
+327      Param   Up to Lowest Neighbor Ceiling      Ceiling_RaiseToLowest
+328      Param   Down to Lowest Neighbor Ceiling    Ceiling_LowerToLowest
+329      Param   Up to Highest Neighbor Floor       Ceiling_RaiseToHighestFloor
+330      Param   Down to Highest Neighbor Floor     Ceiling_LowerToHighestFloor
+331      Param   Down to Floor Instant              Ceiling_ToFloorInstant
+332      Param   Down to Floor                      Ceiling_LowerToFloor
+333      Param   Up Abs Shortest Upper Texture      Ceiling_RaiseByTexture
+334      Param   Down Abs Shortest Upper Texture    Ceiling_LowerByTexture
+335      Param   Up Absolute Param                  Ceiling_RaiseByValue
+336      Param   Down Absolute Param                Ceiling_LowerByValue
+337      Param   To Absolute Height                 Ceiling_MoveToValue
+338      Param   Up Absolute Param, Instant         Ceiling_RaiseInstant
+339      Param   Down Absolute Param, Instant       Ceiling_LowerInstant
+
+</pre>
+
 <a href="#contents">Return to Table of Contents</a>
  
 
@@ -2567,10 +2624,10 @@ also appear on the line in sector A with special 289, giving it a window-like ef
 <hr width="75%" align="left">
 </a>
 <br>
-NOTE for Eternity v3.31 beta 7:<br>
-These linedef types are not currently usable, but are reserved
-for future use once the Small scripting language is fully
-implemented.<br>
+These linedefs are used to start Small Levelscripts. See the
+<a href="small_usagedoc.html">Small Usage Documentation</a> for full information
+on how to use these linedefs along with a Small script to add dynamic actions to
+your maps.
 <br>
 <pre>
 280 WR Start script with tag number
@@ -2589,12 +2646,351 @@ in that manner. Crossing from the second side will have no
 effect.<br>
 <br>
 <a href="#contents">Return to Table of Contents</a>
- 
+
+<p>
+<a name="polyobj">
+<hr width="75%" align="left">
+<b>Section 15. PolyObjects</b>
+<hr width="75%" align="left">
+</a>
+<br>
+PolyObjects are special sets of one-sided linedefs which, unlike any other
+lines, can be moved on the map during gameplay. Unlike the Hexen and zdoom
+implementation of PolyObjects, Eternity does not restrict these objects to
+one per subsector, and they are also allowed to move any distance from their
+spawn point, even across subsector boundaries. The only real restriction is
+that PolyObjects should remain separated by a plane from all other surfaces,
+including other PolyObjects and normal walls.
+<br><br>
+PolyObjects fully clip normal objects such as the player and enemies, optionally
+doing crushing damage depending upon the type of spawn spot used. They also
+block bullet tracers and monsters' lines of site. They do not, however, clip
+sound propagation, so it may be necessary to use sound blocking lines near areas
+where PolyObjects are meant to function as a normal wall until they move.
+<br><br>
+Although Eternity does allow PolyObjects to move between different subsectors,
+this will only work properly if the subsectors on both sides of a line have the
+same properties (floor & ceiling heights, light level, and flat) -- otherwise,
+temporary rendering oddities such as bleeding or disappearing lines may occur.
+Also, the proper rendering of PolyObjects in certain situations is dependent
+upon how the BSP builder splits sectors into subsectors. To get PolyObjects to
+render properly in areas where they may partially occlude normal walls, such as
+when functioning as doors, it may be necessary to "tweak" the area they are in, 
+particularly by enclosing them within a convex sector made of invisible 2S lines
+(this was common practice for sliding door PolyObjects in Hexen as well).
+However, Eternity does not require a "PolyObject-aware" node builder.
+<br><br>
+Finally, unlike zdoom, Eternity allows PolyObjects to be used in DOOM-format
+maps via the use of <a href="#extradata>ExtraData</a>.  See the subsections
+below for more information on how to create and move PolyObjects.
+<br><br>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="polyobj_create">
+<hr width="50%" align="left">
+<b>15.1 Creating PolyObjects</b>
+<hr width="50%" align="left">
+</a>
+<br>
+PolyObjects are a combination of a set of 1S lines, which are typically placed
+in a "control sector" area outside of the main map, and exactly two mapthings:
+one spawn spot, and one anchor point. There are two different methods for
+grouping lines into a PolyObject.
+
+<p>
+Method 1: The Polyobj_StartLine Special
+<br><br>
+The Polyobj_StartLine special marks the first line in a PolyObject which is made
+up of a cyclic set of linedefs (that is, each line "points toward" the
+next line, ending at the first vertex of the first line).
+<br><br>
+Diagrammatic Example:
+<pre>
+    [Control Sector]                     [Main Map Area]
+    +-------------------+          +-------------------------------+
+    |                   |          |                               |
+    |        |          |          |                               |
+    |      +--->+       |          |                               |
+    |      ^    |       |          |                               |
+    |      |    |_      |          |                               |
+    |   A -| B  |       |          |              C                |
+    |      |    v       |          |                               |
+    |      +<---+       |          |                               |
+    |         |         |          |                               |
+    |                   |          |                               |
+    +-------------------+          +-------------------------------+
+</pre>
+Assume that the linedef A is assigned the Polyobj_StartLine special and
+has argument #1 set to "1" -- this is its PolyObject ID number, which must
+be unique amongst all on the map, and must be a number greater than zero.
+<br><br>
+Starting from line A, the engine will go from vertex to vertex, adding
+the first line found which shares the current line's second vertex as its
+first vertex. In this example, since the object is closed as is required,
+the process will end at the first vertex of line A, and there will be
+four lines in the PolyObject (note that unlike Hexen, there is NO limit to
+the number of lines that can be placed in one PolyObject).
+<br><br>
+Now, once the lines are added, it is necessary to define the control objects.
+Points B and C are the two required objects:
+<ul>
+<li> B: This is the PolyObject's anchor point (type EEPolyObjAnchor with
+     DoomEd #9300). It defines the point relative to which all the lines in
+     the PolyObject will be translated to the spawn point. This object's
+     angle must be set to the same value as the StartLine's first argument
+     (the PolyObject ID). There must be one and only one of these objects
+     for each PolyObject ID.
+<li> C: This is the PolyObject's spawn point (one of EEPolyObjSpawnSpot
+     (9301) or EEPolyObjSpawnSpotCrush (9302)). It defines the point where
+     the PolyObject will initially spawn on the map. The anchor point will
+     be translated to this exact location, and all lines in the PolyObject
+     will maintain their relative positions to it. This object must also
+     have its angle field set to the same value as both the StartLine's
+     first argument and the anchor point's angle field. There must be one
+     and only one of these objects for each PolyObject ID. Use 9302 to
+     cause the PolyObject to do crushing damage to things that block it 
+     while it is in motion.
+</ul>
+
+Note that when you use this method, the other lines belonging to the PolyObject
+can be given their own line specials, including ones which affect the PolyObject
+itself. When the player presses the PolyObject, the specials will work as 
+expected.
+<br><br>
+The complete arguments to Polyobj_StartLine are as follows:
+<ul>
+<li> polyobj_id : the unique ID number (greater than zero) of the PolyObject
+<li> mirror_id : the ID number of a PolyObject that you want to mirror every
+     action that affects this PolyObject. This number cannot be the same as
+     the PolyObject's own ID.
+<li> sndseq_num : Number of an EDF sound sequence that this PolyObject will
+     use when moving. NOTE: Sound sequences have not yet been implemented, so
+     this argument will do nothing and is reserved for future use. Leave it
+     zero for now.
+</ul>
+In order to use this line special in a DOOM-format map, it is necessary to use
+<a href="#extradata">ExtraData</a>. In that case, you must give the line you
+want to have the Polyobj_StartLine special the ExtraData linedef control special
+(#270) instead, and then specify Polyobj_StartLine and its arguments in its
+corresponding ExtraData linedef record.
+
+<p>
+Method 2: The Polyobj_ExplicitLine Special
+<br><br>
+The Polyobj_ExplicitLine special demarcates every line that will be added to
+a PolyObject and the exact order in which the lines will be added. This affords
+a bit more flexibility in the construction of PolyObjects at the price of not
+allowing any other line specials to be placed on the object itself.
+<br><br>
+Diagrammatic Example:
+<pre>
+    [Control Sector]                     [Main Map Area]
+    +-------------------+          +-------------------------------+
+    |        2          |          |                               |
+    |        |          |          |                               |
+    |      +--->+       |          |                               |
+    |      ^    |       |          |                               |
+    |      |    |_ 4    |          |                               |
+    |   1 -| B  |       |          |              C                |
+    |      |    v       |          |                               |
+    |      +<---+       |          |                               |
+    |         |         |          |                               |
+    |         3         |          |                               |
+    +-------------------+          +-------------------------------+
+</pre>
+Assume that the linedefs labeled 1 through 4 are assigned the 
+Polyobj_ExplicitLine special, all have argument #1 set to "1" -- this is its 
+PolyObject ID number, which must be unique amongst all on the map, and must be a
+number greater than zero -- and all have argument #2 set to the integer values
+1 through 4, corresponding to their labels in the diagram.
+<br><br>
+The game engine will search through all linedefs in the entire map for
+ones with the current PolyObject ID in argument #1 and a value greater than
+zero in argument #2. The lines will be collected and then sorted by the value
+in their second argument and added to the PolyObject in that order. Note that
+unlike Hexen, it is not necessary for the numbers in the second argument to
+be sequential (ie, a sequence such as { 5, 10, 15, 20 } would also work).
+<br><br>
+Now, once the lines are added, it is necessary to define the control objects.
+This is exactly the same as it is for the StartLine special above.
+<ul>
+<li> B: This is the PolyObject's anchor point (type EEPolyObjAnchor with
+     DoomEd #9300). It defines the point relative to which all the lines in
+     the PolyObject will be translated to the spawn point. This object's
+     angle must be set to the same value as the ExplicitLines' first argument
+     (the PolyObject ID). There must be one and only one of these objects
+     for each PolyObject ID.
+<li> C: This is the PolyObject's spawn point (one of EEPolyObjSpawnSpot
+     [9301] or EEPolyObjSpawnSpotCrush [9302]). It defines the point where
+     the PolyObject will initially spawn on the map. The anchor point will
+     be translated to this exact location, and all lines in the PolyObject
+     will maintain their relative positions to it. This object must also
+     have its angle field set to the same value as both the ExplicitLines'
+     first argument and the anchor point's angle field. There must be one
+     and only one of these objects for each PolyObject ID. Use 9302 to
+     cause the PolyObject to do crushing damage to things that block it 
+     while it is in motion.
+</ul>
+
+The complete arguments to Polyobj_ExplicitLine are as follows:
+<ul>
+<li> polyobj_id : the unique ID number (greater than zero) of the PolyObject
+<li> number : specifies the order in which the line will be added to the
+     PolyObject. This number should be unique amongst all lines to be added
+     to the same object, and must be a value greater than zero.
+<li> mirror_id : the ID number of a PolyObject that you want to mirror every
+     action that affects this PolyObject. This number cannot be the same as
+     the PolyObject's own ID.
+<li> sndseq_num : Number of an EDF sound sequence that this PolyObject will
+     use when moving. NOTE: Sound sequences have not yet been implemented, so
+     this argument will do nothing and is reserved for future use. Leave it
+     zero for now.
+</ul>
+In order to use this line special in a DOOM-format map, it is necessary to use
+<a href="#extradata">ExtraData</a>. In that case, you must give the lines you
+want to have the Polyobj_ExplicitLine special the ExtraData linedef control special
+(#270) instead, and then specify Polyobj_ExplicitLine and its arguments in all the
+corresponding ExtraData linedef records.
+<br><br>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="polyobj_move">
+<hr width="50%" align="left">
+<b>15.2 Moving PolyObjects</b>
+<hr width="50%" align="left">
+</a>
+<br>
+There are two types of basic motion which PolyObjects can currently undergo:
+translation and rotation. Using "override" actions, it is possible to combine
+the two to have a PolyObject which rotates while moving in the xy plane.
+
+<p>
+Translating PolyObjects
+<br><br>
+To move a PolyObject in the xy plane, use one of the following line specials:
+<ul>
+<li> Polyobj_Move
+<li> Polyobj_OR_Move
+</ul>
+
+Both of these line specials use the same arguments:<br>
+<ul>
+<li> polyobj_id : Specifies which PolyObject to intially move. If the object
+     is already moving, nothing will happen unless the action is 
+     Polyobj_OR_Move. If this object has a mirror, the same action will be
+     recursively applied to every mirror PolyObject, reversing the angle of
+     movement for each subsequent mirror.
+<li> speed : Speed of the motion in eighths of a unit per tic.
+<li> angle : Byte angle specifying the direction of motion. To convert from 
+     degrees to byte angles, use this formula:<br>
+     byteangle = (degrees * 256) / 360<br>
+     Round or chop the result to an integer. 0 means East, 64 means North, 128
+     means West, and 192 means South.
+<li> dist : The total distance to move the object in units.
+</ul>
+
+All PolyObjects will inflict thrust on objects which block them with force
+proportional to the speed of motion. If the PolyObject was spawned with the
+EEPolyObjSpawnSpotCrush object (DoomEd num 9302), then if the object does
+not fit at the location it is being pushed toward, it will be damaged 3
+hitpoints per tic (105 damage per second).
+
+
+<p>
+Rotating PolyObjects
+<br><br>
+To rotate a PolyObject, use one of the following line specials:
+<ul>
+<li> Polyobj_RotateRight     
+<li> Polyobj_OR_RotateRight  
+<li> Polyobj_RotateLeft      
+<li> Polyobj_OR_RotateLeft   
+</ul>
+
+All these line specials use the same arguments:<br>
+<ul>
+<li> polyobj_id : Specifies which PolyObject to initially rotate. If the
+     object is already moving, nothing will happen unless the action is
+     Polyobj_OR_RotateRight or Polyobj_OR_RotateLeft. If this object has
+     a mirror, the same action will be recursively applied to every mirror
+     PolyObject, reversing the direction of rotation for each subsequent
+     mirror.
+<li> aspeed : Angular speed of the rotation in byte angles per tic. Same as
+     for the "angle" parameter to Move actions.
+<li> adist : Angular distance to rotate in byte angles. Same as for aspeed,
+     except with two special caveats:
+     <ul>
+     <li> The byte angle value 0 (zero) means to rotate exactly 360 degrees.
+     <li> The byte angle value 255 means to rotate perpetually. This type
+          of action never ends and thus only override actions can 
+          subsequently be applied to the PolyObject.
+     </ul>
+</ul>
+
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="polyobj_move">
+<hr width="50%" align="left">
+<b>15.3 PolyObject Doors</b>
+<hr width="50%" align="left">
+</a>
+<br>
+There are two distinct types of actions provided to allow PolyObjects to
+function as doors.  There are no override versions of door actions, and
+applying other overrides to currently moving PolyObject doors will most
+likely cause the doors to malfunction and move erratically.
+<br><br>
+All PolyObject doors accept a delay parameter, and this specifies the 
+amount of time the door will wait before closing. A door which is closing
+will reopen if blocked by an object.
+
+<ul>
+<li> Polyobj_DoorSlide<br>
+     This action creates a sliding door from a PolyObject and takes the 
+     following arguments:
+     <ul>
+     <li> polyobj_id : The ID number of PolyObject to affect. Mirroring
+          works for doors as well and is the most common use for PolyObject
+          mirroring.
+     <li> speed : Speed of the door's opening and closing in eighths of a
+          unit per tic.
+     <li> angle : Byte angle of door's initial motion. This angle is reversed
+          when the door closes.
+     <li> dist : Distance the door moves when opening, and again when closing,
+          in units.
+     <li> delay : Amount of time before the door attempts to close after
+          fully opening in tics. If the door is forced to reopen due to being
+          blocked, it will also wait this amount of time before once again
+          closing.
+     </ul>
+     
+<li> Polyobj_DoorSwing<br>
+     This action creates a swinging door from a PolyObject and takes the
+     following arguments:
+     <ul>
+     <li> polyobj_id : The ID number of PolyObject to affect. Mirroring works
+          for doors as well and is the most common use for PolyObject
+          mirroring.
+     <li> aspeed : Angular speed in byte angles per tic.
+     <li> adist : Angular distance to rotate when opening, and again but in the
+          opposite direction when closing. 
+     <li> delay : Amount of time before the door attempts to close after fully
+          opening in tics. If the door is forced to reopen due to being blocked,
+          it will also wait this amount of time before once again closing.
+     </ul>
+     Swinging doors currently only rotate left. A right-rotating swinging
+     door special will be added in the near future.
+</ul>
+
+<a href="#contents">Return to Table of Contents</a>
 
 <p>
 <a name="genlines">
 <hr width="75%" align="left">
-<b>Section 15. Detailed Generalized Linedef Specification</b>
+<b>Section 16. Detailed Generalized Linedef Specification</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -2929,7 +3325,7 @@ Notes:
 <p>
 <a name="paramlines">
 <hr width="75%" align="left">
-<b>Section 16. Detailed Parameterized Linedef Specification</b>
+<b>Section 17. Detailed Parameterized Linedef Specification</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -2999,6 +3395,71 @@ height : An integer number of units, either the amount to
          the latter case.
 ------------------------------------------------------------------------------
 
+<a name="paramceils">Parameterized Ceiling Types</a>
+------------------------------------------------------------------------------
+#    Function                           ExtraData Name
+
+323  Up to Highest Neighbor Ceiling     Ceiling_RaiseToHighest
+324  Up to HnC Instant                  Ceiling_ToHighestInstant
+325  Up to Nearest Neighbor Ceiling     Ceiling_RaiseToNearest
+326  Down to Nearest Neighbor Ceiling   Ceiling_LowerToNearest
+327  Up to Lowest Neighbor Ceiling      Ceiling_RaiseToLowest
+328  Down to Lowest Neighbor Ceiling    Ceiling_LowerToLowest
+329  Up to Highest Neighbor Floor       Ceiling_RaiseToHighestFloor
+330  Down to Highest Neighbor Floor     Ceiling_LowerToHighestFloor
+331  Down to Floor Instant              Ceiling_ToFloorInstant
+332  Down to Floor                      Ceiling_LowerToFloor
+333  Up Abs Shortest Upper Texture      Ceiling_RaiseByTexture
+334  Down Abs Shortest Upper Texture    Ceiling_LowerByTexture
+335  Up Absolute Param                  Ceiling_RaiseByValue
+336  Down Absolute Param                Ceiling_LowerByValue
+337  To Absolute Height                 Ceiling_MoveToValue
+338  Up Absolute Param, Instant         Ceiling_RaiseInstant
+339  Down Absolute Param, Instant       Ceiling_LowerInstant
+
+Parameters
+---------------------------------------------------------------
+Ceiling_RaiseToHighest       tag, speed, change
+Ceiling_ToHighestInstant     tag, change, crush
+Ceiling_RaiseToNearest       tag, speed, change
+Ceiling_LowerToNearest       tag, speed, change, crush
+Ceiling_RaiseToLowest        tag, speed, change
+Ceiling_LowerToLowest        tag, speed, change, crush
+Ceiling_RaiseToHighestFloor  tag, speed, change
+Ceiling_LowerToHighestFloor  tag, speed, change, crush
+Ceiling_ToFloorInstant       tag, change, crush
+Ceiling_LowerToFloor         tag, speed, change, crush
+Ceiling_RaiseByTexture       tag, speed, change
+Ceiling_LowerByTexture       tag, speed, change, crush
+Ceiling_RaiseByValue         tag, speed, height, change
+Ceiling_LowerByValue         tag, speed, height, change, crush
+Ceiling_MoveToValue          tag, speed, height, change, crush
+Ceiling_RaiseInstant         tag, height, change
+Ceiling_LowerInstant         tag, height, change, crush
+
+Values
+---------------------------------------------------------------
+tag    : Tag of the sector(s) to affect. A tag of zero means to
+         affect the sector on the second side of the line.
+speed  : Speed of ceiling in eighths of a unit per tic.
+change : This parameter takes the following values:
+         0 : No texture or type change.
+         1 : Copy texture, zero type; trigger model.
+         2 : Copy texture, zero type; numeric model.
+         3 : Copy texture, preserve type; trigger model.
+         4 : Copy texture, preserve type; numeric model.
+         5 : Copy texture and type; trigger model.
+         6 : Copy texture and type; numeric model.
+crush  : Amount of crushing damage ceiling inflicts at each
+         crushing event (when gametic % 4 = 0). If this
+         amount is less than or equal to zero, no crushing
+         damage is done.
+height : An integer number of units, either the amount to 
+         move the floor by or the exact z coordinate to move
+         the floor toward. Negative numbers are valid for 
+         the latter case.
+------------------------------------------------------------------------------
+
 <a name="paramdoors">Parameterized Door Types</a>
 ------------------------------------------------------------------------------
 #    Function                     ExtraData Name
@@ -3030,6 +3491,159 @@ lighttag  : Tag used to determine what sector will receive the
             BOOM dynamic door light effect when this door opens
             or closes.
 countdown : Delay before action occurs in tics.
+------------------------------------------------------------------------------
+
+<a name="paramstairs">Parameterized Stair Types</a>
+------------------------------------------------------------------------------
+#    Function                            ExtraData Name
+
+340  Build stairs up, DOOM method        Stairs_BuildUpDoom
+341  Build stairs down, DOOM method      Stairs_BuildDownDoom
+342  Build stairs up sync*, DOOM method  Stairs_BuildUpDoomSync
+343  Build stairs dn sync*, DOOM method  Stairs_BuildDownDoomSync
+
+* Synchronized stairs have each step move at a different speed so that all the
+  steps reach the destination height at the same time. This stair building
+  style is only available with these parameterized line types.
+
+Parameters
+---------------------------------------------------------------
+Stairs_BuildUpDoom        tag, speed, stepsize, delay, reset
+Stairs_BuildDownDoom      tag, speed, stepsize, delay, reset
+Stairs_BuildUpDoomSync    tag, speed, stepsize, delay, reset
+Stairs_BuildDownDoomSync  tag, speed, stepsize, delay, reset
+
+Values
+---------------------------------------------------------------
+tag       : Tag of first sector to raise or lower as a step.
+            When the stair building method is DOOM, subsequent
+            steps are found by searching across two-sided
+            lines where the first side belongs to the current
+            sector and the floor texture is the same. The
+            Hexen stair building method is not yet supported.
+speed     : Speed of steps in eights of a unit per tic. If the
+            build style is synchronized, only the first step
+            moves at this speed. Other steps will move at a
+            speed which allows them to reach their 
+            destination height at the same time.
+stepsize  : Step size in eighths of a unit.
+delay     : Delay time in tics before stair building begins.
+reset     : If greater than zero, the stairs will wait this
+            amount of time in tics after completely building
+            and will then reset by repeating the same stair
+            building action but in the reverse direction. If
+            zero, the stairs will never reset.
+------------------------------------------------------------------------------
+
+<a name="parampolyobj">Parameterized PolyObject Types</a>
+------------------------------------------------------------------------------
+#    Function                            ExtraData Name
+
+348  Marks first line in PolyObject*     Polyobj_StartLine
+349  Explicitly includes a line*         Polyobj_ExplicitLine
+350  Open PolyObject as sliding door     Polyobj_DoorSlide
+351  Open PolyObject as swinging door    Polyobj_DoorSwing
+352  Move PolyObject in xy plane         Polyobj_Move
+353  Move PolyObject w/override**        Polyobj_OR_Move
+354  Rotate PolyObject right             Polyobj_RotateRight
+355  Rotate PolyObject right w/override  Polyobj_OR_RotateRight
+356  Rotate PolyObject left              Polyobj_RotateLeft
+357  Rotate PolyObject left w/override   Polyobj_OR_RotateLeft
+
+* There are two different methods of creating a PolyObject. In the first,
+  the "first" line is given the Polyobj_StartLine special, and subsequent
+  lines are added to the PolyObject by following segs from vertex to vertex.
+  To use this, all the lines around the PolyObject must run in the same
+  direction, and the last line must end at the same vertex which starts the
+  first line (in other words, it must be closed).
+  
+  With the second method, every line to be included must be given the
+  Polyobj_ExplicitLine special and must be given a linenum param which is
+  unique amongst all lines that will added to that polyobject. Polyobjects
+  of this sort should also be closed for proper rendering, but the game
+  engine cannot and will not verify that this is the case.
+  
+  Only PolyObjects created with the Polyobj_StartLine method can have other
+  line specials on the PolyObject's lines themselves.
+
+** Override types will take effect even if an action is already affecting the
+  specified polyobject. Normal actions will fail in this case.
+
+Parameters
+------------------------------------------------------------------
+Polyobj_StartLine       polyobj_id, mirror_id, sndseq_id
+Polyobj_ExplicitLine    polyobj_id, linenum, mirror_id, sndseq_id
+Polyobj_DoorSlide       polyobj_id, speed, angle, dist, delay
+Polyobj_DoorSwing       polyobj_id, aspeed, adist, delay
+Polyobj_Move            polyobj_id, speed, angle, dist
+Polyobj_OR_Move         polyobj_id, speed, angle, dist
+Polyobj_RotateRight     polyobj_id, aspeed, adist
+Polyobj_OR_RotateRight  polyobj_id, aspeed, adist
+Polyobj_RotateLeft      polyobj_id, aspeed, adist
+Polyobj_OR_RotateLeft   polyobj_id, aspeed, adist
+
+Values
+---------------------------------------------------------------
+polyobj_id : ID number of the PolyObject of which this line is
+             a part. PolyObject ID numbers are defined in the
+             angle field of their EEPolyObjSpawnSpot object
+             (DoomEd numbers 9301 or 9302). Every PolyObject
+             must be given a valid unique ID number greater
+             than zero.
+mirror_id  : The ID number of a PolyObject that wants to mirror
+             every action that this PolyObject makes. This
+             number cannot refer to the self-same PolyObject,
+             nor should PolyObjects attempt to mirror each
+             other in a cycle since this will create problems
+             with override actions. Angle of motion is always
+             reversed when applying an action to a mirroring
+             PolyObject. If a mirror is already in motion for
+             a non-override action, the mirror will not be
+             affected even if the main object was moved. Mirror
+             polyobjects can themselves define a mirror, and
+             an action will affect all mirroring polyobjects
+             in the chain.
+sndseq_id  : Reserved for future use, currently has no effect.
+             Will be used to select the EDF sound sequence this
+             PolyObject uses when moving.
+linenum    : For Polyobj_ExplicitLine only, specifies the
+             order in which lines should be added to the
+             PolyObject. Each line must have a number greater
+             than zero which is unique within all lines that
+             belong to that PolyObject. Although, unlike Hexen,
+             there is no requirement that the numbers be in
+             consecutive order or that they start at 1.
+speed      : Linear speed of PolyObject motion in eighths of a
+             unit per tic.
+angle      : Byte angle of linear motion. *
+dist       : Total linear distance to move in units.
+delay      : Time to wait before closing in tics.
+aspeed     : Byte angle specifying speed in degrees per tic. *
+adist      : Byte angle specifying total angular distance to
+             rotate. *, **
+---------------------------------------------------------------
+
+* Byte angles follow this system:
+    0 =   0 degrees (East)
+   64 =  90 degrees (North)
+  128 = 180 degrees (West)
+  192 = 270 degrees (South)
+  
+  To convert from degrees to byte angles, use the following calculation:
+  
+  byteangle = (degrees * 256) / 360
+ 
+  Chop or round the result to an integer.
+  
+  Valid byte angles fall between 0 and 255, so adjust any angles less than
+  0 or greater than or equal to 360 before performing this conversion.
+  
+** For the adist parameter to Polyobj_Rotate-type specials (excluding
+  Polyobj_DoorSwing), the values 0 and 255 have the following special
+  meanings:
+  0   == The PolyObject will rotate exactly 360 degrees.
+  255 == The PolyObject will rotate perpetually.
+  All other byte angle values have their normal meaning.
 ------------------------------------------------------------------------------
 </pre>
 <a href="#contents">Return to Table of Contents</a>

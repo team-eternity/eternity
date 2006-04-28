@@ -559,7 +559,7 @@ gameinfo_t giDoomCommercial =
 gameinfo_t giHereticSW =
 {
    Game_Heretic,     // type
-   GIF_PAGERAW | GIF_SHAREWARE | GIF_MNBIGFONT, // flags
+   GIF_SHAREWARE | GIF_MNBIGFONT, // flags
 
    HTICRESWAD,       // resourceFmt
 
@@ -640,7 +640,7 @@ gameinfo_t giHereticSW =
 gameinfo_t giHereticReg =
 {
    Game_Heretic,     // type   
-   GIF_PAGERAW | GIF_MNBIGFONT, // flags
+   GIF_MNBIGFONT,    // flags
 
    HTICRESWAD,       // resourceFmt
 

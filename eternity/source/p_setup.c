@@ -599,11 +599,10 @@ void P_LoadHexenLineDefs(int lump)
 
       ld->flags = SHORT(mld->flags);
 
-      // haleyjd 02/22/06: ensure the special and args won't be sign-extended
-      ld->special = ((short)mld->special) & 0xFF;
+      ld->special = mld->special;
       
       for(argnum = 0; argnum < 5; ++argnum)
-         ld->args[argnum] = ((long)mld->args[argnum]) & 0xFF;
+         ld->args[argnum] = mld->args[argnum];
 
       ld->tag = 0;
 

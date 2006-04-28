@@ -361,7 +361,7 @@ void MN_DrawCredits(void)
               FC_HI "Special thanks:" FC_NORMAL " Julian Aubourg,\n"
               "         Joel Murdoch, Anders Astrand\n"
               "\n"
-              "Copyright(C) 2005 J. Haley, S. McGranahan,\n"
+              "Copyright(C) 2006 J. Haley, S. McGranahan,\n"
               "         S. Howard, et al.\n"              
               FC_HI"         http://doomworld.com/eternity/",
               10, gameModeInfo->creditY);
@@ -373,24 +373,21 @@ void MN_HelpDrawer(void)
    {
       helpscreens[viewing_helpscreen].Drawer();   // call drawer
    }
-   else if(gameModeInfo->flags & GIF_PAGERAW)
-   {
-      // haleyjd: heretic support
-      byte *raw;
-
-      raw = W_CacheLumpNum(helpscreens[viewing_helpscreen].lumpnum,
-                           PU_CACHE);
-      V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,raw);
-   }
    else
    {
-      patch_t *patch;
+      // haleyjd: support raw lumps
+      byte *raw;
+      int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
+
+      raw = W_CacheLumpNum(helpscreens[viewing_helpscreen].lumpnum, PU_CACHE);
+
+      // haleyjd 04/22/06: use lump size of 64000 to distinguish raw screens.
+      // Any valid full-screen patch graphic should be larger.
+      if(W_LumpLength(lumpnum) == 64000)
+         V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT, raw);
+      else
+         V_DrawPatch(0, 0, &vbscreen, (patch_t *)raw);
       
-      // load lump
-      patch = W_CacheLumpNum(helpscreens[viewing_helpscreen].lumpnum,
-                             PU_CACHE);
-      // display lump
-      V_DrawPatch(0, 0, &vbscreen, patch);
    }
 }
 

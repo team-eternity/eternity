@@ -100,6 +100,7 @@ static patch_t *skulls[2];
 // haleyjd 02/04/06: small menu pointer
 #define NUMSMALLPTRS 5
 static patch_t *smallptrs[NUMSMALLPTRS];
+static short smallptr_dims[2]; // 0 = width, 1 = height
 static int smallptr_idx;
 static int smallptr_dir = 1;
 static int smallptr_coords[2][2];
@@ -285,10 +286,10 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
 
       // haleyjd 02/04/06: set coordinates for small pointers
       // left pointer:
-      smallptr_coords[0][0] = item_x - 9;
-      smallptr_coords[0][1] = y + item_height / 2 - 4;
+      smallptr_coords[0][0] = item_x - (smallptr_dims[0] + 1);
+      smallptr_coords[0][1] = y + ((item_height - smallptr_dims[1]) >> 1);
       // right pointer:
-      smallptr_coords[1][0] = item_x + desc_width + 2;
+      smallptr_coords[1][0] = item_x + desc_width + 1;
       smallptr_coords[1][1] = smallptr_coords[0][1];
    }
 
@@ -655,6 +656,11 @@ void MN_Init(void)
 
       smallptrs[i] = W_CacheLumpName(name, PU_STATIC);
    }
+
+   // get width and height from first patch
+   smallptr_dims[0] = SHORT(smallptrs[0]->width);
+   smallptr_dims[1] = SHORT(smallptrs[0]->height);
+
    
    // load slider gfx
    
@@ -1376,6 +1382,9 @@ static void MN_BoxSetDimensions(box_widget *box)
    // add 9 to width and 8 to height to account for box border
    box->width  += 9;
    box->height += 8;
+
+   // 04/22/06: add space for a small menu ptr
+   box->width += smallptr_dims[0] + 2;
 }
 
 //
@@ -1404,7 +1413,7 @@ static void MN_BoxWidgetDrawer(void)
    curname = box->item_names[0];
 
    // step out from borders (room was left in width, height calculations)
-   x += 4;
+   x += 4 + smallptr_dims[0] + 2;
    y += 4;
 
    // write title
@@ -1417,13 +1426,20 @@ static void MN_BoxWidgetDrawer(void)
    while(curname)
    {
       int color = gameModeInfo->unselectColor;
+      int height = V_StringHeight(curname);
       
       if(box->selection_idx == i)
+      {
          color = gameModeInfo->selectColor;
+
+         // draw small pointer
+         MN_DrawSmallPtr(x - (smallptr_dims[0] + 1), 
+                         y + ((height - smallptr_dims[1])>>1));
+      }
 
       MN_WriteTextColoured(curname, color, x, y);
 
-      y += V_StringHeight(curname) + 1;
+      y += height + 1;
       
       curname = box->item_names[++i];
    }

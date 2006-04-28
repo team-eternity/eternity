@@ -765,6 +765,8 @@ manual_stair:
       case SpeedParam:
          // haleyjd 10/06/05: parameterized extension
          floor->speed = sd->speed_value;
+         if(floor->speed == 0)
+            floor->speed = FLOORSPEED/4; // no zero-speed stairs
          break;
       }
 
@@ -872,7 +874,7 @@ manual_stair:
             {
                floor->speed = 
                   D_abs(FixedMul(speed, 
-                     FixedDiv(height - sec->floorheight, stairsize)));
+                        FixedDiv(height - sec->floorheight, stairsize)));
             }
             else
                floor->speed = speed;
@@ -896,11 +898,6 @@ manual_stair:
          return rtn;
       secnum = osecnum; //jff 3/4/98 restore old loop index
    }
-   /*
-   // retriggerable generalized stairs build up or down alternately
-   if(rtn)
-      line->special ^= StairDirection; // alternate dir on succ activations
-   */
 
    return rtn;
 }
