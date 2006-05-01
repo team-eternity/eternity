@@ -654,15 +654,12 @@ static void do_draw_plane(visplane_t *pl)
    {
       int stop, light;
       int swirling = 0;
-      // SoM: flat lump size. This will eventually be stored in a table I hope
-      int size;
 
       swirling = flattranslation[pl->picnum] == -1;
       
-      if(swirling)
+      if(swirling && flatsize[flattranslation[pl->picnum]] == 4096)
       {
          ds_source = R_DistortedFlat(pl->picnum);
-         size = W_LumpLength(firstflat + pl->picnum);
       }
       else
       {
@@ -722,7 +719,7 @@ static void do_draw_plane(visplane_t *pl)
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);
 
-      if(!swirling)
+      if(!swirling || flatsize[flattranslation[pl->picnum]] != 4096)
          Z_ChangeTag(ds_source, PU_CACHE);
    }
 }
