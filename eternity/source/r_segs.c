@@ -717,13 +717,15 @@ void R_StoreWallRange(const int start, const int stop)
       // haleyjd 03/12/06: inverted predicates to simplify
       if(markfloor && backsector->f_portal != frontsector->f_portal)
       {
-         if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED)
+         if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED && 
+            frontsector->f_portal->type != R_TWOWAY)
             f_portalignore = true;
       }
 
       if(markceiling && backsector->c_portal != frontsector->c_portal)
       {
-         if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED)
+         if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED &&
+            frontsector->c_portal->type != R_TWOWAY)
             c_portalignore = true;
       }
 #endif
