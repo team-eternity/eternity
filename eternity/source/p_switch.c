@@ -283,6 +283,10 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 
 extern void P_StartLineScript(line_t *line, mobj_t *thing);
 
+// haleyjd 05/02/06: flags to check for 3DMidTex switches
+
+#define MIDTEXFLAGS (ML_TWOSIDED|ML_3DMIDTEX)
+
 //
 // P_UseSpecialLine
 //
@@ -304,7 +308,8 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
 
    // SoM: only allow switch specials on 3d sides to be triggered if 
    // the mobj is within range of the side.
-   if(demo_version >= 331 && (line->flags & (ML_TWOSIDED|ML_3DMIDTEX)) && 
+   // haleyjd 05/02/06: ONLY on two-sided lines.
+   if(demo_version >= 331 && (line->flags & MIDTEXFLAGS) == MIDTEXFLAGS &&
       line->sidenum[side] != -1 && sides[line->sidenum[side]].midtexture)
    {
       fixed_t opentop, openbottom;

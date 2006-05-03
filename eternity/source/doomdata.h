@@ -151,10 +151,18 @@ typedef struct maplinedefhexen_s maplinedefhexen_t;
 
 //jff 3/21/98 Set if line absorbs use by player
 //allow multiple push/switch triggers to be used on one push
-#define ML_PASSUSE      512
+#define ML_PASSUSE              512
 
 // SoM 9/02/02: 3D Middletexture flag!
-#define ML_3DMIDTEX    1024
+#define ML_3DMIDTEX             1024
+
+// haleyjd 05/02/06: Although it was believed until now that a reserved line
+// flag was unnecessary, a problem with Ultimate DOOM E2M7 has disproven this
+// theory. It has roughly 1000 linedefs with 0xFE00 masked into the flags, so
+// making the next line flag reserved and using it to toggle off ALL extended
+// flags will preserve compatibility for such maps. I have been told this map
+// is one of the first ever created, so it may have something to do with that.
+#define ML_RESERVED             2048
 
 // Sector definition, from editing.
 struct mapsector_s

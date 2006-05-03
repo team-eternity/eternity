@@ -671,6 +671,13 @@ void P_LoadLineDefs2(void)
       if(ld->sidenum[1] == -1)
          ld->flags &= ~ML_TWOSIDED;  // Clear 2s flag for missing left side
 
+      // haleyjd 05/02/06: Reserved line flag. If set, we must clear all
+      // BOOM or later extended line flags. This is necessitated by E2M7.
+      if(ld->flags & ML_RESERVED)
+         ld->flags &= ML_BLOCKING|ML_BLOCKMONSTERS|ML_TWOSIDED|ML_DONTPEGTOP|
+                      ML_DONTPEGBOTTOM|ML_SECRET|ML_SOUNDBLOCK|ML_DONTDRAW|
+                      ML_MAPPED;
+
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
       ld->backsector  = ld->sidenum[1]!=-1 ? sides[ld->sidenum[1]].sector : 0;

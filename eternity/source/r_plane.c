@@ -241,13 +241,13 @@ void R_ClearPlanes(void)
 {
    int i, a;
    angle_t angle;
-   
+
    // haleyjd FIXME: wtf is this?
    a = consoleactive ?
       (current_height-viewwindowy) < 0 ? -1 : current_height-viewwindowy
            : -1;
 
-   a = -1;
+   /* a = -1; */
 
 #ifdef R_PORTALS  
    floorclip = floorcliparray;
@@ -684,9 +684,6 @@ static void do_draw_plane(visplane_t *pl)
             flatfunc = R_DrawSpan_64;
       };
         
-      // haleyjd: ?? - inconsequential
-      // trans = swirling;
-
       xoffs = pl->xoffs;  // killough 2/28/98: Add offsets
       yoffs = pl->yoffs;
 #ifdef R_PORTALS
