@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 
-<h3>Eternity Engine ExtraData Reference v1.1 -- 5/23/05</h3>
+<h3>Eternity Engine ExtraData Reference v1.2 -- 5/07/06</h3>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -16,7 +16,7 @@
 <li><a name="contents"><b>Table of Contents</b></a>
     <ul>
     <li><a href="#intro">Introduction to ExtraData</a>
-    <li><a href="#changes">Changes in ExtraData 1.1</a>
+    <li><a href="#changes">Changes in ExtraData 1.2</a>
     <li><a href="#gensyn">General Syntax</a>
     <li><a href="#embed">Embedding and Associating ExtraData</a>
     <li><a href="#mapthings">Mapthings</a>
@@ -58,12 +58,13 @@ to reflect all changes and additions.
 <p>
 <a name="changes">
 <hr>
-<b>Changes in ExtraData 1.1</b>
+<b>Changes in ExtraData 1.2</b>
 <hr>
 </a>
-<br>
 <ul>
-<li> ExtraData support for linedefs added.
+<li> Added height field for mapthings to match Hexen map format.
+<li> New escape characters for strings added to control color, shadowing, and
+     absolute text centering.
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -146,6 +147,22 @@ to reflect all changes and additions.
      <li> \\ : Literal \ character.
      <li> \" : Literal ", necessary to use in double-quoted strings only
      <li> \' : Literal ', necessary to use in single-quoted strings only
+     <li> \0 : Null character
+     <li> \K : Changes text color to "brick" range where supported. 
+     <li> \1 : Changes text color to "tan" range where supported.
+     <li> \2 : Changes text color to "gray" range where supported.
+     <li> \3 : Changes text color to "green" range where supported.
+     <li> \4 : Changes text color to "brown" range where supported.
+     <li> \5 : Changes text color to "gold" range where supported.
+     <li> \6 : Changes text color to "red" range where supported.
+     <li> \7 : Changes text color to "blue" range where supported.
+     <li> \8 : Changes text color to "orange" range where supported.
+     <li> \9 : Changes text color to "yellow" range where supported.
+     <li> \N : Changes text color to gamemode "normal" range where supported.
+     <li> \H : Changes text color to gamemode "hilite" range where supported.
+     <li> \E : Changes text color to gamemode "error" range where supported.
+     <li> \S : Toggles text shadowing where supported.
+     <li> \C : Toggles absolute centering of text where supported.
      </ul>
      <br>
      If \ is followed by any other character, the slash is discarded and the next character
@@ -297,6 +314,7 @@ mapthing
    # These fields are ExtraData extensions
    tid       = &lt;number&gt;
    args      = { &lt;special field&gt;, ... }
+   height    = &lt;number&gt;
 }
 </pre>
 
@@ -403,6 +421,14 @@ Explanation of fields:
     <pre>
     mapthing { args = { 0, 1, 2, 3, 4 } }
     </pre>
+    
+<li><b>height</b><br>
+    Default: 0
+    <br><br>
+    For normal objects, this field indicates a distance above the floor that the thing will
+    spawn at level start. For objects with the SPAWNCEILING flag, this field indicates a
+    distance below the ceiling instead.  This field will have no effect on objects which
+    spawn at a randomized height.
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -435,7 +461,7 @@ field serves to identify linedef records.
 <hr align="left" width="50%">
 </a>
 <br>
-Linedef records in ExtraData are associated only with lines which bare the ExtraData Control
+Linedef records in ExtraData are associated only with lines which bear the ExtraData Control
 Line Special, #270. You can place this special into the normal "special" field of a line using
 virtually any map editor. Editors with Eternity-specific configurations should support this
 special natively.
@@ -478,7 +504,7 @@ linedef
    recordnum = &lt;unique number&gt;
    
    # These fields are normal mapthing fields
-   special   = &lt;number&gt; | &lt;special name&gt; | &lt;generalized specifier&gt;
+   special   = &lt;number&gt; OR &lt;special name&gt; OR &lt;generalized specifier&gt;
    tag       = &lt;number&gt;
    
    # These fields are ExtraData extensions
@@ -510,6 +536,12 @@ Explanation of fields:
     but it can also accept special names for all line types. See the appendix 
     <a href="#linenames">Linedef Special Names</a> for a complete list of the names available
     and an explanation of how to specify generalized specials.
+    <br><br>
+    
+<li><b>tag</b><br>
+    Default: 0
+    <br><br>
+    The tag of the linedef, used by DOOM-style line specials and sector effects.
     <br><br>
 
 <li><b>extflags</b><br>
@@ -966,6 +998,10 @@ Number  Name                                     Notes
  297    Portal_AnchoredFloorCeiling  
  298    Portal_AnchorLine  
  299    Portal_AnchorLineFloor  
+ 344    Portal_TwowayCeiling
+ 345    Portal_TwowayFloor
+ 346    Portal_TwowayAnchorLine
+ 347    Portal_TwowayAnchorLineFloor
 
 
 ------------------------
@@ -976,28 +1012,60 @@ See the <a href="editref.html">Eternity Engine Editing Reference</a> for informa
 
 Number  Name                         Parameters
 -----------------------------------------------------------------------------------------
-   300  Door_Raise                   tag, speed, delay, lighttag
-   301  Door_Open                    tag, speed, lighttag
-   302  Door_Close                   tag, speed, lighttag
-   303  Door_CloseWaitOpen           tag, speed, delay, lighttag
-   304  Door_WaitRaise               tag, speed, delay, countdown, lighttag
-   305  Door_WaitClose               tag, speed, countdown, lighttag
-   306  Floor_RaiseToHighest         tag, speed, change, crush
-   307  Floor_LowerToHighest         tag, speed, change
-   308  Floor_RaiseToLowest          tag, change, crush
-   309  Floor_LowerToLowest          tag, speed, change
-   310  Floor_RaiseToNearest         tag, speed, change, crush
-   311  Floor_LowerToNearest         tag, speed, change
-   312  Floor_RaiseToLowestCeiling   tag, speed, change, crush
-   313  Floor_LowerToLowestCeiling   tag, speed, change
-   314  Floor_RaiseToCeiling         tag, speed, change, crush
-   315  Floor_RaiseByTexture         tag, speed, change, crush
-   316  Floor_LowerByTexture         tag, speed, change
-   317  Floor_RaiseByValue           tag, speed, height, change, crush
-   318  Floor_LowerByValue           tag, speed, height, change
-   319  Floor_MoveToValue            tag, speed, height, change, crush
-   320  Floor_RaiseInstant           tag, height, change, crush
-   321  Floor_LowerInstant           tag, height, change
+ 300    Door_Raise                   tag, speed, delay, lighttag
+ 301    Door_Open                    tag, speed, lighttag
+ 302    Door_Close                   tag, speed, lighttag
+ 303    Door_CloseWaitOpen           tag, speed, delay, lighttag
+ 304    Door_WaitRaise               tag, speed, delay, countdown, lighttag
+ 305    Door_WaitClose               tag, speed, countdown, lighttag
+ 306    Floor_RaiseToHighest         tag, speed, change, crush
+ 307    Floor_LowerToHighest         tag, speed, change
+ 308    Floor_RaiseToLowest          tag, change, crush
+ 309    Floor_LowerToLowest          tag, speed, change
+ 310    Floor_RaiseToNearest         tag, speed, change, crush
+ 311    Floor_LowerToNearest         tag, speed, change
+ 312    Floor_RaiseToLowestCeiling   tag, speed, change, crush
+ 313    Floor_LowerToLowestCeiling   tag, speed, change
+ 314    Floor_RaiseToCeiling         tag, speed, change, crush
+ 315    Floor_RaiseByTexture         tag, speed, change, crush
+ 316    Floor_LowerByTexture         tag, speed, change
+ 317    Floor_RaiseByValue           tag, speed, height, change, crush
+ 318    Floor_LowerByValue           tag, speed, height, change
+ 319    Floor_MoveToValue            tag, speed, height, change, crush
+ 320    Floor_RaiseInstant           tag, height, change, crush
+ 321    Floor_LowerInstant           tag, height, change
+ 322    Floor_ToCeilingInstant       tag, change, crush
+ 323    Ceiling_RaiseToHighest       tag, speed, change
+ 324    Ceiling_ToHighestInstant     tag, change, crush
+ 325    Ceiling_RaiseToNearest       tag, speed, change
+ 326    Ceiling_LowerToNearest       tag, speed, change, crush
+ 327    Ceiling_RaiseToLowest        tag, speed, change
+ 328    Ceiling_LowerToLowest        tag, speed, change, crush
+ 329    Ceiling_RaiseToHighestFloor  tag, speed, change
+ 330    Ceiling_LowerToHighestFloor  tag, speed, change, crush
+ 331    Ceiling_ToFloorInstant       tag, change, crush
+ 332    Ceiling_LowerToFloor         tag, speed, change, crush
+ 333    Ceiling_RaiseByTexture       tag, speed, change
+ 334    Ceiling_LowerByTexture       tag, speed, change, crush
+ 335    Ceiling_RaiseByValue         tag, speed, height, change
+ 336    Ceiling_LowerByValue         tag, speed, height, change, crush
+ 337    Ceiling_MoveToValue          tag, speed, height, change, crush
+ 338    Ceiling_RaiseInstant         tag, height, change
+ 339    Ceiling_LowerInstant         tag, height, change, crush
+ 340    Stairs_BuildUpDoom           tag, speed, stepsize, delay, reset
+ 341    Stairs_BuildDownDoom         tag, speed, stepsize, delay, reset
+ 342    Stairs_BuildUpDoomSync       tag, speed, stepsize, delay, reset
+ 343    Stairs_BuildDownDoomSync     tag, speed, stepsize, delay, reset
+ 348    Polyobj_StartLine            polyobj_id, mirror_id, sndseq_id
+ 349    Polyobj_ExplicitLine         polyobj_id, linenum, mirror_id, sndseq_id
+ 350    Polyobj_DoorSlide            polyobj_id, speed, angle, dist, delay
+ 351    Polyobj_DoorSwing            polyobj_id, aspeed, adist, delay
+ 352    Polyobj_Move                 polyobj_id, speed, angle, dist
+ 353    Polyobj_OR_Move              polyobj_id, speed, angle, dist
+ 354    Polyobj_RotateRight          polyobj_id, aspeed, adist
+ 355    Polyobj_OR_RotateRight       polyobj_id, aspeed, adist
+ 356    Polyobj_RotateLeft           polyobj_id, aspeed, adist
+ 357    Polyobj_OR_RotateLeft        polyobj_id, aspeed, adist
 
 
 ----------------------

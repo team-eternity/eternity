@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 
-<h3>Eternity Engine MapInfo Reference v1.1 -- 5/24/05</h3>
+<h3>Eternity Engine MapInfo Reference v1.2 -- 5/07/06</h3>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -263,6 +263,13 @@ in both global and level header MapInfo, and accept the same values in both type
     on how the Levelscript works. There are no naming restrictions on script lumps.<br>
     Example:
     <pre>levelscript = SCRIPT01</pre>
+
+<li><b>leveltype</b><br>
+    String value that declares what type of level the current map is classified as.
+    Possible values are "doom" and "heretic". This variable affects the automatic
+    translation of thing types and line specials.<br>
+    Example:
+    <pre>leveltype = heretic</pre>
     
 <li><b>lightning</b><br>
     Boolean value that toggles the global lightning effect. When set to true, all sky sectors
@@ -752,6 +759,14 @@ Some of the defaults can be edited by DeHackEd as well.
     map has no Levelscript. Attempted use of the Levelscript under that circumstance may result
     in error messages displayed to the player.
     <br><br>
+
+<li><b>leveltype</b><br>
+    The default value of this variable depends on the game being played:
+    <ul>
+    <li> DOOM (Shareware, Registered, Ultimate, DOOM II, Final): doom
+    <li> Heretic (Shareware, Registered, SoSR) : heretic
+    </ul>
+    <br>
     
 <li><b>lightning</b><br>
     This variable has the default value of "false" for all maps.

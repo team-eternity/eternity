@@ -1,5 +1,5 @@
 ====================================================================
-Eternity Engine v3.33.02 - Frequently Asked Questions
+Eternity Engine v3.33.33 - Frequently Asked Questions
 ====================================================================
 
 This is a FAQ file for the Windows version of the Eternity Engine.
@@ -84,7 +84,7 @@ Q5. Starting Eternity from a command line is a bummer. Is there
 
 Q6. Eternity just got *way* slower. What could be the cause?
     
-Q7. Why does Eternity bomb to the desktop without any error messages?
+Q7. [Deleted]
 
 Q8. Why does Eternity say "SDL.dll" or "SDL_mixer.dll" not found?
 
@@ -511,36 +511,7 @@ A6. Many things could cause this, but one is that Eternity's zone
     resources :)
 
 =====================================================================
-Q7. Why does Eternity bomb to the desktop without any error messages?
-
-A7. This may be an error related to the Windows MCI system, which
-    SDL uses to play MIDI. Once Eternity has crashed without properly
-    shutting down SDL and its child libraries, which can only happen
-    under extreme circumstances, system resources related to DirectX,
-    MCI, and Windows will be permanently lost. In the case of MCI, 
-    the MIDIMAP.DRV module will be destabilized and MIDI cannot be 
-    played again until the system is rebooted. "BSOD" errors may
-    occur on shutdown of Windows as well.
-    
-    Please report ANY instance of Eternity not shutting down properly
-    immediately to us and give as much information about the crash as
-    possible. We believe we have repaired a major issue causing these
-    types of crashes as of Eternity Engine v3.33.00, but we can't be
-    sure until the engine is thoroughly tested.
-    
-    To distinguish a proper Eternity exit from a normal crash and
-    from this kind of inappropriate shutdown, look for the following
-    messages in the Win32 console window:
-    
-    Normal Exit (Nothing went wrong):
-       "Thanks for using the Eternity Engine!"
-       
-    Normal Crash (Caught, all system resources released):
-       "SDL Parachute Deployed"
-       "Thanks for using the Eternity Engine!"
-       
-    Inappropriate Shutdown (All system resources lost):
-       No message given
+Q7. This question has been deleted.
 
 =====================================================================
 Q8. Why does Eternity say "SDL.dll" or "SDL_mixer.dll" not found?
@@ -588,7 +559,6 @@ Q2. What features can we expect to see in the Eternity Engine v3.33?
 
 A2. These features are on the line-up of TODO's for EE v3.33:
 
-    * Polyobjects -- moving walls ala Hexen
     * Hubs -- still working on fixing these from SMMU
     * Full Heretic support
     * Hexen support
@@ -627,5 +597,5 @@ A3. The Eternity Engine is maintained by James "Quasar" Haley and
     
 =====================================================================
           The Eternity Engine -- A Team Eternity Production          
-                               2005
+                               2006
 =====================================================================

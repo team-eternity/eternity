@@ -8,8 +8,6 @@
 #endif
 #define _spec_included
 
-#include <fixed>
-
 // floor changer types
 // NOTE: Trigger change types can ONLY be used if special mode is _SPEC_PASS!
 
@@ -24,10 +22,27 @@ enum
    _FChgTypNum
 }
 
+// ceiling change types
+// NOTE: Trigger change types can ONLY be used if special mode is _SPEC_PASS!
+
+enum
+{
+   _CNoChg,
+   _CChgZeroTrig,
+   _CChgZeroNum,
+   _CChgTxtTrig,
+   _CChgTxtNum,
+   _CChgTypTrig,
+   _CChgTypNum
+}
+
 // Constants
 
 // standard floor speed (used by slow floors; 1 unit per tic)
 #define _FLOORSPEED 8
+
+// standard ceiling speed (used by slow ceilings; 1 unit per tic)
+#define _CEILSPEED 8
 
 // standard door speed (2 units per tic)
 #define _VDOORSPEED 16
@@ -43,7 +58,7 @@ enum _spec_modes
    _SPEC_PASS   // PASS mode: for _INVOKE_LINE model, line and thing are passed to specials
 }
 
-// Note: The special mode will be reset to _SPEC_NULL after each line special execution.
+// Note: The special mode will be reset to _SPEC_NULL after each script execution.
 
 native _SpecialMode(_spec_modes:mode);
 
@@ -74,6 +89,46 @@ native _Floor_LowerByValue(tag, speed, height, change = _FNoChg);             //
 native _Floor_MoveToValue(tag, speed, height, change = _FNoChg, crush = -1);  // 319
 native _Floor_RaiseInstant(tag, height, change = _FNoChg, crush = -1);        // 320
 native _Floor_LowerInstant(tag, height, change = _FNoChg);                    // 321
+native _Floor_ToCeilingInstant(tag, change = _FNoChg, crush = -1);            // 322
+
+// Param Ceiling Specials:
+
+native _Ceiling_RaiseToHighest(tag, speed, change = _CNoChg);                   // 323
+native _Ceiling_ToHighestInstant(tag, change = _CNoChg, crush = -1);            // 324
+native _Ceiling_RaiseToNearest(tag, speed, change = _CNoChg);                   // 325
+native _Ceiling_LowerToNearest(tag, speed, change = _CNoChg, crush = -1);       // 326
+native _Ceiling_RaiseToLowest(tag, speed, change = _CNoChg);                    // 327
+native _Ceiling_LowerToLowest(tag, speed, change = _CNoChg, crush = -1);        // 328
+native _Ceiling_RaiseToHighestFloor(tag, speed, change = _CNoChg);              // 329
+native _Ceiling_LowerToHighestFloor(tag, speed, change = _CNoChg, crush = -1);  // 330
+native _Ceiling_ToFloorInstant(tag, change = _CNoChg, crush = -1);              // 331
+native _Ceiling_LowerToFloor(tag, speed, change = _CNoChg, crush = -1);         // 332
+native _Ceiling_RaiseByTexture(tag, speed, change = _CNoChg);                   // 333
+native _Ceiling_LowerByTexture(tag, speed, change = _CNoChg, crush = -1);       // 334
+native _Ceiling_RaiseByValue(tag, speed, height, change = _CNoChg);             // 335
+native _Ceiling_LowerByValue(tag, speed, height, change = _CNoChg, crush = -1); // 336
+native _Ceiling_MoveToValue(tag, speed, height, change = _CNoChg, crush = -1);  // 337
+native _Ceiling_RaiseInstant(tag, height, change = _CNoChg);                    // 338
+native _Ceiling_LowerInstant(tag, height, change = _CNoChg, crush = -1);        // 339
+
+// Param Stair Specials
+
+native _Stairs_BuildUpDoom(tag, speed, stepsize, delay, reset);       // 340
+native _Stairs_BuildDownDoom(tag, speed, stepsize, delay, reset);     // 341
+native _Stairs_BuildUpDoomSync(tag, speed, stepsize, delay, reset);   // 342
+native _Stairs_BuildDownDoomSync(tag, speed, stepsize, delay, reset); // 343
+
+// Param PolyObject Specials
+
+native _Polyobj_DoorSlide(polyobj_id, speed, angle, dist, delay); // 350
+native _Polyobj_DoorSwing(polyobj_id, aspeed, adist, delay);      // 351
+native _Polyobj_Move(polyobj_id, speed, angle, dist);             // 352
+native _Polyobj_OR_Move(polyobj_id, speed, angle, dist);          // 353
+native _Polyobj_RotateRight(polyobj_id, aspeed, adist);           // 354
+native _Polyobj_OR_RotateRight(polyobj_id, aspeed, adist);        // 355
+native _Polyobj_RotateLeft(polyobj_id, aspeed, adist);            // 356
+native _Polyobj_OR_RotateLeft(polyobj_id, aspeed, adist);         // 357
+
 
 // Allows setting the special of a sector.
 // * must be called only while in a level
@@ -92,6 +147,7 @@ enum _cmap_spaces
 // as for 242 deep water -- if a sector is already affected by deep water, its
 // deep water control sector will be affected by this function instead).
 // * must be called only while in a level
+// WARNING: DO NOT USE THIS YET. IT IS BROKEN.
 native _SectorColormap(const lump[], _cmap_spaces:pos, tag);
 
 // Call to force a lightning strike.

@@ -9,7 +9,7 @@ content="text/html; charset=iso-8859-1">
 
 <body bgcolor="#CECECE">
 
-<h2>Eternity Engine Editing Reference v1.82 -- 4/15/06</h2>
+<h2>Eternity Engine Editing Reference v1.83 -- 5/07/06</h2>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -102,6 +102,7 @@ content="text/html; charset=iso-8859-1">
             <li><a href="#horizportal">286/287/288: Horizon portals</a>
             <li><a href="#skybxportal">290/291/292: Skyboxes</a>
             <li><a href="#anchrportal">295/296/297: Anchored portals</a>
+            <li><a href="#twowyportal">344/345: Two-Way Anchored portals</a>
             <li><a href="#line289">289: Portal transfer</a>
             </ul>
         <li><a href="#scripts">Section 14. Script Control Linedefs</a>
@@ -130,18 +131,10 @@ content="text/html; charset=iso-8859-1">
             <li><a href="#paramstairs">Stairs</a>
             <li><a href="#parampolyobj">PolyObjects</a>
             </ul>
-        <li><a href="#extradata">Section 18. ExtraData</a>
-            <ul>
-            <li><a href="#edintro">18.1 ExtraData Introduction</a>
-            <li><a href="#edthing">18.2 ExtraData Control Objects</a>
-            <li><a href="#edlines">18.3 ExtraData Control Linedefs</a>
-            <li>
-            </ul>
-        </ul>
     <li><a href="#part2">Part II Sector Types</a>
         <ul>
-        <li><a href="#sectors">Section 19. Regular sector types</a>
-        <li><a href="#gensectors">Section 20. Generalized sector types</a>
+        <li><a href="#sectors">Section 18. Regular sector types</a>
+        <li><a href="#gensectors">Section 19. Generalized sector types</a>
         </ul>
     <li><a href="#part3">Part III Linedef Flags</a>
     <li><a href="#part4">Part IV Thing Flags</a>
@@ -156,9 +149,17 @@ content="text/html; charset=iso-8859-1">
         <li><a href="#txtrconv">TXTRCONV format</a>
         <li><a href="#keydefs">KEYDEFS format</a>
         </ul>
+    <li><a href="#extradata">Part VII ExtraData</a>
+        <ul>
+        <li><a href="#edintro">20.1 ExtraData Introduction</a>
+        <li><a href="#edthing">20.2 ExtraData Control Objects</a>
+        <li><a href="#edlines">20.3 ExtraData Control Linedefs</a>
+        </ul>
     </ul>
 </ul>
+<br><br>
 
+<p>
 <a name="part1">
 <hr>
 <h3>Part I Linedef Types</h3>
@@ -1032,7 +1033,6 @@ Parameterized Ceiling Types
 337      Param   To Absolute Height                 Ceiling_MoveToValue
 338      Param   Up Absolute Param, Instant         Ceiling_RaiseInstant
 339      Param   Down Absolute Param, Instant       Ceiling_LowerInstant
-
 </pre>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -1344,7 +1344,13 @@ on the direction the stairs build, up or down. If the motion is
 in the same direction as the stairs build, it occurs at stair
 build speed, otherwise it is instant.<br>
 <br>
-4) Repeat from step 2 until stair building ceases. 
+4) Repeat from step 2 until stair building ceases.<br>
+<br>
+With parameterized stairs, it is possible to have synchronized
+movement. This means that each step will move at a different speed
+such that all the steps reach their destination height at the same
+time. It is also possible to have parameterized stairs reset to
+their original positions after a given amount of time.
 
 <p>
 <a name="stairvar">
@@ -1363,15 +1369,19 @@ Only extended and generalized stair types are retriggerable. The
 extended retriggerable stairs are mostly useless, though
 triggering a stair with stepsize 8 twice might be used. The
 generalized retriggerable stairs alternate building up and down
-on each activation which is much more useful.<br>
+on each activation which is much more useful. For parameterized
+stair types, retriggering is only useful if the staircase resets
+itself after building.<br>
 <br>
 A stair can build up or down (generalized types only).<br>
 <br>
 A stair can have a step size of 4, 8, 16, or 24. Only generalized
-types support stepsize of 4 or 24.<br>
+types support stepsize of 4 or 24. Parameterized stairs can
+build steps of any size greater than zero.<br>
 <br>
 A stair can have build speeds of slow, normal, fast or turbo.
-Only generalized types support speeds of normal or turbo.<br>
+Only generalized types support speeds of normal or turbo.
+Parameterized stairs can build at any speed.<br>
 <br>
 A stair can stop on encountering a different texture or ignore
 (generalized types only) different textures and continue.<br>
@@ -1390,17 +1400,17 @@ others do not crush.
 <pre>
 Regular and Extended Stairs Types
 -------------------------------------------------------------------
-#     Class  Trig  Dir Spd   Step Ignore Mon
+#      Class   Trig   Dir Spd     Step  Ignore Mon
 
-258   Ext    SR    Up  Slow  8    No     No
-7     Reg    S1    Up  Slow  8    No     No
-256   Ext    WR    Up  Slow  8    No     No
-8     Reg    W1    Up  Slow  8    No     No
-
-259   Ext    SR    Up  Fast  16   No     No
-127   Reg    S1    Up  Fast  16   No     No
-257   Ext    WR    Up  Fast  16   No     No
-100   Reg    W1    Up  Fast  16   No     No
+258    Ext     SR     Up  Slow    8     No     No
+7      Reg     S1     Up  Slow    8     No     No
+256    Ext     WR     Up  Slow    8     No     No
+8      Reg     W1     Up  Slow    8     No     No
+ 
+259    Ext     SR     Up  Fast    16    No     No
+127    Reg     S1     Up  Fast    16    No     No
+257    Ext     WR     Up  Fast    16    No     No
+100    Reg     W1     Up  Fast    16    No     No
 
 Generalized Stairs Types
 ---------------------------------------------------------------------------
@@ -1410,6 +1420,21 @@ Generalized Stairs Types
 33FFH          S1/SR  Dn  Normal  8     No     No 
                W1/WR      Fast    16 
                G1/GR      Turbo   24 
+</pre>
+
+There are currently four types of parameterized stair specials, each 
+performing a different type of stair action. See the 
+<a href="#paramstairs">Parameterized Stair Types</a> section for full 
+information on how to use these specials.
+<pre>
+Parameterized Stair Types
+-------------------------------------------------------------------------------
+#      Class   Function                           ExtraData Name
+
+340    Param   Build stairs up, DOOM method       Stairs_BuildUpDoom
+341    Param   Build stairs down, DOOM method     Stairs_BuildDownDoom
+342    Param   Build stairs up sync, DOOM method  Stairs_BuildUpDoomSync
+343    Param   Build stairs dn sync, DOOM method  Stairs_BuildDownDoomSync
 </pre>
 <a href="#contents">Return to Table of Contents</a>
  
@@ -2569,8 +2594,12 @@ for its anchor line. This was revised to allow separate anchored portals to be u
 floor and ceiling of the same sector, which would not previously work. 295 and 297 still use
 the 298 anchor type.
 <br><br>
-Note that the anchored portal will not change view height. So if sector B is below sector A 
-height-wise, it will either cause strange visual artifacts, or sector B may not even render.
+Note that the areas drawn within the anchored portal will render at the player's current
+viewheight, so if the view within sector B in this example were above the ceiling or beneath
+the floor of sector B, a HOM effect would appear in the portal instead of the expected 
+view. Be sure that areas inside an anchored portal are large enough both in terms of area and
+height so that the offset camera position always remains within valid space regardless of where
+the player is viewing the portal from.
 <br><br>
 Anchored portal linedefs are as follows:
 <pre>
@@ -2583,6 +2612,35 @@ Anchored portal linedefs are as follows:
 298  Ext     --   Anchor line, required for use alongside specials 295 and 297.
 
 299  Ext     --   Anchor line, required for use alongside special 296.
+</pre>
+Warning: As of Eternity Engine v3.33.33, normal anchored portals should no longer be used
+for two-way setups, where both areas of an anchored portal are visible from each other. Use
+the new two-way types discussed below instead for this situation. If the lines above are used
+instead, the player may see seemingly spontaneous error messages and feel annoying pauses 
+during gameplay.
+
+<p>
+<a name="twowyportal">
+<hr width="50%" align="left">
+<b>Two-Way Anchored Portals</b>
+<hr width="50%" align="left">
+</a>
+<br>
+For two-way anchored portal setups, where each area involved in the portal can be seen from
+the other area, you are now required to use the following set of linedefs instead of those
+outlined in the section above. This change is necessary to support visibility of normal portals
+even when the player's viewpoint would be beneath the floor or ceiling. Unfortunately, such a 
+change causes the normal anchored portals to begin drawing each other repeatedly when used in
+a two-way setup. Although this will no longer crash Eternity, it is considered an error and will
+be displayed to the player as such. To avoid this, use only these types in such a situation.
+<pre>
+344  Ext     --   Applies two-way anchored portal to ceilings of all like-tagged sectors.
+               
+345  Ext     --   Applies two-way anchored portal to floors of all like-tagged sectors.
+                  
+346  Ext     --   Anchor line, required for use alongside special 344 only.
+
+347  Ext     --   Anchor line, required for use alongside special 345 only.
 </pre>
 
 <p>
@@ -2742,7 +2800,7 @@ Points B and C are the two required objects:
      (the PolyObject ID). There must be one and only one of these objects
      for each PolyObject ID.
 <li> C: This is the PolyObject's spawn point (one of EEPolyObjSpawnSpot
-     (9301) or EEPolyObjSpawnSpotCrush (9302)). It defines the point where
+     [9301] or EEPolyObjSpawnSpotCrush [9302]). It defines the point where
      the PolyObject will initially spawn on the map. The anchor point will
      be translated to this exact location, and all lines in the PolyObject
      will maintain their relative positions to it. This object must also
@@ -3665,7 +3723,7 @@ at once. No extended sector types are implemented at this time.
 <p>
 <a name="sectors">
 <hr width="75%" align="left">
-<b>Section 17. Regular Sector types</b>
+<b>Section 18. Regular Sector types</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3708,7 +3766,7 @@ ignored.<br>
 <p>
 <a name="gensectors">
 <hr width="75%" align="left">
-<b>Section 18. Generalized sector types</b>
+<b>Section 19. Generalized sector types</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3802,7 +3860,7 @@ Dec Bit 11     Description
 <br>
 Only one new linedef flag is implemented in BOOM, called PassThru,
 which allows a push or switch linedef trigger to pass the push action thru it 
-to ones within range behind it. In this way BOOM is capable ofsetting off many 
+to ones within range behind it. In this way BOOM is capable of setting off many 
 actions with a single push. Note that the limitation of one floor action, one 
 ceiling action, and one lighting action per sector affect still applies however.
 <br>
@@ -3831,6 +3889,19 @@ Dec Bit 10     Description
 -------------------------------------------------------------------
 0    0         Linedef is normal with respect to clipping
 1024 1         2S linedef clips objects with respect to mid texture
+</pre>
+=== New to Eternity v3.33.33 ===<br>
+<br>
+As of Eternity Engine v3.33.33, line flag #11 with decimal value 2048 is
+considered reserved. If this bit is set on a line, all of its extended line
+flags from BOOM or later will be set to zero. This is required to repair
+erroneous maps such as Ultimate DOOM's E2M7.
+<br><br>
+<pre>
+Dec Bit 11     Description
+-------------------------------------------------------------------
+0    0         Extended flags are normal
+2048 1         Extended flags are cleared
 </pre>
 <a href="#contents">Return to Table of Contents</a>
  
@@ -3959,11 +4030,20 @@ information.
 <br><br>
 <b>EEParticleDrip</b> (5007)<br>
 A parameterized particle drip will be spawned at this mapthing's location with
-properties determined by the mapthing's ExtraData arguments list. See the particlefx
-field documentation in the <a href="edf_ref.html">EDF Documentation</a> for more
-information on thingtype particle effects, and see the 
+properties determined by the mapthing's ExtraData/Hexen arguments list. See the 
+particlefx field documentation in the <a href="edf_ref.html">EDF Documentation</a>
+for more information on thingtype particle effects, and see the 
 <a href="extradata.html">ExtraData Documentation</a> for full information on the
 ExtraData system.
+<br><br>
+<b>EEMapSpot</b> (9001)<br>
+This is a Hexen/zdoom-compatible mapspot for scripting purposes. It is especially handy
+for playing sounds or spawning objects at a particular location without needing to
+remember the location's x/y/z coordinates.
+<br><br>
+<b>EEMapSpotGravity</b> (9013)<br>
+This object is exactly the same as EEMapSpot, but it will fall under gravity, allowing 
+it to move up or down with sector floors/ceilings.
 <br><br>
 <b>EEParticleFountain</b> (9027 - 9033)<br>
 A particle fountain will be spawned at the mapthing's location.
@@ -3978,6 +4058,25 @@ follows:<br>
 <li> 9032: Black<br>
 <li> 9033: White
 </ul>
+<b>EEPolyObjAnchor</b> (9300)<br>
+This is a Hexen/zdoom-compatible PolyObject anchor spot. Each PolyObject defined in a
+map must have one and only one of these objects, and the object's angle field must be
+set to the PolyObject's integer id number. This spot determines the point relative to
+which lines will be translated and rotated.
+<br><br>
+<b>EEPolyObjSpawnSpot</b> (9301)<br>
+This is a Hexen/zdoom-compatible PolyObject spawn spot. Each PolyObject defined in a 
+map must have one and only one of these objects, and the object's angle field must be
+set to the PolyObject's integer id number. This spot determines the exact location at
+which the PolyObject will start at the beginning of play on the map. The anchor spot
+will be translated exactly to this point, and all lines in the PolyObject are translated
+relative to it.
+<br><br>
+<b>EEPolyObjSpawnSpotCrush</b> (9302)<br>
+Exactly the same as EEPolyObjSpawnSpot, but PolyObjects which use this object instead
+will inflict damage upon shootable things which block the course of their movement at
+a rate of 3 HP/gametic (105 damage per second).
+<br><br>
 <a href="#contents">Return to Table of Contents</a>
  
 
@@ -4285,7 +4384,162 @@ of which is expounded upon in the <a href="console_ref.html">Eternity Engine
 Console Reference</a>. This lump is ASCII text.
 <br><br>
 <a href="#contents">Return to Table of Contents</a>
- 
+
+<p>
+<a name="extradata">
+<hr>
+<h3>Part VII ExtraData</h3>
+<hr>
+</a>
+<br>
+
+<p>
+<a name="edintro">
+<hr width="75%" align="left">
+<b>Section 20.1. ExtraData Introduction</b>
+<hr width="75%" align="left">
+</a>
+<br>
+ExtraData is a new data specification language for the Eternity Engine that allows 
+arbitrary extension of mapthings, lines, and sectors with any number of new fields, 
+with data provided in more or less any format. The use of a textual input language 
+forever removes any future problems caused by binary format limitations. The 
+ExtraData parser is based on the libConfuse configuration file parser library by 
+Martin Hedenfalk, which is also used by GFS and EDF.
+<br><br>
+ExtraData requires special control thing types and line specials to be placed on
+the things or lines to be affected. Within these control objects, the number of
+the ExtraData record to use is specified. Basically speaking, ExtraData replaces
+the information of a thing or line in your map with information you specify in the
+ExtraData text script.
+<br><br>
+This documentation only covers the most basic usage of ExtraData. For full syntax
+and semantics, it is critical that you consult the <a href="extradata.html">Eternity 
+Engine ExtraData Documentation</a>.
+<br><br>
+ExtraData scripts must be attached to the maps which use them via the use of
+<a href="mapinfo.html">MapInfo</a>.
+<br><br>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="edthing">
+<hr width="75%" align="left">
+<b>Section 20.2. ExtraData Control Objects</b>
+<hr width="75%" align="left">
+</a>
+<br>
+The ExtraData control object has a <b>doomednum</b> of 5004. Each control object specifies its
+corresponding ExtraData mapthing record number as an integer value in its mapthing options field.
+If your editor does not allow entering arbitrary values into the options field of mapthings, you
+will need to use the BOOM command-line editor, CLED. As of the initial writing time of this
+document, both DETH and Doom Builder support entering arbitrary integer values for the options
+field. Check your editor's documentation or user interface to verify if it supports this.
+
+<p>
+The x, y, and angle fields of the ExtraData control object are passed on to the thing which will
+be spawned at the control point's location, so those fields of the control object should be set
+normally. The true type and options fields of the thing to be spawned, along with any extended 
+fields, are specified in the ExtraData record which the control thing references.
+
+<p>
+Any number of ExtraData control objects can reference the same ExtraData record. In the event
+that a control object references a non-existant ExtraData record, the ExtraData script for a 
+level is missing, or the thing type referenced by an ExtraData record isn't valid, an Unknown
+thing will be spawned at the control point's location. See the <a href="edf_ref.html">EDF
+Documentation</a> for information on the required Unknown thingtype definition. Note that you
+cannot spawn ExtraData control objects using ExtraData. Attempting this will also result in an
+Unknown thing.
+<br><br>
+Diagram:
+<pre>
+  +-----------------------------+          mapthing
+  |                             |          {
+  |                             |             recordnum = 1
+  |                             |             type = thing:DoomImp
+  |                             |             options = EASY|NORMAL|HARD
+  |                             |             tid = 666
+  |                             |             height = 240
+  |             O               |             args = { 0, 1, 2, 3, 4 }
+  |                             |          }
+  |                             |
+  |                             |
+  |                             |
+  |                             |
+  +-----------------------------+
+</pre>
+Assume that in the diagram, the point marked O is a thing of type 5004 with its options field
+set to 1. This object will use the ExtraData <b>mapthing</b> section defined to the right of
+the diagram, provided that such a section exists in the level's ExtraData script. This 
+particular object will become an Imp who appears in all difficulty levels, has a Small/ACS
+scripting thing ID of 666, spawns 240 units above the ground, and has all five of its argument
+values set to different numbers. Note that the fields <b>tid</b>, <b>height</b>, and
+<b>args</b> are values that would otherwise only be available in the Hexen map format. ExtraData
+allows use of all Hexen-format fields in DOOM, and may also provide access to even more custom
+Eternity Engine fields in the future.
+<br><br>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="edlines">
+<hr width="75%" align="left">
+<b>Section 20.3. ExtraData Control Linedefs</b>
+<hr width="75%" align="left">
+</a>
+<br>
+Linedef records in ExtraData are associated only with lines which bear the ExtraData Control
+Line Special, #270. You can place this special into the normal "special" field of a line using
+virtually any map editor. Editors with Eternity-specific configurations should support this
+special natively.
+
+<p>
+Each control linedef specifies its corresponding ExtraData linedef record number as an integer 
+value in its linedef tag field. If your editor does not allow entering arbitrary values up to
+32767 into the tag field of linedefs, you will need to use the BOOM command-line editor, CLED. 
+As of the initial writing time of this document, both DETH and Doom Builder support entering 
+arbitrary integer values for the tag field. Check your editor's documentation or user interface 
+to verify if it supports this.
+
+<p>
+The flags, sidedefs, textures, and location of the ExtraData control linedef are used normally 
+by the line and cannot be altered from within ExtraData. The true special and tag fields of the
+linedef, along with any extended fields, are specified in the ExtraData record which the control 
+linedef references.
+
+<p>
+Any number of ExtraData control linedefs can reference the same ExtraData record. In the event
+that a control linedef references a non-existant ExtraData record or the ExtraData script for a 
+level is missing, the special and tag of the ExtraData control linedef will both be set to zero.
+<br><br>
+Diagram:
+<pre>
+  +-----------------------------+          linedef
+  |                             |          {
+  |                             |             recordnum = 1
+  |                             |             special = Polyobj_RotateRight
+  |                             |             args = { 1, 4, 64 }
+  |                             |             extflags = PLAYER|CROSS|REPEAT
+  |                             |          }
+  |   +-------------------+     |
+  |             1               |
+  |                             |
+  |                             |
+  |                             |
+  |                             |
+  +-----------------------------+
+</pre>
+Assume that in the diagram, the line marked 1 is a 2S linedef with special 270 and with its tag 
+field set to 1. This line will use the ExtraData <b>linedef</b> section defined to the right of
+the diagram, provided that such a section exists in the level's ExtraData script. This 
+particular line will become a Polyobj_RotateRight trigger that turns PolyObject #1 90 degrees
+at approximately 5 degrees per gametic and which can be activated any number of times but only 
+when crossed by the player. Note that the <b>args</b> field would otherwise only be available in
+the Hexen map format, and that the <b>extflags</b> field, which affects only parameterized line
+specials, is new to the Eternity Engine. ExtraData enables the use of both Hexen and Eternity 
+extended linedef features within the DOOM map format.
+<p>
+<a href="#contents">Return to Table of Contents</a>
+
 </body>
 </html>
 

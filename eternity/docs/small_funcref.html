@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 <hr>
-<b>Eternity Engine Small Function Reference v1.2 -- 09/12/05</b>
+<b>Eternity Engine Small Function Reference v1.3 -- 05/07/06</b>
 <hr>
 <br>
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
@@ -156,6 +156,36 @@
         <li><a href="#_Floor_MoveToValue">_Floor_MoveToValue</a>
         <li><a href="#_Floor_RaiseInstant">_Floor_RaiseInstant</a>
         <li><a href="#_Floor_LowerInstant">_Floor_LowerInstant</a>
+        <li><a href="#_Floor_ToCeilingInstant">_Floor_ToCeilingInstant</a>
+        <li><a href="#_Ceiling_RaiseToHighest">_Ceiling_RaiseToHighest</a>
+        <li><a href="#_Ceiling_ToHighestInstant">_Ceiling_ToHighestInstant</a>
+        <li><a href="#_Ceiling_RaiseToNearest">_Ceiling_RaiseToNearest</a>
+        <li><a href="#_Ceiling_LowerToNearest">_Ceiling_LowerToNearest</a>
+        <li><a href="#_Ceiling_RaiseToLowest">_Ceiling_RaiseToLowest</a>
+        <li><a href="#_Ceiling_LowerToLowest">_Ceiling_LowerToLowest</a>
+        <li><a href="#_Ceiling_RaiseToHighestFloor">_Ceiling_RaiseToHighestFloor</a>
+        <li><a href="#_Ceiling_LowerToHighestFloor">_Ceiling_LowerToHighestFloor</a>
+        <li><a href="#_Ceiling_ToFloorInstant">_Ceiling_ToFloorInstant</a>
+        <li><a href="#_Ceiling_LowerToFloor">_Ceiling_LowerToFloor</a>
+        <li><a href="#_Ceiling_RaiseByTexture">_Ceiling_RaiseByTexture</a>
+        <li><a href="#_Ceiling_LowerByTexture">_Ceiling_LowerByTexture</a>
+        <li><a href="#_Ceiling_RaiseByValue">_Ceiling_RaiseByValue</a>
+        <li><a href="#_Ceiling_LowerByValue">_Ceiling_LowerByValue</a>
+        <li><a href="#_Ceiling_MoveToValue">_Ceiling_MoveToValue</a>
+        <li><a href="#_Ceiling_RaiseInstant">_Ceiling_RaiseInstant</a>
+        <li><a href="#_Ceiling_LowerInstant">_Ceiling_LowerInstant</a>
+        <li><a href="#_Stairs_BuildUpDoom">_Stairs_BuildUpDoom</a>
+        <li><a href="#_Stairs_BuildDownDoom">_Stairs_BuildDownDoom</a>
+        <li><a href="#_Stairs_BuildUpDoomSync">_Stairs_BuildUpDoomSync</a>
+        <li><a href="#_Stairs_BuildDownDoomSync">_Stairs_BuildDownDoomSync</a>
+        <li><a href="#_Polyobj_DoorSlide">_Polyobj_DoorSlide</a>
+        <li><a href="#_Polyobj_DoorSwing">_Polyobj_DoorSwing</a>
+        <li><a href="#_Polyobj_Move">_Polyobj_Move</a>
+        <li><a href="#_Polyobj_OR_Move">_Polyobj_OR_Move</a>
+        <li><a href="#_Polyobj_RotateRight">_Polyobj_RotateRight</a>
+        <li><a href="#_Polyobj_OR_RotateRight">_Polyobj_OR_RotateRight</a>
+        <li><a href="#_Polyobj_RotateLeft">_Polyobj_RotateLeft</a>
+        <li><a href="#_Polyobj_OR_RotateLeft">_Polyobj_OR_RotateLeft</a>
         </ul>
     <li><a href="#cameras">Cameras</a>
         <ul>
@@ -1049,10 +1079,9 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
     not exist, the game will exit with a "W_GetNumForName" error. If the patch specified is not 
     a valid graphic, results will be undefined. The actual location of the patch on screen is 
     subject to change via the patch graphic's x and y offset values. Use the x and y offsets to 
-    more easily position sets of patches relative to certain coordinates. If the resulting 
-    location of a patch graphic is offscreen or causes any part of the patch to extend offscreen, 
-    the patch will not be drawn. If the color or translucency parameters are out of range, 
-    suitable default values of no translation and opaque will be applied.<br>
+    more easily position sets of patches relative to certain coordinates. If the color or 
+    translucency parameters are out of range, suitable default values of no translation and 
+    opaque will be applied.<br>
     Exceptions:
     <ul>
     <li> "Invalid memory access" : name[] or patch[] is not a valid string array.
@@ -1134,23 +1163,23 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
          <ul>
          <li> _FONT_NORMAL
          <li> _FONT_HUD
+         <li> _FONT_BIG
+         <li> _FONT_BIG_NUM
          </ul>
-         Note: This may be made more flexible to allow "big font" and user fonts to be
-         applied in the future.
     <li> cleartics : Amount of time in gametics that the widget will be displayed. If this
          value is zero, the widget may be displayed indefinitely.
     <li> flags : A value which can accept bitwise-OR combinations of the following values:
          <ul>
          <li> _TW_AUTOMAP_ONLY : Widget appears only when automap is active.
          <li> _TW_NOCLEAR : Widget is not automatically cleared on level or viewpoint change.
+         <li> _TW_BOXED : Text has a box drawn in the background.
          </ul>
     </ul>
     Return value: None.<br>
     Found in: hud.inc<br>
     Description: Creates a new widget that displays the specified text message at the given 
     location and with the specified properties. If a widget of the given name already exists, 
-    this function will return immediately without creating a new widget. If the location of 
-    the message puts any part of it offscreen, parts of the message will not be drawn.
+    this function will return immediately without creating a new widget.
     <br>
     Exceptions:
     <ul>
@@ -1894,6 +1923,8 @@ These functions allow manipulation of sectors.
     <br>
     
 <li><a name="_SectorColormap"><b>_SectorColormap</b></a><br>
+    Warning: This function is currently broken. Do not use it.
+<!--
     <em>native _SectorColormap(const lump[], _cmap_spaces:pos, tag);</em><br>
     Parameters:
     <ul>
@@ -1919,6 +1950,7 @@ These functions allow manipulation of sectors.
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
+    -->
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -2588,6 +2620,870 @@ in Hexen.
     *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
     the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
     model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+<li><a name="_Floor_ToCeilingInstant"><b>_Floor_ToCeilingInstant</b></a><br>
+    <em>native _Floor_ToCeilingInstant(tag, change = _FNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_FNoChg : No texture or type change.
+         <li>_FChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_FChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_FChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_FChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_FChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_FChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises indicated sectors' floors to their respective ceilings instantaneously.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_RaiseToHighest"><b>_Ceiling_RaiseToHighest</b></a><br>
+    <em>native _Ceiling_RaiseToHighest(tag, speed, change = _CNoChg);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sectors' ceilings to the highest neighboring ceiling.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+    
+<li><a name="_Ceiling_ToHighestInstant"><b>_Ceiling_ToHighestInstant</b></a><br>
+    <em>native _Ceiling_ToHighestInstant(tag, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sector's ceilings to the highest neighboring ceiling
+    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceilng_RaiseToNearest"><b>_Ceiling_RaiseToNearest</b></a><br>
+    <em>native _Ceiling_RaiseToNearest(tag, speed, change = _CNoChg);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sectors' ceilings to the nearest neighboring ceiling.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_LowerToNearest"><b>_Ceiling_LowerToNearest</b></a><br>
+    <em>native _Ceiling_LowerToNearest(tag, speed, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicated sectors' ceilings to the nearest neighboring ceiling.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_RaiseToLowest"><b>_Ceiling_RaiseToLowest</b></a><br>
+    <em>native _Ceiling_RaiseToLowest(tag, speed, change = _CNoChg);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sectors' ceilings to the lowest neighboring ceiling.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_LowerToLowest"><b>_Ceiling_LowerToLowest</b></a><br>
+    <em>native _Ceiling_LowerToLowest(tag, speed, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicated sectors' ceilings to the lowest neighboring ceiling.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_RaiseToHighestFloor"><b>_Ceiling_RaiseToHighestFloor</b></a><br>
+    <em>native _Ceiling_RaiseToHighestFloor(tag, speed, change = _CNoChg);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sectors' ceilings to the highest neighboring floor.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_LowerToHighestFloor"><b>_Ceiling_LowerToHighestFloor</b></a><br>
+    <em>native _Ceiling_LowerToHighestFloor(tag, speed, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicated sectors' ceilings to the highest neighboring floor.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_ToFloorInstant"><b>_Ceiling_ToFloorInstant</b></a><br>
+    <em>native _Ceiling_ToFloorInstant(tag, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicated sectors' ceilings to their respective floors
+    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_LowerToFloor"><b>_Ceiling_LowerToFloor</b></a><br>
+    <em>native _Ceiling_LowerToFloor(tag, speed, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicated sectors' ceilings to their respective floors.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_RaiseByTexture"><b>_Ceiling_RaiseByTexture</b></a><br>
+    <em>native _Ceiling_RaiseByTexture(tag, speed, change = _CNoChg);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sectors' ceilings by the height of the shortest upper
+    texture around the perimeter of each sector.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_LowerByTexture"><b>_Ceiling_LowerByTexture</b></a><br>
+    <em>native _Ceiling_LowerByTexture(tag, speed, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicates sectors' ceilings by the height of the shortest upper
+    texture around the perimeter of each sector.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_RaiseByValue"><b>_Ceiling_RaiseByValue</b></a><br>
+    <em>native _Ceiling_RaiseByValue(tag, speed, height, change = _CNoChg);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> height : Amount to raise ceiling in integer units.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sectors' ceilings by an absolute amount.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_LowerByValue"><b>_Ceiling_LowerByValue</b></a><br>
+    <em>native _Ceiling_LowerByValue(tag, speed, height, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> height : Amount to lower ceiling in integer units.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicated sectors' ceilings by an absolute amount.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_MoveToValue"><b>_Ceiling_MoveToValue</b></a><br>
+    <em>native _Ceiling_MoveToValue(tag, speed, height, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed in eighths of a unit per tic.
+    <li> height : Amount to move ceiling in integer units.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Moves the indicated sectors' ceilings toward the indicated z coordinate.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_RaiseInstant"><b>_Ceiling_RaiseInstant</b></a><br>
+    <em>native _Ceiling_RaiseInstant(tag, height, change = _CNoChg);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> height : Amount to raise ceiling in integer units.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Raises the indicated sectors' ceilings by the indicated amount
+    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Ceiling_LowerInstant"><b>_Ceiling_LowerInstant</b></a><br>
+    <em>native _Ceiling_LowerInstant(tag, height, change = _CNoChg, crush = -1);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> height : Amount to lower ceiling in integer units.
+    <li> change : One of the following enumeration values:
+         <ul>
+         <li>_CNoChg : No texture or type change.
+         <li>_CChgZeroTrig : Copy texture, zero type; trigger model. ***
+         <li>_CChgZeroNum : Copy texture, zero type; numeric model.
+         <li>_CChgTxtTrig : Copy texture, preserve type; trigger model. ***
+         <li>_CChgTxtNum : Copy texture, preserve type; numeric model.
+         <li>_CChgTypTrig : Copy texture and type; trigger model. ***
+         <li>_CChgTypNum : Copy texture and type; numeric model.
+         </ul>
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+         no crushing damage.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Lowers the indicated sectors' ceilings by the indicated amount
+    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
+    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
+    model with _SPEC_NULL mode will result in no change.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Stairs_BuildUpDoom"><b>_Stairs_BuildUpDoom</b></a><br>
+    <em>native _Stairs_BuildUpDoom(tag, speed, stepsize, delay, reset);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed of steps in eights of a unit per tic. If the
+    <li> stepsize : Step size in eighths of a unit.
+    <li> delay : Delay time in tics before stair building begins.
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+         after completely building and will then reset by repeating the same stair building
+         action but in the reverse direction. If zero, the stairs will never reset.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Starts DOOM-style staircase building at every tagged sector.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Stairs_BuildDownDoom"><b>_Stairs_BuildDownDoom</b></a><br>
+    <em>native _Stairs_BuildDownDoom(tag, speed, stepsize, delay, reset);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed of steps in eights of a unit per tic.
+    <li> stepsize : Step size in eighths of a unit.
+    <li> delay : Delay time in tics before stair building begins.
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+         after completely building and will then reset by repeating the same stair building
+         action but in the reverse direction. If zero, the stairs will never reset.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Starts DOOM-style staircase building at every tagged sector.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Stairs_BuildUpDoomSync"><b>_Stairs_BuildUpDoomSync</b></a><br>
+    <em>native _Stairs_BuildUpDoomSync(tag, speed, stepsize, delay, reset);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed of first step in eights of a unit per tic. The remaining
+         steps move at a speed calculated to allow them to arrive at their destination
+         height at the same time as the first step.
+    <li> stepsize : Step size in eighths of a unit.
+    <li> delay : Delay time in tics before stair building begins.
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+         after completely building and will then reset by repeating the same stair building
+         action but in the reverse direction. If zero, the stairs will never reset.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Starts synchronized DOOM-style staircase building at every tagged sector.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Stairs_BuildDownDoomSync"><b>_Stairs_BuildDownDoomSync</b></a><br>
+    <em>native _Stairs_BuildDownDoomSync(tag, speed, stepsize, delay, reset);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : A tag number for this sector.
+    <li> speed : Speed of first step in eights of a unit per tic. The remaining
+         steps move at a speed calculated to allow them to arrive at their destination
+         height at the same time as the first step.
+    <li> stepsize : Step size in eighths of a unit.
+    <li> delay : Delay time in tics before stair building begins.
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+         after completely building and will then reset by repeating the same stair building
+         action but in the reverse direction. If zero, the stairs will never reset.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Starts synchronized DOOM-style staircase building at every tagged sector.
+    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_DoorSlide"><b>_Polyobj_DoorSlide</b></a><br>
+    <em>native _Polyobj_DoorSlide(polyobj_id, speed, angle, dist, delay);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    <li> speed : Linear speed of PolyObject motion in eighths of a unit per tic.
+    <li> angle : Byte angle of linear motion:
+         <ul>
+         <li> 0 = East
+         <li> 64 = North
+         <li> 128 = West
+         <li> 192 = South
+         </ul>
+    <li> dist : Total linear distance to move in units.
+    <li> delay : Time to wait before closing in tics.
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Opens the indicated PolyObject as a sliding door.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_DoorSwing"><b>_Polyobj_DoorSwing</b></a><br>
+    <em>native _Polyobj_DoorSwing(polyobj_id, aspeed, adist, delay);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    <li> aspeed : Byte angle specifying speed in degrees per tic<br>
+         byteangle = degrees * 256 / 360;
+    <li> adist : Byte angle specifying total angular distance to rotate.
+    <li> delay : Time to wait before closing in tics.
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Opens the indicated PolyObject as a swinging door.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_Move"><b>_Polyobj_Move</b></a><br>
+    <em>native _Polyobj_Move(polyobj_id, speed, angle, dist);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    <li> speed : Linear speed of PolyObject motion in eighths of a unit per tic.
+    <li> angle : Byte angle of linear motion:
+         <ul>
+         <li> 0 = East
+         <li> 64 = North
+         <li> 128 = West
+         <li> 192 = South
+         </ul>
+    <li> dist : Total linear distance to move in units.
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Moves the indicated PolyObject on the (x,y) plane.
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_OR_Move"><b>_Polyobj_OR_Move</b></a><br>
+    <em>native _Polyobj_OR_Move(polyobj_id, speed, angle, dist);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    <li> speed : Linear speed of PolyObject motion in eighths of a unit per tic.
+    <li> angle : Byte angle of linear motion:
+         <ul>
+         <li> 0 = East
+         <li> 64 = North
+         <li> 128 = West
+         <li> 192 = South
+         </ul>
+    <li> dist : Total linear distance to move in units.
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Moves the indicated PolyObject on the (x,y) plane, overriding
+    any existing actions on the PolyObject.
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_RotateRight"><b>_Polyobj_RotateRight</b></a><br>
+    <em>native _Polyobj_RotateRight(polyobj_id, aspeed, adist);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    <li> aspeed : Byte angle specifying speed in degrees per tic<br>
+         byteangle = degrees * 256 / 360;
+    <li> adist : Byte angle specifying total angular distance to rotate.<br>
+         Special values for this parameter:
+         <ul>
+         <li> 0 = 360 degrees
+         <li> 255 = Rotate perpetual
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Rotates the indicated PolyObject to the right.
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_OR_RotateRight"><b>_Polyobj_OR_RotateRight</b></a><br>
+    <em>native _Polyobj_OR_RotateRight(polyobj_id, aspeed, adist);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Rotates the indicated PolyObject to the right, overriding any
+    existing actions on the PolyObject.
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_RotateLeft"><b>_Polyobj_RotateLeft</b></a><br>
+    <em>native _Polyobj_RotateLeft(polyobj_id, aspeed, adist);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    <li> aspeed : Byte angle specifying speed in degrees per tic<br>
+         byteangle = degrees * 256 / 360;
+    <li> adist : Byte angle specifying total angular distance to rotate.<br>
+         Special values for this parameter:
+         <ul>
+         <li> 0 = 360 degrees
+         <li> 255 = Rotate perpetual
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Rotates the indicated PolyObject to the left.
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+
+<li><a name="_Polyobj_OR_RotateLeft"><b>_Polyobj_OR_RotateLeft</b></a><br>
+    <em>native _Polyobj_OR_RotateLeft(polyobj_id, aspeed, adist);</em><br>
+    Parameters:
+    <ul>
+    <li> polyobj_id : ID number of the principle PolyObject to affect.
+    <li> aspeed : Byte angle specifying speed in degrees per tic<br>
+         byteangle = degrees * 256 / 360;
+    <li> adist : Byte angle specifying total angular distance to rotate.<br>
+         Special values for this parameter:
+         <ul>
+         <li> 0 = 360 degrees
+         <li> 255 = Rotate perpetual
+         </ul>
+    </ul>
+    Return value: 1 if action was successful on the main PolyObject, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Rotates the indicated PolyObject to the left, overriding any
+    existing actions on the PolyObject.
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.

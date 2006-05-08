@@ -441,6 +441,13 @@ void P_LoadThings(int lump)
    Z_Free(data);
 }
 
+//
+// P_LoadHexenThings
+//
+// haleyjd: Loads a Hexen-format THINGS lump. The mapthinghexen_t is sent
+// to P_SpawnMapThing along with a normal DOOM one to prevent code
+// explosion.
+//
 void P_LoadHexenThings(int lump)
 {
    int  i;
@@ -470,6 +477,8 @@ void P_LoadHexenThings(int lump)
       mt->angle = SHORT(mt->angle);
       mt->type  = SHORT(mt->type);
       mt->options = SHORT(mt->options);
+
+      // note: args are already in order since they're just bytes
 
       mto.x = mt->x;
       mto.y = mt->y;
@@ -580,6 +589,8 @@ void P_LoadLineDefs(int lump)
 //
 // P_LoadHexenLineDefs
 //
+// haleyjd: Loads a Hexen-format LINEDEFS lump.
+//
 void P_LoadHexenLineDefs(int lump)
 {
    byte *data;
@@ -600,6 +611,8 @@ void P_LoadHexenLineDefs(int lump)
       ld->flags = SHORT(mld->flags);
 
       ld->special = mld->special;
+
+      // FIXME/TODO: Hexen line special translation
       
       for(argnum = 0; argnum < 5; ++argnum)
          ld->args[argnum] = mld->args[argnum];
@@ -1600,15 +1613,19 @@ void P_LoadOlo(void)
 }
 #endif
 
+//
+// P_ConvertHereticThing
+//
+// haleyjd: Converts Heretic doomednums into an Eternity-compatible range.
+//
 static void P_ConvertHereticThing(mapthing_t *mthing)
 {
-   // player starts, teleport destination are common
-   if(mthing->type <= 4 || mthing->type == 11 ||
-      mthing->type == 14)
+   // null, player starts, teleport destination are common
+   if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
       return;
 
+   // TODO: handle heretic ambience
    if(mthing->type >= 1200 && mthing->type < 1300)
-      // TODO: handle heretic ambience
       return;
    
    // handle ordinary heretic things
