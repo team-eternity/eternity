@@ -36,6 +36,8 @@
 #include <dirent.h>
 #endif
 
+#include <errno.h>
+
 #include "z_zone.h"
 #include "c_io.h"
 #include "d_gi.h"
