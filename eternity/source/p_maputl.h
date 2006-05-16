@@ -40,14 +40,16 @@
 #define PT_ADDTHINGS    2
 #define PT_EARLYOUT     4
 
-typedef struct {
+typedef struct divline_s
+{
   fixed_t     x;
   fixed_t     y;
   fixed_t     dx;
   fixed_t     dy;
 } divline_t;
 
-typedef struct {
+typedef struct intercept_s
+{
   fixed_t     frac;           // along trace line
   boolean     isaline;
   union {

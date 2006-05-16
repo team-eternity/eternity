@@ -33,6 +33,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include <errno.h>
+
 #include "z_zone.h"
 #include "m_qstr.h"
 #include "doomdef.h"
