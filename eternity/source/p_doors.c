@@ -732,3 +732,4 @@ void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
+

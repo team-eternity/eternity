@@ -1340,3 +1340,4 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
 //
 //
 //----------------------------------------------------------------------------
+

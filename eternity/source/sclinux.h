@@ -6,6 +6,8 @@
 #ifndef SCLINUX_H
 #define SCLINUX_H
 
+// haleyjd: this is NOT used by the interpreter, so it shouldn't be here.
+#if 0
 /* getchar() is not a 'cool' replacement for MSDOS getch: Linux/unix depends on the features activated or not about the
  * controlling terminal's tty. This means that ioctl(2) calls must be performed, for instance to have the controlling 
  * terminal tty's in 'raw' mode, if we want to be able to fetch a single character. This also means that everything must 
@@ -15,6 +17,7 @@
  * have a complete emacs/vi like line editing system.
  */
 #include "getch.h"
+#endif
 
 #define	stricmp(a,b)    strcasecmp(a,b)
 #define	strnicmp(a,b,c) strncasecmp(a,b,c)
@@ -45,3 +48,6 @@
 #endif
 
 #endif /* SCLINUX_H */
+
+// EOF
+

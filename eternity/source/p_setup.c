@@ -1693,3 +1693,4 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
+

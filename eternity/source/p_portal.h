@@ -25,8 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef P_PORTAL_H
-#define P_PORTAL_H
+#ifndef P_PORTAL_H__
+#define P_PORTAL_H__
 
 
 #ifdef R_LINKEDPORTALS
@@ -59,3 +59,6 @@ void P_BuildLinkTable();
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
 #endif
 #endif
+
+// EOF
+
