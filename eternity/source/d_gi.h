@@ -153,6 +153,7 @@ typedef struct gameinfo_s
    menu_t *mainMenu;          // pointer to main menu structure
    menu_t *saveMenu;          // pointer to save menu structure
    menu_t *loadMenu;          // pointer to load menu structure
+   menu_t *newGameMenu;       // pointer to new game menu structure
    int *menuSounds;           // menu sound indices
    int transFrame;            // frame DEH # used on video menu
    int skvAtkSound;           // skin viewer attack sound

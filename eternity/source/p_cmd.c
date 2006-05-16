@@ -295,6 +295,15 @@ CONSOLE_NETVAR(mon_distfriend, distfriend, cf_server, netcmd_mondistfriend) {}
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
+//
+// haleyjd: FIXME -- DEBUG
+//
+CONSOLE_COMMAND(jump, cf_hidden)
+{
+   if(gamestate == GS_LEVEL)
+      players[0].mo->momz = 10*FRACUNIT;
+}
+
 void P_AddCommands(void)
 {
    C_AddCommand(creator);
@@ -329,6 +338,9 @@ void P_AddCommands(void)
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();
+
+   // haleyjd: FIXME: DEBUG
+   C_AddCommand(jump);
 }
 
 // EOF

@@ -33,17 +33,17 @@ static const char rcsid[] = "$Id: version.c,v 1.2 1998/05/03 22:59:31 killough E
 int VERSION = 333;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char SUBVERSION = 2;
+unsigned char SUBVERSION = 33;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Warrior";
+const char version_name[] = "Paladin";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.33.02 \"Warrior\"";
+const char ee_wmCaption[] = "Eternity Engine v3.33.33 \"Paladin\"";
 #endif
                                              
 // haleyjd: Eternity release history
@@ -66,6 +66,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.33.02 \"Warrior\"";
 // 3.33.00 'Genesis'   -- 05/26/05
 // 3.33.01 'Outcast'   -- 06/24/05
 // 3.33.02 'Warrior'   -- 10/01/05
+// 3.33.33 'Paladin'   -- 05/16/06
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

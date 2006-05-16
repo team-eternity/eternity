@@ -128,6 +128,7 @@
 #define ITEM_INTERPAUSE  "intermission_pause"
 #define ITEM_INTERFADE   "intermission_fade"
 #define ITEM_INTERTL     "intermission_tl"
+#define ITEM_MN_EPISODE  "mn_episode"
 
 // sprite variables (global)
 
@@ -311,6 +312,7 @@ static cfg_opt_t edf_opts[] =
    CFG_INT(ITEM_INTERPAUSE,   0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERFADE,   -1,                 CFGF_NONE),
    CFG_INT_CB(ITEM_INTERTL,   0,                 CFGF_NONE, E_TranslucCB),
+   CFG_STR(ITEM_MN_EPISODE,   NULL,              CFGF_NONE),
    CFG_FUNC("include",        E_Include),
    CFG_FUNC("lumpinclude",    E_LumpInclude),
    CFG_FUNC("include_prev",   E_IncludePrev),
@@ -449,7 +451,8 @@ static cfg_opt_t terrain_lump_opts[] =
 // Options for stuff in EMENUS lump
 static cfg_opt_t menu_lump_opts[] =
 {
-   CFG_SEC(EDF_SEC_MENU, edf_menu_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_MENU,    edf_menu_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_STR(ITEM_MN_EPISODE, NULL,          CFGF_NONE),
    LUMP_FUNCTIONS,
    CFG_END()
 };

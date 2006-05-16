@@ -833,6 +833,12 @@ void E_PtclTerrainHit(particle_t *p)
    if(demo_version < 333 || comp[comp_terrain])
       return;
 
+   // no particle hits during netgames or demos;
+   // this is necessary because particles are not only client
+   // specific, but they also use M_Random
+   if(netgame || demoplayback || demorecording)
+      return;
+
    terrain = TerrainTypes[p->subsector->sector->floorpic];
 
    // some terrains didn't exist before a certain version

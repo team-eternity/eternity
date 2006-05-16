@@ -40,6 +40,9 @@
 #include "w_wad.h"
 
 extern int start_episode;
+extern char *start_mapname;
+
+extern menu_t *mn_episode_override;
 
 #define NUM_HSKULL 18
 
@@ -134,6 +137,17 @@ CONSOLE_COMMAND(mn_hnewgame, 0)
    if(netgame && !demoplayback)
    {
       MN_Alert(s_NEWGAME);
+      return;
+   }
+
+   // haleyjd 05/14/06: reset episode/level selection variables
+   start_episode = 1;
+   start_mapname = NULL;
+
+   // haleyjd 05/14/06: check for episode menu override now
+   if(mn_episode_override)
+   {
+      MN_StartMenu(mn_episode_override);
       return;
    }
 

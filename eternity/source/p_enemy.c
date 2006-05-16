@@ -3803,6 +3803,7 @@ void A_CyberGuardSigh(mobj_t *actor)
 // Console Commands for Things
 //==============================
 
+/*
 CONSOLE_COMMAND(spawn, cf_notnet|cf_level|cf_hidden)
 {
    fixed_t       x,y,z;
@@ -3914,37 +3915,106 @@ CONSOLE_COMMAND(spawn, cf_notnet|cf_level|cf_hidden)
       }
    }
 }
+*/
 
 // haleyjd 07/05/03: new console commands that can use
 // EDF thing type names instead of internal type numbers
 
+extern long *deh_ParseFlagsCombined(const char *strval);
+
 CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 {
-   int num;
-   char buffer[64];
+   fixed_t    x, y, z;
+   mobj_t     *newmobj;
+   angle_t    an;
+   int        type, prestep;
+   static int fountainType = -1;
+   static int playerType = -1;
+   static int dripType = -1;
+   player_t *plyr = &players[consoleplayer];
 
    if(!c_argc)
+   {
+      C_Printf("usage: summon thingtype flags\n");
       return;
+   }
 
-   num = E_ThingNumForName(c_argv[0]);
-
-   if(num == NUMMOBJTYPES)
+   if((type = E_ThingNumForName(c_argv[0])) == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
       return;
    }
 
-   switch(c_argc)
+   if(fountainType == -1)
    {
-   default:
-   case 1:
-      psnprintf(buffer, sizeof(buffer), "spawn %d", num);
-      break;
-   case 2:
-      psnprintf(buffer, sizeof(buffer), "spawn %d %s", num, c_argv[1]);
-      break;
+      fountainType = E_ThingNumForName("EEParticleFountain");
+      playerType   = E_ThingNumForDEHNum(MT_PLAYER);
+      dripType     = E_ThingNumForName("EEParticleDrip");
    }
-   C_RunTextCmd(buffer);
+
+   // if it's a missile, shoot it
+   if(mobjinfo[type].flags & MF_MISSILE)
+   {
+      P_SpawnPlayerMissile(plyr->mo, type);
+      return;
+   }
+
+   an = plyr->mo->angle >> ANGLETOFINESHIFT;
+   prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
+   
+   x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
+   y = plyr->mo->y + FixedMul(prestep, finesine[an]);
+   
+   z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+
+   if(Check_Sides(plyr->mo, x, y))
+      return;
+   
+   newmobj = P_SpawnMobj(x, y, z, type);
+   
+   if(c_argc >= 2)
+   {
+      long *res = deh_ParseFlagsCombined(c_argv[1]);
+
+      newmobj->flags  = res[0];
+      newmobj->flags2 = res[1];
+      newmobj->flags3 = res[2];
+   }
+
+   // killough 8/29/98: add to appropriate thread
+   P_UpdateThinker(&newmobj->thinker);
+      
+   // fountain: random color
+   if(type == fountainType)
+   {
+      int ft = 9027 + M_Random() % 7;
+      
+      newmobj->effects |= (ft - 9026) << FX_FOUNTAINSHIFT;
+   }
+
+   // drip: random parameters
+   if(type == dripType)
+   {
+      newmobj->args[0] = M_Random();
+      newmobj->args[1] = (M_Random() % 8) + 1;
+      newmobj->args[2] = M_Random() + 35;
+      newmobj->args[3] = 1;
+   }
+
+   if(newmobj->flags & MF_COUNTKILL)
+   {
+     newmobj->flags &= ~MF_COUNTKILL;
+     newmobj->flags3 |= MF3_KILLABLE;
+   }
+   
+   if(newmobj->flags & MF_COUNTITEM)
+      newmobj->flags &= ~MF_COUNTITEM;
+   
+   if(newmobj->type == playerType)
+   {
+      // 06/09/02: set player field for voodoo dolls
+      newmobj->player = plyr;
+   }
 }
 
 CONSOLE_COMMAND(give, cf_notnet|cf_level)
@@ -4010,7 +4080,6 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
 
 void PE_AddCommands(void)
 {
-   C_AddCommand(spawn);
    C_AddCommand(summon);
    C_AddCommand(give);
    C_AddCommand(whistle);

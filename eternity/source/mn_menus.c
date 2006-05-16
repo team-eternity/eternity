@@ -54,6 +54,7 @@
 #include "mn_emenu.h"
 #include "mn_misc.h"
 #include "mn_files.h"
+#include "p_setup.h"
 #include "r_defs.h"
 #include "r_draw.h"
 #include "s_sound.h"
@@ -89,6 +90,8 @@ char *mn_wadname;            // wad to load
 
 char *savegamenames[SAVESLOTS];
 
+char *mn_start_mapname;
+
 // haleyjd: keep track of valid save slots
 boolean savegamepresent[SAVESLOTS];
 
@@ -103,6 +106,7 @@ void MN_InitMenus(void)
    mn_phonenum = Z_Strdup("555-1212", PU_STATIC, 0);
    mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
    mn_wadname = Z_Strdup("", PU_STATIC, 0);
+   mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
    for(i = 0; i < SAVESLOTS; ++i)
@@ -197,6 +201,36 @@ void MN_MainMenuDrawer(void)
    V_DrawPatch(94, 2, &vbscreen, W_CacheLumpName("M_DOOM", PU_CACHE));
 }
 
+// haleyjd 05/14/06: moved these up here
+int start_episode;
+
+char *start_mapname; // local copy of ptr to cvar value
+
+extern menu_t *mn_episode_override;
+
+VARIABLE_STRING(mn_start_mapname,    NULL,   9);
+CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
+{
+   int lumpnum;
+
+   if(!c_argc)
+      return;
+
+   lumpnum = W_CheckNumForName(c_argv[0]);
+   
+   if(lumpnum == -1 || P_CheckLevel(lumpnum) == LEVEL_FORMAT_INVALID)   
+      C_Printf(FC_ERROR "level not found\a\n");
+   else
+   {
+      if(mn_start_mapname)
+         free(mn_start_mapname);
+      start_mapname = mn_start_mapname = strdup(c_argv[0]);
+   }
+
+   if(cmdtype == c_menu)
+      MN_StartMenu(gameModeInfo->newGameMenu);
+}
+
 // mn_newgame called from main menu:
 // goes to start map OR
 // starts menu
@@ -207,6 +241,17 @@ CONSOLE_COMMAND(mn_newgame, 0)
    if(netgame && !demoplayback)
    {
       MN_Alert(s_NEWGAME);
+      return;
+   }
+
+   // haleyjd 05/14/06: reset episode/level selection variables
+   start_episode = 1;
+   start_mapname = NULL;
+
+   // haleyjd 05/14/06: check for episode menu override now
+   if(mn_episode_override)
+   {
+      MN_StartMenu(mn_episode_override);
       return;
    }
    
@@ -283,8 +328,6 @@ CONSOLE_COMMAND(mn_quit, 0)
 // Episode Selection
 //
 
-int start_episode;
-
 static menuitem_t mn_episode_items[] =
 {
    {it_title,  "which episode?",            NULL,            "M_EPISOD"},
@@ -311,13 +354,13 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
 {
    if(!c_argc)
    {
-      C_Printf("usage: episode <epinum>\n");
+      C_Printf("usage: mn_episode <epinum>\n");
       return;
    }
    
    start_episode = atoi(c_argv[0]);
    
-   if(gamemode == shareware && start_episode > 1)
+   if((gameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {
       MN_Alert(s_SWSTRING);
       return;
@@ -385,10 +428,18 @@ CONSOLE_COMMAND(newgame, cf_notnet)
       MN_QuestionFunc(s_NIGHTMARE, MN_DoNightmare);
       return;
    }
-   
-   // haleyjd 03/02/03: changed to use config variable
-   if(gamemode == commercial && modifiedgame && startOnNewMap)
+
+   // haleyjd 05/14/06: check for mn_episode_override
+   if(mn_episode_override)
    {
+      if(start_mapname) // if set, use name, else use episode num as usual
+         G_DeferedInitNew(skill, start_mapname);
+      else
+         G_DeferedInitNewNum(skill, start_episode, 1);
+   }
+   else if(gamemode == commercial && modifiedgame && startOnNewMap)
+   {  
+      // haleyjd 03/02/03: changed to use startOnNewMap config variable
       // start on newest level from wad
       G_DeferedInitNew(skill, firstlevel);
    }
@@ -572,12 +623,12 @@ static menuitem_t mn_wadmisc_items[] =
    {it_gap},
    {it_info,     FC_GOLD "autoloaded files", NULL,              NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "wad file 1:",         "auto_wad_1",          NULL, MENUITEM_LALIGNED },
-   {it_variable, "wad file 2:",         "auto_wad_2",          NULL, MENUITEM_LALIGNED },
-   {it_variable, "deh file 1:",         "auto_deh_1",          NULL, MENUITEM_LALIGNED },
-   {it_variable, "deh file 2:",         "auto_deh_2",          NULL, MENUITEM_LALIGNED },
-   {it_variable, "csc file 1:",         "auto_csc_1",          NULL, MENUITEM_LALIGNED },
-   {it_variable, "csc file 2:",         "auto_csc_2",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "wad file 1:",         "auto_wad_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "wad file 2:",         "auto_wad_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "deh file 1:",         "auto_deh_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "deh file 2:",         "auto_deh_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "csc file 1:",         "auto_csc_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "csc file 2:",         "auto_csc_2",           NULL, MENUITEM_LALIGNED },
    {it_end},
 };
 
@@ -3272,6 +3323,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_episode);
    C_AddCommand(startlevel);
    C_AddCommand(use_startmap);
+   C_AddCommand(mn_start_mapname); // haleyjd 05/14/06
    
    C_AddCommand(mn_loadgame);
    C_AddCommand(mn_load);

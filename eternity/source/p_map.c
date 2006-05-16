@@ -553,12 +553,76 @@ static boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
    return true;
 }
 
+//
+// haleyjd 05/14/06: New over/under kernel from WinMBF experimental build.
+// This code allows a lot more varied interaction than the previous code,
+// including touchy things blowing up when landed on.
+//
+
+// things with these flags cannot be stepped up on (causes problems)
+// also, these thing types do not set a thing's floorz or ceilingz
+#define FLAGS_NOSTEPUP \
+   (MF_MISSILE|MF_BOUNCES|MF_SPECIAL|MF_CORPSE|MF_NOCLIP|MF_TOUCHY|MF_SKULLFLY)
+
+//
+// P_Touched
+//
+// haleyjd: isolated code to test for and execute touchy thing death.
+// Required for proper 3D clipping support.
+//
+d_inline static boolean P_Touched(mobj_t *thing, mobj_t *tmthing)
+{
+   static int painType = -1, skullType;
+
+   // EDF FIXME: temporary fix?
+   if(painType == -1)
+   {
+      painType    = E_ThingNumForDEHNum(MT_PAIN);
+      skullType   = E_ThingNumForDEHNum(MT_SKULL);
+   }
+
+   if(thing->flags & MF_TOUCHY &&                  // touchy object
+      tmthing->flags & MF_SOLID &&                 // solid object touches it
+      thing->health > 0 &&                         // touchy object is alive
+      (thing->intflags & MIF_ARMED ||              // Thing is an armed mine
+       sentient(thing)) &&                         // ... or a sentient thing
+      (thing->type != tmthing->type ||             // only different species
+       thing->player) &&                           // ... or different players
+      thing->z + thing->height >= tmthing->z &&    // touches vertically
+      tmthing->z + tmthing->height >= thing->z &&
+      (thing->type ^ painType) |                   // PEs and lost souls
+      (tmthing->type ^ skullType) &&               // are considered same
+      (thing->type ^ skullType) |                  // (but Barons & Knights
+      (tmthing->type ^ painType))                  // are intentionally not)
+   {
+      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
+      return true;
+   }
+
+   return false;
+}
+
+//
+// P_Touched
+//
+// haleyjd: isolated code to test for and execute touching specials.
+// Required for proper 3D clipping support.
+//
+d_inline static boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing)
+{
+   int solid = thing->flags & MF_SOLID;
+   if(tmflags & MF_PICKUP)
+      P_TouchSpecialThing(thing, tmthing); // can remove thing
+   return !solid;
+}
+
 // haleyjd 04/01/03: test routines for new experimental
 // over/under kernel -- these routines carefully select which
 // things are allowed to initiate and respond to over/under
 // movement -- a player must now be involved in order for the
 // movement to be allowed. This cleans up a lot of problems.
 
+/*
 #ifdef OVER_UNDER
 // returns true if moving thing can move over/under other things
 static boolean P_Is3DMover(mobj_t *mover, mobj_t *blocker)
@@ -634,6 +698,7 @@ static boolean P_CanStepUpOn(mobj_t *mover, mobj_t *blocker)
    return true;
 }
 #endif
+*/
 
 //
 // P_MissileBlockHeight
@@ -659,15 +724,11 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    int damage;
 
    // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
-   static int painType    = -1;
-   static int skullType   = -1;
    static int bruiserType = -1;
    static int knightType  = -1;
 
-   if(painType == -1)
+   if(bruiserType == -1)
    {
-      painType    = E_ThingNumForDEHNum(MT_PAIN);
-      skullType   = E_ThingNumForDEHNum(MT_SKULL);
       bruiserType = E_ThingNumForDEHNum(MT_BRUISER);
       knightType  = E_ThingNumForDEHNum(MT_KNIGHT);
    }
@@ -692,6 +753,92 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    if(thing == tmthing)
       return true;
 
+#ifdef OVER_UNDER
+   // haleyjd 05/14/06: new over/under kernel from WinMBF-exp
+   if(demo_version >= 331 && !comp[comp_overunder])
+   {
+      // haleyjd: missiles & non-solid bouncers do their own z checks.
+      if(!(tmthing->flags & MF_MISSILE || (tmthing->flags & MF_BOUNCES &&
+           !(tmthing->flags & MF_SOLID))))
+      {
+         fixed_t thingzl, thingzh, tmthingzl, tmthingzh;
+         
+         thingzl = thing->z;
+         thingzh = thingzl + thing->height;
+         
+         tmthingzl = tmthing->z;
+         tmthingzh = tmthingzl + tmthing->height;
+         
+         if(tmthingzl >= thingzh) // mover is over?
+         {            
+            if(!(thing->flags & FLAGS_NOSTEPUP) && thingzh > tmfloorz)
+               tmfloorz = thingzh;
+
+            // actions to take if mover is standing ON the thing...
+            if(tmthingzl == thingzh)
+            {
+               if(P_Touched(thing, tmthing)) // touchy things should explode    
+                  return true;
+               
+               if(tmthing->flags & MF_SKULLFLY || // skulls should bounce
+                  tmthing->flags & MF_BOUNCES)    // bouncers should bounce
+               {
+                  if(tmthing->momz < 0)
+                     tmthing->momz = -tmthing->momz;
+                  else
+                     tmthing->momz = 5*FRACUNIT; // give it some momentum.
+               }
+               
+               if(thing->flags & MF_SPECIAL) // specials should be collected
+                  return P_CheckPickUp(thing, tmthing);
+            }
+            
+            return true;
+         } 
+         else if(tmthingzh <= thingzl) // mover is under?
+         {
+            if(!(thing->flags & FLAGS_NOSTEPUP) && thingzl < tmceilingz)
+               tmceilingz = thingzl;
+            
+            // actions to take if mover is touching thing from beneath
+            if(tmthingzh == thingzl)
+            {
+               if(P_Touched(thing, tmthing)) // touchy things should explode
+                  return true;
+               
+               if(tmthing->flags & MF_SKULLFLY || // skulls should bounce
+                  tmthing->flags & MF_BOUNCES)    // bouncers should bounce
+               {
+                  if(tmthing->momz > 0)
+                     tmthing->momz = -tmthing->momz;
+                  else
+                     tmthing->momz = -5*FRACUNIT; // give it some momentum.
+               }
+               
+               if(thing->flags & MF_SPECIAL) // specials should be collected
+                  return P_CheckPickUp(thing, tmthing);
+            }
+            
+            return true;
+         }
+         
+         // check for stepup:
+         // only players step up, and never onto anything with special clipping
+         // behaviors. height difference must be <= 24 units.
+         if(tmthing->player && !(thing->flags & FLAGS_NOSTEPUP) && 
+            thingzh - tmthingzl <= 24*FRACUNIT)
+         {
+            // mover can step up on blocker
+            if(thingzh > tmfloorz)
+               tmstepupfloorz = thingzh;
+            
+            return true;
+         }
+      }         
+   }
+#endif
+
+/*
 #ifdef OVER_UNDER
    // haleyjd 04/01/03: new experimental over/under kernel
    if(demo_version >= 331 && !comp[comp_overunder] &&
@@ -726,6 +873,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
       }
    }
 #endif
+*/
 
    // haleyjd 1/17/00: set global hit reference
    BlockingMobj = thing;
@@ -737,6 +885,10 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    // thing, and the touchy thing is not the sole one moving relative to fixed
    // surroundings such as walls, then the touchy thing dies immediately.
 
+   if(P_Touched(thing, tmthing))
+      return true;
+
+   /*
    if(thing->flags & MF_TOUCHY &&                  // touchy object
       tmthing->flags & MF_SOLID &&                 // solid object touches it
       thing->health > 0 &&                         // touchy object is alive
@@ -754,6 +906,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
       P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
       return true;
    }
+   */
 
    // check for skulls slamming into things
    
@@ -856,12 +1009,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    // check for special pickup
    
    if(thing->flags & MF_SPECIAL)
-   {
-      int solid = thing->flags & MF_SOLID;
-      if(tmflags & MF_PICKUP)
-         P_TouchSpecialThing(thing, tmthing); // can remove thing
-      return !solid;
-   }
+      return P_CheckPickUp(thing, tmthing);
 
    // killough 3/16/98: Allow non-solid moving objects to move through solid
    // ones, by allowing the moving thing (tmthing) to move if it's non-solid,

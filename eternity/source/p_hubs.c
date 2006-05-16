@@ -31,7 +31,7 @@
 //
 // haleyjd:
 // This code is not currently accessible and needs a complete ground-up
-// rewrite so that it works properly, taking a queue from Hexen on the
+// rewrite so that it works properly, taking a cue from Hexen on the
 // storage and indexing of hub save files, level transfers, and the
 // proper handling of scripts.
 //

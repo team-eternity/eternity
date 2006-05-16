@@ -28,6 +28,7 @@
 #include "z_zone.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "d_io.h"
 #include "d_dehtbl.h"
 #include "mn_engin.h"
@@ -53,6 +54,8 @@
 #define ITEM_MNITEM_CMD    "cmd"
 #define ITEM_MNITEM_PATCH  "patch"
 #define ITEM_MNITEM_FLAGS  "flags"
+
+#define ITEM_MN_EPISODE    "mn_episode"
 
 // menu item options table
 static cfg_opt_t mnitem_opts[] =
@@ -166,6 +169,9 @@ static menu_t *MN_CreateDynamicMenu(const char *name)
    memset(newMenu, 0, sizeof(menu_t));
 
    // set name
+   if(strlen(name) > 32)
+      E_EDFLoggedErr(2, "MN_CreateDynamicMenu: mnemonic '%s' is too long\n", name);
+
    strncpy(newMenu->name, name, 33);
 
    // hash it
@@ -321,6 +327,9 @@ static void MN_ProcessMenu(menu_t *menu, cfg_t *menuSec)
    E_EDFLogPrintf("\t\tFinished menu %s\n", menu->name);
 }
 
+// global menu overrides
+menu_t *mn_episode_override = NULL;
+
 //
 // MN_ProcessMenus
 //
@@ -329,6 +338,7 @@ static void MN_ProcessMenu(menu_t *menu, cfg_t *menuSec)
 void MN_ProcessMenus(cfg_t *cfg)
 {
    unsigned int i, numMenus;
+   char *override_name;
 
    numMenus = cfg_size(cfg, EDF_SEC_MENU);
 
@@ -362,6 +372,21 @@ void MN_ProcessMenus(cfg_t *cfg)
 
       if((menu = MN_DynamicMenuForName(tempstr)))
          MN_ProcessMenu(menu, menuSec);
+   }
+
+   // now, process menu-related variables
+
+   // allow episode menu override
+   if((override_name = cfg_getstr(cfg, ITEM_MN_EPISODE)))
+   {
+      // not allowed in a shareware gamemode!
+      if(gameModeInfo->flags & GIF_SHAREWARE)
+      {
+         E_EDFLoggedErr(1, "MN_ProcessMenus: can't override episodes " 
+                           "in shareware. Register!\n");
+      }
+
+      mn_episode_override = MN_DynamicMenuForName(override_name);
    }
 }
 

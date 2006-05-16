@@ -240,6 +240,8 @@ extern menu_t menu_savegame;
 extern menu_t menu_hsavegame;
 extern menu_t menu_loadgame;
 extern menu_t menu_hloadgame;
+extern menu_t menu_newgame;
+extern menu_t menu_hnewgame;
 
 //
 // Game Mode Information Structures
@@ -268,6 +270,7 @@ gameinfo_t giDoomSW =
    &menu_main,       // mainMenu
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
+   &menu_newgame,    // newGameMenu
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -345,6 +348,7 @@ gameinfo_t giDoomReg =
    &menu_main,       // mainMenu
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
+   &menu_newgame,    // newGameMenu
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -422,6 +426,7 @@ gameinfo_t giDoomRetail =
    &menu_main,       // mainMenu
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
+   &menu_newgame,    // newGameMenu
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -499,6 +504,7 @@ gameinfo_t giDoomCommercial =
    &menu_main,       // mainMenu
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
+   &menu_newgame,    // newGameMenu
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -576,6 +582,7 @@ gameinfo_t giHereticSW =
    &menu_hmain,      // mainMenu
    &menu_hsavegame,  // saveMenu
    &menu_hloadgame,  // loadMenu
+   &menu_hnewgame,   // newGameMenu
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
    sfx_gldhit,       // skvAtkSound
@@ -657,6 +664,7 @@ gameinfo_t giHereticReg =
    &menu_hmain,      // mainMenu
    &menu_hsavegame,  // saveMenu
    &menu_hloadgame,  // loadMenu
+   &menu_hnewgame,   // newGameMenu
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
    sfx_gldhit,       // skvAtkSound
