@@ -204,6 +204,8 @@ extern fixed_t attackrange;
 extern fixed_t shootz;
 extern fixed_t aimslope;
 
+extern divline_t trace;
+
 boolean PTR_chasetraverse(intercept_t *in)
 {
    fixed_t dist, frac;
