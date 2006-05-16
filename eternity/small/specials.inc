@@ -129,6 +129,12 @@ native _Polyobj_OR_RotateRight(polyobj_id, aspeed, adist);        // 355
 native _Polyobj_RotateLeft(polyobj_id, aspeed, adist);            // 356
 native _Polyobj_OR_RotateLeft(polyobj_id, aspeed, adist);         // 357
 
+// byte angle routines
+stock _ByteAngleToDegrees(byteang)
+   return (byteang * 360) / 256;
+   
+stock _DegreesToByteAngle(degrees)
+   return (degrees * 256) / 360;
 
 // Allows setting the special of a sector.
 // * must be called only while in a level
