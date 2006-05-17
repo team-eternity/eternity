@@ -274,7 +274,7 @@ This section is new to EDF 1.6 and describes classes of identifiers (such as thi
 frame, and sound mnemonics) which are considered reserved by the Eternity Engine.
 You should avoid using any identifier in the following classes for objects which
 you define yourself. Failure to do so could result in incompatibility of your
-project with future versions of the Eternity Engine, due to conflicts with newly
+project with future versions of the Eternity Engine due to conflicts with newly
 added game engine features.
 <ul>
 <li> All identifiers beginning with _ (underscore)
@@ -404,9 +404,10 @@ can be a dummy which is never used, however.
 </a>
 <br>
 The EMENUS lump is an optional EDF lump which can contain any number of <b>menu</b>
-definitions. All definitions are additive, and if definitions of the same name already
-exist, they will overwrite. EMENUS lumps do not cascade by default, but can be made to
-do so by using the <b>include_prev</b> function documented below.
+definitions and menu-system global variables. All definitions are additive, and if 
+definitions of the same name already exist, they will overwrite. EMENUS lumps do not
+cascade by default, but can be made to do so by using the <b>include_prev</b> function
+documented below.
 <br><br>
 Note: it is inappropriate to include an EMENUS lump from EDFROOT or from any file
 included by it, because EMENUS will be processed separately after the root EDF has
@@ -469,7 +470,7 @@ Linux, but the DOS port of Eternity cannot use long file names.
 New to EDF 1.6 (Eternity Engine v3.33.33), the <b>userinclude</b> function allows the
 optional inclusion of a file from Eternity's folder. This function is identical to 
 <b>stdinclude</b>, except that it will test to see if the file exists beforehand, and
-if it does not, no error will occur. This function is not for use by EDF editors in 
+if it does not, no error will occur. This function is <b>NOT</b> for use by EDF editors in 
 projects. This function is intended for end-user modification of EDF settings, including
 but not limited to the custom user menu. Example:
 <pre>
@@ -478,7 +479,8 @@ userinclude("user.edf")
 
 This example can be found in Eternity's root.edf, where it exists to include the optional
 user-defined "user.edf" file. You should never attempt to overwrite the user.edf file with
-one from your own project, as this is outside the scope of its purpose.
+one from your own project, as this is outside the scope of its purpose and will be offensive
+to the end user.
 <br><br>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -3226,8 +3228,34 @@ menu _MN_Custom
    flags = background
 }
 </pre>
-<a href="#contents">Return to Table of Contents</a>
 
+Overriding Native Menus:
+<br><br>
+Eternity allows specific native menus to be overridden by menus you define in EDF.
+Currently the following menus can be overridden:
+<ul>
+<li> Episode selection menu
+</ul>
+
+To override a specific menu, you set a global variable in either the root EDF or in
+an EMENUS lump to the mnemonic of the menu you have provided. A table of variables
+and the menus they replace follows:
+<pre>
+   EDF Variable                   Menu Overridden
+  -------------------------------------------------------
+   mn_episode                     Episode selection menu
+  -------------------------------------------------------
+</pre>
+
+Example:
+<pre>
+/*
+   This could be placed at global scope anywhere within the root chain of EDF
+   files/lumps or within an EMENUS lump along with the menu it names.
+*/
+mn_episode = MyEpisodeMenu
+</pre>
+<a href="#contents">Return to Table of Contents</a>
 
 <p>
 <a name="delta">

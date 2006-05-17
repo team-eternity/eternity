@@ -134,6 +134,8 @@
     <li><a href="#paramspecs">Parameterized Line Specials</a>
         <ul>
         <li><a href="#_SpecialMode">_SpecialMode</a>
+        <li><a href="#_ByteAngleToDegrees">_ByteAngleToDegrees</a>
+        <li><a href="#_DegreesToByteAngle">_DegreesToByteAngle</a>
         <li><a href="#_Door_Raise">_Door_Raise</a>
         <li><a href="#_Door_Open">_Door_Open</a>
         <li><a href="#_Door_Close">_Door_Close</a>
@@ -1993,6 +1995,30 @@ in Hexen.
     automatically reset to _SPEC_NULL. You must set the special mode to _SPEC_PASS at the
     beginning of any script called directly from a script linedef when pass-through semantics 
     are desired.
+    <br><br>
+
+<li><a name="_ByteAngleToDegrees"><b>_ByteAngleToDegrees</b></a><br>
+    <em>stock _ByteAngleToDegrees(byteang);</em><br>
+    Parameters:
+    <ul>
+    <li> byteang : A byte angle value
+    </ul>
+    Return value: The byte angle converted to integer degrees.<br>
+    Found in: specials.inc<br>
+    Description: Converts a given byte angle value to degrees. The formula used is as follows:<br>
+    degrees = (byteangle * 360) / 256;
+    <br><br>
+
+<li><a name="_DegreesToByteAngle"><b>_DegreesToByteAngle</b></a><br>
+    <em>stock _DegreesToByteAngle(degrees);</em><br>
+    Parameters:
+    <ul>
+    <li> degrees : An integer angle in degrees
+    </ul>
+    Return value: The byte angle value corresponding to 'degrees'.<br>
+    Found in: specials.inc<br>
+    Description: Converts a given angle in degress to a byte angle. The formula used is as follows:<br>
+    byteangle = (degrees * 256) / 360;
     <br><br>
     
 <li><a name="_Door_Raise"><b>_Door_Raise</b></a><br>

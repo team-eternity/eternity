@@ -98,7 +98,7 @@ the Eternity console, as well as pointers on console command syntax.
           armor_red, armor_yellow, armor_green, st_rednum, st_singlekey,
           st_graypct
       <li><a href="#varmenus">Menu variables</a><br>
-          use_traditional_menu, wad_directory, mn_toggleisback, mn_searchstr
+          use_traditional_menu, wad_directory, mn_toggleisback, mn_searchstr, mn_start_mapname
       <li><a href="#varrendering">Rendering variables</a><br>
           r_showgun, r_showhom, r_blockmap, r_homflash, r_planeview, r_zoom, 
           r_stretchsky, r_precache, r_trans, r_tranpct, r_swirl, gamma,
@@ -1814,6 +1814,7 @@ Synopsis:
 	* wad_directory
 	* mn_toggleisback
 	* mn_searchstr
+	* mn_start_mapname
 </pre>	
 <ul>	
 <li> use_traditional_menu<br>
@@ -1836,6 +1837,12 @@ Synopsis:
 	type: string<br>	
 	value = string to search for in menus via mn_search command<br>
 	<br>
+<li> mn_start_mapname<br>
+        type: string<br>
+        value = Exact map header name of a map at which a new game started from the menus
+                should begin at. If invoked from the menus, this command will immediately
+                invoke the gamemode-dependent skill selection menu when its value is set.<br>
+        <br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
