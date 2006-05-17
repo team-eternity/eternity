@@ -330,7 +330,7 @@ static void P_SetParticlePosition(particle_t *ptcl)
    subsector_t *ss = R_PointInSubsector(ptcl->x, ptcl->y);
 
    M_DLListInsert((mdllistitem_t *)ptcl, 
-                  &((mdllistitem_t *)ss->sector->ptcllist));
+                  (mdllistitem_t **)(&ss->sector->ptcllist));
 
    ptcl->subsector = ss;
 }

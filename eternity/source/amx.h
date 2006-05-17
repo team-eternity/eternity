@@ -191,8 +191,8 @@ typedef int (AMXAPI *AMX_DEBUG)(struct tagAMX *amx);
 #endif
 
 typedef struct tagAMX_NATIVE_INFO {
-  const char _FAR *name PACKED;
-  AMX_NATIVE func       PACKED;
+  const char _FAR *name;
+  AMX_NATIVE func;
 } AMX_NATIVE_INFO       PACKED;
 
 #define AMX_USERNUM     4
@@ -200,53 +200,53 @@ typedef struct tagAMX_NATIVE_INFO {
 #define sNAMEMAX        31      /* maximum name length of symbol name */
 
 typedef struct tagAMX_FUNCSTUB {
-  ucell address         PACKED;
-  char name[sEXPMAX+1]  PACKED;
+  ucell address;
+  char name[sEXPMAX+1];
 } AMX_FUNCSTUB          PACKED;
 
 typedef struct tagFUNCSTUBNT {
-  ucell address         PACKED;
-  uint32_t nameofs      PACKED;
+  ucell address;
+  uint32_t nameofs;
 } FUNCSTUBNT            PACKED;
 
 /* The AMX structure is the internal structure for many functions. Not all
  * fields are valid at all times; many fields are cached in local variables.
  */
 typedef struct tagAMX {
-  unsigned char _FAR *base PACKED; /* points to the AMX header ("amxhdr") plus the code, optionally also the data */
-  unsigned char _FAR *data PACKED; /* points to separate data+stack+heap, may be NULL */
-  AMX_CALLBACK callback PACKED;
-  AMX_DEBUG debug       PACKED; /* debug callback */
+  unsigned char _FAR *base; /* points to the AMX header ("amxhdr") plus the code, optionally also the data */
+  unsigned char _FAR *data; /* points to separate data+stack+heap, may be NULL */
+  AMX_CALLBACK callback;
+  AMX_DEBUG debug;          /* debug callback */
   /* for external functions a few registers must be accessible from the outside */
-  cell cip              PACKED; /* instruction pointer: relative to base + amxhdr->cod */
-  cell frm              PACKED; /* stack frame base: relative to base + amxhdr->dat */
-  cell hea              PACKED; /* top of the heap: relative to base + amxhdr->dat */
-  cell hlw              PACKED; /* bottom of the heap: relative to base + amxhdr->dat */
-  cell stk              PACKED; /* stack pointer: relative to base + amxhdr->dat */
-  cell stp              PACKED; /* top of the stack: relative to base + amxhdr->dat */
-  int flags             PACKED; /* current status, see amx_Flags() */
+  cell cip; /* instruction pointer: relative to base + amxhdr->cod */
+  cell frm; /* stack frame base: relative to base + amxhdr->dat */
+  cell hea; /* top of the heap: relative to base + amxhdr->dat */
+  cell hlw; /* bottom of the heap: relative to base + amxhdr->dat */
+  cell stk; /* stack pointer: relative to base + amxhdr->dat */
+  cell stp; /* top of the stack: relative to base + amxhdr->dat */
+  int flags; /* current status, see amx_Flags() */
   /* for assertions and debug hook */
-  cell curline          PACKED;
-  cell curfile          PACKED;
-  int dbgcode           PACKED;
-  cell dbgaddr          PACKED;
-  cell dbgparam         PACKED;
-  char _FAR *dbgname    PACKED;
+  cell curline;
+  cell curfile;
+  int dbgcode;
+  cell dbgaddr;
+  cell dbgparam;
+  char _FAR *dbgname;
   /* user data */
-  long usertags[AMX_USERNUM] PACKED;
-  void _FAR *userdata[AMX_USERNUM] PACKED;
+  long usertags[AMX_USERNUM];
+  void _FAR *userdata[AMX_USERNUM];
   /* native functions can raise an error */
-  int error             PACKED;
+  int error;
   /* the sleep opcode needs to store the full AMX status */
-  cell pri              PACKED;
-  cell alt              PACKED;
-  cell reset_stk        PACKED;
-  cell reset_hea        PACKED;
-  cell sysreq_d         PACKED; /* relocated address/value for the SYSREQ.D opcode */
+  cell pri;
+  cell alt;
+  cell reset_stk;
+  cell reset_hea;
+  cell sysreq_d; /* relocated address/value for the SYSREQ.D opcode */
   #if defined JIT
     /* support variables for the JIT */
-    int reloc_size      PACKED; /* required temporary buffer for relocations */
-    long code_size      PACKED; /* estimated memory footprint of the native code */
+    int reloc_size; /* required temporary buffer for relocations */
+    long code_size; /* estimated memory footprint of the native code */
   #endif
 } AMX                   PACKED;
 
@@ -254,23 +254,23 @@ typedef struct tagAMX {
  * structure is used internaly.
  */
 typedef struct tagAMX_HEADER {
-  int32_t size          PACKED; /* size of the "file" */
-  uint16_t magic        PACKED; /* signature */
-  char    file_version  PACKED; /* file format version */
-  char    amx_version   PACKED; /* required version of the AMX */
-  int16_t flags         PACKED;
-  int16_t defsize       PACKED; /* size of a definition record */
-  int32_t cod           PACKED; /* initial value of COD - code block */
-  int32_t dat           PACKED; /* initial value of DAT - data block */
-  int32_t hea           PACKED; /* initial value of HEA - start of the heap */
-  int32_t stp           PACKED; /* initial value of STP - stack top */
-  int32_t cip           PACKED; /* initial value of CIP - the instruction pointer */
-  int32_t publics       PACKED; /* offset to the "public functions" table */
-  int32_t natives       PACKED; /* offset to the "native functions" table */
-  int32_t libraries     PACKED; /* offset to the table of libraries */
-  int32_t pubvars       PACKED; /* the "public variables" table */
-  int32_t tags          PACKED; /* the "public tagnames" table */
-  int32_t nametable     PACKED; /* name table, file version 7 only */
+  int32_t size; /* size of the "file" */
+  uint16_t magic; /* signature */
+  char    file_version; /* file format version */
+  char    amx_version; /* required version of the AMX */
+  int16_t flags;
+  int16_t defsize; /* size of a definition record */
+  int32_t cod; /* initial value of COD - code block */
+  int32_t dat; /* initial value of DAT - data block */
+  int32_t hea; /* initial value of HEA - start of the heap */
+  int32_t stp; /* initial value of STP - stack top */
+  int32_t cip; /* initial value of CIP - the instruction pointer */
+  int32_t publics; /* offset to the "public functions" table */
+  int32_t natives; /* offset to the "native functions" table */
+  int32_t libraries; /* offset to the table of libraries */
+  int32_t pubvars; /* the "public variables" table */
+  int32_t tags; /* the "public tagnames" table */
+  int32_t nametable; /* name table, file version 7 only */
 } AMX_HEADER            PACKED;
 
 #if SMALL_CELL_SIZE==16

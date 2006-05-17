@@ -73,11 +73,10 @@ static edf_string_t *edf_str_numchains[NUM_EDFSTR_CHAINS];
 //
 static void E_AddStringToNumHash(edf_string_t *str)
 {
-   edf_string_t *chain;
+   int idx = str->numkey % NUM_EDFSTR_CHAINS;
 
-   chain = edf_str_numchains[str->numkey % NUM_EDFSTR_CHAINS];
-
-   M_DLListInsert((mdllistitem_t *)str, &((mdllistitem_t *)chain));
+   M_DLListInsert((mdllistitem_t *)str, 
+                  (mdllistitem_t **)(&edf_str_numchains[idx]));
 }
 
 //

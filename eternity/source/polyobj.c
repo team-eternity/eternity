@@ -557,7 +557,7 @@ static void Polyobj_attachToSubsec(polyobj_t *po)
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
-   M_DLListInsert(&po->link, &((mdllistitem_t *)ss->polyList));
+   M_DLListInsert(&po->link, (mdllistitem_t **)(&ss->polyList));
 
 #ifdef R_LINKEDPORTALS
    // set spawnSpot's groupid for correct portal sound behavior
@@ -650,18 +650,18 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
    blockbox[BOXBOTTOM] = (blockbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
    
    // link polyobject to every block its bounding box intersects
-   for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)
+   for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)
    {
-      for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)
+      for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)   
       {
          if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
          {
             polymaplink_t  *l = Polyobj_getLink();
-            polymaplink_t **b = &(polyblocklinks[y * bmapwidth + x]);
             
             l->po = po;
             
-            M_DLListInsert(&l->link, (mdllistitem_t **)b);
+            M_DLListInsert(&l->link, 
+                           (mdllistitem_t **)(&polyblocklinks[y*bmapwidth + x]));
          }
       }
    }
@@ -686,9 +686,9 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
       return;
 
    // search all cells the polyobject touches
-   for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)
+   for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)   
    {
-      for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)
+      for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)   
       {
          if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
          {
@@ -779,9 +779,9 @@ static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
    linebox[BOXTOP]    = (line->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
    // check all mobj blockmap cells the line contacts
-   for(x = linebox[BOXLEFT]; x <= linebox[BOXRIGHT]; ++x)
+   for(y = linebox[BOXBOTTOM]; y <= linebox[BOXTOP]; ++y)
    {
-      for(y = linebox[BOXBOTTOM]; y <= linebox[BOXTOP]; ++y)
+      for(x = linebox[BOXLEFT]; x <= linebox[BOXRIGHT]; ++x)
       {
          if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
          {
