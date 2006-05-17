@@ -560,9 +560,12 @@ static boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
 //
 
 // things with these flags cannot be stepped up on (causes problems)
-// also, these thing types do not set a thing's floorz or ceilingz
 #define FLAGS_NOSTEPUP \
-   (MF_MISSILE|MF_BOUNCES|MF_SPECIAL|MF_CORPSE|MF_NOCLIP|MF_TOUCHY|MF_SKULLFLY)
+   (MF_MISSILE|MF_BOUNCES|MF_SPECIAL|MF_CORPSE|MF_NOCLIP|MF_SKULLFLY)
+
+// things with these flags shouldn't set other things' floor/ceiling heights
+#define FLAGS_NOSETHEIGHTS \
+   (MF_MISSILE|MF_SPECIAL|MF_CORPSE|MF_NOCLIP)
 
 //
 // P_Touched
@@ -758,8 +761,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    if(demo_version >= 331 && !comp[comp_overunder])
    {
       // haleyjd: missiles & non-solid bouncers do their own z checks.
-      if(!(tmthing->flags & MF_MISSILE || (tmthing->flags & MF_BOUNCES &&
-           !(tmthing->flags & MF_SOLID))))
+      if(!(tmthing->flags & MF_MISSILE || 
+           (tmthing->flags & MF_BOUNCES && !(tmthing->flags & MF_SOLID))))
       {
          fixed_t thingzl, thingzh, tmthingzl, tmthingzh;
          
@@ -771,7 +774,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
          
          if(tmthingzl >= thingzh) // mover is over?
          {            
-            if(!(thing->flags & FLAGS_NOSTEPUP) && thingzh > tmfloorz)
+            if(!(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
+               thingzh > tmfloorz)
                tmfloorz = thingzh;
 
             // actions to take if mover is standing ON the thing...
@@ -797,7 +801,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
          } 
          else if(tmthingzh <= thingzl) // mover is under?
          {
-            if(!(thing->flags & FLAGS_NOSTEPUP) && thingzl < tmceilingz)
+            if(!(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
+               thingzl < tmceilingz)
                tmceilingz = thingzl;
             
             // actions to take if mover is touching thing from beneath

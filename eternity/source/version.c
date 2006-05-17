@@ -45,7 +45,7 @@ const char version_name[] = "Paladin";
 #ifdef _SDL_VER
 const char ee_wmCaption[] = "Eternity Engine v3.33.33 \"Paladin\"";
 #endif
-                                             
+            
 // haleyjd: Eternity release history
 // private alpha       -- 3.29 private       09/14/00
 // public beta         -- 3.29 public beta 1 01/08/01
@@ -66,7 +66,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.33.33 \"Paladin\"";
 // 3.33.00 'Genesis'   -- 05/26/05
 // 3.33.01 'Outcast'   -- 06/24/05
 // 3.33.02 'Warrior'   -- 10/01/05
-// 3.33.33 'Paladin'   -- 05/16/06
+// 3.33.33 'Paladin'   -- 05/17/06
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

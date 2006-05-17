@@ -2,6 +2,75 @@
 Changes since Eternity Engine v3.33.02
 =====================================================================
 =====================================================================
+05/16/06
+
+Performed some absolute last-minute changes, including attempts to
+help joe get this beast compiled under Linux.
+
+=====================================================================
+05/14/06
+
+Added episode selection menu override as promised before when I was
+adding the dynamic EDF menus system. It was more complicated than I
+thought it would be, and required the addition of a new console
+variable called mn_start_mapname in order to work under DOOM II.
+This variable records the full name of a map to start a new game on,
+and when set via the menus, it automatically starts up the current
+gamemode's skill selection menu.
+
+Also integrated the experimental over/under kernel from my private
+WinMBF build. This new kernel allows such coolness as landing on top
+of TOUCHY barrels and having them explode and Lost Souls that can
+bounce off the top of your head.
+
+=====================================================================
+05/02/06
+
+Made line flag with value 2048 into a reserved flag because of
+problems with Ultimate DOOM E2M7, which had around 1000 linedefs
+with the value 0xFE00 masked into the options. In 3.33.02, this 
+caused a crash when pressing one of the switches that opens the
+secret corridor in the first room because the line had the 3DMidTex
+flag set.
+
+I also changed the 3DMidTex switch code yet again to ONLY consider
+flagged 2S lines as even possibly being candidates. It makes no 
+sense to give any 3DMidTex behavior to a line that desires to act
+one-sided as far as I figure.
+
+Finally, I brought in a fix from SMMU v3.30 which repaired some
+weird looking v3.21 code in R_ClearPlanes and seems to relate to an
+optimization for drawing when the console is down.
+
+=====================================================================
+04/22/06
+
+Eliminated GIF_PAGERAW flag from gameModeInfo and recoded several
+parts of the engine to distinguish raw pages from fullscreen patches
+using a lump size of 64000 bytes. Valid fullscreen patch graphics
+cannot possibly be this size.
+
+=====================================================================
+04/17/06
+
+SoM has finished two-way anchored portals (not to be confused with
+linked portals) and large flat support. Power-of-two-sized flats up
+to 512x512 are now supported ^_^
+
+=====================================================================
+04/04/06
+
+Tweaked the zone heap printing function so that it can print more
+information before it gets to an area where it could possibly crash
+in the event of severe heap corruption.
+
+=====================================================================
+03/31/06
+
+Added weapon counters and a large number of codepointers that can use
+them.
+
+=====================================================================
 03/29/06
 
 Rolled back my "absolute centered" HUD text widget hackery and
