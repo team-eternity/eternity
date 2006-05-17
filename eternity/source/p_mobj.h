@@ -32,6 +32,7 @@ typedef struct mobj_s mobj_t;   //sf: move up here
 // Basics.
 #include "tables.h"
 #include "m_fixed.h"
+#include "m_random.h"
 
 // We need the thinker_t stuff.
 #include "d_think.h"
@@ -512,8 +513,6 @@ struct mobj_s
 // haleyjd 11/28/02: default z coord addend for missile spawn
 #define DEFAULTMISSILEZ (4*8*FRACUNIT)
 
-extern mapthing_t itemrespawnque[];
-extern int itemrespawntime[];
 extern int iquehead;
 extern int iquetail;
 
@@ -572,7 +571,7 @@ void P_ClearMobjCollection(MobjCollection *);
 void P_CollectThings(MobjCollection *);
 boolean P_CollectionIsEmpty(MobjCollection *);
 mobj_t *P_CollectionWrapIterator(MobjCollection *);
-mobj_t *P_CollectionGetRandom(MobjCollection *, int);
+mobj_t *P_CollectionGetRandom(MobjCollection *, pr_class_t);
 
 // end new Eternity mobj functions
 
