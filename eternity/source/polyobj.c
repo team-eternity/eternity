@@ -595,7 +595,7 @@ static polymaplink_t *Polyobj_getLink(void)
    if(bmap_freelist)
    {
       l = bmap_freelist;
-      bmap_freelist = (polymaplink_t *)(l->link.next);
+      bmap_freelist = l->po_next;
    }
    else
    {
@@ -614,14 +614,14 @@ static polymaplink_t *Polyobj_getLink(void)
 static void Polyobj_putLink(polymaplink_t *l)
 {
    memset(l, 0, sizeof(*l));
-   l->link.next = (mdllistitem_t *)bmap_freelist;
+   l->po_next = bmap_freelist;
    bmap_freelist = l;
 }
 
 //
 // Polyobj_linkToBlockmap
 //
-// Inserts a polyobject into the polyobject blockmap. Unlike, mobj_t's,
+// Inserts a polyobject into the polyobject blockmap. Unlike mobj_t's,
 // polyobjects need to be linked into every blockmap cell which their
 // bounding box intersects. This ensures the accurate level of clipping
 // which is present with linedefs but absent from most mobj interactions.
@@ -659,6 +659,10 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
             polymaplink_t  *l = Polyobj_getLink();
             
             l->po = po;
+
+            // haleyjd 05/18/06: optimization: keep track of links in polyobject
+            l->po_next = po->linkhead;
+            po->linkhead = l;
             
             M_DLListInsert(&l->link, 
                            (mdllistitem_t **)(&polyblocklinks[y*bmapwidth + x]));
@@ -672,44 +676,35 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
 //
 // Polyobj_removeFromBlockmap
 //
-// Unlinks a polyobject from all blockmap cells it intersects and returns
-// its polymaplink objects to the free list.
+// Unlinks a PolyObject from the blockmap and returns its links to the
+// freelist.
+//
+// haleyjd 05/18/06: completely rewritten to optimize unlinking. Links are
+// now tracked in a single-linked list starting in the polyobject itself
+// and running through all polymaplinks. This should be much faster than
+// searching through the blockmap.
 //
 static void Polyobj_removeFromBlockmap(polyobj_t *po)
 {
-   polymaplink_t *rover;
-   fixed_t *blockbox = po->blockbox;
-   int x, y;
+   polymaplink_t *l = po->linkhead;
 
    // don't bother trying to unlink one that's not linked
    if(!po->linked)
       return;
 
-   // search all cells the polyobject touches
-   for(y = blockbox[BOXBOTTOM]; y <= blockbox[BOXTOP]; ++y)   
+   while(l)
    {
-      for(x = blockbox[BOXLEFT]; x <= blockbox[BOXRIGHT]; ++x)   
-      {
-         if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
-         {
-            rover = polyblocklinks[y * bmapwidth + x];
-
-            while(rover && rover->po != po)
-               rover = (polymaplink_t *)(rover->link.next);
-
-            // polyobject not in this cell? go on to next.
-            if(!rover)
-               continue;
-
-            // remove this link from the blockmap and put it on the freelist
-            M_DLListRemove(&rover->link);
-            Polyobj_putLink(rover);
-         }
-      }
+      polymaplink_t *next = l->po_next;
+      M_DLListRemove(&l->link);
+      Polyobj_putLink(l);
+      l = next;
    }
+
+   po->linkhead = NULL;
 
    po->linked = false;
 }
+
 
 // Movement functions
 

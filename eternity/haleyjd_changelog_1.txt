@@ -1,6 +1,6 @@
 NOTE: This file has been retired, and contains changelog entries
 from EE v3.29 public beta 3 up to the release of v3.31 public beta 5.
-See ee-changelog2.txt for more recent updates.
+See haleyjd_changelog_2.txt for more recent updates.
 
 =====================================================================
 Changes since Eternity Engine v3.31 beta 4

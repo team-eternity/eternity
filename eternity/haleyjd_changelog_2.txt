@@ -1,3 +1,7 @@
+NOTE: This file has been retired, and contains changelog entries
+from v3.31 public beta 5 up to the release of v3.33.33.
+See haleyjd_changelog_3.txt for more recent updates.
+
 =====================================================================
 Changes since Eternity Engine v3.33.02
 =====================================================================

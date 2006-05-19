@@ -3057,6 +3057,10 @@ byte *G_ReadOptions(byte *demo_p)
       int i;  // killough 10/98: a compatibility vector now
       for(i = 0; i < COMP_TOTAL; ++i)
          comp[i] = compatibility;
+
+      // haleyjd 05/18/06: BOOM fix: allow zombie exits
+      if(demo_version >= 200 && demo_version <= 202)
+         comp[comp_zombie] = false;
       
       monster_infighting = 1;           // killough 7/19/98
       

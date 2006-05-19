@@ -85,11 +85,12 @@ typedef struct polyobj_s
    angle_t angle;                // for rotation
    boolean attached;             // if true, is attached to a subsector
 
-   fixed_t blockbox[4]; // bounding box for clipping
-   boolean linked;      // is linked to blockmap
-   int validcount;      // for clipping: prevents multiple checks
-   int damage;          // damage to inflict on stuck things
-   fixed_t thrust;      // amount of thrust to put on blocking objects
+   fixed_t blockbox[4];            // bounding box for clipping
+   boolean linked;                 // is linked to blockmap
+   struct polymaplink_s *linkhead; // haleyjd 05/18/06: unlink optimization
+   int validcount;                 // for clipping: prevents multiple checks
+   int damage;                     // damage to inflict on stuck things
+   fixed_t thrust;                 // amount of thrust to put on blocking objects
 
    thinker_t *thinker;  // pointer to a thinker affecting this polyobj
 
@@ -102,8 +103,9 @@ typedef struct polyobj_s
 
 typedef struct polymaplink_s
 {
-   mdllistitem_t link; // for blockmap links
-   polyobj_t *po;      // pointer to polyobject
+   mdllistitem_t link;             // for blockmap links
+   polyobj_t *po;                  // pointer to polyobject
+   struct polymaplink_s *po_next;  // haleyjd 05/18/06: unlink optimization
 } polymaplink_t;
 
 //

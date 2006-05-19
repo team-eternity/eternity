@@ -1,0 +1,20 @@
+================================================================================
+Changes since Eternity Engine v3.33.33
+================================================================================
+--------------------------------------------------------------------------------
+05/18/06
+
+Numerous issues have been found by different people in 3.33.33, so a maintenance
+release will most likely be forthcoming in the near future. Work has already
+begun, actually.
+
+I found an easy way to vastly optimize the blockmap unlinking operation for
+PolyObjects. During linking, the polymaplink_t's generated are now stored on an
+additional single-linked list that originates in the PolyObject itself. This way
+when the object is unlinked, I can simply run down this single-linked list and
+delete each node instead of searching the blockmap for the links. It's so simple
+that I'm plain sick that I didn't think of it earlier :P
+
+================================================================================
+EOF
+================================================================================
