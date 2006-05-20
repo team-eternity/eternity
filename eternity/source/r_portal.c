@@ -93,6 +93,8 @@ static rportal_t *R_CreatePortal(void)
    ret->minx = 0;
    ret->maxx = viewwidth;
 
+   ret->tainted = 0; // haleyjd 05/19/06
+
    memset(&ret->data, 0, sizeof(ret->data));
 
    R_ClearPortal(ret);
@@ -307,6 +309,8 @@ static void R_CreateChild(rportal_t *parent)
    
    child->type = parent->type;
    child->data = parent->data;
+
+   child->tainted = 0; // haleyjd 05/19/06
 
    R_ClearPortal(child);
 }
@@ -636,12 +640,19 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 void R_UntaintPortals(void)
 {
    rportal_t *r;
+   rportal_t *child;
 
    for(r = portals; r; r = r->next)
    {
       r->tainted = 0;
-      if(r->child)
-         r->child->tainted = 0;
+
+      // haleyjd 05/19/06: must clear ALL children
+      child = r->child;
+      while(child)
+      {
+         child->tainted = 0;
+         child = child->child;
+      }
    }
 }
 

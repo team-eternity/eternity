@@ -663,7 +663,7 @@ extern void R_UntaintPortals(void);
 //
 // R_RenderView
 //
-void R_RenderPlayerView (player_t* player, camera_t *camerapoint)
+void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
    R_SetupFrame(player, camerapoint);
    

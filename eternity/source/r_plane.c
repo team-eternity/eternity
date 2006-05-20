@@ -653,35 +653,36 @@ static void do_draw_plane(visplane_t *pl)
    else      // regular flat
    {
       int stop, light;
-      int swirling = 0;
+      int swirling;
 
-      swirling = flattranslation[pl->picnum] == -1;
-      
-      if(swirling && flatsize[flattranslation[pl->picnum]] == 4096)
-      {
+      // haleyjd 05/19/06: rewritten to avoid crashes
+      swirling = (flattranslation[pl->picnum] == -1) && flatsize[pl->picnum] == 4096;
+
+      if(swirling)
          ds_source = R_DistortedFlat(pl->picnum);
-      }
       else
       {
+         if(flattranslation[pl->picnum] == -1)
+            flattranslation[pl->picnum] = pl->picnum;
+
          ds_source = 
-            W_CacheLumpNum(firstflat + flattranslation[pl->picnum],
-                           PU_STATIC);
+            W_CacheLumpNum(firstflat + flattranslation[pl->picnum], PU_STATIC);
       }
 
       // SoM: support for flats of different sizes!!
       switch(flatsize[flattranslation[pl->picnum]])
       {
-         case 16384:
-            flatfunc = R_DrawSpan_128;
-            break;
-         case 65536:
-            flatfunc = R_DrawSpan_256;
-            break;
-         case 262144:
-            flatfunc = R_DrawSpan_512;
-            break;
-         default:
-            flatfunc = R_DrawSpan_64;
+      case 16384:
+         flatfunc = R_DrawSpan_128;
+         break;
+      case 65536:
+         flatfunc = R_DrawSpan_256;
+         break;
+      case 262144:
+         flatfunc = R_DrawSpan_512;
+         break;
+      default:
+         flatfunc = R_DrawSpan_64;
       };
         
       xoffs = pl->xoffs;  // killough 2/28/98: Add offsets
@@ -716,7 +717,7 @@ static void do_draw_plane(visplane_t *pl)
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);
 
-      if(!swirling || flatsize[flattranslation[pl->picnum]] != 4096)
+      if(!swirling)
          Z_ChangeTag(ds_source, PU_CACHE);
    }
 }

@@ -2,6 +2,20 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+05/19/06
+
+Figured out why flat swirling was crashing. SoM was accidentally accessing
+flattranslation[-1] several times, and then asking W_CacheLumpNum to work with
+the essentially random value. Fixed by restoring the normal value to the
+flattranslation lookup after recording its -1 state to determine swirling.
+
+I also found out that my portal tainting system wasn't quite complete. Only the
+first generation of child portals were properly reset, and portals were still
+starting out with an uninitialized taint value at the beginning of the level,
+which would cause spurious rendering failures the first time you laid eyes on
+them (dunno how I missed this).
+
+--------------------------------------------------------------------------------
 05/18/06
 
 Numerous issues have been found by different people in 3.33.33, so a maintenance
