@@ -222,9 +222,9 @@ typedef struct gameinfo_s
 
 extern gameinfo_t *gameModeInfo;
 
-extern gameinfo_t giDoomSW;
+//extern gameinfo_t giDoomSW;
 extern gameinfo_t giDoomReg;
-extern gameinfo_t giDoomRetail;
+//extern gameinfo_t giDoomRetail;
 extern gameinfo_t giDoomCommercial;
 extern gameinfo_t giHereticSW;
 extern gameinfo_t giHereticReg;

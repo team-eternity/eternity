@@ -247,6 +247,7 @@ extern menu_t menu_hnewgame;
 // Game Mode Information Structures
 //
 
+/*
 //
 // DOOM Shareware
 //
@@ -324,14 +325,21 @@ gameinfo_t giDoomSW =
 
    "ENDOOM",         // endTextName
 };
+*/
 
 //
-// DOOM Registered (3 episodes)
+// DOOM Registered
+//
+// Note: since all the data is currently the same, I've eliminated the separate
+// structures for DOOM SW and Ultimate Doom, and I patch the episode number and
+// gamemode flags in d_main.c at startup, as I do for Heretic:SoSR. I'm keeping
+// the commented-out structures though in case more extensive differences show
+// up later as more things are moved into this module.
 //
 gameinfo_t giDoomReg =
 {
    Game_DOOM,        // type
-   0,                // flags
+   0,                // flags -- note: patched for shareware DOOM
 
    DOOMRESWAD,       // resourceFmt
    
@@ -379,7 +387,7 @@ gameinfo_t giDoomReg =
 
    "M_PAUSE",        // pausePatch
 
-   3,                // numEpisodes
+   3,                // numEpisodes -- note 1 for SW DOOM, 4 for Ultimate
    MT_TFOG,          // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -403,6 +411,7 @@ gameinfo_t giDoomReg =
    "ENDOOM",         // endTextName
 };
 
+/*
 //
 // The Ultimate DOOM (4 episodes)
 //
@@ -480,6 +489,7 @@ gameinfo_t giDoomRetail =
 
    "ENDOOM",         // endTextName
 };
+*/
 
 //
 // DOOM II / Final DOOM

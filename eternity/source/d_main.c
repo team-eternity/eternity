@@ -1104,8 +1104,9 @@ void IdentifyVersion(void)
       switch(gamemode)
       {
       case retail:
-         gameModeInfo = &giDoomRetail;
-         game_name = "Ultimate DOOM version";  // killough 8/8/98
+         gameModeInfo = &giDoomReg;
+         gameModeInfo->numEpisodes = 4;       // haleyjd 05/21/06: patch this here
+         game_name = "Ultimate DOOM version"; // killough 8/8/98
          break;
 
       case registered:
@@ -1114,12 +1115,13 @@ void IdentifyVersion(void)
          break;
          
       case shareware:
-         gameModeInfo = &giDoomSW;
+         gameModeInfo = &giDoomReg;
+         gameModeInfo->numEpisodes = 1;
+         gameModeInfo->flags |= GIF_SHAREWARE; // haleyjd 05/21/06: patch these here
          game_name = "DOOM Shareware version";
          break;
 
       case commercial:
-
          gameModeInfo = &giDoomCommercial;
          // joel 10/16/98 Final DOOM fix
          switch (gamemission)
@@ -1136,15 +1138,15 @@ void IdentifyVersion(void)
          default:
 
             i = strlen(iwad);
-            if (i>=10 && !strnicmp(iwad+i-10,"doom2f.wad",10))
+            if(i >= 10 && !strnicmp(iwad+i-10, "doom2f.wad", 10))
             {
-               language=french;
+               language = french;
                game_name = "DOOM II version, French language";
             }
             else
             {
                game_name = haswolflevels ? "DOOM II version" :
-                     "DOOM II version, german edition, no wolf levels";
+                  "DOOM II version, German edition, no Wolf levels";
             }
             break;
          }
@@ -1180,7 +1182,7 @@ void IdentifyVersion(void)
       
       if(gamemode == indetermined)
       {
-         gameModeInfo = &giDoomSW; // haleyjd: be conservative
+         gameModeInfo = &giDoomReg;
          puts("Unknown Game Version, may not work");  // killough 8/8/98
       }
 
