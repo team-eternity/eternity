@@ -422,6 +422,10 @@ static BITMAP *diskflash, *old_data;
 static void I_InitDiskFlash(void)
 {
    byte temp[32*32];
+
+   // haleyjd 05/21/06: no disk in some game modes...   
+   if(!(gameModeInfo->flags & GIF_HASDISK))
+      return;
    
    if(diskflash)
    {
@@ -447,7 +451,8 @@ static void I_InitDiskFlash(void)
 
 void I_BeginRead(void)
 {
-   if(!disk_icon || !in_graphics_mode)
+   // haleyjd 05/21/06: no disk in some game modes...   
+   if(!disk_icon || !in_graphics_mode || !(gameModeInfo->flags & GIF_HASDISK))
       return;
    
    blit(screen, old_data,
@@ -466,9 +471,10 @@ void I_BeginRead(void)
 
 void I_EndRead(void)
 {
-   if(!disk_icon || !in_graphics_mode)
+   // haleyjd 05/21/06: no disk in some game modes...   
+   if(!disk_icon || !in_graphics_mode || !(gameModeInfo->flags & GIF_HASDISK))
       return;
-   
+      
    blit(old_data, screen, 0, 0, (SCREENWIDTH-16) << hires,
         scroll_offset + ((SCREENHEIGHT-15)<<hires), 
         16 << hires, 15 << hires);
