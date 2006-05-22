@@ -321,7 +321,7 @@ default_t defaults[] =
 
    {
       "crosshair_hilite", // haleyjd 06/07/05
-      &crosshair_hilite, NULL,
+      (int *)&crosshair_hilite, NULL,
       0, {0, 1}, dt_number, ss_gen, wad_yes,
       "0 - no highlighting, 1 - aim highlighting enabled"
    },
@@ -1230,14 +1230,14 @@ default_t defaults[] =
 
    {
       "hu_showtime",
-      &hu_showtime, NULL,
+      (int *)&hu_showtime, NULL,
       1, {0,1}, dt_number, ss_mess, wad_yes,
       "display current level time on automap"
    },
 
    {
       "hu_showcoords",
-      &hu_showcoords, NULL,
+      (int *)&hu_showcoords, NULL,
       1, {0,1}, dt_number, ss_mess, wad_yes,
       "display player/pointer coordinates on automap"
    },
@@ -1554,7 +1554,7 @@ default_t defaults[] =
 
    {
       "menu_toggleisback",
-      &menu_toggleisback, NULL,
+      (int *)&menu_toggleisback, NULL,
       0, {0, 1}, dt_number, ss_none, wad_no,
       "1 to make menu toggle action back up one level (like zdoom)"
    },
@@ -2379,7 +2379,7 @@ char *M_Strlwr(char *string)
 
 char *M_Itoa(int value, char *string, int radix)
 {
-#ifdef HAVE_ITOA
+#ifdef EE_HAVE_ITOA
    return ITOA_NAME(value, string, radix);
 #else
    char tmp[33];

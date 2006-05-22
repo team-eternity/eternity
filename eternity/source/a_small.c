@@ -238,8 +238,8 @@ static size_t A_AMXProgramSize(char *lumpname)
 
    W_ReadLumpHeader(lumpnum, (void *)(&hdr), sizeof(hdr));
 
-   amx_Align16((unsigned short *)(&hdr.magic));
-   amx_Align32((unsigned long  *)(&hdr.stp));
+   amx_Align16((uint16_t *)(&hdr.magic));
+   amx_Align32((uint32_t *)(&hdr.stp));
 
    return ((hdr.magic == AMX_MAGIC) ? (size_t)hdr.stp : 0);
 }
@@ -264,7 +264,7 @@ static int A_AMXLoadProgram(AMX *amx, char *lumpname, void *memblock)
    }
    
    W_ReadLumpHeader(lumpnum, (void *)(&hdr), sizeof(hdr));
-   amx_Align32((unsigned long *)(&hdr.size));
+   amx_Align32((uint32_t *)(&hdr.size));
 
    lump = W_CacheLumpNum(lumpnum, PU_CACHE);
    memcpy(memblock, lump, (size_t)(hdr.size));

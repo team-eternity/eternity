@@ -33,7 +33,7 @@
 #define AMX_H_INCLUDED
 
 #if !defined HAVE_STDINT_H
-  #if defined __LCC__ || defined __DMC__ || defined LINUX
+  #if defined __LCC__ || defined __DMC__ || defined LINUX || defined __MINGW32__
     #if defined HAVE_INTTYPES_H
       #include <inttypes.h>
     #else

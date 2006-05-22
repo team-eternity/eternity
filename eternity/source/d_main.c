@@ -1968,7 +1968,7 @@ static void D_DoomInit(void)
    // haleyjd: FIXME
    if(cdrom_mode)
    {
-#ifdef _MSC_VER
+#ifndef DJGPP
       mkdir("c:/doomdata");
 #else
       mkdir("c:/doomdata", 0);

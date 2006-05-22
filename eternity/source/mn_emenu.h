@@ -32,7 +32,7 @@
 
 #define EDF_SEC_MENU "menu"
 
-cfg_opt_t edf_menu_opts[];
+extern cfg_opt_t edf_menu_opts[];
 
 void MN_ProcessMenus(cfg_t *cfg);
 
