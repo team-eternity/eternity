@@ -190,29 +190,35 @@ typedef int (AMXAPI *AMX_DEBUG)(struct tagAMX *amx);
   #endif
 #endif
 
-typedef struct tagAMX_NATIVE_INFO {
+struct tagAMX_NATIVE_INFO {
   const char _FAR *name;
   AMX_NATIVE func;
-} AMX_NATIVE_INFO       PACKED;
+} PACKED;
+
+typedef struct tagAMX_NATIVE_INFO AMX_NATIVE_INFO;
 
 #define AMX_USERNUM     4
 #define sEXPMAX         19      /* maximum name length for file version <= 6 */
 #define sNAMEMAX        31      /* maximum name length of symbol name */
 
-typedef struct tagAMX_FUNCSTUB {
+struct tagAMX_FUNCSTUB {
   ucell address;
   char name[sEXPMAX+1];
-} AMX_FUNCSTUB          PACKED;
+} PACKED;
 
-typedef struct tagFUNCSTUBNT {
+typedef struct tagAMX_FUNCSTUB AMX_FUNCSTUB;
+
+struct tagFUNCSTUBNT {
   ucell address;
   uint32_t nameofs;
-} FUNCSTUBNT            PACKED;
+} PACKED;
+
+typedef struct tagFUNCSTUBNT FUNCSTUBNT;
 
 /* The AMX structure is the internal structure for many functions. Not all
  * fields are valid at all times; many fields are cached in local variables.
  */
-typedef struct tagAMX {
+struct tagAMX {
   unsigned char _FAR *base; /* points to the AMX header ("amxhdr") plus the code, optionally also the data */
   unsigned char _FAR *data; /* points to separate data+stack+heap, may be NULL */
   AMX_CALLBACK callback;
@@ -248,12 +254,14 @@ typedef struct tagAMX {
     int reloc_size; /* required temporary buffer for relocations */
     long code_size; /* estimated memory footprint of the native code */
   #endif
-} AMX                   PACKED;
+} PACKED;
+
+typedef struct tagAMX AMX;
 
 /* The AMX_HEADER structure is both the memory format as the file format. The
  * structure is used internaly.
  */
-typedef struct tagAMX_HEADER {
+struct tagAMX_HEADER {
   int32_t size; /* size of the "file" */
   uint16_t magic; /* signature */
   char    file_version; /* file format version */
@@ -271,7 +279,9 @@ typedef struct tagAMX_HEADER {
   int32_t pubvars; /* the "public variables" table */
   int32_t tags; /* the "public tagnames" table */
   int32_t nametable; /* name table, file version 7 only */
-} AMX_HEADER            PACKED;
+} PACKED;
+
+typedef struct tagAMX_HEADER AMX_HEADER;
 
 #if SMALL_CELL_SIZE==16
   #define AMX_MAGIC     0xf1e2
