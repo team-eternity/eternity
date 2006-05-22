@@ -339,7 +339,7 @@ gameinfo_t giDoomSW =
 gameinfo_t giDoomReg =
 {
    Game_DOOM,        // type
-   0,                // flags -- note: patched for shareware DOOM
+   GIF_HASDISK,      // flags -- note: patched for shareware DOOM
 
    DOOMRESWAD,       // resourceFmt
    
@@ -497,7 +497,7 @@ gameinfo_t giDoomRetail =
 gameinfo_t giDoomCommercial =
 {
    Game_DOOM,        // type
-   0,                // flags
+   GIF_HASDISK,      // flags
 
    DOOMRESWAD,       // resourceFmt
 

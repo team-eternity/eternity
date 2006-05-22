@@ -37,9 +37,9 @@
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
 
-#ifdef DJGPP
-#define USEASM /* sf: changed #ifdef DJGPP to #ifdef USEASM */
-#endif
+//#ifdef DJGPP
+//#define USEASM /* sf: changed #ifdef DJGPP to #ifdef USEASM */
+//#endif
 
 extern byte *ylookup[MAXHEIGHT]; 
 extern int  columnofs[MAXWIDTH]; 

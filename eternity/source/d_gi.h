@@ -107,7 +107,7 @@ enum
 
 // Game Mode Flags
 
-//#define GIF_PAGERAW      0x00000001  // page screens are raw format
+#define GIF_HASDISK      0x00000001  // has flashing io disk
 #define GIF_SHAREWARE    0x00000002  // shareware game (no -file)
 #define GIF_MNBIGFONT    0x00000004  // uses big font for menu titles
 
