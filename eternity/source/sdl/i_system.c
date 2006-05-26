@@ -323,11 +323,13 @@ void I_Quit (void)
    
    // Under Visual C++, the console window likes to rudely slam
    // shut -- this can stop it, but is now optional
+#ifdef _MSC_VER
    if(*errmsg || waitAtExit)
    {
       puts("\nPress any key to continue");
       getch();
    }
+#endif
 }
 
 //
@@ -387,14 +389,14 @@ void I_EndDoom(void)
    int start_ms;
    boolean waiting;
    SDL_Event ev;
-
-	// haleyjd: it's possible to have quit before we even initialized
-	// gameModeInfo, so be sure it's valid before using it here. Also,
-	// allow ENDOOM disable in configuration.
+   
+   // haleyjd: it's possible to have quit before we even initialized
+   // gameModeInfo, so be sure it's valid before using it here. Also,
+   // allow ENDOOM disable in configuration.
    if(!gameModeInfo || !showendoom)
       return;
-
-	endoom_data = W_CacheLumpName(gameModeInfo->endTextName, PU_STATIC);
+   
+   endoom_data = W_CacheLumpName(gameModeInfo->endTextName, PU_STATIC);
    
    // Set up text mode screen   
    TXT_Init();
@@ -409,7 +411,7 @@ void I_EndDoom(void)
    TXT_UpdateScreen();
    
    // Wait for 10 seconds, or until a keypress or mouse click
-	// haleyjd: delay period specified in config (default = 350)
+   // haleyjd: delay period specified in config (default = 350)
    waiting = true;
    start_ms = I_GetTime();
    

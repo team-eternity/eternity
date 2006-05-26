@@ -278,6 +278,7 @@ typedef enum
    MF3_SPACMISSILE  = 0x01000000,  // missile can activate param lines
    MF3_NOFRIENDDMG  = 0x02000000,  // object isn't hurt by friends
    MF3_3DDECORATION = 0x04000000,  // object is a decor. with 3D height info
+   MF3_ALWAYSFAST   = 0x08000000,  // object is always in -fast mode
 } mobjflag3_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

@@ -254,10 +254,6 @@ cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
    if(opt) 
    {
       cfg_assert(opt->type == CFGT_SEC);
-      if(!opt->values)
-      {
-         puts("opt->values is null!\n");
-      }
       cfg_assert(opt->values);
       cfg_assert(index < opt->nvalues);
       return opt->values[index]->section;
@@ -299,10 +295,6 @@ static cfg_value_t *cfg_addval(cfg_opt_t *opt)
 {
    opt->values = (cfg_value_t **)realloc(opt->values,
                                          (opt->nvalues+1) * sizeof(cfg_value_t *));
-   if(!opt->values)
-   {
-      puts("opt->values is null!\n");
-   }
    cfg_assert(opt->values);
    opt->values[opt->nvalues] = (cfg_value_t *)malloc(sizeof(cfg_value_t));
    memset(opt->values[opt->nvalues], 0, sizeof(cfg_value_t));

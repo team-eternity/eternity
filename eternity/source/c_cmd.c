@@ -49,8 +49,8 @@ char *vertime_hack = (char *)version_time;
                /************* constants *************/
 
 // version
-CONST_INT(VERSION);
-CONSOLE_CONST(version, VERSION);
+CONST_INT(version);
+CONSOLE_CONST(version, version);
 
 // version date
 CONST_STRING(verdate_hack);
@@ -354,7 +354,7 @@ void C_AddCommands()
 
 static cell AMX_NATIVE_CALL sm_version(AMX *amx, cell *params)
 {
-   return VERSION;
+   return version;
 }
 
 AMX_NATIVE_INFO ccmd_Natives[] =

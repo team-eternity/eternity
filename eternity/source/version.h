@@ -18,14 +18,14 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __DOOMVERSION__
-#define __DOOMVERSION__
+#ifndef VERSION_H__
+#define VERSION_H__
 
 #include "z_zone.h"  /* memory allocation wrappers -- killough */
 
 // DOOM version
 // enum { VERSION =  203 };
-extern int VERSION;     // sf: made version an int
+extern int version;     // sf: made version an int
 extern unsigned char SUBVERSION; // haleyjd
 
 extern const char version_date[];

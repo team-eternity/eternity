@@ -2,12 +2,45 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+05/22/06
+
+Added a new ALWAYSFAST flag, which makes a monster always have -fast/Nightmare
+attack speed behavior. Note that this doesn't speed up any fireballs they shoot,
+however, since that is handled separately through the fastspeed, nor would it
+make the Demon's walking frames half duration.
+
+--------------------------------------------------------------------------------
+05/21/06
+
+Consolidated the gameinfo_t structures for Shareware, Retail, and Ultimate DOOM
+since only two whole fields differed between them. Those fields are now patched
+at runtime in d_main.c. I didn't delete the extra structs from the source,
+however, since it might be necessary to go back to the older setup if more
+fields are introduced that differ from the Retail settings.
+
+I also made a ton of minor adjustments that allow the port to be built with the
+Dev-C++ MinGW-based development package. The worst bug I got rid of was that the
+packing attributes on structures in amx.h (the Small compiler) were being
+totally ignored due to interference of typedefs. I should probably change my
+project to use -Wall and kill off some warnings too.
+
+I also got the DOS build running again. Why? I dunno, nostalgia maybe? I plan to
+do a full multiplatform release for the next version so that Eternity can 
+definitively claim to be the last port to support DOS. The worst changes that 
+DOS needed were 1) I forgot to change ENDOOM loading to be gamemode-dependent in
+the DOS version of the code, and 2) there's no STDISK crap in Heretic, so that 
+also has to be switched off via gameModeInfo. This was technically a bug in the 
+SDL version too, except that disk drawing is currently broken and therefore de 
+facto disabled there.
+
+--------------------------------------------------------------------------------
 05/19/06
 
 Figured out why flat swirling was crashing. SoM was accidentally accessing
-flattranslation[-1] several times, and then asking W_CacheLumpNum to work with
-the essentially random value. Fixed by restoring the normal value to the
-flattranslation lookup after recording its -1 state to determine swirling.
+flattranslation[pl->picnum] and using its value when it was equal to -1 as an 
+addend with firstflat in the argument to W_CacheLumpNum. Fixed by restoring
+pl->picnum to flattranslation[pl->picnum] after determining whether or not the
+flat is swirling (swirling flats don't animate, so this works fine).
 
 I also found out that my portal tainting system wasn't quite complete. Only the
 first generation of child portals were properly reset, and portals were still

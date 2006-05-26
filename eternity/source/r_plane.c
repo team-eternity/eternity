@@ -242,7 +242,6 @@ void R_ClearPlanes(void)
    int i, a;
    angle_t angle;
 
-   // haleyjd FIXME: wtf is this?
    a = consoleactive ?
       (current_height-viewwindowy) < 0 ? -1 : current_height-viewwindowy
            : -1;

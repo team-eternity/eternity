@@ -1019,6 +1019,7 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 #define V void
 #define F for
 #define Z FC_BROWN
+#define X FC_ABSCENTER
 #define C_W C_SCREENWIDTH
 #define C_H C_SCREENHEIGHT
 #define WT HU_CenterMessageTimed
@@ -1026,7 +1027,6 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 
 V Egg(V){E WT(K C*,I);I x,y;E U C egg[];F(x=0;x<C_W;x++)F(y=0;y<C_H
 ;y++){U C *s=egg+((y%44)*42)+(x%42);if(*s!=247)bd[y*C_W+x]=*
-s;}WT(Z"my hair looks much too\ndark in this p"
-"ic.\noh well, have fun!\n      -- fraggle", 6*35);}
+s;}WT(Z X "my hair looks much too\ndark in this pic.\noh well, have fun!\n-- fraggle", 6*35);}
 
 // EOF

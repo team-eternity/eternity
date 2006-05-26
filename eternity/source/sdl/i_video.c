@@ -156,11 +156,13 @@ static int I_TranslateKey(int sym)
    case SDLK_F11:      rc = KEYD_F11;        break;
    case SDLK_F12:      rc = KEYD_F12;        break;
    case SDLK_BACKSPACE:
+   // FIXME/TODO: delete
    case SDLK_DELETE:   rc = KEYD_BACKSPACE;  break;
    case SDLK_PAUSE:    rc = KEYD_PAUSE;      break;
    case SDLK_EQUALS:   rc = KEYD_EQUALS;     break;
    case SDLK_MINUS:    rc = KEYD_MINUS;      break;
       
+   // FIXME/TODO: numeric keypad
    //  case SDLK_KP0:      rc = KEYD_KEYPAD0;	break;
    //  case SDLK_KP1:      rc = KEYD_KEYPAD1;	break;
    //  case SDLK_KP2:      rc = KEYD_KEYPAD2;	break;
@@ -195,6 +197,7 @@ static int I_TranslateKey(int sym)
    case SDLK_HOME:       rc = KEYD_HOME;     break;
    case SDLK_END:        rc = KEYD_END;      break;
    case SDLK_INSERT:     rc = KEYD_INSERT;   break;
+   // FIXME/TODO: delete
    default:
       rc = sym;
       break;
@@ -316,17 +319,6 @@ static void I_JoystickEvents(void)
 //
 void I_StartFrame(void)
 {
-   /*
-   static boolean firstframe = true;
-
-   // haleyjd 02/23/04: turn mouse event processing on
-   if(firstframe)
-   {
-      SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-      firstframe = false;
-   }
-   */
-
    I_JoystickEvents(); // Obtain joystick data                 phares 4/3/98
 }
 
@@ -364,6 +356,7 @@ static void I_GetEvent(void)
          d_event.type = ev_keydown;
          d_event.data1 = I_TranslateKey(event.key.keysym.sym);
          // haleyjd 08/29/03: don't post out-of-range keys
+         // FIXME/TODO: eliminate shiftxform, etc.
          if(d_event.data1 > 0 && d_event.data1 < 256)
             D_PostEvent(&d_event);
          break;
@@ -372,6 +365,7 @@ static void I_GetEvent(void)
          d_event.type = ev_keyup;
          d_event.data1 = I_TranslateKey(event.key.keysym.sym);
          // haleyjd 08/29/03: don't post out-of-range keys
+         // FIXME/TODO: eliminate shiftxform, etc.
          if(d_event.data1 > 0 && d_event.data1 < 256)
             D_PostEvent(&d_event);
          break;

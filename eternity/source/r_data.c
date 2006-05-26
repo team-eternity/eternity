@@ -982,6 +982,7 @@ int R_CheckTextureNumForName(const char *name)
 int R_TextureNumForName(const char *name)  // const added -- killough
 {
    int i = R_CheckTextureNumForName(name);
+
    if(i == -1)
    {
       i = R_Doom1Texture(name);   // try doom I textures
@@ -989,11 +990,12 @@ int R_TextureNumForName(const char *name)  // const added -- killough
       if (i == -1)
       {
          C_Printf(FC_ERROR"R_TextureNumForName: %.8s not found\n", 
-                  name);
+            name);
          level_error = true;
          return -1;
       }
    }
+
    return i;
 }
 

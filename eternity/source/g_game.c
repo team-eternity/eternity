@@ -1688,7 +1688,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    memset (name2, 0, sizeof(name2));
    
    // killough 2/22/98: "proprietary" version string :-)
-   sprintf (name2, VERSIONID, VERSION);
+   sprintf (name2, VERSIONID, version);
    
    memcpy (save_p, name2, VERSIONSIZE);
    save_p += VERSIONSIZE;
@@ -1819,7 +1819,7 @@ static void G_DoLoadGame(void)
    // skip the description field
    
    // killough 2/22/98: "proprietary" version string :-)
-   sprintf (vcheck, VERSIONID, VERSION);
+   sprintf (vcheck, VERSIONID, version);
    
    // killough 2/22/98: Friendly savegame version difference message
    if(!forced_loadgame && strncmp(save_p, vcheck, VERSIONSIZE))
@@ -1832,7 +1832,7 @@ static void G_DoLoadGame(void)
    
    // killough 2/14/98: load compatibility mode
    compatibility = *save_p++;
-   demo_version = VERSION;     // killough 7/19/98: use this version's id
+   demo_version = version;     // killough 7/19/98: use this version's id
    demo_subversion = SUBVERSION; // haleyjd 06/17/01
    
    gameskill = *save_p++;
@@ -2616,7 +2616,7 @@ void G_ReloadDefaults(void)
   compatibility = false;     // killough 10/98: replaced by comp[] vector
   memcpy(comp, default_comp, sizeof comp);
 
-  demo_version = VERSION;     // killough 7/19/98: use this version's id
+  demo_version = version;     // killough 7/19/98: use this version's id
   demo_subversion = SUBVERSION; // haleyjd 06/17/01
 
   // killough 3/31/98, 4/5/98: demo sync insurance
@@ -3113,7 +3113,7 @@ void G_BeginRecording(void)
    
    demo_p = demobuffer;
    
-   //*demo_p++ = VERSION;
+   //*demo_p++ = version;
    // haleyjd 06/17/01: always write 255 for Eternity-format demos,
    // since VERSION is now > 255 -- version setting is now handled
    // immediately after the new signature below.
@@ -3129,17 +3129,17 @@ void G_BeginRecording(void)
    
    // haleyjd: write appropriate version and subversion numbers
    // write the WHOLE version number :P
-   *demo_p++ = VERSION & 255;
-   *demo_p++ = (VERSION >> 8 ) & 255;
-   *demo_p++ = (VERSION >> 16) & 255;
-   *demo_p++ = (VERSION >> 24) & 255;
+   *demo_p++ =  version & 255;
+   *demo_p++ = (version >> 8 ) & 255;
+   *demo_p++ = (version >> 16) & 255;
+   *demo_p++ = (version >> 24) & 255;
    
    *demo_p++ = SUBVERSION; // always ranges from 0 to 255
    
    // killough 2/22/98: save compatibility flag in new demos
    *demo_p++ = compatibility;       // killough 2/22/98
    
-   demo_version = VERSION;     // killough 7/19/98: use this version's id
+   demo_version = version;     // killough 7/19/98: use this version's id
    demo_subversion = SUBVERSION; // haleyjd 06/17/01
    
    *demo_p++ = gameskill;

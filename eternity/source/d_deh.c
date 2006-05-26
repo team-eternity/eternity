@@ -314,6 +314,7 @@ dehflags_t deh_mobjflags[] =
   {"SPACMISSILE",      0x01000000, 2}, // missile that can activate param lines
   {"NOFRIENDDMG",      0x02000000, 2}, // object isn't hurt by friends
   {"3DDECORATION",     0x04000000, 2}, // object is a decor. with 3D height info
+  {"ALWAYSFAST",       0x08000000, 2}, // object is always in -fast mode
 
   { NULL,              0 }             // NULL terminator
 };

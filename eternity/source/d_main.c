@@ -2336,7 +2336,7 @@ static void D_DoomInit(void)
             FC_NORMAL "By James Haley and Stephen McGranahan\n"
             "http://doomworld.com/eternity/ \n"
             "Version %i.%02i.%02i '%s' \n\n",
-            VERSION/100, VERSION%100, SUBVERSION, version_name);
+            version/100, version%100, SUBVERSION, version_name);
 
    // haleyjd: if we didn't do textmode startup, these didn't show up
    //  earlier, so now is a cool time to show them :)

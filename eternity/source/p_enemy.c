@@ -1371,8 +1371,9 @@ void A_Chase(mobj_t *actor)
    // do not attack twice in a row
    if(actor->flags & MF_JUSTATTACKED)
    {
+      // haleyjd 05/22/06: ALWAYSFAST flag
       actor->flags &= ~MF_JUSTATTACKED;
-      if(gameskill != sk_nightmare && !fastparm)
+      if(gameskill != sk_nightmare && !fastparm && !(actor->flags3 & MF3_ALWAYSFAST))
          P_NewChaseDir(actor);
       return;
    }
@@ -1420,7 +1421,9 @@ void A_Chase(mobj_t *actor)
          return;
       }
 
-      if(!actor->movecount || gameskill >= sk_nightmare || fastparm)
+      // haleyjd 05/22/06: ALWAYSFAST flag
+      if(!actor->movecount || gameskill >= sk_nightmare || fastparm || 
+         (actor->flags3 & MF3_ALWAYSFAST))
       {
          if(P_CheckMissileRange(actor))
          {

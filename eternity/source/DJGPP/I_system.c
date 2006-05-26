@@ -261,7 +261,7 @@ void I_Quit (void)
     G_CheckDemoStatus();
 
         // sf : rearrange this so the errmsg doesn't get messed up
-  if (*errmsg)
+  if(*errmsg)
     puts(errmsg);   // killough 8/8/98
   else
     I_EndDoom();

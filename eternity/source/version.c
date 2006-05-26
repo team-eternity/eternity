@@ -30,7 +30,7 @@ static const char rcsid[] = "$Id: version.c,v 1.2 1998/05/03 22:59:31 killough E
 #include "version.h"
 
 // sf: made int from define
-int VERSION = 333;
+int version = 333;
 
 // haleyjd: subversion -- range from 0 to 255
 unsigned char SUBVERSION = 33;

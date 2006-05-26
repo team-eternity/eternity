@@ -64,13 +64,14 @@ typedef struct vfont_s
    int cw;  // constant width, used only when centering is on
 } vfont_t;
 
-void V_FontWriteText(vfont_t *font, const char *s, int x, int y);
-void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
-void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
-void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
-int  V_FontStringHeight(vfont_t *font, const unsigned char *s);
-int  V_FontStringWidth(vfont_t *font, const unsigned char *s);
-void V_FontSetAbsCentered(void);
+void  V_FontWriteText(vfont_t *font, const char *s, int x, int y);
+void  V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
+void  V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
+void  V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
+int   V_FontStringHeight(vfont_t *font, const unsigned char *s);
+int   V_FontStringWidth(vfont_t *font, const unsigned char *s);
+void  V_FontSetAbsCentered(void);
+short V_FontMaxWidth(vfont_t *font);
 
 vfont_t *V_FontSelect(int fontnum);
 

@@ -670,8 +670,13 @@ void R_ProjectSprite (mobj_t* thing)
       // haleyjd 08/12/02: modified error handling
       doom_printf(FC_ERROR"R_ProjectSprite: invalid sprite number %i\n",
                   thing->sprite);
-      thing->info->translucency = 0;
-      thing->translucency = 0;
+      if(thing->state)
+      {
+         thing->state->sprite = blankSpriteNum;
+         thing->state->frame  = 0;
+      }
+      thing->sprite = blankSpriteNum;
+      thing->frame  = 0;
       return;
    }
 
@@ -681,11 +686,16 @@ void R_ProjectSprite (mobj_t* thing)
       !(sprdef->spriteframes))
    {
       // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR"R_ProjectSprite: invalid frame %i for sprite %s",
+      doom_printf(FC_ERROR"R_ProjectSprite: bad frame %i for sprite %s",
                   thing->frame & FF_FRAMEMASK, 
                   spritelist[thing->sprite]);
-      thing->info->translucency = 0;
-      thing->translucency = 0;
+      if(thing->state)
+      {
+         thing->state->sprite = blankSpriteNum;
+         thing->state->frame  = 0;
+      }
+      thing->sprite = blankSpriteNum;
+      thing->frame  = 0;
       return;
    }
 
