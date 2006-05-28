@@ -2357,7 +2357,7 @@ static void D_DoomInit(void)
 
 #if 0
    // check for a driver that wants intermission stats
-   if((p = M_CheckParm ("-statcopy")) && p<myargc-1)
+   if((p = M_CheckParm("-statcopy")) && p<myargc-1)
    {
       // for statistics driver
       extern void *statcopy;

@@ -46,6 +46,20 @@ extern castinfo_t *castorder;
 // FINALE
 //
 
+// haleyjd 05/26/06: finale types
+enum
+{
+   FINALE_TEXT,         // text only; goes to next level unless endOfGame
+   FINALE_DOOM_CREDITS, // text, then DOOM credits screen
+   FINALE_DOOM_DEIMOS,  // text, then Deimos pic
+   FINALE_DOOM_BUNNY,   // text, then bunny scroller
+   FINALE_DOOM_MARINE,  // text, then pic of DoomGuy
+   FINALE_HTIC_CREDITS, // text, then Heretic credits screen
+   FINALE_HTIC_WATER,   // text, then underwater pic
+   FINALE_HTIC_DEMON,   // text, then demon scroller
+   FINALE_NUMFINALES
+};
+
 // Called by main loop.
 boolean F_Responder (event_t* ev);
 

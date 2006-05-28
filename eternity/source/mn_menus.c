@@ -399,7 +399,15 @@ menu_t menu_newgame =
 
 static void MN_DoNightmare(void)
 {
-   if(gamemode == commercial && modifiedgame && startOnNewMap)
+   // haleyjd 05/14/06: check for mn_episode_override
+   if(mn_episode_override)
+   {
+      if(start_mapname) // if set, use name, else use episode num as usual
+         G_DeferedInitNew(sk_nightmare, start_mapname);
+      else
+         G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
+   }
+   else if(gamemode == commercial && modifiedgame && startOnNewMap)
    {
       // start on newest level from wad
       G_DeferedInitNew(sk_nightmare, firstlevel);

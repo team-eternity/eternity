@@ -2,6 +2,28 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+05/26/06
+
+Partially generalized the finale system so that you can specify what type of
+finale sequence occurs after a map via MapInfo :)  I needed this for my new
+"Episode 5" project, which needs a just-text intermission after the first map,
+but in Ultimate DOOM which didn't previously support text-only intermissions
+that go to the next map (they always ended the episode).
+
+--------------------------------------------------------------------------------
+05/25/06
+
+Started research for the impending rewrite of the console. Quake 2's source code
+is going to be enormously useful, for I have found that it has a significantly
+cleaner and more efficient method of storing console text than any I had even
+imagined (I wish I had thought of it on my own...). I added a routine to the
+font engine that goes through all the patches of the font and finds the widest
+character width. This will be needed to more accurately calculate the number of
+characters allowed per console line.
+
+I've also made some minor adjustments to help joe_ compile under Linux.
+
+--------------------------------------------------------------------------------
 05/22/06
 
 Added a new ALWAYSFAST flag, which makes a monster always have -fast/Nightmare

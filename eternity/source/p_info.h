@@ -59,6 +59,7 @@ typedef struct LevelInfo_s
    char *backDrop;           // pic used during text finale
    char *interMusic;         // text finale music
    char *levelPic;           // intermission level name graphics lump
+   int  finaleType;          // type of finale sequence -- haleyjd 05/26/06
    boolean killStats;        // level has no statistics intermission
    boolean killFinale;       // level has no finale even if text is given
    boolean finaleSecretOnly; // level only has finale if secret exit

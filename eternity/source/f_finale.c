@@ -46,7 +46,7 @@ rcsid[] = "$Id: f_finale.c,v 1.16 1998/05/10 23:39:25 killough Exp $";
 #include "e_states.h"
 
 // Stage of animation:
-//  0 = text, 1 = art screen, 2 = character cast
+//  0 = text, 1 = art screen, 2 = character cast, 3 = Heretic underwater scene
 int finalestage;
 int finalecount;
 
@@ -141,8 +141,9 @@ void F_Ticker(void)
       // killough 3/28/98: check for acceleration
       IN_checkForAccelerate();
    }
-   else if(gamemode == commercial && finalecount > 50)
-   {  
+   else if(LevelInfo.finaleType == FINALE_TEXT && finalecount > 50)
+   {
+      // haleyjd 05/26/06: do this for all FINALE_TEXT finales
       // check for skipping
       for(i = 0; i < MAXPLAYERS; ++i)
 	 if(players[i].cmd.buttons)
@@ -163,27 +164,31 @@ void F_Ticker(void)
 	 (midstage ? NEWTEXTWAIT : TEXTWAIT) ||   // killough 2/28/98:
 	 (midstage && acceleratestage))           // changed to allow acceleration
       {
-	 if(gamemode != commercial) // Doom 1 / Ultimate Doom episode end
-	 {                          // with enough time, it's automatic
+         // Doom 1 / Ultimate Doom episode end: with enough time, it's automatic
+         // haleyjd 05/26/06: all finales except just text use this
+	 if(LevelInfo.finaleType != FINALE_TEXT)
+	 {                          
             finalecount = 0;
             finalestage = 1;
 
-            if(!(gamemode == hereticreg && 
-                (gameepisode == 2 || gameepisode == 3)))
+            // no wipe before Heretic E2 or E3 finales
+            if(LevelInfo.finaleType != FINALE_HTIC_WATER &&
+               LevelInfo.finaleType != FINALE_HTIC_DEMON)
                wipegamestate = -1;     // force a wipe
 
-            if(gameepisode == 3)
+            // special actions
+            switch(LevelInfo.finaleType)
             {
-               if(gamemode == hereticreg)
-               {
-                  DemonBuffer = Z_Malloc(128000, PU_LEVEL,
-                                         (void **)(&DemonBuffer));
-                  W_ReadLump(W_GetNumForName("FINAL2"), DemonBuffer);
-                  W_ReadLump(W_GetNumForName("FINAL1"),
-                             DemonBuffer+64000);
-               }
-               else
-                  S_StartMusic(mus_bunny);
+            case FINALE_DOOM_BUNNY: // bunny scroller
+               S_StartMusic(mus_bunny);
+               break;
+            case FINALE_HTIC_DEMON: // demon scroller
+               DemonBuffer = Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer));
+               W_ReadLump(W_GetNumForName("FINAL2"), DemonBuffer);
+               W_ReadLump(W_GetNumForName("FINAL1"), DemonBuffer+64000);
+               break;
+            default:
+               break;
             }
 	 }
 	 else if(!demo_compatibility && midstage)
@@ -759,76 +764,56 @@ void F_DemonScroll(void)
 }
 
 //
-// F_DoomDrawer
+// F_FinaleEndDrawer
 //
-// Drawer function for DOOM gamemode finales.
+// haleyjd 05/26/06: new combined routine which determines what final screen
+// to show based on LevelInfo.finaleType.
 //
-static void F_DoomDrawer(void)
+static void F_FinaleEndDrawer(void)
 {
-   switch(gameepisode)
+   switch(LevelInfo.finaleType)
    {
-   case 1:
-      if(gamemode == retail)
-         V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("CREDIT",PU_CACHE));
-      else
+   case FINALE_DOOM_CREDITS:
+      if(gameModeInfo->flags & GIF_SHAREWARE)
          V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("HELP2",PU_CACHE));
+      else
+         V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("CREDIT",PU_CACHE));
       break;
-   case 2:
+   case FINALE_DOOM_DEIMOS:
       V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("VICTORY2",PU_CACHE));
       break;
-   case 3:
+   case FINALE_DOOM_BUNNY:
       F_BunnyScroll();
       break;
-   case 4:
+   case FINALE_DOOM_MARINE:
       V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("ENDPIC",PU_CACHE));
       break;
-   }
-}
-
-//
-// F_HticDrawer
-//
-// Drawer function for Heretic finales.
-//
-static void F_HticDrawer(void)
-{
-   switch(gameepisode)
-   {
-   case 1:
-      if(gamemode == hereticsw)
+   case FINALE_HTIC_CREDITS:
+      if(gameModeInfo->flags & GIF_SHAREWARE)
          V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
                      W_CacheLumpName("ORDER", PU_CACHE));
       else
          V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
                      W_CacheLumpName("CREDIT", PU_CACHE));
       break;
-   case 2:
+   case FINALE_HTIC_WATER:
       F_DrawUnderwater();
       break;
-   case 3:
+   case FINALE_HTIC_DEMON:
       F_DemonScroll();
       break;
-   default: // episodes 4 and 5 fall in this catagory
-      V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                  W_CacheLumpName("CREDIT", PU_CACHE));
+   default: // ?
       break;
    }
 }
 
-typedef void (*fdrawer_t)(void);
-
-static fdrawer_t FDrawers[NumGameModeTypes] =
-{
-   F_DoomDrawer,
-   F_HticDrawer
-};
 
 //
 // F_Drawer
 //
 // Main finale drawing routine.
 // Either runs a text mode finale, draws the DOOM II cast, or calls
-// the current gamemode's drawer function.
+// F_FinaleEndDrawer above.
 //
 void F_Drawer(void)
 {
@@ -841,7 +826,7 @@ void F_Drawer(void)
       F_TextWrite();
       break;
    default:
-      (FDrawers[gameModeInfo->type])();
+      F_FinaleEndDrawer();
       break;
    }
 }
