@@ -32,6 +32,11 @@
 // The functions in s_sound.c for sound hashing now call down to these
 // functions.
 //
+// 05/28/06: Sound Sequences
+//
+// This module also now contains EDF sound sequence code. Sound sequences are
+// miniature scripts that determine how sectors and polyobjects play sounds.
+//
 // By James Haley
 //
 //----------------------------------------------------------------------------
@@ -49,23 +54,24 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "Confuse/confuse.h"
+#include "e_lib.h"
 #include "e_edf.h"
 #include "e_sound.h"
 
 //
 // Sound keywords
 //
-#define ITEM_SND_LUMP "lump"
-#define ITEM_SND_PREFIX "prefix"
-#define ITEM_SND_SINGULARITY "singularity"
-#define ITEM_SND_PRIORITY "priority"
-#define ITEM_SND_LINK "link"
-#define ITEM_SND_SKININDEX "skinindex"
-#define ITEM_SND_LINKVOL "linkvol"
-#define ITEM_SND_LINKPITCH "linkpitch"
+#define ITEM_SND_LUMP          "lump"
+#define ITEM_SND_PREFIX        "prefix"
+#define ITEM_SND_SINGULARITY   "singularity"
+#define ITEM_SND_PRIORITY      "priority"
+#define ITEM_SND_LINK          "link"
+#define ITEM_SND_SKININDEX     "skinindex"
+#define ITEM_SND_LINKVOL       "linkvol"
+#define ITEM_SND_LINKPITCH     "linkpitch"
 #define ITEM_SND_CLIPPING_DIST "clipping_dist"
-#define ITEM_SND_CLOSE_DIST "close_dist"
-#define ITEM_SND_DEHNUM "dehackednum"
+#define ITEM_SND_CLOSE_DIST    "close_dist"
+#define ITEM_SND_DEHNUM        "dehackednum"
 
 #define ITEM_DELTA_NAME "name"
 
@@ -88,8 +94,9 @@ static const char *singularities[] =
    "sg_wpnup",
    "sg_oof",
    "sg_getpow",
-   NULL
 };
+
+#define NUM_SINGULARITIES (sizeof(singularities) / sizeof(char *))
 
 //
 // Skin sound indices
@@ -111,8 +118,9 @@ static const char *skinindices[] =
    "sk_plfall",
    "sk_plfeet",
    "sk_fallht",
-   NULL
 };
+
+#define NUM_SKININDICES (sizeof(skinindices) / sizeof(char *))
 
 #define SOUND_OPTIONS \
    CFG_STR(ITEM_SND_LUMP,          NULL,              CFGF_NONE), \
@@ -279,8 +287,7 @@ boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
 //
 // E_NewWadSound
 //
-// Creates a sfxinfo_t structure for a new wad sound and
-// hashes it.
+// Creates a sfxinfo_t structure for a new wad sound and hashes it.
 //
 void E_NewWadSound(const char *name)
 {
@@ -367,8 +374,6 @@ void E_PreCacheSounds(void)
 //
 static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 {
-   int i;
-
    // preconditions: 
    
    // sfx->mnemonic is valid, and this sfxinfo_t has already been 
@@ -400,17 +405,10 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
    {
       const char *s = cfg_getstr(section, ITEM_SND_SINGULARITY);
 
-      i = 0;
+      sfx->singularity = E_StrToNumLinear(singularities, NUM_SINGULARITIES, s);
 
-      while(singularities[i])
-      {
-         if(!strcasecmp(singularities[i], s))
-         {
-            sfx->singularity = i;
-            break;
-         }
-         ++i;
-      }
+      if(sfx->singularity == NUM_SINGULARITIES)
+         sfx->singularity = 0;
    }
 
    // process the priority value
@@ -432,17 +430,10 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
    {
       const char *s = cfg_getstr(section, ITEM_SND_SKININDEX);
 
-      i = 0;
+      sfx->skinsound = E_StrToNumLinear(skinindices, NUM_SKININDICES, s);
 
-      while(skinindices[i])
-      {
-         if(!strcasecmp(skinindices[i], s))
-         {
-            sfx->skinsound = i;
-            break;
-         }
-         ++i;
-      }
+      if(sfx->skinsound == NUM_SKININDICES)
+         sfx->skinsound = 0;
    }
 
    // process link volume
@@ -562,9 +553,196 @@ void E_ProcessSoundDeltas(cfg_t *cfg)
 
       E_ProcessSound(sfx, deltasec, false);
 
-      E_EDFLogPrintf("\t\tApplied sounddelta #%d to sound %s\n",
-                     i, tempstr);
+      E_EDFLogPrintf("\t\tApplied sounddelta #%d to sound %s\n", i, tempstr);
    }
+}
+
+//=============================================================================
+//
+// Sound Sequences
+//
+// haleyjd 05/28/06
+// 
+
+#define ITEM_SEQ_ID   "id"
+#define ITEM_SEQ_CMDS "cmds"
+#define ITEM_SEQ_STOP "stopsound"
+
+// attenuation types
+static const char *attenuation_types[] =
+{
+   "normal",
+   "idle",
+   "static",
+   "none"
+};
+
+#define NUM_ATTENUATION_TYPES (sizeof(attenuation_types) / sizeof(char *))
+
+
+//=============================================================================
+//
+// Ambience
+//
+// haleyjd 05/30/06
+//
+
+#define ITEM_AMB_SOUND       "sound"
+#define ITEM_AMB_INDEX       "index"
+#define ITEM_AMB_VOLUME      "volume"
+#define ITEM_AMB_ATTENUATION "attenuation"
+#define ITEM_AMB_TYPE        "type"
+#define ITEM_AMB_PERIOD      "period"
+#define ITEM_AMB_MINPERIOD   "minperiod"
+#define ITEM_AMB_MAXPERIOD   "maxperiod"
+
+static const char *ambience_types[] =
+{
+   "continuous",
+   "periodic",
+   "random",
+};
+
+#define NUM_AMBIENCE_TYPES (sizeof(ambience_types) / sizeof(char *))
+
+cfg_opt_t edf_ambience_opts[] =
+{
+   CFG_STR(ITEM_AMB_SOUND,       "none",       CFGF_NONE),
+   CFG_INT(ITEM_AMB_INDEX,       0,            CFGF_NONE),
+   CFG_INT(ITEM_AMB_VOLUME,      127,          CFGF_NONE),
+   CFG_STR(ITEM_AMB_ATTENUATION, "normal",     CFGF_NONE),
+   CFG_STR(ITEM_AMB_TYPE,        "continuous", CFGF_NONE),
+   CFG_INT(ITEM_AMB_PERIOD,      35,           CFGF_NONE),
+   CFG_INT(ITEM_AMB_MINPERIOD,   35,           CFGF_NONE),
+   CFG_INT(ITEM_AMB_MAXPERIOD,   35,           CFGF_NONE),
+   CFG_END()
+};
+
+// ambience hash table
+#define NUMAMBIENCECHAINS 67
+static EAmbience_t *ambience_chains[NUMAMBIENCECHAINS];
+
+//
+// E_AmbienceForNum
+//
+// Given an ambience index, returns the ambience object.
+// Returns NULL if no such ambience object exists.
+//
+EAmbience_t *E_AmbienceForNum(int num)
+{   
+   int key = num % NUMAMBIENCECHAINS;
+   EAmbience_t *cur = ambience_chains[key];
+
+   while(cur && cur->index != num)
+      cur = cur->next;
+
+   return cur;
+}
+
+//
+// E_AddAmbienceToHash
+//
+// Adds an ambience object to the hash table.
+//
+static void E_AddAmbienceToHash(EAmbience_t *amb)
+{
+   int key = amb->index % NUMAMBIENCECHAINS;
+
+   amb->next = ambience_chains[key];
+
+   ambience_chains[key] = amb;
+}
+
+//
+// E_ProcessAmbienceSec
+//
+// Processes a single EDF ambience section.
+//
+static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
+{
+   EAmbience_t *newAmb;
+   char *tempstr;
+   int index;
+
+   // issue a warning if index is undefined
+   if(cfg_size(cfg, ITEM_AMB_INDEX) == 0)
+   {
+      E_EDFLogPrintf("\t\tWarning: ambience %d defines no index, "
+                     "ambience index 0 may be overwritten.\n", i);
+   }
+
+   // get index
+   index = cfg_getint(cfg, ITEM_AMB_INDEX);
+
+   // if one already exists, use it, else create a new one
+   if(!(newAmb = E_AmbienceForNum(index)))
+   {
+      newAmb = malloc(sizeof(EAmbience_t));
+
+      // add to hash table
+      newAmb->index = index;
+      E_AddAmbienceToHash(newAmb);
+   }
+
+   // process type -- must be valid
+   tempstr = cfg_getstr(cfg, ITEM_AMB_TYPE);
+   newAmb->type = E_StrToNumLinear(ambience_types, NUM_AMBIENCE_TYPES, tempstr);
+   if(newAmb->type == NUM_AMBIENCE_TYPES)
+   {
+      E_EDFLogPrintf("\t\tWarning: ambience %d uses bad type '%s'\n",
+                     newAmb->index, tempstr);
+      newAmb->type = 0; // use continuous as a default
+   }
+
+   // process sound -- note: may end up NULL, this is not an error
+   tempstr = cfg_getstr(cfg, ITEM_AMB_SOUND);
+   newAmb->sound = E_SoundForName(tempstr);
+   if(!newAmb->sound)
+   {
+      // issue a warning just in case this is a mistake
+      E_EDFLogPrintf("\t\tWarning: ambience %d references bad sound '%s'\n",
+                     newAmb->index, tempstr);
+   }
+
+   // process volume
+   newAmb->volume = cfg_getint(cfg, ITEM_AMB_VOLUME);
+
+   // process attenuation
+   tempstr = cfg_getstr(cfg, ITEM_AMB_ATTENUATION);
+   newAmb->attenuation = 
+      E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES, tempstr);
+   if(newAmb->attenuation == NUM_ATTENUATION_TYPES)
+   {
+      E_EDFLogPrintf("\t\tWarning: ambience %d uses unknown attn type '%s'\n",
+                     newAmb->index, tempstr);
+      newAmb->attenuation = ATTN_NORMAL; // normal attenuation is fine
+   }
+
+   // process period variables
+   newAmb->period    = cfg_getint(cfg, ITEM_AMB_PERIOD);
+   newAmb->minperiod = cfg_getint(cfg, ITEM_AMB_MINPERIOD);
+   newAmb->maxperiod = cfg_getint(cfg, ITEM_AMB_MAXPERIOD);
+
+   E_EDFLogPrintf("\t\tFinished ambience #%d (index %d)\n", i, newAmb->index);
+}
+
+//
+// E_ProcessAmbience
+//
+// Processes all EDF ambience sections.
+//
+void E_ProcessAmbience(cfg_t *cfg)
+{
+   unsigned int i, numambience;
+
+   E_EDFLogPuts("\t* Processing ambience\n");
+
+   numambience = cfg_size(cfg, EDF_SEC_AMBIENCE);
+
+   E_EDFLogPrintf("\t\t%d ambience section(s) defined\n", numambience);
+
+   for(i = 0; i < numambience; ++i)
+      E_ProcessAmbienceSec(cfg_getnsec(cfg, EDF_SEC_AMBIENCE, i), i);
 }
 
 // EOF

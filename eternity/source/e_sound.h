@@ -38,16 +38,45 @@ sfxinfo_t *E_SoundForDEHNum(int);
 void E_NewWadSound(const char *);
 void E_PreCacheSounds(void);
 
+// haleyjd: EDF ambience types
+enum
+{
+   E_AMBIENCE_CONTINUOUS,
+   E_AMBIENCE_PERIODIC,
+   E_AMBIENCE_RANDOM,
+};
+
+// haleyjd 05/30/06: EDF ambience objects
+typedef struct EAmbience_s
+{
+   int index;        // numeric id
+
+   sfxinfo_t *sound; // sound to use
+   int type;         // continuous, periodic, random
+   int volume;       // scale value from 0 to 127
+   int attenuation;  // normal/idle, static, or none
+   int period;       // used for periodic only
+   int minperiod;    // minimum period length for random
+   int maxperiod;    // maximum period length for random
+
+   struct EAmbience_s *next; // for hashing
+} EAmbience_t;
+
+EAmbience_t *E_AmbienceForNum(int num);
+
 #ifdef NEED_EDF_DEFINITIONS
 extern cfg_opt_t edf_sound_opts[];
 extern cfg_opt_t edf_sdelta_opts[];
+extern cfg_opt_t edf_ambience_opts[];
 
 void    E_ProcessSounds(cfg_t *cfg);
 void    E_ProcessSoundDeltas(cfg_t *cfg);
+void    E_ProcessAmbience(cfg_t *cfg);
 boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 
-#define EDF_SEC_SOUND  "sound"
-#define EDF_SEC_SDELTA "sounddelta"
+#define EDF_SEC_SOUND    "sound"
+#define EDF_SEC_SDELTA   "sounddelta"
+#define EDF_SEC_AMBIENCE "ambience"
 #endif
 
 #endif

@@ -774,7 +774,7 @@ void T_ACSThinker(acsthinker_t *script)
             max = POP();
             min = POP();
 
-            PUSH((P_Random(pr_script) % (max - min + 1)) + min);
+            PUSH(P_RangeRandom(pr_script, min, max));
          }
          break;
       case OP_RANDOM_IMM:
@@ -783,7 +783,7 @@ void T_ACSThinker(acsthinker_t *script)
             min = LONG(*ip++);
             max = LONG(*ip++);
 
-            PUSH((P_Random(pr_script) % (max - min + 1)) + min);
+            PUSH(P_RangeRandom(pr_script, min, max));
          }
          break;
       case OP_THINGCOUNT:

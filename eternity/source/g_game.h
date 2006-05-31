@@ -90,8 +90,6 @@ void player_printf(player_t *player, const char *s, ...);
 extern int  key_escape;                                             // phares
 extern int  key_autorun;
 extern int  key_chat;
-extern int  key_backspace;
-extern int  key_enter;
 extern int  key_help;
 extern int  key_spy;
 extern int  key_pause;

@@ -1,4 +1,4 @@
-# sprites.edf - EDF file for Eternity Engine v3.33.02
+# sprites.edf - EDF file for Eternity Engine v3.33.33
 #     This file contains the spritenames array, and definitions for sprite-based
 #     pickup items.
 
@@ -9,6 +9,9 @@
 #     As with all strings, quotations are not required when the string contains
 #     no whitespace or special characters (which sprite names should not).
 
+ifenabled(DOOM)
+
+# Doom Sprites
 spritenames =
 {
   "TROO","SHTG","PUNG","PISG","PISF","SHTF","SHT2","CHGG","CHGF","MISG",
@@ -24,15 +27,38 @@ spritenames =
   "POL3","POL1","POL6","GOR2","GOR3","GOR4","GOR5","SMIT","COL1","COL2",
   "COL3","COL4","CAND","CBRA","COL6","TRE1","TRE2","ELEC","CEYE","FSKU",
   "COL5","TBLU","TGRN","TRED","SMBT","SMGT","SMRT","HDB1","HDB2","HDB3",
-  "HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP","TLP2","TNT1","DOGS",
-  "PLS1","PLS2","UNKN","SPSH","SLDG","LVAS",
+  "HDB4","HDB5","HDB6","POB1","POB2","BRS1","TLMP","TLP2"
+}
+
+endif()
+
+ifdisabled(DOOM)
+
+# If Doom is disabled, we still need the following sprites:
+# * PLAY is needed for players in pretty much all games
+# * HEAD is needed by the Iron Lich too, so it'll have to be here
+
+spritenames =
+{
+  "PLAY","HEAD"
+}
+
+endif()
+
+
+# Eternity Engine Sprites -- Always defined
+spritenames += 
+{ 
+  "TNT1","DOGS","PLS1","PLS2","UNKN","SPSH","SLDG","LVAS",
   
-  # Warning: Do not use any of these sprites!
+  # Warning: Do not use any of these sprites! They may be killed off.
   "CLER","CBAL","FOGS","FOGM","FOGL","LCLR","DWRF","FDWF","GREN","PNS2"
 }
 
+
 ifenabled(HERETIC)
 
+# Heretic Sprites
 spritenames +=
 {
   "BARL","BRPL","MOS1","MOS2","WTRH","CHDL","SRTC","TELE","AKYY","BKYY",
@@ -46,6 +72,7 @@ spritenames +=
 }
 
 endif()
+
 
 # pickup item effects -- format: pickupitem <spritename> { effect = <effect> }
 #     Sprite-based pickup items are currently limited to one per sprite.

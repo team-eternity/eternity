@@ -29,14 +29,13 @@
 static const char
 rcsid[] = "$Id: i_system.c,v 1.14 1998/05/03 22:33:13 killough Exp $";
 
-#include "../z_zone.h"
-
 #ifdef _MSC_VER
 #include <conio.h>
 #endif
 
 #include "SDL.h"
 
+#include "../z_zone.h"
 #include "../c_runcmd.h"
 #include "../d_gi.h"
 #include "../i_system.h"
@@ -213,10 +212,11 @@ boolean I_SetJoystickDevice(int deviceNum)
 
 void I_InitKeyboard(void)
 {
-   SDLMod   mod;
+   //SDLMod   mod;
    
    keyboard_installed = 1;
    
+   /*
    oldmod = SDL_GetModState();
    switch(key_autorun)
    {
@@ -241,6 +241,7 @@ void I_InitKeyboard(void)
    {
       SDL_SetModState(KMOD_NONE);
    }
+   */
 }
 
 void I_Init(void)

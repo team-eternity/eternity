@@ -90,14 +90,45 @@ static boolean MN_SkinResponder(event_t *ev)
    if(ev->type != ev_keydown)
       return false;
 
-   switch(ev->data1)
+   if(action_menu_toggle || action_menu_previous)
    {
-   case KEYD_BACKSPACE:
-   case KEYD_ESCAPE:
+      action_menu_toggle = action_menu_previous = false;
+
       // kill the widget
       S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       current_menuwidget = NULL;
-      break;
+      return true;
+   }
+
+   if(action_menu_left)
+   {
+      action_menu_left = false;
+
+      // rotate sprite left
+      if(skview_rot == 7)
+         skview_rot = 0;
+      else
+         skview_rot++;
+
+      return true;
+   }
+
+   if(action_menu_right)
+   {
+      action_menu_right = false;
+
+      // rotate sprite right
+      if(skview_rot == 0)
+         skview_rot = 7;
+      else
+         skview_rot--;
+
+      return true;
+   }
+
+   switch(ev->data1)
+   {
+      /*
    case KEYD_LEFTARROW:
       // rotate sprite left
       if(skview_rot == 7)
@@ -112,6 +143,7 @@ static boolean MN_SkinResponder(event_t *ev)
       else
          skview_rot--;
       break;
+      */
    case KEYD_RCTRL:
       // attack!
       if(skview_action == SKV_WALKING)
@@ -161,7 +193,7 @@ static boolean MN_SkinResponder(event_t *ev)
       // toggle half-speed animation
       skview_halfspeed ^= true;
       break;
-   case KEYD_SPACEBAR:
+   case ' ':
       // "respawn" the player if dead
       if(skview_action == SKV_DEAD)
       {
@@ -177,13 +209,8 @@ static boolean MN_SkinResponder(event_t *ev)
    return true;
 }
 
-// defines for instruction string positions -- these cascade
-
-#define EXIT_Y  (SCREENHEIGHT - gameModeInfo->vtextinfo->cy - 1)
-#define RESP_Y  (EXIT_Y - gameModeInfo->vtextinfo->cy)
-#define A_Y     (RESP_Y - gameModeInfo->vtextinfo->cy)
-#define LR_Y    (A_Y - gameModeInfo->vtextinfo->cy)
-#define INSTR_Y (LR_Y - gameModeInfo->vtextinfo->cy)
+// haleyjd 05/29/06: got rid of cascading macros in preference of this
+#define INSTR_Y ((SCREENHEIGHT - 1) - (gameModeInfo->vtextinfo->cy * 5))
 
 //
 // MN_SkinInstructions
@@ -197,21 +224,23 @@ static void MN_SkinInstructions(void)
 
    void (*textfunc)(const char *, int, int) = 
       gameModeInfo->shadowTitles ? V_WriteTextBigShadowed : V_WriteTextBig;
-  
+
    // draw a title at the top, too
 
    textfunc(msg, 160 - V_StringWidthBig(msg)/2, 8);
 
-   V_WriteText("instructions:", 4, INSTR_Y);
-   V_WriteText(FC_GRAY "<-" FC_RED " = rotate left,  "
-               FC_GRAY "->" FC_RED " = rotate right", 4, LR_Y);
-   V_WriteText(FC_GRAY "ctrl" FC_RED " = fire,  "
-               FC_GRAY "p" FC_RED " = pain,  "
-               FC_GRAY "d" FC_RED " = die,  "
-               FC_GRAY "x" FC_RED " = gib", 4, A_Y);
-   V_WriteText(FC_GRAY "space" FC_RED " = respawn,  "
-               FC_GRAY "h" FC_RED " = half-speed", 4, RESP_Y);
-   V_WriteText(FC_GRAY "escape or backspace" FC_RED " = exit", 4, EXIT_Y);
+   // haleyjd 05/29/06: rewrote to be binding neutral and to draw all of
+   // it with one call to V_WriteText instead of five.
+   V_WriteText("instructions:\n"
+               FC_GRAY "left" FC_RED " = rotate left, "
+               FC_GRAY "right" FC_RED " = rotate right\n"
+               FC_GRAY "ctrl" FC_RED " = fire, "
+               FC_GRAY "p" FC_RED " = pain, "
+               FC_GRAY "d" FC_RED " = die, "
+               FC_GRAY "x" FC_RED " = gib\n"
+               FC_GRAY "space" FC_RED " = respawn, "
+               FC_GRAY "h" FC_RED " = half-speed\n"
+               FC_GRAY "toggle or previous" FC_RED " = exit", 4, INSTR_Y);
 }
 
 //
@@ -235,29 +264,6 @@ static void MN_SkinDrawer(void)
 
    // draw instructions and title
    MN_SkinInstructions();
-
-   // do state transitions
-   if(skview_tics != -1 && menutime >= skview_tics)
-   {
-      // EDF FIXME: frames need fix
-      // hack states: these need special nextstate handling so
-      // that the player will start walking again afterward
-      if(skview_state == &states[E_SafeState(S_PLAY_ATK1)] ||
-         skview_state == &states[E_SafeState(S_PLAY_PAIN2)])
-      {
-         MN_SkinSetState(&states[mobjinfo[skview_typenum].seestate]);
-         skview_action = SKV_WALKING;
-      }
-      else
-      {
-         // normal state transition
-         MN_SkinSetState(&states[skview_state->nextstate]);
-
-         // if the state has -1 tics, reset skview_tics
-         if(skview_state->tics == -1)
-            skview_tics = -1;
-      }
-   }
 
    // get the player skin sprite definition
    sprdef = &sprites[players[consoleplayer].skin->sprite];
@@ -289,9 +295,40 @@ static void MN_SkinDrawer(void)
       flip);
 }
 
+//
+// MN_SkinTicker
+//
+// haleyjd 05/29/06: separated out from the drawer and added ticker
+// support to widgets to enable precise state transition timing.
+//
+void MN_SkinTicker(void)
+{
+   if(skview_tics != -1 && menutime >= skview_tics)
+   {
+      // EDF FIXME: frames need fix
+      // hack states: these need special nextstate handling so
+      // that the player will start walking again afterward
+      if(skview_state == &states[E_SafeState(S_PLAY_ATK1)] ||
+         skview_state == &states[E_SafeState(S_PLAY_PAIN2)])
+      {
+         MN_SkinSetState(&states[mobjinfo[skview_typenum].seestate]);
+         skview_action = SKV_WALKING;
+      }
+      else
+      {
+         // normal state transition
+         MN_SkinSetState(&states[skview_state->nextstate]);
+
+         // if the state has -1 tics, reset skview_tics
+         if(skview_state->tics == -1)
+            skview_tics = -1;
+      }
+   }
+}
+
 // the skinviewer menu widget
 
-menuwidget_t skinviewer = { MN_SkinDrawer, MN_SkinResponder, true };
+menuwidget_t skinviewer = { MN_SkinDrawer, MN_SkinResponder, MN_SkinTicker, true };
 
 //
 // MN_InitSkinViewer

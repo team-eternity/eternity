@@ -162,7 +162,6 @@ void C_Init(void)
    
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
-   //C_NewAlias("centermsg", "centremsg %opt");
    
    C_AddCommands();
    C_UpdateInputPoint();
@@ -274,26 +273,42 @@ static void C_AddToHistory(char *s)
 
 // respond to keyboard input/events
 
-int C_Responder(event_t* ev)
+int C_Responder(event_t *ev)
 {
    static int shiftdown;
    char ch;
+
+   // haleyjd 05/29/06: dynamic console bindings
+   G_KeyResponder(ev, kac_console);
    
    if(ev->data1 == KEYD_RSHIFT)
    {
-      shiftdown = ev->type==ev_keydown;
+      shiftdown = (ev->type==ev_keydown);
       return consoleactive;   // eat if console active
    }
-   if(ev->data1 == KEYD_PAGEUP)
+
+   pgup_down = action_console_pageup;
+   if(action_console_pageup)
+      return consoleactive;
+   pgdn_down = action_console_pagedown;
+   if(action_console_pagedown)
+      return consoleactive;
+
+   /*
+   if(action_console_pageup)
    {
-      pgup_down = ev->type==ev_keydown;
+      action_console_pageup = false;
+      pgup_down = (ev->type == ev_keydown);
       return consoleactive;
    }
-   if(ev->data1 == KEYD_PAGEDOWN)
+
+   if(action_console_pagedown)
    {
-      pgdn_down = ev->type==ev_keydown;
+      action_console_pagedown = false;
+      pgdn_down = (ev->type == ev_keydown);
       return consoleactive;
    }
+   */
   
    // only interested in keypresses
    if(ev->type != ev_keydown)
@@ -306,10 +321,11 @@ int C_Responder(event_t* ev)
    //
    
    // activate console?
-   if(ev->data1 == KEYD_CONSOLE && console_enabled)
+   if(action_console_toggle && console_enabled)
    {
       // set console
-      current_target = current_target == c_height ? 0 : c_height;
+      action_console_toggle = false;
+      current_target = (current_target == c_height ? 0 : c_height);
       return true;
    }
 
@@ -327,11 +343,12 @@ int C_Responder(event_t* ev)
    //
    
    // tab-completion
-   if(ev->data1 == KEYD_TAB)
+   if(action_console_tab)
    {
       // set inputtext to next or previous in
       // tab-completion list depending on whether
       // shift is being held down
+      action_console_tab = false;
       strcpy(inputtext, shiftdown ? C_NextTab(inputtext) :
              C_PrevTab(inputtext));
       
@@ -340,8 +357,10 @@ int C_Responder(event_t* ev)
     }
   
    // run command
-   if(ev->data1 == KEYD_ENTER)
+   if(action_console_enter)
    {
+      action_console_enter = false;
+
       C_AddToHistory(inputtext);      // add to history
       
       if(!strcmp(inputtext, "r0x0rz delux0rz"))
@@ -365,8 +384,10 @@ int C_Responder(event_t* ev)
    
    // previous command
    
-   if(ev->data1 == KEYD_UPARROW)
+   if(action_console_up)
    {
+      action_console_up = false;
+
       history_current =
          (history_current <= 0) ? 0 : history_current - 1;
       
@@ -380,8 +401,10 @@ int C_Responder(event_t* ev)
   
   // next command
   
-   if(ev->data1 == KEYD_DOWNARROW)
+   if(action_console_down)
    {
+      action_console_down = false;
+
       history_current = (history_current >= history_last) 
          ? history_last : history_current + 1;
 
@@ -400,8 +423,10 @@ int C_Responder(event_t* ev)
    
    // backspace
    
-   if(ev->data1 == KEYD_BACKSPACE)
+   if(action_console_backspace)
    {
+      action_console_backspace = false;
+
       if(strlen(inputtext) > 0)
          inputtext[strlen(inputtext) - 1] = '\0';
       
@@ -412,7 +437,8 @@ int C_Responder(event_t* ev)
 
    // none of these, probably just a normal character
    
-   ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+   // FIXME/TODO: eliminate shiftxform
+   ch = (shiftdown ? shiftxform[ev->data1] : ev->data1); // shifted?
 
    // only care about valid characters
    // dont allow too many characters on one command line

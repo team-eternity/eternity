@@ -813,20 +813,6 @@ default_t defaults[] =
    },
 
    {
-      "key_backspace",
-      &key_backspace, NULL,
-      KEYD_BACKSPACE, {0,255}, dt_number, ss_keys, wad_no,
-      "key to erase last character typed"
-   },
-
-   {
-      "key_enter",
-      &key_enter, NULL,
-      KEYD_ENTER, {0,255}, dt_number, ss_keys, wad_no,
-      "key to review past messages"
-   },
-
-   {
       "key_chatplayer1",
       &destination_keys[0], NULL,
       'g', {0,255}, dt_number, ss_keys, wad_no,

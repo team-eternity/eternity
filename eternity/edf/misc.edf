@@ -1,5 +1,7 @@
-# misc.edf - EDF file for Eternity Engine v3.33.00
+# misc.edf - EDF file for Eternity Engine v3.33.33
 #     Contains miscellaneous settings
+
+ifenabled(DOOM)
 
 # Boss spawner creature types for the SpawnFly codepointer.
 
@@ -8,6 +10,8 @@ boss_spawner_types =
   DoomImp, Demon, Spectre, PainElemental, Cacodemon, Archvile,
   Revenant, Arachnotron, Mancubus, HellKnight, BaronOfHell
 }
+
+endif()
 
 # Heretic Intermission Strings
 

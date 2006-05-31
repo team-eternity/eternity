@@ -84,20 +84,21 @@ extern boolean nosfxparm, nomusicparm;
 
 typedef struct
 {
-  sfxinfo_t *sfxinfo;  // sound information (if null, channel avail.)
-  const mobj_t *origin;// origin of sound
-  int handle;          // handle of the sound being played
+  sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
+  const mobj_t *origin;    // origin of sound
+  int volume;              // volume scale value for effect -- haleyjd 05/29/06
+  soundattn_e attenuation; // attenuation type -- haleyjd 05/29/06
+  int handle;              // handle of the sound being played
 } channel_t;
 
 // the set of channels available
 static channel_t *channels;
 
-// These are not used, but should be (menu).
 // Maximum volume of a sound effect.
 // Internal default is max out of 0-15.
 int snd_SfxVolume = 15;
 
-// Maximum volume of music. Useless so far.
+// Maximum volume of music.
 int snd_MusicVolume = 15;
 
 // precache sounds ?
@@ -129,12 +130,12 @@ musicinfo_t *musicinfos[SOUND_HASHSLOTS];
 
 static void S_StopChannel(int cnum)
 {
-  if (channels[cnum].sfxinfo)
-    {
-      if (I_SoundIsPlaying(channels[cnum].handle))
-	I_StopSound(channels[cnum].handle);      // stop the sound playing
+   if(channels[cnum].sfxinfo)
+   {
+      if(I_SoundIsPlaying(channels[cnum].handle))
+         I_StopSound(channels[cnum].handle);      // stop the sound playing
       channels[cnum].sfxinfo = 0;
-    }
+   }
 }
 
 //
@@ -145,21 +146,37 @@ static void S_StopChannel(int cnum)
 //
 // sf: listener now a camera_t for external cameras
 // haleyjd: added sfx parameter for custom attenuation data
+// haleyjd: added channel volume scale value
 //
 static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
-                               int *vol, int *sep, int *pitch, 
-                               sfxinfo_t *sfx)
+                               int chanvol, int chanattn, int *vol, int *sep,
+                               int *pitch, sfxinfo_t *sfx)
 {
-   fixed_t adx, ady, dist;
+   fixed_t adx = 0, ady = 0, dist = 0;
    angle_t angle;
-   // SoM: I could put this inside an R_LINKEDPORTALS ifdef but I don't want to have
-   // to write two versions of the function
    fixed_t sx, sy;
+   int attenuator, basevolume;        // haleyjd
+   fixed_t close_dist, clipping_dist; // haleyjd
 
    // haleyjd 08/12/04: we cannot adjust a sound for a NULL listener.
-   // haleyjd 07/13/05: we cannot adjust a sound for a NULL source.
-   if(!listener || !source)
+   if(!listener)
       return 1;
+
+   // haleyjd 05/29/06: this function isn't supposed to be called for NULL sources
+#ifdef RANGECHECK
+   if(!source)
+      I_Error("S_AdjustSoundParams: NULL source\n");
+#endif
+
+   // haleyjd 05/29/06: moved up to here and fixed a major bug
+   // are we in a killed-sound sector?   
+   if(gamestate == GS_LEVEL && 
+      R_PointInSubsector(listener->x, listener->y)->sector->special & SF_KILLSOUND)
+      return 0;
+
+   // source in a killed-sound sector?
+   if(R_PointInSubsector(source->x, source->y)->sector->special & SF_KILLSOUND)
+      return 0;
    
    // calculate the distance to sound origin
    //  and clip it if necessary
@@ -169,13 +186,13 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 
    sx = source->x;
    sy = source->y;
-
+      
 #ifdef R_LINKEDPORTALS
-   if(useportalgroups && listener->groupid != R_NOGROUP && source->groupid != R_NOGROUP && 
-      listener->groupid != source->groupid)
+   if(useportalgroups && listener->groupid != R_NOGROUP && 
+      source->groupid != R_NOGROUP && listener->groupid != source->groupid)
    {
-      // The listener and the source are not in the same subspace, so offset the sound origin
-      // so it will sound correct to the player.
+      // The listener and the source are not in the same subspace, so offset
+      // the sound origin so it will sound correct to the player.
       linkoffset_t *link = P_GetLinkOffset(listener->groupid, source->groupid);
       if(link)
       {
@@ -187,34 +204,49 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 
    adx = D_abs((listener->x >> FRACBITS) - (sx >> FRACBITS));
    ady = D_abs((listener->y >> FRACBITS) - (sy >> FRACBITS));
-
+   
    if(ady > adx)
       dist = adx, adx = ady, ady = dist;
 
    dist = adx ? FixedDiv(adx, finesine[(tantoangle[FixedDiv(ady,adx) >> DBITS]
-                                       + ANG90) >> ANGLETOFINESHIFT]) : 0;
+                                        + ANG90) >> ANGLETOFINESHIFT]) : 0;   
+   
+   // haleyjd 05/29/06: allow per-channel volume scaling
+   basevolume = (snd_SfxVolume * chanvol) / 127;
 
-   // are _we_ in a killed-sound sector?
-   if(source)
+   // haleyjd 05/30/06: allow per-channel attenuation behavior
+   switch(chanattn)
    {
-      // source in a killed-sound sector?
-      if(R_PointInSubsector(source->x, source->y)->sector->special & SF_KILLSOUND)
-         return 0;
+   case ATTN_NORMAL: // use sfxinfo_t data
+      attenuator = S_ATTENUATOR;
+      close_dist = sfx->close_dist;
+      clipping_dist = sfx->clipping_dist;
+      break;
+   case ATTN_IDLE: // use DOOM's original values
+      attenuator = S_CLIPPING_DIST_I - S_CLOSE_DIST_I;
+      close_dist = S_CLOSE_DIST;
+      clipping_dist = S_CLIPPING_DIST;
+      break;
+   case ATTN_STATIC: // fade fast
+      attenuator = 448;
+      close_dist = 64 << FRACBITS;
+      clipping_dist = 512 << FRACBITS;
+      break;
+   case ATTN_NONE: // Moooo! Useful for ambient sounds.
+      attenuator = close_dist = clipping_dist = 0;
+      break;
    }
-   else if(gamestate == GS_LEVEL && 
-           R_PointInSubsector(listener->x, listener->y)->sector->special & SF_KILLSOUND)
-      return 0;
 
    // killough 11/98:   handle zero-distance as special case
    // haleyjd 07/13/05: handle case of zero-or-less attenuation as well
-   if(!dist || S_ATTENUATOR <= 0)
+   if(!dist || attenuator <= 0)
    {
       *sep = NORM_SEP;
-      *vol = snd_SfxVolume;
+      *vol = basevolume; // haleyjd 05/29/06: use scaled basevolume
       return *vol > 0;
    }
 
-   if(dist > sfx->clipping_dist >> FRACBITS)
+   if(dist > clipping_dist >> FRACBITS)
       return 0;
 
    // angle of source to listener
@@ -228,56 +260,69 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    angle >>= ANGLETOFINESHIFT;
 
    // stereo separation
-   *sep = NORM_SEP - FixedMul(S_STEREO_SWING>>FRACBITS, finesine[angle]);
+   *sep = NORM_SEP - FixedMul(S_STEREO_SWING >> FRACBITS, finesine[angle]);
    
    // volume calculation
-   *vol = dist < sfx->close_dist >> FRACBITS ? snd_SfxVolume :
-      snd_SfxVolume * ((sfx->clipping_dist >> FRACBITS) - dist) /
-      S_ATTENUATOR;
+   *vol = dist < close_dist >> FRACBITS ? basevolume :
+      basevolume * ((clipping_dist >> FRACBITS) - dist) / attenuator;
 
    return *vol > 0;
 }
 
 //
 // S_getChannel :
+//
 //   If none available, return -1.  Otherwise channel #.
 //
-
 static int S_getChannel(const void *origin, sfxinfo_t *sfxinfo)
 {
-  // channel number to use
-  int cnum;
-  channel_t *c;
-
-  // Find an open channel
-  // killough 12/98: replace is_pickup hack with singularity flag
-  for (cnum=0; cnum<numChannels && channels[cnum].sfxinfo; cnum++)
-    if (origin && channels[cnum].origin == origin &&
-        channels[cnum].sfxinfo->singularity == sfxinfo->singularity)
+   // channel number to use
+   int cnum;
+   channel_t *c;
+   
+   // Find an open channel
+   // killough 12/98: replace is_pickup hack with singularity flag
+   for(cnum = 0; cnum < numChannels && channels[cnum].sfxinfo; ++cnum)
+   {
+      if(origin && channels[cnum].origin == origin &&
+         channels[cnum].sfxinfo->singularity == sfxinfo->singularity)
       {
-        S_StopChannel(cnum);
-        break;
+         S_StopChannel(cnum);
+         break;
       }
+   }
 
-    // None available
-  if (cnum == numChannels)
-    {      // Look for lower priority
-      for (cnum=0 ; cnum<numChannels ; cnum++)
-        if (channels[cnum].sfxinfo->priority >= sfxinfo->priority)
-          break;
-      if (cnum == numChannels)
-        return -1;                  // No lower priority.  Sorry, Charlie.
+   // None available
+   if(cnum == numChannels)
+   {
+      // Look for lower priority
+      for(cnum = 0; cnum < numChannels; ++cnum)
+      {
+         if (channels[cnum].sfxinfo->priority >= sfxinfo->priority)
+            break;
+      }
+      if(cnum == numChannels)
+         return -1;                  // No lower priority.  Sorry, Charlie.
       else
-        S_StopChannel(cnum);        // Otherwise, kick out lower priority.
-    }
-
-  c = &channels[cnum];              // channel is decided to be cnum.
-  c->sfxinfo = sfxinfo;
-  c->origin = origin;
-  return cnum;
+         S_StopChannel(cnum);        // Otherwise, kick out lower priority.
+   }
+   
+   c = &channels[cnum];              // channel is decided to be cnum.
+   c->sfxinfo = sfxinfo;
+   c->origin = origin;
+   return cnum;
 }
 
-void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx)
+//
+// S_StartSfxInfo
+//
+// The main sound starting function.
+// haleyjd 05/29/06: added volume scaling value. Allows sounds to be
+// started and to persist at differing volume levels. volumeScale should
+// range from 0 to 127. Also added customizable attenuation types.
+//
+void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
+                    int volumeScale, soundattn_e attenuation)
 {
    int sep, pitch, priority, cnum;
    int volume = snd_SfxVolume;
@@ -368,11 +413,17 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx)
    // haleyjd 08/12/04: add extcamera check
    
    if(!origin || (!extcamera && origin == players[displayplayer].mo))
+   {
       sep = NORM_SEP;
+      volume = (volume * volumeScale) / 127; // haleyjd 05/29/06: scale volume
+      if(volume < 1)
+         return;
+   }
    else
    {     
       // use an external cam?
-      if(!S_AdjustSoundParams(&playercam, origin, &volume, &sep, &pitch, sfx))
+      if(!S_AdjustSoundParams(&playercam, origin, volumeScale, attenuation,
+                              &volume, &sep, &pitch, sfx))
          return;
       else if(origin->x == playercam.x && origin->y == playercam.y)
          sep = NORM_SEP;
@@ -390,7 +441,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx)
       }
       else
       {
-         // haleyjd: experimental
+         // haleyjd: experimental for Heretic/Hexen
          pitch = NORM_PITCH + (M_Random() & 31);
          pitch -= M_Random() & 31;
       }
@@ -426,9 +477,21 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx)
 
    // Assigns the handle to one of the channels in the mix/output buffer.
    channels[cnum].handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority);
+
+   // haleyjd 05/29/06: record volume scale value and attenuation type
+   channels[cnum].volume      = volumeScale;
+   channels[cnum].attenuation = attenuation;
 }
 
-void S_StartSound(const mobj_t *origin, int sfx_id)
+//
+// S_StartSoundAtVolume
+//
+// haleyjd 05/29/06: Actually, DOOM had a routine named this, but it was
+// removed, apparently by the BOOM team, becaue it was never used for 
+// anything useful (it was always called with sfx_SndVolume...).
+//
+void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
+                          int volume, soundattn_e attn)
 {
    // haleyjd: changed to use EDF DeHackEd number hashing,
    // to enable full use of dynamically defined sounds ^_^
@@ -438,10 +501,29 @@ void S_StartSound(const mobj_t *origin, int sfx_id)
    if(!sfx)
       return;
 
-   S_StartSfxInfo(origin, sfx);
+   S_StartSfxInfo(origin, sfx, volume, attn);
 }
 
-void S_StartSoundName(const mobj_t *origin, char *name)
+//
+// S_StartSound
+//
+// The classic DOOM sound routine, which now accepts an EDF-defined sound
+// DeHackEd number. This allows it to extend to all sounds seamlessly yet
+// retains full compatibility.
+// haleyjd 05/29/06: reimplemented in terms of the above function.
+//
+void S_StartSound(const mobj_t *origin, int sfx_id)
+{
+   S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL);
+}
+
+//
+// S_StartSoundNameAtVolume
+//
+// haleyjd 05/29/06: as below, but allows volume scaling.
+//
+void S_StartSoundNameAtVolume(const mobj_t *origin, char *name, 
+                              int volume, soundattn_e attn)
 {
    sfxinfo_t *sfx;
    
@@ -449,11 +531,26 @@ void S_StartSoundName(const mobj_t *origin, char *name)
    if(!name)
       return;
 
-   // haleyjd 09/03/03: removed error message when sound is not found
    if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx);
+      S_StartSfxInfo(origin, sfx, volume, attn);
 }
 
+//
+// S_StartSoundName
+//
+// Starts a sound by its EDF mnemonic. This is used by some newer
+// engine features, particularly ones that use implicitly defined
+// WAD sounds.
+// haleyjd 05/29/06: reimplemented in terms of the above function.
+//
+void S_StartSoundName(const mobj_t *origin, char *name)
+{
+   S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL);
+}
+
+//
+// S_StopSound
+//
 void S_StopSound(const mobj_t *origin)
 {
    int cnum;
@@ -462,7 +559,7 @@ void S_StopSound(const mobj_t *origin)
    if(!snd_card || nosfxparm)
       return;
 
-   for(cnum=0 ; cnum<numChannels ; cnum++)
+   for(cnum = 0; cnum < numChannels; ++cnum)
    {
       if(channels[cnum].sfxinfo && channels[cnum].origin == origin)
       {
@@ -473,9 +570,10 @@ void S_StopSound(const mobj_t *origin)
 }
 
 //
-// Stop and resume music, during game PAUSE.
+// S_PauseSound
 //
-
+// Stop music, during game PAUSE.
+//
 void S_PauseSound(void)
 {
    if(mus_playing && !mus_paused)
@@ -485,6 +583,11 @@ void S_PauseSound(void)
    }
 }
 
+//
+// S_ResumeSound
+//
+// Start music back up.
+//
 void S_ResumeSound(void)
 {
    if(mus_playing && mus_paused)
@@ -495,14 +598,14 @@ void S_ResumeSound(void)
 }
 
 //
-// Updates music & sounds
+// S_UpdateSounds
 //
-
+// Called from main loop. Updates digital sound positional effects.
+//
 void S_UpdateSounds(const mobj_t *listener)
 {
    int cnum;
-   camera_t playercam;   // sf: a camera_t holding the information about
-                         // the player
+   camera_t playercam; // sf: a camera_t holding the information about the player
 
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
@@ -553,8 +656,12 @@ void S_UpdateSounds(const mobj_t *listener)
 
             if(c->origin) // killough 3/20/98
             {
+               // haleyjd 05/29/06: allow per-channel volume scaling
+               // and attenuation type selection
                if(!S_AdjustSoundParams(listener ? &playercam : NULL,
                                        c->origin,
+                                       c->volume,
+                                       c->attenuation,
                                        &volume, &sep, &pitch, sfx))
                   S_StopChannel(cnum);
                else
@@ -612,7 +719,7 @@ void S_ChangeMusicNum(int musnum, int looping)
    if(musnum <= gameModeInfo->musMin || 
       musnum >= gameModeInfo->numMusic)
    {
-      doom_printf(FC_ERROR"Bad music number %d\n", musnum);
+      doom_printf(FC_ERROR "Bad music number %d\n", musnum);
       return;
    }
    
@@ -700,7 +807,7 @@ void S_StopMusic(void)
    mus_playing = NULL;
 }
 
-void S_StopSounds()
+void S_StopSounds(void)
 {
    int cnum;
    // kill all playing sounds at start of level
@@ -1023,20 +1130,24 @@ void S_UpdateMusic(int lumpnum)
    }
 }
 
+//
+// S_CheckSoundPlaying
+//
 // haleyjd: rudimentary sound checking function
-
+//
 boolean S_CheckSoundPlaying(mobj_t *mo, sfxinfo_t *sfx)
 {
    int cnum;
    
-   for(cnum=0; cnum<numChannels && channels[cnum].sfxinfo; cnum++)
+   for(cnum = 0; cnum < numChannels && channels[cnum].sfxinfo; ++cnum)
    {
-      if(mo && channels[cnum].origin == mo &&
-         channels[cnum].sfxinfo == sfx)
+      if(mo && channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
       {
-         return true;
+         if(I_SoundIsPlaying(channels[cnum].handle))
+            return true;
       }
    }
+   
    return false;
 }
 

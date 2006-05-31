@@ -283,7 +283,7 @@ typedef enum {
 // phares 3/2/98
 
 // sf: console key
-#define KEYD_CONSOLE    '`'
+#define KEYD_ACCGRAVE   '`'
 
 #define KEYD_NUMLOCK    0xC5                 // killough 3/6/98
 

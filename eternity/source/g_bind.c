@@ -108,6 +108,17 @@ int action_map_mark;
 int action_map_clear;
 int action_map_grid;
 
+// Console Actions -- handled by C_Responder
+
+int action_console_pageup;
+int action_console_pagedown;
+int action_console_toggle;
+int action_console_tab;
+int action_console_enter;
+int action_console_up;
+int action_console_down;
+int action_console_backspace;
+
 //
 // Handler Functions
 //
@@ -178,34 +189,43 @@ keyaction_t keyactions[] =
 
    // Menu Actions
 
-   {"menu_toggle",   kac_menu,   at_variable,     {&action_menu_toggle}},
-   {"menu_help",     kac_menu,   at_variable,     {&action_menu_help}},
-   {"menu_setup",    kac_menu,   at_variable,     {&action_menu_setup}},
-   {"menu_up",       kac_menu,   at_variable,     {&action_menu_up}},
-   {"menu_down",     kac_menu,   at_variable,     {&action_menu_down}},
-   {"menu_confirm",  kac_menu,   at_variable,     {&action_menu_confirm}},
-   {"menu_previous", kac_menu,   at_variable,     {&action_menu_previous}},
-   {"menu_left",     kac_menu,   at_variable,     {&action_menu_left}},
-   {"menu_right",    kac_menu,   at_variable,     {&action_menu_right}},
-   {"menu_pageup",   kac_menu,   at_variable,     {&action_menu_pageup}},
-   {"menu_pagedown", kac_menu,   at_variable,     {&action_menu_pagedown}},
-   {"menu_contents", kac_menu,   at_variable,     {&action_menu_contents}},
+   {"menu_toggle",       kac_menu,    at_variable,     {&action_menu_toggle}},
+   {"menu_help",         kac_menu,    at_variable,     {&action_menu_help}},
+   {"menu_setup",        kac_menu,    at_variable,     {&action_menu_setup}},
+   {"menu_up",           kac_menu,    at_variable,     {&action_menu_up}},
+   {"menu_down",         kac_menu,    at_variable,     {&action_menu_down}},
+   {"menu_confirm",      kac_menu,    at_variable,     {&action_menu_confirm}},
+   {"menu_previous",     kac_menu,    at_variable,     {&action_menu_previous}},
+   {"menu_left",         kac_menu,    at_variable,     {&action_menu_left}},
+   {"menu_right",        kac_menu,    at_variable,     {&action_menu_right}},
+   {"menu_pageup",       kac_menu,    at_variable,     {&action_menu_pageup}},
+   {"menu_pagedown",     kac_menu,    at_variable,     {&action_menu_pagedown}},
+   {"menu_contents",     kac_menu,    at_variable,     {&action_menu_contents}},
 
    // Automap Actions
 
-   {"map_right",   kac_map,      at_function,     {NULL}},
-   {"map_left",    kac_map,      at_function,     {NULL}},
-   {"map_up",      kac_map,      at_function,     {NULL}},
-   {"map_down",    kac_map,      at_function,     {NULL}},
-   {"map_zoomin",  kac_map,      at_function,     {NULL}},
-   {"map_zoomout", kac_map,      at_function,     {NULL}},
+   {"map_right",         kac_map,     at_function,     {NULL}},
+   {"map_left",          kac_map,     at_function,     {NULL}},
+   {"map_up",            kac_map,     at_function,     {NULL}},
+   {"map_down",          kac_map,     at_function,     {NULL}},
+   {"map_zoomin",        kac_map,     at_function,     {NULL}},
+   {"map_zoomout",       kac_map,     at_function,     {NULL}},
 
-   {"map_toggle",  kac_map,      at_variable,     {&action_map_toggle}},
-   {"map_gobig",   kac_map,      at_variable,     {&action_map_gobig}},
-   {"map_follow",  kac_map,      at_variable,     {&action_map_follow}},
-   {"map_mark",    kac_map,      at_variable,     {&action_map_mark}},
-   {"map_clear",   kac_map,      at_variable,     {&action_map_clear}},
-   {"map_grid",    kac_map,      at_variable,     {&action_map_grid}},
+   {"map_toggle",        kac_map,     at_variable,     {&action_map_toggle}},
+   {"map_gobig",         kac_map,     at_variable,     {&action_map_gobig}},
+   {"map_follow",        kac_map,     at_variable,     {&action_map_follow}},
+   {"map_mark",          kac_map,     at_variable,     {&action_map_mark}},
+   {"map_clear",         kac_map,     at_variable,     {&action_map_clear}},
+   {"map_grid",          kac_map,     at_variable,     {&action_map_grid}},
+
+   {"console_pageup",    kac_console, at_variable,     {&action_console_pageup}},
+   {"console_pagedown",  kac_console, at_variable,     {&action_console_pagedown}},
+   {"console_toggle",    kac_console, at_variable,     {&action_console_toggle}},
+   {"console_tab",       kac_console, at_variable,     {&action_console_tab}},
+   {"console_enter",     kac_console, at_variable,     {&action_console_enter}},
+   {"console_up",        kac_console, at_variable,     {&action_console_up}},
+   {"console_down",      kac_console, at_variable,     {&action_console_down}},
+   {"console_backspace", kac_console, at_variable,     {&action_console_backspace}},
 };
 
 const int num_keyactions = sizeof(keyactions) / sizeof(*keyactions);
@@ -298,6 +318,7 @@ void G_InitKeyBindings(void)
    
    keybindings[','].name = "<";
    keybindings['.'].name = ">";
+   keybindings['`'].name = "tilde";
    
    for(i = 0; i < NUM_KEYS; ++i)
    {
@@ -536,7 +557,7 @@ boolean G_KeyResponder(event_t *ev, int bclass)
    static boolean ctrldown;
    
    if(ev->data1 == KEYD_RCTRL)      // ctrl
-      ctrldown = ev->type == ev_keydown;
+      ctrldown = (ev->type == ev_keydown);
    
    if(ev->type == ev_keydown)
    {
@@ -660,8 +681,11 @@ boolean G_BindResponder(event_t *ev)
    // got a key - close box
    current_menuwidget = NULL;
 
-   if(ev->data1 == KEYD_ESCAPE) // cancel
+   if(action_menu_toggle) // cancel
+   {
+      action_menu_toggle = false;
       return true;
+   }
    
    if(!(action = G_KeyActionForName(binding_action)))
    {
@@ -685,7 +709,7 @@ boolean G_BindResponder(event_t *ev)
    return true;
 }
 
-menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, true };
+menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
 
 //
 // G_EditBinding

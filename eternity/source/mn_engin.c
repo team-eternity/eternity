@@ -699,7 +699,11 @@ void MN_Ticker(void)
          smallptr_dir = 1;
       
       smallptr_idx += smallptr_dir;
-   }            
+   }
+
+   // haleyjd 05/29/06: tick for any widgets
+   if(current_menuwidget && current_menuwidget->ticker)
+      current_menuwidget->ticker();
 }
 
 ////////////////////////////////
@@ -1516,6 +1520,7 @@ static box_widget menu_box_widget =
    {
       MN_BoxWidgetDrawer,
       MN_BoxWidgetResponder,
+      NULL,
       true // is fullscreen, draws current menu in background
    },
 

@@ -468,8 +468,10 @@ static void E_ThingSound(const char *data, const char *fieldname,
 
    if((sfx = E_EDFSoundForName(data)) == NULL)
    {
-      E_EDFLoggedErr(2, "E_ThingSound: thing '%s': invalid %s '%s'\n",
+      // haleyjd 05/31/06: relaxed to warning
+      E_EDFLogPrintf("\t\tWarning: thing '%s': invalid %s '%s'\n",
                      mobjinfo[thingnum].name, fieldname, data);
+      sfx = &S_sfx[0];
    }
    
    // haleyjd 03/22/06: support auto-allocation of dehnums where possible
@@ -1036,9 +1038,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
 
          if(tempint == NUMMOBJTYPES)
          {
-            E_EDFLoggedErr(2, 
-               "E_ProcessThing: thing '%s': bad drop type '%s'\n",
-               mobjinfo[i].name, tempstr);
+            // haleyjd 05/31/06: demoted to warning
+            E_EDFLogPrintf("\t\tWarning: thing '%s': bad drop type '%s'\n",
+                           mobjinfo[i].name, tempstr);
+            tempint = UnknownThingType;
          }
 
          mobjinfo[i].droptype = tempint;

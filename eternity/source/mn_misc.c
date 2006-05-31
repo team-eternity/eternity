@@ -152,7 +152,6 @@ boolean MN_PopupResponder(event_t *ev)
       {
          // run command and kill message
          // haleyjd 02/24/02: restore saved menuactive state
-         // menuactive = false; // kill menu
          menuactive = popupMenuActive;
          if(popup_callback)
          {
@@ -168,12 +167,12 @@ boolean MN_PopupResponder(event_t *ev)
          redrawsbar = redrawborder = true; // need redraw
          current_menuwidget = NULL;  // kill message
       }
-      if(tolower(ev->data1) == 'n' || ev->data1 == KEYD_ESCAPE
-         || ev->data1 == KEYD_BACKSPACE)     // no!
+      if(tolower(ev->data1) == 'n' || action_menu_toggle
+         || action_menu_previous)     // no!
       {
          // kill message
          // haleyjd 02/24/02: restore saved menuactive state
-         // menuactive = false; // kill menu
+         action_menu_toggle = action_menu_previous = false;
          menuactive = popupMenuActive;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
          redrawsbar = redrawborder = true; // need redraw
@@ -191,9 +190,12 @@ boolean MN_PopupResponder(event_t *ev)
 // widget for popup message alternate draw
 menuwidget_t popup_widget = {MN_PopupDrawer, MN_PopupResponder};
 
+//
+// MN_Alert
+//
 // alert message
 // -- just press enter
-
+//
 void MN_Alert(char *message, ...)
 {
    va_list args;
@@ -212,9 +214,12 @@ void MN_Alert(char *message, ...)
    va_end(args);
 }
 
+//
+// MN_Question
+//
 // question message
 // console command will be run if user responds with 'y'
-
+//
 void MN_Question(char *message, char *command)
 {
    // haleyjd 02/24/02: bug fix for menuactive state
@@ -230,6 +235,14 @@ void MN_Question(char *message, char *command)
    popup_message_command = command;
 }
 
+//
+// MN_QuestionFunc
+//
+// haleyjd: I restored the ability for questions to simply execute
+// native functions because calling C_RunTextCmd from inside the program
+// to execute code otherwise immediately accessible is actually kinda
+// stupid when you stop to think about it.
+//
 void MN_QuestionFunc(char *message, void (*handler)(void))
 {
    popupMenuActive = menuactive;
@@ -391,14 +404,19 @@ void MN_HelpDrawer(void)
    }
 }
 
+// haleyjd 05/29/06: record state of menu activation
+static boolean help_prev_menuactive;
+
 boolean MN_HelpResponder(event_t *ev)
 {
    int *menuSounds = gameModeInfo->menuSounds;
    
    if(ev->type != ev_keydown) return false;
    
-   if(ev->data1 == KEYD_BACKSPACE)
+   if(action_menu_previous)
    {
+      action_menu_previous = false;
+
       // go to previous screen
       // haleyjd: only make sound if we really went back
       viewing_helpscreen--;
@@ -409,24 +427,33 @@ boolean MN_HelpResponder(event_t *ev)
       else
          S_StartSound(NULL, menuSounds[MN_SND_PREVIOUS]);
    }
-   if(ev->data1 == KEYD_ENTER)
+
+   if(action_menu_confirm)
    {
+      action_menu_confirm = false;
+
       // go to next helpscreen
       viewing_helpscreen++;
       if(viewing_helpscreen >= num_helpscreens)
       {
          // cancel
-         ev->data1 = KEYD_ESCAPE;
+         goto cancel;
       }
       else
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
    }
-   if(ev->data1 == KEYD_ESCAPE)
+
+   if(action_menu_toggle)
    {
+      action_menu_toggle = false;
+
       // cancel helpscreen
+cancel:
       redrawsbar = redrawborder = true; // need redraw
       current_menuwidget = NULL;
-      menuactive = false;
+      // haleyjd 05/29/06: maintain previous menu activation state
+      if(!help_prev_menuactive)
+         menuactive = false;
       S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
    }
 
@@ -434,10 +461,13 @@ boolean MN_HelpResponder(event_t *ev)
    return true;
 }
 
-menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, true};
+menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, NULL, true};
 
 CONSOLE_COMMAND(help, 0)
 {
+   // haleyjd 05/29/06: record state of menu activation
+   help_prev_menuactive = menuactive;
+
    MN_ActivateMenu();
    MN_FindHelpScreens();        // search for help screens
    
@@ -450,6 +480,9 @@ CONSOLE_COMMAND(help, 0)
 
 CONSOLE_COMMAND(credits, 0)
 {
+   // haleyjd 05/29/06: record state of menu activation
+   help_prev_menuactive = menuactive;
+
    MN_ActivateMenu();
    MN_FindCreditScreens();        // search for help screens
    
@@ -572,7 +605,8 @@ boolean MN_MapColourResponder(event_t *ev)
 menuwidget_t colour_widget = 
 {
    MN_MapColourDrawer, 
-   MN_MapColourResponder, 
+   MN_MapColourResponder,
+   NULL,
    true
 };
 

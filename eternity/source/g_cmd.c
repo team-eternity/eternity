@@ -122,7 +122,7 @@ int quitsounds2[8] =
    sfx_sgtatk
 };
 
-CONSOLE_COMMAND(quit, 0)
+void G_QuitDoom(void)
 {
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;
@@ -138,6 +138,11 @@ CONSOLE_COMMAND(quit, 0)
    }
    
    exit(0);
+}
+
+CONSOLE_COMMAND(quit, 0)
+{
+   G_QuitDoom();
 }
 
 CONSOLE_COMMAND(animshot, 0)

@@ -274,7 +274,7 @@ static boolean MN_FileResponder(event_t *ev);
 
 // file selector is handled using a menu widget
 
-static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, true };
+static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, NULL, true };
 static int selected_item;
 static char *variable_name;
 static char *help_description;

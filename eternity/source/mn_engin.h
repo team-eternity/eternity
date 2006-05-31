@@ -142,6 +142,7 @@ typedef struct menuwidget_s
 {
   void (*drawer)();
   boolean (*responder)(event_t *ev);
+  void (*ticker)();   // haleyjd 05/29/06
   boolean fullscreen; // haleyjd: optimization for fullscreen widgets
 } menuwidget_t;
 

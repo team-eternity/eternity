@@ -85,12 +85,22 @@ extern int action_map_mark;
 extern int action_map_clear;
 extern int action_map_grid;
 
+extern int action_console_pageup;
+extern int action_console_pagedown;
+extern int action_console_toggle;
+extern int action_console_tab;
+extern int action_console_enter;
+extern int action_console_up;
+extern int action_console_down;
+extern int action_console_backspace;
+
 // haleyjd 07/03/04: key binding classes
 enum keyactionclass
 {
    kac_game,            // game bindings -- handled by G_BuildTiccmd
    kac_menu,            // menu bindings -- handled by MN_Responder
    kac_map,             // map  bindings -- handled by AM_Responder
+   kac_console,         // con. bindings -- handled by C_Repsonder
    NUMKEYACTIONCLASSES
 };
 
@@ -146,6 +156,14 @@ enum keyaction_e
    ka_map_mark,    
    ka_map_clear,   
    ka_map_grid,
+   ka_console_pageup,
+   ka_console_pagedown,
+   ka_console_toggle,
+   ka_console_tab,
+   ka_console_enter,
+   ka_console_up,
+   ka_console_down,
+   ka_console_backspace,
 };
 
 #endif

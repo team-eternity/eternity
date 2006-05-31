@@ -2224,7 +2224,7 @@ void A_BulletAttack(mobj_t *actor)
    sfx = E_SoundForDEHNum(sound);
 
    A_FaceTarget(actor);
-   S_StartSfxInfo(actor, sfx);
+   S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL);
 
    slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
 
@@ -2441,6 +2441,45 @@ void A_ShowMessage(mobj_t *actor)
       break;
    }
 }
+
+//
+// A_AmbientThinker
+//
+// haleyjd 05/31/06: Ambient sound driver function
+//
+void A_AmbientThinker(mobj_t *mo)
+{
+   EAmbience_t *amb = E_AmbienceForNum(mo->args[0]);
+
+   // nothing to play?
+   if(!amb || !amb->sound)
+      return;
+
+   // run thinker actions for corresponding ambience type
+   switch(amb->type)
+   {
+   case E_AMBIENCE_CONTINUOUS:
+      if(S_CheckSoundPlaying(mo, amb->sound)) // not time yet?
+         return;
+      break;
+   case E_AMBIENCE_PERIODIC:
+      if(mo->special1-- >= 0) // not time yet?
+         return;
+      mo->special1 = amb->period; // reset sound period
+      break;
+   case E_AMBIENCE_RANDOM:
+      if(mo->special1-- >= 0) // not time yet?
+         return;
+      mo->special1 = M_RangeRandom(amb->minperiod, amb->maxperiod);
+      break;
+   default: // ???
+      return;
+   }
+
+   // time to play the sound
+   S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation);
+}
+
 
 //
 // Frame Scripting Codepointers

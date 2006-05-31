@@ -343,9 +343,10 @@ static void E_StateSprite(const char *tempstr, int i)
       int sprnum = E_SpriteNumForName(tempstr);
       if(sprnum == NUMSPRITES)
       {
-         E_EDFLoggedErr(2, 
-            "E_ProcessState: frame '%s': invalid sprite '%s'\n",
-            states[i].name, tempstr);
+         // haleyjd 05/31/06: downgraded to warning
+         E_EDFLogPrintf("\t\tWarning: frame '%s': invalid sprite '%s'\n",
+                        states[i].name, tempstr);
+         sprnum = blankSpriteNum;
       }
       states[i].sprite = sprnum;
    }
@@ -463,8 +464,9 @@ static void E_ParseMiscField(char *value, long *target)
             sfxinfo_t *sfx = E_EDFSoundForName(strval);
             if(!sfx)
             {
-               E_EDFLoggedErr(2, "E_ParseMiscField: invalid sound '%s'\n",
-                              strval);
+               // haleyjd 05/31/06: relaxed to warning
+               E_EDFLogPrintf("\t\tWarning: invalid sound '%s'\n", strval);
+               sfx = &S_sfx[0];
             }
 
             // 03/22/06: auto-allocate dehacked numbers where possible

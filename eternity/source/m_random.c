@@ -132,6 +132,16 @@ int P_SubRandom(pr_class_t pr_class)
    return (temp - P_Random(pr_class));
 }
 
+//
+// P_RangeRandom
+//
+// haleyjd 05/31/06: Returns a random number within a given range.
+//
+int P_RangeRandom(pr_class_t pr_class, int min, int max)
+{
+   return (P_Random(pr_class) % (max - min + 1)) + min;
+}
+
 // Initialize all the seeds
 //
 // This initialization method is critical to maintaining demo sync.

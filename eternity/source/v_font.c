@@ -374,7 +374,7 @@ int V_FontStringWidth(vfont_t *font, const unsigned char *s)
 //
 short V_FontMaxWidth(vfont_t *font)
 {
-   int i;
+   unsigned int i;
    short w = 0, pw;
 
    for(i = 0; i < font->size; ++i)

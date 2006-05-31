@@ -762,7 +762,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    {
       // haleyjd: missiles & non-solid bouncers do their own z checks.
       if(!(tmthing->flags & MF_MISSILE || 
-           (tmthing->flags & MF_BOUNCES && !(tmthing->flags & MF_SOLID))))
+           (tmthing->flags & MF_BOUNCES && !(tmthing->flags & MF_SOLID)) ||
+           tmthing->flags & MF_CORPSE))
       {
          fixed_t thingzl, thingzh, tmthingzl, tmthingzh;
          

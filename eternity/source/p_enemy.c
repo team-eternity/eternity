@@ -29,6 +29,7 @@
 static const char
 rcsid[] = "$Id: p_enemy.c,v 1.22 1998/05/12 12:47:10 phares Exp $";
 
+#include "d_io.h"
 #include "doomstat.h"
 #include "m_random.h"
 #include "r_main.h"
@@ -2918,6 +2919,10 @@ void A_SpawnFly(mobj_t *mo)
    mobj_t *fog;
    mobj_t *targ;
 
+   // haleyjd 05/31/06: allow 0 boss types
+   if(NumBossTypes == 0)
+      return;
+
    if(fireType == -1)
       fireType = E_SafeThingType(MT_SPAWNFIRE);
 
@@ -3925,34 +3930,24 @@ CONSOLE_COMMAND(spawn, cf_notnet|cf_level|cf_hidden)
 
 extern long *deh_ParseFlagsCombined(const char *strval);
 
-CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
+static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *flags)
 {
-   fixed_t    x, y, z;
-   mobj_t     *newmobj;
-   angle_t    an;
-   int        type, prestep;
    static int fountainType = -1;
    static int playerType = -1;
    static int dripType = -1;
+   static int ambienceType = -1;
+
+   fixed_t  x, y, z;
+   mobj_t   *newmobj;
+   int      prestep;
    player_t *plyr = &players[consoleplayer];
-
-   if(!c_argc)
-   {
-      C_Printf("usage: summon thingtype flags\n");
-      return;
-   }
-
-   if((type = E_ThingNumForName(c_argv[0])) == NUMMOBJTYPES)
-   {
-      C_Printf("unknown thing type\n");
-      return;
-   }
 
    if(fountainType == -1)
    {
       fountainType = E_ThingNumForName("EEParticleFountain");
       playerType   = E_ThingNumForDEHNum(MT_PLAYER);
       dripType     = E_ThingNumForName("EEParticleDrip");
+      ambienceType = E_ThingNumForName("EEAmbience");
    }
 
    // if it's a missile, shoot it
@@ -3962,7 +3957,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
       return;
    }
 
-   an = plyr->mo->angle >> ANGLETOFINESHIFT;
+   an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
    prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
    
    x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
@@ -3975,17 +3970,31 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
    
    newmobj = P_SpawnMobj(x, y, z, type);
    
-   if(c_argc >= 2)
+   if(flagsmode != -1)
    {
-      long *res = deh_ParseFlagsCombined(c_argv[1]);
+      long *res = deh_ParseFlagsCombined(flags);
 
-      newmobj->flags  = res[0];
-      newmobj->flags2 = res[1];
-      newmobj->flags3 = res[2];
+      switch(flagsmode)
+      {
+      case 0: // set flags
+         newmobj->flags  = res[0];
+         newmobj->flags2 = res[1];
+         newmobj->flags3 = res[2];
+         break;
+      case 1: // add flags
+         newmobj->flags  |= res[0];
+         newmobj->flags2 |= res[1];
+         newmobj->flags3 |= res[2];
+         break;
+      case 2: // rem flags
+         newmobj->flags  &= ~res[0];
+         newmobj->flags2 &= ~res[1];
+         newmobj->flags3 &= ~res[2];
+         break;
+      default:
+         break;
+      }
    }
-
-   // killough 8/29/98: add to appropriate thread
-   P_UpdateThinker(&newmobj->thinker);
       
    // fountain: random color
    if(type == fountainType)
@@ -4004,6 +4013,17 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
       newmobj->args[3] = 1;
    }
 
+   // ambience: cycle through first 64 ambience #'s
+   if(type == ambienceType)
+   {
+      static int ambnum;
+
+      newmobj->args[0] = ambnum++;
+
+      if(ambnum == 65)
+         ambnum = 0;
+   }
+
    if(newmobj->flags & MF_COUNTKILL)
    {
      newmobj->flags &= ~MF_COUNTKILL;
@@ -4017,6 +4037,59 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
    {
       // 06/09/02: set player field for voodoo dolls
       newmobj->player = plyr;
+   }
+
+   // killough 8/29/98: add to appropriate thread
+   P_UpdateThinker(&newmobj->thinker);
+}
+
+CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
+{
+   int type;
+   int flagsmode = -1;
+   const char *flags = NULL;
+
+   if(!c_argc)
+   {
+      C_Printf("usage: summon thingtype flags mode\n");
+      return;
+   }
+
+   if(c_argc >= 2)
+   {
+      flagsmode = 0;
+      flags = c_argv[1];
+   }
+
+   if(c_argc >= 3)
+   {
+      if(!strcasecmp(c_argv[2], "add"))
+         flagsmode = 1; // add
+      else if(!strcasecmp(c_argv[2], "remove"))
+         flagsmode = 2; // remove
+   }
+
+   if((type = E_ThingNumForName(c_argv[0])) == NUMMOBJTYPES)
+   {
+      C_Printf("unknown thing type\n");
+      return;
+   }
+
+   P_ConsoleSummon(type, 0, flagsmode, flags);
+}
+
+CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden)
+{
+   // only in DOOM II ;)
+   if(gamemode == commercial)
+   {
+      int vileType = E_ThingNumForName("Archvile");
+      
+      S_ChangeMusicNum(mus_stalks, true);
+      
+      P_ConsoleSummon(vileType,  0,     1, "FRIEND");
+      P_ConsoleSummon(vileType,  ANG45, 1, "FRIEND");
+      P_ConsoleSummon(vileType, -ANG45, 1, "FRIEND");
    }
 }
 
@@ -4085,6 +4158,7 @@ void PE_AddCommands(void)
 {
    C_AddCommand(summon);
    C_AddCommand(give);
+   C_AddCommand(viles);
    C_AddCommand(whistle);
 }
 

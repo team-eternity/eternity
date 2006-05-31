@@ -1618,6 +1618,9 @@ void P_LoadOlo(void)
 //
 // haleyjd: Converts Heretic doomednums into an Eternity-compatible range.
 //
+// 05/30/06: made much more specific to avoid translating things that don't
+// need to be translated.
+//
 static void P_ConvertHereticThing(mapthing_t *mthing)
 {
    // null, player starts, teleport destination are common
@@ -1628,13 +1631,13 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
    if(mthing->type >= 1200 && mthing->type < 1300)
       return;
    
-   // handle ordinary heretic things
-   if(mthing->type < 2000)
+   // handle ordinary heretic things -- all are less than 100
+   if(mthing->type < 100)
    {
       // add 7000 to normal doomednum
       mthing->type += 7000;
    }
-   else
+   else if(mthing->type > 2000 && mthing->type <= 2035)
    {
       // handle items numbered > 2000
       mthing->type = (mthing->type - 2000) + 7200;

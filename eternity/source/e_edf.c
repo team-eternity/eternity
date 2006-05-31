@@ -293,6 +293,7 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(ITEM_BLANKSPRITE,  "TNT1",            CFGF_NONE),
    CFG_SEC(SEC_PICKUPFX,      pickup_opts,       CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_FRAME,     edf_frame_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_THING,     edf_thing_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(SEC_CAST,          cast_opts,         CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
@@ -1369,9 +1370,11 @@ static void E_ProcessItems(cfg_t *cfg)
 
       if(sprnum == NUMSPRITES)
       {
-         E_EDFLoggedErr(2, 
-            "E_ProcessItems: invalid sprite mnemonic for pickup item: '%s'\n",
+         // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
+         E_EDFLogPrintf(
+            "\t\tWarning: invalid sprite mnemonic for pickup item: '%s'\n",
             title);
+         sprnum = blankSpriteNum;
       }
 
       // find the proper pickup effect number (linear search)
@@ -1779,7 +1782,11 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    E_EDFLogPuts("\t* Processing boss spawn types\n");
 
    if(!numTypes)
-      E_EDFLoggedErr(2, "E_ProcessBossTypes: no boss types defined\n");
+   {
+      // haleyjd 05/31/06: allow zero boss types
+      E_EDFLogPuts("\t\tNo boss types defined\n");
+      return;
+   }
 
    // haleyjd 11/19/03: allow defaults for boss spawn probs
    if(!numProbs)
@@ -1960,6 +1967,9 @@ void E_ProcessEDF(const char *filename)
 
    // 09/03/03: process sounds
    E_AllocSounds(cfg);
+
+   // 05/30/06: process ambience information
+   E_ProcessAmbience(cfg);
 
    // allocate frames and things, build name hash tables, and
    // process frame and thing definitions

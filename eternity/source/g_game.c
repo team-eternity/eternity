@@ -150,8 +150,6 @@ int             animscreenshot = 0;       // animated screenshots
 int key_escape = KEYD_ESCAPE;
 int key_autorun;             
 int key_chat;
-int key_backspace;
-int key_enter;
 int key_help = KEYD_F1;
 int key_spy;
 int key_pause;

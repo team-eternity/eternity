@@ -1,4 +1,4 @@
-# things.edf - EDF file for Eternity Engine v3.33.02
+# things.edf - EDF file for Eternity Engine v3.33.33
 #     Thing types define monsters, fireballs, decorations, etc.
 #     Thing types may be defined elsewhere, and order is unimportant.
 #     User-defined thing types should use DeHackEd numbers greater
@@ -7,7 +7,7 @@
 #     the format of thing type fields.
 
 #     COMPATIBILITY WARNING: All things after thing "EEParticleDrip" have 
-#     NOT been standardized as of v3.33.02. These things should not be 
+#     NOT been standardized as of v3.33.33. These things should not be 
 #     used by editors, via EDF or DeHackEd, until their order and existence
 #     have been finalized and officially documented.
 
@@ -936,26 +936,12 @@ thingtype AmmoShellBox {
   dehackednum = 71
 }
 
-endif()
-
-//
-// Backpack
-//
-// Because DoomPlayer makes reference to this type and is currently always
-// defined, Backpack also has to be defined. DO NOT rely on this thingtype
-// being available in Heretic mode. This may change!
-//
-
 thingtype Backpack {
   doomednum = 8
   spawnstate = S_BPAK
   flags = SPECIAL
   dehackednum = 72
 }
-
-// Continue DOOM gamemode objects
-
-ifenabled(DOOM)
 
 thingtype WeaponBFG {
   doomednum = 2006
@@ -1488,7 +1474,7 @@ thingtype PoolBrain {
 
 endif()
 
-// Begin BOOM / MBF / SMMU / Eternity objects -- these are always defined.
+// Begin BOOM / MBF / SMMU / Eternity objects
 
 thingtype BoomPushPoint {
   doomednum = 5001
@@ -1533,6 +1519,8 @@ thingtype MBFHelperDog {
   dehackednum = 140
 }
 
+ifenabled(DOOM)
+
 thingtype MBFBetaPlasma1 {
   spawnstate = S_PLS1BALL
   seesound = plasma
@@ -1561,6 +1549,8 @@ thingtype MBFBetaPlasma2 {
   dehackednum = 142
 }
 
+endif()
+
 thingtype SMMUCameraSpot {
   doomednum = 5003
   spawnstate = S_TNT1
@@ -1568,6 +1558,8 @@ thingtype SMMUCameraSpot {
   flags = NOBLOCKMAP
   dehackednum = 143
 }
+
+ifenabled(DOOM)
 
 thingtype EEBetaPlasma3 {
   spawnstate = S_PLS1BALL
@@ -1580,6 +1572,8 @@ thingtype EEBetaPlasma3 {
   mod = 23
   dehackednum = 144
 }
+
+endif()
 
 thingtype Unknown {
   doomednum = 5005
@@ -1601,7 +1595,6 @@ thingtype EESkyboxCam {
 thingtype EEParticleFountain {
   spawnstate = S_TNT1
   height = 0.0
-  //flags = NOBLOCKMAP
 }
 
 thingtype EETerrainLavaSplash {
@@ -1695,6 +1688,14 @@ thingtype EEPolyObjSpawnSpotCrush {
   spawnstate = S_TNT1
   cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
   dehackednum = 156
+}
+
+// Ambience object
+
+thingtype EEAmbience {
+  doomednum = 14065
+  spawnstate = S_EE_AMBIENCE_SPAWN
+  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Begin Heretic gamemode objects
@@ -2978,7 +2979,7 @@ thingtype ETCGrenade {
   spawnstate = S_GRENADEFLIGHT
   spawnhealth = 10
   seesound = rlaunc
-  deathstate = S_DETONATE
+  deathstate = S_NULL
   deathsound = barexp
   speed = 1310720
   radius = 11.0000

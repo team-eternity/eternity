@@ -1487,7 +1487,7 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing, mapthinghexen_t *extthing)
 
    // check for players specially
    
-   if (mthing->type <= 4 && mthing->type > 0) // killough 2/26/98 -- fix crashes
+   if(mthing->type <= 4 && mthing->type > 0) // killough 2/26/98 -- fix crashes
    {
       // killough 7/19/98: Marine's best friend :)
       if(GameType == gt_single && 
@@ -1551,11 +1551,11 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing, mapthinghexen_t *extthing)
 
    // haleyjd: special thing types that need to undergo the processing
    // below must be caught here
+   
    if(mthing->type >= 9027 && mthing->type <= 9033)
-   {
-      // particle fountains
-      i = E_SafeThingName("EEParticleFountain");
-   }
+      i = E_SafeThingName("EEParticleFountain"); // particle fountains
+   else if(mthing->type >= 14001 && mthing->type <= 14064)
+      i = E_SafeThingName("EEAmbience");
    else
    {
       // killough 8/23/98: use table for faster lookup
@@ -1650,9 +1650,7 @@ spawnit:
       mobj->flags |= MF_AMBUSH;
 
    if(mobj->flags2 & MF2_FLOATBOB) // haleyjd: initialize floatbob seed
-   {
       mobj->floatbob = P_Random(pr_floathealth);
-   }
 
    // haleyjd: handling for dormant things
    if(mthing->options & MTF_DORMANT)
@@ -1662,10 +1660,12 @@ spawnit:
    }
 
    // haleyjd: set particle fountain color
-   if(i == E_ThingNumForName("EEParticleFountain"))
-   {
+   if(mthing->type >= 9027 && mthing->type <= 9033)
       mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
-   }
+
+   // haleyjd: set ambience sequence # for first 64 types
+   if(mthing->type >= 14001 && mthing->type <= 14064)
+      mobj->args[0] = mthing->type - 14000;
    
    return mobj;
 }

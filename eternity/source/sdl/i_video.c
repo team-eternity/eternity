@@ -29,13 +29,11 @@
 static const char rcsid[] = "$Id: i_video.c,v 1.12 1998/05/03 22:40:35 killough Exp $";
 
 #include "SDL.h"
-#include "../z_zone.h"  /* memory allocation wrappers -- killough */
 
 #include <stdio.h>
 
-
+#include "../z_zone.h"  /* memory allocation wrappers -- killough */
 #include "../doomstat.h"
-
 #include "../am_map.h"
 #include "../c_io.h"
 #include "../c_runcmd.h"
@@ -54,6 +52,8 @@ static const char rcsid[] = "$Id: i_video.c,v 1.12 1998/05/03 22:40:35 killough 
 // haleyjd 04/15/02:
 #include "../i_system.h"
 #include "../in_lude.h"
+
+extern SDL_Joystick *sdlJoystick;
 
 // haleyjd 10/08/05: Chocolate DOOM application focus state code added
 
@@ -328,6 +328,8 @@ void I_StartFrame(void)
 //
 /////////////////////////////////////////////////////////////////////////////
 
+extern void MN_QuitDoom(void);
+
 // SoM 3/14/2002: Rewrote event function for use with SDL
 static void I_GetEvent(void)
 {
@@ -392,13 +394,14 @@ static void I_GetEvent(void)
          }
          else if(event.button.button == SDL_BUTTON_MIDDLE)
          {
-            buttons &= ~2;
-            d_event.data1 = KEYD_MOUSE2;
+            // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
+            buttons &= ~4;
+            d_event.data1 = KEYD_MOUSE3;
          }
          else
          {
-            buttons &= ~4;
-            d_event.data1 = KEYD_MOUSE3;
+            buttons &= ~2;
+            d_event.data1 = KEYD_MOUSE2;
          }
          D_PostEvent(&d_event);
          break;
@@ -415,19 +418,21 @@ static void I_GetEvent(void)
          }
          else if(event.button.button == SDL_BUTTON_MIDDLE)
          {
-            buttons |= 2;
-            d_event.data1 = KEYD_MOUSE2;
+            // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
+            buttons |= 4;
+            d_event.data1 = KEYD_MOUSE3;
          }
          else
          {
-            buttons |= 4;
-            d_event.data1 = KEYD_MOUSE3;
+            buttons |= 2;
+            d_event.data1 = KEYD_MOUSE2;
          }
          D_PostEvent(&d_event);
          break;
 
       case SDL_QUIT:
-         C_RunTextCmd("quit");
+         // haleyjd 05/28/06: call MN_QuitDoom instead of C_RunTextCmd("quit")
+         MN_QuitDoom();
          break;
 
       case SDL_ACTIVEEVENT:

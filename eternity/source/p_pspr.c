@@ -1330,7 +1330,7 @@ void A_FireCustomBullets(player_t *player, pspdef_t *psp)
    // haleyjd 12/08/03: changed to use sound dehacked num
    sfx = E_SoundForDEHNum(sound);
 
-   S_StartSfxInfo(player->mo, sfx);
+   S_StartSfxInfo(player->mo, sfx, 127, ATTN_NORMAL);
 
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
 
@@ -1484,7 +1484,7 @@ void A_CustomPlayerMelee(player_t *player, pspdef_t *psp)
    }
 
    // start sound
-   S_StartSfxInfo(player->mo, sfx);
+   S_StartSfxInfo(player->mo, sfx, 127, ATTN_NORMAL);
    
    // turn to face target   
    player->mo->angle = R_PointToAngle2(player->mo->x, player->mo->y,

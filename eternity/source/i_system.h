@@ -29,10 +29,6 @@
 
 #include <stdarg.h>
 
-#ifdef _SDL_VER
-#include "SDL.h"
-#endif
-
 #include "d_ticcmd.h"
 
 // Called by DoomMain.
@@ -125,7 +121,6 @@ int I_CheckAbort();
 
 #ifdef _SDL_VER
 int i_SDLJoystickNum;
-extern SDL_Joystick *sdlJoystick;
 
 boolean I_SetJoystickDevice(int deviceNum);
 

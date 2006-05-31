@@ -298,15 +298,12 @@ CONSOLE_COMMAND(mn_newgame, 0)
 // menu item to quit doom:
 // pop up a quit message as in the original
 
-CONSOLE_COMMAND(mn_quit, 0)
+void MN_QuitDoom(void)
 {
    int quitmsgnum;
    char quitmsg[128];
    const char *source;
 
-   if(cmdtype != c_menu && menuactive)
-      return;
-   
    quitmsgnum = M_Random() % 14;
 
    // sf: use s_QUITMSG if it has been replaced in a dehacked file
@@ -321,6 +318,14 @@ CONSOLE_COMMAND(mn_quit, 0)
    psnprintf(quitmsg, sizeof(quitmsg), "%s\n\n%s", source, s_DOSY);
    
    MN_Question(quitmsg, "quit");
+}
+
+CONSOLE_COMMAND(mn_quit, 0)
+{
+   if(cmdtype != c_menu && menuactive)
+      return;
+
+   MN_QuitDoom();
 }
 
 /////////////////////////////////////////////////////////
@@ -2833,6 +2838,7 @@ static const char *mn_binding_contentnames[] =
    "game functions",
    "menu keys",
    "automap keys",
+   "console keys",
    NULL
 };
 
@@ -2844,6 +2850,7 @@ extern menu_t menu_envbindings;
 extern menu_t menu_funcbindings;
 extern menu_t menu_menukeys;
 extern menu_t menu_automapkeys;
+extern menu_t menu_consolekeys;
 
 static menu_t *mn_binding_contentpages[] =
 {
@@ -2854,6 +2861,7 @@ static menu_t *mn_binding_contentpages[] =
    &menu_funcbindings,
    &menu_menukeys,
    &menu_automapkeys,
+   &menu_consolekeys,
    NULL
 };
 
@@ -3127,7 +3135,7 @@ menu_t menu_automapkeys =
 {
    mn_automapkeys_items,
    &menu_menukeys,          // previous page
-   NULL,                    // next page
+   &menu_consolekeys,       // next page
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3139,6 +3147,46 @@ menu_t menu_automapkeys =
 CONSOLE_COMMAND(mn_automapkeys, 0)
 {
    MN_StartMenu(&menu_automapkeys);
+}
+
+//------------------------------------------------------------------------
+//
+// Key Bindings: Console Keys
+//
+
+static menuitem_t mn_consolekeys_items[] =
+{
+   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_gap},
+   {it_info,    FC_GOLD "console",      NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+   {it_binding, "toggle",               "console_toggle"},
+   {it_binding, "enter command",        "console_enter"},
+   {it_binding, "complete command",     "console_tab"},
+   {it_binding, "previous command",     "console_up"},
+   {it_binding, "next command",         "console_down"},
+   {it_binding, "backspace",            "console_backspace"},
+   {it_binding, "page up",              "console_pageup"},
+   {it_binding, "page down",            "console_pagedown"},
+   {it_end}
+};
+
+menu_t menu_consolekeys =
+{
+   mn_consolekeys_items,
+   &menu_automapkeys,       // previous page
+   NULL,                    // next page
+   150, 15,                 // x,y offsets
+   4,
+   mf_background,           // draw background: not a skull menu
+   NULL,                    // no drawer
+   mn_binding_contentnames, // table of contents arrays
+   mn_binding_contentpages,
+};
+
+CONSOLE_COMMAND(mn_consolekeys, 0)
+{
+   MN_StartMenu(&menu_consolekeys);
 }
 
 //----------------------------------------------------------------------------
@@ -3386,7 +3434,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_gamefuncs);
    C_AddCommand(mn_menukeys);
    C_AddCommand(mn_automapkeys);
-   
+   C_AddCommand(mn_consolekeys);
    C_AddCommand(newgame);
    
    // prompt messages

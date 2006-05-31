@@ -8,6 +8,8 @@
 #     be used by editors, via EDF or DeHackEd, until their order and existence 
 #     have been finalized and officially documented.
 
+ifenabled(DOOM)
+
 # DOOM sounds
 sound pistol { dehackednum =  1 }
 sound shotgn { dehackednum =  2 }
@@ -117,6 +119,8 @@ sound skeact { priority =  70; dehackednum = 105 }
 sound skesit { priority =  70; dehackednum = 106 }
 sound skeatk { priority =  70; dehackednum = 107 }
 sound radio  { priority =  60; dehackednum = 108 }
+
+endif()
 
 # killough 11/98: dog sounds
 
