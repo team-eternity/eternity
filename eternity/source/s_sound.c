@@ -1139,7 +1139,7 @@ boolean S_CheckSoundPlaying(mobj_t *mo, sfxinfo_t *sfx)
 {
    int cnum;
    
-   for(cnum = 0; cnum < numChannels && channels[cnum].sfxinfo; ++cnum)
+   for(cnum = 0; cnum < numChannels; ++cnum)
    {
       if(mo && channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
       {

@@ -3942,6 +3942,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    int      prestep;
    player_t *plyr = &players[consoleplayer];
 
+   // resolve EDF types (done once for efficiency)
    if(fountainType == -1)
    {
       fountainType = E_ThingNumForName("EEParticleFountain");
@@ -3957,6 +3958,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       return;
    }
 
+   // do a good old Pain-Elemental style summoning
    an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
    prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
    
@@ -3970,6 +3972,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    
    newmobj = P_SpawnMobj(x, y, z, type);
    
+   // tweak the object's flags
    if(flagsmode != -1)
    {
       long *res = deh_ParseFlagsCombined(flags);
@@ -3995,6 +3998,8 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          break;
       }
    }
+
+   // code to make spawning parameterized objects more useful
       
    // fountain: random color
    if(type == fountainType)
@@ -4020,9 +4025,11 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
 
       newmobj->args[0] = ambnum++;
 
-      if(ambnum == 65)
+      if(ambnum == 64)
          ambnum = 0;
    }
+
+   // adjust count* flags to avoid messing up the map
 
    if(newmobj->flags & MF_COUNTKILL)
    {
@@ -4033,12 +4040,10 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    if(newmobj->flags & MF_COUNTITEM)
       newmobj->flags &= ~MF_COUNTITEM;
    
+   // 06/09/02: set player field for voodoo dolls
    if(newmobj->type == playerType)
-   {
-      // 06/09/02: set player field for voodoo dolls
       newmobj->player = plyr;
-   }
-
+   
    // killough 8/29/98: add to appropriate thread
    P_UpdateThinker(&newmobj->thinker);
 }

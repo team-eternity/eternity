@@ -1,0 +1,26 @@
+AC_INIT(eternity, 3.33.33, quasar, eternity)
+AC_CONFIG_AUX_DIR(autotools)
+
+AC_PROG_CC
+AC_PROG_RANLIB
+
+AM_PATH_SDL(1.2.9)
+
+AC_CHECK_LIB(SDL_mixer,Mix_LoadMUS_RW,[
+dnl    AC_DEFINE(HAVE_LIBSDL_MIXER)
+    SDLMIXER_LIBS="$SDLMIXER_LIBS -lSDL_mixer"
+],echo "*** Compiling without SDL_mixer installed probably won't work"
+,$SDL_LIBS $SDLMIXER_LIBS)
+
+AM_INIT_AUTOMAKE(AC_PACKAGE_TARNAME,AC_PACKAGE_VERSION)
+
+AC_OUTPUT([
+Makefile
+edf/Makefile
+wads/Makefile
+source/Makefile
+source/sdl/Makefile
+source/textscreen/Makefile
+source/Confuse/Makefile
+])
+
