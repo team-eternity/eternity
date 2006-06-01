@@ -1432,6 +1432,9 @@ static void D_ProcessDehPreincludes(void)
 
 static void D_AutoExecScripts(void)
 {
+   // haleyjd 05/31/06: run command-line scripts first
+   C_RunCmdLineScripts();
+
    if(!M_CheckParm("-nocscload")) // separate param from above
    {
       int i;

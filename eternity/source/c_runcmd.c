@@ -45,9 +45,11 @@
 
 #include "doomdef.h"
 #include "doomstat.h"
+#include "m_argv.h"
 #include "mn_engin.h"
 #include "g_game.h"
 #include "m_qstr.h" // haleyjd
+#include "w_wad.h"
 
 static void C_EchoValue(command_t *command);
 static void C_SetVariable(command_t *command);
@@ -1201,6 +1203,36 @@ void C_RunScriptFromFile(const char *filename)
    }
 
    D_Fclose(file);
+}
+
+void C_RunCmdLineScripts(void)
+{
+   int p;
+
+   if((p = M_CheckParm("-exec")))
+   {
+      // the parms after p are console script names,
+      // until end of parms or another - preceded parm
+      
+      boolean file = true;
+      
+      while(++p < myargc)
+      {
+         if(*myargv[p] == '-')
+            file = !strcasecmp(myargv[p], "-exec"); // allow multiple -exec
+         else if(file)
+         {
+            char filename[PATH_MAX+1];
+
+            strcpy(filename, myargv[p]);
+
+            NormalizeSlashes(AddDefaultExtension(filename, ".csc"));
+
+            if(!access(".", R_OK))
+               C_RunScriptFromFile(filename);
+         }
+      }
+   }
 }
 
 // EOF

@@ -32,10 +32,12 @@
 // The functions in s_sound.c for sound hashing now call down to these
 // functions.
 //
-// 05/28/06: Sound Sequences
+// 05/28/06: Sound Sequences, Ambience
 //
 // This module also now contains EDF sound sequence code. Sound sequences are
 // miniature scripts that determine how sectors and polyobjects play sounds.
+// Also included are ambience objects that work with mapthings 14001-14065 to
+// provide a generalized ambient sound engine.
 //
 // By James Haley
 //
@@ -568,7 +570,7 @@ void E_ProcessSoundDeltas(cfg_t *cfg)
 #define ITEM_SEQ_CMDS "cmds"
 #define ITEM_SEQ_STOP "stopsound"
 
-// attenuation types
+// attenuation types -- also used by ambience
 static const char *attenuation_types[] =
 {
    "normal",
@@ -579,6 +581,21 @@ static const char *attenuation_types[] =
 
 #define NUM_ATTENUATION_TYPES (sizeof(attenuation_types) / sizeof(char *))
 
+cfg_opt_t edf_seq_opts[] =
+{
+   CFG_INT(ITEM_SEQ_ID,   0, CFGF_NONE),
+   CFG_STR(ITEM_SEQ_CMDS, 0, CFGF_LIST),
+   CFG_END()
+};
+
+//
+// E_ProcessSndSeqs
+//
+// Processes all EDF sound sequences.
+//
+void E_ProcessSndSeqs(cfg_t *cfg)
+{
+}
 
 //=============================================================================
 //
@@ -706,6 +723,11 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
 
    // process volume
    newAmb->volume = cfg_getint(cfg, ITEM_AMB_VOLUME);
+   // rangecheck
+   if(newAmb->volume < 0)
+      newAmb->volume = 0;
+   else if(newAmb->volume > 127)
+      newAmb->volume = 127;
 
    // process attenuation
    tempstr = cfg_getstr(cfg, ITEM_AMB_ATTENUATION);

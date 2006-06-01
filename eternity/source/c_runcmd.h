@@ -249,6 +249,8 @@ const char *C_VariableStringValue(variable_t *command);
 void C_RunScript(DWFILE *);
 void C_RunScriptFromFile(const char *filename);
 
+void C_RunCmdLineScripts(void);
+
 /**** tab completion ****/
 
 void C_InitTab();
