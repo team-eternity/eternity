@@ -2224,7 +2224,7 @@ void A_BulletAttack(mobj_t *actor)
    sfx = E_SoundForDEHNum(sound);
 
    A_FaceTarget(actor);
-   S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL);
+   S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL, false);
 
    slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
 
@@ -2450,6 +2450,7 @@ void A_ShowMessage(mobj_t *actor)
 void A_AmbientThinker(mobj_t *mo)
 {
    EAmbience_t *amb = E_AmbienceForNum(mo->args[0]);
+   boolean loop = false;
 
    // nothing to play?
    if(!amb || !amb->sound)
@@ -2461,6 +2462,7 @@ void A_AmbientThinker(mobj_t *mo)
    case E_AMBIENCE_CONTINUOUS:
       if(S_CheckSoundPlaying(mo, amb->sound)) // not time yet?
          return;
+      loop = true;
       break;
    case E_AMBIENCE_PERIODIC:
       if(mo->special1-- >= 0) // not time yet?
@@ -2477,7 +2479,7 @@ void A_AmbientThinker(mobj_t *mo)
    }
 
    // time to play the sound
-   S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation);
+   S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop);
 }
 
 

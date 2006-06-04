@@ -85,7 +85,7 @@ struct sfxinfo_s
    int skinsound;
    
    // haleyjd: EDF mnemonic
-   char mnemonic[17];
+   char mnemonic[33];
    
    // this is checked every second to see if sound
    // can be thrown out (if 0, then decrement, if -1,

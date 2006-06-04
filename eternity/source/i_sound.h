@@ -64,10 +64,9 @@ void I_SetChannels();
 int I_GetSfxLumpNum (sfxinfo_t *sfxinfo);
 
 // Starts a sound in a particular sound channel.
-// haleyjd: requires different API for VC++ version
-// 07/12/02: adjusted DOS code to be consistent
 
-int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, int pri);
+int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
+                 int pri, int loop);
 
 // Stops a sound channel.
 void I_StopSound(int handle);

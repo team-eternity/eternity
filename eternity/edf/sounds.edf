@@ -96,7 +96,7 @@ sound barexp { priority =  60; dehackednum =  82 }
 sound punch  { dehackednum = 83; skinindex = sk_punch }
 sound hoof   { priority =  70; dehackednum =  84 }
 sound metal  { priority =  70; dehackednum =  85 }
-sound chgun  { link = pistol; linkvol = 150; linkpitch = 0; dehackednum = 86 }
+sound chgun  { link = pistol;  dehackednum = 86 }
 sound tink   { priority =  60; dehackednum =  87 }
 sound bdopn  { priority = 100; dehackednum =  88 }
 sound bdcls  { priority = 100; dehackednum =  89 }
@@ -229,6 +229,42 @@ sound ht_impat1  { lump = "impat1";  prefix = false; priority =  32; dehackednum
 sound ht_impat2  { lump = "impat2";  prefix = false; priority =  32; dehackednum = 377 }
 sound ht_imppai  { lump = "imppai";  prefix = false; priority =  32; dehackednum = 378 }
 sound ht_impdth  { lump = "impdth";  prefix = false; priority =  80; dehackednum = 379 }
+
+endif()
+
+# 
+# Gametype-dependent sound aliases
+# 
+
+# Environmental Sound Defaults
+# These are altered by the game engine to point to sounds specifed by MapInfo.
+# Use these names in sound sequences to refer to the MapInfo-defined defaults.
+
+ifgametype(DOOM)
+
+sound EE_DoorOpen   { link = "doropn"; }
+sound EE_DoorClose  { link = "dorcls"; }
+sound EE_BDoorOpen  { link = "bdopn";  }
+sound EE_BDoorClose { link = "bdcls";  }
+sound EE_SwitchOn   { link = "swtchn"; }
+sound EE_SwitchEx   { link = "swtchx"; }
+sound EE_PlatStart  { link = "pstart"; }
+sound EE_PlatStop   { link = "pstop";  }
+sound EE_PlatMove   { link = "stnmov"; }
+
+endif()
+
+ifgametype(HERETIC)
+
+sound EE_DoorOpen   { link = "ht_doropn"; }
+sound EE_DoorClose  { link = "ht_dorcls"; }
+sound EE_BDoorOpen  { link = "ht_doropn"; }
+sound EE_BDoorClose { link = "ht_dorcls"; }
+sound EE_SwitchOn   { link = "ht_switch"; }
+sound EE_SwitchEx   { link = "ht_switch"; }
+sound EE_PlatStart  { link = "ht_pstart"; }
+sound EE_PlatStop   { link = "ht_pstop";  }
+sound EE_PlatMove   { link = "ht_stnmov"; }
 
 endif()
 

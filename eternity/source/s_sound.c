@@ -88,6 +88,7 @@ typedef struct
   const mobj_t *origin;    // origin of sound
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
   soundattn_e attenuation; // attenuation type -- haleyjd 05/29/06
+  int pitch;               // pitch modifier -- haleyjd 06/03/06
   int handle;              // handle of the sound being played
 } channel_t;
 
@@ -320,9 +321,10 @@ static int S_getChannel(const void *origin, sfxinfo_t *sfxinfo)
 // haleyjd 05/29/06: added volume scaling value. Allows sounds to be
 // started and to persist at differing volume levels. volumeScale should
 // range from 0 to 127. Also added customizable attenuation types.
+// haleyjd 06/03/06: added ability to loop sound samples
 //
 void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
-                    int volumeScale, soundattn_e attenuation)
+                    int volumeScale, soundattn_e attenuation, boolean loop)
 {
    int sep, pitch, priority, cnum;
    int volume = snd_SfxVolume;
@@ -368,22 +370,18 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    // haleyjd: this should now use the sound dehackednum
    sfx_id = sfx->dehackednum;
 
+   // FIXME: Shouldn't the priority value always be used??
+
    // Initialize sound parameters
    if(sfx->link)
    {
-      pitch = sfx->pitch;
-      priority = sfx->priority;
-      volume += sfx->volume;
-
-      if(volume < 1)
-         return;
-      
-      if(volume >= snd_SfxVolume)
-         volume = snd_SfxVolume;
+      pitch        = sfx->pitch;
+      priority     = sfx->priority;
+      volumeScale += sfx->volume;   // haleyjd: now modifies volumeScale
    }
    else
    {
-      pitch = NORM_PITCH;
+      pitch    = NORM_PITCH;
       priority = NORM_PRIORITY;
    }
 
@@ -418,6 +416,8 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       volume = (volume * volumeScale) / 127; // haleyjd 05/29/06: scale volume
       if(volume < 1)
          return;
+      if(volume > snd_SfxVolume)
+         volume = snd_SfxVolume;
    }
    else
    {     
@@ -476,18 +476,21 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       sfx = sfx->link;     // sf: skip thru link(s)
 
    // Assigns the handle to one of the channels in the mix/output buffer.
-   channels[cnum].handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority);
+   channels[cnum].handle = I_StartSound(sfx, cnum, volume, sep, pitch, 
+                                        priority, loop);
 
    // haleyjd 05/29/06: record volume scale value and attenuation type
+   // haleyjd 06/03/06: record pitch too (wtf is going on here??)
    channels[cnum].volume      = volumeScale;
    channels[cnum].attenuation = attenuation;
+   channels[cnum].pitch       = pitch;
 }
 
 //
 // S_StartSoundAtVolume
 //
 // haleyjd 05/29/06: Actually, DOOM had a routine named this, but it was
-// removed, apparently by the BOOM team, becaue it was never used for 
+// removed, apparently by the BOOM team, because it was never used for 
 // anything useful (it was always called with sfx_SndVolume...).
 //
 void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
@@ -501,7 +504,7 @@ void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id,
    if(!sfx)
       return;
 
-   S_StartSfxInfo(origin, sfx, volume, attn);
+   S_StartSfxInfo(origin, sfx, volume, attn, false);
 }
 
 //
@@ -532,7 +535,7 @@ void S_StartSoundNameAtVolume(const mobj_t *origin, char *name,
       return;
 
    if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx, volume, attn);
+      S_StartSfxInfo(origin, sfx, volume, attn, false);
 }
 
 //
@@ -546,6 +549,23 @@ void S_StartSoundNameAtVolume(const mobj_t *origin, char *name,
 void S_StartSoundName(const mobj_t *origin, char *name)
 {
    S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL);
+}
+
+//
+// S_StartSoundLooped
+//
+// haleyjd 06/03/06: support playing looped sounds.
+//
+void S_StartSoundLooped(const mobj_t *origin, char *name, int volume, 
+                        soundattn_e attn)
+{
+   sfxinfo_t *sfx;
+   
+   if(!name)
+      return;
+
+   if((sfx = S_SfxInfoForName(name)))
+      S_StartSfxInfo(origin, sfx, volume, attn, true);
 }
 
 //
@@ -642,8 +662,8 @@ void S_UpdateSounds(const mobj_t *listener)
          if(I_SoundIsPlaying(c->handle))
          {
             // initialize parameters
-            int volume = snd_SfxVolume;
-            int pitch = NORM_PITCH;
+            int volume = snd_SfxVolume; // haleyjd: this gets scaled below.
+            int pitch = c->pitch; // haleyjd 06/03/06: use channel's pitch!
             int sep = NORM_SEP;
 
             // check non-local sounds for distance clipping
@@ -977,7 +997,6 @@ void S_Chgun(void)
    s_chgun->link = NULL;
    s_chgun->pitch = -1;
    s_chgun->volume = -1;
-   s_chgun->data = NULL;
 }
 
 // free sound and reload

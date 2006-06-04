@@ -2984,6 +2984,7 @@ void A_PlayerScream(mobj_t *mo)
 
 //
 // A_KeenDie
+//
 // DOOM II special, map 32.
 // Uses special tag 666.
 //
@@ -2996,7 +2997,7 @@ void A_KeenDie(mobj_t* mo)
 
    // scan the remaining thinkers to see if all Keens are dead
    
-   for(th = thinkercap.next ; th != &thinkercap ; th=th->next)
+   for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       if(th->function == P_MobjThinker)
       {

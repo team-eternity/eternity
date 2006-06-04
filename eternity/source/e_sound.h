@@ -77,6 +77,7 @@ boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 #define EDF_SEC_SOUND    "sound"
 #define EDF_SEC_SDELTA   "sounddelta"
 #define EDF_SEC_AMBIENCE "ambience"
+#define EDF_SEC_SNDSEQ   "soundsequence"
 #endif
 
 #endif

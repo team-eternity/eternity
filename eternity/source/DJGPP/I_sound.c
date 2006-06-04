@@ -113,7 +113,7 @@ static void *getsfx(sfxinfo_t *sfxinfo)
   size = W_LumpLength(sfxlump);
 
   // haleyjd 10/08/04: don't play zero-length sound lumps!
-  if(size == 0)
+  if(size <= 8)
      return NULL;
   
   sfx = W_CacheLumpNum(sfxlump, PU_STATIC);
@@ -214,11 +214,15 @@ int I_GetSfxLumpNum(sfxinfo_t *sfx)
 
 static SAMPLE channel[NUM_CHANNELS];
 
+// haleyjd 06/03/06: looping flags for channels
+static int channel_looping[NUM_CHANNELS];
+
 // This function adds a sound to the list of currently
 // active sounds, which is maintained as a given number
 // of internal channels. Returns a handle.
 
-int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, int pri)
+int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, 
+                 int pri, int loop)
 {
   static int handle;
   int correctSep;
@@ -229,6 +233,8 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, int pr
 
   // destroy anything still in the slot
   stop_sample(&channel[handle]);
+
+  channel_looping[handle] = 0;
 
   if(!sound->data) 
      I_CacheSound(sound);
@@ -253,7 +259,9 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, int pr
   
   // Start the sound
   play_sample(&channel[handle],vol*VOLSCALE+VOLSCALE-1,correctSep,
-          PITCH(pitch),0);
+          PITCH(pitch),loop); // haleyjd 06/03/06: support looping
+
+  channel_looping[handle] = loop; // haleyjd 06/03/06
 
   // Reference for s_sound.c to use when calling functions below
   return handle;
@@ -262,9 +270,10 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, int pr
 // Stop the sound. Necessary to prevent runaway chainsaw,
 // and to stop rocket launches when an explosion occurs.
 
-void I_StopSound (int handle)
+void I_StopSound(int handle)
 {
-  stop_sample(channel+handle);
+   stop_sample(channel+handle);
+   channel_looping[handle] = 0; // haleyjd 06/03/06
 }
 
 // Update the sound parameters. Used to control volume,
@@ -283,8 +292,9 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch)
 
    correctSep = forceFlipPan ? sep - 1 : 256 - sep;
 
+   // haleyjd 06/03/06: support looping samples
    adjust_sample(&channel[handle], vol*VOLSCALE+VOLSCALE-1,
-                 correctSep, PITCH(pitch), 0);
+                 correctSep, PITCH(pitch), channel_looping[handle]);
 }
 
 // We can pretend that any sound that we've associated a handle
@@ -292,7 +302,7 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch)
 
 int I_SoundIsPlaying(int handle)
 {
-  return 1;
+   return 1;
 }
 
 // This function loops all active (internal) sound
@@ -324,19 +334,20 @@ void I_SubmitSound(void)
 
 void I_ShutdownSound(void)
 {
-  remove_sound();
+   remove_sound();
 }
 
 // sf: dynamic sound resource loading
 void I_CacheSound(sfxinfo_t *sound)
 {
-  if(sound->data) return;     // already cached
-  
-  // sf: changed
-  if(sound->link)
-    I_CacheSound(sound->link);
-  else
-    sound->data = getsfx(sound);
+   if(sound->data)
+      return;
+
+   // sf: changed
+   if(sound->link)
+      I_CacheSound(sound->link);
+   else
+      sound->data = getsfx(sound);
 }
 
 void I_InitSound(void)

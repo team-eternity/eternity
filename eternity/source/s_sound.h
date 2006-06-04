@@ -77,7 +77,8 @@ typedef enum
 void S_StartSound(const mobj_t *origin, int sound_id);
 void S_StartSoundName(const mobj_t *origin, char *name);
 void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
-                    int volumeScale, soundattn_e attenuation);
+                    int volumeScale, soundattn_e attenuation,
+                    boolean loop);
 void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
                           int volume, soundattn_e attn);
 void S_StartSoundNameAtVolume(const mobj_t *origin, char *name, 

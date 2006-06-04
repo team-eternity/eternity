@@ -84,8 +84,9 @@ typedef struct {
   unsigned int stepremainder;
   unsigned int samplerate;
   // The channel data pointers, start and end.
-  unsigned char* data;
-  unsigned char* enddata;
+  unsigned char *data;
+  unsigned char *startdata; // haleyjd
+  unsigned char *enddata;
   // Time/gametic that the channel started playing,
   //  used to determine oldest, which automatically
   //  has lowest priority.
@@ -97,6 +98,8 @@ typedef struct {
   int *rightvol_lookup;
   // haleyjd 02/18/05: channel lock -- do not modify when locked!
   volatile int lock;
+  // haleyjd 06/03/06: looping
+  int loop;
 } channel_info_t;
 
 channel_info_t channelinfo[MAX_CHANNELS];
@@ -111,30 +114,43 @@ int vol_lookup[128*256];
  * stopchan
  * Stops a sound, unlocks the data 
  */
-
-static void stopchan(int i)
+static void stopchan(int handle)
 {
+   int cnum;
+
    // haleyjd 02/18/05: bounds checking
-   if(!snd_init || i < 0 || i >= MAX_CHANNELS)
+   if(!snd_init || handle < 0 || handle >= MAX_CHANNELS)
       return;
 
    // haleyjd 02/18/05: sound channel locking in case of 
    // multithreaded access to channelinfo[].data. Make Eternity
    // sleep for the minimum timeslice to give another thread
    // chance to clear the lock.
-   while(channelinfo[i].lock)
+   while(channelinfo[handle].lock)
       SDL_Delay(1);
 
-   if(channelinfo[i].data) /* cph - prevent excess unlocks */
+   if(channelinfo[handle].data)
    {
-      channelinfo[i].data = NULL;
-      
-      // haleyjd: this is an nop in prboom? freeing the sound
-      // data causes crashes, so I have no idea what this is 
-      // really supposed to do...
+      channelinfo[handle].data = NULL;
 
-      //W_UnlockLumpNum(S_sfx[channelinfo[i].id].lumpnum);
+      if(channelinfo[handle].id)
+      {
+         // haleyjd 06/03/06: see if we can free the sound
+         for(cnum = 0; cnum < MAX_CHANNELS; ++cnum)
+         {
+            if(cnum == handle)
+               continue;
+            if(channelinfo[cnum].id &&
+               channelinfo[cnum].id->data == channelinfo[handle].id->data)
+               return; // still being used by some channel
+         }
+         
+         // set sample to PU_CACHE level
+         Z_ChangeTag(channelinfo[handle].id->data, PU_CACHE);
+      }
    }
+
+   channelinfo[handle].id = NULL;
 }
 
 //
@@ -145,8 +161,9 @@ static void stopchan(int i)
 // Returns a handle.
 //
 // haleyjd: needs to take a sfxinfo_t ptr, not a sound id num
+// haleyjd 06/03/06: changed to return boolean for failure or success
 //
-static int addsfx(sfxinfo_t *sfx, int channel)
+static boolean addsfx(sfxinfo_t *sfx, int channel)
 {
    size_t len;
    int lump;
@@ -158,15 +175,12 @@ static int addsfx(sfxinfo_t *sfx, int channel)
 
    // haleyjd 02/18/05: null ptr check
    if(!snd_init || !sfx)
-      return channel;
+      return false;
 
    stopchan(channel);
    
    // We will handle the new SFX.
    // Set pointer to raw data.
-
-   // haleyjd 11/05/03: rewrote to minimize work and fully support
-   // precaching
 
    // haleyjd: Eternity sfxinfo_t does not have a lumpnum field
    lump = I_GetSfxLumpNum(sfx);
@@ -174,40 +188,62 @@ static int addsfx(sfxinfo_t *sfx, int channel)
    // replace missing sounds with a reasonable default
    if(lump == -1)
       lump = W_GetNumForName(gameModeInfo->defSoundName);
-
+   
    len = W_LumpLength(lump);
+   
+   // haleyjd 10/08/04: do not play zero-length sound lumps
+   if(len <= 8)
+      return false;
 
-   // haleyjd 10/08/04: do not play zero-length sound lumps!
-   if(len <= 0)
-      return channel;
+   // haleyjd 06/03/06: rewrote again to make sound data properly freeable
+   if(sfx->data == NULL)
+   {   
+      byte *data;
 
-   if(!sfx->data)
-      sfx->data = W_CacheLumpNum(lump, PU_STATIC);
+      // haleyjd: this should always be called (if lump is already loaded,
+      // W_CacheLumpNum handles that for us).
+      data = (byte *)W_CacheLumpNum(lump, PU_STATIC);
+
+      // Check the header, and ensure this is a valid sound
+      if(data[0] != 0x03 || data[1] != 0x00 || 
+         data[6] != 0x00 || data[7] != 0x00)
+      {
+         Z_ChangeTag(data, PU_CACHE);
+         return false;
+      }
+      
+      // haleyjd 06/03/06
+      sfx->data = Z_Malloc(len, PU_STATIC, &sfx->data);
+      memcpy(sfx->data, data, len);
+
+      // haleyjd 06/03/06: don't need original lump data any more
+      Z_ChangeTag(data, PU_CACHE);
+
+   }
+   else
+      Z_ChangeTag(sfx->data, PU_STATIC); // reset to static cache level
+
+   channelinfo[channel].data = sfx->data;
 
    /* Find padded length */   
    len -= 8;
-
-#ifdef RANGECHECK
-   if(len <= 0)
-      I_Error("addsfx: invalid sound\n");
-#endif
-
-   channelinfo[channel].data = sfx->data;
    
    /* Set pointer to end of raw data. */
    channelinfo[channel].enddata = channelinfo[channel].data + len - 1;
    channelinfo[channel].samplerate = (channelinfo[channel].data[3]<<8)+channelinfo[channel].data[2];
    channelinfo[channel].data += 8; /* Skip header */
+
+   // haleyjd 06/03/06: keep track of start of sound
+   channelinfo[channel].startdata = channelinfo[channel].data;
    
    channelinfo[channel].stepremainder = 0;
    // Should be gametic, I presume.
    channelinfo[channel].starttime = gametic;
    
-   // Preserve sound SFX id,
-   //  e.g. for avoiding duplicates of chainsaw.
+   // Preserve sound SFX id
    channelinfo[channel].id = sfx;
    
-   return channel;
+   return true;
 }
 
 static void updateSoundParams(int handle, int volume, int seperation, int pitch)
@@ -224,6 +260,7 @@ static void updateSoundParams(int handle, int volume, int seperation, int pitch)
    if(handle < 0 || handle>=MAX_CHANNELS)
       I_Error("I_UpdateSoundParams: handle out of range");
 #endif
+
    // Set stepping
    // MWM 2000-12-24: Calculates proportion of channel samplerate
    // to global samplerate for mixing purposes.
@@ -361,27 +398,47 @@ int I_GetSfxLumpNum(sfxinfo_t *sfx)
 //
 // I_StartSound
 //
-int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, int pri)
+int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, 
+                 int pri, int loop)
 {
-   static int handle = -1;
+   static int stomp_handle = -1;
+   int handle;
    
    if(!snd_init)
       return 0;
 
+   // haleyjd: turns out this is too simplistic. see below.
+   /*
    // SoM: reimplement hardware channel wrap-around
    if(++handle >= MAX_CHANNELS)
       handle = 0;
+   */
+
+   // haleyjd 06/03/06: look for an unused hardware channel
+   for(handle = 0; handle < MAX_CHANNELS; ++handle)
+   {
+      if(!I_SoundIsPlaying(handle))
+         break;
+   }
+
+   // all used? stomp on a channel
+   if(handle == MAX_CHANNELS)
+   {
+      // stomp on a different hardware channel each time to be fair
+      if(++stomp_handle >= MAX_CHANNELS)
+         stomp_handle = 0;
+      handle = stomp_handle;
+   }
 
    // haleyjd 02/18/05: cannot proceed until channel is unlocked
    while(channelinfo[handle].lock)
       SDL_Delay(1);
  
-   // haleyjd 09/03/03: this should use handle, NOT cnum, and
-   // the return value is plain redundant. Whoever wrote this was
-   // out of it.
-   addsfx(sound, handle);
-      
-   updateSoundParams(handle, vol, sep, pitch);
+   if(addsfx(sound, handle))
+   {
+      channelinfo[handle].loop = loop;
+      updateSoundParams(handle, vol, sep, pitch);
+   }
    
    return handle;
 }
@@ -517,7 +574,17 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
 
             // Check whether we are done.
             if(channelinfo[chan].data >= channelinfo[chan].enddata)
-               stopchan(chan);
+            {
+               if(channelinfo[chan].loop)
+               {
+                  // haleyjd 06/03/06: restart a looping sample
+                  channelinfo[chan].data = channelinfo[chan].startdata;
+                  channelinfo[chan].stepremainder = 0;
+                  channelinfo[chan].starttime = gametic;
+               }
+               else
+                  stopchan(chan);
+            }
          }
       }
       
@@ -579,9 +646,6 @@ void I_ShutdownSound(void)
 //
 void I_CacheSound(sfxinfo_t *sound)
 {
-   if(sound->data)
-      return;     // already cached
-   
    if(sound->link)
       I_CacheSound(sound->link);
    else
@@ -592,7 +656,7 @@ void I_CacheSound(sfxinfo_t *sound)
       if(lump == -1)
          lump = W_GetNumForName(gameModeInfo->defSoundName);
 
-      sound->data = W_CacheLumpNum(lump, PU_STATIC);
+      W_CacheLumpNum(lump, PU_CACHE);
    }
 }
 

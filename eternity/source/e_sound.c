@@ -326,13 +326,6 @@ void E_NewWadSound(const char *name)
 
       return;
    }
-
-   if(sfx->data)
-   {
-      // free it if cached
-      Z_Free(sfx->data);      // free
-      sfx->data = NULL;
-   }
 }
 
 //
@@ -376,6 +369,8 @@ void E_PreCacheSounds(void)
 //
 static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 {
+   boolean setLink = false;
+
    // preconditions: 
    
    // sfx->mnemonic is valid, and this sfxinfo_t has already been 
@@ -425,6 +420,9 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
       // will be automatically nullified if name is not found
       // (this includes the default value of "none")
       sfx->link = E_SoundForName(name);
+
+      // haleyjd 06/03/06: change defaults for linkvol/linkpitch
+      setLink = true;
    }
 
    // process the skin index
@@ -440,11 +438,26 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 
    // process link volume
    if(IS_SET(ITEM_SND_LINKVOL))
+   {
       sfx->volume = cfg_getint(section, ITEM_SND_LINKVOL);
+
+      // haleyjd: test for altered defaults
+      // linked sounds need actual valid values for these fields
+      if(setLink && sfx->volume < 0)
+         sfx->volume = 0;
+   }
 
    // process link pitch
    if(IS_SET(ITEM_SND_LINKPITCH))
+   {
       sfx->pitch = cfg_getint(section, ITEM_SND_LINKPITCH);
+
+      // haleyjd: test for altered defaults
+      // linked sounds need actual valid values for these fields
+      if(setLink && sfx->pitch < 0)
+         sfx->pitch = 128;
+   }
+
 
    // haleyjd 07/13/05: process clipping_dist
    if(IS_SET(ITEM_SND_CLIPPING_DIST))
@@ -488,15 +501,15 @@ void E_ProcessSounds(cfg_t *cfg)
 
       mnemonic = cfg_title(sndsection);
 
-      // verify the length
-      if(strlen(mnemonic) > 16)
+      // verify the length -- haleyjd 06/03/06: doubled length limit
+      if(strlen(mnemonic) > 32)
       {
          E_EDFLoggedErr(2, 
             "E_ProcessSounds: invalid sound mnemonic '%s'\n", mnemonic);
       }
 
       // copy it to the sound
-      strncpy(S_sfx[i].mnemonic, mnemonic, 17);
+      strncpy(S_sfx[i].mnemonic, mnemonic, 33);
 
       // add this sound to the hash table
       E_AddSoundToHash(&S_sfx[i]);
@@ -589,12 +602,32 @@ cfg_opt_t edf_seq_opts[] =
 };
 
 //
+// E_ProcessSndSeq
+//
+// Processes a single EDF sound sequence.
+//
+static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
+{
+   E_EDFLogPrintf("\t\tFinished sound sequence #%d\n", i);
+}
+
+//
 // E_ProcessSndSeqs
 //
 // Processes all EDF sound sequences.
 //
 void E_ProcessSndSeqs(cfg_t *cfg)
 {
+   unsigned int i, numsequences;
+
+   E_EDFLogPuts("\t* Processing sound sequences\n");
+
+   numsequences = cfg_size(cfg, EDF_SEC_SNDSEQ);
+
+   E_EDFLogPrintf("\t\t%d sound sequence(s) defined\n", numsequences);
+
+   for(i = 0; i < numsequences; ++i)
+      E_ProcessSndSeq(cfg_getnsec(cfg, EDF_SEC_SNDSEQ, i), i);
 }
 
 //=============================================================================
