@@ -579,9 +579,17 @@ void E_ProcessSoundDeltas(cfg_t *cfg)
 // haleyjd 05/28/06
 // 
 
-#define ITEM_SEQ_ID   "id"
-#define ITEM_SEQ_CMDS "cmds"
-#define ITEM_SEQ_STOP "stopsound"
+#define ITEM_SEQ_ID    "id"
+#define ITEM_SEQ_CMDS  "cmds"
+#define ITEM_SEQ_TYPE  "type"
+#define ITEM_SEQ_STOP  "stopsound"
+#define ITEM_SEQ_ATTN  "attenuation"
+#define ITEM_SEQ_VOL   "volume"
+#define ITEM_SEQ_NSCO  "nostopcutoff"
+#define ITEM_SEQ_DOOR  "doorsequence"
+#define ITEM_SEQ_PLAT  "platsequence"
+#define ITEM_SEQ_FLOOR "floorsequence"
+#define ITEM_SEQ_CEIL  "ceilingsequence"
 
 // attenuation types -- also used by ambience
 static const char *attenuation_types[] =
@@ -594,12 +602,165 @@ static const char *attenuation_types[] =
 
 #define NUM_ATTENUATION_TYPES (sizeof(attenuation_types) / sizeof(char *))
 
+// sequence types
+static const char *seq_types[] =
+{
+   "sector",
+   "environment",
+};
+
+#define NUM_SEQ_TYPES (sizeof(seq_types) / sizeof(char *))
+
+// sequence command strings
+static const char *sndseq_cmdstrs[] =
+{
+   "play",
+   "playuntildone",
+   "playtime",
+   "playrepeat",
+   "playloop",
+   "delay",
+   "delayrand",
+   "end",
+
+   // these are supported as properties as well
+   "stopsound",
+   "attenuation",
+   "volume",
+   "nostopcutoff",
+};
+
+#define NUM_SEQ_CMDS (sizeof(sndseq_cmdstrs) / sizeof(char *))
+
 cfg_opt_t edf_seq_opts[] =
 {
-   CFG_INT(ITEM_SEQ_ID,   0, CFGF_NONE),
-   CFG_STR(ITEM_SEQ_CMDS, 0, CFGF_LIST),
+   CFG_INT(ITEM_SEQ_ID,    -1,        CFGF_NONE),
+   CFG_STR(ITEM_SEQ_CMDS,  0,         CFGF_LIST),
+   CFG_STR(ITEM_SEQ_TYPE,  "sector",  CFGF_NONE),
+   CFG_STR(ITEM_SEQ_STOP,  "none",    CFGF_NONE),
+   CFG_STR(ITEM_SEQ_ATTN,  "normal",  CFGF_NONE),
+   CFG_INT(ITEM_SEQ_VOL,   127,       CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_NSCO, cfg_false, CFGF_NONE),
+   CFG_STR(ITEM_SEQ_DOOR,  NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_PLAT,  NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_FLOOR, NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_CEIL,  NULL,      CFGF_NONE),
    CFG_END()
 };
+
+#define NUM_EDFSEQ_CHAINS 127
+static ESoundSeq_t *edf_seq_chains[NUM_EDFSEQ_CHAINS];
+static ESoundSeq_t *edf_seq_numchains[NUM_EDFSEQ_CHAINS];
+
+// need a separate hash for environmental sequences
+#define NUM_EDFSEQ_ENVCHAINS 31
+static ESoundSeq_t *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
+
+//
+// E_AddSequenceToNameHash
+//
+// Adds an EDF sound sequence to the mnemonic hash table.
+//
+static void E_AddSequenceToNameHash(ESoundSeq_t *seq)
+{
+   unsigned int keyval = D_HashTableKey(seq->name) % NUM_EDFSEQ_CHAINS;
+
+   seq->namenext = edf_seq_chains[keyval];
+   edf_seq_chains[keyval] = seq;
+}
+
+//
+// E_AddSequenceToNumHash
+//
+// Adds an EDF sound sequence object to the numeric hash table. More than 
+// one object with the same numeric id can exist, but E_SequenceForNum will
+// only ever find the first such object, which is always the last such
+// object added to the hash table.
+//
+// Note that sequences of type SEQ_ENVIRONMENT have their own separate hash.
+//
+static void E_AddSequenceToNumHash(ESoundSeq_t *seq)
+{
+   unsigned int idx;
+   
+   if(seq->type == SEQ_SECTOR)
+   {
+      idx = seq->index % NUM_EDFSEQ_CHAINS;
+      
+      M_DLListInsert((mdllistitem_t *)seq, 
+                     (mdllistitem_t **)(&edf_seq_numchains[idx]));
+   }
+   else // environment sequences are hashed separately
+   {
+      idx = seq->index % NUM_EDFSEQ_ENVCHAINS;
+
+      M_DLListInsert((mdllistitem_t *)seq,
+                     (mdllistitem_t **)(&edf_seq_envchains[idx]));
+   }
+}
+
+//
+// E_DelSequenceFromNumHash
+//
+// Removes a specific EDF sound sequence object from the numeric hash 
+// table. This must be called on an object that's already linked before
+// relinking it.
+//
+static void E_DelSequenceFromNumHash(ESoundSeq_t *seq)
+{
+   M_DLListRemove((mdllistitem_t *)seq);
+}
+
+//
+// E_SequenceForName
+//
+// Returns an EDF sound sequence with the given name. If none exists,
+// NULL will be returned.
+//
+ESoundSeq_t *E_SequenceForName(const char *name)
+{
+   unsigned int key = D_HashTableKey(name) % NUM_EDFSEQ_CHAINS;
+   ESoundSeq_t *seq = edf_seq_chains[key];
+
+   while(seq && strncasecmp(seq->name, name, 33))
+      seq = seq->namenext;
+
+   return seq;
+}
+
+//
+// E_SequenceForNum
+//
+// Returns an EDF sound sequence with the given numeric id. If none exists,
+// NULL will be returned.
+//
+ESoundSeq_t *E_SequenceForNum(unsigned int id)
+{
+   unsigned int key = id % NUM_EDFSEQ_CHAINS;
+   ESoundSeq_t *seq = edf_seq_numchains[key];
+
+   while(seq && seq->index != id)
+      seq = (ESoundSeq_t *)(seq->numlinks.next);
+
+   return seq;
+}
+
+//
+// E_EnvironmentSequence
+//
+// Returns the environmental sound sequence with the given numeric id.
+// If none exists, NULL will be returned.
+//
+ESoundSeq_t *E_EnvironmentSequence(unsigned int id)
+{
+   unsigned int key = id % NUM_EDFSEQ_ENVCHAINS;
+   ESoundSeq_t *seq = edf_seq_envchains[key];
+
+   while(seq && seq->index != id)
+      seq = (ESoundSeq_t *)(seq->numlinks.next);
+
+   return seq;
+}
 
 //
 // E_ProcessSndSeq
@@ -608,7 +769,144 @@ cfg_opt_t edf_seq_opts[] =
 //
 static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
 {
-   E_EDFLogPrintf("\t\tFinished sound sequence #%d\n", i);
+   const char *name, *tempstr;
+   ESoundSeq_t *newSeq;
+   int idnum, type;
+
+   // get name of sequence
+   name = cfg_title(cfg);
+
+   // verify length
+   if(strlen(name) > 32)
+      E_EDFLoggedErr(2, "E_ProcessSndSeq: invalid mnemonic '%s'\n", name);
+
+   // get numeric id and type now
+   idnum = cfg_getint(cfg, ITEM_SEQ_ID);
+
+   tempstr = cfg_getstr(cfg, ITEM_SEQ_TYPE);
+   type = E_StrToNumLinear(seq_types, NUM_SEQ_TYPES, tempstr);
+   if(type == NUM_SEQ_TYPES)
+   {
+      E_EDFLogPrintf("\t\tWarning: invalid sequence type '%s'\n", tempstr);
+      type = SEQ_SECTOR; // default is sector-type if invalid
+   }
+
+   // if one exists by this name already, reuse it
+   if((newSeq = E_SequenceForName(name)))
+   {
+      // Modify numeric id and rehash object if necessary
+      if(idnum != newSeq->index || type != newSeq->type)
+      {
+         // If old key is >= 0, must remove from hash first
+         if(newSeq->index >= 0)
+            E_DelSequenceFromNumHash(newSeq);
+         
+         // Set new key and type
+         newSeq->index = idnum;
+         newSeq->type  = type;
+         
+         // If new key >= 0, add back to hash
+         if(newSeq->index >= 0)
+            E_AddSequenceToNumHash(newSeq);
+      }
+   }
+   else
+   {
+      // Create a new sound sequence object
+      newSeq = malloc(sizeof(ESoundSeq_t));
+
+      // init to zero
+      memset(newSeq, 0, sizeof(*newSeq));
+      
+      // copy keys into sequence object
+      strncpy(newSeq->name, name, 33);
+      
+      newSeq->index = idnum;
+      newSeq->type  = type;
+            
+      // add to hash tables
+      
+      E_AddSequenceToNameHash(newSeq);
+      
+      // numeric key is not required
+      if(idnum >= 0)
+         E_AddSequenceToNumHash(newSeq);
+   }
+
+   /*
+   CFG_STR(ITEM_SEQ_CMDS,  0,         CFGF_LIST),
+   */
+
+   // process stopsound -- invalid sounds are not an error, and mean "none"
+   tempstr = cfg_getstr(cfg, ITEM_SEQ_STOP);
+   newSeq->stopsound = E_SoundForName(tempstr);
+
+   // process attenuation
+   tempstr = cfg_getstr(cfg, ITEM_SEQ_ATTN);
+   newSeq->attenuation =
+      E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES, tempstr);
+   if(newSeq->attenuation == NUM_ATTENUATION_TYPES)
+   {
+      E_EDFLogPrintf("\t\tWarning: sequence %d uses unknown attn type '%s'\n",
+                     newSeq->index, tempstr);
+      newSeq->attenuation = ATTN_NORMAL; // normal attenuation is fine
+   }
+
+   // process volume
+   newSeq->volume = cfg_getint(cfg, ITEM_SEQ_VOL);
+   // rangecheck
+   if(newSeq->volume < 0)
+      newSeq->volume = 0;
+   else if(newSeq->volume > 127)
+      newSeq->volume = 127;
+
+   // process nostopcutoff
+   newSeq->nostopcutoff = (cfg_getbool(cfg, ITEM_SEQ_NSCO) == cfg_true);
+
+   // process command list
+
+   // if a command list already exists, destroy it
+}
+
+//
+// E_ResolveNames
+//
+// This function resolves the fields in the sound sequences which
+// can reference other sequences. It's necessary to do this in a second
+// pass due to the ability of sound sequences to be overwritten.
+//
+static void E_ResolveNames(cfg_t *cfg, unsigned int i)
+{
+   const char  *tempstr;
+   const char  *name = cfg_title(cfg);
+   ESoundSeq_t *seq  = E_SequenceForName(name);
+
+   if(!seq)
+   {
+      E_EDFLoggedErr(2, "E_ResolveNames: internal error: no such sequence %s\n", 
+                     name);
+   }
+
+   // Note it is not an error for any of these to be either unspecified or
+   // invalid. In either case, the corresponding redirection is nullified.
+
+   // process door redirection
+   if((tempstr = cfg_getstr(cfg, ITEM_SEQ_DOOR)))
+      seq->doorseq = E_SequenceForName(tempstr);
+
+   // process plat redirection
+   if((tempstr = cfg_getstr(cfg, ITEM_SEQ_PLAT)))
+      seq->platseq = E_SequenceForName(tempstr);
+
+   // process floor redirection
+   if((tempstr = cfg_getstr(cfg, ITEM_SEQ_FLOOR)))
+      seq->floorseq = E_SequenceForName(tempstr);
+
+   // process ceiling redirection
+   if((tempstr = cfg_getstr(cfg, ITEM_SEQ_CEIL)))
+      seq->ceilseq = E_SequenceForName(tempstr);
+
+   E_EDFLogPrintf("\t\tFinished sound sequence %s (#%d)\n", name, i);
 }
 
 //
@@ -626,8 +924,13 @@ void E_ProcessSndSeqs(cfg_t *cfg)
 
    E_EDFLogPrintf("\t\t%d sound sequence(s) defined\n", numsequences);
 
+   // do primary processing
    for(i = 0; i < numsequences; ++i)
       E_ProcessSndSeq(cfg_getnsec(cfg, EDF_SEC_SNDSEQ, i), i);
+
+   // resolve mutually referencing fields
+   for(i = 0; i < numsequences; ++i)
+      E_ResolveNames(cfg_getnsec(cfg, EDF_SEC_SNDSEQ, i), i);
 }
 
 //=============================================================================

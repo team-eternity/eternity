@@ -575,9 +575,10 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
             // Check whether we are done.
             if(channelinfo[chan].data >= channelinfo[chan].enddata)
             {
-               if(channelinfo[chan].loop)
+               if(channelinfo[chan].loop &&
+                  !(paused || (menuactive && !demoplayback && !netgame)))
                {
-                  // haleyjd 06/03/06: restart a looping sample
+                  // haleyjd 06/03/06: restart a looping sample if not paused
                   channelinfo[chan].data = channelinfo[chan].startdata;
                   channelinfo[chan].stepremainder = 0;
                   channelinfo[chan].starttime = gametic;
@@ -590,31 +591,19 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
       
       // Clamp to range. Left hardware channel.
       if(dl > SHRT_MAX)
-      {
          *leftout = SHRT_MAX;
-      }
       else if(dl < SHRT_MIN)
-      {
          *leftout = SHRT_MIN;
-      }
       else
-      {
          *leftout = (short)dl;
-      }
       
       // Same for right hardware channel.
       if(dr > SHRT_MAX)
-      {
          *rightout = SHRT_MAX;
-      }
       else if(dr < SHRT_MIN)
-      {
          *rightout = SHRT_MIN;
-      }
       else
-      {
          *rightout = (short)dr;
-      }
       
       // Increment current pointers in stream
       leftout += step;

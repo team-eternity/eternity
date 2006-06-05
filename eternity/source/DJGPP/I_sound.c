@@ -282,6 +282,7 @@ void I_StopSound(int handle)
 void I_UpdateSoundParams(int handle, int vol, int sep, int pitch)
 {
    int correctSep;
+   int loop;
 
    // haleyjd: range check panning value and force a flip pan
    // based on user-specified value
@@ -293,8 +294,11 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch)
    correctSep = forceFlipPan ? sep - 1 : 256 - sep;
 
    // haleyjd 06/03/06: support looping samples
+   loop = channel_looping[handle] && 
+          !(paused || (menuactive && !demoplayback && !netgame))
+
    adjust_sample(&channel[handle], vol*VOLSCALE+VOLSCALE-1,
-                 correctSep, PITCH(pitch), channel_looping[handle]);
+                 correctSep, PITCH(pitch), loop);
 }
 
 // We can pretend that any sound that we've associated a handle

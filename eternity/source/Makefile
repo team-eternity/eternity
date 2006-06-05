@@ -173,6 +173,7 @@ OBJS =   \
 	$(O)/st_hbar.o \
 	$(O)/st_lib.o \
 	$(O)/st_stuff.o \
+	$(O)/s_sndseq.o \
 	$(O)/s_sound.o \
 	$(O)/tables.o \
 	$(O)/v_block.o \

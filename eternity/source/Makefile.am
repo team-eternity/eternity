@@ -23,7 +23,8 @@ e_things.c      e_things.h     e_ttypes.c  e_ttypes.h  f_finale.c  f_finale.h  f
 f_wipe.h        g_bind.c       g_bind.h    g_cmd.c     g_dmflag.c  g_dmflag.h  g_game.c	\
 g_game.h        g_gfs.c        g_gfs.h     hi_stuff.c  hi_stuff.h  hu_frags.c  hu_frags.h	\
 hu_over.c       hu_over.h      hu_stuff.c  hu_stuff.h  i_net.h     info.c      info.h		\
-in_lude.c       in_lude.h      i_sound.h   i_system.h  i_video.h   m_argv.c    m_argv.h	\ m_bbox.c        m_bbox.h       m_cheat.c							\
+in_lude.c       in_lude.h      i_sound.h   i_system.h  i_video.h   m_argv.c    m_argv.h	\
+m_bbox.c        m_bbox.h       m_cheat.c							\
 m_cheat.h       m_dllist.h     m_fcvt.c    m_fcvt.h    m_fixed.h   m_misc.c    m_misc.h	\
 mn_emenu.c      mn_emenu.h     mn_engin.c  mn_engin.h  mn_files.c  mn_files.h  mn_htic.c	\
 mn_htic.h       mn_menus.c     mn_menus.h  mn_misc.c   mn_misc.h   mn_skinv.c  m_qstr.c	\
@@ -39,7 +40,8 @@ p_user.c        p_user.h       r_bsp.c     r_bsp.h     r_data.c    r_data.h    r
 r_draw.c        r_draw.h       r_main.c    r_main.h    r_plane.c   r_plane.h   r_portal.c	\
 r_portal.h      r_ripple.c     r_ripple.h  r_segs.c    r_segs.h    r_sky.c     r_sky.h		\
 r_span.c        r_state.h      r_things.c  r_things.h  rules.make  sclinux.h   		\
-sounds.c        sounds.h       s_sound.c   s_sound.h   st_hbar.c   st_lib.c    st_lib.h		\
+sounds.c        sounds.h       s_sndseq.c  s_sndseq.h  s_sound.c   s_sound.h   st_hbar.c	\
+st_lib.c        st_lib.h		\
 st_stuff.c      st_stuff.h     tables.c    tables.h    v_block.c   v_block.h			\
 version.c       version.h      v_font.c    v_font.h    v_misc.c    v_misc.h    v_patch.c	\
 v_patch.h       v_video.c      v_video.h   wi_stuff.c  wi_stuff.h  w_wad.c			\

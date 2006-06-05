@@ -203,6 +203,7 @@ void P_RunButtons(void)
                   buttonlist[i].btexture;
                break;
             }
+            // SNDSEQ FIXME
             S_StartSound((mobj_t *)&buttonlist[i].soundorg,sfx_swtchn);
             memset(&buttonlist[i],0,sizeof(button_t));
          }
@@ -289,7 +290,6 @@ extern void P_StartLineScript(line_t *line, mobj_t *thing);
 
 //
 // P_UseSpecialLine
-//
 //
 // Called when a thing uses (pushes) a special line.
 // Only the front sides of lines are usable.

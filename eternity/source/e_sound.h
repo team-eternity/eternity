@@ -30,6 +30,7 @@
 
 #include "doomtype.h"
 #include "sounds.h"
+#include "m_dllist.h"
 
 sfxinfo_t *E_SoundForName(const char *);
 sfxinfo_t *E_EDFSoundForName(const char *name);
@@ -63,6 +64,35 @@ typedef struct EAmbience_s
 } EAmbience_t;
 
 EAmbience_t *E_AmbienceForNum(int num);
+
+// sequence types
+enum
+{
+   SEQ_SECTOR,      // for use by sector movement
+   SEQ_ENVIRONMENT, // for use by scripted ambience
+};
+
+// haleyjd 06/04/06: EDF sound sequences
+typedef struct ESoundSeq_s
+{
+   mdllistitem_t numlinks;       // next, prev links for numeric hash chain
+
+   int index;                    // numeric id
+   int type;                     // SEQ_SECTOR or SEQ_ENVIRONMENT
+   char name[33];                // mnemonic
+
+   int volume;                   // starting volume
+   int attenuation;              // starting attenuation
+   sfxinfo_t *stopsound;         // stopsound, if any
+   boolean nostopcutoff;         // if true, sounds aren't cut off at end
+
+   struct ESoundSeq_s *doorseq;  // redirect for door sequence use
+   struct ESoundSeq_s *platseq;  // redirect for platform sequence use
+   struct ESoundSeq_s *floorseq; // redirect for floor sequence use
+   struct ESoundSeq_s *ceilseq;  // redirect for ceiling sequence use
+
+   struct ESoundSeq_s *namenext; // for hashing by name
+} ESoundSeq_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 extern cfg_opt_t edf_sound_opts[];

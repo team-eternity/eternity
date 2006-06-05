@@ -584,6 +584,22 @@ SOURCE=.\Source\v_patch.c
 SOURCE=.\Source\v_video.c
 # End Source File
 # End Group
+# Begin Group "S_"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\s_sndseq.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\s_sound.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\sounds.c
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\source\acs_intr.c
@@ -635,14 +651,6 @@ SOURCE=.\source\polyobj.c
 # Begin Source File
 
 SOURCE=.\Source\psnprntf.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\s_sound.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\sounds.c
 # End Source File
 # Begin Source File
 
@@ -1100,6 +1108,22 @@ SOURCE=.\Source\v_patch.h
 SOURCE=.\Source\v_video.h
 # End Source File
 # End Group
+# Begin Group "S"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\s_sndseq.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\s_sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\sounds.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\Source\a_small.h
@@ -1175,14 +1199,6 @@ SOURCE=.\source\polyobj.h
 # Begin Source File
 
 SOURCE=.\Source\psnprntf.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\s_sound.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\sounds.h
 # End Source File
 # Begin Source File
 

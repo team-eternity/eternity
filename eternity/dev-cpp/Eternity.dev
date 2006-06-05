@@ -1,7 +1,7 @@
 [Project]
 FileName=Eternity.dev
 Name=Eternity
-UnitCount=249
+UnitCount=251
 Type=1
 Ver=1
 ObjFiles=
@@ -2536,4 +2536,24 @@ OriginalFilename=
 ProductName=
 ProductVersion=
 AutoIncBuildNr=0
+
+[Unit250]
+FileName=..\source\s_sndseq.h
+CompileCpp=0
+Folder=S_
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit251]
+FileName=..\source\s_sndseq.c
+CompileCpp=0
+Folder=S_
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
 

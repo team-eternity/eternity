@@ -309,7 +309,7 @@ newseg:
    // error: if we reach here, the seg search never found another seg to
    // continue the loop, and thus the polyobject is open. This isn't allowed.
    po->isBad = true;
-   doom_printf("polyobject %d is not closed", po->id);
+   doom_printf(FC_ERROR "polyobject %d is not closed", po->id);
 }
 
 // structure used to store segs during explicit search process
@@ -368,7 +368,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
    if(numSegItems == 0)
    {
       po->isBad = true;
-      doom_printf("polyobject %d is empty", po->id);
+      doom_printf(FC_ERROR "polyobject %d is empty", po->id);
       return;
    }
 
@@ -464,7 +464,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    {
       // bad polyobject due to id conflict
       po->isBad = true;
-      doom_printf("polyobject id conflict: %d", id);
+      doom_printf(FC_ERROR "polyobject id conflict: %d", id);
    }
    else
    {
@@ -490,7 +490,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 
    if(!(po = Polyobj_GetForNum(anchor->angle)))
    {
-      doom_printf("bad polyobject %d for anchor point", anchor->angle);
+      doom_printf(FC_ERROR "bad polyobject %d for anchor point", anchor->angle);
       return;
    }
 
@@ -501,7 +501,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    // don't move any polyobject more than once
    if(po->attached)
    {
-      doom_printf("polyobj %d has more than one anchor", po->id);
+      doom_printf(FC_ERROR "polyobj %d has more than one anchor", po->id);
       return;
    }
 
