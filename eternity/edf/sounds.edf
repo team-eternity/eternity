@@ -229,6 +229,17 @@ sound ht_impat1  { lump = "impat1";  prefix = false; priority =  32; dehackednum
 sound ht_impat2  { lump = "impat2";  prefix = false; priority =  32; dehackednum = 377 }
 sound ht_imppai  { lump = "imppai";  prefix = false; priority =  32; dehackednum = 378 }
 sound ht_impdth  { lump = "impdth";  prefix = false; priority =  80; dehackednum = 379 }
+sound ht_amb1    { lump = "amb1";    prefix = false; priority =   1; dehackednum = 380 }
+sound ht_amb2    { lump = "amb2";    prefix = false; priority =   1; dehackednum = 381 }
+sound ht_amb3    { lump = "amb3";    prefix = false; priority =   1; dehackednum = 382 }
+sound ht_amb4    { lump = "amb4";    prefix = false; priority =   1; dehackednum = 383 }
+sound ht_amb5    { lump = "amb5";    prefix = false; priority =   1; dehackednum = 384 }
+sound ht_amb6    { lump = "amb6";    prefix = false; priority =   1; dehackednum = 385 }
+sound ht_amb7    { lump = "amb7";    prefix = false; priority =   1; dehackednum = 386 }
+sound ht_amb8    { lump = "amb8";    prefix = false; priority =   1; dehackednum = 387 }
+sound ht_amb9    { lump = "amb9";    prefix = false; priority =   1; dehackednum = 388 }
+sound ht_amb10   { lump = "amb10";   prefix = false; priority =   1; dehackednum = 389 }
+sound ht_amb11   { lump = "amb11";   prefix = false; priority =   1; dehackednum = 390 }
 
 endif()
 

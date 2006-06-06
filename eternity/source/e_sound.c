@@ -367,7 +367,7 @@ void E_PreCacheSounds(void)
 //
 // Processes an EDF sound definition
 //
-static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
+static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def, boolean add)
 {
    boolean setLink = false;
 
@@ -467,13 +467,71 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
    if(IS_SET(ITEM_SND_CLOSE_DIST))
       sfx->close_dist = cfg_getint(section, ITEM_SND_CLOSE_DIST) << FRACBITS;
 
-   // process dehackednum -- not in deltas!
-   if(def)
+   // process dehackednum -- not in deltas! 06/06/06: also not in additive sounds
+   if(def && !add)
    {
       sfx->dehackednum = cfg_getint(section, ITEM_SND_DEHNUM);
 
       if(sfx->dehackednum != -1)
          E_AddSoundToDEHHash(sfx); // add to DeHackEd num hash table
+   }
+}
+
+//
+// E_ProcessAdditiveSounds
+//
+// haleyjd 06/06/06: This allows more sounds to be defined via the ESNDINFO
+// and ESNDSEQ lumps. Overwriting the DeHackEd number of existing sounds is
+// not allowed, however.
+//
+void E_ProcessAdditiveSounds(cfg_t *cfg)
+{
+   unsigned int i, numsounds = cfg_size(cfg, EDF_SEC_SOUND);
+
+   E_EDFLogPrintf("\t\tProcessing additive sounds\n"
+                  "\t\t%d additive sounds defined\n", numsounds);
+
+   // first, hash any sounds that are new
+   for(i = 0; i < numsounds; ++i)
+   {
+      cfg_t *sndsec = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
+      const char *title = cfg_title(sndsec);
+      sfxinfo_t *sfx;
+
+      if(strlen(title) > 32)
+      {
+         E_EDFLoggedErr(2, "E_ProcessAdditiveSounds: invalid mnemonic '%s'\n",
+                        title);
+      }
+      
+      if((sfx = E_EDFSoundForName(title)))
+         continue; // nothing to do here...
+      else
+      {
+         // create a new one and hook into hashchain
+         sfx = Z_Malloc(sizeof(sfxinfo_t), PU_STATIC, 0);
+         memset(sfx, 0, sizeof(sfxinfo_t));
+      
+         strncpy(sfx->mnemonic, title, 33);
+
+         sfx->dehackednum = -1; // not accessible to DeHackEd
+         
+         E_AddSoundToHash(sfx);
+      }
+   }
+
+   // all the sounds in the EDF have been created, so process them
+   for(i = 0; i < numsounds; ++i)
+   {
+      cfg_t *sndsec = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
+      const char *title = cfg_title(sndsec);
+      sfxinfo_t *sfx;
+
+      sfx = E_SoundForName(title);
+
+      E_ProcessSound(sfx, sndsec, true, true);
+      
+      E_EDFLogPrintf("\t\tFinished sound %s(#%d)\n", title, i);
    }
 }
 
@@ -488,33 +546,33 @@ void E_ProcessSounds(cfg_t *cfg)
    int i;
 
    E_EDFLogPuts("\t\tHashing sounds\n");
-
+   
    // initialize S_sfx[0]
    strcpy(S_sfx[0].name, "none");
    strcpy(S_sfx[0].mnemonic, "none");
-
+   
    // now, let's collect the mnemonics (this must be done ahead of time)
    for(i = 1; i < NUMSFX; ++i)
    {
       const char *mnemonic;
       cfg_t *sndsection = cfg_getnsec(cfg, EDF_SEC_SOUND, i - 1);
-
+      
       mnemonic = cfg_title(sndsection);
-
+      
       // verify the length -- haleyjd 06/03/06: doubled length limit
       if(strlen(mnemonic) > 32)
       {
-         E_EDFLoggedErr(2, 
-            "E_ProcessSounds: invalid sound mnemonic '%s'\n", mnemonic);
+         E_EDFLoggedErr(2, "E_ProcessSounds: invalid sound mnemonic '%s'\n",
+                        mnemonic);
       }
-
+      
       // copy it to the sound
       strncpy(S_sfx[i].mnemonic, mnemonic, 33);
-
+      
       // add this sound to the hash table
       E_AddSoundToHash(&S_sfx[i]);
    }
-
+      
    E_EDFLogPuts("\t\tProcessing data\n");
 
    // finally, process the individual sounds
@@ -522,7 +580,7 @@ void E_ProcessSounds(cfg_t *cfg)
    {
       cfg_t *section = cfg_getnsec(cfg, EDF_SEC_SOUND, i - 1);
 
-      E_ProcessSound(&S_sfx[i], section, true);
+      E_ProcessSound(&S_sfx[i], section, true, false);
 
       E_EDFLogPrintf("\t\tFinished sound %s(#%d)\n", S_sfx[i].mnemonic, i);
    }
@@ -537,23 +595,26 @@ void E_ProcessSounds(cfg_t *cfg)
 // editing of existing sounds. The sounddelta shares most of its
 // fields and processing code with the sound section.
 //
-void E_ProcessSoundDeltas(cfg_t *cfg)
+void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
 {
    int i, numdeltas;
 
-   E_EDFLogPuts("\t* Processing sound deltas\n");
+   if(!add)
+      E_EDFLogPuts("\t* Processing sound deltas\n");
+   else
+      E_EDFLogPuts("\t\tProcessing additive sound deltas\n");
 
    numdeltas = cfg_size(cfg, EDF_SEC_SDELTA);
 
    E_EDFLogPrintf("\t\t%d sounddelta(s) defined\n", numdeltas);
 
-   for(i = 0; i < numdeltas; i++)
+   for(i = 0; i < numdeltas; ++i)
    {
       const char *tempstr;
       sfxinfo_t *sfx;
       cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_SDELTA, i);
 
-      // get thingtype to edit
+      // get sound to edit
       if(!cfg_size(deltasec, ITEM_DELTA_NAME))
          E_EDFLoggedErr(2, "E_ProcessSoundDeltas: sounddelta requires name field\n");
 
@@ -566,7 +627,7 @@ void E_ProcessSoundDeltas(cfg_t *cfg)
             "E_ProcessSoundDeltas: sound '%s' does not exist\n", tempstr);
       }
 
-      E_ProcessSound(sfx, deltasec, false);
+      E_ProcessSound(sfx, deltasec, false, add);
 
       E_EDFLogPrintf("\t\tApplied sounddelta #%d to sound %s\n", i, tempstr);
    }
@@ -619,9 +680,13 @@ static const char *sndseq_cmdstrs[] =
    "playtime",
    "playrepeat",
    "playloop",
+   "playabsvol",
+   "playrelvol",
    "delay",
    "delayrand",
    "end",
+
+   "relvolume",
 
    // these are supported as properties as well
    "stopsound",
@@ -630,9 +695,27 @@ static const char *sndseq_cmdstrs[] =
    "nostopcutoff",
 };
 
-#define NUM_SEQ_CMDS (sizeof(sndseq_cmdstrs) / sizeof(char *))
+enum
+{
+   SEQ_TXTCMD_PLAY,
+   SEQ_TXTCMD_PLAYUNTILDONE,
+   SEQ_TXTCMD_PLAYTIME,
+   SEQ_TXTCMD_PLAYREPEAT,
+   SEQ_TXTCMD_PLAYLOOP,
+   SEQ_TXTCMD_PLAYABSVOL,
+   SEQ_TXTCMD_PLAYRELVOL,
+   SEQ_TXTCMD_DELAY,
+   SEQ_TXTCMD_DELAYRAND,
+   SEQ_TXTCMD_END,
+   SEQ_TXTCMD_RELVOLUME,
+   SEQ_TXTCMD_STOPSOUND,
+   SEQ_TXTCMD_ATTENUATION,
+   SEQ_TXTCMD_VOLUME,
+   SEQ_TXTCMD_NOSTOPCUTOFF,
+   SEQ_NUM_TXTCMDS,
+};
 
-cfg_opt_t edf_seq_opts[] =
+cfg_opt_t edf_sndseq_opts[] =
 {
    CFG_INT(ITEM_SEQ_ID,    -1,        CFGF_NONE),
    CFG_STR(ITEM_SEQ_CMDS,  0,         CFGF_LIST),
@@ -734,7 +817,7 @@ ESoundSeq_t *E_SequenceForName(const char *name)
 // Returns an EDF sound sequence with the given numeric id. If none exists,
 // NULL will be returned.
 //
-ESoundSeq_t *E_SequenceForNum(unsigned int id)
+ESoundSeq_t *E_SequenceForNum(int id)
 {
    unsigned int key = id % NUM_EDFSEQ_CHAINS;
    ESoundSeq_t *seq = edf_seq_numchains[key];
@@ -751,7 +834,7 @@ ESoundSeq_t *E_SequenceForNum(unsigned int id)
 // Returns the environmental sound sequence with the given numeric id.
 // If none exists, NULL will be returned.
 //
-ESoundSeq_t *E_EnvironmentSequence(unsigned int id)
+ESoundSeq_t *E_EnvironmentSequence(int id)
 {
    unsigned int key = id % NUM_EDFSEQ_ENVCHAINS;
    ESoundSeq_t *seq = edf_seq_envchains[key];
@@ -760,6 +843,276 @@ ESoundSeq_t *E_EnvironmentSequence(unsigned int id)
       seq = (ESoundSeq_t *)(seq->numlinks.next);
 
    return seq;
+}
+
+//
+// This structure is returned by E_ParseSeqCmdStr and is used to hold pointers
+// to the tokens inside the command string. The pointers may be NULL if the
+// corresponding tokens do not exist.
+//
+typedef struct tempcmd_s
+{
+   const char *strs[3]; // command and up to 2 arguments
+} tempcmd_t;
+
+// states for command mini-parser below.
+enum
+{
+   STATE_LOOKFORCMD,
+   STATE_INCMD,
+};
+
+//
+// E_ParseSeqCmdStr
+//
+// Tokenizes a sound sequence command string. Basically, breaks it up into
+// 0 to 3 tokens. Anything beyond the 3rd token is totally ignored.
+//
+static tempcmd_t E_ParseSeqCmdStr(char *str)
+{
+   tempcmd_t retcmd;
+   char *tokenstart;
+   int state = STATE_LOOKFORCMD, strnum = 0;
+
+   retcmd.strs[0] = retcmd.strs[1] = retcmd.strs[2] = NULL;
+
+   while(1)
+   {
+      switch(state)
+      {
+      case STATE_LOOKFORCMD: // looking for a command -- skip whitespace
+         switch(*str)
+         {
+         case '\0': // end of string -- done
+            return retcmd;
+         case ' ':
+         case '\t':
+            break;
+         default:
+            tokenstart = str;
+            state = STATE_INCMD;
+            break;
+         }
+         break;
+      case STATE_INCMD: // inside a command -- whitespace ends
+         switch(*str)
+         {
+         case '\0': // end of string
+         case ' ':
+         case '\t':
+            retcmd.strs[strnum] = tokenstart;
+            ++strnum;
+            if(*str == '\0' || strnum >= 3) // are we done?
+               return retcmd;
+            tokenstart = NULL;
+            state = STATE_LOOKFORCMD;
+            *str = '\0'; // modify string to terminate tokens
+            break;
+         default:
+            break;
+         }
+         break;
+      }
+
+      ++str;
+   }
+
+   return retcmd; // should be unreachable
+}
+
+//
+// E_SeqGetSound
+//
+// A safe wrapper around E_SoundForName that returns NULL for the
+// NULL pointer. This saves me a truckload of hassle below.
+//
+d_inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
+{
+   return soundname ? E_SoundForName(soundname) : NULL;
+}
+
+//
+// E_SeqGetNumber
+//
+// A safe wrapper around strtol that returns 0 for the NULL string.
+//
+d_inline static int E_SeqGetNumber(const char *numstr)
+{
+   return numstr ? strtol(numstr, NULL, 0) : 0;
+}
+
+//
+// E_SeqGetAttn
+//
+// A safe wrapper on E_StrToNumLinear for attenuation types.
+//
+static int E_SeqGetAttn(const char *attnstr)
+{
+   int attn;
+
+   if(attnstr)
+   {
+      attn = E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES, 
+                              attnstr);
+      if(attn == NUM_ATTENUATION_TYPES)
+         attn = ATTN_NORMAL;
+   }
+   else
+      attn = ATTN_NORMAL;
+
+   return attn;
+}
+
+//
+// E_ParseSeqCmds
+//
+// Yay, more complicated stuff like the cmp frame parser!
+// Seriously, this function compiles sound sequence command strings into a
+// compact array of binary data (bytecode, if you will), and stores it into
+// the ESoundSeq_t structure.
+//
+// Individual commands are tokenized by E_ParseSeqCmdStr above. Only the first
+// three whitespace-delimited tokens on each line are considered, the rest is
+// thrown away as garbage. This makes it freeform but still somewhat strict.
+// Everything is error-tolerant. Missing tokens are NULLified or zeroed out.
+// Bad commands have no effect. Bad sound names end up NULL also.
+//
+// Note that the commands are compiled into a temporary buffer that is allocated
+// at the upper bound of the possible code size -- no command compiles to more
+// than four bytecodes (an opcode and two arguments). At the end, the temporary
+// buffer is copied into one of the actually used size and the temp buffer is 
+// destroyed.
+//
+static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
+{
+   unsigned int i, numcmds;              // loop stuff
+   unsigned int cmdalloc, allocused = 0; // space allocated, space actually used
+   seqcmd_t *tempcmdbuf;                 // temporary command buffer
+
+   numcmds = cfg_size(cfg, ITEM_SEQ_CMDS);
+
+   // allocate the upper bound of command space in the temp buffer:
+   // * add 1 to numcmds for possible missing end command
+   // * multiply by 4 because no txt command compiles to more than 4 ops
+   cmdalloc = (numcmds + 1) * 4 * sizeof(seqcmd_t);
+
+   tempcmdbuf = malloc(cmdalloc);
+   memset(tempcmdbuf, 0, cmdalloc);
+
+   for(i = 0; i < numcmds; ++i)
+   {
+      int cmdindex;
+      tempcmd_t tempcmd;
+      char *tempstr = strdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
+
+      tempcmd = E_ParseSeqCmdStr(tempstr); // parse the command
+
+      // figure out the command (first token on the line)
+      if(!tempcmd.strs[0])
+         E_EDFLogPuts("\t\tWarning: invalid command in sequence, ignored\n");
+      else
+      {  
+         // translate to command index
+         cmdindex = E_StrToNumLinear(sndseq_cmdstrs, SEQ_NUM_TXTCMDS, 
+                                     tempcmd.strs[0]);
+
+         // generate opcodes and their arguments in the temporary buffer
+         switch(cmdindex)
+         {
+         case SEQ_TXTCMD_PLAY:
+            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_PLAYUNTILDONE:
+            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+            tempcmdbuf[allocused++].data = SEQ_CMD_WAITSOUND;
+            break;
+         case SEQ_TXTCMD_PLAYTIME:
+            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+            tempcmdbuf[allocused++].data = SEQ_CMD_DELAY;
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+            break;
+         case SEQ_TXTCMD_PLAYREPEAT:
+            tempcmdbuf[allocused++].data = SEQ_CMD_PLAYREPEAT;
+            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_PLAYLOOP:
+            tempcmdbuf[allocused++].data = SEQ_CMD_PLAYLOOP;
+            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+            break;
+         case SEQ_TXTCMD_PLAYABSVOL:
+            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUME;
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_PLAYRELVOL:
+            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUMEREL;
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_DELAY:
+            tempcmdbuf[allocused++].data = SEQ_CMD_DELAY;
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_DELAYRAND:
+            tempcmdbuf[allocused++].data = SEQ_CMD_DELAYRANDOM;
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+            break;
+         case SEQ_TXTCMD_VOLUME:
+            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUME;
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_RELVOLUME:
+            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUMEREL;
+            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_ATTENUATION:
+            tempcmdbuf[allocused++].data = SEQ_CMD_SETATTENUATION;
+            tempcmdbuf[allocused++].data = E_SeqGetAttn(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_STOPSOUND:
+            // this doesn't go into the command stream; rather, it changes the
+            // stopsound property of the sound sequence object
+            newSeq->stopsound = E_SeqGetSound(tempcmd.strs[1]);
+            break;
+         case SEQ_TXTCMD_NOSTOPCUTOFF:
+            // as above, but this sets the nostopcutoff property
+            newSeq->nostopcutoff = true;
+            break;
+         case SEQ_TXTCMD_END:
+            // do nothing, an end command will be generated below
+            break;
+         default:
+            // invalid opcode :P
+            E_EDFLogPrintf("\t\tWarning: invalid cmd '%s' in sequence, ignored\n",
+                           tempcmd.strs[0]);
+            break;
+         }
+      } // end else
+
+      free(tempstr); // free temporary copy of command
+   } // end for
+
+   // now, generate an end command -- doing it this way, we make sure the
+   // sequence is terminated whether or not the user provides an end command,
+   // which is good since it's really unnecessary in EDF due to syntax
+   tempcmdbuf[allocused++].data = SEQ_CMD_END;
+
+   // now, allocate the buffer in the ESoundSeq_t object at the size actually
+   // used by the compiled sound sequence commands
+   cmdalloc = allocused * sizeof(seqcmd_t);
+
+   newSeq->commands = malloc(cmdalloc);
+   memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
+
+   // free the temp buffer
+   free(tempcmdbuf);
 }
 
 //
@@ -833,10 +1186,6 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
          E_AddSequenceToNumHash(newSeq);
    }
 
-   /*
-   CFG_STR(ITEM_SEQ_CMDS,  0,         CFGF_LIST),
-   */
-
    // process stopsound -- invalid sounds are not an error, and mean "none"
    tempstr = cfg_getstr(cfg, ITEM_SEQ_STOP);
    newSeq->stopsound = E_SoundForName(tempstr);
@@ -865,7 +1214,11 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
 
    // process command list
 
-   // if a command list already exists, destroy it
+   // if a command list already exists, destroy it first
+   if(newSeq->commands)
+      free(newSeq->commands);
+
+   E_ParseSeqCmds(cfg, newSeq);
 }
 
 //

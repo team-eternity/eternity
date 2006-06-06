@@ -79,6 +79,7 @@ rcsid[] = "$Id: g_game.c,v 1.59 1998/06/03 20:23:10 killough Exp $";
 #include "a_small.h"
 #include "g_dmflag.h"
 #include "e_states.h"
+#include "s_sndseq.h"
 
 #define SAVEGAMESIZE  0x20000
 #define SAVESTRINGSIZE  24
@@ -650,6 +651,7 @@ static void G_DoLoadLevel(void)
       memset(players[i].frags, 0, sizeof(players[i].frags));
    }
 
+   S_StopAllSequences(); // haleyjd 06/06/06
    R_ClearParticles();
 
 #ifdef R_LINKEDPORTALS
@@ -657,6 +659,7 @@ static void G_DoLoadLevel(void)
 #elif defined R_PORTALS
    R_InitPortals();
 #endif
+
    P_SetupLevel(gamemapname, 0, gameskill);
 
    if(gamestate != GS_LEVEL)       // level load error
@@ -1255,8 +1258,7 @@ static void G_DoWorldDone(void)
    }
    else
    {
-      // haleyjd 12/14/01: don't use nextlevel for secret exits here
-      // either!
+      // haleyjd 12/14/01: don't use nextlevel for secret exits here either!
       if(*LevelInfo.nextLevel)
          G_SetGameMapName(LevelInfo.nextLevel);
       else
@@ -2162,13 +2164,11 @@ void G_Ticker(void)
    A_ExecuteCallbacks(); 
    
    if(gamestate == GS_LEVEL)
-   {                    
+   {
       P_Ticker();
       ST_Ticker(); 
       AM_Ticker(); 
       HU_Ticker();
-      if(currentdialog) // haleyjd: dialog
-         DLG_Ticker();
    }
    else if(paused & 2);
    else if(gamestate == GS_INTERMISSION) IN_Ticker();
@@ -2779,13 +2779,6 @@ void G_InitNewNum(skill_t skill, int episode, int map)
 void G_InitNew(skill_t skill, char *name)
 {
    int i;
-
-   // haleyjd 11/14/01: reset state of dialogue engine
-   if(currentdialog)
-      DLG_Stop();
-
-   // clear cinematic pause
-   cinema_pause = false;
 
    if(paused)
    {

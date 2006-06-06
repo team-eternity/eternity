@@ -62,6 +62,7 @@ rcsid[] = "$Id: p_setup.c,v 1.16 1998/05/07 00:56:49 killough Exp $";
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_ttypes.h"
 #include "polyobj.h"
+#include "s_sndseq.h"
 
 //
 // MAP related Lookup tables.
@@ -1331,13 +1332,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // Initial height of PointOfView will be set by player think.
    players[consoleplayer].viewz = 1;
 
-   // haleyjd: ensure that dialogue is stopped by now for sure --
-   // all methods of changing levels call this function for sure, and
-   // its the last place because of the Z_FreeTags call below -- if
-   // a dialogue ran past this point, it could cause memory corruption
-   if(currentdialog)
-      DLG_Stop();
-
    // haleyjd 03/15/03: clear levelscript callbacks
    A_RemoveCallbacks(SC_VM_LEVELSCRIPT);
 
@@ -1565,6 +1559,9 @@ void P_InitThingLists(void)
 
    // haleyjd 04/08/03: spawn camera spots
    IN_AddCameras();
+
+   // haleyjd 06/06/06: initialize environmental sequences
+   S_InitEnviroSpots();
 }
 
 //
@@ -1625,10 +1622,6 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
 {
    // null, player starts, teleport destination are common
    if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
-      return;
-
-   // TODO: handle heretic ambience
-   if(mthing->type >= 1200 && mthing->type < 1300)
       return;
    
    // handle ordinary heretic things -- all are less than 100

@@ -1552,9 +1552,11 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing, mapthinghexen_t *extthing)
    // haleyjd: special thing types that need to undergo the processing
    // below must be caught here
    
-   if(mthing->type >= 9027 && mthing->type <= 9033)
-      i = E_SafeThingName("EEParticleFountain"); // particle fountains
-   else if(mthing->type >= 14001 && mthing->type <= 14064)
+   if(mthing->type >= 9027 && mthing->type <= 9033) // particle fountains
+      i = E_SafeThingName("EEParticleFountain");
+   else if(mthing->type >= 1200 && mthing->type < 1300) // enviro sequences
+      i = E_SafeThingName("EEEnviroSequence");
+   else if(mthing->type >= 14001 && mthing->type <= 14064) // ambience
       i = E_SafeThingName("EEAmbience");
    else
    {
@@ -1662,6 +1664,10 @@ spawnit:
    // haleyjd: set particle fountain color
    if(mthing->type >= 9027 && mthing->type <= 9033)
       mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
+
+   // haleyjd: set environment sequence # for first 100 types
+   if(mthing->type >= 1200 && mthing->type < 1300)
+      mobj->args[0] = mthing->type - 1200;
 
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)

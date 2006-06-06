@@ -1551,7 +1551,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
       return;
    }
    
-   if(gamestate != GS_LEVEL || cinema_pause || currentdialog)
+   if(gamestate != GS_LEVEL)
       return;    // only save in levels -- haleyjd: never in cinemas
    
    MN_ReadSaveStrings();
@@ -1571,7 +1571,7 @@ CONSOLE_COMMAND(quicksave, 0)
       return;
    }
    
-   if(gamestate != GS_LEVEL || cinema_pause || currentdialog)
+   if(gamestate != GS_LEVEL)
       return;
   
    if(quickSaveSlot < 0)

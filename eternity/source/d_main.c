@@ -259,8 +259,6 @@ void D_Display(void)
 
          ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
          HU_Drawer();
-         if(currentdialog)
-            DLG_Drawer();
          break;
       case GS_INTERMISSION:
          IN_Drawer();

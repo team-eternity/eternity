@@ -36,6 +36,7 @@ rcsid[] = "$Id: p_tick.c,v 1.7 1998/05/15 00:37:56 killough Exp $";
 #include "p_anim.h"  // haleyjd
 #include "p_partcl.h"
 #include "polyobj.h"
+#include "s_sndseq.h"
 
 int leveltime;
 boolean reset_viewz;
@@ -235,6 +236,8 @@ void P_Ticker(void)
       return;
    
    P_ParticleThinker(); // haleyjd: think for particles
+
+   S_RunSequences(); // haleyjd 06/06/06
 
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses

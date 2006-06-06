@@ -31,6 +31,7 @@
 #include "doomtype.h"
 #include "sounds.h"
 #include "m_dllist.h"
+#include "s_sndseq.h"
 
 sfxinfo_t *E_SoundForName(const char *);
 sfxinfo_t *E_EDFSoundForName(const char *name);
@@ -81,6 +82,8 @@ typedef struct ESoundSeq_s
    int type;                     // SEQ_SECTOR or SEQ_ENVIRONMENT
    char name[33];                // mnemonic
 
+   union seqcmd_s *commands;     // the compiled commands
+
    int volume;                   // starting volume
    int attenuation;              // starting attenuation
    sfxinfo_t *stopsound;         // stopsound, if any
@@ -94,13 +97,20 @@ typedef struct ESoundSeq_s
    struct ESoundSeq_s *namenext; // for hashing by name
 } ESoundSeq_t;
 
+ESoundSeq_t *E_SequenceForName(const char *name);
+ESoundSeq_t *E_SequenceForNum(int id);
+ESoundSeq_t *E_EnvironmentSequence(int id);
+
 #ifdef NEED_EDF_DEFINITIONS
 extern cfg_opt_t edf_sound_opts[];
 extern cfg_opt_t edf_sdelta_opts[];
 extern cfg_opt_t edf_ambience_opts[];
+extern cfg_opt_t edf_sndseq_opts[];
 
 void    E_ProcessSounds(cfg_t *cfg);
-void    E_ProcessSoundDeltas(cfg_t *cfg);
+void    E_ProcessAdditiveSounds(cfg_t *cfg);
+void    E_ProcessSoundDeltas(cfg_t *cfg, boolean add);
+void    E_ProcessSndSeqs(cfg_t *cfg);
 void    E_ProcessAmbience(cfg_t *cfg);
 boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 

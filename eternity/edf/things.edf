@@ -1698,6 +1698,14 @@ thingtype EEAmbience {
   cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
+// Environmental Sequence Point
+
+thingtype EEEnviroSequence {
+  doomednum = 1300
+  spawnstate = S_TNT1
+  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+}
+
 // Begin Heretic gamemode objects
 
 ifenabled(HERETIC)

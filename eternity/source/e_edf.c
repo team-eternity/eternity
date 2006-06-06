@@ -294,6 +294,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(SEC_PICKUPFX,      pickup_opts,       CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_FRAME,     edf_frame_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_THING,     edf_thing_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(SEC_CAST,          cast_opts,         CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
@@ -458,6 +459,16 @@ static cfg_opt_t menu_lump_opts[] =
    CFG_END()
 };
 
+// Options for stuff in ESNDSEQ and ESNDINFO lumps
+static cfg_opt_t sndseq_lump_opts[] =
+{
+   CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_SDELTA,    edf_sdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   LUMP_FUNCTIONS,
+   CFG_END()
+};
 
 //
 // Error Reporting and Logging
@@ -1152,6 +1163,44 @@ static void E_ProcessMenuLump(void)
    MN_ProcessMenus(cfg);
 
    cfg_free(cfg);
+}
+
+//
+// E_ProcessSoundLumps
+//
+// Parses the ESNDSEQ and ESNDINFO lumps, which may optionally include
+// the next lumps on their respective chains. These lumps may both include
+// any type of sound-related sections.
+//
+static void E_ProcessSoundLumps(void)
+{
+   cfg_t *cfg;
+
+   E_EDFLogPuts("\tParsing ESNDSEQ lump...\n");
+
+   if(!(cfg = E_ParseEDFLumpOptional("ESNDSEQ", sndseq_lump_opts)))
+      E_EDFLogPuts("\tNo ESNDSEQ lump found.\n");
+   else
+   {
+      E_ProcessAdditiveSounds(cfg);
+      E_ProcessSoundDeltas(cfg, true);
+      E_ProcessAmbience(cfg);
+      E_ProcessSndSeqs(cfg);
+      cfg_free(cfg);
+   }
+
+   E_EDFLogPuts("\tParsing ESNDINFO lump...\n");
+
+   if(!(cfg = E_ParseEDFLumpOptional("ESNDINFO", sndseq_lump_opts)))
+      E_EDFLogPuts("\tNo ESNDINFO lump found.\n");
+   else
+   {
+      E_ProcessAdditiveSounds(cfg);
+      E_ProcessSoundDeltas(cfg, true);
+      E_ProcessAmbience(cfg);
+      E_ProcessSndSeqs(cfg);
+      cfg_free(cfg);
+   }
 }
 
 //
@@ -1899,6 +1948,9 @@ void E_ProcessEDFLumps(void)
 
    // process EMENUS
    E_ProcessMenuLump();
+
+   // process ESNDSEQ and ESNDINFO
+   E_ProcessSoundLumps();
 }
 
 //
@@ -1971,6 +2023,9 @@ void E_ProcessEDF(const char *filename)
    // 05/30/06: process ambience information
    E_ProcessAmbience(cfg);
 
+   // 06/06/06: process sound sequences
+   E_ProcessSndSeqs(cfg);
+
    // allocate frames and things, build name hash tables, and
    // process frame and thing definitions
    E_ProcessStatesAndThings(cfg);
@@ -1991,7 +2046,7 @@ void E_ProcessEDF(const char *filename)
    E_ProcessMiscVars(cfg);
 
    // 08/30/03: apply deltas
-   E_ProcessSoundDeltas(cfg);
+   E_ProcessSoundDeltas(cfg, false);
    E_ProcessStateDeltas(cfg); // see e_states.c
    E_ProcessThingDeltas(cfg); // see e_things.c
    
