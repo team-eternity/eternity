@@ -175,8 +175,8 @@ static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
    }
 }
 
-#define CMD_ARG1(field) ((curSeq->cmdPtr + 1)-> ## field )
-#define CMD_ARG2(field) ((curSeq->cmdPtr + 2)-> ## field )
+#define CMD_ARG1(field) ((curSeq->cmdPtr + 1)-> field )
+#define CMD_ARG2(field) ((curSeq->cmdPtr + 2)-> field )
 
 static boolean enviroSeqFinished;
 
@@ -426,7 +426,7 @@ static void S_RunEnviroSequence(void)
       seq.currentSound = NULL;
       seq.origin       = nextEnviroSpot;
       seq.attenuation  = edfSeq->attenuation;
-      seq.volume       = M_RangeRandom(32, 127);
+      seq.volume       = M_RangeRandom(32, 112);
       seq.delayCounter = 0;
 
       EnviroSequence    = &seq;   // now playing an enviro sequence
