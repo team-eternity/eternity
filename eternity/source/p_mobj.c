@@ -2919,8 +2919,6 @@ static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
 {
    unsigned short tid;
-   static unsigned short lasttid = 0;
-   mobj_t *mo = NULL;
    
    if(gamestate != GS_LEVEL)
    {
@@ -2928,13 +2926,9 @@ static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
       return -1;
    }
 
-   ++lasttid; // keep track of lasttid so we search in circles
-   if(lasttid == 0) // skip zero
-      lasttid = 1;
-   
-   for(tid = lasttid; tid <= 65535; tid++)
+   for(tid = 1; tid <= 65535; tid++)
    {
-      if(P_FindMobjFromTID(tid, mo, NULL) == 0)
+      if(P_FindMobjFromTID(tid, NULL, NULL) == NULL)
          return tid;
    }
       
@@ -2955,6 +2949,7 @@ AMX_NATIVE_INFO mobj_Natives[] =
    { "_ThingThrust3f",     sm_thingthrust3f },
    { "_ThingThrust",       sm_thingthrust },
    { "_ThingGetPos",       sm_thinggetpos },
+   { "_GetFreeTID",        sm_getfreetid },
    { NULL,                 NULL }
 };
 

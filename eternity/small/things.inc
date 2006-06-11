@@ -149,7 +149,7 @@ enum _thing_pos
    _POS_MOMY,
    _POS_MOMZ,
    _POS_FLOORZ,
-   _POS_CEILINGZ,
+   _POS_CEILINGZ
 }
 
 // Gets one of a thing's positional information fields in fixed-point format
