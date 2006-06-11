@@ -42,7 +42,9 @@ extern unsigned long maxdrawsegs;
 extern drawseg_t *ds_p;
 
 #ifdef R_PORTALS
-boolean R_SetupPortalClipsegs(short *top, short *bottom);
+//boolean R_SetupPortalClipsegs(short *top, short *bottom);
+// haleyjd DEBUG
+boolean R_SetupPortalClipsegs(int *top, int *bottom);
 #endif
 void R_ClearClipSegs(void);
 void R_ClearDrawSegs(void);

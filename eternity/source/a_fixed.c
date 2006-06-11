@@ -54,13 +54,39 @@ static cell AMX_NATIVE_CALL sm_fabs(AMX *amx, cell *params)
    return D_abs(params[1]);
 }
 
+//
+// sm_fsin
+//
+// Sine function for Small's fixed_t angles.
+//
+static cell AMX_NATIVE_CALL sm_fsin(AMX *amx, cell *params)
+{
+   angle_t a = FixedToAngle((fixed_t)params[1]);
+
+   return finesine[a >> ANGLETOFINESHIFT];
+}
+
+//
+// sm_fcos
+//
+// Cosine function for Small's fixed_t angles.
+//
+static cell AMX_NATIVE_CALL sm_fcos(AMX *amx, cell *params)
+{
+   angle_t a = FixedToAngle((fixed_t)params[1]);
+
+   return finecosine[a >> ANGLETOFINESHIFT];
+}
+
 AMX_NATIVE_INFO fixed_Natives[] =
 {
-   { "_ffloat", sm_floattofixed },
-   { "_fmul",   sm_fmul },
-   { "_fdiv",   sm_fdiv },
-   { "_fabs",   sm_fabs },
-   { NULL,           NULL }
+   { "_ffloat",         sm_floattofixed },
+   { "_fmul",           sm_fmul },
+   { "_fdiv",           sm_fdiv },
+   { "_fabs",           sm_fabs },
+   { "_fsin",           sm_fsin },
+   { "_fcos",           sm_fcos },
+   { NULL,              NULL }
 };
 
 // EOF

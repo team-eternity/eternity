@@ -31,13 +31,19 @@
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
-extern short negonearray[MAX_SCREENWIDTH];         // killough 2/8/98:
-extern short screenheightarray[MAX_SCREENWIDTH];   // change to MAX_*
+// haleyjd DEBUG
+//extern short negonearray[MAX_SCREENWIDTH];         // killough 2/8/98:
+//extern short screenheightarray[MAX_SCREENWIDTH];   // change to MAX_*
+
+extern int negonearray[MAX_SCREENWIDTH];
+extern int screenheightarray[MAX_SCREENWIDTH];
 
 // Vars for R_DrawMaskedColumn
 
-extern short   *mfloorclip;
-extern short   *mceilingclip;
+// haleyjd DEBUG
+//extern short   *mfloorclip;
+//extern short   *mceilingclip;
+extern int *mfloorclip, *mceilingclip;
 extern fixed_t spryscale;
 extern fixed_t sprtopscreen;
 extern fixed_t pspritescale;
@@ -52,15 +58,22 @@ typedef struct maskedstack_s
    int firstds, lastds;
    int firstsprite, lastsprite;
 
+   /*
    short floorclip[MAX_SCREENWIDTH];
    short ceilingclip[MAX_SCREENWIDTH];
+   */
+   // haleyjd: DEBUG
+   int floorclip[MAX_SCREENWIDTH];
+   int ceilingclip[MAX_SCREENWIDTH];
 } maskedstack_t;
 
 void R_SortVisSpriteRange (int first, int last);
 void R_DrawSpriteInDSRange (vissprite_t* spr, int firstds, int lastds);
 void R_PushMasked();
 void R_PopMasked();
-void R_SetMaskedSilhouette(short *top, short *bottom);
+//void R_SetMaskedSilhouette(short *top, short *bottom);
+// haleyjd: DEBUG
+void R_SetMaskedSilhouette(int *top, int *bottom);
 #endif
 
 void R_DrawMaskedColumn(column_t *column);

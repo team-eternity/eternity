@@ -1600,13 +1600,14 @@ default_t *M_LookupDefault(const char *name)
 //
 // M_SaveDefaults
 //
-
 void M_SaveDefaults (void)
 {
    char tmpfile[PATH_MAX+1];
    register default_t *dp;
    unsigned int line, blanks;
    FILE *f;
+
+   memset(tmpfile, 0, sizeof(tmpfile));
 
    // killough 10/98: for when exiting early
    if(!defaults_loaded || !defaultfile)

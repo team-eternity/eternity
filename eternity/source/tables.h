@@ -73,7 +73,9 @@ extern const fixed_t finetangent[FINEANGLES/2];
 #define SLOPEBITS    11
 #define DBITS      (FRACBITS-SLOPEBITS)
 
-typedef unsigned angle_t;
+// PORTABILITY WARNING: angle_t depends on 32-bit math overflow
+
+typedef unsigned long angle_t;
 
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y without additional checking.
@@ -82,6 +84,24 @@ extern const angle_t tantoangle[SLOPERANGE+1];
 
 // Utility function, called by R_PointToAngle.
 int SlopeDiv(unsigned num, unsigned den);
+
+//
+// haleyjd 06/07/06:
+//
+// fixed_t <-> angle conversions -- note these assume the fixed_t number is
+// already within the range of 0 to 359. If not, the resulting value begins
+// to lose accuracy, with the inaccuracy increasing with distance from this
+// range.
+//
+d_inline static angle_t FixedToAngle(fixed_t a)
+{
+   return (angle_t)((ULong64)a * ANGLE_1 >> FRACBITS);
+}
+
+d_inline static angle_t AngleToFixed(angle_t a)
+{
+   return (fixed_t)(((ULong64)a << FRACBITS) / ANGLE_1);
+}
 
 #endif
 

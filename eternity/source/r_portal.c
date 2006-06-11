@@ -327,13 +327,18 @@ void R_PortalAdd(rportal_t *portal, int x, int ytop, int ybottom)
    int pbottom = portal->bottom[x];
 
 #ifdef RANGECHECK
-   if((ytop > v_height || ybottom > v_height || ytop < -1 || ybottom < -1) && ytop <= ybottom)
+   if((ytop > v_height || ybottom > v_height || ytop < -1 || ybottom < -1) && 
+      ytop <= ybottom)
    {
-      I_Error("R_PortalAdd portal supplied with bad column data. x:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
+      I_Error("R_PortalAdd portal supplied with bad column data.\n"
+              "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
    }
-   if(pbottom > ptop && (ptop < -1 || pbottom < -1 || ptop > v_height || pbottom > v_height))
+   
+   if(pbottom > ptop && 
+      (ptop < -1 || pbottom < -1 || ptop > v_height || pbottom > v_height))
    {
-      I_Error("R_PortalAdd portal had bad opening data. x:%i, top:%i, bottom:%i\n", x, ptop, pbottom);
+      I_Error("R_PortalAdd portal had bad opening data.\n"
+              "\tx:%i, top:%i, bottom:%i\n", x, ptop, pbottom);
    }
 #endif
 
@@ -439,8 +444,14 @@ static void R_RenderPlanePortal(rportal_t *portal)
    {
       if(portal->top[x] + 1 <= portal->bottom[x])
       {
+         /*
          plane->top[x] = (unsigned short)portal->top[x] + 1;
          plane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
+         */
+         // haleyjd: DEBUG
+         plane->top[x]    = (unsigned int)portal->top[x] + 1;
+         plane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
+
       }
    }
 
@@ -474,6 +485,7 @@ static void R_RenderHorizonPortal(rportal_t *portal)
       if(portal->top[x] + 1 >= portal->bottom[x])
          continue;
 
+      /*
       if(portal->top[x] <= centery && portal->bottom[x] > centery)
       {
          topplane->top[x] = (unsigned short)portal->top[x] + 1;
@@ -490,6 +502,25 @@ static void R_RenderHorizonPortal(rportal_t *portal)
       {
          bottomplane->top[x] = (unsigned short)portal->top[x] + 1;
          bottomplane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
+      }
+      */
+      //haleyjd: DEBUG
+      if(portal->top[x] <= centery && portal->bottom[x] > centery)
+      {
+         topplane->top[x] = (unsigned int)portal->top[x] + 1;
+         topplane->bottom[x] = (unsigned int)centery;
+         bottomplane->top[x] = (unsigned int)centery + 1;
+         bottomplane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
+      }
+      else if(portal->top[x] <= centery)
+      {
+         topplane->top[x] = (unsigned int)portal->top[x] + 1;
+         topplane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
+      }
+      else if(portal->bottom[x] > centery)
+      {
+         bottomplane->top[x] = (unsigned int)portal->top[x] + 1;
+         bottomplane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
       }
    }
 

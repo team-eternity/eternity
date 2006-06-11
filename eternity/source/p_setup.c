@@ -587,6 +587,76 @@ void P_LoadLineDefs(int lump)
    Z_Free(data);
 }
 
+extern void P_ConvertHexenLineSpec(short *special, long *args);
+
+// these flags are shared with Hexen in the normal flags fields
+#define HX_SHAREDFLAGS \
+   (ML_BLOCKING|ML_BLOCKMONSTERS|ML_TWOSIDED|ML_DONTPEGTOP|ML_DONTPEGBOTTOM| \
+    ML_SECRET|ML_SOUNDBLOCK|ML_DONTDRAW|ML_MAPPED)
+
+// line flags belonging only to Hexen
+#define HX_ML_REPEAT_SPECIAL 0x0200
+
+// special activation crap -- definitely the only place this will be used
+#define HX_SPAC_SHIFT 10
+#define HX_SPAC_MASK  0x1c00
+#define HX_GET_SPAC(flags) ((flags & HX_SPAC_MASK) >> HX_SPAC_SHIFT)
+
+#define HX_SPAC_CROSS  0 // when player crosses line
+#define HX_SPAC_USE    1 // when player uses line
+#define HX_SPAC_MCROSS 2 // when monster crosses line
+#define HX_SPAC_IMPACT 3 // when projectile hits line
+#define HX_SPAC_PUSH   4 // when player/monster pushes line
+#define HX_SPAC_PCROSS 5 // when projectile crosses line
+
+//
+// P_ConvertHexenLineFlags
+//
+// Uses the defines above to fiddle with the Hexen map format's line flags
+// and turn them into something meaningful to Eternity. The values get split
+// between line->flags and line->extflags.
+//
+static void P_ConvertHexenLineFlags(line_t *line)
+{
+   // extract Hexen special activation information
+   short spac = HX_GET_SPAC(line->flags);
+
+   // translate into ExtraData extended line flags
+   switch(spac)
+   {
+   case HX_SPAC_CROSS:
+      line->extflags = EX_ML_CROSS | EX_ML_PLAYER;
+      break;
+   case HX_SPAC_USE:
+      line->extflags = EX_ML_USE | EX_ML_PLAYER;
+      break;
+   case HX_SPAC_MCROSS:
+      line->extflags = EX_ML_CROSS | EX_ML_MONSTER;
+      break;
+   case HX_SPAC_IMPACT:
+      line->extflags = EX_ML_IMPACT | EX_ML_MISSILE;
+      break;
+   case HX_SPAC_PUSH:
+      line->extflags = EX_ML_PUSH | EX_ML_PLAYER | EX_ML_MONSTER;
+      break;
+   case HX_SPAC_PCROSS:
+      line->extflags = EX_ML_CROSS | EX_ML_MISSILE;
+      break;
+   }
+
+   // check for repeat flag
+   if(line->flags & HX_ML_REPEAT_SPECIAL)
+      line->extflags |= EX_ML_REPEAT;
+
+   // FIXME/TODO: set 1SONLY line flag here, or elsewhere? Depends on special...
+
+   // clear line flags to those that are shared with DOOM
+   line->flags &= HX_SHAREDFLAGS;
+
+   // FIXME/TODO: how to support Eternity's extended normal flags in Hexen?
+   // We want Hexen to be able to use stuff like 3DMidTex also.
+}
+
 //
 // P_LoadHexenLineDefs
 //
@@ -612,11 +682,16 @@ void P_LoadHexenLineDefs(int lump)
       ld->flags = SHORT(mld->flags);
 
       ld->special = mld->special;
-
-      // FIXME/TODO: Hexen line special translation
       
       for(argnum = 0; argnum < 5; ++argnum)
          ld->args[argnum] = mld->args[argnum];
+
+      // Do Hexen special translation, unconditionally
+      // TODO: support more than one mode (ie, strict Hexen, non-strict, etc)
+      P_ConvertHexenLineSpec(&(ld->special), ld->args);
+
+      // Convert line flags after setting special?
+      P_ConvertHexenLineFlags(ld);
 
       ld->tag = 0;
 
@@ -1495,7 +1570,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    iquehead = iquetail = 0;
    
    // haleyjd 10/05/05: convert heretic specials
-   if(LevelInfo.levelType == LI_TYPE_HERETIC)
+   if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
       P_ConvertHereticSpecials();
    
    // set up world state

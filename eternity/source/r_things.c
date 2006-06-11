@@ -61,20 +61,33 @@ typedef struct {
 
 #ifdef R_PORTALS
 // top and bottom of portal silhouette
-static short portaltop[MAX_SCREENWIDTH];
-static short portalbottom[MAX_SCREENWIDTH];
+//static short portaltop[MAX_SCREENWIDTH];
+//static short portalbottom[MAX_SCREENWIDTH];
+// haleyjd: DEBUG
+static int portaltop[MAX_SCREENWIDTH];
+static int portalbottom[MAX_SCREENWIDTH];
 
-static short *ptop, *pbottom;
+// haleyjd DEBUG
+//static short *ptop, *pbottom;
+static int *ptop, *pbottom;
 
 //
 // R_SetMaskedSilhouette
 //
-void R_SetMaskedSilhouette(short *top, short *bottom)
+
+// haleyjd: DEBUG
+//void R_SetMaskedSilhouette(short *top, short *bottom)
+void R_SetMaskedSilhouette(int *top, int *bottom)
 {
    if(!top || !bottom)
    {
-      register short *topp = portaltop, *bottomp = portalbottom, *stopp = portaltop + MAX_SCREENWIDTH;
-      register short *tp = top, *bp = bottom;
+      // haleyjd: DEBUG
+      //register short *topp = portaltop, *bottomp = portalbottom, *stopp = portaltop + MAX_SCREENWIDTH;
+      //register short *tp = top, *bp = bottom;
+      register int *topp = portaltop, *bottomp = portalbottom, 
+                   *stopp = portaltop + MAX_SCREENWIDTH;
+      register int *tp = top, *bp = bottom;
+
 
       while(topp < stopp)
       {
@@ -84,8 +97,11 @@ void R_SetMaskedSilhouette(short *top, short *bottom)
    }
    else
    {
-      memcpy(portaltop, top, sizeof(short) * MAX_SCREENWIDTH);
-      memcpy(portalbottom, bottom, sizeof(short) * MAX_SCREENWIDTH);
+      // haleyjd: DEBUG
+      //memcpy(portaltop, top, sizeof(short) * MAX_SCREENWIDTH);
+      //memcpy(portalbottom, bottom, sizeof(short) * MAX_SCREENWIDTH);
+      memcpy(portaltop, top, sizeof(int) * MAX_SCREENWIDTH);
+      memcpy(portalbottom, bottom, sizeof(int) * MAX_SCREENWIDTH);
    }
 }
 #endif
@@ -100,7 +116,9 @@ void R_SetMaskedSilhouette(short *top, short *bottom)
 
 extern int global_cmap_index; // haleyjd: NGCS
 
-short pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
+// haleyjd :DEBUG
+//short pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
+int pscreenheightarray[MAX_SCREENWIDTH];
 
 fixed_t pspritescale;
 fixed_t pspriteiscale;
@@ -112,8 +130,11 @@ static lighttable_t **spritelights;        // killough 1/25/98 made static
 // constant arrays
 //  used for psprite clipping and initializing clipping
 
-short negonearray[MAX_SCREENWIDTH];        // killough 2/8/98:
-short screenheightarray[MAX_SCREENWIDTH];  // change to MAX_*
+// haleyjd DEBUG
+//short negonearray[MAX_SCREENWIDTH];        // killough 2/8/98:
+//short screenheightarray[MAX_SCREENWIDTH];  // change to MAX_*
+int negonearray[MAX_SCREENWIDTH];
+int screenheightarray[MAX_SCREENWIDTH];
 int lefthanded=0;
 
 //
@@ -383,24 +404,14 @@ void R_PushMasked(void)
       mstack[stacksize].firstsprite = mstack[stacksize-1].lastsprite;
    }
 
-   // SoM: project the particles to be included with the sprites
-   /*
-   if(drawparticles)
-   {
-      int i = activeParticles;
-      while(i != -1)
-      {
-         R_ProjectParticle(Particles + i);
-         i = Particles[i].next;
-      }
-   }
-   */
-
    mstack[stacksize].lastds = ds_p - drawsegs;
    mstack[stacksize].lastsprite = num_vissprite;
 
-   memcpy(mstack[stacksize].ceilingclip, portaltop, MAX_SCREENWIDTH * sizeof(short));
-   memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(short));
+   // haleyjd: DEBUG
+   //memcpy(mstack[stacksize].ceilingclip, portaltop, MAX_SCREENWIDTH * sizeof(short));
+   //memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(short));
+   memcpy(mstack[stacksize].ceilingclip, portaltop, MAX_SCREENWIDTH * sizeof(int));
+   memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(int));
    stacksize ++;
 }
 #endif
@@ -427,8 +438,12 @@ vissprite_t *R_NewVisSprite(void)
 //  in posts/runs of opaque pixels.
 //
 
+/*
 short   *mfloorclip;
 short   *mceilingclip;
+*/
+// haleyjd DEBUG
+int *mfloorclip, *mceilingclip;
 fixed_t spryscale;
 fixed_t sprtopscreen;
 
@@ -482,7 +497,9 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    fixed_t  frac;
    patch_t  *patch;
    boolean  footclipon = false;
-   short    baseclip = 0;
+   //short    baseclip = 0;
+   // haleyjd DEBUG
+   int baseclip = 0;
    
    if(vis->patch == -1)
    {
@@ -596,7 +613,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    }
    else
    {
-      for(dc_x=vis->x1 ; dc_x<=vis->x2 ; dc_x++, frac += vis->xiscale)
+      for(dc_x = vis->x1; dc_x <= vis->x2; dc_x++, frac += vis->xiscale)
       {
          texturecolumn = frac>>FRACBITS;
          
@@ -618,7 +635,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 // Generates a vissprite for a thing if it might be visible.
 //
-void R_ProjectSprite (mobj_t* thing)
+void R_ProjectSprite(mobj_t* thing)
 {
    fixed_t   tr_x, tr_y;
    fixed_t   gxt, gyt;
@@ -1021,45 +1038,43 @@ void R_DrawPSprite(pspdef_t *psp)
 //
 void R_DrawPlayerSprites(void)
 {
-  int i, lightnum;
-  pspdef_t *psp;
-  sector_t tmpsec;
-  int floorlightlevel, ceilinglightlevel;
+   int i, lightnum;
+   pspdef_t *psp;
+   sector_t tmpsec;
+   int floorlightlevel, ceilinglightlevel;
+   
+   // sf: psprite switch
+   if(!showpsprites || viewcamera) return;
+   
+   R_SectorColormap(viewplayer->mo->subsector->sector);
 
-        // sf: psprite switch
-  if(!showpsprites || viewcamera) return;
+   // get light level
+   // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
+   // (see r_bsp.c for similar calculations for non-player sprites)
 
-  R_SectorColormap(viewplayer->mo->subsector->sector);
+   R_FakeFlat(viewplayer->mo->subsector->sector, &tmpsec,
+              &floorlightlevel, &ceilinglightlevel, 0);
+   lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1)) 
+                 + extralight;
 
-  // get light level
-  // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
-  // (see r_bsp.c for similar calculations for non-player sprites)
+   if(lightnum < 0)
+      spritelights = scalelight[0];
+   else if(lightnum >= LIGHTLEVELS)
+      spritelights = scalelight[LIGHTLEVELS-1];
+   else
+      spritelights = scalelight[lightnum];
 
-  R_FakeFlat(viewplayer->mo->subsector->sector, &tmpsec,
-             &floorlightlevel, &ceilinglightlevel, 0);
-  lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1))
-    + extralight;
+   for(i = 0; i < viewwidth; ++i)
+      pscreenheightarray[i] = viewheight;
+   
+   // clip to screen bounds
+   mfloorclip = pscreenheightarray;
+   mceilingclip = negonearray;
 
-  if (lightnum < 0)
-    spritelights = scalelight[0];
-  else if (lightnum >= LIGHTLEVELS)
-    spritelights = scalelight[LIGHTLEVELS-1];
-  else
-    spritelights = scalelight[lightnum];
-
-  for(i=0;i<viewwidth;i++)
-  {
-    pscreenheightarray[i] = viewheight;
-  }
-
-  // clip to screen bounds
-  mfloorclip = pscreenheightarray;
-  mceilingclip = negonearray;
-
-  // add all active psprites
-  for (i=0, psp=viewplayer->psprites; i<NUMPSPRITES; i++,psp++)
-    if (psp->state)
-      R_DrawPSprite (psp);
+   // add all active psprites
+   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+      if(psp->state)
+         R_DrawPSprite(psp);
 }
 
 //
@@ -1199,11 +1214,14 @@ void R_SortVisSpriteRange(int first, int last)
 //
 // R_DrawSprite
 //
-void R_DrawSprite (vissprite_t* spr)
+void R_DrawSprite(vissprite_t *spr)
 {
    drawseg_t *ds;
-   short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
-   short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+   // haleyjd: DEBUG
+   //short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
+   //short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+   int clipbot[MAX_SCREENWIDTH];
+   int cliptop[MAX_SCREENWIDTH];
    int     x;
    int     r1;
    int     r2;
@@ -1244,7 +1262,7 @@ void R_DrawSprite (vissprite_t* spr)
       }
 
       if(scale < spr->scale || (lowscale < spr->scale &&
-         !R_PointOnSegSide (spr->gx, spr->gy, ds->curline)))
+         !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
       {
          if(ds->maskedtexturecol) // masked mid texture?
             R_RenderMaskedSegRange(ds, r1, r2);
@@ -1333,7 +1351,7 @@ void R_DrawSprite (vissprite_t* spr)
 
    mfloorclip = clipbot;
    mceilingclip = cliptop;
-   R_DrawVisSprite (spr, spr->x1, spr->x2);
+   R_DrawVisSprite(spr, spr->x1, spr->x2);
 }
 
 
@@ -1346,8 +1364,11 @@ void R_DrawSprite (vissprite_t* spr)
 void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 {
    drawseg_t *ds;
-   short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
-   short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+   // haleyjd DEBUG
+   //short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
+   //short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+   int     clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
+   int     cliptop[MAX_SCREENWIDTH];       // change to MAX_*
    int     x;
    int     r1;
    int     r2;
@@ -1517,42 +1538,42 @@ void R_DrawMasked(void)
 #else
 void R_DrawMasked(void)
 {
-  int i;
-  drawseg_t *ds;
+   int i;
+   drawseg_t *ds;
+   
+   if(drawparticles)
+   {
+      int i = activeParticles;
+      while(i != -1)
+      {
+         R_ProjectParticle(Particles + i);
+         i = Particles[i].next;
+      }
+   }
 
-  if(drawparticles)
-  {
-     int i = activeParticles;
-     while(i != -1)
-     {
-	R_ProjectParticle(Particles + i);
-	i = Particles[i].next;
-     }
-  }
+   R_SortVisSprites();
+   
+   // draw all vissprites back to front
+   
+   for(i = num_vissprite; --i >= 0; )
+      R_DrawSprite(vissprite_ptrs[i]);         // killough
+   
+   // render any remaining masked mid textures
 
-  R_SortVisSprites();
-
-  // draw all vissprites back to front
-
-  for(i = num_vissprite; --i >= 0; )
-    R_DrawSprite(vissprite_ptrs[i]);         // killough
-
-  // render any remaining masked mid textures
-
-  // Modified by Lee Killough:
-  // (pointer check was originally nonportable
-  // and buggy, by going past LEFT end of array):
-
-  //    for (ds=ds_p-1 ; ds >= drawsegs ; ds--)    old buggy code
-
-  for(ds=ds_p ; ds-- > drawsegs ; )  // new -- killough
-    if(ds->maskedtexturecol)
-      R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
-
-  // draw the psprites on top of everything
-  //  but does not draw on side views
-  if(!viewangleoffset)
-    R_DrawPlayerSprites();
+   // Modified by Lee Killough:
+   // (pointer check was originally nonportable
+   // and buggy, by going past LEFT end of array):
+   
+   //    for (ds=ds_p-1 ; ds >= drawsegs ; ds--)    old buggy code
+   
+   for(ds=ds_p ; ds-- > drawsegs ; )  // new -- killough
+      if(ds->maskedtexturecol)
+         R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
+      
+   // draw the psprites on top of everything
+   //  but does not draw on side views
+   if(!viewangleoffset)
+      R_DrawPlayerSprites();
 }
 
 #endif

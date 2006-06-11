@@ -262,7 +262,6 @@ static void R_GenerateComposite(int texnum)
 //
 // Rewritten by Lee Killough for performance and to fix Medusa bug
 //
-
 static void R_GenerateLookup(int texnum, int *const errors)
 {
   const texture_t *texture = textures[texnum];
@@ -975,10 +974,12 @@ int R_CheckTextureNumForName(const char *name)
 
 //
 // R_TextureNumForName
-// Calls R_CheckTextureNumForName,
-//  aborts with error message.
 //
-
+// Calls R_CheckTextureNumForName,
+//
+// haleyjd 06/08/06: no longer aborts and causes HOMs instead.
+// The user can look at the console to see missing texture errors.
+//
 int R_TextureNumForName(const char *name)  // const added -- killough
 {
    int i = R_CheckTextureNumForName(name);
@@ -987,12 +988,10 @@ int R_TextureNumForName(const char *name)  // const added -- killough
    {
       i = R_Doom1Texture(name);   // try doom I textures
       
-      if (i == -1)
+      if(i == -1)
       {
-         C_Printf(FC_ERROR"R_TextureNumForName: %.8s not found\n", 
-            name);
-         level_error = true;
-         return -1;
+         C_Printf(FC_ERROR "texture %.8s not found\n", name);
+         return 0; // haleyjd: zero means no texture
       }
    }
 

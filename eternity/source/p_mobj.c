@@ -2245,6 +2245,8 @@ void P_RemoveThingTID(mobj_t *mo)
 // The last parameter only applies when this is called from a
 // Small native function, and can be left null otherwise.
 //
+// haleyjd 06/10/06: eliminated infinite loop for TID_TRIGGER
+//
 mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, SmallContext_t *context)
 {
    switch(tid)
@@ -2264,7 +2266,7 @@ mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, SmallContext_t *context)
       }
    
    case -10: // script trigger object (may be NULL, which is fine)
-      return context ? context->invocationData.trigger : NULL;
+      return !rover && context ? context->invocationData.trigger : NULL;
    
    // Normal TIDs
    default:
@@ -2494,9 +2496,9 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
       return 0;
    }
 
-   if(ang >= 360)
+   while(ang >= 360)
       ang = ang - 360;
-   else if(ang < 0)
+   while(ang < 0)
       ang = ang + 360;
 
    angle = (angle_t)(((ULong64)ang << 32) / 360);
@@ -2786,6 +2788,159 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    return 0;
 }
 
+//
+// sm_thingthrust3f    -- joek 7/6/06
+// * Implements _ThingThrust3f(tid, x, y, z)
+//
+// haleyjd: changed to be "3f" version and to use fixed_t params.
+//
+static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
+{
+   int tid;
+   fixed_t x, y, z;
+   mobj_t *mo = NULL;
+   SmallContext_t *context = A_GetContextForAMX(amx);
+   
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+   
+   tid = params[1];
+   x   = (fixed_t)params[2];
+   y   = (fixed_t)params[3];
+   z   = (fixed_t)params[4];
+   
+   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   {
+      mo->momx += x;
+      mo->momy += y;
+      mo->momz += z;
+   }
+   
+   return 0;
+}
+
+//
+// sm_thingthrust
+//
+// haleyjd 06/08/06:
+// * Implements _ThingThrust(angle, force, tid)
+//
+static cell AMX_NATIVE_CALL sm_thingthrust(AMX *amx, cell *params)
+{
+   mobj_t  *mo   = NULL;
+   angle_t angle = FixedToAngle((fixed_t)params[1]);
+   fixed_t force = (fixed_t)params[2];
+   int     tid   = params[3];
+   SmallContext_t *context = A_GetContextForAMX(amx);
+
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+
+   while((mo = P_FindMobjFromTID(tid, mo, context)))
+      P_ThrustMobj(mo, angle, force);
+
+   return 0;
+}
+
+// thing position enum values
+enum
+{
+   TPOS_X,
+   TPOS_Y,
+   TPOS_Z,
+   TPOS_ANGLE,
+   TPOS_MOMX,
+   TPOS_MOMY,
+   TPOS_MOMZ,
+   TPOS_FLOORZ,
+   TPOS_CEILINGZ,
+};
+
+//
+//  sm_thinggetpos() -- joek 7/6/06
+//  * Implements _ThingGetPos(tid, valuetoget)
+//
+static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
+{
+   int tid, valuetoget;
+   mobj_t *mo = NULL;
+   SmallContext_t *context = A_GetContextForAMX(amx);
+   
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+   
+   tid = params[1];
+   valuetoget = params[2];
+   
+   if((mo = P_FindMobjFromTID(tid, mo, context)))
+   {
+      switch(valuetoget) 
+      {
+      case TPOS_X:
+         return (cell)mo->x;
+      case TPOS_Y:
+         return (cell)mo->y;
+      case TPOS_Z:
+         return (cell)mo->z;
+      case TPOS_ANGLE:
+         return (cell)AngleToFixed(mo->angle);
+      case TPOS_MOMX:
+         return (cell)mo->momx;
+      case TPOS_MOMY:
+         return (cell)mo->momy;
+      case TPOS_MOMZ:
+         return (cell)mo->momz;
+      case TPOS_FLOORZ:
+         return (cell)mo->floorz;
+      case TPOS_CEILINGZ:
+         return (cell)mo->ceilingz;
+      default:
+         return 0;
+      }
+   }
+   
+   return 0;
+}
+
+//
+//  sm_getfreetid()	-- joek 7/6/06
+//  * Implements _GetFreeTID()
+//  - Returns a free TID 
+//
+static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
+{
+   unsigned short tid;
+   static unsigned short lasttid = 0;
+   mobj_t *mo = NULL;
+   
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+
+   ++lasttid; // keep track of lasttid so we search in circles
+   if(lasttid == 0) // skip zero
+      lasttid = 1;
+   
+   for(tid = lasttid; tid <= 65535; tid++)
+   {
+      if(P_FindMobjFromTID(tid, mo, NULL) == 0)
+         return tid;
+   }
+      
+   return 0;
+}
+
 AMX_NATIVE_INFO mobj_Natives[] =
 {
    { "_ThingSpawn",        sm_thingspawn },
@@ -2797,7 +2952,10 @@ AMX_NATIVE_INFO mobj_Natives[] =
    { "_ThingGetProperty",  sm_thinggetproperty },
    { "_ThingSetProperty",  sm_thingsetproperty },
    { "_ThingFlagsFromStr", sm_thingflagsstr },
-   { NULL,                NULL }
+   { "_ThingThrust3f",     sm_thingthrust3f },
+   { "_ThingThrust",       sm_thingthrust },
+   { "_ThingGetPos",       sm_thinggetpos },
+   { NULL,                 NULL }
 };
 
 //----------------------------------------------------------------------------

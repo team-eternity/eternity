@@ -273,7 +273,6 @@ void I_Quit (void)
 //
 // I_Error
 //
-
 void I_Error(const char *error, ...) // killough 3/20/98: add const
 {
    if(!*errmsg)   // ignore all but the first message -- killough

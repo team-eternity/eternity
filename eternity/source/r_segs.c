@@ -87,7 +87,11 @@ static fixed_t  topfrac;
 static fixed_t  topstep;
 static fixed_t  bottomfrac;
 static fixed_t  bottomstep;
-static short    *maskedtexturecol;
+
+
+// haleyjd: DEBUG
+//static short    *maskedtexturecol;
+static int *maskedtexturecol;
 
 //
 // R_RenderMaskedSegRange
@@ -197,7 +201,9 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // draw the columns
    for(dc_x = x1; dc_x <= x2; ++dc_x, spryscale += rw_scalestep)
    {
-      if (maskedtexturecol[dc_x] != D_MAXSHORT)
+      // haleyjd:DEBUG
+      //if(maskedtexturecol[dc_x] != D_MAXSHORT)
+      if(maskedtexturecol[dc_x] != D_MAXINT)
       {
          if(!fixedcolormap)      // calculate lighting
          {                             // killough 11/98:
@@ -243,7 +249,10 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          col = (column_t *)((byte *)
                             R_GetColumn(texnum,maskedtexturecol[dc_x]) - 3);
          R_DrawMaskedColumn(col);
-         maskedtexturecol[dc_x] = D_MAXSHORT;
+         
+         // haleyjd: DEBUG
+         //maskedtexturecol[dc_x] = D_MAXSHORT;
+         maskedtexturecol[dc_x] = D_MAXINT;
       }
    }
 
@@ -269,10 +278,10 @@ static void R_RenderSegLoop(void)
    for(; rw_x < rw_stopx; ++rw_x)
    {
       // mark floor / ceiling areas
-      int yh, yl = (topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS;
+      int yh = 0, yl = (topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS;
       
       // no space above wall?
-      int bottom, top = ceilingclip[rw_x] + 1;
+      int bottom = 0, top = ceilingclip[rw_x] + 1;
       
       if(yl < top)
          yl = top;
@@ -281,7 +290,7 @@ static void R_RenderSegLoop(void)
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
       if((markceiling || c_portalignore) && frontsector->c_portal)
       {
-         bottom = yl-1;
+         bottom = yl - 1;
          
          if(bottom >= floorclip[rw_x])
             bottom = floorclip[rw_x]-1;
@@ -293,7 +302,7 @@ static void R_RenderSegLoop(void)
 #endif
       if(markceiling)
       {
-         bottom = yl-1;
+         bottom = yl - 1;
          
          if(bottom >= floorclip[rw_x])
             bottom = floorclip[rw_x] - 1;
@@ -315,7 +324,7 @@ static void R_RenderSegLoop(void)
       // SoM 3/10/2005: Only add to the portal of the floor is marked
       if((markfloor || f_portalignore)  && frontsector->f_portal)
       {
-         top  = yh < ceilingclip[rw_x] ? ceilingclip[rw_x] : yh;
+         top = yh < ceilingclip[rw_x] ? ceilingclip[rw_x] : yh;
          if(++top <= bottom)
             R_PortalAdd(frontsector->f_portal, rw_x, top - 1, bottom + 1);
       }
@@ -323,7 +332,7 @@ static void R_RenderSegLoop(void)
 #endif
       if(markfloor)
       {
-         top  = yh < ceilingclip[rw_x] ? ceilingclip[rw_x] : yh;
+         top = yh < ceilingclip[rw_x] ? ceilingclip[rw_x] : yh;
          if(++top <= bottom)
          {
             floorplane->top[rw_x] = top;
@@ -418,7 +427,9 @@ static void R_RenderSegLoop(void)
                   dc_texturemid = rw_bottomtexturemid;
                   dc_source = R_GetColumn(bottomtexture, texturecolumn);
                   dc_texheight = textureheight[bottomtexture] >> FRACBITS; // killough
+
                   colfunc();
+
                   floorclip[rw_x] = mid;
                }
                else
@@ -742,7 +753,7 @@ void R_StoreWallRange(const int start, const int stop)
                backsector->ceilingheight+textureheight[sidedef->toptexture]-viewz;
       }
 
-      if (worldlow > worldbottom) // bottom texture
+      if(worldlow > worldbottom) // bottom texture
       {
          bottomtexture = texturetranslation[sidedef->bottomtexture];
          rw_bottomtexturemid = 
@@ -777,7 +788,7 @@ void R_StoreWallRange(const int start, const int stop)
    }
    
    // calculate rw_offset (only needed for textured lines)
-   segtextured = midtexture | toptexture | bottomtexture | maskedtexture;
+   segtextured = midtexture || toptexture || bottomtexture || maskedtexture;
 
    if(segtextured)
    {
@@ -888,13 +899,17 @@ void R_StoreWallRange(const int start, const int stop)
    // save sprite clipping info
    if((ds_p->silhouette & SIL_TOP || maskedtexture) && !ds_p->sprtopclip)
    {
-      memcpy(lastopening, ceilingclip + start, 2 * (rw_stopx - start));
+      // haleyjd: DEBUG -- HORRIBLE. Hard coded data type sizes. What next?
+      //memcpy(lastopening, ceilingclip + start, 2 * (rw_stopx - start));
+      memcpy(lastopening, ceilingclip + start, sizeof(int) * (rw_stopx - start));
       ds_p->sprtopclip = lastopening - start;
       lastopening += rw_stopx - start;
    }
    if((ds_p->silhouette & SIL_BOTTOM || maskedtexture) && !ds_p->sprbottomclip)
    {
-      memcpy(lastopening, floorclip + start, 2 * (rw_stopx - start));
+      // haleyjd DEBUG
+      //memcpy(lastopening, floorclip + start, 2 * (rw_stopx - start));
+      memcpy(lastopening, floorclip + start, sizeof(int) * (rw_stopx - start));
       ds_p->sprbottomclip = lastopening - start;
       lastopening += rw_stopx - start;
    }

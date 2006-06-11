@@ -2075,16 +2075,10 @@ void A_MissileAttack(mobj_t *actor)
    }
 
    // adjust angle -> BAM (must adjust negative angles too)
-   if(a >= 360)
-   {
-      while(a >= 360)
-         a -= 360;
-   }
-   else if(a < 0)
-   {
-      while(a < 0)
-         a += 360;
-   }
+   while(a >= 360)
+      a -= 360;
+   while(a < 0)
+      a += 360;
 
    ang = (angle_t)(((ULong64)a << 32) / 360);
 
@@ -2153,16 +2147,10 @@ void A_MissileSpread(mobj_t *actor)
    }
 
    // adjust angle -> BAM (must adjust negative angles too)
-   if(a >= 360)
-   {
-      while(a >= 360)
-         a -= 360;
-   }
-   else if(a < 0)
-   {
-      while(a < 0)
-         a += 360;
-   }
+   while(a >= 360)
+      a -= 360;
+   while(a < 0)
+      a += 360;
 
    angsweep = (angle_t)(((ULong64)a << 32) / 360);
 

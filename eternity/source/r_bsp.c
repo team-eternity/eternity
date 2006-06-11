@@ -229,7 +229,9 @@ void R_ClearClipSegs(void)
 }
 
 #ifdef R_PORTALS
-boolean R_SetupPortalClipsegs(short *top, short *bottom)
+// haleyjd: DEBUG
+//boolean R_SetupPortalClipsegs(short *top, short *bottom)
+boolean R_SetupPortalClipsegs(int *top, int *bottom)
 {
    int i = 0;
    cliprange_t *seg;

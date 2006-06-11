@@ -973,7 +973,7 @@ static byte *R_GetBufferFuzz(void)
 
 //#ifndef USEASM     // killough 2/15/98
 
-void R_DrawColumn (void) 
+void R_DrawColumn(void) 
 { 
    int              count; 
    register byte    *dest;            // killough
@@ -982,13 +982,14 @@ void R_DrawColumn (void)
 
    count = dc_yh - dc_yl + 1; 
 
-   if (count <= 0)    // Zero length, column does not exceed a pixel.
+   if(count <= 0)    // Zero length, column does not exceed a pixel.
       return;
 
 #ifdef RANGECHECK 
-   if ((unsigned)dc_x >= MAX_SCREENWIDTH
+   if(dc_x < 0 
+      || dc_x >= v_width
       || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT) 
+      || dc_yh >= v_height) 
       I_Error ("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
 #endif 
 

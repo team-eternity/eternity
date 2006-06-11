@@ -238,7 +238,7 @@ void P_MovePlayer (player_t* player)
 // Decrease POV height to floor height.
 //
 
-void P_DeathThink (player_t* player)
+void P_DeathThink(player_t* player)
 {
   angle_t angle;
   angle_t delta;
@@ -320,7 +320,7 @@ static void P_HereticCurrent(player_t *player)
 //
 // P_PlayerThink
 //
-void P_PlayerThink (player_t* player)
+void P_PlayerThink(player_t* player)
 {
    ticcmd_t*    cmd;
    weapontype_t newweapon;

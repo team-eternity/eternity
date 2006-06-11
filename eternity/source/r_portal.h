@@ -78,8 +78,11 @@ typedef struct rportal_s
       skyplaneportal_t plane;
    } data;
 
-   short top[MAX_SCREENWIDTH];
-   short bottom[MAX_SCREENWIDTH];
+   // haleyjd: DEBUG
+   //short top[MAX_SCREENWIDTH];
+   //short bottom[MAX_SCREENWIDTH];
+   int top[MAX_SCREENWIDTH];
+   int bottom[MAX_SCREENWIDTH];
    int minx, maxx;
 
    fixed_t  vx, vy, vz;

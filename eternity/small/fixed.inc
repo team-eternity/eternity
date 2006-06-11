@@ -16,6 +16,8 @@ native Fixed:_ffloat(Float:value);
 native Fixed:_fmul(Fixed:a, Fixed:b);
 native Fixed:_fdiv(Fixed:a, Fixed:b);
 native Fixed:_fabs(Fixed:value);
+native Fixed:_fsin(Fixed:angle);
+native Fixed:_fcos(Fixed:angle);
 
 stock Fixed:fixed(value)
 {
@@ -91,7 +93,7 @@ stock Fixed:operator*(Fixed:a, b)
    return Fixed: (_:a * b);            /* "*" is commutative */
 
 stock Fixed:operator/(Fixed:a, b)
-   return a / fixed(b);
+   return Fixed: (_:a / b);
 
 stock Fixed:operator/(a, Fixed:b)
    return _fdiv(fixed(a), b);
@@ -139,3 +141,4 @@ stock bool:operator!=(Fixed:a, b)       /* "!=" is commutative */
 forward operator%(Fixed:a, Fixed:b);
 forward operator%(Fixed:a, b);
 forward operator%(a, Fixed:b);
+

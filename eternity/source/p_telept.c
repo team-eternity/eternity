@@ -44,7 +44,7 @@ rcsid[] = "$Id: p_telept.c,v 1.13 1998/05/12 06:10:43 killough Exp $";
 // TELEPORTATION
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 int EV_Teleport(line_t *line, int side, mobj_t *thing)
 {
    thinker_t *thinker;

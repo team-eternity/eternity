@@ -8,12 +8,17 @@
 #endif
 #define _things_included
 
+#include <fixed.inc>
+
 // special reserved TID values
 #define _TID_PLAYER1 -1
 #define _TID_PLAYER2 -2
 #define _TID_PLAYER3 -3
 #define _TID_PLAYER4 -4
 #define _TID_TRIGGER -10
+
+// Return an unused TID
+native _GetFreeTID();
 
 // method of death types
 enum _mods
@@ -80,6 +85,12 @@ native _ThingMassacre(_massacres:massacreType);
 // * must be called only while in a level
 native _ThingHate(object, target);
 
+// Thrusts all things with the given TID along a provided angle.
+native _ThingThrust(Fixed:angle, Fixed:force, tid);
+
+// Thrusts all things with the given TID using the independent momenta.
+native _ThingThrust3f(tid, Fixed:x, Fixed:y, Fixed:z);
+
 // Thing type lookup functions:
 
 // Resolves an EDF thingtype mnemonic to a type number. "name" is case-
@@ -127,6 +138,22 @@ native _ThingGetProperty(tid, _thing_fields:field);
 // the TF_TYPE property is read-only and cannot be set via this function.
 // * must be called only while in a level
 native _ThingSetProperty(tid, _thing_fields:field, value);
+
+enum _thing_pos
+{
+   _POS_X,
+   _POS_Y,
+   _POS_Z,
+   _POS_ANGLE,
+   _POS_MOMX,
+   _POS_MOMY,
+   _POS_MOMZ,
+   _POS_FLOORZ,
+   _POS_CEILINGZ,
+}
+
+// Gets one of a thing's positional information fields in fixed-point format
+native Fixed:_ThingGetPos(tid, _thing_pos:field);
 
 // flag operation values
 enum _flagops

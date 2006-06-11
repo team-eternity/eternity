@@ -370,7 +370,9 @@ typedef struct drawseg_s
   // Pointers to lists for sprite clipping,
   // all three adjusted so [x1] is first value.
 
-  short *sprtopclip, *sprbottomclip, *maskedtexturecol;
+  // haleyjd: DEBUG
+  //short *sprtopclip, *sprbottomclip, *maskedtexturecol;
+  int *sprtopclip, *sprbottomclip, *maskedtexturecol;
 #ifdef R_PORTALS
   fixed_t viewx, viewy, viewz;
 #endif
@@ -487,10 +489,18 @@ typedef struct visplane
   unsigned short bottom[MAX_SCREENWIDTH];
   unsigned short pad4;*/
 
+  // haleyjd: debug
+  /*
   unsigned short *pad1;
   unsigned short *top;
   unsigned short *pad2, *pad3;
   unsigned short *bottom, *pad4;
+  */
+  unsigned int *pad1;
+  unsigned int *top;
+  unsigned int *pad2, *pad3;
+  unsigned int *bottom, *pad4;
+
   unsigned int   max_width;
 
 #ifdef R_PORTALS

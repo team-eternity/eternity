@@ -8,6 +8,8 @@
 #endif
 #define _spec_included
 
+#include <fixed.inc>
+
 // floor changer types
 // NOTE: Trigger change types can ONLY be used if special mode is _SPEC_PASS!
 
@@ -135,6 +137,13 @@ stock _ByteAngleToDegrees(byteang)
    
 stock _DegreesToByteAngle(degrees)
    return (degrees * 256) / 360;
+
+   
+stock Fixed:_ByteAngleToFixed(byteang)
+   return Fixed:(byteang * (45 * FRACUNIT / 32));
+   
+stock _FixedToByteAngle(Fixed:angle)
+   return _:(angle * 32 / (45 * FRACUNIT));
 
 // Allows setting the special of a sector.
 // * must be called only while in a level

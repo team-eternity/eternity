@@ -3957,6 +3957,232 @@ void P_ConvertHereticSpecials(void)
 }
 
 //
+// P_ConvertHexenLineSpec
+//
+// Converts data for a Hexen line special in-place.
+//
+// FIXME/TODO: This could probably be tablified and accessed
+// from an array, but not until all the Hexen specials are
+// implemented.
+//
+void P_ConvertHexenLineSpec(short *special, long *args)
+{
+   switch(*special)
+   {
+   case 1:   // poly start line
+      *special = POLYOBJ_START_LINE; // args are same
+      break;
+   case 2:   // poly rotate left
+      *special = 356; // args are same
+      break;
+   case 3:   // poly rotate right
+      *special = 357; // args are same
+      break;
+   case 4:   // poly move
+      *special = 352; // args are same
+      break;
+   case 5:   // poly explicit line
+      *special = POLYOBJ_EXPLICIT_LINE; // args are same
+      break;
+   case 6:   // poly move times 8
+      *special = 352;
+      args[3] *= 8; // multiply distance in args[3] times 8
+      break;
+   case 7:   // poly door swing
+      *special = 351; // args are same
+      break;
+   case 8:   // poly door slide
+      *special = 350; // args are same
+      break;
+   // UNUSED: 9
+   case 10:  // door close
+      *special = 302; // args are same
+      // TODO: if hexen strict mode, clear args[2] (lighttag)
+      break;
+   case 11:  // door open
+      *special = 301; // args are same
+      // TODO: if hexen strict mode, clear args[2] (lighttag)
+      break;
+   case 12:  // door raise
+      *special = 300; // args are same
+      // TODO: if hexen strict mode, clear args[3] (lighttag)
+      break;
+   case 13:  // door locked raise
+      *special = 0; // TODO
+      break;
+   // UNUSED: 14-19
+   case 20:  // floor lower by value
+      *special = 318; // args are same
+      // TODO: hexen strict: clear args[3]
+      break;
+   case 21:  // floor lower to lowest
+      *special = 309; // args are same
+      // TODO: hexen strict: clear args[2]
+      break;
+   case 22:  // floor lower to nearest
+      *special = 311; // args are same
+      // TODO: hexen strict: clear args[2]
+      break;
+   case 23:  // floor raise by value
+      *special = 317; // args are same
+      // TODO: hexen strict: clear args[3], args[4]
+      break;
+   case 24:  // floor raise to highest
+      *special = 306; // args are same
+      // TODO: hexen strict: clear args[2], args[3]
+      break;
+   case 25:  // floor raise to nearest
+      *special = 310; // args are same
+      // TODO: hexen strict: clear args[2], args[3]
+      break;
+   case 26:  // stairs build down normal (Hexen)
+   case 27:  // stairs build up normal (Hexen)
+   case 28:  // floor raise & crush
+   case 29:  // pillar build (no crush)
+   case 30:  // pillar open
+   case 31:  // stairs build down sync (Hexen)
+   case 32:  // stairs build up sync (Hexen)
+      *special = 0; // TODO ^^^^
+      break;
+   // UNUSED: 33, 34
+   case 35:  // floor raise by value x 8
+      *special = 317; // use Floor_RaiseByValue
+      args[2] *= 8;   // multiply distance in args[2] by 8
+      // TODO: hexen strict: clear args[3], args[4]
+      break;
+   case 36:  // floor lower by value x 8
+      *special = 318; // use Floor_LowerByValue
+      args[2] *= 8;   // multiply distance in args[2] by 8
+      // TODO: hexen strict: clear args[3]
+      break;
+   // UNUSED: 37-39
+   case 40:  // ceiling lower by value
+      *special = 336;
+      // TODO: hexen strict: clear args[3], args[4]
+      break;
+   case 41:  // ceiling raise by value
+      *special = 335;
+      // TODO: hexen strict: clear args[3]
+      break;
+   case 42:  // ceiling crush & raise
+   case 43:  // ceiling lower & crush
+   case 44:  // ceiling crush stop
+   case 45:  // ceiling crush, raise, & stay
+   case 46:  // floor crush stop
+      *special = 0; // TODO ^^^^
+      break;
+   // UNUSED: 47-59
+   case 60:  // plat perpetual raise
+   case 61:  // plat stop
+   case 62:  // plat down wait up stay
+   case 63:  // plat down by value x 8 wait up stay
+   case 64:  // plat up wait down stay
+   case 65:  // plat up by value x 8 wait down stay
+      *special = 0; // TODO ^^^^
+      break;
+   case 66:  // floor lower instant x 8
+      *special = 321;
+      {
+         long tmparg = args[1];
+         args[1] = args[2] * 8; // must move args[2] to args[1] and mul. by 8
+         args[2] = tmparg;      // allow change to be specified in unused args[1]
+         // TODO: if hexen strict, zero args[2]
+      }
+      break;
+   case 67:  // floor raise instant x 8
+      *special = 320;
+      {
+         long tmparg = args[1];
+         args[1] = args[2] * 8; // same as above
+         args[2] = tmparg;
+         // TODO: if hexen strict, zero args[2]
+      }
+      break;
+   case 68:  // floor move to value x 8
+      *special = 319;
+      args[2] *= 8; // multiply distance by 8
+      if(args[3])
+         args[2] = -args[2]; // if args[3] == 1, args[2] should be negative
+      args[3] = 0;  // cannot use args[3] value
+      // TODO: if hexen strict, clear args[4]
+      break;
+   case 69:  // ceiling move to value x 8
+      *special = 337;
+      args[2] *= 8; // multiply distance by 8
+      if(args[3])
+         args[2] = -args[2];
+      args[3] = 0;
+      // TODO: if hexen strict, clear args[4]
+      break;
+   case 70:  // teleport
+   case 71:  // teleport no fog
+   case 72:  // thrust mobj
+   case 73:  // damage mobj
+   case 74:  // teleport new map (hubs)
+   case 75:  // teleport end game
+   // UNUSED: 76-79
+   case 80:  // ACS execute
+   case 81:  // ACS suspend
+   case 82:  // ACS terminate
+   case 83:  // ACS locked execute
+      *special = 0; // TODO ^^^^
+      break;
+   // UNUSED: 84-89
+   case 90:  // poly rotate left override
+      *special = 357; // args are same
+      break;
+   case 91:  // poly rotate right override
+      *special = 355; // args are same
+      break;
+   case 92:  // poly move override
+      *special = 353; // args are same
+      break;
+   case 93:  // poly move x 8 override
+      *special = 353; // use Polyobj_OR_Move
+      args[3] *= 8;   // multiply distance to move by 8
+      break;
+   case 94:  // pillar build crush
+   case 95:  // lower floor & ceiling
+   case 96:  // raise floor & ceiling
+   // UNUSED: 97-99
+   case 100: // scroll left
+   case 101: // scroll right
+   case 102: // scroll up
+   case 103: // scroll down
+   // UNUSED: 104-108
+   case 109: // force lightning
+   case 110: // light raise by value
+   case 111: // light lower by value
+   case 112: // light change to value
+   case 113: // light fade
+   case 114: // light glow
+   case 115: // light flicker
+   case 116: // light strobe
+   // UNUSED: 117-119
+   case 120: // quake tremor
+   case 121: // line set identification
+   // UNUSED: 122-128
+   case 129: // use puzzle item
+   case 130: // thing activate
+   case 131: // thing deactivate
+   case 132: // thing remove
+   case 133: // thing destroy
+   case 134: // thing projectile
+   case 135: // thing spawn
+   case 136: // thing projectile gravity
+   case 137: // thing spawn no fog
+   case 138: // floor waggle
+   // UNUSED: 139
+   case 140: // sector sound change
+   // UNUSED: 141-255
+   default:
+      *special = 0; // clear out anything that is currently not used
+   }
+}
+
+
+//=============================================================================
+//
 // Portals
 //
 

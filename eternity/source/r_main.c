@@ -435,9 +435,7 @@ void R_ExecuteSetViewSize (void)
     
    // thing clipping
    for(i = 0; i < viewwidth; ++i)
-   {
       screenheightarray[i] = viewheight;
-   }
 
    // planes
    for(i = 0; i < viewheight * 2; ++i)
@@ -594,7 +592,6 @@ void R_SectorColormap(sector_t *s)
    // killough 3/20/98, 4/4/98: select colormap based on player status
    
    // haleyjd: NGCS
-   //if(s->heightsec == -1) cm = 0;
    if(s->heightsec == -1) 
       cm = global_cmap_index;
    else
