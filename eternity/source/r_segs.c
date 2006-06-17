@@ -90,8 +90,11 @@ static fixed_t  bottomstep;
 
 
 // haleyjd: DEBUG
-//static short    *maskedtexturecol;
+#ifdef R_SIXTEEN
+static short    *maskedtexturecol;
+#else
 static int *maskedtexturecol;
+#endif
 
 //
 // R_RenderMaskedSegRange
@@ -202,8 +205,11 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    for(dc_x = x1; dc_x <= x2; ++dc_x, spryscale += rw_scalestep)
    {
       // haleyjd:DEBUG
-      //if(maskedtexturecol[dc_x] != D_MAXSHORT)
+#ifdef R_SIXTEEN
+      if(maskedtexturecol[dc_x] != D_MAXSHORT)
+#else
       if(maskedtexturecol[dc_x] != D_MAXINT)
+#endif
       {
          if(!fixedcolormap)      // calculate lighting
          {                             // killough 11/98:
@@ -251,8 +257,11 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          R_DrawMaskedColumn(col);
          
          // haleyjd: DEBUG
-         //maskedtexturecol[dc_x] = D_MAXSHORT;
+#ifdef R_SIXTEEN
+         maskedtexturecol[dc_x] = D_MAXSHORT;
+#else
          maskedtexturecol[dc_x] = D_MAXINT;
+#endif
       }
    }
 
@@ -899,17 +908,23 @@ void R_StoreWallRange(const int start, const int stop)
    // save sprite clipping info
    if((ds_p->silhouette & SIL_TOP || maskedtexture) && !ds_p->sprtopclip)
    {
-      // haleyjd: DEBUG -- HORRIBLE. Hard coded data type sizes. What next?
-      //memcpy(lastopening, ceilingclip + start, 2 * (rw_stopx - start));
+      // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+      memcpy(lastopening, ceilingclip + start, sizeof(short) * (rw_stopx - start));
+#else
       memcpy(lastopening, ceilingclip + start, sizeof(int) * (rw_stopx - start));
+#endif
       ds_p->sprtopclip = lastopening - start;
       lastopening += rw_stopx - start;
    }
    if((ds_p->silhouette & SIL_BOTTOM || maskedtexture) && !ds_p->sprbottomclip)
    {
       // haleyjd DEBUG
-      //memcpy(lastopening, floorclip + start, 2 * (rw_stopx - start));
+#ifdef R_SIXTEEN
+      memcpy(lastopening, floorclip + start, sizeof(short) * (rw_stopx - start));
+#else
       memcpy(lastopening, floorclip + start, sizeof(int) * (rw_stopx - start));
+#endif
       ds_p->sprbottomclip = lastopening - start;
       lastopening += rw_stopx - start;
    }

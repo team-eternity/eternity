@@ -254,7 +254,7 @@ void HU_Drawer(void)
    {
       widget = hu_chains[i];
 
-      while(widget)
+      while(widget && !widget->disabled) // haleyjd 06/15/06: oops!
       {
          if(widget->drawer)
             widget->drawer(widget);
@@ -511,6 +511,7 @@ typedef struct hu_patchwidget_s
    int x, y;           // screen location
    char *color;        // color range translation to use
    int tl_level;       // translucency level
+   char patchname[9];  // patch name -- haleyjd 06/15/06
    patch_t *patch;     // screen patch
 } hu_patchwidget_t;
 
@@ -529,7 +530,13 @@ static void HU_PatchWidgetDraw(hu_widget_t *widget)
    if(!pw->patch)
       return;
 
+   // make sure the patch is made static during drawing
+   pw->patch = W_CacheLumpName(pw->patchname, PU_STATIC);
+
    V_DrawPatchTL(pw->x, pw->y, &vbscreen, pw->patch, pw->color, pw->tl_level);
+
+   // set it back to cache level
+   Z_ChangeTag(pw->patch, PU_CACHE);
 }
 
 //
@@ -628,8 +635,11 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
       newpw->color = colrngs[color];
    newpw->tl_level = tl_level;
 
-   // load patch
-   newpw->patch = W_CacheLumpName(patch, PU_STATIC);
+   // 06/15/06: copy patch name
+   strncpy(newpw->patchname, patch, 9);
+
+   // pre-cache patch -- haleyjd 06/15/06: use PU_CACHE
+   newpw->patch = W_CacheLumpName(patch, PU_CACHE);
 }
 
 //
@@ -818,7 +828,8 @@ static void HU_InitWarnings(void)
    // add to hash
    HU_AddWidgetToHash((hu_widget_t *)&vpo_widget);
 
-   vpo_widget.patch = W_CacheLumpName("VPO", PU_STATIC);
+   strncpy(vpo_widget.patchname, "VPO", 9);
+   vpo_widget.patch = W_CacheLumpName("VPO", PU_CACHE);
    vpo_widget.color = NULL;
    vpo_widget.tl_level = FRACUNIT;
    vpo_widget.x = 250;
@@ -835,7 +846,8 @@ static void HU_InitWarnings(void)
    // add to hash
    HU_AddWidgetToHash((hu_widget_t *)&opensocket_widget);
    
-   opensocket_widget.patch = W_CacheLumpName("OPENSOCK", PU_STATIC);
+   strncpy(opensocket_widget.patchname, "OPENSOCK", 9);
+   opensocket_widget.patch = W_CacheLumpName("OPENSOCK", PU_CACHE);
    opensocket_widget.color = NULL;
    opensocket_widget.tl_level = FRACUNIT;
    opensocket_widget.x = 20;
@@ -1991,17 +2003,29 @@ static cell AMX_NATIVE_CALL sm_centermsgtimed(AMX *amx, cell *params)
    return 0;
 }
 
+//
+// sm_inautomap
+//
+// Returns true or false to indicate state of automap. Useful for turning
+// off some HUD stuff like patch widgets.
+//
+static cell AMX_NATIVE_CALL sm_inautomap(AMX *amx, cell *params)
+{
+   return (cell)automapactive;
+}
+
 AMX_NATIVE_INFO hustuff_Natives[] =
 {
-   { "_MoveWidget",         sm_movewidget         },
-   { "_NewPatchWidget",     sm_newpatchwidget     },
-   { "_SetWidgetPatch",     sm_setwidgetpatch     },
-   { "_PatchWidgetColor",   sm_patchwidgetcolor   },
-   { "_NewTextWidget",      sm_newtextwidget      },
-   { "_GetWidgetText",      sm_getwidgettext      },
-   { "_SetWidgetText",      sm_setwidgettext      },
-   { "_ToggleWidget",       sm_togglewidget       },
-   { "_CenterMsgTimed",     sm_centermsgtimed     },
+   { "_MoveWidget",         sm_movewidget       },
+   { "_NewPatchWidget",     sm_newpatchwidget   },
+   { "_SetWidgetPatch",     sm_setwidgetpatch   },
+   { "_PatchWidgetColor",   sm_patchwidgetcolor },
+   { "_NewTextWidget",      sm_newtextwidget    },
+   { "_GetWidgetText",      sm_getwidgettext    },
+   { "_SetWidgetText",      sm_setwidgettext    },
+   { "_ToggleWidget",       sm_togglewidget     },
+   { "_CenterMsgTimed",     sm_centermsgtimed   },
+   { "_InAutomap",          sm_inautomap        },
    { NULL, NULL }
 };
 

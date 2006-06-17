@@ -33,22 +33,31 @@
 #define PL_SKYFLAT (0x80000000)
 
 // Visplane related.
-//extern  short *lastopening;
 
 // haleyjd DEBUG
+#ifdef R_SIXTEEN
+extern short *lastopening;
+#else
 extern int *lastopening;
+#endif
 
 #ifdef R_PORTALS
 // SoM 12/8/03
-//extern short *floorclip, *ceilingclip;
-//extern short floorcliparray[], ceilingcliparray[];
 // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+extern short *floorclip, *ceilingclip;
+extern short floorcliparray[], ceilingcliparray[];
+#else
 extern int *floorclip, *ceilingclip;
 extern int floorcliparray[], ceilingcliparray[];
+#endif
 #else
-//extern short floorclip[], ceilingclip[];
 // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+extern short floorclip[], ceilingclip[];
+#else
 extern int floorclip[], ceilingclip[];
+#endif
 #endif
 
 extern fixed_t *yslope;

@@ -63,13 +63,11 @@
 
 // the amount of ammo the displayplayer has left 
 
-#define playerammo      \
-        _wc_pammo(players[displayplayer].readyweapon)
+#define playerammo _wc_pammo(players[displayplayer].readyweapon)
 
 // the maximum amount the player could have for current weapon
 
-#define playermaxammo   \
-        _wc_mammo(players[displayplayer].readyweapon)
+#define playermaxammo _wc_mammo(players[displayplayer].readyweapon)
 
 // set up an overlay_t
 
@@ -94,17 +92,16 @@ int hud_hidestatus = 0;
 // *not* the general doom font as it is in the original sources and
 // most ports
 
-#define HU_FONTSTART    '!'    /* the first font characters */
-#define HU_FONTEND      (0x7f) /*jff 2/16/98 '_' the last font characters */
+#define HU_FONTSTART '!'    /* the first font characters */
+#define HU_FONTEND   (0x7f) /*jff 2/16/98 '_' the last font characters */
 
 // Calculate # of glyphs in font.
-#define HU_FONTSIZE     (HU_FONTEND - HU_FONTSTART + 1) 
+#define HU_FONTSIZE  (HU_FONTEND - HU_FONTSTART + 1) 
 
 static patch_t *hu_font[HU_FONTSIZE];
 static boolean hu_fontloaded = false;
 
 // haleyjd 01/14/05: new vfont object for HUD font
-
 vfont_t hud_font = 
 {
    HU_FONTSTART, // first character
@@ -134,7 +131,7 @@ void HU_LoadFont(void)
    int i, j;
    char lumpname[9];
 
-   for(i = 0, j = HU_FONTSTART; i < HU_FONTSIZE; i++, j++)
+   for(i = 0, j = HU_FONTSTART; i < HU_FONTSIZE; ++i, ++j)
    {
       lumpname[0] = 0;
       if((j >= '0' && j <= '9') || (j >= 'A' && j <= 'Z') )
@@ -419,10 +416,11 @@ void HU_DrawStatus(int x, int y)
   HU_WriteText(HUDCOLOUR "Status", x, y); // draw, leave a gap
   x += GAP;
   
+  // haleyjd 06/14/06: restored original colors to K/I/S
   psnprintf(tempstr, sizeof(tempstr),
-	    FC_RED "K" FC_GREEN " %i/%i "
-	    FC_RED "I" FC_GREEN " %i/%i "
-	    FC_RED "S" FC_GREEN " %i/%i ",
+	    FC_RED  "K" FC_GREEN " %i/%i "
+	    FC_BLUE "I" FC_GREEN " %i/%i "
+	    FC_GOLD "S" FC_GREEN " %i/%i ",
 	    players[displayplayer].killcount, totalkills,
 	    players[displayplayer].itemcount, totalitems,
 	    players[displayplayer].secretcount, totalsecret
@@ -502,26 +500,20 @@ void HU_OverlaySetup(void)
       
    case 2: // 2: all at bottom of screen
       {
-         int x = 0, y = 192;
+         int x = 160, y = SCREENHEIGHT - 8;
          
-         for(i = 0; i < NUMOVERLAY; ++i)
+         // haleyjd 06/14/06: rewrote to restore a sensible ordering
+         for(i = NUMOVERLAY - 1; i >= 0; --i)
          {
             if(overlay[i].x != -1)
             {
-               // haleyjd: swap health & armor, keep rest the same
-               int idx = i;
-               if(idx == ol_health)
-                  idx = ol_armor;
-               else if(idx == ol_armor)
-                  idx = ol_health;
-
-               setol(idx, x, y);
-               x += 160;
-               if(x >= 300)
-               {
-                  x = 0; 
-                  y -=8;
-               }
+               setol(i, x, y);
+               y -= 8;
+            }
+            if(i == ol_weap)
+            {
+               x = 0;
+               y = SCREENHEIGHT - 8;
             }
          }
       }

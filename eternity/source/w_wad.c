@@ -639,7 +639,9 @@ void *W_CacheLumpNum(int lump, int tag)
    else
    {
       // haleyjd: do not lower cache level and cause static
-      // users to lose their data unexpectedly
+      // users to lose their data unexpectedly (ie, do not change PU_STATIC
+      // into PU_CACHE -- that must be done using Z_ChangeTag explicitly)
+      
       int oldtag = Z_CheckTag(lumpinfo[lump]->cache);
 
       if(tag < oldtag) 

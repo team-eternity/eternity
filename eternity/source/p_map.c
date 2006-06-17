@@ -567,6 +567,11 @@ static boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
 #define FLAGS_NOSETHEIGHTS \
    (MF_MISSILE|MF_SPECIAL|MF_CORPSE|MF_NOCLIP)
 
+// things with these flags shouldn't have THEIR floor/ceiling heights set
+// by other things.
+#define FLAGS_CANTSETHEIGHTS \
+   (MF_MISSILE|MF_SPECIAL|MF_CORPSE|MF_NOCLIP|MF_NOBLOCKMAP)
+
 //
 // P_Touched
 //
@@ -775,7 +780,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
          
          if(tmthingzl >= thingzh) // mover is over?
          {            
-            if(!(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
+            if(!(tmthing->flags & FLAGS_CANTSETHEIGHTS) &&
+               !(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
                thingzh > tmfloorz)
                tmfloorz = thingzh;
 
@@ -802,7 +808,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
          } 
          else if(tmthingzh <= thingzl) // mover is under?
          {
-            if(!(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
+            if(!(tmthing->flags & FLAGS_CANTSETHEIGHTS) &&
+               !(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
                thingzl < tmceilingz)
                tmceilingz = thingzl;
             
@@ -832,6 +839,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
          // only players step up, and never onto anything with special clipping
          // behaviors. height difference must be <= 24 units.
          if(tmthing->player && !(thing->flags & FLAGS_NOSTEPUP) && 
+            !(tmthing->flags & FLAGS_CANTSETHEIGHTS) &&
             thingzh - tmthingzl <= 24*FRACUNIT)
          {
             // mover can step up on blocker
@@ -1628,6 +1636,18 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
    fixed_t box1[4], blockdist, thingzl, thingzh;
    int xl, yl, xh, yh, x, y;
 
+   thing->z += zmove;
+
+   // some things should not be clipped when they z-move:
+   // * SPECIALS that aren't DROPPED
+   // * NOBLOCKMAP objects
+   // * NOCLIP objects
+   // * non-SOLID objects
+   if((thing->flags & MF_SPECIAL && !(thing->flags & MF_DROPPED)) ||
+      thing->flags & (MF_NOBLOCKMAP|MF_NOCLIP) ||
+      !(thing->flags & MF_SOLID))
+      return true;
+
    box1[BOXTOP]    = thing->y + thing->radius;
    box1[BOXBOTTOM] = thing->y - thing->radius;
    box1[BOXRIGHT]  = thing->x + thing->radius;
@@ -1638,23 +1658,11 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
    yl = (box1[BOXBOTTOM] - bmaporgy - MAXRADIUS)>>MAPBLOCKSHIFT;
    yh = (box1[BOXTOP] - bmaporgy + MAXRADIUS)>>MAPBLOCKSHIFT;
 
-   thing->z += zmove;
-
-   // SoM 11/4/02: ok! First off, if a mobj is special it should NEVER
-   // be clipped against other mobjs. For some reason checking the
-   // solid flag was not enough. Secondly, a special thing should 
-   // never be crushed unless it was dropped.
-   if(thing->flags & MF_SPECIAL && !(thing->flags & MF_DROPPED))
-      return true;
-
    thingzl = thing->z;
    thingzh = thingzl + thing->height;
 
    if(thingzl < thing->floorz || thingzh > thing->ceilingz)
       return false;
-
-   if(thing->flags & (MF_NOCLIP | MF_DROPPED))
-      return true;
 
    // Bad formatting but I don't want this to get indented off the screen :/
    for(y = yl; y <= yh; y++) for(x = xl; x <= xh; x++)
@@ -1664,11 +1672,8 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
 
       for(mobj = blocklinks[y*bmapwidth+x]; mobj; mobj = mobj->bnext)
       {
-         // SoM 11/4/02: uh ehehe, DON'T clip against MF_SPECIALs DUH
-         if(!(mobj->flags & MF_SOLID))
-            continue;
-
-         if(mobj->flags & (MF_SPECIAL | MF_CORPSE | MF_NOCLIP))
+         if(!(mobj->flags & MF_SOLID) ||
+            mobj->flags & FLAGS_NOSETHEIGHTS) // haleyjd 06/12/06
             continue;
 
          blockdist = thing->radius + mobj->radius;
@@ -1735,25 +1740,26 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
 
          if(thingzl >= mobj->z + mobj->height)
          {
-            if(mobj->z + mobj->height > thing->floorz)
+            if(!(thing->flags && FLAGS_NOSETHEIGHTS) && 
+               mobj->z + mobj->height > thing->floorz)
             {
                thing->floorz = mobj->z + mobj->height;
 
                // haleyjd 03/19/06: update other thing too
-               if(mobj->ceilingz > thing->z)
+               if(!(mobj->flags & FLAGS_CANTSETHEIGHTS) && mobj->ceilingz > thing->z)
                   mobj->ceilingz = thing->z;
             }
          }
          else if(thingzh <= mobj->z)
          {
-            // SoM 11/29/02: For corpses never set a ceiling from
-            // another thing.
-            if(!(thing->flags & MF_CORPSE) && mobj->z < thing->ceilingz)
+            // haleyjd 06/12/06: some things don't set other things' heights
+            if(!(thing->flags & FLAGS_NOSETHEIGHTS) && mobj->z < thing->ceilingz)
             {
                thing->ceilingz = mobj->z;
 
                // haleyjd 03/19/06: update other thing too
-               if(mobj->floorz < thing->z)
+               // haleyjd 06/12/06: some things don't get their heights set
+               if(!(mobj->flags & FLAGS_CANTSETHEIGHTS) && mobj->floorz < thing->z)
                   mobj->floorz = thing->z;
             }
          }
@@ -1798,7 +1804,8 @@ static boolean P_ThingMovexy(mobj_t *thing, fixed_t oldx, fixed_t oldy)
       
       for(mobj = blocklinks[y*bmapwidth+x]; mobj; mobj = mobj->bnext)
       {
-         if(!(mobj->flags & MF_SOLID))
+         if(!(mobj->flags & MF_SOLID) ||
+            mobj->flags & FLAGS_NOSETHEIGHTS) // haleyjd 06/12/06
          {
             // Non-solid things fall to the floor.
             mobj->floorz = mobj->passfloorz;

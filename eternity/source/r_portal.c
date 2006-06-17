@@ -444,14 +444,14 @@ static void R_RenderPlanePortal(rportal_t *portal)
    {
       if(portal->top[x] + 1 <= portal->bottom[x])
       {
-         /*
+         // haleyjd: DEBUG
+#ifdef R_SIXTEEN
          plane->top[x] = (unsigned short)portal->top[x] + 1;
          plane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
-         */
-         // haleyjd: DEBUG
+#else
          plane->top[x]    = (unsigned int)portal->top[x] + 1;
          plane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
-
+#endif
       }
    }
 
@@ -484,8 +484,8 @@ static void R_RenderHorizonPortal(rportal_t *portal)
    {
       if(portal->top[x] + 1 >= portal->bottom[x])
          continue;
-
-      /*
+      //haleyjd: DEBUG
+#ifdef R_SIXTEEN
       if(portal->top[x] <= centery && portal->bottom[x] > centery)
       {
          topplane->top[x] = (unsigned short)portal->top[x] + 1;
@@ -503,8 +503,7 @@ static void R_RenderHorizonPortal(rportal_t *portal)
          bottomplane->top[x] = (unsigned short)portal->top[x] + 1;
          bottomplane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
       }
-      */
-      //haleyjd: DEBUG
+#else
       if(portal->top[x] <= centery && portal->bottom[x] > centery)
       {
          topplane->top[x] = (unsigned int)portal->top[x] + 1;
@@ -522,6 +521,7 @@ static void R_RenderHorizonPortal(rportal_t *portal)
          bottomplane->top[x] = (unsigned int)portal->top[x] + 1;
          bottomplane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
       }
+#endif
    }
 
    lastx = viewx; lasty = viewy; lastz = viewz;

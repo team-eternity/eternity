@@ -23,7 +23,8 @@
 //
 // Sound Sequences, which are powered by EDF-defined data, implement a way to
 // script the sound behavior of sectors and global ambience effects. Measures
-// have been taken to keep it all fully backward-compatible.
+// have been taken to keep it all fully backward-compatible, as well as to
+// make it more flexible than Hexen's implementation.
 //
 //-----------------------------------------------------------------------------
 
@@ -89,6 +90,8 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
       return;
 
    // check for redirection for certain activation types
+   // this allows a single sector to have different sequences for different
+   // action types; more flexible than what "other ports" have implemented
    switch(seqtype)
    {
    case SEQ_DOOR:
@@ -125,8 +128,12 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
    newSeq->sequence     = edfSeq;              // set sequence pointer
    newSeq->cmdPtr       = edfSeq->commands;    // set command pointer
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
-   newSeq->volume       = edfSeq->volume;      // use starting volume
    newSeq->delayCounter = 0;                   // no delay at start
+
+   // 06/16/06: possibly randomize starting volume
+   newSeq->volume = 
+      edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
+                      : edfSeq->volume;
 }
 
 //
@@ -143,6 +150,10 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
    if(!(edfSeq = E_SequenceForName(seqname)))
       return;
 
+   // note that we do *not* do any redirections when playing sequences by name;
+   // starting a sequence by name should be unambiguous at all times, and is
+   // only done via scripting or by the game engine itself
+
    // stop any sequence the object is already playing
    S_StopSequence(mo);
 
@@ -157,8 +168,12 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
    newSeq->sequence     = edfSeq;              // set sequence pointer
    newSeq->cmdPtr       = edfSeq->commands;    // set command pointer
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
-   newSeq->volume       = edfSeq->volume;      // use starting volume
    newSeq->delayCounter = 0;                   // no delay at start
+
+   // possibly randomize starting volume
+   newSeq->volume = 
+      edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
+                      : edfSeq->volume;
 }
 
 //
@@ -426,8 +441,12 @@ static void S_RunEnviroSequence(void)
       seq.currentSound = NULL;
       seq.origin       = nextEnviroSpot;
       seq.attenuation  = edfSeq->attenuation;
-      seq.volume       = M_RangeRandom(32, 96);
       seq.delayCounter = 0;
+
+      // possibly randomize the starting volume
+      seq.volume = 
+         edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
+                         : edfSeq->volume;
 
       EnviroSequence    = &seq;   // now playing an enviro sequence
       enviroSeqFinished = false;  // sequence is not finished

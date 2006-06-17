@@ -84,7 +84,9 @@ typedef struct ESoundSeq_s
 
    union seqcmd_s *commands;     // the compiled commands
 
-   int volume;                   // starting volume
+   boolean randvol;              // use random starting volume?
+   int volume;                   // starting volume (or max vol if randomized)
+   int minvolume;                // minimum volume if randomized
    int attenuation;              // starting attenuation
    sfxinfo_t *stopsound;         // stopsound, if any
    boolean nostopcutoff;         // if true, sounds aren't cut off at end

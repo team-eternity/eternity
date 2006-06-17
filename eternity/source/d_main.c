@@ -2558,8 +2558,8 @@ void D_NewWadLumps(int handle, int sound_update_type)
       }
       
       // new music
-      if(!strncmp(lumpinfo[i]->name, gameModeInfo->musPrefix,
-                  strlen(gameModeInfo->musPrefix)))
+      if(!strncasecmp(lumpinfo[i]->name, gameModeInfo->musPrefix,
+                      strlen(gameModeInfo->musPrefix)))
       {
          S_UpdateMusic(i);
          continue;

@@ -61,32 +61,44 @@ typedef struct {
 
 #ifdef R_PORTALS
 // top and bottom of portal silhouette
-//static short portaltop[MAX_SCREENWIDTH];
-//static short portalbottom[MAX_SCREENWIDTH];
 // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+static short portaltop[MAX_SCREENWIDTH];
+static short portalbottom[MAX_SCREENWIDTH];
+#else
 static int portaltop[MAX_SCREENWIDTH];
 static int portalbottom[MAX_SCREENWIDTH];
+#endif
 
 // haleyjd DEBUG
-//static short *ptop, *pbottom;
+#ifdef R_SIXTEEN
+static short *ptop, *pbottom;
+#else
 static int *ptop, *pbottom;
+#endif
 
 //
 // R_SetMaskedSilhouette
 //
 
 // haleyjd: DEBUG
-//void R_SetMaskedSilhouette(short *top, short *bottom)
+#ifdef R_SIXTEEN
+void R_SetMaskedSilhouette(short *top, short *bottom)
+#else
 void R_SetMaskedSilhouette(int *top, int *bottom)
+#endif
 {
    if(!top || !bottom)
    {
       // haleyjd: DEBUG
-      //register short *topp = portaltop, *bottomp = portalbottom, *stopp = portaltop + MAX_SCREENWIDTH;
-      //register short *tp = top, *bp = bottom;
+#ifdef R_SIXTEEN
+      register short *topp = portaltop, *bottomp = portalbottom, *stopp = portaltop + MAX_SCREENWIDTH;
+      register short *tp = top, *bp = bottom;
+#else
       register int *topp = portaltop, *bottomp = portalbottom, 
                    *stopp = portaltop + MAX_SCREENWIDTH;
       register int *tp = top, *bp = bottom;
+#endif
 
 
       while(topp < stopp)
@@ -98,10 +110,13 @@ void R_SetMaskedSilhouette(int *top, int *bottom)
    else
    {
       // haleyjd: DEBUG
-      //memcpy(portaltop, top, sizeof(short) * MAX_SCREENWIDTH);
-      //memcpy(portalbottom, bottom, sizeof(short) * MAX_SCREENWIDTH);
+#ifdef R_SIXTEEN
+      memcpy(portaltop, top, sizeof(short) * MAX_SCREENWIDTH);
+      memcpy(portalbottom, bottom, sizeof(short) * MAX_SCREENWIDTH);
+#else
       memcpy(portaltop, top, sizeof(int) * MAX_SCREENWIDTH);
       memcpy(portalbottom, bottom, sizeof(int) * MAX_SCREENWIDTH);
+#endif
    }
 }
 #endif
@@ -117,8 +132,11 @@ void R_SetMaskedSilhouette(int *top, int *bottom)
 extern int global_cmap_index; // haleyjd: NGCS
 
 // haleyjd :DEBUG
-//short pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
+#ifdef R_SIXTEEN
+short pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
+#else
 int pscreenheightarray[MAX_SCREENWIDTH];
+#endif
 
 fixed_t pspritescale;
 fixed_t pspriteiscale;
@@ -131,10 +149,13 @@ static lighttable_t **spritelights;        // killough 1/25/98 made static
 //  used for psprite clipping and initializing clipping
 
 // haleyjd DEBUG
-//short negonearray[MAX_SCREENWIDTH];        // killough 2/8/98:
-//short screenheightarray[MAX_SCREENWIDTH];  // change to MAX_*
+#ifdef R_SIXTEEN
+short negonearray[MAX_SCREENWIDTH];        // killough 2/8/98:
+short screenheightarray[MAX_SCREENWIDTH];  // change to MAX_*
+#else
 int negonearray[MAX_SCREENWIDTH];
 int screenheightarray[MAX_SCREENWIDTH];
+#endif
 int lefthanded=0;
 
 //
@@ -408,10 +429,13 @@ void R_PushMasked(void)
    mstack[stacksize].lastsprite = num_vissprite;
 
    // haleyjd: DEBUG
-   //memcpy(mstack[stacksize].ceilingclip, portaltop, MAX_SCREENWIDTH * sizeof(short));
-   //memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(short));
+#ifdef R_SIXTEEN
+   memcpy(mstack[stacksize].ceilingclip, portaltop, MAX_SCREENWIDTH * sizeof(short));
+   memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(short));
+#else
    memcpy(mstack[stacksize].ceilingclip, portaltop, MAX_SCREENWIDTH * sizeof(int));
    memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(int));
+#endif
    stacksize ++;
 }
 #endif
@@ -438,12 +462,13 @@ vissprite_t *R_NewVisSprite(void)
 //  in posts/runs of opaque pixels.
 //
 
-/*
+// haleyjd DEBUG
+#ifdef R_SIXTEEN
 short   *mfloorclip;
 short   *mceilingclip;
-*/
-// haleyjd DEBUG
+#else
 int *mfloorclip, *mceilingclip;
+#endif
 fixed_t spryscale;
 fixed_t sprtopscreen;
 
@@ -497,10 +522,13 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    fixed_t  frac;
    patch_t  *patch;
    boolean  footclipon = false;
-   //short    baseclip = 0;
    // haleyjd DEBUG
+#ifdef R_SIXTEEN
+   short    baseclip = 0;
+#else
    int baseclip = 0;
-   
+#endif
+
    if(vis->patch == -1)
    {
       // this vissprite belongs to a particle
@@ -1218,10 +1246,13 @@ void R_DrawSprite(vissprite_t *spr)
 {
    drawseg_t *ds;
    // haleyjd: DEBUG
-   //short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
-   //short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+#ifdef R_SIXTEEN
+   short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
+   short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+#else
    int clipbot[MAX_SCREENWIDTH];
    int cliptop[MAX_SCREENWIDTH];
+#endif
    int     x;
    int     r1;
    int     r2;
@@ -1365,10 +1396,13 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 {
    drawseg_t *ds;
    // haleyjd DEBUG
-   //short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
-   //short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+#ifdef R_SIXTEEN
+   short   clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
+   short   cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+#else
    int     clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
    int     cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+#endif
    int     x;
    int     r1;
    int     r2;

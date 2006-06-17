@@ -71,17 +71,17 @@ typedef union seqcmd_s
 
 typedef struct SndSeq_s
 {
-   mdllistitem_t link;      // double-linked list node -- must be first
+   mdllistitem_t link;           // double-linked list node -- must be first
 
-   struct ESoundSeq_s *sequence;   // pointer to EDF sound sequence
-   seqcmd_t *cmdPtr;        // current position in command sequence
+   struct ESoundSeq_s *sequence; // pointer to EDF sound sequence
+   seqcmd_t *cmdPtr;             // current position in command sequence
 
-   mobj_t *origin;          // the origin of the sequence
-   sfxinfo_t *currentSound; // current sound being played
+   mobj_t *origin;               // the origin of the sequence
+   sfxinfo_t *currentSound;      // current sound being played
    
-   int delayCounter;        // delay time counter
-   int volume;              // current volume
-   int attenuation;         // current attenuation type
+   int delayCounter;             // delay time counter
+   int volume;                   // current volume
+   int attenuation;              // current attenuation type
 } SndSeq_t;
 
 extern SndSeq_t *SoundSequences;

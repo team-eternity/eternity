@@ -41,13 +41,13 @@ struct overlay_s
 
 enum
 {
+  ol_status,
   ol_health,
-  ol_ammo,
   ol_armor,
   ol_weap,
+  ol_ammo,
   ol_key,
   ol_frag,
-  ol_status,
   NUMOVERLAY
 };
 

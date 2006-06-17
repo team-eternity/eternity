@@ -73,3 +73,7 @@ native _ToggleWidget(const name[], bool:disable);
 
 // Moves the indicated widget, if it exists.
 native _MoveWidget(const name[], x, y);
+
+// Test if automap is active (true == active, false == inactive)
+native bool:_InAutomap();
+

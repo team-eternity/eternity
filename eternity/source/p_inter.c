@@ -234,7 +234,7 @@ boolean P_GiveArmor(player_t *player, int armortype, boolean htic)
    player->armortype = armortype;
    player->armorpoints = hits;
    
-   // haleyjd 10/10/02
+   // haleyjd 10/10/02 -- TODO/FIXME: hack!
    player->hereticarmor = player->hereticarmor || htic;
    
    return true;

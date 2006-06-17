@@ -2918,7 +2918,7 @@ static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
 {
-   unsigned short tid;
+   int tid;
    
    if(gamestate != GS_LEVEL)
    {

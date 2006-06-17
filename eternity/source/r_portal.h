@@ -79,10 +79,13 @@ typedef struct rportal_s
    } data;
 
    // haleyjd: DEBUG
-   //short top[MAX_SCREENWIDTH];
-   //short bottom[MAX_SCREENWIDTH];
+#ifdef R_SIXTEEN
+   short top[MAX_SCREENWIDTH];
+   short bottom[MAX_SCREENWIDTH];
+#else
    int top[MAX_SCREENWIDTH];
    int bottom[MAX_SCREENWIDTH];
+#endif
    int minx, maxx;
 
    fixed_t  vx, vy, vz;

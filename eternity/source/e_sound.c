@@ -646,6 +646,7 @@ void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
 #define ITEM_SEQ_STOP  "stopsound"
 #define ITEM_SEQ_ATTN  "attenuation"
 #define ITEM_SEQ_VOL   "volume"
+#define ITEM_SEQ_MNVOL "minvolume"
 #define ITEM_SEQ_NSCO  "nostopcutoff"
 #define ITEM_SEQ_DOOR  "doorsequence"
 #define ITEM_SEQ_PLAT  "platsequence"
@@ -723,6 +724,7 @@ cfg_opt_t edf_sndseq_opts[] =
    CFG_STR(ITEM_SEQ_STOP,  "none",    CFGF_NONE),
    CFG_STR(ITEM_SEQ_ATTN,  "normal",  CFGF_NONE),
    CFG_INT(ITEM_SEQ_VOL,   127,       CFGF_NONE),
+   CFG_INT(ITEM_SEQ_MNVOL, -1,        CFGF_NONE),
    CFG_BOOL(ITEM_SEQ_NSCO, cfg_false, CFGF_NONE),
    CFG_STR(ITEM_SEQ_DOOR,  NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_PLAT,  NULL,      CFGF_NONE),
@@ -979,9 +981,9 @@ static int E_SeqGetAttn(const char *attnstr)
 //
 // Note that the commands are compiled into a temporary buffer that is allocated
 // at the upper bound of the possible code size -- no command compiles to more
-// than four bytecodes (an opcode and two arguments). At the end, the temporary
-// buffer is copied into one of the actually used size and the temp buffer is 
-// destroyed.
+// than four bytecodes (one or two opcodes and two arguments). At the end, the 
+// temporary buffer is copied into one of the actually used size and the temp 
+// buffer is destroyed.
 //
 static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
 {
@@ -1208,6 +1210,19 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
       newSeq->volume = 0;
    else if(newSeq->volume > 127)
       newSeq->volume = 127;
+
+   // process minvolume
+   newSeq->minvolume = cfg_getint(cfg, ITEM_SEQ_MNVOL);
+   // if != -1 and not same as volume, volume is randomized
+   if(newSeq->minvolume != -1 && newSeq->minvolume != newSeq->volume)
+   {
+      newSeq->randvol = true;
+      // rangecheck minvolume (max is volume - 1)
+      if(newSeq->minvolume < 0)
+         newSeq->minvolume = 0;
+      else if(newSeq->minvolume > newSeq->volume)
+         newSeq->minvolume = newSeq->volume - 1;
+   }
 
    // process nostopcutoff
    newSeq->nostopcutoff = (cfg_getbool(cfg, ITEM_SEQ_NSCO) == cfg_true);

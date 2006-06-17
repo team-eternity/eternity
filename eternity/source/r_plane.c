@@ -76,9 +76,13 @@ int num_visplanes;      // sf: count visplanes
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
 #define MAXOPENINGS (MAX_SCREENWIDTH*MAX_SCREENHEIGHT)
-//short openings[MAXOPENINGS],*lastopening;
+
 // haleyjd DEBUG
+#ifdef R_SIXTEEN
+short openings[MAXOPENINGS],*lastopening;
+#else
 int openings[MAXOPENINGS], *lastopening;
+#endif
 
 // Clip values are the solid pixel bounding the range.
 //  floorclip starts out SCREENHEIGHT
@@ -87,15 +91,21 @@ int openings[MAXOPENINGS], *lastopening;
 #ifdef R_PORTALS
 // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
 // to the clipping arrays of portals.
-//short floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
-//short *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
 // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+short floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
+short *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
+#else
 int floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
 int *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
+#endif
 #else
-//short floorclip[MAX_SCREENWIDTH], ceilingclip[MAX_SCREENWIDTH];
 // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+short floorclip[MAX_SCREENWIDTH], ceilingclip[MAX_SCREENWIDTH];
+#else
 int floorclip[MAX_SCREENWIDTH], ceilingclip[MAX_SCREENWIDTH];
+#endif
 #endif
 
 // spanstart holds the start of a plane span; initialized to 0 at start
@@ -313,14 +323,20 @@ static visplane_t *new_visplane(unsigned hash)
 
       check->max_width = v_width;
       // haleyjd: DEBUG
-      //check->pad1 = (unsigned short *)calloc(1, (v_width + 2) * sizeof(unsigned short));
+#ifdef R_SIXTEEN
+      check->pad1 = (unsigned short *)calloc(1, (v_width + 2) * sizeof(unsigned short));
+#else
       check->pad1 = calloc(1, (v_width + 2) * sizeof(unsigned int));
+#endif
       check->top = check->pad1 + 1;
       check->pad2 = check->pad1 + v_width + 1;
 
       // haleyjd; DEBUG
-      //check->pad3 = (unsigned short *)calloc(1, (v_width + 2) * sizeof(unsigned short));
+#ifdef R_SIXTEEN
+      check->pad3 = (unsigned short *)calloc(1, (v_width + 2) * sizeof(unsigned short));
+#else
       check->pad3 = calloc(1, (v_width + 2) * sizeof(unsigned int));
+#endif
       check->bottom = check->pad3 + 1;
       check->pad4 = check->pad3 + v_width + 1;
    }
@@ -381,9 +397,12 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 #endif 
    
    // SoM: memset should use the check->max_width
-   //memset(check->top, 0xff, sizeof(unsigned short) * check->max_width);
    // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+   memset(check->top, 0xff, sizeof(unsigned short) * check->max_width);
+#else
    memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
+#endif
    
    return check;
 }
@@ -405,13 +424,14 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    else
       unionh  = pl->maxx, intrh  = stop;
 
-   /*
+   // haleyjd DEBUG
+#ifdef R_SIXTEEN
    for(x = intrl; x <= intrh && pl->top[x] == 0xffff; ++x)
       ;
-   */
-   // haleyjd DEBUG
+#else
    for(x = intrl; x <= intrh && pl->top[x] == 0xffffffffu; ++x)
       ;
+#endif
 
    if(x > intrh)
       pl->minx = unionl, pl->maxx = unionh;
@@ -435,9 +455,12 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->minx = start;
       pl->maxx = stop;
       // SoM: ANYRES
-      //memset(pl->top, 0xff, sizeof(unsigned short) * pl->max_width);
       // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+      memset(pl->top, 0xff, sizeof(unsigned short) * pl->max_width);
+#else
       memset(pl->top, 0xff, sizeof(unsigned int) * pl->max_width);
+#endif
    }
    
    return pl;
@@ -448,9 +471,12 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 //
 
 // haleyjd: DEBUG
-//static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
+#ifdef R_SIXTEEN
+static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
+#else
 static void R_MakeSpans(int x, unsigned int t1, unsigned int b1, 
                         unsigned int t2, unsigned int b2)
+#endif
 {
    // DEBUG
 #ifdef RANGECHECK
@@ -506,7 +532,11 @@ void do_draw_newsky(visplane_t *pl)
       for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
       {
          // haleyjd DEBUG
+#ifdef R_SIXTEEN
+         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
+#else
          if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
+#endif
          {
             dc_source =
                R_GetColumn(skyTexture2,
@@ -568,7 +598,11 @@ void do_draw_newsky(visplane_t *pl)
       for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
       {
          // haleyjd DEBUG
+#ifdef R_SIXTEEN
+         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
+#else
          if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
+#endif
          {
             dc_source =
                R_GetColumn(skyTexture,
@@ -677,9 +711,12 @@ static void do_draw_plane(visplane_t *pl)
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
       for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
       {
-         // DEBUG
-         //if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
+         // haleyjd DEBUG
+#ifdef R_SIXTEEN
+         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
+#else
          if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
+#endif
          {
             dc_source = R_GetColumn(texture,
                ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
@@ -749,9 +786,12 @@ static void do_draw_plane(visplane_t *pl)
          light = 0;
 
       stop = pl->maxx + 1;
-      //pl->top[pl->minx-1] = pl->top[stop] = 0xffff;
       // haleyjd: DEBUG
+#ifdef R_SIXTEEN
+      pl->top[pl->minx-1] = pl->top[stop] = 0xffff;
+#else
       pl->top[pl->minx-1] = pl->top[stop] = 0xffffffffu;
+#endif
       planezlight = pl->colormap[light];//zlight[light];
 
       for(x = pl->minx ; x <= stop ; x++)
