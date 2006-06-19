@@ -1351,7 +1351,6 @@ void R_DrawTranslatedColumn(void)
               dc_yl, dc_yh, dc_x);
 #endif 
 
-  // FIXME. As above.
   // SoM: MAGIC
   dest = R_GetBufferOpaque();
 

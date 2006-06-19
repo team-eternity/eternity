@@ -377,7 +377,10 @@ static patch_t*   p[MAXPLAYERS];
 static patch_t*   bp[MAXPLAYERS];
 
 // Name graphics of each level (centered)
-static patch_t**  lnames;
+
+// haleyjd 06/17/06: cache only the patches needed
+static patch_t *wi_lname_this;
+static patch_t *wi_lname_next;
 
 // haleyjd: counter based on wi_pause_time
 static int cur_pause_time;
@@ -420,19 +423,12 @@ static void WI_drawLF(void)
    
    // haleyjd 07/08/04: fixed to work for any map
    // haleyjd 03/27/05: added string functionality
+   // haleyjd 06/17/06: only the needed patch is now cached
 
    if(LevelInfo.levelPic)
-      patch = W_CacheLumpName(LevelInfo.levelPic, PU_CACHE);
+      patch = W_CacheLumpName(LevelInfo.levelPic, PU_STATIC);
    else
-   {
-      // haleyjd: do not index lnames out of bounds
-      if(wbs->last >= 0 &&
-         ((gamemode == commercial && wbs->last < NUMCMAPS) ||
-          wbs->last < NUMMAPS))
-      {
-         patch = lnames[wbs->last];
-      }
-   }
+      patch = wi_lname_this;
 
    if(patch || mapName)
    {
@@ -440,8 +436,7 @@ static void WI_drawLF(void)
       if(mapName)
       {
          V_WriteTextBig(mapName->string, 
-            (SCREENWIDTH - V_StringWidthBig(mapName->string)) / 2,
-            y);
+            (SCREENWIDTH - V_StringWidthBig(mapName->string)) / 2, y);
          y += (5 * V_StringHeightBig(mapName->string)) / 4;
       }
       else
@@ -455,6 +450,10 @@ static void WI_drawLF(void)
       V_DrawPatch((SCREENWIDTH - SHORT(finished->width))/2,
                   y, &vbscreen, finished);
    }
+
+   // haleyjd 06/17/06: set PU_CACHE level here
+   if(LevelInfo.levelPic)
+      Z_ChangeTag(patch, PU_CACHE);
 }
 
 
@@ -468,13 +467,26 @@ static void WI_drawEL(void)
 {
    int y = WI_TITLEY;
    patch_t *patch = NULL;
+   boolean loadedInfoPatch = false;
 
-   if(wbs->next >= 0 &&
-      ((gamemode == commercial && wbs->next < NUMCMAPS) ||
-      wbs->next < NUMMAPS))
+   // haleyjd 06/17/06: support spec. of next map/next secret map pics
+   if(wbs->gotosecret)
    {
-      patch = lnames[wbs->next];
+      if(LevelInfo.nextSecretPic) // watch out; can't merge these if's
+      {
+         patch = W_CacheLumpName(LevelInfo.nextSecretPic, PU_STATIC);
+         loadedInfoPatch = true;
+      }
    }
+   else if(LevelInfo.nextLevelPic)
+   {
+      patch = W_CacheLumpName(LevelInfo.nextLevelPic, PU_STATIC);
+      loadedInfoPatch = true;
+   }
+
+   // if no MapInfo patch was loaded, try the default (may also be NULL)
+   if(!patch)
+      patch = wi_lname_next;
 
    if(patch || nextMapName)
    {
@@ -483,7 +495,7 @@ static void WI_drawEL(void)
                   y, &vbscreen, entering);
 
       // haleyjd: corrected to use height of entering, not map name
-      y += (5*SHORT(entering->height))/4;
+      y += (5 * SHORT(entering->height))/4;
 
       // draw level
       if(nextMapName)
@@ -498,6 +510,10 @@ static void WI_drawEL(void)
                      y, &vbscreen, patch);
       }
    }
+
+   // haleyjd 06/17/06: set any loaded MapInfo patch to PU_CACHE here
+   if(loadedInfoPatch)
+      Z_ChangeTag(patch, PU_CACHE);
 }
 
 
@@ -809,21 +825,19 @@ static void WI_unloadData(void)
    
    for(i = 0; i < 10; ++i)
       Z_ChangeTag(num[i], PU_CACHE);
+
+   // haleyjd 06/17/06: unload the two level name patches if they exist
+   if(wi_lname_this)
+      Z_ChangeTag(wi_lname_this, PU_CACHE);
+   if(wi_lname_next)
+      Z_ChangeTag(wi_lname_next, PU_CACHE);
    
-   if(gamemode == commercial)
-   {
-      for(i = 0; i < NUMCMAPS; ++i)
-         Z_ChangeTag(lnames[i], PU_CACHE);
-   }
-   else
+   if(gamemode != commercial)
    {
       Z_ChangeTag(yah[0], PU_CACHE);
       Z_ChangeTag(yah[1], PU_CACHE);
       
       Z_ChangeTag(splat, PU_CACHE);
-      
-      for(i = 0; i < NUMMAPS; ++i)
-         Z_ChangeTag(lnames[i], PU_CACHE);
       
       if(wbs->epsd < 3)
       {
@@ -1885,27 +1899,53 @@ static void WI_loadData(void)
    }
 #endif
 
+   // haleyjd 06/17/06: no longer needed:
    // killough 4/26/98: free lnames here (it was freed too early in Doom)
-   Z_Free(lnames);
+   // Z_Free(lnames);
 
    if(gamemode == commercial)
    {
-      NUMCMAPS = 32;
-      
-      lnames = (patch_t **)Z_Malloc(sizeof(patch_t*) * NUMCMAPS, PU_STATIC, 0);
-      for(i = 0; i < NUMCMAPS; ++i)
-      { 
-         sprintf(name, "CWILV%2.2d", i);
-         lnames[i] = W_CacheLumpName(name, PU_STATIC);
-      }         
+      // haleyjd 06/17/06: only load the patches that are needed, and also
+      // allow them to be loaded for ANY valid MAPxy map, not just 1 - 32
+      if(isMAPxy(gamemapname))
+      {
+         int lumpnum;
+
+         psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->last);
+
+         if((lumpnum = W_CheckNumForName(name)) != -1)
+            wi_lname_this = W_CacheLumpNum(lumpnum, PU_STATIC);
+         else
+            wi_lname_this = NULL;
+
+         psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->next);
+
+         if((lumpnum = W_CheckNumForName(name)) != -1)
+            wi_lname_next = W_CacheLumpNum(lumpnum, PU_STATIC);
+         else
+            wi_lname_next = NULL;
+      }
    }
    else
    {
-      lnames = (patch_t **)Z_Malloc(sizeof(patch_t*) * NUMMAPS, PU_STATIC, 0);
-      for(i = 0; i < NUMMAPS; ++i)
+      // haleyjd 06/17/06: as above, but for ExMy maps
+      if(isExMy(gamemapname))
       {
-         sprintf(name, "WILV%d%d", wbs->epsd, i);
-         lnames[i] = W_CacheLumpName(name, PU_STATIC);
+         int lumpnum;
+
+         psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->last);
+
+         if((lumpnum = W_CheckNumForName(name)) != -1)
+            wi_lname_this = W_CacheLumpNum(lumpnum, PU_STATIC);
+         else
+            wi_lname_this = NULL;
+
+         psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->next);
+
+         if((lumpnum = W_CheckNumForName(name)) != -1)
+            wi_lname_next = W_CacheLumpNum(lumpnum, PU_STATIC);
+         else
+            wi_lname_next = NULL;
       }
       
       // you are here
@@ -1936,10 +1976,10 @@ static void WI_loadData(void)
                   // HACK ALERT!
                   a->p[i] = anims[1][4].p[i]; 
                }
-            }
-         }
-      }
-   }
+            } // end for
+         } // end for
+      } // end if
+   } // end else (!commercial)
 
    // More hacks on minus sign.
    wiminus = W_CacheLumpName("WIMINUS", PU_STATIC); 

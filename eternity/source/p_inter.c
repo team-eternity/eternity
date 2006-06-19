@@ -1323,7 +1323,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       // a hand-connected input device or VR helmet,
       // to pinch the player when they're hurt :)
 
-      // haleyjd: this was for the "CyberMan" glove controller ^_^
+      // haleyjd: this was for the "CyberMan" 3D mouse ^_^
       
       {
          int temp = damage < 100 ? damage : 100;

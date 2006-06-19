@@ -39,17 +39,26 @@ enum
    BSPEC_E5M8    = 0x00000080,
 };
 
-// haleyjd 10/05/05: map types
+// haleyjd 10/05/05: level translation types
 enum
 {
    LI_TYPE_DOOM,
    LI_TYPE_HERETIC,
 };
 
+//
+// LevelInfo_t
+//
+// haleyjd: This structure is a singleton and now contains all of what were
+// previously a bunch of messy global variables.
+//
 typedef struct LevelInfo_s
 {
    // map type selection
    int levelType;            // level type used for conversions, etc.
+
+   // specials: lines, sectors, etc.
+   unsigned long bossSpecs;  // boss special flags for BossDeath, HticBossDeath
 
    // intermission and finale stuff
    int  partime;             // intermission par time in seconds
@@ -59,6 +68,8 @@ typedef struct LevelInfo_s
    char *backDrop;           // pic used during text finale
    char *interMusic;         // text finale music
    char *levelPic;           // intermission level name graphics lump
+   char *nextLevelPic;       // level name lump for NEXT level 06/17/06
+   char *nextSecretPic;      // level name lump for SECRET level 06/17/06
    int  finaleType;          // type of finale sequence -- haleyjd 05/26/06
    boolean killStats;        // level has no statistics intermission
    boolean killFinale;       // level has no finale even if text is given
@@ -69,7 +80,6 @@ typedef struct LevelInfo_s
    // level transfer stuff
    char *nextLevel;          // name of next map for normal exit
    char *nextSecret;         // name of next map for secret exit
-   unsigned long bossSpecs;  // boss specials
 
    // level variables
    char *levelName;          // name used in automap
@@ -111,6 +121,7 @@ typedef struct LevelInfo_s
 
 } LevelInfo_t;
 
+// the one and only LevelInfo object
 extern LevelInfo_t LevelInfo;
 
 extern boolean default_weaponowned[NUMWEAPONS];

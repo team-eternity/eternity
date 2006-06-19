@@ -857,9 +857,6 @@ void S_Start(void)
    
    // start new music for the level
    mus_paused = 0;
-
-   // DEBUG
-   doom_printf("music = %s\n", LevelInfo.musicName);
    
    if(!*LevelInfo.musicName && gamemap==0)
    {

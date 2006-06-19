@@ -294,8 +294,8 @@ static void S_RunSequence(SndSeq_t *curSeq)
          Z_Free(curSeq);
       }
       break;
-   default: // unknown command? try advancing
-      curSeq->cmdPtr += 1; 
+   default: // unknown command? (shouldn't happen)
+      I_Error("S_RunSequence: internal error - unknown sequence command\n");
       break;
    }
 }

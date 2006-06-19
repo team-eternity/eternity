@@ -363,26 +363,39 @@ typedef struct
 
 levelvar_t levelvars[]=
 {
-   { IVT_STRING,  "levelpic",       &LevelInfo.levelPic },
-   { IVT_STRING,  "levelname",      &LevelInfo.levelName },
-   { IVT_INT,     "partime",        &LevelInfo.partime },
-   { IVT_STRING,  "music",          &LevelInfo.musicName },
-   { IVT_STRING,  "skyname",        &LevelInfo.skyName },
+   { IVT_STRING,  "altskyname",     &LevelInfo.altSkyName },
+   { IVT_FLAGS,   "boss-specials",  &LevelInfo.bossSpecs,  &boss_flagset }, // haleyjd 03/14/05
+   { IVT_STRING,  "colormap",       &LevelInfo.colorMap },
    { IVT_STRING,  "creator",        &LevelInfo.creator },
-   { IVT_STRING,  "interpic",       &LevelInfo.interPic },
-   { IVT_STRING,  "nextlevel",      &LevelInfo.nextLevel },
+   { IVT_BOOLEAN, "doublesky",      &LevelInfo.doubleSky },
+   { IVT_BOOLEAN, "edf-intername",  &LevelInfo.useEDFInterName },
+   { IVT_BOOLEAN, "endofgame",      &LevelInfo.endOfGame },
+   { IVT_STRING,  "extradata",      &LevelInfo.extraData },     // haleyjd 04/02/03
+   { IVT_BOOLEAN, "finale-secret",  &LevelInfo.finaleSecretOnly },
+   { IVT_STRNUM,  "finaletype",     &LevelInfo.finaleType, &finaleTypeVals },
+   { IVT_BOOLEAN, "fullbright",     &LevelInfo.useFullBright },
    { IVT_INT,     "gravity",        &LevelInfo.gravity },
    { IVT_STRING,  "inter-backdrop", &LevelInfo.backDrop },
-   //{ IVT_STRING,  "defaultweapons", &info_weapons },
-   { IVT_STRING,  "altskyname",     &LevelInfo.altSkyName },
-   { IVT_STRING,  "colormap",       &LevelInfo.colorMap },
-   { IVT_BOOLEAN, "fullbright",     &LevelInfo.useFullBright },
-   { IVT_BOOLEAN, "unevenlight",    &LevelInfo.unevenLight },
+   { IVT_STRING,  "intermusic",     &LevelInfo.interMusic },
+   { IVT_STRING,  "interpic",       &LevelInfo.interPic },
+   { IVT_STRING,  "intertext",      &LevelInfo.interTextLump }, // haleyjd 12/13/01
+   { IVT_BOOLEAN, "killfinale",     &LevelInfo.killFinale },
+   { IVT_BOOLEAN, "killstats",      &LevelInfo.killStats },     // haleyjd 03/24/05
+   { IVT_STRING,  "levelname",      &LevelInfo.levelName },
+   { IVT_STRING,  "levelpic",       &LevelInfo.levelPic },
+   { IVT_STRING,  "levelpicnext",   &LevelInfo.nextLevelPic },
+   { IVT_STRING,  "levelpicsecret", &LevelInfo.nextSecretPic },
+   { IVT_STRING,  "levelscript",    &LevelInfo.scriptLump },    // haleyjd
+   { IVT_STRNUM,  "leveltype",      &LevelInfo.levelType,  &levelTypeVals  },
    { IVT_BOOLEAN, "lightning",      &LevelInfo.hasLightning },
-   { IVT_STRING,  "sky2name",       &LevelInfo.sky2Name },
-   { IVT_BOOLEAN, "doublesky",      &LevelInfo.doubleSky },
+   { IVT_STRING,  "music",          &LevelInfo.musicName },
+   { IVT_STRING,  "nextlevel",      &LevelInfo.nextLevel },
+   { IVT_STRING,  "nextsecret",     &LevelInfo.nextSecret },
+   { IVT_INT,     "partime",        &LevelInfo.partime },
    { IVT_INT,     "skydelta",       &LevelInfo.skyDelta },
    { IVT_INT,     "sky2delta",      &LevelInfo.sky2Delta },
+   { IVT_STRING,  "skyname",        &LevelInfo.skyName },
+   { IVT_STRING,  "sky2name",       &LevelInfo.sky2Name },
    { IVT_STRING,  "sound-swtchn",   &LevelInfo.sound_swtchn },
    { IVT_STRING,  "sound-swtchx",   &LevelInfo.sound_swtchx },
    { IVT_STRING,  "sound-stnmov",   &LevelInfo.sound_stnmov },
@@ -392,20 +405,11 @@ levelvar_t levelvars[]=
    { IVT_STRING,  "sound-dorcls",   &LevelInfo.sound_dorcls },
    { IVT_STRING,  "sound-doropn",   &LevelInfo.sound_doropn },
    { IVT_STRING,  "sound-pstart",   &LevelInfo.sound_pstart },
-   { IVT_STRING,  "nextsecret",     &LevelInfo.nextSecret },
-   { IVT_BOOLEAN, "killfinale",     &LevelInfo.killFinale },
-   { IVT_BOOLEAN, "killstats",      &LevelInfo.killStats },     // haleyjd 03/24/05
-   { IVT_BOOLEAN, "finale-secret",  &LevelInfo.finaleSecretOnly },
-   { IVT_BOOLEAN, "endofgame",      &LevelInfo.endOfGame },
-   { IVT_STRING,  "intertext",      &LevelInfo.interTextLump }, // haleyjd 12/13/01
-   { IVT_STRING,  "intermusic",     &LevelInfo.interMusic },
-   { IVT_STRING,  "levelscript",    &LevelInfo.scriptLump },    // haleyjd
-   { IVT_STRING,  "extradata",      &LevelInfo.extraData },     // haleyjd 04/02/03
-   { IVT_FLAGS,   "boss-specials",  &LevelInfo.bossSpecs,  &boss_flagset   }, // haleyjd 03/14/05
-   { IVT_BOOLEAN, "edf-intername",  &LevelInfo.useEDFInterName },
-   { IVT_STRNUM,  "leveltype",      &LevelInfo.levelType,  &levelTypeVals  },
-   { IVT_STRNUM,  "finaletype",     &LevelInfo.finaleType, &finaleTypeVals },
-   { IVT_END,     0,                0}
+   { IVT_BOOLEAN, "unevenlight",    &LevelInfo.unevenLight },
+
+   //{ IVT_STRING,  "defaultweapons", &info_weapons },
+   
+   { IVT_END,     0,                0 } // must be last
 };
 
 //
@@ -653,6 +657,9 @@ static void P_LoadInterTextLump(void)
 //
 // Sets up default MapInfo values related to f_finale.c code.
 // Moved here from f_finale.c and altered for new features, etc.
+//
+// Note: The newer finale type is handled somewhat differently and is thus
+// in a different function below.
 //
 static void P_InfoDefaultFinale(void)
 {
@@ -1076,6 +1083,8 @@ static void P_ClearLevelVars(void)
    }
 
    LevelInfo.levelPic  = NULL;
+   LevelInfo.nextLevelPic = NULL;
+   LevelInfo.nextSecretPic = NULL;
    LevelInfo.musicName = "";
    LevelInfo.creator   = "unknown";
    LevelInfo.interPic  = "INTERPIC";

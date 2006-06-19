@@ -2525,8 +2525,7 @@ void D_NewWadLumps(int handle, int sound_update_type)
       {
          char *name = lumpinfo[i]->name;
 
-         // ignore ones called 'start' as these are checked
-         // elsewhere (m_menu.c)
+         // ignore ones called 'start' as these are checked elsewhere
          if((!*wad_firstlevel && strcmp(name, "START")) ||
             strncmp(name, wad_firstlevel, 8) < 0)
             strncpy(wad_firstlevel, name, 8);
@@ -2557,7 +2556,7 @@ void D_NewWadLumps(int handle, int sound_update_type)
          continue;
       }
       
-      // new music
+      // new music -- haleyjd 06/17/06: should be strncasecmp, not strncmp
       if(!strncasecmp(lumpinfo[i]->name, gameModeInfo->musPrefix,
                       strlen(gameModeInfo->musPrefix)))
       {

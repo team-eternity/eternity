@@ -138,66 +138,80 @@ mapthing_t *deathmatch_p;
 mapthing_t playerstarts[MAXPLAYERS];
 
 //
+// ShortToLong
+//
+// haleyjd 06/19/06: Happy birthday to me ^_^
+// Inline routine to convert a short value to a long, preserving the value
+// -1 but treating any other negative value as unsigned.
+//
+d_inline static long ShortToLong(short value)
+{
+   return (value == -1) ? -1l : (long)value & 0xffff;
+}
+
+//
 // P_LoadVertexes
 //
 // killough 5/3/98: reformatted, cleaned up
-
-void P_LoadVertexes (int lump)
+//
+void P_LoadVertexes(int lump)
 {
    byte *data;
    int i;
    
-   // Determine number of lumps:
+   // Determine number of vertexes:
    //  total lump length / vertex record length.
    numvertexes = W_LumpLength(lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
-   vertexes = Z_Malloc(numvertexes*sizeof(vertex_t),PU_LEVEL,0);
+   vertexes = Z_Malloc(numvertexes * sizeof(vertex_t), PU_LEVEL, 0);
    
    // Load data into cache.
    data = W_CacheLumpNum(lump, PU_STATIC);
    
-   // Copy and convert vertex coordinates,
-   // internal representation as fixed.
-   for(i=0; i<numvertexes; i++)
+   // Copy and convert vertex coordinates, internal representation as fixed.
+   for(i = 0; i < numvertexes; ++i)
    {
-      vertexes[i].x = SHORT(((mapvertex_t *) data)[i].x)<<FRACBITS;
-      vertexes[i].y = SHORT(((mapvertex_t *) data)[i].y)<<FRACBITS;
+      vertexes[i].x = SHORT(((mapvertex_t *) data)[i].x) << FRACBITS;
+      vertexes[i].y = SHORT(((mapvertex_t *) data)[i].y) << FRACBITS;
    }
 
    // Free buffer memory.
-   Z_Free (data);
+   Z_Free(data);
 }
 
 //
 // P_LoadSegs
 //
 // killough 5/3/98: reformatted, cleaned up
-
-void P_LoadSegs (int lump)
+//
+void P_LoadSegs(int lump)
 {
    int  i;
    byte *data;
    
    numsegs = W_LumpLength(lump) / sizeof(mapseg_t);
-   segs = Z_Malloc(numsegs*sizeof(seg_t),PU_LEVEL,0);
-   memset(segs, 0, numsegs*sizeof(seg_t));
-   data = W_CacheLumpNum(lump,PU_STATIC);
+   segs = Z_Malloc(numsegs * sizeof(seg_t), PU_LEVEL, 0);
+   memset(segs, 0, numsegs * sizeof(seg_t));
+   data = W_CacheLumpNum(lump, PU_STATIC);
    
-   for(i=0; i<numsegs; i++)
+   for(i = 0; i < numsegs; ++i)
    {
-      seg_t *li = segs+i;
-      mapseg_t *ml = (mapseg_t *) data + i;
+      seg_t *li = segs + i;
+      mapseg_t *ml = (mapseg_t *)data + i;
       
       int side, linedef;
       line_t *ldef;
 
-      li->v1 = &vertexes[SHORT(ml->v1)];
-      li->v2 = &vertexes[SHORT(ml->v2)];
+      // haleyjd 06/19/06: convert indices to unsigned
+      li->v1 = &vertexes[(long)SHORT(ml->v1) & 0xffff];
+      li->v2 = &vertexes[(long)SHORT(ml->v2) & 0xffff];
 
-      li->angle = (SHORT(ml->angle))<<16;
-      li->offset = (SHORT(ml->offset))<<16;
-      linedef = SHORT(ml->linedef);
+      li->angle  = (SHORT(ml->angle))  << 16;
+      li->offset = (SHORT(ml->offset)) << 16;
+
+      // haleyjd 06/19/06: convert indices to unsigned
+      linedef = (long)SHORT(ml->linedef) & 0xffff;
       ldef = &lines[linedef];
       li->linedef = ldef;
       side = SHORT(ml->side);
@@ -208,7 +222,7 @@ void P_LoadSegs (int lump)
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
-         li->backsector = 0;
+         li->backsector = NULL;
    }
    
    Z_Free(data);
@@ -219,26 +233,27 @@ void P_LoadSegs (int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 
-void P_LoadSubsectors (int lump)
+void P_LoadSubsectors(int lump)
 {
    byte *data;
    int  i;
    
-   numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
-   subsectors = Z_Malloc(numsubsectors*sizeof(subsector_t),PU_LEVEL,0);
+   numsubsectors = W_LumpLength(lump) / sizeof(mapsubsector_t);
+   subsectors = Z_Malloc(numsubsectors * sizeof(subsector_t), PU_LEVEL, 0);
    data = W_CacheLumpNum(lump, PU_STATIC);
 
-   memset(subsectors, 0, numsubsectors*sizeof(subsector_t));
+   memset(subsectors, 0, numsubsectors * sizeof(subsector_t));
    
-   for(i=0; i<numsubsectors; i++)
+   for(i = 0; i < numsubsectors; ++i)
    {
-      subsectors[i].numlines  = 
-         SHORT(((mapsubsector_t *) data)[i].numsegs );
-      subsectors[i].firstline = 
-         SHORT(((mapsubsector_t *) data)[i].firstseg);
+      // haleyjd 06/19/06: convert indices to unsigned
+      subsectors[i].numlines =
+         (long)SHORT(((mapsubsector_t *) data)[i].numsegs) & 0xffff;
+      subsectors[i].firstline =
+         (long)SHORT(((mapsubsector_t *) data)[i].firstseg) & 0xffff;
    }
    
-   Z_Free (data);
+   Z_Free(data);
 }
 
 //
@@ -246,41 +261,41 @@ void P_LoadSubsectors (int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSectors (int lump)
+void P_LoadSectors(int lump)
 {
    byte *data;
    int  i;
    
    numsectors = W_LumpLength(lump) / sizeof(mapsector_t);
-   sectors = Z_Malloc(numsectors*sizeof(sector_t),PU_LEVEL,0);
+   sectors = Z_Malloc(numsectors * sizeof(sector_t), PU_LEVEL, 0);
    memset(sectors, 0, numsectors*sizeof(sector_t));
-   data = W_CacheLumpNum(lump,PU_STATIC);
+   data = W_CacheLumpNum(lump, PU_STATIC);
 
-   for (i=0; i<numsectors; i++)
+   for(i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
-      const mapsector_t *ms = (mapsector_t *) data + i;
+      const mapsector_t *ms = (mapsector_t *)data + i;
       
-      ss->floorheight = SHORT(ms->floorheight)<<FRACBITS;
-      ss->ceilingheight = SHORT(ms->ceilingheight)<<FRACBITS;
-      ss->floorpic = R_FlatNumForName(ms->floorpic);
-      ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
-      ss->lightlevel = SHORT(ms->lightlevel);
-      ss->special = SHORT(ms->special);
-      ss->oldspecial = SHORT(ms->special);
-      ss->tag = SHORT(ms->tag);
-      ss->thinglist = NULL;
+      ss->floorheight   = SHORT(ms->floorheight)   << FRACBITS;
+      ss->ceilingheight = SHORT(ms->ceilingheight) << FRACBITS;
+      ss->floorpic      = R_FlatNumForName(ms->floorpic);
+      ss->ceilingpic    = R_FlatNumForName(ms->ceilingpic);
+      ss->lightlevel    = SHORT(ms->lightlevel);
+      ss->special       = SHORT(ms->special);
+      ss->oldspecial    = SHORT(ms->special);
+      ss->tag           = SHORT(ms->tag);
+      ss->thinglist     = NULL;
       ss->touching_thinglist = NULL;            // phares 3/14/98
 
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
 
       // killough 3/7/98:
-      ss->floor_xoffs = 0;
-      ss->floor_yoffs = 0;      // floor and ceiling flats offsets
-      ss->ceiling_xoffs = 0;
-      ss->ceiling_yoffs = 0;
-      ss->heightsec = -1;       // sector used to get floor and ceiling height
+      ss->floor_xoffs   =  0;
+      ss->floor_yoffs   =  0;   // floor and ceiling flats offsets
+      ss->ceiling_xoffs =  0;
+      ss->ceiling_yoffs =  0;
+      ss->heightsec     = -1;   // sector used to get floor and ceiling height
       ss->floorlightsec = -1;   // sector used to get floor lighting
       // killough 3/7/98: end changes
 
@@ -321,7 +336,7 @@ void P_LoadSectors (int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadNodes (int lump)
+void P_LoadNodes(int lump)
 {
    byte *data;
    int  i;
@@ -333,26 +348,26 @@ void P_LoadNodes (int lump)
    if(!numnodes)
       I_Error("P_LoadNodes: no nodes defined for level");
 
-   nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL,0);
-   data = W_CacheLumpNum (lump, PU_STATIC);
+   nodes = Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0);
+   data  = W_CacheLumpNum(lump, PU_STATIC);
 
-   for (i=0; i<numnodes; i++)
+   for(i = 0; i < numnodes; ++i)
    {
       node_t *no = nodes + i;
-      mapnode_t *mn = (mapnode_t *) data + i;
+      mapnode_t *mn = (mapnode_t *)data + i;
       int j;
 
-      no->x = SHORT(mn->x)<<FRACBITS;
-      no->y = SHORT(mn->y)<<FRACBITS;
+      no->x  = SHORT(mn->x)<<FRACBITS;
+      no->y  = SHORT(mn->y)<<FRACBITS;
       no->dx = SHORT(mn->dx)<<FRACBITS;
       no->dy = SHORT(mn->dy)<<FRACBITS;
 
-      for(j=0 ; j<2 ; j++)
+      for(j = 0; j < 2; ++j)
       {
          int k;
          no->children[j] = SHORT(mn->children[j]);
-         for(k=0 ; k<4 ; k++)
-            no->bbox[j][k] = SHORT(mn->bbox[j][k])<<FRACBITS;
+         for(k = 0; k < 4; ++k)
+            no->bbox[j][k] = SHORT(mn->bbox[j][k]) << FRACBITS;
       }
    }
    
@@ -429,13 +444,10 @@ void P_LoadThings(int lump)
    //          should now be valid in SP or co-op
    if(GameType != gt_dm)
    {
-      for(i = 0; i < MAXPLAYERS; i++)
+      for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(playeringame[i] && !players[i].mo)
-         {
-            I_Error("P_LoadThings: Missing required player start %i",
-                    i+1);
-         }
+            I_Error("P_LoadThings: Missing required player start %i\n", i+1);
       }
    }
 
@@ -530,7 +542,7 @@ void P_LoadLineDefs(int lump)
    numlines = W_LumpLength(lump) / sizeof(maplinedef_t);
    lines = Z_Malloc(numlines * sizeof(line_t), PU_LEVEL, 0);
    memset(lines, 0, numlines * sizeof(line_t));
-   data = W_CacheLumpNum(lump,PU_STATIC);
+   data = W_CacheLumpNum(lump, PU_STATIC);
 
    for(i = 0; i < numlines; ++i)
    {
@@ -541,8 +553,10 @@ void P_LoadLineDefs(int lump)
       ld->flags   = SHORT(mld->flags);
       ld->special = SHORT(mld->special);
       ld->tag     = SHORT(mld->tag);
-      v1 = ld->v1 = &vertexes[SHORT(mld->v1)];
-      v2 = ld->v2 = &vertexes[SHORT(mld->v2)];
+
+      // haleyjd 06/19/06: convert indices to unsigned
+      v1 = ld->v1 = &vertexes[(long)SHORT(mld->v1) & 0xffff];
+      v2 = ld->v2 = &vertexes[(long)SHORT(mld->v2) & 0xffff];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
@@ -553,28 +567,29 @@ void P_LoadLineDefs(int lump)
 
       if(v1->x < v2->x)
       {
-         ld->bbox[BOXLEFT] = v1->x;
+         ld->bbox[BOXLEFT]  = v1->x;
          ld->bbox[BOXRIGHT] = v2->x;
       }
       else
       {
-         ld->bbox[BOXLEFT] = v2->x;
+         ld->bbox[BOXLEFT]  = v2->x;
          ld->bbox[BOXRIGHT] = v1->x;
       }
 
       if(v1->y < v2->y)
       {
          ld->bbox[BOXBOTTOM] = v1->y;
-         ld->bbox[BOXTOP] = v2->y;
+         ld->bbox[BOXTOP]    = v2->y;
       }
       else
       {
          ld->bbox[BOXBOTTOM] = v2->y;
-         ld->bbox[BOXTOP] = v1->y;
+         ld->bbox[BOXTOP]    = v1->y;
       }
-      
-      ld->sidenum[0] = SHORT(mld->sidenum[0]);
-      ld->sidenum[1] = SHORT(mld->sidenum[1]);
+
+      // haleyjd 06/19/06: convert indices, except -1, to unsigned
+      ld->sidenum[0] = ShortToLong(SHORT(mld->sidenum[0]));
+      ld->sidenum[1] = ShortToLong(SHORT(mld->sidenum[1]));
 
       // killough 4/4/98: support special sidedef interpretation below
       if(ld->sidenum[0] != -1 && ld->special)
@@ -695,8 +710,9 @@ void P_LoadHexenLineDefs(int lump)
 
       ld->tag = 0;
 
-      v1 = ld->v1 = &vertexes[SHORT(mld->v1)];
-      v2 = ld->v2 = &vertexes[SHORT(mld->v2)];
+      // haleyjd 06/19/06: convert indices to unsigned
+      v1 = ld->v1 = &vertexes[(long)SHORT(mld->v1) & 0xffff];
+      v2 = ld->v2 = &vertexes[(long)SHORT(mld->v2) & 0xffff];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
@@ -726,9 +742,10 @@ void P_LoadHexenLineDefs(int lump)
          ld->bbox[BOXBOTTOM] = v2->y;
          ld->bbox[BOXTOP] = v1->y;
       }
-      
-      ld->sidenum[0] = SHORT(mld->sidenum[0]);
-      ld->sidenum[1] = SHORT(mld->sidenum[1]);
+
+      // haleyjd 06/19/06: convert indices, except -1, to unsigned
+      ld->sidenum[0] = ShortToLong(SHORT(mld->sidenum[0]));
+      ld->sidenum[1] = ShortToLong(SHORT(mld->sidenum[1]));
 
       // killough 4/4/98: support special sidedef interpretation below
       if(ld->sidenum[0] != -1 && ld->special)
@@ -809,24 +826,26 @@ void P_LoadSideDefs(int lump)
 
 void P_LoadSideDefs2(int lump)
 {
-   byte *data = W_CacheLumpNum(lump,PU_STATIC);
+   byte *data = W_CacheLumpNum(lump, PU_STATIC);
    int  i;
 
-   for(i=0; i<numsides; i++)
+   for(i = 0; i < numsides; ++i)
    {
-      register mapsidedef_t *msd = (mapsidedef_t *) data + i;
+      register mapsidedef_t *msd = (mapsidedef_t *)data + i;
       register side_t *sd = sides + i;
       register sector_t *sec;
 
-      sd->textureoffset = SHORT(msd->textureoffset)<<FRACBITS;
-      sd->rowoffset = SHORT(msd->rowoffset)<<FRACBITS;
+      sd->textureoffset = SHORT(msd->textureoffset) << FRACBITS;
+      sd->rowoffset     = SHORT(msd->rowoffset)     << FRACBITS;
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
       // killough 4/11/98: refined to allow colormaps to work as wall
       // textures if invalid as colormaps but valid as textures.
 
-      sd->sector = sec = &sectors[SHORT(msd->sector)];
-      switch (sd->special)
+      // haleyjd 06/19/06: convert indices to unsigned
+      sd->sector = sec = &sectors[(long)SHORT(msd->sector) & 0xffff];
+
+      switch(sd->special)
       {
       case 242:                  // variable colormap via 242 linedef
          sd->bottomtexture =
@@ -851,12 +870,13 @@ void P_LoadSideDefs2(int lump)
          break;
 
       default:                        // normal cases
-         sd->midtexture = R_TextureNumForName(msd->midtexture);
-         sd->toptexture = R_TextureNumForName(msd->toptexture);
+         sd->midtexture    = R_TextureNumForName(msd->midtexture);
+         sd->toptexture    = R_TextureNumForName(msd->toptexture);
          sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
          break;
       }
    }
+
    Z_Free(data);
 }
 
@@ -1051,8 +1071,8 @@ void P_LoadBlockMap(int lump)
    
    // sf: -blockmap checkparm made into variable
    // also checking for levels without blockmaps (0 length)
-   if(r_blockmap || W_LumpLength(lump)==0 ||
-      (count = W_LumpLength(lump)/2) >= 0x10000)
+   if(r_blockmap || W_LumpLength(lump) == 0 || 
+      (count = W_LumpLength(lump) / 2) >= 0x10000)
    {
       P_CreateBlockMap();
    }
@@ -1400,9 +1420,9 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    wminfo.partime = 180;
    c_showprompt = false;      // kill console prompt as nothing can
                               // be typed at the moment
-   for(i=0; i<MAXPLAYERS; i++)
-      players[i].killcount = players[i].secretcount = 
-         players[i].itemcount = 0;
+
+   for(i = 0; i < MAXPLAYERS; ++i)
+      players[i].killcount = players[i].secretcount = players[i].itemcount = 0;
 
    // Initial height of PointOfView will be set by player think.
    players[consoleplayer].viewz = 1;
@@ -1442,8 +1462,8 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    DEBUGMSG("stop sounds\n");
 
    // Make sure all sounds are stopped before Z_FreeTags. - sf: why?
-   S_StopSounds();  // sf: s_start split into s_start, s_stopsounds
-                    // because of this requirement
+   //  sf: s_start split into s_start, s_stopsounds because of this requirement
+   S_StopSounds();
    
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_PURGELEVEL-1);
@@ -1455,7 +1475,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_LoadLevelInfo(lumpnum);  // load MapInfo
    E_LoadExtraData();         // haleyjd 10/08/03: load ExtraData
 
-   // haleyjd: changed from if(0) to #if 0
 #if 0
    // when loading a hub level, display a 'loading' box
    if(hub_changelevel)
@@ -1466,7 +1485,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_NewLevelMsg();
    HU_Start();
    
-   // must be after p_loadlevelinfo as the music lump name is got there
+   // must be after p_loadlevelinfo as the music lump name is gotten there
    S_Start();
 
    DEBUGMSG("P_SetupLevel: loaded level info\n");
@@ -1484,18 +1503,18 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    level_error = false;  // reset
    
-   P_LoadVertexes(lumpnum+ML_VERTEXES);
-   P_LoadSectors (lumpnum+ML_SECTORS);
-   P_LoadSideDefs(lumpnum+ML_SIDEDEFS);       // killough 4/4/98
-                                              //
+   P_LoadVertexes(lumpnum + ML_VERTEXES);
+   P_LoadSectors (lumpnum + ML_SECTORS);
+   P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
+
    // haleyjd 10/03/05: handle multiple map formats
    switch(mapformat)
    {
    case LEVEL_FORMAT_DOOM:
-      P_LoadLineDefs(lumpnum+ML_LINEDEFS);
+      P_LoadLineDefs(lumpnum + ML_LINEDEFS);
       break;
    case LEVEL_FORMAT_HEXEN:
-      P_LoadHexenLineDefs(lumpnum+ML_LINEDEFS);
+      P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);
       break;
    }
 
@@ -1503,8 +1522,8 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    V_LoadingIncrease();  // update
 #endif
 
-   P_LoadSideDefs2(lumpnum+ML_SIDEDEFS);      //       |
-   P_LoadLineDefs2();                         // killough 4/4/98
+   P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
+   P_LoadLineDefs2();                     // killough 4/4/98
 
    if(level_error)       // drop to the console
    {             
@@ -1512,15 +1531,15 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
       return;
    }
 
-   P_LoadBlockMap  (lumpnum+ML_BLOCKMAP);     // killough 3/1/98
-   P_LoadSubsectors(lumpnum+ML_SSECTORS);
-   P_LoadNodes     (lumpnum+ML_NODES);
-   P_LoadSegs      (lumpnum+ML_SEGS);
+   P_LoadBlockMap  (lumpnum + ML_BLOCKMAP);     // killough 3/1/98
+   P_LoadSubsectors(lumpnum + ML_SSECTORS);
+   P_LoadNodes     (lumpnum + ML_NODES);
+   P_LoadSegs      (lumpnum + ML_SEGS);
 
    DEBUGMSG("loaded level\n");
    
 #if 0
-   V_LoadingIncrease();    // update
+   V_LoadingIncrease();
 #endif
 
    // haleyjd 01/26/04: call new P_LoadReject
@@ -1530,8 +1549,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_RemoveSlimeTrails(); // killough 10/98: remove slime trails from wad
 
    // Note: you don't need to clear player queue slots --
-   // a much simpler fix is in g_game.c -- killough 10/98
-   
+   // a much simpler fix is in g_game.c -- killough 10/98   
    bodyqueslot = 0;
    deathmatch_p = deathmatchstarts;
 
@@ -1539,10 +1557,10 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    switch(mapformat)
    {
    case LEVEL_FORMAT_DOOM:
-      P_LoadThings(lumpnum+ML_THINGS);
+      P_LoadThings(lumpnum + ML_THINGS);
       break;
    case LEVEL_FORMAT_HEXEN:
-      P_LoadHexenThings(lumpnum+ML_THINGS);
+      P_LoadHexenThings(lumpnum + ML_THINGS);
       break;
    }
 
@@ -1551,17 +1569,15 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // if deathmatch, randomly spawn the active players
    if(GameType == gt_dm)
    {
-      for(i=0; i<MAXPLAYERS; i++)
+      for(i = 0; i < MAXPLAYERS; ++i)
       {
-         if (playeringame[i])
+         if(playeringame[i])
          {
             players[i].mo = NULL;
             G_DeathMatchSpawnPlayer(i);
          }
       }
    }
-
-   DEBUGMSG("done\n");
 
    // haleyjd: init all thing lists (boss brain spots, etc)
    P_InitThingLists(); 
@@ -1576,12 +1592,12 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // set up world state
    P_SpawnSpecials();
 
-#if 0
-   V_LoadingIncrease();      // update
-#endif
-
    // haleyjd
    P_InitLightning();
+
+#if 0
+   V_LoadingIncrease();
+#endif
 
    DEBUGMSG("Precaching graphics\n");
    
@@ -1591,36 +1607,28 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    DEBUGMSG("done\n");
    
-   // psprites
-   // haleyjd 04/11/03: HU_FragsUpdate moved to G_DoLoadLevel
-   
    R_SetViewSize(screenSize+3); //sf
 
 #if 0
    V_LoadingIncrease();
 #endif
-   
-   DEBUGMSG("P_SetupLevel: finished\n");
-   if(doom1level && gamemode == commercial)
-      C_Printf("doom 1 level\n");
 
    // haleyjd: keep the chasecam on between levels
    if(camera == &chasecam)
-   {
       P_ResetChasecam();
-   }
    else
       camera = NULL;        // camera off
 
    // haleyjd 03/15/03: load and initialize any level scripts
    A_InitLevelScript();
+
+   DEBUGMSG("P_SetupLevel: finished\n");
 }
 
 //
 // P_InitThingLists
 //
-// haleyjd 11/19/02
-// Sets up all dynamically allocated thing lists
+// haleyjd 11/19/02: Sets up all dynamically allocated thing lists.
 //
 void P_InitThingLists(void)
 {

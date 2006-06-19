@@ -1314,7 +1314,7 @@ void P_RespawnSpecials (void)
 
    // FIXME: Heretic support?
    
-   ss = R_PointInSubsector (x,y);
+   ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
 

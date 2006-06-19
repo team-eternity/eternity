@@ -86,18 +86,18 @@ extern int r_blockmap;
 //
 typedef struct vertex_s
 {
-  fixed_t x, y;
+   fixed_t x, y;
 } vertex_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.
 typedef struct degenmobj_s
 {
-  thinker_t thinker;  // not used for anything
-  fixed_t x, y, z;
+   thinker_t thinker;  // not used for anything
+   fixed_t x, y, z;
 
 #ifdef R_LINKEDPORTALS
-  // SoM: yes Quasar, this is entirely necessary
-  int     groupid; // The group the sound opriginated in
+   // SoM: yes Quasar, this is entirely necessary
+   int     groupid; // The group the sound originated in
 #endif
 } degenmobj_t;
 
@@ -120,7 +120,7 @@ struct sector_s
    short special;
    short oldspecial;      //jff 2/16/98 remembers if sector WAS secret (automap)
    short tag;
-   int nexttag,firsttag;  // killough 1/30/98: improves searches for tags.
+   int nexttag, firsttag; // killough 1/30/98: improves searches for tags.
    int soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
    mobj_t *soundtarget;   // thing that made a sound (or null)
    int blockbox[4];       // mapblock bounding box for height changes
@@ -236,7 +236,10 @@ typedef struct line_s
    short flags;           // Animation related.
    short special;         
    short tag;
-   short sidenum[2];      // Visual appearance: SideDefs.
+
+   // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
+   long  sidenum[2];      // Visual appearance: SideDefs.
+
    fixed_t bbox[4];       // A bounding box, for the linedef's extent
    slopetype_t slopetype; // To aid move clipping.
    sector_t *frontsector; // Front and back sector.
@@ -244,7 +247,7 @@ typedef struct line_s
    int validcount;        // if == validcount, already checked
    void *specialdata;     // thinker_t for reversable actions
    int tranlump;          // killough 4/11/98: translucency filter, -1 == none
-   int firsttag,nexttag;  // killough 4/17/98: improves searches for tags.
+   int firsttag, nexttag; // killough 4/17/98: improves searches for tags.
 
 #ifdef R_PORTALS
    // SoM 12/10/03: wall portals
@@ -266,7 +269,10 @@ typedef struct line_s
 typedef struct subsector_s
 {
   sector_t *sector;
-  short numlines, firstline;
+
+  // haleyjd 06/19/06: converted from short to long for 65535 segs
+  long  numlines, firstline;
+
 #ifdef POLYOBJECTS
   struct polyobj_s *polyList; // haleyjd 02/19/06: list of polyobjects
 #endif
