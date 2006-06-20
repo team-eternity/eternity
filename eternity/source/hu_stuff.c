@@ -1103,7 +1103,7 @@ static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
    newtw->y = y;   
    if(!(newtw->font = V_FontSelect(font)))
       newtw->font = V_FontSelect(VFONT_SMALL);
-   newtw->cleartic = cleartic;
+   newtw->cleartic = cleartic >= 0 ? cleartic : 0;
    newtw->flags = flags;
 
    // set message
@@ -1867,7 +1867,7 @@ static cell AMX_NATIVE_CALL sm_newtextwidget(AMX *amx, cell *params)
    }
 
    HU_DynamicTextWidget(name, params[3], params[4], params[5], msg,
-                        leveltime + params[6], params[7]);
+                        params[6] != 0 ? leveltime + params[6] : 0, params[7]);
 
    free(name);
    free(msg);
@@ -1952,7 +1952,7 @@ static cell AMX_NATIVE_CALL sm_setwidgettext(AMX *amx, cell *params)
 
       tw->message = tw->alloc = strdup(value);
 
-      tw->cleartic = leveltime + params[3];
+      tw->cleartic = params[3] != 0 ? leveltime + params[3] : 0;
 
       HU_UpdateEraseData(tw);
    }
