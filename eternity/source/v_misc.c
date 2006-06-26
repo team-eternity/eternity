@@ -385,8 +385,8 @@ int V_StringWidthBig(const unsigned char *s)
 
 void V_DrawBox(int x, int y, int w, int h)
 {
-   int xs = bgp[0]->width;
-   int ys = bgp[0]->height;
+   int xs = SHORT(bgp[0]->width);
+   int ys = SHORT(bgp[0]->height);
    int i,j;
    
    // top rows

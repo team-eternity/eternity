@@ -778,7 +778,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
          tmthingzl = tmthing->z;
          tmthingzh = tmthingzl + tmthing->height;
          
-         if(tmthingzl >= thingzh) // mover is over?
+         if(tmthingzl >= thingzl) // mover is over?
          {            
             if(!(tmthing->flags & FLAGS_CANTSETHEIGHTS) &&
                !(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
@@ -786,7 +786,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
                tmfloorz = thingzh;
 
             // actions to take if mover is standing ON the thing...
-            if(tmthingzl == thingzh)
+            if(tmthingzl <= thingzh)
             {
                if(P_Touched(thing, tmthing)) // touchy things should explode    
                   return true;
@@ -806,7 +806,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
             
             return true;
          } 
-         else if(tmthingzh <= thingzl) // mover is under?
+         else if(tmthingzl < thingzl) // mover is under?
          {
             if(!(tmthing->flags & FLAGS_CANTSETHEIGHTS) &&
                !(thing->flags & FLAGS_NOSETHEIGHTS) && thing->flags & MF_SOLID &&
@@ -814,7 +814,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
                tmceilingz = thingzl;
             
             // actions to take if mover is touching thing from beneath
-            if(tmthingzh == thingzl)
+            if(tmthingzh >= thingzl)
             {
                if(P_Touched(thing, tmthing)) // touchy things should explode
                   return true;
@@ -1308,8 +1308,8 @@ boolean P_CheckPositionMobjOnly(mobj_t *thing, fixed_t x, fixed_t y)
    return true;
 }
 
-static boolean P_ThingMovexy(mobj_t *thing, fixed_t oldx, 
-                             fixed_t oldy);
+static boolean P_ThingMovexy(mobj_t *thing, fixed_t oldx, fixed_t oldy);
+boolean P_ThingMovez2(mobj_t *thing, fixed_t tx, fixed_t ty);
 #endif 
 
 //
@@ -1465,8 +1465,6 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
    P_SetThingPosition(thing);
 
 #ifdef OVER_UNDER
-   // SoM 11/4/02: Adjust floorz/ceilingz of things where this obj
-   // used to stand.
    if(demo_version >= 331 && !comp[comp_overunder])
       P_ThingMovexy(thing, oldx, oldy);
 #endif
@@ -1693,6 +1691,7 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
          {
             // Moving up. Check things above because they may need
             // to be moved up as well...
+
             if(mobj->z + mobj->height <= thingzl || mobj->z >= thingzh)
                goto moveok;
 
@@ -1712,6 +1711,7 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
          {
             // Moving down. Things standing on top will need to be lowered
             // and things below may need to be pushed down.
+            
             if(mobj->z + mobj->height <= thingzl)
                goto moveok;
 
@@ -1738,7 +1738,7 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
 
          moveok:
 
-         if(thingzl >= mobj->z + mobj->height)
+         if(thing->z >= mobj->z)
          {
             if(!(thing->flags && FLAGS_NOSETHEIGHTS) && 
                mobj->z + mobj->height > thing->floorz)
@@ -1750,7 +1750,7 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
                   mobj->ceilingz = thing->z;
             }
          }
-         else if(thingzh <= mobj->z)
+         else if(thing->z < mobj->z)
          {
             // haleyjd 06/12/06: some things don't set other things' heights
             if(!(thing->flags & FLAGS_NOSETHEIGHTS) && mobj->z < thing->ceilingz)
@@ -1836,7 +1836,6 @@ static boolean P_ThingMovexy(mobj_t *thing, fixed_t oldx, fixed_t oldy)
       
    return true;
 }
-
 
 // SoM: UGH WHY?
 static boolean PIT_ChangeSector(mobj_t *thing);

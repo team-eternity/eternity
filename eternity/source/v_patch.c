@@ -37,9 +37,15 @@ static int vc_centery;
 static fixed_t vc_centeryfrac;
 static int vc_centerx;
 static fixed_t vc_centerxfrac;
+// haleyjd 06/21/06: removed unused vc_texheight
 static byte *vc_source;
-static int vc_texheight;
 static void (*vc_colfunc)();
+
+// haleyjd 06/21/06: vc_maxfrac: this variable keeps track of the length of the
+// column currently being drawn and allows the V_DrawPatchColumn variants to cap
+// "frac" to this value and avoid the "sparkles" phenomenon, which for screen
+// patches is quite terrible when it does occur
+static fixed_t vc_maxfrac;
 
 // translucency lookups
 static unsigned int *v_fg2rgb;
@@ -75,7 +81,8 @@ static void V_DrawPatchColumn(void)
    dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale; 
+   fracstep = vc_iscale;
+
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
@@ -84,45 +91,35 @@ static void V_DrawPatchColumn(void)
    // This is as fast as it gets.       (Yeah, right!!! -- killough)
    //
    // killough 2/1/98: more performance tuning
+   // haleyjd 06/21/06: rewrote and specialized for screen patches
 
    {
       register const byte *source = vc_source;
-      register heightmask = vc_texheight - 1;
-
-      if(vc_texheight & heightmask) // not a power of 2 -- killough
+      
+      if(frac < 0)
+         frac = 0;
+      if(frac > vc_maxfrac)
+         frac = vc_maxfrac;
+      
+      while((count -= 2) >= 0)
       {
-         heightmask++;
-         heightmask <<= FRACBITS;
-         
-         if(frac < 0)
-            while((frac += heightmask) < 0);
-         else
-            while(frac >= heightmask)
-               frac -= heightmask;
-          
-         do
+         *dest = source[frac >> FRACBITS];
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
          {
-            *dest = source[frac>>FRACBITS];
-            dest += vc_buffer->pitch; // killough 11/98
-            if((frac += fracstep) >= heightmask)
-               frac -= heightmask;
-         } 
-         while(--count);
-      }
-      else
-      {
-         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
-         {
-            *dest = source[(frac>>FRACBITS) & heightmask];
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-            *dest = source[(frac>>FRACBITS) & heightmask];
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
+            frac = vc_maxfrac;
+            fracstep = 0;
          }
-         if(count & 1)
-            *dest = source[(frac>>FRACBITS) & heightmask];
+         *dest = source[frac >> FRACBITS];
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
+         {
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
       }
+      if(count & 1)
+         *dest = source[frac >> FRACBITS];
    }
 } 
 
@@ -162,45 +159,35 @@ static void V_DrawPatchColumnTR(void)
    // This is as fast as it gets.       (Yeah, right!!! -- killough)
    //
    // killough 2/1/98: more performance tuning
+   // haleyjd 06/21/06: rewrote and specialized for screen patches
 
    {
       register const byte *source = vc_source;
-      register heightmask = vc_texheight - 1;
-
-      if(vc_texheight & heightmask) // not a power of 2 -- killough
+      
+      if(frac < 0)
+         frac = 0;
+      if(frac > vc_maxfrac)
+         frac = vc_maxfrac;
+      
+      while((count -= 2) >= 0)
       {
-         heightmask++;
-         heightmask <<= FRACBITS;
-         
-         if(frac < 0)
-            while((frac += heightmask) < 0);
-         else
-            while(frac >= heightmask)
-               frac -= heightmask;
-          
-         do
+         *dest = vc_translation[source[frac >> FRACBITS]];
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
          {
-            *dest = vc_translation[source[frac>>FRACBITS]];
-            dest += vc_buffer->pitch; // killough 11/98
-            if((frac += fracstep) >= heightmask)
-               frac -= heightmask;
-         } 
-         while(--count);
-      }
-      else
-      {
-         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
-         {
-            *dest = vc_translation[source[(frac>>FRACBITS) & heightmask]];
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-            *dest = vc_translation[source[(frac>>FRACBITS) & heightmask]];
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
+            frac = vc_maxfrac;
+            fracstep = 0;
          }
-         if(count & 1)
-            *dest = vc_translation[source[(frac>>FRACBITS) & heightmask]];
+         *dest = vc_translation[source[frac >> FRACBITS]];
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
+         {
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
       }
+      if(count & 1)
+         *dest = vc_translation[source[frac >> FRACBITS]];
    }
 } 
 
@@ -243,53 +230,38 @@ void V_DrawPatchColumnTL(void)
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
+   // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = vc_source;
-      register fixed_t heightmask = vc_texheight - 1;
-
-      if(vc_texheight & heightmask)   // not a power of 2 -- killough
+      
+      if(frac < 0)
+         frac = 0;
+      if(frac > vc_maxfrac)
+         frac = vc_maxfrac;
+      
+      while((count -= 2) >= 0)
       {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if(frac < 0)
-            while((frac += heightmask) <  0);
-         else
-            while(frac >= heightmask)
-               frac -= heightmask;
-        
-         do
+         DO_COLOR_BLEND();
+
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
          {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            DO_COLOR_BLEND();
-            
-            dest += vc_buffer->pitch; // killough 11/98
-            if((frac += fracstep) >= heightmask)
-               frac -= heightmask;
-         } 
-         while(--count);
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
+
+         DO_COLOR_BLEND();
+
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
+         {
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
       }
-      else
+      if(count & 1)
       {
-         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
-         {
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-         }
-         if(count & 1)
-         {
-            DO_COLOR_BLEND();
-         }
+         DO_COLOR_BLEND();
       }
    }
 }
@@ -335,53 +307,38 @@ void V_DrawPatchColumnTRTL(void)
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
+   // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = vc_source;
-      register fixed_t heightmask = vc_texheight - 1;
-
-      if(vc_texheight & heightmask)   // not a power of 2 -- killough
+      
+      if(frac < 0)
+         frac = 0;
+      if(frac > vc_maxfrac)
+         frac = vc_maxfrac;
+      
+      while((count -= 2) >= 0)
       {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if(frac < 0)
-            while((frac += heightmask) <  0);
-         else
-            while(frac >= heightmask)
-               frac -= heightmask;
-        
-         do
+         DO_COLOR_BLEND();
+
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
          {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            DO_COLOR_BLEND();
-            
-            dest += vc_buffer->pitch; // killough 11/98
-            if((frac += fracstep) >= heightmask)
-               frac -= heightmask;
-         } 
-         while(--count);
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
+
+         DO_COLOR_BLEND();
+
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
+         {
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
       }
-      else
+      if(count & 1)
       {
-         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
-         {
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-         }
-         if(count & 1)
-         {
-            DO_COLOR_BLEND();
-         }
+         DO_COLOR_BLEND();
       }
    }
 }
@@ -432,53 +389,38 @@ void V_DrawPatchColumnAdd(void)
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
+   // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = vc_source;
-      register fixed_t heightmask = vc_texheight - 1;
-
-      if(vc_texheight & heightmask)   // not a power of 2 -- killough
+      
+      if(frac < 0)
+         frac = 0;
+      if(frac > vc_maxfrac)
+         frac = vc_maxfrac;
+      
+      while((count -= 2) >= 0)
       {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if(frac < 0)
-            while((frac += heightmask) <  0);
-         else
-            while(frac >= heightmask)
-               frac -= heightmask;
-        
-         do
+         DO_COLOR_BLEND();
+
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
          {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            DO_COLOR_BLEND();
-            
-            dest += vc_buffer->pitch; // killough 11/98
-            if((frac += fracstep) >= heightmask)
-               frac -= heightmask;
-         } 
-         while(--count);
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
+
+         DO_COLOR_BLEND();
+
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
+         {
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
       }
-      else
+      if(count & 1)
       {
-         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
-         {
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-         }
-         if(count & 1)
-         {
-            DO_COLOR_BLEND();
-         }
+         DO_COLOR_BLEND();
       }
    }
 }
@@ -529,53 +471,38 @@ void V_DrawPatchColumnAddTR(void)
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
+   // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = vc_source;
-      register fixed_t heightmask = vc_texheight - 1;
-
-      if(vc_texheight & heightmask)   // not a power of 2 -- killough
+      
+      if(frac < 0)
+         frac = 0;
+      if(frac > vc_maxfrac)
+         frac = vc_maxfrac;
+      
+      while((count -= 2) >= 0)
       {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if(frac < 0)
-            while((frac += heightmask) <  0);
-         else
-            while(frac >= heightmask)
-               frac -= heightmask;
-        
-         do
+         DO_COLOR_BLEND();
+
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
          {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            DO_COLOR_BLEND();
-            
-            dest += vc_buffer->pitch; // killough 11/98
-            if((frac += fracstep) >= heightmask)
-               frac -= heightmask;
-         } 
-         while(--count);
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
+         
+         DO_COLOR_BLEND();
+         
+         dest += vc_buffer->pitch;
+         if((frac += fracstep) > vc_maxfrac)
+         {
+            frac = vc_maxfrac;
+            fracstep = 0;
+         }
       }
-      else
+      if(count & 1)
       {
-         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
-         {
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-
-            DO_COLOR_BLEND();
-
-            dest += vc_buffer->pitch;   // killough 11/98
-            frac += fracstep;
-         }
-         if(count & 1)
-         {
-            DO_COLOR_BLEND();
-         }
+         DO_COLOR_BLEND();
       }
    }
 }
@@ -589,8 +516,9 @@ static void V_DrawMaskedColumn(column_t *column)
 {
    int topscreen, bottomscreen;
    fixed_t basetexturemid = vc_texturemid;
-   
-   vc_texheight = 0; // killough 11/98
+ 
+   // haleyjd 06/21/06: this isn't used any more
+   // vc_texheight = 0; // killough 11/98
 
    while(column->topdelta != 0xff)
    {
@@ -598,7 +526,15 @@ static void V_DrawMaskedColumn(column_t *column)
       topscreen = v_sprtopscreen + v_spryscale * column->topdelta;
       bottomscreen = topscreen + v_spryscale * column->length;
 
+      // haleyjd 06/21/06: calculate the maximum allowed value for the frac
+      // column index; this avoids potential overflow leading to "sparkles",
+      // which for most screen patches look more like mud. Note this solution
+      // probably isn't suitable for adaptation to the R_DrawColumn system
+      // due to efficiency concerns.
+      vc_maxfrac = (column->length - 1) << FRACBITS;
+
       // Here's where "sparkles" come in -- killough:
+      // haleyjd: but not with vc_maxfrac :)
       vc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
       vc_yh = (bottomscreen - 1) >> FRACBITS;
 
@@ -648,10 +584,10 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 
    scale  = FixedDiv(vc_buffer->width, SCREENWIDTH);
    iscale = FixedDiv(SCREENWIDTH, vc_buffer->width);
-   v_spryscale = 
-      FixedMul(scale, 
-               FixedDiv((vc_buffer->height << FRACBITS) / SCREENHEIGHT,
-                        (vc_buffer->width  << FRACBITS) / SCREENWIDTH));
+
+   // haleyjd 06/21/06: simplified redundant math
+   v_spryscale = FixedDiv(vc_buffer->height, SCREENHEIGHT);
+   vc_iscale   = FixedDiv(SCREENHEIGHT, vc_buffer->height);
    
    x1 = FixedMul(tx, scale) >> FRACBITS;
 
@@ -718,7 +654,6 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          I_Error("V_DrawPatchInt: unknown patch drawstyle %d\n", pi->drawstyle);
       }
 
-      vc_iscale = FixedDiv(FRACUNIT, v_spryscale);
       v_sprtopscreen = vc_centeryfrac - FixedMul(vc_texturemid, v_spryscale);
       
       for(; vc_x <= vc_x2; vc_x++, startfrac += xiscale)

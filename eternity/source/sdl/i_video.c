@@ -663,9 +663,8 @@ static void I_ShutdownGraphicsPartway(void)
 {
    if(in_graphics_mode)
    {
-      // SoM 1-20-04: let go of input
-      SDL_ShowCursor(SDL_ENABLE);
-      SDL_WM_GrabInput(SDL_GRAB_OFF);
+      // haleyjd 06/21/06: use UpdateGrab here, not release
+      UpdateGrab();
       in_graphics_mode = false;
       in_textmode = true;
       sdlscreen = NULL;
@@ -688,6 +687,35 @@ void I_ShutdownGraphics(void)
 
 extern boolean setsizeneeded;
 
+static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs)
+{
+   static boolean firsttime = true;
+   int p;
+
+   if(firsttime)
+   {
+      firsttime = false;
+
+      if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
+         (p = atoi(myargv[p + 1])) >= 320 && p <= 1024)
+         *w = p;
+      
+      if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
+         (p = atoi(myargv[p + 1])) >= 200 && p <= 768)
+         *h = p;
+      
+      if(M_CheckParm("-fullscreen"))
+         *fs = true;
+      if(M_CheckParm("-nofullscreen") || M_CheckParm("-window"))
+         *fs = false;
+      
+      if(M_CheckParm("-vsync"))
+         *vs = true;
+      if(M_CheckParm("-novsync"))
+         *vs = false;
+   }
+}
+
 //
 // killough 11/98: New routine, for setting hires and page flipping
 //
@@ -699,6 +727,7 @@ static boolean I_InitGraphicsMode(void)
    int v_h = SCREENHEIGHT;
    int flags = SDL_SWSURFACE;
    SDL_Event dummy;
+   boolean wantfullscreen = false, wantvsync = false;
 
    // haleyjd 10/09/05: from Chocolate DOOM
    // mouse grabbing   
@@ -709,7 +738,7 @@ static boolean I_InitGraphicsMode(void)
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
-      flags = SDL_HWSURFACE | SDL_DOUBLEBUF;
+      wantvsync = true;
    
    scroll_offset = 0;
    switch(v_mode)
@@ -743,6 +772,16 @@ static boolean I_InitGraphicsMode(void)
    
    // odd modes are fullscreen
    if(v_mode & 1)
+      wantfullscreen = true;
+
+   // haleyjd 06/21/06: allow complete command line overrides but only
+   // on initial video mode set (setting from menu doesn't support this)
+   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync);
+
+   if(wantvsync)
+      flags = SDL_HWSURFACE | SDL_DOUBLEBUF;
+
+   if(wantfullscreen)
       flags |= SDL_FULLSCREEN;
      
    // SoM: 4/15/02: Saftey mode
@@ -766,7 +805,7 @@ static boolean I_InitGraphicsMode(void)
       I_Error("Couldn't set video mode %ix%i\n", v_w, v_h);
 
    // haleyjd 10/09/05: keep track of fullscreen state
-   fullscreen = (v_mode & 1);
+   fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
 
    MN_ErrorMsg("");       // clear any error messages
 

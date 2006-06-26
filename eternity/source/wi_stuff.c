@@ -562,10 +562,7 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
    else
    {
       // haleyjd: changed printf to C_Printf
-     
-      // DEBUG
-      C_Printf(FC_ERROR "Could not place patch on level %d\n", 
-               n+1);
+      C_Printf(FC_ERROR "Could not place patch on level %d\n", n+1);
    }
 }
 

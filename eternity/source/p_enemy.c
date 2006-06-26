@@ -2545,6 +2545,15 @@ void A_Fall(mobj_t *actor)
 {
    // actor is on ground, it can be walked over
    actor->flags &= ~MF_SOLID;
+
+   // haleyjd 06/26/06: make it fall to the floor
+#ifdef OVER_UNDER
+   if(demo_version >= 331 && !comp[comp_overunder])
+   {
+      actor->ceilingz = actor->passceilz;
+      actor->floorz   = actor->passfloorz;
+   }
+#endif
 }
 
 // killough 11/98: kill an object

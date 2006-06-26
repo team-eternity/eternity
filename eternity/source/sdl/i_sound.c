@@ -428,6 +428,8 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
       if(++stomp_handle >= MAX_CHANNELS)
          stomp_handle = 0;
       handle = stomp_handle;
+      // haleyjd: DEBUG
+      doom_printf(FC_ERROR "Stomped hardware sound channel %d", handle);
    }
 
    // haleyjd 02/18/05: cannot proceed until channel is unlocked
