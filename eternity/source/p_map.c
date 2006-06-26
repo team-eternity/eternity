@@ -1309,7 +1309,6 @@ boolean P_CheckPositionMobjOnly(mobj_t *thing, fixed_t x, fixed_t y)
 }
 
 static boolean P_ThingMovexy(mobj_t *thing, fixed_t oldx, fixed_t oldy);
-boolean P_ThingMovez2(mobj_t *thing, fixed_t tx, fixed_t ty);
 #endif 
 
 //
@@ -1738,7 +1737,7 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
 
          moveok:
 
-         if(thing->z >= mobj->z)
+         if(thingzl >= mobj->z)
          {
             if(!(thing->flags && FLAGS_NOSETHEIGHTS) && 
                mobj->z + mobj->height > thing->floorz)
@@ -1750,7 +1749,7 @@ boolean P_ThingMovez(mobj_t *thing, fixed_t zmove)
                   mobj->ceilingz = thing->z;
             }
          }
-         else if(thing->z < mobj->z)
+         else if(thingzl < mobj->z)
          {
             // haleyjd 06/12/06: some things don't set other things' heights
             if(!(thing->flags & FLAGS_NOSETHEIGHTS) && mobj->z < thing->ceilingz)
