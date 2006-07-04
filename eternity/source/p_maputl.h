@@ -82,7 +82,6 @@ extern fixed_t opentop;
 extern fixed_t openbottom;
 extern fixed_t openrange;
 
-#ifdef OVER_UNDER
 // SoM 11/3/02: 
 extern fixed_t opensecfloor;
 extern fixed_t opensecceil;
@@ -90,7 +89,6 @@ extern fixed_t opensecceil;
 // SoM 11/6/02: UGHAH
 extern fixed_t   tmpassfloorz;
 extern fixed_t   tmpassceilz;
-#endif
 
 extern sector_t *openfloorsec; // haleyjd
 extern fixed_t lowfloor;

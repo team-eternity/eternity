@@ -161,11 +161,9 @@ fixed_t openbottom;
 fixed_t openrange;
 fixed_t lowfloor;
 
-#ifdef OVER_UNDER
 // SoM 11/3/02: opensecfloor, opensecceil.
 fixed_t opensecfloor;
 fixed_t opensecceil;
-#endif
 
 // moved front and back outside P_LineOpening and changed    // phares 3/7/98
 // them to these so we can pick up the new friction value
@@ -233,10 +231,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    }
 
 
-   #ifdef OVER_UNDER
    opensecfloor = openbottom;
    opensecceil = opentop;
-   #endif
 
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
@@ -287,13 +283,6 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          // haleyjd
          openfloorsec = NULL;
       }
-
-      /*
-      // SoM 09/07/02: let monsters walk over dropoffs
-      open3dmidtex = true;
-      if(tmtouch3dside == 0)
-         tmtouch3dside = 1; // a 3dmidtex line is at least involved now
-      */
    }
 
    openrange = opentop - openbottom;

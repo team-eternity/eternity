@@ -35,6 +35,7 @@ rcsid[] = "$Id: p_enemy.c,v 1.22 1998/05/12 12:47:10 phares Exp $";
 #include "r_main.h"
 #include "p_maputl.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "s_sound.h"
@@ -332,12 +333,6 @@ static int P_IsUnderDamage(mobj_t *actor)
    return dir;
 }
 
-//
-// P_Move
-// Move in the current direction,
-// returns false if the move is blocked.
-//
-
 static fixed_t xspeed[8] = {FRACUNIT,47000,0,-47000,-FRACUNIT,-47000,0,47000};
 static fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 
@@ -345,6 +340,11 @@ static fixed_t yspeed[8] = {0,47000,FRACUNIT,47000,0,-47000,-FRACUNIT,-47000};
 extern  line_t **spechit;          // New code -- killough
 extern  int    numspechit;
 
+//
+// P_Move
+//
+// Move in the current direction; returns false if the move is blocked.
+//
 static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 {
    fixed_t tryx, tryy, deltax, deltay;
@@ -355,6 +355,21 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 
    if(actor->movedir == DI_NODIR)
       return false;
+
+   // haleyjd: OVER_UNDER:
+   // [RH] Instead of yanking non-floating monsters to the ground,
+   // let gravity drop them down, unless they're moving down a step.
+   if(demo_version >= 331 && !comp[comp_overunder])
+   {
+      if(!(actor->flags & MF_NOGRAVITY) && actor->z > actor->floorz && 
+         !(actor->intflags & MIF_ONMOBJ))
+      {
+         if (actor->z > actor->floorz + 24*FRACUNIT)
+            return false;
+         else
+            actor->z = actor->floorz;
+      }
+   }
 
 #ifdef RANGECHECK
    if((unsigned)actor->movedir >= 8)
@@ -418,14 +433,30 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
       
       if(actor->flags & MF_FLOAT && floatok)
       {
+         fixed_t savedz = actor->z;
+
          if(actor->z < tmfloorz)          // must adjust height
             actor->z += FLOATSPEED;
          else
             actor->z -= FLOATSPEED;
-         
-         actor->flags |= MF_INFLOAT;
-         
-         return true;
+
+         // haleyjd: OVER_UNDER:
+         // [RH] Check to make sure there's nothing in the way of the float
+         if(demo_version >= 331 && !comp[comp_overunder])
+         {
+            if(P_TestMobjZ(actor))
+            {
+               actor->flags |= MF_INFLOAT;
+               return true;
+            }
+            actor->z = savedz;
+         }
+         else
+         {
+            actor->flags |= MF_INFLOAT;
+            
+            return true;
+         }
       }
 
       if(!numspechit)
@@ -464,13 +495,17 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    }
 
    // killough 11/98: fall more slowly, under gravity, if felldown==true
-   if(!(actor->flags & MF_FLOAT) && (!felldown || demo_version < 203))
+   // haleyjd: OVER_UNDER: not while in 3D clipping mode
+   if(demo_version < 331 || comp[comp_overunder])
    {
-      fixed_t oldz = actor->z;
-      actor->z = actor->floorz;
-
-      if(actor->z < oldz)
-         E_HitFloor(actor);
+      if(!(actor->flags & MF_FLOAT) && (!felldown || demo_version < 203))
+      {
+         fixed_t oldz = actor->z;
+         actor->z = actor->floorz;
+         
+         if(actor->z < oldz)
+            E_HitFloor(actor);
+      }
    }
    return true;
 }
@@ -734,6 +769,8 @@ static void P_NewChaseDir(mobj_t *actor)
       if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
+         (demo_version < 331 || comp[comp_overunder] || 
+          !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
          !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
       {
          P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
@@ -2545,15 +2582,6 @@ void A_Fall(mobj_t *actor)
 {
    // actor is on ground, it can be walked over
    actor->flags &= ~MF_SOLID;
-
-   // haleyjd 06/26/06: make it fall to the floor
-#ifdef OVER_UNDER
-   if(demo_version >= 331 && !comp[comp_overunder])
-   {
-      actor->ceilingz = actor->passceilz;
-      actor->floorz   = actor->passfloorz;
-   }
-#endif
 }
 
 // killough 11/98: kill an object
@@ -2569,7 +2597,7 @@ void A_Die(mobj_t *actor)
 void A_Explode(mobj_t *thingy)
 {
    P_RadiusAttack(thingy, thingy->target, 128, thingy->info->mod);
-   
+
    if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
       E_HitWater(thingy, thingy->subsector->sector);
 }
@@ -4181,7 +4209,7 @@ void PE_AddCommands(void)
 //
 // $Log: p_enemy.c,v $
 // Revision 1.22  1998/05/12  12:47:10  phares
-// Removed OVER_UNDER code
+// Removed OVER UNDER code
 //
 // Revision 1.21  1998/05/07  00:50:55  killough
 // beautification, remove dependence on evaluation order

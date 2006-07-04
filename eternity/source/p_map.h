@@ -57,7 +57,7 @@ void    P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod);
 boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y);
 
 //jff 3/19/98 P_CheckSector(): new routine to replace P_ChangeSector()
-boolean P_CheckSector(sector_t *sector, int crunch);
+boolean P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
 void    P_DelSeclist(msecnode_t*);                          // phares 3/16/98
 void    P_FreeSecNodeList();    // sf
 void    P_CreateSecNodeList(mobj_t*,fixed_t,fixed_t);       // phares 3/14/98
@@ -78,11 +78,6 @@ extern mobj_t *linetarget;     // who got hit (or NULL)
 extern msecnode_t *sector_list;                             // phares 3/16/98
 extern fixed_t tmbbox[4];         // phares 3/20/98
 extern line_t *blockline;   // killough 8/11/98
-
-#ifdef OVER_UNDER
-boolean P_CheckPositionMobjOnly(mobj_t *, fixed_t, fixed_t);
-boolean P_ThingMovez(mobj_t *thing, fixed_t zmove);
-#endif
 
 #endif // __P_MAP__
 

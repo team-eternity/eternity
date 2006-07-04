@@ -33,6 +33,7 @@ rcsid[] = "$Id: p_mobj.c,v 1.26 1998/05/16 00:24:12 phares Exp $";
 #include "r_main.h"
 #include "p_maputl.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_tick.h"
 #include "sounds.h"
 #include "st_stuff.h"
@@ -76,6 +77,26 @@ fixed_t FloatBobOffsets[64] = // haleyjd 04/30/99: FloatBob
    -484379, -462381, -435930, -405280,
    -370728, -332605, -291279, -247148,
    -200637, -152193, -102284, -51389
+};
+
+fixed_t FloatBobDiffs[64] =
+{
+   51389, 51389, 50894, 49909, 48444,
+   46511, 44131, 41326, 38123,
+   34553, 30649, 26451, 21998,
+   17334, 12501, 7550, 2524,
+   -2524, -7550, -12501, -17334,
+   -21998, -26451, -30649, -34553,
+   -38123, -41326, -44131, -46511,
+   -48444, -49909, -50894, -51390,
+   -51389, -50894, -49909, -48444,
+   -46511, -44131, -41326, -38123,
+   -34553, -30649, -26451, -21999,
+   -17333, -12502, -7549, -2524,
+   2524, 7550, 12501, 17334,
+   21998, 26451, 30650, 34552,
+   38123, 41326, 44131, 46511,
+   48444, 49909, 50895
 };
 
 //
@@ -418,7 +439,10 @@ void P_XYMovement(mobj_t* mo)
 #endif
 
    // no friction for missiles or skulls ever, no friction when airborne
-   if(mo->flags & (MF_MISSILE | MF_SKULLFLY) || mo->z > mo->floorz)
+   if(mo->flags & (MF_MISSILE | MF_SKULLFLY) || 
+      (mo->z > mo->floorz && 
+       (demo_version < 331 || comp[comp_overunder] || 
+        !(mo->intflags & MIF_ONMOBJ)))) // haleyjd: OVER_UNDER
       return;
 
    // killough 8/11/98: add bouncers
@@ -490,6 +514,46 @@ void P_XYMovement(mobj_t* mo)
 }
 
 //
+// P_PlayerHitFloor
+//
+// haleyjd: OVER_UNDER: Isolated code for players hitting floors/objects
+//
+void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
+{
+   // Squat down.
+   // Decrease viewheight for a moment
+   // after hitting the ground (hard),
+   // and utter appropriate sound.
+   
+   mo->player->deltaviewheight = mo->momz >> 3;
+   
+   // haleyjd 05/09/99 no oof when dead :)
+   if(demo_version < 329 || mo->health > 0)
+   {
+      if(!comp[comp_fallingdmg] && demo_version >= 329)
+      {
+         // haleyjd: new features -- feet sound for normal hits,
+         //          grunt for harder, falling damage for worse
+         
+         if(mo->momz < -23*FRACUNIT)
+         {
+            if(!mo->player->powers[pw_invulnerability] &&
+               !(players[consoleplayer].cheats & CF_GODMODE))
+               P_FallingDamage(mo->player);
+            else
+               S_StartSound(mo, sfx_oof);
+         }
+         else if(mo->momz < -12*FRACUNIT)
+            S_StartSound(mo, sfx_oof);
+         else if(onthing || !E_GetThingFloorType(mo)->liquid)
+            S_StartSound(mo, sfx_plfeet);
+      }
+      else if(onthing || !E_GetThingFloorType(mo)->liquid)
+         S_StartSound(mo, sfx_oof);    
+   }
+}
+
+//
 // P_ZMovement
 //
 // Attempt vertical movement.
@@ -514,23 +578,6 @@ static void P_ZMovement(mobj_t* mo)
       correct_lost_soul_bounce = true;
    else // from now on...
       correct_lost_soul_bounce = !comp[comp_soul];
-
-#ifdef OVER_UNDER
-   // haleyjd: 04/01/03: Saving SoM's ass :)
-   if(demo_version >= 331 && !comp[comp_overunder])
-   {
-      fixed_t oldz;
-
-      oldz = mo->z;
-      mo->z += mo->momz;
-      P_CheckPositionMobjOnly(mo, mo->x, mo->y);
-      if(tmfloorz > mo->floorz) // must update if new values
-         mo->floorz = tmfloorz;
-      if(tmceilingz < mo->ceilingz)
-         mo->ceilingz = tmceilingz;
-      mo->z = oldz;
-   }
-#endif   
 
    // killough 7/11/98:
    // BFG fireballs bounced on floors and ceilings in Pre-Beta Doom
@@ -689,41 +736,11 @@ floater:
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
             mo->health > 0)
             P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
-         else if (mo->player && // killough 5/12/98: exclude voodoo dolls
-                  mo->player->mo == mo &&
-                  mo->momz < -LevelInfo.gravity*8)
+         else if(mo->player && // killough 5/12/98: exclude voodoo dolls
+                 mo->player->mo == mo &&
+                 mo->momz < -LevelInfo.gravity*8)
          {
-            // Squat down.
-            // Decrease viewheight for a moment
-            // after hitting the ground (hard),
-            // and utter appropriate sound.
-            
-            mo->player->deltaviewheight = mo->momz >> 3;
-            
-            // haleyjd 05/09/99 no oof when dead :)
-            if(demo_version < 329 || mo->health > 0)
-            {
-               if(!comp[comp_fallingdmg] && demo_version >= 329)
-               {
-                  // haleyjd: new features -- feet sound for normal hits,
-                  //          grunt for harder, falling damage for worse
-                  
-                  if(mo->momz < -23*FRACUNIT)
-                  {
-                     if(!mo->player->powers[pw_invulnerability] &&
-                        !(players[consoleplayer].cheats & CF_GODMODE))
-                        P_FallingDamage(mo->player);
-                     else
-                        S_StartSound(mo, sfx_oof);
-                  }
-                  else if(mo->momz < -12*FRACUNIT)
-                     S_StartSound(mo, sfx_oof);
-                  else if(!E_GetThingFloorType(mo)->liquid)
-                     S_StartSound(mo, sfx_plfeet);
-               }
-               else if(!E_GetThingFloorType(mo)->liquid)
-                  S_StartSound(mo, sfx_oof);    
-            }
+            P_PlayerHitFloor(mo, false);
          }
          mo->momz = 0;
       }
@@ -829,7 +846,10 @@ void P_NightmareRespawn(mobj_t* mobj)
    if(demo_version >= 331)
       mobj->flags |= MF_SOLID;
    
-   check = P_CheckPosition(mobj, x, y);
+   if(demo_version >= 331 && !comp[comp_overunder]) // haleyjd: OVER_UNDER
+      check = P_CheckPositionExt(mobj, x, y);
+   else
+      check = P_CheckPosition(mobj, x, y);
 
    if(demo_version >= 331)
       mobj->flags &= ~MF_SOLID;
@@ -885,9 +905,42 @@ void P_NightmareRespawn(mobj_t* mobj)
 }
 
 //
+// P_TestFloatBob
+//
+// haleyjd: extracted predicate for float bob test
+//
+static boolean P_TestFloatBob(mobj_t *mobj)
+{
+   return demo_version < 331 ||
+      !(mobj->flags2 & MF2_FLOATBOB) ||
+       (mobj->z - FloatBobOffsets[(mobj->floatbob + leveltime) & 63] != mobj->floorz);
+}
+
+// 
+// P_DoZMovement
+//
+// haleyjd: extracted predicate for P_ZMovement call because it got too
+// complicated. We only want to consider certain terms depending on the
+// demo version and whether or not 3D object clipping is enabled.
+//
+static boolean P_DoZMovement(mobj_t *mobj)
+{
+   if(demo_version < 331 || comp[comp_overunder])
+   {
+      return (mobj->momz || 
+              (mobj->z != mobj->floorz && P_TestFloatBob(mobj)));
+   }
+   else
+   {
+      return (mobj->momz || BlockingMobj ||
+              (mobj->z != mobj->floorz && P_TestFloatBob(mobj)));
+   }
+}
+
+
+//
 // P_MobjThinker
 //
-
 void P_MobjThinker(mobj_t *mobj)
 {
    int oldwaterstate, waterstate;
@@ -924,6 +977,7 @@ void P_MobjThinker(mobj_t *mobj)
    }
 
    // momentum movement
+   BlockingMobj = NULL;
    if(mobj->momx | mobj->momy || mobj->flags & MF_SKULLFLY)
    {
       P_XYMovement(mobj);
@@ -931,14 +985,67 @@ void P_MobjThinker(mobj_t *mobj)
          return;       // mobj was removed
    }
 
-   if(mobj->flags2&MF2_FLOATBOB) // haleyjd
+   if(demo_version >= 331 && mobj->flags2 & MF2_FLOATBOB) // haleyjd
+      mobj->z += FloatBobDiffs[(mobj->floatbob + leveltime) & 63];
+   
+   // haleyjd: OVER_UNDER: major changes
+   if(P_DoZMovement(mobj))
    {
-      mobj->z = mobj->floorz + FloatBobOffsets[(mobj->floatbob++)&63];
-   }
-   else if(mobj->z != mobj->floorz || mobj->momz)
-   {
-      P_ZMovement(mobj);
-      if (mobj->thinker.function == P_RemoveThinkerDelayed) // killough
+      if(demo_version >= 331 && !comp[comp_overunder]  &&
+         ((mobj->flags3 & MF3_PASSMOBJ) || (mobj->flags & MF_SPECIAL)))
+      {
+         mobj_t *onmo;
+
+         if(!(onmo = P_GetThingUnder(mobj)))
+         {
+            P_ZMovement(mobj);
+            mobj->intflags &= ~MIF_ONMOBJ;
+         }
+         else
+         {
+            // haleyjd: Here is where to put code for burning somebody's
+            // feet when they stand on a hot object like a torch!
+            // Hack to test:
+            if(onmo->type == E_ThingNumForName("FireBrazier"))
+               P_DamageMobj(mobj, onmo, onmo, 2, MOD_UNKNOWN);
+
+            if(mobj->player && mobj == mobj->player->mo &&
+               mobj->momz < -LevelInfo.gravity*8)
+            {
+               P_PlayerHitFloor(mobj, true);
+            }
+            if(onmo->z + onmo->height - mobj->z <= 24*FRACUNIT)
+            {
+               player_t *player = mobj->player;
+
+               if(player && player->mo == mobj)
+               {
+                  fixed_t deltaview;
+                  player->viewheight -= onmo->z + onmo->height - mobj->z;
+                  deltaview = (VIEWHEIGHT - player->viewheight)>>3;
+                  if(deltaview > player->deltaviewheight)
+                  {
+                     player->deltaviewheight = deltaview;
+                  }
+               }
+               mobj->z = onmo->z + onmo->height;
+            }
+            mobj->intflags |= MIF_ONMOBJ;
+            mobj->momz = 0;
+
+            if(mobj->info->crashstate != NullStateNum 
+               && mobj->flags & MF_CORPSE 
+               && !(mobj->intflags & MIF_CRASHED))
+            {
+               mobj->intflags |= MIF_CRASHED;
+               P_SetMobjState(mobj, mobj->info->crashstate);
+            }
+         }
+      }
+      else
+         P_ZMovement(mobj);
+
+      if(mobj->thinker.function == P_RemoveThinkerDelayed) // killough
          return;       // mobj was removed
    }
    else if(!(mobj->momx | mobj->momy) && !sentient(mobj))
@@ -1032,6 +1139,9 @@ void P_MobjThinker(mobj_t *mobj)
    }
 }
 
+extern fixed_t tmsecfloorz;
+extern fixed_t tmsecceilz;
+
 //
 // P_MobjSetZPos
 //
@@ -1040,16 +1150,7 @@ void P_MobjThinker(mobj_t *mobj)
 // during spawning.
 //
 void P_MobjSetZPos(mobj_t *mobj, fixed_t delta)
-{
-#ifdef OVER_UNDER
-   // SoM 11/5/02: Set these at spawn.
-   mobj->secfloorz = mobj->passfloorz = mobj->floorz;
-   mobj->secceilz  = mobj->passceilz  = mobj->ceilingz;
-   
-   if(demo_version >= 331 && !comp[comp_overunder])
-      P_ThingMovez(mobj, delta);
-#endif
-   
+{   
    // haleyjd 08/07/04: new floorclip system
    P_AdjustFloorClip(mobj);
 }
@@ -1158,6 +1259,13 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
          mobj->z = mobj->floorz;
       else
          mobj->z = (minz + rnd%(maxz - minz + 1))*FRACUNIT;
+   }
+
+   // haleyjd: initialize floatbob seed
+   if(demo_version >= 331 && mobj->flags2 & MF2_FLOATBOB)
+   {
+      mobj->floatbob = P_Random(pr_floathealth);
+      mobj->z += FloatBobOffsets[(mobj->floatbob + leveltime - 1) & 63];
    }
 
    // haleyjd: call new function to set mobj z information
@@ -1651,9 +1759,6 @@ spawnit:
    if(mthing->options & MTF_AMBUSH)
       mobj->flags |= MF_AMBUSH;
 
-   if(mobj->flags2 & MF2_FLOATBOB) // haleyjd: initialize floatbob seed
-      mobj->floatbob = P_Random(pr_floathealth);
-
    // haleyjd: handling for dormant things
    if(mthing->options & MTF_DORMANT)
    {
@@ -1799,7 +1904,7 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 //  and possibly explodes it right there.
 //
 
-void P_CheckMissileSpawn (mobj_t* th)
+void P_CheckMissileSpawn(mobj_t* th)
 {
    if(gameModeInfo->type == Game_DOOM)
    {
@@ -1811,9 +1916,9 @@ void P_CheckMissileSpawn (mobj_t* th)
    // move a little forward so an angle can
    // be computed if it immediately explodes
    
-   th->x += th->momx>>1;
-   th->y += th->momy>>1;
-   th->z += th->momz>>1;
+   th->x += th->momx >> 1;
+   th->y += th->momy >> 1;
+   th->z += th->momz >> 1;
    
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)
@@ -1821,7 +1926,7 @@ void P_CheckMissileSpawn (mobj_t* th)
    
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
-      P_ExplodeMissile (th);
+      P_ExplodeMissile(th);
 }
 
 //
@@ -1867,7 +1972,7 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
    S_StartSound(th, th->info->seesound);
 
    P_SetTarget(&th->target, source); // where it came from // killough 11/98
-   an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);
+   an = R_PointToAngle2(source->x, source->y, dest->x, dest->y);
 
    // fuzzy player --  haleyjd: add total invisibility, ghost
    if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
@@ -2367,6 +2472,35 @@ void P_CollectThings(MobjCollection *mc)
 }
 
 //
+// P_AddToCollection
+//
+// Adds a single object into an MobjCollection.
+//
+void P_AddToCollection(MobjCollection *mc, mobj_t *mo)
+{
+   if(mc->num >= mc->numalloc)
+   {
+      mc->ptrarray = realloc(mc->ptrarray,
+         (mc->numalloc = mc->numalloc ?
+         mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
+   }
+   (mc->ptrarray)[mc->num] = mo;
+   mc->num++;
+}
+
+//
+// P_CollectionSort
+//
+// Sorts the pointers in an MobjCollection using the supplied callback function
+// for determining collation order.
+//
+void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *))
+{
+   if(mc->num > 1)
+      qsort(mc->ptrarray, mc->num, sizeof(mobj_t *), cb);
+}
+
+//
 // P_CollectionIsEmpty
 //
 // Returns true if there are no objects in the collection, and
@@ -2391,6 +2525,17 @@ mobj_t *P_CollectionWrapIterator(MobjCollection *mc)
    mc->wrapiterator %= mc->num;
 
    return ret;
+}
+
+//
+// P_CollectionGetAt
+//
+// Gets the object at the specified index in the collection.
+// Returns NULL if the index is out of bounds.
+//
+mobj_t *P_CollectionGetAt(MobjCollection *mc, unsigned int at)
+{
+   return at < (unsigned int)mc->num ? (mc->ptrarray)[at] : NULL;
 }
 
 //
@@ -2966,7 +3111,7 @@ AMX_NATIVE_INFO mobj_Natives[] =
 // Added Player Starts 5-8 (4001-4004)
 //
 // Revision 1.23  1998/05/12  12:47:21  phares
-// Removed OVER_UNDER code
+// Removed OVER UNDER code
 //
 // Revision 1.22  1998/05/12  06:09:32  killough
 // Prevent voodoo dolls from causing player bopping

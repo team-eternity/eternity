@@ -191,7 +191,10 @@ void P_MovePlayer (player_t* player)
    mobj_t *mo = player->mo;
    
    mo->angle += cmd->angleturn << 16;
-   onground = mo->z <= mo->floorz;
+   
+   // haleyjd: OVER_UNDER
+   onground = mo->z <= mo->floorz ||
+      (demo_version >= 331 && !comp[comp_overunder] && mo->intflags & MIF_ONMOBJ);
    
    // killough 10/98:
    //
@@ -587,7 +590,7 @@ AMX_NATIVE_INFO user_Natives[] =
 //
 // $Log: p_user.c,v $
 // Revision 1.14  1998/05/12  12:47:25  phares
-// Removed OVER_UNDER code
+// Removed OVER UNDER code
 //
 // Revision 1.13  1998/05/10  23:38:04  killough
 // Add #include p_user.h to ensure consistent prototypes

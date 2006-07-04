@@ -3610,7 +3610,7 @@ boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int cr
 
    for(i = 0; i < numattsectors; ++i)
    {
-      if(P_CheckSector(sectors + attsectors[i], crush))
+      if(P_CheckSector(sectors + attsectors[i], crush, delta, 2))
          ok = false;
    }
 

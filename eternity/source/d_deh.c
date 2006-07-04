@@ -315,6 +315,8 @@ dehflags_t deh_mobjflags[] =
   {"NOFRIENDDMG",      0x02000000, 2}, // object isn't hurt by friends
   {"3DDECORATION",     0x04000000, 2}, // object is a decor. with 3D height info
   {"ALWAYSFAST",       0x08000000, 2}, // object is always in -fast mode
+  {"PASSMOBJ",         0x10000000, 2}, // OVER_UNDER
+  {"DONTOVERLAP",      0x20000000, 2}, // OVER_UNDER
 
   { NULL,              0 }             // NULL terminator
 };

@@ -279,6 +279,8 @@ typedef enum
    MF3_NOFRIENDDMG  = 0x02000000,  // object isn't hurt by friends
    MF3_3DDECORATION = 0x04000000,  // object is a decor. with 3D height info
    MF3_ALWAYSFAST   = 0x08000000,  // object is always in -fast mode
+   MF3_PASSMOBJ     = 0x10000000,  // haleyjd: OVER_UNDER
+   MF3_DONTOVERLAP  = 0x20000000,  // haleyjd: OVER_UNDER
 } mobjflag3_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -297,6 +299,8 @@ enum
    MIF_CRASHED     = 0x00000100, // haleyjd: thing has entered crashstate
    MIF_NOPTCLEVTS  = 0x00000200, // haleyjd: thing can't trigger particle events
    MIF_ISCHILD     = 0x00000400, // haleyjd: thing spawned as a child
+   MIF_NOTOUCH     = 0x00000800, // haleyjd: OVER_UNDER: don't blow up touchies
+   MIF_ONMOBJ      = 0x00001000, // haleyjd: OVER_UNDER: is on another thing
 };
 
 // ammo + weapon in a dropped backpack 
@@ -454,7 +458,7 @@ struct mobj_s
   int damage;       // haleyjd 08/02/04: copy damage to mobj now
   fixed_t floorclip;    // haleyjd 08/07/04: floor clip amount
 
-  #ifdef OVER_UNDER
+
   fixed_t secfloorz;
   fixed_t secceilz;
 
@@ -464,7 +468,7 @@ struct mobj_s
   // clipping pass (map architecture + 3d sides).
   fixed_t passfloorz;
   fixed_t passceilz;
-  #endif
+
 
   // scripting fields
   long args[5];       // arguments
@@ -572,7 +576,10 @@ void P_ClearMobjCollection(MobjCollection *);
 void P_CollectThings(MobjCollection *);
 boolean P_CollectionIsEmpty(MobjCollection *);
 mobj_t *P_CollectionWrapIterator(MobjCollection *);
+mobj_t *P_CollectionGetAt(MobjCollection *mc, unsigned int at);
 mobj_t *P_CollectionGetRandom(MobjCollection *, pr_class_t);
+void P_AddToCollection(MobjCollection *mc, mobj_t *mo);
+void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *));
 
 // end new Eternity mobj functions
 

@@ -89,25 +89,25 @@ result_e T_MovePlane
          // Moving a floor down
          if(sector->floorheight - speed < dest)
          {
+            lastpos = sector->floorheight;
+
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
             {
-               flag = P_Scroll3DSides(sector, false, dest - sector->floorheight, crush);
+               flag = P_Scroll3DSides(sector, false, dest - lastpos, crush);
                if(!flag)
                {
-                  P_Scroll3DSides(sector, false, sector->floorheight - dest, crush);
+                  P_Scroll3DSides(sector, false, lastpos - dest, crush);
                   return pastdest;
                }
             }
 
-            lastpos = sector->floorheight;
             sector->floorheight = dest;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            flag = P_CheckSector(sector,crush,dest-lastpos,0); //jff 3/19/98 use faster chk
             if(flag == true)                   
             {
                sector->floorheight =lastpos;
-               P_CheckSector(sector,crush);      //jff 3/19/98 use faster chk
-
+               P_CheckSector(sector,crush,lastpos-dest,0); //jff 3/19/98 use faster chk
                // SoM: if the move in the master sector was bad,
                // keep the 3d sides consistant.
                if(move3dsides)
@@ -133,7 +133,7 @@ result_e T_MovePlane
             
             lastpos = sector->floorheight;
             sector->floorheight -= speed;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            flag = P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
 	    
 
             // haleyjd 02/15/01: last of cph's current demo fixes:
@@ -160,26 +160,27 @@ result_e T_MovePlane
                        dest : sector->ceilingheight;
          if(sector->floorheight + speed > destheight)
          {
+            lastpos = sector->floorheight;
+
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
             {
-               flag = P_Scroll3DSides(sector, false, destheight-sector->floorheight, crush);
+               flag = P_Scroll3DSides(sector, false, destheight-lastpos, crush);
                if(!flag)
                {
-                  P_Scroll3DSides(sector, false, sector->floorheight-destheight, crush);
+                  P_Scroll3DSides(sector, false, lastpos-destheight, crush);
                   return pastdest;
                }
             }
 
-            lastpos = sector->floorheight;
             sector->floorheight = destheight;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            flag = P_CheckSector(sector,crush,destheight-lastpos,0); //jff 3/19/98 use faster chk
             if(flag == true)
             {
                sector->floorheight = lastpos;
-               P_CheckSector(sector,crush);      //jff 3/19/98 use faster chk
+               P_CheckSector(sector,crush,lastpos-destheight,0); //jff 3/19/98 use faster chk
                if(move3dsides)
-                  P_Scroll3DSides(sector, false, sector->floorheight-destheight, crush);
+                  P_Scroll3DSides(sector, false, lastpos-destheight, crush);
             }
             return pastdest;
          }
@@ -199,7 +200,7 @@ result_e T_MovePlane
             // crushing is possible
             lastpos = sector->floorheight;
             sector->floorheight += speed;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            flag = P_CheckSector(sector,crush,speed,0); //jff 3/19/98 use faster chk
             if(flag == true)
             {
                // haleyjd 07/23/05: crush no longer boolean
@@ -211,7 +212,7 @@ result_e T_MovePlane
                      return crushed;
                }
                sector->floorheight = lastpos;
-               P_CheckSector(sector,crush);      //jff 3/19/98 use faster chk
+               P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, false, -speed, crush);
                
@@ -236,25 +237,26 @@ result_e T_MovePlane
                        dest : sector->floorheight; // killough 10/98: add comp flag
          if(sector->ceilingheight - speed < destheight)
          {
+            lastpos = sector->ceilingheight;
+
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
             {
-               flag = P_Scroll3DSides(sector, true, sector->ceilingheight-destheight, crush);
+               flag = P_Scroll3DSides(sector, true, lastpos-destheight, crush);
                if(!flag)
                {
-                  P_Scroll3DSides(sector, true, destheight-sector->ceilingheight, crush);
+                  P_Scroll3DSides(sector, true, destheight-lastpos, crush);
                   return pastdest;
                }
             }
-
-            lastpos = sector->ceilingheight;
+            
             sector->ceilingheight = destheight;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            flag = P_CheckSector(sector,crush,lastpos-destheight,1); //jff 3/19/98 use faster chk
             
             if(flag == true)
             {
                sector->ceilingheight = lastpos;
-               P_CheckSector(sector,crush);      //jff 3/19/98 use faster chk
+               P_CheckSector(sector,crush,destheight-lastpos,1); //jff 3/19/98 use faster chk
                
                if(move3dsides)
                   P_Scroll3DSides(sector, true, destheight-sector->ceilingheight, crush);
@@ -277,7 +279,7 @@ result_e T_MovePlane
             // crushing is possible
             lastpos = sector->ceilingheight;
             sector->ceilingheight -= speed;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            flag = P_CheckSector(sector,crush,-speed,1); //jff 3/19/98 use faster chk
             
             if(flag == true)
             {
@@ -287,7 +289,7 @@ result_e T_MovePlane
                if(crush > 0)
                   return crushed;
                sector->ceilingheight = lastpos;
-               P_CheckSector(sector,crush);      //jff 3/19/98 use faster chk
+               P_CheckSector(sector,crush,speed,1);      //jff 3/19/98 use faster chk
                
                if(move3dsides)
                   P_Scroll3DSides(sector, true, speed, crush);
@@ -300,26 +302,27 @@ result_e T_MovePlane
          // moving a ceiling up
          if(sector->ceilingheight + speed > dest)
          {
+            lastpos = sector->ceilingheight;
+
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
             {
-               flag = P_Scroll3DSides(sector, true, dest-sector->ceilingheight, crush);
+               flag = P_Scroll3DSides(sector, true, dest-lastpos, crush);
                if(!flag)
                {
-                  P_Scroll3DSides(sector, true, sector->ceilingheight-dest, crush);
+                  P_Scroll3DSides(sector, true, lastpos-dest, crush);
                   return pastdest;
                }
             }
 
-            lastpos = sector->ceilingheight;
             sector->ceilingheight = dest;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            flag = P_CheckSector(sector,crush,dest-lastpos,1); //jff 3/19/98 use faster chk
             if(flag == true)
             {
                sector->ceilingheight = lastpos;
-               P_CheckSector(sector,crush);      //jff 3/19/98 use faster chk
+               P_CheckSector(sector,crush,lastpos-dest,1); //jff 3/19/98 use faster chk
                if(move3dsides)
-                  P_Scroll3DSides(sector, true, sector->ceilingheight-dest, crush);
+                  P_Scroll3DSides(sector, true, lastpos-dest, crush);
             }
             return pastdest;
          }
@@ -337,7 +340,7 @@ result_e T_MovePlane
             
             lastpos = sector->ceilingheight;
             sector->ceilingheight += speed;
-            flag = P_CheckSector(sector,crush); //jff 3/19/98 use faster chk
+            P_CheckSector(sector,crush,speed,1); //jff 3/19/98 use faster chk
          }
          break;
       }

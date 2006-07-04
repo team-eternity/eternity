@@ -366,33 +366,33 @@ static void cheat_one()
 
 static void cheat_fa()
 {
-  int i;
-
-  if (!plyr->backpack)
-    {
+   int i;
+   
+   if (!plyr->backpack)
+   {
       for (i=0 ; i<NUMAMMO ; i++)
-        plyr->maxammo[i] *= 2;
+         plyr->maxammo[i] *= 2;
       plyr->backpack = true;
-    }
-
-  plyr->armorpoints = idfa_armor;      // Ty 03/09/98 - deh
-  plyr->armortype = idfa_armor_class;  // Ty 03/09/98 - deh
-        
-  // You can't own weapons that aren't in the game // phares 02/27/98
-  for (i=0;i<NUMWEAPONS;i++)
-    if (!(((i == wp_plasma || i == wp_bfg) && gamemode == shareware) ||
-          (i == wp_supershotgun && gamemode != commercial)))
-      plyr->weaponowned[i] = true;
-        
-  for (i=0;i<NUMAMMO;i++)
-  {
-    if (i!=am_cell || gamemode!=shareware)
-    {
-      plyr->ammo[i] = plyr->maxammo[i];
-    }
-  }
-        //sf : doom_printf
-  doom_printf(s_STSTR_FAADDED);
+   }
+   
+   plyr->armorpoints = idfa_armor;      // Ty 03/09/98 - deh
+   plyr->armortype = idfa_armor_class;  // Ty 03/09/98 - deh
+   
+   // You can't own weapons that aren't in the game // phares 02/27/98
+   for(i = 0; i < NUMWEAPONS; i++)
+   {
+      if(!(((i == wp_plasma || i == wp_bfg) && gamemode == shareware) ||
+         (i == wp_supershotgun && gamemode != commercial)))
+         plyr->weaponowned[i] = true;
+   }
+      
+   for(i = 0; i < NUMAMMO; i++)
+   {
+      if(i != am_cell || gamemode != shareware)
+         plyr->ammo[i] = plyr->maxammo[i];
+   }
+   //sf : doom_printf
+   doom_printf(s_STSTR_FAADDED);
 }
 
 static void cheat_k()
@@ -979,7 +979,7 @@ void Cheat_AddCommands()
 //
 // $Log: m_cheat.c,v $
 // Revision 1.7  1998/05/12  12:47:00  phares
-// Removed OVER_UNDER code
+// Removed OVER UNDER code
 //
 // Revision 1.6  1998/05/07  01:08:11  killough
 // Make TNTAMMO ammo ordering more natural
