@@ -34,7 +34,7 @@ thingtype DoomPlayer {
   height = 56.0
   flags = SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
   flags2 = FOOTCLIP
-  flags3 = SLIDE|TELESTOMP|WINDTHRUST
+  flags3 = SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
   droptype = Backpack // this is currently disabled due to bugs!
   mod = 24
   dehackednum = 1
@@ -61,7 +61,7 @@ thingtype Zombieman {
   speed = 8
   height = 56.0
   activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_POSS_RAISE1
   droptype = AmmoClip
   obituary_normal = "was capped by a zombie"
@@ -84,7 +84,7 @@ thingtype Sergeant {
   speed = 8
   height = 56.0
   activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_SPOS_RAISE1
   droptype = WeaponShotgun
   obituary_normal = "was blasted by a former sergeant"
@@ -109,7 +109,7 @@ thingtype Archvile {
   activesound = vilact
   flags = SOLID|SHOOTABLE|COUNTKILL
   flags2 = FOOTCLIP|SHORTMRANGE
-  flags3 = DMGIGNORED|NOTHRESHOLD|SPACMONSTER
+  flags3 = DMGIGNORED|NOTHRESHOLD|SPACMONSTER|PASSMOBJ
   obituary_normal = "was fried by an archvile"
   dehackednum = 4
 }
@@ -137,7 +137,7 @@ thingtype Revenant {
   height = 56.0
   mass = 500
   activesound = skeact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|LONGMELEE|RANGEHALF|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|LONGMELEE|RANGEHALF|SPACMONSTER|PASSMOBJ
   raisestate = S_SKEL_RAISE1
   obituary_normal = "couldn't hide from a revenant missile"
   obituary_melee  = "was sucker-punched by a revenant"
@@ -180,7 +180,7 @@ thingtype Mancubus {
   height = 64.0
   mass = 1000
   activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|MAP07BOSS1|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|MAP07BOSS1|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_FATT_RAISE1
   obituary_normal = "was flattened by a mancubus"
   dehackednum = 9
@@ -215,7 +215,7 @@ thingtype Chaingunner {
   speed = 8
   height = 56.0
   activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_CPOS_RAISE1
   droptype = WeaponChaingun
   obituary_normal = "felt the heat from a chaingunner"
@@ -239,7 +239,7 @@ thingtype DoomImp {
   speed = 8
   height = 56.0
   activesound = bgact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_TROO_RAISE1
   obituary_normal = "was flamed by an imp"
   obituary_melee  = "was torn apart by an imp"
@@ -264,7 +264,7 @@ thingtype Demon {
   height = 56.0
   mass = 400
   activesound = dmact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_SARG_RAISE1
   obituary_melee = "was chewed on by a demon"
   dehackednum = 13
@@ -288,7 +288,7 @@ thingtype Spectre {
   height = 56.0
   mass = 400
   activesound = dmact
-  cflags = SOLID|SHOOTABLE|SHADOW|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|SHADOW|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_SARG_RAISE1
   obituary_melee = "didn't see the spectre"
   dehackednum = 14
@@ -311,7 +311,7 @@ thingtype Cacodemon {
   height = 56.0
   mass = 400
   activesound = dmact
-  cflags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER|PASSMOBJ
   raisestate = S_HEAD_RAISE1
   obituary_normal = "was roasted by a cacodemon"
   obituary_melee  = "was bitten by a cacodemon"
@@ -335,7 +335,7 @@ thingtype BaronOfHell {
   height = 64.0
   mass = 1000
   activesound = dmact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|E1M8BOSS|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|E1M8BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_BOSS_RAISE1
   obituary_normal = "was burned by a baron"
   obituary_melee  = "was ripped open by a baron"
@@ -374,7 +374,7 @@ thingtype HellKnight {
   height = 64.0
   mass = 1000
   activesound = dmact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_BOS2_RAISE1
   obituary_normal = "bows before a hell knight"
   obituary_melee  = "was ripped open by a hell knight"
@@ -401,7 +401,7 @@ thingtype LostSoul {
   activesound = dmact
   flags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT
   flags2 = NOSTRAFE|RANGEHALF
-  flags3 = KILLABLE|DEADFLOAT|SPACMONSTER
+  flags3 = KILLABLE|DEADFLOAT|SPACMONSTER|PASSMOBJ
   obituary_normal = "was spooked by a lost soul"
   dehackednum = 19
 }
@@ -426,7 +426,7 @@ thingtype Spiderdemon {
   activesound = dmact
   flags = SOLID|SHOOTABLE|COUNTKILL
   flags2 = E3M8BOSS|BOSS|E4M8BOSS|FOOTCLIP|RANGEHALF
-  flags3 = SPACMONSTER
+  flags3 = SPACMONSTER|PASSMOBJ
   obituary_normal = "stood in awe of the spiderdemon"
   dehackednum = 20
 }
@@ -450,7 +450,7 @@ thingtype Arachnotron {
   activesound = bspact
   flags = SOLID|SHOOTABLE|COUNTKILL
   flags2 = MAP07BOSS2|FOOTCLIP
-  flags3 = SPACMONSTER
+  flags3 = SPACMONSTER|PASSMOBJ
   raisestate = S_BSPI_RAISE1
   obituary_normal = "didn't escape the arachnotron"
   dehackednum = 21
@@ -475,7 +475,7 @@ thingtype Cyberdemon {
   activesound = dmact
   flags = SOLID|SHOOTABLE|COUNTKILL
   flags2 = E2M8BOSS|BOSS|E4M6BOSS|FOOTCLIP|RANGEHALF|HIGHERMPROB
-  flags3 = SPACMONSTER
+  flags3 = SPACMONSTER|PASSMOBJ
   obituary_normal = "gulped down a cyberdemon's rocket"
   dehackednum = 22
 }
@@ -497,7 +497,7 @@ thingtype PainElemental {
   height = 56.0
   mass = 400
   activesound = dmact
-  cflags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER|PASSMOBJ
   raisestate = S_PAIN_RAISE1
   nukespecial = PainNukeSpec
   dehackednum = 23
@@ -519,7 +519,7 @@ thingtype WolfSS {
   speed = 8
   height = 56.0
   activesound = posact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_SSWV_RAISE1
   droptype = AmmoClip
   obituary_normal = "was no match for the past"
@@ -539,7 +539,7 @@ thingtype CommanderKeen {
   height = 72.0
   correct_height = 51.0
   mass = 10000000
-  flags = SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|COUNTKILL
+  flags = SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|COUNTKILL|PASSMOBJ
   dehackednum = 25
 }
 
@@ -1513,7 +1513,7 @@ thingtype MBFHelperDog {
   radius = 12.0
   height = 28.0
   activesound = dgact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_DOGS_RAISE1
   obituary_melee = "was chased down by a rabid puppy"
   dehackednum = 140
@@ -2025,7 +2025,7 @@ thingtype Golem {
   height = 62.0
   mass = 75
   activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   dehackednum = 336
 }
 
@@ -2048,7 +2048,7 @@ thingtype NitroGolem {
   height = 62.0
   mass = 75
   activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   dehackednum = 337
 }
 
@@ -2070,7 +2070,7 @@ thingtype GolemGhost {
   height = 62.0
   mass = 75
   activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   dehackednum = 338
 }
 
@@ -2093,7 +2093,7 @@ thingtype NitroGolemGhost {
   height = 62.0
   mass = 75
   activesound = ht_mumsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   dehackednum = 339
 }
 
@@ -2134,7 +2134,7 @@ thingtype Weredragon {
   height = 74.0
   mass = 200
   activesound = ht_bstact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   dehackednum = 342
 }
 
@@ -2178,7 +2178,7 @@ thingtype Ophidian {
   radius = 22.0
   height = 70.0
   activesound = ht_snkact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   dehackednum = 345
 }
 
@@ -2223,7 +2223,7 @@ thingtype SabreClaw {
   height = 64.0
   mass = 75
   activesound = ht_clkact
-  cflags = SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   dehackednum = 348
 }
 
@@ -2245,7 +2245,7 @@ thingtype Disciple {
   height = 68.0
   activesound = ht_wizact
   flags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL
-  flags3 = ACTSEESOUND|BOSSIGNORE|SPACMONSTER
+  flags3 = ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   dehackednum = 349
 }
 
@@ -2280,7 +2280,7 @@ thingtype DeathKnight {
   height = 78.0
   mass = 150
   activesound = ht_kgtsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   dehackednum = 351
 }
 
@@ -2303,7 +2303,7 @@ thingtype DeathKnightGhost {
   height = 78.0
   mass = 150
   activesound = ht_kgtsit
-  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   dehackednum = 352
 }
 
@@ -2353,7 +2353,7 @@ thingtype SerpentRiderDsparil {
   height = 100.0
   mass = 800
   activesound = ht_sbtact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
   nukespecial = SorcNukeSpec
   dehackednum = 355
 }
@@ -2388,7 +2388,7 @@ thingtype Dsparil {
   activesound = ht_soract
   flags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
   flags2 = E3M8BOSS|BOSS|FOOTCLIP
-  flags3 = LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER
+  flags3 = LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
   dehackednum = 357
 }
 
@@ -2526,7 +2526,7 @@ thingtype Maulotaur {
   activesound = ht_minact
   flags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
   flags2 = BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE
-  flags3 = INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER
+  flags3 = INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   dehackednum = 371
 }
 
@@ -2592,7 +2592,7 @@ thingtype IronLich {
   mass = 325
   flags = SOLID|SHOOTABLE|COUNTKILL|NOBLOOD
   flags2 = E1M8BOSS|E4M8BOSS|NOSPLASH
-  flags3 = SPACMONSTER
+  flags3 = SPACMONSTER|PASSMOBJ
   dehackednum = 376
 }
 
@@ -2763,7 +2763,7 @@ thingtype HereticImp {
   activesound = ht_impsit
   flags = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL
   flags2 = NOSTRAFE|SPAWNFLOAT|RANGEHALF
-  flags3 = SPACMONSTER
+  flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
   dehackednum = 393
 }
 
@@ -2787,7 +2787,9 @@ thingtype HereticImpLeader {
   height = 36.0
   mass = 50
   activesound = ht_impsit
-  cflags = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|SPAWNFLOAT|SPACMONSTER
+  flags  = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL
+  flags2 = SPAWNFLOAT
+  flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
   dehackednum = 394
 }
 
@@ -3026,5 +3028,3 @@ thingtype ETCHalifGolem {
   flags = NOBLOCKMAP|NOGRAVITY
   dehackednum = 241
 }
-
-
