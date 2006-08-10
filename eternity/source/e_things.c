@@ -100,6 +100,7 @@ int UnknownThingType;
 #define ITEM_TNG_CRASHSTATE "crashstate"
 #define ITEM_TNG_SKINSPRITE "skinsprite"
 #define ITEM_TNG_C3DHEIGHT "correct_height"
+#define ITEM_TNG_BASICTYPE "basictype"
 #define ITEM_TNG_DEHNUM "dehackednum"
 
 // Thing Delta Keywords
@@ -144,6 +145,152 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
    "none",
    "MinotaurCharge",
    "Whirlwind",
+};
+
+// haleyjd 07/05/06: Basic types for things. These determine a number of
+// alternate "defaults" for the thingtype that will make it behave in a
+// typical manner for things of its basic type (ie: monster, projectile).
+// The nice thing about basic types is that they can change, and things
+// dependent upon them will be automatically updated for new versions of
+// the engine.
+
+static const char *BasicTypeNames[] =
+{
+   "Monster",           // normal walking monster with no fancy features
+   "FlyingMonster",     // normal flying monster
+   "FriendlyHelper",    // a thing with max options for helping player
+   "Projectile",        // normal projectile
+   "PlayerProjectile",  // player projectile (activates param linespecs)
+   "Seeker",            // homing projectile
+   "SolidDecor",        // solid decoration
+   "HangingDecor",      // hanging decoration
+   "SolidHangingDecor", // solid hanging decoration
+   "ShootableDecor",    // shootable decoration
+   "Fog",               // fog, like telefog, item fog, or bullet puffs
+   "Item",              // collectable item
+   "ItemCount",         // collectable item that counts for item %
+   "TerrainBase",       // base of a terrain effect
+   "TerrainChunk",      // chunk of a terrain effect
+   "ControlPoint",      // a control point
+   "ControlPointGrav",  // a control point with gravity
+};
+
+#define NUMBASICTYPES (sizeof(BasicTypeNames) / sizeof(char *))
+
+typedef struct basicttype_s
+{
+   unsigned long flags;    // goes to: mi->flags
+   unsigned long flags2;   //        : mi->flags2
+   unsigned long flags3;   //        : mi->flags3
+   const char *spawnstate; //        : mi->spawnstate
+} basicttype_t;
+
+static basicttype_t BasicThingTypes[] =
+{
+   // Monster
+   {
+      MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL, // flags
+      MF2_FOOTCLIP,                       // flags2
+      MF3_SPACMONSTER|MF3_PASSMOBJ,       // flags3
+   },
+   // FlyingMonster
+   {
+      MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_NOGRAVITY|MF_FLOAT, // flags
+      0,                                                        // flags2
+      MF3_SPACMONSTER|MF3_PASSMOBJ,                             // flags3
+   },
+   // FriendlyHelper
+   { 
+      MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_FRIEND,                // flags
+      MF2_JUMPDOWN|MF2_FOOTCLIP,                                   // flags2
+      MF3_WINDTHRUST|MF3_SUPERFRIEND|MF3_SPACMONSTER|MF3_PASSMOBJ, // flags3
+   },
+   // Projectile
+   {
+      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE, // flags
+      MF2_NOCROSS,                                      // flags2
+      0,                                                // flags3
+   },
+   // PlayerProjectile
+   {
+      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE, // flags
+      MF2_NOCROSS,                                      // flags2
+      MF3_SPACMISSILE,                                  // flags3
+   },
+   // Seeker
+   {
+      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE, // flags
+      MF2_NOCROSS|MF2_SEEKERMISSILE,                    // flags2
+      0,                                                // flags3
+   },
+   // SolidDecor
+   {
+      MF_SOLID, // flags
+      0,        // flags2
+      0,        // flags3
+   },
+   // HangingDecor
+   {
+      MF_SPAWNCEILING|MF_NOGRAVITY, // flags
+      0,                            // flags2
+      0,                            // flags3
+   },
+   // SolidHangingDecor
+   {
+      MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY, // flags
+      0,                                     // flags2
+      0,                                     // flags3
+   },
+   // ShootableDecor
+   {
+      MF_SOLID|MF_SHOOTABLE|MF_NOBLOOD, // flags
+      0,                                // flags2
+      0,                                // flags3
+   },
+   // Fog
+   {
+      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_TRANSLUCENT, // flags
+      MF2_NOSPLASH,                              // flags2
+      0,                                         // flags3
+   },
+   // Item
+   {
+      MF_SPECIAL, // flags
+      0,          // flags2
+      0,          // flags3
+   },
+   // ItemCount
+   {
+      MF_SPECIAL|MF_COUNTITEM, // flags
+      0,                       // flags2
+      0,                       // flags3
+   },
+   // TerrainBase
+   {
+      MF_NOBLOCKMAP|MF_NOGRAVITY, // flags
+      MF2_NOSPLASH,               // flags2
+      0,                          // flags3
+   },
+   // TerrainChunk
+   {
+      MF_NOBLOCKMAP|MF_DROPOFF|MF_MISSILE, // flags
+      MF2_LOGRAV|MF2_NOSPLASH|MF2_NOCROSS, // flags2
+      MF3_CANNOTPUSH,                      // flags3
+   },
+   // ControlPoint
+   {
+      MF_NOBLOCKMAP|MF_NOSECTOR|MF_NOGRAVITY, // flags
+      0,                                      // flags2
+      0,                                      // flags3
+      "S_TNT1",                               // spawnstate
+   },
+   // ControlPointGrav
+   {
+      0,                         // flags
+      MF2_DONTDRAW|MF2_NOSPLASH, // flags2
+      0,                         // flags3
+      "S_TNT1",                  // spawnstate
+   },
 };
 
 //
@@ -200,11 +347,12 @@ static int E_ModCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(ITEM_TNG_DEHNUM,       -1,       CFGF_NONE), \
    CFG_STR(ITEM_TNG_SKINSPRITE,   "noskin", CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_C3DHEIGHT,  0.0f,     CFGF_NONE), \
+   CFG_STR(ITEM_TNG_BASICTYPE,    "",       CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
 {
-   CFG_STR(ITEM_TNG_INHERITS, 0, CFGF_NONE),
+   CFG_STR(ITEM_TNG_INHERITS,  0, CFGF_NONE),
    THINGTYPE_FIELDS
 };
 
@@ -694,6 +842,13 @@ static void E_CopyThing(int num, int pnum)
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(thingsec, (name)) > 0)
 
+// Same as above, but also considers if the basictype has set fields in the thing.
+// In that case, fields which are affected by basictype don't set defaults unless
+// they are explicitly specified.
+
+#define IS_SET_BT(name) \
+   ((def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0)
+
 //
 // E_ProcessThing
 //
@@ -707,6 +862,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    const char *tempstr;
    boolean inherits = false;
    boolean cflags   = false;
+   boolean hasbtype = false;
 
    // 01/27/04: added inheritance -- not in deltas
    if(def)
@@ -749,12 +905,37 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       thing_hitlist[i] = 1;
    }
 
+   // haleyjd 07/05/06: process basictype
+   // Note that when basictype is present, the default handling of all fields
+   // affected by the basictype will be changed.
+   if(IS_SET(ITEM_TNG_BASICTYPE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_BASICTYPE);
+      tempint = E_StrToNumLinear(BasicTypeNames, NUMBASICTYPES, tempstr);
+      if(tempint != NUMBASICTYPES)
+      {
+         basicttype_t *basicType = &BasicThingTypes[tempint];
+
+         mobjinfo[i].flags  = basicType->flags;
+         mobjinfo[i].flags2 = basicType->flags2;
+         mobjinfo[i].flags3 = basicType->flags3;
+
+         if(basicType->spawnstate &&
+            (tempint = E_StateNumForName(basicType->spawnstate)) != NUMSTATES)
+            mobjinfo[i].spawnstate = tempint;
+         else if(!inherits) // don't init to default if the thingtype inherits
+            mobjinfo[i].spawnstate = NullStateNum;
+
+         hasbtype = true; // mobjinfo has a basictype set
+      }
+   }
+
    // process doomednum
    if(IS_SET(ITEM_TNG_DOOMEDNUM))
       mobjinfo[i].doomednum = cfg_getint(thingsec, ITEM_TNG_DOOMEDNUM);
 
    // process spawnstate
-   if(IS_SET(ITEM_TNG_SPAWNSTATE))
+   if(IS_SET_BT(ITEM_TNG_SPAWNSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SPAWNSTATE);
       E_ThingFrame(tempstr, ITEM_TNG_SPAWNSTATE, i, 
@@ -888,7 +1069,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    }
 
    // 02/19/04: process combined flags first
-   if(IS_SET(ITEM_TNG_CFLAGS))
+   if(IS_SET_BT(ITEM_TNG_CFLAGS))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_CFLAGS);
       if(*tempstr == '\0')
@@ -910,7 +1091,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    if(!cflags) // skip if cflags are defined
    {
       // process flags
-      if(IS_SET(ITEM_TNG_FLAGS))
+      if(IS_SET_BT(ITEM_TNG_FLAGS))
       {
          tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS);
          if(*tempstr == '\0')
@@ -920,7 +1101,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       }
       
       // process flags2
-      if(IS_SET(ITEM_TNG_FLAGS2))
+      if(IS_SET_BT(ITEM_TNG_FLAGS2))
       {
          tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS2);
          if(*tempstr == '\0')
@@ -930,7 +1111,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       }
 
       // process flags3
-      if(IS_SET(ITEM_TNG_FLAGS3))
+      if(IS_SET_BT(ITEM_TNG_FLAGS3))
       {
          tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS3);
          if(*tempstr == '\0')

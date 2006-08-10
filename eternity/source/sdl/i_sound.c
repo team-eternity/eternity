@@ -246,7 +246,7 @@ static boolean addsfx(sfxinfo_t *sfx, int channel)
    return true;
 }
 
-static void updateSoundParams(int handle, int volume, int seperation, int pitch)
+static void updateSoundParams(int handle, int volume, int separation, int pitch)
 {
    int slot = handle;
    int rightvol;
@@ -273,20 +273,20 @@ static void updateSoundParams(int handle, int volume, int seperation, int pitch)
    
    // Separation, that is, orientation/stereo.
    //  range is: 1 - 256
-   seperation += 1;
+   separation += 1;
 
    // SoM 7/1/02: forceFlipPan accounted for here
    if(forceFlipPan)
-      seperation = 257 - seperation;
+      separation = 257 - separation;
    
    // Per left/right channel.
-   //  x^2 seperation,
+   //  x^2 separation,
    //  adjust volume properly.
    volume *= 8;
 
-   leftvol = volume - ((volume*seperation*seperation) >> 16);
-   seperation = seperation - 257;
-   rightvol= volume - ((volume*seperation*seperation) >> 16);  
+   leftvol = volume - ((volume*separation*separation) >> 16);
+   separation = separation - 257;
+   rightvol= volume - ((volume*separation*separation) >> 16);  
 
    // Sanity check, clamp volume.
    if(rightvol < 0 || rightvol > 127)
@@ -428,8 +428,6 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
       if(++stomp_handle >= MAX_CHANNELS)
          stomp_handle = 0;
       handle = stomp_handle;
-      // haleyjd: DEBUG
-      doom_printf(FC_ERROR "Stomped hardware sound channel %d", handle);
    }
 
    // haleyjd 02/18/05: cannot proceed until channel is unlocked
@@ -571,12 +569,12 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
             // Limit to LSB???
             channelinfo[chan].stepremainder &= 0xffff;
             
-            // haleyjd 02/18/05: unlock channel
-            channelinfo[chan].lock = 0;
-
             // Check whether we are done.
             if(channelinfo[chan].data >= channelinfo[chan].enddata)
             {
+               // haleyjd 02/18/05: unlock channel
+               channelinfo[chan].lock = 0;
+
                if(channelinfo[chan].loop &&
                   !(paused || (menuactive && !demoplayback && !netgame)))
                {
@@ -588,6 +586,8 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
                else
                   stopchan(chan);
             }
+            // haleyjd 02/18/05: unlock channel
+            channelinfo[chan].lock = 0;
          }
       }
       

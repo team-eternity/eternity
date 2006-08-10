@@ -135,7 +135,7 @@ static void S_StopChannel(int cnum)
    {
       if(I_SoundIsPlaying(channels[cnum].handle))
          I_StopSound(channels[cnum].handle);      // stop the sound playing
-      channels[cnum].sfxinfo = 0;
+      channels[cnum].sfxinfo = NULL;
    }
 }
 
@@ -835,7 +835,7 @@ void S_StopSounds(void)
 
    //jff 1/22/98 skip sound init if sound not enabled
    if(snd_card && !nosfxparm)
-      for(cnum=0 ; cnum<numChannels ; cnum++)
+      for(cnum = 0; cnum < numChannels; ++cnum)
          if(channels[cnum].sfxinfo)
             S_StopChannel(cnum);
 }
@@ -852,13 +852,13 @@ void S_Start(void)
    S_StopSounds();
    
    //jff 1/22/98 return if music is not enabled
-   if (!mus_card || nomusicparm)
+   if(!mus_card || nomusicparm)
       return;
    
    // start new music for the level
    mus_paused = 0;
    
-   if(!*LevelInfo.musicName && gamemap==0)
+   if(!*LevelInfo.musicName && gamemap == 0)
    {
       // dont know what music to play
       // we need a default
@@ -872,7 +872,7 @@ void S_Start(void)
    }
    else
    {
-      if(idmusnum!=-1)
+      if(idmusnum != -1)
       {
          mnum = idmusnum; //jff 3/17/98 reload IDMUS music if not -1
       }
