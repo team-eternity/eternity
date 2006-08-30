@@ -85,6 +85,9 @@ static void MN_PageMenu(menu_t *newpage);
 #define SKULL_HEIGHT 19
 #define BLINK_TIME 8
 
+// haleyjd 08/30/06: emulated old menus have fixed item size of 16
+#define EMULATED_ITEM_SIZE 16 
+
 enum
 {
    slider_left,
@@ -176,6 +179,38 @@ static void MN_DrawSlider(int x, int y, int pct)
 }
 
 //
+// MN_DrawThermo
+//
+// haleyjd 08/30/06: Needed for old menu emulation; this draws an old-style
+// huge slider.
+//
+// TODO/FIXME: allow DeHackEd replacement of patch names
+//
+static void MN_DrawThermo(int x, int y, int thermWidth, int thermDot)
+{
+   int xx, i;
+
+   xx = x;
+   V_DrawPatchDirect(xx, y, &vbscreen,
+                     W_CacheLumpName("M_THERML", PU_CACHE));
+   
+   xx += 8;
+   
+   for(i = 0; i < thermWidth; ++i)
+   {
+      V_DrawPatchDirect(xx, y, &vbscreen,
+                        W_CacheLumpName("M_THERMM", PU_CACHE));
+      xx += 8;
+   }
+   
+   V_DrawPatchDirect(xx, y, &vbscreen,
+                     W_CacheLumpName("M_THERMR", PU_CACHE));
+   
+   V_DrawPatchDirect((x + 8) + thermDot*8, y, &vbscreen,
+                     W_CacheLumpName("M_THERMO", PU_CACHE));
+}
+
+//
 // MN_DrawMenuItem
 //
 // draw a menu item. returns the height in pixels
@@ -195,9 +230,13 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
    // skip drawing if a gap
    if(item->type == it_gap)
    {
+      // haleyjd 08/30/06: emulated menus have fixed item size
+      if(drawing_menu->flags & mf_emulated)
+         item_height = EMULATED_ITEM_SIZE;
+
       // haleyjd 10/09/05: gap size override for menus
       if(drawing_menu->gap_override)
-         return drawing_menu->gap_override;
+         item_height = drawing_menu->gap_override;
 
       return item_height;
    }
@@ -233,14 +272,13 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          
          V_DrawPatchTranslated(x, y, &vbscreen, patch, colrngs[colour], 0);
 
-         // haleyjd 05/16/04: hack for traditional menu support
-         if(gamemode <= retail && traditional_menu &&
-            drawing_menu == &menu_old_main)
-         {
-            item_height = 16; // this was hard-coded in the old system
-         }
+         // haleyjd 05/16/04: hack for traditional menu support;
+         // this was hard-coded in the old system
+         if(drawing_menu->flags & mf_emulated)
+            item_height = EMULATED_ITEM_SIZE; 
 
-         return item_height;
+         if(item->type != it_bigslider)
+            return item_height;
       }
    }
 
@@ -260,7 +298,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
                y);
       item_height = V_StringHeightBig(item->description);
    }
-   else
+   else if(item->type != it_bigslider || !item->patch)
    {
       int item_x;
       desc_width = 
@@ -381,6 +419,19 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          MN_DrawSlider(x + GAP, y, (posn*100) / range);
       }
       break;
+
+      // big slider -- haleyjd 08/30/06: needed for old menu emulation
+
+   case it_bigslider:
+      MN_GetItemVariable(item);
+      if(item->var && item->var->type == vt_int)
+      {
+         // note: the thermometer is drawn in the position of the next menu
+         // item, so place a gap underneath it.
+         MN_DrawThermo(x, y + EMULATED_ITEM_SIZE, item->var->max, 
+                       *(int *)item->var->variable);
+      }
+      break;
       
       // automap colour block
       
@@ -488,8 +539,7 @@ void MN_DrawMenu(menu_t *menu)
             int item_x = menu->x - 30;                         // 30 left
             int item_y = y + (item_height - SKULL_HEIGHT) / 2; // midpoint
             
-            if(gamemode <= retail && traditional_menu &&
-               menu == &menu_old_main)
+            if(menu->flags & mf_emulated)
             {
                item_x = menu->x - 32;
                item_y = menu->y - 5 + itemnum * 16;

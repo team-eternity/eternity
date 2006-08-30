@@ -65,6 +65,7 @@ typedef struct menuitem_s
     it_title,            // the menu title
     it_info,             // information / section header
     it_slider,           // slider
+    it_bigslider,        // big slider -- haleyjd 08/30/06
     it_automap,          // an automap colour
     it_binding,		 // haleyjd: a key binding
     it_end,              // last menuitem in the list
@@ -115,6 +116,7 @@ typedef struct menu_s
       mf_background    = 2,   // show background
       mf_leftaligned   = 4,   // left-aligned menu
       mf_centeraligned = 8,   // center-aligned menu - haleyjd 02/04/06
+      mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
    } flags;               
    
    void (*drawer)();        // seperate drawer function 

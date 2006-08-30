@@ -105,6 +105,7 @@ static dehflags_t mnflagvalues[] =
    { "background",    mf_background    },
    { "leftaligned",   mf_leftaligned   },
    { "centeraligned", mf_centeraligned },
+   { "emulated",      mf_emulated      },
    { NULL,            0                }
 };
 

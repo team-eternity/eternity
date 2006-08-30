@@ -3393,7 +3393,7 @@ menu_t menu_old_main =
    NULL, NULL,            // pages
    97, 64,
    0,
-   mf_skullmenu,
+   mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
    MN_MainMenuDrawer
 };
 
@@ -3411,14 +3411,39 @@ static void MN_PatchOldMainMenu(void)
    menu_old_main.y += 8;
 }
 
-// TODO: Original Options Menu
+// Original Options Menu
+
+static menuitem_t mn_old_option_items[] =
+{
+   { it_runcmd,    "end game",    "mn_endgame",  "M_ENDGAM" },
+   { it_runcmd,    "messages",    "hu_messages", "M_MESSG"  },
+   { it_runcmd,    "gdetail",     "",            "M_DETAIL" },
+   { it_bigslider, "screen size", "screensize",  "M_SCRNSZ" },
+   { it_gap },
+   { it_runcmd,    "msens",       "",            "M_MSENS"  },
+   { it_gap },
+   { it_runcmd,    "sound",       "",            "M_SVOL"   },
+   { it_end }
+};
+
+menu_t menu_old_options =
+{
+   mn_old_option_items,
+   NULL, NULL,            // pages
+   60, 37,
+   0,
+   mf_skullmenu | mf_emulated,
+   NULL
+};
+
+CONSOLE_COMMAND(mn_old_options, 0)
+{
+   MN_StartMenu(&menu_old_options);
+}
+
 // TODO: Original Sound Menu w/ Large Sliders
 // TODO: Original Save and Load Menus?
 // TODO: Draw skull cursor on Credits pages?
-
-// TODO: Extract special case code for menu_old_main from menu engine
-// routines and turn into optional behaviors for any menu.
-
 
 //
 // MN_AddMenus
@@ -3512,6 +3537,9 @@ void MN_AddMenus(void)
 
    C_AddCommand(skinviewer);
    C_AddCommand(use_traditional_menu);
+
+   // haleyjd: "old" menus
+   C_AddCommand(mn_old_options);
    
    // haleyjd: add Heretic-specific menus (in mn_htic.c)
    MN_AddHMenus();
