@@ -21,6 +21,12 @@
 //
 // DESCRIPTION:
 //
+// 3D Mobj Clipping Code
+//
+// Largely from zdoom, this system seems to be more reliable than our old one.
+// It is also kept totally separate from the old clipping code to avoid the
+// entangling problems the earlier code had.
+//
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
@@ -41,28 +47,28 @@
 
 // I HATE GLOBALS!!!
 
-extern mobj_t *tmthing;
-extern fixed_t tmx;
-extern fixed_t tmy;
-extern int     tmflags;
-extern fixed_t tmbbox[4];
-extern line_t *ceilingline;
-extern line_t *blockline;
-extern line_t *floorline;
-extern int     tmunstuck;
-extern fixed_t tmfloorz;
-extern fixed_t tmceilingz;
-extern fixed_t tmdropoffz;
-extern fixed_t tmsecfloorz;
-extern fixed_t tmsecceilz;
-extern fixed_t tmstepupfloorz;
-extern fixed_t tmpassfloorz;
-extern fixed_t tmpassceilz;
-extern int     tmfloorpic;
+extern mobj_t   *tmthing;
+extern fixed_t   tmx;
+extern fixed_t   tmy;
+extern int       tmflags;
+extern fixed_t   tmbbox[4];
+extern line_t   *ceilingline;
+extern line_t   *blockline;
+extern line_t   *floorline;
+extern int       tmunstuck;
+extern fixed_t   tmfloorz;
+extern fixed_t   tmceilingz;
+extern fixed_t   tmdropoffz;
+extern fixed_t   tmsecfloorz;
+extern fixed_t   tmsecceilz;
+extern fixed_t   tmstepupfloorz;
+extern fixed_t   tmpassfloorz;
+extern fixed_t   tmpassceilz;
+extern int       tmfloorpic;
 extern sector_t *tmfloorsec;
-extern int     tmtouch3dside;
-extern int     numspechit;
-extern fixed_t FloatBobOffsets[64];
+extern int       tmtouch3dside;
+extern int       numspechit;
+extern fixed_t   FloatBobOffsets[64];
 
 //
 // P_ZMovementTest

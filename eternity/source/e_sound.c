@@ -1218,10 +1218,10 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    {
       newSeq->randvol = true;
       // rangecheck minvolume (max is volume - 1)
+      if(newSeq->minvolume > newSeq->volume)
+         newSeq->minvolume = newSeq->volume - 1;
       if(newSeq->minvolume < 0)
          newSeq->minvolume = 0;
-      else if(newSeq->minvolume > newSeq->volume)
-         newSeq->minvolume = newSeq->volume - 1;
    }
 
    // process nostopcutoff

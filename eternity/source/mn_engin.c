@@ -1273,9 +1273,7 @@ void MN_StartControlPanel(void)
 {
    // haleyjd 05/16/04: traditional DOOM main menu support
    if(gamemode <= retail && traditional_menu)
-   {
       MN_StartMenu(&menu_old_main);
-   }
    else
       MN_StartMenu(gameModeInfo->mainMenu);
 }

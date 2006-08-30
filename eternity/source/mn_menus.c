@@ -158,43 +158,6 @@ menu_t menu_main =
    MN_MainMenuDrawer       // special drawer
 };
 
-// haleyjd 05/16/04: traditional DOOM main menu support
-
-static menuitem_t mn_old_main_items[] =
-{
-   { it_runcmd, "new game",   "mn_newgame",  "M_NGAME" },
-   { it_runcmd, "options",    "mn_options",  "M_OPTION" },
-   { it_runcmd, "save game",  "mn_savegame", "M_SAVEG" },
-   { it_runcmd, "load game",  "mn_loadgame", "M_LOADG" },
-   { it_runcmd, "read this!", "credits",     "M_RDTHIS" },
-   { it_runcmd, "quit",       "mn_quit",     "M_QUITG" },
-   { it_end }
-};
-
-menu_t menu_old_main =
-{
-   mn_old_main_items,
-   NULL, NULL,            // pages
-   97, 64,
-   0,
-   mf_skullmenu,
-   MN_MainMenuDrawer
-};
-
-//
-// MN_PatchOldMainMenu
-//
-// haleyjd 05/16/04: patches the old main menu for DOOM II, for full
-// compatibility.
-//
-static void MN_PatchOldMainMenu(void)
-{
-   // turn "Read This!" into "Quit Game" and move down 8 pixels
-   menu_old_main.menuitems[4] = menu_old_main.menuitems[5];
-   menu_old_main.menuitems[5].type = it_end;
-   menu_old_main.y += 8;
-}
-
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
@@ -3369,10 +3332,99 @@ CONSOLE_COMMAND(skinviewer, 0)
    MN_InitSkinViewer();
 }
 
+//==============================================================================
+//
+// DOOM Traditional Menu System
+//
+// haleyjd 08/29/06: On August 19 of this year, the DOOM community lost one of
+// its well-known members, Dylan James McIntosh, AKA "Toke," a purist and
+// old-school deathmatcher by trade and creator of a series of popular DM maps
+// whose style was decidedly minimalistic. We met once in real life to discuss a
+// business deal involving programming, which unfortunately never took off. For
+// personal reasons as well as to represent the community, I attended his
+// funeral the following Friday afternoon in Tulsa and met his parents there. I
+// considered him a friend, and I have experienced a lot of pain due to his
+// death.
+//
+// A description of his services and the messages from his many online friends
+// can be viewed at this Doomworld Forums thread:
+// http://www.doomworld.com/vb/showthread.php?s=&threadid=37900
+//
+// He also helped out with several source ports, including ZDaemon, Chocolate
+// DOOM, and yes, Eternity. He didn't do coding, but rather helped by pointing
+// out bugs and compatibility issues. Not very many people do this, and I have
+// always appreciated those who do. He was also a champion for universal
+// multiplayer standards.
+//
+// This feature I had planned for quite some time, but never seemed to find the
+// drive to work on it. Because Toke appreciated everything old-school, I 
+// thought it would be good to introduce this feature in the 3.33.50 version 
+// which is dedicated to his memory. This is a complete emulation of DOOM's 
+// original, minimal menu system without any of the fluff or access to new 
+// features that the normal menus provide.
+//
+// To Toke: We still miss ya, buddy, but I know you're somewhere having fun and
+// maybe having a laugh at our expense ;)  Keep DOOMing forever, my friend.
+//
+
 // haleyjd 05/16/04: traditional menu support
 VARIABLE_BOOLEAN(traditional_menu, NULL, yesno);
 CONSOLE_VARIABLE(use_traditional_menu, traditional_menu, 0) {}
 
+// haleyjd 05/16/04: traditional DOOM main menu support
+
+// Note: the main menu emulation can still be enabled separately from the
+// rest of the purist menu system.
+
+static menuitem_t mn_old_main_items[] =
+{
+   { it_runcmd, "new game",   "mn_newgame",  "M_NGAME" },
+   { it_runcmd, "options",    "mn_options",  "M_OPTION" },
+   { it_runcmd, "save game",  "mn_savegame", "M_SAVEG" },
+   { it_runcmd, "load game",  "mn_loadgame", "M_LOADG" },
+   { it_runcmd, "read this!", "credits",     "M_RDTHIS" },
+   { it_runcmd, "quit",       "mn_quit",     "M_QUITG" },
+   { it_end }
+};
+
+menu_t menu_old_main =
+{
+   mn_old_main_items,
+   NULL, NULL,            // pages
+   97, 64,
+   0,
+   mf_skullmenu,
+   MN_MainMenuDrawer
+};
+
+//
+// MN_PatchOldMainMenu
+//
+// haleyjd 05/16/04: patches the old main menu for DOOM II, for full
+// compatibility.
+//
+static void MN_PatchOldMainMenu(void)
+{
+   // turn "Read This!" into "Quit Game" and move down 8 pixels
+   menu_old_main.menuitems[4] = menu_old_main.menuitems[5];
+   menu_old_main.menuitems[5].type = it_end;
+   menu_old_main.y += 8;
+}
+
+// TODO: Original Options Menu
+// TODO: Original Sound Menu w/ Large Sliders
+// TODO: Original Save and Load Menus?
+// TODO: Draw skull cursor on Credits pages?
+
+// TODO: Extract special case code for menu_old_main from menu engine
+// routines and turn into optional behaviors for any menu.
+
+
+//
+// MN_AddMenus
+//
+// Adds all menu system commands to the console command chains.
+// 
 void MN_AddMenus(void)
 {
    C_AddCommand(mn_newgame);

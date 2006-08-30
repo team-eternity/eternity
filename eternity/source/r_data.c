@@ -777,7 +777,7 @@ void R_InitTranMap(int progress)
 {
    int lump = W_CheckNumForName("TRANMAP");
    
-   // If a tranlucency filter map lump is present, use it
+   // If a translucency filter map lump is present, use it
    
    if(lump != -1)  // Set a pointer to the translucency filter maps.
       main_tranmap = W_CacheLumpNum(lump, PU_STATIC);   // killough 4/11/98
