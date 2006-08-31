@@ -3298,6 +3298,7 @@ static menuitem_t mn_menus_items[] =
    {it_gap},
    {it_info,     FC_GOLD "compatibility"},
    {it_toggle,   "use doom's main menu",   "use_traditional_menu"},
+   {it_toggle,   "emulate all old menus",  "mn_classic_menus"},
    {it_gap},
    {it_info,     FC_GOLD "utilities"},
    {it_variable, "search string:",         "mn_searchstr"},
@@ -3412,6 +3413,33 @@ static void MN_PatchOldMainMenu(void)
    menu_old_main.menuitems[4] = menu_old_main.menuitems[5];
    menu_old_main.menuitems[5].type = it_end;
    menu_old_main.y += 8;
+}
+
+boolean mn_classic_menus;
+
+//
+// MN_LinkClassicMenus
+//
+// haleyjd 08/31/06: This function is called to turn classic menu system support
+// on or off. When it's on, the old main menu above is patched to point to the
+// other old menus.
+//
+static void MN_LinkClassicMenus(boolean link)
+{
+   if(link) // turn on classic menus
+   {
+      menu_old_main.menuitems[1].data = "mn_old_options";
+   }
+   else // turn off classic menus
+   {
+      menu_old_main.menuitems[1].data = "mn_options";
+   }
+}
+
+VARIABLE_BOOLEAN(mn_classic_menus, NULL, yesno);
+CONSOLE_VARIABLE(mn_classic_menus, mn_classic_menus, 0) 
+{
+   MN_LinkClassicMenus(mn_classic_menus);
 }
 
 // Original Options Menu
@@ -3583,6 +3611,7 @@ void MN_AddMenus(void)
    C_AddCommand(use_traditional_menu);
 
    // haleyjd: "old" menus
+   C_AddCommand(mn_classic_menus);
    C_AddCommand(mn_old_options);
    C_AddCommand(mn_old_sound);
    

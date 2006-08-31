@@ -226,9 +226,7 @@ void D_Display(void)
    // save the current screen if about to wipe
    // no melting consoles
    if(gamestate != wipegamestate && wipegamestate != GS_CONSOLE)
-   {
       Wipe_StartScreen();
-   }
 
    if(inwipe || c_moving || menuactive)
       redrawsbar = redrawborder = true;   // redraw status bar and border

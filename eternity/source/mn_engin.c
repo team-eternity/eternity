@@ -428,6 +428,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       {
          // note: the thermometer is drawn in the position of the next menu
          // item, so place a gap underneath it.
+         // FIXME/TODO: support on non-emulated menus
          MN_DrawThermo(x, y + EMULATED_ITEM_SIZE, 
                        item->var->max - item->var->min + 1, 
                        *(int *)item->var->variable);
@@ -1054,6 +1055,7 @@ boolean MN_Responder(event_t *ev)
       switch(menuitem->type)
       {
       case it_slider:
+      case it_bigslider: // haleyjd 08/31/06: old-school big slider
       case it_toggle:
          // no on-off int values
          if(menuitem->var->type == vt_int &&
@@ -1096,6 +1098,7 @@ boolean MN_Responder(event_t *ev)
       switch(menuitem->type)
       {
       case it_slider:
+      case it_bigslider: // haleyjd 08/31/06: old-school big slider
       case it_toggle:
          // no on-off int values
          if(menuitem->var->type == vt_int &&
@@ -1184,7 +1187,7 @@ boolean MN_Responder(event_t *ev)
       } while(n != current_menu->selected);
    }
    
-   return false;
+   return false; //!!current_menu;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1322,8 +1325,13 @@ void MN_ErrorMsg(const char *s, ...)
 //
 void MN_StartControlPanel(void)
 {
+   // haleyjd 08/31/06: not if menu is already active
+   if(menuactive)
+      return;
+
    // haleyjd 05/16/04: traditional DOOM main menu support
-   if(gamemode <= retail && traditional_menu)
+   // haleyjd 08/31/06: support for all of DOOM's original menus
+   if(gamemode <= retail && (traditional_menu || mn_classic_menus))
       MN_StartMenu(&menu_old_main);
    else
       MN_StartMenu(gameModeInfo->mainMenu);
