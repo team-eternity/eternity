@@ -3376,7 +3376,8 @@ CONSOLE_VARIABLE(use_traditional_menu, traditional_menu, 0) {}
 // haleyjd 05/16/04: traditional DOOM main menu support
 
 // Note: the main menu emulation can still be enabled separately from the
-// rest of the purist menu system.
+// rest of the purist menu system. It is modified dynamically to point to
+// the rest of the old menu system when appropriate.
 
 static menuitem_t mn_old_main_items[] =
 {
@@ -3424,7 +3425,7 @@ static menuitem_t mn_old_option_items[] =
    { it_gap },
    { it_runcmd,    "mouse sens.",    "",              "M_MSENS"  },
    { it_gap },
-   { it_runcmd,    "sound volume",   "",              "M_SVOL"   },
+   { it_runcmd,    "sound volume",   "mn_old_sound",  "M_SVOL"   },
    { it_end }
 };
 
@@ -3437,7 +3438,7 @@ static void MN_OldOptionsDrawer(void)
                      W_CacheLumpName("M_OPTTTL", PU_CACHE));
 
    V_DrawPatchDirect(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
-		     W_CacheLumpName(msgNames[showMessages], PU_CACHE));
+                     W_CacheLumpName(msgNames[showMessages], PU_CACHE));
 }
 
 menu_t menu_old_options =
@@ -3455,7 +3456,36 @@ CONSOLE_COMMAND(mn_old_options, 0)
    MN_StartMenu(&menu_old_options);
 }
 
-// TODO: Original Sound Menu w/ Large Sliders
+// Original Sound Menu w/ Large Sliders
+
+static menuitem_t mn_old_sound_items[] =
+{
+   { it_bigslider, "sfx volume",   "sfx_volume",   "M_SFXVOL" },
+   { it_gap },
+   { it_bigslider, "music volume", "music_volume", "M_MUSVOL" },
+   { it_end }
+};
+
+static void MN_OldSoundDrawer(void)
+{
+   V_DrawPatchDirect(60, 38, &vbscreen, W_CacheLumpName("M_SVOL", PU_CACHE));
+}
+
+menu_t menu_old_sound =
+{
+   mn_old_sound_items,
+   NULL, NULL,
+   80, 64,
+   0,
+   mf_skullmenu | mf_emulated,
+   MN_OldSoundDrawer
+};
+
+CONSOLE_COMMAND(mn_old_sound, 0)
+{
+   MN_StartMenu(&menu_old_sound);
+}
+
 // TODO: Original Save and Load Menus?
 // TODO: Draw skull cursor on Credits pages?
 
@@ -3554,6 +3584,7 @@ void MN_AddMenus(void)
 
    // haleyjd: "old" menus
    C_AddCommand(mn_old_options);
+   C_AddCommand(mn_old_sound);
    
    // haleyjd: add Heretic-specific menus (in mn_htic.c)
    MN_AddHMenus();
