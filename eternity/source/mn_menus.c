@@ -3367,6 +3367,8 @@ CONSOLE_COMMAND(skinviewer, 0)
 // maybe having a laugh at our expense ;)  Keep DOOMing forever, my friend.
 //
 
+#define EMULATED_ITEM_SIZE 16
+
 // haleyjd 05/16/04: traditional menu support
 VARIABLE_BOOLEAN(traditional_menu, NULL, yesno);
 CONSOLE_VARIABLE(use_traditional_menu, traditional_menu, 0) {}
@@ -3415,16 +3417,28 @@ static void MN_PatchOldMainMenu(void)
 
 static menuitem_t mn_old_option_items[] =
 {
-   { it_runcmd,    "end game",    "mn_endgame",  "M_ENDGAM" },
-   { it_runcmd,    "messages",    "hu_messages", "M_MESSG"  },
-   { it_runcmd,    "gdetail",     "",            "M_DETAIL" },
-   { it_bigslider, "screen size", "screensize",  "M_SCRNSZ" },
+   { it_runcmd,    "end game",       "mn_endgame",    "M_ENDGAM" },
+   { it_runcmd,    "messages",       "hu_messages /", "M_MESSG"  },
+   { it_runcmd,    "graphic detail", "",              "M_DETAIL" },
+   { it_bigslider, "screen size",    "screensize",    "M_SCRNSZ" },
    { it_gap },
-   { it_runcmd,    "msens",       "",            "M_MSENS"  },
+   { it_runcmd,    "mouse sens.",    "",              "M_MSENS"  },
    { it_gap },
-   { it_runcmd,    "sound",       "",            "M_SVOL"   },
+   { it_runcmd,    "sound volume",   "",              "M_SVOL"   },
    { it_end }
 };
+
+static char detailNames[2][9] = { "M_GDHIGH", "M_GDLOW" };
+static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
+
+static void MN_OldOptionsDrawer(void)
+{
+   V_DrawPatchDirect(108, 15, &vbscreen,
+                     W_CacheLumpName("M_OPTTTL", PU_CACHE));
+
+   V_DrawPatchDirect(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
+		     W_CacheLumpName(msgNames[showMessages], PU_CACHE));
+}
 
 menu_t menu_old_options =
 {
@@ -3433,7 +3447,7 @@ menu_t menu_old_options =
    60, 37,
    0,
    mf_skullmenu | mf_emulated,
-   NULL
+   MN_OldOptionsDrawer
 };
 
 CONSOLE_COMMAND(mn_old_options, 0)

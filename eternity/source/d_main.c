@@ -2339,6 +2339,12 @@ static void D_DoomInit(void)
             "Version %i.%02i.%02i '%s' \n\n",
             version/100, version%100, SUBVERSION, version_name);
 
+#ifdef TOKE_MEMORIAL
+   // haleyjd 08/30/06: for v3.33.50 Phoenix: RIP Toke
+   C_Printf(FC_GREEN "Dedicated to the memory of our friend\n"
+            "Dylan 'Toke' McIntosh  Jan 14 1983 - Aug 19 2006 \n");
+#endif
+
    // haleyjd: if we didn't do textmode startup, these didn't show up
    //  earlier, so now is a cool time to show them :)
    // haleyjd: altered to prevent printf attacks

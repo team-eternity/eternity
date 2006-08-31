@@ -91,6 +91,7 @@ static const char *mnitem_types[] =
    "title",
    "info",
    "slider",
+   "bigslider",
    "automap",
    "binding",
 };

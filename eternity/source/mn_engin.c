@@ -428,7 +428,8 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       {
          // note: the thermometer is drawn in the position of the next menu
          // item, so place a gap underneath it.
-         MN_DrawThermo(x, y + EMULATED_ITEM_SIZE, item->var->max, 
+         MN_DrawThermo(x, y + EMULATED_ITEM_SIZE, 
+                       item->var->max - item->var->min + 1, 
                        *(int *)item->var->variable);
       }
       break;
