@@ -136,16 +136,17 @@ CONSOLE_COMMAND(e_thingtype, 0)
    C_Printf(FC_ERROR "Graphics data:\n"
             FC_HI "Skin sprite: " FC_NORMAL "%d\n"
             FC_HI "Blood color: " FC_NORMAL "%d\n"
-            FC_HI "Particle FX: " FC_NORMAL "%xH\n"
-            FC_HI "Translucency: " FC_NORMAL "%d\n\n",
+            FC_HI "Color: " FC_NORMAL "%d\n"
+            FC_HI "Particle FX: " FC_NORMAL "0x%08x\n"
+            FC_HI "Translucency: " FC_NORMAL "%d%%\n\n",
             mobjinfo[num].altsprite, mobjinfo[num].bloodcolor,
             mobjinfo[num].colour, mobjinfo[num].particlefx,
-            mobjinfo[num].translucency);
+            mobjinfo[num].translucency*100/65536);
 
    C_Printf(FC_ERROR "Flags:\n"
-            FC_HI "Flags 1: " FC_NORMAL "%xH\n"
-            FC_HI "Flags 2: " FC_NORMAL "%xH\n"
-            FC_HI "Flags 3: " FC_NORMAL "%xH\n",
+            FC_HI "Flags 1: " FC_NORMAL "0x%08x\n"
+            FC_HI "Flags 2: " FC_NORMAL "0x%08x\n"
+            FC_HI "Flags 3: " FC_NORMAL "0x%08x\n",
             mobjinfo[num].flags, mobjinfo[num].flags2,
             mobjinfo[num].flags3);
 }
