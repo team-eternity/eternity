@@ -143,6 +143,7 @@ OBJS =   \
 	$(O)/p_inter.o \
 	$(O)/p_lights.o \
 	$(O)/p_map.o \
+	$(O)/p_map3d.o \
 	$(O)/p_maputl.o \
 	$(O)/p_mobj.o \
 	$(O)/p_partcl.o \
