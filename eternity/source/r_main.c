@@ -40,6 +40,7 @@ static const char rcsid[] = "$Id: r_main.c,v 1.13 1998/05/07 00:47:52 killough E
 #include "r_ripple.h"
 #include "r_bsp.h"
 #include "r_draw.h"
+#include "r_drawq.h"
 #include "m_bbox.h"
 #include "r_sky.h"
 #include "s_sound.h"
@@ -84,6 +85,21 @@ extern int global_cmap_index; // haleyjd: NGCS
 
 void R_HOMdrawer(void);
 
+// haleyjd 09/04/06: column drawing engines
+columndrawer_t *r_column_engine;
+int r_column_engine_num;
+
+static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
+{
+   &r_normal_drawer, // normal engine
+   &r_quad_drawer,   // quad cache engine
+};
+
+void R_SetColumnEngine(void)
+{
+   r_column_engine = r_column_engines[r_column_engine_num];
+}
+
 //
 // precalculated math tables
 //
@@ -118,7 +134,7 @@ lighttable_t **colormaps;
 
 int extralight;                           // bumped light from gun blasts
 
-void (*colfunc)(void) = R_DrawColumn;     // current column draw function
+void (*colfunc)(void);                    // current column draw function
 
 //
 // R_PointOnSide
@@ -524,6 +540,9 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       R_ExecuteSetViewSize(); // reset view
       oldzoom = zoom;
    }
+
+   // haleyjd 09/04/06: set or change column drawing engine
+   R_SetColumnEngine();
    
    viewplayer = player;
    mobj = player->mo;
@@ -572,7 +591,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    yslope = origyslope + (viewheight>>1) - (dy >> FRACBITS);
 
    // use drawcolumn
-   colfunc = R_DrawColumn; //sf
+   colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
    
    ++validcount;
 }
@@ -699,7 +718,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    NetUpdate();
 
    R_DrawMasked();
-   R_ResetColumnBuffer();
+   
+   // haleyjd 09/04/06: handle through column engine
+   if(r_column_engine->ResetBuffer)
+      r_column_engine->ResetBuffer();
    
    // Check for new console commands.
    NetUpdate();
@@ -754,8 +776,9 @@ void R_ResetTrans(void)
 //  Console Commands
 //
 
-char *handedstr[] = {"right", "left"};
-char *ptranstr[]  = { "none", "smooth", "general" };
+static char *handedstr[] = { "right", "left" };
+static char *ptranstr[]  = { "none", "smooth", "general" };
+static char *coleng[]    = { "normal", "quad" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
 VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
@@ -772,6 +795,7 @@ VARIABLE_INT(screenSize, NULL,                  0, 8, NULL);
 VARIABLE_INT(zoom, NULL,                        0, 8192, NULL);
 VARIABLE_INT(usegamma, NULL,                    0, 4, NULL);
 VARIABLE_INT(particle_trans, NULL,              0, 2, ptranstr);
+VARIABLE_INT(r_column_engine_num, NULL,         0, NUMCOLUMNENGINES - 1, coleng);
 
 CONSOLE_VARIABLE(gamma, usegamma, 0)
 {
@@ -803,7 +827,7 @@ CONSOLE_VARIABLE(gamma, usegamma, 0)
    player_printf(&players[consoleplayer], "%s", msg);
 
    // change to new gamma val
-   I_SetPalette(W_CacheLumpName ("PLAYPAL",PU_CACHE));
+   I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
 }
 
 CONSOLE_VARIABLE(lefthanded, lefthanded, 0) {}
@@ -859,6 +883,8 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
 // haleyjd: particle translucency on/off
 CONSOLE_VARIABLE(r_ptcltrans, particle_trans, 0) {}
 
+CONSOLE_VARIABLE(r_columnengine, r_column_engine_num, 0) {}
+
 CONSOLE_COMMAND(p_dumphubs, 0)
 {
    extern void P_DumpHubs();
@@ -882,6 +908,7 @@ void R_AddCommands(void)
    C_AddCommand(screensize);
    C_AddCommand(gamma);
    C_AddCommand(r_ptcltrans);
+   C_AddCommand(r_columnengine);
 
    C_AddCommand(p_dumphubs);
 }

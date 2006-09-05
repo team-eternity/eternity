@@ -29,6 +29,7 @@
 
 #include "d_player.h"
 #include "r_data.h"
+#include "r_draw.h"
 #include "r_defs.h"
 #include "p_chase.h"
 #ifdef R_PORTALS
@@ -132,6 +133,12 @@ angle_t R_WadToAngle(int wadangle);
 
 extern int viewdir;
 extern int zoom;
+
+// haleyjd 09/04/06
+#define NUMCOLUMNENGINES 2
+extern int r_column_engine_num;
+extern columndrawer_t *r_column_engine;
+void R_SetColumnEngine(void);
 
 #endif
 

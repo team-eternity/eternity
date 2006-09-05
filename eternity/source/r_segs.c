@@ -115,10 +115,10 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    
    // killough 4/11/98: draw translucent 2s normal textures
    
-   colfunc = R_DrawColumn;
+   colfunc = r_column_engine->DrawColumn;
    if(curline->linedef->tranlump >= 0 && general_translucency)
    {
-      colfunc = R_DrawTLColumn;
+      colfunc = r_column_engine->DrawTLColumn;
       tranmap = main_tranmap;
       if(curline->linedef->tranlump > 0)
          tranmap = W_CacheLumpNum(curline->linedef->tranlump-1, PU_STATIC);

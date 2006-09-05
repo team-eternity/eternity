@@ -1179,12 +1179,7 @@ VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
 VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
 VARIABLE_INT(default_numChannels, NULL, 1, 128, NULL);
 VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
-
-#ifndef _SDL_VER
 VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
-#else
-VARIABLE_INT(snd_MusicVolume,     NULL, 0, 16,  NULL);
-#endif
 
 VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
 

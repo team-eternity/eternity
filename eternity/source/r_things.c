@@ -547,18 +547,18 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    
    if(vis->mobjflags & MF_SHADOW)   // shadow draw
    {
-      colfunc = R_DrawFuzzColumn;    // killough 3/14/98
+      colfunc = r_column_engine->DrawFuzzColumn;    // killough 3/14/98
    }
    else if(vis->mobjflags3 & MF3_TLSTYLEADD)
    {
       // haleyjd 02/08/05: additive translucency support
       if(vis->colour)
       {
-         colfunc = R_DrawAddTlatedColumn;
+         colfunc = r_column_engine->DrawAddTRColumn;
          dc_translation = translationtables[vis->colour - 1];
       }
       else
-         colfunc = R_DrawAddColumn;
+         colfunc = r_column_engine->DrawAddColumn;
 
       dc_translevel = vis->translucency;
    }
@@ -568,11 +568,11 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       // 01/12/04: changed translation handling
       if(vis->colour)
       {
-         colfunc = R_DrawFlexTlatedColumn;
+         colfunc = r_column_engine->DrawFlexTRColumn;
          dc_translation = translationtables[vis->colour - 1];
       }
       else
-         colfunc = R_DrawFlexTLColumn;
+         colfunc = r_column_engine->DrawFlexColumn;
 
       dc_translevel = vis->translucency;
    }
@@ -581,22 +581,22 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       // haleyjd 02/08/05: allow translated BOOM tl columns too
       if(vis->colour)
       {
-         colfunc = R_DrawTLTlatedColumn;
+         colfunc = r_column_engine->DrawTLTRColumn;
          dc_translation = translationtables[vis->colour - 1];
       }
       else
-         colfunc = R_DrawTLColumn;
+         colfunc = r_column_engine->DrawTLColumn;
       
       tranmap = main_tranmap; // killough 4/11/98
    }
    else if(vis->colour)
    {
       // haleyjd 01/12/04: changed translation handling
-      colfunc = R_DrawTranslatedColumn;
+      colfunc = r_column_engine->DrawTRColumn;
       dc_translation = translationtables[vis->colour - 1];
    }
    else
-      colfunc = R_DrawColumn;         // killough 3/14/98, 4/11/98
+      colfunc = r_column_engine->DrawColumn;  // killough 3/14/98, 4/11/98
 
    dc_iscale = FixedDiv(FRACUNIT, vis->scale);
    dc_texturemid = vis->texturemid;
@@ -655,7 +655,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
          R_DrawMaskedColumn (column);
       }
    }
-   colfunc = R_DrawColumn;         // killough 3/14/98
+   colfunc = r_column_engine->DrawColumn; // killough 3/14/98
 }
 
 //

@@ -755,7 +755,8 @@ void I_PlaySong(int handle, int looping)
 
 void I_SetMusicVolume(int volume)
 {
-   Mix_VolumeMusic(volume*8);
+   // haleyjd 09/04/06: adjust to use scale from 0 to 15
+   Mix_VolumeMusic((volume * 128) / 15);
 }
 
 static int paused_midi_volume;

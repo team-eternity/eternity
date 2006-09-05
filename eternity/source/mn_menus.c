@@ -3451,7 +3451,7 @@ static menuitem_t mn_old_option_items[] =
    { it_runcmd,    "graphic detail", "",              "M_DETAIL" },
    { it_bigslider, "screen size",    "screensize",    "M_SCRNSZ" },
    { it_gap },
-   { it_runcmd,    "mouse sens.",    "",              "M_MSENS"  },
+   { it_bigslider, "mouse sens.",    "sens_combined", "M_MSENS"  },
    { it_gap },
    { it_runcmd,    "sound volume",   "mn_old_sound",  "M_SVOL"   },
    { it_end }
@@ -3479,8 +3479,13 @@ menu_t menu_old_options =
    MN_OldOptionsDrawer
 };
 
+extern int mouseSensitivity_c;
+
 CONSOLE_COMMAND(mn_old_options, 0)
 {
+   // propagate horizontal mouse sensitivity to combined setting
+   mouseSensitivity_c = mouseSensitivity_horiz / 4;
+
    MN_StartMenu(&menu_old_options);
 }
 

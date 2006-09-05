@@ -206,8 +206,17 @@ CONSOLE_VARIABLE(sens_horiz, mouseSensitivity_horiz, 0) {}
 
 // vertical mouse sensitivity
 
-VARIABLE_INT(mouseSensitivity_vert, NULL, 0, 48, NULL);
+VARIABLE_INT(mouseSensitivity_vert, NULL, 0, 64, NULL);
 CONSOLE_VARIABLE(sens_vert, mouseSensitivity_vert, 0) {}
+
+int mouseSensitivity_c;
+
+// combined sensitivity (for old-style menu only)
+VARIABLE_INT(mouseSensitivity_c, NULL, 0, 16, NULL);
+CONSOLE_VARIABLE(sens_combined, mouseSensitivity_c, 0)
+{
+   mouseSensitivity_horiz = mouseSensitivity_vert = mouseSensitivity_c * 4;
+}
 
 // player bobbing -- haleyjd: altered to read default, use netcmd
 
@@ -757,6 +766,7 @@ void G_AddCommands(void)
    C_AddCommand(doom_weapon_toggles);
    C_AddCommand(sens_vert);
    C_AddCommand(sens_horiz);
+   C_AddCommand(sens_combined);
    C_AddCommand(invertmouse);
    C_AddCommand(turbo);
    C_AddCommand(playdemo);

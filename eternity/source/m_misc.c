@@ -58,6 +58,7 @@ rcsid[] = "$Id: m_misc.c,v 1.60 1998/06/03 20:32:12 jim Exp $";
 #include "s_sound.h"
 #include "sounds.h"
 #include "d_main.h"
+#include "r_main.h"
 #include "r_sky.h"
 #include "r_draw.h"
 #include "c_io.h"
@@ -487,13 +488,7 @@ default_t defaults[] =
    {
       "music_volume",
       &snd_MusicVolume, NULL,
-      8, 
-#ifdef DJGPP
-      {0,15}, // haleyjd: range is different for SDL
-#else
-      {0,16},
-#endif
-      dt_number, ss_none, wad_no,
+      8, {0,15}, dt_number, ss_none, wad_no,
       "adjust music volume"
    },
 
@@ -1550,6 +1545,13 @@ default_t defaults[] =
       (int *)&wad_directory, NULL,
       (int) ".", {0}, dt_string, ss_none, wad_no,
       "user's default wad directory"
+   },
+
+   {
+      "r_columnengine",
+      &r_column_engine_num, NULL,
+      1, {0, NUMCOLUMNENGINES - 1}, dt_number, ss_none, wad_no,
+      "0 = normal, 1 = optimized quad cache"
    },
 
    { NULL }         // last entry

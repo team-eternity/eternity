@@ -29,6 +29,31 @@
 
 #include "r_defs.h"
 
+//
+// columndrawer_t
+//
+// haleyjd 09/04/06: This structure is used to allow the game engine to use
+// multiple sets of column drawing functions (ie., normal, low detail, and
+// quad buffer optimized).
+//
+typedef struct columndrawer_s
+{
+   void (*DrawColumn)(void);       // normal
+   void (*DrawTLColumn)(void);     // translucent
+   void (*DrawTRColumn)(void);     // translated
+   void (*DrawTLTRColumn)(void);   // translucent/translated
+   void (*DrawFuzzColumn)(void);   // spectre fuzz
+   void (*DrawFlexColumn)(void);   // flex translucent
+   void (*DrawFlexTRColumn)(void); // flex translucent/translated
+   void (*DrawAddColumn)(void);    // additive flextran
+   void (*DrawAddTRColumn)(void);   // additive flextran/translated
+
+   void (*ResetBuffer)(void);      // reset function (may be null)
+   
+} columndrawer_t;
+
+extern columndrawer_t r_normal_drawer;
+
 #define TRANSLATIONCOLOURS 15
 
 extern lighttable_t *dc_colormap;
@@ -106,6 +131,12 @@ void R_DrawAddTlatedColumn(void);
 extern byte *tranmap;         // translucency filter maps 256x256  // phares 
 extern byte *main_tranmap;    // killough 4/11/98
 extern byte *ylookup[];       // killough 11/98
+
+#define FUZZTABLE 50 
+#define FUZZOFF (SCREENWIDTH)
+
+extern const int fuzzoffset[];
+extern int fuzzpos;
 
 #endif
 

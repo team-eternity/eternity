@@ -4191,13 +4191,11 @@ void P_ConvertHexenLineSpec(short *special, long *args)
 //
 // P_SpawnPortal
 //
-// Code by SoM, functionalized by Quasar
-// Spawns a portal and attaches it to floors and/or ceilings
-// of appropriate sectors, and to lines with special 289.
+// Code by SoM, functionalized by Quasar.
+// Spawns a portal and attaches it to floors and/or ceilings of appropriate 
+// sectors, and to lines with special 289.
 //
-static void P_SpawnPortal(line_t *line, 
-                          portal_type type, 
-                          portal_effect effects)
+static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 {
    sector_t  *sector, *frontsector;
    rportal_t *portal;
@@ -4262,14 +4260,16 @@ static void P_SpawnPortal(line_t *line,
          if(line == &lines[s] || lines[s].special != anchortype)          
             continue;
 
-         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) - ((line->v1->x + line->v2->x) / 2);
-         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) - ((line->v1->y + line->v2->y) / 2);
+         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) 
+                      - ((line->v1->x + line->v2->x) / 2);
+         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) 
+                      - ((line->v1->y + line->v2->y) / 2);
          deltaz = 0; /// ???
          break;
       }
       if(s < 0)
       {
-         C_Printf(FC_ERROR"No anchor line for portal.\n");
+         C_Printf(FC_ERROR "No anchor line for portal.\n");
          return;
       }
 
@@ -4294,14 +4294,16 @@ static void P_SpawnPortal(line_t *line,
          if(line == &lines[s] || lines[s].special != anchortype)          
             continue;
 
-         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) - ((line->v1->x + line->v2->x) / 2);
-         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) - ((line->v1->y + line->v2->y) / 2);
+         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) 
+                      - ((line->v1->x + line->v2->x) / 2);
+         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) 
+                      - ((line->v1->y + line->v2->y) / 2);
          deltaz = 0; /// ???
          break;
       }
       if(s < 0)
       {
-         C_Printf(FC_ERROR"No anchor line for portal.\n");
+         C_Printf(FC_ERROR "No anchor line for portal.\n");
          return;
       }
 
@@ -4327,14 +4329,16 @@ static void P_SpawnPortal(line_t *line,
          if(line == &lines[s] || lines[s].special != anchortype)          
             continue;
 
-         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) - ((line->v1->x + line->v2->x) / 2);
-         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) - ((line->v1->y + line->v2->y) / 2);
+         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) 
+                      - ((line->v1->x + line->v2->x) / 2);
+         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) 
+                      - ((line->v1->y + line->v2->y) / 2);
          deltaz = 0; /// ???
          break;
       }
       if(s < 0)
       {
-         C_Printf(FC_ERROR"No anchor line for portal.\n");
+         C_Printf(FC_ERROR "No anchor line for portal.\n");
          return;
       }
 

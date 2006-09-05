@@ -92,38 +92,9 @@ byte    *dc_source;      // first pixel in a column (possibly virtual)
 fixed_t dc_translevel;   // haleyjd: level for zdoom translucency
 
 
-// SoM: OPTIMIZE for ANYRES
-typedef enum
-{
-   COL_NONE,
-   COL_OPAQUE,
-   COL_TRANS,
-   COL_FLEXTRANS,
-   COL_FUZZ,
-   COL_FLEXADD
-} columntype_e;
-
-static int    temp_x = 0;
-static int    tempyl[4], tempyh[4];
-static byte   tempbuf[MAX_SCREENHEIGHT * 4];
-static int    startx = 0;
-static int    temptype = COL_NONE;
-static int    commontop, commonbot;
-static byte   *temptranmap = NULL;
-static fixed_t temptranslevel;
-// haleyjd 09/12/04: optimization -- precalculate flex tran lookups
-static unsigned int *temp_fg2rgb;
-static unsigned int *temp_bg2rgb;
-// SoM 7-28-04: Fix the fuzz problem.
-static byte   *tempfuzzmap;
-
-
-
 // Fuzz stuffs
-#define FUZZTABLE 50 
-#define FUZZOFF (SCREENWIDTH)
 
-static const int fuzzoffset[FUZZTABLE] = 
+const int fuzzoffset[FUZZTABLE] = 
 {
   1,0,1,0,1,1,0,
   1,1,0,1,1,1,0,
@@ -134,831 +105,7 @@ static const int fuzzoffset[FUZZTABLE] =
   1,1,0,1,1,0,1 
 }; 
 
-static int fuzzpos = 0; 
-
-//
-// Error functions that will abort if R_FlushColumns tries to flush 
-// columns without a column type.
-//
-
-static void R_FlushWholeError(void)
-{
-   I_Error("R_FlushWholeColumns called without being initialized.\n");
-}
-
-static void R_FlushHTError(void)
-{
-   I_Error("R_FlushHTColumns called without being initialized.\n");
-}
-
-static void R_QuadFlushError(void)
-{
-   I_Error("R_FlushQuadColumn called without being initialized.\n");
-}
-
-//
-// R_FlushWholeOpaque
-//
-// Flushes the entire columns in the buffer, one at a time.
-// This is used when a quad flush isn't possible.
-// Opaque version -- no remapping whatsoever.
-//
-static void R_FlushWholeOpaque(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
-
-   while(--temp_x >= 0)
-   {
-      yl     = tempyl[temp_x];
-      source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
-      count  = tempyh[temp_x] - yl + 1;
-      
-      while(--count >= 0)
-      {
-         *dest = *source;
-         source += 4;
-         dest += linesize;
-      }
-   }
-}
-
-//
-// R_FlushHTOpaque
-//
-// Flushes the head and tail of columns in the buffer in
-// preparation for a quad flush.
-// Opaque version -- no remapping whatsoever.
-//
-static void R_FlushHTOpaque(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int count, colnum = 0;
-   int yl, yh;
-
-   while(colnum < 4)
-   {
-      yl = tempyl[colnum];
-      yh = tempyh[colnum];
-      
-      // flush column head
-      if(yl < commontop)
-      {
-         source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
-         count  = commontop - yl;
-         
-         while(--count >= 0)
-         {
-            *dest = *source;
-            source += 4;
-            dest += linesize;
-         }
-      }
-      
-      // flush column tail
-      if(yh > commonbot)
-      {
-         source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
-         count  = yh - commonbot;
-         
-         while(--count >= 0)
-         {
-            *dest = *source;
-            source += 4;
-            dest += linesize;
-         }
-      }         
-      ++colnum;
-   }
-}
-
-static void R_FlushWholeTL(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
-
-   while(--temp_x >= 0)
-   {
-      yl     = tempyl[temp_x];
-      source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
-      count  = tempyh[temp_x] - yl + 1;
-
-      while(--count >= 0)
-      {
-         // haleyjd 09/11/04: use temptranmap here
-         *dest = temptranmap[(*dest<<8) + *source];
-         source += 4;
-         dest += linesize;
-      }
-   }
-}
-
-static void R_FlushHTTL(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int count;
-   int colnum = 0, yl, yh;
-
-   while(colnum < 4)
-   {
-      yl = tempyl[colnum];
-      yh = tempyh[colnum];
-
-      // flush column head
-      if(yl < commontop)
-      {
-         source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
-         count  = commontop - yl;
-
-         while(--count >= 0)
-         {
-            // haleyjd 09/11/04: use temptranmap here
-            *dest = temptranmap[(*dest<<8) + *source];
-            source += 4;
-            dest += linesize;
-         }
-      }
-
-      // flush column tail
-      if(yh > commonbot)
-      {
-         source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
-         count  = yh - commonbot;
-
-         while(--count >= 0)
-         {
-            // haleyjd 09/11/04: use temptranmap here
-            *dest = temptranmap[(*dest<<8) + *source];
-            source += 4;
-            dest += linesize;
-         }
-      }
-      
-      ++colnum;
-   }
-}
-
-static void R_FlushWholeFuzz(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
-
-   while(--temp_x >= 0)
-   {
-      yl     = tempyl[temp_x];
-      source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
-      count  = tempyh[temp_x] - yl + 1;
-
-      while(--count >= 0)
-      {
-         // SoM 7-28-04: Fix the fuzz problem.
-         *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? v_width: -v_width]];
-         
-         // Clamp table lookup index.
-         if(++fuzzpos == FUZZTABLE) 
-            fuzzpos = 0;
-         
-         source += 4;
-         dest += linesize;
-      }
-   }
-}
-
-static void R_FlushHTFuzz(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int count;
-   int colnum = 0, yl, yh;
-
-   while(colnum < 4)
-   {
-      yl = tempyl[colnum];
-      yh = tempyh[colnum];
-
-      // flush column head
-      if(yl < commontop)
-      {
-         source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
-         count  = commontop - yl;
-
-         while(--count >= 0)
-         {
-            // SoM 7-28-04: Fix the fuzz problem.
-            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? v_width: -v_width]];
-            
-            // Clamp table lookup index.
-            if(++fuzzpos == FUZZTABLE) 
-               fuzzpos = 0;
-            
-            source += 4;
-            dest += linesize;
-         }
-      }
-
-      // flush column tail
-      if(yh > commonbot)
-      {
-         source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
-         count  = yh - commonbot;
-
-         while(--count >= 0)
-         {
-            // SoM 7-28-04: Fix the fuzz problem.
-            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? v_width: -v_width]];
-            
-            // Clamp table lookup index.
-            if(++fuzzpos == FUZZTABLE) 
-               fuzzpos = 0;
-            
-            source += 4;
-            dest += linesize;
-         }
-      }
-      
-      ++colnum;
-   }
-}
-
-static void R_FlushWholeFlex(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
-   unsigned int fg, bg;
-
-   while(--temp_x >= 0)
-   {
-      yl     = tempyl[temp_x];
-      source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
-      count  = tempyh[temp_x] - yl + 1;
-
-      while(--count >= 0)
-      {
-         // haleyjd 09/12/04: use precalculated lookups
-         fg = temp_fg2rgb[*source];
-         bg = temp_bg2rgb[*dest];
-         fg = (fg+bg) | 0xf07c3e1f;
-         *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
-         
-         source += 4;
-         dest += linesize;
-      }
-   }
-}
-
-static void R_FlushHTFlex(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int count;
-   int colnum = 0, yl, yh;
-   unsigned int fg, bg;
-
-   while(colnum < 4)
-   {
-      yl = tempyl[colnum];
-      yh = tempyh[colnum];
-
-      // flush column head
-      if(yl < commontop)
-      {
-         source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
-         count  = commontop - yl;
-
-         while(--count >= 0)
-         {
-            // haleyjd 09/12/04: use precalculated lookups
-            fg = temp_fg2rgb[*source];
-            bg = temp_bg2rgb[*dest];
-            fg = (fg+bg) | 0xf07c3e1f;
-            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
-            
-            source += 4;
-            dest += linesize;
-         }
-      }
-
-      // flush column tail
-      if(yh > commonbot)
-      {
-         source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
-         count  = yh - commonbot;
-
-         while(--count >= 0)
-         {
-            // haleyjd 09/12/04: use precalculated lookups
-            fg = temp_fg2rgb[*source];
-            bg = temp_bg2rgb[*dest];
-            fg = (fg+bg) | 0xf07c3e1f;
-            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
-            
-            source += 4;
-            dest += linesize;
-         }
-      }
-      
-      ++colnum;
-   }
-}
-
-static void R_FlushWholeFlexAdd(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
-   unsigned int a, b;
-
-   while(--temp_x >= 0)
-   {
-      yl     = tempyl[temp_x];
-      source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
-      count  = tempyh[temp_x] - yl + 1;
-
-      while(--count >= 0)
-      {
-         // mask out LSBs in green and red to allow overflow
-         a = temp_fg2rgb[*source] & 0xFFBFDFF;
-         b = temp_bg2rgb[*dest] & 0xFFBFDFF;
-         
-         a  = a + b;                      // add with overflow
-         b  = a & 0x10040200;             // isolate LSBs
-         b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-         a |= 0xF07C3E1F;                 // apply normal tl mask
-         a |= b;                          // mask in clamped values
-         
-         *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
-         
-         source += 4;
-         dest += linesize;
-      }
-   }
-}
-
-static void R_FlushHTFlexAdd(void)
-{
-   register byte *source;
-   register byte *dest;
-   register int count;
-   int colnum = 0, yl, yh;
-   unsigned int a, b;
-
-   while(colnum < 4)
-   {
-      yl = tempyl[colnum];
-      yh = tempyh[colnum];
-
-      // flush column head
-      if(yl < commontop)
-      {
-         source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
-         count  = commontop - yl;
-
-         while(--count >= 0)
-         {
-            // mask out LSBs in green and red to allow overflow
-            a = temp_fg2rgb[*source] & 0xFFBFDFF;
-            b = temp_bg2rgb[*dest] & 0xFFBFDFF;
-            
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
-            
-            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
-            
-            source += 4;
-            dest += linesize;
-         }
-      }
-
-      // flush column tail
-      if(yh > commonbot)
-      {
-         source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
-         count  = yh - commonbot;
-
-         while(--count >= 0)
-         {
-            // mask out LSBs in green and red to allow overflow
-            a = temp_fg2rgb[*source] & 0xFFBFDFF;
-            b = temp_bg2rgb[*dest] & 0xFFBFDFF;
-            
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
-            
-            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
-            
-            source += 4;
-            dest += linesize;
-         }
-      }
-      
-      ++colnum;
-   }
-}
-
-static void (*R_FlushWholeColumns)(void) = R_FlushWholeError;
-static void (*R_FlushHTColumns)(void)    = R_FlushHTError;
-
-// Begin: Quad column flushing functions.
-static void R_FlushQuadOpaque(void)
-{
-   register int *source = (int *)(tempbuf + (commontop << 2));
-   register int *dest = (int *)(ylookup[commontop] + columnofs[startx]);
-   register int count;
-   register int deststep = linesize / 4;
-
-   count = commonbot - commontop + 1;
-
-   while(--count >= 0)
-   {
-      *dest = *source++;
-      dest += deststep;
-   }
-}
-
-static void R_FlushQuadTL(void)
-{
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
-
-   count = commonbot - commontop + 1;
-
-   while(--count >= 0)
-   {
-      *dest   = temptranmap[(*dest<<8) + *source];
-      dest[1] = temptranmap[(dest[1]<<8) + source[1]];
-      dest[2] = temptranmap[(dest[2]<<8) + source[2]];
-      dest[3] = temptranmap[(dest[3]<<8) + source[3]];
-      source += 4;
-      dest += linesize;
-   }
-}
-
-static void R_FlushQuadFuzz(void)
-{
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
-   int fuzz1, fuzz2, fuzz3, fuzz4;
-   fuzz1 = fuzzpos;
-   fuzz2 = (fuzz1 + MAX_SCREENHEIGHT) % FUZZTABLE;
-   fuzz3 = (fuzz2 + MAX_SCREENHEIGHT) % FUZZTABLE;
-   fuzz4 = (fuzz3 + MAX_SCREENHEIGHT) % FUZZTABLE;
-
-   count = commonbot - commontop + 1;
-
-   while(--count >= 0)
-   {
-      // SoM 7-28-04: Fix the fuzz problem.
-      *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzz1] ? v_width: -v_width]];
-      if(++fuzz1 == FUZZTABLE) fuzz1 = 0;
-      dest[1] = tempfuzzmap[6*256+dest[1 + (fuzzoffset[fuzz2] ? v_width: -v_width)]];
-      if(++fuzz2 == FUZZTABLE) fuzz2 = 0;
-      dest[2] = tempfuzzmap[6*256+dest[2 + (fuzzoffset[fuzz3] ? v_width: -v_width)]];
-      if(++fuzz3 == FUZZTABLE) fuzz3 = 0;
-      dest[3] = tempfuzzmap[6*256+dest[3 + (fuzzoffset[fuzz4] ? v_width: -v_width)]];
-      if(++fuzz4 == FUZZTABLE) fuzz4 = 0;
-
-      source += 4;
-      dest += linesize;
-   }
-
-   fuzzpos = fuzz4;
-}
-
-static void R_FlushQuadFlex(void)
-{
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
-   unsigned int fg, bg;
-
-   count = commonbot - commontop + 1;
-
-   while(--count >= 0)
-   {
-      // haleyjd 09/12/04: use precalculated lookups
-      fg = temp_fg2rgb[*source];
-      bg = temp_bg2rgb[*dest];
-      fg = (fg+bg) | 0xf07c3e1f;
-      *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
-
-      fg = temp_fg2rgb[source[1]];
-      bg = temp_bg2rgb[dest[1]];
-      fg = (fg+bg) | 0xf07c3e1f;
-      dest[1] = RGB8k[0][0][(fg>>5) & (fg>>19)];
-
-      fg = temp_fg2rgb[source[2]];
-      bg = temp_bg2rgb[dest[2]];
-      fg = (fg+bg) | 0xf07c3e1f;
-      dest[2] = RGB8k[0][0][(fg>>5) & (fg>>19)];
-
-      fg = temp_fg2rgb[source[3]];
-      bg = temp_bg2rgb[dest[3]];
-      fg = (fg+bg) | 0xf07c3e1f;
-      dest[3] = RGB8k[0][0][(fg>>5) & (fg>>19)];
-
-      source += 4;
-      dest += linesize;
-   }
-}
-
-static void R_FlushQuadFlexAdd(void)
-{
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
-   unsigned int a, b;
-
-   count = commonbot - commontop + 1;
-
-   while(--count >= 0)
-   {
-      // haleyjd 02/08/05: this is NOT gonna be very fast.
-      a = temp_fg2rgb[*source] & 0xFFBFDFF;
-      b = temp_bg2rgb[*dest] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
-
-      a = temp_fg2rgb[source[1]] & 0xFFBFDFF;
-      b = temp_bg2rgb[dest[1]] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      dest[1] = RGB8k[0][0][(a >> 5) & (a >> 19)];
-
-      a = temp_fg2rgb[source[2]] & 0xFFBFDFF;
-      b = temp_bg2rgb[dest[2]] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      dest[2] = RGB8k[0][0][(a >> 5) & (a >> 19)];
-
-      a = temp_fg2rgb[source[3]] & 0xFFBFDFF;
-      b = temp_bg2rgb[dest[3]] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      dest[3] = RGB8k[0][0][(a >> 5) & (a >> 19)];
-
-      source += 4;
-      dest += linesize;
-   }
-}
-
-static void (*R_FlushQuadColumn)(void) = R_QuadFlushError;
-
-static void R_FlushColumns(void)
-{
-   if(temp_x != 4 || commontop >= commonbot)
-      R_FlushWholeColumns();
-   else
-   {
-      R_FlushHTColumns();
-      R_FlushQuadColumn();
-   }
-   temp_x = 0;
-}
-
-//
-// R_ResetColumnBuffer
-//
-// haleyjd 09/13/04: new function to call from main rendering loop
-// which gets rid of the unnecessary reset of various variables during
-// column drawing.
-//
-void R_ResetColumnBuffer(void)
-{
-   // haleyjd 10/06/05: this must not be done if temp_x == 0!
-   if(temp_x)
-      R_FlushColumns();
-   temptype = COL_NONE;
-   R_FlushWholeColumns = R_FlushWholeError;
-   R_FlushHTColumns    = R_FlushHTError;
-   R_FlushQuadColumn   = R_QuadFlushError;
-}
-
-// haleyjd 09/12/04: split up R_GetBuffer into various different
-// functions to minimize the number of branches and take advantage
-// of as much precalculated information as possible.
-
-static byte *R_GetBufferOpaque(void)
-{
-   // haleyjd: reordered predicates
-   if(temp_x == 4 ||
-      (temp_x && (temptype != COL_OPAQUE || temp_x + startx != dc_x)))
-      R_FlushColumns();
-
-   if(!temp_x)
-   {
-      ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
-      temptype = COL_OPAQUE;
-      R_FlushWholeColumns = R_FlushWholeOpaque;
-      R_FlushHTColumns    = R_FlushHTOpaque;
-      R_FlushQuadColumn   = R_FlushQuadOpaque;
-      return tempbuf + (dc_yl << 2);
-   }
-
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
-   
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
-      
-   return tempbuf + (dc_yl << 2) + temp_x++;
-}
-
-static byte *R_GetBufferTrans(void)
-{
-   // haleyjd: reordered predicates
-   if(temp_x == 4 || tranmap != temptranmap ||
-      (temp_x && (temptype != COL_TRANS || temp_x + startx != dc_x)))
-      R_FlushColumns();
-
-   if(!temp_x)
-   {
-      ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
-      temptype = COL_TRANS;
-      temptranmap = tranmap;
-      R_FlushWholeColumns = R_FlushWholeTL;
-      R_FlushHTColumns    = R_FlushHTTL;
-      R_FlushQuadColumn   = R_FlushQuadTL;
-      return tempbuf + (dc_yl << 2);
-   }
-
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
-   
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
-      
-   return tempbuf + (dc_yl << 2) + temp_x++;
-}
-
-static byte *R_GetBufferFlexTrans(void)
-{
-   // haleyjd: reordered predicates
-   if(temp_x == 4 || temptranslevel != dc_translevel ||
-      (temp_x && (temptype != COL_FLEXTRANS || temp_x + startx != dc_x)))
-      R_FlushColumns();
-
-   if(!temp_x)
-   {
-      ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
-      temptype = COL_FLEXTRANS;
-      temptranslevel = dc_translevel;
-      
-      // haleyjd 09/12/04: optimization -- calculate flex tran lookups
-      // here instead of every time a column is flushed.
-      {
-         fixed_t fglevel, bglevel;
-         
-         fglevel = temptranslevel & ~0x3ff;
-         bglevel = FRACUNIT - fglevel;
-         temp_fg2rgb  = Col2RGB[fglevel >> 10];
-         temp_bg2rgb  = Col2RGB[bglevel >> 10];
-      }
-
-      R_FlushWholeColumns = R_FlushWholeFlex;
-      R_FlushHTColumns    = R_FlushHTFlex;
-      R_FlushQuadColumn   = R_FlushQuadFlex;
-      return tempbuf + (dc_yl << 2);
-   }
-
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
-   
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
-      
-   return tempbuf + (dc_yl << 2) + temp_x++;
-}
-
-static byte *R_GetBufferFlexAdd(void)
-{
-   // haleyjd: reordered predicates
-   if(temp_x == 4 || temptranslevel != dc_translevel ||
-      (temp_x && (temptype != COL_FLEXADD || temp_x + startx != dc_x)))
-      R_FlushColumns();
-
-   if(!temp_x)
-   {
-      ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
-      temptype = COL_FLEXADD;
-      temptranslevel = dc_translevel;
-      
-      {
-         fixed_t fglevel, bglevel;
-         
-         fglevel = temptranslevel & ~0x3ff;
-         bglevel = FRACUNIT;
-         temp_fg2rgb  = Col2RGB[fglevel >> 10];
-         temp_bg2rgb  = Col2RGB[bglevel >> 10];
-      }
-
-      R_FlushWholeColumns = R_FlushWholeFlexAdd;
-      R_FlushHTColumns    = R_FlushHTFlexAdd;
-      R_FlushQuadColumn   = R_FlushQuadFlexAdd;
-      return tempbuf + (dc_yl << 2);
-   }
-
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
-   
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
-      
-   return tempbuf + (dc_yl << 2) + temp_x++;
-}
-
-static byte *R_GetBufferFuzz(void)
-{
-   // haleyjd: reordered predicates
-   if(temp_x == 4 ||
-      (temp_x && (temptype != COL_FUZZ || temp_x + startx != dc_x)))
-      R_FlushColumns();
-
-   if(!temp_x)
-   {
-      ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
-      temptype = COL_FUZZ;
-      tempfuzzmap = dc_colormap; // SoM 7-28-04: Fix the fuzz problem.
-      R_FlushWholeColumns = R_FlushWholeFuzz;
-      R_FlushHTColumns    = R_FlushHTFuzz;
-      R_FlushQuadColumn   = R_FlushQuadFuzz;
-      return tempbuf + (dc_yl << 2);
-   }
-
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
-   
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
-      
-   return tempbuf + (dc_yl << 2) + temp_x++;
-}
+int fuzzpos = 0; 
 
 //
 // A column is a vertical slice/span from a wall texture that,
@@ -973,7 +120,7 @@ static byte *R_GetBufferFuzz(void)
 
 //#ifndef USEASM     // killough 2/15/98
 
-void R_DrawColumn(void) 
+static void R_DrawColumn(void) 
 { 
    int              count; 
    register byte    *dest;            // killough
@@ -986,24 +133,19 @@ void R_DrawColumn(void)
       return;
 
 #ifdef RANGECHECK 
-   if(dc_x < 0 
-      || dc_x >= v_width
-      || dc_yl < 0
-      || dc_yh >= v_height) 
-      I_Error ("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
+   if(dc_x < 0 || dc_x >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
 #endif 
 
    // Framebuffer destination address.
    // Use ylookup LUT to avoid multiply with ScreenWidth.
-   // Use columnofs LUT for subwindows? 
+   // Use columnofs LUT for subwindows
 
-   // SoM: MAGIC
-   dest = R_GetBufferOpaque();
+   dest = ylookup[dc_yl] + columnofs[dc_x];
 
    // Determine scaling, which is the only mapping to be done.
 
    fracstep = dc_iscale; 
-   //frac = dc_texturemid + (dc_yl-centery)*fracstep;    
    frac = dc_texturemid + 
       FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
 
@@ -1012,20 +154,19 @@ void R_DrawColumn(void)
    // This is as fast as it gets.       (Yeah, right!!! -- killough)
    //
    // killough 2/1/98: more performance tuning
-
    {
       register const byte *source = dc_source;            
       register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if (dc_texheight & heightmask)   // not a power of 2 -- killough
+      register heightmask = dc_texheight-1;
+      if(dc_texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
           
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
+         if(frac < 0)
+            while((frac += heightmask) <  0);
          else
-            while (frac >= (int)heightmask)
+            while(frac >= heightmask)
                frac -= heightmask;
           
          do
@@ -1036,27 +177,27 @@ void R_DrawColumn(void)
             // heightmask is the Tutti-Frutti fix -- killough
             
             *dest = colormap[source[frac>>FRACBITS]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
+            dest += linesize;                     // killough 11/98
+            if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
-         while (--count);
+         while(--count);
       }
       else
       {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4; //SoM: MAGIC 
+            dest += linesize;   // killough 11/98
             frac += fracstep;
             *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4;
+            dest += linesize;   // killough 11/98
             frac += fracstep;
          }
-         if (count & 1)
+         if(count & 1)
             *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
       }
-   }
+   }   
 } 
 
 // haleyjd 04/10/04: FIXME -- ASM version of R_DrawColumn is out
@@ -1081,62 +222,58 @@ void R_DrawColumn(void)
 
 //#ifndef USEASM                       // killough 2/21/98: converted to x86 asm
 
-void R_DrawTLColumn (void)                                           
+static void R_DrawTLColumn(void)
 { 
-  int              count; 
-  register byte    *dest;           // killough
-  register fixed_t frac;            // killough
-  fixed_t          fracstep;
-
-  count = dc_yh - dc_yl + 1; 
-
-  // Zero length, column does not exceed a pixel.
-  if (count <= 0)
-    return; 
+   int              count; 
+   register byte    *dest;           // killough
+   register fixed_t frac;            // killough
+   fixed_t          fracstep;
+   
+   count = dc_yh - dc_yl + 1; 
+   
+   // Zero length, column does not exceed a pixel.
+   if(count <= 0)
+      return; 
                                  
 #ifdef RANGECHECK 
-  if ((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT) 
-    I_Error ("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x); 
+   if(dc_x < 0 || dc_x >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawTLColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
 #endif 
 
-  // Framebuffer destination address.
-  // Use ylookup LUT to avoid multiply with ScreenWidth.
-  // Use columnofs LUT for subwindows? 
+   // Framebuffer destination address.
+   // Use ylookup LUT to avoid multiply with ScreenWidth.
+   // Use columnofs LUT for subwindows? 
+   
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+   
+   // Determine scaling,
+   //  which is the only mapping to be done.
+   
+   fracstep = dc_iscale; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
 
-  // SoM: MAGIC
-  dest = R_GetBufferTrans();
-  
-  // Determine scaling,
-  //  which is the only mapping to be done.
-
-  fracstep = dc_iscale; 
-  //frac = dc_texturemid + (dc_yl-centery)*fracstep; 
-  frac = dc_texturemid +
-     FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
-  
-  // Inner loop that does the actual texture mapping,
-  //  e.g. a DDA-lile scaling.
-  // This is as fast as it gets.       (Yeah, right!!! -- killough)
-  //
-  // killough 2/1/98, 2/21/98: more performance tuning
-  
+   // Inner loop that does the actual texture mapping,
+   //  e.g. a DDA-lile scaling.
+   // This is as fast as it gets.       (Yeah, right!!! -- killough)
+   //
+   // killough 2/1/98, 2/21/98: more performance tuning
+   
    {
       register const byte *source = dc_source;            
       register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if (dc_texheight & heightmask)   // not a power of 2 -- killough
+      register heightmask = dc_texheight-1;
+      if(dc_texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
-          
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
+         
+         if(frac < 0)
+            while((frac += heightmask) <  0);
          else
-            while (frac >= (int)heightmask)
+            while(frac >= heightmask)
                frac -= heightmask;
-          
+        
          do
          {
             // Re-map color indices from wall texture column
@@ -1144,28 +281,28 @@ void R_DrawTLColumn (void)
             
             // heightmask is the Tutti-Frutti fix -- killough
             
-            *dest = colormap[source[frac>>FRACBITS]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
+            *dest = tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
+            dest += linesize;          // killough 11/98
+            if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
-         while (--count);
+         while(--count);
       }
       else
       {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4; //SoM: MAGIC 
+            *dest = tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            dest += linesize;   // killough 11/98
             frac += fracstep;
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4;
+            *dest = tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            dest += linesize;   // killough 11/98
             frac += fracstep;
          }
-         if (count & 1)
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+         if(count & 1)
+            *dest = tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
       }
-   }
+   }   
 } 
 
 // haleyjd 04/10/04: FIXME -- ASM version of R_DrawTLColumn is out
@@ -1176,62 +313,58 @@ void R_DrawTLColumn (void)
 //
 // haleyjd 02/08/05: BOOM TL/Tlated was neglected.
 //
-void R_DrawTLTlatedColumn(void)
+static void R_DrawTLTRColumn(void)
 { 
-  int              count; 
-  register byte    *dest;           // killough
-  register fixed_t frac;            // killough
-  fixed_t          fracstep;
-
-  count = dc_yh - dc_yl + 1; 
-
-  // Zero length, column does not exceed a pixel.
-  if (count <= 0)
-    return; 
+   int              count; 
+   register byte    *dest;           // killough
+   register fixed_t frac;            // killough
+   fixed_t          fracstep;
+   
+   count = dc_yh - dc_yl + 1; 
+   
+   // Zero length, column does not exceed a pixel.
+   if(count <= 0)
+      return; 
                                  
 #ifdef RANGECHECK 
-  if ((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT) 
-    I_Error ("R_DrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x); 
+   if(dc_x < 0 || dc_x >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawTLTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
 #endif 
 
-  // Framebuffer destination address.
-  // Use ylookup LUT to avoid multiply with ScreenWidth.
-  // Use columnofs LUT for subwindows? 
+   // Framebuffer destination address.
+   // Use ylookup LUT to avoid multiply with ScreenWidth.
+   // Use columnofs LUT for subwindows? 
+   
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+   
+   // Determine scaling,
+   //  which is the only mapping to be done.
+   
+   fracstep = dc_iscale; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
 
-  // SoM: MAGIC
-  dest = R_GetBufferTrans();
-  
-  // Determine scaling,
-  //  which is the only mapping to be done.
-
-  fracstep = dc_iscale; 
-  //frac = dc_texturemid + (dc_yl-centery)*fracstep; 
-  frac = dc_texturemid +
-     FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
-
-  // Inner loop that does the actual texture mapping,
-  //  e.g. a DDA-lile scaling.
-  // This is as fast as it gets.       (Yeah, right!!! -- killough)
-  //
-  // killough 2/1/98, 2/21/98: more performance tuning
-  
+   // Inner loop that does the actual texture mapping,
+   //  e.g. a DDA-lile scaling.
+   // This is as fast as it gets.       (Yeah, right!!! -- killough)
+   //
+   // killough 2/1/98, 2/21/98: more performance tuning
+   
    {
       register const byte *source = dc_source;            
       register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if (dc_texheight & heightmask)   // not a power of 2 -- killough
+      register heightmask = dc_texheight-1;
+      if(dc_texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
-          
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
+         
+         if(frac < 0)
+            while((frac += heightmask) <  0);
          else
-            while (frac >= (int)heightmask)
+            while(frac >= heightmask)
                frac -= heightmask;
-          
+        
          do
          {
             // Re-map color indices from wall texture column
@@ -1239,28 +372,28 @@ void R_DrawTLTlatedColumn(void)
             
             // heightmask is the Tutti-Frutti fix -- killough
             
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
+            *dest = tranmap[(*dest<<8) + colormap[dc_translation[source[frac>>FRACBITS]]]]; // phares
+            dest += linesize;          // killough 11/98
+            if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
-         while (--count);
+         while(--count);
       }
       else
       {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4; //SoM: MAGIC 
+            *dest = tranmap[(*dest<<8)+colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            dest += linesize;   // killough 11/98
             frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4;
+            *dest = tranmap[(*dest<<8)+colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            dest += linesize;   // killough 11/98
             frac += fracstep;
          }
-         if (count & 1)
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+         if(count & 1)
+            *dest = tranmap[(*dest<<8)+colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
       }
-   }
+   }   
 } 
 
 //
@@ -1283,8 +416,13 @@ void R_DrawTLTlatedColumn(void)
 //     for coloured lighting and SHADOW now done with
 //     flags not NULL colormap
 
-void R_DrawFuzzColumn(void) 
+static void R_DrawFuzzColumn(void) 
 { 
+   int              count; 
+   register byte    *dest;           // killough
+   register fixed_t frac;            // killough
+   fixed_t          fracstep;
+
    // Adjust borders. Low...
    if(!dc_yl) 
       dc_yl = 1;
@@ -1304,15 +442,39 @@ void R_DrawFuzzColumn(void)
       I_Error("R_DrawFuzzColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif
 
-  // Keep till detailshift bug in blocky mode fixed,
-  //  or blocky mode removed.
-
-  // Does not work with blocky mode.
-  // SoM: MAGIC
-  R_GetBufferFuzz();
-
-  // REAL MAGIC... you ready for this?
-  return; // DONE
+   // Keep till detailshift bug in blocky mode fixed,
+   //  or blocky mode removed.
+   
+   // Does not work with blocky mode.   
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+   
+   // Looks familiar.
+   fracstep = dc_iscale; 
+   frac = dc_texturemid + (dc_yl-centery)*fracstep; 
+   
+   // Looks like an attempt at dithering,
+   // using the colormap #6 (of 0-31, a bit brighter than average).
+   
+   do 
+   {
+      // Lookup framebuffer, and retrieve
+      //  a pixel that is either one column
+      //  left or right of the current one.
+      // Add index from colormap to index.
+      // killough 3/20/98: use fullcolormap instead of colormaps
+      // sf: use dc_colormap for coloured lighting
+      
+      //sf : hires
+      *dest = dc_colormap[6*256+dest[fuzzoffset[fuzzpos] ? v_width : -v_width]];
+      
+      // Clamp table lookup index.
+      if(++fuzzpos == FUZZTABLE) 
+         fuzzpos = 0;
+      
+      dest += linesize;
+      frac += fracstep; 
+   } 
+   while(count--);
 }
 
 //
@@ -1332,41 +494,114 @@ byte *dc_translation, **translationtables = NULL;
 int firsttranslationlump, lasttranslationlump;
 int numtranslations = 0;
 
-void R_DrawTranslatedColumn(void) 
+static void R_DrawTRColumn(void) 
 { 
-  int      count; 
-  byte     *dest; 
-  fixed_t  frac;
-  fixed_t  fracstep;     
- 
-  count = dc_yh - dc_yl; 
-  if (count < 0) 
-    return; 
+   int      count; 
+   byte     *dest; 
+   fixed_t  frac;
+   fixed_t  fracstep;     
+   
+   count = dc_yh - dc_yl; 
+   if(count < 0) 
+      return; 
                                  
 #ifdef RANGECHECK 
-  if ((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT)
-    I_Error ( "R_DrawColumn: %i to %i at %i",
-              dc_yl, dc_yh, dc_x);
+   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
 #endif 
 
-  // SoM: MAGIC
-  dest = R_GetBufferOpaque();
-
-  // Looks familiar.
-  fracstep = dc_iscale; 
-  //frac = dc_texturemid + (dc_yl-centery)*fracstep; 
-  frac = dc_texturemid +
-     FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
-
-  count++;        // killough 1/99: minor tuning
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+   
+   // Looks familiar.
+   fracstep = dc_iscale; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
 
    // Here we do an additional index re-mapping.
    {
       register const byte *source = dc_source;            
       register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
+      register heightmask = dc_texheight-1;
+      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+         
+         if(frac < 0)
+            while ((frac += heightmask) <  0);
+         else
+            while (frac >= (int)heightmask)
+               frac -= heightmask;   
+         do
+         {
+            *dest = colormap[dc_translation[source[frac>>FRACBITS]]]; // phares
+            dest += linesize;          // killough 11/98
+            if((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         } 
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
+         {
+            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+         }
+         if(count & 1)
+            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]; // phares
+      }
+   }
+} 
+
+//
+// R_DrawFlexTLColumn
+//
+// haleyjd 09/01/02: zdoom-style translucency
+//
+static void R_DrawFlexColumn(void)
+{ 
+   int              count; 
+   register byte    *dest;           // killough
+   register fixed_t frac;            // killough
+   fixed_t          fracstep;
+   unsigned int *fg2rgb, *bg2rgb;
+   register unsigned int fg, bg;
+   
+   count = dc_yh - dc_yl + 1; 
+
+   // Zero length, column does not exceed a pixel.
+   if(count <= 0)
+      return; 
+                                 
+#ifdef RANGECHECK 
+   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawFlexColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif 
+
+   {
+      fixed_t fglevel, bglevel;
+      
+      fglevel = dc_translevel & ~0x3ff;
+      bglevel = FRACUNIT - fglevel;
+      fg2rgb  = Col2RGB[fglevel >> 10];
+      bg2rgb  = Col2RGB[bglevel >> 10];
+   }
+
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+  
+   fracstep = dc_iscale; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+
+   {
+      register const byte *source = dc_source;            
+      register const lighttable_t *colormap = dc_colormap; 
+      register heightmask = dc_texheight-1;
       if (dc_texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1376,38 +611,435 @@ void R_DrawTranslatedColumn(void)
             while ((frac += heightmask) <  0);
          else
             while (frac >= (int)heightmask)
-               frac -= heightmask;
-          
+               frac -= heightmask;          
+
          do
          {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
+            fg = colormap[source[frac>>FRACBITS]];
+            bg = *dest;
+
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
             
-            // heightmask is the Tutti-Frutti fix -- killough
-            
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
+            dest += linesize;          // killough 11/98
+            if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
-         while (--count);
+         while(--count);
       }
       else
       {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
+         while((count -= 2) >= 0)   // texture height is a power of 2 -- killough
          {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4; //SoM: MAGIC 
+            fg = colormap[source[(frac>>FRACBITS) & heightmask]];
+            bg = *dest;
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            dest += linesize;   // killough 11/98
             frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4;
+            
+            fg = colormap[source[(frac>>FRACBITS) & heightmask]];
+            bg = *dest;
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            dest += linesize;   // killough 11/98
             frac += fracstep;
          }
-         if (count & 1)
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+         if(count & 1)
+         {
+            fg = colormap[source[(frac>>FRACBITS) & heightmask]];
+            bg = *dest;
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+         }
+      }
+   }
+}
+
+//
+// R_DrawFlexTlatedColumn
+//
+// haleyjd 11/05/02: zdoom-style translucency w/translation, for
+// player sprites
+//
+static void R_DrawFlexTRColumn(void) 
+{ 
+   int              count; 
+   register byte    *dest;           // killough
+   register fixed_t frac;            // killough
+   fixed_t          fracstep;
+   unsigned int *fg2rgb, *bg2rgb;
+   register unsigned int fg, bg;
+   
+   count = dc_yh - dc_yl + 1; 
+
+   // Zero length, column does not exceed a pixel.
+   if(count <= 0)
+      return; 
+                                 
+#ifdef RANGECHECK 
+   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawFlexTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif 
+
+   {
+      fixed_t fglevel, bglevel;
+      
+      fglevel = dc_translevel & ~0x3ff;
+      bglevel = FRACUNIT - fglevel;
+      fg2rgb  = Col2RGB[fglevel >> 10];
+      bg2rgb  = Col2RGB[bglevel >> 10];
+   }
+
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+  
+   fracstep = dc_iscale; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+
+   {
+      register const byte *source = dc_source;            
+      register const lighttable_t *colormap = dc_colormap; 
+      register heightmask = dc_texheight-1;
+      if (dc_texheight & heightmask)   // not a power of 2 -- killough
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+          
+         if (frac < 0)
+            while ((frac += heightmask) <  0);
+         else
+            while (frac >= (int)heightmask)
+               frac -= heightmask;          
+
+         do
+         {
+            fg = colormap[dc_translation[source[frac>>FRACBITS]]];
+            bg = *dest;
+
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            
+            dest += linesize;          // killough 11/98
+            if((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         } 
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
+         {
+            fg = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            bg = *dest;
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+            
+            fg = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            bg = *dest;
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+         }
+         if(count & 1)
+         {
+            fg = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            bg = *dest;
+            fg = fg2rgb[fg];
+            bg = bg2rgb[bg];
+            fg = (fg+bg) | 0xf07c3e1f;
+
+            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+         }
       }
    }
 } 
+
+//
+// R_DrawAddColumn
+//
+// haleyjd 02/08/05: additive translucency
+//
+static void R_DrawAddColumn(void)
+{ 
+   int              count; 
+   register byte    *dest;           // killough
+   register fixed_t frac;            // killough
+   fixed_t          fracstep;
+   unsigned int *fg2rgb, *bg2rgb;
+   unsigned int a, b;
+   
+   count = dc_yh - dc_yl + 1; 
+
+   // Zero length, column does not exceed a pixel.
+   if(count <= 0)
+      return; 
+                                 
+#ifdef RANGECHECK 
+   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawAddColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif 
+
+   {
+      fixed_t fglevel, bglevel;
+      
+      fglevel = dc_translevel & ~0x3ff;
+      bglevel = FRACUNIT;
+      fg2rgb  = Col2RGB[fglevel >> 10];
+      bg2rgb  = Col2RGB[bglevel >> 10];
+   }
+
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+  
+   fracstep = dc_iscale; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+
+   {
+      register const byte *source = dc_source;            
+      register const lighttable_t *colormap = dc_colormap; 
+      register heightmask = dc_texheight-1;
+      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+          
+         if (frac < 0)
+            while ((frac += heightmask) <  0);
+         else
+            while (frac >= (int)heightmask)
+               frac -= heightmask;          
+
+         do
+         {
+            // mask out LSBs in green and red to allow overflow
+            a = fg2rgb[colormap[source[frac>>FRACBITS]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            
+            dest += linesize;          // killough 11/98
+            if((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         } 
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0)   // texture height is a power of 2 -- killough
+         {
+            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+
+            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;            
+         }
+         if(count & 1)
+         {
+            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+         }
+      }
+   }   
+}
+
+//
+// R_DrawAddTlatedColumn
+//
+// haleyjd 02/08/05: additive translucency + translation
+// The slowest of all column drawers!
+//
+static void R_DrawAddTRColumn(void) 
+{ 
+   int              count; 
+   register byte    *dest;           // killough
+   register fixed_t frac;            // killough
+   fixed_t          fracstep;
+   unsigned int *fg2rgb, *bg2rgb;
+   unsigned int a, b;
+   
+   count = dc_yh - dc_yl + 1; 
+
+   // Zero length, column does not exceed a pixel.
+   if(count <= 0)
+      return; 
+                                 
+#ifdef RANGECHECK 
+   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
+      I_Error("R_DrawAddTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+#endif 
+
+   {
+      fixed_t fglevel, bglevel;
+      
+      fglevel = dc_translevel & ~0x3ff;
+      bglevel = FRACUNIT;
+      fg2rgb  = Col2RGB[fglevel >> 10];
+      bg2rgb  = Col2RGB[bglevel >> 10];
+   }
+
+   dest = ylookup[dc_yl] + columnofs[dc_x];
+  
+   fracstep = dc_iscale; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+
+   {
+      register const byte *source = dc_source;            
+      register const lighttable_t *colormap = dc_colormap; 
+      register heightmask = dc_texheight-1;
+      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+          
+         if (frac < 0)
+            while ((frac += heightmask) <  0);
+         else
+            while (frac >= (int)heightmask)
+               frac -= heightmask;          
+
+         do
+         {
+            // mask out LSBs in green and red to allow overflow
+            a = fg2rgb[colormap[dc_translation[source[frac>>FRACBITS]]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            
+            dest += linesize;          // killough 11/98
+            if((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         } 
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
+         {
+            a = fg2rgb[colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+
+            a = fg2rgb[colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;            
+         }
+         if(count & 1)
+         {
+            a = fg2rgb[colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            b = bg2rgb[*dest] & 0xFFBFDFF;
+            
+            a  = a + b;                      // add with overflow
+            b  = a & 0x10040200;             // isolate LSBs
+            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
+            a |= 0xF07C3E1F;                 // apply normal tl mask
+            a |= b;                          // mask in clamped values
+            
+            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+         }
+      }
+   }
+} 
+
+//
+// Normal Column Drawer Object
+// haleyjd 09/04/06
+//
+columndrawer_t r_normal_drawer =
+{
+   R_DrawColumn,
+   R_DrawTLColumn,
+   R_DrawTRColumn,
+   R_DrawTLTRColumn,
+   R_DrawFuzzColumn,
+   R_DrawFlexColumn,
+   R_DrawFlexTRColumn,
+   R_DrawAddColumn,
+   R_DrawAddTRColumn,
+
+   NULL
+};
 
 //
 // R_InitTranslationTables
@@ -1524,35 +1156,35 @@ void R_InitTranslationTables(void)
 // SoM: ANYRES
 void R_InitBuffer(int width, int height)
 { 
-  int i; 
-  int st_height;
-
-  linesize = v_width;    // killough 11/98
-
-  // Handle resize,
-  //  e.g. smaller view windows
-  //  with border and/or status bar.
-  viewwindowx = (v_width-viewwidth) >> 1;
-  scaledwindowx = (SCREENWIDTH - width) >> 1;
-  // Column offset. For windows.
-  for (i = viewwidth ; i--; )   // killough 11/98
-    columnofs[i] = viewwindowx + i;
-    
-  // Same with base row offset.
-  st_height = gameModeInfo->StatusBar->height;
-
-  if(viewwidth == v_width)
-     viewwindowy = scaledwindowy = 0;
-  else
-  {
-     viewwindowy = (v_height - ((st_height * globalyscale) >> FRACBITS) - viewheight) >> 1;
-     scaledwindowy = (SCREENHEIGHT - st_height - height) >> 1;
-  }
-  
-  // Precalculate all row offsets.
-
-  for (i = viewheight; i--; )
-    ylookup[i] = screens[0] + (i + viewwindowy) * linesize; // killough 11/98
+   int i; 
+   int st_height;
+   
+   linesize = v_width;    // killough 11/98
+   
+   // Handle resize,
+   //  e.g. smaller view windows
+   //  with border and/or status bar.
+   viewwindowx = (v_width-viewwidth) >> 1;
+   scaledwindowx = (SCREENWIDTH - width) >> 1;
+   // Column offset. For windows.
+   for (i = viewwidth ; i--; )   // killough 11/98
+      columnofs[i] = viewwindowx + i;
+   
+   // Same with base row offset.
+   st_height = gameModeInfo->StatusBar->height;
+   
+   if(viewwidth == v_width)
+      viewwindowy = scaledwindowy = 0;
+   else
+   {
+      viewwindowy = (v_height - ((st_height * globalyscale) >> FRACBITS) - viewheight) >> 1;
+      scaledwindowy = (SCREENHEIGHT - st_height - height) >> 1;
+   }
+   
+   // Precalculate all row offsets.
+   
+   for(i = viewheight; i--; )
+      ylookup[i] = screens[0] + (i + viewwindowy) * linesize; // killough 11/98
 } 
 
 //
@@ -1786,328 +1418,6 @@ void R_DrawNewSkyColumn(void)
   }
 } 
 
-//
-// R_DrawFlexTLColumn
-//
-// haleyjd 09/01/02: zdoom-style translucency
-//
-void R_DrawFlexTLColumn(void)
-{ 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
-   
-   count = dc_yh - dc_yl + 1; 
-
-   // Zero length, column does not exceed a pixel.
-   if(count <= 0)
-      return; 
-                                 
-#ifdef RANGECHECK 
-   if((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT)
-      I_Error ("R_DrawFlexTLColumn: %i to %i at %i", dc_yl, dc_yh, dc_x); 
-#endif 
-   
-   // SoM: MAGIC
-   dest = R_GetBufferFlexTrans();
-  
-   fracstep = dc_iscale; 
-   //frac = dc_texturemid + (dc_yl-centery)*fracstep; 
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
-
-   {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if (dc_texheight & heightmask)   // not a power of 2 -- killough
-      {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
-         else
-            while (frac >= (int)heightmask)
-               frac -= heightmask;
-          
-         do
-         {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            
-            *dest = colormap[source[frac>>FRACBITS]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
-               frac -= heightmask;
-         } 
-         while (--count);
-      }
-      else
-      {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
-         {
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4; //SoM: MAGIC 
-            frac += fracstep;
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4;
-            frac += fracstep;
-         }
-         if (count & 1)
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-      }
-   }
-}
-
-//
-// R_DrawFlexTlatedColumn
-//
-// haleyjd 11/05/02: zdoom-style translucency w/translation, for
-// player sprites
-//
-void R_DrawFlexTlatedColumn(void) 
-{ 
-   int      count; 
-   byte     *dest; 
-   fixed_t  frac;
-   fixed_t  fracstep;     
-   
-   count = dc_yh - dc_yl; 
-   if (count < 0) 
-      return; 
-   
-#ifdef RANGECHECK 
-   if((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT)
-      I_Error("R_DrawFlexTlatedColumn: %i to %i at %i", 
-              dc_yl, dc_yh, dc_x);
-#endif 
-
-   // MAGIC
-   dest = R_GetBufferFlexTrans();
-   
-   // Looks familiar.
-   fracstep = dc_iscale; 
-   //frac = dc_texturemid + (dc_yl-centery)*fracstep; 
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
-   
-   count++;        // killough 1/99: minor tuning
-   
-   // Here we do an additional index re-mapping.
-   {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if (dc_texheight & heightmask)   // not a power of 2 -- killough
-      {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
-         else
-            while (frac >= (int)heightmask)
-               frac -= heightmask;
-          
-         do
-         {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
-               frac -= heightmask;
-         } 
-         while (--count);
-      }
-      else
-      {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
-         {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4; //SoM: MAGIC 
-            frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4;
-            frac += fracstep;
-         }
-         if (count & 1)
-         *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-      }
-   }
-} 
-
-//
-// R_DrawAddColumn
-//
-// haleyjd 02/08/05: additive translucency
-//
-void R_DrawAddColumn(void)
-{ 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
-   
-   count = dc_yh - dc_yl + 1; 
-
-   // Zero length, column does not exceed a pixel.
-   if(count <= 0)
-      return; 
-                                 
-#ifdef RANGECHECK 
-   if((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT)
-      I_Error("R_DrawAddColumn: %i to %i at %i", dc_yl, dc_yh, dc_x); 
-#endif 
-   
-   // SoM: MAGIC
-   dest = R_GetBufferFlexAdd();
-  
-   fracstep = dc_iscale; 
-   //frac = dc_texturemid + (dc_yl-centery)*fracstep; 
-   frac = dc_texturemid + 
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
-
-   {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if (dc_texheight & heightmask)   // not a power of 2 -- killough
-      {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
-         else
-            while (frac >= (int)heightmask)
-               frac -= heightmask;
-          
-         do
-         {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            
-            *dest = colormap[source[frac>>FRACBITS]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
-               frac -= heightmask;
-         } 
-         while (--count);
-      }
-      else
-      {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
-         {
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4; //SoM: MAGIC 
-            frac += fracstep;
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += 4;
-            frac += fracstep;
-         }
-         if (count & 1)
-            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-      }
-   }
-}
-
-//
-// R_DrawAddTlatedColumn
-//
-// haleyjd 02/08/05: additive translucency + translation
-//
-void R_DrawAddTlatedColumn(void) 
-{ 
-   int      count; 
-   byte     *dest; 
-   fixed_t  frac;
-   fixed_t  fracstep;     
-   
-   count = dc_yh - dc_yl; 
-   if (count < 0) 
-      return; 
-   
-#ifdef RANGECHECK 
-   if((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT)
-      I_Error("R_DrawAddTlatedColumn: %i to %i at %i", 
-              dc_yl, dc_yh, dc_x);
-#endif 
-
-   // MAGIC
-   dest = R_GetBufferFlexAdd();
-   
-   // Looks familiar.
-   fracstep = dc_iscale;
-   //frac = dc_texturemid + (dc_yl-centery)*fracstep;
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
-   
-   count++;        // killough 1/99: minor tuning
-   
-   // Here we do an additional index re-mapping.
-   {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if (dc_texheight & heightmask)   // not a power of 2 -- killough
-      {
-         heightmask++;
-         heightmask <<= FRACBITS;
-          
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
-         else
-            while (frac >= (int)heightmask)
-               frac -= heightmask;
-          
-         do
-         {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-            
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
-            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
-            if ((frac += fracstep) >= (int)heightmask)
-               frac -= heightmask;
-         } 
-         while (--count);
-      }
-      else
-      {
-         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
-         {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4; //SoM: MAGIC 
-            frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-            dest += 4;
-            frac += fracstep;
-         }
-         if (count & 1)
-         *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
-      }
-   }
-} 
 
 //----------------------------------------------------------------------------
 //
