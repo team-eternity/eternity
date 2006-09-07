@@ -85,21 +85,6 @@ extern int global_cmap_index; // haleyjd: NGCS
 
 void R_HOMdrawer(void);
 
-// haleyjd 09/04/06: column drawing engines
-columndrawer_t *r_column_engine;
-int r_column_engine_num;
-
-static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
-{
-   &r_normal_drawer, // normal engine
-   &r_quad_drawer,   // quad cache engine
-};
-
-void R_SetColumnEngine(void)
-{
-   r_column_engine = r_column_engines[r_column_engine_num];
-}
-
 //
 // precalculated math tables
 //
@@ -135,6 +120,21 @@ lighttable_t **colormaps;
 int extralight;                           // bumped light from gun blasts
 
 void (*colfunc)(void);                    // current column draw function
+
+// haleyjd 09/04/06: column drawing engines
+columndrawer_t *r_column_engine;
+int r_column_engine_num;
+
+static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
+{
+   &r_normal_drawer, // normal engine
+   &r_quad_drawer,   // quad cache engine
+};
+
+void R_SetColumnEngine(void)
+{
+   r_column_engine = r_column_engines[r_column_engine_num];
+}
 
 //
 // R_PointOnSide
