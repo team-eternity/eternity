@@ -525,9 +525,9 @@ void do_draw_newsky(visplane_t *pl)
 
       // haleyjd: don't stretch textures over 200 tall
       if(dc_texheight < 200)
-         dc_iscale = pspriteiyscale >> stretchsky;
+         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
       else
-         dc_iscale = pspriteiyscale;
+         dc_iscale = pspriteiyscale >> detailshift;
       
       for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
       {
@@ -552,13 +552,17 @@ void do_draw_newsky(visplane_t *pl)
 
       // haleyjd: don't stretch textures over 200 tall
       if(dc_texheight < 200)
-         dc_iscale = pspriteiyscale >> stretchsky;
+         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
       else
-         dc_iscale = pspriteiyscale;
+         dc_iscale = pspriteiyscale >> detailshift;
       
       for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
       {
-         if ((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
+#ifdef R_SIXTEEN
+         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
+#else
+         if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
+#endif
          {
             dc_source =
                R_GetColumn(skyTexture,
@@ -591,9 +595,9 @@ void do_draw_newsky(visplane_t *pl)
 
       // haleyjd: don't stretch textures over 200 tall
       if(dc_texheight < 200)
-         dc_iscale = pspriteiyscale >> stretchsky;
+         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
       else
-         dc_iscale = pspriteiyscale;
+         dc_iscale = pspriteiyscale >> detailshift;
       
       for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
       {
@@ -704,9 +708,9 @@ static void do_draw_plane(visplane_t *pl)
       
       // haleyjd: don't stretch textures over 200 tall
       if(dc_texheight < 200)
-         dc_iscale = pspriteiyscale >> stretchsky;
+         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
       else
-         dc_iscale = pspriteiyscale;
+         dc_iscale = pspriteiyscale >> detailshift;
 
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
       for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
@@ -748,16 +752,16 @@ static void do_draw_plane(visplane_t *pl)
       switch(flatsize[flattranslation[pl->picnum]])
       {
       case 16384:
-         flatfunc = R_DrawSpan_128;
+         flatfunc = r_span_engine->DrawSpan128;
          break;
       case 65536:
-         flatfunc = R_DrawSpan_256;
+         flatfunc = r_span_engine->DrawSpan256;
          break;
       case 262144:
-         flatfunc = R_DrawSpan_512;
+         flatfunc = r_span_engine->DrawSpan512;
          break;
       default:
-         flatfunc = R_DrawSpan_64;
+         flatfunc = r_span_engine->DrawSpan64;
       };
         
       xoffs = pl->xoffs;  // killough 2/28/98: Add offsets

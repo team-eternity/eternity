@@ -530,13 +530,10 @@ static void HU_PatchWidgetDraw(hu_widget_t *widget)
    if(!pw->patch)
       return;
 
-   // make sure the patch is made static during drawing
-   pw->patch = W_CacheLumpName(pw->patchname, PU_STATIC);
+   // be sure the patch is loaded
+   pw->patch = W_CacheLumpName(pw->patchname, PU_CACHE);
 
    V_DrawPatchTL(pw->x, pw->y, &vbscreen, pw->patch, pw->color, pw->tl_level);
-
-   // set it back to cache level
-   Z_ChangeTag(pw->patch, PU_CACHE);
 }
 
 //

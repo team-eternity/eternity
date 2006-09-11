@@ -602,7 +602,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    dc_texturemid = vis->texturemid;
    frac = vis->startfrac;
    spryscale = vis->scale;
-   sprtopscreen = centeryfrac - FixedMul(dc_texturemid,spryscale);
+   sprtopscreen = centeryfrac - FixedMul(dc_texturemid, spryscale);
    
    // haleyjd 10/10/02: foot clipping
    if(vis->footclip)
@@ -698,7 +698,7 @@ void R_ProjectSprite(mobj_t* thing)
       return;
 
    xscale = FixedDiv(projection, tz);
-   yscale = FixedMul(yaspectmul, xscale);
+   yscale = FixedMul(yaspectmul, xscale << detailshift);
    
    gxt = -FixedMul(tr_x,viewsin);
    gyt = FixedMul(tr_y,viewcos);
@@ -864,7 +864,7 @@ void R_ProjectSprite(mobj_t* thing)
    else
    {      // diminished light
       // SoM: ANYRES
-      int index = xscale >> (LIGHTSCALESHIFT + addscaleshift);
+      int index = xscale >> (LIGHTSCALESHIFT + addscaleshift - detailshift);
       if(index >= MAXLIGHTSCALE)
          index = MAXLIGHTSCALE-1;
       vis->colormap = spritelights[index];
@@ -1006,7 +1006,7 @@ void R_DrawPSprite(pspdef_t *psp)
 
   vis->x1 = x1 < 0 ? 0 : x1;
   vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;
-  vis->scale = pspriteyscale; // ANYRES
+  vis->scale = pspriteyscale<<detailshift; // ANYRES
   vis->colour = 0;      // sf: default colourmap
   vis->translucency = FRACUNIT; // haleyjd: default zdoom trans.
   vis->footclip = 0; // haleyjd
@@ -1714,7 +1714,7 @@ void R_ProjectParticle(particle_t *particle)
       return;
    
    xscale = FixedDiv(projection, tz);
-   yscale = FixedMul(yaspectmul, xscale); 
+   yscale = FixedMul(yaspectmul, xscale << detailshift); 
    
    gxt = -FixedMul(tr_x, viewsin); 
    gyt =  FixedMul(tr_y, viewcos); 
@@ -1833,7 +1833,7 @@ void R_ProjectParticle(particle_t *particle)
             ltable = scalelight[lightnum];
          
          // SoM: ANYRES
-         index = xscale >> (LIGHTSCALESHIFT + addscaleshift);
+         index = xscale >> (LIGHTSCALESHIFT + addscaleshift - detailshift);
          if(index >= MAXLIGHTSCALE)
             index = MAXLIGHTSCALE - 1;
          
@@ -1849,12 +1849,13 @@ void R_ProjectParticle(particle_t *particle)
 //
 void R_DrawParticle(vissprite_t *vis)
 {
-   int x1, x2;
+   int x1, x2, ox1, ox2;
    int yl, yh;
    byte color;
 
-   x1 = vis->x1;
-   x2 = vis->x2;
+   ox1 = x1 = vis->x1;
+   ox2 = x2 = vis->x2;
+
    if(x1 < 0)
       x1 = 0;
    if(x2 < x1)
@@ -1862,20 +1863,23 @@ void R_DrawParticle(vissprite_t *vis)
    if(x2 >= viewwidth)
       x2 = viewwidth - 1;
 
+   x1 <<= detailshift;
+   x2 <<= detailshift;
+
    yl = (centeryfrac - FixedMul(vis->texturemid, vis->scale) + 
          FRACUNIT - 1) >> FRACBITS;
    yh = yl + (x2 - x1);
 
    // due to square shape, it is unnecessary to clip the entire
    // particle
-   if(yh >= mfloorclip[x1])
-      yh = mfloorclip[x1]-1;
-   if(yl <= mceilingclip[x1])
-      yl = mceilingclip[x1]+1;
-   if(yh >= mfloorclip[x2])
-      yh = mfloorclip[x2]-1;
-   if(yl <= mceilingclip[x2])
-      yl = mceilingclip[x2]+1;
+   if(yh >= mfloorclip[ox1])
+      yh = mfloorclip[ox1]-1;
+   if(yl <= mceilingclip[ox1])
+      yl = mceilingclip[ox1]+1;
+   if(yh >= mfloorclip[ox2])
+      yh = mfloorclip[ox2]-1;
+   if(yl <= mceilingclip[ox2])
+      yl = mceilingclip[ox2]+1;
 
    color = vis->colormap[vis->startfrac];
 

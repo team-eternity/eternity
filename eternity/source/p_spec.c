@@ -215,7 +215,7 @@ void P_InitPicAnims (void)
       lastanim++;
    }
 
-   Z_ChangeTag (animdefs,PU_CACHE); //jff 3/23/98 allow table to be freed
+   Z_ChangeTag(animdefs, PU_CACHE); //jff 3/23/98 allow table to be freed
 }
 
 ///////////////////////////////////////////////////////////////

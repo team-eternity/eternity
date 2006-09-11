@@ -406,6 +406,9 @@ void P_LoadThings(int lump)
    {
       mapthing_t *mt = (mapthing_t *)data + i;
       
+      // haleyjd 09/11/06: wow, this should be up here.
+      mt->type = SHORT(mt->type);
+
       // Do not spawn cool, new monsters if !commercial
       // haleyjd: removing this for Heretic and DeHackEd
       if(demo_version < 331 && gamemode != commercial)
@@ -429,8 +432,7 @@ void P_LoadThings(int lump)
       // Do spawn all other stuff.
       mt->x = SHORT(mt->x);
       mt->y = SHORT(mt->y);
-      mt->angle = SHORT(mt->angle);
-      mt->type  = SHORT(mt->type);
+      mt->angle = SHORT(mt->angle);      
       mt->options = SHORT(mt->options);
 
       // haleyjd 10/05/05: convert heretic things
@@ -1607,7 +1609,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    DEBUGMSG("done\n");
    
-   R_SetViewSize(screenSize+3); //sf
+   R_SetViewSize(screenSize+3, detailshift); //sf
 
 #if 0
    V_LoadingIncrease();

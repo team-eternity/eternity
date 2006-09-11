@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2006 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,37 +20,16 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//      Mission start screen wipe/melt, special effects.
+//    Low detail column drawers.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __F_WIPE_H__
-#define __F_WIPE_H__
+#ifndef R_DRAWL_H__
+#define R_DRAWL_H__
 
-//
-// SCREEN WIPE PACKAGE
-//
-
-void Wipe_Drawer();
-void Wipe_Ticker();
-void Wipe_StartScreen();
-void Wipe_ScreenReset();
-
-extern boolean inwipe;
-extern int wipe_speed;
+extern columndrawer_t r_lowdetail_drawer;
 
 #endif
 
-//----------------------------------------------------------------------------
-//
-// $Log: f_wipe.h,v $
-// Revision 1.3  1998/05/03  22:11:27  killough
-// beautification
-//
-// Revision 1.2  1998/01/26  19:26:49  phares
-// First rev with no ^Ms
-//
-// Revision 1.1.1.1  1998/01/19  14:02:54  rand
-// Lee's Jan 19 sources
-//
-//----------------------------------------------------------------------------
+// EOF
+

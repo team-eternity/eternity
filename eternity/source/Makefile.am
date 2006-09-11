@@ -37,7 +37,8 @@ polyobj.h       p_partcl.c     p_partcl.h  p_plats.c   p_portal.c  p_portal.h  p
 p_pspr.h        p_saveg.c      p_saveg.h   p_setup.c   p_setup.h   p_sight.c   p_skin.c		\
 p_skin.h        psnprntf.c     psnprntf.h  p_spec.c    p_spec.h    p_switch.c  p_telept.c	\
 p_tick.c        p_tick.h       p_user.c    p_user.h    r_bsp.c     r_bsp.h     r_data.c		\
-r_data.h        r_defs.h       r_draw.c    r_draw.h    r_main.c    r_main.h    r_plane.c	\
+r_data.h        r_defs.h       r_draw.c    r_draw.h    r_drawl.c   r_drawl.h   r_drawq.c	\
+r_drawq.h       r_main.c       r_main.h    r_plane.c						\
 r_plane.h       r_portal.c     r_portal.h  r_ripple.c  r_ripple.h  r_segs.c    r_segs.h		\
 r_sky.c         r_sky.h        r_span.c    r_state.h   r_things.c  r_things.h  rules.make	\
 sclinux.h       sounds.c       sounds.h    s_sndseq.c  s_sndseq.h  s_sound.c   s_sound.h	\

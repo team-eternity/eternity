@@ -1554,6 +1554,20 @@ default_t defaults[] =
       "0 = normal, 1 = optimized quad cache"
    },
 
+   {
+      "r_spanengine",
+      &r_span_engine_num, NULL,
+      0, {0, NUMSPANENGINES - 1}, dt_number, ss_none, wad_no,
+      "0 = high precision, 1 = low optimized, 2 = low"
+   },
+
+   {
+      "r_detail",
+      &c_detailshift, NULL,
+      0, {0, 1}, dt_number, ss_none, wad_no,
+      "0 = high detail, 1 = low detail"
+   },
+
    { NULL }         // last entry
 };
 

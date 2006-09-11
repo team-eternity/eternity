@@ -162,6 +162,8 @@ OBJS =   \
 	$(O)/r_bsp.o \
 	$(O)/r_data.o \
 	$(O)/r_draw.o \
+	$(O)/r_drawq.o \
+	$(O)/r_drawl.o \
 	$(O)/r_main.o \
 	$(O)/r_plane.o \
 	$(O)/r_portal.o \

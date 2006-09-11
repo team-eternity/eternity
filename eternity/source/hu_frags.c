@@ -60,33 +60,30 @@ player_t *sortedplayers[MAXPLAYERS];
 int num_players;
 int show_scores;                // enable scores
 
-static patch_t *fragspic;
-static patch_t *fragbox;
-
 void HU_FragsInit(void)
 {
-  fragspic = W_CacheLumpName("HU_FRAGS", PU_STATIC);
-  fragbox = W_CacheLumpName("HU_FRGBX", PU_STATIC);
 }
 
 void HU_FragsDrawer(void)
 {
-  int i, y;
-  char tempstr[50];
+   int i, y;
+   char tempstr[50];
 
-  if(((players[displayplayer].playerstate!=PST_DEAD || walkcam_active)
-      && !action_frags) || !(GameType == gt_dm))
-    return;
-  
-  if(!show_scores) return;
-  
-  // "frags"
-  V_DrawPatch(FRAGSX, FRAGSY, &vbscreen, fragspic);
-  
-  y = NAMEY;
-  
-  for(i=0; i<num_players; i++)
-    {
+   if(!show_scores)
+      return;
+
+   if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active)
+      && !action_frags) || GameType != gt_dm)
+      return;
+      
+   // "frags"
+   V_DrawPatch(FRAGSX, FRAGSY, &vbscreen, 
+               W_CacheLumpName("HU_FRAGS", PU_CACHE));
+   
+   y = NAMEY;
+   
+   for(i = 0; i < num_players; ++i)
+   {
       // write their name
       psnprintf(tempstr, sizeof(tempstr), "%s%s", !demoplayback && 
          sortedplayers[i]==players+consoleplayer ? FC_HI : FC_NORMAL,
@@ -101,21 +98,21 @@ void HU_FragsDrawer(void)
 	(
 	 FRAGNUMX, y,
 	 &vbscreen,
-	 fragbox,
+	 W_CacheLumpName("HU_FRGBX", PU_CACHE),
 	 sortedplayers[i]->colormap ?
             (char *)translationtables[(sortedplayers[i]->colormap - 1)] :
 	    NULL,
 	 false
 	 );
 
-                        // draw the frags
-      psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
-      V_WriteText(tempstr, FRAGNUMX + 16 - V_StringWidth(tempstr)/2, y);
-      y += 10;
-    }
+       // draw the frags
+       psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
+       V_WriteText(tempstr, FRAGNUMX + 16 - V_StringWidth(tempstr)/2, y);
+       y += 10;
+   }
 }
 
-void HU_FragsUpdate()
+void HU_FragsUpdate(void)
 {
   int i,j;
   int change;
@@ -163,16 +160,16 @@ void HU_FragsUpdate()
     }
 }
 
-void HU_FragsErase()
+void HU_FragsErase(void)
 {
-  int top_y;
-  
-  if(!(GameType == gt_dm))
-    return;
-
-  top_y = SCREENHEIGHT - gameModeInfo->StatusBar->height;
-  
-  R_VideoErase(0, FRAGSY, SCREENWIDTH, FRAGSY - top_y); // ANYRES
+   int top_y;
+   
+   if(!(GameType == gt_dm))
+      return;
+   
+   top_y = SCREENHEIGHT - gameModeInfo->StatusBar->height;
+   
+   R_VideoErase(0, FRAGSY, SCREENWIDTH, FRAGSY - top_y); // ANYRES
 }
 
 ////////////////////////////////////
@@ -182,23 +179,23 @@ void HU_FragsErase()
 
 CONSOLE_COMMAND(frags, 0)
 {
-  int i;
-  
-  for(i=0; i<num_players; i++)
-    {
+   int i;
+   
+   for(i = 0; i < num_players; ++i)
+   {
       C_Printf(FC_HI"%i"FC_NORMAL" %s\n",
-	       sortedplayers[i]->totalfrags,
-	       sortedplayers[i]->name);
-    }
+               sortedplayers[i]->totalfrags,
+               sortedplayers[i]->name);
+   }
 }
 
 VARIABLE_BOOLEAN(show_scores,       NULL,           onoff);
 CONSOLE_VARIABLE(show_scores,   show_scores,    0)      {}
 
-void HU_FragsAddCommands()
+void HU_FragsAddCommands(void)
 {
-  C_AddCommand(frags);
-  C_AddCommand(show_scores);
+   C_AddCommand(frags);
+   C_AddCommand(show_scores);
 }
 
 // EOF

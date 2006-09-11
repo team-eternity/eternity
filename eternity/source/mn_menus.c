@@ -1186,9 +1186,7 @@ CONSOLE_COMMAND(mn_player, 0)
 #define SAVESTRINGSIZE  24
 
 // load/save box patches
-patch_t *patch_left = NULL;
-patch_t *patch_mid;
-patch_t *patch_right;
+patch_t *patch_left, *patch_mid, *patch_right;
 
 void MN_SaveGame(void)
 {
@@ -1299,12 +1297,9 @@ void MN_DrawLoadBox(int x, int y)
 {
    int i;
    
-   if(!patch_left)        // initial load
-   {
-      patch_left = W_CacheLumpName("M_LSLEFT", PU_STATIC);
-      patch_mid = W_CacheLumpName("M_LSCNTR", PU_STATIC);
-      patch_right = W_CacheLumpName("M_LSRGHT", PU_STATIC);
-   }
+   patch_left  = W_CacheLumpName("M_LSLEFT", PU_STATIC);
+   patch_mid   = W_CacheLumpName("M_LSCNTR", PU_STATIC);
+   patch_right = W_CacheLumpName("M_LSRGHT", PU_STATIC);
 
    V_DrawPatch(x, y, &vbscreen, patch_left);
    x += SHORT(patch_left->width);
@@ -1316,6 +1311,11 @@ void MN_DrawLoadBox(int x, int y)
    }
    
    V_DrawPatch(x, y, &vbscreen, patch_right);
+
+   // haleyjd: make purgable
+   Z_ChangeTag(patch_left,  PU_CACHE);
+   Z_ChangeTag(patch_mid,   PU_CACHE);
+   Z_ChangeTag(patch_right, PU_CACHE);
 }
 
 void MN_LoadGameDrawer(void);
@@ -3415,7 +3415,7 @@ static void MN_PatchOldMainMenu(void)
    menu_old_main.y += 8;
 }
 
-boolean mn_classic_menus;
+int mn_classic_menus;
 
 //
 // MN_LinkClassicMenus
@@ -3424,7 +3424,7 @@ boolean mn_classic_menus;
 // on or off. When it's on, the old main menu above is patched to point to the
 // other old menus.
 //
-static void MN_LinkClassicMenus(boolean link)
+static void MN_LinkClassicMenus(int link)
 {
    if(link) // turn on classic menus
    {
@@ -3448,7 +3448,7 @@ static menuitem_t mn_old_option_items[] =
 {
    { it_runcmd,    "end game",       "mn_endgame",    "M_ENDGAM" },
    { it_runcmd,    "messages",       "hu_messages /", "M_MESSG"  },
-   { it_runcmd,    "graphic detail", "",              "M_DETAIL" },
+   { it_runcmd,    "graphic detail", "r_detail /",    "M_DETAIL" },
    { it_bigslider, "screen size",    "screensize",    "M_SCRNSZ" },
    { it_gap },
    { it_bigslider, "mouse sens.",    "sens_combined", "M_MSENS"  },
@@ -3456,6 +3456,8 @@ static menuitem_t mn_old_option_items[] =
    { it_runcmd,    "sound volume",   "mn_old_sound",  "M_SVOL"   },
    { it_end }
 };
+
+extern int c_detailshift;
 
 static char detailNames[2][9] = { "M_GDHIGH", "M_GDLOW" };
 static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
@@ -3467,6 +3469,9 @@ static void MN_OldOptionsDrawer(void)
 
    V_DrawPatchDirect(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
                      W_CacheLumpName(msgNames[showMessages], PU_CACHE));
+
+   V_DrawPatchDirect(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
+                     W_CacheLumpName(detailNames[c_detailshift], PU_CACHE));
 }
 
 menu_t menu_old_options =

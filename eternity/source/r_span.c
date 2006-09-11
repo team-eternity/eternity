@@ -76,7 +76,7 @@ byte *ds_source;
 
 // SoM: This is the high precision flat renderer, it will not distort the flat
 // when looking down or dying.
-void R_DrawSpan_64 (void) 
+static void R_DrawSpan_64(void) 
 { 
    unsigned xposition;
    unsigned yposition;
@@ -137,11 +137,9 @@ void R_DrawSpan_64 (void)
    } 
 }
 
-
-
 // SoM: This is the high precision flat renderer, it will not distort the flat
 // when looking down or dying.
-void R_DrawSpan_128 (void) 
+static void R_DrawSpan_128(void) 
 { 
    unsigned xposition;
    unsigned yposition;
@@ -202,12 +200,9 @@ void R_DrawSpan_128 (void)
    } 
 }
 
-
-
-
 // SoM: This is the high precision flat renderer, it will not distort the flat
 // when looking down or dying.
-void R_DrawSpan_256 (void) 
+static void R_DrawSpan_256(void) 
 { 
    unsigned xposition;
    unsigned yposition;
@@ -268,11 +263,9 @@ void R_DrawSpan_256 (void)
    } 
 }
 
-
-
 // SoM: This is the high precision flat renderer, it will not distort the flat
 // when looking down or dying.
-void R_DrawSpan_512 (void) 
+static void R_DrawSpan_512(void) 
 { 
    unsigned xposition;
    unsigned yposition;
@@ -333,10 +326,9 @@ void R_DrawSpan_512 (void)
    } 
 }
 
-
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
-void R_DrawSpan_OLD (void) 
+static void R_DrawSpan_OLD(void) 
 { 
    register unsigned position;
    unsigned step;
@@ -386,8 +378,7 @@ void R_DrawSpan_OLD (void)
    } 
 }
 
-
-void R_DrawSpan_ORIGINAL (void) 
+static void R_DrawSpan_ORIGINAL(void) 
 { 
    register unsigned position;
    unsigned step;
@@ -454,6 +445,289 @@ void R_DrawSpan_ORIGINAL (void)
       count--;
    } 
 }
+
+// olpspandrawer: uses the old low-precision span drawing routine for
+// 64x64 flats. All other sizes use the normal routines.
+spandrawer_t r_olpspandrawer =
+{
+   R_DrawSpan_ORIGINAL,
+   R_DrawSpan_128,
+   R_DrawSpan_256,
+   R_DrawSpan_512
+};
+
+// lpspandrawer: uses the optimized but low-precision span drawing
+// routine for 64x64 flats. Same as above for others.
+spandrawer_t r_lpspandrawer =
+{
+   R_DrawSpan_OLD,
+   R_DrawSpan_128,
+   R_DrawSpan_256,
+   R_DrawSpan_512
+};
+
+// the normal, high-precision span drawer
+spandrawer_t r_spandrawer =
+{
+   R_DrawSpan_64,
+   R_DrawSpan_128,
+   R_DrawSpan_256,
+   R_DrawSpan_512
+};
+
+//==============================================================================
+//
+// Low-Detail Span Drawers
+//
+// haleyjd 09/10/06: These are for low-detail mode. They use the high-precision
+// drawing code but double up on pixels, making it blocky.
+//
+
+static void R_DrawSpan_LD64(void) 
+{ 
+   unsigned xposition;
+   unsigned yposition;
+   unsigned xstep, ystep;
+   
+   byte *source;
+   byte *colormap;
+   byte *dest;
+   
+   unsigned count;
+      
+   xposition = ds_xfrac << 10; yposition = ds_yfrac << 10;
+   xstep = ds_xstep << 10; ystep = ds_ystep << 10;
+   
+   source = ds_source;
+   colormap = ds_colormap;
+   count = ds_x2 - ds_x1 + 1;
+
+   // low detail: must double x coordinate
+   ds_x1 <<= 1;
+   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   
+   while(count >= 4)
+   {
+      dest[0] = dest[1] = 
+         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[2] = dest[3] = 
+         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[4] = dest[5] = 
+         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[6] = dest[7] = 
+         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest += 8;
+      count -= 4;
+      
+   }
+   while(count--)
+   { 
+      *dest = *(dest + 1) = 
+         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
+      dest += 2;
+      
+      xposition += xstep;
+      yposition += ystep;
+   } 
+}
+
+static void R_DrawSpan_LD128(void) 
+{ 
+   unsigned xposition;
+   unsigned yposition;
+   unsigned xstep, ystep;
+   
+   byte *source;
+   byte *colormap;
+   byte *dest;
+   
+   unsigned count;
+   
+   xposition = ds_xfrac << 9; yposition = ds_yfrac << 9;
+   xstep = ds_xstep << 9; ystep = ds_ystep << 9;
+   
+   source = ds_source;
+   colormap = ds_colormap;
+   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   count = ds_x2 - ds_x1 + 1;
+
+   // low detail: must double x coordinate
+   ds_x1 <<= 1;
+   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   
+   while(count >= 4)
+   {
+      dest[0] = dest[1] =
+         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[2] = dest[3] =
+         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[4] = dest[5] =
+         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[6] = dest[7] =
+         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest += 8;
+      count -= 4;
+   }
+   while (count--)
+   { 
+      *dest = *(dest + 1) =
+         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
+      dest += 2;
+      xposition += xstep;
+      yposition += ystep;
+   } 
+}
+
+static void R_DrawSpan_LD256(void) 
+{ 
+   unsigned xposition;
+   unsigned yposition;
+   unsigned xstep, ystep;
+   
+   byte *source;
+   byte *colormap;
+   byte *dest;
+   
+   unsigned count;
+   
+   xposition = ds_xfrac << 8; yposition = ds_yfrac << 8;
+   xstep = ds_xstep << 8; ystep = ds_ystep << 8;
+   
+   source = ds_source;
+   colormap = ds_colormap;
+   count = ds_x2 - ds_x1 + 1;
+
+   // low detail: must double x coordinate
+   ds_x1 <<= 1;
+   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   
+   while(count >= 4)
+   {
+      dest[0] = dest[1] =
+         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[2] = dest[3] =
+         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[4] = dest[5] =
+         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[6] = dest[7] =
+         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest += 8;
+      count -= 4;
+      
+   }
+   while(count--)
+   { 
+      *dest = *(dest + 1) =
+         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
+      dest += 2;
+      xposition += xstep;
+      yposition += ystep;
+   } 
+}
+
+static void R_DrawSpan_LD512(void) 
+{ 
+   unsigned xposition;
+   unsigned yposition;
+   unsigned xstep, ystep;
+   
+   byte *source;
+   byte *colormap;
+   byte *dest;
+   
+   unsigned count;
+      
+   xposition = ds_xfrac << 7; yposition = ds_yfrac << 7;
+   xstep = ds_xstep << 7; ystep = ds_ystep << 7;
+   
+   source = ds_source;
+   colormap = ds_colormap;
+   count = ds_x2 - ds_x1 + 1;
+
+   // low detail: must double x coordinate
+   ds_x1 <<= 1;
+   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   
+   while(count >= 4)
+   {
+      dest[0] = dest[1] =
+         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[2] = dest[3] =
+         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[4] = dest[5] =
+         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest[6] = dest[7] =
+         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
+      xposition += xstep;
+      yposition += ystep;
+      
+      dest += 8;
+      count -= 4;
+      
+   }
+   while(count--)
+   { 
+      *dest = *(dest + 1) =
+         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
+      dest += 2;
+      xposition += xstep;
+      yposition += ystep;
+   } 
+}
+
+// low-detail spandrawer
+spandrawer_t r_lowspandrawer =
+{
+   R_DrawSpan_LD64,
+   R_DrawSpan_LD128,
+   R_DrawSpan_LD256,
+   R_DrawSpan_LD512
+};
 
 #endif
 

@@ -228,6 +228,10 @@ SOURCE=.\Source\r_draw.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\r_drawl.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\source\r_drawq.c
 # End Source File
 # Begin Source File
@@ -1006,6 +1010,10 @@ SOURCE=.\Source\r_defs.h
 # Begin Source File
 
 SOURCE=.\Source\r_draw.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\r_drawl.h
 # End Source File
 # Begin Source File
 

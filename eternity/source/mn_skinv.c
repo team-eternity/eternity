@@ -128,22 +128,6 @@ static boolean MN_SkinResponder(event_t *ev)
 
    switch(ev->data1)
    {
-      /*
-   case KEYD_LEFTARROW:
-      // rotate sprite left
-      if(skview_rot == 7)
-         skview_rot = 0;
-      else
-         skview_rot++;
-      break;
-   case KEYD_RIGHTARROW:
-      // rotate sprite right
-      if(skview_rot == 0)
-         skview_rot = 7;
-      else
-         skview_rot--;
-      break;
-      */
    case KEYD_RCTRL:
       // attack!
       if(skview_action == SKV_WALKING)

@@ -48,7 +48,7 @@ static int worms[SCREENWIDTH];
 boolean        inwipe = false;
 static int     starting_height;
 
-void Wipe_Initwipe(void)
+static void Wipe_initWipe(void)
 {
    int x;
    
@@ -56,7 +56,8 @@ void Wipe_Initwipe(void)
    
    // SoM 2-4-04: ANYRES
    // use console height
-   // SoM: wtf? Why did I scale this before??? This should be within the 320x200 space unscaled!
+   // SoM: wtf? Why did I scale this before??? This should be within the 320x200
+   // space unscaled!
    starting_height = current_height;
    
    worms[0] = starting_height - M_Random()%16;
@@ -73,20 +74,27 @@ void Wipe_Initwipe(void)
    }
 }
 
+static byte *wipe_buffer;
+
 void Wipe_StartScreen(void)
 {
    register int x, y;
    register byte *dest, *src;
 
-   Wipe_Initwipe();
+   Wipe_initWipe();
   
-   if(!start_screen[0])
+   if(!wipe_buffer)
    {
       // SoM: Reformatted and cleaned up (ANYRES)
-      byte *buffer = start_screen[0] = Z_Malloc(MAX_SCREENHEIGHT * MAX_SCREENWIDTH,PU_STATIC,0);
-      for(x = 0; x < MAX_SCREENWIDTH; x++)
-         start_screen[x] = buffer + (x * MAX_SCREENHEIGHT);    
+      // haleyjd: make purgable, allocate at required size
+      wipe_buffer = Z_Malloc(v_height * v_width, PU_STATIC, 
+                             (void **)&wipe_buffer);
+      
+      for(x = 0; x < v_width; ++x)
+         start_screen[x] = wipe_buffer + (x * v_height);
    }
+   else
+      Z_ChangeTag(wipe_buffer, PU_STATIC); // buffer is in use
 
    // SoM 2-4-04: ANYRES
    for(x = 0; x < v_width; ++x)
@@ -107,6 +115,24 @@ void Wipe_StartScreen(void)
    }
    
    return;
+}
+
+//
+// Wipe_ScreenReset
+//
+// Must be called when the screen resolution changes.
+//
+void Wipe_ScreenReset(void)
+{
+   // if a buffer exists, destroy it
+   if(wipe_buffer)
+   {
+      Z_Free(wipe_buffer);
+      wipe_buffer = NULL;
+   }
+
+   // cancel any current wipe (screen contents have been lost)
+   inwipe = false;
 }
 
 void Wipe_Drawer(void)
@@ -146,6 +172,7 @@ void Wipe_Ticker(void)
 
    // SoM 2-4-04: ANYRES
    for(x = 0; x < SCREENWIDTH; ++x)
+   {
       if(worms[x] < 0)
       {
          ++worms[x];
@@ -162,9 +189,13 @@ void Wipe_Ticker(void)
          worms[x] += dy;
          done = false;
       }
+   }
   
    if(done)
+   {
       inwipe = false;
+      Z_ChangeTag(wipe_buffer, PU_CACHE); // haleyjd: make purgable
+   }
 }
 
 // EOF

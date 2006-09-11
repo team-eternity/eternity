@@ -98,11 +98,11 @@ enum
 };
 patch_t *slider_gfx[num_slider_gfx];
 static menu_t *drawing_menu;
-static patch_t *skulls[2];
+static int skulls[2];
 
 // haleyjd 02/04/06: small menu pointer
 #define NUMSMALLPTRS 5
-static patch_t *smallptrs[NUMSMALLPTRS];
+static int smallptrs[NUMSMALLPTRS];
 static short smallptr_dims[2]; // 0 = width, 1 = height
 static int smallptr_idx;
 static int smallptr_dir = 1;
@@ -116,7 +116,8 @@ static int smallptr_coords[2][2];
 //
 void MN_DrawSmallPtr(int x, int y)
 {
-   V_DrawPatch(x, y, &vbscreen, smallptrs[smallptr_idx]);
+   V_DrawPatch(x, y, &vbscreen, 
+               W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE));
 }
 
 //
@@ -155,6 +156,12 @@ static void MN_DrawSlider(int x, int y, int pct)
    int slider_width = 0;       // find slider width in pixels
    short wl, wm, ws;
 
+   // load slider gfx
+   slider_gfx[slider_left]   = W_CacheLumpName("M_SLIDEL", PU_STATIC);
+   slider_gfx[slider_right]  = W_CacheLumpName("M_SLIDER", PU_STATIC);
+   slider_gfx[slider_mid]    = W_CacheLumpName("M_SLIDEM", PU_STATIC);
+   slider_gfx[slider_slider] = W_CacheLumpName("M_SLIDEO", PU_STATIC);
+
    wl = SHORT(slider_gfx[slider_left]->width);
    wm = SHORT(slider_gfx[slider_mid]->width);
    ws = SHORT(slider_gfx[slider_slider]->width);
@@ -176,6 +183,12 @@ static void MN_DrawSlider(int x, int y, int pct)
    draw_x = wl + (pct * (slider_width - ws)) / 100;
    
    V_DrawPatch(x + draw_x, y, &vbscreen, slider_gfx[slider_slider]);
+
+   // haleyjd: set slider gfx purgable
+   Z_ChangeTag(slider_gfx[slider_left],   PU_CACHE);
+   Z_ChangeTag(slider_gfx[slider_right],  PU_CACHE);
+   Z_ChangeTag(slider_gfx[slider_mid],    PU_CACHE);
+   Z_ChangeTag(slider_gfx[slider_slider], PU_CACHE);
 }
 
 //
@@ -548,19 +561,19 @@ void MN_DrawMenu(menu_t *menu)
             }
             
             V_DrawPatch(item_x, item_y, &vbscreen,
-               skulls[(menutime / BLINK_TIME) % 2]);
+               W_CacheLumpNum(skulls[(menutime / BLINK_TIME) % 2], PU_CACHE));
          }
          else
          {
             // haleyjd 02/04/06: draw small pointers
 
             // draw left pointer
-            V_DrawPatch(smallptr_coords[0][0], smallptr_coords[0][1],
-                        &vbscreen, smallptrs[smallptr_idx]);
+            V_DrawPatch(smallptr_coords[0][0], smallptr_coords[0][1], &vbscreen,
+                        W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE));
 
             // draw right pointer
-            V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1],
-                        &vbscreen, smallptrs[smallptr_idx]);
+            V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &vbscreen, 
+                        W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE));
          }
       }
       
@@ -696,8 +709,8 @@ void MN_Init(void)
    char *cursorPatch2 = gameModeInfo->menuCursor->patch2;
    int i;
 
-   skulls[0] = W_CacheLumpName(cursorPatch1, PU_STATIC);
-   skulls[1] = W_CacheLumpName(cursorPatch2, PU_STATIC);
+   skulls[0] = W_GetNumForName(cursorPatch1);
+   skulls[1] = W_GetNumForName(cursorPatch2);
 
    // haleyjd 02/04/06: load small pointer
    for(i = 0; i < NUMSMALLPTRS; ++i)
@@ -706,21 +719,16 @@ void MN_Init(void)
 
       psnprintf(name, 9, "EEMNPTR%d", i);
 
-      smallptrs[i] = W_CacheLumpName(name, PU_STATIC);
+      smallptrs[i] = W_GetNumForName(name);
    }
 
    // get width and height from first patch
-   smallptr_dims[0] = SHORT(smallptrs[0]->width);
-   smallptr_dims[1] = SHORT(smallptrs[0]->height);
-
-   
-   // load slider gfx
-   
-   slider_gfx[slider_left]   = W_CacheLumpName("M_SLIDEL", PU_STATIC);
-   slider_gfx[slider_right]  = W_CacheLumpName("M_SLIDER", PU_STATIC);
-   slider_gfx[slider_mid]    = W_CacheLumpName("M_SLIDEM", PU_STATIC);
-   slider_gfx[slider_slider] = W_CacheLumpName("M_SLIDEO", PU_STATIC);
-   
+   {
+      patch_t *ptr0 = W_CacheLumpNum(smallptrs[0], PU_CACHE);
+      smallptr_dims[0] = SHORT(ptr0->width);
+      smallptr_dims[1] = SHORT(ptr0->height);
+   }
+      
    quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
 
    // haleyjd: init heretic stuff if appropriate

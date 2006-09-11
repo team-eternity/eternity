@@ -430,11 +430,13 @@ static void R_DrawFuzzColumn(void)
    // .. and high.
    if(dc_yh == viewheight - 1) 
       dc_yh = viewheight - 2; 
-   
-   // Zero length.
-   if((dc_yh - dc_yl) < 0) 
-      return; 
-    
+
+   count = dc_yh - dc_yl; 
+
+    // Zero length.
+    if(count < 0) 
+	return; 
+       
 #ifdef RANGECHECK 
    // haleyjd: these should apparently be adjusted for hires
    // SoM: DONE
@@ -450,7 +452,8 @@ static void R_DrawFuzzColumn(void)
    
    // Looks familiar.
    fracstep = dc_iscale; 
-   frac = dc_texturemid + (dc_yl-centery)*fracstep; 
+   frac = dc_texturemid +
+      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
    
    // Looks like an attempt at dithering,
    // using the colormap #6 (of 0-31, a bit brighter than average).
@@ -501,8 +504,8 @@ static void R_DrawTRColumn(void)
    fixed_t  frac;
    fixed_t  fracstep;     
    
-   count = dc_yh - dc_yl; 
-   if(count < 0) 
+   count = dc_yh - dc_yl + 1; 
+   if(count <= 0) 
       return; 
                                  
 #ifdef RANGECHECK 
@@ -1158,22 +1161,23 @@ void R_InitBuffer(int width, int height)
 { 
    int i; 
    int st_height;
+   int tviewwidth = viewwidth << detailshift;
    
    linesize = v_width;    // killough 11/98
    
    // Handle resize,
    //  e.g. smaller view windows
    //  with border and/or status bar.
-   viewwindowx = (v_width-viewwidth) >> 1;
+   viewwindowx = (v_width-tviewwidth) >> 1;
    scaledwindowx = (SCREENWIDTH - width) >> 1;
    // Column offset. For windows.
-   for (i = viewwidth ; i--; )   // killough 11/98
+   for (i = tviewwidth ; i--; )   // killough 11/98
       columnofs[i] = viewwindowx + i;
    
    // Same with base row offset.
    st_height = gameModeInfo->StatusBar->height;
    
-   if(viewwidth == v_width)
+   if(tviewwidth == v_width)
       viewwindowy = scaledwindowy = 0;
    else
    {

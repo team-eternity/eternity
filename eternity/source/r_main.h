@@ -120,7 +120,7 @@ void R_SectorColormap(sector_t *s);
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_Drawer.
                                 // sf: G_Drawer???
 void R_Init(void);                           // Called by startup code.
-void R_SetViewSize(int blocks);              // Called by M_Responder.
+void R_SetViewSize(int blocks, int detail);  // Called by M_Responder.
 
 void R_InitLightTables(void);                // killough 8/9/98
 
@@ -133,12 +133,19 @@ angle_t R_WadToAngle(int wadangle);
 
 extern int viewdir;
 extern int zoom;
+extern int detailshift;
+extern int c_detailshift; // cvar for detail mode
 
 // haleyjd 09/04/06
 #define NUMCOLUMNENGINES 2
+#define NUMSPANENGINES 3
 extern int r_column_engine_num;
+extern int r_span_engine_num;
 extern columndrawer_t *r_column_engine;
+extern spandrawer_t *r_span_engine;
+
 void R_SetColumnEngine(void);
+void R_SetSpanEngine(void);
 
 #endif
 

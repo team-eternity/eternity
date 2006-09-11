@@ -38,6 +38,7 @@ static const char rcsid[] = "$Id: i_video.c,v 1.12 1998/05/03 22:40:35 killough 
 #include "../c_io.h"
 #include "../c_runcmd.h"
 #include "../d_main.h"
+#include "../f_wipe.h"
 #include "../i_video.h"
 #include "../m_argv.h"
 #include "../m_bbox.h"
@@ -860,6 +861,8 @@ static void I_ResetScreen(void)
       IN_DrawBackground();
       V_CopyRect(0, 0, 1, SCREENWIDTH, SCREENHEIGHT, 0, 0, 0);
    }
+
+   Wipe_ScreenReset(); // haleyjd: reset wipe engine
    
    Z_CheckHeap();
 }

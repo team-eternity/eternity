@@ -41,6 +41,7 @@ static const char rcsid[] = "$Id: r_main.c,v 1.13 1998/05/07 00:47:52 killough E
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_drawq.h"
+#include "r_drawl.h"
 #include "m_bbox.h"
 #include "r_sky.h"
 #include "s_sound.h"
@@ -78,6 +79,8 @@ extern lighttable_t **walllights;
 boolean  showpsprites=1; //sf
 camera_t *viewcamera;
 int zoom = 1;   // sf: fov/zooming
+int detailshift; // haleyjd 09/10/06: low detail mode restoration
+int c_detailshift;
 
 extern int screenSize;
 
@@ -131,9 +134,41 @@ static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
    &r_quad_drawer,   // quad cache engine
 };
 
+//
+// R_SetColumnEngine
+//
+// Sets r_column_engine to the appropriate set of column drawers.
+//
 void R_SetColumnEngine(void)
 {
-   r_column_engine = r_column_engines[r_column_engine_num];
+   if(detailshift == 0)
+      r_column_engine = r_column_engines[r_column_engine_num];
+   else
+      r_column_engine = &r_lowdetail_drawer;
+}
+
+// haleyjd 09/10/06: span drawing engines
+spandrawer_t *r_span_engine;
+int r_span_engine_num;
+
+static spandrawer_t *r_span_engines[NUMSPANENGINES] =
+{
+   &r_spandrawer,    // normal engine
+   &r_lpspandrawer,  // low-precision optimized
+   &r_olpspandrawer, // old low-precision (unoptimized)
+};
+
+//
+// R_SetSpanEngine
+//
+// Sets r_span_engine to the appropriate set of span drawers.
+//
+void R_SetSpanEngine(void)
+{
+   if(detailshift == 0)
+      r_span_engine = r_span_engines[r_span_engine_num];
+   else
+      r_span_engine = &r_lowspandrawer;
 }
 
 //
@@ -239,6 +274,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 // rw_distance must be calculated first.
 //
 // killough 5/2/98: reformatted, cleaned up
+// haleyjd 09/10/06: low detail mode restoration
 //
 fixed_t R_ScaleFromGlobalAngle(angle_t visangle)
 {
@@ -250,7 +286,7 @@ fixed_t R_ScaleFromGlobalAngle(angle_t visangle)
    anglea = ANG90 + (visangle-viewangle);
    angleb = ANG90 + (visangle-rw_normalangle);
    den = FixedMul(rw_distance, finesine[anglea>>ANGLETOFINESHIFT]);
-   num = FixedMul(projection, finesine[angleb>>ANGLETOFINESHIFT]);
+   num = FixedMul(projection, finesine[angleb>>ANGLETOFINESHIFT]) << detailshift;
    
    return den > num>>16 ? (num = FixedDiv(num, den)) > 64*FRACUNIT ?
       64*FRACUNIT : num < 256 ? 256 : num : 64*FRACUNIT;
@@ -274,7 +310,8 @@ static void R_InitTextureMapping (void)
    // haleyjd 04/03/05: calculate and store focallen_x, focallen_y
    focal_tan  = finetangent[FINEANGLES / 4 + fov / 2];
    focallen_x = FixedDiv(centerxfrac*zoom, focal_tan);
-   focallen_y = FixedDiv(FixedMul(centerxfrac*zoom, yaspectmul), focal_tan);
+   focallen_y = 
+      FixedDiv(FixedMul((centerxfrac<<detailshift)*zoom, yaspectmul), focal_tan);
         
    for(i = 0; i < FINEANGLES/2; ++i)
    {
@@ -358,24 +395,27 @@ void R_InitLightTables (void)
    }
 }
 
+boolean setsizeneeded;
+int     setblocks;
+int     setdetail; // haleyjd 09/10/06: low detail mode restoration
+
 //
 // R_SetViewSize
+//
 // Do not really change anything here,
 //  because it might be in the middle of a refresh.
 // The change will take effect next refresh.
 //
-
-boolean setsizeneeded;
-int     setblocks;
-
-void R_SetViewSize(int blocks)
+void R_SetViewSize(int blocks, int detail)
 {
    setsizeneeded = true;
    setblocks = blocks;
+   setdetail = detail; // haleyjd 09/10/06
 }
 
-
+//
 // R_SetupViewScaling
+//
 void R_SetupViewScaling(void)
 {
    int i;
@@ -403,22 +443,22 @@ void R_SetupViewScaling(void)
    {
       scaledviewwidth  = SCREENWIDTH;
       scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth  = v_width;
+      viewwidth  = v_width >> detailshift;                // haleyjd 09/10/06
       viewheight = v_height;
    }
    else
    {
       scaledviewwidth  = setblocks * 32;
       scaledviewheight = (setblocks * 168 / 10) & ~7;     // killough 11/98
-      viewwidth  = realxarray[scaledviewwidth];
+      viewwidth  = realxarray[scaledviewwidth] >> detailshift; // haleyjd 09/10/06
       viewheight = realyarray[scaledviewheight];
    }
 
-   centerx = viewwidth/2;
-   centery = viewheight/2;
-   centerxfrac = centerx<<FRACBITS;
-   centeryfrac = centery<<FRACBITS;
-   projection = centerxfrac * zoom;      // sf: zooming
+   centerx     = viewwidth  / 2;
+   centery     = viewheight / 2;
+   centerxfrac = centerx << FRACBITS;
+   centeryfrac = centery << FRACBITS;
+   projection  = centerxfrac * zoom;      // sf: zooming
 
    // haleyjd 04/03/05: Renamed yprojection to yaspectmul;
    // this matches zdoom and is more descriptive. 
@@ -437,6 +477,9 @@ void R_ExecuteSetViewSize (void)
    int i;
 
    setsizeneeded = false;
+
+   // haleyjd 09/10/06: low detail mode restoration
+   detailshift = setdetail;
    
    R_SetupViewScaling();
    
@@ -458,7 +501,9 @@ void R_ExecuteSetViewSize (void)
    {
       fixed_t dy = D_abs(((i-viewheight)<<FRACBITS)+FRACUNIT/2);
       // sf: zooming
-      origyslope[i] = FixedMul(yaspectmul, FixedDiv(viewwidth*zoom*(FRACUNIT/2), dy));
+      // haleyjd 09/10/06: detailshift
+      origyslope[i] = FixedMul(yaspectmul << detailshift, 
+                               FixedDiv(viewwidth*zoom*(FRACUNIT/2), dy));
    }
 
    yslope = origyslope + (viewheight/2);
@@ -500,7 +545,7 @@ void R_ExecuteSetViewSize (void)
 void R_Init(void)
 {
    R_InitData();
-   R_SetViewSize(screenSize+3);
+   R_SetViewSize(screenSize+3, c_detailshift);
    R_InitPlanes();
    R_InitLightTables();
    R_InitTranslationTables();
@@ -542,7 +587,9 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    }
 
    // haleyjd 09/04/06: set or change column drawing engine
+   // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
+   R_SetSpanEngine();
    
    viewplayer = player;
    mobj = player->mo;
@@ -779,6 +826,8 @@ void R_ResetTrans(void)
 static char *handedstr[] = { "right", "left" };
 static char *ptranstr[]  = { "none", "smooth", "general" };
 static char *coleng[]    = { "normal", "quad" };
+static char *spaneng[]   = { "highprecision", "lowprecision", "old" };
+static char *detailstr[] = { "high", "low" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
 VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
@@ -789,13 +838,17 @@ VARIABLE_BOOLEAN(showpsprites, NULL,                yesno);
 VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
 VARIABLE_BOOLEAN(r_swirl, NULL,                     onoff);
 VARIABLE_BOOLEAN(general_translucency, NULL,        onoff);
-VARIABLE_INT(tran_filter_pct, NULL,             0, 100, NULL);
 VARIABLE_BOOLEAN(autodetect_hom, NULL,              yesno);
-VARIABLE_INT(screenSize, NULL,                  0, 8, NULL);
-VARIABLE_INT(zoom, NULL,                        0, 8192, NULL);
-VARIABLE_INT(usegamma, NULL,                    0, 4, NULL);
-VARIABLE_INT(particle_trans, NULL,              0, 2, ptranstr);
-VARIABLE_INT(r_column_engine_num, NULL,         0, NUMCOLUMNENGINES - 1, coleng);
+VARIABLE_BOOLEAN(c_detailshift,       NULL,         detailstr);
+
+VARIABLE_INT(tran_filter_pct, NULL,     0, 100, NULL);
+VARIABLE_INT(screenSize, NULL,          0, 8, NULL);
+VARIABLE_INT(zoom, NULL,                0, 8192, NULL);
+VARIABLE_INT(usegamma, NULL,            0, 4, NULL);
+VARIABLE_INT(particle_trans, NULL,      0, 2, ptranstr);
+VARIABLE_INT(r_column_engine_num, NULL, 0, NUMCOLUMNENGINES - 1, coleng);
+VARIABLE_INT(r_span_engine_num,   NULL, 0, NUMSPANENGINES - 1,  spaneng);
+
 
 CONSOLE_VARIABLE(gamma, usegamma, 0)
 {
@@ -865,7 +918,7 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
    {
       hide_menu = 20;             // hide the menu for a few tics
       
-      R_SetViewSize(screenSize + 3);
+      R_SetViewSize(screenSize + 3, detailshift);
 
       // haleyjd 10/19/03: reimplement proper hud behavior
       switch(screenSize)
@@ -884,6 +937,14 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
 CONSOLE_VARIABLE(r_ptcltrans, particle_trans, 0) {}
 
 CONSOLE_VARIABLE(r_columnengine, r_column_engine_num, 0) {}
+CONSOLE_VARIABLE(r_spanengine,   r_span_engine_num,   0) {}
+
+CONSOLE_VARIABLE(r_detail, c_detailshift, 0)
+{
+   R_SetViewSize(screenSize + 3, c_detailshift);
+   player_printf(&players[consoleplayer], 
+                 "%s detail", detailstr[c_detailshift]);
+}
 
 CONSOLE_COMMAND(p_dumphubs, 0)
 {
@@ -909,6 +970,8 @@ void R_AddCommands(void)
    C_AddCommand(gamma);
    C_AddCommand(r_ptcltrans);
    C_AddCommand(r_columnengine);
+   C_AddCommand(r_spanengine);
+   C_AddCommand(r_detail);
 
    C_AddCommand(p_dumphubs);
 }

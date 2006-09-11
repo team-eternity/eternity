@@ -46,7 +46,7 @@ typedef struct columndrawer_s
    void (*DrawFlexColumn)(void);   // flex translucent
    void (*DrawFlexTRColumn)(void); // flex translucent/translated
    void (*DrawAddColumn)(void);    // additive flextran
-   void (*DrawAddTRColumn)(void);   // additive flextran/translated
+   void (*DrawAddTRColumn)(void);  // additive flextran/translated
 
    void (*ResetBuffer)(void);      // reset function (may be null)
    
@@ -69,18 +69,6 @@ extern int      linesize;        // killough 11/98
 // first pixel in a column
 extern byte     *dc_source;         
 
-// The span blitting interface.
-// Hook in assembler or system specific BLT here.
-
-void R_DrawColumn(void);
-void R_DrawTLColumn(void);      // drawing translucent textures // phares
-void R_DrawFuzzColumn(void);    // The Spectre/Invisibility effect.
-
-// Draw with color translation tables, for player sprite rendering,
-//  Green/Red/Blue/Indigo shirts.
-
-void R_DrawTranslatedColumn(void);
-
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h);
 
 extern lighttable_t *ds_colormap;
@@ -100,14 +88,25 @@ extern byte *dc_translation;
 
 extern fixed_t dc_translevel; // haleyjd: zdoom style trans level
 
-// Span blitting for rows, floor/ceiling. No Spectre effect needed.
-// BIG FLATS
-void R_DrawSpan_64(void);
-void R_DrawSpan_128(void);
-void R_DrawSpan_256(void);
-void R_DrawSpan_512(void);
+//
+// spandrawer_t
+//
+// haleyjd 09/04/06: This structure is used to allow the game engine to use
+// multiple sets of span drawing functions (ie, low detail, low precision,
+// high precision, etc.)
+//
+typedef struct spandrawer_s
+{
+   void (*DrawSpan64) (void);
+   void (*DrawSpan128)(void);
+   void (*DrawSpan256)(void);
+   void (*DrawSpan512)(void);
+} spandrawer_t;
 
-void R_DrawTLSpan(void);
+extern spandrawer_t r_olpspandrawer; // old low-precision
+extern spandrawer_t r_lpspandrawer;  // low-precision
+extern spandrawer_t r_spandrawer;    // normal
+extern spandrawer_t r_lowspandrawer; // low-detail
 
 void R_InitBuffer(int width, int height);
 
@@ -119,14 +118,6 @@ void R_FillBackScreen(void);
 
 // If the view size is not full screen, draws a border around it.
 void R_DrawViewBorder(void);
-
-void R_DrawTLColumn(void);    // drawing translucent textures     // phares
-void R_DrawTLTlatedColumn(void); // haleyjd 02/08/05: need this too
-
-void R_DrawFlexTLColumn(void);     // haleyjd: zdoom style trans.
-void R_DrawFlexTlatedColumn(void); // haleyjd
-void R_DrawAddColumn(void);
-void R_DrawAddTlatedColumn(void);
 
 extern byte *tranmap;         // translucency filter maps 256x256  // phares 
 extern byte *main_tranmap;    // killough 4/11/98
