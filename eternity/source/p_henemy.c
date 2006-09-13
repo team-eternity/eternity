@@ -720,6 +720,7 @@ void P_BossTeleport(bossteleport_t *bt)
 //
 static int P_SorcTeleportProb(mobj_t *actor)
 {
+   int chance;
    float pct;
 
    if(actor->info->spawnhealth == 0)
@@ -728,23 +729,13 @@ static int P_SorcTeleportProb(mobj_t *actor)
    pct = (float)(actor->health) / (float)(actor->info->spawnhealth);
 
    if(pct == 1.0f)
-   {
       return 0;
-   }
    else if(pct > 0.499f)
-   {
-      int chance = (int)(128.0f * (1.0f - pct));
-
-      return chance >= 16 ? chance : 16;
-   }
+      return (chance = (int)(128.0f * (1.0f - pct))) >= 16 ? chance : 16;
    else if(pct > 0.125f)
-   {
       return (int)(128.0f * (1.0f - pct)) + 40;
-   }
    else
-   {
       return 192;
-   }
 }
 
 void A_Srcr2Decide(mobj_t *actor)
@@ -1037,7 +1028,7 @@ void A_PodPain(mobj_t *actor)
    
    count = (chance > 240) ? 2 : 1;
    
-   for(i = 0; i < count; i++)
+   for(i = 0; i < count; ++i)
    {
       goo = P_SpawnMobj(actor->x, actor->y,
                         actor->z + 48*FRACUNIT, gooType);
