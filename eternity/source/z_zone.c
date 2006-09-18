@@ -46,7 +46,6 @@ static const char rcsid[] = "$Id: z_zone.c,v 1.13 1998/05/12 06:11:55 killough E
 // statistics, and to enable extra debugging features
 //#define INSTRUMENTED
 
-
 // Uncomment this to exhaustively run memory checks
 // while the game is running (this is EXTREMELY slow).
 // Only useful if INSTRUMENTED is also defined.
@@ -369,7 +368,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 #endif
 
    if(!size)
-      return user ? *user = NULL : NULL;           // malloc(0) returns NULL
+      return user ? *user = NULL : NULL;          // malloc(0) returns NULL
 
    size = (size+CHUNK_SIZE-1) & ~(CHUNK_SIZE-1);  // round to chunk size
    
@@ -487,7 +486,7 @@ allocated:
    virtual_memory += size + HEADER_SIZE;
 #endif
    /* cph - the next line was lost in the #ifdef above, and also added an
-   *  extra HEADER_SIZE to block->size, which was incorrect */
+    *  extra HEADER_SIZE to block->size, which was incorrect */
    block->size = size;
    goto allocated;
 }
@@ -751,6 +750,111 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    }
    return p;
 }
+
+#if 0
+void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
+                  const char *file, int line)
+{
+   memblock_t *block, *next = NULL;
+   size_t oldsize = 0;
+
+   // if new size is 0, there's not a lot we can do
+   if(n == 0)
+      goto oldrealloc;
+
+   if(ptr)
+   {
+      block = (memblock_t *)((char *)ptr - HEADER_SIZE);
+
+#ifdef ZONEIDCHECK
+      if(block->id != ZONEID)
+         I_Error("Z_Realloc: block missing ZONEID"
+                 "\nSource: %s:%d"
+         
+#ifdef INSTRUMENTED
+                 "\nSource of malloc: %s:%d"
+                 , file, line, block->file, block->line
+#else
+                 , file, line
+#endif
+                 );
+#endif
+
+      // if a vm block, we don't monkey around.
+      if(block->vm)
+         goto oldrealloc;
+
+      next    = block->next;
+      oldsize = block->size;
+   }
+
+   // oldsize less than new size?
+   if(oldsize < n)
+   {
+      // if next block exists, is not virtual, is free, and has a
+      // size that together with this block is greater than the requested
+      // allocation size, we can merge and split.
+      if(next && next != zone && next->tag == PU_FREE &&
+         oldsize + next->size >= n )
+      {
+      }
+      else
+      {
+         // we must allocate a new block, copy the info, and free the current
+         // (this is what the old realloc always did)
+oldrealloc:
+         void *p = (Z_Malloc)(n, tag, user, file, line);
+         if(ptr)
+         {
+            if(p)
+               memcpy(p, ptr, n <= block->size ? n : block->size);
+            (Z_Free)(ptr, file, line);
+            if(user)
+               *user = p;
+         }
+         return p;
+      }
+   }
+   else if(oldsize > n) // oldsize greater than new size?
+   {
+      // if the difference is greater than or equal to the minimum block split
+      // size, we should split off a new block, possibly merging it with the
+      // next block
+      size_t extra = oldsize - n;
+
+      if(extra >= MIN_BLOCK_SPLIT + HEADER_SIZE)
+      {
+         memblock_t *newb = 
+            (memblock_t *)((char *) block + HEADER_SIZE + size);
+         
+         (newb->next = block->next)->prev = newb;
+         (newb->prev = block)->next = newb;          // Split up block
+         block->size = n;
+         newb->size = extra - HEADER_SIZE;
+         newb->tag = PU_FREE;
+         newb->vm = 0;
+
+         // merge with next block?
+         if(next && next->tag == PU_FREE && next != zone)
+         {
+            if(rover == next) // Move back rover if it points at next block
+               rover = newb;
+            (newb->next = next->next)->prev = newb;
+            newb->size += next->size + HEADER_SIZE;
+            
+#ifdef INSTRUMENTED
+            inactive_memory -= HEADER_SIZE;
+            free_memory += HEADER_SIZE;
+#endif
+         }
+      }
+      else
+         return ptr; // size is close enough already, do nothing
+   }
+   else // size is equal, do nothing
+      return ptr;
+}
+#endif
 
 void *(Z_Calloc)(size_t n1, size_t n2, int tag, void **user,
                  const char *file, int line)
