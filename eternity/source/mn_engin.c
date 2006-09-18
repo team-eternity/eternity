@@ -1503,7 +1503,7 @@ static void MN_BoxWidgetDrawer(void)
 
          // draw small pointer
          MN_DrawSmallPtr(x - (smallptr_dims[0] + 1), 
-                         y + ((height - smallptr_dims[1])>>1));
+                         y + ((height - smallptr_dims[1]) >> 1));
       }
 
       MN_WriteTextColoured(curname, color, x, y);

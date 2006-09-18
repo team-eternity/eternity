@@ -101,18 +101,15 @@ fixed_t FloatBobDiffs[64] =
 
 //
 // P_SetMobjState
+//
 // Returns true if the mobj is still present.
 //
-
-boolean P_SetMobjState(mobj_t* mobj,statenum_t state)
+boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 {
-   state_t*  st;
+   state_t *st;
 
    // haleyjd 07/05/03: adjusted for EDF
    // killough 4/9/98: remember states seen, to detect cycles:
-   //static statenum_t seenstate_tab[NUMSTATES]; // fast transition table      
-   //statenum_t *seenstate = seenstate_tab;      // pointer to table
-
    static statenum_t *seenstate_tab;           // fast transition table
    statenum_t *seenstate;                      // pointer to table
 
@@ -120,13 +117,11 @@ boolean P_SetMobjState(mobj_t* mobj,statenum_t state)
    statenum_t i = state;                       // initial state
    boolean ret = true;                         // return value
 
-   //statenum_t tempstate[NUMSTATES];            // for use with recursion
-
    // EDF FIXME: may be too slow, is there another solution?
    // for use with recursion
-   statenum_t *tempstate = malloc(sizeof(statenum_t)*NUMSTATES);
+   statenum_t *tempstate = NULL;
 
-   // EDF FIXME: might should to move to an initialization function
+   // EDF FIXME: might should move to an initialization function
    if(!seenstate_tab)
    {
       seenstate_tab = Z_Malloc(sizeof(statenum_t)*NUMSTATES,PU_STATIC,NULL);
@@ -134,13 +129,12 @@ boolean P_SetMobjState(mobj_t* mobj,statenum_t state)
    }
    seenstate = seenstate_tab;
 
-   // haleyjd: this doesn't work with dynamically allocated tempstate
-   //if(recursion++)                             // if recursion detected,
-   //   memset(seenstate=tempstate,0,sizeof tempstate); // clear state table
-
    // if recursion detected, clear state table
    if(recursion++)
+   {
+      tempstate = malloc(sizeof(statenum_t)*NUMSTATES);
       memset(seenstate=tempstate, 0, sizeof(statenum_t)*NUMSTATES);
+   }
    
    do
    {
@@ -187,7 +181,8 @@ boolean P_SetMobjState(mobj_t* mobj,statenum_t state)
    }
 
    // haleyjd: free temporary state table (see notes above)
-   free(tempstate);
+   if(tempstate)
+      free(tempstate);
    
    return ret;
 }

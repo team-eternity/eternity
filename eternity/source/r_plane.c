@@ -45,6 +45,7 @@ rcsid[] = "$Id: r_plane.c,v 1.8 1998/05/03 23:09:53 killough Exp $";
 #include "doomstat.h"
 
 #include "c_io.h"
+#include "d_gi.h"
 #include "w_wad.h"
 #include "r_main.h"
 #include "r_draw.h"
@@ -236,12 +237,11 @@ static void R_MapPlane(int y, int x1, int x2)
   {
      if(ds_y >=0 && ds_y < viewheight)
      {
-        // haleyjd FIXME: should use gamemode black, not 0
         // SoM: ANYRES
         if(ds_x1 >= 0 && ds_x1<=viewwidth)
-           *(screens[0]+y*v_width+x1) = 0;
+           *(screens[0]+y*v_width+x1) = gameModeInfo->blackIndex;
         if(ds_x2 >= 0 && ds_x2<=viewwidth)
-           *(screens[0]+y*v_width+x2) = 0;
+           *(screens[0]+y*v_width+x2) = gameModeInfo->blackIndex;
      }
   }
 }
@@ -744,8 +744,12 @@ static void do_draw_plane(visplane_t *pl)
          if(flattranslation[pl->picnum] == -1)
             flattranslation[pl->picnum] = pl->picnum;
 
+         // haleyjd 09/16/06: this was being allocated at PU_STATIC and changed
+         // to PU_CACHE below, generating a lot of unnecessary allocator noise.
+         // As long as no other memory ops are needed between here and the end
+         // of this function (including called functions), this can be PU_CACHE.
          ds_source = 
-            W_CacheLumpNum(firstflat + flattranslation[pl->picnum], PU_STATIC);
+            W_CacheLumpNum(firstflat + flattranslation[pl->picnum], PU_CACHE);
       }
 
       // SoM: support for flats of different sizes!!
@@ -800,27 +804,24 @@ static void do_draw_plane(visplane_t *pl)
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);
-
-      if(!swirling)
-         Z_ChangeTag(ds_source, PU_CACHE);
    }
 }
 
 //
 // R_DrawPlanes
-// At the end of each frame.
 //
-
+// Called at the end of each frame.
+//
 void R_DrawPlanes(void)
 {
    visplane_t *pl;
    int i;
    
    for(i = 0; i < MAXVISPLANES; ++i)
+   {
       for(pl = visplanes[i]; pl; pl = pl->next)
-      {
          do_draw_plane(pl);
-      }
+   }
 }
 
 //----------------------------------------------------------------------------

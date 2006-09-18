@@ -82,7 +82,7 @@ char *R_DistortedFlat(int flatnum)
    
    // SoM: different flat sizes?
    if(flatsize[flatnum] != 4096)
-      return W_CacheLumpNum(firstflat + flatnum, PU_STATIC);
+      return W_CacheLumpNum(firstflat + flatnum, PU_CACHE);
 
    // built this tic?
    if(gametic != swirltic)
@@ -118,13 +118,10 @@ char *R_DistortedFlat(int flatnum)
       swirltic = gametic;
    }
    
-   normalflat = W_CacheLumpNum(firstflat + flatnum, PU_STATIC);
+   normalflat = W_CacheLumpNum(firstflat + flatnum, PU_CACHE);
 
    for(i = 0; i < 4096; ++i)
       distortedflat[i] = normalflat[offset[i]];
-
-   // free the original
-   Z_ChangeTag(normalflat, PU_CACHE);
    
    return distortedflat;
 }

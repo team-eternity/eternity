@@ -2230,7 +2230,7 @@ menu_t menu_hud_pg3 =
    mn_hud_pages,
 };
 
-extern patch_t *crosshairs[CROSSHAIRS];
+extern int crosshairs[CROSSHAIRS];
 
 static void MN_HUDPg2Drawer(void)
 {
@@ -2244,8 +2244,8 @@ static void MN_HUDPg2Drawer(void)
    if(!(menu_hud_pg2.menuitems[3].flags & MENUITEM_POSINIT))
       return;
 
-   if(xhairnum >= 0)
-      patch = crosshairs[xhairnum];
+   if(xhairnum >= 0 && crosshairs[xhairnum] != -1)
+      patch = W_CacheLumpNum(crosshairs[xhairnum], PU_CACHE);
   
    // approximately center box on "crosshair" item in menu
    y = menu_hud_pg2.menuitems[3].y - 5;

@@ -243,54 +243,53 @@ void P_MovePlayer (player_t* player)
 
 void P_DeathThink(player_t* player)
 {
-  angle_t angle;
-  angle_t delta;
-
-  P_MovePsprites (player);
-
-  // fall to the ground
-
-  if (player->viewheight > 6*FRACUNIT)
-    player->viewheight -= FRACUNIT;
-
-  if (player->viewheight < 6*FRACUNIT)
-    player->viewheight = 6*FRACUNIT;
-
-  player->deltaviewheight = 0;
-  onground = (player->mo->z <= player->mo->floorz);
-  P_CalcHeight (player);
-
-  if (player->attacker && player->attacker != player->mo)
-    {
-      angle = R_PointToAngle2 (player->mo->x,
-			       player->mo->y,
-			       player->attacker->x,
-			       player->attacker->y);
+   angle_t angle;
+   angle_t delta;
+   
+   P_MovePsprites (player);
+   
+   // fall to the ground
+   
+   if(player->viewheight > 6*FRACUNIT)
+      player->viewheight -= FRACUNIT;
+   
+   if(player->viewheight < 6*FRACUNIT)
+      player->viewheight = 6*FRACUNIT;
+   
+   player->deltaviewheight = 0;
+   onground = (player->mo->z <= player->mo->floorz);
+   P_CalcHeight (player);
+   
+   if(player->attacker && player->attacker != player->mo)
+   {
+      angle = R_PointToAngle2(player->mo->x,
+                              player->mo->y,
+                              player->attacker->x,
+                              player->attacker->y);
 
       delta = angle - player->mo->angle;
-
+      
       if (delta < ANG5 || delta > (unsigned)-ANG5)
-	{
-	  // Looking at killer,
-	  //  so fade damage flash down.
-
-	  player->mo->angle = angle;
-
-	  if (player->damagecount)
-	    player->damagecount--;
-	}
+      {
+         // Looking at killer,
+         //  so fade damage flash down.
+         
+         player->mo->angle = angle;
+         
+         if (player->damagecount)
+            player->damagecount--;
+      }
       else 
-	if (delta < ANG180)
-	  player->mo->angle += ANG5;
-	else
-	  player->mo->angle -= ANG5;
-    }
-  else 
-    if (player->damagecount)
+         if (delta < ANG180)
+            player->mo->angle += ANG5;
+         else
+            player->mo->angle -= ANG5;
+   }
+   else if(player->damagecount)
       player->damagecount--;
-
-  if (player->cmd.buttons & BT_USE)
-    player->playerstate = PST_REBORN;
+      
+   if(player->cmd.buttons & BT_USE)
+      player->playerstate = PST_REBORN;
 }
 
 static void P_HereticCurrent(player_t *player)

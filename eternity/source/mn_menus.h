@@ -31,7 +31,7 @@ extern menu_t menu_newgame;
 
 extern int traditional_menu; // haleyjd
 
-extern boolean mn_classic_menus;
+extern int mn_classic_menus;
 
 #endif          /** MN_MENUS_H **/
 

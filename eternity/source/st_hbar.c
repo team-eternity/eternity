@@ -43,18 +43,7 @@
 //
 
 // cached patches
-static patch_t *barback;       // basic background
-static patch_t *ltfacetop;     // left face top
-static patch_t *rtfacetop;     // right face top
-static patch_t *chain;         // the chain itself
-static patch_t *lifegem;       // lifegem patch for chain
-static patch_t *ltface;        // replacement part for left face
-static patch_t *rtface;        // replacement part for right face
-static patch_t *dmbar;         // deathmatch status bar
-static patch_t *lifebar;       // normal status bar
-static patch_t *statbar;       // points to one of the two above
 static patch_t *invnums[10];   // inventory numbers
-static patch_t *invneg;        // minus sign for inventory numbers
 
 // current state variables
 static int chainhealth;        // current position of the gem
@@ -70,16 +59,6 @@ static void ST_HticInit(void)
 {
    int i;
 
-   barback   = W_CacheLumpName("BARBACK",  PU_STATIC);
-   ltfacetop = W_CacheLumpName("LTFCTOP",  PU_STATIC);
-   rtfacetop = W_CacheLumpName("RTFCTOP",  PU_STATIC);
-   chain     = W_CacheLumpName("CHAIN",    PU_STATIC);
-   ltface    = W_CacheLumpName("LTFACE",   PU_STATIC);
-   rtface    = W_CacheLumpName("RTFACE",   PU_STATIC);
-   
-   // TODO: fix life gem for multiplayer modes
-   lifegem   = W_CacheLumpName("LIFEGEM2", PU_STATIC);
-
    // load inventory numbers
    for(i = 0; i < 10; ++i)
    {
@@ -90,8 +69,6 @@ static void ST_HticInit(void)
 
       invnums[i] = W_CacheLumpName(lumpname, PU_STATIC);
    }
-   // load minus sign
-   invneg = W_CacheLumpName("NEGNUM", PU_STATIC);
 
    // haleyjd 10/09/05: load key graphics for HUD
    for(i = 0; i < NUMCARDS+3; ++i)  //jff 2/23/98 show both keys too
@@ -108,20 +85,6 @@ static void ST_HticInit(void)
 //
 static void ST_HticStart(void)
 {
-   // update the status bar patch for the appropriate game mode
-   switch(GameType)
-   {
-   case gt_dm:
-      if(!dmbar)
-         dmbar = W_CacheLumpName("STATBAR", PU_STATIC);
-      statbar = dmbar;
-      break;
-   default:
-      if(!lifebar)
-         lifebar = W_CacheLumpName("LIFEBAR", PU_STATIC);
-      statbar = lifebar;
-      break;
-   }
 }
 
 //
@@ -184,7 +147,8 @@ static void ST_drawInvNum(int num, int x, int y)
    {
       if(num < -9)
       {
-         V_DrawPatch(x - 26, y + 1, &vbscreen, W_CacheLumpName("LAME", PU_CACHE));
+         V_DrawPatch(x - 26, y + 1, &vbscreen, 
+                     W_CacheLumpName("LAME", PU_CACHE));
          return;
       }
          
@@ -202,7 +166,7 @@ static void ST_drawInvNum(int num, int x, int y)
    }
    
    if(neg)
-      V_DrawPatch(x - 18, y, &vbscreen, invneg);
+      V_DrawPatch(x - 18, y, &vbscreen, W_CacheLumpName("NEGNUM", PU_CACHE));
 }
 
 //
@@ -213,7 +177,7 @@ static void ST_drawInvNum(int num, int x, int y)
 static void ST_drawBackground(void)
 {
    // draw the background
-   V_DrawPatch(0, 158, &vbscreen, barback);
+   V_DrawPatch(0, 158, &vbscreen, W_CacheLumpName("BARBACK", PU_CACHE));
    
    // patch the face eyes with the GOD graphics if the player
    // is in god mode
@@ -224,8 +188,8 @@ static void ST_drawBackground(void)
    }
    
    // draw the tops of the faces
-   V_DrawPatch(0,   148, &vbscreen, ltfacetop);
-   V_DrawPatch(290, 148, &vbscreen, rtfacetop);
+   V_DrawPatch(0,   148, &vbscreen, W_CacheLumpName("LTFCTOP", PU_CACHE));
+   V_DrawPatch(290, 148, &vbscreen, W_CacheLumpName("RTFCTOP", PU_CACHE));
 }
 
 //
@@ -356,14 +320,17 @@ static void ST_drawLifeChain(void)
 
    // draw the chain -- links repeat every 17 pixels, so we
    // wrap the chain back to the starting position every 17
-   V_DrawPatch(2 + (chainpos%17), y, &vbscreen, chain);
+   V_DrawPatch(2 + (chainpos%17), y, &vbscreen, 
+               W_CacheLumpName("CHAIN", PU_CACHE));
    
-   // draw the gem (17 is the far left pos., 273 is max)
-   V_DrawPatch(17 + chainpos, y, &vbscreen, lifegem);
+   // draw the gem (17 is the far left pos., 273 is max)   
+   // TODO: fix life gem for multiplayer modes
+   V_DrawPatch(17 + chainpos, y, &vbscreen, 
+               W_CacheLumpName("LIFEGEM2", PU_CACHE));
    
    // draw face patches to cover over spare ends of chain
-   V_DrawPatch(0,   190, &vbscreen, ltface);
-   V_DrawPatch(276, 190, &vbscreen, rtface);
+   V_DrawPatch(0,   190, &vbscreen, W_CacheLumpName("LTFACE", PU_CACHE));
+   V_DrawPatch(276, 190, &vbscreen, W_CacheLumpName("RTFACE", PU_CACHE));
    
    // use the colormap to shadow the ends of the chain
    ST_chainShadow();
@@ -378,6 +345,18 @@ static void ST_drawLifeChain(void)
 static void ST_drawStatBar(void)
 {
    int temp;
+   patch_t *statbar;
+
+   // update the status bar patch for the appropriate game mode
+   switch(GameType)
+   {
+   case gt_dm:
+      statbar = W_CacheLumpName("STATBAR", PU_CACHE);
+      break;
+   default:
+      statbar = W_CacheLumpName("LIFEBAR", PU_CACHE);
+      break;
+   }
 
    V_DrawPatch(34, 160, &vbscreen, statbar);
 

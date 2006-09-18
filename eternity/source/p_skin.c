@@ -363,14 +363,13 @@ static void P_CacheFaces(skin_t *skin)
    if(skin->faces) 
       return; // already cached
    
-   if(!strcasecmp(skin->facename,"STF"))
+   if(!strcasecmp(skin->facename, "STF"))
    {
       skin->faces = default_faces;
    }
    else
    {
-      skin->faces =
-         Z_Malloc(ST_NUMFACES*sizeof(patch_t*),PU_STATIC,0);
+      skin->faces = Z_Malloc(ST_NUMFACES * sizeof(patch_t *), PU_STATIC, 0);
       ST_CacheFaces(skin->faces, skin->facename);
    }
 }

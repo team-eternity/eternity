@@ -663,11 +663,11 @@ void R_InitFlats(void)
    // clean up malloc-ing to use sizeof
    
    flattranslation =
-      Z_Malloc((numflats+1)*sizeof(*flattranslation), PU_STATIC, 0);
+      Z_Malloc((numflats+1) * sizeof(*flattranslation), PU_STATIC, 0);
 
    flatsize = Z_Malloc((numflats+1) * sizeof(*flatsize), PU_STATIC, 0);
    
-   for(i=0 ; i<numflats ; i++)
+   for(i = 0; i < numflats; ++i)
    {
       flattranslation[i] = i;
       flatsize[i] = W_LumpLength(firstflat + i);
@@ -703,10 +703,10 @@ void R_InitSpriteLumps(void)
       if(!(i&127))            // killough
          V_LoadingIncrease();
       
-      patch = W_CacheLumpNum(firstspritelump+i, PU_CACHE);
-      spritewidth[i] = SHORT(patch->width)<<FRACBITS;
-      spriteoffset[i] = SHORT(patch->leftoffset)<<FRACBITS;
-      spritetopoffset[i] = SHORT(patch->topoffset)<<FRACBITS;
+      patch = W_CacheLumpNum(firstspritelump + i, PU_CACHE);
+      spritewidth[i]     = SHORT(patch->width) << FRACBITS;
+      spriteoffset[i]    = SHORT(patch->leftoffset) << FRACBITS;
+      spritetopoffset[i] = SHORT(patch->topoffset) << FRACBITS;
    }
 }
 

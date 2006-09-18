@@ -88,7 +88,7 @@ void P_InitSwitchList(void)
 
    //jff 3/23/98 read the switch table from a predefined lump             
    alphSwitchList = 
-      (switchlist_t *)W_CacheLumpName("SWITCHES",PU_STATIC);
+      (switchlist_t *)W_CacheLumpName("SWITCHES", PU_STATIC);
 
    for(i=0;;i++)
    {
@@ -110,7 +110,7 @@ void P_InitSwitchList(void)
 
    numswitches = index/2;
    switchlist[index] = -1;
-   Z_ChangeTag(alphSwitchList,PU_CACHE); //jff 3/23/98 allow table to be freed
+   Z_ChangeTag(alphSwitchList, PU_CACHE); //jff 3/23/98 allow table to be freed
 }
 
 //

@@ -646,7 +646,7 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
 static hu_patchwidget_t crosshair_widget;
 
 // globals related to the crosshair
-patch_t *crosshairs[CROSSHAIRS];
+int crosshairs[CROSSHAIRS];
 char *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
 boolean crosshair_hilite; // haleyjd 06/07/05
@@ -666,7 +666,7 @@ static void HU_CrossHairTick(hu_widget_t *widget)
 
    // fast as possible: don't bother with this crap if the crosshair 
    // isn't going to be displayed anyway   
-   if(!crosshair->patch || !crosshairnum || !crosshair_hilite)
+   if(!crosshairnum || !crosshair_hilite || crosshairs[crosshairnum-1] == -1)
       return;
 
    // search for targets
@@ -692,12 +692,15 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
 {
    int drawx, drawy, h, w;
    hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
-   patch_t *patch = crosshair->patch;
    char *pal = crosshair->color;
+   patch_t *patch;
    
-   if(!patch || viewcamera || automapactive)
+   if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
+      viewcamera || automapactive)
       return;
-  
+
+   patch = W_CacheLumpNum(crosshairs[crosshairnum - 1], PU_CACHE);
+
    // where to draw??
 
    w = SHORT(patch->width);
@@ -731,8 +734,8 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
 void HU_InitCrossHair(void)
 {
    // haleyjd TODO: support user-added crosshairs
-   crosshairs[0] = W_CacheLumpName("CROSS1", PU_STATIC);
-   crosshairs[1] = W_CacheLumpName("CROSS2", PU_STATIC);
+   crosshairs[0] = W_CheckNumForName("CROSS1");
+   crosshairs[1] = W_CheckNumForName("CROSS2");
    
    notargetcolour = cr_red;
    targetcolour = cr_green;
@@ -740,7 +743,7 @@ void HU_InitCrossHair(void)
 
    // set up widget object
    crosshair_widget.color = notargetcolour;
-   crosshair_widget.patch = crosshairnum ? crosshairs[crosshairnum-1] : NULL;
+   crosshair_widget.patch = NULL; // determined dynamically
 
    // set up the object id
    strcpy(crosshair_widget.widget.name, "_HU_CrosshairWidget");
@@ -1645,15 +1648,7 @@ VARIABLE_BOOLEAN(crosshair_hilite,  NULL,               onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
-CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0)
-{
-   int a;
-   
-   a = atoi(c_argv[0]);
-   
-   crosshair_widget.patch = a ? crosshairs[a - 1] : NULL;
-   crosshairnum = a;
-}
+CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_showvpo, show_vpo, 0) {}
 CONSOLE_VARIABLE(hu_vpo_threshold, vpo_threshold, 0) {}
@@ -1807,7 +1802,11 @@ static cell AMX_NATIVE_CALL sm_setwidgetpatch(AMX *amx, cell *params)
    {
       pw = (hu_patchwidget_t *)widget;
 
-      pw->patch = W_CacheLumpName(patch, PU_STATIC);
+      // 08/16/06: bug fix -- copy patch name
+      strncpy(pw->patchname, patch, 9);
+
+      // pre-cache the patch graphic
+      pw->patch = W_CacheLumpName(patch, PU_CACHE);
    }
 
    free(name);

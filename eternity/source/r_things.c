@@ -1655,14 +1655,9 @@ void R_InitParticles(void)
       numParticles = atoi(myargv[i+1]);
    
    if(numParticles == 0) // assume default
-   {
-      //numParticles = 4000; haleyjd 09/07/05: experiment
-      numParticles = 2000;
-   }
+      numParticles = 4000;
    else if(numParticles < 100)
-   {
       numParticles = 100;
-   }
    
    Particles = Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL);
    R_ClearParticles();
