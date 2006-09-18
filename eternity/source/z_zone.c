@@ -751,6 +751,76 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    return p;
 }
 
+#if 0
+void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
+				  const char *file, int line)
+{
+   memblock_t *block, *other = NULL;
+   size_t curr_size = 0, size_orig = n;
+
+   // is ptr null or requested size 0? if so, go to "old" realloc
+   if(ptr == NULL || n == 0)
+      goto oldrealloc;
+
+   // get current size of block
+   block = (memblock_t *)((char *)ptr - HEADER_SIZE);
+
+   // TODO: zone id check
+
+   other = block->next; // save pointer to next block
+   curr_size = block->size;
+   if(block->vm) // vm block? go to old realloc (can't mess with it)
+      goto oldrealloc;
+
+   // round new size to CHUNK_SIZE
+   n = (n + CHUNK_SIZE - 1) & ~(CHUNK_SIZE - 1);
+   
+   if(n > curr_size) // is new allocation size larger than current?
+   {
+      // check to see if it can fit if we merge with the next block
+      if(other && other != zone && other->tag == PU_FREE &&
+         curr_size + other->size + HEADER_SIZE >= n)
+      {
+         // combine the blocks
+
+         // check to see if there's enough extra to warrant splitting off
+         // a new free block
+      }
+
+      // else, do old realloc (make new, copy old, free old)
+      goto oldrealloc;
+   }
+   else if(n < curr_size) // is new allocation size smaller than current?
+   {
+      // check to see if there's enough extra to warrant splitting off
+      // a new free block
+
+      // else, leave block the same size
+   }
+   
+   // new allocation size is same as current, do nothing
+   return ptr;
+
+   // oldrealloc: this is the code that the old Z_Realloc used all the time.
+   // It is still needed for cases such as initial allocation (ptr == NULL),
+   // changing the size of an allocation to zero (technically illegal)
+oldrealloc:
+   {
+      void *p = (Z_Malloc)(n, tag, user, file, line);
+      if(ptr)
+      {
+         memblock_t *block = (memblock_t *)((char *)ptr - HEADER_SIZE);
+         if(p)
+            memcpy(p, ptr, n <= block->size ? n : block->size);
+         (Z_Free)(ptr, file, line);
+         if(user) // in case Z_Free nullified same user
+            *user = p;
+      }
+      return p;
+   }
+}
+#endif
+
 void *(Z_Calloc)(size_t n1, size_t n2, int tag, void **user,
                  const char *file, int line)
 {
