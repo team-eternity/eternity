@@ -736,14 +736,22 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 #endif
 }
 
-void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
-                  const char *file, int line)
+//
+// Z_ReallocOld
+//
+// haleyjd 09/18/06: This is the original Z_Realloc routine. It is still called
+// from the new one below for several cases where this is the appropriate action
+// to be taken.
+//
+static void *Z_ReallocOld(void *ptr, size_t n, int tag, void **user,
+                          const char *file, int line)
 {
    void *p = (Z_Malloc)(n, tag, user, file, line);
    if(ptr)
    {
       memblock_t *block = (memblock_t *)((char *)ptr - HEADER_SIZE);
-      memcpy(p, ptr, n <= block->size ? n : block->size);
+      if(p) // haleyjd 09/18/06: allow to return NULL without crashing
+         memcpy(p, ptr, n <= block->size ? n : block->size);
       (Z_Free)(ptr, file, line);
       if(user) // in case Z_Free nullified same user
          *user=p;
@@ -751,75 +759,222 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    return p;
 }
 
-#if 0
+//
+// Z_Realloc
+//
+// haleyjd 09/18/06: Rewritten to be an actual realloc routine. The 
+// various cases are as follows:
+//
+// 1. If the block is NULL, is in virtual memory, or we're trying to set it to
+//    zero-byte size, we use Z_ReallocOld above.
+// 2. If the block is smaller than the new size, we need to expand it. If the
+//    next block on the zone heap is free, check to see if it together with the
+//    current block is large enough. If so, merge the blocks. Now test to make
+//    sure the internal fragmentation does not exceed the split limit. If it
+//    does, resplit the blocks at the new boundary. If the next block wasn't
+//    free, we have to call Z_ReallocOld to move the entire block elsewhere.
+// 3. If the block is larger than the new size, we can shrink it, but we only
+//    need to shrink it if the wasted space is larger than the split limit.
+//    If so, the block is split at its new boundary. If the next block on the
+//    zone heap is free, it is then necessary to merge the new free block with
+//    the next block on the heap. In the event the block is not shrunk, only the
+//    INSTRUMENTED data needs to be updated to reflect the new internal fragmen-
+//    tation.
+// 4. If the block is already the same size as "n", we don't need to do anything
+//    aside from adjusting the INSTRUMENTED block data for debugging purposes.
+//
 void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
-				  const char *file, int line)
+                  const char *file, int line)
 {
    memblock_t *block, *other = NULL;
    size_t curr_size = 0, size_orig = n;
 
    // is ptr null or requested size 0? if so, go to "old" realloc
    if(ptr == NULL || n == 0)
-      goto oldrealloc;
+      return Z_ReallocOld(ptr, n, tag, user, file, line);
 
    // get current size of block
    block = (memblock_t *)((char *)ptr - HEADER_SIZE);
 
-   // TODO: zone id check
+#ifdef ZONEIDCHECK
+   if(block->id != ZONEID)
+      I_Error("Z_Realloc: Tried to realloc a block without ZONEID"
+              "\nSource: %s:%d"
+      
+#ifdef INSTRUMENTED
+              "\nSource of malloc: %s:%d"
+              , file, line, block->file, block->line
+#else
+              , file, line
+#endif
+      );
+#endif
+
+   if(block->vm) // vm block? go to old realloc (can't mess with it)
+      return Z_ReallocOld(ptr, n, tag, user, file, line);
 
    other = block->next; // save pointer to next block
    curr_size = block->size;
-   if(block->vm) // vm block? go to old realloc (can't mess with it)
-      goto oldrealloc;
-
+   
    // round new size to CHUNK_SIZE
    n = (n + CHUNK_SIZE - 1) & ~(CHUNK_SIZE - 1);
    
    if(n > curr_size) // is new allocation size larger than current?
    {
+      size_t extra;
+
       // check to see if it can fit if we merge with the next block
       if(other && other != zone && other->tag == PU_FREE &&
          curr_size + other->size + HEADER_SIZE >= n)
       {
-         // combine the blocks
+         // merge the blocks
+         if(rover == other)
+            rover = block;
+         (block->next = other->next)->prev = block;
+         block->size += other->size + HEADER_SIZE;
+            
+#ifdef INSTRUMENTED
+         // lost a block...
+         inactive_memory -= HEADER_SIZE;
+         // lost a free block...
+         free_memory -= other->size;
+         // increased active or purgable
+         if(block->tag >= PU_PURGELEVEL)
+            purgable_memory += other->size + HEADER_SIZE;
+         else
+            active_memory += other->size + HEADER_SIZE;
+#endif
 
          // check to see if there's enough extra to warrant splitting off
          // a new free block
-      }
+         extra = block->size - n;
 
-      // else, do old realloc (make new, copy old, free old)
-      goto oldrealloc;
+         if(extra >= MIN_BLOCK_SPLIT + HEADER_SIZE)
+         {
+            memblock_t *newb =
+               (memblock_t *)((char *)block + HEADER_SIZE + n);
+
+            (newb->next = block->next)->prev = newb;
+            (newb->prev = block)->next = newb;
+            block->size = n;
+            newb->size = extra - HEADER_SIZE;
+            newb->tag = PU_FREE;
+            newb->vm = 0;
+
+            if(rover == block)
+               rover = newb;
+
+#ifdef INSTRUMENTED
+            // added a block...
+            inactive_memory += HEADER_SIZE;
+            // added a free block...
+            free_memory += newb->size;
+            // decreased active or purgable
+            if(block->tag >= PU_PURGELEVEL)
+               purgable_memory -= newb->size + HEADER_SIZE;
+            else
+               active_memory -= newb->size + HEADER_SIZE;
+#endif
+         }
+
+#ifdef INSTRUMENTED
+         // subtract old internal fragmentation and add new
+         inactive_memory -= block->extra;
+         inactive_memory += (block->extra = block->size - n);
+#endif
+      }
+      else // else, do old realloc (make new, copy old, free old)
+         return Z_ReallocOld(ptr, n, tag, user, file, line);
    }
    else if(n < curr_size) // is new allocation size smaller than current?
    {
       // check to see if there's enough extra to warrant splitting off
       // a new free block
+      size_t extra = curr_size - n;
 
+      if(extra >= MIN_BLOCK_SPLIT + HEADER_SIZE)
+      {
+         memblock_t *newb = 
+            (memblock_t *)((char *)block + HEADER_SIZE + n);
+         
+         (newb->next = block->next)->prev = newb;
+         (newb->prev = block)->next = newb;
+         block->size = n;
+         newb->size = extra - HEADER_SIZE;
+         newb->tag = PU_FREE;
+         newb->vm = 0;
+         
+#ifdef INSTRUMENTED
+         // added a block...
+         inactive_memory += HEADER_SIZE;
+         // added a free block...
+         free_memory += newb->size;
+         // decreased purgable or active
+         if(block->tag >= PU_PURGELEVEL)
+            purgable_memory -= newb->size + HEADER_SIZE;
+         else
+            active_memory -= newb->size + HEADER_SIZE;
+#endif
+
+         // may need to merge new block with next block
+         if(other && other->tag == PU_FREE && other != zone)
+         {
+            if(rover == other) // Move back rover if it points at next block
+               rover = newb;
+            (newb->next = other->next)->prev = newb;
+            newb->size += other->size + HEADER_SIZE;
+            
+#ifdef INSTRUMENTED
+            // deleted a block...
+            inactive_memory -= HEADER_SIZE;
+            // space between blocks is now free
+            free_memory += HEADER_SIZE;
+#endif
+         }
+      }
       // else, leave block the same size
+
+#ifdef INSTRUMENTED
+      // subtract old internal fragmentation and add new
+      inactive_memory -= block->extra;
+      inactive_memory += (block->extra = block->size - n);
+#endif
+   }
+   // else new allocation size is same as current, don't change it
+
+   // modify the block
+#ifdef INSTRUMENTED
+   block->file = file;
+   block->line = line;
+#endif
+
+   // reset ptr for consistency
+   ptr = (void *)((char *)block + HEADER_SIZE);
+
+   if(block->user != user)
+   {
+      if(block->user)           // nullify old user if any
+         *(block->user) = NULL;
+      block->user = user;       // set block's new user
+      if(user)                  // if non-null, set user to allocation 
+         *user = ptr;
    }
    
-   // new allocation size is same as current, do nothing
-   return ptr;
-
-   // oldrealloc: this is the code that the old Z_Realloc used all the time.
-   // It is still needed for cases such as initial allocation (ptr == NULL),
-   // changing the size of an allocation to zero (technically illegal)
-oldrealloc:
-   {
-      void *p = (Z_Malloc)(n, tag, user, file, line);
-      if(ptr)
-      {
-         memblock_t *block = (memblock_t *)((char *)ptr - HEADER_SIZE);
-         if(p)
-            memcpy(p, ptr, n <= block->size ? n : block->size);
-         (Z_Free)(ptr, file, line);
-         if(user) // in case Z_Free nullified same user
-            *user = p;
-      }
-      return p;
-   }
-}
+   // let Z_ChangeTag handle changing the tag
+   if(block->tag != tag)
+      (Z_ChangeTag)(ptr, tag, file, line);
+   
+#ifdef INSTRUMENTED
+   Z_PrintStats();           // print memory allocation stats
 #endif
+#ifdef ZONEFILE
+   Z_LogPrintf("* Z_Realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n", 
+               ptr, n, tag, user, file, line);
+#endif
+
+   return ptr;
+}
+
 
 void *(Z_Calloc)(size_t n1, size_t n2, int tag, void **user,
                  const char *file, int line)
