@@ -1541,6 +1541,13 @@ default_t defaults[] =
    },
 
    {
+      "mn_classic_menus",
+      &mn_classic_menus, NULL,
+      0, {0, 1}, dt_number, ss_none, wad_yes,
+      "1 to enable use of full classic menu emulation"
+   },
+
+   {
       "wad_directory",
       (int *)&wad_directory, NULL,
       (int) ".", {0}, dt_string, ss_none, wad_no,

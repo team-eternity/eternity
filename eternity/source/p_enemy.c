@@ -4197,12 +4197,27 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
    P_Whistle(plyr->mo, thingnum);
 }
 
+CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
+{
+   player_t *plyr = &players[consoleplayer];
+   fixed_t slope;
+   int damage = 10000;
+
+   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+
+   if(linetarget)
+      damage = linetarget->health;
+
+   P_LineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);
+}
+
 void PE_AddCommands(void)
 {
    C_AddCommand(summon);
    C_AddCommand(give);
    C_AddCommand(viles);
    C_AddCommand(whistle);
+   C_AddCommand(mdk);
 }
 
 //----------------------------------------------------------------------------
