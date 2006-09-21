@@ -591,8 +591,8 @@ boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(numspechit >= spechit_max)
       {
-         spechit_max = spechit_max ? spechit_max*2 : 8;
-         spechit = realloc(spechit,sizeof *spechit*spechit_max); // killough
+         spechit_max = spechit_max ? spechit_max * 2 : 8;
+         spechit = realloc(spechit, sizeof(*spechit) * spechit_max);
       }
       spechit[numspechit++] = ld;
    }
@@ -639,7 +639,7 @@ boolean P_Touched(mobj_t *thing, mobj_t *tmthing)
 }
 
 //
-// P_Touched
+// P_CheckPickUp
 //
 // haleyjd: isolated code to test for and execute touching specials.
 // Required for proper 3D clipping support.
