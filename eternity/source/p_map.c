@@ -28,6 +28,9 @@
 static const char
 rcsid[] = "$Id: p_map.c,v 1.35 1998/05/12 12:47:16 phares Exp $";
 
+#include "z_zone.h"
+
+#include "c_io.h"
 #include "doomstat.h"
 #include "r_main.h"
 #include "p_mobj.h"
@@ -41,6 +44,7 @@ rcsid[] = "$Id: p_map.c,v 1.35 1998/05/12 12:47:16 phares Exp $";
 #include "p_inter.h"
 #include "m_random.h"
 #include "r_segs.h"
+#include "m_argv.h"
 #include "m_bbox.h"
 #include "p_partcl.h"
 #include "p_tick.h"
@@ -113,6 +117,9 @@ int           tmunstuck;     // killough 8/1/98: whether to allow unsticking
 line_t **spechit;                // new code -- killough
 static int spechit_max;          // killough
 
+int spechits_emulation;
+#define MAXSPECHIT_OLD 8         // haleyjd 09/20/06: old limit for overflow emu
+
 int numspechit;
 
 // Temporary holder for thing_sectorlist threads
@@ -121,6 +128,10 @@ msecnode_t *sector_list = NULL;                             // phares 3/16/98
 mobj_t *BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
 
 extern boolean reset_viewz;
+
+// haleyjd 09/20/06: moved to top for maximum visibility
+static int crushchange;
+static boolean nofit;
 
 //
 // TELEPORT MOVE
@@ -137,7 +148,7 @@ static boolean telefrag; // killough 8/9/98: whether to telefrag at exit
 // such things so far.
 static boolean ignore_inerts = true;
 
-static boolean PIT_StompThing (mobj_t *thing)
+static boolean PIT_StompThing(mobj_t *thing)
 {
    fixed_t blockdist;
    
@@ -418,6 +429,66 @@ static int untouched(line_t *ld)
 }
 
 //
+// SpechitOverflow
+//
+// This function implements spechit overflow emulation. The spechit array only
+// had eight entries in the original engine, far too few for a huge number of
+// user-made wads. Any time an object triggered more than 8 walkover lines
+// during one movement, some of the globals in this module would get trashed.
+// Most of them don't matter, but a few can affect clipping. This code is
+// originally by Andrey Budko of PrBoom-plus, and has some modifications from
+// Chocolate Doom as well. Thanks to Andrey and fraggle.
+//
+static void SpechitOverflow(line_t *ld)
+{
+   static unsigned int baseaddr = 0;
+   unsigned int addr;
+
+   // first time through, set the desired base address;
+   // this is where magic number support comes in
+   if(baseaddr == 0)
+   {
+      int p;
+
+      if((p = M_CheckParm("-spechit")) && p < myargc - 1)
+         baseaddr = atoi(myargv[p + 1]);
+      else
+         baseaddr = spechits_emulation == 2 ? 0x01C09C98 : 0x84F968E8;
+   }
+
+   // What's this? The baseaddr is a value suitably close to the address of the
+   // lines array as it was during the recording of the demo. This is added to
+   // the offset of the line in the array times the original structure size to
+   // reconstruct the approximate line addresses actually written. In most cases
+   // this doesn't matter because of the nature of tmbbox, however.
+   addr = baseaddr + (ld - lines) * 0x3E;
+
+   // Note: only the variables affected up to 20 are known, and it is of no
+   // consequence to alter any of the variables between 15 and 20 because they
+   // are all statics used by PIT_ iterator functions in this module and are
+   // always reset to a valid value before being used again.
+   switch(numspechit)
+   {
+   case 9:
+   case 10:
+   case 11:
+   case 12:
+      tmbbox[numspechit - 9] = addr;
+      break;
+   case 13:
+      crushchange = addr;
+      break;
+   case 14:
+      nofit = addr;
+      break;
+   default:
+      C_Printf(FC_ERROR "Warning: spechit overflow %d not emulated\a\n", 
+               numspechit);
+      break;
+   }
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -513,6 +584,10 @@ boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
    
    if(ld->special)
    {
+      // haleyjd 09/20/06: spechit overflow emulation
+      if(demo_compatibility && spechits_emulation)
+         SpechitOverflow(ld);
+
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(numspechit >= spechit_max)
       {
@@ -633,8 +708,6 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    // haleyjd 1/17/00: set global hit reference
    BlockingMobj = thing;
 
-   // haleyjd: OVER_UNDER
-
    // killough 11/98:
    //
    // TOUCHY flag, for mines or other objects which die on contact with solids.
@@ -642,28 +715,9 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    // thing, and the touchy thing is not the sole one moving relative to fixed
    // surroundings such as walls, then the touchy thing dies immediately.
 
+   // haleyjd: functionalized
    if(P_Touched(thing, tmthing))
       return true;
-
-   /*
-   if(thing->flags & MF_TOUCHY &&                  // touchy object
-      tmthing->flags & MF_SOLID &&                 // solid object touches it
-      thing->health > 0 &&                         // touchy object is alive
-      (thing->intflags & MIF_ARMED ||              // Thing is an armed mine
-       sentient(thing)) &&                         // ... or a sentient thing
-      (thing->type != tmthing->type ||             // only different species
-       thing->player) &&                           // ... or different players
-      thing->z + thing->height >= tmthing->z &&    // touches vertically
-      tmthing->z + tmthing->height >= thing->z &&
-      (thing->type ^ painType) |                   // PEs and lost souls
-      (tmthing->type ^ skullType) &&               // are considered same
-      (thing->type ^ skullType) |                  // (but Barons & Knights
-      (tmthing->type ^ painType))                  // are intentionally not)
-   {
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
-      return true;
-   }
-   */
 
    // check for skulls slamming into things
    
@@ -1333,9 +1387,9 @@ void P_ApplyTorque(mobj_t *mo)
 static boolean P_ThingHeightClip(mobj_t *thing)
 {
    boolean onfloor = thing->z == thing->floorz;
+   fixed_t oldfloorz = thing->floorz; // haleyjd
 
    P_CheckPosition(thing, thing->x, thing->y);
-
   
    // what about stranding a monster partially off an edge?
    // killough 11/98: Answer: see below (upset balance if hanging off ledge)
@@ -1352,7 +1406,16 @@ static boolean P_ThingHeightClip(mobj_t *thing)
    // haleyjd
    thing->floorsec = tmfloorsec ? (int)(tmfloorsec - sectors) : -1;
 
-   if(onfloor)  // walking monsters rise and fall with the floor
+   // haleyjd 09/19/06: floatbobbers require special treatment here now
+   if(thing->flags2 & MF2_FLOATBOB)
+   {
+      if(thing->floorz > oldfloorz || !(thing->flags & MF_NOGRAVITY))
+         thing->z = thing->z - oldfloorz + thing->floorz;
+
+      if(thing->z + thing->height > thing->ceilingz)
+         thing->z = thing->ceilingz - thing->height;
+   }
+   else if(onfloor)  // walking monsters rise and fall with the floor
    {
       thing->z = thing->floorz;
       
@@ -2350,10 +2413,6 @@ void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
 //  the way it was and call P_ChangeSector again
 //  to undo the changes.
 //
-
-// SoM 10/28/02: Moved this for new 3d object clipping code
-static int crushchange;
-static boolean nofit;
 
 //
 // PIT_ChangeSector

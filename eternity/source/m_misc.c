@@ -58,6 +58,7 @@ rcsid[] = "$Id: m_misc.c,v 1.60 1998/06/03 20:32:12 jim Exp $";
 #include "s_sound.h"
 #include "sounds.h"
 #include "d_main.h"
+#include "p_map.h"
 #include "r_main.h"
 #include "r_sky.h"
 #include "r_draw.h"
@@ -1573,6 +1574,13 @@ default_t defaults[] =
       &c_detailshift, NULL,
       0, {0, 1}, dt_number, ss_none, wad_no,
       "0 = high detail, 1 = low detail"
+   },
+
+   {
+      "spechits_emulation",
+      &spechits_emulation, NULL,
+      0, {0, 2}, dt_number, ss_none, wad_no,
+      "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like Prboom-plus"
    },
 
    { NULL }         // last entry

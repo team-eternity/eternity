@@ -39,6 +39,7 @@
 #include "g_game.h"
 #include "m_random.h"
 #include "p_info.h"
+#include "p_map.h"
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_spec.h"
@@ -292,6 +293,12 @@ CONSOLE_NETVAR(mon_helpfriends, help_friends, cf_server, netcmd_monhelpfriends) 
 VARIABLE_INT(distfriend, &default_distfriend,   0, 1024, NULL);
 CONSOLE_NETVAR(mon_distfriend, distfriend, cf_server, netcmd_mondistfriend) {}
 
+static char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
+
+// haleyjd 09/20/06: spechits overflow emulation
+VARIABLE_INT(spechits_emulation, NULL, 0, 2, spechit_strs);
+CONSOLE_VARIABLE(spechits_emulation, spechits_emulation, 0) {}
+
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
@@ -335,6 +342,8 @@ void P_AddCommands(void)
    
    C_AddCommand(timelimit);
    C_AddCommand(fraglimit);
+
+   C_AddCommand(spechits_emulation);
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();
