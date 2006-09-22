@@ -429,7 +429,7 @@ static int untouched(line_t *ld)
 }
 
 //
-// SpechitOverflow
+// SpechitOverrun
 //
 // This function implements spechit overflow emulation. The spechit array only
 // had eight entries in the original engine, far too few for a huge number of
@@ -439,7 +439,7 @@ static int untouched(line_t *ld)
 // originally by Andrey Budko of PrBoom-plus, and has some modifications from
 // Chocolate Doom as well. Thanks to Andrey and fraggle.
 //
-static void SpechitOverflow(line_t *ld)
+static void SpechitOverrun(line_t *ld)
 {
    static unsigned int baseaddr = 0;
    unsigned int addr;
@@ -493,7 +493,7 @@ static void SpechitOverflow(line_t *ld)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
+boolean PIT_CheckLine(line_t *ld)
 {
    if(tmbbox[BOXRIGHT] <= ld->bbox[BOXLEFT]
       || tmbbox[BOXLEFT] >= ld->bbox[BOXRIGHT]
@@ -584,10 +584,6 @@ boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
    
    if(ld->special)
    {
-      // haleyjd 09/20/06: spechit overflow emulation
-      if(demo_compatibility && spechits_emulation)
-         SpechitOverflow(ld);
-
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(numspechit >= spechit_max)
       {
@@ -595,6 +591,11 @@ boolean PIT_CheckLine(line_t *ld) // killough 3/26/98: make static
          spechit = realloc(spechit, sizeof(*spechit) * spechit_max);
       }
       spechit[numspechit++] = ld;
+
+      // haleyjd 09/20/06: spechit overflow emulation
+      if(demo_compatibility && spechits_emulation && 
+         numspechit > MAXSPECHIT_OLD)
+         SpechitOverrun(ld);
    }
    
    return true;
