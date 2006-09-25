@@ -66,6 +66,9 @@ struct sfxinfo_s
 
    // referenced sound if a link
    sfxinfo_t *link;
+
+   // haleyjd 09/24/06: referenced sound if an alias
+   sfxinfo_t *alias;
    
    // pitch if a link
    int pitch;
@@ -77,6 +80,18 @@ struct sfxinfo_s
    // on a per-sound basis to allow differing behaviors.
    int clipping_dist;   // distance when sound is clipped entirely
    int close_dist;      // distance when sound is at maximum volume
+
+   // haleyjd 09/23/06: pitch variance types
+   enum
+   {
+      pitch_none,    // none: always at normal pitch.
+      pitch_doom,    // normal variance for DOOM v1.1
+      pitch_doomsaw, // variance for DOOM chainsaw
+      pitch_heretic, // normal variance for Heretic
+      pitch_hticamb, // variance for Heretic ambient sounds
+   }
+   pitch_type;
+
    
    // sound data
    void *data;

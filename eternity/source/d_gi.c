@@ -183,36 +183,6 @@ static gitextmetric_t giHticBigText =
 };
 
 //
-// MapInfo environmental sound defaults
-//
-
-static int doomInfoSounds[INFO_NUMSOUNDS] =
-{
-   sfx_doropn,
-   sfx_dorcls,
-   sfx_bdopn,
-   sfx_bdcls,
-   sfx_swtchn,
-   sfx_swtchx,
-   sfx_pstart,
-   sfx_pstop,
-   sfx_stnmov,
-};
-
-static int hticInfoSounds[INFO_NUMSOUNDS] =
-{
-   sfx_hdoropn,
-   sfx_hdorcls,
-   sfx_hdoropn,
-   sfx_hdorcls,
-   sfx_hswitch,
-   sfx_hswitch,
-   sfx_hpstart,
-   sfx_hpstop,
-   sfx_hstnmov,
-};
-
-//
 // Menu Sounds
 //
 
@@ -317,11 +287,7 @@ gameinfo_t giDoomSW =
    mus_None,         // musMin
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
-   doomInfoSounds,   // infoSounds
    DOOMDEFSOUND,     // defSoundName
-
-   &LevelInfo.sound_dorcls, // normalDoorClose
-   &LevelInfo.sound_bdcls,  // blazingDoorClose
 
    "ENDOOM",         // endTextName
 };
@@ -402,11 +368,7 @@ gameinfo_t giDoomReg =
    mus_None,         // musMin
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
-   doomInfoSounds,   // infoSounds
    DOOMDEFSOUND,     // defSoundName
-
-   &LevelInfo.sound_dorcls, // normalDoorClose
-   &LevelInfo.sound_bdcls,  // blazingDoorClose
 
    "ENDOOM",         // endTextName
 };
@@ -481,11 +443,7 @@ gameinfo_t giDoomRetail =
    mus_None,         // musMin
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
-   doomInfoSounds,   // infoSounds
    DOOMDEFSOUND,     // defSoundName
-
-   &LevelInfo.sound_dorcls, // normalDoorClose
-   &LevelInfo.sound_bdcls,  // blazingDoorClose
 
    "ENDOOM",         // endTextName
 };
@@ -560,11 +518,7 @@ gameinfo_t giDoomCommercial =
    mus_None,         // musMin
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
-   doomInfoSounds,   // infoSounds
    DOOMDEFSOUND,     // defSoundName
-
-   &LevelInfo.sound_dorcls, // normalDoorClose
-   &LevelInfo.sound_bdcls,  // blazingDoorClose
 
    "ENDOOM",         // endTextName
 };
@@ -638,11 +592,7 @@ gameinfo_t giHereticSW =
    hmus_None,        // musMin
    NUMHTICMUSIC,     // numMusic
    "mus_",           // musPrefix
-   hticInfoSounds,   // infoSounds
    HTICDEFSOUND,     // defSoundName
-
-   &LevelInfo.sound_doropn,  // normalDoorClose
-   &LevelInfo.sound_bdopn,   // blazingDoorClose
 
    "ENDTEXT",        // endTextName
 };
@@ -720,11 +670,7 @@ gameinfo_t giHereticReg =
    hmus_None,        // musMin
    NUMHTICMUSIC,     // numMusic
    "mus_",           // musPrefix
-   hticInfoSounds,   // infoSounds
    HTICDEFSOUND,     // defSoundName
-
-   &LevelInfo.sound_doropn,  // normalDoorClose
-   &LevelInfo.sound_bdopn,   // blazingDoorClose
 
    "ENDTEXT",        // endTextName
 };

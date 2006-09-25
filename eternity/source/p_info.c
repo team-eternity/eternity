@@ -90,6 +90,7 @@ static void P_InitWeapons(void);
 static void P_LoadInterTextLump(void);
 static void P_SetSky2Texture(void);
 static void P_SetParTime(void);
+static void P_SetInfoSoundNames(void);
 
 static enum lireadtype_e
 {
@@ -212,6 +213,7 @@ void P_LoadLevelInfo(int lumpnum)
    P_LoadInterTextLump();
    P_SetSky2Texture();
    P_SetParTime();
+   P_SetInfoSoundNames();
 
    // haleyjd 03/15/03: handle level scripts
    if(LevelInfo.scriptLump)
@@ -363,49 +365,51 @@ typedef struct
 
 levelvar_t levelvars[]=
 {
-   { IVT_STRING,  "altskyname",     &LevelInfo.altSkyName },
-   { IVT_FLAGS,   "boss-specials",  &LevelInfo.bossSpecs,  &boss_flagset }, // haleyjd 03/14/05
-   { IVT_STRING,  "colormap",       &LevelInfo.colorMap },
-   { IVT_STRING,  "creator",        &LevelInfo.creator },
-   { IVT_BOOLEAN, "doublesky",      &LevelInfo.doubleSky },
-   { IVT_BOOLEAN, "edf-intername",  &LevelInfo.useEDFInterName },
-   { IVT_BOOLEAN, "endofgame",      &LevelInfo.endOfGame },
-   { IVT_STRING,  "extradata",      &LevelInfo.extraData },     // haleyjd 04/02/03
-   { IVT_BOOLEAN, "finale-secret",  &LevelInfo.finaleSecretOnly },
-   { IVT_STRNUM,  "finaletype",     &LevelInfo.finaleType, &finaleTypeVals },
-   { IVT_BOOLEAN, "fullbright",     &LevelInfo.useFullBright },
-   { IVT_INT,     "gravity",        &LevelInfo.gravity },
-   { IVT_STRING,  "inter-backdrop", &LevelInfo.backDrop },
-   { IVT_STRING,  "intermusic",     &LevelInfo.interMusic },
-   { IVT_STRING,  "interpic",       &LevelInfo.interPic },
-   { IVT_STRING,  "intertext",      &LevelInfo.interTextLump }, // haleyjd 12/13/01
-   { IVT_BOOLEAN, "killfinale",     &LevelInfo.killFinale },
-   { IVT_BOOLEAN, "killstats",      &LevelInfo.killStats },     // haleyjd 03/24/05
-   { IVT_STRING,  "levelname",      &LevelInfo.levelName },
-   { IVT_STRING,  "levelpic",       &LevelInfo.levelPic },
-   { IVT_STRING,  "levelpicnext",   &LevelInfo.nextLevelPic },
-   { IVT_STRING,  "levelpicsecret", &LevelInfo.nextSecretPic },
-   { IVT_STRING,  "levelscript",    &LevelInfo.scriptLump },    // haleyjd
-   { IVT_STRNUM,  "leveltype",      &LevelInfo.levelType,  &levelTypeVals  },
-   { IVT_BOOLEAN, "lightning",      &LevelInfo.hasLightning },
-   { IVT_STRING,  "music",          &LevelInfo.musicName },
-   { IVT_STRING,  "nextlevel",      &LevelInfo.nextLevel },
-   { IVT_STRING,  "nextsecret",     &LevelInfo.nextSecret },
-   { IVT_INT,     "partime",        &LevelInfo.partime },
-   { IVT_INT,     "skydelta",       &LevelInfo.skyDelta },
-   { IVT_INT,     "sky2delta",      &LevelInfo.sky2Delta },
-   { IVT_STRING,  "skyname",        &LevelInfo.skyName },
-   { IVT_STRING,  "sky2name",       &LevelInfo.sky2Name },
-   { IVT_STRING,  "sound-swtchn",   &LevelInfo.sound_swtchn },
-   { IVT_STRING,  "sound-swtchx",   &LevelInfo.sound_swtchx },
-   { IVT_STRING,  "sound-stnmov",   &LevelInfo.sound_stnmov },
-   { IVT_STRING,  "sound-pstop",    &LevelInfo.sound_pstop },
-   { IVT_STRING,  "sound-bdcls",    &LevelInfo.sound_bdcls },
-   { IVT_STRING,  "sound-bdopn",    &LevelInfo.sound_bdopn },
-   { IVT_STRING,  "sound-dorcls",   &LevelInfo.sound_dorcls },
-   { IVT_STRING,  "sound-doropn",   &LevelInfo.sound_doropn },
-   { IVT_STRING,  "sound-pstart",   &LevelInfo.sound_pstart },
-   { IVT_BOOLEAN, "unevenlight",    &LevelInfo.unevenLight },
+   { IVT_STRING,  "altskyname",      &LevelInfo.altSkyName },
+   { IVT_FLAGS,   "boss-specials",   &LevelInfo.bossSpecs,  &boss_flagset }, // haleyjd 03/14/05
+   { IVT_STRING,  "colormap",        &LevelInfo.colorMap },
+   { IVT_STRING,  "creator",         &LevelInfo.creator },
+   { IVT_BOOLEAN, "doublesky",       &LevelInfo.doubleSky },
+   { IVT_BOOLEAN, "edf-intername",   &LevelInfo.useEDFInterName },
+   { IVT_BOOLEAN, "endofgame",       &LevelInfo.endOfGame },
+   { IVT_STRING,  "extradata",       &LevelInfo.extraData },     // haleyjd 04/02/03
+   { IVT_BOOLEAN, "finale-secret",   &LevelInfo.finaleSecretOnly },
+   { IVT_STRNUM,  "finaletype",      &LevelInfo.finaleType, &finaleTypeVals },
+   { IVT_BOOLEAN, "fullbright",      &LevelInfo.useFullBright },
+   { IVT_INT,     "gravity",         &LevelInfo.gravity },
+   { IVT_STRING,  "inter-backdrop",  &LevelInfo.backDrop },
+   { IVT_STRING,  "intermusic",      &LevelInfo.interMusic },
+   { IVT_STRING,  "interpic",        &LevelInfo.interPic },
+   { IVT_STRING,  "intertext",       &LevelInfo.interTextLump }, // haleyjd 12/13/01
+   { IVT_BOOLEAN, "killfinale",      &LevelInfo.killFinale },
+   { IVT_BOOLEAN, "killstats",       &LevelInfo.killStats },     // haleyjd 03/24/05
+   { IVT_STRING,  "levelname",       &LevelInfo.levelName },
+   { IVT_STRING,  "levelpic",        &LevelInfo.levelPic },
+   { IVT_STRING,  "levelpicnext",    &LevelInfo.nextLevelPic },
+   { IVT_STRING,  "levelpicsecret",  &LevelInfo.nextSecretPic },
+   { IVT_STRING,  "levelscript",     &LevelInfo.scriptLump },    // haleyjd
+   { IVT_STRNUM,  "leveltype",       &LevelInfo.levelType,  &levelTypeVals  },
+   { IVT_BOOLEAN, "lightning",       &LevelInfo.hasLightning },
+   { IVT_STRING,  "music",           &LevelInfo.musicName },
+   { IVT_STRING,  "nextlevel",       &LevelInfo.nextLevel },
+   { IVT_STRING,  "nextsecret",      &LevelInfo.nextSecret },
+   { IVT_BOOLEAN, "noautosequences", &LevelInfo.noAutoSequences }, // haleyjd 09/24/06
+   { IVT_INT,     "partime",         &LevelInfo.partime },
+   { IVT_INT,     "skydelta",        &LevelInfo.skyDelta },
+   { IVT_INT,     "sky2delta",       &LevelInfo.sky2Delta },
+   { IVT_STRING,  "skyname",         &LevelInfo.skyName },
+   { IVT_STRING,  "sky2name",        &LevelInfo.sky2Name },
+   { IVT_STRING,  "sound-swtchn",    &LevelInfo.sound_swtchn },
+   { IVT_STRING,  "sound-swtchx",    &LevelInfo.sound_swtchx },
+   { IVT_STRING,  "sound-stnmov",    &LevelInfo.sound_stnmov },
+   { IVT_STRING,  "sound-pstop",     &LevelInfo.sound_pstop },
+   { IVT_STRING,  "sound-bdcls",     &LevelInfo.sound_bdcls },
+   { IVT_STRING,  "sound-bdopn",     &LevelInfo.sound_bdopn },
+   { IVT_STRING,  "sound-dorcls",    &LevelInfo.sound_dorcls },
+   { IVT_STRING,  "sound-doropn",    &LevelInfo.sound_doropn },
+   { IVT_STRING,  "sound-pstart",    &LevelInfo.sound_pstart },
+   { IVT_STRING,  "sound-fcmove",    &LevelInfo.sound_fcmove },
+   { IVT_BOOLEAN, "unevenlight",     &LevelInfo.unevenLight },
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
    
@@ -600,29 +604,104 @@ static void P_InfoDefaultLevelName(void)
       SynthLevelName(false); // put "new level"
 }
 
-static void GetDefSound(char **var, int dehnum)
+#define NUMMAPINFOSOUNDS 10
+
+static char *DefSoundNames[NUMMAPINFOSOUNDS] =
 {
-   sfxinfo_t *sfx;
+   "EE_DoorOpen",
+   "EE_DoorClose",
+   "EE_BDoorOpen",
+   "EE_BDoorClose",
+   "EE_SwitchOn",
+   "EE_SwitchEx",
+   "EE_PlatStart",
+   "EE_PlatStop",
+   "EE_PlatMove",
+   "EE_FCMove",
+};
 
-   sfx = E_SoundForDEHNum(dehnum);
+static sfxinfo_t *DefSoundAliases[NUMMAPINFOSOUNDS][2];
 
-   *var = sfx ? sfx->mnemonic : "none";
-}
+// Yes, an array of pointers-to-pointers. Your eyes do not deceive you.
+// It's just easiest to do it this way.
 
+static char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
+{
+   &LevelInfo.sound_doropn,
+   &LevelInfo.sound_dorcls,
+   &LevelInfo.sound_bdopn,
+   &LevelInfo.sound_bdcls,
+   &LevelInfo.sound_swtchn,
+   &LevelInfo.sound_swtchx,
+   &LevelInfo.sound_pstart,
+   &LevelInfo.sound_pstop,
+   &LevelInfo.sound_stnmov,
+   &LevelInfo.sound_fcmove,
+};
+
+//
+// P_InfoDefaultSoundNames
+//
+// Restores the alias fields of the sounds used by the sound sequence engine
+// for default effects.
+//
 static void P_InfoDefaultSoundNames(void)
 {
-   // haleyjd 03/17/03: now uses gameModeInfo for defaults
-   int *infoSounds = gameModeInfo->infoSounds;
+   static boolean firsttime = true;
+   int i;
 
-   GetDefSound(&LevelInfo.sound_doropn, infoSounds[INFO_DOROPN]);
-   GetDefSound(&LevelInfo.sound_dorcls, infoSounds[INFO_DORCLS]);
-   GetDefSound(&LevelInfo.sound_bdopn,  infoSounds[INFO_BDOPN ]);
-   GetDefSound(&LevelInfo.sound_bdcls,  infoSounds[INFO_BDCLS ]);
-   GetDefSound(&LevelInfo.sound_swtchn, infoSounds[INFO_SWTCHN]);
-   GetDefSound(&LevelInfo.sound_swtchx, infoSounds[INFO_SWTCHX]);
-   GetDefSound(&LevelInfo.sound_pstart, infoSounds[INFO_PSTART]);
-   GetDefSound(&LevelInfo.sound_pstop,  infoSounds[INFO_PSTOP ]);
-   GetDefSound(&LevelInfo.sound_stnmov, infoSounds[INFO_STNMOV]);
+   // if first time, save pointers to the sounds and their aliases
+   if(firsttime)
+   {
+      firsttime = false;
+
+      for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+      {
+         sfxinfo_t *sfx = E_SoundForName(DefSoundNames[i]);
+
+         DefSoundAliases[i][0] = sfx;
+         DefSoundAliases[i][1] = sfx ? sfx->alias : NULL;
+      }
+   }
+   else
+   {
+      // restore defaults
+      for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+      {
+         if(DefSoundAliases[i][0])
+            DefSoundAliases[i][0]->alias = DefSoundAliases[i][1];
+      }
+   }
+
+   // set sound names to defaults
+   for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+   {
+      if(DefSoundAliases[i][0] && DefSoundAliases[i][0]->alias)
+         *infoSoundPtrs[i] = DefSoundAliases[i][0]->alias->mnemonic;
+      else
+         *infoSoundPtrs[i] = "none";
+   }
+}
+
+//
+// P_SetInfoSoundNames
+//
+// Post-processing routine.
+//
+// Changes aliases in sounds used by the sound sequence engine for the default
+// sequences to point at the sounds defined by MapInfo.
+//
+static void P_SetInfoSoundNames(void)
+{
+   int i;
+
+   for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
+   {
+      char *name = *infoSoundPtrs[i];
+
+      if(DefSoundAliases[i][0])
+         DefSoundAliases[i][0]->alias = E_SoundForName(name);
+   }
 }
 
 //
@@ -1082,25 +1161,28 @@ static void P_ClearLevelVars(void)
       break;
    }
 
-   LevelInfo.levelPic  = NULL;
-   LevelInfo.nextLevelPic = NULL;
-   LevelInfo.nextSecretPic = NULL;
-   LevelInfo.musicName = "";
-   LevelInfo.creator   = "unknown";
-   LevelInfo.interPic  = "INTERPIC";
-   LevelInfo.partime   = -1;
+   LevelInfo.levelPic        = NULL;
+   LevelInfo.nextLevelPic    = NULL;
+   LevelInfo.nextSecretPic   = NULL;
+   LevelInfo.musicName       = "";
+   LevelInfo.creator         = "unknown";
+   LevelInfo.interPic        = "INTERPIC";
+   LevelInfo.partime         = -1;
 
-   LevelInfo.colorMap      = "COLORMAP";
-   LevelInfo.useFullBright = true;
-   LevelInfo.unevenLight   = true;
+   LevelInfo.colorMap        = "COLORMAP";
+   LevelInfo.useFullBright   = true;
+   LevelInfo.unevenLight     = true;
    
-   LevelInfo.hasLightning = false;
-   LevelInfo.nextSecret   = "";
-   //info_weapons         = "";
-   LevelInfo.gravity      = DEFAULTGRAVITY;
-   LevelInfo.hasScripts   = false;
-   LevelInfo.scriptLump   = NULL;
-   LevelInfo.extraData    = NULL;
+   LevelInfo.hasLightning    = false;
+   LevelInfo.nextSecret      = "";
+   //info_weapons            = "";
+   LevelInfo.gravity         = DEFAULTGRAVITY;
+   LevelInfo.hasScripts      = false;
+   LevelInfo.scriptLump      = NULL;
+   LevelInfo.extraData       = NULL;
+   
+   // Hexen TODO: will be true for Hexen maps by default
+   LevelInfo.noAutoSequences = false;
 
    // haleyjd: construct defaults
    P_InfoDefaultLevelName();

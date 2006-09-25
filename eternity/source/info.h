@@ -319,72 +319,74 @@ typedef enum {
 
 typedef struct
 {
-   int doomednum;    // Thing number used in id's editor, and now
-                     //  probably by every other editor too
-   int spawnstate;   // The state (frame) index when this Thing is
-                     //  first created
-   int spawnhealth;  // The initial hit points for this Thing
-   int seestate;     // The state when it sees you or wakes up
-   int seesound;     // The sound it makes when waking
-   int reactiontime; // How many tics it waits after it wakes up
-                     //  before it will start to attack, in normal
-                     //  skills (halved for nightmare)
-   int attacksound;  // The sound it makes when it attacks
-   int painstate;    // The state to indicate pain
-   int painchance;   // A number that is checked against a random
-                     //  number 0-255 to see if the Thing is supposed
-                     //  to go to its painstate or not.  Note this
-                     //  has absolutely nothing to do with the chance
-                     //  it will get hurt, just the chance of it
-                     //  reacting visibly.
-   int painsound;    // The sound it emits when it feels pain
-   int meleestate;   // Melee==close attack
-   int missilestate; // What states to use when it's in the air, if
-                     //  in fact it is ever used as a missile
-   int deathstate;   // What state begins the death sequence
-   int xdeathstate;  // What state begins the horrible death sequence
-                     //  like when a rocket takes out a trooper
-   int deathsound;   // The death sound.  See also A_Scream() in
-                     //  p_enemy.c for some tweaking that goes on
-                     //  for certain monsters
-   int speed;        // How fast it moves.  Too fast and it can miss
-                     //  collision logic.
-   int radius;       // An often incorrect radius
-   int height;       // An often incorrect height, used only to see
-                     //  if a monster can enter a sector
-   int c3dheight;    // haleyjd 07/06/05: a height value corrected for
-                     //  3D object clipping. Used only if non-zero and
-                     //  comp_theights is enabled.
-   int mass;         // How much an impact will move it.  Cacodemons
-                     //  seem to retreat when shot because they have
-                     //  very little mass and are moved by impact
-   int damage;       // If this is a missile, how much does it hurt?
-   int activesound;  // What sound it makes wandering around, once
-                     //  in a while.  Chance is 3/256 it will.
-   int flags;        // Bit masks for lots of things.  See p_mobj.h
-   int flags2;       // More bit masks for lots of other things -- haleyjd
-   int raisestate;   // The first state for an Archvile or respawn
-                     //  resurrection.  Zero means it won't come
-                     //  back to life.
-   int translucency; // haleyjd 09/01/02: zdoom-style translucency
-   int flags3;       // haleyjd 11/03/02: flags3
-   int bloodcolor;   // haleyjd 05/08/03: particle blood color
-   int particlefx;   // haleyjd 07/13/03: particle effects
-   int droptype;     // haleyjd 07/13/03: item drop type
-   int mod;          // haleyjd 07/13/03: method of death
-   char *obituary;   // haleyjd 07/13/03: normal obituary
-   char *meleeobit;  // haleyjd 07/13/03: melee obituary
-   int colour;       // haleyjd 01/12/04: translations
-   int dmgspecial;   // haleyjd 08/01/04: special damage actions
-   int crashstate;   // haleyjd 08/07/04: a dead object hitting the ground
-                     //  will enter this state if it has one.
-   int altsprite;    // haleyjd 09/26/04: alternate sprite
+   int doomednum;     // Thing number used in id's editor, and now
+                      //  probably by every other editor too
+   int spawnstate;    // The state (frame) index when this Thing is
+                      //  first created
+   int spawnhealth;   // The initial hit points for this Thing
+   int seestate;      // The state when it sees you or wakes up
+   int seesound;      // The sound it makes when waking
+   int reactiontime;  // How many tics it waits after it wakes up
+                      //  before it will start to attack, in normal
+                      //  skills (halved for nightmare)
+   int attacksound;   // The sound it makes when it attacks
+   int painstate;     // The state to indicate pain
+   int painchance;    // A number that is checked against a random
+                      //  number 0-255 to see if the Thing is supposed
+                      //  to go to its painstate or not.  Note this
+                      //  has absolutely nothing to do with the chance
+                      //  it will get hurt, just the chance of it
+                      //  reacting visibly.
+   int painsound;     // The sound it emits when it feels pain
+   int meleestate;    // Melee==close attack
+   int missilestate;  // What states to use when it's in the air, if
+                      //  in fact it is ever used as a missile
+   int deathstate;    // What state begins the death sequence
+   int xdeathstate;   // What state begins the horrible death sequence
+                      //  like when a rocket takes out a trooper
+   int deathsound;    // The death sound.  See also A_Scream() in
+                      //  p_enemy.c for some tweaking that goes on
+                      //  for certain monsters
+   int speed;         // How fast it moves.  Too fast and it can miss
+                      //  collision logic.
+   int radius;        // An often incorrect radius
+   int height;        // An often incorrect height, used only to see
+                      //  if a monster can enter a sector
+   int c3dheight;     // haleyjd 07/06/05: a height value corrected for
+                      //  3D object clipping. Used only if non-zero and
+                      //  comp_theights is enabled.
+   int mass;          // How much an impact will move it.  Cacodemons
+                      //  seem to retreat when shot because they have
+                      //  very little mass and are moved by impact
+   int damage;        // If this is a missile, how much does it hurt?
+   int activesound;   // What sound it makes wandering around, once
+                      //  in a while.  Chance is 3/256 it will.
+   int flags;         // Bit masks for lots of things.  See p_mobj.h
+   int flags2;        // More bit masks for lots of other things -- haleyjd
+   int raisestate;    // The first state for an Archvile or respawn
+                      //  resurrection.  Zero means it won't come
+                      //  back to life.
+   int translucency;  // haleyjd 09/01/02: zdoom-style translucency
+   int flags3;        // haleyjd 11/03/02: flags3
+   int bloodcolor;    // haleyjd 05/08/03: particle blood color
+   int particlefx;    // haleyjd 07/13/03: particle effects
+   int droptype;      // haleyjd 07/13/03: item drop type
+   int mod;           // haleyjd 07/13/03: method of death
+   char *obituary;    // haleyjd 07/13/03: normal obituary
+   char *meleeobit;   // haleyjd 07/13/03: melee obituary
+   int colour;        // haleyjd 01/12/04: translations
+   int dmgspecial;    // haleyjd 08/01/04: special damage actions
+   int crashstate;    // haleyjd 08/07/04: a dead object hitting the ground
+                      //  will enter this state if it has one.
+   int altsprite;     // haleyjd 09/26/04: alternate sprite
+   int topdamage;     // haleyjd 09/22/06: burn damage for 3D clipping :)
+   int topdamagemask; // haleyjd 09/23/06: time mask for topdamage
    
    // haleyjd: fields needed for EDF identification and hashing
-   char name[41];    // name of this thing type (max 40 chars)
-   int dehnum;       // DeHackEd number for fast lookup and comparison
-   int namenext;     // next mobjinfo_t in name hash chain
-   int dehnext;      // next mobjinfo_t in DEH hash chain
+   char name[41];     // name of this thing type (max 40 chars)
+   int dehnum;        // DeHackEd number for fast lookup and comparison
+   int namenext;      // next mobjinfo_t in name hash chain
+   int dehnext;       // next mobjinfo_t in DEH hash chain
 
 } mobjinfo_t;
 

@@ -1008,7 +1008,7 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
    // print message if any
    if(message)
    {
-      doom_printf("%c%s %s",obcolour+128,target->player->name,message);
+      doom_printf("%c%s %s", obcolour+128, target->player->name, message);
       return;
    }
 
@@ -1064,7 +1064,7 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
       message = s_OB_DEFAULT;
 
    // print message
-   doom_printf("%c%s %s",obcolour+128,target->player->name,message);
+   doom_printf("%c%s %s", obcolour+128, target->player->name, message);
 }
 
 // Special damage type code

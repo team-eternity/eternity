@@ -672,7 +672,7 @@ manual_lift:
       }
 
       if(!silentmove(sec))        //sf: silentmove
-         S_StartSoundName((mobj_t *)&sec->soundorg,LevelInfo.sound_pstart);
+         S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatStart");
       P_AddActivePlat(plat); // add this plat to the list of active plats
       
       if(manual)
@@ -1095,7 +1095,7 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
    sector_t *sec;
    vldoor_t *door;
    boolean manual = false;
-   char *sndname;
+   boolean turbo;
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/04/04: door actions with no line can't be manual
@@ -1204,15 +1204,18 @@ manual_door:
          if(door->speed >= VDOORSPEED*4)
          {
             door->type = genBlazeRaise;
-            sndname = LevelInfo.sound_bdopn;
+            turbo = true;
          }
          else
          {
             door->type = genRaise;
-            sndname = LevelInfo.sound_doropn;
+            turbo = false;
          }
          if(door->topheight != sec->ceilingheight)
-            S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+         {
+            //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+            P_DoorSequence(true, turbo, door->sector);
+         }
          break;
       case ODoor:
          door->direction = plat_up;
@@ -1221,15 +1224,18 @@ manual_door:
          if(door->speed >= VDOORSPEED*4)
          {
             door->type = genBlazeOpen;
-            sndname = LevelInfo.sound_bdopn;
+            turbo = true;
          }
          else
          {
             door->type = genOpen;
-            sndname = LevelInfo.sound_doropn;
+            turbo = false;
          }
          if(door->topheight != sec->ceilingheight)
-            S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+         {
+            //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+            P_DoorSequence(true, turbo, door->sector);
+         }
          break;
       case CdODoor:
          door->topheight = sec->ceilingheight;
@@ -1237,14 +1243,15 @@ manual_door:
          if(door->speed >= VDOORSPEED*4)
          {
             door->type = genBlazeCdO;
-            sndname = LevelInfo.sound_bdcls;
+            turbo = true;;
          }
          else
          {
             door->type = genCdO;
-            sndname = LevelInfo.sound_dorcls;
+            turbo = false;
          }
-         S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+         //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+         P_DoorSequence(false, turbo, door->sector);
          break;
       case CDoor:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
@@ -1253,15 +1260,17 @@ manual_door:
          if(door->speed >= VDOORSPEED*4)
          {
             door->type = genBlazeClose;
-            sndname = LevelInfo.sound_bdcls;
+            turbo = true;
          }
          else
          {
             door->type = genClose;
-            sndname = LevelInfo.sound_dorcls;
+            turbo = false;
          }
-         S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+         //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
+         P_DoorSequence(false, turbo, door->sector);
          break;
+      
       // haleyjd: The following door types are parameterized only
       case pDOdCDoor:
          // parameterized "raise in" type

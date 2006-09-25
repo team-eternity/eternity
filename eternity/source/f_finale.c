@@ -480,7 +480,7 @@ void F_CastTicker(void)
 //
 // F_CastResponder
 //
-boolean F_CastResponder (event_t* ev)
+boolean F_CastResponder(event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
@@ -498,7 +498,7 @@ boolean F_CastResponder (event_t* ev)
    {
       if(mobjinfo[castorder[castnum].type].dehnum == MT_PLAYER)
          S_StartSoundName(NULL, 
-            players[displayplayer].skin->sounds[sk_pldeth]);
+            players[consoleplayer].skin->sounds[sk_pldeth]);
       else
          S_StartSound(NULL, mobjinfo[castorder[castnum].type].deathsound);
    }
@@ -514,7 +514,7 @@ boolean F_CastResponder (event_t* ev)
 // instead of duplicating that code unnecessarily. It's about 200
 // lines shorter now.
 //
-void F_CastPrint(char *text)
+void F_CastPrint(const char *text)
 {
    int cx;
    int w = V_StringWidth(text);
@@ -529,44 +529,45 @@ void F_CastPrint(char *text)
 // F_CastDrawer
 //
 
-void F_CastDrawer (void)
+void F_CastDrawer(void)
 {
-  spritenum_t         altsprite;
-  spritedef_t*        sprdef;
-  spriteframe_t*      sprframe;
-  int                 lump;
-  boolean             flip;
-  patch_t*            patch;
-    
-  // erase the entire screen to a background
-  V_DrawPatch (0,0,&vbscreen, W_CacheLumpName (bgcastcall, PU_CACHE)); // Ty 03/30/98 bg texture extern
-
-  F_CastPrint (castorder[castnum].name);
-    
-  // draw the current frame in the middle of the screen
-  sprdef = sprites + caststate->sprite;
-
-  // override for alternate monster sprite?
-  if((altsprite = mobjinfo[castorder[castnum].type].altsprite) != NUMSPRITES)
-     sprdef = &sprites[altsprite];
-  
-  // override for player skin?
-  if(mobjinfo[castorder[castnum].type].dehnum == MT_PLAYER)
-        sprdef = &sprites[players[displayplayer].skin->sprite];
-
-  // haleyjd 08/15/02
-  if(!(sprdef->spriteframes))
-     return;
-
-  sprframe = &sprdef->spriteframes[caststate->frame & FF_FRAMEMASK];
-  lump = sprframe->lump[0];
-  flip = (boolean)sprframe->flip[0];
-                        
-  patch = W_CacheLumpNum (lump+firstspritelump, PU_CACHE);
-  if (flip)
-    V_DrawPatchFlipped (160,170,&vbscreen,patch);
-  else
-    V_DrawPatch (160,170,&vbscreen,patch);
+   spritenum_t         altsprite;
+   spritedef_t*        sprdef;
+   spriteframe_t*      sprframe;
+   int                 lump;
+   boolean             flip;
+   patch_t*            patch;
+   
+   // erase the entire screen to a background
+   // Ty 03/30/98 bg texture extern
+   V_DrawPatch (0,0,&vbscreen, W_CacheLumpName (bgcastcall, PU_CACHE));
+   
+   F_CastPrint (castorder[castnum].name);
+   
+   // draw the current frame in the middle of the screen
+   sprdef = sprites + caststate->sprite;
+   
+   // override for alternate monster sprite?
+   if((altsprite = mobjinfo[castorder[castnum].type].altsprite) != NUMSPRITES)
+      sprdef = &sprites[altsprite];
+   
+   // override for player skin?
+   if(mobjinfo[castorder[castnum].type].dehnum == MT_PLAYER)
+      sprdef = &sprites[players[consoleplayer].skin->sprite];
+   
+   // haleyjd 08/15/02
+   if(!(sprdef->spriteframes))
+      return;
+   
+   sprframe = &sprdef->spriteframes[caststate->frame & FF_FRAMEMASK];
+   lump = sprframe->lump[0];
+   flip = (boolean)sprframe->flip[0];
+   
+   patch = W_CacheLumpNum(lump + firstspritelump, PU_CACHE);
+   if(flip)
+      V_DrawPatchFlipped(160, 170, &vbscreen, patch);
+   else
+      V_DrawPatch(160, 170, &vbscreen, patch);
 }
 
 

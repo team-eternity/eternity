@@ -257,7 +257,8 @@ void P_DeathThink(player_t* player)
       player->viewheight = 6*FRACUNIT;
    
    player->deltaviewheight = 0;
-   onground = (player->mo->z <= player->mo->floorz);
+   onground = (player->mo->z <= player->mo->floorz) ||
+                 (player->mo->intflags & MIF_ONMOBJ);
    P_CalcHeight (player);
    
    if(player->attacker && player->attacker != player->mo)

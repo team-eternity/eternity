@@ -633,11 +633,16 @@ void I_ShutdownSound(void)
 }
 
 //
+// I_CacheSound
+//
 // haleyjd 11/05/03: fixed for SDL sound engine
+// haleyjd 09/24/06: added sound aliases
 //
 void I_CacheSound(sfxinfo_t *sound)
 {
-   if(sound->link)
+   if(sound->alias)
+      I_CacheSound(sound->alias);
+   else if(sound->link)
       I_CacheSound(sound->link);
    else
    {

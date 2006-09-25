@@ -348,7 +348,10 @@ void I_CacheSound(sfxinfo_t *sound)
       return;
 
    // sf: changed
-   if(sound->link)
+   // haleyjd 09/24/06: added aliases
+   if(sound->alias)
+      I_CacheSound(sound->alias);
+   else if(sound->link)
       I_CacheSound(sound->link);
    else
       sound->data = getsfx(sound);

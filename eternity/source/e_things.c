@@ -101,6 +101,8 @@ int UnknownThingType;
 #define ITEM_TNG_SKINSPRITE "skinsprite"
 #define ITEM_TNG_C3DHEIGHT "correct_height"
 #define ITEM_TNG_BASICTYPE "basictype"
+#define ITEM_TNG_TOPDAMAGE "topdamage"
+#define ITEM_TNG_TOPDMGMASK "topdamagemask"
 #define ITEM_TNG_DEHNUM "dehackednum"
 
 // Thing Delta Keywords
@@ -348,6 +350,8 @@ static int E_ModCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_SKINSPRITE,   "noskin", CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_C3DHEIGHT,  0.0f,     CFGF_NONE), \
    CFG_STR(ITEM_TNG_BASICTYPE,    "",       CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TOPDAMAGE,    0,        CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TOPDMGMASK,   0,        CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -512,7 +516,8 @@ boolean E_AutoAllocThingDEHNum(int thingnum)
    do
    {
       dehnum = edf_alloc_thing_dehnum--;
-   } while(dehnum >= 0 && E_ThingNumForDEHNum(dehnum) != NUMMOBJTYPES);
+   } 
+   while(dehnum >= 0 && E_ThingNumForDEHNum(dehnum) != NUMMOBJTYPES);
 
    // ran out while looking for an unused number?
    if(dehnum < 0)
@@ -1305,6 +1310,14 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_C3DHEIGHT);
       mobjinfo[i].c3dheight = (int)(tempfloat * FRACUNIT);
    }
+
+   // 09/22/06: process topdamage 
+   if(IS_SET(ITEM_TNG_TOPDAMAGE))
+      mobjinfo[i].topdamage = cfg_getint(thingsec, ITEM_TNG_TOPDAMAGE);
+
+   // 09/23/06: process topdamagemask
+   if(IS_SET(ITEM_TNG_TOPDMGMASK))
+      mobjinfo[i].topdamagemask = cfg_getint(thingsec, ITEM_TNG_TOPDMGMASK);
 
    // output end message if processing a definition
    if(def)

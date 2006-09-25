@@ -68,11 +68,13 @@
 #define ITEM_SND_SINGULARITY   "singularity"
 #define ITEM_SND_PRIORITY      "priority"
 #define ITEM_SND_LINK          "link"
+#define ITEM_SND_ALIAS         "alias"
 #define ITEM_SND_SKININDEX     "skinindex"
 #define ITEM_SND_LINKVOL       "linkvol"
 #define ITEM_SND_LINKPITCH     "linkpitch"
 #define ITEM_SND_CLIPPING_DIST "clipping_dist"
 #define ITEM_SND_CLOSE_DIST    "close_dist"
+#define ITEM_SND_PITCHVAR      "pitchvariance"
 #define ITEM_SND_DEHNUM        "dehackednum"
 
 #define ITEM_DELTA_NAME "name"
@@ -124,17 +126,33 @@ static const char *skinindices[] =
 
 #define NUM_SKININDICES (sizeof(skinindices) / sizeof(char *))
 
+//
+// Pitch variance types
+//
+static const char *pitchvars[] =
+{
+   "none",
+   "Doom",
+   "DoomSaw",
+   "Heretic",
+   "HereticAmbient"
+};
+
+#define NUM_PITCHVARS (sizeof(pitchvars) / sizeof(char *))
+
 #define SOUND_OPTIONS \
    CFG_STR(ITEM_SND_LUMP,          NULL,              CFGF_NONE), \
    CFG_BOOL(ITEM_SND_PREFIX,       cfg_true,          CFGF_NONE), \
    CFG_STR(ITEM_SND_SINGULARITY,   "sg_none",         CFGF_NONE), \
    CFG_INT(ITEM_SND_PRIORITY,      64,                CFGF_NONE), \
    CFG_STR(ITEM_SND_LINK,          "none",            CFGF_NONE), \
+   CFG_STR(ITEM_SND_ALIAS,         "none",            CFGF_NONE), \
    CFG_STR(ITEM_SND_SKININDEX,     "sk_none",         CFGF_NONE), \
    CFG_INT(ITEM_SND_LINKVOL,       -1,                CFGF_NONE), \
    CFG_INT(ITEM_SND_LINKPITCH,     -1,                CFGF_NONE), \
    CFG_INT(ITEM_SND_CLIPPING_DIST, S_CLIPPING_DIST_I, CFGF_NONE), \
    CFG_INT(ITEM_SND_CLOSE_DIST,    S_CLOSE_DIST_I,    CFGF_NONE), \
+   CFG_STR(ITEM_SND_PITCHVAR,      "none",            CFGF_NONE), \
    CFG_INT(ITEM_SND_DEHNUM,        -1,                CFGF_NONE), \
    CFG_END()
 
@@ -315,6 +333,7 @@ void E_NewWadSound(const char *name)
       sfx->singularity = sg_none;
       sfx->priority = 64;
       sfx->link = NULL;
+      sfx->alias = NULL;
       sfx->pitch = sfx->volume = -1;
       sfx->clipping_dist = S_CLIPPING_DIST;
       sfx->close_dist = S_CLOSE_DIST;
@@ -367,9 +386,11 @@ void E_PreCacheSounds(void)
 //
 // Processes an EDF sound definition
 //
-static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def, boolean add)
+static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, 
+                           boolean def, boolean add)
 {
    boolean setLink = false;
+   boolean explicitLumpName = false;
 
    // preconditions: 
    
@@ -390,12 +411,25 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def, boolean 
          lumpname = cfg_getstr(section, ITEM_SND_LUMP);
 
          strncpy(sfx->name, lumpname, 9);
+
+         // mark that the lump name has been listed explicitly
+         explicitLumpName = true;
       }
    }
 
    // process the prefix flag
    if(IS_SET(ITEM_SND_PREFIX))
-      sfx->prefix = cfg_getbool(section, ITEM_SND_PREFIX);
+   {
+      // haleyjd 09/23/06: When definitions specify a lump name explicitly and
+      // do not specify a value for prefix, the value will be false instead of
+      // the normal default of true. This avoids the need to put 
+      // "prefix = false" in every single unprefixed sound.
+
+      if(def && explicitLumpName && cfg_size(section, ITEM_SND_PREFIX) == 0)
+         sfx->prefix = false;
+      else
+         sfx->prefix = cfg_getbool(section, ITEM_SND_PREFIX);
+   }
 
    // process the singularity
    if(IS_SET(ITEM_SND_SINGULARITY))
@@ -424,7 +458,16 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def, boolean 
       // haleyjd 06/03/06: change defaults for linkvol/linkpitch
       setLink = true;
    }
+   
+   // haleyjd 09/24/06: process alias
+   if(IS_SET(ITEM_SND_ALIAS))
+   {
+      const char *name = cfg_getstr(section, ITEM_SND_ALIAS);
 
+      // will be automatically nullified same as above
+      sfx->alias = E_SoundForName(name);
+   }
+   
    // process the skin index
    if(IS_SET(ITEM_SND_SKININDEX))
    {
@@ -467,6 +510,17 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def, boolean 
    if(IS_SET(ITEM_SND_CLOSE_DIST))
       sfx->close_dist = cfg_getint(section, ITEM_SND_CLOSE_DIST) << FRACBITS;
 
+   // haleyjd 09/23/06: process pitch variance type
+   if(IS_SET(ITEM_SND_PITCHVAR))
+   {
+      const char *s = cfg_getstr(section, ITEM_SND_PITCHVAR);
+
+      sfx->pitch_type = E_StrToNumLinear(pitchvars, NUM_PITCHVARS, s);
+
+      if(sfx->pitch_type == NUM_PITCHVARS)
+         sfx->pitch_type = pitch_none;
+   }
+   
    // process dehackednum -- not in deltas! 06/06/06: also not in additive sounds
    if(def && !add)
    {

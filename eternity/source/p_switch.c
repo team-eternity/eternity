@@ -204,7 +204,7 @@ void P_RunButtons(void)
                break;
             }
             // SNDSEQ FIXME
-            S_StartSound((mobj_t *)&buttonlist[i].soundorg,sfx_swtchn);
+            S_StartSoundName((mobj_t *)&buttonlist[i].soundorg, "EE_SwitchOn");
             memset(&buttonlist[i],0,sizeof(button_t));
          }
       }
@@ -241,11 +241,11 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    texMid = sides[line->sidenum[side]].midtexture;
    texBot = sides[line->sidenum[side]].bottomtexture;
 
-   sound = LevelInfo.sound_swtchn; // haleyjd
+   sound = "EE_SwitchOn"; // haleyjd
    
    // EXIT SWITCH?
    if(line->special == 11)
-      sound = LevelInfo.sound_swtchx;
+      sound = "EE_SwitchEx";
 
    for(i = 0; i < numswitches * 2; ++i)
    {

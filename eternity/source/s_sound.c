@@ -328,7 +328,6 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 {
    int sep, pitch, priority, cnum;
    int volume = snd_SfxVolume;
-   int sfx_id;
    boolean extcamera = false;
    camera_t playercam;
 
@@ -339,6 +338,14 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
       return;
+
+   // haleyjd 09/24/06: Sound aliases. These are similar to links, but we skip
+   // through them now, up here, instead of below. This allows aliases to simply
+   // serve as alternate names for the same sounds, in contrast to links which
+   // provide a way of playing the same sound with different parameters.
+
+   while(sfx->alias)
+      sfx = sfx->alias;
 
    // haleyjd:  we must weed out degenmobj_t's before trying to 
    // dereference these fields -- a thinker check perhaps?
@@ -366,9 +373,6 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
          return;
       }
    }
-
-   // haleyjd: this should now use the sound dehackednum
-   sfx_id = sfx->dehackednum;
 
    // FIXME: Shouldn't the priority value always be used??
 
@@ -431,19 +435,25 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
   
    if(pitched_sounds)
    {
-      if(gameModeInfo->type == Game_DOOM)
+      switch(sfx->pitch_type)
       {
-         // hacks to vary the sfx pitches
-         if(sfx_id >= sfx_sawup && sfx_id <= sfx_sawhit)
-            pitch += 8 - (M_Random()&15);
-         else if(sfx_id != sfx_itemup && sfx_id != sfx_tink)
-            pitch += 16 - (M_Random()&31);
-      }
-      else
-      {
-         // haleyjd: experimental for Heretic/Hexen
-         pitch = NORM_PITCH + (M_Random() & 31);
+      case pitch_doom:
+         pitch += 16 - (M_Random() & 31);
+         break;
+      case pitch_doomsaw:
+         pitch += 8 - (M_Random() & 15);
+         break;
+      case pitch_heretic:
+         pitch += M_Random() & 31;
          pitch -= M_Random() & 31;
+         break;
+      case pitch_hticamb:
+         pitch += M_Random() & 15;
+         pitch -= M_Random() & 15;
+         break;
+      case pitch_none:
+      default:
+         break;
       }
 
       if(pitch < 0)
@@ -1157,13 +1167,16 @@ void S_UpdateMusic(int lumpnum)
 boolean S_CheckSoundPlaying(mobj_t *mo, sfxinfo_t *sfx)
 {
    int cnum;
-   
-   for(cnum = 0; cnum < numChannels; ++cnum)
-   {
-      if(mo && channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
+
+   if(mo && sfx)
+   {   
+      for(cnum = 0; cnum < numChannels; ++cnum)
       {
-         if(I_SoundIsPlaying(channels[cnum].handle))
-            return true;
+         if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
+         {
+            if(I_SoundIsPlaying(channels[cnum].handle))
+               return true;
+         }
       }
    }
    

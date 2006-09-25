@@ -150,7 +150,7 @@ void D_InitWeaponInfo(void)
 {
    int i;
 
-   for(i = 0; i < NUMWEAPONS; i++)
+   for(i = 0; i < NUMWEAPONS; ++i)
    {
       weaponinfo[i].atkstate   = E_SafeState(weaponinfo[i].atkstate);
       weaponinfo[i].downstate  = E_SafeState(weaponinfo[i].downstate);

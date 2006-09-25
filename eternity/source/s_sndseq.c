@@ -121,7 +121,7 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
    newSeq = Z_Malloc(sizeof(SndSeq_t), PU_LEVEL, NULL);
    memset(newSeq, 0, sizeof(SndSeq_t));
 
-   M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)SoundSequences);
+   M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)&SoundSequences);
 
    // set up all fields
    newSeq->origin       = mo;                  // set origin
@@ -161,7 +161,7 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
    newSeq = Z_Malloc(sizeof(SndSeq_t), PU_LEVEL, NULL);
    memset(newSeq, 0, sizeof(SndSeq_t));
 
-   M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)SoundSequences);
+   M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)&SoundSequences);
 
    // set up all fields
    newSeq->origin       = mo;                  // set origin
@@ -281,7 +281,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       break;
    case SEQ_CMD_END:
       // sequences without a stopsound are ended here
-      if(curSeq->sequence->type == SEQ_ENVIRONMENT)
+      if(curSeq == EnviroSequence)
          enviroSeqFinished = true;
       else if(curSeq->sequence->stopsound == NULL)
       {

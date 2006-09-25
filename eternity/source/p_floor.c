@@ -426,7 +426,7 @@ void T_MoveFloor(floormove_t* floor)
    // sf: added silentmove
    if(!(leveltime&7) && !silentmove(floor->sector))     // make the floormove sound
       S_StartSoundName((mobj_t *)&floor->sector->soundorg,
-                       LevelInfo.sound_stnmov);
+                       "EE_FCMove");
     
    if(res == pastdest)    // if destination height is reached
    {
@@ -518,7 +518,7 @@ void T_MoveFloor(floormove_t* floor)
       // make floor stop sound
       if(!silentmove(floor->sector)) //sf: silentmove
          S_StartSoundName((mobj_t *)&floor->sector->soundorg,
-                          LevelInfo.sound_pstop);
+                          "EE_PlatStop");
    }
 }
 
@@ -587,7 +587,7 @@ void T_MoveElevator(elevator_t* elevator)
    // sf: added silentmove
    if(!(leveltime&7) && !silentmove(elevator->sector))
       S_StartSoundName((mobj_t *)&elevator->sector->soundorg,
-                       LevelInfo.sound_stnmov);
+                       "EE_FCMove");
     
    if(res == pastdest)            // if destination height acheived
    {
@@ -598,7 +598,7 @@ void T_MoveElevator(elevator_t* elevator)
       // make floor stop sound
       if(!silentmove(elevator->sector))   //sf: silentmove
          S_StartSoundName((mobj_t *)&elevator->sector->soundorg,
-                          LevelInfo.sound_pstop);
+                          "EE_PlatStop");
    }
 }
 

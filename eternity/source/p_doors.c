@@ -33,12 +33,44 @@ rcsid[] = "$Id: p_doors.c,v 1.13 1998/05/09 12:16:29 jim Exp $";
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "sounds.h"
 #include "r_main.h"
 #include "dstrings.h"
 #include "d_deh.h"  // Ty 03/27/98 - externalized
 #include "hu_stuff.h"
 #include "d_gi.h"
+
+//
+// P_DoorSequence
+//
+// haleyjd 09/24/06: Plays the appropriate sound sequence for a door.
+//
+void P_DoorSequence(boolean raise, boolean turbo, sector_t *s)
+{
+   const char *seqName;
+
+   if(s->sndSeqID >= 0)
+      S_StartSequenceNum((mobj_t *)&s->soundorg, s->sndSeqID, SEQ_DOOR);
+   else
+   {
+      if(raise)
+         seqName = turbo ? "EEDoorOpenBlazing" : "EEDoorOpenNormal";
+      else
+      {
+         if(turbo)
+         {
+            if(gameModeInfo->type == Game_DOOM && comp[comp_blazing])
+               seqName = "EEDoorCloseBlazingComp";
+            else
+               seqName = "EEDoorCloseBlazing";
+         }
+         else
+            seqName = "EEDoorCloseNormal";
+      }
+      S_StartSequenceName((mobj_t *)&s->soundorg, seqName);
+   }
+}
 
 ///////////////////////////////////////////////////////////////
 //
@@ -59,18 +91,13 @@ rcsid[] = "$Id: p_doors.c,v 1.13 1998/05/09 12:16:29 jim Exp $";
 void T_VerticalDoor(vldoor_t *door)
 {
    result_e  res;
-
-   // haleyjd 03/17/03: TODO: eventually replace with sound
-   // sequences -- for now, use gameModeInfo
-   char *normalDoorClose  = *(gameModeInfo->normalDoorClose);
-   char *blazingDoorClose = *(gameModeInfo->blazingDoorClose);
    
    // Is the door waiting, going up, or going down?
    switch(door->direction)
    {
    case plat_stop:
       // Door is waiting
-      if (!--door->topcountdown)  // downcount and check
+      if(!--door->topcountdown)  // downcount and check
       {
          switch(door->type)
          {
@@ -78,29 +105,45 @@ void T_VerticalDoor(vldoor_t *door)
          case genBlazeRaise:
          case paramBlazeCloseIn: // haleyjd 03/01/05
             door->direction = plat_down; // time to go back down
-            S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                             blazingDoorClose);
+            /*
+            if(gameModeInfo->type == Game_Heretic)
+               S_StartSoundName((mobj_t *)&door->sector->soundorg, "EE_BDoorOpen");
+            else
+               S_StartSoundName((mobj_t *)&door->sector->soundorg, "EE_BDoorClose");
+            */
+            P_DoorSequence(false, true, door->sector);
             break;
             
          case doorNormal:
          case genRaise:
          case paramCloseIn: // haleyjd 03/01/05
             door->direction = plat_down; // time to go back down
-            S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                             normalDoorClose);
+            /*
+            if(gameModeInfo->type == Game_Heretic)
+               S_StartSoundName((mobj_t *)&door->sector->soundorg, "EE_DoorOpen");
+            else
+               S_StartSoundName((mobj_t *)&door->sector->soundorg, "EE_DoorClose");
+            */
+            P_DoorSequence(false, false, door->sector);
             break;
 
          case close30ThenOpen:
          case genCdO:
             door->direction = plat_up;  // time to go back up
+            /*
             S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                             LevelInfo.sound_doropn);
+                             "EE_DoorOpen");
+            */
+            P_DoorSequence(true, false, door->sector);
             break;
 
          case genBlazeCdO:
             door->direction = plat_up;  // time to go back up
+            /*
             S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                             LevelInfo.sound_bdopn);
+                             "EE_BDoorOpen");
+            */
+            P_DoorSequence(true, true, door->sector);
             break;
 
          default:
@@ -119,14 +162,20 @@ void T_VerticalDoor(vldoor_t *door)
          case paramRaiseIn: // haleyjd 03/01/05: new param type
             door->direction = plat_up; // time to raise then
             door->type = doorNormal;   // door acts just like normal 1 DR door now
-            S_StartSoundName((mobj_t *)&door->sector->soundorg,LevelInfo.sound_doropn);
+            /*
+            S_StartSoundName((mobj_t *)&door->sector->soundorg,"EE_DoorOpen");
+            */
+            P_DoorSequence(true, false, door->sector);
             break;
 
             // haleyjd 03/01/05: new param type
          case paramBlazeRaiseIn:
             door->direction = plat_up;
             door->type = genBlazeRaise;
-            S_StartSoundName((mobj_t *)&door->sector->soundorg, LevelInfo.sound_bdopn);
+            /*
+            S_StartSoundName((mobj_t *)&door->sector->soundorg, "EE_BDoorOpen");
+            */
+            P_DoorSequence(true, true, door->sector);
             break;
             
          default:
@@ -152,6 +201,8 @@ void T_VerticalDoor(vldoor_t *door)
       // handle door reaching bottom
       if(res == pastdest)
       {
+         S_StopSequence((mobj_t *)&(door->sector->soundorg));
+
          switch(door->type)
          {
          // regular open and close doors are all done, remove them
@@ -165,9 +216,11 @@ void T_VerticalDoor(vldoor_t *door)
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 03/17/03: heretic doors play dorcls at this
             // point -- see above TODO
+            /*
             if(comp[comp_blazing] || (gameModeInfo->type == Game_Heretic))
                S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                                LevelInfo.sound_bdcls);
+                                "EE_BDoorClose");
+            */
             break;
 
          case doorNormal:
@@ -179,11 +232,13 @@ void T_VerticalDoor(vldoor_t *door)
             P_RemoveThinker(&door->thinker);  // unlink and free
             // haleyjd 03/17/03: heretic doors play dorcls at this
             // point -- see above TODO
+            /*
             if(gameModeInfo->type == Game_Heretic)
             {
                S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                                LevelInfo.sound_dorcls);
+                                "EE_DoorClose");
             }
+            */
             break;
 
             // close then open doors start waiting
@@ -221,8 +276,11 @@ void T_VerticalDoor(vldoor_t *door)
             
          default:             // other types bounce off the obstruction
             door->direction = plat_up;
+            /*
             S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                             LevelInfo.sound_doropn);
+                             "EE_DoorOpen");
+            */
+            P_DoorSequence(true, false, door->sector);
             break;
          }
       }
@@ -262,6 +320,7 @@ void T_VerticalDoor(vldoor_t *door)
          case genOpen:
          case genCdO:
          case genBlazeCdO:
+            S_StopSequence((mobj_t *)&(door->sector->soundorg));
             door->sector->ceilingdata = NULL; //jff 2/22/98
             P_RemoveThinker (&door->thinker); // unlink and free
             break;
@@ -308,7 +367,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
       {
          //sf: player_printf
          player_printf(p, s_PD_BLUEO);       // Ty 03/27/98 - externalized
-         S_StartSound(p->mo,sfx_oof);         // killough 3/20/98
+         S_StartSound(p->mo, sfx_oof);       // killough 3/20/98
          return 0;
       }
       break;
@@ -319,8 +378,8 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
       {
          const char *msg = (gameModeInfo->type == Game_Heretic) 
                            ? s_HPD_GREENO : s_PD_REDO;
-         player_printf(p, msg);       // Ty 03/27/98 - externalized
-         S_StartSound(p->mo,sfx_oof); // killough 3/20/98
+         player_printf(p, msg);        // Ty 03/27/98 - externalized
+         S_StartSound(p->mo, sfx_oof); // killough 3/20/98
          return 0;
       }
       break;
@@ -329,8 +388,8 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
    case 137:
       if (!p->cards[it_yellowcard] && !p->cards[it_yellowskull])
       {
-         player_printf(p, s_PD_YELLOWO);             // Ty 03/27/98 - externalized
-         S_StartSound(p->mo,sfx_oof);         // killough 3/20/98
+         player_printf(p, s_PD_YELLOWO);       // Ty 03/27/98 - externalized
+         S_StartSound(p->mo, sfx_oof);         // killough 3/20/98
          return 0;
       }
       break;
@@ -384,23 +443,32 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->topheight -= 4*FRACUNIT;
          door->direction = plat_down;
          door->speed = VDOORSPEED * 4;
+         /*
          S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                          LevelInfo.sound_bdcls);
+                          "EE_BDoorClose");
+         */
+         P_DoorSequence(false, true, door->sector);
          break;
 
       case doorClose:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          door->direction = plat_down;
+         /*
          S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                          LevelInfo.sound_dorcls);
+                          "EE_DoorClose");
+         */
+         P_DoorSequence(false, false, door->sector);
          break;
 
       case close30ThenOpen:
          door->topheight = sec->ceilingheight;
          door->direction = plat_down;
+         /*
          S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                          LevelInfo.sound_dorcls);
+                          "EE_DoorClose");
+         */
+         P_DoorSequence(false, false, door->sector);
          break;
 
       case blazeRaise:
@@ -410,8 +478,13 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->topheight -= 4*FRACUNIT;
          door->speed = VDOORSPEED * 4;
          if(door->topheight != sec->ceilingheight)
+         {
+            /*
             S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                             LevelInfo.sound_bdopn);
+                             "EE_BDoorOpen");
+            */
+            P_DoorSequence(true, true, door->sector);
+         }
          break;
 
       case doorNormal:
@@ -420,8 +493,13 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          if(door->topheight != sec->ceilingheight)
+         {
+            /*
             S_StartSoundName((mobj_t *)&door->sector->soundorg,
-                             LevelInfo.sound_doropn);
+                             "EE_DoorOpen");
+            */
+            P_DoorSequence(true, false, door->sector);
+         }
          break;
          
       default:
@@ -459,8 +537,8 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
          return 0;
       if(!player->cards[it_bluecard] && !player->cards[it_blueskull])
       {
-         player_printf(player, s_PD_BLUEK);             // Ty 03/27/98 - externalized
-         S_StartSound(player->mo,sfx_oof);     // killough 3/20/98
+         player_printf(player, s_PD_BLUEK);     // Ty 03/27/98 - externalized
+         S_StartSound(player->mo, sfx_oof);     // killough 3/20/98
          return 0;
       }
       break;
@@ -471,8 +549,8 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
          return 0;
       if(!player->cards[it_yellowcard] && !player->cards[it_yellowskull])
       {
-         player_printf(player, s_PD_YELLOWK);             // Ty 03/27/98 - externalized
-         S_StartSound(player->mo,sfx_oof);     // killough 3/20/98
+         player_printf(player, s_PD_YELLOWK);   // Ty 03/27/98 - externalized
+         S_StartSound(player->mo, sfx_oof);     // killough 3/20/98
          return 0;
       }
       break;
@@ -485,8 +563,8 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
       {
          const char *msg = (gameModeInfo->type == Game_Heretic)
                            ? s_HPD_GREENK : s_PD_REDK;
-         player_printf(player, msg);       // Ty 03/27/98 - externalized
-         S_StartSound(player->mo,sfx_oof); // killough 3/20/98
+         player_printf(player, msg);        // Ty 03/27/98 - externalized
+         S_StartSound(player->mo, sfx_oof); // killough 3/20/98
          return 0;
       }
       break;
@@ -496,9 +574,9 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    }
 
    // if the wrong side of door is pushed, give oof sound
-   if(line->sidenum[1]==-1)                       // killough
+   if(line->sidenum[1] == -1)                      // killough
    {
-      S_StartSound(player->mo,sfx_oof);           // killough 3/20/98
+      S_StartSound(player->mo, sfx_oof);           // killough 3/20/98
       return 0;
    }
 
@@ -558,16 +636,15 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    {
    case 117: // blazing door raise
    case 118: // blazing door open
-      S_StartSoundName((mobj_t *)&sec->soundorg, LevelInfo.sound_bdopn);
+      //S_StartSoundName((mobj_t *)&sec->soundorg, "EE_BDoorOpen");
+      P_DoorSequence(true, true, sec);
       break;
 
    case 1:   // normal door sound
    case 31:
-      S_StartSoundName((mobj_t *)&sec->soundorg, LevelInfo.sound_doropn);
-      break;
-
-   default:  // locked door sound
-      S_StartSoundName((mobj_t *)&sec->soundorg, LevelInfo.sound_doropn);
+   default:
+      //S_StartSoundName((mobj_t *)&sec->soundorg, "EE_DoorOpen");
+      P_DoorSequence(true, false, sec);
       break;
    }
 
@@ -644,7 +721,7 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
 {
    vldoor_t *door = Z_Malloc ( sizeof(*door), PU_LEVSPEC, 0);
    
-   P_AddThinker (&door->thinker);
+   P_AddThinker(&door->thinker);
    
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;

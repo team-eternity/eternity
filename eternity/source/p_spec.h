@@ -1157,6 +1157,8 @@ void P_SpawnDoorCloseIn30(sector_t *sec);
 
 void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
 
+void P_DoorSequence(boolean raise, boolean turbo, sector_t *s); // haleyjd
+
 // p_ceilng
 
 void P_RemoveActiveCeiling(ceiling_t *ceiling);  //jff 2/22/98

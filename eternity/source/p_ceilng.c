@@ -86,8 +86,8 @@ void T_MoveCeiling(ceiling_t *ceiling)
          case genSilentCrusher:
             break;
          default: // haleyjd: use mapinfo sound name
-            S_StartSoundName((mobj_t *)&ceiling->sector->soundorg,
-                             LevelInfo.sound_stnmov);
+            S_StartSoundName((mobj_t *)&ceiling->sector->soundorg, 
+                             "EE_FCMove");
             break;
          }
       }
@@ -118,7 +118,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
          case silentCrushAndRaise:
             if(!silentmove(ceiling->sector))    // sf: silentmove
                S_StartSoundName((mobj_t *)&ceiling->sector->soundorg,
-                                LevelInfo.sound_pstop);
+                                "EE_PlatStop");
          case genSilentCrusher:
          case genCrusher:
          case fastCrushAndRaise:
@@ -154,7 +154,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             break;
          default:
             S_StartSoundName((mobj_t *)&ceiling->sector->soundorg,
-                             LevelInfo.sound_stnmov);
+                             "EE_FCMove");
          }
       }
 
@@ -177,7 +177,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
          case silentCrushAndRaise:
             if(!silentmove(ceiling->sector))    // sf: silentmove
                S_StartSoundName((mobj_t *)&ceiling->sector->soundorg,
-                                LevelInfo.sound_pstop);
+                                "EE_PlatStop");
          case crushAndRaise: 
             ceiling->speed = CEILSPEED;
          case fastCrushAndRaise:

@@ -72,24 +72,6 @@ typedef struct gitextmetric_s
    int absh;   // absolute maximum height of any character
 } gitextmetric_t;
 
-
-// enum for sound index array used by p_info.c to remap environmental
-// sound defaults
-
-enum
-{
-   INFO_DOROPN,
-   INFO_DORCLS,
-   INFO_BDOPN,
-   INFO_BDCLS,
-   INFO_SWTCHN,
-   INFO_SWTCHX,
-   INFO_PSTART,
-   INFO_PSTOP,
-   INFO_STNMOV,
-   INFO_NUMSOUNDS,
-};
-
 //
 // enum for menu sounds
 //
@@ -207,13 +189,7 @@ typedef struct gameinfo_s
    int musMin;                // smallest music index value (0)
    int numMusic;              // maximum music index value
    char *musPrefix;           // "D_" for DOOM, "MUS_" for Heretic
-   int *infoSounds;           // p_info env. sound remapping array
    const char *defSoundName;  // default sound if one is missing
-
-   // Line special sound variables -- TODO: replace with editable
-   // sound sequences
-   char **normalDoorClose;
-   char **blazingDoorClose;
 
    // Miscellaneous stuff
    const char *endTextName;   // name of end text resource

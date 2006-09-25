@@ -998,11 +998,17 @@ void P_MobjThinker(mobj_t *mobj)
          }
          else
          {
-            // haleyjd: Here is where to put code for burning somebody's
-            // feet when they stand on a hot object like a torch!
-            // Hack to test:
-            if(onmo->type == E_ThingNumForName("FireBrazier"))
-               P_DamageMobj(mobj, onmo, onmo, 2, MOD_UNKNOWN);
+            // haleyjd 09/23/06: topdamage -- at last, we can have torches and
+            // other hot objects burn things that stand on them :)
+            if(demo_version >= 333 && onmo->info->topdamage > 0)
+            {
+               if(!(leveltime & onmo->info->topdamagemask) &&
+                  (!mobj->player || !mobj->player->powers[pw_ironfeet]))
+               {
+                  P_DamageMobj(mobj, onmo, onmo, 
+                               onmo->info->topdamage, MOD_UNKNOWN);
+               }
+            }
 
             if(mobj->player && mobj == mobj->player->mo &&
                mobj->momz < -LevelInfo.gravity*8)

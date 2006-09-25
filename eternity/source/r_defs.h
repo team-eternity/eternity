@@ -194,6 +194,9 @@ struct sector_s
    angle_t hticPushAngle;
    fixed_t hticPushForce;
 
+   // haleyjd 09/24/06: sound sequence id
+   int sndSeqID;
+
    struct particle_s *ptcllist; // haleyjd 02/20/04: list of particles in sector
 };
 

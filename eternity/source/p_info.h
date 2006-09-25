@@ -118,6 +118,10 @@ typedef struct LevelInfo_s
    char *sound_doropn;       // normal door open
    char *sound_dorcls;       // normal door close
    char *sound_pstart;       // plat start
+   char *sound_fcmove;       // floor/ceiling move
+
+   // sound sequences
+   boolean noAutoSequences;  // auto sequence behavior
 
 } LevelInfo_t;
 

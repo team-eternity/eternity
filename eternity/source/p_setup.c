@@ -265,11 +265,15 @@ void P_LoadSectors(int lump)
 {
    byte *data;
    int  i;
+   int  defaultSndSeq;
    
    numsectors = W_LumpLength(lump) / sizeof(mapsector_t);
    sectors = Z_Malloc(numsectors * sizeof(sector_t), PU_LEVEL, 0);
    memset(sectors, 0, numsectors*sizeof(sector_t));
    data = W_CacheLumpNum(lump, PU_STATIC);
+
+   // haleyjd 09/24/06: determine what the default sound sequence is
+   defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
 
    for(i = 0; i < numsectors; ++i)
    {
@@ -325,6 +329,9 @@ void P_LoadSectors(int lump)
       ss->groupid = R_NOGROUP;
 #endif
       ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
+
+      // haleyjd 09/24/06: sound sequences -- set default
+      ss->sndSeqID = defaultSndSeq;
    }
 
    Z_Free(data);
