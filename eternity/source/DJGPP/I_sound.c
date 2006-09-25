@@ -49,7 +49,8 @@ void I_CacheSound(sfxinfo_t *sound);
 #define SAMPLECOUNT             512
 
 // Factor volume is increased before sending to allegro
-#define VOLSCALE                16
+//#define VOLSCALE                16
+#define VOLSCALE                2
 
         // sf: adjust temp when changing gamespeed
 extern int realtic_clock_rate;

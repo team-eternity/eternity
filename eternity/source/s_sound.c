@@ -213,7 +213,8 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
                                         + ANG90) >> ANGLETOFINESHIFT]) : 0;   
    
    // haleyjd 05/29/06: allow per-channel volume scaling
-   basevolume = (snd_SfxVolume * chanvol) / 127;
+   //basevolume = (snd_SfxVolume * chanvol) / 127;
+   basevolume = (snd_SfxVolume * chanvol) / 15;
 
    // haleyjd 05/30/06: allow per-channel attenuation behavior
    switch(chanattn)
@@ -417,11 +418,11 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    if(!origin || (!extcamera && origin == players[displayplayer].mo))
    {
       sep = NORM_SEP;
-      volume = (volume * volumeScale) / 127; // haleyjd 05/29/06: scale volume
+      volume = (volume * volumeScale) / 15; // haleyjd 05/29/06: scale volume
       if(volume < 1)
          return;
-      if(volume > snd_SfxVolume)
-         volume = snd_SfxVolume;
+      if(volume > 127)
+         volume = 127;
    }
    else
    {     

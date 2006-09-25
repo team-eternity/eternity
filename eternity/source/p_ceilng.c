@@ -246,9 +246,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
 // Passed the linedef activating the function and the type of function desired
 // returns true if a thinker started
 //
-int EV_DoCeiling
-( line_t* line,
-  ceiling_e type )
+int EV_DoCeiling(line_t *line, ceiling_e type)
 {
   int   secnum;
   int   rtn;
@@ -272,7 +270,7 @@ int EV_DoCeiling
   }
   
   // affects all sectors with the same tag as the linedef
-  while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+  while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
   {
     sec = &sectors[secnum];
 
@@ -370,21 +368,21 @@ int EV_DoCeiling
 //jff 4/5/98 return if activated
 int P_ActivateInStasisCeiling(line_t *line)
 {
-  ceilinglist_t *cl;
-  int rtn=0;
-
-  for (cl=activeceilings; cl; cl=cl->next)
-  {
-    ceiling_t *ceiling = cl->ceiling;
-    if (ceiling->tag == line->tag && ceiling->direction == 0)
-    {
-      ceiling->direction = ceiling->olddirection;
-      ceiling->thinker.function = T_MoveCeiling;
-      //jff 4/5/98 return if activated
-      rtn=1;
-    }
-  }
-  return rtn;
+   ceilinglist_t *cl;
+   int rtn=0;
+   
+   for(cl = activeceilings; cl; cl = cl->next)
+   {
+      ceiling_t *ceiling = cl->ceiling;
+      if (ceiling->tag == line->tag && ceiling->direction == 0)
+      {
+         ceiling->direction = ceiling->olddirection;
+         ceiling->thinker.function = T_MoveCeiling;
+         //jff 4/5/98 return if activated
+         rtn=1;
+      }
+   }
+   return rtn;
 }
 
 //

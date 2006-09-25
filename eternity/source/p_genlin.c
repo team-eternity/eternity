@@ -672,7 +672,7 @@ manual_lift:
       }
 
       if(!silentmove(sec))        //sf: silentmove
-         S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatStart");
+         S_StartSoundName((mobj_t *)&sec->soundorg, "EE_PlatStart");
       P_AddActivePlat(plat); // add this plat to the list of active plats
       
       if(manual)

@@ -89,6 +89,8 @@ extern SndSeq_t *SoundSequences;
 void S_StopSequence(mobj_t *mo);
 void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype);
 void S_StartSequenceName(mobj_t *mo, const char *seqname);
+void S_StartSectorSequence(sector_t *s, int seqtype);
+void S_StartSectorSequenceName(sector_t *s, const char *seqname);
 void S_RunSequences(void);
 void S_StopAllSequences(void);
 void S_SetSequenceStatus(void);

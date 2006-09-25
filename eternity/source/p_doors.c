@@ -50,8 +50,12 @@ void P_DoorSequence(boolean raise, boolean turbo, sector_t *s)
 {
    const char *seqName;
 
+   // haleyjd 09/25/06: apparently fraggle forgot silentmove for doors
+   if(silentmove(s))
+      return;
+
    if(s->sndSeqID >= 0)
-      S_StartSequenceNum((mobj_t *)&s->soundorg, s->sndSeqID, SEQ_DOOR);
+      S_StartSectorSequence(s, SEQ_DOOR);
    else
    {
       if(raise)
@@ -68,7 +72,7 @@ void P_DoorSequence(boolean raise, boolean turbo, sector_t *s)
          else
             seqName = "EEDoorCloseNormal";
       }
-      S_StartSequenceName((mobj_t *)&s->soundorg, seqName);
+      S_StartSectorSequenceName(s, seqName);
    }
 }
 

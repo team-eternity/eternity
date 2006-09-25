@@ -137,6 +137,16 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
 }
 
 //
+// S_StartSectorSequence
+//
+// Convenience routine. Starts the sequence indicated in the sector by number.
+//
+void S_StartSectorSequence(sector_t *s, int seqtype)
+{
+   S_StartSequenceNum((mobj_t *)&s->soundorg, s->sndSeqID, seqtype);
+}
+
+//
 // S_StartSequenceName
 //
 // Starts the named sound sequence.
@@ -174,6 +184,16 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
    newSeq->volume = 
       edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
                       : edfSeq->volume;
+}
+
+//
+// S_StartSectorSequenceName
+//
+// Convenience routine for starting a sector sequence by name.
+//
+void S_StartSectorSequenceName(sector_t *s, const char *seqname)
+{
+   S_StartSequenceName((mobj_t *)&s->soundorg, seqname);
 }
 
 //
