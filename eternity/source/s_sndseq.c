@@ -309,6 +309,9 @@ static void S_RunSequence(SndSeq_t *curSeq)
       curSeq->attenuation = CMD_ARG1(data);
       curSeq->cmdPtr += 2;
       break;
+   case SEQ_CMD_RESTART: // restart the sequence
+      curSeq->cmdPtr = curSeq->sequence->commands;
+      break;
    case SEQ_CMD_END:
       // sequences without a stopsound are ended here
       if(curSeq == EnviroSequence)

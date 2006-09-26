@@ -46,6 +46,7 @@ enum
    SEQ_CMD_SETVOLUME,       // sets volume to n
    SEQ_CMD_SETVOLUMEREL,    // adds/subtracts n from volume (for Heretic)
    SEQ_CMD_SETATTENUATION,  // sets attenuation type to n
+   SEQ_CMD_RESTART,         // restart the sequence
    SEQ_CMD_END,             // end of sequence: do nothing
 };
 

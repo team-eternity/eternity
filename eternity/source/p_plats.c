@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2006 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,6 +40,19 @@ rcsid[] = "$Id: p_plats.c,v 1.16 1998/05/08 17:44:18 jim Exp $";
 platlist_t *activeplats;       // killough 2/14/98: made global again
 
 //
+// P_PlatSequence
+//
+// haleyjd 09/26/06: Starts a sound sequence for a plat.
+//
+void P_PlatSequence(sector_t *s, const char *seqname)
+{
+   if(s->sndSeqID >= 0)
+      S_StartSectorSequence(s, SEQ_PLAT);
+   else
+      S_StartSectorSequenceName(s, seqname);
+}
+
+//
 // T_PlatRaise()
 //
 // Action routine to move a plat up and down
@@ -49,7 +62,7 @@ platlist_t *activeplats;       // killough 2/14/98: made global again
 //
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
-
+//
 void T_PlatRaise(plat_t *plat)
 {
    result_e      res;
@@ -63,7 +76,7 @@ void T_PlatRaise(plat_t *plat)
       // if a pure raise type, make the plat moving sound
       if(plat->type == raiseAndChange || plat->type == raiseToNearestAndChange)
       {
-         if(!(leveltime&7) && !silentmove(plat->sector)) // sf: silentmove
+         if(!(leveltime & 7) && !silentmove(plat->sector)) // sf: silentmove
             S_StartSoundName((mobj_t *)&plat->sector->soundorg,
                              "EE_PlatMove");
       }
@@ -118,7 +131,7 @@ void T_PlatRaise(plat_t *plat)
       break;
         
    case down: // plat moving down
-      res = T_MovePlane(plat->sector,plat->speed,plat->low,-1,0,-1);
+      res = T_MovePlane(plat->sector, plat->speed, plat->low, -1, 0, -1);
 
       // handle reaching end of down stroke
       if(res == pastdest)
@@ -143,7 +156,7 @@ void T_PlatRaise(plat_t *plat)
          //killough 1/31/98: relax compatibility to demo_compatibility
          
          // remove the plat if its a pure raise type
-         if(demo_version<203 ? !demo_compatibility : !comp[comp_floors])
+         if(demo_version < 203 ? !demo_compatibility : !comp[comp_floors])
          {
             switch(plat->type)
             {
@@ -311,10 +324,10 @@ int EV_DoPlat
             plat->high = sec->floorheight;
          
          plat->wait = 35*PLATWAIT;
-         plat->status = P_Random(pr_plats)&1;
+         plat->status = P_Random(pr_plats) & 1;
          
          if(!silentmove(sec))    // sf: silentmove
-            S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatStart");
+            S_StartSoundName((mobj_t *)&sec->soundorg, "EE_PlatStart");
          break;
 
       case toggleUpDn: //jff 3/14/98 add new type to support instant toggle

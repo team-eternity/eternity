@@ -739,11 +739,11 @@ static const char *sndseq_cmdstrs[] =
    "playloop",
    "playabsvol",
    "playrelvol",
+   "relvolume",
    "delay",
    "delayrand",
+   "restart",
    "end",
-
-   "relvolume",
 
    // these are supported as properties as well
    "stopsound",
@@ -761,10 +761,12 @@ enum
    SEQ_TXTCMD_PLAYLOOP,
    SEQ_TXTCMD_PLAYABSVOL,
    SEQ_TXTCMD_PLAYRELVOL,
+   SEQ_TXTCMD_RELVOLUME,
    SEQ_TXTCMD_DELAY,
    SEQ_TXTCMD_DELAYRAND,
+   SEQ_TXTCMD_RESTART,
    SEQ_TXTCMD_END,
-   SEQ_TXTCMD_RELVOLUME,
+
    SEQ_TXTCMD_STOPSOUND,
    SEQ_TXTCMD_ATTENUATION,
    SEQ_TXTCMD_VOLUME,
@@ -1195,6 +1197,9 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
          case SEQ_TXTCMD_NOSTOPCUTOFF:
             // as above, but this sets the nostopcutoff property
             newSeq->nostopcutoff = true;
+            break;
+         case SEQ_TXTCMD_RESTART:
+            tempcmdbuf[allocused++].data = SEQ_CMD_RESTART;
             break;
          case SEQ_TXTCMD_END:
             // do nothing, an end command will be generated below
