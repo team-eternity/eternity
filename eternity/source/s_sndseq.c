@@ -223,6 +223,7 @@ static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
 #define CMD_ARG1(field) ((curSeq->cmdPtr + 1)-> field )
 #define CMD_ARG2(field) ((curSeq->cmdPtr + 2)-> field )
 
+// when true, the current environmental sequence has ended
 static boolean enviroSeqFinished;
 
 //
