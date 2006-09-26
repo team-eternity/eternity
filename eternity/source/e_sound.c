@@ -721,8 +721,10 @@ static const char *attenuation_types[] =
 // sequence types
 static const char *seq_types[] =
 {
-   "sector",
-   "environment",
+   "sector",      // a general sector type
+   "door",        // specifically a door type
+   "plat",        // specifically a plat type
+   "environment", // environment
 };
 
 #define NUM_SEQ_TYPES (sizeof(seq_types) / sizeof(char *))
@@ -795,6 +797,13 @@ static ESoundSeq_t *edf_seq_numchains[NUM_EDFSEQ_CHAINS];
 #define NUM_EDFSEQ_ENVCHAINS 31
 static ESoundSeq_t *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
 
+// translator tables for specific types
+
+#define NUM_SEQ_TRANSLATE 64
+
+static ESoundSeq_t *edf_door_sequences[NUM_SEQ_TRANSLATE];
+static ESoundSeq_t *edf_plat_sequences[NUM_SEQ_TRANSLATE];
+
 //
 // E_AddSequenceToNameHash
 //
@@ -822,12 +831,28 @@ static void E_AddSequenceToNumHash(ESoundSeq_t *seq)
 {
    unsigned int idx;
    
-   if(seq->type == SEQ_SECTOR)
+   if(seq->type != SEQ_ENVIRONMENT)
    {
       idx = seq->index % NUM_EDFSEQ_CHAINS;
       
       M_DLListInsert((mdllistitem_t *)seq, 
                      (mdllistitem_t **)(&edf_seq_numchains[idx]));
+
+      // possibly add to the specific type translation tables
+      if(seq->index < NUM_SEQ_TRANSLATE)
+      {
+         switch(seq->type)
+         {
+         case SEQ_DOORTYPE:
+            edf_door_sequences[seq->index] = seq;
+            break;
+         case SEQ_PLATTYPE:
+            edf_plat_sequences[seq->index] = seq;
+            break;
+         default:
+            break;
+         }
+      }
    }
    else // environment sequences are hashed separately
    {
@@ -882,6 +907,36 @@ ESoundSeq_t *E_SequenceForNum(int id)
       seq = (ESoundSeq_t *)(seq->numlinks.next);
 
    return seq;
+}
+
+//
+// E_SequenceForNumType
+//
+// Looks at the specific type translation tables before resorting to the normal
+// hash table.
+//
+ESoundSeq_t *E_SequenceForNumType(int id, int type)
+{
+   ESoundSeq_t *ret = NULL;
+
+   if(id < NUM_SEQ_TRANSLATE)
+   {
+      switch(type)
+      {
+      case SEQ_DOOR:
+         ret = edf_door_sequences[id];
+         break;
+      case SEQ_PLAT:
+      case SEQ_FLOOR:
+      case SEQ_CEILING:
+         ret = edf_plat_sequences[id];
+         break;
+      default:
+         break;
+      }
+   }
+
+   return ret ? ret : E_SequenceForNum(id);
 }
 
 //
@@ -1331,6 +1386,65 @@ static void E_ResolveNames(cfg_t *cfg, unsigned int i)
    E_EDFLogPrintf("\t\tFinished sound sequence %s (#%d)\n", name, i);
 }
 
+// enviro seq manager stuff
+
+#define ITEM_SEQMGR_MINSTARTWAIT "minstartwait"
+#define ITEM_SEQMGR_MAXSTARTWAIT "maxstartwait"
+#define ITEM_SEQMGR_MINWAIT      "minwait"
+#define ITEM_SEQMGR_MAXWAIT      "maxwait"
+
+cfg_opt_t edf_seqmgr_opts[] =
+{
+   CFG_INT(ITEM_SEQMGR_MINSTARTWAIT, (10*TICRATE),       CFGF_NONE),
+   CFG_INT(ITEM_SEQMGR_MAXSTARTWAIT, (10*TICRATE + 31),  CFGF_NONE),
+   CFG_INT(ITEM_SEQMGR_MINWAIT,      ( 6*TICRATE),       CFGF_NONE),
+   CFG_INT(ITEM_SEQMGR_MAXWAIT,      ( 6*TICRATE + 255), CFGF_NONE),
+   CFG_END()
+};
+
+//
+// E_ProcessEnviroMgr
+//
+// Processes the optional block for customizing the environment sequence manager
+//
+static void E_ProcessEnviroMgr(cfg_t *cfg)
+{
+   unsigned int nummgr;
+
+   E_EDFLogPuts("\t* Processing enviroment sequence manager\n");
+
+   nummgr = cfg_size(cfg, EDF_SEC_ENVIROMGR);
+
+   if(nummgr)
+   {
+      cfg_t *eseq = cfg_getsec(cfg, EDF_SEC_ENVIROMGR);
+
+      EnviroSeqManager.minStartWait = 
+         cfg_getint(eseq, ITEM_SEQMGR_MINSTARTWAIT);
+      EnviroSeqManager.maxStartWait =
+         cfg_getint(eseq, ITEM_SEQMGR_MAXSTARTWAIT);
+      
+      // range check
+      if(EnviroSeqManager.minStartWait < 0)
+         EnviroSeqManager.minStartWait = 0;
+      if(EnviroSeqManager.maxStartWait < 1)
+         EnviroSeqManager.maxStartWait = 1;
+
+      if(EnviroSeqManager.maxStartWait <= EnviroSeqManager.minStartWait)
+         EnviroSeqManager.maxStartWait = EnviroSeqManager.minStartWait + 1;
+
+      EnviroSeqManager.minEnviroWait = cfg_getint(eseq, ITEM_SEQMGR_MINWAIT);
+      EnviroSeqManager.maxEnviroWait = cfg_getint(eseq, ITEM_SEQMGR_MAXWAIT);
+
+      if(EnviroSeqManager.minEnviroWait < 1)
+         EnviroSeqManager.minEnviroWait = 1;
+      if(EnviroSeqManager.maxEnviroWait < 2)
+         EnviroSeqManager.maxEnviroWait = 2;
+      if(EnviroSeqManager.maxEnviroWait <= EnviroSeqManager.minEnviroWait)
+         EnviroSeqManager.maxEnviroWait = EnviroSeqManager.minEnviroWait + 1;
+   }
+}
+
 //
 // E_ProcessSndSeqs
 //
@@ -1353,7 +1467,11 @@ void E_ProcessSndSeqs(cfg_t *cfg)
    // resolve mutually referencing fields
    for(i = 0; i < numsequences; ++i)
       E_ResolveNames(cfg_getnsec(cfg, EDF_SEC_SNDSEQ, i), i);
+
+   // process the environment sequence manager
+   E_ProcessEnviroMgr(cfg);
 }
+
 
 //=============================================================================
 //

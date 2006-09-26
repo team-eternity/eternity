@@ -295,6 +295,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
    CFG_SEC(EDF_SEC_FRAME,     edf_frame_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_THING,     edf_thing_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(SEC_CAST,          cast_opts,         CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
@@ -466,6 +467,7 @@ static cfg_opt_t sndseq_lump_opts[] =
    CFG_SEC(EDF_SEC_SDELTA,    edf_sdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
    LUMP_FUNCTIONS,
    CFG_END()
 };
@@ -1101,11 +1103,11 @@ static void E_ProcessStringLump(void)
 {
    cfg_t *cfg;
 
-   E_EDFLogPuts("\tParsing ESTRINGS lump...\n");
+   E_EDFLogPuts("\t* Parsing ESTRINGS lump...\n");
    
    if(!(cfg = E_ParseEDFLumpOptional("ESTRINGS", string_only_opts)))
    {
-      E_EDFLogPuts("\tNo ESTRINGS lump found\n");
+      E_EDFLogPuts("\t\tNo ESTRINGS lump found\n");
       return;
    }
 
@@ -1126,11 +1128,11 @@ static void E_ProcessTerrainLump(void)
 {
    cfg_t *cfg;
 
-   E_EDFLogPuts("\tParsing ETERRAIN lump...\n");
+   E_EDFLogPuts("\t* Parsing ETERRAIN lump...\n");
    
    if(!(cfg = E_ParseEDFLumpOptional("ETERRAIN", terrain_lump_opts)))
    {
-      E_EDFLogPuts("\tNo ETERRAIN lump found.\n");
+      E_EDFLogPuts("\t\tNo ETERRAIN lump found.\n");
       return;
    }
 
@@ -1152,11 +1154,11 @@ static void E_ProcessMenuLump(void)
 {
    cfg_t *cfg;
 
-   E_EDFLogPuts("\tParsing EMENUS lump...\n");
+   E_EDFLogPuts("\t* Parsing EMENUS lump...\n");
 
    if(!(cfg = E_ParseEDFLumpOptional("EMENUS", menu_lump_opts)))
    {
-      E_EDFLogPuts("\tNo EMENUS lump found.\n");
+      E_EDFLogPuts("\t\tNo EMENUS lump found.\n");
       return;
    }
 
@@ -1176,10 +1178,10 @@ static void E_ProcessSoundLumps(void)
 {
    cfg_t *cfg;
 
-   E_EDFLogPuts("\tParsing ESNDSEQ lump...\n");
+   E_EDFLogPuts("\t* Parsing ESNDSEQ lump...\n");
 
    if(!(cfg = E_ParseEDFLumpOptional("ESNDSEQ", sndseq_lump_opts)))
-      E_EDFLogPuts("\tNo ESNDSEQ lump found.\n");
+      E_EDFLogPuts("\t\tNo ESNDSEQ lump found.\n");
    else
    {
       E_ProcessAdditiveSounds(cfg);
@@ -1189,10 +1191,10 @@ static void E_ProcessSoundLumps(void)
       cfg_free(cfg);
    }
 
-   E_EDFLogPuts("\tParsing ESNDINFO lump...\n");
+   E_EDFLogPuts("\t* Parsing ESNDINFO lump...\n");
 
    if(!(cfg = E_ParseEDFLumpOptional("ESNDINFO", sndseq_lump_opts)))
-      E_EDFLogPuts("\tNo ESNDINFO lump found.\n");
+      E_EDFLogPuts("\t\tNo ESNDINFO lump found.\n");
    else
    {
       E_ProcessAdditiveSounds(cfg);

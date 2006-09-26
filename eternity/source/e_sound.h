@@ -70,6 +70,8 @@ EAmbience_t *E_AmbienceForNum(int num);
 enum
 {
    SEQ_SECTOR,      // for use by sector movement
+   SEQ_DOORTYPE,    // specifically meant for doors
+   SEQ_PLATTYPE,    // specifically meant for plats
    SEQ_ENVIRONMENT, // for use by scripted ambience
 };
 
@@ -79,7 +81,7 @@ typedef struct ESoundSeq_s
    mdllistitem_t numlinks;       // next, prev links for numeric hash chain
 
    int index;                    // numeric id
-   int type;                     // SEQ_SECTOR or SEQ_ENVIRONMENT
+   int type;                     // type of sequence (see above enum)
    char name[33];                // mnemonic
 
    union seqcmd_s *commands;     // the compiled commands
@@ -101,6 +103,7 @@ typedef struct ESoundSeq_s
 
 ESoundSeq_t *E_SequenceForName(const char *name);
 ESoundSeq_t *E_SequenceForNum(int id);
+ESoundSeq_t *E_SequenceForNumType(int id, int type);
 ESoundSeq_t *E_EnvironmentSequence(int id);
 
 #ifdef NEED_EDF_DEFINITIONS
@@ -108,6 +111,7 @@ extern cfg_opt_t edf_sound_opts[];
 extern cfg_opt_t edf_sdelta_opts[];
 extern cfg_opt_t edf_ambience_opts[];
 extern cfg_opt_t edf_sndseq_opts[];
+extern cfg_opt_t edf_seqmgr_opts[];
 
 void    E_ProcessSounds(cfg_t *cfg);
 void    E_ProcessAdditiveSounds(cfg_t *cfg);
@@ -116,10 +120,11 @@ void    E_ProcessSndSeqs(cfg_t *cfg);
 void    E_ProcessAmbience(cfg_t *cfg);
 boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 
-#define EDF_SEC_SOUND    "sound"
-#define EDF_SEC_SDELTA   "sounddelta"
-#define EDF_SEC_AMBIENCE "ambience"
-#define EDF_SEC_SNDSEQ   "soundsequence"
+#define EDF_SEC_SOUND     "sound"
+#define EDF_SEC_SDELTA    "sounddelta"
+#define EDF_SEC_AMBIENCE  "ambience"
+#define EDF_SEC_SNDSEQ    "soundsequence"
+#define EDF_SEC_ENVIROMGR "enviromanager"
 #endif
 
 #endif

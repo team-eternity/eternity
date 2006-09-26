@@ -810,7 +810,7 @@ soundsequence EEHticAmbScream
 {
    type = environment
    id = 0
-   cmds = { "play ht_amb1" }
+   cmds = { "playuntildone ht_amb1" }
    
    volume = 96
    minvolume = 32
@@ -821,7 +821,7 @@ soundsequence EEHticAmbSquish
 {
    type = environment
    id = 1
-   cmds = { "play ht_amb2" }
+   cmds = { "playuntildone ht_amb2" }
    
    volume = 96
    minvolume = 32
@@ -835,21 +835,16 @@ soundsequence EEHticAmbDrops
    cmds =
    {
       "play ht_amb3",
-      "delay 16",
-      "delayrand 0 31",
+      "delayrand 16 47",
       "play ht_amb7",
-      "delay 16",
-      "delayrand 0 31",
+      "delayrand 16 47",
       "play ht_amb3",
-      "delay 16",
-      "delayrand 0 31",
+      "delayrand 16 47",
       "play ht_amb7",
-      "delay 16",
-      "delayrand 0 31",
+      "delayrand 16 47",
       "play ht_amb3",
-      "delay 16",
-      "delayrand 0 31",
-      "play ht_amb7"
+      "delayrand 16 47",
+      "playuntildone ht_amb7"
    }
    
    volume = 96
@@ -863,8 +858,7 @@ soundsequence EEHticSlowFootSteps
    id = 3
    cmds =
    {
-      "play ht_amb4",
-      "delay 15",
+      "playtime ht_amb4 15",
       "playrelvol ht_amb11 -3",
       "delay 15",
       "playrelvol ht_amb4  -3",
@@ -877,7 +871,8 @@ soundsequence EEHticSlowFootSteps
       "delay 15",
       "playrelvol ht_amb4  -3",
       "delay 15",
-      "playrelvol ht_amb11 -3"
+      "playrelvol ht_amb11 -3",
+      "nostopcutoff"
    }
    
    volume = 96
@@ -891,13 +886,10 @@ soundsequence EEHticHeartBeat
    id = 4
    cmds =
    {
-      "play ht_amb5",
-      "delay 35",
-      "play ht_amb5",
-      "delay 35",
-      "play ht_amb5",
-      "delay 35",
-      "play ht_amb5"
+      "playtime ht_amb5 35",
+      "playtime ht_amb5 35",
+      "playtime ht_amb5 35",
+      "playuntildone ht_amb5"
    }
    
    volume = 96
@@ -911,13 +903,13 @@ soundsequence EEHticBells
    id = 5
    cmds =
    {
-      "play ht_amb6",
-      "delay 17",
+      "playtime ht_amb6 17",
       "playrelvol ht_amb6 -8",
       "delay 17",
       "playrelvol ht_amb6 -8",
       "delay 17",
-      "playrelvol ht_amb6 -8"
+      "playrelvol ht_amb6 -8",
+      "nostopcutoff"
    }
    
    volume = 96
@@ -929,7 +921,7 @@ soundsequence EEHticGrowl
 {
    type = environment
    id = 6
-   cmds = { "play ht_bstsit" }
+   cmds = { "playuntildone ht_bstsit" }
    
    volume = 96
    minvolume = 32
@@ -940,7 +932,7 @@ soundsequence EEHticMagic
 {
    type = environment
    id = 7
-   cmds = { "play ht_amb8" }
+   cmds = { "playuntildone ht_amb8" }
    
    volume = 96
    minvolume = 32
@@ -953,8 +945,7 @@ soundsequence EEHticLaughter
    id = 8
    cmds =
    {
-      "play ht_amb9",
-      "delay 16",
+      "playtime ht_amb9 16",
       "playrelvol ht_amb9  -4",
       "delay 16",
       "playrelvol ht_amb9  -4",
@@ -963,7 +954,8 @@ soundsequence EEHticLaughter
       "delay 16",
       "playrelvol ht_amb10 -4",
       "delay 16",
-      "playrelvol ht_amb10 -4"
+      "playrelvol ht_amb10 -4",
+      "nostopcutoff"
    }
    
    volume = 96
@@ -977,8 +969,7 @@ soundsequence EEHticFastFootSteps
    id = 9
    cmds =
    {
-      "play ht_amb4",
-      "delay 8",
+      "playtime ht_amb4 8",
       "playrelvol ht_amb11 -3",
       "delay 8",
       "playrelvol ht_amb4  -3",
@@ -991,7 +982,8 @@ soundsequence EEHticFastFootSteps
       "delay 8",
       "playrelvol ht_amb4  -3",
       "delay 8",
-      "playrelvol ht_amb11 -3"
+      "playrelvol ht_amb11 -3",
+      "nostopcutoff"
    }
    
    volume = 96

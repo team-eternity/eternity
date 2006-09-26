@@ -50,7 +50,7 @@ platlist_t *activeplats;       // killough 2/14/98: made global again
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 
-void T_PlatRaise(plat_t* plat)
+void T_PlatRaise(plat_t *plat)
 {
    result_e      res;
    
@@ -61,8 +61,7 @@ void T_PlatRaise(plat_t* plat)
       res = T_MovePlane(plat->sector,plat->speed,plat->high,plat->crush,0,1);
                                         
       // if a pure raise type, make the plat moving sound
-      if(plat->type == raiseAndChange
-         || plat->type == raiseToNearestAndChange)
+      if(plat->type == raiseAndChange || plat->type == raiseToNearestAndChange)
       {
          if(!(leveltime&7) && !silentmove(plat->sector)) // sf: silentmove
             S_StartSoundName((mobj_t *)&plat->sector->soundorg,
@@ -83,7 +82,7 @@ void T_PlatRaise(plat_t* plat)
          if(res == pastdest) // end of stroke
          {
             // if not an instant toggle type, wait, make plat stop sound
-            if(plat->type!=toggleUpDn)
+            if(plat->type != toggleUpDn)
             {
                plat->count = plat->wait;
                plat->status = waiting;

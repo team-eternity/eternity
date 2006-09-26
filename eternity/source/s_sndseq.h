@@ -87,6 +87,7 @@ typedef struct SndSeq_s
 extern SndSeq_t *SoundSequences;
 
 void S_StopSequence(mobj_t *mo);
+void S_StopSectorSequence(sector_t *s);
 void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype);
 void S_StartSequenceName(mobj_t *mo, const char *seqname);
 void S_StartSectorSequence(sector_t *s, int seqtype);
@@ -95,6 +96,18 @@ void S_RunSequences(void);
 void S_StopAllSequences(void);
 void S_SetSequenceStatus(void);
 void S_InitEnviroSpots(void);
+
+// EnviroSeqMgr_t -- environment sequence manager data
+
+typedef struct EnviroSeqMgr_s
+{
+   int minStartWait;  // minimum wait period at start
+   int maxStartWait;  // maximum wait period at start
+   int minEnviroWait; // minimum wait period between sequences
+   int maxEnviroWait; // maximum wait period between sequences
+} EnviroSeqMgr_t;
+
+extern EnviroSeqMgr_t EnviroSeqManager;
 
 #endif
 

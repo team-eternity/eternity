@@ -74,6 +74,16 @@ void S_StopSequence(mobj_t *mo)
 }
 
 //
+// S_StopSectorSequence
+//
+// Convenience routine.
+//
+void S_StopSectorSequence(sector_t *s)
+{
+   S_StopSequence((mobj_t *)&s->soundorg);
+}
+
+//
 // S_StartSequenceNum
 //
 // Starts a sound sequence by index number. The actual sequence started may be
@@ -86,7 +96,7 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
    SndSeq_t *newSeq;
 
    // find sequence by number, if none, return
-   if(!(edfSeq = E_SequenceForNum(seqnum)))
+   if(!(edfSeq = E_SequenceForNumType(seqnum, seqtype)))
       return;
 
    // check for redirection for certain activation types
@@ -379,6 +389,15 @@ void S_SetSequenceStatus(void)
 // effects, but folded within the Hexen-like sound sequence engine.
 //
 
+// the environment sequence manager data
+EnviroSeqMgr_t EnviroSeqManager =
+{
+   10*TICRATE,
+   10*TICRATE + 31,
+    6*TICRATE,
+    6*TICRATE + 255,
+};
+
 static MobjCollection enviroSpots;
 static int enviroTics;
 static mobj_t *nextEnviroSpot;
@@ -400,7 +419,8 @@ void S_InitEnviroSpots(void)
 
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
-   enviroTics        = 10 * TICRATE + (M_Random() & 31);
+   enviroTics        = M_RangeRandom(EnviroSeqManager.minStartWait,
+                                     EnviroSeqManager.maxStartWait);
 
    if(!P_CollectionIsEmpty(&enviroSpots))
       nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
@@ -439,7 +459,8 @@ static void S_RunEnviroSequence(void)
       {
          memset(&seq, 0, sizeof(SndSeq_t));
          EnviroSequence = NULL;
-         enviroTics = 6 * TICRATE + M_Random();
+         enviroTics = M_RangeRandom(EnviroSeqManager.minEnviroWait,
+                                    EnviroSeqManager.maxEnviroWait);
          nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
       }
       else
