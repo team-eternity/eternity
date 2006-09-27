@@ -38,6 +38,15 @@ rcsid[] = "$Id: p_ceilng.c,v 1.14 1998/05/09 10:58:10 jim Exp $";
 // the list of ceilings moving currently, including crushers
 ceilinglist_t *activeceilings;
 
+//
+// P_CeilingSequence
+//
+// haleyjd 09/27/06: Starts the appropriate sound sequence for a ceiling action.
+//
+void P_CeilingSequence()
+{
+}
+
 /////////////////////////////////////////////////////////////////
 //
 // Ceiling action routine and linedef type handler
@@ -78,6 +87,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             );
 
       // if not a silent crusher, make moving sound
+      /*
       if(!(leveltime&7) && !silentmove(ceiling->sector))
       {
          switch(ceiling->type)
@@ -91,6 +101,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             break;
          }
       }
+      */
 
       // handle reaching destination height
       if(res == pastdest)

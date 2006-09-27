@@ -39,6 +39,38 @@ SndSeq_t *SoundSequences; // head of running sndseq list
 SndSeq_t *EnviroSequence; // currently playing environmental sequence
 
 //
+// S_CheckSequenceLoop
+//
+// Stops any sound sequence being played by the given object.
+//
+boolean S_CheckSequenceLoop(mobj_t *mo)
+{
+   SndSeq_t *curSeq = SoundSequences, *next;
+
+   while(curSeq)
+   {
+      next = (SndSeq_t *)(curSeq->link.next);
+
+      if(curSeq->origin == mo)
+         return curSeq->looping;
+
+      curSeq = next;
+   }
+
+   return false; // if no sequence is playing, it's sure not looping o_O
+}
+
+//
+// S_CheckSectorSequenceLoop
+//
+// Convenience routine.
+//
+boolean S_CheckSectorSequenceLoop(sector_t *s)
+{
+   return S_CheckSequenceLoop((mobj_t *)&s->soundorg);
+}
+
+//
 // S_StopSequence
 //
 // Stops any sound sequence being played by the given object.
@@ -139,6 +171,7 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
    newSeq->cmdPtr       = edfSeq->commands;    // set command pointer
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
    newSeq->delayCounter = 0;                   // no delay at start
+   newSeq->looping      = false;               // not looping
 
    // 06/16/06: possibly randomize starting volume
    newSeq->volume = 
@@ -189,6 +222,7 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
    newSeq->cmdPtr       = edfSeq->commands;    // set command pointer
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
    newSeq->delayCounter = 0;                   // no delay at start
+   newSeq->looping      = false;               // not looping
 
    // possibly randomize starting volume
    newSeq->volume = 
@@ -247,6 +281,9 @@ static void S_RunSequence(SndSeq_t *curSeq)
    if(curSeq->currentSound)
       isPlaying = S_CheckSoundPlaying(curSeq->origin, curSeq->currentSound);
 
+   // set looping to false here; looping instructions will set it to true
+   curSeq->looping = false;
+
    switch(curSeq->cmdPtr->data)
    {
    case SEQ_CMD_PLAY: // basic "play sound" using all parameters
@@ -270,8 +307,10 @@ static void S_RunSequence(SndSeq_t *curSeq)
          curSeq->currentSound = CMD_ARG1(sfx);
          S_StartSeqSound(curSeq, true);
       }
+      curSeq->looping = true;
       break;
    case SEQ_CMD_PLAYLOOP: // play sound in a delay loop (doesn't advance)
+      curSeq->looping = true;
       curSeq->currentSound = CMD_ARG1(sfx);
       curSeq->delayCounter = CMD_ARG2(data);
       S_StartSeqSound(curSeq, true);
@@ -487,6 +526,7 @@ static void S_RunEnviroSequence(void)
       seq.origin       = nextEnviroSpot;
       seq.attenuation  = edfSeq->attenuation;
       seq.delayCounter = 0;
+      seq.looping      = false;
 
       // possibly randomize the starting volume
       seq.volume = 

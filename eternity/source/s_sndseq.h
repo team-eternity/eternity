@@ -83,6 +83,8 @@ typedef struct SndSeq_s
    int delayCounter;             // delay time counter
    int volume;                   // current volume
    int attenuation;              // current attenuation type
+
+   boolean looping;              // if true, sequence is in a loop
 } SndSeq_t;
 
 extern SndSeq_t *SoundSequences;
