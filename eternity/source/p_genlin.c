@@ -582,7 +582,7 @@ int EV_DoGenLift(line_t *line)
       
 manual_lift:
       // Do not start another function if floor already moving
-      if(P_SectorActive(floor_special,sec))
+      if(P_SectorActive(floor_special, sec))
       {
          if(!manual)
             continue;
@@ -671,8 +671,11 @@ manual_lift:
          break;
       }
 
+      /*
       if(!silentmove(sec))        //sf: silentmove
          S_StartSoundName((mobj_t *)&sec->soundorg, "EE_PlatStart");
+      */
+      P_PlatSequence(plat->sector, "EEPlatNormal");
       P_AddActivePlat(plat); // add this plat to the list of active plats
       
       if(manual)

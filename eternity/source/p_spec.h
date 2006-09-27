@@ -1151,6 +1151,8 @@ void P_RemoveAllActivePlats(void);    // killough
 
 void P_ActivateInStasis(int tag);
 
+void P_PlatSequence(sector_t *s, const char *seqname);
+
 // p_doors
 
 void P_SpawnDoorCloseIn30(sector_t *sec);

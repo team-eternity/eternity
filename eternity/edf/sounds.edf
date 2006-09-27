@@ -1077,3 +1077,31 @@ soundsequence EEDoorCloseBlazing
 
 endif()
 
+# Plat Sequences
+
+# This is used by most plat types, like the ordinary down-wait-up-stay type
+soundsequence EEPlatNormal
+{
+   cmds =
+   {
+      "play EE_PlatStart",
+      "stopsound EE_PlatStop"
+   }
+}
+
+# This is used by raise-and-change plat types.
+soundsequence EEPlatRaise
+{
+   cmds =
+   {
+      "playloop EE_PlatMove 8",
+      "stopsound EE_PlatStop"
+   }
+}
+
+# This may seem pointless, but defining it allows the silent behavior of instant
+# move plats to be overridden by redefining this sequence.
+soundsequence EEPlatSilent
+{
+}
+

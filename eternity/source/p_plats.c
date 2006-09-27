@@ -34,6 +34,7 @@ rcsid[] = "$Id: p_plats.c,v 1.16 1998/05/08 17:44:18 jim Exp $";
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "sounds.h"
 #include "d_gi.h"
 
@@ -46,6 +47,9 @@ platlist_t *activeplats;       // killough 2/14/98: made global again
 //
 void P_PlatSequence(sector_t *s, const char *seqname)
 {
+   if(silentmove(s))
+      return;
+
    if(s->sndSeqID >= 0)
       S_StartSectorSequence(s, SEQ_PLAT);
    else
@@ -74,34 +78,43 @@ void T_PlatRaise(plat_t *plat)
       res = T_MovePlane(plat->sector,plat->speed,plat->high,plat->crush,0,1);
                                         
       // if a pure raise type, make the plat moving sound
+      /*
       if(plat->type == raiseAndChange || plat->type == raiseToNearestAndChange)
       {
          if(!(leveltime & 7) && !silentmove(plat->sector)) // sf: silentmove
             S_StartSoundName((mobj_t *)&plat->sector->soundorg,
                              "EE_PlatMove");
       }
+      */
       
       // if encountered an obstacle, and not a crush type, reverse direction
-      if(res == crushed && (plat->crush <= 0))
+      if(res == crushed && plat->crush <= 0)
       {
          plat->count = plat->wait;
          plat->status = down;
+         /*
          if(!silentmove(plat->sector))    // sf: silentmove
             S_StartSoundName((mobj_t *)&plat->sector->soundorg,
                              "EE_PlatStart");
+         */
+         P_PlatSequence(plat->sector, "EEPlatNormal");
       }
       else  // else handle reaching end of up stroke
       {
          if(res == pastdest) // end of stroke
          {
+            S_StopSectorSequence(plat->sector);
+
             // if not an instant toggle type, wait, make plat stop sound
             if(plat->type != toggleUpDn)
             {
                plat->count = plat->wait;
                plat->status = waiting;
+               /*
                if(!silentmove(plat->sector)) // sf: silentmove
                   S_StartSoundName((mobj_t *)&plat->sector->soundorg,
                                    "EE_PlatStop");
+               */
             }
             else // else go into stasis awaiting next toggle activation
             {
@@ -136,14 +149,18 @@ void T_PlatRaise(plat_t *plat)
       // handle reaching end of down stroke
       if(res == pastdest)
       {
+         S_StopSectorSequence(plat->sector);
+
          // if not an instant toggle, start waiting, make plat stop sound
          if(plat->type!=toggleUpDn) //jff 3/14/98 toggle up down
          {                           // is silent, instant, no waiting
             plat->count = plat->wait;
             plat->status = waiting;
+            /*
             if(!silentmove(plat->sector)) // sf: silentmove
                S_StartSoundName((mobj_t *)&plat->sector->soundorg,
                                 "EE_PlatStop");
+            */
          }
          else // instant toggles go into stasis awaiting next activation
          {
@@ -179,9 +196,15 @@ void T_PlatRaise(plat_t *plat)
             plat->status = down;   // if at top, start down
          
          // make plat start sound
+         /*
          if(!silentmove(plat->sector))    // sf: silentmove
             S_StartSoundName((mobj_t *)&plat->sector->soundorg,
                              "EE_PlatStart");
+         */
+         if(plat->type == toggleUpDn)
+            P_PlatSequence(plat->sector, "EEPlatSilent");
+         else
+            P_PlatSequence(plat->sector, "EEPlatNormal");
       }
       break; //jff 1/27/98 don't pickup code added later to in_stasis
 
@@ -200,10 +223,7 @@ void T_PlatRaise(plat_t *plat)
 // and for some plat types, an amount to raise
 // Returns true if a thinker is started, or restarted from stasis
 //
-int EV_DoPlat
-( line_t*       line,
-  plattype_e    type,
-  int           amount )
+int EV_DoPlat(line_t *line, plattype_e type, int amount )
 {
    plat_t* plat;
    int             secnum;
@@ -212,7 +232,6 @@ int EV_DoPlat
    
    secnum = -1;
    rtn = 0;
-
 
    // Activate all <type> plats that are in_stasis
    switch(type)
@@ -268,8 +287,11 @@ int EV_DoPlat
          //jff 3/14/98 clear old field as well
          sec->oldspecial = 0;               
 
+         /*
          if(!silentmove(sec)) //sf: silentmove
             S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatMove");
+         */
+         P_PlatSequence(plat->sector, "EEPlatRaise");
          break;
           
       case raiseAndChange:
@@ -279,8 +301,11 @@ int EV_DoPlat
          plat->wait = 0;
          plat->status = up;
          
+         /*
          if(!silentmove(sec)) //sf: silentmove
             S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatMove");
+         */
+         P_PlatSequence(plat->sector, "EEPlatRaise");
          break;
           
       case downWaitUpStay:
@@ -293,8 +318,11 @@ int EV_DoPlat
          plat->high = sec->floorheight;
          plat->wait = 35*PLATWAIT;
          plat->status = down;
+         /*
          if(!silentmove(sec))    // sf: silentmove
             S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatStart");
+         */
+         P_PlatSequence(plat->sector, "EEPlatNormal");
          break;
           
       case blazeDWUS:
@@ -307,8 +335,11 @@ int EV_DoPlat
          plat->high = sec->floorheight;
          plat->wait = 35*PLATWAIT;
          plat->status = down;
+         /*
          if(!silentmove(sec))    // sf: silentmove
             S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatStart");
+         */
+         P_PlatSequence(plat->sector, "EEPlatNormal");
          break;
           
       case perpetualRaise:
@@ -326,8 +357,11 @@ int EV_DoPlat
          plat->wait = 35*PLATWAIT;
          plat->status = P_Random(pr_plats) & 1;
          
+         /*
          if(!silentmove(sec))    // sf: silentmove
             S_StartSoundName((mobj_t *)&sec->soundorg, "EE_PlatStart");
+         */
+         P_PlatSequence(plat->sector, "EEPlatNormal");
          break;
 
       case toggleUpDn: //jff 3/14/98 add new type to support instant toggle
@@ -339,6 +373,8 @@ int EV_DoPlat
          plat->low    = sec->ceilingheight;
          plat->high   = sec->floorheight;
          plat->status = down;
+
+         P_PlatSequence(plat->sector, "EEPlatSilent");
          break;
          
       default:
@@ -349,13 +385,10 @@ int EV_DoPlat
    return rtn;
 }
 
-// The following were all rewritten by Lee Killough
-// to use the new structure which places no limits
-// on active plats. It also avoids spending as much
-// time searching for active plats. Previously a 
-// fixed-size array was used, with NULL indicating
-// empty entries, while now a doubly-linked list
-// is used.
+// The following were all rewritten by Lee Killough to use the new structure 
+// which places no limits on active plats. It also avoids spending as much
+// time searching for active plats. Previously a fixed-size array was used,
+// with NULL indicating empty entries, while now a doubly-linked list is used.
 
 //
 // P_ActivateInStasis()
@@ -369,7 +402,7 @@ int EV_DoPlat
 void P_ActivateInStasis(int tag)
 {
    platlist_t *pl;
-   for(pl=activeplats; pl; pl=pl->next)   // search the active plats
+   for(pl = activeplats; pl; pl = pl->next)   // search the active plats
    {
       plat_t *plat = pl->plat;              // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
@@ -393,10 +426,10 @@ void P_ActivateInStasis(int tag)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_StopPlat(line_t* line)
+int EV_StopPlat(line_t *line)
 {
    platlist_t *pl;
-   for(pl=activeplats; pl; pl=pl->next)  // search the active plats
+   for(pl = activeplats; pl; pl = pl->next)  // search the active plats
    {
       plat_t *plat = pl->plat;             // for one with the tag not in stasis
       if(plat->status != in_stasis && plat->tag == line->tag)
@@ -417,7 +450,7 @@ int EV_StopPlat(line_t* line)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(plat_t* plat)
+void P_AddActivePlat(plat_t *plat)
 {
    platlist_t *list = malloc(sizeof *list);
    list->plat = plat;
@@ -436,7 +469,7 @@ void P_AddActivePlat(plat_t* plat)
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-void P_RemoveActivePlat(plat_t* plat)
+void P_RemoveActivePlat(plat_t *plat)
 {
    platlist_t *list = plat->list;
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
