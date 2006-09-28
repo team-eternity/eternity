@@ -230,7 +230,8 @@ static boolean addsfx(sfxinfo_t *sfx, int channel)
    
    /* Set pointer to end of raw data. */
    channelinfo[channel].enddata = channelinfo[channel].data + len - 1;
-   channelinfo[channel].samplerate = (channelinfo[channel].data[3]<<8)+channelinfo[channel].data[2];
+   channelinfo[channel].samplerate = 
+      (channelinfo[channel].data[3] << 8) + channelinfo[channel].data[2];
    channelinfo[channel].data += 8; /* Skip header */
 
    // haleyjd 06/03/06: keep track of start of sound
@@ -405,7 +406,7 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
    int handle;
    
    if(!snd_init)
-      return 0;
+      return -1;
 
    // haleyjd: turns out this is too simplistic. see below.
    /*
@@ -421,14 +422,10 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
          break;
    }
 
-   // all used? stomp on a channel
+   // all used? don't play the sound. It's preferable to miss a sound
+   // than it is to cut off one already playing, which sounds weird.
    if(handle == MAX_CHANNELS)
-   {
-      // stomp on a different hardware channel each time to be fair
-      if(++stomp_handle >= MAX_CHANNELS)
-         stomp_handle = 0;
-      handle = stomp_handle;
-   }
+      return -1;
 
    // haleyjd 02/18/05: cannot proceed until channel is unlocked
    while(channelinfo[handle].lock)
@@ -439,6 +436,8 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
       channelinfo[handle].loop = loop;
       updateSoundParams(handle, vol, sep, pitch);
    }
+   else
+      handle = -1;
    
    return handle;
 }

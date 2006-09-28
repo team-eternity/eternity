@@ -100,6 +100,9 @@ void S_StopAllSequences(void);
 void S_SetSequenceStatus(void);
 void S_InitEnviroSpots(void);
 
+boolean S_CheckSequenceLoop(mobj_t *mo);
+boolean S_CheckSectorSequenceLoop(sector_t *s);
+
 // EnviroSeqMgr_t -- environment sequence manager data
 
 typedef struct EnviroSeqMgr_s

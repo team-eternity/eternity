@@ -198,15 +198,15 @@ sound dgpain { pitchvariance = Doom; priority =  96; dehackednum = 113 }
 
 sound eefly
 {
-   priority = 32
+   priority = 120
    dehackednum = 114
    clipping_dist = 512
    close_dist = 64
 }
 
-sound gloop  { pitchvariance = Doom; priority =  32; dehackednum = 115 }
-sound thundr { pitchvariance = Doom; priority =  96; dehackednum = 116 }
-sound muck   { pitchvariance = Doom; priority =  32; dehackednum = 117 }
+sound gloop  { pitchvariance = Doom; priority =  100; dehackednum = 115 }
+sound thundr { pitchvariance = Doom; priority =  96;  dehackednum = 116 }
+sound muck   { pitchvariance = Doom; priority =  100; dehackednum = 117 }
 
 sound plfeet
 {
@@ -238,7 +238,7 @@ sound burn   { pitchvariance = Doom; priority =  32; dehackednum = 121 }
 sound eehtsz
 { 
    pitchvariance = Doom
-   priority = 32
+   priority = 100
    dehackednum = 122
    clipping_dist = 640
    close_dist = 96
@@ -247,7 +247,7 @@ sound eehtsz
 sound eedrip
 {
    pitchvariance = Doom
-   priority = 32
+   priority = 100
    dehackednum = 123
    clipping_dist = 640
    close_dist = 96
@@ -262,108 +262,108 @@ ifenabled(HERETIC)
 
 sound ht_gldhit
 {
-   lump = "gldhit"; priority =  32; dehackednum = 300; pitchvariance = Heretic
+   lump = "gldhit"; priority =  64; dehackednum = 300; pitchvariance = Heretic
 }
 
 sound ht_telept
 {
-   lump = "telept"; priority =  50; dehackednum = 301
+   lump = "telept"; priority =  32; dehackednum = 301
    pitchvariance = Heretic
 }
 
 sound ht_chat
 {
-   lump = "chat";   priority = 100; dehackednum = 302; pitchvariance = Heretic
+   lump = "chat";   priority =  60; dehackednum = 302; pitchvariance = Heretic
 }
 
 sound ht_keyup
 {
-   lump = "keyup";  priority =  50; dehackednum = 303; pitchvariance = Heretic
+   lump = "keyup";  priority =  78; dehackednum = 303; pitchvariance = Heretic
 }
 
 sound ht_itemup
 {
-   lump = "itemup"; priority =  32; dehackednum = 304; pitchvariance = Heretic
+   lump = "itemup"; priority =  78; dehackednum = 304; pitchvariance = Heretic
 }
 
 sound ht_mumsit
 {
-   lump = "mumsit"; priority =  32; dehackednum = 305; pitchvariance = Heretic
+   lump = "mumsit"; priority =  98; dehackednum = 305; pitchvariance = Heretic
 }
 
 sound ht_mumat1
 {
-   lump = "mumat1"; priority =  32; dehackednum = 306; pitchvariance = Heretic
+   lump = "mumat1"; priority =  70; dehackednum = 306; pitchvariance = Heretic
 }
 
 sound ht_mumat2
 {
-   lump = "mumat2"; priority =  32; dehackednum = 307; pitchvariance = Heretic
+   lump = "mumat2"; priority =  70; dehackednum = 307; pitchvariance = Heretic
 }
 
 sound ht_mumpai
 {
-   lump = "mumpai"; priority =  32; dehackednum = 308; pitchvariance = Heretic
+   lump = "mumpai"; priority =  96; dehackednum = 308; pitchvariance = Heretic
 }
 
 sound ht_mumdth
 {
-   lump = "mumdth"; priority =  80; dehackednum = 309; pitchvariance = Heretic
+   lump = "mumdth"; priority =  70; dehackednum = 309; pitchvariance = Heretic
 }
 
 sound ht_mumhed
 {
-   lump = "mumhed"; priority =  32; dehackednum = 310; pitchvariance = Heretic
+   lump = "mumhed"; priority =  70; dehackednum = 310; pitchvariance = Heretic
 }
 
 sound ht_clksit
 {
-   lump = "clksit"; priority =  32; dehackednum = 311; pitchvariance = Heretic
+   lump = "clksit"; priority =  96; dehackednum = 311; pitchvariance = Heretic
 }
 
 sound ht_clkatk
 {
-   lump = "clkatk"; priority =  32; dehackednum = 312; pitchvariance = Heretic
+   lump = "clkatk"; priority =  70; dehackednum = 312; pitchvariance = Heretic
 }
 
 sound ht_clkpai
 {
-   lump = "clkpai"; priority =  32; dehackednum = 313; pitchvariance = Heretic
+   lump = "clkpai"; priority =  96; dehackednum = 313; pitchvariance = Heretic
 }
 
 sound ht_clkdth
 {
-   lump = "clkdth"; priority =  80; dehackednum = 314; pitchvariance = Heretic
+   lump = "clkdth"; priority =  70; dehackednum = 314; pitchvariance = Heretic
 }
 
 sound ht_clkact
 {
-   lump = "clkact"; priority =  20; dehackednum = 315; pitchvariance = Heretic
+   lump = "clkact"; priority = 120; dehackednum = 315; pitchvariance = Heretic
 }
 
 sound ht_wizsit
 {
-   lump = "wizsit"; priority =  32; dehackednum = 316; pitchvariance = Heretic
+   lump = "wizsit"; priority =  95; dehackednum = 316; pitchvariance = Heretic
 }
 
 sound ht_wizatk
 {
-   lump = "wizatk"; priority =  32; dehackednum = 317; pitchvariance = Heretic
+   lump = "wizatk"; priority =  70; dehackednum = 317; pitchvariance = Heretic
 }
 
 sound ht_wizdth
 {
-   lump = "wizdth"; priority =  80; dehackednum = 318; pitchvariance = Heretic
+   lump = "wizdth"; priority =  70; dehackednum = 318; pitchvariance = Heretic
 }
 
 sound ht_wizact
 {
-   lump = "wizact"; priority =  20; dehackednum = 319; pitchvariance = Heretic
+   lump = "wizact"; priority = 120; dehackednum = 319; pitchvariance = Heretic
 }
 
 sound ht_wizpai
 {
-   lump = "wizpai"; priority =  32; dehackednum = 320; pitchvariance = Heretic
+   lump = "wizpai"; priority =  96; dehackednum = 320; pitchvariance = Heretic
 }
 
 sound ht_sorzap
@@ -378,7 +378,7 @@ sound ht_sorrise
 
 sound ht_sorsit
 {
-   lump = "sorsit"; priority = 200; dehackednum = 323; pitchvariance = Heretic
+   lump = "sorsit"; priority =  24; dehackednum = 323; pitchvariance = Heretic
 }
 
 sound ht_soratk
@@ -388,177 +388,177 @@ sound ht_soratk
 
 sound ht_sorpai
 {
-   lump = "sorpai"; priority = 200; dehackednum = 325; pitchvariance = Heretic
+   lump = "sorpai"; priority =  32; dehackednum = 325; pitchvariance = Heretic
 }
 
 sound ht_soract
 {
-   lump = "soract"; priority = 200; dehackednum = 326; pitchvariance = Heretic
+   lump = "soract"; priority = 100; dehackednum = 326; pitchvariance = Heretic
 }
 
 sound ht_sordsph
 {
-   lump = "sordsph";priority = 200; dehackednum = 327; pitchvariance = Heretic
+   lump = "sordsph";priority =  32; dehackednum = 327; pitchvariance = Heretic
 }
 
 sound ht_sordexp
 {
-   lump = "sordexp";priority = 200; dehackednum = 328; pitchvariance = Heretic
+   lump = "sordexp";priority =  32; dehackednum = 328; pitchvariance = Heretic
 }
 
 sound ht_sordbon
 {
-   lump = "sordbon";priority = 200; dehackednum = 329; pitchvariance = Heretic
+   lump = "sordbon";priority =  32; dehackednum = 329; pitchvariance = Heretic
 }
 
 sound ht_wind
 {
-   lump = "wind";   priority =  16; dehackednum = 330; pitchvariance = Heretic
+   lump = "wind";   priority = 255; dehackednum = 330; pitchvariance = Heretic
 }
 
 sound ht_waterfl
 {
-   lump = "waterfl";priority =  16; dehackednum = 331; pitchvariance = Heretic
+   lump = "waterfl";priority = 255; dehackednum = 331; pitchvariance = Heretic
 }
 
 sound ht_podexp
 {
-   lump = "podexp"; priority =  40; dehackednum = 332; pitchvariance = Heretic
+   lump = "podexp"; priority =  60; dehackednum = 332; pitchvariance = Heretic
 }
 
 sound ht_newpod
 {
-   lump = "newpod"; priority =  16; dehackednum = 333; pitchvariance = Heretic
+   lump = "newpod"; priority =  32; dehackednum = 333; pitchvariance = Heretic
 }
 
 sound ht_kgtsit
 {
-   lump = "kgtsit"; priority =  32; dehackednum = 334; pitchvariance = Heretic
+   lump = "kgtsit"; priority =  94; dehackednum = 334; pitchvariance = Heretic
 }
 
 sound ht_kgtatk
 {
-   lump = "kgtatk"; priority =  32; dehackednum = 335; pitchvariance = Heretic
+   lump = "kgtatk"; priority =  70; dehackednum = 335; pitchvariance = Heretic
 }
 
 sound ht_kgtat2
 {
-   lump = "kgtat2"; priority =  32; dehackednum = 336; pitchvariance = Heretic
+   lump = "kgtat2"; priority =  70; dehackednum = 336; pitchvariance = Heretic
 }
 
 sound ht_kgtdth
 {
-   lump = "kgtdth"; priority =  80; dehackednum = 337; pitchvariance = Heretic
+   lump = "kgtdth"; priority =  70; dehackednum = 337; pitchvariance = Heretic
 }
 
 sound ht_kgtpai
 {
-   lump = "kgtpai"; priority =  32; dehackednum = 338; pitchvariance = Heretic
+   lump = "kgtpai"; priority =  96; dehackednum = 338; pitchvariance = Heretic
 }
 
 sound ht_hrnhit
 {
-   lump = "hrnhit"; priority =  32; dehackednum = 339; pitchvariance = Heretic
+   lump = "hrnhit"; priority =  64; dehackednum = 339; pitchvariance = Heretic
 }
 
 sound ht_bstsit
 {
-   lump = "bstsit"; priority =  32; dehackednum = 340; pitchvariance = Heretic
+   lump = "bstsit"; priority =  93; dehackednum = 340; pitchvariance = Heretic
 }
 
 sound ht_bstatk
 {
-   lump = "bstatk"; priority =  32; dehackednum = 341; pitchvariance = Heretic
+   lump = "bstatk"; priority =  70; dehackednum = 341; pitchvariance = Heretic
 }
 
 sound ht_bstpai
 {
-   lump = "bstpai"; priority =  32; dehackednum = 342; pitchvariance = Heretic
+   lump = "bstpai"; priority =  96; dehackednum = 342; pitchvariance = Heretic
 }
 
 sound ht_bstdth
 {
-   lump = "bstdth"; priority =  80; dehackednum = 343; pitchvariance = Heretic
+   lump = "bstdth"; priority =  70; dehackednum = 343; pitchvariance = Heretic
 }
 
 sound ht_bstact
 {
-   lump = "bstact"; priority =  20; dehackednum = 344; pitchvariance = Heretic
+   lump = "bstact"; priority = 100; dehackednum = 344; pitchvariance = Heretic
 }
 
 sound ht_snksit
 {
-   lump = "snksit"; priority =  32; dehackednum = 345; pitchvariance = Heretic
+   lump = "snksit"; priority =  93; dehackednum = 345; pitchvariance = Heretic
 }
 
 sound ht_snkatk
 {
-   lump = "snkatk"; priority =  32; dehackednum = 346; pitchvariance = Heretic
+   lump = "snkatk"; priority =  70; dehackednum = 346; pitchvariance = Heretic
 }
 
 sound ht_snkpai
 {
-   lump = "snkpai"; priority =  32; dehackednum = 347; pitchvariance = Heretic
+   lump = "snkpai"; priority =  96; dehackednum = 347; pitchvariance = Heretic
 }
 
 sound ht_snkdth
 {
-   lump = "snkdth"; priority =  80; dehackednum = 348; pitchvariance = Heretic
+   lump = "snkdth"; priority =  70; dehackednum = 348; pitchvariance = Heretic
 }
 
 sound ht_snkact
 {
-   lump = "snkact"; priority =  20; dehackednum = 349; pitchvariance = Heretic
+   lump = "snkact"; priority = 100; dehackednum = 349; pitchvariance = Heretic
 }
 
 sound ht_doropn
 {
-   lump = "doropn"; priority =  40; dehackednum = 350; pitchvariance = Heretic
+   lump = "doropn"; priority = 100; dehackednum = 350; pitchvariance = Heretic
 }
 
 sound ht_dorcls
 {
-   lump = "dorcls"; priority =  40; dehackednum = 351; pitchvariance = Heretic
+   lump = "dorcls"; priority = 100; dehackednum = 351; pitchvariance = Heretic
 }
 
 sound ht_switch
 {
-   lump = "switch"; priority =  40; dehackednum = 352; pitchvariance = Heretic
+   lump = "switch"; priority =  78; dehackednum = 352; pitchvariance = Heretic
 }
 
 sound ht_pstart
 {
-   lump = "pstart"; priority =  40; dehackednum = 353; pitchvariance = Heretic
+   lump = "pstart"; priority = 100; dehackednum = 353; pitchvariance = Heretic
 }
 
 sound ht_pstop
 {
-   lump = "pstop";  priority =  40; dehackednum = 354; pitchvariance = Heretic
+   lump = "pstop";  priority = 100; dehackednum = 354; pitchvariance = Heretic
 }
 
 sound ht_stnmov
 {
-   lump = "stnmov"; priority =  40; dehackednum = 355; pitchvariance = Heretic
+   lump = "stnmov"; priority = 119; dehackednum = 355; pitchvariance = Heretic
 }
 
 sound ht_sbtpai
 {
-   lump = "sbtpai"; priority =  32; dehackednum = 356; pitchvariance = Heretic
+   lump = "sbtpai"; priority =  96; dehackednum = 356; pitchvariance = Heretic
 }
 
 sound ht_sbtdth
 {
-   lump = "sbtdth"; priority =  80; dehackednum = 357; pitchvariance = Heretic
+   lump = "sbtdth"; priority =  32; dehackednum = 357; pitchvariance = Heretic
 }
 
 sound ht_sbtact
 {
-   lump = "sbtact"; priority =  20; dehackednum = 358; pitchvariance = Heretic
+   lump = "sbtact"; priority = 100; dehackednum = 358; pitchvariance = Heretic
 }
 
 sound ht_lobhit
 {
-   lump = "lobhit"; priority =  20; dehackednum = 359; pitchvariance = Heretic
+   lump = "lobhit"; priority =  64; dehackednum = 359; pitchvariance = Heretic
 }
 
 sound ht_minsit
@@ -568,12 +568,12 @@ sound ht_minsit
 
 sound ht_minat1
 {
-   lump = "minat1"; priority =  32; dehackednum = 361; pitchvariance = Heretic
+   lump = "minat1"; priority =  70; dehackednum = 361; pitchvariance = Heretic
 }
 
 sound ht_minat2
 {
-   lump = "minat2"; priority =  32; dehackednum = 362; pitchvariance = Heretic
+   lump = "minat2"; priority =  70; dehackednum = 362; pitchvariance = Heretic
 }
 
 sound ht_minpai
@@ -583,22 +583,22 @@ sound ht_minpai
 
 sound ht_mindth
 {
-   lump = "mindth"; priority =  20; dehackednum = 364; pitchvariance = Heretic
+   lump = "mindth"; priority =  32; dehackednum = 364; pitchvariance = Heretic
 }
 
 sound ht_minact
 {
-   lump = "minact"; priority =  32; dehackednum = 365; pitchvariance = Heretic
+   lump = "minact"; priority = 100; dehackednum = 365; pitchvariance = Heretic
 }
 
 sound ht_stfpow
 {
-   lump = "stfpow"; priority =  32; dehackednum = 366; pitchvariance = Heretic
+   lump = "stfpow"; priority =  64; dehackednum = 366; pitchvariance = Heretic
 }
 
 sound ht_phohit
 {
-   lump = "phohit"; priority =  32; dehackednum = 367; pitchvariance = Heretic
+   lump = "phohit"; priority =  64; dehackednum = 367; pitchvariance = Heretic
 }
 
 sound ht_hedsit
@@ -608,128 +608,128 @@ sound ht_hedsit
 
 sound ht_hedat1
 {
-   lump = "hedat1"; priority =  32; dehackednum = 369; pitchvariance = Heretic
+   lump = "hedat1"; priority =  70; dehackednum = 369; pitchvariance = Heretic
 }
 
 sound ht_hedat2
 {
-   lump = "hedat2"; priority =  32; dehackednum = 370; pitchvariance = Heretic
+   lump = "hedat2"; priority =  70; dehackednum = 370; pitchvariance = Heretic
 }
 
 sound ht_hedat3
 {
-   lump = "hedat3"; priority =  32; dehackednum = 371; pitchvariance = Heretic
+   lump = "hedat3"; priority =  70; dehackednum = 371; pitchvariance = Heretic
 }
 
 sound ht_heddth
 {
-   lump = "heddth"; priority =  80; dehackednum = 372; pitchvariance = Heretic
+   lump = "heddth"; priority =  32; dehackednum = 372; pitchvariance = Heretic
 }
 
 sound ht_hedact
 {
-   lump = "hedact"; priority =  20; dehackednum = 373; pitchvariance = Heretic
+   lump = "hedact"; priority = 100; dehackednum = 373; pitchvariance = Heretic
 }
 
 sound ht_hedpai
 {
-   lump = "hedpai"; priority =  32; dehackednum = 374; pitchvariance = Heretic
+   lump = "hedpai"; priority =  96; dehackednum = 374; pitchvariance = Heretic
 }
 
 sound ht_impsit
 {
-   lump = "impsit"; priority =  32; dehackednum = 375; pitchvariance = Heretic
+   lump = "impsit"; priority =  97; dehackednum = 375; pitchvariance = Heretic
 }
 
 sound ht_impat1
 {
-   lump = "impat1"; priority =  32; dehackednum = 376; pitchvariance = Heretic
+   lump = "impat1"; priority =  70; dehackednum = 376; pitchvariance = Heretic
 }
 
 sound ht_impat2
 {
-   lump = "impat2"; priority =  32; dehackednum = 377; pitchvariance = Heretic
+   lump = "impat2"; priority =  70; dehackednum = 377; pitchvariance = Heretic
 }
 
 sound ht_imppai
 {
-   lump = "imppai"; priority =  32; dehackednum = 378; pitchvariance = Heretic
+   lump = "imppai"; priority =  96; dehackednum = 378; pitchvariance = Heretic
 }
 
 sound ht_impdth
 {
-   lump = "impdth"; priority =  80; dehackednum = 379; pitchvariance = Heretic
+   lump = "impdth"; priority =  70; dehackednum = 379; pitchvariance = Heretic
 }
 
 sound ht_amb1
 {
-   lump = "amb1";   priority =   1; dehackednum = 380; 
+   lump = "amb1";   priority = 255; dehackednum = 380; 
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb2
 {
-   lump = "amb2";   priority =   1; dehackednum = 381
+   lump = "amb2";   priority = 255; dehackednum = 381
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb3
 {
-   lump = "amb3";   priority =   1; dehackednum = 382
+   lump = "amb3";   priority = 255; dehackednum = 382
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb4
 {
-   lump = "amb4";   priority =   1; dehackednum = 383
+   lump = "amb4";   priority = 255; dehackednum = 383
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb5
 {
-   lump = "amb5";   priority =   1; dehackednum = 384
+   lump = "amb5";   priority = 255; dehackednum = 384
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb6
 {
-   lump = "amb6";   priority =   1; dehackednum = 385
+   lump = "amb6";   priority = 255; dehackednum = 385
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb7
 {
-   lump = "amb7";   priority =   1; dehackednum = 386
+   lump = "amb7";   priority = 255; dehackednum = 386
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb8
 {
-   lump = "amb8";   priority =   1; dehackednum = 387
+   lump = "amb8";   priority = 255; dehackednum = 387
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb9
 {
-   lump = "amb9";   priority =   1; dehackednum = 388
+   lump = "amb9";   priority = 255; dehackednum = 388
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb10
 {
-   lump = "amb10";  priority =   1; dehackednum = 389
+   lump = "amb10";  priority = 255; dehackednum = 389
    pitchvariance = HereticAmbient
 }
 
 sound ht_amb11
 {
-   lump = "amb11";  priority =   1; dehackednum = 390
+   lump = "amb11";  priority = 255; dehackednum = 390
    pitchvariance = HereticAmbient
 }
 
 sound ht_dormov
 {
-   lump = "dormov"; priority =  40; dehackednum = 391
+   lump = "dormov"; priority = 119; dehackednum = 391
    pitchvariance = Heretic
 }
 
@@ -1105,3 +1105,27 @@ soundsequence EEPlatSilent
 {
 }
 
+# Ceiling Sequences
+
+# Used by most ceiling actions
+soundsequence EECeilingNormal
+{
+   cmds =
+   {
+      "playloop EE_FCMove 8"
+   }
+}
+
+# Used by "silent" crushers that aren't really silent
+soundsequence EECeilingSemiSilent
+{
+   cmds =
+   {
+      "stopsound EE_PlatStop"
+   }
+}
+
+# Like above for plats, but for ceilings.
+soundsequence EECeilingSilent
+{
+}

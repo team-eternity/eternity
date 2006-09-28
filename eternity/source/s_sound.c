@@ -90,6 +90,9 @@ typedef struct
   soundattn_e attenuation; // attenuation type -- haleyjd 05/29/06
   int pitch;               // pitch modifier -- haleyjd 06/03/06
   int handle;              // handle of the sound being played
+  int o_priority;          // haleyjd 09/27/06: stored priority value
+  int priority;            // current priority value
+  int singularity;         // haleyjd 09/27/06: stored singularity value
 } channel_t;
 
 // the set of channels available
@@ -129,13 +132,20 @@ musicinfo_t *musicinfos[SOUND_HASHSLOTS];
 // Internals.
 //
 
+//
+// S_StopChannel
+//
+// Stops a sound channel.
+//
 static void S_StopChannel(int cnum)
 {
    if(channels[cnum].sfxinfo)
    {
       if(I_SoundIsPlaying(channels[cnum].handle))
          I_StopSound(channels[cnum].handle);      // stop the sound playing
-      channels[cnum].sfxinfo = NULL;
+      
+      // haleyjd 09/27/06: clear the entire channel
+      memset(&channels[cnum], 0, sizeof(channel_t));
    }
 }
 
@@ -148,10 +158,11 @@ static void S_StopChannel(int cnum)
 // sf: listener now a camera_t for external cameras
 // haleyjd: added sfx parameter for custom attenuation data
 // haleyjd: added channel volume scale value
+// haleyjd: added priority scaling
 //
 static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
                                int chanvol, int chanattn, int *vol, int *sep,
-                               int *pitch, sfxinfo_t *sfx)
+                               int *pitch, int *pri, sfxinfo_t *sfx)
 {
    fixed_t adx = 0, ady = 0, dist = 0;
    angle_t angle;
@@ -268,6 +279,12 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    *vol = dist < close_dist >> FRACBITS ? basevolume :
       basevolume * ((clipping_dist >> FRACBITS) - dist) / attenuator;
 
+   // haleyjd 09/27/06: decrease priority with volume attenuation
+   *pri = *pri + (127 - *vol);
+   
+   if(*pri > 255) // cap to 255
+      *pri = 255;
+
    return *vol > 0;
 }
 
@@ -275,43 +292,65 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 // S_getChannel :
 //
 //   If none available, return -1.  Otherwise channel #.
+//   haleyjd 09/27/06: fixed priority/singularity bugs
+//   Note that a higher priority number means lower priority!
 //
-static int S_getChannel(const void *origin, sfxinfo_t *sfxinfo)
+static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
+                        int priority, int singularity)
 {
    // channel number to use
    int cnum;
-   channel_t *c;
-   
-   // Find an open channel
+   int lowestpriority = -1; // haleyjd
+   int lpcnum = -1;
+
+   // haleyjd 09/28/06: moved this here. If we kill a sound already
+   // being played, we can use that channel. There is no need to
+   // search for a free one again because we already know of one.
+
+   // kill old sound
    // killough 12/98: replace is_pickup hack with singularity flag
-   for(cnum = 0; cnum < numChannels && channels[cnum].sfxinfo; ++cnum)
+   for(cnum = 0; cnum < numChannels; ++cnum)
    {
-      if(origin && channels[cnum].origin == origin &&
-         channels[cnum].sfxinfo->singularity == sfxinfo->singularity)
+      if(channels[cnum].sfxinfo &&
+         channels[cnum].singularity == singularity &&
+         channels[cnum].origin == origin)
       {
          S_StopChannel(cnum);
          break;
       }
    }
+   
+   // Find an open channel
+   if(cnum == numChannels)
+   {
+      // haleyjd 09/28/06: it isn't necessary to look for playing sounds in
+      // the same singularity class again, as we just did that above. Here
+      // we are looking for an open channel. We will also keep track of the
+      // channel found with the lowest sound priority while doing this.
+      for(cnum = 0; cnum < numChannels && channels[cnum].sfxinfo; ++cnum)
+      {
+         if(channels[cnum].priority > lowestpriority)
+         {
+            lowestpriority = channels[cnum].priority;
+            lpcnum = cnum;
+         }
+      }
+   }
 
-   // None available
+   // None available?
    if(cnum == numChannels)
    {
       // Look for lower priority
-      for(cnum = 0; cnum < numChannels; ++cnum)
-      {
-         if (channels[cnum].sfxinfo->priority >= sfxinfo->priority)
-            break;
-      }
-      if(cnum == numChannels)
+      // haleyjd: we have stored the channel found with the lowest priority
+      // in the loop above
+      if(priority > lowestpriority)
          return -1;                  // No lower priority.  Sorry, Charlie.
       else
-         S_StopChannel(cnum);        // Otherwise, kick out lower priority.
+         S_StopChannel(lpcnum);      // Otherwise, kick out lowest priority.
    }
    
-   c = &channels[cnum];              // channel is decided to be cnum.
-   c->sfxinfo = sfxinfo;
-   c->origin = origin;
+   channels[cnum].sfxinfo = sfxinfo;              // channel is decided to be cnum.
+   channels[cnum].origin  = origin;
    return cnum;
 }
 
@@ -327,7 +366,7 @@ static int S_getChannel(const void *origin, sfxinfo_t *sfxinfo)
 void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
                     int volumeScale, soundattn_e attenuation, boolean loop)
 {
-   int sep, pitch, priority, cnum;
+   int sep, pitch, o_priority, priority, singularity, cnum, handle;
    int volume = snd_SfxVolume;
    boolean extcamera = false;
    camera_t playercam;
@@ -351,20 +390,18 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    // haleyjd:  we must weed out degenmobj_t's before trying to 
    // dereference these fields -- a thinker check perhaps?
 
+   // haleyjd: monster skins don't support sound replacements
+
    if(sfx->skinsound) // check for skin sounds
    {
       char *sndname = "";
 
       if(origin && 
-         (origin->thinker.function == P_MobjThinker) &&  // haleyjd
-         origin->skin)
-      {
-         // haleyjd: monster skins don't support sound replacements
-         if(origin->skin->type == SKIN_PLAYER)
-         {
-            sndname = origin->skin->sounds[sfx->skinsound - 1];
-            sfx = S_SfxInfoForName(sndname);
-         }
+         origin->thinker.function == P_MobjThinker &&       // haleyjd
+         origin->skin && origin->skin->type == SKIN_PLAYER) // haleyjd
+      {         
+         sndname = origin->skin->sounds[sfx->skinsound - 1];
+         sfx = S_SfxInfoForName(sndname);
       }
       
       if(!sfx)
@@ -375,20 +412,19 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       }
    }
 
-   // FIXME: Shouldn't the priority value always be used??
-
    // Initialize sound parameters
    if(sfx->link)
    {
       pitch        = sfx->pitch;
-      priority     = sfx->priority;
       volumeScale += sfx->volume;   // haleyjd: now modifies volumeScale
    }
    else
-   {
       pitch    = NORM_PITCH;
-      priority = NORM_PRIORITY;
-   }
+   
+   // haleyjd: modified so that priority value is always used
+   // haleyjd: also modified to get and store proper singularity value
+   o_priority = priority = sfx->priority;
+   singularity = sfx->singularity;
 
    // haleyjd: setup playercam
    if(gamestate == GS_LEVEL)
@@ -428,7 +464,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    {     
       // use an external cam?
       if(!S_AdjustSoundParams(&playercam, origin, volumeScale, attenuation,
-                              &volume, &sep, &pitch, sfx))
+                              &volume, &sep, &pitch, &priority, sfx))
          return;
       else if(origin->x == playercam.x && origin->y == playercam.y)
          sep = NORM_SEP;
@@ -464,21 +500,8 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
          pitch = 255;
    }
 
-   // kill old sound
-   // killough 12/98: replace is_pickup hack with singularity flag
-   for(cnum = 0; cnum < numChannels; ++cnum)
-   {
-      if(channels[cnum].sfxinfo &&
-         channels[cnum].sfxinfo->singularity == sfx->singularity &&
-         channels[cnum].origin == origin)
-      {
-         S_StopChannel(cnum);
-         break;
-      }
-   }
-
    // try to find a channel
-   cnum = S_getChannel(origin, sfx);
+   cnum = S_getChannel(origin, sfx, priority, singularity);
    
    if(cnum < 0)
       return;
@@ -487,14 +510,25 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       sfx = sfx->link;     // sf: skip thru link(s)
 
    // Assigns the handle to one of the channels in the mix/output buffer.
-   channels[cnum].handle = I_StartSound(sfx, cnum, volume, sep, pitch, 
-                                        priority, loop);
+   handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority, loop);
 
-   // haleyjd 05/29/06: record volume scale value and attenuation type
-   // haleyjd 06/03/06: record pitch too (wtf is going on here??)
-   channels[cnum].volume      = volumeScale;
-   channels[cnum].attenuation = attenuation;
-   channels[cnum].pitch       = pitch;
+   // haleyjd: check to see if the sound was started
+   if(handle >= 0)
+   {
+      channels[cnum].handle = handle;
+      
+      // haleyjd 05/29/06: record volume scale value and attenuation type
+      // haleyjd 06/03/06: record pitch too (wtf is going on here??)
+      // haleyjd 09/27/06: store priority and singularity values (!!!)
+      channels[cnum].volume      = volumeScale;
+      channels[cnum].attenuation = attenuation;
+      channels[cnum].pitch       = pitch;
+      channels[cnum].o_priority  = o_priority;  // original priority
+      channels[cnum].priority    = priority;    // scaled priority
+      channels[cnum].singularity = singularity;
+   }
+   else // haleyjd: the sound didn't start, so clear the channel info
+      memset(&channels[cnum], 0, sizeof(channel_t));
 }
 
 //
@@ -502,7 +536,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 //
 // haleyjd 05/29/06: Actually, DOOM had a routine named this, but it was
 // removed, apparently by the BOOM team, because it was never used for 
-// anything useful (it was always called with sfx_SndVolume...).
+// anything useful (it was always called with snd_SfxVolume...).
 //
 void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
                           int volume, soundattn_e attn)
@@ -676,6 +710,7 @@ void S_UpdateSounds(const mobj_t *listener)
             int volume = snd_SfxVolume; // haleyjd: this gets scaled below.
             int pitch = c->pitch; // haleyjd 06/03/06: use channel's pitch!
             int sep = NORM_SEP;
+            int pri = c->o_priority; // haleyjd 09/27/06: priority
 
             // check non-local sounds for distance clipping
             // or modify their params
@@ -693,10 +728,13 @@ void S_UpdateSounds(const mobj_t *listener)
                                        c->origin,
                                        c->volume,
                                        c->attenuation,
-                                       &volume, &sep, &pitch, sfx))
+                                       &volume, &sep, &pitch, &pri, sfx))
                   S_StopChannel(cnum);
                else
+               {
                   I_UpdateSoundParams(c->handle, volume, sep, pitch);
+                  c->priority = pri; // haleyjd
+               }
             }
          }
          else   // if channel is allocated but sound has stopped, free it

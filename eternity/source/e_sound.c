@@ -444,7 +444,15 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section,
 
    // process the priority value
    if(IS_SET(ITEM_SND_PRIORITY))
+   {
       sfx->priority = cfg_getint(section, ITEM_SND_PRIORITY);
+
+      // haleyjd 09/27/06: force into range of 0 to 255
+      if(sfx->priority < 0)
+         sfx->priority = 0;
+      if(sfx->priority > 255)
+         sfx->priority = 255;
+   }
 
    // process the link
    if(IS_SET(ITEM_SND_LINK))

@@ -667,6 +667,14 @@ typedef struct platlist {
 
 // p_ceilng
 
+// haleyjd: ceiling noise levels
+enum
+{
+   CNOISE_NORMAL,     // plays plat move sound
+   CNOISE_SEMISILENT, // plays plat stop at end of strokes
+   CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
+};
+
 typedef struct
 {
   thinker_t thinker;

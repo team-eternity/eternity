@@ -229,7 +229,7 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
   int correctSep;
 
   // move up one slot, with wraparound
-  if (++handle >= NUM_CHANNELS)
+  if(++handle >= NUM_CHANNELS)
     handle = 0;
 
   // destroy anything still in the slot
@@ -241,9 +241,8 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
      I_CacheSound(sound);
 
   // haleyjd: I_CacheSound may fail if the lump is zero length
-  // FIXME: this needs to be tested!
   if(!sound->data)
-     return handle; // pretend we started the sound
+     return -1;
 
   // Copy the sound's data into the sound sample slot
   memcpy(&channel[handle], sound->data, sizeof(SAMPLE));
