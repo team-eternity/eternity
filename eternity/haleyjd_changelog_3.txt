@@ -2,6 +2,279 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+09/28/06
+
+More work on ceiling sequences. I have also revamped the entire sound engine
+priority system, and I believe problems with the old handling of priority were
+the source of the weird sound cutoff problems that were plaguing me back in
+August.
+
+Basically, the original sound engine ignores sound priority. If an overflow
+occurs with respect to the number of channels needed, it cuts off the first 
+sound it finds with "lower priority." But the priority values stored in sfxinfo
+are not even used! All sounds not played through links were given a default
+priority value, so they were all equal. This meant that the very first sound
+found playing was generally cut off, even if it was something of relatively far
+greater importance.
+
+Say for example that an Imp is scratching your face. But 1500 units away are 32
+crusher sectors whirring away at near-zero volume and using up all the sound 
+channels with their obnoxious stnmov sound. The crushers may very well override
+the Imp, even though if you had a choice on what you'd rather hear, it would be
+the Imp and not the crushers.
+
+Now, priority values are loaded into the sound channels themselves, and they are
+scaled with the volume of the sound, so that quiet, more distant sounds have
+lower priority. As a dramatic example, a Cyberdemon in a large group of Imps
+would be sure to have his menacing MOOO! sound heard because his wakeup sound
+priority is very high and does not scale down with distance, whereas the Imps'
+sound is lower priority and scales down the further away they are. This makes
+sense obviously, because if there's a Cyberdemon around, you always want to know
+about it.
+
+I had to change the priority values of all Heretic sounds, because the old
+values were actually inverted. I took another look at Heretic's sound code, and
+it does something very similar to what I've done, except that their priority
+scale is inverted relative to DOOM's.
+
+In DOOM, a larger number means lower priority. So a Cyberdemon MOOO is high
+priority at 32, whereas an Imp's idle chortling has a paltry 120. This seems
+confusing even to me, so I can't blame Raven for changing it. In Heretic, a low
+number means low priority. For example, global ambience sounds were given a
+priority of 1, which is lower than anything else under their system. This makes
+more sense, but for compatibility purposes I have to maintain DOOM's values in
+preference to Heretic's.
+
+--------------------------------------------------------------------------------
+09/27/06
+
+Began work on sound sequence support for ceiling actions.
+
+--------------------------------------------------------------------------------
+09/26/06
+
+Added a tweak to the sound sequence system that will make Hexen work when the
+time comes to worry about that. Basically, "door" and "plat" type sequences
+need dedicated lookup arrays that store any sequences marked of that type with
+numeric ids between 0 and 63. These take precedence over the normal numeric
+sndseq hash table.
+
+I added a restart command for sound sequences after noticing zdoom has this,
+although it's not very useful yet because I'm not moving the envirosequence
+engine into data. I think it works fine as a native system, and I can provide a
+special enviromanager block in EDF to allow the user to tweak its default
+settings.
+
+Sound sequences now work for plat sectors :)
+
+--------------------------------------------------------------------------------
+09/25/06
+
+Added topdamage field for 3D object burning, which was previously implemented as
+a special-case hack for FireBrazier objects for testing purposes.
+
+Added Heretic's environmental ambience sequences to sounds.edf, added the 
+ability to have pure sound aliases, changed MapInfo environmental sound 
+replacement to work with the sound sequence engine, and began integration of 
+sector sound sequences, starting with doors.
+
+The difference between sound links and sound aliases is a bit difficult to
+explain, but basically it's like this:
+
+A) A sound alias simply provides another name by which the aliased sound can be
+   played. It will be played in the exact same manner as though it had been
+   started via its own name, because alias resolution is performed first.
+   
+B) A sound link provides an entire separate set of parameters for playing a
+   sound. Links are resolved after all the data has been used to setup the sound
+   for playing.
+   
+Sound aliases are needed so that the default sound sequences can use them and
+therefore become gamemode independent to the largest degree possible.
+
+I have also expanded the sound volume precision that is sent down to the system-
+specific sound driver code, increasing the range from 0-15 to the full 0-127.
+This gets rid of the presentation of false precision in ambience and sound
+sequences, and it smoothes out distance attenuation significantly.
+
+--------------------------------------------------------------------------------
+09/22/06
+
+Fixed an error in the spechit emulation that was adapted from Chocolate Doom,
+and I let fraggle know about it :P
+
+--------------------------------------------------------------------------------
+09/21/06
+
+Began addition of spechit overflow emulation, originally from prboom+ and with
+some tweaks from Chocolate Doom. This should improve Eternity's standing with the
+demo watching crowd a bit once again ;)
+
+--------------------------------------------------------------------------------
+09/19/06
+
+I created a real realloc function for the zone heap, which is something I had 
+been mulling over mentally for a couple of years now actually. The BOOM version
+of Z_Realloc was actually naive and always performed the worst case operation;
+that is, allocating a buffer of the new size, copying the old one into it, and
+then freeing the old one. Not only is this inefficient in a number of cases, 
+but it also requires 2 times the necessary free RAM to be available during a
+realloc.
+
+The new Z_Realloc recognizes all possible cases:
+1. The block can be expanded in place by absorbing the next free block.
+2. The block can be shrunk.
+3. The block can be left the same size.
+4. The block must be moved.
+
+It seems the largest number of reallocs do fall into category 4, but there's a 
+significant chunk that do not, and most of them are the ones occuring during
+actual gameplay (libConfuse actually generates an enormous number of realloc
+calls during EDF, and this skews any statistics I try to generate using the
+zone logging file -- most of them are of type 4).
+
+The secret feature is more or less complete now, and options related to it have
+been added to the config file.
+
+I added an MDK cheat console command sort of like the one zdoom has. It fires a
+tracer that can instantly kill any monster. This comes really in handy when you
+summon up something that you don't really want to deal with ;)
+
+--------------------------------------------------------------------------------
+09/18/06
+
+Finished up memory usage improvements by creating a conditionally compiled log
+file system for the zone heap which can record all memory operations.
+
+--------------------------------------------------------------------------------
+09/13/06
+
+Made small tweaks to some of EE's parameterized codepointer functions.
+
+--------------------------------------------------------------------------------
+09/11/06
+
+Low detail mode integration has been completed, along with the addition of the
+ability to have multiple span drawing engines as well (now you can use the old
+inaccurate drawers if you're an ultra-purist; me, I'll stick with the new ones).
+
+I have begun a massive sweep of the source code to find allocations that are at
+PU_STATIC level which should actually be PU_CACHE. The vast majority of these
+appear to be patch graphics used in the HUD, menus, and other systems.
+
+--------------------------------------------------------------------------------
+09/05/06
+
+In connection to the special feature, I have changed the music volume range back
+to its original 0 to 15, I have enabled the ability to have a single unified
+mouse sensitivity setting instead of two independent axes (in actuality, setting
+the unified value just propagates the value to both of the normal settings), and
+I have also added the ability for the game engine to use multiple column drawer
+engines. This is in preparation for the restoration of "low detail" mode. I
+restored the old column drawers and made the quad cache optimization an option
+alongside the original rendering method.
+
+--------------------------------------------------------------------------------
+09/01/06
+
+Applied some bug fixes and tweaks to the e_thingtype console command.
+
+--------------------------------------------------------------------------------
+08/31/06
+
+Work on the special feature continues, and it's almost complete.
+
+--------------------------------------------------------------------------------
+08/30/06
+
+Added an "emulated" flag to the menu system to standardize some behavior
+previously hard-coded to the emulated old main menu.
+
+Added memorial messages for Toke, and bumped everything up to the new version.
+
+--------------------------------------------------------------------------------
+08/21/06
+
+A truly horrible weekend for the Doom community. Since I'm actually writing this
+well after the fact, I won't go into a lot of detail, but suffice it to say that
+our friend Toke will be sorely missed. I have already decided to dedicate the
+next release of Eternity, which will now be deemed v3.33.50 "Phoenix", to his
+memory. I'm also working on a "secret feature" that will be a nice little extra
+touch for this release, and something that Toke might have appreciated since he
+loved the oldschool purist DOOM.
+
+This kind of tragedy has a way of grabbing you and slapping you hard in the face
+over and over until you realize just how fleeting and tenuous life really is.
+
+--------------------------------------------------------------------------------
+08/09/06
+
+The whole 3D clipping fiasco put me off coding for a while and so I didn't get
+much done during the past month. Amongst things that were done, however, are
+basic types for EDF things. These are standard sets of flags that can be
+extended in the future without breaking peoples' EDF patches.
+
+I've noted a long-standing problem in the sound engine. Sometimes sounds seem to
+be getting cut off unexpectedly. For example, a demon's snort in the E1M5 demo
+for Ultimate Doom seems to cut off the player's shotgun blast. Extensive
+debugging hasn't revealed anything yet, but I know I'm not just imagining this.
+
+--------------------------------------------------------------------------------
+07/04/06
+
+July 4th. How patriotic. Anyways, during the past week I have integrated a
+tweaked version of zdoom's 3D object clipping code into Eternity to replace our
+defunct system. It seems to work flawlessly after some initial difficulties with
+touchy objects and 3DMidTex lines. The new system has some capabilities our old
+one did not, including the ability for me to easily add fire damage to things
+like torches when you stand on top of them :)
+
+--------------------------------------------------------------------------------
+06/26/06
+
+I fixed a bug in EE's screen patch scaling that was making black pixels show up
+at the ends of some columns (this was the cause of the dark lines on the R_Init
+loading box at startup).
+
+I have also discovered that 3D object clipping is once again completely broken
+with respect to sector movement. I have no idea if my recent changes are
+responsible for this (and if so, which), or if this is a problem reaching back
+to or earlier than the last release. The problems in the system have come to a
+head and must be dealt with. I have again made a new experimental fork of the
+engine to work with. Right now I'm thinking about trying to restart from 
+scratch with it :(
+
+--------------------------------------------------------------------------------
+06/20/06
+
+Fixed some bugs in the text HUD widgets.
+
+--------------------------------------------------------------------------------
+06/19/06
+
+Yay it's my birthday!
+
+Today's a big day for Eternity too. The release of Crucified Dreams revealed 
+some problems in EE's MapInfo system that required addressing so that I could
+make a custom MapInfo lump for that project. I also bit the bullet and got the
+seg limit expansion done at long last. The entire "ordeal" lasted about 5 
+minutes and was incredibly simple. The limit on all mutually referencing map
+entities should now be 65535 rather than 32767. Yet more sound sequence work has
+also been done.
+
+--------------------------------------------------------------------------------
+06/17/06
+
+Got many things done. More joe Small functions and work on sound sequences. I
+found a long-hidden bug in the music engine that was doing a case-sensitive
+compare on lump names. This was failing to pick up new music lumps. Put in some
+tweaks for 3D object clipping to try to make it more symmetric. Fixed a bug in
+joe's free TID function related to maxing out the value of an unsigned short and
+trying to compare against the value -- an infinite loop could occur. I also made
+the 32-bit rendering fixes conditional on the R_SIXTEEN define just in case
+there are problems with the changes.
+
+--------------------------------------------------------------------------------
 06/10/06
 
 After a few days of work, I have finally cracked the cause of a long-standing
@@ -16,24 +289,29 @@ cause three different errors:
    outrageous coordinate such as 32000.
 2. The game would crash in R_DrawSpan in a similar manner.
 3. The game would trash out almost the entire BSS static variable memory segment
-   and then segv at some arbitrary point later, often during shutdown when
-   trying to write the configuration file. This made debugging more complicated,
-   but once again my invaluable experience with the two-week bug enabled me to
+   via an out-of-control iteration on the spanstart array in R_MakeSpans, and 
+   then segv at some  arbitrary point later, often during shutdown when trying
+   to write the configuration file. This made debugging more complicated, but 
+   once again my invaluable experience with the "two-week bug" enabled me to
    instantly recognize the overflow when it happened. Determining where it 
-   happened was a bit more difficult, since map files generated by VC++
-   obviously do not include static variables.
+   happened was a bit more difficult, since map files generated by VC++ 
+   obviously do not include static variables. I had to insert guard variables
+   around the various arrays in the renderer to check for the overflow's
+   beginning in RAM.
 
 The problem? Short ints aren't sufficient for the clipping arrays in DOOM. If
 the difference between floor and ceiling is too large in the right circumstance,
 it will attempt to store a value into the array that is less than -32768. This
 causes integer underflow, resulting in a value of +32000 typically. Since
-there's by necessity no bounds checking, the error goes uncaught.
+there's by necessity no bounds checking (and I'll note my attempts to add it
+ended in frustration), the error goes uncaught and makes the game go crazy
+later when trying to draw the underflowed columns or spans.
 
 The solution? Upgrade all clipping arrays, including openings and spanstart,
 to 32-bit integers. This doubles the amount of memory usage, particularly for
-visplanes, and will hurt cache performance slightly no doubt. However, the
-framerate of the engine doesn't seem affected on modern machines so my concern
-is minimal at this point.
+visplanes, and will hurt cache performance, no doubt. However, the framerate of
+the engine doesn't seem affected on modern machines so my concern is minimal at
+this point.
 
 Also added some of joe's new Small natives :)
 
