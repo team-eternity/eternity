@@ -100,6 +100,7 @@ typedef struct {
   volatile int lock;
   // haleyjd 06/03/06: looping
   int loop;
+  int idnum;
 } channel_info_t;
 
 channel_info_t channelinfo[MAX_CHANNELS];
@@ -402,7 +403,7 @@ int I_GetSfxLumpNum(sfxinfo_t *sfx)
 int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, 
                  int pri, int loop)
 {
-   static int stomp_handle = -1;
+   static unsigned int id = 0;
    int handle;
    
    if(!snd_init)
@@ -430,9 +431,14 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
    // haleyjd 02/18/05: cannot proceed until channel is unlocked
    while(channelinfo[handle].lock)
       SDL_Delay(1);
+
+   // haleyjd DEBUG
+   if(channelinfo[handle].data)
+      I_Error("data set???\n");
  
    if(addsfx(sound, handle))
    {
+      channelinfo[handle].idnum = id++; // give the sound a unique id
       channelinfo[handle].loop = loop;
       updateSoundParams(handle, vol, sep, pitch);
    }
@@ -473,10 +479,24 @@ int I_SoundIsPlaying(int handle)
       return false;
 
 #ifdef RANGECHECK
-   if(handle >= MAX_CHANNELS)
+   if(handle < 0 || handle >= MAX_CHANNELS)
       I_Error("I_SoundIsPlaying: handle out of range");
 #endif
+ 
    return (channelinfo[handle].data != NULL);
+}
+
+int I_SoundID(int handle)
+{
+   if(!snd_init)
+      return 0;
+
+#ifdef RANGECHECK
+   if(handle < 0 || handle >= MAX_CHANNELS)
+      I_Error("I_SoundStartTic: handle out of range");
+#endif
+
+   return channelinfo[handle].idnum;
 }
 
 //

@@ -82,7 +82,7 @@ extern int snd_card, mus_card;
 extern boolean nosfxparm, nomusicparm;
 //jff end sound enabling variables readable here
 
-typedef struct
+typedef struct channel_s
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
   const mobj_t *origin;    // origin of sound
@@ -93,6 +93,7 @@ typedef struct
   int o_priority;          // haleyjd 09/27/06: stored priority value
   int priority;            // current priority value
   int singularity;         // haleyjd 09/27/06: stored singularity value
+  int idnum;               // haleyjd 09/30/06: unique id num for sound event
 } channel_t;
 
 // the set of channels available
@@ -149,6 +150,25 @@ static void S_StopChannel(int cnum)
    }
 }
 
+static boolean S_CheckSectorKill(camera_t *listener, const mobj_t *source)
+{
+   // haleyjd 05/29/06: moved up to here and fixed a major bug
+   // are we in a killed-sound sector?   
+   if(gamestate == GS_LEVEL)
+   { 
+      if(listener && 
+         R_PointInSubsector(listener->x, listener->y)->sector->special & SF_KILLSOUND)
+         return true;
+      
+      // source in a killed-sound sector?
+      if(source &&
+         R_PointInSubsector(source->x, source->y)->sector->special & SF_KILLSOUND)
+         return true;
+   }
+
+   return false;
+}
+
 //
 // S_AdjustSoundParams
 //
@@ -179,16 +199,6 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    if(!source)
       I_Error("S_AdjustSoundParams: NULL source\n");
 #endif
-
-   // haleyjd 05/29/06: moved up to here and fixed a major bug
-   // are we in a killed-sound sector?   
-   if(gamestate == GS_LEVEL && 
-      R_PointInSubsector(listener->x, listener->y)->sector->special & SF_KILLSOUND)
-      return 0;
-
-   // source in a killed-sound sector?
-   if(R_PointInSubsector(source->x, source->y)->sector->special & SF_KILLSOUND)
-      return 0;
    
    // calculate the distance to sound origin
    //  and clip it if necessary
@@ -352,8 +362,6 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
       }
    }
    
-   channels[cnum].sfxinfo = sfxinfo;              // channel is decided to be cnum.
-   channels[cnum].origin  = origin;
    return cnum;
 }
 
@@ -422,7 +430,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       volumeScale += sfx->volume;   // haleyjd: now modifies volumeScale
    }
    else
-      pitch    = NORM_PITCH;
+      pitch = NORM_PITCH;
 
    // haleyjd 09/29/06: rangecheck volumeScale now!
    if(volumeScale < 0)
@@ -455,6 +463,10 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 #endif
       }
    }
+
+   // haleyjd 09/29/06: check for sector sound kill here.
+   if(S_CheckSectorKill(&playercam, origin))
+      return;
 
    // Check to see if it is audible, modify the params
    // killough 3/7/98, 4/25/98: code rearranged slightly
@@ -510,10 +522,11 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    }
 
    // try to find a channel
-   cnum = S_getChannel(origin, sfx, priority, singularity);
-   
-   if(cnum < 0)
+   if((cnum = S_getChannel(origin, sfx, priority, singularity)) < 0)
       return;
+
+   channels[cnum].sfxinfo = sfx;
+   channels[cnum].origin  = origin;
 
    while(sfx->link)
       sfx = sfx->link;     // sf: skip thru link(s)
@@ -535,6 +548,8 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       channels[cnum].o_priority  = o_priority;  // original priority
       channels[cnum].priority    = priority;    // scaled priority
       channels[cnum].singularity = singularity;
+      
+      channels[cnum].idnum = I_SoundID(handle);
    }
    else // haleyjd: the sound didn't start, so clear the channel info
       memset(&channels[cnum], 0, sizeof(channel_t));
@@ -635,7 +650,8 @@ void S_StopSound(const mobj_t *origin)
 
    for(cnum = 0; cnum < numChannels; ++cnum)
    {
-      if(channels[cnum].sfxinfo && channels[cnum].origin == origin)
+      if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
+         channels[cnum].idnum == I_SoundID(channels[cnum].handle))
       {
          S_StopChannel(cnum);
          break;
@@ -711,6 +727,12 @@ void S_UpdateSounds(const mobj_t *listener)
       channel_t *c = &channels[cnum];
       sfxinfo_t *sfx = c->sfxinfo;
 
+      if(c->idnum != I_SoundID(c->handle))
+      {
+         memset(c, 0, sizeof(channel_t));
+         continue;
+      }
+
       if(sfx)
       {
          if(I_SoundIsPlaying(c->handle))
@@ -724,12 +746,17 @@ void S_UpdateSounds(const mobj_t *listener)
             // check non-local sounds for distance clipping
             // or modify their params
             
-            // sf: removed check for if
-            // listener is source, for silencing sectors
             // sf again: use external camera if there is one
             // fix afterglows bug: segv because of NULL listener
 
-            if(c->origin) // killough 3/20/98
+            // haleyjd 09/29/06: major bug fix. fraggle's change to remove the
+            // listener != origin check here causes player sounds to be adjusted
+            // inappropriately. The only reason he changed this was to get to
+            // the code in S_AdjustSoundParams that checks for sector sound
+            // killing. We do that here now instead.
+            if(listener && S_CheckSectorKill(&playercam, c->origin))
+               S_StopChannel(cnum);
+            else if(c->origin && listener != c->origin) // killough 3/20/98
             {
                // haleyjd 05/29/06: allow per-channel volume scaling
                // and attenuation type selection

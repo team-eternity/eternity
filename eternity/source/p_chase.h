@@ -29,9 +29,9 @@
 
 typedef struct camera_s
 {
-   long x;
-   long y;
-   long z;
+   fixed_t x;
+   fixed_t y;
+   fixed_t z;
    angle_t angle;
    fixed_t pitch;
    int heightsec;  // haleyjd: for deep water handling
