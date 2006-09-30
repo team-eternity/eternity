@@ -346,7 +346,10 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
       if(priority > lowestpriority)
          return -1;                  // No lower priority.  Sorry, Charlie.
       else
+      {
          S_StopChannel(lpcnum);      // Otherwise, kick out lowest priority.
+         cnum = lpcnum;
+      }
    }
    
    channels[cnum].sfxinfo = sfxinfo;              // channel is decided to be cnum.
