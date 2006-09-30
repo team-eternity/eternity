@@ -385,11 +385,11 @@ manual_ceiling:
       case CbyST:
          targheight = (ceiling->sector->ceilingheight>>FRACBITS) +
             ceiling->direction * (P_FindShortestUpperAround(secnum)>>FRACBITS);
-         if(targheight>32000)  //jff 3/13/98 prevent overflow
-            targheight=32000;    // wraparound in ceiling height
-         if(targheight<-32000)
-            targheight=-32000;
-         targheight<<=FRACBITS;
+         if(targheight > 32000)  // jff 3/13/98 prevent overflow
+            targheight = 32000;  // wraparound in ceiling height
+         if(targheight < -32000)
+            targheight = -32000;
+         targheight <<= FRACBITS;
          break;
       case Cby24:
          targheight = ceiling->sector->ceilingheight +
@@ -497,6 +497,7 @@ manual_ceiling:
          }
       }
       P_AddActiveCeiling(ceiling); // add this ceiling to the active list
+      P_CeilingSequence(ceiling->sector, CNOISE_NORMAL); // haleyjd 09/29/06
       if(manual)
          return rtn;
    }
@@ -1032,7 +1033,11 @@ manual_crusher:
       ceiling->oldspeed=ceiling->speed;
 
       P_AddActiveCeiling(ceiling); // add to list of active ceilings
-      if (manual) return rtn;
+      // haleyjd 09/29/06
+      P_CeilingSequence(ceiling->sector, Slnt ? CNOISE_SILENT : CNOISE_NORMAL);
+
+      if(manual)
+         return rtn;
    }
    return rtn;
 }

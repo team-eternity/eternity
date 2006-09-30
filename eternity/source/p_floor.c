@@ -616,9 +616,7 @@ void T_MoveElevator(elevator_t* elevator)
 // Passed the line that activated the floor and the type of floor motion
 // Returns true if a thinker was created.
 //
-int EV_DoFloor
-( line_t*       line,
-  floor_e       floortype )
+int EV_DoFloor(line_t *line, floor_e floortype )
 {
    int           secnum;
    int           rtn;

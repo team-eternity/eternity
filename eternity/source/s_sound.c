@@ -420,6 +420,12 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    }
    else
       pitch    = NORM_PITCH;
+
+   // haleyjd 09/29/06: rangecheck volumeScale now!
+   if(volumeScale < 0)
+      volumeScale = 0;
+   else if(volumeScale > 127)
+      volumeScale = 127;
    
    // haleyjd: modified so that priority value is always used
    // haleyjd: also modified to get and store proper singularity value

@@ -1181,6 +1181,8 @@ void P_RemoveActiveCeiling(ceiling_t *c);
 
 int P_ActivateInStasisCeiling(line_t *line); 
 
+void P_CeilingSequence(sector_t *s, int noiseLevel);
+
 mobj_t *P_GetPushThing(int);                                // phares 3/23/98
 
 // SoM 9/19/02: 3dside movement. :)
