@@ -40,6 +40,23 @@ rcsid[] = "$Id: p_floor.c,v 1.23 1998/05/23 10:23:16 jim Exp $";
 
 boolean P_ChangeSector(sector_t *, int);
 
+//
+// P_FloorSequence
+//
+// haleyjd 10/02/06: Starts a sound sequence for a floor action.
+//
+void P_FloorSequence(sector_t *s)
+{
+   if(silentmove(s))
+      return;
+
+   if(s->sndSeqID >= 0)
+      S_StartSectorSequence(s, SEQ_FLOOR);
+   else
+   {
+   }
+}
+
 ///////////////////////////////////////////////////////////////////////
 // 
 // Plane (floor or ceiling), Floor motion and Elevator action routines
@@ -378,6 +395,9 @@ void T_MoveFloor(floormove_t* floor)
             (floor->direction == plat_up) ? plat_down : plat_up;
          floor->floordestheight = floor->resetHeight;
          floor->type = genResetStair;
+         
+         // SNDSEQ FIXME: verify this is needed (I believe it is)
+         P_FloorSequence(floor->sector);
       }
 
       // While stair is building, the delay timer is counting down
@@ -424,12 +444,16 @@ void T_MoveFloor(floormove_t* floor)
    );
 
    // sf: added silentmove
+   /*
    if(!(leveltime&7) && !silentmove(floor->sector))     // make the floormove sound
       S_StartSoundName((mobj_t *)&floor->sector->soundorg,
                        "EE_FCMove");
+   */
     
    if(res == pastdest)    // if destination height is reached
    {
+      S_StopSectorSequence(floor->sector);
+
       // haleyjd 10/13/05: stairs that wish to reset must wait
       // until their reset timer expires.
       if(floor->type == genBuildStair && floor->resetTime > 0)
@@ -516,9 +540,11 @@ void T_MoveFloor(floormove_t* floor)
       }
 
       // make floor stop sound
+      /*
       if(!silentmove(floor->sector)) //sf: silentmove
          S_StartSoundName((mobj_t *)&floor->sector->soundorg,
                           "EE_PlatStop");
+      */
    }
 }
 
@@ -585,20 +611,25 @@ void T_MoveElevator(elevator_t* elevator)
 
    // make floor move sound
    // sf: added silentmove
+   /*
    if(!(leveltime&7) && !silentmove(elevator->sector))
       S_StartSoundName((mobj_t *)&elevator->sector->soundorg,
                        "EE_FCMove");
+   */
     
    if(res == pastdest)            // if destination height acheived
    {
+      S_StopSectorSequence(elevator->sector);
       elevator->sector->floordata = NULL;     //jff 2/22/98
       elevator->sector->ceilingdata = NULL;   //jff 2/22/98
       P_RemoveThinker(&elevator->thinker);    // remove elevator from actives
       
       // make floor stop sound
+      /*
       if(!silentmove(elevator->sector))   //sf: silentmove
          S_StartSoundName((mobj_t *)&elevator->sector->soundorg,
                           "EE_PlatStop");
+      */
    }
 }
 
@@ -838,6 +869,8 @@ int EV_DoFloor(line_t *line, floor_e floortype )
       default:
          break;
       }
+
+      P_FloorSequence(floor->sector);
    }
    return rtn;
 }
@@ -853,9 +886,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
 //
 // jff 3/15/98 added to better support generalized sector types
 //
-int EV_DoChange
-( line_t*       line,
-  change_e      changetype )
+int EV_DoChange(line_t *line, change_e changetype)
 {
    int                   secnum;
    int                   rtn;
@@ -1004,6 +1035,8 @@ int EV_BuildStairs(line_t *line, stair_e type)
          floor->floordestheight = height;
          
          texture = sec->floorpic;
+
+         P_FloorSequence(floor->sector);
          
          // Find next sector to raise
          //   1. Find 2-sided line with same sector side[0] (lowest numbered)
@@ -1067,6 +1100,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
                //jff 2/27/98 fix uninitialized crush field
                if(!demo_compatibility)
                   floor->crush = (type == build8 ? -1 : 10);
+               P_FloorSequence(floor->sector);
                ok = 1;
                break;
             } // end for
@@ -1171,6 +1205,7 @@ int EV_DoDonut(line_t*  line)
          floor->texture = s3->floorpic;
          floor->newspecial = 0;
          floor->floordestheight = s3->floorheight;
+         P_FloorSequence(floor->sector);
         
          //  Spawn lowering donut-hole pillar
          floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
@@ -1183,6 +1218,7 @@ int EV_DoDonut(line_t*  line)
          floor->sector = s1;
          floor->speed = FLOORSPEED / 2;
          floor->floordestheight = s3->floorheight;
+         P_FloorSequence(floor->sector);
          break;
       }
    }
@@ -1266,6 +1302,7 @@ int EV_DoElevator
       default:
          break;
       }
+      P_FloorSequence(elevator->sector);
    }
    return rtn;
 }

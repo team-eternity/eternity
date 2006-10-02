@@ -248,6 +248,8 @@ manual_floor:
             } // end if(line)
          }
       }
+      // SNDSEQ FIXME: ensure not called for any type that makes no sound (???)
+      P_FloorSequence(floor->sector);
       if(manual)
          return rtn;
    }
@@ -761,7 +763,7 @@ manual_stair:
          floor->speed = FLOORSPEED/2;
          break;
       case SpeedFast:
-	 floor->speed = FLOORSPEED*2;
+         floor->speed = FLOORSPEED*2;
          break;
       case SpeedTurbo:
          floor->speed = FLOORSPEED*4;
@@ -815,6 +817,8 @@ manual_stair:
       sec->stairlock = -2;         // jff 2/26/98 set up lock on current sector
       sec->nextsec   = -1;
       sec->prevsec   = -1;
+
+      P_FloorSequence(floor->sector);
       
       osecnum = secnum;            // jff 3/4/98 preserve loop index  
       // Find next sector to raise
@@ -893,6 +897,8 @@ manual_stair:
             floor->delayTime     = sd->delay_value;      
             floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;            
             floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
+
+            P_FloorSequence(floor->sector);
             
             ok = 1;
             break;
