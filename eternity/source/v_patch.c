@@ -82,7 +82,6 @@ static void V_DrawPatchColumn(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = vc_iscale;
-
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
@@ -150,7 +149,7 @@ static void V_DrawPatchColumnTR(void)
    dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale; 
+   fracstep = vc_iscale;
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
@@ -226,7 +225,7 @@ void V_DrawPatchColumnTL(void)
    dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale; 
+   fracstep = vc_iscale;
    frac = vc_texturemid + 
       FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
 
@@ -582,12 +581,18 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    tx =  pi->x << FRACBITS;
    tx -= (SHORT(patch->leftoffset) << FRACBITS);
 
+   // haleyjd 10/01/06: round up the inverse scaling factors by 1/65536. This
+   // ensures that fracstep steps up to the next pixel just fast enough to
+   // prevent non-unform scaling in modes where the inverse scaling factor is
+   // not accurately represented in fixed point (ie. should be 0.333...).
+   // The error is one pixel per every 65536, so it's totally irrelevant.
+
    scale  = FixedDiv(vc_buffer->width, SCREENWIDTH);
-   iscale = FixedDiv(SCREENWIDTH, vc_buffer->width);
+   iscale = FixedDiv(SCREENWIDTH, vc_buffer->width) + 1;
 
    // haleyjd 06/21/06: simplified redundant math
    v_spryscale = FixedDiv(vc_buffer->height, SCREENHEIGHT);
-   vc_iscale   = FixedDiv(SCREENHEIGHT, vc_buffer->height);
+   vc_iscale   = FixedDiv(SCREENHEIGHT, vc_buffer->height) + 1;
    
    x1 = FixedMul(tx, scale) >> FRACBITS;
 

@@ -59,7 +59,7 @@ static const char rcsid[] = "$Id: z_zone.c,v 1.13 1998/05/12 06:11:55 killough E
 //#define DUMPONEXIT
 
 // Uncomment this to log all memory operations to a file
-#define ZONEFILE
+//#define ZONEFILE
 
 // Tunables
 

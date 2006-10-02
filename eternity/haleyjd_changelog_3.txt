@@ -2,6 +2,44 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+09/30/06
+
+Worked REALLY late tonight. Three errors were fixed:
+
+1. A heap corruption problem was being caused by a mistake I made in my tweak to
+   have sounds always replace the sound of *lowest* priority instead of the
+   first sound they find with a lower priority. This actually reduces loop
+   overhead in S_getChannel rather than increasing it, as the search op can be
+   done in a loop that was already there, and then a later loop can be 
+   eliminated altogether. But I was forgetting to actually set the channel
+   number to the number of the channel with the lowest priority when this
+   happened, so it was writing to channels[32] and trashing the next block on
+   the zone heap.
+   
+2. While trying to help me fix this, SoM found out that sound link volume wasn't
+   being clipped into range and caused an error in i_sound.c due to some out-of-
+   date EDFs that still had a volume specified on the chgun sound.
+   
+3. I found the REAL ultimate reason for sounds playing at the wrong volume.
+   There was a race condition between S_UpdateSounds and I_SDLUpdateSound,
+   the latter of which DOES appear to be called from a separate thread as I
+   have long suspected. If S_UpdateSounds was called before I_SDLUpdateSound
+   (or during?), sometimes channels that had stopped were missed and would
+   continue to have their hardware channel's parameters modified. This would
+   cause any new sound reusing the same hardware channel (started in an
+   S_StartSound call between S_UpdateSounds and I_SDLUpdateSound) to be
+   modified instead of the original.
+   
+   I tried a number of different fixes to this but none were satisfactory until
+   I thought of giving every sound that's played a unique ID number. ID numbers
+   start at 0 and increase by one every time a sound is played. If a software
+   and hardware channels' IDs don't match, that software channel won't be
+   adjusted or stopped again until it has been cleared out by S_UpdateSounds. 
+   This makes the timing of calls to I_SDLUpdateSound irrelevant. This requires
+   a new low-level sound API function I_SoundID that returns the idnum for the
+   given hardware channel handle.
+
+--------------------------------------------------------------------------------
 09/28/06
 
 More work on ceiling sequences. I have also revamped the entire sound engine

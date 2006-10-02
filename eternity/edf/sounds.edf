@@ -1129,3 +1129,15 @@ soundsequence EECeilingSemiSilent
 soundsequence EECeilingSilent
 {
 }
+
+# Floor Sequences
+
+soundsequence EEFloor
+{
+   cmds =
+   {
+      "playloop EE_FCMove 8",
+      "stopsound EE_PlatStop"
+   }
+}
+

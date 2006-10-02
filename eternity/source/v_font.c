@@ -39,12 +39,13 @@
 #include "v_video.h"
 #include "v_font.h"
 
+extern vfont_t small_font, hud_font, big_font, big_num_font;
+
 static boolean fixedColor = false;
 static int fixedColNum = 0;
 static char *altMap = NULL;
 static boolean shadowChar = false;
 static boolean absCentered = false; // 03/04/06: every line will be centered
-
 
 //
 // V_FontLineWidth
@@ -235,6 +236,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
             V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, 
                           FRACUNIT*2/3);
          }
+
          V_DrawPatchTranslated(tx, cy, &vbscreen, patch, color, false);
       }
       
@@ -390,8 +392,6 @@ short V_FontMaxWidth(vfont_t *font)
 
    return w;
 }
-
-extern vfont_t small_font, hud_font, big_font, big_num_font;
 
 //
 // V_FontSelect
