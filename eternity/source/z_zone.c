@@ -292,8 +292,6 @@ void Z_Init(void)
    if(!(HEADER_SIZE >= sizeof(memblock_t) && MIN_RAM > LEAVE_ASIDE))
       I_Error("Z_Init: Sanity check failed");
 #endif
-
-   atexit(Z_Close);            // exit handler
    
    size = (size+CHUNK_SIZE-1) & ~(CHUNK_SIZE-1);  // round to chunk size
    
@@ -312,6 +310,8 @@ void Z_Init(void)
          size -= RETRY_AMOUNT;
       }
    }
+
+   atexit(Z_Close);            // exit handler
 
    // Align on cache boundary
    
