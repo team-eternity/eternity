@@ -4211,6 +4211,27 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
    P_LineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);
 }
 
+CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
+{
+   player_t *plyr = &players[consoleplayer];
+   int i;
+   fixed_t slope;
+   int damage = 10000;
+
+   for(i = 0; i < 60; ++i)  // offset angles from its attack angle
+   {
+      angle_t an = (ANG360/60)*i;
+      
+      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
+
+      if(linetarget)
+         damage = linetarget->health;
+
+      P_LineAttack(plyr->mo, an, MISSILERANGE, slope, damage);
+   }
+}
+
+
 void PE_AddCommands(void)
 {
    C_AddCommand(summon);
@@ -4218,6 +4239,7 @@ void PE_AddCommands(void)
    C_AddCommand(viles);
    C_AddCommand(whistle);
    C_AddCommand(mdk);
+   C_AddCommand(mdkbomb);
 }
 
 //----------------------------------------------------------------------------

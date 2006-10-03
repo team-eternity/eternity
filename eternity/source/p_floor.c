@@ -36,6 +36,7 @@ rcsid[] = "$Id: p_floor.c,v 1.23 1998/05/23 10:23:16 jim Exp $";
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "sounds.h"
 
 boolean P_ChangeSector(sector_t *, int);
@@ -53,8 +54,7 @@ void P_FloorSequence(sector_t *s)
    if(s->sndSeqID >= 0)
       S_StartSectorSequence(s, SEQ_FLOOR);
    else
-   {
-   }
+      S_StartSectorSequenceName(s, "EEFloor");
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -396,7 +396,6 @@ void T_MoveFloor(floormove_t* floor)
          floor->floordestheight = floor->resetHeight;
          floor->type = genResetStair;
          
-         // SNDSEQ FIXME: verify this is needed (I believe it is)
          P_FloorSequence(floor->sector);
       }
 
@@ -417,6 +416,7 @@ void T_MoveFloor(floormove_t* floor)
          {
             floor->type = genDelayStair;
             floor->delayTimer = floor->delayTime;
+            S_StopSectorSequence(floor->sector);
          }
          break;
       case genDelayStair:
@@ -424,6 +424,9 @@ void T_MoveFloor(floormove_t* floor)
          {
             floor->type = genBuildStair;
             floor->delayTimer = floor->stepRaiseTime;
+            
+            if(floor->sector->floorheight != floor->floordestheight)
+               P_FloorSequence(floor->sector);
          }
          return;
       case genWaitStair:

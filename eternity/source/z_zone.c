@@ -484,6 +484,11 @@ allocated:
    // haleyjd: cph's virtual memory error fix
 #ifdef INSTRUMENTED
    virtual_memory += size + HEADER_SIZE;
+
+   // haleyjd 10/03/06: Big problem: extra wasn't being initialized for vm
+   // blocks. This caused the memset used to randomize freed memory with 
+   // INSTRUMENTED to stomp all over the C heap.
+   block->extra = 0;
 #endif
    /* cph - the next line was lost in the #ifdef above, and also added an
     *  extra HEADER_SIZE to block->size, which was incorrect */
@@ -823,8 +828,35 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    {
       size_t extra;
 
+      // haleyjd 10/03/06: free adjacent purgable blocks
+      while(other != zone && other != block &&
+            (other->tag == PU_FREE || 
+             (other->tag >= PU_PURGELEVEL && !other->vm)))
+      {
+         if(other->tag >= PU_PURGELEVEL)
+         {
+            (Z_Free)((char *)other + HEADER_SIZE, file, line);
+            
+            // reset pointer to next block
+            other = block->next;
+         }
+
+         // use current size of block; note it may have increased if it was
+         // merged with an adjacent free block
+
+         // if we've freed enough, stop
+         if(curr_size + other->size + HEADER_SIZE >= n)
+            break;
+
+         // move to next block
+         other = other->next;
+      }
+
+      // reset pointer
+      other = block->next;
+
       // check to see if it can fit if we merge with the next block
-      if(other && other != zone && other->tag == PU_FREE &&
+      if(other != zone && other->tag == PU_FREE &&
          curr_size + other->size + HEADER_SIZE >= n)
       {
          // merge the blocks

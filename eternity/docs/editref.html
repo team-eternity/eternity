@@ -3568,8 +3568,8 @@ Parameters
 ---------------------------------------------------------------
 Stairs_BuildUpDoom        tag, speed, stepsize, delay, reset
 Stairs_BuildDownDoom      tag, speed, stepsize, delay, reset
-Stairs_BuildUpDoomSync    tag, speed, stepsize, delay, reset
-Stairs_BuildDownDoomSync  tag, speed, stepsize, delay, reset
+Stairs_BuildUpDoomSync    tag, speed, stepsize, reset
+Stairs_BuildDownDoomSync  tag, speed, stepsize, reset
 
 Values
 ---------------------------------------------------------------
@@ -3584,8 +3584,8 @@ speed     : Speed of steps in eights of a unit per tic. If the
             moves at this speed. Other steps will move at a
             speed which allows them to reach their 
             destination height at the same time.
-stepsize  : Step size in eighths of a unit.
-delay     : Delay time in tics before stair building begins.
+stepsize  : Step size in units.
+delay     : Delay time in tics between steps
 reset     : If greater than zero, the stairs will wait this
             amount of time in tics after completely building
             and will then reset by repeating the same stair

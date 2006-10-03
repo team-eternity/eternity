@@ -27,6 +27,7 @@
 static const char
 rcsid[] = "$Id: p_mobj.c,v 1.26 1998/05/16 00:24:12 phares Exp $";
 
+#include "z_zone.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "m_random.h"
@@ -182,7 +183,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 
    // haleyjd: free temporary state table (see notes above)
    if(tempstate)
-      free(tempstate);
+      Z_Free(tempstate);
    
    return ret;
 }

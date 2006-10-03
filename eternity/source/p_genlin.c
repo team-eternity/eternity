@@ -1798,7 +1798,7 @@ static boolean pspec_Stairs(line_t *line, long *args, short special,
    stairdata_t sd;
 
    sd.trigger_type  = trigger_type;
-   sd.direction     = plat_down;
+   sd.direction     = 0;
    sd.speed_type    = SpeedParam;
    sd.stepsize_type = StepSizeParam;
    
@@ -1809,16 +1809,20 @@ static boolean pspec_Stairs(line_t *line, long *args, short special,
    switch(special)
    {
    case 340: // Stairs_BuildUpDoom
-      sd.direction = plat_up;
+      sd.direction = 1;
       // fall through
    case 341: // Stairs_BuildDownDoom
-      sd.sync_value     = 0;
+      sd.sync_value  = 0;
+      sd.delay_value = args[3];
+      sd.reset_value = args[4];
       break;
    case 342: // Stairs_BuildUpDoomSync
-      sd.direction = plat_up;
+      sd.direction = 1;
       // fall through
    case 343: // Stairs_BuildDownDoomSync
-      sd.sync_value     = 1;
+      sd.sync_value  = 1;
+      sd.delay_value = 0;       // 10/02/06 sync'd stairs can't delay >_<
+      sd.reset_value = args[3];
       break;
    }
 
@@ -1826,8 +1830,6 @@ static boolean pspec_Stairs(line_t *line, long *args, short special,
    //    (tag, speed, stepsize, delay, reset)
    sd.speed_value    = args[1] * FRACUNIT / 8;
    sd.stepsize_value = args[2] * FRACUNIT;
-   sd.delay_value    = args[3];
-   sd.reset_value    = args[4];
 
    return EV_DoParamStairs(line, args[0], &sd);
 }
