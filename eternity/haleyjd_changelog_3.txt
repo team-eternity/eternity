@@ -2,6 +2,62 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+10/03/06
+
+Another big day; this work has brought 3.33.50 to the brink of release.
+
+* Floor sequences are finished. They required some special consideration when
+  dealing with delayed stairs. zdoom seems to leave the sequences running on
+  such stair sectors, but I don't like that.
+
+* Fixed a number of bugs in param stairs, corrected major mistakes in their
+  documentation, and removed the "delay" parameter for sync'd stairs. Sync'd
+  stairs cannot delay between steps; I have no idea what I was thinking when I
+  added that parameter to those types...
+
+* At long last, I found the bug in the zone heap introduced in BOOM when the
+  engine is compiled with INSTRUMENTED defined and runs out of zone memory.
+  VM blocks had their "extra" field, used to track internal fragmentation for
+  memory statistics purposes, left uninitialized. The problem was that in
+  Z_Free, only with INSTRUMENTED defined, the amount of space in the block minus
+  the "extra" field is memset with gametic & 0xff to randomize memory (the idea
+  being that it will cause a crash when freed memory is accessed, and I've found
+  in the past that it's quite reliable at doing that).
+  
+  This out-of-control memsetting would completely trash the C heap and cause
+  some pretty weird looking segmentation violations. I'll note that I was aware
+  of the existence of this problem as early as my work doing MBF beta testing; 
+  Lee's double boss brain super war level would always crash after it started
+  using "virtual" memory. The same went for DOOM II MAP30 in MBF, SMMU, and 
+  earlier EE versions.
+
+  I found the problem by accident while doing stress testing with nuts.wad --
+  every time the amount of allocated RAM exceeded 16 MB and started using
+  system malloc, I'd get a hard crash a few frames later in MSVCRT.DLL that
+  always pointed to a Z_Free line. When I printed the zone heap, I noticed that
+  several blocks had values like 0x62626262 in their zone ID fields, and then
+  the real kicker -- the thinker list was getting corrupted the same way. I 
+  knew at that point that I was looking at something related to the memset in
+  Z_Free. That led me directly to the vm block allocation code where I noticed
+  the missing intialization for block->extra.
+
+  Note that this has only ever affected *debug* builds of Eternity, thus you'll
+  never have experienced this crash in any release.
+
+--------------------------------------------------------------------------------
+10/02/06
+
+Figured out how to *really* fix general screen patch scaling. I just needed to
+add 1 to the inverse scaling factors that are used to step in column space. This
+pushes them up just high enough so that they go to the next pixel when they
+would if the computer were doing ideal real number math (ie, 3*0.333... should
+equal 1 and not 0.99998). This introduces an error of one pixel per every 65536
+that are drawn, so at current possible screen resolutions there is no error at
+all (I dread the day when 65536 is a possible screen dimension :P ).
+
+Work on floor sequences continues.
+
+--------------------------------------------------------------------------------
 09/30/06
 
 Worked REALLY late tonight. Three errors were fixed:
