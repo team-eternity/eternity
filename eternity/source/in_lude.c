@@ -255,6 +255,7 @@ void IN_DrawBackground(void)
 void IN_Start(wbstartstruct_t *wbstartstruct)
 {
    S_StopAllSequences(); // haleyjd 06/06/06
+   S_StopLoopedSounds(); // haleyjd 10/06/06
 
    // haleyjd 03/24/05: allow skipping stats intermission
    if(LevelInfo.killStats)

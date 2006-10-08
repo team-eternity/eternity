@@ -2160,10 +2160,11 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 // killough 8/2/98: add mask parameter, which, if set to MF_FRIEND,
 // makes autoaiming skip past friends.
 
-fixed_t P_AimLineAttack(mobj_t *t1,angle_t angle,fixed_t distance,int mask)
+fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
 {
    fixed_t x2, y2;
    fixed_t lookslope = 0;
+   fixed_t pitch = 0;
    
    angle >>= ANGLETOFINESHIFT;
    shootthing = t1;
@@ -2171,10 +2172,16 @@ fixed_t P_AimLineAttack(mobj_t *t1,angle_t angle,fixed_t distance,int mask)
    x2 = t1->x + (distance>>FRACBITS)*finecosine[angle];
    y2 = t1->y + (distance>>FRACBITS)*finesine[angle];
    shootz = t1->z + (t1->height>>1) + 8*FRACUNIT;
+
+   // haleyjd 10/08/06: this should be gotten from t1->player, not 
+   // players[displayplayer]. Also, if it's zero, use the old
+   // code in all cases to avoid roundoff error.
+   if(t1->player)
+      pitch = t1->player->pitch;
    
    // can't shoot outside view angles
 
-   if(!t1->player || demo_version < 333)
+   if(pitch == 0 || demo_version < 333)
    {
       topslope = 100*FRACUNIT/160;
       bottomslope = -100*FRACUNIT/160;
@@ -2182,16 +2189,15 @@ fixed_t P_AimLineAttack(mobj_t *t1,angle_t angle,fixed_t distance,int mask)
    else
    {
       // haleyjd 04/05/05: use proper slope range for look slope
-      fixed_t pitch = players[displayplayer].pitch;
       fixed_t topangle, bottomangle;
 
-      lookslope = finetangent[(ANG90 - pitch)>>ANGLETOFINESHIFT];
+      lookslope   = finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
       topangle    = pitch - ANGLE_1*32;
       bottomangle = pitch + ANGLE_1*32;
 
-      topslope = finetangent[(ANG90 - topangle)>>ANGLETOFINESHIFT];
-      bottomslope = finetangent[(ANG90 - bottomangle)>>ANGLETOFINESHIFT];
+      topslope    = finetangent[(ANG90 -    topangle) >> ANGLETOFINESHIFT];
+      bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
    }
    
    attackrange = distance;

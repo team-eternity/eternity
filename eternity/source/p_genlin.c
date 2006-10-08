@@ -674,11 +674,7 @@ manual_lift:
          break;
       }
 
-      /*
-      if(!silentmove(sec))        //sf: silentmove
-         S_StartSoundName((mobj_t *)&sec->soundorg, "EE_PlatStart");
-      */
-      P_PlatSequence(plat->sector, "EEPlatNormal");
+      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
       P_AddActivePlat(plat); // add this plat to the list of active plats
       
       if(manual)
@@ -1226,10 +1222,7 @@ manual_door:
             turbo = false;
          }
          if(door->topheight != sec->ceilingheight)
-         {
-            //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
-            P_DoorSequence(true, turbo, door->sector);
-         }
+            P_DoorSequence(true, turbo, door->sector); // haleyjd
          break;
       case ODoor:
          door->direction = plat_up;
@@ -1246,10 +1239,7 @@ manual_door:
             turbo = false;
          }
          if(door->topheight != sec->ceilingheight)
-         {
-            //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
-            P_DoorSequence(true, turbo, door->sector);
-         }
+            P_DoorSequence(true, turbo, door->sector); // haleyjd
          break;
       case CdODoor:
          door->topheight = sec->ceilingheight;
@@ -1264,8 +1254,7 @@ manual_door:
             door->type = genCdO;
             turbo = false;
          }
-         //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
-         P_DoorSequence(false, turbo, door->sector);
+         P_DoorSequence(false, turbo, door->sector); // haleyjd
          break;
       case CDoor:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
@@ -1281,8 +1270,7 @@ manual_door:
             door->type = genClose;
             turbo = false;
          }
-         //S_StartSoundName((mobj_t *)&door->sector->soundorg, sndname);
-         P_DoorSequence(false, turbo, door->sector);
+         P_DoorSequence(false, turbo, door->sector); // haleyjd
          break;
       
       // haleyjd: The following door types are parameterized only

@@ -203,9 +203,9 @@ void P_RunButtons(void)
                   buttonlist[i].btexture;
                break;
             }
-            // SNDSEQ FIXME
+            
             S_StartSoundName((mobj_t *)&buttonlist[i].soundorg, "EE_SwitchOn");
-            memset(&buttonlist[i],0,sizeof(button_t));
+            memset(&buttonlist[i], 0, sizeof(button_t));
          }
       }
    }
@@ -245,7 +245,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    
    // EXIT SWITCH?
    if(line->special == 11)
-      sound = "EE_SwitchEx";
+      sound = "EE_SwitchEx"; // haleyjd
 
    for(i = 0; i < numswitches * 2; ++i)
    {
@@ -274,7 +274,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          S_StartSoundName(buttonlist->soundorg,sound); // switch activation sound
          sides[line->sidenum[side]].bottomtexture = switchlist[i^1]; //chg texture
          
-         if (useAgain)
+         if(useAgain)
             P_StartButton(line,side,bottom,switchlist[i],BUTTONTIME); // start timer
          
          return;

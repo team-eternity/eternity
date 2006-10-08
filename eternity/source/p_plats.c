@@ -78,43 +78,26 @@ void T_PlatRaise(plat_t *plat)
       res = T_MovePlane(plat->sector,plat->speed,plat->high,plat->crush,0,1);
                                         
       // if a pure raise type, make the plat moving sound
-      /*
-      if(plat->type == raiseAndChange || plat->type == raiseToNearestAndChange)
-      {
-         if(!(leveltime & 7) && !silentmove(plat->sector)) // sf: silentmove
-            S_StartSoundName((mobj_t *)&plat->sector->soundorg,
-                             "EE_PlatMove");
-      }
-      */
+      // haleyjd: now handled through sound sequences
       
       // if encountered an obstacle, and not a crush type, reverse direction
       if(res == crushed && plat->crush <= 0)
       {
          plat->count = plat->wait;
          plat->status = down;
-         /*
-         if(!silentmove(plat->sector))    // sf: silentmove
-            S_StartSoundName((mobj_t *)&plat->sector->soundorg,
-                             "EE_PlatStart");
-         */
-         P_PlatSequence(plat->sector, "EEPlatNormal");
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
       }
       else  // else handle reaching end of up stroke
       {
          if(res == pastdest) // end of stroke
          {
-            S_StopSectorSequence(plat->sector);
+            S_StopSectorSequence(plat->sector); // haleyjd
 
             // if not an instant toggle type, wait, make plat stop sound
             if(plat->type != toggleUpDn)
             {
                plat->count = plat->wait;
                plat->status = waiting;
-               /*
-               if(!silentmove(plat->sector)) // sf: silentmove
-                  S_StartSoundName((mobj_t *)&plat->sector->soundorg,
-                                   "EE_PlatStop");
-               */
             }
             else // else go into stasis awaiting next toggle activation
             {
@@ -149,18 +132,13 @@ void T_PlatRaise(plat_t *plat)
       // handle reaching end of down stroke
       if(res == pastdest)
       {
-         S_StopSectorSequence(plat->sector);
+         S_StopSectorSequence(plat->sector); // haleyjd
 
          // if not an instant toggle, start waiting, make plat stop sound
          if(plat->type!=toggleUpDn) //jff 3/14/98 toggle up down
          {                           // is silent, instant, no waiting
             plat->count = plat->wait;
             plat->status = waiting;
-            /*
-            if(!silentmove(plat->sector)) // sf: silentmove
-               S_StartSoundName((mobj_t *)&plat->sector->soundorg,
-                                "EE_PlatStop");
-            */
          }
          else // instant toggles go into stasis awaiting next activation
          {
@@ -196,11 +174,7 @@ void T_PlatRaise(plat_t *plat)
             plat->status = down;   // if at top, start down
          
          // make plat start sound
-         /*
-         if(!silentmove(plat->sector))    // sf: silentmove
-            S_StartSoundName((mobj_t *)&plat->sector->soundorg,
-                             "EE_PlatStart");
-         */
+         // haleyjd: changed for sound sequences
          if(plat->type == toggleUpDn)
             P_PlatSequence(plat->sector, "EEPlatSilent");
          else
@@ -287,11 +261,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          //jff 3/14/98 clear old field as well
          sec->oldspecial = 0;               
 
-         /*
-         if(!silentmove(sec)) //sf: silentmove
-            S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatMove");
-         */
-         P_PlatSequence(plat->sector, "EEPlatRaise");
+         P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
           
       case raiseAndChange:
@@ -301,11 +271,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->wait = 0;
          plat->status = up;
          
-         /*
-         if(!silentmove(sec)) //sf: silentmove
-            S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatMove");
-         */
-         P_PlatSequence(plat->sector, "EEPlatRaise");
+         P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
           
       case downWaitUpStay:
@@ -318,11 +284,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->high = sec->floorheight;
          plat->wait = 35*PLATWAIT;
          plat->status = down;
-         /*
-         if(!silentmove(sec))    // sf: silentmove
-            S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatStart");
-         */
-         P_PlatSequence(plat->sector, "EEPlatNormal");
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
       case blazeDWUS:
@@ -335,11 +297,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->high = sec->floorheight;
          plat->wait = 35*PLATWAIT;
          plat->status = down;
-         /*
-         if(!silentmove(sec))    // sf: silentmove
-            S_StartSoundName((mobj_t *)&sec->soundorg,"EE_PlatStart");
-         */
-         P_PlatSequence(plat->sector, "EEPlatNormal");
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
           
       case perpetualRaise:
@@ -357,11 +315,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->wait = 35*PLATWAIT;
          plat->status = P_Random(pr_plats) & 1;
          
-         /*
-         if(!silentmove(sec))    // sf: silentmove
-            S_StartSoundName((mobj_t *)&sec->soundorg, "EE_PlatStart");
-         */
-         P_PlatSequence(plat->sector, "EEPlatNormal");
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
 
       case toggleUpDn: //jff 3/14/98 add new type to support instant toggle

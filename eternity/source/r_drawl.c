@@ -921,7 +921,7 @@ static void R_LowDrawAddTRColumn(void)
 } 
 
 //
-// haleyjd 09/04/06: Quad Column Drawer Object
+// haleyjd 09/04/06: Low Detail Column Drawer Object
 //
 columndrawer_t r_lowdetail_drawer =
 {

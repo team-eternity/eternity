@@ -872,6 +872,288 @@ boolean G_Responder(event_t* ev)
 // DEMO RECORDING
 //
 
+// killough 2/28/98: A ridiculously large number
+// of players, the most you'll ever need in a demo
+// or savegame. This is used to prevent problems, in
+// case more players in a game are supported later.
+
+#define MIN_MAXPLAYERS 32
+
+// haleyjd 10/08/06: longtics demo support -- DOOM v1.91 writes 111 into the
+// version field of its demos (because it's one more than v1.10 I guess).
+#define DOOM_191_VERSION 111
+
+static boolean longtics_demo; // if true, demo playing is longtics format
+
+static char *defdemoname;
+
+//
+// NETCODE_FIXME -- DEMO_FIXME
+//
+// More demo-related stuff here, for playing back demos. Will need more
+// version detection to detect the new non-homogeneous demo format.
+// Use of G_ReadOptions also impacts the configuration, netcode, 
+// console, etc. G_ReadOptions and G_WriteOptions are, as indicated in
+// one of Lee's comments, designed to be able to transmit initial
+// variable values during netgame arbitration. I don't know if this
+// avenue should be pursued but it might be a good idea. The current
+// system being used to send them at startup is garbage.
+//
+
+static void G_DoPlayDemo(void)
+{
+   skill_t skill;
+   int i, episode, map;
+   int demover;
+   char basename[9];
+   byte *option_p = NULL;      // killough 11/98
+  
+   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
+      basetic = gametic;  // killough 9/29/98
+      
+   ExtractFileBase(defdemoname,basename);           // killough
+   
+   demobuffer = demo_p = W_CacheLumpName (basename, PU_STATIC);  // killough
+   
+   // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
+   // Old demos turn on demo_compatibility => compatibility; new demos load
+   // compatibility flag, and other flags as well, as a part of the demo.
+   
+   // haleyjd: this is the version for DOOM/BOOM/MBF demos; new demos 
+   // test the signature and then get the new version number after it
+   // if the signature matches the eedemosig array declared above.
+
+   demo_version =      // killough 7/19/98: use the version id stored in demo
+      demover = *demo_p++;
+
+   // haleyjd 09/02/03: test for old Heretic, etc. demos here.
+   // Heretic demos don't even store the version -- the first byte 
+   // in the file is the skill level, and is thus easy to recognize.
+   // For full safety, I compare against 255, which is the value put
+   // in the old version byte by Eternity when it writes a demo.
+
+   if(gameModeInfo->type != Game_DOOM && demo_version < 255)
+   {
+      C_Printf("Non-DOOM format demos are not supported\n");
+      gameaction = ga_nothing;
+      Z_ChangeTag(demobuffer, PU_CACHE);
+      D_AdvanceDemo();
+      return;
+   }
+   
+   if(demover < 200)     // Autodetect old demos
+   {
+      // haleyjd 10/08/06: longtics support
+      longtics_demo = (demover == DOOM_191_VERSION);
+
+      demo_subversion = 0; // haleyjd: always 0 for old demos
+
+      compatibility = true;
+      memset(comp, 0xff, sizeof comp);  // killough 10/98: a vector now
+
+      // killough 3/2/98: force these variables to be 0 in demo_compatibility
+
+      variable_friction = 0;
+
+      weapon_recoil = 0;
+
+      allow_pushers = 0;
+
+      monster_infighting = 1;           // killough 7/19/98
+
+      bfgtype = bfg_normal;                  // killough 7/19/98
+
+      dogs = 0;                         // killough 7/19/98
+      dog_jumping = 0;                  // killough 10/98
+
+      monster_backing = 0;              // killough 9/8/98
+      
+      monster_avoid_hazards = 0;        // killough 9/9/98
+
+      monster_friction = 0;             // killough 10/98
+      help_friends = 0;                 // killough 9/9/98
+      monkeys = 0;
+
+      // haleyjd 05/23/04: autoaim is sync-critical
+      default_autoaim = autoaim;
+      autoaim = 1;
+
+      default_allowmlook = allowmlook;
+      allowmlook = 0;
+
+      // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
+      // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
+
+      if ((skill=demover) >= 100)         // For demos from versions >= 1.4
+      {
+         skill = *demo_p++;
+         episode = *demo_p++;
+         map = *demo_p++;
+         deathmatch = *demo_p++;
+         respawnparm = *demo_p++;
+         fastparm = *demo_p++;
+         nomonsters = *demo_p++;
+         consoleplayer = *demo_p++;
+      }
+      else
+      {
+         episode = *demo_p++;
+         map = *demo_p++;
+         deathmatch = respawnparm = fastparm =
+            nomonsters = consoleplayer = 0;
+      }
+   }
+   else    // new versions of demos
+   {
+      // haleyjd: don't ignore the signature any more -- use it
+      // demo_p += 6;               // skip signature;
+      if(demo_version == 255 && !strncmp(demo_p, eedemosig, 5))
+      {
+         int temp;
+         
+         demo_p += 6; // increment past signature
+         
+         // reconstruct full version number and reset it
+         temp  = *demo_p++;                // byte one
+         temp |= ((int)(*demo_p++)) <<  8; // byte two
+         temp |= ((int)(*demo_p++)) << 16; // byte three
+         temp |= ((int)(*demo_p++)) << 24; // byte four
+         demo_version = demover = temp;
+         
+         // get subversion
+         demo_subversion = *demo_p++;
+      }
+      else
+      {
+         demo_p += 6; // increment past signature
+         
+         // subversion is always 0 for demo versions < 329
+         demo_subversion = 0;
+      }
+      
+      compatibility = *demo_p++;       // load old compatibility flag
+      skill = *demo_p++;
+      episode = *demo_p++;
+      map = *demo_p++;
+      deathmatch = *demo_p++;
+      consoleplayer = *demo_p++;
+
+      // haleyjd 10/08/06: determine longtics support in new demos
+      longtics_demo = (demo_version > 333 || 
+                       (demo_version == 333 && demo_subversion >= 50));
+
+      // haleyjd 04/14/03: retrieve dmflags if appropriate version
+      if(demo_version >= 331)
+      {
+         dmflags  = *demo_p++;
+         dmflags |= ((unsigned long)(*demo_p++)) << 8;
+         dmflags |= ((unsigned long)(*demo_p++)) << 16;
+         dmflags |= ((unsigned long)(*demo_p++)) << 24;
+      }
+
+      // haleyjd 12/14/01: retrieve gamemapname if in appropriate
+      // version
+      if(demo_version > 329 || 
+         (demo_version == 329 && demo_subversion >= 5))
+      {
+         int i;
+         
+         for(i = 0; i < 8; i++)
+            gamemapname[i] = *demo_p++;
+         
+         gamemapname[8] = '\0';
+      }
+
+      // killough 11/98: save option pointer for below
+      if (demover >= 203)
+         option_p = demo_p;
+
+      demo_p = G_ReadOptions(demo_p);  // killough 3/1/98: Read game options
+      
+      if(demover == 200)        // killough 6/3/98: partially fix v2.00 demos
+         demo_p += 256-GAME_OPTION_SIZE;
+   }
+
+   if(demo_compatibility)  // only 4 players can exist in old demos
+   {
+      for(i=0; i<4; i++)  // intentionally hard-coded 4 -- killough
+         playeringame[i] = *demo_p++;
+      for(;i < MAXPLAYERS; i++)
+         playeringame[i] = 0;
+   }
+   else
+   {
+      for(i = 0; i < MAXPLAYERS; ++i)
+         playeringame[i] = *demo_p++;
+      demo_p += MIN_MAXPLAYERS - MAXPLAYERS;
+   }
+
+   if(playeringame[1])
+      netgame = netdemo = true;
+
+   // haleyjd 04/10/03: determine game type
+   if(demo_version < 331)
+   {
+      // note: do NOT set default_dmflags here
+      if(deathmatch)
+      {
+         GameType = gt_dm;
+         G_SetDefaultDMFlags(deathmatch, false);
+      }
+      else
+      {
+         GameType = (netgame ? gt_coop : gt_single);
+         G_SetDefaultDMFlags(0, false);
+      }
+   }
+   else
+   {
+      // dmflags was already set above,
+      // "deathmatch" now holds the game type
+      GameType = deathmatch;
+   }
+   
+   // don't spend a lot of time in loadlevel
+
+   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
+   {
+      // killough 2/22/98:
+      // Do it anyway for timing demos, to reduce timing noise
+      precache = timingdemo;
+      
+      // haleyjd: choose appropriate G_InitNew based on version
+      if(demo_version > 329 ||
+         (demo_version == 329 && demo_subversion >= 5))
+      {
+         G_InitNew(skill, gamemapname);
+      }
+      else
+         G_InitNewNum(skill, episode, map);
+
+      // killough 11/98: If OPTIONS were loaded from the wad in G_InitNew(),
+      // reload any demo sync-critical ones from the demo itself, to be exactly
+      // the same as during recording.
+      
+      if(option_p)
+         G_ReadOptions(option_p);
+   }
+
+   precache = true;
+   usergame = false;
+   demoplayback = true;
+   
+   for(i=0; i<MAXPLAYERS;i++)         // killough 4/24/98
+      players[i].cheats = 0;
+   
+   gameaction = ga_nothing;
+   
+   if(timingdemo)
+   {
+      starttime = I_GetTime_RealTime();
+      startgametic = gametic;
+   }
+}
+
 #define DEMOMARKER    0x80
 
 //
@@ -897,8 +1179,16 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
    else
    {
       cmd->forwardmove = ((signed char)*demo_p++);
-      cmd->sidemove = ((signed char)*demo_p++);
-      cmd->angleturn = ((unsigned char)*demo_p++)<<8;
+      cmd->sidemove    = ((signed char)*demo_p++);
+      
+      if(longtics_demo) // haleyjd 10/08/06: longtics support
+      {
+         cmd->angleturn  =  *demo_p++;
+         cmd->angleturn |= (*demo_p++) << 8;
+      }
+      else
+         cmd->angleturn = ((unsigned char)*demo_p++)<<8;
+      
       cmd->buttons = (unsigned char)*demo_p++;
       
       if(demo_version >= 333)
@@ -942,22 +1232,33 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 // it checks for another reallocation. zdoom changes this, so I know
 // it is an issue.
 //
-static void G_WriteDemoTiccmd(ticcmd_t* cmd)
+static void G_WriteDemoTiccmd(ticcmd_t *cmd)
 {
    unsigned int position = demo_p - demobuffer;
+   int i = 0;
    
-   demo_p[0] = cmd->forwardmove;
-   demo_p[1] = cmd->sidemove;
-   demo_p[2] = (cmd->angleturn + 128) >> 8;
-   demo_p[3] = cmd->buttons;  
-   demo_p[4] = cmd->look & 0xff;
-   demo_p[5] = (cmd->look >> 8) & 0xff;
+   demo_p[i++] = cmd->forwardmove;
+   demo_p[i++] = cmd->sidemove;
+
+   // haleyjd 10/08/06: longtics support from Choco Doom.
+   // If this is a longtics demo, record in higher resolution
+   if(longtics_demo)
+   {
+      demo_p[i++] =  cmd->angleturn & 0xff;
+      demo_p[i++] = (cmd->angleturn >> 8) & 0xff;
+   }
+   else
+      demo_p[i++] = (cmd->angleturn + 128) >> 8; 
+
+   demo_p[i++] =  cmd->buttons;  
+   demo_p[i++] =  cmd->look & 0xff;
+   demo_p[i++] = (cmd->look >> 8) & 0xff;
    
-   if(position+16 > maxdemosize)   // killough 8/23/98
+   if(position + 16 > maxdemosize)   // killough 8/23/98
    {
       // no more space
       maxdemosize += 128*1024;   // add another 128K  -- killough
-      demobuffer = realloc(demobuffer,maxdemosize);
+      demobuffer = realloc(demobuffer, maxdemosize);
       demo_p = position + demobuffer;  // back on track
       // end of main demo limit changes -- killough
    }
@@ -981,7 +1282,7 @@ void G_ExitLevel(void)
 //
 // Here's for the german edition.
 // IF NO WOLF3D LEVELS, NO SECRET EXIT!
-// (unless its a script secret exit)
+// (unless it's a script secret exit)
 //
 void G_SecretExitLevel(void)
 {
@@ -1150,7 +1451,7 @@ static void G_DoCompleted(void)
    
    gameaction = ga_nothing;
    
-   for(i=0; i<MAXPLAYERS; i++)
+   for(i = 0; i < MAXPLAYERS; ++i)
    {
       if(playeringame[i])
          G_PlayerFinishLevel(i);        // take away cards and stuff
@@ -1271,276 +1572,6 @@ static void G_DoWorldDone(void)
    AM_clearMarks(); //jff 4/12/98 clear any marks on the automap
 }
 
-// killough 2/28/98: A ridiculously large number
-// of players, the most you'll ever need in a demo
-// or savegame. This is used to prevent problems, in
-// case more players in a game are supported later.
-
-#define MIN_MAXPLAYERS 32
-
-static char *defdemoname;
-
-//
-// NETCODE_FIXME -- DEMO_FIXME
-//
-// More demo-related stuff here, for playing back demos. Will need more
-// version detection to detect the new non-homogeneous demo format.
-// Use of G_ReadOptions also impacts the configuration, netcode, 
-// console, etc. G_ReadOptions and G_WriteOptions are, as indicated in
-// one of Lee's comments, designed to be able to transmit initial
-// variable values during netgame arbitration. I don't know if this
-// avenue should be pursued but it might be a good idea. The current
-// system being used to send them at startup is garbage.
-//
-
-static void G_DoPlayDemo(void)
-{
-   skill_t skill;
-   int i, episode, map;
-   int demover;
-   char basename[9];
-   byte *option_p = NULL;      // killough 11/98
-   //int lumpnum;
-   //int length;
-  
-   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
-      basetic = gametic;  // killough 9/29/98
-      
-   ExtractFileBase(defdemoname,basename);           // killough
-   
-   demobuffer = demo_p = W_CacheLumpName (basename, PU_STATIC);  // killough
-   
-   // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
-   // Old demos turn on demo_compatibility => compatibility; new demos load
-   // compatibility flag, and other flags as well, as a part of the demo.
-   
-   // haleyjd: this is the version for DOOM/BOOM/MBF demos; new demos 
-   // test the signature and then get the new version number after it
-   // if the signature matches the eedemosig array declared above.
-
-   demo_version =      // killough 7/19/98: use the version id stored in demo
-      demover = *demo_p++;
-
-   // haleyjd 09/02/03: test for old Heretic, etc. demos here.
-   // Heretic demos don't even store the version -- the first byte 
-   // in the file is the skill level, and is thus easy to recognize.
-   // For full safety, I compare against 255, which is the value put
-   // in the old version byte by Eternity when it writes a demo.
-
-   if(gameModeInfo->type != Game_DOOM && demo_version < 255)
-   {
-      C_Printf("Non-DOOM format demos are not supported\n");
-      gameaction = ga_nothing;
-      Z_ChangeTag(demobuffer, PU_CACHE);
-      D_AdvanceDemo();
-      return;
-   }
-   
-   if(demover < 200)     // Autodetect old demos
-   {
-      demo_subversion = 0; // haleyjd: always 0 for old demos
-
-      compatibility = true;
-      memset(comp, 0xff, sizeof comp);  // killough 10/98: a vector now
-
-      // killough 3/2/98: force these variables to be 0 in demo_compatibility
-
-      variable_friction = 0;
-
-      weapon_recoil = 0;
-
-      allow_pushers = 0;
-
-      monster_infighting = 1;           // killough 7/19/98
-
-      bfgtype = bfg_normal;                  // killough 7/19/98
-
-      dogs = 0;                         // killough 7/19/98
-      dog_jumping = 0;                  // killough 10/98
-
-      monster_backing = 0;              // killough 9/8/98
-      
-      monster_avoid_hazards = 0;        // killough 9/9/98
-
-      monster_friction = 0;             // killough 10/98
-      help_friends = 0;                 // killough 9/9/98
-      monkeys = 0;
-
-      // haleyjd 05/23/04: autoaim is sync-critical
-      default_autoaim = autoaim;
-      autoaim = 1;
-
-      default_allowmlook = allowmlook;
-      allowmlook = 0;
-
-      // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
-      // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
-
-      if ((skill=demover) >= 100)         // For demos from versions >= 1.4
-      {
-         skill = *demo_p++;
-         episode = *demo_p++;
-         map = *demo_p++;
-         deathmatch = *demo_p++;
-         respawnparm = *demo_p++;
-         fastparm = *demo_p++;
-         nomonsters = *demo_p++;
-         consoleplayer = *demo_p++;
-      }
-      else
-      {
-         episode = *demo_p++;
-         map = *demo_p++;
-         deathmatch = respawnparm = fastparm =
-            nomonsters = consoleplayer = 0;
-      }
-   }
-   else    // new versions of demos
-   {
-      // haleyjd: don't ignore the signature any more -- use it
-      // demo_p += 6;               // skip signature;
-      if(demo_version == 255 && !strncmp(demo_p, eedemosig, 5))
-      {
-         int temp;
-         
-         demo_p += 6; // increment past signature
-         
-         // reconstruct full version number and reset it
-         temp = *demo_p++;                 // byte one
-         temp |= ((int)(*demo_p++)) << 8;  // byte two
-         temp |= ((int)(*demo_p++)) << 16; // byte three
-         temp |= ((int)(*demo_p++)) << 24; // byte four
-         demo_version = demover = temp;
-         
-         // get subversion
-         demo_subversion = *demo_p++;
-      }
-      else
-      {
-         demo_p += 6; // increment past signature
-         
-         // subversion is always 0 for demo versions < 329
-         demo_subversion = 0;
-      }
-      
-      compatibility = *demo_p++;       // load old compatibility flag
-      skill = *demo_p++;
-      episode = *demo_p++;
-      map = *demo_p++;
-      deathmatch = *demo_p++;
-      consoleplayer = *demo_p++;
-
-      // haleyjd 04/14/03: retrieve dmflags if appropriate version
-      if(demo_version >= 331)
-      {
-         dmflags  = *demo_p++;
-         dmflags |= ((unsigned long)(*demo_p++)) << 8;
-         dmflags |= ((unsigned long)(*demo_p++)) << 16;
-         dmflags |= ((unsigned long)(*demo_p++)) << 24;
-      }
-
-      // haleyjd 12/14/01: retrieve gamemapname if in appropriate
-      // version
-      if(demo_version > 329 || 
-         (demo_version == 329 && demo_subversion >= 5))
-      {
-         int i;
-         
-         for(i = 0; i < 8; i++)
-            gamemapname[i] = *demo_p++;
-         
-         gamemapname[8] = '\0';
-      }
-
-      // killough 11/98: save option pointer for below
-      if (demover >= 203)
-         option_p = demo_p;
-
-      demo_p = G_ReadOptions(demo_p);  // killough 3/1/98: Read game options
-      
-      if(demover == 200)        // killough 6/3/98: partially fix v2.00 demos
-         demo_p += 256-GAME_OPTION_SIZE;
-   }
-
-   if(demo_compatibility)  // only 4 players can exist in old demos
-   {
-      for(i=0; i<4; i++)  // intentionally hard-coded 4 -- killough
-         playeringame[i] = *demo_p++;
-      for(;i < MAXPLAYERS; i++)
-         playeringame[i] = 0;
-   }
-   else
-   {
-      for(i=0 ; i < MAXPLAYERS; i++)
-         playeringame[i] = *demo_p++;
-      demo_p += MIN_MAXPLAYERS - MAXPLAYERS;
-   }
-
-   if(playeringame[1])
-      netgame = netdemo = true;
-
-   // haleyjd 04/10/03: determine game type
-   if(demo_version < 331)
-   {
-      // note: do NOT set default_dmflags here
-      if(deathmatch)
-      {
-         GameType = gt_dm;
-         G_SetDefaultDMFlags(deathmatch, false);
-      }
-      else
-      {
-         GameType = (netgame ? gt_coop : gt_single);
-         G_SetDefaultDMFlags(0, false);
-      }
-   }
-   else
-   {
-      // dmflags was already set above,
-      // "deathmatch" now holds the game type
-      GameType = deathmatch;
-   }
-   
-   // don't spend a lot of time in loadlevel
-
-   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
-   {
-      // killough 2/22/98:
-      // Do it anyway for timing demos, to reduce timing noise
-      precache = timingdemo;
-      
-      // haleyjd: choose appropriate G_InitNew based on version
-      if(demo_version > 329 ||
-         (demo_version == 329 && demo_subversion >= 5))
-      {
-         G_InitNew(skill, gamemapname);
-      }
-      else
-         G_InitNewNum(skill, episode, map);
-
-      // killough 11/98: If OPTIONS were loaded from the wad in G_InitNew(),
-      // reload any demo sync-critical ones from the demo itself, to be exactly
-      // the same as during recording.
-      
-      if(option_p)
-         G_ReadOptions(option_p);
-   }
-
-   precache = true;
-   usergame = false;
-   demoplayback = true;
-   
-   for(i=0; i<MAXPLAYERS;i++)         // killough 4/24/98
-      players[i].cheats = 0;
-   
-   gameaction = ga_nothing;
-   
-   if(timingdemo)
-   {
-      starttime = I_GetTime_RealTime();
-      startgametic = gametic;
-   }
-}
 
 #define VERSIONSIZE   16
 
@@ -3190,21 +3221,14 @@ void G_TimeDemo(char *name, boolean showmenu)
       return;
    }
    
-   //G_StopDemo();          // stop any previous demos
+   //G_StopDemo();         // stop any previous demos
    
    defdemoname = name;
    gameaction = ga_playdemo;
    singledemo = true;      // sf: moved from reloaddefaults
    
    singletics = true;
-   timingdemo = true;            // show stats after quit
-   
-   // check for framerate checking from menu
-   // haleyjd: realigned to use a parameter rather than checking
-   // if the menus are active, since that didn't work properly and
-   // could not be made to work
-   
-   /*timedemo_menuscreen = showmenu;*/
+   timingdemo = true;      // show stats after quit   
 }
 
 //===================
@@ -3251,16 +3275,9 @@ boolean G_CheckDemoStatus(void)
       Z_ChangeTag(demobuffer, PU_CACHE);
       G_ReloadDefaults();    // killough 3/1/98
       netgame = false;       // killough 3/29/98
-      //GameType = DefaultGameType; // haleyjd 04/10/03: unnecessary
       timingdemo = false;
       C_SetConsole();
-      ResetNet();
-      
-      // check for timedemo from menu
-      /*
-      if(timedemo_menuscreen)
-         MN_ShowFrameRate((gametics * TICRATE * 10) / realtics);
-      */
+      ResetNet();      
       return false;
    }              
 
@@ -3276,14 +3293,13 @@ boolean G_CheckDemoStatus(void)
       Z_ChangeTag(demobuffer, PU_CACHE);
       G_ReloadDefaults();    // killough 3/1/98
       netgame = false;       // killough 3/29/98
-      //GameType = DefaultGameType; // haleyjd 04/10/03: unnecessary
       D_AdvanceDemo();
       return true;
    }
    return false;
 }
 
-void G_StopDemo()
+void G_StopDemo(void)
 {
    extern boolean advancedemo;
    

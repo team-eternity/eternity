@@ -618,24 +618,37 @@ void R_SetupFrame(player_t *player, camera_t *camera)
 
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
-   
-   dy = FixedMul(focallen_y, 
-                 finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
-   dy *= zoom;
 
    // make fixed-point viewheight and divide by 2
    viewheightfrac = viewheight << (FRACBITS - 1);
 
-   // haleyjd: must bound after zooming
-   if(dy < -viewheightfrac)
-      dy = -viewheightfrac;
-   else if(dy > viewheightfrac)
-      dy = viewheightfrac;
+   // haleyjd 10/08/06: use simpler calculation for pitch == 0 to avoid 
+   // unnecessary roundoff error. This is what was causing sky textures to
+   // appear a half-pixel too low (the entire display was too low actually).
+   if(pitch)
+   {
+      dy = FixedMul(focallen_y, 
+                    finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
+      dy *= zoom;
+            
+      // haleyjd: must bound after zooming
+      if(dy < -viewheightfrac)
+         dy = -viewheightfrac;
+      else if(dy > viewheightfrac)
+         dy = viewheightfrac;
+      
+      centeryfrac = viewheightfrac + dy;
 
-   centeryfrac = viewheightfrac + dy;
-   centery     = centeryfrac >> FRACBITS;
+      yslope = origyslope + (viewheight >> 1) - (dy >> FRACBITS);
+   }
+   else
+   {
+      centeryfrac = viewheightfrac;
 
-   yslope = origyslope + (viewheight>>1) - (dy >> FRACBITS);
+      yslope = origyslope + (viewheight >> 1);
+   }
+   
+   centery = centeryfrac >> FRACBITS;
 
    // use drawcolumn
    colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06

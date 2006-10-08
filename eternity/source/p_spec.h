@@ -196,107 +196,107 @@
 
 typedef enum
 {
-  WalkOnce,
-  WalkMany,
-  SwitchOnce,
-  SwitchMany,
-  GunOnce,
-  GunMany,
-  PushOnce,
-  PushMany,
+   WalkOnce,
+   WalkMany,
+   SwitchOnce,
+   SwitchMany,
+   GunOnce,
+   GunMany,
+   PushOnce,
+   PushMany,
 } triggertype_e;
 
 // define names for the Speed field of the general linedefs
 
 typedef enum
 {
-  SpeedSlow,
-  SpeedNormal,
-  SpeedFast,
-  SpeedTurbo,  
-  SpeedParam, // haleyjd 05/04/04: parameterized extension 
+   SpeedSlow,
+   SpeedNormal,
+   SpeedFast,
+   SpeedTurbo,  
+   SpeedParam, // haleyjd 05/04/04: parameterized extension 
 } motionspeed_e;
 
 // define names for the Target field of the general floor
 
 typedef enum
 {
-  FtoHnF,
-  FtoLnF,
-  FtoNnF,
-  FtoLnC,
-  FtoC,
-  FbyST,
-  Fby24,
-  Fby32,
+   FtoHnF,
+   FtoLnF,
+   FtoNnF,
+   FtoLnC,
+   FtoC,
+   FbyST,
+   Fby24,
+   Fby32,
   
-  FbyParam, // haleyjd 05/07/04: parameterized extensions
-  FtoAbs,
-  FInst,
+   FbyParam, // haleyjd 05/07/04: parameterized extensions
+   FtoAbs,
+   FInst,
 } floortarget_e;
 
 // define names for the Changer Type field of the general floor
 
 typedef enum
 {
-  FNoChg,
-  FChgZero,
-  FChgTxt,
-  FChgTyp,
+   FNoChg,
+   FChgZero,
+   FChgTxt,
+   FChgTyp,
 } floorchange_e;
 
 // define names for the Change Model field of the general floor
 
 typedef enum
 {
-  FTriggerModel,
-  FNumericModel,
+   FTriggerModel,
+   FNumericModel,
 } floormodel_t;
 
 // define names for the Target field of the general ceiling
 
 typedef enum
 {
-  CtoHnC,
-  CtoLnC,
-  CtoNnC,
-  CtoHnF,
-  CtoF,
-  CbyST,
-  Cby24,
-  Cby32,
+   CtoHnC,
+   CtoLnC,
+   CtoNnC,
+   CtoHnF,
+   CtoF,
+   CbyST,
+   Cby24,
+   Cby32,
 
-  CbyParam, // haleyjd 05/07/04: parameterized extensions
-  CtoAbs,
-  CInst,
+   CbyParam, // haleyjd 05/07/04: parameterized extensions
+   CtoAbs,
+   CInst,
 } ceilingtarget_e;
 
 // define names for the Changer Type field of the general ceiling
 
 typedef enum
 {
-  CNoChg,
-  CChgZero,
-  CChgTxt,
-  CChgTyp,
+   CNoChg,
+   CChgZero,
+   CChgTxt,
+   CChgTyp,
 } ceilingchange_e;
 
 // define names for the Change Model field of the general ceiling
 
 typedef enum
 {
-  CTriggerModel,
-  CNumericModel,
+   CTriggerModel,
+   CNumericModel,
 } ceilingmodel_t;
 
 // define names for the Target field of the general lift
 
 typedef enum
 {
-  F2LnF,
-  F2NnF,
-  F2LnC,
-  LnF2HnF,
+   F2LnF,
+   F2NnF,
+   F2LnC,
+   LnF2HnF,
 } lifttarget_e;
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
@@ -315,28 +315,28 @@ typedef enum
 
 typedef enum
 {
-  OdCDoor,
-  ODoor,
-  CdODoor,
-  CDoor,
+   OdCDoor,
+   ODoor,
+   CdODoor,
+   CDoor,
   
-  // haleyjd 03/01/05: new param types with initial delays
-  pDOdCDoor,
-  pDCDoor,
+   // haleyjd 03/01/05: new param types with initial delays
+   pDOdCDoor,
+   pDCDoor,
 } doorkind_e;
 
 // define names for the locked door Kind field of the general ceiling
 
 typedef enum
 {
-  AnyKey,
-  RCard,
-  BCard,
-  YCard,
-  RSkull,
-  BSkull,
-  YSkull,
-  AllKeys,
+   AnyKey,
+   RCard,
+   BCard,
+   YCard,
+   RSkull,
+   BSkull,
+   YSkull,
+   AllKeys,
 } keykind_e;
 
 //////////////////////////////////////////////////////////////////
@@ -349,38 +349,38 @@ typedef enum
 
 typedef enum
 {
-  floor_special,
-  ceiling_special,
-  lighting_special,
+   floor_special,
+   ceiling_special,
+   lighting_special,
 } special_e;
 
 //jff 3/15/98 pure texture/type change for better generalized support
 typedef enum
 {
-  trigChangeOnly,
-  numChangeOnly,
+   trigChangeOnly,
+   numChangeOnly,
 } change_e;
 
 // p_plats
 
 typedef enum
 {
-  up,
-  down,
-  waiting,
-  in_stasis
+   up,
+   down,
+   waiting,
+   in_stasis
 } plat_e;
 
 typedef enum
 {
-  perpetualRaise,
-  downWaitUpStay,
-  raiseAndChange,
-  raiseToNearestAndChange,
-  blazeDWUS,
-  genLift,      //jff added to support generalized Plat types
-  genPerpetual, 
-  toggleUpDn,   //jff 3/14/98 added to support instant toggle type
+   perpetualRaise,
+   downWaitUpStay,
+   raiseAndChange,
+   raiseToNearestAndChange,
+   blazeDWUS,
+   genLift,      //jff added to support generalized Plat types
+   genPerpetual, 
+   toggleUpDn,   //jff 3/14/98 added to support instant toggle type
 
 } plattype_e;
 
@@ -392,30 +392,30 @@ typedef enum
 
 typedef enum
 {
-  doorNormal,
-  close30ThenOpen,
-  doorClose,
-  doorOpen,
-  raiseIn5Mins,
-  blazeRaise,
-  blazeOpen,
-  blazeClose,
+   doorNormal,
+   close30ThenOpen,
+   doorClose,
+   doorOpen,
+   raiseIn5Mins,
+   blazeRaise,
+   blazeOpen,
+   blazeClose,
 
-  //jff 02/05/98 add generalize door types
-  genRaise,
-  genBlazeRaise,
-  genOpen,
-  genBlazeOpen,
-  genClose,
-  genBlazeClose,
-  genCdO,
-  genBlazeCdO,
+   //jff 02/05/98 add generalize door types
+   genRaise,
+   genBlazeRaise,
+   genOpen,
+   genBlazeOpen,
+   genClose,
+   genBlazeClose,
+   genCdO,
+   genBlazeCdO,
 
-  // haleyjd 03/01/05: exclusively param door types
-  paramRaiseIn,
-  paramBlazeRaiseIn,
-  paramCloseIn,
-  paramBlazeCloseIn,
+   // haleyjd 03/01/05: exclusively param door types
+   paramRaiseIn,
+   paramBlazeRaiseIn,
+   paramCloseIn,
+   paramBlazeCloseIn,
 } vldoor_e;
 
 // haleyjd 05/04/04: door wait types
@@ -432,100 +432,99 @@ typedef enum
 
 typedef enum
 {
-  lowerToFloor,
-  raiseToHighest,
-  lowerToLowest,
-  lowerToMaxFloor,
-  lowerAndCrush,
-  crushAndRaise,
-  fastCrushAndRaise,
-  silentCrushAndRaise,
+   lowerToFloor,
+   raiseToHighest,
+   lowerToLowest,
+   lowerToMaxFloor,
+   lowerAndCrush,
+   crushAndRaise,
+   fastCrushAndRaise,
+   silentCrushAndRaise,
 
-  //jff 02/04/98 add types for generalized ceiling mover
-  genCeiling,
-  genCeilingChg,
-  genCeilingChg0,
-  genCeilingChgT,
+   //jff 02/04/98 add types for generalized ceiling mover
+   genCeiling,
+   genCeilingChg,
+   genCeilingChg0,
+   genCeilingChgT,
 
-  //jff 02/05/98 add types for generalized ceiling mover
-  genCrusher,
-  genSilentCrusher,
-
+   //jff 02/05/98 add types for generalized ceiling mover
+   genCrusher,
+   genSilentCrusher,
 } ceiling_e;
 
 // p_floor
 
 typedef enum
 {
-  // lower floor to highest surrounding floor
-  lowerFloor,
+   // lower floor to highest surrounding floor
+   lowerFloor,
   
-  // lower floor to lowest surrounding floor
-  lowerFloorToLowest,
+   // lower floor to lowest surrounding floor
+   lowerFloorToLowest,
   
-  // lower floor to highest surrounding floor VERY FAST
-  turboLower,
+   // lower floor to highest surrounding floor VERY FAST
+   turboLower,
   
-  // raise floor to lowest surrounding CEILING
-  raiseFloor,
+   // raise floor to lowest surrounding CEILING
+   raiseFloor,
   
-  // raise floor to next highest surrounding floor
-  raiseFloorToNearest,
+   // raise floor to next highest surrounding floor
+   raiseFloorToNearest,
 
-  //jff 02/03/98 lower floor to next lowest neighbor
-  lowerFloorToNearest,
+   //jff 02/03/98 lower floor to next lowest neighbor
+   lowerFloorToNearest,
 
-  //jff 02/03/98 lower floor 24 absolute
-  lowerFloor24,
+   //jff 02/03/98 lower floor 24 absolute
+   lowerFloor24,
 
-  //jff 02/03/98 lower floor 32 absolute
-  lowerFloor32Turbo,
+   //jff 02/03/98 lower floor 32 absolute
+   lowerFloor32Turbo,
 
-  // raise floor to shortest height texture around it
-  raiseToTexture,
+   // raise floor to shortest height texture around it
+   raiseToTexture,
   
-  // lower floor to lowest surrounding floor
-  //  and change floorpic
-  lowerAndChange,
+   // lower floor to lowest surrounding floor
+   //  and change floorpic
+   lowerAndChange,
 
-  raiseFloor24,
+   raiseFloor24,
 
-  //jff 02/03/98 raise floor 32 absolute
-  raiseFloor32Turbo,
+   //jff 02/03/98 raise floor 32 absolute
+   raiseFloor32Turbo,
 
-  raiseFloor24AndChange,
-  raiseFloorCrush,
+   raiseFloor24AndChange,
+   raiseFloorCrush,
 
-  // raise to next highest floor, turbo-speed
-  raiseFloorTurbo,       
-  donutRaise,
-  raiseFloor512,
+   // raise to next highest floor, turbo-speed
+   raiseFloorTurbo,       
+   donutRaise,
+   raiseFloor512,
 
-  //jff 02/04/98  add types for generalized floor mover
-  genFloor,
-  genFloorChg,
-  genFloorChg0,
-  genFloorChgT,
+   //jff 02/04/98  add types for generalized floor mover
+   genFloor,
+   genFloorChg,
+   genFloorChg0,
+   genFloorChgT,
 
-  //new types for stair builders
-  buildStair,
-  genBuildStair,
-  genWaitStair,  // haleyjd 10/10/05: stair resetting
-  genDelayStair, // haleyjd 10/13/05: delayed stair
-  genResetStair, 
+   //new types for stair builders
+   buildStair,
+   genBuildStair,
+   genWaitStair,  // haleyjd 10/10/05: stair resetting
+   genDelayStair, // haleyjd 10/13/05: delayed stair
+   genResetStair, 
 } floor_e;
 
 typedef enum
 {
-  build8, // slowly build by 8
-  turbo16 // quickly build by 16    
+   build8, // slowly build by 8
+   turbo16 // quickly build by 16    
 } stair_e;
 
 typedef enum
 {
-  elevateUp,
-  elevateDown,
-  elevateCurrent,
+   elevateUp,
+   elevateDown,
+   elevateCurrent,
 } elevator_e;
 
 //////////////////////////////////////////////////////////////////
@@ -537,18 +536,17 @@ typedef enum
 // texture type enum
 typedef enum
 {
-    top,
-    middle,
-    bottom
-
+   top,
+   middle,
+   bottom      
 } bwhere_e;
 
 // crush check returns
 typedef enum
 {
-  ok,
-  crushed,
-  pastdest
+   ok,
+   crushed,
+   pastdest
 } result_e;
 
 //////////////////////////////////////////////////////////////////
@@ -831,6 +829,19 @@ typedef struct
   fixed_t ceilingdestheight;
   fixed_t speed;
 } elevator_t;
+
+// joek: pillars
+typedef struct
+{
+  thinker_t thinker;
+  sector_t *sector;
+  int ceilingSpeed;
+  int floorSpeed;
+  int floordest;
+  int ceilingdest;
+  int direction;
+  int crush;
+} pillar_t;
 
 // p_spec
 

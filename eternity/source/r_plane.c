@@ -706,14 +706,15 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd: use height determined from patches in texture
       dc_texheight = sky->height;
       
-      // haleyjd: don't stretch textures over 200 tall
-      if(dc_texheight < 200)
+      // haleyjd:  don't stretch textures over 200 tall
+      // 10/07/06: don't stretch skies in old demos (no mlook)
+      if(demo_version >= 300 && dc_texheight < 200)
          dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
       else
          dc_iscale = pspriteiyscale >> detailshift;
 
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
-      for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
+      for(x = pl->minx; (dc_x = x) <= pl->maxx; ++x)
       {
          // haleyjd DEBUG
 #ifdef R_SIXTEEN
@@ -724,7 +725,7 @@ static void do_draw_plane(visplane_t *pl)
          {
             dc_source = R_GetColumn(texture,
                ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
-
+            
             colfunc();
          }
       }

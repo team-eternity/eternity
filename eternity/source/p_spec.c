@@ -3793,11 +3793,9 @@ void P_AttachSectors(line_t *cline, boolean ceiling)
 // P_ConvertHereticSpecials
 //
 // haleyjd 08/14/02:
-// This function converts old Heretic levels to a BOOM-compatible
-// format.
+// This function converts old Heretic levels to a BOOM-compatible format.
 // haleyjd 10/14/05:
-// Now finalized via implementation of all needed parameterized
-// line specials.
+// Now finalized via implementation of all needed parameterized line specials.
 //
 void P_ConvertHereticSpecials(void)
 {

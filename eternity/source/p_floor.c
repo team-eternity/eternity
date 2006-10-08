@@ -447,11 +447,7 @@ void T_MoveFloor(floormove_t* floor)
    );
 
    // sf: added silentmove
-   /*
-   if(!(leveltime&7) && !silentmove(floor->sector))     // make the floormove sound
-      S_StartSoundName((mobj_t *)&floor->sector->soundorg,
-                       "EE_FCMove");
-   */
+   // haleyjd: moving sound handled by sound sequences now
     
    if(res == pastdest)    // if destination height is reached
    {
@@ -516,23 +512,23 @@ void T_MoveFloor(floormove_t* floor)
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
       
-      if(floor->sector->stairlock==-2) // if this sector is stairlocked
+      if(floor->sector->stairlock == -2) // if this sector is stairlocked
       {
          sector_t *sec = floor->sector;
-         sec->stairlock=-1;              // thinker done, promote lock to -1
+         sec->stairlock = -1;             // thinker done, promote lock to -1
 
-         while(sec->prevsec!=-1 &&
-               sectors[sec->prevsec].stairlock!=-2)
+         while(sec->prevsec != -1 &&
+               sectors[sec->prevsec].stairlock != -2)
             sec = &sectors[sec->prevsec]; // search for a non-done thinker
-         if(sec->prevsec==-1)           // if all thinkers previous are done
+         if(sec->prevsec == -1)           // if all thinkers previous are done
          {
             sec = floor->sector;          // search forward
-            while(sec->nextsec!=-1 &&
-                  sectors[sec->nextsec].stairlock!=-2) 
+            while(sec->nextsec != -1 &&
+                  sectors[sec->nextsec].stairlock != -2) 
                sec = &sectors[sec->nextsec];
-            if(sec->nextsec==-1)         // if all thinkers ahead are done too
+            if(sec->nextsec == -1)        // if all thinkers ahead are done too
             {
-               while(sec->prevsec!=-1)    // clear all locks
+               while(sec->prevsec != -1)  // clear all locks
                {
                   sec->stairlock = 0;
                   sec = &sectors[sec->prevsec];
@@ -543,11 +539,7 @@ void T_MoveFloor(floormove_t* floor)
       }
 
       // make floor stop sound
-      /*
-      if(!silentmove(floor->sector)) //sf: silentmove
-         S_StartSoundName((mobj_t *)&floor->sector->soundorg,
-                          "EE_PlatStop");
-      */
+      // haleyjd: handled via sound sequences
    }
 }
 
@@ -613,12 +605,7 @@ void T_MoveElevator(elevator_t* elevator)
    }
 
    // make floor move sound
-   // sf: added silentmove
-   /*
-   if(!(leveltime&7) && !silentmove(elevator->sector))
-      S_StartSoundName((mobj_t *)&elevator->sector->soundorg,
-                       "EE_FCMove");
-   */
+   // haleyjd: handled through sound sequences
     
    if(res == pastdest)            // if destination height acheived
    {
@@ -628,11 +615,40 @@ void T_MoveElevator(elevator_t* elevator)
       P_RemoveThinker(&elevator->thinker);    // remove elevator from actives
       
       // make floor stop sound
-      /*
-      if(!silentmove(elevator->sector))   //sf: silentmove
-         S_StartSoundName((mobj_t *)&elevator->sector->soundorg,
-                          "EE_PlatStop");
-      */
+      // haleyjd: handled through sound sequences
+   }
+}
+
+// haleyjd 10/07/06: Pillars by Joe :)
+
+//
+// T_MovePillar
+//
+// Pillar thinker function
+// joek 4/9/06
+//
+void T_MovePillar(pillar_t *pillar)
+{
+   boolean result;
+   
+   // Move floor
+   result  = (T_MovePlane(pillar->sector, pillar->floorSpeed, 
+                          pillar->floordest, pillar->crush, 0, 
+                          pillar->direction) == pastdest);
+   
+   // Move ceiling
+   result &= (T_MovePlane(pillar->sector, pillar->ceilingSpeed, 
+                          pillar->ceilingdest, pillar->crush, 1, 
+                          pillar->direction * -1) == pastdest);
+   
+   if(result)
+   {
+      S_StopSectorSequence(pillar->sector);
+      pillar->sector->floordata = NULL;
+      pillar->sector->ceilingdata = NULL;      
+      // TODO: notify scripts
+      //P_TagFinished(pillar->sector->tag);
+      P_RemoveThinker(&pillar->thinker);
    }
 }
 

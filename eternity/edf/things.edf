@@ -601,7 +601,7 @@ thingtype DoomBarrel {
   deathsound = barexp
   radius = 10.0
   height = 42.0
-  correct_height = 28.0
+  correct_height = 34.0
   flags = SOLID|SHOOTABLE|NOBLOOD
   mod = 18
   dehackednum = 31

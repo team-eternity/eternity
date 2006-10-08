@@ -2690,9 +2690,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
    tid = (int)params[2];
 
    while((mo = P_FindMobjFromTID(tid, mo, context)))
-   {
       S_StartSoundName(mo, sndname);
-   }
 
    Z_Free(sndname);
 

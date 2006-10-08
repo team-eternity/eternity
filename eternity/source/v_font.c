@@ -232,7 +232,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          // haleyjd 10/04/05: text shadowing
          if(shadowChar)
          {
-            char *cm = (char *)(colormaps[0] + 31*256);
+            char *cm = (char *)(colormaps[0] + 33*256);
             V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, 
                           FRACUNIT*2/3);
          }

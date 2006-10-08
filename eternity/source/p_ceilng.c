@@ -108,21 +108,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             );
 
       // if not a silent crusher, make moving sound
-      /*
-      if(!(leveltime&7) && !silentmove(ceiling->sector))
-      {
-         switch(ceiling->type)
-         {
-         case silentCrushAndRaise:
-         case genSilentCrusher:
-            break;
-         default: // haleyjd: use mapinfo sound name
-            S_StartSoundName((mobj_t *)&ceiling->sector->soundorg, 
-                             "EE_FCMove");
-            break;
-         }
-      }
-      */
+      // haleyjd: now handled through sound sequences
 
       // handle reaching destination height
       if(res == pastdest)
@@ -148,11 +134,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
 
             // crushers reverse direction at the top
          case silentCrushAndRaise:
-            /*
-            if(!silentmove(ceiling->sector))    // sf: silentmove
-               S_StartSoundName((mobj_t *)&ceiling->sector->soundorg,
-                                "EE_PlatStop");
-            */
+            // haleyjd: if not playing a looping sequence, start one
             if(!S_CheckSectorSequenceLoop(ceiling->sector))
                P_CeilingSequence(ceiling->sector, CNOISE_SEMISILENT);
          case genSilentCrusher:
@@ -181,20 +163,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             );
 
       // if not silent crusher type make moving sound
-      /*
-      if(!(leveltime&7) && !silentmove(ceiling->sector))
-      {
-         switch(ceiling->type)
-         {
-         case silentCrushAndRaise:
-         case genSilentCrusher:
-            break;
-         default:
-            S_StartSoundName((mobj_t *)&ceiling->sector->soundorg,
-                             "EE_FCMove");
-         }
-      }
-      */
+      // haleyjd: now handled through sound sequences
 
       // handle reaching destination height
       if(res == pastdest)
@@ -213,11 +182,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             // make platform stop at bottom of all crusher strokes
             // except generalized ones, reset speed, start back up
          case silentCrushAndRaise:
-            /*
-            if(!silentmove(ceiling->sector))    // sf: silentmove
-               S_StartSoundName((mobj_t *)&ceiling->sector->soundorg,
-                                "EE_PlatStop");
-            */
+            // haleyjd: if not playing a looping sequence, start one
             if(!S_CheckSectorSequenceLoop(ceiling->sector))
                P_CeilingSequence(ceiling->sector, CNOISE_SEMISILENT);
          case crushAndRaise: 

@@ -41,7 +41,8 @@ SndSeq_t *EnviroSequence; // currently playing environmental sequence
 //
 // S_CheckSequenceLoop
 //
-// Stops any sound sequence being played by the given object.
+// Returns true if the thing is playing a sequence and the sequence is looping,
+// and false in any other circumstance.
 //
 boolean S_CheckSequenceLoop(mobj_t *mo)
 {
@@ -313,7 +314,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       curSeq->looping = true;
       curSeq->currentSound = CMD_ARG1(sfx);
       curSeq->delayCounter = CMD_ARG2(data);
-      S_StartSeqSound(curSeq, true);
+      S_StartSeqSound(curSeq, false);
       break;
    case SEQ_CMD_DELAY: // delay for a while
       curSeq->currentSound = NULL;

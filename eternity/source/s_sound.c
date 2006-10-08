@@ -94,6 +94,7 @@ typedef struct channel_s
   int priority;            // current priority value
   int singularity;         // haleyjd 09/27/06: stored singularity value
   int idnum;               // haleyjd 09/30/06: unique id num for sound event
+  boolean looping;         // haleyjd 10/06/06: is this channel looping?
 } channel_t;
 
 // the set of channels available
@@ -548,6 +549,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       channels[cnum].o_priority  = o_priority;  // original priority
       channels[cnum].priority    = priority;    // scaled priority
       channels[cnum].singularity = singularity;
+      channels[cnum].looping     = loop;
       
       channels[cnum].idnum = I_SoundID(handle);
    }
@@ -922,6 +924,22 @@ void S_StopSounds(void)
    if(snd_card && !nosfxparm)
       for(cnum = 0; cnum < numChannels; ++cnum)
          if(channels[cnum].sfxinfo)
+            S_StopChannel(cnum);
+}
+
+//
+// S_StopLoopedSounds
+//
+// haleyjd 10/06/06: Looped sounds need to stop playing when the intermission
+// starts up, or else they'll play all the way til the next level.
+//
+void S_StopLoopedSounds(void)
+{
+   int cnum;
+
+   if(snd_card && !nosfxparm)
+      for(cnum = 0; cnum < numChannels; ++cnum)
+         if(channels[cnum].sfxinfo && channels[cnum].looping)
             S_StopChannel(cnum);
 }
 
