@@ -77,7 +77,6 @@ static const char rcsid[] = "$Id: d_main.c,v 1.47 1998/05/16 09:16:51 killough E
 #include "in_lude.h"
 #include "a_small.h"
 #include "g_gfs.h"
-#include "d_dehtbl.h"
 #include "g_dmflag.h"
 #include "e_edf.h"
 
@@ -322,7 +321,7 @@ void D_Display(void)
 
 static int demosequence;         // killough 5/2/98: made static
 static int pagetic;
-static char *pagename;
+static const char *pagename;
 
 //
 // D_PageTicker
@@ -429,19 +428,19 @@ void D_AdvanceDemo(void)
 
 // killough 11/98: functions to perform demo sequences
 
-static void D_SetPageName(char *name)
+static void D_SetPageName(const char *name)
 {
    pagename = name;
 }
 
-static void D_DrawTitle(char *name)
+static void D_DrawTitle(const char *name)
 {
    S_StartMusic(gameModeInfo->titleMusNum);
    pagetic = gameModeInfo->titleTics;
    D_SetPageName(name);
 }
 
-static void D_DrawTitleA(char *name)
+static void D_DrawTitleA(const char *name)
 {
    pagetic = gameModeInfo->advisorTics;
    D_SetPageName(name);
@@ -449,93 +448,97 @@ static void D_DrawTitleA(char *name)
 
 // killough 11/98: tabulate demo sequences
 
-static struct 
+typedef void (*dsfunc_t)(const char *);
+
+typedef struct demostate_s
 {
-   void (*func)(char *);
+   dsfunc_t func;
    char *name;
-} const demostates[][6] =
-  {
-    {
+} demostate_t;
+
+static const demostate_t demostates[][6] =
+{
+   {
       {D_DrawTitle, "TITLEPIC"}, // shareware
       {D_DrawTitle, "TITLEPIC"}, // registerd
       {D_DrawTitle, "TITLEPIC"}, // retail
       {D_DrawTitle, "TITLEPIC"}, // commercial
       {D_DrawTitle, "TITLE"},    // heretic shareware
       {D_DrawTitle, "TITLE"},    // heretic registered/sosr
-    },
+   },
 
-    {
-      {G_DeferedPlayDemo, "demo1"},
-      {G_DeferedPlayDemo, "demo1"},
-      {G_DeferedPlayDemo, "demo1"},
-      {G_DeferedPlayDemo, "demo1"},
-      {D_DrawTitleA, "TITLE"},
-      {D_DrawTitleA, "TITLE"},
-    },
+   {
+      {G_DeferedPlayDemo, "DEMO1"},
+      {G_DeferedPlayDemo, "DEMO1"},
+      {G_DeferedPlayDemo, "DEMO1"},
+      {G_DeferedPlayDemo, "DEMO1"},
+      {D_DrawTitleA,      "TITLE"},
+      {D_DrawTitleA,      "TITLE"},
+   },
 
-    {
-      {D_SetPageName, NULL},
-      {D_SetPageName, NULL},
-      {D_SetPageName, NULL},
-      {D_SetPageName, NULL},
-      {G_DeferedPlayDemo, "demo1"},
-      {G_DeferedPlayDemo, "demo1"},
-    },
+   {
+      {D_SetPageName,     NULL},
+      {D_SetPageName,     NULL},
+      {D_SetPageName,     NULL},
+      {D_SetPageName,     NULL},
+      {G_DeferedPlayDemo, "DEMO1"},
+      {G_DeferedPlayDemo, "DEMO1"},
+   },
 
-    {
-      {G_DeferedPlayDemo, "demo2"},
-      {G_DeferedPlayDemo, "demo2"},
-      {G_DeferedPlayDemo, "demo2"},
-      {G_DeferedPlayDemo, "demo2"},
-      {D_SetPageName, "ORDER"},
-      {D_SetPageName, "CREDIT"},
-    },
+   {
+      {G_DeferedPlayDemo, "DEMO2"},
+      {G_DeferedPlayDemo, "DEMO2"},
+      {G_DeferedPlayDemo, "DEMO2"},
+      {G_DeferedPlayDemo, "DEMO2"},
+      {D_SetPageName,     "TORDER"},
+      {D_SetPageName,     "TCREDIT"},
+   },
 
-    {
-      {D_SetPageName, "HELP2"},
-      {D_SetPageName, "HELP2"},
-      {D_SetPageName, "CREDIT"},
-      {D_DrawTitle,   "TITLEPIC"},
-      {G_DeferedPlayDemo, "demo2"},
-      {G_DeferedPlayDemo, "demo2"},
-    },
+   {
+      {D_SetPageName,     "THELP2"},
+      {D_SetPageName,     "THELP2"},
+      {D_SetPageName,     "TCREDIT"},
+      {D_DrawTitle,       "TITLEPIC"},
+      {G_DeferedPlayDemo, "DEMO2"},
+      {G_DeferedPlayDemo, "DEMO2"},
+   },
 
-    {
-      {G_DeferedPlayDemo, "demo3"},
-      {G_DeferedPlayDemo, "demo3"},
-      {G_DeferedPlayDemo, "demo3"},
-      {G_DeferedPlayDemo, "demo3"},
-      {D_SetPageName, NULL},
-      {D_SetPageName, NULL},
-    },
+   {
+      {G_DeferedPlayDemo, "DEMO3"},
+      {G_DeferedPlayDemo, "DEMO3"},
+      {G_DeferedPlayDemo, "DEMO3"},
+      {G_DeferedPlayDemo, "DEMO3"},
+      {D_SetPageName,     NULL},
+      {D_SetPageName,     NULL},
+   },
 
-    {
+   {
       {NULL},
       {NULL},
       {NULL},
-      {D_SetPageName, "CREDIT"},
-      {G_DeferedPlayDemo, "demo3"},
-      {G_DeferedPlayDemo, "demo3"},
-    },
+      {D_SetPageName,     "TCREDIT"},
+      {G_DeferedPlayDemo, "DEMO3"},
+      {G_DeferedPlayDemo, "DEMO3"},
+   },
 
-    {
+   {
       {NULL},
       {NULL},
       {NULL},
-      {G_DeferedPlayDemo, "demo4"},
-      {D_SetPageName, "CREDIT"},
-      {D_SetPageName, "CREDIT"},
-    },
+      {G_DeferedPlayDemo, "DEMO4"},
+      {D_SetPageName,     "TCREDIT"},
+      {D_SetPageName,     "TCREDIT"},
+   },
 
-    {
+   {
       {NULL},
       {NULL},
       {NULL},
       {NULL},
       {NULL},
       {NULL},
-    }
-  };
+   }
+};
 
 //
 // This cycles through the demo sequences.
@@ -544,17 +547,26 @@ static struct
 
 void D_DoAdvanceDemo(void)
 {
+   const demostate_t *state;
+
    players[consoleplayer].playerstate = PST_LIVE;  // not reborn
    advancedemo = usergame = paused = false;
    gameaction = ga_nothing;
    
    pagetic = gameModeInfo->pageTics;
    gamestate = GS_DEMOSCREEN;
+
+   // haleyjd 10/08/06: changed to allow DEH/BEX replacement of 
+   // demo state resource names
+   state = &(demostates[++demosequence][gamemode]);
    
-   if (!demostates[++demosequence][gamemode].func)
+   if(!state->func) // time to wrap?
+   {
       demosequence = 0;
-   demostates[demosequence][gamemode].func
-      (demostates[demosequence][gamemode].name);
+      state = &(demostates[0][gamemode]);
+   }
+
+   state->func(DEH_String(state->name));
 
    C_InstaPopup();       // make console go away
 }
@@ -2210,7 +2222,7 @@ static void D_DoomInit(void)
    // previously before the point where DEH/BEX was loaded, it couldn't
    // be done.
    if(cdrom_mode)
-      puts(s_D_CDROM);
+      puts(DEH_String("D_CDROM"));
    
    // Ty 04/08/98 - Add 5 lines of misc. data, only if nonblank
    // The expectation is that these will be set in a .bex file

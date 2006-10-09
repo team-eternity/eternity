@@ -40,21 +40,26 @@ typedef struct
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c
 extern int num_bexptrs;
 
-typedef struct
+typedef struct dehstr_s
 {
-   char **ppstr;  // doubly indirect pointer to string
-   char *lookup;  // pointer to lookup string name
-   int bnext;     // haleyjd: for bex hash chaining (by mnemonic)
-   int dnext;     // haleyjd: for deh hash chaining (by value)
-} deh_strs;
+   char **ppstr;   // doubly indirect pointer to string   
+   char *lookup;   // pointer to lookup string name
+   char *original; // haleyjd 10/08/06: original string
+   int bnext;      // haleyjd: for bex hash chaining (by mnemonic)
+   int dnext;      // haleyjd: for deh hash chaining (by value)
+} dehstr_t;
 
 extern char **deh_spritenames;
 extern char **deh_musicnames;
 
 unsigned int D_HashTableKey(const char *str);
 
-deh_strs *D_GetBEXStr(const char *string);
-deh_strs *D_GetDEHStr(const char *string);
+dehstr_t *D_GetBEXStr(const char *string);
+dehstr_t *D_GetDEHStr(const char *string);
+
+// haleyjd 10/08/06: new string fetching functions
+const char *DEH_String(const char *mnemonic);
+boolean DEH_StringChanged(const char *mnemonic);
 
 deh_bexptr *D_GetBexPtr(const char *mnemonic);
 
@@ -87,7 +92,7 @@ typedef struct
    long results[MAXFLAGFIELDS];
 } dehflagset_t;
 
-void deh_ParseFlags(dehflagset_t *dehflags, char **strval, FILE *fpout);
+void deh_ParseFlags(dehflagset_t *dehflags, char **strval);
 long deh_ParseFlagsSingle(const char *strval, int mode);
 long *deh_ParseFlagsCombined(const char *strval);
 

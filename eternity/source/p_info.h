@@ -61,67 +61,67 @@ typedef struct LevelInfo_s
    unsigned long bossSpecs;  // boss special flags for BossDeath, HticBossDeath
 
    // intermission and finale stuff
-   int  partime;             // intermission par time in seconds
-   char *interPic;           // intermission background
-   char *interText;          // presence of this determines if a finale will occur
-   char *interTextLump;      // this can be set in the file
-   char *backDrop;           // pic used during text finale
-   char *interMusic;         // text finale music
-   char *levelPic;           // intermission level name graphics lump
-   char *nextLevelPic;       // level name lump for NEXT level 06/17/06
-   char *nextSecretPic;      // level name lump for SECRET level 06/17/06
-   int  finaleType;          // type of finale sequence -- haleyjd 05/26/06
-   boolean killStats;        // level has no statistics intermission
-   boolean killFinale;       // level has no finale even if text is given
-   boolean finaleSecretOnly; // level only has finale if secret exit
-   boolean endOfGame;        // DOOM II: last map, trigger cast call
-   boolean useEDFInterName;  // use an intermission map name from EDF
+   int  partime;              // intermission par time in seconds
+   const char *interPic;      // intermission background
+   const char *interText;     // presence of this determines if a finale will occur
+   const char *interTextLump; // this can be set in the file
+   const char *backDrop;      // pic used during text finale
+   const char *interMusic;    // text finale music
+   const char *levelPic;      // intermission level name graphics lump
+   const char *nextLevelPic;  // level name lump for NEXT level 06/17/06
+   const char *nextSecretPic; // level name lump for SECRET level 06/17/06
+   int  finaleType;           // type of finale sequence -- haleyjd 05/26/06
+   boolean killStats;         // level has no statistics intermission
+   boolean killFinale;        // level has no finale even if text is given
+   boolean finaleSecretOnly;  // level only has finale if secret exit
+   boolean endOfGame;         // DOOM II: last map, trigger cast call
+   boolean useEDFInterName;   // use an intermission map name from EDF
 
    // level transfer stuff
-   char *nextLevel;          // name of next map for normal exit
-   char *nextSecret;         // name of next map for secret exit
+   const char *nextLevel;     // name of next map for normal exit
+   const char *nextSecret;    // name of next map for secret exit
 
    // level variables
-   char *levelName;          // name used in automap
-   char *musicName;          // name of music to play during level
+   const char *levelName;     // name used in automap
+   const char *musicName;     // name of music to play during level
 
    // color map stuff
-   char *colorMap;           // global colormap replacement
-   boolean useFullBright;    // use fullbright on this map?
-   boolean unevenLight;      // use uneven wall lighting?
+   const char *colorMap;      // global colormap replacement
+   boolean useFullBright;     // use fullbright on this map?
+   boolean unevenLight;       // use uneven wall lighting?
 
    // sky stuff
-   char *skyName;            // normal sky name (F_SKY1 or top of double)
-   char *altSkyName;         // alt sky - replaces skyName during lightning
-   char *sky2Name;           // secondary sky (F_SKY2 or bottom of double)
-   boolean doubleSky;        // use hexen-style double skies?
-   boolean hasLightning;     // map has lightning flashes?
-   int  skyDelta;            // double-sky scroll speeds (units/tic)
+   const char *skyName;       // normal sky name (F_SKY1 or top of double)
+   const char *altSkyName;    // alt sky - replaces skyName during lightning
+   const char *sky2Name;      // secondary sky (F_SKY2 or bottom of double)
+   boolean doubleSky;         // use hexen-style double skies?
+   boolean hasLightning;      // map has lightning flashes?
+   int  skyDelta;             // double-sky scroll speeds (units/tic)
    int  sky2Delta;
 
    // misc
-   int gravity;              // gravity factor
-   char *creator;            // creator: name of who made this map
+   int gravity;               // gravity factor
+   const char *creator;       // creator: name of who made this map
 
    // attached scripts
-   boolean hasScripts;       // true if scriptLump is valid
-   char *scriptLump;         // name of Levelscript lump
-   char *extraData;          // name of ExtraData lump
+   boolean hasScripts;        // true if scriptLump is valid
+   char *scriptLump;          // name of Levelscript lump
+   char *extraData;           // name of ExtraData lump
 
    // per-level sound replacements
-   char *sound_swtchn;       // switch on
-   char *sound_swtchx;       // switch off
-   char *sound_stnmov;       // plane move
-   char *sound_pstop;        // plat stop
-   char *sound_bdcls;        // blazing door close
-   char *sound_bdopn;        // blazing door open
-   char *sound_doropn;       // normal door open
-   char *sound_dorcls;       // normal door close
-   char *sound_pstart;       // plat start
-   char *sound_fcmove;       // floor/ceiling move
+   const char *sound_swtchn;  // switch on
+   const char *sound_swtchx;  // switch off
+   const char *sound_stnmov;  // plane move
+   const char *sound_pstop;   // plat stop
+   const char *sound_bdcls;   // blazing door close
+   const char *sound_bdopn;   // blazing door open
+   const char *sound_doropn;  // normal door open
+   const char *sound_dorcls;  // normal door close
+   const char *sound_pstart;  // plat start
+   const char *sound_fcmove;  // floor/ceiling move
 
    // sound sequences
-   boolean noAutoSequences;  // auto sequence behavior
+   boolean noAutoSequences;   // auto sequence behavior
 
 } LevelInfo_t;
 

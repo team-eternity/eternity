@@ -807,28 +807,30 @@ boolean AM_Responder(event_t *ev)
             followplayer = !followplayer;
             f_oldloc.x = D_MAXINT;
             // Ty 03/27/98 - externalized
-            doom_printf(followplayer ? s_AMSTR_FOLLOWON : s_AMSTR_FOLLOWOFF);
+            doom_printf(DEH_String(followplayer ? "AMSTR_FOLLOWON" 
+                                                : "AMSTR_FOLLOWOFF"));
             action_map_follow = 0;
          }
          else if(action_map_grid)
          {
             automap_grid = !automap_grid;      // killough 2/28/98
             // Ty 03/27/98 - *not* externalized
-            doom_printf(automap_grid ? s_AMSTR_GRIDON : s_AMSTR_GRIDOFF);
+            doom_printf(DEH_String(automap_grid ? "AMSTR_GRIDON" 
+                                                : "AMSTR_GRIDOFF"));
             action_map_grid = 0;
          }
          else if(action_map_mark)
          {
             // Ty 03/27/98 - *not* externalized     
             // sf: fixed this (buffer at start, presumably from an old sprintf
-            doom_printf("%s %d", s_AMSTR_MARKEDSPOT, markpointnum);
+            doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
             AM_addMark();
             action_map_mark = 0;
          }
          else if(action_map_clear)
          {
             AM_clearMarks();  // Ty 03/27/98 - *not* externalized
-            doom_printf(s_AMSTR_MARKSCLEARED);
+            doom_printf(DEH_String("AMSTR_MARKSCLEARED"));
             action_map_clear = 0;
          }
          else

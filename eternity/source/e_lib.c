@@ -307,7 +307,7 @@ long E_ParseFlags(const char *str, dehflagset_t *flagset)
 
    bufptr = buffer = strdup(str);
 
-   deh_ParseFlags(flagset, &bufptr, NULL);
+   deh_ParseFlags(flagset, &bufptr);
 
    free(buffer);
 

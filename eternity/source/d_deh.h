@@ -22,6 +22,7 @@
 #define __D_DEH__
 
 #include "doomtype.h"
+#include "d_dehtbl.h"
 
 //
 //      Ty 03/22/98 - note that we are keeping the english versions and
@@ -1168,11 +1169,11 @@ extern char *s_OB_GRENADE;
 // and converted to arrays of pointers to char *
 // See modified HUTITLEx macros
 //
-extern char **mapnames[];
-extern char **mapnames2[];
-extern char **mapnamesp[];
-extern char **mapnamest[];
-extern char **mapnamesh[];
+extern const char *mapnames[];
+extern const char *mapnames2[];
+extern const char *mapnamesp[];
+extern const char *mapnamest[];
+extern const char *mapnamesh[];
 
 extern boolean deh_pars;
 extern boolean deh_loaded; // sf

@@ -30,9 +30,9 @@
 
 // pop-up messages
 
-void MN_Alert(char *message, ...);
-void MN_Question(char *message, char *command);
-void MN_QuestionFunc(char *message, void (*handler)(void));
+void MN_Alert(const char *message, ...);
+void MN_Question(const char *message, char *command);
+void MN_QuestionFunc(const char *message, void (*handler)(void));
 
 // help screens
 

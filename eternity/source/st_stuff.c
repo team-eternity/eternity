@@ -319,7 +319,6 @@ static int      st_faceindex = 0;
 // holds key-type for each key box on bar
 static int      keyboxes[3];
 
-extern char     *mapnames[];
 extern byte     **translationtables;
 
 //

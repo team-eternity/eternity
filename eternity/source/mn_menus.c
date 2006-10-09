@@ -203,7 +203,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
 {
    if(netgame && !demoplayback)
    {
-      MN_Alert(s_NEWGAME);
+      MN_Alert("%s", DEH_String("NEWGAME"));
       return;
    }
 
@@ -266,19 +266,20 @@ void MN_QuitDoom(void)
    int quitmsgnum;
    char quitmsg[128];
    const char *source;
+   const char *str = DEH_String("QUITMSG");
 
    quitmsgnum = M_Random() % 14;
 
-   // sf: use s_QUITMSG if it has been replaced in a dehacked file
+   // sf: use QUITMSG if it has been replaced in a dehacked file
 
-   if(strcmp(s_QUITMSG, "")) // support dehacked replacement
-      source = s_QUITMSG;
+   if(strcmp(str, "")) // support dehacked replacement
+      source = str;
    else if(gameModeInfo->type == Game_Heretic) // haleyjd: heretic support
       source = HTICQUITMSG;
    else // normal doom messages
       source = endmsg[quitmsgnum];
 
-   psnprintf(quitmsg, sizeof(quitmsg), "%s\n\n%s", source, s_DOSY);
+   psnprintf(quitmsg, sizeof(quitmsg), "%s\n\n%s", source, DEH_String("DOSY"));
    
    MN_Question(quitmsg, "quit");
 }
@@ -330,7 +331,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
    
    if((gameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {
-      MN_Alert(s_SWSTRING);
+      MN_Alert("%s", DEH_String("SWSTRING"));
       return;
    }
    
@@ -401,7 +402,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    // haleyjd 07/27/05: restored nightmare behavior
    if(skill == sk_nightmare)
    {
-      MN_QuestionFunc(s_NIGHTMARE, MN_DoNightmare);
+      MN_QuestionFunc(DEH_String("NIGHTMARE"), MN_DoNightmare);
       return;
    }
 
@@ -655,7 +656,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
       MN_Alert("You must purchase the full version\n"
                "to load external wad files.\n"
                "\n"
-               "%s", s_PRESSKEY);
+               "%s", DEH_String("PRESSKEY"));
       return;
    }
 
@@ -1280,7 +1281,7 @@ void MN_ReadSaveStrings(void)
          // haleyjd
          if(savegamenames[i])
             Z_Free(savegamenames[i]);
-         savegamenames[i] = Z_Strdup(s_EMPTYSTRING, PU_STATIC, 0);
+         savegamenames[i] = Z_Strdup(DEH_String("EMPTYSTRING"), PU_STATIC, 0);
          continue;
       }
 
@@ -1368,7 +1369,7 @@ void MN_LoadGameDrawer()
    for(i=0, y=2; i<SAVESLOTS; i++, y+=2)  // haleyjd
    {
       menu_loadgame.menuitems[y].description =
-         savegamenames[i] ? savegamenames[i] : s_EMPTYSTRING;
+         savegamenames[i] ? savegamenames[i] : DEH_String("EMPTYSTRING");
    }
 }
 
@@ -1376,7 +1377,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
 {
    if(netgame && !demoplayback)
    {
-      MN_Alert(s_LOADNET);
+      MN_Alert("%s", DEH_String("LOADNET"));
       return;
    }
    
@@ -1405,7 +1406,7 @@ CONSOLE_COMMAND(mn_load, 0)
    // haleyjd 08/25/02: giant bug here
    if(!savegamepresent[slot])
    {
-      MN_Alert("You can't load an empty game!\n%s", s_PRESSKEY);
+      MN_Alert("You can't load an empty game!\n%s", DEH_String("PRESSKEY"));
       return;     // empty slot
    }
    
@@ -1423,7 +1424,7 @@ CONSOLE_COMMAND(quickload, 0)
    
    if(netgame && !demoplayback)
    {
-      MN_Alert(s_QLOADNET);
+      MN_Alert("%s", DEH_String("QLOADNET"));
       return;
    }
 
@@ -1436,12 +1437,12 @@ CONSOLE_COMMAND(quickload, 0)
 
    if(quickSaveSlot < 0)
    {
-      MN_Alert(s_QSAVESPOT);
+      MN_Alert("%s", DEH_String("QSAVESPOT"));
       return;
    }
    
    psnprintf(tempstring, sizeof(tempstring),
-             s_QLPROMPT, savegamenames[quickSaveSlot]);
+             DEH_String("QLPROMPT"), savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qload");
 }
 
@@ -1510,7 +1511,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
    
    if(!usergame && (!demoplayback || netgame))
    {
-      MN_Alert(s_SAVEDEAD); // Ty 03/27/98 - externalized
+      MN_Alert("%s", DEH_String("SAVEDEAD")); // Ty 03/27/98 - externalized
       return;
    }
    
@@ -1546,7 +1547,7 @@ CONSOLE_COMMAND(quicksave, 0)
    }
    
    psnprintf(tempstring, sizeof(tempstring),
-             s_QSPROMPT, savegamenames[quickSaveSlot]);
+             DEH_String("QSPROMPT"), savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qsave");
 }
 
@@ -1676,11 +1677,11 @@ CONSOLE_COMMAND(mn_endgame, 0)
    // haleyjd 04/18/03: restored netgame behavior from MBF
    if(netgame)
    {
-      MN_Alert("%s", s_NETEND);
+      MN_Alert("%s", DEH_String("NETEND"));
       return;
    }
 
-   MN_Question(s_ENDGAME, "starttitle");
+   MN_Question(DEH_String("ENDGAME"), "starttitle");
 }
 
 /////////////////////////////////////////////////////////////////

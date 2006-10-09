@@ -282,7 +282,7 @@ char buf[3];
    if(!isdigit(buf[0]) || !isdigit(buf[1]))
       return;
 
-   doom_printf(s_STSTR_MUS); // Ty 03/27/98 - externalized
+   doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
   
    if(gamemode == commercial)
    {
@@ -290,7 +290,7 @@ char buf[3];
           
       //jff 4/11/98 prevent IDMUS00 in DOOMII and IDMUS36 or greater
       if(musnum < mus_runnin ||  ((buf[0]-'0')*10 + buf[1]-'0') > 35)
-         doom_printf(s_STSTR_NOMUS); // Ty 03/27/98 - externalized
+         doom_printf("%s", DEH_String("STSTR_NOMUS")); // Ty 03/27/98 - externalized
       else
       {
          S_ChangeMusicNum(musnum, 1);
@@ -305,7 +305,7 @@ char buf[3];
       int mapnum     = (buf[1] - '0') - 1;
 
       if(episodenum < 0 || episodenum > 5 || mapnum < 0 || mapnum > 8)
-         doom_printf(s_STSTR_NOMUS);
+         doom_printf("%s", DEH_String("STSTR_NOMUS"));
       else
       {
          musnum = H_Mus_Matrix[episodenum][mapnum];
@@ -319,7 +319,7 @@ char buf[3];
           
       //jff 4/11/98 prevent IDMUS0x IDMUSx0 in DOOMI and greater than introa
       if(buf[0] < '1' || buf[1] < '1' || ((buf[0]-'1')*9 + buf[1]-'1') > 31)
-         doom_printf(s_STSTR_NOMUS); // Ty 03/27/98 - externalized
+         doom_printf("%s", DEH_String("STSTR_NOMUS")); // Ty 03/27/98 - externalized
       else
       {
          S_ChangeMusicNum(musnum, 1);
@@ -332,7 +332,7 @@ char buf[3];
 static void cheat_choppers(void)
 {
   plyr->weaponowned[wp_chainsaw] = true;
-  doom_printf(s_STSTR_CHOPPERS); // Ty 03/27/98 - externalized
+  doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
 
 static void cheat_god()
@@ -392,7 +392,7 @@ static void cheat_fa()
          plyr->ammo[i] = plyr->maxammo[i];
    }
    //sf : doom_printf
-   doom_printf(s_STSTR_FAADDED);
+   doom_printf("%s", DEH_String("STSTR_FAADDED"));
 }
 
 static void cheat_k()
@@ -426,23 +426,22 @@ static void cheat_noclip()
 // 'behold?' power-up cheats (modified for infinite duration -- killough)
 static void cheat_pw(pw)
 {
-  if (plyr->powers[pw])
-    plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap;  // killough
-  else
-    {
+   if(plyr->powers[pw])
+      plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap;  // killough
+   else
+   {
       P_GivePower(plyr, pw);
-      if (pw != pw_strength && !comp[comp_infcheat])
-        plyr->powers[pw] = -1;      // infinite duration -- killough
-    }
-        // sf : doom_printf
-  doom_printf(s_STSTR_BEHOLDX); // Ty 03/27/98 - externalized
+      if(pw != pw_strength && !comp[comp_infcheat])
+         plyr->powers[pw] = -1;      // infinite duration -- killough
+   }
+   
+   doom_printf("%s", DEH_String("STSTR_BEHOLDX")); // Ty 03/27/98 - externalized
 }
 
 // 'behold' power-up menu
 static void cheat_behold()
 {
-        // sf: doom_printf
-  doom_printf(s_STSTR_BEHOLD); // Ty 03/27/98 - externalized
+   doom_printf("%s", DEH_String("STSTR_BEHOLD")); // Ty 03/27/98 - externalized
 }
 
 // 'clev' change-level cheat
@@ -508,8 +507,7 @@ char buf[3];
 
   idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
 
-        // sf: doom_printf
-  doom_printf(s_STSTR_CLEV); // Ty 03/27/98 - externalized
+  doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
   G_DeferedInitNewNum(gameskill, epsd, map);
 }
@@ -529,23 +527,25 @@ static void cheat_mypos()
 
 static void cheat_comp()
 {
-  int i;
+   int i;
+   
+   // Ty 03/27/98 - externalized
+   doom_printf("%s",
+      DEH_String((compatibility = !compatibility) ? "STSTR_COMPON"
+                                                  : "STSTR_COMPOFF"));
 
-        // sf: doom_printf
-  doom_printf(   // Ty 03/27/98 - externalized
-    (compatibility = !compatibility) ? s_STSTR_COMPON : s_STSTR_COMPOFF );
-
-  for (i=0; i<COMP_TOTAL; i++)  // killough 10/98: reset entire vector
-    comp[i] = compatibility;
+   for(i = 0; i < COMP_TOTAL; ++i) // killough 10/98: reset entire vector
+      comp[i] = compatibility;
 }
 
 // variable friction cheat
 static void cheat_friction()
 {
-  C_RunTextCmd("varfriction /");        //sf
-        // sf : doom_printf
-  doom_printf(variable_friction ? "Variable Friction enabled" : 
-	      "Variable Friction disabled" );
+   C_RunTextCmd("varfriction /");        //sf
+   
+   // FIXME: externalize strings
+   doom_printf(variable_friction ? "Variable Friction enabled" : 
+                                   "Variable Friction disabled" );
 }
 
 
@@ -553,29 +553,31 @@ static void cheat_friction()
 // phares 3/10/98
 static void cheat_pushers()
 {
-  C_RunTextCmd("pushers /");            // sf
-  doom_printf(allow_pushers ? "pushers enabled" : "pushers disabled");
+   C_RunTextCmd("pushers /");
+   
+   // FIXME: externalize strings
+   doom_printf(allow_pushers ? "pushers enabled" : "pushers disabled");
 }
 
 // translucency cheat
 static void cheat_tran()
 {
-  C_RunTextCmd("r_trans /");    // sf
+   C_RunTextCmd("r_trans /");    // sf
 }
 
 static void cheat_massacre()    // jff 2/01/98 kill all monsters
 {
-  C_RunTextCmd("nuke");  //sf
+   C_RunTextCmd("nuke");  //sf
 }
 
 // killough 2/7/98: move iddt cheat from am_map.c to here
 // killough 3/26/98: emulate Doom better
 static void cheat_ddt()
 {
-  extern int ddt_cheating;
-  extern boolean automapactive;
-  if (automapactive)
-    ddt_cheating = (ddt_cheating+1) % 3;
+   extern int ddt_cheating;
+   extern boolean automapactive;
+   if(automapactive)
+      ddt_cheating = (ddt_cheating+1) % 3;
 }
 
 // killough 2/7/98: HOM autodetection
@@ -588,8 +590,7 @@ static void cheat_hom()
 // killough 2/16/98: keycard/skullkey cheat functions
 static void cheat_key()
 {
-        // sf : doom_printf
-  doom_printf("Red, Yellow, Blue");  // Ty 03/27/98 - *not* externalized
+   doom_printf("Red, Yellow, Blue");  // Ty 03/27/98 - *not* externalized
 }
 
 static void cheat_keyx()
@@ -600,15 +601,15 @@ static void cheat_keyx()
 static void cheat_keyxx(key)
 {
    doom_printf((plyr->cards[key] = !plyr->cards[key]) ? 
-    "Key Added" : "Key Removed");  // Ty 03/27/98 - *not* externalized
+     "Key Added" : "Key Removed");  // Ty 03/27/98 - *not* externalized
 }
 
 // killough 2/16/98: generalized weapon cheats
 
 static void cheat_weap()
 {                                   // Ty 03/27/98 - *not* externalized
-  doom_printf( gamemode==commercial ?           // killough 2/28/98
-    "Weapon number 1-9" : "Weapon number 1-8" );
+   doom_printf( gamemode==commercial ?           // killough 2/28/98
+     "Weapon number 1-9" : "Weapon number 1-8" );
 }
 
 static void cheat_weapx(buf)
@@ -801,31 +802,33 @@ CONSOLE_COMMAND(noclip, cf_notnet|cf_level)
   players[consoleplayer].cheats &= ~CF_NOCLIP;
   players[consoleplayer].cheats |= value ? CF_NOCLIP : 0;
 
-  doom_printf(players[consoleplayer].cheats & CF_NOCLIP ?
-    s_STSTR_NCON : s_STSTR_NCOFF); // Ty 03/27/98 - externalized
+  doom_printf("%s",
+     DEH_String(players[consoleplayer].cheats & CF_NOCLIP ?
+                "STSTR_NCON" : "STSTR_NCOFF"));
 }
 
 CONSOLE_COMMAND(god, cf_notnet|cf_level)
 {
-  int value=0;          // sf: choose to set to 0 or 1 
-  if(c_argc)
-    sscanf(c_argv[0], "%i", &value);
-  else
-    value = !(players[consoleplayer].cheats & CF_GODMODE);
+   int value=0;          // sf: choose to set to 0 or 1 
 
-  players[consoleplayer].cheats &= ~CF_GODMODE;
-  players[consoleplayer].cheats |= value ? CF_GODMODE : 0;
-
-  if (players[consoleplayer].cheats & CF_GODMODE)
-    {
+   if(c_argc)
+      sscanf(c_argv[0], "%i", &value);
+   else
+      value = !(players[consoleplayer].cheats & CF_GODMODE);
+   
+   players[consoleplayer].cheats &= ~CF_GODMODE;
+   players[consoleplayer].cheats |= value ? CF_GODMODE : 0;
+   
+   if(players[consoleplayer].cheats & CF_GODMODE)
+   {
       if (players[consoleplayer].mo)
-        players[consoleplayer].mo->health = god_health;  // Ty 03/09/98 - deh
-          
+         players[consoleplayer].mo->health = god_health;  // Ty 03/09/98 - deh
+      
       players[consoleplayer].health = god_health;
-      doom_printf(s_STSTR_DQDON); // Ty 03/27/98 - externalized
-    }
-  else 
-      doom_printf(s_STSTR_DQDOFF); // Ty 03/27/98 - externalized
+      doom_printf("%s", DEH_String("STSTR_DQDON")); // Ty 03/27/98 - externalized
+   }
+   else 
+      doom_printf("%s", DEH_String("STSTR_DQDOFF")); // Ty 03/27/98 - externalized
 }
 
 extern void A_Fall(mobj_t *);

@@ -1009,7 +1009,7 @@ boolean MN_Responder(event_t *ev)
             char *str = *(char **)(input_command->variable->variable);
             
             if(current_menu != gameModeInfo->saveMenu || 
-               strcmp(str, s_EMPTYSTRING))
+               strcmp(str, DEH_String("EMPTYSTRING")))
                strcpy(input_buffer, str);
             else
                input_buffer[0] = 0;

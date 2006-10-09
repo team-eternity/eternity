@@ -836,7 +836,7 @@ void S_ChangeMusicNum(int musnum, int looping)
 }
 
 // change by name
-void S_ChangeMusicName(char *name, int looping)
+void S_ChangeMusicName(const char *name, int looping)
 {
    musicinfo_t *music;
    
@@ -970,9 +970,7 @@ void S_Start(void)
    
    // sf: replacement music
    if(*LevelInfo.musicName)
-   {
       S_ChangeMusicName(LevelInfo.musicName, true);
-   }
    else
    {
       if(idmusnum != -1)
@@ -1208,7 +1206,7 @@ static void S_CreateMusicHashTable()
    }
 }
 
-musicinfo_t *S_MusicForName(char *name)
+musicinfo_t *S_MusicForName(const char *name)
 {
    int hashnum;
    musicinfo_t *mus;

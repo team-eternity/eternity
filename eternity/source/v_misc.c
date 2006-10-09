@@ -775,7 +775,7 @@ void V_Init(void)
 // Tiles a 64 x 64 flat over the entirety of the provided VBuffer
 // surface. Used by menus, intermissions, finales, etc.
 //
-void V_DrawBackground(char *patchname, VBuffer *back_dest)
+void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
    byte *src = W_CacheLumpNum(firstflat + R_FlatNumForName(patchname),
                               PU_CACHE);
@@ -791,7 +791,7 @@ char *R_DistortedFlat(int);
 // As above, but uses the ultra-cool water warping effect.
 // Created by fraggle.
 //
-void V_DrawDistortedBackground(char* patchname, VBuffer *back_dest)
+void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
    byte *src = R_DistortedFlat(R_FlatNumForName(patchname));
    

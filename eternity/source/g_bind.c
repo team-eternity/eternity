@@ -569,7 +569,7 @@ boolean G_KeyResponder(event_t *ev, int bclass)
          char buffer[128];
          
          psnprintf(buffer, sizeof(buffer),
-                   "disconnect from server?\n\n%s", s_PRESSYN);
+                   "disconnect from server?\n\n%s", DEH_String("PRESSYN"));
          MN_Question(buffer, "disconnect leaving");
          
          // dont get stuck thinking ctrl is down

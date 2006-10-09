@@ -220,7 +220,7 @@ void F_TextWrite(void)
 {
    int         w, h;         // killough 8/9/98: move variables below
    int         count;
-   char*       ch;
+   const char  *ch;
    int         c;
    int         cx;
    int         cy;
@@ -313,29 +313,27 @@ boolean         castattacking;
 extern  gamestate_t     wipegamestate;
 
 // haleyjd 07/05/03: support old DEH names for the first
-// 17 cast members, for compatibility purposes. Note that
-// oldnames is an array of pointers-to-pointers, to support
-// DeHackEd replacement properly.
+// 17 cast members, for compatibility purposes.
 #define OLDCASTMAX 17
-static char **oldnames[OLDCASTMAX] =
+static const char *oldnames[OLDCASTMAX] =
 {
-   &s_CC_ZOMBIE,
-   &s_CC_SHOTGUN,
-   &s_CC_HEAVY,
-   &s_CC_IMP,
-   &s_CC_DEMON,
-   &s_CC_LOST,
-   &s_CC_CACO,
-   &s_CC_HELL,
-   &s_CC_BARON,
-   &s_CC_ARACH,
-   &s_CC_PAIN,
-   &s_CC_REVEN,
-   &s_CC_MANCU,
-   &s_CC_ARCH,
-   &s_CC_SPIDER,
-   &s_CC_CYBER,
-   &s_CC_HERO,
+   "CC_ZOMBIE",
+   "CC_SHOTGUN",
+   "CC_HEAVY",
+   "CC_IMP",
+   "CC_DEMON",
+   "CC_LOST",
+   "CC_CACO",
+   "CC_HELL",
+   "CC_BARON",
+   "CC_ARACH",
+   "CC_PAIN",
+   "CC_REVEN",
+   "CC_MANCU",
+   "CC_ARCH",
+   "CC_SPIDER",
+   "CC_CYBER",
+   "CC_HERO",
 };
 
 //
@@ -354,7 +352,7 @@ void F_StartCast(void)
    for(i = 0; i < OLDCASTMAX; ++i)
    {
       if(!castorder[i].name)
-         castorder[i].name = *(oldnames[i]); // array of ptr-to-ptrs (!)
+         castorder[i].name = DEH_String(oldnames[i]);
    }
 
    wipegamestate = -1;         // force a screen wipe

@@ -310,13 +310,12 @@ boolean P_GivePower(player_t *player, int power)
 
 void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 {
-   player_t *player;
-   int      i;
-   int      sound;
-   char*    message = NULL;
-   boolean  removeobj = true;
-   boolean  pickup_fx = true; // haleyjd 04/14/03
-   fixed_t  delta = special->z - toucher->z;
+   player_t   *player;
+   int        i, sound;
+   const char *message = NULL;
+   boolean    removeobj = true;
+   boolean    pickup_fx = true; // haleyjd 04/14/03
+   fixed_t    delta = special->z - toucher->z;
 
    if(delta > toucher->height || delta < -8*FRACUNIT)
       return;        // out of reach
@@ -343,13 +342,13 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    case PFX_GREENARMOR:
       if(!P_GiveArmor(player, green_armor_class, false))
          return;
-      message = s_GOTARMOR; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTARMOR"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_BLUEARMOR:
       if(!P_GiveArmor(player, blue_armor_class, false))
          return;
-      message = s_GOTMEGA; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTMEGA"); // Ty 03/22/98 - externalized
       break;
 
       // bonus items
@@ -360,7 +359,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       if(player->health > (maxhealth * 2))
          player->health = (maxhealth * 2);
       player->mo->health = player->health;
-      message = s_GOTHTHBONUS; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTHTHBONUS"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ARMORBONUS:
@@ -370,7 +369,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          player->armorpoints = max_armor;
       if(!player->armortype)
          player->armortype = green_armor_class;
-      message = s_GOTARMBONUS; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTARMBONUS"); // Ty 03/22/98 - externalized
       break;
 
       // sf: removed beta items
@@ -380,7 +379,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       if(player->health > max_soul)
          player->health = max_soul;
       player->mo->health = player->health;
-      message = s_GOTSUPER; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTSUPER"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
@@ -390,7 +389,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       player->health = mega_health;
       player->mo->health = player->health;
       P_GiveArmor(player,blue_armor_class, false);
-      message = s_GOTMSPHERE; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTMSPHERE"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
@@ -398,42 +397,42 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       // leave cards for everyone
    case PFX_BLUEKEY:
       if(!player->cards[it_bluecard])
-         message = s_GOTBLUECARD; // Ty 03/22/98 - externalized
+         message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_bluecard);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_YELLOWKEY:
       if(!player->cards[it_yellowcard])
-         message = s_GOTYELWCARD; // Ty 03/22/98 - externalized
+         message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_yellowcard);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_REDKEY:
       if(!player->cards[it_redcard])
-         message = s_GOTREDCARD; // Ty 03/22/98 - externalized
+         message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_redcard);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
    case PFX_BLUESKULL:
       if(!player->cards[it_blueskull])
-         message = s_GOTBLUESKUL; // Ty 03/22/98 - externalized
+         message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_blueskull);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
    case PFX_YELLOWSKULL:
       if(!player->cards[it_yellowskull])
-         message = s_GOTYELWSKUL; // Ty 03/22/98 - externalized
+         message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_yellowskull);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
    case PFX_REDSKULL:
       if(!player->cards[it_redskull])
-         message = s_GOTREDSKULL; // Ty 03/22/98 - externalized
+         message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_redskull);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
@@ -442,16 +441,15 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    case PFX_STIMPACK:
       if(!P_GiveBody(player, 10))
          return;
-      message = s_GOTSTIM; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTSTIM"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_MEDIKIT:
       if(!P_GiveBody(player, 25))
          return;
-      // sf: fix medineed (check for below 25, but medikit gives
-      // 25, so always > 25)
-      message = player->health < 50 ?     // was 25
-          s_GOTMEDINEED : s_GOTMEDIKIT; // Ty 03/22/98 - externalized
+      // sf: fix medineed 
+      // (check for below 25, but medikit gives 25, so always > 25)
+      message = DEH_String(player->health < 50 ? "GOTMEDINEED" : "GOTMEDIKIT");
       break;
 
 
@@ -459,14 +457,14 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    case PFX_INVULNSPHERE:
       if(!P_GivePower(player, pw_invulnerability))
          return;
-      message = s_GOTINVUL; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTINVUL"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
    case PFX_BERZERKBOX:
       if(!P_GivePower(player, pw_strength))
          return;
-      message = s_GOTBERSERK; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
       if(player->readyweapon != wp_fist)
          // sf: removed beta
          player->pendingweapon = wp_fist;
@@ -476,7 +474,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    case PFX_INVISISPHERE:
       if(!P_GivePower (player, pw_invisibility))
          return;
-      message = s_GOTINVIS; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTINVIS"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
@@ -485,14 +483,14 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          return;
       // sf:removed beta
       
-      message = s_GOTSUIT; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
    case PFX_ALLMAP:
       if(!P_GivePower(player, pw_allmap))
          return;
-      message = s_GOTMAP; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTMAP"); // Ty 03/22/98 - externalized
       sound = sfx_getpow;
       break;
 
@@ -502,7 +500,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          return;
       // sf:removed beta
       sound = sfx_getpow;
-      message = s_GOTVISOR; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTVISOR"); // Ty 03/22/98 - externalized
       break;
 
       // ammo
@@ -517,49 +515,49 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          if(!P_GiveAmmo(player,am_clip,1))
             return;
       }
-      message = s_GOTCLIP; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTCLIP"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CLIPBOX:
       if(!P_GiveAmmo(player, am_clip,5))
          return;
-      message = s_GOTCLIPBOX; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTCLIPBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKET:
       if(!P_GiveAmmo(player, am_misl,1))
          return;
-      message = s_GOTROCKET; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTROCKET"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_ROCKETBOX:
       if(!P_GiveAmmo(player, am_misl,5))
          return;
-      message = s_GOTROCKBOX; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTROCKBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELL:
       if(!P_GiveAmmo(player, am_cell,1))
          return;
-      message = s_GOTCELL; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTCELL"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_CELLPACK:
       if(!P_GiveAmmo(player, am_cell,5))
          return;
-      message = s_GOTCELLBOX; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTCELLBOX"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELL:
       if(!P_GiveAmmo(player, am_shell,1))
          return;
-      message = s_GOTSHELLS; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTSHELLS"); // Ty 03/22/98 - externalized
       break;
       
    case PFX_SHELLBOX:
       if(!P_GiveAmmo(player, am_shell,5))
          return;
-      message = s_GOTSHELLBOX; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTSHELLBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_BACKPACK:
@@ -587,18 +585,19 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       else
 #endif
       {
-         for(i=0 ; i<NUMAMMO ; i++)
-            P_GiveAmmo (player, i, 1);
-         message = s_GOTBACKPACK; // Ty 03/22/98 - externalized
+         for(i = 0; i < NUMAMMO; ++i)
+            P_GiveAmmo(player, i, 1);
+         message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
       }
 
       break;
 
       // weapons
    case PFX_BFG:
-      if (!P_GiveWeapon (player, wp_bfg, false) )
+      if(!P_GiveWeapon (player, wp_bfg, false))
          return;
-      message = bfgtype==0 ? s_GOTBFG9000       // sf
+      // FIXME: externalize all BFG pickup strings
+      message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
                 : bfgtype==1 ? "You got the BFG 2704!"
                 : bfgtype==2 ? "You got the BFG 11K!"
                 : bfgtype==3 ? "You got the Bouncing BFG!"
@@ -610,42 +609,42 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    case PFX_CHAINGUN:
       if(!P_GiveWeapon(player, wp_chaingun, special->flags & MF_DROPPED))
          return;
-      message = s_GOTCHAINGUN; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_CHAINSAW:
       if(!P_GiveWeapon(player, wp_chainsaw, false))
          return;
-      message = s_GOTCHAINSAW; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_LAUNCHER:
       if(!P_GiveWeapon(player, wp_missile, false) )
          return;
-      message = s_GOTLAUNCHER; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_PLASMA:
       if(!P_GiveWeapon(player, wp_plasma, false))
          return;
-      message = s_GOTPLASMA; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SHOTGUN:
       if(!P_GiveWeapon(player, wp_shotgun, special->flags & MF_DROPPED))
          return;
-      message = s_GOTSHOTGUN; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SSG:
       if(!P_GiveWeapon(player, wp_supershotgun, special->flags & MF_DROPPED))
          return;
-      message = s_GOTSHOTGUN2; // Ty 03/22/98 - externalized
+      message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
@@ -654,7 +653,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       // heretic keys: give both card and skull equivalent DOOM keys
    case PFX_HGREENKEY: // green key (red in doom)
       if(!player->cards[it_redcard])
-         message = s_HGOTGREENKEY;
+         message = DEH_String("HGOTGREENKEY");
       P_GiveCard(player, it_redcard);
       P_GiveCard(player, it_redskull);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -663,7 +662,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 
    case PFX_HBLUEKEY: // blue key (blue in doom)
       if(!player->cards[it_bluecard])
-         message = s_HGOTBLUEKEY;
+         message = DEH_String("HGOTBLUEKEY");
       P_GiveCard(player, it_bluecard);
       P_GiveCard(player, it_blueskull);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -672,7 +671,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 
    case PFX_HYELLOWKEY: // yellow key (yellow in doom)
       if(!player->cards[it_yellowcard])
-         message = s_HGOTYELLOWKEY;
+         message = DEH_String("HGOTYELLOWKEY");
       P_GiveCard(player, it_yellowcard);
       P_GiveCard(player, it_yellowskull);
       removeobj = pickup_fx = (GameType == gt_single);
@@ -682,107 +681,107 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    case PFX_HPOTION: // heretic potion
       if(!P_GiveBody(player, 10))
          return;
-      message = s_HITEMHEALTH;
+      message = DEH_String("HITEMHEALTH");
       sound = sfx_hitemup;
       break;
 
    case PFX_SILVERSHIELD: // heretic shield 1
       if(!P_GiveArmor(player, 1, true))
          return;
-      message = s_HITEMSHIELD1;
+      message = DEH_String("HITEMSHIELD1");
       sound = sfx_hitemup;
       break;
 
    case PFX_ENCHANTEDSHIELD: // heretic shield 2
       if(!P_GiveArmor(player, 2, true))
          return;
-      message = s_HITEMSHIELD2;
+      message = DEH_String("HITEMSHIELD2");
       sound = sfx_hitemup;
       break;
 
    case PFX_BAGOFHOLDING: // bag of holding
       // HTIC_TODO: bag of holding effects
-      message = s_HITEMBAGOFHOLDING;
+      message = DEH_String("HITEMBAGOFHOLDING");
       sound = sfx_hitemup;
       break;
 
    case PFX_HMAP: // map scroll
       if(!P_GivePower(player, pw_allmap))
          return;
-      message = s_HITEMSUPERMAP;
+      message = DEH_String("HITEMSUPERMAP");
       sound = sfx_hitemup;
       break;
    
       // Heretic Ammo items
    case PFX_GWNDWIMPY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOGOLDWAND1;
+      message = DEH_String("HAMMOGOLDWAND1");
       sound = sfx_hitemup;
       break;
    
    case PFX_GWNDHEFTY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOGOLDWAND2;
+      message = DEH_String("HAMMOGOLDWAND2");
       sound = sfx_hitemup;
       break;
    
    case PFX_MACEWIMPY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOMACE1;
+      message = DEH_String("HAMMOMACE1");
       sound = sfx_hitemup;
       break;
    
    case PFX_MACEHEFTY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOMACE2;
+      message = DEH_String("HAMMOMACE2");
       sound = sfx_hitemup;
       break;
    
    case PFX_CBOWWIMPY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOCROSSBOW1;
+      message = DEH_String("HAMMOCROSSBOW1");
       sound = sfx_hitemup;
       break;
    
    case PFX_CBOWHEFTY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOCROSSBOW2;
+      message = DEH_String("HAMMOCROSSBOW2");
       sound = sfx_hitemup;
       break;
    
    case PFX_BLSRWIMPY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOBLASTER1;
+      message = DEH_String("HAMMOBLASTER1");
       sound = sfx_hitemup;
       break;
    
    case PFX_BLSRHEFTY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOBLASTER2;
+      message = DEH_String("HAMMOBLASTER2");
       sound = sfx_hitemup;
       break;
    
    case PFX_PHRDWIMPY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOPHOENIXROD1;
+      message = DEH_String("HAMMOPHOENIXROD1");
       sound = sfx_hitemup;
       break;
    
    case PFX_PHRDHEFTY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOPHOENIXROD2;
+      message = DEH_String("HAMMOPHOENIXROD2");
       sound = sfx_hitemup;
       break;
    
    case PFX_SKRDWIMPY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOSKULLROD1;
+      message = DEH_String("HAMMOSKULLROD1");
       sound = sfx_hitemup;
       break;
    
    case PFX_SKRDHEFTY:
       // HTIC_TODO: give ammo
-      message = s_HAMMOSKULLROD2;
+      message = DEH_String("HAMMOSKULLROD2");
       sound = sfx_hitemup;
       break;
 
@@ -961,13 +960,13 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
 
    switch(MeansOfDeath)
    {
-   case MOD_SUICIDE: message = s_OB_SUICIDE; break;
-   case MOD_FALLING: message = s_OB_FALLING; break;
-   case MOD_CRUSH:   message = s_OB_CRUSH;   break;
-   case MOD_SLIME:   message = s_OB_SLIME;   break;
-   case MOD_LAVA:    message = s_OB_LAVA;    break;
-   case MOD_BARREL:  message = s_OB_BARREL;  break;
-   case MOD_SPLASH:  message = s_OB_SPLASH;  break;
+   case MOD_SUICIDE: message = DEH_String("OB_SUICIDE"); break;
+   case MOD_FALLING: message = DEH_String("OB_FALLING"); break;
+   case MOD_CRUSH:   message = DEH_String("OB_CRUSH");   break;
+   case MOD_SLIME:   message = DEH_String("OB_SLIME");   break;
+   case MOD_LAVA:    message = DEH_String("OB_LAVA");    break;
+   case MOD_BARREL:  message = DEH_String("OB_BARREL");  break;
+   case MOD_SPLASH:  message = DEH_String("OB_SPLASH");  break;
    default: break;
    }
 
@@ -979,11 +978,20 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
 
          switch(MeansOfDeath)
          {
-         case MOD_R_SPLASH:      message = s_OB_R_SPLASH_SELF; break;
-         case MOD_ROCKET:        message = s_OB_ROCKET_SELF;   break;
-         case MOD_BFG11K_SPLASH: message = s_OB_BFG11K_SELF; break;
-         case MOD_GRENADE:       message = s_OB_GRENADE_SELF; break;
-         default: break;
+         case MOD_R_SPLASH:
+            message = DEH_String("OB_R_SPLASH_SELF"); 
+            break;
+         case MOD_ROCKET:
+            message = DEH_String("OB_ROCKET_SELF");
+            break;
+         case MOD_BFG11K_SPLASH: 
+            message = DEH_String("OB_BFG11K_SELF");
+            break;
+         case MOD_GRENADE:
+            message = DEH_String("OB_GRENADE_SELF");
+            break;
+         default:
+            break;
          }
       }
       else if(!source->player)
@@ -1032,7 +1040,7 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
       if(friendly)
       {
          // in coop mode, player kills are bad
-         message = s_OB_COOP;
+         message = DEH_String("OB_COOP");
       }
       else
       {
@@ -1040,20 +1048,20 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
 
          switch(MeansOfDeath)
          {
-         case MOD_FIST:       message = s_OB_FIST; break;
-         case MOD_CHAINSAW:   message = s_OB_CHAINSAW; break;
-         case MOD_PISTOL:     message = s_OB_PISTOL; break;
-         case MOD_SHOTGUN:    message = s_OB_SHOTGUN; break;
-         case MOD_SSHOTGUN:   message = s_OB_SSHOTGUN; break;
-         case MOD_CHAINGUN:   message = s_OB_CHAINGUN; break;
-         case MOD_ROCKET:     message = s_OB_ROCKET; break;
-         case MOD_R_SPLASH:   message = s_OB_R_SPLASH; break;
-         case MOD_PLASMA:     message = s_OB_PLASMA; break;
-         case MOD_BFG:        message = s_OB_BFG; break;
-         case MOD_BFG_SPLASH: message = s_OB_BFG_SPLASH; break;
-         case MOD_BETABFG:    message = s_OB_BETABFG; break;
-         case MOD_BFGBURST:   message = s_OB_BFGBURST; break;
-         case MOD_GRENADE:    message = s_OB_GRENADE; break;
+         case MOD_FIST:       message = DEH_String("OB_FIST");       break;
+         case MOD_CHAINSAW:   message = DEH_String("OB_CHAINSAW");   break;
+         case MOD_PISTOL:     message = DEH_String("OB_PISTOL");     break;
+         case MOD_SHOTGUN:    message = DEH_String("OB_SHOTGUN");    break;
+         case MOD_SSHOTGUN:   message = DEH_String("OB_SSHOTGUN");   break;
+         case MOD_CHAINGUN:   message = DEH_String("OB_CHAINGUN");   break;
+         case MOD_ROCKET:     message = DEH_String("OB_ROCKET");     break;
+         case MOD_R_SPLASH:   message = DEH_String("OB_R_SPLASH");   break;
+         case MOD_PLASMA:     message = DEH_String("OB_PLASMA");     break;
+         case MOD_BFG:        message = DEH_String("OB_BFG");        break;
+         case MOD_BFG_SPLASH: message = DEH_String("OB_BFG_SPLASH"); break;
+         case MOD_BETABFG:    message = DEH_String("OB_BETABFG");    break;
+         case MOD_BFGBURST:   message = DEH_String("OB_BFGBURST");   break;
+         case MOD_GRENADE:    message = DEH_String("OB_GRENADE");    break;
          default: break;
          }
       }
@@ -1061,7 +1069,7 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
 
    // use default message
    if(!message)
-      message = s_OB_DEFAULT;
+      message = DEH_String("OB_DEFAULT");
 
    // print message
    doom_printf("%c%s %s", obcolour+128, target->player->name, message);

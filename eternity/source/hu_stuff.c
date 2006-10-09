@@ -56,7 +56,6 @@
 #include "d_io.h"
 #include "m_qstr.h"
 #include "a_small.h"
-#include "d_dehtbl.h"
 
 char *chat_macros[10];
 const char* shiftxform;
@@ -878,7 +877,7 @@ typedef struct hu_textwidget_s
    
    int x, y;             // coords on screen
    vfont_t *font;        // font object
-   char *message;        // text to draw
+   const char *message;  // text to draw
    char *alloc;          // if non-NULL, widget owns the message
    int cleartic;         // gametic in which to clear the widget (0=never)
    tw_erase_t erasedata; // rect area to erase

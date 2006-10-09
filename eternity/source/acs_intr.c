@@ -780,8 +780,8 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_RANDOM_IMM:
          {
             int min, max;
-            min = LONG(*ip++);
-            max = LONG(*ip++);
+            min = IPNEXT();
+            max = IPNEXT();
 
             PUSH(P_RangeRandom(pr_script, min, max));
          }
@@ -977,7 +977,7 @@ void T_ACSThinker(acsthinker_t *script)
          DECSTP3(); // TODO/FIXME: needs hexen sound translation & volume
          break;
       case OP_ENDPRINTBOLD:
-         HU_CenterMsgTimedColor(acsPrintBuffer.buffer, FC_YELLOW, 20*35);
+         HU_CenterMsgTimedColor(acsPrintBuffer.buffer, FC_GOLD, 20*35);
          break;
       default:
          // unknown opcode, must stop execution

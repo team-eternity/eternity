@@ -136,7 +136,7 @@ CONSOLE_COMMAND(mn_hnewgame, 0)
 {
    if(netgame && !demoplayback)
    {
-      MN_Alert(s_NEWGAME);
+      MN_Alert("%s", DEH_String("NEWGAME"));
       return;
    }
 
@@ -317,7 +317,7 @@ static void MN_HLoadDrawer(void)
    for(i = 0, y = 0; i < SAVESLOTS; ++i, y += 2)
    {
       menu_hloadgame.menuitems[y].description =
-         savegamenames[i] ? savegamenames[i] : s_EMPTYSTRING;
+         savegamenames[i] ? savegamenames[i] : DEH_String("EMPTYSTRING");
    }
 }
 

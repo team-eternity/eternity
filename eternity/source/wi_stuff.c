@@ -2134,7 +2134,7 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    if(LevelInfo.useEDFInterName)
    {
       char nameBuffer[24];
-      char *basename;
+      const char *basename;
 
       // set current map
       psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);

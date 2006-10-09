@@ -860,7 +860,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
          !player->cards[it_yellowcard] &&
          !player->cards[it_yellowskull])
       {
-         player_printf(player, s_PD_ANY);
+         player_printf(player, "%s", DEH_String("PD_ANY"));
          S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
          return false;
       }
@@ -870,9 +870,10 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
          (!skulliscard || !player->cards[it_redskull]))
       {
          if(gameModeInfo->type == Game_Heretic)
-            player_printf(player, s_HPD_GREENK);
+            player_printf(player, "%s", DEH_String("HPD_GREENK"));
          else
-            player_printf(player, skulliscard? s_PD_REDK : s_PD_REDC);
+            player_printf(player, "%s",
+               DEH_String(skulliscard ? "PD_REDK" : "PD_REDC"));
          
          S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
          return false;
@@ -882,7 +883,8 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       if(!player->cards[it_bluecard] &&
          (!skulliscard || !player->cards[it_blueskull]))
       {
-         player_printf(player, skulliscard ? s_PD_BLUEK : s_PD_BLUEC);
+         player_printf(player, "%s",
+            DEH_String(skulliscard ? "PD_BLUEK" : "PD_BLUEC"));
          S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
          return false;
       }
@@ -891,7 +893,8 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       if(!player->cards[it_yellowcard] &&
          (!skulliscard || !player->cards[it_yellowskull]))
       {
-         player_printf(player, skulliscard? s_PD_YELLOWK : s_PD_YELLOWC);
+         player_printf(player, "%s",
+            DEH_String(skulliscard ? "PD_YELLOWK" : "PD_YELLOWC"));
          S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
          return false;
       }
@@ -901,9 +904,10 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
          (!skulliscard || !player->cards[it_redcard]))
       {
          if(gameModeInfo->type == Game_Heretic)
-            player_printf(player, s_HPD_GREENK);
+            player_printf(player, "%s", DEH_String("HPD_GREENK"));
          else
-            player_printf(player, skulliscard? s_PD_REDK : s_PD_REDS);
+            player_printf(player, "%s",
+               DEH_String(skulliscard ? "PD_REDK" : "PD_REDS"));
          S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
          return false;
       }
@@ -912,7 +916,8 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       if(!player->cards[it_blueskull] &&
          (!skulliscard || !player->cards[it_bluecard]))
       {
-         player_printf(player, skulliscard? s_PD_BLUEK : s_PD_BLUES);
+         player_printf(player, "%s",
+            DEH_String(skulliscard ? "PD_BLUEK" : "PD_BLUES"));
          S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
          return false;
       }
@@ -921,7 +926,8 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       if(!player->cards[it_yellowskull] &&
          (!skulliscard || !player->cards[it_yellowcard]))
       {
-         player_printf(player, skulliscard? s_PD_YELLOWK : s_PD_YELLOWS);
+         player_printf(player, "%s",
+            DEH_String(skulliscard ? "PD_YELLOWK" : "PD_YELLOWS"));
          S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
          return false;
       }
@@ -935,8 +941,8 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
           !player->cards[it_yellowcard] ||
           !player->cards[it_yellowskull]))
       {
-         player_printf(player, s_PD_ALL6);
-         S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
+         player_printf(player, "%s", DEH_String("PD_ALL6"));
+         S_StartSound(player->mo, sfx_oof);           // killough 3/20/98
          return false;
       }
       // haleyjd: removed extra ! from player->cards[it_yellowskull]
@@ -949,7 +955,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
           ((demo_version == 203) ? !player->cards[it_yellowskull] : 
                                     player->cards[it_yellowskull]))))
       {
-         player_printf(player, s_PD_ALL3);
+         player_printf(player, "%s", DEH_String("PD_ALL3"));
          S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
          return false;
       }

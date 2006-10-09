@@ -713,6 +713,16 @@
 #define CC_CYBER  "THE CYBERDEMON"
 #define CC_HERO "OUR HERO"
 
+// haleyjd 10/08/06 -- demo sequence strings
+#define TITLEPIC "TITLEPIC"
+#define TITLE    "TITLE"
+#define DEMO1    "DEMO1"
+#define DEMO2    "DEMO2"
+#define DEMO3    "DEMO3"
+#define DEMO4    "DEMO4"
+#define TCREDIT  "CREDIT"
+#define TORDER   "ORDER"
+#define THELP2   "HELP2"
 
 #endif
 

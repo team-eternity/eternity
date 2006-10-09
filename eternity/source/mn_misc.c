@@ -196,7 +196,7 @@ menuwidget_t popup_widget = {MN_PopupDrawer, MN_PopupResponder};
 // alert message
 // -- just press enter
 //
-void MN_Alert(char *message, ...)
+void MN_Alert(const char *message, ...)
 {
    va_list args;
    
@@ -220,7 +220,7 @@ void MN_Alert(char *message, ...)
 // question message
 // console command will be run if user responds with 'y'
 //
-void MN_Question(char *message, char *command)
+void MN_Question(const char *message, char *command)
 {
    // haleyjd 02/24/02: bug fix for menuactive state
    popupMenuActive = menuactive;
@@ -243,7 +243,7 @@ void MN_Question(char *message, char *command)
 // to execute code otherwise immediately accessible is actually kinda
 // stupid when you stop to think about it.
 //
-void MN_QuestionFunc(char *message, void (*handler)(void))
+void MN_QuestionFunc(const char *message, void (*handler)(void))
 {
    popupMenuActive = menuactive;
    

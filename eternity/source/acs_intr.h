@@ -53,7 +53,7 @@ typedef struct acscript_s
    int numArgs;  // number of arguments this script wants
    int *code;    // bytecode entry point
    int sreg;     // state register
-   int sdata;    // sepcial data for state
+   int sdata;    // special data for state
 } acscript_t;
 
 //

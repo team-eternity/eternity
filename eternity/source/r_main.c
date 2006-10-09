@@ -865,25 +865,25 @@ VARIABLE_INT(r_span_engine_num,   NULL, 0, NUMSPANENGINES - 1,  spaneng);
 
 CONSOLE_VARIABLE(gamma, usegamma, 0)
 {
-   char *msg;
+   const char *msg;
 
    // haleyjd 09/06/02: restore message
    switch(usegamma)
    {
    case 0:
-      msg = s_GAMMALVL0;
+      msg = DEH_String("GAMMALVL0");
       break;
    case 1:
-      msg = s_GAMMALVL1;
+      msg = DEH_String("GAMMALVL1");
       break;
    case 2:
-      msg = s_GAMMALVL2;
+      msg = DEH_String("GAMMALVL2");
       break;
    case 3:
-      msg = s_GAMMALVL3;
+      msg = DEH_String("GAMMALVL3");
       break;
    case 4:
-      msg = s_GAMMALVL4;
+      msg = DEH_String("GAMMALVL4");
       break;
    default:
       msg = "borked!";

@@ -165,7 +165,7 @@ static void HI_loadData(void)
 
    {
       char nameBuffer[24];
-      char *basename;
+      const char *basename;
 
       // set current map
       psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);

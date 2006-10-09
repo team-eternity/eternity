@@ -33,7 +33,7 @@
 
 // haleyjd: this stuff is now needed in e_edf.c
 typedef struct {
-   char       *name;
+   const char  *name;
    mobjtype_t  type;   
    boolean     stopattack;
    struct castsound_s { int frame; int sound; } sounds[4];

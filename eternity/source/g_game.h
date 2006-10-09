@@ -35,7 +35,7 @@
 #define GAME_OPTION_SIZE 64
 
 char *G_GetNameForMap(int episode, int map);
-int G_GetMapForName(char *name);
+int G_GetMapForName(const char *name);
 
 boolean G_Responder(event_t *ev);
 boolean G_CheckDemoStatus(void);
@@ -43,7 +43,7 @@ boolean G_CheckDemoStatus(void);
 void G_DeathMatchSpawnPlayer(int playernum);
 void G_DeferedInitNewNum(skill_t skill, int episode, int map);
 void G_DeferedInitNew(skill_t skill, char *levelname);
-void G_DeferedPlayDemo(char *demo);
+void G_DeferedPlayDemo(const char *demo);
 void G_TimeDemo(char *name, boolean showmenu);
 void G_LoadGame(char *name, int slot, boolean is_command); // killough 5/15/98
 void G_ForcedLoadGame(void);           // killough 5/15/98: forced loadgames

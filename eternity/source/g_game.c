@@ -885,7 +885,7 @@ boolean G_Responder(event_t* ev)
 
 static boolean longtics_demo; // if true, demo playing is longtics format
 
-static char *defdemoname;
+static const char *defdemoname;
 
 //
 // NETCODE_FIXME -- DEMO_FIXME
@@ -1818,7 +1818,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    if(!M_WriteFile(filename, savebuffer, length))
       doom_printf(errno ? strerror(errno) : FC_ERROR"Could not save game: Error unknown");
    else if(!hub_changelevel) // sf: no 'game saved' message for hubs
-      doom_printf(s_GGSAVED);  // Ty 03/27/98 - externalized
+      doom_printf("%s", DEH_String("GGSAVED"));  // Ty 03/27/98 - externalized
 
    free(savebuffer);  // killough
    savebuffer = save_p = NULL;
@@ -1880,7 +1880,7 @@ static void G_DoLoadGame(void)
 
    G_SetGameMap();       // get gameepisode, map
    
-   if (!forced_loadgame)
+   if(!forced_loadgame)
    {  // killough 3/16/98, 12/98: check lump name checksum
       checksum = G_Signature();
       if (memcmp(&checksum, save_p, sizeof checksum))
@@ -2492,7 +2492,7 @@ static int     d_episode;
 static int     d_map;
 static char    d_mapname[10];
 
-int G_GetMapForName(char *name)
+int G_GetMapForName(const char *name)
 {
    // haleyjd 03/17/02: do not write back into argument!
    char normName[9];
@@ -3134,6 +3134,8 @@ void G_BeginRecording(void)
    int i;
    
    demo_p = demobuffer;
+
+   longtics_demo = true;
    
    //*demo_p++ = version;
    // haleyjd 06/17/01: always write 255 for Eternity-format demos,
@@ -3197,7 +3199,7 @@ void G_BeginRecording(void)
 //
 // G_DeferedPlayDemo
 //
-void G_DeferedPlayDemo(char *name)
+void G_DeferedPlayDemo(const char *name)
 {
    // haleyjd: removed SMMU cruft in attempt to fix
    defdemoname = name;

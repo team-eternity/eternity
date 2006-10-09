@@ -93,7 +93,7 @@ void S_StartMusic(int music_id);
 
 // Start music using <music_id> from sounds.h, and set whether looping
 void S_ChangeMusicNum(int music_id, int looping);
-void S_ChangeMusicName(char *name, int looping);
+void S_ChangeMusicName(const char *name, int looping);
 void S_ChangeMusic(musicinfo_t *music, int looping);
 
 // Stops the music fer sure.
@@ -111,7 +111,7 @@ void S_UpdateSoundDeferred(int lumpnum);
 void S_ProcDeferredSounds(void);
 void S_Chgun(void);
 
-musicinfo_t *S_MusicForName(char *name);
+musicinfo_t *S_MusicForName(const char *name);
 void S_UpdateMusic(int lumpnum);
 
 //

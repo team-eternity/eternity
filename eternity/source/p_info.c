@@ -51,7 +51,6 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomdef.h"
-#include "d_dehtbl.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "f_finale.h"
@@ -365,10 +364,10 @@ typedef struct
 
 levelvar_t levelvars[]=
 {
-   { IVT_STRING,  "altskyname",      &LevelInfo.altSkyName },
+   { IVT_STRING,  "altskyname",      (void *)&LevelInfo.altSkyName },
    { IVT_FLAGS,   "boss-specials",   &LevelInfo.bossSpecs,  &boss_flagset }, // haleyjd 03/14/05
-   { IVT_STRING,  "colormap",        &LevelInfo.colorMap },
-   { IVT_STRING,  "creator",         &LevelInfo.creator },
+   { IVT_STRING,  "colormap",        (void *)&LevelInfo.colorMap },
+   { IVT_STRING,  "creator",         (void *)&LevelInfo.creator },
    { IVT_BOOLEAN, "doublesky",       &LevelInfo.doubleSky },
    { IVT_BOOLEAN, "edf-intername",   &LevelInfo.useEDFInterName },
    { IVT_BOOLEAN, "endofgame",       &LevelInfo.endOfGame },
@@ -377,39 +376,39 @@ levelvar_t levelvars[]=
    { IVT_STRNUM,  "finaletype",      &LevelInfo.finaleType, &finaleTypeVals },
    { IVT_BOOLEAN, "fullbright",      &LevelInfo.useFullBright },
    { IVT_INT,     "gravity",         &LevelInfo.gravity },
-   { IVT_STRING,  "inter-backdrop",  &LevelInfo.backDrop },
-   { IVT_STRING,  "intermusic",      &LevelInfo.interMusic },
-   { IVT_STRING,  "interpic",        &LevelInfo.interPic },
-   { IVT_STRING,  "intertext",       &LevelInfo.interTextLump }, // haleyjd 12/13/01
+   { IVT_STRING,  "inter-backdrop",  (void *)&LevelInfo.backDrop },
+   { IVT_STRING,  "intermusic",      (void *)&LevelInfo.interMusic },
+   { IVT_STRING,  "interpic",        (void *)&LevelInfo.interPic },
+   { IVT_STRING,  "intertext",       (void *)&LevelInfo.interTextLump }, // haleyjd 12/13/01
    { IVT_BOOLEAN, "killfinale",      &LevelInfo.killFinale },
    { IVT_BOOLEAN, "killstats",       &LevelInfo.killStats },     // haleyjd 03/24/05
-   { IVT_STRING,  "levelname",       &LevelInfo.levelName },
-   { IVT_STRING,  "levelpic",        &LevelInfo.levelPic },
-   { IVT_STRING,  "levelpicnext",    &LevelInfo.nextLevelPic },
-   { IVT_STRING,  "levelpicsecret",  &LevelInfo.nextSecretPic },
-   { IVT_STRING,  "levelscript",     &LevelInfo.scriptLump },    // haleyjd
-   { IVT_STRNUM,  "leveltype",       &LevelInfo.levelType,  &levelTypeVals  },
+   { IVT_STRING,  "levelname",       (void *)&LevelInfo.levelName },
+   { IVT_STRING,  "levelpic",        (void *)&LevelInfo.levelPic },
+   { IVT_STRING,  "levelpicnext",    (void *)&LevelInfo.nextLevelPic },
+   { IVT_STRING,  "levelpicsecret",  (void *)&LevelInfo.nextSecretPic },
+   { IVT_STRING,  "levelscript",     (void *)&LevelInfo.scriptLump },    // haleyjd
+   { IVT_STRNUM,  "leveltype",       (void *)&LevelInfo.levelType,  &levelTypeVals  },
    { IVT_BOOLEAN, "lightning",       &LevelInfo.hasLightning },
-   { IVT_STRING,  "music",           &LevelInfo.musicName },
-   { IVT_STRING,  "nextlevel",       &LevelInfo.nextLevel },
-   { IVT_STRING,  "nextsecret",      &LevelInfo.nextSecret },
+   { IVT_STRING,  "music",           (void *)&LevelInfo.musicName },
+   { IVT_STRING,  "nextlevel",       (void *)&LevelInfo.nextLevel },
+   { IVT_STRING,  "nextsecret",      (void *)&LevelInfo.nextSecret },
    { IVT_BOOLEAN, "noautosequences", &LevelInfo.noAutoSequences }, // haleyjd 09/24/06
    { IVT_INT,     "partime",         &LevelInfo.partime },
    { IVT_INT,     "skydelta",        &LevelInfo.skyDelta },
    { IVT_INT,     "sky2delta",       &LevelInfo.sky2Delta },
-   { IVT_STRING,  "skyname",         &LevelInfo.skyName },
-   { IVT_STRING,  "sky2name",        &LevelInfo.sky2Name },
-   { IVT_STRING,  "sound-swtchn",    &LevelInfo.sound_swtchn },
-   { IVT_STRING,  "sound-swtchx",    &LevelInfo.sound_swtchx },
-   { IVT_STRING,  "sound-stnmov",    &LevelInfo.sound_stnmov },
-   { IVT_STRING,  "sound-pstop",     &LevelInfo.sound_pstop },
-   { IVT_STRING,  "sound-bdcls",     &LevelInfo.sound_bdcls },
-   { IVT_STRING,  "sound-bdopn",     &LevelInfo.sound_bdopn },
-   { IVT_STRING,  "sound-dorcls",    &LevelInfo.sound_dorcls },
-   { IVT_STRING,  "sound-doropn",    &LevelInfo.sound_doropn },
-   { IVT_STRING,  "sound-pstart",    &LevelInfo.sound_pstart },
-   { IVT_STRING,  "sound-fcmove",    &LevelInfo.sound_fcmove },
-   { IVT_BOOLEAN, "unevenlight",     &LevelInfo.unevenLight },
+   { IVT_STRING,  "skyname",         (void *)&LevelInfo.skyName },
+   { IVT_STRING,  "sky2name",        (void *)&LevelInfo.sky2Name },
+   { IVT_STRING,  "sound-swtchn",    (void *)&LevelInfo.sound_swtchn },
+   { IVT_STRING,  "sound-swtchx",    (void *)&LevelInfo.sound_swtchx },
+   { IVT_STRING,  "sound-stnmov",    (void *)&LevelInfo.sound_stnmov },
+   { IVT_STRING,  "sound-pstop",     (void *)&LevelInfo.sound_pstop },
+   { IVT_STRING,  "sound-bdcls",     (void *)&LevelInfo.sound_bdcls },
+   { IVT_STRING,  "sound-bdopn",     (void *)&LevelInfo.sound_bdopn },
+   { IVT_STRING,  "sound-dorcls",    (void *)&LevelInfo.sound_dorcls },
+   { IVT_STRING,  "sound-doropn",    (void *)&LevelInfo.sound_doropn },
+   { IVT_STRING,  "sound-pstart",    (void *)&LevelInfo.sound_pstart },
+   { IVT_STRING,  "sound-fcmove",    (void *)&LevelInfo.sound_fcmove },
+   { IVT_BOOLEAN, "unevenlight",     (void *)&LevelInfo.unevenLight },
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
    
@@ -530,11 +529,11 @@ static void P_ParseLevelVar(char *cmd)
 
 // automap name macros (moved from hu_stuff.c)
 
-#define HU_TITLE  (*mapnames[(gameepisode-1)*9+gamemap-1])
-#define HU_TITLE2 (*mapnames2[gamemap-1])
-#define HU_TITLEP (*mapnamesp[gamemap-1])
-#define HU_TITLET (*mapnamest[gamemap-1])
-#define HU_TITLEH (*mapnamesh[(gameepisode-1)*9+gamemap-1])
+#define HU_TITLE  (mapnames[(gameepisode-1)*9+gamemap-1])
+#define HU_TITLE2 (mapnames2[gamemap-1])
+#define HU_TITLEP (mapnamesp[gamemap-1])
+#define HU_TITLET (mapnamest[gamemap-1])
+#define HU_TITLEH (mapnamesh[(gameepisode-1)*9+gamemap-1])
 
 //
 // SynthLevelName
@@ -566,42 +565,43 @@ static void SynthLevelName(boolean secret)
 //
 static void P_InfoDefaultLevelName(void)
 {
-   // TODO: make sensitive to which names are actually replaced
-   // via DeHackEd -- a bit challenging given how DEH/BEX works.
+   const char *bexname = NULL;
+   boolean deh_modified = false;
+   boolean synth_type   = false;
 
-   if(!newlevel || deh_loaded)
+   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= 32)
    {
-      if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= 32)
-      {
-         // DOOM II
-         LevelInfo.levelName = gamemission == pack_tnt  ? HU_TITLET :
-                               gamemission == pack_plut ? HU_TITLEP :
-                               HU_TITLE2;
-      }
-      else if(isExMy(gamemapname) &&
-              gameepisode > 0 && gameepisode <= gameModeInfo->numEpisodes &&
-              gamemap > 0 && gamemap <= 9)
-      {
-         if(gameModeInfo->type == Game_Heretic) // Heretic
-         {
-            int maxEpisode = gameModeInfo->numEpisodes;
-
-            // For Heretic, the last episode isn't "real" and contains
-            // "secret" levels -- a name is synthesized for those
-            // 10/10/05: don't catch shareware here
-            if(maxEpisode == 1 || gameepisode < maxEpisode)
-               LevelInfo.levelName = HU_TITLEH;
-            else
-               SynthLevelName(true); // put "hidden level"
-         }
-         else
-            LevelInfo.levelName = HU_TITLE; // DOOM
-      }
-      else
-         SynthLevelName(false); // oddly named maps
+      // DOOM II
+      bexname = gamemission == pack_tnt ? HU_TITLET :
+                gamemission == pack_plut ? HU_TITLEP : HU_TITLE2;
    }
+   else if(isExMy(gamemapname) &&
+           gameepisode > 0 && gameepisode <= gameModeInfo->numEpisodes &&
+           gamemap > 0 && gamemap <= 9)
+   {
+      if(gameModeInfo->type == Game_Heretic) // Heretic
+      {
+         int maxEpisode = gameModeInfo->numEpisodes;
+         
+         // For Heretic, the last episode isn't "real" and contains
+         // "secret" levels -- a name is synthesized for those
+         // 10/10/05: don't catch shareware here
+         if(maxEpisode == 1 || gameepisode < maxEpisode)
+            bexname = HU_TITLEH;            
+         else
+            synth_type = true; // put "hidden level"
+      }
+      else // DOOM
+         bexname = HU_TITLE;         
+   }
+
+   if(bexname)
+      deh_modified = DEH_StringChanged(bexname);
+
+   if((newlevel && !deh_modified) || !bexname)
+      SynthLevelName(synth_type);
    else
-      SynthLevelName(false); // put "new level"
+      LevelInfo.levelName = DEH_String(bexname);
 }
 
 #define NUMMAPINFOSOUNDS 10
@@ -625,7 +625,7 @@ static sfxinfo_t *DefSoundAliases[NUMMAPINFOSOUNDS][2];
 // Yes, an array of pointers-to-pointers. Your eyes do not deceive you.
 // It's just easiest to do it this way.
 
-static char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
+static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 {
    &LevelInfo.sound_doropn,
    &LevelInfo.sound_dorcls,
@@ -697,7 +697,7 @@ static void P_SetInfoSoundNames(void)
 
    for(i = 0; i < NUMMAPINFOSOUNDS; ++i)
    {
-      char *name = *infoSoundPtrs[i];
+      const char *name = *infoSoundPtrs[i];
 
       if(DefSoundAliases[i][0])
          DefSoundAliases[i][0]->alias = E_SoundForName(name);
@@ -718,16 +718,19 @@ static void P_LoadInterTextLump(void)
    if(LevelInfo.interTextLump)
    {
       int lumpNum, lumpLen;
+      char *str;
             
       lumpNum = W_GetNumForName(LevelInfo.interTextLump);
       lumpLen = W_LumpLength(lumpNum);
       
-      LevelInfo.interText = Z_Malloc(lumpLen + 1, PU_LEVEL, 0);
+      str = Z_Malloc(lumpLen + 1, PU_LEVEL, 0);
       
-      W_ReadLump(lumpNum, LevelInfo.interText);
+      W_ReadLump(lumpNum, str);
       
       // null-terminate the string
-      (LevelInfo.interText)[lumpLen] = '\0';
+      str[lumpLen] = '\0';
+
+      LevelInfo.interText = str;
    }
 }
 
@@ -764,19 +767,19 @@ static void P_InfoDefaultFinale(void)
          {
          case 1:
             LevelInfo.backDrop  = bgflatE1;
-            LevelInfo.interText = s_E1TEXT;
+            LevelInfo.interText = DEH_String("E1TEXT");
             break;
          case 2:
             LevelInfo.backDrop  = bgflatE2;
-            LevelInfo.interText = s_E2TEXT;
+            LevelInfo.interText = DEH_String("E2TEXT");
             break;
          case 3:
             LevelInfo.backDrop  = bgflatE3;
-            LevelInfo.interText = s_E3TEXT;
+            LevelInfo.interText = DEH_String("E3TEXT");
             break;
          case 4:
             LevelInfo.backDrop  = bgflatE4;
-            LevelInfo.interText = s_E4TEXT;
+            LevelInfo.interText = DEH_String("E4TEXT");
             break;
          }
       }
@@ -796,40 +799,46 @@ static void P_InfoDefaultFinale(void)
       case 6:
          LevelInfo.backDrop  = bgflat06;
          LevelInfo.interText = 
-            gamemission == pack_tnt  ? s_T1TEXT :
-            gamemission == pack_plut ? s_P1TEXT : s_C1TEXT;
+            gamemission == pack_tnt  ? DEH_String("T1TEXT") :
+            gamemission == pack_plut ? DEH_String("P1TEXT") : 
+                                       DEH_String("C1TEXT");
          break;
       case 11:
          LevelInfo.backDrop  = bgflat11;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? s_T2TEXT :
-            gamemission == pack_plut ? s_P2TEXT : s_C2TEXT;
+            gamemission == pack_tnt  ? DEH_String("T2TEXT") :
+            gamemission == pack_plut ? DEH_String("P2TEXT") : 
+                                       DEH_String("C2TEXT");
          break;
       case 20:
          LevelInfo.backDrop  = bgflat20;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? s_T3TEXT :
-            gamemission == pack_plut ? s_P3TEXT : s_C3TEXT;
+            gamemission == pack_tnt  ? DEH_String("T3TEXT") :
+            gamemission == pack_plut ? DEH_String("P3TEXT") : 
+                                       DEH_String("C3TEXT");
          break;
       case 30:
          LevelInfo.backDrop  = bgflat30;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? s_T4TEXT :
-            gamemission == pack_plut ? s_P4TEXT : s_C4TEXT;
+            gamemission == pack_tnt  ? DEH_String("T4TEXT") :
+            gamemission == pack_plut ? DEH_String("P4TEXT") : 
+                                       DEH_String("C4TEXT");
          LevelInfo.endOfGame = true;
          break;
       case 15:
          LevelInfo.backDrop  = bgflat15;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? s_T5TEXT :
-            gamemission == pack_plut ? s_P5TEXT : s_C5TEXT;
+            gamemission == pack_tnt  ? DEH_String("T5TEXT") :
+            gamemission == pack_plut ? DEH_String("P5TEXT") : 
+                                       DEH_String("C5TEXT");
          LevelInfo.finaleSecretOnly = true; // only after secret exit
          break;
       case 31:
          LevelInfo.backDrop  = bgflat31;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? s_T6TEXT :
-            gamemission == pack_plut ? s_P6TEXT : s_C6TEXT;
+            gamemission == pack_tnt  ? DEH_String("T6TEXT") :
+            gamemission == pack_plut ? DEH_String("P6TEXT") : 
+                                       DEH_String("C6TEXT");
          LevelInfo.finaleSecretOnly = true; // only after secret exit
          break;
       default:
@@ -856,23 +865,23 @@ static void P_InfoDefaultFinale(void)
          {
          case 1:
             LevelInfo.backDrop  = bgflathE1;
-            LevelInfo.interText = s_H1TEXT;
+            LevelInfo.interText = DEH_String("H1TEXT");
             break;
          case 2:
             LevelInfo.backDrop  = bgflathE2;
-            LevelInfo.interText = s_H2TEXT;
+            LevelInfo.interText = DEH_String("H2TEXT");
             break;
          case 3:
             LevelInfo.backDrop  = bgflathE3;
-            LevelInfo.interText = s_H3TEXT;
+            LevelInfo.interText = DEH_String("H3TEXT");
             break;
          case 4:
             LevelInfo.backDrop  = bgflathE4;
-            LevelInfo.interText = s_H4TEXT;
+            LevelInfo.interText = DEH_String("H4TEXT");
             break;
          case 5:
             LevelInfo.backDrop  = bgflathE5;
-            LevelInfo.interText = s_H5TEXT;
+            LevelInfo.interText = DEH_String("H5TEXT");
             break;
          }
       }
