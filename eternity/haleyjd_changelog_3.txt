@@ -2,6 +2,82 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+10/09/06
+
+And the fun continues:
+
+* Changed the ACS PRINTBOLD function to use FC_GOLD instead of FC_YELLOW. I keep
+  making this mistake over and over in different parts of the source; you'd
+  think I'd learn :P
+  
+* DEH strings replacement has been significantly improved simply by making the
+  parser always compare strings against their original values instead of the
+  newest value assigned to them by DeHackEd. I don't know why it didn't work
+  this way to begin with, and I'd consider it a bug fix. fraggle helped out a
+  bit by providing a weird DEH patch that was mostly broken without this tweak,
+  and some advice on how to fix it.
+  
+* The DEH log file has been functionalized. The way it was done before was 
+  simply terrible. Really, the whole parser is overdue for a rewrite, but that's
+  pretty low-priority since I encourage the use of EDF over DEH/BEX.
+  
+* Several DEH parser bugs have been fixed, mainly dealing with the provision of
+  invalid ammo or weapon indices.
+  
+* Added DEH_String function similar to the one used by Chocolate Doom. This lets
+  the game engine get DEH/BEX strings using their BEX mnemonic instead of
+  relying on a global variable. I've gone through and replaced almost all uses 
+  of the global variables with calls to this function. I was also able to add a
+  DEH_StringChanged function, which tells you whether or not a DEH/BEX patch has
+  changed the value of a given string. This helped me fix a problem in the level
+  name determination code where if DeHackEd was added, ALL levels would suddenly
+  start to use the default DOOM level names. The proper thing to do is to enable
+  default names only for maps that have actually had their name replaced :)
+  
+* Added BEX strings TITLEPIC, TITLE, CREDIT, ORDER, and DEMO1 - DEMO4. These
+  allow DEH/BEX replacement of screen resource names in the title/demo sequence.
+  TITLE is for Heretic/Hexen, btw.
+  
+--------------------------------------------------------------------------------
+10/08/06
+
+I'm getting an enormous amount of work done every day. Basically this is my
+version of crunch mode :P
+
+* DoomBarrel's correct_height was not correct :P  Somebody in the BOOM team
+  didn't do their homework I guess, because a height of 28.0 actually is
+  somewhat inside the top of the sprite. As a result, the map Barrels o' Fun
+  was broken. The mancubus at the beginning could shoot fireballs to his heart's
+  content and they would pass right through the barrels. Fixed it to be 34.0,
+  which is much closer and causes the mancubus to blow up those barrels.
+  
+* Longtics demo support. This means that EE can now play cph's Doom v1.91 demos,
+  and that new demos recorded with 3.33.50 or later will have full turning
+  precision :)
+  
+* Fixed the intermission to kill all playing looped sounds, since otherwise 
+  they continue until the end of the intermission.
+  
+* Started integrating joe's Hexen pillars code.
+
+* Fixed the "sky is too low by 1 pixel" problem. It turns out the whole screen
+  was off by half a pixel on average. This was due to the new mlook code. Why?
+  finetangent is horrible and causes roundoff error, especially for the value
+  at which your default pitch angle rests (I believe it is near an asymptote of
+  the tangent function). As a result, EE now simply uses Doom's old method of
+  setting the centery/centeryfrac variables when your pitch angle is zero,
+  because in fact there's no need to do any of that extra, inaccurate calcu-
+  lation when it's zero. This is an extremely small optimization on top of a
+  needed bug fix ;)
+  
+* Removed sky stretching when playing old demos. Old demos have no mlook, and 
+  thus they don't need sky stretching. Looks a lot better now IMO.
+  
+* Changed shadow text to use colormap 33 instead of 31, just to make sure that
+  all the colors are mapped to true black :)  It looks about the same to me,
+  though.
+
+--------------------------------------------------------------------------------
 10/03/06
 
 Another big day; this work has brought 3.33.50 to the brink of release.
