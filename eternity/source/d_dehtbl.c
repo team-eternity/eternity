@@ -1775,7 +1775,7 @@ boolean DEH_StringChanged(const char *mnemonic)
    if(!(dehstr = D_GetBEXStr(mnemonic)))
       I_Error("DEH_StringChanged: unknown BEX mnemonic %s\n", mnemonic);
 
-   return (dehstr->original == *(dehstr->ppstr));
+   return (dehstr->original != *(dehstr->ppstr));
 }
 
 //

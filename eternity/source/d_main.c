@@ -1864,16 +1864,14 @@ static void D_DoomInit(void)
    
    // haleyjd 09/11/03: queue GFS DEH's
    if(haveGFS)
-   {
       D_ProcessGFSDeh(gfs);
-   }
 
    // killough 10/98: set default savename based on executable's name
    // haleyjd 08/28/03: must be done BEFORE bex hash chain init!
    savegamename = Z_Malloc(16, PU_STATIC, NULL);
    psnprintf(savegamename, 16, "%.4ssav", D_DoomExeName());
    
-   devparm = !!M_CheckParm ("-devparm");         //sf: move up here
+   devparm = !!M_CheckParm("-devparm");         //sf: move up here
       
    IdentifyVersion();
    printf("\n"); // gap
@@ -1882,9 +1880,9 @@ static void D_DoomInit(void)
    
    // jff 1/24/98 set both working and command line value of play parms
    // sf: make boolean for console
-   nomonsters = clnomonsters = !!M_CheckParm ("-nomonsters");
-   respawnparm = clrespawnparm = !!M_CheckParm ("-respawn");
-   fastparm = clfastparm = !!M_CheckParm ("-fast");
+   nomonsters  = clnomonsters  = !!M_CheckParm("-nomonsters");
+   respawnparm = clrespawnparm = !!M_CheckParm("-respawn");
+   fastparm    = clfastparm    = !!M_CheckParm("-fast");
    // jff 1/24/98 end of set to both working and command line value
 
    DefaultGameType = gt_single;
@@ -2013,9 +2011,7 @@ static void D_DoomInit(void)
    // haleyjd 03/10/03: Load GFS Wads
    // 08/08/03: moved first, so that command line overrides
    if(haveGFS)
-   {
       D_ProcessGFSWads(gfs);
-   }
 
    // haleyjd 11/22/03: look for loose wads (drag and drop)
    D_LooseWads();
@@ -2083,35 +2079,38 @@ static void D_DoomInit(void)
       autostart = true;
    }
 
-   if((p = M_CheckParm("-timer")) && p < myargc-1 && (GameType == gt_dm))
+   // haleyjd: deatchmatch-only options
+   if(GameType == gt_dm)
    {
-      int time = atoi(myargv[p+1]);
+      if((p = M_CheckParm("-timer")) && p < myargc-1)
+      {
+         int time = atoi(myargv[p+1]);
+         
+         usermsg("Levels will end after %d minute%s.\n", 
+            time, time > 1 ? "s" : "");
+         levelTimeLimit = time;
+      }
       
-      usermsg("Levels will end after %d minute%s.\n", 
-              time, time > 1 ? "s" : "");
-      levelTimeLimit = time;
-   }
-
-   // sf: moved from p_spec.c
-   // See if -frags has been used
-
-   p = M_CheckParm("-frags");
-   if(p && GameType == gt_dm)
-   {
-      int frags = atoi(myargv[p+1]);
+      // sf: moved from p_spec.c
+      // See if -frags has been used
+      if((p = M_CheckParm("-frags")) && p < myargc-1)
+      {
+         int frags = atoi(myargv[p+1]);
+         
+         if(frags <= 0)
+            frags = 10;  // default 10 if no count provided
+         levelFragLimit = frags;
+      }
       
-      if (frags <= 0) frags = 10;  // default 10 if no count provided
-      levelFragLimit = frags;
+      if((p = M_CheckParm("-avg")) && p < myargc-1)
+      {  
+         levelTimeLimit = 20 * 60 * TICRATE;
+         usermsg("Austin Virtual Gaming: Levels will end after 20 minutes");
+      }
    }
 
-   if((p = M_CheckParm("-avg")) && p < myargc-1 && GameType == gt_dm)
-   {  
-      levelTimeLimit = 20 * 60 * TICRATE;
-      puts("Austin Virtual Gaming: Levels will end after 20 minutes");
-   }
-
-   if(((p = M_CheckParm ("-warp")) ||      // killough 5/2/98
-       (p = M_CheckParm ("-wart"))) && p < myargc - 1)
+   if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
+       (p = M_CheckParm("-wart"))) && p < myargc - 1)
    {
       // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
       if(gamemode == commercial)
@@ -2136,8 +2135,8 @@ static void D_DoomInit(void)
    //jff end of sound/music command line parms
 
    // killough 3/2/98: allow -nodraw -noblit generally
-   nodrawers = !!M_CheckParm ("-nodraw");
-   noblit = !!M_CheckParm ("-noblit");
+   nodrawers = !!M_CheckParm("-nodraw");
+   noblit    = !!M_CheckParm("-noblit");
    
    if(M_CheckParm("-debugfile")) // sf: debugfile check earlier
    {
@@ -2179,9 +2178,9 @@ static void D_DoomInit(void)
 
    // Check for -file in shareware
    //
-   // haleyjd 03/22/03: there's no point in trying to detect
-   // fake IWADs, especially after user wads have already been
-   // linked in, so I've removed that kludge
+   // haleyjd 03/22/03: there's no point in trying to detect fake IWADs, 
+   // especially after user wads have already been linked in, so I've removed 
+   // that kludge
    if(modifiedgame && (gameModeInfo->flags & GIF_SHAREWARE))
       I_Error("\nYou cannot -file with the shareware version. Register!");
 

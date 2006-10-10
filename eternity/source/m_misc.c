@@ -1577,10 +1577,17 @@ default_t defaults[] =
    },
 
    {
+      "r_vissprite_limit",
+      &r_vissprite_limit, NULL,
+      -1, {-1, UL}, dt_number, ss_none, wad_yes,
+      "number of vissprites allowed per frame (-1 = no limit)"
+   },
+
+   {
       "spechits_emulation",
       &spechits_emulation, NULL,
       0, {0, 2}, dt_number, ss_none, wad_no,
-      "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like Prboom-plus"
+      "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"
    },
 
    { NULL }         // last entry

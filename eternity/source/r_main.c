@@ -743,7 +743,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
    R_SetupFrame(player, camerapoint);
    
-   // haleyjd: temporary debug
+   // haleyjd: untaint portals
    R_UntaintPortals();
 
    // Clear buffers.
@@ -959,6 +959,9 @@ CONSOLE_VARIABLE(r_detail, c_detailshift, 0)
                  "%s detail", detailstr[c_detailshift]);
 }
 
+VARIABLE_INT(r_vissprite_limit, NULL, -1, D_MAXINT, NULL);
+CONSOLE_VARIABLE(r_vissprite_limit, r_vissprite_limit, 0) {}
+
 CONSOLE_COMMAND(p_dumphubs, 0)
 {
    extern void P_DumpHubs();
@@ -985,6 +988,7 @@ void R_AddCommands(void)
    C_AddCommand(r_columnengine);
    C_AddCommand(r_spanengine);
    C_AddCommand(r_detail);
+   C_AddCommand(r_vissprite_limit);
 
    C_AddCommand(p_dumphubs);
 }

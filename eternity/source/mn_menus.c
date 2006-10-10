@@ -904,7 +904,7 @@ static void MN_DMFlagsDrawer(void)
                   
       V_WriteTextColoured
         (
-         values[!(dmflags & (1<<(i-4)))],
+         values[!(dmflags & (1<<(i-2)))],
          (i == menu_dmflags.selected) ? 
             gameModeInfo->selectColor : gameModeInfo->variableColor,
          menuitem->x + 20, menuitem->y

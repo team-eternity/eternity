@@ -736,36 +736,20 @@ static int R_PolyobjCompare(const void *p1, const void *p2)
 // must be sorted to draw in DOOM's front-to-back order within individual
 // subsectors. This is a modified version of R_SortVisSprites.
 //
-static void R_SortPolyObjects(subsector_t *sub)
+static void R_SortPolyObjects(polyobj_t *po)
 {
-   if(numpolys)
+   int i = 0;
+         
+   while(po)
    {
-      polyobj_t *po;
-      int i = 0;
-
-      // allocate twice the number needed to minimize allocations
-      if(num_po_ptrs < numpolys*2)
-      {
-         // use free instead realloc since faster (thanks Lee ^_^)
-         free(po_ptrs);
-         po_ptrs = malloc((num_po_ptrs = numpolys*2) * sizeof(*po_ptrs));
-      }
-
-      po = sub->polyList;
-
-      while(po)
-      {
-         po->zdist = R_PointToDist2(viewx, viewy, 
-                                    po->centerPt.x, po->centerPt.y);
-         po_ptrs[i++] = po;
-         po = (polyobj_t *)(po->link.next);
-      }
-
-      // the polyobjects are NOT in any particular order, so use qsort
-      // 03/10/06: only bother if there are actually polys to sort
-      if(numpolys >= 2)
-         qsort(po_ptrs, numpolys, sizeof(polyobj_t *), R_PolyobjCompare);
+      po->zdist = R_PointToDist2(viewx, viewy, 
+         po->centerPt.x, po->centerPt.y);
+      po_ptrs[i++] = po;
+      po = (polyobj_t *)(po->link.next);
    }
+   
+   // the polyobjects are NOT in any particular order, so use qsort
+   qsort(po_ptrs, numpolys, sizeof(polyobj_t *), R_PolyobjCompare);
 }
 
 //
@@ -776,11 +760,10 @@ static void R_SortPolyObjects(subsector_t *sub)
 //
 static void R_AddPolyObjects(subsector_t *sub)
 {
-   polyobj_t *po = sub->polyList;
-
+   polyobj_t *po = (polyobj_t *)(sub->polyList->link.next);
    int i, j;
 
-   numpolys = 0;
+   numpolys = 1; // we know there is at least one
 
    // count polyobjects
    while(po)
@@ -789,8 +772,19 @@ static void R_AddPolyObjects(subsector_t *sub)
       po = (polyobj_t *)(po->link.next);
    }
 
-   // sort polyobjects
-   R_SortPolyObjects(sub);
+   // allocate twice the number needed to minimize allocations
+   if(num_po_ptrs < numpolys*2)
+   {
+      // use free instead realloc since faster (thanks Lee ^_^)
+      free(po_ptrs);
+      po_ptrs = malloc((num_po_ptrs = numpolys*2) * sizeof(*po_ptrs));
+   }
+
+   // sort polyobjects if necessary
+   if(numpolys > 1)
+      R_SortPolyObjects(sub->polyList);
+   else
+      po_ptrs[0] = sub->polyList;
 
    // render polyobjects
    for(i = 0; i < numpolys; ++i)
@@ -884,7 +878,9 @@ static void R_Subsector(int num)
 
 #ifdef POLYOBJECTS
    // haleyjd 02/19/06: draw polyobjects before static lines
-   R_AddPolyObjects(sub);
+   // haleyjd 10/09/06: skip call entirely if no polyobjects
+   if(sub->polyList)
+      R_AddPolyObjects(sub);
 #endif
 
    while(count--)

@@ -190,6 +190,7 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
          else
          {
             C_Printf(FC_ERROR "couldn't open %s\n",name);
+            free(filename); // haleyjd 10/09/06: memory leak
             return true;  // error
          }
       }

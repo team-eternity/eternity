@@ -56,6 +56,9 @@ extern fixed_t pspriteiscale;
 extern fixed_t pspriteyscale; // ANYRES
 extern fixed_t pspriteiyscale;
 
+// haleyjd 10/09/06: optional vissprite limit
+extern int r_vissprite_limit;
+
 #ifdef R_PORTALS
 // SoM 12/13/03: the stack for use with portals
 typedef struct maskedstack_s

@@ -77,6 +77,10 @@ static short *ptop, *pbottom;
 static int *ptop, *pbottom;
 #endif
 
+// haleyjd 10/09/06: optional vissprite limit
+int r_vissprite_limit;
+static int r_vissprite_count;
+
 //
 // R_SetMaskedSilhouette
 //
@@ -397,6 +401,8 @@ void R_InitSprites(char **namelist)
 void R_ClearSprites(void)
 {
    num_vissprite = 0; // killough
+
+   r_vissprite_count = 0; // haleyjd
 }
 
 #ifdef R_PORTALS
@@ -452,6 +458,7 @@ vissprite_t *R_NewVisSprite(void)
       num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc*2 : 128;
       vissprites = realloc(vissprites,num_vissprite_alloc*sizeof(*vissprites));
    }
+
    return vissprites + num_vissprite++;
 }
 
@@ -663,7 +670,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 // Generates a vissprite for a thing if it might be visible.
 //
-void R_ProjectSprite(mobj_t* thing)
+void R_ProjectSprite(mobj_t *thing)
 {
    fixed_t   tr_x, tr_y;
    fixed_t   gxt, gyt;
@@ -809,6 +816,10 @@ void R_ProjectSprite(mobj_t* thing)
            thing->z >= sectors[heightsec].ceilingheight)
          return;
    }
+  
+   // haleyjd 10/09/06: optional vissprite limit ^____^
+   if(r_vissprite_limit != -1 && ++r_vissprite_count > r_vissprite_limit)
+      return;
 
    // store information in a vissprite
    vis = R_NewVisSprite();
