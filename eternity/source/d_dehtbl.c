@@ -386,9 +386,9 @@ char *s_DEMO1      = DEMO1;    // demos
 char *s_DEMO2      = DEMO2;
 char *s_DEMO3      = DEMO3;
 char *s_DEMO4      = DEMO4;
-char *s_TCREDIT    = TCREDIT;  // credit/order screens
-char *s_TORDER     = TORDER;
-char *s_THELP2     = THELP2;
+char *s_CREDIT     = CREDIT;  // credit/order screens
+char *s_ORDER      = ORDER;
+char *s_HELP2      = HELP2;
 // Ty 03/30/98 - new substitutions for background textures
 char *bgflatE1     = "FLOOR4_8"; // end of DOOM Episode 1
 char *bgflatE2     = "SFLR6_1";  // end of DOOM Episode 2
@@ -829,9 +829,9 @@ dehstr_t deh_strlookup[] =
    { &s_DEMO2, "DEMO2" },
    { &s_DEMO3, "DEMO3" },
    { &s_DEMO4, "DEMO4" },
-   { &s_TCREDIT, "TCREDIT" },
-   { &s_TORDER, "TORDER" },
-   { &s_THELP2, "THELP2" },
+   { &s_CREDIT, "CREDIT" },
+   { &s_ORDER, "ORDER" },
+   { &s_HELP2, "HELP2" },
    // background flats
    { &bgflatE1,"BGFLATE1"},
    { &bgflatE2,"BGFLATE2"},
