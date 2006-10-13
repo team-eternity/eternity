@@ -530,8 +530,8 @@ boolean PIT_CheckLine(line_t *ld)
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(!(tmthing->flags & MF_FRIEND || tmthing->player)
-         && ld->flags & ML_BLOCKMONSTERS && 
+      if(!(tmthing->flags & MF_FRIEND || tmthing->player) && 
+         ld->flags & ML_BLOCKMONSTERS && 
          !(ld->flags & ML_3DMIDTEX))
          return false; // block monsters only
    }

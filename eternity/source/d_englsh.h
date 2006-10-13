@@ -720,9 +720,9 @@
 #define DEMO2    "DEMO2"
 #define DEMO3    "DEMO3"
 #define DEMO4    "DEMO4"
-#define TCREDIT  "CREDIT"
-#define TORDER   "ORDER"
-#define THELP2   "HELP2"
+#define CREDIT   "CREDIT"
+#define ORDER    "ORDER"
+#define HELP2    "HELP2"
 
 #endif
 
