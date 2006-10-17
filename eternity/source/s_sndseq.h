@@ -87,7 +87,9 @@ typedef struct SndSeq_s
    boolean looping;              // if true, sequence is in a loop
 } SndSeq_t;
 
+// Sound sequence pointers, needed for savegame support
 extern SndSeq_t *SoundSequences;
+extern SndSeq_t *EnviroSequence;
 
 void S_StopSequence(mobj_t *mo);
 void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling);

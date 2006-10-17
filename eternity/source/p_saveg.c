@@ -1331,6 +1331,9 @@ static void P_UnArchiveSmallAMX(AMX *amx)
 // The list of callbacks is terminated with a single byte value
 // equal to SC_VM_END.
 //
+// FIXME: Order may be important after all, at least for the
+// -recordfrom command.
+//
 static void P_ArchiveCallbacks(void)
 {
    int callback_count = 0;
@@ -1359,6 +1362,9 @@ static void P_ArchiveCallbacks(void)
 //
 // Kills any existing Small callbacks, then unarchives and links
 // in any saved callbacks.
+//
+// FIXME: restore callbacks to the order they were saved in.
+// Why? -recordfrom command.
 //
 static void P_UnArchiveCallbacks(void)
 {
@@ -1449,6 +1455,19 @@ void P_UnArchiveScripts(void)
    P_UnArchiveCallbacks();
 
    // TODO: execute load game event callbacks?
+}
+
+//============================================================================
+//
+// haleyjd 10/17/06: Sound Sequences
+//
+
+void P_ArchiveSoundSequences(void)
+{
+}
+
+void P_UnArchiveSoundSequences(void)
+{
 }
 
 //----------------------------------------------------------------------------
