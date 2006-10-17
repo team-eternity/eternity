@@ -30,6 +30,7 @@
 
 #include "z_zone.h"
 #include "doomstat.h"
+#include "d_dehtbl.h"
 #include "d_main.h"
 #include "m_qstr.h"
 #include "s_sound.h"
@@ -275,7 +276,7 @@ static int num_helpscreens;
 static int viewing_helpscreen;     // currently viewing help screen
 extern boolean inhelpscreens; // indicates we are in or just left a help screen
 
-static void AddHelpScreen(char *screenname)
+static void AddHelpScreen(const char *screenname)
 {
    int lumpnum;
    
@@ -304,11 +305,11 @@ static void MN_FindCreditScreens(void)
    // if they're not in the wad
 
    if(gameModeInfo->type == Game_Heretic)
-      AddHelpScreen("ORDER");
+      AddHelpScreen(DEH_String("ORDER"));
    else
-      AddHelpScreen("HELP2");
+      AddHelpScreen(DEH_String("HELP2"));
    
-   AddHelpScreen("CREDIT");
+   AddHelpScreen(DEH_String("CREDIT"));
 }
 
 static void MN_FindHelpScreens(void)
@@ -319,7 +320,7 @@ static void MN_FindHelpScreens(void)
    
    // add custom menus first
    
-   for(custom = 0; custom < 100; custom++)
+   for(custom = 0; custom < 100; ++custom)
    {
       char tempstr[10];
 
@@ -333,7 +334,7 @@ static void MN_FindHelpScreens(void)
    // and i can restore the dynamic help screens
 
    if(gameModeInfo->type == Game_Heretic)
-      AddHelpScreen("ORDER");
+      AddHelpScreen(DEH_String("ORDER"));
    else
       AddHelpScreen("HELP");
    
@@ -342,21 +343,75 @@ static void MN_FindHelpScreens(void)
    // promote the registered version at every availability
    // haleyjd: HELP2 is a help screen in heretic too
    
-   AddHelpScreen("HELP2"); 
+   AddHelpScreen(DEH_String("HELP2")); 
 }
+
+#define NUMCATS 5
+
+static const char *cat_strs[NUMCATS] =
+{
+   FC_HI "Programming:",
+   FC_HI "Based On:",
+   FC_HI "Graphics:",
+   FC_HI "Start map:",
+   FC_HI "Special Thanks:",
+};
+
+static const char *val_strs[NUMCATS] =
+{
+   "James Haley\nSteven McGranahan\nJoe Kennedy\n",
+   
+   FC_HI "SMMU" FC_NORMAL " by Simon Howard\n"
+   FC_HI "MBF " FC_NORMAL " by Lee Killough\n"
+   FC_HI "BOOM" FC_NORMAL " by Team TNT\n",
+
+   "Bob Satori",
+   "Derek MacDonald",
+   "Julian Aubourg\nJoel Murdoch\nAnders Astrand\nSargeBaldy\n",
+};
 
 void MN_DrawCredits(void)
 {
-  inhelpscreens = true;
+   static int cat_width = -1, val_width = -1, line_x;
+   int i, y;
+   const char *str;
 
-  // sf: altered for SMMU
-  // haleyjd: altered for Eternity :)
+   if(cat_width == -1)
+   {
+      // determine widest category string
+      int w;
 
-  V_DrawDistortedBackground(gameModeInfo->creditBackground, 
-                            &vbscreen);
+      for(i = 0; i < 5; ++i)
+      {
+         w = V_StringWidth(cat_strs[i]);
+
+         if(w > cat_width)
+            cat_width = w;
+      }
+
+      // determine widest value string
+      for(i = 0; i < 5; ++i)
+      {
+         w = V_StringWidth(val_strs[i]);
+
+         if(w > val_width)
+            val_width = w;
+      }
+
+      // determine line position
+      line_x = (SCREENWIDTH - (cat_width + val_width + 16)) >> 1;
+   }
+
+   inhelpscreens = true;
+
+   // sf: altered for SMMU
+   // haleyjd: altered for Eternity :)
+   
+   V_DrawDistortedBackground(gameModeInfo->creditBackground, &vbscreen);
 
   // sf: SMMU credits
 
+  /*
   V_WriteText(FC_HI "The Eternity Engine\n"
               "\n"
               FC_NORMAL "Enhancements by James 'Quasar' Haley\n"
@@ -378,6 +433,25 @@ void MN_DrawCredits(void)
               "         S. Howard, et al.\n"              
               FC_HI"         http://doomworld.com/eternity/",
               10, gameModeInfo->creditY);
+   */
+
+   y = gameModeInfo->creditY;
+   str = FC_ABSCENTER FC_HI "The Eternity Engine";
+   V_WriteTextBigShadowed(str, 0, y);
+   y += V_StringHeightBig(str) + gameModeInfo->creditTitleStep;
+
+   // draw info categories
+   for(i = 0; i < NUMCATS; ++i)
+   {
+      V_WriteText(cat_strs[i], 
+                  line_x + (cat_width - V_StringWidth(cat_strs[i])), y);
+      V_WriteText(val_strs[i], line_x + cat_width + 16, y);
+
+      y += V_StringHeight(val_strs[i]);
+   }
+
+   V_WriteText(FC_ABSCENTER "Copyright 2006 Team Eternity et al.\n"
+               "http://doomworld.com/eternity/", 0, y);
 }
 
 void MN_HelpDrawer(void)

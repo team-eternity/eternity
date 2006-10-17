@@ -38,6 +38,9 @@ SndSeq_t *SoundSequences; // head of running sndseq list
 
 SndSeq_t *EnviroSequence; // currently playing environmental sequence
 
+#define SECTOR_ORIGIN(s, b) \
+   (mobj_t *)((b) ? &((s)->csoundorg) : &((s)->soundorg))
+
 //
 // S_CheckSequenceLoop
 //
@@ -66,9 +69,9 @@ boolean S_CheckSequenceLoop(mobj_t *mo)
 //
 // Convenience routine.
 //
-boolean S_CheckSectorSequenceLoop(sector_t *s)
+boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling)
 {
-   return S_CheckSequenceLoop((mobj_t *)&s->soundorg);
+   return S_CheckSequenceLoop(SECTOR_ORIGIN(s, floorOrCeiling));
 }
 
 //
@@ -111,9 +114,9 @@ void S_StopSequence(mobj_t *mo)
 //
 // Convenience routine.
 //
-void S_StopSectorSequence(sector_t *s)
+void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling)
 {
-   S_StopSequence((mobj_t *)&s->soundorg);
+   S_StopSequence(SECTOR_ORIGIN(s, floorOrCeiling));
 }
 
 //
@@ -187,7 +190,9 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
 //
 void S_StartSectorSequence(sector_t *s, int seqtype)
 {
-   S_StartSequenceNum((mobj_t *)&s->soundorg, s->sndSeqID, seqtype);
+   boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
+   
+   S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype);
 }
 
 //
@@ -236,9 +241,9 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
 //
 // Convenience routine for starting a sector sequence by name.
 //
-void S_StartSectorSequenceName(sector_t *s, const char *seqname)
+void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 {
-   S_StartSequenceName((mobj_t *)&s->soundorg, seqname);
+   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname);
 }
 
 //

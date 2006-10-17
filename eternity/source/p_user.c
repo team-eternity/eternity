@@ -541,13 +541,12 @@ void P_PlayerThink(player_t* player)
    // Handling colormaps.
    // killough 3/20/98: reformat to terse C syntax
    
+   // sf: removed MBF beta stuff
+   
    player->fixedcolormap = 
-      
-      // sf: removed MBF beta stuff
-
-   player->powers[pw_invulnerability] > 4*32 ||    /* Regular Doom */
-   player->powers[pw_invulnerability] & 8 ? INVERSECOLORMAP :
-   player->powers[pw_infrared] > 4*32 || player->powers[pw_infrared] & 8;
+      (player->powers[pw_invulnerability] > 4*32 ||    
+       player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
+      (player->powers[pw_infrared] > 4*32 || player->powers[pw_infrared] & 8);
 }
 
 // Small native functions for player stuff

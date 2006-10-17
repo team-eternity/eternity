@@ -53,7 +53,7 @@ void P_PlatSequence(sector_t *s, const char *seqname)
    if(s->sndSeqID >= 0)
       S_StartSectorSequence(s, SEQ_PLAT);
    else
-      S_StartSectorSequenceName(s, seqname);
+      S_StartSectorSequenceName(s, seqname, false);
 }
 
 //
@@ -91,7 +91,7 @@ void T_PlatRaise(plat_t *plat)
       {
          if(res == pastdest) // end of stroke
          {
-            S_StopSectorSequence(plat->sector); // haleyjd
+            S_StopSectorSequence(plat->sector, false); // haleyjd
 
             // if not an instant toggle type, wait, make plat stop sound
             if(plat->type != toggleUpDn)
@@ -132,7 +132,7 @@ void T_PlatRaise(plat_t *plat)
       // handle reaching end of down stroke
       if(res == pastdest)
       {
-         S_StopSectorSequence(plat->sector); // haleyjd
+         S_StopSectorSequence(plat->sector, false); // haleyjd
 
          // if not an instant toggle, start waiting, make plat stop sound
          if(plat->type!=toggleUpDn) //jff 3/14/98 toggle up down

@@ -412,7 +412,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    {
       // first time only - cons_keyactions was NULL
       cons_keyactions = Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0);
-      cons_keyactions->bclass = kac_game;
+      cons_keyactions->bclass = kac_console;
       cons_keyactions->type = at_conscmd;
       cons_keyactions->name = Z_Strdup(name, PU_STATIC, 0);
       cons_keyactions->next = NULL;
@@ -429,7 +429,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
       temp = temp->next;
    }
    newaction = Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0);
-   newaction->bclass = kac_game;
+   newaction->bclass = kac_console;
    newaction->type = at_conscmd;
    newaction->name = Z_Strdup(name, PU_STATIC, 0);
    newaction->next = NULL;
@@ -594,7 +594,8 @@ boolean G_KeyResponder(event_t *ev, int bclass)
                break;
                
             case at_conscmd:
-               C_RunTextCmd(keybindings[key].bindings[bclass]->name);
+               if(!consoleactive) // haleyjd: not in console.
+                  C_RunTextCmd(keybindings[key].bindings[bclass]->name);
                break;
                
             default:

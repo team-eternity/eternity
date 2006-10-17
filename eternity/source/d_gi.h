@@ -131,6 +131,7 @@ typedef struct gameinfo_s
    char *menuBackground;      // name of menu background flat
    char *creditBackground;    // name of dynamic credit bg flat
    int   creditY;             // y coord for credit text
+   int   creditTitleStep;     // step-down from credit title
    gimenucursor_t *menuCursor;   // pointer to the big menu cursor
    menu_t *mainMenu;          // pointer to main menu structure
    menu_t *saveMenu;          // pointer to save menu structure

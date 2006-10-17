@@ -72,7 +72,7 @@ void P_DoorSequence(boolean raise, boolean turbo, sector_t *s)
          else
             seqName = "EEDoorCloseNormal";
       }
-      S_StartSectorSequenceName(s, seqName);
+      S_StartSectorSequenceName(s, seqName, true);
    }
 }
 
@@ -179,7 +179,7 @@ void T_VerticalDoor(vldoor_t *door)
       // handle door reaching bottom
       if(res == pastdest)
       {
-         S_StopSectorSequence(door->sector);
+         S_StopSectorSequence(door->sector, true);
 
          switch(door->type)
          {
@@ -280,7 +280,7 @@ void T_VerticalDoor(vldoor_t *door)
          case genOpen:
          case genCdO:
          case genBlazeCdO:
-            S_StopSectorSequence(door->sector);
+            S_StopSectorSequence(door->sector, true);
             door->sector->ceilingdata = NULL; //jff 2/22/98
             P_RemoveThinker(&door->thinker); // unlink and free
             break;

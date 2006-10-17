@@ -120,6 +120,8 @@ static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
 static lighttable_t **planezlight;
 static fixed_t planeheight;
 
+static lighttable_t *planefixedcolormap; // haleyjd 10/16/06
+
 // killough 2/8/98: make variables static
 
 static fixed_t basexscale, baseyscale;
@@ -207,24 +209,14 @@ static void R_MapPlane(int y, int x1, int x2)
    ds_yfrac = -viewy - FixedMul(finesine[angle],   length) + yoffs;
 #endif
 
-   if(!(ds_colormap = fixedcolormap))
+   if((ds_colormap = planefixedcolormap) == NULL) // haleyjd 10/16/06
    {
       index = distance >> LIGHTZSHIFT;
       if(index >= MAXLIGHTZ )
          index = MAXLIGHTZ-1;
       ds_colormap = planezlight[index];
    }
-   else
-   {
-      // haleyjd 10/31/02: invuln fix
-      if(fixedcolormap != 
-         fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
-      {
-         // SoM 10/19/02: deep water colormap fix
-         ds_colormap = planezlight[MAXLIGHTZ-1];
-      }
-   }
-
+   
    ds_y = y;
    ds_x1 = x1;
    ds_x2 = x2;
@@ -352,7 +344,7 @@ static visplane_t *new_visplane(unsigned hash)
 // killough 2/28/98: Add offsets
 
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
-                fixed_t xoffs, fixed_t yoffs)
+                        fixed_t xoffs, fixed_t yoffs)
 {
    visplane_t *check;
    unsigned hash;                      // killough
@@ -370,7 +362,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          lightlevel == check->lightlevel &&
          xoffs == check->xoffs &&      // killough 2/28/98: Add offset checks
          yoffs == check->yoffs &&
-         zlight == check->colormap
+         zlight == check->colormap &&
+         fixedcolormap == check->fixedcolormap
 #ifdef R_PORTALS
          && viewx == check->viewx
          && viewy == check->viewy
@@ -390,6 +383,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->xoffs = xoffs;               // killough 2/28/98: Save offsets
    check->yoffs = yoffs;
    check->colormap = zlight;
+   check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
 #ifdef R_PORTALS
    check->viewx = viewx;
    check->viewy = viewy;
@@ -444,6 +438,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->picnum = pl->picnum;
       new_pl->lightlevel = pl->lightlevel;
       new_pl->colormap = pl->colormap;
+      new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
       new_pl->xoffs = pl->xoffs;           // killough 2/28/98
       new_pl->yoffs = pl->yoffs;
 #ifdef R_PORTALS
@@ -802,6 +797,9 @@ static void do_draw_plane(visplane_t *pl)
       pl->top[pl->minx-1] = pl->top[stop] = 0xffffffffu;
 #endif
       planezlight = pl->colormap[light];//zlight[light];
+
+      // haleyjd 10/16/06
+      planefixedcolormap = pl->fixedcolormap;
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);

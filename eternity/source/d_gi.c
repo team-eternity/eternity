@@ -317,7 +317,8 @@ gameinfo_t giDoomReg =
 
    DOOMMENUBACK,     // menuBackground
    DOOMCREDITBK,     // creditBackground
-   17,               // creditY
+   20,               // creditY
+   12,               // creditTitleStep
    &giSkullCursor,   // menuCursor
    &menu_main,       // mainMenu
    &menu_savegame,   // saveMenu
@@ -467,7 +468,8 @@ gameinfo_t giDoomCommercial =
 
    DOOMMENUBACK,     // menuBackground
    DM2CREDITBK,      // creditBackground
-   17,               // creditY
+   20,               // creditY
+   12,               // creditTitleStep
    &giSkullCursor,   // menuCursor
    &menu_main,       // mainMenu
    &menu_savegame,   // saveMenu
@@ -541,7 +543,8 @@ gameinfo_t giHereticSW =
 
    HTICMENUBACK,     // menuBackground
    HTICCREDITBK,     // creditBackground
-   10,               // creditY
+   8,                // creditY
+   8,                // creditTitleStep
    &giArrowCursor,   // menuCursor
    &menu_hmain,      // mainMenu
    &menu_hsavegame,  // saveMenu
@@ -619,7 +622,8 @@ gameinfo_t giHereticReg =
 
    HTICMENUBACK,     // menuBackground
    HTICCREDITBK,     // creditBackground
-   10,               // creditY
+   8,                // creditY
+   8,                // creditTitleStep
    &giArrowCursor,   // menuCursor
    &menu_hmain,      // mainMenu
    &menu_hsavegame,  // saveMenu

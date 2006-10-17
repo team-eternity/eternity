@@ -54,7 +54,7 @@ void P_FloorSequence(sector_t *s)
    if(s->sndSeqID >= 0)
       S_StartSectorSequence(s, SEQ_FLOOR);
    else
-      S_StartSectorSequenceName(s, "EEFloor");
+      S_StartSectorSequenceName(s, "EEFloor", false);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -416,7 +416,7 @@ void T_MoveFloor(floormove_t* floor)
          {
             floor->type = genDelayStair;
             floor->delayTimer = floor->delayTime;
-            S_StopSectorSequence(floor->sector);
+            S_StopSectorSequence(floor->sector, false);
          }
          break;
       case genDelayStair:
@@ -451,7 +451,7 @@ void T_MoveFloor(floormove_t* floor)
     
    if(res == pastdest)    // if destination height is reached
    {
-      S_StopSectorSequence(floor->sector);
+      S_StopSectorSequence(floor->sector, false);
 
       // haleyjd 10/13/05: stairs that wish to reset must wait
       // until their reset timer expires.
@@ -609,7 +609,7 @@ void T_MoveElevator(elevator_t* elevator)
     
    if(res == pastdest)            // if destination height acheived
    {
-      S_StopSectorSequence(elevator->sector);
+      S_StopSectorSequence(elevator->sector, false);
       elevator->sector->floordata = NULL;     //jff 2/22/98
       elevator->sector->ceilingdata = NULL;   //jff 2/22/98
       P_RemoveThinker(&elevator->thinker);    // remove elevator from actives
@@ -643,7 +643,7 @@ void T_MovePillar(pillar_t *pillar)
    
    if(result)
    {
-      S_StopSectorSequence(pillar->sector);
+      S_StopSectorSequence(pillar->sector, false);
       pillar->sector->floordata = NULL;
       pillar->sector->ceilingdata = NULL;      
       // TODO: notify scripts

@@ -1130,14 +1130,12 @@ void P_LoadBlockMap(int lump)
 #endif
 }
 
-//
-// P_GroupLines
-// Builds sector line lists and subsector sector numbers.
-// Finds block bounding boxes for sectors.
-//
-// killough 5/3/98: reformatted, cleaned up
-// killough 8/24/98: rewrote to use faster algorithm
 
+//
+// AddLineToSector
+//
+// Utility function for P_GroupLines below.
+//
 static void AddLineToSector(sector_t *s, line_t *l)
 {
    M_AddToBox(s->blockbox, l->v1->x, l->v1->y);
@@ -1145,17 +1143,25 @@ static void AddLineToSector(sector_t *s, line_t *l)
    *s->lines++ = l;
 }
 
-void P_GroupLines (void)
+//
+// P_GroupLines
+// Builds sector line lists and subsector sector numbers.
+// Finds block bounding boxes for sectors.
+//
+// killough 5/3/98: reformatted, cleaned up
+// killough 8/24/98: rewrote to use faster algorithm
+//
+void P_GroupLines(void)
 {
    int i, total;
    line_t **linebuffer;
 
    // look up sector number for each subsector
-   for(i=0; i<numsubsectors; i++)
+   for(i = 0; i < numsubsectors; ++i)
       subsectors[i].sector = segs[subsectors[i].firstline].sidedef->sector;
 
    // count number of lines in each sector
-   for(i=0; i<numlines; i++)
+   for(i = 0; i < numlines; ++i)
    {
       lines[i].frontsector->linecount++;
       if(lines[i].backsector && 
@@ -1166,7 +1172,7 @@ void P_GroupLines (void)
    }
 
    // compute total number of lines and clear bounding boxes
-   for(total=0, i=0; i<numsectors; i++)
+   for(total = 0, i = 0; i < numsectors; ++i)
    {
       total += sectors[i].linecount;
       M_ClearBox(sectors[i].blockbox);
@@ -1175,13 +1181,13 @@ void P_GroupLines (void)
    // build line tables for each sector
    linebuffer = Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0);
 
-   for(i=0; i<numsectors; i++)
+   for(i = 0; i < numsectors; ++i)
    {
       sectors[i].lines = linebuffer;
       linebuffer += sectors[i].linecount;
    }
   
-   for(i=0; i<numlines; i++)
+   for(i = 0; i < numlines; ++i)
    {
       AddLineToSector(lines[i].frontsector, &lines[i]);
       if(lines[i].backsector && 
@@ -1191,7 +1197,7 @@ void P_GroupLines (void)
       }
    }
 
-   for(i=0; i<numsectors; i++)
+   for(i = 0; i < numsectors; ++i)
    {
       sector_t *sector = sectors+i;
       int block;
@@ -1208,6 +1214,9 @@ void P_GroupLines (void)
       // SoM: same for group id.
       sector->soundorg.groupid = sector->groupid;
 #endif
+
+      // haleyjd 10/16/06: copy all properties to ceiling origin
+      sector->csoundorg = sector->soundorg;
 
       // adjust bounding box to map blocks
       block = (sector->blockbox[BOXTOP]-bmaporgy+MAXRADIUS)>>MAPBLOCKSHIFT;

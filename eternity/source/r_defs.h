@@ -125,6 +125,7 @@ struct sector_s
    mobj_t *soundtarget;   // thing that made a sound (or null)
    int blockbox[4];       // mapblock bounding box for height changes
    degenmobj_t soundorg;  // origin for any sounds played by the sector
+   degenmobj_t csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
    int validcount;        // if == validcount, already checked
    mobj_t *thinglist;     // list of mobjs in sector
 
@@ -491,6 +492,7 @@ typedef struct visplane
   int picnum, lightlevel, minx, maxx;
   fixed_t height;
   lighttable_t *(*colormap)[MAXLIGHTZ];
+  lighttable_t *fixedcolormap;  // haleyjd 10/16/06
   fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
 
   // SoM: ANYRES this is the biggest waste of ram when running in low resolution.

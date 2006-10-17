@@ -90,18 +90,18 @@ typedef struct SndSeq_s
 extern SndSeq_t *SoundSequences;
 
 void S_StopSequence(mobj_t *mo);
-void S_StopSectorSequence(sector_t *s);
+void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling);
 void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype);
 void S_StartSequenceName(mobj_t *mo, const char *seqname);
 void S_StartSectorSequence(sector_t *s, int seqtype);
-void S_StartSectorSequenceName(sector_t *s, const char *seqname);
+void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
 void S_RunSequences(void);
 void S_StopAllSequences(void);
 void S_SetSequenceStatus(void);
 void S_InitEnviroSpots(void);
 
 boolean S_CheckSequenceLoop(mobj_t *mo);
-boolean S_CheckSectorSequenceLoop(sector_t *s);
+boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling);
 
 // EnviroSeqMgr_t -- environment sequence manager data
 

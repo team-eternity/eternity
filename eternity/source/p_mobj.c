@@ -933,7 +933,6 @@ static boolean P_DoZMovement(mobj_t *mobj)
    }
 }
 
-
 //
 // P_MobjThinker
 //

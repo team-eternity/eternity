@@ -132,11 +132,9 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    ch = (const unsigned char *)s;
 
    // haleyjd 03/29/06: special treatment - if first character is 143
-   // (abscenter toggle), then toggle absCentered now.
-   if(*ch == 143)
-      absCentered ^= true;
-
-   cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1 : x;
+   // (abscenter toggle), then center line
+   
+   cx = (*ch == 143) ? (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1 : x;
    cy = y;
    
    while((c = *ch++))
@@ -198,7 +196,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       }
       if(c == '\n')
       {
-         cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, ch+1)) >> 1 : x;
+         cx = absCentered ? (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : x;
          cy += font->cy;
          continue;
       }

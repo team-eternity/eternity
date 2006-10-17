@@ -286,8 +286,8 @@ fixed_t R_ScaleFromGlobalAngle(angle_t visangle)
    anglea = ANG90 + (visangle-viewangle);
    angleb = ANG90 + (visangle-rw_normalangle);
    den = FixedMul(rw_distance, finesine[anglea>>ANGLETOFINESHIFT]);
-   num = FixedMul(projection, finesine[angleb>>ANGLETOFINESHIFT]) << detailshift;
-   
+   num = FixedMul(projection, finesine[angleb>>ANGLETOFINESHIFT]) << detailshift;   
+
    return den > num>>16 ? (num = FixedDiv(num, den)) > 64*FRACUNIT ?
       64*FRACUNIT : num < 256 ? 256 : num : 64*FRACUNIT;
 }
@@ -308,10 +308,21 @@ static void R_InitTextureMapping (void)
    // Calc focal length so fov angles cover SCREENWIDTH
 
    // haleyjd 04/03/05: calculate and store focallen_x, focallen_y
+
+   // haleyjd 10/14/06: until/unless true variable FOV is added, there is
+   // no need for these complicated calculations. The tangent of the half-angle
+   // is tan(45) == 1, and thus focallen is equal to centerxfrac.
+#if 0
    focal_tan  = finetangent[FINEANGLES / 4 + fov / 2];
    focallen_x = FixedDiv(centerxfrac*zoom, focal_tan);
    focallen_y = 
       FixedDiv(FixedMul((centerxfrac<<detailshift)*zoom, yaspectmul), focal_tan);
+#else
+   focal_tan  = FRACUNIT;
+   focallen_x = centerxfrac*zoom;
+   focallen_y = FixedMul((centerxfrac<<detailshift)*zoom, yaspectmul);
+#endif
+
         
    for(i = 0; i < FINEANGLES/2; ++i)
    {
@@ -629,7 +640,6 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    {
       dy = FixedMul(focallen_y, 
                     finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
-      dy *= zoom;
             
       // haleyjd: must bound after zooming
       if(dy < -viewheightfrac)
@@ -715,7 +725,7 @@ void R_SectorColormap(sector_t *s)
          scalelightfixed[i] = fixedcolormap;
    }
    else
-      fixedcolormap = 0;   
+      fixedcolormap = NULL;   
 }
 
 angle_t R_WadToAngle(int wadangle)

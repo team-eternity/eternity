@@ -56,13 +56,13 @@ void P_CeilingSequence(sector_t *s, int noiseLevel)
       switch(noiseLevel)
       {
       case CNOISE_NORMAL:
-         S_StartSectorSequenceName(s, "EECeilingNormal");
+         S_StartSectorSequenceName(s, "EECeilingNormal", true);
          break;
       case CNOISE_SEMISILENT:
-         S_StartSectorSequenceName(s, "EECeilingSemiSilent");
+         S_StartSectorSequenceName(s, "EECeilingSemiSilent", true);
          break;
       case CNOISE_SILENT:
-         S_StartSectorSequenceName(s, "EECeilingSilent");
+         S_StartSectorSequenceName(s, "EECeilingSilent", true);
          break;
       }
    }
@@ -135,7 +135,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             // crushers reverse direction at the top
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(ceiling->sector))
+            if(!S_CheckSectorSequenceLoop(ceiling->sector, true))
                P_CeilingSequence(ceiling->sector, CNOISE_SEMISILENT);
          case genSilentCrusher:
          case genCrusher:
@@ -183,7 +183,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             // except generalized ones, reset speed, start back up
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(ceiling->sector))
+            if(!S_CheckSectorSequenceLoop(ceiling->sector, true))
                P_CeilingSequence(ceiling->sector, CNOISE_SEMISILENT);
          case crushAndRaise: 
             ceiling->speed = CEILSPEED;
@@ -432,7 +432,7 @@ int EV_CeilingCrushStop(line_t* line)
          ceiling->olddirection = ceiling->direction;
          ceiling->direction = plat_stop;
          ceiling->thinker.function = NULL;
-         S_StopSectorSequence(ceiling->sector); // haleyjd 09/28/06
+         S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
          rtn = 1;
       }
    }
@@ -470,7 +470,7 @@ void P_RemoveActiveCeiling(ceiling_t* ceiling)
 {
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
-   S_StopSectorSequence(ceiling->sector); // haleyjd 09/28/06
+   S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
    P_RemoveThinker(&ceiling->thinker);
    if((*list->prev = list->next))
       list->next->prev = list->prev;
