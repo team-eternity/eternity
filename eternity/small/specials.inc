@@ -115,10 +115,10 @@ native _Ceiling_LowerInstant(tag, height, change = _CNoChg, crush = -1);        
 
 // Param Stair Specials
 
-native _Stairs_BuildUpDoom(tag, speed, stepsize, delay, reset);       // 340
-native _Stairs_BuildDownDoom(tag, speed, stepsize, delay, reset);     // 341
-native _Stairs_BuildUpDoomSync(tag, speed, stepsize, delay, reset);   // 342
-native _Stairs_BuildDownDoomSync(tag, speed, stepsize, delay, reset); // 343
+native _Stairs_BuildUpDoom(tag, speed, stepsize, delay, reset);   // 340
+native _Stairs_BuildDownDoom(tag, speed, stepsize, delay, reset); // 341
+native _Stairs_BuildUpDoomSync(tag, speed, stepsize, reset);      // 342
+native _Stairs_BuildDownDoomSync(tag, speed, stepsize, reset);    // 343
 
 // Param PolyObject Specials
 
