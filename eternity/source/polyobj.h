@@ -92,6 +92,8 @@ typedef struct polyobj_s
    int damage;                     // damage to inflict on stuck things
    fixed_t thrust;                 // amount of thrust to put on blocking objects
 
+   int seqId;                      // 10/17/06: sound sequence id
+
    thinker_t *thinker;  // pointer to a thinker affecting this polyobj
 
    boolean isBad; // a bad polyobject: should not be rendered/manipulated

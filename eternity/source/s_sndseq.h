@@ -32,6 +32,7 @@
 
 #include "m_dllist.h"
 #include "e_sound.h"
+#include "polyobj.h"
 #include "s_sound.h"
 
 // sound sequence commands
@@ -60,6 +61,14 @@ enum
    SEQ_CEILING,
 };
 
+// sound sector origin types (needed for savegames)
+enum
+{
+   SEQ_ORIGIN_SECTOR,
+   SEQ_ORIGIN_POLYOBJ,
+   SEQ_ORIGIN_OTHER,
+};
+
 // seqcmd_t -- a single sound sequence command
 
 typedef union seqcmd_s
@@ -85,18 +94,29 @@ typedef struct SndSeq_s
    int attenuation;              // current attenuation type
 
    boolean looping;              // if true, sequence is in a loop
+
+   // 10/17/06: data needed for savegames
+   int originType;               // type of origin (sector, polyobj, other)
+   ptrdiff_t originIdx;          // sector or polyobj number, (or -1)
 } SndSeq_t;
 
 // Sound sequence pointers, needed for savegame support
 extern SndSeq_t *SoundSequences;
 extern SndSeq_t *EnviroSequence;
 
+void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
+                        int seqOriginIdx);
+void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
+                         int seqOriginIdx);
 void S_StopSequence(mobj_t *mo);
-void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling);
-void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype);
-void S_StartSequenceName(mobj_t *mo, const char *seqname);
+
 void S_StartSectorSequence(sector_t *s, int seqtype);
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
+void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling);
+
+void S_StartPolySequence(polyobj_t *po);
+void S_StopPolySequence(polyobj_t *po);
+
 void S_RunSequences(void);
 void S_StopAllSequences(void);
 void S_SetSequenceStatus(void);

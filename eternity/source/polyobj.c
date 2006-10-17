@@ -428,7 +428,8 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
          po->mirror = seg->linedef->args[1];
          if(po->mirror == po->id) // do not allow a self-reference
             po->mirror = -1;
-         // TODO: sound sequence is in args[2]
+         // sound sequence is in args[2]
+         po->seqId = args[2];
          break;
       }
    }
@@ -451,7 +452,8 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
       po->mirror = po->segs[0]->linedef->args[2];
       if(po->mirror == po->id) // do not allow a self-reference
          po->mirror = -1;
-      // TODO: sound sequence is in args[3]
+      // sound sequence is in args[3]
+      po->seqId = args[3];
    }
 
 
@@ -1222,7 +1224,7 @@ void T_PolyObjRotate(polyrotate_t *th)
          P_RemoveThinker(&th->thinker);
 
          // TODO: notify scripts
-         // TODO: sound sequence stop event
+         S_StopPolySequence(po);
       }
       else if(th->distance < avel)
       {
@@ -1287,7 +1289,7 @@ void T_PolyObjMove(polymove_t *th)
          P_RemoveThinker(&th->thinker);
 
          // TODO: notify scripts
-         // TODO: sound sequence stop event
+         S_StopPolySequence(po);
       }
       else if(th->distance < avel)
       {
@@ -1325,7 +1327,7 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
    if(th->delayCount)
    {
       if(--th->delayCount == 0)
-         ; // TODO: start sound sequence event
+         S_StartPolySequence(po);
       return;
    }
 
@@ -1369,7 +1371,7 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
             P_RemoveThinker(&th->thinker);
             // TODO: notify scripts
          }
-         // TODO: sound sequence stop event
+         S_StopPolySequence(po);
       }
       else if(th->distance < avel)
       {
@@ -1387,7 +1389,7 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
       th->angle    = th->initAngle;
       Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
       th->closing  = false;
-      // TODO: sound sequence start event
+      S_StartPolySequence(po);
    }
 }
 
@@ -1417,7 +1419,7 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
    if(th->delayCount)
    {
       if(--th->delayCount == 0)
-         ; // TODO: start sound sequence event
+         S_StartPolySequence(po);
       return;
    }
 
@@ -1456,7 +1458,7 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
             P_RemoveThinker(&th->thinker);
             // TODO: notify scripts
          }
-         // TODO: sound sequence stop event
+         S_StopPolySequence(po);
       }
       else if(th->distance < avel)
       {
@@ -1473,7 +1475,7 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
       th->speed    = th->initSpeed;
       th->closing  = false;
 
-      // TODO: sound sequence start event
+      S_StartPolySequence(po);
    }
 }
 
@@ -1526,7 +1528,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    else if(po->thrust > 4*FRACUNIT)
       po->thrust = 4*FRACUNIT;
 
-   // TODO: start sound sequence event
+   S_StartPolySequence(po);
 
    // apply action to mirroring polyobjects as well
    while((po = Polyobj_GetMirror(po)))
@@ -1567,7 +1569,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       else if(po->thrust > 4*FRACUNIT)
          po->thrust = 4*FRACUNIT;
 
-      // TODO: start sound sequence event
+      S_StartPolySequence(po);
    }
 
    // action was successful
@@ -1617,7 +1619,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    else if(po->thrust > 4*FRACUNIT)
       po->thrust = 4*FRACUNIT;
 
-   // TODO: start sound sequence event
+   S_StartPolySequence(po);
 
    // apply action to mirroring polyobjects as well
    while((po = Polyobj_GetMirror(po)))
@@ -1654,7 +1656,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       else if(po->thrust > 4*FRACUNIT)
          po->thrust = 4*FRACUNIT;
 
-      // TODO: start sound sequence event
+      S_StartPolySequence(po);
    }
 
    // action was successful
@@ -1698,7 +1700,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    else if(po->thrust > 4*FRACUNIT)
       po->thrust = 4*FRACUNIT;
 
-   // TODO: sound sequence start event
+   S_StartPolySequence(po);
 
    // start action on mirroring polyobjects as well
    while((po = Polyobj_GetMirror(po)))
@@ -1738,7 +1740,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       else if(po->thrust > 4*FRACUNIT)
          po->thrust = 4*FRACUNIT;
       
-      // TODO: sound sequence start event
+      S_StartPolySequence(po);
    }
 }
 
@@ -1771,7 +1773,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    else if(po->thrust > 4*FRACUNIT)
       po->thrust = 4*FRACUNIT;
    
-   // TODO: sound sequence start event
+   S_StartPolySequence(po);
 
    // start action on mirroring polyobjects as well
    while((po = Polyobj_GetMirror(po)))
@@ -1808,7 +1810,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       else if(po->thrust > 4*FRACUNIT)
          po->thrust = 4*FRACUNIT;
 
-      // TODO: sound sequence start event
+      S_StartPolySequence(po);
    }
 }
 

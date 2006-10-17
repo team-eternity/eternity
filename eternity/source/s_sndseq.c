@@ -120,13 +120,24 @@ void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling)
 }
 
 //
+// S_StopPolySequence
+//
+// Convenience routine.
+//
+void S_StopPolySequence(polyobj_t *po)
+{
+   S_StopSequence((mobj_t *)&po->spawnSpot);
+}
+
+//
 // S_StartSequenceNum
 //
 // Starts a sound sequence by index number. The actual sequence started may be
 // altered by sound sequence redirects, depending on the sequence activation
 // type.
 //
-void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
+void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
+                        ptrdiff_t seqOriginIdx)
 {
    ESoundSeq_t *edfSeq;
    SndSeq_t *newSeq;
@@ -176,6 +187,8 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype)
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
    newSeq->delayCounter = 0;                   // no delay at start
    newSeq->looping      = false;               // not looping
+   newSeq->originType   = seqOriginType;       // set origin type
+   newSeq->originIdx    = seqOriginIdx;        // set origin index
 
    // 06/16/06: possibly randomize starting volume
    newSeq->volume = 
@@ -192,7 +205,20 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
 {
    boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
    
-   S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype);
+   S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
+                      SEQ_ORIGIN_SECTOR, s - sectors);
+}
+
+//
+// S_StartPolySequence
+//
+// Convenience routine. Starts a polyobject sound sequence
+//
+void S_StartPolySequence(polyobj_t *po)
+{
+   // TODO/FIXME: is there a value that means "no sequence" ?
+   S_StartSequenceNum((mobj_t *)&po->spawnSpot, po->seqId, SEQ_DOOR, 
+                      SEQ_ORIGIN_POLY, po->id);
 }
 
 //
@@ -200,7 +226,8 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
 //
 // Starts the named sound sequence.
 //
-void S_StartSequenceName(mobj_t *mo, const char *seqname)
+void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType, 
+                         ptrdiff_t seqOriginIdx)
 {
    ESoundSeq_t *edfSeq;
    SndSeq_t *newSeq;
@@ -229,6 +256,8 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
    newSeq->delayCounter = 0;                   // no delay at start
    newSeq->looping      = false;               // not looping
+   newSeq->originType   = seqOriginType;       // origin type
+   newSeq->originIdx    = seqOriginIdx;        // origin index
 
    // possibly randomize starting volume
    newSeq->volume = 
@@ -243,7 +272,8 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname)
 //
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 {
-   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname);
+   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, SEQ_ORIGIN_SECTOR, 
+                       s - sectors);
 }
 
 //
