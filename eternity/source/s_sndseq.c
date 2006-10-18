@@ -207,7 +207,8 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
    boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
    
    S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
-                      SEQ_ORIGIN_SECTOR, s - sectors);
+                      ceil ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
+                      s - sectors);
 }
 
 //
@@ -273,7 +274,8 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
 //
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 {
-   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, SEQ_ORIGIN_SECTOR, 
+   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, 
+                       fOrC ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
                        s - sectors);
 }
 
@@ -452,15 +454,6 @@ void S_StopAllSequences(void)
    S_StopEnviroSequence();
 }
 
-//
-// S_SetSequenceStatus
-//
-// Restores a sound sequence's status using data extracted from a game save.
-//
-void S_SetSequenceStatus(void)
-{
-}
-
 //=============================================================================
 //
 // Environmental Ambience Sequences
@@ -482,6 +475,22 @@ static MobjCollection enviroSpots;
 static int enviroTics;
 static mobj_t *nextEnviroSpot;
 
+static SndSeq_t enviroSeq;
+
+
+static S_ResetEnviroEngine(void)
+{
+   EnviroSequence    = NULL;
+   enviroSeqFinished = true;
+   enviroTics        = M_RangeRandom(EnviroSeqManager.minStartWait,
+                                     EnviroSeqManager.maxStartWait);
+
+   if(!P_CollectionIsEmpty(&enviroSpots))
+      nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
+   else
+      nextEnviroSpot = NULL; // broken, but shouldn't matter
+}
+
 //
 // S_InitEnviroSpots
 //
@@ -497,15 +506,7 @@ void S_InitEnviroSpots(void)
    if(enviroType != NUMMOBJTYPES)
       P_CollectThings(&enviroSpots);
 
-   EnviroSequence    = NULL;
-   enviroSeqFinished = true;
-   enviroTics        = M_RangeRandom(EnviroSeqManager.minStartWait,
-                                     EnviroSeqManager.maxStartWait);
-
-   if(!P_CollectionIsEmpty(&enviroSpots))
-      nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
-   else
-      nextEnviroSpot = NULL; // broken, but shouldn't matter
+   S_ResetEnviroEngine();
 }
 
 //
@@ -518,8 +519,6 @@ void S_InitEnviroSpots(void)
 //
 static void S_RunEnviroSequence(void)
 {
-   static SndSeq_t seq;
-
    // nothing to do?
    if(P_CollectionIsEmpty(&enviroSpots))
       return;
@@ -537,7 +536,7 @@ static void S_RunEnviroSequence(void)
       // is it finished?
       if(enviroSeqFinished)
       {
-         memset(&seq, 0, sizeof(SndSeq_t));
+         memset(&enviroSeq, 0, sizeof(SndSeq_t));
          EnviroSequence = NULL;
          enviroTics = M_RangeRandom(EnviroSeqManager.minEnviroWait,
                                     EnviroSeqManager.maxEnviroWait);
@@ -557,21 +556,23 @@ static void S_RunEnviroSequence(void)
          return;
       }
 
-      seq.sequence     = edfSeq;
-      seq.cmdPtr       = edfSeq->commands;
-      seq.currentSound = NULL;
-      seq.origin       = nextEnviroSpot;
-      seq.attenuation  = edfSeq->attenuation;
-      seq.delayCounter = 0;
-      seq.looping      = false;
+      enviroSeq.sequence     = edfSeq;
+      enviroSeq.cmdPtr       = edfSeq->commands;
+      enviroSeq.currentSound = NULL;
+      enviroSeq.origin       = nextEnviroSpot;
+      enviroSeq.attenuation  = edfSeq->attenuation;
+      enviroSeq.delayCounter = 0;
+      enviroSeq.looping      = false;
+      enviroSeq.originType   = SEQ_ORIGIN_OTHER;
+      enviroSeq.originIdx    = -1;
 
       // possibly randomize the starting volume
-      seq.volume = 
+      enviroSeq.volume = 
          edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
                          : edfSeq->volume;
 
-      EnviroSequence    = &seq;   // now playing an enviro sequence
-      enviroSeqFinished = false;  // sequence is not finished
+      EnviroSequence    = &enviroSeq; // now playing an enviro sequence
+      enviroSeqFinished = false;      // sequence is not finished
    }
 }
 
@@ -588,6 +589,35 @@ static void S_StopEnviroSequence(void)
    nextEnviroSpot = NULL;     // no spot chosen
    enviroSeqFinished = true;  // finished playing
    enviroTics = D_MAXINT;     // wait more or less forever
+}
+
+//
+// S_SetSequenceStatus
+//
+// Restores a sound sequence's status using data extracted from a game save.
+//
+void S_SetSequenceStatus(SndSeq_t *seq)
+{
+   // if it is an environment sequence, copy this sequence into the enviro
+   // sequence and then destroy this one that was created by the savegame code
+   if(seq->sequence->type == SEQ_ENVIRONMENT)
+   {
+      memcpy(&enviroSeq, seq, sizeof(SndSeq_t));
+      EnviroSequence = &enviroSeq;
+      enviroSeqFinished = false;
+      enviroTics = 0;
+
+      Z_Free(seq);
+   }
+   else
+   {
+      // link this sequence
+      M_DLListInsert(&seq->link, (mdllistitem_t **)&SoundSequences);
+   }
+
+   // if EnviroSequence isn't set, reset the enviroseq engine
+   if(!EnviroSequence)
+      S_ResetEnviroEngine();
 }
 
 // EOF

@@ -41,6 +41,8 @@ void P_ArchiveSpecials(void);
 void P_UnArchiveSpecials(void);
 void P_ArchiveScripts(void);
 void P_UnArchiveScripts(void);
+void P_ArchiveSoundSequences(void);
+void P_UnArchiveSoundSequences(void);
 
 // 1/18/98 killough: add RNG info to savegame
 void P_ArchiveRNG(void);

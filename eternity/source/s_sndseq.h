@@ -64,7 +64,8 @@ enum
 // sound sector origin types (needed for savegames)
 enum
 {
-   SEQ_ORIGIN_SECTOR,
+   SEQ_ORIGIN_SECTOR_F,
+   SEQ_ORIGIN_SECTOR_C,
    SEQ_ORIGIN_POLYOBJ,
    SEQ_ORIGIN_OTHER,
 };
@@ -119,7 +120,7 @@ void S_StopPolySequence(polyobj_t *po);
 
 void S_RunSequences(void);
 void S_StopAllSequences(void);
-void S_SetSequenceStatus(void);
+void S_SetSequenceStatus(SndSeq_t *seq);
 void S_InitEnviroSpots(void);
 
 boolean S_CheckSequenceLoop(mobj_t *mo);

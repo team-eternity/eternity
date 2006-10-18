@@ -41,6 +41,7 @@ rcsid[] = "$Id: p_saveg.c,v 1.17 1998/05/03 23:10:22 killough Exp $";
 #include "p_setup.h"
 #include "e_edf.h"
 #include "a_small.h"
+#include "s_sndseq.h"
 
 byte *save_p;
 
@@ -1462,12 +1463,195 @@ void P_UnArchiveScripts(void)
 // haleyjd 10/17/06: Sound Sequences
 //
 
+static void P_ArchiveSndSeq(SndSeq_t *seq)
+{
+   int twizzle;
+
+   CheckSaveGame(33 + 6*sizeof(int));
+
+   // save name of EDF sequence
+   memcpy(save_p, seq->sequence->name, 33);
+   save_p += 33;
+
+   // twizzle command pointer
+   twizzle = seq->cmdPtr - seq->sequence->commands;
+   memcpy(save_p, &twizzle, sizeof(int));
+   save_p += sizeof(int);
+
+   // save origin type
+   memcpy(save_p, &seq->originType, sizeof(int));
+   save_p += sizeof(int);
+
+   // depending on origin type, either save the origin index (sector or polyobj
+   // number), or an mobj_t number.This differentiation is necessary 
+   // because degenmobj_t are not covered by mobj numbering.
+   switch(seq->originType)
+   {
+   case SEQ_ORIGIN_SECTOR_F:
+   case SEQ_ORIGIN_SECTOR_C:
+   case SEQ_ORIGIN_POLYOBJ:
+      memcpy(save_p, &seq->originIdx, sizeof(int));
+      break;
+   case SEQ_ORIGIN_OTHER:
+      twizzle = P_MobjNum(seq->origin); // it better be a normal mobj_t here!
+      memcpy(save_p, &twizzle, sizeof(int));
+      break;
+   default:
+      I_Error("P_ArchiveSndSeq: unknown sequence origin type %d\n", 
+              seq->originType);
+   }
+
+   save_p += sizeof(int);
+
+   // save delay counter
+   memcpy(save_p, &seq->delayCounter, sizeof(int));
+   save_p += sizeof(int);
+
+   // save current volume level
+   memcpy(save_p, &seq->volume, sizeof(int));
+   save_p += sizeof(int);
+
+   // save current attenuation parameter
+   memcpy(save_p, &seq->attenuation, sizeof(int));
+   save_p += sizeof(int);
+}
+
+static void P_UnArchiveSndSeq(void)
+{
+   SndSeq_t  *newSeq;
+   sector_t  *s;
+   polyobj_t *po;
+   mobj_t    *mo;
+   int twizzle;
+   char name[33];
+
+   // allocate a new sound sequence
+   newSeq = Z_Malloc(sizeof(SndSeq_t), PU_LEVEL, NULL);
+
+   // get corresponding EDF sequence
+   memcpy(name, save_p, 33);
+   save_p += 33;
+
+   if(!(newSeq->sequence = E_SequenceForName(name)))
+      I_Error("P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
+              name);
+
+   newSeq->currentSound = NULL; // not currently playing a sound
+
+   // reset command pointer
+   memcpy(&twizzle, save_p, sizeof(int));
+   save_p += sizeof(int);
+   newSeq->cmdPtr = newSeq->sequence->commands + twizzle;
+
+   // get origin type
+   memcpy(&newSeq->originType, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   // get twizzled origin index
+   memcpy(&twizzle, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   // restore pointer to origin
+   switch(newSeq->originType)
+   {
+   case SEQ_ORIGIN_SECTOR_F:
+      s = sectors + twizzle;
+      newSeq->originIdx = twizzle;
+      newSeq->origin = (mobj_t *)&s->soundorg;
+      break;
+   case SEQ_ORIGIN_SECTOR_C:
+      s = sectors + twizzle;
+      newSeq->originIdx = twizzle;
+      newSeq->origin = (mobj_t *)&s->csoundorg;
+      break;
+   case SEQ_ORIGIN_POLYOBJ:
+      if(!(po = Polyobj_GetForNum(twizzle)))
+         I_Error("P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
+                 twizzle);
+      newSeq->originIdx = po->id;
+      newSeq->origin = (mobj_t *)&po->spawnSpot;
+      break;
+   case SEQ_ORIGIN_OTHER:
+      if(!(mo = P_MobjForNum(twizzle)))
+         I_Error("P_UnArchiveSndSeq: origin at invalid mobj_t\n");
+      newSeq->originIdx = -1;
+      newSeq->origin = mo;
+      break;
+   default:
+      I_Error("P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
+              newSeq->originType);
+   }
+
+   // restore delay counter
+   memcpy(&newSeq->delayCounter, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   // restore current volume
+   memcpy(&newSeq->volume, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   // restore current attenuation
+   memcpy(&newSeq->attenuation, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   newSeq->looping = false; // not currently looping since not currently playing
+
+   // let the sound sequence code take care of putting this sequence into its 
+   // proper place, as that's a complicated action that requires use of data
+   // static to s_sndseq.c
+   S_SetSequenceStatus(newSeq);
+}
+
 void P_ArchiveSoundSequences(void)
 {
+   SndSeq_t *seq = SoundSequences;
+   int count = 0;
+
+   CheckSaveGame(sizeof(int));
+
+   // count active sound sequences (+1 if there's a running enviroseq)
+   while(seq)
+   {
+      ++count;
+      seq = (SndSeq_t *)(seq->link.next);
+   }
+
+   if(EnviroSequence)
+      ++count;
+
+   // save count
+   memcpy(save_p, &count, sizeof(int));
+   save_p += sizeof(int);
+
+   // save all the normal sequences
+   seq = SoundSequences;
+   while(seq)
+   {
+      P_ArchiveSndSeq(seq);
+      seq = (SndSeq_t *)(seq->link.next);
+   }
+
+   // save enviro sequence
+   if(EnviroSequence)
+      P_ArchiveSndSeq(EnviroSequence);
 }
 
 void P_UnArchiveSoundSequences(void)
 {
+   int i, count;
+
+   // stop any sequences currently playing
+   // actually, this leaks memory, but only until the end of the current level
+   S_StopAllSequences();
+
+   // get sequence count
+   memcpy(&count, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   // unarchive all sequences; the sound sequence code takes care of
+   // distinguishing any special sequences (such as environmental) for us.
+   for(i = 0; i < count; ++i)
+      P_UnArchiveSndSeq();
 }
 
 //----------------------------------------------------------------------------

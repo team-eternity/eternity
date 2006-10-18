@@ -1807,6 +1807,8 @@ void G_SaveCurrentLevel(char *filename, char *description)
    Z_CheckHeap();
    P_ArchiveScripts();   // sf: archive scripts
    Z_CheckHeap();
+   P_ArchiveSoundSequences();
+   Z_CheckHeap();
    
    P_DeNumberObjects();
 
@@ -1955,6 +1957,7 @@ static void G_DoLoadGame(void)
    P_UnArchiveRNG();    // killough 1/18/98: load RNG information
    P_UnArchiveMap();    // killough 1/22/98: load automap information
    P_UnArchiveScripts(); // sf: scripting
+   P_UnArchiveSoundSequences();
    P_FreeObjTable();
 
    if(*save_p != 0xe6)
