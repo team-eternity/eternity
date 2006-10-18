@@ -47,7 +47,7 @@ static const char rcsid[] =
 #endif
 
 
-//jff 1/7/98 default automap colors added
+//jff 1/7/98 default acolors added
 int mapcolor_back;    // map background
 int mapcolor_grid;    // grid lines color
 int mapcolor_wall;    // normal 1s wall color

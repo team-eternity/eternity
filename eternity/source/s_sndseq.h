@@ -97,7 +97,7 @@ typedef struct SndSeq_s
 
    // 10/17/06: data needed for savegames
    int originType;               // type of origin (sector, polyobj, other)
-   ptrdiff_t originIdx;          // sector or polyobj number, (or -1)
+   int originIdx;                // sector or polyobj number, (or -1)
 } SndSeq_t;
 
 // Sound sequence pointers, needed for savegame support

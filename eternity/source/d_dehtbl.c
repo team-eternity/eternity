@@ -1308,6 +1308,7 @@ extern void A_WeaponSetCtr();
 extern void A_WeaponCopyCtr();
 extern void A_WeaponCtrOp();
 extern void A_AmbientThinker();
+extern void A_SteamSpawn(); // haleyjd DEBUG
 
 // haleyjd 10/12/02: Heretic pointers
 extern void A_SpawnGlitter();
@@ -1516,6 +1517,7 @@ deh_bexptr deh_bexptrs[] =
   {A_WeaponCopyCtr,     "WeaponCopyCtr"},
   {A_WeaponCtrOp,       "WeaponCtrOp"},
   {A_AmbientThinker,    "AmbientThinker"},
+  {A_SteamSpawn,        "SteamSpawn"}, // haleyjd DEBUG
 
   // haleyjd 07/13/03: nuke specials
   {A_PainNukeSpec,      "PainNukeSpec"},

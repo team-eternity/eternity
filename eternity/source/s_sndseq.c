@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "s_sndseq.h"
 #include "e_things.h"
+#include "r_state.h"
 
 // Global data
 
@@ -137,7 +138,7 @@ void S_StopPolySequence(polyobj_t *po)
 // type.
 //
 void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
-                        ptrdiff_t seqOriginIdx)
+                        int seqOriginIdx)
 {
    ESoundSeq_t *edfSeq;
    SndSeq_t *newSeq;
@@ -218,7 +219,7 @@ void S_StartPolySequence(polyobj_t *po)
 {
    // TODO/FIXME: is there a value that means "no sequence" ?
    S_StartSequenceNum((mobj_t *)&po->spawnSpot, po->seqId, SEQ_DOOR, 
-                      SEQ_ORIGIN_POLY, po->id);
+                      SEQ_ORIGIN_POLYOBJ, po->id);
 }
 
 //
@@ -227,7 +228,7 @@ void S_StartPolySequence(polyobj_t *po)
 // Starts the named sound sequence.
 //
 void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType, 
-                         ptrdiff_t seqOriginIdx)
+                         int seqOriginIdx)
 {
    ESoundSeq_t *edfSeq;
    SndSeq_t *newSeq;

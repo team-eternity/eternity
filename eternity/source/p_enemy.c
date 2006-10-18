@@ -4010,6 +4010,8 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    
    newmobj = P_SpawnMobj(x, y, z, type);
    
+   newmobj->angle = plyr->mo->angle;
+
    // tweak the object's flags
    if(flagsmode != -1)
    {

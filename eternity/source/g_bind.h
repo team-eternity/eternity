@@ -101,6 +101,7 @@ enum keyactionclass
    kac_menu,            // menu bindings -- handled by MN_Responder
    kac_map,             // map  bindings -- handled by AM_Responder
    kac_console,         // con. bindings -- handled by C_Repsonder
+   kac_cmd,             // command
    NUMKEYACTIONCLASSES
 };
 

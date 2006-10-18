@@ -752,10 +752,13 @@ boolean G_Responder(event_t* ev)
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
        ST_Responder(ev) ||  // status window ate it
-       AM_Responder(ev)))   // automap ate it
+       AM_Responder(ev)))
    {
       return true;
    }
+
+   if(G_KeyResponder(ev, kac_cmd))
+      return true;
 
    // any other key pops up menu if in demos
    //

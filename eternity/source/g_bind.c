@@ -412,7 +412,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    {
       // first time only - cons_keyactions was NULL
       cons_keyactions = Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0);
-      cons_keyactions->bclass = kac_console;
+      cons_keyactions->bclass = kac_cmd;
       cons_keyactions->type = at_conscmd;
       cons_keyactions->name = Z_Strdup(name, PU_STATIC, 0);
       cons_keyactions->next = NULL;
@@ -429,7 +429,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
       temp = temp->next;
    }
    newaction = Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0);
-   newaction->bclass = kac_console;
+   newaction->bclass = kac_cmd;
    newaction->type = at_conscmd;
    newaction->name = Z_Strdup(name, PU_STATIC, 0);
    newaction->next = NULL;
@@ -555,6 +555,7 @@ char *G_FirstBoundKey(char *action)
 boolean G_KeyResponder(event_t *ev, int bclass)
 {
    static boolean ctrldown;
+   boolean ret = false;
    
    if(ev->data1 == KEYD_RCTRL)      // ctrl
       ctrldown = (ev->type == ev_keydown);
@@ -601,6 +602,7 @@ boolean G_KeyResponder(event_t *ev, int bclass)
             default:
                break;
             }
+            ret = true;
          }
       }
    }
@@ -625,10 +627,11 @@ boolean G_KeyResponder(event_t *ev, int bclass)
          default:
             break;
          }
+         ret = true;
       }
    }
 
-   return true;
+   return ret;
 }
 
 //===========================================================================

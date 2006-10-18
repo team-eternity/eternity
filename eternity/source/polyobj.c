@@ -45,6 +45,7 @@
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "s_sndseq.h"
 #include "v_misc.h"
 
 /*
@@ -429,7 +430,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
          if(po->mirror == po->id) // do not allow a self-reference
             po->mirror = -1;
          // sound sequence is in args[2]
-         po->seqId = args[2];
+         po->seqId = seg->linedef->args[2];
          break;
       }
    }
@@ -453,7 +454,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
       if(po->mirror == po->id) // do not allow a self-reference
          po->mirror = -1;
       // sound sequence is in args[3]
-      po->seqId = args[3];
+      po->seqId = po->segs[0]->linedef->args[3];
    }
 
 

@@ -2461,6 +2461,58 @@ void A_AmbientThinker(mobj_t *mo)
    S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop);
 }
 
+void A_SteamSpawn(mobj_t *mo)
+{
+   mobj_t *steamthing;
+   int thingtype;
+   int vrange, hrange;
+   int tvangle, thangle;
+   angle_t vangle, hangle;
+   fixed_t speed, angularspeed;
+   
+   // Get the thingtype of the thing we're spewing (a steam cloud for example)
+   thingtype = E_SafeThingType((int)(mo->state->args[0]));
+   
+   // And the speed to fire it out at
+   speed = mo->state->args[4] << FRACBITS;
+
+   // Make our angles byteangles
+   hangle = (mo->angle / (ANG90/64));
+   thangle = hangle;
+   tvangle = (mo->state->args[2] * 256) / 360;
+   // As well as the spread ranges
+   hrange = (mo->state->args[1] * 256) / 360;
+   vrange = (mo->state->args[3] * 256) / 360;
+   
+   // Get the angles we'll be firing the things in, factoring in 
+   // where within the range it will lie
+   thangle += ((hrange >> 1) - ((M_Random() * hrange)/255));
+   tvangle += ((vrange >> 1) - ((M_Random() * vrange)/255));
+   
+   while(thangle >= 256)
+      thangle -= 256;
+   while(thangle < 0)
+      thangle += 256;
+         
+   while(tvangle >= 256)
+      tvangle -= 256;
+   while(tvangle < 0)
+      tvangle += 256;
+   
+   // Make angles angle_t
+   hangle = ((unsigned int)thangle * (ANG90/64));
+   vangle = ((unsigned int)tvangle * (ANG90/64));
+
+   // Spawn thing
+   steamthing = P_SpawnMobj(mo->x, mo->y, mo->z, thingtype);
+   
+   // Give it some momentum
+   // angular speed is the hypotenuse of the x and y speeds
+   angularspeed = FixedMul(speed, finecosine[vangle >> ANGLETOFINESHIFT]);
+   steamthing->momx = FixedMul(angularspeed, finecosine[hangle >> ANGLETOFINESHIFT]);
+   steamthing->momy = FixedMul(angularspeed, finesine[hangle >> ANGLETOFINESHIFT]);
+   steamthing->momz = FixedMul(speed, finesine[vangle >> ANGLETOFINESHIFT]);
+}
 
 //
 // Frame Scripting Codepointers
