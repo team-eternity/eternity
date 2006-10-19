@@ -1018,7 +1018,7 @@ static void G_DoPlayDemo(void)
          demo_p += 6; // increment past signature
          
          // reconstruct full version number and reset it
-         temp  = *demo_p++;                // byte one
+         temp  =        *demo_p++;         // byte one
          temp |= ((int)(*demo_p++)) <<  8; // byte two
          temp |= ((int)(*demo_p++)) << 16; // byte three
          temp |= ((int)(*demo_p++)) << 24; // byte four
