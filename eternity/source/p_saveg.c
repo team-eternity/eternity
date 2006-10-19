@@ -1467,7 +1467,7 @@ static void P_ArchiveSndSeq(SndSeq_t *seq)
 {
    int twizzle;
 
-   CheckSaveGame(33 + 6*sizeof(int));
+   CheckSaveGame(33 + 7*sizeof(int));
 
    // save name of EDF sequence
    memcpy(save_p, seq->sequence->name, 33);
@@ -1483,8 +1483,8 @@ static void P_ArchiveSndSeq(SndSeq_t *seq)
    save_p += sizeof(int);
 
    // depending on origin type, either save the origin index (sector or polyobj
-   // number), or an mobj_t number.This differentiation is necessary 
-   // because degenmobj_t are not covered by mobj numbering.
+   // number), or an mobj_t number. This differentiation is necessary because 
+   // degenmobj_t are not covered by mobj numbering.
    switch(seq->originType)
    {
    case SEQ_ORIGIN_SECTOR_F:
@@ -1513,6 +1513,10 @@ static void P_ArchiveSndSeq(SndSeq_t *seq)
 
    // save current attenuation parameter
    memcpy(save_p, &seq->attenuation, sizeof(int));
+   save_p += sizeof(int);
+
+   // save flags
+   memcpy(save_p, &seq->flags, sizeof(int));
    save_p += sizeof(int);
 }
 
@@ -1594,7 +1598,11 @@ static void P_UnArchiveSndSeq(void)
    memcpy(&newSeq->attenuation, save_p, sizeof(int));
    save_p += sizeof(int);
 
-   newSeq->looping = false; // not currently looping since not currently playing
+   // restore flags and remove looping flag if present
+   memcpy(&newSeq->flags, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   newSeq->flags &= ~SEQ_FLAG_LOOPING;
 
    // let the sound sequence code take care of putting this sequence into its 
    // proper place, as that's a complicated action that requires use of data
@@ -1641,8 +1649,7 @@ void P_UnArchiveSoundSequences(void)
    int i, count;
 
    // stop any sequences currently playing
-   // actually, this leaks memory, but only until the end of the current level
-   S_StopAllSequences();
+   S_SequenceGameLoad();
 
    // get sequence count
    memcpy(&count, save_p, sizeof(int));

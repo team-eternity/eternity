@@ -115,14 +115,17 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    {
       if(sec->f_portal && sec->f_portal->type == R_LINKED)
       {
-         // Ok, because the same portal can be used on many sectors and even lines, the portal
-         // structure won't tell you what sector is on the other side of the portal. SO
+         // Ok, because the same portal can be used on many sectors and even
+         // lines, the portal structure won't tell you what sector is on the
+         // other side of the portal. SO
          sector_t *other;
          line_t *check = sec->lines[0];
 
          other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - sec->f_portal->data.camera.deltax,
-                            ((check->v1->y + check->v2->y) >> 1) - sec->f_portal->data.camera.deltay)->sector;
+            R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) 
+                                - sec->f_portal->data.camera.deltax,
+                               ((check->v1->y + check->v2->y) >> 1) 
+                                - sec->f_portal->data.camera.deltay)->sector;
 
          P_RecursiveSound(other, soundblocks, soundtarget);
       }
@@ -3837,7 +3840,8 @@ void A_ClericBreak(mobj_t *actor)
    // Limit break         
    // Limit break 
 #ifdef R_LINKEDPORTALS
-   ang = R_PointToAngle2(actor->x, actor->y, getTargetX(actor), getTargetY(actor));
+   ang = R_PointToAngle2(actor->x, actor->y, 
+                         getTargetX(actor), getTargetY(actor));
 #else        
    ang = R_PointToAngle2(actor->x, actor->y, target->x, target->y);
 #endif

@@ -584,9 +584,9 @@ void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *))
 // end new Eternity mobj functions
 
 #ifdef R_LINKEDPORTALS
-#include "p_linkoffset.h"
+#include "linkoffs.h"
 
-d_inline fixed_t getTargetX(mobj_t *mo)
+d_inline static fixed_t getTargetX(mobj_t *mo)
 {
    linkoffset_t *link;
 
@@ -600,7 +600,7 @@ d_inline fixed_t getTargetX(mobj_t *mo)
    return mo->target->x + link->x;
 }
 
-d_inline fixed_t getTargetY(mobj_t *mo)
+d_inline static fixed_t getTargetY(mobj_t *mo)
 {
    linkoffset_t *link;
 
@@ -617,7 +617,7 @@ d_inline fixed_t getTargetY(mobj_t *mo)
 
 // SoM: if I am not mistaken (which I shouldn't be) linked portals only ever make an
 // x and y offset... Maybe I should phase out the z offset stuff?
-d_inline fixed_t getTargetZ(mobj_t *mo)
+d_inline static fixed_t getTargetZ(mobj_t *mo)
 {
    linkoffset_t *link;
 

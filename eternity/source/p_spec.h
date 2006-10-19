@@ -1178,7 +1178,7 @@ void P_SpawnDoorCloseIn30(sector_t *sec);
 
 void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
 
-void P_DoorSequence(boolean raise, boolean turbo, sector_t *s); // haleyjd
+void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s); // haleyjd
 
 // p_floor
 void P_FloorSequence(sector_t *s);

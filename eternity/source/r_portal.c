@@ -738,10 +738,11 @@ void R_RenderPortals(void)
 
 
 #ifdef R_LINKEDPORTALS
-// ------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // SoM: Begin linked portals
 
-rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, int groupid)
+rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, 
+                             int groupid)
 {
    rportal_t *rover, *ret;
    cameraportal_t cam;
@@ -754,7 +755,8 @@ rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, int
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_LINKED || memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+      if(rover->type != R_LINKED || 
+         memcmp(&cam, &(rover->data.camera), sizeof(cam)))
          continue;
 
       return rover;
@@ -765,6 +767,7 @@ rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, int
    ret->data.camera = cam;
    return ret;
 }
+
 #endif
 #endif
 

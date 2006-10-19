@@ -994,7 +994,7 @@ soundsequence EEHticFastFootSteps
 endif()
 
 #
-# Default Sound Sequences
+# Default Sector Sound Sequences
 #
 
 # Door Opening Sequences

@@ -363,7 +363,8 @@ void AM_restoreScaleAndLoc(void)
 #ifdef R_LINKEDPORTALS
       linkoffset_t *link;
 
-      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(useportalgroups && plr->mo->groupid > 0 && 
+         (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = plr->mo->x + link->x - m_w/2;
          m_y = plr->mo->y + link->y - m_h/2;
@@ -527,7 +528,8 @@ void AM_initVariables(void)
    {
       linkoffset_t *link;
 
-      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(useportalgroups && plr->mo->groupid > 0 && 
+         (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = plr->mo->x + link->x - m_w/2;
          m_y = plr->mo->y + link->y - m_h/2;
@@ -1000,7 +1002,8 @@ void AM_doFollowPlayer(void)
    {
 #ifdef R_LINKEDPORTALS
       linkoffset_t *link;
-      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(useportalgroups && plr->mo->groupid > 0 && 
+         (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = FTOM(MTOF(plr->mo->x + link->x)) - m_w/2;
          m_y = FTOM(MTOF(plr->mo->y + link->y)) - m_h/2;
@@ -1810,7 +1813,8 @@ void AM_drawPlayers(void)
    if(!netgame)
    {
 #ifdef R_LINKEDPORTALS
-      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(useportalgroups && plr->mo->groupid > 0 && 
+         (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          px = plr->mo->x + link->x;
          py = plr->mo->y + link->y;
@@ -1864,7 +1868,8 @@ void AM_drawPlayers(void)
          continue;
       
 #ifdef R_LINKEDPORTALS
-      if(useportalgroups && plr->mo->groupid > 0 && (link = P_GetLinkOffset(0, plr->mo->groupid)))
+      if(useportalgroups && plr->mo->groupid > 0 && 
+         (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          px = p->mo->x + link->x;
          py = p->mo->y + link->y;

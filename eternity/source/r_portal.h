@@ -25,8 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef R_PORTALS_H
-#define R_PORTALS_H
+#ifndef R_PORTALS_H__
+#define R_PORTALS_H__
 
 typedef enum
 {

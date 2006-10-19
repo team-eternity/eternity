@@ -1030,33 +1030,33 @@ void RunGameTics(void)
    }
 }
 
-void TryRunTics (void)
+void TryRunTics(void)
 {
-  static int exittime = 0;
-  // gettime_realtime is used because the game speed can be changed
-  int realtics = I_GetTime_RealTime() - exittime;
-  int i;
-
-  exittime = I_GetTime_RealTime();  // save for next time
-
-  // sf: run the menu and console regardless of 
-  // game time. to prevent lockups
-
-  // NETCODE_FIXME: fraggle change #3
-
-  I_StartTic ();        // run these here now to get keyboard
-  D_ProcessEvents ();   // input for console/menu
-
-  for(i = 0; i<realtics; i++)   // run tics
-    {
+   static int exittime = 0;
+   // gettime_realtime is used because the game speed can be changed
+   int realtics = I_GetTime_RealTime() - exittime;
+   int i;
+   
+   exittime = I_GetTime_RealTime();  // save for next time
+   
+   // sf: run the menu and console regardless of 
+   // game time. to prevent lockups
+   
+   // NETCODE_FIXME: fraggle change #3
+   
+   I_StartTic();        // run these here now to get keyboard
+   D_ProcessEvents();   // input for console/menu
+   
+   for(i = 0; i < realtics; ++i)   // run tics
+   {
       // all independent tickers here
-      MN_Ticker ();
-      C_Ticker ();
+      MN_Ticker();
+      C_Ticker();
       V_FPSTicker();
-    }
-
-        // run the game tickers
-  RunGameTics();
+   }
+   
+   // run the game tickers
+   RunGameTics();
 }
 
 /////////////////////////////////////////////////////
@@ -1066,22 +1066,22 @@ void TryRunTics (void)
 
 CONSOLE_COMMAND(kick, cf_server)
 {
-  if(!c_argc)
-    {
+   if(!c_argc)
+   {
       C_Printf("usage: kick <playernum>\n"
                " use playerinfo to find playernum\n");
       return;
-    }
-  D_KickPlayer(atoi(c_argv[0]));
+   }
+   D_KickPlayer(atoi(c_argv[0]));
 }
 
 CONSOLE_COMMAND(playerinfo, 0)
 {
-  int i;
-  
-  for(i=0;i<MAXPLAYERS;i++)
-    if(playeringame[i])
-      C_Printf("%i: %s\n",i, players[i].name);
+   int i;
+   
+   for(i = 0; i < MAXPLAYERS; ++i)
+      if(playeringame[i])
+         C_Printf("%i: %s\n",i, players[i].name);
 }
 
 //
@@ -1090,15 +1090,15 @@ CONSOLE_COMMAND(playerinfo, 0)
 //
 CONSOLE_COMMAND(disconnect, cf_netonly)
 {
-  D_QuitNetGame();
-  C_SetConsole();
+   D_QuitNetGame();
+   C_SetConsole();
 }
 
 void net_AddCommands()
 {
-  C_AddCommand(kick);
-  C_AddCommand(disconnect);
-  C_AddCommand(playerinfo);
+   C_AddCommand(kick);
+   C_AddCommand(disconnect);
+   C_AddCommand(playerinfo);
 }
 
 //----------------------------------------------------------------------------

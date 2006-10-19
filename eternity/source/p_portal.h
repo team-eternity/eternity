@@ -33,27 +33,28 @@
 extern boolean useportalgroups;
 
 #ifndef R_NOGROUP
-// No link group. I know this means there is a signed limit on portal groups but do you think
-// anyone is going to make a level with 2147483647 groups that doesn't have NUTS in the wad name?
-// I didn't think so either.
+// No link group. I know this means there is a signed limit on portal groups but
+// do you think anyone is going to make a level with 2147483647 groups that 
+// doesn't have NUTS in the wad name? I didn't think so either.
 #define R_NOGROUP -1
 #endif
 
 // P_CreatePortalGroup
-// Defines a grouping of sectors in the map as its own seperate subspace of the map.
-// This subspace can be related to other subspaces in the map by offset values, thus allowing
-// things like sound travel and monster AI to work through portrals. 
+// Defines a grouping of sectors in the map as its own seperate subspace of the 
+// map. This subspace can be related to other subspaces in the map by offset 
+// values, thus allowing things like sound travel and monster AI to work through
+// portrals. 
 int P_CreatePortalGroup(sector_t *from);
 
 // R_BuildLinkTable
-// Builds the link table. This should only be called after all the portals for the level
-// have been created.
+// Builds the link table. This should only be called after all the portals for
+// the level have been created.
 void P_BuildLinkTable();
 
-#include "p_linkoffset.h"
-
+#include "linkoffs.h"
 
 #endif
+
 #endif
 
 // EOF

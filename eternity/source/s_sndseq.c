@@ -39,6 +39,8 @@ SndSeq_t *SoundSequences; // head of running sndseq list
 
 SndSeq_t *EnviroSequence; // currently playing environmental sequence
 
+// Macros
+
 #define SECTOR_ORIGIN(s, b) \
    (mobj_t *)((b) ? &((s)->csoundorg) : &((s)->soundorg))
 
@@ -57,7 +59,7 @@ boolean S_CheckSequenceLoop(mobj_t *mo)
       next = (SndSeq_t *)(curSeq->link.next);
 
       if(curSeq->origin == mo)
-         return curSeq->looping;
+         return ((curSeq->flags & SEQ_FLAG_LOOPING) == SEQ_FLAG_LOOPING);
 
       curSeq = next;
    }
@@ -111,6 +113,61 @@ void S_StopSequence(mobj_t *mo)
 }
 
 //
+// S_SquashSequence
+//
+// Stops any sound sequence being played without playing the stop sound or
+// cutting off the currently playing sound. This is needed by doors when
+// they bounce, or weird stuff happens.
+//
+void S_SquashSequence(mobj_t *mo)
+{
+   SndSeq_t *curSeq = SoundSequences, *next;
+
+   while(curSeq)
+   {
+      next = (SndSeq_t *)(curSeq->link.next);
+
+      if(curSeq->origin == mo)
+      {
+         // unlink and delete this object
+         M_DLListRemove((mdllistitem_t *)curSeq);
+         Z_Free(curSeq);
+      }
+
+      curSeq = next;
+   }
+}
+
+//
+// S_KillSequence
+//
+// Totally kills any sound sequence being played by the object.
+// Not only is the stop sound not played, but any sound being currently played
+// is cut off regardless of the nostopcutoff value.
+//
+void S_KillSequence(mobj_t *mo)
+{
+   SndSeq_t *curSeq = SoundSequences, *next;
+
+   while(curSeq)
+   {
+      next = (SndSeq_t *)(curSeq->link.next);
+
+      if(curSeq->origin == mo)
+      {
+         // stop any sound playing
+         S_StopSound(curSeq->origin);
+
+         // unlink and delete this object
+         M_DLListRemove((mdllistitem_t *)curSeq);
+         Z_Free(curSeq);
+      }
+
+      curSeq = next;
+   }
+}
+
+//
 // S_StopSectorSequence
 //
 // Convenience routine.
@@ -118,6 +175,16 @@ void S_StopSequence(mobj_t *mo)
 void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling)
 {
    S_StopSequence(SECTOR_ORIGIN(s, floorOrCeiling));
+}
+
+//
+// S_SquashSectorSequence
+//
+// Convenience routine.
+//
+void S_SquashSectorSequence(sector_t *s, boolean floorOrCeiling)
+{
+   S_SquashSequence(SECTOR_ORIGIN(s, floorOrCeiling));
 }
 
 //
@@ -187,7 +254,7 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
    newSeq->cmdPtr       = edfSeq->commands;    // set command pointer
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
    newSeq->delayCounter = 0;                   // no delay at start
-   newSeq->looping      = false;               // not looping
+   newSeq->flags        = 0;                   // no special flags
    newSeq->originType   = seqOriginType;       // set origin type
    newSeq->originIdx    = seqOriginIdx;        // set origin index
 
@@ -212,13 +279,29 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
 }
 
 //
+// S_ReplaceSectorSequence
+//
+// Squashes any currently playing sequence and starts a new one.
+// Used by bouncing doors.
+//
+void S_ReplaceSectorSequence(sector_t *s, int seqtype)
+{
+   boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
+
+   S_SquashSectorSequence(s, ceil);
+   
+   S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
+                      ceil ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
+                      s - sectors);
+}
+
+//
 // S_StartPolySequence
 //
 // Convenience routine. Starts a polyobject sound sequence
 //
 void S_StartPolySequence(polyobj_t *po)
 {
-   // TODO/FIXME: is there a value that means "no sequence" ?
    S_StartSequenceNum((mobj_t *)&po->spawnSpot, po->seqId, SEQ_DOOR, 
                       SEQ_ORIGIN_POLYOBJ, po->id);
 }
@@ -257,7 +340,7 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
    newSeq->cmdPtr       = edfSeq->commands;    // set command pointer
    newSeq->attenuation  = edfSeq->attenuation; // use starting attenuation
    newSeq->delayCounter = 0;                   // no delay at start
-   newSeq->looping      = false;               // not looping
+   newSeq->flags        = 0;                   // no special flags
    newSeq->originType   = seqOriginType;       // origin type
    newSeq->originIdx    = seqOriginIdx;        // origin index
 
@@ -280,6 +363,21 @@ void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 }
 
 //
+// S_ReplaceSectorSequenceName
+//
+// Convenience routine for starting a sector sequence by name without playing
+// the stop sound of any currently playing sequence.
+//
+void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
+{
+   S_SquashSectorSequence(s, fOrC);
+
+   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, 
+                       fOrC ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
+                       s - sectors);
+}
+
+//
 // S_StartSeqSound
 //
 // Starts a sound in the usual manner for a sound sequence.
@@ -292,6 +390,8 @@ static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
                      seq->attenuation, loop);
    }
 }
+
+// Command argument macros: we peek ahead in the command stream.
 
 #define CMD_ARG1(field) ((curSeq->cmdPtr + 1)-> field )
 #define CMD_ARG2(field) ((curSeq->cmdPtr + 2)-> field )
@@ -321,7 +421,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       isPlaying = S_CheckSoundPlaying(curSeq->origin, curSeq->currentSound);
 
    // set looping to false here; looping instructions will set it to true
-   curSeq->looping = false;
+   curSeq->flags &= ~SEQ_FLAG_LOOPING;
 
    switch(curSeq->cmdPtr->data)
    {
@@ -346,10 +446,10 @@ static void S_RunSequence(SndSeq_t *curSeq)
          curSeq->currentSound = CMD_ARG1(sfx);
          S_StartSeqSound(curSeq, true);
       }
-      curSeq->looping = true;
+      curSeq->flags |= SEQ_FLAG_LOOPING;
       break;
    case SEQ_CMD_PLAYLOOP: // play sound in a delay loop (doesn't advance)
-      curSeq->looping = true;
+      curSeq->flags |= SEQ_FLAG_LOOPING;
       curSeq->currentSound = CMD_ARG1(sfx);
       curSeq->delayCounter = CMD_ARG2(data);
       S_StartSeqSound(curSeq, false);
@@ -441,7 +541,7 @@ void S_RunSequences(void)
 //
 // S_StopAllSequences
 //
-// Stops all running sound sequences.
+// Stops all running sound sequences. Called at the end of a level.
 //
 void S_StopAllSequences(void)
 {
@@ -462,13 +562,14 @@ void S_StopAllSequences(void)
 // effects, but folded within the Hexen-like sound sequence engine.
 //
 
-// the environment sequence manager data
+// The environment sequence manager data. This is overridable via a special
+// block in EDF.
 EnviroSeqMgr_t EnviroSeqManager =
 {
-   10*TICRATE,
-   10*TICRATE + 31,
-    6*TICRATE,
-    6*TICRATE + 255,
+   10*TICRATE,        // minimum start wait
+   10*TICRATE + 31,   // maximum start wait
+    6*TICRATE,        // minimum wait between sequences
+    6*TICRATE + 255,  // maximum wait between sequences
 };
 
 static MobjCollection enviroSpots;
@@ -477,18 +578,23 @@ static mobj_t *nextEnviroSpot;
 
 static SndSeq_t enviroSeq;
 
-
-static S_ResetEnviroEngine(void)
+//
+// S_ResetEnviroSeqEngine
+//
+// Resets the environmental sequence engine.
+//
+static void S_ResetEnviroSeqEngine(void)
 {
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
-   enviroTics        = M_RangeRandom(EnviroSeqManager.minStartWait,
-                                     EnviroSeqManager.maxStartWait);
 
    if(!P_CollectionIsEmpty(&enviroSpots))
       nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
    else
       nextEnviroSpot = NULL; // broken, but shouldn't matter
+
+   enviroTics = M_RangeRandom(EnviroSeqManager.minStartWait,
+                              EnviroSeqManager.maxStartWait);
 }
 
 //
@@ -506,7 +612,7 @@ void S_InitEnviroSpots(void)
    if(enviroType != NUMMOBJTYPES)
       P_CollectThings(&enviroSpots);
 
-   S_ResetEnviroEngine();
+   S_ResetEnviroSeqEngine();
 }
 
 //
@@ -562,7 +668,7 @@ static void S_RunEnviroSequence(void)
       enviroSeq.origin       = nextEnviroSpot;
       enviroSeq.attenuation  = edfSeq->attenuation;
       enviroSeq.delayCounter = 0;
-      enviroSeq.looping      = false;
+      enviroSeq.flags        = SEQ_FLAG_ENVIRO; // started by enviro engine
       enviroSeq.originType   = SEQ_ORIGIN_OTHER;
       enviroSeq.originIdx    = -1;
 
@@ -591,6 +697,11 @@ static void S_StopEnviroSequence(void)
    enviroTics = D_MAXINT;     // wait more or less forever
 }
 
+//=============================================================================
+//
+// Savegame Loading Stuff
+//
+
 //
 // S_SetSequenceStatus
 //
@@ -599,8 +710,8 @@ static void S_StopEnviroSequence(void)
 void S_SetSequenceStatus(SndSeq_t *seq)
 {
    // if it is an environment sequence, copy this sequence into the enviro
-   // sequence and then destroy this one that was created by the savegame code
-   if(seq->sequence->type == SEQ_ENVIRONMENT)
+   // sequence and then destroy the one that was created by the savegame code
+   if(seq->flags & SEQ_FLAG_ENVIRO)
    {
       memcpy(&enviroSeq, seq, sizeof(SndSeq_t));
       EnviroSequence = &enviroSeq;
@@ -614,10 +725,27 @@ void S_SetSequenceStatus(SndSeq_t *seq)
       // link this sequence
       M_DLListInsert(&seq->link, (mdllistitem_t **)&SoundSequences);
    }
+}
 
-   // if EnviroSequence isn't set, reset the enviroseq engine
-   if(!EnviroSequence)
-      S_ResetEnviroEngine();
+//
+// S_SequenceGameLoad
+//
+// This is called from the savegame loading code to reset the sound sequence
+// engine.
+//
+void S_SequenceGameLoad(void)
+{
+   SndSeq_t *curSeq;
+
+   // kill all running sequences
+   // note the loop restarts from the beginning each time because S_KillSequence
+   // modifies the double-linked list; it'll stop running when the last sequence
+   // is deleted.
+   while((curSeq = SoundSequences))
+      S_KillSequence(curSeq->origin);
+
+   // reset the enviro sequence engine in a way that lets it start up again
+   S_ResetEnviroSeqEngine();
 }
 
 // EOF

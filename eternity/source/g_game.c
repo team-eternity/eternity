@@ -643,7 +643,7 @@ static void G_DoLoadLevel(void)
    gamestate = GS_LEVEL;
 
    // haleyjd 12/27/03: this should be BEFORE P_SetupLevel!
-   for(i = 0; i < MAXPLAYERS; i++)
+   for(i = 0; i < MAXPLAYERS; ++i)
    {
       if(playeringame[i] && players[i].playerstate == PST_DEAD)
          players[i].playerstate = PST_REBORN;
@@ -652,6 +652,7 @@ static void G_DoLoadLevel(void)
    }
 
    S_StopAllSequences(); // haleyjd 06/06/06
+   S_StopLoopedSounds(); // haleyjd 10/19/06
    R_ClearParticles();
 
 #ifdef R_LINKEDPORTALS
@@ -664,7 +665,7 @@ static void G_DoLoadLevel(void)
 
    if(gamestate != GS_LEVEL)       // level load error
    {
-      for(i = 0; i < MAXPLAYERS; i++)
+      for(i = 0; i < MAXPLAYERS; ++i)
          players[i].playerstate = PST_LIVE;
       return;
    }

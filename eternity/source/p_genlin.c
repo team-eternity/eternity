@@ -35,6 +35,7 @@ rcsid[] = "$Id: p_genlin.c,v 1.18 1998/05/23 10:23:23 jim Exp $";
 #include "p_tick.h"
 #include "m_random.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "sounds.h"
 #include "a_small.h"
 #include "e_exdata.h"
@@ -1076,6 +1077,9 @@ static int GenDoorRetrigger(vldoor_t *door, int trig)
             return 0;
          door->direction = plat_down;
       }
+
+      // haleyjd: squash the sector's sound sequence
+      S_SquashSectorSequence(door->sector, true);
       
       return 1;
    }
@@ -1222,7 +1226,7 @@ manual_door:
             turbo = false;
          }
          if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, turbo, door->sector); // haleyjd
+            P_DoorSequence(true, turbo, false, door->sector); // haleyjd
          break;
       case ODoor:
          door->direction = plat_up;
@@ -1239,7 +1243,7 @@ manual_door:
             turbo = false;
          }
          if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, turbo, door->sector); // haleyjd
+            P_DoorSequence(true, turbo, false, door->sector); // haleyjd
          break;
       case CdODoor:
          door->topheight = sec->ceilingheight;
@@ -1254,7 +1258,7 @@ manual_door:
             door->type = genCdO;
             turbo = false;
          }
-         P_DoorSequence(false, turbo, door->sector); // haleyjd
+         P_DoorSequence(false, turbo, false, door->sector); // haleyjd
          break;
       case CDoor:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
@@ -1270,7 +1274,7 @@ manual_door:
             door->type = genClose;
             turbo = false;
          }
-         P_DoorSequence(false, turbo, door->sector); // haleyjd
+         P_DoorSequence(false, turbo, false, door->sector); // haleyjd
          break;
       
       // haleyjd: The following door types are parameterized only

@@ -1270,7 +1270,10 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
          if(inflictor->groupid == target->groupid ||
             !(link = P_GetLinkOffset(inflictor->groupid, target->groupid)))
-            ang = R_PointToAngle2 (inflictor->x, inflictor->y, target->x, target->y);
+         {
+            ang = R_PointToAngle2 (inflictor->x, inflictor->y, 
+                                   target->x, target->y);
+         }
          else
          {
             ang = R_PointToAngle2(inflictor->x, inflictor->y, 

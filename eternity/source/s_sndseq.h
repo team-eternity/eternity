@@ -78,6 +78,13 @@ typedef union seqcmd_s
    int data;       // some kind of data
 } seqcmd_t;
 
+// 10/18/06: sequence flags
+enum
+{
+   SEQ_FLAG_LOOPING = 0x01,
+   SEQ_FLAG_ENVIRO  = 0x02,
+};
+
 // SndSeq_t -- a running sound sequence
 
 typedef struct SndSeq_s
@@ -94,7 +101,7 @@ typedef struct SndSeq_s
    int volume;                   // current volume
    int attenuation;              // current attenuation type
 
-   boolean looping;              // if true, sequence is in a loop
+   int flags;                    // sequence flags
 
    // 10/17/06: data needed for savegames
    int originType;               // type of origin (sector, polyobj, other)
@@ -110,10 +117,15 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
 void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
                          int seqOriginIdx);
 void S_StopSequence(mobj_t *mo);
+void S_SquashSequence(mobj_t *mo);
+void S_KillSequence(mobj_t *mo);
 
 void S_StartSectorSequence(sector_t *s, int seqtype);
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
+void S_ReplaceSectorSequence(sector_t *s, int seqtype);
+void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
 void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling);
+void S_SquashSectorSequence(sector_t *s, boolean floorOrCeiling);
 
 void S_StartPolySequence(polyobj_t *po);
 void S_StopPolySequence(polyobj_t *po);
@@ -121,6 +133,7 @@ void S_StopPolySequence(polyobj_t *po);
 void S_RunSequences(void);
 void S_StopAllSequences(void);
 void S_SetSequenceStatus(SndSeq_t *seq);
+void S_SequenceGameLoad(void);
 void S_InitEnviroSpots(void);
 
 boolean S_CheckSequenceLoop(mobj_t *mo);

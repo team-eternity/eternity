@@ -853,7 +853,9 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 
 #ifdef R_LINKEDPORTALS
    if(!result && tracerhitportal)
-      result = P_PathTraverse(trace.x, trace.y, trace.x + trace.dx, trace.y + trace.dy, flags, trav);
+      result = P_PathTraverse(trace.x, trace.y, 
+                              trace.x + trace.dx, trace.y + trace.dy, 
+                              flags, trav);
 #endif
 
    return result;

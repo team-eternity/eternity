@@ -46,7 +46,7 @@ rcsid[] = "$Id: p_doors.c,v 1.13 1998/05/09 12:16:29 jim Exp $";
 //
 // haleyjd 09/24/06: Plays the appropriate sound sequence for a door.
 //
-void P_DoorSequence(boolean raise, boolean turbo, sector_t *s)
+void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
 {
    const char *seqName;
 
@@ -55,7 +55,12 @@ void P_DoorSequence(boolean raise, boolean turbo, sector_t *s)
       return;
 
    if(s->sndSeqID >= 0)
-      S_StartSectorSequence(s, SEQ_DOOR);
+   {
+      if(bounced) // if the door bounced, replace the sequence
+         S_ReplaceSectorSequence(s, SEQ_DOOR);
+      else
+         S_StartSectorSequence(s, SEQ_DOOR);
+   }
    else
    {
       if(raise)
@@ -72,7 +77,11 @@ void P_DoorSequence(boolean raise, boolean turbo, sector_t *s)
          else
             seqName = "EEDoorCloseNormal";
       }
-      S_StartSectorSequenceName(s, seqName, true);
+
+      if(bounced)
+         S_ReplaceSectorSequenceName(s, seqName, true);
+      else
+         S_StartSectorSequenceName(s, seqName, true);
    }
 }
 
@@ -109,25 +118,25 @@ void T_VerticalDoor(vldoor_t *door)
          case genBlazeRaise:
          case paramBlazeCloseIn: // haleyjd 03/01/05
             door->direction = plat_down; // time to go back down
-            P_DoorSequence(false, true, door->sector); // haleyjd
+            P_DoorSequence(false, true, false, door->sector); // haleyjd
             break;
             
          case doorNormal:
          case genRaise:
          case paramCloseIn: // haleyjd 03/01/05
             door->direction = plat_down; // time to go back down
-            P_DoorSequence(false, false, door->sector); // haleyjd
+            P_DoorSequence(false, false, false, door->sector); // haleyjd
             break;
 
          case close30ThenOpen:
          case genCdO:
             door->direction = plat_up;  // time to go back up
-            P_DoorSequence(true, false, door->sector); // haleyjd
+            P_DoorSequence(true, false, false, door->sector); // haleyjd
             break;
 
          case genBlazeCdO:
             door->direction = plat_up;  // time to go back up
-            P_DoorSequence(true, true, door->sector); // haleyjd
+            P_DoorSequence(true, true, false, door->sector); // haleyjd
             break;
 
          default:
@@ -146,14 +155,14 @@ void T_VerticalDoor(vldoor_t *door)
          case paramRaiseIn: // haleyjd 03/01/05: new param type
             door->direction = plat_up; // time to raise then
             door->type = doorNormal;   // door acts just like normal 1 DR door now
-            P_DoorSequence(true, false, door->sector); // haleyjd
+            P_DoorSequence(true, false, false, door->sector); // haleyjd
             break;
 
             // haleyjd 03/01/05: new param type
          case paramBlazeRaiseIn:
             door->direction = plat_up;
             door->type = genBlazeRaise;
-            P_DoorSequence(true, true, door->sector); // haleyjd
+            P_DoorSequence(true, true, false, door->sector); // haleyjd
             break;
             
          default:
@@ -240,7 +249,7 @@ void T_VerticalDoor(vldoor_t *door)
             
          default:             // other types bounce off the obstruction
             door->direction = plat_up;
-            P_DoorSequence(true, false, door->sector); // haleyjd
+            P_DoorSequence(true, false, true, door->sector); // haleyjd
             break;
          }
       }
@@ -404,20 +413,20 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->topheight -= 4*FRACUNIT;
          door->direction = plat_down;
          door->speed = VDOORSPEED * 4;
-         P_DoorSequence(false, true, door->sector); // haleyjd
+         P_DoorSequence(false, true, false, door->sector); // haleyjd
          break;
 
       case doorClose:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          door->direction = plat_down;
-         P_DoorSequence(false, false, door->sector); // haleyjd
+         P_DoorSequence(false, false, false, door->sector); // haleyjd
          break;
 
       case close30ThenOpen:
          door->topheight = sec->ceilingheight;
          door->direction = plat_down;
-         P_DoorSequence(false, false, door->sector); // haleyjd
+         P_DoorSequence(false, false, false, door->sector); // haleyjd
          break;
 
       case blazeRaise:
@@ -427,7 +436,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->topheight -= 4*FRACUNIT;
          door->speed = VDOORSPEED * 4;
          if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, true, door->sector); // haleyjd
+            P_DoorSequence(true, true, false, door->sector); // haleyjd
          break;
 
       case doorNormal:
@@ -436,7 +445,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, false, door->sector); // haleyjd
+            P_DoorSequence(true, false, false, door->sector); // haleyjd
          break;
          
       default:
@@ -566,6 +575,9 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
             
             door->direction = plat_down; // start going down immediately
          }
+         // haleyjd: squash the sector's sound sequence when a door reversal
+         // occurs, otherwise you get a doubled sound at the next downstroke.
+         S_SquashSectorSequence(door->sector, true);
          return 1;
       }
    }
@@ -575,13 +587,13 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    {
    case 117: // blazing door raise
    case 118: // blazing door open
-      P_DoorSequence(true, true, sec); // haleyjd
+      P_DoorSequence(true, true, false, sec); // haleyjd
       break;
 
    case 1:   // normal door sound
    case 31:
    default:
-      P_DoorSequence(true, false, sec); // haleyjd
+      P_DoorSequence(true, false, false, sec); // haleyjd
       break;
    }
 

@@ -1954,8 +1954,9 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          {
             if(z < sidesector->floorheight)
             {
+               // SoM: don't check for portals here anymore
                if(sidesector->floorpic == skyflatnum ||
-                  sidesector->floorpic == sky2flatnum) // SoM: don't check for portals here anymore
+                  sidesector->floorpic == sky2flatnum) 
                   return false;
 #ifdef R_PORTALS
                if(sidesector->f_portal)
