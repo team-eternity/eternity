@@ -56,6 +56,9 @@ rcsid[] = "$Id: p_enemy.c,v 1.22 1998/05/12 12:47:10 phares Exp $";
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "d_gi.h"
+#ifdef R_LINKEDPORTALS
+#include "r_main.h"
+#endif
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -106,6 +109,38 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    sec->validcount = validcount;
    sec->soundtraversed = soundblocks+1;
    P_SetTarget(&sec->soundtarget, soundtarget);    // killough 11/98
+
+#ifdef R_LINKEDPORTALS
+   if(useportalgroups)
+   {
+      if(sec->f_portal && sec->f_portal->type == R_LINKED)
+      {
+         // Ok, because the same portal can be used on many sectors and even lines, the portal
+         // structure won't tell you what sector is on the other side of the portal. SO
+         sector_t *other;
+         line_t *check = sec->lines[0];
+
+         other = 
+         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - sec->f_portal->data.camera.deltax,
+                            ((check->v1->y + check->v2->y) >> 1) - sec->f_portal->data.camera.deltay)->sector;
+
+         P_RecursiveSound(other, soundblocks, soundtarget);
+      }
+      if(sec->c_portal && sec->c_portal->type == R_LINKED)
+      {
+         // Ok, because the same portal can be used on many sectors and even lines, the portal
+         // structure won't tell you what sector is on the other side of the portal. SO
+         sector_t *other;
+         line_t *check = sec->lines[0];
+
+         other = 
+         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - sec->c_portal->data.camera.deltax,
+                            ((check->v1->y + check->v2->y) >> 1) - sec->c_portal->data.camera.deltay)->sector;
+
+         P_RecursiveSound(other, soundblocks, soundtarget);
+      }
+   }
+#endif
 
    for(i=0; i<sec->linecount; i++)
    {
@@ -177,9 +212,15 @@ static boolean P_HitFriend(mobj_t *actor)
    return actor->target &&
       (P_AimLineAttack(actor,
                        R_PointToAngle2(actor->x, actor->y,
+#ifdef R_LINKEDPORTALS
+                          getTargetX(actor), getTargetY(actor)),
+                       P_AproxDistance(actor->x - getTargetX(actor), 
+                          actor->y - getTargetY(actor)),
+#else
                           actor->target->x, actor->target->y),
-                       P_AproxDistance(actor->x-actor->target->x, 
-                          actor->y-actor->target->y),
+                       P_AproxDistance(actor->x - actor->target->x, 
+                          actor->y - actor->target->y),
+#endif
                        0),
        linetarget) &&
       linetarget != actor->target &&
@@ -221,8 +262,13 @@ static boolean P_CheckMissileRange(mobj_t *actor)
       return false;       // do not attack yet
 
    // OPTIMIZE: get this from a global checksight
-   dist = P_AproxDistance(actor->x-actor->target->x,
-                          actor->y-actor->target->y) - 64*FRACUNIT;
+#ifdef R_LINKEDPORTALS
+   dist = P_AproxDistance(actor->x - getTargetX(actor),
+                          actor->y - getTargetY(actor)) - 64*FRACUNIT;
+#else
+   dist = P_AproxDistance(actor->x - actor->target->x,
+                          actor->y - actor->target->y) - 64*FRACUNIT;
+#endif
 
    if(actor->info->meleestate == NullStateNum)
       dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -539,9 +585,14 @@ static boolean P_SmartMove(mobj_t *actor)
    if((actor->flags2 & MF2_JUMPDOWN || (actor->type == HelperThing)) &&
       target && dog_jumping &&
       !((target->flags ^ actor->flags) & MF_FRIEND) &&
+#ifdef R_LINKEDPORTALS
+      P_AproxDistance(actor->x - getTargetX(actor),
+                      actor->y - getTargetY(actor)) < FRACUNIT*144 &&
+#else
       P_AproxDistance(actor->x - target->x,
                       actor->y - target->y) < FRACUNIT*144 &&
-      P_Random(pr_dropoff) < 235)
+#endif      
+   P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
    }
@@ -754,8 +805,13 @@ static fixed_t P_AvoidDropoff(mobj_t *actor)
 static void P_NewChaseDir(mobj_t *actor)
 {
    mobj_t *target = actor->target;
+#ifdef R_LINKEDPORTALS
+   fixed_t deltax = getTargetX(actor) - actor->x;
+   fixed_t deltay = getTargetY(actor) - actor->y;
+#else
    fixed_t deltax = target->x - actor->x;
    fixed_t deltay = target->y - actor->y;
+#endif
 
    // killough 8/8/98: sometimes move away from target, keeping distance
    //
@@ -1658,7 +1714,11 @@ void A_FaceTarget(mobj_t *actor)
 
    actor->flags &= ~MF_AMBUSH;
    actor->angle = R_PointToAngle2(actor->x, actor->y,
+#ifdef R_LINKEDPORTALS
+                                  getTargetX(actor), getTargetY(actor));
+#else
                                   actor->target->x, actor->target->y);
+#endif
    if(actor->target->flags & MF_SHADOW ||
       actor->target->flags2 & MF2_DONTDRAW || // haleyjd
       actor->target->flags3 & MF3_GHOST)      // haleyjd
@@ -3596,7 +3656,11 @@ void A_Cleric2Chase(mobj_t *actor)
          angle_t ang;
          
          ang = R_PointToAngle2(actor->x, actor->y,
+#ifdef R_LINKEDPORTALS
+                               getTargetX(actor), getTargetY(actor));
+#else
                                target->x, target->y);
+#endif
          if(P_Random(pr_clericevade)<128)
             ang += ANG90;
          else
@@ -3771,7 +3835,12 @@ void A_ClericBreak(mobj_t *actor)
    A_FaceTarget(actor);
 
    // Limit break         
+   // Limit break 
+#ifdef R_LINKEDPORTALS
+   ang = R_PointToAngle2(actor->x, actor->y, getTargetX(actor), getTargetY(actor));
+#else        
    ang = R_PointToAngle2(actor->x, actor->y, target->x, target->y);
+#endif
    an1 = ((P_Random(pr_clr2attack)&127) - 64) * (ANG90/768) + ang;
 
    P_SpawnMissileAngle(actor, E_SafeThingType(MT_CLRBALL), an1, 0, 

@@ -1100,6 +1100,8 @@ static boolean P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
       angle_t angle;
       fixed_t thrust;
       
+      // SoM: TODO figure out if linked portals needs to worry about this. It looks like
+      // target might not always be source->target
       angle = R_PointToAngle2(source->x, source->y, target->x, target->y);
       thrust = 16*FRACUNIT + (P_Random(pr_mincharge) << 10);
 
@@ -1257,10 +1259,28 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    {
       // haleyjd: thrust factor differs for Heretic
       short tf = gameModeInfo->thrustFactor;
+
+      // SoM: restructured a bit
+      fixed_t thrust = damage*(FRACUNIT>>3)*tf/target->info->mass;
+#ifdef R_LINKEDPORTALS
+      unsigned ang;
+
+      {
+         linkoffset_t *link;
+
+         if(inflictor->groupid == target->groupid ||
+            !(link = P_GetLinkOffset(inflictor->groupid, target->groupid)))
+            ang = R_PointToAngle2 (inflictor->x, inflictor->y, target->x, target->y);
+         else
+         {
+            ang = R_PointToAngle2(inflictor->x, inflictor->y, 
+                                  target->x + link->x, target->y + link->y);
+         }
+      }
+#else
       unsigned ang = R_PointToAngle2 (inflictor->x, inflictor->y,
                                       target->x, target->y);
-
-      fixed_t thrust = damage*(FRACUNIT>>3)*tf/target->info->mass;
+#endif
 
       // make fall forwards sometimes
       if(damage < 40 && damage > target->health

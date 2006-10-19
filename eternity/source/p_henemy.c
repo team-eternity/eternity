@@ -1451,7 +1451,11 @@ void A_MinotaurDecide(mobj_t *actor)
 
    S_StartSound(actor, sfx_minsit);
    
+#ifdef R_LINKEDPORTALS
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
+#else   
    dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
+#endif
    
    // charge attack
    if(P_CheckMntrCharge(dist, actor, target))
@@ -1748,7 +1752,11 @@ void A_LichAttack(mobj_t *actor)
    }
    
    // determine distance and use it to alter attack probabilities
+#ifdef R_LINKEDPORTALS
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) > 512*FRACUNIT;
+#else
    dist = P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT;
+#endif
    
    randAttack = P_Random(pr_lichattack);
    
@@ -2156,9 +2164,15 @@ void A_MissileSpread(mobj_t *actor)
       // calculate z momentum
       mobj_t *target = actor->target;
 
+#ifdef R_LINKEDPORTALS
+      momz = P_MissileMomz(getTargetX(actor) - actor->x,
+                           getTargetY(actor) - actor->y,
+                           getTargetZ(actor) - actor->z,
+#else
       momz = P_MissileMomz(target->x - actor->x,
                            target->y - actor->y,
                            target->z - actor->z,
+#endif
                            mobjinfo[type].speed);
 
       P_SpawnMissileAngle(actor, type, ang, momz, z);
@@ -2383,7 +2397,11 @@ void A_AproxDistance(mobj_t *actor)
       return;
    }
    
+#ifdef R_LINKEDPORTALS
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
+#else   
    dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
+#endif
 
    *dest = dist >> FRACBITS;
 }

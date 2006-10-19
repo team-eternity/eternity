@@ -1970,9 +1970,8 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                      group2 = sidesector->f_portal->data.camera.groupid;
                      link = P_GetLinkOffset(group1, group2);
 
-                     // SoM: for now...
                      if(!link)
-                        I_Error("linked portals exist without a link. Linked portals SHOULD have been be disabled. Contact Team Eternity.\n");
+                        return false;
 
                      zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
                                        D_abs(z - startz));
@@ -2016,9 +2015,8 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                      group2 = sidesector->c_portal->data.camera.groupid;
                      link = P_GetLinkOffset(group1, group2);
 
-                     // SoM: for now...
                      if(!link)
-                        I_Error("linked portals exist without a link. Linked portals SHOULD have been be disabled. Contact Team Eternity.\n");
+                        return false;
 
                      zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
                                        D_abs(z - startz));

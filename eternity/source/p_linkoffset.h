@@ -25,12 +25,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef P_PORTAL_H__
-#define P_PORTAL_H__
+#ifndef P_LINKOFFSET_H
+#define P_LINKOFFSET_H
 
 
 #ifdef R_LINKEDPORTALS
-extern boolean useportalgroups;
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but do you think
@@ -39,22 +38,11 @@ extern boolean useportalgroups;
 #define R_NOGROUP -1
 #endif
 
-// P_CreatePortalGroup
-// Defines a grouping of sectors in the map as its own seperate subspace of the map.
-// This subspace can be related to other subspaces in the map by offset values, thus allowing
-// things like sound travel and monster AI to work through portrals. 
-int P_CreatePortalGroup(sector_t *from);
+typedef struct linkoffset_s
+{
+   fixed_t x, y, z;
+} linkoffset_t;
 
-// R_BuildLinkTable
-// Builds the link table. This should only be called after all the portals for the level
-// have been created.
-void P_BuildLinkTable();
-
-#include "p_linkoffset.h"
-
-
+linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
 #endif
 #endif
-
-// EOF
-

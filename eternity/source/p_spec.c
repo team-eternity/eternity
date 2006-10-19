@@ -4313,13 +4313,13 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 
       portal = R_GetTwoWayPortal(deltax, deltay, deltaz);
       break;
-/*#ifdef R_LINKEDPORTALS
+#ifdef R_LINKEDPORTALS
    case portal_linked:
       // linked portals can only be applied to either the floor or ceiling.
-      if(line->special == 344)
-         anchortype = 346;
+      if(line->special == 358)
+         anchortype = 360;
       else
-         anchortype = 347;
+         anchortype = 361;
 
       frontsector = line->frontsector;
       if(!frontsector) 
@@ -4348,7 +4348,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 
       portal = R_GetLinkedPortal(deltax, deltay, deltaz, P_CreatePortalGroup(frontsector));
       break;
-#endif*/
+#endif
    default:
       I_Error("P_SpawnPortal: unknown portal type\n");
    }
