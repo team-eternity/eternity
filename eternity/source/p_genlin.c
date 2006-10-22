@@ -249,7 +249,7 @@ manual_floor:
             } // end if(line)
          }
       }
-      // SNDSEQ FIXME: ensure not called for any type that makes no sound (???)
+
       P_FloorSequence(floor->sector);
       if(manual)
          return rtn;
@@ -1906,6 +1906,42 @@ static boolean pspec_PolyRotate(long *args, short special)
 #endif // ifdef POLYOBJECTS
 
 //
+// pspec_Pillar
+//
+// joek
+// Parses arguments for hexen style parameterized Pillar specials.
+//
+// haleyjd: rewritten to use pillardata_t struct
+//
+static boolean pspec_Pillar(line_t *line, long *args, short special)
+{
+   pillardata_t pd;
+   
+   pd.tag   = args[0];
+   pd.crush = 0;
+
+   switch(special)
+   {
+   case 363:
+      pd.crush  = args[3];
+      // fall through
+   case 362:
+      pd.speed  = args[1] ? args[1] * FRACUNIT / 8 : FRACUNIT; // no 0 speed!
+      pd.height = args[2] * FRACUNIT;
+      return EV_PillarBuild(line, &pd);
+
+   case 364:
+      pd.speed = args[1] ? args[1] * FRACUNIT / 8 : FRACUNIT;
+      pd.fdist = args[2] * FRACUNIT;
+      pd.cdist = args[3] * FRACUNIT;
+      return EV_PillarOpen(line, &pd);
+
+   default:
+      return false;
+   }
+}
+
+//
 // P_ExecParamLineSpec
 //
 // Executes a parameterized line special.
@@ -1994,6 +2030,11 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
       success = pspec_PolyRotate(args, special);
       break;
 #endif
+   case 362: // Pillar_Build
+   case 363: // Pillar_BuildAndCrush
+   case 364: // Pillar_Open
+      success = pspec_Pillar(line, args, special);
+      break;
    default:
       break;
    }
@@ -2080,26 +2121,13 @@ boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac)
 // Small Natives
 //
 
-enum
-{
-   SM_SPEC_NULL,
-   SM_SPEC_PASS
-};
-
 //
 // sm_specialmode
 //
-// Allows the semantics for specials called from line scripts to be
-// changed so that the special is executed as if it belongs to the line
-// that started the script. This allows use of zero tags and trigger
-// model change types.
+// Deprecated: does nothing
 //
 static cell AMX_NATIVE_CALL sm_specialmode(AMX *amx, cell *params)
 {
-   SmallContext_t *ctx = A_GetContextForAMX(amx);
-
-   ctx->invocationData.spec_mode = params[1];
-
    return 0;
 }
 
@@ -2128,12 +2156,11 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
 
    ctx = A_GetContextForAMX(amx);
 
-   // if special mode is "pass", pass on the line and thing involved
-   // in a line script execution so that the special executes as if it
-   // came from the line that started the script.
+   // If invocation type is SC_INVOKE_LINE, we can pass on the line and
+   // thing that triggered this script. This results in the action acting
+   // exactly like it belongs to the line normally.
 
-   if(ctx->invocationData.invokeType == SC_INVOKE_LINE &&
-      ctx->invocationData.spec_mode == SM_SPEC_PASS)
+   if(ctx->invocationData.invokeType == SC_INVOKE_LINE)
    {
       line  = ctx->invocationData.line;
       thing = ctx->invocationData.trigger;
@@ -2209,6 +2236,9 @@ SCRIPT_SPEC(355, polyobj_or_rotateright)
 SCRIPT_SPEC(356, polyobj_rotateleft)
 SCRIPT_SPEC(357, polyobj_or_rotateleft)
 #endif
+SCRIPT_SPEC(362, pillar_build)
+SCRIPT_SPEC(363, pillar_buildandcrush)
+SCRIPT_SPEC(364, pillar_open)
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
@@ -2267,6 +2297,9 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Polyobj_RotateLeft",          sm_polyobj_rotateleft          },
    { "_Polyobj_OR_RotateLeft",       sm_polyobj_or_rotateleft       },
 #endif
+   { "_Pillar_Build",                sm_pillar_build                },
+   { "_Pillar_BuildAndCrush",        sm_pillar_buildandcrush        },
+   { "_Pillar_Open",                 sm_pillar_open                 },
    { NULL, NULL }
 };
 

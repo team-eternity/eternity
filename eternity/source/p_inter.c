@@ -1100,8 +1100,8 @@ static boolean P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
       angle_t angle;
       fixed_t thrust;
       
-      // SoM: TODO figure out if linked portals needs to worry about this. It looks like
-      // target might not always be source->target
+      // SoM: TODO figure out if linked portals needs to worry about this. It 
+      // looks like target might not always be source->target
       angle = R_PointToAngle2(source->x, source->y, target->x, target->y);
       thrust = 16*FRACUNIT + (P_Random(pr_mincharge) << 10);
 

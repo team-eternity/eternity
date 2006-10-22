@@ -2009,6 +2009,16 @@ static cell AMX_NATIVE_CALL sm_inautomap(AMX *amx, cell *params)
    return (cell)automapactive;
 }
 
+static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)
+{
+   if(hud_enabled && hud_overlaystyle > 0) // Boom HUD enabled, return style
+      return (cell)hud_overlaystyle + 1;
+   else if(viewheight == v_height)         // Fullscreen (no HUD)
+      return 0;			
+   else                                    // Vanilla style status bar
+      return 1;
+}
+
 AMX_NATIVE_INFO hustuff_Natives[] =
 {
    { "_MoveWidget",         sm_movewidget       },
@@ -2020,6 +2030,7 @@ AMX_NATIVE_INFO hustuff_Natives[] =
    { "_SetWidgetText",      sm_setwidgettext    },
    { "_ToggleWidget",       sm_togglewidget     },
    { "_CenterMsgTimed",     sm_centermsgtimed   },
+   { "_GetHUDMode",         sm_gethudmode       },
    { "_InAutomap",          sm_inautomap        },
    { NULL, NULL }
 };

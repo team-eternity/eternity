@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 James Haley, Steven McGranahan
+// Copyright(C) 2006 James Haley, Stephen McGranahan
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

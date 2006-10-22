@@ -267,6 +267,11 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
   return handle;
 }
 
+int I_SoundID(int handle)
+{
+   return 0; // FIXME/TODO: broken?
+}
+
 // Stop the sound. Necessary to prevent runaway chainsaw,
 // and to stop rocket launches when an explosion occurs.
 

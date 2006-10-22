@@ -3075,7 +3075,7 @@ static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
       return -1;
    }
 
-   for(tid = 1; tid <= 65535; tid++)
+   for(tid = 1; tid <= 65535; ++tid)
    {
       if(P_FindMobjFromTID(tid, NULL, NULL) == NULL)
          return tid;

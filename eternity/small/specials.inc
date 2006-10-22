@@ -11,7 +11,7 @@
 #include <fixed.inc>
 
 // floor changer types
-// NOTE: Trigger change types can ONLY be used if special mode is _SPEC_PASS!
+// NOTE: Trigger change types can ONLY be used from line scripts!
 
 enum
 {
@@ -25,7 +25,7 @@ enum
 }
 
 // ceiling change types
-// NOTE: Trigger change types can ONLY be used if special mode is _SPEC_PASS!
+// NOTE: Trigger change types can ONLY be used from line scripts!
 
 enum
 {
@@ -56,11 +56,12 @@ enum
 
 enum _spec_modes
 {
-   _SPEC_NULL,  // NULL mode: no thing or line is ever passed on to a special
-   _SPEC_PASS   // PASS mode: for _INVOKE_LINE model, line and thing are passed to specials
+   _SPEC_NULL,  
+   _SPEC_PASS   
 }
 
-// Note: The special mode will be reset to _SPEC_NULL after each script execution.
+// WARNING: This function is deprecated and now does nothing. Specials
+// started by line scripts will automatically be in SPEC_PASS mode now.
 
 native _SpecialMode(_spec_modes:mode);
 
@@ -131,19 +132,25 @@ native _Polyobj_OR_RotateRight(polyobj_id, aspeed, adist);        // 355
 native _Polyobj_RotateLeft(polyobj_id, aspeed, adist);            // 356
 native _Polyobj_OR_RotateLeft(polyobj_id, aspeed, adist);         // 357
 
+// Param Pillar Specials
+native _Pillar_Build(tag, speed, height);                // 362
+native _Pillar_BuildAndCrush(tag, speed, height, crush); // 363
+native _Pillar_Open(tag, speed, fdist, cdist);       // 364
+
+
 // byte angle routines
 stock _ByteAngleToDegrees(byteang)
    return (byteang * 360) / 256;
    
 stock _DegreesToByteAngle(degrees)
    return (degrees * 256) / 360;
-
    
 stock Fixed:_ByteAngleToFixed(byteang)
    return Fixed:(byteang * (45 * FRACUNIT / 32));
    
 stock _FixedToByteAngle(Fixed:angle)
    return _:(angle * 32 / (45 * FRACUNIT));
+
 
 // Allows setting the special of a sector.
 // * must be called only while in a level

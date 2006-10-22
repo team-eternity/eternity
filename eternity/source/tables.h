@@ -95,10 +95,10 @@ int SlopeDiv(unsigned num, unsigned den);
 //
 d_inline static angle_t FixedToAngle(fixed_t a)
 {
-   return (angle_t)((ULong64)a * ANGLE_1 >> FRACBITS);
+   return (angle_t)(((ULong64)a * ANGLE_1) >> FRACBITS);
 }
 
-d_inline static angle_t AngleToFixed(angle_t a)
+d_inline static fixed_t AngleToFixed(angle_t a)
 {
    return (fixed_t)(((ULong64)a << FRACBITS) / ANGLE_1);
 }

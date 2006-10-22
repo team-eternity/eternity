@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley, Steven McGranahan, Julian Aubourg, et al.
+// Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -67,6 +67,8 @@ int I_GetSfxLumpNum (sfxinfo_t *sfxinfo);
 
 int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
                  int pri, int loop);
+
+int I_SoundID(int handle);
 
 // Stops a sound channel.
 void I_StopSound(int handle);

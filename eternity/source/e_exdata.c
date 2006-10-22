@@ -550,6 +550,10 @@ static struct exlinespec
    { 360, "Portal_LinkedAnchorLine" },
    { 361, "Portal_LinkedAnchorLineFloor" },
 #endif
+
+   { 362, "Pillar_Build" },
+   { 363, "Pillar_BuildAndCrush" },
+   { 364, "Pillar_Open" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -1666,6 +1670,9 @@ boolean E_IsParamSpecial(short special)
    case 355: // Polyobj_OR_RotateRight
    case 356: // Polyobj_RotateLeft
    case 357: // Polyobj_OR_RotateLeft
+   case 362: // Pillar_Build
+   case 363: // Pillar_BuildAndCrush
+   case 364: // Pillar_Open
       return true;
    default:
       return false;

@@ -77,3 +77,16 @@ native _MoveWidget(const name[], x, y);
 // Test if automap is active (true == active, false == inactive)
 native bool:_InAutomap();
 
+enum
+{
+   _HUD_NONE,
+   _HUD_STATUSBAR,
+   _HUD_BOOM,
+   _HUD_FLAT,
+   _HUD_DISTRIBUTED,
+   _HUD_GRAPHICAL,
+}
+
+// Return the HUD style using the above enumeration
+native _GetHUDMode();
+

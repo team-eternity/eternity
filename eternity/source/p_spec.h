@@ -843,6 +843,17 @@ typedef struct
   int crush;
 } pillar_t;
 
+// haleyjd 10/21/06: data struct for param pillars
+typedef struct
+{
+   fixed_t speed;  // speed of furthest moving surface
+   fixed_t fdist;  // for open, how far to open floor
+   fixed_t cdist;  // for open, how far to open ceiling
+   fixed_t height; // for close, where to meet
+   int     crush;  // amount of crushing damage
+   int     tag;    // tag
+} pillardata_t;
+
 // p_spec
 
 // killough 3/7/98: Add generalized scroll effects
@@ -1014,11 +1025,14 @@ void T_MoveCeiling(ceiling_t *ceiling);
 // p_floor
 
 result_e T_MovePlane(sector_t *sector, fixed_t speed, fixed_t dest,
-		     int crush, int floorOrCeiling, int direction);
+                     int crush, int floorOrCeiling, int direction);
 
 void T_MoveFloor(floormove_t *floor);
 
 void T_MoveElevator(elevator_t *elevator);
+
+// joek
+void T_MovePillar(pillar_t *pillar);
 
 // p_spec
 
@@ -1089,6 +1103,13 @@ int EV_LightTurnOnPartway(int tag, fixed_t level);  // killough 10/10/98
 int EV_DoChange(line_t *line, change_e changetype);
 
 int EV_DoDonut(line_t *line);
+
+// joek: pillars
+
+int EV_PillarBuild(line_t *line, pillardata_t *pd);
+
+int EV_PillarOpen(line_t *line, pillardata_t *pd);
+
 
 // p_plats
 

@@ -151,19 +151,25 @@ static void S_StopChannel(int cnum)
    }
 }
 
-static boolean S_CheckSectorKill(camera_t *listener, const mobj_t *source)
+//
+// S_CheckSectorKill
+//
+// haleyjd: isolated code to check for sector sound killing.
+// Returns true if the sound should be killed.
+//
+static boolean S_CheckSectorKill(const camera_t *ear, const mobj_t *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
-   // are we in a killed-sound sector?   
    if(gamestate == GS_LEVEL)
    { 
-      if(listener && 
-         R_PointInSubsector(listener->x, listener->y)->sector->special & SF_KILLSOUND)
+      // are we in a killed-sound sector?
+      if(ear && 
+         R_PointInSubsector(ear->x, ear->y)->sector->special & SF_KILLSOUND)
          return true;
       
       // source in a killed-sound sector?
-      if(source &&
-         R_PointInSubsector(source->x, source->y)->sector->special & SF_KILLSOUND)
+      if(src &&
+         R_PointInSubsector(src->x, src->y)->sector->special & SF_KILLSOUND)
          return true;
    }
 
@@ -1377,31 +1383,24 @@ static cell AMX_NATIVE_CALL sm_sectorsound(AMX *amx, cell *params)
 
 static cell AMX_NATIVE_CALL sm_sectorsoundnum(AMX *amx, cell *params)
 {
-   int tag, tagtype, sndnum;
+   int tag, sndnum;
+   int secnum = -1;
 
    sndnum  = params[1];
    tag     = params[2];
-   tagtype = params[3];
 
    if(gamestate != GS_LEVEL)
    {
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
    }
-
-   if(!tagtype) // 0 == find sector by tag
+   
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
-      int secnum = -1;
-
-      while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
-      {
-         sector_t *sector = &sectors[secnum];
-         
-         S_StartSound((mobj_t *)&sector->soundorg, sndnum);
-      }
+      sector_t *sector = &sectors[secnum];
+      
+      S_StartSound((mobj_t *)&sector->soundorg, sndnum);
    }
-
-   // TODO: find sector by ExtraData SID
 
    return 0;
 }

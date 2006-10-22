@@ -4042,8 +4042,14 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 26:  // stairs build down normal (Hexen)
    case 27:  // stairs build up normal (Hexen)
    case 28:  // floor raise & crush
+      *special = 0; // TODO ^^^^
+      break;
    case 29:  // pillar build (no crush)
+      *special = 362; // args are same
+      break;
    case 30:  // pillar open
+      *special = 364; // args are same
+      break;
    case 31:  // stairs build down sync (Hexen)
    case 32:  // stairs build up sync (Hexen)
       *special = 0; // TODO ^^^^
@@ -4146,6 +4152,8 @@ void P_ConvertHexenLineSpec(short *special, long *args)
       args[3] *= 8;   // multiply distance to move by 8
       break;
    case 94:  // pillar build crush
+      *special = 363; // args are same
+      break;
    case 95:  // lower floor & ceiling
    case 96:  // raise floor & ceiling
    // UNUSED: 97-99

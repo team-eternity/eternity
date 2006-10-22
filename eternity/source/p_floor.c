@@ -1326,6 +1326,181 @@ int EV_DoElevator
    return rtn;
 }
 
+//
+// EV_PillarBuild
+//
+// Pillar build init function
+// joek 4/9/06
+//
+int EV_PillarBuild(line_t *line, pillardata_t *pd)
+{
+   pillar_t *pillar;
+   sector_t *sector;
+   int returnval = 0;
+   int sectornum = -1;
+   int destheight;
+   boolean manual = false;
+
+   // check if a manual trigger, if so do just the sector on the backside
+   if(pd->tag == 0)
+   {
+      if(!line || !(sector = line->backsector))
+         return returnval;
+      sectornum = sector - sectors;
+      manual = true;
+      goto manual_pillar;
+   }
+
+   while((sectornum = P_FindSectorFromTag(pd->tag, sectornum)) >= 0)
+   {
+      sector = &sectors[sectornum];
+
+manual_pillar:
+      // already being buggered about with, 
+      // or ceiling <= floor, therefore closed
+      if(sector->floordata || sector->ceilingdata || 
+         sector->ceilingheight <= sector->floorheight)
+      {
+         if(manual)
+            return returnval;
+         else
+            continue;
+      }
+            
+      pillar = Z_Malloc(sizeof(pillar_t), PU_LEVSPEC, 0);
+      sector->floordata = pillar;
+      sector->ceilingdata = pillar;
+      P_AddThinker(&pillar->thinker);
+      pillar->thinker.function = T_MovePillar;
+      pillar->sector = sector;
+      
+      if(pd->height == 0) // height == 0 so we meet in the middle
+      {
+         destheight = sector->floorheight + 
+                         ((sector->ceilingheight - sector->floorheight) / 2);
+      }
+      else // else we meet at floorheight + args[2]
+         destheight = sector->floorheight + pd->height;
+
+      if(pd->height == 0) // height is 0 so we meet halfway
+      {
+         pillar->ceilingSpeed = pd->speed;
+         pillar->floorSpeed   = pd->speed;
+      }      
+      else if(destheight-sector->floorheight > sector->ceilingheight-destheight)
+      {
+         pillar->floorSpeed = pd->speed;
+         pillar->ceilingSpeed = FixedDiv(sector->ceilingheight - destheight,
+                                   FixedDiv(destheight - sector->floorheight,
+                                            pillar->floorSpeed));
+      }
+      else
+      {
+         pillar->ceilingSpeed = pd->speed;
+         pillar->floorSpeed = FixedDiv(destheight - sector->floorheight,
+                                 FixedDiv(sector->ceilingheight - destheight, 
+                                          pillar->ceilingSpeed));
+      } 
+      
+      pillar->floordest = destheight;
+      pillar->ceilingdest = destheight;
+      pillar->direction = 1;
+      pillar->crush = pd->crush;
+      returnval = 1;
+      
+      P_FloorSequence(pillar->sector);
+
+      if(manual)
+         return returnval;
+   }
+
+   return returnval;
+}
+
+//
+// EV_PillarOpen
+//
+// Pillar open init function
+// joek 4/9/06
+//
+int EV_PillarOpen(line_t *line, pillardata_t *pd)
+{
+   pillar_t *pillar;
+   sector_t *sector;
+   int returnval = 0;
+   int sectornum = -1;
+   boolean manual = false;
+
+   // check if a manual trigger, if so do just the sector on the backside
+   if(pd->tag == 0)
+   {
+      if(!line || !(sector = line->backsector))
+         return returnval;
+      sectornum = sector - sectors;
+      manual = true;
+      goto manual_pillar;
+   }
+
+   while((sectornum = P_FindSectorFromTag(pd->tag, sectornum)) >= 0)
+   {
+      sector = &sectors[sectornum];
+
+manual_pillar:
+      // already being buggered about with
+      if(sector->floordata || sector->ceilingdata ||
+         sector->floorheight != sector->ceilingheight)
+      {
+         if(manual)
+            return returnval;
+         else
+            continue;
+      }
+
+      pillar = Z_Malloc(sizeof(pillar_t), PU_LEVSPEC, 0);
+      sector->floordata   = pillar;
+      sector->ceilingdata = pillar;
+      P_AddThinker(&pillar->thinker);
+      pillar->thinker.function = T_MovePillar;
+      pillar->sector = sector;
+      
+      if(pd->fdist == 0) // floordist == 0 so we find the next lowest floor
+         pillar->floordest = P_FindLowestFloorSurrounding(sector);
+      else               // else we meet at floorheight - args[2]
+         pillar->floordest = sector->floorheight - pd->fdist;
+      
+      if(pd->cdist == 0) // ceilingdist = 0 so we find the next highest ceiling
+         pillar->ceilingdest = P_FindHighestCeilingSurrounding(sector);
+      else               // else we meet at ceilingheight + args[3]
+         pillar->ceilingdest = sector->ceilingheight + pd->cdist;
+       
+      if(pillar->ceilingdest - sector->ceilingheight > 
+            sector->floorheight - pillar->floordest)
+      {
+         pillar->ceilingSpeed = pd->speed;
+         pillar->floorSpeed = FixedDiv(sector->floorheight - pillar->floordest, 
+                                 FixedDiv(pillar->ceilingdest - sector->ceilingheight,
+                                          pillar->ceilingSpeed));
+      }
+      else
+      {
+         pillar->floorSpeed = pd->speed;
+         pillar->ceilingSpeed = FixedDiv(pillar->ceilingdest - sector->ceilingheight,
+                                   FixedDiv(sector->floorheight - pillar->floordest, 
+                                            pillar->floorSpeed));
+      }
+
+      pillar->direction = -1;
+      returnval = 1;
+      
+      P_FloorSequence(pillar->sector);
+
+      if(manual)
+         return returnval;
+   }
+
+   return returnval;
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_floor.c,v $

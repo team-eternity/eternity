@@ -604,6 +604,7 @@ enum {
    tc_polymove,
    tc_polyslidedoor,
    tc_polyswingdoor,
+   tc_pillar,        // joek: pillars
    tc_endspecials
 } specials_e;
 
@@ -625,9 +626,10 @@ enum {
 // T_PolyObjMove                                            //      
 // T_PolyDoorSlide                                          // polyobjects
 // T_PolyDoorSwing                                          //      
+// T_MovePillar                                             // joek: pillars
 //
 
-void P_ArchiveSpecials (void)
+void P_ArchiveSpecials(void)
 {
    thinker_t *th;
    size_t    size = 0;          // killough
@@ -676,6 +678,7 @@ void P_ArchiveSpecials (void)
             th->function == T_PolyObjMove   ? 4+sizeof(polymove_t)      :
             th->function == T_PolyDoorSlide ? 4+sizeof(polyslidedoor_t) :
             th->function == T_PolyDoorSwing ? 4+sizeof(polyswingdoor_t) :
+            th->function == T_MovePillar    ? 4+sizeof(pillar_t)        :
             0;
       }
    }
@@ -875,6 +878,17 @@ void P_ArchiveSpecials (void)
          save_p += sizeof(polyswingdoor_t);
          continue;
       }
+
+      if(th->function == T_MovePillar)
+      {
+      	 pillar_t *pillar;
+         *save_p++ = tc_pillar;     
+         pillar = (pillar_t *)save_p;
+         memcpy(save_p, th, sizeof(pillar_t));
+         save_p += sizeof(pillar_t);
+         pillar->sector = (sector_t *)(pillar->sector - sectors);
+         continue;
+      }
    }
    
    // add a terminating marker
@@ -885,7 +899,7 @@ void P_ArchiveSpecials (void)
 //
 // P_UnArchiveSpecials
 //
-void P_UnArchiveSpecials (void)
+void P_UnArchiveSpecials(void)
 {
    byte tclass;
    
@@ -1095,10 +1109,22 @@ void P_UnArchiveSpecials (void)
             P_AddThinker(&pswdoor->thinker);
             break;
          }
+      
+      case tc_pillar:
+         {
+            pillar_t *pillar = Z_Malloc(sizeof(pillar_t), PU_LEVEL, NULL);
+            memcpy(pillar, save_p, sizeof(pillar_t));
+            save_p += sizeof(pillar_t);
+            pillar->sector = &sectors[(int)pillar->sector];
+            pillar->sector->floordata = pillar; 
+            pillar->sector->ceilingdata = pillar;
+            pillar->thinker.function = T_MovePillar;
+            P_AddThinker(&pillar->thinker);
+            break;
+         }
 
       default:
-         I_Error("P_UnArchiveSpecials: Unknown tclass %i in savegame",
-                 tclass);
+         I_Error("P_UnArchiveSpecials: Unknown tclass %i in savegame", tclass);
       }
    }
 }

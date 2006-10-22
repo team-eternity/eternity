@@ -359,7 +359,7 @@ static const char *cat_strs[NUMCATS] =
 
 static const char *val_strs[NUMCATS] =
 {
-   "James Haley\nSteven McGranahan\nJoe Kennedy\n",
+   "James Haley\nStephen McGranahan\nJoe Kennedy\n",
    
    FC_HI "SMMU" FC_NORMAL " by Simon Howard\n"
    FC_HI "MBF " FC_NORMAL " by Lee Killough\n"
@@ -496,7 +496,8 @@ boolean MN_HelpResponder(event_t *ev)
       viewing_helpscreen--;
       if(viewing_helpscreen < 0)
       {
-         viewing_helpscreen = 0;
+         // cancel
+         goto cancel;
       }
       else
          S_StartSound(NULL, menuSounds[MN_SND_PREVIOUS]);
@@ -532,7 +533,7 @@ cancel:
    }
 
    // always eatkey
-   return true;
+   return false;
 }
 
 menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, NULL, true};

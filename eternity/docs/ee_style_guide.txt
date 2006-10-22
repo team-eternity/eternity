@@ -30,7 +30,7 @@ made static unless they are required in another module. Inline functions must
 be declared as static also, or they will cause linker errors if the compiler
 target does not support inlining.
 
-It is suggested but not rqeuired to put '_t' on the end of types created with 
+It is suggested but not required to put '_t' on the end of types created with 
 typedef.  An example of this is 'txt_window_t'.  When creating structures, 
 always typedef them, and make the typedef name the same as the struct tag name,
 but with _t instead of _s.
