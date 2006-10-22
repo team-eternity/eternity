@@ -2507,8 +2507,8 @@ void A_SteamSpawn(mobj_t *mo)
    
    // Get the angles we'll be firing the things in, factoring in 
    // where within the range it will lie
-   thangle += ((hrange >> 1) - ((M_Random() * hrange)/255));
-   tvangle += ((vrange >> 1) - ((M_Random() * vrange)/255));
+   thangle += (hrange >> 1) - (P_Random(pr_steamspawn) * hrange / 255);
+   tvangle += (vrange >> 1) - (P_Random(pr_steamspawn) * vrange / 255);
    
    while(thangle >= 256)
       thangle -= 256;

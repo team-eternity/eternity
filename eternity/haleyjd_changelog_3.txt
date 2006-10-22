@@ -2,6 +2,40 @@
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
+10/22/06
+
+SoM improved the automap for use with linked portals.
+
+Final commits are now being made for 3.33.50 release to mop up the last few
+remaining minor issues and problems.
+
+--------------------------------------------------------------------------------
+10/19/06
+
+Added a style guide for new programmers :)
+
+--------------------------------------------------------------------------------
+10/18/06
+
+Fixed console command event responding for real, finally, by adding a new call
+to G_KeyResponder(kac_cmd) in G_Responder. Joe added his SteamSpawn codepointer.
+Sequence saving/loading is complete. SoM made a massive linked portals commit.
+
+--------------------------------------------------------------------------------
+10/17/06
+
+Rewrote the dynamic credits screen to make it look really snazzy. Fixed a bug in
+the abscenter text drawing code. Added a new separate ceiling sound origin for
+sectors so that they can run two sound sequences when both the floor and ceiling
+are affected by separate actions. Began sound sequence saving/loading code.
+Finished polyobject sequence support.
+
+--------------------------------------------------------------------------------
+10/10/06
+
+Added an optional vissprite limit.
+
+--------------------------------------------------------------------------------
 10/09/06
 
 And the fun continues:

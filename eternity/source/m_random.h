@@ -138,10 +138,10 @@ typedef enum {
   pr_fogfloat,
   pr_floathealth, // floatbobbing seed
   pr_clericteleport, // TODO: reuse these
-  pr_clr2attack,
+  pr_clr2attack, 
   pr_clr2choose,
   pr_dwarfatk,
-  pr_dwarffwae,
+  pr_steamspawn, // steam spawn codepointer 
   pr_mincharge,  // minotaur inflictor special
   pr_reflect,    // missile reflection
   pr_tglitz,     // teleglitter z coord
