@@ -111,6 +111,11 @@ extern int map_secret_after;  // secrets do not appear til after bagged
 
 extern int map_point_coordinates;  // killough 10/98
 
+#ifdef R_LINKEDPORTALS
+extern int mapcolor_prtl;
+extern boolean mapportal_overlay;
+#endif
+
 #endif
 
 //----------------------------------------------------------------------------

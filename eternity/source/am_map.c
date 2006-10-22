@@ -18,7 +18,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //--------------------------------------------------------------------------
-//
+// 
 // DESCRIPTION:  
 //   the automap code
 //
@@ -70,6 +70,13 @@ int mapcolor_hair;    // crosshair color
 int mapcolor_sngl;    // single player arrow color
 int mapcolor_plyr[4]; // colors for player arrows in multiplayer
 int mapcolor_frnd;    // colors for friends of player
+#ifdef R_LINKEDPORTALS
+int mapcolor_prtl;    // SoM: color of lines not in the current portal group
+
+// SoM: map mode. True means the portal groups are overlayed (the group the player is in being displayed in color and the
+// other groups being grayed out and underneath) and false means the map is not modified.
+boolean mapportal_overlay;
+#endif
 
 //jff 3/9/98 add option to not show secret sectors until entered
 int map_secret_after;
@@ -363,7 +370,7 @@ void AM_restoreScaleAndLoc(void)
 #ifdef R_LINKEDPORTALS
       linkoffset_t *link;
 
-      if(useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = plr->mo->x + link->x - m_w/2;
@@ -528,7 +535,7 @@ void AM_initVariables(void)
    {
       linkoffset_t *link;
 
-      if(useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = plr->mo->x + link->x - m_w/2;
@@ -1002,7 +1009,7 @@ void AM_doFollowPlayer(void)
    {
 #ifdef R_LINKEDPORTALS
       linkoffset_t *link;
-      if(useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          m_x = FTOM(MTOF(plr->mo->x + link->x)) - m_w/2;
@@ -1569,6 +1576,68 @@ void AM_drawWalls(void)
    int i;
    static mline_t l;
    
+#ifdef R_LINKEDPORTALS
+   int plrgroup = plr->mo->groupid;
+
+   if(mapportal_overlay && useportalgroups)
+   {
+      for(i = 0; i < numlines; ++i)
+      {
+         line_t *line = &lines[i];
+
+         if(line->frontsector && line->frontsector->groupid == plrgroup)
+            continue;
+
+         l.a.x = line->v1->x;
+         l.a.y = line->v1->y;
+         l.b.x = line->v2->x;
+         l.b.y = line->v2->y;
+
+         if(line->frontsector && line->frontsector->groupid > 0)
+         {
+            linkoffset_t *link;
+
+            if(link = P_GetLinkOffset(0, line->frontsector->groupid))
+            {
+               l.a.x += link->x;
+               l.a.y += link->y;
+               l.b.x += link->x;
+               l.b.y += link->y;
+            }
+         }
+         // if line has been seen or IDDT has been used
+         if(ddt_cheating || (line->flags & ML_MAPPED))
+         {
+            // check for DONTDRAW flag; those lines are only visible
+            // if using the IDDT cheat.
+            if((line->flags & ML_DONTDRAW) && !ddt_cheating)
+               continue;
+
+            if(!line->backsector ||
+               line->backsector->floorheight != line->frontsector->floorheight ||
+               line->backsector->ceilingheight != line->frontsector->ceilingheight)
+            {
+               AM_drawMline(&l, mapcolor_prtl);
+            }
+         }
+         else if(plr->powers[pw_allmap]) // computermap visible lines
+         {
+            // now draw the lines only visible because the player has computermap
+            if(!(line->flags & ML_DONTDRAW)) // invisible flag lines do not show
+            {
+               if(!line->backsector ||
+                  line->backsector->floorheight != line->frontsector->floorheight ||
+                  line->backsector->ceilingheight != line->frontsector->ceilingheight)
+               {
+                  AM_drawMline(&l, mapcolor_prtl);
+               }
+            }
+         } // end else if
+      
+      }
+   }
+#endif
+
    // draw the unclipped visible portions of all lines
    for(i = 0; i < numlines; ++i)
    {
@@ -1580,16 +1649,22 @@ void AM_drawWalls(void)
       l.b.y = line->v2->y;
 
 #ifdef R_LINKEDPORTALS
-      if(useportalgroups && line->frontsector && line->frontsector->groupid > 0)
+      if(mapportal_overlay && useportalgroups)
       {
-         linkoffset_t *link;
+         if(line->frontsector && line->frontsector->groupid != plrgroup)
+            continue;
 
-         if(link = P_GetLinkOffset(0, line->frontsector->groupid))
+         if(line->frontsector && line->frontsector->groupid > 0)
          {
-            l.a.x += link->x;
-            l.a.y += link->y;
-            l.b.x += link->x;
-            l.b.y += link->y;
+            linkoffset_t *link;
+
+            if(link = P_GetLinkOffset(0, line->frontsector->groupid))
+            {
+               l.a.x += link->x;
+               l.a.y += link->y;
+               l.b.x += link->x;
+               l.b.y += link->y;
+            }
          }
       }
 #endif
@@ -1813,7 +1888,7 @@ void AM_drawPlayers(void)
    if(!netgame)
    {
 #ifdef R_LINKEDPORTALS
-      if(useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          px = plr->mo->x + link->x;
@@ -1868,7 +1943,7 @@ void AM_drawPlayers(void)
          continue;
       
 #ifdef R_LINKEDPORTALS
-      if(useportalgroups && plr->mo->groupid > 0 && 
+      if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
          px = p->mo->x + link->x;
@@ -1940,7 +2015,7 @@ void AM_drawThings(int colors, int colorrange)
          ty = t->y;
 
 #ifdef R_LINKEDPORTALS
-         if(useportalgroups && t->subsector->sector->groupid > 0)
+         if(mapportal_overlay && useportalgroups && t->subsector->sector->groupid > 0)
          {
             linkoffset_t *link;
 
