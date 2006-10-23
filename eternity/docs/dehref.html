@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 
-<h2>Eternity Engine DeHackEd / BEX Reference v2.05 -- 09/12/05</h2>
+<h2>Eternity Engine DeHackEd / BEX Reference v2.06 -- 10/22/06</h2>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -129,6 +129,7 @@
         <li><a href="#tpart9">Part 9 - INTERMISSION TILED BACKGROUNDS</a>
         <li><a href="#tpart10">Part 10 - NEW: STARTUP BANNERS</a>
         <li><a href="#tpart11">Part 11 - NEW: OBITUARIES</a>
+        <li><a href="#tpart12">Part 12 - NEW: DEMO SEQUENCE/HELP/CREDITS</a>
         </ul>
     <li><a href="#sndtable">Sound Table</a>
     </ul>
@@ -141,6 +142,7 @@
 </a>
 
 <ul>
+<li> 10/22/06: Added Bits3 flags ALWAYSFAST, PASSMOBJ, DONTOVERLAP. Updated BEX strings.
 <li> 9/12/05: Added Bits3 flag 3DDECORATION
 <li> 6/17/05: Added Bits3 flag NOFRIENDDMG.
 <li> 5/26/05: Added Bits3 flags SPACMONSTER and SPACMISSILE.
@@ -859,6 +861,16 @@ Notes on Bits2 values:
   3DDECORATION  0x04000000 - Thing is a decoration which, when 3D object clipping is
                              active, will NOT use its corrected height, even if one
                              is specified in its EDF thingtype definition.
+
+  ALWAYSFAST    0x08000000 - Thing has -fast/Nightmare mode attack speed behavior in
+                             any difficulty level.
+                             
+  PASSMOBJ      0x10000000 - Thing is fully treated with respect to 3D object clipping.
+                             All monsters and other moving solid things should have this
+                             flag.
+                             
+  DONTOVERLAP   0x20000000 - This thing type prefers not to overlap with other things
+                             vertically when possible.
   ------------------------------------------------------------------
 </pre>
 
@@ -1529,6 +1541,14 @@ Eternity performs old DeHackEd-style text substitution by searching through the 
 BEX string table for a string with a matching value. If no such string can be found, the
 substitution is discarded. Many strings which existed in DOOM are no longer available in
 Eternity.
+
+<br><br>
+Note: Beginning with EE 3.33.50, it is possible for strings to be replaced multiple times,
+and for strings to still be replaceable even if another different string is given the same
+value. The original value of strings is now always used to compare against the old strings,
+instead of the newest value taken from the DEH/BEX patch. This significantly improves 
+compatibility with old patches that swap sprite, sound, and music names.
+
 <br><br>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -2823,6 +2843,41 @@ OB_GRENADE_SELF    Displayed when grenade kills self
                      "lost track of a grenade"
 OB_GRENADE         Displayed when player dies by grenade in DM
                      "tripped on a grenade"
+------------------ -----------------------------------------------------
+</pre>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="tpart12">
+<hr width="50%" align="left">
+<b>Part 10 - NEW: DEMO SEQUENCE/HELP/CREDITS</b>
+<hr width="50%" align="left">
+</a>
+<br>
+These are the names of resources used by the demo/title sequence, help screens,
+and credit/about screens.
+<pre>
+MNEMONIC           Purpose
+                     Initial original value (just the first part if long)
+------------------ -----------------------------------------------------
+TITLEPIC           DOOM / DOOM II Titlepic resource
+                     "TITLEPIC"
+TITLE              Heretic Titlepic resource
+                     "TITLE"
+CREDIT             Static credits screen for original game authors
+                     "CREDIT"
+HELP2              Shareware advertisement help screen
+                     "HELP2"
+ORDER              Shareware advertisement help screen
+                     "ORDER"
+DEMO1              First demo played in title sequence
+                     "DEMO1"
+DEMO2              Second demo played in title sequence
+                     "DEMO2"
+DEMO3              Third demo played in title sequence
+                     "DEMO3"
+DEMO4              Fourth demo played in title sequence
+                     "DEMO4"
 ------------------ -----------------------------------------------------
 </pre>
 <a href="#contents">Return to Table of Contents</a>

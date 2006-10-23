@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 
-<h3>Eternity Engine MapInfo Reference v1.2 -- 5/07/06</h3>
+<h3>Eternity Engine MapInfo Reference v1.3 -- 10/22/06</h3>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -176,6 +176,33 @@ in both global and level header MapInfo, and accept the same values in both type
     variable has no effect.<br>
     Example:
     <pre>finale-secret = true</pre>
+
+<li><b>finaletype</b><br>
+    This string-valued field determines what type of finale will take place after a level's
+    intermission, if one is set to occur (the intertext must be provided to trigger a finale).
+    <pre>
+    Value         Meaning
+    ---------------------------------------------------------------------------
+    text          Only the intertext will be displayed. Play will then continue
+                  to the next level normally.
+    doom_credits  The DOOM CREDITS screen will be displayed after the intertext.
+                  Play ends after this map.
+    doom_deimos   The DOOM picture of Deimos above Hell will be displayed after
+                  the intertext. Play ends after this map.
+    doom_bunny    The scrolling picture of Daisy's head on a pike will be 
+                  displayed, accompanied by the words "THE END" which are shot 
+                  up with several bullets. Play ends after this map.
+    doom_marine   The E4 ending picture of the Marine holding Daisy's head is
+                  displayed after the intertext. Play ends after this map.
+    htic_credtis  The Heretic CREDITS screen will be displayed after the 
+                  intertext. Play ends after this map.
+    htic_water    The Heretic underwater screen with special palette is
+                  displayed after the intertext. Play ends after this map.
+    htic_demon    The Heretic demon scroller is displayed after the intertext.
+                  Play ends after this map.
+    ----------------------------------------------------------------------------</pre>
+    Example:
+    <pre>finaletype = text</pre>
     
 <li><b>fullbright</b><br>
     Boolean value that determines whether fullbright can be used on this level. When 
@@ -228,7 +255,7 @@ in both global and level header MapInfo, and accept the same values in both type
     extra text will be drawn off the bottom of the screen.<br>
     Example:
     <pre>intertext = MAP04TXT</pre>
-    
+        
 <li><b>killfinale</b><br>
     Boolean value that allows built-in text intermission points to be disabled. For example,
     if you do not want text to appear after DOOM II MAP11, set this variable to true.<br>
@@ -305,6 +332,16 @@ in both global and level header MapInfo, and accept the same values in both type
     exit on any map.<br>
     Example:
     <pre>nextsecret = MAP34</pre>
+
+<li><b>noautosequences</b><br>
+    Determines the default assignment of sound sequences. If set to true, no sound
+    sequences will be automatically assigned to sectors. The sequence of all sectors by
+    default will be sequence number 0. If set to false, the default sound sequences 
+    defined in <b>sounds.edf</b> will be used. These sequences implement the normal,
+    default behaviors for DOOM and Heretic, and can be easily overridden by the user
+    if desired.<br>
+    Example:
+    <pre>noautosequences = true</pre>
     
 <li><b>partime</b><br>
     Partime for the map in seconds. This value overrides any value provided via DeHackEd.
@@ -362,7 +399,8 @@ in both global and level header MapInfo, and accept the same values in both type
     EDF mnemonic of a sound to replace the default "swtchx" sound for this map.
     <br><br>
 <li><b>sound-stnmov</b><br>
-    EDF mnemonic of a sound to replace the default "stnmov" sound for this map.
+    EDF mnemonic of a sound to replace the default "stnmov" sound when used for
+    plat actions on this map.
     <br><br>
 <li><b>sound-pstop</b><br>
     EDF mnemonic of a sound to replace the default "pstop" sound for this map.
@@ -381,7 +419,10 @@ in both global and level header MapInfo, and accept the same values in both type
     <br><br>
 <li><b>sound-doropn</b><br>
     EDF mnemonic of a sound to replace the default "doropn" sound for this map.
-
+    <br><br>
+<li><b>sound-fcmove</b><br>
+    EDF mnemonic of a sound to replace the default "stnmov" sound when used for
+    floor and ceiling movement on this map.
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -613,6 +654,24 @@ Some of the defaults can be edited by DeHackEd as well.
     The default values for DOOM II maps MAP15 and MAP31 is "true".
     <br><br>
     
+<li><b>finaletype</b><br>
+    This variable has special defaults for the following maps:
+    <ul>
+    <li> DOOM E1M8: doom_credits
+    <li> DOOM E2M8: doom_deimos
+    <li> DOOM E3M8: doom_bunny
+    <li> DOOM E4M8: doom_marine
+    <li> All other maps in DOOM: text
+    <li> All maps in DOOM II: text
+    <li> Heretic E1M8: htic_credits
+    <li> Heretic E2M8: htic_water
+    <li> Heretic E3M8: htic_demon
+    <li> Heretic E4M8: htic_credits
+    <li> Heretic E5M8: htic_credits
+    <li> All other maps in Heretic: text
+    </ul>
+    <br>
+    
 <li><b>fullbright</b><br>
     The default value of this variable for all maps is "true".
     <br><br>
@@ -824,6 +883,10 @@ Some of the defaults can be edited by DeHackEd as well.
     Note: if nextsecret is defined for a map that does not normally have a secret exit,
     the secret map must also define its nextlevel explicitly. Otherwise, the player may 
     become stuck in the secret level.
+    <br><br>
+    
+<li><b>noautosequences</b><br>
+    This variable has the default value false for all maps.
     <br><br>
     
 <li><b>partime</b><br>

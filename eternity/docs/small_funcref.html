@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 <hr>
-<b>Eternity Engine Small Function Reference v1.3 -- 05/07/06</b>
+<b>Eternity Engine Small Function Reference v1.4 -- 10/22/06</b>
 <hr>
 <br>
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
@@ -84,6 +84,8 @@
         <li><a href="#_SetWidgetText">_SetWidgetText</a>
         <li><a href="#_ToggleWidget">_ToggleWidget</a>
         <li><a href="#_MoveWidget">_MoveWidget</a>
+        <li><a href="#_GetHUDMode">_GetHUDMode</a>
+        <li><a href="#_InAutomap">_InAutomap</a>
         </ul>    
     <li><a href="#game">Game Functions</a>
         <ul>
@@ -110,6 +112,10 @@
         <li><a href="#_ThingGetProperty">_ThingGetProperty</a>
         <li><a href="#_ThingSetProperty">_ThingSetProperty</a>
         <li><a href="#_ThingFlagsFromStr">_ThingFlagsFromStr</a>
+        <li><a href="#_ThingThrust">_ThingThrust</a>
+        <li><a href="#_ThingThrust3f">_ThingThrust3f</a>
+        <li><a href="#_ThingGetPos">_ThingGetPos</a>
+        <li><a href="#_GetFreeTID">_GetFreeTID</a>
         </ul>
     <li><a href="#sound">Sounds</a>
         <ul>
@@ -136,6 +142,8 @@
         <li><a href="#_SpecialMode">_SpecialMode</a>
         <li><a href="#_ByteAngleToDegrees">_ByteAngleToDegrees</a>
         <li><a href="#_DegreesToByteAngle">_DegreesToByteAngle</a>
+        <li><a href="#_ByteAngleToFixed">_ByteAngleToFixed</a>
+        <li><a href="#_FixedToByteAngle">_FixedToByteAngle</a>
         <li><a href="#_Door_Raise">_Door_Raise</a>
         <li><a href="#_Door_Open">_Door_Open</a>
         <li><a href="#_Door_Close">_Door_Close</a>
@@ -188,7 +196,10 @@
         <li><a href="#_Polyobj_OR_RotateRight">_Polyobj_OR_RotateRight</a>
         <li><a href="#_Polyobj_RotateLeft">_Polyobj_RotateLeft</a>
         <li><a href="#_Polyobj_OR_RotateLeft">_Polyobj_OR_RotateLeft</a>
-        </ul>
+        <li><a href="#_Pillar_Build">_Pillar_Build</a>
+        <li><a href="#_Pillar_BuildAndCrush">_Pillar_BuildAndCrush</a>
+        <li><a href="#_Pillar_Open">_Pillar_Open</a>
+    </ul>
     <li><a href="#cameras">Cameras</a>
         <ul>
         <li><a href="#_ToggleChasecam">_ToggleChasecam</a>
@@ -1270,9 +1281,46 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
     </ul>
 </ul>
 
+<ul>
+<li><a name="_GetHUDMode"><b>_GetHUDMode</b></a><br>
+    <em>native _GetHUDMode();</em><br>
+    Parameters: None<br>
+    Return value: Depending on the current HUD mode it will return one of the following
+    enum values:<br>
+         <ul>
+         <li> _HUD_NONE: No HUD visible.
+         <li> _HUD_STATUSBAR: Vanilla Doom status bar.
+         <li> _HUD_BOOM: Boom HUD
+         <li> _HUD_FLAT: The flat Boom HUD
+         <li> _HUD_DISTRIBUTED: The distributed Boom HUD
+         <li> _HUD_GRAPHICAL: Graphical HUD.
+         </ul>
+    Found in: hud.inc<br>
+    Description: Returns the current HUD mode or _HUD_NONE if no HUD is visible at all.
+    <br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode."
+    </ul>
+</ul>
+
+<ul>
+<li><a name="_InAutomap"><b>_InAutomap</b></a><br>
+    <em>native bool:_InAutomap();</em><br>
+    Parameters: None<br>
+    Return value: True if the automap is visible, false otherwise.<br>
+    Found in: hud.inc<br>
+    Description: Test if automap is active, true == active, false == inactive.
+    <br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode."
+    </ul>
+</ul>
+
 <a href="#contents">Return to Table of Contents</a>
 
-<p>
+
 <a name="game">
 <hr>
 <b>Game Functions</b>
@@ -1713,6 +1761,87 @@ not exist, so it is best to check beforehand when possible.
     </ul>
 </ul>
 
+<ul>
+<li><a name="_ThingThrust"><b>_ThingThrust</b></a><br>
+    <em>native _ThingThrust(angle, force, tid);</em><br>
+    Parameters:
+    <ul>
+    <li> angle : Angle in which to move the thing.
+    <li> force : Force to apply to the thing.
+    <li> tid : TID value of things to manipulate.
+    </ul>
+    Return value: None.<br>
+    Found in: things.inc<br>
+    Description: Pushes all things with the given TID along the provided angle with 
+    the specified force.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+</ul>
+
+<ul>
+<li><a name="_ThingThrust3f"><b>_ThingThrust3f</b></a><br>
+    <em>native _ThingThrust3f(tid, x, y, z);</em><br>
+    Parameters:
+    <ul>
+    <li> tid : TID value of things to manipulate.
+    <li> x : Force to apply to the thing in the x direction.
+    <li> y : Force to apply to the thing in the y direction.
+    <li> z : Force to apply to the thing in the z direction.
+    </ul>
+    Return value: None.<br>
+    Found in: things.inc<br>
+    Description: Pushes all things with the specified TID with the forces in 
+    each direction.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+</ul>
+
+<ul>
+<li><a name="_ThingGetPos"><b>_ThingGetPos</b></a><br>
+    <em>native Fixed:_ThingGetPos(tid, _thing_pos:field);</em><br>
+    Parameters:
+    <ul>
+    <li> tid : TID value of the thing(s) to use.
+    <li> _thing_pos:field : Specifies which property to return. Should be one of the following
+       enumeration values:
+       <ul>
+       <li> _POS_X : Return x coordinate.
+       <li> _POS_Y : Return y coordinate.
+       <li> _POS_Z : Return z coordinate.
+       <li> _POS_ANGLE : Return thing's angle.
+       <li> _POS_MOMX : Return the momentum of the thing in the x plane.
+       <li> _POS_MOMY : Return the momentum of the thing in the y plane.
+       <li> _POS_MOMZ : Return the momentum of the thing in the z plane.
+       <li> _POS_FLOORZ : Return the floor z level for the thing.
+       <li> _POS_CEILINGZ : Return the ceiling z level for the thing.
+       </ul>
+    </ul>
+    Return value: Depends on the specified enum.<br>
+    Found in: things.inc<br>
+    Description: Returns one of a thing's properties.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+</ul>
+
+<ul>
+<li><a name="_GetFreeTID"><b>_GetFreeTID</b></a><br>
+    <em>native _GetFreeTID();</em><br>
+    Parameters: None<br>
+    Return value: An unused TID.<br>
+    Found in: things.inc<br>
+    Description: Returns an unused TID or 0 if there are no free TIDs.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+</ul>
+
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
@@ -1973,17 +2102,20 @@ in Hexen.
 <ul>
 <li><a name="_SpecialMode"><b>_SpecialMode</b></a><br>
     <em>native _SpecialMode(_spec_modes:mode);</em><br>
-    Parameters:
-    <ul>
+    Parameters: None<br>
+    <!--<ul>
     <li> _spec_modes:mode : One of the following enumeration values:
          <ul>
          <li> _SPEC_NULL : Special activation occurs with no line or thing data.
          <li> _SPEC_PASS : Special activation line/thing data passes through from the script linedef.
          </ul>
-    </ul>
-    Return value: None.<br>
+    </ul>-->
+    Return value: 0<br>
     Found in: specials.inc<br>
-    Description: Sets the special execution mode for scripts started under the _INVOKE_LINE
+    Description: Deprecated, now performs no operation. Scripts started by linedefs will
+    now automatically pass on line and thing information to script specials as with
+    _SPEC_PASS. In any other context, the mode is implicitly _SPEC_NULL as always.<br>
+    <!-- Sets the special execution mode for scripts started under the _INVOKE_LINE
     invocation model only. When such a script executes a parameterized line special, there exists
     the option of starting the special as if though it originated from the linedef which activated
     the script. Selecting this mode allows the use of zero tags and the trigger floor/ceiling
@@ -1994,8 +2126,8 @@ in Hexen.
     Note: After the script originally called by the line has finished, the special mode will
     automatically reset to _SPEC_NULL. You must set the special mode to _SPEC_PASS at the
     beginning of any script called directly from a script linedef when pass-through semantics 
-    are desired.
-    <br><br>
+    are desired. -->
+    <br>
 
 <li><a name="_ByteAngleToDegrees"><b>_ByteAngleToDegrees</b></a><br>
     <em>stock _ByteAngleToDegrees(byteang);</em><br>
@@ -2021,6 +2153,32 @@ in Hexen.
     byteangle = (degrees * 256) / 360;
     <br><br>
     
+<li><a name="_ByteAngleToFixed"><b>_ByteAngleToFixed</b></a><br>
+    <em>stock Fixed:_ByteAngleToFixed(byteang);</em><br>
+    Parameters:
+    <ul>
+    <li> byteang : A byte angle value
+    </ul>
+    Return value: The byte angle converted to fixed-point degrees.<br>
+    Found in: specials.inc<br>
+    Description: Converts a given byte angle value to degrees in fixed-point number
+    format. The formula used is as follows:<br>
+    degrees = Fixed:(byteang * (45 * FRACUNIT / 32));
+    <br><br>
+
+<li><a name="_FixedToByteAngle"><b>_FixedToByteAngle</b></a><br>
+    <em>stock _FixedToByteAngle(Fixed:angle);</em><br>
+    Parameters:
+    <ul>
+    <li> angle : A fixed-point angle in degrees
+    </ul>
+    Return value: The byte angle value corresponding to 'angle'.<br>
+    Found in: specials.inc<br>
+    Description: Converts a given fixed-point angle in degress to a byte angle. The 
+    formula used is as follows:<br>
+    byteangle = _:(angle * 32 / (45 * FRACUNIT));
+    <br><br>
+    
 <li><a name="_Door_Raise"><b>_Door_Raise</b></a><br>
     <em>native _Door_Raise(tag, speed, delay, lighttag = 0);</em><br>
     Parameters:
@@ -2033,8 +2191,8 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Opens all indicated sectors as doors, which will close after the given
-    amount of delay time. Zero tags may only be used if the special mode is set to
-    _SPEC_PASS.<br>
+    amount of delay time. Zero tags may only be used if the calling script was started from
+    a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2052,7 +2210,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Opens all indicated sectors as doors; the sectors will remain open. Zero tags 
-    may only be used if the special mode is set to _SPEC_PASS.<br>
+    may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2070,7 +2228,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Closes all indicated sectors as doors; the sectors will remain closed. Zero 
-    tags may only be used if the special mode is set to _SPEC_PASS.<br>
+    tags may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2089,7 +2247,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Closes all indicated sectors as doors, which will open after the given amount
-    of delay time. Zero tags may only be used if the special mode is set to _SPEC_PASS.<br>
+    of delay time. Zero tags may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2110,7 +2268,7 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Waits until the countdown period has expired, then opens all indicated sectors 
     as doors, which will close after the given amount of delay time. Zero tags may only be
-    used if the special mode is set to _SPEC_PASS.<br>
+    used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2129,8 +2287,8 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Waits until the countdown period has expired, then closes all indicated sectors
-    as doors; the sectors will remain closed. Zero tags may only be used if the special mode
-    is set to _SPEC_PASS.<br>
+    as doors; the sectors will remain closed. Zero tags may only be used if the calling script was 
+    started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2160,11 +2318,11 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Raises all indicated sectors' floors to the highest neighboring floor. If
     the highest neighboring floor is lower, movement is instantaneous. If no neighboring
-    floor exists, motion is to -32000. Zero tags may only be used if the special mode is
-    _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    floor exists, motion is to -32000. Zero tags may only be used if the calling script was started from a 
+    linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change models in any other circumstance will result in no change.
+    <br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2192,11 +2350,10 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Lowers all indicated sectors' floors to the highest neighboring floor. If
     the highest neighboring floor is higher, movement is instantaneous. If no neighboring
-    floor exists, motion is to -32000. Zero tags may only be used if the special mode is
-    _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    floor exists, motion is to -32000. Zero tags may only be used if the calling script was started 
+    from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2224,11 +2381,10 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises all indicated sectors' floors to the lowest neighboring floor.
-    Movement is always instantaneous. Zero tags may only be used if the special mode is
-    _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Movement is always instantaneous. Zero tags may only be used if the calling script was started
+    from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2256,10 +2412,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Lowers all indicated sectors' floors to the lowest neighboring floor, including
     the floor itself. Movement is always at the indicated speed. Zero tags may only be used if the 
-    special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2289,10 +2444,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Raises all indicated sectors' floors to the next higher neighboring floor. 
     Movement is always at the indicated speed. If no neighboring floor exists, the floor will
-    not move. Zero tags may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    not move. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2320,10 +2474,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Lowers all indicated sectors' floors to the next lower neighboring floor. 
     Movement is always at the indicated speed. If no neighboring floor exists, the floor will
-    not move. Zero tags may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    not move. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2354,10 +2507,9 @@ in Hexen.
     Description: Raises all indicated sectors' floors to the height of the lowest neighboring
     sector's ceiling, including the sector's ceiling itself. If the destination height is lower
     than the floor's current height, movement will be instantaneous. Zero tags may only be used 
-    if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2386,10 +2538,9 @@ in Hexen.
     Description: Lowers all indicated sectors' floors to the height of the lowest neighboring
     sector's ceiling, including the sector's ceiling itself. If the destination height is higher
     than the floor's current height, movement will be instantaneous. Zero tags may only be used 
-    if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2418,10 +2569,10 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises all indicated sectors' floors to the height of their own ceilings.
-    Zero tags may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br><br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
+    <br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2451,10 +2602,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description:  Raises indicated sectors' floors by the height of the shortest lower texture 
     on any line on the boundary of the sector. If no such texture exists, movement is to
-    +32000. Zero tags may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br><br>
+    +32000. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br><br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2482,10 +2632,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description:  Lowers indicated sectors' floors by the height of the shortest lower texture 
     on any line on the boundary of the sector. If no such texture exists, movement is to
-    -32000. Zero tags may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    -32000. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2515,10 +2664,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description:  Raises indicated sectors' floors by the indicated amount. Zero tags may only 
-    be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2546,10 +2694,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description:  Lowers indicated sectors' floors by the indicated amount. Zero tags may 
-    only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2580,10 +2727,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description:  Moves indicated sectors' floors to the height given. Movement direction is
     always toward the destination height, and instantaneous movement is not possible. Zero tags 
-    may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2612,10 +2758,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description:  Raises indicated sectors' floors by the indicated amount instantaneously. Zero 
-    tags may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2642,10 +2787,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description:  Lowers indicated sectors' floors by the indicated amount instantaneously. Zero 
-    tags may only be used if the special mode is _SPEC_PASS.<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2673,10 +2817,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises indicated sectors' floors to their respective ceilings instantaneously.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2704,10 +2847,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises the indicated sectors' ceilings to the highest neighboring ceiling.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2736,10 +2878,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises the indicated sector's ceilings to the highest neighboring ceiling
-    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    instantaneously. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2767,10 +2908,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises the indicated sectors' ceilings to the nearest neighboring ceiling.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2800,10 +2940,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers the indicated sectors' ceilings to the nearest neighboring ceiling.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2831,10 +2970,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises the indicated sectors' ceilings to the lowest neighboring ceiling.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2864,10 +3002,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers the indicated sectors' ceilings to the lowest neighboring ceiling.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2895,10 +3032,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises the indicated sectors' ceilings to the highest neighboring floor.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2928,10 +3064,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers the indicated sectors' ceilings to the highest neighboring floor.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2960,10 +3095,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers the indicated sectors' ceilings to their respective floors
-    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    instantaneously. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -2993,10 +3127,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers the indicated sectors' ceilings to their respective floors.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3025,10 +3158,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Raises the indicated sectors' ceilings by the height of the shortest upper
     texture around the perimeter of each sector.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3059,10 +3191,9 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Lowers the indicates sectors' ceilings by the height of the shortest upper
     texture around the perimeter of each sector.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3091,10 +3222,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises the indicated sectors' ceilings by an absolute amount.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other cricumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3125,10 +3255,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers the indicated sectors' ceilings by an absolute amount.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3159,10 +3288,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Moves the indicated sectors' ceilings toward the indicated z coordinate.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3190,10 +3318,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises the indicated sectors' ceilings by the indicated amount
-    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    instantaneously. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used if the calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3223,10 +3350,9 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers the indicated sectors' ceilings by the indicated amount
-    instantaneously. Zero tags may only be used if the special mode is _SPEC_PASS<br>
-    *** : Trigger change models can only be used if the special mode is set to _SPEC_PASS and
-    the invocation type for the current script is _INVOKE_LINE. Attempting to use trigger change
-    model with _SPEC_NULL mode will result in no change.<br>
+    instantaneously. Zero tags may only be used if the calling script was started from a linedef.<br>
+    *** : Trigger change models can only be used ifthe calling script was started from a linedef.
+    Attempting to use trigger change model under any other circumstance mode will result in no change.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3249,7 +3375,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Starts DOOM-style staircase building at every tagged sector.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3272,7 +3398,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Starts DOOM-style staircase building at every tagged sector.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3297,7 +3423,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Starts synchronized DOOM-style staircase building at every tagged sector.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3322,7 +3448,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Starts synchronized DOOM-style staircase building at every tagged sector.
-    Zero tags may only be used if the special mode is _SPEC_PASS<br>
+    Zero tags may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -3510,6 +3636,69 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Rotates the indicated PolyObject to the left, overriding any
     existing actions on the PolyObject.
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+
+    <li><a name="_Pillar_Build"><b>_Pillar_Build</b></a><br>
+    <em>native _Pillar_Build(tag, speed, height);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : Tag of sector to affect.
+    <li> speed : Speed of pillar.
+    <li> height : Height above the floor the pillar will close to.
+    </ul>
+    Return value:  1 if action was successful on any sector, 0 otherwise.<br>
+    Description: Floor and ceiling close in to the specified height above the inital
+    floor height. The floor or ceiling furthest away from this height moves at the given
+    speed, while other moves at a speed which will make them both arrive at the
+    height at the same time. If the height is 0, they will meet in the middle. <br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+
+    <li><a name="_Pillar_BuildAndCrush"><b>_Pillar_BuildAndCrush</b></a><br>
+    <em>native _Pillar_BuildAndCrush(tag, speed, height, crush);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : Tag of sector to affect.
+    <li> speed : Speed of pillar.
+    <li> height : Height above the floor the pillar will close to.
+    <li> damage : Damage per tic the pillar will inflict while crushing
+    </ul>
+    Return value:  1 if action was successful on any sector, 0 otherwise.<br>
+    Description: Floor and ceiling close in to the specified height above the inital
+    floor height. The floor or ceiling furthest away from this height moves at the given
+    speed, while other moves at a speed which will make them both arrive at the
+    height at the same time. If the height is 0, they will meet in the middle. If a thing is
+    trapped between the floor and ceiling while they are moving, the thing will be crushed.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+    
+    <li><a name="_Pillar_Open"><b>_Pillar_Open</b></a><br>
+    <em>native _Pillar_Open(tag, speed, fdist, cdist);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : Tag of sector to affect.
+    <li> speed : Speed of pillar.
+    <li> fdist : Distance the floor should move.
+    <li> cdist : Distance the ceiling should move.
+    </ul>
+    Return value:  1 if action was successful on any sector, 0 otherwise.<br>
+    Description: Floor and ceiling open up away from eachother by the given distances.
+    If the floor distance is greater than the ceiling distance, the floor speed is
+    the given speed, while the ceiling speed is set so the ceiling reaches its
+    destination at the same time the floor does, and vice versa. If a distance is 0, 
+    the floor or ceiling will move to the lowest neighboring floor or highest neighboring
+    ceiling. This function will only work properly if the floor and ceiling heights of the 
+    tagged sector are initally equal.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.

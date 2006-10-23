@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 
-<h2>Eternity Engine EDF Reference v1.6 -- 04/02/06</h2>
+<h2>Eternity Engine EDF Reference v1.7 -- 10/22/06</h2>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -26,6 +26,7 @@
         <li><a href="#estrings">ESTRINGS Lump</a>
         <li><a href="#eterrain">ETERRAIN Lump</a>
         <li><a href="#emenus">EMENUS Lump</a>
+        <li><a href="#esndinfo">ESNDINFO and ESNDSEQ Lumps</a>
         <li><a href="#inc">Including Files</a>
         <li><a href="#inclump">Including Lumps</a>
         <li><a href="#bex">Including BEX Files</a>
@@ -46,6 +47,9 @@
     <li><a href="#cast">DOOM II Cast Call</a>
     <li><a href="#boss">DOOM II Boss Brain Types</a>
     <li><a href="#sound">Sounds</a>
+    <li><a href="#ambience">Ambience</a>
+    <li><a href="#soundseqs">Sound Sequences</a>
+    <li><a href="#enviromgr">Enviroment Sequence Manager</a>
     <li><a href="#terrain">TerrainTypes</a>
         <ul>
         <li><a href="#splashes">Splash Objects</a>
@@ -92,16 +96,22 @@ This documentation will be regularly updated to reflect all changes and addition
 <p>
 <a name="changes">
 <hr>
-<b>Changes in EDF 1.6</b>
+<b>Changes in EDF 1.7</b>
 <hr>
 </a>
 <br>
 <ul>
-<li> EDF menu definitions.
-<li> Support for userinclude function and user.edf added.
-<li> Color, translucency, shadowing, and absolute centering escape characters added.
-<li> DeHackEd numbers can now be auto-allocated for things, frames, and sounds.
-<li> Added information on reserved identifiers.
+<li> Many errors have been downgraded to warnings, allowing fewer edit-and-run cycles
+     for debugging EDF files. As usual, all warnings are issued to the verbose log
+     activated with <b>-edfout</b>.
+<li> basictype, topdamage, topdamagemask fields added to thingtype section.
+<li> pitchvariance and alias fields added to sound section.
+<li> Ambience definitions.
+<li> Sound sequences.
+<li> Environment sequence manager.
+<li> ESNDINFO and ESNDSEQ lumps.
+<li> Additive sounds and sounddeltas.
+<li> Semantics of several sound fields have been adjusted and improved.
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -416,6 +426,25 @@ been processed. Doing this will cause the definitions to be processed twice.
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
+<a name="esndinfo">
+<hr>
+<b>ESNDINFO and ESNDSEQ Lumps</b>
+<hr>
+</a>
+<br>
+The ESNDINFO and ESNDSEQ lumps are optional EDF lumps which can contain any number of 
+<b>sound</b>, <b>sounddelta</b>, <b>ambience</b>, <b>soundsequence</b>, and <b>enviromanager</b>
+definitions. All definitions are additive, and if definitions of the same name already exist, 
+they will overwrite. These lumps do not cascade by default, but can be made to do so by using 
+the <b>include_prev</b> function documented below.
+<br><br>
+Note: it is inappropriate to include an ESNDINFO or ESNDSEQ lump from EDFROOT or from any file
+included by it, because both of these lumps will be processed separately after the root EDF has
+been processed. Doing this will cause the definitions to be needlessly processed twice.
+<br><br>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
 <a name="inc">
 <hr>
 <b>Including Files</b>
@@ -559,7 +588,7 @@ Eternity Engine v3.33.33.
 <ul>
 <li> root.edf -- includes all other modules
 <li> sprites.edf -- contains the sprite names list and sprite-based pickup item definitions
-<li> sounds.edf -- contains sound definitions
+<li> sounds.edf -- contains sound and soundsequence definitions.
 <li> frames.edf -- contains frame data for use by thing types and player guns
 <li> things.edf -- contains thing type definitions
 <li> cast.edf -- contains DOOM II cast call definitions
@@ -931,7 +960,9 @@ EDFs).
 Restrictions and Caveats:
 <ul>
 <li> There must be at least one sprite name defined.
-<li> All sprite names used by other structures must be defined, or an error will occur.
+<li> If invalid sprite names are used by other structures, a warning will be issued to the
+     verbose log and the value of the blanksprite variable will be substituted as a safe
+     fallback.
 <li> Sprite names will be checked for length, but not for invalid characters.
 <li> If compatibility with DeHackEd patches is desired, new sprites should use addition lists.
 </ul>
@@ -1248,16 +1279,14 @@ take special values of the following type by using prefix:value syntax as shown:
 <ul>
 <li><b>frame:&lt;frame mnemonic&gt;</b><br>
      Translated to the DeHackEd number of the indicated frame. If the indicated frame has
-     no unique DeHackEd number, the S_NULL state will be stored and a warning will be issued
-     to the verbose EDF log.<br>
+     no unique DeHackEd number, one will be assigned to it if possible.<br>
      Example:
      <pre>
      misc1 = frame:S_FOOBAR1
      </pre>
 <li><b>thing:&lt;thing mnemonic&gt;</b><br>
      Translated to the DeHackEd number of the indicated thing type. If the indicated thing has
-     no unique DeHackEd number, the Unknown thing type will be stored and a warning will be issued
-     to the verbose EDF log.<br>
+     no unique DeHackEd number, one will be assigned to it if possible.<br>
      Example:
      <pre>
      misc1 = thing:BaronOfHell
@@ -1267,8 +1296,7 @@ take special values of the following type by using prefix:value syntax as shown:
      <a href="dehref.html#sndtable">Internal Sound List</a> 
      in the Eternity DeHackEd/BEX Reference for a list of documented sound mnemonics,
      or view the default sounds.edf file. If the indicated sound has no unique DeHackEd
-     number, the dummy sound "none" will be stored and a warning will be issued to the verbose
-     EDF log.<br>
+     number, one will be assigned to it if possible.<br>
      Example:
      <pre>
      misc2 = sound:pistol
@@ -1562,6 +1590,7 @@ Syntax:
 thingtype &lt;unique mnemonic&gt;
 {
    inherits        = &lt;thing type mnemonic&gt;
+   basictype       = &lt;basic type name&gt;
    doomednum       = &lt;number&gt;
    spawnstate      = &lt;frame mnemonic&gt;
    spawnhealth     = &lt;number&gt;
@@ -1584,6 +1613,8 @@ thingtype &lt;unique mnemonic&gt;
    correct_height  = &lt;floating-point number&gt;
    mass            = &lt;number&gt;
    damage          = &lt;number&gt;
+   topdamage       = &lt;number&gt;
+   topdamagemask   = &lt;number&gt;
    activesound     = &lt;sound mnemonic&gt;
    flags           = &lt;flag list&gt;
    flags2          = &lt;flag list&gt;
@@ -1614,7 +1645,88 @@ Explanation of fields:
     No default value<br>
     Sets the thing type from which this type will inherit values. See the
     <a href="#inherit">Thing Type Inheritance</a> section below for full information on how
-    thing type inheritance works.    
+    thing type inheritance works.   
+<li><b>basictype</b><br>
+    No default value<br>
+    Sets the basic type of this thingtype definition. Basic types are not thingtypes, but
+    are engine-defined sets of flags and states which an object can adopt as its default
+    values for the corresponding flag and state fields. Use of basictypes is encouraged
+    because thingtypes using them can automatically adapt to occasionally necessary changes
+    to monsters and other thing categories that involve the addition of new thingtype flag
+    values. This is a table of all currently existing basictypes and the values that they
+    impart upon thingtypes:
+    <ul>
+    <li> Monster<br>
+         Purpose: An ordinary walking monster with no fancy features.<br>
+         cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+         <br><br>
+    <li> FlyingMonster<br>
+         Purpose: An ordinary flying monster.<br>
+         cflags = SOLID|SHOOTABLE|COUNTKILL|NOGRAVITY|FLOAT|SPACMONSTER|PASSMOBJ
+    <br><br>
+    <li> FriendlyHelper<br>
+         Purpose: A player helper with maximum friendliness options.<br>
+         cflags = SOLID|SHOOTABLE|COUNTKILL|FRIEND|JUMPDOWN|FOOTCLIP|WINDTHRUST|SUPERFRIEND|SPACMONSTER|PASSMOBJ
+    <br><br>
+    <li> Projectile<br>
+         Purpose: A standard projectile.<br>
+         cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+    <br><br>
+    <li> PlayerProjectile<br>
+         Purpose: A projectile for use by players.<br>
+         cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SPACMISSILE
+    <br><br>
+    <li> Seeker<br>
+         Purpose: A missile prepared to be fired by homing missile codepointers.<br>
+         cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SEEKERMISSILE
+    <br><br>
+    <li> SolidDecor<br>
+         Purpose: A solid decorative item.<br>
+         cflags = SOLID
+    <br><br>
+    <li> HangingDecor<br>
+         Purpose: A hanging decorative item that is passable even without 3D object clipping.<br>
+         cflags = SPAWNCEILING|NOGRAVITY
+    <br><br>
+    <li> SolidHangingDecor<br>
+         Purpose: A solid hanging decorative item.<br>
+         cflags = SOLID|SPAWNCEILING|NOGRAVITY
+    <br><br>
+    <li> ShootableDecor<br>
+         Purpose: A shootable decorative item.<br>
+         cflags = SOLID|SHOOTABLE|NOBLOOD
+    <br><br>
+    <li> Fog<br>
+         Purpose: A fog item such as telefog or item fog.<br>
+         cflags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT|NOSPLASH
+    <br><br>
+    <li> Item<br>
+         Purpose: A collectable item. Doesn't count.<br>
+         cflags = SPECIAL
+    <br><br>
+    <li> ItemCount<br>
+         Purpose: A collectable item. Counts for item %.<br>
+         cflags = SPECIAL|COUNTITEM
+    <br><br>
+    <li> TerrainBase<br>
+         Purpose: A TerrainTypes base item.<br>
+         cflags = NOBLOCKMAP|NOGRAVITY|NOSPLASH
+    <br><br>
+    <li> TerrainChunk<br>
+         Purpose: A TerrainTypes chunk item.<br>
+         cflags = NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH
+    <br><br>
+    <li> ControlPoint<br>
+         Purpose: An inert control point.<br>
+         cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY<br>
+         spawnstate = S_TNT1
+    <br><br>
+    <li> ControlPointGrav<br>
+         Purpose: An inert control point that is subject to gravity.<br>
+         cflags = DONTDRAW|NOSPLASH<br>
+         spawnstate = S_TNT1
+    </ul>
+    New to EDF 1.7.
 <li><b>doomednum</b><br>
     Default = -1<br>
     Sets the ID used to identify this thing type in maps. For example, when a map calls for a 
@@ -1757,6 +1869,18 @@ Explanation of fields:
     
     This field is also used as a parameter by some new, parameterized codepointers, including 
     BetaSkullAttack and Detonate.
+<li><b>topdamage</b><br>
+    Default = 0<br>
+    This number is a constant amount of damage inflicted on any shootable object that stands
+    on top of this object when 3D object clipping is active. This is useful for objects such
+    as torches and flaming barrels. The frequency of damage is determined by the topdamagemask
+    field. New to EDF 1.7.
+<li><b>topdamagemask</b><br>
+    Default = 0<br>
+    This number determines how often a thing with a non-zero topdamage field burns objects
+    that are standing on top of it. This number should be a power of two minus 1 to work
+    properly, such as 1, 3, 7, 15, or 31 (31 would be approximately once per second and
+    is used by DOOM's nukage sector types). New to EDF 1.7.
 <li><b>activesound</b><br>
     Default = none<br>
     Sets the sound used by a thing when it is wandering around. A thing is given a 3 out of 
@@ -2436,31 +2560,39 @@ sound &lt;mnemonic&gt;
    prefix        = &lt;boolean&gt;
    singularity   = &lt;singularity class&gt;
    priority      = &lt;number&gt;
+   alias         = &lt;sound mnemonic&gt;
    link          = &lt;sound mnemonic&gt;
    linkvol       = &lt;number&gt;
    linkpitch     = &lt;number&gt;
    skinindex     = &lt;skin index type&gt;
    clipping_dist = &lt;number&gt;
    close_dist    = &lt;number&gt;
+   pitchvariance = &lt;pitch variance type&gt;
    dehackednum   = &lt;number&gt;
 }
 </pre>
 Explanation of Fields:
 <ul>
 <li><b>lump</b><br>
-    Default: If not provided, the mnemonic will be copied directly to the lump name. For example,
-    if the mnemonic for an entry is dsfoo and the lump name is not provided, it will become
-    dsfoo, and in that case, the prefix field (explained below) should be set to false.<br>
+    Default: If a value is not provided to this field, then this sound's mnemonic will
+    be copied directly to this field. In this case, the default value for the prefix field
+    becomes "true". This means that the mnemonic will be prefixed with the "DS" prefix to
+    construct the final sound lump name. If an explicit value is provided to this field,
+    then the default value of the prefix field becomes "false". This means the lump name,
+    as provided, becomes the final sound lump name and will not be prefixed in any way.
+    <br><br>        
     The lump field indicates the lump name that this sound resource will have in WAD files.
     If the prefix field below is true, the prefix "DS" will be appended to this name when looking
     for the sound. Otherwise, this name will be used exactly as it is provided. In the event a
     sound is not found, a default sound for the current game mode (DSPISTOL in DOOM, GLDHIT in
     Heretic) will be played instead.
 <li><b>prefix</b><br>
-    Default = true<br>
+    Default = Depends on presence of <b>lump</b> field<br>
     This boolean field indicates whether to prefix the lump name with DS when searching for
     this sound's lump. Values of false/no/off mean that the lump will not be prefixed. Values
-    of true/yes/on mean that it should be prefixed. 
+    of true/yes/on mean that it should be prefixed. If the lump field is provided, the 
+    default value of this field changes from true to false (this behavior is new as of
+    EDF v1.7).
 <li><b>singularity</b><br>
     Default = sg_none<br>
     This field indicates a singularity class for this sound. If another sound of the same
@@ -2476,21 +2608,39 @@ Explanation of Fields:
 <li><b>priority</b><br>
     Default = 64<br>
     This field establishes a relative priority for this sound. When sounds must be stopped in
-    order to start new ones, those with the lowest priority will be replaced first.
+    order to start new ones, those with the lowest priority will be replaced first. Priority
+    scales down with distance, so sounds playing at higher volume or closer to the player
+    have priority over quieter and more distant sounds. Please note carefully that a higher
+    value in this field means a lower priority. So 0 is the highest priority possible, and
+    255 is the lowest priority (priorities lower than 255 will be capped into range).
+<li><b>alias</b><br>
+    Default = "none"<br>
+    This field causes this sound definition to become an alias for another existing sound. Its
+    value must either be "none," or another valid sound mnemonic. When this sound is played,
+    the aliased sound will be played instead, using all the data defined in the aliased sound
+    (when an alias references another alias, the resolution is done recursively until a non-
+    aliased sound is found). New to EDF 1.7.
 <li><b>link</b><br>
     Default = "none"<br>
     This field links this sound definition to another existing sound definition. Its value must
     either be "none," or another valid sound mnemonic. When a linked sound is played, the sound
     that is linked to will be played instead, using the linkvol and linkpitch parameters provided
-    in this sound entry. Use of this feature will rarely be necessary and is not recommended.
+    in this sound entry. All parameters for playing the sound, including priority, singularity,
+    pitch variance, and clipping distances come from <b>this</b> sound definition, and not from the
+    sound to which this one is linked.
 <li><b>linkvol</b><br>
-    Default = -1<br>
+    Default = 127 (full volume)<br>
     This field provides a value to be added to the sound's volume when a linked sound is played
-    through this sound definition.
+    through this sound definition. Volume range is from 0 to 127, but this field may be any
+    value. The resulting value when added to the base volume will be capped into range. For
+    example, if a sound normally plays at full volume, specifying a negative value in this
+    field will reduce the volume. Warning: The semantics of this field have changed as of
+    EE v3.33.50.
 <li><b>linkpitch</b><br>
-    Default = -1<br>
+    Default = 127 (normal)<br>
     This field provides a pitch value to be used when a linked sound is played through this
-    sound definition.
+    sound definition. Pitch values should be between 0 and 255 when provided. Warning: The
+    semantics of this field have changed as of EE v3.33.50.
 <li><b>clipping_dist</b><br>
     Default = 1200<br>
     This value specifies the distance from the origin at which this sound will be completely
@@ -2526,6 +2676,20 @@ Explanation of Fields:
     sk_plfall
     sk_plfeet
     sk_fallht</pre>    
+<li><b>pitchvariance</b><br>
+    Default = none<br>
+    This field allows specification of the type of pitch variation this sound plays with when
+    pitched sounds are enabled. The following values are allowed:
+    <pre>
+    none            -- No pitch variation
+    Doom            -- Pitch variation similar to that used in DOOM v1.1 for most sounds
+    DoomSaw         -- Pitch variation similar to that used for saw sounds in DOOM v1.1.
+    Heretic         -- Pitch variation similar to that used in Heretic
+    HereticAmbience -- Pitch variation similar to that used in Heretic for global ambience.
+    </pre>
+    In general, DOOM types provide less variation than Heretic types. Note that Eternity has
+    now repaired some bugs in the BOOM sound pitch variation code, and so the effect works
+    much better than it did previously. New to EDF 1.7.
 <li><b>dehackednum</b><br>
     Default = -1<br>
     In order to be accessible to thing and frame definitions, a sound definition must be given
@@ -2542,11 +2706,12 @@ Explanation of Fields:
 
 Restrictions and Caveats:
 <ul>
-<li> All sounds must have a unique mnemonic no longer than 16 characters. They should only 
+<li> All sounds must have a unique mnemonic no longer than 32 characters. They should only 
      contain alphanumeric characters and underscores. Length will be verified, but format will 
      not (non-unique mnemonics will overwrite previous definitions, see below). The mnemonic
      "none" is reserved and cannot be overridden or edited. Sounds using the mnemonic "none"
-     will not be playable.
+     will not be playable. Note: The limit on sound mnemonic length limit was increased from
+     16 to 32 as of EE v3.33.50 (EDF v1.7).
 <li> If the lump name is not provided, so that the mnemonic will be copied to it, then the
      mnemonic must also either be a full, valid lump name, or a string that becomes one if
      the prefix field is set to true. If a mnemonic is used which is not a valid sound lump
@@ -2574,20 +2739,37 @@ Full Example:
 <pre>
 # Define some new sounds
 # This one is only accessible via scripting because it doesn't have a DeHackEd number.
+# (Although a DeHackEd number may be auto-assigned to it if something in EDF attempts
+#  to use its DeHackEd number...)
+
 sound MySound
 {
-   lump = foo  # this will play DSFOO, since prefix defaults to true
+   lump = foo    # this will play FOO, since prefix defaults to false when
+                 # a lump name is explicitly provided. Note that this case is
+                 # affected by the change in EDF v1.7. Previously, this would have
+                 # played the sound DSFOO, even though the lump name is specified
+                 # as "foo". Automatic prefixing now ONLY applies to sounds which
+                 # copy their mnemonic to the lumpname and allow prefix to default.
 }
 
-# This entry uses its mnemonic to double as the sound lump name.
+# This entry uses its mnemonic to double as the sound lump name, but already provides
+# the standard DS prefix in the mnemonic.
+
 sound dsblah
 {
-   prefix = false  # Without this, it would try to play DSDSBLAH, which is wrong
+   prefix = false  # Because we did not explicitly specify a lump name, the
+                   # lump name has become "dsblah", and the default value of
+                   # prefix is true. That means we have to change it to false,
+                   # or else the game would try to play DSDSBLAH, which is
+                   # wrong. This has not changed.
+                   
    dehackednum = 10000
 }
 
 # This entry also uses the mnemonic as the sound name, but with prefixing.
-# Since prefix defaults to true, the sound lump played will be "DSEXPLOD".
+# Since prefix defaults to true when the lump name is not explicitly provided, 
+# the sound lump played will be "DSEXPLOD". This has also not changed.
+
 sound explod
 {
    priority = 128
@@ -2597,11 +2779,9 @@ sound explod
 # This entry links to another sound.
 sound BlahLink
 {
-   lump = dummy    # this won't even get used in this case
-   prefix = false  # dsblah doesn't need a prefix, so we should echo that here
    link = dsblah   # we've linked this entry to the dsblah sound
-   linkvol = 150   # use some suitable values for these (must experiment)
-   linkpitch = 0
+   linkvol = 64    # use some suitable values for these (must experiment)
+   linkpitch = 72
    dehackednum = 10002
 }
 
@@ -2611,7 +2791,480 @@ sound explod
    priority = 96        # Maybe we like 96 better than 128...
    dehackednum = 10001  # We can reuse the same DeHackEd number, since it overwrites
 }
+
+# This sound is just an alias for explod. It will play using all the parameters
+# as they are defined in explod. Anything else we defined in this sound would be
+# totally ignored.
+
+sound Explosion { alias = explod }
+
 </pre>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="ambience">
+<hr>
+<b>Ambience</b>
+<hr>
+</a>
+<br>
+New to EDF v1.7, <b>ambience</b> sections allow the user to define the behavior of ambient
+sound spots, which can be placed on maps using DoomEd numbers 14001 through 14065. The
+first 64 of these objects automatically use the ambience sections with numeric indexes 1
+through 64. Object 14065 accepts the index number in its first argument field, which may
+be specified either through the use of ExtraData or via the Hexen map format.
+<br><br>
+Syntax:
+<pre>
+ambience
+{
+   sound       = &lt;sound mnemonic&gt;
+   index       = &lt;number&gt;
+   volume      = &lt;number&gt;
+   attenuation = &lt;attenuation type&gt;
+   type        = &lt;ambience behavior type&gt;
+   period      = &lt;number&gt;
+   minperiod   = &lt;number&gt;
+   maxperiod   = &lt;number&gt;
+}
+</pre>
+Explanation of Fields:
+<ul>
+<li><b>sound</b><br>
+    Default = "none"<br>
+    This field specifies the sound to be played by an ambience object using this
+    definition. If the value provided to this field is invalid, no sound will be played.
+<li><b>index</b><br>
+    Default = 0<br>
+    Defines the index of this ambience definition. This may be an integer of any value
+    zero or greater, although only the first 256 ambience definitions are usable via the
+    Hexen map format. When an ambience definition has the same index as a previously
+    defined ambience definition, it will overwrite that previous definition. Note that
+    if a thing placed on a map references an invalid ambience sequence, that object will
+    do nothing.
+<li><b>volume</b><br>
+    Default = 127<br>
+    The relative volume of this ambient sound, ranging from 0 to 127. This is multiplied
+    by the user's volume setting so that the true range of volume is from 0 to the user's
+    setting. For all attenuation types except "none", the volume is additionally decreased
+    by the user's distance from the ambience object.
+<li><b>attenuation</b><br>
+    Default = "normal"<br>
+    This field defines the attenuation behavior of the ambience object. Attenuation is
+    how the sound changes with distance between the listener and the ambience object. The
+    following values are available for this field:
+    <pre>
+    normal -- Use the close_dist and clipping_dist fields defined in the sound definition.
+    idle   -- Use DOOM's normal default sound attenuation behavior.
+    static -- Fades quickly (inaudible from 512 units).
+    none   -- Plays at this ambience definition's volume level regardless of distance.
+    </pre>
+<li><b>type</b><br>
+    Default = "continuous"<br>
+    This field defines the repetition behavior of this ambience definition. The following
+    values are available for this field:
+    <pre>
+    continuous -- loops the sound seamlessly
+    periodic   -- restarts the sound every "period" number of gametics
+    random     -- restarts the sound after a randomized wait period determined by the
+                  minperiod and maxperiod fields
+    </pre>
+<li><b>period</b><br>
+    Default = 35<br>
+    For periodic ambience definitions, this field defines how frequently the sound is
+    restarted in gametics (1/35 of a second).
+<li><b>minperiod</b><br>
+    Default = 35<br>
+    For random ambience definitions, this field defines the shortest wait period before the
+    sound will be restarted.
+<li><b>maxperiod</b><br>
+    Default = 35<br>
+    For random ambience definitions, this field defines the longest wait period before the
+    sound will be restarted. The ambience object will wait a period of time somewhere
+    between minperiod and maxperiod gametics, inclusive. For proper behavior, maxperiod
+    should be a number greater than minperiod.
+</ul>
+<br>
+Example:
+<pre>
+ambience
+{
+   index       = 0
+   sound       = ht_waterfl
+   type        = continuous
+   volume      = 127
+   attenuation = static
+}
+
+ambience
+{
+   index       = 1
+   sound       = ht_bstsit
+   type        = periodic
+   volume      = 64
+   attenuation = none
+   period      = 70
+}
+
+ambience
+{
+   index       = 2
+   sound       = ht_bstatk
+   type        = random
+   volume      = 127
+   attenuation = idle
+   minperiod   = 35
+   maxperiod   = 105
+}
+</pre>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="soundseqs">
+<hr>
+<b>Sound Sequences</b>
+<hr>
+</a>
+<br>
+New to EDF v1.7, <b>soundsequence</b> sections allow the user to define scripted sequences
+of sounds that can be used to control the auditory behavior of sectors, PolyObjects, and
+global environmental ambience effects. Every soundsequence section should have a unique
+mnemonic of 32 characters' length or less. If a sound sequence redefines an existing
+sequence's mnemonic, it will overwrite the original sequence.
+<br><br>
+Sound sequences are assigned to sectors via use of objects with DoomEd numbers 1400 through
+1411. The first ten of these objects assign sequences 0 through 10 to the sector in which
+they are placed. Object 1411 accepts the sequence id number in its first argument value,
+which can be specified via ExtraData or through use of the Hexen map format.
+<br><br>
+Sound sequences are assigned to PolyObjects by specifying the sequence id number in the
+last argument to the Polyobj_StartLine or Polyobj_ExplicitLine specials.
+<br><br>
+Sound sequences are assigned for playing by the environmental sequence engine by being
+given a type value of "environment". Environment sequences exist in their own numeric
+namespace and may thus have ids the same as sequences used for other purposes. Environmental
+sound sequences are assigned to a map by placing objects with DoomEd numbers 1200 through
+1300 anywhere on the map. The first 100 of these objects specify environmental sequences
+0 through 99. Object 1300 accepts an environmental sequence number in its first argument,
+which may be specified via ExtraData or through use of the Hexen map format.
+<br><br>
+When played from scripts, sound sequences are always started by their mnemonic.
+<br><br>
+Syntax:
+<pre>
+soundsequence &lt;mnemonic&gt;
+{
+   id              = &lt;number&gt;
+   cmds            = { &lt;string&gt;, ... }
+   type            = &lt;sequence type&gt;
+   stopsound       = &lt;sound mnemonic&gt;
+   attenuation     = &lt;attenuation type&gt;
+   volume          = &lt;number&gt;
+   minvolume       = &lt;number&gt;
+   nostopcutoff    = &lt;boolean&gt;
+   doorsequence    = &lt;sound sequence mnemonic&gt;
+   platsequence    = &lt;sound sequence mnemonic&gt;
+   floorsequence   = &lt;sound sequence mnemonic&gt;
+   ceilingsequence = &lt;sound sequence mnemonic&gt;
+}
+</pre>
+Explanation of Fields:
+<ul>
+<li><b>id</b><br>
+    Default: -1<br>
+    For a sequence to be playable by sectors, PolyObjects, or the environmental
+    ambience engine, the sequence must define an id number. The id number is affected
+    by the sequence type, however. For sequences marked as being of type "door" or
+    "plat", the first 64 sequences from 0 to 63 are kept in a special, separate lookup.
+    This means that if a door sector or a PolyObject requests sequence #0, it will first 
+    look for a sequence of type "door" which has the id number 0. If none is found, it 
+    will then look amongst all sequences. If one is not found at that point, no sequence
+    is played. The same process applies for plat/floor/ceiling sectors. For environmental 
+    sequences, the id numbers are kept in an entirely separate namespace. This means that
+    environmental sequence #0 is not the same as sector sequence #0 and will not hide it.<br>
+    For sector, door, or plat sequences greater than 63, all sequences exist in the
+    same numeric namespace. If a sequence has the default id of -1, it cannot be played
+    by number and can only be accessed via scripting.
+<li><b>cmds</b><br>
+    Default = { "end" }
+    This is a list of strings that make up the command script for this sound sequence.
+    The syntax and function of all commands is documented below.
+<li><b>type</b><br>
+    Default = "sector"<br>
+    This defines the particular type of this sound sequence. The following values apply 
+    to this field:
+    <pre>
+    sector -- A general sector sequence. The ID number is always in the main namespace.
+    door   -- A sector sequence meant particularly for doors or PolyObjects. The first 64
+              sequences with ID numbers 0 through 63 of this type are kept in a separate 
+              lookup table, and will be found first before checking the main namespace.
+    plat   -- A sector sequence meant particularly for plat, ceiling, or floor actions.
+              This works like doors above, with the first 64 such sequences (ids 0 through
+              63) having a separate lookup that has priority over the main namespace.
+              
+    NOTE: If both a sector and door or plat sequence exist with the same id numbers
+    between 0 and 63, the door or plat sequence will be found first when a sector 
+    starts that type of action. Otherwise, the last such sequence parsed will prevail.
+              
+    environment -- Sequences of this type are for use by the environmental sound engine.
+                   They are kept in an entirely separate namespace, and cannot be found
+                   by sector or PolyObject actions. This means an environment and sector
+                   type sequence can have the same ID numbers without conflicting.
+    </pre>
+<li><b>stopsound</b><br>
+    Default = "none"<br>
+    Defines an optional sound to play when this sequence is ended. Sequences with a
+    stopsound defined will wait for the game engine to cut them off, and this sound
+    will be played at that point. If no stopsound is defined, then the sequence is
+    cut off immediately, with sound behavior depending on the "nostopcutoff" field.
+    Note that this value can also be specified via a command in the <b>cmds</b> list.
+<li><b>attenuation</b><br>
+    Default = "normal"<br>
+    Defines the starting attenuation of the sound sequence. May be one of the following
+    values:
+    <pre>
+    normal -- use the values defined in the <b>sound</b> block for the current sound
+              being played by the sound sequence.
+    idle   -- use DOOM's default attenuation behavior.
+    static -- Fade quickly.
+    none   -- Plays at the sound sequence's current volume regardless of distance from
+              the origin.
+    </pre>
+    Note that the attenuation type can be changed at runtime by the attenuation command
+    in the <b>cmds</b> block as well.
+<li><b>volume</b><br>
+    Default = 127<br>
+    Defines the starting relative volume of the sound sequence, from 0 to 127. Volume can
+    also be set and modified by a number of sound sequence commands.
+<li><b>minvolume</b><br>
+    Default = -1<br>
+    If given a value between 0 and 127, but less than the volume field, the starting
+    volume of the sound sequence will be randomized between minvolume and volume inclusive.
+<li><b>nostopcutoff</b><br>
+    Default = false<br>
+    This boolean value determines what happens to any sound playing when a sequence that
+    doesn't define a stopsound is stopped. If false, the sound is cut off immediately.
+    If true, the sound is allowed to play to completion. It is redundant to specify this
+    value as true for a sequence that defines a stopsound. Note that this attribute may
+    also be toggled to true via use of the nostopcutoff command in the <b>cmds</b> list.
+<li><b>doorsequence</b><br>
+    Default = No default<br>
+    If a valid sound sequence mnemonic is specified in this field, then when this sound
+    sequence is started by a door action, it will redirect to the named sequence. This
+    allows sectors with multiple possible actions affecting them to use different sound
+    sequences for each action.
+<li><b>platsequence</b><br>
+    Default = No default<br>
+    If a valid sound sequence mnemonic is specified in this field, then when this sound
+    sequence is started by a platform action, it will redirect to the named sequence. This
+    allows sectors with multiple possible actions affecting them to use different sound
+    sequences for each action.
+<li><b>floorsequence</b><br>
+    Default = No default<br>
+    If a valid sound sequence mnemonic is specified in this field, then when this sound
+    sequence is started by a floor action, it will redirect to the named sequence. This
+    allows sectors with multiple possible actions affecting them to use different sound
+    sequences for each action.
+<li><b>ceilingsequence</b><br>
+    Default = No default<br>
+    If a valid sound sequence mnemonic is specified in this field, then when this sound
+    sequence is started by a ceiling action, it will redirect to the named sequence. This
+    allows sectors with multiple possible actions affecting them to use different sound
+    sequences for each action.
+</ul>
+<br>
+Sound Sequence Commands
+<br><br>
+The following is a list of the commands and their functions that can be specified inside
+a sound sequence's <b>cmds</b> list. Note that whitespace within each command is ignored,
+and that invalid or missing argument values are always corrected to a safe and suitable
+default.
+<ul>
+<li><b>play &lt;sound&gt;</b><br>
+    Plays the given sound and advances to the next command immediately.
+    <br><br>
+<li><b>playuntildone &lt;sound&gt;</b><br>
+    Plays the given sound and delays the sequence until the sound has stopped playing.
+    The sequence then advances to the next command.
+    <br><br>
+<li><b>playtime &lt;sound&gt; &lt;delay&gt;</b><br>
+    Plays the given sound and delays for the given number of gametics, then advances to
+    the next command.
+    <br><br>
+<li><b>playrepeat &lt;sound&gt;</b><br>
+    Plays the given sound in a continuous, seamless loop. The sequence will not advance
+    and must be stopped explicitly by the game engine. Environmental sequences should not
+    use this command or they will lock out all other sequences for the duration of the level.
+    <br><br>
+<li><b>playloop &lt;sound&gt; &lt;delay&gt;</b><br>
+    Plays the given sound in a time-delayed loop. The sound is restarted every "delay"
+    gametics, even if it has not finished, or possibly long after it has ended. The
+    sequence will not advance and must be stopped explicitly by the game engine. 
+    Environmental sequences should not use this command or they will lock out all other 
+    sequences for the duration of the level.
+    <br><br>
+<li><b>playabsvol &lt;sound&gt; &lt;volume&gt;</b><br>
+    Plays the given sound at the given absolute volume, which becomes the new current
+    volume level for the sound sequence (subsequent sounds will continue to play at this
+    volume). The sequence will advance to the next command immediately. Volume should be
+    between 0 and 127 inclusive.
+    <br><br>
+<li><b>playrelvol &lt;sound&gt; &lt;volume&gt;</b><br>
+    Plays the given sound at the current sequence volume level plus the "volume" argument,
+    which becomes the new current volume level for the sound sequence. The volume argument
+    to this command may be any number, including negative values which will decrease the
+    sequence volume. The volume will be wrapped into the range of 0 to 127. The sequence
+    will advance to the next command immediately.
+    <br><br>
+<li><b>delay &lt;tics&gt;</b><br>
+    Delays execution of the sound sequence by the specified number of gametics.
+    <br><br>
+<li><b>delayrand &lt;min&gt; &lt;max&gt;</b><br>
+    Delays execution of the sound sequence by an amount between min and max inclusive.
+    Min and max should not be equal and should be between 0 and 255 for best results.
+    <br><br>
+<li><b>volume &lt;vol&gt;</b><br>
+    Sets the current volume level of the sound sequence to "vol", which should be a number
+    between 0 and 127.
+    <br><br>
+<li><b>relvolume &lt;vol&gt;</b><br>
+    Adds "vol" to the current volume level of the sound sequence. "vol" may be any value,
+    with negative numbers decreasing the current volume level. The resulting volume level
+    will be clipped into the range of 0 to 127.
+    <br><br>
+<li><b>attenuation &lt;attn&gt;</b><br>
+    Sets the current attenuation behavior type for the sound sequence. Allowed values are
+    normal, idle, static, and none.
+    <br><br>
+<li><b>stopsound &lt;sound&gt;</b><br>
+    Sets the stopsound for the sequence to "sound", if such a sound exists. The last such
+    command in the command stream is the only one that will be used.
+    <br><br>
+<li><b>nostopcutoff</b><br>
+    Sets the <b>nostopcutoff</b> property of this sequence to true.
+    <br><br>
+<li><b>restart</b><br>
+    Restarts the sound sequence from the beginning.
+    <br><br>
+<li><b>end</b><br>
+    Marks the end of this sound sequence. It is never necessary to specify this command
+    explicitly, as an end command is automatically added to every sound sequence as a 
+    convenience to the user.
+</ul>
+<br>
+Example:
+<pre>
+// This is a sequence playable by name only. It is one of the default sector sequences
+// defined in sounds.edf, and is used by Heretic doors when they close.
+soundsequence EEDoorCloseNormal
+{
+   cmds =
+   {
+      "play EE_DoorOpen",
+      "stopsound EE_DoorClose"
+   }
+}
+
+// This is an environmental sequence for Heretic, which is used by placing a thing of
+// type 1200 anywhere on the map. It is started by the environmental sequence manager
+// at random, with the probability of it being played being determined by the proportion
+// of 1200 objects to other environmental sequence spots on the map.
+soundsequence EEHticAmbScream
+{
+   type = environment
+   id = 0
+   cmds = { "playuntildone ht_amb1" }
+   
+   volume = 96
+   minvolume = 32
+   attenuation = none
+}
+
+// This is a sound sequence meant to be played by a PolyObject. It could also use
+// type sector and would still work, but using type door is more explicit. PolyObjects
+// always use door-type actions when starting sequences, so they check the door lookup
+// first for id numbers between 0 and 63.
+soundsequence PolyDoor
+{
+   type = door
+   id   = 0
+   cmds =
+   {
+      "play EE_BDoorOpen",
+      "stopsound EE_PlatStop"
+   }
+}
+
+// This is one of the more complicated environmental sequences from sounds.edf.
+// It plays two alternating footstep sounds every 15 gametics at a constantly
+// decreasing volume level.
+soundsequence EEHticSlowFootSteps
+{
+   type = environment
+   id = 3
+   cmds =
+   {
+      "playtime ht_amb4 15",
+      "playrelvol ht_amb11 -3",
+      "delay 15",
+      "playrelvol ht_amb4  -3",
+      "delay 15",
+      "playrelvol ht_amb11 -3",
+      "delay 15",
+      "playrelvol ht_amb4  -3",
+      "delay 15",
+      "playrelvol ht_amb11 -3",
+      "delay 15",
+      "playrelvol ht_amb4  -3",
+      "delay 15",
+      "playrelvol ht_amb11 -3",
+      "nostopcutoff"
+   }
+   
+   volume = 96
+   minvolume = 32
+   attenuation = none
+}
+
+// Yes, sound sequences can be completely silent :) All fields are defaulting, and
+// the only command in the command list is "end".
+soundsequence EEPlatSilent
+{
+}
+</pre>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
+<a name="enviromgr">
+<hr>
+<b>Environmental Sequence Manager</b>
+<hr>
+</a>
+<br>
+EDF can alter basic properties of the environmental ambience sound sequence manager.
+This system runs in every level and randomly chooses environmental sequences to play
+based on what objects with DoomEd numbers 1200 through 1300 are present on the level
+(these objects are collected in much the same way as Boss Brain spots or D'Sparil's
+teleport landings). The probability of a given sequence playing on any particular
+event is determined solely by how many objects on the level specify that sequence as
+compared to the total number of objects.
+<br><br>
+There can be any number of enviromanager blocks specified, but only the values in the
+last one parsed will be used.
+<br><br>
+Syntax:
+<pre>
+enviromanager
+{
+   minstartwait = &lt;number&gt; // minimum wait time at level start in tics
+   maxstartwait = &lt;number&gt; // maximum wait time at level start in tics
+   minwait      = &lt;number&gt; // minimum wait time between sequences in tics
+   maxwait      = &lt;number&gt; // maximum wait time between sequences in tics
+}
+</pre>
+In all cases, the minimum wait times should be less than the maximum. The engine will
+adjust the values to make this true if it is not.
+<br><br>
 <a href="#contents">Return to Table of Contents</a>
 
 <p>

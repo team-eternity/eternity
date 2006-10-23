@@ -431,10 +431,6 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
    // haleyjd 02/18/05: cannot proceed until channel is unlocked
    while(channelinfo[handle].lock)
       SDL_Delay(1);
-
-   // haleyjd DEBUG
-   if(channelinfo[handle].data)
-      I_Error("data set???\n");
  
    if(addsfx(sound, handle))
    {

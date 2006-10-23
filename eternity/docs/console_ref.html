@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 <hr>
-<b>The Eternity Engine v3.33.33 Console Reference -- 04/02/06</b>
+<b>The Eternity Engine v3.33.50 Console Reference -- 10/22/06</b>
 <hr>
 
 <p>
@@ -42,7 +42,7 @@ the Eternity console, as well as pointers on console command syntax.
       <li><a href="#cmdnetworking">Networking</a><br>
           disconnect, playerinfo, frags, kick, say
       <li><a href="#cmdcheats">Cheats</a><br>
-          god, noclip, nuke, infammo
+          god, noclip, nuke, infammo, mdk, mdkbomb
       <li><a href="#cmdvideo">Video Options</a><br>
           v_modelist, animshot, screenshot
       <li><a href="#cmdplayer">Player Options</a><br>
@@ -660,6 +660,8 @@ Synopsis of Commands:
 	* noclip
 	* nuke
 	* infammo
+	* mdk
+	* mdkbomb
 </pre>
 <ul>
 <li> god<br><br>
@@ -682,6 +684,18 @@ Synopsis of Commands:
 
   Toggles infinite ammo (INFSHOTS) on or off.<br>
   Flags: not in network games, only in levels
+  <br><br>
+<li> mdk<br><br>
+
+  Fires a tracer from the player that instantly kills any monster the player
+  is targetting.<br>
+  Flags: only in level, not in netgames, hidden
+  <br><br>
+<li> mdkbomb<br><br>
+
+  As above, but fires 60 such tracers in a circle around the player.<br>
+  Flags: only in level, not in network games, hidden
+  
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 

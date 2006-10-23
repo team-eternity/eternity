@@ -9,7 +9,7 @@ content="text/html; charset=iso-8859-1">
 
 <body bgcolor="#CECECE">
 
-<h2>Eternity Engine Editing Reference v1.83 -- 5/07/06</h2>
+<h2>Eternity Engine Editing Reference v1.90 -- 10/22/06</h2>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -112,7 +112,12 @@ content="text/html; charset=iso-8859-1">
             <li><a href="#polyobj_move">15.2 Moving PolyObjects</a>
             <li><a href="#polyobj_door">15.3 PolyObject Doors</a>
             </ul>
-        <li><a href="#genlines">Section 16. Detailed Generalized Linedef Specification</a>
+        <li><a href="#pillars">Section 16. Pillars</a>
+            <ul>
+            <li><a href="#pillarvars">Pillar varieties</a>
+            <li><a href="#pillarlines">Pillar linedef types</a>
+            </ul>
+        <li><a href="#genlines">Section 17. Detailed Generalized Linedef Specification</a>
             <ul>
             <li><a href="#ranges">Line ranges/nomenclature</a>
             <li><a href="#genfloors">Floors</a>
@@ -123,18 +128,19 @@ content="text/html; charset=iso-8859-1">
             <li><a href="#genstairs">Stairs</a>
             <li><a href="#gencrush">Crushers</a>
             </ul>
-        <li><a href="#paramlines">Section 17. Detailed Parameterized Linedef Specification</a>
+        <li><a href="#paramlines">Section 18. Detailed Parameterized Linedef Specification</a>
             <ul>
             <li><a href="#paramfloors">Floors</a>
             <li><a href="#paramceils">Ceilings</a>
             <li><a href="#paramdoors">Doors</a>
             <li><a href="#paramstairs">Stairs</a>
             <li><a href="#parampolyobj">PolyObjects</a>
+            <li><a href="#parampillars">Pillars</a>
             </ul>
     <li><a href="#part2">Part II Sector Types</a>
         <ul>
-        <li><a href="#sectors">Section 18. Regular sector types</a>
-        <li><a href="#gensectors">Section 19. Generalized sector types</a>
+        <li><a href="#sectors">Section 19. Regular sector types</a>
+        <li><a href="#gensectors">Section 20. Generalized sector types</a>
         </ul>
     <li><a href="#part3">Part III Linedef Flags</a>
     <li><a href="#part4">Part IV Thing Flags</a>
@@ -151,9 +157,9 @@ content="text/html; charset=iso-8859-1">
         </ul>
     <li><a href="#extradata">Part VII ExtraData</a>
         <ul>
-        <li><a href="#edintro">20.1 ExtraData Introduction</a>
-        <li><a href="#edthing">20.2 ExtraData Control Objects</a>
-        <li><a href="#edlines">20.3 ExtraData Control Linedefs</a>
+        <li><a href="#edintro">21.1 ExtraData Introduction</a>
+        <li><a href="#edthing">21.2 ExtraData Control Objects</a>
+        <li><a href="#edlines">21.3 ExtraData Control Linedefs</a>
         </ul>
     </ul>
 </ul>
@@ -3046,9 +3052,80 @@ will reopen if blocked by an object.
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
+<a name="pillars">
+<hr width="75%" align="left">
+<b>Section 16. Pillars</b>
+<hr width="75%" align="left">
+</a>
+<br>
+A pillar is a linedef type that moves both floor and ceiling in opposite directions. 
+All pillar linedefs are parameterized; there are no regular, extended, or generalized 
+pillar types. Instant pillar motion is not possible.
+
+<p>
+<a name="pillarvars">
+<hr width="50%" align="left">
+<b>Section 16.1 Pillar varieties</b>
+<hr width="50%" align="left">
+</a>
+<br>
+<ul>
+<li> Build<br>
+<br>
+The pillar's floor and ceiling move up and down respectively until they meet at a
+parameter-specified height. If the specified height is 0, the floor and ceiling
+will meet at a point directly half-way between their current heights. The speed
+parameter for this type specifies the speed of the surface which must move the
+greater distance. The other surface's speed will be set such that it arrives at 
+the destination at the same time. No crushing damage is done by this type. If
+motion is blocked, both surfaces will wait until the obstruction is removed.<br>
+<br>
+<li> Build and Crush<br>
+<br>
+This is exactly the same as build, but variable crushing damage will be inflicted
+on all objects that are blocking the pillar's motion.<br>
+<br>
+<li> Open<br>
+<br>
+The pillar's floor and ceiling move apart (down and up respectively), opening a
+closed pillar. The distances that the floor and ceiling should move are specified
+separately as parameters. If the floor distance is zero, the floor will move to the
+lowest surrounding floor. If the ceiling distance is zero, the ceiling will move to
+the highest surrounding ceiling. The speed parameter specifies the speed of the
+surface which must move the greatest distance. The other surface's speed will be set
+such that it arrives at its destination at the same time. This type of action can
+only be performed on a sector which has the floor and ceiling heights equal.
+</ul>
+
+<a href="#contents">Return to Table of Contents</a>
+ 
+<p>
+<a name="elevlines">
+<hr width="50%" align="left">
+<b>Section 16.2 Pillar linedef types</b>
+<hr width="50%" align="left">
+</a>
+<br>
+There are currently three types of parameterized pillar specials, each 
+performing a different type of pillar action. See the
+<a href="#parampillars">Parameterized Pillar Types</a> section for full 
+information on how to use these specials.
+<pre>
+Parameterized Stair Types
+-------------------------------------------------------------------------------
+#      Class   Function                           ExtraData Name
+
+362    Param   Build pillar                       Pillar_Build
+363    Param   Build pillar and crush             Pillar_BuildAndCrush
+364    Param   Open pillar                        Pillar_Open
+</pre>
+<a href="#contents">Return to Table of Contents</a>
+
+
+<p>
 <a name="genlines">
 <hr width="75%" align="left">
-<b>Section 16. Detailed Generalized Linedef Specification</b>
+<b>Section 17. Detailed Generalized Linedef Specification</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3383,7 +3460,7 @@ Notes:
 <p>
 <a name="paramlines">
 <hr width="75%" align="left">
-<b>Section 17. Detailed Parameterized Linedef Specification</b>
+<b>Section 18. Detailed Parameterized Linedef Specification</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3703,10 +3780,49 @@ adist      : Byte angle specifying total angular distance to
   255 == The PolyObject will rotate perpetually.
   All other byte angle values have their normal meaning.
 ------------------------------------------------------------------------------
+
+<a name="parampillars">Parameterized Pillar Types</a>
+------------------------------------------------------------------------------
+#    Function                            ExtraData Name
+
+362  Build pillar                        Pillar_Build
+363  Build pillar and crush              Pillar_BuildAndCrush
+364  Open pillar                         Pillar_Open
+
+Parameters
+---------------------------------------------------------------
+Pillar_Build              tag, speed, height
+Pillar_BuildAndCrush      tag, speed, height, crush
+Pillar_Open               tag, speed, fdist, cdist
+
+Values
+---------------------------------------------------------------
+tag       : Tag of sector to close or open as a pillar. For the
+            action to succeed, neither surface may have an 
+            action running on it already. If the tag is zero,
+            the sector on the backside of a 2S line with this
+            special will be used.
+speed     : Speed of the surface with the greatest distance to
+            move in eights of a unit per tic. The other surface
+            will move at a speed which causes it to reach its
+            destination at the same time.
+height    : For Build and BuildAndCrush types, this is the 
+            height relative to the floor where the floor and 
+            ceiling should meet. If this value is zero, the 
+            floor and ceiling will meet exactly half-way.
+crush     : For BuildAndCrush type only, this specifies the 
+            amount of damage to inflict per crush event.
+fdist     : For Open type only, this is the distance the floor
+            should move down. If this value is zero, the floor
+            will move to its lowest neighboring floor.
+cdist     : For Open type only, this is the distance the
+            ceiling should move up. If this value is zero, the
+            ceiling will move to its highest neighboring 
+            ceiling.          
+------------------------------------------------------------------------------
 </pre>
 <a href="#contents">Return to Table of Contents</a>
  
-
 <p>
 <a name="part2">
 <hr>
@@ -3723,7 +3839,7 @@ at once. No extended sector types are implemented at this time.
 <p>
 <a name="sectors">
 <hr width="75%" align="left">
-<b>Section 18. Regular Sector types</b>
+<b>Section 19. Regular Sector types</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3766,7 +3882,7 @@ ignored.<br>
 <p>
 <a name="gensectors">
 <hr width="75%" align="left">
-<b>Section 19. Generalized sector types</b>
+<b>Section 20. Generalized sector types</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -4004,6 +4120,22 @@ not currently documented. Maps should refrain from using those
 things until they are made official, as they could change or be
 deleted later.<br>
 <br>
+<b>EEEnviroSequence</b> (1200 - 1300)<br>
+This group of objects are all translated into EEEnviroSequence with DoomEdNum
+1300. These objects are used to add environmental sound sequences to the 
+environmental sequence manager. For types 1200 through 1299, the sequence number
+to add is type - 1200. For type 1300, the sequence number is the value in args[0]
+as specified via ExtraData or the Hexen map format.
+<br><br>
+<b>EESectorSequence</b> (1400 - 1500)<br>
+This group of objects are all translated into EESectorSequence with DoomEdNum
+1500. These objects are used to assign sound sequences to sectors by number.
+For types 1400 through 1499, the sequence number is type - 1400. For type
+1500, the sequence number is the value in args[0] as specified via ExtraData
+or the Hexen map format. For type 1500, if args[0] is 0, the sector is reset
+to default sound sequence behavior, even if the MapInfo variable "noautosequences"
+has been set to "true".
+<br><br>
 <b>ExtraData Thing Control Object</b> (5004)<br>
 This doomednum is used to reference an ExtraData mapthing record, the number of 
 which must be placed in the options field of this mapthing. There is no EDF 
@@ -4076,6 +4208,13 @@ relative to it.
 Exactly the same as EEPolyObjSpawnSpot, but PolyObjects which use this object instead
 will inflict damage upon shootable things which block the course of their movement at
 a rate of 3 HP/gametic (105 damage per second).
+<br><br>
+<b>EEAmbience</b> (14001 - 14065)<br>
+This group of objects are all translated into EEAmbience with DoomEdNum 14065. These
+objects define control points that utilize EDF ambience definitions. For types 14001
+through 14064, the ambience index used by that object is type - 14000. For type 14065,
+the ambience index used by the object is the value in args[0] as specified via
+ExtraData or the Hexen map format.
 <br><br>
 <a href="#contents">Return to Table of Contents</a>
  
@@ -4396,7 +4535,7 @@ Console Reference</a>. This lump is ASCII text.
 <p>
 <a name="edintro">
 <hr width="75%" align="left">
-<b>Section 20.1. ExtraData Introduction</b>
+<b>Section 21.1. ExtraData Introduction</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -4425,7 +4564,7 @@ ExtraData scripts must be attached to the maps which use them via the use of
 <p>
 <a name="edthing">
 <hr width="75%" align="left">
-<b>Section 20.2. ExtraData Control Objects</b>
+<b>Section 21.2. ExtraData Control Objects</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -4483,7 +4622,7 @@ Eternity Engine fields in the future.
 <p>
 <a name="edlines">
 <hr width="75%" align="left">
-<b>Section 20.3. ExtraData Control Linedefs</b>
+<b>Section 21.3. ExtraData Control Linedefs</b>
 <hr width="75%" align="left">
 </a>
 <br>

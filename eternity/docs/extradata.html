@@ -8,7 +8,7 @@
 
 <body bgcolor="#CECECE">
 
-<h3>Eternity Engine ExtraData Reference v1.2 -- 5/07/06</h3>
+<h3>Eternity Engine ExtraData Reference v1.3 -- 10/22/06</h3>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -16,7 +16,7 @@
 <li><a name="contents"><b>Table of Contents</b></a>
     <ul>
     <li><a href="#intro">Introduction to ExtraData</a>
-    <li><a href="#changes">Changes in ExtraData 1.2</a>
+    <li><a href="#changes">Changes in ExtraData 1.3</a>
     <li><a href="#gensyn">General Syntax</a>
     <li><a href="#embed">Embedding and Associating ExtraData</a>
     <li><a href="#mapthings">Mapthings</a>
@@ -58,13 +58,11 @@ to reflect all changes and additions.
 <p>
 <a name="changes">
 <hr>
-<b>Changes in ExtraData 1.2</b>
+<b>Changes in ExtraData 1.3</b>
 <hr>
 </a>
 <ul>
-<li> Added height field for mapthings to match Hexen map format.
-<li> New escape characters for strings added to control color, shadowing, and
-     absolute text centering.
+<li> New pillar line types, and fixes to parameterized stairs documentation.
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -1054,8 +1052,8 @@ Number  Name                         Parameters
  339    Ceiling_LowerInstant         tag, height, change, crush
  340    Stairs_BuildUpDoom           tag, speed, stepsize, delay, reset
  341    Stairs_BuildDownDoom         tag, speed, stepsize, delay, reset
- 342    Stairs_BuildUpDoomSync       tag, speed, stepsize, delay, reset
- 343    Stairs_BuildDownDoomSync     tag, speed, stepsize, delay, reset
+ 342    Stairs_BuildUpDoomSync       tag, speed, stepsize, reset
+ 343    Stairs_BuildDownDoomSync     tag, speed, stepsize, reset
  348    Polyobj_StartLine            polyobj_id, mirror_id, sndseq_id
  349    Polyobj_ExplicitLine         polyobj_id, linenum, mirror_id, sndseq_id
  350    Polyobj_DoorSlide            polyobj_id, speed, angle, dist, delay
@@ -1066,7 +1064,9 @@ Number  Name                         Parameters
  355    Polyobj_OR_RotateRight       polyobj_id, aspeed, adist
  356    Polyobj_RotateLeft           polyobj_id, aspeed, adist
  357    Polyobj_OR_RotateLeft        polyobj_id, aspeed, adist
-
+ 362    Pillar_Build                 tag, speed, height
+ 363    Pillar_BuildAndCrush         tag, speed, height, crush
+ 364    Pillar_Open                  tag, speed, fdist, cdist
 
 ----------------------
 Generalized Line Types

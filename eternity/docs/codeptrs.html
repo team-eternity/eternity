@@ -9,7 +9,7 @@
 <body bgcolor="#CECECE">
 
 <hr>
-<b>The Eternity Engine Definitive Code Pointer Reference -- 04/01/06</b>
+<b>The Eternity Engine Definitive Code Pointer Reference -- 10/22/06</b>
 <hr>
 
 <p>
@@ -47,7 +47,7 @@ their use, as well as common pitfalls that lead to nasty crashes.
         <li><a href="#genmisc">Miscellaneous Pointers</a><br>
             BFGSpray, BFG11KHit, BouncingBFG, BFGBurst, Mushroom, Nailbomb, SetFlags,
             UnSetFlags, Fall, Die, BrainScream, BrainExplode, SpawnFly, Fire, Spawn,
-            Turn, LineEffect, Stop
+            Turn, LineEffect, Stop, SteamSpawn
         <li><a href="#hticmisc">Heretic Miscellaneous Pointers</a><br>
             SpawnGlitter, AccelGlitter, SpawnAbove, MummySoul, BlueSpark, GenWizard,
             Sor2DthInit, Sor2DthLoop, PodPain, RemovePod, MakePod, DripBlood
@@ -57,7 +57,7 @@ their use, as well as common pitfalls that lead to nasty crashes.
             Sor1Pain
         <li><a href="#objsound">Object Sound Pointers</a><br>
             PlaySound, Pain, Scream, XScream, PlayerScream, BrainPain, BrainAwake,
-            VileStart
+            VileStart, AmbientThinker
         <li><a href="#aiptr">AI Pointers</a><br>
             Look, Chase, VileChase, FaceTarget, KeepChasing, RandomWalk
         <li><a href="#hticai">Heretic AI Pointers</a><br>
@@ -109,10 +109,7 @@ their use, as well as common pitfalls that lead to nasty crashes.
 <hr width="60%" align="left"></a>
 
 <ul>
-<li>03/31/06: Put thunk info into the pointers themselves and removed HticDrop,
-    which is now deprecated and will be removed in the near future in preference
-    of full specification of item drop behavior via EDF. Added ThingSummon and
-    KillChildren. Added new weapon frame scripting pointers.
+<li>10/22/06: Added AmbientThinker and SteamSpawn.
 </ul>
 
 <a href="#contents">Return to Table of Contents</a>
@@ -1102,6 +1099,22 @@ range will wrap around.
   Purpose: Causes an object to completely stop all movement. New to Eternity.<br>
   Thunk:   Yes.
 
+<li> <b>SteamSpawn</b><br>
+  Type:    Miscellaneous, parameterized
+  <br><br>
+  Parameter Information:
+  <ul>
+  <li> Args1 = DeHackEd number of thing type to spawn
+  <li> Args2 = Horizontal angular range (centered on thing's angle)
+  <li> Args3 = Vertical angle
+  <li> Args4 = Vertical angular rangle (centered on Args3)
+  <li> Args5 = Speed
+  </ul>
+  <br>
+  Purpose: Spawns and thrusts objects within randomized horizontal and vertical
+           angular sweeps. Angular ranges should be values between 0 and 359.
+           New to Eternity Engine v3.33.50.<br>
+  Thunk:   Yes.
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -1414,7 +1427,18 @@ range will wrap around.
   Type:    Object sound pointer, normal<br>
   Purpose: Plays the "vilatk" sound effect.<br>
   Thunk:   Yes.
+<br><br><br>
 
+<li> <b>AmbientThinker</b><br>
+  Type:    Object sound pointer, normal<br>
+  Purpose: Drives EDF ambience effects controlled by the EEAmbience object. This
+           pointer expects to find the EDF ambience sequence index number in the
+           args[0] field of the thing. If that number is invalid, this codepointer
+           does nothing. It also utilizes the counter #0 field of the object as a 
+           ticker. In order to work properly, this codepointer must be called once
+           every gametic (ie, in a frame of duration 1). New to Eternity Engine v3.33.50.<br>
+  Thunk:   Absolutely not.
+  
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 

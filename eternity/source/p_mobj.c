@@ -1670,6 +1670,8 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing, mapthinghexen_t *extthing)
       i = E_SafeThingName("EEParticleFountain");
    else if(mthing->type >= 1200 && mthing->type < 1300) // enviro sequences
       i = E_SafeThingName("EEEnviroSequence");
+   else if(mthing->type >= 1400 && mthing->type < 1500) // sector sequence
+      i = E_SafeThingName("EESectorSequence");
    else if(mthing->type >= 14001 && mthing->type <= 14064) // ambience
       i = E_SafeThingName("EEAmbience");
    else
@@ -1779,6 +1781,21 @@ spawnit:
    // haleyjd: set environment sequence # for first 100 types
    if(mthing->type >= 1200 && mthing->type < 1300)
       mobj->args[0] = mthing->type - 1200;
+
+   // haleyjd: handle sequence override objects -- 100 types
+   if(mthing->type >= 1400 && mthing->type <= 1500)
+   {
+      subsector_t *subsec;
+
+      if(mthing->type != 1500) // for non-1500, number is type-1400
+         mobj->args[0] = mthing->type - 1400;
+      else if(mobj->args[0] == 0) // for 1500, 0 means reset to default
+         mobj->args[0] = -1; 
+
+      // set sector sequence id from mobj->args[0]
+      subsec = R_PointInSubsector(mobj->x, mobj->y);
+      subsec->sector->sndSeqID = mobj->args[0];
+   }
 
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)

@@ -1,5 +1,5 @@
 ====================================================================
-Eternity Engine v3.33.33 - Frequently Asked Questions
+Eternity Engine v3.33.50 - Frequently Asked Questions
 ====================================================================
 
 This is a FAQ file for the Windows version of the Eternity Engine.
@@ -67,6 +67,8 @@ QF. What is the keys.csc file, and can I safely edit it to my liking?
 QG. Does Eternity support Legacy skins?
 
 QH. Can I reset the video mode from the command line?
+
+QI. HOW DO I PAGE LEFT/RIGHT IN THE MENUS?!?!
 
 *** System-Specific Questions ***
 
@@ -406,6 +408,42 @@ eternity -v_mode 0
 
 This would start up Eternity in 320x200 VGA or 320x200 windowed,
 depending on the version being used.
+
+Starting with Eternity Engine v3.33.50, you may also specify the
+following command-line options to customize your video mode:
+
+-v_width <n>
+-v_height <n>
+-window
+-nofullscreen
+-fullscreen
+-vsync
+-novsync
+
+For -v_width, n must be a number between 320 and 1024. For -v_height,
+n must be a number between 200 and 768. Values which are out of range
+will be ignored and the dimension for the currently selected video
+mode will be used instead.
+
+Example command line:
+
+c:\eternity\>eternity -v_width 960 -v_height 600 -window
+
+Note: -window and -nofullscreen mean the same thing.
+
+=====================================================================
+QI. HOW DO I PAGE LEFT/RIGHT IN THE MENUS?!?!
+
+AI. One of two ways.
+    1. Use ctrl+left or ctrl+right. This is a hard-coded shortcut.
+    2. Bind keys to the key actions "menu_pageup" and "menu_pagedown".
+       These actions take you one menu left or right respectively.
+       These actions are bound by default to the pageup and pagedown
+       keys on the keyboard starting with v3.33.50.
+       
+    Also, you may want to bind a key to the "menu_contents" action.
+    This allows you to see a Table of Contents for multipage menus
+    that allows you to instantly jump to any menu in the set.
 
 =====================================================================
 
