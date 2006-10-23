@@ -67,7 +67,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.33.50 \"Phoenix\" -- Dedicated t
 // 3.33.01 'Outcast'   -- 06/24/05
 // 3.33.02 'Warrior'   -- 10/01/05
 // 3.33.33 'Paladin'   -- 05/17/06
-// 3.33.50 'Phoenix'   -- 
+// 3.33.50 'Phoenix'   -- 10/23/06
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
