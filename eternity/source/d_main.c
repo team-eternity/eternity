@@ -1087,8 +1087,8 @@ void IdentifyVersion(void)
 
    // set save path to -save parm or current dir
 
-   strcpy(basesavegame,".");       //jff 3/27/98 default to current dir
-   if((i=M_CheckParm("-save")) && i<myargc-1) //jff 3/24/98 if -save present
+   strcpy(basesavegame, ".");       //jff 3/27/98 default to current dir
+   if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
    {
       if(!stat(myargv[i+1],&sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
          strcpy(basesavegame,myargv[i+1]);  //jff 3/24/98 use that for savegame

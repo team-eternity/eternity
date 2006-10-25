@@ -53,6 +53,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef LINUX
+#include <linux/limits.h>
+#endif
+
 #endif
 
 //----------------------------------------------------------------------------

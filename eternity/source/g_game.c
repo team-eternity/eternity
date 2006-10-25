@@ -1850,7 +1850,14 @@ static void G_DoLoadGame(void)
 
    gameaction = ga_nothing;
    
-   length = M_ReadFile(savename, &savebuffer);
+   // haleyjd 10/24/06: check for failure
+   if((length = M_ReadFile(savename, &savebuffer)) == -1)
+   {
+      C_Printf(FC_ERROR "Failed to load savegame %s\n", savename);
+      C_SetConsole();
+      return;
+   }
+
    save_p = savebuffer + SAVESTRINGSIZE;
    
    // skip the description field
