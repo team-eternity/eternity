@@ -30,11 +30,11 @@
 #define INPUTLENGTH 512
 #define LINELENGTH  128
 
-void C_Init(void);
-void C_Ticker(void);
-void C_Drawer(void);
-int C_Responder(event_t* ev);
-void C_Update(void);
+void    C_Init(void);
+void    C_Ticker(void);
+void    C_Drawer(void);
+boolean C_Responder(event_t* ev);
+void    C_Update(void);
 
 void C_Printf(const char *s, ...);
 void C_Puts(const char *s);
@@ -50,7 +50,7 @@ void C_CloseConsoleLog(void);
 void C_DumpMessages(const char *filename);
 
         // sf 9/99: made a #define
-#define consoleactive (current_height || gamestate==GS_CONSOLE)
+#define consoleactive (current_height || gamestate == GS_CONSOLE)
 
 extern int c_height;     // the height of the console
 extern int c_speed;       // pixels/tic it moves

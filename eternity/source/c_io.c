@@ -62,15 +62,15 @@
 #define C_SCREENWIDTH v_width
 
 extern const char *shiftxform;
-void Egg();
+static void Egg();
 
 // the messages (what you see in the console window)
-static unsigned char messages[MESSAGES][LINELENGTH];
+static char messages[MESSAGES][LINELENGTH];
 static int message_pos = 0;   // position in the history (last line in window)
 static int message_last = 0;  // the last message
 
 // the command history(what you type in)
-static unsigned char history[HISTORY][LINELENGTH];
+static char history[HISTORY][LINELENGTH];
 static int history_last = 0;
 static int history_current = 0;
 
@@ -82,7 +82,7 @@ int c_speed=10;       // pixels/tic it moves
 int current_target = 0;
 int current_height = 0;
 boolean c_showprompt;
-static char *backdrop = NULL;
+static byte *backdrop = NULL;
 static char inputtext[INPUTLENGTH];
 static char *input_point;      // left-most point you see of the command line
 
@@ -100,12 +100,12 @@ static FILE *console_log = NULL;
 // ticker, responder, drawer, init etc.
 //
 
-static void C_InitBackdrop(void)
+static void C_initBackdrop(void)
 {
    patch_t *patch;
    const char *lumpname;
-   //byte *oldscreen;
    VBuffer cback;
+   boolean darken = false;
    
    switch(gamemode)
    {
@@ -113,17 +113,19 @@ static void C_InitBackdrop(void)
    case retail: 
       lumpname = "INTERPIC";
       break;
-   case registered: 
-      lumpname = "PFUB2";
-      break;
    default: 
       lumpname = "TITLEPIC";
+      // haleyjd: if we use the titlepic, we need to darken it.
+      darken = true;
       break;
    }
    
    // allow for custom console background graphic
    if(W_CheckNumForName("CONSOLE") >= 0)
+   {
       lumpname = "CONSOLE";
+      darken = false;
+   }
    
    if(backdrop)
       Z_Free(backdrop);
@@ -136,9 +138,19 @@ static void C_InitBackdrop(void)
    cback.width = cback.pitch = C_SCREENWIDTH;
    cback.height = C_SCREENHEIGHT;
 
-   patch = W_CacheLumpName(lumpname, PU_CACHE);
+   patch = W_CacheLumpName(lumpname, PU_STATIC);
 
-   V_DrawPatch(0, 0, &cback, patch);
+   if(darken)
+   {
+      char *colormap = W_CacheLumpName("COLORMAP", PU_STATIC);
+
+      V_DrawPatchTranslated(0, 0, &cback, patch, colormap + 16 * 256, false);
+      Z_ChangeTag(colormap, PU_CACHE);
+   }
+   else
+      V_DrawPatch(0, 0, &cback, patch);
+
+   Z_ChangeTag(patch, PU_CACHE);
 }
 
 // input_point is the leftmost point of the inputtext which
@@ -148,7 +160,7 @@ static void C_InitBackdrop(void)
 //
 // CONSOLE_FIXME: See how Quake 2 does this, it's much better.
 //
-static void C_UpdateInputPoint(void)
+static void C_updateInputPoint(void)
 {
    for(input_point = inputtext;
        V_StringWidth(input_point) > SCREENWIDTH-20; input_point++);
@@ -158,13 +170,13 @@ static void C_UpdateInputPoint(void)
 
 void C_Init(void)
 {
-   C_InitBackdrop();
+   C_initBackdrop();
    
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
    
    C_AddCommands();
-   C_UpdateInputPoint();
+   C_updateInputPoint();
    
    // haleyjd
    G_InitKeyBindings();
@@ -225,7 +237,7 @@ void C_Ticker(void)
 // CONSOLE_FIXME: history needs to be more efficient. Use pointers 
 // instead of copying strings back and forth.
 //
-static void C_AddToHistory(char *s)
+static void C_addToHistory(const char *s)
 {
    const char *t;
    const char *a_prompt;
@@ -273,7 +285,7 @@ static void C_AddToHistory(char *s)
 
 // respond to keyboard input/events
 
-int C_Responder(event_t *ev)
+boolean C_Responder(event_t *ev)
 {
    static int shiftdown;
    char ch;
@@ -293,26 +305,10 @@ int C_Responder(event_t *ev)
    pgdn_down = action_console_pagedown;
    if(action_console_pagedown)
       return consoleactive;
-
-   /*
-   if(action_console_pageup)
-   {
-      action_console_pageup = false;
-      pgup_down = (ev->type == ev_keydown);
-      return consoleactive;
-   }
-
-   if(action_console_pagedown)
-   {
-      action_console_pagedown = false;
-      pgdn_down = (ev->type == ev_keydown);
-      return consoleactive;
-   }
-   */
   
    // only interested in keypresses
    if(ev->type != ev_keydown)
-      return 0;
+      return false;
   
    //////////////////////////////////
    // Check for special keypresses
@@ -352,7 +348,7 @@ int C_Responder(event_t *ev)
       strcpy(inputtext, shiftdown ? C_NextTab(inputtext) :
              C_PrevTab(inputtext));
       
-      C_UpdateInputPoint(); // reset scrolling
+      C_updateInputPoint(); // reset scrolling
       return true;
     }
   
@@ -361,7 +357,7 @@ int C_Responder(event_t *ev)
    {
       action_console_enter = false;
 
-      C_AddToHistory(inputtext);      // add to history
+      C_addToHistory(inputtext);      // add to history
       
       if(!strcmp(inputtext, "r0x0rz delux0rz"))
          Egg(); //shh!
@@ -373,7 +369,7 @@ int C_Responder(event_t *ev)
       C_InitTab();            // reset tab completion
       
       inputtext[0] = 0;       // clear inputtext now
-      C_UpdateInputPoint();   // reset scrolling
+      C_updateInputPoint();   // reset scrolling
       
       return true;
    }
@@ -395,7 +391,7 @@ int C_Responder(event_t *ev)
       strcpy(inputtext, history[history_current]);
       
       C_InitTab();            // reset tab completion
-      C_UpdateInputPoint();   // reset scrolling
+      C_updateInputPoint();   // reset scrolling
       return true;
    }
   
@@ -413,7 +409,7 @@ int C_Responder(event_t *ev)
              "" : (char*)history[history_current]);
       
       C_InitTab();            // reset tab-completion
-      C_UpdateInputPoint();   // reset scrolling
+      C_updateInputPoint();   // reset scrolling
       return true;
    }
 
@@ -431,7 +427,7 @@ int C_Responder(event_t *ev)
          inputtext[strlen(inputtext) - 1] = '\0';
       
       C_InitTab();            // reset tab-completion
-      C_UpdateInputPoint();   // reset scrolling
+      C_updateInputPoint();   // reset scrolling
       return true;
    }
 
@@ -448,7 +444,7 @@ int C_Responder(event_t *ev)
       psnprintf(inputtext, sizeof(inputtext), "%s%c", inputtext, ch);
       
       C_InitTab();            // reset tab-completion
-      C_UpdateInputPoint();   // reset scrolling
+      C_updateInputPoint();   // reset scrolling
       return true;
    }
    
@@ -478,7 +474,7 @@ void C_Drawer(void)
    
    if(oldscreenheight != C_SCREENHEIGHT)
    {
-      C_InitBackdrop();       // re-init to the new screen size
+      C_initBackdrop();       // re-init to the new screen size
       oldscreenheight = C_SCREENHEIGHT;
    }
 
@@ -611,16 +607,17 @@ static void C_AddMessage(const char *s)
    {
       C_ScrollUp();
    }
-   end = messages[message_last] + strlen(messages[message_last]);
+   end = (unsigned char *)(messages[message_last] + strlen(messages[message_last]));
    *end++ = linecolor;
    *end = '\0';
 
    for(c = (const unsigned char *)s; *c; c++)
    {
-      // >= 128 for colours
+      // >= 128 for colours / control chars
       if(*c == '\t' || (*c > 31 && *c < 127) || *c >= 128)
       {
-         if(*c >= 128)
+         if((*c >= TEXT_COLOR_MIN && *c <= TEXT_COLOR_MAX) ||
+            (*c >= TEXT_COLOR_NORMAL && *c <= TEXT_COLOR_ERROR))
             linecolor = *c;
 
          if(V_StringWidth(messages[message_last]) > SCREENWIDTH-9 ||
@@ -628,12 +625,12 @@ static void C_AddMessage(const char *s)
          {
             // might possibly over-run, go onto next line
             C_ScrollUp();
-            end = messages[message_last] + strlen(messages[message_last]);
+            end = (unsigned char *)(messages[message_last] + strlen(messages[message_last]));
             *end++ = linecolor; // keep current color on next line
             *end = '\0';
          }
          
-         end = messages[message_last] + strlen(messages[message_last]);
+         end = (unsigned char *)(messages[message_last] + strlen(messages[message_last]));
          *end++ = *c;
          *end = '\0';
       }
@@ -644,7 +641,7 @@ static void C_AddMessage(const char *s)
       if(*c == '\n')
       {
          C_ScrollUp();
-         end = messages[message_last] + strlen(messages[message_last]);
+         end = (unsigned char *)(messages[message_last] + strlen(messages[message_last]));
          *end++ = linecolor; // keep current color on next line
          *end = '\0';
       }
@@ -808,7 +805,7 @@ void C_DumpMessages(const char *filename)
 
    if(!(outfile = fopen(filename, "a+")))
    {
-      C_Printf(FC_ERROR"Could not append console buffer to file %s\n", 
+      C_Printf(FC_ERROR "Could not append console buffer to file %s\n", 
                filename);
       return;
    }
@@ -819,7 +816,7 @@ void C_DumpMessages(const char *filename)
       memset(tmpmessage, 0, LINELENGTH);
       len = strlen(messages[i]);
 
-      C_StripColorChars(messages[i], tmpmessage, len);
+      C_StripColorChars((unsigned char *)messages[i], tmpmessage, len);
 
       fprintf(outfile, "%s\n", tmpmessage);
    }
@@ -1030,29 +1027,29 @@ AMX_NATIVE_INFO cons_io_Natives[] =
 };
 
 //
-// CONSOLE_FIXME: Should probably either disambiguate this easter
-// egg or just get rid of it. It tiles fraggle's head (the graphics
-// are stored in an array named "egg" that is in another file) over
-// the console background. It's kind of cute so I'd like to keep it
-// around.
+// Egg
 //
+// haleyjd: ??? ;)
+//
+static void Egg(void)
+{
+   extern void HU_CenterMessageTimed(const char *s, int tics);
+   int x, y;
+   extern unsigned char egg[];
 
-#define E extern
-#define U unsigned
-#define C char
-#define K const
-#define I int
-#define V void
-#define F for
-#define Z FC_BROWN
-#define X FC_ABSCENTER
-#define C_W C_SCREENWIDTH
-#define C_H C_SCREENHEIGHT
-#define WT HU_CenterMessageTimed
-#define bd backdrop
+   for(x = 0; x < C_SCREENWIDTH; ++x)
+   {
+      for(y = 0; y < C_SCREENHEIGHT; ++y)
+      {
+         unsigned char *s = egg + ((y % 44 * 42) + (x % 42));
+         if(*s != 247)
+            backdrop[y * C_SCREENWIDTH + x] = *s;
+      }
+   }
 
-V Egg(V){E WT(K C*,I);I x,y;E U C egg[];F(x=0;x<C_W;x++)F(y=0;y<C_H
-;y++){U C *s=egg+((y%44)*42)+(x%42);if(*s!=247)bd[y*C_W+x]=*
-s;}WT(Z X "my hair looks much too\ndark in this pic.\noh well, have fun!\n-- fraggle", 6*35);}
+   HU_CenterMessageTimed(FC_BROWN FC_ABSCENTER "my hair looks much too\n"
+                         "dark in this pic.\noh well, have fun!\n-- fraggle",
+                         6 * TICRATE);
+}
 
 // EOF

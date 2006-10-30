@@ -1296,7 +1296,7 @@ void P_UnArchivePolyObjects(void)
 static void P_ArchiveSmallAMX(AMX *amx)
 {
    long amx_size = 0;
-   char *data;
+   byte *data;
 
    // get both size of and pointer to data segment
    data = A_GetAMXDataSegment(amx, &amx_size);
@@ -1326,7 +1326,7 @@ static void P_ArchiveSmallAMX(AMX *amx)
 static void P_UnArchiveSmallAMX(AMX *amx)
 {
    long cur_amx_size, arch_amx_size;
-   char *data;
+   byte *data;
 
    // get pointer to AMX data segment and current data segment size
    data = A_GetAMXDataSegment(amx, &cur_amx_size);

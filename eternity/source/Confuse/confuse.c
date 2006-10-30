@@ -41,16 +41,16 @@ void lexer_init(void);
 void lexer_reset(void);
 
 // haleyjd 03/08/03: Modifications for Eternity
-#define PACKAGE_VERSION "Eternity version"
-#define PACKAGE_STRING  "libConfuse"
+// #define PACKAGE_VERSION "Eternity version"
+// #define PACKAGE_STRING  "libConfuse"
 
 // haleyjd: removed ENABLE_NLS
 #define _(str) str
 #define N_(str) str
 
-const char *confuse_version = PACKAGE_VERSION;
-const char *confuse_copyright = PACKAGE_STRING" by Martin Hedenfalk <mhe@home.se>";
-const char *confuse_author = "Martin Hedenfalk <mhe@home.se>";
+const char *confuse_version   = "Eternity version";
+const char *confuse_copyright = "libConfuse by Martin Hedenfalk <mhe@home.se>";
+const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
 
 // haleyjd: added data param
 extern int cfg_lexer_include(cfg_t *cfg, const char *fname, int data);

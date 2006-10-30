@@ -262,9 +262,9 @@ char *C_PrevTab(char *key);
 extern alias_t aliases; // haleyjd 04/14/03: changed to linked list
 extern char *cmdoptions;
 
-alias_t *C_NewAlias(unsigned char *aliasname, unsigned char *command);
-void C_RemoveAlias(unsigned char *aliasname);
-alias_t *C_GetAlias(char *name);
+alias_t *C_NewAlias(const char *aliasname, const char *command);
+void C_RemoveAlias(const char *aliasname);
+alias_t *C_GetAlias(const char *name);
 
 /**** command buffers ****/
 

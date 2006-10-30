@@ -37,6 +37,7 @@
 #include "c_io.h"
 #include "d_gi.h"
 #include "v_video.h"
+#include "v_misc.h"
 #include "v_font.h"
 
 extern vfont_t small_font, hud_font, big_font, big_num_font;
@@ -62,7 +63,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
    {
       c = *s;
 
-      if(c >= 128) // color code
+      if(c >= 128) // color or control code
          continue;
       
       if(c == '\n') // newline
@@ -134,23 +135,24 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    // haleyjd 03/29/06: special treatment - if first character is 143
    // (abscenter toggle), then center line
    
-   cx = (*ch == 143) ? (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1 : x;
+   cx = (*ch == TEXT_CONTROL_ABSCENTER) ? 
+          (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1 : x;
    cy = y;
    
    while((c = *ch++))
    {
-      // color and translucency codes
-      if(c >= 128)
+      // color and control codes
+      if(c >= TEXT_COLOR_MIN)
       {
-         if(c == 138) // translucency toggle
+         if(c == TEXT_CONTROL_TRANS) // translucency toggle
          {
             tl ^= true;
          }
-         else if(c == 142) // shadow toggle
+         else if(c == TEXT_CONTROL_SHADOW) // shadow toggle
          {
             shadowChar ^= true;
          }
-         else if(c == 143) // abscenter toggle
+         else if(c == TEXT_CONTROL_ABSCENTER) // abscenter toggle
          {
             absCentered ^= true;
          }
@@ -161,13 +163,13 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
             // haleyjd: allow use of gamemode-dependent defaults
             switch(c)
             {
-            case 139:
+            case TEXT_COLOR_NORMAL:
                colnum = gameModeInfo->colorNormal;
                break;
-            case 140:
+            case TEXT_COLOR_HI:
                colnum = gameModeInfo->colorHigh;
                break;
-            case 141:
+            case TEXT_COLOR_ERROR:
                colnum = gameModeInfo->colorError;
                break;
             default:
@@ -305,7 +307,7 @@ void V_FontSetAbsCentered(void)
 //
 // Finds the tallest height in pixels of the string
 //
-int V_FontStringHeight(vfont_t *font, const unsigned char *s)
+int V_FontStringHeight(vfont_t *font, const char *s)
 {
    unsigned char c;
    int height;
@@ -313,7 +315,7 @@ int V_FontStringHeight(vfont_t *font, const unsigned char *s)
    height = font->cy; // a string is always at least one line high
    
    // add an extra cy for each newline found
-   while((c = *s++))
+   while((c = (unsigned char)*s++))
    {
       if(c == '\n')
          height += font->cy;
@@ -327,7 +329,7 @@ int V_FontStringHeight(vfont_t *font, const unsigned char *s)
 //
 // Finds the width of the longest line in the string
 //
-int V_FontStringWidth(vfont_t *font, const unsigned char *s)
+int V_FontStringWidth(vfont_t *font, const char *s)
 {
    int length = 0;        // current line width
    int longest_width = 0; // longest line width so far
@@ -336,9 +338,9 @@ int V_FontStringWidth(vfont_t *font, const unsigned char *s)
    
    for(; *s; s++)
    {
-      c = *s;
+      c = (unsigned char)*s;
 
-      if(c >= 128) // color code
+      if(c >= 128) // color or control code
          continue;
       
       if(c == '\n') // newline

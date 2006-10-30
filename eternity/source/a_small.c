@@ -432,7 +432,7 @@ int A_GetSmallString(AMX *amx, char **dest, cell addr)
 // Returns a pointer to the given AMX's data segment, and can
 // optionally return the size of the segment in bytes in *size.
 //
-char *A_GetAMXDataSegment(AMX *amx, long *size)
+byte *A_GetAMXDataSegment(AMX *amx, long *size)
 {
    AMX_HEADER *hdr = (AMX_HEADER *)amx->base;
 

@@ -49,6 +49,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#ifdef LINUX
+// Linux needs strings.h too, for strcasecmp etc.
+#include <strings.h>
+#endif
 #include <assert.h>
 
 #include "psnprntf.h"
@@ -82,6 +86,13 @@ void Z_DumpHistory(char *);
 #define Z_Realloc(a,b,c,d) (Z_Realloc)  (a,b,c,d,__FILE__,__LINE__)
 #define Z_CheckHeap()      (Z_CheckHeap)(__FILE__,__LINE__)
 #define Z_CheckTag(a)      (Z_CheckTag) (a,__FILE__,__LINE__)
+
+// haleyjd 10/29/06: undefine any existing macros by these names
+#undef malloc
+#undef free
+#undef realloc
+#undef calloc
+#undef strdup
 
 #define malloc(n)          (Z_Malloc) (n,    PU_STATIC,0,__FILE__,__LINE__)
 #define free(p)            (Z_Free)   (p,                __FILE__,__LINE__)

@@ -172,22 +172,26 @@ static cell AMX_NATIVE_CALL getarg(AMX *amx, cell *params)
 
 static cell AMX_NATIVE_CALL setarg(AMX *amx, cell *params)
 {
-  AMX_HEADER *hdr;
-  uchar *data;
-  cell value;
-
-  hdr=(AMX_HEADER *)amx->base;
-  data=amx->data ? amx->data : amx->base+(int)hdr->dat;
-  /* get the base value */
-  value= * (cell *)(data+(int)amx->frm+((int)params[1]+3)*sizeof(cell));
-  /* adjust the address in "value" in case of an array access */
-  value+=params[2]*sizeof(cell);
-  /* verify the address */
-  if (value<0 || value>=amx->hea && value<amx->stk)
-    return 0;
-  /* set the value indirectly */
-  * (cell *)(data+(int)value) = params[3];
-  return 1;
+   AMX_HEADER *hdr;
+   uchar *data;
+   cell value;
+   
+   hdr = (AMX_HEADER *)amx->base;
+   data = amx->data ? amx->data : amx->base+(int)hdr->dat;
+   
+   /* get the base value */
+   value = *(cell *)(data+(int)amx->frm+((int)params[1]+3)*sizeof(cell));
+   
+   /* adjust the address in "value" in case of an array access */
+   value+=params[2]*sizeof(cell);
+   
+   /* verify the address */
+   if(value < 0 || (value >= amx->hea && value < amx->stk))
+      return 0;
+   
+   /* set the value indirectly */
+   *(cell *)(data+(int)value) = params[3];
+   return 1;
 }
 
 #if defined __BORLANDC__ || defined __WATCOMC__

@@ -338,7 +338,7 @@ void V_WriteTextColoured(const char *s, int colour, int x, int y)
 // find height(in pixels) of a string 
 // haleyjd 01/14/05: now uses vfont engine
 //
-int V_StringHeight(const unsigned char *s)
+int V_StringHeight(const char *s)
 {
    return V_FontStringHeight(&small_font, s);
 }
@@ -348,7 +348,7 @@ int V_StringHeight(const unsigned char *s)
 //
 // haleyjd 01/14/05: big font support
 //
-int V_StringHeightBig(const unsigned char *s)
+int V_StringHeightBig(const char *s)
 {
    return V_FontStringHeight(&big_font, s);
 }
@@ -358,7 +358,7 @@ int V_StringHeightBig(const unsigned char *s)
 //
 // haleyjd 01/14/05: now uses vfont engine
 //
-int V_StringWidth(const unsigned char *s)
+int V_StringWidth(const char *s)
 {
    return V_FontStringWidth(&small_font, s);
 }
@@ -368,7 +368,7 @@ int V_StringWidth(const unsigned char *s)
 //
 // haleyjd 01/14/05: big font support
 //
-int V_StringWidthBig(const unsigned char *s)
+int V_StringWidthBig(const char *s)
 {
    return V_FontStringWidth(&big_font, s);
 }

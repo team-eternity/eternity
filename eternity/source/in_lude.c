@@ -23,9 +23,8 @@
 // 
 // Shared intermission code
 //
-// haleyjd: This code has been moved here from wi_stuff.c to
-// provide a consistent interface to intermission code and to
-// enable better code reuse.
+// haleyjd: This code has been moved here from wi_stuff.c to provide a
+// consistent interface to intermission code and to enable better code reuse.
 //
 //-----------------------------------------------------------------------------
 
@@ -106,14 +105,13 @@ void IN_StartCamera(void)
       wi_camera = P_CollectionGetRandom(&camerathings, pr_misc);
       
       // remove the player mobjs (look silly in camera view)
-      for(i=0; i<MAXPLAYERS; i++)
+      for(i = 0; i < MAXPLAYERS; ++i)
       {
-         if(!playeringame[i]) continue;
-         // this is strange. the monsters can still
-         // see the player Mobj, (and even kill it!)
-         // even tho it has been removed from the
-         // level. I make it unshootable first so
-         // they lose interest.
+         if(!playeringame[i])
+            continue;
+         // this is strange. the monsters can still see the player Mobj, (and
+         // even kill it!) even tho it has been removed from the level. I make
+         // it unshootable first so they lose interest.
          players[i].mo->flags &= ~MF_SHOOTABLE;
          P_RemoveMobj(players[i].mo);
       }
@@ -138,6 +136,8 @@ void IN_StartCamera(void)
    {
       realbackdrop = 0;
       wi_camera = NULL;
+      S_StopAllSequences(); // haleyjd 06/06/06
+      S_StopLoopedSounds(); // haleyjd 10/06/06
    }
 }
 
@@ -254,9 +254,6 @@ void IN_DrawBackground(void)
 //
 void IN_Start(wbstartstruct_t *wbstartstruct)
 {
-   S_StopAllSequences(); // haleyjd 06/06/06
-   S_StopLoopedSounds(); // haleyjd 10/06/06
-
    // haleyjd 03/24/05: allow skipping stats intermission
    if(LevelInfo.killStats)
    {

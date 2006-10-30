@@ -159,7 +159,7 @@ SmallContext_t *A_CreateChildContext(SmallContext_t *, SmallContext_t *);
 void A_DestroyChildContext(SmallContext_t *);
 
 int  A_GetSmallString(AMX *amx, char **dest, cell addr);
-char *A_GetAMXDataSegment(AMX *amx, long *size);
+byte *A_GetAMXDataSegment(AMX *amx, long *size);
 void A_ClearInvocation(SmallContext_t *);
 void A_InitGameScript(void);
 void A_InitLevelScript(void);

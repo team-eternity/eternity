@@ -758,8 +758,12 @@ char *C_PrevTab(char *key)
 alias_t aliases;
 char *cmdoptions;       // command line options for aliases
 
-        // get an alias from a name
-alias_t *C_GetAlias(char *name)
+//
+// C_GetAlias
+//
+// Get an alias from a name
+//
+alias_t *C_GetAlias(const char *name)
 {
    alias_t *alias = aliases.next;
 
@@ -773,20 +777,20 @@ alias_t *C_GetAlias(char *name)
    return NULL;
 }
 
-// create a new alias, or use one that already exists
-
-alias_t *C_NewAlias(unsigned char *aliasname, unsigned char *command)
+//
+// C_NewAlias
+//
+// Create a new alias, or use one that already exists
+//
+alias_t *C_NewAlias(const char *aliasname, const char *command)
 {
    alias_t *alias;
 
    // search for an existing alias with this name
-   alias = C_GetAlias(aliasname);
-   
-   if(alias)
+   if((alias = C_GetAlias(aliasname)))
    {
       free(alias->command);
       alias->command = strdup(command);
-      return alias;
    }
    else
    {
@@ -796,20 +800,21 @@ alias_t *C_NewAlias(unsigned char *aliasname, unsigned char *command)
       alias->command = strdup(command);
       alias->next = aliases.next;
       aliases.next = alias;
-
-      return alias;
    }
+
+   return alias;
 }
 
-// remove an alias
-
-void C_RemoveAlias(unsigned char *aliasname)
+//
+// C_RemoveAlias
+//
+// Remove an alias
+//
+void C_RemoveAlias(const char *aliasname)
 {
    alias_t *prev  = &aliases;
    alias_t *rover = aliases.next;
    alias_t *alias = NULL;
-
-   C_Printf("C_RemoveAlias(\"%s\")\n", aliasname);
 
    while(rover)
    {
@@ -828,13 +833,15 @@ void C_RemoveAlias(unsigned char *aliasname)
       C_Printf("unknown alias \"%s\"\n", aliasname);
       return;
    }
-
+   
+   C_Printf("removing alias \"%s\"\n", aliasname);
+   
    // free alias data
    free(alias->name);
    free(alias->command);
 
    // unlink alias
-   prev->next = alias->next;
+   prev->next  = alias->next;
    alias->next = NULL;
 
    // free the alias

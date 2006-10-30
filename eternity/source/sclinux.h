@@ -19,8 +19,14 @@
 #include "getch.h"
 #endif
 
+// haleyjd: do not define if already defined
+#ifndef stricmp
 #define	stricmp(a,b)    strcasecmp(a,b)
+#endif
+
+#ifndef strnicmp
 #define	strnicmp(a,b,c) strncasecmp(a,b,c)
+#endif
 
 /*
  * WinWorld wants '\'. Unices do not.

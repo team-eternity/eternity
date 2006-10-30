@@ -718,10 +718,10 @@ void R_InitSpriteLumps(void)
 //
 // killough 4/4/98: Add support for C_START/C_END markers
 //
-
 void R_InitColormaps(void)
 {
    int i;
+
    firstcolormaplump = W_GetNumForName("C_START");
    lastcolormaplump  = W_GetNumForName("C_END");
    numcolormaps = lastcolormaplump - firstcolormaplump;

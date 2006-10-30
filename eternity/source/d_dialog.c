@@ -455,7 +455,8 @@ void DLG_WriteText(void)
       }
 
       // support \x80 through \x89 for localized color changes
-      if(c >= 128)
+      if((c >= TEXT_COLOR_MIN && c <= TEXT_COLOR_MAX) ||
+         (c >= TEXT_COLOR_NORMAL && c <= TEXT_COLOR_ERROR))
       {
 	 int colnum = c - 128;
 	 

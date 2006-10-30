@@ -1125,7 +1125,7 @@ boolean AM_clipMline(mline_t *ml, fline_t *fl)
    register int outcode2 = 0;
    register int outside;
 
-   fpoint_t  tmp;
+   fpoint_t tmp = { 0, 0 };
    int   dx;
    int   dy;
 
@@ -1597,7 +1597,7 @@ void AM_drawWalls(void)
          {
             linkoffset_t *link;
 
-            if(link = P_GetLinkOffset(0, line->frontsector->groupid))
+            if((link = P_GetLinkOffset(0, line->frontsector->groupid)))
             {
                l.a.x += link->x;
                l.a.y += link->y;
@@ -1658,7 +1658,7 @@ void AM_drawWalls(void)
          {
             linkoffset_t *link;
 
-            if(link = P_GetLinkOffset(0, line->frontsector->groupid))
+            if((link = P_GetLinkOffset(0, line->frontsector->groupid)))
             {
                l.a.x += link->x;
                l.a.y += link->y;
@@ -2019,7 +2019,7 @@ void AM_drawThings(int colors, int colorrange)
          {
             linkoffset_t *link;
 
-            if(link = P_GetLinkOffset(0, t->subsector->sector->groupid))
+            if((link = P_GetLinkOffset(0, t->subsector->sector->groupid)))
             {
                tx += link->x;
                ty += link->y;

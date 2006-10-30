@@ -1724,11 +1724,11 @@ static void *amx_opcodelist_nodebug[] = {
   AMX_HEADER *hdr;
   AMX_FUNCSTUB *func;
   unsigned char *code, *data;
-  cell pri,alt,stk,frm,hea;
+  cell pri, alt = 0, stk, frm, hea;
   cell reset_stk, reset_hea, *cip;
   cell offs;
   ucell codesize;
-  int num,i;
+  int num = 0, i;
   va_list ap;
   int debug;
 
@@ -1888,14 +1888,14 @@ static void *amx_opcodelist_nodebug[] = {
     NEXT(cip);
   op_load_i:
     /* verify address */
-    if (pri>=hea && pri<stk || (ucell)pri>=(ucell)amx->stp)
+    if((pri >= hea && pri < stk) || (ucell)pri >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     pri= * (cell *)(data+(int)pri);
     NEXT(cip);
   op_lodb_i:
     GETPARAM(offs);
     /* verify address */
-    if (pri>=hea && pri<stk || (ucell)pri>=(ucell)amx->stp)
+    if((pri >= hea && pri < stk) || (ucell)pri >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     switch (offs) {
     case 1:
@@ -1961,14 +1961,14 @@ static void *amx_opcodelist_nodebug[] = {
     NEXT(cip);
   op_stor_i:
     /* verify address */
-    if (alt>=hea && alt<stk || (ucell)alt>=(ucell)amx->stp)
+    if((alt >= hea && alt < stk) || (ucell)alt >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     *(cell *)(data+(int)alt)=pri;
     NEXT(cip);
   op_strb_i:
     GETPARAM(offs);
     /* verify address */
-    if (alt>=hea && alt<stk || (ucell)alt>=(ucell)amx->stp)
+    if((alt >= hea && alt < stk) || (ucell)alt >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     switch (offs) {
     case 1:
@@ -1985,7 +1985,7 @@ static void *amx_opcodelist_nodebug[] = {
   op_lidx:
     offs=pri*sizeof(cell)+alt;
     /* verify address */
-    if (offs>=hea && offs<stk || (ucell)offs>=(ucell)amx->stp)
+    if((offs >= hea && offs < stk) || (ucell)offs >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     pri= * (cell *)(data+(int)offs);
     NEXT(cip);
@@ -1993,7 +1993,7 @@ static void *amx_opcodelist_nodebug[] = {
     GETPARAM(offs);
     offs=(pri << (int)offs)+alt;
     /* verify address */
-    if (offs>=hea && offs<stk || (ucell)offs>=(ucell)amx->stp)
+    if((offs >= hea && offs < stk) || (ucell)offs >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     pri= * (cell *)(data+(int)offs);
     NEXT(cip);
@@ -2494,13 +2494,13 @@ static void *amx_opcodelist_nodebug[] = {
     /* verify top & bottom memory addresses, for both source and destination
      * addresses
      */
-    if (pri>=hea && pri<stk || (ucell)pri>=(ucell)amx->stp)
+    if((pri >= hea && pri < stk) || (ucell)pri >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    if ((pri+offs)>hea && (pri+offs)<stk || (ucell)(pri+offs)>(ucell)amx->stp)
+    if(((pri+offs) > hea && (pri+offs) < stk) || (ucell)(pri+offs) > (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    if (alt>=hea && alt<stk || (ucell)alt>=(ucell)amx->stp)
+    if((alt >= hea && alt < stk) || (ucell)alt >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    if ((alt+offs)>hea && (alt+offs)<stk || (ucell)(alt+offs)>(ucell)amx->stp)
+    if(((alt+offs) > hea && (alt+offs) < stk) || (ucell)(alt+offs) > (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     memcpy(data+(int)alt, data+(int)pri, (int)offs);
     NEXT(cip);
@@ -2509,24 +2509,24 @@ static void *amx_opcodelist_nodebug[] = {
     /* verify top & bottom memory addresses, for both source and destination
      * addresses
      */
-    if (pri>=hea && pri<stk || (ucell)pri>=(ucell)amx->stp)
+    if((pri >= hea && pri < stk) || (ucell)pri >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    if ((pri+offs)>hea && (pri+offs)<stk || (ucell)(pri+offs)>(ucell)amx->stp)
+    if(((pri+offs) > hea && (pri+offs) < stk) || (ucell)(pri+offs) > (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    if (alt>=hea && alt<stk || (ucell)alt>=(ucell)amx->stp)
+    if((alt >= hea && alt < stk) || (ucell)alt >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    if ((alt+offs)>hea && (alt+offs)<stk || (ucell)(alt+offs)>(ucell)amx->stp)
+    if(((alt+offs) > hea && (alt+offs) < stk) || (ucell)(alt+offs) > (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
     pri=memcmp(data+(int)alt, data+(int)pri, (int)offs);
     NEXT(cip);
   op_fill:
     GETPARAM(offs);
     /* verify top & bottom memory addresses */
-    if (alt>=hea && alt<stk || (ucell)alt>=(ucell)amx->stp)
+    if((alt >= hea && alt < stk) || (ucell)alt >= (ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    if ((alt+offs)>hea && (alt+offs)<stk || (ucell)(alt+offs)>(ucell)amx->stp)
+    if(((alt+offs) > hea && (alt+offs) < stk) || (ucell)(alt+offs)>(ucell)amx->stp)
       ABORT(amx,AMX_ERR_MEMACCESS);
-    for (i=(int)alt; offs>=sizeof(cell); i+=sizeof(cell), offs-=sizeof(cell))
+    for(i=(int)alt; offs>=sizeof(cell); i+=sizeof(cell), offs-=sizeof(cell))
       *(cell *)(data+i) = pri;
     NEXT(cip);
   op_halt:
@@ -3807,32 +3807,34 @@ int AMXAPI amx_SetDebugHook(AMX *amx,AMX_DEBUG debug)
 #if defined AMX_RAISEERROR
 int AMXAPI amx_RaiseError(AMX *amx, int error)
 {
-  assert(error>0);
-  amx->error=error;
-  return AMX_ERR_NONE;
+   assert(error > 0);
+   amx->error = error;
+   return AMX_ERR_NONE;
 }
 #endif /* AMX_RAISEERROR */
 
 #if defined AMX_GETADDR
 int AMXAPI amx_GetAddr(AMX *amx,cell amx_addr,cell **phys_addr)
 {
-  AMX_HEADER *hdr;
-  unsigned char *data;
+   AMX_HEADER *hdr;
+   unsigned char *data;
+   
+   assert(amx != NULL);
+   hdr = (AMX_HEADER *)amx->base;
+   assert(hdr != NULL);
+   assert(hdr->magic == AMX_MAGIC);
+   data = (amx->data != NULL) ? amx->data : amx->base + (int)hdr->dat;
+   
+   assert(phys_addr != NULL);
+   
+   if((amx_addr >= amx->hea && amx_addr < amx->stk) || amx_addr < 0 || amx_addr >= amx->stp)
+   {
+      *phys_addr = NULL;
+      return AMX_ERR_MEMACCESS;
+   }
 
-  assert(amx!=NULL);
-  hdr=(AMX_HEADER *)amx->base;
-  assert(hdr!=NULL);
-  assert(hdr->magic==AMX_MAGIC);
-  data=(amx->data!=NULL) ? amx->data : amx->base+(int)hdr->dat;
-
-  assert(phys_addr!=NULL);
-  if (amx_addr>=amx->hea && amx_addr<amx->stk || amx_addr<0 || amx_addr>=amx->stp) {
-    *phys_addr=NULL;
-    return AMX_ERR_MEMACCESS;
-  } /* if */
-
-  *phys_addr=(cell *)(data + (int)amx_addr);
-  return AMX_ERR_NONE;
+   *phys_addr = (cell *)(data + (int)amx_addr);
+   return AMX_ERR_NONE;
 }
 #endif /* AMX_GETADDR */
 
@@ -4000,8 +4002,8 @@ int AMXAPI amx_GetString(char *dest,const cell *source,int use_wchar)
  */
 int AMXAPI amx_UTF8Get(const char *string, const char **endptr, cell *value)
 {
-static char utf8_count[16]={ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4 };
-static long utf8_lowmark[5] = { 0x80, 0x800, 0x10000L, 0x200000L, 0x4000000L };
+  static char utf8_count[16]={ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4 };
+  static long utf8_lowmark[5] = { 0x80, 0x800, 0x10000L, 0x200000L, 0x4000000L };
   unsigned char c;
   cell result;
   int followup;
@@ -4039,27 +4041,27 @@ static long utf8_lowmark[5] = { 0x80, 0x800, 0x10000L, 0x200000L, 0x4000000L };
     switch (followup) {
     case 4:
       if (((c=*string++) & 0xc0) != 0x80) goto error;
-      result = (result << 6) | c & 0x3f;
+      result = (result << 6) | (c & 0x3f);
     case 3:
       if (((c=*string++) & 0xc0) != 0x80) goto error;
-      result = (result << 6) | c & 0x3f;
+      result = (result << 6) | (c & 0x3f);
     case 2:
       if (((c=*string++) & 0xc0) != 0x80) goto error;
-      result = (result << 6) | c & 0x3f;
+      result = (result << 6) | (c & 0x3f);
     case 1:
       if (((c=*string++) & 0xc0) != 0x80) goto error;
-      result = (result << 6) | c & 0x3f;
+      result = (result << 6) | (c & 0x3f);
     case 0:
       if (((c=*string++) & 0xc0) != 0x80) goto error;
-      result = (result << 6) | c & 0x3f;
+      result = (result << 6) | (c & 0x3f);
     } /* switch */
     /* Do additional checks: shortest encoding & reserved positions. The
      * lowmark limits also depends on the code length; it can be read from
      * a table with 5 elements. This is "utf8_lowmark[]".
      */
-    if (result<utf8_lowmark[followup])
+    if(result<utf8_lowmark[followup])
       goto error;
-    if (result>=0xd800 && result<=0xdfff || result==0xfffe || result==0xffff)
+    if((result >= 0xd800 && result <= 0xdfff) || result == 0xfffe || result == 0xffff)
       goto error;
   } /* if */
 
@@ -4077,65 +4079,82 @@ error:
 /* amx_UTF8Put()
  * Encode a single character into a byte string. The character may result in
  * a string of up to 6 bytes. The function returns an error code if "maxchars"
- * is lower than the requried number of characters; in this case nothing is
+ * is lower than the required number of characters; in this case nothing is
  * stored.
  * The function does not zero-terminate the string.
  */
 int AMXAPI amx_UTF8Put(char *string, char **endptr, int maxchars, cell value)
 {
-  assert(string!=NULL);
-  if (endptr!=NULL)     /* preset, in case of an error */
-    *endptr=string;
-
-  if (value<0x80) {
-    /* 0xxxxxxx */
-    if (maxchars < 1) goto error;
-    *string++ = (char)value;
-  } else if (value<0x800) {
-    /* 110xxxxx 10xxxxxx */
-    if (maxchars < 2) goto error;
-    *string++ = (char)((value>>6) & 0x1f | 0xc0);
-    *string++ = (char)(value & 0x3f | 0x80);
-  } else if (value<0x10000) {
-    /* 1110xxxx 10xxxxxx 10xxxxxx (16 bits, BMP plane) */
-    if (maxchars < 3) goto error;
-    if (value>=0xd800 && value<=0xdfff || value==0xfffe || value==0xffff)
-      goto error;       /* surrogate pairs and invalid characters */
-    *string++ = (char)((value>>12) & 0x0f | 0xe0);
-    *string++ = (char)((value>>6) & 0x3f | 0x80);
-    *string++ = (char)(value & 0x3f | 0x80);
-  } else if (value<0x200000) {
-    /* 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
-    if (maxchars < 4) goto error;
-    *string++ = (char)((value>>18) & 0x07 | 0xf0);
-    *string++ = (char)((value>>12) & 0x3f | 0x80);
-    *string++ = (char)((value>>6) & 0x3f | 0x80);
-    *string++ = (char)(value & 0x3f | 0x80);
-  } else if (value<0x4000000) {
-    /* 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx */
-    if (maxchars < 5) goto error;
-    *string++ = (char)((value>>24) & 0x03 | 0xf8);
-    *string++ = (char)((value>>18) & 0x3f | 0x80);
-    *string++ = (char)((value>>12) & 0x3f | 0x80);
-    *string++ = (char)((value>>6) & 0x3f | 0x80);
-    *string++ = (char)(value & 0x3f | 0x80);
-  } else {
-    /* 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx (31 bits) */
-    if (maxchars < 6) goto error;
-    *string++ = (char)((value>>30) & 0x01 | 0xfc);
-    *string++ = (char)((value>>24) & 0x3f | 0x80);
-    *string++ = (char)((value>>18) & 0x3f | 0x80);
-    *string++ = (char)((value>>12) & 0x3f | 0x80);
-    *string++ = (char)((value>>6) & 0x3f | 0x80);
-    *string++ = (char)(value & 0x3f | 0x80);
-  } /* if */
-
-  if (endptr!=NULL)
-    *endptr=string;
-  return AMX_ERR_NONE;
-
+   assert(string != NULL);
+   if(endptr != NULL)     /* preset, in case of an error */
+      *endptr = string;
+   
+   if(value < 0x80) 
+   {
+      /* 0xxxxxxx */
+      if(maxchars < 1) 
+         goto error;
+      *string++ = (char)value;
+   } 
+   else if(value < 0x800)
+   {
+      /* 110xxxxx 10xxxxxx */
+      if(maxchars < 2) 
+         goto error;
+      *string++ = (char)(((value >> 6) & 0x1f) | 0xc0);
+      *string++ = (char)( (value       & 0x3f) | 0x80);
+   }
+   else if(value<0x10000)
+   {
+      /* 1110xxxx 10xxxxxx 10xxxxxx (16 bits, BMP plane) */
+      if(maxchars < 3)
+         goto error;
+      if((value >= 0xd800 && value <= 0xdfff) || value==0xfffe || value==0xffff)
+         goto error;       /* surrogate pairs and invalid characters */
+      *string++ = (char)(((value >> 12) & 0x0f) | 0xe0);
+      *string++ = (char)(((value >>  6) & 0x3f) | 0x80);
+      *string++ = (char)( (value        & 0x3f) | 0x80);
+   }
+   else if(value<0x200000)
+   {
+      /* 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
+      if(maxchars < 4)
+         goto error;
+      *string++ = (char)(((value >> 18) & 0x07) | 0xf0);
+      *string++ = (char)(((value >> 12) & 0x3f) | 0x80);
+      *string++ = (char)(((value >>  6) & 0x3f) | 0x80);
+      *string++ = (char)( (value        & 0x3f) | 0x80);
+   }
+   else if(value<0x4000000)
+   {
+      /* 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx */
+      if(maxchars < 5)
+         goto error;
+      *string++ = (char)(((value >> 24) & 0x03) | 0xf8);
+      *string++ = (char)(((value >> 18) & 0x3f) | 0x80);
+      *string++ = (char)(((value >> 12) & 0x3f) | 0x80);
+      *string++ = (char)(((value >>  6) & 0x3f) | 0x80);
+      *string++ = (char)( (value        & 0x3f) | 0x80);
+   }
+   else
+   {
+      /* 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx (31 bits) */
+      if(maxchars < 6)
+         goto error;
+      *string++ = (char)(((value >> 30) & 0x01) | 0xfc);
+      *string++ = (char)(((value >> 24) & 0x3f) | 0x80);
+      *string++ = (char)(((value >> 18) & 0x3f) | 0x80);
+      *string++ = (char)(((value >> 12) & 0x3f) | 0x80);
+      *string++ = (char)(((value >>  6) & 0x3f) | 0x80);
+      *string++ = (char)( (value        & 0x3f) | 0x80);
+   }
+   
+   if(endptr != NULL)
+      *endptr = string;
+   return AMX_ERR_NONE;
+   
 error:
-  return AMX_ERR_PARAMS;
+   return AMX_ERR_PARAMS;
 }
 
 /* amx_UTF8Check()

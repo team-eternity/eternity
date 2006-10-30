@@ -50,7 +50,31 @@ extern int v_mode;
 
 extern patch_t *v_font[V_FONTSIZE];
 
-        // font colours
+// haleyjd 10/30/06: enum for text control characters
+enum
+{
+   TEXT_COLOR_BRICK = 128,
+   TEXT_COLOR_TAN,
+   TEXT_COLOR_GRAY,
+   TEXT_COLOR_GREEN,
+   TEXT_COLOR_BROWN,
+   TEXT_COLOR_GOLD,
+   TEXT_COLOR_RED,
+   TEXT_COLOR_BLUE,
+   TEXT_COLOR_ORANGE,
+   TEXT_COLOR_YELLOW,
+   TEXT_CONTROL_TRANS,
+   TEXT_COLOR_NORMAL,
+   TEXT_COLOR_HI,
+   TEXT_COLOR_ERROR,
+   TEXT_CONTROL_SHADOW,
+   TEXT_CONTROL_ABSCENTER,
+
+   TEXT_COLOR_MIN = TEXT_COLOR_BRICK,
+   TEXT_COLOR_MAX = TEXT_COLOR_YELLOW,
+};
+
+// normal font colors -- 128 through 137
 #define FC_BRICK        "\x80"
 #define FC_TAN          "\x81"
 #define FC_GRAY         "\x82"
@@ -61,29 +85,29 @@ extern patch_t *v_font[V_FONTSIZE];
 #define FC_BLUE         "\x87"
 #define FC_ORANGE       "\x88"
 #define FC_YELLOW       "\x89"
-// haleyjd: translucent text support
+// haleyjd: translucent text support (138)
 #define FC_TRANS        "\x8a"
-// haleyjd 08/20/02: new characters for internal color usage
+// haleyjd 08/20/02: new characters for internal color usage (139-141)
 #define FC_NORMAL       "\x8b"
 #define FC_HI           "\x8c"
 #define FC_ERROR        "\x8d"
-// haleyjd 03/14/06: shadow toggle via text
+// haleyjd 03/14/06: shadow toggle via text (142)
 #define FC_SHADOW       "\x8e"
-// haleyjd 03/29/06: absolute centering toggle
+// haleyjd 03/29/06: absolute centering toggle (143)
 #define FC_ABSCENTER    "\x8f"
 
 void V_WriteText(const char *s, int x, int y);
 void V_WriteTextColoured(const char *s, int colour, int x, int y);
 void V_WriteTextShadowed(const char *s, int x, int y);
-int  V_StringWidth(const unsigned char *s);
-int  V_StringHeight(const unsigned char *s);
+int  V_StringWidth(const char *s);
+int  V_StringHeight(const char *s);
 
 void V_WriteTextBig(const char *s, int x, int y);
 void V_WriteTextBigShadowed(const char *s, int x, int y);
 void V_WriteNumTextBig(const char *s, int x, int y);
 void V_WriteNumTextBigShadowed(const char *s, int x, int y);
-int  V_StringWidthBig(const unsigned char *s);
-int  V_StringHeightBig(const unsigned char *s);
+int  V_StringWidthBig(const char *s);
+int  V_StringHeightBig(const char *s);
 
 ///////////////////////////////////////////////////////////////////////////
 //
