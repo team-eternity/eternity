@@ -119,15 +119,15 @@ typedef struct menu_s
       mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
    } flags;               
    
-   void (*drawer)();        // seperate drawer function 
+   void (*drawer)();              // separate drawer function 
 
-   const char **content_names; // table of contents stuff, optional
+   const char **content_names;    // table of contents stuff, optional
    struct menu_s **content_pages;
    
-   int gap_override;        // haleyjd 10/09/05: override gap size
+   int gap_override;              // haleyjd 10/09/05: override gap size
 
    // internal fields
-   char name[33];           // haleyjd 03/14/06: for dynamic menus
+   char name[33];                 // haleyjd 03/14/06: for dynamic menus
    struct menu_s *dynanext;
 } menu_t;
 

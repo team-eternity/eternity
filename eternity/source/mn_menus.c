@@ -329,7 +329,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
    
    start_episode = atoi(c_argv[0]);
    
-   if((gameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
+   if(gameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
       MN_Alert("%s", DEH_String("SWSTRING"));
       return;
@@ -2321,12 +2321,14 @@ CONSOLE_COMMAND(mn_status, 0)
 extern menu_t menu_automapcol1;
 extern menu_t menu_automapcol2;
 extern menu_t menu_automapcol3;
+extern menu_t menu_automap4;
 
 static const char *mn_automap_names[] =
 {
    "background and lines",
    "floor and ceiling lines",
    "sprites",
+   "portals",
    NULL
 };
 
@@ -2335,6 +2337,7 @@ static menu_t *mn_automap_pages[] =
    &menu_automapcol1,
    &menu_automapcol2,
    &menu_automapcol3,
+   &menu_automap4,
    NULL
 };
 
@@ -2373,7 +2376,7 @@ static menuitem_t mn_automapcoldoor_items[] =
 
 static menuitem_t mn_automapcolsprite_items[] =
 {
-   {it_title,    FC_GOLD "automap", NULL,  "m_auto"},
+   {it_title,    FC_GOLD "automap", NULL, "m_auto"},
    {it_gap},
    {it_info,     FC_GOLD "sprites", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
@@ -2384,6 +2387,21 @@ static menuitem_t mn_automapcolsprite_items[] =
    {it_automap,  "yellow key",      "mapcolor_ykey"},
    {it_automap,  "blue key",        "mapcolor_bkey"},
    {it_end}
+};
+
+static menuitem_t mn_automapportal_items[] =
+{
+   {it_title,    FC_GOLD "automap", NULL, "m_auto"},
+   {it_gap},
+   {it_info,     FC_GOLD "portals", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+#ifdef R_LINKEDPORTALS
+   {it_toggle,   "overlay linked portals", "mapportal_overlay"},
+   {it_automap,  "overlay line color",     "mapcolor_prtl"},
+#else
+   {it_info,     FC_BRICK "linked portals disabled" },
+#endif
+   {it_end},
 };
 
 menu_t menu_automapcol1 = 
@@ -2416,6 +2434,19 @@ menu_t menu_automapcol3 =
 {
    mn_automapcolsprite_items,
    &menu_automapcol2,         // previous page
+   &menu_automap4,            // next page
+   200, 15,                   // x,y
+   4,                         // starting item
+   mf_background,             // fullscreen
+   NULL,
+   mn_automap_names,          // TOC stuff
+   mn_automap_pages,
+};
+
+menu_t menu_automap4 = 
+{
+   mn_automapportal_items,
+   &menu_automapcol3,         // previous page
    NULL,                      // next page
    200, 15,                   // x,y
    4,                         // starting item

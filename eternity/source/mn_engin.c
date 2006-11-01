@@ -1220,7 +1220,7 @@ void MN_ActivateMenu(void)
 //
 // MN_StartMenu
 //
-// start a menu:
+// Start a menu
 //
 void MN_StartMenu(menu_t *menu)
 {
