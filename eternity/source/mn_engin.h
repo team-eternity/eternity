@@ -102,6 +102,7 @@ typedef struct menu_s
    // 10/07/05: pointers to additional page menus
    struct menu_s *prevpage;
    struct menu_s *nextpage;
+   struct menu_s *rootpage;   // haleyjd 11/02/06: first page of a set
 
    // x,y offset of menu
    int x, y;
@@ -129,6 +130,8 @@ typedef struct menu_s
    // internal fields
    char name[33];                 // haleyjd 03/14/06: for dynamic menus
    struct menu_s *dynanext;
+
+   struct menu_s *curpage;        // haleyjd 10/02/06: for multipage menus
 } menu_t;
 
 // menu 'widgets':

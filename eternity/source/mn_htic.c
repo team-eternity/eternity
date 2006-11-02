@@ -75,7 +75,7 @@ static menuitem_t mn_hmain_items[] =
 menu_t menu_hmain =
 {
    mn_hmain_items,        // menu items
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,      // pages
    100, 56,               // x, y offsets
    0,                     // start with 'new game' selected
    mf_skullmenu,          // a skull menu
@@ -126,7 +126,7 @@ static menuitem_t mn_hepisode_items[] =
 menu_t menu_hepisode =
 {
    mn_hepisode_items,    // menu items
-   NULL, NULL,           // pages
+   NULL, NULL, NULL,     // pages
    38, 26,               // x,y offsets
    2,                    // starting item: city of the damned
    mf_skullmenu,         // is a skull menu
@@ -173,7 +173,7 @@ static menuitem_t mn_hnewgame_items[] =
 menu_t menu_hnewgame =
 {
    mn_hnewgame_items,    // menu items
-   NULL, NULL,           // pages
+   NULL, NULL, NULL,     // pages
    38, 26,               // x,y offsets
    4,                    // starting item: bringest them oneth
    mf_skullmenu,         // is a skull menu
@@ -228,7 +228,7 @@ static void MN_HSaveDrawer(void);
 menu_t menu_hsavegame =
 {
    mn_hsavegame_items,            // items
-   NULL, NULL,                    // pages
+   NULL, NULL, NULL,              // pages
    HSAVEGAME_X, HSAVEGAME_Y,      // x, y
    0,                             // starting index
    mf_skullmenu | mf_leftaligned, // flags
@@ -284,7 +284,7 @@ static void MN_HLoadDrawer(void);
 menu_t menu_hloadgame =
 {
    mn_hloadgame_items,            // items
-   NULL, NULL,                    // pages
+   NULL, NULL, NULL,              // pages
    HLOADGAME_X, HLOADGAME_Y,      // x, y
    0,                             // starting index
    mf_skullmenu | mf_leftaligned, // flags

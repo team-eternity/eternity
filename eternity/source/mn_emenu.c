@@ -201,6 +201,21 @@ static void MN_InitDynamicMenu(menu_t *newMenu, menuitem_t *items,
    newMenu->y         = y;
    newMenu->selected  = firstitem;
    newMenu->flags     = flags;
+
+   // if this menu has a previous page...
+   if(newMenu->prevpage)
+   {
+      menu_t *curpage = newMenu;
+
+      // go back through the pages until we find a menu that has no prevpage
+      while(curpage->prevpage)
+         curpage = curpage->prevpage;
+
+      // the menu we have found is the root page of this menu
+      newMenu->rootpage = curpage;
+   }
+   else // otherwise, set rootpage to self
+      newMenu->rootpage = newMenu;
 }
 
 //
@@ -290,6 +305,7 @@ static void MN_ClearDynamicMenu(menu_t *menu)
    menu->menuitems = NULL;
    menu->prevpage  = NULL;
    menu->nextpage  = NULL;
+   menu->rootpage  = menu; // point to self
    menu->x         = 0;
    menu->y         = 0;
    menu->selected  = 0;

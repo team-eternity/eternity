@@ -1229,7 +1229,7 @@ void MN_StartMenu(menu_t *menu)
       C_InstaPopup();          // haleyjd 03/11/06: get rid of console...
       console_enabled = false; // ...and don't allow it to be reopened
       MN_ActivateMenu();
-      current_menu = menu;
+      current_menu = menu;      
       menu_history_num = 0;  // reset history
    }
    else
@@ -1237,6 +1237,12 @@ void MN_StartMenu(menu_t *menu)
       menu_history[menu_history_num++] = current_menu;
       current_menu = menu;
    }
+
+   // haleyjd 10/02/06: if the menu being activated has a curpage set, 
+   // redirect to that page now; this allows us to return to whatever
+   // page the user was last viewing.
+   if(current_menu->curpage)
+      current_menu = current_menu->curpage;
    
    menu_error_time = 0;      // clear error message
    redrawsbar = redrawborder = true;  // need redraw
@@ -1253,6 +1259,11 @@ static void MN_PageMenu(menu_t *newpage)
       return;
 
    current_menu = newpage;
+
+   // haleyjd 10/02/06: if this page has a rootpage, set the rootpage's
+   // curpage value to this page, in order to remember what page we're on.
+   if(current_menu->rootpage)
+      current_menu->rootpage->curpage = current_menu;
 
    menu_error_time = 0;
    redrawsbar = redrawborder = true;

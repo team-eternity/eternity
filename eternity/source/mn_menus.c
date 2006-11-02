@@ -151,7 +151,7 @@ static menuitem_t mn_main_items[] =
 menu_t menu_main =
 {
    mn_main_items,          // menu items
-   NULL, NULL,             // pages
+   NULL, NULL, NULL,       // pages
    100, 65,                // x, y offsets
    0,                      // start with 'new game' selected
    mf_skullmenu,           // a skull menu
@@ -311,7 +311,7 @@ static menuitem_t mn_episode_items[] =
 menu_t menu_episode =
 {
    mn_episode_items,    // menu items
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,    // pages
    40, 30,              // x, y offsets
    2,                   // select episode 1
    mf_skullmenu,        // skull menu
@@ -360,7 +360,7 @@ static menuitem_t mn_newgame_items[] =
 menu_t menu_newgame =
 {
    mn_newgame_items,     // menu items
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,     // pages
    40, 15,               // x,y offsets
    6,                    // starting item: hurt me plenty
    mf_skullmenu,         // is a skull menu
@@ -451,7 +451,7 @@ static menuitem_t mn_startmap_items[] =
 menu_t menu_startmap =
 {
    mn_startmap_items,    // menu items
-   NULL, NULL,           // pages
+   NULL, NULL, NULL,     // pages
    40, 15,               // x,y offsets
    7,                    // starting item: start map
    mf_leftaligned | mf_background, 
@@ -491,7 +491,7 @@ static menuitem_t mn_features_items[] =
 menu_t menu_features =
 {
    mn_features_items,
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,           // pages
    100, 15,
    3,
    mf_leftaligned | mf_skullmenu
@@ -537,7 +537,7 @@ static menuitem_t mn_demos_items[] =
 menu_t menu_demos = 
 {
    mn_demos_items,    // menu items
-   NULL, NULL,        // pages
+   NULL, NULL, NULL,  // pages
    200, 15,           // x,y
    3,                 // start item
    mf_background,     // full screen
@@ -614,6 +614,7 @@ menu_t menu_loadwad =
    mn_loadwad_items,            // menu items
    NULL, 
    &menu_wadmisc,               // pages
+   &menu_loadwad,               // rootpage
    120, 15,                     // x,y offsets
    4,                           // starting item
    mf_background,               // full screen 
@@ -627,6 +628,7 @@ menu_t menu_wadmisc =
    mn_wadmisc_items,
    &menu_loadwad,
    NULL,
+   &menu_loadwad, // rootpage
    200, 15,
    4,
    mf_background,
@@ -709,7 +711,7 @@ static menuitem_t mn_multiplayer_items[] =
 menu_t menu_multiplayer =
 {
    mn_multiplayer_items,
-   NULL, NULL,                                   // pages
+   NULL, NULL, NULL,                             // pages
    100, 15,                                      // x,y offsets
    4,                                            // starting item
    mf_background|mf_leftaligned,                 // fullscreen
@@ -769,6 +771,7 @@ menu_t menu_gamesettings =
    mn_gamesettings_items,
    NULL, 
    &menu_advanced,               // pages
+   &menu_gamesettings,           // rootpage
    164, 15,
    3,                            // start
    mf_background,                // full screen
@@ -826,6 +829,7 @@ menu_t menu_advanced =
    mn_advanced_items,
    &menu_gamesettings, 
    &menu_dmflags,                // pages
+   &menu_gamesettings,           // rootpage
    200, 15,
    3,                            // start
    mf_background,                // full screen
@@ -869,7 +873,8 @@ menu_t menu_dmflags =
 {
    mn_dmflags_items,
    &menu_advanced, 
-   &menu_chatmacros,  // pages
+   &menu_chatmacros,   // pages
+   &menu_gamesettings, // rootpage
    200, 15,
    2,
    mf_background,     // full screen
@@ -978,6 +983,7 @@ menu_t menu_chatmacros =
    mn_chatmacros_items,
    &menu_dmflags, 
    NULL,                                 // pages
+   &menu_gamesettings,                   // rootpage
    25, 15,                               // x, y offset
    2,                                    // chatmacro0 at start
    mf_background,                        // full-screen
@@ -1017,7 +1023,7 @@ static menuitem_t mn_tcpip_items[] =
 menu_t menu_tcpip =
 {
    mn_tcpip_items,
-   NULL, NULL,                   // pages
+   NULL, NULL, NULL,             // pages
    180,15,                       // x,y offset
    3,
    mf_background,                // full-screen
@@ -1057,7 +1063,7 @@ static menuitem_t mn_serial_items[] =
 menu_t menu_serial =
 {
    mn_serial_items,
-   NULL, NULL,                   // pages
+   NULL, NULL, NULL,             // pages
    180,15,                       // x,y offset
    3,
    mf_background,                // fullscreen
@@ -1113,8 +1119,8 @@ static menuitem_t mn_player_items[] =
 menu_t menu_player =
 {
    mn_player_items,
-   NULL, NULL,                           // pages
-   180, 5,                                // x, y offset
+   NULL, NULL, NULL,                     // pages
+   180, 5,                               // x, y offset
    2,                                    // chatmacro0 at start
    mf_background,                        // full-screen
    MN_PlayerDrawer
@@ -1348,7 +1354,7 @@ static menuitem_t mn_loadgame_items[] =
 menu_t menu_loadgame =
 {
    mn_loadgame_items,
-   NULL, NULL,                       // pages
+   NULL, NULL, NULL,                 // pages
    50, 15,                           // x, y
    2,                                // starting slot
    mf_skullmenu | mf_leftaligned,    // skull menu
@@ -1496,7 +1502,7 @@ static menuitem_t mn_savegame_items[] =
 menu_t menu_savegame = 
 {
    mn_savegame_items,
-   NULL, NULL,                       // pages
+   NULL, NULL, NULL,                 // pages
    50, 15,                           // x, y
    2,                                // starting slot
    mf_skullmenu | mf_leftaligned,    // skull menu
@@ -1628,6 +1634,7 @@ menu_t menu_options =
    mn_options_items,
    NULL, 
    &menu_optionsp2,                      // pages
+   &menu_options,                        // rootpage
    100, 15,                              // x,y offsets
    3,                                    // starting item: first selectable
    mf_background|mf_centeraligned,       // draw background: not a skull menu
@@ -1664,6 +1671,7 @@ menu_t menu_optionsp2 =
    mn_optionsp2_items,
    &menu_options,
    NULL,
+   &menu_options, // rootpage
    100, 15,
    3,
    mf_background|mf_centeraligned,
@@ -1790,6 +1798,7 @@ menu_t menu_video =
    mn_video_items,
    NULL,                 // prev page
    &menu_sysvideo,       // next page
+   &menu_video,          // rootpage
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
@@ -1860,6 +1869,7 @@ menu_t menu_sysvideo =
    mn_sysvideo_items,
    &menu_video,          // prev page
    &menu_particles,      // next page
+   &menu_video,          // rootpage
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
@@ -1892,6 +1902,7 @@ menu_t menu_particles =
    mn_particles_items,   // menu items
    &menu_sysvideo,       // previous page
    NULL,                 // next page
+   &menu_video,          // rootpage
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
@@ -1936,7 +1947,7 @@ static menuitem_t mn_sound_items[] =
 menu_t menu_sound =
 {
    mn_sound_items,
-   NULL, NULL,                  // pages
+   NULL, NULL, NULL,            // pages
    180, 15,                     // x, y offset
    3,                           // first selectable
    mf_background,               // full-screen menu
@@ -2001,8 +2012,10 @@ menu_t menu_mouse =
    NULL,                         // previous page
 #ifdef _SDL_VER
    &menu_joystick,               // next page
+   &menu_mouse,                  // rootpage
 #else
    NULL,                         // next page
+   NULL,                         // rootpage
 #endif
    200, 15,                      // x, y offset
    2,                            // first selectable
@@ -2101,6 +2114,7 @@ menu_t menu_joystick =
    mn_joystick_items,
    &menu_mouse,          // previous page
    NULL,                 // next page
+   &menu_mouse,          // rootpage
    200, 15,              // x,y offset
    2,                    // start on first selectable
    mf_background,        // full-screen menu
@@ -2197,6 +2211,7 @@ menu_t menu_hud =
    mn_hud_items,
    NULL, 
    &menu_hud_pg2,         // next page
+   &menu_hud,             // rootpage
    200, 15,               // x,y offset
    3,
    mf_background,
@@ -2210,6 +2225,7 @@ menu_t menu_hud_pg2 =
    mn_hud_pg2_items,
    &menu_hud,             // previous page
    &menu_hud_pg3,         // next page
+   &menu_hud,             // rootpage
    200, 15,               // x,y offset
    3,
    mf_background,
@@ -2223,6 +2239,7 @@ menu_t menu_hud_pg3 =
    mn_hud_pg3_items,
    &menu_hud_pg2,         // previous page
    NULL,                  // next page
+   &menu_hud,             // rootpage
    200, 15,               // x,y offset
    3,
    mf_background,
@@ -2301,7 +2318,7 @@ static menuitem_t mn_statusbar_items[] =
 menu_t menu_statusbar =
 {
    mn_statusbar_items,
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,       // pages
    200, 15,
    2,
    mf_background,
@@ -2409,6 +2426,7 @@ menu_t menu_automapcol1 =
    mn_automapcolbgl_items,
    NULL,                   // previous page
    &menu_automapcol2,      // next page
+   &menu_automapcol1,      // rootpage
    200, 15,                // x,y
    4,                      // starting item
    mf_background,          // fullscreen
@@ -2422,6 +2440,7 @@ menu_t menu_automapcol2 =
    mn_automapcoldoor_items,
    &menu_automapcol1,       // previous page
    &menu_automapcol3,       // next page
+   &menu_automapcol1,       // rootpage
    200, 15,                 // x,y
    4,                       // starting item
    mf_background,           // fullscreen
@@ -2435,6 +2454,7 @@ menu_t menu_automapcol3 =
    mn_automapcolsprite_items,
    &menu_automapcol2,         // previous page
    &menu_automap4,            // next page
+   &menu_automapcol1,         // rootpage
    200, 15,                   // x,y
    4,                         // starting item
    mf_background,             // fullscreen
@@ -2448,6 +2468,7 @@ menu_t menu_automap4 =
    mn_automapportal_items,
    &menu_automapcol3,         // previous page
    NULL,                      // next page
+   &menu_automapcol1,         // rootpage
    200, 15,                   // x,y
    4,                         // starting item
    mf_background,             // fullscreen
@@ -2517,6 +2538,7 @@ menu_t menu_weapons =
    mn_weapons_items,
    NULL, 
    &menu_weapons_pref,                  // next page
+   &menu_weapons,                       // rootpage
    200, 15,                             // x,y offset
    4,                                   // starting item
    mf_background,                       // full screen
@@ -2548,7 +2570,8 @@ menu_t menu_weapons_pref =
    mn_weapons_pref_items,         // items
    &menu_weapons,                 // previous page
    NULL,                          // next page
-   88, 15,                       // coords
+   &menu_weapons,                 // rootpage
+   88, 15,                        // coords
    4,                             // first item
    mf_background|mf_leftaligned,  // flags
    NULL,                          // no drawer
@@ -2635,6 +2658,7 @@ menu_t menu_compat1 =
 {
    mn_compat1_items,    // items
    NULL, &menu_compat2, // pages
+   &menu_compat1,       // rootpage
    270, 5,              // x,y
    3,                   // starting item
    mf_background,       // full screen
@@ -2647,6 +2671,7 @@ menu_t menu_compat2 =
 {
    mn_compat2_items,    // items
    &menu_compat1, NULL, // pages
+   &menu_compat1,       // rootpage
    270, 5,              // x,y
    3,                   // starting item
    mf_background,       // full screen
@@ -2676,7 +2701,7 @@ static menuitem_t mn_etccompat_items[] =
 menu_t menu_etccompat =
 {
    mn_etccompat_items,  // menu items
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,    // pages
    270, 5,              // x, y
    2,                   // starting item
    mf_background,	// full screen
@@ -2716,7 +2741,7 @@ static menuitem_t mn_enemies_items[] =
 menu_t menu_enemies =
 {
    mn_enemies_items,
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,      // pages
    220,15,                // x,y offset
    3,                     // starting item
    mf_background          // full screen
@@ -2760,7 +2785,7 @@ static menuitem_t mn_framerate_items[] =
 menu_t menu_framerate = 
 {
    mn_framerate_items,
-   NULL, NULL,                            // pages
+   NULL, NULL, NULL,                      // pages
    15, 15,                                // x, y
    6,                                     // starting item
    mf_background | mf_leftaligned,        // align left
@@ -2902,6 +2927,7 @@ menu_t menu_movekeys =
    mn_movekeys_items,
    NULL,                    // previous page
    &menu_advkeys,           // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -2915,6 +2941,7 @@ menu_t menu_advkeys =
    mn_advkeys_items,
    &menu_movekeys,          // previous page
    &menu_weaponbindings,    // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -2964,6 +2991,7 @@ menu_t menu_weaponbindings =
    mn_weaponbindings_items,
    &menu_advkeys,           // previous page
    &menu_envbindings,       // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3001,6 +3029,7 @@ menu_t menu_envbindings =
    mn_envbindings_items,
    &menu_weaponbindings,    // previous page
    &menu_funcbindings,      // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3043,6 +3072,7 @@ menu_t menu_funcbindings =
    mn_function_items,
    &menu_envbindings,       // previous page
    &menu_menukeys,          // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3087,6 +3117,7 @@ menu_t menu_menukeys =
    mn_menukeys_items,
    &menu_funcbindings,      // previous page
    &menu_automapkeys,       // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3131,6 +3162,7 @@ menu_t menu_automapkeys =
    mn_automapkeys_items,
    &menu_menukeys,          // previous page
    &menu_consolekeys,       // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3171,6 +3203,7 @@ menu_t menu_consolekeys =
    mn_consolekeys_items,
    &menu_automapkeys,       // previous page
    NULL,                    // next page
+   &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3343,6 +3376,7 @@ menu_t menu_menuopts =
    mn_menus_items,
    NULL,                    // prev page
    NULL,                    // next page
+   NULL,                    // root page
    200, 15,                 // x,y offsets
    3,                       // first item
    mf_background,           // draw background: not a skull menu
@@ -3426,7 +3460,7 @@ static menuitem_t mn_old_main_items[] =
 menu_t menu_old_main =
 {
    mn_old_main_items,
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,           // pages
    97, 64,
    0,
    mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
@@ -3509,7 +3543,7 @@ static void MN_OldOptionsDrawer(void)
 menu_t menu_old_options =
 {
    mn_old_option_items,
-   NULL, NULL,            // pages
+   NULL, NULL, NULL,           // pages
    60, 37,
    0,
    mf_skullmenu | mf_emulated,
@@ -3544,7 +3578,7 @@ static void MN_OldSoundDrawer(void)
 menu_t menu_old_sound =
 {
    mn_old_sound_items,
-   NULL, NULL,
+   NULL, NULL, NULL,
    80, 64,
    0,
    mf_skullmenu | mf_emulated,
