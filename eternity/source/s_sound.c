@@ -1310,7 +1310,7 @@ CONSOLE_VARIABLE(music_volume, snd_MusicVolume, 0)
 // haleyjd 12/08/01: allow user to force reversal of audio channels
 CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
 
-CONSOLE_COMMAND(s_playmus, 0)
+CONSOLE_COMMAND(s_playmusic, 0)
 {
    musicinfo_t *music;
    char namebuf[16];
@@ -1328,7 +1328,8 @@ CONSOLE_COMMAND(s_playmus, 0)
       return;
    }
 
-   // check to see if the lump exists
+   // check to see if the lump exists to avoid stopping the current music if it
+   // is missing
    psnprintf(namebuf, sizeof(namebuf), "%s%s", 
              gameModeInfo->musPrefix, music->name);
 
@@ -1350,7 +1351,7 @@ void S_AddCommands(void)
   C_AddCommand(sfx_volume);
   C_AddCommand(music_volume);
   C_AddCommand(s_flippan);
-  C_AddCommand(s_playmus);
+  C_AddCommand(s_playmusic);
 }
 
 //

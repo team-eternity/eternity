@@ -478,7 +478,8 @@ static boolean MN_FileResponder(event_t *ev)
             }
             return true; // eat key
          }
-      } while(n != selected_item);
+      } 
+      while(n != selected_item);
    }
    
    return false; // not interested
