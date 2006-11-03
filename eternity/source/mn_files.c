@@ -279,6 +279,7 @@ static int selected_item;
 static char *variable_name;
 static char *help_description;
 static int numfileboxlines;
+static boolean select_dismiss;
 
 //
 // MN_FileDrawer
@@ -452,7 +453,8 @@ static boolean MN_FileResponder(event_t *ev)
          C_RunTextCmd(tempstr);
          S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
-      current_menuwidget = NULL; // cancel widget
+      if(select_dismiss)
+         current_menuwidget = NULL; // cancel widget
       return true;
    }
 
@@ -521,6 +523,7 @@ CONSOLE_COMMAND(mn_selectwad, 0)
    current_menuwidget = &file_selector;
    help_description = "select wad file:";
    variable_name = "mn_wadname";
+   select_dismiss = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -551,11 +554,42 @@ CONSOLE_COMMAND(dir, 0)
    }
 }
 
+CONSOLE_COMMAND(mn_selectmusic, 0)
+{
+   musicinfo_t *music;
+   int i;
+
+   // clear directory
+   MN_clearDirectory();
+
+   // run down music hash chains and add music to file list
+   for(i = 0; i < SOUND_HASHSLOTS; ++i)
+   {
+      music = musicinfos[i];
+
+      while(music)
+      {
+         MN_addFile(music->name);
+         music = music->next;
+      }
+   }
+
+   // sort the list
+   MN_sortFiles();
+
+   selected_item = 0;
+   current_menuwidget = &file_selector;
+   help_description = "select music to play:";
+   variable_name = "s_playmusic";
+   select_dismiss = false;
+}
+
 void MN_File_AddCommands(void)
 {
-  C_AddCommand(dir);
-  C_AddCommand(mn_selectwad);
-  C_AddCommand(wad_directory);
+   C_AddCommand(dir);
+   C_AddCommand(mn_selectwad);
+   C_AddCommand(wad_directory);
+   C_AddCommand(mn_selectmusic);
 }
 
 // EOF

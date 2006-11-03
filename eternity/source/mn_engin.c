@@ -775,10 +775,9 @@ void MN_Drawer(void)
    if(hide_menu) redrawsbar = redrawborder = true;
    
    // activate menu if displaying widget
-   if(current_menuwidget) menuactive = true; 
-   
-   if(!menuactive || hide_menu) return;
-   
+   // haleyjd 11/03/06: this is unnecessary and causes problems
+   //if(current_menuwidget) menuactive = true; 
+      
    if(current_menuwidget)
    {
       // alternate drawer
@@ -786,6 +785,10 @@ void MN_Drawer(void)
          current_menuwidget->drawer();
       return;
    }
+
+   // haleyjd: moved down to here
+   if(!menuactive || hide_menu) 
+      return;
  
    MN_DrawMenu(current_menu);  
 }

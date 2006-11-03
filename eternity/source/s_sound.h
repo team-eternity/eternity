@@ -134,6 +134,11 @@ extern int default_numChannels;  // killough 10/98
 //jff 3/17/98 holds last IDMUS number, or -1
 extern int idmusnum;
 
+// haleyjd 11/03/06: moved/added to header
+#define SOUND_HASHSLOTS 257
+
+extern musicinfo_t *musicinfos[];
+
 #endif
 
 //----------------------------------------------------------------------------

@@ -57,7 +57,6 @@ rcsid[] = "$Id: s_sound.c,v 1.11 1998/05/03 22:57:06 killough Exp $";
 #define S_STEREO_SWING (96<<FRACBITS)
 
 // sf: sound/music hashing
-#define SOUND_HASHSLOTS 257
 // use sound_hash for music hash too
 
 static d_inline int sound_hash(const char *s)
@@ -1262,8 +1261,13 @@ void S_UpdateMusic(int lumpnum)
 {
    musicinfo_t *music;
    char sndname[16];
+   int prefixlen;
 
-   strncpy(sndname, lumpinfo[lumpnum]->name + 2, 6);
+   // haleyjd 11/03/06: enormous bug here for Heretic
+   prefixlen = strlen(gameModeInfo->musPrefix);
+
+   memset(sndname, 0, sizeof(sndname));
+   strncpy(sndname, lumpinfo[lumpnum]->name + prefixlen, 8 - prefixlen);
    
    // check if one already in the table first
    
