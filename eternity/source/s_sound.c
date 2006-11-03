@@ -787,6 +787,30 @@ void S_UpdateSounds(const mobj_t *listener)
    }
 }
 
+//
+// S_CheckSoundPlaying
+//
+// haleyjd: rudimentary sound checking function
+//
+boolean S_CheckSoundPlaying(mobj_t *mo, sfxinfo_t *sfx)
+{
+   int cnum;
+
+   if(mo && sfx)
+   {   
+      for(cnum = 0; cnum < numChannels; ++cnum)
+      {
+         if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
+         {
+            if(I_SoundIsPlaying(channels[cnum].handle))
+               return true;
+         }
+      }
+   }
+   
+   return false;
+}
+
 void S_SetMusicVolume(int volume)
 {
    //jff 1/22/98 return if music is not enabled
@@ -949,6 +973,8 @@ void S_StopLoopedSounds(void)
             S_StopChannel(cnum);
 }
 
+//
+// S_Start
 //
 // Per level startup code.
 // Kills playing sounds at start of level,
@@ -1191,7 +1217,7 @@ static void S_HookMusic(musicinfo_t *music)
    musicinfos[hashslot] = music;
 }
 
-static void S_CreateMusicHashTable()
+static void S_CreateMusicHashTable(void)
 {
    int i;
    
@@ -1202,14 +1228,12 @@ static void S_CreateMusicHashTable()
    else
       mushash_created = true;
 
-   for(i = 0; i < SOUND_HASHSLOTS; i++)
+   for(i = 0; i < SOUND_HASHSLOTS; ++i)
       musicinfos[i] = NULL;
    
-   // hook in all musics
-   for(i = 0; i < gameModeInfo->numMusic; i++)
-   {
+   // hook in all natively defined music
+   for(i = 0; i < gameModeInfo->numMusic; ++i)
       S_HookMusic(&(gameModeInfo->s_music[i]));
-   }
 }
 
 musicinfo_t *S_MusicForName(const char *name)
@@ -1256,30 +1280,6 @@ void S_UpdateMusic(int lumpnum)
    }
 }
 
-//
-// S_CheckSoundPlaying
-//
-// haleyjd: rudimentary sound checking function
-//
-boolean S_CheckSoundPlaying(mobj_t *mo, sfxinfo_t *sfx)
-{
-   int cnum;
-
-   if(mo && sfx)
-   {   
-      for(cnum = 0; cnum < numChannels; ++cnum)
-      {
-         if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
-         {
-            if(I_SoundIsPlaying(channels[cnum].handle))
-               return true;
-         }
-      }
-   }
-   
-   return false;
-}
-
 ///////////////////////////////////////////////////////////////////////////
 //
 // Console Commands
@@ -1296,19 +1296,53 @@ VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
 CONSOLE_VARIABLE(snd_channels, default_numChannels, 0) {}
+
 CONSOLE_VARIABLE(sfx_volume, snd_SfxVolume, 0)
 {
-  S_SetSfxVolume(snd_SfxVolume);
+   S_SetSfxVolume(snd_SfxVolume);
 }
+
 CONSOLE_VARIABLE(music_volume, snd_MusicVolume, 0)
 {
-  S_SetMusicVolume(snd_MusicVolume);
+   S_SetMusicVolume(snd_MusicVolume);
 }
 
 // haleyjd 12/08/01: allow user to force reversal of audio channels
 CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
 
-void S_AddCommands()
+CONSOLE_COMMAND(s_playmus, 0)
+{
+   musicinfo_t *music;
+   char namebuf[16];
+
+   if(c_argc < 1)
+   {
+      C_Printf(FC_ERROR "A music name is required.\a\n");
+      return;
+   }
+
+   // check to see if there's a music by this name
+   if(!(music = S_MusicForName(c_argv[0])))
+   {
+      C_Printf(FC_ERROR "Unknown music %s\a\n", c_argv[0]);
+      return;
+   }
+
+   // check to see if the lump exists
+   psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+             gameModeInfo->musPrefix, music->name);
+
+   if(W_CheckNumForName(namebuf) < 0)
+   {
+      C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf, 
+               c_argv[0]);
+      return;
+   }
+
+   S_ChangeMusic(music, true);
+}
+
+void S_AddCommands(void)
 {
   C_AddCommand(s_pitched);
   C_AddCommand(s_precache);
@@ -1316,6 +1350,7 @@ void S_AddCommands()
   C_AddCommand(sfx_volume);
   C_AddCommand(music_volume);
   C_AddCommand(s_flippan);
+  C_AddCommand(s_playmus);
 }
 
 //

@@ -3060,7 +3060,7 @@ static menuitem_t mn_function_items[] =
    {it_binding, "toggle hud",           "hu_overlay /"},
    {it_binding, "quick save",           "quicksave"},
    {it_binding, "end game",             "mn_endgame"},
-   {it_binding, "toggle messages",      "messages /"},
+   {it_binding, "toggle messages",      "hu_messages /"},
    {it_binding, "quick load",           "quickload"},
    {it_binding, "quit",                 "mn_quit"},
    {it_binding, "gamma correction",     "gamma /"},
