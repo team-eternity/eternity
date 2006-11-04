@@ -97,7 +97,7 @@ static void R_DrawSpan_64(void)
    // is now FASTER than doom's original span renderer. Whodathunkit?
    
    xposition = ds_xfrac << 10; yposition = ds_yfrac << 10;
-   xstep = ds_xstep << 10; ystep = ds_ystep << 10;
+   xstep = ds_xstep; ystep = ds_ystep;
    
    source = ds_source;
    colormap = ds_colormap;
@@ -160,7 +160,7 @@ static void R_DrawSpan_128(void)
    // is now FASTER than doom's original span renderer. Whodathunkit?
 
    xposition = ds_xfrac << 9; yposition = ds_yfrac << 9;
-   xstep = ds_xstep << 9; ystep = ds_ystep << 9;
+   xstep = ds_xstep >> 1; ystep = ds_ystep >> 1;
    
    source = ds_source;
    colormap = ds_colormap;
@@ -223,7 +223,7 @@ static void R_DrawSpan_256(void)
    // is now FASTER than doom's original span renderer. Whodathunkit?
 
    xposition = ds_xfrac << 8; yposition = ds_yfrac << 8;
-   xstep = ds_xstep << 8; ystep = ds_ystep << 8;
+   xstep = ds_xstep >> 2; ystep = ds_ystep >> 2;
    
    source = ds_source;
    colormap = ds_colormap;
@@ -286,7 +286,7 @@ static void R_DrawSpan_512(void)
    // is now FASTER than doom's original span renderer. Whodathunkit?
    
    xposition = ds_xfrac << 7; yposition = ds_yfrac << 7;
-   xstep = ds_xstep << 7; ystep = ds_ystep << 7;
+   xstep = ds_xstep >> 3; ystep = ds_ystep >> 3;
    
    source = ds_source;
    colormap = ds_colormap;
@@ -340,7 +340,7 @@ static void R_DrawSpan_OLD(void)
    unsigned count;
    
    position = ((ds_xfrac<<10)&0xffff0000) | ((ds_yfrac>>6)&0xffff);
-   step = ((ds_xstep<<10)&0xffff0000) | ((ds_ystep>>6)&0xffff);
+   step = ((ds_xstep)&0xffff0000) | ((ds_ystep>>16)&0xffff);
    
    source = ds_source;
    colormap = ds_colormap;
@@ -393,7 +393,7 @@ static void R_DrawSpan_ORIGINAL(void)
    unsigned ytemp;
    
    position = ((ds_xfrac<<10)&0xffff0000) | ((ds_yfrac>>6)&0xffff);
-   step = ((ds_xstep<<10)&0xffff0000) | ((ds_ystep>>6)&0xffff);
+   step = ((ds_xstep)&0xffff0000) | ((ds_ystep>>16)&0xffff);
    
    source = ds_source;
    colormap = ds_colormap;
@@ -496,7 +496,7 @@ static void R_DrawSpan_LD64(void)
    unsigned count;
       
    xposition = ds_xfrac << 10; yposition = ds_yfrac << 10;
-   xstep = ds_xstep << 10; ystep = ds_ystep << 10;
+   xstep = ds_xstep; ystep = ds_ystep;
    
    source = ds_source;
    colormap = ds_colormap;
@@ -556,7 +556,7 @@ static void R_DrawSpan_LD128(void)
    unsigned count;
    
    xposition = ds_xfrac << 9; yposition = ds_yfrac << 9;
-   xstep = ds_xstep << 9; ystep = ds_ystep << 9;
+   xstep = ds_xstep >> 1; ystep = ds_ystep >> 1;
    
    source = ds_source;
    colormap = ds_colormap;
@@ -615,7 +615,7 @@ static void R_DrawSpan_LD256(void)
    unsigned count;
    
    xposition = ds_xfrac << 8; yposition = ds_yfrac << 8;
-   xstep = ds_xstep << 8; ystep = ds_ystep << 8;
+   xstep = ds_xstep >> 2; ystep = ds_ystep >> 2;
    
    source = ds_source;
    colormap = ds_colormap;
@@ -674,7 +674,7 @@ static void R_DrawSpan_LD512(void)
    unsigned count;
       
    xposition = ds_xfrac << 7; yposition = ds_yfrac << 7;
-   xstep = ds_xstep << 7; ystep = ds_ystep << 7;
+   xstep = ds_xstep >> 3; ystep = ds_ystep >> 3;
    
    source = ds_source;
    colormap = ds_colormap;
