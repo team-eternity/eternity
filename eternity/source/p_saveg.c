@@ -438,7 +438,14 @@ void P_ArchiveThinkers(void)
       {
          mobj_t *target = sectors[i].soundtarget;
          if(target)
-            target = (mobj_t *) target->thinker.prev;
+         {
+            // haleyjd 11/03/06: We must check for P_MobjThinker here as well,
+            // or player corpses waiting for deferred removal will be saved as
+            // raw pointer values instead of twizzled numbers, causing a crash
+            // on savegame load!
+            target = target->thinker.function == P_MobjThinker ? 
+                        (mobj_t *)target->thinker.prev : NULL;
+         }
          memcpy(save_p, &target, sizeof target);
          save_p += sizeof target;
       }
@@ -472,7 +479,8 @@ static void P_SetNewTarget(mobj_t **mop, mobj_t *targ)
 void P_UnArchiveThinkers(void)
 {
    thinker_t *th;
-   size_t    size;        // killough 2/14/98: size of or index into table
+   size_t    size;        // killough 2/14/98: size of into table
+   size_t    idx;         // haleyjd 11/03/06: separate index var
    
    // killough 3/26/98: Load boss brain state
    memcpy(&brain, save_p, sizeof brain);
@@ -491,10 +499,10 @@ void P_UnArchiveThinkers(void)
    }
    P_InitThinkers();
 
-  // killough 2/14/98: count number of thinkers by skipping through them
+   // killough 2/14/98: count number of thinkers by skipping through them
    {
       byte *sp = save_p;     // save pointer and skip header
-      for(size = 1; *save_p++ == tc_mobj; size++)  // killough 2/14/98
+      for(size = 1; *save_p++ == tc_mobj; ++size)  // killough 2/14/98
       {                     // skip all entries, adding up count
          PADSAVEP();
          save_p += sizeof(mobj_t);
@@ -509,12 +517,13 @@ void P_UnArchiveThinkers(void)
    }
 
    // read in saved thinkers
-   for(size = 1; *save_p++ == tc_mobj; size++)    // killough 2/14/98
+   // haleyjd 11/03/06: use idx to save "size" for rangechecking
+   for(idx = 1; *save_p++ == tc_mobj; ++idx)    // killough 2/14/98
    {
       mobj_t *mobj = Z_Malloc(sizeof(mobj_t), PU_LEVEL, NULL);
       
       // killough 2/14/98 -- insert pointers to thinkers into table, in order:
-      mobj_p[size] = mobj;
+      mobj_p[idx] = mobj;
 
       PADSAVEP();
       memcpy(mobj, save_p, sizeof(mobj_t));
@@ -556,17 +565,26 @@ void P_UnArchiveThinkers(void)
    // NULL entries automatically handled by first table entry.
    //
    // killough 11/98: use P_SetNewTarget() to set fields
+   // haleyjd 11/03/06: rangecheck all mobj_p indices for security
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      P_SetNewTarget(&((mobj_t *) th)->target,
-         mobj_p[(size_t)((mobj_t *)th)->target]);
-      
-      P_SetNewTarget(&((mobj_t *) th)->tracer,
-         mobj_p[(size_t)((mobj_t *)th)->tracer]);
-      
-      P_SetNewTarget(&((mobj_t *) th)->lastenemy,
-         mobj_p[(size_t)((mobj_t *)th)->lastenemy]);      
+      mobj_t *mo = (mobj_t *)th;
+
+      if((size_t)mo->target < size)
+         P_SetNewTarget(&mo->target, mobj_p[(size_t)mo->target]);
+      else
+         mo->target = NULL;
+
+      if((size_t)mo->tracer < size)
+         P_SetNewTarget(&mo->tracer, mobj_p[(size_t)mo->tracer]);
+      else
+         mo->tracer = NULL;
+
+      if((size_t)mo->lastenemy < size)
+         P_SetNewTarget(&mo->lastenemy, mobj_p[(size_t)mo->lastenemy]);
+      else
+         mo->lastenemy = NULL;
    }
 
    {  // killough 9/14/98: restore soundtargets
@@ -576,7 +594,12 @@ void P_UnArchiveThinkers(void)
          mobj_t *target;
          memcpy(&target, save_p, sizeof target);
          save_p += sizeof target;
-         P_SetNewTarget(&sectors[i].soundtarget, mobj_p[(size_t) target]);
+
+         // haleyjd 11/03/06: rangecheck for security
+         if((size_t)target < size)
+            P_SetNewTarget(&sectors[i].soundtarget, mobj_p[(size_t) target]);
+         else
+            sectors[i].soundtarget = NULL;
       }
    }
 

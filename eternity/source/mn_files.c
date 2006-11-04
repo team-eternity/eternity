@@ -44,6 +44,7 @@
 #include "m_misc.h"
 #include "mn_engin.h"
 #include "s_sound.h"
+#include "w_wad.h"
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -332,14 +333,22 @@ static void MN_FileDrawer(void)
    numfileboxlines = (h - 2) / lheight;
 
    // determine first and last filename to display (we can display
-   // "numlines" filenames. The selected item will be last in the box
-   // if the covered area doesn't start at zero.
-   min = selected_item - numfileboxlines + 1;
+   // "numlines" filenames.
+   // haleyjd 11/04/06: improved to keep selection centered in box except at
+   // beginning and end of list.
+   min = selected_item - numfileboxlines/2 /* + 1*/;
    if(min < 0)
       min = 0;
    max = min + numfileboxlines - 1;
    if(max >= num_mn_files)
+   {
       max = num_mn_files - 1;
+      // haleyjd 11/04/06: reset min when the list end is displayed to
+      // keep the box completely full.
+      min = max - numfileboxlines + 1;
+      if(min < 0)
+         min = 0;
+   }
 
    // start 1 pixel right & below the color box coords
    x = bleft + 1;
@@ -349,6 +358,7 @@ static void MN_FileDrawer(void)
    for(i = min; i <= max; ++i)
    {
       int color;
+      const char *text;
 
       // if this is the selected item, use the appropriate color
       if(i == selected_item)
@@ -359,8 +369,14 @@ static void MN_FileDrawer(void)
       else
          color = gameModeInfo->unselectColor;
 
+      // haleyjd 11/04/06: add "more" indicators when box is scrolled :)
+      if((i == min && min > 0) || (i == max && max < num_mn_files - 1))
+         text = FC_GOLD "More...";
+      else
+         text = mn_filelist[i];
+      
       // draw it!
-      MN_WriteTextColoured(mn_filelist[i], color, x + 11, y);
+      MN_WriteTextColoured(text, color, x + 11, y);
 
       // step by the height of one line
       y += lheight;
@@ -408,10 +424,8 @@ static boolean MN_FileResponder(event_t *ev)
       {
          selected_item -= numfileboxlines;
          if(selected_item < 0)
-         {
             selected_item = 0;
-            S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
-         }
+         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
    }
@@ -423,10 +437,8 @@ static boolean MN_FileResponder(event_t *ev)
       {
          selected_item += numfileboxlines;
          if(selected_item >= num_mn_files) 
-         {
             selected_item = num_mn_files - 1;
-            S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
-         }
+         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
    }
@@ -557,6 +569,7 @@ CONSOLE_COMMAND(dir, 0)
 CONSOLE_COMMAND(mn_selectmusic, 0)
 {
    musicinfo_t *music;
+   char namebuf[16];
    int i;
 
    // clear directory
@@ -569,7 +582,13 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
 
       while(music)
       {
-         MN_addFile(music->name);
+         // don't add music entries that don't actually exist
+         psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+                   gameModeInfo->musPrefix, music->name);
+         
+         if(W_CheckNumForName(namebuf) >= 0)
+            MN_addFile(music->name);
+
          music = music->next;
       }
    }
