@@ -393,7 +393,8 @@ static cfg_opt_t cast_only_opts[] =
 // Options for stuff in sounds.edf only
 static cfg_opt_t sound_only_opts[] =
 {
-   CFG_SEC(EDF_SEC_SOUND, edf_sound_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_SOUND,  edf_sound_opts,  CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_SNDSEQ, edf_sndseq_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    DEF_FUNCTIONS,
    CFG_END()
 };

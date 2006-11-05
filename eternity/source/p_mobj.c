@@ -848,7 +848,16 @@ void P_NightmareRespawn(mobj_t* mobj)
       mobj->flags |= MF_SOLID;
    
    if(demo_version >= 331 && !comp[comp_overunder]) // haleyjd: OVER_UNDER
+   {
+      fixed_t sheight = mobj->height;
+      
+      // haleyjd 11/04/06: need to restore real height before checking
+      mobj->height = P_ThingInfoHeight(mobj->info);
+      
       check = P_CheckPositionExt(mobj, x, y);
+      
+      mobj->height = sheight;
+   }
    else
       check = P_CheckPosition(mobj, x, y);
 

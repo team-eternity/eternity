@@ -183,16 +183,18 @@ static void R_MapPlane(int y, int x1, int x2)
       I_Error ("R_MapPlane: %i, %i at %i", x1, x2, y);
 #endif
 
-   if (planeheight != cachedheight[y])
+   if(planeheight != cachedheight[y])
    {
       cachedheight[y] = planeheight;
+      
       distance = cacheddistance[y] = FixedMul (planeheight, yslope[y]);
-      // SoM: because the span drawers now use up to 26 fractional bits, this calculation should result in a 6.26 number
-      // because otherwise there are 10 bits which are all 0 and add no precision to the flat drawing routines at all...
+      
+      // SoM: because the span drawers now use up to 26 fractional bits, this
+      // calculation should result in a 6.26 number because otherwise there are
+      // 10 bits which are all 0 and add no precision to the flat drawing 
+      // routines at all...
       ds_xstep = cachedxstep[y] = (fixed_t)((Long64)distance * basexscale >> 6);
       ds_ystep = cachedystep[y] = (fixed_t)((Long64)distance * baseyscale >> 6);
-      //ds_xstep = cachedxstep[y] = FixedMul (distance,basexscale);
-      //ds_ystep = cachedystep[y] = FixedMul (distance,baseyscale);
    }
    else
    {
