@@ -27,6 +27,8 @@
 #ifndef E_LIB_H__
 #define E_LIB_H__
 
+#include "d_dehtbl.h"
+
 typedef struct E_Enable_s
 {
    const char *name;

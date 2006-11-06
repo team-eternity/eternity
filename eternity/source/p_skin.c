@@ -56,7 +56,16 @@ skin_t marine =
    "marine",
    0,           // haleyjd 05/11/03: player sprite number now set by EDF
    {
-      NULL
+      "plpain",
+      "pdiehi",
+      "oof",
+      "slop",
+      "punch",
+      "radio",
+      "pldeth",
+      "plfall",
+      "plfeet",
+      "fallht",
    }, 
    "STF", 
    default_faces
@@ -71,7 +80,7 @@ static skin_t **monster_skins = NULL; // haleyjd 09/26/04
 char **spritelist = NULL;
 char *default_skin = NULL;     // name of currently selected skin
 
-char *skinsoundnames[NUMSKINSOUNDS] =
+const char *skinsoundnames[NUMSKINSOUNDS] =
 {
    "dsplpain",
    "dspdiehi",
@@ -90,31 +99,39 @@ static void P_AddSkin(skin_t *newskin);
 static void P_CreateMarine(void);
 static void P_CacheFaces(skin_t *skin);
 static void P_InitMonsterSkins(void);
-static void GetDefSound(char **var, int dehnum);
+
+/*
+//
+// GetDefSound
+//
+// This function gets the EDF sound mnemonic for a given sound DeHackEd
+// number. This keeps skins more compatible than they were previously.
+//
+static void GetDefSound(char **var, int dehnum)
+{
+   sfxinfo_t *sfx = E_SoundForDEHNum(dehnum);
+
+   *var = (sfx ? sfx->mnemonic : "none");
+}
+*/
 
 //
 // P_ResolveSkinSounds
 //
-// haleyjd 10/17/05: Woops! Ever since EDF wad loading was added,
-// non-replaced sounds in skins have been broken. This was because
-// it tried to lookup sound dehnums before EDF was processed. So now,
-// we must resolve any NULL skin sounds to the defaults afterward in
-// P_InitSkins below, which is called from R_Init, well after EDF
-// processing.
+// Resolve all missing sounds for skins.
 //
 static void P_ResolveSkinSounds(skin_t *skin)
 {
    int i;
-   int sndids[] =
-   {
-      sfx_plpain, sfx_pdiehi, sfx_oof,    sfx_slop,   sfx_punch, 
-      sfx_radio,  sfx_pldeth, sfx_plfall, sfx_plfeet, sfx_fallht,
-   };
+
+   // FIXME: need to use proper defaults based on gamemode.
+   // For now, just use marine sounds.
 
    for(i = 0; i < NUMSKINSOUNDS; ++i)
    {
       if(!skin->sounds[i])
-         GetDefSound(&(skin->sounds[i]), sndids[i]);
+         skin->sounds[i] = marine.sounds[i];
+         
    }
 }
 
@@ -172,19 +189,6 @@ void P_InitSkins(void)
 }
 
 //
-// GetDefSound
-//
-// This function gets the EDF sound mnemonic for a given sound DeHackEd
-// number. This keeps skins more compatible than they were previously.
-//
-static void GetDefSound(char **var, int dehnum)
-{
-   sfxinfo_t *sfx = E_SoundForDEHNum(dehnum);
-
-   *var = (sfx ? sfx->mnemonic : "none");
-}
-
-//
 // P_CreateMarine
 //
 // Initialize the default DOOM marine skin
@@ -199,18 +203,6 @@ static void P_CreateMarine(void)
       return;      // dont make twice
 
    marine.sprite = playerSpriteNum;
-
-   // initialize sound names
-   GetDefSound(&(marine.sounds[sk_plpain]), sfx_plpain);
-   GetDefSound(&(marine.sounds[sk_pdiehi]), sfx_pdiehi);
-   GetDefSound(&(marine.sounds[sk_oof]),    sfx_oof);
-   GetDefSound(&(marine.sounds[sk_slop]),   sfx_slop);
-   GetDefSound(&(marine.sounds[sk_punch]),  sfx_punch);
-   GetDefSound(&(marine.sounds[sk_radio]),  sfx_radio);
-   GetDefSound(&(marine.sounds[sk_pldeth]), sfx_pldeth);
-   GetDefSound(&(marine.sounds[sk_plfall]), sfx_plfall);
-   GetDefSound(&(marine.sounds[sk_plfeet]), sfx_plfeet);
-   GetDefSound(&(marine.sounds[sk_fallht]), sfx_fallht);
    
    if(default_skin == NULL) 
       default_skin = Z_Strdup("marine", PU_STATIC, 0);

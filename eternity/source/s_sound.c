@@ -411,7 +411,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 
    if(sfx->skinsound) // check for skin sounds
    {
-      char *sndname = "";
+      const char *sndname = "";
 
       if(origin && 
          origin->thinker.function == P_MobjThinker &&       // haleyjd
@@ -601,7 +601,7 @@ void S_StartSound(const mobj_t *origin, int sfx_id)
 //
 // haleyjd 05/29/06: as below, but allows volume scaling.
 //
-void S_StartSoundNameAtVolume(const mobj_t *origin, char *name, 
+void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name, 
                               int volume, soundattn_e attn)
 {
    sfxinfo_t *sfx;
@@ -622,7 +622,7 @@ void S_StartSoundNameAtVolume(const mobj_t *origin, char *name,
 // WAD sounds.
 // haleyjd 05/29/06: reimplemented in terms of the above function.
 //
-void S_StartSoundName(const mobj_t *origin, char *name)
+void S_StartSoundName(const mobj_t *origin, const char *name)
 {
    S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL);
 }
@@ -1106,7 +1106,7 @@ void S_Init(int sfxVolume, int musicVolume)
 // Sound Hashing
 //
 
-sfxinfo_t *S_SfxInfoForName(char *name)
+sfxinfo_t *S_SfxInfoForName(const char *name)
 {   
    // haleyjd 09/03/03: now calls down to master EDF sound hash   
    return E_SoundForName(name);

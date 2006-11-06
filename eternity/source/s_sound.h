@@ -76,13 +76,13 @@ typedef enum
 //  using <sound_id> from sounds.h
 //
 void S_StartSound(const mobj_t *origin, int sound_id);
-void S_StartSoundName(const mobj_t *origin, char *name);
+void S_StartSoundName(const mobj_t *origin, const char *name);
 void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
                     int volumeScale, soundattn_e attenuation,
                     boolean loop);
 void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
                           int volume, soundattn_e attn);
-void S_StartSoundNameAtVolume(const mobj_t *origin, char *name, 
+void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name, 
                               int volume, soundattn_e attn);
 
 // Stop sound for thing at <origin>
@@ -105,7 +105,7 @@ void S_StopLoopedSounds(void); // haleyjd
 void S_PauseSound(void);
 void S_ResumeSound(void);
 
-sfxinfo_t *S_SfxInfoForName(char *name);
+sfxinfo_t *S_SfxInfoForName(const char *name);
 void S_UpdateSound(int lumpnum);
 void S_UpdateSoundDeferred(int lumpnum);
 void S_ProcDeferredSounds(void);

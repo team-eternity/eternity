@@ -58,7 +58,7 @@ struct skin_s
    char        *spritename;   // 4 chars
    char        *skinname;     // name of the skin: eg 'marine'
    spritenum_t sprite;        // set by initskins
-   char        *sounds[NUMSKINSOUNDS];
+   const char  *sounds[NUMSKINSOUNDS];
    char        *facename;     // statusbar face
    patch_t     **faces;
 };

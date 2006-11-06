@@ -525,6 +525,10 @@ SOURCE=.\Source\e_lib.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\e_player.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\e_sound.c
 # End Source File
 # Begin Source File
@@ -1086,6 +1090,10 @@ SOURCE=.\Source\e_exdata.h
 # Begin Source File
 
 SOURCE=.\Source\e_lib.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_player.h
 # End Source File
 # Begin Source File
 
