@@ -179,6 +179,20 @@ static skin_t *E_CreatePlayerClassSkin(cfg_t *skinsec)
 //
 static void E_ProcessPlayerClass(cfg_t *pc)
 {
+   const char *tempstr;
+
+   // get mnemonic (section title)
+   tempstr = cfg_title(pc);
+
+   E_EDFLogPrintf("\t\tProcessing class %s\n", tempstr);
+
+   // process skin -- required element
+   if(cfg_size(pc, ITEM_PCLASS_SKIN) <= 0)
+   {
+      E_EDFLoggedErr(2, "E_ProcessPlayerClass: required skin is missing for "
+                        "player class"); // FIXME: print mnemonic
+   }
+   E_CreatePlayerClassSkin(cfg_getsec(pc, ITEM_PCLASS_SKIN));
 }
 
 //
@@ -188,9 +202,15 @@ static void E_ProcessPlayerClass(cfg_t *pc)
 //
 void E_ProcessPlayerClasses(cfg_t *cfg)
 {
-   unsigned int count;
+   unsigned int count, i;
 
    count = cfg_size(cfg, EDF_SEC_PCLASS);
+
+   E_EDFLogPrintf("\t* Processing player classes\n"
+                  "\t\t%d class(es) defined\n", count);
+
+   for(i = 0; i < count; ++i)
+      E_ProcessPlayerClass(cfg_getnsec(cfg, EDF_SEC_PCLASS, i));
 }
 
 // EOF

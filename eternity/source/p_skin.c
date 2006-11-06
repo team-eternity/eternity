@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-// Copyright(C) 2003 James Haley
+// Copyright(C) 2006 Simon Howard, James Haley, et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@
 //
 // Skins are a set of sprites which replace the normal player sprites, so
 // in multiplayer the players can look like whatever they want.
-//
-// FIXME: rewrite needed for Heretic-specific stuff
 //
 // NETCODE_FIXME -- CONFIG_FIXME: Need to be able to save skin values more
 // effectively.
@@ -125,13 +123,11 @@ static void P_ResolveSkinSounds(skin_t *skin)
    int i;
 
    // FIXME: need to use proper defaults based on gamemode.
-   // For now, just use marine sounds.
 
    for(i = 0; i < NUMSKINSOUNDS; ++i)
    {
       if(!skin->sounds[i])
-         skin->sounds[i] = marine.sounds[i];
-         
+         skin->sounds[i] = marine.sounds[i];         
    }
 }
 
@@ -152,6 +148,8 @@ void P_InitSkins(void)
    // haleyjd 09/26/04: initialize monster skins list
    P_InitMonsterSkins();
 
+   // FIXME: get rid of marine and add EDF skins here
+
    // create default gamemode skin -- TODO: heretic support
    P_CreateMarine();
 
@@ -160,12 +158,13 @@ void P_InitSkins(void)
       Z_Free(spritelist);
    
    // haleyjd 05/12/03: don't count the marine skin
+   // FIXME: don't count any skin with an already-existing sprite
    spritelist = Z_Malloc(((numskins-1)+NUMSPRITES+1)*sizeof(char *),
                          PU_STATIC, 0);
 
    // add the normal sprites
    currentsprite = spritelist;
-   for(i = 0; i < NUMSPRITES + 1; i++)
+   for(i = 0; i < NUMSPRITES + 1; ++i)
    {
       if(!sprnames[i])
          break;
@@ -174,8 +173,12 @@ void P_InitSkins(void)
    }
 
    // add skin sprites
-   for(i = 0; i < numskins; i++)
+   for(i = 0; i < numskins; ++i)
    {
+      // FIXME: don't add any sprite that already exists
+      // PROBLEM: sprite hashing in EDF is transient and not available at this point
+      // Keep EDF sprite hash around?
+
       if(skins[i] == &marine) // do not add the marine sprite again
          continue;
       *currentsprite   = skins[i]->spritename;
@@ -221,6 +224,7 @@ static void P_CreateMarine(void)
 //
 static void P_AddSkin(skin_t *newskin)
 {
+   // FIXME: needs to use hash table instead of array
    if(numskins >= numskinsalloc)
    {
       numskinsalloc = numskinsalloc ? numskinsalloc*2 : 32;
@@ -291,6 +295,8 @@ static void P_ParseSkinCmd(char *line)
          while(*newsoundname == ' ')
             newsoundname++;
          
+         // FIXME: only increment past DS if DS is provided; otherwise,
+         // the value is a raw sound mnemonic already
          newsoundname += 2;        // ds
          
          newskin->sounds[i] = strdup(newsoundname);
@@ -304,6 +310,8 @@ void P_ParseSkin(int lumpnum)
    char *rover;
    char inputline[256];
    boolean comment;
+
+   // FIXME: revise to use finite-state-automaton parser and qstring buffers
 
    memset(inputline, 0, 256);
       
@@ -373,6 +381,9 @@ static void P_CacheFaces(skin_t *skin)
 static skin_t *P_SkinForName(char *s)
 {
    int i;
+
+   // FIXME: needs to use a chained hash table with front insertion
+   // now to properly support EDF skins
 
    while(*s==' ')
       s++;
