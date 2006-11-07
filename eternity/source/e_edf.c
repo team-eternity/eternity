@@ -206,14 +206,14 @@ const char *pickupnames[PFX_NUMFX] =
 // with size NUMSPRITES)
 int *pickupfx = NULL;
 
+// Hash tables
+//
 // Note:
 // For maximum efficiency, the number of chains in these hash tables
 // should be a prime number at least as large as the number of
 // elements to be contained in each respective table. Since definitions
 // can be added by the user, it is best to choose a number a bit larger
 // than necessary, which allows more of a buffer for user-defined types.
-
-// Temporary hash tables (used only during EDF processing)
 
 // Sprite hashing
 #define NUMSPRCHAINS 257
@@ -2053,13 +2053,9 @@ void E_ProcessEDF(const char *filename)
    E_ProcessStateDeltas(cfg); // see e_states.c
    E_ProcessThingDeltas(cfg); // see e_things.c
    
-   E_EDFLogPuts("Processing finished, freeing tables\n");
+   E_EDFLogPuts("Processing finished, freeing main cfg object\n");
 
-   // free unneeded hash tables and string arrays
-   Z_Free(sprchains);
-   Z_Free(sprnext);
-
-   E_EDFLogPuts("Freeing cfg object\n");
+   // haleyjd 11/07/06: sprite hash table is now persistent for skin support
 
    // free the config object
    cfg_free(cfg);
@@ -2083,9 +2079,8 @@ void E_ProcessEDF(const char *filename)
 //
 // E_SpriteNumForName
 //
-// Sprite hashing function, valid only during EDF parsing. Returns
-// the index of "name" in the sprnames array, if found. If not,
-// returns NUMSPRITES.
+// Sprite hashing function. Returns the index of "name" in the sprnames array,
+// if found. If not, returns NUMSPRITES.
 //
 int E_SpriteNumForName(const char *name)
 {

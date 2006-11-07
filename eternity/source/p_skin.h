@@ -61,6 +61,9 @@ struct skin_s
    const char  *sounds[NUMSKINSOUNDS];
    char        *facename;     // statusbar face
    patch_t     **faces;
+
+   // haleyjd 11/07/06: for hashing
+   struct skin_s *hashnext;
 };
 
 extern skin_t marine;

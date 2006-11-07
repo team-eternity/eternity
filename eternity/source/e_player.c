@@ -90,9 +90,9 @@ cfg_opt_t edf_playerclass_opts[] =
 // be added to the main skin list and fully initialized in p_skin.c along with
 // other normal skins.
 
-skin_t **edf_skins;
-int numedfskins, numedfskinsalloc;
+#define NUMEDFSKINCHAINS 17
 
+skin_t *edf_skins[NUMEDFSKINCHAINS];
 
 //==============================================================================
 //
@@ -107,14 +107,10 @@ int numedfskins, numedfskinsalloc;
 //
 static void E_AddPlayerClassSkin(skin_t *skin)
 {
-   if(numedfskins >= numedfskinsalloc)
-   {
-      edf_skins = realloc(edf_skins, 
-         (numedfskinsalloc = numedfskinsalloc ?
-          numedfskinsalloc*2 : 4) * sizeof *edf_skins);
-   }
-   edf_skins[numedfskins] = skin;
-   ++numedfskins;
+   int key = D_HashTableKey(skin->skinname) % NUMEDFSKINCHAINS;
+
+   skin->hashnext = edf_skins[key];
+   edf_skins[key] = skin;
 }
 
 //
@@ -138,32 +134,38 @@ static skin_t *E_CreatePlayerClassSkin(cfg_t *skinsec)
 
    // set sprite information
    newSkin->spritename = strdup(cfg_getstr(skinsec, ITEM_SKIN_SPRITE));
-   newSkin->sprite     = 0;  // handled by skin code
+
+   // check sprite for validity
+   if(E_SpriteNumForName(newSkin->spritename) == NUMSPRITES)
+   {
+      E_EDFLogPrintf("\t\tWarning: skin '%s' references invalid sprite '%s'\n",
+                     newSkin->skinname, newSkin->spritename);
+      newSkin->spritename = sprnames[blankSpriteNum]; // substitute blank sprite
+   }
+
+   newSkin->sprite = 0; // handled by skin code
 
    // set faces
    newSkin->facename = strdup(cfg_getstr(skinsec, ITEM_SKIN_FACES));
    newSkin->faces    = NULL; // handled by skin code
    
-   // set sounds
-   if(cfg_size(skinsec, ITEM_SKIN_SOUNDS) <= 0)
+   // set sounds if specified
+   if(cfg_size(skinsec, ITEM_SKIN_SOUNDS) > 0)
    {
-      // section is not optional, and error is not recoverable
-      E_EDFLoggedErr(2, "E_CreatePlayerClassSkin: required sounds section "
-                        "is missing for skin '%s'\n", newSkin->skinname);
-   }
-   sndsec = cfg_getsec(skinsec, ITEM_SKIN_SOUNDS);
+      sndsec = cfg_getsec(skinsec, ITEM_SKIN_SOUNDS);
 
-   // get sounds from the sounds section
-   newSkin->sounds[sk_plpain] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_PAIN));
-   newSkin->sounds[sk_pdiehi] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_DIEHI));
-   newSkin->sounds[sk_oof]    = strdup(cfg_getstr(sndsec, ITEM_SKINSND_OOF));
-   newSkin->sounds[sk_slop]   = strdup(cfg_getstr(sndsec, ITEM_SKINSND_GIB));
-   newSkin->sounds[sk_punch]  = strdup(cfg_getstr(sndsec, ITEM_SKINSND_PUNCH));
-   newSkin->sounds[sk_radio]  = strdup(cfg_getstr(sndsec, ITEM_SKINSND_RADIO));
-   newSkin->sounds[sk_pldeth] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_DIE));
-   newSkin->sounds[sk_plfall] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_FALL));
-   newSkin->sounds[sk_plfeet] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_FEET));
-   newSkin->sounds[sk_fallht] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_FALLHIT));
+      // get sounds from the sounds section
+      newSkin->sounds[sk_plpain] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_PAIN));
+      newSkin->sounds[sk_pdiehi] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_DIEHI));
+      newSkin->sounds[sk_oof]    = strdup(cfg_getstr(sndsec, ITEM_SKINSND_OOF));
+      newSkin->sounds[sk_slop]   = strdup(cfg_getstr(sndsec, ITEM_SKINSND_GIB));
+      newSkin->sounds[sk_punch]  = strdup(cfg_getstr(sndsec, ITEM_SKINSND_PUNCH));
+      newSkin->sounds[sk_radio]  = strdup(cfg_getstr(sndsec, ITEM_SKINSND_RADIO));
+      newSkin->sounds[sk_pldeth] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_DIE));
+      newSkin->sounds[sk_plfall] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_FALL));
+      newSkin->sounds[sk_plfeet] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_FEET));
+      newSkin->sounds[sk_fallht] = strdup(cfg_getstr(sndsec, ITEM_SKINSND_FALLHIT));
+   }
 
    // add the skin to the list
    E_AddPlayerClassSkin(newSkin);
