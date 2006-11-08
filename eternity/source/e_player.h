@@ -28,20 +28,25 @@
 #ifndef E_PLAYER_H__
 #define E_PLAYER_H__
 
+// macros
+#define NUMEDFSKINCHAINS 17
+
 //
 // playerclass_t structure
 //
-
 typedef struct playerclass_s
 {
    int foo;
 } playerclass_t;
 
+
+// EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 
 #define EDF_SEC_PCLASS "playerclass"
+extern cfg_opt_t edf_pclass_opts[];
 
-#endif
+#endif // NEED_EDF_DEFINITIONS
 
 #endif
 
