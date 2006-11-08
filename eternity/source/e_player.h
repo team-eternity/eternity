@@ -36,12 +36,15 @@
 //
 typedef struct playerclass_s
 {
-   int foo;
+   char *skinname;
 } playerclass_t;
 
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
+
+#define EDF_SEC_SKIN "skin"
+extern cfg_opt_t edf_skin_opts[];
 
 #define EDF_SEC_PCLASS "playerclass"
 extern cfg_opt_t edf_pclass_opts[];
