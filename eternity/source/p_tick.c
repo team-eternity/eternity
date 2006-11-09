@@ -142,6 +142,10 @@ void P_RemoveThinkerDelayed(thinker_t *thinker)
    {
       thinker_t *next = thinker->next;
       (next->prev = currentthinker = thinker->prev)->next = next;
+      
+      // haleyjd 11/09/06: remove from threaded list now
+      (thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
+      
       Z_Free(thinker);
    }
 }
@@ -163,7 +167,9 @@ void P_RemoveThinker(thinker_t *thinker)
    thinker->function = P_RemoveThinkerDelayed;
    
    // killough 8/29/98: remove immediately from threaded list
-   (thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
+   
+   // haleyjd 11/09/06: NO!   
+   //(thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
 }
 
 //

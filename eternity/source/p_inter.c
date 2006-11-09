@@ -1394,6 +1394,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       // If target's health is less than 50%, move it to the front of its list.
       // This will slightly increase the chances that enemies will choose to
       // "finish it off", but its main purpose is to alert friends of danger.
+
       if(target->health * 2 < target->info->spawnhealth)
       {
          thinker_t *cap = 

@@ -109,6 +109,8 @@ void E_EDFLogPuts(const char *msg);
 void E_EDFLogPrintf(const char *msg, ...);
 void E_EDFLoggedErr(int lv, const char *msg, ...);
 
+int  E_SpriteNumForName(const char *name);
+
 #endif
 
 // EOF

@@ -4306,6 +4306,16 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
    }
 }
 
+CONSOLE_COMMAND(banish, cf_notnet|cf_level)
+{
+   player_t *plyr = &players[consoleplayer];
+   fixed_t slope;
+
+   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+
+   if(linetarget)
+      P_RemoveMobj(linetarget);
+}
 
 void PE_AddCommands(void)
 {
@@ -4315,6 +4325,7 @@ void PE_AddCommands(void)
    C_AddCommand(whistle);
    C_AddCommand(mdk);
    C_AddCommand(mdkbomb);
+   C_AddCommand(banish);
 }
 
 //----------------------------------------------------------------------------

@@ -36,7 +36,11 @@
 //
 typedef struct playerclass_s
 {
-   char *skinname;
+   skin_t *defaultskin; // pointer to default skin
+
+   // hashing data
+   char mnemonic[33];
+   struct playerclass_s *next;
 } playerclass_t;
 
 

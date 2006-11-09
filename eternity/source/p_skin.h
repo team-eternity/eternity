@@ -58,12 +58,12 @@ struct skin_s
    char        *spritename;   // 4 chars
    char        *skinname;     // name of the skin: eg 'marine'
    spritenum_t sprite;        // set by initskins
-   const char  *sounds[NUMSKINSOUNDS];
+   char        *sounds[NUMSKINSOUNDS];
    char        *facename;     // statusbar face
    patch_t     **faces;
 
-   // haleyjd 11/07/06: for hashing
-   struct skin_s *hashnext;
+   // haleyjd 11/07/06: for EDF hashing
+   struct skin_s *ehashnext;
 };
 
 extern skin_t marine;

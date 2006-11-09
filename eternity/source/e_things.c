@@ -48,8 +48,6 @@
 #include "e_things.h"
 #include "e_sound.h"
 
-extern int E_SpriteNumForName(const char *name);
-
 // 7/24/05: This is now global, for efficiency's sake
 
 // The "Unknown" thing type, which is required, has its type

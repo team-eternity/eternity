@@ -26,6 +26,7 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_io.h"
 #include "p_skin.h"
 
 #include "Confuse/confuse.h"
@@ -92,9 +93,15 @@ cfg_opt_t edf_pclass_opts[] =
 
 skin_t *edf_skins[NUMEDFSKINCHAINS];
 
+// Player classes
+
+#define NUMEDFPCLASSCHAINS 17
+
+playerclass_t *edf_player_classes[NUMEDFPCLASSCHAINS];
+
 //==============================================================================
 //
-// Code
+// Skins
 //
 
 //
@@ -106,7 +113,7 @@ static void E_AddPlayerClassSkin(skin_t *skin)
 {
    int key = D_HashTableKey(skin->skinname) % NUMEDFSKINCHAINS;
 
-   skin->hashnext = edf_skins[key];
+   skin->ehashnext = edf_skins[key];
    edf_skins[key] = skin;
 }
 
@@ -120,12 +127,12 @@ static void E_AddPlayerClassSkin(skin_t *skin)
 static skin_t *E_EDFSkinForName(const char *name)
 {
    int key = D_HashTableKey(name) % NUMEDFSKINCHAINS;
-   skin_t *chain = edf_skins[key];
+   skin_t *skin = edf_skins[key];
 
-   while(chain && strcasecmp(name, chain->skinname))
-      chain = chain->hashnext;
+   while(skin && strcasecmp(name, skin->skinname))
+      skin = skin->ehashnext;
 
-   return chain;
+   return skin;
 }
 
 #define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
@@ -149,7 +156,7 @@ static void E_DoSkinSound(cfg_t *sndsec, boolean def, skin_t *skin, int idx,
 //
 // E_CreatePlayerSkin
 //
-// Creates and adds a new EDF 
+// Creates and adds a new EDF player skin
 //
 static void E_CreatePlayerSkin(cfg_t *skinsec)
 {
@@ -196,15 +203,13 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       // check sprite for validity
       if(E_SpriteNumForName(newSkin->spritename) == NUMSPRITES)
       {
-         E_EDFLogPrintf("\t\tWarning: skin '%s' references invalid sprite '%s'\n",
+         E_EDFLogPrintf("\t\tWarning: skin '%s' references unknown sprite '%s'\n",
                         newSkin->skinname, newSkin->spritename);
-         
-         // substitute player sprite
          newSkin->spritename = sprnames[playerSpriteNum];
       }
 
       // sprite has been reset, so clear the sprite number
-      newSkin->sprite = 0; // handled by skin code
+      newSkin->sprite = -1; // handled by skin code
    }
 
    // set faces
@@ -256,19 +261,98 @@ void E_ProcessSkins(cfg_t *cfg)
       E_CreatePlayerSkin(cfg_getnsec(cfg, EDF_SEC_SKIN, i));
 }
 
+//==============================================================================
+//
+// Player Classes
+//
+
+//
+// E_AddPlayerClass
+//
+// Adds a player class object to the playerclass hash table.
+//
+static void E_AddPlayerClass(playerclass_t *pc)
+{
+   int key = D_HashTableKey(pc->mnemonic) % NUMEDFPCLASSCHAINS;
+
+   pc->next = edf_player_classes[key];
+   edf_player_classes[key] = pc;
+}
+
+//
+// E_PlayerClassForName
+//
+// Returns a player class given a name, or NULL if no such class exists.
+//
+playerclass_t *E_PlayerClassForName(const char *name)
+{
+   int key = D_HashTableKey(name) % NUMEDFPCLASSCHAINS;
+   playerclass_t *pc = edf_player_classes[key];
+
+   while(pc && strcasecmp(pc->mnemonic, name))
+      pc = pc->next;
+
+   return pc;
+}
+
 //
 // E_ProcessPlayerClass
 //
 // Processes a single EDF player class section.
 //
-static void E_ProcessPlayerClass(cfg_t *pc)
+static void E_ProcessPlayerClass(cfg_t *pcsec)
 {
    const char *tempstr;
+   playerclass_t *pc;
+   boolean def;
 
-   // get mnemonic (section title)
-   tempstr = cfg_title(pc);
+   // get mnemonic from section title
+   tempstr = cfg_title(pcsec);
 
-   E_EDFLogPrintf("\t\tProcessing class %s\n", tempstr);
+   // verify mnemonic
+   if(strlen(tempstr) > 32)
+      E_EDFLoggedErr(2, "E_ProcessPlayerClass: invalid mnemonic %s\n", tempstr);
+
+   if(!(pc = E_PlayerClassForName(tempstr)))
+   {
+      // create a new player class
+      pc = malloc(sizeof(playerclass_t));
+      memset(pc, 0, sizeof(playerclass_t));
+
+      // set mnemonic and hash it
+      strncpy(pc->mnemonic, tempstr, 33);
+      E_AddPlayerClass(pc);
+
+      E_EDFLogPrintf("\t\tCreating player class %s\n", pc->mnemonic);
+
+      def = true;
+   }
+   else
+   {
+      // edit an existing class
+      E_EDFLogPrintf("\t\tModifying player class %s\n", pc->mnemonic);
+      def = false;
+   }
+
+   // default skin name
+   if(IS_SET(pcsec, ITEM_PCLASS_DEFAULTSKIN))
+   {
+      tempstr = cfg_getstr(pcsec, ITEM_PCLASS_DEFAULTSKIN);
+
+      // possible error: must specify a default skin!
+      if(!tempstr)
+      {
+         E_EDFLoggedErr(2, "E_ProcessPlayerClass: missing required defaultskin "
+                           "for player class %s\n", pc->mnemonic);
+      }
+
+      // possible error 2: skin specified MUST exist
+      if(!(pc->defaultskin = E_EDFSkinForName(tempstr)))
+      {
+         E_EDFLoggedErr(2, "E_ProcessPlayerClass: invalid defaultskin '%s' "
+                           "for player class %s\n", tempstr, pc->mnemonic);
+      }
+   }
 }
 
 //

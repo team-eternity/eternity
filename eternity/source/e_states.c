@@ -45,8 +45,6 @@
 #include "e_string.h"
 #include "e_states.h"
 
-extern int E_SpriteNumForName(const char *name);
-
 // 7/24/05: This is now global, for efficiency's sake
 
 // The "S_NULL" state, which is required, has its number resolved
