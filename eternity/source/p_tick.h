@@ -41,7 +41,9 @@ void P_UpdateThinker(thinker_t *thinker);   // killough 8/29/98
 void P_SetTarget(mobj_t **mo, mobj_t *target);   // killough 11/98
 
 // killough 8/29/98: threads of thinkers, for more efficient searches
-typedef enum {
+typedef enum 
+{
+  th_delete,  // haleyjd 11/09/06: giant bug fix
   th_misc,
   th_friends,
   th_enemies,

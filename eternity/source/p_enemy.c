@@ -1480,7 +1480,8 @@ void A_Chase(mobj_t *actor)
       superfriend = P_SuperFriend(actor);
 
   // check for melee attack
-   if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) && !superfriend)
+   if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) && 
+      !superfriend)
    {
       // haleyjd 05/01/05: Detect and prevent infinite recursion if
       // Chase is called from a thing's attack state
