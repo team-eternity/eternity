@@ -1,0 +1,11 @@
+# EDF File for Eternity Engine v3.33.50
+#
+# This file contains player-related definitions, including
+# skins, player classes, and weapons.
+
+skin marine {}
+
+playerclass DoomMarine
+{
+   defaultskin = marine
+}

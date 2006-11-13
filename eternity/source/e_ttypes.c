@@ -286,7 +286,7 @@ static void E_ProcessSplashes(cfg_t *cfg)
    unsigned int numSplashes = cfg_size(cfg, EDF_SEC_SPLASH);
 
    E_EDFLogPrintf("\t\t* Processing splashes\n"
-                  "\t\t\t%d splashes defined\n", numSplashes);
+                  "\t\t\t%d splash(es) defined\n", numSplashes);
 
    for(i = 0; i < numSplashes; ++i)
    {
@@ -480,7 +480,7 @@ static void E_ProcessTerrains(cfg_t *cfg)
    unsigned int numTerrains = cfg_size(cfg, EDF_SEC_TERRAIN);
 
    E_EDFLogPrintf("\t\t* Processing terrain\n"
-                  "\t\t\t%d terrains defined\n", numTerrains);
+                  "\t\t\t%d terrain(s) defined\n", numTerrains);
 
    E_AddSolidTerrain();
 
@@ -497,7 +497,7 @@ static void E_ProcessTerrainDeltas(cfg_t *cfg)
    unsigned int numTerrains = cfg_size(cfg, EDF_SEC_TERDELTA);
 
    E_EDFLogPrintf("\t\t* Processing terrain deltas\n"
-                  "\t\t\t%d terrain deltas defined\n", numTerrains);
+                  "\t\t\t%d terrain delta(s) defined\n", numTerrains);
 
    for(i = 0; i < numTerrains; ++i)
    {
@@ -676,7 +676,7 @@ static void E_ProcessFloors(cfg_t *cfg)
    unsigned int numFloors = cfg_size(cfg, EDF_SEC_FLOOR);
 
    E_EDFLogPrintf("\t\t* Processing floors\n"
-                  "\t\t\t%d floors defined\n", numFloors);
+                  "\t\t\t%d floor(s) defined\n", numFloors);
 
    for(i = 0; i < numFloors; ++i)
    {

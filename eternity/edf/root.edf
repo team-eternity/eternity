@@ -9,5 +9,6 @@ include("things.edf")
 include("cast.edf")
 include("misc.edf")
 include("terrain.edf")
+include("player.edf")
 
 userinclude("user.edf")
