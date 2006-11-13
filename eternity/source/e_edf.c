@@ -44,6 +44,7 @@
 // * terrain.edf .. Contains terrain-related structures.
 //                  See e_ttypes.c for implementation.
 // * misc.edf ..... Miscellaneous stuff
+// * player.edf ... EDF skins, weapons, and player classes
 //
 // EDF can also be loaded from WAD lumps, starting from the newest
 // lump named "EDFROOT". EDF lumps currently take total precedence
@@ -93,6 +94,7 @@
 #include "e_states.h"
 #include "e_ttypes.h"
 #include "mn_emenu.h"
+#include "e_player.h"
 
 // EDF Keywords used by features implemented in this module
 
@@ -298,6 +300,8 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
    CFG_SEC(EDF_SEC_FRAME,     edf_frame_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_THING,     edf_thing_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_SKIN,      edf_skin_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_PCLASS,    edf_pclass_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(SEC_CAST,          cast_opts,         CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SPLASH,    edf_splash_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
@@ -409,6 +413,16 @@ static cfg_opt_t terrain_only_opts[] =
    DEF_FUNCTIONS,
    CFG_END()
 };
+
+// Options for stuff in player.edf only
+static cfg_opt_t pclass_only_opts[] =
+{
+   CFG_SEC(EDF_SEC_SKIN,      edf_skin_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_PCLASS,    edf_pclass_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   DEF_FUNCTIONS,
+   CFG_END()
+};
+
 
 //
 // Separate Lump opt Arrays. These are for lumps that can be parsed
@@ -1635,6 +1649,41 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
       cfg_free(thingcfg);
 }
 
+//
+// E_ProcessPlayerData
+//
+// Processes all player-related sections.
+//
+static void E_ProcessPlayerData(cfg_t *cfg)
+{
+   E_ProcessSkins(cfg);
+   E_ProcessPlayerClasses(cfg);
+}
+
+//
+// E_TryDefaultPlayerData
+//
+// Last-chance defaults processing for player data. This is invoked after all
+// EDF lump processing in order to give lumps a chance to fill in the missing
+// required definitions.
+//
+static void E_TryDefaultPlayerData(void)
+{
+   cfg_t *pcfg;
+   const char *pfn;
+
+   E_EDFLogPuts("\t\tAttempting to load default player.edf\n");
+
+   pfn  = E_BuildDefaultFn("player.edf");
+   pcfg = E_ParseEDFFile(pfn, pclass_only_opts);
+
+   E_ProcessPlayerData(pcfg);
+
+   // free the temporary cfg
+   cfg_free(pcfg);
+}
+
+
 static void E_TryDefaultCast(void);
 
 //
@@ -1969,6 +2018,10 @@ void E_ProcessLastChance(void)
    // terrain defaults
    if(E_NeedDefaultTerrain())
       E_TryDefaultTerrain();
+
+   // player data defaults
+   if(E_NeedDefaultPlayerData())
+      E_TryDefaultPlayerData();
 }
 
 // Main EDF Routine
@@ -2032,6 +2085,9 @@ void E_ProcessEDF(const char *filename)
    // allocate frames and things, build name hash tables, and
    // process frame and thing definitions
    E_ProcessStatesAndThings(cfg);
+
+   // 11/13/06: process player sections (skins, pclasses, weapons)
+   E_ProcessPlayerData(cfg);
 
    // process cast call
    E_ProcessCast(cfg);

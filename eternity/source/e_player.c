@@ -101,6 +101,16 @@ playerclass_t *edf_player_classes[NUMEDFPCLASSCHAINS];
 
 //==============================================================================
 //
+// Static Variables
+//
+
+// These numbers are used to track the number of definitions processed in order
+// to enable last-chance defaults fallback.
+static int num_edf_skins;
+static int num_edf_pclasses;
+
+//==============================================================================
+//
 // Skins
 //
 
@@ -111,7 +121,7 @@ playerclass_t *edf_player_classes[NUMEDFPCLASSCHAINS];
 //
 static void E_AddPlayerClassSkin(skin_t *skin)
 {
-   int key = D_HashTableKey(skin->skinname) % NUMEDFSKINCHAINS;
+   unsigned int key = D_HashTableKey(skin->skinname) % NUMEDFSKINCHAINS;
 
    skin->ehashnext = edf_skins[key];
    edf_skins[key] = skin;
@@ -126,7 +136,7 @@ static void E_AddPlayerClassSkin(skin_t *skin)
 //
 static skin_t *E_EDFSkinForName(const char *name)
 {
-   int key = D_HashTableKey(name) % NUMEDFSKINCHAINS;
+   unsigned int key = D_HashTableKey(name) % NUMEDFSKINCHAINS;
    skin_t *skin = edf_skins[key];
 
    while(skin && strcasecmp(name, skin->skinname))
@@ -186,6 +196,8 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       E_AddPlayerClassSkin(newSkin);
 
       def = true;
+
+      ++num_edf_skins; // keep track of how many we've processed
    }
    else
    {
@@ -273,7 +285,7 @@ void E_ProcessSkins(cfg_t *cfg)
 //
 static void E_AddPlayerClass(playerclass_t *pc)
 {
-   int key = D_HashTableKey(pc->mnemonic) % NUMEDFPCLASSCHAINS;
+   unsigned int key = D_HashTableKey(pc->mnemonic) % NUMEDFPCLASSCHAINS;
 
    pc->next = edf_player_classes[key];
    edf_player_classes[key] = pc;
@@ -286,7 +298,7 @@ static void E_AddPlayerClass(playerclass_t *pc)
 //
 playerclass_t *E_PlayerClassForName(const char *name)
 {
-   int key = D_HashTableKey(name) % NUMEDFPCLASSCHAINS;
+   unsigned int key = D_HashTableKey(name) % NUMEDFPCLASSCHAINS;
    playerclass_t *pc = edf_player_classes[key];
 
    while(pc && strcasecmp(pc->mnemonic, name))
@@ -326,6 +338,8 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       E_EDFLogPrintf("\t\tCreating player class %s\n", pc->mnemonic);
 
       def = true;
+
+      ++num_edf_pclasses; // keep track of how many we've processed
    }
    else
    {
@@ -371,6 +385,19 @@ void E_ProcessPlayerClasses(cfg_t *cfg)
 
    for(i = 0; i < count; ++i)
       E_ProcessPlayerClass(cfg_getnsec(cfg, EDF_SEC_PCLASS, i));
+}
+
+//
+// E_NeedDefaultPlayerData
+//
+// Returns true if EDF needs to perform last-chance defaults parsing for
+// player.edf. This is true in the event that the number of ANY of the
+// sections processed in this file is zero (at least one of each is
+// required).
+//
+boolean E_NeedDefaultPlayerData(void)
+{
+   return !(num_edf_skins && num_edf_pclasses);
 }
 
 // EOF
