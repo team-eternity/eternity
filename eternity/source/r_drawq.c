@@ -553,10 +553,14 @@ static void R_FlushQuadFuzz(void)
    register byte *dest = ylookup[commontop] + columnofs[startx];
    register int count;
    int fuzz1, fuzz2, fuzz3, fuzz4;
+
+   // haleyjd 11/11/06: changed to be more like original;
+   // special thanks to proff from the PrBoom team
    fuzz1 = fuzzpos;
-   fuzz2 = (fuzz1 + MAX_SCREENHEIGHT) % FUZZTABLE;
-   fuzz3 = (fuzz2 + MAX_SCREENHEIGHT) % FUZZTABLE;
-   fuzz4 = (fuzz3 + MAX_SCREENHEIGHT) % FUZZTABLE;
+   fuzz2 = (fuzz1 + tempyl[1]) % FUZZTABLE;
+   fuzz3 = (fuzz2 + tempyl[2]) % FUZZTABLE;
+   fuzz4 = (fuzz3 + tempyl[3]) % FUZZTABLE;
+
 
    count = commonbot - commontop + 1;
 
