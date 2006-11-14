@@ -46,7 +46,9 @@
 #include "d_io.h" // SoM 3/13/02: Get rid of strncasecmp warnings in VC++
 #include "e_edf.h"
 #include "e_sound.h"
+#include "e_player.h"
 
+/*
 skin_t marine = 
 {
    SKIN_PLAYER, // haleyjd 09/26/04: skin type
@@ -68,17 +70,19 @@ skin_t marine =
    "STF", 
    default_faces
 };
+*/
 
-int numskins = 0;      // haleyjd 03/22/03
-int numskinsalloc = 0; // haleyjd 03/22/03
-skin_t **skins = NULL;
+static int numskins = 0;      // haleyjd 03/22/03
+static int numskinsalloc = 0; // haleyjd 03/22/03
+static int numedfskins;       // haleyjd 11/14/06
+static skin_t **skins = NULL;
 
 static skin_t **monster_skins = NULL; // haleyjd 09/26/04
 
 char **spritelist = NULL;
 char *default_skin = NULL;     // name of currently selected skin
 
-const char *skinsoundnames[NUMSKINSOUNDS] =
+static const char *skinsoundnames[NUMSKINSOUNDS] =
 {
    "dsplpain",
    "dspdiehi",
@@ -92,11 +96,27 @@ const char *skinsoundnames[NUMSKINSOUNDS] =
    "dsfallht",
 };
 
+static char *skinsounddefs[NUMSKINSOUNDS] =
+{
+   "plpain",
+   "pdiehi",
+   "oof",
+   "slop",
+   "punch",
+   "radio",
+   "pldeth",
+   "plfall",
+   "plfeet",
+   "fallht",
+};
+
 // forward prototypes
 static void P_AddSkin(skin_t *newskin);
-static void P_CreateMarine(void);
+//static void P_CreateMarine(void);
+static void P_AddEDFSkins(void);
 static void P_CacheFaces(skin_t *skin);
 static void P_InitMonsterSkins(void);
+static skin_t *P_SkinForName(char *s);
 
 /*
 //
@@ -127,7 +147,7 @@ static void P_ResolveSkinSounds(skin_t *skin)
    for(i = 0; i < NUMSKINSOUNDS; ++i)
    {
       if(!skin->sounds[i])
-         skin->sounds[i] = marine.sounds[i];         
+         skin->sounds[i] = skinsounddefs[i];         
    }
 }
 
@@ -144,23 +164,30 @@ void P_InitSkins(void)
 {
    int i;
    char **currentsprite;
+   int numskinsprites;
 
    // haleyjd 09/26/04: initialize monster skins list
    P_InitMonsterSkins();
 
-   // FIXME: get rid of marine and add EDF skins here
+   // create default gamemode skin
+   // P_CreateMarine();
 
-   // create default gamemode skin -- TODO: heretic support
-   P_CreateMarine();
+   // FIXME: problem here with preferences
+   if(default_skin == NULL) 
+      default_skin = Z_Strdup("marine", PU_STATIC, 0);
+
+   // haleyjd 11/14/06: add EDF skins
+   P_AddEDFSkins();
 
    // allocate spritelist
    if(spritelist)
       Z_Free(spritelist);
    
-   // haleyjd 05/12/03: don't count the marine skin
-   // FIXME: don't count any skin with an already-existing sprite
-   spritelist = Z_Malloc(((numskins-1)+NUMSPRITES+1)*sizeof(char *),
-                         PU_STATIC, 0);
+   // don't count any skin with an already-existing sprite
+   if((numskinsprites = numskins - numedfskins) < 0)
+      I_Error("P_InitSkins: numedfskins > numskins\n");
+
+   spritelist = malloc((numskinsprites + NUMSPRITES + 1) * sizeof(char *));
 
    // add the normal sprites
    currentsprite = spritelist;
@@ -175,29 +202,22 @@ void P_InitSkins(void)
    // add skin sprites
    for(i = 0; i < numskins; ++i)
    {
-      // FIXME: don't add any sprite that already exists
-      // PROBLEM: sprite hashing in EDF is transient and not available at this point
-      // Keep EDF sprite hash around?
-
-      if(skins[i] == &marine) // do not add the marine sprite again
-         continue;
-      *currentsprite   = skins[i]->spritename;
-      skins[i]->sprite = currentsprite - spritelist;
+      // haleyjd 11/14/06: don't add EDF skin sprites
+      if(!skins[i]->edfskin)
+      {
+         *currentsprite   = skins[i]->spritename;
+         skins[i]->sprite = currentsprite - spritelist;
+         currentsprite++;
+      }
       P_ResolveSkinSounds(skins[i]); // haleyjd 10/17/05: resolve sounds
       P_CacheFaces(skins[i]);
-      currentsprite++;
    }
 
    *currentsprite = NULL;     // end in null
 }
 
-//
-// P_CreateMarine
-//
-// Initialize the default DOOM marine skin
-//
-// haleyjd 03/22/03: partially rewritten
-//
+
+/*
 static void P_CreateMarine(void)
 {
    static boolean marine_created = false;
@@ -207,12 +227,39 @@ static void P_CreateMarine(void)
 
    marine.sprite = playerSpriteNum;
    
-   if(default_skin == NULL) 
-      default_skin = Z_Strdup("marine", PU_STATIC, 0);
-   
    P_AddSkin(&marine);
    
    marine_created = true;
+}
+*/
+
+//
+// P_AddEDFSkins
+//
+// haleyjd 11/14/06: Replaces P_CreateMarine. Adds all EDF player skins to the
+// main skin list.
+//
+static void P_AddEDFSkins(void)
+{
+   int i;
+
+   // go down every hash chain
+   for(i = 0; i < NUMEDFSKINCHAINS; ++i)
+   {
+      skin_t *chain = edf_skins[i];
+
+      while(chain)
+      {
+         // add the skin only if one of this name doesn't already exist
+         if(!P_SkinForName(chain->skinname))
+         {
+            P_AddSkin(chain);
+            ++numedfskins;
+         }
+
+         chain = chain->ehashnext;
+      }
+   }
 }
 
 //
@@ -316,13 +363,17 @@ void P_ParseSkin(int lumpnum)
    memset(inputline, 0, 256);
       
    newskin = Z_Malloc(sizeof(skin_t), PU_STATIC, 0);
+   memset(newskin, 0, sizeof(skin_t));
+
    newskin->spritename = Z_Malloc(5, PU_STATIC, 0);
    strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
    newskin->spritename[4] = 0;
-   newskin->facename = "STF";      // default status bar face
-   newskin->faces = 0;
 
-   newskin->type = SKIN_PLAYER; // haleyjd: it's a player skin
+   newskin->facename = "STF";      // default status bar face
+   newskin->faces    = NULL;
+
+   newskin->type    = SKIN_PLAYER; // haleyjd: it's a player skin
+   newskin->edfskin = false;       // haleyjd: it's not an EDF skin
 
    // set sounds to defaults
    // haleyjd 10/17/05: nope, can't do it here now, see top of file
@@ -398,6 +449,19 @@ static skin_t *P_SkinForName(char *s)
    }
 
    return NULL;
+}
+
+//
+// P_GetDefaultSkin
+//
+// Gets the default skin for a player.
+//
+// TODO: Make this use player classes. For now, return the marine skin
+// just to keep things working while the class system is implemented.
+//
+skin_t *P_GetDefaultSkin(player_t *player)
+{
+   return P_SkinForName("marine");
 }
 
 void P_SetSkin(skin_t *skin, int playernum)

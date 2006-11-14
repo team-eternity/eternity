@@ -192,6 +192,9 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       // type is always player
       newSkin->type = SKIN_PLAYER;
 
+      // is an EDF-created skin
+      newSkin->edfskin = true;
+
       // add the new skin to the list
       E_AddPlayerClassSkin(newSkin);
 
@@ -220,8 +223,8 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
          newSkin->spritename = sprnames[playerSpriteNum];
       }
 
-      // sprite has been reset, so clear the sprite number
-      newSkin->sprite = -1; // handled by skin code
+      // sprite has been reset, so reset the sprite number
+      newSkin->sprite = E_SpriteNumForName(newSkin->spritename);
    }
 
    // set faces

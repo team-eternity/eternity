@@ -181,7 +181,10 @@ void P_UnArchivePlayers(void)
          // will be set when unarc thinker
          players[i].mo = NULL;
          players[i].attacker = NULL;
-         players[i].skin = &marine;  // reset skin
+         // FIXME: need to save skin and attempt to restore it; if the
+         // indicated skin didn't exist, we'd then fall back to the default
+         // for the player's class
+         players[i].skin = P_GetDefaultSkin(&players[i]);  // reset skin
          players[i].attackdown = players[i].usedown = false;  // sf
          players[i].cmd.buttons = 0;    // sf
       }
@@ -535,7 +538,10 @@ void P_UnArchiveThinkers(void)
          int playernum = (int)mobj->player - 1;
 
          (mobj->player = &players[playernum])->mo = mobj;
-         P_SetSkin(&marine, playernum); // haleyjd
+         
+         // FIXME: Need to save skin and attempt to restore, then fall back
+         // to default for player class if non-existant
+         P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
       }
 
       P_SetThingPosition(mobj);

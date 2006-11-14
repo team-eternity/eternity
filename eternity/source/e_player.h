@@ -31,6 +31,8 @@
 // macros
 #define NUMEDFSKINCHAINS 17
 
+extern skin_t *edf_skins[NUMEDFSKINCHAINS];
+
 //
 // playerclass_t structure
 //

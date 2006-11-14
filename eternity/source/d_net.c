@@ -576,7 +576,7 @@ void D_InitPlayers (void)
    {
       sprintf(players[i].name, "player %i", i+1);
       players[i].colormap = i % TRANSLATIONCOLOURS;
-      players[i].skin = &marine;
+      players[i].skin = P_GetDefaultSkin(&players[i]);
    }
 }
 

@@ -23,6 +23,7 @@
 
 typedef struct skin_s skin_t;
 
+#include "d_player.h"
 #include "info.h"
 #include "sounds.h"
 #include "st_stuff.h"
@@ -64,12 +65,11 @@ struct skin_s
 
    // haleyjd 11/07/06: for EDF hashing
    struct skin_s *ehashnext;
+   boolean edfskin; // if true, is an EDF skin
 };
 
-extern skin_t marine;
-extern skin_t **skins;
-extern char **spritelist;       // new spritelist, same format as sprnames
-        // in info.c, but includes skins sprites.
+extern char **spritelist; // new spritelist, same format as sprnames
+                          // in info.c, but includes skins sprites.
 
 void P_InitSkins(void);
 
@@ -77,6 +77,8 @@ void P_ListSkins(void);
 void P_ChangeSkin(void);
 void P_ParseSkin(int lumpnum);
 void P_SetSkin(skin_t *skin, int playernum);
+
+skin_t *P_GetDefaultSkin(player_t *player);
 
 skin_t *P_GetMonsterSkin(spritenum_t sprnum);
 
