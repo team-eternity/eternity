@@ -181,10 +181,7 @@ void P_UnArchivePlayers(void)
          // will be set when unarc thinker
          players[i].mo = NULL;
          players[i].attacker = NULL;
-         // FIXME: need to save skin and attempt to restore it; if the
-         // indicated skin didn't exist, we'd then fall back to the default
-         // for the player's class
-         players[i].skin = P_GetDefaultSkin(&players[i]);  // reset skin
+         players[i].skin = NULL;
          players[i].attackdown = players[i].usedown = false;  // sf
          players[i].cmd.buttons = 0;    // sf
       }
