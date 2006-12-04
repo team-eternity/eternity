@@ -226,6 +226,7 @@ gameinfo_t giDoomSW =
    Game_DOOM,        // type
    GIF_SHAREWARE,    // flags
 
+   "doom",           // gameDir
    DOOMRESWAD,       // resourceFmt
 
    170,              // titleTics
@@ -307,6 +308,7 @@ gameinfo_t giDoomReg =
    Game_DOOM,        // type
    GIF_HASDISK,      // flags -- note: patched for shareware DOOM
 
+   "doom",           // gameDir
    DOOMRESWAD,       // resourceFmt
    
    170,              // titleTics
@@ -383,6 +385,7 @@ gameinfo_t giDoomRetail =
    Game_DOOM,        // type
    0,                // flags
 
+   "doom",           // gameDir
    DOOMRESWAD,       // resourceFmt
 
    170,              // titleTics
@@ -458,6 +461,7 @@ gameinfo_t giDoomCommercial =
    Game_DOOM,        // type
    GIF_HASDISK,      // flags
 
+   "doom",           // gameDir
    DOOMRESWAD,       // resourceFmt
 
    11*TICRATE,       // titleTics
@@ -533,6 +537,7 @@ gameinfo_t giHereticSW =
    Game_Heretic,     // type
    GIF_SHAREWARE | GIF_MNBIGFONT, // flags
 
+   "heretic",        // gameDir
    HTICRESWAD,       // resourceFmt
 
    210,              // titleTics
@@ -612,6 +617,7 @@ gameinfo_t giHereticReg =
    Game_Heretic,     // type   
    GIF_MNBIGFONT,    // flags
 
+   "heretic",        // gameDir
    HTICRESWAD,       // resourceFmt
 
    210,              // titleTics

@@ -124,11 +124,14 @@ boolean advancedemo;
 
 extern boolean timingdemo, singledemo, demoplayback, fastdemo; // killough
 
-char    wadfile[PATH_MAX+1];       // primary wad file
-char    mapdir[PATH_MAX+1];        // directory of development maps
-char    basedefault[PATH_MAX+1];   // default file
-char    baseiwad[PATH_MAX+1];      // jff 3/23/98: iwad directory
-char    basesavegame[PATH_MAX+1];  // killough 2/16/98: savegame directory
+char    wadfile[PATH_MAX+1];      // primary wad file
+char    mapdir[PATH_MAX+1];       // directory of development maps
+char    basedefault[PATH_MAX+1];  // default file
+char    baseiwad[PATH_MAX+1];     // jff 3/23/98: iwad directory
+char    basesavegame[PATH_MAX+1]; // killough 2/16/98: savegame directory
+
+char    basepath[PATH_MAX+1];     // haleyjd 11/23/06: path of "base" directory
+char    basegamepath[PATH_MAX+1]; // haleyjd 11/23/06: path of game directory
 
 // set from iwad: level to start new games from
 char firstlevel[9] = "";     
@@ -664,6 +667,84 @@ char *D_DoomExeName(void)
    return name;
 }
 
+//
+// D_SetBasePath
+//
+// haleyjd 11/23/06: Sets the path to the "base" folder, where Eternity stores
+// all of its data.
+//
+static void D_SetBasePath(void)
+{
+   int p;
+   char *s;
+   struct stat sbuf;
+   char basedir[PATH_MAX + 1];
+
+   memset(basedir, 0, sizeof(basedir));
+   
+   // Priority:
+   // 1. Command-line argument "-base"
+   // 2. Environment variable "ETERNITYBASE"
+   // 3. /base under DoomExeDir
+
+   if((p = M_CheckParm("-base")) && p < myargc - 1)
+      psnprintf(basedir, PATH_MAX + 1, "%s", myargv[p + 1]);
+   else if((s = getenv("ETERNITYBASE")))
+      psnprintf(basedir, PATH_MAX + 1, "%s", s);
+   else
+      psnprintf(basedir, PATH_MAX + 1, "%s/%s", D_DoomExeDir(), "base");
+
+   if(!stat(basedir, &sbuf)) // check for existence
+   {
+      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+      {
+         strncpy(basepath, basedir, PATH_MAX + 1);
+         basepath[PATH_MAX] = '\0';
+      }
+      else
+         I_Error("Base path %s is not a directory.\n", basedir);
+   }
+   else
+      I_Error("Base path %s does not exist\n", basedir);
+}
+
+//
+// D_SetGamePath
+//
+// haleyjd 11/23/06: Sets the game path under the base path. This allows
+// separate defaults, save games, etc. for different games.
+//
+static void D_SetGamePath(void)
+{
+   int p;
+   struct stat sbuf;
+   char gamedir[PATH_MAX + 1];
+
+   if((p = M_CheckParm("-game")) && p < myargc - 1)
+   {
+      psnprintf(gamedir, sizeof(gamedir), "%s/%s", 
+                basepath, myargv[p + 1]);
+   }
+   else
+   {
+      psnprintf(gamedir, sizeof(gamedir), "%s/%s",
+                basepath, gameModeInfo->gameDir);
+   }
+
+   if(!stat(gamedir, &sbuf)) // check for existence
+   {
+      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+      {
+         strncpy(basegamepath, gamedir, PATH_MAX + 1);
+         basegamepath[PATH_MAX] = '\0';
+      }
+      else
+         I_Error("Game path %s is not a directory.\n", gamedir);
+   }
+   else
+      I_Error("Game path %s does not exist\n", gamedir);
+}
+
 #define isIWAD(name) \
    ((name)[0] == 'I' && (name)[1] == 'W' && \
     (name)[2] == 'A' && (name)[3] == 'D')
@@ -1032,16 +1113,12 @@ char *FindIWADFile(void)
 //
 static void D_LoadResourceWad(void)
 {
-   char filestr[PATH_MAX+1];
-   
-   // get smmu.wad from the same directory as smmu.exe
-   // 25/10/99: use same name as exe
-   
+   char filestr[PATH_MAX + 1];
+      
    // haleyjd 06/04/02: lengthened filestr, memset to 0
-   memset(filestr, 0, PATH_MAX+1);
+   memset(filestr, 0, PATH_MAX + 1);
    
-   psnprintf(filestr, sizeof(filestr), gameModeInfo->resourceFmt,
-             D_DoomExeDir(), D_DoomExeName());
+   psnprintf(filestr, sizeof(filestr), "%s/%s", basegamepath, "eternity.wad");
    
    NormalizeSlashes(filestr);
    D_AddFile(filestr);
@@ -1077,24 +1154,6 @@ void IdentifyVersion(void)
    int         i;    //jff 3/24/98 index of args on commandline
    struct stat sbuf; //jff 3/24/98 used to test save path for existence
    char *iwad;
-
-   // get config file from same directory as executable
-   // killough 10/98
-   // haleyjd 07/04/02: fix for when doom exe dir is ""
-   
-   psnprintf(basedefault, sizeof(basedefault),
-             "%s/%s.cfg", D_DoomExeDir(), D_DoomExeName());
-
-   // set save path to -save parm or current dir
-
-   strcpy(basesavegame, ".");       //jff 3/27/98 default to current dir
-   if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
-   {
-      if(!stat(myargv[i+1],&sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
-         strcpy(basesavegame,myargv[i+1]);  //jff 3/24/98 use that for savegame
-      else
-         puts("Error: -save path does not exist, using current dir");  // killough 8/8/98
-   }
 
    // locate the IWAD and determine game mode from it
    
@@ -1194,9 +1253,32 @@ void IdentifyVersion(void)
          puts("Unknown Game Version, may not work");  // killough 8/8/98
       }
 
-      // haleyjd 03/10/03: add eternity.wad before the IWAD, at
-      // request of fraggle -- this allows better compatibility
-      // with new IWADs
+      // haleyjd 11/23/06: set base/game paths
+      D_SetBasePath();
+      D_SetGamePath();
+
+      // haleyjd 11/23/06: set basedefault here, and use basegamepath.
+      // get config file from same directory as executable
+      // killough 10/98
+      
+      psnprintf(basedefault, sizeof(basedefault),
+                "%s/%s.cfg", basegamepath, D_DoomExeName());
+
+      // haleyjd 11/23/06: set basesavegame here, and use basegamepath
+      // set save path to -save parm or current dir
+      
+      strcpy(basesavegame, basegamepath);
+      
+      if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
+      {
+         if(!stat(myargv[i+1],&sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
+            strcpy(basesavegame, myargv[i+1]);  //jff 3/24/98 use that for savegame
+         else
+            puts("Error: -save path does not exist, using game path");  // killough 8/8/98
+      }
+
+      // haleyjd 03/10/03: add eternity.wad before the IWAD, at request of 
+      // fraggle -- this allows better compatibility with new IWADs
       D_LoadResourceWad();
 
       D_AddFile(iwad);
@@ -1625,8 +1707,7 @@ static void D_LoadEDF(gfs_t *gfs)
       // use default
       if(!D_LooseEDF(edfname)) // check for loose files (drag and drop)
       {
-         psnprintf(edfname, sizeof(edfname), "%s/%s", 
-                   D_DoomExeDir(), "root.edf");
+         psnprintf(edfname, sizeof(edfname), "%s/%s",  basepath, "root.edf");
 
          // disable other game modes' definitions implicitly ONLY
          // when using the default root.edf
@@ -1877,7 +1958,7 @@ static void D_DoomInit(void)
    printf("\n"); // gap
    
    modifiedgame = false;
-   
+
    // jff 1/24/98 set both working and command line value of play parms
    // sf: make boolean for console
    nomonsters  = clnomonsters  = !!M_CheckParm("-nomonsters");

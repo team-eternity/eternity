@@ -2327,16 +2327,21 @@ boolean WriteBMPfile(char *filename, byte *data, int width,
 //
 // killough 10/98: improved error-handling
 
-void M_ScreenShot (void)
+void M_ScreenShot(void)
 {
    boolean success = false;
+   char path[PATH_MAX + 1];
    
    errno = 0;
+
+   // haleyjd 11/23/06: use basepath/shots
+   psnprintf(path, sizeof(path), "%s/%s", basepath, "shots");
    
    // haleyjd 05/23/02: corrected uses of access to use defined
    // constants rather than integers, some of which were not even
    // correct under DJGPP to begin with (it's a wonder it worked...)
-   if(!access(".", W_OK))
+   
+   if(!access(path, W_OK))
    {
       static int shot;
       char lbmname[PATH_MAX+1];
@@ -2344,8 +2349,11 @@ void M_ScreenShot (void)
       
       // haleyjd: changed prefix to etrn
       do
-         sprintf(lbmname,                         //jff 3/30/98 pcx or bmp?
-                 screenshot_pcx ? "etrn%02d.pcx" : "etrn%02d.bmp", shot++);
+      {
+         psnprintf(lbmname, sizeof(lbmname), //jff 3/30/98 pcx or bmp?
+                   screenshot_pcx ? "%s/etrn%02d.pcx" : "%s/etrn%02d.bmp", 
+                   path, shot++);
+      }
       while(!access(lbmname, F_OK) && --tries);
 
       if(tries)

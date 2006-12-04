@@ -147,7 +147,7 @@ static void P_ResolveSkinSounds(skin_t *skin)
    for(i = 0; i < NUMSKINSOUNDS; ++i)
    {
       if(!skin->sounds[i])
-         skin->sounds[i] = skinsounddefs[i];         
+         skin->sounds[i] = strdup(skinsounddefs[i]);
    }
 }
 

@@ -743,12 +743,13 @@ void G_LoadDefaults(void)
 
    // haleyjd 03/15/03: fix for -cdrom
    // haleyjd 07/03/04: FIXME: doesn't work for linux
+   // haleyjd 11/23/06: use basegamepath
 #ifdef EE_CDROM_SUPPORT
    if(cdrom_mode)
       psnprintf(temp, sizeof(temp), "%s/%s", "c:/doomdata", "keys.csc");
    else
 #endif
-      psnprintf(temp, sizeof(temp), "%s/%s", D_DoomExeDir(), "keys.csc");
+      psnprintf(temp, sizeof(temp), "%s/%s", basegamepath, "keys.csc");
    
    cfg_file = strdup(temp);
 

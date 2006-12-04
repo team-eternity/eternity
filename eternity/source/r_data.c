@@ -792,7 +792,8 @@ void R_InitTranMap(int progress)
       } cache;
       FILE *cachefp;
       
-      strcat(strcpy(fname, D_DoomExeDir()), "/tranmap.dat");
+      // haleyjd 11/23/06: use basegamepath
+      strcat(strcpy(fname, basegamepath), "/tranmap.dat");
 
       cachefp = fopen(fname, "r+b");
 

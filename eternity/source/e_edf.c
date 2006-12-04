@@ -1060,7 +1060,7 @@ static cfg_t *E_ParseEDFFile(const char *filename, cfg_opt_t *opts)
    if((err = cfg_parse(cfg, filename)))
    {
       E_EDFLoggedErr(1, 
-         "E_ParseEDFFile: failed to parse EDF file %s (code %d)\n",
+         "E_ParseEDFFile: failed to parse %s (code %d)\n",
          filename, err);
    }
 

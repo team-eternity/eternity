@@ -185,7 +185,7 @@ const char *E_BuildDefaultFn(const char *filename)
 {
    static char buffer[PATH_MAX + 1];
 
-   psnprintf(buffer, sizeof(buffer), "%s/%s", D_DoomExeDir(), filename);
+   psnprintf(buffer, sizeof(buffer), "%s/%s", basepath, filename);
    NormalizeSlashes(buffer);
 
    return buffer;
