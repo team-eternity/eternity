@@ -58,10 +58,20 @@
 #include "psnprntf.h"
 
 // ZONE MEMORY
-// PU - purge tags.
 
-enum {PU_FREE, PU_STATIC, PU_SOUND, PU_MUSIC, PU_LEVEL, PU_LEVSPEC, PU_CACHE,
-      /* Must always be last -- killough */ PU_MAX};
+// PU - purge tags.
+enum 
+{
+   PU_FREE,    // block is free
+   PU_STATIC,  // block is static (remains until explicitly freed)
+   PU_SOUND,   // currently unused
+   PU_MUSIC,   // currently unused
+   PU_LEVEL,   // allocation belongs to level (freed at next level load)
+   PU_LEVSPEC, // used for thinker_t's (same as PU_LEVEL basically)
+   PU_CACHE,   // block is cached (may be implicitly freed at any time!)
+
+   PU_MAX      // Must always be last -- killough
+};
 
 #define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */
 
@@ -73,6 +83,7 @@ void (Z_Init)(void);
 void *(Z_Calloc)(size_t n, size_t n2, int tag, void **user, const char *, int);
 void *(Z_Realloc)(void *p, size_t n, int tag, void **user, const char *, int);
 char *(Z_Strdup)(const char *s, int tag, void **user, const char *, int);
+void *(Z_Alloca)(size_t n, const char *file, int line);
 void (Z_CheckHeap)(const char *,int);   // killough 3/22/98: add file/line info
 int (Z_CheckTag)(void *,const char *,int);
 void Z_DumpHistory(char *);
@@ -84,8 +95,9 @@ void Z_DumpHistory(char *);
 #define Z_Strdup(a,b,c)    (Z_Strdup)   (a,b,c,  __FILE__,__LINE__)
 #define Z_Calloc(a,b,c,d)  (Z_Calloc)   (a,b,c,d,__FILE__,__LINE__)
 #define Z_Realloc(a,b,c,d) (Z_Realloc)  (a,b,c,d,__FILE__,__LINE__)
-#define Z_CheckHeap()      (Z_CheckHeap)(__FILE__,__LINE__)
-#define Z_CheckTag(a)      (Z_CheckTag) (a,__FILE__,__LINE__)
+#define Z_Alloca(a)        (Z_Alloca)   (a,      __FILE__,__LINE__)
+#define Z_CheckHeap()      (Z_CheckHeap)(        __FILE__,__LINE__)
+#define Z_CheckTag(a)      (Z_CheckTag) (a,      __FILE__,__LINE__)
 
 // haleyjd 10/29/06: undefine any existing macros by these names
 #undef malloc

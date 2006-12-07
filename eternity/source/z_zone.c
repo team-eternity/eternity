@@ -118,7 +118,7 @@ static memblock_t *rover;                // roving pointer to memory blocks
 static memblock_t *zone;                 // pointer to first block
 static memblock_t *zonebase;             // pointer to entire zone memory
 static size_t zonebase_size;             // zone memory allocated size
-static memblock_t *blockbytag[PU_MAX];
+static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
 
 #ifdef INSTRUMENTED
 
@@ -1007,17 +1007,92 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    return ptr;
 }
 
-
+//
+// Z_Calloc
+//
 void *(Z_Calloc)(size_t n1, size_t n2, int tag, void **user,
                  const char *file, int line)
 {
    return (n1*=n2) ? memset((Z_Malloc)(n1, tag, user, file, line), 0, n1) : NULL;
 }
 
+//
+// Z_Strdup
+//
 char *(Z_Strdup)(const char *s, int tag, void **user,
                  const char *file, int line)
 {
    return strcpy((Z_Malloc)(strlen(s)+1, tag, user, file, line), s);
+}
+
+//
+// haleyjd 12/06/06: Zone alloca functions
+//
+
+typedef struct alloca_header_s
+{
+   struct alloca_header_s *next;
+} alloca_header_t;
+
+static alloca_header_t *alloca_root;
+
+//
+// Z_FreeAlloca
+//
+// haleyjd 12/06/06: Frees all blocks allocated with Z_Alloca.
+//
+static void Z_FreeAlloca(void)
+{
+   alloca_header_t *hdr = alloca_root, *next;
+
+#ifdef ZONEFILE
+   Z_LogPuts("* Freeing alloca blocks\n");
+#endif
+
+   while(hdr)
+   {
+      next = hdr->next;
+
+      Z_Free(hdr);
+
+      hdr = next;
+   }
+
+   alloca_root = NULL;
+}
+
+//
+// Z_Alloca
+//
+// haleyjd 12/06/06:
+// Implements a portable garbage-collected alloca on the zone heap.
+//
+void *(Z_Alloca)(size_t n, const char *file, int line)
+{
+   alloca_header_t *hdr;
+   void *ptr;
+
+   // special case for n == 0: free all allocations
+   if(n == 0)
+   {
+      Z_FreeAlloca();
+      return NULL;
+   }
+
+#ifdef ZONEFILE
+   Z_LogPrintf("* Z_Alloca(n = %lu, file = %s, line = %d)\n", n, file, line);
+#endif
+
+   // add an alloca_header_t to the requested allocation size
+   ptr = (Z_Malloc)(n + sizeof(alloca_header_t), PU_STATIC, NULL, file, line);
+
+   // add to linked list
+   hdr = (alloca_header_t *)ptr;
+   hdr->next = alloca_root;
+   alloca_root = hdr;
+
+   // return a pointer to the actual allocation
+   return (void *)((char *)ptr + sizeof(alloca_header_t));
 }
 
 void (Z_CheckHeap)(const char *file, int line)

@@ -700,6 +700,7 @@ static void D_SetBasePath(void)
       {
          strncpy(basepath, basedir, PATH_MAX + 1);
          basepath[PATH_MAX] = '\0';
+         NormalizeSlashes(basepath);
       }
       else
          I_Error("Base path %s is not a directory.\n", basedir);
@@ -737,6 +738,7 @@ static void D_SetGamePath(void)
       {
          strncpy(basegamepath, gamedir, PATH_MAX + 1);
          basegamepath[PATH_MAX] = '\0';
+         NormalizeSlashes(basegamepath);
       }
       else
          I_Error("Game path %s is not a directory.\n", gamedir);
@@ -2586,6 +2588,9 @@ void D_DoomMain(void)
       // Synchronous sound output is explicitly called.
       // Update sound output.
       I_SubmitSound();
+
+      // haleyjd 12/06/06: garbage-collect all alloca blocks
+      Z_Alloca(0);
    }
 }
 

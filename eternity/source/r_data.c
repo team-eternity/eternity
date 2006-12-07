@@ -785,16 +785,22 @@ void R_InitTranMap(int progress)
    {
       // Compose a default transparent filter map based on PLAYPAL.
       unsigned char *playpal = W_CacheLumpName("PLAYPAL", PU_STATIC);
-      char fname[PATH_MAX + 1], *D_DoomExeDir(void);
+      
+      char *fname;
+      unsigned int fnamesize;
+      
       struct {
          unsigned char pct;
          unsigned char playpal[256];
       } cache;
       FILE *cachefp;
-      
-      // haleyjd 11/23/06: use basegamepath
-      strcat(strcpy(fname, basegamepath), "/tranmap.dat");
 
+      // haleyjd 11/23/06: use basegamepath
+      // haleyjd 12/06/06: use Z_Alloca for path length limit removal
+      fnamesize = strlen(basegamepath) + strlen("/tranmap.dat") + 1;
+      fname     = Z_Alloca(fnamesize);
+      psnprintf(fname, fnamesize, "%s%s", basegamepath, "/tranmap.dat");
+      
       cachefp = fopen(fname, "r+b");
 
       main_tranmap = Z_Malloc(256*256, PU_STATIC, 0);  // killough 4/11/98
