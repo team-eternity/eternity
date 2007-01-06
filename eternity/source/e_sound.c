@@ -785,7 +785,7 @@ enum
 cfg_opt_t edf_sndseq_opts[] =
 {
    CFG_INT(ITEM_SEQ_ID,    -1,        CFGF_NONE),
-   CFG_STR(ITEM_SEQ_CMDS,  0,         CFGF_LIST),
+   CFG_STR(ITEM_SEQ_CMDS,  0,         CFGF_LIST|CFGF_STRSPACE),
    CFG_STR(ITEM_SEQ_TYPE,  "sector",  CFGF_NONE),
    CFG_STR(ITEM_SEQ_STOP,  "none",    CFGF_NONE),
    CFG_STR(ITEM_SEQ_ATTN,  "normal",  CFGF_NONE),

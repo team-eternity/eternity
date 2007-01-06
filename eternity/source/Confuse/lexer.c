@@ -78,11 +78,38 @@ enum
    STATE_PLUS,
 };
 
+// haleyjd 12/23/06: if true, unquoted strings can contain spaces
+// at the moment. Defaults to false.
+
+static boolean unquoted_spaces = false;
+
+//
+// lexer_set_unquoted_spaces
+//
+// Toggles the behavior of spaces inside unquoted strings.
+//
+void lexer_set_unquoted_spaces(boolean us)
+{
+   unquoted_spaces = us;
+}
+
+//
+// lexer_init
+//
+// Initializes the lexer.
+//
 void lexer_init(void)
 {
    M_QStrCreate(&qstring);
 }
 
+//
+// lexer_reset
+//
+// Resets all variables in the lexer to their initial state. It is very
+// important for this to be called by the libConfuse parser before parsing
+// each independent cfg_t.
+//
 void lexer_reset(void)
 {
    // clear include stack
@@ -91,6 +118,7 @@ void lexer_reset(void)
 
    // reset lexer variables
    mytext = NULL;
+   unquoted_spaces = false;
 
    // free qstring buffer
    M_QStrFree(&qstring);
@@ -291,10 +319,11 @@ include:
          break;
          
       case STATE_UNQUOTEDSTRING: // unquoted string
-         if(c == ' '  || c == '"'  || c == '\'' || c == '\t' || 
-            c == '\n' || c == '\f' || c == '='  || c == '{'  || 
-            c == '}'  || c == '('  || c == ')'  || c == '+'  || 
-            c == ','  || c == '#'  || c == '/'  || c == ';')
+         if((!unquoted_spaces && c == ' ') || 
+            c == '"'  || c == '\'' || c == '\t' || c == '\n' || 
+            c == '\f' || c == '='  || c == '{'  || c == '}'  || 
+            c == '('  || c == ')'  || c == '+'  || c == ','  || 
+            c == '#'  || c == '/'  || c == ';')
          {
             // any special character ends an unquoted string
             D_Ungetc(c, currentFile); // put it back

@@ -512,8 +512,8 @@ void I_AddCommands()
 
 #ifdef _SDL_VER
    C_AddCommand(i_waitatexit);
-	C_AddCommand(i_showendoom);
-	C_AddCommand(i_endoomdelay);
+   C_AddCommand(i_showendoom);
+   C_AddCommand(i_endoomdelay);
 #endif
    
    I_Video_AddCommands();

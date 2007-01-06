@@ -39,6 +39,7 @@ extern char *mytext; // haleyjd
 int mylex(cfg_t *cfg);
 void lexer_init(void);
 void lexer_reset(void);
+void lexer_set_unquoted_spaces(boolean);
 
 // haleyjd 03/08/03: Modifications for Eternity
 // #define PACKAGE_VERSION "Eternity version"
@@ -567,10 +568,11 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
    cfg_bool_t append_value;
    cfg_opt_t funcopt = CFG_STR(0,0,0);
    cfg_bool_t found_func = cfg_false; // haleyjd
+   int tok;
    
    while(1)
    {
-      int tok = mylex(cfg); // haleyjd
+      tok = mylex(cfg); // haleyjd
       
       if(tok == 0)
       {
@@ -607,10 +609,11 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          {
             cfg_error(cfg, _("unexpected token '%s'"), mytext);
             return STATE_ERROR;
-         }
-         opt = cfg_getopt(cfg, mytext); // haleyjd
-         if(opt == 0)
+         }         
+         
+         if((opt = cfg_getopt(cfg, mytext)) == 0) // haleyjd
             return STATE_ERROR;
+         
          if(opt->type == CFGT_SEC)
          {
             if(is_set(CFGF_TITLE, opt->flags))
@@ -624,6 +627,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          } 
          else
             state = 1;
+
          break;
       case 1: /* expecting an equal sign or plus-equal sign */
          append_value = cfg_false;
@@ -659,6 +663,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case 2: /* expecting an option value */
          if(tok == '}' && is_set(CFGF_LIST, opt->flags))
          {
+            lexer_set_unquoted_spaces(false); /* haleyjd */
             state = 0;
             break;
          }
@@ -680,6 +685,9 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
                opt->name);
             return STATE_ERROR;
          }
+         /* haleyjd 12/23/06: set unquoted string state */
+         if(is_set(CFGF_STRSPACE, opt->flags))
+            lexer_set_unquoted_spaces(true);
          state = 2;
          next_state = 4;
          break;
@@ -692,7 +700,10 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             next_state = 4;
          } 
          else if(tok == '}')
+         {
+            lexer_set_unquoted_spaces(false); /* haleyjd */
             state = 0;
+         }
          else
          {
             cfg_error(cfg, _("unexpected token '%s'"), mytext);

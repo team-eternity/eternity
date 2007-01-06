@@ -67,6 +67,7 @@ enum cfg_type_t
 #define CFGF_DEFINIT 64
 // haleyjd: custom flags
 #define CFGF_LOOKFORFUNC 128 /**< will do nothing until "lookfor" function is found */
+#define CFGF_STRSPACE    256 /**< unquoted strings within this section may contain spaces */
 
 /** Return codes from cfg_parse(). */
 #define CFG_SUCCESS 0
