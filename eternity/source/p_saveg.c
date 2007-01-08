@@ -85,7 +85,7 @@ void P_DeNumberObjects(void)
    thinker_t *prev = &thinkercap;
    thinker_t *th;
    
-   for(th = thinkercap.next ; th != &thinkercap ; prev=th, th=th->next)
+   for(th = thinkercap.next; th != &thinkercap; prev = th, th = th->next)
       th->prev = prev;
 }
 
@@ -97,11 +97,11 @@ void P_DeNumberObjects(void)
 //
 static int P_MobjNum(mobj_t *mo)
 {
-   long l = mo ? (long)mo->thinker.prev : -1;   // -1 = NULL
+   long l = mo ? (long)mo->thinker.prev : 0;   // 0 = NULL
    
    // extra check for invalid thingnum (prob. still ptr)
    if(l < 0 || l > num_thinkers) 
-      l = -1;
+      l = 0;
    
    return l;
 }
@@ -113,7 +113,7 @@ static int P_MobjNum(mobj_t *mo)
 //
 static mobj_t *P_MobjForNum(int n)
 {
-   return (n == -1) ? NULL : mobj_p[n];
+   return mobj_p[n];
 }
 
 //
@@ -1628,8 +1628,7 @@ static void P_UnArchiveSndSeq(void)
       newSeq->origin = (mobj_t *)&po->spawnSpot;
       break;
    case SEQ_ORIGIN_OTHER:
-      if(!(mo = P_MobjForNum(twizzle)))
-         I_Error("P_UnArchiveSndSeq: origin at invalid mobj_t\n");
+      mo = P_MobjForNum(twizzle);
       newSeq->originIdx = -1;
       newSeq->origin = mo;
       break;

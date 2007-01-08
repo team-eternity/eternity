@@ -76,6 +76,7 @@ static const char rcsid[] = "$Id: d_main.c,v 1.47 1998/05/16 09:16:51 killough E
 #include "d_gi.h"
 #include "in_lude.h"
 #include "a_small.h"
+#include "acs_intr.h"
 #include "g_gfs.h"
 #include "g_dmflag.h"
 #include "e_edf.h"
@@ -2417,9 +2418,10 @@ static void D_DoomInit(void)
    if(in_textmode)
       D_SetGraphicsMode();
 
-   // initialize Small, load game scripts
+   // initialize Small, load game scripts; 01/07/07: init ACS
    A_InitSmall();
    A_InitGameScript();
+   ACS_Init();
 
    // haleyjd: updated for eternity
    C_Printf("\n");
@@ -2535,9 +2537,7 @@ static void D_DoomInit(void)
             G_BeginRecording();
       }
       else
-      {
-         D_StartTitle();                 // start up intro loop
-      }
+         D_StartTitle(); // start up intro loop
    }
 }
 

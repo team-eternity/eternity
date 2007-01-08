@@ -27,9 +27,20 @@
 
 #include "z_zone.h"
 
+#include "a_small.h"
 #include "acs_intr.h"
-
-#ifdef ACS_INTR
+#include "c_io.h"
+#include "doomstat.h"
+#include "g_game.h"
+#include "hu_stuff.h"
+#include "m_misc.h"
+#include "m_qstr.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "r_data.h"
+#include "s_sndseq.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 //
 // Local Enumerations
@@ -189,12 +200,15 @@ static int ACSworldvars[64];
 static boolean acsLoaded;
 
 // deferred scripts
-// TODO
+static deferredacs_t *acsDeferred;
 
 
 //
 // Static Functions
 //
+
+static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type, 
+                                     int args[5]);
 
 //
 // ACS_stopScript
@@ -205,6 +219,7 @@ static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
 {
    acscript->sreg = ACS_STATE_STOPPED;
    // TODO: notify waiting scripts that this script has ended
+   P_SetTarget(&script->trigger, NULL);
    P_RemoveThinker(&script->thinker);
 }
 
@@ -219,7 +234,7 @@ static void ACS_runOpenScript(acscript_t *acs, int iNum)
    acsthinker_t *newScript;
 
    newScript = Z_Malloc(sizeof(acsthinker_t), PU_LEVSPEC, 0);
-   memset(script, 0, sizeof(acsthinker_t));
+   memset(newScript, 0, sizeof(acsthinker_t));
 	
    newScript->scriptNum   = acs->number;
    newScript->internalNum = iNum;
@@ -242,13 +257,20 @@ static void ACS_runOpenScript(acscript_t *acs, int iNum)
 // ACS_indexForNum
 //
 // Returns the index of the script in the "scripts" array given its number
-// from within the script itself.
+// from within the script itself. Returns acsNumScripts if no such script
+// exists.
+//
+// Currently uses a linear search, since the set is small and fixed-size.
 //
 int ACS_indexForNum(int num)
 {
-   // TODO: Yet Another Hash Table (TM)
+   int idx;
 
-   return 0;
+   for(idx = 0; idx < acsNumScripts; ++idx)
+      if(scripts[idx].number == num)
+         break;
+
+   return idx;
 }
 
 //
@@ -257,16 +279,17 @@ int ACS_indexForNum(int num)
 // Executes a line special that has been encoded in the script with
 // operands on the stack.
 //
-static void ACS_execLineSpec(line_t *l, mobj_t *mo, int spec, int side,
+static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
                              int argc, int *argv)
 {
-   int args[5];
+   long args[5] = { 0, 0, 0, 0, 0 };
 
    // args are on stack in last to first order
    for(; argc > 0; --argc)
       args[argc-1] = *argv++;
 
-   // FIXME/TODO: must translate line specials & args for Hexen maps
+   // translate line specials & args for Hexen maps
+   P_ConvertHexenLineSpec(&spec, args);
 
    P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
 }
@@ -277,16 +300,18 @@ static void ACS_execLineSpec(line_t *l, mobj_t *mo, int spec, int side,
 // Executes a line special that has been encoded in the script with
 // immediate operands.
 //
-static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, int spec, int side,
+static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, short spec, int side,
                                 int argc, int *argv)
 {
-   int args[5];
+   long args[5] = { 0, 0, 0, 0, 0 };
+   int i = argc;
 
    // args follow instruction in the code from first to last
-   for(; argc > 0; --argc)
-      args[5-argc] = LONG(*argv++);
+   for(; i > 0; --i)
+      args[argc-i] = LONG(*argv++);
 
-   // FIXME/TODO: must translate line specials & args for Hexen maps
+   // translate line specials & args for Hexen maps
+   P_ConvertHexenLineSpec(&spec, args);
 
    P_ExecParamLineSpec(l, mo, spec, args, side, SPAC_CROSS, true);
 }
@@ -435,19 +460,21 @@ static void ACS_setLineBlocking(int tag, int block)
 //
 // Sets all tagged lines' complete parameterized specials.
 //
-static void ACS_setLineSpecial(int spec, long *args, int tag)
+static void ACS_setLineSpecial(short spec, long *args, int tag)
 {
    line_t *l;
    int linenum = -1;
 
-   // FIXME/TODO: needs special/args translation for Hexen maps
+   // do special/args translation for Hexen maps
+   P_ConvertHexenLineSpec(&spec, args);
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
       l->special = spec;
-      memcpy(l->args, args, 5*sizeof(long));
+      memcpy(l->args, args, 5 * sizeof(long));
    }
 }
+
 
 //
 // Global Functions
@@ -520,6 +547,7 @@ void T_ACSThinker(acsthinker_t *script)
       // count instructions to end unbounded loops
       if(++count >= 500000)
       {
+         doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
          action = ACTION_ENDSCRIPT;
          break;
       }
@@ -540,57 +568,57 @@ void T_ACSThinker(acsthinker_t *script)
          PUSH(IPNEXT());
          break;
       case OP_LINESPEC1:
-         ACS_execLineSpec(script->line, script->trigger, IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
                           script->lineSide, 1, stack);
          DECSTP();
          break;
       case OP_LINESPEC2:
-         ACS_execLineSpec(script->line, script->trigger, IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
                           script->lineSide, 2, stack);
          DECSTP2();
          break;
       case OP_LINESPEC3:
-         ACS_execLineSpec(script->line, script->trigger, IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
                           script->lineSide, 3, stack);
          DECSTP3();
          break;
       case OP_LINESPEC4:
-         ACS_execLineSpec(script->line, script->trigger, IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
                           script->lineSide, 4, stack);
          DECSTP4();
          break;
       case OP_LINESPEC5:
-         ACS_execLineSpec(script->line, script->trigger, IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
                           script->lineSide, 5, stack);
          DECSTP5();
          break;
       case OP_LINESPEC1_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, temp, 
+         ACS_execLineSpecImm(script->line, script->trigger, (short) temp, 
                              script->lineSide, 1, ip);
          ++ip; // skip past arg
          break;
       case OP_LINESPEC2_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
                              script->lineSide, 2, ip);
          ip += 2; // skip past args
          break;
       case OP_LINESPEC3_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
                              script->lineSide, 3, ip);
          ip += 3; // skip past args
          break;
       case OP_LINESPEC4_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
                              script->lineSide, 4, ip);
          ip += 4; // skip past args
          break;
       case OP_LINESPEC5_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
                              script->lineSide, 5, ip);
          ip += 5; // skip past args
          break;
@@ -606,6 +634,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIV:
          if(!(temp = ST_OP2))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -614,6 +643,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MOD:
          if(!(temp = ST_OP2))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -685,6 +715,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIVSCRIPTVAR:
          if(!(temp = POP()))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -693,6 +724,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIVMAPVAR:
          if(!(temp = POP()))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -701,6 +733,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_DIVWORLDVAR:
          if(!(temp = POP()))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -709,6 +742,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MODSCRIPTVAR:
          if(!(temp = POP()))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -717,6 +751,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MODMAPVAR:
          if(!(temp = POP()))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -725,6 +760,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_MODWORLDVAR:
          if(!(temp = POP()))
          {
+            doom_printf(FC_ERROR "ACS Error: divide by zero\a");
             action = ACTION_ENDSCRIPT;
             break;
          }
@@ -930,13 +966,41 @@ void T_ACSThinker(acsthinker_t *script)
          PUSH(leveltime);
          break;
       case OP_SECTORSOUND:
-         DECSTP2(); // TODO/FIXME: needs hexen sound translation & volume
+         {
+            mobj_t *src = NULL;
+            int vol    = POP();
+            int strnum = POP();
+
+            // if script started from a line, use the frontsector's sound origin
+            if(script->line)
+               src = (mobj_t *)&(script->line->frontsector->soundorg);
+
+            S_StartSoundNameAtVolume(src, acs_stringtbl[strnum], vol, 
+                                     ATTN_NORMAL);
+         }
          break;
       case OP_AMBIENTSOUND:
-         DECSTP2(); // TODO/FIXME: needs hexen sound translation & volume
+         {
+            int vol    = POP();
+            int strnum = POP();
+
+            S_StartSoundNameAtVolume(NULL, acs_stringtbl[strnum], vol, 
+                                     ATTN_NORMAL);
+         }
          break;
       case OP_SOUNDSEQUENCE:
-         DECSTP();  // TODO/FIXME: needs sound sequences
+         {
+            sector_t *sec;
+            int strnum = POP();
+
+            if(script->line && (sec = script->line->frontsector))
+               S_StartSectorSequenceName(sec, acs_stringtbl[strnum], false);
+            else
+            {
+               S_StartSequenceName(NULL, acs_stringtbl[strnum], 
+                                   SEQ_ORIGIN_OTHER, -1);
+            }
+         }
          break;
       case OP_SETLINETEXTURE:
          {
@@ -962,7 +1026,8 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_SETLINESPECIAL:
          {
-            int tag, spec;
+            int tag;
+            short spec;
             long args[5];
 
             for(temp = 5; temp > 0; --temp)
@@ -974,17 +1039,30 @@ void T_ACSThinker(acsthinker_t *script)
          }
          break;
       case OP_THINGSOUND:
-         DECSTP3(); // TODO/FIXME: needs hexen sound translation & volume
+         {
+            int vol    = POP();
+            int strnum = POP();
+            int tid    = POP();
+            mobj_t *mo = NULL;
+
+            while((mo = P_FindMobjFromTID(tid, mo, NULL)))
+            {
+               S_StartSoundNameAtVolume(mo, acs_stringtbl[strnum], vol,
+                                        ATTN_NORMAL);
+            }
+         }
          break;
       case OP_ENDPRINTBOLD:
          HU_CenterMsgTimedColor(acsPrintBuffer.buffer, FC_GOLD, 20*35);
          break;
       default:
          // unknown opcode, must stop execution
+         doom_printf(FC_ERROR "ACS Error: unknown opcode %d\a", opcode);
          action = ACTION_ENDSCRIPT;
          break;
       }
-   } while(action == ACTION_RUN);
+   } 
+   while(action == ACTION_RUN);
 
    // check for special actions flagged in loop above
    switch(action)
@@ -1010,8 +1088,6 @@ void ACS_Init(void)
 {
    // initialize the qstring used to construct player messages
    M_QStrInitCreate(&acsPrintBuffer);
-
-   // TODO: init deferred scripts?
 }
 
 //
@@ -1021,10 +1097,24 @@ void ACS_Init(void)
 //
 void ACS_NewGame(void)
 {
+   deferredacs_t *cur, *next;
+
    // clear out the world variables
    memset(ACSworldvars, 0, sizeof(ACSworldvars));
 
-   // TODO: clear out deferred scripts
+   // clear out deferred scripts
+   cur = acsDeferred;
+
+   while(cur)
+   {
+      next = (deferredacs_t *)(cur->link.next);
+
+      M_DLListRemove(&cur->link);
+      free(cur);
+
+      cur = next;
+   }
+   acsDeferred = NULL;
 }
 
 //
@@ -1073,16 +1163,16 @@ void ACS_LoadScript(int lump)
       return;
 
    // allocate scripts array
-   scripts = Z_Malloc(numscripts * sizeof(acscript_t), PU_LEVEL, NULL);
+   scripts = Z_Malloc(acsNumScripts * sizeof(acscript_t), PU_LEVEL, NULL);
 
    acsLoaded = true;
 
    // read script information entries
-   for(i = 0; i < numscripts; ++i)
+   for(i = 0; i < acsNumScripts; ++i)
    {
       scripts[i].number  = LONG(*rover++); // read script number
       scripts[i].code    = (long *)(acsdata + LONG(*rover++)); // set entry pt
-      scripts[i].numArgs = LONG(*rover++);
+      scripts[i].numArgs = LONG(*rover++); // number of args
 
       // handle open scripts: scripts > 1000 should start at the
       // beginning of the level
@@ -1116,14 +1206,44 @@ void ACS_LoadScript(int lump)
 }
 
 //
-// ACS_AddDeferredScript
+// ACS_addDeferredScript
 //
 // Adds a deferred script that will be executed when the indicated
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
-void ACS_AddDeferredScript(int scrnum, int mapnum, int args[3])
+static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type, 
+                                     int args[5])
 {
-   // TODO
+   deferredacs_t *cur = acsDeferred, *newdacs;
+
+   // check to make sure the script isn't already scheduled
+   while(cur)
+   {
+      if(cur->targetMap == mapnum && cur->scriptNum == scrnum)
+         return false;
+
+      cur = (deferredacs_t *)(cur->link.next);
+   }
+
+   // allocate a new deferredacs_t
+   newdacs = malloc(sizeof(deferredacs_t));
+
+   // set script number
+   newdacs->scriptNum = scrnum; 
+
+   // set action type
+   newdacs->type = type;
+
+   // set args
+   memcpy(newdacs->args, args, 5 * sizeof(int));
+
+   // record target map number
+   newdacs->targetMap = mapnum;
+
+   // add it to the linked list
+   M_DLListInsert(&newdacs->link, (mdllistitem_t **)&acsDeferred);
+
+   return true;
 }
 
 //
@@ -1133,7 +1253,52 @@ void ACS_AddDeferredScript(int scrnum, int mapnum, int args[3])
 //
 void ACS_RunDeferredScripts(void)
 {
-   // TODO
+   deferredacs_t *cur = acsDeferred, *next;
+   acsthinker_t *newScript = NULL;
+   int internalNum;
+
+   while(cur)
+   {
+      next = (deferredacs_t *)(cur->link.next);
+
+      if(cur->targetMap == gamemap)
+      {
+         switch(cur->type)
+         {
+         case ACS_DEFERRED_EXECUTE:
+            ACS_StartScript(cur->scriptNum, 0, cur->args, NULL, NULL, 0, 
+                            &newScript);
+            if(newScript)
+               newScript->delay = TICRATE;
+            break;
+         case ACS_DEFERRED_SUSPEND:
+            if((internalNum = ACS_indexForNum(cur->scriptNum)) != acsNumScripts)
+            {
+               acscript_t *script = &scripts[internalNum];
+
+               if(script->sreg != ACS_STATE_STOPPED &&
+                  script->sreg != ACS_STATE_TERMINATE)
+                  script->sreg = ACS_STATE_SUSPEND;
+            }
+            break;
+         case ACS_DEFERRED_TERMINATE:
+            if((internalNum = ACS_indexForNum(cur->scriptNum)) != acsNumScripts)
+            {
+               acscript_t *script = &scripts[internalNum];
+
+               if(script->sreg != ACS_STATE_STOPPED)
+                  script->sreg = ACS_STATE_TERMINATE;
+            }
+            break;
+         }
+
+         // unhook and delete this deferred script
+         M_DLListRemove(&cur->link);
+         free(cur);
+      }
+
+      cur = next;
+   }
 }
 
 //
@@ -1141,8 +1306,9 @@ void ACS_RunDeferredScripts(void)
 //
 // Standard method for starting an ACS script.
 //
-boolean ACS_StartScript(int scrnum, int map, int *args, 
-                        mobj_t *mo, line_t *line, int side)
+boolean ACS_StartScript(int scrnum, int map, long *args, 
+                        mobj_t *mo, line_t *line, int side,
+                        acsthinker_t **scr)
 {
    acscript_t   *scrData;
    acsthinker_t *newScript;
@@ -1152,12 +1318,11 @@ boolean ACS_StartScript(int scrnum, int map, int *args,
    if(!acsLoaded)
       return false;
 
+   // should the script be deferred to a different map?
    if(map > 0 && map != gamemap)
-   {
-      // TODO: add to deferred scripts instead of running
-      return true;
-   }
+      return ACS_addDeferredScript(scrnum, map, ACS_DEFERRED_EXECUTE, args);
 
+   // look for the script
    if((internalNum = ACS_indexForNum(scrnum)) == acsNumScripts)
    {
       // tink!
@@ -1200,11 +1365,86 @@ boolean ACS_StartScript(int scrnum, int map, int *args,
    // mark as running
    scrData->sreg  = ACS_STATE_RUNNING;
    scrData->sdata = 0;
+
+   // return pointer to new script in *scr if not null
+   if(scr)
+      *scr = newScript;
 	
    return true;
 }
 
-#endif
+//
+// ACS_TerminateScript
+//
+// Attempts to terminate the given script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+boolean ACS_TerminateScript(int scrnum, int mapnum)
+{
+   boolean ret = false;
+   int foo[5] = { 0, 0, 0, 0, 0 };
+
+   // ACS must be active on the current map or we do nothing
+   if(!acsLoaded)
+      return false;
+
+   if(mapnum > 0 && mapnum == gamemap)
+   {
+      int internalNum;
+
+      if((internalNum = ACS_indexForNum(scrnum)) != acsNumScripts)
+      {
+         acscript_t *script = &scripts[internalNum];
+
+         if(script->sreg != ACS_STATE_STOPPED)
+         {
+            script->sreg = ACS_STATE_TERMINATE;
+            ret = true;
+         }
+      }
+   }
+   else
+      ret = ACS_addDeferredScript(scrnum, mapnum, ACS_DEFERRED_TERMINATE, foo);
+
+   return ret;
+}
+
+//
+// ACS_SuspendScript
+//
+// Attempts to suspend the given script. If the mapnum doesn't match the
+// current gamemap, the action will be deferred.
+//
+boolean ACS_SuspendScript(int scrnum, int mapnum)
+{
+   int foo[5] = { 0, 0, 0, 0, 0 };
+   boolean ret = false;
+
+   // ACS must be active on the current map or we do nothing
+   if(!acsLoaded)
+      return false;
+
+   if(mapnum > 0 && mapnum == gamemap)
+   {
+      int internalNum;
+
+      if((internalNum = ACS_indexForNum(scrnum)) != acsNumScripts)
+      {
+         acscript_t *script = &scripts[internalNum];
+
+         if(script->sreg != ACS_STATE_STOPPED &&
+            script->sreg != ACS_STATE_TERMINATE)
+         {
+            script->sreg = ACS_STATE_SUSPEND;
+            ret = true;
+         }
+      }
+   }
+   else
+      ret = ACS_addDeferredScript(scrnum, mapnum, ACS_DEFERRED_SUSPEND, foo);
+
+   return ret;
+}
 
 // EOF
 

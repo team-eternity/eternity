@@ -992,6 +992,8 @@ boolean P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
+void P_ConvertHexenLineSpec(short *special, long *args);
+
 ////////////////////////////////////////////////////////////////
 //
 // Linedef and sector special action function prototypes
@@ -1238,6 +1240,8 @@ enum
 };
 
 boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac);
+boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special, 
+                            long *args, int side, int spac, boolean reuse);
 
 #endif
 

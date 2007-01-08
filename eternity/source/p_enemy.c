@@ -3030,7 +3030,9 @@ void A_SpawnFly(mobj_t *mo)
    if(--mo->reactiontime)
       return;     // still flying
 
-   targ = mo->target;
+   // haleyjd: do not crash if target is null
+   if(!(targ = mo->target))
+      return;
    
    // First spawn teleport fog.
    fog = P_SpawnMobj(targ->x, targ->y, targ->z, fireType);

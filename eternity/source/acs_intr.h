@@ -28,7 +28,8 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
-#ifdef ACS_INTR
+#include "p_mobj.h"
+#include "m_dllist.h"
 
 //
 // Defines
@@ -82,6 +83,14 @@ typedef struct acsthinker_s
    int    lineSide;           // line side of activation
 } acsthinker_t;
 
+// deferred action types
+enum
+{
+   ACS_DEFERRED_EXECUTE,
+   ACS_DEFERRED_SUSPEND,
+   ACS_DEFERRED_TERMINATE,
+};
+
 //
 // deferredacs_t
 //
@@ -89,12 +98,26 @@ typedef struct acsthinker_s
 //
 typedef struct deferredacs_s
 {
-   int scriptNum;  // ACS script number to execute
-   int targetMap;  // target map number
-   int args[3];    // additional arguments from linedef
+   mdllistitem_t link; // list links
+   int scriptNum;      // ACS script number to execute
+   int targetMap;      // target map number
+   int type;           // type of action to perform...
+   int args[5];        // additional arguments from linedef
 } deferredacs_t;
 
-#endif
+
+// Global function prototypes
+
+void T_ACSThinker(acsthinker_t *script);
+void ACS_Init(void);
+void ACS_NewGame(void);
+void ACS_InitLevel(void);
+void ACS_LoadScript(int lump);
+void ACS_RunDeferredScripts(void);
+boolean ACS_StartScript(int scrnum, int map, long *args, mobj_t *mo, 
+                        line_t *line, int side, acsthinker_t **scr);
+boolean ACS_TerminateScript(int srcnum, int mapnum);
+boolean ACS_SuspendScript(int scrnum, int mapnum);
 
 #endif
 

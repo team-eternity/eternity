@@ -1004,7 +1004,13 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
 //
 polyobj_t *Polyobj_GetForNum(int id)
 {
-   int curidx  = PolyObjects[id % numPolyObjects].first;
+   int curidx;
+
+   // haleyjd 01/07/07: must check if == 0 first!
+   if(numPolyObjects == 0)
+      return NULL;
+   
+   curidx = PolyObjects[id % numPolyObjects].first;
 
    while(curidx != numPolyObjects && PolyObjects[curidx].id != id)
       curidx = PolyObjects[curidx].next;

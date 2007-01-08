@@ -59,6 +59,7 @@ rcsid[] = "$Id: p_setup.c,v 1.16 1998/05/07 00:56:49 killough Exp $";
 #include "d_io.h" // SoM 3/14/2002: strncasecmp
 #include "in_lude.h"
 #include "a_small.h"
+#include "acs_intr.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_ttypes.h"
 #include "polyobj.h"
@@ -610,8 +611,6 @@ void P_LoadLineDefs(int lump)
    }
    Z_Free(data);
 }
-
-extern void P_ConvertHexenLineSpec(short *special, long *args);
 
 // these flags are shared with Hexen in the normal flags fields
 #define HX_SHAREDFLAGS \
@@ -1378,9 +1377,8 @@ int P_CheckLevel(int lumpnum)
    
    for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
    {
-      // haleyjd 03/28/03: walked 1 off the end of lumpinfo (> -> >=)
       ln = lumpnum + i;
-      if(ln >= numlumps ||     // past the last lump
+      if(ln >= numlumps ||     // past the last lump?
          strncmp(lumpinfo[ln]->name, levellumps[i], 8))
       {
          // If "BEHAVIOR" wasn't found, we assume we are dealing with
@@ -1446,7 +1444,9 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    players[consoleplayer].viewz = 1;
 
    // haleyjd 03/15/03: clear levelscript callbacks
+   // haleyjd 01/07/07: reset ACS interpreter state
    A_RemoveCallbacks(SC_VM_LEVELSCRIPT);
+   ACS_InitLevel();
 
    if(debugfile)
    {
@@ -1639,6 +1639,11 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    // haleyjd 03/15/03: load and initialize any level scripts
    A_InitLevelScript();
+
+   // haleyjd 01/07/07: initialize ACS for Hexen maps
+   // ACS_FIXME: support ACS in Doom maps somehow?   
+   if(mapformat == LEVEL_FORMAT_HEXEN)
+      ACS_LoadScript(lumpnum + ML_BEHAVIOR);
 
    DEBUGMSG("P_SetupLevel: finished\n");
 }

@@ -319,11 +319,11 @@ include:
          break;
          
       case STATE_UNQUOTEDSTRING: // unquoted string
-         if((!unquoted_spaces && c == ' ') || 
-            c == '"'  || c == '\'' || c == '\t' || c == '\n' || 
-            c == '\f' || c == '='  || c == '{'  || c == '}'  || 
-            c == '('  || c == ')'  || c == '+'  || c == ','  || 
-            c == '#'  || c == '/'  || c == ';')
+         if((!unquoted_spaces && (c == ' ' || c == '\t'))    || 
+            c == '"'  || c == '\'' || c == '\n' || c == '\f' || 
+            c == '='  || c == '{'  || c == '}'  || c == '('  || 
+            c == ')'  || c == '+'  || c == ','  || c == '#'  || 
+            c == '/'  || c == ';')
          {
             // any special character ends an unquoted string
             D_Ungetc(c, currentFile); // put it back

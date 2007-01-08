@@ -39,6 +39,7 @@ rcsid[] = "$Id: p_genlin.c,v 1.18 1998/05/23 10:23:23 jim Exp $";
 #include "sounds.h"
 #include "a_small.h"
 #include "e_exdata.h"
+#include "acs_intr.h"
 
 //////////////////////////////////////////////////////////
 //
@@ -1942,6 +1943,26 @@ static boolean pspec_Pillar(line_t *line, long *args, short special)
 }
 
 //
+// pspec_ACSExecute
+//
+// haleyjd 01/07/07: Runs an ACS script.
+//
+static boolean pspec_ACSExecute(line_t *line, long *args, short special,
+                                int side, mobj_t *thing)
+{
+   int snum, mnum;
+   long script_args[5] = { 0, 0, 0, 0, 0 };
+
+   snum           = args[0];
+   mnum           = args[1];
+   script_args[0] = args[2]; // transfer last three line args to script args
+   script_args[1] = args[3];
+   script_args[2] = args[4];
+
+   return ACS_StartScript(snum, mnum, script_args, thing, line, side, NULL);
+}
+
+//
 // P_ExecParamLineSpec
 //
 // Executes a parameterized line special.
@@ -2034,6 +2055,15 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 363: // Pillar_BuildAndCrush
    case 364: // Pillar_Open
       success = pspec_Pillar(line, args, special);
+      break;
+   case 365: // ACS_Execute
+      success = pspec_ACSExecute(line, args, special, side, thing);
+      break;
+   case 366: // ACS_Suspend
+      success = ACS_SuspendScript(args[0], args[1]);
+      break;
+   case 367: // ACS_Terminate
+      success = ACS_TerminateScript(args[0], args[1]);
       break;
    default:
       break;
@@ -2239,6 +2269,9 @@ SCRIPT_SPEC(357, polyobj_or_rotateleft)
 SCRIPT_SPEC(362, pillar_build)
 SCRIPT_SPEC(363, pillar_buildandcrush)
 SCRIPT_SPEC(364, pillar_open)
+SCRIPT_SPEC(365, acs_execute)
+SCRIPT_SPEC(366, acs_suspend)
+SCRIPT_SPEC(367, acs_terminate)
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
@@ -2300,6 +2333,9 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Pillar_Build",                sm_pillar_build                },
    { "_Pillar_BuildAndCrush",        sm_pillar_buildandcrush        },
    { "_Pillar_Open",                 sm_pillar_open                 },
+   { "_ACS_Execute",                 sm_acs_execute                 },
+   { "_ACS_Suspend",                 sm_acs_suspend                 },
+   { "_ACS_Terminate",               sm_acs_terminate               },
    { NULL, NULL }
 };
 

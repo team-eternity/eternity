@@ -554,6 +554,9 @@ static struct exlinespec
    { 362, "Pillar_Build" },
    { 363, "Pillar_BuildAndCrush" },
    { 364, "Pillar_Open" },
+   { 365, "ACS_Execute" },
+   { 366, "ACS_Suspend" },
+   { 367, "ACS_Terminate" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -1673,6 +1676,9 @@ boolean E_IsParamSpecial(short special)
    case 362: // Pillar_Build
    case 363: // Pillar_BuildAndCrush
    case 364: // Pillar_Open
+   case 365: // ACS_Execute
+   case 366: // ACS_Suspend
+   case 367: // ACS_Terminate
       return true;
    default:
       return false;

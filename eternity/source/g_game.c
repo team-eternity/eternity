@@ -80,6 +80,7 @@ rcsid[] = "$Id: g_game.c,v 1.59 1998/06/03 20:23:10 killough Exp $";
 #include "g_dmflag.h"
 #include "e_states.h"
 #include "s_sndseq.h"
+#include "acs_intr.h"
 
 #define SAVEGAMESIZE  0x20000
 #define SAVESTRINGSIZE  24
@@ -697,6 +698,9 @@ static void G_DoLoadLevel(void)
 
    // haleyjd: set global colormap -- see r_data.c
    R_SetGlobalLevelColormap();
+
+   // haleyjd 01/07/07: run deferred ACS scripts
+   ACS_RunDeferredScripts();
 
    C_Popup();  // pop up the console
    
@@ -1830,7 +1834,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    savebuffer = save_p = NULL;
 }
 
-static void G_DoSaveGame()
+static void G_DoSaveGame(void)
 {
    char name[PATH_MAX+1];
    
@@ -1863,7 +1867,7 @@ static void G_DoLoadGame(void)
    // skip the description field
    
    // killough 2/22/98: "proprietary" version string :-)
-   sprintf (vcheck, VERSIONID, version);
+   sprintf(vcheck, VERSIONID, version);
    
    // killough 2/22/98: Friendly savegame version difference message
    if(!forced_loadgame && strncmp(save_p, vcheck, VERSIONSIZE))
@@ -2824,6 +2828,11 @@ void G_InitNewNum(skill_t skill, int episode, int map)
 void G_InitNew(skill_t skill, char *name)
 {
    int i;
+
+   // ACS_FIXME: For now, call ACS_NewGame from here. This may not suffice once
+   // hubs are working, but then, pretty much all the level transfer code needs
+   // to be rewritten for that to work smoothly anyways.
+   ACS_NewGame();
 
    if(paused)
    {

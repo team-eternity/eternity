@@ -4130,10 +4130,20 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 73:  // damage mobj
    case 74:  // teleport new map (hubs)
    case 75:  // teleport end game
+      *special = 0; // TODO ^^^^
+      break;
    // UNUSED: 76-79
    case 80:  // ACS execute
+      *special = 365; // args are same.
+      break;
    case 81:  // ACS suspend
+      *special = 366; // args are same
+      // TODO: if hexen strict, clear args[1]
+      break;
    case 82:  // ACS terminate
+      *special = 367; // args are same
+      // TODO: if hexen strict, clear args[1]
+      break;
    case 83:  // ACS locked execute
       *special = 0; // TODO ^^^^
       break;
