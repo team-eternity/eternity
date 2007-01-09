@@ -529,11 +529,14 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
       // Do NOT simply return false 1/4th of the time (causes monsters to
       // back out when they shouldn't, and creates secondary stickiness).
 
-      for (good = false; numspechit--; )
+      for(good = false; numspechit--; )
       {
          if(P_UseSpecialLine(actor, spechit[numspechit], 0))
             good |= (spechit[numspechit] == blockline ? 1 : 2);
       }
+
+      // haleyjd 01/09/07: do not leave numspechit == -1
+      numspechit = 0;
 
       return good && (demo_version < 203 || comp[comp_doorstuck] ||
                       (P_Random(pr_opendoor) >= 230) ^ (good & 1));

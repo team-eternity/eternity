@@ -1242,6 +1242,9 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
                P_CrossSpecialLine(spechit[numspechit], oldside, thing);
          }
       }
+
+      // haleyjd 01/09/07: do not leave numspechit == -1
+      numspechit = 0;
    }
    
    return true;
