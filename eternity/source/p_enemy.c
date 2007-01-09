@@ -502,14 +502,19 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
          }
          else
          {
-            actor->flags |= MF_INFLOAT;
-            
+            actor->flags |= MF_INFLOAT;            
             return true;
          }
       }
 
       if(!numspechit)
          return false;
+
+#ifdef RANGECHECK
+      // haleyjd 01/09/07: SPECHIT_DEBUG
+      if(numspechit < 0)
+         I_Error("P_Move: numspechit == %d\n", numspechit);
+#endif
 
       actor->movedir = DI_NODIR;
       

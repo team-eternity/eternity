@@ -298,13 +298,13 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
       bruiserType = E_ThingNumForDEHNum(MT_BRUISER);
       knightType  = E_ThingNumForDEHNum(MT_KNIGHT);
    }
-   
+
    // killough 11/98: add touchy things
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
       return true;
 
    blockdist = thing->radius + tmthing->radius;
-   
+
    if(D_abs(thing->x - tmx) >= blockdist ||
       D_abs(thing->y - tmy) >= blockdist)
       return true; // didn't hit it
@@ -315,7 +315,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    // should not be moved up to first, as it adds more overhead than it removes.
    
    // don't clip against self
-   
+  
    if(thing == tmthing)
       return true;
 
@@ -380,16 +380,16 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
       // Determine damage amount, and the skull comes to a dead stop.
       
       int damage = ((P_Random(pr_skullfly)%8)+1)*tmthing->damage;
-      
+     
       P_DamageMobj(thing, tmthing, tmthing, damage, MOD_UNKNOWN);
       
       tmthing->flags &= ~MF_SKULLFLY;
       tmthing->momx = tmthing->momy = tmthing->momz = 0;
-      
+
       P_SetMobjState (tmthing, tmthing->info->spawnstate);
 
       BlockingMobj = NULL; // haleyjd: from zdoom
-      
+
       return false;   // stop moving
    }
 
@@ -413,7 +413,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
       
       if(tmthing->z > thing->z + height) // haleyjd 07/06/05
          return true;    // overhead
-      
+
       if(tmthing->z + tmthing->height < thing->z)
          return true;    // underneath
 
@@ -444,6 +444,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
                tmthing->momx >>= 2;
                tmthing->momy >>= 2;
             }
+
             return false;
          }
       }
@@ -472,7 +473,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    }
 
    // check for special pickup
-   
+
    if(thing->flags & MF_SPECIAL
       // [RH] The next condition is to compensate for the extra height
       // that gets added by P_CheckPosition() so that you cannot pick
@@ -541,6 +542,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // SoM: 09/07/02: 3dsides monster fix
    tmtouch3dside = 0;
    validcount++;
+   
    numspechit = 0;
 
    // haleyjd 06/28/06: skullfly check from zdoom
@@ -586,6 +588,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
                { 
                   // Thing slammed into something; don't let it move now.
                   thing->height = realheight;
+
                   return false;
                }
                else if(!BlockingMobj->player && 
@@ -605,6 +608,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
                      // There is something to step up on. Return this thing as
                      // the blocker so that we don't step up.
                      thing->height = realheight;
+
                      return false;
                   }
                   // Nothing is blocking us, but this actor potentially could
@@ -616,6 +620,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
                else
                { // Definitely blocking
                   thing->height = realheight;
+
                   return false;
                }
             }

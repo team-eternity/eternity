@@ -1014,7 +1014,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
 {
    fixed_t oldx, oldy, oldz;
-
+   
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
    // passfloorz is the floor as determined from sectors and 3DMidTex.
    // secfloorz is the floor as determined only from sectors.
@@ -1032,6 +1032,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
    if(demo_version >= 331 && !comp[comp_overunder])
    {
       oldz = thing->z;
+
       if(!P_CheckPosition3D(thing, x, y))
       {
          // Solid wall or thing
@@ -1086,8 +1087,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
       // mobj must lower to fit
       if((floatok = true, !(thing->flags & MF_TELEPORT) &&
           tmceilingz - thing->z < thing->height))
-         return ret;
-          
+         return ret;          
 
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
@@ -1172,8 +1172,8 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
                else
                   zdist = thing->floorz - floorz;
                
-               if(zdist > 24*FRACUNIT ||
-                  thing->dropoffz - tmdropoffz > 24*FRACUNIT)                    
+               if(zdist > 24*FRACUNIT || 
+                  thing->dropoffz - tmdropoffz > 24*FRACUNIT)
                   return false;
             }
             else  // dropoff allowed -- check for whether it fell more than 24
@@ -1187,19 +1187,25 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
       if(thing->flags & MF_BOUNCES &&    // killough 8/13/98
          !(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
          !sentient(thing) && tmfloorz - thing->z > 16*FRACUNIT)
+      {
          return false; // too big a step up for bouncers under gravity
+      }
 
       // killough 11/98: prevent falling objects from going up too many steps
       if(thing->intflags & MIF_FALLING && tmfloorz - thing->z >
          FixedMul(thing->momx,thing->momx)+FixedMul(thing->momy,thing->momy))
+      {
          return false;
+      }
 
       // haleyjd: CANTLEAVEFLOORPIC flag
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
          (tmfloorpic != thing->subsector->sector->floorpic ||
           tmfloorz - thing->z != 0))
+      {
          // thing must stay within its current floor type
          return false;
+      }
    }
 
    // the move is ok,

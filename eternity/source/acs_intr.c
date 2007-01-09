@@ -1137,8 +1137,8 @@ void ACS_LoadScript(int lump)
    long *rover;
    int i, numstrings;
 
-   // zero length lump?
-   if(!W_LumpLength(lump))
+   // zero length or too-short lump?
+   if(W_LumpLength(lump) < 6)
    {
       acsdata = NULL;
       return;
@@ -1159,7 +1159,7 @@ void ACS_LoadScript(int lump)
    // read number of scripts
    acsNumScripts = LONG(*rover++);
 
-   if(!acsNumScripts) // no scripts defined?
+   if(acsNumScripts <= 0) // no scripts defined?
       return;
 
    // allocate scripts array
