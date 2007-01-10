@@ -4173,10 +4173,20 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 103: // scroll down
    // UNUSED: 104-108
    case 109: // force lightning
+      *special = 0; // TODO ^^^^
+      break;
    case 110: // light raise by value
+      *special = 368; // args are same
+      break;
    case 111: // light lower by value
+      *special = 369; // args are same
+      break;
    case 112: // light change to value
+      *special = 370; // args are same
+      break;
    case 113: // light fade
+      *special = 371; // args are same
+      break;
    case 114: // light glow
    case 115: // light flicker
    case 116: // light strobe

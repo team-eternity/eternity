@@ -50,7 +50,7 @@ rcsid[] = "$Id: p_lights.c,v 1.11 1998/05/18 09:04:41 jim Exp $";
 // Passed a fireflicker_t structure containing light levels and timing
 // Returns nothing
 //
-void T_FireFlicker (fireflicker_t* flick)
+void T_FireFlicker(fireflicker_t *flick)
 {
    int amount;
    
@@ -75,19 +75,19 @@ void T_FireFlicker (fireflicker_t* flick)
 // Passed a lightflash_t structure containing light levels and timing
 // Returns nothing
 //
-void T_LightFlash (lightflash_t* flash)
+void T_LightFlash(lightflash_t* flash)
 {
    if(--flash->count)
       return;
    
    if(flash->sector->lightlevel == flash->maxlight)
    {
-      flash-> sector->lightlevel = flash->minlight;
+      flash->sector->lightlevel = flash->minlight;
       flash->count = (P_Random(pr_lights)&flash->mintime)+1;
    }
    else
    {
-      flash-> sector->lightlevel = flash->maxlight;
+      flash->sector->lightlevel = flash->maxlight;
       flash->count = (P_Random(pr_lights)&flash->maxtime)+1;
    }
 }
@@ -100,7 +100,7 @@ void T_LightFlash (lightflash_t* flash)
 // Passed a strobe_t structure containing light levels and timing
 // Returns nothing
 //
-void T_StrobeFlash (strobe_t*   flash)
+void T_StrobeFlash(strobe_t *flash)
 {
    if(--flash->count)
       return;
@@ -126,7 +126,7 @@ void T_StrobeFlash (strobe_t*   flash)
 // Returns nothing
 //
 
-void T_Glow(glow_t* g)
+void T_Glow(glow_t *g)
 {
    switch(g->direction)
    {
@@ -152,45 +152,46 @@ void T_Glow(glow_t* g)
    }
 }
 
+//
+// T_LightFade
+//
 // sf 13/10/99:
-//
-// T_LightFade()
-//
 // Just fade the light level in a sector to a new level
 //
-
-void T_LightFade(lightlevel_t *ll)
+// haleyjd 01/10/07: changes for param line specs
+//
+void T_LightFade(lightfade_t *lf)
 {
-   if(ll->sector->lightlevel < ll->destlevel)
+   boolean done = false;
+
+   // fade light by one step
+   lf->lightlevel += lf->step;
+
+   // fading up or down? check if done
+   if((lf->step > 0) ? lf->lightlevel >= lf->destlevel 
+                     : lf->lightlevel <= lf->destlevel)
    {
-      // increase the lightlevel
-      if(ll->sector->lightlevel + ll->speed >= ll->destlevel)
-      {
-         // stop changing light level
-         ll->sector->lightlevel = ll->destlevel; // set to dest lightlevel
-         
-         ll->sector->lightingdata = NULL;        // clear lightingdata
-         P_RemoveThinker(&ll->thinker);          // remove thinker
-      }
-      else
-      {
-         ll->sector->lightlevel += ll->speed; // move lightlevel
-      }
+      lf->lightlevel = lf->destlevel;
+      done = true;
    }
-   else
+
+   // write light level back to sector
+   lf->sector->lightlevel = (short)(lf->lightlevel / FRACUNIT);
+
+   if(lf->sector->lightlevel < 0)
+      lf->sector->lightlevel = 0;
+   else if(lf->sector->lightlevel > 255)
+      lf->sector->lightlevel = 255;
+
+   if(done)
    {
-      // decrease lightlevel
-      if(ll->sector->lightlevel - ll->speed <= ll->destlevel)
-      {
-         // stop changing light level
-         ll->sector->lightlevel = ll->destlevel;  // set to dest lightlevel
-         
-         ll->sector->lightingdata = NULL;         // clear lightingdata
-         P_RemoveThinker(&ll->thinker);           // remove thinker       
-      }
+      if(lf->type == fade_once)
+         P_RemoveThinker(&lf->thinker);
       else
       {
-         ll->sector->lightlevel -= ll->speed;     // move lightlevel
+         // reverse glow direction
+         lf->destlevel = (lf->lightlevel == lf->glowmax) ? lf->glowmin : lf->glowmax;
+         lf->step      = (lf->lightlevel - lf->destlevel) / lf->glowspeed;
       }
    }
 }
@@ -213,7 +214,7 @@ void T_LightFade(lightlevel_t *ll)
 // Passed the sector that spawned the thinker
 // Returns nothing
 //
-void P_SpawnFireFlicker (sector_t *sector)
+void P_SpawnFireFlicker(sector_t *sector)
 {
    fireflicker_t *flick;
    
@@ -240,7 +241,7 @@ void P_SpawnFireFlicker (sector_t *sector)
 // Passed the sector that spawned the thinker
 // Returns nothing
 //
-void P_SpawnLightFlash (sector_t *sector)
+void P_SpawnLightFlash(sector_t *sector)
 {
    lightflash_t *flash;
    
@@ -271,10 +272,7 @@ void P_SpawnLightFlash (sector_t *sector)
 //
 // Returns nothing
 //
-void P_SpawnStrobeFlash
-( sector_t *sector,
-  int   fastOrSlow,
-  int   inSync )
+void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 {
    strobe_t *flash;
    
@@ -326,35 +324,6 @@ void P_SpawnGlowingLight(sector_t *sector)
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
 }
 
-// sf 13/10/99:
-//
-// P_FadeLight()
-//
-// Fade all the lights in sectors with a particular tag to a new value
-//
-
-void P_FadeLight(int tag, int destvalue, int speed)
-{
-   int i;
-   lightlevel_t *ll;
-   
-   // search all sectors for ones with tag
-   for(i = -1; (i = P_FindSectorFromTag(tag,i)) >= 0;)
-   {
-      sector_t *sector = &sectors[i];
-      sector->lightingdata = sector;    // just set it to something
-      
-      ll = Z_Malloc(sizeof(*ll), PU_LEVSPEC, 0);
-      ll->thinker.function = T_LightFade;
-      
-      P_AddThinker(&ll->thinker);       // add thinker
-      
-      ll->sector = sector;
-      ll->destlevel = destvalue;
-      ll->speed = speed;
-   }
-}
-
 //////////////////////////////////////////////////////////
 //
 // Linedef lighting function handlers
@@ -371,21 +340,21 @@ void P_FadeLight(int tag, int destvalue, int speed)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_StartLightStrobing(line_t* line)
+int EV_StartLightStrobing(line_t *line)
 {
    int   secnum;
    sector_t* sec;
    
    secnum = -1;
    // start lights strobing in all sectors tagged same as line
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       // if already doing a lighting function, don't start a second
       if(P_SectorActive(lighting_special,sec)) //jff 2/22/98
          continue;
       
-      P_SpawnStrobeFlash (sec,SLOWDARK, 0);
+      P_SpawnStrobeFlash(sec, SLOWDARK, 0);
    }
    return 1;
 }
@@ -441,7 +410,7 @@ int EV_LightTurnOn(line_t *line, int bright)
    // search all sectors for ones with same tag as activating line
    
    // killough 10/98: replace inefficient search with fast search
-   for(i = -1; (i = P_FindSectorFromLineTag(line,i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
    {
       sector_t *temp, *sector = sectors+i;
       int j, tbright = bright; //jff 5/17/98 search for maximum PER sector
@@ -493,7 +462,7 @@ int EV_LightTurnOnPartway(int tag, fixed_t level)
       level = FRACUNIT;
 
    // search all sectors for ones with same tag as activating line
-   for(i = -1; (i = P_FindSectorFromTag(tag,i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
       sector_t *temp, *sector = sectors + i;
       int j, bright = 0, min = sector->lightlevel;
@@ -513,6 +482,133 @@ int EV_LightTurnOnPartway(int tag, fixed_t level)
          (level * bright + (FRACUNIT - level) * min) >> FRACBITS;
    }
    return 1;
+}
+
+//==============================================================================
+//
+// haleyjd 01/09/07: Parameterized Lighting
+//
+
+//
+// EV_SetLight
+//
+// haleyjd 01/09/07: Depending on the value of "type", this function
+// sets, adds to, or subtracts from all tagged sectors' light levels.
+//
+int EV_SetLight(int tag, setlight_e type, int lvl)
+{
+   int i, rtn = 0;
+   sector_t *s;
+
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   {      
+      s = &sectors[i];
+
+      rtn = 1; // if any sector is changed, we return 1
+
+      switch(type)
+      {
+      case setlight_set:
+         s->lightlevel = lvl;
+         break;
+      case setlight_add:
+         s->lightlevel += lvl;
+         break;
+      case setlight_sub:
+         s->lightlevel -= lvl;
+         break;
+      }
+
+      if(s->lightlevel < 0)
+         s->lightlevel = 0;
+      else if(s->lightlevel > 255)
+         s->lightlevel = 255;
+   }
+
+   return rtn;
+}
+
+//
+// EV_FadeLight
+//
+// sf 13/10/99:
+// Fade all the lights in sectors with a particular tag to a new value
+//
+// haleyjd 01/10/07: changes for param specs
+//
+int EV_FadeLight(int tag, int destvalue, int speed)
+{
+   int i, rtn = 0;
+   lightfade_t *lf;
+
+   // speed <= 0? hell no.
+   if(speed <= 0)
+      return rtn;
+   
+   // search all sectors for ones with tag
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   {
+      rtn = 1;
+
+      lf = Z_Malloc(sizeof(*lf), PU_LEVSPEC, NULL);
+      lf->thinker.function = T_LightFade;
+      
+      P_AddThinker(&lf->thinker);       // add thinker
+
+      lf->sector = &sectors[i];
+      
+      lf->destlevel  = destvalue * FRACUNIT;               // dest. light level
+      lf->lightlevel = lf->sector->lightlevel * FRACUNIT;  // curr. light level
+      lf->step = (lf->destlevel - lf->lightlevel) / speed; // delta per frame
+
+      lf->type = fade_once;
+   }
+
+   return rtn;
+}
+
+int EV_GlowLight(int tag, int minval, int maxval, int speed)
+{
+   int i, rtn = 0;
+   lightfade_t *lf;
+
+   // speed <= 0? hell no.
+   if(speed <= 0 || maxval == minval)
+      return rtn;
+
+   // ensure min and max have proper relationship
+   if(maxval < minval)
+   {
+      int temp = maxval;
+      maxval = minval;
+      minval = temp;
+   }
+   
+   // search all sectors for ones with tag
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   {
+      rtn = 1;
+
+      lf = Z_Malloc(sizeof(*lf), PU_LEVSPEC, NULL);
+      lf->thinker.function = T_LightFade;
+
+      P_AddThinker(&lf->thinker);
+
+      lf->sector = &sectors[i];
+
+      lf->glowmin   = minval * FRACUNIT;
+      lf->glowmax   = maxval * FRACUNIT;
+      lf->glowspeed = speed;
+
+      // start out fading to min level
+      lf->destlevel  = lf->glowmin;                        // dest. light level
+      lf->lightlevel = lf->sector->lightlevel * FRACUNIT;  // curr. light level
+      lf->step = (lf->destlevel - lf->lightlevel) / speed; // delta per frame
+
+      lf->type = fade_glow;
+   }
+
+   return rtn;
 }
 
 //----------------------------------------------------------------------------

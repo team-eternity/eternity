@@ -2065,6 +2065,18 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 367: // ACS_Terminate
       success = ACS_TerminateScript(args[0], args[1]);
       break;
+   case 368: // Light_RaiseByValue
+      success = EV_SetLight(args[0], setlight_add, args[1]);
+      break;
+   case 369: // Light_LowerByValue
+      success = EV_SetLight(args[0], setlight_sub, args[1]);
+      break;
+   case 370: // Light_ChangeToValue
+      success = EV_SetLight(args[0], setlight_set, args[1]);
+      break;
+   case 371: // Light_Fade
+      success = EV_FadeLight(args[0], args[1], args[2]);
+      break;
    default:
       break;
    }
@@ -2272,6 +2284,10 @@ SCRIPT_SPEC(364, pillar_open)
 SCRIPT_SPEC(365, acs_execute)
 SCRIPT_SPEC(366, acs_suspend)
 SCRIPT_SPEC(367, acs_terminate)
+SCRIPT_SPEC(368, light_raisebyvalue)
+SCRIPT_SPEC(369, light_lowerbyvalue)
+SCRIPT_SPEC(370, light_changetovalue)
+SCRIPT_SPEC(371, light_fade)
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
@@ -2336,6 +2352,10 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_ACS_Execute",                 sm_acs_execute                 },
    { "_ACS_Suspend",                 sm_acs_suspend                 },
    { "_ACS_Terminate",               sm_acs_terminate               },
+   { "_Light_RaiseByValue",          sm_light_raisebyvalue          },
+   { "_Light_LowerByValue",          sm_light_lowerbyvalue          },
+   { "_Light_ChangeToValue",         sm_light_changetovalue         },
+   { "_Light_Fade",                  sm_light_fade                  },
    { NULL, NULL }
 };
 

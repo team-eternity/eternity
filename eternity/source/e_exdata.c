@@ -557,6 +557,10 @@ static struct exlinespec
    { 365, "ACS_Execute" },
    { 366, "ACS_Suspend" },
    { 367, "ACS_Terminate" },
+   { 368, "Light_RaiseByValue" },
+   { 369, "Light_LowerByValue" },
+   { 370, "Light_ChangeToValue" },
+   { 371, "Light_Fade" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -1679,6 +1683,10 @@ boolean E_IsParamSpecial(short special)
    case 365: // ACS_Execute
    case 366: // ACS_Suspend
    case 367: // ACS_Terminate
+   case 368: // Light_RaiseByValue
+   case 369: // Light_LowerByValue
+   case 370: // Light_ChangeToValue
+   case 371: // Light_Fade
       return true;
    default:
       return false;

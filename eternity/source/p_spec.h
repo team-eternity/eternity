@@ -527,6 +527,21 @@ typedef enum
    elevateCurrent,
 } elevator_e;
 
+// haleyjd 01/09/07: p_lights
+
+typedef enum
+{
+   setlight_set, // set light to given level
+   setlight_add, // add to light level
+   setlight_sub, // subtract from light level
+} setlight_e;
+
+typedef enum
+{
+   fade_once, // just a normal fade effect
+   fade_glow, // glow effect
+} lightfade_e;
+
 //////////////////////////////////////////////////////////////////
 //
 // general enums
@@ -629,13 +644,21 @@ typedef struct
 
 } glow_t;
 
-typedef struct          // sf 13/10/99
+// sf 13/10/99
+// haleyjd 01/10/06: revised for parameterized line specs
+
+typedef struct
 {
   thinker_t thinker;
   sector_t *sector;
-  int destlevel;
-  int speed;
-} lightlevel_t;
+  fixed_t lightlevel;
+  fixed_t destlevel;
+  fixed_t step;
+  fixed_t glowmin;
+  fixed_t glowmax;
+  int     glowspeed;
+  lightfade_e type;
+} lightfade_t;
 
 // p_plats
 
@@ -1010,7 +1033,7 @@ void T_Glow(glow_t *g);
 
 void T_FireFlicker(fireflicker_t *flick);  // killough 10/4/98
 
-void T_LightFade(lightlevel_t *ll);     // sf 13/10/99
+void T_LightFade(lightfade_t *ll);     // sf 13/10/99
 
 // p_plats
 
@@ -1100,6 +1123,10 @@ int EV_LightTurnOn(line_t *line, int bright);
 
 int EV_LightTurnOnPartway(int tag, fixed_t level);  // killough 10/10/98
 
+int EV_SetLight(int tag, setlight_e type, int lvl); // haleyjd 01/09/07
+
+int EV_FadeLight(int tag, int destvalue, int speed); // haleyjd 01/10/07
+
 // p_floor
 
 int EV_DoChange(line_t *line, change_e changetype);
@@ -1181,7 +1208,6 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync);
 
 void P_SpawnGlowingLight(sector_t *sector);
 
-void P_FadeLight(int tag, int destvalue, int speed);
 
 // p_plats
 
