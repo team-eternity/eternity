@@ -40,6 +40,9 @@ rcsid[] = "$Id: p_genlin.c,v 1.18 1998/05/23 10:23:23 jim Exp $";
 #include "a_small.h"
 #include "e_exdata.h"
 #include "acs_intr.h"
+#include "c_runcmd.h"
+#include "c_io.h"
+#include "c_net.h"
 
 //////////////////////////////////////////////////////////
 //
@@ -2077,6 +2080,9 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 371: // Light_Fade
       success = EV_FadeLight(args[0], args[1], args[2]);
       break;
+   case 372: // Light_Glow
+      success = EV_GlowLight(args[0], args[1], args[2], args[3]);
+      break;
    default:
       break;
    }
@@ -2215,6 +2221,37 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
 }
 
 //
+// Console Command to execute line specials
+//
+
+CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
+{
+   short spec;
+   long args[5] = { 0, 0, 0, 0, 0 };
+   int i, numargs;
+
+   if(!c_argc)
+   {
+      C_Printf("usage: p_linespec name args\n");
+      return;
+   }
+
+   spec = E_LineSpecForName(c_argv[0]);
+
+   numargs = c_argc - 1;
+
+   for(i = 0; i < numargs; ++i)
+      args[i] = atoi(c_argv[i + 1]);
+
+   P_ExecParamLineSpec(NULL, players[cmdsrc].mo, spec, args, 0, SPAC_CROSS, true);
+}
+
+void P_AddGenLineCommands(void)
+{
+   C_AddCommand(p_linespec);
+}
+
+//
 // Small Param Line Special Wrappers
 //
 
@@ -2288,6 +2325,7 @@ SCRIPT_SPEC(368, light_raisebyvalue)
 SCRIPT_SPEC(369, light_lowerbyvalue)
 SCRIPT_SPEC(370, light_changetovalue)
 SCRIPT_SPEC(371, light_fade)
+SCRIPT_SPEC(372, light_glow)
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
@@ -2356,6 +2394,7 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Light_LowerByValue",          sm_light_lowerbyvalue          },
    { "_Light_ChangeToValue",         sm_light_changetovalue         },
    { "_Light_Fade",                  sm_light_fade                  },
+   { "_Light_Glow",                  sm_light_glow                  },
    { NULL, NULL }
 };
 

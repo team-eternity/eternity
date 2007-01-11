@@ -4188,6 +4188,8 @@ void P_ConvertHexenLineSpec(short *special, long *args)
       *special = 371; // args are same
       break;
    case 114: // light glow
+      *special = 372; // args are same
+      break;
    case 115: // light flicker
    case 116: // light strobe
    // UNUSED: 117-119

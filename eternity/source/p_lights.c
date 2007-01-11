@@ -191,7 +191,7 @@ void T_LightFade(lightfade_t *lf)
       {
          // reverse glow direction
          lf->destlevel = (lf->lightlevel == lf->glowmax) ? lf->glowmin : lf->glowmax;
-         lf->step      = (lf->lightlevel - lf->destlevel) / lf->glowspeed;
+         lf->step      = (lf->destlevel - lf->lightlevel) / lf->glowspeed;
       }
    }
 }
@@ -567,7 +567,7 @@ int EV_FadeLight(int tag, int destvalue, int speed)
    return rtn;
 }
 
-int EV_GlowLight(int tag, int minval, int maxval, int speed)
+int EV_GlowLight(int tag, int maxval, int minval, int speed)
 {
    int i, rtn = 0;
    lightfade_t *lf;

@@ -1127,6 +1127,8 @@ int EV_SetLight(int tag, setlight_e type, int lvl); // haleyjd 01/09/07
 
 int EV_FadeLight(int tag, int destvalue, int speed); // haleyjd 01/10/07
 
+int EV_GlowLight(int tag, int maxval, int minval, int speed); // haleyjd 01/10/07
+
 // p_floor
 
 int EV_DoChange(line_t *line, change_e changetype);

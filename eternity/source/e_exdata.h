@@ -107,6 +107,7 @@ void E_LoadLineDefExt(line_t *line);
 boolean E_IsParamSpecial(short special);
 void E_GetEDMapThings(mapthingext_t **things, int *numthings);
 void E_GetEDLines(maplinedefext_t **lines, int *numlines);
+short E_LineSpecForName(const char *name);
 
 #endif
 

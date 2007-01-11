@@ -561,6 +561,7 @@ static struct exlinespec
    { 369, "Light_LowerByValue" },
    { 370, "Light_ChangeToValue" },
    { 371, "Light_Fade" },
+   { 372, "Light_Glow" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -814,10 +815,20 @@ static void E_InitLineSpecHash(void)
 //
 // Gets a line special for a name.
 //
-static short E_LineSpecForName(const char *name)
+short E_LineSpecForName(const char *name)
 {
+   static boolean hash_init = false;
    unsigned int key = D_HashTableKey(name) % NUMLSPECCHAINS;
-   unsigned int i   = linespec_chains[key];
+   unsigned int i;
+
+   // initialize line specials hash first time
+   if(!hash_init)
+   {
+      E_InitLineSpecHash();
+      hash_init = true;
+   }
+
+   i = linespec_chains[key];
 
    while(i != NUMLINESPECS && strcasecmp(name, exlinespecs[i].name))
       i = exlinespecs[i].next;
@@ -919,10 +930,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
 //
 static boolean E_BooleanArg(const char *str)
 {
-   if(!strcasecmp(str, "yes"))
-      return true;
-   
-   return false;
+   return !strcasecmp(str, "yes");
 }
 
 //
@@ -1336,23 +1344,13 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    if(*endptr != '\0')
    {
       // value is a special name
-      static boolean hash_init = false;
       char *bracket_loc = strchr(value, '(');
 
       // if it has a parenthesis, it's a generalized type
       if(bracket_loc)
          *(long *)result = E_ProcessGenSpec(value);
       else
-      {
-         // initialize line specials hash first time
-         if(!hash_init)
-         {
-            E_InitLineSpecHash();
-            hash_init = true;
-         }
-         
          *(long *)result = (long)(E_LineSpecForName(value));
-      }
    }
    else
    {
@@ -1687,6 +1685,7 @@ boolean E_IsParamSpecial(short special)
    case 369: // Light_LowerByValue
    case 370: // Light_ChangeToValue
    case 371: // Light_Fade
+   case 372: // Light_Glow
       return true;
    default:
       return false;
