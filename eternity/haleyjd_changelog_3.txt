@@ -1,4 +1,124 @@
 ================================================================================
+Changes since Eternity Engine v3.33.50
+================================================================================
+--------------------------------------------------------------------------------
+11/09/06
+
+Work continues on classes, but has been set back by the unexpected discovery of
+another extremely serious bug, this one from MBF.
+
+Turns out that monsters being removed from the game while still being targetted
+can end up being manipulated by the things that were targetting them at the
+time. This means that while having been moved to the th_misc class and having
+their thinkerclass links invalidated, they start getting moved back into the
+list. Problem is, the code that moves them in the list expects them to be in
+the list already. If they're not, the entire list gets corrupted and the AI 
+routines fall into an infinite loop, causing the game to hard-lock.
+
+Turns out that removing the monsters from the threaded lists isn't possible.
+They must remain in the list but be moved into a new class, th_delete. I found
+this problem by creating a "banish" console command, which totally removes a
+targetted monster from the game.
+
+--------------------------------------------------------------------------------
+11/08/06
+
+Assmaster convinced me to separate EDF skins from player classes, so they are
+now their own independent global entities. This eliminates any oddity with 
+classes defining multiple skins of the same name and unexpectedly overwriting
+each other.
+
+--------------------------------------------------------------------------------
+11/07/06
+
+Made the EDF sprite hash persistent in case skins or player classes need to make
+use of it at runtime. Changed the new EDF skin objects to be hashed instead of
+being stored in a reallocating array.
+
+--------------------------------------------------------------------------------
+11/06/06
+
+Prematurely began work on dynamic player classes. This will involve rewriting
+a good deal of the skin engine.
+
+--------------------------------------------------------------------------------
+11/05/06
+
+Fixed a bug in the new 3D object clipping related to nightmare respawning -- you
+could get stuck inside monsters if you were standing over them, but not on the
+same floor level, when they decided to respawn. This was apparently an import
+error, as I don't believe zdoom has this problem.
+
+I also fixed EDF so that sounds.edf can be parsed as a default fallback again,
+although in this circumstance, sound sequences are still currently broken. I
+need to rewrite this part of EDF to parse sound sequences from the same cfg_t
+that sounds are coming from.
+
+--------------------------------------------------------------------------------
+11/04/06
+
+SoM increased the precision of the span renderers yet again by doing true 6.26 
+fixed-point math. The extra precision was before being wasted through shifting,
+resulting in a lot of zeroes in the decimal places.
+
+I added DSTINK from Freedoom to eternity.wad after I noticed that this sound is
+missing from Doom Shareware versions 1.1 and 1.2. I could throw in the real
+DSTINK but I'd prefer to not add more technically illegal resources to the
+resource wad when there are acceptable free alternatives.
+
+I tested to see if it had a good DSGETPOW sound, but I didn't like it, so the
+real one will remain.
+
+--------------------------------------------------------------------------------
+11/03/06
+
+Music selection widget is finished. I also seriously rewrote the way that text
+box widgets work; the selected item now remains in the center of the box instead
+of being at the end of it, and arrows with a MORE message appear at the box
+boundaries when the list can be scrolled up or down.
+
+I also fixed a bug with menu widgets which caused them to unnecessarily activate
+the menu system.
+
+Turns out there was a bug in music lump hashing too, and so new music lumps have
+once again been broken for a while.
+
+--------------------------------------------------------------------------------
+11/02/06
+
+Added rootmenu and curpage fields to menu_t to create a solution to the problem
+of remembering what page a menu was last on.
+
+The key binding menu item for the hu_messages command still used the old
+"messages" command name and therefore didn't work.
+
+I added a console command that can play music. This is in anticipation of a 
+jukebox-style menu that will let you play music, which is being added as a sort
+of easter egg feature.
+
+--------------------------------------------------------------------------------
+11/01/06
+
+Started work on refining some of the recent changes to the menu system.
+
+--------------------------------------------------------------------------------
+10/30/06
+
+Work on Linux issues continues. I also fixed a number of console bugs with
+text control characters, particularly the abscenter character.
+
+--------------------------------------------------------------------------------
+10/24/06
+
+Began the laborious process of fixing the few hundred warnings thrown by gcc
+when compiling under Linux. They're all minor nitpickings aside from trouble
+with the PATH_MAX symbol on some distributions.
+
+I also added a fix for crashing when the user requests to load an empty save
+game slot from the command line. This was fixed for menus a long time ago, but I
+never thought about the -load command.
+
+================================================================================
 Changes since Eternity Engine v3.33.33
 ================================================================================
 --------------------------------------------------------------------------------
