@@ -646,6 +646,7 @@ static void R_AddLine(seg_t *line)
       seg.high = (seg.backsec->ceilingheight / 65536.0f) - view.z;
 
       seg.clipsolid = seg.frontsec->ceilingheight <= seg.frontsec->floorheight 
+                || seg.backsec->ceilingheight <= seg.backsec->floorheight
                 || ((seg.frontsec->ceilingheight <= seg.backsec->floorheight
                 || seg.backsec->ceilingheight <= seg.frontsec->floorheight 
                 || seg.backsec->floorheight >= seg.backsec->ceilingheight) 
@@ -654,6 +655,12 @@ static void R_AddLine(seg_t *line)
                    && (seg.backsec->ceilingpic == skyflatnum 
                    ||  seg.backsec->ceilingpic == sky2flatnum))) ? true : false;
 
+      if((seg.frontsec->ceilingpic == skyflatnum 
+          || seg.frontsec->ceilingpic == sky2flatnum)
+          && (seg.backsec->ceilingpic == skyflatnum 
+          ||  seg.backsec->ceilingpic == sky2flatnum))
+         seg.top = seg.high;
+
       seg.markceiling = mark || seg.clipsolid ||
          seg.top != seg.high ||
          seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
@@ -661,12 +668,6 @@ static void R_AddLine(seg_t *line)
          seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
          seg.frontsec->c_portal != seg.backsec->c_portal ||
          seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ? true : false;
-
-      if((seg.frontsec->ceilingpic == skyflatnum 
-          || seg.frontsec->ceilingpic == sky2flatnum)
-          && (seg.backsec->ceilingpic == skyflatnum 
-          ||  seg.backsec->ceilingpic == sky2flatnum))
-         seg.top = seg.high;
 
       if(seg.high < seg.top && side->toptexture)
       {
@@ -697,7 +698,7 @@ static void R_AddLine(seg_t *line)
          seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = (int)((seg.bottom + seg.bottomtexh + seg.toffsety) * FRACUNIT);
+            seg.bottomtexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
          else
             seg.bottomtexmid = (int)((seg.low + seg.toffsety) * FRACUNIT);
       }

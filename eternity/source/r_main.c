@@ -276,7 +276,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 static void R_InitTextureMapping (void)
 {
    register int i, x, limit;
-   float vtan;
+   float vtan, ratio;
    
    // Use tangent table to generate viewangletox:
    //  viewangletox will give the next greatest x
@@ -285,10 +285,11 @@ static void R_InitTextureMapping (void)
    // Calc focal length so fov angles cover SCREENWIDTH
 
    // Cardboard
+   ratio = 1.6f / (view.width / view.height);
    view.fov = (float)fov * PI / 180.0f; // 90 degrees
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;
-   view.yfoc = view.xfoc * 1.2f;
+   view.yfoc = view.xfoc * ratio;
    view.focratio = view.yfoc / view.xfoc;
 
    // Unfortunately, cardboard still has to co-exist with the old fixed point code
@@ -760,8 +761,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_DrawMasked();
    
    // haleyjd 09/04/06: handle through column engine
-   //if(r_column_engine->ResetBuffer)
-   //   r_column_engine->ResetBuffer();
+   if(r_column_engine->ResetBuffer)
+      r_column_engine->ResetBuffer();
    
    // Check for new console commands.
    NetUpdate();
