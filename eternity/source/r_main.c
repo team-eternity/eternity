@@ -483,7 +483,7 @@ void R_ExecuteSetViewSize (void)
       int j, startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
       for(j = 0; j < MAXLIGHTSCALE; ++j)
       {                                       // killough 11/98:
-         int t, level = startmap - j*SCREENWIDTH/scaledviewwidth/DISTMAP;
+         int t, level = startmap - j*1/DISTMAP;
          
          if(level < 0)
             level = 0;
