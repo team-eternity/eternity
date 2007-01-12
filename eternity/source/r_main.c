@@ -285,7 +285,7 @@ static void R_InitTextureMapping (void)
    // Calc focal length so fov angles cover SCREENWIDTH
 
    // Cardboard
-   ratio = 1.6f / (view.width / view.height);
+   ratio = 1.6f / ((float)v_width / (float)v_height);
    view.fov = (float)fov * PI / 180.0f; // 90 degrees
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;
@@ -502,16 +502,16 @@ void R_ExecuteSetViewSize (void)
    if(view.tan < 1.0f)
    {
       view.pspritexscale = view.width / ((float)SCREENWIDTH * view.tan);
-      view.pspriteyscale = view.height / ((float)SCREENHEIGHT * view.tan);
       view.pspritexstep = ((float)SCREENWIDTH * view.tan) / view.width;
-      view.pspriteystep = ((float)SCREENHEIGHT * view.tan) / view.height;
+      view.pspriteyscale = view.pspritexscale * view.focratio;
+      view.pspriteystep = 1.0f / view.pspriteyscale;
    }
    else
    {
       view.pspritexscale = view.width / (float)SCREENWIDTH;
-      view.pspriteyscale = view.height / (float)SCREENHEIGHT;
       view.pspritexstep = (float)SCREENWIDTH / view.width;
-      view.pspriteystep = (float)SCREENHEIGHT / view.height;
+      view.pspriteyscale = view.pspritexscale * view.focratio;
+      view.pspriteystep = 1.0f / view.pspriteyscale;
    }
 }
 
