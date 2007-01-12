@@ -271,6 +271,8 @@ static void R_RenderSegLoop(void)
             segclip.ceilingplane->top[i] = (int)top;
             segclip.ceilingplane->bottom[i] = (int)bottom;
          }
+   
+         ceilingclip[i] = t;
       }
 
 #ifdef R_PORTALS
@@ -304,6 +306,7 @@ static void R_RenderSegLoop(void)
             segclip.floorplane->top[i] = (int)top;
             segclip.floorplane->bottom[i] = (int)bottom;
          }
+         floorclip[i] = b;
       }
 
 #ifdef R_PORTALS
