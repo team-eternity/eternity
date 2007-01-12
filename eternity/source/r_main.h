@@ -201,6 +201,7 @@ typedef struct
 
 extern cb_view_t  view;
 extern cb_seg_t   seg;
+extern cb_seg_t   segclip;
 
 #endif
 

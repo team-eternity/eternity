@@ -743,8 +743,34 @@ static void R_AddLine(seg_t *line)
    }
 
    #ifdef R_PORTALS
-      if(portalrender && !R_ClipSeg())
+   if(portalrender)
+   {
+      float y1, y2;
+
+      // I totally overlooked this when I moved all the wall panel projection to r_segs.c
+      // I guess it's good enough to just store the top and bottom projections for the entire
+      // seg in the segclip object and have clipseg use that for reference.
+      i1 = seg.dist * view.yfoc;
+      i2 = seg.dist2 * view.yfoc;
+
+      if(seg.x2frac == seg.x1frac)
+         pstep = 1.0f;
+      else
+         pstep = 1.0f / (seg.x2frac - seg.x1frac);
+
+      segclip.top = 
+      y1 = view.ycenter - (seg.top * i1);
+      y2 = view.ycenter - (seg.top * i2);
+      segclip.topstep = (y2 - y1) * pstep;
+
+      segclip.bottom = 
+      y1 = view.ycenter - (seg.bottom * i1) - 1;
+      y2 = view.ycenter - (seg.bottom * i2) - 1;
+      segclip.bottomstep = (y2 - y1) * pstep;
+
+      if(!R_ClipSeg())
          return;
+   }
    #endif
 
    if(seg.clipsolid)

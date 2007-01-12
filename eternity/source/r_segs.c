@@ -44,9 +44,9 @@ rcsid[] = "$Id: r_segs.c,v 1.16 1998/05/03 23:02:01 killough Exp $";
 
 
 // SoM: Cardboard globals
-cb_seg_t          seg;
 cb_column_t       column;
-static cb_seg_t   segclip;
+cb_seg_t          seg;
+cb_seg_t          segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
 
@@ -454,6 +454,8 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
+#define DISTSTEPLIMIT 0.0002f
+
 void R_StoreWallRange(const int start, const int stop)
 {
    float clipx1;
@@ -468,7 +470,7 @@ void R_StoreWallRange(const int start, const int stop)
    segclip.x1 = start;
    segclip.x2 = stop;
 
-   if((float)fabs(segclip.diststep) > 0.0003f)
+   if((float)fabs(segclip.diststep) > DISTSTEPLIMIT)
    {
       clipx1 = (float)(start - seg.x1);
       clipx2 = (float)(seg.x2 - stop);
@@ -697,7 +699,7 @@ void R_StoreWallRange(const int start, const int stop)
 boolean R_ClipSeg()
 {
    int   i;
-   float l;
+   float clipx;
    // The way we handle segs depends on relative camera position. If the 
    // camera is above we need to reject segs based on the top of the seg.
    // If the camera is below the bottom of the seg the bottom edge needs 
@@ -707,9 +709,9 @@ boolean R_ClipSeg()
    {
       float top, topstep, topstop;
 
-      top = seg.top;
-      topstep = seg.topstep;
-      topstop = top + ((seg.x2 - seg.x1) * topstep);
+      top = segclip.top;
+      topstep = segclip.topstep;
+      topstop = top + ((seg.x2frac - seg.x1frac) * topstep);
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
@@ -721,18 +723,18 @@ boolean R_ClipSeg()
          }
 
          // First visible column has been found, so set seg to start here.
-         l = (float)(i - seg.x1);
+         if(i != seg.x1)
+         {
+            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
+               clipx = (float)(i - seg.x1);
+            else
+               clipx = (float)(i - seg.x1frac);
 
-         seg.top = top;
-         seg.bottom += seg.bottomstep * l;
-         seg.dist += seg.diststep * l;
-         seg.len += seg.lenstep * l;
-         if(seg.toptex)
-            seg.high += seg.highstep * l;
-         if(seg.bottomtex)
-            seg.low += seg.lowstep * l;
-
-         seg.x1 = i;
+            seg.dist += seg.diststep * clipx;
+            seg.len += seg.lenstep * clipx;
+            seg.x1 = i;
+            seg.x1frac = (float)i;
+         }
 
          // next count back from the right end of the seg to see if there are
          // hidden columns which could be removed.
@@ -749,7 +751,18 @@ boolean R_ClipSeg()
             break;
          }
 
-         seg.x2 = i;
+         if(i != seg.x2)
+         {
+            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
+               clipx = (float)(seg.x2 - i);
+            else
+               clipx = (float)(seg.x2frac - i);
+
+            seg.dist2 -= clipx * seg.diststep;
+            seg.len2 -= clipx * seg.lenstep;
+            seg.x2 = i;
+            seg.x2frac = (float)i;
+         }
          return true;
       }
 
@@ -760,9 +773,9 @@ boolean R_ClipSeg()
    {
       float bottom, bottomstep, stopbottom;
 
-      bottom = seg.bottom;
-      bottomstep = seg.bottomstep;
-      stopbottom = bottom + ((seg.x2 - seg.x1) * bottomstep);
+      bottom = segclip.bottom;
+      bottomstep = segclip.bottomstep;
+      stopbottom = bottom + ((seg.x2frac - seg.x1frac) * bottomstep);
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
@@ -773,19 +786,19 @@ boolean R_ClipSeg()
             continue;
          }
 
-         // First visible column has been found, so set seg to start here.
-         l = (float)(i - seg.x1);
+         if(i != seg.x1)
+         {
+            // First visible column has been found, so set seg to start here.
+            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
+               clipx = (float)(i - seg.x1);
+            else
+               clipx = (float)(i - seg.x1frac);
 
-         seg.top += seg.topstep * l;
-         seg.bottom = bottom;
-         seg.dist += seg.diststep * l;
-         seg.len += seg.lenstep * l;
-         if(seg.toptex)
-            seg.high += seg.highstep * l;
-         if(seg.bottomtex)
-            seg.low += seg.lowstep * l;
-
-         seg.x1 = i;
+            seg.dist += seg.diststep * clipx;
+            seg.len += seg.lenstep * clipx;
+            seg.x1 = i;
+            seg.x1frac = (float)i;
+         }
 
          // next count back from the right end of the seg to see if there are
          // hidden columns which could be removed.
@@ -802,7 +815,18 @@ boolean R_ClipSeg()
             break;
          }
 
-         seg.x2 = i;
+         if(i != seg.x2)
+         {
+            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
+               clipx = (float)(seg.x2 - i);
+            else
+               clipx = (float)(seg.x2frac - i);
+
+            seg.dist2 -= clipx * seg.diststep;
+            seg.len2 -= clipx * seg.lenstep;
+            seg.x2 = i;
+            seg.x2frac = (float)i;
+         }
          return true;
       }
 
