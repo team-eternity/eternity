@@ -460,6 +460,7 @@ static void R_AddLine(seg_t *line)
    vertex_t  t1, t2, temp;
    side_t *side;
    static sector_t tempsec;
+   float floorx1, floorx2;
 
    seg.clipsolid = false;
    seg.backsec = line->backsector ? R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true) : NULL;
@@ -552,13 +553,15 @@ static void R_AddLine(seg_t *line)
    // SoM: Handle the case where a wall is only occupying a single post but still needs to be 
    // rendered to keep groups of single post walls from not being rendered and causing slime 
    // trails.
- 
+   floorx1 = (float)floor(x1 + 0.5f);
+   floorx2 = (float)floor(x2 - 0.5f);
+
    // backface rejection
-   if(x2 < x1)
+   if(floorx2 < floorx1)
       return;
 
    // off the screen rejection
-   if(x2 < 0 || x1 >= view.width)
+   if(floorx2 < 0 || floorx1 >= view.width)
       return;
 
    if(x2 > x1)
@@ -719,7 +722,7 @@ static void R_AddLine(seg_t *line)
    }
    else
    {
-      seg.x1 = (int)floor(x1);
+      seg.x1 = (int)floorx1;
       seg.x1frac = x1;
    }
 
@@ -735,7 +738,7 @@ static void R_AddLine(seg_t *line)
    }
    else
    {
-      seg.x2 = (int)floor(x2);
+      seg.x2 = (int)floorx2;
       seg.x2frac = x2;
    }
 

@@ -465,7 +465,7 @@ void R_StoreWallRange(const int start, const int stop)
    segclip.x1 = start;
    segclip.x2 = stop;
 
-   if((float)fabs(segclip.diststep) > 0.00009f)
+   if((float)fabs(segclip.diststep) > 0.0003f)
    {
       clipx1 = (float)(start - seg.x1);
       clipx2 = (float)(seg.x2 - stop);
