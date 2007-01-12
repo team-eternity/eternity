@@ -56,6 +56,37 @@ int main(int argc, char **argv)
    myargc = argc;
    myargv = argv;
    
+   // SoM: From CHOCODOOM Thank you fraggle!!
+#ifdef _WIN32
+
+    // Allow -gdi as a shortcut for using the windib driver.
+
+    //!
+    // @category video 
+    // @platform windows
+    //
+    // Use the Windows GDI driver instead of DirectX.
+    //
+
+    if (M_CheckParm("-gdi") > 0)
+    {
+        putenv("SDL_VIDEODRIVER=windib");
+    }
+
+    // From the SDL 1.2.10 release notes: 
+    //
+    // > The "windib" video driver is the default now, to prevent 
+    // > problems with certain laptops, 64-bit Windows, and Windows 
+    // > Vista. 
+    //
+    // The hell with that.
+
+    if (getenv("SDL_VIDEODRIVER") == NULL)
+    {
+        putenv("SDL_VIDEODRIVER=directx");
+    }
+#endif
+
    // haleyjd 04/15/02: added check for failure
    if(SDL_Init(INIT_FLAGS) == -1)
    {

@@ -380,6 +380,7 @@ static void I_GetEvent(void)
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
          mouseevent.data3 = -event.motion.yrel;
          mouseevent.data2 = event.motion.xrel;
+
          sendmouseevent = 1;
          break;
       
@@ -551,10 +552,13 @@ void I_FinishUpdate(void)
       memcpy(sdlscreen->pixels, screens[PRIMARY_BUFFER], v_width * v_height);
    else
    {
-      int y = v_height;
+      // SoM: ok, so it would seem that the backward count is actually slower
+      // probably because it involves a lot more jumping around in memory. This way
+      // the pointer runs more linnearly through the memory buffer.
+      int y = -1;
       
       // SoM: optimized a bit
-      while(--y >= 0)
+      while(++y < v_height)
          memcpy((char *)sdlscreen->pixels + (y * pitch1), screens[PRIMARY_BUFFER] + (y * pitch2), pitch2);
    }
 
