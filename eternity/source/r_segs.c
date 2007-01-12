@@ -40,17 +40,16 @@ rcsid[] = "$Id: r_segs.c,v 1.16 1998/05/03 23:02:01 killough Exp $";
 #include "p_info.h"
 
 // OPTIMIZE: closed two sided lines as single sided
+// SoM: Done.
+
+
+// SoM: Cardboard globals
+cb_seg_t          seg;
+cb_column_t       column;
+static cb_seg_t   segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
 
-// True if any of the segs textures might be visible.
-static boolean  segtextured;
-static boolean  markfloor;      // False if the back side is the same plane.
-static boolean  markceiling;
-static boolean  maskedtexture;
-static int      toptexture;
-static int      bottomtexture;
-static int      midtexture;
 
 #ifdef R_PORTALS
 // SoM: ignore markfloor/markceiling in some cases for portals.
@@ -58,43 +57,11 @@ static boolean  c_portalignore;
 static boolean  f_portalignore;
 #endif
 
-angle_t         rw_normalangle; // angle to line origin
-int             rw_angle1;
-fixed_t         rw_distance;
 lighttable_t    **walllights;
-
-//
-// regular wall
-//
-static int      rw_x;
-static int      rw_stopx;
-static angle_t  rw_centerangle;
-static fixed_t  rw_offset;
-static fixed_t  rw_scale;
-static fixed_t  rw_scalestep;
-static fixed_t  rw_midtexturemid;
-static fixed_t  rw_toptexturemid;
-static fixed_t  rw_bottomtexturemid;
-static int      worldtop;
-static int      worldbottom;
-static int      worldhigh;
-static int      worldlow;
-static fixed_t  pixhigh;
-static fixed_t  pixlow;
-static fixed_t  pixhighstep;
-static fixed_t  pixlowstep;
-static fixed_t  topfrac;
-static fixed_t  topstep;
-static fixed_t  bottomfrac;
-static fixed_t  bottomstep;
 
 
 // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-static short    *maskedtexturecol;
-#else
 static int *maskedtexturecol;
-#endif
 
 //
 // R_RenderMaskedSegRange
@@ -106,142 +73,123 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    int      lightnum;
    int      texnum;
    sector_t tempsec;      // killough 4/13/98
+   float    dist, diststep;
+   lighttable_t **wlight;
 
    // Calculate light table.
    // Use different light tables
    //   for horizontal / vertical / diagonal. Diagonal?
 
-   curline = ds->curline;  // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
+   segclip.line = ds->curline;
    
    // killough 4/11/98: draw translucent 2s normal textures
    
    colfunc = r_column_engine->DrawColumn;
-   if(curline->linedef->tranlump >= 0 && general_translucency)
+   if(segclip.line->linedef->tranlump >= 0 && general_translucency)
    {
       colfunc = r_column_engine->DrawTLColumn;
       tranmap = main_tranmap;
-      if(curline->linedef->tranlump > 0)
-         tranmap = W_CacheLumpNum(curline->linedef->tranlump-1, PU_STATIC);
+      if(segclip.line->linedef->tranlump > 0)
+         tranmap = W_CacheLumpNum(segclip.line->linedef->tranlump-1, PU_STATIC);
    }
    // killough 4/11/98: end translucent 2s normal code
-   
-   frontsector = curline->frontsector;
-   backsector = curline->backsector;
+   segclip.frontsec = segclip.line->frontsector;
+   segclip.backsec = segclip.line->backsector;
 
-   texnum = texturetranslation[curline->sidedef->midtexture];
+   texnum = texturetranslation[segclip.line->sidedef->midtexture];
    
    // killough 4/13/98: get correct lightlevel for 2s normal textures
-   lightnum = (R_FakeFlat(frontsector, &tempsec, NULL, NULL, false)
+   lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, NULL, NULL, false)
                ->lightlevel >> LIGHTSEGSHIFT)+extralight;
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
    {  
-      if(curline->v1->y == curline->v2->y)
+      if(ds->curline->linedef->v1->y == ds->curline->linedef->v2->y)
          --lightnum;
-      else if(curline->v1->x == curline->v2->x)
+      else if(ds->curline->linedef->v1->x == ds->curline->linedef->v2->x)
          ++lightnum;
    }
 
    // SoM 10/19/02: deep water colormap fix
-   walllights = 
+   wlight = 
       ds->colormap[lightnum >= LIGHTLEVELS || fixedcolormap ? 
                    LIGHTLEVELS-1 :
                    lightnum <  0 ? 0 : lightnum ] ;
 
    maskedtexturecol = ds->maskedtexturecol;
 
-   rw_scalestep = ds->scalestep;
-   spryscale = ds->scale1 + (x1 - ds->x1)*rw_scalestep;
    mfloorclip = ds->sprbottomclip;
    mceilingclip = ds->sprtopclip;
 
+   diststep = ds->diststep;
+   dist = ds->dist1 + (x1 - ds->x1) * diststep;
+
 #ifdef R_PORTALS
    // find positioning
-   if(curline->linedef->flags & ML_DONTPEGBOTTOM)
+   if(segclip.line->linedef->flags & ML_DONTPEGBOTTOM)
    {
-      dc_texturemid = frontsector->floorheight > backsector->floorheight
-         ? frontsector->floorheight : backsector->floorheight;
-      dc_texturemid = dc_texturemid + textureheight[texnum] - ds->viewz;
+      column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
+         ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
+      column.texmid = column.texmid + textureheight[texnum] - ds->viewz;
    }
    else
    {
-      dc_texturemid =frontsector->ceilingheight<backsector->ceilingheight
-         ? frontsector->ceilingheight : backsector->ceilingheight;
-      dc_texturemid = dc_texturemid - ds->viewz;
+      column.texmid = segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight
+         ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
+      column.texmid = column.texmid - ds->viewz;
    }
 #else
    // find positioning
-   if(curline->linedef->flags & ML_DONTPEGBOTTOM)
+   if(segclip.line->linedef->flags & ML_DONTPEGBOTTOM)
    {
-      dc_texturemid = frontsector->floorheight > backsector->floorheight
-         ? frontsector->floorheight : backsector->floorheight;
-      dc_texturemid = dc_texturemid + textureheight[texnum] - viewz;
+      column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
+         ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
+      column.texmid = column.texmid + textureheight[texnum] - viewz;
    }
    else
    {
-      dc_texturemid =frontsector->ceilingheight<backsector->ceilingheight
-         ? frontsector->ceilingheight : backsector->ceilingheight;
-      dc_texturemid = dc_texturemid - viewz;
+      column.texmid = segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight
+         ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
+      column.texmid = column.texmid - viewz;
    }
 #endif
 
-   dc_texturemid += curline->sidedef->rowoffset;
+   column.texmid += segclip.line->sidedef->rowoffset;
    
    // SoM 10/19/02: deep water colormap fixes
-   //  if (fixedcolormap)
-   //    dc_colormap = fixedcolormap;
+   //if (fixedcolormap)
+   //   column.colormap = fixedcolormap;
    if(fixedcolormap)
    {
       // haleyjd 10/31/02: invuln fix
       if(fixedcolormap == 
          fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
-         dc_colormap = fixedcolormap;
+         column.colormap = fixedcolormap;
       else
-         dc_colormap = walllights[MAXLIGHTSCALE-1];
+         column.colormap = walllights[MAXLIGHTSCALE-1];
    }
 
    // draw the columns
-   for(dc_x = x1; dc_x <= x2; ++dc_x, spryscale += rw_scalestep)
+   for(column.x = x1; column.x <= x2; ++column.x, dist += diststep)
    {
       // haleyjd:DEBUG
-#ifdef R_SIXTEEN
-      if(maskedtexturecol[dc_x] != D_MAXSHORT)
-#else
-      if(maskedtexturecol[dc_x] != D_MAXINT)
-#endif
+      if(maskedtexturecol[column.x] != 0x7fffffff)
       {
          if(!fixedcolormap)      // calculate lighting
          {                             // killough 11/98:
             // SoM: ANYRES
-            unsigned index = spryscale>>(LIGHTSCALESHIFT + addscaleshift);
+            int index = (int)(dist * 2560.0f);
             
             if(index >=  MAXLIGHTSCALE )
                index = MAXLIGHTSCALE - 1;
             
-            dc_colormap = walllights[index];
+            column.colormap = wlight[index];
          }
 
-         // killough 3/2/98:
-         //
-         // This calculation used to overflow and cause crashes in Doom:
-         //
-         // sprtopscreen = centeryfrac - FixedMul(dc_texturemid, spryscale);
-         //
-         // This code fixes it, by using double-precision intermediate
-         // arithmetic and by skipping the drawing of 2s normals whose
-         // mapping to screen coordinates is totally out of range:
-
-         {
-            Long64 t = ((Long64) centeryfrac << FRACBITS) -
-                        (Long64) dc_texturemid * spryscale;
-            if(t + (Long64)textureheight[texnum] * spryscale < 0 ||
-               t > (Long64)MAX_SCREENHEIGHT << FRACBITS*2)
-               continue;        // skip if the texture is out of screen's range
-            sprtopscreen = (long)(t >> FRACBITS);
-         }
-
-         dc_iscale = 0xffffffffu / (unsigned) spryscale;
+         maskedcolumn.scale = view.yfoc * dist;
+         maskedcolumn.ytop = view.ycenter - ((column.texmid / 65536.0f) * maskedcolumn.scale);
+         column.step = (int)(65536.0f / maskedcolumn.scale);
 
          // killough 1/25/98: here's where Medusa came in, because
          // it implicitly assumed that the column was all one patch.
@@ -253,21 +201,16 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
          // draw the texture
          col = (column_t *)((byte *)
-                            R_GetColumn(texnum,maskedtexturecol[dc_x]) - 3);
+                            R_GetColumn(texnum,maskedtexturecol[column.x]) - 3);
          R_DrawMaskedColumn(col);
          
-         // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-         maskedtexturecol[dc_x] = D_MAXSHORT;
-#else
-         maskedtexturecol[dc_x] = D_MAXINT;
-#endif
+         maskedtexturecol[column.x] = 0x7fffffff;
       }
    }
 
    // Except for main_tranmap, mark others purgable at this point
-   if(curline->linedef->tranlump > 0 && general_translucency)
-      Z_ChangeTag(tranmap, PU_CACHE); // killough 4/11/98
+   if(segclip.line->linedef->tranlump > 0 && general_translucency)
+      Z_ChangeTag(tranmap, PU_CACHE); // killough 4/11/98*/
 }
 
 //
@@ -277,211 +220,217 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 // CALLED: CORE LOOPING ROUTINE.
 //
 
-#define HEIGHTBITS 12
-#define HEIGHTUNIT (1<<HEIGHTBITS)
+
+#define R_ROUNDOFF
 
 static void R_RenderSegLoop(void)
 {
-   fixed_t  texturecolumn = 0;   // shut up compiler warning
-   
-   for(; rw_x < rw_stopx; ++rw_x)
+   float t, b, h, l, top, bottom;
+   int i, texx;
+   float basescale;
+
+   for(i = segclip.x1; i <= segclip.x2; i++)
    {
-      // mark floor / ceiling areas
-      int yh = 0, yl = (topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS;
-      
-      // no space above wall?
-      int bottom = 0, top = ceilingclip[rw_x] + 1;
-      
-      if(yl < top)
-         yl = top;
-      
+      top = ceilingclip[i];
+
+      t = segclip.top;
+      b = segclip.bottom;
+      if(t < top)
+         t = top;
+
+      if(b > floorclip[i])
+         b = floorclip[i];
+
+
 #ifdef R_PORTALS
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
-      if((markceiling || c_portalignore) && frontsector->c_portal)
+      if((segclip.markceiling || c_portalignore) && segclip.frontsec->c_portal)
       {
-         bottom = yl - 1;
+         bottom = t - 1;
          
-         if(bottom >= floorclip[rw_x])
-            bottom = floorclip[rw_x]-1;
+         if(bottom > floorclip[i])
+            bottom = floorclip[i];
          
-         if(top <= bottom)
-            R_PortalAdd(frontsector->c_portal, rw_x, top - 1, bottom + 1);
+         if(bottom - top > -1.0f)
+            R_PortalAdd(segclip.frontsec->c_portal, i, top, bottom);
       }
       else
 #endif
-      if(markceiling)
+      if(segclip.markceiling && segclip.ceilingplane)
       {
-         bottom = yl - 1;
-         
-         if(bottom >= floorclip[rw_x])
-            bottom = floorclip[rw_x] - 1;
+         bottom = t - 1;
 
-         if(top <= bottom)
+         if(bottom > floorclip[i])
+            bottom = floorclip[i];
+
+         // ahh the fraction... Some times the top can be greater than the bottom by less than
+         // 1 but the pixel should still be included because the fractional portion is being
+         // discarded anyway.
+         if(bottom - top > -1.0f)
          {
-            ceilingplane->top[rw_x] = top;
-            ceilingplane->bottom[rw_x] = bottom;
+            segclip.ceilingplane->top[i] = (int)top;
+            segclip.ceilingplane->bottom[i] = (int)bottom;
          }
       }
-
-      yh = bottomfrac>>HEIGHTBITS;
-      
-      bottom = floorclip[rw_x] - 1;
-      if(yh > bottom)
-         yh = bottom;
 
 #ifdef R_PORTALS
       // SoM 3/10/2005: Only add to the portal of the floor is marked
-      if((markfloor || f_portalignore)  && frontsector->f_portal)
+      if((segclip.markfloor || f_portalignore)  && segclip.frontsec->f_portal)
       {
-         top = yh < ceilingclip[rw_x] ? ceilingclip[rw_x] : yh;
-         if(++top <= bottom)
-            R_PortalAdd(frontsector->f_portal, rw_x, top - 1, bottom + 1);
+         top = b + 1;
+         bottom = floorclip[i];
+
+         if(top < ceilingclip[i])
+            top = ceilingclip[i];
+
+         if(bottom - top > -1.0f)
+            R_PortalAdd(segclip.frontsec->f_portal, i, top, bottom);
       }
       else
 #endif
-      if(markfloor)
+      if(segclip.markfloor && segclip.floorplane)
       {
-         top = yh < ceilingclip[rw_x] ? ceilingclip[rw_x] : yh;
-         if(++top <= bottom)
+         top = b + 1;
+         bottom = floorclip[i];
+
+         if(top < ceilingclip[i])
+            top = ceilingclip[i];
+
+         // ahh the fraction... Some times the top can be greater than the bottom by less than
+         // 1 but the pixel should still be included because the fractional portion is being
+         // discarded anyway.
+         if(bottom - top > -1.0f)
          {
-            floorplane->top[rw_x] = top;
-            floorplane->bottom[rw_x] = bottom;
+            segclip.floorplane->top[i] = (int)top;
+            segclip.floorplane->bottom[i] = (int)bottom;
          }
       }
 
 #ifdef R_PORTALS
-      if(linedef->portal)
-         R_PortalAdd(linedef->portal, rw_x, yl-1, yh+1);
+      if(segclip.line->linedef->portal)
+         R_PortalAdd(segclip.line->linedef->portal, i, t, b);
       else
-      {
 #endif
-         // texturecolumn and lighting are independent of wall tiers
-         if(segtextured)
+      if(segclip.toptex || segclip.midtex || segclip.bottomtex || segclip.maskedtex)
+      {
+         int index;
+
+         basescale = 1.0f / (segclip.dist * view.yfoc);
+
+         column.step = (int)(basescale * FRACUNIT);
+         column.x = i;
+
+         texx = (int)((segclip.len * basescale) + segclip.toffsetx);
+
+         if(ds_p->maskedtexturecol)
+            ds_p->maskedtexturecol[i] = texx;
+
+         // calculate lighting
+         // SoM: ANYRES
+         if(!fixedcolormap)
          {
-            unsigned index;
-            
-            // calculate texture offset
-            angle_t angle =(rw_centerangle+xtoviewangle[rw_x])>>ANGLETOFINESHIFT;
-            texturecolumn = rw_offset-FixedMul(finetangent[angle],rw_distance);
-            texturecolumn >>= FRACBITS;
-            
-            // calculate lighting
-            // SoM: ANYRES
-            index = rw_scale >> (LIGHTSCALESHIFT + addscaleshift);
-            
+            // SoM: it took me about 5 solid minutes of looking at the old doom code
+            // and running test levels through it to do the math and get 2560 as the
+            // light distance factor.
+            index = (int)(segclip.dist * 2560.0f);
+         
             if(index >=  MAXLIGHTSCALE)
                index = MAXLIGHTSCALE - 1;
-            dc_colormap = walllights[index];
-            dc_x = rw_x;
-            dc_iscale = 0xffffffffu / (unsigned)rw_scale;
-         }
 
-         // draw the wall tiers
-         if(midtexture)
-         {
-            dc_yl = yl;     // single sided line
-            dc_yh = yh;
-            dc_texturemid = rw_midtexturemid;
-            dc_source = R_GetColumn(midtexture, texturecolumn);
-            dc_texheight = textureheight[midtexture] >> FRACBITS; // killough
-            colfunc();
-            ceilingclip[rw_x] = viewheight;
-            floorclip[rw_x] = -1;
+            column.colormap = segclip.walllights[index];
          }
          else
+            column.colormap = fixedcolormap;
+
+         if(segclip.twosided == false && segclip.midtex)
          {
-            // two sided line
-            if(toptexture)
-            {
-               // top wall
-               int mid = pixhigh >> HEIGHTBITS;
-               pixhigh += pixhighstep;
-               
-               if(mid >= floorclip[rw_x])
-                  mid = floorclip[rw_x] - 1;
-               
-               if(mid >= yl)
-               {
-                  dc_yl = yl;
-                  dc_yh = mid;
-                  dc_texturemid = rw_toptexturemid;
-                  dc_source = R_GetColumn(toptexture, texturecolumn);
-                  dc_texheight = textureheight[toptexture] >> FRACBITS;//killough
-                  colfunc();
-                  ceilingclip[rw_x] = mid;
-               }
-               else
-                  ceilingclip[rw_x] = yl - 1;
-            }
-            else
-            {  
-               // no top wall
-               if(markceiling)
-                  ceilingclip[rw_x] = yl - 1;
-            }
+            column.y1 = (int)t;
+            column.y2 = (int)b;
 
-            if(bottomtexture)          // bottom wall
+            column.texmid = segclip.midtexmid;
+
+            column.source = R_GetColumn(segclip.midtex, texx);
+            column.texheight = segclip.midtexh;
+
+            colfunc();
+
+            ceilingclip[i] = view.height - 1.0f;
+            floorclip[i] = 0.0f;
+         }
+         else if(segclip.twosided)
+         {
+            if(segclip.toptex)
             {
-               int mid = (pixlow + HEIGHTUNIT - 1) >> HEIGHTBITS;
-               pixlow += pixlowstep;
-               
-               // no space above wall?
-               if(mid <= ceilingclip[rw_x])
-                  mid = ceilingclip[rw_x] + 1;
-               
-               if(mid <= yh)
+               h = segclip.high;
+               if(h > floorclip[i])
+                  h = floorclip[i];
+
+               column.y1 = (int)t;
+               column.y2 = (int)h;
+
+               if(column.y2 >= column.y1)
                {
-                  dc_yl = mid;
-                  dc_yh = yh;
-                  dc_texturemid = rw_bottomtexturemid;
-                  dc_source = R_GetColumn(bottomtexture, texturecolumn);
-                  dc_texheight = textureheight[bottomtexture] >> FRACBITS; // killough
+                  column.texmid = segclip.toptexmid;
+
+                  column.source = R_GetColumn(segclip.toptex, texx);
+                  column.texheight = segclip.toptexh;
 
                   colfunc();
 
-                  floorclip[rw_x] = mid;
+                  ceilingclip[i] = h + 1.0f;
                }
                else
-                  floorclip[rw_x] = yh + 1;
+                  ceilingclip[i] = t;
+
+               segclip.high += segclip.highstep;
             }
-            else
+            else if(segclip.markceiling)
+               ceilingclip[i] = t;
+
+
+            if(segclip.bottomtex)
             {
-               // no bottom wall
-               if(markfloor)
-                  floorclip[rw_x] = yh + 1;
+               l = segclip.low;
+               if(l < ceilingclip[i])
+                  l = ceilingclip[i];
+
+               column.y1 = (int)l;
+               column.y2 = (int)b;
+
+               if(column.y2 >= column.y1)
+               {
+                  column.texmid = segclip.bottomtexmid;
+
+                  column.source = R_GetColumn(segclip.bottomtex, texx);
+                  column.texheight = segclip.bottomtexh;
+
+                  colfunc();
+
+                  floorclip[i] = l - 1.0f;
+               }
+               else
+                  floorclip[i] = b;
+
+               segclip.low += segclip.lowstep;
             }
-            
-            // save texturecol for backdrawing of masked mid texture
-            if (maskedtexture)
-               maskedtexturecol[rw_x] = texturecolumn;
-         } // !midtexture
-#ifdef R_PORTALS
-      } // !linedef->portal
-#endif
-      
-      rw_scale += rw_scalestep;
-      topfrac += topstep;
-      bottomfrac += bottomstep;
+            else if(segclip.markfloor)
+               floorclip[i] = b;
+         }
+      }
+      else
+      {
+         if(segclip.markfloor) floorclip[i] = b;
+         if(segclip.markceiling) ceilingclip[i] = t;
+      }
+
+      segclip.len += segclip.lenstep;
+      segclip.dist += segclip.diststep;
+      segclip.top += segclip.topstep;
+      segclip.bottom += segclip.bottomstep;
    }
 }
 
 // killough 5/2/98: move from r_main.c, made static, simplified
-
-static fixed_t R_PointToDist(fixed_t x, fixed_t y)
-{
-   fixed_t dx = D_abs(x - viewx);
-   fixed_t dy = D_abs(y - viewy);
-   
-   if(dy > dx)
-   {
-      fixed_t t = dx;
-      dx = dy;
-      dy = t;
-   }
-   return dx ? FixedDiv(dx, finesine[(tantoangle[FixedDiv(dy,dx) >> DBITS]
-                                      + ANG90) >> ANGLETOFINESHIFT]) : 0;
-}
-
 fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 {
    fixed_t dx = D_abs(x2 - x1);
@@ -504,442 +453,233 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 //
 void R_StoreWallRange(const int start, const int stop)
 {
-   fixed_t hyp;
-   fixed_t sineval;
-   angle_t distangle, offsetangle;
-#ifdef R_PORTALS
-   // SoM: don't unmark some portal floors/ceilings
-   c_portalignore = false; f_portalignore = false;
-#endif
+   float clipx1;
+   float clipx2;
 
-   if(ds_p == drawsegs + maxdrawsegs) // killough 1/98 -- fix 2s line HOM
+   float y1, y2, i1, i2;
+   float pstep;
+   side_t *side = seg.side;
+
+   memcpy(&segclip, &seg, sizeof(seg));
+
+   segclip.x1 = start;
+   segclip.x2 = stop;
+
+   if((float)fabs(segclip.diststep) > 0.00009f)
    {
-      unsigned long newmax = maxdrawsegs ? maxdrawsegs*2 : 128; // killough
-      drawsegs = realloc(drawsegs, newmax * sizeof(*drawsegs));
+      clipx1 = (float)(start - seg.x1);
+      clipx2 = (float)(seg.x2 - stop);
+   }
+   else
+   {
+      clipx1 = (float)(start - seg.x1frac);
+      clipx2 = (float)(seg.x2frac - stop);
+   }
+
+   if(segclip.floorplane)
+      segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
+
+   if(segclip.ceilingplane)
+      segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+
+   if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
+      segclip.line->linedef->flags |= ML_MAPPED;
+
+   if(clipx1)
+   {
+      segclip.dist += clipx1 * segclip.diststep;
+      segclip.len += clipx1 * segclip.lenstep;
+   }
+   if(clipx2)
+   {
+      segclip.dist2 -= clipx2 * segclip.diststep;
+      segclip.len2 -= clipx2 * segclip.lenstep;
+   }
+
+
+   i1 = segclip.dist * view.yfoc;
+   i2 = segclip.dist2 * view.yfoc;
+
+   if(stop == start)
+      pstep = 1.0f;
+   else
+      pstep = 1.0f / (float)(stop - start);
+
+   if(!segclip.backsec)
+   {
+      segclip.top = 
+      y1 = view.ycenter - (seg.top * i1);
+      y2 = view.ycenter - (seg.top * i2);
+      segclip.topstep = (y2 - y1) * pstep;
+
+      segclip.bottom = 
+      y1 = view.ycenter - (seg.bottom * i1) - 1;
+      y2 = view.ycenter - (seg.bottom * i2) - 1;
+      segclip.bottomstep = (y2 - y1) * pstep;
+   }
+   else
+   {
+      segclip.top = 
+      y1 = view.ycenter - (seg.top * i1);
+      y2 = view.ycenter - (seg.top * i2);
+      segclip.topstep = (y2 - y1) * pstep;
+      if(segclip.toptex)
+      {
+         segclip.high = 
+         y1 = view.ycenter - (seg.high * i1) - 1;
+         y2 = view.ycenter - (seg.high * i2) - 1;
+         segclip.highstep = (y2 - y1) * pstep;
+      }
+
+      segclip.bottom = 
+      y1 = view.ycenter - (seg.bottom * i1) - 1;
+      y2 = view.ycenter - (seg.bottom * i2) - 1;
+      segclip.bottomstep = (y2 - y1) * pstep;
+      if(segclip.bottomtex)
+      {
+         segclip.low = 
+         y1 = view.ycenter - (seg.low * i1);
+         y2 = view.ycenter - (seg.low * i2);
+         segclip.lowstep = (y2 - y1) * pstep;
+      }
+   }
+
+   // Lighting
+   // TODO: Modularize the lighting. This function should not handle colormaps directly.
+   // calculate light table
+   //  use different light tables
+   //  for horizontal / vertical / diagonal
+   // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
+   if(!fixedcolormap)
+   {
+      int lightnum = (segclip.frontsec->lightlevel >> LIGHTSEGSHIFT) + extralight;
+
+      // haleyjd 08/11/00: optionally skip this to evenly apply colormap
+      if(LevelInfo.unevenLight)
+      {  
+         if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
+            --lightnum;
+         else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
+            ++lightnum;
+      }
+
+      if(lightnum < 0)
+         segclip.walllights = scalelight[0];
+      else if(lightnum >= LIGHTLEVELS)
+         segclip.walllights = scalelight[LIGHTLEVELS-1];
+      else
+         segclip.walllights = scalelight[lightnum];
+   }
+
+
+   // drawsegs need to be taken care of here
+   if(ds_p == drawsegs + maxdrawsegs)
+   {
+      unsigned newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
+      drawsegs = realloc(drawsegs, sizeof(drawseg_t) * newmax);
       ds_p = drawsegs + maxdrawsegs;
       maxdrawsegs = newmax;
    }
 
-#ifdef RANGECHECK
-   if(start >= viewwidth || start > stop)
-      I_Error("Bad R_RenderWallRange: %i to %i", start , stop);
-#endif
-
-   sidedef = curline->sidedef;
-   linedef = curline->linedef;
-
-   // mark the segment as visible for auto map
-   linedef->flags |= ML_MAPPED;
-   
-   // calculate rw_distance for scale calculation
-   rw_normalangle = curline->angle + ANG90;
-   offsetangle = D_abs(rw_normalangle - rw_angle1);
-
-   if(offsetangle > ANG90)
-      offsetangle = ANG90;
-   
-   distangle = ANG90 - offsetangle;
-   hyp = R_PointToDist(curline->v1->x, curline->v1->y);  
-   sineval = finesine[distangle >> ANGLETOFINESHIFT];
-   rw_distance = FixedMul(hyp, sineval);
-
-   ds_p->x1 = rw_x = start;
+   ds_p->x1 = start;
    ds_p->x2 = stop;
-   ds_p->curline = curline;
-   ds_p->colormap = scalelight;
-   rw_stopx = stop + 1;
-
-#ifdef R_PORTALS
    ds_p->viewx = viewx;
    ds_p->viewy = viewy;
    ds_p->viewz = viewz;
-#endif
-
-   // killough 1/6/98, 2/1/98: remove limit on openings
-   // killough 8/1/98: Replaced code with a static limit 
-   // guaranteed to be big enough
+   ds_p->curline = segclip.line;
+   ds_p->dist2 = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
+   ds_p->diststep = segclip.diststep;
+   ds_p->colormap = scalelight;
    
-   // calculate scale at both ends and step
-   // SoM: ANYRES aspect ratio
-   ds_p->scale1 = rw_scale =
-      FixedMul(yaspectmul, R_ScaleFromGlobalAngle(viewangle + xtoviewangle[start]));
-
-   if(stop > start)
+   if(segclip.clipsolid)
    {
-      ds_p->scale2 = FixedMul(yaspectmul, R_ScaleFromGlobalAngle(viewangle + xtoviewangle[stop]));
-      ds_p->scalestep = rw_scalestep = (ds_p->scale2-rw_scale) / (stop-start);
-   }
-   else
-      ds_p->scale2 = ds_p->scale1;
-
-   // calculate texture boundaries
-   //  and decide if floor / ceiling marks are needed
-   worldtop    = frontsector->ceilingheight - viewz;
-   worldbottom = frontsector->floorheight - viewz;
-   
-   midtexture = toptexture = bottomtexture = maskedtexture = 0;
-   ds_p->maskedtexturecol = NULL;
-
-   if(!backsector)
-   {
-      // single sided line
-      midtexture = texturetranslation[sidedef->midtexture];
-      
-      // a single sided line is terminal, so it must mark ends
-      markfloor = markceiling = true;
-
-#ifdef R_PORTALS
-      // haleyjd 03/12/06: inverted predicates to simplify
-      if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED && 
-         frontsector->f_portal->type != R_TWOWAY)
-         f_portalignore = true;
-      if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED && 
-         frontsector->c_portal->type != R_TWOWAY)
-         c_portalignore = true;
-#endif
-      
-      if(linedef->flags & ML_DONTPEGBOTTOM)
-      {         
-         // bottom of texture at bottom
-         fixed_t vtop = frontsector->floorheight + 
-            textureheight[sidedef->midtexture];
-         rw_midtexturemid = vtop - viewz;
-      }
-      else // top of texture at top
-         rw_midtexturemid = worldtop;
-
-      rw_midtexturemid += sidedef->rowoffset;
-      
-      {      // killough 3/27/98: reduce offset
-         fixed_t h = textureheight[sidedef->midtexture];
-         if(h & (h - FRACUNIT))
-            rw_midtexturemid %= h;
-      }
-      
       ds_p->silhouette = SIL_BOTH;
       ds_p->sprtopclip = screenheightarray;
-      ds_p->sprbottomclip = negonearray;
+      ds_p->sprbottomclip = zeroarray;
       ds_p->bsilheight = D_MAXINT;
       ds_p->tsilheight = D_MININT;
+      ds_p->maskedtexturecol = NULL;
    }
-   else      // two sided line
+   else
    {
       ds_p->sprtopclip = ds_p->sprbottomclip = NULL;
       ds_p->silhouette = 0;
 
-      if(frontsector->floorheight > backsector->floorheight)
+      if(segclip.frontsec->floorheight > segclip.backsec->floorheight)
       {
          ds_p->silhouette = SIL_BOTTOM;
-         ds_p->bsilheight = frontsector->floorheight;
+         ds_p->bsilheight = segclip.frontsec->floorheight;
       }
-      else if(backsector->floorheight > viewz)
+      else if(segclip.backsec->floorheight > viewz)
       {
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = D_MAXINT;
       }
-
-      if(frontsector->ceilingheight < backsector->ceilingheight)
+      if(segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight)
       {
          ds_p->silhouette |= SIL_TOP;
-         ds_p->tsilheight = frontsector->ceilingheight;
+         ds_p->tsilheight = segclip.frontsec->ceilingheight;
       }
-      else if(backsector->ceilingheight < viewz)
+      else if(segclip.backsec->ceilingheight < viewz)
       {
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = D_MININT;
       }
 
-      // killough 1/17/98: this test is required if the fix
-      // for the automap bug (r_bsp.c) is used, or else some
-      // sprites will be displayed behind closed doors. That
-      // fix prevents lines behind closed doors with dropoffs
-      // from being displayed on the automap.
-      //
-      // killough 4/7/98: make doorclosed external variable
-      
+
+      if(segclip.maskedtex)
       {
-         extern int doorclosed;    // killough 1/17/98, 2/8/98, 4/7/98
-         if(doorclosed || backsector->ceilingheight <= frontsector->floorheight)
-         {
-            ds_p->sprbottomclip = negonearray;
-            ds_p->bsilheight = D_MAXINT;
-            ds_p->silhouette |= SIL_BOTTOM;
-         }
-         if(doorclosed || backsector->floorheight >= frontsector->ceilingheight)
-         {                   // killough 1/17/98, 2/8/98
-            ds_p->sprtopclip = screenheightarray;
-            ds_p->tsilheight = D_MININT;
-            ds_p->silhouette |= SIL_TOP;
-         }
+         register int i, *mtc;
+         int xlen;
+         xlen = segclip.x2 - segclip.x1 + 1;
+
+         ds_p->maskedtexturecol = (int *)(lastopening - segclip.x1);
+         i = xlen;
+
+         mtc = (int *)lastopening;
+
+         while(i--)
+            mtc[i] = 0x7fffffff;
+
+         lastopening += xlen;
       }
-      
-      worldhigh = backsector->ceilingheight - viewz;
-      worldlow = backsector->floorheight - viewz;
-      
-      // hack to allow height changes in outdoor areas
-      if((frontsector->ceilingpic == skyflatnum ||
-          frontsector->ceilingpic == sky2flatnum) && 
-         (backsector->ceilingpic == skyflatnum ||
-          backsector->ceilingpic == sky2flatnum))
-         worldtop = worldhigh;
-
-      markfloor = worldlow != worldbottom
-         || backsector->floorpic != frontsector->floorpic
-         || backsector->lightlevel != frontsector->lightlevel
-
-         // killough 3/7/98: Add checks for (x,y) offsets
-         || backsector->floor_xoffs != frontsector->floor_xoffs
-         || backsector->floor_yoffs != frontsector->floor_yoffs
-
-         // killough 4/15/98: prevent 2s normals
-         // from bleeding through deep water
-         || frontsector->heightsec != -1
-
-         // sf: for coloured lighting
-         || backsector->heightsec != frontsector->heightsec
-         
-         // killough 4/17/98: draw floors if different light levels
-         || backsector->floorlightsec != frontsector->floorlightsec
-#ifdef R_PORTALS
-         // SoM 12/10/03: PORTALS
-         || backsector->f_portal != frontsector->f_portal
-#endif
-         ;
-
-      markceiling = worldhigh != worldtop
-         || backsector->ceilingpic != frontsector->ceilingpic
-         || backsector->lightlevel != frontsector->lightlevel
-
-         // killough 3/7/98: Add checks for (x,y) offsets
-         || backsector->ceiling_xoffs != frontsector->ceiling_xoffs
-         || backsector->ceiling_yoffs != frontsector->ceiling_yoffs
-         
-         // killough 4/15/98: prevent 2s normals
-         // from bleeding through fake ceilings
-         || (frontsector->heightsec != -1 &&
-             (frontsector->ceilingpic!=skyflatnum &&
-              frontsector->ceilingpic!=sky2flatnum))
-
-         // killough 4/17/98: draw ceilings if different light levels
-         || backsector->ceilinglightsec != frontsector->ceilinglightsec
-         // sf: for coloured lighting
-         || backsector->heightsec != frontsector->heightsec
-#ifdef R_PORTALS
-         // SoM 12/10/03: PORTALS
-         || backsector->c_portal != frontsector->c_portal
-#endif
-         ;
-
-
-#ifdef R_PORTALS
-      // SoM: some portal types should be rendered even if the player is above or below the
-      // ceiling or floor plane.
-      // haleyjd 03/12/06: inverted predicates to simplify
-      if(markfloor && backsector->f_portal != frontsector->f_portal)
-      {
-         if(frontsector->f_portal && frontsector->f_portal->type != R_LINKED && 
-            frontsector->f_portal->type != R_TWOWAY)
-            f_portalignore = true;
-      }
-
-      if(markceiling && backsector->c_portal != frontsector->c_portal)
-      {
-         if(frontsector->c_portal && frontsector->c_portal->type != R_LINKED &&
-            frontsector->c_portal->type != R_TWOWAY)
-            c_portalignore = true;
-      }
-#endif
-
-      if(backsector->ceilingheight <= frontsector->floorheight || 
-         backsector->floorheight >= frontsector->ceilingheight)
-         markceiling = markfloor = true;   // closed door
-
-      if(worldhigh < worldtop)   // top texture
-      {
-         toptexture = texturetranslation[sidedef->toptexture];
-         rw_toptexturemid = 
-            linedef->flags & ML_DONTPEGTOP ? worldtop :
-               backsector->ceilingheight+textureheight[sidedef->toptexture]-viewz;
-      }
-
-      if(worldlow > worldbottom) // bottom texture
-      {
-         bottomtexture = texturetranslation[sidedef->bottomtexture];
-         rw_bottomtexturemid = 
-            linedef->flags & ML_DONTPEGBOTTOM ? worldtop : worldlow;
-      }
-      rw_toptexturemid += sidedef->rowoffset;
-      
-      // killough 3/27/98: reduce offset
-      {
-         fixed_t h = textureheight[sidedef->toptexture];
-         if(h & (h - FRACUNIT))
-            rw_toptexturemid %= h;
-      }
-
-      rw_bottomtexturemid += sidedef->rowoffset;
-      
-      // killough 3/27/98: reduce offset
-      {
-         fixed_t h;
-         h = textureheight[sidedef->bottomtexture];
-         if(h & (h - FRACUNIT))
-            rw_bottomtexturemid %= h;
-      }
-
-      // allocate space for masked texture tables
-      if (sidedef->midtexture)    // masked midtexture
-      {
-         maskedtexture = true;
-         ds_p->maskedtexturecol = maskedtexturecol = lastopening - rw_x;
-         lastopening += rw_stopx - rw_x;
-      }
-   }
-   
-   // calculate rw_offset (only needed for textured lines)
-   segtextured = midtexture || toptexture || bottomtexture || maskedtexture;
-
-   if(segtextured)
-   {
-      offsetangle = rw_normalangle-rw_angle1;
-      
-      if(offsetangle > ANG180)
-         offsetangle = -offsetangle;
-      
-      if(offsetangle > ANG90)
-         offsetangle = ANG90;
-      
-      sineval = finesine[offsetangle >> ANGLETOFINESHIFT];
-      rw_offset = FixedMul(hyp, sineval);
-
-      if(rw_normalangle - rw_angle1 < ANG180)
-         rw_offset = -rw_offset;
-      
-      rw_offset += sidedef->textureoffset + curline->offset;
-      
-      rw_centerangle = ANG90 + viewangle - rw_normalangle;
-
-      // calculate light table
-      //  use different light tables
-      //  for horizontal / vertical / diagonal
-      // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
-      if(!fixedcolormap)
-      {
-         int lightnum = (frontsector->lightlevel >> LIGHTSEGSHIFT) + extralight;
-
-         // haleyjd 08/11/00: optionally skip this to evenly apply colormap
-         if(LevelInfo.unevenLight)
-         {  
-            if(curline->v1->y == curline->v2->y)
-               --lightnum;
-            else if(curline->v1->x == curline->v2->x)
-               ++lightnum;
-         }
-
-         if(lightnum < 0)
-            walllights = scalelight[0];
-         else if(lightnum >= LIGHTLEVELS)
-            walllights = scalelight[LIGHTLEVELS-1];
-         else
-            walllights = scalelight[lightnum];
-      }
-   }
-
-   // if a floor / ceiling plane is on the wrong side of the view
-   // plane, it is definitely invisible and doesn't need to be marked.
-   
-   // killough 3/7/98: add deep water check
-   if(frontsector->heightsec == -1)
-   {
-      if(frontsector->floorheight >= viewz)        // above view plane
-         markfloor = false;
-      if(frontsector->ceilingheight <= viewz &&
-         frontsector->ceilingpic != skyflatnum &&
-         frontsector->ceilingpic != sky2flatnum)   // below view plane
-         markceiling = false;
-   }
-
-   // calculate incremental stepping values for texture edges
-   worldtop >>= 4;
-   worldbottom >>= 4;
-   
-   topstep = -FixedMul(rw_scalestep, worldtop);
-   topfrac = (centeryfrac >> 4) - FixedMul(worldtop, rw_scale);
-   
-   bottomstep = -FixedMul(rw_scalestep, worldbottom);
-   bottomfrac = (centeryfrac >> 4) - FixedMul(worldbottom, rw_scale);
-
-   if(backsector)
-   {
-      worldhigh >>= 4;
-      worldlow >>= 4;
-      
-      if(worldhigh < worldtop)
-      {
-         pixhigh = (centeryfrac >> 4) - FixedMul(worldhigh, rw_scale);
-         pixhighstep = -FixedMul(rw_scalestep,worldhigh);
-      }
-      if(worldlow > worldbottom)
-      {
-         pixlow = (centeryfrac >> 4) - FixedMul(worldlow, rw_scale);
-         pixlowstep = -FixedMul(rw_scalestep,worldlow);
-      }
-   }
-
-   // render it
-   if(markceiling)
-   {
-      if(ceilingplane)   // killough 4/11/98: add NULL ptr checks
-         ceilingplane = R_CheckPlane(ceilingplane, rw_x, rw_stopx - 1);
       else
-         markceiling = 0;
-   }
-
-   if(markfloor)
-   {
-      if(floorplane)     // killough 4/11/98: add NULL ptr checks
-         floorplane = R_CheckPlane(floorplane, rw_x, rw_stopx - 1);
-      else
-         markfloor = 0;
+         ds_p->maskedtexturecol = NULL;
    }
 
    R_RenderSegLoop();
    
-   // save sprite clipping info
-   if((ds_p->silhouette & SIL_TOP || maskedtexture) && !ds_p->sprtopclip)
+   // store clipping arrays
+   if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
    {
-      // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-      memcpy(lastopening, ceilingclip + start, sizeof(short) * (rw_stopx - start));
-#else
-      memcpy(lastopening, ceilingclip + start, sizeof(int) * (rw_stopx - start));
-#endif
-      ds_p->sprtopclip = lastopening - start;
-      lastopening += rw_stopx - start;
+      int xlen = segclip.x2 - segclip.x1 + 1;
+
+      memcpy(lastopening, ceilingclip + segclip.x1, sizeof(float) * xlen);
+      ds_p->sprtopclip = lastopening - segclip.x1;
+      lastopening += xlen;
    }
-   if((ds_p->silhouette & SIL_BOTTOM || maskedtexture) && !ds_p->sprbottomclip)
+   if((ds_p->silhouette & SIL_BOTTOM || segclip.maskedtex) && !ds_p->sprbottomclip)
    {
-      // haleyjd DEBUG
-#ifdef R_SIXTEEN
-      memcpy(lastopening, floorclip + start, sizeof(short) * (rw_stopx - start));
-#else
-      memcpy(lastopening, floorclip + start, sizeof(int) * (rw_stopx - start));
-#endif
-      ds_p->sprbottomclip = lastopening - start;
-      lastopening += rw_stopx - start;
+      int xlen = segclip.x2 - segclip.x1 + 1;
+
+      memcpy(lastopening, floorclip + segclip.x1, sizeof(float) * xlen);
+      ds_p->sprbottomclip = lastopening - segclip.x1;
+      lastopening += xlen;
    }
-   if (maskedtexture && !(ds_p->silhouette & SIL_TOP))
+   if (segclip.maskedtex && !(ds_p->silhouette & SIL_TOP))
    {
       ds_p->silhouette |= SIL_TOP;
       ds_p->tsilheight = D_MININT;
    }
-   if (maskedtexture && !(ds_p->silhouette & SIL_BOTTOM))
+   if (segclip.maskedtex && !(ds_p->silhouette & SIL_BOTTOM))
    {
       ds_p->silhouette |= SIL_BOTTOM;
       ds_p->bsilheight = D_MAXINT;
    }
    ++ds_p;
 }
+
+
 
 #ifdef R_PORTALS
 //
@@ -951,133 +691,123 @@ void R_StoreWallRange(const int start, const int stop)
 // actually visible in. This function is sound and Doom could even use 
 // this for normal rendering, but it adds some overhead.
 //
-boolean R_ClipSeg(int *start, int *stop)
+boolean R_ClipSeg()
 {
-   angle_t distangle, offsetangle;
-   fixed_t scale1, scale2, viewheightf = viewheight << HEIGHTBITS, 
-           stopfrac, hyp, sineval;
-   int x;
-
-   // calculate rw_distance for scale calculation
-   // I stole this from above.
-   rw_normalangle = curline->angle + ANG90;
-   offsetangle = D_abs(rw_normalangle - rw_angle1);
-
-   if(offsetangle > ANG90)
-      offsetangle = ANG90;
-
-   distangle = ANG90 - offsetangle;
-   hyp = R_PointToDist(curline->v1->x, curline->v1->y);  
-   sineval = finesine[distangle >> ANGLETOFINESHIFT];
-   rw_distance = FixedMul(hyp, sineval);
-
-   scale1 = FixedMul(yaspectmul, R_ScaleFromGlobalAngle(viewangle + xtoviewangle[*start]));
-   
-   if(*stop > *start)
-   {
-      scale2 = FixedMul(yaspectmul, R_ScaleFromGlobalAngle(viewangle + xtoviewangle[*stop]));
-      rw_scalestep = (scale2 - scale1) / (*stop - *start);
-   }
-   else
-   {
-      scale2 = scale1;
-      rw_scalestep = 0;
-   }
-
+   int   i;
+   float l;
    // The way we handle segs depends on relative camera position. If the 
    // camera is above we need to reject segs based on the top of the seg.
    // If the camera is below the bottom of the seg the bottom edge needs 
    // to be clipped. This is done so visplanes will still be rendered 
    // fully.
-
-   if(viewz > frontsector->ceilingheight)
+   if(viewz > seg.frontsec->ceilingheight)
    {
-      worldtop = (frontsector->ceilingheight - viewz) >> 4;
-      topstep = -FixedMul(rw_scalestep, worldtop);
-      topfrac = (centeryfrac>>4) - FixedMul(worldtop, scale1);
-      stopfrac = (centeryfrac>>4) - FixedMul(worldtop, scale2);
+      float top, topstep, topstop;
 
-      for(x = *start; x <= *stop; ++x)
+      top = seg.top;
+      topstep = seg.topstep;
+      topstop = top + ((seg.x2 - seg.x1) * topstep);
+
+      for(i = seg.x1; i <= seg.x2; i++)
       {
-         if(floorclip[x] < ceilingclip[x] || 
-            ((topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS) > floorclip[x] - 1)
+         if(floorclip[i] < ceilingclip[i] || top > floorclip[i])
          {
-            // column is not visible, so increment and continue
-            topfrac += topstep;
+            // column is not visible so increment and continue
+            top += topstep;
             continue;
          }
 
-         // the first visible column has been found, so set the seg start there.
-         *start = x;
+         // First visible column has been found, so set seg to start here.
+         l = (float)(i - seg.x1);
 
-         // next count back from the right end of the seg to see if there 
-         // are hidden columns which could be removed.
-         topfrac = stopfrac;
+         seg.top = top;
+         seg.bottom += seg.bottomstep * l;
+         seg.dist += seg.diststep * l;
+         seg.len += seg.lenstep * l;
+         if(seg.toptex)
+            seg.high += seg.highstep * l;
+         if(seg.bottomtex)
+            seg.low += seg.lowstep * l;
 
-         for(x = *stop; x > *start; --x)
+         seg.x1 = i;
+
+         // next count back from the right end of the seg to see if there are
+         // hidden columns which could be removed.
+         top = topstop;
+         for(i = seg.x2; i > seg.x1; i--)
          {
-            if(floorclip[x] < ceilingclip[x] || 
-               ((topfrac + HEIGHTUNIT - 1) >> HEIGHTBITS) > floorclip[x] - 1)
+            if(floorclip[i] < ceilingclip[i] || top > floorclip[i])
             {
-               topfrac -= topstep;
+               top -= topstep;
                continue;
             }
 
-            // found a visible column
+            // visible
             break;
          }
-         
-         // set the stop value.
-         *stop = x;
 
+         seg.x2 = i;
          return true;
       }
 
-      // not visible
+      // No visible column could be found
       return false;
    }
-   else if(viewz < frontsector->floorheight)
+   else if(viewz < seg.frontsec->floorheight)
    {
-      worldbottom = (frontsector->floorheight - viewz) >> 4;
-      bottomstep = -FixedMul(rw_scalestep, worldbottom);
-      bottomfrac = (centeryfrac>>4) - FixedMul(worldbottom, scale1);
-      stopfrac = (centeryfrac>>4) - FixedMul(worldbottom, scale2);
+      float bottom, bottomstep, stopbottom;
 
-      // SoM 2/7/2006: was < made <= to fix a bad slimetrail bug
-      for(x = *start; x <= *stop; ++x)
+      bottom = seg.bottom;
+      bottomstep = seg.bottomstep;
+      stopbottom = bottom + ((seg.x2 - seg.x1) * bottomstep);
+
+      for(i = seg.x1; i <= seg.x2; i++)
       {
-         if(floorclip[x] < ceilingclip[x] || 
-            (bottomfrac >> HEIGHTBITS) <= ceilingclip[x] + 1)
+         if(floorclip[i] < ceilingclip[i] || bottom < ceilingclip[i])
          {
-            bottomfrac += bottomstep;
+            // column is not visible so increment and continue
+            bottom += bottomstep;
             continue;
          }
 
-         *start = x;
-         bottomfrac = stopfrac;
+         // First visible column has been found, so set seg to start here.
+         l = (float)(i - seg.x1);
 
-         for(x = *stop; x > *start; --x)
+         seg.top += seg.topstep * l;
+         seg.bottom = bottom;
+         seg.dist += seg.diststep * l;
+         seg.len += seg.lenstep * l;
+         if(seg.toptex)
+            seg.high += seg.highstep * l;
+         if(seg.bottomtex)
+            seg.low += seg.lowstep * l;
+
+         seg.x1 = i;
+
+         // next count back from the right end of the seg to see if there are
+         // hidden columns which could be removed.
+         bottom = stopbottom;
+         for(i = seg.x2; i > seg.x1; i--)
          {
-            if(floorclip[x] < ceilingclip[x] || 
-               (bottomfrac >> HEIGHTBITS) <= ceilingclip[x] + 1)
+            if(floorclip[i] < ceilingclip[i] || bottom < ceilingclip[i])
             {
-               bottomfrac -= bottomstep;
+               bottom -= bottomstep;
                continue;
             }
 
+            // visible
             break;
          }
 
-         *stop = x;
-         // If we can't reject the column then it's visible
+         seg.x2 = i;
          return true;
       }
 
-      // not visible
+      // No visible column could be found
       return false;
    }
-   else
-      return true;
+
+   return true;
 }
 #endif // ifdef R_PORTALS
 

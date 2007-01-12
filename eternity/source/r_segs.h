@@ -32,7 +32,7 @@ void R_StoreWallRange(int start, int stop);
 
 #ifdef R_PORTALS
 // SoM 3/14/2005: Seg rejection for portals.
-boolean R_ClipSeg(int *start, int *stop);
+boolean R_ClipSeg();
 #endif
 
 fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);

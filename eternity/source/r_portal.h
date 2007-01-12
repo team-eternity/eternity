@@ -78,14 +78,8 @@ typedef struct rportal_s
       skyplaneportal_t plane;
    } data;
 
-   // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-   short top[MAX_SCREENWIDTH];
-   short bottom[MAX_SCREENWIDTH];
-#else
-   int top[MAX_SCREENWIDTH];
-   int bottom[MAX_SCREENWIDTH];
-#endif
+   float top[MAX_SCREENWIDTH];
+   float bottom[MAX_SCREENWIDTH];
    int minx, maxx;
 
    fixed_t  vx, vy, vz;
@@ -102,7 +96,8 @@ rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
 rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, fixed_t *floorz, fixed_t *ceilingz, short *floorlight, short *ceilinglight, fixed_t *floorxoff, fixed_t *flooryoff, fixed_t *ceilingxoff, fixed_t *ceilingyoff);
 rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta, short *lightlevel, fixed_t *xoff, fixed_t *yoff);
 
-void R_PortalAdd(rportal_t *portal, int x, int ytop, int ybottom);
+// SoM: Cardboard
+void R_PortalAdd(rportal_t *portal, int x, float ytop, float ybottom);
 
 void R_ClearPortals(void);
 void R_RenderPortals(void);

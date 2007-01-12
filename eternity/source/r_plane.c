@@ -78,12 +78,7 @@ int num_visplanes;      // sf: count visplanes
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
 #define MAXOPENINGS (MAX_SCREENWIDTH*MAX_SCREENHEIGHT)
 
-// haleyjd DEBUG
-#ifdef R_SIXTEEN
-short openings[MAXOPENINGS],*lastopening;
-#else
-int openings[MAXOPENINGS], *lastopening;
-#endif
+float openings[MAXOPENINGS], *lastopening;
 
 // Clip values are the solid pixel bounding the range.
 //  floorclip starts out SCREENHEIGHT
@@ -92,21 +87,10 @@ int openings[MAXOPENINGS], *lastopening;
 #ifdef R_PORTALS
 // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
 // to the clipping arrays of portals.
-// haleyjd: DEBUG
-#ifdef R_SIXTEEN
-short floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
-short *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
+float floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
+float *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
 #else
-int floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
-int *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
-#endif
-#else
-// haleyjd: DEBUG
-#ifdef R_SIXTEEN
-short floorclip[MAX_SCREENWIDTH], ceilingclip[MAX_SCREENWIDTH];
-#else
-int floorclip[MAX_SCREENWIDTH], ceilingclip[MAX_SCREENWIDTH];
-#endif
+float floorclip[MAX_SCREENWIDTH], ceilingclip[MAX_SCREENWIDTH];
 #endif
 
 // spanstart holds the start of a plane span; initialized to 0 at start
@@ -124,7 +108,6 @@ static lighttable_t *planefixedcolormap; // haleyjd 10/16/06
 
 // killough 2/8/98: make variables static
 
-static fixed_t basexscale, baseyscale;
 static fixed_t cachedheight[MAX_SCREENHEIGHT];
 static fixed_t cacheddistance[MAX_SCREENHEIGHT];
 static fixed_t cachedxstep[MAX_SCREENHEIGHT];
@@ -139,6 +122,10 @@ fixed_t origyslope[MAX_SCREENHEIGHT*2];
 
 fixed_t distscale[MAX_SCREENWIDTH];
 int     visplane_view=0;
+
+
+cb_span_t  span;
+cb_plane_t plane;
 
 // BIG FLATS
 void R_Throw(void)
@@ -160,88 +147,69 @@ void R_InitPlanes(void)
 //
 // R_MapPlane
 //
-// Uses global vars:
-//  planeheight
-//  ds_source
-//  basexscale
-//  baseyscale
-//  viewx
-//  viewy
-//  xoffs
-//  yoffs
 //
 // BASIC PRIMITIVE
 //
 static void R_MapPlane(int y, int x1, int x2)
 {
-   angle_t angle;
-   fixed_t distance, length;
-   unsigned index;
-   
+   float dy, xstep, ystep, realy, slope;
+
 #ifdef RANGECHECK
    if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
       I_Error ("R_MapPlane: %i, %i at %i", x1, x2, y);
 #endif
-
-   if(planeheight != cachedheight[y])
-   {
-      cachedheight[y] = planeheight;
-      
-      distance = cacheddistance[y] = FixedMul (planeheight, yslope[y]);
-      
-      // SoM: because the span drawers now use up to 26 fractional bits, this
-      // calculation should result in a 6.26 number because otherwise there are
-      // 10 bits which are all 0 and add no precision to the flat drawing 
-      // routines at all...
-      ds_xstep = cachedxstep[y] = (fixed_t)((Long64)distance * basexscale >> 6);
-      ds_ystep = cachedystep[y] = (fixed_t)((Long64)distance * baseyscale >> 6);
-   }
+  
+   // SoM: because ycenter is an actual row of pixels (and it isn't really the center row because
+   // there are an even number of rows) some corrections need to be made depending on where the 
+   // row lies relative to the ycenter row.
+   if(view.ycenter == y)
+      dy = 0.01f;
+   else if(y < view.ycenter)
+      dy = (float)fabs(view.ycenter - y) - 1;
    else
-   {
-      distance = cacheddistance[y];
-      ds_xstep = cachedxstep[y];
-      ds_ystep = cachedystep[y];
-   }
-   
-   length = FixedMul(distance,distscale[x1]);
-   angle = (viewangle + xtoviewangle[x1]) >> ANGLETOFINESHIFT;
+      dy = (float)fabs(view.ycenter - y) + 1;
+
+   slope = (float)fabs(plane.height / dy);
+   realy = slope * view.yfoc;
+
+   xstep = view.cos * slope * view.focratio;
+   ystep = -view.sin * slope * view.focratio;
+
+
+   span.xfrac = (int)((plane.pviewx + plane.xoffset + (view.sin * realy) + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
+   span.yfrac = (int)((plane.pviewy - plane.yoffset + (view.cos * realy) + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
+   span.xstep = (int)(xstep * plane.fixedunit);
+   span.ystep = (int)(ystep * plane.fixedunit);
 
    // killough 2/28/98: Add offsets
-#ifdef R_PORTALS
-   ds_xfrac =  pviewx + FixedMul(finecosine[angle], length) + xoffs;
-   ds_yfrac = -pviewy - FixedMul(finesine[angle],   length) + yoffs;
-#else
-   ds_xfrac =  viewx + FixedMul(finecosine[angle], length) + xoffs;
-   ds_yfrac = -viewy - FixedMul(finesine[angle],   length) + yoffs;
-#endif
-
-   if((ds_colormap = planefixedcolormap) == NULL) // haleyjd 10/16/06
+   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
    {
-      index = distance >> LIGHTZSHIFT;
+      int index = (int)(realy / 16.0f);
       if(index >= MAXLIGHTZ )
          index = MAXLIGHTZ-1;
-      ds_colormap = planezlight[index];
+      span.colormap = plane.planezlight[index];
    }
    
-   ds_y = y;
-   ds_x1 = x1;
-   ds_x2 = x2;
+   span.y = y;
+   span.x1 = x1;
+   span.x2 = x2;
+   span.source = plane.source;
    
    // BIG FLATS
    flatfunc();
 
-  // visplane viewing -- sf
-  if(visplane_view)
-  {
-     if(ds_y >=0 && ds_y < viewheight)
-     {
-        // SoM: ANYRES
-        if(ds_x1 >= 0 && ds_x1<=viewwidth)
-           *(screens[0]+y*v_width+x1) = gameModeInfo->blackIndex;
-        if(ds_x2 >= 0 && ds_x2<=viewwidth)
-           *(screens[0]+y*v_width+x2) = gameModeInfo->blackIndex;
-     }
-  }
+   // visplane viewing -- sf
+   if(visplane_view)
+   {
+      if(y >=0 && y < viewheight)
+      {
+         // SoM: ANYRES
+         if(x1 >= 0 && x1 <=viewwidth)
+            *(screens[0]+y*v_width+x1) = gameModeInfo->blackIndex;
+         if(x2 >= 0 && x2 <=viewwidth)
+            *(screens[0]+y*v_width+x2) = gameModeInfo->blackIndex;
+      }
+   }
 }
 
 //
@@ -254,12 +222,10 @@ static void R_MapPlane(int y, int x1, int x2)
 
 void R_ClearPlanes(void)
 {
-   int i, a;
-   angle_t angle;
+   int i;
+   float a;
 
-   a = consoleactive ?
-      (current_height-viewwindowy) < 0 ? -1 : current_height-viewwindowy
-           : -1;
+   a = (float)(consoleactive ? (current_height-viewwindowy) < 0 ? 0 : current_height-viewwindowy : 0);
 
    /* a = -1; */
 
@@ -271,7 +237,7 @@ void R_ClearPlanes(void)
    // opening / clipping determination
    for(i = 0; i < MAX_SCREENWIDTH; ++i)
    {
-      floorclip[i] = viewheight;
+      floorclip[i] = view.height - 1.0f;
       ceilingclip[i] = a;
    }
 
@@ -283,12 +249,6 @@ void R_ClearPlanes(void)
 
    // texture calculation
    memset (cachedheight, 0, sizeof(cachedheight));
-
-   // left to right mapping
-   angle = (viewangle-ANG90)>>ANGLETOFINESHIFT;
-   // scale will be unit scale at SCREENWIDTH/2 distance
-   basexscale = FixedDiv (finecosine[angle],centerxfrac*zoom);
-   baseyscale = -FixedDiv (finesine[angle],centerxfrac*zoom);
    
    num_visplanes = 0;    // reset
 }
@@ -320,21 +280,11 @@ static visplane_t *new_visplane(unsigned hash)
          free(check->pad3);
 
       check->max_width = v_width;
-      // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-      check->pad1 = (unsigned short *)calloc(1, (v_width + 2) * sizeof(unsigned short));
-#else
-      check->pad1 = calloc(1, (v_width + 2) * sizeof(unsigned int));
-#endif
+      check->pad1 = calloc(1, (v_width + 2) * sizeof(int));
       check->top = check->pad1 + 1;
       check->pad2 = check->pad1 + v_width + 1;
 
-      // haleyjd; DEBUG
-#ifdef R_SIXTEEN
-      check->pad3 = (unsigned short *)calloc(1, (v_width + 2) * sizeof(unsigned short));
-#else
-      check->pad3 = calloc(1, (v_width + 2) * sizeof(unsigned int));
-#endif
+      check->pad3 = calloc(1, (v_width + 2) * sizeof(int));
       check->bottom = check->pad3 + 1;
       check->pad4 = check->pad3 + v_width + 1;
    }
@@ -371,9 +321,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap
 #ifdef R_PORTALS
-         && viewx == check->viewx
-         && viewy == check->viewy
-         && viewz == check->viewz
+         && view.x == check->viewx
+         && view.y == check->viewy
+         && view.z == check->viewz
 #endif
         )
         return check;
@@ -391,18 +341,18 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
 #ifdef R_PORTALS
-   check->viewx = viewx;
-   check->viewy = viewy;
-   check->viewz = viewz;
+   check->viewx = view.x;
+   check->viewy = view.y;
+   check->viewz = view.z;
 #endif 
    
    // SoM: memset should use the check->max_width
-   // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-   memset(check->top, 0xff, sizeof(unsigned short) * check->max_width);
-#else
-   memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
-#endif
+   //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
+   {
+      register unsigned i = 0;
+      register int *p = check->top;
+      while(i < check->max_width) p[i++] = 0x7FFFFFFF;
+   }
    
    return check;
 }
@@ -424,14 +374,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    else
       unionh  = pl->maxx, intrh  = stop;
 
-   // haleyjd DEBUG
-#ifdef R_SIXTEEN
-   for(x = intrl; x <= intrh && pl->top[x] == 0xffff; ++x)
+   for(x = intrl; x <= intrh && pl->top[x] == 0x7FFFFFFF; ++x)
       ;
-#else
-   for(x = intrl; x <= intrh && pl->top[x] == 0xffffffffu; ++x)
-      ;
-#endif
 
    if(x > intrh)
       pl->minx = unionl, pl->maxx = unionh;
@@ -456,12 +400,12 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->minx = start;
       pl->maxx = stop;
       // SoM: ANYRES
-      // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-      memset(pl->top, 0xff, sizeof(unsigned short) * pl->max_width);
-#else
-      memset(pl->top, 0xff, sizeof(unsigned int) * pl->max_width);
-#endif
+      //memset(pl->top, 0xff, sizeof(unsigned int) * pl->max_width);
+      {
+         register int *p = pl->top;
+         register unsigned i = 0;
+         while(i < pl->max_width) p[i++] = 0x7FFFFFFF;
+      }
    }
    
    return pl;
@@ -472,12 +416,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 //
 
 // haleyjd: DEBUG
-#ifdef R_SIXTEEN
 static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
-#else
-static void R_MakeSpans(int x, unsigned int t1, unsigned int b1, 
-                        unsigned int t2, unsigned int b2)
-#endif
 {
    // DEBUG
 #ifdef RANGECHECK
@@ -485,13 +424,13 @@ static void R_MakeSpans(int x, unsigned int t1, unsigned int b1,
       I_Error("R_MakeSpans: b2 >= MAX_SCREENHEIGHT\n");
 #endif
 
-   for(; t1 < t2 && t1 <= b1; ++t1)
-      R_MapPlane(t1, spanstart[t1], x-1);
-   for(; b1 > b2 && b1 >= t1; --b1)
-      R_MapPlane(b1, spanstart[b1], x-1);
+   for(; t2 > t1 && t1 <= b1; t1++)
+      R_MapPlane(t1, spanstart[t1], x - 1);
+   for(; b2 < b1 && t1 <= b1; b1--)
+      R_MapPlane(b1, spanstart[b1], x - 1);
    while(t2 < t1 && t2 <= b2)
       spanstart[t2++] = x;
-   while(b2 > b1 && b2 >= t2)
+   while(b2 > b1 && t2 <= b2)
       spanstart[b2--] = x;
 }
 
@@ -517,29 +456,24 @@ void do_draw_newsky(visplane_t *pl)
       sky1 = R_GetSkyTexture(skyTexture);
       sky2 = R_GetSkyTexture(skyTexture2);
       
-      if(comp[comp_skymap] || !(dc_colormap = fixedcolormap))
-         dc_colormap = fullcolormap;
+      if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
+         column.colormap = fullcolormap;
       
       // first draw sky 2 with R_DrawColumn (unmasked)
-      dc_texturemid = sky2->texturemid;      
-      dc_texheight = sky2->height;
+      column.texmid = sky2->texturemid;      
+      column.texheight = sky2->height;
 
       // haleyjd: don't stretch textures over 200 tall
-      if(dc_texheight < 200)
-         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
+      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
       else
-         dc_iscale = pspriteiyscale >> detailshift;
+         column.step = (int)(view.pspriteystep * 65536.0f);
       
-      for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
+      for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
-         // haleyjd DEBUG
-#ifdef R_SIXTEEN
-         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
-#else
-         if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
-#endif
+         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
-            dc_source =
+            column.source =
                R_GetColumn(skyTexture2,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
             
@@ -548,27 +482,24 @@ void do_draw_newsky(visplane_t *pl)
       }
       
       // now draw sky 1 with R_DrawNewSkyColumn (masked)
-      dc_texturemid = sky1->texturemid;
-      dc_texheight = sky1->height;
+      column.texmid = sky1->texturemid;
+      column.texheight = sky1->height;
 
       // haleyjd: don't stretch textures over 200 tall
-      if(dc_texheight < 200)
-         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
+      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
       else
-         dc_iscale = pspriteiyscale >> detailshift;
+         column.step = (int)(view.pspriteystep * 65536.0f);
       
-      for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
+      for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
-#ifdef R_SIXTEEN
-         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
-#else
-         if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
-#endif
+         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
-            dc_source =
+            column.source =
                R_GetColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
-            R_DrawNewSkyColumn();
+            
+            colfunc();
          }
       }
    }
@@ -587,29 +518,24 @@ void do_draw_newsky(visplane_t *pl)
 
       sky1 = R_GetSkyTexture(skyTexture);
       
-      dc_texturemid = sky1->texturemid;    // Default y-offset
+      column.texmid = sky1->texturemid;    // Default y-offset
       
-      if(comp[comp_skymap] || !(dc_colormap = fixedcolormap))
-         dc_colormap = fullcolormap;
+      if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
+         column.colormap = fullcolormap;
       
-      dc_texheight = sky1->height;
+      column.texheight = sky1->height;
 
       // haleyjd: don't stretch textures over 200 tall
-      if(dc_texheight < 200)
-         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
+      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
       else
-         dc_iscale = pspriteiyscale >> detailshift;
+         column.step = (int)(view.pspriteystep * 65536.0f);
       
-      for(x = pl->minx; (dc_x = x) <= pl->maxx; x++)
+      for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
-         // haleyjd DEBUG
-#ifdef R_SIXTEEN
-         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
-#else
-         if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
-#endif
+         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
-            dc_source =
+            column.source =
                R_GetColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
 
@@ -677,7 +603,7 @@ static void do_draw_plane(visplane_t *pl)
          
          // Vertical offset allows careful sky positioning.        
          
-         dc_texturemid = s->rowoffset - 28*FRACUNIT;
+         column.texmid = s->rowoffset - 28*FRACUNIT;
          
          // We sometimes flip the picture horizontally.
          //
@@ -691,7 +617,7 @@ static void do_draw_plane(visplane_t *pl)
       {
          texture = skytexture;             // Default texture
          sky = R_GetSkyTexture(texture);   // haleyjd 08/30/02         
-         dc_texturemid = sky->texturemid;  // Default y-offset
+         column.texmid = sky->texturemid;  // Default y-offset
          flip = 0;                         // Doom flips it
       }
 
@@ -700,31 +626,27 @@ static void do_draw_plane(visplane_t *pl)
       //
       // killough 7/19/98: fix hack to be more realistic:
 
-      if(comp[comp_skymap] || !(dc_colormap = fixedcolormap))
-         dc_colormap = fullcolormap;          // killough 3/20/98
+      if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
+         column.colormap = fullcolormap;          // killough 3/20/98
 
       //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
       // haleyjd: use height determined from patches in texture
-      dc_texheight = sky->height;
+      column.texheight = sky->height;
       
       // haleyjd:  don't stretch textures over 200 tall
       // 10/07/06: don't stretch skies in old demos (no mlook)
-      if(demo_version >= 300 && dc_texheight < 200)
-         dc_iscale = (pspriteiyscale >> stretchsky) >> detailshift;
+      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
       else
-         dc_iscale = pspriteiyscale >> detailshift;
+         column.step = (int)(view.pspriteystep * 65536.0f);
+
 
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
-      for(x = pl->minx; (dc_x = x) <= pl->maxx; ++x)
+      for(x = pl->minx; (column.x = x) <= pl->maxx; ++x)
       {
-         // haleyjd DEBUG
-#ifdef R_SIXTEEN
-         if((dc_yl = pl->top[x]) <= (dc_yh = pl->bottom[x]))
-#else
-         if((dc_yl = pl->top[x]) != -1 && dc_yl <= (dc_yh = pl->bottom[x]))
-#endif
+         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
-            dc_source = R_GetColumn(texture,
+            column.source = R_GetColumn(texture,
                ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
             
             colfunc();
@@ -740,7 +662,7 @@ static void do_draw_plane(visplane_t *pl)
       swirling = (flattranslation[pl->picnum] == -1) && flatsize[pl->picnum] == 4096;
 
       if(swirling)
-         ds_source = R_DistortedFlat(pl->picnum);
+         plane.source = R_DistortedFlat(pl->picnum);
       else
       {
          if(flattranslation[pl->picnum] == -1)
@@ -750,7 +672,7 @@ static void do_draw_plane(visplane_t *pl)
          // to PU_CACHE below, generating a lot of unnecessary allocator noise.
          // As long as no other memory ops are needed between here and the end
          // of this function (including called functions), this can be PU_CACHE.
-         ds_source = 
+         plane.source = 
             W_CacheLumpNum(firstflat + flattranslation[pl->picnum], PU_CACHE);
       }
 
@@ -759,26 +681,30 @@ static void do_draw_plane(visplane_t *pl)
       {
       case 16384:
          flatfunc = r_span_engine->DrawSpan128;
+         plane.fixedunit = r_span_engine->fixedunit128;
          break;
       case 65536:
          flatfunc = r_span_engine->DrawSpan256;
+         plane.fixedunit = r_span_engine->fixedunit256;
          break;
       case 262144:
          flatfunc = r_span_engine->DrawSpan512;
+         plane.fixedunit = r_span_engine->fixedunit512;
          break;
       default:
          flatfunc = r_span_engine->DrawSpan64;
+         plane.fixedunit = r_span_engine->fixedunit64;
       };
         
-      xoffs = pl->xoffs;  // killough 2/28/98: Add offsets
-      yoffs = pl->yoffs;
+      plane.xoffset = pl->xoffs / 65536.0f;  // killough 2/28/98: Add offsets
+      plane.yoffset = pl->yoffs / 65536.0f;
 #ifdef R_PORTALS
-      pviewx = pl->viewx;
-      pviewy = pl->viewy;
-      pviewz = pl->viewz;
-      planeheight = D_abs(pl->height-pviewz);
+      plane.pviewx = pl->viewx;
+      plane.pviewy = pl->viewy;
+      plane.pviewz = pl->viewz;
+      plane.height = (pl->height / 65536.0f) - pl->viewz;
 #else
-      planeheight = D_abs(pl->height-viewz);
+      plane.height = (pl->height / 65536.0f) - view.z;
 #endif
       
       //light = (pl->lightlevel >> LIGHTSEGSHIFT) + extralight;
@@ -796,16 +722,11 @@ static void do_draw_plane(visplane_t *pl)
          light = 0;
 
       stop = pl->maxx + 1;
-      // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-      pl->top[pl->minx-1] = pl->top[stop] = 0xffff;
-#else
-      pl->top[pl->minx-1] = pl->top[stop] = 0xffffffffu;
-#endif
-      planezlight = pl->colormap[light];//zlight[light];
+      pl->top[pl->minx-1] = pl->top[stop] = 0x7FFFFFFF;
 
+      plane.planezlight = pl->colormap[light];//zlight[light];
       // haleyjd 10/16/06
-      planefixedcolormap = pl->fixedcolormap;
+      plane.fixedcolormap = pl->fixedcolormap;
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);

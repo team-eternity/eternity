@@ -114,6 +114,8 @@ int       *flatsize;
 
 // needed for pre-rendering
 fixed_t   *spritewidth, *spriteoffset, *spritetopoffset;
+// SoM: used by cardboard
+float     *spriteheight;
 
 //
 // MAPTEXTURE_T CACHING
@@ -696,6 +698,8 @@ void R_InitSpriteLumps(void)
    spriteoffset = Z_Malloc(numspritelumps*sizeof*spriteoffset, PU_STATIC, 0);
    spritetopoffset =
       Z_Malloc(numspritelumps*sizeof*spritetopoffset, PU_STATIC, 0);
+   spriteheight = Z_Malloc(numspritelumps * sizeof(float), PU_STATIC, 0);
+
    
    for(i = 0; i < numspritelumps; ++i)
    {
@@ -707,6 +711,7 @@ void R_InitSpriteLumps(void)
       spritewidth[i]     = SHORT(patch->width) << FRACBITS;
       spriteoffset[i]    = SHORT(patch->leftoffset) << FRACBITS;
       spritetopoffset[i] = SHORT(patch->topoffset) << FRACBITS;
+      spriteheight[i]    = (float)SHORT(patch->height);
    }
 }
 

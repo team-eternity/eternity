@@ -50,6 +50,7 @@ boolean portalrender = false;
 static void R_ClearPortal(rportal_t *portal)
 {
    int x;
+   float t = (float)viewheight;
 
    if(portal->maxx < portal->minx)
       return;
@@ -59,8 +60,8 @@ static void R_ClearPortal(rportal_t *portal)
 
    for(x = 0; x < MAX_SCREENWIDTH; x++)
    {
-      portal->top[x] = viewheight;
-      portal->bottom[x] = -1;
+      portal->top[x] = t;
+      portal->bottom[x] = -1.0f;
    }
 
    if(portal->child)
@@ -321,13 +322,13 @@ static void R_CreateChild(rportal_t *parent)
 // Adds a column to a portal for rendering. A child portal may
 // be created.
 //
-void R_PortalAdd(rportal_t *portal, int x, int ytop, int ybottom)
+void R_PortalAdd(rportal_t *portal, int x, float ytop, float ybottom)
 {
-   int ptop = portal->top[x];
-   int pbottom = portal->bottom[x];
+   float ptop = portal->top[x];
+   float pbottom = portal->bottom[x];
 
 #ifdef RANGECHECK
-   if((ytop > v_height || ybottom > v_height || ytop < -1 || ybottom < -1) && 
+   if((ytop >= view.height || ybottom >= view.height || ytop < 0 || ybottom < 0) && 
       ytop <= ybottom)
    {
       I_Error("R_PortalAdd portal supplied with bad column data.\n"
@@ -335,14 +336,14 @@ void R_PortalAdd(rportal_t *portal, int x, int ytop, int ybottom)
    }
    
    if(pbottom > ptop && 
-      (ptop < -1 || pbottom < -1 || ptop > v_height || pbottom > v_height))
+      (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
    {
       I_Error("R_PortalAdd portal had bad opening data.\n"
               "\tx:%i, top:%i, bottom:%i\n", x, ptop, pbottom);
    }
 #endif
 
-   if(ybottom <= 0 || ytop >= viewheight)
+   if(ybottom < 0.0f || ytop >= view.height)
       return;
 
    if(x <= portal->maxx && x >= portal->minx)
@@ -358,7 +359,7 @@ void R_PortalAdd(rportal_t *portal, int x, int ytop, int ybottom)
       }
 
       // if the column lays completely outside the existing portal, create child
-      if(ytop >= pbottom || ybottom <= ptop)
+      if(ytop > pbottom || ybottom < ptop)
       {
          if(!portal->child)
             R_CreateChild(portal);
@@ -442,16 +443,10 @@ static void R_RenderPlanePortal(rportal_t *portal)
 
    for(x = portal->minx; x <= portal->maxx; x++)
    {
-      if(portal->top[x] + 1 <= portal->bottom[x])
+      if(portal->top[x] < portal->bottom[x])
       {
-         // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-         plane->top[x] = (unsigned short)portal->top[x] + 1;
-         plane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
-#else
-         plane->top[x]    = (unsigned int)portal->top[x] + 1;
-         plane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
-#endif
+         plane->top[x]    = (int)portal->top[x];
+         plane->bottom[x] = (int)portal->bottom[x];
       }
    }
 
@@ -482,46 +477,25 @@ static void R_RenderHorizonPortal(rportal_t *portal)
 
    for(x = portal->minx; x <= portal->maxx; x++)
    {
-      if(portal->top[x] + 1 >= portal->bottom[x])
+      if(portal->top[x] > portal->bottom[x])
          continue;
-      //haleyjd: DEBUG
-#ifdef R_SIXTEEN
-      if(portal->top[x] <= centery && portal->bottom[x] > centery)
+      if(portal->top[x] <= view.ycenter && portal->bottom[x] >= view.ycenter + 1.0f)
       {
-         topplane->top[x] = (unsigned short)portal->top[x] + 1;
-         topplane->bottom[x] = (unsigned short)centery;
-         bottomplane->top[x] = (unsigned short)centery + 1;
-         bottomplane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
+         topplane->top[x] = (int)portal->top[x];
+         topplane->bottom[x] = centery;
+         bottomplane->top[x] = centery + 1;
+         bottomplane->bottom[x] = (int)portal->bottom[x];
       }
-      else if(portal->top[x] <= centery)
+      else if(portal->top[x] <= view.ycenter)
       {
-         topplane->top[x] = (unsigned short)portal->top[x] + 1;
-         topplane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
+         topplane->top[x] = (int)portal->top[x];
+         topplane->bottom[x] = (int)portal->bottom[x];
       }
-      else if(portal->bottom[x] > centery)
+      else if(portal->bottom[x] > view.ycenter)
       {
-         bottomplane->top[x] = (unsigned short)portal->top[x] + 1;
-         bottomplane->bottom[x] = (unsigned short)portal->bottom[x] - 1;
+         bottomplane->top[x] = (int)portal->top[x];
+         bottomplane->bottom[x] = (int)portal->bottom[x];
       }
-#else
-      if(portal->top[x] <= centery && portal->bottom[x] > centery)
-      {
-         topplane->top[x] = (unsigned int)portal->top[x] + 1;
-         topplane->bottom[x] = (unsigned int)centery;
-         bottomplane->top[x] = (unsigned int)centery + 1;
-         bottomplane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
-      }
-      else if(portal->top[x] <= centery)
-      {
-         topplane->top[x] = (unsigned int)portal->top[x] + 1;
-         topplane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
-      }
-      else if(portal->bottom[x] > centery)
-      {
-         bottomplane->top[x] = (unsigned int)portal->top[x] + 1;
-         bottomplane->bottom[x] = (unsigned int)portal->bottom[x] - 1;
-      }
-#endif
    }
 
    lastx = viewx; lasty = viewy; lastz = viewz;
@@ -599,6 +573,7 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
 static void R_RenderAnchoredPortal(rportal_t *portal)
 {
    fixed_t lastx, lasty, lastz;
+   float   lastxf, lastyf, lastzf;
 
 #ifdef R_LINKEDPORTALS
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && portal->type != R_LINKED)
@@ -646,11 +621,18 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    lastx = viewx;
    lasty = viewy;
    lastz = viewz;
+   lastxf = view.x;
+   lastyf = view.y;
+   lastzf = view.z;
+
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    viewx = portal->vx - portal->data.camera.deltax;
    viewy = portal->vy - portal->data.camera.deltay;
    viewz = portal->vz - portal->data.camera.deltaz;
+   view.x = viewx / 65536.0f;
+   view.y = viewy / 65536.0f;
+   view.z = viewz / 65536.0f;
 
    R_RenderBSPNode(numnodes-1);
 
@@ -662,6 +644,9 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    viewx = lastx;
    viewy = lasty;
    viewz = lastz;
+   view.x = lastxf;
+   view.y = lastyf;
+   view.z = lastzf;
 
    if(portal->child)
       R_RenderAnchoredPortal(portal->child);

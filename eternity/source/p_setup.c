@@ -175,6 +175,9 @@ void P_LoadVertexes(int lump)
    {
       vertexes[i].x = SHORT(((mapvertex_t *) data)[i].x) << FRACBITS;
       vertexes[i].y = SHORT(((mapvertex_t *) data)[i].y) << FRACBITS;
+      // Cardboard store float versions of vertices.
+      vertexes[i].fx = vertexes[i].x / 65536.0f;
+      vertexes[i].fy = vertexes[i].y / 65536.0f;
    }
 
    // Free buffer memory.
@@ -1307,6 +1310,9 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
                   int x0 = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
                   v->x = (int)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
                   v->y = (int)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
+                  // Cardboard store float versions of vertices.
+                  v->fx = v->x / 65536.0f;
+                  v->fy = v->y / 65536.0f;
                }
             }  // Obfuscated C contest entry:   :)
          }

@@ -2033,8 +2033,6 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 // P_SpawnPlayerMissile
 // Tries to aim at a nearby monster
 //
-extern fixed_t *yslope;
-
 mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
 {
    mobj_t *th;

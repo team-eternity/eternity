@@ -33,6 +33,7 @@
 #include "v_video.h"
 #include "mn_engin.h"
 #include "d_gi.h"
+#include "r_plane.h"
 
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
@@ -46,7 +47,7 @@ extern int  columnofs[MAXWIDTH];
 
 
 //
-// R_DrawSpan_64
+// R_DrawSpan_*
 // With DOOM style restrictions on view orientation,
 //  the floors and ceilings consist of horizontal slices
 //  or spans with constant z depth.
@@ -58,274 +59,197 @@ extern int  columnofs[MAXWIDTH];
 //  and the inner loop has to step in texture space u and v.
 //
 
-int  ds_y; 
-int  ds_x1; 
-int  ds_x2;
 
-lighttable_t *ds_colormap; 
+#ifndef USEASM
 
-fixed_t ds_xfrac; 
-fixed_t ds_yfrac; 
-fixed_t ds_xstep; 
-fixed_t ds_ystep;
 
-// start of a 64*64 tile image 
-byte *ds_source;        
+// SoM: we only need 6 bits for the integer part (0 thru 63) so the rest
+// can be used for the fraction part. This allows calculation of the memory
+// address in the texture with two shifts, an OR and one AND. (see below)
+// for texture sizes > 64 the amount of precision we can allow will decrease,
+// but only by one bit per power of two (obviously)
+// Ok, because I was able to eliminate the variable spot below, this function
+// is now FASTER than doom's original span renderer. Whodathunkit?
+void R_DrawSpanCB_8_64(void)
+{
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-#ifndef USEASM      // killough 2/15/98
+   dest = ylookup[span.y] + columnofs[span.x1];
 
-// SoM: This is the high precision flat renderer, it will not distort the flat
-// when looking down or dying.
-static void R_DrawSpan_64(void) 
-{ 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-   
-   // SoM: we only need 6 bits for the integer part (0 thru 63) so the rest
-   // can be used for the fraction part. This allows calculation of the memory
-   // address in the texture with two shifts, an OR and one AND. (see below)
-   // for texture sizes > 64 the amount of precision we can allow will decrease,
-   // but only by one bit per power of two (obviously)
-   // Ok, because I was able to eliminate the variable spot below, this function
-   // is now FASTER than doom's original span renderer. Whodathunkit?
-   
-   xposition = ds_xfrac << 10; yposition = ds_yfrac << 10;
-   xstep = ds_xstep; ystep = ds_ystep;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   count = ds_x2 - ds_x1 + 1;
-   
    while(count >= 4)
    {
       // SoM: Why didn't I see this earlier? the spot variable is a waste now
       // because we don't have the uber complicated math to calculate it now, 
       // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[0] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[1] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[1] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[2] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[2] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[3] = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[3] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
+      
+      dest += 4;
+      count -= 4;
+      
+   }
+   while(count-- > 0)
+   {
+      *dest++ = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]];
+      xf += xs;
+      yf += ys;
+   }
+}
+
+
+void R_DrawSpanCB_8_128(void)
+{
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   int count = span.x2 - span.x1 + 1;
+
+   dest = ylookup[span.y] + columnofs[span.x1];
+
+   while(count >= 4)
+   {
+      // SoM: Why didn't I see this earlier? the spot variable is a waste now
+      // because we don't have the uber complicated math to calculate it now, 
+      // so that was a memory write we didn't need!
+      dest[0] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      xf += xs;
+      yf += ys;
+      
+      dest[1] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      xf += xs;
+      yf += ys;
+      
+      dest[2] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      xf += xs;
+      yf += ys;
+      
+      dest[3] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      xf += xs;
+      yf += ys;
       
       dest += 4;
       count -= 4;
       
    }
    while(count--)
-   { 
-      *dest++ = colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
-   } 
+   {
+      *dest++ = source[((xf >> 18) & 0x3F80) | (yf >> 25)];
+      xf += xs;
+      yf += ys;
+   }
 }
 
-// SoM: This is the high precision flat renderer, it will not distort the flat
-// when looking down or dying.
-static void R_DrawSpan_128(void) 
-{ 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-   
-   // SoM: we only need 7 bits for the integer part (0 thru 127) so the rest
-   // can be used for the fraction part. This allows calculation of the memory
-   // address in the texture with two shifts, an OR and one AND. (see below)
-   // for texture sizes > 128 the amount of precision we can allow will 
-   // decrease, but only by one bit per power of two (obviously)
-   // Ok, because I was able to eliminate the variable spot below, this function
-   // is now FASTER than doom's original span renderer. Whodathunkit?
 
-   xposition = ds_xfrac << 9; yposition = ds_yfrac << 9;
-   xstep = ds_xstep >> 1; ystep = ds_ystep >> 1;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   count = ds_x2 - ds_x1 + 1;
-   
-   while (count >= 4)
+void R_DrawSpanCB_8_256(void)
+{
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   int count = span.x2 - span.x1 + 1;
+
+   dest = ylookup[span.y] + columnofs[span.x1];
+
+   while(count >= 4)
    {
       // SoM: Why didn't I see this earlier? the spot variable is a waste now
       // because we don't have the uber complicated math to calculate it now, 
       // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[0] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      xf += xs;
+      yf += ys;
       
-      dest[1] = colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[1] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      xf += xs;
+      yf += ys;
       
-      dest[2] = colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[2] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      xf += xs;
+      yf += ys;
       
-      dest[3] = colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[3] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      xf += xs;
+      yf += ys;
       
       dest += 4;
       count -= 4;
       
    }
-   while (count--)
-   { 
-      *dest++ = colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
-   } 
-}
-
-// SoM: This is the high precision flat renderer, it will not distort the flat
-// when looking down or dying.
-static void R_DrawSpan_256(void) 
-{ 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-   
-   // SoM: we only need 8 bits for the integer part (0 thru 255) so the rest
-   // can be used for the fraction part. This allows calculation of the memory
-   // address in the texture with two shifts, an OR and one AND. (see below)
-   // for texture sizes > 256 the amount of precision we can allow will 
-   // decrease, but only by one bit per power of two (obviously)
-   // Ok, because I was able to eliminate the variable spot below, this function
-   // is now FASTER than doom's original span renderer. Whodathunkit?
-
-   xposition = ds_xfrac << 8; yposition = ds_yfrac << 8;
-   xstep = ds_xstep >> 2; ystep = ds_ystep >> 2;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   count = ds_x2 - ds_x1 + 1;
-   
-   while (count >= 4)
+   while(count--)
    {
-      // SoM: Why didn't I see this earlier? the spot variable is a waste now
-      // because we don't have the uber complicated math to calculate it now,
-      // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
-      
-      dest[1] = colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
-      
-      dest[2] = colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
-      
-      dest[3] = colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
-      
-      dest += 4;
-      count -= 4;
-      
+      *dest++ = source[((xf >> 16) & 0xFF00) | (yf >> 24)];
+      xf += xs;
+      yf += ys;
    }
-   while (count--)
-   { 
-      *dest++ = colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
-   } 
 }
 
-// SoM: This is the high precision flat renderer, it will not distort the flat
-// when looking down or dying.
-static void R_DrawSpan_512(void) 
-{ 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-   
-   // SoM: we only need 8 bits for the integer part (0 thru 255) so the rest
-   // can be used for the fraction part. This allows calculation of the memory
-   // address in the texture with two shifts, an OR and one AND. (see below)
-   // for texture sizes > 256 the amount of precision we can allow will decrease,
-   // but only by one bit per power of two (obviously)
-   // Ok, because I was able to eliminate the variable spot below, this function
-   // is now FASTER than doom's original span renderer. Whodathunkit?
-   
-   xposition = ds_xfrac << 7; yposition = ds_yfrac << 7;
-   xstep = ds_xstep >> 3; ystep = ds_ystep >> 3;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   count = ds_x2 - ds_x1 + 1;
-   
-   while (count >= 4)
+
+
+void R_DrawSpanCB_8_512(void)
+{
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   int count = span.x2 - span.x1 + 1;
+
+   dest = ylookup[span.y] + columnofs[span.x1];
+
+   while(count >= 4)
    {
       // SoM: Why didn't I see this earlier? the spot variable is a waste now
       // because we don't have the uber complicated math to calculate it now, 
       // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[0] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      xf += xs;
+      yf += ys;
       
-      dest[1] = colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[1] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      xf += xs;
+      yf += ys;
       
-      dest[2] = colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[2] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      xf += xs;
+      yf += ys;
       
-      dest[3] = colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[3] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      xf += xs;
+      yf += ys;
       
       dest += 4;
       count -= 4;
       
    }
-   while (count--)
-   { 
-      *dest++ = colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
-   } 
+   while(count--)
+   {
+      *dest++ = source[((xf >> 14) & 0x3FE00) | (yf >> 23)];
+      xf += xs;
+      yf += ys;
+   }
 }
 
+
+
+#if 0
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
 static void R_DrawSpan_OLD(void) 
@@ -445,15 +369,28 @@ static void R_DrawSpan_ORIGINAL(void)
       count--;
    } 
 }
+#else
+static void R_DrawSpan_OLD(void) 
+{ 
+}
+
+static void R_DrawSpan_ORIGINAL(void)
+{
+}
+#endif // 0
 
 // olpspandrawer: uses the old low-precision span drawing routine for
 // 64x64 flats. All other sizes use the normal routines.
 spandrawer_t r_olpspandrawer =
 {
    R_DrawSpan_ORIGINAL,
-   R_DrawSpan_128,
-   R_DrawSpan_256,
-   R_DrawSpan_512
+   R_DrawSpanCB_8_128,
+   R_DrawSpanCB_8_256,
+   R_DrawSpanCB_8_512,
+   65536.0f,
+   33554432.0f,
+   16777216.0f,
+   8388608.0f
 };
 
 // lpspandrawer: uses the optimized but low-precision span drawing
@@ -461,18 +398,26 @@ spandrawer_t r_olpspandrawer =
 spandrawer_t r_lpspandrawer =
 {
    R_DrawSpan_OLD,
-   R_DrawSpan_128,
-   R_DrawSpan_256,
-   R_DrawSpan_512
+   R_DrawSpanCB_8_128,
+   R_DrawSpanCB_8_256,
+   R_DrawSpanCB_8_512,
+   65536.0f,
+   33554432.0f,
+   16777216.0f,
+   8388608.0f
 };
 
 // the normal, high-precision span drawer
 spandrawer_t r_spandrawer =
 {
-   R_DrawSpan_64,
-   R_DrawSpan_128,
-   R_DrawSpan_256,
-   R_DrawSpan_512
+   R_DrawSpanCB_8_64,
+   R_DrawSpanCB_8_128,
+   R_DrawSpanCB_8_256,
+   R_DrawSpanCB_8_512,
+   67108864.0f,
+   33554432.0f,
+   16777216.0f,
+   8388608.0f
 };
 
 //==============================================================================
@@ -483,6 +428,7 @@ spandrawer_t r_spandrawer =
 // drawing code but double up on pixels, making it blocky.
 //
 
+#if 0
 static void R_DrawSpan_LD64(void) 
 { 
    unsigned xposition;
@@ -719,6 +665,13 @@ static void R_DrawSpan_LD512(void)
       yposition += ystep;
    } 
 }
+#else
+static void R_DrawSpan_LD64(void) {}
+static void R_DrawSpan_LD128(void) {}
+
+static void R_DrawSpan_LD256(void) {}
+static void R_DrawSpan_LD512(void) {}
+#endif
 
 // low-detail spandrawer
 spandrawer_t r_lowspandrawer =
@@ -726,7 +679,11 @@ spandrawer_t r_lowspandrawer =
    R_DrawSpan_LD64,
    R_DrawSpan_LD128,
    R_DrawSpan_LD256,
-   R_DrawSpan_LD512
+   R_DrawSpan_LD512,
+   65536.0f,
+   65536.0f,
+   65536.0f,
+   65536.0f
 };
 
 #endif

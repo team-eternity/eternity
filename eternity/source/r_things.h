@@ -31,30 +31,12 @@
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
-// haleyjd DEBUG
-#ifdef R_SIXTEEN
-extern short negonearray[MAX_SCREENWIDTH];         // killough 2/8/98:
-extern short screenheightarray[MAX_SCREENWIDTH];   // change to MAX_*
-#else
-extern int negonearray[MAX_SCREENWIDTH];
-extern int screenheightarray[MAX_SCREENWIDTH];
-#endif
+extern float zeroarray[MAX_SCREENWIDTH];
+extern float screenheightarray[MAX_SCREENWIDTH];
 
 // Vars for R_DrawMaskedColumn
 
-// haleyjd DEBUG
-#ifdef R_SIXTEEN
-extern short   *mfloorclip;
-extern short   *mceilingclip;
-#else
-extern int *mfloorclip, *mceilingclip;
-#endif
-extern fixed_t spryscale;
-extern fixed_t sprtopscreen;
-extern fixed_t pspritescale;
-extern fixed_t pspriteiscale;
-extern fixed_t pspriteyscale; // ANYRES
-extern fixed_t pspriteiyscale;
+extern float *mfloorclip, *mceilingclip;
 
 // haleyjd 10/09/06: optional vissprite limit
 extern int r_vissprite_limit;
@@ -66,14 +48,9 @@ typedef struct maskedstack_s
    int firstds, lastds;
    int firstsprite, lastsprite;
 
-   // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-   short floorclip[MAX_SCREENWIDTH];
-   short ceilingclip[MAX_SCREENWIDTH];
-#else
-   int floorclip[MAX_SCREENWIDTH];
-   int ceilingclip[MAX_SCREENWIDTH];
-#endif
+   // SoM: Cardboard
+   float floorclip[MAX_SCREENWIDTH];
+   float ceilingclip[MAX_SCREENWIDTH];
 } maskedstack_t;
 
 void R_SortVisSpriteRange (int first, int last);
@@ -81,15 +58,11 @@ void R_DrawSpriteInDSRange (vissprite_t* spr, int firstds, int lastds);
 void R_PushMasked();
 void R_PopMasked();
 
-// haleyjd: DEBUG
-#ifdef R_SIXTEEN
-void R_SetMaskedSilhouette(short *top, short *bottom);
-#else
-void R_SetMaskedSilhouette(int *top, int *bottom);
-#endif
+// SoM: Cardboard
+void R_SetMaskedSilhouette(float *top, float *bottom);
 #endif
 
-void R_DrawMaskedColumn(column_t *column);
+void R_DrawMaskedColumn(column_t *tcolumn);
 void R_SortVisSprites(void);
 void R_AddSprites(sector_t *sec,int); // killough 9/18/98
 void R_AddPSprites(void);
@@ -105,6 +78,15 @@ void R_ProjectParticle(particle_t *particle);
 void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
+
+
+typedef struct
+{
+   float ytop;
+   float scale;
+} cb_maskedcolumn_t;
+
+extern cb_maskedcolumn_t maskedcolumn;
 
 #endif
 

@@ -49,13 +49,11 @@ extern int      viewwindowy;
 // SoM: ANYRES
 extern int      scaledwindowx;
 extern int      scaledwindowy;
-extern int      addscaleshift;
 
 extern int      centerx;
 extern int      centery;
 extern fixed_t  centerxfrac;
 extern fixed_t  centeryfrac;
-extern fixed_t  projection;
 // ANYRES
 extern fixed_t  yaspectmul;
 
@@ -77,6 +75,8 @@ extern boolean  showpsprites;
 #define LIGHTSEGSHIFT      4
 #define LIGHTSCALESHIFT   12
 #define LIGHTZSHIFT       20
+
+#define LIGHTZDIV         16.0f
 
 // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
 extern lighttable_t *(*scalelight)[MAXLIGHTSCALE];
@@ -108,7 +108,6 @@ int R_PointOnSide(fixed_t x, fixed_t y, node_t *node);
 int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
-fixed_t R_ScaleFromGlobalAngle(angle_t visangle);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 void R_SectorColormap(sector_t *s);
 
@@ -132,7 +131,6 @@ void R_ExecuteSetViewSize(void);
 angle_t R_WadToAngle(int wadangle);
 
 extern int viewdir;
-extern int zoom;
 extern int detailshift;
 extern int c_detailshift; // cvar for detail mode
 
@@ -146,6 +144,63 @@ extern spandrawer_t *r_span_engine;
 
 void R_SetColumnEngine(void);
 void R_SetSpanEngine(void);
+
+
+const float PI;
+
+typedef struct
+{
+   float x, y, z;
+   float angle, pitch;
+   float sin, cos;
+
+   float width, height;
+   float xcenter, ycenter;
+   
+   float xfoc, yfoc, focratio;
+   float fov;
+   float tan;
+
+   float pspritexscale, pspriteyscale;
+   float pspritexstep, pspriteystep;
+} cb_view_t;
+
+
+
+typedef struct
+{
+   
+   int x1, x2;
+   float x1frac, x2frac;
+   float toffsetx, toffsety;
+
+   float dist, dist2, diststep;
+   float len, len2, lenstep;
+
+   float top, top2, topstep;
+   float high, high2, highstep;
+   float low, low2, lowstep;
+   float bottom, bottom2, bottomstep;
+
+   boolean twosided, clipsolid, maskedtex;
+   short toptex, midtex, bottomtex;
+   boolean markfloor, markceiling;
+
+   int toptexmid, midtexmid, bottomtexmid;
+   int toptexh, midtexh, bottomtexh;
+
+   // 8 bit tables
+   lighttable_t **walllights;
+
+   side_t *side;
+   sector_t *frontsec, *backsec;
+   visplane_t *floorplane, *ceilingplane;
+   seg_t *line;
+} cb_seg_t;
+
+
+extern cb_view_t  view;
+extern cb_seg_t   seg;
 
 #endif
 

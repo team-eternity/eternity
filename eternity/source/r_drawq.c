@@ -713,80 +713,80 @@ static byte *R_GetBufferOpaque(void)
 {
    // haleyjd: reordered predicates
    if(temp_x == 4 ||
-      (temp_x && (temptype != COL_OPAQUE || temp_x + startx != dc_x)))
+      (temp_x && (temptype != COL_OPAQUE || temp_x + startx != column.x)))
       R_FlushColumns();
 
    if(!temp_x)
    {
       ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
+      startx = column.x;
+      *tempyl = commontop = column.y1;
+      *tempyh = commonbot = column.y2;
       temptype = COL_OPAQUE;
       R_FlushWholeColumns = R_FlushWholeOpaque;
       R_FlushHTColumns    = R_FlushHTOpaque;
       R_FlushQuadColumn   = R_FlushQuadOpaque;
-      return tempbuf + (dc_yl << 2);
+      return tempbuf + (column.y1 << 2);
    }
 
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
+   tempyl[temp_x] = column.y1;
+   tempyh[temp_x] = column.y2;
    
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
+   if(column.y1 > commontop)
+      commontop = column.y1;
+   if(column.y2 < commonbot)
+      commonbot = column.y2;
       
-   return tempbuf + (dc_yl << 2) + temp_x++;
+   return tempbuf + (column.y1 << 2) + temp_x++;
 }
 
 static byte *R_GetBufferTrans(void)
 {
    // haleyjd: reordered predicates
    if(temp_x == 4 || tranmap != temptranmap ||
-      (temp_x && (temptype != COL_TRANS || temp_x + startx != dc_x)))
+      (temp_x && (temptype != COL_TRANS || temp_x + startx != column.x)))
       R_FlushColumns();
 
    if(!temp_x)
    {
       ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
+      startx = column.x;
+      *tempyl = commontop = column.y1;
+      *tempyh = commonbot = column.y2;
       temptype = COL_TRANS;
       temptranmap = tranmap;
       R_FlushWholeColumns = R_FlushWholeTL;
       R_FlushHTColumns    = R_FlushHTTL;
       R_FlushQuadColumn   = R_FlushQuadTL;
-      return tempbuf + (dc_yl << 2);
+      return tempbuf + (column.y1 << 2);
    }
 
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
+   tempyl[temp_x] = column.y1;
+   tempyh[temp_x] = column.y2;
    
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
+   if(column.y1 > commontop)
+      commontop = column.y1;
+   if(column.y2 < commonbot)
+      commonbot = column.y2;
       
-   return tempbuf + (dc_yl << 2) + temp_x++;
+   return tempbuf + (column.y1 << 2) + temp_x++;
 }
 
 static byte *R_GetBufferFlexTrans(void)
 {
    // haleyjd: reordered predicates
-   if(temp_x == 4 || temptranslevel != dc_translevel ||
-      (temp_x && (temptype != COL_FLEXTRANS || temp_x + startx != dc_x)))
+   if(temp_x == 4 || temptranslevel != column.translevel ||
+      (temp_x && (temptype != COL_FLEXTRANS || temp_x + startx != column.x)))
       R_FlushColumns();
 
    if(!temp_x)
    {
       ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
+      startx = column.x;
+      *tempyl = commontop = column.y1;
+      *tempyh = commonbot = column.y2;
       temptype = COL_FLEXTRANS;
-      temptranslevel = dc_translevel;
+      temptranslevel = column.translevel;
       
       // haleyjd 09/12/04: optimization -- calculate flex tran lookups
       // here instead of every time a column is flushed.
@@ -802,35 +802,35 @@ static byte *R_GetBufferFlexTrans(void)
       R_FlushWholeColumns = R_FlushWholeFlex;
       R_FlushHTColumns    = R_FlushHTFlex;
       R_FlushQuadColumn   = R_FlushQuadFlex;
-      return tempbuf + (dc_yl << 2);
+      return tempbuf + (column.y1 << 2);
    }
 
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
+   tempyl[temp_x] = column.y1;
+   tempyh[temp_x] = column.y2;
    
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
+   if(column.y1 > commontop)
+      commontop = column.y1;
+   if(column.y2 < commonbot)
+      commonbot = column.y2;
       
-   return tempbuf + (dc_yl << 2) + temp_x++;
+   return tempbuf + (column.y1 << 2) + temp_x++;
 }
 
 static byte *R_GetBufferFlexAdd(void)
 {
    // haleyjd: reordered predicates
-   if(temp_x == 4 || temptranslevel != dc_translevel ||
-      (temp_x && (temptype != COL_FLEXADD || temp_x + startx != dc_x)))
+   if(temp_x == 4 || temptranslevel != column.translevel ||
+      (temp_x && (temptype != COL_FLEXADD || temp_x + startx != column.x)))
       R_FlushColumns();
 
    if(!temp_x)
    {
       ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
+      startx = column.x;
+      *tempyl = commontop = column.y1;
+      *tempyh = commonbot = column.y2;
       temptype = COL_FLEXADD;
-      temptranslevel = dc_translevel;
+      temptranslevel = column.translevel;
       
       {
          fixed_t fglevel, bglevel;
@@ -844,50 +844,50 @@ static byte *R_GetBufferFlexAdd(void)
       R_FlushWholeColumns = R_FlushWholeFlexAdd;
       R_FlushHTColumns    = R_FlushHTFlexAdd;
       R_FlushQuadColumn   = R_FlushQuadFlexAdd;
-      return tempbuf + (dc_yl << 2);
+      return tempbuf + (column.y1 << 2);
    }
 
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
+   tempyl[temp_x] = column.y1;
+   tempyh[temp_x] = column.y2;
    
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
+   if(column.y1 > commontop)
+      commontop = column.y1;
+   if(column.y2 < commonbot)
+      commonbot = column.y2;
       
-   return tempbuf + (dc_yl << 2) + temp_x++;
+   return tempbuf + (column.y1 << 2) + temp_x++;
 }
 
 static byte *R_GetBufferFuzz(void)
 {
    // haleyjd: reordered predicates
    if(temp_x == 4 ||
-      (temp_x && (temptype != COL_FUZZ || temp_x + startx != dc_x)))
+      (temp_x && (temptype != COL_FUZZ || temp_x + startx != column.x)))
       R_FlushColumns();
 
    if(!temp_x)
    {
       ++temp_x;
-      startx = dc_x;
-      *tempyl = commontop = dc_yl;
-      *tempyh = commonbot = dc_yh;
+      startx = column.x;
+      *tempyl = commontop = column.y1;
+      *tempyh = commonbot = column.y2;
       temptype = COL_FUZZ;
-      tempfuzzmap = dc_colormap; // SoM 7-28-04: Fix the fuzz problem.
+      tempfuzzmap = column.colormap; // SoM 7-28-04: Fix the fuzz problem.
       R_FlushWholeColumns = R_FlushWholeFuzz;
       R_FlushHTColumns    = R_FlushHTFuzz;
       R_FlushQuadColumn   = R_FlushQuadFuzz;
-      return tempbuf + (dc_yl << 2);
+      return tempbuf + (column.y1 << 2);
    }
 
-   tempyl[temp_x] = dc_yl;
-   tempyh[temp_x] = dc_yh;
+   tempyl[temp_x] = column.y1;
+   tempyh[temp_x] = column.y2;
    
-   if(dc_yl > commontop)
-      commontop = dc_yl;
-   if(dc_yh < commonbot)
-      commonbot = dc_yh;
+   if(column.y1 > commontop)
+      commontop = column.y1;
+   if(column.y2 < commonbot)
+      commonbot = column.y2;
       
-   return tempbuf + (dc_yl << 2) + temp_x++;
+   return tempbuf + (column.y1 << 2) + temp_x++;
 }
 
 static void R_QDrawColumn(void) 
@@ -897,15 +897,15 @@ static void R_QDrawColumn(void)
    register fixed_t frac;            // killough
    fixed_t          fracstep;     
 
-   count = dc_yh - dc_yl + 1; 
+   count = column.y2 - column.y1 + 1; 
 
    if(count <= 0)    // Zero length, column does not exceed a pixel.
       return;
 
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || 
-      dc_yl < 0 || dc_yh >= v_height) 
-      I_Error("R_QDrawColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
+   if(column.x  < 0 || column.x  >= v_width || 
+      column.y1 < 0 || column.y2 >= v_height) 
+      I_Error("R_QDrawColumn: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
    // Framebuffer destination address.
@@ -917,9 +917,8 @@ static void R_QDrawColumn(void)
 
    // Determine scaling, which is the only mapping to be done.
 
-   fracstep = dc_iscale;    
-   frac = dc_texturemid + 
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step;    
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    // Inner loop that does the actual texture mapping,
    //  e.g. a DDA-lile scaling.
@@ -928,10 +927,10 @@ static void R_QDrawColumn(void)
    // killough 2/1/98: more performance tuning
 
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -980,30 +979,29 @@ static void R_QDrawTLColumn(void)
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    
-   count = dc_yh - dc_yl + 1; 
+   count = column.y2 - column.y1 + 1; 
    
    // Zero length, column does not exceed a pixel.
    if(count <= 0)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || 
-      dc_yl < 0 || dc_yh >= v_height) 
-      I_Error("R_QDrawTLColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
+   if(column.x  < 0 || column.x  >= v_width || 
+      column.y1 < 0 || column.y2 >= v_height) 
+      I_Error("R_QDrawTLColumn: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
    
    // SoM: MAGIC
    dest = R_GetBufferTrans();
       
-   fracstep = dc_iscale; 
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step; 
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
      
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -1052,31 +1050,30 @@ static void R_QDrawTLTRColumn(void)
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    
-   count = dc_yh - dc_yl + 1; 
+   count = column.y2 - column.y1 + 1; 
    
    // Zero length, column does not exceed a pixel.
    if(count <= 0)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || 
-      dc_yl < 0 || dc_yh >= v_height) 
-      I_Error("R_QDrawTLTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);    
+   if(column.x  < 0 || column.x  >= v_width || 
+      column.y1 < 0 || column.y2 >= v_height) 
+      I_Error("R_QDrawTLTRColumn: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
    // SoM: MAGIC
    dest = R_GetBufferTrans();
    
-   fracstep = dc_iscale; 
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step; 
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
   
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -1089,7 +1086,7 @@ static void R_QDrawTLTRColumn(void)
           
          do
          {
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
+            *dest = colormap[column.translation[source[frac>>FRACBITS]]];
             dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
             if((frac += fracstep) >= (int)heightmask)
                frac -= heightmask;
@@ -1100,15 +1097,15 @@ static void R_QDrawTLTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
       }
    }
 } 
@@ -1120,22 +1117,22 @@ static void R_QDrawTLTRColumn(void)
 static void R_QDrawFuzzColumn(void) 
 { 
    // Adjust borders. Low...
-   if(!dc_yl) 
-      dc_yl = 1;
+   if(!column.y1) 
+      column.y1 = 1;
    
    // .. and high.
-   if(dc_yh == viewheight - 1) 
-      dc_yh = viewheight - 2; 
+   if(column.y2 == viewheight - 1) 
+      column.y2 = viewheight - 2; 
    
    // Zero length?
-   if((dc_yh - dc_yl) < 0) 
+   if((column.y2 - column.y1) < 0) 
       return; 
     
 #ifdef RANGECHECK 
    // haleyjd: these should apparently be adjusted for hires
    // SoM: DONE
-   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
-      I_Error("R_QDrawFuzzColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+      I_Error("R_QDrawFuzzColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif
 
    // SoM: MAGIC
@@ -1152,31 +1149,30 @@ static void R_QDrawTRColumn(void)
    fixed_t  frac;
    fixed_t  fracstep;     
    
-   count = dc_yh - dc_yl; 
+   count = column.y2 - column.y1; 
    if(count < 0) 
       return; 
                                  
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
-      I_Error("R_QDrawTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+      I_Error("R_QDrawTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
    // SoM: MAGIC
    dest = R_GetBufferOpaque();
    
    // Looks familiar.
-   fracstep = dc_iscale; 
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step; 
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    count++;        // killough 1/99: minor tuning
 
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -1189,7 +1185,7 @@ static void R_QDrawTRColumn(void)
           
          do
          {
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
+            *dest = colormap[column.translation[source[frac>>FRACBITS]]];
             dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
             if((frac += fracstep) >= (int)heightmask)
                frac -= heightmask;
@@ -1200,15 +1196,15 @@ static void R_QDrawTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
       }
    }
 } 
@@ -1225,29 +1221,28 @@ static void R_QDrawFlexColumn(void)
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    
-   count = dc_yh - dc_yl + 1; 
+   count = column.y2 - column.y1 + 1; 
 
    // Zero length, column does not exceed a pixel.
    if(count <= 0)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
-      I_Error("R_QDrawFlexColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+      I_Error("R_QDrawFlexColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
    
    // SoM: MAGIC
    dest = R_GetBufferFlexTrans();
   
-   fracstep = dc_iscale; 
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step; 
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -1297,31 +1292,30 @@ static void R_QDrawFlexTRColumn(void)
    fixed_t  frac;
    fixed_t  fracstep;     
    
-   count = dc_yh - dc_yl; 
+   count = column.y2 - column.y1; 
    if(count < 0) 
       return; 
    
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
-      I_Error("R_QDrawFlexTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+      I_Error("R_QDrawFlexTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
    // MAGIC
    dest = R_GetBufferFlexTrans();
    
    // Looks familiar.
-   fracstep = dc_iscale; 
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step; 
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
    
    count++;        // killough 1/99: minor tuning
    
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -1334,7 +1328,7 @@ static void R_QDrawFlexTRColumn(void)
           
          do
          {
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
+            *dest = colormap[column.translation[source[frac>>FRACBITS]]];
             dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
             if((frac += fracstep) >= (int)heightmask)
                frac -= heightmask;
@@ -1345,15 +1339,15 @@ static void R_QDrawFlexTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
       }
    }
 } 
@@ -1370,29 +1364,28 @@ static void R_QDrawAddColumn(void)
    register fixed_t frac;            // killough
    fixed_t          fracstep;
    
-   count = dc_yh - dc_yl + 1; 
+   count = column.y2 - column.y1 + 1; 
 
    // Zero length, column does not exceed a pixel.
    if(count <= 0)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
-      I_Error("R_QDrawAddColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+      I_Error("R_QDrawAddColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
    
    // SoM: MAGIC
    dest = R_GetBufferFlexAdd();
   
-   fracstep = dc_iscale; 
-   frac = dc_texturemid + 
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step; 
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -1441,31 +1434,30 @@ static void R_QDrawAddTRColumn(void)
    fixed_t  frac;
    fixed_t  fracstep;     
    
-   count = dc_yh - dc_yl; 
+   count = column.y2 - column.y1; 
    if (count < 0) 
       return; 
    
 #ifdef RANGECHECK 
-   if(dc_x  < 0 || dc_x  >= v_width || dc_yl < 0 || dc_yh >= v_height)
-      I_Error("R_QDrawAddTRColumn: %i to %i at %i", dc_yl, dc_yh, dc_x);
+   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+      I_Error("R_QDrawAddTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
    // MAGIC
    dest = R_GetBufferFlexAdd();
    
    // Looks familiar.
-   fracstep = dc_iscale;
-   frac = dc_texturemid +
-      FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+   fracstep = column.step;
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
    
    count++;        // killough 1/99: minor tuning
    
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = dc_source;            
-      register const lighttable_t *colormap = dc_colormap; 
-      register unsigned heightmask = dc_texheight-1;
-      if(dc_texheight & heightmask)   // not a power of 2 -- killough
+      register const byte *source = column.source;            
+      register const lighttable_t *colormap = column.colormap; 
+      register unsigned heightmask = column.texheight-1;
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
@@ -1478,7 +1470,7 @@ static void R_QDrawAddTRColumn(void)
           
          do
          {
-            *dest = colormap[dc_translation[source[frac>>FRACBITS]]];
+            *dest = colormap[column.translation[source[frac>>FRACBITS]]];
             dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
             if((frac += fracstep) >= (int)heightmask)
                frac -= heightmask;
@@ -1489,15 +1481,15 @@ static void R_QDrawAddTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[dc_translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
       }
    }
 } 

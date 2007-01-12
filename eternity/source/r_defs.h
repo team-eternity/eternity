@@ -87,6 +87,10 @@ extern int r_blockmap;
 typedef struct vertex_s
 {
    fixed_t x, y;
+
+   // SoM: Cardboard
+   // Fixme: polyobjects need to update the float vertex coords too.
+   float   fx, fy;
 } vertex_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.
@@ -219,7 +223,6 @@ typedef struct
   // for other functions.
 
   int special;
-
 } side_t;
 
 //
@@ -368,7 +371,7 @@ typedef struct drawseg_s
 {
   seg_t *curline;
   int x1, x2;
-  fixed_t scale1, scale2, scalestep;
+  float dist1, dist2, diststep;
   int silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
   fixed_t bsilheight;                   // do not clip sprites above this
   fixed_t tsilheight;                   // do not clip sprites below this
@@ -380,12 +383,9 @@ typedef struct drawseg_s
   // Pointers to lists for sprite clipping,
   // all three adjusted so [x1] is first value.
 
-  // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-  short *sprtopclip, *sprbottomclip, *maskedtexturecol;
-#else
-  int *sprtopclip, *sprbottomclip, *maskedtexturecol;
-#endif
+  float *sprtopclip, *sprbottomclip;
+  // SoM: this still needs to be int
+  int   *maskedtexturecol;
 #ifdef R_PORTALS
   fixed_t viewx, viewy, viewz;
 #endif
@@ -418,11 +418,15 @@ typedef struct vissprite_s
   fixed_t gx, gy;              // for line side calculation
   fixed_t gz, gzt;             // global bottom / top for silhouette clipping
   fixed_t startfrac;           // horizontal position of x1
-  fixed_t scale;
   fixed_t xiscale;             // negative if flipped
   fixed_t texturemid;
   int patch;
   int mobjflags, mobjflags3;   // flags, flags3 from thing
+
+  float   startx;
+  float   dist, xstep, ystep;
+  float   ytop, ybottom;
+  float   scale;
 
   // for color translation and shadow draw, maxbright frames as well
         // sf: also coloured lighting
@@ -504,21 +508,15 @@ typedef struct visplane
   unsigned short pad4;*/
 
   // haleyjd DEBUG
-#ifdef R_SIXTEEN
-  unsigned short *pad1;
-  unsigned short *top;
-  unsigned short *pad2, *pad3;
-  unsigned short *bottom, *pad4;
-#else
-  unsigned int *pad1;
-  unsigned int *top;
-  unsigned int *pad2, *pad3;
-  unsigned int *bottom, *pad4;
-#endif
+  int *pad1;
+  int *top;
+  int *pad2, *pad3;
+  int *bottom, *pad4;
+
   unsigned int   max_width;
 
 #ifdef R_PORTALS
-  fixed_t viewx, viewy, viewz;
+  float viewx, viewy, viewz;
 #endif
 } visplane_t;
 

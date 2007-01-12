@@ -34,30 +34,14 @@
 
 // Visplane related.
 
-// haleyjd DEBUG
-#ifdef R_SIXTEEN
-extern short *lastopening;
-#else
-extern int *lastopening;
-#endif
+extern float *lastopening;
 
 #ifdef R_PORTALS
 // SoM 12/8/03
-// haleyjd: DEBUG
-#ifdef R_SIXTEEN
-extern short *floorclip, *ceilingclip;
-extern short floorcliparray[], ceilingcliparray[];
+extern float *floorclip, *ceilingclip;
+extern float floorcliparray[], ceilingcliparray[];
 #else
-extern int *floorclip, *ceilingclip;
-extern int floorcliparray[], ceilingcliparray[];
-#endif
-#else
-// haleyjd: DEBUG
-#ifdef R_SIXTEEN
-extern short floorclip[], ceilingclip[];
-#else
-extern int floorclip[], ceilingclip[];
-#endif
+extern float floorclip[], ceilingclip[];
 #endif
 
 extern fixed_t *yslope;
@@ -77,6 +61,34 @@ visplane_t *R_FindPlane(
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
 extern int visplane_view;
+
+
+typedef struct
+{
+   int x1, x2, y;
+   fixed_t xfrac, yfrac, xstep, ystep;
+   void *source;
+   lighttable_t *colormap;
+} cb_span_t;
+
+
+typedef struct
+{
+   float xoffset, yoffset;
+   float height;
+   float pviewx, pviewy, pviewz;
+   int   picnum;
+
+   // SoM: we use different fixed point numbers for different flat sizes
+   float fixedunit;
+
+   lighttable_t **planezlight;
+   lighttable_t *fixedcolormap;
+   void *source;
+} cb_plane_t;
+
+extern cb_span_t span;
+extern cb_plane_t plane;
 
 #endif
 

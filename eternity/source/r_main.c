@@ -50,11 +50,14 @@ static const char rcsid[] = "$Id: r_main.c,v 1.13 1998/05/07 00:47:52 killough E
 #include "d_deh.h"
 #include "d_gi.h"
 
-// Fineangles in the SCREENWIDTH wide window.
-int fov = 2048;   //sf: made an int from a #define
+
+
+// SoM: Cardboard
+const float PI = 3.14159265f;
+cb_view_t view;
+
 
 // haleyjd 04/03/05: focal lengths made global, y len added
-fixed_t focal_tan;
 fixed_t focallen_x;
 fixed_t focallen_y;
 
@@ -68,9 +71,7 @@ int validcount = 1;         // increment every time a check is made
 lighttable_t *fixedcolormap;
 int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
-fixed_t  projection;
 fixed_t  yaspectmul; // ANYRES aspect ratio
-int      addscaleshift = 0;
 fixed_t  viewx, viewy, viewz;
 angle_t  viewangle;
 fixed_t  viewcos, viewsin;
@@ -78,9 +79,10 @@ player_t *viewplayer;
 extern lighttable_t **walllights;
 boolean  showpsprites=1; //sf
 camera_t *viewcamera;
-int zoom = 1;   // sf: fov/zooming
 int detailshift; // haleyjd 09/10/06: low detail mode restoration
 int c_detailshift;
+// SoM: removed the old zoom code infavor of actual field of view!
+int fov = 90;
 
 extern int screenSize;
 
@@ -141,10 +143,10 @@ static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
 //
 void R_SetColumnEngine(void)
 {
-   if(detailshift == 0)
+   //if(detailshift == 0)
       r_column_engine = r_column_engines[r_column_engine_num];
-   else
-      r_column_engine = &r_lowdetail_drawer;
+   //else
+   //   r_column_engine = &r_lowdetail_drawer;
 }
 
 // haleyjd 09/10/06: span drawing engines
@@ -165,10 +167,10 @@ static spandrawer_t *r_span_engines[NUMSPANENGINES] =
 //
 void R_SetSpanEngine(void)
 {
-   if(detailshift == 0)
+   //if(detailshift == 0)
       r_span_engine = r_span_engines[r_span_engine_num];
-   else
-      r_span_engine = &r_lowspandrawer;
+   //else
+   //   r_span_engine = &r_lowspandrawer;
 }
 
 //
@@ -267,39 +269,14 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 }
 
 //
-// R_ScaleFromGlobalAngle
-//
-// Returns the texture mapping scale for the current line (horizontal span)
-//  at the given angle.
-// rw_distance must be calculated first.
-//
-// killough 5/2/98: reformatted, cleaned up
-// haleyjd 09/10/06: low detail mode restoration
-//
-fixed_t R_ScaleFromGlobalAngle(angle_t visangle)
-{
-   int     anglea;
-   int     angleb;
-   int     den;
-   fixed_t num;
-   
-   anglea = ANG90 + (visangle-viewangle);
-   angleb = ANG90 + (visangle-rw_normalangle);
-   den = FixedMul(rw_distance, finesine[anglea>>ANGLETOFINESHIFT]);
-   num = FixedMul(projection, finesine[angleb>>ANGLETOFINESHIFT]) << detailshift;   
-
-   return den > num>>16 ? (num = FixedDiv(num, den)) > 64*FRACUNIT ?
-      64*FRACUNIT : num < 256 ? 256 : num : 64*FRACUNIT;
-}
-
-//
 // R_InitTextureMapping
 //
 // killough 5/2/98: reformatted
 
 static void R_InitTextureMapping (void)
 {
-   register int i,x;
+   register int i, x, limit;
+   float vtan;
    
    // Use tangent table to generate viewangletox:
    //  viewangletox will give the next greatest x
@@ -307,43 +284,40 @@ static void R_InitTextureMapping (void)
    //
    // Calc focal length so fov angles cover SCREENWIDTH
 
-   // haleyjd 04/03/05: calculate and store focallen_x, focallen_y
+   // Cardboard
+   view.fov = (float)fov * PI / 180.0f; // 90 degrees
+   view.tan = vtan = (float)tan(view.fov / 2);
+   view.xfoc = view.xcenter / vtan;
+   view.yfoc = view.xfoc * 1.2f;
+   view.focratio = view.yfoc / view.xfoc;
 
-   // haleyjd 10/14/06: until/unless true variable FOV is added, there is
-   // no need for these complicated calculations. The tangent of the half-angle
-   // is tan(45) == 1, and thus focallen is equal to centerxfrac.
-#if 0
-   focal_tan  = finetangent[FINEANGLES / 4 + fov / 2];
-   focallen_x = FixedDiv(centerxfrac*zoom, focal_tan);
-   focallen_y = 
-      FixedDiv(FixedMul((centerxfrac<<detailshift)*zoom, yaspectmul), focal_tan);
-#else
-   focal_tan  = FRACUNIT;
-   focallen_x = centerxfrac*zoom;
-   focallen_y = FixedMul((centerxfrac<<detailshift)*zoom, yaspectmul);
-#endif
+   // Unfortunately, cardboard still has to co-exist with the old fixed point code
+   focallen_x = (int)(view.xfoc * FRACUNIT);
+   focallen_y = (int)(view.yfoc * FRACUNIT);
 
-        
-   for(i = 0; i < FINEANGLES/2; ++i)
+   // SoM: rewrote old LUT generation code to work with variable FOV
+   i = 0;
+   limit = -(int)((view.xcenter / view.xfoc) * 65536.0f);
+   while(i < FINEANGLES/2 && finetangent[i] < limit)
+      viewangletox[i++] = viewwidth + 1;
+
+   limit = -limit;
+   while(i < FINEANGLES/2 && finetangent[i] <= limit)
    {
       int t;
-      if(finetangent[i] > FRACUNIT*2)
-         t = -1;
+
+      t = FixedMul(finetangent[i], focallen_x);
+      t = (centerxfrac - t + FRACUNIT-1) >> FRACBITS;
+      if(t < -1)
+         viewangletox[i++] = -1;
+      else if(t > viewwidth+1)
+         viewangletox[i++] = viewwidth+1;
       else
-         if(finetangent[i] < -FRACUNIT*2)
-            t = viewwidth+1;
-      else
-      {
-         t = FixedMul(finetangent[i], focallen_x);
-         t = (centerxfrac - t + FRACUNIT-1) >> FRACBITS;
-         if(t < -1)
-            t = -1;
-         else
-            if(t > viewwidth+1)
-               t = viewwidth+1;
-      }
-      viewangletox[i] = t;
+         viewangletox[i++] = t;
    }
+
+   while(i < FINEANGLES/2)
+      viewangletox[i++] = -1;
     
    // Scan viewangletox[] to generate xtoviewangle[]:
    //  xtoviewangle will give the smallest view angle
@@ -439,8 +413,6 @@ void R_SetupViewScaling(void)
    globalyscale  = (v_height << FRACBITS) / SCREENHEIGHT;
    globaliyscale = (SCREENHEIGHT << FRACBITS) / v_height;
 
-   addscaleshift = (globalxscale >> FRACBITS) - 1;
-
    realxarray[320] = v_width;
    realyarray[200] = v_height;
 
@@ -454,14 +426,14 @@ void R_SetupViewScaling(void)
    {
       scaledviewwidth  = SCREENWIDTH;
       scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth  = v_width >> detailshift;                // haleyjd 09/10/06
+      viewwidth  = v_width;// >> detailshift;                // haleyjd 09/10/06
       viewheight = v_height;
    }
    else
    {
       scaledviewwidth  = setblocks * 32;
       scaledviewheight = (setblocks * 168 / 10) & ~7;     // killough 11/98
-      viewwidth  = realxarray[scaledviewwidth] >> detailshift; // haleyjd 09/10/06
+      viewwidth  = realxarray[scaledviewwidth];// >> detailshift; // haleyjd 09/10/06
       viewheight = realyarray[scaledviewheight];
    }
 
@@ -469,13 +441,16 @@ void R_SetupViewScaling(void)
    centery     = viewheight / 2;
    centerxfrac = centerx << FRACBITS;
    centeryfrac = centery << FRACBITS;
-   projection  = centerxfrac * zoom;      // sf: zooming
 
    // haleyjd 04/03/05: Renamed yprojection to yaspectmul;
    // this matches zdoom and is more descriptive. 
    // It still works the same, though.
    
    yaspectmul = FixedDiv(globalyscale, globalxscale);
+
+   // SoM: Cardboard
+   view.xcenter = (view.width = (float)viewwidth) * 0.5f;
+   view.ycenter = (view.height = (float)viewheight) * 0.5f;
 
    R_InitBuffer(scaledviewwidth, scaledviewheight);       // killough 11/98
 }
@@ -496,35 +471,10 @@ void R_ExecuteSetViewSize (void)
    
    R_InitTextureMapping();
     
-   // psprite scales
-   // sf: zooming added
-   pspritescale = FixedDiv(zoom*viewwidth, SCREENWIDTH);  // killough 11/98
-   pspriteiscale = FixedDiv(SCREENWIDTH, zoom*viewwidth); // killough 11/98
-   pspriteyscale = FixedMul(pspritescale, yaspectmul);
-   pspriteiyscale = FixedDiv(FRACUNIT, pspriteyscale);
-    
    // thing clipping
    for(i = 0; i < viewwidth; ++i)
-      screenheightarray[i] = viewheight;
+      screenheightarray[i] = view.height - 1.0f;
 
-   // planes
-   for(i = 0; i < viewheight * 2; ++i)
-   {
-      fixed_t dy = D_abs(((i-viewheight)<<FRACBITS)+FRACUNIT/2);
-      // sf: zooming
-      // haleyjd 09/10/06: detailshift
-      origyslope[i] = FixedMul(yaspectmul << detailshift, 
-                               FixedDiv(viewwidth*zoom*(FRACUNIT/2), dy));
-   }
-
-   yslope = origyslope + (viewheight/2);
-        
-   for(i = 0; i < viewwidth; ++i)
-   {
-      fixed_t cosadj = D_abs(finecosine[xtoviewangle[i]>>ANGLETOFINESHIFT]);
-      distscale[i] = FixedDiv(FRACUNIT,cosadj);
-   }
-    
    // Calculate the light levels to use
    //  for each level / scale combination.
    for(i = 0; i < LIGHTLEVELS; ++i)
@@ -546,6 +496,21 @@ void R_ExecuteSetViewSize (void)
          for(t = 0; t < numcolormaps; ++t)     // killough 4/4/98
             c_scalelight[t][i][j] = colormaps[t] + level;
       }
+   }
+
+   if(view.tan < 1.0f)
+   {
+      view.pspritexscale = view.width / ((float)SCREENWIDTH * view.tan);
+      view.pspriteyscale = view.height / ((float)SCREENHEIGHT * view.tan);
+      view.pspritexstep = ((float)SCREENWIDTH * view.tan) / view.width;
+      view.pspriteystep = ((float)SCREENHEIGHT * view.tan) / view.height;
+   }
+   else
+   {
+      view.pspritexscale = view.width / (float)SCREENWIDTH;
+      view.pspriteyscale = view.height / (float)SCREENHEIGHT;
+      view.pspritexstep = (float)SCREENWIDTH / view.width;
+      view.pspriteystep = (float)SCREENHEIGHT / view.height;
    }
 }
 
@@ -578,6 +543,7 @@ subsector_t *R_PointInSubsector(fixed_t x, fixed_t y)
 
 int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 
+
 //
 // R_SetupFrame
 //
@@ -585,18 +551,10 @@ int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 void R_SetupFrame(player_t *player, camera_t *camera)
 {               
    mobj_t *mobj;
-   static int oldzoom;
    fixed_t pitch;
    fixed_t dy;
    fixed_t viewheightfrac;
    
-   // check for change to zoom
-   if(zoom != oldzoom)
-   {
-      R_ExecuteSetViewSize(); // reset view
-      oldzoom = zoom;
-   }
-
    // haleyjd 09/04/06: set or change column drawing engine
    // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
@@ -627,6 +585,18 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
+   // SoM: Cardboard
+   view.x = viewx / 65536.0f;
+   view.y = viewy / 65536.0f;
+   view.z = viewz / 65536.0f;
+   view.angle = (ANG90 - viewangle) * PI / (ANGLE_1 * 180);
+   view.pitch = (ANG90 - pitch) * PI / (ANGLE_1 * 180);
+   view.sin = (float)sin(view.angle);
+   if(view.angle == PI * 0.5f || view.angle == PI * 1.5f)
+      view.cos = 0.0f;
+   else
+      view.cos = (float)cos(view.angle);
+
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
 
@@ -648,8 +618,6 @@ void R_SetupFrame(player_t *player, camera_t *camera)
          dy = viewheightfrac;
       
       centeryfrac = viewheightfrac + dy;
-
-      yslope = origyslope + (viewheight >> 1) - (dy >> FRACBITS);
    }
    else
    {
@@ -659,6 +627,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    }
    
    centery = centeryfrac >> FRACBITS;
+
+   view.ycenter = (float)centery;
 
    // use drawcolumn
    colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
@@ -762,7 +732,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_ClearPlanes();
    R_ClearSprites();
    
-   if(autodetect_hom)
+    if(autodetect_hom)
       R_HOMdrawer();
    
    // check for new console commands.
@@ -790,8 +760,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_DrawMasked();
    
    // haleyjd 09/04/06: handle through column engine
-   if(r_column_engine->ResetBuffer)
-      r_column_engine->ResetBuffer();
+   //if(r_column_engine->ResetBuffer)
+   //   r_column_engine->ResetBuffer();
    
    // Check for new console commands.
    NetUpdate();
@@ -864,13 +834,22 @@ VARIABLE_BOOLEAN(general_translucency, NULL,        onoff);
 VARIABLE_BOOLEAN(autodetect_hom, NULL,              yesno);
 VARIABLE_BOOLEAN(c_detailshift,       NULL,         detailstr);
 
+// SoM: Variable FOV
+VARIABLE_INT(fov, NULL, 20, 179, NULL);
+
 VARIABLE_INT(tran_filter_pct, NULL,     0, 100, NULL);
 VARIABLE_INT(screenSize, NULL,          0, 8, NULL);
-VARIABLE_INT(zoom, NULL,                0, 8192, NULL);
 VARIABLE_INT(usegamma, NULL,            0, 4, NULL);
 VARIABLE_INT(particle_trans, NULL,      0, 2, ptranstr);
 VARIABLE_INT(r_column_engine_num, NULL, 0, NUMCOLUMNENGINES - 1, coleng);
 VARIABLE_INT(r_span_engine_num,   NULL, 0, NUMSPANENGINES - 1,  spaneng);
+
+
+
+CONSOLE_VARIABLE(r_fov, fov, 0)
+{
+   setsizeneeded = true;
+}
 
 
 CONSOLE_VARIABLE(gamma, usegamma, 0)
@@ -910,7 +889,6 @@ CONSOLE_VARIABLE(lefthanded, lefthanded, 0) {}
 CONSOLE_VARIABLE(r_blockmap, r_blockmap, 0) {}
 CONSOLE_VARIABLE(r_homflash, flashing_hom, 0) {}
 CONSOLE_VARIABLE(r_planeview, visplane_view, 0) {}
-CONSOLE_VARIABLE(r_zoom, zoom, 0) {}
 CONSOLE_VARIABLE(r_precache, r_precache, 0) {}
 CONSOLE_VARIABLE(r_showgun, showpsprites, 0) {}
 
@@ -980,11 +958,11 @@ CONSOLE_COMMAND(p_dumphubs, 0)
 
 void R_AddCommands(void)
 {
+   C_AddCommand(r_fov);
    C_AddCommand(lefthanded);
    C_AddCommand(r_blockmap);
    C_AddCommand(r_homflash);
    C_AddCommand(r_planeview);
-   C_AddCommand(r_zoom);
    C_AddCommand(r_precache);
    C_AddCommand(r_showgun);
    C_AddCommand(r_showhom);

@@ -35,20 +35,16 @@ rcsid[] = "$Id: r_bsp.c,v 1.17 1998/05/03 22:47:33 killough Exp $";
 #include "r_plane.h"
 #include "r_things.h"
 
-seg_t     *curline;
-side_t    *sidedef;
-line_t    *linedef;
-sector_t  *frontsector;
-sector_t  *backsector;
 drawseg_t *ds_p;
 
 // killough 4/7/98: indicates doors closed wrt automap bugfix:
 int      doorclosed;
 
 // killough: New code which removes 2s linedef limit
-drawseg_t *drawsegs;
+drawseg_t *drawsegs = NULL;
 unsigned long maxdrawsegs;
 // drawseg_t drawsegs[MAXDRAWSEGS];       // old code -- killough
+
 
 //
 // R_ClearDrawSegs
@@ -101,7 +97,7 @@ static cliprange_t solidsegs[MAXSEGS];
 //  e.g. single sided LineDefs (middle texture)
 //  that entirely block the view.
 //
-static void R_ClipSolidWallSegment(int first, int last)
+static void R_ClipSolidWallSegment()
 {
    cliprange_t *next, *start;
    
@@ -109,40 +105,40 @@ static void R_ClipSolidWallSegment(int first, int last)
    // (adjacent pixels are touching).
    
    start = solidsegs;
-   while(start->last < first - 1)
+   while(start->last < seg.x1 - 1)
       ++start;
 
-   if(first < start->first)
+   if(seg.x1 < start->first)
    {
-      if(last < start->first - 1)
+      if(seg.x2 < start->first - 1)
       {
          // Post is entirely visible (above start), so insert a new clippost.
-         R_StoreWallRange(first, last);
+         R_StoreWallRange(seg.x1, seg.x2);
          
          // 1/11/98 killough: performance tuning using fast memmove
          memmove(start + 1, start, (++newend - start) * sizeof(*start));
-         start->first = first;
-         start->last = last;
+         start->first = seg.x1;
+         start->last = seg.x2;
          return;
       }
 
       // There is a fragment above *start.
-      R_StoreWallRange(first, start->first - 1);
+      R_StoreWallRange(seg.x1, start->first - 1);
       
       // Now adjust the clip size.
-      start->first = first;
+      start->first = seg.x1;
    }
 
    // Bottom contained in start?
-   if(last <= start->last)
+   if(seg.x2 <= start->last)
       return;
 
    next = start;
-   while(last >= (next + 1)->first - 1)
+   while(seg.x2 >= (next + 1)->first - 1)
    {      // There is a fragment between two posts.
       R_StoreWallRange(next->last + 1, (next + 1)->first - 1);
       ++next;
-      if(last <= next->last)
+      if(seg.x2 <= next->last)
       {  
          // Bottom is contained in next. Adjust the clip size.
          start->last = next->last;
@@ -151,10 +147,10 @@ static void R_ClipSolidWallSegment(int first, int last)
    }
 
    // There is a fragment after *next.
-   R_StoreWallRange(next->last + 1, last);
+   R_StoreWallRange(next->last + 1, seg.x2);
    
    // Adjust the clip size.
-   start->last = last;
+   start->last = seg.x2;
    
    // Remove start+1 to next from the clip list,
    // because start now covers their area.
@@ -176,44 +172,44 @@ crunch:
 // Does handle windows,
 //  e.g. LineDefs with upper and lower texture.
 //
-static void R_ClipPassWallSegment(int first, int last)
+static void R_ClipPassWallSegment()
 {
    cliprange_t *start = solidsegs;
    
    // Find the first range that touches the range
    //  (adjacent pixels are touching).
-   while(start->last < first - 1)
+   while(start->last < seg.x1 - 1)
       ++start;
 
-   if(first < start->first)
+   if(seg.x1 < start->first)
    {
-      if(last < start->first - 1)
+      if(seg.x2 < start->first - 1)
       {
          // Post is entirely visible (above start).
-         R_StoreWallRange(first, last);
+         R_StoreWallRange(seg.x1, seg.x2);
          return;
       }
 
       // There is a fragment above *start.
-      R_StoreWallRange(first, start->first - 1);
+      R_StoreWallRange(seg.x1, start->first - 1);
    }
 
    // Bottom contained in start?
-   if(last <= start->last)
+   if(seg.x2 <= start->last)
       return;
 
-   while(last >= (start + 1)->first - 1)
+   while(seg.x2 >= (start + 1)->first - 1)
    {
       // There is a fragment between two posts.
       R_StoreWallRange(start->last + 1, (start + 1)->first - 1);
       ++start;
       
-      if(last <= start->last)
+      if(seg.x2 <= start->last)
          return;
    }
    
    // There is a fragment after *next.
-   R_StoreWallRange(start->last + 1, last);
+   R_StoreWallRange(start->last + 1, seg.x2);
 }
 
 //
@@ -230,11 +226,7 @@ void R_ClearClipSegs(void)
 
 #ifdef R_PORTALS
 // haleyjd: DEBUG
-#ifdef R_SIXTEEN
-boolean R_SetupPortalClipsegs(short *top, short *bottom)
-#else
-boolean R_SetupPortalClipsegs(int *top, int *bottom)
-#endif
+boolean R_SetupPortalClipsegs(float *top, float *bottom)
 {
    int i = 0;
    cliprange_t *seg;
@@ -242,7 +234,7 @@ boolean R_SetupPortalClipsegs(int *top, int *bottom)
    R_ClearClipSegs();
    
    // extend first solidseg to one column left of first open post
-   while(i < viewwidth && top[i] + 1 >= bottom[i]) 
+   while(i < viewwidth && bottom[i] - top[i] <= -1.0f) 
       ++i;
    
    // first open post found, set last closed post to last closed post (i - 1);
@@ -257,7 +249,7 @@ boolean R_SetupPortalClipsegs(int *top, int *bottom)
    while(1)
    {
       //find the first closed post.
-      while(i < viewwidth && top[i] + 1 < bottom[i]) 
+      while(i < viewwidth && bottom[i] - top[i] > -1.0f) 
          ++i;
       
       if(i == viewwidth)
@@ -299,20 +291,20 @@ int R_DoorClosed(void)
    return
 
      // if door is closed because back is shut:
-     backsector->ceilingheight <= backsector->floorheight
+     seg.backsec->ceilingheight <= seg.backsec->floorheight
 
      // preserve a kind of transparent door/lift special effect:
-     && (backsector->ceilingheight >= frontsector->ceilingheight ||
-      curline->sidedef->toptexture)
+     && (seg.backsec->ceilingheight >= seg.frontsec->ceilingheight ||
+      seg.line->sidedef->toptexture)
 
-     && (backsector->floorheight <= frontsector->floorheight ||
-      curline->sidedef->bottomtexture)
+     && (seg.backsec->floorheight <= seg.frontsec->floorheight ||
+      seg.line->sidedef->bottomtexture)
 
      // properly render skies (consider door "open" if both ceilings are sky):
-     && ((backsector->ceilingpic != skyflatnum && 
-          backsector->ceilingpic != sky2flatnum) ||
-         (frontsector->ceilingpic != skyflatnum &&
-          frontsector->ceilingpic != sky2flatnum));
+     && ((seg.backsec->ceilingpic != skyflatnum && 
+          seg.backsec->ceilingpic != sky2flatnum) ||
+         (seg.frontsec->ceilingpic != skyflatnum &&
+          seg.frontsec->ceilingpic != sky2flatnum));
 }
 
 //
@@ -456,155 +448,307 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
+#define NEARCLIP 0.1f
+extern int       *texturewidthmask;
+
 static void R_AddLine(seg_t *line)
 {
-   int      x1;
-   int      x2;
-   angle_t  angle1;
-   angle_t  angle2;
-   angle_t  span;
-   angle_t  tspan;
-   static sector_t tempsec;     // killough 3/8/98: ceiling/water hack
+   float x1, x2;
+   float toffsetx, toffsety;
+   float i1, i2, pstep;
+   float dx, dy, length;
+   vertex_t  t1, t2, temp;
+   side_t *side;
+   static sector_t tempsec;
 
-   curline = line;
-   
-   angle1 = R_PointToAngle(line->v1->x, line->v1->y);
-   angle2 = R_PointToAngle(line->v2->x, line->v2->y);
+   seg.clipsolid = false;
+   seg.backsec = line->backsector ? R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true) : NULL;
+   seg.line = line;
 
-   // Clip to view edges.
-   span = angle1 - angle2;
-   
-   // Back side, i.e. backface culling
-   if(span >= ANG180)
-      return;
-   
-   // Global angle needed by segcalc.
-   rw_angle1 = angle1;
-   angle1 -= viewangle;
-   angle2 -= viewangle;
-
-   tspan = angle1 + clipangle;
-   if(tspan > 2 * clipangle)
-   {
-      tspan -= (2 * clipangle);
-      
-      // Totally off the left edge?
-      if(tspan >= span)
-         return;
-      
-      angle1 = clipangle;
-   }
-
-   tspan = clipangle - angle2;
-   if(tspan > 2 * clipangle)
-   {
-      tspan -= (2 * clipangle);
-      
-      // Totally off the left edge?
-      if(tspan >= span)
-         return;
-      angle2 = -clipangle;
-   }
-
-   // The seg is in the view range,
-   // but not necessarily visible.
-   
-   angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
-   angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
-   
-   // killough 1/31/98: Here is where "slime trails" can SOMETIMES occur:
-   // SoM: This is also where all the line rendering bugs come from.
-   // bouncy wall bugs are caused by the left vertex being WAAAY of the screen and the LUT
-   // at that point becomes unstable and highly inaccurate. 
-   x1 = viewangletox[angle1];
-   x2 = viewangletox[angle2];
-
-   // Does not cross a pixel?
-   if(x1 >= x2)       // killough 1/31/98 -- change == to >= for robustness
-      return;
-
-   backsector = line->backsector;
-   
-   // Single sided line?
-   if(!backsector)
-      goto clipsolid;
-
-   // killough 3/8/98, 4/4/98: hack for invisible ceilings / deep water
-   backsector = R_FakeFlat(backsector, &tempsec, NULL, NULL, true);
-   
-   doorclosed = 0;       // killough 4/16/98
-   
-   // Closed door.
-
-   if(backsector->ceilingheight <= frontsector->floorheight || 
-      backsector->floorheight   >= frontsector->ceilingheight)
-      goto clipsolid;
-
-   // This fixes the automap floor height bug -- killough 1/18/98:
-   // killough 4/7/98: optimize: save result in doorclosed for use in r_segs.c
-   if((doorclosed = R_DoorClosed()))
-      goto clipsolid;
-
-   // Window.
-   if(backsector->ceilingheight != frontsector->ceilingheight || 
-      backsector->floorheight   != frontsector->floorheight)
-      goto clippass;
-
-   // Reject empty lines used for triggers
-   //  and special events.
-   // Identical floor and ceiling on both sides,
-   // identical light levels on both sides,
-   // and no middle texture.
-   if(backsector->ceilingpic == frontsector->ceilingpic 
-      && backsector->floorpic == frontsector->floorpic
-      && backsector->lightlevel == frontsector->lightlevel 
-      && curline->sidedef->midtexture == 0
+   // Reject empty two-sided lines used for line specials.
+   if(seg.backsec && seg.frontsec 
+      && seg.backsec->ceilingpic == seg.frontsec->ceilingpic 
+      && seg.backsec->floorpic == seg.frontsec->floorpic
+      && seg.backsec->lightlevel == seg.frontsec->lightlevel 
+      && seg.line->sidedef->midtexture == 0
       
       // killough 3/7/98: Take flats offsets into account:
-      && backsector->floor_xoffs == frontsector->floor_xoffs
-      && backsector->floor_yoffs == frontsector->floor_yoffs
-      && backsector->ceiling_xoffs == frontsector->ceiling_xoffs
-      && backsector->ceiling_yoffs == frontsector->ceiling_yoffs
+      && seg.backsec->floor_xoffs == seg.frontsec->floor_xoffs
+      && seg.backsec->floor_yoffs == seg.frontsec->floor_yoffs
+      && seg.backsec->ceiling_xoffs == seg.frontsec->ceiling_xoffs
+      && seg.backsec->ceiling_yoffs == seg.frontsec->ceiling_yoffs
       
       // killough 4/16/98: consider altered lighting
-      && backsector->floorlightsec == frontsector->floorlightsec
-      && backsector->ceilinglightsec == frontsector->ceilinglightsec
+      && seg.backsec->floorlightsec == seg.frontsec->floorlightsec
+      && seg.backsec->ceilinglightsec == seg.frontsec->ceilinglightsec
+
+      && seg.backsec->floorheight == seg.frontsec->floorheight
+      && seg.backsec->ceilingheight == seg.frontsec->ceilingheight
       
       // sf: coloured lighting
-      && backsector->heightsec == frontsector->heightsec
+      && seg.backsec->heightsec == seg.frontsec->heightsec
 #ifdef R_PORTALS
       // SoM 12/10/03: PORTALS
-      && backsector->c_portal == frontsector->c_portal
-      && backsector->f_portal == frontsector->f_portal
+      && seg.backsec->c_portal == seg.frontsec->c_portal
+      && seg.backsec->f_portal == seg.frontsec->f_portal
 #endif
       )
       return;
+      
 
-clippass:
-#ifdef R_PORTALS
-   x2 -= 1;
-   // SoM 3/14/2005: If we are rendering a portal area, check the seg against the portal view
-   // and possibly reject it.
-   if(portalrender && !R_ClipSeg(&x1, &x2))
+   // The first step is to do calculations for the entire wall seg, then
+   // send the wall to the clipping functions.
+   temp.fx = line->v1->fx - view.x;
+   temp.fy = line->v1->fy - view.y;
+   t1.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t1.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+
+   temp.fx = line->v2->fx - view.x;
+   temp.fy = line->v2->fy - view.y;
+   t2.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t2.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+
+   // Simple reject for lines entirely behind the view plane.
+   if(t1.fy < NEARCLIP && t2.fy < NEARCLIP)
       return;
-   R_ClipPassWallSegment(x1, x2);
-#else
-   R_ClipPassWallSegment(x1, x2 - 1);
-#endif
-   return;
+
+   toffsetx = toffsety = 0;
+
+   if(t1.fy < NEARCLIP)
+   {
+      float move, movey;
+
+      // SoM: optimization would be to store the line slope in float format in the segs
+      movey = NEARCLIP - t1.fy;
+      move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+
+      t1.fx += move;
+      toffsetx += (float)sqrt(move * move + movey * movey);
+      t1.fy = NEARCLIP;
+      i1 = 1.0f / NEARCLIP;
+      x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+   }
+   else
+   {
+      i1 = 1.0f / t1.fy;
+      x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+   }
+
+
+   if(t2.fy < NEARCLIP)
+   {
+      // SoM: optimization would be to store the line slope in float format in the segs
+      t2.fx += (NEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+      t2.fy = NEARCLIP;
+      i2 = 1.0f / NEARCLIP;
+      x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+   }
+   else
+   {
+      i2 = 1.0f / t2.fy;
+      x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+   }
+
+   // SoM: Handle the case where a wall is only occupying a single post but still needs to be 
+   // rendered to keep groups of single post walls from not being rendered and causing slime 
+   // trails.
+ 
+   // backface rejection
+   if(x2 < x1)
+      return;
+
+   // off the screen rejection
+   if(x2 < 0 || x1 >= view.width)
+      return;
+
+   if(x2 > x1)
+      pstep = 1.0f / (x2 - x1);
+   else
+      pstep = 1.0f;
+
+   side = line->sidedef;
    
-clipsolid:
-#ifdef R_PORTALS
-   x2 -= 1;
-   // SoM 3/14/2005: If we are rendering a portal area, check the seg against the portal view
-   // and possibly reject it.
-   if(portalrender && !R_ClipSeg(&x1, &x2))
-      return;
-   R_ClipSolidWallSegment(x1, x2);
-#else
-   R_ClipSolidWallSegment(x1, x2 - 1);
-#endif
+   seg.toffsetx = toffsetx + (side->textureoffset / 65536.0f) + (line->offset / 65536.0f);
+   seg.toffsety = toffsety + (side->rowoffset / 65536.0f);
+
+   if(seg.toffsetx < 0)
+   {
+      float maxtexw;
+      // SoM: ok, this was driving me crazy. It seems that when the offset is less than 0, the
+      // fractional part will cause the texel at 0 + abs(seg.toffsetx) to double and it will
+      // strip the first texel to one column. This is because -64 + ANY FRACTION is going to cast
+      // to 63 and when you cast -0.999 through 0.999 it will cast to 0. The first step is to
+      // find the largest texture width on the line to make sure all the textures will start
+      // at the same column when the offsets are adjusted.
+
+      maxtexw = 0.0f;
+      if(side->toptexture)
+         maxtexw = (float)texturewidthmask[side->toptexture];
+      if(side->midtexture && texturewidthmask[side->midtexture] > maxtexw)
+         maxtexw = (float)texturewidthmask[side->midtexture];
+      if(side->bottomtexture && texturewidthmask[side->bottomtexture] > maxtexw)
+         maxtexw = (float)texturewidthmask[side->bottomtexture];
+
+      // Then adjust the offset to zero or the first positive value that will repeat correctly
+      // with the largest texture on the line.
+      if(maxtexw)
+      {
+         maxtexw++;
+         while(seg.toffsetx < 0.0f) 
+            seg.toffsetx += maxtexw;
+      }
+   }
+
+   dx = t2.fx - t1.fx;
+   dy = t2.fy - t1.fy;
+   length = (float)sqrt(dx * dx + dy * dy);
+
+   seg.dist = i1;
+   seg.dist2 = i2;
+   seg.diststep = (i2 - i1) * pstep;
+
+   seg.len = 0;
+   seg.len2 = length * i2 * view.yfoc;
+   seg.lenstep = length * i2 * pstep * view.yfoc;
+
+   seg.side = side;
+
+   seg.top = (seg.frontsec->ceilingheight / 65536.0f) - view.z;
+   seg.bottom = (seg.frontsec->floorheight / 65536.0f) - view.z;
+
+   if(!seg.backsec)
+   {
+      seg.twosided = false;
+      seg.toptex = seg.bottomtex = 0;
+      seg.midtex = texturetranslation[side->midtexture];
+      seg.midtexh = textureheight[side->midtexture] >> FRACBITS;
+
+      if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
+         seg.midtexmid = (int)((seg.bottom + seg.midtexh + seg.toffsety) * FRACUNIT);
+      else
+         seg.midtexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
+
+      seg.markceiling = seg.ceilingplane ? true : false;
+      seg.markfloor = seg.floorplane ? true : false;
+      seg.clipsolid = true;
+   }
+   else
+   {
+      boolean mark;
+
+      seg.twosided = true;
+
+      mark = seg.frontsec->lightlevel != seg.backsec->lightlevel ||
+             seg.frontsec->heightsec != -1 ||
+             seg.frontsec->heightsec != seg.backsec->heightsec ? true : false;
+
+
+      seg.high = (seg.backsec->ceilingheight / 65536.0f) - view.z;
+
+      seg.clipsolid = seg.frontsec->ceilingheight <= seg.frontsec->floorheight 
+                || ((seg.frontsec->ceilingheight <= seg.backsec->floorheight
+                || seg.backsec->ceilingheight <= seg.frontsec->floorheight 
+                || seg.backsec->floorheight >= seg.backsec->ceilingheight) 
+                && !((seg.frontsec->ceilingpic == skyflatnum 
+                   || seg.frontsec->ceilingpic == sky2flatnum)
+                   && (seg.backsec->ceilingpic == skyflatnum 
+                   ||  seg.backsec->ceilingpic == sky2flatnum))) ? true : false;
+
+      seg.markceiling = mark || seg.clipsolid ||
+         seg.top != seg.high ||
+         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
+         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
+         seg.frontsec->c_portal != seg.backsec->c_portal ||
+         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ? true : false;
+
+      if((seg.frontsec->ceilingpic == skyflatnum 
+          || seg.frontsec->ceilingpic == sky2flatnum)
+          && (seg.backsec->ceilingpic == skyflatnum 
+          ||  seg.backsec->ceilingpic == sky2flatnum))
+         seg.top = seg.high;
+
+      if(seg.high < seg.top && side->toptexture)
+      {
+         seg.toptex = texturetranslation[side->toptexture];
+         seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
+
+         if(seg.line->linedef->flags & ML_DONTPEGTOP)
+            seg.toptexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
+         else
+            seg.toptexmid = (int)((seg.high + seg.toptexh + seg.toffsety) * FRACUNIT);
+      }
+      else
+         seg.toptex = 0;
+
+
+      seg.markfloor = mark || seg.clipsolid || 
+         seg.frontsec->floorheight != seg.backsec->floorheight ||
+         seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
+         seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+         seg.frontsec->floorpic != seg.backsec->floorpic ||
+         seg.frontsec->f_portal != seg.backsec->f_portal ||
+         seg.frontsec->floorlightsec != seg.backsec->floorlightsec ? true : false;
+
+      seg.low = (seg.backsec->floorheight / 65536.0f) - view.z;
+      if(seg.bottom < seg.low && side->bottomtexture)
+      {
+         seg.bottomtex = texturetranslation[side->bottomtexture];
+         seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
+
+         if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
+            seg.bottomtexmid = (int)((seg.bottom + seg.bottomtexh + seg.toffsety) * FRACUNIT);
+         else
+            seg.bottomtexmid = (int)((seg.low + seg.toffsety) * FRACUNIT);
+      }
+      else
+         seg.bottomtex = 0;
+
+      seg.midtex = 0;
+      seg.maskedtex = seg.side->midtexture ? true : false;
+   }
+
+
+   if(x1 < 0)
+   {
+      seg.dist += seg.diststep * -x1;
+      seg.len += seg.lenstep * -x1;
+      seg.x1frac = 0.0f;
+      seg.x1 = 0;
+   }
+   else
+   {
+      seg.x1 = (int)floor(x1);
+      seg.x1frac = x1;
+   }
+
+   if(x2 >= view.width)
+   {
+      float clipx = x2 - view.width + 1.0f;
+
+      seg.dist2 -= seg.diststep * clipx;
+      seg.len2 -= seg.lenstep * clipx;
+
+      seg.x2frac = view.width - 1.0f;
+      seg.x2 = viewwidth - 1;
+   }
+   else
+   {
+      seg.x2 = (int)floor(x2);
+      seg.x2frac = x2;
+   }
+
+   #ifdef R_PORTALS
+      if(portalrender && !R_ClipSeg())
+         return;
+   #endif
+
+   if(seg.clipsolid)
+      R_ClipSolidWallSegment();
+   else
+      R_ClipPassWallSegment();
 }
+
 
 static const int checkcoord[12][4] = // killough -- static const
 {
@@ -819,47 +963,47 @@ static void R_Subsector(int num)
 #endif
 
    sub = &subsectors[num];
-   frontsector = sub->sector;
+   seg.frontsec = sub->sector;
    count = sub->numlines;
    line = &segs[sub->firstline];
    
-   R_SectorColormap(frontsector);
+   R_SectorColormap(seg.frontsec);
    
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
-   frontsector = R_FakeFlat(frontsector, &tempsec, &floorlightlevel,
+   seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                             &ceilinglightlevel, false);   // killough 4/11/98
 
    // killough 3/7/98: Add (x,y) offsets to flats, add deep water check
    // killough 3/16/98: add floorlightlevel
    // killough 10/98: add support for skies transferred from sidedefs
 
-   floorplane = frontsector->floorheight < viewz || // killough 3/7/98
-     (frontsector->heightsec != -1 &&
-      (sectors[frontsector->heightsec].ceilingpic == skyflatnum ||
-       sectors[frontsector->heightsec].ceilingpic == sky2flatnum)) ?
-     R_FindPlane(frontsector->floorheight, 
-                 (frontsector->floorpic == skyflatnum ||
-                  frontsector->floorpic == sky2flatnum) &&  // kilough 10/98
-                 frontsector->sky & PL_SKYFLAT ? frontsector->sky :
-                 frontsector->floorpic,
+   seg.floorplane = seg.frontsec->floorheight < viewz || // killough 3/7/98
+     (seg.frontsec->heightsec != -1 &&
+      (sectors[seg.frontsec->heightsec].ceilingpic == skyflatnum ||
+       sectors[seg.frontsec->heightsec].ceilingpic == sky2flatnum)) ?
+     R_FindPlane(seg.frontsec->floorheight, 
+                 (seg.frontsec->floorpic == skyflatnum ||
+                  seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
+                 seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
+                 seg.frontsec->floorpic,
                  floorlightlevel,                // killough 3/16/98
-                 frontsector->floor_xoffs,       // killough 3/7/98
-                 frontsector->floor_yoffs) : NULL;
+                 seg.frontsec->floor_xoffs,       // killough 3/7/98
+                 seg.frontsec->floor_yoffs) : NULL;
 
-   ceilingplane = frontsector->ceilingheight > viewz ||
-     (frontsector->ceilingpic == skyflatnum ||
-      frontsector->ceilingpic == sky2flatnum) ||
-     (frontsector->heightsec != -1 &&
-      (sectors[frontsector->heightsec].floorpic == skyflatnum ||
-       sectors[frontsector->heightsec].floorpic == sky2flatnum)) ?
-     R_FindPlane(frontsector->ceilingheight,     // killough 3/8/98
-                 (frontsector->ceilingpic == skyflatnum ||
-                  frontsector->ceilingpic == sky2flatnum) &&  // kilough 10/98
-                 frontsector->sky & PL_SKYFLAT ? frontsector->sky :
-                 frontsector->ceilingpic,
+   seg.ceilingplane = seg.frontsec->ceilingheight > viewz ||
+     (seg.frontsec->ceilingpic == skyflatnum ||
+      seg.frontsec->ceilingpic == sky2flatnum) ||
+     (seg.frontsec->heightsec != -1 &&
+      (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
+       sectors[seg.frontsec->heightsec].floorpic == sky2flatnum)) ?
+     R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
+                 (seg.frontsec->ceilingpic == skyflatnum ||
+                  seg.frontsec->ceilingpic == sky2flatnum) &&  // kilough 10/98
+                 seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
+                 seg.frontsec->ceilingpic,
                  ceilinglightlevel,              // killough 4/11/98
-                 frontsector->ceiling_xoffs,     // killough 3/7/98
-                 frontsector->ceiling_yoffs) : NULL;
+                 seg.frontsec->ceiling_xoffs,     // killough 3/7/98
+                 seg.frontsec->ceiling_yoffs) : NULL;
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 
    // instead of fake one. Improve sprite lighting by basing sprite

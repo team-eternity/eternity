@@ -44,6 +44,8 @@ extern fixed_t *textureheight;
 extern fixed_t *spritewidth;
 extern fixed_t *spriteoffset;
 extern fixed_t *spritetopoffset;
+// SoM: Needed for cardboard
+extern float   *spriteheight;
 
 extern lighttable_t **colormaps;          // killough 3/20/98, 4/4/98
 extern lighttable_t *fullcolormap;        // killough 3/20/98
@@ -109,11 +111,7 @@ extern camera_t         *viewcamera;
 extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
 extern angle_t          xtoviewangle[MAX_SCREENWIDTH+1];  // killough 2/8/98
-extern fixed_t          rw_distance;
-extern angle_t          rw_normalangle;
 
-// angle to line origin
-extern int              rw_angle1;
 
 // Segs count?
 extern int              sscount;

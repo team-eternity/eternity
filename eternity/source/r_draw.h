@@ -56,37 +56,12 @@ extern columndrawer_t r_normal_drawer;
 
 #define TRANSLATIONCOLOURS 15
 
-extern lighttable_t *dc_colormap;
-extern int      dc_x;
-extern int      dc_yl;
-extern int      dc_yh;
-extern fixed_t  dc_iscale;
-extern fixed_t  dc_texturemid;
-extern int      dc_texheight;    // killough
 extern int      linesize;        // killough 11/98
-// SoM: ANYRES
-
-// first pixel in a column
-extern byte     *dc_source;         
 
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h);
 
-extern lighttable_t *ds_colormap;
-
-extern int     ds_y;
-extern int     ds_x1;
-extern int     ds_x2;
-extern fixed_t ds_xfrac;
-extern fixed_t ds_yfrac;
-extern fixed_t ds_xstep;
-extern fixed_t ds_ystep;
-
 // start of a 64*64 tile image
-extern byte *ds_source;              
 extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
-extern byte *dc_translation;
-
-extern fixed_t dc_translevel; // haleyjd: zdoom style trans level
 
 //
 // spandrawer_t
@@ -101,6 +76,8 @@ typedef struct spandrawer_s
    void (*DrawSpan128)(void);
    void (*DrawSpan256)(void);
    void (*DrawSpan512)(void);
+   // SoM: store the fixed point units here so the rasterizer can pre-shift everything
+   float  fixedunit64, fixedunit128, fixedunit256, fixedunit512;
 } spandrawer_t;
 
 extern spandrawer_t r_olpspandrawer; // old low-precision
@@ -128,6 +105,27 @@ extern byte *ylookup[];       // killough 11/98
 
 extern const int fuzzoffset[];
 extern int fuzzpos;
+
+// Cardboard
+typedef struct
+{
+   int x, y1, y2;
+
+   fixed_t step;
+   int texheight;
+
+   int texmid;
+
+   // 8-bit lighting
+   lighttable_t *colormap;
+   byte *translation;
+   fixed_t translevel; // haleyjd: zdoom style trans level
+
+   void *source;
+} cb_column_t;
+
+
+extern cb_column_t column;
 
 #endif
 
