@@ -842,7 +842,10 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    // Does not cross a pixel.
    if(sx1 == sx2)
       return false;
-   --sx2;
+
+   // SoM: To account for the rounding error of the old BSP system, I needed to make adjustments.
+   if(sx1 > 0) sx1--;
+   if(sx2 < viewwidth - 1) sx2++;
 
    start = solidsegs;
    while(start->last < sx2)
