@@ -429,7 +429,7 @@ void R_DrawMaskedColumn(column_t *tcolumn)
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
    
-   column.texmid = 0; // killough 11/98
+   column.texheight = 0; // killough 11/98
 
    while(tcolumn->topdelta != 0xff)
    {
