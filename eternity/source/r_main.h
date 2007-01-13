@@ -189,6 +189,10 @@ typedef struct
    int toptexmid, midtexmid, bottomtexmid;
    int toptexh, midtexh, bottomtexh;
 
+   // The portal ignore flags. If a portal should be rendered even if the camera is on the
+   // backface of it...
+   boolean f_portalignore, c_portalignore;
+
    // 8 bit tables
    lighttable_t **walllights;
 

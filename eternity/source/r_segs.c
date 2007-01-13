@@ -51,12 +51,6 @@ cb_seg_t          segclip;
 // killough 1/6/98: replaced globals with statics where appropriate
 
 
-#ifdef R_PORTALS
-// SoM: ignore markfloor/markceiling in some cases for portals.
-static boolean  c_portalignore;
-static boolean  f_portalignore;
-#endif
-
 lighttable_t    **walllights;
 
 
@@ -244,7 +238,7 @@ static void R_RenderSegLoop(void)
 
 #ifdef R_PORTALS
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
-      if((segclip.markceiling || c_portalignore) && segclip.frontsec->c_portal)
+      if((segclip.markceiling || segclip.c_portalignore) && segclip.frontsec->c_portal)
       {
          bottom = t - 1;
          
@@ -253,6 +247,8 @@ static void R_RenderSegLoop(void)
          
          if(bottom - top > -1.0f)
             R_PortalAdd(segclip.frontsec->c_portal, i, top, bottom);
+
+         ceilingclip[i] = t;
       }
       else
 #endif
@@ -277,7 +273,7 @@ static void R_RenderSegLoop(void)
 
 #ifdef R_PORTALS
       // SoM 3/10/2005: Only add to the portal of the floor is marked
-      if((segclip.markfloor || f_portalignore)  && segclip.frontsec->f_portal)
+      if((segclip.markfloor || segclip.f_portalignore)  && segclip.frontsec->f_portal)
       {
          top = b + 1;
          bottom = floorclip[i];
@@ -287,6 +283,8 @@ static void R_RenderSegLoop(void)
 
          if(bottom - top > -1.0f)
             R_PortalAdd(segclip.frontsec->f_portal, i, top, bottom);
+
+         floorclip[i] = b;
       }
       else
 #endif
@@ -306,6 +304,7 @@ static void R_RenderSegLoop(void)
             segclip.floorplane->top[i] = (int)top;
             segclip.floorplane->bottom[i] = (int)bottom;
          }
+
          floorclip[i] = b;
       }
 
@@ -323,7 +322,7 @@ static void R_RenderSegLoop(void)
          column.step = (int)(basescale * FRACUNIT);
          column.x = i;
 
-         texx = (int)((segclip.len * basescale) + segclip.toffsetx);
+         texx = (int)(((segclip.len) * basescale) + segclip.toffsetx);
 
          if(ds_p->maskedtexturecol)
             ds_p->maskedtexturecol[i] = texx;
@@ -454,7 +453,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-#define DISTSTEPLIMIT 0.0002f
+#define DISTSTEPLIMIT 0.00005f
 
 void R_StoreWallRange(const int start, const int stop)
 {
@@ -467,19 +466,13 @@ void R_StoreWallRange(const int start, const int stop)
 
    memcpy(&segclip, &seg, sizeof(seg));
 
+   clipx1 = (float)fabs(segclip.diststep) > DISTSTEPLIMIT ? 
+            (float)(start - segclip.x1) : (float)(start - segclip.x1frac);
+
+   clipx2 = (float)(segclip.x2frac - stop);
+
    segclip.x1 = start;
    segclip.x2 = stop;
-
-   if((float)fabs(segclip.diststep) > DISTSTEPLIMIT)
-   {
-      clipx1 = (float)(start - seg.x1);
-      clipx2 = (float)(seg.x2 - stop);
-   }
-   else
-   {
-      clipx1 = (float)(start - seg.x1frac);
-      clipx2 = (float)(seg.x2frac - stop);
-   }
 
    if(segclip.floorplane)
       segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
@@ -493,7 +486,11 @@ void R_StoreWallRange(const int start, const int stop)
    if(clipx1)
    {
       segclip.dist += clipx1 * segclip.diststep;
-      segclip.len += clipx1 * segclip.lenstep;
+
+      // SoM: prevent the first column of a line from showing one column left of what it should
+      // due to rounding error.
+      if(clipx1 > 0 || clipx1 <= -1.0f)
+         segclip.len += clipx1 * segclip.lenstep;
    }
    if(clipx2)
    {
@@ -509,6 +506,10 @@ void R_StoreWallRange(const int start, const int stop)
       pstep = 1.0f;
    else
       pstep = 1.0f / (float)(stop - start);
+
+   // Recalculate the lenstep to help lessen the rounding error.
+   segclip.lenstep = (segclip.len2 - segclip.len) * pstep;
+   segclip.diststep = (segclip.dist2 - segclip.dist) * pstep;
 
    if(!segclip.backsec)
    {
@@ -708,10 +709,12 @@ boolean R_ClipSeg()
    if(viewz > seg.frontsec->ceilingheight)
    {
       float top, topstep, topstop;
+      float y1, y2;
 
-      top = segclip.top;
-      topstep = segclip.topstep;
-      topstop = top + ((seg.x2frac - seg.x1frac) * topstep);
+      // I totally overlooked this when I moved all the wall panel projection to r_segs.c
+      top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
+      topstop = y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+      topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
@@ -725,10 +728,8 @@ boolean R_ClipSeg()
          // First visible column has been found, so set seg to start here.
          if(i != seg.x1)
          {
-            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
-               clipx = (float)(i - seg.x1);
-            else
-               clipx = (float)(i - seg.x1frac);
+            clipx = (float)fabs(segclip.diststep) > DISTSTEPLIMIT ? 
+                    (float)(i - seg.x1) : (float)(i - seg.x1frac);
 
             seg.dist += seg.diststep * clipx;
             seg.len += seg.lenstep * clipx;
@@ -753,10 +754,7 @@ boolean R_ClipSeg()
 
          if(i != seg.x2)
          {
-            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
-               clipx = (float)(seg.x2 - i);
-            else
-               clipx = (float)(seg.x2frac - i);
+            clipx = (float)(seg.x2frac - i);
 
             seg.dist2 -= clipx * seg.diststep;
             seg.len2 -= clipx * seg.lenstep;
@@ -772,10 +770,11 @@ boolean R_ClipSeg()
    else if(viewz < seg.frontsec->floorheight)
    {
       float bottom, bottomstep, stopbottom;
+      float y1, y2;
 
-      bottom = segclip.bottom;
-      bottomstep = segclip.bottomstep;
-      stopbottom = bottom + ((seg.x2frac - seg.x1frac) * bottomstep);
+      bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
+      stopbottom = y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+      bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
@@ -789,10 +788,8 @@ boolean R_ClipSeg()
          if(i != seg.x1)
          {
             // First visible column has been found, so set seg to start here.
-            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
-               clipx = (float)(i - seg.x1);
-            else
-               clipx = (float)(i - seg.x1frac);
+            clipx = (float)fabs(segclip.diststep) > DISTSTEPLIMIT ? 
+                    (float)(i - seg.x1) : (float)(i - seg.x1frac);
 
             seg.dist += seg.diststep * clipx;
             seg.len += seg.lenstep * clipx;
@@ -817,11 +814,7 @@ boolean R_ClipSeg()
 
          if(i != seg.x2)
          {
-            if((float)fabs(seg.diststep) > DISTSTEPLIMIT)
-               clipx = (float)(seg.x2 - i);
-            else
-               clipx = (float)(seg.x2frac - i);
-
+            clipx = (float)(seg.x2frac - i);
             seg.dist2 -= clipx * seg.diststep;
             seg.len2 -= clipx * seg.lenstep;
             seg.x2 = i;

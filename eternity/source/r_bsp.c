@@ -619,6 +619,10 @@ static void R_AddLine(seg_t *line)
    seg.top = (seg.frontsec->ceilingheight / 65536.0f) - view.z;
    seg.bottom = (seg.frontsec->floorheight / 65536.0f) - view.z;
 
+#ifdef R_PORTALS
+   seg.f_portalignore = seg.c_portalignore = false;
+#endif
+
    if(!seg.backsec)
    {
       seg.twosided = false;
@@ -634,6 +638,16 @@ static void R_AddLine(seg_t *line)
       seg.markceiling = seg.ceilingplane ? true : false;
       seg.markfloor = seg.floorplane ? true : false;
       seg.clipsolid = true;
+
+#ifdef R_PORTALS
+      // haleyjd 03/12/06: inverted predicates to simplify
+      if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
+         seg.frontsec->f_portal->type != R_TWOWAY)
+         seg.f_portalignore = true;
+      if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED && 
+         seg.frontsec->c_portal->type != R_TWOWAY)
+         seg.c_portalignore = true;
+#endif
    }
    else
    {
@@ -664,13 +678,13 @@ static void R_AddLine(seg_t *line)
           ||  seg.backsec->ceilingpic == sky2flatnum))
          seg.top = seg.high;
 
-      seg.markceiling = mark || seg.clipsolid ||
+      seg.markceiling = seg.ceilingplane && (mark || seg.clipsolid ||
          seg.top != seg.high ||
          seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
          seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
          seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
          seg.frontsec->c_portal != seg.backsec->c_portal ||
-         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ? true : false;
+         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec) ? true : false;
 
       if(seg.high < seg.top && side->toptexture)
       {
@@ -686,13 +700,32 @@ static void R_AddLine(seg_t *line)
          seg.toptex = 0;
 
 
-      seg.markfloor = mark || seg.clipsolid || 
+      seg.markfloor = seg.floorplane && (mark || seg.clipsolid ||  
          seg.frontsec->floorheight != seg.backsec->floorheight ||
          seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
          seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
          seg.frontsec->floorpic != seg.backsec->floorpic ||
          seg.frontsec->f_portal != seg.backsec->f_portal ||
-         seg.frontsec->floorlightsec != seg.backsec->floorlightsec ? true : false;
+         seg.frontsec->floorlightsec != seg.backsec->floorlightsec) ? true : false;
+
+#ifdef R_PORTALS
+      // SoM: some portal types should be rendered even if the player is above or below the
+      // ceiling or floor plane.
+      // haleyjd 03/12/06: inverted predicates to simplify
+      if(seg.backsec->f_portal != seg.frontsec->f_portal)
+      {
+         if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
+            seg.frontsec->f_portal->type != R_TWOWAY)
+            seg.f_portalignore = true;
+      }
+
+      if(seg.backsec->c_portal != seg.frontsec->c_portal)
+      {
+         if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED &&
+            seg.frontsec->c_portal->type != R_TWOWAY)
+            seg.c_portalignore = true;
+      }
+#endif
 
       seg.low = (seg.backsec->floorheight / 65536.0f) - view.z;
       if(seg.bottom < seg.low && side->bottomtexture)
@@ -745,29 +778,6 @@ static void R_AddLine(seg_t *line)
    #ifdef R_PORTALS
    if(portalrender)
    {
-      float y1, y2;
-
-      // I totally overlooked this when I moved all the wall panel projection to r_segs.c
-      // I guess it's good enough to just store the top and bottom projections for the entire
-      // seg in the segclip object and have clipseg use that for reference.
-      i1 = seg.dist * view.yfoc;
-      i2 = seg.dist2 * view.yfoc;
-
-      if(seg.x2frac == seg.x1frac)
-         pstep = 1.0f;
-      else
-         pstep = 1.0f / (seg.x2frac - seg.x1frac);
-
-      segclip.top = 
-      y1 = view.ycenter - (seg.top * i1);
-      y2 = view.ycenter - (seg.top * i2);
-      segclip.topstep = (y2 - y1) * pstep;
-
-      segclip.bottom = 
-      y1 = view.ycenter - (seg.bottom * i1) - 1;
-      y2 = view.ycenter - (seg.bottom * i2) - 1;
-      segclip.bottomstep = (y2 - y1) * pstep;
-
       if(!R_ClipSeg())
          return;
    }
