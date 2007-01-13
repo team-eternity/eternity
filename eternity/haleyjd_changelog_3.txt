@@ -2,23 +2,228 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+01/11/07 - 01/12/07
+
+SoM has begun the long-anticipated integration of his Cardboard floating-point
+renderer into Eternity. We are currently both doing extensive testing on the
+code; it is working very well and eliminates virtually all numeric instability
+in the Doom renderer. A number of bugs have come up, but all have been quickly
+repaired.
+
+Once again, he has done the impossible. Lee Killough abandoned the idea of a
+floating point renderer because he believed it necessitated total demo
+incompatibility, would ruin compatibility with rendering engine exploits, and
+would necessarily cause problems such as gaping holes in levels due to the 
+fixed-point BSP. So far, SoM has avoided every one of these problems with 
+nothing but skillful grace.
+
+Much testing still needs to be done. I may invite some of the old beta testers
+back to try it out before there's a release ;)
+
+--------------------------------------------------------------------------------
+01/10/07
+
+I've been adding more parameterized line specials to flesh out ACS. I've started
+with the easier stuff -- lighting. So far I've added Light_RaiseByValue,
+Light_LowerByValue, Light_ChangeToValue, Light_Fade, and Light_Glow. Light_Fade 
+and Light_Glow are really cool because I resurrected the light fading code left
+over from FraggleScript. Although I quickly realized that I needed to more or 
+less totally rewrite it to make it ACS compatible :P
+
+These are on top of the ACS_Execute, Suspend, and Terminate specials which are
+necessary for basic ACS functionality. Note that all these functions are also
+available in Small automatically through the param linespecs system, so it is
+now suddenly possible to execute ACS from Small ;)
+
+I also got sick of running through all 40 maps of Hexen and hoping that I could
+get one to execute my new line specials, so I added a new console command
+called p_linespec which can execute any parameterized line special by name. The
+syntax for the new command is as follows:
+
+   $ p_linespec <name> <args> ...
+   
+The name is exactly the same as used via ExtraData and ACS (and Small minus the
+leading underscore that is necessary in that language). The args are exactly as
+would be specified on an ExtraData special -- note that these in some cases
+differ from the args that would be given to the equivalent ACS action special,
+since ACS must be strictly Hexen-compatible, whereas ExtraData enables various
+extensions via having wider args values (signed dwords vs unsigned bytes). I
+might make an ACS-compatible version of the command that calls
+P_ConvertHexenLineSpec before executing the special. This would help those more
+familiar with zdoom be able to use the command effectively.
+
+--------------------------------------------------------------------------------
+01/09/07
+
+Yet another ugly bug has reared its ugly head. It is possible for colliding Lost
+Souls to cause a recursive call to P_TryMove. The path through which this call
+occurs seems to be as such:
+
+P_XYMovement -> P_TryMove -> P_CheckPosition -> P_BlockThingsIterator ->
+   PIT_CheckThing -> P_SetMobjState -> A_Look -> P_SetMobjState -> A_Chase ->
+   P_Move -> P_TryMove
+   
+Woops! Guess what. P_TryMove is not reentrant; never has been. Calling it
+recursively causes somewhere around 20 different global variables to be
+overwritten, causing the first clipping operation that was being done to go 
+haywire.
+
+Well in this case, as crazy as this is going to sound, it was causing a 
+spechit *underflow*. You've heard of spechit overflows I'm sure, but this was
+totally different. Sometimes the second P_TryMove call would return true for
+unblocked, and would have ran down numspechit, executing specials for any
+crossed lines. This left numspechit with the value of -1 after exiting that
+function. However, back in the first call to P_TryMove, the now-munged up
+clipping operation returns false.
+
+However, in P_Move there is code that monsters use to check for lines to
+press when they are blocked. This is what enables monsters to open doors and 
+continue walking through them; without it, they would simply balk and turn
+straight around. This code checked if numspechit == 0. If it did, the clipping
+operation must have been successful, because P_TryMove *should* never return
+false if the spechit loop was executed. If the move was successful, there would
+be no reason to look for lines to push (monsters don't close doors that are 
+already open, for instance).
+
+Due to the reentrant call, however, TWO non-reentrant clipping operations have
+occured during the space in which one should have been executed. This means that
+all bets on pre- and post-conditions were off. It turns out that P_TryMove in
+this case CAN return false after having run numspechit down to -1. The -1 value
+falls through the check and causes the monster to start looking for lines to 
+press. Lines that do not exist. It uses as line pointers words that are in fact
+part of the zone memory block header for the dynamically allocated spechit array
+in BOOM/MBF. This was causing the game to crash in P_UseSpecialLine when it
+would try to access line_t fields on what was actually a string pointer (the
+filename pointer in memblock_t when compiled with INSTRUMENTED).
+
+I guess this bug has been in the Doom engine all along, but apparently it has
+never shown ill side-effects until now. The only fix I could come up with right
+now is to set numspechit to 0 at the end of P_TryMove instead of allowing it to
+remain -1. This eliminates the post-condition violation caused by recursive
+calls to the function and allows P_Move to avoid crashing.
+
+What actually needs to be done is to make the clipping engine reentrant by
+pushing all globals onto a stack or, ideally, collecting the globals into some
+sort of clip data structure that is passed around to all relevant functions.
+Unfortunately such an approach is unreconcilable with demo compatibility, so
+it would have to be done in such a way that it could be turned on and off.
+This grossly complicates the situation. For now, I am not addressing the issue
+of clipper reentrancy.
+
+--------------------------------------------------------------------------------
+01/08/07
+
+I've been in a Hexen mood lately and have been playing it in DOSBox. This has
+lead me to start working on the ACS interpreter again. In fact, I finished it.
+Yep, that's right, EE can execute ACS scripts now. Of course, most of them 
+won't do anything because a large portion of the action specials still are not
+implemented, and a few of the built-in functions don't work yet either,
+especially not any that rely on Hexen's thingtype script id's -- I believe
+adding the ability to specify these via EDF will offer maximum flexibility to
+the editor.
+
+In the process of testing ACS in Hexen, I found out that using Polyobj_GetForNum
+with zero polyobjects on the level would cause a divide by zero exception. This
+was caused by taking the hash key modulus the number of polyobjects. This
+function now has to check to make sure numPolyObjects != 0 before doing the hash
+key calculation.
+
+--------------------------------------------------------------------------------
+01/06/07
+
+I added a tweak to the libConfuse parser and lexer which allow specified
+sections to contain spaces within unquoted strings. This is specified by putting
+a new CFGF_STRSPACE flag on the sections in question. This allows me to remove
+the requirement that sound sequence strings be quoted, which is something I
+myself found extremely irritating during their development.
+
+I eventually hope to rewrite the entire libConfuse parser to make it LALR(1)
+(this means look-ahead, look-right, one token). This means that it uses one
+token of look-ahead to determine the meaning of the current token being parsed.
+Examples of languages which are commonly parsed using LALR(1) parsers include
+C, C++, and Java. LALR(1) affords much more power than the current system, and
+it would enable such features as function-valued fields and possibly even
+arithmetic expressions to be added to EDF in the future, putting it at a level
+even with or above DECORATE.
+
+This will, of course, be a major undertaking. I don't expect to do it soon, as
+my initial pokings at the problem have lead nowhere.
+
+--------------------------------------------------------------------------------
+12/06/06
+
+After a suggestion by fraggle, I've started work to eliminate all static limits
+on file path lengths by getting rid of the PATH_MAX constant. However, to do
+this maintainably I need alloca() functionality. As any good C programmer knows,
+alloca is non-standard and non-portable; Visual C++ 6.0 doesn't even have an
+implementation of it at all as far as I know.
+
+So, I wrote my own alloca. It is a garbage-collected implementation over the
+zone heap system. Zone blocks are allocated at PU_STATIC, but before being
+returned from Z_Alloca, an extra header is added in which links together all
+the alloca blocks. The pointer returned from Z_Alloca is pointing just beyond
+this extra header, and therefore it cannot be used with Z_Realloc or Z_Free,
+just as with normal alloca.
+
+Z_Alloca allocations are freed at the end of every frame in the program's main
+loop using a Z_Alloca(0) call. Since the list is empty most of the time, 
+especially at runtime, this doesn't add much overhead. It also ensures that
+too many alloca allocations won't accumulate.
+
+--------------------------------------------------------------------------------
+12/04/06
+
+Changed all of Eternity's paths and file io functions to use a base directory.
+The base directory can be specified through a new ETERNITYBASE environment
+variable or by using -base on the command line. The default location for the
+base directory is in the exe's directory, of course.
+
+There is one TODO with this. I need to make the presence of a base dir in the
+exe's directory override use of the environment variable. This doesn't currently
+work; if there is an environment variable, it is always used except when -base
+is specified.
+
+--------------------------------------------------------------------------------
+11/14/06
+
+Applied a fix to the quad flush function for spectre fuzz columns that proff
+sent me. It restores the effect back to its original look by using the fuzz
+table offsets differently. I think it looks a lot better now.
+
+--------------------------------------------------------------------------------
+11/13/06
+
+Started integration of the player class engine into the game. Unfortunately, I
+won't be able to totally complete it without fixing the netcode first. On the
+positive side, Chocolate Doom's netcode is now stabilized and fully functional,
+so I will be taking a look at it very soon with the eventual goal of getting it
+retrofitted into EE.
+
+I created the player.edf module to contain skin, class, and eventually weapon
+and inventory definitions. I also finally remembered to fix some of the EDF
+verbose log messages related to TerrainTypes. They would always use an -s ending
+even when there was only 1 of the given definition. I changed them to to use (s)
+like all the rest of the messages in other modules.
+
+--------------------------------------------------------------------------------
 11/09/06
 
 Work continues on classes, but has been set back by the unexpected discovery of
 another extremely serious bug, this one from MBF.
 
-Turns out that monsters being removed from the game while still being targetted
-can end up being manipulated by the things that were targetting them at the
-time. This means that while having been moved to the th_misc class and having
-their thinkerclass links invalidated, they start getting moved back into the
-list. Problem is, the code that moves them in the list expects them to be in
-the list already. If they're not, the entire list gets corrupted and the AI 
-routines fall into an infinite loop, causing the game to hard-lock.
+Turns out that monsters being removed from the game while still being targeted
+can end up being manipulated by the things that were targeting them at the time.
+This means that after having their thinkerclass links invalidated, they start 
+getting moved back into the class lists. Problem is, the code that moves them in
+the list expects them to be in the list already. If they're not, the entire list
+gets corrupted and the AI routines fall into an infinite loop, causing the game
+to hard-lock.
 
 Turns out that removing the monsters from the threaded lists isn't possible.
 They must remain in the list but be moved into a new class, th_delete. I found
 this problem by creating a "banish" console command, which totally removes a
-targetted monster from the game.
+targeted monster from the game. PrBoom had already solved this problem, so their
+code was helpful to me.
 
 --------------------------------------------------------------------------------
 11/08/06
