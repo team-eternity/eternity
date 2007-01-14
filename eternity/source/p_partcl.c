@@ -404,6 +404,17 @@ void P_ParticleThinker(void)
          particle->z = floorheight;
 
       // floor clipping
+#ifdef R_LINKEDPORTALS
+      if(particle->z < floorheight && psec->f_portal && useportalgroups && psec->f_portal->type == R_LINKED)
+      {
+         P_UnsetParticlePosition(particle);
+         particle->x -= psec->f_portal->data.camera.deltax;
+         particle->y -= psec->f_portal->data.camera.deltay;
+         particle->z -= psec->f_portal->data.camera.deltaz;
+         P_SetParticlePosition(particle);
+      }
+      else
+#endif
       if(particle->z < floorheight)
       {
          // particles with fall to ground style start ticking now
