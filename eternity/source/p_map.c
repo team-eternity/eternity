@@ -1923,7 +1923,19 @@ static boolean PTR_ShootTraverse(intercept_t *in)
       line_t *li = in->d.line;
 
       // haleyjd 03/13/05: move up point on line side check to here
+#ifdef R_LINKEDPORTALS
+      // SoM: this was causing some trouble when shooting through linked portals
+      // because although trace.x and trace.y are offsetted when the shot travels through
+      // a portal, shootthing->x and shootthing->y are NOT. Demo comped just in case.
+      int lineside;
+
+      if(demo_version >= 333)
+         lineside = P_PointOnLineSide(trace.x, trace.y, li);
+      else
+         P_PointOnLineSide(shootthing->x, shootthing->y, li);
+#else
       int lineside = P_PointOnLineSide(shootthing->x, shootthing->y, li);
+#endif
       
       // SoM: Shouldn't be called until A: we know the bullet passed or
       // B: We know it didn't hit a plane first
