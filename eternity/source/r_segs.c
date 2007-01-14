@@ -41,20 +41,13 @@ rcsid[] = "$Id: r_segs.c,v 1.16 1998/05/03 23:02:01 killough Exp $";
 
 // OPTIMIZE: closed two sided lines as single sided
 // SoM: Done.
-
-
 // SoM: Cardboard globals
 cb_column_t       column;
 cb_seg_t          seg;
 cb_seg_t          segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
-
-
 lighttable_t    **walllights;
-
-
-// haleyjd: DEBUG
 static int *maskedtexturecol;
 
 //
@@ -68,6 +61,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    int      texnum;
    sector_t tempsec;      // killough 4/13/98
    float    dist, diststep;
+   float    scale, scalestep;
+   float    texmidf;
    lighttable_t **wlight;
 
    // Calculate light table.
@@ -77,7 +72,6 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    segclip.line = ds->curline;
    
    // killough 4/11/98: draw translucent 2s normal textures
-   
    colfunc = r_column_engine->DrawColumn;
    if(segclip.line->linedef->tranlump >= 0 && general_translucency)
    {
@@ -87,6 +81,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          tranmap = W_CacheLumpNum(segclip.line->linedef->tranlump-1, PU_STATIC);
    }
    // killough 4/11/98: end translucent 2s normal code
+
    segclip.frontsec = segclip.line->frontsector;
    segclip.backsec = segclip.line->backsector;
 
@@ -164,8 +159,13 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          column.colormap = walllights[MAXLIGHTSCALE-1];
    }
 
+   // SoM: performance tuning (tm Lee Killough 1998)
+   scale = dist * view.yfoc;
+   scalestep = diststep * view.yfoc;
+   texmidf = column.texmid / 65536.0f;
+
    // draw the columns
-   for(column.x = x1; column.x <= x2; ++column.x, dist += diststep)
+   for(column.x = x1; column.x <= x2; ++column.x, dist += diststep, scale += scalestep)
    {
       // haleyjd:DEBUG
       if(maskedtexturecol[column.x] != 0x7fffffff)
@@ -181,9 +181,9 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
             column.colormap = wlight[index];
          }
 
-         maskedcolumn.scale = view.yfoc * dist;
-         maskedcolumn.ytop = view.ycenter - ((column.texmid / 65536.0f) * maskedcolumn.scale);
-         column.step = (int)(65536.0f / maskedcolumn.scale);
+         maskedcolumn.scale = scale;
+         maskedcolumn.ytop = view.ycenter - (texmidf * scale);
+         column.step = (int)(65536.0f / scale);
 
          // killough 1/25/98: here's where Medusa came in, because
          // it implicitly assumed that the column was all one patch.
@@ -214,8 +214,6 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 // CALLED: CORE LOOPING ROUTINE.
 //
 
-
-#define R_ROUNDOFF
 
 static void R_RenderSegLoop(void)
 {
@@ -322,7 +320,8 @@ static void R_RenderSegLoop(void)
          column.step = (int)(basescale * FRACUNIT);
          column.x = i;
 
-         texx = (int)(((segclip.len) * basescale) + segclip.toffsetx);
+         texx = segclip.len < 0 ? (int)segclip.toffsetx :
+                (int)(((segclip.len) * basescale) + segclip.toffsetx);
 
          if(ds_p->maskedtexturecol)
             ds_p->maskedtexturecol[i] = texx;
@@ -341,8 +340,6 @@ static void R_RenderSegLoop(void)
 
             column.colormap = segclip.walllights[index];
          }
-         else
-            column.colormap = fixedcolormap;
 
          if(segclip.twosided == false && segclip.midtex)
          {
@@ -432,6 +429,27 @@ static void R_RenderSegLoop(void)
    }
 }
 
+
+
+static void R_StoreTextureColumns(void)
+{
+   int i, texx;
+   float basescale;
+   
+   for(i = segclip.x1; i <= segclip.x2; i++)
+   {
+      basescale = 1.0f / (segclip.dist * view.yfoc);
+      texx = segclip.len < 0 ? (int)segclip.toffsetx :
+             (int)(((segclip.len) * basescale) + segclip.toffsetx);
+
+      if(ds_p->maskedtexturecol)
+         ds_p->maskedtexturecol[i] = texx;
+
+      segclip.len += segclip.lenstep;
+      segclip.dist += segclip.diststep;
+   }
+}
+
 // killough 5/2/98: move from r_main.c, made static, simplified
 fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 {
@@ -463,6 +481,9 @@ void R_StoreWallRange(const int start, const int stop)
    float y1, y2, i1, i2;
    float pstep;
    side_t *side = seg.side;
+   boolean usesegloop = !seg.backsec || seg.clipsolid || seg.markceiling || seg.markfloor || 
+                        seg.toptex || seg.midtex || seg.bottomtex || seg.f_portalignore || 
+                        seg.c_portalignore || segclip.line->linedef->portal ? true : false;
 
    memcpy(&segclip, &seg, sizeof(seg));
 
@@ -486,11 +507,7 @@ void R_StoreWallRange(const int start, const int stop)
    if(clipx1)
    {
       segclip.dist += clipx1 * segclip.diststep;
-
-      // SoM: prevent the first column of a line from showing one column left of what it should
-      // due to rounding error.
-      if(clipx1 > 0 || clipx1 <= -1.0f)
-         segclip.len += clipx1 * segclip.lenstep;
+      segclip.len += clipx1 * segclip.lenstep;
    }
    if(clipx2)
    {
@@ -508,8 +525,11 @@ void R_StoreWallRange(const int start, const int stop)
       pstep = 1.0f / (float)(stop - start);
 
    // Recalculate the lenstep to help lessen the rounding error.
-   segclip.lenstep = (segclip.len2 - segclip.len) * pstep;
-   segclip.diststep = (segclip.dist2 - segclip.dist) * pstep;
+   if(clipx1 || clipx2)
+   {
+      segclip.lenstep = (segclip.len2 - segclip.len) * pstep;
+      segclip.diststep = (segclip.dist2 - segclip.dist) * pstep;
+   }
 
    if(!segclip.backsec)
    {
@@ -653,7 +673,10 @@ void R_StoreWallRange(const int start, const int stop)
          ds_p->maskedtexturecol = NULL;
    }
 
-   R_RenderSegLoop();
+   if(ds_p->silhouette || usesegloop || !ds_p->maskedtexturecol)
+      R_RenderSegLoop();
+   else
+      R_StoreTextureColumns();
    
    // store clipping arrays
    if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)

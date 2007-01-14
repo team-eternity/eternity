@@ -466,6 +466,11 @@ static void R_AddLine(seg_t *line)
    seg.backsec = line->backsector ? R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true) : NULL;
    seg.line = line;
 
+   // If the frontsector is closed, don't render the line!
+   // This fixes a very specific type of slime trail.
+   if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight)
+      return;
+
    // Reject empty two-sided lines used for line specials.
    if(seg.backsec && seg.frontsec 
       && seg.backsec->ceilingpic == seg.frontsec->ceilingpic 
@@ -662,8 +667,7 @@ static void R_AddLine(seg_t *line)
 
       seg.high = (seg.backsec->ceilingheight / 65536.0f) - view.z;
 
-      seg.clipsolid = seg.frontsec->ceilingheight <= seg.frontsec->floorheight 
-                || seg.backsec->ceilingheight <= seg.backsec->floorheight
+      seg.clipsolid = seg.backsec->ceilingheight <= seg.backsec->floorheight
                 || ((seg.frontsec->ceilingheight <= seg.backsec->floorheight
                 || seg.backsec->ceilingheight <= seg.frontsec->floorheight 
                 || seg.backsec->floorheight >= seg.backsec->ceilingheight) 
@@ -745,7 +749,6 @@ static void R_AddLine(seg_t *line)
       seg.maskedtex = seg.side->midtexture ? true : false;
    }
 
-
    if(x1 < 0)
    {
       seg.dist += seg.diststep * -x1;
@@ -776,11 +779,8 @@ static void R_AddLine(seg_t *line)
    }
 
    #ifdef R_PORTALS
-   if(portalrender)
-   {
-      if(!R_ClipSeg())
-         return;
-   }
+   if(portalrender && !R_ClipSeg())
+      return;
    #endif
 
    if(seg.clipsolid)
