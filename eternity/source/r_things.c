@@ -551,7 +551,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    {
       footclipon = true;
       baseclip = vis->ybottom - (vis->footclip / 65536.0f) * maskedcolumn.scale;
-      column.texmid += vis->footclip;
+
    }
 
    // haleyjd: use a separate loop for footclip things, to minimize
@@ -708,8 +708,9 @@ void R_ProjectSprite(mobj_t *thing)
    x2 = (view.xcenter + (tx2 * idist * view.xfoc));
    if(x2 < 0.0f)
       return;
-      
-   tz1 = ((thing->z + spritetopoffset[lump]) / 65536.0f) - view.z;
+
+   // SoM: forgot about footclipping
+   tz1 = ((thing->z + spritetopoffset[lump] - thing->floorclip) / 65536.0f) - view.z;
    y1 = (view.ycenter - (tz1 * idist * view.yfoc));
    if(y1 >= view.height)
       return;
@@ -789,7 +790,7 @@ void R_ProjectSprite(mobj_t *thing)
    vis->footclip = thing->floorclip;
 
    // haleyjd: moved this down, added footclip term
-   vis->texturemid = gzt - viewz - vis->footclip ;
+   vis->texturemid = gzt - viewz - vis->footclip;
 
    vis->patch = lump;
 
