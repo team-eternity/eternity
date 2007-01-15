@@ -151,12 +151,6 @@ void R_InitPlanes(void)
 // BASIC PRIMITIVE
 //
 
-#ifdef __GNUC__
-   #define d_fabsf(n)  ((n) < 0.0f ? -(n) : (n))
-#else
-   #define d_fabsf(n)   (float)fabs(n)
-#endif
-
 static void R_MapPlane(int y, int x1, int x2)
 {
    float dy, xstep, ystep, realy, slope;
@@ -172,20 +166,20 @@ static void R_MapPlane(int y, int x1, int x2)
    if(view.ycenter == y)
       dy = 0.01f;
    else if(y < view.ycenter)
-      dy = d_fabsf(view.ycenter - y) - 1;
+      dy = (float)fabs(view.ycenter - y) - 1;
    else
-      dy = d_fabsf(view.ycenter - y) + 1;
+      dy = (float)fabs(view.ycenter - y) + 1;
 
-   slope = d_fabsf(plane.height / dy);
+   slope = (float)fabs(plane.height / dy);
    realy = slope * view.yfoc;
 
    xstep = view.sin * slope * view.focratio;
    ystep = view.cos * slope * view.focratio;
 
-   span.xfrac = (int)((-plane.pviewy + plane.yoffset + (-view.cos * realy) + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
-   span.yfrac = (int)((plane.pviewx + plane.xoffset + (view.sin * realy) + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
-   span.xstep = (int)(xstep * plane.fixedunit);
-   span.ystep = (int)(ystep * plane.fixedunit);
+   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-view.cos * realy) + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
+   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (view.sin * realy) + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
+   span.xstep = (unsigned)(xstep * plane.fixedunit);
+   span.ystep = (unsigned)(ystep * plane.fixedunit);
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06

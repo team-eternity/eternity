@@ -66,7 +66,7 @@ extern int visplane_view;
 typedef struct
 {
    int x1, x2, y;
-   fixed_t xfrac, yfrac, xstep, ystep;
+   unsigned xfrac, yfrac, xstep, ystep;
    void *source;
    lighttable_t *colormap;
 } cb_span_t;
