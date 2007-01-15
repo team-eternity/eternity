@@ -150,6 +150,13 @@ void R_InitPlanes(void)
 //
 // BASIC PRIMITIVE
 //
+
+#ifdef __GNUC__
+   #define d_fabsf(n)  ((n) < 0.0f ? -(n) : (n))
+#else
+   #define d_fabsf(n)   (float)fabs(n)
+#endif
+
 static void R_MapPlane(int y, int x1, int x2)
 {
    float dy, xstep, ystep, realy, slope;
@@ -165,11 +172,11 @@ static void R_MapPlane(int y, int x1, int x2)
    if(view.ycenter == y)
       dy = 0.01f;
    else if(y < view.ycenter)
-      dy = (float)fabs(view.ycenter - y) - 1;
+      dy = d_fabsf(view.ycenter - y) - 1;
    else
-      dy = (float)fabs(view.ycenter - y) + 1;
+      dy = d_fabsf(view.ycenter - y) + 1;
 
-   slope = (float)fabs(plane.height / dy);
+   slope = d_fabsf(plane.height / dy);
    realy = slope * view.yfoc;
 
    xstep = view.sin * slope * view.focratio;
