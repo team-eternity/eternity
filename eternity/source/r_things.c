@@ -551,6 +551,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    {
       footclipon = true;
       baseclip = vis->ybottom - (vis->footclip / 65536.0f) * maskedcolumn.scale;
+      column.texmid += vis->footclip;
    }
 
    // haleyjd: use a separate loop for footclip things, to minimize
