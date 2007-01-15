@@ -875,13 +875,14 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    sx1 = viewangletox[angle1];
    sx2 = viewangletox[angle2];
    
+   // SoM: To account for the rounding error of the old BSP system, I needed to make adjustments.
+   // SoM: Moved this to before the "does not cross a pixel" check to fix another slime trail
+   if(sx1 > 0) sx1--;
+   if(sx2 < viewwidth - 1) sx2++;
+
    // Does not cross a pixel.
    if(sx1 == sx2)
       return false;
-
-   // SoM: To account for the rounding error of the old BSP system, I needed to make adjustments.
-   if(sx1 > 0) sx1--;
-   if(sx2 < viewwidth - 1) sx2++;
 
    start = solidsegs;
    while(start->last < sx2)
