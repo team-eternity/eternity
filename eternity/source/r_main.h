@@ -185,6 +185,7 @@ typedef struct
    boolean twosided, clipsolid, maskedtex;
    short toptex, midtex, bottomtex;
    boolean markfloor, markceiling;
+   boolean segtextured;
 
    int toptexmid, midtexmid, bottomtexmid;
    int toptexh, midtexh, bottomtexh;
@@ -206,6 +207,9 @@ typedef struct
 extern cb_view_t  view;
 extern cb_seg_t   seg;
 extern cb_seg_t   segclip;
+
+// SoM: frameid frame counter.
+extern unsigned   frameid;
 
 #endif
 

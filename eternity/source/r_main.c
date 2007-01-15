@@ -546,6 +546,30 @@ int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 
 
 //
+// R_IncrementFrameid
+//
+// SoM: frameid is an unsigned integer that represents the number of the frame currently 
+// being rendered for use in caching data used by the renderer which is unique to each frame.
+// frameid is incremented every frame. When the number becomes too great and the value wraps 
+// back around to 0, the structures should be searched and all frameids reset to prevent mishaps 
+// in the rendering process.
+//
+unsigned frameid = 0;
+
+static void R_IncrementFrameid(void)
+{
+   frameid++;
+
+   if(!frameid)
+   {
+      // it wraped!
+      doom_printf("Congratulations! You have just played through 4,294,967,295 rendered frames of Doom. At a constant rate of 35 frames per second you have spent at least 1,420 days playing DOOM.\nGET A LIFE.\n");
+      frameid = 1;
+   }
+}
+
+
+//
 // R_SetupFrame
 //
 
@@ -560,6 +584,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
    R_SetSpanEngine();
+   // Cardboard
+   R_IncrementFrameid();
    
    viewplayer = player;
    mobj = player->mo;
@@ -593,10 +619,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    view.angle = (ANG90 - viewangle) * PI / (ANGLE_1 * 180);
    view.pitch = (ANG90 - pitch) * PI / (ANGLE_1 * 180);
    view.sin = (float)sin(view.angle);
-   if(view.angle == PI * 0.5f || view.angle == PI * 1.5f)
-      view.cos = 0.0f;
-   else
-      view.cos = (float)cos(view.angle);
+   view.cos = (float)cos(view.angle);
 
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle

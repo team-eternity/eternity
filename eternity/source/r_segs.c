@@ -311,7 +311,7 @@ static void R_RenderSegLoop(void)
          R_PortalAdd(segclip.line->linedef->portal, i, t, b);
       else
 #endif
-      if(segclip.toptex || segclip.midtex || segclip.bottomtex || segclip.maskedtex)
+      if(segclip.segtextured)
       {
          int index;
 

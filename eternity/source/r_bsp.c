@@ -462,9 +462,18 @@ static void R_AddLine(seg_t *line)
    static sector_t tempsec;
    float floorx1, floorx2;
 
+   tempsec.frameid = 0;
+
    seg.clipsolid = false;
    seg.backsec = line->backsector ? R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true) : NULL;
    seg.line = line;
+
+   if(seg.backsec && seg.backsec->frameid != frameid)
+   {
+      seg.backsec->floorheightf = (float)seg.backsec->floorheight / 65536.0f;
+      seg.backsec->ceilingheightf = (float)seg.backsec->ceilingheight / 65536.0f;
+      seg.backsec->frameid = frameid;
+   }
 
    // If the frontsector is closed, don't render the line!
    // This fixes a very specific type of slime trail.
@@ -621,8 +630,8 @@ static void R_AddLine(seg_t *line)
 
    seg.side = side;
 
-   seg.top = (seg.frontsec->ceilingheight / 65536.0f) - view.z;
-   seg.bottom = (seg.frontsec->floorheight / 65536.0f) - view.z;
+   seg.top = seg.frontsec->ceilingheightf - view.z;
+   seg.bottom = seg.frontsec->floorheightf - view.z;
 
 #ifdef R_PORTALS
    seg.f_portalignore = seg.c_portalignore = false;
@@ -643,6 +652,7 @@ static void R_AddLine(seg_t *line)
       seg.markceiling = seg.ceilingplane ? true : false;
       seg.markfloor = seg.floorplane ? true : false;
       seg.clipsolid = true;
+      seg.segtextured = seg.midtex ? true : false;
 
 #ifdef R_PORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
@@ -665,7 +675,7 @@ static void R_AddLine(seg_t *line)
              seg.frontsec->heightsec != seg.backsec->heightsec ? true : false;
 
 
-      seg.high = (seg.backsec->ceilingheight / 65536.0f) - view.z;
+      seg.high = seg.backsec->ceilingheightf - view.z;
 
       seg.clipsolid = seg.backsec->ceilingheight <= seg.backsec->floorheight
                 || ((seg.frontsec->ceilingheight <= seg.backsec->floorheight
@@ -731,7 +741,7 @@ static void R_AddLine(seg_t *line)
       }
 #endif
 
-      seg.low = (seg.backsec->floorheight / 65536.0f) - view.z;
+      seg.low = seg.backsec->floorheightf - view.z;
       if(seg.bottom < seg.low && side->bottomtexture)
       {
          seg.bottomtex = texturetranslation[side->bottomtexture];
@@ -747,6 +757,7 @@ static void R_AddLine(seg_t *line)
 
       seg.midtex = 0;
       seg.maskedtex = seg.side->midtexture ? true : false;
+      seg.segtextured = seg.maskedtex || seg.bottomtex || seg.toptex ? true : false;
    }
 
    if(x1 < 0)
@@ -1012,10 +1023,20 @@ static void R_Subsector(int num)
    line = &segs[sub->firstline];
    
    R_SectorColormap(seg.frontsec);
+
+   // SoM: Cardboard optimization
+   tempsec.frameid = 0;
    
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                             &ceilinglightlevel, false);   // killough 4/11/98
+
+   if(seg.frontsec->frameid != frameid)
+   {
+      seg.frontsec->floorheightf = (float)seg.frontsec->floorheight / 65536.0f;
+      seg.frontsec->ceilingheightf = (float)seg.frontsec->ceilingheight / 65536.0f;
+      seg.frontsec->frameid = frameid;
+   }
 
    // killough 3/7/98: Add (x,y) offsets to flats, add deep water check
    // killough 3/16/98: add floorlightlevel

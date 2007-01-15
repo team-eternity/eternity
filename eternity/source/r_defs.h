@@ -203,6 +203,12 @@ struct sector_s
    int sndSeqID;
 
    struct particle_s *ptcllist; // haleyjd 02/20/04: list of particles in sector
+
+   // Cardboard optimization
+   // They are set in R_Subsector and R_FakeFlat and are
+   // only valid for that sector for that frame.
+   unsigned frameid;
+   float ceilingheightf, floorheightf;
 };
 
 //
@@ -492,32 +498,32 @@ typedef struct
 
 typedef struct visplane
 {
-  struct visplane *next;        // Next visplane in hash chain -- killough
-  int picnum, lightlevel, minx, maxx;
-  fixed_t height;
-  lighttable_t *(*colormap)[MAXLIGHTZ];
-  lighttable_t *fixedcolormap;  // haleyjd 10/16/06
-  fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
+   struct visplane *next;        // Next visplane in hash chain -- killough
+   int picnum, lightlevel, minx, maxx;
+   fixed_t height;
+   lighttable_t *(*colormap)[MAXLIGHTZ];
+   lighttable_t *fixedcolormap;  // haleyjd 10/16/06
+   fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
 
-  // SoM: ANYRES this is the biggest waste of ram when running in low resolution.
-  // Fix: allocate buffer on creation and reallocate if needed when used again.
-  /*unsigned short pad1;          // leave pads for [minx-1]/[maxx+1]
-  unsigned short top[MAX_SCREENWIDTH];
-  unsigned short pad2, pad3;    // killough 2/8/98, 4/25/98
-  unsigned short bottom[MAX_SCREENWIDTH];
-  unsigned short pad4;*/
+   // SoM: ANYRES this is the biggest waste of ram when running in low resolution.
+   // Fix: allocate buffer on creation and reallocate if needed when used again.
+   /*unsigned short pad1;          // leave pads for [minx-1]/[maxx+1]
+   unsigned short top[MAX_SCREENWIDTH];
+   unsigned short pad2, pad3;    // killough 2/8/98, 4/25/98
+   unsigned short bottom[MAX_SCREENWIDTH];
+   unsigned short pad4;*/
 
-  // haleyjd DEBUG
-  int *pad1;
-  int *top;
-  int *pad2, *pad3;
-  int *bottom, *pad4;
+   int *pad1;
+   int *top;
+   int *pad2, *pad3;
+   int *bottom, *pad4;
 
-  unsigned int   max_width;
+   unsigned int   max_width;
 
 #ifdef R_PORTALS
-  float viewx, viewy, viewz;
+   float viewx, viewy, viewz;
 #endif
+  
 } visplane_t;
 
 #endif

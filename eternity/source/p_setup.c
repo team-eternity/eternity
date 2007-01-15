@@ -336,6 +336,7 @@ void P_LoadSectors(int lump)
 
       // haleyjd 09/24/06: sound sequences -- set default
       ss->sndSeqID = defaultSndSeq;
+      ss->frameid = 0;
    }
 
    Z_Free(data);
