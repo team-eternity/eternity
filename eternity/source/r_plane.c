@@ -321,9 +321,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap
 #ifdef R_PORTALS
-         && view.x == check->viewx
-         && view.y == check->viewy
-         && view.z == check->viewz
+         && viewx == check->viewx
+         && viewy == check->viewy
+         && viewz == check->viewz
 #endif
         )
         return check;
@@ -341,10 +341,17 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
 #ifdef R_PORTALS
-   check->viewx = view.x;
-   check->viewy = view.y;
-   check->viewz = view.z;
-#endif 
+   check->viewx = viewx;
+   check->viewy = viewy;
+   check->viewz = viewz;
+   
+   check->viewxf = view.x;
+   check->viewyf = view.y;
+   check->viewzf = view.z;
+#endif
+   check->heightf = (float)height / 65536.0f;
+   check->xoffsf = (float)xoffs / 65536.0f;
+   check->yoffsf = (float)yoffs / 65536.0f;
    
    // SoM: memset should use the check->max_width
    //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
@@ -395,12 +402,18 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->viewx = pl->viewx;
       new_pl->viewy = pl->viewy;
       new_pl->viewz = pl->viewz;
+
+      new_pl->viewxf = pl->viewxf;
+      new_pl->viewyf = pl->viewyf;
+      new_pl->viewzf = pl->viewzf;
 #endif 
+      // SoM: copy converted stuffs too
+      new_pl->heightf = pl->heightf;
+      new_pl->xoffsf = pl->xoffsf;
+      new_pl->yoffsf = pl->yoffsf;
       pl = new_pl;
       pl->minx = start;
       pl->maxx = stop;
-      // SoM: ANYRES
-      //memset(pl->top, 0xff, sizeof(unsigned int) * pl->max_width);
       {
          register int *p = pl->top;
          register unsigned i = 0;
@@ -696,15 +709,15 @@ static void do_draw_plane(visplane_t *pl)
          plane.fixedunit = r_span_engine->fixedunit64;
       };
         
-      plane.xoffset = pl->xoffs / 65536.0f;  // killough 2/28/98: Add offsets
-      plane.yoffset = pl->yoffs / 65536.0f;
+      plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
+      plane.yoffset = pl->yoffsf;
 #ifdef R_PORTALS
-      plane.pviewx = pl->viewx;
-      plane.pviewy = pl->viewy;
-      plane.pviewz = pl->viewz;
-      plane.height = (pl->height / 65536.0f) - pl->viewz;
+      plane.pviewx = pl->viewxf;
+      plane.pviewy = pl->viewyf;
+      plane.pviewz = pl->viewzf;
+      plane.height = pl->heightf - pl->viewzf;
 #else
-      plane.height = (pl->height / 65536.0f) - view.z;
+      plane.height = pl->heightf - view.z;
 #endif
       
       //light = (pl->lightlevel >> LIGHTSEGSHIFT) + extralight;

@@ -521,9 +521,12 @@ typedef struct visplane
    unsigned int   max_width;
 
 #ifdef R_PORTALS
-   float viewx, viewy, viewz;
+   fixed_t viewx, viewy, viewz;
 #endif
-  
+
+   // SoM: Cardboard optimization
+   float xoffsf, yoffsf, heightf;
+   float viewxf, viewyf, viewzf;  
 } visplane_t;
 
 #endif

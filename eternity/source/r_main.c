@@ -562,9 +562,15 @@ static void R_IncrementFrameid(void)
 
    if(!frameid)
    {
+      int i;
+
       // it wraped!
       doom_printf("Congratulations! You have just played through 4,294,967,295 rendered frames of Doom. At a constant rate of 35 frames per second you have spent at least 1,420 days playing DOOM.\nGET A LIFE.\n");
       frameid = 1;
+
+      // reset everything that uses this
+      for(i = 0; i < numsectors; i++)
+         sectors[i].frameid = 0;
    }
 }
 
