@@ -146,18 +146,24 @@ d_inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
 {
    dst->x += add->x;
    dst->y += add->y;
+   dst->fx = (float)dst->x / 65536.0f;
+   dst->fy = (float)dst->y / 65536.0f;
 }
 
 d_inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
 {
    dst->x -= sub->x;
    dst->y -= sub->y;
+   dst->fx = (float)dst->x / 65536.0f;
+   dst->fy = (float)dst->y / 65536.0f;
 }
 
 d_inline static void Polyobj_vecSub2(vertex_t *dst, vertex_t *v1, vertex_t *v2)
 {
    dst->x = v1->x - v2->x;
    dst->y = v1->y - v2->y;
+   dst->fx = (float)dst->x / 65536.0f;
+   dst->fy = (float)dst->y / 65536.0f;
 }
 
 // Reallocating array maintenance
@@ -877,6 +883,9 @@ d_inline static void Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, int ang
 
    v->x += c->x;
    v->y += c->y;
+
+   v->fx = (float)v->x / 65536.0f;
+   v->fy = (float)v->y / 65536.0f;
 }
 
 //
