@@ -556,7 +556,7 @@ int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 //
 unsigned frameid = 0;
 
-static void R_IncrementFrameid(void)
+void R_IncrementFrameid(void)
 {
    frameid++;
 

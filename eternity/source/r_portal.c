@@ -553,6 +553,7 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    viewy = portal->data.camera.mobj->y;
    viewz = portal->data.camera.mobj->z;
 
+   R_IncrementFrameid();
    R_RenderBSPNode(numnodes-1);
    R_PushMasked();
 
@@ -634,6 +635,7 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    view.y = viewy / 65536.0f;
    view.z = viewz / 65536.0f;
 
+   R_IncrementFrameid();
    R_RenderBSPNode(numnodes-1);
 
    R_PushMasked();
