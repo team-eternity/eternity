@@ -1772,7 +1772,126 @@ static fixed_t  topslope;
 static fixed_t  bottomslope;
 
 #ifdef R_LINKEDPORTALS
-boolean tracerhitportal = false;
+static tptnode_t *tptlist = NULL, *tptend = NULL, *tptunused = NULL;
+
+static tptnode_t *TPT_NewNode()
+{
+   tptnode_t *ret;
+
+   // Make a new node or unlink an existing node from the unused list.
+   if(!tptunused)
+      ret = (tptnode_t *)Z_Malloc(sizeof(tptnode_t), PU_STATIC, 0);
+   else
+   {
+      ret = tptunused;
+      tptunused = tptunused->next;
+   }
+
+   // Link it to the end of the list.
+   if(!tptlist)
+      tptlist = tptend = ret;
+   else
+   {
+      tptend->next = ret;
+      tptend = ret;
+   }
+
+   ret->next = NULL;
+   return ret;
+}
+
+
+void P_NewShootTPT(linkoffset_t *link, fixed_t fromx, fixed_t fromy, fixed_t fromz)
+{
+   tptnode_t *node = TPT_NewNode();
+
+   node->type = tShoot;
+   node->x1 = fromx - link->x;
+   node->y1 = fromy - link->y;
+   node->dx = trace.dx - (fromx - trace.x);
+   node->dy = trace.dy - (fromy - trace.y);
+   node->startz = startz - link->z;
+   node->shootz = fromz - link->z;
+}
+
+
+
+boolean P_CheckTPT()
+{
+   return tptlist ? true : false;
+}
+
+
+tptnode_t *P_StartTPT()
+{
+   tptnode_t *ret = tptlist;
+   if(!ret)
+      return NULL;
+
+   tptlist = ret->next;
+
+   if(!tptlist)
+      tptend = NULL;
+   else
+      ret->next = NULL;
+
+   if(ret->type == tShoot)
+   {
+      trace.x = ret->x1;
+      trace.y = ret->y1;
+      trace.dx = ret->dx;
+      trace.dy = ret->dy;
+      startz = ret->startz;
+      shootz = ret->shootz;
+
+      return ret;
+   }
+   else if(ret->type == tAim)
+   {
+      trace.x = ret->x1;
+      trace.y = ret->y1;
+      trace.dx = ret->dx;
+      trace.dy = ret->dy;
+      startz = ret->startz;
+      shootz = ret->shootz;
+      topslope = ret->topslope;
+      bottomslope = ret->bottomslope;
+
+      return ret;
+   }
+
+   I_Error("P_StartTPT: Node had invalid type value %i\n", (int)ret->type);
+   return NULL;
+}
+
+
+
+void P_FinishTPT(tptnode_t *node)
+{
+   //Link the node back into the unused list
+   node->next = tptunused;
+   tptunused = node;
+}
+
+
+
+// Call this after you use TPT!
+void P_ClearTPT()
+{
+   tptnode_t *rover;
+
+   while(rover = tptlist)
+   {
+      tptlist = rover->next;
+
+      rover->next = tptunused;
+      tptunused = rover;
+   }
+
+
+   tptlist = tptend = NULL;
+}
+
 #endif
 
 //
@@ -2001,11 +2120,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                      y += FixedMul(trace.y - y, zdiff);
                      z = sidesector->floorheight;
 
-                     trace.x = x - link->x;
-                     trace.y = y - link->y;
-                     startz = z - link->z;
-                     shootz = z - link->z;
-                     tracerhitportal = true;
+                     P_NewShootTPT(link, x, y, z);
                   }
 #endif
                   return false;
@@ -2045,12 +2160,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                      x += FixedMul(trace.x - x, zdiff);
                      y += FixedMul(trace.y - y, zdiff);
                      z = sidesector->ceilingheight;
-
-                     trace.x = x - link->x;
-                     trace.y = y - link->y;
-                     startz = z - link->z;
-                     shootz = z - link->z;
-                     tracerhitportal = true;
+                     P_NewShootTPT(link, x, y, z);
                   }
 #endif
                   return false;

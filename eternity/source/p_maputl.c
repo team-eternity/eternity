@@ -723,11 +723,6 @@ boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 // for all lines.
 //
 // killough 5/3/98: reformatted, cleaned up
-#ifdef R_LINKEDPORTALS
-extern boolean tracerhitportal;
-#endif
-
-
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                        int flags, boolean trav(intercept_t *))
 {
@@ -844,18 +839,22 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       }
    }
 
-#ifdef R_LINKEDPORTALS
-   tracerhitportal = false;
-#endif
    // go through the sorted list
    // SoM: just store this for a sec
    result = P_TraverseIntercepts(trav, FRACUNIT);
 
 #ifdef R_LINKEDPORTALS
-   if(!result && tracerhitportal)
+   while(!result && P_CheckTPT())
+   {
+      tptnode_t *node = P_StartTPT();
       result = P_PathTraverse(trace.x, trace.y, 
                               trace.x + trace.dx, trace.y + trace.dy, 
                               flags, trav);
+      P_FinishTPT(node);
+   }
+
+   if(result && P_CheckTPT())
+      P_ClearTPT();
 #endif
 
    return result;
