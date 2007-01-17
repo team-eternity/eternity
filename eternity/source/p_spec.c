@@ -4191,7 +4191,11 @@ void P_ConvertHexenLineSpec(short *special, long *args)
       *special = 372; // args are same
       break;
    case 115: // light flicker
+      *special = 373; // args are same
+      break;
    case 116: // light strobe
+      *special = 374; // args are same
+      break;
    // UNUSED: 117-119
    case 120: // quake tremor
    case 121: // line set identification

@@ -2083,6 +2083,12 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 372: // Light_Glow
       success = EV_GlowLight(args[0], args[1], args[2], args[3]);
       break;
+   case 373: // Light_Flicker
+      success = EV_FlickerLight(args[0], args[1], args[2]);
+      break;
+   case 374: // Light_Strobe
+      success = EV_StrobeLight(args[0], args[1], args[2], args[3], args[4]);
+      break;
    default:
       break;
    }
@@ -2326,6 +2332,8 @@ SCRIPT_SPEC(369, light_lowerbyvalue)
 SCRIPT_SPEC(370, light_changetovalue)
 SCRIPT_SPEC(371, light_fade)
 SCRIPT_SPEC(372, light_glow)
+SCRIPT_SPEC(373, light_flicker)
+SCRIPT_SPEC(374, light_strobe)
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
@@ -2395,6 +2403,8 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Light_ChangeToValue",         sm_light_changetovalue         },
    { "_Light_Fade",                  sm_light_fade                  },
    { "_Light_Glow",                  sm_light_glow                  },
+   { "_Light_Flicker",               sm_light_flicker               },
+   { "_Light_Strobe",                sm_light_strobe                },
    { NULL, NULL }
 };
 

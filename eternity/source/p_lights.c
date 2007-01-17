@@ -113,7 +113,7 @@ void T_StrobeFlash(strobe_t *flash)
    else
    {
       flash-> sector->lightlevel = flash->minlight;
-      flash->count =flash->darktime;
+      flash->count = flash->darktime;
    }
 }
 
@@ -567,6 +567,15 @@ int EV_FadeLight(int tag, int destvalue, int speed)
    return rtn;
 }
 
+//
+// EV_GlowLight
+//
+// haleyjd:
+// Parameterized glow effect. Uses the fading thinker, but sets it up to
+// perpetually fade between two different light levels. The glow always starts
+// by fading the sector toward the lower light level, whether that requires
+// fading up or down.
+//
 int EV_GlowLight(int tag, int maxval, int minval, int speed)
 {
    int i, rtn = 0;
@@ -606,6 +615,74 @@ int EV_GlowLight(int tag, int maxval, int minval, int speed)
       lf->step = (lf->destlevel - lf->lightlevel) / speed; // delta per frame
 
       lf->type = fade_glow;
+   }
+
+   return rtn;
+}
+
+//
+// EV_StrobeLight
+//
+// haleyjd 01/16/07: Parameterized light strobe effect.
+// Allows strobing the light of a sector between any two light levels with
+// independent durations for both levels. Uses the same thinker as the normal
+// strobe light effect.
+//
+int EV_StrobeLight(int tag, int maxval, int minval, int maxtime, int mintime)
+{
+   strobe_t *flash;
+   int i, rtn = 0;
+   
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   {
+      rtn = 1;
+      flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
+      
+      flash->thinker.function = T_StrobeFlash;
+      P_AddThinker(&flash->thinker);
+      
+      flash->sector     = &sectors[i];
+      flash->maxlight   = maxval;
+      flash->minlight   = minval;
+      flash->brighttime = maxtime;
+      flash->darktime   = mintime;
+      flash->count      = 1;
+
+      flash->sector->lightlevel = flash->maxlight;
+   }
+
+   return rtn;
+}
+
+//
+// EV_FlickerLight
+//
+// haleyjd 01/16/07:
+// Parameterized flickering light effect. Changes between maxval and minval
+// at a randomized time period between 0.2 and 1.8 seconds (7 to 64 tics).
+// Uses the normal lightflash thinker.
+//
+int EV_FlickerLight(int tag, int maxval, int minval)
+{
+   lightflash_t *flash;
+   int i, rtn = 0;
+   
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   {
+      rtn = 1;
+      flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
+      
+      flash->thinker.function = T_LightFlash;
+      P_AddThinker(&flash->thinker);      
+      
+      flash->sector   = &sectors[i];
+      flash->maxlight = maxval;
+      flash->minlight = minval;
+      flash->maxtime  = 64;
+      flash->mintime  = 7;
+      flash->count    = (P_Random(pr_lights) & flash->maxtime) + 1;
+
+      flash->sector->lightlevel = flash->maxlight;
    }
 
    return rtn;
