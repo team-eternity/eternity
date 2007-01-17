@@ -178,6 +178,8 @@ void P_LoadVertexes(int lump)
       // Cardboard store float versions of vertices.
       vertexes[i].fx = vertexes[i].x / 65536.0f;
       vertexes[i].fy = vertexes[i].y / 65536.0f;
+      // Initialize the frameid marker
+      vertexes[i].frameid = 0;
    }
 
    // Free buffer memory.

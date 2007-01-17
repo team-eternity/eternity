@@ -89,8 +89,12 @@ typedef struct vertex_s
    fixed_t x, y;
 
    // SoM: Cardboard
-   // Fixme: polyobjects need to update the float vertex coords too.
+   // These should always be kept current to x and y
    float   fx, fy;
+
+   // These are cached per frame
+   unsigned frameid;
+   float tx, ty, proj_x, proj_dist;
 } vertex_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.

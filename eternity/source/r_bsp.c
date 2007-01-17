@@ -461,6 +461,7 @@ static void R_AddLine(seg_t *line)
    side_t *side;
    static sector_t tempsec;
    float floorx1, floorx2;
+   vertex_t  *v1, *v2;
 
    tempsec.frameid = 0;
 
@@ -513,19 +514,42 @@ static void R_AddLine(seg_t *line)
 
    // The first step is to do calculations for the entire wall seg, then
    // send the wall to the clipping functions.
-   temp.fx = line->v1->fx - view.x;
-   temp.fy = line->v1->fy - view.y;
-   t1.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t1.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+   v1 = line->v1;
+   v2 = line->v2;
 
-   temp.fx = line->v2->fx - view.x;
-   temp.fy = line->v2->fy - view.y;
-   t2.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t2.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+   if(v1->frameid != frameid)
+   {
+      temp.fx = v1->fx - view.x;
+      temp.fy = v1->fy - view.y;
+      t1.fx = v1->tx = (temp.fx * view.cos) - (temp.fy * view.sin);
+      t1.fy = v1->ty = (temp.fy * view.cos) + (temp.fx * view.sin);
+   }
+   else
+   {
+      t1.fx = v1->tx;
+      t1.fy = v1->ty;
+   }
+
+   if(v2->frameid != frameid)
+   {
+      temp.fx = v2->fx - view.x;
+      temp.fy = v2->fy - view.y;
+      t2.fx = v2->tx = (temp.fx * view.cos) - (temp.fy * view.sin);
+      t2.fy = v2->ty = (temp.fy * view.cos) + (temp.fx * view.sin);
+   }
+   else
+   {
+      t2.fx = v2->tx;
+      t2.fy = v2->ty;
+   }
 
    // Simple reject for lines entirely behind the view plane.
    if(t1.fy < NEARCLIP && t2.fy < NEARCLIP)
+   {
+      // Make sure both vertices are marked.
+      v1->frameid = v2->frameid = frameid;
       return;
+   }
 
    toffsetx = toffsety = 0;
 
@@ -542,11 +566,21 @@ static void R_AddLine(seg_t *line)
       t1.fy = NEARCLIP;
       i1 = 1.0f / NEARCLIP;
       x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+
+      // SoM: you can't store the clipped vertex projection so mark it as finished and
+      // t1.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
+      v1->frameid = frameid;
+   }
+   else if(v1->frameid == frameid)
+   {
+      i1 = v1->proj_dist;
+      x1 = v1->proj_x;
    }
    else
    {
-      i1 = 1.0f / t1.fy;
-      x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+      i1 = v1->proj_dist = 1.0f / t1.fy;
+      x1 = v1->proj_x = (view.xcenter + (t1.fx * i1 * view.xfoc));
+      v1->frameid = frameid;
    }
 
 
@@ -557,11 +591,21 @@ static void R_AddLine(seg_t *line)
       t2.fy = NEARCLIP;
       i2 = 1.0f / NEARCLIP;
       x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+
+      // SoM: you can't store the clipped vertex projection so mark it as finished and
+      // t2.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
+      v2->frameid = frameid;
+   }
+   else if(v2->frameid == frameid)
+   {
+      i2 = v2->proj_dist;
+      x2 = v2->proj_x;
    }
    else
    {
-      i2 = 1.0f / t2.fy;
-      x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+      i2 = v2->proj_dist = 1.0f / t2.fy;
+      x2 = v2->proj_x = (view.xcenter + (t2.fx * i2 * view.xfoc));
+      v2->frameid = frameid;
    }
 
    // SoM: Handle the case where a wall is only occupying a single post but still needs to be 

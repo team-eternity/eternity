@@ -571,6 +571,9 @@ void R_IncrementFrameid(void)
       // reset everything that uses this
       for(i = 0; i < numsectors; i++)
          sectors[i].frameid = 0;
+
+      for(i = 0; i < numvertexes; i++)
+         vertexes[i].frameid = 0;
    }
 }
 

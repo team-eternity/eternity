@@ -211,6 +211,7 @@ extern cb_seg_t   segclip;
 // SoM: Anchored portals need to increment the frameid as well
 void R_IncrementFrameid(void);
 // SoM: frameid frame counter.
+void R_IncrementFrameid(void); // Needed by the portal functions... 
 extern unsigned   frameid;
 
 #endif
