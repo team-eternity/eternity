@@ -329,156 +329,170 @@ typedef struct
 
 struct mobj_s
 {
-  // List: thinker links.
-  thinker_t           thinker;
-  
-  // Info for drawing: position.
-  fixed_t             x;
-  fixed_t             y;
-  fixed_t             z;
-  
+   // List: thinker links.
+   thinker_t           thinker;
+
+   // Info for drawing: position.
+   fixed_t             x;
+   fixed_t             y;
+   fixed_t             z;
+
 #ifdef R_LINKEDPORTALS
-  // SoM: yes Quasar, this is entirely necessary (see degenmobj_t)
-  int     groupid; // The group the sound originated in
+   // SoM: yes Quasar, this is entirely necessary (see degenmobj_t)
+   int     groupid; // The group the sound originated in
 #endif
 
-  // More list: links in sector (if needed)
-  struct mobj_s*      snext;
-  struct mobj_s**     sprev; // killough 8/10/98: change to ptr-to-ptr
+   // More list: links in sector (if needed)
+   struct mobj_s*      snext;
+   struct mobj_s**     sprev; // killough 8/10/98: change to ptr-to-ptr
 
-  //More drawing info: to determine current sprite.
-  angle_t             angle;  // orientation
-  spritenum_t         sprite; // used to find patch_t and flip value
-  int                 frame;  // might be ORed with FF_FULLBRIGHT
+   //More drawing info: to determine current sprite.
+   angle_t             angle;  // orientation
+   spritenum_t         sprite; // used to find patch_t and flip value
+   int                 frame;  // might be ORed with FF_FULLBRIGHT
 
-  // Interaction info, by BLOCKMAP.
-  // Links in blocks (if needed).
-  struct mobj_s*      bnext;
-  struct mobj_s**     bprev; // killough 8/11/98: change to ptr-to-ptr
-  
-  struct subsector_s* subsector;
-  
-  // The closest interval over all contacted Sectors.
-  fixed_t             floorz;
-  fixed_t             ceilingz;
+   // Interaction info, by BLOCKMAP.
+   // Links in blocks (if needed).
+   struct mobj_s*      bnext;
+   struct mobj_s**     bprev; // killough 8/11/98: change to ptr-to-ptr
 
-  // killough 11/98: the lowest floor over all contacted Sectors.
-  fixed_t             dropoffz;
+   struct subsector_s* subsector;
 
-  // For movement checking.
-  fixed_t             radius;
-  fixed_t             height; 
-  
-  // Momentums, used to update position.
-  fixed_t             momx;
-  fixed_t             momy;
-  fixed_t             momz;
+   // The closest interval over all contacted Sectors.
+   fixed_t             floorz;
+   fixed_t             ceilingz;
 
-  // If == validcount, already checked.
-  int                 validcount;
+   // killough 11/98: the lowest floor over all contacted Sectors.
+   fixed_t             dropoffz;
 
-  mobjtype_t          type;
-  mobjinfo_t*         info;   // &mobjinfo[mobj->type]
+   // For movement checking.
+   fixed_t             radius;
+   fixed_t             height; 
 
-  int colour; // sf: the sprite colour
+   // Momentums, used to update position.
+   fixed_t             momx;
+   fixed_t             momy;
+   fixed_t             momz;
 
-  union
-  {
-    long           bfgcount;
-    backpack_t*    backpack;       // for if its a backpack
-  } extradata;
+   // If == validcount, already checked.
+   int                 validcount;
 
-  int                 tics;   // state tic counter
-  state_t*            state;
-  unsigned long       flags;
-  unsigned long       flags2;    // haleyjd 04/09/99: I know, kill me now
-  unsigned long       flags3;    // haleyjd 11/03/02
-  int                 intflags;  // killough 9/15/98: internal flags
-  int                 health;
+   mobjtype_t          type;
+   mobjinfo_t*         info;   // &mobjinfo[mobj->type]
 
-  // Movement direction, movement generation (zig-zagging).
-  short               movedir;        // 0-7
-  short               movecount;      // when 0, select a new dir
-  short               strafecount;    // killough 9/8/98: monster strafing
-  
-  // Thing being chased/attacked (or NULL),
-  // also the originator for missiles.
-  struct mobj_s*      target;
+   int colour; // sf: the sprite colour
 
-  // Reaction time: if non 0, don't attack yet.
-  // Used by player to freeze a bit after teleporting.
-  short               reactiontime;   
+   union
+   {
+      long           bfgcount;
+      backpack_t*    backpack;       // for if its a backpack
+   } extradata;
 
-  // If >0, the current target will be chased no
-  // matter what (even if shot by another object)
-  short               threshold;
+   int                 tics;   // state tic counter
+   state_t*            state;
+   unsigned long       flags;
+   unsigned long       flags2;    // haleyjd 04/09/99: I know, kill me now
+   unsigned long       flags3;    // haleyjd 11/03/02
+   int                 intflags;  // killough 9/15/98: internal flags
+   int                 health;
 
-  // killough 9/9/98: How long a monster pursues a target.
-  short               pursuecount;
-  
-  short               gear; // killough 11/98: used in torque simulation
-  
-  // Additional info record for player avatars only.
-  // Only valid if thing is a player
-  struct player_s*    player;
-  skin_t *           skin;   //sf: skin
-  
-  // Player number last looked for.
-  short               lastlook;       
-  
-  // For nightmare respawn.
-  mapthing_t          spawnpoint;     
-  
-  // Thing being chased/attacked for tracers.
-  struct mobj_s*      tracer; 
-  
-  // new field: last known enemy -- killough 2/15/98
-  struct mobj_s*      lastenemy;
-  
-  // killough 8/2/98: friction properties part of sectors,
-  // not objects -- removed friction properties from here
-  
-  // a linked list of sectors where this object appears
-  struct msecnode_s* touching_sectorlist;                 // phares 3/14/98
-  
-  // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
+   // Movement direction, movement generation (zig-zagging).
+   short               movedir;        // 0-7
+   short               movecount;      // when 0, select a new dir
+   short               strafecount;    // killough 9/8/98: monster strafing
 
-  // New Fields for Eternity -- haleyjd
-  
-  // specials -- these are used by some codepointers to maintain state
-  // Note: these are now known as "counters" on the user-side of things.
-  short special1;
-  short special2;
-  short special3;
+   // Thing being chased/attacked (or NULL),
+   // also the originator for missiles.
+   struct mobj_s*      target;
 
-  int effects;      // particle effect flag field
-  int translucency; // zdoom-style translucency level
-  int floatbob;     // floatbob offset
-  int floorsec;     // # of sector responsible for floorz
-  int damage;       // haleyjd 08/02/04: copy damage to mobj now
-  fixed_t floorclip;    // haleyjd 08/07/04: floor clip amount
+   // Reaction time: if non 0, don't attack yet.
+   // Used by player to freeze a bit after teleporting.
+   short               reactiontime;   
 
+   // If >0, the current target will be chased no
+   // matter what (even if shot by another object)
+   short               threshold;
 
-  fixed_t secfloorz;
-  fixed_t secceilz;
+   // killough 9/9/98: How long a monster pursues a target.
+   short               pursuecount;
 
-  // SoM 11/6/02: Yet again! Two more z values that must be stored
-  // in the mobj struct 9_9
-  // These are the floor and ceiling heights given by the first
-  // clipping pass (map architecture + 3d sides).
-  fixed_t passfloorz;
-  fixed_t passceilz;
+   short               gear; // killough 11/98: used in torque simulation
+
+   // Additional info record for player avatars only.
+   // Only valid if thing is a player
+   struct player_s*    player;
+   skin_t *           skin;   //sf: skin
+
+   // Player number last looked for.
+   short               lastlook;       
+
+   // For nightmare respawn.
+   mapthing_t          spawnpoint;     
+
+   // Thing being chased/attacked for tracers.
+   struct mobj_s*      tracer; 
+
+   // new field: last known enemy -- killough 2/15/98
+   struct mobj_s*      lastenemy;
+
+   // killough 8/2/98: friction properties part of sectors,
+   // not objects -- removed friction properties from here
+
+   // a linked list of sectors where this object appears
+   struct msecnode_s* touching_sectorlist;                 // phares 3/14/98
+
+   // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
+
+   // New Fields for Eternity -- haleyjd
+
+   // specials -- these are used by some codepointers to maintain state
+   // Note: these are now known as "counters" on the user-side of things.
+   short special1;
+   short special2;
+   short special3;
+
+   int effects;      // particle effect flag field
+   int translucency; // zdoom-style translucency level
+   int floatbob;     // floatbob offset
+   int floorsec;     // # of sector responsible for floorz
+   int damage;       // haleyjd 08/02/04: copy damage to mobj now
+   fixed_t floorclip;    // haleyjd 08/07/04: floor clip amount
 
 
-  // scripting fields
-  long args[5];       // arguments
-  unsigned short tid; // thing id used by scripts
+   fixed_t secfloorz;
+   fixed_t secceilz;
 
-  // Note: tid chain pointers are NOT serialized in save games,
-  // but are restored on load by rehashing the things as they are
-  // spawned.
-  mobj_t *tid_next;   // ptr to next thing in tid chain
-  mobj_t **tid_prevn; // ptr to last thing's next pointer
+   // SoM 11/6/02: Yet again! Two more z values that must be stored
+   // in the mobj struct 9_9
+   // These are the floor and ceiling heights given by the first
+   // clipping pass (map architecture + 3d sides).
+   fixed_t passfloorz;
+   fixed_t passceilz;
+
+
+   // scripting fields
+   long args[5];       // arguments
+   unsigned short tid; // thing id used by scripts
+
+   // Note: tid chain pointers are NOT serialized in save games,
+   // but are restored on load by rehashing the things as they are
+   // spawned.
+   mobj_t *tid_next;   // ptr to next thing in tid chain
+   mobj_t **tid_prevn; // ptr to last thing's next pointer
+
+#ifdef R_LINKEDPORTALS
+   // SoM: When a mobj partially passes through a floor/ceiling portal, it needs to clip against
+   // two sets of map structures and map objects, the one it's currently in and then one it's
+   // passing into. The current plane (haha) is to spawn a dummy mobj on the other side of the
+   // portal and use that to occupy space for the mobj / send feedback to the main mobj as to
+   // where its position will be on the other side. This will require a lot of special clipping
+   // code...
+   mobj_t *portaldummy;
+   // This should only be set if the mobj is a portaldummy. This is the link back to the object
+   // that this is a dummy for. This link will be used for such things as the dummy taking damage
+   // (intersecting bullts and rockets, anyone?) 
+   mobj_t *dummyto;
+#endif
 };
 
         // put it here, it works, ok?

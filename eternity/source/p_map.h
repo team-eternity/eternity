@@ -99,15 +99,17 @@ typedef struct tptnode_s
 
    // -- Used by both types --
    // Translated tracer coords keep the distance to be traveled constant
-   fixed_t x1, y1, dx, dy;
-   fixed_t startz;
-   // Translated shootz coord should continue from height of the portal or whatever height it hit the portal line.
-   fixed_t shootz;
+   fixed_t x, y, dx, dy;
+   // Translated z coord should continue from height of the portal or whatever height it hit the portal line.
+   fixed_t z;
+   fixed_t originx, originy, originz;
+   // Accumulated travel along the line. Should be the XY distance between (x,y) 
+   // and (originx, originy) 
+   fixed_t movefrac;
+   fixed_t attackrange;
 
    // -- Used by tAim --
    fixed_t topslope, bottomslope;
-
-
 
    // -- Singly linked list --
    struct tptnode_s *next;

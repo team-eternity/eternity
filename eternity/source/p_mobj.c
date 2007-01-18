@@ -1195,6 +1195,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
 #ifdef R_LINKEDPORTALS
    mobj->groupid = R_NOGROUP;
+   mobj->dummyto = mobj->portaldummy = NULL;
 #endif
 
    // haleyjd 09/26/04: rudimentary support for monster skins
@@ -1821,8 +1822,6 @@ spawnit:
 // P_SpawnPuff
 //
 
-extern fixed_t attackrange;
-
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, 
                  int updown, boolean ptcl)
 {
@@ -1840,7 +1839,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 
    // don't make punches spark on the wall
    
-   if(attackrange == MELEERANGE)
+   if(trace.attackrange == MELEERANGE)
       P_SetMobjState(th, E_SafeState(S_PUFF3));
 
    // haleyjd: for demo sync etc we still need to do the above, so
@@ -1849,7 +1848,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    {
       if(bulletpuff_particle != 2)
          th->translucency = 0;
-      if(attackrange != MELEERANGE)
+      if(trace.attackrange != MELEERANGE)
          P_DrawSplash2(32, x, y, z, dir, updown, 1);
    }
 }

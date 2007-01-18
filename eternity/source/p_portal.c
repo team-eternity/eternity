@@ -34,6 +34,7 @@
 #include "r_plane.h"
 #include "r_bsp.h"
 #include "r_things.h"
+#include "p_setup.h"
 
 #ifdef R_LINKEDPORTALS
 
@@ -48,7 +49,7 @@ linkoffset_t **linktable = NULL;
 // allocated static and is a expandable list. Each entry in the list is another
 // list of ints which contain the sector numbers in that group. This sub-list is
 // allocated PU_LEVEL because it is level specific.
-static sector_t  **grouplist = NULL;
+static sector_t  ***grouplist = NULL;
 static int  groupcount = 0, grouplimit = 0;
 
 // This flag is a big deal. Heh, if this is true a whole lot of code will 
@@ -124,7 +125,7 @@ int P_CreatePortalGroup(sector_t *from)
    {
       grouplimit = grouplimit ? (grouplimit << 1) : 8;
       grouplist = 
-         (sector_t **)Z_Realloc(grouplist, sizeof(sector_t *) * grouplimit,
+         (sector_t ***)Z_Realloc(grouplist, sizeof(sector_t *) * grouplimit,
                                 PU_STATIC, NULL);
    }
 
@@ -172,7 +173,7 @@ int P_CreatePortalGroup(sector_t *from)
    list[count++] = NULL;
 
    grouplist[groupcount] = 
-      (sector_t *)Z_Malloc(count * sizeof(sector_t *), PU_LEVEL, 0);
+      (sector_t **)Z_Malloc(count * sizeof(sector_t *), PU_LEVEL, 0);
    
    memcpy(grouplist[groupcount], list, count * sizeof(sector_t *));
 
@@ -301,7 +302,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
                           int from)
 {
    int i, p;
-   linkoffset_t *link, **grouplist, **fromlist;
+   linkoffset_t *link, **linklist, **fromlist;
 
    // The main group has an indrect link with every group that links to a group
    // it has a direct link to it, or any group that has a link to a group the 
@@ -311,21 +312,21 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
    // from there, run the function again with each direct link.
    if(from == R_NOGROUP)
    {
-      grouplist = linktable + group * groupcount;
+      linklist = linktable + group * groupcount;
 
       for(i = 0; i < groupcount; ++i)
       {
          if(i == group)
             continue;
 
-         if(link = grouplist[i])
+         if(link = linklist[i])
             P_GatherLinks(group, link->x, link->y, link->z, i);
       }
 
       return;
    }
 
-   grouplist = linktable + group * groupcount;
+   linklist = linktable + group * groupcount;
    fromlist = linktable + from * groupcount;
 
    // Second step run through the linked group's link list. Ignore any groups 
@@ -336,7 +337,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
       if(p == group || p == from)
          continue;
 
-      if(!(link = fromlist[p]) || grouplist[p])
+      if(!(link = fromlist[p]) || linklist[p])
          continue;
 
       P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z);
@@ -433,6 +434,42 @@ void P_BuildLinkTable(void)
 
    // Everything checks out... let's run the portals
    useportalgroups = true;
+}
+
+
+
+//
+// P_LinkRejectTable
+// Currently just clears each group for every other group.
+void P_LinkRejectTable(void)
+{
+   int i, s, p, q;
+   sector_t **list, **list2;
+
+   for(i = 0; i < groupcount; i++)
+   {
+      list = grouplist[i];
+      for(s = 0; list[s]; s++)
+      {
+         int sectorindex1 = list[s] - sectors;
+
+
+         for(p = 0; p < groupcount; p++)
+         {
+            if(i == p)
+               continue;
+            
+            list2 = grouplist[p];
+            for(q = 0; list2[q]; q++)
+            {
+               int sectorindex2 = list2[q] - sectors;
+               int pnum = (sectorindex1 * numsectors) + sectorindex2;
+
+               rejectmatrix[pnum>>3] &= ~(1 << (pnum&7));
+            } // q
+         } // p
+      } // s
+   } // i
 }
 
 #endif

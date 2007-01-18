@@ -581,7 +581,7 @@ static void check_intercept(void)
    }
 }
 
-divline_t trace;
+linetracer_t trace;
 
 // PIT_AddLineIntercepts.
 // Looks for lines in the given block
@@ -604,8 +604,8 @@ boolean PIT_AddLineIntercepts(line_t *ld)
    if(trace.dx >  FRACUNIT*16 || trace.dy >  FRACUNIT*16 ||
       trace.dx < -FRACUNIT*16 || trace.dy < -FRACUNIT*16)
    {
-      s1 = P_PointOnDivlineSide (ld->v1->x, ld->v1->y, &trace);
-      s2 = P_PointOnDivlineSide (ld->v2->x, ld->v2->y, &trace);
+      s1 = P_PointOnDivlineSide (ld->v1->x, ld->v1->y, (divline_t *)&trace);
+      s2 = P_PointOnDivlineSide (ld->v2->x, ld->v2->y, (divline_t *)&trace);
    }
    else
    {
@@ -618,7 +618,7 @@ boolean PIT_AddLineIntercepts(line_t *ld)
    
    // hit the line
    P_MakeDivline(ld, &dl);
-   frac = P_InterceptVector(&trace, &dl);
+   frac = P_InterceptVector((divline_t *)&trace, &dl);
    
    if(frac < 0)
       return true;        // behind source
@@ -662,8 +662,8 @@ boolean PIT_AddThingIntercepts(mobj_t *thing)
       y2 = thing->y + thing->radius;
    }
 
-   s1 = P_PointOnDivlineSide (x1, y1, &trace);
-   s2 = P_PointOnDivlineSide (x2, y2, &trace);
+   s1 = P_PointOnDivlineSide (x1, y1, (divline_t *)&trace);
+   s2 = P_PointOnDivlineSide (x2, y2, (divline_t *)&trace);
    
    if(s1 == s2)
       return true;                // line isn't crossed
@@ -673,7 +673,7 @@ boolean PIT_AddThingIntercepts(mobj_t *thing)
    dl.dx = x2-x1;
    dl.dy = y2-y1;
    
-   frac = P_InterceptVector (&trace, &dl);
+   frac = P_InterceptVector ((divline_t *)&trace, &dl);
    
    if (frac < 0)
       return true;                // behind source
@@ -737,6 +737,9 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    // SoM: just a little bit-o-change...
    boolean result;
 
+   // Only PTR_s that use TPTs need to worry about this value.
+   trace.finished = false;
+
    validcount++;
    intercept_p = intercepts;
    
@@ -746,8 +749,8 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    if(!((y1-bmaporgy)&(MAPBLOCKSIZE-1)))
       y1 += FRACUNIT;     // don't side exactly on a line
 
-   trace.x = x1;
-   trace.y = y1;
+   trace.x = trace.originx = x1;
+   trace.y = trace.originy = y1;
    trace.dx = x2 - x1;
    trace.dy = y2 - y1;
    
@@ -814,13 +817,13 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    {
       if(flags & PT_ADDLINES)
       {
-         if(!P_BlockLinesIterator(mapx, mapy,PIT_AddLineIntercepts))
+         if(!P_BlockLinesIterator(mapx, mapy, PIT_AddLineIntercepts))
             return false; // early out
       }
       
       if(flags & PT_ADDTHINGS)
       {
-         if(!P_BlockThingsIterator(mapx, mapy,PIT_AddThingIntercepts))
+         if(!P_BlockThingsIterator(mapx, mapy, PIT_AddThingIntercepts))
             return false; // early out
       }
       
@@ -844,7 +847,11 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    result = P_TraverseIntercepts(trav, FRACUNIT);
 
 #ifdef R_LINKEDPORTALS
-   while(!result && P_CheckTPT())
+   // Only check portals if no linetarget was aquired.
+   // Due to the way these are accumulated, there should be no recursion so the list
+   // will never be infinite. Note: TPT nodes are never created unless the demo
+   // version is >= 333 so I don't bother to check that here.
+   while(!trace.finished && P_CheckTPT())
    {
       tptnode_t *node = P_StartTPT();
       result = P_PathTraverse(trace.x, trace.y, 
@@ -853,7 +860,7 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       P_FinishTPT(node);
    }
 
-   if(result && P_CheckTPT())
+   if(trace.finished && P_CheckTPT())
       P_ClearTPT();
 #endif
 

@@ -42,11 +42,46 @@
 
 typedef struct divline_s
 {
-  fixed_t     x;
-  fixed_t     y;
-  fixed_t     dx;
-  fixed_t     dy;
+   fixed_t     x;
+   fixed_t     y;
+   fixed_t     dx;
+   fixed_t     dy;
 } divline_t;
+
+
+// SoM: linetracer_t can be cast to divline_t for the appropriate functions but holds much more
+// data which is needed for making tracers correctly travel through portals
+typedef struct linetracer_s
+{
+   fixed_t     x;
+   fixed_t     y;
+   fixed_t     dx;
+   fixed_t     dy;
+
+   // Moved crappy globals here
+   fixed_t     z; // replaces shootz
+   int         la_damage;
+   fixed_t     attackrange;
+   fixed_t     aimslope;
+   fixed_t     topslope, bottomslope;
+
+   // SoM: used by aiming TPT
+   fixed_t     originx;
+   fixed_t     originy;
+   fixed_t     originz;
+
+   fixed_t     sin;
+   fixed_t     cos;
+
+   // Accumulated travel along the line. Should be the XY distance between (x,y) 
+   // and (originx, originy) 
+   fixed_t movefrac;
+
+
+   boolean finished;
+} linetracer_t;
+
+
 
 typedef struct intercept_s
 {
@@ -92,7 +127,7 @@ extern fixed_t   tmpassceilz;
 
 extern sector_t *openfloorsec; // haleyjd
 extern fixed_t lowfloor;
-extern divline_t trace;
+extern linetracer_t trace;
 
 #endif  // __P_MAPUTL__
 
