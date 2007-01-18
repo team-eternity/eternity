@@ -41,6 +41,7 @@
 #include "z_zone.h"
 #include "c_io.h"
 #include "d_gi.h"
+#include "d_io.h"
 #include "m_misc.h"
 #include "mn_engin.h"
 #include "s_sound.h"

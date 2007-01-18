@@ -242,12 +242,12 @@ static void E_ProcessSplash(cfg_t *cfg)
 
    // process smallsound
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLSOUND);
-   if(strlen(tempstr) > 16)
+   if(strlen(tempstr) > 32)
    {
       E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
                      tempstr);
    }
-   strncpy(newSplash->smallsound, tempstr, 17);
+   strncpy(newSplash->smallsound, tempstr, 33);
 
    // process baseclass
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_BASECLASS);
@@ -268,12 +268,12 @@ static void E_ProcessSplash(cfg_t *cfg)
    
    // process sound
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_SOUND);
-   if(strlen(tempstr) > 16)
+   if(strlen(tempstr) > 32)
    {
       E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
                      tempstr);
    }
-   strncpy(newSplash->sound, tempstr, 17);
+   strncpy(newSplash->sound, tempstr, 33);
 
    E_EDFLogPrintf("\t\t\t%s splash '%s'\n", 
                   newsp ? "Finished" : "Modified", 
