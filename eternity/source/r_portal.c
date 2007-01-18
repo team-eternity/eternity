@@ -37,10 +37,9 @@
 static rportal_t *portals = NULL, *last = NULL;
 
 // This flag is set when a portal is being rendered. This flag is checked in r_bsp.c when
-// rendering camera portals (skybox, anchored, linked) so that an extra function (R_ClipSeg) is
-// called to prevent certain types of HOM in portals.
-boolean portalrender = false;
-
+// rendering camera portals (skybox, anchored, linked) so that an extra function (R_ClipSegToPortal) 
+// is called to prevent certain types of HOM in portals.
+portalrender_t portalrender = {false, MAX_SCREENWIDTH, 0};
 
 //
 // R_ClearPortal
@@ -575,6 +574,7 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 {
    fixed_t lastx, lasty, lastz;
    float   lastxf, lastyf, lastzf;
+   int     i;
 
 #ifdef R_LINKEDPORTALS
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && portal->type != R_LINKED)
@@ -615,6 +615,21 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 
    floorclip = portal->bottom;
    ceilingclip = portal->top;
+
+   portalrender.minx = portal->minx;
+   portalrender.maxx = portal->maxx;
+
+   portalrender.miny = MAX_SCREENHEIGHT;
+   portalrender.maxy = 0;
+   for(i = portal->minx; i <= portal->maxx; i++)
+   {
+      if(portal->top[i] < portalrender.miny)
+         portalrender.miny = portal->top[i];
+
+      if(portal->bottom[i] > portalrender.maxy)
+         portalrender.maxy = portal->bottom[i];
+   }
+
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -686,7 +701,7 @@ void R_RenderPortals(void)
    while(1)
    {
       // SoM 3/14/2005: Set the portal rendering flag
-      portalrender = true;
+      portalrender.active = true;
       for(r = portals; r; r = r->next)
       {
          if(r->maxx < r->minx)
@@ -717,7 +732,7 @@ void R_RenderPortals(void)
       }
 
       // SoM 3/14/2005: Unset the portal rendering flag
-      portalrender = false;
+      portalrender.active = false;
       if(!r)
          return;
    }

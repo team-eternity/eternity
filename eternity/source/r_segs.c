@@ -664,7 +664,7 @@ void R_StoreWallRange(const int start, const int stop)
 
          mtc = (int *)lastopening;
 
-         while(i--)
+         for(i = 0; i < xlen; i++)
             mtc[i] = 0x7fffffff;
 
          lastopening += xlen;
@@ -712,7 +712,7 @@ void R_StoreWallRange(const int start, const int stop)
 
 #ifdef R_PORTALS
 //
-// R_ClipSeg
+// R_ClipSegToPortal
 //
 // SoM 3/14/2005: This function will reject segs that are completely 
 // outside the portal window based on a few conditions. It will also 
@@ -720,10 +720,15 @@ void R_StoreWallRange(const int start, const int stop)
 // actually visible in. This function is sound and Doom could even use 
 // this for normal rendering, but it adds some overhead.
 //
-boolean R_ClipSeg()
+boolean R_ClipSegToPortal()
 {
    int   i;
    float clipx;
+
+   // Start off by clipping the edges to the current solid segs.
+   if(!R_ClipInitialSegRange())
+      return false;
+   
    // The way we handle segs depends on relative camera position. If the 
    // camera is above we need to reject segs based on the top of the seg.
    // If the camera is below the bottom of the seg the bottom edge needs 
@@ -737,6 +742,11 @@ boolean R_ClipSeg()
       // I totally overlooked this when I moved all the wall panel projection to r_segs.c
       top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
       topstop = y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(y1 > portalrender.maxy && y2 > portalrender.maxy)
+         return false;
+
       topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
 
       for(i = seg.x1; i <= seg.x2; i++)
@@ -797,6 +807,11 @@ boolean R_ClipSeg()
 
       bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
       stopbottom = y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(y1 < portalrender.miny && y2 < portalrender.miny)
+         return false;
+
       bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
 
       for(i = seg.x1; i <= seg.x2; i++)

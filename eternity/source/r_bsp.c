@@ -225,11 +225,10 @@ void R_ClearClipSegs(void)
 }
 
 #ifdef R_PORTALS
-// haleyjd: DEBUG
 boolean R_SetupPortalClipsegs(float *top, float *bottom)
 {
    int i = 0;
-   cliprange_t *seg;
+   cliprange_t *solidseg;
    
    R_ClearClipSegs();
    
@@ -244,7 +243,7 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
    if(i == viewwidth)
       return false;
    
-   seg = solidsegs + 1;
+   solidseg = solidsegs + 1;
    
    while(1)
    {
@@ -256,26 +255,67 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
          goto endopen;
       
       // set the solidsegs
-      seg->first = i;
+      solidseg->first = i;
       
       // find the first open post
       while(i < viewwidth && top[i] + 1 >= bottom[i]) i++;
       if(i == viewwidth)
          goto endclosed;
       
-      seg->last = i - 1;
-      seg++;
+      solidseg->last = i - 1;
+      solidseg++;
    }
    
 endopen:
-   seg->first = viewwidth;
-   seg->last = 0x7fff;
-   newend = seg + 1;
+   solidseg->first = viewwidth;
+   solidseg->last = 0x7fff;
+   newend = solidseg + 1;
    return true;
    
 endclosed:
-   seg->last = 0x7fff;
-   newend = seg + 1;
+   solidseg->last = 0x7fff;
+   newend = solidseg + 1;
+   return true;
+}
+
+
+
+// 
+// R_ClipInitialSegRange
+// Used by R_ClipSeg to quickly reject segs outside the open range of the portal and to
+// clip segs to the portals open range on the x-axis
+boolean R_ClipInitialSegRange(void)
+{
+   float clipx;
+
+   if(seg.x2 < portalrender.minx || seg.x1 > portalrender.maxx)
+      return false;
+
+
+   if(portalrender.minx > seg.x1)
+   {
+      clipx = portalrender.minx - seg.x1frac;
+
+      seg.x1 = portalrender.minx;
+      seg.x1frac = (float)portalrender.minx;
+
+      seg.dist += clipx * seg.diststep;
+      seg.len += clipx * seg.lenstep;
+   }
+   // ok, the left edge is done
+
+   // do the right edge
+   if(portalrender.maxx < seg.x2)
+   {
+      clipx = portalrender.maxx - seg.x2frac;
+
+      seg.x2 = portalrender.maxx;
+      seg.x2frac = (float)portalrender.maxx;
+
+      seg.dist2 += clipx * seg.diststep;
+      seg.len2 += clipx * seg.lenstep;
+   }
+
    return true;
 }
 #endif
@@ -834,7 +874,7 @@ static void R_AddLine(seg_t *line)
    }
 
    #ifdef R_PORTALS
-   if(portalrender && !R_ClipSeg())
+   if(portalrender.active && !R_ClipSegToPortal())
       return;
    #endif
 

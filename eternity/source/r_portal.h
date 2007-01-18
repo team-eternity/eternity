@@ -103,7 +103,14 @@ void R_ClearPortals(void);
 void R_RenderPortals(void);
 
 // SoM 3/14/2004: flag if we are rendering portals.
-extern boolean portalrender;
+typedef struct
+{
+   boolean active;
+   int     minx, maxx;
+   float   miny, maxy;
+} portalrender_t;
+
+extern portalrender_t  portalrender;
 
 #ifdef R_LINKEDPORTALS
 // SoM 2/13/2006: Thus marks the beginning of my work on linked portals
