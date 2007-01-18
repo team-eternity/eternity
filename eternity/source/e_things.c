@@ -28,6 +28,7 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+#include "acs_intr.h"
 #include "i_system.h"
 #include "w_wad.h"
 #include "d_io.h"
@@ -101,6 +102,9 @@ int UnknownThingType;
 #define ITEM_TNG_BASICTYPE "basictype"
 #define ITEM_TNG_TOPDAMAGE "topdamage"
 #define ITEM_TNG_TOPDMGMASK "topdamagemask"
+#define ITEM_TNG_ACS_SPAWN "acs_spawndata"
+#define ITEM_TNG_ACS_NUM "num"
+#define ITEM_TNG_ACS_MODES "modes"
 #define ITEM_TNG_DEHNUM "dehackednum"
 
 // Thing Delta Keywords
@@ -134,6 +138,29 @@ static dehflagset_t particle_flags =
 {
    particlefx,  // flaglist
    0,           // mode
+};
+
+// ACS game mode flags
+
+static dehflags_t acs_gamemodes[] =
+{
+   { "doom",    ACS_MODE_DOOM },
+   { "heretic", ACS_MODE_HTIC },
+   { "all",     ACS_MODE_ALL  },
+   { NULL,      0             }
+};
+
+static dehflagset_t acs_gamemode_flags =
+{
+   acs_gamemodes, // flaglist
+   0,             // mode
+};
+
+// table to translate from gameModeInfo->type to acs gamemode flag
+static int gameTypeToACSFlags[NumGameModeTypes] =
+{
+   ACS_MODE_DOOM, // Game_DOOM,
+   ACS_MODE_HTIC, // Game_Heretic
 };
 
 // Special damage inflictor types
@@ -297,6 +324,14 @@ static basicttype_t BasicThingTypes[] =
 // Thing Type Options
 //
 
+// acs spawndata sub-section
+static cfg_opt_t acs_data[] =
+{
+   CFG_INT(ITEM_TNG_ACS_NUM,   -1,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_ACS_MODES, "all", CFGF_NONE),
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
@@ -350,6 +385,7 @@ static int E_ModCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BASICTYPE,    "",       CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDAMAGE,    0,        CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDMGMASK,   0,        CFGF_NONE), \
+   CFG_SEC(ITEM_TNG_ACS_SPAWN,    acs_data, CFGF_NOCASE), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1317,6 +1353,33 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    if(IS_SET(ITEM_TNG_TOPDMGMASK))
       mobjinfo[i].topdamagemask = cfg_getint(thingsec, ITEM_TNG_TOPDMGMASK);
 
+   // 01/17/07: process acs_spawndata
+   if(cfg_size(thingsec, ITEM_TNG_ACS_SPAWN) > 0)
+   {
+      cfg_t *acs_sec = cfg_getsec(thingsec, ITEM_TNG_ACS_SPAWN);
+
+      // get ACS spawn number
+      tempint = cfg_getint(acs_sec, ITEM_TNG_ACS_NUM);
+
+      // rangecheck number
+      if(tempint >= ACS_NUM_THINGTYPES)
+      {
+         E_EDFLogPrintf("\t\tWarning: invalid ACS spawn number %d\n", tempint);
+      }
+      else if(tempint >= 0) // negative numbers mean no spawn number
+      {
+         long flags;
+
+         // get mode flags
+         tempstr = cfg_getstr(acs_sec, ITEM_TNG_ACS_MODES);
+
+         flags = E_ParseFlags(tempstr, &acs_gamemode_flags);
+
+         if(flags & gameTypeToACSFlags[gameModeInfo->type])
+            ACS_thingtypes[tempint] = i;
+      }
+   }
+
    // output end message if processing a definition
    if(def)
       E_EDFLogPrintf("\t\tFinished thing %s(#%d)\n", mobjinfo[i].name, i);
@@ -1339,6 +1402,10 @@ void E_ProcessThings(cfg_t *cfg)
 
    // initialize hitlist
    memset(thing_hitlist, 0, NUMMOBJTYPES*sizeof(byte));
+
+   // 01/17/07: initialize ACS thingtypes array
+   for(i = 0; i < ACS_NUM_THINGTYPES; ++i)
+      ACS_thingtypes[i] = UnknownThingType;
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {

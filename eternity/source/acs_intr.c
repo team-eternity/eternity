@@ -202,6 +202,16 @@ static boolean acsLoaded;
 // deferred scripts
 static deferredacs_t *acsDeferred;
 
+//
+// Global Variables
+//
+
+// ACS_thingtypes:
+// This array translates from ACS spawn numbers to internal thingtype indices.
+// ACS spawn numbers are specified via EDF and are gamemode-dependent. EDF takes
+// responsibility for populating this list.
+
+int ACS_thingtypes[ACS_NUM_THINGTYPES];
 
 //
 // Static Functions
@@ -326,12 +336,16 @@ static int ACS_countThings(int type, int tid)
 {
    thinker_t *th;
    int count = 0;
-   
-   // FIXME/TODO: must translate Hexen thing type ids to true types
 
    // don't bother counting if no valid search is specified
    if(!(type || tid))
       return 0;
+   
+   // translate ACS thing type ids to true types
+   if(type < 0 || type >= ACS_NUM_THINGTYPES)
+      return 0;
+
+   type = ACS_thingtypes[type];
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {

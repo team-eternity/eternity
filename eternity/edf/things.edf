@@ -65,6 +65,7 @@ thingtype Zombieman {
   raisestate = S_POSS_RAISE1
   droptype = AmmoClip
   obituary_normal = "was capped by a zombie"
+  acs_spawndata { num = 4; modes = doom }
   dehackednum = 2
 }
 
@@ -88,6 +89,7 @@ thingtype Sergeant {
   raisestate = S_SPOS_RAISE1
   droptype = WeaponShotgun
   obituary_normal = "was blasted by a former sergeant"
+  acs_spawndata { num = 1; modes = doom }
   dehackednum = 3
 }
 
@@ -111,6 +113,7 @@ thingtype Archvile {
   flags2 = FOOTCLIP|SHORTMRANGE
   flags3 = DMGIGNORED|NOTHRESHOLD|SPACMONSTER|PASSMOBJ
   obituary_normal = "was fried by an archvile"
+  acs_spawndata { num = 111; modes = doom }
   dehackednum = 4
 }
 
@@ -141,6 +144,7 @@ thingtype Revenant {
   raisestate = S_SKEL_RAISE1
   obituary_normal = "couldn't hide from a revenant missile"
   obituary_melee  = "was sucker-punched by a revenant"
+  acs_spawndata { num = 20; modes = doom }
   dehackednum = 6
 }
 
@@ -154,6 +158,7 @@ thingtype TracerShot {
   height = 8.0
   damage = 10
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|SEEKERMISSILE|SPACMISSILE
+  acs_spawndata { num = 52; modes = doom }
   dehackednum = 7
 }
 
@@ -183,6 +188,7 @@ thingtype Mancubus {
   cflags = SOLID|SHOOTABLE|COUNTKILL|MAP07BOSS1|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_FATT_RAISE1
   obituary_normal = "was flattened by a mancubus"
+  acs_spawndata { num = 112; modes = doom }
   dehackednum = 9
 }
 
@@ -196,6 +202,7 @@ thingtype MancubusShot {
   height = 8.0
   damage = 8
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|SPACMISSILE
+  acs_spawndata { num = 153; modes = doom }
   dehackednum = 10
 }
 
@@ -219,6 +226,7 @@ thingtype Chaingunner {
   raisestate = S_CPOS_RAISE1
   droptype = WeaponChaingun
   obituary_normal = "felt the heat from a chaingunner"
+  acs_spawndata { num = 2; modes = doom }
   dehackednum = 11
 }
 
@@ -243,6 +251,7 @@ thingtype DoomImp {
   raisestate = S_TROO_RAISE1
   obituary_normal = "was flamed by an imp"
   obituary_melee  = "was torn apart by an imp"
+  acs_spawndata { num = 5; modes = doom }
   dehackednum = 12
 }
 
@@ -267,6 +276,7 @@ thingtype Demon {
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_SARG_RAISE1
   obituary_melee = "was chewed on by a demon"
+  acs_spawndata { num = 8; modes = doom }
   dehackednum = 13
 }
 
@@ -291,6 +301,7 @@ thingtype Spectre {
   cflags = SOLID|SHOOTABLE|SHADOW|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   raisestate = S_SARG_RAISE1
   obituary_melee = "didn't see the spectre"
+  acs_spawndata { num = 9; modes = doom }
   dehackednum = 14
 }
 
@@ -315,6 +326,7 @@ thingtype Cacodemon {
   raisestate = S_HEAD_RAISE1
   obituary_normal = "was roasted by a cacodemon"
   obituary_melee  = "was bitten by a cacodemon"
+  acs_spawndata { num = 19; modes = doom }
   dehackednum = 15
 }
 
@@ -339,6 +351,7 @@ thingtype BaronOfHell {
   raisestate = S_BOSS_RAISE1
   obituary_normal = "was burned by a baron"
   obituary_melee  = "was ripped open by a baron"
+  acs_spawndata { num = 3; modes = doom }
   dehackednum = 16
 }
 
@@ -353,6 +366,7 @@ thingtype BaronShot {
   height = 8.0
   damage = 8
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
+  acs_spawndata { num = 154; modes = doom }
   dehackednum = 17
 }
 
@@ -378,6 +392,7 @@ thingtype HellKnight {
   raisestate = S_BOS2_RAISE1
   obituary_normal = "bows before a hell knight"
   obituary_melee  = "was ripped open by a hell knight"
+  acs_spawndata { num = 113; modes = doom }
   dehackednum = 18
 }
 
@@ -403,6 +418,7 @@ thingtype LostSoul {
   flags2 = NOSTRAFE|RANGEHALF
   flags3 = KILLABLE|DEADFLOAT|SPACMONSTER|PASSMOBJ
   obituary_normal = "was spooked by a lost soul"
+  acs_spawndata { num = 110; modes = doom }
   dehackednum = 19
 }
 
@@ -428,6 +444,7 @@ thingtype Spiderdemon {
   flags2 = E3M8BOSS|BOSS|E4M8BOSS|FOOTCLIP|RANGEHALF
   flags3 = SPACMONSTER|PASSMOBJ
   obituary_normal = "stood in awe of the spiderdemon"
+  acs_spawndata { num = 7; modes = doom }
   dehackednum = 20
 }
 
@@ -453,6 +470,7 @@ thingtype Arachnotron {
   flags3 = SPACMONSTER|PASSMOBJ
   raisestate = S_BSPI_RAISE1
   obituary_normal = "didn't escape the arachnotron"
+  acs_spawndata { num = 6; modes = doom }
   dehackednum = 21
 }
 
@@ -477,6 +495,7 @@ thingtype Cyberdemon {
   flags2 = E2M8BOSS|BOSS|E4M6BOSS|FOOTCLIP|RANGEHALF|HIGHERMPROB
   flags3 = SPACMONSTER|PASSMOBJ
   obituary_normal = "gulped down a cyberdemon's rocket"
+  acs_spawndata { num = 114; modes = doom }
   dehackednum = 22
 }
 
@@ -500,6 +519,7 @@ thingtype PainElemental {
   cflags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|SPACMONSTER|PASSMOBJ
   raisestate = S_PAIN_RAISE1
   nukespecial = PainNukeSpec
+  acs_spawndata { num = 115; modes = doom }
   dehackednum = 23
 }
 
@@ -523,6 +543,7 @@ thingtype WolfSS {
   raisestate = S_SSWV_RAISE1
   droptype = AmmoClip
   obituary_normal = "was no match for the past"
+  acs_spawndata { num = 116; modes = doom }
   dehackednum = 24
 }
 
@@ -590,6 +611,7 @@ thingtype BossSpawnCube {
 thingtype BossSpawnFire {
   spawnstate = S_SPAWNFIRE1
   flags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
+  acs_spawndata { num = 98; modes = doom }
   dehackednum = 30
 }
 
@@ -604,6 +626,7 @@ thingtype DoomBarrel {
   correct_height = 34.0
   flags = SOLID|SHOOTABLE|NOBLOOD
   mod = 18
+  acs_spawndata { num = 125; modes = doom }
   dehackednum = 31
 }
 
@@ -618,6 +641,7 @@ thingtype DoomImpShot {
   height = 8.0
   damage = 3
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
+  acs_spawndata { num = 10; modes = doom }
   dehackednum = 32
 }
 
@@ -632,6 +656,7 @@ thingtype CacodemonShot {
   height = 8.0
   damage = 5
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
+  acs_spawndata { num = 126; modes = doom }
   dehackednum = 33
 }
 
@@ -647,6 +672,7 @@ thingtype RocketShot {
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SPACMISSILE
   particlefx = ROCKET
   mod = 5
+  acs_spawndata { num = 127; modes = doom }
   dehackednum = 34
 }
 
@@ -661,6 +687,7 @@ thingtype PlasmaShot {
   damage = 5
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
   mod = 7
+  acs_spawndata { num = 51; modes = doom }
   dehackednum = 35
 }
 
@@ -675,6 +702,7 @@ thingtype BFGShot {
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
   particlefx = BFG
   mod = 8
+  acs_spawndata { num = 128; modes = doom }
   dehackednum = 36
 }
 
@@ -688,18 +716,21 @@ thingtype ArachnotronShot {
   height = 8.0
   damage = 5
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|SPACMISSILE
+  acs_spawndata { num = 129; modes = doom }
   dehackednum = 37
 }
 
 thingtype BulletPuff {
   spawnstate = S_PUFF1
   cflags = NOBLOCKMAP|NOGRAVITY|TRANSLUCENT|NOSPLASH
+  acs_spawndata { num = 131; modes = doom }
   dehackednum = 38
 }
 
 thingtype DoomBlood {
   spawnstate = S_BLOOD1
   cflags = NOBLOCKMAP|NOSPLASH
+  acs_spawndata { num = 130; modes = doom }
   dehackednum = 39
 }
 
@@ -744,6 +775,7 @@ thingtype GreenArmor {
   doomednum = 2018
   spawnstate = S_ARM1
   flags = SPECIAL
+  acs_spawndata { num = 68; modes = doom }
   dehackednum = 44
 }
 
@@ -751,6 +783,7 @@ thingtype BlueArmor {
   doomednum = 2019
   spawnstate = S_ARM2
   flags = SPECIAL
+  acs_spawndata { num = 69; modes = doom }
   dehackednum = 45
 }
 
@@ -758,6 +791,7 @@ thingtype HealthBonus {
   doomednum = 2014
   spawnstate = S_BON1
   flags = SPECIAL|COUNTITEM
+  acs_spawndata { num = 152; modes = doom }
   dehackednum = 46
 }
 
@@ -765,6 +799,7 @@ thingtype ArmorBonus {
   doomednum = 2015
   spawnstate = S_BON2
   flags = SPECIAL|COUNTITEM
+  acs_spawndata { num = 22; modes = doom }
   dehackednum = 47
 }
 
@@ -772,6 +807,7 @@ thingtype DoomBlueCard {
   doomednum = 5
   spawnstate = S_BKEY
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 85; modes = doom }
   dehackednum = 48
 }
 
@@ -779,6 +815,7 @@ thingtype DoomRedCard {
   doomednum = 13
   spawnstate = S_RKEY
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 86; modes = doom }
   dehackednum = 49
 }
 
@@ -786,6 +823,7 @@ thingtype DoomYellowCard {
   doomednum = 6
   spawnstate = S_YKEY
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 87; modes = doom }
   dehackednum = 50
 }
 
@@ -793,6 +831,7 @@ thingtype DoomYellowSkull {
   doomednum = 39
   spawnstate = S_YSKULL
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 88; modes = doom }
   dehackednum = 51
 }
 
@@ -800,6 +839,7 @@ thingtype DoomRedSkull {
   doomednum = 38
   spawnstate = S_RSKULL
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 89; modes = doom }
   dehackednum = 52
 }
 
@@ -807,6 +847,7 @@ thingtype DoomBlueSkull {
   doomednum = 40
   spawnstate = S_BSKULL
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 90; modes = doom }
   dehackednum = 53
 }
 
@@ -814,6 +855,7 @@ thingtype StimPack {
   doomednum = 2011
   spawnstate = S_STIM
   flags = SPECIAL
+  acs_spawndata { num = 23; modes = doom }
   dehackednum = 54
 }
 
@@ -821,6 +863,7 @@ thingtype MediKit {
   doomednum = 2012
   spawnstate = S_MEDI
   flags = SPECIAL
+  acs_spawndata { num = 24; modes = doom }
   dehackednum = 55
 }
 
@@ -828,6 +871,7 @@ thingtype SoulSphere {
   doomednum = 2013
   spawnstate = S_SOUL
   flags = SPECIAL|COUNTITEM|TRANSLUCENT
+  acs_spawndata { num = 25; modes = doom }
   dehackednum = 56
 }
 
@@ -835,6 +879,7 @@ thingtype InvulnSphere {
   doomednum = 2022
   spawnstate = S_PINV
   cflags = SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
+  acs_spawndata { num = 133; modes = doom }
   dehackednum = 57
 }
 
@@ -842,6 +887,7 @@ thingtype BerzerkBox {
   doomednum = 2023
   spawnstate = S_PSTR
   flags = SPECIAL|COUNTITEM
+  acs_spawndata { num = 134; modes = doom }
   dehackednum = 58
 }
 
@@ -849,6 +895,7 @@ thingtype InvisiSphere {
   doomednum = 2024
   spawnstate = S_PINS
   cflags = SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
+  acs_spawndata { num = 135; modes = doom }
   dehackednum = 59
 }
 
@@ -856,6 +903,7 @@ thingtype RadiationSuit {
   doomednum = 2025
   spawnstate = S_SUIT
   flags = SPECIAL
+  acs_spawndata { num = 136; modes = doom }
   dehackednum = 60
 }
 
@@ -863,6 +911,7 @@ thingtype ComputerMap {
   doomednum = 2026
   spawnstate = S_PMAP
   flags = SPECIAL|COUNTITEM
+  acs_spawndata { num = 137; modes = doom }
   dehackednum = 61
 }
 
@@ -870,6 +919,7 @@ thingtype LightAmpVisor {
   doomednum = 2045
   spawnstate = S_PVIS
   flags = SPECIAL|COUNTITEM
+  acs_spawndata { num = 138; modes = doom }
   dehackednum = 62
 }
 
@@ -877,6 +927,7 @@ thingtype MegaSphere {
   doomednum = 83
   spawnstate = S_MEGA
   flags = SPECIAL|COUNTITEM|TRANSLUCENT
+  acs_spawndata { num = 132; modes = doom }
   dehackednum = 63
 }
 
@@ -884,6 +935,7 @@ thingtype AmmoClip {
   doomednum = 2007
   spawnstate = S_CLIP
   flags = SPECIAL
+  acs_spawndata { num = 11; modes = doom }
   dehackednum = 64
 }
 
@@ -891,6 +943,7 @@ thingtype AmmoBulletBox {
   doomednum = 2048
   spawnstate = S_AMMO
   flags = SPECIAL
+  acs_spawndata { num = 139; modes = doom }
   dehackednum = 65
 }
 
@@ -898,6 +951,7 @@ thingtype AmmoRocket {
   doomednum = 2010
   spawnstate = S_ROCK
   flags = SPECIAL
+  acs_spawndata { num = 140; modes = doom }
   dehackednum = 66
 }
 
@@ -905,6 +959,7 @@ thingtype AmmoRocketBox {
   doomednum = 2046
   spawnstate = S_BROK
   flags = SPECIAL
+  acs_spawndata { num = 141; modes = doom }
   dehackednum = 67
 }
 
@@ -912,6 +967,7 @@ thingtype AmmoCell {
   doomednum = 2047
   spawnstate = S_CELL
   flags = SPECIAL
+  acs_spawndata { num = 75; modes = doom }
   dehackednum = 68
 }
 
@@ -919,6 +975,7 @@ thingtype AmmoCellPack {
   doomednum = 17
   spawnstate = S_CELP
   flags = SPECIAL
+  acs_spawndata { num = 142; modes = doom }
   dehackednum = 69
 }
 
@@ -926,6 +983,7 @@ thingtype AmmoShells {
   doomednum = 2008
   spawnstate = S_SHEL
   flags = SPECIAL
+  acs_spawndata { num = 12; modes = doom }
   dehackednum = 70
 }
 
@@ -933,6 +991,7 @@ thingtype AmmoShellBox {
   doomednum = 2049
   spawnstate = S_SBOX
   flags = SPECIAL
+  acs_spawndata { num = 143; modes = doom }
   dehackednum = 71
 }
 
@@ -940,6 +999,7 @@ thingtype Backpack {
   doomednum = 8
   spawnstate = S_BPAK
   flags = SPECIAL
+  acs_spawndata { num = 144; modes = doom }
   dehackednum = 72
 }
 
@@ -947,6 +1007,7 @@ thingtype WeaponBFG {
   doomednum = 2006
   spawnstate = S_BFUG
   flags = SPECIAL
+  acs_spawndata { num = 31; modes = doom }
   dehackednum = 73
 }
 
@@ -954,6 +1015,7 @@ thingtype WeaponChaingun {
   doomednum = 2002
   spawnstate = S_MGUN
   flags = SPECIAL
+  acs_spawndata { num = 28; modes = doom }
   dehackednum = 74
 }
 
@@ -961,6 +1023,7 @@ thingtype WeaponChainsaw {
   doomednum = 2005
   spawnstate = S_CSAW
   flags = SPECIAL
+  acs_spawndata { num = 32; modes = doom }
   dehackednum = 75
 }
 
@@ -968,6 +1031,7 @@ thingtype WeaponRocketLauncher {
   doomednum = 2003
   spawnstate = S_LAUN
   flags = SPECIAL
+  acs_spawndata { num = 29; modes = doom }
   dehackednum = 76
 }
 
@@ -975,6 +1039,7 @@ thingtype WeaponPlasmaGun {
   doomednum = 2004
   spawnstate = S_PLAS
   flags = SPECIAL
+  acs_spawndata { num = 30; modes = doom }
   dehackednum = 77
 }
 
@@ -982,6 +1047,7 @@ thingtype WeaponShotgun {
   doomednum = 2001
   spawnstate = S_SHOT
   flags = SPECIAL
+  acs_spawndata { num = 27; modes = doom }
   dehackednum = 78
 }
 
@@ -989,6 +1055,7 @@ thingtype WeaponSSG {
   doomednum = 82
   spawnstate = S_SHOT2
   flags = SPECIAL
+  acs_spawndata { num = 33; modes = doom }
   dehackednum = 79
 }
 
@@ -1340,6 +1407,7 @@ thingtype HeadShishkabob {
 thingtype CrushedGibs {
   doomednum = 24
   spawnstate = S_GIBS
+  acs_spawndata { num = 146; modes = doom }
   dehackednum = 122
 }
 
@@ -1394,6 +1462,7 @@ thingtype FlamingBarrel {
   radius = 16.0
   correct_height = 46.0
   cflags = SOLID|3DDECORATION
+  acs_spawndata { num = 149; modes = doom }
   dehackednum = 128
 }
 
@@ -1455,6 +1524,7 @@ thingtype PoolBloodAndGuts {
   doomednum = 79
   spawnstate = S_COLONGIBS
   flags = NOBLOCKMAP
+  acs_spawndata { num = 147; modes = doom }
   dehackednum = 135
 }
 
@@ -1462,6 +1532,7 @@ thingtype PoolBlood {
   doomednum = 80
   spawnstate = S_SMALLPOOL
   flags = NOBLOCKMAP
+  acs_spawndata { num = 148; modes = doom }
   dehackednum = 136
 }
 
@@ -1469,6 +1540,7 @@ thingtype PoolBrain {
   doomednum = 81
   spawnstate = S_BRAINSTEM
   flags = NOBLOCKMAP
+  acs_spawndata { num = 150; modes = doom }
   dehackednum = 137
 }
 
@@ -1720,6 +1792,7 @@ thingtype CrystalVial {
   doomednum = 7081
   spawnstate = S_ITEM_PTN1_1
   cflags = SPECIAL|FLOATBOB
+  acs_spawndata { num = 23; modes = heretic }
   dehackednum = 300
 }
 
@@ -1727,6 +1800,7 @@ thingtype SilverShield {
   doomednum = 7085
   spawnstate = S_ITEM_SHLD1
   cflags = SPECIAL|FLOATBOB
+  acs_spawndata { num = 68; modes = heretic }
   dehackednum = 301
 }
 
@@ -1734,6 +1808,7 @@ thingtype EnchantedShield {
   doomednum = 7031
   spawnstate = S_ITEM_SHD2_1
   cflags = SPECIAL|FLOATBOB
+  acs_spawndata { num = 69; modes = heretic }
   dehackednum = 302
 }
 
@@ -1741,6 +1816,7 @@ thingtype BagOfHolding {
   doomednum = 7008
   spawnstate = S_ITEM_BAGH1
   cflags = SPECIAL|COUNTITEM|FLOATBOB
+  acs_spawndata { num = 136; modes = heretic }
   dehackednum = 303
 }
 
@@ -1748,6 +1824,7 @@ thingtype MapScroll {
   doomednum = 7035
   spawnstate = S_ITEM_SPMP1
   cflags = SPECIAL|COUNTITEM|FLOATBOB
+  acs_spawndata { num = 137; modes = heretic }
   dehackednum = 304
 }
 
@@ -1765,6 +1842,7 @@ thingtype Pod {
   flags2 = NORESPAWN|PUSHABLE
   flags3 = SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER
   mod = 18
+  acs_spawndata { num = 125; modes = heretic }
   dehackednum = 305
 }
 
@@ -1783,6 +1861,7 @@ thingtype PodGenerator {
   doomednum = 7043
   spawnstate = S_PODGENERATOR
   flags = NOSECTOR|NOBLOCKMAP
+  acs_spawndata { num = 126; modes = heretic }
   dehackednum = 307
 }
 
@@ -1996,12 +2075,14 @@ thingtype TeleGlitterGenBlue {
 thingtype TeleGlitterRed {
   spawnstate = S_TELEGLITTER1_1
   flags = NOBLOCKMAP|NOGRAVITY|MISSILE
+  acs_spawndata { num = 166; modes = heretic }
   dehackednum = 332
 }
 
 thingtype TeleGlitterBlue {
   spawnstate = S_TELEGLITTER2_1
   flags = NOBLOCKMAP|NOGRAVITY|MISSILE
+  acs_spawndata { num = 167; modes = heretic }
   dehackednum = 333
 }
 
@@ -2036,6 +2117,7 @@ thingtype Golem {
   mass = 75
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 4; modes = heretic }
   dehackednum = 336
 }
 
@@ -2059,6 +2141,7 @@ thingtype NitroGolem {
   mass = 75
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 2; modes = heretic }
   dehackednum = 337
 }
 
@@ -2081,6 +2164,7 @@ thingtype GolemGhost {
   mass = 75
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 8; modes = heretic }
   dehackednum = 338
 }
 
@@ -2104,6 +2188,7 @@ thingtype NitroGolemGhost {
   mass = 75
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 9; modes = heretic }
   dehackednum = 339
 }
 
@@ -2122,6 +2207,7 @@ thingtype GolemShot {
   height = 14.0
   damage = 4
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SEEKERMISSILE
+  acs_spawndata { num = 131; modes = heretic }
   dehackednum = 341
 }
 
@@ -2145,6 +2231,7 @@ thingtype Weredragon {
   mass = 200
   activesound = ht_bstact
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 3; modes = heretic }
   dehackednum = 342
 }
 
@@ -2157,6 +2244,7 @@ thingtype WeredragonShot {
   height = 8.0
   damage = 4
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST
+  acs_spawndata { num = 120; modes = heretic }
   dehackednum = 343
 }
 
@@ -2189,6 +2277,7 @@ thingtype Ophidian {
   height = 70.0
   activesound = ht_snkact
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 132; modes = heretic }
   dehackednum = 345
 }
 
@@ -2201,6 +2290,7 @@ thingtype OphidianShotA {
   height = 8.0
   damage = 1
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST
+  acs_spawndata { num = 138; modes = heretic }
   dehackednum = 346
 }
 
@@ -2213,6 +2303,7 @@ thingtype OphidianShotB {
   height = 8.0
   damage = 3
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  acs_spawndata { num = 139; modes = heretic }
   dehackednum = 347
 }
 
@@ -2234,6 +2325,7 @@ thingtype SabreClaw {
   mass = 75
   activesound = ht_clkact
   cflags = SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 1; modes = heretic }
   dehackednum = 348
 }
 
@@ -2256,6 +2348,7 @@ thingtype Disciple {
   activesound = ht_wizact
   flags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL
   flags3 = ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  acs_spawndata { num = 19; modes = heretic }
   dehackednum = 349
 }
 
@@ -2268,6 +2361,7 @@ thingtype DiscipleShot {
   height = 6.0
   damage = 3
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  acs_spawndata { num = 140; modes = heretic }
   dehackednum = 350
 }
 
@@ -2291,6 +2385,7 @@ thingtype DeathKnight {
   mass = 150
   activesound = ht_kgtsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 6; modes = heretic }
   dehackednum = 351
 }
 
@@ -2314,6 +2409,7 @@ thingtype DeathKnightGhost {
   mass = 150
   activesound = ht_kgtsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 129; modes = heretic }
   dehackednum = 352
 }
 
@@ -2329,6 +2425,7 @@ thingtype KnightAxe {
   flags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE
   flags2 = NOCROSS
   flags3 = THRUGHOST|WINDTHRUST
+  acs_spawndata { num = 127; modes = heretic }
   dehackednum = 353
 }
 
@@ -2342,6 +2439,7 @@ thingtype KnightAxeRed {
   height = 8.0
   damage = 7
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|THRUGHOST
+  acs_spawndata { num = 128; modes = heretic }
   dehackednum = 354
 }
 
@@ -2365,6 +2463,7 @@ thingtype SerpentRiderDsparil {
   activesound = ht_sbtact
   cflags = SOLID|SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
   nukespecial = SorcNukeSpec
+  acs_spawndata { num = 142; modes = heretic }
   dehackednum = 355
 }
 
@@ -2377,6 +2476,7 @@ thingtype SRDsparilShot1 {
   height = 10.0
   damage = 10
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE
+  acs_spawndata { num = 144; modes = heretic }
   dehackednum = 356
 }
 
@@ -2399,6 +2499,7 @@ thingtype Dsparil {
   flags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
   flags2 = E3M8BOSS|BOSS|FOOTCLIP
   flags3 = LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 143; modes = heretic }
   dehackednum = 357
 }
 
@@ -2411,6 +2512,7 @@ thingtype DsparilShot1 {
   height = 6.0
   damage = 1
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  acs_spawndata { num = 146; modes = heretic }
   dehackednum = 358
 }
 
@@ -2428,6 +2530,7 @@ thingtype DsparilShot2 {
   height = 6.0
   damage = 10
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  acs_spawndata { num = 145; modes = heretic }
   dehackednum = 360
 }
 
@@ -2441,6 +2544,7 @@ thingtype HereticGreenKey {
   doomednum = 7073
   spawnstate = S_AKYY1
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 86; modes = heretic }
   dehackednum = 362
 }
 
@@ -2448,6 +2552,7 @@ thingtype HereticBlueKey {
   doomednum = 7079
   spawnstate = S_BKYY1
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 85; modes = heretic }
   dehackednum = 363
 }
 
@@ -2455,6 +2560,7 @@ thingtype HereticYellowKey {
   doomednum = 7080
   spawnstate = S_CKYY1
   flags = SPECIAL|NOTDMATCH
+  acs_spawndata { num = 87; modes = heretic }
   dehackednum = 364
 }
 
@@ -2462,6 +2568,7 @@ thingtype HereticAmbienceWind {
   doomednum = 7042
   spawnstate = S_SND_WIND
   cflags = DONTDRAW
+  acs_spawndata { num = 110; modes = heretic }
   dehackednum = 365
 }
 
@@ -2469,6 +2576,7 @@ thingtype HereticAmbienceWater {
   doomednum = 7041
   spawnstate = S_SND_WATERFALL
   cflags = DONTDRAW
+  acs_spawndata { num = 111; modes = heretic }
   dehackednum = 366
 }
 
@@ -2485,6 +2593,7 @@ thingtype HereticVolcano {
   radius = 12.0
   height = 20.0
   flags = SOLID
+  acs_spawndata { num = 150; modes = heretic }
   dehackednum = 368
 }
 
@@ -2497,6 +2606,7 @@ thingtype VolcanoBall {
   height = 8.0
   damage = 2
   cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH
+  acs_spawndata { num = 123; modes = heretic }
   dehackednum = 369
 }
 
@@ -2508,6 +2618,7 @@ thingtype VolcanoBallSmall {
   height = 6.0
   damage = 1
   cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH
+  acs_spawndata { num = 124; modes = heretic }
   dehackednum = 370
 }
 
@@ -2535,6 +2646,7 @@ thingtype Maulotaur {
   flags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
   flags2 = BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE
   flags3 = INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 114; modes = heretic } // note: different from zdoom
   dehackednum = 371
 }
 
@@ -2546,7 +2658,8 @@ thingtype MaulotaurShot {
   radius = 10.0
   height = 6.0
   damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE  
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE
+  acs_spawndata { num = 115; modes = heretic } // note: different from zdoom  
   dehackednum = 372
 }
 
@@ -2560,6 +2673,7 @@ thingtype MaulotaurFloorFire {
   height = 12.0
   damage = 4
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FLOORMISSILE|FIREDAMAGE|NOSPLASH
+  acs_spawndata { num = 116; modes = heretic } // note: different from zdoom
   dehackednum = 373
 }
 
@@ -2570,6 +2684,7 @@ thingtype MaulotaurFloorFlame {
   radius = 8.0
   damage = 4
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH
+  acs_spawndata { num = 117; modes = heretic } // note : different from zdoom
   dehackednum = 374
 }
 
@@ -2601,6 +2716,7 @@ thingtype IronLich {
   flags = SOLID|SHOOTABLE|COUNTKILL|NOBLOOD
   flags2 = E1M8BOSS|E4M8BOSS|NOSPLASH
   flags3 = SPACMONSTER|PASSMOBJ
+  acs_spawndata { num = 20; modes = heretic }
   dehackednum = 376
 }
 
@@ -2613,6 +2729,7 @@ thingtype IronLichShot1 {
   height = 6.0
   damage = 1
   cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST
+  acs_spawndata { num = 164; modes = heretic }
   dehackednum = 377
 }
 
@@ -2649,6 +2766,7 @@ thingtype LichWhirlwind {
   cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|SEEKERMISSILE|EXPLOCOUNT
   translucency = 26624
   dmgspecial = Whirlwind
+  acs_spawndata { num = 165; modes = heretic }
   dehackednum = 380
 }
 
@@ -2657,6 +2775,7 @@ thingtype HAmmoWandWimpy {
   spawnstate = S_AMG1
   spawnhealth = 10
   flags = SPECIAL
+  acs_spawndata { num = 11; modes = heretic }
   dehackednum = 381
 }
 
@@ -2665,6 +2784,7 @@ thingtype HAmmoWandHefty {
   spawnstate = S_AMG2_1
   spawnhealth = 50
   flags = SPECIAL
+  acs_spawndata { num = 12; modes = heretic }
   dehackednum = 382
 }
 
@@ -2673,6 +2793,7 @@ thingtype HAmmoMaceWimpy {
   spawnstate = S_AMM1
   spawnhealth = 20
   flags = SPECIAL
+  acs_spawndata { num = 35; modes = heretic }
   dehackednum = 383
 }
 
@@ -2681,6 +2802,7 @@ thingtype HAmmoMaceHefty {
   spawnstate = S_AMM2
   spawnhealth = 100
   flags = SPECIAL
+  acs_spawndata { num = 36; modes = heretic }
   dehackednum = 384
 }
 
@@ -2689,6 +2811,7 @@ thingtype HAmmoCBowWimpy {
   spawnstate = S_AMC1
   spawnhealth = 5
   flags = SPECIAL
+  acs_spawndata { num = 33; modes = heretic }
   dehackednum = 385
 }
 
@@ -2697,6 +2820,7 @@ thingtype HAmmoCBowHefty {
   spawnstate = S_AMC2_1
   spawnhealth = 20
   flags = SPECIAL
+  acs_spawndata { num = 34; modes = heretic }
   dehackednum = 386
 }
 
@@ -2705,6 +2829,7 @@ thingtype HAmmoSkullWimpy {
   spawnstate = S_AMS1_1
   spawnhealth = 20
   flags = SPECIAL
+  acs_spawndata { num = 158; modes = heretic }
   dehackednum = 387
 }
 
@@ -2713,6 +2838,7 @@ thingtype HAmmoSkullHefty {
   spawnstate = S_AMS2_1
   spawnhealth = 100
   flags = SPECIAL
+  acs_spawndata { num = 159; modes = heretic }
   dehackednum = 388
 }
 
@@ -2721,6 +2847,7 @@ thingtype HAmmoPhoenixWimpy {
   spawnstate = S_AMP1_1
   spawnhealth = 1
   flags = SPECIAL
+  acs_spawndata { num = 161; modes = heretic }
   dehackednum = 389
 }
 
@@ -2729,6 +2856,7 @@ thingtype HAmmoPhoenixHefty {
   spawnstate = S_AMP2_1
   spawnhealth = 10
   flags = SPECIAL
+  acs_spawndata { num = 162; modes = heretic }
   dehackednum = 390
 }
 
@@ -2737,6 +2865,7 @@ thingtype HAmmoBlasterWimpy {
   spawnstate = S_AMB1_1
   spawnhealth = 10
   flags = SPECIAL
+  acs_spawndata { num = 37; modes = heretic }
   dehackednum = 391
 }
 
@@ -2745,6 +2874,7 @@ thingtype HAmmoBlasterHefty {
   spawnstate = S_AMB2_1
   spawnhealth = 25
   flags = SPECIAL
+  acs_spawndata { num = 38; modes = heretic }
   dehackednum = 392
 }
 
@@ -2772,6 +2902,7 @@ thingtype HereticImp {
   flags = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL
   flags2 = NOSTRAFE|SPAWNFLOAT|RANGEHALF
   flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  acs_spawndata { num = 5; modes = heretic }
   dehackednum = 393
 }
 
@@ -2798,6 +2929,7 @@ thingtype HereticImpLeader {
   flags  = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL
   flags2 = SPAWNFLOAT
   flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  acs_spawndata { num = 7; modes = heretic }
   dehackednum = 394
 }
 
@@ -2820,6 +2952,7 @@ thingtype HereticImpShot {
   height = 8.0
   damage = 1
   cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS
+  acs_spawndata { num = 10; modes = heretic }
   dehackednum = 397
 }
 

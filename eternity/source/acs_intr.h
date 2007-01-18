@@ -37,6 +37,20 @@
 
 #define ACS_STACK_LEN 128 
 #define ACS_NUMLOCALS 10
+#define ACS_NUM_THINGTYPES 256
+
+//
+// Misc. Enums
+//
+
+// ACS game mode flags for EDF thingtypes
+
+enum
+{
+   ACS_MODE_DOOM = 0x00000001,
+   ACS_MODE_HTIC = 0x00000002,
+   ACS_MODE_ALL  = ACS_MODE_DOOM | ACS_MODE_HTIC,
+}; 
 
 //
 // Structures
@@ -118,6 +132,10 @@ boolean ACS_StartScript(int scrnum, int map, long *args, mobj_t *mo,
                         line_t *line, int side, acsthinker_t **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
 boolean ACS_SuspendScript(int scrnum, int mapnum);
+
+// extern vars.
+
+extern int ACS_thingtypes[ACS_NUM_THINGTYPES];
 
 #endif
 
