@@ -320,8 +320,7 @@ static void R_RenderSegLoop(void)
          column.step = (int)(basescale * FRACUNIT);
          column.x = i;
 
-         texx = segclip.len < 0 ? (int)segclip.toffsetx :
-                (int)(((segclip.len) * basescale) + segclip.toffsetx);
+         texx = (int)(((segclip.len) * basescale) + segclip.toffsetx);
 
          if(ds_p->maskedtexturecol)
             ds_p->maskedtexturecol[i] = texx;
@@ -439,8 +438,7 @@ static void R_StoreTextureColumns(void)
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       basescale = 1.0f / (segclip.dist * view.yfoc);
-      texx = segclip.len < 0 ? (int)segclip.toffsetx :
-             (int)(((segclip.len) * basescale) + segclip.toffsetx);
+      texx = (int)(((segclip.len) * basescale) + segclip.toffsetx);
 
       if(ds_p->maskedtexturecol)
          ds_p->maskedtexturecol[i] = texx;
@@ -471,8 +469,6 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-#define DISTSTEPLIMIT 0.00005f
-
 void R_StoreWallRange(const int start, const int stop)
 {
    float clipx1;
@@ -487,8 +483,7 @@ void R_StoreWallRange(const int start, const int stop)
 
    memcpy(&segclip, &seg, sizeof(seg));
 
-   clipx1 = (float)fabs(segclip.diststep) > DISTSTEPLIMIT ? 
-            (float)(start - segclip.x1) : (float)(start - segclip.x1frac);
+   clipx1 = (float)(start - segclip.x1frac);
 
    clipx2 = (float)(segclip.x2frac - stop);
 
@@ -761,8 +756,7 @@ boolean R_ClipSegToPortal()
          // First visible column has been found, so set seg to start here.
          if(i != seg.x1)
          {
-            clipx = (float)fabs(segclip.diststep) > DISTSTEPLIMIT ? 
-                    (float)(i - seg.x1) : (float)(i - seg.x1frac);
+            clipx = (float)(i - seg.x1frac);
 
             seg.dist += seg.diststep * clipx;
             seg.len += seg.lenstep * clipx;
@@ -826,8 +820,7 @@ boolean R_ClipSegToPortal()
          if(i != seg.x1)
          {
             // First visible column has been found, so set seg to start here.
-            clipx = (float)fabs(segclip.diststep) > DISTSTEPLIMIT ? 
-                    (float)(i - seg.x1) : (float)(i - seg.x1frac);
+            clipx = (float)(i - seg.x1frac);
 
             seg.dist += seg.diststep * clipx;
             seg.len += seg.lenstep * clipx;

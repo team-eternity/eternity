@@ -651,8 +651,11 @@ static void R_AddLine(seg_t *line)
    // SoM: Handle the case where a wall is only occupying a single post but still needs to be 
    // rendered to keep groups of single post walls from not being rendered and causing slime 
    // trails.
-   floorx1 = (float)floor(x1 + 0.5f);
-   floorx2 = (float)floor(x2 - 0.5f);
+
+   // SoM: changed from simple 0.5 rounding. This actually fixes many accuracy problems the 
+   // line rasterizing and texturing code was having.
+   floorx1 = (float)floor(x1 + 0.999f);
+   floorx2 = (float)floor(x2 - 0.001f);
 
    // backface rejection
    if(floorx2 < floorx1)
@@ -975,9 +978,7 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    if(sx1 > 0) sx1--;
    if(sx2 < viewwidth - 1) sx2++;
 
-   // Does not cross a pixel.
-   if(sx1 == sx2)
-      return false;
+   // SoM: Removed the "does not cross a pixel" test
 
    start = solidsegs;
    while(start->last < sx2)
