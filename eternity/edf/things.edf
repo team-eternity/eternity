@@ -1386,6 +1386,7 @@ thingtype DeadSergeant {
 thingtype DeadDoomPlayerGibs {
   doomednum = 10
   spawnstate = S_PLAY_XDIE9
+  acs_spawndata { num = 145; modes = doom }
   dehackednum = 119
 }
 

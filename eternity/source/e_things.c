@@ -31,6 +31,7 @@
 #include "acs_intr.h"
 #include "i_system.h"
 #include "w_wad.h"
+#include "d_gi.h"
 #include "d_io.h"
 #include "d_dehtbl.h"
 #include "d_mod.h"
