@@ -249,7 +249,6 @@ void R_DrawSpanCB_8_512(void)
 
 
 
-#if 0
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
 static void R_DrawSpan_OLD(void) 
@@ -263,13 +262,13 @@ static void R_DrawSpan_OLD(void)
    
    unsigned count;
    
-   position = ((ds_xfrac<<10)&0xffff0000) | ((ds_yfrac>>6)&0xffff);
-   step = ((ds_xstep)&0xffff0000) | ((ds_ystep>>16)&0xffff);
+   position = ((span.yfrac<<10)&0xffff0000) | ((span.xfrac>>6)&0xffff);
+   step = ((span.ystep<<10)&0xffff0000) | ((span.xstep>>6)&0xffff);
    
-   source = ds_source;
-   colormap = ds_colormap;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   count = ds_x2 - ds_x1 + 1; 
+   source = span.source;
+   colormap = span.colormap;
+   dest = ylookup[span.y] + columnofs[span.x1];       
+   count = span.x2 - span.x1 + 1; 
    
    // SoM: So I went back and realized the error of ID's ways and this is even
    // faster now! This is by far the fastest way because it uses the exact same
@@ -302,96 +301,8 @@ static void R_DrawSpan_OLD(void)
    } 
 }
 
-static void R_DrawSpan_ORIGINAL(void) 
-{ 
-   register unsigned position;
-   unsigned step;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-   unsigned spot; 
-   unsigned xtemp;
-   unsigned ytemp;
-   
-   position = ((ds_xfrac<<10)&0xffff0000) | ((ds_yfrac>>6)&0xffff);
-   step = ((ds_xstep)&0xffff0000) | ((ds_ystep>>16)&0xffff);
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   count = ds_x2 - ds_x1 + 1; 
-   
-   while (count >= 4)
-   { 
-      ytemp = position>>4;
-      ytemp = ytemp & 4032;
-      xtemp = position>>26;
-      spot = xtemp | ytemp;
-      position += step;
-      dest[0] = colormap[source[spot]]; 
-      
-      ytemp = position>>4;
-      ytemp = ytemp & 4032;
-      xtemp = position>>26;
-      spot = xtemp | ytemp;
-      position += step;
-      dest[1] = colormap[source[spot]];
-      
-      ytemp = position>>4;
-      ytemp = ytemp & 4032;
-      xtemp = position>>26;
-      spot = xtemp | ytemp;
-      position += step;
-      dest[2] = colormap[source[spot]];
-      
-      ytemp = position>>4;
-      ytemp = ytemp & 4032;
-      xtemp = position>>26;
-      spot = xtemp | ytemp;
-      position += step;
-      dest[3] = colormap[source[spot]]; 
-      
-      dest += 4;
-      count -= 4;
-   } 
-   
-   while (count)
-   { 
-      ytemp = position>>4;
-      ytemp = ytemp & 4032;
-      xtemp = position>>26;
-      spot = xtemp | ytemp;
-      position += step;
-      *dest++ = colormap[source[spot]]; 
-      count--;
-   } 
-}
-#else
-static void R_DrawSpan_OLD(void) 
-{ 
-}
 
-static void R_DrawSpan_ORIGINAL(void)
-{
-}
-#endif // 0
-
-// olpspandrawer: uses the old low-precision span drawing routine for
-// 64x64 flats. All other sizes use the normal routines.
-spandrawer_t r_olpspandrawer =
-{
-   R_DrawSpan_ORIGINAL,
-   R_DrawSpanCB_8_128,
-   R_DrawSpanCB_8_256,
-   R_DrawSpanCB_8_512,
-   65536.0f,
-   33554432.0f,
-   16777216.0f,
-   8388608.0f
-};
+// SoM: Removed the original span drawing code.
 
 // lpspandrawer: uses the optimized but low-precision span drawing
 // routine for 64x64 flats. Same as above for others.

@@ -80,7 +80,6 @@ typedef struct spandrawer_s
    float  fixedunit64, fixedunit128, fixedunit256, fixedunit512;
 } spandrawer_t;
 
-extern spandrawer_t r_olpspandrawer; // old low-precision
 extern spandrawer_t r_lpspandrawer;  // low-precision
 extern spandrawer_t r_spandrawer;    // normal
 extern spandrawer_t r_lowspandrawer; // low-detail

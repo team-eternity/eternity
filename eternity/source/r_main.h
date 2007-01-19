@@ -134,7 +134,7 @@ extern int c_detailshift; // cvar for detail mode
 
 // haleyjd 09/04/06
 #define NUMCOLUMNENGINES 2
-#define NUMSPANENGINES 3
+#define NUMSPANENGINES 2
 extern int r_column_engine_num;
 extern int r_span_engine_num;
 extern columndrawer_t *r_column_engine;

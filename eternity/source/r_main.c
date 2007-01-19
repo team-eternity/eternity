@@ -157,7 +157,6 @@ static spandrawer_t *r_span_engines[NUMSPANENGINES] =
 {
    &r_spandrawer,    // normal engine
    &r_lpspandrawer,  // low-precision optimized
-   &r_olpspandrawer, // old low-precision (unoptimized)
 };
 
 //
@@ -849,7 +848,7 @@ void R_ResetTrans(void)
 static char *handedstr[] = { "right", "left" };
 static char *ptranstr[]  = { "none", "smooth", "general" };
 static char *coleng[]    = { "normal", "quad" };
-static char *spaneng[]   = { "highprecision", "lowprecision", "old" };
+static char *spaneng[]   = { "highprecision", "lowprecision" }; // SoM: Removed old.
 static char *detailstr[] = { "high", "low" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
