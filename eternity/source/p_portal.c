@@ -26,8 +26,6 @@
 //-----------------------------------------------------------------------------
 
 
-#ifdef R_PORTALS
-
 #include "c_io.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -187,18 +185,25 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 {
    if(!linktable)
    {
-      I_Error("P_GetLinkOffset called with no linktable allocated.\n");
+#ifdef RANGECHECK
+      doom_printf("P_GetLinkOffset called with no linktable allocated.\n");
+#endif
       return NULL;
    }
 
    if(startgroup < 0 || startgroup >= groupcount)
    {
-      I_Error("P_GetLinkOffset called with start groupid out of bounds.\n");
+#ifdef RANGECHECK
+      doom_printf("P_GetLinkOffset called with start groupid out of bounds.\n");
+#endif
       return NULL;
    }
+
    if(targetgroup < 0 || targetgroup >= groupcount)
    {
-      I_Error("P_GetLinkOffset called with target groupid out of bounds.\n");
+#ifdef RANGECHECK
+      doom_printf("P_GetLinkOffset called with target groupid out of bounds.\n");
+#endif
       return NULL;
    }
 
@@ -472,7 +477,6 @@ void P_LinkRejectTable(void)
    } // i
 }
 
-#endif
 #endif
 
 // EOF

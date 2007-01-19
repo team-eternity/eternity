@@ -41,10 +41,9 @@ extern unsigned long maxdrawsegs;
 
 extern drawseg_t *ds_p;
 
-#ifdef R_PORTALS
 boolean R_SetupPortalClipsegs(float *top, float *bottom);
 boolean R_ClipInitialSegRange(void);
-#endif
+
 void R_ClearClipSegs(void);
 void R_ClearDrawSegs(void);
 void R_RenderBSPNode(int bspnum);

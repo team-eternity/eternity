@@ -36,13 +36,9 @@
 
 extern float *lastopening;
 
-#ifdef R_PORTALS
 // SoM 12/8/03
 extern float *floorclip, *ceilingclip;
 extern float floorcliparray[], ceilingcliparray[];
-#else
-extern float floorclip[], ceilingclip[];
-#endif
 
 extern fixed_t *yslope;
 extern fixed_t origyslope[], distscale[];

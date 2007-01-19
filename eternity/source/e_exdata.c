@@ -522,13 +522,11 @@ static struct exlinespec
    { 341, "Stairs_BuildDownDoom" },
    { 342, "Stairs_BuildUpDoomSync" },
    { 343, "Stairs_BuildDownDoomSync" },
-#ifdef R_PORTALS
    // SoM: two-way portals
    { 344, "Portal_TwowayCeiling" },
    { 345, "Portal_TwowayFloor" },
    { 346, "Portal_TwowayAnchorLine" },
    { 347, "Portal_TwowayAnchorLineFloor" },
-#endif
 
 #ifdef POLYOBJECTS
    { 348, "Polyobj_StartLine" },

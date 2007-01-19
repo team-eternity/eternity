@@ -75,9 +75,7 @@ void G_SetGameMapName(const char *s); // haleyjd
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 void G_CopySpeedSet(int destType, int srcType);
 
-#ifdef R_PORTALS
 void R_InitPortals();
-#endif
 
 // killough 1/18/98: Doom-style printf;   killough 4/25/98: add gcc attributes
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));

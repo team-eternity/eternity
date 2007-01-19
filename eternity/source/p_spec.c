@@ -115,7 +115,6 @@ extern int allow_pushers;
 extern int variable_friction;         // phares 3/20/98
 
 // haleyjd 01/24/04: portals
-#ifdef R_PORTALS
 typedef enum
 {
    portal_plane,
@@ -136,7 +135,6 @@ typedef enum
 } portal_effect;
 
 static void P_SpawnPortal(line_t *, portal_type, portal_effect);
-#endif
 
 //
 // P_InitPicAnims
@@ -2733,7 +2731,6 @@ void P_SpawnSpecials(void)
          P_SpawnHereticWind(&lines[i]);
          break;
 
-#ifdef R_PORTALS
       // SoM 12/10/03: added skybox/portal specials
       // haleyjd 01/24/04: functionalized code to reduce footprint
       case 283:
@@ -2760,7 +2757,6 @@ void P_SpawnSpecials(void)
       case 345:
          P_SpawnPortal(&lines[i], portal_twoway, lines[i].special - 344);
          break;
-#endif
 #ifdef R_LINKEDPORTALS
       case 358:
       case 359:
@@ -4224,8 +4220,6 @@ void P_ConvertHexenLineSpec(short *special, long *args)
 // Portals
 //
 
-#ifdef R_PORTALS
-
 //
 // P_SpawnPortal
 //
@@ -4417,7 +4411,6 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    }
 }
 
-#endif
 
 //
 // Small Natives

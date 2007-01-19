@@ -626,11 +626,7 @@ void G_SetGameMapName(const char *s)
 extern gamestate_t wipegamestate;
 extern gamestate_t oldgamestate;
 
-#ifdef R_LINKEDPORTALS
-extern void P_InitPortals(void);
-#elif defined R_PORTALS
 extern void R_InitPortals(void);
-#endif
 
 static void G_DoLoadLevel(void)
 {
@@ -656,11 +652,7 @@ static void G_DoLoadLevel(void)
    S_StopLoopedSounds(); // haleyjd 10/19/06
    R_ClearParticles();
 
-#ifdef R_LINKEDPORTALS
-   P_InitPortals();
-#elif defined R_PORTALS
    R_InitPortals();
-#endif
 
    P_SetupLevel(gamemapname, 0, gameskill);
 

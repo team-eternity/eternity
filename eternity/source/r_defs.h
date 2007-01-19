@@ -49,12 +49,10 @@ typedef struct patch_s patch_t;
 
 // SoM: I had to move this for linked portals.
 typedef struct sector_s sector_t;
-#ifdef R_PORTALS
 // Portals
 #include "r_portal.h"
 #ifdef R_LINKEDPORTALS
 #include "p_portal.h"
-#endif
 #endif
 
 #include "p_partcl.h"
@@ -192,9 +190,9 @@ struct sector_s
    int c_numsectors;
    int *c_attsectors;
 
-#ifdef R_PORTALS
    rportal_t *c_portal;
    rportal_t *f_portal;
+#ifdef R_LINKEDPORTALS
    int groupid;
 #endif
 
@@ -266,10 +264,9 @@ typedef struct line_s
    int tranlump;          // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag; // killough 4/17/98: improves searches for tags.
 
-#ifdef R_PORTALS
    // SoM 12/10/03: wall portals
    rportal_t *portal;
-#endif
+
    // haleyjd 02/26/05: ExtraData fields
    long extflags;         // activation flags for param specials
    long args[5];          // argument values for param specials
@@ -396,9 +393,8 @@ typedef struct drawseg_s
   float *sprtopclip, *sprbottomclip;
   // SoM: this still needs to be int
   int   *maskedtexturecol;
-#ifdef R_PORTALS
+
   fixed_t viewx, viewy, viewz;
-#endif
 } drawseg_t;
 
 //
@@ -524,9 +520,7 @@ typedef struct visplane
 
    unsigned int   max_width;
 
-#ifdef R_PORTALS
    fixed_t viewx, viewy, viewz;
-#endif
 
    // SoM: Cardboard optimization
    float xoffsf, yoffsf, heightf;

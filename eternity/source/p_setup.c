@@ -330,10 +330,9 @@ void P_LoadSectors(int lump)
       ss->c_numsectors = ss->c_numsectors = 0;
       ss->c_attsectors = ss->f_attsectors = NULL;
 
-#ifdef R_PORTALS
+      // SoM: init portals
       ss->c_portal = ss->f_portal = NULL;
       ss->groupid = R_NOGROUP;
-#endif
       ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
 
       // haleyjd 09/24/06: sound sequences -- set default

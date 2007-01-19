@@ -2341,7 +2341,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                if(sidesector->floorpic == skyflatnum ||
                   sidesector->floorpic == sky2flatnum) 
                   return false;
-#ifdef R_PORTALS
+               // SoM: Check here for portals
                if(sidesector->f_portal)
                {
 #ifdef R_LINKEDPORTALS
@@ -2355,7 +2355,6 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 #endif
                   return false;
                }
-#endif
                if(demo_version < 333)
                {
                   zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
@@ -2378,7 +2377,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                if(sidesector->ceilingpic == skyflatnum ||
                   sidesector->ceilingpic == sky2flatnum) // SoM
                   return false;
-#ifdef R_PORTALS
+               // SoM: Check here for portals
                if(sidesector->c_portal)
                {
 #ifdef R_LINKEDPORTALS
@@ -2392,7 +2391,6 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 #endif
                   return false;
                }
-#endif
                if(demo_version < 333)
                {
                   zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
@@ -2434,10 +2432,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
       if(li->frontsector->ceilingpic == skyflatnum ||
          li->frontsector->ceilingpic == sky2flatnum
-#ifdef R_PORTALS
-         || li->frontsector->c_portal
-#endif
-         )
+         || li->frontsector->c_portal)
       {
          // don't shoot the sky!
          // don't shoot ceiling portals either
@@ -2457,11 +2452,9 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          }
       }
       
-#ifdef R_PORTALS
       // don't shoot portal lines
       if(!hitplane && li->portal)
          return false;
-#endif
       
       // Spawn bullet puffs.
       

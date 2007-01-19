@@ -84,14 +84,10 @@ float openings[MAXOPENINGS], *lastopening;
 //  floorclip starts out SCREENHEIGHT
 //  ceilingclip starts out -1
 
-#ifdef R_PORTALS
 // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
 // to the clipping arrays of portals.
 float floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
 float *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
-#else
-float floorclip[MAX_SCREENWIDTH], ceilingclip[MAX_SCREENWIDTH];
-#endif
 
 // spanstart holds the start of a plane span; initialized to 0 at start
 
@@ -113,9 +109,7 @@ static fixed_t cacheddistance[MAX_SCREENHEIGHT];
 static fixed_t cachedxstep[MAX_SCREENHEIGHT];
 static fixed_t cachedystep[MAX_SCREENHEIGHT];
 static fixed_t xoffs,yoffs;    // killough 2/28/98: flat offsets
-#ifdef R_PORTALS
 static fixed_t pviewx, pviewy, pviewz;
-#endif
 
 fixed_t *yslope;
 fixed_t origyslope[MAX_SCREENHEIGHT*2];
@@ -229,10 +223,8 @@ void R_ClearPlanes(void)
 
    /* a = -1; */
 
-#ifdef R_PORTALS  
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
-#endif
 
    // opening / clipping determination
    for(i = 0; i < MAX_SCREENWIDTH; ++i)
@@ -320,11 +312,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          yoffs == check->yoffs &&
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap
-#ifdef R_PORTALS
          && viewx == check->viewx
          && viewy == check->viewy
          && viewz == check->viewz
-#endif
         )
         return check;
    }
@@ -340,7 +330,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->yoffs = yoffs;
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
-#ifdef R_PORTALS
+
    check->viewx = viewx;
    check->viewy = viewy;
    check->viewz = viewz;
@@ -348,7 +338,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->viewxf = view.x;
    check->viewyf = view.y;
    check->viewzf = view.z;
-#endif
+
    check->heightf = (float)height / 65536.0f;
    check->xoffsf = (float)xoffs / 65536.0f;
    check->yoffsf = (float)yoffs / 65536.0f;
@@ -398,7 +388,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
       new_pl->xoffs = pl->xoffs;           // killough 2/28/98
       new_pl->yoffs = pl->yoffs;
-#ifdef R_PORTALS
+
       new_pl->viewx = pl->viewx;
       new_pl->viewy = pl->viewy;
       new_pl->viewz = pl->viewz;
@@ -406,7 +396,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->viewxf = pl->viewxf;
       new_pl->viewyf = pl->viewyf;
       new_pl->viewzf = pl->viewzf;
-#endif 
+
       // SoM: copy converted stuffs too
       new_pl->heightf = pl->heightf;
       new_pl->xoffsf = pl->xoffsf;
@@ -711,14 +701,11 @@ static void do_draw_plane(visplane_t *pl)
         
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
-#ifdef R_PORTALS
+
       plane.pviewx = pl->viewxf;
       plane.pviewy = pl->viewyf;
       plane.pviewz = pl->viewzf;
       plane.height = pl->heightf - pl->viewzf;
-#else
-      plane.height = pl->heightf - view.z;
-#endif
       
       //light = (pl->lightlevel >> LIGHTSEGSHIFT) + extralight;
 

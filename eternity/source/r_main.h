@@ -32,9 +32,7 @@
 #include "r_draw.h"
 #include "r_defs.h"
 #include "p_chase.h"
-#ifdef R_PORTALS
 #include "r_portal.h"
-#endif
 
 //
 // POV related.

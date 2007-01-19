@@ -41,7 +41,6 @@ extern float *mfloorclip, *mceilingclip;
 // haleyjd 10/09/06: optional vissprite limit
 extern int r_vissprite_limit;
 
-#ifdef R_PORTALS
 // SoM 12/13/03: the stack for use with portals
 typedef struct maskedstack_s
 {
@@ -60,7 +59,6 @@ void R_PopMasked();
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(float *top, float *bottom);
-#endif
 
 void R_DrawMaskedColumn(column_t *tcolumn);
 void R_SortVisSprites(void);

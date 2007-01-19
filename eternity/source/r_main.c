@@ -777,13 +777,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // Check for new console commands.
    NetUpdate();
 
-#ifdef R_PORTALS
    R_SetMaskedSilhouette(NULL, NULL);
    R_PushMasked();
-   
    // SoM 12/9/03: render the portals.
    R_RenderPortals();
-#endif
 
    R_DrawPlanes();
    

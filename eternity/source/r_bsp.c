@@ -224,7 +224,7 @@ void R_ClearClipSegs(void)
    newend = solidsegs+2;
 }
 
-#ifdef R_PORTALS
+
 boolean R_SetupPortalClipsegs(float *top, float *bottom)
 {
    int i = 0;
@@ -318,7 +318,6 @@ boolean R_ClipInitialSegRange(void)
 
    return true;
 }
-#endif
 
 // killough 1/18/98 -- This function is used to fix the automap bug which
 // showed lines behind closed doors simply because the door had a dropoff.
@@ -543,11 +542,9 @@ static void R_AddLine(seg_t *line)
       
       // sf: coloured lighting
       && seg.backsec->heightsec == seg.frontsec->heightsec
-#ifdef R_PORTALS
       // SoM 12/10/03: PORTALS
       && seg.backsec->c_portal == seg.frontsec->c_portal
       && seg.backsec->f_portal == seg.frontsec->f_portal
-#endif
       )
       return;
       
@@ -720,9 +717,7 @@ static void R_AddLine(seg_t *line)
    seg.top = seg.frontsec->ceilingheightf - view.z;
    seg.bottom = seg.frontsec->floorheightf - view.z;
 
-#ifdef R_PORTALS
    seg.f_portalignore = seg.c_portalignore = false;
-#endif
 
    if(!seg.backsec)
    {
@@ -741,7 +736,6 @@ static void R_AddLine(seg_t *line)
       seg.clipsolid = true;
       seg.segtextured = seg.midtex ? true : false;
 
-#ifdef R_PORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
       if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
          seg.frontsec->f_portal->type != R_TWOWAY)
@@ -749,7 +743,6 @@ static void R_AddLine(seg_t *line)
       if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED && 
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
-#endif
    }
    else
    {
@@ -809,7 +802,6 @@ static void R_AddLine(seg_t *line)
          seg.frontsec->f_portal != seg.backsec->f_portal ||
          seg.frontsec->floorlightsec != seg.backsec->floorlightsec) ? true : false;
 
-#ifdef R_PORTALS
       // SoM: some portal types should be rendered even if the player is above or below the
       // ceiling or floor plane.
       // haleyjd 03/12/06: inverted predicates to simplify
@@ -826,7 +818,6 @@ static void R_AddLine(seg_t *line)
             seg.frontsec->c_portal->type != R_TWOWAY)
             seg.c_portalignore = true;
       }
-#endif
 
       seg.low = seg.backsec->floorheightf - view.z;
       if(seg.bottom < seg.low && side->bottomtexture)
@@ -876,10 +867,8 @@ static void R_AddLine(seg_t *line)
       seg.x2frac = x2;
    }
 
-   #ifdef R_PORTALS
    if(portalrender.active && !R_ClipSegToPortal())
       return;
-   #endif
 
    if(seg.clipsolid)
       R_ClipSolidWallSegment();

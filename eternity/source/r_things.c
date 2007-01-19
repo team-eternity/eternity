@@ -59,7 +59,6 @@ typedef struct {
   int bottomclip;
 } maskdraw_t;
 
-#ifdef R_PORTALS
 // top and bottom of portal silhouette
 static float portaltop[MAX_SCREENWIDTH];
 static float portalbottom[MAX_SCREENWIDTH];
@@ -96,7 +95,6 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
       memcpy(portalbottom, bottom, sizeof(float) * MAX_SCREENWIDTH);
    }
 }
-#endif
 
 //
 // Sprite rotation 0 is facing the viewer,
@@ -362,7 +360,6 @@ void R_ClearSprites(void)
    r_vissprite_count = 0; // haleyjd
 }
 
-#ifdef R_PORTALS
 // SoM 12/13/03: the masked stack
 static maskedstack_t *mstack = NULL;
 static int stacksize = 0, stackmax = 0;
@@ -395,7 +392,6 @@ void R_PushMasked(void)
    memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(float));
    stacksize ++;
 }
-#endif
 
 //
 // R_NewVisSprite
@@ -1143,7 +1139,6 @@ void R_SortVisSprites(void)
 }
 
 
-#ifdef R_PORTALS
 //
 // R_SortVisSpriteRange
 //
@@ -1177,7 +1172,6 @@ void R_SortVisSpriteRange(int first, int last)
       msort(vissprite_ptrs, vissprite_ptrs + numsprites, numsprites);
    }
 }
-#endif
 
 //
 // R_DrawSprite
@@ -1316,7 +1310,6 @@ void R_DrawSprite(vissprite_t *spr)
 }
 
 
-#ifdef R_PORTALS
 //
 // R_DrawSpriteInDSRange
 //
@@ -1448,14 +1441,11 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    mceilingclip = cliptop;
    R_DrawVisSprite(spr, spr->x1, spr->x2);
 }
-#endif
 
 
 //
 // R_DrawMasked
 //
-
-#ifdef R_PORTALS
 void R_DrawMasked(void)
 {
    int firstds, lastds, firstsprite, lastsprite;
@@ -1495,48 +1485,6 @@ void R_DrawMasked(void)
    if(!viewangleoffset)
       R_DrawPlayerSprites();
 }
-#else
-void R_DrawMasked(void)
-{
-   int i;
-   drawseg_t *ds;
-   
-   if(drawparticles)
-   {
-      int i = activeParticles;
-      while(i != -1)
-      {
-         R_ProjectParticle(Particles + i);
-         i = Particles[i].next;
-      }
-   }
-
-   R_SortVisSprites();
-   
-   // draw all vissprites back to front
-   
-   for(i = num_vissprite; --i >= 0; )
-      R_DrawSprite(vissprite_ptrs[i]);         // killough
-   
-   // render any remaining masked mid textures
-
-   // Modified by Lee Killough:
-   // (pointer check was originally nonportable
-   // and buggy, by going past LEFT end of array):
-   
-   //    for (ds=ds_p-1 ; ds >= drawsegs ; ds--)    old buggy code
-   
-   for(ds=ds_p ; ds-- > drawsegs ; )  // new -- killough
-      if(ds->maskedtexturecol)
-         R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
-      
-   // draw the psprites on top of everything
-   //  but does not draw on side views
-   if(!viewangleoffset)
-      R_DrawPlayerSprites();
-}
-
-#endif
 
 //=====================================================================
 //

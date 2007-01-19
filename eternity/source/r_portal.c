@@ -25,8 +25,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifdef R_PORTALS
-
 #include "c_io.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -770,7 +768,6 @@ rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz,
    return ret;
 }
 
-#endif
 #endif
 
 //----------------------------------------------------------------------------

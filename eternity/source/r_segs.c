@@ -114,7 +114,6 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    diststep = ds->diststep;
    dist = ds->dist1 + (x1 - ds->x1) * diststep;
 
-#ifdef R_PORTALS
    // find positioning
    if(segclip.line->linedef->flags & ML_DONTPEGBOTTOM)
    {
@@ -128,21 +127,6 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
       column.texmid = column.texmid - ds->viewz;
    }
-#else
-   // find positioning
-   if(segclip.line->linedef->flags & ML_DONTPEGBOTTOM)
-   {
-      column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
-         ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
-      column.texmid = column.texmid + textureheight[texnum] - viewz;
-   }
-   else
-   {
-      column.texmid = segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight
-         ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
-      column.texmid = column.texmid - viewz;
-   }
-#endif
 
    column.texmid += segclip.line->sidedef->rowoffset;
    
@@ -234,7 +218,6 @@ static void R_RenderSegLoop(void)
          b = floorclip[i];
 
 
-#ifdef R_PORTALS
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
       if((segclip.markceiling || segclip.c_portalignore) && segclip.frontsec->c_portal)
       {
@@ -248,9 +231,7 @@ static void R_RenderSegLoop(void)
 
          ceilingclip[i] = t;
       }
-      else
-#endif
-      if(segclip.markceiling && segclip.ceilingplane)
+      else if(segclip.markceiling && segclip.ceilingplane)
       {
          bottom = t - 1;
 
@@ -269,7 +250,6 @@ static void R_RenderSegLoop(void)
          ceilingclip[i] = t;
       }
 
-#ifdef R_PORTALS
       // SoM 3/10/2005: Only add to the portal of the floor is marked
       if((segclip.markfloor || segclip.f_portalignore)  && segclip.frontsec->f_portal)
       {
@@ -284,9 +264,7 @@ static void R_RenderSegLoop(void)
 
          floorclip[i] = b;
       }
-      else
-#endif
-      if(segclip.markfloor && segclip.floorplane)
+      else if(segclip.markfloor && segclip.floorplane)
       {
          top = b + 1;
          bottom = floorclip[i];
@@ -306,12 +284,9 @@ static void R_RenderSegLoop(void)
          floorclip[i] = b;
       }
 
-#ifdef R_PORTALS
       if(segclip.line->linedef->portal)
          R_PortalAdd(segclip.line->linedef->portal, i, t, b);
-      else
-#endif
-      if(segclip.segtextured)
+      else if(segclip.segtextured)
       {
          int index;
 
@@ -705,7 +680,6 @@ void R_StoreWallRange(const int start, const int stop)
 
 
 
-#ifdef R_PORTALS
 //
 // R_ClipSegToPortal
 //
@@ -860,7 +834,6 @@ boolean R_ClipSegToPortal()
 
    return true;
 }
-#endif // ifdef R_PORTALS
 
 //----------------------------------------------------------------------------
 //
