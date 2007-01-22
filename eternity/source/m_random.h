@@ -190,6 +190,8 @@ typedef enum {
   pr_rndwmovect,
   pr_rndwspawn,
   pr_weapsetctr, // WeaponSetCtr
+  pr_quake,      // T_QuakeThinker
+  pr_quakedmg,   // quake damage
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

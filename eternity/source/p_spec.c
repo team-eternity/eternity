@@ -4194,6 +4194,8 @@ void P_ConvertHexenLineSpec(short *special, long *args)
       break;
    // UNUSED: 117-119
    case 120: // quake tremor
+      *special = 375;
+      break;
    case 121: // line set identification
    // UNUSED: 122-128
    case 129: // use puzzle item

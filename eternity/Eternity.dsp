@@ -210,6 +210,10 @@ SOURCE=.\Source\p_tick.c
 
 SOURCE=.\Source\p_user.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\source\p_xenemy.c
+# End Source File
 # End Group
 # Begin Group "R_"
 
@@ -990,6 +994,10 @@ SOURCE=.\Source\p_tick.h
 # Begin Source File
 
 SOURCE=.\Source\p_user.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\p_xenemy.h
 # End Source File
 # End Group
 # Begin Group "R"

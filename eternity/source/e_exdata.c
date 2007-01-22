@@ -562,6 +562,7 @@ static struct exlinespec
    { 372, "Light_Glow" },
    { 373, "Light_Flicker" },
    { 374, "Light_Strobe" },
+   { 375, "Radius_Quake" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -1688,6 +1689,7 @@ boolean E_IsParamSpecial(short special)
    case 372: // Light_Glow
    case 373: // Light_Flicker
    case 374: // Light_Strobe
+   case 375: // Radius_Quake
       return true;
    default:
       return false;

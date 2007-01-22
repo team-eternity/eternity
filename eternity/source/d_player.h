@@ -182,7 +182,10 @@ struct player_s
   fixed_t             pitch;
 
   // True if secret level has been done.
-  boolean             didsecret;      
+  boolean             didsecret;
+  
+  // If > 0, player is experiencing an earthquake
+  int                 quake;
 
   char                name[20];
 };

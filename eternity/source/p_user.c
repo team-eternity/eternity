@@ -547,6 +547,9 @@ void P_PlayerThink(player_t* player)
       (player->powers[pw_invulnerability] > 4*32 ||    
        player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
       (player->powers[pw_infrared] > 4*32 || player->powers[pw_infrared] & 8);
+
+   // haleyjd 01/21/07: clear earthquake flag before running quake thinkers later
+   player->quake = 0;
 }
 
 // Small native functions for player stuff

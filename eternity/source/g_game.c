@@ -2271,6 +2271,7 @@ void G_PlayerReborn(int player)
    p->usedown = p->attackdown = true;  // don't do anything immediately
    p->playerstate = PST_LIVE;
    p->health = initial_health;  // Ty 03/12/98 - use dehacked values
+   p->quake = 0;                // haleyjd 01/21/07
    p->readyweapon = p->pendingweapon = wp_pistol;
    // sf: different weapons owned
    memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));

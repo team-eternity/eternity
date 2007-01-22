@@ -34,6 +34,7 @@ static const char rcsid[] = "$Id: r_main.c,v 1.13 1998/05/07 00:47:52 killough E
 #include "g_game.h"
 #include "hu_over.h"
 #include "mn_engin.h" 
+#include "p_xenemy.h"
 #include "r_main.h"
 #include "r_things.h"
 #include "r_plane.h"
@@ -606,6 +607,15 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       viewz = player->viewz;
       viewangle = mobj->angle;// + viewangleoffset;
       pitch = player->pitch;
+
+      // haleyjd 01/21/07: earthquakes
+      if(player->quake)
+      {
+         int strength = player->quake;
+
+         viewx += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
+         viewy += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
+      }
    }
    else
    {
@@ -753,6 +763,9 @@ extern void R_UntaintPortals(void);
 //
 void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
+   boolean quake = false;
+   unsigned long savedflags;
+
    R_SetupFrame(player, camerapoint);
    
    // haleyjd: untaint portals
@@ -770,8 +783,19 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // check for new console commands.
    NetUpdate();
 
+   // haleyjd 01/21/07: earthquakes -- make player invisible to himself
+   if(player->quake && !camerapoint)
+   {
+      quake = true;
+      savedflags = player->mo->flags2;
+      player->mo->flags2 |= MF2_DONTDRAW;
+   }
+
    // The head node is the last node output.
-   R_RenderBSPNode(numnodes-1);
+   R_RenderBSPNode(numnodes - 1);
+
+   if(quake)
+      player->mo->flags2 = savedflags;
    
    // Check for new console commands.
    NetUpdate();

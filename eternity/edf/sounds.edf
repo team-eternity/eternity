@@ -253,6 +253,12 @@ sound eedrip
    close_dist = 96
 }
 
+sound Earthquake
+{
+   lump = "quake2";
+   dehackednum = 124
+}
+
 # WARNING: all sounds below are not standardized yet -- if you use them, your mods
 # will break when used with future versions of Eternity, so don't use them.
 

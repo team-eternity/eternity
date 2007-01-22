@@ -775,8 +775,8 @@ void MN_Drawer(void)
    if(hide_menu) redrawsbar = redrawborder = true;
    
    // activate menu if displaying widget
-   // haleyjd 11/03/06: this is unnecessary and causes problems
-   //if(current_menuwidget) menuactive = true; 
+   if(current_menuwidget && !menuactive)
+      MN_StartControlPanel();
       
    if(current_menuwidget)
    {
