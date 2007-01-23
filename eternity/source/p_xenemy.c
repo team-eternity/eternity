@@ -48,48 +48,10 @@
 //
 void T_QuakeThinker(quakethinker_t *qt)
 {
-   int i;
+   int i, tics;
    mobj_t *soundorg = (mobj_t *)&qt->origin;
    sfxinfo_t *quakesound;
-
-   quakesound = E_SoundForName("Earthquake");
-
-   // loop quake sound
-   if(quakesound && !S_CheckSoundPlaying(soundorg, quakesound))
-      S_StartSfxInfo(soundorg, quakesound, 127, ATTN_NONE, true);
-
-   // do some rumbling every 2 tics
-   if(!(qt->duration-- & 1))
-   {
-      for(i = 0; i < MAXPLAYERS; ++i)
-      {
-         if(playeringame[i])
-         {
-            player_t *p  = &players[i];
-            mobj_t   *mo = p->mo;
-            angle_t  thrustangle;
-            fixed_t  dst = P_AproxDistance(qt->origin.x - mo->x, 
-                                           qt->origin.y - mo->y);
-
-            // test if player is in quake radius
-            if(dst < qt->quakeRadius)
-               p->quake = qt->intensity;
-
-            // test if in damage radius and on floor
-            if(dst < qt->damageRadius && mo->z <= mo->floorz)
-            {
-               if(P_Random(pr_quake) < 50)
-               {
-                  P_DamageMobj(mo, NULL, NULL, (P_Random(pr_quakedmg) % 8) + 1,
-                               MOD_UNKNOWN);
-               }
-               thrustangle = (359 * P_Random(pr_quake) / 255) * ANGLE_1;
-               P_ThrustMobj(mo, thrustangle, qt->intensity * FRACUNIT / 2);
-            }
-         }
-      }
-   }
-
+   
    // quake is finished?
    if(qt->duration == 0)
    {
@@ -98,6 +60,47 @@ void T_QuakeThinker(quakethinker_t *qt)
 
       S_StopSound((mobj_t *)&qt->origin);
       P_RemoveThinker(&(qt->origin.thinker));
+      return;
+   }
+   
+   quakesound = E_SoundForName("Earthquake");
+
+   // loop quake sound
+   if(quakesound && !S_CheckSoundPlaying(soundorg, quakesound))
+      S_StartSfxInfo(soundorg, quakesound, 127, ATTN_NONE, true);
+
+   tics = qt->duration--;
+
+   // do some rumbling every 2 tics
+   for(i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(playeringame[i])
+      {
+         player_t *p  = &players[i];
+         mobj_t   *mo = p->mo;
+         fixed_t  dst = P_AproxDistance(qt->origin.x - mo->x, 
+                                        qt->origin.y - mo->y);
+         // test if player is in quake radius
+         if(dst < qt->quakeRadius)
+            p->quake = qt->intensity;
+
+         if(!(tics & 1))
+         {
+            angle_t  thrustangle;   
+            
+            // test if in damage radius and on floor
+            if(dst < qt->damageRadius && mo->z <= mo->floorz)
+            {
+               if(P_Random(pr_quake) < 50)
+               {
+                  P_DamageMobj(mo, NULL, NULL, (P_Random(pr_quakedmg) % 8) + 1,
+                     MOD_UNKNOWN);
+               }
+               thrustangle = (359 * P_Random(pr_quake) / 255) * ANGLE_1;
+               P_ThrustMobj(mo, thrustangle, qt->intensity * FRACUNIT / 2);
+            }
+         }
+      }
    }
 }
 
