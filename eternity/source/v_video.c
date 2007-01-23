@@ -42,7 +42,8 @@ rcsid[] = "$Id: v_video.c,v 1.10 1998/05/06 11:12:48 jim Exp $";
 #include "i_video.h"
 
 // Each screen is [SCREENWIDTH*SCREENHEIGHT];
-byte *screens[5];
+// SoM: Moved. See cb_video_t
+// byte *screens[5];
 int  dirtybox[4];
 
 //jff 2/18/98 palette color ranges for translation
@@ -243,17 +244,17 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
   V_MarkRect (destx, desty, width, height);
 
    // SoM 1-30-04: ANYRES
-   if(globalyscale > FRACUNIT)
+   if(video.globalyscale > FRACUNIT)
    {
       int realx, realy, realw, realh;
 
       realx = realxarray[srcx];
       realy = realyarray[srcy];
-      src = screens[srcscrn] + v_width * realy + realx;
+      src = video.screens[srcscrn] + video.width * realy + realx;
 
       realx = realxarray[destx];
       realy = realyarray[desty];
-      dest = screens[destscrn] + v_width * realy + realx;
+      dest = video.screens[destscrn] + video.width * realy + realx;
 
       // I HOPE this will not extend the array bounds HEHE
       realw = realxarray[width + destx] - realx;
@@ -262,14 +263,14 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
       while(realh--)
       {
          memcpy(dest, src, realw);
-         src += v_width;
-         dest += v_width;
+         src += video.width;
+         dest += video.width;
       }
    }
    else
    {
-      src = screens[srcscrn]+SCREENWIDTH*srcy+srcx;
-      dest = screens[destscrn]+SCREENWIDTH*desty+destx;
+      src = video.screens[srcscrn]+SCREENWIDTH*srcy+srcx;
+      dest = video.screens[destscrn]+SCREENWIDTH*desty+destx;
 
       for ( ; height>0 ; height--)
       {
@@ -331,7 +332,7 @@ void V_DrawPatchUnscaled(int x, int y, int scrn, patch_t *patch)
    int  w = SHORT(patch->width), col = 0, colstop = w, colstep = 1;
    
 #ifdef RANGECHECK
-   if(v_width == SCREENWIDTH || v_height == SCREENHEIGHT)
+   if(video.width == SCREENWIDTH || video.height == SCREENHEIGHT)
       I_Error("V_DrawPatchUnscaled called in 320x200 video mode\n");
 #endif
    
@@ -341,8 +342,8 @@ void V_DrawPatchUnscaled(int x, int y, int scrn, patch_t *patch)
    // haleyjd: fix for hires
    // haleyjd 05/18/02: no message, just return
    // SoM: This makes more sense I guess
-   if((unsigned)x + w > (unsigned)v_width || 
-      (unsigned)y + SHORT(patch->height) > (unsigned)v_height || 
+   if((unsigned)x + w > (unsigned)video.width || 
+      (unsigned)y + SHORT(patch->height) > (unsigned)video.height || 
       (unsigned)scrn>4)
    {
       return;      // killough 1/19/98: commented out printfs
@@ -353,7 +354,7 @@ void V_DrawPatchUnscaled(int x, int y, int scrn, patch_t *patch)
       V_MarkRect (x, y, SHORT(patch->width), SHORT(patch->height));
 #endif
    
-   desttop = screens[scrn]+y*(SCREENWIDTH*2)+x;
+   desttop = video.screens[scrn]+y*(SCREENWIDTH*2)+x;
    
    for(; col != colstop; col += colstep, desttop++)
    {
@@ -573,20 +574,20 @@ void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
 #endif
 
    // SoM 1-30-04: ANYRES
-   if(globalyscale > FRACUNIT)
+   if(video.globalyscale > FRACUNIT)
    {
       x = realxarray[x];
-      height = (height * globalyscale) >> FRACBITS;
+      height = (height * video.globalyscale) >> FRACBITS;
 
       y = realyarray[y];
-      width = (width * globalxscale) >> FRACBITS;
+      width = (width * video.globalxscale) >> FRACBITS;
    }
 
-   src = screens[scrn] + y * v_width + x;
+   src = video.screens[scrn] + y * video.width + x;
    while (height--)
    {
       memcpy (dest, src, width);
-      src += v_width;
+      src += video.width;
       dest += width;
    }
 }

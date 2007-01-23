@@ -121,7 +121,7 @@ void CB_DrawColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -202,7 +202,7 @@ void CB_DrawTLColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawTLColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -272,7 +272,7 @@ void CB_DrawTLTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawTLTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -360,7 +360,7 @@ void CB_DrawFuzzColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawFuzzColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -415,7 +415,7 @@ void CB_DrawTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -484,7 +484,7 @@ void CB_DrawFlexColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawFlexColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -590,7 +590,7 @@ void CB_DrawFlexTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawFlexTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -696,7 +696,7 @@ void CB_DrawAddColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawAddColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -815,7 +815,7 @@ void CB_DrawAddTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawAddTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -1053,12 +1053,12 @@ void R_InitBuffer(int width, int height)
    int st_height;
    int tviewwidth = viewwidth << detailshift;
    
-   linesize = v_width;    // killough 11/98
+   linesize = video.width;    // killough 11/98
    
    // Handle resize,
    //  e.g. smaller view windows
    //  with border and/or status bar.
-   viewwindowx = (v_width-tviewwidth) >> 1;
+   viewwindowx = (video.width-tviewwidth) >> 1;
    scaledwindowx = (SCREENWIDTH - width) >> 1;
    // Column offset. For windows.
    for (i = tviewwidth ; i--; )   // killough 11/98
@@ -1067,18 +1067,18 @@ void R_InitBuffer(int width, int height)
    // Same with base row offset.
    st_height = gameModeInfo->StatusBar->height;
    
-   if(tviewwidth == v_width)
+   if(tviewwidth == video.width)
       viewwindowy = scaledwindowy = 0;
    else
    {
-      viewwindowy = (v_height - ((st_height * globalyscale) >> FRACBITS) - viewheight) >> 1;
+      viewwindowy = (video.height - ((st_height * video.globalyscale) >> FRACBITS) - viewheight) >> 1;
       scaledwindowy = (SCREENHEIGHT - st_height - height) >> 1;
    }
    
    // Precalculate all row offsets.
    
    for(i = viewheight; i--; )
-      ylookup[i] = screens[0] + (i + viewwindowy) * linesize; // killough 11/98
+      ylookup[i] = video.screens[0] + (i + viewwindowy) * linesize; // killough 11/98
 } 
 
 //
@@ -1167,7 +1167,7 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
 
    // SoM: ANYRES
    // This receives scaled offsets.
-   if(v_width != SCREENWIDTH || v_height != SCREENHEIGHT)
+   if(video.width != SCREENWIDTH || video.height != SCREENHEIGHT)
    {
       w = realxarray[x + w] - realxarray[x];
       h = realyarray[y + h] - realyarray[y];
@@ -1175,20 +1175,20 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
       y = realyarray[y];
    }
          
-   ofs = x + y * v_width;
+   ofs = x + y * video.width;
 
-   if(x == 0 && w == (unsigned int)v_width)
+   if(x == 0 && w == (unsigned int)video.width)
    {
-      memcpy(screens[0]+ofs, screens[1]+ofs, w * h);   // LFB copy.
+      memcpy(video.screens[0]+ofs, video.screens[1]+ofs, w * h);   // LFB copy.
       return;
    }
 
-   ofs += (h - 1) * v_width;
+   ofs += (h - 1) * video.width;
 
    while(h-- > 0)
    {
-      memcpy(screens[0] + ofs, screens[1] + ofs, w);
-      ofs -= v_width;
+      memcpy(video.screens[0] + ofs, video.screens[1] + ofs, w);
+      ofs -= video.width;
    }
 } 
 

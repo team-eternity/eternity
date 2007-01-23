@@ -53,10 +53,21 @@ extern int gamma_correct;
 int v_mode = 0;
 static int prevmode = 0;
 
-int v_width = SCREENWIDTH;
-int v_height = SCREENHEIGHT;
-fixed_t globalxscale = FRACUNIT, globalyscale = FRACUNIT;
-fixed_t globalixscale = FRACUNIT, globaliyscale = FRACUNIT;
+cb_video_t  video = 
+{
+   SCREENWIDTH, 
+   SCREENHEIGHT, 
+   SCREENWIDTH * FRACUNIT,
+   SCREENHEIGHT * FRACUNIT,
+   FRACUNIT, 
+   FRACUNIT, 
+   FRACUNIT, 
+   FRACUNIT
+};
+/*int video.width = SCREENWIDTH;
+int video.height = SCREENHEIGHT;
+fixed_t video.globalxscale = FRACUNIT, video.globalyscale = FRACUNIT;
+fixed_t video.globalxstep = FRACUNIT, video.globalystep = FRACUNIT;*/
 int realxarray[321];
 int realyarray[201];
 
@@ -457,7 +468,7 @@ void V_DrawLoading(void)
    y = (SCREENHEIGHT/2);
    realx = realxarray[x];
    realy = realyarray[y];
-   dest = screens[0] + (realy*v_width) + realx;
+   dest = video.screens[0] + (realy*video.width) + realx;
    linelen = (90*loading_amount) / loading_total;
    reallinelen = realxarray[linelen];
    reallineend = realxarray[90 - linelen];
@@ -466,14 +477,14 @@ void V_DrawLoading(void)
    memset(dest, white, reallinelen);
    // black line (unfilled)
 
-   if((globalyscale >> FRACBITS) > 1)
+   if((video.globalyscale >> FRACBITS) > 1)
    {
       yfrac = 0;
-      ystep = globaliyscale;
+      ystep = video.globalystep;
 
       while(yfrac < FRACUNIT)
       {
-         dest += v_width;
+         dest += video.width;
          memset(dest, white, reallinelen);
          memset(dest + reallinelen, black, reallineend);
          yfrac += ystep;
@@ -572,7 +583,7 @@ void V_FPSDrawer(void)
       for(cy=0, y = Y_OFFSET; cy<CHART_HEIGHT; y++, cy++)
       {
          i = cy > (CHART_HEIGHT-history[cx]) ? BLACK : WHITE;
-         screens[0][y*v_width +x] = i; // ANYRES
+         video.screens[0][y*video.width +x] = i; // ANYRES
       }
    }
 }
@@ -602,7 +613,7 @@ void V_FPSTicker(void)
 void V_ClassicFPSDrawer(void)
 {
   static int lasttic;
-  byte *s = screens[0];
+  byte *s = video.screens[0];
   
   int i = I_GetTime();
   int tics = i - lasttic;
@@ -611,35 +622,35 @@ void V_ClassicFPSDrawer(void)
     tics = 20;
 
    // SoM: ANYRES
-   if(globalyscale > FRACUNIT)
+   if(video.globalyscale > FRACUNIT)
    {
-      int baseoffset = (v_height - (globalyscale >> FRACBITS)) * v_width;
+      int baseoffset = (video.height - (video.globalyscale >> FRACBITS)) * video.width;
       int offset;
       int x, y, w, h;
 
-      w = globalxscale >> FRACBITS;
-      h = globalyscale >> FRACBITS;
+      w = video.globalxscale >> FRACBITS;
+      h = video.globalyscale >> FRACBITS;
 
       for (i=0 ; i < tics * 2 ; i += 2)
       {
          offset = baseoffset;
          y = h;
-         x = (i * globalxscale) >> FRACBITS;
+         x = (i * video.globalxscale) >> FRACBITS;
          while(y--)
          {
             memset(s + offset + x, 0xff, w);
-            offset += v_width;
+            offset += video.width;
          }
       }
       for ( ; i < 20 * 2 ; i += 2)
       {
          offset = baseoffset;
          y = h;
-         x = (i * globalxscale) >> FRACBITS;
+         x = (i * video.globalxscale) >> FRACBITS;
          while(y--)
          {
             memset(s + offset + x, 0x0, w);
-            offset += v_width;
+            offset += video.width;
          }
       }
    }
@@ -704,18 +715,18 @@ static void V_InitScreenVBuffer(void)
    int drawtype;
 
    // haleyjd: set up VBuffer for the screen
-   vbscreen.data   = screens[0];
-   vbscreen.width  = v_width;
-   vbscreen.height = v_height;
-   vbscreen.pitch  = v_width; // TODO: fix to allow direct drawing!
+   vbscreen.data   = video.screens[0];
+   vbscreen.width  = video.width;
+   vbscreen.height = video.height;
+   vbscreen.pitch  = video.width; // TODO: fix to allow direct drawing!
    vbscreen.xslookup = realxarray;
    vbscreen.yslookup = realyarray;
-   vbscreen.ixscale = globalixscale;
-   vbscreen.iyscale = globaliyscale;
+   vbscreen.ixscale = video.globalxstep;
+   vbscreen.iyscale = video.globalystep;
    
-   if(v_width == 320 && v_height == 200)
+   if(video.width == 320 && video.height == 200)
       drawtype = DRAWTYPE_UNSCALED;
-   else if(v_width == 640 && v_height == 400)
+   else if(video.width == 640 && video.height == 400)
       drawtype = DRAWTYPE_2XSCALED;
    else
       drawtype = DRAWTYPE_GENSCALED;
@@ -725,7 +736,7 @@ static void V_InitScreenVBuffer(void)
    // copy most attributes to the first backscreen
 
    memcpy(&backscreen1, &vbscreen, sizeof(VBuffer));
-   backscreen1.data = screens[1];
+   backscreen1.data = video.screens[1];
    backscreen1.pitch = backscreen1.width;
 }
 
@@ -739,7 +750,7 @@ void V_Init(void)
 {
    static byte *s;
    
-   int size = v_width * v_height;
+   int size = video.width * video.height;
 
    // SoM: ANYRES is ganna have to work in DJGPP too
    // haleyjd: why isn't this in i_video.c, anyways? oh well.
@@ -750,18 +761,18 @@ void V_Init(void)
    if(s)
    {
       free(s);
-      free(screens[0]);
+      free(video.screens[0]);
    }
 #endif
    
-   screens[3] = (screens[2] = (screens[1] = s = calloc(size,3)) + size) + size;
+   video.screens[3] = (video.screens[2] = (video.screens[1] = s = calloc(size,3)) + size) + size;
    
 #ifdef DJGPP
-   screens0_bitmap = create_bitmap_ex(8, v_width, v_height);
-   memset(screens[0] = screens0_bitmap->line[0], 0, size);
+   screens0_bitmap = create_bitmap_ex(8, video.width, video.height);
+   memset(video.screens[0] = screens0_bitmap->line[0], 0, size);
 #else
-   screens[0] = malloc(size);
-   memset(screens[0], 0, size);
+   video.screens[0] = malloc(size);
+   memset(video.screens[0], 0, size);
 #endif
 
    R_SetupViewScaling();

@@ -2362,7 +2362,7 @@ void M_ScreenShot(void)
          // (PU_CACHE could cause crash)
          
          byte *pal = W_CacheLumpName ("PLAYPAL", PU_STATIC);
-         byte *linear = screens[2];
+         byte *linear = video.screens[2];
          
          I_ReadScreen(linear);
 
@@ -2372,7 +2372,7 @@ void M_ScreenShot(void)
          // killough 10/98: detect failure and remove file if error
          // SoM: ANYRES
          if(!(success = (screenshot_pcx ? WritePCXfile : WriteBMPfile)
-            (lbmname, linear, v_width, v_height, pal)))
+            (lbmname, linear, video.width, video.height, pal)))
          {
             int t = errno;
             remove(lbmname);

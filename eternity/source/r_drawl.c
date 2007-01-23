@@ -52,7 +52,7 @@ static void R_LowDrawColumn(void)
    x = column.x << 1;
 
 #ifdef RANGECHECK 
-   if(x < 0 || x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x < 0 || x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_LowDrawColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif 
    
@@ -128,7 +128,7 @@ static void R_LowDrawTLColumn(void)
    x = column.x << 1;
 
 #ifdef RANGECHECK 
-   if(x < 0 || x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x < 0 || x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_LowDrawTLColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif 
 
@@ -221,7 +221,7 @@ static void R_LowDrawTLTRColumn(void)
    x = column.x << 1;
 
 #ifdef RANGECHECK 
-   if(x < 0 || x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x < 0 || x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_LowDrawTLTRColumn: %i to %i at %i", column.y1, column.y2, x);    
 #endif 
 
@@ -323,7 +323,7 @@ static void R_LowDrawFuzzColumn(void)
 #ifdef RANGECHECK 
    // haleyjd: these should apparently be adjusted for hires
    // SoM: DONE
-   if(x  < 0 || x >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x  < 0 || x >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_DrawFuzzColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif
 
@@ -340,8 +340,8 @@ static void R_LowDrawFuzzColumn(void)
    do 
    {      
       //sf : hires
-      *dest  = column.colormap[6*256+dest [fuzzoffset[fuzzpos] ? v_width : -v_width]];
-      *dest2 = column.colormap[6*256+dest2[fuzzoffset[fuzzpos] ? v_width : -v_width]];
+      *dest  = column.colormap[6*256+dest [fuzzoffset[fuzzpos] ? video.width : -video.width]];
+      *dest2 = column.colormap[6*256+dest2[fuzzoffset[fuzzpos] ? video.width : -video.width]];
       
       // Clamp table lookup index.
       if(++fuzzpos == FUZZTABLE) 
@@ -368,7 +368,7 @@ static void R_LowDrawTRColumn(void)
    x = column.x << 1;
                                  
 #ifdef RANGECHECK 
-   if(x  < 0 || x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x  < 0 || x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_LowDrawTRColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif 
 
@@ -449,7 +449,7 @@ static void R_LowDrawFlexColumn(void)
    x = column.x << 1;
                                  
 #ifdef RANGECHECK 
-   if(x  < 0 || x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x  < 0 || x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_DrawFlexColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif 
 
@@ -566,7 +566,7 @@ static void R_LowDrawFlexTRColumn(void)
    x = column.x << 1;
                                  
 #ifdef RANGECHECK 
-   if(x  < 0 || x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x  < 0 || x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_DrawFlexTRColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif 
 
@@ -680,7 +680,7 @@ static void R_LowDrawAddColumn(void)
    x = column.x << 1;
                                  
 #ifdef RANGECHECK 
-   if(x  < 0 || x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x  < 0 || x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_DrawAddColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif 
 
@@ -808,7 +808,7 @@ static void R_LowDrawAddTRColumn(void)
    x = column.x << 1;
                                  
 #ifdef RANGECHECK 
-   if(x  < 0 || x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(x  < 0 || x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_DrawAddTRColumn: %i to %i at %i", column.y1, column.y2, x);
 #endif 
 

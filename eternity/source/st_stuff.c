@@ -1282,7 +1282,7 @@ static void ST_DoomStart(void)
    ST_createWidgets();
 
    memcpy(&backscreen4, &vbscreen, sizeof(VBuffer));
-   backscreen4.data  = screens[4];
+   backscreen4.data  = video.screens[4];
    backscreen4.pitch = backscreen4.width;
 }
 
@@ -1327,7 +1327,7 @@ static void ST_DoomInit(void)
    ST_loadData();
    
    // SoM: allocate enough for ANYRES
-   screens[4] = Z_Malloc(MAX_SCREENWIDTH * 150, PU_STATIC, 0);
+   video.screens[4] = Z_Malloc(MAX_SCREENWIDTH * 150, PU_STATIC, 0);
 }
 
 //

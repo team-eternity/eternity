@@ -87,29 +87,29 @@ void Wipe_StartScreen(void)
    {
       // SoM: Reformatted and cleaned up (ANYRES)
       // haleyjd: make purgable, allocate at required size
-      wipe_buffer = Z_Malloc(v_height * v_width, PU_STATIC, 
+      wipe_buffer = Z_Malloc(video.height * video.width, PU_STATIC, 
                              (void **)&wipe_buffer);
       
-      for(x = 0; x < v_width; ++x)
-         start_screen[x] = wipe_buffer + (x * v_height);
+      for(x = 0; x < video.width; ++x)
+         start_screen[x] = wipe_buffer + (x * video.height);
    }
    else
       Z_ChangeTag(wipe_buffer, PU_STATIC); // buffer is in use
 
    // SoM 2-4-04: ANYRES
-   for(x = 0; x < v_width; ++x)
+   for(x = 0; x < video.width; ++x)
    {
       // limit check
-      int wormx = (x << FRACBITS) / globalxscale;
+      int wormx = (x << FRACBITS) / video.globalxscale;
       int wormy = realyarray[worms[wormx] > 0 ? worms[wormx] : 0];
       
-      src = screens[0] + x;
+      src = video.screens[0] + x;
       dest = start_screen[x];
       
-      for(y = 0; y < v_height - wormy; y++)
+      for(y = 0; y < video.height - wormy; y++)
       {
          *dest = *src;
-         src += v_width;
+         src += video.width;
          dest++;
       }
    }
@@ -141,22 +141,22 @@ void Wipe_Drawer(void)
    register char *dest, *src;
 
    // SoM 2-4-04: ANYRES
-   for(x = 0; x < v_width; ++x)
+   for(x = 0; x < video.width; ++x)
    {
       int wormy, wormx;
       
-      wormx = (x << FRACBITS) / globalxscale;
+      wormx = (x << FRACBITS) / video.globalxscale;
       wormy = worms[wormx] > 0 ? worms[wormx] : 0;  // limit check
 	  
       wormy = realyarray[wormy];
 
       src = start_screen[x];
-      dest = screens[0] + v_width * wormy + x;
+      dest = video.screens[0] + video.width * wormy + x;
       
-      for(y = v_height - wormy; y--;)
+      for(y = video.height - wormy; y--;)
       {
          *dest = *src++;
-         dest += v_width;
+         dest += video.width;
       }
    }
  

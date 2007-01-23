@@ -82,7 +82,6 @@ typedef enum
 
 #define CR_DEFAULT CR_RED   /* default value for out of range colors */
 
-extern byte *screens[5];
 extern int  dirtybox[4];
 extern byte gammatable[5][256];
 extern int  usegamma;// SoM: ANYRES no long need hires        // killough 11/98

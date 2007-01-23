@@ -206,7 +206,7 @@ static void ST_shadowLine(int x, int y, int len,
    int mapnum, i;
 
    // start at origin of line
-   dest = screens[0] + y*SCREENWIDTH + x;
+   dest = video.screens[0] + y*SCREENWIDTH + x;
 
    // step in x direction for len pixels
    for(i = x, mapnum = startmap; i < x + len; ++i)
@@ -242,10 +242,10 @@ static void ST_shadowLineHi(int x, int y, int len,
    // start at origin of line
    realx = realxarray[x];
    realy = realyarray[y];
-   dest = screens[0] + realy * v_width + realx;
+   dest = video.screens[0] + realy * video.width + realx;
    len = realxarray[x + len] - realx;
    mapnum = startmap << FRACBITS;
-   mapstep *= globaliyscale >> 1;
+   mapstep *= video.globalystep >> 1;
 
    // step in x direction for len scaled pixels
    for(x = realx; x < realx + len; ++x)
@@ -255,11 +255,11 @@ static void ST_shadowLineHi(int x, int y, int len,
       mapnum += mapstep;
 
       // remap all four pixels in this scaled pixel's area
-      dest = screens[0] + realy * v_width + x;
-      for(p = globalyscale >> FRACBITS; p; p--)
+      dest = video.screens[0] + realy * video.width + x;
+      for(p = video.globalyscale >> FRACBITS; p; p--)
       {
          *dest = colormap[*dest];
-         dest += v_width;
+         dest += video.width;
       }
    }
 }
@@ -278,7 +278,7 @@ static void ST_chainShadow(void)
    // choose a drawing function depending on resolution, for
    // maximum speed
    // SoM: ANYRES
-   if(globalyscale > FRACUNIT)
+   if(video.globalyscale > FRACUNIT)
       linefunc = ST_shadowLineHi;
    else
       linefunc = ST_shadowLine;

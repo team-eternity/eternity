@@ -585,7 +585,7 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
       return;
 
    // haleyjd: temporary debug
-   if(portal->tainted > v_width)
+   if(portal->tainted > video.width)
    {
       portal->tainted++;
       doom_printf("refused to draw portal %p (t=%d)", portal, portal->tainted);

@@ -250,7 +250,7 @@ static void R_FlushWholeFuzz(void)
       while(--count >= 0)
       {
          // SoM 7-28-04: Fix the fuzz problem.
-         *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? v_width: -v_width]];
+         *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]];
          
          // Clamp table lookup index.
          if(++fuzzpos == FUZZTABLE) 
@@ -284,7 +284,7 @@ static void R_FlushHTFuzz(void)
          while(--count >= 0)
          {
             // SoM 7-28-04: Fix the fuzz problem.
-            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? v_width: -v_width]];
+            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]];
             
             // Clamp table lookup index.
             if(++fuzzpos == FUZZTABLE) 
@@ -305,7 +305,7 @@ static void R_FlushHTFuzz(void)
          while(--count >= 0)
          {
             // SoM 7-28-04: Fix the fuzz problem.
-            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? v_width: -v_width]];
+            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]];
             
             // Clamp table lookup index.
             if(++fuzzpos == FUZZTABLE) 
@@ -567,13 +567,13 @@ static void R_FlushQuadFuzz(void)
    while(--count >= 0)
    {
       // SoM 7-28-04: Fix the fuzz problem.
-      *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzz1] ? v_width: -v_width]];
+      *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzz1] ? video.width: -video.width]];
       if(++fuzz1 == FUZZTABLE) fuzz1 = 0;
-      dest[1] = tempfuzzmap[6*256+dest[1 + (fuzzoffset[fuzz2] ? v_width: -v_width)]];
+      dest[1] = tempfuzzmap[6*256+dest[1 + (fuzzoffset[fuzz2] ? video.width: -video.width)]];
       if(++fuzz2 == FUZZTABLE) fuzz2 = 0;
-      dest[2] = tempfuzzmap[6*256+dest[2 + (fuzzoffset[fuzz3] ? v_width: -v_width)]];
+      dest[2] = tempfuzzmap[6*256+dest[2 + (fuzzoffset[fuzz3] ? video.width: -video.width)]];
       if(++fuzz3 == FUZZTABLE) fuzz3 = 0;
-      dest[3] = tempfuzzmap[6*256+dest[3 + (fuzzoffset[fuzz4] ? v_width: -v_width)]];
+      dest[3] = tempfuzzmap[6*256+dest[3 + (fuzzoffset[fuzz4] ? video.width: -video.width)]];
       if(++fuzz4 == FUZZTABLE) fuzz4 = 0;
 
       source += 4;
@@ -903,8 +903,8 @@ static void R_QDrawColumn(void)
       return;
 
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || 
-      column.y1 < 0 || column.y2 >= v_height) 
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height) 
       I_Error("R_QDrawColumn: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -986,8 +986,8 @@ static void R_QDrawTLColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || 
-      column.y1 < 0 || column.y2 >= v_height) 
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height) 
       I_Error("R_QDrawTLColumn: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
    
@@ -1057,8 +1057,8 @@ static void R_QDrawTLTRColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || 
-      column.y1 < 0 || column.y2 >= v_height) 
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height) 
       I_Error("R_QDrawTLTRColumn: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -1131,7 +1131,7 @@ static void R_QDrawFuzzColumn(void)
 #ifdef RANGECHECK 
    // haleyjd: these should apparently be adjusted for hires
    // SoM: DONE
-   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawFuzzColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif
 
@@ -1154,7 +1154,7 @@ static void R_QDrawTRColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
@@ -1228,7 +1228,7 @@ static void R_QDrawFlexColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawFlexColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
    
@@ -1297,7 +1297,7 @@ static void R_QDrawFlexTRColumn(void)
       return; 
    
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawFlexTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
@@ -1371,7 +1371,7 @@ static void R_QDrawAddColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawAddColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
    
@@ -1439,7 +1439,7 @@ static void R_QDrawAddTRColumn(void)
       return; 
    
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= v_width || column.y1 < 0 || column.y2 >= v_height)
+   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawAddTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 

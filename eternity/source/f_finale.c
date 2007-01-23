@@ -594,22 +594,22 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
       }
   else*/
    // SoM: ANYRES
-   if(globalyscale > FRACUNIT)
+   if(video.globalyscale > FRACUNIT)
    {
-      byte *desttop = screens[0] + x;
+      byte *desttop = video.screens[0] + x;
 
       while (column->topdelta != 0xff)
       {
          register const byte *source = (byte *) column + 3;
-         register byte *dest = desttop + realyarray[column->topdelta] * v_width;
+         register byte *dest = desttop + realyarray[column->topdelta] * video.width;
          register int count = realyarray[column->length];
          register fixed_t frac;
          fixed_t step;
 
          frac = 0;
-         step = globaliyscale;
+         step = video.globalystep;
 
-         for (;count--; dest += v_width)
+         for (;count--; dest += video.width)
          {
             *dest = source[frac >> FRACBITS];
             frac += step;
@@ -622,7 +622,7 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
    {
       while (column->topdelta != 0xff)
       {
-         byte *desttop = screens[0] + x;
+         byte *desttop = video.screens[0] + x;
          const byte *source = (byte *) column + 3;
          byte *dest = desttop + column->topdelta*SCREENWIDTH;
          int count = column->length;
@@ -658,9 +658,9 @@ void F_BunnyScroll (void)
       scrolled = 0;
               
    // ANYRES
-  for ( x = 0 ; x < v_width ; x++)
+  for ( x = 0 ; x < video.width ; x++)
   {
-    int scaledx = (x * globaliyscale) >> FRACBITS;
+    int scaledx = (x * video.globalystep) >> FRACBITS;
 
     if (scaledx+scrolled < 320)
       F_DrawPatchCol (x, p1, scaledx+scrolled);

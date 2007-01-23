@@ -1599,7 +1599,7 @@ void R_ProjectParticle(particle_t *particle)
    tz = (particle->z / 65536.0f) - view.z;
 
    y1 = (view.ycenter - (tz * yscale));
-   y2 = y1 + (float)(x2 - x1);
+   y2 = (view.ycenter - ((tz - 1.0f) * yscale));
    
    if(y2 < 0.0f || y1 >= view.height)
       return;
@@ -1760,7 +1760,7 @@ void R_DrawParticle(vissprite_t *vis)
 	 return;
       ++ycount;
 
-      spacing = v_width - xcount;
+      spacing = video.width - xcount;
       dest = ylookup[yl] + columnofs[x1];
 
       // haleyjd 02/08/05: rewritten to remove inner loop invariants

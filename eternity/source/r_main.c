@@ -285,7 +285,7 @@ static void R_InitTextureMapping (void)
    // Calc focal length so fov angles cover SCREENWIDTH
 
    // Cardboard
-   ratio = 1.6f / ((float)v_width / (float)v_height);
+   ratio = 1.6f / ((float)video.width / (float)video.height);
    view.fov = (float)fov * PI / 180.0f; // 90 degrees
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;
@@ -409,26 +409,55 @@ void R_SetupViewScaling(void)
    // Moved stuff, reformatted a bit
    // haleyjd 04/03/05: removed unnecessary FixedDiv calls
 
-   globalxscale  = (v_width << FRACBITS) / SCREENWIDTH;
-   globalixscale = (SCREENWIDTH << FRACBITS) / v_width;
-   globalyscale  = (v_height << FRACBITS) / SCREENHEIGHT;
-   globaliyscale = (SCREENHEIGHT << FRACBITS) / v_height;
+   video.globalxscale  = (video.width << FRACBITS) / SCREENWIDTH;
+   video.globalxstep   = (SCREENWIDTH << FRACBITS) / video.width;
+   video.globalyscale  = (video.height << FRACBITS) / SCREENHEIGHT;
+   video.globalystep   = (SCREENHEIGHT << FRACBITS) / video.height;
 
-   realxarray[320] = v_width;
-   realyarray[200] = v_height;
+   video.floatxscale = (float)video.width / SCREENWIDTH;
+   video.floatxstep  = SCREENWIDTH / (float)video.width;
+   video.floatyscale = (float)video.height / SCREENHEIGHT;
+   video.floatystep  = SCREENHEIGHT / (float)video.height;
+
+   realxarray[320] = video.width;
+   realyarray[200] = video.height;
 
    for(i = 0; i < 320; ++i)
-      realxarray[i] = (i * globalxscale) >> FRACBITS;
+      realxarray[i] = (i * video.globalxscale) >> FRACBITS;
 
    for(i = 0; i < 200; ++i)
-      realyarray[i] = (i * globalyscale) >> FRACBITS;
+      realyarray[i] = (i * video.globalyscale) >> FRACBITS;
+
+   // SoM: ok, assemble the realx1/x2 arrays differently. To start, we are using floats
+   // to do the scaling which is 100 times more accurate, secondly, I realized that the
+   // reason the old single arrays were causing problems was they was only calculating the 
+   // top-left corner of the scaled pixels. Calculating widths through these arrays is wrong
+   // because the scaling will change the final scaled widths depending on what their unscaled
+   // screen coords were. Thusly, all rectangles should be converted to unscaled x1, y1, x2, y2
+   // coords, scaled, and then converted back to x, y, w, h
+   for(i = 0; i < 319; i++)
+   {
+      video.realx1array[i] = (int)(i * video.floatxscale);
+      video.realx2array[i] = (int)((i + 1) * video.floatxscale) - 1;
+   }
+   video.realx1array[i] = (int)(i * video.floatxscale);
+   video.realx2array[i] = video.width - 1;
+
+   for(i = 0; i < 199; i++)
+   {
+      video.realy1array[i] = (int)(i * video.floatyscale);
+      video.realy2array[i] = (int)((i + 1) * video.floatyscale) - 1;
+   }
+   video.realy1array[i] = (int)(i * video.floatyscale);
+   video.realy2array[i] = video.height - 1;
+
 
    if(setblocks == 11)
    {
       scaledviewwidth  = SCREENWIDTH;
       scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth  = v_width >> detailshift;                // haleyjd 09/10/06
-      viewheight = v_height;
+      viewwidth  = video.width >> detailshift;                // haleyjd 09/10/06
+      viewheight = video.height;
    }
    else
    {
@@ -447,7 +476,7 @@ void R_SetupViewScaling(void)
    // this matches zdoom and is more descriptive. 
    // It still works the same, though.
    
-   yaspectmul = FixedDiv(globalyscale, globalxscale);
+   yaspectmul = FixedDiv(video.globalyscale, video.globalxscale);
 
    // SoM: Cardboard
    view.xcenter = (view.width = (float)viewwidth) * 0.5f;
@@ -833,12 +862,12 @@ void R_HOMdrawer(void)
    char *dest;
    
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
-   dest = screens[0] + viewwindowy*v_width + viewwindowx;
+   dest = video.screens[0] + viewwindowy * video.width + viewwindowx;
 
    for(y = viewwindowy; y < viewwindowy+viewheight; ++y)
    {
       memset(dest, colour, viewwidth);
-      dest += v_width;
+      dest += video.width;
    }
 }
 

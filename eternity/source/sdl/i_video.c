@@ -549,7 +549,7 @@ void I_FinishUpdate(void)
 
    // SoM 3/14/2002: Only one way to go about this without asm code
    if(pitch1 == pitch2)
-      memcpy(sdlscreen->pixels, screens[PRIMARY_BUFFER], v_width * v_height);
+      memcpy(sdlscreen->pixels, video.screens[PRIMARY_BUFFER], video.width * video.height);
    else
    {
       // SoM: ok, so it would seem that the backward count is actually slower
@@ -558,8 +558,8 @@ void I_FinishUpdate(void)
       int y = -1;
       
       // SoM: optimized a bit
-      while(++y < v_height)
-         memcpy((char *)sdlscreen->pixels + (y * pitch1), screens[PRIMARY_BUFFER] + (y * pitch2), pitch2);
+      while(++y < video.height)
+         memcpy((char *)sdlscreen->pixels + (y * pitch1), video.screens[PRIMARY_BUFFER] + (y * pitch2), pitch2);
    }
 
    SDL_UnlockSurface(sdlscreen);
@@ -573,9 +573,9 @@ void I_FinishUpdate(void)
 
 void I_ReadScreen(byte *scr)
 {
-   int size = v_width * v_height;
+   int size = video.width * video.height;
    
-   memcpy(scr, *screens, size);
+   memcpy(scr, *video.screens, size);
 }
 
 //
@@ -819,8 +819,8 @@ static boolean I_InitGraphicsMode(void)
    UpdateFocus();
    UpdateGrab();
 
-   v_width  = v_w;
-   v_height = v_h;
+   video.width  = v_w;
+   video.height = v_h;
    
    V_Init();      
    

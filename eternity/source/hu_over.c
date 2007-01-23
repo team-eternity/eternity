@@ -548,7 +548,7 @@ void HU_OverlayDraw(void)
    int i;
    
    // SoM 2-4-04: ANYRES
-   if(viewheight != v_height || automapactive || !hud_enabled) 
+   if(viewheight != video.height || automapactive || !hud_enabled) 
       return;  // fullscreen only
   
    HU_OverlaySetup();

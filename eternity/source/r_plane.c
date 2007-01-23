@@ -199,9 +199,9 @@ static void R_MapPlane(int y, int x1, int x2)
       {
          // SoM: ANYRES
          if(x1 >= 0 && x1 <=viewwidth)
-            *(screens[0]+y*v_width+x1) = gameModeInfo->blackIndex;
+            *(video.screens[0]+y*video.width+x1) = gameModeInfo->blackIndex;
          if(x2 >= 0 && x2 <=viewwidth)
-            *(screens[0]+y*v_width+x2) = gameModeInfo->blackIndex;
+            *(video.screens[0]+y*video.width+x2) = gameModeInfo->blackIndex;
       }
    }
 }
@@ -264,21 +264,21 @@ static visplane_t *new_visplane(unsigned hash)
    check->next = visplanes[hash];
    visplanes[hash] = check;
 
-   if(check->max_width < (unsigned)v_width)
+   if(check->max_width < (unsigned)video.width)
    {
       if(check->pad1)
          free(check->pad1);
       if(check->pad3)
          free(check->pad3);
 
-      check->max_width = v_width;
-      check->pad1 = calloc(1, (v_width + 2) * sizeof(int));
+      check->max_width = video.width;
+      check->pad1 = calloc(1, (video.width + 2) * sizeof(int));
       check->top = check->pad1 + 1;
-      check->pad2 = check->pad1 + v_width + 1;
+      check->pad2 = check->pad1 + video.width + 1;
 
-      check->pad3 = calloc(1, (v_width + 2) * sizeof(int));
+      check->pad3 = calloc(1, (video.width + 2) * sizeof(int));
       check->bottom = check->pad3 + 1;
-      check->pad4 = check->pad3 + v_width + 1;
+      check->pad4 = check->pad3 + video.width + 1;
    }
    
    num_visplanes++;      // keep track of how many for counter

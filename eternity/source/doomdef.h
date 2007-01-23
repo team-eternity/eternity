@@ -98,13 +98,34 @@ typedef enum {
 // SoM 2-4-04: ANYRES
 #define MAX_SCREENWIDTH  1024
 #define MAX_SCREENHEIGHT 768
-extern int v_width, v_height;
-extern fixed_t v_widthfrac, v_heightfrac;
-extern fixed_t globalxscale, globalyscale;
-extern fixed_t globalixscale, globaliyscale;
-// SoM 1-31-04: This will insure that scaled patches and such are put in the right places
+
+// SoM: replaced globals with a struct and a single global
+typedef struct
+{
+   // SoM: Not implemented (yet)
+   //int bitdepth;
+
+   int width, height;
+   fixed_t widthfrac, heightfrac;
+   fixed_t globalxscale, globalyscale;
+   fixed_t globalxstep, globalystep;
+
+   float floatxscale, floatyscale;
+   float floatxstep, floatystep;
+
+   byte *screens[5];
+
+   // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
+   int realx1array[320];
+   int realy1array[200];
+   int realx2array[320];
+   int realy2array[200];
+} cb_video_t;
+
 extern int realxarray[321];
 extern int realyarray[201];
+
+extern cb_video_t video;
 
 #define SCREENWIDTH      320
 #define SCREENHEIGHT     200

@@ -58,8 +58,8 @@
 #define HISTORY 32
 
 // SoM 2-4-04: ANYRES
-#define C_SCREENHEIGHT v_height
-#define C_SCREENWIDTH v_width
+#define C_SCREENHEIGHT video.height
+#define C_SCREENWIDTH video.width
 
 extern const char *shiftxform;
 static void Egg();
@@ -464,7 +464,7 @@ void C_Drawer(void)
 {
    int y;
    int count;
-   int real_height = (current_height * globalyscale) >> FRACBITS;
+   int real_height = (current_height * video.globalyscale) >> FRACBITS;
    static int oldscreenheight = 0;
    
    if(!consoleactive) 
@@ -485,7 +485,7 @@ void C_Drawer(void)
 
    // draw backdrop
 
-   memcpy(screens[0],
+   memcpy(video.screens[0],
           backdrop + (C_SCREENHEIGHT-real_height)*C_SCREENWIDTH,
           real_height*C_SCREENWIDTH);
 
