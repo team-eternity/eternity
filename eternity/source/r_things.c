@@ -1730,8 +1730,8 @@ void R_DrawParticle(vissprite_t *vis)
    if(x2 >= viewwidth)
       x2 = viewwidth - 1;
 
-   //x1 <<= detailshift;
-   //x2 <<= detailshift;
+   x1 <<= detailshift;
+   x2 <<= detailshift;
 
    // due to square shape, it is unnecessary to clip the entire
    // particle

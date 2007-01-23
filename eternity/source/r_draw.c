@@ -81,16 +81,6 @@ byte *main_tranmap;     // killough 4/11/98
 // Source is the top of the column to scale.
 //
 
-lighttable_t *dc_colormap; 
-int     dc_x; 
-int     dc_yl; 
-int     dc_yh; 
-fixed_t dc_iscale; 
-fixed_t dc_texturemid;
-int     dc_texheight;    // killough
-byte    *dc_source;      // first pixel in a column (possibly virtual) 
-fixed_t dc_translevel;   // haleyjd: level for zdoom translucency
-
 
 // Fuzz stuffs
 
@@ -713,7 +703,7 @@ void CB_DrawAddColumn_8(void)
    {
       fixed_t fglevel, bglevel;
       
-      fglevel = dc_translevel & ~0x3ff;
+      fglevel = column.translevel & ~0x3ff;
       bglevel = FRACUNIT;
       fg2rgb  = Col2RGB[fglevel >> 10];
       bg2rgb  = Col2RGB[bglevel >> 10];
@@ -1061,7 +1051,7 @@ void R_InitBuffer(int width, int height)
 { 
    int i; 
    int st_height;
-   int tviewwidth = viewwidth;// << detailshift;
+   int tviewwidth = viewwidth << detailshift;
    
    linesize = v_width;    // killough 11/98
    
@@ -1241,30 +1231,28 @@ void R_DrawNewSkyColumn(void)
   register fixed_t frac;            // killough
   fixed_t          fracstep;     
 
-  count = dc_yh - dc_yl + 1; 
+  count = column.y2 - column.y1 + 1; 
 
   if (count <= 0)    // Zero length, column does not exceed a pixel.
     return; 
                                  
 #ifdef RANGECHECK 
-  if ((unsigned)dc_x >= MAX_SCREENWIDTH
-      || dc_yl < 0
-      || dc_yh >= MAX_SCREENHEIGHT) 
-    I_Error ("R_DrawNewSkyColumn: %i to %i at %i", dc_yl, dc_yh, dc_x); 
+  if ((unsigned)column.x >= MAX_SCREENWIDTH
+      || column.y1 < 0
+      || column.y2 >= MAX_SCREENHEIGHT) 
+    I_Error ("R_DrawNewSkyColumn: %i to %i at %i", column.y1, column.y2, column.x); 
 #endif 
 
   // Framebuffer destination address.
   // Use ylookup LUT to avoid multiply with ScreenWidth.
   // Use columnofs LUT for subwindows? 
 
-  dest = ylookup[dc_yl] + columnofs[dc_x];  
+  dest = ylookup[column.y1] + columnofs[column.x];  
 
   // Determine scaling, which is the only mapping to be done.
 
-  fracstep = dc_iscale; 
-  //frac = dc_texturemid + (dc_yl-centery)*fracstep; 
-  frac = dc_texturemid +
-     FixedMul((dc_yl << FRACBITS) - centeryfrac, fracstep);
+  fracstep = column.step; 
+  frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
   // Inner loop that does the actual texture mapping,
   //  e.g. a DDA-lile scaling.
@@ -1273,10 +1261,10 @@ void R_DrawNewSkyColumn(void)
   // killough 2/1/98: more performance tuning
 
   {
-    register const byte *source = dc_source;            
-    register const lighttable_t *colormap = dc_colormap; 
-    register int heightmask = dc_texheight-1;
-    if (dc_texheight & heightmask)   // not a power of 2 -- killough
+    register const byte *source = column.source;            
+    register const lighttable_t *colormap = column.colormap; 
+    register int heightmask = column.texheight-1;
+    if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
         heightmask++;
         heightmask <<= FRACBITS;

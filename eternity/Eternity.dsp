@@ -232,6 +232,10 @@ SOURCE=.\Source\r_draw.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\r_drawl.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\source\r_drawq.c
 # End Source File
 # Begin Source File

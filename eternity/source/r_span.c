@@ -339,112 +339,82 @@ spandrawer_t r_spandrawer =
 // drawing code but double up on pixels, making it blocky.
 //
 
-#if 0
+
 static void R_DrawSpan_LD64(void) 
 { 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-      
-   xposition = ds_xfrac << 10; yposition = ds_yfrac << 10;
-   xstep = ds_xstep; ystep = ds_ystep;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   count = ds_x2 - ds_x1 + 1;
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-   // low detail: must double x coordinate
-   ds_x1 <<= 1;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   
+   dest = ylookup[span.y] + columnofs[span.x1 << 1];
+
    while(count >= 4)
    {
-      dest[0] = dest[1] = 
-         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      // SoM: Why didn't I see this earlier? the spot variable is a waste now
+      // because we don't have the uber complicated math to calculate it now, 
+      // so that was a memory write we didn't need!
+      dest[0] = dest[1] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[2] = dest[3] = 
-         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[2] = dest[3] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[4] = dest[5] = 
-         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[4] = dest[5] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[6] = dest[7] = 
-         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[6] = dest[7] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
+      xf += xs;
+      yf += ys;
       
       dest += 8;
       count -= 4;
       
    }
-   while(count--)
-   { 
-      *dest = *(dest + 1) = 
-         colormap[source[((yposition >> 20) & 0xFC0) | (xposition >> 26)]]; 
+   while(count-- > 0)
+   {
+      dest[0] = dest[1] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]];
+
       dest += 2;
-      
-      xposition += xstep;
-      yposition += ystep;
-   } 
+
+      xf += xs;
+      yf += ys;
+   }
 }
 
 static void R_DrawSpan_LD128(void) 
 { 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-   
-   xposition = ds_xfrac << 9; yposition = ds_yfrac << 9;
-   xstep = ds_xstep >> 1; ystep = ds_ystep >> 1;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
-   count = ds_x2 - ds_x1 + 1;
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-   // low detail: must double x coordinate
-   ds_x1 <<= 1;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   dest = ylookup[span.y] + columnofs[span.x1 << 1];
    
    while(count >= 4)
    {
-      dest[0] = dest[1] =
-         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[0] = dest[1] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[2] = dest[3] =
-         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[2] = dest[3] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[4] = dest[5] =
-         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[4] = dest[5] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
+      xf += xs;
+      yf += ys;
       
-      dest[6] = dest[7] =
-         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
-      xposition += xstep;
-      yposition += ystep;
+      dest[6] = dest[7] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
+      xf += xs;
+      yf += ys;
       
       dest += 8;
       count -= 4;
@@ -452,57 +422,45 @@ static void R_DrawSpan_LD128(void)
    while (count--)
    { 
       *dest = *(dest + 1) =
-         colormap[source[((yposition >> 18) & 0x3F80) | (xposition >> 25)]]; 
+         colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
       dest += 2;
-      xposition += xstep;
-      yposition += ystep;
+      xf += xs;
+      yf += ys;
    } 
 }
 
 static void R_DrawSpan_LD256(void) 
 { 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-   
-   xposition = ds_xfrac << 8; yposition = ds_yfrac << 8;
-   xstep = ds_xstep >> 2; ystep = ds_ystep >> 2;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   count = ds_x2 - ds_x1 + 1;
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   byte *colormap = (byte *)span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-   // low detail: must double x coordinate
-   ds_x1 <<= 1;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   dest = ylookup[span.y] + columnofs[span.x1 << 1];
    
    while(count >= 4)
    {
       dest[0] = dest[1] =
-         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
+      xf += xs;
+      yf += ys;
       
       dest[2] = dest[3] =
-         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
+      xf += xs;
+      yf += ys;
       
       dest[4] = dest[5] =
-         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
+      xf += xs;
+      yf += ys;
       
       dest[6] = dest[7] =
-         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
+      xf += xs;
+      yf += ys;
       
       dest += 8;
       count -= 4;
@@ -511,57 +469,45 @@ static void R_DrawSpan_LD256(void)
    while(count--)
    { 
       *dest = *(dest + 1) =
-         colormap[source[((yposition >> 16) & 0xFF00) | (xposition >> 24)]]; 
+         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
       dest += 2;
-      xposition += xstep;
-      yposition += ystep;
+      xf += xs;
+      yf += ys;
    } 
 }
 
 static void R_DrawSpan_LD512(void) 
 { 
-   unsigned xposition;
-   unsigned yposition;
-   unsigned xstep, ystep;
-   
-   byte *source;
-   byte *colormap;
-   byte *dest;
-   
-   unsigned count;
-      
-   xposition = ds_xfrac << 7; yposition = ds_yfrac << 7;
-   xstep = ds_xstep >> 3; ystep = ds_ystep >> 3;
-   
-   source = ds_source;
-   colormap = ds_colormap;
-   count = ds_x2 - ds_x1 + 1;
+   unsigned xf = span.xfrac, xs = span.xstep;
+   unsigned yf = span.yfrac, ys = span.ystep;
+   register byte *dest;
+   byte *source = (byte *)span.source;
+   byte *colormap = (byte *)span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-   // low detail: must double x coordinate
-   ds_x1 <<= 1;
-   dest = ylookup[ds_y] + columnofs[ds_x1];       
+   dest = ylookup[span.y] + columnofs[span.x1 << 1];
    
    while(count >= 4)
    {
       dest[0] = dest[1] =
-         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
+      xf += xs;
+      yf += ys;
       
       dest[2] = dest[3] =
-         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
+      xf += xs;
+      yf += ys;
       
       dest[4] = dest[5] =
-         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
+      xf += xs;
+      yf += ys;
       
       dest[6] = dest[7] =
-         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
-      xposition += xstep;
-      yposition += ystep;
+         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
+      xf += xs;
+      yf += ys;
       
       dest += 8;
       count -= 4;
@@ -570,19 +516,12 @@ static void R_DrawSpan_LD512(void)
    while(count--)
    { 
       *dest = *(dest + 1) =
-         colormap[source[((yposition >> 14) & 0x3FE00) | (xposition >> 23)]]; 
+         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
       dest += 2;
-      xposition += xstep;
-      yposition += ystep;
+      xf += xs;
+      yf += ys;
    } 
 }
-#else
-static void R_DrawSpan_LD64(void) {}
-static void R_DrawSpan_LD128(void) {}
-
-static void R_DrawSpan_LD256(void) {}
-static void R_DrawSpan_LD512(void) {}
-#endif
 
 // low-detail spandrawer
 spandrawer_t r_lowspandrawer =
@@ -591,10 +530,10 @@ spandrawer_t r_lowspandrawer =
    R_DrawSpan_LD128,
    R_DrawSpan_LD256,
    R_DrawSpan_LD512,
-   65536.0f,
-   65536.0f,
-   65536.0f,
-   65536.0f
+   67108864.0f,
+   33554432.0f,
+   16777216.0f,
+   8388608.0f
 };
 
 #endif

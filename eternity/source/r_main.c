@@ -144,10 +144,10 @@ static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
 //
 void R_SetColumnEngine(void)
 {
-   //if(detailshift == 0)
+   if(detailshift == 0)
       r_column_engine = r_column_engines[r_column_engine_num];
-   //else
-   //   r_column_engine = &r_lowdetail_drawer;
+   else
+      r_column_engine = &r_lowdetail_drawer;
 }
 
 // haleyjd 09/10/06: span drawing engines
@@ -167,10 +167,10 @@ static spandrawer_t *r_span_engines[NUMSPANENGINES] =
 //
 void R_SetSpanEngine(void)
 {
-   //if(detailshift == 0)
+   if(detailshift == 0)
       r_span_engine = r_span_engines[r_span_engine_num];
-   //else
-   //   r_span_engine = &r_lowspandrawer;
+   else
+      r_span_engine = &r_lowspandrawer;
 }
 
 //
@@ -289,7 +289,7 @@ static void R_InitTextureMapping (void)
    view.fov = (float)fov * PI / 180.0f; // 90 degrees
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;
-   view.yfoc = view.xfoc * ratio;
+   view.yfoc = (view.xfoc * ratio) * (detailshift ? 2.0f : 1.0f);
    view.focratio = view.yfoc / view.xfoc;
 
    // Unfortunately, cardboard still has to co-exist with the old fixed point code
@@ -427,14 +427,14 @@ void R_SetupViewScaling(void)
    {
       scaledviewwidth  = SCREENWIDTH;
       scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth  = v_width;// >> detailshift;                // haleyjd 09/10/06
+      viewwidth  = v_width >> detailshift;                // haleyjd 09/10/06
       viewheight = v_height;
    }
    else
    {
       scaledviewwidth  = setblocks * 32;
       scaledviewheight = (setblocks * 168 / 10) & ~7;     // killough 11/98
-      viewwidth  = realxarray[scaledviewwidth];// >> detailshift; // haleyjd 09/10/06
+      viewwidth  = realxarray[scaledviewwidth] >> detailshift; // haleyjd 09/10/06
       viewheight = realyarray[scaledviewheight];
    }
 
