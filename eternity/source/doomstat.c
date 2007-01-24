@@ -139,6 +139,9 @@ gametype_t GameType = gt_single, DefaultGameType = gt_single;
 int waitAtExit = 0;
 #endif
 
+// haleyjd 01/24/07: spawn <!>'s for missing objects?
+boolean markUnknowns;
+
 //----------------------------------------------------------------------------
 //
 // $Log: doomstat.c,v $

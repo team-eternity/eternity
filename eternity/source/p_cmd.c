@@ -299,6 +299,11 @@ static char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
 VARIABLE_INT(spechits_emulation, NULL, 0, 2, spechit_strs);
 CONSOLE_VARIABLE(spechits_emulation, spechits_emulation, 0) {}
 
+// haleyjd 01/24/07: spawn Unknowns for missing things on maps?
+VARIABLE_BOOLEAN(markUnknowns, NULL, yesno);
+CONSOLE_VARIABLE(p_markunknowns, 0) {}
+
+
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
@@ -344,6 +349,7 @@ void P_AddCommands(void)
    C_AddCommand(fraglimit);
 
    C_AddCommand(spechits_emulation);
+   C_AddCommand(p_markunknowns);
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();
