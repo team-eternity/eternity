@@ -56,6 +56,7 @@ int main(int argc, char **argv)
    myargc = argc;
    myargv = argv;
    
+/*
    // SoM: From CHOCODOOM Thank you fraggle!!
 #ifdef _WIN32
 
@@ -86,6 +87,7 @@ int main(int argc, char **argv)
         putenv("SDL_VIDEODRIVER=directx");
     }
 #endif
+    */
 
    // haleyjd 04/15/02: added check for failure
    if(SDL_Init(INIT_FLAGS) == -1)

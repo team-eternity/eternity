@@ -33,6 +33,7 @@ rcsid[] = "$Id: p_genlin.c,v 1.18 1998/05/23 10:23:23 jim Exp $";
 #include "p_info.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "p_xenemy.h"
 #include "m_random.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
