@@ -2514,7 +2514,7 @@ void P_UpdateSpecials(void)
    if(levelFragLimit)  // we used -frags so compare count
    {
       int i;
-      for(i=0; i<MAXPLAYERS; i++)
+      for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(!playeringame[i])
             continue;
@@ -2527,9 +2527,9 @@ void P_UpdateSpecials(void)
    }
 
    // Animate flats and textures globally
-   for (anim = anims ; anim < lastanim ; anim++)
+   for(anim = anims; anim < lastanim; ++anim)
    {
-      for(i=anim->basepic ; i<anim->basepic+anim->numpics ; i++)
+      for(i = anim->basepic; i < anim->basepic + anim->numpics; ++i)
       {
          pic = anim->basepic + 
                ((leveltime/anim->speed + i)%anim->numpics);

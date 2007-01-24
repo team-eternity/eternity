@@ -50,6 +50,7 @@ static const char rcsid[] = "$Id: r_main.c,v 1.13 1998/05/07 00:47:52 killough E
 #include "w_wad.h"
 #include "d_deh.h"
 #include "d_gi.h"
+#include "c_io.h"
 
 
 
@@ -78,7 +79,7 @@ angle_t  viewangle;
 fixed_t  viewcos, viewsin;
 player_t *viewplayer;
 extern lighttable_t **walllights;
-boolean  showpsprites=1; //sf
+boolean  showpsprites = 1; //sf
 camera_t *viewcamera;
 int detailshift; // haleyjd 09/10/06: low detail mode restoration
 int c_detailshift;
@@ -577,13 +578,14 @@ int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 //
 // R_IncrementFrameid
 //
-// SoM: frameid is an unsigned integer that represents the number of the frame currently 
-// being rendered for use in caching data used by the renderer which is unique to each frame.
-// frameid is incremented every frame. When the number becomes too great and the value wraps 
-// back around to 0, the structures should be searched and all frameids reset to prevent mishaps 
-// in the rendering process.
+// SoM: frameid is an unsigned integer that represents the number of the frame 
+// currently being rendered for use in caching data used by the renderer which 
+// is unique to each frame. frameid is incremented every frame. When the number
+// becomes too great and the value wraps back around to 0, the structures should
+// be searched and all frameids reset to prevent mishaps in the rendering 
+// process.
 //
-unsigned frameid = 0;
+unsigned int frameid = 0;
 
 void R_IncrementFrameid(void)
 {
@@ -593,8 +595,12 @@ void R_IncrementFrameid(void)
    {
       int i;
 
-      // it wraped!
-      doom_printf("Congratulations! You have just played through 4,294,967,295 rendered frames of Doom. At a constant rate of 35 frames per second you have spent at least 1,420 days playing DOOM.\nGET A LIFE.\n");
+      // it wrapped!
+      C_Printf("Congratulations! You have just played through 4,294,967,295 "
+               "rendered frames of Doom. At a constant rate of 35 frames per "
+               "second you have spent at least 1,420 days playing DOOM.\n"
+               "GET A LIFE.\a\n");
+
       frameid = 1;
 
       // reset everything that uses this
@@ -638,7 +644,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       pitch = player->pitch;
 
       // haleyjd 01/21/07: earthquakes
-      if(player->quake)
+      if(player->quake &&
+         !((menuactive && !demoplayback && !netgame) || paused))
       {
          int strength = player->quake;
 

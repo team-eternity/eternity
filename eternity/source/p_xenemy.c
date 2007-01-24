@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2007 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ void T_QuakeThinker(quakethinker_t *qt)
 
    // loop quake sound
    if(quakesound && !S_CheckSoundPlaying(soundorg, quakesound))
-      S_StartSfxInfo(soundorg, quakesound, 127, ATTN_NONE, true);
+      S_StartSfxInfo(soundorg, quakesound, 127, ATTN_NORMAL, true);
 
    tics = qt->duration--;
 

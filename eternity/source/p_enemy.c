@@ -64,7 +64,8 @@ extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
 static mobj_t *current_actor;
 
-typedef enum {
+typedef enum 
+{
    DI_EAST,
    DI_NORTHEAST,
    DI_NORTH,
@@ -90,12 +91,14 @@ static void P_NewChaseDir(mobj_t *actor);
 //
 
 //
+// P_RecursiveSound
+//
 // Called by P_NoiseAlert.
 // Recursively traverse adjacent sectors,
 // sound blocking lines cut off traversal.
 //
 // killough 5/5/98: reformatted, cleaned up
-
+//
 static void P_RecursiveSound(sector_t *sec, int soundblocks,
                              mobj_t *soundtarget)
 {
@@ -181,10 +184,10 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
 //
 // P_NoiseAlert
+//
 // If a monster yells at a player,
 // it will alert other monsters to the player.
 //
-
 void P_NoiseAlert(mobj_t *target, mobj_t *emitter)
 {
    validcount++;
@@ -194,7 +197,6 @@ void P_NoiseAlert(mobj_t *target, mobj_t *emitter)
 //
 // P_CheckMeleeRange
 //
-
 boolean P_CheckMeleeRange(mobj_t *actor)
 {
    mobj_t *pl = actor->target;
@@ -334,7 +336,6 @@ static boolean P_CheckMissileRange(mobj_t *actor)
 // or that a monster should stay on the lift for a while
 // while it goes up or down.
 //
-
 static boolean P_IsOnLift(const mobj_t *actor)
 {
    const sector_t *sec = actor->subsector->sector;
@@ -377,7 +378,6 @@ static boolean P_IsOnLift(const mobj_t *actor)
 // their current position. Returns 1 if the damage is moderate,
 // -1 if it is serious. Used for AI.
 //
-
 static int P_IsUnderDamage(mobj_t *actor)
 { 
    const struct msecnode_s *seclist;
@@ -584,7 +584,6 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 //
 // killough 9/12/98: Same as P_Move, except smarter
 //
-
 static boolean P_SmartMove(mobj_t *actor)
 {
    mobj_t *target = actor->target;
@@ -640,7 +639,8 @@ static boolean P_SmartMove(mobj_t *actor)
 }
 
 //
-// TryWalk
+// P_TryWalk
+//
 // Attempts to move actor on
 // in its current (ob->moveangle) direction.
 // If blocked by either a wall or an actor
@@ -650,7 +650,6 @@ static boolean P_SmartMove(mobj_t *actor)
 // If a door is in the way,
 // an OpenDoor call is made to start it opening.
 //
-
 static boolean P_TryWalk(mobj_t *actor)
 {
    if(!P_SmartMove(actor))
@@ -667,7 +666,6 @@ static boolean P_TryWalk(mobj_t *actor)
 // Most of P_NewChaseDir(), except for what
 // determines the new direction to take
 //
-
 static void P_DoNewChaseDir(mobj_t *actor, fixed_t deltax, fixed_t deltay)
 {
    dirtype_t xdir, ydir, tdir;
@@ -790,9 +788,10 @@ static boolean PIT_AvoidDropoff(line_t *line)
 }
 
 //
+// P_AvoidDropoff
+//
 // Driver for above
 //
-
 static fixed_t P_AvoidDropoff(mobj_t *actor)
 {
    int yh=((tmbbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
@@ -808,10 +807,10 @@ static fixed_t P_AvoidDropoff(mobj_t *actor)
    // check lines
 
    validcount++;
-   for(bx=xl ; bx<=xh ; bx++)
+   for(bx = xl; bx <= xh; ++bx)
    {
       // all contacted lines
-      for(by=yl ; by<=yh ; by++)
+      for(by = yl; by <= yh; ++by)
          P_BlockLinesIterator(bx, by, PIT_AvoidDropoff);
    }
    
@@ -824,7 +823,6 @@ static fixed_t P_AvoidDropoff(mobj_t *actor)
 //
 // killough 9/8/98: Split into two functions
 //
-
 static void P_NewChaseDir(mobj_t *actor)
 {
    mobj_t *target = actor->target;
@@ -908,7 +906,6 @@ static void P_NewChaseDir(mobj_t *actor)
 //
 // killough 9/9/98: whether a target is visible to a monster
 //
-
 static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, boolean allaround)
 {
    if(mo->flags2 & MF2_DONTDRAW)
@@ -940,6 +937,9 @@ static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, boolean allaround)
    return P_CheckSight(actor, mo);
 }
 
+
+static int current_allaround;
+
 //
 // PIT_FindTarget
 //
@@ -947,9 +947,6 @@ static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, boolean allaround)
 //
 // Finds monster targets for other monsters
 //
-
-static int current_allaround;
-
 static boolean PIT_FindTarget(mobj_t *mo)
 {
    mobj_t *actor = current_actor;
@@ -1041,10 +1038,10 @@ static boolean P_HereticMadMelee(mobj_t *actor)
 
 //
 // P_LookForPlayers
+//
 // If allaround is false, only look 180 degrees in front.
 // Returns true if a player is targeted.
 //
-
 static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
 {
    player_t *player;
@@ -1129,6 +1126,8 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
    }
 }
 
+//
+// P_LookForMonsters
 // 
 // Friendly monsters, by Lee Killough 7/18/98
 //
@@ -1136,7 +1135,6 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
 // also return to owner if they cannot find any targets.
 // A marine's best friend :)  killough 7/18/98, 9/98
 //
-
 static boolean P_LookForMonsters(mobj_t *actor, boolean allaround)
 {
    thinker_t *cap, *th;
@@ -1223,7 +1221,6 @@ static boolean P_LookForMonsters(mobj_t *actor, boolean allaround)
 //
 // killough 9/5/98: look for targets to go after, depending on kind of monster
 //
-
 static boolean P_LookForTargets(mobj_t *actor, int allaround)
 {
    return actor->flags & MF_FRIEND ?
@@ -1236,7 +1233,6 @@ static boolean P_LookForTargets(mobj_t *actor, int allaround)
 //
 // killough 9/8/98: Help friends in danger of dying
 //
-
 static boolean P_HelpFriend(mobj_t *actor)
 {
    thinker_t *cap, *th;
@@ -1281,9 +1277,9 @@ static boolean P_HelpFriend(mobj_t *actor)
 
 //
 // A_Look
+//
 // Stay in state until a player is sighted.
 //
-
 void A_Look(mobj_t *actor)
 {
    mobj_t *targ;
@@ -1319,34 +1315,37 @@ void A_Look(mobj_t *actor)
    if(actor->info->seesound)
    {
       int sound;
+
+      // EDF_FIXME: needs to be generalized like in zdoom
       switch (actor->info->seesound)
       {
       case sfx_posit1:
       case sfx_posit2:
       case sfx_posit3:
-         sound = sfx_posit1+P_Random(pr_see)%3;
+         sound = sfx_posit1 + P_Random(pr_see) % 3;
          break;
          
       case sfx_bgsit1:
       case sfx_bgsit2:
-         sound = sfx_bgsit1+P_Random(pr_see)%2;
+         sound = sfx_bgsit1 + P_Random(pr_see) % 2;
          break;
          
       case sfx_dfsit1:  // haleyjd: dwarf screams :)
       case sfx_dfsit2:
-         sound = sfx_dfsit1+P_Random(pr_see)%2;
+         sound = sfx_dfsit1 + P_Random(pr_see) % 2;
          break;
          
       case sfx_clsit1:  // haleyjd: new cleric quips - only if uses clsit1
-         sound = sfx_clsit1+P_Random(pr_see)%4;
+         sound = sfx_clsit1 + P_Random(pr_see) % 4;
          break;
          
       default:
          sound = actor->info->seesound;
          break;
       }
+      
       // haleyjd: generalize to all bosses
-      if(actor->flags2&MF2_BOSS)
+      if(actor->flags2 & MF2_BOSS)
          S_StartSound(NULL, sound);          // full volume
       else
          S_StartSound(actor, sound);
@@ -1361,7 +1360,6 @@ void A_Look(mobj_t *actor)
 // killough 10/98:
 // Allows monsters to continue movement while attacking
 //
-
 void A_KeepChasing(mobj_t *actor)
 {
    /*
@@ -1421,10 +1419,10 @@ static void P_MakeActiveSound(mobj_t *actor)
 
 //
 // A_Chase
+//
 // Actor has a melee attack,
 // so it tries to close as fast as possible
 //
-
 void A_Chase(mobj_t *actor)
 {
    boolean superfriend = false;
@@ -1769,7 +1767,7 @@ void A_PosAttack(mobj_t *actor)
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_posattack) << 20;
 
-   damage = (P_Random(pr_posattack)%5 + 1)*3;
+   damage = (P_Random(pr_posattack) % 5 + 1) * 3;
    P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
@@ -1790,7 +1788,7 @@ void A_SPosAttack(mobj_t* actor)
    {  
       // haleyjd 08/05/04: use new function
       int angle = bangle + (P_SubRandom(pr_sposattack) << 20);
-      int damage = ((P_Random(pr_sposattack)%5)+1)*3;
+      int damage = ((P_Random(pr_sposattack) % 5) + 1) * 3;
       P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
    }
 }
@@ -1811,7 +1809,7 @@ void A_CPosAttack(mobj_t *actor)
    
    // haleyjd 08/05/04: use new function
    angle = bangle + (P_SubRandom(pr_cposattack) << 20);
-   damage = ((P_Random(pr_cposattack)%5)+1)*3;
+   damage = ((P_Random(pr_cposattack) % 5) + 1) * 3;
    P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
@@ -1871,7 +1869,6 @@ void A_BspiAttack(mobj_t *actor)
 //
 // A_TroopAttack
 //
-
 void A_TroopAttack(mobj_t *actor)
 {
    if(!actor->target)
@@ -1949,7 +1946,6 @@ void A_BruisAttack(mobj_t *actor)
 //
 // A_SkelMissile
 //
-
 void A_SkelMissile(mobj_t *actor)
 {
    mobj_t *mo;
@@ -2001,8 +1997,8 @@ void A_Tracer(mobj_t *actor)
    // spawn a puff of smoke behind the rocket
    P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false);
    
-   th = P_SpawnMobj(actor->x-actor->momx,
-                    actor->y-actor->momy,
+   th = P_SpawnMobj(actor->x - actor->momx,
+                    actor->y - actor->momy,
                     actor->z, E_SafeThingType(MT_SMOKE));
   
    th->momz = FRACUNIT;
@@ -2047,7 +2043,7 @@ void A_Tracer(mobj_t *actor)
    if(dist < 1)
       dist = 1;
 
-   slope = (dest->z+40*FRACUNIT - actor->z) / dist;
+   slope = (dest->z + 40*FRACUNIT - actor->z) / dist;
    
    if(slope < actor->momz)
       actor->momz -= FRACUNIT/8;
@@ -2060,7 +2056,7 @@ void A_SkelWhoosh(mobj_t *actor)
    if(!actor->target)
       return;
    A_FaceTarget(actor);
-   S_StartSound(actor,sfx_skeswg);
+   S_StartSound(actor, sfx_skeswg);
 }
 
 void A_SkelFist(mobj_t *actor)
@@ -2070,7 +2066,7 @@ void A_SkelFist(mobj_t *actor)
    A_FaceTarget(actor);
    if(P_CheckMeleeRange(actor))
    {
-      int damage = ((P_Random(pr_skelfist)%10)+1)*6;
+      int damage = ((P_Random(pr_skelfist) % 10) + 1) * 6;
       S_StartSound(actor, sfx_skepch);
       P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
    }
@@ -2133,7 +2129,7 @@ boolean PIT_VileCheck(mobj_t *thing)
       if(demo_version >= 331)
          corpsehit->flags |= MF_SOLID;
 
-      check = P_CheckPosition(corpsehit,corpsehit->x,corpsehit->y);
+      check = P_CheckPosition(corpsehit, corpsehit->x, corpsehit->y);
 
       if(demo_version >= 331)
          corpsehit->flags &= ~MF_SOLID;
@@ -2162,10 +2158,10 @@ boolean PIT_VileCheck(mobj_t *thing)
 
 //
 // A_VileChase
+//
 // Check for ressurecting a body
 //
-
-void A_VileChase(mobj_t* actor)
+void A_VileChase(mobj_t *actor)
 {
    int xl, xh;
    int yl, yh;
@@ -2185,14 +2181,14 @@ void A_VileChase(mobj_t* actor)
       yh = (viletryy - bmaporgy + MAXRADIUS*2)>>MAPBLOCKSHIFT;
 
       vileobj = actor;
-      for(bx=xl ; bx<=xh ; bx++)
+      for(bx = xl; bx <= xh; ++bx)
       {
-         for(by=yl ; by<=yh ; by++)
+         for(by = yl; by <= yh; ++by)
          {
             // Call PIT_VileCheck to check
             // whether object is a corpse
             // that can be raised.
-            if(!P_BlockThingsIterator(bx,by,PIT_VileCheck))
+            if(!P_BlockThingsIterator(bx, by, PIT_VileCheck))
             {
                mobjinfo_t *info;
                
