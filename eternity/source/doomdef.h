@@ -107,19 +107,19 @@ typedef struct
 
    int width, height;
    fixed_t widthfrac, heightfrac;
-   fixed_t globalxscale, globalyscale;
-   fixed_t globalxstep, globalystep;
+   fixed_t xscale, yscale;
+   fixed_t xstep, ystep;
 
-   float floatxscale, floatyscale;
-   float floatxstep, floatystep;
+   float xscalef, yscalef;
+   float xstepf, ystepf;
 
    byte *screens[5];
 
    // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
-   int realx1array[320];
-   int realy1array[200];
-   int realx2array[320];
-   int realy2array[200];
+   int x1lookup[321];
+   int y1lookup[201];
+   int x2lookup[321];
+   int y2lookup[201];
 } cb_video_t;
 
 extern int realxarray[321];

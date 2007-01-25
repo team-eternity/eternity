@@ -64,10 +64,8 @@ cb_video_t  video =
    FRACUNIT, 
    FRACUNIT
 };
-/*int video.width = SCREENWIDTH;
-int video.height = SCREENHEIGHT;
-fixed_t video.globalxscale = FRACUNIT, video.globalyscale = FRACUNIT;
-fixed_t video.globalxstep = FRACUNIT, video.globalystep = FRACUNIT;*/
+
+// SoM: To be phased out
 int realxarray[321];
 int realyarray[201];
 
@@ -477,10 +475,10 @@ void V_DrawLoading(void)
    memset(dest, white, reallinelen);
    // black line (unfilled)
 
-   if((video.globalyscale >> FRACBITS) > 1)
+   if((video.yscale >> FRACBITS) > 1)
    {
       yfrac = 0;
-      ystep = video.globalystep;
+      ystep = video.ystep;
 
       while(yfrac < FRACUNIT)
       {
@@ -622,20 +620,20 @@ void V_ClassicFPSDrawer(void)
     tics = 20;
 
    // SoM: ANYRES
-   if(video.globalyscale > FRACUNIT)
+   if(video.yscale > FRACUNIT)
    {
-      int baseoffset = (video.height - (video.globalyscale >> FRACBITS)) * video.width;
+      int baseoffset = (video.height - (video.yscale >> FRACBITS)) * video.width;
       int offset;
       int x, y, w, h;
 
-      w = video.globalxscale >> FRACBITS;
-      h = video.globalyscale >> FRACBITS;
+      w = video.xscale >> FRACBITS;
+      h = video.yscale >> FRACBITS;
 
       for (i=0 ; i < tics * 2 ; i += 2)
       {
          offset = baseoffset;
          y = h;
-         x = (i * video.globalxscale) >> FRACBITS;
+         x = (i * video.xscale) >> FRACBITS;
          while(y--)
          {
             memset(s + offset + x, 0xff, w);
@@ -646,7 +644,7 @@ void V_ClassicFPSDrawer(void)
       {
          offset = baseoffset;
          y = h;
-         x = (i * video.globalxscale) >> FRACBITS;
+         x = (i * video.xscale) >> FRACBITS;
          while(y--)
          {
             memset(s + offset + x, 0x0, w);
@@ -721,8 +719,8 @@ static void V_InitScreenVBuffer(void)
    vbscreen.pitch  = video.width; // TODO: fix to allow direct drawing!
    vbscreen.xslookup = realxarray;
    vbscreen.yslookup = realyarray;
-   vbscreen.ixscale = video.globalxstep;
-   vbscreen.iyscale = video.globalystep;
+   vbscreen.ixscale = video.xstep;
+   vbscreen.iyscale = video.ystep;
    
    if(video.width == 320 && video.height == 200)
       drawtype = DRAWTYPE_UNSCALED;

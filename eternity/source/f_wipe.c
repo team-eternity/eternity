@@ -100,7 +100,7 @@ void Wipe_StartScreen(void)
    for(x = 0; x < video.width; ++x)
    {
       // limit check
-      int wormx = (x << FRACBITS) / video.globalxscale;
+      int wormx = (x << FRACBITS) / video.xscale;
       int wormy = realyarray[worms[wormx] > 0 ? worms[wormx] : 0];
       
       src = video.screens[0] + x;
@@ -145,7 +145,7 @@ void Wipe_Drawer(void)
    {
       int wormy, wormx;
       
-      wormx = (x << FRACBITS) / video.globalxscale;
+      wormx = (x << FRACBITS) / video.xscale;
       wormy = worms[wormx] > 0 ? worms[wormx] : 0;  // limit check
 	  
       wormy = realyarray[wormy];

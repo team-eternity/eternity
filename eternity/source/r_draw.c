@@ -1071,7 +1071,7 @@ void R_InitBuffer(int width, int height)
       viewwindowy = scaledwindowy = 0;
    else
    {
-      viewwindowy = (video.height - ((st_height * video.globalyscale) >> FRACBITS) - viewheight) >> 1;
+      viewwindowy = (video.height - ((st_height * video.yscale) >> FRACBITS) - viewheight) >> 1;
       scaledwindowy = (SCREENHEIGHT - st_height - height) >> 1;
    }
    

@@ -672,7 +672,7 @@ void AM_LevelInit(void)
    
    // SoM 2-4-04: ANYRES
    f_w = video.width;
-   f_h = video.height - ((gameModeInfo->StatusBar->height * video.globalyscale) >> FRACBITS);
+   f_h = video.height - ((gameModeInfo->StatusBar->height * video.yscale) >> FRACBITS);
 
    AM_findMinMaxBoundaries();
    scale_mtof = FixedDiv(min_scale_mtof, (int)(0.7*FRACUNIT));
@@ -1091,7 +1091,7 @@ void AM_clearFB(int color)
    {
       // SoM 2-4-04: ANYRES
       V_DrawBlock(0, 0, &vbscreen, 
-                  SCREENWIDTH, (f_h << FRACBITS) / video.globalyscale, 
+                  SCREENWIDTH, (f_h << FRACBITS) / video.yscale, 
                   am_backdrop);
    }
    else
@@ -2115,8 +2115,8 @@ void AM_drawMarks(void)
    {
       if(markpoints[i].x != -1)
       {
-         int w  = (5 * video.globalxscale) >> FRACBITS;
-         int h  = (6 * video.globalyscale) >> FRACBITS;
+         int w  = (5 * video.xscale) >> FRACBITS;
+         int h  = (6 * video.yscale) >> FRACBITS;
          int fx = CXMTOF(markpoints[i].x);
          int fy = CYMTOF(markpoints[i].y);
          int j  = i;
@@ -2126,17 +2126,17 @@ void AM_drawMarks(void)
             int d = j % 10;
             
             if(d == 1)          // killough 2/22/98: less spacing for '1'
-               fx += (video.globalxscale >> FRACBITS);
+               fx += (video.xscale >> FRACBITS);
             
             if(fx >= f_x && fx < f_w - w && fy >= f_y && fy < f_h - h)
             {
-               V_DrawPatch((fx<<FRACBITS)/video.globalxscale, 
-                           (fy<<FRACBITS)/video.globalyscale, 
+               V_DrawPatch((fx<<FRACBITS)/video.xscale, 
+                           (fy<<FRACBITS)/video.yscale, 
                            &vbscreen, 
                            marknums[d]);
             }
             
-            fx -= w - (video.globalxscale >> FRACBITS); // killough 2/22/98: 1 space backwards
+            fx -= w - (video.xscale >> FRACBITS); // killough 2/22/98: 1 space backwards
             
             j /= 10;
 

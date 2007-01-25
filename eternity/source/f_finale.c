@@ -594,7 +594,7 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
       }
   else*/
    // SoM: ANYRES
-   if(video.globalyscale > FRACUNIT)
+   if(video.yscale > FRACUNIT)
    {
       byte *desttop = video.screens[0] + x;
 
@@ -607,7 +607,7 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
          fixed_t step;
 
          frac = 0;
-         step = video.globalystep;
+         step = video.ystep;
 
          for (;count--; dest += video.width)
          {
@@ -660,7 +660,7 @@ void F_BunnyScroll (void)
    // ANYRES
   for ( x = 0 ; x < video.width ; x++)
   {
-    int scaledx = (x * video.globalystep) >> FRACBITS;
+    int scaledx = (x * video.ystep) >> FRACBITS;
 
     if (scaledx+scrolled < 320)
       F_DrawPatchCol (x, p1, scaledx+scrolled);

@@ -410,24 +410,24 @@ void R_SetupViewScaling(void)
    // Moved stuff, reformatted a bit
    // haleyjd 04/03/05: removed unnecessary FixedDiv calls
 
-   video.globalxscale  = (video.width << FRACBITS) / SCREENWIDTH;
-   video.globalxstep   = (SCREENWIDTH << FRACBITS) / video.width;
-   video.globalyscale  = (video.height << FRACBITS) / SCREENHEIGHT;
-   video.globalystep   = (SCREENHEIGHT << FRACBITS) / video.height;
+   video.xscale  = (video.width << FRACBITS) / SCREENWIDTH;
+   video.xstep   = (SCREENWIDTH << FRACBITS) / video.width;
+   video.yscale  = (video.height << FRACBITS) / SCREENHEIGHT;
+   video.ystep   = (SCREENHEIGHT << FRACBITS) / video.height;
 
-   video.floatxscale = (float)video.width / SCREENWIDTH;
-   video.floatxstep  = SCREENWIDTH / (float)video.width;
-   video.floatyscale = (float)video.height / SCREENHEIGHT;
-   video.floatystep  = SCREENHEIGHT / (float)video.height;
+   video.xscalef = (float)video.width / SCREENWIDTH;
+   video.xstepf  = SCREENWIDTH / (float)video.width;
+   video.yscalef = (float)video.height / SCREENHEIGHT;
+   video.ystepf  = SCREENHEIGHT / (float)video.height;
 
    realxarray[320] = video.width;
    realyarray[200] = video.height;
 
    for(i = 0; i < 320; ++i)
-      realxarray[i] = (i * video.globalxscale) >> FRACBITS;
+      realxarray[i] = (i * video.xscale) >> FRACBITS;
 
    for(i = 0; i < 200; ++i)
-      realyarray[i] = (i * video.globalyscale) >> FRACBITS;
+      realyarray[i] = (i * video.yscale) >> FRACBITS;
 
    // SoM: ok, assemble the realx1/x2 arrays differently. To start, we are using floats
    // to do the scaling which is 100 times more accurate, secondly, I realized that the
@@ -438,19 +438,21 @@ void R_SetupViewScaling(void)
    // coords, scaled, and then converted back to x, y, w, h
    for(i = 0; i < 319; i++)
    {
-      video.realx1array[i] = (int)(i * video.floatxscale);
-      video.realx2array[i] = (int)((i + 1) * video.floatxscale) - 1;
+      video.x1lookup[i] = (int)(i * video.xscalef);
+      video.x2lookup[i] = (int)((i + 1) * video.xscalef) - 1;
    }
-   video.realx1array[i] = (int)(i * video.floatxscale);
-   video.realx2array[i] = video.width - 1;
+   video.x1lookup[i] = (int)(i * video.xscalef);
+   video.x2lookup[i] = video.width - 1;
+   video.x1lookup[320] = video.x2lookup[320] = video.width;
 
    for(i = 0; i < 199; i++)
    {
-      video.realy1array[i] = (int)(i * video.floatyscale);
-      video.realy2array[i] = (int)((i + 1) * video.floatyscale) - 1;
+      video.y1lookup[i] = (int)(i * video.yscalef);
+      video.y2lookup[i] = (int)((i + 1) * video.yscalef) - 1;
    }
-   video.realy1array[i] = (int)(i * video.floatyscale);
-   video.realy2array[i] = video.height - 1;
+   video.y1lookup[i] = (int)(i * video.yscalef);
+   video.y2lookup[i] = video.height - 1;
+   video.x1lookup[200] = video.x2lookup[200] = video.height;
 
 
    if(setblocks == 11)
@@ -477,7 +479,7 @@ void R_SetupViewScaling(void)
    // this matches zdoom and is more descriptive. 
    // It still works the same, though.
    
-   yaspectmul = FixedDiv(video.globalyscale, video.globalxscale);
+   yaspectmul = FixedDiv(video.yscale, video.xscale);
 
    // SoM: Cardboard
    view.xcenter = (view.width = (float)viewwidth) * 0.5f;

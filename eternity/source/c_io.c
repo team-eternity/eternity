@@ -464,7 +464,7 @@ void C_Drawer(void)
 {
    int y;
    int count;
-   int real_height = (current_height * video.globalyscale) >> FRACBITS;
+   int real_height = (current_height * video.yscale) >> FRACBITS;
    static int oldscreenheight = 0;
    
    if(!consoleactive) 
