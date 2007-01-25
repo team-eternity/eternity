@@ -1696,19 +1696,16 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing, mapthinghexen_t *extthing)
 
    if(i == NUMMOBJTYPES)
    {
+      doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
+                  mthing->type, mthing->x, mthing->y);
+
       // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
       // at user's discretion, but not when recording/playing demos or in
       // netgames.
       if(markUnknowns && !(netgame || demorecording || demoplayback))
-      {
          i = UnknownThingType;
-      }
       else
-      {
-         doom_printf(FC_ERROR "Unknown Thing type %i at (%i, %i)",
-            mthing->type, mthing->x, mthing->y);
          return NULL;  // sf
-      }
    }
 
   // don't spawn keycards and players in deathmatch
