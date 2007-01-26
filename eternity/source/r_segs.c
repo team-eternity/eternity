@@ -201,91 +201,81 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
 static void R_RenderSegLoop(void)
 {
-   float t, b, h, l, top, bottom;
+   int t, b, h, l, top, bottom;
+   int cliptop, clipbot;
    int i, texx;
    float basescale;
 
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
-      top = ceilingclip[i];
+      top = cliptop = (int)ceilingclip[i];
+      clipbot = (int)floorclip[i];
 
-      t = segclip.top;
-      b = segclip.bottom;
-      if(t < top)
-         t = top;
-
-      if(b > floorclip[i])
-         b = floorclip[i];
-
+      t = (int)(segclip.top < ceilingclip[i] ? ceilingclip[i] : segclip.top);
+      b = (int)(segclip.bottom > floorclip[i] ? floorclip[i] : segclip.bottom);
 
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
       if((segclip.markceiling || segclip.c_portalignore) && segclip.frontsec->c_portal)
       {
          bottom = t - 1;
          
-         if(bottom > floorclip[i])
-            bottom = floorclip[i];
+         if(bottom > clipbot)
+            bottom = clipbot;
          
-         if(bottom - top > -1.0f)
-            R_PortalAdd(segclip.frontsec->c_portal, i, top, bottom);
+         if(bottom >= top)
+            R_PortalAdd(segclip.frontsec->c_portal, i, (float)top, (float)bottom);
 
-         ceilingclip[i] = t;
+         ceilingclip[i] = (float)t;
       }
       else if(segclip.markceiling && segclip.ceilingplane)
       {
          bottom = t - 1;
-
-         if(bottom > floorclip[i])
-            bottom = floorclip[i];
-
-         // ahh the fraction... Some times the top can be greater than the bottom by less than
-         // 1 but the pixel should still be included because the fractional portion is being
-         // discarded anyway.
-         if(bottom - top > -1.0f)
+         
+         if(bottom > clipbot)
+            bottom = clipbot;
+         
+         if(bottom >= top)
          {
-            segclip.ceilingplane->top[i] = (int)top;
-            segclip.ceilingplane->bottom[i] = (int)bottom;
+            segclip.ceilingplane->top[i] = top;
+            segclip.ceilingplane->bottom[i] = bottom;
          }
    
-         ceilingclip[i] = t;
+         ceilingclip[i] = (float)t;
       }
 
       // SoM 3/10/2005: Only add to the portal of the floor is marked
       if((segclip.markfloor || segclip.f_portalignore)  && segclip.frontsec->f_portal)
       {
          top = b + 1;
-         bottom = floorclip[i];
+         bottom = clipbot;
 
-         if(top < ceilingclip[i])
-            top = ceilingclip[i];
+         if(top < cliptop)
+            top = cliptop;
 
-         if(bottom - top > -1.0f)
-            R_PortalAdd(segclip.frontsec->f_portal, i, top, bottom);
+         if(top <= bottom)
+            R_PortalAdd(segclip.frontsec->f_portal, i, (float)top, (float)bottom);
 
-         floorclip[i] = b;
+         floorclip[i] = (float)b;
       }
       else if(segclip.markfloor && segclip.floorplane)
       {
          top = b + 1;
-         bottom = floorclip[i];
+         bottom = clipbot;
 
-         if(top < ceilingclip[i])
-            top = ceilingclip[i];
+         if(top < cliptop)
+            top = cliptop;
 
-         // ahh the fraction... Some times the top can be greater than the bottom by less than
-         // 1 but the pixel should still be included because the fractional portion is being
-         // discarded anyway.
-         if(bottom - top > -1.0f)
+         if(top <= bottom)
          {
-            segclip.floorplane->top[i] = (int)top;
-            segclip.floorplane->bottom[i] = (int)bottom;
+            segclip.floorplane->top[i] = top;
+            segclip.floorplane->bottom[i] = bottom;
          }
 
-         floorclip[i] = b;
+         floorclip[i] = (float)b;
       }
 
       if(segclip.line->linedef->portal)
-         R_PortalAdd(segclip.line->linedef->portal, i, t, b);
+         R_PortalAdd(segclip.line->linedef->portal, i, (float)t, (float)b);
       else if(segclip.segtextured)
       {
          int index;
@@ -317,8 +307,8 @@ static void R_RenderSegLoop(void)
 
          if(segclip.twosided == false && segclip.midtex)
          {
-            column.y1 = (int)t;
-            column.y2 = (int)b;
+            column.y1 = t;
+            column.y2 = b;
 
             column.texmid = segclip.midtexmid;
 
@@ -334,12 +324,10 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.toptex)
             {
-               h = segclip.high;
-               if(h > floorclip[i])
-                  h = floorclip[i];
+               h = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
 
-               column.y1 = (int)t;
-               column.y2 = (int)h;
+               column.y1 = t;
+               column.y2 = h;
 
                if(column.y2 >= column.y1)
                {
@@ -350,25 +338,23 @@ static void R_RenderSegLoop(void)
 
                   colfunc();
 
-                  ceilingclip[i] = h + 1.0f;
+                  ceilingclip[i] = (float)(h + 1);
                }
                else
-                  ceilingclip[i] = t;
+                  ceilingclip[i] = (float)t;
 
                segclip.high += segclip.highstep;
             }
             else if(segclip.markceiling)
-               ceilingclip[i] = t;
+               ceilingclip[i] = (float)t;
 
 
             if(segclip.bottomtex)
             {
-               l = segclip.low;
-               if(l < ceilingclip[i])
-                  l = ceilingclip[i];
+               l = (int)(segclip.low < ceilingclip[i] ? ceilingclip[i] : segclip.low);
 
-               column.y1 = (int)l;
-               column.y2 = (int)b;
+               column.y1 = l;
+               column.y2 = b;
 
                if(column.y2 >= column.y1)
                {
@@ -379,21 +365,21 @@ static void R_RenderSegLoop(void)
 
                   colfunc();
 
-                  floorclip[i] = l - 1.0f;
+                  floorclip[i] = (float)(l - 1);
                }
                else
-                  floorclip[i] = b;
+                  floorclip[i] = (float)b;
 
                segclip.low += segclip.lowstep;
             }
             else if(segclip.markfloor)
-               floorclip[i] = b;
+               floorclip[i] = (float)b;
          }
       }
       else
       {
-         if(segclip.markfloor) floorclip[i] = b;
-         if(segclip.markceiling) ceilingclip[i] = t;
+         if(segclip.markfloor) floorclip[i] = (float)b;
+         if(segclip.markceiling) ceilingclip[i] = (float)t;
       }
 
       segclip.len += segclip.lenstep;
