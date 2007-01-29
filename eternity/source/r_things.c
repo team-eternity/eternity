@@ -431,7 +431,7 @@ void R_DrawMaskedColumn(column_t *tcolumn)
    {
       // calculate unclipped screen coordinates for post
       y1 = maskedcolumn.ytop + (maskedcolumn.scale*tcolumn->topdelta) + 0.5f;
-      y2 = y1 + (maskedcolumn.scale*tcolumn->length) - 1.6f;
+      y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1.5f;
 
       column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
       column.y2 = (int)(y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2);

@@ -706,7 +706,7 @@ boolean R_ClipSegToPortal()
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
-         if(floorclip[i] < ceilingclip[i] || top > floorclip[i])
+         if(floorclip[i] < ceilingclip[i] || floorclip[i] - top <= -1.0f)
          {
             // column is not visible so increment and continue
             top += topstep;
@@ -729,7 +729,7 @@ boolean R_ClipSegToPortal()
          top = topstop;
          for(i = seg.x2; i > seg.x1; i--)
          {
-            if(floorclip[i] < ceilingclip[i] || top > floorclip[i])
+            if(floorclip[i] < ceilingclip[i] || floorclip[i] - top <= -1.0f)
             {
                top -= topstep;
                continue;
@@ -770,7 +770,7 @@ boolean R_ClipSegToPortal()
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
-         if(floorclip[i] < ceilingclip[i] || bottom < ceilingclip[i])
+         if(floorclip[i] < ceilingclip[i] || bottom - ceilingclip[i] <= -1.0f)
          {
             // column is not visible so increment and continue
             bottom += bottomstep;
@@ -793,7 +793,7 @@ boolean R_ClipSegToPortal()
          bottom = stopbottom;
          for(i = seg.x2; i > seg.x1; i--)
          {
-            if(floorclip[i] < ceilingclip[i] || bottom < ceilingclip[i])
+            if(floorclip[i] < ceilingclip[i] || bottom - ceilingclip[i] <= -1.0f)
             {
                bottom -= bottomstep;
                continue;
