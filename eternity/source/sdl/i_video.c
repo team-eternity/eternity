@@ -337,11 +337,14 @@ static void I_GetEvent(void)
    SDL_Event event;
    event_t   d_event;   
    
-   event_t mouseevent = { ev_mouse, 0, 0, 0 };
-   static int buttons = 0;
-   fixed_t mousefrac;
-   
+   event_t     mouseevent = { ev_mouse, 0, 0, 0 };
+   static int  buttons = 0;
+   fixed_t     mousefrac;
+   // This might be only a windows problem... but it seems the 
+   int         mousexden = fullscreen ? video.width : video.width >> 1;
+   int         mouseyden = fullscreen ? video.height : video.height >> 1;
    int sendmouseevent = 0;
+
    
    while(SDL_PollEvent(&event))
    {
@@ -381,18 +384,18 @@ static void I_GetEvent(void)
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
 #if 0
          // SoM: Fixed the uneven mouse movement between video modes
-         mousefrac = (event.motion.yrel << FRACBITS) / (video.height >> 1) * 20; 
+         mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 20; 
          mouseevent.data3 -= mousefrac;
 
-         mousefrac = (event.motion.xrel << FRACBITS) / (video.width >> 1) * 32; 
+         mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 32; 
          mouseevent.data2 += mousefrac;
 #else
          // SoM: parabolic mouse accelleration
          // This should really be an option (mayhaps a console variable and menu option?)
-         mousefrac = (event.motion.yrel << FRACBITS) / (video.height >> 1) * 7; 
+         mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 7; 
          mouseevent.data3 -= FixedMul(D_abs(mousefrac), mousefrac) + mousefrac;
 
-         mousefrac = (event.motion.xrel << FRACBITS) / (video.width >> 1) * 5; 
+         mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 5; 
          mouseevent.data2 += FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac;
 #endif
          sendmouseevent = 1;
