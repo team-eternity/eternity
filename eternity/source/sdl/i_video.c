@@ -339,6 +339,7 @@ static void I_GetEvent(void)
    
    event_t mouseevent = { ev_mouse, 0, 0, 0 };
    static int buttons = 0;
+   fixed_t mousefrac;
    
    int sendmouseevent = 0;
    
@@ -378,9 +379,22 @@ static void I_GetEvent(void)
             continue;
 
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
-         mouseevent.data3 = -event.motion.yrel;
-         mouseevent.data2 = event.motion.xrel;
+#if 0
+         // SoM: Fixed the uneven mouse movement between video modes
+         mousefrac = (event.motion.yrel << FRACBITS) / (video.height >> 1) * 20; 
+         mouseevent.data3 -= mousefrac;
 
+         mousefrac = (event.motion.xrel << FRACBITS) / (video.width >> 1) * 32; 
+         mouseevent.data2 += mousefrac;
+#else
+         // SoM: parabolic mouse accelleration
+         // This should really be an option (mayhaps a console variable and menu option?)
+         mousefrac = (event.motion.yrel << FRACBITS) / (video.height >> 1) * 7; 
+         mouseevent.data3 -= FixedMul(D_abs(mousefrac), mousefrac) + mousefrac;
+
+         mousefrac = (event.motion.xrel << FRACBITS) / (video.width >> 1) * 5; 
+         mouseevent.data2 += FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac;
+#endif
          sendmouseevent = 1;
          break;
       

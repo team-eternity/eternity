@@ -851,8 +851,8 @@ boolean G_Responder(event_t* ev)
       mousebuttons[0] = ev->data1 & 1;
       mousebuttons[1] = ev->data1 & 2;
       mousebuttons[2] = ev->data1 & 4;
-      mousex = (ev->data2*(mouseSensitivity_horiz*4))/10;  // killough
-      mousey = (ev->data3*(mouseSensitivity_vert*4))/10;   // haleyjd 05/30/05: fixed
+      mousex = (ev->data2 * (mouseSensitivity_horiz*4))/ FRACUNIT;  // killough
+      mousey = (ev->data3 * (mouseSensitivity_vert*4)) / FRACUNIT;   // haleyjd 05/30/05: fixed
       return true;    // eat events
       
    case ev_joystick:
