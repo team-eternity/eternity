@@ -290,7 +290,7 @@ static void R_InitTextureMapping (void)
    view.fov = (float)fov * PI / 180.0f; // 90 degrees
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;
-   view.yfoc = (view.xfoc * ratio) * (detailshift ? 2.0f : 1.0f);
+   view.yfoc = detailshift ? (view.xfoc * ratio) * 2.0f : (view.xfoc * ratio);
    view.focratio = view.yfoc / view.xfoc;
 
    // Unfortunately, cardboard still has to co-exist with the old fixed point code
