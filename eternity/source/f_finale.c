@@ -135,7 +135,7 @@ static float Get_TextSpeed(void)
 void F_Ticker(void)
 {
    int i;
-
+   
    if(!demo_compatibility)
    {
       // killough 3/28/98: check for acceleration
@@ -146,28 +146,28 @@ void F_Ticker(void)
       // haleyjd 05/26/06: do this for all FINALE_TEXT finales
       // check for skipping
       for(i = 0; i < MAXPLAYERS; ++i)
-	 if(players[i].cmd.buttons)
-	    goto next_level;      // go on to the next level
+         if(players[i].cmd.buttons)
+            goto next_level;      // go on to the next level
    }
-
+   
    // advance animation
    finalecount++;
    
    if(finalestage == 2)
       F_CastTicker();
-
+   
    if(!finalestage)
    {
       float speed = demo_compatibility ? TEXTSPEED : Get_TextSpeed();
 
       if(finalecount > strlen(LevelInfo.interText)*speed + // phares
-	 (midstage ? NEWTEXTWAIT : TEXTWAIT) ||   // killough 2/28/98:
-	 (midstage && acceleratestage))           // changed to allow acceleration
+         (midstage ? NEWTEXTWAIT : TEXTWAIT) ||   // killough 2/28/98:
+         (midstage && acceleratestage))           // changed to allow acceleration
       {
          // Doom 1 / Ultimate Doom episode end: with enough time, it's automatic
          // haleyjd 05/26/06: all finales except just text use this
-	 if(LevelInfo.finaleType != FINALE_TEXT)
-	 {                          
+         if(LevelInfo.finaleType != FINALE_TEXT)
+         {                          
             finalecount = 0;
             finalestage = 1;
 
@@ -190,17 +190,17 @@ void F_Ticker(void)
             default:
                break;
             }
-	 }
-	 else if(!demo_compatibility && midstage)
-	 { 
-	    // you must press a button to continue in Doom 2
-	    // haleyjd: allow cast calls after arbitrary maps
-	 next_level:
-	    if(LevelInfo.endOfGame)
-	       F_StartCast(); // cast of Doom 2 characters
-	    else
-	       gameaction = ga_worlddone;  // next level, e.g. MAP07
-	 }
+         }
+         else if(!demo_compatibility && midstage)
+         { 
+            // you must press a button to continue in Doom 2
+            // haleyjd: allow cast calls after arbitrary maps
+next_level:
+            if(LevelInfo.endOfGame)
+               F_StartCast(); // cast of Doom 2 characters
+            else
+               gameaction = ga_worlddone;  // next level, e.g. MAP07
+         }
       }
    }
 }

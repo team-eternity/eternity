@@ -112,11 +112,11 @@ enum
 //
 typedef struct deferredacs_s
 {
-   mdllistitem_t link; // list links
-   int scriptNum;      // ACS script number to execute
-   int targetMap;      // target map number
-   int type;           // type of action to perform...
-   int args[5];        // additional arguments from linedef
+   mdllistitem_t link;  // list links
+   int  scriptNum;      // ACS script number to execute
+   int  targetMap;      // target map number
+   int  type;           // type of action to perform...
+   long args[5];        // additional arguments from linedef
 } deferredacs_t;
 
 

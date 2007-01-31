@@ -26,8 +26,8 @@
 
 void HU_LoadFont(void);
 void HU_WriteText(const char *s, int x, int y);
-int  HU_StringWidth(const unsigned char *s);
-int  HU_StringHeight(const unsigned char *s);
+int  HU_StringWidth(const char *s);
+int  HU_StringHeight(const char *s);
 
     /************** overlay drawing ***************/
 

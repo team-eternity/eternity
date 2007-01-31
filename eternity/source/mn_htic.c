@@ -301,6 +301,10 @@ static void MN_HLoadDrawer(void)
 {
    int x, y, i;
    const char *title = "load game";
+   static char *emptystr = NULL;
+
+   if(!emptystr)
+      emptystr = strdup(DEH_String("EMPTYSTRING"));
 
    V_WriteTextBig(title, 160 - V_StringWidthBig(title) / 2, 10);
 
@@ -317,7 +321,7 @@ static void MN_HLoadDrawer(void)
    for(i = 0, y = 0; i < SAVESLOTS; ++i, y += 2)
    {
       menu_hloadgame.menuitems[y].description =
-         savegamenames[i] ? savegamenames[i] : DEH_String("EMPTYSTRING");
+         savegamenames[i] ? savegamenames[i] : emptystr;
    }
 }
 

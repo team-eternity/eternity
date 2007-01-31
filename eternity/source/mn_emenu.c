@@ -284,7 +284,6 @@ static void MN_ClearDynamicMenu(menu_t *menu)
    // first: clear out menu items
    if(menu->menuitems)
    {
-      int i = 0;
       menuitem_t *item = menu->menuitems;
       
       while(item->type != it_end)

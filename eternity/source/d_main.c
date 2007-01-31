@@ -1307,11 +1307,12 @@ void FindResponseFile(void)
 {
    int i;
 
-   for(i = 1; i < myargc; i++)
+   for(i = 1; i < myargc; ++i)
    {
       if(myargv[i][0] == '@')
       {
          int size, index, indexinfile;
+         byte *f;
          char *file = NULL, *firstargv;
          char **moreargs = malloc(myargc * sizeof(char *));
          char **newargv;
@@ -1321,10 +1322,12 @@ void FindResponseFile(void)
          AddDefaultExtension(fname, ".rsp");
 
          // read the response file into memory
-         if((size = M_ReadFile(fname, (byte **)&file)) < 0)
+         if((size = M_ReadFile(fname, &f)) < 0)
          {
             I_Error("No such response file: %s\n", fname);
          }
+
+         file = (char *)f;
 
          printf("Found response file %s\n", fname);
 

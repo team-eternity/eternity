@@ -171,7 +171,7 @@ void HU_WriteText(const char *s, int x, int y)
 // Calculates the width in pixels of a string in heads-up font
 // haleyjd 01/14/05: now uses vfont engine
 //
-int HU_StringWidth(const unsigned char *s)
+int HU_StringWidth(const char *s)
 {
    return V_FontStringWidth(&hud_font, s);
 }
@@ -182,7 +182,7 @@ int HU_StringWidth(const unsigned char *s)
 // Calculates the height in pixels of a string in heads-up font
 // haleyjd 01/14/05: now uses vfont engine
 //
-int HU_StringHeight(const unsigned char *s)
+int HU_StringHeight(const char *s)
 {
    return V_FontStringHeight(&hud_font, s);
 }

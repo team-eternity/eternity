@@ -1594,11 +1594,16 @@ void deh_procCheat(DWFILE *fpin, char *line) // done
                {    // killough 9/12/98: disable cheats which are prefixes of this one
                   int i;
                   for(i = 0; cheat[i].cheat; ++i)
+                  {
                     if(cheat[i].when & not_deh &&
-                       !strncasecmp(cheat[i].cheat,
-                                    cheat[iy].cheat,
-                                    strlen(cheat[i].cheat)) && i != iy)
+                       !strncasecmp((const char *)(cheat[i].cheat),
+                                    (const char *)(cheat[iy].cheat),
+                                    strlen((const char *)(cheat[i].cheat))) && 
+                       i != iy)
+                    {
                        cheat[i].deh_modified = true;
+                    }
+                  }
                 }
                 cheat[iy].cheat = strdup(p);
                 deh_LogPrintf("Assigned new cheat '%s' to cheat '%s'at index %d\n",

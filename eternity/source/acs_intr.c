@@ -218,7 +218,7 @@ int ACS_thingtypes[ACS_NUM_THINGTYPES];
 //
 
 static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type, 
-                                     int args[5]);
+                                     long args[5]);
 
 //
 // ACS_stopScript
@@ -1185,7 +1185,7 @@ void ACS_LoadScript(int lump)
    for(i = 0; i < acsNumScripts; ++i)
    {
       scripts[i].number  = LONG(*rover++); // read script number
-      scripts[i].code    = (long *)(acsdata + LONG(*rover++)); // set entry pt
+      scripts[i].code    = (int *)(acsdata + LONG(*rover++)); // set entry pt
       scripts[i].numArgs = LONG(*rover++); // number of args
 
       // handle open scripts: scripts > 1000 should start at the
@@ -1226,7 +1226,7 @@ void ACS_LoadScript(int lump)
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
 static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type, 
-                                     int args[5])
+                                     long args[5])
 {
    deferredacs_t *cur = acsDeferred, *newdacs;
 
@@ -1396,7 +1396,7 @@ boolean ACS_StartScript(int scrnum, int map, long *args,
 boolean ACS_TerminateScript(int scrnum, int mapnum)
 {
    boolean ret = false;
-   int foo[5] = { 0, 0, 0, 0, 0 };
+   long foo[5] = { 0, 0, 0, 0, 0 };
 
    // ACS must be active on the current map or we do nothing
    if(!acsLoaded)
@@ -1431,7 +1431,7 @@ boolean ACS_TerminateScript(int scrnum, int mapnum)
 //
 boolean ACS_SuspendScript(int scrnum, int mapnum)
 {
-   int foo[5] = { 0, 0, 0, 0, 0 };
+   long foo[5] = { 0, 0, 0, 0, 0 };
    boolean ret = false;
 
    // ACS must be active on the current map or we do nothing

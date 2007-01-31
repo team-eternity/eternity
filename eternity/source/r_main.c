@@ -802,7 +802,7 @@ extern void R_UntaintPortals(void);
 void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
    boolean quake = false;
-   unsigned long savedflags;
+   unsigned long savedflags = 0;
 
    R_SetupFrame(player, camerapoint);
    
@@ -868,12 +868,12 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 void R_HOMdrawer(void)
 {
    int y, colour;
-   char *dest;
+   byte *dest;
    
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
    dest = video.screens[0] + viewwindowy * video.width + viewwindowx;
 
-   for(y = viewwindowy; y < viewwindowy+viewheight; ++y)
+   for(y = viewwindowy; y < viewwindowy + viewheight; ++y)
    {
       memset(dest, colour, viewwidth);
       dest += video.width;

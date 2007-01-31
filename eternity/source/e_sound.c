@@ -992,7 +992,7 @@ enum
 static tempcmd_t E_ParseSeqCmdStr(char *str)
 {
    tempcmd_t retcmd;
-   char *tokenstart;
+   char *tokenstart = NULL;
    int state = STATE_LOOKFORCMD, strnum = 0;
 
    retcmd.strs[0] = retcmd.strs[1] = retcmd.strs[2] = NULL;

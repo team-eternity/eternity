@@ -53,7 +53,7 @@
     #include <sys/mman.h>
   #endif
 #endif
-#if defined __LCC__
+#if defined __LCC__ || defined LINUX
   #include <wchar.h>    /* for wcslen() */
 #endif
 #include "amx.h"
@@ -3919,9 +3919,9 @@ int AMXAPI amx_StrLen(cell *cstr, int *length)
 int AMXAPI amx_SetString(cell *dest,const char *source,int pack,int use_wchar)
 {                 /* the memory blocks should not overlap */
 #ifndef DJGPP
-  int len= use_wchar ? wcslen((const wchar_t*)source) : strlen(source);
+  int len = use_wchar ? wcslen((const wchar_t*)source) : strlen(source);
 #else
-  int len= strlen(source);
+  int len = strlen(source);
 #endif
   int i;
   if (pack) {

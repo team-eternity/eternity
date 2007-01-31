@@ -172,10 +172,10 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
     const char *pfmt = format;
     int ncount = 0;     /* number of characters printed so far */
     int state = STATE_NONE;
-    char flags;
-    int width;
-    int precision;
-    char prefix;
+    char flags = 0;
+    int width = 0;
+    int precision = 0;
+    char prefix = 0;
 
     while (*pfmt)
     {
@@ -416,12 +416,12 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
                 int width, int precision, char prefix, va_list *ap)
 {
     long int number = 0;
-    unsigned long int unumber;
+    unsigned long int unumber = 0;
     char numbersigned = 1;
     char iszero = 0; /* bool */
-    int base;
+    int base = 0;
     int len = 0; /* length of number component (no sign or padding) */
-    char char10;
+    char char10 = 0;
     char sign = 0;
     int widthpad = 0;
     int addprefix = 0; /* optional "0x" = 2 */
@@ -769,7 +769,7 @@ typedef union {
  */
 
 int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
-                int width, int precision, char prefix, va_list *ap)
+                   int width, int precision, char prefix, va_list *ap)
 {
     char *digits;
     int sign = 0;
@@ -778,7 +778,7 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
 
     int len;
     int pad = 0;
-    int signwidth = 0;
+    //int signwidth = 0;
     int totallen;
     char signchar = 0;
     int leadingzeros = 0;

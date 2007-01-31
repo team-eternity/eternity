@@ -449,7 +449,7 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
 // haleyjd 04/03/04: rewritten for ANYRES patch system
 // 
 void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
-                   unsigned char *outr, int tl)
+                  char *outr, int tl)
 {
    PatchInfo pi;
 
@@ -498,7 +498,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
 // haleyjd 02/08/05
 // 
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
-                    unsigned char *outr, int tl)
+                    char *outr, int tl)
 {
    PatchInfo pi;
 

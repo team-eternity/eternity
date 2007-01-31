@@ -193,8 +193,8 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    fixed_t adx = 0, ady = 0, dist = 0;
    angle_t angle;
    fixed_t sx, sy;
-   int attenuator, basevolume;        // haleyjd
-   fixed_t close_dist, clipping_dist; // haleyjd
+   int attenuator = 0, basevolume;            // haleyjd
+   fixed_t close_dist = 0, clipping_dist = 0; // haleyjd
 
    // haleyjd 08/12/04: we cannot adjust a sound for a NULL listener.
    if(!listener)
@@ -240,7 +240,6 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
                                         + ANG90) >> ANGLETOFINESHIFT]) : 0;   
    
    // haleyjd 05/29/06: allow per-channel volume scaling
-   //basevolume = (snd_SfxVolume * chanvol) / 127;
    basevolume = (snd_SfxVolume * chanvol) / 15;
 
    // haleyjd 05/30/06: allow per-channel attenuation behavior

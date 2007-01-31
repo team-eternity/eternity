@@ -40,7 +40,7 @@
 
 // array of pointers to the
 // column data for 'superfast' melt
-static char *start_screen[MAX_SCREENWIDTH] = {0};
+static byte *start_screen[MAX_SCREENWIDTH] = {0};
 
 // y co-ordinate of various columns
 static int worms[SCREENWIDTH];
@@ -138,7 +138,7 @@ void Wipe_ScreenReset(void)
 void Wipe_Drawer(void)
 {
    register int x, y;
-   register char *dest, *src;
+   register byte *dest, *src;
 
    // SoM 2-4-04: ANYRES
    for(x = 0; x < video.width; ++x)
@@ -147,7 +147,7 @@ void Wipe_Drawer(void)
       
       wormx = (x << FRACBITS) / video.xscale;
       wormy = worms[wormx] > 0 ? worms[wormx] : 0;  // limit check
-	  
+
       wormy = realyarray[wormy];
 
       src = start_screen[x];

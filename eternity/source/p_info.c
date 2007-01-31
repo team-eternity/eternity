@@ -1139,6 +1139,7 @@ static void P_SetParTime(void)
             break;
          case hereticsw:
          case hereticreg:
+         default:
             LevelInfo.partime = 0; // no par times in Heretic
             break;
          }

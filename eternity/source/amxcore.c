@@ -44,6 +44,11 @@
   #include <time.h>
 #endif
 
+// haleyjd: Linxu needs strings.h
+#ifdef LINUX
+#include <strings.h>
+#endif
+
 #if defined _UNICODE
 # include <tchar.h>
 #elif !defined __T

@@ -4232,7 +4232,7 @@ void P_ConvertHexenLineSpec(short *special, long *args)
 static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 {
    sector_t  *sector, *frontsector;
-   rportal_t *portal;
+   rportal_t *portal = NULL;
    mobj_t    *skycam;
    static int CamType = -1;
    int s;
@@ -4273,7 +4273,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       }
       if(!skycam)
       {
-         C_Printf(FC_ERROR"Skybox found with no skybox camera\n");
+         C_Printf(FC_ERROR "Skybox found with no skybox camera\a\n");
          return;
       }
       
@@ -4303,7 +4303,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       }
       if(s < 0)
       {
-         C_Printf(FC_ERROR "No anchor line for portal.\n");
+         C_Printf(FC_ERROR "No anchor line for portal.\a\n");
          return;
       }
 
@@ -4337,7 +4337,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       }
       if(s < 0)
       {
-         C_Printf(FC_ERROR "No anchor line for portal.\n");
+         C_Printf(FC_ERROR "No anchor line for portal.\a\n");
          return;
       }
 
@@ -4372,7 +4372,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       }
       if(s < 0)
       {
-         C_Printf(FC_ERROR "No anchor line for portal.\n");
+         C_Printf(FC_ERROR "No anchor line for portal.\a\n");
          return;
       }
 

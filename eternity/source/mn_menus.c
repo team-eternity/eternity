@@ -1362,20 +1362,24 @@ menu_t menu_loadgame =
 };
 
 
-void MN_LoadGameDrawer()
+void MN_LoadGameDrawer(void)
 {
+   static char *emptystr = NULL;
    int i, y;
+
+   if(!emptystr)
+      emptystr = strdup(DEH_String("EMPTYSTRING"));
    
-   for(i=0, y=46; i<SAVESLOTS; i++, y+=16) // haleyjd
+   for(i = 0, y = 46; i < SAVESLOTS; ++i, y += 16) // haleyjd
    {
       MN_DrawLoadBox(45, y);
    }
    
    // this is lame
-   for(i=0, y=2; i<SAVESLOTS; i++, y+=2)  // haleyjd
+   for(i = 0, y = 2; i < SAVESLOTS; ++i, y += 2)  // haleyjd
    {
       menu_loadgame.menuitems[y].description =
-         savegamenames[i] ? savegamenames[i] : DEH_String("EMPTYSTRING");
+         savegamenames[i] ? savegamenames[i] : emptystr;
    }
 }
 

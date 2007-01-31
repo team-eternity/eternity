@@ -392,9 +392,9 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          
          // display input buffer if inputting new var value
          if(input_command && item->var == input_command->variable)
-            psnprintf(varvalue, sizeof(varvalue), "%s_", input_buffer);
+            psnprintf((char *)varvalue, sizeof(varvalue), "%s_", input_buffer);
          else
-            strncpy(varvalue, C_VariableStringValue(item->var), 1024);
+            strncpy((char *)varvalue, C_VariableStringValue(item->var), 1024);
          
          if(drawing_menu->flags & mf_background)
          {
@@ -846,18 +846,18 @@ boolean MN_Responder(event_t *ev)
       
       if(ev->data1 == KEYD_ENTER && input_buffer[0])
       {
-            unsigned char *temp;
-            
-            // place " marks round the new value
-            temp = strdup(input_buffer);
-            psnprintf(input_buffer, sizeof(input_buffer), "\"%s\"", temp);
-            free(temp);
-            
-            // set the command
-            cmdtype = c_menu;
-            C_RunCommand(input_command, input_buffer);
-            input_command = NULL;
-            return true; // eat key
+         unsigned char *temp;
+         
+         // place " marks round the new value
+         temp = strdup((const char *)input_buffer);
+         psnprintf((char *)input_buffer, sizeof(input_buffer), "\"%s\"", temp);
+         free(temp);
+         
+         // set the command
+         cmdtype = c_menu;
+         C_RunCommand(input_command, (const char *)input_buffer);
+         input_command = NULL;
+         return true; // eat key
       }
 
       // check for backspace
@@ -1383,17 +1383,17 @@ static void MN_InitFont(void)
    menu_font.dw = 1;
 }
 
-void MN_WriteText(unsigned char *s, int x, int y)
+void MN_WriteText(const char *s, int x, int y)
 {
    V_FontWriteText(&menu_font, s, x, y);
 }
 
-void MN_WriteTextColoured(const unsigned char *s, int colour, int x, int y)
+void MN_WriteTextColoured(const char *s, int colour, int x, int y)
 {
    V_FontWriteTextColored(&menu_font, s, colour, x, y);
 }
 
-int MN_StringWidth(const unsigned char *s)
+int MN_StringWidth(const char *s)
 {
    return V_FontStringWidth(&menu_font, s);
 }

@@ -427,6 +427,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 
 //
 // R_StoreWallRange
+//
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
@@ -437,10 +438,12 @@ void R_StoreWallRange(const int start, const int stop)
 
    float y1, y2, i1, i2;
    float pstep;
-   side_t *side = seg.side;
-   boolean usesegloop = !seg.backsec || seg.clipsolid || seg.markceiling || seg.markfloor || 
-                        seg.toptex || seg.midtex || seg.bottomtex || seg.f_portalignore || 
-                        seg.c_portalignore || segclip.line->linedef->portal ? true : false;
+
+   boolean usesegloop = !seg.backsec || seg.clipsolid || seg.markceiling || 
+                        seg.markfloor || seg.toptex || seg.midtex || 
+                        seg.bottomtex || seg.f_portalignore || 
+                        seg.c_portalignore || 
+                        (segclip.line->linedef->portal ? true : false);
 
    memcpy(&segclip, &seg, sizeof(seg));
 
@@ -527,7 +530,8 @@ void R_StoreWallRange(const int start, const int stop)
    }
 
    // Lighting
-   // TODO: Modularize the lighting. This function should not handle colormaps directly.
+   // TODO: Modularize the lighting. This function should not handle colormaps 
+   // directly.
    // calculate light table
    //  use different light tables
    //  for horizontal / vertical / diagonal
@@ -675,7 +679,7 @@ void R_StoreWallRange(const int start, const int stop)
 // actually visible in. This function is sound and Doom could even use 
 // this for normal rendering, but it adds some overhead.
 //
-boolean R_ClipSegToPortal()
+boolean R_ClipSegToPortal(void)
 {
    int   i;
    float clipx;
@@ -694,7 +698,8 @@ boolean R_ClipSegToPortal()
       float top, topstep, topstop;
       float y1, y2;
 
-      // I totally overlooked this when I moved all the wall panel projection to r_segs.c
+      // I totally overlooked this when I moved all the wall panel projection 
+      // to r_segs.c
       top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
       topstop = y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
 

@@ -723,6 +723,9 @@ void R_RenderPortals(void)
 #endif
             R_RenderAnchoredPortal(r);
             break;
+         default:
+            I_Error("R_RenderPortals: unknown portal type %d\n", r->type);
+            break;
          }
 
          R_ClearPortal(r);

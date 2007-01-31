@@ -47,6 +47,11 @@ rcsid[] = "$Id: i_sound.c,v 1.15 1998/05/03 22:32:33 killough Exp $";
 #include "../s_sound.h"
 #include "../mn_engin.h"
 
+#ifdef LINUX
+// haleyjd 01/28/07: I don't understand why this is needed here...
+extern DECLSPEC Mix_Music * SDLCALL Mix_LoadMUS_RW(SDL_RWops *rw);
+#endif
+
 void I_CacheSound(sfxinfo_t *sound);
 
 // Needed for calling the actual sound output.
@@ -859,7 +864,7 @@ int I_RegisterSong(void *data, int size)
 
       memset(&mididata,0,sizeof(MIDI));
       
-      if(err = mmus2mid((byte *)data, &mididata, 89, 0)) 
+      if((err = mmus2mid((byte *)data, &mididata, 89, 0))) 
       {         
          // Nope, not a mus
          doom_printf(FC_ERROR"Error loading midi: %d", err);

@@ -56,7 +56,7 @@ static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
 static int C_Sync(command_t *command);
 static void C_ArgvtoArgs();
-static boolean C_Strcmp(unsigned char *a, unsigned char *b);
+static boolean C_Strcmp(char *pa, char *pb);
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -1003,8 +1003,11 @@ void C_ClearBuffer(int cmdtype)
 }
 
         // compare regardless of font colour
-boolean C_Strcmp(unsigned char *a, unsigned char *b)
+static boolean C_Strcmp(char *pa, char *pb)
 {
+   unsigned char *a = (unsigned char *)pa;
+   unsigned char *b = (unsigned char *)pb;
+
    while(*a || *b)
    {
       // remove colour dependency

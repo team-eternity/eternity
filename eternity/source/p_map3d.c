@@ -1068,8 +1068,6 @@ static void PIT_FloorDrop(mobj_t *thing)
    if(thing->momz == 0 &&
       (!(thing->flags & MF_NOGRAVITY) || thing->z == oldfloorz))
    {
-      fixed_t oldz = thing->z;
-      
       // If float bob, always stay the same approximate distance above
       // the floor; otherwise only move things standing on the floor,
       // and only do it if the drop is slow enough.
@@ -1136,8 +1134,6 @@ static void PIT_CeilingLower(mobj_t *thing)
 
    if(thing->z + thing->height > thing->ceilingz)
    {
-      fixed_t oldz = thing->z;
-
       P_ReInitMobjCollection(&intersectors, 0);
 
       if(thing->ceilingz - thing->height >= thing->floorz)
@@ -1173,7 +1169,6 @@ static void PIT_CeilingRaise(mobj_t *thing)
    if(thing->z < thing->floorz &&
       thing->z + thing->height >= thing->ceilingz - moveamt)
    {
-      fixed_t oldz = thing->z;
       thing->z = thing->floorz;
 
       if(thing->z + thing->height > thing->ceilingz)
@@ -1206,7 +1201,7 @@ static void PIT_CeilingRaise(mobj_t *thing)
 //
 boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
 {
-   void (*iterator)(mobj_t *);
+   void (*iterator)(mobj_t *)  = NULL;
    void (*iterator2)(mobj_t *) = NULL;
    msecnode_t *n;
 

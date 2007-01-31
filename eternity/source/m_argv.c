@@ -28,8 +28,8 @@
 static const char
 rcsid[] = "$Id: m_argv.c,v 1.5 1998/05/03 22:51:40 killough Exp $";
 
-#include <string.h>
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "z_zone.h"
+#include "d_io.h"   // SoM 3/14/2002: strncasecmp
 
 
 int    myargc;
@@ -37,19 +37,23 @@ char **myargv;
 
 //
 // M_CheckParm
+//
 // Checks for the given parameter
 // in the program's command line arguments.
 // Returns the argument number (1 to argc-1)
 // or 0 if not present
 //
-
 int M_CheckParm(const char *check)
 {
-  int i;
-  for (i=1; i<myargc; i++)
-    if (!strcasecmp(check, myargv[i]))
-      return i;
-  return 0;
+   int i;
+
+   for(i = 1; i < myargc; ++i)
+   {
+      if(!strcasecmp(check, myargv[i]))
+         return i;
+   }
+
+   return 0;
 }
 
 //----------------------------------------------------------------------------

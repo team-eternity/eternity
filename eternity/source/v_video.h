@@ -115,10 +115,10 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, char *
                            boolean flipped);
 
 void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch, 
-                   unsigned char *outr, int tl);
+                   char *outr, int tl);
 
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
-                    unsigned char *outr, int tl);
+                    char *outr, int tl);
 
 // Draw a linear block of pixels into the view buffer.
 

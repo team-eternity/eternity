@@ -76,8 +76,10 @@ typedef struct spandrawer_s
    void (*DrawSpan128)(void);
    void (*DrawSpan256)(void);
    void (*DrawSpan512)(void);
-   // SoM: store the fixed point units here so the rasterizer can pre-shift everything
-   float  fixedunit64, fixedunit128, fixedunit256, fixedunit512;
+   
+   // SoM: store the fixed point units here so the rasterizer can pre-shift 
+   // everything
+   float fixedunit64, fixedunit128, fixedunit256, fixedunit512;
 } spandrawer_t;
 
 extern spandrawer_t r_lpspandrawer;  // low-precision

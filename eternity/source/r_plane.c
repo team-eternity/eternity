@@ -97,19 +97,9 @@ static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
 // texture mapping
 //
 
-static lighttable_t **planezlight;
-static fixed_t planeheight;
-
-static lighttable_t *planefixedcolormap; // haleyjd 10/16/06
-
 // killough 2/8/98: make variables static
 
 static fixed_t cachedheight[MAX_SCREENHEIGHT];
-static fixed_t cacheddistance[MAX_SCREENHEIGHT];
-static fixed_t cachedxstep[MAX_SCREENHEIGHT];
-static fixed_t cachedystep[MAX_SCREENHEIGHT];
-static fixed_t xoffs,yoffs;    // killough 2/28/98: flat offsets
-static fixed_t pviewx, pviewy, pviewz;
 
 fixed_t *yslope;
 fixed_t origyslope[MAX_SCREENHEIGHT*2];

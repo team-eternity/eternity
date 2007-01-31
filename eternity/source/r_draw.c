@@ -132,7 +132,7 @@ void CB_DrawColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -214,7 +214,7 @@ void CB_DrawTLColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -283,7 +283,7 @@ void CB_DrawTLTRColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -426,7 +426,7 @@ void CB_DrawTRColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -504,7 +504,7 @@ void CB_DrawFlexColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -610,7 +610,7 @@ void CB_DrawFlexTRColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -716,7 +716,7 @@ void CB_DrawAddColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -835,7 +835,7 @@ void CB_DrawAddTRColumn_8(void)
    {
       register byte *source = column.source;
       register lighttable_t *colormap = column.colormap;
-      register heightmask = column.texheight - 1;
+      register int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {

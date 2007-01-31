@@ -77,11 +77,8 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
 {
    if(!top || !bottom)
    {
-      // haleyjd: DEBUG
       register float *topp = portaltop, *bottomp = portalbottom, 
                      *stopp = portaltop + MAX_SCREENWIDTH;
-      register float *tp = top, *bp = bottom;
-
 
       while(topp < stopp)
       {
@@ -364,9 +361,6 @@ void R_ClearSprites(void)
 static maskedstack_t *mstack = NULL;
 static int stacksize = 0, stackmax = 0;
 
-static int firstds, lastds;
-static int firstsprite, lastsprite;
-
 void R_PushMasked(void)
 {
    if(stacksize == stackmax)
@@ -600,20 +594,20 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 void R_ProjectSprite(mobj_t *thing)
 {
-   fixed_t   gzt;            // killough 3/27/98
+   fixed_t       gzt;            // killough 3/27/98
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   int       lump;
-   boolean   flip;
-   vissprite_t *vis;
-   int heightsec;            // killough 3/27/98
+   int           lump;
+   boolean       flip;
+   vissprite_t   *vis;
+   int           heightsec;      // killough 3/27/98
 
    float tempx, tempy;
    float tx1, tx2, ty1, tz1, tz2;
    float idist;
    float swidth, sleftoffset;
    float x1, x2, y1, y2;
-   float pstep;
+   float pstep = 0.0f;
 
    // haleyjd 04/18/99: MF2_DONTDRAW
    //         09/01/02: zdoom-style translucency
@@ -624,7 +618,7 @@ void R_ProjectSprite(mobj_t *thing)
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = (thing->x / 65536.0f) - view.x;
    tempy = (thing->y / 65536.0f) - view.y;
-   ty1 = (tempy * view.cos) + (tempx * view.sin);
+   ty1   = (tempy * view.cos) + (tempx * view.sin);
 
    // lies in front of the front view plane
    if(ty1 < 1.0f)
@@ -632,12 +626,11 @@ void R_ProjectSprite(mobj_t *thing)
 
    tx1 = (tempx * view.cos) - (tempy * view.sin);
 
-
    // decide which patch to use for sprite relative to player
    if((unsigned)thing->sprite >= (unsigned)numsprites)
    {
       // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR"R_ProjectSprite: invalid sprite number %i\n",
+      doom_printf(FC_ERROR "R_ProjectSprite: bad sprite number %i\n",
                   thing->sprite);
       if(thing->state)
       {
@@ -655,7 +648,7 @@ void R_ProjectSprite(mobj_t *thing)
       !(sprdef->spriteframes))
    {
       // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR"R_ProjectSprite: bad frame %i for sprite %s",
+      doom_printf(FC_ERROR "R_ProjectSprite: bad frame %i for sprite %s",
                   thing->frame & FF_FRAMEMASK, 
                   spritelist[thing->sprite]);
       if(thing->state)
@@ -798,7 +791,8 @@ void R_ProjectSprite(mobj_t *thing)
    else if(LevelInfo.useFullBright && (thing->frame & FF_FULLBRIGHT)) // haleyjd
       vis->colormap = fullcolormap;       // full bright  // killough 3/20/98
    else
-   {      // diminished light
+   {     
+      // diminished light
       // SoM: ANYRES
       int index = (int)(idist * 2560.0f);
       if(index >= MAXLIGHTSCALE)
@@ -1757,7 +1751,7 @@ void R_DrawParticle(vissprite_t *vis)
       
       ycount = yh - yl;      
       if(ycount < 0)
-	 return;
+         return;
       ++ycount;
 
       spacing = video.width - xcount;
@@ -1788,9 +1782,11 @@ void R_DrawParticle(vissprite_t *vis)
                   bg = bg2rgb[*dest];
                   bg = (fg + bg) | 0xf07c3e1f;
                   *dest++ = RGB8k[0][0][(bg >> 5) & (bg >> 19)];
-               } while(--count);
+               } 
+               while(--count);
                dest += spacing;  // go to next row
-            } while(--ycount);
+            } 
+            while(--ycount);
          }
          else // general (BOOM)
          {
@@ -1800,10 +1796,13 @@ void R_DrawParticle(vissprite_t *vis)
                
                do // step in x
                {
-                  *dest++ = main_tranmap[(*dest << 8) + color];
-               } while(--count);
+                  *dest = main_tranmap[(*dest << 8) + color];
+                  ++dest;
+               } 
+               while(--count);
                dest += spacing;  // go to next row
-            } while(--ycount);
+            } 
+            while(--ycount);
          } // end else [particle_trans == 2]
       }
       else // opaque (fast, and looks terrible)
@@ -1813,11 +1812,11 @@ void R_DrawParticle(vissprite_t *vis)
             int count = xcount;
             
             do // step in x
-            {
                *dest++ = color;
-            } while(--count);
+            while(--count);
             dest += spacing;  // go to next row
-         } while(--ycount);
+         } 
+         while(--ycount);
       } // end else [!general_translucency]
    } // end local block
 }

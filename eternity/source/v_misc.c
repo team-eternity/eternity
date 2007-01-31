@@ -446,7 +446,7 @@ static char *loading_message;
 void V_DrawLoading(void)
 {
    int x, y, realx, realy, reallinelen, reallineend;
-   char *dest;
+   byte *dest;
    int linelen;
    fixed_t yfrac, ystep;
 

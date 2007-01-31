@@ -624,7 +624,9 @@ char buf[3];
   if (w==wp_fist)           // make '1' apply beserker strength toggle
     cheat_pw(pw_strength);
   else
+  {
     if (w >= 0 && w < NUMWEAPONS)
+    {
       if ((plyr->weaponowned[w] = !plyr->weaponowned[w]))
         doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
       else 
@@ -634,6 +636,8 @@ char buf[3];
           if (w==plyr->readyweapon)         // maybe switch if weapon removed
             plyr->pendingweapon = P_SwitchWeapon(plyr);
         }
+    }
+  }
 }
 
 // killough 2/16/98: generalized ammo cheats

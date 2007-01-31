@@ -1007,7 +1007,7 @@ static void G_DoPlayDemo(void)
    {
       // haleyjd: don't ignore the signature any more -- use it
       // demo_p += 6;               // skip signature;
-      if(demo_version == 255 && !strncmp(demo_p, eedemosig, 5))
+      if(demo_version == 255 && !strncmp((const char *)demo_p, eedemosig, 5))
       {
          int temp;
          
@@ -1751,9 +1751,9 @@ void G_SaveCurrentLevel(char *filename, char *description)
       for(*save_p = 0; *w; w++)
       {
          CheckSaveGame(strlen(*w)+2);
-         strcat(strcat(save_p, *w), "\n");
+         strcat(strcat((char *)save_p, *w), "\n");
       }
-      save_p += strlen(save_p)+1;
+      save_p += strlen((char *)save_p)+1;
    }
 
    CheckSaveGame(GAME_OPTION_SIZE+MIN_MAXPLAYERS+11);
@@ -1862,7 +1862,7 @@ static void G_DoLoadGame(void)
    sprintf(vcheck, VERSIONID, version);
    
    // killough 2/22/98: Friendly savegame version difference message
-   if(!forced_loadgame && strncmp(save_p, vcheck, VERSIONSIZE))
+   if(!forced_loadgame && strncmp((const char *)save_p, vcheck, VERSIONSIZE))
    {
       G_LoadGameErr("Different Savegame Version!!!\n\nAre you sure?");
       return;
@@ -1894,10 +1894,10 @@ static void G_DoLoadGame(void)
       checksum = G_Signature();
       if (memcmp(&checksum, save_p, sizeof checksum))
       {
-         char *msg = malloc(strlen(save_p + sizeof checksum) + 128);
+         char *msg = malloc(strlen((const char *)(save_p + sizeof checksum)) + 128);
          strcpy(msg,"Incompatible Savegame!!!\n");
          if(save_p[sizeof checksum])
-            strcat(strcat(msg,"Wads expected:\n\n"), save_p + sizeof checksum);
+            strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
          strcat(msg, "\nAre you sure?");
          C_Puts(msg);
          G_LoadGameErr(msg);
@@ -1909,7 +1909,7 @@ static void G_DoLoadGame(void)
    save_p += sizeof checksum;
    while(*save_p++);
 
-   for(i=0 ; i<MAXPLAYERS ; i++)
+   for(i = 0; i < MAXPLAYERS; ++i)
       playeringame[i] = *save_p++;
    save_p += MIN_MAXPLAYERS-MAXPLAYERS;         // killough 2/28/98
 

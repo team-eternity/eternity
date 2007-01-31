@@ -151,7 +151,6 @@ result_e T_MovePlane
             lastpos = sector->floorheight;
             sector->floorheight -= speed;
             flag = P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
-	    
 
             // haleyjd 02/15/01: last of cph's current demo fixes:
             // cph - make more compatible with original Doom, by

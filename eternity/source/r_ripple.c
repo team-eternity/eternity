@@ -46,8 +46,8 @@
 // 1 cycle per 32 units (2 in 64)
 #define SWIRLFACTOR2 (8192/32)
 
-static char *normalflat;
-static char distortedflat[4096];
+static byte *normalflat;
+static byte distortedflat[4096];
 int r_swirl;       // hack
 
 #if 0
@@ -73,7 +73,7 @@ static void R_DrawLines(void)
 // Generates a distorted flat from a normal one using a two-dimensional
 // sine wave pattern.
 //
-char *R_DistortedFlat(int flatnum)
+byte *R_DistortedFlat(int flatnum)
 {
    static int swirltic = -1;
    static int offset[4096];

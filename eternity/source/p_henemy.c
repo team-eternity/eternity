@@ -2164,8 +2164,6 @@ void A_MissileSpread(mobj_t *actor)
    for(i = 0; i < num; ++i)
    {
       // calculate z momentum
-      mobj_t *target = actor->target;
-
 #ifdef R_LINKEDPORTALS
       momz = P_MissileMomz(getTargetX(actor) - actor->x,
                            getTargetY(actor) - actor->y,

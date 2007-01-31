@@ -585,7 +585,7 @@ void MN_MapColourDrawer(void)
    patch_t *patch;
    int x, y;
    int u, v;
-   char block[BLOCK_SIZE*BLOCK_SIZE];
+   byte block[BLOCK_SIZE*BLOCK_SIZE];
 
    // draw the menu in the background
    
@@ -595,7 +595,7 @@ void MN_MapColourDrawer(void)
    
    patch = W_CacheLumpName("M_COLORS", PU_CACHE);
    
-   x = (SCREENWIDTH - SHORT(patch->width)) / 2;
+   x = (SCREENWIDTH  - SHORT(patch->width )) / 2;
    y = (SCREENHEIGHT - SHORT(patch->height)) / 2;
    
    V_DrawPatch(x, y, &vbscreen, patch);
@@ -609,8 +609,8 @@ void MN_MapColourDrawer(void)
    memset(block, HIGHLIGHT_COLOUR, BLOCK_SIZE*BLOCK_SIZE);
   
    // draw colour inside
-   for(u=1; u<BLOCK_SIZE-1; u++)
-      for(v=1; v<BLOCK_SIZE-1; v++)
+   for(u = 1; u < BLOCK_SIZE - 1; ++u)
+      for(v = 1; v < BLOCK_SIZE - 1; ++v)
          block[v*BLOCK_SIZE + u] = selected_colour;
   
    // draw block

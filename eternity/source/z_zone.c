@@ -792,7 +792,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
                   const char *file, int line)
 {
    memblock_t *block, *other = NULL;
-   size_t curr_size = 0, size_orig = n;
+   size_t curr_size = 0;
 
    // is ptr null or requested size 0? if so, go to "old" realloc
    if(ptr == NULL || n == 0)

@@ -324,7 +324,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
          if(i == group)
             continue;
 
-         if(link = linklist[i])
+         if((link = linklist[i]))
             P_GatherLinks(group, link->x, link->y, link->z, i);
       }
 

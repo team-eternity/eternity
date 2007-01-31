@@ -65,7 +65,7 @@ static void R_LowDrawColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -154,7 +154,7 @@ static void R_LowDrawTLColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -247,7 +247,7 @@ static void R_LowDrawTLTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -383,7 +383,7 @@ static void R_LowDrawTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -471,7 +471,7 @@ static void R_LowDrawFlexColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -588,7 +588,7 @@ static void R_LowDrawFlexTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -702,7 +702,7 @@ static void R_LowDrawAddColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -830,7 +830,7 @@ static void R_LowDrawAddTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
