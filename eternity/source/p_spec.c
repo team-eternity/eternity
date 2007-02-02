@@ -4409,6 +4409,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          (lines[s].backsector && lines[s].frontsector)) // ignore 2S lines
          continue;
 
+      lines[s].special = 0;
       lines[s].portal = portal;
    }
 }

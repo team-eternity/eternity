@@ -57,6 +57,9 @@ void P_BuildLinkTable(void);
 void P_LinkRejectTable(void);
 #include "linkoffs.h"
 
+
+boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link);
+
 #endif
 
 #endif

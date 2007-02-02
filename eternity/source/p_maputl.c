@@ -196,14 +196,40 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    openbacksector = linedef->backsector;
 
    {
-      frontceilz = openfrontsector->ceilingheight;
-      backceilz = openbacksector->ceilingheight;
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && useportalgroups && openfrontsector->c_portal &&
+         openfrontsector->c_portal->type == R_LINKED)
+         frontceilz = openfrontsector->ceilingheight + mo->height;
+      else
+#endif
+         frontceilz = openfrontsector->ceilingheight;
+
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && useportalgroups && openbacksector->c_portal &&
+         openbacksector->c_portal->type == R_LINKED)
+         backceilz = openbacksector->ceilingheight + mo->height;
+      else
+#endif
+         backceilz = openbacksector->ceilingheight;
    }
 
 
    {
-      frontfloorz = openfrontsector->floorheight;
-      backfloorz = openbacksector->floorheight;
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && useportalgroups && openfrontsector->f_portal &&
+         openfrontsector->f_portal->type == R_LINKED)
+         frontfloorz = openfrontsector->floorheight - mo->height;
+      else 
+#endif
+         frontfloorz = openfrontsector->floorheight;
+
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && useportalgroups && openbacksector->f_portal &&
+         openbacksector->f_portal->type == R_LINKED)
+         backfloorz = openbacksector->floorheight - mo->height;
+      else
+#endif
+         backfloorz = openbacksector->floorheight;
    }
    
    if(frontceilz < backceilz)

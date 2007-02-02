@@ -529,8 +529,21 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // Any contacted lines the step closer together
    // will adjust them.
 
-   tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
-   tmceilingz = newsubsec->sector->ceilingheight;
+#ifdef R_LINKEDPORTALS
+   if(demo_version >= 333 && useportalgroups && !(tmthing->flags & MF_NOCLIP) &&
+      newsubsec->sector->f_portal && newsubsec->sector->f_portal->type == R_LINKED)
+      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - tmthing->height;
+   else
+#endif
+      tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
+
+#ifdef R_LINKEDPORTALS
+   if(demo_version >= 333 && useportalgroups && !(tmthing->flags & MF_NOCLIP) &&
+      newsubsec->sector->c_portal && newsubsec->sector->c_portal->type == R_LINKED)
+      tmceilingz = newsubsec->sector->ceilingheight + tmthing->height;
+   else
+#endif
+      tmceilingz = newsubsec->sector->ceilingheight;
 
    tmsecfloorz = tmpassfloorz = tmstepupfloorz = tmfloorz;
    tmsecceilz = tmpassceilz = tmceilingz;

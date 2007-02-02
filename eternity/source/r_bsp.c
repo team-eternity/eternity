@@ -487,7 +487,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
-#define NEARCLIP 0.1f
+#define NEARCLIP 0.05f
+#define PNEARCLIP 0.001f
 extern int       *texturewidthmask;
 
 static void R_AddLine(seg_t *line)
@@ -580,69 +581,129 @@ static void R_AddLine(seg_t *line)
       t2.fy = v2->ty;
    }
 
-   // Simple reject for lines entirely behind the view plane.
-   if(t1.fy < NEARCLIP && t2.fy < NEARCLIP)
+   // SoM: Portal lines are not texture and as a result can be clipped MUCH closer to the camera
+   // than normal lines can. This closer clipping distance is used to stave off the flash that
+   // can sometimes occur when passing through a linked portal line.
+   if(line->linedef->portal)
    {
-      // Make sure both vertices are marked.
-      v1->frameid = v2->frameid = frameid;
-      return;
-   }
+      if(t1.fy < PNEARCLIP && t2.fy < PNEARCLIP)
+         return; // Don't mark the vertices.
 
-   toffsetx = toffsety = 0;
+      toffsetx = toffsety = 0;
+      if(t1.fy < PNEARCLIP)
+      {
+         float move, movey;
 
-   if(t1.fy < NEARCLIP)
-   {
-      float move, movey;
+         // SoM: optimization would be to store the line slope in float format in the segs
+         movey = PNEARCLIP - t1.fy;
+         move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
 
-      // SoM: optimization would be to store the line slope in float format in the segs
-      movey = NEARCLIP - t1.fy;
-      move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+         t1.fx += move;
+         toffsetx += (float)sqrt(move * move + movey * movey);
+         t1.fy = PNEARCLIP;
+         i1 = 1.0f / PNEARCLIP;
+         x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+         // Don't mark the vertices.
+      }
+      else if(v1->frameid == frameid)
+      {
+         // if it's already marked that's ok
+         i1 = v1->proj_dist;
+         x1 = v1->proj_x;
+      }
+      else
+      {
+         i1 = 1.0f / t1.fy;
+         x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+      }
 
-      t1.fx += move;
-      toffsetx += (float)sqrt(move * move + movey * movey);
-      t1.fy = NEARCLIP;
-      i1 = 1.0f / NEARCLIP;
-      x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
-
-      // SoM: you can't store the clipped vertex projection so mark it as finished and
-      // t1.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
-      v1->frameid = frameid;
-   }
-   else if(v1->frameid == frameid)
-   {
-      i1 = v1->proj_dist;
-      x1 = v1->proj_x;
+      if(t2.fy < PNEARCLIP)
+      {
+         // SoM: optimization would be to store the line slope in float format in the segs
+         t2.fx += (PNEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+         t2.fy = PNEARCLIP;
+         i2 = 1.0f / PNEARCLIP;
+         x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+         // Don't mark the vertices.
+      }
+      else if(v2->frameid == frameid)
+      {
+         // if it's already marked that's ok
+         i2 = v2->proj_dist;
+         x2 = v2->proj_x;
+      }
+      else
+      {
+         i2 = 1.0f / t2.fy;
+         x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+      }
    }
    else
    {
-      i1 = v1->proj_dist = 1.0f / t1.fy;
-      x1 = v1->proj_x = (view.xcenter + (t1.fx * i1 * view.xfoc));
-      v1->frameid = frameid;
-   }
+      // Simple reject for lines entirely behind the view plane.
+      if(t1.fy < NEARCLIP && t2.fy < NEARCLIP)
+      {
+         // Make sure both vertices are marked.
+         v1->frameid = v2->frameid = frameid;
+         return;
+      }
+
+      toffsetx = toffsety = 0;
+
+      if(t1.fy < NEARCLIP)
+      {
+         float move, movey;
+
+         // SoM: optimization would be to store the line slope in float format in the segs
+         movey = NEARCLIP - t1.fy;
+         move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+
+         t1.fx += move;
+         toffsetx += (float)sqrt(move * move + movey * movey);
+         t1.fy = NEARCLIP;
+         i1 = 1.0f / NEARCLIP;
+         x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+
+         // SoM: you can't store the clipped vertex projection so mark it as finished and
+         // t1.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
+         v1->frameid = frameid;
+      }
+      else if(v1->frameid == frameid)
+      {
+         i1 = v1->proj_dist;
+         x1 = v1->proj_x;
+      }
+      else
+      {
+         i1 = v1->proj_dist = 1.0f / t1.fy;
+         x1 = v1->proj_x = (view.xcenter + (t1.fx * i1 * view.xfoc));
+         v1->frameid = frameid;
+      }
 
 
-   if(t2.fy < NEARCLIP)
-   {
-      // SoM: optimization would be to store the line slope in float format in the segs
-      t2.fx += (NEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
-      t2.fy = NEARCLIP;
-      i2 = 1.0f / NEARCLIP;
-      x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+      if(t2.fy < NEARCLIP)
+      {
+         // SoM: optimization would be to store the line slope in float format in the segs
+         t2.fx += (NEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+         t2.fy = NEARCLIP;
+         i2 = 1.0f / NEARCLIP;
+         x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
 
-      // SoM: you can't store the clipped vertex projection so mark it as finished and
-      // t2.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
-      v2->frameid = frameid;
-   }
-   else if(v2->frameid == frameid)
-   {
-      i2 = v2->proj_dist;
-      x2 = v2->proj_x;
-   }
-   else
-   {
-      i2 = v2->proj_dist = 1.0f / t2.fy;
-      x2 = v2->proj_x = (view.xcenter + (t2.fx * i2 * view.xfoc));
-      v2->frameid = frameid;
+         // SoM: you can't store the clipped vertex projection so mark it as finished and
+         // t2.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
+         v2->frameid = frameid;
+      }
+      else if(v2->frameid == frameid)
+      {
+         i2 = v2->proj_dist;
+         x2 = v2->proj_x;
+      }
+      else
+      {
+         i2 = v2->proj_dist = 1.0f / t2.fy;
+         x2 = v2->proj_x = (view.xcenter + (t2.fx * i2 * view.xfoc));
+         v2->frameid = frameid;
+      }
    }
 
    // SoM: Handle the case where a wall is only occupying a single post but still needs to be 

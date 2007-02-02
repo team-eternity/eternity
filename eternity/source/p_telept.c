@@ -83,7 +83,11 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
             if(!(demo_compatibility &&
                (gamemission == pack_plut || gamemission == pack_tnt)))
             {
-               thing->z = thing->floorz;
+               // SoM: so yeah... Need this for linked portals.
+               if(demo_version >= 333)
+                  thing->z = thing->secfloorz;
+               else
+                  thing->z = thing->floorz;
             }
 
             // sf: use this instead of affecting viewz directly

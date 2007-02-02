@@ -33,6 +33,7 @@
 #include "r_bsp.h"
 #include "r_things.h"
 #include "p_setup.h"
+#include "p_map.h"
 
 #ifdef R_LINKEDPORTALS
 
@@ -476,6 +477,43 @@ void P_LinkRejectTable(void)
       } // s
    } // i
 }
+
+
+
+// -----------------------------------------
+// Begin portal teleportation
+
+boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
+{
+   fixed_t moz = mo->z;
+   fixed_t momx = mo->momx;
+   fixed_t momy = mo->momy;
+   fixed_t momz = mo->momz;
+
+   if(!mo || !link)
+      return 0;
+   if(!P_TeleportMove(mo, mo->x - link->x, mo->y - link->y, false)) // killough 8/9/98
+      return 0;
+
+   mo->z = moz - link->z;
+
+   mo->momx = momx;
+   mo->momy = momy;
+   mo->momz = momz;
+
+   // Adjust a player's view, in case there has been a height change
+   if (mo->player)
+   {
+      if(mo->player == players+displayplayer)
+          P_ResetChasecam();
+   }
+
+   P_AdjustFloorClip(mo);
+   
+   return 1;
+}
+
+
 
 #endif
 

@@ -446,6 +446,10 @@ typedef struct vissprite_s
 
   fixed_t footclip; // haleyjd: foot clipping
 
+  #ifdef R_LINKEDPORTALS
+  int    sector; // SoM: sector the sprite is in.
+  #endif
+
 } vissprite_t;
 
 //  

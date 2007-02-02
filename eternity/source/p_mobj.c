@@ -717,6 +717,43 @@ floater:
 
    // clip movement
    
+#ifdef R_LINKEDPORTALS
+   if(useportalgroups && mo->subsector->sector->f_portal && 
+      mo->subsector->sector->f_portal->type == R_LINKED)
+   {
+      // Calculate the height at which the mobj should pass through the portal
+      fixed_t passheight = mo->z + (mo->player ? mo->player->viewheight : (mo->height >> 1));
+
+      if(passheight < mo->subsector->sector->floorheight)
+      {
+         linkoffset_t *link = P_GetLinkOffset(mo->subsector->sector->groupid, 
+                                              mo->subsector->sector->f_portal->data.camera.groupid);
+         if(link)
+         {
+            EV_PortalTeleport(mo, link);
+            return;
+         }
+      }
+   }
+   if(useportalgroups && mo->subsector->sector->c_portal && 
+      mo->subsector->sector->c_portal->type == R_LINKED)
+   {
+      // Calculate the height at which the mobj should pass through the portal
+      fixed_t passheight = mo->z + (mo->player ? mo->player->viewheight : (mo->height >> 1));
+
+      if(passheight > mo->subsector->sector->ceilingheight)
+      {
+         linkoffset_t *link = P_GetLinkOffset(mo->subsector->sector->groupid, 
+                                              mo->subsector->sector->c_portal->data.camera.groupid);
+         if(link)
+         {
+            EV_PortalTeleport(mo, link);
+            return;
+         }
+      }
+   }
+#endif
+
    if (mo->z <= mo->floorz)
    {
       // hit the floor

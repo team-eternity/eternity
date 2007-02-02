@@ -424,8 +424,8 @@ void R_DrawMaskedColumn(column_t *tcolumn)
    while(tcolumn->topdelta != 0xff)
    {
       // calculate unclipped screen coordinates for post
-      y1 = maskedcolumn.ytop + (maskedcolumn.scale*tcolumn->topdelta) + 0.5f;
-      y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1.5f;
+      y1 = maskedcolumn.ytop + (maskedcolumn.scale * tcolumn->topdelta);
+      y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
 
       column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
       column.y2 = (int)(y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2);
@@ -608,6 +608,7 @@ void R_ProjectSprite(mobj_t *thing)
    float swidth, sleftoffset;
    float x1, x2, y1, y2;
    float pstep = 0.0f;
+   int   intx1, intx2;
 
    // haleyjd 04/18/99: MF2_DONTDRAW
    //         09/01/02: zdoom-style translucency
@@ -698,6 +699,9 @@ void R_ProjectSprite(mobj_t *thing)
    if(x2 < 0.0f)
       return;
 
+   intx1 = (int)(x1 + 0.999f);
+   intx2 = (int)(x2 - 0.001f);
+
    // SoM: forgot about footclipping
    tz1 = ((thing->z + spritetopoffset[lump] - thing->floorclip) / 65536.0f) - view.z;
    y1 = (view.ycenter - (tz1 * idist * view.yfoc));
@@ -756,8 +760,8 @@ void R_ProjectSprite(mobj_t *thing)
    vis->gz = thing->z;
    vis->gzt = gzt;                          // killough 3/27/98
    // Cardboard
-   vis->x1 = (int)(x1 < 0.0f ? 0.0f : x1);
-   vis->x2 = (int)(x2 >= view.width ? view.width - 1.0f : x2);
+   vis->x1 = x1 < 0.0f ? 0 : intx1;
+   vis->x2 = x2 >= view.width ? viewwidth - 1 : intx2;
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
    vis->dist = idist;
@@ -765,8 +769,11 @@ void R_ProjectSprite(mobj_t *thing)
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->scale = vis->dist * view.yfoc;
+#ifdef R_LINKEDPORTALS
+   vis->sector = thing->subsector->sector - sectors;
+#endif
 
-   if(x1 < vis->x1)
+   //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
 
    vis->translucency = thing->translucency; // haleyjd 09/01/02
@@ -943,6 +950,9 @@ void R_DrawPSprite(pspdef_t *psp)
   vis->scale = view.pspriteyscale;
   vis->ytop = (view.height * 0.5f) - ((vis->texturemid / 65536.0f) * vis->scale);
   vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
+#ifdef R_LINKEDPORTALS
+  vis->sector = viewplayer->mo->subsector->sector - sectors;
+#endif
    
   if (flip)
     {
@@ -1419,6 +1429,43 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    }
    // killough 3/27/98: end special clipping for deep water / fake ceilings
 
+#ifdef R_LINKEDPORTALS
+   // SoM: special clipping for linked portals
+   if(useportalgroups)
+   {
+      float h, mh;
+
+      sector_t *sector = sectors + spr->sector;
+
+      mh = (sectors->floorheight / 65536.0f) - view.z;
+      if(sector->f_portal && sector->f_portal->type == R_LINKED && 
+         sector->floorheight > spr->gz)
+      {
+         h = view.ycenter - (mh * spr->scale);
+         if(h < 0) h = 0;
+         if(h >= view.height) h = view.height - 1;
+
+         for(x = spr->x1; x <= spr->x2; x++)
+            if(clipbot[x] == -2 || h < clipbot[x])
+               clipbot[x] = h;
+      }
+
+
+      mh = (sectors->ceilingheight / 65536.0f) - view.z;
+      if(sector->c_portal && sector->c_portal->type == R_LINKED && 
+         sector->ceilingheight < spr->gzt)
+      {
+         h = view.ycenter - (mh * spr->scale);
+         if(h < 0) h = 0;
+         if(h >= view.height) h = view.height - 1;
+
+         for(x = spr->x1; x <= spr->x2; x++)
+            if(cliptop[x] == -2 || h > cliptop[x])
+               cliptop[x] = h;
+      }
+   }
+#endif
+
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
    
@@ -1657,6 +1704,9 @@ void R_ProjectParticle(particle_t *particle)
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->scale = yscale;
+#ifdef R_LINKEDPORTALS
+   vis->sector = sector - sectors;  
+#endif
    
    if(fixedcolormap ==
       fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))

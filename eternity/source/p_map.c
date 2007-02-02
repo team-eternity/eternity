@@ -297,8 +297,22 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    // Any contacted lines the step closer together
    // will adjust them.
    
-   tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
-   tmceilingz = newsubsec->sector->ceilingheight;
+#ifdef R_LINKEDPORTALS
+   if(demo_version >= 333 && useportalgroups && newsubsec->sector->f_portal &&
+      newsubsec->sector->f_portal->type == R_LINKED)
+      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - tmthing->height;
+   else
+#endif
+      tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
+
+#ifdef R_LINKEDPORTALS
+   if(demo_version >= 333 && useportalgroups && newsubsec->sector->c_portal &&
+      newsubsec->sector->c_portal->type == R_LINKED)
+      tmceilingz = newsubsec->sector->ceilingheight + tmthing->height;
+   else
+#endif
+      tmceilingz = newsubsec->sector->ceilingheight;
+
    tmsecfloorz = tmstepupfloorz = tmpassfloorz = tmfloorz;
    tmsecceilz = tmpassceilz = tmceilingz;
 
@@ -517,6 +531,28 @@ boolean PIT_CheckLine(line_t *ld)
    // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
    if(!ld->backsector) // one sided line
    {
+#ifdef R_LINKEDPORTALS
+      linkoffset_t *link;
+
+      if(useportalgroups && ld->portal && ld->portal->type == R_LINKED &&
+         (link = P_GetLinkOffset(ld->frontsector->groupid, ld->portal->data.camera.groupid)))
+      {
+         // 1/11/98 killough: remove limit on lines hit, by array doubling
+         if(numspechit >= spechit_max)
+         {
+            spechit_max = spechit_max ? spechit_max * 2 : 8;
+            spechit = realloc(spechit, sizeof(*spechit) * spechit_max);
+         }
+         spechit[numspechit++] = ld;
+
+         // haleyjd 09/20/06: spechit overflow emulation
+         if(demo_compatibility && spechits_emulation && 
+            numspechit > MAXSPECHIT_OLD)
+            SpechitOverrun(ld);
+
+         return true;
+      }
+#endif
       blockline = ld;
       return tmunstuck && !untouched(ld) &&
          FixedMul(tmx-tmthing->x,ld->dy) > FixedMul(tmy-tmthing->y,ld->dx);
@@ -1235,11 +1271,25 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
 
    // if any special lines were hit, do the effect
    // killough 11/98: simplified
-
    if(!(thing->flags & (MF_TELEPORT | MF_NOCLIP)))
    {
       while(numspechit--)
       {
+#ifdef R_LINKEDPORTALS
+         if(useportalgroups && spechit[numspechit]->portal && 
+            spechit[numspechit]->portal->type == R_LINKED)
+         {
+            // SoM: if the mobj is touching a portal line, and the line is behind the mobj
+            // no matter what the previous lineside was, we missed the teleport and NEED to do
+            // so now.
+            if(P_PointOnLineSide(thing->x, thing->y, spechit[numspechit]))
+            {
+               linkoffset_t *link = P_GetLinkOffset(thing->groupid, 
+                                                    spechit[numspechit]->portal->data.camera.groupid);
+               EV_PortalTeleport(thing, link);
+            }
+         }
+#endif
          if(spechit[numspechit]->special)  // see if the line was crossed
          {
             int oldside;
@@ -1848,8 +1898,31 @@ void P_NewAimTPT(linkoffset_t *link, fixed_t frac, fixed_t newz,
 }
 
 
+void P_NewUseTPT(linkoffset_t *link, fixed_t frac)
+{
+   tptnode_t *node = TPT_NewNode();
 
-boolean P_CheckTPT(void)
+   node->type = tUse;
+
+   node->x = trace.x + FixedMul(frac, trace.cos);
+   node->x -= link->x;
+
+   node->y = trace.y + FixedMul(frac, trace.sin);
+   node->y -= link->y;
+
+   node->originx = trace.originx - link->x;
+   node->originy = trace.originy - link->y;
+   node->originz = trace.originz - link->x;
+
+   node->movefrac = trace.movefrac + frac;
+   node->attackrange = trace.attackrange - frac;
+   node->dx = FixedMul(trace.cos, node->attackrange);
+   node->dy = FixedMul(trace.sin, node->attackrange);
+}
+
+
+
+boolean P_CheckTPT()
 {
    return tptlist ? true : false;
 }
@@ -1895,6 +1968,21 @@ tptnode_t *P_StartTPT(void)
       trace.originz = ret->originz;
       trace.topslope = ret->topslope;
       trace.bottomslope = ret->bottomslope;
+      trace.movefrac = ret->movefrac;
+      trace.attackrange = ret->attackrange;
+
+      return ret;
+   }
+   else if(ret->type == tUse)
+   {
+      trace.x = ret->x;
+      trace.y = ret->y;
+      trace.z = ret->z;
+      trace.dx = ret->dx;
+      trace.dy = ret->dy;
+      trace.originx = ret->originx;
+      trace.originy = ret->originy;
+      trace.originz = ret->originz;
       trace.movefrac = ret->movefrac;
       trace.attackrange = ret->attackrange;
 
@@ -2431,6 +2519,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                hitplane = true;
                updown = 1; // haleyjd
             }
+#ifdef R_LINKEDPORTALS
             else if(useportalgroups && li->portal && li->portal->type == R_LINKED)
             {
                linkoffset_t *link = 
@@ -2447,6 +2536,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
                return false;
             }
+#endif
          }
          else if(demo_version >= 333 && li->portal && li->portal->type == R_LINKED)
             return true;
@@ -2653,10 +2743,32 @@ static mobj_t *usething;
 
 static boolean PTR_UseTraverse(intercept_t *in)
 {
+#ifdef R_LINKEDPORTALS
+   if(useportalgroups && in->d.line->portal && in->d.line->portal->type == R_LINKED)
+   {
+      linkoffset_t *link;
+      sector_t *sidesector;
+      int side = P_PointOnLineSide(trace.originx, trace.originy, in->d.line);
+
+      if(side)
+         return true;
+      sidesector = in->d.line->frontsector;
+      if(!sidesector)
+         return true;
+
+      link = P_GetLinkOffset(sidesector->groupid, in->d.line->portal->data.camera.groupid);
+      if(!link)
+         return false;
+
+      P_NewUseTPT(link, in->frac);
+      return false;
+   }
+   else
+#endif
    if(in->d.line->special)
    {
       P_UseSpecialLine(usething, in->d.line,
-         P_PointOnLineSide(usething->x, usething->y,in->d.line)==1);
+         P_PointOnLineSide(trace.originx, trace.originy,in->d.line)==1);
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag
@@ -2714,8 +2826,11 @@ void P_UseLines(player_t *player)
    
    x1 = player->mo->x;
    y1 = player->mo->y;
-   x2 = x1 + (USERANGE>>FRACBITS)*finecosine[angle];
-   y2 = y1 + (USERANGE>>FRACBITS)*finesine[angle];
+   x2 = x1 + (USERANGE>>FRACBITS)*(trace.cos = finecosine[angle]);
+   y2 = y1 + (USERANGE>>FRACBITS)*(trace.sin = finesine[angle]);
+
+   trace.attackrange = USERANGE;
+   trace.movefrac = 0;
 
    // old code:
    //

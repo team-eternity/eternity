@@ -95,6 +95,7 @@ typedef struct tptnode_s
    {
       tShoot,
       tAim,
+      tUse,
    } type;
 
    // -- Used by both types --
