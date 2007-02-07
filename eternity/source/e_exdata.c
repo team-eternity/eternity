@@ -563,6 +563,11 @@ static struct exlinespec
    { 373, "Light_Flicker" },
    { 374, "Light_Strobe" },
    { 375, "Radius_Quake" },
+
+#ifdef R_LINKEDPORTALS
+   { 376, "Portal_LinkedLineLine"},
+   { 377, "Portal_LinkedLineLineAnchor"},
+#endif
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

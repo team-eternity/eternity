@@ -131,7 +131,8 @@ typedef enum
 {
    portal_ceiling,
    portal_floor,
-   portal_both
+   portal_both,
+   portal_lineonly, // SoM: Added for linked line-line portals.
 } portal_effect;
 
 static void P_SpawnPortal(line_t *, portal_type, portal_effect);
@@ -2762,6 +2763,9 @@ void P_SpawnSpecials(void)
       case 359:
          P_SpawnPortal(&lines[i], portal_linked, lines[i].special - 358);
          break;
+      case 376:
+         P_SpawnPortal(&lines[i], portal_linked, portal_lineonly);
+         break;
 #endif
       }
    }
@@ -4348,8 +4352,10 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       // linked portals can only be applied to either the floor or ceiling.
       if(line->special == 358)
          anchortype = 360;
-      else
+      else if(line->special == 359)
          anchortype = 361;
+      else if(line->special == 376)
+         anchortype = 377;
 
       frontsector = line->frontsector;
       if(!frontsector) 
@@ -4372,11 +4378,29 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       }
       if(s < 0)
       {
-         C_Printf(FC_ERROR "No anchor line for portal.\a\n");
+         C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", line - lines);
          return;
       }
 
       portal = R_GetLinkedPortal(deltax, deltay, deltaz, P_CreatePortalGroup(frontsector));
+
+      if(line->special == 376)
+      {
+         if(line->frontsector && line->backsector)
+         {
+            C_Printf(FC_ERROR, "Line-Line portal line two sided. (line %i)", line - lines);
+            return;
+         }
+         if(lines[s].frontsector && lines[s].backsector)
+         {
+            C_Printf(FC_ERROR, "Line-Line anchor line two sided. (line %i)", s);
+            return;
+         }
+
+         line->portal = R_GetLinkedPortal(-deltax, -deltay, -deltaz, P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector : lines[s].backsector));
+         lines[s].portal = portal;
+         return;
+      }
       break;
 #endif
    default:
