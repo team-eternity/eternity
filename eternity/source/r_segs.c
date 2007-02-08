@@ -191,53 +191,52 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       Z_ChangeTag(tranmap, PU_CACHE); // killough 4/11/98*/
 }
 
+
 //
 // R_RenderSegLoop
 // Draws zero, one, or two textures (and possibly a masked texture) for walls.
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-
-
 static void R_RenderSegLoop(void)
 {
-   int t, b, h, l, top, bottom;
+   int t, b, h, l, line;
    int cliptop, clipbot;
    int i, texx;
    float basescale;
 
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
-      top = cliptop = (int)ceilingclip[i];
+      cliptop = (int)ceilingclip[i];
       clipbot = (int)floorclip[i];
 
-      t = (int)(segclip.top < ceilingclip[i] ? ceilingclip[i] : segclip.top);
-      b = (int)(segclip.bottom > floorclip[i] ? floorclip[i] : segclip.bottom);
+      t = segclip.top < ceilingclip[i] ? cliptop : (int)segclip.top;
+      b = segclip.bottom > floorclip[i] ? clipbot : (int)segclip.bottom;
 
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
       if((segclip.markceiling || segclip.c_portalignore) && segclip.frontsec->c_portal)
       {
-         bottom = t - 1;
+         line = t - 1;
          
-         if(bottom > clipbot)
-            bottom = clipbot;
+         if(line > clipbot)
+            line = clipbot;
          
-         if(bottom >= top)
-            R_PortalAdd(segclip.frontsec->c_portal, i, (float)top, (float)bottom);
+         if(line >= cliptop)
+            R_PortalAdd(segclip.frontsec->c_portal, i, (float)cliptop, (float)line);
 
          ceilingclip[i] = (float)t;
       }
       else if(segclip.markceiling && segclip.ceilingplane)
       {
-         bottom = t - 1;
+         line = t - 1;
          
-         if(bottom > clipbot)
-            bottom = clipbot;
+         if(line > clipbot)
+            line = clipbot;
          
-         if(bottom >= top)
+         if(line >= cliptop)
          {
-            segclip.ceilingplane->top[i] = top;
-            segclip.ceilingplane->bottom[i] = bottom;
+            segclip.ceilingplane->top[i] = cliptop;
+            segclip.ceilingplane->bottom[i] = line;
          }
    
          ceilingclip[i] = (float)t;
@@ -246,29 +245,27 @@ static void R_RenderSegLoop(void)
       // SoM 3/10/2005: Only add to the portal of the floor is marked
       if((segclip.markfloor || segclip.f_portalignore)  && segclip.frontsec->f_portal)
       {
-         top = b + 1;
-         bottom = clipbot;
+         line = b + 1;
 
-         if(top < cliptop)
-            top = cliptop;
+         if(line < cliptop)
+            line = cliptop;
 
-         if(top <= bottom)
-            R_PortalAdd(segclip.frontsec->f_portal, i, (float)top, (float)bottom);
+         if(line <= clipbot)
+            R_PortalAdd(segclip.frontsec->f_portal, i, (float)line, (float)clipbot);
 
          floorclip[i] = (float)b;
       }
       else if(segclip.markfloor && segclip.floorplane)
       {
-         top = b + 1;
-         bottom = clipbot;
+         line = b + 1;
 
-         if(top < cliptop)
-            top = cliptop;
+         if(line < cliptop)
+            line = cliptop;
 
-         if(top <= bottom)
+         if(line <= clipbot)
          {
-            segclip.floorplane->top[i] = top;
-            segclip.floorplane->bottom[i] = bottom;
+            segclip.floorplane->top[i] = line;
+            segclip.floorplane->bottom[i] = clipbot;
          }
 
          floorclip[i] = (float)b;
