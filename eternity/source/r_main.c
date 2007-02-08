@@ -86,6 +86,9 @@ int c_detailshift;
 // SoM: removed the old zoom code infavor of actual field of view!
 int fov = 90;
 
+// SoM: Used by a hack to fix some hom when traveling through portals.
+int viewgroup;
+
 extern int screenSize;
 
 extern int global_cmap_index; // haleyjd: NGCS
@@ -644,6 +647,10 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       viewz = player->viewz;
       viewangle = mobj->angle;// + viewangleoffset;
       pitch = player->pitch;
+      // SoM
+#ifdef R_LINKEDPORTALS
+      viewgroup = mobj->groupid;
+#endif
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -662,6 +669,9 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       viewz = camera->z;
       viewangle = camera->angle;
       pitch = camera->pitch;
+#ifdef R_LINKEDPORTALS
+      viewgroup = camera->groupid;
+#endif
    }
 
    extralight = player->extralight;

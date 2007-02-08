@@ -797,6 +797,7 @@ static void R_AddLine(seg_t *line)
       seg.clipsolid = true;
       seg.segtextured = seg.midtex ? true : false;
 
+#ifdef R_LINKEDPORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
       if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
          seg.frontsec->f_portal->type != R_TWOWAY)
@@ -804,6 +805,7 @@ static void R_AddLine(seg_t *line)
       if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED && 
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
+#endif
    }
    else
    {
@@ -863,6 +865,7 @@ static void R_AddLine(seg_t *line)
          seg.frontsec->f_portal != seg.backsec->f_portal ||
          seg.frontsec->floorlightsec != seg.backsec->floorlightsec) ? true : false;
 
+#ifdef R_LINKEDPORTALS
       // SoM: some portal types should be rendered even if the player is above or below the
       // ceiling or floor plane.
       // haleyjd 03/12/06: inverted predicates to simplify
@@ -879,6 +882,7 @@ static void R_AddLine(seg_t *line)
             seg.frontsec->c_portal->type != R_TWOWAY)
             seg.c_portalignore = true;
       }
+#endif
 
       seg.low = seg.backsec->floorheightf - view.z;
       if(seg.bottom < seg.low && side->bottomtexture)

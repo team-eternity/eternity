@@ -111,6 +111,7 @@ extern camera_t         *viewcamera;
 extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
 extern angle_t          xtoviewangle[MAX_SCREENWIDTH+1];  // killough 2/8/98
+extern int              viewgroup; // SoM
 
 
 // Segs count?

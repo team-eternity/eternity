@@ -717,43 +717,6 @@ floater:
 
    // clip movement
    
-#ifdef R_LINKEDPORTALS
-   if(useportalgroups && mo->subsector->sector->f_portal && 
-      mo->subsector->sector->f_portal->type == R_LINKED)
-   {
-      // Calculate the height at which the mobj should pass through the portal
-      fixed_t passheight = mo->z + (mo->player ? mo->player->viewheight : (mo->height >> 1));
-
-      if(passheight < mo->subsector->sector->floorheight)
-      {
-         linkoffset_t *link = P_GetLinkOffset(mo->subsector->sector->groupid, 
-                                              mo->subsector->sector->f_portal->data.camera.groupid);
-         if(link)
-         {
-            EV_PortalTeleport(mo, link);
-            return;
-         }
-      }
-   }
-   if(useportalgroups && mo->subsector->sector->c_portal && 
-      mo->subsector->sector->c_portal->type == R_LINKED)
-   {
-      // Calculate the height at which the mobj should pass through the portal
-      fixed_t passheight = mo->z + (mo->player ? mo->player->viewheight : (mo->height >> 1));
-
-      if(passheight > mo->subsector->sector->ceilingheight)
-      {
-         linkoffset_t *link = P_GetLinkOffset(mo->subsector->sector->groupid, 
-                                              mo->subsector->sector->c_portal->data.camera.groupid);
-         if(link)
-         {
-            EV_PortalTeleport(mo, link);
-            return;
-         }
-      }
-   }
-#endif
-
    if (mo->z <= mo->floorz)
    {
       // hit the floor
@@ -984,6 +947,65 @@ static boolean P_DoZMovement(mobj_t *mobj)
    }
 }
 
+
+
+#ifdef R_LINKEDPORTALS
+static boolean P_CheckPortalTeleport(mobj_t *mobj)
+{
+   if(useportalgroups && mobj->subsector->sector->f_portal && 
+      mobj->subsector->sector->f_portal->type == R_LINKED)
+   {
+      fixed_t passheight;
+      if(mobj->player)
+      {
+         P_CalcHeight(mobj->player);
+         passheight = mobj->player->viewz;
+      }
+      else
+         passheight = mobj->z + (mobj->height >> 1);
+
+
+      if(passheight < mobj->subsector->sector->floorheight)
+      {
+         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid, 
+                                              mobj->subsector->sector->f_portal->data.camera.groupid);
+         if(link)
+         {
+            EV_PortalTeleport(mobj, link);
+            return true;
+         }
+      }
+   }
+   if(useportalgroups && mobj->subsector->sector->c_portal && 
+      mobj->subsector->sector->c_portal->type == R_LINKED)
+   {
+      // Calculate the height at which the mobj should pass through the portal
+      fixed_t passheight;
+      if(mobj->player)
+      {
+         P_CalcHeight(mobj->player);
+         passheight = mobj->player->viewz;
+      }
+      else
+         passheight = mobj->z + (mobj->height >> 1);
+
+      if(passheight > mobj->subsector->sector->ceilingheight)
+      {
+         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid, 
+                                              mobj->subsector->sector->c_portal->data.camera.groupid);
+         if(link)
+         {
+            EV_PortalTeleport(mobj, link);
+            return true;
+         }
+      }
+   }
+
+   return false;
+}
+#endif
+
+
 //
 // P_MobjThinker
 //
@@ -1033,7 +1055,8 @@ void P_MobjThinker(mobj_t *mobj)
 
    if(demo_version >= 331 && mobj->flags2 & MF2_FLOATBOB) // haleyjd
       mobj->z += FloatBobDiffs[(mobj->floatbob + leveltime) & 63];
-   
+
+  
    // haleyjd: OVER_UNDER: major changes
    if(P_DoZMovement(mobj))
    {
@@ -1097,6 +1120,10 @@ void P_MobjThinker(mobj_t *mobj)
       else
          P_ZMovement(mobj);
 
+#ifdef R_LINKEDPORTALS
+      P_CheckPortalTeleport(mobj);
+#endif
+
       if(mobj->thinker.function == P_RemoveThinkerDelayed) // killough
          return;       // mobj was removed
    }
@@ -1113,7 +1140,15 @@ void P_MobjThinker(mobj_t *mobj)
          P_ApplyTorque(mobj);               // Apply torque
       else
          mobj->intflags &= ~MIF_FALLING, mobj->gear = 0;  // Reset torque
+
+#ifdef R_LINKEDPORTALS
+      P_CheckPortalTeleport(mobj);
+#endif
    }
+#ifdef R_LINKEDPORTALS
+   else
+      P_CheckPortalTeleport(mobj);
+#endif
 
    // haleyjd 11/06/05: handle crashstate here
    if(mobj->info->crashstate != NullStateNum 

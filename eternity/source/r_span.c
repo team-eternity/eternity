@@ -121,6 +121,7 @@ void R_DrawSpanCB_8_128(void)
    unsigned yf = span.yfrac, ys = span.ystep;
    register byte *dest;
    byte *source = (byte *)span.source;
+   lighttable_t *colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
    dest = ylookup[span.y] + columnofs[span.x1];
@@ -130,19 +131,19 @@ void R_DrawSpanCB_8_128(void)
       // SoM: Why didn't I see this earlier? the spot variable is a waste now
       // because we don't have the uber complicated math to calculate it now, 
       // so that was a memory write we didn't need!
-      dest[0] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      dest[0] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
       xf += xs;
       yf += ys;
       
-      dest[1] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      dest[1] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
       xf += xs;
       yf += ys;
       
-      dest[2] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      dest[2] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
       xf += xs;
       yf += ys;
       
-      dest[3] = source[((xf >> 18) & 0x3F80) | (yf >> 25)]; 
+      dest[3] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
       xf += xs;
       yf += ys;
       
@@ -152,7 +153,7 @@ void R_DrawSpanCB_8_128(void)
    }
    while(count--)
    {
-      *dest++ = source[((xf >> 18) & 0x3F80) | (yf >> 25)];
+      *dest++ = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]];
       xf += xs;
       yf += ys;
    }
@@ -165,6 +166,7 @@ void R_DrawSpanCB_8_256(void)
    unsigned yf = span.yfrac, ys = span.ystep;
    register byte *dest;
    byte *source = (byte *)span.source;
+   lighttable_t *colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
    dest = ylookup[span.y] + columnofs[span.x1];
@@ -174,19 +176,19 @@ void R_DrawSpanCB_8_256(void)
       // SoM: Why didn't I see this earlier? the spot variable is a waste now
       // because we don't have the uber complicated math to calculate it now, 
       // so that was a memory write we didn't need!
-      dest[0] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      dest[0] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
       xf += xs;
       yf += ys;
       
-      dest[1] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      dest[1] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
       xf += xs;
       yf += ys;
       
-      dest[2] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      dest[2] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
       xf += xs;
       yf += ys;
       
-      dest[3] = source[((xf >> 16) & 0xFF00) | (yf >> 24)]; 
+      dest[3] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
       xf += xs;
       yf += ys;
       
@@ -196,7 +198,7 @@ void R_DrawSpanCB_8_256(void)
    }
    while(count--)
    {
-      *dest++ = source[((xf >> 16) & 0xFF00) | (yf >> 24)];
+      *dest++ = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]];
       xf += xs;
       yf += ys;
    }
@@ -210,6 +212,7 @@ void R_DrawSpanCB_8_512(void)
    unsigned yf = span.yfrac, ys = span.ystep;
    register byte *dest;
    byte *source = (byte *)span.source;
+   lighttable_t *colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
    dest = ylookup[span.y] + columnofs[span.x1];
@@ -219,19 +222,19 @@ void R_DrawSpanCB_8_512(void)
       // SoM: Why didn't I see this earlier? the spot variable is a waste now
       // because we don't have the uber complicated math to calculate it now, 
       // so that was a memory write we didn't need!
-      dest[0] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      dest[0] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
       xf += xs;
       yf += ys;
       
-      dest[1] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      dest[1] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
       xf += xs;
       yf += ys;
       
-      dest[2] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      dest[2] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
       xf += xs;
       yf += ys;
       
-      dest[3] = source[((xf >> 14) & 0x3FE00) | (yf >> 23)]; 
+      dest[3] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
       xf += xs;
       yf += ys;
       
@@ -241,7 +244,7 @@ void R_DrawSpanCB_8_512(void)
    }
    while(count--)
    {
-      *dest++ = source[((xf >> 14) & 0x3FE00) | (yf >> 23)];
+      *dest++ = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]];
       xf += xs;
       yf += ys;
    }

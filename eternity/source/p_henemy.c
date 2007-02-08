@@ -2169,9 +2169,9 @@ void A_MissileSpread(mobj_t *actor)
                            getTargetY(actor) - actor->y,
                            getTargetZ(actor) - actor->z,
 #else
-      momz = P_MissileMomz(target->x - actor->x,
-                           target->y - actor->y,
-                           target->z - actor->z,
+      momz = P_MissileMomz(actor->target->x - actor->x,
+                           actor->target->y - actor->y,
+                           actor->target->z - actor->z,
 #endif
                            mobjinfo[type].speed);
 

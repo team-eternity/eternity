@@ -2037,13 +2037,16 @@ static boolean PTR_AimTraverse(intercept_t *in)
       li = in->d.line;
       
       dist = FixedMul (trace.attackrange, in->frac);
-      if(demo_version >= 333)
-         dist += trace.movefrac;
 
       if(demo_version >= 333 && useportalgroups)
       {
+         dist += trace.movefrac;
          lineside = P_PointOnLineSide(trace.x, trace.y, li);
          sidesector = lineside ? li->backsector : li->frontsector; 
+
+         // Marked twosided but really one sided?      
+         if(!sidesector)
+            return false;
       }
 
       if(!(li->flags & ML_TWOSIDED))
@@ -2052,10 +2055,6 @@ static boolean PTR_AimTraverse(intercept_t *in)
       // Crosses a two sided line.
       // A two sided line will restrict
       // the possible target ranges.
-
-      // Marked twosided but really one sided?      
-      if(!sidesector)
-         return false;
 
       P_LineOpening (li, NULL);
       
@@ -2324,7 +2323,7 @@ static boolean PTR_AimTraverse(intercept_t *in)
    if(thingbottomslope < trace.bottomslope)
       thingbottomslope = trace.bottomslope;
    
-   aimslope = (thingtopslope+thingbottomslope)/2;
+   trace.aimslope = (thingtopslope+thingbottomslope)/2;
    linetarget = th;
    
    return false;   // don't go any farther
@@ -2536,10 +2535,12 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
                return false;
             }
-#endif
          }
          else if(demo_version >= 333 && li->portal && li->portal->type == R_LINKED)
             return true;
+#else
+         }
+#endif
 
          if(!hitplane && li->special)
             P_ShootSpecialLine(shootthing, li, lineside);

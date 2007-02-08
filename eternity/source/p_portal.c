@@ -85,6 +85,10 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
 
    sector->groupid = groupid;
 
+   // SoM: soundorg ids need to be set too
+   sector->soundorg.groupid = groupid;
+   sector->csoundorg.groupid = groupid;
+
    for(mo = sector->thinglist; mo; mo = mo->snext)
       mo->groupid = groupid;
 }
