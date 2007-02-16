@@ -1,4 +1,4 @@
-AC_INIT(eternity, 3.33.33, quasar, eternity)
+AC_INIT(eternity, 3.33.50, haleyjd@hotmail.com)
 AC_CONFIG_AUX_DIR(autotools)
 
 AC_PROG_CC
@@ -16,8 +16,6 @@ AM_INIT_AUTOMAKE(AC_PACKAGE_TARNAME,AC_PACKAGE_VERSION)
 
 AC_OUTPUT([
 Makefile
-edf/Makefile
-wads/Makefile
 source/Makefile
 source/sdl/Makefile
 source/textscreen/Makefile

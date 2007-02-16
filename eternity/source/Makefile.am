@@ -1,12 +1,12 @@
 SUBDIRS = Confuse sdl textscreen
 
-gamesdir = ~/eternity
+gamesdir = /usr/local/games
 
 games_PROGRAMS = eternity
 
 AM_CFLAGS = -I/usr/include/SDL -I/usr/local/include/SDL @SDL_CFLAGS@ -Wall\
 -D_SDL_VER -DNDEBUG -DAMX_NODYNALOAD -DR_LINKEDPORTALS -DR_PORTALS     \
--DOVER_UNDER -DPOLYOBJECTS -D_CONSOLE -std=c99 -I/usr/include -DLINUX
+-DOVER_UNDER -DPOLYOBJECTS -D_CONSOLE -DLINUX
 
 eternity_SOURCES = \
 acs_intr.c      acs_intr.h     a_fixed.c   am_color.c  am_map.c    am_map.h    amx.c		\
@@ -14,7 +14,7 @@ amxcore.c       amx.h          a_small.c   a_small.h   c_cmd.c     c_io.c      c
 c_net.c         c_net.h        Confuse     c_runcmd.c  c_runcmd.h  d_deh.c     d_deh.h		\
 d_dehtbl.c      d_dehtbl.h     d_dialog.c  d_dialog.h  d_dwfile.h  d_englsh.h  d_event.h	\
 d_french.h      d_gi.c         d_gi.h      dhticstr.h  d_io.c      d_io.h			\
-d_items.c       d_items.h      d_keywds.h  d_main.c    d_main.h				\
+d_items.c       d_items.h      d_keywds.h  d_main.c    d_main.h	 e_player.c e_player.h			\
 d_mod.h         d_net.c        d_net.h     doomdata.h  doomdef.c   doomdef.h   doomstat.c	\
 doomstat.h      doomtype.h     d_player.h  dstrings.c  dstrings.h  d_textur.h  d_think.h	\
 d_ticcmd.h      e_cmd.c        e_edf.c     e_edf.h     e_exdata.c  e_exdata.h  e_lib.c		\
@@ -24,7 +24,7 @@ f_wipe.h        g_bind.c       g_bind.h    g_cmd.c     g_dmflag.c  g_dmflag.h  g
 g_game.h        g_gfs.c        g_gfs.h     hi_stuff.c  hi_stuff.h  hu_frags.c  hu_frags.h	\
 hu_over.c       hu_over.h      hu_stuff.c  hu_stuff.h  i_net.h     info.c      info.h		\
 in_lude.c       in_lude.h      i_sound.h   i_system.h  i_video.h   m_argv.c    m_argv.h	\
-m_bbox.c        m_bbox.h       m_cheat.c							\
+m_bbox.c        m_bbox.h       m_cheat.c	 p_xenemy.c  p_xenemy.h						\
 m_cheat.h       m_dllist.h     m_fcvt.c    m_fcvt.h    m_fixed.h   m_misc.c    m_misc.h	\
 mn_emenu.c      mn_emenu.h     mn_engin.c  mn_engin.h  mn_files.c  mn_files.h  mn_htic.c	\
 mn_htic.h       mn_menus.c     mn_menus.h  mn_misc.c   mn_misc.h   mn_skinv.c  m_qstr.c	\

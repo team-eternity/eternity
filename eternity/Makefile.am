@@ -1,1 +1,1 @@
-SUBDIRS = source wads edf
+SUBDIRS = source
