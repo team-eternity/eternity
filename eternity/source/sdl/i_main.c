@@ -68,11 +68,6 @@ int main(int argc, char **argv)
     // Use the Windows GDI driver instead of DirectX.
     //
 
-    if (M_CheckParm("-gdi") > 0)
-    {
-        putenv("SDL_VIDEODRIVER=windib");
-    }
-
     // From the SDL 1.2.10 release notes: 
     //
     // > The "windib" video driver is the default now, to prevent 
@@ -81,9 +76,15 @@ int main(int argc, char **argv)
     //
     // The hell with that.
 
-    if (getenv("SDL_VIDEODRIVER") == NULL)
+    // SoM: the gdi interface is much faster for windowed modes which are more commonly used.
+    // Thus, GDI is default.
+    if (M_CheckParm("-directx"))
     {
         putenv("SDL_VIDEODRIVER=directx");
+    }
+    else if (M_CheckParm("-gdi") > 0 || getenv("SDL_VIDEODRIVER") == NULL)
+    {
+        putenv("SDL_VIDEODRIVER=windib");
     }
 #endif
 
