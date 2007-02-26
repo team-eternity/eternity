@@ -101,7 +101,7 @@ int I_GetTime_Scaled(void)
 }
 
 
-static int  I_GetTime_FastDemo(void)
+static int I_GetTime_FastDemo(void)
 {
    static int fasttic;
    return fasttic++;
