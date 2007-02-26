@@ -938,7 +938,7 @@ boolean E_HitWater(mobj_t *thing, sector_t *sector)
       terrain = &solid;
 
    // some things don't cause splashes
-   if(thing->flags2 & MF2_NOSPLASH)
+   if(thing->flags2 & MF2_NOSPLASH || thing->flags2 & MF2_FLOATBOB)
       terrain = &solid;
 
    z = sector->heightsec != -1 ? 
