@@ -3538,18 +3538,21 @@ static void P_SpawnHereticWind(line_t *line)
 
 line_t *P_FindLine(int tag, int *searchPosition)
 {
-   int i;
+   line_t *line = NULL;
    
-   for(i = *searchPosition+1; i < numlines; i++)
-   {
-      if(lines[i].tag == tag)
-      {
-         *searchPosition = i;
-         return &lines[i];
-      }
-   }
-   *searchPosition = -1;
-   return NULL;
+   int start = 
+      (*searchPosition >= 0 ? lines[*searchPosition].nexttag :
+       lines[(unsigned)tag % (unsigned)numlines].firsttag);
+  
+   while(start >= 0 && lines[start].tag != line->tag)
+      start = lines[start].nexttag;
+
+   if(start >= 0)
+      line = &lines[start];
+
+   *searchPosition = start;
+   
+   return line;
 }
 
 //===============================================================

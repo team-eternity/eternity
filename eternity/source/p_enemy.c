@@ -344,7 +344,7 @@ static boolean P_IsOnLift(const mobj_t *actor)
 
    // Short-circuit: it's on a lift which is active.
    if(sec->floordata &&
-      ((thinker_t *) sec->floordata)->function==T_PlatRaise)
+      ((thinker_t *) sec->floordata)->function == T_PlatRaise)
       return true;
 
    // Check to see if it's in a sector which can be 
@@ -353,7 +353,7 @@ static boolean P_IsOnLift(const mobj_t *actor)
    {
       for(l = -1; (l = P_FindLineFromLineTag(&line, l)) >= 0;)
       {
-         switch (lines[l].special)
+         switch(lines[l].special)
          {
          case  10: case  14: case  15: case  20: case  21: case  22:
          case  47: case  53: case  62: case  66: case  67: case  68:

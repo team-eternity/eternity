@@ -2935,14 +2935,15 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
    {
       switch(field)
       {
-      case TF_TYPE:     value = mo->type;     break;
-      case TF_TICS:     value = mo->tics;     break;
-      case TF_HEALTH:   value = mo->health;   break;
-      case TF_SPECIAL1: value = mo->special1; break;
-      case TF_SPECIAL2: value = mo->special2; break;
-      case TF_SPECIAL3: value = mo->special3; break;
-      case TF_EFFECTS:  value = mo->effects;  break;
+      case TF_TYPE:         value = mo->type;         break;
+      case TF_TICS:         value = mo->tics;         break;
+      case TF_HEALTH:       value = mo->health;       break;
+      case TF_SPECIAL1:     value = mo->special1;     break;
+      case TF_SPECIAL2:     value = mo->special2;     break;
+      case TF_SPECIAL3:     value = mo->special3;     break;
+      case TF_EFFECTS:      value = mo->effects;      break;
       case TF_TRANSLUCENCY: value = mo->translucency; break;
+      default:              value = 0;                break;
       }
    }
 
@@ -3037,6 +3038,71 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    free(flags);
 
    return 0;
+}
+
+//
+// sm_thingsetfriend
+// * Implements _ThingSetFriend(tid, friend)
+//
+static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
+{
+   int tid, friendly;
+   mobj_t *mo = NULL;
+   SmallContext_t *context = A_GetContextForAMX(amx);
+   
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+   
+   tid      = params[1];
+   friendly = params[2];
+
+   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   {
+      switch(friendly)
+      {
+      case 0: // make enemy
+         mo->flags &= ~MF_FRIEND;
+         break;
+      case 1: // make friend
+         mo->flags |= MF_FRIEND;
+         break;
+      case 2: // toggle state
+         mo->flags ^= MF_FRIEND;
+         break;
+      }
+
+      P_UpdateThinker(&mo->thinker);
+   }
+
+   return 0;
+}
+
+//
+// sm_thingisfriend
+// * Implements _ThingIsFriend(tid)
+//
+static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
+{
+   int tid;
+   boolean friendly;
+   mobj_t *mo = NULL;
+   SmallContext_t *ctx = A_GetContextForAMX(amx);
+   
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+
+   tid = params[1];
+
+   if((mo = P_FindMobjFromTID(tid, mo, ctx)))
+      friendly = ((mo->flags & MF_FRIEND) == MF_FRIEND);
+
+   return friendly;
 }
 
 //
@@ -3197,6 +3263,8 @@ AMX_NATIVE_INFO mobj_Natives[] =
    { "_ThingGetProperty",  sm_thinggetproperty },
    { "_ThingSetProperty",  sm_thingsetproperty },
    { "_ThingFlagsFromStr", sm_thingflagsstr },
+   { "_ThingSetFriend",    sm_thingsetfriend },
+   { "_ThingIsFriend",     sm_thingisfriend },
    { "_ThingThrust3f",     sm_thingthrust3f },
    { "_ThingThrust",       sm_thingthrust },
    { "_ThingGetPos",       sm_thinggetpos },

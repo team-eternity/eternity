@@ -251,6 +251,7 @@ typedef struct line_s
    short flags;           // Animation related.
    short special;         
    short tag;
+   short line_id;         // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
    long  sidenum[2];      // Visual appearance: SideDefs.
@@ -263,6 +264,7 @@ typedef struct line_s
    void *specialdata;     // thinker_t for reversable actions
    int tranlump;          // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag; // killough 4/17/98: improves searches for tags.
+   int firstid,  nextid;  // haleyjd 02/27/07: same but for line id's
 
    // SoM 12/10/03: wall portals
    rportal_t *portal;

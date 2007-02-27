@@ -422,8 +422,8 @@ static int ACS_countPlayers(void)
 //
 static void ACS_setLineTexture(const char *texture, int pos, int side, int tag)
 {
-   line_t *l;
-   int linenum, texnum;
+   line_t *l = NULL;
+   int linenum = -1, texnum;
 
    texnum = R_TextureNumForName(texture);
    linenum = -1;

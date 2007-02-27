@@ -571,6 +571,9 @@ void P_LoadLineDefs(int lump)
       ld->special = SHORT(mld->special);
       ld->tag     = SHORT(mld->tag);
 
+      // haleyjd 02/27/07
+      ld->line_id = -1;
+
       // haleyjd 06/19/06: convert indices to unsigned
       v1 = ld->v1 = &vertexes[(long)SHORT(mld->v1) & 0xffff];
       v2 = ld->v2 = &vertexes[(long)SHORT(mld->v2) & 0xffff];
@@ -724,6 +727,7 @@ void P_LoadHexenLineDefs(int lump)
       P_ConvertHexenLineFlags(ld);
 
       ld->tag = 0;
+      ld->line_id = -1; // haleyjd 02/27/07
 
       // haleyjd 06/19/06: convert indices to unsigned
       v1 = ld->v1 = &vertexes[(long)SHORT(mld->v1) & 0xffff];
