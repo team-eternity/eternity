@@ -36,6 +36,7 @@ rcsid[] = "$Id: p_saveg.c,v 1.17 1998/05/03 23:10:22 killough Exp $";
 #include "m_random.h"
 #include "am_map.h"
 #include "p_enemy.h"
+#include "p_xenemy.h"
 #include "p_hubs.h"
 #include "p_skin.h"
 #include "p_setup.h"
@@ -631,6 +632,8 @@ enum {
    tc_polyslidedoor,
    tc_polyswingdoor,
    tc_pillar,        // joek: pillars
+   tc_quake,         // haleyjd 02/28/07: earthquake
+   tc_lightfade,     // haleyjd 02/28/07: lightfade thinker
    tc_endspecials
 } specials_e;
 
@@ -644,15 +647,17 @@ enum {
 // T_StrobeFlash, (strobe_t: sector_t *),
 // T_Glow, (glow_t: sector_t *),
 // T_PlatRaise, (plat_t: sector_t *), - active list
-// T_MoveElevator, (plat_t: sector_t *), - active list      // jff 2/22/98
-// T_Scroll                                                 // killough 3/7/98
-// T_Pusher                                                 // phares 3/22/98
-// T_FireFlicker                                            // killough 10/4/98
-// T_PolyObjRotate                                          // haleyjd 03/26/06:
-// T_PolyObjMove                                            //      
-// T_PolyDoorSlide                                          // polyobjects
-// T_PolyDoorSwing                                          //      
-// T_MovePillar                                             // joek: pillars
+// T_MoveElevator, (plat_t: sector_t *), - active list      -- jff 2/22/98
+// T_Scroll                                                 -- killough 3/7/98
+// T_Pusher                                                 -- phares 3/22/98
+// T_FireFlicker                                            -- killough 10/4/98
+// T_PolyObjRotate                                          -- haleyjd 03/26/06:
+// T_PolyObjMove                                             -     
+// T_PolyDoorSlide                                           - polyobjects
+// T_PolyDoorSwing                                           -     
+// T_MovePillar                                             -- joek: pillars
+// T_QuakeThinker                                           -- haleyjd: quakes
+// T_LightFade                                              -- haleyjd: param light
 //
 
 void P_ArchiveSpecials(void)
@@ -689,22 +694,24 @@ void P_ArchiveSpecials(void)
       else
       {
          size +=
-            th->function == T_MoveCeiling   ? 4+sizeof(ceiling_t)       :
-            th->function == T_VerticalDoor  ? 4+sizeof(vldoor_t)        :
-            th->function == T_MoveFloor     ? 4+sizeof(floormove_t)     :
-            th->function == T_PlatRaise     ? 4+sizeof(plat_t)          :
-            th->function == T_LightFlash    ? 4+sizeof(lightflash_t)    :
-            th->function == T_StrobeFlash   ? 4+sizeof(strobe_t)        :
-            th->function == T_Glow          ? 4+sizeof(glow_t)          :
-            th->function == T_MoveElevator  ? 4+sizeof(elevator_t)      :
-            th->function == T_Scroll        ? 4+sizeof(scroll_t)        :
-            th->function == T_Pusher        ? 4+sizeof(pusher_t)        :
-            th->function == T_FireFlicker   ? 4+sizeof(fireflicker_t)   :
-            th->function == T_PolyObjRotate ? 4+sizeof(polyrotate_t)    :
-            th->function == T_PolyObjMove   ? 4+sizeof(polymove_t)      :
-            th->function == T_PolyDoorSlide ? 4+sizeof(polyslidedoor_t) :
-            th->function == T_PolyDoorSwing ? 4+sizeof(polyswingdoor_t) :
-            th->function == T_MovePillar    ? 4+sizeof(pillar_t)        :
+            th->function == T_MoveCeiling   ? 4 + sizeof(ceiling_t)       :
+            th->function == T_VerticalDoor  ? 4 + sizeof(vldoor_t)        :
+            th->function == T_MoveFloor     ? 4 + sizeof(floormove_t)     :
+            th->function == T_PlatRaise     ? 4 + sizeof(plat_t)          :
+            th->function == T_LightFlash    ? 4 + sizeof(lightflash_t)    :
+            th->function == T_StrobeFlash   ? 4 + sizeof(strobe_t)        :
+            th->function == T_Glow          ? 4 + sizeof(glow_t)          :
+            th->function == T_MoveElevator  ? 4 + sizeof(elevator_t)      :
+            th->function == T_Scroll        ? 4 + sizeof(scroll_t)        :
+            th->function == T_Pusher        ? 4 + sizeof(pusher_t)        :
+            th->function == T_FireFlicker   ? 4 + sizeof(fireflicker_t)   :
+            th->function == T_PolyObjRotate ? 4 + sizeof(polyrotate_t)    :
+            th->function == T_PolyObjMove   ? 4 + sizeof(polymove_t)      :
+            th->function == T_PolyDoorSlide ? 4 + sizeof(polyslidedoor_t) :
+            th->function == T_PolyDoorSwing ? 4 + sizeof(polyswingdoor_t) :
+            th->function == T_MovePillar    ? 4 + sizeof(pillar_t)        :
+            th->function == T_QuakeThinker  ? 4 + sizeof(quakethinker_t)  :
+            th->function == T_LightFade     ? 4 + sizeof(lightfade_t)     :
             0;
       }
    }
@@ -907,12 +914,31 @@ void P_ArchiveSpecials(void)
 
       if(th->function == T_MovePillar)
       {
-      	 pillar_t *pillar;
+      	pillar_t *pillar;
          *save_p++ = tc_pillar;     
          pillar = (pillar_t *)save_p;
          memcpy(save_p, th, sizeof(pillar_t));
          save_p += sizeof(pillar_t);
          pillar->sector = (sector_t *)(pillar->sector - sectors);
+         continue;
+      }
+
+      if(th->function == T_QuakeThinker)
+      {
+         *save_p++ = tc_quake;
+         memcpy(save_p, th, sizeof(quakethinker_t));
+         save_p += sizeof(quakethinker_t);
+         continue;
+      }
+
+      if(th->function == T_LightFade)
+      {
+         lightfade_t *fade;
+         *save_p++ = tc_lightfade;
+         fade = (lightfade_t *)save_p;
+         memcpy(save_p, th, sizeof(lightfade_t));
+         save_p += sizeof(lightfade_t);
+         fade->sector = (sector_t *)(fade->sector - sectors);
          continue;
       }
    }
@@ -1146,6 +1172,27 @@ void P_UnArchiveSpecials(void)
             pillar->sector->ceilingdata = pillar;
             pillar->thinker.function = T_MovePillar;
             P_AddThinker(&pillar->thinker);
+            break;
+         }
+
+      case tc_quake:
+         {
+            quakethinker_t *quake = Z_Malloc(sizeof(quakethinker_t), PU_LEVEL, NULL);
+            memcpy(quake, save_p, sizeof(quakethinker_t));
+            save_p += sizeof(quakethinker_t);
+            quake->origin.thinker.function = T_QuakeThinker;
+            P_AddThinker(&(quake->origin.thinker));
+            break;
+         }
+
+      case tc_lightfade:
+         {
+            lightfade_t *fade = Z_Malloc(sizeof(lightfade_t), PU_LEVEL, NULL);
+            memcpy(fade, save_p, sizeof(lightfade_t));
+            save_p += sizeof(lightfade_t);
+            fade->thinker.function = T_LightFade;
+            fade->sector = &sectors[(int)fade->sector];
+            P_AddThinker(&fade->thinker);
             break;
          }
 

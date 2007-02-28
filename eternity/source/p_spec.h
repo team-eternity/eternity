@@ -1262,6 +1262,9 @@ boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int cr
 
 line_t *P_FindLine(int tag, int *searchPosition);
 
+line_t *P_FindLineForID(int id, int *searchPosition);
+void    P_SetLineID(int i, long id);
+
 // haleyjd: parameterized lines
 
 // param special activation types

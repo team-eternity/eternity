@@ -39,16 +39,16 @@
 
 // SoM: Linked portals
 // this list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
-// table is built it is allocated as a linnear buffer of groupcount * groupcount
+// table is built it is allocated as a linear buffer of groupcount * groupcount
 // entries. The entries are arranged much like pixels in a screen buffer where 
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
 linkoffset_t **linktable = NULL;
 
-// Ok, this is kinda trickey. The group list is a double pointer. The list is
+// Ok, this is kinda tricky. The group list is a double pointer. The list is
 // allocated static and is a expandable list. Each entry in the list is another
 // list of ints which contain the sector numbers in that group. This sub-list is
 // allocated PU_LEVEL because it is level specific.
-static sector_t  ***grouplist = NULL;
+static sector_t ***grouplist = NULL;
 static int  groupcount = 0, grouplimit = 0;
 
 // This flag is a big deal. Heh, if this is true a whole lot of code will 
@@ -57,12 +57,11 @@ static int  groupcount = 0, grouplimit = 0;
 boolean useportalgroups = false;
 
 
-void R_InitPortals(void);
-
 void P_InitPortals(void)
 {
    int i;
    linktable = NULL;
+   extern void R_InitPortals(void);
 
    groupcount = 0;
    for(i = 0; i < grouplimit; ++i)
@@ -86,7 +85,7 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
    sector->groupid = groupid;
 
    // SoM: soundorg ids need to be set too
-   sector->soundorg.groupid = groupid;
+   sector->soundorg.groupid  = groupid;
    sector->csoundorg.groupid = groupid;
 
    for(mo = sector->thinglist; mo; mo = mo->snext)
@@ -174,6 +173,10 @@ int P_CreatePortalGroup(sector_t *from)
       }
    }
    list[count++] = NULL;
+
+   // haleyjd 02/28/07: FIXME! ATTN SoM
+   // Here grouplist is allocated at PU_LEVEL. The above Z_Realloc uses
+   // PU_STATIC. Which is right?
 
    grouplist[groupcount] = 
       (sector_t **)Z_Malloc(count * sizeof(sector_t *), PU_LEVEL, 0);
@@ -438,9 +441,7 @@ void P_BuildLinkTable(void)
 
    // That first loop has to complete before this can be run!
    for(i = 0; i < groupcount; ++i)
-   {
       P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
-   }
 
    // Everything checks out... let's run the portals
    useportalgroups = true;
@@ -450,7 +451,9 @@ void P_BuildLinkTable(void)
 
 //
 // P_LinkRejectTable
+//
 // Currently just clears each group for every other group.
+//
 void P_LinkRejectTable(void)
 {
    int i, s, p, q;
@@ -462,7 +465,6 @@ void P_LinkRejectTable(void)
       for(s = 0; list[s]; s++)
       {
          int sectorindex1 = list[s] - sectors;
-
 
          for(p = 0; p < groupcount; p++)
          {
@@ -487,6 +489,9 @@ void P_LinkRejectTable(void)
 // -----------------------------------------
 // Begin portal teleportation
 
+//
+// EV_PortalTeleport
+//
 boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 {
    fixed_t moz = mo->z;
@@ -496,7 +501,7 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 
    if(!mo || !link)
       return 0;
-   if(!P_TeleportMove(mo, mo->x - link->x, mo->y - link->y, false)) // killough 8/9/98
+   if(!P_TeleportMove(mo, mo->x - link->x, mo->y - link->y, false))
       return 0;
 
    mo->z = moz - link->z;
@@ -506,9 +511,9 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
    mo->momz = momz;
 
    // Adjust a player's view, in case there has been a height change
-   if (mo->player)
+   if(mo->player)
    {
-      if(mo->player == players+displayplayer)
+      if(mo->player == players + displayplayer)
           P_ResetChasecam();
    }
 
@@ -516,8 +521,6 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
    
    return 1;
 }
-
-
 
 #endif
 

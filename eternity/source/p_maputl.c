@@ -873,10 +873,11 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    result = P_TraverseIntercepts(trav, FRACUNIT);
 
 #ifdef R_LINKEDPORTALS
-   // Only check portals if no linetarget was aquired.
-   // Due to the way these are accumulated, there should be no recursion so the list
-   // will never be infinite. Note: TPT nodes are never created unless the demo
-   // version is >= 333 so I don't bother to check that here.
+   // Only check portals if no linetarget was acquired.
+   // Due to the way these are accumulated, there should be no recursion so the
+   // list will never be infinite. Note: TPT nodes are never created unless the 
+   // demo_version is >= 333 so I don't bother to check that here.
+
    while(!trace.finished && P_CheckTPT())
    {
       tptnode_t *node = P_StartTPT();

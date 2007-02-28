@@ -635,12 +635,27 @@ void P_LoadLineDefs(int lump)
 #define HX_SPAC_MASK  0x1c00
 #define HX_GET_SPAC(flags) ((flags & HX_SPAC_MASK) >> HX_SPAC_SHIFT)
 
-#define HX_SPAC_CROSS  0 // when player crosses line
-#define HX_SPAC_USE    1 // when player uses line
-#define HX_SPAC_MCROSS 2 // when monster crosses line
-#define HX_SPAC_IMPACT 3 // when projectile hits line
-#define HX_SPAC_PUSH   4 // when player/monster pushes line
-#define HX_SPAC_PCROSS 5 // when projectile crosses line
+enum
+{
+   HX_SPAC_CROSS,  // when player crosses line
+   HX_SPAC_USE,    // when player uses line
+   HX_SPAC_MCROSS, // when monster crosses line
+   HX_SPAC_IMPACT, // when projectile hits line
+   HX_SPAC_PUSH,   // when player/monster pushes line
+   HX_SPAC_PCROSS, // when projectile crosses line
+   HX_SPAC_NUMSPAC
+};
+
+// haleyjd 02/28/07: tablified
+static long spac_flags_tlate[HX_SPAC_NUMSPAC] =
+{
+   EX_ML_CROSS  | EX_ML_PLAYER,                   // SPAC_CROSS
+   EX_ML_USE    | EX_ML_PLAYER,                   // SPAC_USE
+   EX_ML_CROSS  | EX_ML_MONSTER,                  // SPAC_MCROSS
+   EX_ML_IMPACT | EX_ML_MISSILE,                  // SPAC_IMPACT
+   EX_ML_PUSH   | EX_ML_PLAYER   | EX_ML_MONSTER, // SPAC_PUSH
+   EX_ML_CROSS  | EX_ML_MISSILE                   // SPAC_PCROSS
+};
 
 //
 // P_ConvertHexenLineFlags
@@ -655,27 +670,7 @@ static void P_ConvertHexenLineFlags(line_t *line)
    short spac = HX_GET_SPAC(line->flags);
 
    // translate into ExtraData extended line flags
-   switch(spac)
-   {
-   case HX_SPAC_CROSS:
-      line->extflags = EX_ML_CROSS | EX_ML_PLAYER;
-      break;
-   case HX_SPAC_USE:
-      line->extflags = EX_ML_USE | EX_ML_PLAYER;
-      break;
-   case HX_SPAC_MCROSS:
-      line->extflags = EX_ML_CROSS | EX_ML_MONSTER;
-      break;
-   case HX_SPAC_IMPACT:
-      line->extflags = EX_ML_IMPACT | EX_ML_MISSILE;
-      break;
-   case HX_SPAC_PUSH:
-      line->extflags = EX_ML_PUSH | EX_ML_PLAYER | EX_ML_MONSTER;
-      break;
-   case HX_SPAC_PCROSS:
-      line->extflags = EX_ML_CROSS | EX_ML_MISSILE;
-      break;
-   }
+   line->extflags = spac_flags_tlate[spac];
 
    // check for repeat flag
    if(line->flags & HX_ML_REPEAT_SPECIAL)
@@ -771,8 +766,11 @@ void P_LoadHexenLineDefs(int lump)
          sides[*ld->sidenum].special = ld->special;
 
       // haleyjd 02/26/05: ExtraData
+      // FIXME/TODO: how to support ExtraData via Hexen??
+#if 0
       if(ld->special == ED_LINE_SPECIAL)
          E_LoadLineDefExt(ld);
+#endif
    }
    Z_Free(data);
 }

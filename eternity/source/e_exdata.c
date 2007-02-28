@@ -565,9 +565,11 @@ static struct exlinespec
    { 375, "Radius_Quake" },
 
 #ifdef R_LINKEDPORTALS
-   { 376, "Portal_LinkedLineLine"},
-   { 377, "Portal_LinkedLineLineAnchor"},
+   { 376, "Portal_LinkedLineLine" },
+   { 377, "Portal_LinkedLineLineAnchor" },
 #endif
+
+   { 378, "Line_SetIdentification" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

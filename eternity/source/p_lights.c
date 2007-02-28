@@ -118,14 +118,13 @@ void T_StrobeFlash(strobe_t *flash)
 }
 
 //
-// T_Glow()
+// T_Glow
 //
 // Glowing light action routine, called once per tick
 //
 // Passed a glow_t structure containing light levels and timing
 // Returns nothing
 //
-
 void T_Glow(glow_t *g)
 {
    switch(g->direction)

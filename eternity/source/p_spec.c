@@ -772,44 +772,59 @@ int P_FindSectorFromTag(const int tag, int start)
    return start;
 }
 
-
+//
+// P_InitTagLists
+//
 // Hash the sector tags across the sectors and linedefs.
+//
 static void P_InitTagLists(void)
 {
    register int i;
-
-   for(i=numsectors; --i>=0; )      // Initially make all slots empty.
+   
+   for(i = numsectors; --i >= 0; )   // Initially make all slots empty.
       sectors[i].firsttag = -1;
-
-   for(i=numsectors; --i>=0; )       // Proceed from last to first sector
+   
+   for(i = numsectors; --i >= 0; )   // Proceed from last to first sector
    {                                 // so that lower sectors appear first
       int j = (unsigned)sectors[i].tag % (unsigned)numsectors; // Hash func
       sectors[i].nexttag = sectors[j].firsttag;   // Prepend sector to chain
       sectors[j].firsttag = i;
    }
-
-  // killough 4/17/98: same thing, only for linedefs
-
-   for(i=numlines; --i>=0; )        // Initially make all slots empty.
+   
+   // killough 4/17/98: same thing, only for linedefs
+   // haleyjd 02/28/07: also for line id's
+   
+   for(i = numlines; --i >= 0; )   // Initially make all slots empty.
+   {
       lines[i].firsttag = -1;
-
-   for(i=numlines; --i>=0; )       // Proceed from last to first linedef
+      lines[i].firstid  = -1;
+   }
+   
+   for(i = numlines; --i >= 0; )   // Proceed from last to first linedef
    {                               // so that lower linedefs appear first
       int j = (unsigned)lines[i].tag % (unsigned)numlines; // Hash func
       lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
       lines[j].firsttag = i;
+
+      // haleyjd: lines with id of -1 are not hashed
+      if(lines[i].line_id != -1)
+      {
+         j = (unsigned)lines[i].line_id % (unsigned)numlines;
+         lines[i].nextid = lines[j].firstid;
+         lines[j].firstid = i;
+      }
    }
 }
 
 //
-// P_FindMinSurroundingLight()
+// P_FindMinSurroundingLight
 //
 // Passed a sector and a light level, returns the smallest light level
 // in a surrounding sector less than that passed. If no smaller light
 // level exists, the light level passed is returned.
 //
 // killough 11/98: reformatted
-
+//
 int P_FindMinSurroundingLight(sector_t *sector, int min)
 {
    const sector_t *check;
@@ -2767,6 +2782,11 @@ void P_SpawnSpecials(void)
          P_SpawnPortal(&lines[i], portal_linked, portal_lineonly);
          break;
 #endif
+      case 378: // haleyjd 02/28/07: Line_SetIdentification
+         // TODO: allow upper byte in args[2] for Hexen-format maps
+         P_SetLineID(i, lines[i].args[0]);
+         lines[i].special = 0;             // clear special
+         break;
       }
    }
 
@@ -3530,12 +3550,13 @@ static void P_SpawnHereticWind(line_t *line)
 //
 //==========================
 
-/*
-   P_FindLine:  a much nicer line finding function.
-     Probably slower, but probably easier to use and 
-     understand :P
-*/
-
+//
+// P_FindLine  
+//
+// A much nicer line finding function.
+// haleyjd 02/27/07: rewritten to get rid of Raven code and to speed up in the
+// same manner as P_FindLineFromLineTag by using in-table tag hash.
+//
 line_t *P_FindLine(int tag, int *searchPosition)
 {
    line_t *line = NULL;
@@ -3544,7 +3565,7 @@ line_t *P_FindLine(int tag, int *searchPosition)
       (*searchPosition >= 0 ? lines[*searchPosition].nexttag :
        lines[(unsigned)tag % (unsigned)numlines].firsttag);
   
-   while(start >= 0 && lines[start].tag != line->tag)
+   while(start >= 0 && lines[start].tag != tag)
       start = lines[start].nexttag;
 
    if(start >= 0)
@@ -3555,14 +3576,64 @@ line_t *P_FindLine(int tag, int *searchPosition)
    return line;
 }
 
-//===============================================================
+//============================================================================
+//
+// Line IDs
+//
+// haleyjd 02/28/07: Hexen requires slightly different semantics for its line
+// ids than Doom supports through line tags (chiefly, the default value is -1
+// rather than 0). I'll exploit this as an excuse to add a second tag field to
+// linedefs ;)
+//
+
+//
+// P_FindLineForID
+//
+// Returns a linedef for a linedef id. Linedef ids are in-table hashed just like
+// tags. This is pretty much the same as P_FindLine above.
+//
+line_t *P_FindLineForID(int id, int *searchPosition)
+{
+   line_t *line = NULL;
+
+   int start =
+      (*searchPosition >= 0 ? lines[*searchPosition].nextid :
+       lines[(unsigned)id % (unsigned)numlines].firstid);
+
+   while(start >= 0 && lines[start].line_id != id)
+      start = lines[start].nextid;
+
+   if(start >= 0)
+      line = &lines[start];
+
+   *searchPosition = start;
+
+   return line;
+}
+
+void P_SetLineID(int i, long id)
+{
+   line_t *line = &lines[i];
+
+   line->line_id = id;
+
+   if(line->line_id != -1)
+   {
+      int key = (unsigned)line->line_id % (unsigned)numlines;
+
+      line->nextid = lines[key].firstid;
+      lines[key].firstid = i;
+   }
+}
+
+//============================================================================
 //
 // 3D Sides
 //
 // SoM: New functions to facilitate scrolling of 3d sides to make
 // use as doors/lifts
 //
-//===============================================================
+//============================================================================
 
 //
 // SoM 9/19/2002
@@ -4204,6 +4275,8 @@ void P_ConvertHexenLineSpec(short *special, long *args)
       *special = 375;
       break;
    case 121: // line set identification
+      *special = 378;
+      break;
    // UNUSED: 122-128
    case 129: // use puzzle item
    case 130: // thing activate

@@ -251,7 +251,7 @@ typedef struct line_s
    short flags;           // Animation related.
    short special;         
    short tag;
-   short line_id;         // haleyjd 02/27/07: line id's
+   long  line_id;         // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
    long  sidenum[2];      // Visual appearance: SideDefs.
