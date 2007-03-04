@@ -32,9 +32,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_spec.c,v 1.56 1998/05/25 10:40:30 killough Exp $";
-
 #include "doomstat.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -2570,6 +2567,33 @@ void P_UpdateSpecials(void)
 //////////////////////////////////////////////////////////////////////
 
 //
+// P_SetupHeightTransfer
+//
+// haleyjd 03/04/07: New function to handle setting up the 242 deep water and
+// its related effects. We want to transfer certain properties from the
+// heightsec to the real sector now, so that normal sectors can have those
+// properties without being part of a 242 effect.
+//
+// Namely, colormaps.
+//
+static void P_SetupHeightTransfer(int linenum, int secnum)
+{
+   int s;
+   sector_t *heightsec = &sectors[secnum];
+
+   for(s = -1; (s = P_FindSectorFromLineTag(lines + linenum, s)) >= 0; )
+   {
+      sectors[s].heightsec = secnum;
+
+      // transfer colormaps to affected sectors instead of getting them from
+      // the heightsec during the rendering process
+      sectors[s].topmap    = heightsec->topmap;
+      sectors[s].midmap    = heightsec->midmap;
+      sectors[s].bottommap = heightsec->bottommap;
+   }
+}
+
+//
 // P_SpawnSpecials
 //
 // After the map has been loaded, scan for specials that spawn thinkers
@@ -2691,8 +2715,7 @@ void P_SpawnSpecials(void)
          // support for drawn heights coming from different sector
       case 242:
          sec = sides[*lines[i].sidenum].sector-sectors;
-         for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
-            sectors[s].heightsec = sec;
+         P_SetupHeightTransfer(i, sec); // haleyjd 03/04/07
          break;
 
          // killough 3/16/98: Add support for setting
@@ -2795,10 +2818,8 @@ void P_SpawnSpecials(void)
    P_BuildLinkTable();
 #endif
 
-#ifdef POLYOBJECTS
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
-#endif
 }
 
 // killough 2/28/98:

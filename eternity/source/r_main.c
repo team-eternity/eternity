@@ -26,8 +26,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char rcsid[] = "$Id: r_main.c,v 1.13 1998/05/07 00:47:52 killough Exp $";
-
 #include "doomstat.h"
 #include "i_video.h"
 #include "c_runcmd.h"
@@ -738,32 +736,38 @@ typedef enum
 void R_SectorColormap(sector_t *s)
 {
    int cm;
-   // killough 3/20/98, 4/4/98: select colormap based on player status
+   area_t viewarea;
    
-   // haleyjd: NGCS
-   if(s->heightsec == -1) 
-      cm = global_cmap_index;
+   // killough 3/20/98, 4/4/98: select colormap based on player status
+   // haleyjd 03/04/07: rewritten to get colormaps from the sector itself
+   // instead of from its heightsec if it has one (heightsec colormaps are
+   // transferred to their affected sectors at level setup now).
+   
+   if(s->heightsec == -1)
+      viewarea = area_normal;
    else
    {
-      sector_t *viewsector;
-      area_t viewarea;
-      viewsector = R_PointInSubsector(viewx,viewy)->sector;
-
-      // find which area the viewpoint (player) is in
+      sector_t *viewsector = R_PointInSubsector(viewx, viewy)->sector;
+      
+      // find which area the viewpoint is in
       viewarea =
          viewsector->heightsec == -1 ? area_normal :
          viewz < sectors[viewsector->heightsec].floorheight ? area_below :
          viewz > sectors[viewsector->heightsec].ceilingheight ? area_above :
          area_normal;
+   }
 
-      s = s->heightsec + sectors;
-
-      cm = viewarea==area_normal ? s->midmap :
-            viewarea==area_above ? s->topmap : s->bottommap;
-
-      // haleyjd: NGCS -- sector colormaps may be 0
-      if(!cm)
-         cm = global_cmap_index;
+   switch(viewarea)
+   {
+   case area_normal:
+      cm = s->midmap;
+      break;
+   case area_above:
+      cm = s->topmap;
+      break;
+   case area_below:
+      cm = s->bottommap;
+      break;
    }
 
    fullcolormap = colormaps[cm];

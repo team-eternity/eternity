@@ -28,9 +28,6 @@
 //
 //----------------------------------------------------------------------------
 
-// haleyjd: temporary define
-#ifdef POLYOBJECTS
-
 #include "z_zone.h"
 
 #include "doomstat.h"
@@ -1862,8 +1859,6 @@ int EV_DoPolyDoor(polydoordata_t *doordata)
 
    return 1;
 }
-
-#endif // ifdef POLYOBJECTS
 
 // EOF
 

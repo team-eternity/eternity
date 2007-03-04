@@ -639,126 +639,6 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
 }
 
 //
-// Crosshair Widget
-//
-
-static hu_patchwidget_t crosshair_widget;
-
-// globals related to the crosshair
-int crosshairs[CROSSHAIRS];
-char *targetcolour, *notargetcolour, *friendcolour;
-int crosshairnum;       // 0 = none
-boolean crosshair_hilite; // haleyjd 06/07/05
-char *cross_str[]= { "none", "cross", "angle" }; // for console
-
-//
-// HU_CrossHairTick
-//
-// Updates the crosshair on each gametic.
-//
-static void HU_CrossHairTick(hu_widget_t *widget)
-{
-   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
-
-   // default to no target
-   crosshair->color = notargetcolour;
-
-   // fast as possible: don't bother with this crap if the crosshair 
-   // isn't going to be displayed anyway   
-   if(!crosshairnum || !crosshair_hilite || crosshairs[crosshairnum-1] == -1)
-      return;
-
-   // search for targets
-   
-   P_AimLineAttack(players[displayplayer].mo,
-                   players[displayplayer].mo->angle, 
-                   16*64*FRACUNIT, 0);
-
-   if(linetarget)
-   {
-      // target found
-      crosshair->color = 
-         (linetarget->flags & MF_FRIEND) ? friendcolour : targetcolour;
-   }
-}
-
-//
-// HU_CrossHairDraw
-//
-// Draws the crosshair patch.
-//
-static void HU_CrossHairDraw(hu_widget_t *widget)
-{
-   int drawx, drawy, h, w;
-   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
-   char *pal = crosshair->color;
-   patch_t *patch;
-   
-   if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
-      viewcamera || automapactive)
-      return;
-
-   patch = W_CacheLumpNum(crosshairs[crosshairnum - 1], PU_CACHE);
-
-   // where to draw??
-
-   w = SHORT(patch->width);
-   h = SHORT(patch->height);
-   
-   drawx = (SCREENWIDTH - w) / 2;
-
-   // haleyjd 04/09/05: this kludge moves the crosshair to within
-   // a tolerable distance of the player's true vertical aim when
-   // the screen size is less than full.
-   if(scaledviewheight != SCREENHEIGHT)
-   {
-      // use 1/5 of the displayplayer's pitch angle in integer degrees
-      int angle = players[displayplayer].pitch / (ANGLE_1*5);
-      drawy = scaledwindowy + (scaledviewheight - h) / 2 + angle;
-   }
-   else
-      drawy = scaledwindowy + (scaledviewheight - h) / 2;
-  
-   if(pal == notargetcolour)
-      V_DrawPatchTL(drawx, drawy, &vbscreen, patch, pal, FTRANLEVEL);
-   else
-      V_DrawPatchTranslated(drawx, drawy, &vbscreen, patch, pal, false);
-}
-
-//
-// HU_InitCrossHair
-//
-// Sets up the crosshair widget and associated globals.
-//
-void HU_InitCrossHair(void)
-{
-   // haleyjd TODO: support user-added crosshairs
-   crosshairs[0] = W_CheckNumForName("CROSS1");
-   crosshairs[1] = W_CheckNumForName("CROSS2");
-   
-   notargetcolour = cr_red;
-   targetcolour = cr_green;
-   friendcolour = cr_blue;
-
-   // set up widget object
-   crosshair_widget.color = notargetcolour;
-   crosshair_widget.patch = NULL; // determined dynamically
-
-   // set up the object id
-   strcpy(crosshair_widget.widget.name, "_HU_CrosshairWidget");
-
-   // set type
-   crosshair_widget.widget.type = WIDGET_PATCH;
-
-   // set up object virtuals
-   crosshair_widget.widget.ticker = HU_CrossHairTick;
-   crosshair_widget.widget.drawer = HU_CrossHairDraw;
-
-   // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&crosshair_widget);
-}
-
-//
 // Pop-up Warning Boxes
 //
 // Several different things that appear, quake-style, to warn you of
@@ -1205,6 +1085,132 @@ void HU_CenterMsgTimedColor(const char *s, const char *color, int tics)
    centermsg_color = color;
    HU_CenterMessageTimed(s, tics);
 }
+
+// haleyjd 03/03/07: moved crosshair widget down below centermessage for fix
+
+//
+// Crosshair Widget
+//
+
+static hu_patchwidget_t crosshair_widget;
+
+// globals related to the crosshair
+int crosshairs[CROSSHAIRS];
+char *targetcolour, *notargetcolour, *friendcolour;
+int crosshairnum;       // 0 = none
+boolean crosshair_hilite; // haleyjd 06/07/05
+char *cross_str[]= { "none", "cross", "angle" }; // for console
+
+//
+// HU_CrossHairTick
+//
+// Updates the crosshair on each gametic.
+//
+static void HU_CrossHairTick(hu_widget_t *widget)
+{
+   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
+
+   // default to no target
+   crosshair->color = notargetcolour;
+
+   // fast as possible: don't bother with this crap if the crosshair 
+   // isn't going to be displayed anyway   
+   if(!crosshairnum || !crosshair_hilite || crosshairs[crosshairnum-1] == -1)
+      return;
+
+   // search for targets
+   
+   P_AimLineAttack(players[displayplayer].mo,
+                   players[displayplayer].mo->angle, 
+                   16*64*FRACUNIT, 0);
+
+   if(linetarget)
+   {
+      // target found
+      crosshair->color = 
+         (linetarget->flags & MF_FRIEND) ? friendcolour : targetcolour;
+   }
+}
+
+//
+// HU_CrossHairDraw
+//
+// Draws the crosshair patch.
+//
+static void HU_CrossHairDraw(hu_widget_t *widget)
+{
+   int drawx, drawy, h, w;
+   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
+   char *pal = crosshair->color;
+   patch_t *patch;
+   
+   // haleyjd 03/03/07: don't display while showing a center message
+   if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
+      viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
+      return;
+
+   patch = W_CacheLumpNum(crosshairs[crosshairnum - 1], PU_CACHE);
+
+   // where to draw??
+
+   w = SHORT(patch->width);
+   h = SHORT(patch->height);
+   
+   drawx = (SCREENWIDTH - w) / 2;
+
+   // haleyjd 04/09/05: this kludge moves the crosshair to within
+   // a tolerable distance of the player's true vertical aim when
+   // the screen size is less than full.
+   if(scaledviewheight != SCREENHEIGHT)
+   {
+      // use 1/5 of the displayplayer's pitch angle in integer degrees
+      int angle = players[displayplayer].pitch / (ANGLE_1*5);
+      drawy = scaledwindowy + (scaledviewheight - h) / 2 + angle;
+   }
+   else
+      drawy = scaledwindowy + (scaledviewheight - h) / 2;
+  
+   if(pal == notargetcolour)
+      V_DrawPatchTL(drawx, drawy, &vbscreen, patch, pal, FTRANLEVEL);
+   else
+      V_DrawPatchTranslated(drawx, drawy, &vbscreen, patch, pal, false);
+}
+
+//
+// HU_InitCrossHair
+//
+// Sets up the crosshair widget and associated globals.
+//
+void HU_InitCrossHair(void)
+{
+   // haleyjd TODO: support user-added crosshairs
+   crosshairs[0] = W_CheckNumForName("CROSS1");
+   crosshairs[1] = W_CheckNumForName("CROSS2");
+   
+   notargetcolour = cr_red;
+   targetcolour = cr_green;
+   friendcolour = cr_blue;
+
+   // set up widget object
+   crosshair_widget.color = notargetcolour;
+   crosshair_widget.patch = NULL; // determined dynamically
+
+   // set up the object id
+   strcpy(crosshair_widget.widget.name, "_HU_CrosshairWidget");
+
+   // set type
+   crosshair_widget.widget.type = WIDGET_PATCH;
+
+   // set up object virtuals
+   crosshair_widget.widget.ticker = HU_CrossHairTick;
+   crosshair_widget.widget.drawer = HU_CrossHairDraw;
+
+   // add to hash
+   HU_AddWidgetToHash((hu_widget_t *)&crosshair_widget);
+}
+
+
+
 
 //
 // Elapsed level time (automap)

@@ -25,9 +25,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: r_data.c,v 1.23 1998/05/23 08:05:57 killough Exp $";
-
 #include <time.h>
 
 #include "z_zone.h"
@@ -752,14 +749,19 @@ void R_InitColormaps(void)
 //   the appropriate colormap and the rendering code checks this
 //   instead of assuming it should always use colormap 0 -- much
 //   cleaner but requires more modification to the rendering code.
+//
+// 03/04/07: added outdoor fogmap
 
 int global_cmap_index = 0;
+int global_fog_index  = 0;
 
 void R_SetGlobalLevelColormap(void)
 {
    global_cmap_index = R_ColormapNumForName(LevelInfo.colorMap);
+   global_fog_index  = R_ColormapNumForName(LevelInfo.outdoorFog);
+
    // can't tolerate the error in this case
-   if(global_cmap_index < 0)      
+   if(global_cmap_index < 0 || global_fog_index < 0)
       I_Error("R_SetGlobalLevelColormap: colormap lump not found!\n");
 }
 

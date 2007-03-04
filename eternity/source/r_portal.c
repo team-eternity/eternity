@@ -34,10 +34,11 @@
 
 static rportal_t *portals = NULL, *last = NULL;
 
-// This flag is set when a portal is being rendered. This flag is checked in r_bsp.c when
-// rendering camera portals (skybox, anchored, linked) so that an extra function (R_ClipSegToPortal) 
-// is called to prevent certain types of HOM in portals.
-portalrender_t portalrender = {false, MAX_SCREENWIDTH, 0};
+// This flag is set when a portal is being rendered. This flag is checked in 
+// r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an
+// extra function (R_ClipSegToPortal) is called to prevent certain types of HOM
+// in portals.
+portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
 
 //
 // R_ClearPortal
@@ -55,7 +56,7 @@ static void R_ClearPortal(rportal_t *portal)
    portal->maxx = 0;
    portal->minx = viewwidth;
 
-   for(x = 0; x < MAX_SCREENWIDTH; x++)
+   for(x = 0; x < MAX_SCREENWIDTH; ++x)
    {
       portal->top[x] = t;
       portal->bottom[x] = -1.0f;
@@ -118,7 +119,8 @@ rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_ANCHORED || memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+      if(rover->type != R_ANCHORED || 
+         memcmp(&cam, &(rover->data.camera), sizeof(cam)))
          continue;
 
       return rover;
@@ -155,7 +157,8 @@ rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_TWOWAY || memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+      if(rover->type != R_TWOWAY || 
+         memcmp(&cam, &(rover->data.camera), sizeof(cam)))
          continue;
 
       return rover;
@@ -232,7 +235,8 @@ rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic,
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_HORIZON || memcmp(&rover->data.horizon, &horizon, sizeof(horizon)))
+      if(rover->type != R_HORIZON || 
+         memcmp(&rover->data.horizon, &horizon, sizeof(horizon)))
          continue;
 
       return rover;
@@ -270,7 +274,8 @@ rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta,
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_PLANE || memcmp(&rover->data.plane, &plane, sizeof(plane)))
+      if(rover->type != R_PLANE || 
+         memcmp(&rover->data.plane, &plane, sizeof(plane)))
          continue;
 
       return rover;
@@ -365,8 +370,8 @@ void R_PortalAdd(rportal_t *portal, int x, float ytop, float ybottom)
          return;
       }
 
-      // because a check has already been made to reject the column, the columns must intersect
-      // expand as needed
+      // because a check has already been made to reject the column, the columns
+      // must intersect; expand as needed
       if(ytop < ptop)
          portal->top[x] = ytop;
 
@@ -377,7 +382,8 @@ void R_PortalAdd(rportal_t *portal, int x, float ytop, float ybottom)
 
    if(portal->maxx < portal->minx)
    {
-      // Portal is empty so place the column anywhere (first column added to the portal)
+      // Portal is empty so place the column anywhere (first column added to 
+      // the portal)
       portal->minx = portal->maxx = x;
       portal->top[x] = ytop;
       portal->bottom[x] = ybottom;
@@ -434,7 +440,11 @@ static void R_RenderPlanePortal(rportal_t *portal)
    if(portal->maxx < portal->minx)
       return;
 
-   plane = R_FindPlane(*portal->data.plane.delta + viewz, *portal->data.plane.pic, *portal->data.plane.lightlevel, *portal->data.plane.xoff - viewx, *portal->data.plane.yoff + viewy);
+   plane = R_FindPlane(*portal->data.plane.delta + viewz, 
+                       *portal->data.plane.pic, 
+                       *portal->data.plane.lightlevel, 
+                       *portal->data.plane.xoff - viewx, 
+                       *portal->data.plane.yoff + viewy);
 
    plane = R_CheckPlane(plane, portal->minx, portal->maxx);
 
@@ -466,8 +476,16 @@ static void R_RenderHorizonPortal(rportal_t *portal)
    if(portal->maxx < portal->minx)
       return;
 
-   topplane = R_FindPlane(*portal->data.horizon.ceilingz, *portal->data.horizon.ceilingpic, *portal->data.horizon.ceilinglight, *portal->data.horizon.ceilingxoff, *portal->data.horizon.ceilingyoff);
-   bottomplane = R_FindPlane(*portal->data.horizon.floorz, *portal->data.horizon.floorpic, *portal->data.horizon.floorlight, *portal->data.horizon.floorxoff, *portal->data.horizon.flooryoff);
+   topplane = R_FindPlane(*portal->data.horizon.ceilingz, 
+                          *portal->data.horizon.ceilingpic, 
+                          *portal->data.horizon.ceilinglight, 
+                          *portal->data.horizon.ceilingxoff, 
+                          *portal->data.horizon.ceilingyoff);
+   bottomplane = R_FindPlane(*portal->data.horizon.floorz, 
+                             *portal->data.horizon.floorpic, 
+                             *portal->data.horizon.floorlight, 
+                             *portal->data.horizon.floorxoff, 
+                             *portal->data.horizon.flooryoff);
 
    topplane = R_CheckPlane(topplane, portal->minx, portal->maxx);
    bottomplane = R_CheckPlane(bottomplane, portal->minx, portal->maxx);
@@ -523,12 +541,16 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
 #ifdef RANGECHECK
    {
       int i;
-      for(i = 0; i < MAX_SCREENWIDTH; i++)
+      for(i = 0; i < MAX_SCREENWIDTH; ++i)
       {
          if(portal->bottom[i] > portal->top[i] && (portal->bottom[i] < -1 
             || portal->bottom[i] > viewheight || portal->top[i] < -1 
             || portal->top[i] > viewheight))
-            I_Error("R_RenderSkyboxPortal: clipping array contained invalid information. x:%i, ytop:%i, ybottom:%i\n", i, portal->top[i], portal->bottom[i]);
+         {
+            I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
+                    "information. x:%i, ytop:%i, ybottom:%i\n", 
+                    i, portal->top[i], portal->bottom[i]);
+         }
       }
    }
 #endif
@@ -600,7 +622,11 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
          if(portal->bottom[i] > portal->top[i] && (portal->bottom[i] < -1 
             || portal->bottom[i] > viewheight || portal->top[i] < -1 
             || portal->top[i] > viewheight))
-            I_Error("R_RenderAnchoredPortal: clipping array contained invalid information. x:%i, ytop:%i, ybottom:%i\n", i, portal->top[i], portal->bottom[i]);
+         {
+            I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
+                    "information. x:%i, ytop:%i, ybottom:%i\n", 
+                    i, portal->top[i], portal->bottom[i]);
+         }
       }
    }
 #endif

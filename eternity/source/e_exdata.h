@@ -48,21 +48,7 @@
 
 // ExtraData mapthing structure
 
-typedef struct mapthingext_s
-{   
-   // standard fields
-   mapthing_t stdfields;
-
-   // extended fields
-   unsigned short tid;
-   long args[5];
-   short height;
-
-   // internal fields (used by ExtraData only)
-   int recordnum;   
-   int next;
-
-} mapthingext_t;
+// haleyjd 03/03/07: usurped by new unified mapthing_t in doomdata.h
 
 // Extended line special flags
 // Because these go into a new field used only by parameterized
@@ -92,6 +78,7 @@ typedef struct maplinedefext_s
    // extended fields
    long extflags;
    long args[5];
+   long id;
 
    // internal fields (used by ExtraData only)
    int recordnum;
@@ -105,7 +92,7 @@ void E_LoadExtraData(void);
 mobj_t *E_SpawnMapThingExt(mapthing_t *mt);
 void E_LoadLineDefExt(line_t *line);
 boolean E_IsParamSpecial(short special);
-void E_GetEDMapThings(mapthingext_t **things, int *numthings);
+void E_GetEDMapThings(mapthing_t **things, int *numthings);
 void E_GetEDLines(maplinedefext_t **lines, int *numlines);
 short E_LineSpecForName(const char *name);
 

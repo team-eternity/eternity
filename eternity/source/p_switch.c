@@ -24,9 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_switch.c,v 1.25 1998/06/01 14:48:19 jim Exp $";
-
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "g_game.h"

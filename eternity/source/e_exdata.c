@@ -55,7 +55,7 @@
 
 // statics
 
-static mapthingext_t *EDThings;
+static mapthing_t *EDThings;
 static unsigned int numEDMapThings;
 
 #define NUMMTCHAINS 1021
@@ -86,6 +86,7 @@ static unsigned int linedef_chains[NUMLDCHAINS];
 #define FIELD_LINE_TAG       "tag"
 #define FIELD_LINE_EXTFLAGS  "extflags"
 #define FIELD_LINE_ARGS      "args"
+#define FIELD_LINE_ID        "id"
 
 // mapthing options and related data structures
 
@@ -135,6 +136,7 @@ static cfg_opt_t linedef_opts[] =
    CFG_INT(FIELD_LINE_TAG,        0,  CFGF_NONE),
    CFG_STR(FIELD_LINE_EXTFLAGS,   "", CFGF_NONE),
    CFG_STR(FIELD_LINE_ARGS,       0,  CFGF_LIST),
+   CFG_INT(FIELD_LINE_ID,        -1,  CFGF_NONE),
    CFG_END()
 };
 
@@ -527,8 +529,6 @@ static struct exlinespec
    { 345, "Portal_TwowayFloor" },
    { 346, "Portal_TwowayAnchorLine" },
    { 347, "Portal_TwowayAnchorLineFloor" },
-
-#ifdef POLYOBJECTS
    { 348, "Polyobj_StartLine" },
    { 349, "Polyobj_ExplicitLine" },
    { 350, "Polyobj_DoorSlide" },
@@ -539,7 +539,6 @@ static struct exlinespec
    { 355, "Polyobj_OR_RotateRight" },
    { 356, "Polyobj_RotateLeft" },
    { 357, "Polyobj_OR_RotateLeft" },
-#endif
 
    // SoM: linked portal types
 #ifdef R_LINKEDPORTALS
@@ -670,7 +669,7 @@ static int E_ParseTypeField(char *value)
 //
 // Parses the mapthing args list.
 //
-static void E_ParseThingArgs(mapthingext_t *mte, cfg_t *sec)
+static void E_ParseThingArgs(mapthing_t *mte, cfg_t *sec)
 {
    unsigned int i, numargs;
 
@@ -705,12 +704,11 @@ static void E_ProcessEDThings(cfg_t *cfg)
    if(!numEDMapThings)
       return;
 
-   // allocate the mapthingext_t structures
-   EDThings = Z_Malloc(numEDMapThings * sizeof(mapthingext_t),
-                       PU_LEVEL, NULL);
+   // allocate the mapthing_t structures
+   EDThings = Z_Malloc(numEDMapThings * sizeof(mapthing_t), PU_LEVEL, NULL);
 
    // initialize the hash chains
-   for(i = 0; i < NUMMTCHAINS; i++)
+   for(i = 0; i < NUMMTCHAINS; ++i)
       mapthing_chains[i] = numEDMapThings;
 
    // read fields
@@ -738,25 +736,27 @@ static void E_ProcessEDThings(cfg_t *cfg)
 
       // type
       tempstr = cfg_getstr(thingsec, FIELD_TYPE);
-      EDThings[i].stdfields.type = (short)(E_ParseTypeField(tempstr));
+      EDThings[i].type = (short)(E_ParseTypeField(tempstr));
 
       // it is not allowed to spawn an ExtraData control object via
       // ExtraData, but the error is tolerated by changing it to an 
       // "Unknown" thing
-      if(EDThings[i].stdfields.type == ED_CTRL_DOOMEDNUM)
-         EDThings[i].stdfields.type = mobjinfo[UnknownThingType].doomednum;
+      if(EDThings[i].type == ED_CTRL_DOOMEDNUM)
+         EDThings[i].type = mobjinfo[UnknownThingType].doomednum;
 
       // options
       tempstr = cfg_getstr(thingsec, FIELD_OPTIONS);
       if(*tempstr == '\0')
-         EDThings[i].stdfields.options = 0;
+         EDThings[i].options = 0;
       else
-         EDThings[i].stdfields.options = (short)(E_ParseFlags(tempstr, &mt_flagset));
+         EDThings[i].options = (short)(E_ParseFlags(tempstr, &mt_flagset));
 
       // extended fields
 
       // get TID field
-      EDThings[i].tid = (unsigned short)cfg_getint(thingsec, FIELD_TID);
+      EDThings[i].tid = (short)cfg_getint(thingsec, FIELD_TID);
+      if(EDThings[i].tid < 0)
+         EDThings[i].tid = 0; // you cannot specify a reserved TID
 
       // get args
       E_ParseThingArgs(&EDThings[i], thingsec);
@@ -1467,6 +1467,9 @@ static void E_ProcessEDLines(cfg_t *cfg)
       // args
       E_ParseLineArgs(&EDLines[i], linesec);
 
+      // 03/03/07: line id
+      EDLines[i].id = cfg_getint(linesec, FIELD_LINE_ID);
+
       // TODO: any other new fields
    }
 }
@@ -1532,8 +1535,7 @@ void E_LoadExtraData(void)
 mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
 {
    unsigned int edThingIdx;
-   mapthingext_t *edthing;
-   mobj_t *mo;
+   mapthing_t *edthing;
 
    // The record number is stored in the control thing's options field.
    // Check to see if the record exists, and that ExtraData is loaded.
@@ -1541,46 +1543,22 @@ mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
       (edThingIdx = E_EDThingForRecordNum((unsigned short)(mt->options))) == numEDMapThings)
    {
       // spawn an Unknown thing
-      mo = P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ,
-                       UnknownThingType);
-      return mo;
+      return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ, 
+                         UnknownThingType);
    }
 
    // get a pointer to the proper ExtraData mapthing record
    edthing = &(EDThings[edThingIdx]);
 
-   // propagate the control object's x, y, and angle fields to the
-   // mapthing_t inside the record
-   edthing->stdfields.x = mt->x;
-   edthing->stdfields.y = mt->y;
-   edthing->stdfields.angle = mt->angle;
+   // propagate the control object's x, y, and angle fields to the ED object
+   edthing->x     = mt->x;
+   edthing->y     = mt->y;
+   edthing->angle = mt->angle;
 
-   // spawn the thing normally
-   mo = P_SpawnMapThing(&(edthing->stdfields), NULL);
-
-   // set extended fields in mo from the record
-   if(mo)
-   {
-      // 02/02/04: TID -- numeric id used for scripting
-      P_AddThingTID(mo, edthing->tid);
-
-      // 08/16/04: args values
-      memcpy(mo->args, edthing->args, 5 * sizeof(long));
-
-      // 10/04/05: height
-      if(edthing->height && !(mo->flags2 & MF2_SPAWNFLOAT))
-      {
-         fixed_t rheight = edthing->height << FRACBITS;
-         
-         if(mo->flags & MF_SPAWNCEILING)
-            rheight = -rheight;
-         
-         P_MobjSetZPos(mo, rheight);
-      }
-   }
-
+   // spawn the thing normally; 
    // return the spawned object back through P_SpawnMapThing
-   return mo;
+
+   return P_SpawnMapThing(edthing);
 }
 
 //
@@ -1620,6 +1598,9 @@ void E_LoadLineDefExt(line_t *line)
 
    // args
    memcpy(line->args, edline->args, 5*sizeof(long));
+
+   // 03/03/07: id
+   line->line_id = edline->id;
 }
 
 //
@@ -1703,7 +1684,7 @@ boolean E_IsParamSpecial(short special)
    }
 }
 
-void E_GetEDMapThings(mapthingext_t **things, int *numthings)
+void E_GetEDMapThings(mapthing_t **things, int *numthings)
 {
    *things = EDThings;
    *numthings = numEDMapThings;

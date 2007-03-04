@@ -25,9 +25,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_genlin.c,v 1.18 1998/05/23 10:23:23 jim Exp $";
-
 #include "doomstat.h"
 #include "r_main.h"
 #include "p_info.h"
@@ -1831,9 +1828,6 @@ static boolean pspec_Stairs(line_t *line, long *args, short special,
    return EV_DoParamStairs(line, args[0], &sd);
 }
 
-// haleyjd: temporary define
-#ifdef POLYOBJECTS
-
 //
 // pspec_PolyDoor
 //
@@ -1907,8 +1901,6 @@ static boolean pspec_PolyRotate(long *args, short special)
 
    return EV_DoPolyObjRotate(&prd);
 }
-
-#endif // ifdef POLYOBJECTS
 
 //
 // pspec_Pillar
@@ -2039,7 +2031,6 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 343: // Stairs_BuildDownDoomSync
       success = pspec_Stairs(line, args, special, trigger_type);
       break;
-#ifdef POLYOBJECTS
    case 350: // Polyobj_DoorSlide
    case 351: // Polyobj_DoorSwing
       success = pspec_PolyDoor(args, special);
@@ -2054,7 +2045,6 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 357: // Polyobj_OR_RotateLeft
       success = pspec_PolyRotate(args, special);
       break;
-#endif
    case 362: // Pillar_Build
    case 363: // Pillar_BuildAndCrush
    case 364: // Pillar_Open
@@ -2315,7 +2305,6 @@ SCRIPT_SPEC(340, stairs_buildupdoom)
 SCRIPT_SPEC(341, stairs_builddowndoom)
 SCRIPT_SPEC(342, stairs_buildupdoomsync)
 SCRIPT_SPEC(343, stairs_builddowndoomsync)
-#ifdef POLYOBJECTS
 SCRIPT_SPEC(350, polyobj_doorslide)
 SCRIPT_SPEC(351, polyobj_doorswing)
 SCRIPT_SPEC(352, polyobj_move)
@@ -2324,7 +2313,6 @@ SCRIPT_SPEC(354, polyobj_rotateright)
 SCRIPT_SPEC(355, polyobj_or_rotateright)
 SCRIPT_SPEC(356, polyobj_rotateleft)
 SCRIPT_SPEC(357, polyobj_or_rotateleft)
-#endif
 SCRIPT_SPEC(362, pillar_build)
 SCRIPT_SPEC(363, pillar_buildandcrush)
 SCRIPT_SPEC(364, pillar_open)
@@ -2387,7 +2375,6 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Stairs_BuildDownDoom",        sm_stairs_builddowndoom        },
    { "_Stairs_BuildUpDoomSync",      sm_stairs_buildupdoomsync      },
    { "_Stairs_BuildDownDoomSync",    sm_stairs_builddowndoomsync    },
-#ifdef POLYOBJECTS
    { "_Polyobj_DoorSlide",           sm_polyobj_doorslide           },
    { "_Polyobj_DoorSwing",           sm_polyobj_doorswing           },
    { "_Polyobj_Move",                sm_polyobj_move                },
@@ -2396,7 +2383,6 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Polyobj_OR_RotateRight",      sm_polyobj_or_rotateright      },
    { "_Polyobj_RotateLeft",          sm_polyobj_rotateleft          },
    { "_Polyobj_OR_RotateLeft",       sm_polyobj_or_rotateleft       },
-#endif
    { "_Pillar_Build",                sm_pillar_build                },
    { "_Pillar_BuildAndCrush",        sm_pillar_buildandcrush        },
    { "_Pillar_Open",                 sm_pillar_open                 },

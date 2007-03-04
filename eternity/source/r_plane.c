@@ -39,9 +39,6 @@
 
 #include "z_zone.h"  /* memory allocation wrappers -- killough */
 
-static const char
-rcsid[] = "$Id: r_plane.c,v 1.8 1998/05/03 23:09:53 killough Exp $";
-
 #include "doomstat.h"
 
 #include "c_io.h"
@@ -119,7 +116,6 @@ void R_Throw(void)
 
 void (*flatfunc)(void) = R_Throw;
 
-
 //
 // R_InitPlanes
 // Only at game startup.
@@ -131,10 +127,8 @@ void R_InitPlanes(void)
 //
 // R_MapPlane
 //
-//
 // BASIC PRIMITIVE
 //
-
 static void R_MapPlane(int y, int x1, int x2)
 {
    float dy, xstep, ystep, realy, slope;
@@ -200,18 +194,17 @@ static void R_MapPlane(int y, int x1, int x2)
 // R_ClearPlanes
 // At begining of frame.
 //
-// SoM: uses double floating point for calculation of the global scales because it is
-// much more accurate. This is done only once per frame so this really has no effect on 
-// speed.
-
+// SoM: uses double floating point for calculation of the global scales because
+// it is much more accurate. This is done only once per frame so this really has
+// no effect on speed.
+//
 void R_ClearPlanes(void)
 {
    int i;
    float a;
 
-   a = (float)(consoleactive ? (current_height-viewwindowy) < 0 ? 0 : current_height-viewwindowy : 0);
-
-   /* a = -1; */
+   a = (float)(consoleactive ? 
+         (current_height-viewwindowy) < 0 ? 0 : current_height-viewwindowy : 0);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -245,7 +238,8 @@ static visplane_t *new_visplane(unsigned hash)
    {
       check = calloc(1, sizeof *check);
       check->max_width = 0;
-      check->pad1 = check->pad2 = check->pad3 = check->pad4 = check->top = check->bottom = NULL;
+      check->pad1 = check->pad2 = check->pad3 = check->pad4 = check->top = 
+         check->bottom = NULL;
    }
    else 
       if(!(freetail = freetail->next))
@@ -280,7 +274,7 @@ static visplane_t *new_visplane(unsigned hash)
 // R_FindPlane
 //
 // killough 2/28/98: Add offsets
-
+//
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
                         fixed_t xoffs, fixed_t yoffs)
 {
@@ -291,9 +285,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       lightlevel = height = 0;   // killough 7/19/98: most skies map together
 
    // New visplane algorithm uses hash table -- killough
-   hash = visplane_hash(picnum,lightlevel,height);
+   hash = visplane_hash(picnum, lightlevel, height);
 
-   for(check=visplanes[hash]; check; check=check->next)  // killough
+   for(check=visplanes[hash]; check; check = check->next)  // killough
    {
       if(height == check->height &&
          picnum == check->picnum &&
@@ -301,10 +295,10 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          xoffs == check->xoffs &&      // killough 2/28/98: Add offset checks
          yoffs == check->yoffs &&
          zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap
-         && viewx == check->viewx
-         && viewy == check->viewy
-         && viewz == check->viewz
+         fixedcolormap == check->fixedcolormap && 
+         viewx == check->viewx && 
+         viewy == check->viewy && 
+         viewz == check->viewz
         )
         return check;
    }

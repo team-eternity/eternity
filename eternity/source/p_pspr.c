@@ -31,9 +31,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_pspr.c,v 1.13 1998/05/07 00:53:36 killough Exp $";
-
 #include "doomstat.h"
 #include "d_event.h"
 #include "g_game.h"

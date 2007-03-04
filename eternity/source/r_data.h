@@ -86,6 +86,7 @@ extern int r_precache;
 extern int numflats; // haleyjd
 
 extern int global_cmap_index; // haleyjd
+extern int global_fog_index;
 
 extern texture_t **textures;
 

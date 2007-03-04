@@ -27,9 +27,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_maputl.c,v 1.13 1998/05/03 22:16:48 killough Exp $";
-
 #include "doomstat.h"
 #include "m_bbox.h"
 #include "r_main.h"
@@ -514,15 +511,12 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 {
    int        offset;
    const long *list;     // killough 3/1/98: for removal of blockmap limit
-#ifdef POLYOBJECTS
    polymaplink_t *plink; // haleyjd 02/22/06
-#endif
    
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
    offset = y * bmapwidth + x;
 
-#ifdef POLYOBJECTS
    // haleyjd 02/22/06: consider polyobject lines
    plink = polyblocklinks[offset];
 
@@ -546,7 +540,6 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
       }
       plink = (polymaplink_t *)(plink->link.next);
    }
-#endif
 
    // original was reading delimiting 0 as linedef 0 -- phares
    offset = *(blockmap + offset);

@@ -87,6 +87,7 @@ typedef struct LevelInfo_s
 
    // color map stuff
    const char *colorMap;      // global colormap replacement
+   const char *outdoorFog;    // outdoor fogmap -- 03/04/07
    boolean useFullBright;     // use fullbright on this map?
    boolean unevenLight;       // use uneven wall lighting?
 

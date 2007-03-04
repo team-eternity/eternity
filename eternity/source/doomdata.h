@@ -222,7 +222,7 @@ typedef struct mapnode_s mapnode_t;
 
 // Thing definition, position, orientation and type,
 // plus skill/visibility flags and attributes.
-struct mapthing_s
+struct mapthingdoom_s
 {
   short x;
   short y;
@@ -231,7 +231,7 @@ struct mapthing_s
   short options;
 } __attribute__((packed));
 
-typedef struct mapthing_s mapthing_t;
+typedef struct mapthingdoom_s mapthingdoom_t;
 
 struct mapthinghexen_s
 {
@@ -247,6 +247,26 @@ struct mapthinghexen_s
 } __attribute__((packed));
 
 typedef struct mapthinghexen_s mapthinghexen_t;
+
+// haleyjd 03/03/07: New mapthing_t structure. The structures above are used to
+// read things from the wad lump, but this new mapthing_t is used to store the
+// data in memory now. This eliminates some weirdness and redundancies
+
+typedef struct mapthing_s
+{
+   short tid;       // scripting id
+   short x;         // x coord
+   short y;         // y coord
+   short height;    // z height relative to floor
+   short angle;     // angle in wad format
+   short type;      // doomednum
+   short options;   // bitflags
+   long  special;   // scripting special
+   long  args[5];   // arguments for special
+
+   int   recordnum; // for ExtraData hashing
+   int   next;
+} mapthing_t;
 
 #ifdef _MSC_VER
 #pragma pack(pop)

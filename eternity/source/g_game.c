@@ -27,9 +27,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: g_game.c,v 1.59 1998/06/03 20:23:10 killough Exp $";
-
 #include <time.h>
 #include <stdarg.h>
 #include <errno.h>
@@ -687,9 +684,6 @@ static void G_DoLoadLevel(void)
    //jff 4/26/98 wake up the status bar in case were coming out of a DM demo
    // killough 5/13/98: in case netdemo has consoleplayer other than green
    ST_Start();
-
-   // haleyjd: set global colormap -- see r_data.c
-   R_SetGlobalLevelColormap();
 
    // haleyjd 01/07/07: run deferred ACS scripts
    ACS_RunDeferredScripts();
@@ -2284,15 +2278,15 @@ void G_PlayerReborn(int player)
       p->maxammo[i] = maxammo[i];
 }
 
+void P_SpawnPlayer(mapthing_t *mthing);
+
 //
 // G_CheckSpot
+//
 // Returns false if the player cannot be respawned
 // at the given mapthing_t spot
 // because something is occupying it
 //
-
-void P_SpawnPlayer(mapthing_t *mthing);
-
 static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
 {
    fixed_t     x,y;

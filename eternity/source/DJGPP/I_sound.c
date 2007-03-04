@@ -24,8 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: i_sound.c,v 1.15 1998/05/03 22:32:33 killough Exp $";
 
 // Julian: 6/6/2001: replaced by local inclusion
 #include "allegro.h"

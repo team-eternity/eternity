@@ -24,9 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: r_bsp.c,v 1.17 1998/05/03 22:47:33 killough Exp $";
-
 #include "doomstat.h"
 #include "m_bbox.h"
 #include "i_system.h"
@@ -395,7 +392,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                          : viewplayer->mo->subsector->sector->heightsec;
             
       underwater = 
-	 (heightsec!=-1 && viewz<=sectors[heightsec].floorheight);
+	 (heightsec != -1 && viewz <= sectors[heightsec].floorheight);
 
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
@@ -524,25 +521,29 @@ static void R_AddLine(seg_t *line)
    // Reject empty two-sided lines used for line specials.
    if(seg.backsec && seg.frontsec 
       && seg.backsec->ceilingpic == seg.frontsec->ceilingpic 
-      && seg.backsec->floorpic == seg.frontsec->floorpic
+      && seg.backsec->floorpic   == seg.frontsec->floorpic
       && seg.backsec->lightlevel == seg.frontsec->lightlevel 
       && seg.line->sidedef->midtexture == 0
       
       // killough 3/7/98: Take flats offsets into account:
-      && seg.backsec->floor_xoffs == seg.frontsec->floor_xoffs
-      && seg.backsec->floor_yoffs == seg.frontsec->floor_yoffs
+      && seg.backsec->floor_xoffs   == seg.frontsec->floor_xoffs
+      && seg.backsec->floor_yoffs   == seg.frontsec->floor_yoffs
       && seg.backsec->ceiling_xoffs == seg.frontsec->ceiling_xoffs
       && seg.backsec->ceiling_yoffs == seg.frontsec->ceiling_yoffs
       
       // killough 4/16/98: consider altered lighting
-      && seg.backsec->floorlightsec == seg.frontsec->floorlightsec
+      && seg.backsec->floorlightsec   == seg.frontsec->floorlightsec
       && seg.backsec->ceilinglightsec == seg.frontsec->ceilinglightsec
 
-      && seg.backsec->floorheight == seg.frontsec->floorheight
+      && seg.backsec->floorheight   == seg.frontsec->floorheight
       && seg.backsec->ceilingheight == seg.frontsec->ceilingheight
       
       // sf: coloured lighting
-      && seg.backsec->heightsec == seg.frontsec->heightsec
+      // haleyjd 03/04/07: must test against maps, not heightsec
+      && seg.backsec->bottommap == seg.frontsec->bottommap 
+      && seg.backsec->midmap    == seg.frontsec->midmap 
+      && seg.backsec->topmap    == seg.frontsec->topmap
+
       // SoM 12/10/03: PORTALS
       && seg.backsec->c_portal == seg.frontsec->c_portal
       && seg.backsec->f_portal == seg.frontsec->f_portal
@@ -1044,8 +1045,6 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    return true;
 }
 
-#ifdef POLYOBJECTS
-
 static int numpolys;        // number of polyobjects in current subsector
 static int num_po_ptrs;     // number of polyobject pointers allocated
 static polyobj_t **po_ptrs; // temp ptr array to sort polyobject pointers
@@ -1131,7 +1130,6 @@ static void R_AddPolyObjects(subsector_t *sub)
          R_AddLine(po_ptrs[i]->segs[j]);
    }
 }
-#endif
 
 //
 // R_Subsector
@@ -1224,12 +1222,10 @@ static void R_Subsector(int num)
 
    R_AddSprites(sub->sector, (floorlightlevel+ceilinglightlevel)/2);
 
-#ifdef POLYOBJECTS
    // haleyjd 02/19/06: draw polyobjects before static lines
    // haleyjd 10/09/06: skip call entirely if no polyobjects
    if(sub->polyList)
       R_AddPolyObjects(sub);
-#endif
 
    while(count--)
       R_AddLine(line++);

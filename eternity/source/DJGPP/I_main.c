@@ -24,9 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: i_main.c,v 1.8 1998/05/15 00:34:03 killough Exp $";
-
 #include "../doomdef.h"
 #include "../m_argv.h"
 #include "../d_main.h"

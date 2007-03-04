@@ -25,9 +25,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_setup.c,v 1.16 1998/05/07 00:56:49 killough Exp $";
-
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_main.h"
@@ -313,7 +310,10 @@ void P_LoadSectors(int lump)
       ss->ceilinglightsec = -1;
       
       // killough 4/4/98: colormaps:
-      ss->bottommap = ss->midmap = ss->topmap = 0;
+      // haleyjd 03/04/07: modifications for per-sector colormap logic
+      ss->bottommap = ss->midmap = ss->topmap =
+         ((ss->ceilingpic == skyflatnum || ss->ceilingpic == sky2flatnum) ?
+          global_fog_index : global_cmap_index);
       
       // killough 10/98: sky textures coming from sidedefs:
       ss->sky = 0;
@@ -404,8 +404,13 @@ void P_LoadThings(int lump)
 {
    int  i;
    byte *data = W_CacheLumpNum(lump, PU_STATIC);
+   mapthing_t *mapthings;
    
-   numthings = W_LumpLength(lump) / sizeof(mapthing_t); //sf: use global
+   numthings = W_LumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
+
+   // haleyjd 03/03/07: allocate full mapthings
+   mapthings = malloc(numthings * sizeof(mapthing_t));
+   memset(mapthings, 0, numthings * sizeof(mapthing_t));
 
    // haleyjd: explicitly nullify old player object pointers
    if(GameType != gt_dm)
@@ -419,16 +424,17 @@ void P_LoadThings(int lump)
    
    for(i = 0; i < numthings; ++i)
    {
-      mapthing_t *mt = (mapthing_t *)data + i;
+      mapthingdoom_t *mt = (mapthingdoom_t *)data + i;
+      mapthing_t     *ft = &mapthings[i];
       
       // haleyjd 09/11/06: wow, this should be up here.
-      mt->type = SHORT(mt->type);
+      ft->type = SHORT(mt->type);
 
       // Do not spawn cool, new monsters if !commercial
       // haleyjd: removing this for Heretic and DeHackEd
       if(demo_version < 331 && gamemode != commercial)
       {
-         switch(mt->type)
+         switch(ft->type)
          {
          case 68:  // Arachnotron
          case 64:  // Archvile
@@ -445,20 +451,19 @@ void P_LoadThings(int lump)
       }
       
       // Do spawn all other stuff.
-      mt->x = SHORT(mt->x);
-      mt->y = SHORT(mt->y);
-      mt->angle = SHORT(mt->angle);      
-      mt->options = SHORT(mt->options);
+      ft->x       = SHORT(mt->x);
+      ft->y       = SHORT(mt->y);
+      ft->angle   = SHORT(mt->angle);      
+      ft->options = SHORT(mt->options);
 
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
-         P_ConvertHereticThing(mt);
+         P_ConvertHereticThing(ft);
       
-      P_SpawnMapThing(mt, NULL);
+      P_SpawnMapThing(ft);
    }
    
-   // haleyjd: all player things for players in this game
-   //          should now be valid in SP or co-op
+   // haleyjd: all player things for players in this game should now be valid
    if(GameType != gt_dm)
    {
       for(i = 0; i < MAXPLAYERS; ++i)
@@ -469,6 +474,7 @@ void P_LoadThings(int lump)
    }
 
    Z_Free(data);
+   Z_Free(mapthings);
 }
 
 //
@@ -482,8 +488,13 @@ void P_LoadHexenThings(int lump)
 {
    int  i;
    byte *data = W_CacheLumpNum(lump, PU_STATIC);
+   mapthing_t *mapthings;
    
    numthings = W_LumpLength(lump) / sizeof(mapthinghexen_t);
+
+   // haleyjd 03/03/07: allocate full mapthings
+   mapthings = malloc(numthings * sizeof(mapthing_t));
+   memset(mapthings, 0, numthings * sizeof(mapthing_t));
 
    // haleyjd: explicitly nullify old player object pointers
    if(GameType != gt_dm)
@@ -497,30 +508,24 @@ void P_LoadHexenThings(int lump)
    
    for(i = 0; i < numthings; ++i)
    {
-      mapthing_t mto;
-      mapthinghexen_t *mt = (mapthinghexen_t *)data + i;      
+      mapthinghexen_t *mt = (mapthinghexen_t *)data + i;
+      mapthing_t      *ft = &mapthings[i];
       
-      mt->tid = SHORT(mt->tid);
-      mt->x = SHORT(mt->x);
-      mt->y = SHORT(mt->y);
-      mt->height = SHORT(mt->height);
-      mt->angle = SHORT(mt->angle);
-      mt->type  = SHORT(mt->type);
-      mt->options = SHORT(mt->options);
+      ft->tid     = SHORT(mt->tid);
+      ft->x       = SHORT(mt->x);
+      ft->y       = SHORT(mt->y);
+      ft->height  = SHORT(mt->height);
+      ft->angle   = SHORT(mt->angle);
+      ft->type    = SHORT(mt->type);
+      ft->options = SHORT(mt->options);
 
       // note: args are already in order since they're just bytes
 
-      mto.x = mt->x;
-      mto.y = mt->y;
-      mto.angle = mt->angle;
-      mto.type = mt->type;
-      mto.options = mt->options;
-
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
-         P_ConvertHereticThing(&mto);
+         P_ConvertHereticThing(ft);
       
-      P_SpawnMapThing(&mto, mt);
+      P_SpawnMapThing(ft);
    }
    
    // haleyjd: all player things for players in this game
@@ -538,6 +543,7 @@ void P_LoadHexenThings(int lump)
    }
 
    Z_Free(data);
+   Z_Free(mapthings);
 }
 
 //
@@ -851,6 +857,7 @@ void P_LoadSideDefs2(int lump)
       register mapsidedef_t *msd = (mapsidedef_t *)data + i;
       register side_t *sd = sides + i;
       register sector_t *sec;
+      int cmap;
 
       sd->textureoffset = SHORT(msd->textureoffset) << FRACBITS;
       sd->rowoffset     = SHORT(msd->rowoffset)     << FRACBITS;
@@ -865,15 +872,27 @@ void P_LoadSideDefs2(int lump)
       switch(sd->special)
       {
       case 242:                  // variable colormap via 242 linedef
-         sd->bottomtexture =
-            (sec->bottommap =   R_ColormapNumForName(msd->bottomtexture)) < 0 ?
-            sec->bottommap = 0, R_TextureNumForName(msd->bottomtexture): 0 ;
-         sd->midtexture =
-            (sec->midmap =   R_ColormapNumForName(msd->midtexture)) < 0 ?
-            sec->midmap = 0, R_TextureNumForName(msd->midtexture)  : 0 ;
-         sd->toptexture =
-            (sec->topmap =   R_ColormapNumForName(msd->toptexture)) < 0 ?
-            sec->topmap = 0, R_TextureNumForName(msd->toptexture)  : 0 ;
+         if((cmap = R_ColormapNumForName(msd->bottomtexture)) < 0)
+            sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
+         else
+         {
+            sec->bottommap = cmap;
+            sd->bottomtexture = 0;
+         }
+         if((cmap = R_ColormapNumForName(msd->midtexture)) < 0)
+            sd->midtexture = R_TextureNumForName(msd->midtexture);
+         else
+         {
+            sec->midmap = cmap;
+            sd->midtexture = 0;
+         }
+         if((cmap = R_ColormapNumForName(msd->toptexture)) < 0)
+            sd->toptexture = R_TextureNumForName(msd->toptexture);
+         else
+         {
+            sec->topmap = cmap;
+            sd->toptexture = 0;
+         }
          break;
 
       case 260: // killough 4/11/98: apply translucency to 2s normal texture
@@ -1130,12 +1149,10 @@ void P_LoadBlockMap(int lump)
    memset(blocklinks, 0, count);
    blockmap = blockmaplump + 4;
 
-#ifdef POLYOBJECTS
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
    polyblocklinks = Z_Malloc(count, PU_LEVEL, NULL);
    memset(polyblocklinks, 0, count);
-#endif
 }
 
 
@@ -1496,7 +1513,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    S_StopSounds();
    
    // free the old level
-   Z_FreeTags(PU_LEVEL, PU_PURGELEVEL-1);
+   Z_FreeTags(PU_LEVEL, PU_PURGELEVEL - 1);
 
    P_FreeSecNodeList(); // sf: free the psecnode_t linked list in p_map.c
    P_InitThinkers();   
@@ -1504,6 +1521,9 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    P_LoadLevelInfo(lumpnum);  // load MapInfo
    E_LoadExtraData();         // haleyjd 10/08/03: load ExtraData
+
+   // haleyjd: set global colormap -- see r_data.c
+   R_SetGlobalLevelColormap();
 
 #if 0
    // when loading a hub level, display a 'loading' box

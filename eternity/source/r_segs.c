@@ -26,8 +26,6 @@
 //
 // 4/25/98, 5/2/98 killough: reformatted, beautified
 
-static const char
-rcsid[] = "$Id: r_segs.c,v 1.16 1998/05/03 23:02:01 killough Exp $";
 
 #include "doomstat.h"
 #include "r_main.h"

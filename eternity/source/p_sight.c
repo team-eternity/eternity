@@ -24,9 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_sight.c,v 1.7 1998/05/07 00:55:55 killough Exp $";
-
 #include "doomstat.h"
 #include "r_main.h"
 #include "p_maputl.h"
@@ -96,7 +93,12 @@ static fixed_t P_InterceptVector2(const divline_t *v2,
    return 0;
 }
 
-#ifdef POLYOBJECTS
+//
+// P_CrossSubsecPolyObj
+//
+// haleyjd:
+// Checks a line of sight against lines belonging to the given polyobject.
+//
 static boolean P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
 {
    int i;
@@ -142,7 +144,6 @@ static boolean P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
    
    return true;
 }
-#endif
 
 //
 // P_CrossSubsector
@@ -155,9 +156,7 @@ static boolean P_CrossSubsector(int num, register los_t *los)
 {
    seg_t *seg;
    int count;
-#ifdef POLYOBJECTS
    polyobj_t *po; // haleyjd 02/23/06
-#endif
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
@@ -167,7 +166,6 @@ static boolean P_CrossSubsector(int num, register los_t *los)
    // haleyjd 02/23/06: this assignment should be after the above check
    seg = segs + subsectors[num].firstline;
 
-#ifdef POLYOBJECTS
    // haleyjd 02/23/06: check polyobject lines
    if((po = subsectors[num].polyList))
    {
@@ -182,7 +180,6 @@ static boolean P_CrossSubsector(int num, register los_t *los)
          po = (polyobj_t *)(po->link.next);
       }
    }
-#endif
 
    for(count = subsectors[num].numlines; --count >= 0; seg++)  // check lines
    {
@@ -343,15 +340,11 @@ boolean P_CheckSight(mobj_t *t1, mobj_t *t2)
    // killough 11/98: shortcut for melee situations
    // same subsector? obviously visible
    // haleyjd: compatibility optioned for old demos -- thanks to cph
-#ifndef POLYOBJECTS
-   if(!demo_compatibility && t1->subsector == t2->subsector)
-      return true;
-#else
    // haleyjd 02/23/06: can't do this if there are polyobjects in the subsec
+
    if(!demo_compatibility && !t1->subsector->polyList && 
       t1->subsector == t2->subsector)
       return true;
-#endif
 
    // An unobstructed LOS is possible.
    // Now look from eyes of t1 to any part of t2.

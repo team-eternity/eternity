@@ -24,9 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char
-rcsid[] = "$Id: p_mobj.c,v 1.26 1998/05/16 00:24:12 phares Exp $";
-
 #include "z_zone.h"
 #include "doomdef.h"
 #include "doomstat.h"
@@ -1617,14 +1614,9 @@ void P_SpawnPlayer(mapthing_t* mthing)
 //
 // sf: made to return mobj_t* spawned
 //
-// haleyjd: added mapthinghexen_t* parameter for Hexen mapthings.
-//    This parameter may be NULL, in which case the object is just
-//    a DOOM-format thing. In either case, the information in the
-//    mapthing_t is also valid, and is set equal to the corresponding
-//    info in the mapthinghexen_t by the code in p_setup.c -- this keeps
-//    things relatively simple and requires no code duplication.
+// haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
 //
-mobj_t *P_SpawnMapThing(mapthing_t *mthing, mapthinghexen_t *extthing)
+mobj_t *P_SpawnMapThing(mapthing_t *mthing)
 {
    int    i;
    mobj_t *mobj;
@@ -1807,30 +1799,25 @@ spawnit:
    mobj = P_SpawnMobj(x, y, z, i);
 
    // haleyjd 10/03/05: Hexen-format mapthing support
-   if(extthing)
+
+   // haleyjd 10/03/05: Hexen-style z positioning
+   if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
-      int argnum;
-
-      // haleyjd 10/03/05: Hexen-style z positioning
-      if(extthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
-      {
-         fixed_t rheight = extthing->height << FRACBITS;
-         
-         if(z == ONCEILINGZ)
-            rheight = -rheight;
-         
-         P_MobjSetZPos(mobj, rheight);
-      }
-
-      // haleyjd 10/03/05: Hexen-style TID
-      P_AddThingTID(mobj, extthing->tid);
-
-      // haleyjd 10/03/05: Hexen-style args
-      for(argnum = 0; argnum < 5; ++argnum)
-         mobj->args[argnum] = (long)(extthing->args[argnum]);
-
-      // TODO: special
+      fixed_t rheight = mthing->height << FRACBITS;
+      
+      if(z == ONCEILINGZ)
+         rheight = -rheight;
+      
+      P_MobjSetZPos(mobj, rheight);
    }
+   
+   // haleyjd 10/03/05: Hexen-style TID
+   P_AddThingTID(mobj, mthing->tid);
+   
+   // haleyjd 10/03/05: Hexen-style args
+   memcpy(mobj->args, mthing->args, 5 * sizeof(long));
+   
+   // TODO: special
    
    mobj->spawnpoint = *mthing;
 

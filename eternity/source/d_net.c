@@ -25,9 +25,6 @@
 //
 //-----------------------------------------------------------------------------
 
-static const char rcsid[] =
-"$Id: d_net.c,v 1.12 1998/05/21 12:12:09 jim Exp $";
-
 #include "c_io.h"
 #include "c_net.h"
 #include "doomstat.h"

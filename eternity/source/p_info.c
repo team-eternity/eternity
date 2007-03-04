@@ -90,6 +90,7 @@ static void P_LoadInterTextLump(void);
 static void P_SetSky2Texture(void);
 static void P_SetParTime(void);
 static void P_SetInfoSoundNames(void);
+static void P_SetOutdoorFog(void);
 
 static enum lireadtype_e
 {
@@ -213,6 +214,7 @@ void P_LoadLevelInfo(int lumpnum)
    P_SetSky2Texture();
    P_SetParTime();
    P_SetInfoSoundNames();
+   P_SetOutdoorFog();
 
    // haleyjd 03/15/03: handle level scripts
    if(LevelInfo.scriptLump)
@@ -393,6 +395,7 @@ levelvar_t levelvars[]=
    { IVT_STRING,  "nextlevel",       (void *)&LevelInfo.nextLevel },
    { IVT_STRING,  "nextsecret",      (void *)&LevelInfo.nextSecret },
    { IVT_BOOLEAN, "noautosequences", &LevelInfo.noAutoSequences }, // haleyjd 09/24/06
+   { IVT_STRING,  "outdoorfog",      (void *)&LevelInfo.outdoorFog }, // haleyjd 03/04/07
    { IVT_INT,     "partime",         &LevelInfo.partime },
    { IVT_INT,     "skydelta",        &LevelInfo.skyDelta },
    { IVT_INT,     "sky2delta",       &LevelInfo.sky2Delta },
@@ -1150,6 +1153,20 @@ static void P_SetParTime(void)
 }
 
 //
+// P_SetOutdoorFog
+//
+// Post-processing routine
+//
+// If the global fog map has not been set, set it the same as the global
+// colormap for the level.
+//
+static void P_SetOutdoorFog(void)
+{
+   if(LevelInfo.outdoorFog == NULL)
+      LevelInfo.outdoorFog = "COLORMAP"; //LevelInfo.colorMap;
+}
+
+//
 // P_ClearLevelVars
 //
 // Clears all the level variables so that none are left over from a
@@ -1180,6 +1197,7 @@ static void P_ClearLevelVars(void)
    LevelInfo.partime         = -1;
 
    LevelInfo.colorMap        = "COLORMAP";
+   LevelInfo.outdoorFog      = NULL;
    LevelInfo.useFullBright   = true;
    LevelInfo.unevenLight     = true;
    

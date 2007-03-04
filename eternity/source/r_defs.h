@@ -107,9 +107,7 @@ typedef struct degenmobj_s
 #endif
 } degenmobj_t;
 
-#ifdef POLYOBJECTS
 #include "polyobj.h"
-#endif
 
 //
 // The SECTORS record, at runtime.
@@ -289,9 +287,8 @@ typedef struct subsector_s
   // haleyjd 06/19/06: converted from short to long for 65535 segs
   long  numlines, firstline;
 
-#ifdef POLYOBJECTS
   struct polyobj_s *polyList; // haleyjd 02/19/06: list of polyobjects
-#endif
+
 } subsector_t;
 
 // phares 3/14/98

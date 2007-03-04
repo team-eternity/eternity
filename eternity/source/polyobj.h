@@ -31,9 +31,6 @@
 #ifndef POLYOBJ_H__
 #define POLYOBJ_H__
 
-// haleyjd: temporary define
-#ifdef POLYOBJECTS
-
 #include "m_dllist.h"
 #include "p_mobj.h"
 #include "r_defs.h"
@@ -233,8 +230,6 @@ int EV_DoPolyObjRotate(polyrotdata_t *);
 extern polyobj_t *PolyObjects;
 extern int numPolyObjects;
 extern polymaplink_t **polyblocklinks; // polyobject blockmap
-
-#endif // ifdef POLYOBJECTS
 
 #endif
 

@@ -177,7 +177,7 @@ CONSOLE_COMMAND(e_dumpitems, 0)
 
 CONSOLE_COMMAND(e_listmapthings, cf_level)
 {
-   mapthingext_t *things;
+   mapthing_t *things;
    int i, numthings;
 
    E_GetEDMapThings(&things, &numthings);
@@ -194,13 +194,13 @@ CONSOLE_COMMAND(e_listmapthings, cf_level)
    {
       C_Printf("%5d\t%5d\t%5d\n", 
                things[i].recordnum, things[i].next, 
-               things[i].stdfields.type, things[i].tid);
+               things[i].type, things[i].tid);
    }
 }
 
 CONSOLE_COMMAND(e_mapthing, cf_level)
 {
-   mapthingext_t *things;
+   mapthing_t *things;
    int i, numthings, recordnum;
 
    if(!c_argc)
@@ -231,8 +231,8 @@ CONSOLE_COMMAND(e_mapthing, cf_level)
                   FC_HI "Args: " FC_NORMAL "%d, %d, %d, %d, %d\n",
                   things[i].recordnum,
                   things[i].next,
-                  things[i].stdfields.type,
-                  things[i].stdfields.options,
+                  things[i].type,
+                  things[i].options,
                   things[i].tid,
                   things[i].args[0], things[i].args[1],
                   things[i].args[2], things[i].args[3],
