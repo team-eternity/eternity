@@ -203,13 +203,16 @@ void P_ArchiveWorld (void)
    
    // haleyjd  09/00: we need to save friction & movefactor now too
    // for scripting purposes
+
+   // haleyjd 03/04/07: must save sector colormap indices
    
    size_t size = 
-      (sizeof(short)*5 + sizeof sec->floorheight + sizeof sec->ceilingheight
-       + sizeof sec->friction + sizeof sec->movefactor)
+      (sizeof(short)*5 + sizeof(sec->floorheight) + sizeof(sec->ceilingheight) +
+       sizeof(sec->friction) + sizeof(sec->movefactor) + 
+       sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap))
       * numsectors + sizeof(short)*3*numlines + 4;
 
-   for(i = 0; i < numlines; i++)
+   for(i = 0; i < numlines; ++i)
    {
       if(lines[i].sidenum[0] != -1)
          size +=
@@ -228,19 +231,27 @@ void P_ArchiveWorld (void)
    put = (short *)save_p;
 
    // do sectors
-   for(i = 0, sec = sectors; i < numsectors; i++, sec++)
+   for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
       // killough 10/98: save full floor & ceiling heights, including fraction
-      memcpy(put, &sec->floorheight, sizeof sec->floorheight);
-      put = (void *)((char *) put + sizeof sec->floorheight);
-      memcpy(put, &sec->ceilingheight, sizeof sec->ceilingheight);
-      put = (void *)((char *) put + sizeof sec->ceilingheight);
+      memcpy(put, &sec->floorheight, sizeof(sec->floorheight));
+      put = (void *)((char *) put + sizeof(sec->floorheight));
+      memcpy(put, &sec->ceilingheight, sizeof(sec->ceilingheight));
+      put = (void *)((char *) put + sizeof(sec->ceilingheight));
 
       // haleyjd: save the friction information too
-      memcpy(put, &sec->friction, sizeof sec->friction);
-      put = (void *)((char *) put + sizeof sec->friction);
-      memcpy(put, &sec->movefactor, sizeof sec->movefactor);
-      put = (void *)((char *) put + sizeof sec->movefactor);
+      memcpy(put, &sec->friction, sizeof(sec->friction));
+      put = (void *)((char *) put + sizeof(sec->friction));
+      memcpy(put, &sec->movefactor, sizeof(sec->movefactor));
+      put = (void *)((char *) put + sizeof(sec->movefactor));
+
+      // haleyjd 03/04/07: save colormap indices
+      memcpy(put, &sec->topmap, sizeof(sec->topmap));
+      put = (void *)((char *) put + sizeof(sec->topmap));
+      memcpy(put, &sec->midmap, sizeof(sec->midmap));
+      put = (void *)((char *) put + sizeof(sec->midmap));
+      memcpy(put, &sec->bottommap, sizeof(sec->bottommap));
+      put = (void *)((char *) put + sizeof(sec->bottommap));
 
       *put++ = sec->floorpic;
       *put++ = sec->ceilingpic;
@@ -250,7 +261,7 @@ void P_ArchiveWorld (void)
    }
 
    // do lines
-   for(i = 0, li = lines; i < numlines; i++, li++)
+   for(i = 0, li = lines; i < numlines; ++i, ++li)
    {
       int j;
 
@@ -267,10 +278,10 @@ void P_ArchiveWorld (void)
             // killough 10/98: save full sidedef offsets,
             // preserving fractional scroll offsets
             
-            memcpy(put, &si->textureoffset, sizeof si->textureoffset);
-            put = (void *)((char *) put + sizeof si->textureoffset);
-            memcpy(put, &si->rowoffset, sizeof si->rowoffset);
-            put = (void *)((char *) put + sizeof si->rowoffset);
+            memcpy(put, &si->textureoffset, sizeof(si->textureoffset));
+            put = (void *)((char *) put + sizeof(si->textureoffset));
+            memcpy(put, &si->rowoffset, sizeof(si->rowoffset));
+            put = (void *)((char *) put + sizeof(si->rowoffset));
             
             *put++ = si->toptexture;
             *put++ = si->bottomtexture;
@@ -302,30 +313,38 @@ void P_UnArchiveWorld (void)
    {
       // killough 10/98: load full floor & ceiling heights, including fractions
       
-      memcpy(&sec->floorheight, get, sizeof sec->floorheight);
-      get = (void *)((char *) get + sizeof sec->floorheight);
-      memcpy(&sec->ceilingheight, get, sizeof sec->ceilingheight);
-      get = (void *)((char *) get + sizeof sec->ceilingheight);
+      memcpy(&sec->floorheight, get, sizeof(sec->floorheight));
+      get = (void *)((char *) get + sizeof(sec->floorheight));
+      memcpy(&sec->ceilingheight, get, sizeof(sec->ceilingheight));
+      get = (void *)((char *) get + sizeof(sec->ceilingheight));
 
       // haleyjd: retrieve the friction information we now save
-      memcpy(&sec->friction, get, sizeof sec->friction);
-      get = (void *)((char *) get + sizeof sec->friction);
-      memcpy(&sec->movefactor, get, sizeof sec->movefactor);
-      get = (void *)((char *) get + sizeof sec->movefactor);
+      memcpy(&sec->friction, get, sizeof(sec->friction));
+      get = (void *)((char *) get + sizeof(sec->friction));
+      memcpy(&sec->movefactor, get, sizeof(sec->movefactor));
+      get = (void *)((char *) get + sizeof(sec->movefactor));
 
-      sec->floorpic = *get++;
-      sec->ceilingpic = *get++;
-      sec->lightlevel = *get++;
-      sec->special = *get++;
-      sec->tag = *get++;
-      sec->ceilingdata = 0; //jff 2/22/98 now three thinker fields, not two
-      sec->floordata = 0;
-      sec->lightingdata = 0;
-      sec->soundtarget = 0;
+      // haleyjd 03/04/07: retrieve colormap indices
+      memcpy(&sec->topmap, get, sizeof(sec->topmap));
+      get = (void *)((char *) get + sizeof(sec->topmap));
+      memcpy(&sec->midmap, get, sizeof(sec->midmap));
+      get = (void *)((char *) get + sizeof(sec->midmap));
+      memcpy(&sec->bottommap, get, sizeof(sec->bottommap));
+      get = (void *)((char *) get + sizeof(sec->bottommap));
+
+      sec->floorpic     = *get++;
+      sec->ceilingpic   = *get++;
+      sec->lightlevel   = *get++;
+      sec->special      = *get++;
+      sec->tag          = *get++;
+      sec->ceilingdata  = NULL; //jff 2/22/98 now three thinker fields, not two
+      sec->floordata    = NULL;
+      sec->lightingdata = NULL;
+      sec->soundtarget  = NULL;
    }
 
    // do lines
-   for(i = 0, li = lines; i < numlines; i++, li++)
+   for(i = 0, li = lines; i < numlines; ++i, ++li)
    {
       int j;
 
@@ -340,14 +359,14 @@ void P_UnArchiveWorld (void)
             
             // killough 10/98: load full sidedef offsets, including fractions
             
-            memcpy(&si->textureoffset, get, sizeof si->textureoffset);
-            get = (void *)((char *) get + sizeof si->textureoffset);
-            memcpy(&si->rowoffset, get, sizeof si->rowoffset);
-            get = (void *)((char *) get + sizeof si->rowoffset);
+            memcpy(&si->textureoffset, get, sizeof(si->textureoffset));
+            get = (void *)((char *) get + sizeof(si->textureoffset));
+            memcpy(&si->rowoffset, get, sizeof(si->rowoffset));
+            get = (void *)((char *) get + sizeof(si->rowoffset));
             
-            si->toptexture = *get++;
+            si->toptexture    = *get++;
             si->bottomtexture = *get++;
-            si->midtexture = *get++;
+            si->midtexture    = *get++;
          }
       }
    }

@@ -4589,22 +4589,7 @@ static cell AMX_NATIVE_CALL sm_sectorcolormap(AMX *amx, cell *params)
 
    while((secnum = P_FindSectorFromTag(id, secnum)) >= 0)
    {
-      sector_t *s;
-
-      // If the sector is not already affected by deep water, we have
-      // to set up a fake 242 effect by making it its own heightsec.
-      // Otherwise, the heightsec set would break it. Instead, we'll 
-      // alter the colormaps of the deep water control sector. This 
-      // may affect other sectors too, but the behavior is necessary
-      // and will be documented.
-      
-      if(sectors[secnum].heightsec != -1)
-         s = &sectors[sectors[secnum].heightsec];
-      else
-      {
-         s = &sectors[secnum];
-         s->heightsec = secnum;
-      }
+      sector_t *s = &sectors[secnum];
 
       switch(pos)
       {

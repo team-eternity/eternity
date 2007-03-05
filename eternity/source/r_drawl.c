@@ -112,6 +112,9 @@ static void R_LowDrawColumn(void)
    }   
 }
 
+#define SRCPIXEL \
+   tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
+
 static void R_LowDrawTLColumn(void)
 { 
    int              x, count; 
@@ -187,23 +190,29 @@ static void R_LowDrawTLColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest2 = *dest = 
-               tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest2 = *dest = SRCPIXEL;
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
-            *dest2 = *dest = 
-               tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest2 = *dest = SRCPIXEL;
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
          }
          if(count & 1)
-            *dest2 = *dest = 
-               tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest2 = *dest = SRCPIXEL;
       }
    }   
-} 
+}
+
+#undef SRCPIXEL
+
+#define SRCPIXEL \
+   tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
+
+#define SRCPIXEL_MASK \
+   tranmap[(*dest<<8) + \
+           colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]
 
 static void R_LowDrawTLTRColumn(void)
 { 
@@ -266,8 +275,7 @@ static void R_LowDrawTLTRColumn(void)
             
             // heightmask is the Tutti-Frutti fix -- killough
             
-            *dest2 = *dest = 
-               tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]; // phares
+            *dest2 = *dest = SRCPIXEL; // phares
             dest += linesize;          // killough 11/98
             dest2 += linesize;
             if((frac += fracstep) >= heightmask)
@@ -279,30 +287,31 @@ static void R_LowDrawTLTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest2 = *dest = 
-               tranmap[(*dest<<8)+colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            *dest2 = *dest = SRCPIXEL_MASK;
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
-            *dest2 = *dest = 
-               tranmap[(*dest<<8)+colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            *dest2 = *dest = SRCPIXEL_MASK;
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
          }
          if(count & 1)
-            *dest2 = *dest = 
-               tranmap[(*dest<<8)+colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            *dest2 = *dest = SRCPIXEL_MASK;
       }
    }   
-} 
+}
+
+#undef SRCPIXEL
+#undef SRCPIXEL_MASK
+
+#define SRCPIXEL \
+   column.colormap[6*256+dest [fuzzoffset[fuzzpos] ? video.width : -video.width]]
 
 static void R_LowDrawFuzzColumn(void) 
 { 
    int              x, count; 
    register byte    *dest, *dest2;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
 
    // Adjust borders. Low...
    if(!column.y1) 
@@ -329,19 +338,15 @@ static void R_LowDrawFuzzColumn(void)
 
    dest  = ylookup[column.y1] + columnofs[x];
    dest2 = ylookup[column.y1] + columnofs[x + 1];
-   
-   // Looks familiar.
-   fracstep = column.step; 
-   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
-   
+      
    // Looks like an attempt at dithering,
    // using the colormap #6 (of 0-31, a bit brighter than average).
    
    do 
    {      
       //sf : hires
-      *dest  = column.colormap[6*256+dest [fuzzoffset[fuzzpos] ? video.width : -video.width]];
-      *dest2 = column.colormap[6*256+dest2[fuzzoffset[fuzzpos] ? video.width : -video.width]];
+      *dest  = SRCPIXEL;
+      *dest2 = SRCPIXEL;
       
       // Clamp table lookup index.
       if(++fuzzpos == FUZZTABLE) 
@@ -349,10 +354,17 @@ static void R_LowDrawFuzzColumn(void)
       
       dest += linesize;
       dest2 += linesize;
-      frac += fracstep; 
    } 
    while(count--);
 }
+
+#undef SRCPIXEL
+
+#define SRCPIXEL \
+   colormap[column.translation[source[frac>>FRACBITS]]]
+
+#define SRCPIXEL_MASK \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
 
 static void R_LowDrawTRColumn(void) 
 { 
@@ -396,7 +408,7 @@ static void R_LowDrawTRColumn(void)
                frac -= heightmask;   
          do
          {
-            *dest2 = *dest = colormap[column.translation[source[frac>>FRACBITS]]]; // phares
+            *dest2 = *dest = SRCPIXEL; // phares
             dest += linesize;          // killough 11/98
             dest2 += linesize;
             if((frac += fracstep) >= heightmask)
@@ -408,23 +420,23 @@ static void R_LowDrawTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest2 = *dest = 
-               colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest2 = *dest = SRCPIXEL_MASK; // phares
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
-            *dest2 = *dest = 
-               colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest2 = *dest = SRCPIXEL_MASK; // phares
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
          }
          if(count & 1)
-            *dest2 = *dest = 
-               colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest2 = *dest = SRCPIXEL_MASK; // phares
       }
    }
 } 
+
+#undef SRCPIXEL
+#undef SRCPIXEL_MASK
 
 //
 // R_DrawFlexTLColumn
@@ -542,6 +554,9 @@ static void R_LowDrawFlexColumn(void)
    }
 }
 
+#define SRCPIXEL \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
+
 //
 // R_DrawFlexTlatedColumn
 //
@@ -621,7 +636,7 @@ static void R_LowDrawFlexTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            fg = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            fg = SRCPIXEL;
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
@@ -632,7 +647,7 @@ static void R_LowDrawFlexTRColumn(void)
             dest2 += linesize;
             frac += fracstep;
             
-            fg = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            fg = SRCPIXEL;
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
@@ -645,7 +660,7 @@ static void R_LowDrawFlexTRColumn(void)
          }
          if(count & 1)
          {
-            fg = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            fg = SRCPIXEL;
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
@@ -655,7 +670,12 @@ static void R_LowDrawFlexTRColumn(void)
          }
       }
    }
-} 
+}
+
+#undef SRCPIXEL 
+
+#define SRCPIXEL \
+   fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF
 
 //
 // R_DrawAddColumn
@@ -739,7 +759,7 @@ static void R_LowDrawAddColumn(void)
       {
          while((count -= 2) >= 0)   // texture height is a power of 2 -- killough
          {
-            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -753,7 +773,7 @@ static void R_LowDrawAddColumn(void)
             dest2 += linesize;
             frac += fracstep;
 
-            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -769,7 +789,7 @@ static void R_LowDrawAddColumn(void)
          }
          if(count & 1)
          {
-            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -783,6 +803,14 @@ static void R_LowDrawAddColumn(void)
       }
    }   
 }
+
+#undef SRCPIXEL
+
+#define SRCPIXEL \
+   fg2rgb[colormap[column.translation[source[frac>>FRACBITS]]]] & 0xFFBFDFF
+
+#define SRCPIXEL_MASK \
+   fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF
 
 //
 // R_DrawAddTlatedColumn
@@ -845,7 +873,7 @@ static void R_LowDrawAddTRColumn(void)
          do
          {
             // mask out LSBs in green and red to allow overflow
-            a = fg2rgb[colormap[column.translation[source[frac>>FRACBITS]]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -867,7 +895,7 @@ static void R_LowDrawAddTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            a = fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK;
             b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -881,7 +909,7 @@ static void R_LowDrawAddTRColumn(void)
             dest2 += linesize;
             frac += fracstep;
 
-            a = fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK;
             b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -897,7 +925,7 @@ static void R_LowDrawAddTRColumn(void)
          }
          if(count & 1)
          {
-            a = fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK;
             b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -911,6 +939,9 @@ static void R_LowDrawAddTRColumn(void)
       }
    }
 } 
+
+#undef SRCPIXEL
+#undef SRCPIXEL_MASK
 
 //
 // haleyjd 09/04/06: Low Detail Column Drawer Object

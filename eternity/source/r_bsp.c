@@ -582,9 +582,10 @@ static void R_AddLine(seg_t *line)
       t2.fy = v2->ty;
    }
 
-   // SoM: Portal lines are not texture and as a result can be clipped MUCH closer to the camera
-   // than normal lines can. This closer clipping distance is used to stave off the flash that
-   // can sometimes occur when passing through a linked portal line.
+   // SoM: Portal lines are not texture and as a result can be clipped MUCH 
+   // closer to the camera than normal lines can. This closer clipping 
+   // distance is used to stave off the flash that can sometimes occur when
+   // passing through a linked portal line.
    if(line->linedef->portal)
    {
       if(t1.fy < PNEARCLIP && t2.fy < PNEARCLIP)
@@ -595,7 +596,8 @@ static void R_AddLine(seg_t *line)
       {
          float move, movey;
 
-         // SoM: optimization would be to store the line slope in float format in the segs
+         // SoM: optimization would be to store the line slope in float 
+         // format in the segs
          movey = PNEARCLIP - t1.fy;
          move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
 
@@ -620,7 +622,8 @@ static void R_AddLine(seg_t *line)
 
       if(t2.fy < PNEARCLIP)
       {
-         // SoM: optimization would be to store the line slope in float format in the segs
+         // SoM: optimization would be to store the line slope in float 
+         // format in the segs
          t2.fx += (PNEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
          t2.fy = PNEARCLIP;
          i2 = 1.0f / PNEARCLIP;
@@ -655,7 +658,8 @@ static void R_AddLine(seg_t *line)
       {
          float move, movey;
 
-         // SoM: optimization would be to store the line slope in float format in the segs
+         // SoM: optimization would be to store the line slope in float 
+         // format in the segs
          movey = NEARCLIP - t1.fy;
          move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
 
@@ -665,8 +669,9 @@ static void R_AddLine(seg_t *line)
          i1 = 1.0f / NEARCLIP;
          x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
 
-         // SoM: you can't store the clipped vertex projection so mark it as finished and
-         // t1.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
+         // SoM: you can't store the clipped vertex projection so mark it as
+         // finished and t1.fy < NEARCLIP will be true when the vertex is used
+         // again, so it won't be cached.
          v1->frameid = frameid;
       }
       else if(v1->frameid == frameid)
@@ -684,14 +689,16 @@ static void R_AddLine(seg_t *line)
 
       if(t2.fy < NEARCLIP)
       {
-         // SoM: optimization would be to store the line slope in float format in the segs
+         // SoM: optimization would be to store the line slope in float 
+         // format in the segs
          t2.fx += (NEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
          t2.fy = NEARCLIP;
          i2 = 1.0f / NEARCLIP;
          x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
 
-         // SoM: you can't store the clipped vertex projection so mark it as finished and
-         // t2.fy < NEARCLIP will be true when the vertex is used again, so it won't be cached.
+         // SoM: you can't store the clipped vertex projection so mark it as 
+         // finished and t2.fy < NEARCLIP will be true when the vertex is used
+         // again, so it won't be cached.
          v2->frameid = frameid;
       }
       else if(v2->frameid == frameid)
@@ -707,12 +714,12 @@ static void R_AddLine(seg_t *line)
       }
    }
 
-   // SoM: Handle the case where a wall is only occupying a single post but still needs to be 
-   // rendered to keep groups of single post walls from not being rendered and causing slime 
-   // trails.
+   // SoM: Handle the case where a wall is only occupying a single post but 
+   // still needs to be rendered to keep groups of single post walls from not
+   // being rendered and causing slime trails.
 
-   // SoM: changed from simple 0.5 rounding. This actually fixes many accuracy problems the 
-   // line rasterizing and texturing code was having.
+   // SoM: changed from simple 0.5 rounding. This actually fixes many accuracy
+   // problems the line rasterizing and texturing code was having.
    floorx1 = (float)floor(x1 + 0.999f);
    floorx2 = (float)floor(x2 - 0.001f);
 
@@ -731,18 +738,22 @@ static void R_AddLine(seg_t *line)
 
    side = line->sidedef;
    
-   seg.toffsetx = toffsetx + (side->textureoffset / 65536.0f) + (line->offset / 65536.0f);
+   seg.toffsetx = toffsetx + (side->textureoffset / 65536.0f) 
+                     + (line->offset / 65536.0f);
    seg.toffsety = toffsety + (side->rowoffset / 65536.0f);
 
    if(seg.toffsetx < 0)
    {
       float maxtexw;
-      // SoM: ok, this was driving me crazy. It seems that when the offset is less than 0, the
-      // fractional part will cause the texel at 0 + abs(seg.toffsetx) to double and it will
-      // strip the first texel to one column. This is because -64 + ANY FRACTION is going to cast
-      // to 63 and when you cast -0.999 through 0.999 it will cast to 0. The first step is to
-      // find the largest texture width on the line to make sure all the textures will start
-      // at the same column when the offsets are adjusted.
+
+      // SoM: ok, this was driving me crazy. It seems that when the offset is 
+      // less than 0, the fractional part will cause the texel at 
+      // 0 + abs(seg.toffsetx) to double and it will strip the first texel to
+      // one column. This is because -64 + ANY FRACTION is going to cast to 63
+      // and when you cast -0.999 through 0.999 it will cast to 0. The first 
+      // step is to find the largest texture width on the line to make sure all
+      // the textures will start at the same column when the offsets are 
+      // adjusted.
 
       maxtexw = 0.0f;
       if(side->toptexture)
@@ -752,8 +763,8 @@ static void R_AddLine(seg_t *line)
       if(side->bottomtexture && texturewidthmask[side->bottomtexture] > maxtexw)
          maxtexw = (float)texturewidthmask[side->bottomtexture];
 
-      // Then adjust the offset to zero or the first positive value that will repeat correctly
-      // with the largest texture on the line.
+      // Then adjust the offset to zero or the first positive value that will 
+      // repeat correctly with the largest texture on the line.
       if(maxtexw)
       {
          maxtexw++;
@@ -814,35 +825,45 @@ static void R_AddLine(seg_t *line)
 
       seg.twosided = true;
 
-      mark = seg.frontsec->lightlevel != seg.backsec->lightlevel ||
-             seg.frontsec->heightsec != -1 ||
-             seg.frontsec->heightsec != seg.backsec->heightsec ? true : false;
+      // haleyjd 03/04/07: reformatted and eliminated numerous unnecessary
+      // conditional statements (predicates already provide the needed
+      // true/false value without a branch). Also added tweak for sector
+      // colormaps.
 
+      mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
+              seg.frontsec->heightsec != -1 ||
+              seg.frontsec->heightsec != seg.backsec->heightsec ||
+              seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
 
       seg.high = seg.backsec->ceilingheightf - view.z;
 
-      seg.clipsolid = seg.backsec->ceilingheight <= seg.backsec->floorheight
-                || ((seg.frontsec->ceilingheight <= seg.backsec->floorheight
-                || seg.backsec->ceilingheight <= seg.frontsec->floorheight 
-                || seg.backsec->floorheight >= seg.backsec->ceilingheight) 
-                && !((seg.frontsec->ceilingpic == skyflatnum 
-                   || seg.frontsec->ceilingpic == sky2flatnum)
-                   && (seg.backsec->ceilingpic == skyflatnum 
-                   ||  seg.backsec->ceilingpic == sky2flatnum))) ? true : false;
+      seg.clipsolid = 
+         (seg.backsec->ceilingheight <= seg.backsec->floorheight || 
+          ((seg.frontsec->ceilingheight <= seg.backsec->floorheight || 
+            seg.backsec->ceilingheight <= seg.frontsec->floorheight || 
+            seg.backsec->floorheight >= seg.backsec->ceilingheight) && 
+           !((seg.frontsec->ceilingpic == skyflatnum || 
+              seg.frontsec->ceilingpic == sky2flatnum) && 
+             (seg.backsec->ceilingpic == skyflatnum ||  
+              seg.backsec->ceilingpic == sky2flatnum))));
 
-      if((seg.frontsec->ceilingpic == skyflatnum 
-          || seg.frontsec->ceilingpic == sky2flatnum)
-          && (seg.backsec->ceilingpic == skyflatnum 
-          ||  seg.backsec->ceilingpic == sky2flatnum))
+      if((seg.frontsec->ceilingpic == skyflatnum || 
+          seg.frontsec->ceilingpic == sky2flatnum) && 
+         (seg.backsec->ceilingpic == skyflatnum ||
+          seg.backsec->ceilingpic == sky2flatnum))
+      {
          seg.top = seg.high;
+      }
 
-      seg.markceiling = seg.ceilingplane && (mark || seg.clipsolid ||
-         seg.top != seg.high ||
-         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
-         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
-         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
-         seg.frontsec->c_portal != seg.backsec->c_portal ||
-         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec) ? true : false;
+      seg.markceiling = 
+         (seg.ceilingplane && 
+          (mark || seg.clipsolid || seg.top != seg.high || 
+           seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
+           seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+           seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
+           seg.frontsec->c_portal != seg.backsec->c_portal ||
+           seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+           seg.frontsec->topmap != seg.backsec->topmap)); // haleyjd
 
       if(seg.high < seg.top && side->toptexture)
       {
@@ -858,28 +879,33 @@ static void R_AddLine(seg_t *line)
          seg.toptex = 0;
 
 
-      seg.markfloor = seg.floorplane && (mark || seg.clipsolid ||  
-         seg.frontsec->floorheight != seg.backsec->floorheight ||
-         seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
-         seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
-         seg.frontsec->floorpic != seg.backsec->floorpic ||
-         seg.frontsec->f_portal != seg.backsec->f_portal ||
-         seg.frontsec->floorlightsec != seg.backsec->floorlightsec) ? true : false;
+      seg.markfloor = 
+         (seg.floorplane && 
+          (mark || seg.clipsolid ||  
+           seg.frontsec->floorheight != seg.backsec->floorheight ||
+           seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
+           seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+           seg.frontsec->floorpic != seg.backsec->floorpic ||
+           seg.frontsec->f_portal != seg.backsec->f_portal ||
+           seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+           seg.frontsec->bottommap != seg.backsec->bottommap)); // haleyjd
 
 #ifdef R_LINKEDPORTALS
-      // SoM: some portal types should be rendered even if the player is above or below the
-      // ceiling or floor plane.
+      // SoM: some portal types should be rendered even if the player is above
+      // or below the ceiling or floor plane.
       // haleyjd 03/12/06: inverted predicates to simplify
       if(seg.backsec->f_portal != seg.frontsec->f_portal)
       {
-         if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
+         if(seg.frontsec->f_portal && 
+            seg.frontsec->f_portal->type != R_LINKED &&
             seg.frontsec->f_portal->type != R_TWOWAY)
             seg.f_portalignore = true;
       }
 
       if(seg.backsec->c_portal != seg.frontsec->c_portal)
       {
-         if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED &&
+         if(seg.frontsec->c_portal && 
+            seg.frontsec->c_portal->type != R_LINKED &&
             seg.frontsec->c_portal->type != R_TWOWAY)
             seg.c_portalignore = true;
       }
@@ -900,8 +926,8 @@ static void R_AddLine(seg_t *line)
          seg.bottomtex = 0;
 
       seg.midtex = 0;
-      seg.maskedtex = seg.side->midtexture ? true : false;
-      seg.segtextured = seg.maskedtex || seg.bottomtex || seg.toptex ? true : false;
+      seg.maskedtex = !!seg.side->midtexture;
+      seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
    }
 
    if(x1 < 0)

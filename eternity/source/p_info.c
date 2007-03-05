@@ -1163,7 +1163,7 @@ static void P_SetParTime(void)
 static void P_SetOutdoorFog(void)
 {
    if(LevelInfo.outdoorFog == NULL)
-      LevelInfo.outdoorFog = "COLORMAP"; //LevelInfo.colorMap;
+      LevelInfo.outdoorFog = LevelInfo.colorMap;
 }
 
 //

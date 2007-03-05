@@ -234,6 +234,9 @@ static void R_FlushHTTL(void)
    }
 }
 
+#define SRCPIXEL \
+   tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]]
+
 static void R_FlushWholeFuzz(void)
 {
    register byte *source;
@@ -250,7 +253,7 @@ static void R_FlushWholeFuzz(void)
       while(--count >= 0)
       {
          // SoM 7-28-04: Fix the fuzz problem.
-         *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]];
+         *dest = SRCPIXEL;
          
          // Clamp table lookup index.
          if(++fuzzpos == FUZZTABLE) 
@@ -284,7 +287,7 @@ static void R_FlushHTFuzz(void)
          while(--count >= 0)
          {
             // SoM 7-28-04: Fix the fuzz problem.
-            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]];
+            *dest = SRCPIXEL;
             
             // Clamp table lookup index.
             if(++fuzzpos == FUZZTABLE) 
@@ -305,7 +308,7 @@ static void R_FlushHTFuzz(void)
          while(--count >= 0)
          {
             // SoM 7-28-04: Fix the fuzz problem.
-            *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]];
+            *dest = SRCPIXEL;
             
             // Clamp table lookup index.
             if(++fuzzpos == FUZZTABLE) 
@@ -319,6 +322,8 @@ static void R_FlushHTFuzz(void)
       ++colnum;
    }
 }
+
+#undef SRCPIXEL
 
 static void R_FlushWholeFlex(void)
 {
@@ -547,6 +552,9 @@ static void R_FlushQuadTL(void)
    }
 }
 
+#define SRCPIXEL(n) \
+   tempfuzzmap[6*256+dest[(n) + fuzzoffset[fuzz1] ? video.width: -video.width]];
+
 static void R_FlushQuadFuzz(void)
 {
    register byte *source = tempbuf + (commontop << 2);
@@ -567,13 +575,13 @@ static void R_FlushQuadFuzz(void)
    while(--count >= 0)
    {
       // SoM 7-28-04: Fix the fuzz problem.
-      *dest = tempfuzzmap[6*256+dest[fuzzoffset[fuzz1] ? video.width: -video.width]];
+      *dest = SRCPIXEL(0);
       if(++fuzz1 == FUZZTABLE) fuzz1 = 0;
-      dest[1] = tempfuzzmap[6*256+dest[1 + (fuzzoffset[fuzz2] ? video.width: -video.width)]];
+      dest[1] = SRCPIXEL(1);
       if(++fuzz2 == FUZZTABLE) fuzz2 = 0;
-      dest[2] = tempfuzzmap[6*256+dest[2 + (fuzzoffset[fuzz3] ? video.width: -video.width)]];
+      dest[2] = SRCPIXEL(2);
       if(++fuzz3 == FUZZTABLE) fuzz3 = 0;
-      dest[3] = tempfuzzmap[6*256+dest[3 + (fuzzoffset[fuzz4] ? video.width: -video.width)]];
+      dest[3] = SRCPIXEL(3);
       if(++fuzz4 == FUZZTABLE) fuzz4 = 0;
 
       source += 4;
@@ -582,6 +590,8 @@ static void R_FlushQuadFuzz(void)
 
    fuzzpos = fuzz4;
 }
+
+#undef SRCPIXEL
 
 static void R_FlushQuadFlex(void)
 {
@@ -1043,6 +1053,9 @@ static void R_QDrawTLColumn(void)
 } 
 
 
+#define SRCPIXEL \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
+
 static void R_QDrawTLTRColumn(void)
 { 
    int              count; 
@@ -1097,18 +1110,20 @@ static void R_QDrawTLTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
       }
    }
 } 
+
+#undef SRCPIXEL
 
 //
 // Spectre/Invisibility.
@@ -1131,7 +1146,8 @@ static void R_QDrawFuzzColumn(void)
 #ifdef RANGECHECK 
    // haleyjd: these should apparently be adjusted for hires
    // SoM: DONE
-   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawFuzzColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif
 
@@ -1141,6 +1157,9 @@ static void R_QDrawFuzzColumn(void)
    // REAL MAGIC... you ready for this?
    return; // DONE
 }
+
+#define SRCPIXEL \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
 
 static void R_QDrawTRColumn(void) 
 { 
@@ -1154,7 +1173,8 @@ static void R_QDrawTRColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
@@ -1196,18 +1216,20 @@ static void R_QDrawTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
       }
    }
 } 
+
+#undef SRCPIXEL
 
 //
 // R_DrawFlexTLColumn
@@ -1228,7 +1250,8 @@ static void R_QDrawFlexColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawFlexColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
    
@@ -1279,6 +1302,9 @@ static void R_QDrawFlexColumn(void)
    }
 }
 
+#define SRCPIXEL \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
+
 //
 // R_DrawFlexTlatedColumn
 //
@@ -1297,7 +1323,8 @@ static void R_QDrawFlexTRColumn(void)
       return; 
    
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawFlexTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
@@ -1339,18 +1366,20 @@ static void R_QDrawFlexTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
       }
    }
 } 
+
+#undef SRCPIXEL
 
 //
 // R_DrawAddColumn
@@ -1371,7 +1400,8 @@ static void R_QDrawAddColumn(void)
       return; 
                                  
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawAddColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
    
@@ -1422,6 +1452,9 @@ static void R_QDrawAddColumn(void)
    }
 }
 
+#define SRCPIXEL \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
+
 //
 // R_DrawAddTlatedColumn
 //
@@ -1439,7 +1472,8 @@ static void R_QDrawAddTRColumn(void)
       return; 
    
 #ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("R_QDrawAddTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
@@ -1481,18 +1515,20 @@ static void R_QDrawAddTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4; //SoM: MAGIC 
             frac += fracstep;
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += 4;
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
       }
    }
 } 
+
+#undef SRCPIXEL
 
 //
 // haleyjd 09/04/06: Quad Column Drawer Object

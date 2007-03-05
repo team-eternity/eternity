@@ -78,7 +78,6 @@ byte *main_tranmap;     // killough 4/11/98
 // Source is the top of the column to scale.
 //
 
-
 // Fuzz stuffs
 
 const int fuzzoffset[FUZZTABLE] = 
@@ -118,8 +117,9 @@ void CB_DrawColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
+      I_Error("CB_DrawColumn_8: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
    dest = ylookup[column.y1] + columnofs[column.x];
@@ -188,6 +188,9 @@ void CB_DrawColumn_8(void)
 
 //#ifndef USEASM                       // killough 2/21/98: converted to x86 asm
 
+#define SRCPIXEL \
+   tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
+
 void CB_DrawTLColumn_8(void)
 {
    int count;
@@ -199,8 +202,9 @@ void CB_DrawTLColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawTLColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
+      I_Error("CB_DrawTLColumn_8: %i to %i at %i", column.y1, column.y2, column.x);
 #endif 
 
    dest = ylookup[column.y1] + columnofs[column.x];
@@ -237,23 +241,32 @@ void CB_DrawTLColumn_8(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest = SRCPIXEL; // phares
             dest += linesize;   // killough 11/98
             frac += fracstep;
-            *dest = tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest = SRCPIXEL; // phares
             dest += linesize;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
-            *dest = tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest = SRCPIXEL; // phares
       }
    }
 }
+
+#undef SRCPIXEL
 
 // haleyjd 04/10/04: FIXME -- ASM version of R_DrawTLColumn is out
 // of sync currently.
 
 //#endif  // killough 2/21/98: converted to x86 asm
+
+#define SRCPIXEL \
+   tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
+
+#define SRCPIXEL_MASK \
+   tranmap[(*dest<<8) + \
+      colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]
 
 //
 // haleyjd 02/08/05: BOOM TL/Tlated was neglected.
@@ -269,7 +282,8 @@ void CB_DrawTLTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawTLTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -295,8 +309,8 @@ void CB_DrawTLTRColumn_8(void)
 
          do
          {
-            *dest = tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]; // phares
-            dest += linesize;          // killough 11/98
+            *dest = SRCPIXEL; // phares
+            dest += linesize; // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -306,18 +320,21 @@ void CB_DrawTLTRColumn_8(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = tranmap[(*dest<<8)+colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            *dest = SRCPIXEL_MASK; // phares
             dest += linesize;   // killough 11/98
             frac += fracstep;
-            *dest = tranmap[(*dest<<8)+colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            *dest = SRCPIXEL_MASK; // phares
             dest += linesize;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
-            *dest = tranmap[(*dest<<8)+colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]; // phares
+            *dest = SRCPIXEL_MASK; // phares
       }
    }
 }
+
+#undef SRCPIXEL
+#undef SRCPIXEL_MASK
 
 
 //
@@ -340,6 +357,9 @@ void CB_DrawTLTRColumn_8(void)
 //     for coloured lighting and SHADOW now done with
 //     flags not NULL colormap
 
+#define SRCPIXEL \
+   colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
+
 void CB_DrawFuzzColumn_8(void)
 {
    int count;
@@ -357,7 +377,8 @@ void CB_DrawFuzzColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawFuzzColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -368,21 +389,24 @@ void CB_DrawFuzzColumn_8(void)
       
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
-         *dest = colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]];
+         *dest = SRCPIXEL;
          if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
          dest += linesize;   // killough 11/98
 
-         *dest = colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]];
+         *dest = SRCPIXEL;
          if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
          dest += linesize;   // killough 11/98
       }
       if(count & 1)
       {
-         *dest = colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]];
+         *dest = SRCPIXEL;
          if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
       }
    }
 }
+
+#undef SRCPIXEL
+
 //
 // R_DrawTranslatedColumn
 // Used to draw player sprites
@@ -400,6 +424,8 @@ byte **translationtables = NULL;
 int firsttranslationlump, lasttranslationlump;
 int numtranslations = 0;
 
+#define SRCPIXEL \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
 
 void CB_DrawTRColumn_8(void)
 {
@@ -412,7 +438,8 @@ void CB_DrawTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -449,19 +476,20 @@ void CB_DrawTRColumn_8(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]; // phares
+            *dest = SRCPIXEL; // phares
             dest += linesize;   // killough 11/98
             frac += fracstep;
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
             dest += linesize;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
-            *dest = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            *dest = SRCPIXEL;
       }
    }
 }
 
+#undef SRCPIXEL
 
 //
 // R_DrawFlexColumn
@@ -481,7 +509,8 @@ void CB_DrawFlexColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawFlexColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -568,6 +597,9 @@ void CB_DrawFlexColumn_8(void)
    }
 }
 
+#define SRCPIXEL \
+   colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
+
 //
 // R_DrawFlexTlatedColumn
 //
@@ -587,7 +619,8 @@ void CB_DrawFlexTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawFlexTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -640,7 +673,7 @@ void CB_DrawFlexTRColumn_8(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            fg = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            fg = SRCPIXEL;
             bg = *dest;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
@@ -650,7 +683,7 @@ void CB_DrawFlexTRColumn_8(void)
             dest += linesize;   // killough 11/98
             frac += fracstep;
             
-            fg = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            fg = SRCPIXEL;
             bg = *dest;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
@@ -662,7 +695,7 @@ void CB_DrawFlexTRColumn_8(void)
          }
          if(count & 1)
          {
-            fg = colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]];
+            fg = SRCPIXEL;
             bg = *dest;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
@@ -674,6 +707,10 @@ void CB_DrawFlexTRColumn_8(void)
    }
 }
 
+#undef SRCPIXEL
+
+#define SRCPIXEL \
+   fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF
 
 //
 // R_DrawAddColumn
@@ -693,7 +730,8 @@ void CB_DrawAddColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawAddColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -750,7 +788,7 @@ void CB_DrawAddColumn_8(void)
       {
          while((count -= 2) >= 0)   // texture height is a power of 2 -- killough
          {
-            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[*dest] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -763,7 +801,7 @@ void CB_DrawAddColumn_8(void)
             dest += linesize;   // killough 11/98
             frac += fracstep;
 
-            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[*dest] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -778,7 +816,7 @@ void CB_DrawAddColumn_8(void)
          }
          if(count & 1)
          {
-            a = fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[*dest] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -792,6 +830,14 @@ void CB_DrawAddColumn_8(void)
       }
    }
 }
+
+#undef SRCPIXEL
+
+#define SRCPIXEL \
+   fg2rgb[colormap[column.translation[source[frac>>FRACBITS]]]] & 0xFFBFDFF
+
+#define SRCPIXEL_MASK \
+   fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF
 
 //
 // R_DrawAddTlatedColumn
@@ -812,7 +858,8 @@ void CB_DrawAddTRColumn_8(void)
    if(count <= 0) return;
 
 #ifdef RANGECHECK 
-   if(column.x < 0 || column.x >= video.width || column.y1 < 0 || column.y2 >= video.height)
+   if(column.x  < 0 || column.x  >= video.width || 
+      column.y1 < 0 || column.y2 >= video.height)
       I_Error("CB_DrawAddTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
 #endif 
 
@@ -848,7 +895,7 @@ void CB_DrawAddTRColumn_8(void)
          do
          {
             // mask out LSBs in green and red to allow overflow
-            a = fg2rgb[colormap[column.translation[source[frac>>FRACBITS]]]] & 0xFFBFDFF;
+            a = SRCPIXEL;
             b = bg2rgb[*dest] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -869,7 +916,7 @@ void CB_DrawAddTRColumn_8(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            a = fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK;
             b = bg2rgb[*dest] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -882,7 +929,7 @@ void CB_DrawAddTRColumn_8(void)
             dest += linesize;   // killough 11/98
             frac += fracstep;
 
-            a = fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK;
             b = bg2rgb[*dest] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -897,7 +944,7 @@ void CB_DrawAddTRColumn_8(void)
          }
          if(count & 1)
          {
-            a = fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK;
             b = bg2rgb[*dest] & 0xFFBFDFF;
             
             a  = a + b;                      // add with overflow
@@ -911,6 +958,9 @@ void CB_DrawAddTRColumn_8(void)
       }
    }
 }
+
+#undef SRCPIXEL
+#undef SRCPIXEL_MASK
 
 //
 // Normal Column Drawer Object
@@ -1151,8 +1201,8 @@ void R_FillBackScreen (void)
 // Copy a screen buffer.
 //
 // SoM: why the hell was this written to only take an offset and size parameter?
-// this is a much nicer solution which fixes scaling issues in highres modes that aren't
-// perfectly 4/3
+// this is a much nicer solution which fixes scaling issues in highres modes that 
+// aren't perfectly 4/3
 //
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 { 
@@ -1176,7 +1226,7 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
 
    if(x == 0 && w == (unsigned int)video.width)
    {
-      memcpy(video.screens[0]+ofs, video.screens[1]+ofs, w * h);   // LFB copy.
+      memcpy(video.screens[0]+ofs, video.screens[1]+ofs, w * h);   // LFB copy
       return;
    }
 
