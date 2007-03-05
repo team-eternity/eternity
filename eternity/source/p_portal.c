@@ -119,16 +119,14 @@ int P_CreatePortalGroup(sector_t *from)
    if(listmax <= numsectors)
    {
       listmax = numsectors + 1;
-      list = (sector_t **)Z_Realloc(list, sizeof(sector_t *) * listmax, 
-                                    PU_STATIC, NULL);
+      list = (sector_t **)realloc(list, sizeof(sector_t *) * listmax);
    }
 
    if(groupcount == grouplimit)
    {
       grouplimit = grouplimit ? (grouplimit << 1) : 8;
       grouplist = 
-         (sector_t ***)Z_Realloc(grouplist, sizeof(sector_t *) * grouplimit,
-                                PU_STATIC, NULL);
+         (sector_t ***)realloc(grouplist, sizeof(sector_t *) * grouplimit);
    }
 
    list[count++] = from;
@@ -173,10 +171,6 @@ int P_CreatePortalGroup(sector_t *from)
       }
    }
    list[count++] = NULL;
-
-   // haleyjd 02/28/07: FIXME! ATTN SoM
-   // Here grouplist is allocated at PU_LEVEL. The above Z_Realloc uses
-   // PU_STATIC. Which is right?
 
    grouplist[groupcount] = 
       (sector_t **)Z_Malloc(count * sizeof(sector_t *), PU_LEVEL, 0);
