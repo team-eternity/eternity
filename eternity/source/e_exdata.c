@@ -1548,7 +1548,7 @@ mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
    }
 
    // get a pointer to the proper ExtraData mapthing record
-   edthing = &(EDThings[edThingIdx]);
+   edthing = &EDThings[edThingIdx];
 
    // propagate the control object's x, y, and angle fields to the ED object
    edthing->x     = mt->x;
@@ -1585,7 +1585,7 @@ void E_LoadLineDefExt(line_t *line)
    }
 
    // get a pointer to the proper ExtraData line record
-   edline = &(EDLines[edLineIdx]);
+   edline = &EDLines[edLineIdx];
 
    // apply standard fields to the line
    line->special = edline->stdfields.special;
