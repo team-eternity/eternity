@@ -42,7 +42,7 @@ typedef struct
   int         enableaps;   // haleyjd: enables above field, off by default
 } weaponinfo_t;
 
-extern  weaponinfo_t    weaponinfo[NUMWEAPONS];
+extern weaponinfo_t weaponinfo[NUMWEAPONS];
 
 // haleyjd: temporary hack
 void D_InitWeaponInfo(void);

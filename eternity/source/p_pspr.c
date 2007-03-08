@@ -67,6 +67,8 @@ int weapon_recoil;      // weapon recoil
 
 // The following array holds the recoil values         // phares
 
+// WEAPON_FIXME: recoil -> EDF weapon property
+
 static const int recoil_values[] = {    // phares
    10,  // wp_fist
    10,  // wp_pistol
@@ -99,6 +101,8 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
          break;
       }
 
+      // WEAPON_FIXME: pre-beta bfg must become an alternate weapon under EDF
+
       // killough 7/19/98: Pre-Beta BFG
       if(stnum == E_StateNumForDEHNum(S_BFG1) && bfgtype == bfg_classic)
          stnum = E_SafeState(S_OLDBFG1); // Skip to alternative weapon frame
@@ -129,11 +133,10 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
 
 //
 // P_BringUpWeapon
-// Starts bringing the pending weapon up
-// from the bottom of the screen.
-// Uses player
 //
-
+// Starts bringing the pending weapon up from the bottom of the screen.
+// Uses player.
+//
 static void P_BringUpWeapon(player_t *player)
 {
    statenum_t newstate;
@@ -141,6 +144,7 @@ static void P_BringUpWeapon(player_t *player)
    if(player->pendingweapon == wp_nochange)
       player->pendingweapon = player->readyweapon;
    
+   // WEAPON_FIXME: weaponup sound must become EDF property of weapons
    if(player->pendingweapon == wp_chainsaw)
       S_StartSound(player->mo, sfx_sawup);
    
@@ -162,29 +166,37 @@ static void P_BringUpWeapon(player_t *player)
 
 int weapon_preferences[2][NUMWEAPONS+1] =
 {
-   {6, 9, 4, 3, 2, 8, 5, 7, 1, 0},  // !compatibility preferences
-   {6, 9, 4, 3, 2, 8, 5, 7, 1, 0},  //  compatibility preferences
+   { 6, 9, 4, 3, 2, 8, 5, 7, 1, 0 },  // !compatibility preferences
+   { 6, 9, 4, 3, 2, 8, 5, 7, 1, 0 },  //  compatibility preferences
 };
 
-// P_SwitchWeapon checks current ammo levels and gives you the
-// most preferred weapon with ammo. It will not pick the currently
-// raised weapon. When called from P_CheckAmmo this won't matter,
-// because the raised weapon has no ammo anyway. When called from
-// G_BuildTiccmd you want to toggle to a different weapon regardless.
-
+//
+// P_SwitchWeapon
+//
+// Checks current ammo levels and gives you the most preferred weapon with ammo.
+// It will not pick the currently raised weapon. When called from P_CheckAmmo 
+// this won't matter, because the raised weapon has no ammo anyway. When called
+// from G_BuildTiccmd you want to toggle to a different weapon regardless.
+//
 int P_SwitchWeapon(player_t *player)
 {
-   int *prefer = weapon_preferences[demo_compatibility!=0]; // killough 3/22/98
+   int *prefer = weapon_preferences[demo_compatibility != 0]; // killough 3/22/98
    int currentweapon = player->readyweapon;
    int newweapon = currentweapon;
-   int i = NUMWEAPONS+1;   // killough 5/2/98
+   int i = NUMWEAPONS + 1;   // killough 5/2/98   
 
-  // killough 2/8/98: follow preferences and fix BFG/SSG bugs
+   // killough 2/8/98: follow preferences and fix BFG/SSG bugs
 
-   // haleyjd FIXME: makes assumptions about ammo per shot
+   // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
+   // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
+   // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
+   // haleyjd WEAPON_FIXME: comercial-only must become EDF weapon property
+   // haleyjd WEAPON_FIXME: must support arbitrary weapons
+   // haleyjd WEAPON_FIXME: chainsaw/fist issues
+
    do
    {
-      switch (*prefer++)
+      switch(*prefer++)
       {
       case 1:
          if(!player->powers[pw_strength])  // allow chainsaw override
@@ -230,11 +242,16 @@ int P_SwitchWeapon(player_t *player)
          break;
       }
    }
-   while (newweapon==currentweapon && --i);        // killough 5/2/98
+   while(newweapon == currentweapon && --i);        // killough 5/2/98
+
    return newweapon;
 }
 
+//
+// P_WeaponPreferred
+//
 // killough 5/2/98: whether consoleplayer prefers weapon w1 over weapon w2.
+//
 int P_WeaponPreferred(int w1, int w2)
 {
   return
@@ -251,11 +268,11 @@ int P_WeaponPreferred(int w1, int w2)
 
 //
 // P_CheckAmmo
+//
 // Returns true if there is enough ammo to shoot.
 // If not, selects the next weapon to use.
 // (only in demo_compatibility mode -- killough 3/22/98)
 //
-
 boolean P_CheckAmmo(player_t *player)
 {
    ammotype_t ammo = weaponinfo[player->readyweapon].ammo;
@@ -263,15 +280,6 @@ boolean P_CheckAmmo(player_t *player)
    // haleyjd 08/10/02: get count from weaponinfo_t
    // (BFGCELLS value is now written into struct by DeHackEd code)
    int count = weaponinfo[player->readyweapon].ammopershot;
-
-#if 0  
-   int count = 1;  // Regular
-   
-   if(player->readyweapon == wp_bfg) // Minimal amount for one shot varies.
-      count = BFGCELLS;
-   else if(player->readyweapon == wp_supershotgun) // Double barrel.
-      count = 2;
-#endif
       
    // Some do not need ammunition anyway.
    // Return if current ammunition sufficient.
@@ -309,35 +317,36 @@ boolean P_CheckAmmo(player_t *player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(player_t *player, int compat_amount)
+void P_SubtractAmmo(player_t *player, int compat_amt)
 {
    weapontype_t weapontype = player->readyweapon;
-   weaponinfo_t *weapon    = &weaponinfo[weapon]; 
+   weaponinfo_t *weapon    = &weaponinfo[weapontype]; 
    ammotype_t   ammotype   = weapon->ammo;
 
-   if(player->cheats & CF_INFAMMO)
+   // WEAPON_FIXME/TODO: comp flag for corruption of player->maxammo by DeHackEd
+   if(player->cheats & CF_INFAMMO || 
+      (demo_version >= 329 && ammotype >= NUMAMMO))
       return;
-
-   // FIXME/TODO: comp flag for corruption of player->maxammo by DeHackEd
-   if(demo_version < 329 || ammotype < NUMAMMO)
-   {
-      player->ammo[ammotype] -= 
-         weapon->enableaps ? weapon->ammopershot : compat_amount;
-   }
+   
+   player->ammo[ammotype] -= 
+      (weapon->enableaps || !compat_amt) ? weapon->ammopershot : compat_amt;
 }
+
+int lastshottic; // killough 3/22/98
 
 //
 // P_FireWeapon.
 //
-
-int lastshottic; // killough 3/22/98
-
 static void P_FireWeapon(player_t *player)
 {
    statenum_t newstate;
    
    if(!P_CheckAmmo(player))
       return;
+
+   // WEAPON_FIXME: ability for silencer should be EDF weapon property
+   // WEAPON_FIXME: some weapons always silent?
+   // PCLASS_FIXME: first attack state -> EDF playerclass property
    
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK1));
    newstate = weaponinfo[player->readyweapon].atkstate;
@@ -354,20 +363,23 @@ static void P_FireWeapon(player_t *player)
 
 void P_DropWeapon(player_t *player)
 {
-   P_SetPsprite(player, ps_weapon,
-                weaponinfo[player->readyweapon].downstate);
+   P_SetPsprite(player, ps_weapon, weaponinfo[player->readyweapon].downstate);
 }
 
 //
 // A_WeaponReady
+//
 // The player can fire the weapon
 // or change to another weapon at this time.
 // Follows after getting weapon up,
 // or after previous attack/fire sequence.
 //
-
 void A_WeaponReady(player_t *player, pspdef_t *psp)
 {
+   // PCLASS_FIXME: attack states -> EDF playerclass properties
+   // PCLASS_FIXME: spawnstate -> EDF playerclass property
+   // WEAPON_FIXME: chainsaw particulars
+
    // get out of attack state
    if(player->mo->state == &states[E_SafeState(S_PLAY_ATK1)]
       || player->mo->state == &states[E_SafeState(S_PLAY_ATK2)])
@@ -387,6 +399,8 @@ void A_WeaponReady(player_t *player, pspdef_t *psp)
       P_SetPsprite(player, ps_weapon, newstate);
       return;
    }
+
+   // WEAPON_FIXME: what precisely does this do? Needs to be an EDF weapon property?
 
    // check for fire
    //  the missile launcher and bfg do not auto fire
@@ -416,10 +430,10 @@ void A_WeaponReady(player_t *player, pspdef_t *psp)
 
 //
 // A_ReFire
+//
 // The player can re-fire the weapon
 // without lowering it entirely.
 //
-
 void A_ReFire(player_t *player, pspdef_t *psp)
 {
    // check for fire
@@ -438,13 +452,15 @@ void A_ReFire(player_t *player, pspdef_t *psp)
    }
 }
 
-/* cph 2002/08/08 - In old Doom, P_CheckAmmo would start the weapon 
- * lowering immediately. This was lost in Boom when the weapon 
- * switching logic was rewritten. But we must tell Doom that we 
- * don't need to complete the reload frames for the weapon here. 
- * G_BuildTiccmd will set ->pendingweapon
- * for us later on. */
-
+//
+// A_CheckReload
+//
+// cph 2002/08/08 - In old Doom, P_CheckAmmo would start the weapon 
+// lowering immediately. This was lost in Boom when the weapon 
+// switching logic was rewritten. But we must tell Doom that we 
+// don't need to complete the reload frames for the weapon here. 
+// G_BuildTiccmd will set ->pendingweapon for us later on.
+//
 void A_CheckReload(player_t *player, pspdef_t *psp)
 {
    if(!P_CheckAmmo(player) && demo_version >= 331)
@@ -462,6 +478,7 @@ void A_CheckReload(player_t *player, pspdef_t *psp)
 
 void A_Lower(player_t *player, pspdef_t *psp)
 {
+   // WEAPON_FIXME: LOWERSPEED property of EDF weapons?
    psp->sy += LOWERSPEED;
    
    // Is already down.
@@ -496,6 +513,8 @@ void A_Lower(player_t *player, pspdef_t *psp)
 void A_Raise(player_t *player, pspdef_t *psp)
 {
    statenum_t newstate;
+
+   // WEAPON_FIXME: RAISESPEED property of EDF weapons?
    
    psp->sy -= RAISESPEED;
    
@@ -518,11 +537,15 @@ void A_Raise(player_t *player, pspdef_t *psp)
 // was moved here so the recoil could be synched with the
 // muzzle flash, rather than the pressing of the trigger.
 // The BFG delay caused this to be necessary.
-
+//
+// WEAPON_FIXME: "adder" parameter is not reliable for EDF editing
+//
 static void A_FireSomething(player_t* player,int adder)
 {
    P_SetPsprite(player, ps_flash,
       weaponinfo[player->readyweapon].flashstate+adder);
+
+   // WEAPON_FIXME: recoil -> EDF weapon property
    
    // killough 3/27/98: prevent recoil in no-clipping mode
    if(!(player->mo->flags & MF_NOCLIP))
@@ -537,6 +560,8 @@ static void A_FireSomething(player_t* player,int adder)
 
 void A_GunFlash(player_t *player, pspdef_t *psp)
 {
+   // PCLASS_FIXME: secondary attack state -> EDF playerclass property
+
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
    
    A_FireSomething(player, 0);                               // phares
@@ -567,12 +592,14 @@ void A_GunFlash(player_t *player, pspdef_t *psp)
 //
 // A_Punch
 //
-
 void A_Punch(player_t *player, pspdef_t *psp)
 {
    angle_t angle;
    int slope, damage = (P_Random(pr_punch) % 10 + 1) << 1;
    
+   // WEAPON_FIXME: berserk and/or other damage multipliers -> EDF weapon property?
+   // WEAPON_FIXME: tracer damage, range, etc possible weapon properties?
+
    if(player->powers[pw_strength])
       damage *= 10;
    
@@ -603,7 +630,6 @@ void A_Punch(player_t *player, pspdef_t *psp)
 //
 // A_Saw
 //
-
 void A_Saw(player_t *player, pspdef_t *psp)
 {
    int slope, damage = 2*(P_Random(pr_saw)%10+1);
@@ -686,7 +712,7 @@ void A_FireBFG(player_t *player, pspdef_t *psp)
 //
 // This code may not be used in other mods without appropriate credit given.
 // Code leeches will be telefragged.
-
+//
 void A_FireOldBFG(player_t *player, pspdef_t *psp)
 {
    static int type1  = -1;
@@ -700,14 +726,20 @@ void A_FireOldBFG(player_t *player, pspdef_t *psp)
    }
 
    type = type1;
+
+   // PCLASS_FIXME: second attack state
    
    // sf: make sure the player is in firing frame, or it looks silly
    if(demo_version > 300)
       P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
    
+   // WEAPON_FIXME: recoil for classic BFG
+
    if(weapon_recoil && !(player->mo->flags & MF_NOCLIP))
       P_Thrust(player, ANG180 + player->mo->angle,
                512*recoil_values[wp_plasma]);
+
+   // WEAPON_FIXME: ammopershot for classic BFG
 
    if((demo_version < 329 ||
        weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
@@ -723,8 +755,8 @@ void A_FireOldBFG(player_t *player, pspdef_t *psp)
    {
       mobj_t *th, *mo = player->mo;
       angle_t an = mo->angle;
-      angle_t an1 = ((P_Random(pr_bfg)&127) - 64) * (ANG90/768) + an;
-      angle_t an2 = ((P_Random(pr_bfg)&127) - 64) * (ANG90/640) + ANG90;
+      angle_t an1 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 768) + an;
+      angle_t an2 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 640) + ANG90;
       extern int autoaim;
       fixed_t slope;
 
@@ -791,14 +823,14 @@ void A_FirePlasma(player_t *player, pspdef_t *psp)
    P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_PLASMA));
 }
 
+static fixed_t bulletslope;
+
 //
 // P_BulletSlope
+//
 // Sets a slope so a near miss is at aproximately
 // the height of the intended target
 //
-
-static fixed_t bulletslope;
-
 static void P_BulletSlope(mobj_t *mo)
 {
    angle_t an = mo->angle;    // see which target is to be aimed at
@@ -820,7 +852,6 @@ static void P_BulletSlope(mobj_t *mo)
 //
 // P_GunShot
 //
-
 void P_GunShot(mobj_t *mo, boolean accurate)
 {
    int damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
@@ -839,6 +870,8 @@ void A_FirePistol(player_t *player, pspdef_t *psp)
 {
    S_StartSound(player->mo, sfx_pistol);
    
+   // PCLASS_FIXME: attack state two
+
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
 
    P_SubtractAmmo(player, 1);
@@ -855,6 +888,8 @@ void A_FireShotgun(player_t *player, pspdef_t *psp)
 {
    int i;
    
+   // PCLASS_FIXME: second attack state
+
    S_StartSound(player->mo, sfx_shotgn);
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
    
@@ -874,6 +909,8 @@ void A_FireShotgun(player_t *player, pspdef_t *psp)
 void A_FireShotgun2(player_t *player, pspdef_t *psp)
 {
    int i;
+
+   // WEAPON_FIXME: secondary attack state
    
    S_StartSound(player->mo, sfx_dshtgn);
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
@@ -908,6 +945,8 @@ void A_FireCGun(player_t *player, pspdef_t *psp)
       return;
    
    // sf: removed beta
+
+   // WEAPON_FIXME: secondary attack state
    
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
    
@@ -915,7 +954,7 @@ void A_FireCGun(player_t *player, pspdef_t *psp)
 
    // haleyjd 08/28/03: this is not safe for DeHackEd/EDF, so it
    // needs some modification to be safer
-   // haleyjd FIXME: hackish and dangerous for EDF, needs fix.
+   // haleyjd WEAPON_FIXME: hackish and dangerous for EDF, needs fix.
    if(demo_version < 331 || 
       ((psp->state - states) >= E_StateNumForDEHNum(S_CHAIN1) &&
        (psp->state - states) < E_StateNumForDEHNum(S_CHAIN3)))
@@ -954,13 +993,14 @@ void A_BFGBurst(mobj_t *mo); // haleyjd
 
 //
 // A_BFGSpray
+//
 // Spawn a BFG explosion on every monster in view
 //
-
 void A_BFGSpray(mobj_t *mo)
 {
    int i;
 
+   // WEAPON_FIXME: BFG type stuff
    switch(bfgtype)
    {
    case bfg_11k:
@@ -1004,7 +1044,11 @@ void A_BFGSpray(mobj_t *mo)
    }
 }
 
-        /********* Bouncing BFG Code ********/
+//
+// A_BouncingBFG
+//
+// haleyjd: The bouncing BFG from SMMU, but fixed to work better.
+//
 void A_BouncingBFG(mobj_t *mo)
 {
    int i;
@@ -1068,7 +1112,11 @@ void A_BouncingBFG(mobj_t *mo)
    }
 }
 
-// when the BFG 11K hits the wall or whatever
+//
+// A_BFG11KHit
+//
+// Explosion pointer for SMMU BFG11k.
+//
 void A_BFG11KHit(mobj_t *mo)
 {
    int i = 0;
@@ -1160,7 +1208,6 @@ void A_BFGBurst(mobj_t *mo)
 //
 // A_BFGsound
 //
-
 void A_BFGsound(player_t *player, pspdef_t *psp)
 {
    S_StartSound(player->mo, sfx_bfg);
@@ -1168,15 +1215,15 @@ void A_BFGsound(player_t *player, pspdef_t *psp)
 
 //
 // P_SetupPsprites
+//
 // Called at start of level for each player.
 //
-
 void P_SetupPsprites(player_t *player)
 {
    int i;
    
    // remove all psprites
-   for(i=0; i<NUMPSPRITES; i++)
+   for(i = 0; i < NUMPSPRITES; ++i)
       player->psprites[i].state = NULL;
    
    // spawn the gun
@@ -1186,9 +1233,9 @@ void P_SetupPsprites(player_t *player)
 
 //
 // P_MovePsprites
+//
 // Called every tic by player thinking routine.
 //
-
 void P_MovePsprites(player_t *player)
 {
    pspdef_t *psp = player->psprites;
@@ -1198,7 +1245,7 @@ void P_MovePsprites(player_t *player)
    // drop tic count and possibly change state
    // a -1 tic count never changes
    
-   for(i=0; i<NUMPSPRITES; i++, psp++)
+   for(i = 0; i < NUMPSPRITES; ++i, ++psp)
    {
       if(psp->state && psp->tics != -1 && !--psp->tics)
          P_SetPsprite(player, i, psp->state->nextstate);
@@ -1254,6 +1301,8 @@ void A_FireCustomBullets(player_t *player, pspdef_t *psp)
 
    S_StartSfxInfo(player->mo, sfx, 127, ATTN_NORMAL, false);
 
+   // PCLASS_FIXME: secondary attack state
+
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
 
    // subtract ammo amount
@@ -1261,7 +1310,7 @@ void A_FireCustomBullets(player_t *player, pspdef_t *psp)
       !(player->cheats & CF_INFAMMO))
    {
       // now settable in weapon, not needed as a parameter here
-      SUBTRACTAMMO();
+      P_SubtractAmmo(player, 0);
    }
 
    A_FireSomething(player, 0);
@@ -1323,9 +1372,9 @@ void A_FirePlayerMissile(player_t *player, pspdef_t *psp)
 
    // decrement ammo if appropriate
    if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
-      !(player->cheats & CF_INFAMMO))
+     !(player->cheats & CF_INFAMMO))
    {
-      SUBTRACTAMMO();
+      P_SubtractAmmo(player, 0);
    }
 
    mo = P_SpawnPlayerMissile(player->mo, thingnum);
@@ -1383,7 +1432,7 @@ void A_CustomPlayerMelee(player_t *player, pspdef_t *psp)
    if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
       !(player->cheats & CF_INFAMMO))
    {
-      SUBTRACTAMMO();
+      P_SubtractAmmo(player, 0);
    }
    
    angle = player->mo->angle;
@@ -1394,6 +1443,9 @@ void A_CustomPlayerMelee(player_t *player, pspdef_t *psp)
    if((slope = P_AimLineAttack(player->mo, angle, MELEERANGE, MF_FRIEND),
       !linetarget))
       slope = P_AimLineAttack(player->mo, angle, MELEERANGE, 0);
+
+   // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
+   // WEAPON_FIXME: check ALL new weapon pointers for this problem.
    
    P_LineAttack(player->mo, angle, MELEERANGE, slope, damage);
    
@@ -1513,7 +1565,7 @@ void A_PlayerThunk(player_t *player, pspdef_t *psp)
       if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
          !(player->cheats & CF_INFAMMO))
       {
-         SUBTRACTAMMO();
+         P_SubtractAmmo(player, 0);
       }
    }
 
