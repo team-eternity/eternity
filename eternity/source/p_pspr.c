@@ -62,11 +62,6 @@ int default_weapon_speed = 6;
 
 #define BFGCELLS bfgcells        /* Ty 03/09/98 externalized in p_inter.c */
 
-// haleyjd 08/10/02
-#define SUBTRACTAMMO() \
-        player->ammo[weaponinfo[player->readyweapon].ammo] -= \
-        weaponinfo[player->readyweapon].ammopershot
-
 extern void P_Thrust(player_t *, angle_t, fixed_t);
 int weapon_recoil;      // weapon recoil
 
@@ -305,6 +300,30 @@ boolean P_CheckAmmo(player_t *player)
 #endif
       
    return false;
+}
+
+//
+// P_SubtractAmmo
+//
+// haleyjd 03/08/07:
+// Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
+// operation is complicated by compatibility issues and extra features.
+//
+void P_SubtractAmmo(player_t *player, int compat_amount)
+{
+   weapontype_t weapontype = player->readyweapon;
+   weaponinfo_t *weapon    = &weaponinfo[weapon]; 
+   ammotype_t   ammotype   = weapon->ammo;
+
+   if(player->cheats & CF_INFAMMO)
+      return;
+
+   // FIXME/TODO: comp flag for corruption of player->maxammo by DeHackEd
+   if(demo_version < 329 || ammotype < NUMAMMO)
+   {
+      player->ammo[ammotype] -= 
+         weapon->enableaps ? weapon->ammopershot : compat_amount;
+   }
 }
 
 //
@@ -636,23 +655,10 @@ void A_Saw(player_t *player, pspdef_t *psp)
 //
 // A_FireMissile
 //
-
 void A_FireMissile(player_t *player, pspdef_t *psp)
 {
-   if((demo_version < 329 || 
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO)) // haleyjd
-   {
-      if(!weaponinfo[player->readyweapon].enableaps)
-      {
-         player->ammo[weaponinfo[player->readyweapon].ammo]--;
-      }
-      else
-      {
-         SUBTRACTAMMO();
-      }
-   }
-   
+   P_SubtractAmmo(player, 1);
+
    P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_ROCKET));
 }
 
@@ -665,20 +671,9 @@ void A_FireMissile(player_t *player, pspdef_t *psp)
 void A_FireBFG(player_t *player, pspdef_t *psp)
 {
    mobj_t *mo;
+
+   P_SubtractAmmo(player, BFGCELLS);
    
-   if((demo_version < 329 ||
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO)) // haleyjd
-   {
-      if(!weaponinfo[player->readyweapon].enableaps)
-      {
-         player->ammo[weaponinfo[player->readyweapon].ammo] -= BFGCELLS;
-      }
-      else
-      {
-         SUBTRACTAMMO();
-      }
-   }
    mo = P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_BFG));
    mo->extradata.bfgcount = BFGBOUNCE;   // for bouncing bfg - redundant
 }
@@ -786,23 +781,10 @@ void A_FireOldBFG(player_t *player, pspdef_t *psp)
 //
 // A_FirePlasma
 //
-
 void A_FirePlasma(player_t *player, pspdef_t *psp)
 {
-   if((demo_version < 329 ||
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO)) // haleyjd
-   {
-      if(!weaponinfo[player->readyweapon].enableaps)
-      {
-         player->ammo[weaponinfo[player->readyweapon].ammo]--;
-      }
-      else
-      {
-         SUBTRACTAMMO();
-      }
-   }
-   
+   P_SubtractAmmo(player, 1);
+
    A_FireSomething(player, P_Random(pr_plasma) & 1);
    
    // sf: removed beta
@@ -853,26 +835,13 @@ void P_GunShot(mobj_t *mo, boolean accurate)
 //
 // A_FirePistol
 //
-
 void A_FirePistol(player_t *player, pspdef_t *psp)
 {
    S_StartSound(player->mo, sfx_pistol);
    
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
-   
-   if((demo_version < 329 || 
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO))
-   {
-      if(!weaponinfo[player->readyweapon].enableaps)
-      {
-         player->ammo[weaponinfo[player->readyweapon].ammo]--;
-      }
-      else
-      {
-         SUBTRACTAMMO();
-      }
-   }
+
+   P_SubtractAmmo(player, 1);
    
    A_FireSomething(player, 0); // phares
    P_BulletSlope(player->mo);
@@ -882,7 +851,6 @@ void A_FirePistol(player_t *player, pspdef_t *psp)
 //
 // A_FireShotgun
 //
-
 void A_FireShotgun(player_t *player, pspdef_t *psp)
 {
    int i;
@@ -890,19 +858,7 @@ void A_FireShotgun(player_t *player, pspdef_t *psp)
    S_StartSound(player->mo, sfx_shotgn);
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
    
-   if((demo_version < 329 ||
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO)) // haleyjd
-   {
-      if(!weaponinfo[player->readyweapon].enableaps)
-      {
-         player->ammo[weaponinfo[player->readyweapon].ammo]--;
-      }
-      else
-      {
-         SUBTRACTAMMO();
-      }
-   }
+   P_SubtractAmmo(player, 1);
    
    A_FireSomething(player,0);                                      // phares
    
@@ -915,27 +871,14 @@ void A_FireShotgun(player_t *player, pspdef_t *psp)
 //
 // A_FireShotgun2
 //
-
 void A_FireShotgun2(player_t *player, pspdef_t *psp)
 {
    int i;
    
    S_StartSound(player->mo, sfx_dshtgn);
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
-   
-   if((demo_version < 329 ||
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO)) // haleyjd
-   {
-      if(!weaponinfo[player->readyweapon].enableaps)
-      {
-         player->ammo[weaponinfo[player->readyweapon].ammo] -= 2;
-      }
-      else
-      {
-         SUBTRACTAMMO();
-      }
-   }
+
+   P_SubtractAmmo(player, 2);
    
    A_FireSomething(player,0);                                      // phares
    
@@ -968,19 +911,7 @@ void A_FireCGun(player_t *player, pspdef_t *psp)
    
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK2));
    
-   if((demo_version < 329 ||
-       weaponinfo[player->readyweapon].ammo < NUMAMMO) &&
-      !(player->cheats & CF_INFAMMO)) // haleyjd
-   {
-      if(!weaponinfo[player->readyweapon].enableaps)
-      {
-         player->ammo[weaponinfo[player->readyweapon].ammo]--;
-      }
-      else
-      {
-         SUBTRACTAMMO();
-      }
-   }
+   P_SubtractAmmo(player, 1);
 
    // haleyjd 08/28/03: this is not safe for DeHackEd/EDF, so it
    // needs some modification to be safer
@@ -1283,15 +1214,9 @@ void P_MovePsprites(player_t *player)
 //
 //===============================
 
+// FIXME/TODO: get rid of this?
 void A_FireGrenade(player_t *player, pspdef_t *psp)
 {
-   if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
-      !(player->cheats & CF_INFAMMO))
-   {
-      SUBTRACTAMMO();
-   }
-
-   P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_GRENADE));
 }
 
 //
