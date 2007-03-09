@@ -49,6 +49,7 @@ typedef struct patch_s patch_t;
 
 // SoM: I had to move this for linked portals.
 typedef struct sector_s sector_t;
+
 // Portals
 #include "r_portal.h"
 #ifdef R_LINKEDPORTALS
@@ -98,14 +99,16 @@ typedef struct vertex_s
 // Each sector has a degenmobj_t in its center for sound origin purposes.
 typedef struct degenmobj_s
 {
-   thinker_t thinker;  // not used for anything
-   fixed_t x, y, z;
+   thinker_t thinker;  // not used for anything (haleyjd: not true now,
+   fixed_t x, y, z;    //    earthquake code)
 
 #ifdef R_LINKEDPORTALS
    // SoM: yes Quasar, this is entirely necessary
    int     groupid; // The group the sound originated in
 #endif
 } degenmobj_t;
+
+// haleyjd: polyobj.h needs degenmobj_t, so it must be here
 
 #include "polyobj.h"
 
@@ -114,6 +117,7 @@ typedef struct degenmobj_s
 // Stores things/mobjs.
 //
 // SoM: moved the definition of sector_t to by the r_portal.h include
+//
 struct sector_s
 {
    fixed_t floorheight;

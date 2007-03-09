@@ -552,8 +552,8 @@ static void R_FlushQuadTL(void)
    }
 }
 
-#define SRCPIXEL(n) \
-   tempfuzzmap[6*256+dest[(n) + fuzzoffset[fuzz1] ? video.width: -video.width]];
+#define SRCPIXEL(n, p) \
+   tempfuzzmap[6*256+dest[(n) + fuzzoffset[(p)] ? video.width: -video.width]];
 
 static void R_FlushQuadFuzz(void)
 {
@@ -575,13 +575,13 @@ static void R_FlushQuadFuzz(void)
    while(--count >= 0)
    {
       // SoM 7-28-04: Fix the fuzz problem.
-      *dest = SRCPIXEL(0);
+      *dest = SRCPIXEL(0, fuzz1);
       if(++fuzz1 == FUZZTABLE) fuzz1 = 0;
-      dest[1] = SRCPIXEL(1);
+      dest[1] = SRCPIXEL(1, fuzz2);
       if(++fuzz2 == FUZZTABLE) fuzz2 = 0;
-      dest[2] = SRCPIXEL(2);
+      dest[2] = SRCPIXEL(2, fuzz3);
       if(++fuzz3 == FUZZTABLE) fuzz3 = 0;
-      dest[3] = SRCPIXEL(3);
+      dest[3] = SRCPIXEL(3, fuzz4);
       if(++fuzz4 == FUZZTABLE) fuzz4 = 0;
 
       source += 4;

@@ -1637,7 +1637,7 @@ frame S_BEAST_XDIE5 { cmp = "BEAS|13|*| 5|*          |@next"; dehackednum = 2160
 frame S_BEAST_XDIE6
 { 
    cmp  = "BEAS|14|*|6|HticDrop|@next"
-   args = { thing:HAmmoCBowWimpy, 84, 0, 0, 10" } 
+   args = { thing:HAmmoCBowWimpy, 84, 0, 0, 10 } 
    dehackednum = 2161 
 }
 frame S_BEAST_XDIE7 { cmp = "BEAS|15|*| 5|*          |@next"; dehackednum = 2162 }
