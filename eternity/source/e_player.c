@@ -41,9 +41,28 @@
 // Weapons
 //
 
+#define ITEM_WEAPON_AMMO        "ammo"
+#define ITEM_WEAPON_AMMOPERSHOT "ammopershot"
+#define ITEM_WEAPON_RECOIL      "recoil"
+#define ITEM_WEAPON_UPSTATE     "upstate"
+#define ITEM_WEAPON_DOWNSTATE   "downstate"
+#define ITEM_WEAPON_READYSTATE  "readystate"
+#define ITEM_WEAPON_ATTACKSTATE "attackstate"
+#define ITEM_WEAPON_FLASHSTATE  "flashstate"
+#define ITEM_WEAPON_UPSOUND     "upsound"
+
 cfg_opt_t edf_weapon_opts[] =
 {
-   // TODO
+   CFG_STR(ITEM_WEAPON_AMMO,        NULL,     CFGF_NONE), // TODO: default ammo type?
+   CFG_INT(ITEM_WEAPON_AMMOPERSHOT, 1,        CFGF_NONE),
+   CFG_INT(ITEM_WEAPON_RECOIL,      0,        CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_UPSTATE,     "S_NULL", CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_DOWNSTATE,   "S_NULL", CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_READYSTATE,  "S_NULL", CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_ATTACKSTATE, "S_NULL", CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_FLASHSTATE,  "S_NULL", CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_UPSOUND,     "none",   CFGF_NONE),
+   // TODO: more stuff.
    CFG_END()
 };
 
