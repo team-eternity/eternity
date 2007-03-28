@@ -37,6 +37,20 @@
 #include "e_edf.h"
 #include "e_player.h"
 
+//
+// Weapons
+//
+
+cfg_opt_t edf_weapon_opts[] =
+{
+   // TODO
+   CFG_END()
+};
+
+//
+// Player Class and Skin Options
+//
+
 #define ITEM_SKINSND_PAIN    "pain"
 #define ITEM_SKINSND_DIEHI   "diehi"
 #define ITEM_SKINSND_OOF     "oof"
@@ -105,7 +119,7 @@ playerclass_t *edf_player_classes[NUMEDFPCLASSCHAINS];
 //
 
 // These numbers are used to track the number of definitions processed in order
-// to enable last-chance defaults fallback.
+// to enable last-chance defaults processing.
 static int num_edf_skins;
 static int num_edf_pclasses;
 
@@ -162,6 +176,23 @@ static void E_DoSkinSound(cfg_t *sndsec, boolean def, skin_t *skin, int idx,
       skin->sounds[idx] = strdup(cfg_getstr(sndsec, itemname));
    }
 }
+
+//
+// A table of EDF skin sound names, for lookup by skin sound index number
+//
+static const char *skin_sound_names[NUMSKINSOUNDS] =
+{
+   ITEM_SKINSND_PAIN,
+   ITEM_SKINSND_DIEHI,
+   ITEM_SKINSND_OOF,
+   ITEM_SKINSND_GIB,
+   ITEM_SKINSND_PUNCH,
+   ITEM_SKINSND_RADIO,
+   ITEM_SKINSND_DIE,
+   ITEM_SKINSND_FALL,
+   ITEM_SKINSND_FEET,
+   ITEM_SKINSND_FALLHIT
+};
 
 //
 // E_CreatePlayerSkin
@@ -243,18 +274,11 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    if(cfg_size(skinsec, ITEM_SKIN_SOUNDS) > 0)
    {
       cfg_t *sndsec = cfg_getsec(skinsec, ITEM_SKIN_SOUNDS);
+      int i;
 
       // get sounds from the sounds section
-      E_DoSkinSound(sndsec, def, newSkin, sk_plpain, ITEM_SKINSND_PAIN);
-      E_DoSkinSound(sndsec, def, newSkin, sk_pdiehi, ITEM_SKINSND_DIEHI);
-      E_DoSkinSound(sndsec, def, newSkin, sk_oof,    ITEM_SKINSND_OOF);
-      E_DoSkinSound(sndsec, def, newSkin, sk_slop,   ITEM_SKINSND_GIB);
-      E_DoSkinSound(sndsec, def, newSkin, sk_punch,  ITEM_SKINSND_PUNCH);
-      E_DoSkinSound(sndsec, def, newSkin, sk_radio,  ITEM_SKINSND_RADIO);
-      E_DoSkinSound(sndsec, def, newSkin, sk_pldeth, ITEM_SKINSND_DIE);
-      E_DoSkinSound(sndsec, def, newSkin, sk_plfall, ITEM_SKINSND_FALL);
-      E_DoSkinSound(sndsec, def, newSkin, sk_plfeet, ITEM_SKINSND_FEET);
-      E_DoSkinSound(sndsec, def, newSkin, sk_fallht, ITEM_SKINSND_FALLHIT);
+      for(i = 0; i < NUMSKINSOUNDS; ++i)
+         E_DoSkinSound(sndsec, def, newSkin, i, skin_sound_names[i]);
    }
 }
 
