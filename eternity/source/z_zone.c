@@ -1235,6 +1235,22 @@ void Z_PrintZoneHeap(void)
    fclose(outfile);
 }
 
+//
+// Z_DumpCore
+//
+// haleyjd 03/18/07: Write the zone heap to file
+//
+void Z_DumpCore(void)
+{
+   FILE *outfile;
+
+   if(!(outfile = fopen("zone.bin", "wb")))
+      return;
+
+   fwrite(zonebase, 1, zonebase_size, outfile);
+   fclose(outfile);
+}
+
 //-----------------------------------------------------------------------------
 //
 // $Log: z_zone.c,v $

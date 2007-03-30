@@ -265,6 +265,7 @@ static void R_FlushWholeFuzz(void)
    }
 }
 
+/*
 static void R_FlushHTFuzz(void)
 {
    register byte *source;
@@ -322,6 +323,7 @@ static void R_FlushHTFuzz(void)
       ++colnum;
    }
 }
+*/
 
 #undef SRCPIXEL
 
@@ -552,6 +554,7 @@ static void R_FlushQuadTL(void)
    }
 }
 
+/*
 #define SRCPIXEL(n, p) \
    tempfuzzmap[6*256+dest[(n) + fuzzoffset[(p)] ? video.width: -video.width]];
 
@@ -592,6 +595,7 @@ static void R_FlushQuadFuzz(void)
 }
 
 #undef SRCPIXEL
+*/
 
 static void R_FlushQuadFlex(void)
 {
@@ -687,7 +691,7 @@ static void (*R_FlushQuadColumn)(void) = R_QuadFlushError;
 
 static void R_FlushColumns(void)
 {
-   if(temp_x != 4 || commontop >= commonbot)
+   if(temp_x != 4 || commontop >= commonbot || temptype == COL_FUZZ)
       R_FlushWholeColumns();
    else
    {
@@ -884,8 +888,8 @@ static byte *R_GetBufferFuzz(void)
       temptype = COL_FUZZ;
       tempfuzzmap = column.colormap; // SoM 7-28-04: Fix the fuzz problem.
       R_FlushWholeColumns = R_FlushWholeFuzz;
-      R_FlushHTColumns    = R_FlushHTFuzz;
-      R_FlushQuadColumn   = R_FlushQuadFuzz;
+      R_FlushHTColumns    = R_FlushHTError;
+      R_FlushQuadColumn   = R_QuadFlushError;
       return tempbuf + (column.y1 << 2);
    }
 

@@ -76,6 +76,11 @@ CONSOLE_COMMAND(z_print, cf_hidden)
    Z_PrintZoneHeap();
 }
 
+CONSOLE_COMMAND(z_dumpcore, cf_hidden)
+{
+   Z_DumpCore();
+}
+
 CONSOLE_COMMAND(starttitle, cf_notnet)
 {
    // haleyjd 04/18/03
@@ -753,6 +758,7 @@ void G_AddCommands(void)
 {
    C_AddCommand(i_error);
    C_AddCommand(z_print);
+   C_AddCommand(z_dumpcore);
    C_AddCommand(starttitle);
    C_AddCommand(endgame);
    C_AddCommand(pause);

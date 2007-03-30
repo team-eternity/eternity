@@ -124,6 +124,8 @@ void Z_PrintStats(void);      // killough 8/23/98
 
 void Z_PrintZoneHeap(void);
 
+void Z_DumpCore(void);
+
 #endif
 
 //----------------------------------------------------------------------------
