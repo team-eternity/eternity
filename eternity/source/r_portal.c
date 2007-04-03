@@ -137,12 +137,10 @@ rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 }
 
 
-
-
 //
-// R_GetAnchoredPortal
+// R_GetTwoWayPortal
 //
-// Either finds a matching existing anchored portal matching the
+// Either finds a matching existing two-way anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
 rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
@@ -173,8 +171,6 @@ rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 
    return ret;
 }
-
-
 
 
 //
@@ -223,15 +219,15 @@ rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic,
 
    memset(&horizon, 0, sizeof(horizon));
    horizon.ceilinglight = ceilinglight;
-   horizon.floorlight = floorlight;
-   horizon.ceilingpic = ceilingpic;
-   horizon.floorpic = floorpic;
-   horizon.ceilingz = ceilingz;
-   horizon.floorz = floorz;
-   horizon.ceilingxoff = ceilingxoff;
-   horizon.ceilingyoff = ceilingyoff;
-   horizon.floorxoff = floorxoff;
-   horizon.flooryoff = flooryoff;
+   horizon.floorlight   = floorlight;
+   horizon.ceilingpic   = ceilingpic;
+   horizon.floorpic     = floorpic;
+   horizon.ceilingz     = ceilingz;
+   horizon.floorz       = floorz;
+   horizon.ceilingxoff  = ceilingxoff;
+   horizon.ceilingyoff  = ceilingyoff;
+   horizon.floorxoff    = floorxoff;
+   horizon.flooryoff    = flooryoff;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -494,21 +490,23 @@ static void R_RenderHorizonPortal(rportal_t *portal)
    {
       if(portal->top[x] > portal->bottom[x])
          continue;
-      if(portal->top[x] <= view.ycenter && portal->bottom[x] >= view.ycenter + 1.0f)
+
+      if(portal->top[x]    <= view.ycenter && 
+         portal->bottom[x] >= view.ycenter + 1.0f)
       {
-         topplane->top[x] = (int)portal->top[x];
-         topplane->bottom[x] = centery;
-         bottomplane->top[x] = centery + 1;
+         topplane->top[x]       = (int)portal->top[x];
+         topplane->bottom[x]    = centery;
+         bottomplane->top[x]    = centery + 1;
          bottomplane->bottom[x] = (int)portal->bottom[x];
       }
       else if(portal->top[x] <= view.ycenter)
       {
-         topplane->top[x] = (int)portal->top[x];
+         topplane->top[x]    = (int)portal->top[x];
          topplane->bottom[x] = (int)portal->bottom[x];
       }
       else if(portal->bottom[x] > view.ycenter)
       {
-         bottomplane->top[x] = (int)portal->top[x];
+         bottomplane->top[x]    = (int)portal->top[x];
          bottomplane->bottom[x] = (int)portal->bottom[x];
       }
    }
@@ -576,7 +574,7 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    R_RenderBSPNode(numnodes-1);
    R_PushMasked();
 
-   floorclip = floorcliparray;
+   floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
 
    viewx = lastx;
@@ -667,9 +665,9 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx = portal->vx - portal->data.camera.deltax;
-   viewy = portal->vy - portal->data.camera.deltay;
-   viewz = portal->vz - portal->data.camera.deltaz;
+   viewx  = portal->vx - portal->data.camera.deltax;
+   viewy  = portal->vy - portal->data.camera.deltay;
+   viewz  = portal->vz - portal->data.camera.deltaz;
    view.x = viewx / 65536.0f;
    view.y = viewy / 65536.0f;
    view.z = viewz / 65536.0f;
@@ -682,9 +680,9 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
 
-   viewx = lastx;
-   viewy = lasty;
-   viewz = lastz;
+   viewx  = lastx;
+   viewy  = lasty;
+   viewz  = lastz;
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
@@ -693,7 +691,20 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
       R_RenderAnchoredPortal(portal->child);
 }
 
-// haleyjd: temporary debug
+//
+// R_UntaintPortals
+//
+// haleyjd: temporary debug (maybe)
+// Clears the tainted count for all portals to zero.
+// This allows the renderer to keep track of how many times a portal has been
+// rendered during a frame. If that count exceeds a given limit (which is
+// currently somewhat arbitrarily set to the screen width), the renderer will
+// refuse to render the portal any more during that frame. This prevents run-
+// away recursion between multiple portals, as well as run-away recursion into
+// the same portal due to floor/ceiling overlap caused by using non-two-way
+// anchored portals in two-way situations. Only anchored portals and skyboxes
+// are susceptible to this problem.
+//
 void R_UntaintPortals(void)
 {
    rportal_t *r;
