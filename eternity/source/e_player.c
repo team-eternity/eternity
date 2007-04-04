@@ -38,7 +38,7 @@
 #include "e_player.h"
 
 //
-// Weapons
+// Weapon Options
 //
 
 #define ITEM_WEAPON_AMMO        "ammo"
