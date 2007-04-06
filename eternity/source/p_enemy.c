@@ -2869,24 +2869,6 @@ void A_BabyMetal(mobj_t *mo)
    A_Chase(mo);
 }
 
-void A_OpenShotgun2(player_t *player, pspdef_t *psp)
-{
-   S_StartSound(player->mo, sfx_dbopn);
-}
-
-void A_LoadShotgun2(player_t *player, pspdef_t *psp)
-{
-   S_StartSound(player->mo, sfx_dbload);
-}
-
-void A_ReFire(player_t *player, pspdef_t *psp);
-
-void A_CloseShotgun2(player_t *player, pspdef_t *psp)
-{
-   S_StartSound(player->mo, sfx_dbcls);
-   A_ReFire(player,psp);
-}
-
 // killough 2/7/98: Remove limit on icon landings:
 // haleyjd 07/30/04: use new MobjCollection
 
@@ -3421,19 +3403,26 @@ void A_StartScript(mobj_t *actor)
 // args[1] - select vm (0 == gamescript, 1 == levelscript)
 // args[2-4] - parameters to script (must accept 3 params)
 //
-void A_PlayerStartScript(player_t *player, pspdef_t *psp)
+void A_PlayerStartScript(mobj_t *mo)
 {
    SmallContext_t *rootContext, *useContext;
    SmallContext_t newContext;
-   int scriptnum = (int)(psp->state->args[0]);
-   int selectvm  = (int)(psp->state->args[1]);
+   int scriptnum, selectvm;
+   player_t *player;
+   pspdef_t *psp;
+   cell params[3];
 
-   cell params[3] =
-   {
-      (cell)(psp->state->args[2]),
-      (cell)(psp->state->args[3]),
-      (cell)(psp->state->args[4]),
-   };
+   if(!mo->player)
+      return;
+
+   player = mo->player;
+   psp    = &player->psprites[player->curpsprite];
+
+   scriptnum =  (int)(psp->state->args[0]);
+   selectvm  =  (int)(psp->state->args[1]);
+   params[0] = (cell)(psp->state->args[2]);
+   params[1] = (cell)(psp->state->args[3]);
+   params[2] = (cell)(psp->state->args[4]);
 
    // determine root context to use
    switch(selectvm)
@@ -3457,7 +3446,7 @@ void A_PlayerStartScript(player_t *player, pspdef_t *psp)
    // set invocation data
    useContext->invocationData.invokeType = SC_INVOKE_PLAYER;
    useContext->invocationData.playernum = (int)(player - players);
-   useContext->invocationData.trigger = player->mo;
+   useContext->invocationData.trigger = mo;
 
    // execute
    A_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);

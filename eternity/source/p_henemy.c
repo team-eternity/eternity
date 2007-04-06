@@ -3063,15 +3063,25 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 // args[3] : counter # to use
 // args[4] : psprite to affect (weapon or flash)
 //
-void A_WeaponCtrJump(player_t *player, pspdef_t *pspr)
+void A_WeaponCtrJump(mobj_t *mo)
 {
    boolean branch = false;
-   int statenum   = pspr->state->args[0];
-   int checktype  = pspr->state->args[1];
-   short value    = (short)(pspr->state->args[2]);
-   int cnum       = pspr->state->args[3];
-   int psprnum    = pspr->state->args[4];
-   short *counter;
+   int statenum, checktype, cnum, psprnum;
+   short value, *counter;
+   player_t *player;
+   pspdef_t *pspr;
+
+   if(!mo->player)
+      return;
+
+   player = mo->player;
+   pspr   = &player->psprites[player->curpsprite];
+
+   statenum  = pspr->state->args[0];
+   checktype = pspr->state->args[1];
+   value     = (short)(pspr->state->args[2]);
+   cnum      = pspr->state->args[3];
+   psprnum   = pspr->state->args[4];
    
    // validate state number
    statenum = E_StateNumForDEHNum(statenum);
@@ -3152,13 +3162,23 @@ void A_WeaponCtrJump(player_t *player, pspdef_t *pspr)
 // args[2] : number of frames in consecutive set
 // args[3] : psprite to affect (weapon or flash)
 //
-void A_WeaponCtrSwitch(player_t *player, pspdef_t *pspr)
+void A_WeaponCtrSwitch(mobj_t *mo)
 {
-   int cnum       = pspr->state->args[0];
-   int startstate = pspr->state->args[1];
-   int numstates  = pspr->state->args[2] - 1;
-   int psprnum    = pspr->state->args[3];
+   int cnum, startstate, numstates, psprnum;
    short *counter;
+   player_t *player;
+   pspdef_t *pspr;
+
+   if(!mo->player)
+      return;
+
+   player = mo->player;
+   pspr   = &player->psprites[player->curpsprite];
+
+   cnum       = pspr->state->args[0];
+   startstate = pspr->state->args[1];
+   numstates  = pspr->state->args[2] - 1;
+   psprnum    = pspr->state->args[3];
 
       // validate psprite number
    if(psprnum < 0 || psprnum >= NUMPSPRITES)
@@ -3204,12 +3224,24 @@ void A_WeaponCtrSwitch(player_t *player, pspdef_t *pspr)
 // args[1] : value to utilize
 // args[2] : operation to perform
 //
-void A_WeaponSetCtr(player_t *player, pspdef_t *pspr)
+void A_WeaponSetCtr(mobj_t *mo)
 {
-   int cnum      = pspr->state->args[0];
-   short value   = (short)(pspr->state->args[1]);
-   int specialop = pspr->state->args[2];
+   int cnum;
+   short value;
+   int specialop;
    short *counter;
+   player_t *player;
+   pspdef_t *pspr;
+
+   if(!mo->player)
+      return;
+
+   player = mo->player;
+   pspr   = &player->psprites[player->curpsprite];
+
+   cnum      = pspr->state->args[0];
+   value     = (short)(pspr->state->args[1]);
+   specialop = pspr->state->args[2];
 
    switch(cnum)
    {
@@ -3272,14 +3304,27 @@ void A_WeaponSetCtr(player_t *player, pspdef_t *pspr)
 // args[2] : counter destination
 // args[3] : operation to perform
 //
-void A_WeaponCtrOp(player_t *player, pspdef_t *pspr)
+void A_WeaponCtrOp(mobj_t *mo)
 {
-   int c_oper1_num = pspr->state->args[0];
-   int c_oper2_num = pspr->state->args[1];
-   int c_dest_num  = pspr->state->args[2];   
-   int specialop   = pspr->state->args[3];
+   player_t *player;
+   pspdef_t *pspr;
+   int c_oper1_num;
+   int c_oper2_num;
+   int c_dest_num;
+   int specialop;
 
    short *c_oper1, *c_oper2, *c_dest;
+
+   if(!mo->player)
+      return;
+
+   player = mo->player;
+   pspr   = &player->psprites[player->curpsprite];
+
+   c_oper1_num = pspr->state->args[0];
+   c_oper2_num = pspr->state->args[1];
+   c_dest_num  = pspr->state->args[2];
+   specialop   = pspr->state->args[3];
 
    switch(c_oper1_num)
    {
@@ -3367,11 +3412,21 @@ void A_WeaponCtrOp(player_t *player, pspdef_t *pspr)
 // args[0] : source counter #
 // args[1] : destination counter #
 //
-void A_WeaponCopyCtr(player_t *player, pspdef_t *pspr)
+void A_WeaponCopyCtr(mobj_t *mo)
 {
-   int cnum1   = pspr->state->args[0];
-   int cnum2   = pspr->state->args[1];
+   int cnum1, cnum2;
    short *src, *dest;
+   player_t *player;
+   pspdef_t *pspr;
+
+   if(!mo->player)
+      return;
+
+   player = mo->player;
+   pspr   = &player->psprites[player->curpsprite];
+
+   cnum1 = pspr->state->args[0];
+   cnum2 = pspr->state->args[1];
 
    switch(cnum1)
    {

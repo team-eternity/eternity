@@ -619,7 +619,6 @@ void R_IncrementFrameid(void)
 //
 // R_SetupFrame
 //
-
 void R_SetupFrame(player_t *player, camera_t *camera)
 {               
    mobj_t *mobj;

@@ -177,6 +177,7 @@ struct player_s
 
   // Overlay view sprites (gun, etc).
   pspdef_t            psprites[NUMPSPRITES];
+  int                 curpsprite; // haleyjd 04/05/07: for codeptr rewrite
 
   // haleyjd 04/03/05: true pitch angle (replaces updownangle)
   fixed_t             pitch;
