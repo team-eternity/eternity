@@ -1451,8 +1451,8 @@ CONSOLE_COMMAND(quickload, 0)
       return;
    }
    
-   psnprintf(tempstring, sizeof(tempstring),
-             DEH_String("QLPROMPT"), savegamenames[quickSaveSlot]);
+   psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT, 
+             savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qload");
 }
 
@@ -1526,7 +1526,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
    }
    
    if(gamestate != GS_LEVEL)
-      return;    // only save in levels -- haleyjd: never in cinemas
+      return;    // only save in levels
    
    MN_ReadSaveStrings();
 
@@ -1556,8 +1556,8 @@ CONSOLE_COMMAND(quicksave, 0)
       return;
    }
    
-   psnprintf(tempstring, sizeof(tempstring),
-             DEH_String("QSPROMPT"), savegamenames[quickSaveSlot]);
+   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT, 
+             savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qsave");
 }
 
