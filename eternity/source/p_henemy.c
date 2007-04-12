@@ -3071,11 +3071,10 @@ void A_WeaponCtrJump(mobj_t *mo)
    player_t *player;
    pspdef_t *pspr;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   pspr   = &player->psprites[player->curpsprite];
+   pspr = &player->psprites[player->curpsprite];
 
    statenum  = pspr->state->args[0];
    checktype = pspr->state->args[1];
@@ -3169,11 +3168,10 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    player_t *player;
    pspdef_t *pspr;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   pspr   = &player->psprites[player->curpsprite];
+   pspr = &player->psprites[player->curpsprite];
 
    cnum       = pspr->state->args[0];
    startstate = pspr->state->args[1];
@@ -3233,11 +3231,10 @@ void A_WeaponSetCtr(mobj_t *mo)
    player_t *player;
    pspdef_t *pspr;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   pspr   = &player->psprites[player->curpsprite];
+   pspr = &player->psprites[player->curpsprite];
 
    cnum      = pspr->state->args[0];
    value     = (short)(pspr->state->args[1]);
@@ -3315,11 +3312,10 @@ void A_WeaponCtrOp(mobj_t *mo)
 
    short *c_oper1, *c_oper2, *c_dest;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   pspr   = &player->psprites[player->curpsprite];
+   pspr = &player->psprites[player->curpsprite];
 
    c_oper1_num = pspr->state->args[0];
    c_oper2_num = pspr->state->args[1];
@@ -3419,12 +3415,10 @@ void A_WeaponCopyCtr(mobj_t *mo)
    player_t *player;
    pspdef_t *pspr;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   pspr   = &player->psprites[player->curpsprite];
-
+   pspr  = &player->psprites[player->curpsprite];
    cnum1 = pspr->state->args[0];
    cnum2 = pspr->state->args[1];
 

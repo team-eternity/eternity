@@ -386,11 +386,10 @@ void A_WeaponReady(mobj_t *mo)
    player_t *player;
    pspdef_t *psp;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   psp    = &player->psprites[player->curpsprite];
+   psp = &player->psprites[player->curpsprite];
 
    // PCLASS_FIXME: attack states -> EDF playerclass properties
    // PCLASS_FIXME: spawnstate -> EDF playerclass property
@@ -508,11 +507,10 @@ void A_Lower(mobj_t *mo)
    player_t *player;
    pspdef_t *psp;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   psp    = &player->psprites[player->curpsprite];
+   psp = &player->psprites[player->curpsprite];
 
    // WEAPON_FIXME: LOWERSPEED property of EDF weapons?
    psp->sy += LOWERSPEED;
@@ -551,11 +549,10 @@ void A_Raise(mobj_t *mo)
    player_t *player;
    pspdef_t *psp;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   psp    = &player->psprites[player->curpsprite];
+   psp = &player->psprites[player->curpsprite];
 
    // WEAPON_FIXME: RAISESPEED property of EDF weapons?
    
@@ -1040,11 +1037,10 @@ void A_FireCGun(mobj_t *mo)
    player_t *player;
    pspdef_t *psp;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   psp    = &player->psprites[player->curpsprite];
+   psp = &player->psprites[player->curpsprite];
 
    S_StartSound(mo, sfx_chgun);
 
@@ -1400,11 +1396,10 @@ void A_FireCustomBullets(mobj_t *mo)
    player_t *player;
    pspdef_t *psp;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   psp    = &player->psprites[player->curpsprite];
+   psp = &player->psprites[player->curpsprite];
 
    sound      = (int)(psp->state->args[0]);
    accurate   = (int)(psp->state->args[1]);
@@ -1536,11 +1531,10 @@ void A_CustomPlayerMelee(mobj_t *mo)
    player_t *player;
    pspdef_t *psp;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   psp    = &player->psprites[player->curpsprite];
+   psp = &player->psprites[player->curpsprite];
 
    dmgfactor  = (int)(psp->state->args[0]);
    dmgmod     = (int)(psp->state->args[1]);
@@ -1647,10 +1641,9 @@ void A_PlayerThunk(mobj_t *mo)
    player_t *player;
    pspdef_t *psp;
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
    psp    = &player->psprites[player->curpsprite];
 
    cptrnum   =    (int)(psp->state->args[0]);

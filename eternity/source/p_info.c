@@ -248,8 +248,9 @@ static void P_ParseLevelInfo(int lumpnum)
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier
-   lump[size] = '\n';
-   lump[size + 1] = '\0';
+   // haleyjd 04/08/07: buffer overrun repaired!
+   lump[size - 2] = '\n';
+   lump[size - 1] = '\0';
 
    rover = lump;
 
@@ -568,7 +569,7 @@ static void SynthLevelName(boolean secret)
 //
 static void P_InfoDefaultLevelName(void)
 {
-   const char *bexname = NULL;
+   const char *bexname  = NULL;
    boolean deh_modified = false;
    boolean synth_type   = false;
 

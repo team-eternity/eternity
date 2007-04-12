@@ -3412,11 +3412,10 @@ void A_PlayerStartScript(mobj_t *mo)
    pspdef_t *psp;
    cell params[3];
 
-   if(!mo->player)
+   if(!(player = mo->player))
       return;
 
-   player = mo->player;
-   psp    = &player->psprites[player->curpsprite];
+   psp = &player->psprites[player->curpsprite];
 
    scriptnum =  (int)(psp->state->args[0]);
    selectvm  =  (int)(psp->state->args[1]);
