@@ -55,6 +55,7 @@ void T_QuakeThinker(quakethinker_t *qt)
    // quake is finished?
    if(qt->duration == 0)
    {
+      // FIXME: should these be cleared here?
       for(i = 0; i < MAXPLAYERS; ++i)
          players[i].quake = 0;
 
@@ -71,7 +72,7 @@ void T_QuakeThinker(quakethinker_t *qt)
 
    tics = qt->duration--;
 
-   // do some rumbling every 2 tics
+   // do some rumbling
    for(i = 0; i < MAXPLAYERS; ++i)
    {
       if(playeringame[i])
@@ -84,6 +85,7 @@ void T_QuakeThinker(quakethinker_t *qt)
          if(dst < qt->quakeRadius)
             p->quake = qt->intensity;
 
+         // every 2 tics, the player may be damaged
          if(!(tics & 1))
          {
             angle_t  thrustangle;   
