@@ -491,7 +491,7 @@ int I_SoundID(int handle)
 
 #ifdef RANGECHECK
    if(handle < 0 || handle >= MAX_CHANNELS)
-      I_Error("I_SoundStartTic: handle out of range");
+      I_Error("I_SoundID: handle out of range\n");
 #endif
 
    return channelinfo[handle].idnum;
@@ -756,7 +756,7 @@ void I_InitMusic(void)
       mus_init = true;
       break;   
    default:
-      printf("I_InitMusic: Using No MIDI Device.\n");
+      printf("I_InitMusic: Music is disabled.\n");
       break;
    }
    
@@ -859,12 +859,12 @@ int I_RegisterSong(void *data, int size)
       SDL_FreeRW(rw);
       rw = NULL;
 
-      memset(&mididata,0,sizeof(MIDI));
+      memset(&mididata, 0, sizeof(MIDI));
       
       if((err = mmus2mid((byte *)data, &mididata, 89, 0))) 
       {         
          // Nope, not a mus
-         doom_printf(FC_ERROR"Error loading midi: %d", err);
+         doom_printf(FC_ERROR "Error loading midi: %d", err);
          return 0;
       }
 
@@ -907,8 +907,8 @@ int I_QrySongPlaying(int handle)
 
 // system specific sound console commands
 
-char *sndcardstr[] = { "SDL mixer", "none" };
-char *muscardstr[] = { "SDL mixer", "none" };
+static char *sndcardstr[] = { "SDL mixer", "none" };
+static char *muscardstr[] = { "SDL mixer", "none" };
 
 VARIABLE_INT(snd_card, NULL,           -1, 0, sndcardstr);
 VARIABLE_INT(mus_card, NULL,           -1, 0, muscardstr);

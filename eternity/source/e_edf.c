@@ -1893,7 +1893,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    if(!numProbs)
       useProbs = false;
 
-   if((useProbs && numTypes != numProbs) || numTypes != 11)
+   if(useProbs ? numTypes != numProbs : numTypes != 11)
    {
       E_EDFLoggedErr(2, 
          "E_ProcessBossTypes: %d boss types, %d boss probs\n",
