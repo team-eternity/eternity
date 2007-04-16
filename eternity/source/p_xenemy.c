@@ -55,11 +55,7 @@ void T_QuakeThinker(quakethinker_t *qt)
    // quake is finished?
    if(qt->duration == 0)
    {
-      // FIXME: should these be cleared here?
-      for(i = 0; i < MAXPLAYERS; ++i)
-         players[i].quake = 0;
-
-      S_StopSound((mobj_t *)&qt->origin);
+      S_StopSound(soundorg);
       P_RemoveThinker(&(qt->origin.thinker));
       return;
    }
@@ -81,8 +77,11 @@ void T_QuakeThinker(quakethinker_t *qt)
          mobj_t   *mo = p->mo;
          fixed_t  dst = P_AproxDistance(qt->origin.x - mo->x, 
                                         qt->origin.y - mo->y);
+
          // test if player is in quake radius
-         if(dst < qt->quakeRadius)
+         // haleyjd 04/16/07: only set p->quake when qt->intensity is greater;
+         // this way, the strongest quake in effect always wins out
+         if(dst < qt->quakeRadius && p->quake < qt->intensity)
             p->quake = qt->intensity;
 
          // every 2 tics, the player may be damaged
@@ -95,7 +94,7 @@ void T_QuakeThinker(quakethinker_t *qt)
             {
                if(P_Random(pr_quake) < 50)
                {
-                  P_DamageMobj(mo, NULL, NULL, (P_Random(pr_quakedmg) % 8) + 1,
+                  P_DamageMobj(mo, NULL, NULL, P_Random(pr_quakedmg) % 8 + 1,
                                MOD_UNKNOWN);
                }
                thrustangle = (359 * P_Random(pr_quake) / 255) * ANGLE_1;

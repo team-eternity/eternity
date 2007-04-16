@@ -247,7 +247,7 @@ mobj_t *P_GetThingUnder(mobj_t *mo)
 // P_SBlockThingsIterator
 //
 // Special version of P_BlockThingsIterator: takes an actor from which to start
-// a search, which is an extensions borrowed from zdoom and is needed for 3D 
+// a search, which is an extension borrowed from zdoom and is needed for 3D 
 // object clipping.
 //
 boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *), 
@@ -277,7 +277,7 @@ extern fixed_t tmsecfloorz;
 extern fixed_t tmsecceilz;
 
 extern boolean P_Touched(mobj_t *thing, mobj_t *tmthing);
-extern int P_MissileBlockHeight(mobj_t *mo);
+extern int     P_MissileBlockHeight(mobj_t *mo);
 extern boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing);
 
 //
@@ -386,7 +386,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
       tmthing->flags &= ~MF_SKULLFLY;
       tmthing->momx = tmthing->momy = tmthing->momz = 0;
 
-      P_SetMobjState (tmthing, tmthing->info->spawnstate);
+      P_SetMobjState(tmthing, tmthing->info->spawnstate);
 
       BlockingMobj = NULL; // haleyjd: from zdoom
 
@@ -522,7 +522,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
    // Whether object can get out of a sticky situation:
    tmunstuck = thing->player &&        // only players
-      thing->player->mo == thing;        // not voodoo dolls
+      thing->player->mo == thing;      // not voodoo dolls
 
    // The base floor / ceiling is from the subsector
    // that contains the point.
