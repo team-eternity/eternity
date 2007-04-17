@@ -2,7 +2,153 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
-01/11/07 - 01/12/07
+03/29/07
+
+I changed the quad cache column engine to not use quad caching at all for fuzz
+columns because they still looked totally wrong, and I couldn't figure out how
+to ever get the proper results when the columns were quad cached. So fuzz 
+drawing through the quad engine is actually less efficient now, but the 
+difference is so small, and fuzz columns are so rare, that it shouldn't be a
+problem. Maybe if you filled nuts.wad with only spectres you would see a 
+difference. But I doubt it :P
+
+--------------------------------------------------------------------------------
+03/28/07
+
+Minor work on player classes and EDF weapons is ongoing.
+
+--------------------------------------------------------------------------------
+03/08/07
+
+Began work on changing how ammo handling is done in p_pspr.c so that ammo
+subtraction in weapon codepointers is done in one uniform way with a new
+function. This is preliminary work toward the dynamic weapons system, of course.
+
+I additionally identified numerous weapon FIXME's; things that will need to be
+changed or augmented to work with the EDF weapon system.
+
+--------------------------------------------------------------------------------
+03/04/07
+
+I have completed fixes and changes that allow Eternity to fully and properly 
+support dynamic sector colormaps. Colormaps for deep water are no longer read
+through the heightsec but are transfered directly to the affected sectors during
+level setup. This simplifies things drastically and allows scripting to be able
+to properly manipulate any sector's colormaps.
+
+--------------------------------------------------------------------------------
+02/28/07
+
+Finished up the line id system and added savegame code for all of the recently
+added thinker types, including earthquakes and scripted/Hexen-style light fades.
+Also reformatted frames.edf.
+
+--------------------------------------------------------------------------------
+02/27/07
+
+Added new Small natives _ThingSetFriend and _ThingIsFriend, for manipulating the
+friendliness of monsters from Small scripts. Still needed is a function which
+spawns a monster as friendly from the get-go.
+
+I rewrote P_FindLine to use the line tag hash table, and I started work on 
+adding Hexen-style line IDs, which unlike tags have a default value of -1 
+instead of zero. Line IDs will be needed for ACS scripting, and will also be
+usable via ExtraData.
+
+Also started poking around with the high level netcode, but I'm not getting very
+far right now.
+
+--------------------------------------------------------------------------------
+02/25/07
+
+Added a tweak to the TerrainTypes system that keeps FLOATBOB objects from
+causing terrain hits. I noticed some potions splashing down some watery steps in
+an E5 map of Heretic one time and thought it quite odd. They probably also
+shouldn't be subject to Lee's torque code either, for that matter, but I haven't
+addressed that separate issue yet.
+
+--------------------------------------------------------------------------------
+02/16/07
+
+Joe finally fixed up the Linux build and install system to work with the base
+directory setup.
+
+--------------------------------------------------------------------------------
+01/30/07
+
+Continued with GCC warning fixes. It seems that GCC 4 has a new strict aliasing
+optimization system which causes perfectly valid C code to throw a load of
+annoying warnings about type-punning breaking strict aliasing assumptions. This
+is a load of crap, of course. If strict aliasing causes valid code to give off
+warnings, then strict aliasing should have to be turned ON via an option, not
+turned OFF by one. But then expecting GCC to display any serious type of design
+logic has been unreasonable for quite some years now.
+
+GCC 4 builds of Eternity *must* use -fno-strict-aliasing, which unfortunately
+disables the optimizations for the entire game engine while most of it could
+safely utilize it. Type punning is utilized throughout important segments of the
+game to achieve polymorphism. The largest (and original) use is of course the
+thinker_t list. There are no plain thinker_t's -- all of them are embedded
+inside one of a good two dozen different structure types, all of which need to
+"think" once per gametic and are therefore kept on the same linked lists and
+allocated and freed with the same code.
+
+Other code which uses this same or a similar approach includes my generic queue 
+and double-linked list modules, and the sound code, which allows degenmobj_t to 
+pose as mobj_t in order to facilitate the playing of sounds by sectors and other
+static entities.
+
+--------------------------------------------------------------------------------
+01/24/07
+
+Added a console variable that allows the game to spawn Unknowns at the location
+of unknown thing types (like zdoom does) except during demo recording, demo
+playback, or netgames. This option is on top of the messages which are shown at
+map start.
+
+--------------------------------------------------------------------------------
+01/21/07
+
+Implemented Hexen-style earthquakes for Small, ACS, and parameterized Hexen /
+ExtraData line specials. Eternity's earthquakes are lacking a number of quirks
+that Hexen's had. Mainly, multiple ongoing earthquakes won't cancel any of the
+effects on the player. I also do not spawn any mobj_t's, and so Eternity does
+not have a temporary earthquake epicenter thingtype. Instead, the earthquake
+thinker itself contains a degenmobj_t (or rather, the degenmobj_t contains the
+thinker ;)  This degenmobj_t serves to both hold the coordinates of the 
+epicenter and works as a convenient sound origin (degenmobj_t can be type-punned
+as both thinker_t *and* mobj_t, which is its great asset). Note that earthquake 
+sounds are played from the origin with full volume and zero attenuation. This 
+means that if a Cyberdemon moos during an earthquake, you'll hear both sounds.
+
+--------------------------------------------------------------------------------
+01/18/07
+
+Added ACS thing type numbers to EDF. These are gamemode-dependent, as only 256
+id numbers are available to ACS line specials. The numbers have been made zdoom-
+compatible as much as possible, though I am very disappointed with the number of
+ids that zdoom has not bothered to allocate. There are many Doom and Heretic
+objects deserving of a spawn id number which are not currently allocated one. I
+am afraid to hand any out myself, as this situation may change in the future.
+
+I noticed that TerrainType sound mnemonics had not been expanded in length since
+the sound mnemonic max length was changed from 16 to 32 characters. This meant
+that TerrainTypes had an artificial lower name length limitation for a while.
+
+SoM continues work on linked portals with optimizations, bug fixes, and new
+features. You can shoot through them now ^_^
+
+--------------------------------------------------------------------------------
+01/17/07
+
+Finished up adding the rest of the Hexen parameterized lighting specials.
+However, I need to revise them to be able to work on a single sector on the
+backside of the line when activated as push line specials. In fact, I need to
+go over a bunch of the recently added specials and check them for this ability.
+They should all ideally support it.
+
+--------------------------------------------------------------------------------
+01/11/07 - 01/16/07
 
 SoM has begun the long-anticipated integration of his Cardboard floating-point
 renderer into Eternity. We are currently both doing extensive testing on the
@@ -131,7 +277,7 @@ key calculation.
 --------------------------------------------------------------------------------
 01/06/07
 
-I added a tweak to the libConfuse parser and lexer which allow specified
+I added a tweak to the libConfuse parser and lexer which allows specified
 sections to contain spaces within unquoted strings. This is specified by putting
 a new CFGF_STRSPACE flag on the sections in question. This allows me to remove
 the requirement that sound sequence strings be quoted, which is something I
