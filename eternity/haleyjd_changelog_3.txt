@@ -2,6 +2,55 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+04/12/07
+
+I tweaked up my codepointer rewrite to use fewer lines of code to retrieve the
+player and psprite pointers from the mo parameter, and I also fixed a major bug
+in the MapInfo parser. My previous fix to normalize the lump by adding a \n and
+\0 pair to the end of it was incorrect because it overflowed the buffer by 
+writing two bytes past the end. This happened because I forgot I had already
+incremented the buffer length variable "size" by 2 when I allocated it. I was
+thinking the buffer was allocated at size+2, and therefore I needed to write the
+bytes to indices "size" and "size+1", when the correct indices were "size-2" and
+"size-1".
+
+This would cause random corruption of the last data field in the lump if the
+lump was not already linebreak-terminated, and worse, if the lump was a multiple
+of 32 bytes in size, the next block on the zone heap would get corrupted and the
+game would crash.
+
+Those looking for a temporary workaround until the next release should end their
+MapInfo lumps with a linebreak and pad them with spaces in order to avoid having
+size % 32 == 0. This should avoid both the corruption and the crash.
+
+--------------------------------------------------------------------------------
+04/11/07
+
+Integrated joe's fix to the Phoenix problem of not being able to quicksave or
+quickload due to the menu system asking for some nonexistent BEX strings (this
+caused the internal error "DEH_String: unknown BEX mnemonic '%s'"). These
+strings were inappropriately caught in a mass search-and-replace operation after
+I rewrote DEH/BEX string handling. Also did some major reformatting of the data
+tables in d_dehtbl.c -- I'm not done yet though :P
+
+--------------------------------------------------------------------------------
+04/05/07
+
+I have now changed weapon codepointers to use the same prototype as mobj action
+codepointers, so all issues related to crashes caused by EDF or DEH/BEX patches
+assigning the wrong type of pointer to the wrong frame are now a thing of the
+past. This was made possible by retrieving the player pointer from mo, and
+adding a "curpsprite" index to the player_t structure that allows retrieving the
+proper psprite pointer from the player. As a result, all monster pointers are
+now usable directly by the player (though many of them are not going to have
+satisfactory results when used this way), and a select few of the weapon 
+pointers can now work for monsters. The Saw pointer is one of those, as it uses
+no fields at all from the player_t or psprite_t structures.
+
+This solution was glaringly obvious. I have no excuse for it having taken eight
+years for me to think of it :P
+
+--------------------------------------------------------------------------------
 03/29/07
 
 I changed the quad cache column engine to not use quad caching at all for fuzz
