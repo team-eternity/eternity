@@ -2,6 +2,21 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+04/16/07
+
+Applied minor tweaks to the earthquake code that should ensure that earthquakes
+cannot cut each others' effects off, and to ensure that the earthquake with the
+greatest Richter scale determines how much the player's screen will shake (the
+effect is not additive, both because it's difficult to achieve proper results
+with a system like that, and because it wouldn't be Hexen-compatible).
+
+--------------------------------------------------------------------------------
+04/13/07
+
+The EDF boss spawner / boss probabilities logic was apparently broken during
+some reformatting a long time ago and has thus been messed up for quite a while.
+
+--------------------------------------------------------------------------------
 04/12/07
 
 I tweaked up my codepointer rewrite to use fewer lines of code to retrieve the
