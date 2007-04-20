@@ -647,8 +647,8 @@ boolean P_Touched(mobj_t *thing, mobj_t *tmthing)
    // EDF FIXME: temporary fix?
    if(painType == -1)
    {
-      painType    = E_ThingNumForDEHNum(MT_PAIN);
-      skullType   = E_ThingNumForDEHNum(MT_SKULL);
+      painType  = E_ThingNumForDEHNum(MT_PAIN);
+      skullType = E_ThingNumForDEHNum(MT_SKULL);
    }
 
    if(thing->flags & MF_TOUCHY &&                  // touchy object
@@ -681,9 +681,43 @@ boolean P_Touched(mobj_t *thing, mobj_t *tmthing)
 boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing)
 {
    int solid = thing->flags & MF_SOLID;
+
    if(tmflags & MF_PICKUP)
       P_TouchSpecialThing(thing, tmthing); // can remove thing
+
    return !solid;
+}
+
+//
+// P_SkullHit
+//
+// haleyjd: isolated code to test for and execute SKULLFLY objects hitting
+// things. Returns true if PIT_CheckThing should exit.
+//
+boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing)
+{
+   boolean ret = false;
+
+   if(tmthing->flags & MF_SKULLFLY)
+   {
+      // A flying skull is smacking something.
+      // Determine damage amount, and the skull comes to a dead stop.
+
+      int damage = (P_Random(pr_skullfly) % 8 + 1) * tmthing->damage;
+      
+      P_DamageMobj(thing, tmthing, tmthing, damage, MOD_UNKNOWN);
+      
+      tmthing->flags &= ~MF_SKULLFLY;
+      tmthing->momx = tmthing->momy = tmthing->momz = 0;
+      
+      P_SetMobjState(tmthing, tmthing->info->spawnstate);
+
+      BlockingMobj = NULL; // haleyjd: from zdoom
+
+      ret = true; // stop moving
+   }
+
+   return ret;
 }
 
 //
@@ -754,24 +788,10 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
       return true;
 
    // check for skulls slamming into things
-   
-   if(tmthing->flags & MF_SKULLFLY)
-   {
-      // A flying skull is smacking something.
-      // Determine damage amount, and the skull comes to a dead stop.
-      
-      int damage = ((P_Random(pr_skullfly)%8)+1)*tmthing->damage;
-      
-      P_DamageMobj(thing, tmthing, tmthing, damage, MOD_UNKNOWN);
-      
-      tmthing->flags &= ~MF_SKULLFLY;
-      tmthing->momx = tmthing->momy = tmthing->momz = 0;
-      
-      P_SetMobjState (tmthing, tmthing->info->spawnstate);
-      
-      return false;   // stop moving
-   }
 
+   if(P_SkullHit(thing, tmthing))
+      return false;
+   
    // missiles can hit other things
    // killough 8/10/98: bouncing non-solid things can hit other things too
    
@@ -847,8 +867,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
       (demo_version < 331 || !(tmthing->flags3 & MF3_CANNOTPUSH)))
    {
       // transfer one-fourth momentum along the x and y axes
-      thing->momx += tmthing->momx >> 2;
-      thing->momy += tmthing->momy >> 2;
+      thing->momx += tmthing->momx / 4;
+      thing->momy += tmthing->momy / 4;
    }
 
    // check for special pickup

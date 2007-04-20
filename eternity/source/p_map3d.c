@@ -279,6 +279,7 @@ extern fixed_t tmsecceilz;
 extern boolean P_Touched(mobj_t *thing, mobj_t *tmthing);
 extern int     P_MissileBlockHeight(mobj_t *mo);
 extern boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing);
+extern boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing);
 
 //
 // PIT_CheckThing3D
@@ -352,7 +353,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
          {
             P_Touched(thing, tmthing);
             // haleyjd: make the thing fly up a bit so it can run across
-            tmthing->momz += 1*FRACUNIT; 
+            tmthing->momz += FRACUNIT; 
             return true;
          }
       }
@@ -374,24 +375,8 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
 
    // check for skulls slamming into things
    
-   if(tmthing->flags & MF_SKULLFLY)
-   {
-      // A flying skull is smacking something.
-      // Determine damage amount, and the skull comes to a dead stop.
-      
-      int damage = ((P_Random(pr_skullfly)%8)+1)*tmthing->damage;
-     
-      P_DamageMobj(thing, tmthing, tmthing, damage, MOD_UNKNOWN);
-      
-      tmthing->flags &= ~MF_SKULLFLY;
-      tmthing->momx = tmthing->momy = tmthing->momz = 0;
-
-      P_SetMobjState(tmthing, tmthing->info->spawnstate);
-
-      BlockingMobj = NULL; // haleyjd: from zdoom
-
-      return false;   // stop moving
-   }
+   if(P_SkullHit(thing, tmthing))
+      return false;
 
    // missiles can hit other things
    // killough 8/10/98: bouncing non-solid things can hit other things too
@@ -468,8 +453,8 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    if(thing->flags2 & MF2_PUSHABLE && !(tmthing->flags3 & MF3_CANNOTPUSH))
    {
       // transfer one-fourth momentum along the x and y axes
-      thing->momx += tmthing->momx >> 2;
-      thing->momy += tmthing->momy >> 2;
+      thing->momx += tmthing->momx / 4;
+      thing->momy += tmthing->momy / 4;
    }
 
    // check for special pickup

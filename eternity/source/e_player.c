@@ -93,6 +93,7 @@ static cfg_opt_t pc_skin_sound_opts[] =
    CFG_STR(ITEM_SKINSND_FALL,    "plfall", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_FEET,    "plfeet", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_FALLHIT, "fallht", CFGF_NONE),
+   CFG_END()
 };
 
 #define ITEM_SKIN_SPRITE "sprite"
