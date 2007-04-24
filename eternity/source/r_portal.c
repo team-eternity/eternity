@@ -327,7 +327,7 @@ void R_PortalAdd(rportal_t *portal, int x, float ytop, float ybottom)
 
 #ifdef RANGECHECK
    if((ytop >= view.height || ybottom >= view.height || ytop < 0 || ybottom < 0) && 
-      ytop <= ybottom)
+      ytop < ybottom)
    {
       I_Error("R_PortalAdd portal supplied with bad column data.\n"
               "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
@@ -462,7 +462,8 @@ static void R_RenderPlanePortal(rportal_t *portal)
 //
 static void R_RenderHorizonPortal(rportal_t *portal)
 {
-   fixed_t lastx, lasty, lastz; // SoM 3/10/2005 
+   fixed_t lastx, lasty, lastz; // SoM 3/10/2005
+   float   lastxf, lastyf, lastzf;
    visplane_t *topplane, *bottomplane;
    int x;
 
@@ -512,15 +513,24 @@ static void R_RenderHorizonPortal(rportal_t *portal)
    }
 
    lastx = viewx; lasty = viewy; lastz = viewz;
-   
+   lastxf = view.x;
+   lastyf = view.y;
+   lastzf = view.z;
+
    viewx = portal->vx;   
    viewy = portal->vy;   
    viewz = portal->vz;   
+   view.x = viewx / 65536.0f;
+   view.y = viewy / 65536.0f;
+   view.z = viewz / 65536.0f;
 
    if(portal->child)
       R_RenderHorizonPortal(portal->child);
 
    viewx = lastx; viewy = lasty; viewz = lastz;
+   view.x = lastxf;
+   view.y = lastyf;
+   view.z = lastzf;
 }
 
 //
@@ -529,6 +539,7 @@ static void R_RenderHorizonPortal(rportal_t *portal)
 static void R_RenderSkyboxPortal(rportal_t *portal)
 {
    fixed_t lastx, lasty, lastz;
+   float   lastxf, lastyf, lastzf;
 
    if(portal->type != R_SKYBOX)
       return;
@@ -565,10 +576,16 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    lastx = viewx;
    lasty = viewy;
    lastz = viewz;
+   lastxf = view.x;
+   lastyf = view.y;
+   lastzf = view.z;
 
    viewx = portal->data.camera.mobj->x;
    viewy = portal->data.camera.mobj->y;
    viewz = portal->data.camera.mobj->z;
+   view.x = viewx / 65536.0f;
+   view.y = viewy / 65536.0f;
+   view.z = viewz / 65536.0f;
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes-1);
@@ -580,6 +597,9 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    viewx = lastx;
    viewy = lasty;
    viewz = lastz;
+   view.x = lastxf;
+   view.y = lastyf;
+   view.z = lastzf;
 
    if(portal->child)
       R_RenderSkyboxPortal(portal->child);
