@@ -690,6 +690,48 @@ static void D_ExpandTilde(char basedir[PATH_MAX + 1])
 
 }
 
+// return codes for D_CheckBasePath
+enum
+{
+   BASE_ISGOOD,
+   BASE_NOTEXIST,
+   BASE_NOTDIR,
+};
+
+//
+// D_CheckBasePath
+//
+// Checks a provided path to see that it both exists and that it is a directory
+// and not a plain file.
+//
+static int D_CheckBasePath(const char *path)
+{
+   int ret;
+   struct stat sbuf;
+
+   if(!stat(path, &sbuf)) // check for existence
+   {
+      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+         ret = BASE_ISGOOD;
+      else
+         ret = BASE_NOTDIR;
+   }
+   else
+      ret = BASE_NOTEXIST;
+   
+   return ret;
+}
+
+// basepath sources
+enum
+{
+   BASE_CMDLINE,
+   BASE_ENVIRON,
+   BASE_WORKING,
+   BASE_EXEDIR,
+   BASE_NUMBASE
+};
+
 //
 // D_SetBasePath
 //
@@ -698,40 +740,84 @@ static void D_ExpandTilde(char basedir[PATH_MAX + 1])
 //
 static void D_SetBasePath(void)
 {
-   int p;
+   int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    char *s;
-   struct stat sbuf;
    char basedir[PATH_MAX + 1];
+   boolean havepath = false;
 
    memset(basedir, 0, sizeof(basedir));
 
    // Priority:
    // 1. Command-line argument "-base"
    // 2. Environment variable "ETERNITYBASE"
-   // 3. /base under DoomExeDir
+   // 3. /base under working directory
+   // 4. /base under DoomExeDir
 
+   // check command-line
    if((p = M_CheckParm("-base")) && p < myargc - 1)
-      psnprintf(basedir, PATH_MAX + 1, "%s", myargv[p + 1]);
-   else if((s = getenv("ETERNITYBASE")))
-      psnprintf(basedir, PATH_MAX + 1, "%s", s);
-   else
-      psnprintf(basedir, PATH_MAX + 1, "%s/%s", D_DoomExeDir(), "base");
-
-   D_ExpandTilde(basedir);
-
-   if(!stat(basedir, &sbuf)) // check for existence
    {
-      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-      {
-         strncpy(basepath, basedir, PATH_MAX + 1);
-         basepath[PATH_MAX] = '\0';
-         NormalizeSlashes(basepath);
-      }
-      else
-         I_Error("Base path %s is not a directory.\n", basedir);
+      psnprintf(basedir, PATH_MAX + 1, "%s", myargv[p + 1]);
+      D_ExpandTilde(basedir);
+
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+         source = BASE_CMDLINE;
    }
-   else
-      I_Error("Base path %s does not exist\n", basedir);
+
+   // check environment
+   if(res != BASE_ISGOOD && (s = getenv("ETERNITYBASE")))
+   {
+      strncpy(basedir, s, PATH_MAX + 1);
+      D_ExpandTilde(basedir);
+
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+         source = BASE_ENVIRON;
+   }
+
+   // check working dir
+   if(res != BASE_ISGOOD)
+   {
+      strncpy(basedir, "./base", PATH_MAX + 1);
+
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+         source = BASE_WORKING;
+   }
+
+   // check exe dir
+   if(res != BASE_ISGOOD)
+   {
+      psnprintf(basedir, PATH_MAX + 1, "%s/base", D_DoomExeDir());
+
+      if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
+         source = BASE_EXEDIR;
+      else
+      {
+         // final straw.
+         I_Error("D_SetBasePath: base path %s.\n",
+                 res == BASE_NOTDIR ? "is not a directory" : "does not exist");
+      }
+   }
+
+   strncpy(basepath, basedir, PATH_MAX + 1);
+   basepath[PATH_MAX] = '\0';
+   NormalizeSlashes(basepath);
+
+   switch(source)
+   {
+   case BASE_CMDLINE:
+      s = "by command line";
+      break;
+   case BASE_ENVIRON:
+      s = "by environment";
+      break;
+   case BASE_WORKING:
+      s = "to working directory";
+      break;
+   case BASE_EXEDIR:
+      s = "to executable directory";
+      break;
+   }
+
+   printf("Base path set %s\n", s);
 }
 
 //
