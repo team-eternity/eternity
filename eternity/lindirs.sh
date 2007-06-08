@@ -1,14 +1,8 @@
 #! /bin/bash
 
 mkdir ~/.eternity
-mkdir ~/.eternity/base
-mkdir ~/.eternity/base/doom
-mkdir ~/.eternity/base/heretic
-mkdir ~/.eternity/base/shots
 
-cp edf/*.edf ~/.eternity/base
-cp wads/eternity.wad ~/.eternity/base/doom
-cp wads/eterhtic.wad ~/.eternity/base/heretic/eternity.wad
+cp -R base/ ~/.eternity/base
 
 if [ $ETERNITYBASE ]; then
    echo "ETERNITYBASE = $ETERNITYBASE";
