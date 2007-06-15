@@ -68,7 +68,7 @@
         <li><a href="#_ffloor">_ffloor</a>
         <li><a href="#_fceil">_fceil</a>
         <li><a href="#_ftoi">_ftoi</a>
-        </ul>    
+        </ul>
     <li><a href="#random">Random Number Generators</a>
         <ul>
         <li><a href="#_P_Random">_P_Random</a>
@@ -86,7 +86,7 @@
         <li><a href="#_MoveWidget">_MoveWidget</a>
         <li><a href="#_GetHUDMode">_GetHUDMode</a>
         <li><a href="#_InAutomap">_InAutomap</a>
-        </ul>    
+        </ul>
     <li><a href="#game">Game Functions</a>
         <ul>
         <li><a href="#_ExitLevel">_ExitLevel</a>
@@ -115,6 +115,7 @@
         <li><a href="#_ThingThrust">_ThingThrust</a>
         <li><a href="#_ThingThrust3f">_ThingThrust3f</a>
         <li><a href="#_ThingGetPos">_ThingGetPos</a>
+        <li><a href="#_ThingTeleport">_ThingTeleport</a>
         <li><a href="#_GetFreeTID">_GetFreeTID</a>
         </ul>
     <li><a href="#sound">Sounds</a>
@@ -234,7 +235,7 @@ Here is a brief example and explanation of the entries in this reference:
 The <b>Function Name</b> is the name of the function, by which it is called in a script
 and can be found in this reference. Below the name is the exact declaration of the function
 in Small along with a brief explanation of each parameter to the function and its return
-value. Below this is the header file in which the declaration can be found, and then a 
+value. Below this is the header file in which the declaration can be found, and then a
 description with additional, verbose information about how to use the function. Finally, if
 the function can cause any exceptions, the types of errors will be explained.
 <br><br>
@@ -262,7 +263,7 @@ documented here.
     is available to the interpreter in which the current script is running. This is not
     yet useful for anything within the Eternity environment.
     <br><br>
-    
+
 <li><a name="funcidx"><b>funcidx</b></a><br>
     <em>native funcidx(const name[]);</em><br>
     Parameters:
@@ -271,14 +272,14 @@ documented here.
     </ul>
     Return value: Internal index number of the function.<br>
     Found in: core.inc<br>
-    Description: This function returns the internal index of a public Small function. This 
+    Description: This function returns the internal index of a public Small function. This
     is not yet useful for anything within the Eternity environment.<br>
     Exceptions:
     <ul>
     <li> "Native function failed" : The value in name cannot be used as a function name.
     </ul>
     <br>
-    
+
 <li><a name="numargs"><b>numargs</b></a><br>
     <em>native numargs();</em><br>
     Parameters: None<br>
@@ -289,7 +290,7 @@ documented here.
     arguments by using the "..." syntax (see the Small Language Reference for full
     information).
     <br><br>
-    
+
 <li><a name="getarg"><b>getarg</b></a><br>
     <em>native getarg(arg, index = 0);</em><br>
     Parameters:
@@ -305,7 +306,7 @@ documented here.
     Small, the first argument is considered to be #0, not #1. The second argument, which is
     optional, is used as an array index when a function takes arrays as parameters.
     <br><br>
-    
+
 <li><a name="setarg"><b>setarg</b></a><br>
     <em>native setarg(arg, index = 0, value);</em><br>
     Parameters:
@@ -319,7 +320,7 @@ documented here.
     Found in: core.inc<br>
     Description: Sets the value of the specified argument for variable-argument functions.
     <br><br>
-    
+
 <li><a name="strlen"><b>strlen</b></a><br>
     <em>native strlen(const string[]);</em><br>
     Parameters:
@@ -331,7 +332,7 @@ documented here.
     Description: Returns the length of a string array. This function works on both
     packed and unpacked Small strings, and returns the number of characters in either case.
     <br><br>
-    
+
 <li><a name="strpack"><b>strpack</b></a><br>
     <em>native strpack(dest[], const source[]);</em><br>
     Parameters:
@@ -349,7 +350,7 @@ documented here.
     <li> "Parameter error" : dest or source is not a valid string array.
     </ul>
     <br>
-    
+
 <li><a name="strunpack"><b>strunpack</b></a><br>
     <em>native strunpack(dest[], const source[]);</em><br>
     Parameters:
@@ -367,7 +368,7 @@ documented here.
     <li> "Parameter error" : dest or source is not a valid string array.
     </ul>
     <br>
-    
+
 <li><a name="tolower"><b>tolower</b></a><br>
     <em>native tolower(c);</em><br>
     Parameters:
@@ -377,7 +378,7 @@ documented here.
     Return value: The lower-case equivalent of the character c.<br>
     Found in: core.inc
     <br><br>
-    
+
 <li><a name="toupper"><b>toupper</b></a><br>
     <em>native toupper(c);</em><br>
     Parameters:
@@ -387,7 +388,7 @@ documented here.
     Return value: The upper-case equivalent of the character c.<br>
     Found in: core.inc
     <br><br>
-    
+
 <li><a name="swapchars"><b>swapchars</b></a><br>
     <em>native swapchars(c);</em><br>
     Parameters:
@@ -398,7 +399,7 @@ documented here.
     Found in: core.inc<br>
     Description: Returns the value c with all bytes in the cell swapped.
     <br><br>
-    
+
 <li><a name="min"><b>min</b></a><br>
     <em>native min(value1, value2);</em><br>
     Parameters:
@@ -409,7 +410,7 @@ documented here.
     Return value: Returns the parameter which has the least value.<br>
     Found in: core.inc
     <br><br>
-    
+
 <li><a name="max"><b>max</b></a><br>
     <em>native max(value1, value2);</em><br>
     Parameters:
@@ -420,7 +421,7 @@ documented here.
     Return value: Returns the parameter which has the greatest value.<br>
     Found in: core.inc
     <br><br>
-    
+
 <li><a name="clamp"><b>clamp</b></a><br>
     <em>native clamp(value, min = cellmin, max = cellmax);</em><br>
     Parameters:
@@ -478,11 +479,11 @@ include the following:
     invocation data will be set, and can be retrieved from any function called during the
     execution of the script. However, once the script ends, the invocation data is lost, thus
     if any of it is needed later, it must be saved in static or global variables. This function
-    can be used to test the invocation model before running any function which requires a 
-    certain model to be active, and can therefore allow you to avoid any invocation-related 
+    can be used to test the invocation model before running any function which requires a
+    certain model to be active, and can therefore allow you to avoid any invocation-related
     errors.
     <br><br>
-    
+
 <li><a name="_GetCcmdSrc"><b>_GetCcmdSrc</b></a><br>
     <em>native _GetCcmdSrc();</em><br>
     Parameters: None.<br>
@@ -495,7 +496,7 @@ include the following:
     <li> "Bad invocation model for native function" : Invocation type is not _INVOKE_CCMD.
     </ul>
     <br>
-    
+
 <li><a name="_GetPlayerSrc"><b>_GetPlayerSrc</b></a><br>
     <em>native _GetPlayerSrc();</em><br>
     Parameters: None.<br>
@@ -503,8 +504,8 @@ include the following:
     Found in: invoke.inc<br>
     Description: If the invocation type is _INVOKE_CCMD, _INVOKE_PLAYER, or _INVOKE_DIALOGUE,
     the number of the player who started the script will be returned in all cases. If the
-    invocation type is _INVOKE_THING, _INVOKE_LINE, or _INVOKE_TERRAIN, if a player object 
-    started the script, the player number will be returned, but if a non-player object started 
+    invocation type is _INVOKE_THING, _INVOKE_LINE, or _INVOKE_TERRAIN, if a player object
+    started the script, the player number will be returned, but if a non-player object started
     it, the value -1 will be returned instead. This can be used to tell if a player or a monster
     or other thing started a script.<br>
     Exceptions:
@@ -524,16 +525,16 @@ include the following:
     <ol>
     <li> If the object is a player, one of _TID_PLAYER1 through _TID_PLAYER4 will be returned.
     <li> If the object has its own unique TID, that TID will be returned.
-    <li> If the object does not have a unique TID, _TID_TRIGGER will be returned. 
-         _TID_TRIGGER is the only way to manipulate objects which do not possess a unique 
+    <li> If the object does not have a unique TID, _TID_TRIGGER will be returned.
+         _TID_TRIGGER is the only way to manipulate objects which do not possess a unique
          TID.
     </ol>
     If there is no trigger object for the current script, zero will be returned. This can be
     used to test for the presence of a trigger object before using Thing functions with
-    _TID_TRIGGER. While those functions will not cause errors when used with _TID_TRIGGER and 
+    _TID_TRIGGER. While those functions will not cause errors when used with _TID_TRIGGER and
     there is no trigger object, it may often be better to know beforehand.
     <br><br>
-    
+
 <li><a name="_SetCallback"><b>_SetCallback</b></a><br>
     <em>native _SetCallback(const name[], _waittypes:waittype = _SWAIT_NONE, waitdata = 0, flags = _CB_PAUSABLE | _CB_MPAUSE);</em><br>
     Parameters:
@@ -584,7 +585,7 @@ include the following:
     <li> "Unknown wait type" : Wait type value is invalid.
     </ul>
     <br>
-    
+
 <li><a name="_ExecGS"><b>_ExecGS</b></a><br>
     <em>native _ExecGS(const name[], ...);</em><br>
     Parameters:
@@ -604,7 +605,7 @@ include the following:
     <li> "Unknown or uninitialized VM" : No Gamescript is loaded.
     </ul>
     <br>
-    
+
 <li><a name="_ExecLS"><b>_ExecLS</b></a><br>
     <em>native _ExecLS(const name[], ...);</em><br>
     Parameters:
@@ -624,7 +625,7 @@ include the following:
     <li> "Unknown or uninitialized VM" : No Levelscript is loaded.
     </ul>
     <br>
-    
+
 <li><a name="_GetLevelVar"><b>_GetLevelVar</b></a><br>
     <em>native _GetLevelVar(const name[]);</em><br>
     Parameters:
@@ -739,7 +740,7 @@ Input/Output functions allow the user to manipulate and print string values.
     This can also be achieved by using ConsolePrint with the string "{||}", using the
     appropriate number of pipe characters, but this function is available as a convenience.
     <br><br>
-    
+
 <li><a name="_ConsoleBeep"><b>_ConsoleBeep</b></a><br>
     <em>native _ConsoleBeep();</em><br>
     Parameters: None.<br>
@@ -749,7 +750,7 @@ Input/Output functions allow the user to manipulate and print string values.
     This can also be achieved by using ConsolePrint and the '\a' character escape, but this
     function is available as a convenience.
     <br><br>
-    
+
 <li><a name="_Itoa"><b>_Itoa</b></a><br>
     <em>native _Itoa(number, string[], base, bool:packed);</em><br>
     Parameters:
@@ -770,7 +771,7 @@ Input/Output functions allow the user to manipulate and print string values.
     <li> "Invalid memory access" : string[] is not a valid string array.
     </ul>
     <br>
-    
+
 <li><a name="_Printf"><b>_Printf</b></a><br>
     <em>native _Printf(_msgtypes:msgtype, const format[], ...);</em><br>
     Parameters:
@@ -864,7 +865,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     it explicitly indicates that you may do so, and Eternity does not provide any operators
     or functions for working with literal Float values directly.
     <br><br>
-    
+
 <li><a name="_fmul"><b>_fmul</b></a><br>
     <em>native Fixed:_fmul(Fixed:a, Fixed:b);</em><br>
     Parameters:
@@ -879,7 +880,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     this function explicitly. Simply perform the operation "a * b" with two variables that
     are tagged as Fixed numbers and this function will be called implicitly.
     <br><br>
-    
+
 <li><a name="_fdiv"><b>_fdiv</b></a><br>
     <em>native Fixed:_fdiv(Fixed:a, Fixed:b);</em><br>
     Parameters:
@@ -898,7 +899,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     <li> "Divide by zero" : The divisor is zero; division by zero is undefined.
     </ul>
     <br>
-    
+
 <li><a name="_fabs"><b>_fabs</b></a><br>
     <em>native Fixed:_fabs(Fixed:value);</em><br>
     Parameters:
@@ -911,7 +912,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     in Small code as well, but the internal implementation is very fast, so using this function
     is recommended.
     <br><br>
-    
+
 <li><a name="fixed"><b>fixed</b></a><br>
     <em>stock Fixed:fixed(value);</em><br>
     Parameters:
@@ -923,7 +924,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     Description: Converts the given integer value to fixed-point format. If the number is less
     than -32768 or greater than 32767, data will be lost.
     <br><br>
-    
+
 <li><a name="_ffract"><b>_ffract</b></a><br>
     <em>stock Fixed:_ffract(Fixed:value);</em><br>
     Parameters:
@@ -934,7 +935,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     Found in: fixed.inc<br>
     Warning: This function was incorrect for negative values in Eternity Engine v3.33.00.
     <br><br>
-    
+
 <li><a name="_ffloor"><b>_ffloor</b></a><br>
     <em>stock Fixed:_ffloor(Fixed:value);</em><br>
     Parameters:
@@ -945,7 +946,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     Found in: fixed.inc<br>
     Warning: This function was incorrect in Eternity Engine v3.33.00.
     <br><br>
-    
+
 <li><a name="_fceil"><b>_fceil</b></a><br>
     <em>stock Fixed:_fceil(Fixed:value);</em><br>
     Parameters:
@@ -955,7 +956,7 @@ Fixed tag can be viewed in the <b>fixed.inc</b> header file.
     Return value: Returns the integral fixed-point number greater than or equal to 'value'.<br>
     Found in: fixed.inc
     <br><br>
-    
+
 <li><a name="_ftoi"><b>_ftoi</b></a><br>
     <em>stock _ftoi(Fixed:value);</em><br>
     Parameters:
@@ -992,7 +993,7 @@ the system.
     that changing the order or number of calls to this function in a script will impact demo
     compatibility for any levels using the script in question.
     <br><br>
-    
+
 <li><a name="_M_Random"><b>_M_Random</b></a><br>
     <em>native _M_Random();</em><br>
     Parameters: None.<br>
@@ -1050,18 +1051,18 @@ OnHUDStart      Called at start of a new level or when the player viewpoint
                 changes (ie, to a different player in coop mode). Use this
                 callback to set new values to auto-cleared text widgets, etc.
 
-OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the 
+OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
                 screen. This is the safest time to alter the properties of
                 HUD widgets. Altering them at any other time may result in
                 scraps being left on the game border and other odd visual
-                errors.   
+                errors.
 -------------------------------------------------------------------------------
 </pre>
 
 <ul>
 <li><a name="_NewPatchWidget"><b>_NewPatchWidget</b></a><br>
     <em>native _NewPatchWidget(const name[], const patch[], x, y, color = -1, tl = FRACUNIT);</em><br>
-    Parameters:     
+    Parameters:
     <ul>
     <li> const name[] : Unique mnemonic, must be no longer than 32 characters.
     <li> const patch[] : Name of patch-format graphic lump, must be no longer than 8 characters.
@@ -1078,7 +1079,7 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
          <li> _PCR_RED
          <li> _PCR_BLUE
          <li> _PCR_ORANGE
-         <li> _PCR_YELLOW  
+         <li> _PCR_YELLOW
          </ul>
          The default value -1 means that no color translation will be used.
     <li> tl : Translucency value as a number from 0 to 65536. Use the constant FRACUNIT to
@@ -1087,13 +1088,13 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
     Return value: None<br>
     Found in: hud.inc<br>
     Description: Creates a new widget that displays the specified patch at the given location
-    and with the specified properties. If a widget of the given name already exists, this 
-    function will return immediately without creating a new widget. If the patch specified does 
-    not exist, the game will exit with a "W_GetNumForName" error. If the patch specified is not 
-    a valid graphic, results will be undefined. The actual location of the patch on screen is 
-    subject to change via the patch graphic's x and y offset values. Use the x and y offsets to 
-    more easily position sets of patches relative to certain coordinates. If the color or 
-    translucency parameters are out of range, suitable default values of no translation and 
+    and with the specified properties. If a widget of the given name already exists, this
+    function will return immediately without creating a new widget. If the patch specified does
+    not exist, the game will exit with a "W_GetNumForName" error. If the patch specified is not
+    a valid graphic, results will be undefined. The actual location of the patch on screen is
+    subject to change via the patch graphic's x and y offset values. Use the x and y offsets to
+    more easily position sets of patches relative to certain coordinates. If the color or
+    translucency parameters are out of range, suitable default values of no translation and
     opaque will be applied.<br>
     Exceptions:
     <ul>
@@ -1115,7 +1116,7 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
     will happen. If the patch specified does not exist, the game will exit with a "W_GetNumForName"
     error. If the patch specified is not a valid graphic, results will be undefined.
     <br>
-    Note: Patch graphics loaded for use by patch widgets will remain loaded in memory 
+    Note: Patch graphics loaded for use by patch widgets will remain loaded in memory
     permanently in case they are needed again. This may impact memory usage if too many patches
     are loaded, so do not assume that resources are unlimited.
     <br>
@@ -1124,7 +1125,7 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
     <li> "Invalid memory access" : name[] or patch[] is not a valid string array.
     </ul>
     <br>
-    
+
 <li><a name="_PatchWidgetColor"><b>_PatchWidgetColor</b></a><br>
     <em>native _PatchWidgetColor(const name[], color = -2, tl = -1);</em><br>
     Parameters:
@@ -1141,7 +1142,7 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
          <li> _PCR_RED
          <li> _PCR_BLUE
          <li> _PCR_ORANGE
-         <li> _PCR_YELLOW  
+         <li> _PCR_YELLOW
          </ul>
          The default value -2 means that the current color used by the widget will not change.
          Any value other than these will clear the patch's color translation completely.
@@ -1190,8 +1191,8 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
     </ul>
     Return value: None.<br>
     Found in: hud.inc<br>
-    Description: Creates a new widget that displays the specified text message at the given 
-    location and with the specified properties. If a widget of the given name already exists, 
+    Description: Creates a new widget that displays the specified text message at the given
+    location and with the specified properties. If a widget of the given name already exists,
     this function will return immediately without creating a new widget.
     <br>
     Exceptions:
@@ -1205,7 +1206,7 @@ OnHUDPreDraw    Called immediately before all HUD widgets are drawn to the
     Parameters:
     <ul>
     <li> const name[] : Mnemonic of an existing text widget.
-    <li> dest[] : Destination string array to receive message.         
+    <li> dest[] : Destination string array to receive message.
     <li> size : Number of characters to retrieve. This value MUST be less than or equal to
          the length of dest[].
     <li> bool:packed : If true, dest[] will be treated as a packed string.
@@ -1342,7 +1343,7 @@ Game functions allow interaction with various aspects of the game engine and pla
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_ExitSecret"><b>_ExitSecret</b></a><br>
     <em>native _ExitSecret();</em><br>
     Parameters: None.<br>
@@ -1357,7 +1358,7 @@ Game functions allow interaction with various aspects of the game engine and pla
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_StartGame"><b>_StartGame</b></a><br>
     <em>native _StartGame(_gameskills:skill, const mapname[]);</em><br>
     Parameters:
@@ -1382,7 +1383,7 @@ Game functions allow interaction with various aspects of the game engine and pla
     <li> "Invalid memory access" : mapname[] is not a valid string array.
     </ul>
     <br>
-    
+
 <li><a name="_GameSkill"><b>_GameSkill</b></a><br>
     <em>native _gameskills:_GameSkill();</em><br>
     Parameters: None.<br>
@@ -1396,7 +1397,7 @@ Game functions allow interaction with various aspects of the game engine and pla
     </ul>
     Found in: game.inc
     <br><br>
-    
+
 <li><a name="_GameType"><b>_GameType</b></a><br>
     <em>native _gametypes:_GameType();</em><br>
     Parameters: None.<br>
@@ -1408,14 +1409,14 @@ Game functions allow interaction with various aspects of the game engine and pla
     </ul>
     Found in: game.inc
     <br><br>
-    
+
 <li><a name="_EngineVersion"><b>_EngineVersion</b></a><br>
     <em>native _EngineVersion();</em><br>
     Parameters: None.<br>
     Return value: Version number of this build of the Eternity Engine multiplied by 100.<br>
     Found in: game.inc
     <br><br>
-    
+
 <li><a name="_GetPlayerName"><b>_GetPlayerName</b></a><br>
     <em>native _GetPlayerName(num, str[], bool:packed);</em><br>
     Parameters:
@@ -1458,7 +1459,7 @@ _TID_PLAYER4 : Refers to player 4's avatar, if player 4 is present.
 _TID_TRIGGER : Refers to the current script trigger object, if one exists.
 </pre>
 These values are always safe to use, as all mapthing functions check whether the objects
-exist before using them. However, sometimes results may be unexpected if the objects do 
+exist before using them. However, sometimes results may be unexpected if the objects do
 not exist, so it is best to check beforehand when possible.
 
 <ul>
@@ -1487,7 +1488,7 @@ not exist, so it is best to check beforehand when possible.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_ThingHurt"><b>_ThingHurt</b></a><br>
     <em>native _ThingHurt(tid, damage, _mods:mod = _MOD_UNKNOWN, inflictor = 0, source = 0);</em><br>
     Parameters:
@@ -1532,14 +1533,14 @@ not exist, so it is best to check beforehand when possible.
     Description: Kills all creatures on the map that are included in the indicated class.
     Players are not included in any massacre. Massacres are not equivalent to the "killem"
     cheat code, and EDF nukespecial functions will NOT be invoked because of a massacre.
-    Thus, there may still be living creatures on the map after a massacre as a result of 
+    Thus, there may still be living creatures on the map after a massacre as a result of
     spawn-on-death actions (like those of the Pain Elemental or Serpent Rider D'Sparil).<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_ThingHate"><b>_ThingHate</b></a><br>
     <em>native _ThingHate(object, target);</em><br>
     Parameters:
@@ -1551,14 +1552,14 @@ not exist, so it is best to check beforehand when possible.
     Found in: things.inc<br>
     Description: Causes the targets of all things with a TID matching 'object' to be set to
     the first object found with TID 'target', if one exists. This will cause enemies or friendly
-    entities to begin fighting the indicated object, although it is still possible for them to 
+    entities to begin fighting the indicated object, although it is still possible for them to
     become distracted by other targets later.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_ThingNumForName"><b>_ThingNumForName</b></a><br>
     <em>native _ThingNumForName(const name[]);</em><br>
     Parameters:
@@ -1571,7 +1572,7 @@ not exist, so it is best to check beforehand when possible.
     number if a thingtype was defined with that mnemonic by EDF. If no such thingtype is
     found, the number of the required "Unknown" thingtype will be returned instead.
     <br><br>
-    
+
 <li><a name="_ThingNumForDEHNum"><b>_ThingNumForDEHNum</b></a><br>
     <em>native _ThingNumForDEHNum(num);</em><br>
     Parameters:
@@ -1586,7 +1587,7 @@ not exist, so it is best to check beforehand when possible.
     returned instead. Note that the default DeHackEd number of -1 cannot be resolved to
     any particular thingtype.
     <br><br>
-    
+
 <li><a name="_ThingUnknown"><b>_ThingUnknown</b></a><br>
     <em>native _ThingUnknown();</em><br>
     Parameters: None.<br>
@@ -1605,7 +1606,7 @@ not exist, so it is best to check beforehand when possible.
     Description: This stock function is a convenience method for testing if the results of a
     thingtype lookup resulted in a valid, unique thingtype.
     <br><br>
-    
+
 <li><a name="_ThingSpawn"><b>_ThingSpawn</b></a><br>
     <em>native _ThingSpawn(type, x, y, z, tid = 0, angle = 0);</em><br>
     Parameters:
@@ -1626,7 +1627,7 @@ not exist, so it is best to check beforehand when possible.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_ThingSpawnSpot"><b>_ThingSpawnSpot</b></a><br>
     <em>native _ThingSpawnSpot(type, spottid, tid = 0, angle = 0);</em><br>
     Parameters:
@@ -1695,7 +1696,7 @@ not exist, so it is best to check beforehand when possible.
          <li> _THING_COUNTER1 : Counter field two value.
          <li> _THING_COUNTER2 : Counter field three value.
          <li> _THING_EFFECTS : Particle effects flags value.
-         <li> _THING_TRANSLUCENCY : Flex translucency level of this thing.         
+         <li> _THING_TRANSLUCENCY : Flex translucency level of this thing.
          </ul>
     <li> value : New value of the property. Integer values only.
     </ul>
@@ -1722,7 +1723,7 @@ not exist, so it is best to check beforehand when possible.
          <li> _FLAGS_ADD : Turns on the indicated flags, leaving others alone.
          <li> _FLAGS_REMOVE : Turns off the indicated flags, leaving others alone.
          </ul>
-    <li> const str[] : EDF/BEX combined thing flags string. See the Eternity Engine DeHackEd/BEX 
+    <li> const str[] : EDF/BEX combined thing flags string. See the Eternity Engine DeHackEd/BEX
          documentation
          <a href="dehref.html#tngflags">BEX Extension: Thing Flag Lists</a> section for full
          information.
@@ -1730,15 +1731,15 @@ not exist, so it is best to check beforehand when possible.
     Return value: None.<br>
     Found in: things.inc<br>
     Description: Sets the flags indicated in str[] on all things with the given TID. This function
-    accepts an EDF/BEX-format combined flags string. The semantics of this field are similar to 
-    those of the "cflags" field in an EDF thingtype definition. Mnemonics for all three internal 
-    flags fields can be provided in the same string, with the sole exception of the flags field 
-    value "SLIDE", which cannot be specified and is overridden by the flags3 field value with the 
+    accepts an EDF/BEX-format combined flags string. The semantics of this field are similar to
+    those of the "cflags" field in an EDF thingtype definition. Mnemonics for all three internal
+    flags fields can be provided in the same string, with the sole exception of the flags field
+    value "SLIDE", which cannot be specified and is overridden by the flags3 field value with the
     same name.
     <br>
-    Some flags should not be set using this function, however, as their effects will not be 
-    properly activated or removed simply by toggling the flag. Other functions will be provided 
-    in the future to toggle some of these thing properties properly. The following flags are not 
+    Some flags should not be set using this function, however, as their effects will not be
+    properly activated or removed simply by toggling the flag. Other functions will be provided
+    in the future to toggle some of these thing properties properly. The following flags are not
     togglable and will may render incomplete, unexpected, or undefined results:
     <ul>
     <li> NOSECTOR
@@ -1772,7 +1773,7 @@ not exist, so it is best to check beforehand when possible.
     </ul>
     Return value: None.<br>
     Found in: things.inc<br>
-    Description: Pushes all things with the given TID along the provided angle with 
+    Description: Pushes all things with the given TID along the provided angle with
     the specified force.<br>
     Exceptions:
     <ul>
@@ -1792,7 +1793,7 @@ not exist, so it is best to check beforehand when possible.
     </ul>
     Return value: None.<br>
     Found in: things.inc<br>
-    Description: Pushes all things with the specified TID with the forces in 
+    Description: Pushes all things with the specified TID with the forces in
     each direction.<br>
     Exceptions:
     <ul>
@@ -1823,6 +1824,31 @@ not exist, so it is best to check beforehand when possible.
     Return value: Depends on the specified enum.<br>
     Found in: things.inc<br>
     Description: Returns one of a thing's properties.<br>
+    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+</ul>
+
+<ul>
+<li><a name="_ThingTeleport"><b>_ThingTeleport</b></a><br>
+    <em>native _ThingTeleport(tid, Fixed:x, Fixed:y, Fixed:z, _thing_tele:silent);</em><br>
+    Parameters:
+    <ul>
+    <li> tid : TID value of the thing(s) to use.
+    <li> x : x coord to teleport to, must be in fixed point
+    <li> y : y coord to teleport to, must be in fixed point
+    <li> z : z coord to teleport to, must be in fixed point
+    <li> _thing_tele:silent : Specifies whether the teleport is silent or not. Should be one of the following
+       enumeration values:
+       <ul>
+       <li> _TELE_NORMAL : Teleportation is accompanied by telefog and the teleport sound
+       <li> _TELE_SILENT : Functions like a silent teleport, no fog or noises.
+       </ul>
+    </ul>
+    Return value: None.<br>
+    Found in: things.inc<br>
+    Description: Teleports things of the given TID to the given location (silently or otherwise).<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -1869,7 +1895,7 @@ Sound functions allow the playing of sounds and music in various ways.
     <li> "Invalid memory access" : name[] is not a valid string array.
     </ul>
     <br>
-    
+
 <li><a name="_SoundGlobalNum"><b>_SoundGlobalNum</b></a><br>
     <em>native _SoundGlobalNum(sndnum);</em><br>
     Parameters:
@@ -1882,7 +1908,7 @@ Sound functions allow the playing of sounds and music in various ways.
     exists with the requested DeHackEd number, no sound will be played. The reserved sound
     DeHackEd number zero cannot be played.
     <br><br>
-    
+
 <li><a name="_SectorSound"><b>_SectorSound</b></a><br>
     <em>native _SectorSound(const name[], tag);</em><br>
     Parameters:
@@ -1942,8 +1968,8 @@ Sound functions allow the playing of sounds and music in various ways.
     </ul>
     Return value: None.<br>
     Found in: sound.inc<br>
-    Description: Every thing found with the given TID will play the requested sound. If no 
-    sound exists with the requested DeHackEd number, no sound will be played. The reserved 
+    Description: Every thing found with the given TID will play the requested sound. If no
+    sound exists with the requested DeHackEd number, no sound will be played. The reserved
     sound DeHackEd number zero cannot be played.
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
@@ -1999,7 +2025,7 @@ These functions allow direct manipulation of particle effects.
     </ul>
     Return value: None.<br>
     Found in: particle.inc<br>
-    Description: Causes a particle explosion effect to occur at the specified location 
+    Description: Causes a particle explosion effect to occur at the specified location
     using the two specified colors.<br>
     Exceptions:
     <ul>
@@ -2052,7 +2078,7 @@ These functions allow manipulation of sectors.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_SectorColormap"><b>_SectorColormap</b></a><br>
     Warning: This function is currently broken. Do not use it.
 <!--
@@ -2093,9 +2119,9 @@ These functions allow manipulation of sectors.
 <hr>
 </a>
 <br>
-These functions correspond to ExtraData parameterized linedef specials. These functions provide 
-functionality similar to BOOM generalized linedefs, but they can accept an even wider range of 
-values than the corresponding BOOM lines, and thus provide additional flexibility far beyond 
+These functions correspond to ExtraData parameterized linedef specials. These functions provide
+functionality similar to BOOM generalized linedefs, but they can accept an even wider range of
+values than the corresponding BOOM lines, and thus provide additional flexibility far beyond
 what is possible with the DOOM map format. These specials are based loosely on those available
 in Hexen.
 
@@ -2119,13 +2145,13 @@ in Hexen.
     invocation model only. When such a script executes a parameterized line special, there exists
     the option of starting the special as if though it originated from the linedef which activated
     the script. Selecting this mode allows the use of zero tags and the trigger floor/ceiling
-    change model, among other things which may be noted in the specials below. Specials 
+    change model, among other things which may be noted in the specials below. Specials
     executed by scripts under other invocation models will always use _SPEC_NULL mode, even if
     the current mode is set to _SPEC_PASS, because they have no trigger line to reference.
     <br>
     Note: After the script originally called by the line has finished, the special mode will
     automatically reset to _SPEC_NULL. You must set the special mode to _SPEC_PASS at the
-    beginning of any script called directly from a script linedef when pass-through semantics 
+    beginning of any script called directly from a script linedef when pass-through semantics
     are desired. -->
     <br>
 
@@ -2152,7 +2178,7 @@ in Hexen.
     Description: Converts a given angle in degress to a byte angle. The formula used is as follows:<br>
     byteangle = (degrees * 256) / 360;
     <br><br>
-    
+
 <li><a name="_ByteAngleToFixed"><b>_ByteAngleToFixed</b></a><br>
     <em>stock Fixed:_ByteAngleToFixed(byteang);</em><br>
     Parameters:
@@ -2174,11 +2200,11 @@ in Hexen.
     </ul>
     Return value: The byte angle value corresponding to 'angle'.<br>
     Found in: specials.inc<br>
-    Description: Converts a given fixed-point angle in degress to a byte angle. The 
+    Description: Converts a given fixed-point angle in degress to a byte angle. The
     formula used is as follows:<br>
     byteangle = _:(angle * 32 / (45 * FRACUNIT));
     <br><br>
-    
+
 <li><a name="_Door_Raise"><b>_Door_Raise</b></a><br>
     <em>native _Door_Raise(tag, speed, delay, lighttag = 0);</em><br>
     Parameters:
@@ -2209,14 +2235,14 @@ in Hexen.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description: Opens all indicated sectors as doors; the sectors will remain open. Zero tags 
+    Description: Opens all indicated sectors as doors; the sectors will remain open. Zero tags
     may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Door_Close"><b>_Door_Close</b></a><br>
     <em>native _Door_Close(tag, speed, lighttag = 0);</em><br>
     Parameters:
@@ -2227,7 +2253,7 @@ in Hexen.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description: Closes all indicated sectors as doors; the sectors will remain closed. Zero 
+    Description: Closes all indicated sectors as doors; the sectors will remain closed. Zero
     tags may only be used if the calling script was started from a linedef.<br>
     Exceptions:
     <ul>
@@ -2253,7 +2279,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Door_WaitRaise"><b>_Door_WaitRaise</b></a><br>
     <em>native _Door_WaitRaise(tag, speed, delay, countdown, lighttag = 0);</em><br>
     Parameters:
@@ -2266,7 +2292,7 @@ in Hexen.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description: Waits until the countdown period has expired, then opens all indicated sectors 
+    Description: Waits until the countdown period has expired, then opens all indicated sectors
     as doors, which will close after the given amount of delay time. Zero tags may only be
     used if the calling script was started from a linedef.<br>
     Exceptions:
@@ -2274,7 +2300,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Door_WaitClose"><b>_Door_WaitClose</b></a><br>
     <em>native _Door_WaitClose(tag, speed, countdown, lighttag = 0);</em><br>
     Parameters:
@@ -2287,14 +2313,14 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Waits until the countdown period has expired, then closes all indicated sectors
-    as doors; the sectors will remain closed. Zero tags may only be used if the calling script was 
+    as doors; the sectors will remain closed. Zero tags may only be used if the calling script was
     started from a linedef.<br>
     Exceptions:
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_RaiseToHighest"><b>_Floor_RaiseToHighest</b></a><br>
     <em>native _Floor_RaiseToHighest(tag, speed, change = _FNoChg, crush = -1);</em><br>
     Parameters:
@@ -2311,14 +2337,14 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises all indicated sectors' floors to the highest neighboring floor. If
     the highest neighboring floor is lower, movement is instantaneous. If no neighboring
-    floor exists, motion is to -32000. Zero tags may only be used if the calling script was started from a 
+    floor exists, motion is to -32000. Zero tags may only be used if the calling script was started from a
     linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change models in any other circumstance will result in no change.
@@ -2328,7 +2354,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_LowerToHighest"><b>_Floor_LowerToHighest</b></a><br>
     <em>native _Floor_LowerToHighest(tag, speed, change = _FNoChg);</em><br>
     Parameters:
@@ -2350,7 +2376,7 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Lowers all indicated sectors' floors to the highest neighboring floor. If
     the highest neighboring floor is higher, movement is instantaneous. If no neighboring
-    floor exists, motion is to -32000. Zero tags may only be used if the calling script was started 
+    floor exists, motion is to -32000. Zero tags may only be used if the calling script was started
     from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2359,7 +2385,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_RaiseToLowest"><b>_Floor_RaiseToLowest</b></a><br>
     <em>native _Floor_RaiseToLowest(tag, change = _FNoChg, crush = -1);</em><br>
     Parameters:
@@ -2375,7 +2401,7 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -2411,7 +2437,7 @@ in Hexen.
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Lowers all indicated sectors' floors to the lowest neighboring floor, including
-    the floor itself. Movement is always at the indicated speed. Zero tags may only be used if the 
+    the floor itself. Movement is always at the indicated speed. Zero tags may only be used if the
     calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2420,7 +2446,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_RaiseToNearest"><b>_Floor_RaiseToNearest</b></a><br>
     <em>native _Floor_RaiseToNearest(tag, speed, change = _FNoChg, crush = -1);</em><br>
     Parameters:
@@ -2437,12 +2463,12 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description: Raises all indicated sectors' floors to the next higher neighboring floor. 
+    Description: Raises all indicated sectors' floors to the next higher neighboring floor.
     Movement is always at the indicated speed. If no neighboring floor exists, the floor will
     not move. Zero tags may only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the the calling script was started from a linedef.
@@ -2472,7 +2498,7 @@ in Hexen.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description: Lowers all indicated sectors' floors to the next lower neighboring floor. 
+    Description: Lowers all indicated sectors' floors to the next lower neighboring floor.
     Movement is always at the indicated speed. If no neighboring floor exists, the floor will
     not move. Zero tags may only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
@@ -2499,14 +2525,14 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description: Raises all indicated sectors' floors to the height of the lowest neighboring
     sector's ceiling, including the sector's ceiling itself. If the destination height is lower
-    than the floor's current height, movement will be instantaneous. Zero tags may only be used 
+    than the floor's current height, movement will be instantaneous. Zero tags may only be used
     if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2515,7 +2541,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_LowerToLowestCeiling"><b>_Floor_LowerToLowestCeiling</b></a><br>
     <em>native _Floor_LowerToLowestCeiling(tag, speed, change = _FNoChg);</em><br>
     Parameters:
@@ -2537,7 +2563,7 @@ in Hexen.
     Found in: specials.inc<br>
     Description: Lowers all indicated sectors' floors to the height of the lowest neighboring
     sector's ceiling, including the sector's ceiling itself. If the destination height is higher
-    than the floor's current height, movement will be instantaneous. Zero tags may only be used 
+    than the floor's current height, movement will be instantaneous. Zero tags may only be used
     if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2563,7 +2589,7 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -2578,7 +2604,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_RaiseByTexture"><b>_Floor_RaiseByTexture</b></a><br>
     <em>native _Floor_RaiseByTexture(tag, speed, change = _FNoChg, crush = -1);</em><br>
     Parameters:
@@ -2595,12 +2621,12 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description:  Raises indicated sectors' floors by the height of the shortest lower texture 
+    Description:  Raises indicated sectors' floors by the height of the shortest lower texture
     on any line on the boundary of the sector. If no such texture exists, movement is to
     +32000. Zero tags may only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
@@ -2610,7 +2636,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_LowerByTexture"><b>_Floor_LowerByTexture</b></a><br>
     <em>native _Floor_LowerByTexture(tag, speed, change = _FNoChg);</em><br>
     Parameters:
@@ -2630,7 +2656,7 @@ in Hexen.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description:  Lowers indicated sectors' floors by the height of the shortest lower texture 
+    Description:  Lowers indicated sectors' floors by the height of the shortest lower texture
     on any line on the boundary of the sector. If no such texture exists, movement is to
     -32000. Zero tags may only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
@@ -2640,7 +2666,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_RaiseByValue"><b>_Floor_RaiseByValue</b></a><br>
     <em>native _Floor_RaiseByValue(tag, speed, height, change = _FNoChg, crush = -1);</em><br>
     Parameters:
@@ -2658,12 +2684,12 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description:  Raises indicated sectors' floors by the indicated amount. Zero tags may only 
+    Description:  Raises indicated sectors' floors by the indicated amount. Zero tags may only
     be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2693,7 +2719,7 @@ in Hexen.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description:  Lowers indicated sectors' floors by the indicated amount. Zero tags may 
+    Description:  Lowers indicated sectors' floors by the indicated amount. Zero tags may
     only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2702,7 +2728,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_MoveToValue"><b>_Floor_MoveToValue</b></a><br>
     <em>native _Floor_MoveToValue(tag, speed, height, change = _FNoChg, crush = -1);</em><br>
     Parameters:
@@ -2720,13 +2746,13 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
     Description:  Moves indicated sectors' floors to the height given. Movement direction is
-    always toward the destination height, and instantaneous movement is not possible. Zero tags 
+    always toward the destination height, and instantaneous movement is not possible. Zero tags
     may only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2752,12 +2778,12 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description:  Raises indicated sectors' floors by the indicated amount instantaneously. Zero 
+    Description:  Raises indicated sectors' floors by the indicated amount instantaneously. Zero
     tags may only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2786,7 +2812,7 @@ in Hexen.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
     Found in: specials.inc<br>
-    Description:  Lowers indicated sectors' floors by the indicated amount instantaneously. Zero 
+    Description:  Lowers indicated sectors' floors by the indicated amount instantaneously. Zero
     tags may only be used if the calling script was started from a linedef.<br>
     *** : Trigger change models can only be used if the calling script was started from a linedef.
     Attempting to use trigger change model under any other circumstance will result in no change.<br>
@@ -2795,7 +2821,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_Floor_ToCeilingInstant"><b>_Floor_ToCeilingInstant</b></a><br>
     <em>native _Floor_ToCeilingInstant(tag, change = _FNoChg, crush = -1);</em><br>
     Parameters:
@@ -2811,7 +2837,7 @@ in Hexen.
          <li>_FChgTypTrig : Copy texture and type; trigger model. ***
          <li>_FChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -2825,7 +2851,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_RaiseToHighest"><b>_Ceiling_RaiseToHighest</b></a><br>
     <em>native _Ceiling_RaiseToHighest(tag, speed, change = _CNoChg);</em><br>
@@ -2855,8 +2881,8 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
-    
+
+
 <li><a name="_Ceiling_ToHighestInstant"><b>_Ceiling_ToHighestInstant</b></a><br>
     <em>native _Ceiling_ToHighestInstant(tag, change = _CNoChg, crush = -1);</em><br>
     Parameters:
@@ -2872,7 +2898,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -2886,7 +2912,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceilng_RaiseToNearest"><b>_Ceiling_RaiseToNearest</b></a><br>
     <em>native _Ceiling_RaiseToNearest(tag, speed, change = _CNoChg);</em><br>
@@ -2916,7 +2942,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_LowerToNearest"><b>_Ceiling_LowerToNearest</b></a><br>
     <em>native _Ceiling_LowerToNearest(tag, speed, change = _CNoChg, crush = -1);</em><br>
@@ -2934,7 +2960,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -2948,7 +2974,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_RaiseToLowest"><b>_Ceiling_RaiseToLowest</b></a><br>
     <em>native _Ceiling_RaiseToLowest(tag, speed, change = _CNoChg);</em><br>
@@ -2978,7 +3004,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_LowerToLowest"><b>_Ceiling_LowerToLowest</b></a><br>
     <em>native _Ceiling_LowerToLowest(tag, speed, change = _CNoChg, crush = -1);</em><br>
@@ -2996,7 +3022,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3010,7 +3036,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_RaiseToHighestFloor"><b>_Ceiling_RaiseToHighestFloor</b></a><br>
     <em>native _Ceiling_RaiseToHighestFloor(tag, speed, change = _CNoChg);</em><br>
@@ -3040,7 +3066,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_LowerToHighestFloor"><b>_Ceiling_LowerToHighestFloor</b></a><br>
     <em>native _Ceiling_LowerToHighestFloor(tag, speed, change = _CNoChg, crush = -1);</em><br>
@@ -3058,7 +3084,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3072,7 +3098,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_ToFloorInstant"><b>_Ceiling_ToFloorInstant</b></a><br>
     <em>native _Ceiling_ToFloorInstant(tag, change = _CNoChg, crush = -1);</em><br>
@@ -3089,7 +3115,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3103,7 +3129,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_LowerToFloor"><b>_Ceiling_LowerToFloor</b></a><br>
     <em>native _Ceiling_LowerToFloor(tag, speed, change = _CNoChg, crush = -1);</em><br>
@@ -3121,7 +3147,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3135,7 +3161,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_RaiseByTexture"><b>_Ceiling_RaiseByTexture</b></a><br>
     <em>native _Ceiling_RaiseByTexture(tag, speed, change = _CNoChg);</em><br>
@@ -3166,7 +3192,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_LowerByTexture"><b>_Ceiling_LowerByTexture</b></a><br>
     <em>native _Ceiling_LowerByTexture(tag, speed, change = _CNoChg, crush = -1);</em><br>
@@ -3184,7 +3210,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3199,7 +3225,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_RaiseByValue"><b>_Ceiling_RaiseByValue</b></a><br>
     <em>native _Ceiling_RaiseByValue(tag, speed, height, change = _CNoChg);</em><br>
@@ -3230,7 +3256,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_LowerByValue"><b>_Ceiling_LowerByValue</b></a><br>
     <em>native _Ceiling_LowerByValue(tag, speed, height, change = _CNoChg, crush = -1);</em><br>
@@ -3249,7 +3275,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3263,7 +3289,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_MoveToValue"><b>_Ceiling_MoveToValue</b></a><br>
     <em>native _Ceiling_MoveToValue(tag, speed, height, change = _CNoChg, crush = -1);</em><br>
@@ -3282,7 +3308,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3296,7 +3322,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_RaiseInstant"><b>_Ceiling_RaiseInstant</b></a><br>
     <em>native _Ceiling_RaiseInstant(tag, height, change = _CNoChg);</em><br>
@@ -3326,7 +3352,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Ceiling_LowerInstant"><b>_Ceiling_LowerInstant</b></a><br>
     <em>native _Ceiling_LowerInstant(tag, height, change = _CNoChg, crush = -1);</em><br>
@@ -3344,7 +3370,7 @@ in Hexen.
          <li>_CChgTypTrig : Copy texture and type; trigger model. ***
          <li>_CChgTypNum : Copy texture and type; numeric model.
          </ul>
-    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means 
+    <li> crush : Optional amount of crushing damage to apply per crush event. Zero or less means
          no crushing damage.
     </ul>
     Return value: 1 if action was successful on any sector, 0 otherwise.<br>
@@ -3358,7 +3384,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Stairs_BuildUpDoom"><b>_Stairs_BuildUpDoom</b></a><br>
     <em>native _Stairs_BuildUpDoom(tag, speed, stepsize, delay, reset);</em><br>
@@ -3368,7 +3394,7 @@ in Hexen.
     <li> speed : Speed of steps in eights of a unit per tic. If the
     <li> stepsize : Step size in eighths of a unit.
     <li> delay : Delay time in tics before stair building begins.
-    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics
          after completely building and will then reset by repeating the same stair building
          action but in the reverse direction. If zero, the stairs will never reset.
     </ul>
@@ -3381,7 +3407,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Stairs_BuildDownDoom"><b>_Stairs_BuildDownDoom</b></a><br>
     <em>native _Stairs_BuildDownDoom(tag, speed, stepsize, delay, reset);</em><br>
@@ -3391,7 +3417,7 @@ in Hexen.
     <li> speed : Speed of steps in eights of a unit per tic.
     <li> stepsize : Step size in eighths of a unit.
     <li> delay : Delay time in tics before stair building begins.
-    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics
          after completely building and will then reset by repeating the same stair building
          action but in the reverse direction. If zero, the stairs will never reset.
     </ul>
@@ -3404,7 +3430,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Stairs_BuildUpDoomSync"><b>_Stairs_BuildUpDoomSync</b></a><br>
     <em>native _Stairs_BuildUpDoomSync(tag, speed, stepsize, delay, reset);</em><br>
@@ -3416,7 +3442,7 @@ in Hexen.
          height at the same time as the first step.
     <li> stepsize : Step size in eighths of a unit.
     <li> delay : Delay time in tics before stair building begins.
-    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics
          after completely building and will then reset by repeating the same stair building
          action but in the reverse direction. If zero, the stairs will never reset.
     </ul>
@@ -3429,7 +3455,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Stairs_BuildDownDoomSync"><b>_Stairs_BuildDownDoomSync</b></a><br>
     <em>native _Stairs_BuildDownDoomSync(tag, speed, stepsize, delay, reset);</em><br>
@@ -3441,7 +3467,7 @@ in Hexen.
          height at the same time as the first step.
     <li> stepsize : Step size in eighths of a unit.
     <li> delay : Delay time in tics before stair building begins.
-    <li> reset : If greater than zero, the stairs will wait this amount of time in tics 
+    <li> reset : If greater than zero, the stairs will wait this amount of time in tics
          after completely building and will then reset by repeating the same stair building
          action but in the reverse direction. If zero, the stairs will never reset.
     </ul>
@@ -3454,7 +3480,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_DoorSlide"><b>_Polyobj_DoorSlide</b></a><br>
     <em>native _Polyobj_DoorSlide(polyobj_id, speed, angle, dist, delay);</em><br>
@@ -3480,7 +3506,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_DoorSwing"><b>_Polyobj_DoorSwing</b></a><br>
     <em>native _Polyobj_DoorSwing(polyobj_id, aspeed, adist, delay);</em><br>
@@ -3500,7 +3526,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_Move"><b>_Polyobj_Move</b></a><br>
     <em>native _Polyobj_Move(polyobj_id, speed, angle, dist);</em><br>
@@ -3525,7 +3551,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_OR_Move"><b>_Polyobj_OR_Move</b></a><br>
     <em>native _Polyobj_OR_Move(polyobj_id, speed, angle, dist);</em><br>
@@ -3551,7 +3577,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_RotateRight"><b>_Polyobj_RotateRight</b></a><br>
     <em>native _Polyobj_RotateRight(polyobj_id, aspeed, adist);</em><br>
@@ -3575,7 +3601,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_OR_RotateRight"><b>_Polyobj_OR_RotateRight</b></a><br>
     <em>native _Polyobj_OR_RotateRight(polyobj_id, aspeed, adist);</em><br>
@@ -3592,7 +3618,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_RotateLeft"><b>_Polyobj_RotateLeft</b></a><br>
     <em>native _Polyobj_RotateLeft(polyobj_id, aspeed, adist);</em><br>
@@ -3616,7 +3642,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 
 <li><a name="_Polyobj_OR_RotateLeft"><b>_Polyobj_OR_RotateLeft</b></a><br>
     <em>native _Polyobj_OR_RotateLeft(polyobj_id, aspeed, adist);</em><br>
@@ -3681,7 +3707,7 @@ in Hexen.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
     <li><a name="_Pillar_Open"><b>_Pillar_Open</b></a><br>
     <em>native _Pillar_Open(tag, speed, fdist, cdist);</em><br>
     Parameters:
@@ -3695,9 +3721,9 @@ in Hexen.
     Description: Floor and ceiling open up away from eachother by the given distances.
     If the floor distance is greater than the ceiling distance, the floor speed is
     the given speed, while the ceiling speed is set so the ceiling reaches its
-    destination at the same time the floor does, and vice versa. If a distance is 0, 
+    destination at the same time the floor does, and vice versa. If a distance is 0,
     the floor or ceiling will move to the lowest neighboring floor or highest neighboring
-    ceiling. This function will only work properly if the floor and ceiling heights of the 
+    ceiling. This function will only work properly if the floor and ceiling heights of the
     tagged sector are initally equal.<br>
     Exceptions:
     <ul>
@@ -3733,7 +3759,7 @@ the game.
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
     <br>
-    
+
 <li><a name="_IsChasecamOn"><b>_IsChasecamOn</b></a><br>
     <em>native bool:_IsChasecamOn();</em><br>
     Parameters: None.<br>

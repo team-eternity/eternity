@@ -155,6 +155,16 @@ enum _thing_pos
 // Gets one of a thing's positional information fields in fixed-point format
 native Fixed:_ThingGetPos(tid, _thing_pos:field);
 
+enum _thing_tele
+{
+   _TELE_NORMAL,
+   _TELE_SILENT
+}
+
+// Teleports thing with given tid to given (x,y) location, silent can be either
+// _TELE_NORMAL or _TELE_SILENT (self explanatory)
+native _ThingTeleport(tid, Fixed:x, Fixed:y, Fixed:z, _thing_tele:silent);
+
 // flag operation values
 enum _flagops
 {
@@ -181,7 +191,7 @@ enum
    _PFX_BFG            = 0x00000008,
    _PFX_FLIESONDEATH   = 0x00000010,
    _PFX_DRIP           = 0x00000020,
-   
+
    _PFX_REDFOUNTAIN    = 0x00010000,
    _PFX_GREENFOUNTAIN  = 0x00020000,
    _PFX_BLUEFOUNTAIN   = 0x00030000,
