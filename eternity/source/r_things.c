@@ -80,7 +80,7 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
       while(topp < stopp)
       {
          *topp++ = 0;
-         *bottomp++ = view.height - 1.0f;;
+         *bottomp++ = view.height - 1.0f;
       }
    }
    else

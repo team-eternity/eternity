@@ -230,7 +230,7 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
    R_ClearClipSegs();
    
    // extend first solidseg to one column left of first open post
-   while(i < viewwidth && bottom[i] - top[i] <= -1.0f) 
+   while(i < viewwidth && bottom[i] < top[i]) 
       ++i;
    
    // first open post found, set last closed post to last closed post (i - 1);
@@ -245,7 +245,7 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
    while(1)
    {
       //find the first closed post.
-      while(i < viewwidth && bottom[i] - top[i] > -1.0f) 
+      while(i < viewwidth && bottom[i] >= top[i]) 
          ++i;
       
       if(i == viewwidth)
@@ -255,7 +255,7 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
       solidseg->first = i;
       
       // find the first open post
-      while(i < viewwidth && top[i] + 1 >= bottom[i]) i++;
+      while(i < viewwidth && top[i] > bottom[i]) i++;
       if(i == viewwidth)
          goto endclosed;
       

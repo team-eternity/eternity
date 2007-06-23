@@ -182,6 +182,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    open3dmidtex = false; // haleyjd: clear this flag before each line
    */
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
+   // SoM: used for 3dmidtex
+   fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
 
    if(linedef->sidenum[1] == -1)      // single sided line
    {
@@ -200,6 +202,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       else
 #endif
          frontceilz = openfrontsector->ceilingheight;
+      
+      frontcz = openfrontsector->ceilingheight;
 
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && useportalgroups && openbacksector->c_portal &&
@@ -208,6 +212,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       else
 #endif
          backceilz = openbacksector->ceilingheight;
+
+      backcz = openbacksector->ceilingheight;
    }
 
 
@@ -220,6 +226,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 #endif
          frontfloorz = openfrontsector->floorheight;
 
+      frontfz = openfrontsector->floorheight;
+
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && useportalgroups && openbacksector->f_portal &&
          openbacksector->f_portal->type == R_LINKED)
@@ -227,12 +235,15 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       else
 #endif
          backfloorz = openbacksector->floorheight;
+
+      backfz = openfrontsector->floorheight;
    }
    
    if(frontceilz < backceilz)
       opentop = frontceilz;
    else
       opentop = backceilz;
+
    
    if(frontfloorz > backfloorz)
    {
@@ -253,6 +264,15 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       openfloorsec = openbacksector;
    }
 
+   if(frontcz < backcz)
+      otop = frontcz;
+   else
+      otop = backcz;
+
+   if(frontfz < backfz)
+      obot = frontfz;
+   else
+      obot = backfz;
 
    opensecfloor = openbottom;
    opensecceil = opentop;
@@ -267,12 +287,12 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
-         texbot = side->rowoffset + openbottom;
+         texbot = side->rowoffset + obot;
          textop = texbot + textureheight[side->midtexture];
       }
       else
       {
-         textop = opentop + side->rowoffset;
+         textop = otop + side->rowoffset;
          texbot = textop - textureheight[side->midtexture];
       }
       texmid = (textop + texbot)/2;
