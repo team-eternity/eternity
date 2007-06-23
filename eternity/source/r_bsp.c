@@ -94,7 +94,7 @@ static cliprange_t solidsegs[MAXSEGS];
 //  e.g. single sided LineDefs (middle texture)
 //  that entirely block the view.
 //
-static void R_ClipSolidWallSegment()
+static void R_ClipSolidWallSegment(int x1, int x2)
 {
    cliprange_t *next, *start;
    
@@ -102,40 +102,40 @@ static void R_ClipSolidWallSegment()
    // (adjacent pixels are touching).
    
    start = solidsegs;
-   while(start->last < seg.x1 - 1)
+   while(start->last < x1 - 1)
       ++start;
 
-   if(seg.x1 < start->first)
+   if(x1 < start->first)
    {
-      if(seg.x2 < start->first - 1)
+      if(x2 < start->first - 1)
       {
          // Post is entirely visible (above start), so insert a new clippost.
-         R_StoreWallRange(seg.x1, seg.x2);
+         R_StoreWallRange(x1, x2);
          
          // 1/11/98 killough: performance tuning using fast memmove
          memmove(start + 1, start, (++newend - start) * sizeof(*start));
-         start->first = seg.x1;
-         start->last = seg.x2;
+         start->first = x1;
+         start->last = x2;
          return;
       }
 
       // There is a fragment above *start.
-      R_StoreWallRange(seg.x1, start->first - 1);
+      R_StoreWallRange(x1, start->first - 1);
       
       // Now adjust the clip size.
-      start->first = seg.x1;
+      start->first = x1;
    }
 
    // Bottom contained in start?
-   if(seg.x2 <= start->last)
+   if(x2 <= start->last)
       return;
 
    next = start;
-   while(seg.x2 >= (next + 1)->first - 1)
+   while(x2 >= (next + 1)->first - 1)
    {      // There is a fragment between two posts.
       R_StoreWallRange(next->last + 1, (next + 1)->first - 1);
       ++next;
-      if(seg.x2 <= next->last)
+      if(x2 <= next->last)
       {  
          // Bottom is contained in next. Adjust the clip size.
          start->last = next->last;
@@ -144,10 +144,10 @@ static void R_ClipSolidWallSegment()
    }
 
    // There is a fragment after *next.
-   R_StoreWallRange(next->last + 1, seg.x2);
+   R_StoreWallRange(next->last + 1, x2);
    
    // Adjust the clip size.
-   start->last = seg.x2;
+   start->last = x2;
    
    // Remove start+1 to next from the clip list,
    // because start now covers their area.
@@ -169,44 +169,44 @@ crunch:
 // Does handle windows,
 //  e.g. LineDefs with upper and lower texture.
 //
-static void R_ClipPassWallSegment()
+static void R_ClipPassWallSegment(int x1, int x2)
 {
    cliprange_t *start = solidsegs;
    
    // Find the first range that touches the range
    //  (adjacent pixels are touching).
-   while(start->last < seg.x1 - 1)
+   while(start->last < x1 - 1)
       ++start;
 
-   if(seg.x1 < start->first)
+   if(x1 < start->first)
    {
-      if(seg.x2 < start->first - 1)
+      if(x2 < start->first - 1)
       {
          // Post is entirely visible (above start).
-         R_StoreWallRange(seg.x1, seg.x2);
+         R_StoreWallRange(x1, x2);
          return;
       }
 
       // There is a fragment above *start.
-      R_StoreWallRange(seg.x1, start->first - 1);
+      R_StoreWallRange(x1, start->first - 1);
    }
 
    // Bottom contained in start?
-   if(seg.x2 <= start->last)
+   if(x2 <= start->last)
       return;
 
-   while(seg.x2 >= (start + 1)->first - 1)
+   while(x2 >= (start + 1)->first - 1)
    {
       // There is a fragment between two posts.
       R_StoreWallRange(start->last + 1, (start + 1)->first - 1);
       ++start;
       
-      if(seg.x2 <= start->last)
+      if(x2 <= start->last)
          return;
    }
    
    // There is a fragment after *next.
-   R_StoreWallRange(start->last + 1, seg.x2);
+   R_StoreWallRange(start->last + 1, x2);
 }
 
 //
@@ -477,6 +477,103 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    }
    return sec;
 }
+
+
+
+//
+// R_ClipSegToPortal
+//
+// SoM 3/14/2005: This function will reject segs that are completely 
+// outside the portal window based on a few conditions. It will also 
+// clip the start and stop values of the seg based on what range it is 
+// actually visible in. This function is sound and Doom could even use 
+// this for normal rendering, but it adds some overhead.
+
+// SoM 6/24/2007: Moved this here and rewrote it a bit.
+
+static void R_ClipSegToPortal(void)
+{
+   int i, startx;
+
+   // The way we handle segs depends on relative camera position. If the 
+   // camera is above we need to reject segs based on the top of the seg.
+   // If the camera is below the bottom of the seg the bottom edge needs 
+   // to be clipped. This is done so visplanes will still be rendered 
+   // fully.
+   if(viewz > seg.frontsec->ceilingheight)
+   {
+      float top, topstep;
+      float y1, y2;
+
+      // I totally overlooked this when I moved all the wall panel projection 
+      // to r_segs.c
+      top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
+      y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(y1 > portalrender.maxy && y2 > portalrender.maxy)
+         return;
+
+      topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+
+      for(i = seg.x1; i <= seg.x2; i++)
+      {
+         // skip past the closed or out of sight columns to find the first visible column
+         for(; i <= seg.x2 && (floorclip[i] < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
+            top += topstep;
+
+         if(i > seg.x2)
+            return;
+
+         startx = i; // mark
+
+         // skip past visible columns 
+         for(; i <= seg.x2 && floorclip[i] >= ceilingclip[i] && floorclip[i] - top > -1.0f; i++)
+            top += topstep;
+
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+      }
+   }
+   else
+   {
+      float bottom, bottomstep;
+      float y1, y2;
+
+      bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
+      y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(y1 < portalrender.miny && y2 < portalrender.miny)
+         return;
+
+      bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+
+      for(i = seg.x1; i <= seg.x2; i++)
+      {
+         for(; i <= seg.x2 && (floorclip[i] < ceilingclip[i] || bottom < ceilingclip[i]); i++)
+            bottom += bottomstep;
+
+         if(i > seg.x2)
+            return;
+
+         startx = i;
+
+         for(; i <= seg.x2 && floorclip[i] >= ceilingclip[i] && bottom >= ceilingclip[i]; i++)
+            bottom += bottomstep;
+
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+      }
+   }
+}
+
+
+
 
 //
 // R_AddLine
@@ -959,13 +1056,12 @@ static void R_AddLine(seg_t *line)
       seg.x2frac = x2;
    }
 
-   if(portalrender.active && !R_ClipSegToPortal())
-      return;
-
-   if(seg.clipsolid)
-      R_ClipSolidWallSegment();
+   if(portalrender.active)
+      R_ClipSegToPortal();
+   else if(seg.clipsolid)
+      R_ClipSolidWallSegment(seg.x1, seg.x2);
    else
-      R_ClipPassWallSegment();
+      R_ClipPassWallSegment(seg.x1, seg.x2);
 }
 
 
