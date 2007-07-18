@@ -71,7 +71,7 @@ qstring_t *M_QStrCreateSize(qstring_t *qstr, unsigned int size)
    qstr->buffer = realloc(qstr->buffer, size);
    qstr->size   = size;
    qstr->index  = 0;
-   memset(qstr->buffer, 0, QSTR_BASESIZE);
+   memset(qstr->buffer, 0, size);
 
    return qstr;
 }

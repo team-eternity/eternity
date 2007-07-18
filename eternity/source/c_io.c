@@ -941,9 +941,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
    int numparams = (int)(params[0] / sizeof(cell));
 
    // create a string table
-   msgs = Z_Malloc(numparams * sizeof(char *), PU_STATIC, NULL);
-
-   memset(msgs, 0, numparams * sizeof(char *));
+   msgs = Z_Calloc(numparams, sizeof(char *), PU_STATIC, NULL);
 
    for(i = 1; i <= numparams; i++)
    {      
@@ -977,9 +975,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
       totallen += (int)strlen(msgs[i]);
   
    // create complete message
-   msg = Z_Malloc(totallen + 1, PU_STATIC, NULL);
-
-   memset(msg, 0, totallen + 1);
+   msg = Z_Calloc(1, totallen + 1, PU_STATIC, NULL);
 
    for(i = 0; i < numparams; i++)
       strcat(msg, msgs[i]);

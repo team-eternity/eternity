@@ -135,12 +135,12 @@ static void R_MapPlane(int y, int x1, int x2)
 
 #ifdef RANGECHECK
    if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
-      I_Error ("R_MapPlane: %i, %i at %i", x1, x2, y);
+      I_Error("R_MapPlane: %i, %i at %i", x1, x2, y);
 #endif
   
-   // SoM: because ycenter is an actual row of pixels (and it isn't really the center row because
-   // there are an even number of rows) some corrections need to be made depending on where the 
-   // row lies relative to the ycenter row.
+   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
+   // center row because there are an even number of rows) some corrections need
+   // to be made depending on where the row lies relative to the ycenter row.
    if(view.ycenter == y)
       dy = 0.01f;
    else if(y < view.ycenter)
@@ -154,8 +154,10 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = view.sin * slope * view.focratio;
    ystep = view.cos * slope * view.focratio;
 
-   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-view.cos * realy) + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (view.sin * realy) + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
+   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-view.cos * realy) 
+                            + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
+   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (view.sin * realy) 
+                            + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
    span.xstep = (unsigned)(xstep * plane.fixedunit);
    span.ystep = (unsigned)(ystep * plane.fixedunit);
 
@@ -168,7 +170,7 @@ static void R_MapPlane(int y, int x1, int x2)
       span.colormap = plane.planezlight[index];
    }
    
-   span.y = y;
+   span.y  = y;
    span.x1 = x1;
    span.x2 = x2;
    span.source = plane.source;
@@ -179,16 +181,110 @@ static void R_MapPlane(int y, int x1, int x2)
    // visplane viewing -- sf
    if(visplane_view)
    {
-      if(y >=0 && y < viewheight)
+      if(y >= 0 && y < viewheight)
       {
          // SoM: ANYRES
-         if(x1 >= 0 && x1 <=viewwidth)
-            *(video.screens[0]+y*video.width+x1) = gameModeInfo->blackIndex;
-         if(x2 >= 0 && x2 <=viewwidth)
-            *(video.screens[0]+y*video.width+x2) = gameModeInfo->blackIndex;
+         if(x1 >= 0 && x1 <= viewwidth)
+            *(video.screens[0] + y*video.width + x1) = gameModeInfo->blackIndex;
+         if(x2 >= 0 && x2 <= viewwidth)
+            *(video.screens[0] + y*video.width + x2) = gameModeInfo->blackIndex;
       }
    }
 }
+
+
+/*
+//
+// R_MapPlane
+//
+// BASIC PRIMITIVE
+//
+static void R_MapPlane(int y, int x1, int x2)
+{
+   float dy, xstep, ystep, realy, slope;
+
+   float tviewx, tviewy, tviewcos, tviewsin;
+   float t_a;
+
+#ifdef RANGECHECK
+   if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
+      I_Error("R_MapPlane: %i, %i at %i", x1, x2, y);
+#endif
+  
+   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
+   // center row because there are an even number of rows) some corrections need
+   // to be made depending on where the row lies relative to the ycenter row.
+   if(view.ycenter == y)
+      dy = 0.01f;
+   else if(y < view.ycenter)
+      dy = (float)fabs(view.ycenter - y) - 1;
+   else
+      dy = (float)fabs(view.ycenter - y) + 1;
+
+   slope = (float)fabs(plane.height / dy);
+   realy = slope * view.yfoc;
+
+   tviewx = plane.pviewx;
+   tviewy = plane.pviewy;
+   tviewsin   = view.sin;
+   tviewcos   = view.cos;
+
+#define PROT (45*PI/180.0f)
+
+   // signs of sine terms must be reversed to flip y axis
+   plane.pviewx = (float)( tviewx * cos(PROT) + tviewy * sin(PROT));
+   plane.pviewy = (float)(-tviewx * sin(PROT) + tviewy * cos(PROT));
+
+   t_a = ((ANG90 - viewangle) + ANG45) * PI / ANG180;
+   view.cos = (float)cos(t_a);
+   view.sin = (float)sin(t_a);
+
+   xstep = view.sin * slope * view.focratio;
+   ystep = view.cos * slope * view.focratio;
+
+   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-view.cos * realy) 
+                            + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
+   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (view.sin * realy) 
+                            + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
+   span.xstep = (unsigned)(xstep * plane.fixedunit);
+   span.ystep = (unsigned)(ystep * plane.fixedunit);
+
+   // killough 2/28/98: Add offsets
+   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
+   {
+      int index = (int)(realy / 16.0f);
+      if(index >= MAXLIGHTZ )
+         index = MAXLIGHTZ-1;
+      span.colormap = plane.planezlight[index];
+   }
+   
+   span.y  = y;
+   span.x1 = x1;
+   span.x2 = x2;
+   span.source = plane.source;
+   
+   // BIG FLATS
+   flatfunc();
+
+   // visplane viewing -- sf
+   if(visplane_view)
+   {
+      if(y >= 0 && y < viewheight)
+      {
+         // SoM: ANYRES
+         if(x1 >= 0 && x1 <= viewwidth)
+            *(video.screens[0] + y*video.width + x1) = gameModeInfo->blackIndex;
+         if(x2 >= 0 && x2 <= viewwidth)
+            *(video.screens[0] + y*video.width + x2) = gameModeInfo->blackIndex;
+      }
+   }
+
+   plane.pviewx = tviewx;
+   plane.pviewy = tviewy;
+   view.sin = tviewsin;
+   view.cos = tviewcos;
+}
+*/
 
 //
 // R_ClearPlanes
@@ -324,8 +420,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->viewzf = view.z;
 
    check->heightf = (float)height / 65536.0f;
-   check->xoffsf = (float)xoffs / 65536.0f;
-   check->yoffsf = (float)yoffs / 65536.0f;
+   check->xoffsf  = (float)xoffs / 65536.0f;
+   check->yoffsf  = (float)yoffs / 65536.0f;
    
    // SoM: memset should use the check->max_width
    //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);

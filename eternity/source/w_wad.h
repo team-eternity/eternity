@@ -51,32 +51,46 @@ typedef struct
 // WADFILE I/O related stuff.
 //
 
+// haleyjd 07/12/07: altered lumpinfo_t for separation of logical and physical
+// lump fields.
+
 typedef struct
 {
-  // WARNING: order of some fields important (see info.c).
+   // haleyjd: logical lump data
+   char   name[9];
+   size_t size;
+   
+   // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
+   int index, next;
 
-  char  name[9];
-  int   size;
-  const void *data;     // killough 1/31/98: points to predefined lump data
+   // killough 4/17/98: namespace tags, to prevent conflicts between resources
+   enum 
+   {
+      ns_global = 0,
+      ns_sprites,
+      ns_flats,
+      ns_colormaps,
+      ns_translations
+   } li_namespace;
+   
+   void *cache;  //sf
 
-  // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
-  int index, next;
+   // haleyjd: lump type
+   enum
+   {
+      lump_direct,  // lump accessed via stdio (physical file)
+      lump_memory,  // lump is a memory buffer
+      lump_numtypes
+   } type;
+   
+   // haleyjd: physical lump data
+   
+   FILE *file;       // for a direct lump, a pointer to the file it is in
+   const void *data; // for a memory lump, a pointer to its static memory buffer
+   size_t position;  // for direct and memory lumps, offset into file/buffer
 
-  // killough 4/17/98: namespace tags, to prevent conflicts between resources
-  enum {
-    ns_global=0,
-    ns_sprites,
-    ns_flats,
-    ns_colormaps,
-    ns_translations
-  } li_namespace; // haleyjd 05/21/02: renamed from "namespace"
-
-  int handle;
-  int position;
-  void *cache;  //sf
 } lumpinfo_t;
 
-extern void       **lumpcache;
 extern lumpinfo_t **lumpinfo;   //sf: ptr to ptr
 extern int        numlumps;
 
@@ -88,7 +102,6 @@ int W_AddNewFile(char *filename);
 // killough 4/17/98: if W_CheckNumForName() called with only
 // one argument, pass ns_global as the default namespace
 
-int W_FileLength(int handle);
 #define W_CheckNumForName(name) (W_CheckNumForName)(name, ns_global)
 int     (W_CheckNumForName)(const char* name, int);   // killough 4/17/98
 int     W_GetNumForName(const char* name);
@@ -96,20 +109,17 @@ int     W_LumpLength(int lump);
 void    W_ReadLump(int lump, void *dest);
 void*   W_CacheLumpNum(int lump, int tag);
 long    W_LumpCheckSum(int lumpnum);
-int     W_ReadLumpHeader(int lump, void *dest, int size);
+int     W_ReadLumpHeader(int lump, void *dest, size_t size);
 
 #define W_CacheLumpName(name,tag) W_CacheLumpNum (W_GetNumForName(name),(tag))
 
-void NormalizeSlashes(char *);                    // killough 11/98
-char *AddDefaultExtension(char *, const char *);  // killough 1/18/98
-void ExtractFileBase(const char *, char *);       // killough
 unsigned W_LumpNameHash(const char *s);           // killough 1/31/98
 void W_InitLumpHash(void);
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
 
-extern int iwadhandle;
-extern int firstWadHandle; // haleyjd 06/21/04
+extern FILE *iwadhandle;
+extern FILE *firstWadHandle; // haleyjd 06/21/04
 
 #endif
 

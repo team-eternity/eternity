@@ -172,10 +172,12 @@ void P_LoadVertexes(int lump)
    {
       vertexes[i].x = SHORT(((mapvertex_t *) data)[i].x) << FRACBITS;
       vertexes[i].y = SHORT(((mapvertex_t *) data)[i].y) << FRACBITS;
-      // Cardboard store float versions of vertices.
+      
+      // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = vertexes[i].x / 65536.0f;
       vertexes[i].fy = vertexes[i].y / 65536.0f;
-      // Initialize the frameid marker
+      
+      // SoM: Initialize the frameid marker
       vertexes[i].frameid = 0;
    }
 
@@ -194,8 +196,7 @@ void P_LoadSegs(int lump)
    byte *data;
    
    numsegs = W_LumpLength(lump) / sizeof(mapseg_t);
-   segs = Z_Malloc(numsegs * sizeof(seg_t), PU_LEVEL, 0);
-   memset(segs, 0, numsegs * sizeof(seg_t));
+   segs = Z_Calloc(numsegs, sizeof(seg_t), PU_LEVEL, NULL);
    data = W_CacheLumpNum(lump, PU_STATIC);
    
    for(i = 0; i < numsegs; ++i)
@@ -242,10 +243,8 @@ void P_LoadSubsectors(int lump)
    int  i;
    
    numsubsectors = W_LumpLength(lump) / sizeof(mapsubsector_t);
-   subsectors = Z_Malloc(numsubsectors * sizeof(subsector_t), PU_LEVEL, 0);
+   subsectors = Z_Calloc(numsubsectors, sizeof(subsector_t), PU_LEVEL, 0);
    data = W_CacheLumpNum(lump, PU_STATIC);
-
-   memset(subsectors, 0, numsubsectors * sizeof(subsector_t));
    
    for(i = 0; i < numsubsectors; ++i)
    {
@@ -271,8 +270,7 @@ void P_LoadSectors(int lump)
    int  defaultSndSeq;
    
    numsectors = W_LumpLength(lump) / sizeof(mapsector_t);
-   sectors = Z_Malloc(numsectors * sizeof(sector_t), PU_LEVEL, 0);
-   memset(sectors, 0, numsectors*sizeof(sector_t));
+   sectors = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
    data = W_CacheLumpNum(lump, PU_STATIC);
 
    // haleyjd 09/24/06: determine what the default sound sequence is
@@ -283,25 +281,21 @@ void P_LoadSectors(int lump)
       sector_t *ss = sectors + i;
       const mapsector_t *ms = (mapsector_t *)data + i;
       
-      ss->floorheight   = SHORT(ms->floorheight)   << FRACBITS;
-      ss->ceilingheight = SHORT(ms->ceilingheight) << FRACBITS;
-      ss->floorpic      = R_FlatNumForName(ms->floorpic);
-      ss->ceilingpic    = R_FlatNumForName(ms->ceilingpic);
-      ss->lightlevel    = SHORT(ms->lightlevel);
-      ss->special       = SHORT(ms->special);
-      ss->oldspecial    = SHORT(ms->special);
-      ss->tag           = SHORT(ms->tag);
-      ss->thinglist     = NULL;
+      ss->floorheight        = SHORT(ms->floorheight)   << FRACBITS;
+      ss->ceilingheight      = SHORT(ms->ceilingheight) << FRACBITS;
+      ss->floorpic           = R_FlatNumForName(ms->floorpic);
+      ss->ceilingpic         = R_FlatNumForName(ms->ceilingpic);
+      ss->lightlevel         = SHORT(ms->lightlevel);
+      ss->special            = SHORT(ms->special);
+      ss->oldspecial         = SHORT(ms->special);
+      ss->tag                = SHORT(ms->tag);
+      ss->thinglist          = NULL;
       ss->touching_thinglist = NULL;            // phares 3/14/98
 
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
 
       // killough 3/7/98:
-      ss->floor_xoffs   =  0;
-      ss->floor_yoffs   =  0;   // floor and ceiling flats offsets
-      ss->ceiling_xoffs =  0;
-      ss->ceiling_yoffs =  0;
       ss->heightsec     = -1;   // sector used to get floor and ceiling height
       ss->floorlightsec = -1;   // sector used to get floor lighting
       // killough 3/7/98: end changes
@@ -314,20 +308,10 @@ void P_LoadSectors(int lump)
       ss->bottommap = ss->midmap = ss->topmap =
          ((ss->ceilingpic == skyflatnum || ss->ceilingpic == sky2flatnum) ?
           global_fog_index : global_cmap_index);
-      
-      // killough 10/98: sky textures coming from sidedefs:
-      ss->sky = 0;
-      
-      // haleyjd 08/17/02: zero-out friction and movefactor now
-      // so that P_SpawnFriction can skip Heretic hack sectors
-      ss->friction = 0;
-      ss->movefactor = 0;
-
+            
       // SoM 9/19/02: Initialize the attached sector list for 3dsides
-      ss->c_numattached = ss->f_numattached = 0;
       ss->c_attached = ss->f_attached = NULL;
       // SoM 11/9/04: 
-      ss->c_numsectors = ss->c_numsectors = 0;
       ss->c_attsectors = ss->f_attsectors = NULL;
 
       // SoM: init portals
@@ -339,7 +323,10 @@ void P_LoadSectors(int lump)
 
       // haleyjd 09/24/06: sound sequences -- set default
       ss->sndSeqID = defaultSndSeq;
-      ss->frameid = 0;
+
+      // haleyjd 07/05/07: flat rotation angles
+      ss->floorangle = ss->floorbaseangle = ss->ceilingangle =
+         ss->ceilingbaseangle = 0.0f;
    }
 
    Z_Free(data);
@@ -372,10 +359,10 @@ void P_LoadNodes(int lump)
       mapnode_t *mn = (mapnode_t *)data + i;
       int j;
 
-      no->x  = SHORT(mn->x)<<FRACBITS;
-      no->y  = SHORT(mn->y)<<FRACBITS;
-      no->dx = SHORT(mn->dx)<<FRACBITS;
-      no->dy = SHORT(mn->dy)<<FRACBITS;
+      no->x  = SHORT(mn->x)  << FRACBITS;
+      no->y  = SHORT(mn->y)  << FRACBITS;
+      no->dx = SHORT(mn->dx) << FRACBITS;
+      no->dy = SHORT(mn->dy) << FRACBITS;
 
       for(j = 0; j < 2; ++j)
       {
@@ -409,8 +396,7 @@ void P_LoadThings(int lump)
    numthings = W_LumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
-   mapthings = malloc(numthings * sizeof(mapthing_t));
-   memset(mapthings, 0, numthings * sizeof(mapthing_t));
+   mapthings = calloc(numthings, sizeof(mapthing_t));
 
    // haleyjd: explicitly nullify old player object pointers
    if(GameType != gt_dm)
@@ -480,9 +466,7 @@ void P_LoadThings(int lump)
 //
 // P_LoadHexenThings
 //
-// haleyjd: Loads a Hexen-format THINGS lump. The mapthinghexen_t is sent
-// to P_SpawnMapThing along with a normal DOOM one to prevent code
-// explosion.
+// haleyjd: Loads a Hexen-format THINGS lump.
 //
 void P_LoadHexenThings(int lump)
 {
@@ -493,8 +477,7 @@ void P_LoadHexenThings(int lump)
    numthings = W_LumpLength(lump) / sizeof(mapthinghexen_t);
 
    // haleyjd 03/03/07: allocate full mapthings
-   mapthings = malloc(numthings * sizeof(mapthing_t));
-   memset(mapthings, 0, numthings * sizeof(mapthing_t));
+   mapthings = calloc(numthings, sizeof(mapthing_t));
 
    // haleyjd: explicitly nullify old player object pointers
    if(GameType != gt_dm)
@@ -535,10 +518,7 @@ void P_LoadHexenThings(int lump)
       for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(playeringame[i] && !players[i].mo)
-         {
-            I_Error("P_LoadThings: Missing required player start %i",
-                    i+1);
-         }
+            I_Error("P_LoadThings: Missing required player start %i", i+1);
       }
    }
 
@@ -563,8 +543,7 @@ void P_LoadLineDefs(int lump)
    int  i;
 
    numlines = W_LumpLength(lump) / sizeof(maplinedef_t);
-   lines = Z_Malloc(numlines * sizeof(line_t), PU_LEVEL, 0);
-   memset(lines, 0, numlines * sizeof(line_t));
+   lines = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
    data = W_CacheLumpNum(lump, PU_STATIC);
 
    for(i = 0; i < numlines; ++i)
@@ -702,8 +681,7 @@ void P_LoadHexenLineDefs(int lump)
    int  i;
 
    numlines = W_LumpLength(lump) / sizeof(maplinedefhexen_t);
-   lines = Z_Malloc(numlines * sizeof(line_t), PU_LEVEL, 0);
-   memset(lines, 0, numlines * sizeof(line_t));
+   lines = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
    data = W_CacheLumpNum(lump, PU_STATIC);
 
    for(i = 0; i < numlines; ++i)
@@ -839,8 +817,7 @@ void P_LoadLineDefs2(void)
 void P_LoadSideDefs(int lump)
 {
    numsides = W_LumpLength(lump) / sizeof(mapsidedef_t);
-   sides = Z_Malloc(numsides * sizeof(side_t), PU_LEVEL, 0);
-   memset(sides, 0, numsides * sizeof(side_t));
+   sides = Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0);
 }
 
 // killough 4/4/98: delay using texture names until
@@ -1145,14 +1122,12 @@ void P_LoadBlockMap(int lump)
 
    // clear out mobj chains
    count = sizeof(*blocklinks) * bmapwidth * bmapheight;
-   blocklinks = Z_Malloc(count, PU_LEVEL, NULL);
-   memset(blocklinks, 0, count);
+   blocklinks = Z_Calloc(1, count, PU_LEVEL, NULL);
    blockmap = blockmaplump + 4;
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = Z_Malloc(count, PU_LEVEL, NULL);
-   memset(polyblocklinks, 0, count);
+   polyblocklinks = Z_Calloc(1, count, PU_LEVEL, NULL);
 }
 
 
@@ -1368,10 +1343,8 @@ static void P_LoadReject(int lump)
       // then divide by 8 to get the proper reject size
       size = (((numsectors * numsectors) + 7) & ~7) / 8;
 
-      rejectmatrix = Z_Malloc(size, PU_LEVEL, 0);
-
       // set to all zeroes so that the reject has no effect
-      memset(rejectmatrix, 0, size);
+      rejectmatrix = Z_Calloc(1, size, PU_LEVEL, 0);
    }
 }
 
@@ -1500,7 +1473,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    }
 
    // haleyjd 07/22/04: moved up
-   newlevel = (lumpinfo[lumpnum]->handle != iwadhandle);
+   newlevel = (lumpinfo[lumpnum]->file != iwadhandle);
    doom1level = false;
 
    strncpy(levelmapname, mapname, 8);

@@ -2605,7 +2605,7 @@ void P_SpawnSpecials(void)
    int      episode;
    
    episode = 1;
-   if(W_CheckNumForName("texture2") >= 0)
+   if(W_CheckNumForName("TEXTURE2") >= 0)
       episode = 2;
    
    // sf: -timer moved to d_main.c

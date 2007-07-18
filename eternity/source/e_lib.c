@@ -97,7 +97,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    case -1: // physical file
       M_GetFilePath(cfg->filename, currentpath, sizeof(currentpath));
       psnprintf(filename, sizeof(filename), "%s/%s", currentpath, argv[0]);
-      NormalizeSlashes(filename);
+      M_NormalizeSlashes(filename);
       return cfg_lexer_include(cfg, filename, -1);
    
    default: // data source
@@ -186,7 +186,7 @@ const char *E_BuildDefaultFn(const char *filename)
    static char buffer[PATH_MAX + 1];
 
    psnprintf(buffer, sizeof(buffer), "%s/%s", basepath, filename);
-   NormalizeSlashes(buffer);
+   M_NormalizeSlashes(buffer);
 
    return buffer;
 }

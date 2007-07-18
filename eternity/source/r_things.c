@@ -556,8 +556,14 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
          texturecolumn = (int)frac;
          
 #ifdef RANGECHECK
-         if(texturecolumn < 0 || texturecolumn >= SHORT(patch->width))
-            I_Error ("R_DrawSpriteRange: bad texturecolumn");
+         {
+            int w = SHORT(patch->width);
+            if(texturecolumn < 0 || texturecolumn >= w)
+            {
+               I_Error("R_DrawSpriteRange: bad texturecolumn %d of %d", 
+                       texturecolumn, w);
+            }
+         }
 #endif
          
          tcolumn = (column_t *)((byte *) patch +
@@ -572,8 +578,14 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
          texturecolumn = (int)frac;
          
 #ifdef RANGECHECK
-         if(texturecolumn < 0 || texturecolumn >= SHORT(patch->width))
-            I_Error ("R_DrawSpriteRange: bad texturecolumn");
+         {
+            int w = SHORT(patch->width);
+            if(texturecolumn < 0 || texturecolumn >= w)
+            {
+               I_Error("R_DrawSpriteRange: bad texturecolumn %d of %d", 
+                       texturecolumn, w);
+            }
+         }
 #endif
          
          tcolumn = (column_t *)((byte *) patch +
@@ -710,8 +722,9 @@ void R_ProjectSprite(mobj_t *thing)
    if(y2 < 0.0f)
       return;
 
+   // SoM 07/15/07: add fudge factor to prevent overstepping in R_DrawVisSprite
    if(x2 >= x1)
-      pstep = 1.0f / (x2 - x1 + 1.0f);
+      pstep = 1.0f / (x2 - x1 + 1.0001f);
 
    // Cardboard
    // SoM: Block of old code that stays
@@ -858,144 +871,149 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 //
 void R_DrawPSprite(pspdef_t *psp)
 {
-  float         tx;
-  float         x1, x2;
-  float         oldycenter;
+   float         tx;
+   float         x1, x2, w;
+   float         oldycenter;
+   
+   spritedef_t   *sprdef;
+   spriteframe_t *sprframe;
+   int           lump;
+   boolean       flip;
+   vissprite_t   *vis;
+   vissprite_t   avis;
+   
+   // haleyjd: total invis. psprite disable
+   
+   if(viewplayer->mo->flags2 & MF2_DONTDRAW)
+      return;
+   
+   // decide which patch to use
+   // haleyjd 08/14/02: should not be rangecheck, modified error
+   // handling
+   
+   if((unsigned)psp->state->sprite >= (unsigned)numsprites)
+   {
+      doom_printf(FC_ERROR"R_DrawPSprite: bad sprite number %i", 
+                  psp->state->sprite);
+      psp->state->sprite = blankSpriteNum;
+      psp->state->frame = 0;
+   }
 
-  spritedef_t   *sprdef;
-  spriteframe_t *sprframe;
-  int           lump;
-  boolean       flip;
-  vissprite_t   *vis;
-  vissprite_t   avis;
+   sprdef = &sprites[psp->state->sprite];
+   
+   if(((psp->state->frame&FF_FRAMEMASK) >= sprdef->numframes) ||
+      !(sprdef->spriteframes))
+   {
+      doom_printf(FC_ERROR"R_DrawPSprite: bad frame %d for sprite %s",
+                 (int)(psp->state->frame & FF_FRAMEMASK), 
+                 spritelist[psp->state->sprite]);
+      psp->state->sprite = blankSpriteNum;
+      psp->state->frame = 0;
+      // reset sprdef
+      sprdef = &sprites[psp->state->sprite];
+   }
 
-  // haleyjd: total invis. psprite disable
+   sprframe = &sprdef->spriteframes[psp->state->frame & FF_FRAMEMASK];
+   
+   lump = sprframe->lump[0];
+   flip = ( (boolean) sprframe->flip[0] ) ^ lefthanded;
+   
+   // calculate edges of the shape
+   tx  = (psp->sx / 65536.0f) - 160.0f;
+   tx -= (spriteoffset[lump] / 65536.0f);
 
-  if(viewplayer->mo->flags2 & MF2_DONTDRAW)
-    return;
+      // haleyjd
+   w = (float)(spritewidth[lump] >> FRACBITS);
 
-  // decide which patch to use
-  // haleyjd 08/14/02: should not be rangecheck, modified error
-  // handling
-
-  if((unsigned)psp->state->sprite >= (unsigned)numsprites)
-  {
-    doom_printf(FC_ERROR"R_DrawPSprite: invalid sprite number %i", 
-                psp->state->sprite);
-    psp->state->sprite = blankSpriteNum;
-    psp->state->frame = 0;
-  }
-
-  sprdef = &sprites[psp->state->sprite];
-
-  if(((psp->state->frame&FF_FRAMEMASK) >= sprdef->numframes) ||
-     !(sprdef->spriteframes))
-  {
-    doom_printf(FC_ERROR"R_DrawPSprite: invalid frame %i for sprite %s",
-                (int)(psp->state->frame & FF_FRAMEMASK),
-                spritelist[psp->state->sprite]);
-    psp->state->sprite = blankSpriteNum;
-    psp->state->frame = 0;
-    // reset sprdef
-    sprdef = &sprites[psp->state->sprite];
-  }
-
-  sprframe = &sprdef->spriteframes[psp->state->frame & FF_FRAMEMASK];
-
-  lump = sprframe->lump[0];
-  flip = ( (boolean) sprframe->flip[0] ) ^ lefthanded;
-
-  // calculate edges of the shape
-  tx = (psp->sx / 65536.0f) - 160.0f;
-  tx -= (spriteoffset[lump] / 65536.0f);
-
-  x1 = (view.xcenter + tx * view.pspritexscale);
-
-  // off the right side
-  if (x1 > viewwidth)
-    return;
-
-  tx += (float)(spritewidth[lump] >> FRACBITS);
-  x2 = (view.xcenter + tx * view.pspritexscale) - 1.0f;
-
-  // off the left side
-  if (x2 < 0)
-    return;
+   x1 = (view.xcenter + tx * view.pspritexscale);
+   
+   // off the right side
+   if(x1 > viewwidth)
+      return;
+   
+   tx += w;
+   x2  = (view.xcenter + tx * view.pspritexscale) - 1.0f;
+   
+   // off the left side
+   if(x2 < 0)
+      return;
  
-  if(lefthanded)
-  {
+   if(lefthanded)
+   {
       float tmpx = x1;
       x1 = view.width - x2;
       x2 = view.width - tmpx;    // viewwidth-x1
-  }
+   }
+   
+   // store information in a vissprite
+   vis = &avis;
+   vis->mobjflags = 0;
+   vis->mobjflags3 = 0; // haleyjd
+   
+   // killough 12/98: fix psprite positioning problem
+   vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
+                      (psp->sy - spritetopoffset[lump]);
 
-  // store information in a vissprite
-  vis = &avis;
-  vis->mobjflags = 0;
-  vis->mobjflags3 = 0; // haleyjd
-
-  // killough 12/98: fix psprite positioning problem
-  vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
-                    (psp->sy - spritetopoffset[lump]);
-
-  vis->x1 = (int)(x1 < 0.0f ? 0.0f : x1);
-  vis->x2 = (int)(x2 >= view.width ? view.width - 1 : x2);
-  vis->ystep = view.pspriteystep; // ANYRES
-  vis->colour = 0;      // sf: default colourmap
-  vis->translucency = FRACUNIT; // haleyjd: default zdoom trans.
-  vis->footclip = 0; // haleyjd
-  vis->scale = view.pspriteyscale;
-  vis->ytop = (view.height * 0.5f) - ((vis->texturemid / 65536.0f) * vis->scale);
-  vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
+   vis->x1 = (int)(x1 < 0.0f ? 0.0f : x1);
+   vis->x2 = (int)(x2 >= view.width ? view.width - 1 : x2);
+   vis->ystep = view.pspriteystep; // ANYRES
+   vis->colour = 0;      // sf: default colourmap
+   vis->translucency = FRACUNIT; // haleyjd: default zdoom trans.
+   vis->footclip = 0; // haleyjd
+   vis->scale = view.pspriteyscale;
+   vis->ytop = (view.height * 0.5f) - ((vis->texturemid / 65536.0f) * vis->scale);
+   vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
 #ifdef R_LINKEDPORTALS
-  vis->sector = viewplayer->mo->subsector->sector - sectors;
+   vis->sector = viewplayer->mo->subsector->sector - sectors;
 #endif
    
-  if (flip)
-    {
-      vis->xstep = -view.pspritexstep;
+   // haleyjd 07/01/07: use actual pixel range to scale graphic
+   // SoM: add fudge factor to prevent overstepping in R_DrawVisSprite
+   if(flip)
+   {
+      vis->xstep  = -(w / (x2 - x1 + 1.0001f));
       vis->startx = (float)(spritewidth[lump] >> FRACBITS) - 1.0f;
-    }
-  else
-    {
-      vis->xstep = view.pspritexstep;
+   }
+   else
+   {
+      vis->xstep  = w / (x2 - x1 + 1.0001f);
       vis->startx = 0.0f;
-    }
+   }
+   
+   if(vis->x1 > x1)
+      vis->startx += vis->xstep * (vis->x1-x1);
+   
+   vis->patch = lump;
+   
+   if(viewplayer->powers[pw_invisibility] > 4*32 || 
+      viewplayer->powers[pw_invisibility] & 8)
+   {
+      // sf: shadow draw now detected by flags
+      vis->mobjflags |= MF_SHADOW;                  // shadow draw
+      vis->colormap = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
+   }
+   else if(viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
+           viewplayer->powers[pw_ghost] & 8)
+   {
+      vis->translucency = HTIC_GHOST_TRANS;
+      vis->colormap = spritelights[MAXLIGHTSCALE-1];
+   }
+   else if(fixedcolormap)
+      vis->colormap = fixedcolormap;           // fixed color
+   else if(psp->state->frame & FF_FULLBRIGHT)
+      vis->colormap = fullcolormap;            // full bright // killough 3/20/98
+   else
+      vis->colormap = spritelights[MAXLIGHTSCALE-1];  // local light
+   
+   if(psp->trans) // translucent gunflash
+      vis->mobjflags |= MF_TRANSLUCENT;
 
-  if (vis->x1 > x1)
-    vis->startx += vis->xstep * (vis->x1-x1);
-
-  vis->patch = lump;
-
-  if (viewplayer->powers[pw_invisibility] > 4*32
-   || viewplayer->powers[pw_invisibility] & 8)
-  {
-           // sf: shadow draw now detected by flags
-     vis->mobjflags |= MF_SHADOW;                    // shadow draw
-     vis->colormap = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
-  }
-  else if(viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
-          viewplayer->powers[pw_ghost] & 8)
-  {
-     vis->translucency = HTIC_GHOST_TRANS;
-     vis->colormap = spritelights[MAXLIGHTSCALE-1];
-  }
-  else if (fixedcolormap)
-    vis->colormap = fixedcolormap;           // fixed color
-  else if (psp->state->frame & FF_FULLBRIGHT)
-    vis->colormap = fullcolormap;            // full bright // killough 3/20/98
-  else
-    vis->colormap = spritelights[MAXLIGHTSCALE-1];  // local light
-
-  if(psp->trans) // translucent gunflash
-    vis->mobjflags |= MF_TRANSLUCENT;
-
-  oldycenter = view.ycenter;
-  view.ycenter = (view.height * 0.5f);
-
-  R_DrawVisSprite (vis, vis->x1, vis->x2);
-
-  view.ycenter = oldycenter;
+   oldycenter = view.ycenter;
+   view.ycenter = (view.height * 0.5f);
+   
+   R_DrawVisSprite (vis, vis->x1, vis->x2);
+   
+   view.ycenter = oldycenter;
 }
 
 //

@@ -583,7 +583,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 
    // haleyjd 10/01/06: round up the inverse scaling factors by 1/65536. This
    // ensures that fracstep steps up to the next pixel just fast enough to
-   // prevent non-unform scaling in modes where the inverse scaling factor is
+   // prevent non-uniform scaling in modes where the inverse scaling factor is
    // not accurately represented in fixed point (ie. should be 0.333...).
    // The error is one pixel per every 65536, so it's totally irrelevant.
 
@@ -701,6 +701,222 @@ void V_SetupBufferFuncs(VBuffer *buffer, int drawtype)
    V_SetBlockFuncs(buffer, drawtype);
 }
 
+//=============================================================================
+//
+// Conversion Routines
+//
+// haleyjd: this stuff turns other graphic formats into patches :)
+//
+
+//
+// V_LinearToPatch
+//
+// haleyjd 07/07/07: converts a linear graphic to a patch
+//
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
+{
+   int      x, y;
+   patch_t  *p;
+   column_t *c;
+   int      *columnofs;
+   byte     *src, *dest;
+
+   // 1. no source bytes are lost (no transparency)
+   // 2. patch_t header is 4 shorts plus width * int for columnofs array
+   // 3. one post per vertical slice plus 2 padding bytes and 1 byte for
+   //    a -1 post to cap the column are required
+   size_t total_size = 
+      4 * sizeof(short) + w * (h + sizeof(long) + sizeof(column_t) + 3);
+   
+   byte *out = malloc(total_size);
+
+   p = (patch_t *)out;
+
+   // set basic header information
+   p->width      = w;
+   p->height     = h;
+   p->topoffset  = 0;
+   p->leftoffset = 0;
+
+   // get pointer to columnofs table
+   columnofs = (int *)(out + 4 * sizeof(short));
+
+   // skip past columnofs table
+   dest = out + 4 * sizeof(short) + w * sizeof(long);
+
+   // convert columns of linear graphic into true columns
+   for(x = 0; x < w; ++x)
+   {
+      // set entry in columnofs table
+      columnofs[x] = dest - out;
+
+      // set basic column properties
+      c = (column_t *)dest;
+      c->length   = h;
+      c->topdelta = 0;
+
+      // skip past column header
+      dest += sizeof(column_t) + 1;
+
+      // copy bytes
+      for(y = 0, src = linear + x; y < h; ++y, src += w)
+         *dest++ = *src;
+
+      // create end post
+      *(dest + 1) = 255;
+
+      // skip to next column location 
+      dest += 2;
+   }
+
+   // allow returning size of allocation in *memsize
+   if(memsize)
+      *memsize = total_size;
+
+   // voila!
+   return p;
+}
+
+// haleyjd: GBA sprite patch structure. Similar to patch_t, but all fields are
+// big-endian shorts, and the pixel data for columns is in an entirely separate
+// wad lump.
+
+typedef struct gbasprite_s
+{
+   short width;
+   short height;
+   short leftoffset;
+   short topoffset;
+   unsigned short columnofs[8];
+} gbasprite_t;
+
+// haleyjd: GBA sprite column structure. Same as column_t but has an unsigned
+// short offset into the pixel data lump instead of the actual pixels.
+
+typedef struct gbacolumn_s
+{
+   byte topdelta;
+   byte length;
+   unsigned short dataofs;
+} gbacolumn_t;
+
+//
+// V_GBASpriteToPatch
+//
+// haleyjd 07/08/07: converts a two-lump GBA-format sprite to a normal patch.
+// Special thanks to Kaiser for help understanding this.
+//
+patch_t *V_GBASpriteToPatch(byte *sprlump, byte *datalump, size_t *memsize)
+{
+   int x, pixelcount = 0, columncount = 0;
+   size_t total_size = 0;
+   gbasprite_t *gbapatch = (gbasprite_t *)sprlump;
+   gbacolumn_t *gbacolumn;
+   patch_t  *p;
+   column_t *c;
+   byte *out, *dest, *src;
+   int *columnofs;
+
+   // normalize big-endian fields in patch header
+   gbapatch->width      = BIGSHORT(gbapatch->width);
+   gbapatch->height     = BIGSHORT(gbapatch->height);
+   gbapatch->leftoffset = BIGSHORT(gbapatch->leftoffset);
+   gbapatch->topoffset  = BIGSHORT(gbapatch->topoffset);
+
+   // first things first, we must figure out how much memory to allocate for
+   // the Doom patch -- best way to do this is to use the same process that
+   // would be used to draw it, and count columns and pixels. We can also
+   // normalize all the big-endian shorts in the data at the same time.
+
+   for(x = 0; x < gbapatch->width; ++x)
+   {
+      gbapatch->columnofs[x] = BIGSHORT(gbapatch->columnofs[x]);
+
+      gbacolumn = (gbacolumn_t *)(sprlump + gbapatch->columnofs[x]);
+
+      for(; gbacolumn->topdelta != 0xff; ++gbacolumn)
+      {
+         gbacolumn->dataofs = BIGSHORT(gbacolumn->dataofs);
+         pixelcount += gbacolumn->length;
+         ++columncount;
+      }
+   }
+
+   // calculate total_size --
+   // 1. patch header - 4 shorts + width * int for columnofs array
+   // 2. number of pixels counted above
+   // 3. columncount column_t headers
+   // 4. columncount times 2 padding bytes
+   // 5. one -1 post to cap each vertical slice
+   total_size = 4 * sizeof(short) + gbapatch->width * sizeof(long) + 
+                pixelcount + columncount * (sizeof(column_t) + 2) + 
+                gbapatch->width;
+
+   out = malloc(total_size);
+
+   p = (patch_t *)out;
+
+   // store header info
+   p->width      = gbapatch->width;
+   p->height     = gbapatch->height;
+   p->leftoffset = gbapatch->leftoffset;
+   p->topoffset  = gbapatch->topoffset;
+
+   // get pointer to columnofs table
+   columnofs = (int *)(out + 4 * sizeof(short));
+
+   // skip past columnofs table
+   dest = out + 4 * sizeof(short) + p->width * sizeof(long);
+
+   // repeat drawing process to construct PC-format patch
+   for(x = 0; x < gbapatch->width; ++x)
+   {
+      // set columnofs entry for this column in the PC patch
+      columnofs[x] = dest - out;
+
+      gbacolumn = (gbacolumn_t *)(sprlump + gbapatch->columnofs[x]);
+
+      for(; gbacolumn->topdelta != 0xff; ++gbacolumn)
+      {
+         int count;
+         byte lastbyte;
+
+         // set basic column properties
+         c = (column_t *)dest;
+         c->topdelta = gbacolumn->topdelta;
+         count = c->length = gbacolumn->length;
+
+         // skip past column header
+         dest += sizeof(column_t);
+
+         // gbacolumn->dataofs gives an offset into the pixel data lump
+         src = datalump + gbacolumn->dataofs;
+
+         // copy first pixel into padding byte at start of column
+         *dest++ = *src;
+
+         // copy pixels
+         while(count--)
+         {
+            lastbyte = *src++;
+            *dest++ = lastbyte;
+         }
+
+         // copy last pixel into padding byte at end of column
+         *dest++ = lastbyte;
+      }
+
+      // create end post for this column
+      *dest++ = 0xff;
+   }
+
+   // allow returning size of allocation in *memsize
+   if(memsize)
+      *memsize = total_size;
+
+   // phew!
+   return p;
+}
 
 // EOF
 

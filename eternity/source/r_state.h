@@ -113,10 +113,6 @@ extern int              viewangletox[FINEANGLES/2];
 extern angle_t          xtoviewangle[MAX_SCREENWIDTH+1];  // killough 2/8/98
 extern int              viewgroup; // SoM
 
-
-// Segs count?
-extern int              sscount;
-
 extern visplane_t       *floorplane;
 extern visplane_t       *ceilingplane;
 

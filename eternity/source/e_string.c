@@ -129,10 +129,7 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
    else
    {
       // Create a new string object
-      newStr = malloc(sizeof(edf_string_t));
-
-      // init to zero
-      memset(newStr, 0, sizeof(*newStr));
+      newStr = calloc(1, sizeof(edf_string_t));
       
       // copy keys into string object
       if(strlen(key) > 32)

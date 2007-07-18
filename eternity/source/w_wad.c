@@ -27,138 +27,75 @@
 #include "doomstat.h"
 #include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
 #include <fcntl.h>
-#include <sys/stat.h>
 
 #include "c_io.h"
 #include "s_sound.h"
 #include "p_skin.h"
+#include "m_misc.h"
 #include "w_wad.h"
 
 //
 // GLOBALS
 //
 
-// sf:
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
-
 // Location of each lump on disk.
-lumpinfo_t **lumpinfo;     // sf : array of ptrs
-int        numlumps;       // killough
-int        iwadhandle;     // sf: the handle of the main iwad
-int        firstWadHandle = -1; // haleyjd: track handle of first wad added
+lumpinfo_t **lumpinfo;          // sf : array of ptrs
+int        numlumps;            // killough
 
-// 
-// W_FileLength
+// haleyjd: WAD_TODO: put wad system globals into structure
+FILE *iwadhandle;     // sf: the handle of the main iwad
+FILE *firstWadHandle; // haleyjd: track handle of first wad added
+
 //
-// Gets the length of a file given its handle.
-// FIXME/TODO: don't use POSIX fstat; is slower and less portable
-// haleyjd 03/09/06: made global
+// haleyjd 07/12/07: structure for transparently manipulating lumps of
+// different types
 //
-int W_FileLength(int handle)
+
+typedef struct lumptype_s
 {
-   struct stat fileinfo;
-   if(fstat(handle, &fileinfo) == -1)
-      I_Error("W_FileLength: failure in fstat\n");
-   return fileinfo.st_size;
-}
+   size_t (*readLump)(lumpinfo_t *, void *, size_t);
+} lumptype_t;
 
-void ExtractFileBase(const char *path, char *dest)
+static size_t W_DirectReadLump(lumpinfo_t *, void *, size_t);
+static size_t W_MemoryReadLump(lumpinfo_t *, void *, size_t);
+
+static lumptype_t LumpHandlers[lump_numtypes] =
 {
-   const char *src = path + strlen(path) - 1;
-   int length;
-   
-   // back up until a \ or the start
-   while(src != path && src[-1] != ':' // killough 3/22/98: allow c:filename
-         && *(src-1) != '\\'
-         && *(src-1) != '/')
-      src--;
-
-   // copy up to eight characters
-   memset(dest, 0, 8);
-   length = 0;
-
-   while(*src && *src != '.')
-      if(++length == 9)
-         I_Error("Filename base of %s > 8 chars", path);
-      else
-         *dest++ = toupper(*src++);
-}
-
-//
-// 1/18/98 killough: adds a default extension to a path
-// Note: Backslashes are treated specially, for MS-DOS.
-//
-
-char *AddDefaultExtension(char *path, const char *ext)
-{
-   char *p = path;
-   while(*p++);
-   while(p-- > path && *p != '/' && *p != '\\')
-      if(*p == '.')
-         return path;
-   if(*ext != '.')
-      strcat(path, ".");
-   return strcat(path, ext);
-}
-
-// NormalizeSlashes
-//
-// Remove trailing slashes, translate backslashes to slashes
-// The string to normalize is passed and returned in str
-//
-// killough 11/98: rewritten
-
-void NormalizeSlashes(char *str)
-{
-   char *p;
-   
-   // Convert backslashes to slashes
-   for(p = str; *p; p++)
+   // direct lump
    {
-      if(*p == '\\')
-         *p = '/';
-   }
+      W_DirectReadLump,
+   },
 
-   // Remove trailing slashes
-   while(p > str && *--p == '/')
-      *p = 0;
-
-   // Collapse multiple slashes
-   for(p = str; (*str++ = *p); )
-      if(*p++ == '/')
-         while(*p == '/')
-            p++;
-}
+   // memory lump
+   {
+      W_MemoryReadLump,
+   },
+};
 
 //
 // LUMP BASED ROUTINES.
 //
 
+static int w_sound_update_type;
+
+void D_NewWadLumps(FILE *handle, int sound_update_type);
+
 //
 // W_AddFile
-// All files are optional, but at least one file must be
-//  found (PWAD, if all required lumps are present).
-// Files with a .wad extension are wadlink files
-//  with multiple lumps.
-// Other files are single lumps with the base filename
-//  for the lump name.
+//
+// All files are optional, but at least one file must be found (PWAD, if all 
+// required lumps are present).
+// Files with a .wad extension are wadlink files with multiple lumps.
+// Other files are single lumps with the base filename for the lump name.
 //
 // Reload hack removed by Lee Killough
 //
-
-static int w_sound_update_type;
-
-void D_NewWadLumps(int handle, int sound_update_type);
-
-        // sf: made int
 static int W_AddFile(const char *name) // killough 1/31/98: static, const
 {
    wadinfo_t   header;
    lumpinfo_t* lump_p;
    unsigned    i;
-   int         handle;
+   FILE        *handle;
    int         length;
    int         startlump;
    filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
@@ -167,28 +104,27 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
    lumpinfo_t  *newlumps;
    boolean     isWad;     // haleyjd 05/23/04
 
-   NormalizeSlashes(AddDefaultExtension(filename, ".wad"));  // killough 11/98
+   M_NormalizeSlashes(M_AddDefaultExtension(filename, ".wad"));  // killough 11/98
 
    // open the file and add to directory
-   
-   if((handle = open(filename, O_RDONLY | O_BINARY)) == -1)
+   if((handle = fopen(filename, "rb")) == NULL)
    {
-      if(strlen(name) > 4 && !strcasecmp(name+strlen(name)-4 , ".lmp" ))
+      if(strlen(name) > 4 && !strcasecmp(name + strlen(name) - 4 , ".lmp" ))
       {
          free(filename);
-         return false;         // sf: no errors
+         return false; // sf: no errors
       }
       // killough 11/98: allow .lmp extension if none existed before
-      NormalizeSlashes(AddDefaultExtension(strcpy(filename, name), ".lmp"));
-      if((handle = open(filename,O_RDONLY | O_BINARY)) == -1)
+      M_NormalizeSlashes(M_AddDefaultExtension(strcpy(filename, name), ".lmp"));
+      if((handle = fopen(filename, "rb")) == NULL)
       {
          if(in_textmode)
             I_Error("Error: couldn't open %s\n",name);  // killough
          else
          {
-            C_Printf(FC_ERROR "couldn't open %s\n",name);
-            free(filename); // haleyjd 10/09/06: memory leak
-            return true;  // error
+            C_Printf(FC_ERROR "Couldn't open %s\n", name);
+            free(filename);
+            return true; // error
          }
       }
    }
@@ -204,47 +140,49 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
       isWad = false; // haleyjd 05/23/04
       fileinfo = &singleinfo;
       singleinfo.filepos = 0;
-      singleinfo.size = LONG(W_FileLength(handle));
-      ExtractFileBase(filename, singleinfo.name);
+      singleinfo.size = LONG(M_FileLength(fileno(handle)));
+      M_ExtractFileBase(filename, singleinfo.name);
       numlumps++;
    }
    else
    {
       // WAD file
       isWad = true; // haleyjd 05/23/04
-      read(handle, &header, sizeof(header));
-      if(strncmp(header.identification,"IWAD",4) &&
-         strncmp(header.identification,"PWAD",4))
+      
+      fread(&header, sizeof(header), 1, handle);
+      
+      if(strncmp(header.identification, "IWAD", 4) && 
+         strncmp(header.identification, "PWAD", 4))
+      {
          I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename);
-      header.numlumps = LONG(header.numlumps);
+      }
+      
+      header.numlumps     = LONG(header.numlumps);
       header.infotableofs = LONG(header.infotableofs);
-      length = header.numlumps*sizeof(filelump_t);
+      
+      length = header.numlumps * sizeof(filelump_t);
       fileinfo2free = fileinfo = malloc(length);    // killough
-      lseek(handle, header.infotableofs, SEEK_SET);
-      read(handle, fileinfo, length);
+      
+      fseek(handle, header.infotableofs, SEEK_SET);
+      fread(fileinfo, length, 1, handle);
+      
       numlumps += header.numlumps;
    }
 
    free(filename);           // killough 11/98
    
    // Fill in lumpinfo
-   //sf :ptr to ptr
-   lumpinfo = realloc(lumpinfo, (numlumps+2)*sizeof(lumpinfo_t*));
+   lumpinfo = realloc(lumpinfo, numlumps * sizeof(lumpinfo_t *));
 
    // space for new lumps
-   newlumps = malloc((numlumps-startlump) * sizeof(lumpinfo_t));
-   lump_p = newlumps;
-   //&lumpinfo[startlump];
+   newlumps = malloc((numlumps - startlump) * sizeof(lumpinfo_t));
+   lump_p   = newlumps;
    
-   // update IWAD handle
-   //
-   // haleyjd 05/23/04: do NOT do this when dealing with single
-   // files. "isWad" keeps track of this now.
-   
+   // update IWAD handle?   
    if(isWad)
    {
       // haleyjd 06/21/04: track handle of first wad added also
-      if(firstWadHandle == -1)
+      if(firstWadHandle == NULL)
          firstWadHandle = handle;
 
       if(!strncmp(header.identification, "IWAD", 4))
@@ -253,23 +191,24 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
   
    for(i = startlump; i < (unsigned)numlumps; i++, lump_p++, fileinfo++)
    {
-      lumpinfo[i] = lump_p;
-      lump_p->handle = handle;                    //  killough 4/25/98
-      lump_p->position = LONG(fileinfo->filepos);
-      lump_p->size = LONG(fileinfo->size);
-      // sf:cache
+      lumpinfo[i]      = lump_p;
+      lump_p->type     = lump_direct; // haleyjd
+      lump_p->file     = handle;
+      lump_p->position = (size_t)(LONG(fileinfo->filepos));
+      lump_p->size     = (size_t)(LONG(fileinfo->size));
+      
       lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
-      lump_p->li_namespace = ns_global;              // killough 4/17/98
+      lump_p->li_namespace = ns_global;            // killough 4/17/98
       
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
    }
    
-   free(fileinfo2free);      // killough
+   free(fileinfo2free); // killough
    
    D_NewWadLumps(handle, w_sound_update_type);
    
-   return false;       // no error
+   return false; // no error
 }
 
 // jff 1/23/98 Create routines to reorder the master directory
@@ -443,6 +382,7 @@ void W_InitLumpHash(void)
 
 //
 // W_GetNumForName
+//
 // Calls W_CheckNumForName, but bombs out if not found.
 //
 int W_GetNumForName(const char* name)     // killough -- const added
@@ -478,39 +418,20 @@ static void W_InitResources(void)          // sf
 }
 
 //
-// W_AddPredefines
+// W_InitMultipleFiles
 //
-// Predefined lumps are no longer in the executable.
-// This now just initializes lumpinfo.
+// Pass a null terminated list of files to use.
+// All files are optional, but at least one file must be found.
+// Files with a .wad extension are idlink files with multiple lumps.
+// Other files are single lumps with the base filename for the lump name.
+// Lump names can appear multiple times.
+// The name searcher looks backwards, so a later file overrides earlier ones.
 //
-void W_AddPredefines(void)
+void W_InitMultipleFiles(char *const *filenames)
 {
-   // predefined lumps removed now
    numlumps = 0;
    
    lumpinfo = Z_Malloc(1, PU_STATIC, 0);
-}
-
-//
-// W_InitMultipleFiles
-// Pass a null terminated list of files to use.
-// All files are optional, but at least one file
-//  must be found.
-// Files with a .wad extension are idlink files
-//  with multiple lumps.
-// Other files are single lumps with the base filename
-//  for the lump name.
-// Lump names can appear multiple times.
-// The name searcher looks backwards, so a later file
-//  does override all earlier ones.
-//
-
-void W_InitMultipleFiles(char *const *filenames)
-{
-   // killough 1/31/98: add predefined lumps first
-   
-   //sf : move predefine adding to a separate function
-   W_AddPredefines();
 
    // haleyjd 09/13/03: set new sound lump parsing to deferred
    w_sound_update_type = 0;
@@ -537,6 +458,7 @@ int W_AddNewFile(char *filename)
 
 //
 // W_LumpLength
+//
 // Returns the buffer size needed to load the given lump.
 //
 int W_LumpLength(int lump)
@@ -548,75 +470,51 @@ int W_LumpLength(int lump)
 
 //
 // W_ReadLump
-// Loads the lump into the given buffer,
-//  which must be >= W_LumpLength().
+//
+// Loads the lump into the given buffer, which must be >= W_LumpLength().
 //
 void W_ReadLump(int lump, void *dest)
 {
-   // haleyjd 08/30/02: access is potentially too early!
-   lumpinfo_t *l; // = lumpinfo[lump];
+   size_t c;
+   lumpinfo_t *l;
    
    if(lump < 0 || lump >= numlumps)
-      I_Error("W_ReadLump: %i >= numlumps",lump);
+      I_Error("W_ReadLump: %d >= numlumps", lump);
 
-   // haleyjd: NOW we can do it
    l = lumpinfo[lump];
-   
-   if(l->data)     // killough 1/31/98: predefined lump data
-      memcpy(dest, l->data, l->size);
-   else
-   {
-      int c;
-      
-      // killough 1/31/98: Reload hack (-wart) removed
-      // killough 10/98: Add flashing disk indicator
-      I_BeginRead();
-      lseek(l->handle, l->position, SEEK_SET);
-      c = read(l->handle, dest, l->size);
-      if(c < l->size)
-         I_Error("W_ReadLump: only read %i of %i on lump %i", c, l->size, lump);
-      I_EndRead();
-   }
+
+   // killough 1/31/98: Reload hack (-wart) removed
+
+   c = LumpHandlers[l->type].readLump(l, dest, l->size);
+   if(c < l->size)
+      I_Error("W_ReadLump: only read %d of %d on lump %d", c, l->size, lump);
 }
 
 //
 // W_ReadLumpHeader
 //
-// haleyjd 08/30/02: Inspired by DOOM Legacy, this function is
-// for when you just need a small piece of data from the beginning
-// of a lump. There's hardly any use reading in the whole thing
-// in that case.
+// haleyjd 08/30/02: Inspired by DOOM Legacy, this function is for when you
+// just need a small piece of data from the beginning of a lump. There's hardly
+// any use reading in the whole thing in that case.
 //
-int W_ReadLumpHeader(int lump, void *dest, int size)
+int W_ReadLumpHeader(int lump, void *dest, size_t size)
 {
+   size_t c;
    lumpinfo_t *l;
    
    if(lump < 0 || lump >= numlumps)
-      I_Error("W_ReadLumpHeader: %i >= numlumps",lump);
+      I_Error("W_ReadLumpHeader: %d >= numlumps",lump);
    
    l = lumpinfo[lump];
 
    if(l->size < size || l->size == 0)
       return 0;
 
-   if(l->data)
-   {
-      memcpy(dest, l->data, size);
-      return size;
-   }
-   else
-   {
-      int c;
-      
-      I_BeginRead();
-      lseek(l->handle, l->position, SEEK_SET);
-      c = read(l->handle, dest, size);
-      if(c < size)
-         I_Error("W_ReadLumpHeader: only read %i of %i on lump %i", c, size, lump);
-      I_EndRead();
-
-      return c;
-   }
+   c = LumpHandlers[l->type].readLump(l, dest, size);
+   if(c < size)
+      I_Error("W_ReadLumpHeader: only read %d of %d on lump %d", c, size, lump);
+   
+   return c;
 }
 
 //
@@ -636,9 +534,9 @@ void *W_CacheLumpNum(int lump, int tag)
    }
    else
    {
-      // haleyjd: do not lower cache level and cause static
-      // users to lose their data unexpectedly (ie, do not change PU_STATIC
-      // into PU_CACHE -- that must be done using Z_ChangeTag explicitly)
+      // haleyjd: do not lower cache level and cause static users to lose their 
+      // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that 
+      // must be done using Z_ChangeTag explicitly)
       
       int oldtag = Z_CheckTag(lumpinfo[lump]->cache);
 
@@ -671,6 +569,42 @@ long W_LumpCheckSum(int lumpnum)
       checksum += lump[i] * i;
    
    return checksum;
+}
+
+//=============================================================================
+//
+// haleyjd 07/12/07: Implementor functions for individual lump types
+//
+
+//
+// Direct lumps -- lumps that consist of an entire physical file, or a part
+// of one. This includes normal files and wad lumps; to the code, it makes no
+// difference.
+//
+
+static size_t W_DirectReadLump(lumpinfo_t *l, void *dest, size_t size)
+{
+   size_t ret;
+
+   // killough 10/98: Add flashing disk indicator
+   I_BeginRead();
+   fseek(l->file, l->position, SEEK_SET);
+   ret = fread(dest, 1, size, l->file);
+   I_EndRead();
+
+   return ret;
+}
+
+//
+// Memory lumps -- lumps that are held in a static memory buffer
+//
+
+static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest, size_t size)
+{
+   // killough 1/31/98: predefined lump data
+   memcpy(dest, l->data, size);
+
+   return size;
 }
 
 //----------------------------------------------------------------------------

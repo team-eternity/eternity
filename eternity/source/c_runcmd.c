@@ -46,6 +46,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "m_argv.h"
+#include "m_misc.h"
 #include "mn_engin.h"
 #include "g_game.h"
 #include "m_qstr.h" // haleyjd
@@ -1236,7 +1237,7 @@ void C_RunCmdLineScripts(void)
 
             strcpy(filename, myargv[p]);
 
-            NormalizeSlashes(AddDefaultExtension(filename, ".csc"));
+            M_NormalizeSlashes(M_AddDefaultExtension(filename, ".csc"));
 
             if(!access(".", R_OK))
                C_RunScriptFromFile(filename);

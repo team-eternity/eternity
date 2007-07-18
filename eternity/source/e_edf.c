@@ -659,7 +659,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    M_GetFilePath(cfg->filename, currentpath, sizeof(currentpath));
    psnprintf(filename, sizeof(filename), "%s/%s", currentpath, argv[0]);
-   NormalizeSlashes(filename);
+   M_NormalizeSlashes(filename);
 
    // queue the file for later processing
    D_QueueDEH(filename, 0);
@@ -1276,8 +1276,7 @@ static void E_ProcessSprites(cfg_t *cfg)
 
    // 10/17/03: allocate a single sprite string instead of a bunch
    // of separate ones to save tons of memory and some time
-   spritestr = Z_Malloc(5 * NUMSPRITES, PU_STATIC, 0);
-   memset(spritestr, 0, 5 * NUMSPRITES);
+   spritestr = Z_Calloc(NUMSPRITES, 5, PU_STATIC, 0);
 
    // allocate with size+1 for the NULL terminator
    sprnames  = Z_Malloc((NUMSPRITES + 1) * sizeof(char *),PU_STATIC,0);
@@ -1513,8 +1512,7 @@ static void E_AllocSounds(cfg_t *cfg)
    ++NUMSFX;
 
    // let's allocate & initialize the sounds...
-   S_sfx = malloc(NUMSFX * sizeof(sfxinfo_t));
-   memset(S_sfx, 0, NUMSFX * sizeof(sfxinfo_t));
+   S_sfx = calloc(NUMSFX, sizeof(sfxinfo_t));
 
    // 08/10/05: must call this from here now, so that defaults
    // can kick in when no sounds exist

@@ -39,13 +39,12 @@ extern char *startlevel;
 void D_AddFile(char *file);
 void D_ListWads(void);
 void D_ReInitWadfiles(void);
-void D_NewWadLumps(int handle, int sound_update_type);
+void D_NewWadLumps(FILE *handle, int sound_update_type);
 boolean D_AddNewFile(char *s);
 
 
 char *D_DoomExeDir(void);       // killough 2/16/98: path to executable's dir
 char *D_DoomExeName(void);      // killough 10/98: executable's name
-void NormalizeSlashes(char *);  // killough 11/98
 extern char basesavegame[];     // killough 2/16/98: savegame path
 
 //jff 1/24/98 make command line copies of play modes available

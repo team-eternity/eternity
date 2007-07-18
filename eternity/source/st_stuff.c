@@ -465,6 +465,7 @@ static void ST_updateFaceWidget(void)
          // if(plyr->health - st_oldhealth > ST_MUCHPAIN)
          if(st_oldhealth - plyr->health > ST_MUCHPAIN)
          {
+            priority = 8;
             st_facecount = ST_TURNCOUNT;
             st_faceindex = ST_calcPainOffset() + ST_OUCHOFFSET;
          }

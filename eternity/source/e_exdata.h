@@ -86,6 +86,25 @@ typedef struct maplinedefext_s
 
 } maplinedefext_t;
 
+// ExtraData sector structure
+
+typedef struct mapsectorext_s
+{
+   // standard fields
+   mapsector_t stdfields;
+
+   // extended fields
+   double floor_xoffs;
+   double floor_yoffs;
+   double ceiling_xoffs;
+   double ceiling_yoffs;
+
+   // internal fields (used by ExtraData only)
+   int recordnum;
+   int next;
+
+} mapsectorext_t;
+
 // Globals
 
 void E_LoadExtraData(void);

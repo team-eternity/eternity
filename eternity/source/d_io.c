@@ -39,6 +39,7 @@
 #include "doomtype.h"
 #include "d_io.h"
 #include "d_dwfile.h"
+#include "m_misc.h"
 #include "w_wad.h"
 
 char *D_Fgets(char *buf, size_t n, DWFILE *fp)
@@ -178,7 +179,7 @@ size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file)
 size_t D_FileLength(DWFILE *file)
 {
    return 
-      !file->lump ? W_FileLength(fileno((FILE *)(file->inp))) :
+      !file->lump ? M_FileLength(fileno((FILE *)(file->inp))) :
                     W_LumpLength(file->lumpnum);
 }
 

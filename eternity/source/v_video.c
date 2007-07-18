@@ -704,7 +704,6 @@ void V_CacheBlock(int x, int y, int width, int height, byte *src,
    }
 }
 
-
 //----------------------------------------------------------------------------
 //
 // $Log: v_video.c,v $

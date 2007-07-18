@@ -70,6 +70,7 @@ extern int  columnofs[MAXWIDTH];
 // but only by one bit per power of two (obviously)
 // Ok, because I was able to eliminate the variable spot below, this function
 // is now FASTER than doom's original span renderer. Whodathunkit?
+
 void R_DrawSpanCB_8_64(void)
 {
    unsigned xf = span.xfrac, xs = span.xstep;

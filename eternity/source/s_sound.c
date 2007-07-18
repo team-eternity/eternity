@@ -137,6 +137,11 @@ musicinfo_t *musicinfos[SOUND_HASHSLOTS];
 //
 static void S_StopChannel(int cnum)
 {
+#ifdef RANGECHECK
+   if(cnum < 0 || cnum >= numChannels)
+      I_Error("S_StopChannel: handle %d out of range\n", cnum);
+#endif
+
    if(channels[cnum].sfxinfo)
    {
       if(I_SoundIsPlaying(channels[cnum].handle))
@@ -363,6 +368,11 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
          cnum = lpcnum;
       }
    }
+
+#ifdef RANGECHECK
+   if(cnum >= numChannels)
+      I_Error("S_getChannel: handle %d out of range\n", cnum);
+#endif
    
    return cnum;
 }
@@ -526,6 +536,11 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    // try to find a channel
    if((cnum = S_getChannel(origin, sfx, priority, singularity)) < 0)
       return;
+
+#ifdef RANGECHECK
+   if(cnum < 0 || cnum >= numChannels)
+      I_Error("S_StartSfxInfo: handle %d out of range\n", cnum);
+#endif
 
    channels[cnum].sfxinfo = sfx;
    channels[cnum].origin  = origin;
@@ -730,8 +745,10 @@ void S_UpdateSounds(const mobj_t *listener)
       channel_t *c = &channels[cnum];
       sfxinfo_t *sfx = c->sfxinfo;
 
+      // haleyjd: has this software channel lost its hardware channel?
       if(c->idnum != I_SoundID(c->handle))
       {
+         // clear the channel and keep going
          memset(c, 0, sizeof(channel_t));
          continue;
       }
@@ -814,7 +831,7 @@ void S_SetMusicVolume(int volume)
 
 #ifdef RANGECHECK
    if(volume < 0 || volume > 16)
-      I_Error("Attempt to set music volume at %d", volume);
+      I_Error("Attempt to set music volume at %d\n", volume);
 #endif
 
    // haleyjd: I don't think it should do this in SDL
@@ -834,7 +851,7 @@ void S_SetSfxVolume(int volume)
 
 #ifdef RANGECHECK
    if(volume < 0 || volume > 127)
-      I_Error("Attempt to set sfx volume at %d", volume);
+      I_Error("Attempt to set sfx volume at %d\n", volume);
 #endif
 
    snd_SfxVolume = volume;
@@ -1169,8 +1186,7 @@ void S_UpdateSoundDeferred(int lumpnum)
    if(!snd_queue_init)
       S_InitDefSndQueue();
 
-   newsq = malloc(sizeof(squeueitem_t));
-   memset(newsq, 0, sizeof(squeueitem_t));
+   newsq = calloc(1, sizeof(squeueitem_t));
 
    strncpy(newsq->lumpname, lumpinfo[lumpnum]->name, 9);
 

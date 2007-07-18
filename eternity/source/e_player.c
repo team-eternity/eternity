@@ -234,8 +234,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    {
       E_EDFLogPrintf("\t\tCreating skin '%s'\n", tempstr);
 
-      newSkin = malloc(sizeof(skin_t));
-      memset(newSkin, 0, sizeof(skin_t));
+      newSkin = calloc(1, sizeof(skin_t));
 
       // set name
       newSkin->skinname = strdup(tempstr);
@@ -375,8 +374,7 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
    if(!(pc = E_PlayerClassForName(tempstr)))
    {
       // create a new player class
-      pc = malloc(sizeof(playerclass_t));
-      memset(pc, 0, sizeof(playerclass_t));
+      pc = calloc(1, sizeof(playerclass_t));
 
       // set mnemonic and hash it
       strncpy(pc->mnemonic, tempstr, 33);

@@ -243,8 +243,7 @@ static void ACS_runOpenScript(acscript_t *acs, int iNum)
 {
    acsthinker_t *newScript;
 
-   newScript = Z_Malloc(sizeof(acsthinker_t), PU_LEVSPEC, 0);
-   memset(newScript, 0, sizeof(acsthinker_t));
+   newScript = Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL);
 	
    newScript->scriptNum   = acs->number;
    newScript->internalNum = iNum;
@@ -1358,8 +1357,7 @@ boolean ACS_StartScript(int scrnum, int map, long *args,
       return false;
 
    // setup the new script thinker
-   newScript = Z_Malloc(sizeof(acsthinker_t), PU_LEVSPEC, NULL);	
-   memset(newScript, 0, sizeof(acsthinker_t));
+   newScript = Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL);
 
    newScript->scriptNum   = scrnum;
    newScript->internalNum = internalNum;

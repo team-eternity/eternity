@@ -121,10 +121,8 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 
    // EDF FIXME: might should move to an initialization function
    if(!seenstate_tab)
-   {
-      seenstate_tab = Z_Malloc(sizeof(statenum_t)*NUMSTATES,PU_STATIC,NULL);
-      memset(seenstate_tab, 0, sizeof(statenum_t)*NUMSTATES);
-   }
+      seenstate_tab = Z_Calloc(NUMSTATES, sizeof(statenum_t), PU_STATIC, NULL);
+
    seenstate = seenstate_tab;
 
    // if recursion detected, clear state table
@@ -531,7 +529,7 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
          if(mo->momz < -23*FRACUNIT)
          {
             if(!mo->player->powers[pw_invulnerability] &&
-               !(players[consoleplayer].cheats & CF_GODMODE))
+               !(mo->player->cheats & CF_GODMODE))
                P_FallingDamage(mo->player);
             else
                S_StartSound(mo, sfx_oof);
@@ -1244,11 +1242,9 @@ void P_MobjSetZPos(mobj_t *mobj, fixed_t delta)
 //
 mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
-   mobj_t     *mobj = Z_Malloc(sizeof *mobj, PU_LEVEL, NULL);
+   mobj_t     *mobj = Z_Calloc(1, sizeof *mobj, PU_LEVEL, NULL);
    mobjinfo_t *info = &mobjinfo[type];
    state_t    *st;
-
-   memset(mobj, 0, sizeof *mobj);
 
    mobj->type = type;
    mobj->info = info;
@@ -1793,7 +1789,7 @@ spawnit:
    z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    // haleyjd 10/13/02: float rand z
-   if(demo_version >= 331 && mobjinfo[i].flags2 & MF2_SPAWNFLOAT)
+   if(demo_version >= 331 && (mobjinfo[i].flags2 & MF2_SPAWNFLOAT))
       z = FLOATRANDZ;
 
    mobj = P_SpawnMobj(x, y, z, i);

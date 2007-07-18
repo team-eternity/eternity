@@ -769,8 +769,7 @@ void V_Init(void)
    screens0_bitmap = create_bitmap_ex(8, video.width, video.height);
    memset(video.screens[0] = screens0_bitmap->line[0], 0, size);
 #else
-   video.screens[0] = malloc(size);
-   memset(video.screens[0], 0, size);
+   video.screens[0] = calloc(1, size);
 #endif
 
    R_SetupViewScaling();

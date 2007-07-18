@@ -604,10 +604,7 @@ static polymaplink_t *Polyobj_getLink(void)
       bmap_freelist = l->po_next;
    }
    else
-   {
-      l = Z_Malloc(sizeof(*l), PU_LEVEL, NULL);
-      memset(l, 0, sizeof(*l));
-   }
+      l = Z_Calloc(1, sizeof(*l), PU_LEVEL, NULL);
 
    return l;
 }
@@ -1079,8 +1076,7 @@ void Polyobj_InitLevel(void)
          {
             ++numPolyObjects;
             
-            qitem = malloc(sizeof(mobjqitem_t));
-            memset(qitem, 0, sizeof(mobjqitem_t));
+            qitem = calloc(1, sizeof(mobjqitem_t));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &spawnqueue);
          }
@@ -1088,8 +1084,7 @@ void Polyobj_InitLevel(void)
          {
             ++numAnchors;
 
-            qitem = malloc(sizeof(mobjqitem_t));
-            memset(qitem, 0, sizeof(mobjqitem_t));
+            qitem = calloc(1, sizeof(mobjqitem_t));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &anchorqueue);
          }
@@ -1099,9 +1094,8 @@ void Polyobj_InitLevel(void)
    if(numPolyObjects)
    {
       // allocate the PolyObjects array
-      PolyObjects = Z_Malloc(numPolyObjects * sizeof(polyobj_t), 
+      PolyObjects = Z_Calloc(numPolyObjects, sizeof(polyobj_t), 
                              PU_LEVEL, NULL);
-      memset(PolyObjects, 0, numPolyObjects * sizeof(polyobj_t));
 
       // setup hash fields
       for(i = 0; i < numPolyObjects; ++i)

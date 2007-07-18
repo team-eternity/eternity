@@ -905,7 +905,7 @@ static void G_DoPlayDemo(void)
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
       basetic = gametic;  // killough 9/29/98
       
-   ExtractFileBase(defdemoname,basename);           // killough
+   M_ExtractFileBase(defdemoname,basename);         // killough
    
    demobuffer = demo_p = W_CacheLumpName (basename, PU_STATIC);  // killough
    
@@ -2890,7 +2890,7 @@ void G_RecordDemo(char *name)
    demo_insurance = (default_demo_insurance != 0); // killough 12/98
    
    usergame = false;
-   AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
+   M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
    
    i = M_CheckParm("-maxdemo");
    

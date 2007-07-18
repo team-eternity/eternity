@@ -140,7 +140,7 @@ struct sector_s
    // killough 8/28/98: friction is a sector property, not an mobj property.
    // these fields used to be in mobj_t, but presented performance problems
    // when processed as mobj properties. Fix is to make them sector properties.
-   int friction,movefactor;
+   int friction, movefactor;
 
    // thinker_t for reversable actions
    void *floordata;    // jff 2/22/98 make thinkers on
@@ -207,6 +207,10 @@ struct sector_s
    int sndSeqID;
 
    struct particle_s *ptcllist; // haleyjd 02/20/04: list of particles in sector
+
+   // haleyjd 07/04/07: Happy July 4th :P
+   // Angles for flat rotation!
+   float floorangle, ceilingangle, floorbaseangle, ceilingbaseangle;
 
    // Cardboard optimization
    // They are set in R_Subsector and R_FakeFlat and are

@@ -67,9 +67,16 @@ static unsigned int numEDLines;
 #define NUMLDCHAINS 1021
 static unsigned int linedef_chains[NUMLDCHAINS];
 
+static mapsectorext_t *EDSectors;
+static unsigned int numEDSectors;
+
+#define NUMSECCHAINS 1021
+static unsigned int sector_chains[NUMSECCHAINS];
+
 // ExtraData section names
 #define SEC_MAPTHING "mapthing"
 #define SEC_LINEDEF  "linedef"
+#define SEC_SECTOR   "sector"
 
 // ExtraData field names
 // mapthing fields:
@@ -80,13 +87,29 @@ static unsigned int linedef_chains[NUMLDCHAINS];
 #define FIELD_ARGS    "args"
 #define FIELD_HEIGHT  "height"
 
-// linedef fields
+// linedef fields:
 #define FIELD_LINE_NUM       "recordnum"
 #define FIELD_LINE_SPECIAL   "special"
 #define FIELD_LINE_TAG       "tag"
 #define FIELD_LINE_EXTFLAGS  "extflags"
 #define FIELD_LINE_ARGS      "args"
 #define FIELD_LINE_ID        "id"
+
+// sector fields:
+#define FIELD_SECTOR_NUM            "recordnum"
+#define FIELD_SECTOR_SPECIAL        "special"
+#define FIELD_SECTOR_TAG            "tag"
+#define FIELD_SECTOR_DAMAGEAMOUNT   "damageamount"
+#define FIELD_SECTOR_DAMAGEMASK     "damagemask"
+#define FIELD_SECTOR_DAMAGEMOD      "damagemod"
+#define FIELD_SECTOR_FLOORTERRAIN   "floorterrain"
+#define FIELD_SECTOR_FLOORANGLE     "floorangle"
+#define FIELD_SECTOR_FLOORXOFFSET   "floorxoffset"
+#define FIELD_SECTOR_FLOORYOFFSET   "flooryoffset"
+#define FIELD_SECTOR_CEILINGTERRAIN "ceilingterrain"
+#define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
+#define FIELD_SECTOR_CEILINGXOFFSET "ceilingxoffset"
+#define FIELD_SECTOR_CEILINGYOFFSET "ceilingyoffset"
 
 // mapthing options and related data structures
 
@@ -573,15 +596,42 @@ static struct exlinespec
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
 
+
+// haleyjd 06/26/07: sector options and related data structures
+
+static cfg_opt_t sector_opts[] =
+{
+   CFG_INT(FIELD_SECTOR_NUM,              0,    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_SPECIAL,          "",   CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_TAG,              0,    CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_DAMAGEAMOUNT,     0,    CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_DAMAGEMASK,       0,    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DAMAGEMOD,        0,    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     0,    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   0,    CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_FLOORANGLE,       0,    CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_CEILINGANGLE,     0,    CFGF_NONE),
+
+   CFG_FLOAT(FIELD_SECTOR_FLOORXOFFSET,   0.0f, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORYOFFSET,   0.0f, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGXOFFSET, 0.0f, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGYOFFSET, 0.0f, CFGF_NONE),
+   
+   CFG_END()
+};
+
+
 // primary ExtraData options table
 
 static cfg_opt_t ed_opts[] =
 {
    CFG_SEC(SEC_MAPTHING, mapthing_opts, CFGF_MULTI|CFGF_NOCASE),
    CFG_SEC(SEC_LINEDEF,  linedef_opts,  CFGF_MULTI|CFGF_NOCASE),
+   CFG_SEC(SEC_SECTOR,   sector_opts,   CFGF_MULTI|CFGF_NOCASE),
    CFG_END()
 };
 
+//=============================================================================
 //
 // Shared Processing Routines
 //
@@ -597,6 +647,7 @@ static void E_ParseArg(const char *str, long *dest)
    *dest = strtol(str, NULL, 0);
 }
 
+//=============================================================================
 //
 // Begin Mapthing Routines
 //
@@ -768,6 +819,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
    }
 }
 
+//=============================================================================
 //
 // Begin Linedef Routines
 //
@@ -1474,6 +1526,34 @@ static void E_ProcessEDLines(cfg_t *cfg)
    }
 }
 
+//=============================================================================
+//
+// Begin Sector Routines
+//
+
+//
+// E_EDSectorForRecordNum
+//
+// Returns an index into EDSectors for the given record number.
+// Returns numEDSectors if no such record exists.
+//
+static unsigned int E_EDSectorForRecordNum(int recnum)
+{
+   unsigned int num;
+   int key = recnum % NUMSECCHAINS;
+
+   num = sector_chains[key];
+   while(num != numEDSectors && EDSectors[num].recordnum != recnum)
+   {
+      num = EDSectors[num].next;
+   }
+
+   return num;
+}
+
+// TODO
+
+//=============================================================================
 //
 // Global Routines
 //
@@ -1528,9 +1608,8 @@ void E_LoadExtraData(void)
 //
 // Called by P_SpawnMapThing when an ExtraData control point
 // (doomednum 5004) is encountered.  This function recursively
-// calls P_SpawnMapThing with the new basic mapthing data from
-// the corresponding ExtraData record, and then sets ExtraData 
-// fields on the returned mobj_t.
+// calls P_SpawnMapThing with the new mapthing data from the 
+// corresponding ExtraData record.
 //
 mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
 {
@@ -1601,6 +1680,41 @@ void E_LoadLineDefExt(line_t *line)
 
    // 03/03/07: id
    line->line_id = edline->id;
+}
+
+//
+// E_LoadSectorExt
+//
+void E_LoadSectorExt(sector_t *sector)
+{
+   unsigned int edSectorIdx;
+   mapsectorext_t *edsector;
+
+   // ExtraData record number is stored in sector tag
+   if(!LevelInfo.extraData || numEDLines == 0 ||
+      (edSectorIdx = E_EDSectorForRecordNum((unsigned short)(sector->tag))) == numEDSectors)
+   {
+      // if no ExtraData or no such record, zero special and tag,
+      // and we're finished here.
+      sector->special = 0;
+      sector->tag     = 0;
+      return;
+   }
+
+   // get a pointer to the proper ExtraData line record
+   edsector = &EDSectors[edSectorIdx];
+
+   // apply standard fields to the sector
+   sector->special = edsector->stdfields.special;
+   sector->tag     = edsector->stdfields.tag;
+
+   // apply extended fields to the sector
+
+   // flat offsets
+   sector->floor_xoffs   = (fixed_t)(edsector->floor_xoffs   * FRACUNIT);
+   sector->floor_yoffs   = (fixed_t)(edsector->floor_yoffs   * FRACUNIT);
+   sector->ceiling_xoffs = (fixed_t)(edsector->ceiling_xoffs * FRACUNIT);
+   sector->ceiling_yoffs = (fixed_t)(edsector->ceiling_yoffs * FRACUNIT);
 }
 
 //

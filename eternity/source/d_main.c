@@ -658,8 +658,7 @@ char *D_DoomExeName(void)
       while(p[i] && p[i] != '.')
          i++;
 
-      name = malloc(i + 1);
-      memset(name, 0, i + 1);
+      name = calloc(1, i + 1);
 
       strncpy(name, p, i);
    }
@@ -799,7 +798,7 @@ static void D_SetBasePath(void)
 
    strncpy(basepath, basedir, PATH_MAX + 1);
    basepath[PATH_MAX] = '\0';
-   NormalizeSlashes(basepath);
+   M_NormalizeSlashes(basepath);
 
    switch(source)
    {
@@ -849,7 +848,7 @@ static void D_SetGamePath(void)
       {
          strncpy(basegamepath, gamedir, PATH_MAX + 1);
          basegamepath[PATH_MAX] = '\0';
-         NormalizeSlashes(basegamepath);
+         M_NormalizeSlashes(basegamepath);
       }
       else
          I_Error("Game path %s is not a directory.\n", gamedir);
@@ -1125,7 +1124,7 @@ char *FindIWADFile(void)
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
-      NormalizeSlashes(strcpy(baseiwad,basename));
+      M_NormalizeSlashes(strcpy(baseiwad,basename));
       if(WadFileStatus(strcpy(iwad,baseiwad),&isdir))
       {
          if(!isdir)
@@ -1141,13 +1140,13 @@ char *FindIWADFile(void)
             }
       }
       else if(!strchr(iwad,':') && !strchr(iwad,'/'))
-         AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
+         M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
    }
 
    for(j = 0; j < 2; j++)
    {
       strcpy(iwad, j ? D_DoomExeDir() : ".");
-      NormalizeSlashes(iwad);
+      M_NormalizeSlashes(iwad);
 
       if(devparm)       // sf: only show 'looking in' for devparm
          printf("Looking in %s\n",iwad);   // killough 8/8/98
@@ -1174,7 +1173,7 @@ char *FindIWADFile(void)
    {
       if((p = getenv(envvars[i])))
       {
-         NormalizeSlashes(strcpy(iwad,p));
+         M_NormalizeSlashes(strcpy(iwad,p));
          if(WadFileStatus(iwad,&isdir))
          {
             if (!isdir)
@@ -1233,7 +1232,7 @@ static void D_LoadResourceWad(void)
 
    psnprintf(filestr, sizeof(filestr), "%s/%s", basegamepath, "eternity.wad");
 
-   NormalizeSlashes(filestr);
+   M_NormalizeSlashes(filestr);
    D_AddFile(filestr);
 
    modifiedgame = false;         // reset, ignoring smmu.wad etc.
@@ -1429,7 +1428,7 @@ void FindResponseFile(void)
          char fname[PATH_MAX + 1];
 
          strncpy(fname, &myargv[i][1], PATH_MAX + 1);
-         AddDefaultExtension(fname, ".rsp");
+         M_AddDefaultExtension(fname, ".rsp");
 
          // read the response file into memory
          if((size = M_ReadFile(fname, &f)) < 0)
@@ -1554,10 +1553,10 @@ static void D_ProcessDehCommandLine(void)
             if(deh)
             {
                char file[PATH_MAX+1];      // killough
-               AddDefaultExtension(strcpy(file, myargv[p]), ".bex");
+               M_AddDefaultExtension(strcpy(file, myargv[p]), ".bex");
                if(access(file, F_OK))  // nope
                {
-                  AddDefaultExtension(strcpy(file, myargv[p]), ".deh");
+                  M_AddDefaultExtension(strcpy(file, myargv[p]), ".deh");
                   if(access(file, F_OK))  // still nope
                      I_Error("Cannot find .deh or .bex file named %s",
                              myargv[p]);
@@ -1590,7 +1589,7 @@ static void D_ProcessWadPreincludes(void)
             if(*s)
             {
                char file[PATH_MAX+1];
-               AddDefaultExtension(strcpy(file, s), ".wad");
+               M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
                   D_AddFile(file);
                else
@@ -1617,12 +1616,12 @@ static void D_ProcessDehPreincludes(void)
             if(*s)
             {
                char file[PATH_MAX+1];
-               AddDefaultExtension(strcpy(file, s), ".bex");
+               M_AddDefaultExtension(strcpy(file, s), ".bex");
                if(!access(file, R_OK))
                   D_QueueDEH(file, 0); // haleyjd: queue it
                else
                {
-                  AddDefaultExtension(strcpy(file, s), ".deh");
+                  M_AddDefaultExtension(strcpy(file, s), ".deh");
                   if(!access(file, R_OK))
                      D_QueueDEH(file, 0); // haleyjd: queue it
                   else
@@ -1653,7 +1652,7 @@ static void D_AutoExecScripts(void)
             if(*s)
             {
                char file[PATH_MAX+1];
-               AddDefaultExtension(strcpy(file, s), ".csc");
+               M_AddDefaultExtension(strcpy(file, s), ".csc");
                if(!access(file, R_OK))
                   C_RunScriptFromFile(file);
                else
@@ -1711,7 +1710,7 @@ static void D_ProcessGFSDeh(gfs_t *gfs)
 
       psnprintf(filename, sizeof(filename),
                 "%s/%s", gfs->filepath, gfs->dehnames[i]);
-      NormalizeSlashes(filename);
+      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open .deh or .bex %s\n", filename);
@@ -1736,7 +1735,7 @@ static void D_ProcessGFSWads(gfs_t *gfs)
 
       psnprintf(filename, sizeof(filename),
                 "%s/%s", gfs->filepath, gfs->wadnames[i]);
-      NormalizeSlashes(filename);
+      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
@@ -1756,7 +1755,7 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
 
       psnprintf(filename, sizeof(filename),
                 "%s/%s", gfs->filepath, gfs->cscnames[i]);
-      NormalizeSlashes(filename);
+      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open CSC file %s\n", filename);
@@ -1838,7 +1837,7 @@ static void D_LoadEDF(gfs_t *gfs)
       }
    }
 
-   NormalizeSlashes(edfname);
+   M_NormalizeSlashes(edfname);
 
    E_ProcessEDF(edfname);
 
@@ -1871,7 +1870,7 @@ static void D_LooseWads(void)
 
       // add it
       strncpy(filename, myargv[i], PATH_MAX + 1);
-      NormalizeSlashes(filename);
+      M_NormalizeSlashes(filename);
       modifiedgame = true;
       D_AddFile(filename);
    }
@@ -1899,7 +1898,7 @@ static void D_LooseDehs(void)
 
       // add it
       strncpy(filename, myargv[i], PATH_MAX + 1);
-      NormalizeSlashes(filename);
+      M_NormalizeSlashes(filename);
       D_QueueDEH(filename, 0);
    }
 }
@@ -2033,7 +2032,7 @@ static void D_DoomInit(void)
       char fn[PATH_MAX + 1];
 
       // haleyjd 01/19/05: corrected use of AddDefaultExtension
-      AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
+      M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
       if(access(fn, F_OK))
          I_Error("GFS file %s not found\n", fn);
 
@@ -2250,7 +2249,7 @@ static void D_DoomInit(void)
    if(p && p < myargc - 1)
    {
       strcpy(file,myargv[p + 1]);
-      AddDefaultExtension(file,".lmp");     // killough
+      M_AddDefaultExtension(file,".lmp");     // killough
       D_AddFile(file);
       usermsg("Playing demo %s\n",file);
    }
@@ -2719,7 +2718,7 @@ void D_ReInitWadfiles(void)
 }
 
 // FIXME: various parts of this routine need tightening up
-void D_NewWadLumps(int handle, int sound_update_type)
+void D_NewWadLumps(FILE *handle, int sound_update_type)
 {
    int i, format;
    char wad_firstlevel[9];
@@ -2728,7 +2727,7 @@ void D_NewWadLumps(int handle, int sound_update_type)
 
    for(i = 0; i < numlumps; ++i)
    {
-      if(lumpinfo[i]->handle != handle)
+      if(lumpinfo[i]->file != handle)
          continue;
 
       // haleyjd: changed check for "THINGS" lump to a fullblown

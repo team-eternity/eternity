@@ -447,10 +447,11 @@ byte *R_GetColumn(int tex, int col)
 
 //
 // R_InitTextures
+//
 // Initializes the texture list
 //  with the textures from the world map.
 //
-void R_InitTextures (void)
+void R_InitTextures(void)
 {
    maptexture_t *mtexture;
    texture_t    *texture;
@@ -551,7 +552,7 @@ void R_InitTextures (void)
       // sf: reorganised to use loading pic
       int temp3 = 6 + (temp2 - temp1 + 255) / 128 + (numtextures + 255) / 128;
       
-      V_SetLoading(temp3, "r_init:");
+      V_SetLoading(temp3, "R_Init:");
    }
 
    for(i = 0; i < numtextures; ++i, ++directory)

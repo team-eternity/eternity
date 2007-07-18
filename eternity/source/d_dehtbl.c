@@ -1871,8 +1871,7 @@ void D_BuildBEXTables(void)
 
    // haleyjd 03/11/03: must be dynamic now
    // 10/17/03: allocate all the names through a single pointer
-   spritestr = Z_Malloc(5 * NUMSPRITES, PU_STATIC, 0);
-   memset(spritestr, 0, 5 * NUMSPRITES);
+   spritestr = Z_Calloc(NUMSPRITES, 5, PU_STATIC, NULL);
 
    deh_spritenames = Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0);
 
@@ -1884,8 +1883,7 @@ void D_BuildBEXTables(void)
    deh_spritenames[NUMSPRITES] = NULL;
 
    // 09/07/05: allocate all music names through one pointer
-   musicstr = Z_Malloc(7 * NUMMUSIC, PU_STATIC, 0);
-   memset(musicstr, 0, 7 * NUMMUSIC);
+   musicstr = Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0);
 
    deh_musicnames = Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0);
 
@@ -1930,8 +1928,7 @@ void D_DEHQueueInit(void)
 void D_QueueDEH(const char *filename, int lumpnum)
 {
    // allocate a new dehqueue_t
-   dehqueueitem_t *newdq = malloc(sizeof(dehqueueitem_t));
-   memset(newdq, 0, sizeof(dehqueueitem_t));
+   dehqueueitem_t *newdq = calloc(1, sizeof(dehqueueitem_t));
 
    // if filename is valid, this is a file DEH
    if(filename)

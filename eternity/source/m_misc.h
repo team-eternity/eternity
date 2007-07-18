@@ -35,14 +35,14 @@
 //
 
 boolean M_WriteFile(const char *name, void *source, unsigned int length);
-int M_ReadFile(const char *name, byte **buffer);
-void M_ScreenShot(void);
-void M_LoadDefaults(void);
-void M_SaveDefaults(void);
-int M_DrawText(int x,int y,boolean direct, char *string);
+int     M_ReadFile(const char *name, byte **buffer);
+void    M_ScreenShot(void);
+void    M_LoadDefaults(void);
+void    M_SaveDefaults(void);
+int     M_DrawText(int x,int y,boolean direct, char *string);
 struct default_s *M_LookupDefault(const char *name);     // killough 11/98
 boolean M_ParseOption(const char *name, boolean wad);    // killough 11/98
-void M_LoadOptions(void);                                // killough 11/98
+void    M_LoadOptions(void);                             // killough 11/98
 
 // haleyjd: Portable versions of common non-standard C functions.
 // Some of these default to the standard implementation if its
@@ -52,10 +52,17 @@ char *M_Strupr(char *string);
 char *M_Strlwr(char *string);
 char *M_Itoa(int value, char *string, int radix);
 
-void M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
+// Misc file routines
+// haleyjd: moved a number of these here from w_wad module.
 
-extern int screenshot_pcx;                               // killough 10/98
-extern int screenshot_gamma;                             // haleyjd  03/06
+void  M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
+int   M_FileLength(int handle);
+void  M_ExtractFileBase(const char *, char *);               // killough
+char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
+void  M_NormalizeSlashes(char *);                            // killough 11/98
+
+extern int screenshot_pcx;                                   // killough 10/98
+extern int screenshot_gamma;                                 // haleyjd  03/06
 
 // phares 4/21/98:
 // Moved from m_misc.c so m_menu.c could see it.
@@ -69,8 +76,7 @@ typedef struct default_s
   int  *const current;                      // possible nondefault variable
   int   const defaultvalue;                 // built-in default value
   struct {int min, max;} const limit;       // numerical limits
-        // sf: changed to dt_ for fragglescript
-  enum {dt_number, dt_string} const isstr;        // number or string
+  enum {dt_number, dt_string} const isstr;  // number or string
   ss_types const setupscreen;               // setup screen this appears on
   enum {wad_no, wad_yes} const wad_allowed; // whether it's allowed in wads
   const char *const help;                   // description of parameter

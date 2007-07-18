@@ -41,8 +41,16 @@
 
 d_inline static short SHORT(short x)
 {
-  return (((unsigned char *) &x)[1]<< 8) +
+  return (((unsigned char *) &x)[1] << 8) +
           ((unsigned char *) &x)[0];
+}
+
+// haleyjd: same routine but for big-endian input
+
+d_inline static short BIGSHORT(short x)
+{
+   return (((unsigned char *) &x)[0] << 8) +
+           ((unsigned char *) &x)[1];
 }
 
 // Swapping 32bit.
@@ -50,9 +58,9 @@ d_inline static short SHORT(short x)
 
 d_inline static long LONG(long x)
 {
-  return (((unsigned char *) &x)[3]<<24) +
-         (((unsigned char *) &x)[2]<<16) +
-         (((unsigned char *) &x)[1]<< 8) +
+  return (((unsigned char *) &x)[3] << 24) +
+         (((unsigned char *) &x)[2] << 16) +
+         (((unsigned char *) &x)[1] <<  8) +
           ((unsigned char *) &x)[0];
 } 
 

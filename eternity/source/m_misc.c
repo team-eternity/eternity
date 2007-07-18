@@ -67,6 +67,7 @@
 #include "d_gi.h"
 
 #include <errno.h>
+#include <sys/stat.h>
 
 //
 // DEFAULTS
@@ -1666,7 +1667,7 @@ void M_SaveDefaults (void)
 
    psnprintf(tmpfile, sizeof(tmpfile), "%s/tmp%.5s.cfg", 
              D_DoomExeDir(), D_DoomExeName());
-   NormalizeSlashes(tmpfile);
+   M_NormalizeSlashes(tmpfile);
 
    errno = 0;
    if(!(f = fopen(tmpfile, "w")))  // killough 9/21/98
@@ -1936,7 +1937,7 @@ void M_LoadDefaults (void)
          defaultfile = strdup(basedefault);
    }
 
-   NormalizeSlashes(defaultfile);
+   M_NormalizeSlashes(defaultfile);
    
    // read the file in, overriding any set defaults
    //
@@ -2506,6 +2507,89 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
    // return the empty string, since the path is relative to the root.
    if(!found_slash && *base == '\0')
       *base = '.';
+}
+
+// 
+// M_FileLength
+//
+// Gets the length of a file given its handle.
+// FIXME/TODO: don't use POSIX fstat; is slower and less portable
+// haleyjd 03/09/06: made global
+//
+int M_FileLength(int handle)
+{
+   struct stat fileinfo;
+   if(fstat(handle, &fileinfo) == -1)
+      I_Error("M_FileLength: failure in fstat\n");
+   return fileinfo.st_size;
+}
+
+void M_ExtractFileBase(const char *path, char *dest)
+{
+   const char *src = path + strlen(path) - 1;
+   int length;
+   
+   // back up until a \ or the start
+   while(src != path && src[-1] != ':' // killough 3/22/98: allow c:filename
+         && *(src-1) != '\\'
+         && *(src-1) != '/')
+      src--;
+
+   // copy up to eight characters
+   memset(dest, 0, 8);
+   length = 0;
+
+   while(*src && *src != '.')
+      if(++length == 9)
+         I_Error("Filename base of %s > 8 chars", path);
+      else
+         *dest++ = toupper(*src++);
+}
+
+//
+// 1/18/98 killough: adds a default extension to a path
+// Note: Backslashes are treated specially, for MS-DOS.
+//
+char *M_AddDefaultExtension(char *path, const char *ext)
+{
+   char *p = path;
+   while(*p++);
+   while(p-- > path && *p != '/' && *p != '\\')
+      if(*p == '.')
+         return path;
+   if(*ext != '.')
+      strcat(path, ".");
+   return strcat(path, ext);
+}
+
+//
+// M_NormalizeSlashes
+//
+// Remove trailing slashes, translate backslashes to slashes
+// The string to normalize is passed and returned in str
+//
+// killough 11/98: rewritten
+//
+void M_NormalizeSlashes(char *str)
+{
+   char *p;
+   
+   // Convert backslashes to slashes
+   for(p = str; *p; p++)
+   {
+      if(*p == '\\')
+         *p = '/';
+   }
+
+   // Remove trailing slashes
+   while(p > str && *--p == '/')
+      *p = 0;
+
+   // Collapse multiple slashes
+   for(p = str; (*str++ = *p); )
+      if(*p++ == '/')
+         while(*p == '/')
+            p++;
 }
 
 //----------------------------------------------------------------------------

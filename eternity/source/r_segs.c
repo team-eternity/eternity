@@ -149,10 +149,9 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // draw the columns
    for(column.x = x1; column.x <= x2; ++column.x, dist += diststep, scale += scalestep)
    {
-      // haleyjd:DEBUG
       if(maskedtexturecol[column.x] != 0x7fffffff)
       {
-         if(!fixedcolormap)      // calculate lighting
+         if(!fixedcolormap)
          {                             // killough 11/98:
             // SoM: ANYRES
             int index = (int)(dist * 2560.0f);
@@ -162,6 +161,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
             
             column.colormap = wlight[index];
          }
+
 
          maskedcolumn.scale = scale;
          maskedcolumn.ytop = view.ycenter - (texmidf * scale);
@@ -287,7 +287,17 @@ static void R_RenderSegLoop(void)
 
          // calculate lighting
          // SoM: ANYRES
-         if(!fixedcolormap)
+         // haleyjd 06/30/07: cardboard invuln fix.
+         if(fixedcolormap)
+         {
+            // haleyjd 10/31/02: invuln fix
+            if(fixedcolormap == 
+               fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
+               column.colormap = fixedcolormap;
+            else
+               column.colormap = walllights[MAXLIGHTSCALE-1];
+         }
+         else
          {
             // SoM: it took me about 5 solid minutes of looking at the old doom code
             // and running test levels through it to do the math and get 2560 as the

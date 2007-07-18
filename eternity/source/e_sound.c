@@ -322,9 +322,7 @@ void E_NewWadSound(const char *name)
    if(!sfx)
    {
       // create a new one and hook into hashchain
-      sfx = Z_Malloc(sizeof(sfxinfo_t), PU_STATIC, 0);
-
-      memset(sfx, 0, sizeof(sfxinfo_t));
+      sfx = Z_Calloc(1, sizeof(sfxinfo_t), PU_STATIC, NULL);
       
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
@@ -571,8 +569,7 @@ void E_ProcessAdditiveSounds(cfg_t *cfg)
       else
       {
          // create a new one and hook into hashchain
-         sfx = Z_Malloc(sizeof(sfxinfo_t), PU_STATIC, 0);
-         memset(sfx, 0, sizeof(sfxinfo_t));
+         sfx = Z_Calloc(1, sizeof(sfxinfo_t), PU_STATIC, NULL);
       
          strncpy(sfx->mnemonic, title, 33);
 
@@ -1117,8 +1114,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    // * multiply by 4 because no txt command compiles to more than 4 ops
    cmdalloc = (numcmds + 1) * 4 * sizeof(seqcmd_t);
 
-   tempcmdbuf = malloc(cmdalloc);
-   memset(tempcmdbuf, 0, cmdalloc);
+   tempcmdbuf = calloc(1, cmdalloc);
 
    for(i = 0; i < numcmds; ++i)
    {
@@ -1290,10 +1286,7 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    else
    {
       // Create a new sound sequence object
-      newSeq = malloc(sizeof(ESoundSeq_t));
-
-      // init to zero
-      memset(newSeq, 0, sizeof(*newSeq));
+      newSeq = calloc(1, sizeof(ESoundSeq_t));
       
       // copy keys into sequence object
       strncpy(newSeq->name, name, 33);
