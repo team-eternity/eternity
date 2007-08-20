@@ -34,8 +34,12 @@
 #include <fcntl.h>
 
 // haleyjd 10/28/04: Win32-specific repair for D_DoomExeDir
+// haleyjd 08/20/07: POSIX opendir needed for autoload functionality
 #ifdef _MSC_VER
 #include "Win32/i_fnames.h"
+#include "Win32/i_opndir.h"
+#else
+#include <dirent.h>
 #endif
 
 #include "z_zone.h"
@@ -900,6 +904,70 @@ static void D_SetGamePath(void)
       I_Error("Game path %s does not exist\n", gamedir);
 }
 
+// haleyjd 08/20/07: gamepath autload directory structure
+static DIR *autoloads;
+static char autoload_dirname[PATH_MAX + 1];
+
+//
+// D_EnumerateAutoloadDir
+//
+// haleyjd 08/20/07: this function enumerates the base/game/autoload directory.
+//
+static void D_EnumerateAutoloadDir(void)
+{
+   if(!autoloads)
+   {  
+      psnprintf(autoload_dirname, sizeof(autoload_dirname), 
+                "%s/autoload", basegamepath);
+      
+      autoloads = opendir(autoload_dirname);
+   }
+}
+
+//
+// D_GameAutoloadWads
+//
+// Loads all wad files in the base/game/autoload directory.
+//
+static void D_GameAutoloadWads(void)
+{
+   char fn[PATH_MAX + 1];
+
+   if(autoloads)
+   {
+      struct dirent *direntry;
+      
+      while((direntry = readdir(autoloads)))
+      {
+         if(strstr(direntry->d_name, ".wad"))
+         {
+            psnprintf(fn, sizeof(fn), "%s/%s", 
+                      autoload_dirname, direntry->d_name);
+            M_NormalizeSlashes(fn);
+            D_AddFile(fn);
+         }
+      }
+      
+      rewinddir(autoloads);
+   }
+}
+
+//
+// D_CloseAutoloadDir
+//
+// haleyjd 08/20/07: closes the base/game/autoload directory.
+//
+static void D_CloseAutoloadDir(void)
+{
+   if(autoloads)
+   {
+      closedir(autoloads);
+      autoloads = NULL;
+   }
+}
+
+// macros for CheckIWAD
+
 #define isIWAD(name) \
    ((name)[0] == 'I' && (name)[1] == 'W' && \
     (name)[2] == 'A' && (name)[3] == 'D')
@@ -1197,9 +1265,20 @@ char *FindIWADFile(void)
          M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
    }
 
-   for(j = 0; j < 2; j++)
+   for(j = 0; j < (gamepathset ? 3 : 2); j++)
    {
-      strcpy(iwad, j ? D_DoomExeDir() : ".");
+      switch(j)
+      {
+      case 0:
+      case 1:
+         strcpy(iwad, j ? D_DoomExeDir() : ".");
+         break;
+      case 2:
+         // haleyjd: try basegamepath too when -game was used
+         strcpy(iwad, basegamepath);
+         break;
+      }
+
       M_NormalizeSlashes(iwad);
 
        // sf: only show 'looking in' for devparm
@@ -1637,7 +1716,7 @@ static void D_ProcessDehCommandLine(void)
 
 static void D_ProcessWadPreincludes(void)
 {
-   if (!M_CheckParm ("-noload"))
+   if(!M_CheckParm("-noload"))
    {
       int i;
       char *s;
@@ -2443,6 +2522,10 @@ static void D_DoomInit(void)
 
    D_ProcessWadPreincludes(); // killough 10/98: add preincluded wads at the end
 
+   // haleyjd 08/20/07: also, enumerate and load wads from base/game/autoload
+   D_EnumerateAutoloadDir();
+   D_GameAutoloadWads();
+
    startupmsg("W_Init", "Init WADfiles.");
    W_InitMultipleFiles(wadfiles);
    usermsg("");  // gap
@@ -2588,6 +2671,9 @@ static void D_DoomInit(void)
    }
 
    // haleyjd: GFS is no longer valid from here!
+
+   // haleyjd 08/20/07: done with base/game/autoload directory
+   D_CloseAutoloadDir();
 
    if(devparm) // we wait if in devparm so the user can see the messages
    {
