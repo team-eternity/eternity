@@ -904,6 +904,27 @@ static void D_SetGamePath(void)
       I_Error("Game path %s does not exist\n", gamedir);
 }
 
+//
+// D_CheckGameEDF
+//
+// Looks for an optional root.edf file in base/game
+//
+static const char *D_CheckGameEDF(void)
+{
+   struct stat sbuf;
+   static char game_edf[PATH_MAX + 1];
+
+   psnprintf(game_edf, sizeof(game_edf), "%s/root.edf", basegamepath);
+
+   if(!stat(game_edf, &sbuf)) // check for existence
+   {
+      if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
+         return game_edf;        // return the filename
+   }
+
+   return NULL; // return NULL to indicate the file doesn't exist
+}
+
 // haleyjd 08/20/07: gamepath autload directory structure
 static DIR *autoloads;
 static char autoload_dirname[PATH_MAX + 1];
@@ -915,7 +936,7 @@ static char autoload_dirname[PATH_MAX + 1];
 //
 static void D_EnumerateAutoloadDir(void)
 {
-   if(!autoloads)
+   if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
    {  
       psnprintf(autoload_dirname, sizeof(autoload_dirname), 
                 "%s/autoload", basegamepath);
@@ -948,6 +969,63 @@ static void D_GameAutoloadWads(void)
          }
       }
       
+      rewinddir(autoloads);
+   }
+}
+
+//
+// D_GameAutoloadDEH
+//
+// Queues all deh/bex files in the base/game/autoload directory.
+//
+static void D_GameAutoloadDEH(void)
+{
+   char fn[PATH_MAX + 1];
+
+   if(autoloads)
+   {
+      struct dirent *direntry;
+
+      while((direntry = readdir(autoloads)))
+      {
+         if(strstr(direntry->d_name, ".deh") || 
+            strstr(direntry->d_name, ".bex"))
+         {
+            psnprintf(fn, sizeof(fn), "%s/%s",
+                      autoload_dirname, direntry->d_name);
+            M_NormalizeSlashes(fn);
+            D_QueueDEH(fn, 0);
+         }
+      }
+
+      rewinddir(autoloads);
+   }
+}
+
+//
+// D_GameAutoloadCSC
+//
+// Runs all console scripts in the base/game/autoload directory.
+//
+static void D_GameAutoloadCSC(void)
+{
+   char fn[PATH_MAX + 1];
+
+   if(autoloads)
+   {
+      struct dirent *direntry;
+
+      while((direntry = readdir(autoloads)))
+      {
+         if(strstr(direntry->d_name, ".csc"))
+         {
+            psnprintf(fn, sizeof(fn), "%s/%s",
+                      autoload_dirname, direntry->d_name);
+            M_NormalizeSlashes(fn);
+            C_RunScriptFromFile(fn);
+         }
+      }
+
       rewinddir(autoloads);
    }
 }
@@ -1535,7 +1613,17 @@ void IdentifyVersion(void)
       D_AddFile(iwad);
    }
    else
-      I_Error("IWAD not found\n");
+   {
+      // haleyjd 08/20/07: improved error message for n00bs
+      I_Error("\nIWAD not found!\n"
+              "To specify an IWAD, try one of the following:\n"
+              "* Use -iwad\n"
+              "* Set the DOOMWADDIR environment variable.\n"
+              "* Place an IWAD in the working directory.\n"
+              "* Place an IWAD file under the appropriate.\n"
+              "  game folder of the base directory and use.\n"
+              "  the -game parameter.");
+   }
 }
 
 // MAXARGVS: a reasonable(?) limit on response file arguments
@@ -1571,9 +1659,7 @@ void FindResponseFile(void)
 
          // read the response file into memory
          if((size = M_ReadFile(fname, &f)) < 0)
-         {
             I_Error("No such response file: %s\n", fname);
-         }
 
          file = (char *)f;
 
@@ -1643,7 +1729,8 @@ void FindResponseFile(void)
                   *p = 0;
                   newargv[indexinfile++] = realloc(s,strlen(s)+1);
                }
-            } while(size > 0);
+            } 
+            while(size > 0);
          }
          free(file);
 
@@ -1961,7 +2048,13 @@ static void D_LoadEDF(gfs_t *gfs)
       // use default
       if(!D_LooseEDF(edfname)) // check for loose files (drag and drop)
       {
-         psnprintf(edfname, sizeof(edfname), "%s/%s",  basepath, "root.edf");
+         const char *fn;
+
+         // haleyjd 08/20/07: check for root.edf in base/game first
+         if((fn = D_CheckGameEDF()))
+            strncpy(edfname, fn, PATH_MAX + 1);
+         else
+            psnprintf(edfname, sizeof(edfname), "%s/%s",  basepath, "root.edf");
 
          // disable other game modes' definitions implicitly ONLY
          // when using the default root.edf
@@ -2545,6 +2638,9 @@ static void D_DoomInit(void)
    // haleyjd  09/03: this just queues them now
    D_ProcessDehPreincludes();
 
+   // haleyjd 08/20/07: queue autoload dir dehs
+   D_GameAutoloadDEH();
+
    // haleyjd 09/11/03: All EDF and DeHackEd processing is now
    // centralized here, in order to allow EDF to load from wads.
    // As noted in comments, the other DEH functions above now add
@@ -2659,6 +2755,9 @@ static void D_DoomInit(void)
    // haleyjd: AFTER keybindings for overrides
    startupmsg("D_AutoExecScripts", "Executing console scripts.");
    D_AutoExecScripts();
+
+   // haleyjd 08/20/07: autoload dir csc's
+   D_GameAutoloadCSC();
 
    // haleyjd 03/10/03: GFS csc's
    if(haveGFS)

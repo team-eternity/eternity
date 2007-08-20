@@ -740,7 +740,7 @@ void I_InitSound(void)
    {
       int audio_buffers;
 
-      puts("I_InitSound: ");
+      printf("I_InitSound: ");
 
       /* Initialize variables */
       audio_buffers = SAMPLECOUNT * snd_samplerate / 11025;
