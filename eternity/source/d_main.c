@@ -816,16 +816,22 @@ static void D_SetBasePath(void)
       break;
    }
 
-   printf("Base path set %s\n", s);
+   printf("Base path set %s.\n", s);
 }
 
+// haleyjd 8/18/07: if true, the game path has been set
+static boolean gamepathset;
+
+// haleyjd 8/19/07: index of the game name as specified on the command line
+static int gamepathparm;
+
 //
-// D_SetGamePath
+// D_CheckGamePathParam
 //
-// haleyjd 11/23/06: Sets the game path under the base path. This allows
-// separate defaults, save games, etc. for different games.
+// haleyjd 08/18/07: This function checks for the -game command-line parameter.
+// If it is set, then its value is saved and gamepathset is asserted.
 //
-static void D_SetGamePath(void)
+static void D_CheckGamePathParam(void)
 {
    int p;
    struct stat sbuf;
@@ -833,14 +839,51 @@ static void D_SetGamePath(void)
 
    if((p = M_CheckParm("-game")) && p < myargc - 1)
    {
-      psnprintf(gamedir, sizeof(gamedir), "%s/%s",
-                basepath, myargv[p + 1]);
+      psnprintf(gamedir, sizeof(gamedir), "%s/%s", basepath, myargv[p + 1]);
+
+      gamepathparm = p + 1;
+
+      if(!stat(gamedir, &sbuf)) // check for existence
+      {
+         if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+         {
+            strncpy(basegamepath, gamedir, PATH_MAX + 1);
+            basegamepath[PATH_MAX] = '\0';
+            M_NormalizeSlashes(basegamepath);
+            gamepathset = true;
+         }
+         else
+            I_Error("Game path %s is not a directory.\n", gamedir);
+      }
+      else
+         I_Error("Game path %s does not exist\n", gamedir);
    }
-   else
-   {
-      psnprintf(gamedir, sizeof(gamedir), "%s/%s",
-                basepath, gameModeInfo->gameDir);
-   }
+}
+
+// default gamepath names for each gamemission
+static const char *gamemission_pathnames[] =
+{
+   "doom",     // doom
+   "doom2",    // doom2
+   "tnt",      // tnt
+   "plutonia", // plut
+   "heretic",  // heretic
+   "heretic",  // hticsosr
+};
+
+//
+// D_SetGamePath
+//
+// haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
+// been determined by the iwad in use.
+//
+static void D_SetGamePath(void)
+{
+   struct stat sbuf;
+   char gamedir[PATH_MAX + 1];
+
+   psnprintf(gamedir, sizeof(gamedir), "%s/%s", 
+             basepath, gamemission_pathnames[gamemission]);
 
    if(!stat(gamedir, &sbuf)) // check for existence
    {
@@ -1102,12 +1145,11 @@ boolean WadFileStatus(char *filename,boolean *isdir)
 //
 // killough 11/98: simplified, removed error-prone cut-n-pasted code
 //
-
 char *FindIWADFile(void)
 {
-   static const char *envvars[] = {"DOOMWADDIR", "HOME"};
-   static char iwad[PATH_MAX+1], customiwad[PATH_MAX+1];
-   boolean isdir=false;
+   static const char *envvars[] = { "DOOMWADDIR", "HOME" };
+   static char iwad[PATH_MAX + 1], customiwad[PATH_MAX + 1], gameiwad[PATH_MAX + 1];
+   boolean isdir = false;
    int i,j;
    char *p;
    const char *basename = NULL;
@@ -1116,30 +1158,42 @@ char *FindIWADFile(void)
    *customiwad = 0; // customiwad is blank
 
    //jff 3/24/98 get -iwad parm if specified else use .
-   if((i = M_CheckParm("-iwad")) && i < myargc-1)
-      basename = myargv[i+1];
+   if((i = M_CheckParm("-iwad")) && i < myargc - 1)
+      basename = myargv[i + 1];
    else
       basename = G_GFSCheckIWAD(); // haleyjd 04/16/03: GFS support
 
+   // haleyjd 08/19/07: if -game was used and neither -iwad nor a GFS iwad
+   // specification was used, start off by trying base/game/game.wad
+   if(gamepathset && !basename)
+   {
+      psnprintf(gameiwad, sizeof(gameiwad), "%s/%s.wad", 
+                basegamepath, myargv[gamepathparm]);
+      if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
+         basename = gameiwad;
+   }
+      
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
-      M_NormalizeSlashes(strcpy(baseiwad,basename));
-      if(WadFileStatus(strcpy(iwad,baseiwad),&isdir))
+      M_NormalizeSlashes(strcpy(baseiwad, basename));
+      if(WadFileStatus(strcpy(iwad, baseiwad), &isdir))
       {
          if(!isdir)
             return iwad;
          else
+         {
             for(i = 0; i < nstandard_iwads; i++)
             {
                int n = strlen(iwad);
-               strcat(iwad,standard_iwads[i]);
-               if(WadFileStatus(iwad,&isdir) && !isdir)
+               strcat(iwad, standard_iwads[i]);
+               if(WadFileStatus(iwad, &isdir) && !isdir)
                   return iwad;
                iwad[n] = 0; // reset iwad length to former
             }
+         }
       }
-      else if(!strchr(iwad,':') && !strchr(iwad,'/'))
+      else if(!strchr(iwad, ':') && !strchr(iwad, '/'))
          M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
    }
 
@@ -1148,12 +1202,14 @@ char *FindIWADFile(void)
       strcpy(iwad, j ? D_DoomExeDir() : ".");
       M_NormalizeSlashes(iwad);
 
-      if(devparm)       // sf: only show 'looking in' for devparm
+       // sf: only show 'looking in' for devparm
+      if(devparm)
          printf("Looking in %s\n",iwad);   // killough 8/8/98
+
       if(*customiwad)
       {
-         strcat(iwad,customiwad);
-         if (WadFileStatus(iwad,&isdir) && !isdir)
+         strcat(iwad, customiwad);
+         if(WadFileStatus(iwad, &isdir) && !isdir)
             return iwad;
       }
       else
@@ -1161,31 +1217,31 @@ char *FindIWADFile(void)
          for(i = 0; i < nstandard_iwads; i++)
          {
             int n = strlen(iwad);
-            strcat(iwad,standard_iwads[i]);
-            if(WadFileStatus(iwad,&isdir) && !isdir)
+            strcat(iwad, standard_iwads[i]);
+            if(WadFileStatus(iwad, &isdir) && !isdir)
                return iwad;
             iwad[n] = 0; // reset iwad length to former
          }
       }
    }
 
-   for(i=0; i<sizeof envvars/sizeof *envvars;i++)
+   for(i = 0; i < sizeof envvars / sizeof *envvars; i++)
    {
       if((p = getenv(envvars[i])))
       {
-         M_NormalizeSlashes(strcpy(iwad,p));
-         if(WadFileStatus(iwad,&isdir))
+         M_NormalizeSlashes(strcpy(iwad, p));
+         if(WadFileStatus(iwad, &isdir))
          {
-            if (!isdir)
+            if(!isdir)
             {
                if(!*customiwad)
-                  return printf("Looking for %s\n",iwad), iwad; // killough 8/8/98
+                  return printf("Looking for %s\n", iwad), iwad; // killough 8/8/98
                else if((p = strrchr(iwad,'/')))
                {
                   *p=0;
-                  strcat(iwad,customiwad);
+                  strcat(iwad, customiwad);
                   printf("Looking for %s\n",iwad);  // killough 8/8/98
-                  if(WadFileStatus(iwad,&isdir) && !isdir)
+                  if(WadFileStatus(iwad, &isdir) && !isdir)
                      return iwad;
                }
             }
@@ -1195,7 +1251,7 @@ char *FindIWADFile(void)
                   printf("Looking in %s\n",iwad);  // killough 8/8/98
                if(*customiwad)
                {
-                  if (WadFileStatus(strcat(iwad,customiwad),&isdir) && !isdir)
+                  if(WadFileStatus(strcat(iwad, customiwad), &isdir) && !isdir)
                      return iwad;
                }
                else
@@ -1203,8 +1259,8 @@ char *FindIWADFile(void)
                   for(i = 0; i < nstandard_iwads; i++)
                   {
                      int n = strlen(iwad);
-                     strcat(iwad,standard_iwads[i]);
-                     if(WadFileStatus(iwad,&isdir) && !isdir)
+                     strcat(iwad, standard_iwads[i]);
+                     if(WadFileStatus(iwad, &isdir) && !isdir)
                         return iwad;
                      iwad[n] = 0; // reset iwad length to former
                   }
@@ -1230,12 +1286,16 @@ static void D_LoadResourceWad(void)
    // haleyjd 06/04/02: lengthened filestr, memset to 0
    memset(filestr, 0, PATH_MAX + 1);
 
-   psnprintf(filestr, sizeof(filestr), "%s/%s", basegamepath, "eternity.wad");
+   psnprintf(filestr, sizeof(filestr), "%s/eternity.wad", basegamepath);
+
+   // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.wad
+   if(access(filestr, R_OK))
+      psnprintf(filestr, sizeof(filestr), "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
    D_AddFile(filestr);
 
-   modifiedgame = false;         // reset, ignoring smmu.wad etc.
+   modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
 
 //
@@ -1365,9 +1425,9 @@ void IdentifyVersion(void)
          puts("Unknown Game Version, may not work");  // killough 8/8/98
       }
 
-      // haleyjd 11/23/06: set base/game paths
-      D_SetBasePath();
-      D_SetGamePath();
+      // haleyjd 11/23/06: set game path if -game wasn't used
+      if(!gamepathset)
+         D_SetGamePath();
 
       // haleyjd 11/23/06: set basedefault here, and use basegamepath.
       // get config file from same directory as executable
@@ -2025,6 +2085,12 @@ static void D_DoomInit(void)
       cdrom_mode = true;
 #endif
 
+   // haleyjd 08/18/07: set base path
+   D_SetBasePath();
+
+   // haleyjd 08/19/07: check for -game parameter first
+   D_CheckGamePathParam();
+
    // haleyjd 03/10/03: GFS support
    // haleyjd 11/22/03: support loose GFS on the command line too
    if((p = M_CheckParm("-gfs")) && p < myargc - 1)
@@ -2041,11 +2107,20 @@ static void D_DoomInit(void)
       gfs = G_LoadGFS(fn);
       haveGFS = true;
    }
-   else
+   else if((gfs = D_LooseGFS())) // look for a loose GFS for drag-and-drop support
    {
-      // look for a loose GFS for drag-and-drop support
-      if((gfs = D_LooseGFS()))
+      haveGFS = true;
+   }
+   else if(gamepathset) // haleyjd 08/19/07: look for default.gfs in specified game path
+   {
+      char fn[PATH_MAX + 1];
+
+      psnprintf(fn, sizeof(fn), "%s/default.gfs", basegamepath);
+      if(!access(fn, R_OK))
+      {
+         gfs = G_LoadGFS(fn);
          haveGFS = true;
+      }
    }
 
    // haleyjd: init the dehacked queue (only necessary the first time)

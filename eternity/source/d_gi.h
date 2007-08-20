@@ -118,8 +118,7 @@ typedef struct gameinfo_s
    int flags;                 // game mode flags
 
    // startup stuff
-   const char *gameDir;       // game data subdirectory
-   const char *resourceFmt;   // format string for resource wad
+   // (none currently)
    
    // demo state information
    int titleTics;             // length of time to show title

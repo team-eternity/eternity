@@ -43,21 +43,21 @@
 
 static gfs_t gfs;
 
-#define SEC_WADFILE "wadfile"
-#define SEC_DEHFILE "dehfile"
-#define SEC_CSCFILE "cscfile"
-#define SEC_EDFFILE "edffile"
-#define SEC_IWAD    "iwad"
-#define SEC_BASEPATH "basepath"
+#define SEC_WADFILE   "wadfile"
+#define SEC_DEHFILE   "dehfile"
+#define SEC_CSCFILE   "cscfile"
+#define SEC_EDFFILE   "edffile"
+#define SEC_IWAD      "iwad"
+#define SEC_BASEPATH  "basepath"
 
 static cfg_opt_t gfs_opts[] =
 {
-   CFG_STR(SEC_WADFILE,  0, CFGF_MULTI),
-   CFG_STR(SEC_DEHFILE,  0, CFGF_MULTI),
-   CFG_STR(SEC_CSCFILE,  0, CFGF_MULTI),
-   CFG_STR(SEC_EDFFILE,  0, CFGF_NONE),
-   CFG_STR(SEC_IWAD,     0, CFGF_NONE),
-   CFG_STR(SEC_BASEPATH, 0, CFGF_NONE),
+   CFG_STR(SEC_WADFILE,   0, CFGF_MULTI),
+   CFG_STR(SEC_DEHFILE,   0, CFGF_MULTI),
+   CFG_STR(SEC_CSCFILE,   0, CFGF_MULTI),
+   CFG_STR(SEC_EDFFILE,   0, CFGF_NONE),
+   CFG_STR(SEC_IWAD,      0, CFGF_NONE),
+   CFG_STR(SEC_BASEPATH,  0, CFGF_NONE),
    CFG_END()
 };
 

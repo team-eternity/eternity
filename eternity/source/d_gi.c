@@ -40,10 +40,6 @@
 
 // definitions
 
-// resource wad format strings
-#define DOOMRESWAD   "%s/%s.wad"
-#define HTICRESWAD   "%s/%.4shtic.wad"
-
 // automap number mark format strings
 #define DOOMMARKS    "AMMNUM%d"
 #define HTICMARKS    "SMALLIN%d"
@@ -226,9 +222,6 @@ gameinfo_t giDoomSW =
    Game_DOOM,        // type
    GIF_SHAREWARE,    // flags
 
-   "doom",           // gameDir
-   DOOMRESWAD,       // resourceFmt
-
    170,              // titleTics
    0,                // advisorTics
    false,            // hasAdvisory
@@ -307,9 +300,6 @@ gameinfo_t giDoomReg =
 {
    Game_DOOM,        // type
    GIF_HASDISK,      // flags -- note: patched for shareware DOOM
-
-   "doom",           // gameDir
-   DOOMRESWAD,       // resourceFmt
    
    170,              // titleTics
    0,                // advisorTics
@@ -385,9 +375,6 @@ gameinfo_t giDoomRetail =
    Game_DOOM,        // type
    0,                // flags
 
-   "doom",           // gameDir
-   DOOMRESWAD,       // resourceFmt
-
    170,              // titleTics
    0,                // advisorTics
    false,            // hasAdvisory
@@ -461,9 +448,6 @@ gameinfo_t giDoomCommercial =
    Game_DOOM,        // type
    GIF_HASDISK,      // flags
 
-   "doom",           // gameDir
-   DOOMRESWAD,       // resourceFmt
-
    11*TICRATE,       // titleTics
    0,                // advisorTics
    false,            // hasAdvisory
@@ -536,9 +520,6 @@ gameinfo_t giHereticSW =
 {
    Game_Heretic,     // type
    GIF_SHAREWARE | GIF_MNBIGFONT, // flags
-
-   "heretic",        // gameDir
-   HTICRESWAD,       // resourceFmt
 
    210,              // titleTics
    140,              // advisorTics
@@ -616,9 +597,6 @@ gameinfo_t giHereticReg =
 {
    Game_Heretic,     // type   
    GIF_MNBIGFONT,    // flags
-
-   "heretic",        // gameDir
-   HTICRESWAD,       // resourceFmt
 
    210,              // titleTics
    140,              // advisorTics
