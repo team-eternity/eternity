@@ -1620,8 +1620,8 @@ void IdentifyVersion(void)
               "* Use -iwad\n"
               "* Set the DOOMWADDIR environment variable.\n"
               "* Place an IWAD in the working directory.\n"
-              "* Place an IWAD file under the appropriate.\n"
-              "  game folder of the base directory and use.\n"
+              "* Place an IWAD file under the appropriate\n"
+              "  game folder of the base directory and use\n"
               "  the -game parameter.");
    }
 }
