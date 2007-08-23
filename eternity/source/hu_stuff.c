@@ -907,7 +907,8 @@ static void HU_TextWidgetClear(hu_widget_t *widget)
       tw->alloc = NULL;
    }
    
-   tw->message = NULL;
+   tw->message  = NULL;
+   tw->cleartic = 0;    // haleyjd 08/23/07: woops!
 }
 
 //
