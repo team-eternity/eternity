@@ -71,7 +71,7 @@ typedef struct stbarfns_s
    // function pointers
    void (*Ticker)(void);   // tic processing
    void (*Drawer)(void);   // drawing
-   void (*FSDrawer)(void);  // fullscreen drawer
+   void (*FSDrawer)(void); // fullscreen drawer
    void (*Start)(void);    // reinit
    void (*Init)(void);     // initialize at startup   
 } stbarfns_t;
@@ -88,17 +88,17 @@ typedef enum
 
 // killough 5/2/98: moved from m_misc.c:
 
-extern int health_red;    // health amount less than which status is red
-extern int health_yellow; // health amount less than which status is yellow
-extern int health_green;  // health amount above is blue, below is green
-extern int armor_red;     // armor amount less than which status is red
-extern int armor_yellow;  // armor amount less than which status is yellow
-extern int armor_green;   // armor amount above is blue, below is green
-extern int ammo_red;      // ammo percent less than which status is red
-extern int ammo_yellow;   // ammo percent less is yellow more green
-extern int sts_always_red;// status numbers do not change colors
-extern int sts_pct_always_gray;// status percents do not change colors
-extern int sts_traditional_keys;  // display keys the traditional way
+extern int health_red;     // health amount less than which status is red
+extern int health_yellow;  // health amount less than which status is yellow
+extern int health_green;   // health amount above is blue, below is green
+extern int armor_red;      // armor amount less than which status is red
+extern int armor_yellow;   // armor amount less than which status is yellow
+extern int armor_green;    // armor amount above is blue, below is green
+extern int ammo_red;       // ammo percent less than which status is red
+extern int ammo_yellow;    // ammo percent less is yellow more green
+extern int sts_always_red; // status numbers do not change colors
+extern int sts_pct_always_gray;  // status percents do not change colors
+extern int sts_traditional_keys; // display keys the traditional way
 
 // Number of status faces.
 #define ST_NUMPAINFACES         5

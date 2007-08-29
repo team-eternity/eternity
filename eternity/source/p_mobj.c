@@ -2462,7 +2462,7 @@ mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, SmallContext_t *context)
       }
 
    case -10: // script trigger object (may be NULL, which is fine)
-      return !rover && context ? context->invocationData.trigger : NULL;
+      return (!rover && context) ? context->invocationData.trigger : NULL;
 
    // Normal TIDs
    default:
@@ -3070,7 +3070,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 {
    int tid;
-   boolean friendly;
+   boolean friendly = false;
    mobj_t *mo = NULL;
    SmallContext_t *ctx = A_GetContextForAMX(amx);
 

@@ -110,6 +110,9 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
 #define FIELD_SECTOR_CEILINGXOFFSET "ceilingxoffset"
 #define FIELD_SECTOR_CEILINGYOFFSET "ceilingyoffset"
+#define FIELD_SECTOR_TOPMAP         "colormap_upper"
+#define FIELD_SECTOR_MIDMAP         "colormap_middle"
+#define FIELD_SECTOR_BOTTOMMAP      "colormap_lower"
 
 // mapthing options and related data structures
 
@@ -587,8 +590,8 @@ static struct exlinespec
    { 375, "Radius_Quake" },
 
 #ifdef R_LINKEDPORTALS
-   { 376, "Portal_LinkedLineLine" },
-   { 377, "Portal_LinkedLineLineAnchor" },
+   { 376, "Portal_LinkedLineToLine" },
+   { 377, "Portal_LinkedLineToLineAnchor" },
 #endif
 
    { 378, "Line_SetIdentification" },
@@ -601,21 +604,24 @@ static struct exlinespec
 
 static cfg_opt_t sector_opts[] =
 {
-   CFG_INT(FIELD_SECTOR_NUM,              0,    CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_SPECIAL,          "",   CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_TAG,              0,    CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_DAMAGEAMOUNT,     0,    CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_DAMAGEMASK,       0,    CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_DAMAGEMOD,        0,    CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     0,    CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   0,    CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_FLOORANGLE,       0,    CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_CEILINGANGLE,     0,    CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_NUM,              0,          CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_SPECIAL,          "",         CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_TAG,              0,          CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_DAMAGEAMOUNT,     0,          CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_DAMAGEMASK,       0,          CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DAMAGEMOD,        0,          CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     "@flat",    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   "@flat",    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_TOPMAP,           "@default", CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
 
    CFG_FLOAT(FIELD_SECTOR_FLOORXOFFSET,   0.0f, CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_FLOORYOFFSET,   0.0f, CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGXOFFSET, 0.0f, CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGYOFFSET, 0.0f, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0f, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0f, CFGF_NONE),
    
    CFG_END()
 };
@@ -1465,7 +1471,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
 {
    unsigned int i;
 
-   // get the number of mapthing records
+   // get the number of linedef records
    numEDLines = cfg_size(cfg, SEC_LINEDEF);
 
    // if none, we're done
@@ -1551,7 +1557,52 @@ static unsigned int E_EDSectorForRecordNum(int recnum)
    return num;
 }
 
-// TODO
+//
+// E_ProcessEDSectors
+//
+// Allocates and processes ExtraData sector records.
+//
+static void E_ProcessEDSectors(cfg_t *cfg)
+{
+   unsigned int i;
+
+   // get the number of sector records
+   numEDSectors = cfg_size(cfg, SEC_SECTOR);
+
+   // if none, we're done
+   if(!numEDSectors)
+      return;
+
+   // allocate the mapsectorext_t structures
+   EDSectors = Z_Malloc(numEDSectors * sizeof(mapsectorext_t),
+                        PU_LEVEL, NULL);
+
+   // initialize the hash chains
+   for(i = 0; i < NUMSECCHAINS; ++i)
+      sector_chains[i] = numEDSectors;
+
+   // read fields
+   for(i = 0; i < numEDSectors; ++i)
+   {
+      cfg_t *sectorsec;
+      const char *tempstr;
+      int tempint;
+
+      sectorsec = cfg_getnsec(cfg, SEC_SECTOR, i);
+
+      // get the record number
+      tempint = EDSectors[i].recordnum = cfg_getint(sectorsec, FIELD_SECTOR_NUM);
+
+      // guard against duplicate record numbers
+      if(E_EDSectorForRecordNum(tempint) != numEDSectors)
+         I_Error("E_ProcessEDSectors: duplicate record number %d\n", tempint);
+
+      // hash this ExtraData sector record by its recordnum field
+      tempint = EDSectors[i].recordnum % NUMSECCHAINS;
+      EDSectors[i].next = sector_chains[tempint];
+      sector_chains[tempint] = i;
+   }
+}
 
 //=============================================================================
 //
@@ -1701,7 +1752,7 @@ void E_LoadSectorExt(sector_t *sector)
       return;
    }
 
-   // get a pointer to the proper ExtraData line record
+   // get a pointer to the proper ExtraData sector record
    edsector = &EDSectors[edSectorIdx];
 
    // apply standard fields to the sector
@@ -1715,6 +1766,13 @@ void E_LoadSectorExt(sector_t *sector)
    sector->floor_yoffs   = (fixed_t)(edsector->floor_yoffs   * FRACUNIT);
    sector->ceiling_xoffs = (fixed_t)(edsector->ceiling_xoffs * FRACUNIT);
    sector->ceiling_yoffs = (fixed_t)(edsector->ceiling_yoffs * FRACUNIT);
+
+   // colormaps
+   sector->topmap    = edsector->topmap;
+   sector->midmap    = edsector->midmap;
+   sector->bottommap = edsector->bottommap;
+
+   // TODO: more
 }
 
 //

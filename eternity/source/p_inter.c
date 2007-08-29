@@ -1024,9 +1024,9 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
          // look at source's readyweapon to determine cause
          switch(source->player->readyweapon)
          {
-         case wp_fist:         MeansOfDeath = MOD_FIST; break;
-         case wp_pistol:       MeansOfDeath = MOD_PISTOL; break;
-         case wp_shotgun:      MeansOfDeath = MOD_SHOTGUN; break;
+         case wp_fist:         MeansOfDeath = MOD_FIST;     break;
+         case wp_pistol:       MeansOfDeath = MOD_PISTOL;   break;
+         case wp_shotgun:      MeansOfDeath = MOD_SHOTGUN;  break;
          case wp_chaingun:     MeansOfDeath = MOD_CHAINGUN; break;
          case wp_chainsaw:     MeansOfDeath = MOD_CHAINSAW; break;
          case wp_supershotgun: MeansOfDeath = MOD_SSHOTGUN; break;
@@ -1072,7 +1072,7 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
    doom_printf("%c%s %s", obcolour+128, target->player->name, message);
 }
 
-// Special damage type code
+// Special damage type code -- see codepointer table below.
 
 typedef struct dmgspecdata_s
 {
@@ -1153,6 +1153,17 @@ static boolean P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 
    return true; // always return from P_DamageMobj
 }
+
+//
+// haleyjd: Damage Special codepointer lookup table
+//
+// mobjinfo::dmgspecial is an index into this table. The index is checked for
+// validity during EDF processing. If the special returns true, P_DamageMobj
+// returns immediately, assuming that the special did its own damage. If it
+// returns false, P_DamageMobj continues, and the damage field of the 
+// dmgspecdata_t structure is used to possibly modify the damage that will be
+// done.
+//
 
 typedef boolean (*dmgspecial_t)(dmgspecdata_t *);
 
@@ -1247,7 +1258,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    // inflict thrust and push the victim out of reach,
    // thus kick away unless using the chainsaw.
 
-   // haleyjd FIXME: make lack of thrust a property of weapons
+   // haleyjd WEAPON_FIXME: make lack of thrust a property of weapons
 
    if(inflictor && !(target->flags & MF_NOCLIP) &&
       (!source || !source->player ||

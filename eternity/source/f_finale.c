@@ -504,25 +504,19 @@ boolean F_CastResponder(event_t* ev)
 // F_CastPrint
 //
 // haleyjd 03/17/05: Writes the cast member name centered at the
-// bottom of the screen. Rewritten to use the proper string methods
-// instead of duplicating that code unnecessarily. It's about 200
-// lines shorter now.
+// bottom of the screen. Rewritten to use the proper text-drawing 
+// methods instead of duplicating that code unnecessarily. It's 
+// about 200 lines shorter now.
 //
 void F_CastPrint(const char *text)
 {
-   int cx;
-   int w = V_StringWidth(text);
-   
-   cx = 160 - w / 2;
-
-   V_WriteText(text, cx, 180);
+   V_WriteText(text, 160 - V_StringWidth(text) / 2, 180);
 }
 
 
 //
 // F_CastDrawer
 //
-
 void F_CastDrawer(void)
 {
    spritenum_t         altsprite;
@@ -534,9 +528,9 @@ void F_CastDrawer(void)
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawPatch (0,0,&vbscreen, W_CacheLumpName (bgcastcall, PU_CACHE));
+   V_DrawPatch(0, 0, &vbscreen, W_CacheLumpName(bgcastcall, PU_CACHE));
    
-   F_CastPrint (castorder[castnum].name);
+   F_CastPrint(castorder[castnum].name);
    
    // draw the current frame in the middle of the screen
    sprdef = sprites + caststate->sprite;
