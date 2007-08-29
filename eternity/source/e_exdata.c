@@ -602,10 +602,13 @@ static struct exlinespec
 
 // haleyjd 06/26/07: sector options and related data structures
 
+static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                          void *result);
+
 static cfg_opt_t sector_opts[] =
 {
    CFG_INT(FIELD_SECTOR_NUM,              0,          CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_SPECIAL,          "",         CFGF_NONE),
+   CFG_INT_CB(FIELD_SECTOR_SPECIAL,       0,          CFGF_NONE, E_SectorSpecCB),
    CFG_INT(FIELD_SECTOR_TAG,              0,          CFGF_NONE),
    CFG_INT(FIELD_SECTOR_DAMAGEAMOUNT,     0,          CFGF_NONE),
    CFG_INT(FIELD_SECTOR_DAMAGEMASK,       0,          CFGF_NONE),
@@ -1558,6 +1561,54 @@ static unsigned int E_EDSectorForRecordNum(int recnum)
 }
 
 //
+// E_SectorSpecCB
+//
+// libConfuse callback function for processing the sector special.
+//
+static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                          void *result)
+{
+   long num;
+   char *endptr;
+
+   num = strtol(value, &endptr, 0);
+
+   // check if value is a number or not
+   if(*endptr != '\0')
+   {
+      // value is a special name
+      /*
+      char *bracket_loc = strchr(value, '(');
+
+      // if it has a parenthesis, it's a generalized type
+      if(bracket_loc)
+         *(long *)result = E_ProcessGenSpec(value);
+      else
+         *(long *)result = (long)(E_LineSpecForName(value));
+      */
+   }
+   else
+   {
+      // value is a number
+      if(errno == ERANGE)
+      {
+         if(cfg)
+         {
+            cfg_error(cfg,
+                      "integer value for option '%s' is out of range",
+                      opt->name);
+         }
+         return -1;
+      }
+
+      *(long *)result = num;
+   }
+
+   return 0;
+}
+
+
+//
 // E_ProcessEDSectors
 //
 // Allocates and processes ExtraData sector records.
@@ -1601,6 +1652,14 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempint = EDSectors[i].recordnum % NUMSECCHAINS;
       EDSectors[i].next = sector_chains[tempint];
       sector_chains[tempint] = i;
+
+      // standard fields
+
+      // special
+      EDSectors[i].stdfields.special = (short)cfg_getint(sectorsec, FIELD_SECTOR_SPECIAL);
+
+      // tag
+      EDSectors[i].stdfields.tag = (short)cfg_getint(sectorsec, FIELD_SECTOR_TAG);
    }
 }
 

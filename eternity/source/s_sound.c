@@ -865,8 +865,7 @@ void S_ChangeMusicNum(int musnum, int looping)
 {
    musicinfo_t *music;
    
-   if(musnum <= gameModeInfo->musMin || 
-      musnum >= gameModeInfo->numMusic)
+   if(musnum <= gameModeInfo->musMin || musnum >= gameModeInfo->numMusic)
    {
       doom_printf(FC_ERROR "Bad music number %d\n", musnum);
       return;
@@ -962,10 +961,11 @@ void S_StopSounds(void)
    // kill all playing sounds at start of level
    //  (trust me - a good idea)
 
-   //jff 1/22/98 skip sound init if sound not enabled
+   // jff 1/22/98 skip sound init if sound not enabled
+   // haleyjd 08/29/07: kill only sourced sounds.
    if(snd_card && !nosfxparm)
       for(cnum = 0; cnum < numChannels; ++cnum)
-         if(channels[cnum].sfxinfo)
+         if(channels[cnum].sfxinfo && channels[cnum].origin)
             S_StopChannel(cnum);
 }
 

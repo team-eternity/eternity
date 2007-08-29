@@ -2309,14 +2309,14 @@ nukage_t nukageValues[4][2] =
 };
 
 //
-// P_PlayerInSpecialSector()
+// P_PlayerInSpecialSector
 //
 // Called every tick frame
 //  that the player origin is in a special sector
 //
 // Changed to ignore sector types the engine does not recognize
 //
-void P_PlayerInSpecialSector (player_t *player)
+void P_PlayerInSpecialSector(player_t *player)
 {
    int dmgAmt, dmgTics, dmgType;
    sector_t *sector = player->mo->subsector->sector;
@@ -2328,8 +2328,8 @@ void P_PlayerInSpecialSector (player_t *player)
       return;
 
    // Has hit ground.
-   //jff add if to handle old vs generalized types
-   if(sector->special<32) // regular sector specials
+   // jff add if to handle old vs generalized types
+   if(sector->special < 32) // regular sector specials
    {
       if(sector->special == 9)     // killough 12/98
       {
@@ -2345,7 +2345,7 @@ void P_PlayerInSpecialSector (player_t *player)
             // 5/10 unit damage per 31 ticks
             if(!player->powers[pw_ironfeet])
             {
-               if(!(leveltime&0x1f))
+               if(!(leveltime & 0x1f))
                {
                   P_DamageMobj(player->mo, NULL, NULL, 10, MOD_SLIME);
                }
@@ -2356,7 +2356,7 @@ void P_PlayerInSpecialSector (player_t *player)
             // 2/5 unit damage per 31 ticks
             if(!player->powers[pw_ironfeet])
             {
-               if(!(leveltime&0x1f))
+               if(!(leveltime & 0x1f))
                   P_DamageMobj(player->mo, NULL, NULL, 5, MOD_SLIME);
             }
             break;
@@ -2366,9 +2366,9 @@ void P_PlayerInSpecialSector (player_t *player)
          case 4:
             // 10/20 unit damage plus blinking light (light already spawned)
             if(!player->powers[pw_ironfeet] || 
-               (P_Random(pr_slimehurt)<5) ) // even with suit, take damage
+               (P_Random(pr_slimehurt) < 5) ) // even with suit, take damage
             {
-               if(!(leveltime&0x1f))
+               if(!(leveltime & 0x1f))
                   P_DamageMobj(player->mo, NULL, NULL, 20, MOD_SLIME);
             }
             break;
@@ -2378,8 +2378,8 @@ void P_PlayerInSpecialSector (player_t *player)
             if(comp[comp_god])   // killough 2/21/98: add compatibility switch
                player->cheats &= ~CF_GODMODE; // on godmode cheat clearing
             // does not affect invulnerability
-            if(!(leveltime&0x1f))
-               P_DamageMobj (player->mo, NULL, NULL, 20, MOD_SLIME);
+            if(!(leveltime & 0x1f))
+               P_DamageMobj(player->mo, NULL, NULL, 20, MOD_SLIME);
             if(player->health <= 10)
                G_ExitLevel();
             break;
@@ -2401,7 +2401,7 @@ void P_PlayerInSpecialSector (player_t *player)
          else
             dmgType = DOOMNUKAGE;
 
-         switch((sector->special&DAMAGE_MASK)>>DAMAGE_SHIFT)
+         switch((sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT)
          {
          case 0: // no damage
             break;
@@ -2419,7 +2419,7 @@ void P_PlayerInSpecialSector (player_t *player)
             dmgTics = nukageValues[2][dmgType].dmgTics;
             if(!player->powers[pw_ironfeet])
             {
-               if(!(leveltime&dmgTics))
+               if(!(leveltime & dmgTics))
                {
                   P_DamageMobj(player->mo, NULL, NULL, dmgAmt, MOD_SLIME);
                   
@@ -2434,7 +2434,7 @@ void P_PlayerInSpecialSector (player_t *player)
             if(!player->powers[pw_ironfeet]
                || (P_Random(pr_slimehurt)<5))  // take damage even with suit
             {
-               if(!(leveltime&dmgTics))
+               if(!(leveltime & dmgTics))
                {
                   P_DamageMobj(player->mo, NULL, NULL, dmgAmt, MOD_SLIME);
                   
@@ -2446,12 +2446,12 @@ void P_PlayerInSpecialSector (player_t *player)
          }
       }
 
-      if(sector->special&SECRET_MASK)
+      if(sector->special & SECRET_MASK)
       {
          player->secretcount++;
          sector->special &= ~SECRET_MASK;
-         if(sector->special<32) // if all extended bits clear,
-            sector->special=0;    // sector is not special anymore
+         if(sector->special < 32)   // if all extended bits clear,
+            sector->special = 0;    // sector is not special anymore
       }
 
       // phares 3/19/98:
