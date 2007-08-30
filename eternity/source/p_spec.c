@@ -2346,9 +2346,7 @@ void P_PlayerInSpecialSector(player_t *player)
             if(!player->powers[pw_ironfeet])
             {
                if(!(leveltime & 0x1f))
-               {
                   P_DamageMobj(player->mo, NULL, NULL, 10, MOD_SLIME);
-               }
             }
             break;
 
@@ -2366,7 +2364,7 @@ void P_PlayerInSpecialSector(player_t *player)
          case 4:
             // 10/20 unit damage plus blinking light (light already spawned)
             if(!player->powers[pw_ironfeet] || 
-               (P_Random(pr_slimehurt) < 5) ) // even with suit, take damage
+               (P_Random(pr_slimehurt) < 5))  // even with suit, take damage
             {
                if(!(leveltime & 0x1f))
                   P_DamageMobj(player->mo, NULL, NULL, 20, MOD_SLIME);
@@ -2481,7 +2479,8 @@ void P_PlayerOnSpecialFlat(player_t *player)
 
    terrain = E_GetThingFloorType(player->mo);
 
-   if(terrain->damageamount && !(leveltime & terrain->damagetimemask))
+   if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
+      terrain->damageamount && !(leveltime & terrain->damagetimemask))
    {
       P_DamageMobj(player->mo, NULL, NULL, terrain->damageamount,
                    terrain->damagetype);
@@ -2492,7 +2491,7 @@ void P_PlayerOnSpecialFlat(player_t *player)
 }
 
 //
-// P_UpdateSpecials()
+// P_UpdateSpecials
 //
 // Check level timer, frag counter,
 // animate flats, scroll walls,
