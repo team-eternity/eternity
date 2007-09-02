@@ -514,6 +514,27 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
    return 1;
 }
 
+
+
+// ---------------------------------------------------------------------------------
+// SoM: Begin dummy mobj code
+
+void P_DummyMobjThinker(mobj_t *mobj)
+{
+   
+}
+
+
+
+
+void P_CreateDummy(mobj_t *owner)
+{
+   if(owner->portaldummy)
+      return;
+
+   owner->portaldummy = 
+}
+
 #endif
 
 // EOF

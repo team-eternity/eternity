@@ -194,25 +194,23 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    openfrontsector = linedef->frontsector;
    openbacksector = linedef->backsector;
 
+   // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
+   // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && useportalgroups && openfrontsector->c_portal &&
-         openfrontsector->c_portal->type == R_LINKED)
-         frontceilz = openfrontsector->ceilingheight + mo->height;
+         openfrontsector->c_portal->type == R_LINKED && 
+         openfrontsector->c_portal == openbacksector->c_portal && 
+         openfrontsector->ceilingheight == openbacksector->ceilingheight)
+         frontceilz = backceilz = openfrontsector->ceilingheight + (1024 * FRACUNIT);
       else
 #endif
+      {
          frontceilz = openfrontsector->ceilingheight;
+         backceilz = openbacksector->ceilingheight;
+      }
       
       frontcz = openfrontsector->ceilingheight;
-
-#ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && useportalgroups && openbacksector->c_portal &&
-         openbacksector->c_portal->type == R_LINKED)
-         backceilz = openbacksector->ceilingheight + mo->height;
-      else
-#endif
-         backceilz = openbacksector->ceilingheight;
-
       backcz = openbacksector->ceilingheight;
    }
 
@@ -220,23 +218,19 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && useportalgroups && openfrontsector->f_portal &&
-         openfrontsector->f_portal->type == R_LINKED)
-         frontfloorz = openfrontsector->floorheight - mo->height;
+         openfrontsector->f_portal->type == R_LINKED &&
+         openfrontsector->f_portal == openbacksector->f_portal &&
+         openfrontsector->floorheight == openbacksector->ceilingheight)
+         frontfloorz = backfloorz = openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
       else 
 #endif
+      {
          frontfloorz = openfrontsector->floorheight;
+         backfloorz = openbacksector->floorheight;
+      }
 
       frontfz = openfrontsector->floorheight;
-
-#ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && useportalgroups && openbacksector->f_portal &&
-         openbacksector->f_portal->type == R_LINKED)
-         backfloorz = openbacksector->floorheight - mo->height;
-      else
-#endif
-         backfloorz = openbacksector->floorheight;
-
-      backfz = openfrontsector->floorheight;
+      backfz = openbacksector->floorheight;
    }
    
    if(frontceilz < backceilz)

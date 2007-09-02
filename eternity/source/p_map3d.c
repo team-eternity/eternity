@@ -517,7 +517,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && useportalgroups && !(tmthing->flags & MF_NOCLIP) &&
       newsubsec->sector->f_portal && newsubsec->sector->f_portal->type == R_LINKED)
-      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - tmthing->height;
+      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
    else
 #endif
       tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
@@ -525,7 +525,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && useportalgroups && !(tmthing->flags & MF_NOCLIP) &&
       newsubsec->sector->c_portal && newsubsec->sector->c_portal->type == R_LINKED)
-      tmceilingz = newsubsec->sector->ceilingheight + tmthing->height;
+      tmceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
    else
 #endif
       tmceilingz = newsubsec->sector->ceilingheight;

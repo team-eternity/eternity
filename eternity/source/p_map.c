@@ -297,7 +297,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && useportalgroups && newsubsec->sector->f_portal &&
       newsubsec->sector->f_portal->type == R_LINKED)
-      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - tmthing->height;
+      tmfloorz = tmdropoffz = D_MININT; //newsubsec->sector->floorheight - tmthing->height;
    else
 #endif
       tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
@@ -305,7 +305,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && useportalgroups && newsubsec->sector->c_portal &&
       newsubsec->sector->c_portal->type == R_LINKED)
-      tmceilingz = newsubsec->sector->ceilingheight + tmthing->height;
+      tmceilingz = D_MAXINT; //newsubsec->sector->ceilingheight + tmthing->height;
    else
 #endif
       tmceilingz = newsubsec->sector->ceilingheight;
