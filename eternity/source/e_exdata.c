@@ -1576,16 +1576,6 @@ static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    // check if value is a number or not
    if(*endptr != '\0')
    {
-      // value is a special name
-      /*
-      char *bracket_loc = strchr(value, '(');
-
-      // if it has a parenthesis, it's a generalized type
-      if(bracket_loc)
-         *(long *)result = E_ProcessGenSpec(value);
-      else
-         *(long *)result = (long)(E_LineSpecForName(value));
-      */
    }
    else
    {

@@ -2369,6 +2369,7 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
 
 //
 // G_DeathMatchSpawnPlayer
+//
 // Spawns a player at one of the random death match spots
 // called at level load and each death
 //
@@ -2388,7 +2389,7 @@ void G_DeathMatchSpawnPlayer(int playernum)
    {
       int i = P_Random(pr_dmspawn) % selections;
       
-      if(G_CheckSpot(playernum, &deathmatchstarts[i]) )
+      if(G_CheckSpot(playernum, &deathmatchstarts[i]))
       {
          deathmatchstarts[i].type = playernum + 1;
          P_SpawnPlayer(&deathmatchstarts[i]);

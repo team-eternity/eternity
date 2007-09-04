@@ -651,8 +651,7 @@ static void P_RunEffect(mobj_t *actor, int effects)
          &grey4,  &white
       };
       int color = (effects & FX_FOUNTAINMASK) >> 15;
-      MakeFountain(actor, *fountainColors[color], 
-                   *fountainColors[color+1]);
+      MakeFountain(actor, *fountainColors[color], *fountainColors[color+1]);
    }
 
    if(effects & FX_DRIP)
@@ -1156,8 +1155,8 @@ static void P_DripEffect(mobj_t *actor)
 
 particle_event_t particleEvents[P_EVENT_NUMEVENTS] =
 {
-   { NULL,              "pevt_none" },          // P_EVENT_NONE
-   { P_RocketExplosion, "pevt_rexpl" },         // P_EVENT_ROCKET_EXPLODE
+   { NULL,              "pevt_none"    },       // P_EVENT_NONE
+   { P_RocketExplosion, "pevt_rexpl"   },       // P_EVENT_ROCKET_EXPLODE
    { P_BFGExplosion,    "pevt_bfgexpl" },       // P_EVENT_BFG_EXPLODE
 };
 
@@ -1181,7 +1180,7 @@ void P_RunEvent(mobj_t *actor)
 
    if(effectNum < 0 || effectNum >= P_EVENT_NUMEVENTS)
    {
-      doom_printf(FC_ERROR"P_RunEvent: Particle event no. out of range");
+      doom_printf(FC_ERROR "P_RunEvent: Particle event no. out of range");
       return;
    }
 

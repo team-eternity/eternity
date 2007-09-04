@@ -155,8 +155,7 @@ static void P_SpawnPortal(line_t *, portal_type, portal_effect);
 // The standard list of switches and animations is contained in the example
 // source text file DEFSWANI.DAT also in the BOOM util distribution.
 //
-//
-void P_InitPicAnims (void)
+void P_InitPicAnims(void)
 {
    int         i;
    animdef_t   *animdefs; //jff 3/23/98 pointer to animation lump
@@ -229,7 +228,6 @@ void P_InitPicAnims (void)
 //
 // Note: if side=1 is specified, it must exist or results undefined
 //
-
 side_t *getSide(int currentSector, int line, int side)
 {
    return &sides[sectors[currentSector].lines[line]->sidenum[side]];
@@ -244,7 +242,6 @@ side_t *getSide(int currentSector, int line, int side)
 //
 // Note: if side=1 is specified, it must exist or results undefined
 //
-
 sector_t *getSector(int currentSector, int line, int side)
 {
    return 
@@ -261,7 +258,7 @@ sector_t *getSector(int currentSector, int line, int side)
 // of 2S flag unless compatibility optioned
 //
 // killough 11/98: reformatted
-
+//
 int twoSided(int sector, int line)
 {
    //jff 1/26/98 return what is actually needed, whether the line
@@ -281,7 +278,7 @@ int twoSided(int sector, int line)
 // Note: returns NULL if not two-sided line, or both sides refer to sector
 //
 // killough 11/98: reformatted
-
+//
 sector_t *getNextSector(line_t *line, sector_t *sec)
 {
    //jff 1/26/98 check unneeded since line->backsector already
@@ -309,7 +306,7 @@ sector_t *getNextSector(line_t *line, sector_t *sec)
 // in the sector passed or its surrounding sectors.
 //
 // killough 11/98: reformatted
-
+//
 fixed_t P_FindLowestFloorSurrounding(sector_t* sec)
 {
    fixed_t floor = sec->floorheight;
@@ -336,7 +333,7 @@ fixed_t P_FindLowestFloorSurrounding(sector_t* sec)
 //       if compatibility then -500*FRACUNIT is the smallest return possible
 //
 // killough 11/98: reformatted
-
+//
 fixed_t P_FindHighestFloorSurrounding(sector_t *sec)
 {
    fixed_t floor = -500*FRACUNIT;
@@ -349,7 +346,7 @@ fixed_t P_FindHighestFloorSurrounding(sector_t *sec)
    if(!comp[comp_model])          //jff 3/12/98 avoid ovf
       floor = -32000*FRACUNIT;      // in height calculations
 
-   for(i=0 ;i < sec->linecount ; i++)
+   for(i = 0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
          other->floorheight > floor)
@@ -369,7 +366,6 @@ fixed_t P_FindHighestFloorSurrounding(sector_t *sec)
 //
 // Rewritten by Lee Killough to avoid fixed array and to be faster
 //
-
 fixed_t P_FindNextHighestFloor(sector_t *sec, int currentheight)
 {
    sector_t *other;
@@ -403,7 +399,7 @@ fixed_t P_FindNextHighestFloor(sector_t *sec, int currentheight)
 // passed is returned.
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
-
+//
 fixed_t P_FindNextLowestFloor(sector_t *sec, int currentheight)
 {
    sector_t *other;
@@ -437,7 +433,7 @@ fixed_t P_FindNextLowestFloor(sector_t *sec, int currentheight)
 // passed is returned.
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
-
+//
 fixed_t P_FindNextLowestCeiling(sector_t *sec, int currentheight)
 {
    sector_t *other;
@@ -471,7 +467,7 @@ fixed_t P_FindNextLowestCeiling(sector_t *sec, int currentheight)
 // passed is returned.
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
-
+//
 fixed_t P_FindNextHighestCeiling(sector_t *sec, int currentheight)
 {
    sector_t *other;
@@ -506,7 +502,7 @@ fixed_t P_FindNextHighestCeiling(sector_t *sec, int currentheight)
 //       but if compatibility then MAXINT is the return
 //
 // killough 11/98: reformatted
-
+//
 fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
 {
    const sector_t *other;
@@ -535,7 +531,7 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
 //       but if compatibility then 0 is the smallest return possible
 //
 // killough 11/98: reformatted
-
+//
 fixed_t P_FindHighestCeilingSurrounding(sector_t* sec)
 {
    const sector_t *other;
@@ -569,7 +565,7 @@ fixed_t P_FindHighestCeilingSurrounding(sector_t* sec)
 // jff 02/03/98 Add routine to find shortest lower texture
 //
 // killough 11/98: reformatted
-
+//
 fixed_t P_FindShortestTextureAround(int secnum)
 {
    const sector_t *sec = &sectors[secnum];
@@ -581,7 +577,6 @@ fixed_t P_FindShortestTextureAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   
    if(!comp[comp_model])
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
    
@@ -614,7 +609,7 @@ fixed_t P_FindShortestTextureAround(int secnum)
 // jff 03/20/98 Add routine to find shortest upper texture
 //
 // killough 11/98: reformatted
-
+//
 fixed_t P_FindShortestUpperAround(int secnum)
 {
    const sector_t *sec = &sectors[secnum];
@@ -626,7 +621,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   if (!comp[comp_model])
+   if(!comp[comp_model])
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow
 
    // in height calcs
@@ -663,7 +658,6 @@ fixed_t P_FindShortestUpperAround(int secnum)
 //
 // killough 11/98: reformatted
 // 
-
 sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 {
    sector_t *sec = &sectors[secnum]; //jff 3/2/98 woops! better do this
@@ -853,7 +847,6 @@ int P_FindMinSurroundingLight(sector_t *sector, int min)
 //
 // haleyjd 08/22/00: fixed bug found by fraggle
 //
-
 boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
 {
    // does this line special distinguish between skulls and keys?
@@ -3311,9 +3304,9 @@ boolean PIT_PushThing(mobj_t* thing)
       // If speed <= 0, you're outside the effective radius. You also have
       // to be able to see the push/pull source point.
 
-      if(speed > 0 && P_CheckSight(thing,tmpusher->source))
+      if(speed > 0 && P_CheckSight(thing, tmpusher->source))
       {
-         pushangle = R_PointToAngle2(thing->x,thing->y,sx,sy);
+         pushangle = R_PointToAngle2(thing->x, thing->y, sx, sy);
          
          if(tmpusher->source->type == E_ThingNumForDEHNum(MT_PUSH))
             pushangle += ANG180;    // away
@@ -3507,7 +3500,7 @@ static void P_SpawnPushers(void)
    register int s;
    mobj_t* thing;
 
-   for(i = 0; i < numlines; i++,l++)
+   for(i = 0; i < numlines; i++, l++)
    {
       switch(l->special)
       {
@@ -3548,7 +3541,7 @@ static void P_SpawnHereticWind(line_t *line)
    for(s = -1; (s = P_FindSectorFromLineTag(line,s)) >= 0; )
    {
       // types 20-39 affect the player in P_PlayerThink
-      // types 40-51 affect MF3_WINDTHRUST things in P_XYMovement
+      // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
       // this is selected by use of lines 294 or 293, respectively
 
       sectors[s].hticPushType  = (line->special == 294) ? 20 : 40;
@@ -3594,6 +3587,19 @@ line_t *P_FindLine(int tag, int *searchPosition)
    *searchPosition = start;
    
    return line;
+}
+
+//
+// P_TransferSectorSpecial
+//
+// haleyjd 09/02/07: This function must now be called to accomplish transfer of
+// specials from one sector to another. There is now other data in the sector_t
+// structure which needs to be transferred along with the special so that
+// features like customizable sector damage can work in the same manner and be
+// switched on or off by floor/ceiling transfer line types.
+//
+void P_TransferSectorSpecial()
+{
 }
 
 //============================================================================
@@ -4482,6 +4488,8 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 
       if(line->special == 376)
       {
+         int group;
+
          if(line->frontsector && line->backsector)
          {
             C_Printf(FC_ERROR, "Line-Line portal line two sided. (line %i)", line - lines);
@@ -4493,7 +4501,10 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
             return;
          }
 
-         line->portal = R_GetLinkedPortal(-deltax, -deltay, -deltaz, P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector : lines[s].backsector));
+         group = P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector :
+                                                            lines[s].backsector);
+
+         line->portal = R_GetLinkedPortal(-deltax, -deltay, -deltaz, group);
          lines[s].portal = portal;
          return;
       }

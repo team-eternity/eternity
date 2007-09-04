@@ -1617,8 +1617,8 @@ void R_ProjectParticle(particle_t *particle)
 {
    fixed_t gzt;
    int x1, x2;
-   vissprite_t*	vis;
-   sector_t* sector = NULL;
+   vissprite_t *vis;
+   sector_t    *sector = NULL;
    int heightsec = -1;
    
    float tempx, tempy, ty1, tx1, tx2, tz;
@@ -1628,7 +1628,7 @@ void R_ProjectParticle(particle_t *particle)
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = (particle->x / 65536.0f) - view.x;
    tempy = (particle->y / 65536.0f) - view.y;
-   ty1 = (tempy * view.cos) + (tempx * view.sin);
+   ty1   = (tempy * view.cos) + (tempx * view.sin);
 
    // lies in front of the front view plane
    if(ty1 < 1.0f)
