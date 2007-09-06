@@ -93,9 +93,8 @@ manual_floor:
       floor->direction = fd->direction ? plat_up : plat_down;
       floor->sector = sec;
       floor->texture = sec->floorpic;
-      floor->newspecial = sec->special;
       //jff 3/14/98 transfer old special field too
-      floor->oldspecial = sec->oldspecial;
+      P_SetupSpecialTransfer(sec, &(floor->special));
       floor->type = genFloor;
 
       // set the speed of motion
@@ -205,15 +204,13 @@ manual_floor:
                switch(fd->change_type)
                {
                case FChgZero:  // zero type
-                  floor->newspecial = 0;
                   //jff 3/14/98 change old field too
-                  floor->oldspecial = 0;
+                  P_ZeroSpecialTransfer(&(floor->special));
                   floor->type = genFloorChg0;
                   break;
                case FChgTyp:   // copy type
-                  floor->newspecial = sec->special;
                   //jff 3/14/98 change old field too
-                  floor->oldspecial = sec->oldspecial;
+                  P_SetupSpecialTransfer(sec, &(floor->special));
                   floor->type = genFloorChgT;
                   break;
                case FChgTxt:   // leave type be
@@ -232,15 +229,13 @@ manual_floor:
                switch(fd->change_type)
                {
                case FChgZero:    // zero type
-                  floor->newspecial = 0;
                   //jff 3/14/98 change old field too
-                  floor->oldspecial = 0;
+                  P_ZeroSpecialTransfer(&(floor->special));
                   floor->type = genFloorChg0;
                   break;
                case FChgTyp:     // copy type
-                  floor->newspecial = line->frontsector->special;
                   //jff 3/14/98 change old field too
-                  floor->oldspecial = line->frontsector->oldspecial;
+                  P_SetupSpecialTransfer(line->frontsector, &(floor->special));
                   floor->type = genFloorChgT;
                   break;
                case FChgTxt:     // leave type be
@@ -338,9 +333,8 @@ manual_ceiling:
       ceiling->direction = cd->direction ? plat_up : plat_down;
       ceiling->sector = sec;
       ceiling->texture = sec->ceilingpic;
-      ceiling->newspecial = sec->special;
       //jff 3/14/98 change old field too
-      ceiling->oldspecial = sec->oldspecial;
+      P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
       ceiling->type = genCeiling;
 
@@ -454,15 +448,13 @@ manual_ceiling:
                switch(cd->change_type)
                {
                case CChgZero:  // type is zeroed
-                  ceiling->newspecial = 0;
                   //jff 3/14/98 change old field too
-                  ceiling->oldspecial = 0;
+                  P_ZeroSpecialTransfer(&(ceiling->special));
                   ceiling->type = genCeilingChg0;
                   break;
                case CChgTyp:   // type is copied
-                  ceiling->newspecial = sec->special;
                   //jff 3/14/98 change old field too
-                  ceiling->oldspecial = sec->oldspecial;
+                  P_SetupSpecialTransfer(sec, &(ceiling->special));
                   ceiling->type = genCeilingChgT;
                   break;
                case CChgTxt:   // type is left alone
@@ -481,15 +473,13 @@ manual_ceiling:
                switch(cd->change_type)
                {
                case CChgZero:    // type is zeroed
-                  ceiling->newspecial = 0;
                   //jff 3/14/98 change old field too
-                  ceiling->oldspecial = 0;
+                  P_ZeroSpecialTransfer(&(ceiling->special));
                   ceiling->type = genCeilingChg0;
                   break;
                case CChgTyp:     // type is copied
-                  ceiling->newspecial = line->frontsector->special;
                   //jff 3/14/98 change old field too
-                  ceiling->oldspecial = line->frontsector->oldspecial;
+                  P_SetupSpecialTransfer(line->frontsector, &(ceiling->special));
                   ceiling->type = genCeilingChgT;
                   break;
                case CChgTxt:     // type is left alone
@@ -1011,7 +1001,9 @@ manual_crusher:
       ceiling->direction = plat_down;
       ceiling->sector = sec;
       ceiling->texture = sec->ceilingpic;
-      ceiling->newspecial = sec->special;
+      // FIXME/TODO: oldspecial uninitialized??
+      P_ZeroSpecialTransfer(&(ceiling->special));
+      ceiling->special.newspecial = sec->special;
       ceiling->tag = sec->tag;
       ceiling->type = Slnt? genSilentCrusher : genCrusher;
       ceiling->topheight = sec->ceilingheight;

@@ -736,6 +736,14 @@ typedef struct
    int     topcountdown;
 } doordata_t;
 
+// haleyjd 09/06/07: sector special transfer structure
+
+typedef struct
+{
+   int newspecial;
+   int oldspecial;
+} spectransfer_t;
+
 // p_doors
 
 typedef struct
@@ -750,8 +758,8 @@ typedef struct
   int crush;
 
   //jff 02/04/98 add these to support ceiling changers
-  int newspecial;
-  int oldspecial; //jff 3/14/98 add to fix bug in change transfers
+  //jff 3/14/98 add to fix bug in change transfers
+  spectransfer_t special; // haleyjd 09/06/07: spectransfer
   short texture;
 
   // 1 = up, 0 = waiting, -1 = down
@@ -795,8 +803,11 @@ typedef struct
   int crush;
   sector_t *sector;
   int direction;
-  int newspecial;
-  int oldspecial;      // jff 3/14/98 add to fix bug in change transfers
+
+  // jff 3/14/98 add to fix bug in change transfers
+  // haleyjd 09/06/07: spectransfer
+  spectransfer_t special;
+
   short texture;
   fixed_t floordestheight;
   fixed_t speed;
@@ -1264,6 +1275,11 @@ line_t *P_FindLine(int tag, int *searchPosition);
 
 line_t *P_FindLineForID(int id, int *searchPosition);
 void    P_SetLineID(int i, long id);
+
+// haleyjd: sector special transfers
+void P_SetupSpecialTransfer(sector_t *, spectransfer_t *);
+void P_ZeroSpecialTransfer(spectransfer_t *);
+void P_TransferSectorSpecial(sector_t *, spectransfer_t *);
 
 // haleyjd: parameterized lines
 

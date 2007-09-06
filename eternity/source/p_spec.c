@@ -3589,6 +3589,42 @@ line_t *P_FindLine(int tag, int *searchPosition)
    return line;
 }
 
+//=============================================================================
+//
+// haleyjd 09/06/07: Sector Special Transfer Logic
+//
+// This new set of functions and the corresponding spectransfer_t structure,
+// which is now held inside floor and ceiling movement thinkers, allows
+// extending the special transfer logic to new fields in the sector_t
+// structure. Besides eliminating redundant logic formerly scattered throughout
+// the floor and ceiling modules, this is necessitated by some ExtraData sector
+// features.
+//
+
+//
+// P_SetupSpecialTransfer
+//
+// haleyjd 09/06/07: This function is called to populate a spectransfer_t
+// structure with data from a sector.
+//
+void P_SetupSpecialTransfer(sector_t *sector, spectransfer_t *spec)
+{
+   spec->newspecial = sector->special;
+   spec->oldspecial = sector->oldspecial;
+}
+
+//
+// P_ZeroSpecialTransfer
+//
+// haleyjd 09/06/07: function to create a spectransfer_t that zeroes the sector
+// special.
+//
+void P_ZeroSpecialTransfer(spectransfer_t *spec)
+{
+   // currently nothing special must be done, just memset it
+   memset(spec, 0, sizeof(spectransfer_t));
+}
+
 //
 // P_TransferSectorSpecial
 //
@@ -3598,8 +3634,10 @@ line_t *P_FindLine(int tag, int *searchPosition)
 // features like customizable sector damage can work in the same manner and be
 // switched on or off by floor/ceiling transfer line types.
 //
-void P_TransferSectorSpecial()
+void P_TransferSectorSpecial(sector_t *sector, spectransfer_t *spec)
 {
+   sector->special    = spec->newspecial;
+   sector->oldspecial = spec->oldspecial;
 }
 
 //============================================================================
