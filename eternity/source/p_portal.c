@@ -519,6 +519,8 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 // ---------------------------------------------------------------------------------
 // SoM: Begin dummy mobj code
 
+
+#if 0
 void P_DummyMobjThinker(mobj_t *mobj)
 {
    
@@ -534,6 +536,7 @@ void P_CreateDummy(mobj_t *owner)
 
    owner->portaldummy = 
 }
+#endif
 
 #endif
 
