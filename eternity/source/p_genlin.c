@@ -1001,9 +1001,8 @@ manual_crusher:
       ceiling->direction = plat_down;
       ceiling->sector = sec;
       ceiling->texture = sec->ceilingpic;
-      // FIXME/TODO: oldspecial uninitialized??
-      P_ZeroSpecialTransfer(&(ceiling->special));
-      ceiling->special.newspecial = sec->special;
+      // haleyjd: note: transfer isn't actually used by crushers...
+      P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
       ceiling->type = Slnt? genSilentCrusher : genCrusher;
       ceiling->topheight = sec->ceilingheight;

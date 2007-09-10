@@ -462,8 +462,7 @@ void T_MoveFloor(floormove_t* floor)
          switch(floor->type) // handle texture/type changes
          {
          case donutRaise:
-            // FIXME/TODO: Boom bug? no oldspecial transfer?
-            floor->sector->special = floor->special.newspecial;
+            P_TransferSectorSpecial(floor->sector, &(floor->special));
             floor->sector->floorpic = floor->texture;
             break;
          case genFloorChgT:
@@ -802,9 +801,8 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->floordestheight =
             floor->sector->floorheight + 24 * FRACUNIT;
          sec->floorpic = line->frontsector->floorpic;
-         sec->special = line->frontsector->special;
          //jff 3/14/98 transfer both old and new special
-         sec->oldspecial = line->frontsector->oldspecial;
+         P_DirectTransferSectorSpecial(line->frontsector, sec);
          break;
 
       case raiseToTexture:
@@ -918,16 +916,14 @@ int EV_DoChange(line_t *line, change_e changetype)
       {
       case trigChangeOnly:
          sec->floorpic = line->frontsector->floorpic;
-         sec->special = line->frontsector->special;
-         sec->oldspecial = line->frontsector->oldspecial;
+         P_DirectTransferSectorSpecial(line->frontsector, sec);
          break;
       case numChangeOnly:
          secm = P_FindModelFloorSector(sec->floorheight,secnum);
          if(secm) // if no model, no change
          {
             sec->floorpic = secm->floorpic;
-            sec->special = secm->special;
-            sec->oldspecial = secm->oldspecial;
+            P_DirectTransferSectorSpecial(secm, sec);
          }
          break;
       default:
@@ -1170,7 +1166,7 @@ int EV_DoDonut(line_t*  line)
       s1 = &sectors[secnum];                // s1 is pillar's sector
               
       // do not start the donut if the pillar is already moving
-      if(P_SectorActive(floor_special,s1)) //jff 2/22/98
+      if(P_SectorActive(floor_special, s1)) //jff 2/22/98
          continue;
                       
       s2 = getNextSector(s1->lines[0],s1); // s2 is pool's sector
@@ -1178,7 +1174,7 @@ int EV_DoDonut(line_t*  line)
                                   // pillar must be two-sided 
 
       // do not start the donut if the pool is already moving
-      if(!comp[comp_floors] && P_SectorActive(floor_special,s2))
+      if(!comp[comp_floors] && P_SectorActive(floor_special, s2))
          continue;                           //jff 5/7/98
                       
       // find a two sided line around the pool whose other side isn't the pillar

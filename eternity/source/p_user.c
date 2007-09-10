@@ -290,30 +290,36 @@ void P_DeathThink(player_t* player)
       player->playerstate = PST_REBORN;
 }
 
+//
+// P_HereticCurrent
+//
+// Applies Heretic current effects to the player.
+//
+// haleyjd 09/09/07: Rewritten to use msecnodes and eliminate the redundant 
+// mobj_t::floorsec field.
+//
 static void P_HereticCurrent(player_t *player)
 {
-   sector_t *thingsec = player->mo->subsector->sector;
-   sector_t *floorsec = 
-      (player->mo->floorsec >= 0) ? &sectors[player->mo->floorsec] 
-                                  : NULL;
+   msecnode_t *m;
+   mobj_t     *thing = player->mo;
 
-   // don't affect the player if noclipping is on (pushes you
-   // right through walls)
-   if(player->mo->flags & MF_NOCLIP)
+   // don't affect the player if noclipping is on (pushes you through walls)
+   if(thing->flags & MF_NOCLIP)
       return;
    
-   if(thingsec->hticPushType >= 20 && thingsec->hticPushType <= 39 &&
-      player->mo->z <= thingsec->floorheight)
+   // determine what touched sector the player is standing on
+   for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      // normal case -- player is on thingsec floor
-      P_Thrust(player, thingsec->hticPushAngle, thingsec->hticPushForce);
+      if(thing->z == m->m_sector->floorheight)
+         break;
    }
-   else if(floorsec && player->mo->z <= floorsec->floorheight &&
-           floorsec->hticPushType >= 20 && floorsec->hticPushType <= 39)
+
+   if(m)
    {
-      // stupid case -- player is on floorsec floor, hanging off
-      // edge, but should still be pushed over
-      P_Thrust(player, floorsec->hticPushAngle, floorsec->hticPushForce);
+      sector_t *sec = m->m_sector;
+
+      if(sec->hticPushType >= 20 && sec->hticPushType <= 39)
+         P_Thrust(player, sec->hticPushAngle, sec->hticPushForce);
    }
 }
 

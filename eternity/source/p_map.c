@@ -90,7 +90,6 @@ fixed_t   tmpassceilz;
 
 // haleyjd
 int       tmfloorpic;
-sector_t *tmfloorsec = NULL; // 10/16/02: floorsec
 
 // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
 // haleyjd: values for tmtouch3dside:
@@ -315,9 +314,6 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 
    // haleyjd
    tmfloorpic = newsubsec->sector->floorpic;
-
-   // haleyjd 10/16/02: set tmfloorsec
-   tmfloorsec = newsubsec->sector;
    
    // SoM 09/07/02: 3dsides monster fix
    tmtouch3dside = 0;
@@ -355,9 +351,6 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    thing->passceilz = tmpassceilz;
    thing->secfloorz = tmsecfloorz;
    thing->secceilz = tmsecceilz;
-
-   // haleyjd 10/16/02: set floorsec
-   thing->floorsec = (int)(tmfloorsec - sectors);
    
    thing->x = x;
    thing->y = y;
@@ -589,9 +582,6 @@ boolean PIT_CheckLine(line_t *ld)
 
       floorline = ld;          // killough 8/1/98: remember floor linedef
       blockline = ld;
-
-      // haleyjd
-      tmfloorsec = openfloorsec;
    }
 
    if(lowfloor < tmdropoffz)
@@ -1004,8 +994,6 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 
    // haleyjd
    tmfloorpic = newsubsec->sector->floorpic;
-   // haleyjd 10/16/02: tmfloorsec
-   tmfloorsec = newsubsec->sector;
    // SoM: 09/07/02: 3dsides monster fix
    tmtouch3dside = 0;
    validcount++;
@@ -1278,8 +1266,6 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
 
    thing->x = x;
    thing->y = y;
-   // haleyjd
-   thing->floorsec = tmfloorsec ? (int)(tmfloorsec - sectors) : -1;
    
    P_SetThingPosition(thing);
 
@@ -1479,9 +1465,6 @@ static boolean P_ThingHeightClip(mobj_t *thing)
    thing->passceilz = tmpassceilz;
    thing->secfloorz = tmsecfloorz;
    thing->secceilz = tmsecceilz;
-
-   // haleyjd
-   thing->floorsec = tmfloorsec ? (int)(tmfloorsec - sectors) : -1;
 
    // haleyjd 09/19/06: floatbobbers require special treatment here now
    if(thing->flags2 & MF2_FLOATBOB)

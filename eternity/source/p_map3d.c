@@ -65,7 +65,6 @@ extern fixed_t   tmstepupfloorz;
 extern fixed_t   tmpassfloorz;
 extern fixed_t   tmpassceilz;
 extern int       tmfloorpic;
-extern sector_t *tmfloorsec;
 extern int       tmtouch3dside;
 extern int       numspechit;
 extern fixed_t   FloatBobOffsets[64];
@@ -535,8 +534,6 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
    // haleyjd
    tmfloorpic = newsubsec->sector->floorpic;
-   // haleyjd 10/16/02: tmfloorsec
-   tmfloorsec = newsubsec->sector;
    // SoM: 09/07/02: 3dsides monster fix
    tmtouch3dside = 0;
    validcount++;
@@ -729,9 +726,6 @@ static boolean P_AdjustFloorCeil(mobj_t *thing, boolean midtex)
    thing->passceilz  = tmpassceilz;
    thing->dropoffz   = tmdropoffz; // killough 11/98: remember dropoffs
    
-   // FIXME/TODO: eliminate or change how this works
-   thing->floorsec   = tmfloorsec ? (int)(tmfloorsec - sectors) : -1;
-
    thing->flags3 = oldfl3;
 
    return isgood;

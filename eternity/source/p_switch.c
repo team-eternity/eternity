@@ -87,12 +87,12 @@ void P_InitSwitchList(void)
    alphSwitchList = 
       (switchlist_t *)W_CacheLumpName("SWITCHES", PU_STATIC);
 
-   for(i=0;;i++)
+   for(i = 0; ; i++)
    {
-      if(index+1 >= max_numswitches)
+      if(index + 1 >= max_numswitches)
       {
-         switchlist = realloc(switchlist, sizeof *switchlist *
-         (max_numswitches = max_numswitches ? max_numswitches*2 : 8));
+         switchlist = realloc(switchlist, sizeof(*switchlist) *
+         (max_numswitches = max_numswitches ? max_numswitches * 2 : 8));
       }
       if(SHORT(alphSwitchList[i].episode) <= episode) //jff 5/11/98 endianess
       {
@@ -105,7 +105,7 @@ void P_InitSwitchList(void)
       }
    }
 
-   numswitches = index/2;
+   numswitches = index / 2;
    switchlist[index] = -1;
    Z_ChangeTag(alphSwitchList, PU_CACHE); //jff 3/23/98 allow table to be freed
 }
@@ -281,10 +281,6 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 
 extern void P_StartLineScript(line_t *line, mobj_t *thing);
 
-// haleyjd 05/02/06: flags to check for 3DMidTex switches
-
-#define MIDTEXFLAGS (ML_TWOSIDED|ML_3DMIDTEX)
-
 //
 // P_UseSpecialLine
 //
@@ -306,16 +302,13 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
    // SoM: only allow switch specials on 3d sides to be triggered if 
    // the mobj is within range of the side.
    // haleyjd 05/02/06: ONLY on two-sided lines.
-   if(demo_version >= 331 && (line->flags & MIDTEXFLAGS) == MIDTEXFLAGS &&
-      line->sidenum[side] != -1 && sides[line->sidenum[side]].midtexture)
+   if(demo_version >= 331 && (line->flags & ML_3DMIDTEX) &&
+      line->backsector && line->sidenum[side] != -1 && 
+      sides[line->sidenum[side]].midtexture)
    {
       fixed_t opentop, openbottom;
       fixed_t textop, texbot;
       side_t *sidedef = &sides[line->sidenum[side]];
-
-      // haleyjd 10/03/05: make sure we're dealing with a two-sided line.
-      if(!line->backsector)
-         return false;
 
       opentop = line->frontsector->ceilingheight < line->backsector->ceilingheight ?
                 line->frontsector->ceilingheight : line->backsector->ceilingheight;

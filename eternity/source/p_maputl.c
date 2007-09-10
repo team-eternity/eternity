@@ -168,9 +168,6 @@ fixed_t opensecceil;
 sector_t *openfrontsector; // made global                    // phares
 sector_t *openbacksector;  // made global
 
-// haleyjd 10/16/02: floorsec
-sector_t *openfloorsec;
-
 /*
 // haleyjd 02/23/05
 boolean open3dmidtex;
@@ -245,8 +242,6 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       lowfloor = backfloorz;
       // haleyjd
       tmfloorpic = openfrontsector->floorpic;
-      // haleyjd
-      openfloorsec = openfrontsector;
    }
    else
    {
@@ -254,8 +249,6 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       lowfloor = frontfloorz;
       // haleyjd
       tmfloorpic = openbacksector->floorpic;
-      // haleyjd
-      openfloorsec = openbacksector;
    }
 
    if(frontcz < backcz)
@@ -316,9 +309,6 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          // SoM 01/12/06: let monsters walk over dropoffs
          if(abs(mo->z - textop) <= 24*FRACUNIT)
             tmtouch3dside = 1;
-
-         // haleyjd
-         openfloorsec = NULL;
       }
    }
 

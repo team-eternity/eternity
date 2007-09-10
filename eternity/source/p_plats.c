@@ -254,10 +254,8 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
          plat->wait = 0;
          plat->status = up;
-         sec->special = 0;
          //jff 3/14/98 clear old field as well
-         sec->oldspecial = 0;               
-
+         P_ZeroSectorSpecial(sec);
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
           

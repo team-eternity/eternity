@@ -1269,17 +1269,25 @@ mobj_t *P_GetPushThing(int);                                // phares 3/23/98
 
 // SoM 9/19/02: 3dside movement. :)
 void P_AttachSectors(line_t *cline, boolean ceiling);
+
 boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int crush);
 
 line_t *P_FindLine(int tag, int *searchPosition);
 
 line_t *P_FindLineForID(int id, int *searchPosition);
+
 void    P_SetLineID(int i, long id);
 
 // haleyjd: sector special transfers
 void P_SetupSpecialTransfer(sector_t *, spectransfer_t *);
+
 void P_ZeroSpecialTransfer(spectransfer_t *);
+
 void P_TransferSectorSpecial(sector_t *, spectransfer_t *);
+
+void P_DirectTransferSectorSpecial(sector_t *, sector_t *);
+
+void P_ZeroSectorSpecial(sector_t *);
 
 // haleyjd: parameterized lines
 

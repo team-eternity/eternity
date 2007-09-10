@@ -462,7 +462,6 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
       fixed_t floorz = actor->floorz;
       fixed_t ceilingz = actor->ceilingz;
       fixed_t dropoffz = actor->dropoffz;
-      int     floorsec = actor->floorsec; // haleyjd
       
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
       
@@ -477,7 +476,6 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
          actor->floorz = floorz;
          actor->ceilingz = ceilingz;
          actor->dropoffz = dropoffz;
-         actor->floorsec = floorsec; // haleyjd
          P_SetThingPosition(actor);
          movefactor *= FRACUNIT / ORIG_FRICTION_FACTOR / 4;
          actor->momx += FixedMul(deltax, movefactor);

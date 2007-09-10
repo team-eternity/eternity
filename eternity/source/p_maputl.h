@@ -125,7 +125,6 @@ extern fixed_t opensecceil;
 extern fixed_t   tmpassfloorz;
 extern fixed_t   tmpassceilz;
 
-extern sector_t *openfloorsec; // haleyjd
 extern fixed_t lowfloor;
 extern linetracer_t trace;
 

@@ -38,7 +38,7 @@
 #ifdef R_LINKEDPORTALS
 
 // SoM: Linked portals
-// this list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
+// This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
 // table is built it is allocated as a linear buffer of groupcount * groupcount
 // entries. The entries are arranged much like pixels in a screen buffer where 
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
@@ -76,7 +76,7 @@ void P_InitPortals(void)
 // R_SetSectorGroupID
 //
 // SoM: yes this is hackish, I admit :(
-// this sets all mobjs inside the sector to have the sector id
+// This sets all mobjs inside the sector to have the sector id
 //
 void R_SetSectorGroupID(sector_t *sector, int groupid)
 {
@@ -516,7 +516,7 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 
 
 
-// ---------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // SoM: Begin dummy mobj code
 
 

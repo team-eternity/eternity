@@ -2423,7 +2423,7 @@ void P_PlayerInSpecialSector(player_t *player)
             dmgAmt  = nukageValues[3][dmgType].dmgAmount;
             dmgTics = nukageValues[3][dmgType].dmgTics;
             if(!player->powers[pw_ironfeet]
-               || (P_Random(pr_slimehurt)<5))  // take damage even with suit
+               || (P_Random(pr_slimehurt) < 5))  // take damage even with suit
             {
                if(!(leveltime & dmgTics))
                {
@@ -3638,6 +3638,30 @@ void P_TransferSectorSpecial(sector_t *sector, spectransfer_t *spec)
 {
    sector->special    = spec->newspecial;
    sector->oldspecial = spec->oldspecial;
+}
+
+//
+// P_DirectTransferSectorSpecial
+//
+// haleyjd 09/09/07: function to directly transfer a special and accompanying
+// data from one sector to another.
+//
+void P_DirectTransferSectorSpecial(sector_t *src, sector_t *dest)
+{
+   dest->special    = src->special;
+   dest->oldspecial = src->oldspecial;
+}
+
+//
+// P_ZeroSectorSpecial
+//
+// haleyjd 09/09/07: Directly sets a sector's special and accompanying data to
+// a non-special state.
+//
+void P_ZeroSectorSpecial(sector_t *sec)
+{
+   sec->special    = 0;
+   sec->oldspecial = 0;
 }
 
 //============================================================================

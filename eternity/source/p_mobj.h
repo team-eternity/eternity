@@ -454,7 +454,6 @@ struct mobj_s
    int effects;      // particle effect flag field
    int translucency; // zdoom-style translucency level
    int floatbob;     // floatbob offset
-   int floorsec;     // # of sector responsible for floorz
    int damage;       // haleyjd 08/02/04: copy damage to mobj now
    fixed_t floorclip;    // haleyjd 08/07/04: floor clip amount
 
