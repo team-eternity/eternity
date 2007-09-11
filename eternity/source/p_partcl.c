@@ -702,14 +702,11 @@ void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z,
 // haleyjd 04/01/05: Code originally by SoM that makes a blood drop
 // that falls to the floor. Isolated by me into a function, and made
 // to use new styleflags that weren't available when this was written.
+// This code is under the GPL.
 //
 static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z, 
-                        angle_t angle, int updown, byte color1, 
-                        byte color2)
+                        angle_t angle, byte color1, byte color2)
 {
-   fixed_t zspread = (updown ? -2400 : 2400);
-   fixed_t zadd    = (updown == 2 ? -128 : 0);
-
    for(; count; --count)
    {
       particle_t *p = newParticle();
@@ -726,11 +723,129 @@ static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z,
       p->velz = 128 * -3000 + M_Random();
       p->accz = -(LevelInfo.gravity*100/256);
       p->styleflags = PS_FLOORCLIP | PS_FALLTOGROUND;
-      p->z = z + (M_Random() + zadd) * zspread;
+      p->z = z + (M_Random() - 128) * -2400;
       an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
       p->x = x + (M_Random() & 10) * finecosine[an];
       p->y = y + (M_Random() & 10) * finesine[an];
       P_SetParticlePosition(p);
+   }
+}
+
+//
+// P_SmokePuff
+//
+// haleyjd 09/10/07: SoM's vastly improved smoke puff effect, improved even
+// more to replace the god-awful Quake 2-wannabe splash from zdoom.
+// This code is under the GPL.
+//
+void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, 
+                 int updown)
+{
+   particle_t *p;
+   angle_t an;
+   int ttl;
+   fixed_t accz;
+   boolean hitwater = false;
+   byte color1, color2;
+
+   // default: grey puff
+   color1 = grey1;
+   color2 = grey5;
+   
+   if(!comp[comp_terrain])
+   {
+      // 06/21/02: make bullet puff colors responsive to 
+      // TerrainTypes -- this is very cool and Quake-2-like ^_^      
+      
+      ETerrain *terrain = E_GetTerrainTypeForPt(x, y, updown);
+      
+      if(terrain->usepcolors)
+      {
+         color1 = terrain->pcolor_1;
+         color2 = terrain->pcolor_2;
+      }
+      
+      if(terrain->liquid)
+         hitwater = true;
+   }
+
+   count += M_Random() & 15; // MOARRRR!
+
+   // handle shooting liquids: make it spray up like in the movies
+   if(!updown && hitwater)
+   {
+      // live longer and accelerate downward faster
+      ttl  = 30;
+      accz = -FRACUNIT/8;
+   }
+   else
+   {
+      ttl  = 15;
+      accz = -FRACUNIT/22;
+   }
+
+   for(; count; --count)
+   {      
+      if(!(p = newParticle()))
+         break;
+      
+      p->ttl = ttl;
+      p->fade = FADEFROMTTL(ttl);
+      p->trans = 255;
+      p->size = 2 + M_Random() % 5;
+      p->color = M_Random() & 0x80 ? color1 : color2;      
+      p->velz = M_Random() * 512;
+      if(updown == 1) // ceiling shot?
+         p->velz = -(p->velz / 4);
+      p->accz = accz;
+      p->styleflags = 0;
+      
+      an = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
+      p->velx = (M_Random() * finecosine[an]) >> 11;
+      p->vely = (M_Random() * finesine[an]) >> 11;
+      p->accx = p->velx >> 4;
+      p->accy = p->vely >> 4;
+      
+      if(updown == 1) // ceiling shot?
+         p->z = z - (M_Random() + 72) * 2000;
+      else
+         p->z = z + (M_Random() + 72) * 2000;
+      an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
+      p->x = x + (M_Random() & 14) * finecosine[an];
+      p->y = y + (M_Random() & 14) * finesine[an];
+      P_SetParticlePosition(p);
+   }
+
+   if(!hitwater) // no sparks on liquids
+   {
+      count = M_Random() & 3;
+
+      for(; count; --count)
+      {
+         fixed_t pathdist = M_Random() << 8;
+         fixed_t speed;
+         
+         if(!(p = JitterParticle(3 + (M_Random() % 24))))
+            break;
+         
+         p->x = x - pathdist;
+         p->y = y - pathdist;
+         p->z = z - pathdist;
+         P_SetParticlePosition(p);
+         
+         speed = (M_Random() - 128) * (FRACUNIT / 200);
+         an = angle >> ANGLETOFINESHIFT;
+         p->velx += FixedMul(speed, finecosine[an]);
+         p->vely += FixedMul(speed, finesine[an]);
+         if(updown) // on ceiling or wall, fall fast
+            p->velz -= FRACUNIT/36;
+         else       // on floor, throw it upward a bit
+            p->velz += FRACUNIT/2;
+         p->accz -= FRACUNIT/20;
+         p->color = yellow;
+         p->size = 2;
+         p->styleflags = PS_FULLBRIGHT;
+      }
    }
 }
 
@@ -753,6 +868,55 @@ static struct bloodColor
    { &orange, &yorange },
 };
 
+void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z, 
+                  angle_t angle)
+{
+   byte color1, color2;
+   particle_t *p;
+   angle_t an;
+   int bloodcolor = mo->info->bloodcolor;
+
+   // get blood colors
+   if(bloodcolor < 0 || bloodcolor >= NUMBLOODCOLORS)
+      bloodcolor = 0;
+
+   color1 = *(mobjBloodColors[bloodcolor].color1);
+   color2 = *(mobjBloodColors[bloodcolor].color2);
+
+   // haleyjd 04/01/05: at random, throw out drops
+   // haleyjd 09/10/07: even if a drop is thrown, do the rest of the effect
+   if(M_Random() < 72)
+      P_BloodDrop(count, x, y, z, angle, color1, color2);
+
+   count += M_Random() & 31; // a LOT more blood.
+
+   for(; count; --count)
+   {
+      if(!(p = newParticle()))
+         break;
+      
+      p->ttl = 15 + M_Random() % 6;
+      p->fade = FADEFROMTTL(p->ttl);
+      p->trans = 255;
+      p->size = 2 + M_Random() % 5;
+      p->color = M_Random() & 0x80 ? color1 : color2;      
+      p->velz = M_Random() < 32 ? M_Random() * 96 : M_Random() * -96;
+      p->accz = -FRACUNIT/22;
+      p->styleflags = 0;
+      
+      an = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
+      p->velx = (M_Random() * finecosine[an]) / 768;
+      p->vely = (M_Random() * finesine[an]) / 768;
+      p->accx = p->velx / 8;
+      p->accy = p->vely / 8;
+      an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
+      p->x = x + (M_Random() % 24) * finecosine[an];
+      p->y = y + (M_Random() % 24) * finesine[an];
+      p->z = z + (M_Random() - 128) * -6000;
+      P_SetParticlePosition(p);
+   }
+}
+
 void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z, 
                    angle_t angle, int updown, int kind)
 {   
@@ -773,31 +937,13 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
    case 0:              // Blood
       color1 = *(mobjBloodColors[bloodcolor].color1);
       color2 = *(mobjBloodColors[bloodcolor].color2);
-      // haleyjd 04/01/05: at random, throw out drops instead
+      /*
+      // haleyjd 04/01/05: at random, throw out drops too
       if(M_Random() < 64)
-      {
          P_BloodDrop(count, x, y, z, angle, updown, color1, color2);
-         return;
-      }
-      break;
-   case 1:              // Gunshot
-      // default: grey puff
-      color1 = grey1;
-      color2 = grey5;
-
-      if(!comp[comp_terrain])
-      {
-         // 06/21/02: make bullet puff colors responsive to 
-         // TerrainTypes -- this is very cool and Quake-2-like ^_^      
-         
-         ETerrain *terrain = E_GetTerrainTypeForPt(x, y, updown);
-         
-         if(terrain->usepcolors)
-         {
-            color1 = terrain->pcolor_1;
-            color2 = terrain->pcolor_2;
-         }
-      }
+      */
+      //P_BloodSpray(count, x, y, z, angle, updown, bloodcolor);
+      return;
       break;
    case 2:		// Smoke
       color1 = grey3;
@@ -823,7 +969,7 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
       p->fade = FADEFROMTTL(12);
       p->trans = 255;
       p->styleflags = 0;
-      p->size = 4;
+      p->size = 2 + M_Random() % 5;
       p->color = M_Random() & 0x80 ? color1 : color2;
       p->velz = M_Random() * zvel;
       p->accz = -FRACUNIT/22;
@@ -837,8 +983,8 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
       }
       p->z = z + (M_Random() + zadd) * zspread;
       an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
-      p->x = x + (M_Random() & 31)*finecosine[an];
-      p->y = y + (M_Random() & 31)*finesine[an];
+      p->x = x + (M_Random() & 31) * finecosine[an];
+      p->y = y + (M_Random() & 31) * finesine[an];
       P_SetParticlePosition(p);
    }
 }

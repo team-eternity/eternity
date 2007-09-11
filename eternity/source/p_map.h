@@ -118,10 +118,10 @@ typedef struct tptnode_s
 
 
 
-boolean     P_CheckTPT();
-tptnode_t   *P_StartTPT();
-void        P_FinishTPT(tptnode_t *node);
-void        P_ClearTPT();
+boolean    P_CheckTPT(void);
+tptnode_t *P_StartTPT();
+void       P_FinishTPT(tptnode_t *node);
+void       P_ClearTPT();
 #endif
 
 #endif // __P_MAP__

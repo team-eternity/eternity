@@ -1906,12 +1906,12 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 
    // haleyjd: for demo sync etc we still need to do the above, so
    // here we'll make the puff invisible and draw particles instead
-   if(ptcl && drawparticles && bulletpuff_particle)
+   if(ptcl && drawparticles && bulletpuff_particle &&
+      trace.attackrange != MELEERANGE)
    {
       if(bulletpuff_particle != 2)
          th->translucency = 0;
-      if(trace.attackrange != MELEERANGE)
-         P_DrawSplash2(32, x, y, z, dir, updown, 1);
+      P_SmokePuff(32, x, y, z, dir, updown);
    }
 }
 
@@ -1950,8 +1950,9 @@ void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, mobj_t
    {
       if(bloodsplat_particle != 2)
          th->translucency = 0;
-      P_DrawSplash2(32, x, y, z, dir, 2,
-                    target->info->bloodcolor | MBC_BLOODMASK);
+      //P_DrawSplash2(32, x, y, z, dir, 2,
+      //              target->info->bloodcolor | MBC_BLOODMASK);
+      P_BloodSpray(target, 32, x, y, z, dir, 2);
    }
 }
 

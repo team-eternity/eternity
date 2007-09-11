@@ -433,8 +433,8 @@ void P_SetThingPosition(mobj_t *thing)
    if(!(thing->flags & MF_NOBLOCKMAP))
    {
       // inert things don't need to be in blockmap
-      int blockx = (thing->x - bmaporgx)>>MAPBLOCKSHIFT;
-      int blocky = (thing->y - bmaporgy)>>MAPBLOCKSHIFT;
+      int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
+      int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
       
       if(blockx>=0 && blockx < bmapwidth && blocky>=0 && blocky < bmapheight)
       {
@@ -510,7 +510,7 @@ boolean ThingIsOnLine(mobj_t *t, line_t *l)
 // to it.
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 {
    int        offset;
@@ -577,7 +577,7 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 boolean P_BlockThingsIterator(int x, int y, boolean func(mobj_t*))
 {
    mobj_t *mobj;
-   if(!(x<0 || y<0 || x>=bmapwidth || y>=bmapheight))
+   if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
       for(mobj = blocklinks[y*bmapwidth+x]; mobj; mobj = mobj->bnext)
          if(!func(mobj))
             return false;
@@ -606,7 +606,9 @@ static void check_intercept(void)
 
 linetracer_t trace;
 
-// PIT_AddLineIntercepts.
+//
+// PIT_AddLineIntercepts
+//
 // Looks for lines in the given block
 // that intercept the given trace
 // to add to the intercepts list.
@@ -615,7 +617,7 @@ linetracer_t trace;
 // are on opposite sides of the trace.
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 boolean PIT_AddLineIntercepts(line_t *ld)
 {
    int       s1;
@@ -660,7 +662,7 @@ boolean PIT_AddLineIntercepts(line_t *ld)
 // PIT_AddThingIntercepts
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 boolean PIT_AddThingIntercepts(mobj_t *thing)
 {
    fixed_t   x1, y1;
@@ -713,11 +715,12 @@ boolean PIT_AddThingIntercepts(mobj_t *thing)
 
 //
 // P_TraverseIntercepts
+//
 // Returns true if the traverser function returns true
 // for all lines.
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 {
    intercept_t *in = NULL;
@@ -740,12 +743,14 @@ boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 
 //
 // P_PathTraverse
+//
 // Traces a line from x1,y1 to x2,y2,
 // calling the traverser function for each.
 // Returns true if the traverser function returns true
 // for all lines.
 //
 // killough 5/3/98: reformatted, cleaned up
+//
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                        int flags, boolean trav(intercept_t *))
 {
@@ -806,7 +811,7 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       ystep = 256*FRACUNIT;
    }
 
-   yintercept = (y1>>MAPBTOFRAC) + FixedMul(partial, ystep);
+   yintercept = (y1 >> MAPBTOFRAC) + FixedMul(partial, ystep);
    
    if(yt2 > yt1)
    {
@@ -827,7 +832,7 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       xstep = 256*FRACUNIT;
    }
 
-   xintercept = (x1>>MAPBTOFRAC) + FixedMul (partial, xstep);
+   xintercept = (x1 >> MAPBTOFRAC) + FixedMul(partial, xstep);
    
    // Step through map blocks.
    // Count is present to prevent a round off error

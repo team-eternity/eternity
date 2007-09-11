@@ -430,6 +430,8 @@ void P_PlayerThink(player_t* player)
    // Future Code:                                                     //  ^
    // Check to see if the object you've been standing on has moved     //  |
    // out from underneath you.                                         // phares
+
+   // haleyjd: burn damage is now implemented, but is handled elsewhere.
    
    // Check for weapon change.
    
@@ -444,14 +446,17 @@ void P_PlayerThink(player_t* player)
       //  when the weapon psprite can do it
       //  (read: not in the middle of an attack).
       
-      newweapon = (cmd->buttons & BT_WEAPONMASK)>>BT_WEAPONSHIFT;
+      newweapon = (cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT;
       
       // killough 3/22/98: For demo compatibility we must perform the fist
       // and SSG weapons switches here, rather than in G_BuildTiccmd(). For
       // other games which rely on user preferences, we must use the latter.
 
-      if (demo_compatibility)
-      { // compatibility mode -- required for old demos -- killough
+      // WEAPON_FIXME: bunch of crap.
+
+      if(demo_compatibility)
+      { 
+         // compatibility mode -- required for old demos -- killough
          if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
 	    (player->readyweapon != wp_chainsaw ||
 	     !player->powers[pw_strength]))
@@ -464,13 +469,12 @@ void P_PlayerThink(player_t* player)
       }
 
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
+
+      // WEAPON_FIXME: shareware availability -> weapon property
       
-      if(player->weaponowned[newweapon] && 
-         newweapon != player->readyweapon)
+      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
       {
-         // Do not go to plasma or BFG in shareware,
-         //  even if cheated.
-         
+         // Do not go to plasma or BFG in shareware, even if cheated.
          if((newweapon != wp_plasma && newweapon != wp_bfg)
             || (gamemode != shareware) )
             player->pendingweapon = newweapon;

@@ -1800,19 +1800,24 @@ void P_SlideMove(mobj_t *mo)
    while(!P_TryMove(mo, mo->x+tmxmove, mo->y+tmymove, true));
 }
 
+//=============================================================================
 //
-// P_LineAttack
+// Line Attacks
 //
+
 mobj_t *linetarget; // who got hit (or NULL)
 static mobj_t *shootthing;
 
 static int aim_flags_mask; // killough 8/2/98: for more intelligent autoaiming
 
-// SoM: Moved globals into a structure. See p_maputil.h
+// SoM: Moved globals into a structure. See p_maputl.h
 
 #ifdef R_LINKEDPORTALS
 static tptnode_t *tptlist = NULL, *tptend = NULL, *tptunused = NULL;
 
+//
+// TPT_NewNode
+//
 static tptnode_t *TPT_NewNode(void)
 {
    tptnode_t *ret;
@@ -1839,7 +1844,9 @@ static tptnode_t *TPT_NewNode(void)
    return ret;
 }
 
-
+//
+// P_NewShootTPT
+//
 void P_NewShootTPT(linkoffset_t *link, fixed_t frac, fixed_t newz)
 {
    tptnode_t *node = TPT_NewNode();
@@ -1866,7 +1873,9 @@ void P_NewShootTPT(linkoffset_t *link, fixed_t frac, fixed_t newz)
    node->dy = FixedMul(trace.attackrange, trace.sin);
 }
 
-
+//
+// P_NewAimTPT
+//
 void P_NewAimTPT(linkoffset_t *link, fixed_t frac, fixed_t newz, 
                  fixed_t newtopslope, fixed_t newbottomslope)
 {
@@ -1897,7 +1906,9 @@ void P_NewAimTPT(linkoffset_t *link, fixed_t frac, fixed_t newz,
    node->bottomslope = newbottomslope;
 }
 
-
+//
+// P_NewUseTPT
+//
 void P_NewUseTPT(linkoffset_t *link, fixed_t frac)
 {
    tptnode_t *node = TPT_NewNode();
@@ -1920,14 +1931,19 @@ void P_NewUseTPT(linkoffset_t *link, fixed_t frac)
    node->dy = FixedMul(trace.sin, node->attackrange);
 }
 
-
-
-boolean P_CheckTPT()
+//
+// P_CheckTPT
+//
+// Returns true if there are any TPT nodes on the list, false otherwise.
+//
+boolean P_CheckTPT(void)
 {
-   return tptlist ? true : false;
+   return (tptlist != NULL);
 }
 
-
+//
+// P_StartTPT
+//
 tptnode_t *P_StartTPT(void)
 {
    tptnode_t *ret = tptlist;
@@ -1993,6 +2009,11 @@ tptnode_t *P_StartTPT(void)
    return NULL;
 }
 
+//
+// P_FinishTPT
+//
+// Puts a TPT node onto the free list.
+//
 void P_FinishTPT(tptnode_t *node)
 {
    // Link the node back into the unused list
@@ -2000,7 +2021,11 @@ void P_FinishTPT(tptnode_t *node)
    tptunused = node;
 }
 
+//
+// P_ClearTPT
+//
 // Call this after you use TPT!
+//
 void P_ClearTPT(void)
 {
    tptnode_t *rover;
@@ -2012,7 +2037,6 @@ void P_ClearTPT(void)
       rover->next = tptunused;
       tptunused = rover;
    }
-
 
    tptlist = tptend = NULL;
 }
@@ -2591,6 +2615,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
       return true;  // corpse or something
 
    // haleyjd: don't let players use melee attacks on ghosts
+   // WEAPON_FIXME: ghost immunity -> weapon property
    if((th->flags3 & MF3_GHOST) && shootthing->player &&
       (shootthing->player->readyweapon == wp_fist ||
        shootthing->player->readyweapon == wp_chainsaw))
@@ -2600,25 +2625,25 @@ static boolean PTR_ShootTraverse(intercept_t *in)
    
    // check angles to see if the thing can be aimed at
    
-   dist = FixedMul (trace.attackrange, in->frac);
-   thingtopslope = FixedDiv (th->z+th->height - trace.z , dist);
+   dist = FixedMul(trace.attackrange, in->frac);
+   thingtopslope = FixedDiv(th->z + th->height - trace.z, dist);
    
-   if (thingtopslope < trace.aimslope)
+   if(thingtopslope < trace.aimslope)
       return true;  // shot over the thing
    
-   thingbottomslope = FixedDiv (th->z - trace.z, dist);
+   thingbottomslope = FixedDiv(th->z - trace.z, dist);
    
-   if (thingbottomslope > trace.aimslope)
+   if(thingbottomslope > trace.aimslope)
       return true;  // shot under the thing
    
    // hit thing
    // position a bit closer
    
-   frac = in->frac - FixedDiv (10*FRACUNIT, trace.attackrange);
+   frac = in->frac - FixedDiv(10*FRACUNIT, trace.attackrange);
    
-   x = trace.x + FixedMul (trace.dx, frac);
-   y = trace.y + FixedMul (trace.dy, frac);
-   z = trace.z + FixedMul (trace.aimslope, FixedMul(frac, trace.attackrange));
+   x = trace.x + FixedMul(trace.dx, frac);
+   y = trace.y + FixedMul(trace.dy, frac);
+   z = trace.z + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
    
    // Spawn bullet puffs or blood spots,
    // depending on target type. -- haleyjd: and status flags!
@@ -2710,8 +2735,7 @@ fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
 //
 // P_LineAttack
 //
-// If damage == 0, it is just a test trace
-// that will leave linetarget set.
+// If damage == 0, it is just a test trace that will leave linetarget set.
 //
 void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
                   fixed_t slope, int damage)
@@ -2721,8 +2745,8 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
    angle >>= ANGLETOFINESHIFT;
    shootthing = t1;
    trace.la_damage = damage;
-   x2 = t1->x + (distance>>FRACBITS)*(trace.cos = finecosine[angle]);
-   y2 = t1->y + (distance>>FRACBITS)*(trace.sin = finesine[angle]);
+   x2 = t1->x + (distance >> FRACBITS) * (trace.cos = finecosine[angle]);
+   y2 = t1->y + (distance >> FRACBITS) * (trace.sin = finesine[angle]);
    
    trace.originz = trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
    trace.attackrange = distance;
@@ -2757,7 +2781,8 @@ static boolean PTR_UseTraverse(intercept_t *in)
       if(!sidesector)
          return true;
 
-      link = P_GetLinkOffset(sidesector->groupid, in->d.line->portal->data.camera.groupid);
+      link = P_GetLinkOffset(sidesector->groupid, 
+                             in->d.line->portal->data.camera.groupid);
       if(!link)
          return false;
 
@@ -2789,6 +2814,9 @@ static boolean PTR_UseTraverse(intercept_t *in)
    }
 }
 
+//
+// PTR_NoWayTraverse
+//
 // Returns false if a "oof" sound should be made because of a blocking
 // linedef. Makes 2s middles which are impassable, as well as 2s uppers
 // and lowers which block the player, cause the sound effect when the
@@ -2798,7 +2826,6 @@ static boolean PTR_UseTraverse(intercept_t *in)
 //
 // by Lee Killough
 //
-
 static boolean PTR_NoWayTraverse(intercept_t *in)
 {
    line_t *ld = in->d.line;                       // This linedef
@@ -2841,7 +2868,7 @@ void P_UseLines(player_t *player)
    
    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
       if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse))
-         S_StartSound (usething, sfx_noway);
+         S_StartSound(usething, sfx_noway);
 }
 
 //
@@ -2854,10 +2881,9 @@ static int bombmod; // haleyjd 07/13/03
 
 //
 // PIT_RadiusAttack
-// "bombsource" is the creature
-// that caused the explosion at "bombspot".
 //
-
+// "bombsource" is the creature that caused the explosion at "bombspot".
+//
 static boolean PIT_RadiusAttack(mobj_t *thing)
 {
    fixed_t dx, dy, dist;
@@ -2905,17 +2931,17 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
 
 //
 // P_RadiusAttack
+//
 // Source is the creature that caused the explosion at spot.
 //   haleyjd 07/13/03: added method of death flag
 //
-
 void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
 {
-   fixed_t dist = (damage+MAXRADIUS)<<FRACBITS;
-   int yh = (spot->y + dist - bmaporgy)>>MAPBLOCKSHIFT;
-   int yl = (spot->y - dist - bmaporgy)>>MAPBLOCKSHIFT;
-   int xh = (spot->x + dist - bmaporgx)>>MAPBLOCKSHIFT;
-   int xl = (spot->x - dist - bmaporgx)>>MAPBLOCKSHIFT;
+   fixed_t  dist = (damage + MAXRADIUS) << FRACBITS;
+   int yh = (spot->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
+   int yl = (spot->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
+   int xh = (spot->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
+   int xl = (spot->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
    int x, y;
 
    bombspot = spot;
@@ -2923,8 +2949,8 @@ void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
    bombdamage = damage;
    bombmod = mod;       // haleyjd
    
-   for(y=yl ; y<=yh ; y++)
-      for(x=xl ; x<=xh ; x++)
+   for(y = yl; y <= yh; ++y)
+      for(x = xl; x <= xh; ++x)
          P_BlockThingsIterator(x, y, PIT_RadiusAttack);
 }
 
@@ -2956,7 +2982,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
    if(thing->health <= 0)
    {
       // sf: clear the skin which will mess things up
-      // haleyjd 03/11/03: not in heretic
+      // haleyjd 03/11/03: only in Doom
       if(gameModeInfo->type == Game_DOOM)
       {
          thing->skin = NULL;
@@ -3127,16 +3153,22 @@ msecnode_t *headsecnode = NULL;
 //      too late: some msecnode_t's are used during the loading of the
 //      level. 
 
+//
+// P_FreeSecNodeList
+//
 void P_FreeSecNodeList(void)
 {
    headsecnode = NULL; // this is all thats needed to fix the bug
 }
 
-// P_GetSecnode() retrieves a node from the freelist. The calling routine
-// should make sure it sets all fields properly.
+//
+// P_GetSecnode
+//
+// Retrieves a node from the freelist. The calling routine should make sure it
+// sets all fields properly.
 //
 // killough 11/98: reformatted
-
+//
 static msecnode_t *P_GetSecnode(void)
 {
    msecnode_t *node;
@@ -3146,31 +3178,35 @@ static msecnode_t *P_GetSecnode(void)
       Z_Malloc(sizeof *node, PU_LEVEL, NULL); 
 }
 
-// P_PutSecnode() returns a node to the freelist.
-
+//
+// P_PutSecnode
+//
+// Returns a node to the freelist.
+//
 static void P_PutSecnode(msecnode_t *node)
 {
    node->m_snext = headsecnode;
    headsecnode = node;
 }
 
-// phares 3/16/98
 //
-// P_AddSecnode() searches the current list to see if this sector is
-// already there. If not, it adds a sector node at the head of the list of
-// sectors this object appears in. This is called when creating a list of
-// nodes that will get linked in later. Returns a pointer to the new node.
+// P_AddSecnode
+//
+// phares 3/16/98
+// Searches the current list to see if this sector is already there. If 
+// not, it adds a sector node at the head of the list of sectors this 
+// object appears in. This is called when creating a list of nodes that
+// will get linked in later. Returns a pointer to the new node.
 //
 // killough 11/98: reformatted
-
-static msecnode_t *P_AddSecnode(sector_t *s, mobj_t *thing, 
-                                msecnode_t *nextnode)
+//
+static msecnode_t *P_AddSecnode(sector_t *s, mobj_t *thing, msecnode_t *nextnode)
 {
    msecnode_t *node;
    
-   for (node = nextnode; node; node = node->m_tnext)
+   for(node = nextnode; node; node = node->m_tnext)
    {
-      if (node->m_sector == s)   // Already have a node for this sector?
+      if(node->m_sector == s)   // Already have a node for this sector?
       {
          node->m_thing = thing; // Yes. Setting m_thing says 'keep it'.
          return nextnode;
@@ -3201,12 +3237,14 @@ static msecnode_t *P_AddSecnode(sector_t *s, mobj_t *thing,
    return s->touching_thinglist = node;
 }
 
-// P_DelSecnode() deletes a sector node from the list of
-// sectors this object appears in. Returns a pointer to the next node
-// on the linked list, or NULL.
+//
+// P_DelSecnode
+//
+// Deletes a sector node from the list of sectors this object appears in.
+// Returns a pointer to the next node on the linked list, or NULL.
 //
 // killough 11/98: reformatted
-
+//
 static msecnode_t *P_DelSecnode(msecnode_t *node)
 {
    if(node)
@@ -3248,22 +3286,26 @@ static msecnode_t *P_DelSecnode(msecnode_t *node)
    return node;
 }
 
+//
+// P_DelSeclist
+//
 // Delete an entire sector list
-
+//
 void P_DelSeclist(msecnode_t *node)
 {
    while(node)
       node = P_DelSecnode(node);
 }
 
-// phares 3/14/98
 //
 // PIT_GetSectors
+//
+// phares 3/14/98
 // Locates all the sectors the object is in by looking at the lines that
 // cross through it. You have already decided that the object is allowed
 // at this location, so don't bother with checking impassable or
 // blocking lines.
-
+//
 static boolean PIT_GetSectors(line_t *ld)
 {
    if(tmbbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
@@ -3282,7 +3324,7 @@ static boolean PIT_GetSectors(line_t *ld)
    // allowed to move to this position, then the sector_list
    // will be attached to the Thing's mobj_t at touching_sectorlist.
 
-   sector_list = P_AddSecnode(ld->frontsector,tmthing,sector_list);
+   sector_list = P_AddSecnode(ld->frontsector, tmthing, sector_list);
 
    // Don't assume all lines are 2-sided, since some Things
    // like teleport fog are allowed regardless of whether their 
@@ -3298,16 +3340,17 @@ static boolean PIT_GetSectors(line_t *ld)
    return true;
 }
 
-// phares 3/14/98
 //
-// P_CreateSecNodeList alters/creates the sector_list that shows what sectors
-// the object resides in.
+// P_CreateSecNodeList 
+//
+// phares 3/14/98
+// Alters/creates the sector_list that shows what sectors the object resides in.
 //
 // killough 11/98: reformatted
 //
 // haleyjd 01/02/00: added cph's fix to stop clobbering the tmthing
 //  global variable (whose stupid idea was it to use that?)
-
+//
 void P_CreateSecNodeList(mobj_t *thing,fixed_t x,fixed_t y)
 {
    int xl, xh, yl, yh, bx, by;
