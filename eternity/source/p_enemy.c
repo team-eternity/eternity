@@ -868,6 +868,7 @@ static void P_NewChaseDir(mobj_t *actor)
          }
          else
          {
+            // WEAPON_FIXME: weapons considered melee for fleeing purposes
             if(target->health > 0 &&
                (actor->flags ^ target->flags) & MF_FRIEND)
             {   // Live enemy target

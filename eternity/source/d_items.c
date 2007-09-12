@@ -141,7 +141,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
 //
 // haleyjd 07/25/03: temporary hack to resolve weapon states
 // until EDF weapon support is in place
-// FIXME
+// WEAPON_FIXME
 //
 void D_InitWeaponInfo(void)
 {

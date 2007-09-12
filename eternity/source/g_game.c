@@ -2266,12 +2266,19 @@ void G_PlayerReborn(int player)
    p->playerstate = PST_LIVE;
    p->health = initial_health;  // Ty 03/12/98 - use dehacked values
    p->quake = 0;                // haleyjd 01/21/07
+
+   // WEAPON_FIXME: default reborn weapon
    p->readyweapon = p->pendingweapon = wp_pistol;
+
+   // WEAPON_FIXME: revive "weaponowned" feature?
    // sf: different weapons owned
    memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
+   
+   // WEAPON_FIXME: always owned weapons
    p->weaponowned[wp_fist] = true;     // always fist and pistol
    p->weaponowned[wp_pistol] = true;
    
+   // WEAPON_FIXME: default ammo stuff
    p->ammo[am_clip] = initial_bullets; // Ty 03/12/98 - use dehacked values
    
    for(i = 0; i < NUMAMMO; i++)

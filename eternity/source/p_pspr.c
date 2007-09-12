@@ -393,7 +393,7 @@ void A_WeaponReady(mobj_t *mo)
 
    // PCLASS_FIXME: attack states -> EDF playerclass properties
    // PCLASS_FIXME: spawnstate -> EDF playerclass property
-   // WEAPON_FIXME: chainsaw particulars
+   // WEAPON_FIXME: chainsaw particulars (idle sound)
 
    // get out of attack state
    if(mo->state == &states[E_SafeState(S_PLAY_ATK1)] || 
@@ -417,7 +417,7 @@ void A_WeaponReady(mobj_t *mo)
       return;
    }
 
-   // WEAPON_FIXME: what precisely does this do? Needs to be an EDF weapon property?
+   // WEAPON_FIXME: NOAUTOFIRE flag
 
    // check for fire
    //  the missile launcher and bfg do not auto fire

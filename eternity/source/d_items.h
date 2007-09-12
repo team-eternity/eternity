@@ -29,17 +29,34 @@
 
 #include "doomdef.h"
 
+//
+// haleyjd 09/11/07: weapon flags
+//
+enum
+{
+   WEAPON_NOTHRUST     = 0x00000001, // doesn't thrust mobj_t's
+   WEAPON_HITGHOSTS    = 0x00000002, // tracer-based weapon can hit ghosts
+   WEAPON_NOTSHAREWARE = 0x00000004, // not in shareware gamemodes
+   WEAPON_COMMERCIAL   = 0x00000008, // only in Doom 2
+   WEAPON_SILENCER     = 0x00000010, // weapon supports silencer powerup
+   WEAPON_SILENT       = 0x00000020, // weapon is always silent
+   WEAPON_NOAUTOFIRE   = 0x00000040, // weapon won't autofire in A_WeaponReady
+};
+
 // Weapon info: sprite frames, ammunition use.
 typedef struct
 {
-  ammotype_t  ammo;
-  int         upstate;
-  int         downstate;
-  int         readystate;
-  int         atkstate;
-  int         flashstate;
-  int         ammopershot; // haleyjd 08/10/02: ammo per shot field
-  int         enableaps;   // haleyjd: enables above field, off by default
+   ammotype_t  ammo;
+   int         upstate;
+   int         downstate;
+   int         readystate;
+   int         atkstate;
+   int         flashstate;
+   int         ammopershot; // haleyjd 08/10/02: ammo per shot field
+   int         enableaps;   // haleyjd: enables above field, off by default
+   
+   // haleyjd 09/11/07: new fields in prep. for dynamic weapons
+   long        flags;       
 } weaponinfo_t;
 
 extern weaponinfo_t weaponinfo[NUMWEAPONS];

@@ -129,6 +129,7 @@ boolean P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
    // We were down to zero, so select a new weapon.
    // Preferences are not user selectable.
    
+   // WEAPON_FIXME: ammo reception behaviors
    switch (ammo)
    {
    case am_clip:
@@ -458,6 +459,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       sound = sfx_getpow;
       break;
 
+      // WEAPON_FIXME: berserk changes to fist
    case PFX_BERZERKBOX:
       if(!P_GivePower(player, pw_strength))
          return;
@@ -1021,6 +1023,7 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
    {
       if(MeansOfDeath == MOD_PLAYERMISC)
       {
+         // WEAPON_FIXME: player-on-player obits
          // look at source's readyweapon to determine cause
          switch(source->player->readyweapon)
          {

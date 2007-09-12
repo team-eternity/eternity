@@ -45,7 +45,6 @@ typedef struct playerclass_s
    struct playerclass_s *next;
 } playerclass_t;
 
-
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 

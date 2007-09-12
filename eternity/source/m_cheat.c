@@ -328,6 +328,7 @@ char buf[3];
 // 'choppers' invulnerability & chainsaw
 static void cheat_choppers(void)
 {
+   // WEAPON_FIXME: choppers cheat
   plyr->weaponowned[wp_chainsaw] = true;
   doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
@@ -374,6 +375,8 @@ static void cheat_fa()
    
    plyr->armorpoints = idfa_armor;      // Ty 03/09/98 - deh
    plyr->armortype = idfa_armor_class;  // Ty 03/09/98 - deh
+
+   // WEAPON_FIXME: IDFA cheat
    
    // You can't own weapons that aren't in the game // phares 02/27/98
    for(i = 0; i < NUMWEAPONS; i++)
@@ -613,6 +616,8 @@ static void cheat_weapx(buf)
 char buf[3];
 {
   int w = *buf - '1';
+
+  // WEAPON_FIXME: weap cheat
 
   if ((w==wp_supershotgun && gamemode!=commercial) ||      // killough 2/28/98
       ((w==wp_bfg || w==wp_plasma) && gamemode==shareware))

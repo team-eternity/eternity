@@ -27,6 +27,7 @@
 
 #include "z_zone.h"
 #include "d_io.h"
+#include "d_items.h"
 #include "p_skin.h"
 
 #include "Confuse/confuse.h"
@@ -50,21 +51,47 @@
 #define ITEM_WEAPON_ATTACKSTATE "attackstate"
 #define ITEM_WEAPON_FLASHSTATE  "flashstate"
 #define ITEM_WEAPON_UPSOUND     "upsound"
+#define ITEM_WEAPON_IDLESOUND   "idlesound"
+#define ITEM_WEAPON_FLAGS       "flags"
 
 cfg_opt_t edf_weapon_opts[] =
 {
-   CFG_STR(ITEM_WEAPON_AMMO,        NULL,     CFGF_NONE), // TODO: default ammo type?
-   CFG_INT(ITEM_WEAPON_AMMOPERSHOT, 1,        CFGF_NONE),
-   CFG_INT(ITEM_WEAPON_RECOIL,      0,        CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_UPSTATE,     "S_NULL", CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_DOWNSTATE,   "S_NULL", CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_READYSTATE,  "S_NULL", CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_ATTACKSTATE, "S_NULL", CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_FLASHSTATE,  "S_NULL", CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_UPSOUND,     "none",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_AMMO,        NULL,       CFGF_NONE), // TODO: default ammo type?
+   CFG_INT(ITEM_WEAPON_AMMOPERSHOT, 1,          CFGF_NONE),
+   CFG_INT(ITEM_WEAPON_RECOIL,      0,          CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_UPSTATE,     "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_DOWNSTATE,   "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_READYSTATE,  "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_ATTACKSTATE, "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_FLASHSTATE,  "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_UPSOUND,     "none",     CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_IDLESOUND,   "none",     CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_FLAGS,       "",         CFGF_NONE),
+   
    // TODO: more stuff.
+
    CFG_END()
 };
+
+// haleyjd: weapon flags!
+static dehflags_t weapon_flags[] =
+{
+   { "NOTHRUST",     WEAPON_NOTHRUST     },
+   { "HITGHOSTS",    WEAPON_HITGHOSTS    },
+   { "NOTSHAREWARE", WEAPON_NOTSHAREWARE },
+   { "COMMERCIAL",   WEAPON_COMMERCIAL   },
+   { "SILENCER",     WEAPON_SILENCER     },
+   { "SILENT",       WEAPON_SILENT       },
+   { "NOAUTOFIRE",   WEAPON_NOAUTOFIRE   },
+   { NULL,           0 }
+};
+
+static dehflagset_t weapon_flagset =
+{
+   weapon_flags, // flaglist
+   0,            // mode: single flags word
+};
+
 
 //
 // Player Class and Skin Options

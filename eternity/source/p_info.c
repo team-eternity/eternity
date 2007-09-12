@@ -1301,6 +1301,7 @@ boolean default_weaponowned[NUMWEAPONS];
 
 // haleyjd: note -- this is considered deprecated and is a
 // candidate for replacement/rewrite
+// WEAPON_FIXME: mapinfo weapons.
 
 static void P_InitWeapons(void)
 {
