@@ -2,6 +2,98 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+07/18/07
+
+The next release version of Eternity will be dedicated (once again) to the 
+memory of our good friend and long-time Eternity fan Jason "Assmaster" Masihdas,
+who disappeared from the Internet on June 14th, only a week after SoM and I
+participated in his UniDoom Radio Show to talk about EE progress. He committed
+suicide by unknown means and for unknown motivations, which came as a shock to
+everyone in the community.
+
+He was a great friend, a solid rock to depend upon, and a genuinely nice guy. We
+will miss him dearly.
+
+Today I committed all my work from the past two and half months, so the changes
+are massive:
+
+* I sweeped the engine for all malloc/memset(0) function call pairs and changed
+  them into calls to the until-now unused Z_Calloc function. Z_Calloc does a 
+  malloc and memset together, and is designed to semantically allocate arrays 
+  (it accepts two parameters, size of record, and number of records to allocate,
+  much like fread works). 
+
+* Integration of ExtraData sector records has begun. 
+
+* I fixed a bug in M_QStrCreateSize that caused it to fail to initialize any 
+  bytes of the string beyond the qstring base size of 32 bytes. This could have 
+  potentially caused other qstring functions to run off the buffer if the string 
+  was modified externally under the assumption that the rest of the qstring 
+  buffer is initialized to zero (which is supposed to be the case at all times).
+
+* Added a BIGSHORT symmetric endianness correction routine to support a function
+  which can load and convert GBA-format sprites into Doom patches in hopes of
+  eventually supporting reading of data directly from the GBA Doom ROM. I also
+  created a new linear-to-patch routine, which amongst other things, may be
+  useful in the future for the support of using flats as textures.
+
+* Eliminated all unnecessary zero assignments to map entity fields in p_setup.c
+  functions (lines, sectors, etc.). All of these are memset to zero when they
+  are allocated, so assigning zeroes to fields (except for floating point ones)
+  is redundant and just clutters up the code.
+
+* Began implementation of flat rotation.
+
+* Applied fixes to bugs in Cardboard's handling of player fixed colormaps and
+  determining the width of vissprites. This latter problem has been causing
+  "R_DrawSpriteRange: bad texturecolumn" errors in the debug build.
+
+* Added a debug sound log in an attempt to track down esselfortium's problems on
+  his x86 Mac machine. It was very little help other than to verify for certain
+  that the program is crashing inside of I_SDLUpdateSound on writing to byte
+  1024 of an 8192-byte buffer. Our current best guess is that this is some type
+  of software conflict on essel's machine. Until he installs Visual Studio, I
+  won't be able to make any further progress against this. Don't enable the
+  debug sound log -- it generates about 10 MB of output per *second* of gameplay
+  so watching a 5 minute demo with it active would generate a file in excess of
+  3 GB in size. Beside that, it would mean nothing to anybody except me.
+
+* Applied a fix to the OUCH face logic suggested by Andrey Budko which causes 
+  it to work properly when the player receives massive damage from monsters. 
+  For an odd reason the priority system caused it to only show for about one tic
+  when damage was received from monsters, but to display normally when the
+  damage was received by shooting a barrel (there's a special case for "being
+  hurt by your own damn stupidity").
+
+* Began changes to the wad file system that will transform it into a full-
+  featured virtual file system capable of dealing with WADs stored in RAM as
+  well as ZIP files. Step one was to move everything not directly related to the
+  reading of WAD files, including filename parsing routines, to m_misc.c.
+
+--------------------------------------------------------------------------------
+06/15/07
+
+Joe has recently updated the Linux build system to work with the base hierarchy
+and has added a new _ThingTeleport function for Small scripts.
+
+--------------------------------------------------------------------------------
+04/28/07
+
+Added the base heirarchy to the SVN repo so that Eternity can be executed 
+from the Visual Studio shell immediately upon checkout without any modification
+or need to run scripts to set stuff up. Users of Dev-Cpp may need to set their
+ETERNITYBASE environment variable to get the default location of the EXE to see
+the base directory, however. Linux users are stuck with an automake script
+which installs stuff properly for them, so there it's not really an issue.
+
+--------------------------------------------------------------------------------
+04/20/07
+
+Added a missing CFG_END() to the skin sound options array. This would have
+caused a beautiful segmentation fault. Also made changes to PIT_CheckThing(3D)
+to isolate and avoid duplication of the code used for Lost Soul collisions.
+
+--------------------------------------------------------------------------------
 04/16/07
 
 Applied minor tweaks to the earthquake code that should ensure that earthquakes
