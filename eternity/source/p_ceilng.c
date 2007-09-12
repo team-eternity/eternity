@@ -489,6 +489,22 @@ void P_RemoveAllActiveCeilings(void)
    }
 }
 
+// EV_ChangeCeilingTex
+//
+// Changes the ceiling flat of all tagged sectors.
+//
+void P_ChangeCeilingTex(const char *name, int tag)
+{
+   int flatnum;
+   int secnum = -1;
+
+   flatnum = R_FlatNumForName(name);
+
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+      sectors[secnum].ceilingpic = flatnum;
+}
+
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_ceilng.c,v $

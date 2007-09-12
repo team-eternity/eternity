@@ -176,3 +176,29 @@ native _SectorColormap(const lump[], _cmap_spaces:pos, tag);
 // * only works if lightning is enabled via MapInfo
 // * must be called only while in a level
 native _ForceLightning();
+
+// Set floor/ceiling of sectors of given tag to the given flat name
+native _ChangeFloor(tag, const flat[]);native _ChangeCeiling(tag, const flat[]);
+
+enum _texture_positions
+{
+	_TEX_LOWER,
+	_TEX_MID,
+	_TEX_UPPER,
+}
+
+enum _texture_sides
+{
+	_SIDE_FRONT,
+	_SIDE_BACK,
+}
+
+// side is the side of the linedef to change the texture of, takes _SIDE_FRONT or _SIDE_BACK
+// pos is the texture of the linedef to change, takes _TEX_LOWER, _TEX_MID, or _TEX_UPPER
+
+// Set the texture of lines of given lineid
+native _SetLineTexture(lineid, side, pos, const texturename[]);
+// Set the texture of lines of given tag
+native _SetLineTextureTag(tag, side, pos, const texturename[]);
+
+

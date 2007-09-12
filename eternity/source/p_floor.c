@@ -1489,6 +1489,18 @@ manual_pillar:
    return returnval;
 }
 
+void P_ChangeFloorTex(const char *name, int tag)
+{
+   int flatnum;
+   int secnum = -1;
+
+   flatnum = R_FlatNumForName(name);
+
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+      sectors[secnum].floorpic = flatnum;
+}
+
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_floor.c,v $

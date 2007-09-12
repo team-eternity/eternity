@@ -1067,8 +1067,7 @@ void T_MoveFloor(floormove_t *floor);
 
 void T_MoveElevator(elevator_t *elevator);
 
-// joek
-void T_MovePillar(pillar_t *pillar);
+void T_MovePillar(pillar_t *pillar);	// joek
 
 // p_spec
 
@@ -1112,6 +1111,8 @@ int EV_DoCeiling(line_t *line, ceiling_e type);
 
 int EV_CeilingCrushStop(line_t *line);
 
+void P_ChangeCeilingTex(const char *name, int tag);
+
 // p_doors
 
 int EV_VerticalDoor(line_t *line, mobj_t *thing);
@@ -1152,12 +1153,11 @@ int EV_DoChange(line_t *line, change_e changetype);
 
 int EV_DoDonut(line_t *line);
 
-// joek: pillars
-
-int EV_PillarBuild(line_t *line, pillardata_t *pd);
+int EV_PillarBuild(line_t *line, pillardata_t *pd);	// joek: pillars
 
 int EV_PillarOpen(line_t *line, pillardata_t *pd);
 
+void P_ChangeFloorTex(const char *name, int tag);
 
 // p_plats
 
@@ -1180,6 +1180,8 @@ int EV_DoGenCrusher(line_t *line);
 int EV_DoGenDoor(line_t *line);
 
 int EV_DoGenLockedDoor(line_t *line);
+
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean usetag);
 
 // haleyjd 02/23/04
 extern mobj_t *genDoorThing;

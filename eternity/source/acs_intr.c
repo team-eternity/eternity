@@ -58,14 +58,6 @@ enum
    ACS_STATE_TERMINATE,  // will be stopped on next thinking turn
 };
 
-// ACS texture position numbers
-enum
-{
-   ACS_TEX_UPPER,
-   ACS_TEX_MIDDLE,
-   ACS_TEX_LOWER,
-};
-
 // opcode IDs
 enum
 {
@@ -366,37 +358,6 @@ static int ACS_countThings(int type, int tid)
    return count;
 }
 
-//
-// ACS_changeFloor
-//
-// Changes the floor flat of all tagged sectors.
-//
-static void ACS_changeFloor(const char *name, int tag)
-{
-   int flatnum;
-   int secnum = -1;
-
-   flatnum = R_FlatNumForName(name);
-
-   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
-      sectors[secnum].floorpic = flatnum;
-}
-
-//
-// ACS_changeCeiling
-//
-// Changes the ceiling flat of all tagged sectors.
-//
-static void ACS_changeCeiling(const char *name, int tag)
-{
-   int flatnum;
-   int secnum = -1;
-
-   flatnum = R_FlatNumForName(name);
-
-   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
-      sectors[secnum].ceilingpic = flatnum;
-}
 
 //
 // ACS_countPlayers
@@ -412,39 +373,6 @@ static int ACS_countPlayers(void)
          ++count;
 
    return count;
-}
-
-//
-// ACS_setLineTexture
-//
-// Sets the indicated texture on all tagged lines.
-//
-static void ACS_setLineTexture(const char *texture, int pos, int side, int tag)
-{
-   line_t *l = NULL;
-   int linenum = -1, texnum;
-
-   texnum = R_TextureNumForName(texture);
-   linenum = -1;
-
-   while((l = P_FindLineForID(tag, &linenum)) != NULL)
-   {
-      if(l->sidenum[side] == -1)
-         continue;
-
-      switch(pos)
-      {
-      case ACS_TEX_UPPER:
-         sides[l->sidenum[side]].toptexture = texnum;
-         break;
-      case ACS_TEX_MIDDLE:
-         sides[l->sidenum[side]].midtexture = texnum;
-         break;
-      case ACS_TEX_LOWER:
-         sides[l->sidenum[side]].bottomtexture = texnum;
-         break;
-      }
-   }
 }
 
 //
@@ -867,19 +795,19 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_CHANGEFLOOR:
          temp = POP(); // get flat string index
-         ACS_changeFloor(acs_stringtbl[temp], POP()); // get tag
+         P_ChangeFloorTex(acs_stringtbl[temp], POP()); // get tag
          break;
       case OP_CHANGEFLOOR_IMM:
          temp = *ip++; // get tag
-         ACS_changeFloor(acs_stringtbl[IPNEXT()], temp);
+         P_ChangeFloorTex(acs_stringtbl[IPNEXT()], temp);
          break;
       case OP_CHANGECEILING:
          temp = POP(); // get flat string index
-         ACS_changeCeiling(acs_stringtbl[temp], POP()); // get tag
+         P_ChangeCeilingTex(acs_stringtbl[temp], POP()); // get tag
          break;
       case OP_CHANGECEILING_IMM:
          temp = IPNEXT(); // get tag
-         ACS_changeCeiling(acs_stringtbl[IPNEXT()], temp);
+         P_ChangeCeilingTex(acs_stringtbl[IPNEXT()], temp);
          break;
       case OP_RESTART:
          ip = acscript->code;
@@ -1024,7 +952,7 @@ void T_ACSThinker(acsthinker_t *script)
             side   = POP();
             tag    = POP();
 
-            ACS_setLineTexture(acs_stringtbl[strnum], pos, side, tag);
+            P_ChangeLineTex(acs_stringtbl[strnum], pos, side, tag, false);
          }
          break;
       case OP_SETLINEBLOCKING:

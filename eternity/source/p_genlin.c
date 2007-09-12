@@ -1940,6 +1940,7 @@ static boolean pspec_ACSExecute(line_t *line, long *args, short special,
    int snum, mnum;
    long script_args[5] = { 0, 0, 0, 0, 0 };
 
+
    snum           = args[0];
    mnum           = args[1];
    script_args[0] = args[2]; // transfer last three line args to script args
@@ -2156,6 +2157,55 @@ boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac)
    return success;
 }
 
+// ChangeLineTex texture position numbers
+enum
+{
+   CLT_TEX_UPPER,
+   CLT_TEX_MIDDLE,
+   CLT_TEX_LOWER,
+};
+
+//
+// EV_ChangeLineTex
+//
+// Sets the indicated texture on all lines of lineid tag (if usetag false) or of
+// the given tag (if usetag true)
+//
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean usetag)
+{
+   line_t *l = NULL;
+   int linenum = -1, texnum;
+   
+   line_t *(*GetID)(int, int *);
+
+   texnum = R_TextureNumForName(texture);
+   linenum = -1;
+
+   if(usetag)
+      GetID = P_FindLine;
+   else
+      GetID = P_FindLineForID;
+
+   while((l = GetID(tag, &linenum)) != NULL)
+   {
+      if(l->sidenum[side] == -1)
+         continue;
+
+      switch(pos)
+      {
+      case CLT_TEX_UPPER:
+         sides[l->sidenum[side]].toptexture = texnum;
+         break;
+      case CLT_TEX_MIDDLE:
+         sides[l->sidenum[side]].midtexture = texnum;
+         break;
+      case CLT_TEX_LOWER:
+         sides[l->sidenum[side]].bottomtexture = texnum;
+         break;
+      }
+   }
+}
+
 //
 // Small Natives
 //
@@ -2167,6 +2217,137 @@ boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac)
 //
 static cell AMX_NATIVE_CALL sm_specialmode(AMX *amx, cell *params)
 {
+   return 0;
+}
+
+//
+// sm_changecelingtex  -- joek 9/11/07
+//
+// - small func to change our ceiling texture
+//
+static cell AMX_NATIVE_CALL sm_changeceilingtex(AMX *amx, cell *params)
+{
+   char *flat;
+   int tag, err;
+
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+
+   tag = params[1];
+
+   if((err = A_GetSmallString(amx, &flat, params[2])) != AMX_ERR_NONE)
+   {
+      amx_RaiseError(amx, err);
+      return -1;
+   }
+
+   P_ChangeCeilingTex(flat, tag);
+
+   Z_Free(flat);
+
+   return 0;
+}
+
+//
+// sm_changefloortex  -- joek 9/11/07
+//
+// - small func to change our floor texture
+//
+static cell AMX_NATIVE_CALL sm_changefloortex(AMX *amx, cell *params)
+{
+   char *flat;
+   int err, tag;
+
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+
+   tag = params[1];
+
+   if((err = A_GetSmallString(amx, &flat, params[2])) != AMX_ERR_NONE)
+   {
+      amx_RaiseError(amx, err);
+      return -1;
+   }
+
+   P_ChangeFloorTex(flat, tag);
+
+   Z_Free(flat);
+
+
+   return 0;
+}
+
+//
+// sm_changelinetex  -- joek 9/11/07
+//
+// - small func to change our line texture by lineid
+//
+static cell AMX_NATIVE_CALL sm_changelinetex(AMX *amx, cell *params)
+{
+   char *texname;
+   int err, lineid, side, pos;
+
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+
+   lineid = params[1];        // lineid of lines to affect
+   side = params[2];       // Front/Back
+   pos = params[3];    // Upper/Middle/Lower
+
+   if((err = A_GetSmallString(amx, &texname, params[4])) != AMX_ERR_NONE)
+   {
+      amx_RaiseError(amx, err);
+      return -1;
+   }
+
+   P_ChangeLineTex(texname, pos, side, lineid, false);
+
+   Z_Free(texname);
+
+
+   return 0;
+}
+
+//
+// sm_changelinetextag  -- joek 9/11/07
+//
+// - small func to change our line texture by tag
+//
+static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
+{
+   char *texname;
+   int err, tag, side, pos;
+
+   if(gamestate != GS_LEVEL)
+   {
+      amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
+      return -1;
+   }
+
+   tag = params[1];        // lineid of lines to affect
+   side = params[2];       // Front/Back
+   pos = params[3];    // Upper/Middle/Lower
+
+   if((err = A_GetSmallString(amx, &texname, params[4])) != AMX_ERR_NONE)
+   {
+      amx_RaiseError(amx, err);
+      return -1;
+   }
+
+   P_ChangeLineTex(texname, pos, side, tag, true);
+
+   Z_Free(texname);
+
+
    return 0;
 }
 
@@ -2388,6 +2569,10 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Light_Flicker",               sm_light_flicker               },
    { "_Light_Strobe",                sm_light_strobe                },
    { "_Radius_Quake",                sm_radius_quake                },
+   { "_ChangeFloor",                 sm_changefloortex              },
+   { "_ChangeCeiling",               sm_changeceilingtex            },
+   { "_SetLineTexture",              sm_changelinetex               },
+   { "_SetLineTextureTag",           sm_changelinetextag            },
    { NULL, NULL }
 };
 
@@ -2445,5 +2630,5 @@ AMX_NATIVE_INFO genlin_Natives[] =
 //
 //
 //----------------------------------------------------------------------------
-          
- 
+
+
