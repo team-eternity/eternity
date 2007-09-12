@@ -2,6 +2,44 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+08/28/07
+
+Work on ExtraData sector records is accelerating.
+
+--------------------------------------------------------------------------------
+08/23/07
+
+I found a bug in the text HUD widget system that was causing the crosshair to
+disappear until the same timestamp that the last center message disappeared in
+all subsequent levels. The cleartic field of text widgets needed to be set to 
+zero in the clear handler function for that widget type to prevent this.
+
+--------------------------------------------------------------------------------
+08/21/07
+
+Tweaked the new "IWAD not found" error message. The new message is verbose and
+gives instructions on some of the various ways to let Eternity find your IWAD
+files.
+
+--------------------------------------------------------------------------------
+08/20/07
+
+Work on -game system continues. Support for autoloading all files in the
+base/game/autoload directory, using the same opendir implementation earlier
+added to support the dynamic WAD loading menu, is under way.
+
+--------------------------------------------------------------------------------
+08/19/07
+
+I've begun previously planned modifications to the base folder hierarchy and the
+way it is used in order to fully support the -game command-line parameter. When
+finished, -game should allow not only finding IWADs and the appropriate engine
+resource wad, but also addition of autoloaded GFS, root EDF, WADs, DEH/BEX and
+console scripts. The ability to have a default.gfs will allow games to use files
+(including IWADs) stored anywhere on the user's hard drive, and for the full set
+of involved files to be added to EE with one simple command-line parameter.
+
+--------------------------------------------------------------------------------
 07/18/07
 
 The next release version of Eternity will be dedicated (once again) to the 
