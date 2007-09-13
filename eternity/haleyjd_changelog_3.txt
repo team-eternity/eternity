@@ -2,9 +2,121 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+09/12/07
+
+I have turned back to the infant dynamic weapons system again for a change of
+pace. I have increased the number of WEAPON_FIXME tags significantly, and I
+think I have identified the vast majority of code points that will require
+modification to work with the new system. I have begun defining weapon flags
+that will de-hardcode behaviors specific to certain weapons. I've even defined
+a few flags that will make new features already, such as a flag that makes
+weapons always silenced (i.e. they will never alert enemies, a property that
+the fists really should have had in Doom already...).
+
+I will try to alternately work on weapons and ED sectors until both are totally
+finished. There will definitely not be a release until these two major features
+are complete.
+
+Joe wants to work on the inventory system and we will have to cooperate in
+defining the design and requirements for this, especially since it overlaps with
+work on the dynamic weapons system as far as being able to define weapon and
+ammo pickups goes. We think it is a good idea for player weapons owned, player
+ammo amounts, and player keys to fold into the inventory system so that only
+one interface for giving and taking items to/from the player is presented via
+scripting. How exactly this will be accomplished is what remains to be seen.
+
+Once both EDF inventory and weapons are complete, 100% Heretic support will be
+within our grasp!
+
+The new particle effects have also been finished, with some further tweaking to
+the blood effect. I'll probably never be totally satisfied with it, but it's
+certainly a vast improvement over the previous effect.
+
+--------------------------------------------------------------------------------
+09/11/07
+
+Started work on finally knocking off one of the short-term TODO's that's been
+around forever -- improving those godawful particle effects that were taken
+as-is from zdoom. SoM's bullet puff code from ages ago which has been commented
+out in p_partcl.c has finally been integrated and improved. Sparks now fly when
+bullets hit floors, walls, and ceilings (the sparks behave differently on the
+floor and bounce up a bit), and shooting liquids results in a movie-like splash.
+Blood is now much more voluminous and dynamic. It behaves more like arterial
+spray from puncture wounds, falling and weaving, spreading out from a more
+centralized source. Particle sizes are now randomized, and the blood drop effect
+is more frequent and happens alongside the general spray rather than being
+exclusive of it. I believe these changes make the effects worth having in the
+engine. Previously they just looked like Quake-2-wannabe crap.
+
+Joe added texture and flat changing functions to Small, rewriting code from the
+ACS interpreter as necessary to prevent code duplication.
+
+--------------------------------------------------------------------------------
+09/10/07
+
+The sector special transfer system is now 100% complete. Floors and ceilings
+contain a new spectransfer_t sub-structure which can be initialized to zero or
+to the special contents of a sector with functions defined in p_spec.c, and then
+its contents can be transferred to another sector by calling 
+P_TransferSectorSpecial. There are also similar functions for transferring the
+special directly between two sectors without involving a spectransfer structure.
+
+--------------------------------------------------------------------------------
+09/04/07
+
+Minor work on ED sectors; began implementation of a new system for transferring
+specials between sectors. This will be necessitated by the addition of fields
+for custom sector damage and other ED features, which need to be transferred
+between sectors along with the special in order for these features to work in
+the same way. It was already a mess anyway and should have been functionalized
+in BOOM.
+
+--------------------------------------------------------------------------------
+08/29/07
+
+Work continues on ED sectors. I have also made a small modification to the
+sound engine that allows sourceless sounds to continue playing to the end when
+a new level is started. The reason for cutting off sounds at the start of a new
+map is because of the fact that in P_SetupLevel, all PU_LEVEL tags are freed.
+This would cause any sounds referencing mobj_t's on the old map (if any was even
+loaded, the game just assumes one was for simplicity's sake) to start accessing
+freed memory.
+
+Sourceless sounds on the other hand don't make reference to any mobj_t's and
+thus they do not need to be cut off at the beginning of levels. While this may
+lead to a Cyberdemon's moo carrying over as you activate the IDCLEV cheat, it
+also allows interface sounds to not cut off abruptly. I had long been irritated
+by the pistol sound generated by the menu while starting a new game getting cut
+short. This doesn't happen any more.
+
+--------------------------------------------------------------------------------
 08/28/07
 
-Work on ExtraData sector records is accelerating.
+Work on ExtraData sector records is accelerating. Current fields in the ED
+sector record are as follows:
+
+special
+tag
+damageamount
+damagemask
+damagemod
+floorterrain
+ceilingterrain
+colormap_upper
+colormap_middle
+colormap_lower
+floorxoffset
+flooryoffset
+floorangle
+ceilingxoffset
+ceilingyoffset
+ceilingangle
+
+This amounts to customizable sector damage, per-sector TerrainType overrides,
+ability to specify colormaps without setting up a 242 transfer, and the 
+ability to align and rotate flats. I'm sure more stuff can be added, including
+zdoomesque "enter sector" or "hit floor" specials, which are actually an idea
+I had independently years ago when the idea of ExtraData was first conceived.
 
 --------------------------------------------------------------------------------
 08/23/07
