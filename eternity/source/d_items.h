@@ -34,13 +34,13 @@
 //
 enum
 {
-   WEAPON_NOTHRUST     = 0x00000001, // doesn't thrust mobj_t's
-   WEAPON_HITGHOSTS    = 0x00000002, // tracer-based weapon can hit ghosts
-   WEAPON_NOTSHAREWARE = 0x00000004, // not in shareware gamemodes
-   WEAPON_COMMERCIAL   = 0x00000008, // only in Doom 2
-   WEAPON_SILENCER     = 0x00000010, // weapon supports silencer powerup
-   WEAPON_SILENT       = 0x00000020, // weapon is always silent
-   WEAPON_NOAUTOFIRE   = 0x00000040, // weapon won't autofire in A_WeaponReady
+   WPF_NOTHRUST     = 0x00000001, // doesn't thrust mobj_t's
+   WPF_HITGHOSTS    = 0x00000002, // tracer-based weapon can hit ghosts
+   WPF_NOTSHAREWARE = 0x00000004, // not in shareware gamemodes
+   WPF_COMMERCIAL   = 0x00000008, // only in Doom 2
+   WPF_SILENCER     = 0x00000010, // weapon supports silencer powerup
+   WPF_SILENT       = 0x00000020, // weapon is always silent
+   WPF_NOAUTOFIRE   = 0x00000040, // weapon won't autofire in A_WeaponReady
 };
 
 // Weapon info: sprite frames, ammunition use.

@@ -373,6 +373,26 @@ void P_DropWeapon(player_t *player)
    P_SetPsprite(player, ps_weapon, weaponinfo[player->readyweapon].downstate);
 }
 
+//=============================================================================
+//
+// haleyjd 09/13/07
+//
+// New functions for dynamic weapons system
+//
+
+//
+// P_GetReadyWeapon
+//
+// haleyjd 09/13/07: Retrieves a pointer to the proper weaponinfo_t structure
+// for the readyweapon index stored in the player.
+//
+// WEAPON_TODO: Will need to change as system evolves.
+//
+weaponinfo_t *P_GetReadyWeapon(player_t *player)
+{
+   return &(weaponinfo[player->readyweapon]);
+}
+
 //
 // A_WeaponReady
 //

@@ -83,6 +83,8 @@ void P_SetupPsprites(struct player_s *curplayer);
 void P_MovePsprites(struct player_s *curplayer);
 void P_DropWeapon(struct player_s *player);
 
+weaponinfo_t *P_GetReadyWeapon(player_t *player);
+
 #endif
 
 //----------------------------------------------------------------------------

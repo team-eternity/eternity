@@ -76,13 +76,13 @@ cfg_opt_t edf_weapon_opts[] =
 // haleyjd: weapon flags!
 static dehflags_t weapon_flags[] =
 {
-   { "NOTHRUST",     WEAPON_NOTHRUST     },
-   { "HITGHOSTS",    WEAPON_HITGHOSTS    },
-   { "NOTSHAREWARE", WEAPON_NOTSHAREWARE },
-   { "COMMERCIAL",   WEAPON_COMMERCIAL   },
-   { "SILENCER",     WEAPON_SILENCER     },
-   { "SILENT",       WEAPON_SILENT       },
-   { "NOAUTOFIRE",   WEAPON_NOAUTOFIRE   },
+   { "NOTHRUST",     WPF_NOTHRUST     },
+   { "HITGHOSTS",    WPF_HITGHOSTS    },
+   { "NOTSHAREWARE", WPF_NOTSHAREWARE },
+   { "COMMERCIAL",   WPF_COMMERCIAL   },
+   { "SILENCER",     WPF_SILENCER     },
+   { "SILENT",       WPF_SILENT       },
+   { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
    { NULL,           0 }
 };
 

@@ -54,7 +54,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PUNCH,
     S_PUNCH1,
     S_NULL,
-    0,
+    0, false,
   },  
   {
     // pistol
@@ -64,7 +64,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PISTOL,
     S_PISTOL1,
     S_PISTOLFLASH,
-    1,
+    1, false,
   },  
   {
     // shotgun
@@ -74,7 +74,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_SGUN,
     S_SGUN1,
     S_SGUNFLASH1,
-    1,
+    1, false,
   },
   {
     // chaingun
@@ -84,7 +84,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_CHAIN,
     S_CHAIN1,
     S_CHAINFLASH1,
-    1,
+    1, false,
   },
   {
     // missile launcher
@@ -94,7 +94,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_MISSILE,
     S_MISSILE1,
     S_MISSILEFLASH1,
-    1,
+    1, false,
   },
   {
     // plasma rifle
@@ -104,7 +104,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PLASMA,
     S_PLASMA1,
     S_PLASMAFLASH1,
-    1,
+    1, false,
   },
   {
     // bfg 9000
@@ -114,7 +114,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_BFG,
     S_BFG1,
     S_BFGFLASH1,
-    40,
+    40, false,
   },
   {
     // chainsaw
@@ -124,7 +124,8 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_SAW,
     S_SAW1,
     S_NULL,
-    0,
+    0, false,
+    WPF_NOTHRUST
   },
   {
     // super shotgun
@@ -134,7 +135,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_DSGUN,
     S_DSGUN1,
     S_DSGUNFLASH1,
-    2,
+    2, false,
   },  
 };
 
