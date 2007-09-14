@@ -888,7 +888,7 @@ void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    if(M_Random() < 72)
       P_BloodDrop(count, x, y, z, angle, color1, color2);
 
-   count += M_Random() & 31; // a LOT more blood.
+   count += 3*(M_Random() & 31)/2; // a LOT more blood.
 
    for(; count; --count)
    {
@@ -910,9 +910,9 @@ void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z,
       p->accx = p->velx / 8;
       p->accy = p->vely / 8;
       an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
-      p->x = x + (M_Random() % 24) * finecosine[an];
-      p->y = y + (M_Random() % 24) * finesine[an];
-      p->z = z + (M_Random() - 128) * -6000;
+      p->x = x + (M_Random() % 20) * finecosine[an];
+      p->y = y + (M_Random() % 20) * finesine[an];
+      p->z = z + (M_Random() - 128) * -4000;
       P_SetParticlePosition(p);
    }
 }

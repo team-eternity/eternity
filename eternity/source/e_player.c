@@ -77,12 +77,13 @@ cfg_opt_t edf_weapon_opts[] =
 static dehflags_t weapon_flags[] =
 {
    { "NOTHRUST",     WPF_NOTHRUST     },
-   { "HITGHOSTS",    WPF_HITGHOSTS    },
+   { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
    { "NOTSHAREWARE", WPF_NOTSHAREWARE },
    { "COMMERCIAL",   WPF_COMMERCIAL   },
    { "SILENCER",     WPF_SILENCER     },
    { "SILENT",       WPF_SILENT       },
    { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
+   { "FLEEMELEE",    WPF_FLEEMELEE    },
    { NULL,           0 }
 };
 

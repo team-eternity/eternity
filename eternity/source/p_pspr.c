@@ -197,7 +197,7 @@ int P_SwitchWeapon(player_t *player)
    // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
    // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
    // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
-   // haleyjd WEAPON_FIXME: comercial-only must become EDF weapon property
+   // haleyjd WEAPON_FIXME: commercial-only must become EDF weapon property
    // haleyjd WEAPON_FIXME: must support arbitrary weapons
    // haleyjd WEAPON_FIXME: chainsaw/fist issues
 
@@ -347,19 +347,25 @@ int lastshottic; // killough 3/22/98
 static void P_FireWeapon(player_t *player)
 {
    statenum_t newstate;
+   weaponinfo_t *weapon;
    
    if(!P_CheckAmmo(player))
       return;
 
-   // WEAPON_FIXME: ability for silencer should be EDF weapon property
-   // WEAPON_FIXME: some weapons always silent?
+   weapon = P_GetReadyWeapon(player);
+
    // PCLASS_FIXME: first attack state -> EDF playerclass property
    
    P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK1));
-   newstate = weaponinfo[player->readyweapon].atkstate;
+   newstate = weapon->atkstate;
    P_SetPsprite(player, ps_weapon, newstate);
-   if(!player->powers[pw_silencer]) // haleyjd 04/06/03
+
+   // haleyjd 04/06/03: silencer powerup
+   // haleyjd 09/14/07: per-weapon silencer, always silent support
+   if(!(weapon->flags & WPF_SILENCER && player->powers[pw_silencer]) &&
+      !(weapon->flags & WPF_SILENT)) 
       P_NoiseAlert(player->mo, player->mo);
+
    lastshottic = gametic;                       // killough 3/22/98
 }
 
@@ -437,16 +443,13 @@ void A_WeaponReady(mobj_t *mo)
       return;
    }
 
-   // WEAPON_FIXME: NOAUTOFIRE flag
-
    // check for fire
    //  the missile launcher and bfg do not auto fire
    
    if(player->cmd.buttons & BT_ATTACK)
    {
       if(!player->attackdown || 
-         (player->readyweapon != wp_missile && 
-          player->readyweapon != wp_bfg))
+         !(P_GetReadyWeapon(player)->flags & WPF_NOAUTOFIRE))
       {
          player->attackdown = true;
          P_FireWeapon(player);
@@ -1007,7 +1010,7 @@ void A_FireShotgun2(mobj_t *mo)
    if(!player)
       return;
 
-   // WEAPON_FIXME: secondary attack state
+   // PCLASS_FIXME: secondary attack state
    
    S_StartSound(mo, sfx_dshtgn);
    P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
@@ -1069,7 +1072,7 @@ void A_FireCGun(mobj_t *mo)
    
    // sf: removed beta
 
-   // WEAPON_FIXME: secondary attack state
+   // PCLASS_FIXME: secondary attack state
    
    P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
    

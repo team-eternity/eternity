@@ -35,12 +35,13 @@
 enum
 {
    WPF_NOTHRUST     = 0x00000001, // doesn't thrust mobj_t's
-   WPF_HITGHOSTS    = 0x00000002, // tracer-based weapon can hit ghosts
+   WPF_NOHITGHOSTS  = 0x00000002, // tracer-based weapon can't hit ghosts
    WPF_NOTSHAREWARE = 0x00000004, // not in shareware gamemodes
    WPF_COMMERCIAL   = 0x00000008, // only in Doom 2
    WPF_SILENCER     = 0x00000010, // weapon supports silencer powerup
    WPF_SILENT       = 0x00000020, // weapon is always silent
    WPF_NOAUTOFIRE   = 0x00000040, // weapon won't autofire in A_WeaponReady
+   WPF_FLEEMELEE    = 0x00000080, // monsters consider it a melee weapon
 };
 
 // Weapon info: sprite frames, ammunition use.

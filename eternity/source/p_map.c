@@ -2611,14 +2611,12 @@ static boolean PTR_ShootTraverse(intercept_t *in)
    if(th == shootthing)
       return true;  // can't shoot self
    
-   if(!(th->flags&MF_SHOOTABLE))
+   if(!(th->flags & MF_SHOOTABLE))
       return true;  // corpse or something
 
    // haleyjd: don't let players use melee attacks on ghosts
-   // WEAPON_FIXME: ghost immunity -> weapon property
-   if((th->flags3 & MF3_GHOST) && shootthing->player &&
-      (shootthing->player->readyweapon == wp_fist ||
-       shootthing->player->readyweapon == wp_chainsaw))
+   if(th->flags3 & MF3_GHOST && shootthing->player &&
+      P_GetReadyWeapon(shootthing->player)->flags & WPF_NOHITGHOSTS)
    {
       return true;
    }

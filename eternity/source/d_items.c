@@ -55,6 +55,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PUNCH1,
     S_NULL,
     0, false,
+    WPF_FLEEMELEE | WPF_NOHITGHOSTS | WPF_SILENCER
   },  
   {
     // pistol
@@ -65,6 +66,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PISTOL1,
     S_PISTOLFLASH,
     1, false,
+    WPF_SILENCER,
   },  
   {
     // shotgun
@@ -85,6 +87,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_CHAIN1,
     S_CHAINFLASH1,
     1, false,
+    WPF_SILENCER,
   },
   {
     // missile launcher
@@ -95,6 +98,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_MISSILE1,
     S_MISSILEFLASH1,
     1, false,
+    WPF_NOAUTOFIRE
   },
   {
     // plasma rifle
@@ -115,6 +119,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_BFG1,
     S_BFGFLASH1,
     40, false,
+    WPF_NOAUTOFIRE
   },
   {
     // chainsaw
@@ -125,7 +130,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_SAW1,
     S_NULL,
     0, false,
-    WPF_NOTHRUST
+    WPF_NOTHRUST | WPF_FLEEMELEE | WPF_NOHITGHOSTS
   },
   {
     // super shotgun

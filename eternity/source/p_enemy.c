@@ -868,18 +868,18 @@ static void P_NewChaseDir(mobj_t *actor)
          }
          else
          {
-            // WEAPON_FIXME: weapons considered melee for fleeing purposes
             if(target->health > 0 &&
                (actor->flags ^ target->flags) & MF_FRIEND)
-            {   // Live enemy target
+            {   
+               // Live enemy target
                if(monster_backing &&
                   actor->info->missilestate != NullStateNum && 
                   !(actor->flags2 & MF2_NOSTRAFE) &&
                   ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
                    (target->player && dist < MELEERANGE*3 &&
-                    (target->player->readyweapon == wp_fist ||
-                     target->player->readyweapon == wp_chainsaw))))
-               {       // Back away from melee attacker
+                    P_GetReadyWeapon(target->player)->flags & WPF_FLEEMELEE)))
+               {
+                  // Back away from melee attacker
                   actor->strafecount = P_Random(pr_enemystrafe) & 15;
                   deltax = -deltax, deltay = -deltay;
                }
