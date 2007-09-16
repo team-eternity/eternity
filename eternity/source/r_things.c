@@ -456,6 +456,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    patch_t  *patch;
    boolean  footclipon = false;
    float baseclip = 0;
+   int w;
 
    if(vis->patch == -1)
    {
@@ -541,6 +542,8 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 
    }
 
+   w = SHORT(patch->width);
+
    // haleyjd: use a separate loop for footclip things, to minimize
    // overhead for regular sprites and to require no separate loop
    // just to update mfloorclip
@@ -555,20 +558,13 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 
          texturecolumn = (int)frac;
          
-#ifdef RANGECHECK
-         {
-            int w = SHORT(patch->width);
-            if(texturecolumn < 0 || texturecolumn >= w)
-            {
-               I_Error("R_DrawSpriteRange: bad texturecolumn %d of %d", 
-                       texturecolumn, w);
-            }
-         }
-#endif
+         // haleyjd 09/16/07: Cardboard requires this rangecheck, made nonfatal
+         if(texturecolumn < 0 || texturecolumn >= w)
+            continue;
          
          tcolumn = (column_t *)((byte *) patch +
             LONG(patch->columnofs[texturecolumn]));
-         R_DrawMaskedColumn (tcolumn);
+         R_DrawMaskedColumn(tcolumn);
       }
    }
    else
@@ -577,20 +573,13 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       {
          texturecolumn = (int)frac;
          
-#ifdef RANGECHECK
-         {
-            int w = SHORT(patch->width);
-            if(texturecolumn < 0 || texturecolumn >= w)
-            {
-               I_Error("R_DrawSpriteRange: bad texturecolumn %d of %d", 
-                       texturecolumn, w);
-            }
-         }
-#endif
+         // haleyjd 09/16/07: Cardboard requires this rangecheck, made nonfatal
+         if(texturecolumn < 0 || texturecolumn >= w)
+            continue;
          
          tcolumn = (column_t *)((byte *) patch +
             LONG(patch->columnofs[texturecolumn]));
-         R_DrawMaskedColumn (tcolumn);
+         R_DrawMaskedColumn(tcolumn);
       }
    }
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
@@ -722,9 +711,8 @@ void R_ProjectSprite(mobj_t *thing)
    if(y2 < 0.0f)
       return;
 
-   // SoM 07/15/07: add fudge factor to prevent overstepping in R_DrawVisSprite
    if(x2 >= x1)
-      pstep = 1.0f / (x2 - x1 + 1.0001f);
+      pstep = 1.0f / (x2 - x1 + 1.0f);
 
    // Cardboard
    // SoM: Block of old code that stays
@@ -968,10 +956,9 @@ void R_DrawPSprite(pspdef_t *psp)
 #endif
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
-   // SoM: add fudge factor to prevent overstepping in R_DrawVisSprite
    if(flip)
    {
-      vis->xstep  = -(w / (x2 - x1 + 1.0001f));
+      vis->xstep  = -(w / (x2 - x1 + 1.0f));
       vis->startx = (float)(spritewidth[lump] >> FRACBITS) - 1.0f;
    }
    else

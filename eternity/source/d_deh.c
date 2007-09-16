@@ -1980,14 +1980,14 @@ boolean deh_procStringSub(char *key, char *lookfor, char *newstring)
       deh_LogPrintf("Assigned key %s => '%s'\n", key, newstring);
    else
    {
-       deh_LogPrintf("Changed '%.12s%s' to '%.12s%s' at key %s\n",
-                     lookfor, (strlen(lookfor) > 12) ? "..." : "",
-                     newstring, (strlen(newstring) > 12) ? "..." :"",
-                     dehstr->lookup);
+      deh_LogPrintf("Changed '%.12s%s' to '%.12s%s' at key %s\n",
+                    lookfor, (strlen(lookfor) > 12) ? "..." : "",
+                    newstring, (strlen(newstring) > 12) ? "..." :"",
+                    dehstr->lookup);
 
-       // must have passed an old style string so show BEX
-       deh_LogPrintf("*BEX FORMAT:\n%s=%s\n*END BEX\n",
-                     dehstr->lookup, dehReformatStr(newstring));
+      // must have passed an old style string so show BEX
+      deh_LogPrintf("*BEX FORMAT:\n%s=%s\n*END BEX\n",
+                    dehstr->lookup, dehReformatStr(newstring));
    }
 
    return true;
