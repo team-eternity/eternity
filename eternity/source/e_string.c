@@ -40,14 +40,18 @@
 // 03/27/05: EDF strings!
 
 // String section keywords
-#define ITEM_STRING_NUM "num"
-#define ITEM_STRING_VAL "val"
+#define ITEM_STRING_NUM    "num"
+#define ITEM_STRING_VAL    "val"
+#define ITEM_STRING_BEXDST "bexdest"
+#define ITEM_STRING_BEXSRC "bexsource"
 
 // String Options
 cfg_opt_t edf_string_opts[] =
 {
-   CFG_STR(ITEM_STRING_VAL, "", CFGF_NONE),
-   CFG_INT(ITEM_STRING_NUM, -1, CFGF_NONE),
+   CFG_STR(ITEM_STRING_VAL,    "", CFGF_NONE),
+   CFG_INT(ITEM_STRING_NUM,    -1, CFGF_NONE),
+   CFG_STR(ITEM_STRING_BEXDST, "", CFGF_NONE),
+   CFG_STR(ITEM_STRING_BEXSRC, "", CFGF_NONE),
    CFG_END()
 };
 
@@ -242,18 +246,37 @@ void E_ProcessStrings(cfg_t *cfg)
    for(i = 0; i < numstrings; ++i)
    {
       cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_STRING, i);
-      const char *mnemonic, *value;
+      const char *mnemonic, *value, *bex, *bexsource;
       int number;
+      dehstr_t *dehstr;
 
       mnemonic = cfg_title(sec);
       value    = cfg_getstr(sec, ITEM_STRING_VAL);
       number   = cfg_getint(sec, ITEM_STRING_NUM);
+
+      // haleyjd 09/16/07: support also assigning the value of a BEX string,
+      // and filling this string object with the value of a BEX string
+      bex       = cfg_getstr(sec, ITEM_STRING_BEXDST);
+      bexsource = cfg_getstr(sec, ITEM_STRING_BEXSRC);
+
+      // if bexsource is a valid BEX mnemonic, the value to use becomes the 
+      // value of that BEX string rather than any specified in this string object.
+      if((dehstr = D_GetBEXStr(bexsource)))
+         value = *(dehstr->ppstr);
 
       E_CreateString(value, mnemonic, number);
 
       E_EDFLogPrintf("\t\tDefined string '%s' (#%d)\n"
                      "\t\t\tvalue = '%s'\n",
                      mnemonic, number, value);
+
+      if((dehstr = D_GetBEXStr(bex)))
+      {
+         *(dehstr->ppstr) = strdup(value);
+
+         E_EDFLogPrintf("\t\t\tCopied to BEX string '%s'\n",
+                        mnemonic, bex);
+      }
    }
 }
 

@@ -389,15 +389,70 @@ void P_DropWeapon(player_t *player)
 //
 // P_GetReadyWeapon
 //
-// haleyjd 09/13/07: Retrieves a pointer to the proper weaponinfo_t structure
-// for the readyweapon index stored in the player.
+// haleyjd 09/13/07: 
+// Retrieves a pointer to the proper weaponinfo_t structure for the 
+// readyweapon index stored in the player.
 //
 // WEAPON_TODO: Will need to change as system evolves.
+// PCLASS_FIXME: weapons
 //
 weaponinfo_t *P_GetReadyWeapon(player_t *player)
 {
    return &(weaponinfo[player->readyweapon]);
 }
+
+//
+// P_GetPlayerWeapon
+//
+// haleyjd 09/16/07:
+// Gets weapon at given index for the given player.
+// 
+// WEAPON_TODO: must redirect through playerclass lookup
+// PCLASS_FIXME: weapons
+//
+weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
+{
+   // currently there is only one linear weaponinfo
+   return &weaponinfo[index];
+}
+
+//
+// P_WeaponSoundInfo
+//
+// Plays a sound originating from the player's weapon by sfxinfo_t *
+//
+static void P_WeaponSoundInfo(mobj_t *mo, sfxinfo_t *sound)
+{
+   int volume = 127;
+
+   if(mo->player && mo->player->powers[pw_silencer] &&
+      P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
+      volume = WEAPON_VOLUME_SILENCED;
+
+   S_StartSfxInfo(mo, sound, volume, ATTN_NORMAL, false);
+}
+
+//
+// P_WeaponSound
+//
+// Plays a sound originating from the player's weapon
+//
+static void P_WeaponSound(mobj_t *mo, int sfx_id)
+{
+   int volume = 127;
+
+   if(mo->player && mo->player->powers[pw_silencer] &&
+      P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
+      volume = WEAPON_VOLUME_SILENCED;
+
+   S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL);
+}
+
+//
+// End dynamic weapon systems functions
+//
+//=============================================================================
+
 
 //
 // A_WeaponReady
@@ -690,8 +745,8 @@ void A_Punch(mobj_t *mo)
 
    if(!linetarget)
       return;
-   
-   S_StartSound(mo, sfx_punch);
+
+   P_WeaponSound(mo, sfx_punch);
 
    // turn to face target
    mo->angle = R_PointToAngle2(mo->x, mo->y, linetarget->x, linetarget->y);
@@ -720,11 +775,11 @@ void A_Saw(mobj_t *mo)
    
    if(!linetarget)
    {
-      S_StartSound(mo, sfx_sawful);
+      P_WeaponSound(mo, sfx_sawful);
       return;
    }
 
-   S_StartSound(mo, sfx_sawhit);
+   P_WeaponSound(mo, sfx_sawhit);
    
    // turn to face target
    angle = R_PointToAngle2(mo->x, mo->y, linetarget->x, linetarget->y);
@@ -960,7 +1015,7 @@ void A_FirePistol(mobj_t *mo)
    if(!player)
       return;
 
-   S_StartSound(mo, sfx_pistol);
+   P_WeaponSound(mo, sfx_pistol);
    
    // PCLASS_FIXME: attack state two
 
@@ -986,7 +1041,7 @@ void A_FireShotgun(mobj_t *mo)
 
    // PCLASS_FIXME: second attack state
 
-   S_StartSound(mo, sfx_shotgn);
+   P_WeaponSound(mo, sfx_shotgn);
    P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
    
    P_SubtractAmmo(player, 1);
@@ -1012,7 +1067,7 @@ void A_FireShotgun2(mobj_t *mo)
 
    // PCLASS_FIXME: secondary attack state
    
-   S_StartSound(mo, sfx_dshtgn);
+   P_WeaponSound(mo, sfx_dshtgn);
    P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
 
    P_SubtractAmmo(player, 2);
@@ -1037,24 +1092,23 @@ void A_FireShotgun2(mobj_t *mo)
 
 void A_OpenShotgun2(mobj_t *mo)
 {
-   S_StartSound(mo, sfx_dbopn);
+   P_WeaponSound(mo, sfx_dbopn);
 }
 
 void A_LoadShotgun2(mobj_t *mo)
 {
-   S_StartSound(mo, sfx_dbload);
+   P_WeaponSound(mo, sfx_dbload);
 }
 
 void A_CloseShotgun2(mobj_t *mo)
 {
-   S_StartSound(mo, sfx_dbcls);
+   P_WeaponSound(mo, sfx_dbcls);
    A_ReFire(mo);
 }
 
 //
 // A_FireCGun
 //
-
 void A_FireCGun(mobj_t *mo)
 {
    player_t *player;
@@ -1065,7 +1119,7 @@ void A_FireCGun(mobj_t *mo)
 
    psp = &player->psprites[player->curpsprite];
 
-   S_StartSound(mo, sfx_chgun);
+   P_WeaponSound(mo, sfx_chgun);
 
    if(!player->ammo[weaponinfo[player->readyweapon].ammo])
       return;
@@ -1345,7 +1399,7 @@ void A_BFGBurst(mobj_t *mo)
 //
 void A_BFGsound(mobj_t *mo)
 {
-   S_StartSound(mo, sfx_bfg);
+   P_WeaponSound(mo, sfx_bfg);
 }
 
 //
@@ -1441,7 +1495,7 @@ void A_FireCustomBullets(mobj_t *mo)
    // haleyjd 12/08/03: changed to use sound dehacked num
    sfx = E_SoundForDEHNum(sound);
 
-   S_StartSfxInfo(mo, sfx, 127, ATTN_NORMAL, false);
+   P_WeaponSoundInfo(mo, sfx);
 
    // PCLASS_FIXME: secondary attack state
 
@@ -1607,12 +1661,12 @@ void A_CustomPlayerMelee(mobj_t *mo)
    {
       // assume they want sawful on miss if sawhit specified
       if(sound == sfx_sawhit)
-         S_StartSound(mo, sfx_sawful);
+         P_WeaponSound(mo, sfx_sawful);
       return;
    }
 
    // start sound
-   S_StartSfxInfo(mo, sfx, 127, ATTN_NORMAL, false);
+   P_WeaponSoundInfo(mo, sfx);
    
    // turn to face target   
    player->mo->angle = R_PointToAngle2(mo->x, mo->y,

@@ -179,6 +179,7 @@ typedef struct gameinfo_s
    int teleSound;             // sound id for teleportation
    short thrustFactor;        // damage thrust factor
    boolean hasMadMelee;       // game mode has mad melee when player dies
+   const char *defPClassName; // default playerclass name
 
    // Intermission and Finale stuff
    int interMusNum;           // intermission music number

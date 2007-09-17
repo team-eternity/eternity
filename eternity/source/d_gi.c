@@ -352,6 +352,7 @@ gameinfo_t giDoomReg =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    false,            // hasMadMelee
+   "DoomMarine",     // defPClassName
 
    mus_inter,        // interMusNum
    &giDoomFText,     // ftextinfo
@@ -499,6 +500,7 @@ gameinfo_t giDoomCommercial =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    false,            // hasMadMelee
+   "DoomMarine",     // defPClassName
 
    mus_dm2int,       // interMusNum
    &giDoomFText,     // ftextinfo
@@ -572,6 +574,7 @@ gameinfo_t giHereticSW =
    sfx_htelept,      // teleSound
    150,              // thrustFactor
    true,             // hasMadMelee
+   "DoomMarine",     // defPClassName -- PCLASS_FIXME
 
    hmus_intr,        // interMusNum
    &giHticFText,     // ftextinfo
@@ -649,6 +652,7 @@ gameinfo_t giHereticReg =
    sfx_htelept,      // teleSound
    150,              // thrustFactor
    true,             // hasMadMelee
+   "DoomMarine",     // defPClassName -- PCLASS_FIXME
 
    hmus_intr,        // interMusNum
    &giHticFText,     // ftextinfo

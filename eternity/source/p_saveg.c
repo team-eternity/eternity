@@ -553,7 +553,7 @@ void P_UnArchiveThinkers(void)
 
          (mobj->player = &players[playernum])->mo = mobj;
          
-         // FIXME: Need to save skin and attempt to restore, then fall back
+         // PCLASS_FIXME: Need to save skin and attempt to restore, then fall back
          // to default for player class if non-existant
          P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
       }

@@ -963,7 +963,7 @@ void R_DrawPSprite(pspdef_t *psp)
    }
    else
    {
-      vis->xstep  = w / (x2 - x1 + 1.0001f);
+      vis->xstep  = w / (x2 - x1 + 1.0f);
       vis->startx = 0.0f;
    }
    

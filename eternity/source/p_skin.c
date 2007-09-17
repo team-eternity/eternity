@@ -455,8 +455,8 @@ static skin_t *P_SkinForName(char *s)
 //
 // Gets the default skin for a player.
 //
-// TODO: Make this use player classes. For now, return the marine skin
-// just to keep things working while the class system is implemented.
+// PCLASS_TODO: Make this use player classes. For now, return the marine
+// skin just to keep things working while the class system is implemented.
 //
 skin_t *P_GetDefaultSkin(player_t *player)
 {

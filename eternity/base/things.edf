@@ -469,7 +469,7 @@ thingtype Arachnotron {
   flags2 = MAP07BOSS2|FOOTCLIP
   flags3 = SPACMONSTER|PASSMOBJ
   raisestate = S_BSPI_RAISE1
-  obituary_normal = "didn't escape the arachnotron"
+  obituary_normal = "tried to stare down an arachnotron"
   acs_spawndata { num = 6; modes = doom }
   dehackednum = 21
 }

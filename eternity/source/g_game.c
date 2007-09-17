@@ -2268,6 +2268,7 @@ void G_PlayerReborn(int player)
    p->quake = 0;                // haleyjd 01/21/07
 
    // WEAPON_FIXME: default reborn weapon
+   // PCLASS_FIXME: default reborn weapon
    p->readyweapon = p->pendingweapon = wp_pistol;
 
    // WEAPON_FIXME: revive "weaponowned" feature?
@@ -2275,10 +2276,12 @@ void G_PlayerReborn(int player)
    memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
    
    // WEAPON_FIXME: always owned weapons
+   // PCLASS_FIXME: always owned weapons
    p->weaponowned[wp_fist] = true;     // always fist and pistol
    p->weaponowned[wp_pistol] = true;
    
    // WEAPON_FIXME: default ammo stuff
+   // PCLASS_FIXME: default ammo stuff
    p->ammo[am_clip] = initial_bullets; // Ty 03/12/98 - use dehacked values
    
    for(i = 0; i < NUMAMMO; i++)

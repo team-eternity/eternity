@@ -98,9 +98,9 @@ boolean P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
    
    // haleyjd: Part of the campaign to eliminate unnecessary
    //   I_Error bombouts for things that can be ignored safely
-   if((unsigned) ammo > NUMAMMO)
+   if((unsigned)ammo >= NUMAMMO)
    {
-      C_Printf(FC_ERROR"P_GiveAmmo: bad type %i\a\n", ammo);
+      doom_printf(FC_ERROR "P_GiveAmmo: bad type %d\a\n", ammo);
       return false;
    }
 

@@ -26,6 +26,7 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_gi.h"
 #include "d_io.h"
 #include "d_items.h"
 #include "p_skin.h"
@@ -136,11 +137,17 @@ cfg_opt_t edf_skin_opts[] =
    CFG_END()
 };
 
+#define ITEM_PCLASS_DEFAULT     "default"
 #define ITEM_PCLASS_DEFAULTSKIN "defaultskin"
+#define ITEM_PCLASS_ALTATTACK   "altattackstate"
 
 cfg_opt_t edf_pclass_opts[] =
 {
    CFG_STR(ITEM_PCLASS_DEFAULTSKIN, NULL, CFGF_NONE),
+   CFG_STR(ITEM_PCLASS_ALTATTACK,   NULL, CFGF_NONE),
+
+   CFG_BOOL(ITEM_PCLASS_DEFAULT, cfg_false, CFGF_NONE),
+
    CFG_END()
 };
 
@@ -439,6 +446,17 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
          E_EDFLoggedErr(2, "E_ProcessPlayerClass: invalid defaultskin '%s' "
                            "for player class %s\n", tempstr, pc->mnemonic);
       }
+   }
+
+   // default flag
+   if(IS_SET(pcsec, ITEM_PCLASS_DEFAULT))
+   {
+      cfg_bool_t tmp = cfg_getbool(pcsec, ITEM_PCLASS_DEFAULT);
+
+      // last player class with default flag set true will become the default
+      // playerclass for the current gamemode.
+      if(tmp == cfg_true)
+         gameModeInfo->defPClassName = pc->mnemonic;
    }
 }
 

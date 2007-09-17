@@ -50,6 +50,9 @@
 #define FF_FULLBRIGHT   0x8000  /* flag in thing->frame */
 #define FF_FRAMEMASK    0x7fff
 
+// haleyjd 09/16/07: silencer weapon volume reduction
+#define WEAPON_VOLUME_SILENCED 50
+
 //
 // Overlay psprites are scaled shapes
 // drawn directly on the view screen,
@@ -84,6 +87,7 @@ void P_MovePsprites(struct player_s *curplayer);
 void P_DropWeapon(struct player_s *player);
 
 weaponinfo_t *P_GetReadyWeapon(player_t *player);
+weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);
 
 #endif
 

@@ -427,7 +427,7 @@ static void cheat_noclip()
 static void cheat_pw(pw)
 {
    if(plyr->powers[pw])
-      plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap;  // killough
+      plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap && pw!=pw_silencer;  // killough
    else
    {
       P_GivePower(plyr, pw);
