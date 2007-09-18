@@ -279,8 +279,10 @@ endclosed:
 
 // 
 // R_ClipInitialSegRange
-// Used by R_ClipSeg to quickly reject segs outside the open range of the portal and to
-// clip segs to the portals open range on the x-axis
+//
+// Used by R_ClipSeg to quickly reject segs outside the open range of the 
+// portal and to clip segs to the portals open range on the x-axis
+//
 boolean R_ClipInitialSegRange(void)
 {
    float clipx;
@@ -488,9 +490,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 // clip the start and stop values of the seg based on what range it is 
 // actually visible in. This function is sound and Doom could even use 
 // this for normal rendering, but it adds some overhead.
-
+//
 // SoM 6/24/2007: Moved this here and rewrote it a bit.
-
+//
 static void R_ClipSegToPortal(void)
 {
    int i, startx;
@@ -1150,8 +1152,10 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
    sx1 = viewangletox[angle1];
    sx2 = viewangletox[angle2];
    
-   // SoM: To account for the rounding error of the old BSP system, I needed to make adjustments.
-   // SoM: Moved this to before the "does not cross a pixel" check to fix another slime trail
+   // SoM: To account for the rounding error of the old BSP system, I needed to
+   // make adjustments.
+   // SoM: Moved this to before the "does not cross a pixel" check to fix 
+   // another slime trail
    if(sx1 > 0) sx1--;
    if(sx2 < viewwidth - 1) sx2++;
 
@@ -1201,8 +1205,7 @@ static void R_SortPolyObjects(polyobj_t *po)
          
    while(po)
    {
-      po->zdist = R_PointToDist2(viewx, viewy, 
-         po->centerPt.x, po->centerPt.y);
+      po->zdist = R_PointToDist2(viewx, viewy, po->centerPt.x, po->centerPt.y);
       po_ptrs[i++] = po;
       po = (polyobj_t *)(po->link.next);
    }
