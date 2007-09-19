@@ -7,5 +7,7 @@ skin marine {}
 
 playerclass DoomMarine
 {
-   defaultskin = marine
+   defaultskin    = marine
+   thingtype      = DoomPlayer
+   altattackstate = S_PLAY_ATK2
 }

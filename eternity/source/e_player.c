@@ -37,6 +37,8 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_states.h"
+#include "e_things.h"
 #include "e_player.h"
 
 //
@@ -139,11 +141,13 @@ cfg_opt_t edf_skin_opts[] =
 
 #define ITEM_PCLASS_DEFAULT     "default"
 #define ITEM_PCLASS_DEFAULTSKIN "defaultskin"
+#define ITEM_PCLASS_THINGTYPE   "thingtype"
 #define ITEM_PCLASS_ALTATTACK   "altattackstate"
 
 cfg_opt_t edf_pclass_opts[] =
 {
    CFG_STR(ITEM_PCLASS_DEFAULTSKIN, NULL, CFGF_NONE),
+   CFG_STR(ITEM_PCLASS_THINGTYPE,   NULL, CFGF_NONE),
    CFG_STR(ITEM_PCLASS_ALTATTACK,   NULL, CFGF_NONE),
 
    CFG_BOOL(ITEM_PCLASS_DEFAULT, cfg_false, CFGF_NONE),
@@ -448,13 +452,45 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       }
    }
 
+   // mobj type
+   if(IS_SET(pcsec, ITEM_PCLASS_THINGTYPE))
+   {
+      tempstr = cfg_getstr(pcsec, ITEM_PCLASS_THINGTYPE);
+
+      // thing type must be specified
+      if(!tempstr)
+      {
+         E_EDFLoggedErr(2, "E_ProcessPlayerClass: missing required thingtype "
+                           "for player class %s\n", pc->mnemonic);
+      }
+
+      // thing type must exist
+      pc->type = E_GetThingNumForName(tempstr);
+   }
+
+   // altattack state
+   if(IS_SET(pcsec, ITEM_PCLASS_ALTATTACK))
+   {
+      tempstr = cfg_getstr(pcsec, ITEM_PCLASS_ALTATTACK);
+
+      // alt attack state must be specified
+      if(!tempstr)
+      {
+         E_EDFLoggedErr(2, "E_ProcessPlayerClass: missing required altattackstate "
+                           "for player class %s\n", pc->mnemonic);
+      }
+
+      // state must exist
+      pc->altattack = E_GetStateNumForName(tempstr);
+   }
+
    // default flag
    if(IS_SET(pcsec, ITEM_PCLASS_DEFAULT))
    {
       cfg_bool_t tmp = cfg_getbool(pcsec, ITEM_PCLASS_DEFAULT);
 
       // last player class with default flag set true will become the default
-      // playerclass for the current gamemode.
+      // player class for the current gamemode.
       if(tmp == cfg_true)
          gameModeInfo->defPClassName = pc->mnemonic;
    }

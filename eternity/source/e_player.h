@@ -38,7 +38,9 @@ extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 //
 typedef struct playerclass_s
 {
-   skin_t *defaultskin; // pointer to default skin
+   skin_t *defaultskin;  // pointer to default skin
+   mobjtype_t type;      // index of mobj type used
+   statenum_t altattack; // index of alternate attack state for weapon code
 
    // hashing data
    char mnemonic[33];
