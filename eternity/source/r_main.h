@@ -113,9 +113,9 @@ void R_SectorColormap(sector_t *s);
 // REFRESH - the actual rendering functions.
 //
 
-                // sf: camera point added
+// sf: camera point added
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_Drawer.
-                                // sf: G_Drawer???
+                                                                 // sf: G_Drawer???
 void R_Init(void);                           // Called by startup code.
 void R_SetViewSize(int blocks, int detail);  // Called by M_Responder.
 
@@ -143,8 +143,8 @@ extern spandrawer_t *r_span_engine;
 void R_SetColumnEngine(void);
 void R_SetSpanEngine(void);
 
-
-const float PI;
+// haleyjd 09/19/07: missing extern!
+extern const float PI;
 
 typedef struct
 {
@@ -163,11 +163,8 @@ typedef struct
    float pspritexstep, pspriteystep;
 } cb_view_t;
 
-
-
 typedef struct
 {
-   
    int x1, x2;
    float x1frac, x2frac;
    float toffsetx, toffsety;
@@ -188,8 +185,8 @@ typedef struct
    int toptexmid, midtexmid, bottomtexmid;
    int toptexh, midtexh, bottomtexh;
 
-   // The portal ignore flags. If a portal should be rendered even if the camera is on the
-   // backface of it...
+   // The portal ignore flags. If a portal should be rendered even if the camera
+   // is on the backface of it...
    boolean f_portalignore, c_portalignore;
 
    // 8 bit tables

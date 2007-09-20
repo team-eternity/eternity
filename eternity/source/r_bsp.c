@@ -602,7 +602,10 @@ static void R_AddLine(seg_t *line)
    tempsec.frameid = 0;
 
    seg.clipsolid = false;
-   seg.backsec = line->backsector ? R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true) : NULL;
+   if(line->backsector)
+      seg.backsec = R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true);
+   else
+      seg.backsec = NULL;
    seg.line = line;
 
    if(seg.backsec && seg.backsec->frameid != frameid)
@@ -894,19 +897,19 @@ static void R_AddLine(seg_t *line)
    if(!seg.backsec)
    {
       seg.twosided = false;
-      seg.toptex = seg.bottomtex = 0;
-      seg.midtex = texturetranslation[side->midtexture];
-      seg.midtexh = textureheight[side->midtexture] >> FRACBITS;
+      seg.toptex   = seg.bottomtex = 0;
+      seg.midtex   = texturetranslation[side->midtexture];
+      seg.midtexh  = textureheight[side->midtexture] >> FRACBITS;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
          seg.midtexmid = (int)((seg.bottom + seg.midtexh + seg.toffsety) * FRACUNIT);
       else
          seg.midtexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
 
-      seg.markceiling = seg.ceilingplane ? true : false;
-      seg.markfloor = seg.floorplane ? true : false;
-      seg.clipsolid = true;
-      seg.segtextured = seg.midtex ? true : false;
+      seg.markceiling = (seg.ceilingplane != NULL);
+      seg.markfloor   = (seg.floorplane != NULL);
+      seg.clipsolid   = true;
+      seg.segtextured = (seg.midtex != 0);
 
 #ifdef R_LINKEDPORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
@@ -936,6 +939,8 @@ static void R_AddLine(seg_t *line)
 
       seg.high = seg.backsec->ceilingheightf - view.z;
 
+      // FIXME: redundant tests
+      // FIXME: sky test repeated, should be cached
       seg.clipsolid = 
          (seg.backsec->ceilingheight <= seg.backsec->floorheight || 
           ((seg.frontsec->ceilingheight <= seg.backsec->floorheight || 

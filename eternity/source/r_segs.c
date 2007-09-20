@@ -394,8 +394,6 @@ static void R_RenderSegLoop(void)
    }
 }
 
-
-
 static void R_StoreTextureColumns(void)
 {
    int i, texx;
@@ -447,8 +445,7 @@ void R_StoreWallRange(const int start, const int stop)
    boolean usesegloop = !seg.backsec || seg.clipsolid || seg.markceiling || 
                         seg.markfloor || seg.toptex || seg.midtex || 
                         seg.bottomtex || seg.f_portalignore || 
-                        seg.c_portalignore || 
-                        (segclip.line->linedef->portal ? true : false);
+                        seg.c_portalignore || segclip.line->linedef->portal;
 
    memcpy(&segclip, &seg, sizeof(seg));
 
