@@ -923,7 +923,7 @@ static void R_AddLine(seg_t *line)
    }
    else
    {
-      boolean mark;
+      boolean mark, sky; // haleyjd
 
       seg.twosided = true;
 
@@ -939,25 +939,22 @@ static void R_AddLine(seg_t *line)
 
       seg.high = seg.backsec->ceilingheightf - view.z;
 
+      // haleyjd 09/20/07: only test for sky once
+      sky = ((seg.frontsec->ceilingpic == skyflatnum ||
+              seg.frontsec->ceilingpic == sky2flatnum) &&
+             (seg.backsec->ceilingpic  == skyflatnum ||
+              seg.backsec->ceilingpic  == sky2flatnum));
+
       // FIXME: redundant tests
-      // FIXME: sky test repeated, should be cached
       seg.clipsolid = 
          (seg.backsec->ceilingheight <= seg.backsec->floorheight || 
           ((seg.frontsec->ceilingheight <= seg.backsec->floorheight || 
             seg.backsec->ceilingheight <= seg.frontsec->floorheight || 
             seg.backsec->floorheight >= seg.backsec->ceilingheight) && 
-           !((seg.frontsec->ceilingpic == skyflatnum || 
-              seg.frontsec->ceilingpic == sky2flatnum) && 
-             (seg.backsec->ceilingpic == skyflatnum ||  
-              seg.backsec->ceilingpic == sky2flatnum))));
+            !sky));
 
-      if((seg.frontsec->ceilingpic == skyflatnum || 
-          seg.frontsec->ceilingpic == sky2flatnum) && 
-         (seg.backsec->ceilingpic == skyflatnum ||
-          seg.backsec->ceilingpic == sky2flatnum))
-      {
+      if(sky)
          seg.top = seg.high;
-      }
 
       seg.markceiling = 
          (seg.ceilingplane && 
