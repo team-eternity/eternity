@@ -945,13 +945,20 @@ static void R_AddLine(seg_t *line)
              (seg.backsec->ceilingpic  == skyflatnum ||
               seg.backsec->ceilingpic  == sky2flatnum));
 
-      // FIXME: redundant tests
-      seg.clipsolid = 
-         (seg.backsec->ceilingheight <= seg.backsec->floorheight || 
-          ((seg.frontsec->ceilingheight <= seg.backsec->floorheight || 
-            seg.backsec->ceilingheight <= seg.frontsec->floorheight || 
-            seg.backsec->floorheight >= seg.backsec->ceilingheight) && 
-            !sky));
+      if(seg.backsec->ceilingheight <= seg.backsec->floorheight && 
+         ((seg.backsec->ceilingheight != seg.frontsec->ceilingheight && !seg.side->toptexture) ||
+         (seg.backsec->floorheight != seg.frontsec->floorheight && !seg.side->bottomtexture)))
+         ;
+      else
+      {
+         // FIXME: redundant tests
+         seg.clipsolid = 
+            (seg.backsec->ceilingheight <= seg.backsec->floorheight || 
+             ((seg.frontsec->ceilingheight <= seg.backsec->floorheight || 
+               seg.backsec->ceilingheight <= seg.frontsec->floorheight || 
+               seg.backsec->floorheight >= seg.backsec->ceilingheight) && 
+               !sky));
+      }
 
       if(sky)
          seg.top = seg.high;
