@@ -220,6 +220,8 @@ void R_ClearClipSegs(void)
    solidsegs[1].last = 0x7fff; // ffff;      new short limit --  killough
    newend = solidsegs+2;
 
+   // haleyjd 09/22/07: must clear seg and segclip structures
+   memset(&seg, 0, sizeof(cb_seg_t));
    memset(&segclip, 0, sizeof(cb_seg_t));
 }
 
@@ -1288,6 +1290,9 @@ static void R_Subsector(int num)
    if(num >= numsubsectors)
       I_Error("R_Subsector: ss %i with numss = %i", num, numsubsectors);
 #endif
+
+   // haleyjd 09/22/07: clear seg structure
+   memset(&seg, 0, sizeof(cb_seg_t));
 
    sub = &subsectors[num];
    seg.frontsec = sub->sector;

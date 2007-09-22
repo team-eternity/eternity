@@ -442,13 +442,22 @@ void R_StoreWallRange(const int start, const int stop)
    float y1, y2, i1, i2;
    float pstep;
 
-   boolean usesegloop = !seg.backsec || seg.clipsolid || seg.markceiling || 
-                        seg.markfloor || seg.toptex || seg.midtex || 
-                        seg.bottomtex || seg.f_portalignore || 
-                        seg.c_portalignore || 
-                        (segclip.line && segclip.line->linedef->portal);
-
+   boolean usesegloop;
+   
+   // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));
+
+   // haleyjd: NULL segclip line?? shouldn't happen.
+#ifdef RANGECHECK
+   if(!segclip.line)
+      I_Error("R_StoreWallRange: null segclip.line\n");
+#endif
+   
+   usesegloop = !seg.backsec || seg.clipsolid || 
+                seg.markceiling || seg.markfloor || 
+                seg.toptex || seg.midtex || seg.bottomtex || 
+                seg.f_portalignore || seg.c_portalignore || 
+                segclip.line->linedef->portal;
 
    clipx1 = (float)(start - segclip.x1frac);
 
