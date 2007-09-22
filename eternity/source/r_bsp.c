@@ -219,6 +219,8 @@ void R_ClearClipSegs(void)
    solidsegs[1].first = viewwidth;
    solidsegs[1].last = 0x7fff; // ffff;      new short limit --  killough
    newend = solidsegs+2;
+
+   memset(&segclip, 0, sizeof(cb_seg_t));
 }
 
 

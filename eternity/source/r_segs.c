@@ -445,7 +445,8 @@ void R_StoreWallRange(const int start, const int stop)
    boolean usesegloop = !seg.backsec || seg.clipsolid || seg.markceiling || 
                         seg.markfloor || seg.toptex || seg.midtex || 
                         seg.bottomtex || seg.f_portalignore || 
-                        seg.c_portalignore || segclip.line->linedef->portal;
+                        seg.c_portalignore || 
+                        (segclip.line && segclip.line->linedef->portal);
 
    memcpy(&segclip, &seg, sizeof(seg));
 
