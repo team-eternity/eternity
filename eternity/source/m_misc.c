@@ -763,6 +763,13 @@ default_t defaults[] =
       "DOOM thingtypes use inaccurate height information"
    },
 
+   {
+      "comp_planeshoot",
+      &default_comp[comp_planeshoot], &comp[comp_planeshoot],
+      1, {0,1}, dt_number, ss_comp, wad_yes,
+      "Tracer shots cannot hit the floor or ceiling"
+   },
+
    // For key bindings, the values stored in the key_* variables       // phares
    // are the internal Doom Codes. The values stored in the default.cfg
    // file are the keyboard codes. I_ScanCode2DoomCode converts from

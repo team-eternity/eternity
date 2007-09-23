@@ -129,6 +129,7 @@ enum {
   comp_soul,        //         03/23/03: lost soul bounce
   comp_theights,    //         07/06/05: thing heights fix
   comp_overunder,   //         10/19/02: thing z clipping
+  comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
   COMP_TOTAL=32  // Some extra room for additional variables
 };
 

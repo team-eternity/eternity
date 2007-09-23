@@ -2175,7 +2175,7 @@ static boolean PTR_AimTraverse(intercept_t *in)
          slope = FixedDiv(li->frontsector->floorheight - trace.originz, dist);
          if(slope > trace.bottomslope)
          {
-            // Find the distance from the ogrigin to the intersection with the 
+            // Find the distance from the origin to the intersection with the 
             // plane.
             fixed_t z = li->frontsector->floorheight;
             fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
@@ -2378,15 +2378,15 @@ static boolean P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    // line opening, otherwise lines behind the plane will be activated.
    boolean floorsame = 
       (li->frontsector->floorheight == li->backsector->floorheight &&
-       demo_version < 333);
+       (demo_version < 333 || comp[comp_planeshoot]));
    boolean ceilingsame =
       (li->frontsector->ceilingheight == li->backsector->ceilingheight &&
-       demo_version < 333);
+       (demo_version < 333 || comp[comp_planeshoot]));
 
    if((floorsame   || FixedDiv(openbottom - trace.z , dist) <= trace.aimslope) &&
       (ceilingsame || FixedDiv(opentop - trace.z , dist) >= trace.aimslope))
    {
-      if(li->special && demo_version >= 329)
+      if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
          P_ShootSpecialLine(shootthing, li, side);
       
       return true;      // shot continues
@@ -2415,7 +2415,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
       // haleyjd 03/13/05: move up point on line side check to here
       // SoM: this was causing some trouble when shooting through linked 
-      // portals because although trace.x and trace.y are offsetted when 
+      // portals because although trace.x and trace.y are offset when 
       // the shot travels through a portal, shootthing->x and 
       // shootthing->y are NOT. Demo comped just in case.
       int lineside;
@@ -2427,7 +2427,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
       
       // SoM: Shouldn't be called until A: we know the bullet passed or
       // B: We know it didn't hit a plane first
-      if(li->special && demo_version < 329)
+      if(li->special && (demo_version < 329 || comp[comp_planeshoot]))
          P_ShootSpecialLine(shootthing, li, lineside);
       
       if(li->flags & ML_TWOSIDED)
@@ -2451,7 +2451,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
       y = trace.y + FixedMul(trace.dy, frac);
       z = trace.z + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
 
-      if(demo_version >= 329)
+      if(demo_version >= 329 && !comp[comp_planeshoot])
       {
          // SoM: Check for colision with a plane.
          sector_t*  sidesector = lineside ? li->backsector : li->frontsector;
@@ -2470,6 +2470,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                if(sidesector->floorpic == skyflatnum ||
                   sidesector->floorpic == sky2flatnum) 
                   return false;
+
                // SoM: Check here for portals
                if(sidesector->f_portal)
                {

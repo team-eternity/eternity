@@ -2634,7 +2634,9 @@ static menuitem_t mn_compat1_items[] =
    {it_toggle, "doom thing heights may be inaccurate",      "comp_theights"},
    {it_end}
 };
-   
+  
+// MENU_FIXME: add comp_planeshoot before 3.37.00 launch
+ 
 static menuitem_t mn_compat2_items[] =
 { 
    {it_title,  FC_GOLD "compatibility", NULL, "m_compat"},

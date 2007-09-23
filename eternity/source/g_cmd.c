@@ -661,6 +661,7 @@ const char *comp_strings[] =
   "soul",       //          Lost soul bouncing
   "theights",   //          Thing heights fix
   "overunder",  //          10/19/02: z checking
+  "planeshoot", //          09/22/07: plane shooting
 };
 
 static void Handler_CompFloors(void)
@@ -704,7 +705,7 @@ void G_AddCompat(void)
 {
    int i;
    
-   for(i=0; i<=comp_overunder; i++)   // haleyjd: update this regularly
+   for(i = 0; i <= comp_planeshoot; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
       command_t *command;

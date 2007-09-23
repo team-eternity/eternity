@@ -91,6 +91,7 @@ enum
   netcmd_comp_22,   //          lost soul bouncing
   netcmd_comp_23,   //          thing heights fix
   netcmd_comp_24,   //          extended z clipping
+  netcmd_comp_25,   //          plane shooting
   NUMNETCMDS,
 };
 

@@ -763,6 +763,10 @@ static void E_ProcessCmpState(const char *value, int i)
             "E_ProcessCmpState: frame '%s': bad spriteframe '%s'\n",
             states[i].name, curtoken);
       }
+
+      // haleyjd 09/22/07: if blank sprite, force to frame 0
+      if(states[i].sprite == blankSpriteNum)
+         states[i].frame = 0;
    }
 
    // process fullbright
@@ -876,6 +880,10 @@ static void E_ProcessState(int i, cfg_t *framesec, boolean def)
    // process spriteframe
    if(IS_SET(ITEM_FRAME_SPRFRAME))
       states[i].frame = cfg_getint(framesec, ITEM_FRAME_SPRFRAME);
+
+   // haleyjd 09/22/07: if sprite == blankSpriteNum, force to frame 0
+   if(states[i].sprite == blankSpriteNum)
+      states[i].frame = 0;
 
    // check for fullbright
    if(IS_SET(ITEM_FRAME_FULLBRT))
