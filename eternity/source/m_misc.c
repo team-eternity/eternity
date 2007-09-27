@@ -2097,7 +2097,9 @@ typedef struct
 //
 // WritePCXfile
 //
-
+// haleyjd 09/27/07: Changed pcx->palette_type from 2 to 1.
+// According to authoritative ZSoft documentation, 1 = Color, 2 == Grayscale.
+//
 boolean WritePCXfile(char *filename, byte *data, int width,
                      int height, byte *palette)
 {
@@ -2122,7 +2124,7 @@ boolean WritePCXfile(char *filename, byte *data, int width,
    memset(pcx->palette, 0, sizeof(pcx->palette));
    pcx->color_planes   = 1;        // chunky image
    pcx->bytes_per_line = SHORT((short)width);
-   pcx->palette_type   = SHORT(2); // not a grey scale
+   pcx->palette_type   = SHORT(1); // not a grey scale
    memset(pcx->filler, 0, sizeof(pcx->filler));
 
    // pack the image
