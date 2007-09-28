@@ -43,6 +43,7 @@
 #include "p_partcl.h"
 #include "d_gi.h"
 #include "g_dmflag.h"
+#include "e_player.h"
 
 #define NCMD_EXIT               0x80000000
 #define NCMD_RETRANSMIT         0x40000000
@@ -544,11 +545,19 @@ void CheckAbort (void)
 void D_InitPlayers (void)
 {
    int i;
-   
+
+   // PCLASS_FIXME: not necessarily the most logical place for default
+   // verfication; subject to NETCODE_FIXME.
+   E_VerifyDefaultPlayerClass();
+
    for(i = 0; i < MAXPLAYERS; ++i)
    {
       sprintf(players[i].name, "player %i", i+1);
       players[i].colormap = i % TRANSLATIONCOLOURS;
+
+      // PCLASS_FIXME: subject to the NETCODE_FIXME above; only allows
+      // player class to be set to default. Must change!
+      players[i].pclass = E_PlayerClassForName(gameModeInfo->defPClassName);
       players[i].skin = P_GetDefaultSkin(&players[i]);
    }
 }

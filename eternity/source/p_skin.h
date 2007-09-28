@@ -62,6 +62,7 @@ struct skin_s
    char        *sounds[NUMSKINSOUNDS];
    char        *facename;     // statusbar face
    patch_t     **faces;
+   const char  **classes;     // haleyjd: compatible player classes
 
    // haleyjd 11/07/06: for EDF hashing
    struct skin_s *ehashnext;

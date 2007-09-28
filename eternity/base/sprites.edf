@@ -52,7 +52,7 @@ spritenames +=
   "TNT1","DOGS","PLS1","PLS2","UNKN","SPSH","SLDG","LVAS",
   
   # Warning: Do not use any of these sprites! They may be killed off.
-  "CLER","CBAL","FOGS","FOGM","FOGL","LCLR","DWRF","FDWF","GREN","PNS2"
+  "CLER","CBAL","FOGS","FOGM","FOGL","LCLR","DWRF","FDWF","GREN","PNS2","EERV"
 }
 
 

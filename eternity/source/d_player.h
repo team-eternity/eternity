@@ -46,9 +46,11 @@ typedef struct player_s player_t;
 // as commands per game tick.
 #include "d_ticcmd.h"
 
-
 // skins.
 #include "p_skin.h"
+
+// haleyjd: player classes
+#include "e_player.h"
 
 
 //
@@ -88,7 +90,8 @@ typedef enum
 //
 struct player_s
 {
-  mobj_t*             mo;
+  mobj_t *            mo;
+  playerclass_t *     pclass;       // haleyjd 09/27/07: player class
   playerstate_t       playerstate;
   ticcmd_t            cmd;
 

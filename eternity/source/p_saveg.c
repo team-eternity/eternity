@@ -40,6 +40,7 @@
 #include "e_edf.h"
 #include "a_small.h"
 #include "s_sndseq.h"
+#include "d_gi.h"
 
 byte *save_p;
 
@@ -180,6 +181,7 @@ void P_UnArchivePlayers(void)
          players[i].mo = NULL;
          players[i].attacker = NULL;
          players[i].skin = NULL;
+         players[i].pclass = NULL;
          players[i].attackdown = players[i].usedown = false;  // sf
          players[i].cmd.buttons = 0;    // sf
       }
@@ -552,9 +554,14 @@ void P_UnArchiveThinkers(void)
          int playernum = (int)mobj->player - 1;
 
          (mobj->player = &players[playernum])->mo = mobj;
+
+         // PCLASS_FIXME: Need to save and restore proper player class!
+         // Temporary hack.
+         players[playernum].pclass = E_PlayerClassForName(gameModeInfo->defPClassName);
          
          // PCLASS_FIXME: Need to save skin and attempt to restore, then fall back
-         // to default for player class if non-existant
+         // to default for player class if non-existant. Note: must be after player
+         // class is set.
          P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
       }
 

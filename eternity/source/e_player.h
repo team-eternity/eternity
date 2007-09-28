@@ -47,6 +47,9 @@ typedef struct playerclass_s
    struct playerclass_s *next;
 } playerclass_t;
 
+playerclass_t *E_PlayerClassForName(const char *);
+void E_VerifyDefaultPlayerClass(void);
+
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 

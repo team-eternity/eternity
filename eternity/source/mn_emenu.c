@@ -423,7 +423,7 @@ CONSOLE_COMMAND(mn_dynamenu, 0)
 
    if(!(menu = MN_DynamicMenuForName(c_argv[0])))
    {
-      C_Printf(FC_ERROR "no such menu %s\n\a", c_argv[0]);
+      C_Printf(FC_ERROR "no such menu %s\a\n", c_argv[0]);
       return;
    }
 

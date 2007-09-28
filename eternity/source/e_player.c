@@ -25,15 +25,16 @@
 //
 //----------------------------------------------------------------------------
 
+#define NEED_EDF_DEFINITIONS
+
 #include "z_zone.h"
+
+#include "Confuse/confuse.h"
+
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_items.h"
 #include "p_skin.h"
-
-#include "Confuse/confuse.h"
-
-#define NEED_EDF_DEFINITIONS
 
 #include "e_lib.h"
 #include "e_edf.h"
@@ -127,15 +128,17 @@ static cfg_opt_t pc_skin_sound_opts[] =
    CFG_END()
 };
 
-#define ITEM_SKIN_SPRITE "sprite"
-#define ITEM_SKIN_FACES  "faces"
-#define ITEM_SKIN_SOUNDS "sounds"
+#define ITEM_SKIN_SPRITE  "sprite"
+#define ITEM_SKIN_FACES   "faces"
+#define ITEM_SKIN_SOUNDS  "sounds"
+#define ITEM_SKIN_CLASSES "classes"
 
 cfg_opt_t edf_skin_opts[] =
 {
-   CFG_STR(ITEM_SKIN_SPRITE, "PLAY",             CFGF_NONE),
-   CFG_STR(ITEM_SKIN_FACES,  "STF",              CFGF_NONE),
-   CFG_SEC(ITEM_SKIN_SOUNDS, pc_skin_sound_opts, CFGF_NOCASE),
+   CFG_STR(ITEM_SKIN_SPRITE,  "PLAY",             CFGF_NONE),
+   CFG_STR(ITEM_SKIN_FACES,   "STF",              CFGF_NONE),
+   CFG_SEC(ITEM_SKIN_SOUNDS,  pc_skin_sound_opts, CFGF_NOCASE),
+   CFG_STR(ITEM_SKIN_CLASSES, NULL,               CFGF_LIST),
    CFG_END()
 };
 
@@ -338,6 +341,8 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       for(i = 0; i < NUMSKINSOUNDS; ++i)
          E_DoSkinSound(sndsec, def, newSkin, i, skin_sound_names[i]);
    }
+
+   // PCLASS_TODO: compatible skin classes
 }
 
 //
@@ -471,17 +476,18 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
    // altattack state
    if(IS_SET(pcsec, ITEM_PCLASS_ALTATTACK))
    {
+      statenum_t statenum = 0;
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_ALTATTACK);
 
-      // alt attack state must be specified
-      if(!tempstr)
+      // altattackstate should be specified, but if it's not, use the 
+      // thing type's normal missilestate.
+      if(!tempstr || (statenum = E_StateNumForName(tempstr)) == NUMSTATES)
       {
-         E_EDFLoggedErr(2, "E_ProcessPlayerClass: missing required altattackstate "
-                           "for player class %s\n", pc->mnemonic);
+         mobjinfo_t *mi = &mobjinfo[pc->type];
+         statenum = mi->missilestate;
       }
-
-      // state must exist
-      pc->altattack = E_GetStateNumForName(tempstr);
+      
+      pc->altattack = statenum;
    }
 
    // default flag
@@ -525,6 +531,26 @@ void E_ProcessPlayerClasses(cfg_t *cfg)
 boolean E_NeedDefaultPlayerData(void)
 {
    return !(num_edf_skins && num_edf_pclasses);
+}
+
+//
+// Game Engine Interface
+//
+
+//
+// E_VerifyDefaultPlayerClass
+//
+// Called after EDF processing. Verifies that the current gamemode possesses a
+// valid default player class. If not, we can't run the game!
+//
+void E_VerifyDefaultPlayerClass(void)
+{
+   if(E_PlayerClassForName(gameModeInfo->defPClassName) == NULL)
+   {
+      I_Error("E_VerifyDefaultPlayerClass: default playerclass '%s' "
+              "does not exist!\n",
+              gameModeInfo->defPClassName);
+   }
 }
 
 // EOF

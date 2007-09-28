@@ -32,13 +32,15 @@
 #ifndef P_XENEMY_H__
 #define P_XENEMY_H__
 
+// Earthquakes
+
 typedef struct quakethinker_s
 {
-   degenmobj_t origin;
-   int intensity;
-   int duration;
-   fixed_t quakeRadius;
-   fixed_t damageRadius;
+   degenmobj_t origin;   // serves as thinker and sound origin
+   int intensity;        // richter scale (hardly realistic)
+   int duration;         // how long it lasts
+   fixed_t quakeRadius;  // radius of shaking effects
+   fixed_t damageRadius; // radius of damage effects (if any)
 } quakethinker_t;
 
 void T_QuakeThinker(quakethinker_t *qt);

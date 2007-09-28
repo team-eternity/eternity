@@ -455,12 +455,16 @@ static skin_t *P_SkinForName(char *s)
 //
 // Gets the default skin for a player.
 //
-// PCLASS_TODO: Make this use player classes. For now, return the marine
-// skin just to keep things working while the class system is implemented.
+// PCLASS_TODO: what about preferences?
 //
 skin_t *P_GetDefaultSkin(player_t *player)
 {
-   return P_SkinForName("marine");
+#ifdef RANGECHECK
+   if(!player->pclass)
+      I_Error("P_GetDefaultSkin: NULL playerclass\n");
+#endif
+
+   return player->pclass->defaultskin;
 }
 
 void P_SetSkin(skin_t *skin, int playernum)

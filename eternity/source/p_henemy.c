@@ -68,64 +68,37 @@ void A_Die(mobj_t *actor);
 //
 // Parameters:
 // args[0] - object type (use DeHackEd number)
-// args[1] - z momentum (scaled by FRACUNIT)
-// args[2] - mode select:
-//  * 0 = spawn on floor, use z momentum
-//  * 1 = spawn on floor, no z momentum
-//  * 2 = random z coord, use z momentum
-//  * 3 = random z coord, no z momentum
-// args[3] - alternate radius for effect
+// args[1] - z momentum (scaled by FRACUNIT/8)
 //
 void A_SpawnGlitter(mobj_t *actor)
 {
    mobj_t *glitter;
-   int glitterType, mode;
+   int glitterType;
    fixed_t initMomentum;
    fixed_t x, y, z;
-   int radius;
 
    glitterType  = (int)(actor->state->args[0]);
-   initMomentum = (fixed_t)(actor->state->args[1]);
-   mode         = (int)(actor->state->args[2]);
-   radius       = (int)(actor->state->args[3]);
+   initMomentum = (fixed_t)(actor->state->args[1]) * FRACUNIT / 8;
 
    // special defaults
 
-   // momentum of zero == 1/2 unit per tic (use mode 1 to avoid)
+   // default momentum of zero == 1/4 unit per tic
    if(!initMomentum)
       initMomentum = FRACUNIT >> 2;
-
-   // radius of zero == radius of 32 (zero is useless)
-   if(!radius)
-      radius = 32;
 
    // haleyjd 07/05/03: adjusted for EDF
    glitterType = E_SafeThingType(glitterType);
 
-   // randomize spawning coordinates within a radius-unit square
-   x = actor->x + ((P_Random(pr_tglit) % radius) - (radius/2)) * FRACUNIT;
-   y = actor->y + ((P_Random(pr_tglit) % radius) - (radius/2)) * FRACUNIT;
+   // randomize spawning coordinates within a 32-unit square
+   x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
 
-   // haleyjd 07/14/04: use this to absorb P_ClericSparkle effect
-   if(mode == 2 || mode == 3)
-   {
-      int h = P_ThingInfoHeight(actor->info);
-      z = actor->z + h/2 + (P_SubRandom(pr_tglitz) << 15);
-      
-      // cap to within actor's height range
-      if(z > actor->z + h)
-        z = actor->z + h;
-      else if(z < actor->floorz)
-        z = actor->floorz;
-   }
-   else
-      z = actor->floorz;
+   z = actor->floorz;
 
    glitter = P_SpawnMobj(x, y, z, glitterType);
 
    // give it some upward momentum
-   if(mode == 0 || mode == 2)
-      glitter->momz = initMomentum;
+   glitter->momz = initMomentum;
 }
 
 //
@@ -350,7 +323,7 @@ void A_GenTracer(mobj_t *actor)
    if(dist < 1)
       dist = 1;
 
-   slope = (dest->z+40*FRACUNIT - actor->z) / dist;
+   slope = (dest->z + 40*FRACUNIT - actor->z) / dist;
    
    if(slope < actor->momz)
       actor->momz -= FRACUNIT/8;
@@ -411,8 +384,8 @@ void P_HticTracer(mobj_t *actor, angle_t threshold, angle_t maxturn)
    actor->momy = FixedMul(actor->info->speed, finesine[diff]);
 
    // adjust z only when significant height difference exists
-   if(actor->z+actor->height < dest->z ||
-      dest->z+dest->height < actor->z)
+   if(actor->z + actor->height < dest->z ||
+      dest->z  + dest->height  < actor->z)
    {
       // directly from above
       dist = P_AproxDistance(dest->x - actor->x, dest->y - actor->y);
@@ -569,7 +542,7 @@ void A_Srcr1Attack(mobj_t *actor)
       return;
    }
 
-   if(actor->health > (actor->info->spawnhealth*2)/3)
+   if(actor->health > (actor->info->spawnhealth * 2) / 3)
    {
       // regular attack, one fire ball
       P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
@@ -586,9 +559,8 @@ void A_Srcr1Attack(mobj_t *actor)
                           momz, mheight);
       
       // desperation -- attack twice
-      if(actor->health*3 < actor->info->spawnhealth)
+      if(actor->health * 3 < actor->info->spawnhealth)
       {
-         // don't bite the fast walk counter here
          if(actor->special2)
          {
             actor->special2 = 0;
@@ -667,7 +639,7 @@ void P_SpawnSorcSpots(void)
 // Generalized function for teleporting a boss (or any other thing)
 // around at random between a provided set of map spots, along
 // with special effects on demand.
-// Currently used by D'Sparil and Eternity Leader Cleric.
+// Currently used by D'Sparil.
 //
 void P_BossTeleport(bossteleport_t *bt)
 {
@@ -740,6 +712,7 @@ static int P_SorcTeleportProb(mobj_t *actor)
 
 void A_Srcr2Decide(mobj_t *actor)
 {
+   // if no spots, no teleportation
    if(P_CollectionIsEmpty(&sorcspots))
       return;
 
@@ -747,14 +720,14 @@ void A_Srcr2Decide(mobj_t *actor)
    {
       bossteleport_t bt;
 
-      bt.mc        = &sorcspots;      // use sorcspots collection
-      bt.rngNum    = pr_sorctele2;    // use this rng
-      bt.boss      = actor;           // teleport D'Sparil
-      bt.state     = E_SafeState(S_SOR2_TELE1); // set him to this state
+      bt.mc        = &sorcspots;                       // use sorcspots
+      bt.rngNum    = pr_sorctele2;                     // use this rng
+      bt.boss      = actor;                            // teleport D'Sparil
+      bt.state     = E_SafeState(S_SOR2_TELE1);        // set him to this state
       bt.fxtype    = E_SafeThingType(MT_SOR2TELEFADE); // spawn a DSparil TeleFade
-      bt.zpamt     = 0;               // add 0 to fx z coordinate
-      bt.hereThere = BOSSTELE_ORIG;   // spawn fx only at origin
-      bt.soundNum  = sfx_htelept;     // use heretic teleport sound
+      bt.zpamt     = 0;                                // add 0 to fx z coord
+      bt.hereThere = BOSSTELE_ORIG;                    // spawn fx only at origin
+      bt.soundNum  = sfx_htelept;                      // use htic teleport sound
 
       P_BossTeleport(&bt);
    }
@@ -856,6 +829,7 @@ void A_GenWizard(mobj_t *actor)
       return;
    }
 
+   // transfer friendliness
    mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // add to appropriate thread
@@ -864,6 +838,7 @@ void A_GenWizard(mobj_t *actor)
    // Check for movements.
    if(!P_TryMove(mo, mo->x, mo->y, false))
    {
+      // can't move, remove it immediately
       P_RemoveMobj(mo);
       return;
    }
@@ -904,7 +879,7 @@ void A_Sor2DthLoop(mobj_t *actor)
 //
 void A_HticExplode(mobj_t *actor)
 {
-   int damage;
+   int damage = 128;
 
    int action = (int)(actor->state->args[0]);
 
@@ -919,15 +894,14 @@ void A_HticExplode(mobj_t *actor)
    case 3: // 3 -- Time Bomb of the Ancients, special effects
       actor->z += 32*FRACUNIT;
       actor->translucency = FRACUNIT;
-      // fall through
+      break;
    default:
-      damage = 128;
       break;
    }
 
    P_RadiusAttack(actor, actor->target, damage, actor->info->mod);
 
-   if(actor->z <= actor->secfloorz + damage*FRACUNIT)
+   if(actor->z <= actor->secfloorz + damage * FRACUNIT)
       E_HitWater(actor, actor->subsector->sector);
 }
 

@@ -2191,12 +2191,8 @@ void G_Ticker(void)
    if(inwipe)
       Wipe_Ticker();
 
-   // sf: slightly more understandable,
-   // killoughs system was pointlessly complex
-   // obfuscation is useful but insane when taken to the extreme
-
    // haleyjd 03/15/03: execute scheduled Small callbacks
-   A_ExecuteCallbacks(); 
+   A_ExecuteCallbacks();
    
    if(gamestate == GS_LEVEL)
    {
@@ -2205,10 +2201,21 @@ void G_Ticker(void)
       AM_Ticker(); 
       HU_Ticker();
    }
-   else if(paused & 2);
-   else if(gamestate == GS_INTERMISSION) IN_Ticker();
-   else if(gamestate == GS_FINALE) F_Ticker();
-   else if(gamestate == GS_DEMOSCREEN) D_PageTicker();
+   else if(!(paused & 2)) // haleyjd: refactored
+   {
+      switch(gamestate)
+      {
+      case GS_INTERMISSION:
+         IN_Ticker();
+         break;
+      case GS_FINALE:
+         F_Ticker();
+         break;
+      case GS_DEMOSCREEN:
+         D_PageTicker();
+         break;
+      }
+   }
 }
 
 //
@@ -2218,10 +2225,10 @@ void G_Ticker(void)
 
 //
 // G_PlayerReborn
+//
 // Called after a player dies
 // almost everything is cleared and initialized
 //
-
 void G_PlayerReborn(int player)
 {
    player_t *p;
@@ -2234,6 +2241,7 @@ void G_PlayerReborn(int player)
    char playername[20];
    int playercolour;
    skin_t *playerskin;
+   playerclass_t *playerclass;
 
    memcpy (frags, players[player].frags, sizeof frags);
    killcount = players[player].killcount;
@@ -2241,8 +2249,9 @@ void G_PlayerReborn(int player)
    secretcount = players[player].secretcount;
    strncpy(playername, players[player].name, 20);
    playercolour = players[player].colormap;
-   totalfrags=players[player].totalfrags;
-   playerskin=players[player].skin;
+   totalfrags = players[player].totalfrags;
+   playerskin = players[player].skin;
+   playerclass = players[player].pclass; // haleyjd: playerclass
    
    p = &players[player];
 
@@ -2260,7 +2269,8 @@ void G_PlayerReborn(int player)
    players[player].itemcount = itemcount;
    players[player].secretcount = secretcount;
    players[player].totalfrags = totalfrags;
-   players[player].skin=playerskin;
+   players[player].skin = playerskin;
+   players[player].pclass = playerclass; // haleyjd: playerclass
    
    p->usedown = p->attackdown = true;  // don't do anything immediately
    p->playerstate = PST_LIVE;

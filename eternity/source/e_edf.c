@@ -34,7 +34,7 @@
 //                  E_ProcessEDF by default
 // * sprites.edf .. Includes the sprnames array and sprite-based
 //                  pickup item definitions
-// * sounds.edf ... Contains the sfxinfo structures
+// * sounds.edf ... Contains sfxinfo structures and sound sequences
 //                  See e_sound.c for implementation.
 // * frames.edf ... Contains the states structures
 //                  See e_states.c for implementation.
@@ -45,6 +45,7 @@
 //                  See e_ttypes.c for implementation.
 // * misc.edf ..... Miscellaneous stuff
 // * player.edf ... EDF skins, weapons, and player classes
+//                  See e_player.c for implementation.
 //
 // EDF can also be loaded from WAD lumps, starting from the newest
 // lump named "EDFROOT". EDF lumps currently take total precedence
@@ -58,6 +59,9 @@
 //                  See e_ttypes.c for implementation.
 // * EMENUS ....... Lump chain that can define menu objects.
 //                  See mn_emenu.c for implementation.
+// * ESNDINFO ..... Lump chain that can contain any type of sound definition.
+// * ESNDSEQ ...... Same as above.
+//                  See e_sound.c for implementation.
 //
 // By James Haley
 //
@@ -65,7 +69,12 @@
 
 #include <errno.h>
 
+#define NEED_EDF_DEFINITIONS
+
 #include "z_zone.h"
+
+#include "Confuse/confuse.h"
+
 #include "w_wad.h"
 #include "i_system.h"
 #include "d_main.h"
@@ -81,10 +90,6 @@
 #include "p_pspr.h"
 #include "f_finale.h"
 #include "m_qstr.h"
-
-#include "Confuse/confuse.h"
-
-#define NEED_EDF_DEFINITIONS
 
 #include "e_lib.h"
 #include "e_edf.h"

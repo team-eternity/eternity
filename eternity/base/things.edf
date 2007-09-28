@@ -1785,6 +1785,14 @@ thingtype EESectorSequence {
   cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
+// What's this?
+
+thingtype EERavenObj {
+  inherits = Unknown
+  doomednum = 5008
+  skinsprite = EERV
+}
+
 // Begin Heretic gamemode objects
 
 ifenabled(HERETIC)

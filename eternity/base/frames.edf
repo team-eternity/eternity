@@ -1365,8 +1365,6 @@ frame S_LAVASMOKE5  { cmp = "LVAS|K|T| 5";         dehackednum = 1107 }
 # WARNING: S_LAVASMOKE5 is the last standardized frame as of EE v3.31 final.
 # Frames below here should not be directly used or edited by user mods yet!
 
-
-
 #
 # Heretic Frames
 #

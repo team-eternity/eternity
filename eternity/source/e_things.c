@@ -28,6 +28,9 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+
+#include "Confuse/confuse.h"
+
 #include "acs_intr.h"
 #include "i_system.h"
 #include "w_wad.h"
@@ -41,8 +44,6 @@
 #include "p_inter.h"
 #include "p_partcl.h"
 #include "r_draw.h"
-
-#include "Confuse/confuse.h"
 
 #include "e_lib.h"
 #include "e_edf.h"
