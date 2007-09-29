@@ -4047,7 +4047,6 @@ extern long *deh_ParseFlagsCombined(const char *strval);
 static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *flags)
 {
    static int fountainType = -1;
-   static int playerType = -1;
    static int dripType = -1;
    static int ambienceType = -1;
 
@@ -4060,7 +4059,6 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    if(fountainType == -1)
    {
       fountainType = E_ThingNumForName("EEParticleFountain");
-      playerType   = E_ThingNumForDEHNum(MT_PLAYER);
       dripType     = E_ThingNumForName("EEParticleDrip");
       ambienceType = E_ThingNumForName("EEAmbience");
    }
@@ -4157,7 +4155,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       newmobj->flags &= ~MF_COUNTITEM;
    
    // 06/09/02: set player field for voodoo dolls
-   if(newmobj->type == playerType)
+   if(E_IsPlayerClassThingType(newmobj->type))
       newmobj->player = plyr;
    
    // killough 8/29/98: add to appropriate thread

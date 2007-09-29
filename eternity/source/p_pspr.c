@@ -354,9 +354,7 @@ static void P_FireWeapon(player_t *player)
 
    weapon = P_GetReadyWeapon(player);
 
-   // PCLASS_FIXME: first attack state -> EDF playerclass property
-   
-   P_SetMobjState(player->mo, E_SafeState(S_PLAY_ATK1));
+   P_SetMobjState(player->mo, player->mo->info->missilestate);
    newstate = weapon->atkstate;
    P_SetPsprite(player, ps_weapon, newstate);
 
@@ -472,15 +470,13 @@ void A_WeaponReady(mobj_t *mo)
 
    psp = &player->psprites[player->curpsprite];
 
-   // PCLASS_FIXME: attack states -> EDF playerclass properties
-   // PCLASS_FIXME: spawnstate -> EDF playerclass property
    // WEAPON_FIXME: chainsaw particulars (idle sound)
 
    // get out of attack state
-   if(mo->state == &states[E_SafeState(S_PLAY_ATK1)] || 
-      mo->state == &states[E_SafeState(S_PLAY_ATK2)])
+   if(mo->state == &states[mo->info->missilestate] || 
+      mo->state == &states[player->pclass->altattack])
    {
-      P_SetMobjState(mo, E_SafeState(S_PLAY));
+      P_SetMobjState(mo, mo->info->spawnstate);
    }
 
    if(player->readyweapon == wp_chainsaw && 
@@ -683,9 +679,7 @@ void A_GunFlash(mobj_t *mo)
    if(!player)
       return;
 
-   // PCLASS_FIXME: secondary attack state -> EDF playerclass property
-
-   P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
+   P_SetMobjState(mo, player->pclass->altattack);
    
    A_FireSomething(player, 0);                               // phares
 }
@@ -868,7 +862,7 @@ void A_FireOldBFG(mobj_t *mo)
    
    // sf: make sure the player is in firing frame, or it looks silly
    if(demo_version > 300)
-      P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
+      P_SetMobjState(mo, player->pclass->altattack);
    
    // WEAPON_FIXME: recoil for classic BFG
 
@@ -1019,7 +1013,7 @@ void A_FirePistol(mobj_t *mo)
    
    // PCLASS_FIXME: attack state two
 
-   P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
+   P_SetMobjState(mo, player->pclass->altattack);
 
    P_SubtractAmmo(player, 1);
    
@@ -1042,7 +1036,7 @@ void A_FireShotgun(mobj_t *mo)
    // PCLASS_FIXME: second attack state
 
    P_WeaponSound(mo, sfx_shotgn);
-   P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
+   P_SetMobjState(mo, player->pclass->altattack);
    
    P_SubtractAmmo(player, 1);
    
@@ -1068,7 +1062,7 @@ void A_FireShotgun2(mobj_t *mo)
    // PCLASS_FIXME: secondary attack state
    
    P_WeaponSound(mo, sfx_dshtgn);
-   P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
+   P_SetMobjState(mo, player->pclass->altattack);
 
    P_SubtractAmmo(player, 2);
    
@@ -1128,7 +1122,7 @@ void A_FireCGun(mobj_t *mo)
 
    // PCLASS_FIXME: secondary attack state
    
-   P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
+   P_SetMobjState(mo, player->pclass->altattack);
    
    P_SubtractAmmo(player, 1);
 
@@ -1499,7 +1493,7 @@ void A_FireCustomBullets(mobj_t *mo)
 
    // PCLASS_FIXME: secondary attack state
 
-   P_SetMobjState(mo, E_SafeState(S_PLAY_ATK2));
+   P_SetMobjState(mo, player->pclass->altattack);
 
    // subtract ammo amount
    if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&

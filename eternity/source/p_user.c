@@ -225,8 +225,9 @@ void P_MovePlayer (player_t* player)
             P_Thrust(player,mo->angle-ANG90,cmd->sidemove*movefactor);
          }
       }
-      if (mo->state == states+E_SafeState(S_PLAY))
-         P_SetMobjState(mo,E_SafeState(S_PLAY_RUN1));
+
+      if(mo->state == &states[mo->info->spawnstate])
+         P_SetMobjState(mo, mo->info->seestate);
    }
 }
 

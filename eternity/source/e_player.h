@@ -49,6 +49,7 @@ typedef struct playerclass_s
 
 playerclass_t *E_PlayerClassForName(const char *);
 void E_VerifyDefaultPlayerClass(void);
+boolean E_IsPlayerClassThingType(mobjtype_t);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

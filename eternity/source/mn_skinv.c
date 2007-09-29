@@ -62,6 +62,9 @@ static int skview_rot = 0;
 static boolean skview_halfspeed = false;
 static int skview_typenum; // 07/12/03
 
+// haleyjd 09/29/07: rewrites for player class engine
+static statenum_t skview_atkstate2;
+
 //
 // MN_SkinSetState
 //
@@ -133,7 +136,7 @@ static boolean MN_SkinResponder(event_t *ev)
       if(skview_action == SKV_WALKING)
       {
          S_StartSound(NULL, gameModeInfo->skvAtkSound);
-         MN_SkinSetState(&states[E_SafeState(S_PLAY_ATK2)]);
+         MN_SkinSetState(&states[skview_atkstate2]);
          skview_action = SKV_FIRING;
       }
       break;
@@ -289,11 +292,9 @@ void MN_SkinTicker(void)
 {
    if(skview_tics != -1 && menutime >= skview_tics)
    {
-      // EDF FIXME: frames need fix
       // hack states: these need special nextstate handling so
       // that the player will start walking again afterward
-      if(skview_state == &states[E_SafeState(S_PLAY_ATK1)] ||
-         skview_state == &states[E_SafeState(S_PLAY_PAIN2)])
+      if(skview_state->nextstate == mobjinfo[skview_typenum].spawnstate)
       {
          MN_SkinSetState(&states[mobjinfo[skview_typenum].seestate]);
          skview_action = SKV_WALKING;
@@ -323,11 +324,16 @@ menuwidget_t skinviewer = { MN_SkinDrawer, MN_SkinResponder, MN_SkinTicker, true
 //
 void MN_InitSkinViewer(void)
 {
+   playerclass_t *pclass = players[consoleplayer].pclass; // haleyjd 09/29/07
+
    // reset all state variables
    skview_action = SKV_WALKING;
    skview_rot = 0;
    skview_halfspeed = false;
-   skview_typenum = E_GetThingNumForDEHNum(MT_PLAYER);
+   skview_typenum = pclass->type;
+
+   // haleyjd 09/29/07: save alternate attack state number
+   skview_atkstate2  = pclass->altattack;
 
    MN_SkinSetState(&states[mobjinfo[skview_typenum].seestate]);
 

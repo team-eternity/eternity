@@ -109,9 +109,6 @@ typedef enum
 
   S_PLAY = 149,
   S_PLAY_RUN1,
-  S_PLAY_ATK1 = 154,
-  S_PLAY_ATK2,
-  S_PLAY_PAIN2 = 157,
 
   S_VILE_HEAL1 = 266,
 
@@ -196,7 +193,6 @@ extern char **sprnames;
 // haleyjd 08/02/04: only enum values actually used remain here now.
 //
 typedef enum {
-  MT_PLAYER = 1,
 
   MT_VILE = 4,
   MT_FIRE,

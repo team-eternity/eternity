@@ -490,7 +490,7 @@ boolean F_CastResponder(event_t* ev)
    castattacking = false;
    if(mobjinfo[castorder[castnum].type].deathsound)
    {
-      if(mobjinfo[castorder[castnum].type].dehnum == MT_PLAYER)
+      if(castorder[castnum].type == players[consoleplayer].pclass->type)
          S_StartSoundName(NULL, 
             players[consoleplayer].skin->sounds[sk_pldeth]);
       else
@@ -540,7 +540,7 @@ void F_CastDrawer(void)
       sprdef = &sprites[altsprite];
    
    // override for player skin?
-   if(mobjinfo[castorder[castnum].type].dehnum == MT_PLAYER)
+   if(castorder[castnum].type == players[consoleplayer].pclass->type)
       sprdef = &sprites[players[consoleplayer].skin->sprite];
    
    // haleyjd 08/15/02

@@ -131,14 +131,12 @@ static cfg_opt_t pc_skin_sound_opts[] =
 #define ITEM_SKIN_SPRITE  "sprite"
 #define ITEM_SKIN_FACES   "faces"
 #define ITEM_SKIN_SOUNDS  "sounds"
-#define ITEM_SKIN_CLASSES "classes"
 
 cfg_opt_t edf_skin_opts[] =
 {
    CFG_STR(ITEM_SKIN_SPRITE,  "PLAY",             CFGF_NONE),
    CFG_STR(ITEM_SKIN_FACES,   "STF",              CFGF_NONE),
    CFG_SEC(ITEM_SKIN_SOUNDS,  pc_skin_sound_opts, CFGF_NOCASE),
-   CFG_STR(ITEM_SKIN_CLASSES, NULL,               CFGF_LIST),
    CFG_END()
 };
 
@@ -341,8 +339,6 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       for(i = 0; i < NUMSKINSOUNDS; ++i)
          E_DoSkinSound(sndsec, def, newSkin, i, skin_sound_names[i]);
    }
-
-   // PCLASS_TODO: compatible skin classes
 }
 
 //
@@ -551,6 +547,27 @@ void E_VerifyDefaultPlayerClass(void)
               "does not exist!\n",
               gameModeInfo->defPClassName);
    }
+}
+
+boolean E_IsPlayerClassThingType(mobjtype_t motype)
+{
+   int i;
+
+   // run down all hash chains
+   for(i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   {
+      playerclass_t *chain = edf_player_classes[i];
+
+      while(chain)
+      {
+         if(chain->type == motype) // found a match
+            return true;
+
+         chain = chain->next;
+      }
+   }
+
+   return false;
 }
 
 // EOF

@@ -1289,8 +1289,8 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    }
    else if(demo_version < 303 || !(GameType == gt_dm))
    {
-      if(type == E_ThingNumForDEHNum(MT_PLAYER)) // Except in old demos, players
-         mobj->flags |= MF_FRIEND;               // are always friends.
+      if(E_IsPlayerClassThingType(type)) // Except in old demos, players
+         mobj->flags |= MF_FRIEND;       // are always friends.
    }
 
    mobj->health = info->spawnhealth;
@@ -1551,7 +1551,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    x    = mthing->x << FRACBITS;
    y    = mthing->y << FRACBITS;
    z    = ONFLOORZ;
-   mobj = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PLAYER));
+   mobj = P_SpawnMobj(x, y, z, p->pclass->type);
 
    // sf: set color translations for player sprites
    mobj->colour = players[mthing->type - 1].colormap;
