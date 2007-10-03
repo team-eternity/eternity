@@ -33,6 +33,7 @@
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_wad.h"
+#include "d_gi.h"
 
 // killough 2/8/98: Remove switch limit
 
@@ -521,7 +522,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
       if(thing->player && thing->player->health <= 0 && 
          !comp[comp_zombie])
       {
-         S_StartSound(thing, sfx_noway);
+         S_StartSound(thing, gameModeInfo->playerSounds[sk_oof]);
          return false;
       }
       P_ChangeSwitchTexture(line,0,0);
@@ -600,7 +601,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
       if(thing->player && thing->player->health <= 0 &&
          !comp[comp_zombie])
       {
-         S_StartSound(thing, sfx_noway);
+         S_StartSound(thing, gameModeInfo->playerSounds[sk_oof]);
          return false;
       }
       P_ChangeSwitchTexture(line,0,0);

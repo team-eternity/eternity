@@ -1544,7 +1544,7 @@ static void P_HitSlideLine(line_t *ld)
       {
          // haleyjd: only the player should oof
          if(slidemo->player)
-            S_StartSound(slidemo, sfx_oof); // oooff!
+            S_StartSound(slidemo, gameModeInfo->playerSounds[sk_oof]); // oooff!
          tmxmove /= 2; // absorb half the momentum
          tmymove = -tmymove/2;
       }
@@ -1559,7 +1559,7 @@ static void P_HitSlideLine(line_t *ld)
       {
          // haleyjd: only the player should oof
          if(slidemo->player)
-            S_StartSound(slidemo, sfx_oof); // oooff!
+            S_StartSound(slidemo, gameModeInfo->playerSounds[sk_oof]); // oooff!
          tmxmove = -tmxmove/2; // absorb half the momentum
          tmymove /= 2;
       }
@@ -1593,7 +1593,7 @@ static void P_HitSlideLine(line_t *ld)
    {
       // haleyjd: only the player should oof
       if(slidemo->player)
-         S_StartSound(slidemo,sfx_oof); // oooff!
+         S_StartSound(slidemo, gameModeInfo->playerSounds[sk_oof]); // oooff!
       moveangle = lineangle - deltaangle;
       movelen /= 2; // absorb
       moveangle >>= ANGLETOFINESHIFT;
@@ -2805,7 +2805,8 @@ static boolean PTR_UseTraverse(intercept_t *in)
       if(openrange <= 0)
       {
          // can't use through a wall
-         S_StartSound(usething, sfx_noway);
+         // PCLASS_FIXME: add noway sound to skins
+         S_StartSound(usething, gameModeInfo->playerSounds[sk_oof]);
          return false;
       }
       // not a special line, but keep checking
@@ -2867,7 +2868,8 @@ void P_UseLines(player_t *player)
    
    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
       if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse))
-         S_StartSound(usething, sfx_noway);
+         // PCLASS_FIXME: add noway sound to skins
+         S_StartSound(usething, gameModeInfo->playerSounds[sk_oof]);
 }
 
 //

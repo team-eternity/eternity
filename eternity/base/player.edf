@@ -3,6 +3,8 @@
 # This file contains player-related definitions, including
 # skins, player classes, and weapons.
 
+ifenabled(DOOM)
+
 skin marine {}
 
 playerclass DoomMarine
@@ -11,3 +13,18 @@ playerclass DoomMarine
    thingtype      = DoomPlayer
    altattackstate = S_PLAY_ATK2
 }
+
+endif()
+
+ifenabled(HERETIC)
+
+skin corvus {}
+
+playerclass Corvus
+{
+   defaultskin    = corvus
+   thingtype      = HereticPlayer
+   altattackstate = S_HPLAY_ATK2
+}
+
+endif()

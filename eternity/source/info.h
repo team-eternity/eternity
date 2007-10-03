@@ -107,9 +107,6 @@ typedef enum
 
   S_EXPLODE1 = 127,
 
-  S_PLAY = 149,
-  S_PLAY_RUN1,
-
   S_VILE_HEAL1 = 266,
 
   S_SARG_RUN1 = 477,
@@ -286,6 +283,8 @@ typedef enum {
   MT_IMPCHUNK1 = 395,
   MT_IMPCHUNK2,
   MT_IMPBALL,
+
+  MT_HPLAYERSKULL = 399,
 
 // Start Eternity TC New Things
   MT_CLRBALL = 222,           // cleric projectile

@@ -41,6 +41,7 @@ enum
    sk_plfall, // haleyjd: new sounds -- breaks compatibility
    sk_plfeet,
    sk_fallht,
+   sk_plwdth, // haleyjd: wimpy death
    NUMSKINSOUNDS
 };
 

@@ -192,6 +192,7 @@ typedef enum {
   pr_weapsetctr, // WeaponSetCtr
   pr_quake,      // T_QuakeThinker
   pr_quakedmg,   // quake damage
+  pr_skullpop,   // Heretic skull flying
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

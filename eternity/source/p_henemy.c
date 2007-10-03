@@ -2005,6 +2005,47 @@ void A_ImpExplode(mobj_t *actor)
 }
 
 //
+// Heretic player functions
+//
+
+// PCLASS_FIXME: skull height a playerclass property?
+#define SKULLHEIGHT (48 * FRACUNIT)
+
+void A_PlayerSkull(mobj_t *actor)
+{
+   mobj_t *head;
+   static int skullType = -1;
+
+   if(skullType == -1)
+      skullType = E_SafeThingType(MT_HPLAYERSKULL);
+
+   head = P_SpawnMobj(actor->x, actor->y, actor->z + SKULLHEIGHT, skullType);
+
+   // transfer player to head
+   head->player = actor->player;
+   head->health = actor->health;
+   head->angle  = actor->angle;
+
+   // clear old body of player
+   actor->flags &= ~MF_SOLID;
+   actor->player = NULL;
+
+   // fiddle with player properties
+   if(head->player)
+   {
+      head->player->mo          = head; // set player's thing to head
+      head->player->pitch       = 0;    // don't look up or down
+      head->player->damagecount = 32;   // see red for a while
+   }
+   
+   // send head flying
+   head->momx = 512 * P_SubRandom(pr_skullpop);
+   head->momy = 512 * P_SubRandom(pr_skullpop);
+   head->momz =  64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
+}
+
+
+//
 // Other Parameterized Codepointer Functions
 //
 

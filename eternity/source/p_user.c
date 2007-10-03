@@ -40,6 +40,7 @@
 #include "s_sound.h"
 #include "a_small.h"
 #include "e_states.h"
+#include "d_gi.h"
 
 //
 // Movement.
@@ -255,9 +256,10 @@ void P_DeathThink(player_t* player)
       player->viewheight = 6*FRACUNIT;
    
    player->deltaviewheight = 0;
-   onground = (player->mo->z <= player->mo->floorz) ||
-                 (player->mo->intflags & MIF_ONMOBJ);
-   P_CalcHeight (player);
+   //onground = (player->mo->z <= player->mo->floorz) ||
+   //              (player->mo->intflags & MIF_ONMOBJ);
+   onground = true;
+   P_CalcHeight(player);
    
    if(player->attacker && player->attacker != player->mo)
    {
@@ -402,7 +404,7 @@ void P_PlayerThink(player_t* player)
          !(player->mo->intflags & MIF_SCREAMED))
       {
          player->mo->intflags |= MIF_SCREAMED;
-         S_StartSound(player->mo, sfx_plfall);
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_plfall]);
       }
    }
   

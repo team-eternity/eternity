@@ -11,12 +11,9 @@
 #     used by editors, via EDF or DeHackEd, until their order and existence
 #     have been finalized and officially documented.
 
-//
-// DoomPlayer
-//
-// Currently defined in all gamemodes, but this is subject to change.
-// Avatar object used by players.
-// 
+// Begin thingtypes only defined when Doom is enabled
+
+ifenabled(DOOM)
 
 thingtype DoomPlayer {
   spawnstate = S_PLAY
@@ -39,10 +36,6 @@ thingtype DoomPlayer {
   mod = 24
   dehackednum = 1
 }
-
-// Begin thingtypes only defined in DOOM mode
-
-ifenabled(DOOM)
 
 thingtype Zombieman {
   doomednum = 3004
@@ -2963,6 +2956,38 @@ thingtype HereticImpShot {
   cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS
   acs_spawndata { num = 10; modes = heretic }
   dehackednum = 397
+}
+
+thingtype HereticPlayer {
+  spawnstate = S_HPLAY
+  spawnhealth = 100
+  seestate = S_HPLAY_RUN1
+  reactiontime = 0
+  painstate = S_HPLAY_PAIN
+  painchance = 255
+  painsound = ht_plrpai
+  missilestate = S_HPLAY_ATK1
+  deathstate = S_HPLAY_DIE1
+  xdeathstate = S_HPLAY_XDIE1
+  deathsound = ht_plrdth
+  radius = 16.0
+  height = 56.0
+  flags  = SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
+  flags2 = FOOTCLIP
+  flags3 = SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
+  droptype = BagOfHolding // this is currently disabled due to bugs!
+  mod = playermisc
+  dehackednum = 398
+}
+
+thingtype HereticPlayerSkull 
+{
+  spawnstate = S_HPLAYERSKULL1
+  crashstate = S_HPLAYERSKULLX
+  radius = 4.0
+  height = 4.0
+  cflags = CORPSE|DROPOFF|LOGRAV|CANNOTPUSH
+  dehackednum = 399
 }
 
 endif()

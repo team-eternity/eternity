@@ -51,6 +51,7 @@
 #include "e_sound.h"
 #include "d_dehtbl.h"
 #include "p_info.h"
+#include "d_gi.h"
 
 int weapon_speed = 6;
 int default_weapon_speed = 6;
@@ -740,7 +741,7 @@ void A_Punch(mobj_t *mo)
    if(!linetarget)
       return;
 
-   P_WeaponSound(mo, sfx_punch);
+   P_WeaponSound(mo, gameModeInfo->playerSounds[sk_punch]);
 
    // turn to face target
    mo->angle = R_PointToAngle2(mo->x, mo->y, linetarget->x, linetarget->y);

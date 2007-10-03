@@ -52,7 +52,8 @@ spritenames +=
   "TNT1","DOGS","PLS1","PLS2","UNKN","SPSH","SLDG","LVAS",
   
   # Warning: Do not use any of these sprites! They may be killed off.
-  "CLER","CBAL","FOGS","FOGM","FOGL","LCLR","DWRF","FDWF","GREN","PNS2","EERV"
+  "CLER","CBAL","FOGS","FOGM","FOGL","LCLR","DWRF","FDWF","GREN","PNS2",
+  "EERV"
 }
 
 
@@ -68,7 +69,7 @@ spritenames +=
   "PPOD","KNIG","SPAX","RAXE","BLOD","BEAS","FRB1","SNKE","SNFX","SRCR",
   "FX14","VLCO","VFBL","XPL1","VTFB","SFFI","MNTR","FX12","FX13","FX04",
   "FX05","FX06","FX07","AMG1","AMG2","AMM1","AMM2","AMC1","AMC2","AMB1",
-  "AMB2","AMS1","AMS2","AMP1","AMP2","IMPX","FX10"
+  "AMB2","AMS1","AMS2","AMP1","AMP2","IMPX","FX10","BSKL"
 }
 
 endif()

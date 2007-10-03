@@ -333,7 +333,7 @@ void MN_InitSkinViewer(void)
    skview_typenum = pclass->type;
 
    // haleyjd 09/29/07: save alternate attack state number
-   skview_atkstate2  = pclass->altattack;
+   skview_atkstate2 = pclass->altattack;
 
    MN_SkinSetState(&states[mobjinfo[skview_typenum].seestate]);
 

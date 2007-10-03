@@ -1325,16 +1325,7 @@ void A_Look(mobj_t *actor)
       case sfx_bgsit2:
          sound = sfx_bgsit1 + P_Random(pr_see) % 2;
          break;
-         
-      case sfx_dfsit1:  // haleyjd: dwarf screams :)
-      case sfx_dfsit2:
-         sound = sfx_dfsit1 + P_Random(pr_see) % 2;
-         break;
-         
-      case sfx_clsit1:  // haleyjd: new cleric quips - only if uses clsit1
-         sound = sfx_clsit1 + P_Random(pr_see) % 4;
-         break;
-         
+                  
       default:
          sound = actor->info->seesound;
          break;
@@ -2637,13 +2628,13 @@ void A_Scream(mobj_t *actor)
 
 void A_XScream(mobj_t *actor)
 {
-   int sound = sfx_slop;
+   int sound = gameModeInfo->playerSounds[sk_slop];
    
    // haleyjd: falling damage
    if(!comp[comp_fallingdmg] && demo_version >= 329)
    {
       if(actor->player && actor->intflags & MIF_DIEDFALLING)
-         sound = sfx_fallht;
+         sound = gameModeInfo->playerSounds[sk_fallht];
    }
    
    S_StartSound(actor, sound);
@@ -3067,16 +3058,31 @@ void A_SpawnFly(mobj_t *mo)
 
 void A_PlayerScream(mobj_t *mo)
 {
-   int sound = sfx_pldeth;  // Default death sound.
-   if(gamemode != shareware && mo->health < -50) // killough 12/98
-      sound = sfx_pdiehi;   // IF THE PLAYER DIES LESS THAN -50% WITHOUT GIBBING
-   
-   // haleyjd: maybe we died from falling, if so, gross falling death sound
-   if(!comp[comp_fallingdmg] && demo_version >= 329 && 
+   int sound;
+
+   if(mo->player && strcasecmp(mo->player->skin->sounds[sk_plwdth], "none") &&
+      mo->intflags & MIF_WIMPYDEATH)
+   {
+      // haleyjd 09/29/07: wimpy death, if supported
+      sound = sk_plwdth;
+   }
+   else if(gamemode == shareware || mo->health >= -50)
+   {
+      // Default death sound
+      sound = sk_pldeth; 
+   }
+   else
+   {
+      // IF THE PLAYER DIES LESS THAN -50% WITHOUT GIBBING
+      sound = sk_pdiehi;
+   }
+
+   // if died falling, gross falling death sound
+   if(!comp[comp_fallingdmg] && demo_version >= 329 &&
       mo->intflags & MIF_DIEDFALLING)
-      sound = sfx_fallht;
-   
-   S_StartSound(mo, sound);
+      sound = sk_fallht;
+      
+   S_StartSound(mo, gameModeInfo->playerSounds[sound]);
 }
 
 //

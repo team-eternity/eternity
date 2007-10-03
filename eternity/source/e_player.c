@@ -112,6 +112,7 @@ static dehflagset_t weapon_flagset =
 #define ITEM_SKINSND_FALL    "fall"
 #define ITEM_SKINSND_FEET    "feet"
 #define ITEM_SKINSND_FALLHIT "fallhit"
+#define ITEM_SKINSND_PLWDTH  "plwdth"
 
 static cfg_opt_t pc_skin_sound_opts[] =
 {
@@ -125,6 +126,7 @@ static cfg_opt_t pc_skin_sound_opts[] =
    CFG_STR(ITEM_SKINSND_FALL,    "plfall", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_FEET,    "plfeet", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_FALLHIT, "fallht", CFGF_NONE),
+   CFG_STR(ITEM_SKINSND_PLWDTH,  "plwdth", CFGF_NONE),
    CFG_END()
 };
 
@@ -251,7 +253,8 @@ static const char *skin_sound_names[NUMSKINSOUNDS] =
    ITEM_SKINSND_DIE,
    ITEM_SKINSND_FALL,
    ITEM_SKINSND_FEET,
-   ITEM_SKINSND_FALLHIT
+   ITEM_SKINSND_FALLHIT,
+   ITEM_SKINSND_PLWDTH,
 };
 
 //
@@ -549,6 +552,13 @@ void E_VerifyDefaultPlayerClass(void)
    }
 }
 
+//
+// E_IsPlayerClassThingType
+//
+// Checks all extant player classes to see if any stakes a claim on the
+// indicated thingtype. Linear search over a small set. This is the only
+// real, efficient way to see if a thingtype is a potential player.
+//
 boolean E_IsPlayerClassThingType(mobjtype_t motype)
 {
    int i;
@@ -566,6 +576,45 @@ boolean E_IsPlayerClassThingType(mobjtype_t motype)
          chain = chain->next;
       }
    }
+
+   return false;
+}
+
+//
+// E_PlayerInWalkingState
+//
+// This function is necessitated by the code in P_XYMovement that puts the
+// player back in his spawnstate when his momentum has expired. The previous
+// code there was a gross hack that made three assumptions:
+//
+// 1. The player's root walking frame was S_PLAY_RUN1.
+// 2. The player's walking frames were sequentially defined.
+// 3. The player had exactly 4 walking frames.
+//
+// None of these are safe under EDF, nor under player classes. Instead we
+// have to walk the state sequence stemming from the player's
+// mobjinfo::seestate and compare the player's frame against every frame
+// within that cycle. The frame cycle should always be relatively short
+// (4 frames or so), so this isn't going to be a time-consuming operation.
+// The walking frame cycle had better be closed, or this may go haywire.
+//
+boolean E_PlayerInWalkingState(player_t *player)
+{
+   state_t *pstate, *curstate, *seestate;
+
+   pstate   = player->mo->state;
+   seestate = &states[player->mo->info->seestate];
+
+   curstate = seestate;
+
+   do
+   {
+      if(curstate == pstate) // found a match
+         return true;
+
+      curstate = &states[curstate->nextstate]; // try next state
+   }
+   while(curstate != seestate); // terminate when it loops
 
    return false;
 }

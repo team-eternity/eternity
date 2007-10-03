@@ -47,6 +47,7 @@
 #include "e_edf.h"
 #include "e_sound.h"
 #include "e_player.h"
+#include "d_gi.h"
 
 /*
 skin_t marine = 
@@ -94,44 +95,15 @@ static const char *skinsoundnames[NUMSKINSOUNDS] =
    "dsplfall",
    "dsplfeet",
    "dsfallht",
-};
-
-static char *skinsounddefs[NUMSKINSOUNDS] =
-{
-   "plpain",
-   "pdiehi",
-   "oof",
-   "slop",
-   "punch",
-   "radio",
-   "pldeth",
-   "plfall",
-   "plfeet",
-   "fallht",
+   "dsplwdth",
 };
 
 // forward prototypes
 static void P_AddSkin(skin_t *newskin);
-//static void P_CreateMarine(void);
 static void P_AddEDFSkins(void);
 static void P_CacheFaces(skin_t *skin);
 static void P_InitMonsterSkins(void);
 static skin_t *P_SkinForName(char *s);
-
-/*
-//
-// GetDefSound
-//
-// This function gets the EDF sound mnemonic for a given sound DeHackEd
-// number. This keeps skins more compatible than they were previously.
-//
-static void GetDefSound(char **var, int dehnum)
-{
-   sfxinfo_t *sfx = E_SoundForDEHNum(dehnum);
-
-   *var = (sfx ? sfx->mnemonic : "none");
-}
-*/
 
 //
 // P_ResolveSkinSounds
@@ -141,8 +113,7 @@ static void GetDefSound(char **var, int dehnum)
 static void P_ResolveSkinSounds(skin_t *skin)
 {
    int i;
-
-   // FIXME: need to use proper defaults based on gamemode.
+   const char **skinsounddefs = gameModeInfo->skinSounds;
 
    for(i = 0; i < NUMSKINSOUNDS; ++i)
    {
@@ -216,22 +187,6 @@ void P_InitSkins(void)
    *currentsprite = NULL;     // end in null
 }
 
-
-/*
-static void P_CreateMarine(void)
-{
-   static boolean marine_created = false;
-   
-   if(marine_created) 
-      return;      // dont make twice
-
-   marine.sprite = playerSpriteNum;
-   
-   P_AddSkin(&marine);
-   
-   marine_created = true;
-}
-*/
 
 //
 // P_AddEDFSkins

@@ -86,7 +86,6 @@ enum
    MN_SND_NUMSOUNDS,
 };
 
-
 // Game Mode Flags
 
 #define GIF_HASDISK      0x00000001  // has flashing io disk
@@ -192,6 +191,8 @@ typedef struct gameinfo_s
    int numMusic;              // maximum music index value
    char *musPrefix;           // "D_" for DOOM, "MUS_" for Heretic
    const char *defSoundName;  // default sound if one is missing
+   const char **skinSounds;   // default skin sound mnemonics array
+   int *playerSounds;         // player sound dehnum indirection
 
    // Miscellaneous stuff
    const char *endTextName;   // name of end text resource

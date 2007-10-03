@@ -865,7 +865,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
          !player->cards[it_yellowskull])
       {
          player_printf(player, "%s", DEH_String("PD_ANY"));
-         S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]);  // killough 3/20/98
          return false;
       }
       break;
@@ -879,7 +879,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
             player_printf(player, "%s",
                DEH_String(skulliscard ? "PD_REDK" : "PD_REDC"));
          
-         S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]);  // killough 3/20/98
          return false;
       }
       break;
@@ -889,7 +889,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       {
          player_printf(player, "%s",
             DEH_String(skulliscard ? "PD_BLUEK" : "PD_BLUEC"));
-         S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]);  // killough 3/20/98
          return false;
       }
       break;
@@ -899,7 +899,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       {
          player_printf(player, "%s",
             DEH_String(skulliscard ? "PD_YELLOWK" : "PD_YELLOWC"));
-         S_StartSound(player->mo,sfx_oof);  // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]);  // killough 3/20/98
          return false;
       }
       break;
@@ -912,7 +912,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
          else
             player_printf(player, "%s",
                DEH_String(skulliscard ? "PD_REDK" : "PD_REDS"));
-         S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return false;
       }
       break;
@@ -922,7 +922,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       {
          player_printf(player, "%s",
             DEH_String(skulliscard ? "PD_BLUEK" : "PD_BLUES"));
-         S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return false;
       }
       break;
@@ -932,7 +932,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
       {
          player_printf(player, "%s",
             DEH_String(skulliscard ? "PD_YELLOWK" : "PD_YELLOWS"));
-         S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return false;
       }
       break;
@@ -946,7 +946,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
           !player->cards[it_yellowskull]))
       {
          player_printf(player, "%s", DEH_String("PD_ALL6"));
-         S_StartSound(player->mo, sfx_oof);           // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return false;
       }
       // haleyjd: removed extra ! from player->cards[it_yellowskull]
@@ -960,7 +960,7 @@ boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
                                     player->cards[it_yellowskull]))))
       {
          player_printf(player, "%s", DEH_String("PD_ALL3"));
-         S_StartSound(player->mo,sfx_oof);             // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return false;
       }
       break;

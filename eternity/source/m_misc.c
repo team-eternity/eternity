@@ -2395,10 +2395,13 @@ void M_ScreenShot(void)
    // players[consoleplayer].message = "screen shot"
    
    // killough 10/98: print error message and change sound effect if error
-   S_StartSound(NULL, !success ? doom_printf(errno ? strerror(errno) :
-                                             FC_ERROR"Could not take screenshot"), sfx_oof :
-                gameModeInfo->c_BellSound);  // just tink, no radio
-                                             // tink is in doom2 too
+   if(!success)
+   {
+      doom_printf(errno? strerror(errno) : FC_ERROR "Could not take screenshot");
+      S_StartSound(NULL, gameModeInfo->playerSounds[sk_oof]);
+   }
+   else
+      S_StartSound(NULL, gameModeInfo->c_BellSound);
 }
 
 // haleyjd: portable strupr function

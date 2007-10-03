@@ -259,6 +259,17 @@ sound Earthquake
    dehackednum = 124
 }
 
+ifenabled(DOOM)
+
+# A sound entry for the player wimpy death
+sound plwdth 
+{ 
+   pitchvariance = Doom; priority =  32; dehackednum = 125; 
+   skinindex = sk_plwdth
+}
+
+endif()
+
 # WARNING: all sounds below are not standardized yet -- if you use them, your mods
 # will break when used with future versions of Eternity, so don't use them.
 
@@ -280,6 +291,7 @@ sound ht_telept
 sound ht_chat
 {
    lump = "chat";   priority =  60; dehackednum = 302; pitchvariance = Heretic
+   skinindex = sk_radio
 }
 
 sound ht_keyup
@@ -735,8 +747,43 @@ sound ht_amb11
 
 sound ht_dormov
 {
-   lump = "dormov"; priority = 119; dehackednum = 391
-   pitchvariance = Heretic
+   lump = "dormov"; priority = 119; dehackednum = 391; pitchvariance = Heretic
+}
+
+sound ht_plroof
+{
+   lump = "plroof"; priority = 96;  dehackednum = 392; pitchvariance = Heretic
+   skinindex = sk_oof
+}
+
+sound ht_plrpai
+{
+   lump = "plrpai"; priority = 96;  dehackednum = 393; pitchvariance = Heretic
+   skinindex = sk_plpain
+}
+
+sound ht_plrdth
+{
+   lump = "plrdth"; priority = 32;  dehackednum = 394; pitchvariance = Heretic
+   skinindex = sk_pldeth
+}
+
+sound ht_gibdth
+{
+   lump = "gibdth"; priority = 112; dehackednum = 395; pitchvariance = Heretic
+   skinindex = sk_slop
+}
+
+sound ht_plrwdth
+{
+   lump = "plrwdth"; priority = 32; dehackednum = 396; pitchvariance = Heretic
+   skinindex = sk_plwdth
+}
+
+sound ht_plrcdth
+{
+   lump = "plrcdth"; priority = 32; dehackednum = 397; pitchvariance = Heretic
+   skinindex = sk_pdiehi
 }
 
 endif()

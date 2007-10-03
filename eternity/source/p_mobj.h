@@ -301,6 +301,7 @@ enum
    MIF_ISCHILD     = 0x00000400, // haleyjd: thing spawned as a child
    MIF_NOTOUCH     = 0x00000800, // haleyjd: OVER_UNDER: don't blow up touchies
    MIF_ONMOBJ      = 0x00001000, // haleyjd: OVER_UNDER: is on another thing
+   MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
 };
 
 // ammo + weapon in a dropped backpack 

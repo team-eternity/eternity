@@ -1382,14 +1382,16 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       if(player)
          P_DeathMessage(source, target, inflictor);
 
+      // haleyjd 09/29/07: wimpy death?
+      if(damage <= 10)
+         target->intflags |= MIF_WIMPYDEATH;
+
       P_KillMobj(source, target);
       return;
    }
 
-   // haleyjd: special falling death hack
-   //          if we got here, we didn't really die
-   if(target->intflags & MIF_DIEDFALLING)
-      target->intflags &= ~MIF_DIEDFALLING;
+   // haleyjd: special death hacks: if we got here, we didn't really die
+   target->intflags &= ~(MIF_DIEDFALLING|MIF_WIMPYDEATH);
 
    // killough 9/7/98: keep track of targets so that friends can help friends
    if(demo_version >= 203)

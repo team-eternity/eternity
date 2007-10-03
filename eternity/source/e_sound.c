@@ -122,6 +122,7 @@ static const char *skinindices[] =
    "sk_plfall",
    "sk_plfeet",
    "sk_fallht",
+   "sk_plwdth",
 };
 
 #define NUM_SKININDICES (sizeof(skinindices) / sizeof(char *))

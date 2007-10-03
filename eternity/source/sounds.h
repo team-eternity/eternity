@@ -391,6 +391,8 @@ typedef enum {
   sfx_burn,   // lava terrain sound
   sfx_eehtsz, // heat sizzle
   sfx_eedrip, // drip
+  sfx_quake2, // earthquake
+  sfx_plwdth, // player wimpy death
 
   // haleyjd 10/08/02: heretic sounds
   sfx_gldhit = 300,
@@ -468,6 +470,29 @@ typedef enum {
   sfx_heddth,
   sfx_hedact,
   sfx_hedpai,
+  sfx_impsit,
+  sfx_impat1,
+  sfx_impat2,
+  sfx_imppai,
+  sfx_impdth,
+  sfx_htamb1,
+  sfx_htamb2,
+  sfx_htamb3,
+  sfx_htamb4,
+  sfx_htamb5,
+  sfx_htamb6,
+  sfx_htamb7,
+  sfx_htamb8,
+  sfx_htamb9,
+  sfx_htamb10,
+  sfx_htamb11,
+  sfx_htdormov,
+  sfx_hplroof,
+  sfx_hplrpai,
+  sfx_hplrdth,
+  sfx_hgibdth,
+  sfx_hplrwdth,
+  sfx_hplrcdth,
 
   // Start Eternity TC New SFX -- TODO: eliminate or standardize
   sfx_clratk = 182, // cleric sounds

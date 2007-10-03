@@ -1365,6 +1365,7 @@ extern void A_ImpDeath();
 extern void A_ImpXDeath1();
 extern void A_ImpXDeath2();
 extern void A_ImpExplode();
+extern void A_PlayerSkull();
 
 // eternity tc ptrs: TODO: remove these?
 extern void A_ClericAtk();
@@ -1527,7 +1528,7 @@ deh_bexptr deh_bexptrs[] =
   {A_SpawnGlitter,      "SpawnGlitter",  BPF_PTHUNK},
   {A_AccelGlitter,      "AccelGlitter",  BPF_PTHUNK},
   {A_SpawnAbove,        "SpawnAbove",    BPF_PTHUNK},
-  {A_MummyAttack,	      "MummyAttack",   BPF_PTHUNK},
+  {A_MummyAttack,       "MummyAttack",   BPF_PTHUNK},
   {A_MummyAttack2,      "MummyAttack2",  BPF_PTHUNK},
   {A_MummySoul,         "MummySoul",     BPF_PTHUNK},
   {A_HticDrop,          "HticDrop",      BPF_PTHUNK},
@@ -1559,12 +1560,12 @@ deh_bexptr deh_bexptrs[] =
   {A_SorcererRise,      "SorcererRise",  BPF_PTHUNK},
   {A_VolcanoBlast,      "VolcanoBlast",  BPF_PTHUNK},
   {A_VolcBallImpact,    "VolcBallImpact"},
-  {A_MinotaurAtk1,	   "MinotaurAtk1",  BPF_PTHUNK},
-  {A_MinotaurDecide,	   "MinotaurDecide"},
-  {A_MinotaurAtk2,	   "MinotaurAtk2",  BPF_PTHUNK},
-  {A_MinotaurAtk3,	   "MinotaurAtk3"},
-  {A_MinotaurCharge,	   "MinotaurCharge"},
-  {A_MntrFloorFire,	   "MntrFloorFire"},
+  {A_MinotaurAtk1,      "MinotaurAtk1",  BPF_PTHUNK},
+  {A_MinotaurDecide,    "MinotaurDecide"},
+  {A_MinotaurAtk2,      "MinotaurAtk2",  BPF_PTHUNK},
+  {A_MinotaurAtk3,      "MinotaurAtk3"},
+  {A_MinotaurCharge,    "MinotaurCharge"},
+  {A_MntrFloorFire,     "MntrFloorFire"},
   {A_LichFire,          "LichFire",      BPF_PTHUNK},
   {A_LichWhirlwind,     "LichWhirlwind", BPF_PTHUNK},
   {A_LichAttack,        "LichAttack",    BPF_PTHUNK},
@@ -1578,6 +1579,7 @@ deh_bexptr deh_bexptrs[] =
   {A_ImpXDeath1,        "ImpXDeath1"},
   {A_ImpXDeath2,        "ImpXDeath2"},
   {A_ImpExplode,        "ImpExplode"},
+  {A_PlayerSkull,       "PlayerSkull"},
   
   // ETERNITY TC ptrs -- TODO: eliminate these
   {A_ClericAtk, "ClericAtk"},
@@ -1594,6 +1596,7 @@ deh_bexptr deh_bexptrs[] =
   {A_DwarfAlterEgoChase,  "DwarfAlterEgoChase"},
   {A_DwarfAlterEgoAttack, "DwarfAlterEgoAttack"},
   {A_PhoenixTracer, "PhoenixTracer"},
+
   // This NULL entry must be the last in the list
   {NULL,             "NULL"},  // Ty 05/16/98
 };

@@ -210,6 +210,70 @@ extern menu_t menu_newgame;
 extern menu_t menu_hnewgame;
 
 //
+// Skin Sound Defaults
+//
+
+static char *doom_skindefs[NUMSKINSOUNDS] =
+{
+   "plpain",
+   "pdiehi",
+   "oof",
+   "slop",
+   "punch",
+   "radio",
+   "pldeth",
+   "plfall",
+   "plfeet",
+   "fallht",
+   "none",
+};
+
+static int doom_soundnums[NUMSKINSOUNDS] =
+{
+   sfx_plpain,
+   sfx_pdiehi,
+   sfx_oof,
+   sfx_slop,
+   sfx_punch,
+   sfx_radio,
+   sfx_pldeth,
+   sfx_plfall,
+   sfx_plfeet,
+   sfx_fallht,
+   sfx_plwdth,
+};
+
+static char *htic_skindefs[NUMSKINSOUNDS] =
+{
+   "ht_plrpai",
+   "ht_plrcdth",
+   "ht_plroof",
+   "ht_gibdth",
+   "none",      // HTIC_FIXME
+   "ht_chat",
+   "ht_plrdth",
+   "plfall",
+   "plfeet",
+   "fallht",
+   "ht_plrwdth",
+};
+
+static int htic_soundnums[NUMSKINSOUNDS] =
+{
+   sfx_hplrpai,
+   sfx_hplrcdth,
+   sfx_hplroof,
+   sfx_hgibdth,
+   sfx_None,    // HTIC_FIXME
+   sfx_chat,
+   sfx_hplrdth,
+   sfx_plfall,
+   sfx_plfeet,
+   sfx_fallht,
+   sfx_hplrwdth,
+};
+
+//
 // Game Mode Information Structures
 //
 
@@ -363,6 +427,8 @@ gameinfo_t giDoomReg =
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
    DOOMDEFSOUND,     // defSoundName
+   doom_skindefs,    // skinSounds
+   doom_soundnums,   // playerSounds
 
    "ENDOOM",         // endTextName
 };
@@ -511,6 +577,8 @@ gameinfo_t giDoomCommercial =
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
    DOOMDEFSOUND,     // defSoundName
+   doom_skindefs,    // skinSounds
+   doom_soundnums,   // playerSounds
 
    "ENDOOM",         // endTextName
 };
@@ -574,7 +642,7 @@ gameinfo_t giHereticSW =
    sfx_htelept,      // teleSound
    150,              // thrustFactor
    true,             // hasMadMelee
-   "DoomMarine",     // defPClassName -- PCLASS_FIXME
+   "Corvus",         // defPClassName
 
    hmus_intr,        // interMusNum
    &giHticFText,     // ftextinfo
@@ -585,6 +653,8 @@ gameinfo_t giHereticSW =
    NUMHTICMUSIC,     // numMusic
    "mus_",           // musPrefix
    HTICDEFSOUND,     // defSoundName
+   htic_skindefs,    // skinSounds
+   htic_soundnums,   // playerSounds
 
    "ENDTEXT",        // endTextName
 };
@@ -652,7 +722,7 @@ gameinfo_t giHereticReg =
    sfx_htelept,      // teleSound
    150,              // thrustFactor
    true,             // hasMadMelee
-   "DoomMarine",     // defPClassName -- PCLASS_FIXME
+   "Corvus",         // defPClassName
 
    hmus_intr,        // interMusNum
    &giHticFText,     // ftextinfo
@@ -663,6 +733,8 @@ gameinfo_t giHereticReg =
    NUMHTICMUSIC,     // numMusic
    "mus_",           // musPrefix
    HTICDEFSOUND,     // defSoundName
+   htic_skindefs,    // skinSounds
+   htic_soundnums,   // playerSounds
 
    "ENDTEXT",        // endTextName
 };

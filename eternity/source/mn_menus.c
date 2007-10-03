@@ -1541,7 +1541,7 @@ CONSOLE_COMMAND(quicksave, 0)
 
    if(!usergame && (!demoplayback || netgame))  // killough 10/98
    {
-      S_StartSound(NULL, sfx_oof);
+      S_StartSound(NULL, gameModeInfo->playerSounds[sk_oof]);
       return;
    }
    

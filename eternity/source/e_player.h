@@ -48,8 +48,10 @@ typedef struct playerclass_s
 } playerclass_t;
 
 playerclass_t *E_PlayerClassForName(const char *);
-void E_VerifyDefaultPlayerClass(void);
+
+void    E_VerifyDefaultPlayerClass(void);
 boolean E_IsPlayerClassThingType(mobjtype_t);
+boolean E_PlayerInWalkingState(player_t *);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

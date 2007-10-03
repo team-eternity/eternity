@@ -457,13 +457,13 @@ void P_XYMovement(mobj_t* mo)
    {
       // if in a walking frame, stop moving
 
-      // haleyjd 07/25/03: FIXME: this is ugly.
+      // haleyjd 09/29/07: cleared fixme on gross hack
       // killough 10/98:
       // Don't affect main player when voodoo dolls stop, except in old demos:
 
-      if(player && (unsigned)(player->mo->state - states - E_SafeState(S_PLAY_RUN1)) < 4
-         && (player->mo == mo || demo_version < 203))
-         P_SetMobjState(player->mo, E_SafeState(S_PLAY));
+      if(player && E_PlayerInWalkingState(player) && 
+         (player->mo == mo || demo_version < 203))
+         P_SetMobjState(player->mo, player->mo->info->spawnstate);
 
       mo->momx = mo->momy = 0;
 
@@ -532,15 +532,15 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
                !(mo->player->cheats & CF_GODMODE))
                P_FallingDamage(mo->player);
             else
-               S_StartSound(mo, sfx_oof);
+               S_StartSound(mo, gameModeInfo->playerSounds[sk_oof]);
          }
          else if(mo->momz < -12*FRACUNIT)
-            S_StartSound(mo, sfx_oof);
+            S_StartSound(mo, gameModeInfo->playerSounds[sk_oof]);
          else if(onthing || !E_GetThingFloorType(mo)->liquid)
-            S_StartSound(mo, sfx_plfeet);
+            S_StartSound(mo, gameModeInfo->playerSounds[sk_plfeet]);
       }
       else if(onthing || !E_GetThingFloorType(mo)->liquid)
-         S_StartSound(mo, sfx_oof);
+         S_StartSound(mo, gameModeInfo->playerSounds[sk_oof]);
    }
 }
 

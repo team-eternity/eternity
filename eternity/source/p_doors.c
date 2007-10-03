@@ -333,7 +333,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
       {
          // Ty 03/27/98 - externalized
          player_printf(p, "%s", DEH_String("PD_BLUEO"));
-         S_StartSound(p->mo, sfx_oof);       // killough 3/20/98
+         S_StartSound(p->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return 0;
       }
       break;
@@ -345,7 +345,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
          const char *msg = (gameModeInfo->type == Game_Heretic) 
                            ? DEH_String("HPD_GREENO") : DEH_String("PD_REDO");
          player_printf(p, "%s", msg);  // Ty 03/27/98 - externalized
-         S_StartSound(p->mo, sfx_oof); // killough 3/20/98
+         S_StartSound(p->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return 0;
       }
       break;
@@ -356,7 +356,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
       {
          // Ty 03/27/98 - externalized
          player_printf(p, "%s", DEH_String("PD_YELLOWO"));
-         S_StartSound(p->mo, sfx_oof);         // killough 3/20/98
+         S_StartSound(p->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return 0;
       }
       break;
@@ -482,7 +482,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
       {
          // Ty 03/27/98 - externalized
          player_printf(player, "%s", DEH_String("PD_BLUEK"));
-         S_StartSound(player->mo, sfx_oof);     // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return 0;
       }
       break;
@@ -495,7 +495,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
       {
          // Ty 03/27/98 - externalized
          player_printf(player, "%s", DEH_String("PD_YELLOWK"));
-         S_StartSound(player->mo, sfx_oof);     // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return 0;
       }
       break;
@@ -509,7 +509,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
          const char *msg = (gameModeInfo->type == Game_Heretic)
                            ? DEH_String("HPD_GREENK") : DEH_String("PD_REDK");
          player_printf(player, "%s", msg);  // Ty 03/27/98 - externalized
-         S_StartSound(player->mo, sfx_oof); // killough 3/20/98
+         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
          return 0;
       }
       break;
@@ -521,7 +521,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    // if the wrong side of door is pushed, give oof sound
    if(line->sidenum[1] == -1)                      // killough
    {
-      S_StartSound(player->mo, sfx_oof);           // killough 3/20/98
+      S_StartSound(player->mo, gameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
       return 0;
    }
 
