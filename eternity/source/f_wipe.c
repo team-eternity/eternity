@@ -64,13 +64,12 @@ static void Wipe_initWipe(void)
    
    for(x = 1; x < SCREENWIDTH; ++x)
    {
-      int r = (M_Random()%3) - 1;
+      int r = (M_Random() % 3) - 1;
       worms[x] = worms[x-1] + r;
-      if (worms[x] > 0)
+      if(worms[x] > 0)
          worms[x] = 0;
-      else
-         if (worms[x] == -16)
-            worms[x] = -15;
+      else if(worms[x] == -16)
+         worms[x] = -15;
    }
 }
 

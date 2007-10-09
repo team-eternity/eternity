@@ -216,6 +216,7 @@ camera_t       *camera;
 extern boolean setsizeneeded;
 boolean        redrawsbar;      // sf: globaled
 boolean        redrawborder;    // sf: cleaned up border redraw
+boolean        wipewait = true;        // haleyjd 10/09/07
 
 void D_Display(void)
 {
@@ -240,84 +241,116 @@ void D_Display(void)
    // need to do all this if the menus are going to cover it up :)
    if(!MN_CheckFullScreen())
    {
-      switch(gamestate)                // do buffered drawing
-      {
-      case GS_LEVEL:
-         // see if the border needs to be initially drawn
-         if(oldgamestate != GS_LEVEL)
-            R_FillBackScreen();    // draw the pattern into the back screen
-         HU_Erase();
+      boolean wipedone = false;
 
-         if(automapactive)
+      while(!wipedone)
+      {
+         switch(gamestate)                // do buffered drawing
          {
-            AM_Drawer();
+         case GS_LEVEL:
+            // see if the border needs to be initially drawn
+            if(oldgamestate != GS_LEVEL)
+               R_FillBackScreen();    // draw the pattern into the back screen
+            HU_Erase();
+            
+            if(automapactive)
+            {
+               AM_Drawer();
+            }
+            else
+            {
+               // see if the border needs to be updated to the screen
+               if(redrawborder)
+                  R_DrawViewBorder();    // redraw border
+               R_RenderPlayerView (&players[displayplayer], camera);
+            }
+            
+            ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
+            HU_Drawer();
+            break;
+         case GS_INTERMISSION:
+            IN_Drawer();
+            break;
+         case GS_FINALE:
+            F_Drawer();
+            break;
+         case GS_DEMOSCREEN:
+            D_PageDrawer();
+            break;
+         case GS_CONSOLE:
+            break;
+         }
+         
+         redrawsbar = false; // reset this now
+         redrawborder = false;
+         
+         // clean up border stuff
+         if(gamestate != oldgamestate && gamestate != GS_LEVEL)
+            I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+         
+         oldgamestate = wipegamestate = gamestate;
+         
+         // draw pause pic
+         if(paused && !walkcam_active) // sf: not if walkcam active for
+         {                             // frads taking screenshots
+            char *lumpname = gameModeInfo->pausePatch; 
+            
+            // haleyjd 03/12/03: changed to work
+            // in heretic, and with user pause patches
+            patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
+            int width = SHORT(patch->width);
+            int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
+            // SoM 2-4-04: ANYRES
+            int y = 4 + (automapactive ? 0 : scaledwindowy);
+            
+            V_DrawPatch(x, y, &vbscreen, patch);
+         }
+         
+         if(inwipe)
+            Wipe_Drawer();
+         
+         C_Drawer();
+
+         if(inwipe && wipewait)
+         {
+            int wipestart = I_GetTime();
+            int tics = 0;
+
+            // wait one tic's worth of time
+            do
+            {
+               tics = I_GetTime() - wipestart;
+            }
+            while(!tics);
+
+            // run wipe logic from here
+            Wipe_Ticker();
+
+            // this stuff draws over a wipe
+            MN_Drawer();
+            NetUpdate();
+            if(v_ticker)
+               V_FPSDrawer();
+            I_FinishUpdate();
+
+            wipedone = !inwipe; // keep looping if inwipe
          }
          else
-         {
-            // see if the border needs to be updated to the screen
-            if(redrawborder)
-               R_DrawViewBorder();    // redraw border
-            R_RenderPlayerView (&players[displayplayer], camera);
-         }
-
-         ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
-         HU_Drawer();
-         break;
-      case GS_INTERMISSION:
-         IN_Drawer();
-         break;
-      case GS_FINALE:
-         F_Drawer();
-         break;
-      case GS_DEMOSCREEN:
-         D_PageDrawer();
-         break;
-      case GS_CONSOLE:
-         break;
+            wipedone = true;
       }
-
-      redrawsbar = false; // reset this now
-      redrawborder = false;
-
-      // clean up border stuff
-      if(gamestate != oldgamestate && gamestate != GS_LEVEL)
-         I_SetPalette(W_CacheLumpName("PLAYPAL",PU_CACHE));
-
-      oldgamestate = wipegamestate = gamestate;
-
-      // draw pause pic
-      if(paused && !walkcam_active) // sf: not if walkcam active for
-      {                             // frads taking screenshots
-         char *lumpname = gameModeInfo->pausePatch; // haleyjd 03/12/03
-
-         // in heretic, and with user pause patches
-         patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
-         int width = SHORT(patch->width);
-         int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
-         // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindowy);
-
-         V_DrawPatch(x, y, &vbscreen, patch);
-      }
-
-      if(inwipe)
-         Wipe_Drawer();
-
-      C_Drawer();
-
    } // if(!MN_CheckFullScreen())
 
    // menus go directly to the screen
    MN_Drawer();         // menu is drawn even on top of everything
    NetUpdate();         // send out any new accumulation
-
+   
    //sf : now system independent
    if(v_ticker)
       V_FPSDrawer();
-
+   
    // sf: wipe changed: runs alongside the rest of the game rather
    //     than in its own loop
-
+   
    I_FinishUpdate();              // page flip or blit buffer
 }
 
@@ -574,7 +607,7 @@ void D_DoAdvanceDemo(void)
 
    state->func(DEH_String(state->name));
 
-   C_InstaPopup();       // make console go away
+   //C_InstaPopup();       // make console go away
 }
 
 //
@@ -675,22 +708,20 @@ char *D_DoomExeName(void)
 //
 static void D_ExpandTilde(char basedir[PATH_MAX + 1])
 {
-
-    if(basedir[0] == '~')
-    {
-        char *home = strdup(getenv("HOME"));
-        char *oldbasedir = strdup(basedir);
-
-        memcpy(basedir + strlen(home), oldbasedir + 1, PATH_MAX - strlen(home) - 1);
-        memcpy(basedir, home, strlen(home));
-
-        if(home)
-            free(home);
-
-        if(oldbasedir)
-            free(oldbasedir);
-    }
-
+   if(basedir[0] == '~')
+   {
+      char *home = strdup(getenv("HOME"));
+      char *oldbasedir = strdup(basedir);
+      
+      memcpy(basedir + strlen(home), oldbasedir + 1, PATH_MAX - strlen(home) - 1);
+      memcpy(basedir, home, strlen(home));
+      
+      if(home)
+         free(home);
+      
+      if(oldbasedir)
+         free(oldbasedir);
+   }
 }
 
 // return codes for D_CheckBasePath
@@ -818,6 +849,9 @@ static void D_SetBasePath(void)
    case BASE_EXEDIR:
       s = "to executable directory";
       break;
+   default:
+      s = "to God only knows what"; // ???
+      break;
    }
 
    printf("Base path set %s.\n", s);
@@ -860,7 +894,7 @@ static void D_CheckGamePathParam(void)
             I_Error("Game path %s is not a directory.\n", gamedir);
       }
       else
-         I_Error("Game path %s does not exist\n", gamedir);
+         I_Error("Game path %s does not exist.\n", gamedir);
    }
 }
 
@@ -901,7 +935,7 @@ static void D_SetGamePath(void)
          I_Error("Game path %s is not a directory.\n", gamedir);
    }
    else
-      I_Error("Game path %s does not exist\n", gamedir);
+      I_Error("Game path %s does not exist.\n", gamedir);
 }
 
 //
