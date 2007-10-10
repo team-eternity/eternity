@@ -1791,7 +1791,6 @@ void M_SaveDefaults (void)
 //
 // This function parses .cfg file lines, or lines in OPTIONS lumps
 //
-
 boolean M_ParseOption(const char *p, boolean wad)
 {
    char name[80], strparm[100];
@@ -1922,7 +1921,6 @@ void M_LoadOptions(void)
 //
 // M_LoadDefaults
 //
-
 void M_LoadDefaults (void)
 {
    register default_t *dp;

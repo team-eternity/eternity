@@ -699,7 +699,13 @@ boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing)
       
       tmthing->flags &= ~MF_SKULLFLY;
       tmthing->momx = tmthing->momy = tmthing->momz = 0;
-      
+
+      // haleyjd: Note that this is where potential for a recursive clipping
+      // operation occurs -- P_SetMobjState causes a call to A_Look, which
+      // causes another state-set to the seestate, which calls A_Chase.
+      // A_Chase in turn calls P_TryMove and that can cause a lot of shit
+      // to explode... fixing it in a compatible manner is nigh impossible.
+
       P_SetMobjState(tmthing, tmthing->info->spawnstate);
 
       BlockingMobj = NULL; // haleyjd: from zdoom
@@ -878,6 +884,9 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
 }
 
 
+//
+// Check_Sides
+//
 // This routine checks for Lost Souls trying to be spawned      // phares
 // across 1-sided lines, impassible lines, or "monsters can't   //   |
 // cross" lines. Draw an imaginary line between the PE          //   V
@@ -890,7 +899,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
 // Then check the PE and LS to see if they're on different
 // sides of the blocking line. If so, return true, otherwise
 // false.
-
+//
 boolean Check_Sides(mobj_t *actor, int x, int y)
 {
    int bx,by,xl,xh,yl,yh;
@@ -952,7 +961,6 @@ boolean Check_Sides(mobj_t *actor, int x, int y)
 //  speciallines[]
 //  numspeciallines
 //
-
 boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y) 
 {
    int xl, xh, yl, yh, bx, by;
@@ -1047,11 +1055,12 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 
 //
 // P_TryMove
+//
 // Attempt to move to a new position,
 // crossing special lines unless MF_TELEPORT is set.
 //
 // killough 3/15/98: allow dropoff as option
-
+//
 boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
 {
    fixed_t oldx, oldy, oldz;
@@ -1282,13 +1291,14 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
          if(useportalgroups && spechit[numspechit]->portal && 
             spechit[numspechit]->portal->type == R_LINKED)
          {
-            // SoM: if the mobj is touching a portal line, and the line is behind the mobj
-            // no matter what the previous lineside was, we missed the teleport and NEED to do
-            // so now.
+            // SoM: if the mobj is touching a portal line, and the line is behind
+            // the mobj no matter what the previous lineside was, we missed the 
+            // teleport and NEED to do so now.
             if(P_PointOnLineSide(thing->x, thing->y, spechit[numspechit]))
             {
-               linkoffset_t *link = P_GetLinkOffset(thing->groupid, 
-                                                    spechit[numspechit]->portal->data.camera.groupid);
+               linkoffset_t *link = 
+                  P_GetLinkOffset(thing->groupid, 
+                                  spechit[numspechit]->portal->data.camera.groupid);
                EV_PortalTeleport(thing, link);
             }
          }
@@ -1393,11 +1403,11 @@ static boolean PIT_ApplyTorque(line_t *ld)
 }
 
 //
-// killough 9/12/98
+// P_ApplyTorque
 //
+// killough 9/12/98
 // Applies "torque" to objects, based on all contacted linedefs
 //
-
 void P_ApplyTorque(mobj_t *mo)
 {
    int xl = ((tmbbox[BOXLEFT] = 
@@ -1438,6 +1448,7 @@ void P_ApplyTorque(mobj_t *mo)
 
 //
 // P_ThingHeightClip
+//
 // Takes a valid thing and adjusts the thing->floorz,
 // thing->ceilingz, and possibly thing->z.
 // This is called for all nearby monsters
@@ -1446,7 +1457,6 @@ void P_ApplyTorque(mobj_t *mo)
 // the z will be set to the lowest value
 // and false will be returned.
 //
-
 static boolean P_ThingHeightClip(mobj_t *thing)
 {
    boolean onfloor = thing->z == thing->floorz;
@@ -1511,7 +1521,6 @@ static fixed_t   tmymove;
 //
 // If the floor is icy, then you can bounce off a wall.             // phares
 //
-
 static void P_HitSlideLine(line_t *ld)
 {
    int     side;
@@ -1615,11 +1624,9 @@ static void P_HitSlideLine(line_t *ld)
    }
 }
 
-
 //
 // PTR_SlideTraverse
 //
-
 static boolean PTR_SlideTraverse(intercept_t *in)
 {
    line_t *li;
@@ -1686,15 +1693,14 @@ isblocking:
 
 //
 // P_SlideMove
-// The momx / momy move is bad, so try to slide
-// along a wall.
-// Find the first line hit, move flush to it,
-// and slide along it
+//
+// The momx / momy move is bad, so try to slide along a wall.
+// Find the first line hit, move flush to it, and slide along it.
 //
 // This is a kludgy mess.
 //
 // killough 11/98: reformatted
-
+//
 void P_SlideMove(mobj_t *mo)
 {
    int hitcount = 3;

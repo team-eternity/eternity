@@ -233,6 +233,7 @@ static void ST_shadowLine(int x, int y, int len,
 // This version is for 640x400 resolution.
 //
 // ANYRES generalize for any resolution 
+//
 static void ST_shadowLineHi(int x, int y, int len,
                             int startmap, int mapstep)
 {

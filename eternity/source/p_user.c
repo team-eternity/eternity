@@ -82,9 +82,9 @@ void P_Bob(player_t *player, angle_t angle, fixed_t move)
 
 //
 // P_CalcHeight
+//
 // Calculate the walking / running height adjustment
 //
-
 void P_CalcHeight(player_t *player)
 {
    int     angle;
@@ -109,9 +109,9 @@ void P_CalcHeight(player_t *player)
 
    player->bob = demo_compatibility ?
       (FixedMul(player->mo->momx, player->mo->momx) +
-       FixedMul(player->mo->momy,player->mo->momy))>>2 :
-      player_bobbing ? (FixedMul(player->momx,player->momx) + 
-                       FixedMul(player->momy,player->momy))>>2 : 0;
+       FixedMul(player->mo->momy, player->mo->momy)) >> 2 :
+      player_bobbing ? (FixedMul(player->momx, player->momx) + 
+                        FixedMul(player->momy, player->momy)) >> 2 : 0;
 
    if(player->bob > MAXBOB)
       player->bob = MAXBOB;
@@ -120,8 +120,8 @@ void P_CalcHeight(player_t *player)
    {
       player->viewz = player->mo->z + VIEWHEIGHT;
       
-      if(player->viewz > player->mo->ceilingz-4*FRACUNIT)
-         player->viewz = player->mo->ceilingz-4*FRACUNIT;
+      if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
+         player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
 
       // phares 2/25/98:
       // The following line was in the Id source and appears
@@ -133,8 +133,8 @@ void P_CalcHeight(player_t *player)
       return;
    }
 
-   angle = (FINEANGLES/20*leveltime)&FINEMASK;
-   bob = FixedMul(player->bob/2,finesine[angle]);
+   angle = (FINEANGLES / 20 * leveltime) & FINEMASK;
+   bob   = FixedMul(player->bob / 2, finesine[angle]);
 
    // move viewheight
    
@@ -148,16 +148,16 @@ void P_CalcHeight(player_t *player)
          player->deltaviewheight = 0;
       }
 
-      if(player->viewheight < VIEWHEIGHT/2)
+      if(player->viewheight < VIEWHEIGHT / 2)
       {
-         player->viewheight = VIEWHEIGHT/2;
+         player->viewheight = VIEWHEIGHT / 2;
          if(player->deltaviewheight <= 0)
             player->deltaviewheight = 1;
       }
 
       if(player->deltaviewheight)
       {
-         player->deltaviewheight += FRACUNIT/4;
+         player->deltaviewheight += FRACUNIT / 4;
          if(!player->deltaviewheight)
             player->deltaviewheight = 1;
       }
@@ -172,8 +172,8 @@ void P_CalcHeight(player_t *player)
       player->viewz -= player->mo->floorclip;
    }
    
-   if(player->viewz > player->mo->ceilingz-4*FRACUNIT)
-      player->viewz = player->mo->ceilingz-4*FRACUNIT;
+   if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
+      player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
 }
 
 //
@@ -183,7 +183,7 @@ void P_CalcHeight(player_t *player)
 //
 // killough 10/98: simplified
 
-void P_MovePlayer (player_t* player)
+void P_MovePlayer(player_t* player)
 {
    ticcmd_t *cmd = &player->cmd;
    mobj_t *mo = player->mo;
@@ -236,29 +236,41 @@ void P_MovePlayer (player_t* player)
 
 //
 // P_DeathThink
+//
 // Fall on your face when dying.
 // Decrease POV height to floor height.
 //
-
-void P_DeathThink(player_t* player)
+void P_DeathThink(player_t *player)
 {
    angle_t angle;
    angle_t delta;
    
-   P_MovePsprites (player);
+   P_MovePsprites(player);
    
    // fall to the ground
    
-   if(player->viewheight > 6*FRACUNIT)
+   if(player->viewheight > 6 * FRACUNIT)
       player->viewheight -= FRACUNIT;
    
-   if(player->viewheight < 6*FRACUNIT)
-      player->viewheight = 6*FRACUNIT;
+   if(player->viewheight < 6 * FRACUNIT)
+      player->viewheight = 6 * FRACUNIT;
    
    player->deltaviewheight = 0;
-   //onground = (player->mo->z <= player->mo->floorz) ||
-   //              (player->mo->intflags & MIF_ONMOBJ);
-   onground = true;
+
+   // haleyjd: never bob player view when dead, and always treat player like
+   //          he is on the ground; FIXME: needs comp flag? pretty minor...
+   if(demo_version >= 333)
+   {
+      onground = true;
+      player->momx = player->momy = 0;
+   }
+   else
+   {
+      onground = player->mo->z <= player->mo->floorz ||
+                    (demo_version >= 331 && !comp[comp_overunder] &&
+                     player->mo->intflags & MIF_ONMOBJ);
+   }
+   
    P_CalcHeight(player);
    
    if(player->attacker && player->attacker != player->mo)
@@ -270,18 +282,18 @@ void P_DeathThink(player_t* player)
 
       delta = angle - player->mo->angle;
       
-      if (delta < ANG5 || delta > (unsigned)-ANG5)
+      if(delta < ANG5 || delta > (unsigned)-ANG5)
       {
          // Looking at killer,
          //  so fade damage flash down.
          
          player->mo->angle = angle;
          
-         if (player->damagecount)
+         if(player->damagecount)
             player->damagecount--;
       }
       else 
-         if (delta < ANG180)
+         if(delta < ANG180)
             player->mo->angle += ANG5;
          else
             player->mo->angle -= ANG5;
@@ -329,11 +341,11 @@ static void P_HereticCurrent(player_t *player)
 //
 // P_PlayerThink
 //
-void P_PlayerThink(player_t* player)
+void P_PlayerThink(player_t *player)
 {
    ticcmd_t*    cmd;
    weapontype_t newweapon;
-   
+
    // killough 2/8/98, 3/21/98:
    // (this code is necessary despite questions raised elsewhere in a comment)
 
@@ -343,7 +355,7 @@ void P_PlayerThink(player_t* player)
       player->mo->flags &= ~MF_NOCLIP;
 
    // chain saw run forward
-   
+
    cmd = &player->cmd;
    if(player->mo->flags & MF_JUSTATTACKED)
    {
@@ -355,7 +367,7 @@ void P_PlayerThink(player_t* player)
 
    if(player->playerstate == PST_DEAD)
    {
-      P_DeathThink (player);
+      P_DeathThink(player);
       return;
    }
 
@@ -407,16 +419,16 @@ void P_PlayerThink(player_t* player)
          S_StartSound(player->mo, gameModeInfo->playerSounds[sk_plfall]);
       }
    }
-  
+
    // Determine if there's anything about the sector you're in that's
    // going to affect you, like painful floors.
-   
+
    if(player->mo->subsector->sector->special)
       P_PlayerInSpecialSector(player);
 
    // haleyjd 08/23/05: terrain-based effects
    P_PlayerOnSpecialFlat(player);
-   
+
    // haleyjd: Heretic current specials
    P_HereticCurrent(player);
 
@@ -429,7 +441,7 @@ void P_PlayerThink(player_t* player)
    // this is competing with other attributes we may want to add,
    // we'll put this off for future consideration when more is
    // known.
-   
+
    // Future Code:                                                     //  ^
    // Check to see if the object you've been standing on has moved     //  |
    // out from underneath you.                                         // phares
@@ -442,7 +454,7 @@ void P_PlayerThink(player_t* player)
 
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
-   
+
    if(cmd->buttons & BT_CHANGE)
    {
       // The actual changing of the weapon is done
@@ -461,20 +473,20 @@ void P_PlayerThink(player_t* player)
       { 
          // compatibility mode -- required for old demos -- killough
          if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-	    (player->readyweapon != wp_chainsaw ||
-	     !player->powers[pw_strength]))
+            (player->readyweapon != wp_chainsaw ||
+             !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(gamemode == commercial &&
-	    newweapon == wp_shotgun &&
-	    player->weaponowned[wp_supershotgun] &&
-	    player->readyweapon != wp_supershotgun)
+            newweapon == wp_shotgun &&
+            player->weaponowned[wp_supershotgun] &&
+            player->readyweapon != wp_supershotgun)
             newweapon = wp_supershotgun;
       }
 
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
 
       // WEAPON_FIXME: shareware availability -> weapon property
-      
+
       if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
@@ -496,35 +508,35 @@ void P_PlayerThink(player_t* player)
    }
    else
       player->usedown = false;
-   
+
    // cycle psprites
-   
+
    P_MovePsprites (player);
 
    // Counters, time dependent power ups.
-   
+
    // Strength counts up to diminish fade.
-   
+
    if(player->powers[pw_strength])
       player->powers[pw_strength]++;
-   
+
    // killough 1/98: Make idbeholdx toggle:
-   
+
    if(player->powers[pw_invulnerability] > 0) // killough
       player->powers[pw_invulnerability]--;
-   
+
    if(player->powers[pw_invisibility] > 0)
    {
       if(!--player->powers[pw_invisibility] )
          player->mo->flags &= ~MF_SHADOW;
    }
-   
+
    if(player->powers[pw_infrared] > 0)        // killough
       player->powers[pw_infrared]--;
-   
+
    if(player->powers[pw_ironfeet] > 0)        // killough
       player->powers[pw_ironfeet]--;
-   
+
    if(player->powers[pw_ghost] > 0)        // haleyjd
    {
       if(!--player->powers[pw_ghost])
@@ -544,15 +556,15 @@ void P_PlayerThink(player_t* player)
 
    if(player->damagecount)
       player->damagecount--;
-   
+
    if(player->bonuscount)
       player->bonuscount--;
 
    // Handling colormaps.
    // killough 3/20/98: reformat to terse C syntax
-   
+
    // sf: removed MBF beta stuff
-   
+
    player->fixedcolormap = 
       (player->powers[pw_invulnerability] > 4*32 ||    
        player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
