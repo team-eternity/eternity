@@ -110,6 +110,9 @@ extern int showendoom;
 extern int endoomdelay;
 #endif
 
+// haleyjd 10/09/07: wipe waiting
+extern int wipewait;
+
 //jff 3/3/98 added min, max, and help string to all entries
 //jff 4/10/98 added isstr field to specify whether value is string or int
 //
@@ -1609,6 +1612,13 @@ default_t defaults[] =
       &spechits_emulation, NULL,
       0, {0, 2}, dt_number, ss_none, wad_no,
       "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"
+   },
+
+   {
+      "wipewait",
+      &wipewait, NULL,
+      2, {0, 2}, dt_number, ss_none, wad_no,
+      "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"
    },
 
    { NULL }         // last entry

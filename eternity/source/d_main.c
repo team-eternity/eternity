@@ -216,7 +216,7 @@ camera_t       *camera;
 extern boolean setsizeneeded;
 boolean        redrawsbar;      // sf: globaled
 boolean        redrawborder;    // sf: cleaned up border redraw
-boolean        wipewait = true;        // haleyjd 10/09/07
+int            wipewait;        // haleyjd 10/09/07
 
 void D_Display(void)
 {
@@ -243,7 +243,7 @@ void D_Display(void)
    {
       boolean wipedone = false;
 
-      while(!wipedone)
+      while(!wipedone) // haleyjd 10/09/07: optional wipe blocking
       {
          switch(gamestate)                // do buffered drawing
          {
@@ -311,7 +311,8 @@ void D_Display(void)
          
          C_Drawer();
 
-         if(inwipe && wipewait)
+         if(inwipe && 
+            (wipewait == 1 || (wipewait == 2 && demoplayback)))
          {
             int wipestart = I_GetTime();
             int tics = 0;

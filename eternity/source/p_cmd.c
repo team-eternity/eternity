@@ -303,6 +303,13 @@ CONSOLE_VARIABLE(spechits_emulation, spechits_emulation, 0) {}
 VARIABLE_BOOLEAN(markUnknowns, NULL, yesno);
 CONSOLE_VARIABLE(p_markunknowns, markUnknowns, 0) {}
 
+// haleyjd 10/09/07
+extern int wipewait;
+
+static char *wipewait_strs[] = { "never", "always", "demos" };
+
+VARIABLE_INT(wipewait, NULL, 0, 2, wipewait_strs);
+CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
 
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
@@ -350,6 +357,7 @@ void P_AddCommands(void)
 
    C_AddCommand(spechits_emulation);
    C_AddCommand(p_markunknowns);
+   C_AddCommand(wipewait);
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();
