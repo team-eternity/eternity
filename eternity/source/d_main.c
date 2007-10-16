@@ -2926,6 +2926,16 @@ static void D_DoomInit(void)
    }
    else if(!singledemo)                    // killough 12/98
    {
+      if(autostart || netgame)
+      {
+         G_InitNewNum(startskill, startepisode, startmap);
+         if(demorecording)
+            G_BeginRecording();
+      }
+      else
+         D_StartTitle();                 // start up intro loop
+
+      /*
       if(netgame)
       {
          //
@@ -2945,6 +2955,7 @@ static void D_DoomInit(void)
       }
       else
          D_StartTitle(); // start up intro loop
+         */
    }
 }
 

@@ -426,7 +426,7 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    if(newweapon != wp_nochange)
    {
       cmd->buttons |= BT_CHANGE;
-      cmd->buttons |= newweapon<<BT_WEAPONSHIFT;
+      cmd->buttons |= newweapon << BT_WEAPONSHIFT;
    }
 
    // mouse -- haleyjd: some of this is obsolete now -- removed
@@ -481,8 +481,8 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    // change to use tmousex, y   
    // divide by the number of new tics so each gets an equal share
 
-   tmousex = mousex / newtics;
-   tmousey = mousey / newtics;
+   tmousex = mousex /* / newtics */;
+   tmousey = mousey /* / newtics */;
 
    // we average the mouse movement as well
    // this is most important in smoothing movement
@@ -568,11 +568,14 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    if(sendsave && !demoplayback)
    {
       sendsave = false;
-      cmd->buttons = BT_SPECIAL | BTS_SAVEGAME | (savegameslot<<BTS_SAVESHIFT);
+      cmd->buttons = BT_SPECIAL | BTS_SAVEGAME | (savegameslot << BTS_SAVESHIFT);
    }
 
+   mousex = mousey = 0;
+   /*
    if(ticnum == newtics - 1) // only if the last tic being built
       mousex = mousey = 0;   // clear them
+      */
 }
 
 //
@@ -978,7 +981,7 @@ static void G_DoPlayDemo(void)
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
 
-      if ((skill=demover) >= 100)         // For demos from versions >= 1.4
+      if((skill = demover) >= 100)         // For demos from versions >= 1.4
       {
          skill = *demo_p++;
          episode = *demo_p++;
@@ -2102,8 +2105,10 @@ void G_Ticker(void)
             if(demorecording)
                G_WriteDemoTiccmd(cmd);
             
+            /*
             if(isconsoletic && netgame)
                continue;
+            */
             
             // check for turbo cheats
             // killough 2/14/98, 2/20/98 -- only warn in netgames and demos
@@ -2115,7 +2120,7 @@ void G_Ticker(void)
                doom_printf("%s is turbo!", players[i].name); // killough 9/29/98
             }
             
-            if(netgame && !isconsoletic && !netdemo && 
+            if(netgame && /*!isconsoletic &&*/ !netdemo && 
                !(gametic % ticdup))
             {
                if(gametic > BACKUPTICS && 
@@ -3310,7 +3315,7 @@ boolean G_CheckDemoStatus(void)
       netgame = false;       // killough 3/29/98
       timingdemo = false;
       C_SetConsole();
-      ResetNet();      
+      //ResetNet();      
       return false;
    }              
 

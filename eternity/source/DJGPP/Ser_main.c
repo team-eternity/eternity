@@ -638,22 +638,22 @@ static void Ser_Start(void)
    netsend = Ser_NetISR;
    netgame = true;
    
-   ResetNet();
+   //ResetNet();
    
    D_InitNetGame();
    
-   ResetNet();
+   //ResetNet();
    
    C_SendNetData();
    
    if(!netgame) // aborted
    {
       Ser_Disconnect();
-      ResetNet();
+      //ResetNet();
       return;
    }
    
-   ResetNet();
+   //ResetNet();
    MN_ClearMenus(); // clear menus now connected
 }
 

@@ -78,12 +78,16 @@ void I_InitNetwork (void)
 
   // set up the singleplayer doomcom
 
+  // FIXME: broken.
+#error DJGPP i_net.c broken.
+  /*
   singleplayer.id = DOOMCOM_ID;
   singleplayer.numplayers = singleplayer.numnodes = 1;
   singleplayer.deathmatch = false;
   singleplayer.consoleplayer = 0;
   singleplayer.extratics=0;
   singleplayer.ticdup=1;
+  */
  
   // set up for network
                           

@@ -437,9 +437,22 @@ void I_EndDoom(void)
 }
 
 // check for ESC button pressed, regardless of keyboard handler
-int I_CheckAbort()
+int I_CheckAbort(void)
 {
-   // check normal keyboard handler
+   SDL_Event ev;
+
+   if(SDL_PollEvent(&ev))
+   {
+      switch(ev.type)
+      {
+      case SDL_KEYDOWN:
+         if(ev.key.keysym.sym == SDLK_ESCAPE)
+            return true;
+      default:
+         break;
+      }
+   }
+
    return false;
 }
 
@@ -461,7 +474,7 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
    else
       I_GetTime = I_GetTime_RealTime;
    
-   ResetNet();         // reset the timers and stuff
+   //ResetNet();         // reset the timers and stuff
 }
 
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}

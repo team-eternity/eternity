@@ -359,7 +359,7 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
   else
     I_GetTime = I_GetTime_RealTime;
   
-  ResetNet();         // reset the timers and stuff
+  //ResetNet();         // reset the timers and stuff
 }
 
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0)
