@@ -53,6 +53,9 @@ boolean NetListen(void);
 // NETWORKING
 //
 
+// haleyjd 10/16/07: DEBUG
+static FILE *netlog;
+
 void (*netget)(void);
 void (*netsend)(void);
 
@@ -135,7 +138,28 @@ void PacketSend(void)
    
    packet->len     = doomcom->datalength;
    packet->address = sendaddress[doomcom->remotenode];
-   
+
+   // haleyjd: DEBUG
+   fprintf(netlog, 
+           "Sending Packet:\n"
+           "checksum = %d, player = %d, retransmitfrom = %d, starttic = %d, numtics = %d\n",
+           sw->checksum, sw->player, sw->retransmitfrom, sw->starttic, sw->numtics);
+
+   for(c = 0; c < netbuffer->numtics; ++c)
+   {
+      fprintf(netlog,
+              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %c, buttons = %d, look = %d\n",
+              c, 
+              sw->cmds[c].forwardmove, sw->cmds[c].sidemove, sw->cmds[c].angleturn,
+              sw->cmds[c].consistancy, sw->cmds[c].chatchar, sw->cmds[c].buttons,
+              sw->cmds[c].look);
+   }
+
+   fprintf(netlog, "packet len = %d, packet addr = %d\n",
+           packet->len, packet->address);
+
+   // haleyjd: end DEBUG
+
    if(!SDLNet_UDP_Send(udpsocket, -1, packet))
       I_Error("Error sending packet: %s", SDLNet_GetError());
 }
@@ -193,6 +217,27 @@ void PacketGet(void)
       netbuffer->cmds[c].buttons     = sw->cmds[c].buttons;
       netbuffer->cmds[c].look        = net_to_host16(sw->cmds[c].look);
    }
+
+   // haleyjd: DEBUG
+   fprintf(netlog, 
+           "Receiving Packet:\n"
+           "checksum = %d, player = %d, retransmitfrom = %d, starttic = %d, numtics = %d\n",
+           netbuffer->checksum, netbuffer->player, 
+           netbuffer->retransmitfrom, netbuffer->starttic, netbuffer->numtics);
+
+   for(c = 0; c < netbuffer->numtics; ++c)
+   {
+      fprintf(netlog,
+              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %c, buttons = %d, look = %d\n",
+              c, 
+              netbuffer->cmds[c].forwardmove, netbuffer->cmds[c].sidemove, 
+              netbuffer->cmds[c].angleturn, netbuffer->cmds[c].consistancy, 
+              netbuffer->cmds[c].chatchar, netbuffer->cmds[c].buttons,
+              netbuffer->cmds[c].look);
+   }
+
+   fprintf(netlog, "doomcom->remotenode = %d,  doomcom->datalength = %d\n",
+           doomcom->remotenode, doomcom->datalength);
 }
 
 //
@@ -329,6 +374,14 @@ void I_InitNetwork(void)
    udpsocket = SDLNet_UDP_Open(DOOMPORT);
    
    packet = SDLNet_AllocPacket(5000);
+
+   // haleyjd: DEBUG
+   netlog = fopen("net.log", "a");
+
+   if(!netlog)
+      I_Error("Failed to open net.log\n");
+
+   fprintf(netlog, "Beginning net logging session...\n");
 }
 
 void I_NetCmd(void)
