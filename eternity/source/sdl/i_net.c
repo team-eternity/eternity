@@ -260,6 +260,8 @@ void I_QuitNetwork(void)
    }
    
    SDLNet_Quit();
+
+   fclose(netlog);
 }
 
 //
