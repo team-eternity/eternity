@@ -49,11 +49,17 @@
 // ticcmds are transmitted over the network by code in d_net.c
 //
 
+// haleyjd 10/16/07: ticcmd_t must be packed
+
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
 // The data sampled per tick (single player)
 // and transmitted to other peers (multiplayer).
 // Mainly movements/button commands per game tick,
 // plus a checksum for internal state consistency.
-typedef struct
+struct ticcmd_s
 {
    char  forwardmove; // *2048 for move
    char  sidemove;    // *2048 for move
@@ -62,7 +68,13 @@ typedef struct
    short consistancy; // checks for net game
    byte  chatchar;
    byte  buttons;
-} ticcmd_t;
+} __attribute__((packed));
+
+typedef struct ticcmd_s ticcmd_t;
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 #endif
 

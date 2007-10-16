@@ -29,6 +29,11 @@
 
 #include "d_player.h"
 
+// haleyjd 10/16/07: structures in this file must be packed
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
 //
 // Network play related stuff.
 // There is a data struct that stores network
@@ -56,7 +61,7 @@ enum
 //
 // Network packet data.
 //
-typedef struct
+struct doomdata_s
 {
     // High bit is retransmit request.
     unsigned            checksum;
@@ -67,7 +72,9 @@ typedef struct
     byte                player;
     byte                numtics;
     ticcmd_t            cmds[BACKUPTICS];
-} doomdata_t;
+} __attribute__((packed));
+
+typedef struct doomdata_s doomdata_t;
 
 //
 // Startup packet difference
@@ -106,8 +113,11 @@ typedef struct
 // changes to the netcmds/cvars systems, and will require that ALL sync
 // critical variables have cvars. Some currently may not.
 
+// haleyjd 10/16/07: is this even used any more? Doesn't look like it.
+
 #define STARTUPLEN 12
-typedef struct
+
+struct startup_s
 {
   byte monsters_remember;
   byte variable_friction;
@@ -119,9 +129,11 @@ typedef struct
   byte demo_insurance;
   unsigned long rngseed;
   char filler[sizeof(ticcmd_t)*BACKUPTICS-STARTUPLEN];
-} startup_t;
+} __attribute__((packed));
 
-typedef struct
+typedef struct startup_s startup_t;
+
+struct doomcom_s
 {
     // Supposed to be DOOMCOM_ID?
     long                id;
@@ -169,31 +181,37 @@ typedef struct
     // The packet data to be sent.
     doomdata_t          data;
     
-} doomcom_t;
+} __attribute__((packed));
+
+typedef struct doomcom_s doomcom_t;
 
 // Create any new ticcmds and broadcast to other players.
-void NetUpdate (void);
+void NetUpdate(void);
 
-void D_InitNetGame();
+void D_InitNetGame(void);
 
 // Broadcasts special packets to other players
 //  to notify of game exit
-void D_QuitNetGame (void);
-void D_KickPlayer (int playernum);
+void D_QuitNetGame(void);
+void D_KickPlayer(int playernum);
 
-//? how many ticks to run?
-void TryRunTics (void);
-void Tickers();
+// how many ticks to run?
+void TryRunTics(void);
 
-extern void (*netdisconnect)();  // function ptr for disconnect function
+//extern void (*netdisconnect)();  // function ptr for disconnect function
 
 //void ResetNet();
 
-extern int isconsoletic;        // is the current tic a gametic
-                                // or a list of console commands?
+//extern int isconsoletic;        // is the current tic a gametic
+                                  // or a list of console commands?
 extern boolean opensocket;
 //extern doomcom_t singleplayer;
 //extern int newtics, ticnum;     //sf
+
+// haleyjd 10/16/07
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 #endif
 
