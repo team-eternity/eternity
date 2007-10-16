@@ -148,7 +148,7 @@ void PacketSend(void)
    for(c = 0; c < netbuffer->numtics; ++c)
    {
       fprintf(netlog,
-              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %c, buttons = %d, look = %d\n",
+              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %d, buttons = %d, look = %d\n",
               c, 
               sw->cmds[c].forwardmove, sw->cmds[c].sidemove, sw->cmds[c].angleturn,
               sw->cmds[c].consistancy, sw->cmds[c].chatchar, sw->cmds[c].buttons,
@@ -228,7 +228,7 @@ void PacketGet(void)
    for(c = 0; c < netbuffer->numtics; ++c)
    {
       fprintf(netlog,
-              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %c, buttons = %d, look = %d\n",
+              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %d, buttons = %d, look = %d\n",
               c, 
               netbuffer->cmds[c].forwardmove, netbuffer->cmds[c].sidemove, 
               netbuffer->cmds[c].angleturn, netbuffer->cmds[c].consistancy, 
@@ -383,7 +383,10 @@ void I_InitNetwork(void)
    if(!netlog)
       I_Error("Failed to open net.log\n");
 
-   fprintf(netlog, "Beginning net logging session...\n");
+   fprintf(netlog, 
+           "Beginning net logging session...\n"
+           "sizeof(doomdata_t) == %lu, sizeof(ticcmd_t) == %lu\n",
+           sizeof(doomdata_t), sizeof(ticcmd_t));
 }
 
 void I_NetCmd(void)

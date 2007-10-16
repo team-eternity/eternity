@@ -64,7 +64,7 @@ enum
 struct doomdata_s
 {
     // High bit is retransmit request.
-    unsigned            checksum;
+    unsigned int        checksum;
     // Only valid if NCMD_RETRANSMIT.
     byte                retransmitfrom;
     
