@@ -112,6 +112,25 @@ typedef struct degenmobj_s
 
 #include "polyobj.h"
 
+
+
+// SoM: for attaching surfaces (floors and ceilings) to each other
+typedef enum
+{
+   AS_FLOOR,
+   AS_CEILING,
+   AS_BOTH
+} attachedtype_e;
+
+typedef struct
+{
+   int             sector;
+   attachedtype_e  type;
+} attachedsurface_t;
+
+
+
+
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
@@ -191,6 +210,13 @@ struct sector_s
    int *c_attached;
    int c_numsectors;
    int *c_attsectors;
+
+
+   // SoM 10/14/07: And now surfaces of other sectors can be attached to a sector's floor and/or ceiling
+   int c_asurfacecount;
+   attachedsurface_t *c_asurfaces;
+   int f_asurfacecount;
+   attachedsurface_t *f_asurfaces;
 
    rportal_t *c_portal;
    rportal_t *f_portal;

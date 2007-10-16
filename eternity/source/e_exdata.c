@@ -595,6 +595,12 @@ static struct exlinespec
 #endif
 
    { 378, "Line_SetIdentification" },
+
+   // Sector floor/ceiling attachment
+   { 379, "Attach_SetCeilingControl" },
+   { 380, "Attach_SetFloorControl" },
+   { 381, "Attach_FloorToControl" },
+   { 382, "Attach_CeilingToControl" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

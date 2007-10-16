@@ -2750,10 +2750,10 @@ void P_SpawnSpecials(void)
       // and will affect weather or not the sector will keep moving,
       // thus keeping compatibility for all thinker types.
       case 281:
-         P_AttachSectors(&lines[i], false);
+         P_AttachLines(&lines[i], false);
          break;
       case 282:
-         P_AttachSectors(&lines[i], true);
+         P_AttachLines(&lines[i], true);
          break;
 
       // haleyjd 03/12/03: Heretic wind transfer specials
@@ -2801,6 +2801,12 @@ void P_SpawnSpecials(void)
          // TODO: allow upper byte in args[2] for Hexen-format maps
          P_SetLineID(i, lines[i].args[0]);
          lines[i].special = 0;             // clear special
+         break;
+
+      // SoM 10/14/07: Surface/Surface attachments
+      case 379:
+      case 380:
+         P_AttachSectors(lines + i);
          break;
       }
    }
@@ -3787,14 +3793,14 @@ boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int cr
 
 //
 // SoM 9/19/2002
-// P_AttachSectors
+// P_AttachLines
 //
 // Attaches all sectors that have lines with same tag as cline to
 // cline's front sector.
 //
 // SoM 11/9/04: Now attaches lines and records another list of sectors
 //
-void P_AttachSectors(line_t *cline, boolean ceiling)
+void P_AttachLines(line_t *cline, boolean ceiling)
 {
    static int maxattach = 0;
    static int numattach = 0;
@@ -3955,6 +3961,215 @@ void P_AttachSectors(line_t *cline, boolean ceiling)
       memcpy(cline->frontsector->f_attsectors, attached, sizeof(int) * numattach);
    }
 }
+
+
+
+
+//
+// P_MoveAttached
+//
+// Moves all attached surfaces.
+boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int crush)
+{
+   int i;
+
+   int count;
+   attachedsurface_t *list;
+
+   boolean ok = true;
+   
+   if(ceiling)
+   {
+      count = sector->c_asurfacecount;
+      list = sector->c_asurfaces;
+   }
+   else
+   {
+      count = sector->f_asurfacecount;
+      list = sector->f_asurfaces;
+   }
+
+   for(i = 0; i < count; i++)
+   {
+      if(list[i].type == AS_CEILING)
+      {
+         sectors[list[i].sector].ceilingheight += delta;
+         if(P_CheckSector(sectors + list[i].sector, crush, delta, 1))
+            ok = false;
+      }
+      else if(list[i].type == AS_FLOOR)
+      {
+         sectors[list[i].sector].floorheight += delta;
+         if(P_CheckSector(sectors + list[i].sector, crush, delta, 0))
+            ok = false;
+      }
+      else if(list[i].type == AS_BOTH)
+      {
+         // If the movement is positive, move the ceiling first
+         if(delta > 0)
+         {
+            sectors[list[i].sector].ceilingheight += delta;
+            if(P_CheckSector(sectors + list[i].sector, crush, delta, 1))
+               ok = false;
+            sectors[list[i].sector].floorheight += delta;
+            if(P_CheckSector(sectors + list[i].sector, crush, delta, 0))
+               ok = false;
+         }
+         else
+         {
+            sectors[list[i].sector].floorheight += delta;
+            if(P_CheckSector(sectors + list[i].sector, crush, delta, 0))
+               ok = false;
+            sectors[list[i].sector].ceilingheight += delta;
+            if(P_CheckSector(sectors + list[i].sector, crush, delta, 1))
+               ok = false;
+         }
+      }
+   }
+
+   return ok;
+}
+
+//
+// SoM 10/14/2007
+// P_AttachSectors
+//
+// Attaches all sectors with like-tagged attachment lines to line->frontsector
+//
+void P_AttachSectors(line_t *line)
+{
+   static int numattached = 0;
+   static int maxattached = 0;
+   static attachedsurface_t *attached = NULL;
+
+   boolean ceiling = line->special == 379 ? true : false;
+   sector_t *sector = line->frontsector;
+
+   int start = 0, i;
+   line_t *slaveline;
+
+   if(!sector) return;
+
+   numattached = 0;
+
+   
+   // Check to ensure that this sector doesn't already 
+   // have attachments.
+   if(!ceiling && sector->f_asurfacecount)
+   {
+      numattached = sector->f_asurfacecount;
+
+      if(numattached >= maxattached)
+      {
+         maxattached = numattached + 5;
+         attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+      }
+
+      memcpy(attached, sector->f_asurfaces, sizeof(attachedsurface_t) * numattached);
+      Z_Free(sector->f_asurfaces);
+      sector->f_asurfaces = NULL;
+      sector->f_asurfacecount = 0;
+   }
+   else if(ceiling && sector->c_asurfacecount)
+   {
+      numattached = sector->c_asurfacecount;
+
+      if(numattached >= maxattached)
+      {
+         maxattached = numattached + 5;
+         attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+      }
+
+      memcpy(attached, sector->c_asurfaces, sizeof(attachedsurface_t) * numattached);
+      Z_Free(sector->c_asurfaces);
+      sector->c_asurfaces = NULL;
+      sector->c_asurfacecount = 0;
+   }
+
+   // Search the lines list. Check for every tagged line that
+   // has the appropriate special, then add the line's frontsector to the attached list.
+   for(start = -1; (start = P_FindLineFromLineTag(line,start)) >= 0; )
+   {
+      if(start != line-lines)
+      {
+         slaveline = lines+start;
+
+         if(!slaveline->frontsector)
+            continue;
+
+         if(slaveline->special == 381)
+         {
+            // search the list of attachments
+            for(i = 0; i < numattached; i++)
+            {
+               if(attached[i].sector == slaveline->frontsector - sectors)
+               {
+                  if(attached[i].type == AS_CEILING)
+                     attached[i].type = AS_BOTH;
+                  break;
+               }
+            }
+
+            if(i == numattached)
+            {
+               // add sector
+               if(numattached == maxattached)
+               {
+                  numattached += 5;
+                  attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+               }
+
+               attached[numattached].sector = slaveline->frontsector - sectors;
+               attached[numattached].type = AS_FLOOR;
+               numattached++;
+            }
+         }
+         else if(slaveline->special == 382)
+         {
+            // search the list of attachments
+            for(i = 0; i < numattached; i++)
+            {
+               if(attached[i].sector == slaveline->frontsector - sectors)
+               {
+                  if(attached[i].type == AS_FLOOR)
+                     attached[i].type = AS_BOTH;
+                  break;
+               }
+            }
+
+            if(i == numattached)
+            {
+               // add sector
+               if(numattached == maxattached)
+               {
+                  maxattached += 5;
+                  attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+               }
+
+               attached[numattached].sector = slaveline->frontsector - sectors;
+               attached[numattached].type = AS_CEILING;
+               numattached++;
+            }
+         }
+      }
+   } // end for
+
+   // Copy the list to the sector.
+   if(ceiling)
+   {
+      sector->c_asurfacecount = numattached;
+      sector->c_asurfaces = Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0);
+      memcpy(sector->c_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
+   }
+   else
+   {
+      sector->f_asurfacecount = numattached;
+      sector->f_asurfaces = Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0);
+      memcpy(sector->f_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
+   }
+}
+
+
 
 
 //

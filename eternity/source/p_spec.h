@@ -1270,7 +1270,8 @@ void P_CeilingSequence(sector_t *s, int noiseLevel);
 mobj_t *P_GetPushThing(int);                                // phares 3/23/98
 
 // SoM 9/19/02: 3dside movement. :)
-void P_AttachSectors(line_t *cline, boolean ceiling);
+void P_AttachLines(line_t *cline, boolean ceiling);
+void P_AttachSectors(line_t *line);
 
 boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int crush);
 

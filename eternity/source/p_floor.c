@@ -89,12 +89,14 @@ result_e T_MovePlane
    fixed_t     destheight;  //jff 02/04/98 used to keep floors/ceilings
                             // from moving thru each other
    boolean     move3dsides; // SoM: If set, check for and move 3d sides.
+   boolean     moveattached; // SoM: if set, check for and move attached sector surfaces.
 
 
    switch(floorOrCeiling)
    {
    case 0:
       move3dsides = (sector->f_attached && demo_version >= 331);
+      moveattached = (sector->f_asurfaces && demo_version >= 331);
       
       // Moving a floor
       switch(direction)
@@ -112,9 +114,17 @@ result_e T_MovePlane
                if(!flag)
                {
                   P_Scroll3DSides(sector, false, lastpos - dest, crush);
-                  return pastdest;
+                  return crushed;
                }
             }
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, false, dest - lastpos, crush))
+               {
+                  P_MoveAttached(sector, false, lastpos - dest, crush);
+                  return crushed;
+               }
+            }            
 
             sector->floorheight = dest;
             flag = P_CheckSector(sector,crush,dest-lastpos,0); //jff 3/19/98 use faster chk
@@ -126,6 +136,8 @@ result_e T_MovePlane
                // keep the 3d sides consistant.
                if(move3dsides)
                   P_Scroll3DSides(sector, false, sector->floorheight - dest, crush);
+               if(moveattached)
+                  P_MoveAttached(sector, false, sector->floorheight - dest, crush);
                
                // Note from SoM: Shouldn't we return crushed if the
                // last move was rejected?
@@ -144,6 +156,14 @@ result_e T_MovePlane
                   return crushed;
                }
             }
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, false, -speed, crush))
+               {
+                  P_MoveAttached(sector, false, speed, crush);
+                  return crushed;
+               }
+            }            
             
             lastpos = sector->floorheight;
             sector->floorheight -= speed;
@@ -159,6 +179,8 @@ result_e T_MovePlane
                P_ChangeSector(sector, crush);
                if(move3dsides)
                   P_Scroll3DSides(sector, false, speed, crush);
+               if(moveattached)
+                  P_MoveAttached(sector, false, speed, crush);
                return crushed;
             }
          }
@@ -182,9 +204,17 @@ result_e T_MovePlane
                if(!flag)
                {
                   P_Scroll3DSides(sector, false, lastpos-destheight, crush);
-                  return pastdest;
+                  return crushed;
                }
             }
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, false, destheight-lastpos, crush))
+               {
+                  P_MoveAttached(sector, false, lastpos-destheight, crush);
+                  return crushed;
+               }
+            }            
 
             sector->floorheight = destheight;
             flag = P_CheckSector(sector,crush,destheight-lastpos,0); //jff 3/19/98 use faster chk
@@ -194,6 +224,8 @@ result_e T_MovePlane
                P_CheckSector(sector,crush,lastpos-destheight,0); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, false, lastpos-destheight, crush);
+               if(moveattached)
+                  P_MoveAttached(sector, false, lastpos-destheight, crush);
             }
             return pastdest;
          }
@@ -209,6 +241,14 @@ result_e T_MovePlane
                   return crushed;
                }
             }
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, false, speed, crush))
+               {
+                  P_MoveAttached(sector, false, -speed, crush);
+                  return crushed;
+               }
+            }            
 
             // crushing is possible
             lastpos = sector->floorheight;
@@ -228,6 +268,8 @@ result_e T_MovePlane
                P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, false, -speed, crush);
+               if(moveattached)
+                  P_MoveAttached(sector, false, -speed, crush);
                
                return crushed;
             }
@@ -238,6 +280,7 @@ result_e T_MovePlane
                                                                         
    case 1:
       move3dsides = sector->c_attached && demo_version >= 331;
+      moveattached = (sector->c_asurfaces && demo_version >= 331);
 
       // moving a ceiling
       switch(direction)
@@ -259,9 +302,17 @@ result_e T_MovePlane
                if(!flag)
                {
                   P_Scroll3DSides(sector, true, destheight-lastpos, crush);
-                  return pastdest;
+                  return crushed;
                }
             }
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, true, lastpos-destheight, crush))
+               {
+                  P_MoveAttached(sector, true, destheight-lastpos, crush);
+                  return crushed;
+               }
+            }            
             
             sector->ceilingheight = destheight;
             flag = P_CheckSector(sector,crush,lastpos-destheight,1); //jff 3/19/98 use faster chk
@@ -273,6 +324,8 @@ result_e T_MovePlane
                
                if(move3dsides)
                   P_Scroll3DSides(sector, true, destheight-sector->ceilingheight, crush);
+               if(moveattached)
+                  P_MoveAttached(sector, true, destheight-sector->ceilingheight, crush);
             }
             return pastdest;
          }
@@ -288,6 +341,14 @@ result_e T_MovePlane
                   return crushed;
                }
             }
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, true, -speed, crush))
+               {
+                  P_MoveAttached(sector, true, speed, crush);
+                  return crushed;
+               }
+            }            
 
             // crushing is possible
             lastpos = sector->ceilingheight;
@@ -306,6 +367,8 @@ result_e T_MovePlane
                
                if(move3dsides)
                   P_Scroll3DSides(sector, true, speed, crush);
+               if(moveattached)
+                  P_MoveAttached(sector, true, speed, crush);
                return crushed;
             }
          }
@@ -324,9 +387,18 @@ result_e T_MovePlane
                if(!flag)
                {
                   P_Scroll3DSides(sector, true, lastpos-dest, crush);
-                  return pastdest;
+                  return crushed;
                }
             }
+
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, true, dest - lastpos, crush))
+               {
+                  P_MoveAttached(sector, true, lastpos - dest, crush);
+                  return crushed;
+               }
+            }            
 
             sector->ceilingheight = dest;
             flag = P_CheckSector(sector,crush,dest-lastpos,1); //jff 3/19/98 use faster chk
@@ -336,6 +408,8 @@ result_e T_MovePlane
                P_CheckSector(sector,crush,lastpos-dest,1); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, true, lastpos-dest, crush);
+               if(moveattached)
+                  P_MoveAttached(sector, true, lastpos - dest, crush);
             }
             return pastdest;
          }
@@ -347,9 +421,19 @@ result_e T_MovePlane
                if(!flag)
                {
                   P_Scroll3DSides(sector, true, -speed, crush);
-                  return pastdest;
+                  return crushed;
                }
             }
+
+            if(moveattached)
+            {
+               if(!P_MoveAttached(sector, true, speed, crush))
+               {
+                  P_MoveAttached(sector, true, -speed, crush);
+                  return crushed;
+               }
+            }
+
             
             lastpos = sector->ceilingheight;
             sector->ceilingheight += speed;

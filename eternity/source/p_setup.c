@@ -314,6 +314,10 @@ void P_LoadSectors(int lump)
       // SoM 11/9/04: 
       ss->c_attsectors = ss->f_attsectors = NULL;
 
+      // SoM 10/14/07:
+      ss->c_asurfacecount = ss->f_asurfacecount = 0;
+      ss->c_asurfaces = ss->f_asurfaces = NULL;
+
       // SoM: init portals
       ss->c_portal = ss->f_portal = NULL;
 #ifdef R_LINKEDPORTALS
