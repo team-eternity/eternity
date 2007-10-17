@@ -534,7 +534,6 @@ void P_CreateDummy(mobj_t *owner)
    if(owner->portaldummy)
       return;
 
-   owner->portaldummy = 
 }
 #endif
 

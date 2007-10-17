@@ -296,6 +296,27 @@ void T_VerticalDoor(vldoor_t *door)
          }
       }
 
+      // SoM: With attached sectors, doors can now encounter crushed events while opening
+      else if(demo_version >= 333 && res == crushed)
+      {
+         // handle door meeting obstruction on way down
+         switch(door->type)
+         {
+         case paramRaiseIn:      // haleyjd 03/01/05
+         case paramBlazeRaiseIn:
+         case genRaise:
+         case genBlazeRaise:
+         case blazeRaise:
+         case doorOpen:      // Raise types do not bounce, merely wait
+            break;
+            
+         default:             // other types bounce off the obstruction
+            door->direction = plat_down;
+            P_DoorSequence(false, false, true, door->sector); // haleyjd
+            break;
+         }
+      }
+
       //jff 1/31/98 turn lighting on in tagged sectors of manual doors
       // killough 10/98: replaced with gradual lighting code
       break;

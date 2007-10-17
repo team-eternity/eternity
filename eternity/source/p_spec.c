@@ -512,11 +512,33 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
    if(!comp[comp_model])
       height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in
 
-   // height calculations
-   for(i=0; i < sec->linecount; i++)
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight < height)
-         height = other->ceilingheight;
+   if(demo_version >= 333)
+   {
+      // SoM: ignore attached sectors.
+      for(i=0; i < sec->linecount; i++)
+      {
+         if((other = getNextSector(sec->lines[i],sec)) &&
+            other->ceilingheight < height)
+         {
+            int i;
+
+            for(i = 0; i < sec->c_asurfacecount; i++)
+               if(sec->c_asurfaces[i].sector == other)
+                  break;
+            
+            if(i == sec->c_asurfacecount)
+               height = other->ceilingheight;
+         }
+      }
+   }
+   else
+   {
+      // height calculations
+      for(i=0; i < sec->linecount; i++)
+         if((other = getNextSector(sec->lines[i],sec)) &&
+            other->ceilingheight < height)
+            height = other->ceilingheight;
+   }
 
    return height;
 }
@@ -3993,14 +4015,14 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
    {
       if(list[i].type == AS_CEILING)
       {
-         sectors[list[i].sector].ceilingheight += delta;
-         if(P_CheckSector(sectors + list[i].sector, crush, delta, 1))
+         list[i].sector->ceilingheight += delta;
+         if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
       }
       else if(list[i].type == AS_FLOOR)
       {
-         sectors[list[i].sector].floorheight += delta;
-         if(P_CheckSector(sectors + list[i].sector, crush, delta, 0))
+         list[i].sector->floorheight += delta;
+         if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
       }
       else if(list[i].type == AS_BOTH)
@@ -4008,20 +4030,54 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
          // If the movement is positive, move the ceiling first
          if(delta > 0)
          {
-            sectors[list[i].sector].ceilingheight += delta;
-            if(P_CheckSector(sectors + list[i].sector, crush, delta, 1))
+            list[i].sector->ceilingheight += delta;
+            if(P_CheckSector(list[i].sector, crush, delta, 1))
                ok = false;
-            sectors[list[i].sector].floorheight += delta;
-            if(P_CheckSector(sectors + list[i].sector, crush, delta, 0))
+            list[i].sector->floorheight += delta;
+            if(P_CheckSector(list[i].sector, crush, delta, 0))
                ok = false;
          }
          else
          {
-            sectors[list[i].sector].floorheight += delta;
-            if(P_CheckSector(sectors + list[i].sector, crush, delta, 0))
+            list[i].sector->floorheight += delta;
+            if(P_CheckSector(list[i].sector, crush, delta, 0))
                ok = false;
-            sectors[list[i].sector].ceilingheight += delta;
-            if(P_CheckSector(sectors + list[i].sector, crush, delta, 1))
+            list[i].sector->ceilingheight += delta;
+            if(P_CheckSector(list[i].sector, crush, delta, 1))
+               ok = false;
+         }
+      }
+      else if(list[i].type == AS_MIRRORCEILING)
+      {
+         list[i].sector->ceilingheight -= delta;
+         if(P_CheckSector(list[i].sector, crush, -delta, 1))
+            ok = false;
+      }
+      else if(list[i].type == AS_MIRRORFLOOR)
+      {
+         list[i].sector->floorheight -= delta;
+         if(P_CheckSector(list[i].sector, crush, -delta, 0))
+            ok = false;
+      }
+      else if(list[i].type == AS_MIRRORBOTH)
+      {
+         // Mirrored is different because it is flipped, so the order is reversed as well
+         if(delta > 0)
+         {
+            list[i].sector->floorheight -= delta;
+            if(P_CheckSector(list[i].sector, crush, -delta, 0))
+               ok = false;
+            list[i].sector->ceilingheight -= delta;
+            if(P_CheckSector(list[i].sector, crush, -delta, 1))
+               ok = false;
+         }
+         else
+         {
+            list[i].sector->ceilingheight -= delta;
+            if(P_CheckSector(list[i].sector, crush, -delta, 1))
+               ok = false;
+            list[i].sector->floorheight -= delta;
+            if(P_CheckSector(list[i].sector, crush, -delta, 0))
                ok = false;
          }
       }
@@ -4090,6 +4146,8 @@ void P_AttachSectors(line_t *line)
    // has the appropriate special, then add the line's frontsector to the attached list.
    for(start = -1; (start = P_FindLineFromLineTag(line,start)) >= 0; )
    {
+      attachedtype_e type;
+
       if(start != line-lines)
       {
          slaveline = lines+start;
@@ -4099,58 +4157,116 @@ void P_AttachSectors(line_t *line)
 
          if(slaveline->special == 381)
          {
+            // Don't attach a floor to itself
+            if(slaveline->frontsector == sector && line->special == 380)
+               continue;
+
             // search the list of attachments
             for(i = 0; i < numattached; i++)
             {
-               if(attached[i].sector == slaveline->frontsector - sectors)
+               if(attached[i].sector == slaveline->frontsector)
                {
                   if(attached[i].type == AS_CEILING)
                      attached[i].type = AS_BOTH;
+                  if(attached[i].type == AS_BOTH || attached[i].type == AS_FLOOR ||
+                     attached[i].type == AS_MIRRORFLOOR || attached[i].type == AS_MIRRORBOTH)
+                     break;
                   break;
                }
             }
 
-            if(i == numattached)
-            {
-               // add sector
-               if(numattached == maxattached)
-               {
-                  numattached += 5;
-                  attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
-               }
+            if(i < numattached)
+               continue;
 
-               attached[numattached].sector = slaveline->frontsector - sectors;
-               attached[numattached].type = AS_FLOOR;
-               numattached++;
-            }
+            type = AS_FLOOR;
          }
          else if(slaveline->special == 382)
          {
+            // Don't attach a ceiling to itself
+            if(slaveline->frontsector == sector && line->special == 379)
+               continue;
+
             // search the list of attachments
             for(i = 0; i < numattached; i++)
             {
-               if(attached[i].sector == slaveline->frontsector - sectors)
+               if(attached[i].sector == slaveline->frontsector)
                {
                   if(attached[i].type == AS_FLOOR)
                      attached[i].type = AS_BOTH;
+
+                  if(attached[i].type == AS_BOTH || attached[i].type == AS_CEILING ||
+                     attached[i].type == AS_MIRRORCEILING || attached[i].type == AS_MIRRORBOTH)
+                     break;
+               }
+            }
+
+            if(i < numattached)
+               continue;
+
+            type = AS_CEILING;
+         }
+         else if(slaveline->special == 383)
+         {
+            // Don't attach a floor to itself
+            if(slaveline->frontsector == sector && line->special == 380)
+               continue;
+
+            // search the list of attachments
+            for(i = 0; i < numattached; i++)
+            {
+               if(attached[i].sector == slaveline->frontsector)
+               {
+                  if(attached[i].type == AS_MIRRORCEILING)
+                     attached[i].type = AS_MIRRORBOTH;
+                  if(attached[i].type == AS_BOTH || attached[i].type == AS_FLOOR ||
+                     attached[i].type == AS_MIRRORFLOOR || attached[i].type == AS_MIRRORBOTH)
+                     break;
                   break;
                }
             }
 
-            if(i == numattached)
-            {
-               // add sector
-               if(numattached == maxattached)
-               {
-                  maxattached += 5;
-                  attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
-               }
+            if(i < numattached)
+               continue;
 
-               attached[numattached].sector = slaveline->frontsector - sectors;
-               attached[numattached].type = AS_CEILING;
-               numattached++;
-            }
+            type = AS_MIRRORFLOOR;
          }
+         else if(slaveline->special == 384)
+         {
+            // Don't attach a ceiling to itself
+            if(slaveline->frontsector == sector && line->special == 379)
+               continue;
+
+            // search the list of attachments
+            for(i = 0; i < numattached; i++)
+            {
+               if(attached[i].sector == slaveline->frontsector)
+               {
+                  if(attached[i].type == AS_MIRRORFLOOR)
+                     attached[i].type = AS_MIRRORBOTH;
+
+                  if(attached[i].type == AS_BOTH || attached[i].type == AS_CEILING ||
+                     attached[i].type == AS_MIRRORCEILING || attached[i].type == AS_MIRRORBOTH)
+                     break;
+               }
+            }
+
+            if(i < numattached)
+               continue;
+
+            type = AS_MIRRORCEILING;
+         }
+
+
+         // add sector
+         if(numattached == maxattached)
+         {
+            maxattached += 5;
+            attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+         }
+
+         attached[numattached].sector = slaveline->frontsector;
+         attached[numattached].type = type;
+         numattached++;
       }
    } // end for
 

@@ -601,6 +601,8 @@ static struct exlinespec
    { 380, "Attach_SetFloorControl" },
    { 381, "Attach_FloorToControl" },
    { 382, "Attach_CeilingToControl" },
+   { 383, "Attach_MirrorFloorToControl" },
+   { 384, "Attach_MirrorCeilingToControl" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

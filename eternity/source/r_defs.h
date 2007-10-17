@@ -119,12 +119,15 @@ typedef enum
 {
    AS_FLOOR,
    AS_CEILING,
-   AS_BOTH
+   AS_BOTH,
+   AS_MIRRORFLOOR,
+   AS_MIRRORCEILING,
+   AS_MIRRORBOTH,
 } attachedtype_e;
 
 typedef struct
 {
-   int             sector;
+   sector_t        *sector;
    attachedtype_e  type;
 } attachedsurface_t;
 

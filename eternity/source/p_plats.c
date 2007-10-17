@@ -127,7 +127,15 @@ void T_PlatRaise(plat_t *plat)
       res = T_MovePlane(plat->sector, plat->speed, plat->low, -1, 0, -1);
 
       // handle reaching end of down stroke
-      if(res == pastdest)
+      // SoM: attached sectors means the plat can crush when heading down too
+      // if encountered an obstacle, and not a crush type, reverse direction
+      if(demo_version >= 333 && res == crushed && plat->crush <= 0)
+      {
+         plat->count = plat->wait;
+         plat->status = up;
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+      }
+      else if(res == pastdest)
       {
          S_StopSectorSequence(plat->sector, false); // haleyjd
 
