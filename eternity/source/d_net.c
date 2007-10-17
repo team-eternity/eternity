@@ -720,7 +720,7 @@ static void D_ArbitrateNetStart(void)
             if(dm)
                DefaultGameType = GameType = gt_dm;
 
-            G_ReadOptions((char *)netbuffer->cmds);
+            //G_ReadOptions((char *)netbuffer->cmds);
 
             D_InitPlayers();
             return;
@@ -750,7 +750,7 @@ static void D_ArbitrateNetStart(void)
                I_Error("D_ArbitrateNetStart: GAME_OPTION_SIZE"
                        " too large w.r.t. BACKUPTICS");
 
-            G_WriteOptions((char *) netbuffer->cmds);    // killough 12/98
+            //G_WriteOptions((char *) netbuffer->cmds);    // killough 12/98
             
             // killough 5/2/98: Always write the maximum number of tics.
             netbuffer->numtics = BACKUPTICS;
