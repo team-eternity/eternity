@@ -26,6 +26,8 @@
 
 
 #include "SDL.h"
+#include "SDL_net.h"
+#include "SDL_mixer.h"
 
 #include "../z_zone.h"
 #include "../doomdef.h"
@@ -48,6 +50,70 @@ void I_Quit(void);
 #else
 #define INIT_FLAGS BASE_INIT_FLAGS
 #endif
+
+//
+// VerifySDLVersions
+//
+// haleyjd 10/17/07: Tired of issues caused by the runtime version
+// differing from the compiled version of SDL libs, I am writing
+// this function to warn about such a thing.
+//
+static void VerifySDLVersions(void)
+{
+   SDL_version  cv;       // compiled version
+   const SDL_version *lv; // linked version
+   boolean error = false;
+
+   // test SDL
+   SDL_VERSION(&cv);
+   lv = SDL_Linked_Version();
+
+   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   {
+      error = true;
+      printf("WARNING: SDL linked and compiled versions do not match!\n"
+             "Compiled version: %d.%d.%d\n"
+             "Linked version: %d.%d.%d\n"
+             "Eternity may behave erratically unless you upgrade your runtime\n"
+             "version of the SDL library.\n\n",
+             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+   }
+
+   // test SDL_mixer
+   SDL_MIXER_VERSION(&cv);
+   lv = Mix_Linked_Version();
+
+   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   {
+      error = true;
+      printf("WARNING: SDL_mixer linked and compiled versions do not match!\n"
+             "Compiled version: %d.%d.%d\n"
+             "Linked version: %d.%d.%d\n"
+             "Eternity may behave erratically unless you upgrade your runtime\n"
+             "version of the SDL_mixer library.\n\n",
+             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+   }
+
+   SDL_NET_VERSION(&cv);
+   lv = SDLNet_Linked_Version();
+
+   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   {
+      error = true;
+      printf("WARNING: SDL_net linked and compiled versions do not match!\n"
+             "Compiled version: %d.%d.%d\n"
+             "Linked version: %d.%d.%d\n"
+             "Eternity may behave erratically unless you upgrade your runtime\n"
+             "version of the SDL_net library.\n\n",
+             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+   }
+
+   if(error)
+   {
+      printf("Press any key to continue...\n");
+      getchar();
+   }
+}
 
 int main(int argc, char **argv)
 {
@@ -88,6 +154,8 @@ int main(int argc, char **argv)
       puts("Failed to initialize SDL library.\n");
       return -1;
    }
+
+   VerifySDLVersions();
 
    // haleyjd 02/23/04: ignore mouse events at startup
    //SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
