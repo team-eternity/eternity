@@ -53,9 +53,6 @@ boolean NetListen(void);
 // NETWORKING
 //
 
-// haleyjd 10/16/07: DEBUG
-static FILE *netlog;
-
 void (*netget)(void);
 void (*netsend)(void);
 
@@ -67,6 +64,7 @@ static UDPpacket *packet;
 
 static IPaddress sendaddress[MAXNETNODES];
 
+/*
 unsigned short host_to_net16(unsigned int value)
 {
    union
@@ -106,6 +104,7 @@ unsigned long net_to_host32(unsigned int value)
    
    return SDLNet_Read32(&l);
 }
+*/
 
 // haleyjd: end new functions for anark's netcode
 
@@ -115,8 +114,9 @@ unsigned long net_to_host32(unsigned int value)
 void PacketSend(void)
 {
    int c;
-   doomdata_t *sw;
+   //doomdata_t *sw;
    
+   /*
    sw = (doomdata_t *)packet->data;
    
    SDLNet_Write32(netbuffer->checksum, &sw->checksum);
@@ -135,30 +135,34 @@ void PacketSend(void)
       sw->cmds[c].buttons     = netbuffer->cmds[c].buttons;
       SDLNet_Write16(netbuffer->cmds[c].look, &(sw->cmds[c].look)); // haleyjd
    }
-   
-   packet->len     = doomcom->datalength;
-   packet->address = sendaddress[doomcom->remotenode];
+   */
 
-   // haleyjd: DEBUG
-   fprintf(netlog, 
-           "Sending Packet:\n"
-           "checksum = %d, player = %d, retransmitfrom = %d, starttic = %d, numtics = %d\n",
-           sw->checksum, sw->player, sw->retransmitfrom, sw->starttic, sw->numtics);
+   byte *rover = (byte *)packet->data;
+
+   SDLNet_Write32(netbuffer->checksum, rover);
+   rover += sizeof(netbuffer->checksum);
+
+   *rover++ = netbuffer->player;
+   *rover++ = netbuffer->retransmitfrom;
+   *rover++ = netbuffer->starttic;
+   *rover++ = netbuffer->numtics;
 
    for(c = 0; c < netbuffer->numtics; ++c)
    {
-      fprintf(netlog,
-              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %d, buttons = %d, look = %d\n",
-              c, 
-              sw->cmds[c].forwardmove, sw->cmds[c].sidemove, sw->cmds[c].angleturn,
-              sw->cmds[c].consistancy, sw->cmds[c].chatchar, sw->cmds[c].buttons,
-              sw->cmds[c].look);
+      *rover++ = netbuffer->cmds[c].forwardmove;
+      *rover++ = netbuffer->cmds[c].sidemove;
+      SDLNet_Write16(netbuffer->cmds[c].angleturn, rover);
+      rover += sizeof(netbuffer->cmds[c].angleturn);
+      SDLNet_Write16(netbuffer->cmds[c].consistancy, rover);
+      rover += sizeof(netbuffer->cmds[c].consistancy);
+      *rover++ = netbuffer->cmds[c].chatchar;
+      *rover++ = netbuffer->cmds[c].buttons;
+      SDLNet_Write16(netbuffer->cmds[c].look, rover);
+      rover += sizeof(netbuffer->cmds[c].look);
    }
-
-   fprintf(netlog, "packet len = %d, packet addr = %d\n",
-           packet->len, packet->address);
-
-   // haleyjd: end DEBUG
+   
+   packet->len     = doomcom->datalength;
+   packet->address = sendaddress[doomcom->remotenode];
 
    if(!SDLNet_UDP_Send(udpsocket, -1, packet))
       I_Error("Error sending packet: %s", SDLNet_GetError());
@@ -170,7 +174,8 @@ void PacketSend(void)
 void PacketGet(void)
 {
    int i, c, packets_read;
-   doomdata_t *sw;
+   //doomdata_t *sw;
+   byte *rover;
    
    packets_read = SDLNet_UDP_Recv(udpsocket, packet);
    
@@ -199,45 +204,29 @@ void PacketGet(void)
    doomcom->remotenode = i;
    doomcom->datalength = packet->len;
    
-   sw = (doomdata_t *)packet->data;
+   //sw = (doomdata_t *)packet->data;
+   rover = (byte *)packet->data;
    
-   netbuffer->checksum = SDLNet_Read32(&sw->checksum);
-   netbuffer->player         = sw->player;
-   netbuffer->retransmitfrom = sw->retransmitfrom;
-   netbuffer->starttic       = sw->starttic;
-   netbuffer->numtics        = sw->numtics;
+   netbuffer->checksum = SDLNet_Read32(rover);
+   rover += sizeof(netbuffer->checksum);
+   netbuffer->player         = *rover++;
+   netbuffer->retransmitfrom = *rover++;
+   netbuffer->starttic       = *rover++;
+   netbuffer->numtics        = *rover++;
    
-   for (c = 0; c < netbuffer->numtics; ++c)
-   {
-      netbuffer->cmds[c].forwardmove = sw->cmds[c].forwardmove;
-      netbuffer->cmds[c].sidemove    = sw->cmds[c].sidemove;
-      netbuffer->cmds[c].angleturn   = SDLNet_Read16(&(sw->cmds[c].angleturn));
-      netbuffer->cmds[c].consistancy = SDLNet_Read16(&(sw->cmds[c].consistancy));
-      netbuffer->cmds[c].chatchar    = sw->cmds[c].chatchar;
-      netbuffer->cmds[c].buttons     = sw->cmds[c].buttons;
-      netbuffer->cmds[c].look        = SDLNet_Read16(&(sw->cmds[c].look));
-   }
-
-   // haleyjd: DEBUG
-   fprintf(netlog, 
-           "Receiving Packet:\n"
-           "checksum = %d, player = %d, retransmitfrom = %d, starttic = %d, numtics = %d\n",
-           netbuffer->checksum, netbuffer->player, 
-           netbuffer->retransmitfrom, netbuffer->starttic, netbuffer->numtics);
-
    for(c = 0; c < netbuffer->numtics; ++c)
    {
-      fprintf(netlog,
-              "* cmd %d: forwardmove = %d, sidemove = %d, angleturn = %d, consistancy = %d, chatchar = %d, buttons = %d, look = %d\n",
-              c, 
-              netbuffer->cmds[c].forwardmove, netbuffer->cmds[c].sidemove, 
-              netbuffer->cmds[c].angleturn, netbuffer->cmds[c].consistancy, 
-              netbuffer->cmds[c].chatchar, netbuffer->cmds[c].buttons,
-              netbuffer->cmds[c].look);
+      netbuffer->cmds[c].forwardmove = *rover++;
+      netbuffer->cmds[c].sidemove    = *rover++;
+      netbuffer->cmds[c].angleturn   = SDLNet_Read16(rover);
+      rover += sizeof(netbuffer->cmds[c].angleturn);
+      netbuffer->cmds[c].consistancy = SDLNet_Read16(rover);
+      rover += sizeof(netbuffer->cmds[c].consistancy);
+      netbuffer->cmds[c].chatchar    = *rover++;
+      netbuffer->cmds[c].buttons     = *rover++;
+      netbuffer->cmds[c].look        = SDLNet_Read16(rover);
+      rover += sizeof(netbuffer->cmds[c].look);
    }
-
-   fprintf(netlog, "doomcom->remotenode = %d,  doomcom->datalength = %d\n",
-           doomcom->remotenode, doomcom->datalength);
 }
 
 //
@@ -260,8 +249,6 @@ void I_QuitNetwork(void)
    }
    
    SDLNet_Quit();
-
-   fclose(netlog);
 }
 
 //
@@ -376,17 +363,6 @@ void I_InitNetwork(void)
    udpsocket = SDLNet_UDP_Open(DOOMPORT);
    
    packet = SDLNet_AllocPacket(5000);
-
-   // haleyjd: DEBUG
-   netlog = fopen("net.log", "a");
-
-   if(!netlog)
-      I_Error("Failed to open net.log\n");
-
-   fprintf(netlog, 
-           "Beginning net logging session...\n"
-           "sizeof(doomdata_t) == %lu, sizeof(ticcmd_t) == %lu\n",
-           sizeof(doomdata_t), sizeof(ticcmd_t));
 }
 
 void I_NetCmd(void)
