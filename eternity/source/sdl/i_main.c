@@ -51,69 +51,7 @@ void I_Quit(void);
 #define INIT_FLAGS BASE_INIT_FLAGS
 #endif
 
-//
-// VerifySDLVersions
-//
-// haleyjd 10/17/07: Tired of issues caused by the runtime version
-// differing from the compiled version of SDL libs, I am writing
-// this function to warn about such a thing.
-//
-static void VerifySDLVersions(void)
-{
-   SDL_version  cv;       // compiled version
-   const SDL_version *lv; // linked version
-   boolean error = false;
-
-   // test SDL
-   SDL_VERSION(&cv);
-   lv = SDL_Linked_Version();
-
-   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
-   {
-      error = true;
-      printf("WARNING: SDL linked and compiled versions do not match!\n"
-             "Compiled version: %d.%d.%d\n"
-             "Linked version: %d.%d.%d\n"
-             "Eternity may behave erratically unless you upgrade your runtime\n"
-             "version of the SDL library.\n\n",
-             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
-   }
-
-   // test SDL_mixer
-   SDL_MIXER_VERSION(&cv);
-   lv = Mix_Linked_Version();
-
-   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
-   {
-      error = true;
-      printf("WARNING: SDL_mixer linked and compiled versions do not match!\n"
-             "Compiled version: %d.%d.%d\n"
-             "Linked version: %d.%d.%d\n"
-             "Eternity may behave erratically unless you upgrade your runtime\n"
-             "version of the SDL_mixer library.\n\n",
-             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
-   }
-
-   SDL_NET_VERSION(&cv);
-   lv = SDLNet_Linked_Version();
-
-   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
-   {
-      error = true;
-      printf("WARNING: SDL_net linked and compiled versions do not match!\n"
-             "Compiled version: %d.%d.%d\n"
-             "Linked version: %d.%d.%d\n"
-             "Eternity may behave erratically unless you upgrade your runtime\n"
-             "version of the SDL_net library.\n\n",
-             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
-   }
-
-   if(error)
-   {
-      printf("Press any key to continue...\n");
-      getchar();
-   }
-}
+static void VerifySDLVersions(void);
 
 int main(int argc, char **argv)
 {
@@ -155,7 +93,10 @@ int main(int argc, char **argv)
       return -1;
    }
 
+#ifdef _DEBUG
+   // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
+#endif
 
    // haleyjd 02/23/04: ignore mouse events at startup
    //SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
@@ -170,6 +111,123 @@ int main(int argc, char **argv)
    return 0;
 }
 
+
+#ifdef _DEBUG
+
+// error flags for VerifySDLVersions
+enum
+{
+   ERROR_SDL       = 0x01,
+   ERROR_SDL_MIXER = 0x02,
+   ERROR_SDL_NET   = 0x04,
+};
+
+//
+// VerifySDLVersions
+//
+// haleyjd 10/17/07: Tired of issues caused by the runtime version
+// differing from the compiled version of SDL libs, I am writing
+// this function to warn about such a thing.
+//
+static void VerifySDLVersions(void)
+{
+   SDL_version cv;       // compiled version
+   const SDL_version *lv; // linked version
+   int error = 0;
+
+   // expected versions
+   // must update these when SDL is updated.
+   static SDL_version ex_vers[3] = 
+   {
+      { 1, 2, 12 }, // SDL
+      { 1, 2,  8 }, // SDL_mixer
+      { 1, 2,  7 }, // SDL_net
+   };
+
+   // test SDL
+   SDL_VERSION(&cv);
+   lv = SDL_Linked_Version();
+
+   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   {
+      error |= ERROR_SDL;
+      printf("WARNING: SDL linked and compiled versions do not match!\n"
+             "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
+             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+   }
+
+   if(lv->major != ex_vers[0].major || lv->minor != ex_vers[0].minor ||
+      lv->patch != ex_vers[0].patch)
+   {
+      error |= ERROR_SDL;
+      printf("WARNING: SDL linked version is not the expected version\n"
+             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
+             lv->major, lv->minor, lv->patch,
+             ex_vers[0].major, ex_vers[0].minor, ex_vers[0].patch);
+   }
+
+   if(!(error & ERROR_SDL))
+      printf("DEBUG: Using SDL version %d.%d.%d\n",
+             lv->major, lv->minor, lv->patch);
+
+   // test SDL_mixer
+   SDL_MIXER_VERSION(&cv);
+   lv = Mix_Linked_Version();
+
+   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   {
+      error |= ERROR_SDL_MIXER;
+      printf("WARNING: SDL_mixer linked and compiled versions do not match!\n"
+             "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
+             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+   }
+   
+   if(lv->major != ex_vers[1].major || lv->minor != ex_vers[1].minor ||
+      lv->patch != ex_vers[1].patch)
+   {
+      error |= ERROR_SDL_MIXER;
+      printf("WARNING: SDL_mixer linked version is not the expected version\n"
+             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
+             lv->major, lv->minor, lv->patch,
+             ex_vers[1].major, ex_vers[1].minor, ex_vers[1].patch);
+   }
+   
+   if(!(error & ERROR_SDL_MIXER))
+      printf("DEBUG: Using SDL_mixer version %d.%d.%d\n",
+             lv->major, lv->minor, lv->patch);
+
+   SDL_NET_VERSION(&cv);
+   lv = SDLNet_Linked_Version();
+
+   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   {
+      error |= ERROR_SDL_NET;
+      printf("WARNING: SDL_net linked and compiled versions do not match!\n"
+             "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
+             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+   }
+
+   if(lv->major != ex_vers[2].major || lv->minor != ex_vers[2].minor ||
+      lv->patch != ex_vers[2].patch)
+   {
+      error |= ERROR_SDL_NET;
+      printf("WARNING: SDL_net linked version is not the expected version\n"
+             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
+             lv->major, lv->minor, lv->patch,
+             ex_vers[2].major, ex_vers[2].minor, ex_vers[2].patch);
+   }
+   
+   if(!(error & ERROR_SDL_NET))
+      printf("DEBUG: Using SDL_net version %d.%d.%d\n",
+             lv->major, lv->minor, lv->patch);
+
+   if(error)
+   {
+      printf("Press any key to continue...\n");
+      getchar();
+   }
+}
+#endif
 
 //----------------------------------------------------------------------------
 //
