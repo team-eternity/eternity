@@ -119,7 +119,7 @@ void PacketSend(void)
    
    sw = (doomdata_t *)packet->data;
    
-   sw->checksum       = host_to_net32(netbuffer->checksum);
+   SDLNet_Write32(netbuffer->checksum, &sw->checksum);
    sw->player         = netbuffer->player;
    sw->retransmitfrom = netbuffer->retransmitfrom;
    sw->starttic       = netbuffer->starttic;
@@ -129,11 +129,11 @@ void PacketSend(void)
    {
       sw->cmds[c].forwardmove = netbuffer->cmds[c].forwardmove;
       sw->cmds[c].sidemove    = netbuffer->cmds[c].sidemove;
-      sw->cmds[c].angleturn   = host_to_net16(netbuffer->cmds[c].angleturn);
-      sw->cmds[c].consistancy = host_to_net16(netbuffer->cmds[c].consistancy);
+      SDLNet_Write16(netbuffer->cmds[c].angleturn,   &(sw->cmds[c].angleturn));
+      SDLNet_Write16(netbuffer->cmds[c].consistancy, &(sw->cmds[c].consistancy));
       sw->cmds[c].chatchar    = netbuffer->cmds[c].chatchar;
       sw->cmds[c].buttons     = netbuffer->cmds[c].buttons;
-      sw->cmds[c].look        = host_to_net16(netbuffer->cmds[c].look); // haleyjd
+      SDLNet_Write16(netbuffer->cmds[c].look, &(sw->cmds[c].look)); // haleyjd
    }
    
    packet->len     = doomcom->datalength;
@@ -201,7 +201,7 @@ void PacketGet(void)
    
    sw = (doomdata_t *)packet->data;
    
-   netbuffer->checksum       = net_to_host32(sw->checksum);
+   netbuffer->checksum = SDLNet_Read32(&sw->checksum);
    netbuffer->player         = sw->player;
    netbuffer->retransmitfrom = sw->retransmitfrom;
    netbuffer->starttic       = sw->starttic;
@@ -211,11 +211,11 @@ void PacketGet(void)
    {
       netbuffer->cmds[c].forwardmove = sw->cmds[c].forwardmove;
       netbuffer->cmds[c].sidemove    = sw->cmds[c].sidemove;
-      netbuffer->cmds[c].angleturn   = net_to_host16(sw->cmds[c].angleturn);
-      netbuffer->cmds[c].consistancy = net_to_host16(sw->cmds[c].consistancy);
+      netbuffer->cmds[c].angleturn   = SDLNet_Read16(&(sw->cmds[c].angleturn));
+      netbuffer->cmds[c].consistancy = SDLNet_Read16(&(sw->cmds[c].consistancy));
       netbuffer->cmds[c].chatchar    = sw->cmds[c].chatchar;
       netbuffer->cmds[c].buttons     = sw->cmds[c].buttons;
-      netbuffer->cmds[c].look        = net_to_host16(sw->cmds[c].look);
+      netbuffer->cmds[c].look        = SDLNet_Read16(&(sw->cmds[c].look));
    }
 
    // haleyjd: DEBUG
