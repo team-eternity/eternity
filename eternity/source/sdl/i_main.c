@@ -47,11 +47,10 @@ void I_Quit(void);
 
 #ifdef _DEBUG
 #define INIT_FLAGS (BASE_INIT_FLAGS | SDL_INIT_NOPARACHUTE)
-#else
-#define INIT_FLAGS BASE_INIT_FLAGS
 
 static void VerifySDLVersions(void);
-
+#else
+#define INIT_FLAGS BASE_INIT_FLAGS
 #endif
 
 //
