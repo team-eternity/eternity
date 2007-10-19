@@ -93,6 +93,17 @@ static doomdata_t reboundstore;
 //
 static int NetbufferSize(void)
 {
+#ifdef _DEBUG
+   static boolean firsttime = true;
+
+   if(firsttime)
+   {
+      printf("NetbufferSize: %d\n",
+             (int)&(((doomdata_t *)0)->d.cmds[netbuffer->numtics]));
+      firsttime = false;
+   }
+#endif
+
    return (int)&(((doomdata_t *)0)->d.cmds[netbuffer->numtics]); 
 }
 
@@ -107,6 +118,18 @@ static unsigned int NetbufferChecksum(void)
    c = 0x1234567;
    
    l = (NetbufferSize() - (int)&(((doomdata_t *)0)->retransmitfrom)) / 4;
+
+#ifdef _DEBUG
+   {
+      static boolean firsttime = true;
+      if(firsttime)
+      {
+         printf("Checksum bytes: %d\n", l);
+         firsttime = false;
+      }
+   }
+#endif
+
    for(i = 0; i < l; ++i)
       c += ((unsigned *)&netbuffer->retransmitfrom)[i] * (i + 1);
    
