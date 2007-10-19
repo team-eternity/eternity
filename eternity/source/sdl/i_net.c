@@ -345,7 +345,7 @@ void I_InitNetwork(void)
    }
    
    netsend = PacketSend;
-   netget = PacketGet;
+   netget  = PacketGet;
    netgame = true;
    
    doomcom->consoleplayer = myargv[i+1][0]-'1';
@@ -357,7 +357,7 @@ void I_InitNetwork(void)
    atexit(I_QuitNetwork);
    
    i++;
-   while (++i < myargc && myargv[i][0] != '-')
+   while(++i < myargc && myargv[i][0] != '-')
    {
       if(SDLNet_ResolveHost(&sendaddress[doomcom->numnodes], myargv[i], DOOMPORT))
          I_Error("Unable to resolve %s", myargv[i]);
