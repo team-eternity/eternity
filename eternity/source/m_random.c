@@ -96,6 +96,7 @@ int P_Random(pr_class_t pr_class)
      prndlog = fopen("p_random.log", "w");
      if(!prndlog)
         I_Error("Couldn't open P_Random debug log\n");
+     firsttime = false;
   }
 
 
