@@ -57,54 +57,46 @@ void (*netget)(void);
 void (*netsend)(void);
 
 // haleyjd: new functions for anarkavre's WinMBF netcode
-static int DOOMPORT = 8626;
+static Uint16 DOOMPORT = 8626;
 
 static UDPsocket udpsocket;
 static UDPpacket *packet;
 
 static IPaddress sendaddress[MAXNETNODES];
 
-/*
-unsigned short host_to_net16(unsigned int value)
+d_inline static void HostToNet16(Sint16 value, byte *area)
 {
-   union
-   {
-      unsigned short s;
-      char b[2];
-   } data;
-   
-   SDLNet_Write16(value, data.b);
-   
-   return data.s;
+   // input is host endianness, output is big endian
+
+   area[0] = (byte)((value >> 8) & 0xff);
+   area[1] = (byte)( value       & 0xff);
 }
 
-unsigned short net_to_host16(unsigned int value)
+d_inline static Sint16 NetToHost16(const byte *area)
 {
-   unsigned short s = value;
-   
-   return SDLNet_Read16(&s);
+   // input is big endian, output is host endianness
+   return ((Sint16)area[0] << 8) | area[1];
 }
 
-unsigned long host_to_net32(unsigned int value)
+d_inline static void HostToNet32(Uint32 value, byte *area)
 {
-   union
-   {
-      unsigned long l;
-      char b[4];
-   } data;
-   
-   SDLNet_Write32(value, data.b);
-   
-   return data.l;
+   // input is host endianness, output is big endian
+
+   area[0] = (byte)((value >> 24) & 0xff);
+   area[1] = (byte)((value >> 16) & 0xff);
+   area[2] = (byte)((value >>  8) & 0xff);
+   area[3] = (byte)( value        & 0xff);
 }
 
-unsigned long net_to_host32(unsigned int value)
+d_inline static Uint32 NetToHost32(const byte *area)
 {
-   unsigned long l = value;
-   
-   return SDLNet_Read32(&l);
+   // input is big endian, output is host endianness
+
+   return ((Uint32)area[0] << 24) |
+          ((Uint32)area[1] << 16) |
+          ((Uint32)area[2] <<  8) |
+                   area[3];
 }
-*/
 
 // haleyjd: end new functions for anark's netcode
 
@@ -139,7 +131,7 @@ void PacketSend(void)
 
    byte *rover = (byte *)packet->data;
 
-   SDLNet_Write32(netbuffer->checksum, rover);
+   HostToNet32(netbuffer->checksum, rover);
    rover += sizeof(netbuffer->checksum);
 
    *rover++ = netbuffer->player;
@@ -147,18 +139,26 @@ void PacketSend(void)
    *rover++ = netbuffer->starttic;
    *rover++ = netbuffer->numtics;
 
-   for(c = 0; c < netbuffer->numtics; ++c)
+   if(!(netbuffer->checksum & NCMD_SETUP))
    {
-      *rover++ = netbuffer->cmds[c].forwardmove;
-      *rover++ = netbuffer->cmds[c].sidemove;
-      SDLNet_Write16(netbuffer->cmds[c].angleturn, rover);
-      rover += sizeof(netbuffer->cmds[c].angleturn);
-      SDLNet_Write16(netbuffer->cmds[c].consistancy, rover);
-      rover += sizeof(netbuffer->cmds[c].consistancy);
-      *rover++ = netbuffer->cmds[c].chatchar;
-      *rover++ = netbuffer->cmds[c].buttons;
-      SDLNet_Write16(netbuffer->cmds[c].look, rover);
-      rover += sizeof(netbuffer->cmds[c].look);
+      for(c = 0; c < netbuffer->numtics; ++c)
+      {
+         *rover++ = netbuffer->d.cmds[c].forwardmove;
+         *rover++ = netbuffer->d.cmds[c].sidemove;
+         HostToNet16(netbuffer->d.cmds[c].angleturn, rover);
+         rover += sizeof(netbuffer->d.cmds[c].angleturn);
+         HostToNet16(netbuffer->d.cmds[c].consistancy, rover);
+         rover += sizeof(netbuffer->d.cmds[c].consistancy);
+         *rover++ = netbuffer->d.cmds[c].chatchar;
+         *rover++ = netbuffer->d.cmds[c].buttons;
+         HostToNet16(netbuffer->d.cmds[c].look, rover);
+         rover += sizeof(netbuffer->d.cmds[c].look);
+      }
+   }
+   else
+   {
+      for(c = 0; c < GAME_OPTION_SIZE; ++c)
+         *rover++ = netbuffer->d.data[c];
    }
    
    packet->len     = doomcom->datalength;
@@ -207,25 +207,33 @@ void PacketGet(void)
    //sw = (doomdata_t *)packet->data;
    rover = (byte *)packet->data;
    
-   netbuffer->checksum = SDLNet_Read32(rover);
+   netbuffer->checksum = NetToHost32(rover);
    rover += sizeof(netbuffer->checksum);
    netbuffer->player         = *rover++;
    netbuffer->retransmitfrom = *rover++;
    netbuffer->starttic       = *rover++;
    netbuffer->numtics        = *rover++;
    
-   for(c = 0; c < netbuffer->numtics; ++c)
+   if(!(netbuffer->checksum & NCMD_SETUP))
    {
-      netbuffer->cmds[c].forwardmove = *rover++;
-      netbuffer->cmds[c].sidemove    = *rover++;
-      netbuffer->cmds[c].angleturn   = SDLNet_Read16(rover);
-      rover += sizeof(netbuffer->cmds[c].angleturn);
-      netbuffer->cmds[c].consistancy = SDLNet_Read16(rover);
-      rover += sizeof(netbuffer->cmds[c].consistancy);
-      netbuffer->cmds[c].chatchar    = *rover++;
-      netbuffer->cmds[c].buttons     = *rover++;
-      netbuffer->cmds[c].look        = SDLNet_Read16(rover);
-      rover += sizeof(netbuffer->cmds[c].look);
+      for(c = 0; c < netbuffer->numtics; ++c)
+      {
+         netbuffer->d.cmds[c].forwardmove = *rover++;
+         netbuffer->d.cmds[c].sidemove    = *rover++;
+         netbuffer->d.cmds[c].angleturn   = NetToHost16(rover);
+         rover += sizeof(netbuffer->d.cmds[c].angleturn);
+         netbuffer->d.cmds[c].consistancy = NetToHost16(rover);
+         rover += sizeof(netbuffer->d.cmds[c].consistancy);
+         netbuffer->d.cmds[c].chatchar    = *rover++;
+         netbuffer->d.cmds[c].buttons     = *rover++;
+         netbuffer->d.cmds[c].look        = NetToHost16(rover);
+         rover += sizeof(netbuffer->d.cmds[c].look);
+      }
+   }
+   else
+   {
+      for(c = 0; c < GAME_OPTION_SIZE; ++c)
+         netbuffer->d.data[c] = *rover++;
    }
 }
 
@@ -351,7 +359,7 @@ void I_InitNetwork(void)
    i++;
    while (++i < myargc && myargv[i][0] != '-')
    {
-      if (SDLNet_ResolveHost(&sendaddress[doomcom->numnodes], myargv[i], DOOMPORT))
+      if(SDLNet_ResolveHost(&sendaddress[doomcom->numnodes], myargv[i], DOOMPORT))
          I_Error("Unable to resolve %s", myargv[i]);
       
       doomcom->numnodes++;

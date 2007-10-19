@@ -51,12 +51,22 @@
 // Networking and tick handling related.
 #define BACKUPTICS              12
 
+// haleyjd 10/19/07: moved here from d_net.c
+#define NCMD_EXIT               0x80000000
+#define NCMD_RETRANSMIT         0x40000000
+#define NCMD_SETUP              0x20000000
+#define NCMD_KILL               0x10000000      /* kill game */
+#define NCMD_CHECKSUM           0x0fffffff
+
 enum
 {
     CMD_SEND    = 1,
     CMD_GET     = 2
 };
 
+// haleyjd 10/19/07: moved here from g_game.h:
+// killough 5/2/98: number of bytes reserved for saving options
+#define GAME_OPTION_SIZE 64
 
 //
 // Network packet data.
@@ -71,7 +81,12 @@ struct doomdata_s
     byte                starttic;
     byte                player;
     byte                numtics;
-    ticcmd_t            cmds[BACKUPTICS];
+
+    union packetdata_u
+    {
+       byte                data[GAME_OPTION_SIZE];
+       ticcmd_t            cmds[BACKUPTICS];
+    } d;
 } __attribute__((packed));
 
 typedef struct doomdata_s doomdata_t;
@@ -88,50 +103,23 @@ typedef struct doomdata_s doomdata_t;
 // Note: for phase 1 we need to add monsters_remember, variable_friction,
 //       weapon_recoil, allow_pushers, over_under, player_bobbing,
 //       fastparm, demo_insurance, and the rngseed
-//Stick all options into bytes so we don't need to mess with bitfields
-//WARNING: make sure this doesn't exceed the size of the ticcmds area!
-//sizeof(ticcmd_t)*BACKUPTICS
-//This is the current length of our extra stuff
+// Stick all options into bytes so we don't need to mess with bitfields
+// WARNING: make sure this doesn't exceed the size of the ticcmds area!
+// sizeof(ticcmd_t)*BACKUPTICS
+// This is the current length of our extra stuff
 //
-//killough 5/2/98: this should all be replaced by calls to G_WriteOptions()
-//and G_ReadOptions(), which were specifically designed to set up packets.
-//By creating a separate struct and functions to read/write the options,
-//you now have two functions and data to maintain instead of just one.
-//If the array in g_game.c which G_WriteOptions()/G_ReadOptions() operates
-//on, is too large (more than sizeof(ticcmd_t)*BACKUPTICS), it can
-//either be shortened, or the net code needs to divide it up
-//automatically into packets. The STARTUPLEN below is non-portable.
-//There's a portable way to do it without having to know the sizes.
+// killough 5/2/98: this should all be replaced by calls to G_WriteOptions()
+// and G_ReadOptions(), which were specifically designed to set up packets.
+// By creating a separate struct and functions to read/write the options,
+// you now have two functions and data to maintain instead of just one.
+// If the array in g_game.c which G_WriteOptions()/G_ReadOptions() operates
+// on, is too large (more than sizeof(ticcmd_t)*BACKUPTICS), it can
+// either be shortened, or the net code needs to divide it up
+// automatically into packets. The STARTUPLEN below is non-portable.
+// There's a portable way to do it without having to know the sizes.
 //
-// NETCODE_FIXME: The comment above is the one I make reference to in
-// g_game.c that discusses the fact that this stuff below is pure garbage
-// and that something similar to G_Read/WriteOptions needs to be employed
-// when sending the values of sync-critical variables over the network at
-// game startup. However, if properly designed, the console system should
-// probably handle this itself by iterating over all console variables
-// and transmitting the sync-critical ones. This will require various
-// changes to the netcmds/cvars systems, and will require that ALL sync
-// critical variables have cvars. Some currently may not.
 
-// haleyjd 10/16/07: is this even used any more? Doesn't look like it.
-
-#define STARTUPLEN 12
-
-struct startup_s
-{
-  byte monsters_remember;
-  byte variable_friction;
-  byte weapon_recoil;
-  byte allow_pushers;
-  byte over_under;
-  byte player_bobbing;
-  byte fastparm;
-  byte demo_insurance;
-  unsigned long rngseed;
-  char filler[sizeof(ticcmd_t)*BACKUPTICS-STARTUPLEN];
-} __attribute__((packed));
-
-typedef struct startup_s startup_t;
+// haleyjd 10/18/07: removed unused startup_t structure
 
 struct doomcom_s
 {

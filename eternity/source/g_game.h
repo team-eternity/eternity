@@ -31,9 +31,6 @@
 // GAME
 //
 
-// killough 5/2/98: number of bytes reserved for saving options
-#define GAME_OPTION_SIZE 64
-
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);
 

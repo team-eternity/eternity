@@ -215,7 +215,7 @@ static void VerifySDLVersions(void)
    {
       error |= ERROR_SDL_NET;
       printf("WARNING: SDL_net linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
+             "%d.%d.%d (linked) != %d.%d.%d (expected)\n\n",
              lv->major, lv->minor, lv->patch,
              ex_vers[2].major, ex_vers[2].minor, ex_vers[2].patch);
    }

@@ -45,12 +45,6 @@
 #include "g_dmflag.h"
 #include "e_player.h"
 
-#define NCMD_EXIT               0x80000000
-#define NCMD_RETRANSMIT         0x40000000
-#define NCMD_SETUP              0x20000000
-#define NCMD_KILL               0x10000000      /* kill game */
-#define NCMD_CHECKSUM           0x0fffffff
-
 doomcom_t  *doomcom;        
 doomdata_t *netbuffer; // points inside doomcom
 
@@ -99,7 +93,7 @@ static doomdata_t reboundstore;
 //
 static int NetbufferSize(void)
 {
-   return (int)&(((doomdata_t *)0)->cmds[netbuffer->numtics]); 
+   return (int)&(((doomdata_t *)0)->d.cmds[netbuffer->numtics]); 
 }
 
 //
@@ -201,7 +195,7 @@ static void HSendPacket(int node, int flags)
       int realretrans;
       
       if(netbuffer->checksum & NCMD_RETRANSMIT)
-         realretrans = ExpandTics (netbuffer->retransmitfrom);
+         realretrans = ExpandTics(netbuffer->retransmitfrom);
       else
          realretrans = -1;
       
@@ -413,7 +407,7 @@ static void GetPackets(void)
          remoteresend[netnode] = false;
          
          start = nettics[netnode] - realstart;               
-         src = &netbuffer->cmds[start];
+         src = &netbuffer->d.cmds[start];
          
          while (nettics[netnode] < realend)
          {
@@ -500,7 +494,7 @@ void NetUpdate(void)
          resendto[i] = maketic - doomcom->extratics;
          
          for(j = 0; j < netbuffer->numtics; ++j)
-            netbuffer->cmds[j] = localcmds[(realstart + j) % BACKUPTICS];
+            netbuffer->d.cmds[j] = localcmds[(realstart + j) % BACKUPTICS];
          
          if(remoteresend[i])
          {
@@ -720,7 +714,7 @@ static void D_ArbitrateNetStart(void)
             if(dm)
                DefaultGameType = GameType = gt_dm;
 
-            G_ReadOptions((char *)netbuffer->cmds);
+            G_ReadOptions(netbuffer->d.data);
 
             D_InitPlayers();
             return;
@@ -749,16 +743,16 @@ static void D_ArbitrateNetStart(void)
             netbuffer->starttic = (startepisode-1) * 64 + startmap;
             netbuffer->player = version;
 
-            if(GAME_OPTION_SIZE > sizeof netbuffer->cmds)
+            if(GAME_OPTION_SIZE > sizeof netbuffer->d.data)
                I_Error("D_ArbitrateNetStart: GAME_OPTION_SIZE"
                        " too large w.r.t. BACKUPTICS");
 
-            G_WriteOptions((char *) netbuffer->cmds);    // killough 12/98
+            G_WriteOptions(netbuffer->d.data);    // killough 12/98
             
             // killough 5/2/98: Always write the maximum number of tics.
             netbuffer->numtics = BACKUPTICS;
             
-            HSendPacket (i, NCMD_SETUP);
+            HSendPacket(i, NCMD_SETUP);
          }
 
          for(i = 10; i && HGetPacket(); --i)
