@@ -66,9 +66,6 @@ rng_t rng;     // the random number state
 
 unsigned long rngseed = 1993;   // killough 3/26/98: The seed
 
-// haleyjd: DEBUG
-static FILE *prndlog;
-
 int P_Random(pr_class_t pr_class)
 {
   // killough 2/16/98:  We always update both sets of random number
@@ -89,17 +86,6 @@ int P_Random(pr_class_t pr_class)
   // much more unstable method by putting everything
   // except pr_misc into pr_all_in_one
 
-  // haleyjd: DEBUG
-  static boolean firsttime = true;
-  if(firsttime)
-  {
-     prndlog = fopen("p_random.log", "w");
-     if(!prndlog)
-        I_Error("Couldn't open P_Random debug log\n");
-     firsttime = false;
-  }
-
-
   compat= pr_class == pr_misc ?     // sf: moved here
          (rng.prndindex = (rng.prndindex + 1) & 255) :
          (rng.rndindex  = (rng.rndindex  + 1) & 255) ;
@@ -114,10 +100,7 @@ int P_Random(pr_class_t pr_class)
   rng.seed[pr_class] = boom * 1664525ul + 221297ul + pr_class*2;
 
   if(demo_compatibility)
-  {
-     fprintf(prndlog, "%d\n", rndtable[compat]);
      return rndtable[compat];
-  }
 
   boom >>= 20;
 
@@ -128,8 +111,6 @@ int P_Random(pr_class_t pr_class)
 
   if (demo_insurance)
     boom += (gametic-basetic)*7;
-
-  fprintf(prndlog, "%d\n", boom & 255);
 
   return boom & 255;
 }

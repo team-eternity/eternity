@@ -2948,6 +2948,9 @@ void G_RecordDemo(char *name)
 byte *G_WriteOptions(byte *demo_p)
 {
    byte *target = demo_p + GAME_OPTION_SIZE;
+
+   // haleyjd: DEBUG
+   byte *orig = demo_p;
    
    *demo_p++ = monsters_remember;  // part of monster AI -- byte 1
    
@@ -3021,6 +3024,17 @@ byte *G_WriteOptions(byte *demo_p)
    
    if(demo_p != target)
       I_Error("G_WriteOptions: GAME_OPTION_SIZE is too small");
+
+   {
+      FILE *options = fopen("woption.log", "wb");
+
+      if(options)
+      {
+         fwrite(orig, 1, GAME_OPTION_SIZE, options);
+         
+         fclose(options);
+      }
+   }
    
    return target;
 }
@@ -3030,6 +3044,9 @@ byte *G_WriteOptions(byte *demo_p)
 byte *G_ReadOptions(byte *demo_p)
 {
    byte *target = demo_p + GAME_OPTION_SIZE;
+
+   //haleyjd: DEBUG
+   byte *orig = demo_p;
    
    monsters_remember = *demo_p++;
    
@@ -3143,7 +3160,18 @@ byte *G_ReadOptions(byte *demo_p)
       allowmlook = 0;
    }
   
-  return target;
+   {
+      FILE *options = fopen("roption.log", "wb");
+      
+      if(options)
+      {
+         fwrite(orig, 1, GAME_OPTION_SIZE, options);
+         
+         fclose(options);
+      }
+   }
+
+   return target;
 }
 
 /*
