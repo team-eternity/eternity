@@ -155,9 +155,9 @@ static void R_MapPlane(int y, int x1, int x2)
    ystep = view.cos * slope * view.focratio;
 
    span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-view.cos * realy) 
-                            + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
+                            + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
    span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (view.sin * realy) 
-                            + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
+                            + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
    span.xstep = (unsigned)(xstep * plane.fixedunit);
    span.ystep = (unsigned)(ystep * plane.fixedunit);
 
