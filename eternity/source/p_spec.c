@@ -4255,6 +4255,8 @@ void P_AttachSectors(line_t *line)
 
             type = AS_MIRRORCEILING;
          }
+         else
+            continue;
 
 
          // add sector
