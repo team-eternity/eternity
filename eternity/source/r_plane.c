@@ -497,12 +497,10 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 //
 // R_MakeSpans
 //
-
-// haleyjd: DEBUG
 static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
 {
-   // DEBUG
 #ifdef RANGECHECK
+   // haleyjd: do not allow this loop to trash the BSS data
    if(b2 >= MAX_SCREENHEIGHT)
       I_Error("R_MakeSpans: b2 >= MAX_SCREENHEIGHT\n");
 #endif

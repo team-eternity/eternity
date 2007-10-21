@@ -106,28 +106,6 @@ d_inline static Uint32 NetToHost32(const byte *area)
 void PacketSend(void)
 {
    int c;
-   //doomdata_t *sw;
-   
-   /*
-   sw = (doomdata_t *)packet->data;
-   
-   SDLNet_Write32(netbuffer->checksum, &sw->checksum);
-   sw->player         = netbuffer->player;
-   sw->retransmitfrom = netbuffer->retransmitfrom;
-   sw->starttic       = netbuffer->starttic;
-   sw->numtics        = netbuffer->numtics;
-   
-   for(c = 0; c < netbuffer->numtics; ++c)
-   {
-      sw->cmds[c].forwardmove = netbuffer->cmds[c].forwardmove;
-      sw->cmds[c].sidemove    = netbuffer->cmds[c].sidemove;
-      SDLNet_Write16(netbuffer->cmds[c].angleturn,   &(sw->cmds[c].angleturn));
-      SDLNet_Write16(netbuffer->cmds[c].consistancy, &(sw->cmds[c].consistancy));
-      sw->cmds[c].chatchar    = netbuffer->cmds[c].chatchar;
-      sw->cmds[c].buttons     = netbuffer->cmds[c].buttons;
-      SDLNet_Write16(netbuffer->cmds[c].look, &(sw->cmds[c].look)); // haleyjd
-   }
-   */
 
    byte *rover = (byte *)packet->data;
 
@@ -264,34 +242,15 @@ void I_QuitNetwork(void)
 //
 void I_InitNetwork(void)
 {
-   /*   
-   // set up the singleplayer doomcom
-   
-   singleplayer.id = DOOMCOM_ID;
-   singleplayer.numplayers = singleplayer.numnodes = 1;
-   singleplayer.deathmatch = false;
-   singleplayer.consoleplayer = 0;
-   singleplayer.extratics=0;
-   singleplayer.ticdup=1;
-   
-   // set up for network
-   
-   // parse network game options,
-   //  -net <consoleplayer> <host> <host> ...
-   // single player game
-   doomcom = &singleplayer;
-   netgame = false;
-   return;
-   */
    int i, p;
    
    doomcom = calloc(1, sizeof(*doomcom));
    
    // set up for network
    i = M_CheckParm("-dup");
-   if(i && i < myargc-1)
+   if(i && i < myargc - 1)
    {
-      doomcom->ticdup = myargv[i+1][0]-'0';
+      doomcom->ticdup = myargv[i + 1][0] - '0';
       if (doomcom->ticdup < 1)
          doomcom->ticdup = 1;
       if (doomcom->ticdup > 9)
@@ -300,15 +259,15 @@ void I_InitNetwork(void)
    else
       doomcom-> ticdup = 1;
 	
-   if(M_CheckParm ("-extratic"))
-      doomcom-> extratics = 1;
+   if(M_CheckParm("-extratic"))
+      doomcom->extratics = 1;
    else
-      doomcom-> extratics = 0;
+      doomcom->extratics = 0;
 
-   p = M_CheckParm ("-port");
-   if(p && p<myargc-1)
+   p = M_CheckParm("-port");
+   if(p && p < myargc - 1)
    {
-      DOOMPORT = atoi (myargv[p+1]);
+      DOOMPORT = atoi(myargv[p + 1]);
       usermsg("Using alternative port %i\n", DOOMPORT);
    }
 
@@ -331,15 +290,9 @@ void I_InitNetwork(void)
       doomcom->numplayers = doomcom->numnodes = 1;
       doomcom->deathmatch = false;
       doomcom->consoleplayer = 0;
-      doomcom->extratics=0;
-      doomcom->ticdup=1;
+      doomcom->extratics = 0;
+      doomcom->ticdup = 1;
       
-      // set up for network
-      
-      // parse network game options,
-      //  -net <consoleplayer> <host> <host> ...
-      // single player game
-      //doomcom = &singleplayer;
       netgame = false;
       return;      
    }

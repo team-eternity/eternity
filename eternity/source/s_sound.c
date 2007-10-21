@@ -393,6 +393,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    int volume = snd_SfxVolume;
    boolean extcamera = false;
    camera_t playercam;
+   camera_t *listener = &playercam;
 
    // haleyjd 09/03/03: allow NULL sounds to fall through
    if(!sfx)
@@ -466,18 +467,26 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       else
       {
          mobj_t *mo = players[displayplayer].mo;
-         playercam.x = mo->x; 
-         playercam.y = mo->y; 
-         playercam.z = mo->z;
-         playercam.angle = mo->angle;
+
+         // haleyjd 10/20/07: do not crash in multiplayer trying to
+         // adjust sounds for a player that hasn't been spawned yet!
+         if(mo)
+         {
+            playercam.x = mo->x; 
+            playercam.y = mo->y; 
+            playercam.z = mo->z;
+            playercam.angle = mo->angle;
 #ifdef R_LINKEDPORTALS
-         playercam.groupid = mo->groupid;
+            playercam.groupid = mo->groupid;
 #endif
+         }
+         else
+            listener = NULL;
       }
    }
 
    // haleyjd 09/29/06: check for sector sound kill here.
-   if(S_CheckSectorKill(&playercam, origin))
+   if(S_CheckSectorKill(listener, origin))
       return;
 
    // Check to see if it is audible, modify the params
@@ -496,7 +505,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    else
    {     
       // use an external cam?
-      if(!S_AdjustSoundParams(&playercam, origin, volumeScale, attenuation,
+      if(!S_AdjustSoundParams(listener, origin, volumeScale, attenuation,
                               &volume, &sep, &pitch, &priority, sfx))
          return;
       else if(origin->x == playercam.x && origin->y == playercam.y)
