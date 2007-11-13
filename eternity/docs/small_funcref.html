@@ -200,6 +200,10 @@
         <li><a href="#_Pillar_Build">_Pillar_Build</a>
         <li><a href="#_Pillar_BuildAndCrush">_Pillar_BuildAndCrush</a>
         <li><a href="#_Pillar_Open">_Pillar_Open</a>
+        <li><a href="#_ChangeFloor">_ChangeFloor</a>
+        <li><a href="#_ChangeCeiling">_ChangeCeiling</a>
+        <li><a href="#_SetLineTexture">_SetLineTexture</a>
+        <li><a href="#_SetLineTextureTag">_SetLineTextureTag</a>
     </ul>
     <li><a href="#cameras">Cameras</a>
         <ul>
@@ -3729,7 +3733,92 @@ in Hexen.
     <ul>
     <li> "Bad gamemode for native function" : Game is not currently in level mode.
     </ul>
+	<br/>
+
+	<li><a name="_ChangeFloor"><b>_ChangeFloor</b></a><br>
+    <em>native _ChangeFloor(tag, const flat[]);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : Tag of the sectors to change the floor flat of.
+    <li> flat : The name of the flat to change the floor to.
+	</ul>
+    Return value: 0 if action was successful on any sector, -1 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Changes the tagged sector's floor flats to the given flat.<br>    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br/>
+
+	<li><a name="_ChangeCeiling"><b>_ChangeCeiling</b></a><br>
+    <em>native _ChangeCeiling(tag, const flat[]);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : Tag of the sectors to change the ceiling flat of.
+    <li> flat : The name of the flat to change the ceiling to.
+	</ul>
+    Return value: 0 if action was successful on any sector, -1 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Changes the tagged sector's ceiling flats to the given flat.<br>    Exceptions:
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br/>
+
+	<li><a name="_SetLineTexture"><b>_SetLineTexture</b></a><br>
+    <em>native _SetLineTexture(lineid, side, pos, const texturename[]);</em><br>
+    Parameters:
+    <ul>
+    <li> lineid : The lineid of the line the function will change the texture of.
+    <li> side : The side of the line the texture the function will change is on. Can be:
+         <ul>
+         <li>_SIDE_FRONT : Front side of line
+         <li>_SIDE_BACK : Back side of line
+		</ul>
+    <li> pos : One of the following enumeration values:
+         <ul>
+         <li>_TEX_LOWER : The texture to change is the lower texture
+         <li>_TEX_MID : The texture to change is the middle texture
+         <li>_TEX_UPPER : The texture to change is the upper texture
+         </ul>
+    <li> texturename : Name of texture to change to.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Changes the specified line's texture on the given position and side.<br>
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+
+	<li><a name="_SetLineTextureTag"><b>_SetLineTextureTag</b></a><br>
+    <em>native _SetLineTextureTag(tag, side, pos, const texturename[]);</em><br>
+    Parameters:
+    <ul>
+    <li> tag : The tag of the lines the function will change the texture of.
+    <li> side : The side of the line the texture the function will change is on. Can be:
+         <ul>
+         <li>_SIDE_FRONT : Front side of line
+         <li>_SIDE_BACK : Back side of line
+         </ul>
+    <li> pos : One of the following enumeration values:
+         <ul>
+         <li>_TEX_LOWER : The texture to change is the lower texture
+         <li>_TEX_MID : The texture to change is the middle texture
+         <li>_TEX_UPPER : The texture to change is the upper texture
+         </ul>
+    <li> texturename : Name of texture to change to.
+    </ul>
+    Return value: 1 if action was successful on any sector, 0 otherwise.<br>
+    Found in: specials.inc<br>
+    Description: Changes the specified lines's textures on the given position and side.<br>
+    <ul>
+    <li> "Bad gamemode for native function" : Game is not currently in level mode.
+    </ul>
+    <br>
+
 </ul>
+
 
 <a href="#contents">Return to Table of Contents</a>
 
