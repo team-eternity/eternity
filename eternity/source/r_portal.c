@@ -612,7 +612,6 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 {
    fixed_t lastx, lasty, lastz;
    float   lastxf, lastyf, lastzf;
-   int     i;
 
 #ifdef R_LINKEDPORTALS
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && portal->type != R_LINKED)
@@ -625,12 +624,12 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
       return;
 
    // haleyjd: temporary debug
-   if(portal->tainted > video.width)
+   if(portal->tainted > 6)
    {
       portal->tainted++;
       doom_printf("refused to draw portal %p (t=%d)", portal, portal->tainted);
       return;
-   }
+   } 
 
 #ifdef RANGECHECK
    {
@@ -661,7 +660,7 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    portalrender.minx = portal->minx;
    portalrender.maxx = portal->maxx;
 
-   portalrender.miny = MAX_SCREENHEIGHT;
+/*   portalrender.miny = MAX_SCREENHEIGHT;
    portalrender.maxy = 0;
    for(i = portal->minx; i <= portal->maxx; i++)
    {
@@ -670,7 +669,7 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 
       if(portal->bottom[i] > portalrender.maxy)
          portalrender.maxy = portal->bottom[i];
-   }
+   }*/
 
 
    ++validcount;

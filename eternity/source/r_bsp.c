@@ -232,6 +232,10 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
    cliprange_t *solidseg;
    
    R_ClearClipSegs();
+
+   // SoM: This should be done here instead of having an additional loop
+   portalrender.miny = MAX_SCREENHEIGHT;
+   portalrender.maxy = 0;
    
    // extend first solidseg to one column left of first open post
    while(i < viewwidth && bottom[i] < top[i]) 
@@ -250,7 +254,15 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
    {
       //find the first closed post.
       while(i < viewwidth && bottom[i] >= top[i]) 
+      {
+         if(top[i] < portalrender.miny) 
+            portalrender.miny = top[i];
+
+         if(bottom[i] > portalrender.maxy) 
+            portalrender.maxy = bottom[i];
+
          ++i;
+      }
       
       if(i == viewwidth)
          goto endopen;
@@ -543,7 +555,7 @@ static void R_ClipSegToPortal(void)
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
-   else
+   else if(viewz < seg.frontsec->floorheight)
    {
       float bottom, bottomstep;
       float y1, y2;
@@ -559,7 +571,7 @@ static void R_ClipSegToPortal(void)
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
-         for(; i <= seg.x2 && (floorclip[i] < ceilingclip[i] || bottom < ceilingclip[i]); i++)
+         for(; i <= seg.x2 && (floorclip[i] < ceilingclip[i] || bottom < (ceilingclip[i] + 1.0f)); i++)
             bottom += bottomstep;
 
          if(i > seg.x2)
@@ -575,6 +587,13 @@ static void R_ClipSegToPortal(void)
          else
             R_ClipPassWallSegment(startx, i - 1);
       }
+   }
+   else
+   {
+      if(seg.clipsolid)
+         R_ClipSolidWallSegment(seg.x1, seg.x2);
+      else
+         R_ClipPassWallSegment(seg.x1, seg.x2);
    }
 }
 

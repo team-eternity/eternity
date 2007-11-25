@@ -203,6 +203,9 @@ static void R_RenderSegLoop(void)
    int i, texx;
    float basescale;
 
+   if(segclip.line->linedef - lines == 23)
+      segclip.line = segclip.line;
+
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       cliptop = (int)ceilingclip[i];
@@ -452,6 +455,9 @@ void R_StoreWallRange(const int start, const int stop)
    if(!segclip.line)
       I_Error("R_StoreWallRange: null segclip.line\n");
 #endif
+
+   if(segclip.line->linedef - lines == 23)
+      segclip.line = segclip.line;
    
    usesegloop = !seg.backsec || seg.clipsolid || 
                 seg.markceiling || seg.markfloor || 
