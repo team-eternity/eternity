@@ -23,10 +23,7 @@
 // All of this code, with the exception of the include stuff, is
 // brand spankin' new.
 
-#if defined(DJGPP) || defined(LINUX)
 #include <errno.h>
-#endif
-
 #include <ctype.h>
 
 #include "../z_zone.h"
