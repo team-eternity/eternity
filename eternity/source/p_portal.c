@@ -221,21 +221,13 @@ void P_AddLinkOffset(int startgroup, int targetgroup,
    linkoffset_t *link;
 
    if(!linktable)
-   {
-      I_Error("P_AddLinkOffset called with no linktable allocated.\n");
-      return;
-   }
+      I_Error("P_AddLinkOffset: no linktable allocated.\n");
 
    if(startgroup < 0 || startgroup >= groupcount)
-   {
-      I_Error("P_AddLinkOffset called with start groupid out of bounds.\n");
-      return;
-   }
+      I_Error("P_AddLinkOffset: start groupid %d out of bounds.\n", startgroup);
+
    if(targetgroup < 0 || targetgroup >= groupcount)
-   {
-      I_Error("P_AddLinkOffset called with target groupid out of bounds.\n");
-      return;
-   }
+      I_Error("P_AddLinkOffset: target groupid %d out of bounds.\n", targetgroup);
 
    if(startgroup == targetgroup)
       return;
