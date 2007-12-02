@@ -6,7 +6,7 @@ games_PROGRAMS = eternity
 
 AM_CFLAGS = -I/usr/include/SDL -I/usr/local/include/SDL @SDL_CFLAGS@ -Wall\
 -D_SDL_VER -DNDEBUG -DAMX_NODYNALOAD -DR_LINKEDPORTALS -DR_PORTALS     \
--DOVER_UNDER -DPOLYOBJECTS -D_CONSOLE -DLINUX
+-DOVER_UNDER -DPOLYOBJECTS -D_CONSOLE -DLINUX -lSDL_net
 
 eternity_SOURCES = \
 acs_intr.c      acs_intr.h     a_fixed.c   am_color.c  am_map.c    am_map.h    amx.c		\
