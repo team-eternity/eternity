@@ -852,8 +852,8 @@ boolean G_Responder(event_t* ev)
       mousex = (ev->data2 * (mouseSensitivity_horiz*4))/ FRACUNIT;  // killough
       mousey = (ev->data3 * (mouseSensitivity_vert*4)) / FRACUNIT;   // haleyjd 05/30/05: fixed
 #else
-      mousex = (ev->data2 * (mouseSensitivity_horiz + 5) / 10) >> FRACBITS;
-      mousey = (ev->data3 * (mouseSensitivity_vert + 5) / 10) >> FRACBITS;
+      mousex = (ev->data2 * (mouseSensitivity_horiz + 5) / 5) >> FRACBITS;
+      mousey = (ev->data3 * (mouseSensitivity_vert + 5) / 5) >> FRACBITS;
 #endif
       return true;    // eat events
       
