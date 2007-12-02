@@ -1496,6 +1496,8 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_InitThinkers();   
    P_InitTIDHash();     // haleyjd 02/02/04 -- clear the TID hash table
 
+   P_InitPortals(); // SoM: I can't believe I forgot to call this!
+
    P_LoadLevelInfo(lumpnum);  // load MapInfo
    E_LoadExtraData();         // haleyjd 10/08/03: load ExtraData
 
