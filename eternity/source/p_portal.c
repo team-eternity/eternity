@@ -211,22 +211,27 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 //
 // P_AddLinkOffset
 //
-void P_AddLinkOffset(int startgroup, int targetgroup, 
-                     fixed_t x, fixed_t y, fixed_t z)
+
+// Returns 0 if the link offset was added successfully, 1 if the start group is out of bounds,
+// and 2 of the target group is out of bounds.
+int P_AddLinkOffset(int startgroup, int targetgroup, 
+                    fixed_t x, fixed_t y, fixed_t z)
 {
    linkoffset_t *link;
 
+#ifdef RANGECHECK
    if(!linktable)
       I_Error("P_AddLinkOffset: no linktable allocated.\n");
+#endif
 
    if(startgroup < 0 || startgroup >= groupcount)
-      I_Error("P_AddLinkOffset: start groupid %d out of bounds.\n", startgroup);
+      return 1; //I_Error("P_AddLinkOffset: start groupid %d out of bounds.\n", startgroup);
 
    if(targetgroup < 0 || targetgroup >= groupcount)
-      I_Error("P_AddLinkOffset: target groupid %d out of bounds.\n", targetgroup);
+      return 2; //I_Error("P_AddLinkOffset: target groupid %d out of bounds.\n", targetgroup);
 
    if(startgroup == targetgroup)
-      return;
+      return 0;
 
    link = (linkoffset_t *)Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0);
    linktable[startgroup * groupcount + targetgroup] = link;
@@ -234,6 +239,8 @@ void P_AddLinkOffset(int startgroup, int targetgroup,
    link->x = x;
    link->y = y;
    link->z = z;
+
+   return 0;
 }
 
 //
@@ -265,12 +272,23 @@ static boolean P_CheckLinkedPortal(rportal_t *portal, sector_t *sec)
       return false;
    }
 
+   if(sec->groupid < 0 || 
+      sec->groupid >= groupcount)
+   {
+      C_Printf(FC_ERROR "P_BuildLinkTable: sector %i does not belong to a "
+               "portal group.\nLinked portals are disabled.\a\n", i);
+      return false;
+   }
+
+
    // We've found a linked portal so add the entry to the table
    if(!(link = P_GetLinkOffset(sec->groupid, portal->data.camera.groupid)))
    {
-      P_AddLinkOffset(sec->groupid, portal->data.camera.groupid, 
-                      portal->data.camera.deltax, portal->data.camera.deltay, 
-                      portal->data.camera.deltaz);
+      int ret = P_AddLinkOffset(sec->groupid, portal->data.camera.groupid, 
+                                portal->data.camera.deltax, portal->data.camera.deltay, 
+                                portal->data.camera.deltaz);
+      if(ret)
+         return false;
    }
    else
    {
@@ -282,7 +300,7 @@ static boolean P_CheckLinkedPortal(rportal_t *portal, sector_t *sec)
          C_Printf(FC_ERROR "P_BuildLinkTable: sector %i in group %i contains "
                   "inconsistent reference to group %i.\n"
                   "Linked portals are disabled.\a\n", 
-                  i, sec->groupid, sec->c_portal->data.camera.groupid);
+                  i, sec->groupid, portal->data.camera.groupid);
          return false;
       }
    }
@@ -300,7 +318,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
    linkoffset_t *link, **linklist, **fromlist;
 
    // The main group has an indrect link with every group that links to a group
-   // it has a direct link to it, or any group that has a link to a group the 
+   // that has a direct link to it, or any group that has a link to a group the 
    // main group has an indirect link to. huh.
 
    // First step: run through the list of groups this group has direct links to
@@ -422,6 +440,14 @@ void P_BuildLinkTable(void)
    // That first loop has to complete before this can be run!
    for(i = 0; i < groupcount; ++i)
       P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
+
+   // SoM: one last step. Find all map architecture with a group id of -1 and assign it to
+   // group 0
+   for(i = 0; i < numsectors; i++)
+   {
+      if(sectors[i].groupid == R_NOGROUP)
+         sectors[i].groupid = 0;
+   }
 
    // Everything checks out... let's run the portals
    useportalgroups = true;

@@ -1297,7 +1297,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             if(P_PointOnLineSide(thing->x, thing->y, spechit[numspechit]))
             {
                linkoffset_t *link = 
-                  P_GetLinkOffset(thing->groupid, 
+                  P_GetLinkOffset(spechit[numspechit]->frontsector->groupid, 
                                   spechit[numspechit]->portal->data.camera.groupid);
                EV_PortalTeleport(thing, link);
             }
