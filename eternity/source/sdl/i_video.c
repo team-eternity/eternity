@@ -380,7 +380,7 @@ static void I_GetEvent(void)
             continue;
 
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
-#if 0
+/*#if 1
          // SoM: Fixed the uneven mouse movement between video modes
          mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 20; 
          mouseevent.data3 -= mousefrac;
@@ -395,7 +395,9 @@ static void I_GetEvent(void)
 
          mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 5; 
          mouseevent.data2 += FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac;
-#endif
+#endif*/
+         mouseevent.data3 -= (event.motion.yrel << FRACBITS) / mouseyden * 200;
+         mouseevent.data2 += (event.motion.xrel << FRACBITS) / mousexden * 320;
          sendmouseevent = 1;
          break;
       
