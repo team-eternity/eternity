@@ -56,8 +56,6 @@ static int  groupcount = 0, grouplimit = 0;
 // set true by P_BuildLinkTable.
 boolean useportalgroups = false;
 
-extern void R_InitPortals(void);
-
 void P_InitPortals(void)
 {
    int i;
@@ -68,8 +66,6 @@ void P_InitPortals(void)
       grouplist[i] = NULL;
 
    useportalgroups = false;
-
-   R_InitPortals();
 }
 
 //
