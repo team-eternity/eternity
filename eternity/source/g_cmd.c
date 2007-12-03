@@ -425,6 +425,12 @@ extern int smooth_turning;
 VARIABLE_BOOLEAN(smooth_turning, NULL,          onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
+
+// SoM: mouse accel
+char *accel_options[]={"off", "parabolic"};
+VARIABLE_INT(mouseAccel_type, NULL, 0, 1, accel_options);
+CONSOLE_VARIABLE(mouse_accel, mouseAccel_type, 0) {}
+
 // haleyjd: new stuff
 
 extern int map_point_coordinates;
@@ -774,6 +780,7 @@ void G_AddCommands(void)
    C_AddCommand(sens_vert);
    C_AddCommand(sens_horiz);
    C_AddCommand(sens_combined);
+   C_AddCommand(mouse_accel);
    C_AddCommand(invertmouse);
    C_AddCommand(turbo);
    C_AddCommand(playdemo);

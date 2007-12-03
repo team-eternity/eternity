@@ -480,6 +480,14 @@ default_t defaults[] =
       "adjust vertical (y) mouse sensitivity"
    },
 
+   // SoM
+   {
+      "mouse_accel",
+      &mouseAccel_type, NULL,
+      0, {0, 1}, dt_number, ss_none, wad_no,
+      "0 for no mouse accel, 1 for parabolic"
+   },
+
    {
       "sfx_volume",
       &snd_SfxVolume, NULL,

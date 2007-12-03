@@ -310,6 +310,9 @@ extern  gamestate_t     wipegamestate;
 extern  int             mouseSensitivity_horiz; // killough
 extern  int             mouseSensitivity_vert;
 
+// SoM: 
+extern  int             mouseAccel_type;
+
 // debug flag to cancel adaptiveness
 extern  boolean         singletics;
 

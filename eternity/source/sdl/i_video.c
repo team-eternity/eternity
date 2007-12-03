@@ -328,6 +328,7 @@ void I_StartFrame(void)
 /////////////////////////////////////////////////////////////////////////////
 
 extern void MN_QuitDoom(void);
+extern int mouseAccel_type;
 
 // SoM 3/14/2002: Rewrote event function for use with SDL
 static void I_GetEvent(void)
@@ -380,24 +381,19 @@ static void I_GetEvent(void)
             continue;
 
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
-/*#if 1
-         // SoM: Fixed the uneven mouse movement between video modes
-         mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 20; 
-         mouseevent.data3 -= mousefrac;
+         if(mouseAccel_type == 0)
+         {
+            mouseevent.data3 -= (event.motion.yrel << FRACBITS) / mouseyden * 200;
+            mouseevent.data2 += (event.motion.xrel << FRACBITS) / mousexden * 320;
+         }
+         else if(mouseAccel_type == 1)
+         {
+            mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 64; 
+            mouseevent.data3 -= FixedMul(D_abs(mousefrac), mousefrac) + mousefrac;
 
-         mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 32; 
-         mouseevent.data2 += mousefrac;
-#else
-         // SoM: parabolic mouse accelleration
-         // This should really be an option (mayhaps a console variable and menu option?)
-         mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 7; 
-         mouseevent.data3 -= FixedMul(D_abs(mousefrac), mousefrac) + mousefrac;
-
-         mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 5; 
-         mouseevent.data2 += FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac;
-#endif*/
-         mouseevent.data3 -= (event.motion.yrel << FRACBITS) / mouseyden * 200;
-         mouseevent.data2 += (event.motion.xrel << FRACBITS) / mousexden * 320;
+            mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 40; 
+            mouseevent.data2 += FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac;
+         }
          sendmouseevent = 1;
          break;
       
