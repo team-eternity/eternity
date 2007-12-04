@@ -532,6 +532,10 @@ static boolean in_page_flip, linear;
 static int scroll_offset;
 static unsigned destscreen;
 
+// haleyjd 12/03/07: 8-on-32 graphics support
+static boolean crossbitdepth;
+Uint32 RGB8to32[256];          // palette to true-color lookup table
+
 #define PRIMARY_BUFFER 0
 
 void I_FinishUpdate(void)
@@ -560,19 +564,58 @@ void I_FinishUpdate(void)
    pitch1 = sdlscreen->pitch;
    pitch2 = sdlscreen->w * sdlscreen->format->BytesPerPixel;
 
-   // SoM 3/14/2002: Only one way to go about this without asm code
-   if(pitch1 == pitch2)
-      memcpy(sdlscreen->pixels, video.screens[PRIMARY_BUFFER], video.width * video.height);
+   if(crossbitdepth)
+   {
+      // haleyjd 12/03/07: cross-bit-depth support:
+      // We are running the game in 8-bit but using a 32-bit video
+      // surface. Why? To avoid problems such as DirectX palette-setting
+      // lag under SDL in Win32. This may also be useful to users who can't
+      // get low-res 8-bit modes on their video cards otherwise.
+
+      byte *pixel  = video.screens[PRIMARY_BUFFER];
+      Uint32 *dest = (Uint32 *)sdlscreen->pixels;
+
+      if(pitch1 == pitch2)
+      {
+         Uint32 *mdest = ((Uint32 *)sdlscreen->pixels) + (video.width * video.height);
+
+         while(dest != mdest)
+            *dest++ = RGB8to32[*pixel++];
+      }
+      else
+      {
+         int x, y = -1;
+
+         while(++y < video.height)
+         {
+            x = -1;
+            dest = (Uint32 *)((byte *)sdlscreen->pixels + (y * pitch1));
+
+            while(++x < video.width)
+               *dest++ = RGB8to32[*pixel++];
+         }
+      }
+   }
    else
    {
-      // SoM: ok, so it would seem that the backward count is actually slower
-      // probably because it involves a lot more jumping around in memory. This way
-      // the pointer runs more linnearly through the memory buffer.
-      int y = -1;
-      
-      // SoM: optimized a bit
-      while(++y < video.height)
-         memcpy((char *)sdlscreen->pixels + (y * pitch1), video.screens[PRIMARY_BUFFER] + (y * pitch2), pitch2);
+      // SoM 3/14/2002: Only one way to go about this without asm code
+      if(pitch1 == pitch2)
+      {
+         memcpy(sdlscreen->pixels, video.screens[PRIMARY_BUFFER], 
+                video.width * video.height);
+      }
+      else
+      {
+         // SoM: ok, so it would seem that the backward count is actually slower
+         // probably because it involves a lot more jumping around in memory. 
+         // This way the pointer runs linear through the memory buffer.
+         int y = -1;
+         
+         // SoM: optimized a bit
+         while(++y < video.height)
+            memcpy((char *)sdlscreen->pixels + (y * pitch1), 
+                   video.screens[PRIMARY_BUFFER] + (y * pitch2), pitch2);
+      }
    }
 
    SDL_UnlockSurface(sdlscreen);
@@ -659,6 +702,24 @@ void I_SetPalette(byte *palette)
    
    if(!in_graphics_mode)             // killough 8/11/98
       return;
+
+   if(crossbitdepth)
+   {
+      // haleyjd 12/03/07: if doing cross-bit-depth drawing, we do not set
+      // a hardware palette. Instead, we create the RGB8to32 lookup table.
+
+      for(i = 0; i < 256; ++i)
+      {
+         RGB8to32[i] = 
+            ((Uint32)(gammatable[usegamma][*(palette + 0)]) << 16) |
+            ((Uint32)(gammatable[usegamma][*(palette + 1)]) <<  8) |
+            ((Uint32)(gammatable[usegamma][*(palette + 2)]) <<  0);
+
+         palette += 3;
+      }
+
+      return;
+   }
    
    for(i = 0; i < 256; ++i)
    {
@@ -705,7 +766,8 @@ void I_ShutdownGraphics(void)
 
 extern boolean setsizeneeded;
 
-static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs)
+static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs, 
+                             boolean *hw)
 {
    static boolean firsttime = true;
    int p;
@@ -731,6 +793,11 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs)
          *vs = true;
       if(M_CheckParm("-novsync"))
          *vs = false;
+
+      if(M_CheckParm("-hardware"))
+         *hw = true;
+      if(M_CheckParm("-software"))
+         *hw = false;
    }
 }
 
@@ -741,11 +808,12 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs)
 // sf: now returns true if an error occurred
 static boolean I_InitGraphicsMode(void)
 {
-   int v_w = SCREENWIDTH;
-   int v_h = SCREENHEIGHT;
+   int v_w   = SCREENWIDTH;
+   int v_h   = SCREENHEIGHT;
+   int v_bd  = 8;
    int flags = SDL_SWSURFACE;
    SDL_Event dummy;
-   boolean wantfullscreen = false, wantvsync = false;
+   boolean wantfullscreen = false, wantvsync = false, wanthardware = false;
 
    // haleyjd 10/09/05: from Chocolate DOOM
    // mouse grabbing   
@@ -753,6 +821,13 @@ static boolean I_InitGraphicsMode(void)
       grabmouse = 1;
    else if(M_CheckParm("-nograbmouse"))
       grabmouse = 0;
+
+   // haleyjd 12/03/07: cross-bit-depth support
+   if(M_CheckParm("-8in32"))
+   {
+      v_bd = 32;
+      crossbitdepth = true;
+   }
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
@@ -794,7 +869,10 @@ static boolean I_InitGraphicsMode(void)
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync);
+   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware);
+
+   if(wanthardware)
+      flags = SDL_HWSURFACE;
 
    if(wantvsync)
       flags = SDL_HWSURFACE | SDL_DOUBLEBUF;
@@ -803,9 +881,9 @@ static boolean I_InitGraphicsMode(void)
       flags |= SDL_FULLSCREEN;
      
    // SoM: 4/15/02: Saftey mode
-   if(v_mode > 0 && SDL_VideoModeOK(v_w, v_h, 8, flags))
+   if(v_mode > 0 && SDL_VideoModeOK(v_w, v_h, v_bd, flags))
    {
-      sdlscreen = SDL_SetVideoMode(v_w, v_h, 8, flags);
+      sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags);
       if(!sdlscreen)
       {
          I_SetMode(0);
@@ -813,9 +891,9 @@ static boolean I_InitGraphicsMode(void)
          return true;
       }
    }
-   else if(v_mode == 0 && SDL_VideoModeOK(v_w, v_h, 8, flags))
+   else if(v_mode == 0 && SDL_VideoModeOK(v_w, v_h, v_bd, flags))
    {
-      sdlscreen = SDL_SetVideoMode(v_w, v_h, 8, flags);
+      sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags);
       if(!sdlscreen)
          I_Error("Couldn't set video mode %ix%i\n", v_w, v_h);
    }
@@ -824,6 +902,11 @@ static boolean I_InitGraphicsMode(void)
 
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
+
+   // haleyjd 12/03/07: if the video surface is not actually 32-bit, we
+   // must disable cross-bit-depth drawing
+   if(sdlscreen->format->BitsPerPixel != 32)
+      crossbitdepth = false;
 
    MN_ErrorMsg("");       // clear any error messages
 
