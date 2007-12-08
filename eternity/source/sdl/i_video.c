@@ -388,11 +388,11 @@ static void I_GetEvent(void)
          }
          else if(mouseAccel_type == 1)
          {
-            mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 64; 
-            mouseevent.data3 -= FixedMul(D_abs(mousefrac), mousefrac) + mousefrac;
+            mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 7; 
+            mouseevent.data3 -= (FixedMul(D_abs(mousefrac), mousefrac) + mousefrac) * 20;
 
-            mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 40; 
-            mouseevent.data2 += FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac;
+            mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 5; 
+            mouseevent.data2 += (FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac) * 20;
          }
          sendmouseevent = 1;
          break;
