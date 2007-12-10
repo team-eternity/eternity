@@ -217,7 +217,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       if(mo && demo_version >= 333 && useportalgroups && openfrontsector->f_portal &&
          openfrontsector->f_portal->type == R_LINKED &&
          openfrontsector->f_portal == openbacksector->f_portal &&
-         openfrontsector->floorheight == openbacksector->ceilingheight)
+         openfrontsector->floorheight == openbacksector->floorheight)
          frontfloorz = backfloorz = openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
       else 
 #endif

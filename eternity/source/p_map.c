@@ -2097,7 +2097,8 @@ static boolean PTR_AimTraverse(intercept_t *in)
       // intersection.
       if(demo_version >= 333 && useportalgroups && sidesector->c_portal && 
          sidesector->c_portal->type == R_LINKED && 
-         trace.originz <= sidesector->ceilingheight)
+         trace.originz <= sidesector->ceilingheight &&
+         li->frontsector->c_portal != li->backsector->c_portal)
       {
          slope = FixedDiv(sidesector->ceilingheight - trace.originz, dist);
          if(trace.topslope > slope)
@@ -2116,7 +2117,8 @@ static boolean PTR_AimTraverse(intercept_t *in)
 
       if(demo_version >= 333 && useportalgroups && sidesector->f_portal && 
          sidesector->f_portal->type == R_LINKED && 
-         trace.originz >= sidesector->floorheight)
+         trace.originz >= sidesector->floorheight &&
+         li->frontsector->f_portal != li->backsector->f_portal)
       {
          slope = FixedDiv(sidesector->floorheight - trace.originz, dist);
          if(slope > trace.bottomslope)
