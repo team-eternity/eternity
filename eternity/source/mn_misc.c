@@ -409,32 +409,6 @@ void MN_DrawCredits(void)
    
    V_DrawDistortedBackground(gameModeInfo->creditBackground, &vbscreen);
 
-  // sf: SMMU credits
-
-  /*
-  V_WriteText(FC_HI "The Eternity Engine\n"
-              "\n"
-              FC_NORMAL "Enhancements by James 'Quasar' Haley\n"
-              "         and Stephen McGranahan\n"
-              "\n"
-              FC_HI "SMMU:" FC_NORMAL " \"Smack my marine up\"\n"
-              "\n"
-              "Port by Simon Howard 'Fraggle'\n"
-              "\n"
-              "Based on the MBF port by Lee Killough\n"
-              "\n"
-              FC_HI "Programming:" FC_NORMAL " J. Haley, S. McGranahan\n"
-              FC_HI "Graphics:" FC_NORMAL " Bob Satori\n"
-              FC_HI "Start map:" FC_NORMAL " Derek MacDonald\n"
-              FC_HI "Special thanks:" FC_NORMAL " Julian Aubourg,\n"
-              "         Joel Murdoch, Anders Astrand\n"
-              "\n"
-              "Copyright(C) 2006 J. Haley, S. McGranahan,\n"
-              "         S. Howard, et al.\n"              
-              FC_HI"         http://doomworld.com/eternity/",
-              10, gameModeInfo->creditY);
-   */
-
    y = gameModeInfo->creditY;
    str = FC_ABSCENTER FC_HI "The Eternity Engine";
    V_WriteTextBigShadowed(str, 0, y);

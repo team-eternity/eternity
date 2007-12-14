@@ -626,7 +626,6 @@ void I_FinishUpdate(void)
 //
 // I_ReadScreen
 //
-
 void I_ReadScreen(byte *scr)
 {
    int size = video.width * video.height;

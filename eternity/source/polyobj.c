@@ -798,8 +798,8 @@ static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
                hitthing = true;
             }
          } // end if
-      } // end for(y)
-   } // end for(x)
+      } // end for(x)
+   } // end for(y)
 
    return hitthing;
 }

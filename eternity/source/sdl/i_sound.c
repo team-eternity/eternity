@@ -49,36 +49,6 @@
 extern DECLSPEC Mix_Music * SDLCALL Mix_LoadMUS_RW(SDL_RWops *rw);
 #endif
 
-#if 0
-// haleyjd: debug log for essel
-
-static FILE *sound_log = NULL;
-
-static void DebugOpenSndLog(void)
-{
-   sound_log = fopen("sound.log", "w");
-}
-
-static void DebugCloseSndLog(void)
-{
-   if(sound_log)
-      fclose(sound_log);
-}
-
-static void DebugSndLog(const char *msg, ...)
-{
-   if(sound_log)
-   {
-      va_list args;
-      
-      va_start(args, msg);
-      vfprintf(sound_log, msg, args);
-      fflush(sound_log);
-      va_end(args);
-   }
-}
-#endif
-
 void I_CacheSound(sfxinfo_t *sound);
 
 // Needed for calling the actual sound output.
@@ -571,11 +541,6 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
    //  (right channel is implicit).
    leftend = leftout + (len / 4) * step;
 
-#if 0
-   DebugSndLog("update sound start: ud=%p, s=%p, len=%d; lo=%p, ro=%p, le=%p\n", 
-               userdata, stream, len, leftout, rightout, leftend);
-#endif
-
    // Mix sounds into the mixing buffer.
    // Loop over step*SAMPLECOUNT,
    //  that is 512 values for two channels.
@@ -620,19 +585,10 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
 
             // Limit to LSB???
             channelinfo[chan].stepremainder &= 0xffff;
-
-#if 0
-            DebugSndLog("channel %d: dl=%d, dr=%d, step=%d, stepremainder=%d, data=%p\n",
-                        chan, dl, dr, channelinfo[chan].step, 
-                        channelinfo[chan].stepremainder, channelinfo[chan].data);
-#endif
             
             // Check whether we are done.
             if(channelinfo[chan].data >= channelinfo[chan].enddata)
             {
-#if 0
-               DebugSndLog("stopping channel %d\n", chan);
-#endif
                // haleyjd 02/18/05: unlock channel
                channelinfo[chan].lock = 0;
 
@@ -643,9 +599,6 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
                   channelinfo[chan].data = channelinfo[chan].startdata;
                   channelinfo[chan].stepremainder = 0;
                   channelinfo[chan].starttime = gametic;
-#if 0
-                  DebugSndLog("looping channel %d\n", chan);
-#endif
                }
                else
                   stopchan(chan);
@@ -674,15 +627,7 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
       // Increment current pointers in stream
       leftout += step;
       rightout += step;
-
-#if 0
-      DebugSndLog("leftout = %p, rightout = %p\n", leftout, rightout);
-#endif
    }
-
-#if 0
-   DebugSndLog("end of updatesound\n");
-#endif
 }
 
 // This would be used to write out the mixbuffer
@@ -701,10 +646,6 @@ void I_ShutdownSound(void)
    {
       Mix_CloseAudio();
       snd_init = 0;
-
-#if 0
-      DebugCloseSndLog();
-#endif
    }
 }
 
@@ -774,10 +715,6 @@ void I_InitSound(void)
       // (may be dependent, docs are unclear)
       if(!nomusicparm)
          I_InitMusic();
-
-#if 0
-      DebugOpenSndLog();
-#endif
    }   
 }
 
