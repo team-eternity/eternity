@@ -317,7 +317,7 @@ void P_Skin_AddCommands(void);
 //
 // haleyjd: FIXME -- DEBUG
 //
-CONSOLE_COMMAND(spacejump, cf_hidden)
+CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
 {
    if(gamestate == GS_LEVEL)
       players[0].mo->momz = 10*FRACUNIT;

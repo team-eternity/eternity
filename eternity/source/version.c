@@ -31,7 +31,7 @@
 int version = 337;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char SUBVERSION = 50;
+unsigned char SUBVERSION = 0;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd

@@ -204,6 +204,7 @@ void PacketGet(void)
          rover += sizeof(netbuffer->d.cmds[c].consistancy);
          netbuffer->d.cmds[c].chatchar    = *rover++;
          netbuffer->d.cmds[c].buttons     = *rover++;
+         netbuffer->d.cmds[c].actions     = *rover++;
          netbuffer->d.cmds[c].look        = NetToHost16(rover);
          rover += sizeof(netbuffer->d.cmds[c].look);
       }
