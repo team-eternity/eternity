@@ -509,6 +509,11 @@ void P_PlayerThink(player_t *player)
    else
       player->usedown = false;
 
+   // Handle actions   -- joek 12/22/07
+   if(cmd->actions & AC_JUMP)
+      if((player->mo->z == player->mo->floorz) || (player->mo->intflags & MIF_ONMOBJ))
+         player->mo->momz = 10*FRACUNIT;
+
    // cycle psprites
 
    P_MovePsprites (player);

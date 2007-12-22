@@ -28,7 +28,7 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 333;
+int version = 337;
 
 // haleyjd: subversion -- range from 0 to 255
 unsigned char SUBVERSION = 50;

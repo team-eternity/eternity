@@ -317,7 +317,7 @@ void P_Skin_AddCommands(void);
 //
 // haleyjd: FIXME -- DEBUG
 //
-CONSOLE_COMMAND(jump, cf_hidden)
+CONSOLE_COMMAND(spacejump, cf_hidden)
 {
    if(gamestate == GS_LEVEL)
       players[0].mo->momz = 10*FRACUNIT;
@@ -363,7 +363,7 @@ void P_AddCommands(void)
    P_Skin_AddCommands();
 
    // haleyjd: FIXME: DEBUG
-   C_AddCommand(jump);
+   C_AddCommand(spacejump);
 }
 
 // EOF

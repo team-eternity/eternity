@@ -68,6 +68,7 @@ struct ticcmd_s
    short consistancy; // checks for net game
    byte  chatchar;
    byte  buttons;
+   byte  actions;
 } __attribute__((packed));
 
 typedef struct ticcmd_s ticcmd_t;

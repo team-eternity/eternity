@@ -64,6 +64,7 @@ int action_speed;       // running
 int action_attack;      // firing current weapon
 int action_strafe;      // strafe in any direction
 int action_flip;        // 180 degree turn
+int action_jump;        // jump
 
 int action_mlook;       // mlook activation
 int action_lookup;      // key-look up
@@ -168,6 +169,7 @@ keyaction_t keyactions[] =
    {"attack",    kac_game,       at_variable,     {&action_attack}},
    {"flip",      kac_game,       at_variable,     {&action_flip}},
    {"speed",     kac_game,       at_variable,     {&action_speed}},
+   {"jump",      kac_game,       at_variable,     {&action_jump}},      //  -- joek 12/22/07
 
    {"mlook",     kac_game,       at_variable,     {&action_mlook}},
    {"lookup",    kac_game,       at_variable,     {&action_lookup}},

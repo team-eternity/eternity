@@ -54,6 +54,7 @@ extern int action_speed;
 extern int action_attack;
 extern int action_strafe;
 extern int action_flip;
+extern int action_jump;
 
 extern int action_mlook;
 extern int action_center;

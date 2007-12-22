@@ -256,6 +256,7 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    }
 #endif
 
+   cmd->actions = 0;
    cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
 
    strafe = action_strafe;
@@ -317,7 +318,8 @@ void G_BuildTiccmd(ticcmd_t* cmd)
       side += sidemove[speed];
    if(action_moveleft)
       side -= sidemove[speed];
-
+   if(action_jump)                    // -- joek 12/22/07
+      cmd->actions |= AC_JUMP;
    mlook = allowmlook && (action_mlook || automlook);
 
    // console commands
@@ -1195,6 +1197,9 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       
       cmd->buttons = (unsigned char)*demo_p++;
       
+      if(demo_version >= 337)
+         cmd->actions = *demo_p++;
+
       if(demo_version >= 333)
       {
          cmd->look  =  *demo_p++;
@@ -1255,6 +1260,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
       demo_p[i++] = (cmd->angleturn + 128) >> 8; 
 
    demo_p[i++] =  cmd->buttons;  
+   demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
    demo_p[i++] =  cmd->look & 0xff;
    demo_p[i++] = (cmd->look >> 8) & 0xff;
    
