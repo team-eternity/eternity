@@ -256,7 +256,6 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    }
 #endif
 
-   cmd->actions = 0;
    cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
 
    strafe = action_strafe;
@@ -1199,6 +1198,8 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       
       if(demo_version >= 337)
          cmd->actions = *demo_p++;
+      else
+         cmd->actions = 0;
 
       if(demo_version >= 333)
       {
