@@ -1860,17 +1860,20 @@ void A_LichFireGrow(mobj_t *actor)
 // Almost identical to the Lost Soul's attack, but adds a frequent
 // failure to attack so that the imps do not constantly charge.
 //
+// haleyjd 12/17/07: changed probability for better behavior.
+//
 void A_ImpChargeAtk(mobj_t *actor)
 {   
-   if(!actor->target || P_Random(pr_impcharge) > 64)
+   if(!actor->target || P_Random(pr_impcharge) < 128)
    {
       P_SetMobjState(actor, actor->info->seestate);
-      return;
    }
-   
-   S_StartSound(actor, actor->info->attacksound);
-   
-   P_SkullFly(actor, 12*FRACUNIT);
+   else
+   {   
+      S_StartSound(actor, actor->info->attacksound);
+
+      P_SkullFly(actor, 12 * FRACUNIT);
+   }
 }
 
 //

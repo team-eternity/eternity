@@ -26,8 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_USER__
-#define __P_USER__
+#ifndef P_USER_H__
+#define P_USER_H__
 
 #include "d_player.h"
 
@@ -41,9 +41,8 @@ void P_CalcHeight(player_t *player);
 void P_DeathThink(player_t *player);
 void P_MovePlayer(player_t *player);
 void P_Thrust(player_t *player, angle_t angle, fixed_t move);
-boolean P_CheckClipView(mobj_t *mo);
 
-#endif // __P_USER__
+#endif // P_USER_H__
 
 //----------------------------------------------------------------------------
 //

@@ -394,6 +394,10 @@ void P_PlayerThink(player_t *player)
       }
    }
 
+   // haleyjd: count down jump timer
+   if(player->jumptime)
+      player->jumptime--;
+
    // Move around.
    // Reactiontime is used to prevent movement
    //  for a bit after a teleport.
@@ -401,7 +405,22 @@ void P_PlayerThink(player_t *player)
    if(player->mo->reactiontime)
       player->mo->reactiontime--;
    else
+   {
       P_MovePlayer(player);
+
+      // Handle actions   -- joek 12/22/07
+      
+      if(cmd->actions & AC_JUMP)
+      {
+         if((player->mo->z == player->mo->floorz || 
+             (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+         {
+            player->mo->momz += 8*FRACUNIT; // PCLASS_FIXME: make jump height pclass property
+            player->mo->intflags &= ~MIF_ONMOBJ;
+            player->jumptime = 18;
+         }
+      }
+   }
   
    P_CalcHeight (player); // Determines view height and bobbing
    
@@ -508,11 +527,6 @@ void P_PlayerThink(player_t *player)
    }
    else
       player->usedown = false;
-
-   // Handle actions   -- joek 12/22/07
-   if(cmd->actions & AC_JUMP)
-      if((player->mo->z == player->mo->floorz) || (player->mo->intflags & MIF_ONMOBJ))
-         player->mo->momz = 10*FRACUNIT;
 
    // cycle psprites
 

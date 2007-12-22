@@ -154,7 +154,7 @@ typedef struct keyaction_s
 
 } keyaction_t;
 
-keyaction_t keyactions[] =
+keyaction_t keyactions[NUMKEYACTIONS] =
 {
    // Game Actions
 

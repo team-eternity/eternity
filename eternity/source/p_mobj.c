@@ -517,6 +517,7 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
    // and utter appropriate sound.
 
    mo->player->deltaviewheight = mo->momz >> 3;
+   mo->player->jumptime = 10;
 
    // haleyjd 05/09/99 no oof when dead :)
    if(demo_version < 329 || mo->health > 0)
@@ -726,7 +727,7 @@ floater:
       if(correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz; // the skull slammed into something
 
-      if((moving_down = mo->momz < 0))
+      if((moving_down = (mo->momz < 0)))
       {
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&

@@ -2635,8 +2635,6 @@ static menuitem_t mn_compat1_items[] =
    {it_toggle, "bullets cannot hit floors / ceilings",      "comp_planeshoot"},
    {it_end}
 };
-  
-// MENU_FIXME: add comp_planeshoot before 3.37.00 launch
  
 static menuitem_t mn_compat2_items[] =
 { 
@@ -3457,12 +3455,12 @@ CONSOLE_VARIABLE(use_traditional_menu, traditional_menu, 0) {}
 
 static menuitem_t mn_old_main_items[] =
 {
-   { it_runcmd, "new game",   "mn_newgame",  "M_NGAME" },
+   { it_runcmd, "new game",   "mn_newgame",  "M_NGAME"  },
    { it_runcmd, "options",    "mn_options",  "M_OPTION" },
-   { it_runcmd, "save game",  "mn_savegame", "M_SAVEG" },
-   { it_runcmd, "load game",  "mn_loadgame", "M_LOADG" },
+   { it_runcmd, "save game",  "mn_savegame", "M_SAVEG"  },
+   { it_runcmd, "load game",  "mn_loadgame", "M_LOADG"  },
    { it_runcmd, "read this!", "credits",     "M_RDTHIS" },
-   { it_runcmd, "quit",       "mn_quit",     "M_QUITG" },
+   { it_runcmd, "quit",       "mn_quit",     "M_QUITG"  },
    { it_end }
 };
 

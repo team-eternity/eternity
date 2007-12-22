@@ -117,8 +117,9 @@ enum keyaction_e
    ka_use,       
    ka_strafe,    
    ka_attack,    
-   ka_flip,      
-   ka_speed,     
+   ka_flip,
+   ka_speed,
+   ka_jump,
    ka_mlook,     
    ka_lookup,    
    ka_lookdown,  
@@ -166,6 +167,7 @@ enum keyaction_e
    ka_console_up,
    ka_console_down,
    ka_console_backspace,
+   NUMKEYACTIONS
 };
 
 #endif

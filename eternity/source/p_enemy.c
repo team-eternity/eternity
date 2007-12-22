@@ -609,7 +609,7 @@ static boolean P_SmartMove(mobj_t *actor)
       P_AproxDistance(actor->x - target->x,
                       actor->y - target->y) < FRACUNIT*144 &&
 #endif      
-   P_Random(pr_dropoff) < 235)
+      P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
    }

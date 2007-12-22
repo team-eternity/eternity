@@ -90,108 +90,83 @@ typedef enum
 //
 struct player_s
 {
-  mobj_t *            mo;
-  playerclass_t *     pclass;       // haleyjd 09/27/07: player class
-  playerstate_t       playerstate;
-  ticcmd_t            cmd;
+   mobj_t        *mo;
+   playerclass_t *pclass;      // haleyjd 09/27/07: player class
+   skin_t        *skin;        // skin
+   playerstate_t  playerstate; // live, dead, reborn, etc.
+   ticcmd_t       cmd;         // current input
 
-  // Determine POV,
-  //  including viewpoint bobbing during movement.
-  // Focal origin above r.z
-  fixed_t             viewz;
-  // Base height above floor for viewz.
-  fixed_t             viewheight;
-  // Bob/squat speed.
-  fixed_t             deltaviewheight;
-  // bounded/scaled total momentum.
-  fixed_t             bob;    
-
-  // killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
-  // mo->momx and mo->momy represent true momenta experienced by player.
-  // This only represents the thrust that the player applies himself.
-  // This avoids anomolies with such things as Boom ice and conveyors.
-  fixed_t            momx, momy;      // killough 10/98
-
-  // This is only used between levels,
-  // mo->health is used during levels.
-  int                 health; 
-  int                 armorpoints;
-  // Armor type is 0-2.
-  int                 armortype;
-  // haleyjd 10/10/02
-  boolean             hereticarmor; // true if has heretic armor
-
-  // Power ups. invinc and invis are tic counters.
-  int                 powers[NUMPOWERS];
-  boolean             cards[NUMCARDS];
-  boolean             backpack;
+   // Determine POV,
+   //  including viewpoint bobbing during movement.
   
-  // Frags, kills of other players.
-  int                 frags[MAXPLAYERS];
-  int                 totalfrags;
-  weapontype_t        readyweapon;
+   fixed_t        viewz;           // Focal origin above r.z  
+   fixed_t        viewheight;      // Base height above floor for viewz.  
+   fixed_t        deltaviewheight; // Bob/squat speed.
+   fixed_t        bob;             // bounded/scaled total momentum.
+   fixed_t        pitch;           // haleyjd 04/03/05: true pitch angle
+
+    // killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
+   // mo->momx and mo->momy represent true momenta experienced by player.
+   // This only represents the thrust that the player applies himself.
+   // This avoids anomolies with such things as Boom ice and conveyors.
+   fixed_t        momx, momy;      // killough 10/98
+
+   int            health;       // This is only used between levels
+   int            armorpoints;
+   int            armortype;    // Armor type is 0-2.  
+   boolean        hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
+
+   // Power ups. invinc and invis are tic counters.
+   int            powers[NUMPOWERS];
+   boolean        cards[NUMCARDS];
+   boolean        backpack;
   
-  // Is wp_nochange if not changing.
-  weapontype_t        pendingweapon;
+   // Frags, kills of other players.
+   int            frags[MAXPLAYERS];
+   int            totalfrags;
+   
+   weapontype_t   readyweapon;
+   weapontype_t   pendingweapon; // Is wp_nochange if not changing.
 
-  boolean             weaponowned[NUMWEAPONS];
-  int                 ammo[NUMAMMO];
-  int                 maxammo[NUMAMMO];
-  short               weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
+   boolean        weaponowned[NUMWEAPONS];
+   int            ammo[NUMAMMO];
+   int            maxammo[NUMAMMO];
+   short          weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
 
-  // True if button down last tic.
-  int                 attackdown;
-  int                 usedown;
+   int            extralight;    // So gun flashes light up areas.
+   
+   int            attackdown; // True if button down last tic.
+   int            usedown;
 
-  // Bit flags, for cheats and debug.
-  // See cheat_t, above.
-  int                 cheats;         
+   int            cheats;      // Bit flags, for cheats and debug.
 
-  // Refired shots are less accurate.
-  int                 refire;         
+   int            refire;      // Refired shots are less accurate.
 
    // For intermission stats.
-  int                 killcount;
-  int                 itemcount;
-  int                 secretcount;
-
-  // Hint messages.
-  // sf: now done with dprintf
-  //  char*               message;        
+   int            killcount;
+   int            itemcount;
+   int            secretcount;
+   boolean        didsecret;    // True if secret level has been done.
   
-  // For screen flashing (red or bright).
-  int                 damagecount;
-  int                 bonuscount;
+   // For screen flashing (red or bright).
+   int            damagecount;
+   int            bonuscount;
+   int            fixedcolormap; // Current PLAYPAL, for pain etc.
 
-  // Who did damage (NULL for floors/ceilings).
-  mobj_t*             attacker;
+   mobj_t        *attacker;      // Who did damage (NULL for floors/ceilings).
+
+   int            colormap;      // colorshift for player sprites
+
+   // Overlay view sprites (gun, etc).
+   pspdef_t       psprites[NUMPSPRITES];
+   int            curpsprite;    // haleyjd 04/05/07: for codeptr rewrite
   
-  // So gun flashes light up areas.
-  int                 extralight;
+   int            quake;         // If > 0, player is experiencing an earthquake
 
-  // Current PLAYPAL, ???
-  //  can be set to REDCOLORMAP for pain, etc.
-  int                 fixedcolormap;
+   int            jumptime;      // If > 0, player can't jump again yet
 
-  // Player skin and colorshift,
-  //  0-3 for which color to draw player.
-  int                 colormap;
-  skin_t*             skin;
-
-  // Overlay view sprites (gun, etc).
-  pspdef_t            psprites[NUMPSPRITES];
-  int                 curpsprite; // haleyjd 04/05/07: for codeptr rewrite
-
-  // haleyjd 04/03/05: true pitch angle (replaces updownangle)
-  fixed_t             pitch;
-
-  // True if secret level has been done.
-  boolean             didsecret;
-  
-  // If > 0, player is experiencing an earthquake
-  int                 quake;
-
-  char                name[20];
+   // Player name
+   char           name[20];
 };
 
 
