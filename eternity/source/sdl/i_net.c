@@ -129,6 +129,7 @@ void PacketSend(void)
          rover += sizeof(netbuffer->d.cmds[c].consistancy);
          *rover++ = netbuffer->d.cmds[c].chatchar;
          *rover++ = netbuffer->d.cmds[c].buttons;
+         *rover++ = netbuffer->d.cmds[c].actions;
          HostToNet16(netbuffer->d.cmds[c].look, rover);
          rover += sizeof(netbuffer->d.cmds[c].look);
       }
