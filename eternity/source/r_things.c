@@ -421,12 +421,11 @@ void R_DrawMaskedColumn(column_t *tcolumn)
    while(tcolumn->topdelta != 0xff)
    {
       // calculate unclipped screen coordinates for post
-      y1 = maskedcolumn.ytop + (maskedcolumn.scale * tcolumn->topdelta);
+      y1 = maskedcolumn.ytop + (maskedcolumn.scale * tcolumn->topdelta );
       y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
 
       column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
       column.y2 = (int)(y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2);
-      
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < view.height)
