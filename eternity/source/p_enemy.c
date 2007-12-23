@@ -111,37 +111,34 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    P_SetTarget(&sec->soundtarget, soundtarget);    // killough 11/98
 
 #ifdef R_LINKEDPORTALS
-   if(useportalgroups)
+   if(R_LinkedFloorActive(sec))
    {
-      if(sec->f_portal && sec->f_portal->type == R_LINKED)
-      {
-         // Ok, because the same portal can be used on many sectors and even
-         // lines, the portal structure won't tell you what sector is on the
-         // other side of the portal. SO
-         sector_t *other;
-         line_t *check = sec->lines[0];
+      // Ok, because the same portal can be used on many sectors and even
+      // lines, the portal structure won't tell you what sector is on the
+      // other side of the portal. SO
+      sector_t *other;
+      line_t *check = sec->lines[0];
 
-         other = 
-            R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) 
-                                - sec->f_portal->data.camera.deltax,
-                               ((check->v1->y + check->v2->y) >> 1) 
-                                - sec->f_portal->data.camera.deltay)->sector;
+      other = 
+         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) 
+                             - sec->f_portal->data.camera.deltax,
+                            ((check->v1->y + check->v2->y) >> 1) 
+                             - sec->f_portal->data.camera.deltay)->sector;
 
-         P_RecursiveSound(other, soundblocks, soundtarget);
-      }
-      if(sec->c_portal && sec->c_portal->type == R_LINKED)
-      {
-         // Ok, because the same portal can be used on many sectors and even lines, the portal
-         // structure won't tell you what sector is on the other side of the portal. SO
-         sector_t *other;
-         line_t *check = sec->lines[0];
+      P_RecursiveSound(other, soundblocks, soundtarget);
+   }
+   if(R_LinkedCeilingActive(sec))
+   {
+      // Ok, because the same portal can be used on many sectors and even lines, the portal
+      // structure won't tell you what sector is on the other side of the portal. SO
+      sector_t *other;
+      line_t *check = sec->lines[0];
 
-         other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - sec->c_portal->data.camera.deltax,
-                            ((check->v1->y + check->v2->y) >> 1) - sec->c_portal->data.camera.deltay)->sector;
+      other = 
+      R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - sec->c_portal->data.camera.deltax,
+                         ((check->v1->y + check->v2->y) >> 1) - sec->c_portal->data.camera.deltay)->sector;
 
-         P_RecursiveSound(other, soundblocks, soundtarget);
-      }
+      P_RecursiveSound(other, soundblocks, soundtarget);
    }
 #endif
 
@@ -151,7 +148,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[i];
       
 #ifdef R_LINKEDPORTALS
-      if(useportalgroups && check->portal && check->portal->type == R_LINKED)
+      if(R_LinkedLineActive(check))
       {
          sector_t *other;
 
@@ -2443,12 +2440,12 @@ void P_SkullFly(mobj_t *actor, fixed_t speed)
    actor->momx = FixedMul(speed, finecosine[an]);
    actor->momy = FixedMul(speed, finesine[an]);
    
-   dist = P_AproxDistance(dest->x - actor->x, dest->y - actor->y);
+   dist = P_AproxDistance(getTargetX(dest) - actor->x, getTargetY(dest) - actor->y);
    dist = dist / speed;
    if(dist < 1)
       dist = 1;
 
-   actor->momz = (dest->z+(dest->height>>1) - actor->z) / dist;
+   actor->momz = (getTargetZ(dest)+(dest->height>>1) - actor->z) / dist;
 }
 
 //

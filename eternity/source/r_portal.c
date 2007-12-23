@@ -796,12 +796,156 @@ void R_RenderPortals(void)
 }
 
 
+
+/*#ifdef R_LINKEDPORTALS
+boolean   R_LinkedFloorActive(sector_t *sector)
+{
+   return useportalgroups && sector->f_portal && sector->f_portal->type == R_LINKED &&
+          sector->floorheight <= sector->f_portal->data.camera.planez ? true : false;
+}
+
+
+boolean   R_LinkedCeilingActive(sector_t *sector)
+{
+   return useportalgroups && sector->c_portal && sector->c_portal->type == R_LINKED &&
+          sector->ceilingheight >= sector->c_portal->data.camera.planez ? true : false;
+}
+
+
+boolean   R_LinkedLineActive(line_t *line)
+{
+   return useportalgroups && line->portal && line->portal->type == R_LINKED ? true : false;
+}
+#endif
+
+
+fixed_t R_GetFloorPlanez(sector_t *sector)
+{
+#ifdef R_LINKEDPORTALS
+   if(sector->f_portal && sector->f_portal->type == R_LINKED && 
+      sector->floorheight <= sector->f_portal->data.camera.planez)
+      return sector->f_portal->data.camera.planez;
+   else
+#endif
+   return sector->floorheight;
+}
+
+fixed_t R_GetCeilingPlanez(sector_t *sector)
+{
+#ifdef R_LINKEDPORTALS
+   if(sector->c_portal && sector->c_portal->type == R_LINKED && 
+      sector->ceilingheight >= sector->c_portal->data.camera.planez)
+      return sector->c_portal->data.camera.planez;
+   else
+#endif
+   return sector->ceilingheight;
+}
+
+
+
+boolean R_FloorPortalActive(sector_t *sector)
+{
+#ifdef R_LINKEDPORTALS
+   if(sector->f_portal && sector->f_portal->type == R_LINKED)
+   {
+      if(sector->floorheight <= sector->f_portal->data.camera.planez)
+         return true;
+      else
+         return false;
+   }
+#endif
+   return sector->f_portal ? true : false;
+}
+
+
+
+boolean R_CeilingPortalActive(sector_t *sector)
+{
+#ifdef R_LINKEDPORTALS
+   if(sector->c_portal && sector->c_portal->type == R_LINKED)
+   {
+      if(sector->ceilingheight >= sector->c_portal->data.camera.planez)
+         return true;
+      else
+         return false;
+   }
+#endif
+   return sector->c_portal ? true : false;
+}
+
+
+
+
+boolean R_RenderFloorPortal(sector_t *sector)
+{
+#ifdef R_LINKEDPORTALS
+   if(sector->f_portal)
+   {
+      if(sector->f_portal->type == R_TWOWAY)
+      {
+         if(sector->floorheight < viewz)
+            return true;
+         else
+            return false;
+      }
+      else if(sector->f_portal->type == R_LINKED)
+      {
+         if(sector->floorheight < viewz && 
+            sector->floorheight <= sector->f_portal->data.camera.planez)
+            return true;
+         else
+            return false;
+      }
+      else
+         return true;
+   }
+   return false;
+#else
+   if(sector->f_portal && (sector->f_portal->type != R_TWOWAY || sector->floorheight < viewz))
+      return true;
+   return false;
+#endif
+}
+
+
+
+boolean R_RenderCeilingPortal(sector_t *sector)
+{
+#ifdef R_LINKEDPORTALS
+   if(sector->c_portal)
+   {
+      if(sector->c_portal->type == R_TWOWAY)
+      {
+         if(sector->ceilingheight > viewz)
+            return true;
+         else
+            return false;
+      }
+      else if(sector->c_portal->type == R_LINKED)
+      {
+         if(sector->ceilingheight > viewz && 
+            sector->ceilingheight >= sector->c_portal->data.camera.planez)
+            return true;
+         else
+            return false;
+      }
+      else
+         return true;
+   }
+   return false;
+#else
+   if(sector->c_portal && (sector->c_portal->type != R_TWOWAY || sector->ceilingheight > viewz))
+      return true;
+   return false;
+#endif
+}*/
+
 #ifdef R_LINKEDPORTALS
 // ----------------------------------------------------------------------------
 // SoM: Begin linked portals
 
 rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, 
-                             int groupid)
+                             fixed_t planez, int groupid)
 {
    rportal_t *rover, *ret;
    cameraportal_t cam;
@@ -811,6 +955,7 @@ rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz,
    cam.deltay = deltay;
    cam.deltaz = deltaz;
    cam.groupid = groupid;
+   cam.planez = planez;
 
    for(rover = portals; rover; rover = rover->next)
    {

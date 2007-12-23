@@ -195,11 +195,10 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && useportalgroups && openfrontsector->c_portal &&
-         openfrontsector->c_portal->type == R_LINKED && 
-         openfrontsector->c_portal == openbacksector->c_portal && 
-         openfrontsector->ceilingheight == openbacksector->ceilingheight)
-         frontceilz = backceilz = openfrontsector->ceilingheight + (1024 * FRACUNIT);
+      if(mo && demo_version >= 333 && R_LinkedCeilingActive(openfrontsector) &&
+         R_LinkedCeilingActive(openbacksector) && 
+         openfrontsector->c_portal == openbacksector->c_portal)
+         frontceilz = backceilz = R_GetCeilingPlanez(openfrontsector) + (1024 * FRACUNIT);
       else
 #endif
       {
@@ -214,11 +213,10 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && useportalgroups && openfrontsector->f_portal &&
-         openfrontsector->f_portal->type == R_LINKED &&
-         openfrontsector->f_portal == openbacksector->f_portal &&
-         openfrontsector->floorheight == openbacksector->floorheight)
-         frontfloorz = backfloorz = openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+      if(mo && demo_version >= 333 && R_LinkedFloorActive(openfrontsector) &&
+         R_LinkedFloorActive(openbacksector) && 
+         openfrontsector->f_portal == openbacksector->f_portal)
+         frontfloorz = backfloorz = R_GetFloorPlanez(openfrontsector) - (1024 * FRACUNIT); //mo->height;
       else 
 #endif
       {

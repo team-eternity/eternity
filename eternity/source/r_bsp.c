@@ -493,6 +493,17 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       }
       sec = tempsec;               // Use other sector
    }
+
+   // SoM: For shame I'm using this function for PORTALS!!??
+   else if(R_FloorPortalActive(sec) || R_CeilingPortalActive(sec))
+   {
+      *tempsec = *sec;
+
+      tempsec->floorheight = R_GetFloorPlanez(sec);
+      tempsec->ceilingheight = R_GetCeilingPlanez(sec);
+      sec = tempsec;
+   }
+
    return sec;
 }
 
@@ -640,7 +651,14 @@ static void R_AddLine(seg_t *line)
 
    // If the frontsector is closed, don't render the line!
    // This fixes a very specific type of slime trail.
-   if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight)
+   // Unless we are viewing down into a portal...??
+   if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
+      !((seg.frontsec->c_portal && seg.frontsec->c_portal->type == R_LINKED &&
+        R_CeilingPortalActive(seg.frontsec) && 
+        viewz >= seg.frontsec->c_portal->data.camera.planez) || 
+        (seg.frontsec->f_portal && seg.frontsec->f_portal->type == R_LINKED &&
+        R_FloorPortalActive(seg.frontsec) && 
+        viewz <= seg.frontsec->f_portal->data.camera.planez)))
       return;
 
    // Reject empty two-sided lines used for line specials.
@@ -929,8 +947,8 @@ static void R_AddLine(seg_t *line)
       else
          seg.midtexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
 
-      seg.markceiling = (seg.ceilingplane != NULL);
-      seg.markfloor   = (seg.floorplane != NULL);
+      seg.markceiling = (seg.ceilingplane != NULL || R_RenderCeilingPortal(seg.frontsec));
+      seg.markfloor   = (seg.floorplane != NULL || R_RenderFloorPortal(seg.frontsec));
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
 
@@ -986,7 +1004,7 @@ static void R_AddLine(seg_t *line)
          seg.top = seg.high;
 
       seg.markceiling = 
-         (seg.ceilingplane && 
+         ((seg.ceilingplane || R_RenderCeilingPortal(seg.frontsec)) && 
           (mark || seg.clipsolid || seg.top != seg.high || 
            seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
            seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
@@ -1010,7 +1028,7 @@ static void R_AddLine(seg_t *line)
 
 
       seg.markfloor = 
-         (seg.floorplane && 
+         ((seg.floorplane || R_RenderFloorPortal(seg.frontsec)) && 
           (mark || seg.clipsolid ||  
            seg.frontsec->floorheight != seg.backsec->floorheight ||
            seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
@@ -1338,10 +1356,12 @@ static void R_Subsector(int num)
    // killough 3/16/98: add floorlightlevel
    // killough 10/98: add support for skies transferred from sidedefs
 
-   seg.floorplane = seg.frontsec->floorheight < viewz || // killough 3/7/98
+   // SoM: If there is an active portal, forget about the floorplane.
+   seg.floorplane = !R_FloorPortalActive(seg.frontsec) && 
+     (seg.frontsec->floorheight < viewz || // killough 3/7/98
      (seg.frontsec->heightsec != -1 &&
       (sectors[seg.frontsec->heightsec].ceilingpic == skyflatnum ||
-       sectors[seg.frontsec->heightsec].ceilingpic == sky2flatnum)) ?
+       sectors[seg.frontsec->heightsec].ceilingpic == sky2flatnum))) ?
      R_FindPlane(seg.frontsec->floorheight, 
                  (seg.frontsec->floorpic == skyflatnum ||
                   seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
@@ -1351,12 +1371,13 @@ static void R_Subsector(int num)
                  seg.frontsec->floor_xoffs,       // killough 3/7/98
                  seg.frontsec->floor_yoffs) : NULL;
 
-   seg.ceilingplane = seg.frontsec->ceilingheight > viewz ||
+   seg.ceilingplane = !R_CeilingPortalActive(seg.frontsec) &&
+     (seg.frontsec->ceilingheight > viewz ||
      (seg.frontsec->ceilingpic == skyflatnum ||
       seg.frontsec->ceilingpic == sky2flatnum) ||
      (seg.frontsec->heightsec != -1 &&
       (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
-       sectors[seg.frontsec->heightsec].floorpic == sky2flatnum)) ?
+       sectors[seg.frontsec->heightsec].floorpic == sky2flatnum))) ?
      R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
                  (seg.frontsec->ceilingpic == skyflatnum ||
                   seg.frontsec->ceilingpic == sky2flatnum) &&  // kilough 10/98

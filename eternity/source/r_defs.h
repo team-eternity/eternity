@@ -567,6 +567,8 @@ typedef struct visplane
    float viewxf, viewyf, viewzf;  
 } visplane_t;
 
+
+
 #endif
 
 //----------------------------------------------------------------------------

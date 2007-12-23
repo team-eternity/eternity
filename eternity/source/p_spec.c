@@ -4737,7 +4737,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    mobj_t    *skycam;
    static int CamType = -1;
    int s;
-   fixed_t deltax, deltay, deltaz;
+   fixed_t deltax, deltay, deltaz, planez;
    int anchortype; // SoM 3-10-04: new plan.
 
    if(!(sector = line->frontsector))
@@ -4846,17 +4846,26 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       break;
 #ifdef R_LINKEDPORTALS
    case portal_linked:
-      // linked portals can only be applied to either the floor or ceiling.
-      if(line->special == 358)
-         anchortype = 360;
-      else if(line->special == 359)
-         anchortype = 361;
-      else if(line->special == 376)
-         anchortype = 377;
-
       frontsector = line->frontsector;
       if(!frontsector) 
          frontsector = line->backsector;
+
+      // linked portals can only be applied to either the floor or ceiling.
+      if(line->special == 358)
+      {
+         anchortype = 360;
+         planez = frontsector->floorheight;
+      }
+      else if(line->special == 359)
+      {
+         anchortype = 361;
+         planez = frontsector->ceilingheight;
+      }
+      else if(line->special == 376)
+      {
+         anchortype = 377;
+         planez = 0; // SoM: What should this really be? I dunno.
+      }
 
       // find anchor line
       for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
@@ -4879,7 +4888,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          return;
       }
 
-      portal = R_GetLinkedPortal(deltax, deltay, deltaz, P_CreatePortalGroup(frontsector));
+      portal = R_GetLinkedPortal(deltax, deltay, deltaz, planez, P_CreatePortalGroup(frontsector));
 
       if(line->special == 376)
       {
@@ -4899,7 +4908,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          group = P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector :
                                                             lines[s].backsector);
 
-         line->portal = R_GetLinkedPortal(-deltax, -deltay, -deltaz, group);
+         line->portal = R_GetLinkedPortal(-deltax, -deltay, -deltaz, planez, group);
          lines[s].portal = portal;
          return;
       }

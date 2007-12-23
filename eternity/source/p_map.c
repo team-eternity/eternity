@@ -294,17 +294,15 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    // will adjust them.
    
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && useportalgroups && newsubsec->sector->f_portal &&
-      newsubsec->sector->f_portal->type == R_LINKED)
-      tmfloorz = tmdropoffz = D_MININT; //newsubsec->sector->floorheight - tmthing->height;
+   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector))
+      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS); //newsubsec->sector->floorheight - tmthing->height;
    else
 #endif
       tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && useportalgroups && newsubsec->sector->c_portal &&
-      newsubsec->sector->c_portal->type == R_LINKED)
-      tmceilingz = D_MAXINT; //newsubsec->sector->ceilingheight + tmthing->height;
+   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector))
+      tmceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS); //newsubsec->sector->ceilingheight + tmthing->height;
    else
 #endif
       tmceilingz = newsubsec->sector->ceilingheight;
@@ -524,7 +522,7 @@ boolean PIT_CheckLine(line_t *ld)
 #ifdef R_LINKEDPORTALS
       linkoffset_t *link;
 
-      if(useportalgroups && ld->portal && ld->portal->type == R_LINKED &&
+      if(R_LinkedLineActive(ld) &&
          (link = P_GetLinkOffset(ld->frontsector->groupid, ld->portal->data.camera.groupid)))
       {
          // 1/11/98 killough: remove limit on lines hit, by array doubling
@@ -1288,8 +1286,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
       while(numspechit--)
       {
 #ifdef R_LINKEDPORTALS
-         if(useportalgroups && spechit[numspechit]->portal && 
-            spechit[numspechit]->portal->type == R_LINKED)
+         if(R_LinkedLineActive(spechit[numspechit]))
          {
             // SoM: if the mobj is touching a portal line, and the line is behind
             // the mobj no matter what the previous lineside was, we missed the 
@@ -2095,17 +2092,16 @@ static boolean PTR_AimTraverse(intercept_t *in)
       // target may be sitting on top of a ledge. If we don't hit any monsters,
       // we'll need to continue looking through portals, so store the 
       // intersection.
-      if(demo_version >= 333 && useportalgroups && sidesector->c_portal && 
-         sidesector->c_portal->type == R_LINKED && 
-         trace.originz <= sidesector->ceilingheight &&
+      if(demo_version >= 333 && R_LinkedCeilingActive(sidesector) &&  
+         trace.originz <= R_GetCeilingPlanez(sidesector) &&
          li->frontsector->c_portal != li->backsector->c_portal)
       {
-         slope = FixedDiv(sidesector->ceilingheight - trace.originz, dist);
+         slope = FixedDiv(R_GetCeilingPlanez(sidesector) - trace.originz, dist);
          if(trace.topslope > slope)
          {
             // Find the distance from the ogrigin to the intersection with the 
             // plane.
-            fixed_t z = sidesector->ceilingheight;
+            fixed_t z = R_GetCeilingPlanez(sidesector);
             fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
             linkoffset_t *link = 
                P_GetLinkOffset(sidesector->groupid, 
@@ -2115,17 +2111,16 @@ static boolean PTR_AimTraverse(intercept_t *in)
          }
       }
 
-      if(demo_version >= 333 && useportalgroups && sidesector->f_portal && 
-         sidesector->f_portal->type == R_LINKED && 
-         trace.originz >= sidesector->floorheight &&
+      if(demo_version >= 333 && R_LinkedFloorActive(sidesector) &&
+         trace.originz >= R_GetFloorPlanez(sidesector) &&
          li->frontsector->f_portal != li->backsector->f_portal)
       {
-         slope = FixedDiv(sidesector->floorheight - trace.originz, dist);
+         slope = FixedDiv(R_GetFloorPlanez(sidesector) - trace.originz, dist);
          if(slope > trace.bottomslope)
          {
             // Find the distance from the ogrigin to the intersection with the 
             // plane.
-            fixed_t z = sidesector->floorheight;
+            fixed_t z = R_GetFloorPlanez(sidesector);
             fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
             linkoffset_t *link = 
                P_GetLinkOffset(sidesector->groupid, 
@@ -2159,15 +2154,15 @@ static boolean PTR_AimTraverse(intercept_t *in)
          return false;
 
       // The line is blocking so check for portals in the frontsector.
-      if(li->frontsector->c_portal && li->frontsector->c_portal->type == R_LINKED &&
-         trace.originz <= li->frontsector->ceilingheight)
+      if(R_LinkedCeilingActive(li->frontsector) &&
+         trace.originz <= R_GetCeilingPlanez(li->frontsector))
       {
-         slope = FixedDiv(li->frontsector->ceilingheight - trace.originz, dist);
+         slope = FixedDiv(R_GetCeilingPlanez(li->frontsector) - trace.originz, dist);
          if(trace.topslope > slope)
          {
             // Find the distance from the ogrigin to the intersection with the 
             // plane.
-            fixed_t z = li->frontsector->ceilingheight;
+            fixed_t z = R_GetCeilingPlanez(li->frontsector);
             fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
             linkoffset_t *link = 
                P_GetLinkOffset(li->frontsector->groupid, 
@@ -2177,15 +2172,15 @@ static boolean PTR_AimTraverse(intercept_t *in)
          }
       }
 
-      if(li->frontsector->f_portal && li->frontsector->f_portal->type == R_LINKED &&
-         trace.originz >= li->frontsector->floorheight)
+      if(R_LinkedFloorActive(li->frontsector) &&
+         trace.originz >= R_GetFloorPlanez(li->frontsector))
       {
-         slope = FixedDiv(li->frontsector->floorheight - trace.originz, dist);
+         slope = FixedDiv(R_GetFloorPlanez(li->frontsector) - trace.originz, dist);
          if(slope > trace.bottomslope)
          {
             // Find the distance from the origin to the intersection with the 
             // plane.
-            fixed_t z = li->frontsector->floorheight;
+            fixed_t z = R_GetFloorPlanez(li->frontsector);
             fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
             linkoffset_t *link = 
                P_GetLinkOffset(li->frontsector->groupid, 
@@ -2196,12 +2191,12 @@ static boolean PTR_AimTraverse(intercept_t *in)
       }
 
       // also check line portals.
-      if(li->portal && li->portal->type == R_LINKED)
+      if(R_LinkedLineActive(li))
       {
          fixed_t slope2;
 
-         slope = FixedDiv(li->frontsector->floorheight - trace.originz, dist);
-         slope2 = FixedDiv(li->frontsector->ceilingheight - trace.originz, dist);
+         slope = FixedDiv(R_GetFloorPlanez(li->frontsector) - trace.originz, dist);
+         slope2 = FixedDiv(R_GetCeilingPlanez(li->frontsector) - trace.originz, dist);
          if(slope2 < trace.bottomslope && slope > trace.topslope)
             return false;
          else
@@ -2469,9 +2464,9 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          // 1s line, don't crash!
          if(sidesector)
          {
-            if(z < sidesector->floorheight)
+            if(z < R_GetFloorPlanez(sidesector))
             {
-               fixed_t pfrac = FixedDiv(sidesector->floorheight - trace.z, 
+               fixed_t pfrac = FixedDiv(R_GetFloorPlanez(sidesector) - trace.z, 
                                         trace.aimslope);
          
                // SoM: don't check for portals here anymore
@@ -2483,13 +2478,13 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                if(sidesector->f_portal)
                {
 #ifdef R_LINKEDPORTALS
-                  if(useportalgroups && sidesector->f_portal->type == R_LINKED)
+                  if(R_LinkedFloorActive(sidesector))
                   {
                      linkoffset_t *link = 
                         P_GetLinkOffset(sidesector->groupid, 
                                         sidesector->f_portal->data.camera.groupid);
                      if(link)
-                        P_NewShootTPT(link, pfrac, sidesector->floorheight);
+                        P_NewShootTPT(link, pfrac, R_GetFloorPlanez(sidesector));
                   }
 #endif
                   return false;
@@ -2497,7 +2492,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
                if(demo_version < 333)
                {
-                  zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
+                  zdiff = FixedDiv(D_abs(z - R_GetFloorPlanez(sidesector)),
                                    D_abs(z - trace.originz));
                   x += FixedMul(trace.x - x, zdiff);
                   y += FixedMul(trace.y - y, zdiff);
@@ -2507,13 +2502,13 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                   x = trace.x + FixedMul(trace.cos, pfrac);
                   y = trace.y + FixedMul(trace.sin, pfrac);
                }
-               z = sidesector->floorheight;
+               z = R_GetFloorPlanez(sidesector);
                hitplane = true;
                updown = 0; // haleyjd
             }
-            else if(z > sidesector->ceilingheight)
+            else if(z > R_GetCeilingPlanez(sidesector))
             {
-               fixed_t pfrac = FixedDiv(sidesector->ceilingheight - trace.z, trace.aimslope);
+               fixed_t pfrac = FixedDiv(R_GetCeilingPlanez(sidesector) - trace.z, trace.aimslope);
                if(sidesector->ceilingpic == skyflatnum ||
                   sidesector->ceilingpic == sky2flatnum) // SoM
                   return false;
@@ -2522,13 +2517,13 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                if(sidesector->c_portal)
                {
 #ifdef R_LINKEDPORTALS
-                  if(useportalgroups && sidesector->c_portal->type == R_LINKED)
+                  if(R_LinkedCeilingActive(sidesector))
                   {
                      linkoffset_t *link = 
                         P_GetLinkOffset(sidesector->groupid, 
                                         sidesector->c_portal->data.camera.groupid);
                      if(link)
-                        P_NewShootTPT(link, pfrac, sidesector->ceilingheight);
+                        P_NewShootTPT(link, pfrac, R_GetCeilingPlanez(sidesector));
                   }
 #endif
                   return false;
@@ -2536,7 +2531,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
                if(demo_version < 333)
                {
-                  zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
+                  zdiff = FixedDiv(D_abs(z - R_GetCeilingPlanez(sidesector)),
                                    D_abs(z - trace.originz));
                   x += FixedMul(trace.x - x, zdiff);
                   y += FixedMul(trace.y - y, zdiff);
@@ -2547,12 +2542,12 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                   y = trace.y + FixedMul(trace.sin, pfrac);
                }
 
-               z = sidesector->ceilingheight;
+               z = R_GetCeilingPlanez(sidesector);
                hitplane = true;
                updown = 1; // haleyjd
             }
 #ifdef R_LINKEDPORTALS
-            else if(useportalgroups && li->portal && li->portal->type == R_LINKED)
+            else if(R_LinkedLineActive(li))
             {
                linkoffset_t *link = 
                   P_GetLinkOffset(sidesector->groupid, 
@@ -2569,7 +2564,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                return false;
             }
          }
-         else if(demo_version >= 333 && li->portal && li->portal->type == R_LINKED)
+         else if(demo_version >= 333 && R_LinkedLineActive(li))
             return true;
 #else
          }
@@ -2586,7 +2581,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          // don't shoot the sky!
          // don't shoot ceiling portals either
          
-         if(z > li->frontsector->ceilingheight)
+         if(z > R_GetCeilingPlanez(li->frontsector))
             return false;
          
          // it's a sky hack wall
@@ -2776,7 +2771,7 @@ static mobj_t *usething;
 static boolean PTR_UseTraverse(intercept_t *in)
 {
 #ifdef R_LINKEDPORTALS
-   if(useportalgroups && in->d.line->portal && in->d.line->portal->type == R_LINKED)
+   if(R_LinkedLineActive(in->d.line))
    {
       linkoffset_t *link;
       sector_t *sidesector;

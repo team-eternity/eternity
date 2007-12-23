@@ -354,8 +354,7 @@ void P_XYMovement(mobj_t* mo)
                (BlockingMobj->flags2 & MF2_REFLECTIVE))
             {
                angle_t refangle =
-                  R_PointToAngle2(BlockingMobj->x, BlockingMobj->y,
-                                  mo->x, mo->y);
+                  R_PointToAngle2(BlockingMobj->x, BlockingMobj->y, mo->x, mo->y);
 
                // Change angle for reflection
                if(BlockingMobj->flags2 & MF2_DEFLECTIVE)
@@ -949,7 +948,8 @@ static boolean P_DoZMovement(mobj_t *mobj)
 static boolean P_CheckPortalTeleport(mobj_t *mobj)
 {
    if(useportalgroups && mobj->subsector->sector->f_portal &&
-      mobj->subsector->sector->f_portal->type == R_LINKED)
+      mobj->subsector->sector->f_portal->type == R_LINKED &&
+      R_FloorPortalActive(mobj->subsector->sector))
    {
       fixed_t passheight;
       if(mobj->player)
@@ -961,7 +961,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          passheight = mobj->z + (mobj->height >> 1);
 
 
-      if(passheight < mobj->subsector->sector->floorheight)
+      if(passheight < R_GetFloorPlanez(mobj->subsector->sector))
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
                                               mobj->subsector->sector->f_portal->data.camera.groupid);
@@ -973,7 +973,8 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       }
    }
    if(useportalgroups && mobj->subsector->sector->c_portal &&
-      mobj->subsector->sector->c_portal->type == R_LINKED)
+      mobj->subsector->sector->c_portal->type == R_LINKED &&
+      R_CeilingPortalActive(mobj->subsector->sector))
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
@@ -985,7 +986,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
-      if(passheight > mobj->subsector->sector->ceilingheight)
+      if(passheight > R_GetCeilingPlanez(mobj->subsector->sector))
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
                                               mobj->subsector->sector->c_portal->data.camera.groupid);

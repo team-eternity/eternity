@@ -203,9 +203,6 @@ static void R_RenderSegLoop(void)
    int i, texx;
    float basescale;
 
-   if(segclip.line->linedef - lines == 23)
-      segclip.line = segclip.line;
-
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       cliptop = (int)ceilingclip[i];
@@ -215,7 +212,7 @@ static void R_RenderSegLoop(void)
       b = segclip.bottom > floorclip[i] ? clipbot : (int)segclip.bottom;
 
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
-      if((segclip.markceiling || segclip.c_portalignore) && segclip.frontsec->c_portal)
+      if(segclip.markceiling && R_RenderCeilingPortal(segclip.frontsec))
       {
          line = t - 1;
          
@@ -244,7 +241,7 @@ static void R_RenderSegLoop(void)
       }
 
       // SoM 3/10/2005: Only add to the portal of the floor is marked
-      if((segclip.markfloor || segclip.f_portalignore)  && segclip.frontsec->f_portal)
+      if(segclip.markfloor && R_RenderFloorPortal(segclip.frontsec))
       {
          line = b + 1;
 

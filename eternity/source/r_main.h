@@ -32,7 +32,6 @@
 #include "r_draw.h"
 #include "r_defs.h"
 #include "p_chase.h"
-#include "r_portal.h"
 
 //
 // POV related.
@@ -196,6 +195,9 @@ typedef struct
    sector_t *frontsec, *backsec;
    visplane_t *floorplane, *ceilingplane;
    seg_t *line;
+
+   // SoM: used for portals
+   fixed_t  frontfloorz, frontceilz, backfloorz, backceilz;
 } cb_seg_t;
 
 
@@ -209,6 +211,8 @@ void R_IncrementFrameid(void);
 void R_IncrementFrameid(void); // Needed by the portal functions... 
 extern unsigned   frameid;
 
+// SoM: include these prototypes after the map data definitions:
+#include "r_pcheck.h"
 #endif
 
 //----------------------------------------------------------------------------

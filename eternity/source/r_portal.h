@@ -47,6 +47,7 @@ typedef struct
    fixed_t   deltax, deltay, deltaz;
 #ifdef R_LINKEDPORTALS
    int       groupid; // SoM: linked portals are camera portals
+   fixed_t   planez;
 #endif
 } cameraportal_t;
 
@@ -113,8 +114,8 @@ typedef struct
 extern portalrender_t  portalrender;
 
 #ifdef R_LINKEDPORTALS
-// SoM 2/13/2006: Thus marks the beginning of my work on linked portals
-rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, int groupid);
+rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, 
+                             fixed_t planez, int groupid);
 #endif
 #endif
 
