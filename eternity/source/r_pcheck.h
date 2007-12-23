@@ -30,28 +30,28 @@
 
 
 #ifdef R_LINKEDPORTALS
-d_inline boolean   R_LinkedFloorActive(sector_t *sector)
+d_inline static boolean   R_LinkedFloorActive(sector_t *sector)
 {
    return (useportalgroups && sector->f_portal && sector->f_portal->type == R_LINKED &&
           sector->floorheight <= sector->f_portal->data.camera.planez);
 }
 
 
-d_inline boolean   R_LinkedCeilingActive(sector_t *sector)
+d_inline static boolean   R_LinkedCeilingActive(sector_t *sector)
 {
    return (useportalgroups && sector->c_portal && sector->c_portal->type == R_LINKED &&
           sector->ceilingheight >= sector->c_portal->data.camera.planez);
 }
 
 
-d_inline boolean   R_LinkedLineActive(line_t *line)
+d_inline static boolean   R_LinkedLineActive(line_t *line)
 {
    return (useportalgroups && line->portal && line->portal->type == R_LINKED);
 }
 #endif
 
 
-d_inline fixed_t R_GetFloorPlanez(sector_t *sector)
+d_inline static fixed_t R_GetFloorPlanez(sector_t *sector)
 {
    return 
 #ifdef R_LINKEDPORTALS
@@ -63,7 +63,7 @@ d_inline fixed_t R_GetFloorPlanez(sector_t *sector)
 }
 
 
-d_inline fixed_t R_GetCeilingPlanez(sector_t *sector)
+d_inline static fixed_t R_GetCeilingPlanez(sector_t *sector)
 {
    return
 #ifdef R_LINKEDPORTALS
@@ -75,7 +75,7 @@ d_inline fixed_t R_GetCeilingPlanez(sector_t *sector)
 }
 
 
-d_inline boolean R_FloorPortalActive(sector_t *sector)
+d_inline static boolean R_FloorPortalActive(sector_t *sector)
 {
    return 
 #ifdef R_LINKEDPORTALS
@@ -86,7 +86,7 @@ d_inline boolean R_FloorPortalActive(sector_t *sector)
 }
 
 
-d_inline boolean R_CeilingPortalActive(sector_t *sector)
+d_inline static boolean R_CeilingPortalActive(sector_t *sector)
 {
    return 
 #ifdef R_LINKEDPORTALS
@@ -97,7 +97,7 @@ d_inline boolean R_CeilingPortalActive(sector_t *sector)
 }
 
 
-d_inline boolean R_RenderFloorPortal(sector_t *sector)
+d_inline static boolean R_RenderFloorPortal(sector_t *sector)
 {
    const rportal_t *fp = sector->f_portal;
 
@@ -116,7 +116,7 @@ d_inline boolean R_RenderFloorPortal(sector_t *sector)
 
 
 
-d_inline boolean R_RenderCeilingPortal(sector_t *sector)
+d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
 {
    const rportal_t *cp = sector->c_portal;
 
