@@ -947,9 +947,7 @@ static boolean P_DoZMovement(mobj_t *mobj)
 #ifdef R_LINKEDPORTALS
 static boolean P_CheckPortalTeleport(mobj_t *mobj)
 {
-   if(useportalgroups && mobj->subsector->sector->f_portal &&
-      mobj->subsector->sector->f_portal->type == R_LINKED &&
-      R_FloorPortalActive(mobj->subsector->sector))
+   if(R_LinkedFloorActive(mobj->subsector->sector))
    {
       fixed_t passheight;
       if(mobj->player)
@@ -972,9 +970,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          }
       }
    }
-   if(useportalgroups && mobj->subsector->sector->c_portal &&
-      mobj->subsector->sector->c_portal->type == R_LINKED &&
-      R_CeilingPortalActive(mobj->subsector->sector))
+   if(R_LinkedCeilingActive(mobj->subsector->sector))
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;

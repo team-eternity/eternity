@@ -405,7 +405,7 @@ void P_ParticleThinker(void)
 
       // floor clipping
 #ifdef R_LINKEDPORTALS
-      if(particle->z < floorheight && psec->f_portal && useportalgroups && psec->f_portal->type == R_LINKED)
+      if(particle->z < floorheight && R_LinkedFloorActive(psec))
       {
          P_UnsetParticlePosition(particle);
          particle->x -= psec->f_portal->data.camera.deltax;

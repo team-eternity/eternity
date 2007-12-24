@@ -622,6 +622,10 @@ static void R_AddLine(seg_t *line)
    static sector_t tempsec;
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
+   // SoM: one of the biproducts of the portal height enforcement: The top silhouette
+   // should be drawn at ceilingheight but the actual texture coords should start
+   // at ceilingz. Yeah Quasar, it did get a LITTLE complicated :/
+   float textop, texhigh, texlow, texbottom;
 
    tempsec.frameid = 0;
 
@@ -643,11 +647,9 @@ static void R_AddLine(seg_t *line)
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
    if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
-      !((seg.frontsec->c_portal && seg.frontsec->c_portal->type == R_LINKED &&
-        R_CeilingPortalActive(seg.frontsec) && 
+      !((R_LinkedCeilingActive(seg.frontsec) && 
         viewz > seg.frontsec->c_portal->data.camera.planez) || 
-        (seg.frontsec->f_portal && seg.frontsec->f_portal->type == R_LINKED &&
-        R_FloorPortalActive(seg.frontsec) && 
+        (R_LinkedFloorActive(seg.frontsec) && 
         viewz < seg.frontsec->f_portal->data.camera.planez)))
       return;
 
@@ -923,6 +925,9 @@ static void R_AddLine(seg_t *line)
    seg.top = seg.frontsec->ceilingheightf - view.z;
    seg.bottom = seg.frontsec->floorheightf - view.z;
 
+   textop = (seg.frontsec->ceilingz / 65536.0f) - view.z;
+   texbottom = (seg.frontsec->floorz / 65536.0f) - view.z;
+
    seg.f_portalignore = seg.c_portalignore = false;
 
    if(!seg.backsec)
@@ -933,9 +938,9 @@ static void R_AddLine(seg_t *line)
       seg.midtexh  = textureheight[side->midtexture] >> FRACBITS;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.midtexmid = (int)((seg.bottom + seg.midtexh + seg.toffsety) * FRACUNIT);
+         seg.midtexmid = (int)((texbottom + seg.midtexh + seg.toffsety) * FRACUNIT);
       else
-         seg.midtexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
+         seg.midtexmid = (int)((textop + seg.toffsety) * FRACUNIT);
 
       seg.markceiling = (seg.ceilingplane != NULL || R_RenderCeilingPortal(seg.frontsec));
       seg.markfloor   = (seg.floorplane != NULL || R_RenderFloorPortal(seg.frontsec));
@@ -969,6 +974,7 @@ static void R_AddLine(seg_t *line)
               seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
 
       seg.high = seg.backsec->ceilingheightf - view.z;
+      texhigh = (seg.backsec->ceilingz / 65536.0f) - view.z;
 
       // haleyjd 09/20/07: only test for sky once
       sky = ((seg.frontsec->ceilingpic == skyflatnum ||
@@ -1009,9 +1015,9 @@ static void R_AddLine(seg_t *line)
          seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
 
          if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
+            seg.toptexmid = (int)((textop + seg.toffsety) * FRACUNIT);
          else
-            seg.toptexmid = (int)((seg.high + seg.toptexh + seg.toffsety) * FRACUNIT);
+            seg.toptexmid = (int)((texhigh + seg.toptexh + seg.toffsety) * FRACUNIT);
       }
       else
          seg.toptex = 0;
@@ -1050,15 +1056,16 @@ static void R_AddLine(seg_t *line)
 #endif
 
       seg.low = seg.backsec->floorheightf - view.z;
+      texlow = (seg.backsec->floorz / 65536.0f) - view.z;
       if(seg.bottom < seg.low && side->bottomtexture)
       {
          seg.bottomtex = texturetranslation[side->bottomtexture];
          seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = (int)((seg.top + seg.toffsety) * FRACUNIT);
+            seg.bottomtexmid = (int)((textop + seg.toffsety) * FRACUNIT);
          else
-            seg.bottomtexmid = (int)((seg.low + seg.toffsety) * FRACUNIT);
+            seg.bottomtexmid = (int)((texlow + seg.toffsety) * FRACUNIT);
       }
       else
          seg.bottomtex = 0;
