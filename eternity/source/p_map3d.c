@@ -516,7 +516,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
       !(tmthing->flags & MF_NOCLIP))
-      tmfloorz = tmdropoffz = R_GetFloorPlanez(newsubsec->sector) - (1024 * FRACUNIT);
+      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
    else
 #endif
       tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
@@ -524,7 +524,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
       !(tmthing->flags & MF_NOCLIP))
-      tmceilingz = R_GetFloorPlanez(newsubsec->sector) + (1024 * FRACUNIT);
+      tmceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
    else
 #endif
       tmceilingz = newsubsec->sector->ceilingheight;

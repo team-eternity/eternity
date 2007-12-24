@@ -961,7 +961,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          passheight = mobj->z + (mobj->height >> 1);
 
 
-      if(passheight < R_GetFloorPlanez(mobj->subsector->sector))
+      if(passheight < mobj->subsector->sector->floorheight)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
                                               mobj->subsector->sector->f_portal->data.camera.groupid);
@@ -986,7 +986,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
-      if(passheight > R_GetCeilingPlanez(mobj->subsector->sector))
+      if(passheight > mobj->subsector->sector->ceilingheight)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
                                               mobj->subsector->sector->c_portal->data.camera.groupid);

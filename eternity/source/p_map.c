@@ -2093,15 +2093,15 @@ static boolean PTR_AimTraverse(intercept_t *in)
       // we'll need to continue looking through portals, so store the 
       // intersection.
       if(demo_version >= 333 && R_LinkedCeilingActive(sidesector) &&  
-         trace.originz <= R_GetCeilingPlanez(sidesector) &&
+         trace.originz <= sidesector->ceilingheight &&
          li->frontsector->c_portal != li->backsector->c_portal)
       {
-         slope = FixedDiv(R_GetCeilingPlanez(sidesector) - trace.originz, dist);
+         slope = FixedDiv(sidesector->ceilingheight - trace.originz, dist);
          if(trace.topslope > slope)
          {
             // Find the distance from the ogrigin to the intersection with the 
             // plane.
-            fixed_t z = R_GetCeilingPlanez(sidesector);
+            fixed_t z = sidesector->ceilingheight;
             fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
             linkoffset_t *link = 
                P_GetLinkOffset(sidesector->groupid, 
@@ -2112,15 +2112,15 @@ static boolean PTR_AimTraverse(intercept_t *in)
       }
 
       if(demo_version >= 333 && R_LinkedFloorActive(sidesector) &&
-         trace.originz >= R_GetFloorPlanez(sidesector) &&
+         trace.originz >= sidesector->floorheight &&
          li->frontsector->f_portal != li->backsector->f_portal)
       {
-         slope = FixedDiv(R_GetFloorPlanez(sidesector) - trace.originz, dist);
+         slope = FixedDiv(sidesector->floorheight - trace.originz, dist);
          if(slope > trace.bottomslope)
          {
             // Find the distance from the ogrigin to the intersection with the 
             // plane.
-            fixed_t z = R_GetFloorPlanez(sidesector);
+            fixed_t z = sidesector->floorheight;
             fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
             linkoffset_t *link = 
                P_GetLinkOffset(sidesector->groupid, 
@@ -2155,14 +2155,14 @@ static boolean PTR_AimTraverse(intercept_t *in)
 
       // The line is blocking so check for portals in the frontsector.
       if(R_LinkedCeilingActive(li->frontsector) &&
-         trace.originz <= R_GetCeilingPlanez(li->frontsector))
+         trace.originz <= li->frontsector->ceilingheight)
       {
-         slope = FixedDiv(R_GetCeilingPlanez(li->frontsector) - trace.originz, dist);
+         slope = FixedDiv(li->frontsector->ceilingheight - trace.originz, dist);
          if(trace.topslope > slope)
          {
             // Find the distance from the ogrigin to the intersection with the 
             // plane.
-            fixed_t z = R_GetCeilingPlanez(li->frontsector);
+            fixed_t z = li->frontsector->ceilingheight;
             fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
             linkoffset_t *link = 
                P_GetLinkOffset(li->frontsector->groupid, 
@@ -2173,14 +2173,14 @@ static boolean PTR_AimTraverse(intercept_t *in)
       }
 
       if(R_LinkedFloorActive(li->frontsector) &&
-         trace.originz >= R_GetFloorPlanez(li->frontsector))
+         trace.originz >= li->frontsector->floorheight)
       {
-         slope = FixedDiv(R_GetFloorPlanez(li->frontsector) - trace.originz, dist);
+         slope = FixedDiv(li->frontsector->floorheight - trace.originz, dist);
          if(slope > trace.bottomslope)
          {
             // Find the distance from the origin to the intersection with the 
             // plane.
-            fixed_t z = R_GetFloorPlanez(li->frontsector);
+            fixed_t z = li->frontsector->floorheight;
             fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
             linkoffset_t *link = 
                P_GetLinkOffset(li->frontsector->groupid, 
@@ -2195,8 +2195,8 @@ static boolean PTR_AimTraverse(intercept_t *in)
       {
          fixed_t slope2;
 
-         slope = FixedDiv(R_GetFloorPlanez(li->frontsector) - trace.originz, dist);
-         slope2 = FixedDiv(R_GetCeilingPlanez(li->frontsector) - trace.originz, dist);
+         slope = FixedDiv(li->frontsector->floorheight - trace.originz, dist);
+         slope2 = FixedDiv(li->frontsector->ceilingheight - trace.originz, dist);
          if(slope2 < trace.bottomslope && slope > trace.topslope)
             return false;
          else
@@ -2464,9 +2464,9 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          // 1s line, don't crash!
          if(sidesector)
          {
-            if(z < R_GetFloorPlanez(sidesector))
+            if(z < sidesector->floorheight)
             {
-               fixed_t pfrac = FixedDiv(R_GetFloorPlanez(sidesector) - trace.z, 
+               fixed_t pfrac = FixedDiv(sidesector->floorheight - trace.z, 
                                         trace.aimslope);
          
                // SoM: don't check for portals here anymore
@@ -2484,7 +2484,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                         P_GetLinkOffset(sidesector->groupid, 
                                         sidesector->f_portal->data.camera.groupid);
                      if(link)
-                        P_NewShootTPT(link, pfrac, R_GetFloorPlanez(sidesector));
+                        P_NewShootTPT(link, pfrac, sidesector->floorheight);
                   }
 #endif
                   return false;
@@ -2492,7 +2492,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
                if(demo_version < 333)
                {
-                  zdiff = FixedDiv(D_abs(z - R_GetFloorPlanez(sidesector)),
+                  zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
                                    D_abs(z - trace.originz));
                   x += FixedMul(trace.x - x, zdiff);
                   y += FixedMul(trace.y - y, zdiff);
@@ -2502,13 +2502,13 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                   x = trace.x + FixedMul(trace.cos, pfrac);
                   y = trace.y + FixedMul(trace.sin, pfrac);
                }
-               z = R_GetFloorPlanez(sidesector);
+               z = sidesector->floorheight;
                hitplane = true;
                updown = 0; // haleyjd
             }
-            else if(z > R_GetCeilingPlanez(sidesector))
+            else if(z > sidesector->ceilingheight)
             {
-               fixed_t pfrac = FixedDiv(R_GetCeilingPlanez(sidesector) - trace.z, trace.aimslope);
+               fixed_t pfrac = FixedDiv(sidesector->ceilingheight - trace.z, trace.aimslope);
                if(sidesector->ceilingpic == skyflatnum ||
                   sidesector->ceilingpic == sky2flatnum) // SoM
                   return false;
@@ -2523,7 +2523,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                         P_GetLinkOffset(sidesector->groupid, 
                                         sidesector->c_portal->data.camera.groupid);
                      if(link)
-                        P_NewShootTPT(link, pfrac, R_GetCeilingPlanez(sidesector));
+                        P_NewShootTPT(link, pfrac, sidesector->ceilingheight);
                   }
 #endif
                   return false;
@@ -2531,7 +2531,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
                if(demo_version < 333)
                {
-                  zdiff = FixedDiv(D_abs(z - R_GetCeilingPlanez(sidesector)),
+                  zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
                                    D_abs(z - trace.originz));
                   x += FixedMul(trace.x - x, zdiff);
                   y += FixedMul(trace.y - y, zdiff);
@@ -2542,7 +2542,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                   y = trace.y + FixedMul(trace.sin, pfrac);
                }
 
-               z = R_GetCeilingPlanez(sidesector);
+               z = sidesector->ceilingheight;
                hitplane = true;
                updown = 1; // haleyjd
             }
@@ -2581,7 +2581,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          // don't shoot the sky!
          // don't shoot ceiling portals either
          
-         if(z > R_GetCeilingPlanez(li->frontsector))
+         if(z > li->frontsector->ceilingheight)
             return false;
          
          // it's a sky hack wall

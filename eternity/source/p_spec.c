@@ -309,15 +309,15 @@ sector_t *getNextSector(line_t *line, sector_t *sec)
 //
 fixed_t P_FindLowestFloorSurrounding(sector_t* sec)
 {
-   fixed_t floor = sec->floorheight;
+   fixed_t floor = sec->floorz;
    const sector_t *other;
    int i;
    
    for(i = 0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i], sec)) &&
-         other->floorheight < floor)
-         floor = other->floorheight;
+         other->floorz < floor)
+         floor = other->floorz;
    }
    
    return floor;
@@ -349,8 +349,8 @@ fixed_t P_FindHighestFloorSurrounding(sector_t *sec)
    for(i = 0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight > floor)
-         floor = other->floorheight;
+         other->floorz > floor)
+         floor = other->floorz;
    }
    
    return floor;
@@ -374,15 +374,15 @@ fixed_t P_FindNextHighestFloor(sector_t *sec, int currentheight)
    for(i=0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight > currentheight)
+         other->floorz > currentheight)
       {
-         int height = other->floorheight;
+         int height = other->floorz;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->floorheight < height &&
-               other->floorheight > currentheight)
-               height = other->floorheight;
+               other->floorz < height &&
+               other->floorz > currentheight)
+               height = other->floorz;
          }
          return height;
       }
@@ -408,15 +408,15 @@ fixed_t P_FindNextLowestFloor(sector_t *sec, int currentheight)
    for(i=0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight < currentheight)
+         other->floorz < currentheight)
       {
-         int height = other->floorheight;
+         int height = other->floorz;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->floorheight > height &&
-               other->floorheight < currentheight)
-               height = other->floorheight;
+               other->floorz > height &&
+               other->floorz < currentheight)
+               height = other->floorz;
          }
          return height;
       }
@@ -442,15 +442,15 @@ fixed_t P_FindNextLowestCeiling(sector_t *sec, int currentheight)
    for(i=0 ;i < sec->linecount ; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight < currentheight)
+         other->ceilingz < currentheight)
       {
-         int height = other->ceilingheight;
+         int height = other->ceilingz;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->ceilingheight > height &&
-               other->ceilingheight < currentheight)
-               height = other->ceilingheight;
+               other->ceilingz > height &&
+               other->ceilingz < currentheight)
+               height = other->ceilingz;
          }
         return height;
       }
@@ -476,15 +476,15 @@ fixed_t P_FindNextHighestCeiling(sector_t *sec, int currentheight)
    for(i=0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight > currentheight)
+         other->ceilingz > currentheight)
       {
-         int height = other->ceilingheight;
+         int height = other->ceilingz;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->ceilingheight < height &&
-               other->ceilingheight > currentheight)
-               height = other->ceilingheight;
+               other->ceilingz < height &&
+               other->ceilingz > currentheight)
+               height = other->ceilingz;
          }
          return height;
       }
@@ -518,7 +518,7 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
       for(i=0; i < sec->linecount; i++)
       {
          if((other = getNextSector(sec->lines[i],sec)) &&
-            other->ceilingheight < height)
+            other->ceilingz < height)
          {
             int i;
 
@@ -527,7 +527,7 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
                   break;
             
             if(i == sec->c_asurfacecount)
-               height = other->ceilingheight;
+               height = other->ceilingz;
          }
       }
    }
@@ -536,8 +536,8 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
       // height calculations
       for(i=0; i < sec->linecount; i++)
          if((other = getNextSector(sec->lines[i],sec)) &&
-            other->ceilingheight < height)
-            height = other->ceilingheight;
+            other->ceilingz < height)
+            height = other->ceilingz;
    }
 
    return height;
@@ -569,8 +569,8 @@ fixed_t P_FindHighestCeilingSurrounding(sector_t* sec)
    // height calculations
    for(i=0; i < sec->linecount; i++)
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight > height)
-         height = other->ceilingheight;
+         other->ceilingz > height)
+         height = other->ceilingz;
       
    return height;
 }
@@ -694,7 +694,7 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
       if (twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
          getSide(secnum,i,0)->sector-sectors == secnum))->
-         floorheight == floordestheight)
+         floorz == floordestheight)
          return sec;
       
    return NULL;
@@ -732,7 +732,7 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
       if(twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
                           getSide(secnum,i,0)->sector-sectors == secnum))->
-          ceilingheight == ceildestheight)
+          ceilingz == ceildestheight)
          return sec;
 
    return NULL;
@@ -2339,7 +2339,7 @@ void P_PlayerInSpecialSector(player_t *player)
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->floorheight)
+   if(player->mo->z != sector->floorz)
       return;
 
    // Has hit ground.
@@ -2489,7 +2489,7 @@ void P_PlayerOnSpecialFlat(player_t *player)
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->floorheight)
+   if(player->mo->z != sector->floorz)
       return;
 
    terrain = E_GetThingFloorType(player->mo);
@@ -2867,8 +2867,8 @@ void T_Scroll(scroll_t *s)
    
    if(s->control != -1)
    {   // compute scroll amounts based on a sector's height changes
-      fixed_t height = sectors[s->control].floorheight +
-         sectors[s->control].ceilingheight;
+      fixed_t height = sectors[s->control].floorz +
+         sectors[s->control].ceilingz;
       fixed_t delta = height - s->last_height;
       s->last_height = height;
       dx = FixedMul(dx, delta);
@@ -2919,10 +2919,10 @@ void T_Scroll(scroll_t *s)
       // killough 4/4/98: Underwater, carry things even w/o gravity
 
       sec = sectors + s->affectee;
-      height = sec->floorheight;
+      height = sec->floorz;
       waterheight = sec->heightsec != -1 &&
-         sectors[sec->heightsec].floorheight > height ?
-         sectors[sec->heightsec].floorheight : D_MININT;
+         sectors[sec->heightsec].floorz > height ?
+         sectors[sec->heightsec].floorz : D_MININT;
 
       // Move objects only if on floor or underwater,
       // non-floating, and clipped.
@@ -2977,7 +2977,7 @@ static void Add_Scroller(int type, fixed_t dx, fixed_t dy,
    s->vdx = s->vdy = 0;
    if((s->control = control) != -1)
       s->last_height =
-       sectors[control].floorheight + sectors[control].ceilingheight;
+       sectors[control].floorz + sectors[control].ceilingz;
    s->affectee = affectee;
    P_AddThinker(&s->thinker);
 }
@@ -3418,7 +3418,7 @@ void T_Pusher(pusher_t *p)
    // constant pushers p_wind and p_current
    
    if(sec->heightsec != -1) // special water sector?
-      ht = sectors[sec->heightsec].floorheight;
+      ht = sectors[sec->heightsec].floorz;
    node = sec->touching_thinglist; // things touching this sector
    for( ; node; node = node->m_snext)
     {
@@ -3462,7 +3462,7 @@ void T_Pusher(pusher_t *p)
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
-            if(thing->z > sec->floorheight) // above ground
+            if(thing->z > sec->floorz) // above ground
                xspeed = yspeed = 0; // no force
             else // on ground
             {
@@ -4015,13 +4015,15 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
    {
       if(list[i].type == AS_CEILING)
       {
-         list[i].sector->ceilingheight += delta;
+         list[i].sector->ceilingz += delta;
+         list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
       }
       else if(list[i].type == AS_FLOOR)
       {
-         list[i].sector->floorheight += delta;
+         list[i].sector->floorz += delta;
+         list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
          if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
       }
@@ -4030,32 +4032,38 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
          // If the movement is positive, move the ceiling first
          if(delta > 0)
          {
-            list[i].sector->ceilingheight += delta;
+            list[i].sector->ceilingz += delta;
+            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, delta, 1))
                ok = false;
-            list[i].sector->floorheight += delta;
+            list[i].sector->floorz += delta;
+            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, delta, 0))
                ok = false;
          }
          else
          {
-            list[i].sector->floorheight += delta;
+            list[i].sector->floorz += delta;
+            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, delta, 0))
                ok = false;
-            list[i].sector->ceilingheight += delta;
+            list[i].sector->ceilingz += delta;
+            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, delta, 1))
                ok = false;
          }
       }
       else if(list[i].type == AS_MIRRORCEILING)
       {
-         list[i].sector->ceilingheight -= delta;
+         list[i].sector->ceilingz -= delta;
+         list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
       }
       else if(list[i].type == AS_MIRRORFLOOR)
       {
-         list[i].sector->floorheight -= delta;
+         list[i].sector->floorz -= delta;
+         list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
       }
@@ -4064,19 +4072,23 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
          // Mirrored is different because it is flipped, so the order is reversed as well
          if(delta > 0)
          {
-            list[i].sector->floorheight -= delta;
+            list[i].sector->floorz -= delta;
+            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, -delta, 0))
                ok = false;
-            list[i].sector->ceilingheight -= delta;
+            list[i].sector->ceilingz -= delta;
+            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, -delta, 1))
                ok = false;
          }
          else
          {
-            list[i].sector->ceilingheight -= delta;
+            list[i].sector->ceilingz -= delta;
+            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, -delta, 1))
                ok = false;
-            list[i].sector->floorheight -= delta;
+            list[i].sector->floorz -= delta;
+            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
             if(P_CheckSector(list[i].sector, crush, -delta, 0))
                ok = false;
          }
@@ -4748,14 +4760,14 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    {
    case portal_plane:
       portal = R_GetPlanePortal(&sector->ceilingpic, 
-                                &sector->ceilingheight, 
+                                &sector->ceilingz, 
                                 &sector->lightlevel, 
                                 &sector->ceiling_xoffs, 
                                 &sector->ceiling_yoffs);
       break;
    case portal_horizon:
       portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic, 
-                                  &sector->floorheight, &sector->ceilingheight,
+                                  &sector->floorz, &sector->ceilingz,
                                   &sector->lightlevel, &sector->lightlevel,
                                   &sector->floor_xoffs, &sector->floor_yoffs,
                                   &sector->ceiling_xoffs, &sector->ceiling_yoffs);
@@ -4854,12 +4866,12 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       if(line->special == 358)
       {
          anchortype = 360;
-         planez = frontsector->floorheight;
+         planez = frontsector->floorz;
       }
       else if(line->special == 359)
       {
          anchortype = 361;
-         planez = frontsector->ceilingheight;
+         planez = frontsector->ceilingz;
       }
       else if(line->special == 376)
       {
@@ -4925,9 +4937,17 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
       case portal_ceiling:
          sectors[s].c_portal = portal;
+#ifdef R_LINKEDPORTALS
+         if(portal->type == R_LINKED)
+            sectors[s].ceilingheight = R_GetCeilingPlanez(sectors + s);
+#endif
          break;
       case portal_floor:
          sectors[s].f_portal = portal;
+#ifdef R_LINKEDPORTALS
+         if(portal->type == R_LINKED)
+            sectors[s].floorheight = R_GetFloorPlanez(sectors + s);
+#endif
          break;
       case portal_both:
          sectors[s].c_portal = sectors[s].f_portal = portal;
@@ -4935,6 +4955,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       default:
          I_Error("P_SpawnPortal: unknown portal effect\n");
       }
+
    }
 
    // attach portal to like-tagged 289 lines

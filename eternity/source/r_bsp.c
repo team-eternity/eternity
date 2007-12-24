@@ -494,16 +494,6 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       sec = tempsec;               // Use other sector
    }
 
-   // SoM: For shame I'm using this function for PORTALS!!??
-   else if(R_FloorPortalActive(sec) || R_CeilingPortalActive(sec))
-   {
-      *tempsec = *sec;
-
-      tempsec->floorheight = R_GetFloorPlanez(sec);
-      tempsec->ceilingheight = R_GetCeilingPlanez(sec);
-      sec = tempsec;
-   }
-
    return sec;
 }
 
@@ -655,10 +645,10 @@ static void R_AddLine(seg_t *line)
    if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       !((seg.frontsec->c_portal && seg.frontsec->c_portal->type == R_LINKED &&
         R_CeilingPortalActive(seg.frontsec) && 
-        viewz >= seg.frontsec->c_portal->data.camera.planez) || 
+        viewz > seg.frontsec->c_portal->data.camera.planez) || 
         (seg.frontsec->f_portal && seg.frontsec->f_portal->type == R_LINKED &&
         R_FloorPortalActive(seg.frontsec) && 
-        viewz <= seg.frontsec->f_portal->data.camera.planez)))
+        viewz < seg.frontsec->f_portal->data.camera.planez)))
       return;
 
    // Reject empty two-sided lines used for line specials.

@@ -198,7 +198,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       if(mo && demo_version >= 333 && R_LinkedCeilingActive(openfrontsector) &&
          R_LinkedCeilingActive(openbacksector) && 
          openfrontsector->c_portal == openbacksector->c_portal)
-         frontceilz = backceilz = R_GetCeilingPlanez(openfrontsector) + (1024 * FRACUNIT);
+         frontceilz = backceilz = openfrontsector->ceilingheight + (1024 * FRACUNIT);
       else
 #endif
       {
@@ -216,7 +216,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       if(mo && demo_version >= 333 && R_LinkedFloorActive(openfrontsector) &&
          R_LinkedFloorActive(openbacksector) && 
          openfrontsector->f_portal == openbacksector->f_portal)
-         frontfloorz = backfloorz = R_GetFloorPlanez(openfrontsector) - (1024 * FRACUNIT); //mo->height;
+         frontfloorz = backfloorz = openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
       else 
 #endif
       {

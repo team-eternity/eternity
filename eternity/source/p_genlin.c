@@ -130,18 +130,18 @@ manual_floor:
          break;
       case FtoNnF:
          floor->floordestheight = fd->direction ?
-            P_FindNextHighestFloor(sec,sec->floorheight) :
-            P_FindNextLowestFloor(sec,sec->floorheight);
+            P_FindNextHighestFloor(sec,sec->floorz) :
+            P_FindNextLowestFloor(sec,sec->floorz);
          break;
       case FtoLnC:
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
          break;
       case FtoC:
-         floor->floordestheight = sec->ceilingheight;
+         floor->floordestheight = sec->ceilingz;
          break;
       case FbyST:
          floor->floordestheight = 
-            (floor->sector->floorheight>>FRACBITS) + floor->direction * 
+            (floor->sector->floorz>>FRACBITS) + floor->direction * 
             (P_FindShortestTextureAround(secnum)>>FRACBITS);
          if(floor->floordestheight>32000)  //jff 3/13/98 prevent overflow
             floor->floordestheight=32000;    // wraparound in floor height
@@ -150,33 +150,33 @@ manual_floor:
          floor->floordestheight<<=FRACBITS;
          break;
       case Fby24:
-         floor->floordestheight = floor->sector->floorheight +
+         floor->floordestheight = floor->sector->floorz +
             floor->direction * 24*FRACUNIT;
          break;
       case Fby32:
-         floor->floordestheight = floor->sector->floorheight +
+         floor->floordestheight = floor->sector->floorz +
             floor->direction * 32*FRACUNIT;
          break;
       
          // haleyjd 05/07/04: parameterized extensions
          //         05/20/05: added FtoAbs, FInst
       case FbyParam: 
-         floor->floordestheight = floor->sector->floorheight +
+         floor->floordestheight = floor->sector->floorz +
             floor->direction * fd->height_value;
          break;
       case FtoAbs:
          floor->floordestheight = fd->height_value;
          // adjust direction appropriately (instant movement not possible)
-         if(floor->floordestheight > floor->sector->floorheight)
+         if(floor->floordestheight > floor->sector->floorz)
             floor->direction = plat_up;
          else
             floor->direction = plat_down;
          break;
       case FInst:
-         floor->floordestheight = floor->sector->floorheight +
+         floor->floordestheight = floor->sector->floorz +
             floor->direction * fd->height_value;
          // adjust direction appropriately (always instant)
-         if(floor->floordestheight > floor->sector->floorheight)
+         if(floor->floordestheight > floor->sector->floorz)
             floor->direction = plat_down;
          else
             floor->direction = plat_up;
@@ -361,7 +361,7 @@ manual_ceiling:
       }
 
       // set destination target height
-      targheight = sec->ceilingheight;
+      targheight = sec->ceilingz;
       switch(cd->target_type)
       {
       case CtoHnC:
@@ -372,17 +372,17 @@ manual_ceiling:
          break;
       case CtoNnC:
          targheight = cd->direction ?
-            P_FindNextHighestCeiling(sec,sec->ceilingheight) :
-            P_FindNextLowestCeiling(sec,sec->ceilingheight);
+            P_FindNextHighestCeiling(sec,sec->ceilingz) :
+            P_FindNextLowestCeiling(sec,sec->ceilingz);
          break;
       case CtoHnF:
          targheight = P_FindHighestFloorSurrounding(sec);
          break;
       case CtoF:
-         targheight = sec->floorheight;
+         targheight = sec->floorz;
          break;
       case CbyST:
-         targheight = (ceiling->sector->ceilingheight>>FRACBITS) +
+         targheight = (ceiling->sector->ceilingz>>FRACBITS) +
             ceiling->direction * (P_FindShortestUpperAround(secnum)>>FRACBITS);
          if(targheight > 32000)  // jff 3/13/98 prevent overflow
             targheight = 32000;  // wraparound in ceiling height
@@ -391,32 +391,32 @@ manual_ceiling:
          targheight <<= FRACBITS;
          break;
       case Cby24:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->ceilingz +
             ceiling->direction * 24*FRACUNIT;
          break;
       case Cby32:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->ceilingz +
             ceiling->direction * 32*FRACUNIT;
          break;
 
          // haleyjd 10/06/05: parameterized extensions
       case CbyParam:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->ceilingz +
             ceiling->direction * cd->height_value;
          break;
       case CtoAbs:
          targheight = cd->height_value;
          // adjust direction appropriately (instant movement not possible)
-         if(targheight > ceiling->sector->ceilingheight)
+         if(targheight > ceiling->sector->ceilingz)
             ceiling->direction = plat_up;
          else
             ceiling->direction = plat_down;
          break;
       case CInst:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->ceilingz +
             ceiling->direction * cd->height_value;
          // adjust direction appropriately (always instant)
-         if(targheight > ceiling->sector->ceilingheight)
+         if(targheight > ceiling->sector->ceilingz)
             ceiling->direction = plat_down;
          else
             ceiling->direction = plat_up;
@@ -598,7 +598,7 @@ manual_lift:
       plat->tag = line->tag;
       
       plat->type = genLift;
-      plat->high = sec->floorheight;
+      plat->high = sec->floorz;
       plat->status = down;
 
       // setup the target destination height
@@ -606,25 +606,25 @@ manual_lift:
       {
       case F2LnF:
          plat->low = P_FindLowestFloorSurrounding(sec);
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
+         if(plat->low > sec->floorz)
+            plat->low = sec->floorz;
          break;
       case F2NnF:
-         plat->low = P_FindNextLowestFloor(sec,sec->floorheight);
+         plat->low = P_FindNextLowestFloor(sec,sec->floorz);
          break;
       case F2LnC:
          plat->low = P_FindLowestCeilingSurrounding(sec);
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
+         if(plat->low > sec->floorz)
+            plat->low = sec->floorz;
          break;
       case LnF2HnF:
          plat->type = genPerpetual;
          plat->low = P_FindLowestFloorSurrounding(sec);
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
+         if(plat->low > sec->floorz)
+            plat->low = sec->floorz;
          plat->high = P_FindHighestFloorSurrounding(sec);
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
+         if(plat->high < sec->floorz)
+            plat->high = sec->floorz;
          plat->status = P_Random(pr_genlift)&1;
          break;
       default:
@@ -790,7 +790,7 @@ manual_stair:
       }
 
       speed = floor->speed;
-      height = sec->floorheight + floor->direction * stairsize;
+      height = sec->floorz + floor->direction * stairsize;
       floor->floordestheight = height;
       texture = sec->floorpic;
       floor->crush = -1;
@@ -798,7 +798,7 @@ manual_stair:
 
       // haleyjd 10/13/05: init reset and delay properties
       floor->resetTime     = sd->reset_value;
-      floor->resetHeight   = sec->floorheight;
+      floor->resetHeight   = sec->floorz;
       floor->delayTime     = sd->delay_value;      
       floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;
       floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
@@ -871,7 +871,7 @@ manual_stair:
             {
                floor->speed = 
                   D_abs(FixedMul(speed, 
-                        FixedDiv(height - sec->floorheight, stairsize)));
+                        FixedDiv(height - sec->floorz, stairsize)));
             }
             else
                floor->speed = speed;
@@ -882,7 +882,7 @@ manual_stair:
 
             // haleyjd 10/13/05: init reset and delay properties
             floor->resetTime     = sd->reset_value;
-            floor->resetHeight   = sec->floorheight;
+            floor->resetHeight   = sec->floorz;
             floor->delayTime     = sd->delay_value;      
             floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;            
             floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
@@ -1005,8 +1005,8 @@ manual_crusher:
       P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
       ceiling->type = Slnt? genSilentCrusher : genCrusher;
-      ceiling->topheight = sec->ceilingheight;
-      ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
+      ceiling->topheight = sec->ceilingz;
+      ceiling->bottomheight = sec->floorz + (8*FRACUNIT);
 
       // setup ceiling motion speed
       switch (Sped)
@@ -1218,7 +1218,7 @@ manual_door:
             door->type = genRaise;
             turbo = false;
          }
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->ceilingz)
             P_DoorSequence(true, turbo, false, door->sector); // haleyjd
          break;
       case ODoor:
@@ -1235,11 +1235,11 @@ manual_door:
             door->type = genOpen;
             turbo = false;
          }
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->ceilingz)
             P_DoorSequence(true, turbo, false, door->sector); // haleyjd
          break;
       case CdODoor:
-         door->topheight = sec->ceilingheight;
+         door->topheight = sec->ceilingz;
          door->direction = plat_down;
          if(door->speed >= VDOORSPEED*4)
          {

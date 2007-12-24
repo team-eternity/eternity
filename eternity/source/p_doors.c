@@ -171,16 +171,16 @@ void T_VerticalDoor(vldoor_t *door)
    case plat_down:
       // Door is moving down
       res = T_MovePlane(door->sector, door->speed,
-                        door->sector->floorheight,
+                        door->sector->floorz,
                         -1, 1, door->direction);
 
       // killough 10/98: implement gradual lighting effects
-      if(door->lighttag && door->topheight - door->sector->floorheight)
+      if(door->lighttag && door->topheight - door->sector->floorz)
          EV_LightTurnOnPartway(door->lighttag,
-                               FixedDiv(door->sector->ceilingheight -
-                                        door->sector->floorheight,
+                               FixedDiv(door->sector->ceilingz -
+                                        door->sector->floorz,
                                         door->topheight -
-                                        door->sector->floorheight));
+                                        door->sector->floorz));
 
       // handle door reaching bottom
       if(res == pastdest)
@@ -259,12 +259,12 @@ void T_VerticalDoor(vldoor_t *door)
                         door->direction);
 
       // killough 10/98: implement gradual lighting effects
-      if(door->lighttag && door->topheight - door->sector->floorheight)
+      if(door->lighttag && door->topheight - door->sector->floorz)
          EV_LightTurnOnPartway(door->lighttag,
-                               FixedDiv(door->sector->ceilingheight -
-                                        door->sector->floorheight,
+                               FixedDiv(door->sector->ceilingz -
+                                        door->sector->floorz,
                                         door->topheight -
-                                        door->sector->floorheight));
+                                        door->sector->floorz));
 
       // handle door reaching the top
       if(res == pastdest)
@@ -442,7 +442,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          break;
 
       case close30ThenOpen:
-         door->topheight = sec->ceilingheight;
+         door->topheight = sec->ceilingz;
          door->direction = plat_down;
          P_DoorSequence(false, false, false, door->sector); // haleyjd
          break;
@@ -453,7 +453,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          door->speed = VDOORSPEED * 4;
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->ceilingz)
             P_DoorSequence(true, true, false, door->sector); // haleyjd
          break;
 
@@ -462,7 +462,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          door->direction = plat_up;
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->ceilingz)
             P_DoorSequence(true, false, false, door->sector); // haleyjd
          break;
          

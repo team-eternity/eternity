@@ -323,6 +323,10 @@ void P_LoadSectors(int lump)
 #ifdef R_LINKEDPORTALS
       ss->groupid = R_NOGROUP;
 #endif
+
+      ss->floorz = ss->floorheight;
+      ss->ceilingz = ss->ceilingheight;
+
       ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
 
       // haleyjd 09/24/06: sound sequences -- set default

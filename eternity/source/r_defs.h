@@ -246,6 +246,11 @@ struct sector_s
    // only valid for that sector for that frame.
    unsigned frameid;
    float ceilingheightf, floorheightf;
+
+   // SoM: the actual, factual floor and ceiling heights these are used by linked portals
+   // but ifdefing them would be a nightmare and the source will still compile with these 
+   // outside the ifdefs.
+   fixed_t floorz, ceilingz;
 };
 
 //

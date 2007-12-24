@@ -209,7 +209,7 @@ void P_ArchiveWorld (void)
    // haleyjd 03/04/07: must save sector colormap indices
    
    size_t size = 
-      (sizeof(short)*5 + sizeof(sec->floorheight) + sizeof(sec->ceilingheight) +
+      (sizeof(short)*5 + sizeof(sec->floorz) + sizeof(sec->ceilingz) +
        sizeof(sec->friction) + sizeof(sec->movefactor) + 
        sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap))
       * numsectors + sizeof(short)*3*numlines + 4;
@@ -236,10 +236,10 @@ void P_ArchiveWorld (void)
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
       // killough 10/98: save full floor & ceiling heights, including fraction
-      memcpy(put, &sec->floorheight, sizeof(sec->floorheight));
-      put = (void *)((char *) put + sizeof(sec->floorheight));
-      memcpy(put, &sec->ceilingheight, sizeof(sec->ceilingheight));
-      put = (void *)((char *) put + sizeof(sec->ceilingheight));
+      memcpy(put, &sec->floorz, sizeof(sec->floorz));
+      put = (void *)((char *) put + sizeof(sec->floorz));
+      memcpy(put, &sec->ceilingz, sizeof(sec->ceilingz));
+      put = (void *)((char *) put + sizeof(sec->ceilingz));
 
       // haleyjd: save the friction information too
       memcpy(put, &sec->friction, sizeof(sec->friction));
@@ -315,10 +315,10 @@ void P_UnArchiveWorld (void)
    {
       // killough 10/98: load full floor & ceiling heights, including fractions
       
-      memcpy(&sec->floorheight, get, sizeof(sec->floorheight));
-      get = (void *)((char *) get + sizeof(sec->floorheight));
-      memcpy(&sec->ceilingheight, get, sizeof(sec->ceilingheight));
-      get = (void *)((char *) get + sizeof(sec->ceilingheight));
+      memcpy(&sec->floorz, get, sizeof(sec->floorz));
+      get = (void *)((char *) get + sizeof(sec->floorz));
+      memcpy(&sec->ceilingz, get, sizeof(sec->ceilingz));
+      get = (void *)((char *) get + sizeof(sec->ceilingz));
 
       // haleyjd: retrieve the friction information we now save
       memcpy(&sec->friction, get, sizeof(sec->friction));
@@ -343,6 +343,10 @@ void P_UnArchiveWorld (void)
       sec->floordata    = NULL;
       sec->lightingdata = NULL;
       sec->soundtarget  = NULL;
+
+      // SoM: update the heights
+      sec->floorheight = R_GetFloorPlanez(sec);
+      sec->ceilingheight = R_GetCeilingPlanez(sec);
    }
 
    // do lines
