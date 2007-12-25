@@ -2440,12 +2440,13 @@ void P_SkullFly(mobj_t *actor, fixed_t speed)
    actor->momx = FixedMul(speed, finecosine[an]);
    actor->momy = FixedMul(speed, finesine[an]);
    
-   dist = P_AproxDistance(getTargetX(dest) - actor->x, getTargetY(dest) - actor->y);
+   dist = P_AproxDistance(getTargetX(actor) - actor->x, 
+                          getTargetY(actor) - actor->y);
    dist = dist / speed;
    if(dist < 1)
       dist = 1;
 
-   actor->momz = (getTargetZ(dest)+(dest->height>>1) - actor->z) / dist;
+   actor->momz = (getTargetZ(actor)+ (dest->height >> 1) - actor->z) / dist;
 }
 
 //
