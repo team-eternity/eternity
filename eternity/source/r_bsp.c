@@ -960,6 +960,7 @@ static void R_AddLine(seg_t *line)
    else
    {
       boolean mark, sky; // haleyjd
+      boolean toptexmissing, bottomtexmissing; // SoM
 
       seg.twosided = true;
 
@@ -982,19 +983,18 @@ static void R_AddLine(seg_t *line)
              (seg.backsec->ceilingpic  == skyflatnum ||
               seg.backsec->ceilingpic  == sky2flatnum));
 
-      if(sky || 
-         !(seg.backsec->ceilingheight <= seg.backsec->floorheight && 
-           ((seg.backsec->ceilingheight != seg.frontsec->ceilingheight && 
-             !seg.side->toptexture) ||
-            (seg.backsec->floorheight != seg.frontsec->floorheight && 
-             !seg.side->bottomtexture))))
-      {
-         seg.clipsolid = 
-            (seg.backsec->ceilingheight <= seg.backsec->floorheight || 
-             ((seg.frontsec->ceilingheight <= seg.backsec->floorheight || 
-               seg.backsec->ceilingheight <= seg.frontsec->floorheight) && 
-              !sky));
-      }
+      // SoM: Test for missing textures only once.
+      toptexmissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight && 
+                       !seg.side->toptexture);
+      bottomtexmissing = (seg.frontsec->floorheight < seg.backsec->floorheight && 
+                          !seg.side->bottomtexture);
+
+      // New clipsolid code will emulate the old doom behavior and still manages to 
+      // keep valid closed door cases handled.
+      seg.clipsolid = (!sky &&
+         ((seg.frontsec->ceilingheight <= seg.backsec->floorheight && !bottomtexmissing) ||
+          (seg.frontsec->floorheight >= seg.backsec->ceilingheight && !toptexmissing) ||
+          (seg.backsec->ceilingheight <= seg.backsec->floorheight && !toptexmissing && !bottomtexmissing)));
 
       if(sky)
          seg.top = seg.high;
