@@ -647,6 +647,8 @@ static void R_AddLine(seg_t *line)
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
    if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
+      seg.frontsec->ceilingpic != skyflatnum &&
+      seg.frontsec->ceilingpic != sky2flatnum &&
       !((R_LinkedCeilingActive(seg.frontsec) && 
         viewz > seg.frontsec->c_portal->data.camera.planez) || 
         (R_LinkedFloorActive(seg.frontsec) && 
