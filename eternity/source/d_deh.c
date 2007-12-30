@@ -2071,7 +2071,7 @@ void deh_procBexSprites(DWFILE *fpin, char *line)
       }
 
       // do it
-      memset(candidate, 0, 7);
+      memset(candidate, 0, sizeof(candidate));
       strncpy(candidate, ptr_lstrip(strval), 4);
       if(strlen(candidate) != 4)
       {

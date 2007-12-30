@@ -2710,7 +2710,7 @@ void G_ScrambleRand()
    rngseed += tv.tv_sec*1000ul + tv.tv_usec / 1000ul + gametic;*/
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
-   rngseed = time(NULL);
+   rngseed = (unsigned long) time(NULL);
 
 }
 

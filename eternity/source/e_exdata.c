@@ -1634,7 +1634,6 @@ static void E_ProcessEDSectors(cfg_t *cfg)
    for(i = 0; i < numEDSectors; ++i)
    {
       cfg_t *sectorsec;
-      const char *tempstr;
       int tempint;
 
       sectorsec = cfg_getnsec(cfg, SEC_SECTOR, i);

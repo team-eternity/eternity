@@ -72,7 +72,7 @@ int mapcolor_prtl;    // SoM: color of lines not in the current portal group
 
 // SoM: map mode. True means the portal groups are overlayed (the group the player is in being displayed in color and the
 // other groups being grayed out and underneath) and false means the map is not modified.
-boolean mapportal_overlay;
+int mapportal_overlay;
 #endif
 
 //jff 3/9/98 add option to not show secret sectors until entered
