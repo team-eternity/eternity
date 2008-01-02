@@ -591,8 +591,9 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
       while (column->topdelta != 0xff)
       {
          register const byte *source = (byte *) column + 3;
-         register byte *dest = desttop + realyarray[column->topdelta] * video.width;
-         register int count = realyarray[column->length];
+         register byte *dest = desttop + video.x1lookup[column->topdelta] * video.width;
+         register int count = video.x2lookup[column->topdelta + column->length - 1] -
+                              video.x1lookup[column->topdelta] + 1;
          register fixed_t frac;
          fixed_t step;
 

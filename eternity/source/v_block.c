@@ -96,10 +96,10 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer, int width, int height,
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
       
-   realx = buffer->xslookup[x];
-   realy = buffer->yslookup[y];
-   w     = buffer->xslookup[width];
-   h     = buffer->yslookup[height];
+   realx = buffer->x1lookup[x];
+   realy = buffer->y1lookup[y];
+   w     = buffer->x2lookup[x + width - 1] - realx + 1;
+   h     = buffer->y2lookup[y + height - 1] - realy + 1;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
    yfrac = 0;

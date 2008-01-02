@@ -1216,10 +1216,11 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
    // This receives scaled offsets.
    if(video.width != SCREENWIDTH || video.height != SCREENHEIGHT)
    {
-      w = realxarray[x + w] - realxarray[x];
-      h = realyarray[y + h] - realyarray[y];
-      x = realxarray[x];
-      y = realyarray[y];
+      // w = x2 - x1 + 1
+      w = video.x2lookup[x + w - 1] - video.x1lookup[x] + 1;
+      h = video.y2lookup[y + h - 1] - video.y1lookup[y] + 1;
+      x = video.x1lookup[x];
+      y = video.y1lookup[y];
    }
          
    ofs = x + y * video.width;

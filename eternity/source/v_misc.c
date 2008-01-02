@@ -65,10 +65,6 @@ cb_video_t  video =
    FRACUNIT
 };
 
-// SoM: To be phased out
-int realxarray[321];
-int realyarray[201];
-
 //
 // V_NumModes
 //
@@ -464,12 +460,12 @@ void V_DrawLoading(void)
   
    x = ((SCREENWIDTH/2)-45);
    y = (SCREENHEIGHT/2);
-   realx = realxarray[x];
-   realy = realyarray[y];
+   realx = video.x1lookup[x];
+   realy = video.y1lookup[y];
    dest = video.screens[0] + (realy*video.width) + realx;
    linelen = (90*loading_amount) / loading_total;
-   reallinelen = realxarray[linelen];
-   reallineend = realxarray[90 - linelen];
+   reallinelen = video.x2lookup[x + linelen - 1] - realx + 1;
+   reallineend = video.x2lookup[x + 89] - realx - reallinelen + 1;
 
    // white line
    memset(dest, white, reallinelen);
@@ -622,18 +618,18 @@ void V_ClassicFPSDrawer(void)
    // SoM: ANYRES
    if(video.yscale > FRACUNIT)
    {
-      int baseoffset = (video.height - (video.yscale >> FRACBITS)) * video.width;
+      int baseoffset = video.y1lookup[SCREENHEIGHT - 1] * video.width;
       int offset;
       int x, y, w, h;
 
-      w = video.xscale >> FRACBITS;
-      h = video.yscale >> FRACBITS;
+      h = video.y2lookup[SCREENHEIGHT - 1] - video.y1lookup[SCREENHEIGHT - 1] + 1;
 
       for (i=0 ; i < tics * 2 ; i += 2)
       {
          offset = baseoffset;
          y = h;
-         x = (i * video.xscale) >> FRACBITS;
+         x = video.x1lookup[i];
+         w = video.x2lookup[i] - video.x1lookup[i] + 1;
          while(y--)
          {
             memset(s + offset + x, 0xff, w);
@@ -644,7 +640,8 @@ void V_ClassicFPSDrawer(void)
       {
          offset = baseoffset;
          y = h;
-         x = (i * video.xscale) >> FRACBITS;
+         x = video.x1lookup[i];
+         w = video.x2lookup[i] - video.x1lookup[i] + 1;
          while(y--)
          {
             memset(s + offset + x, 0x0, w);
@@ -717,8 +714,10 @@ static void V_InitScreenVBuffer(void)
    vbscreen.width  = video.width;
    vbscreen.height = video.height;
    vbscreen.pitch  = video.width; // TODO: fix to allow direct drawing!
-   vbscreen.xslookup = realxarray;
-   vbscreen.yslookup = realyarray;
+   vbscreen.x1lookup = video.x1lookup;
+   vbscreen.y1lookup = video.y1lookup;
+   vbscreen.x2lookup = video.x2lookup;
+   vbscreen.y2lookup = video.y2lookup;
    vbscreen.ixscale = video.xstep;
    vbscreen.iyscale = video.ystep;
    

@@ -48,8 +48,10 @@ typedef struct VBuffer_s
    void (*BlockDrawer)(int, int, struct VBuffer_s *, int, int, byte *);
    void (*TileBlock64)(struct VBuffer_s *, byte *);
 
-   int  *xslookup;
-   int  *yslookup;
+   int  *x1lookup;
+   int  *y1lookup;
+   int  *x2lookup;
+   int  *y2lookup;
    fixed_t ixscale;
    fixed_t iyscale;
 } VBuffer;
@@ -78,6 +80,34 @@ enum
 };
 
 void V_SetupBufferFuncs(VBuffer *buffer, int drawtype);
+
+
+
+// SoM: In my continual effort to weed out multiple column drawers I discovered the new patch
+// system is derrived from the old screen sprite code. I've cleaned it up a bit.
+typedef struct
+{
+   int x;
+   int y1, y2;
+
+   fixed_t texmid, frac, step;
+   fixed_t centery, centeryfrac;
+   fixed_t centerx, centerxfrac;
+
+   byte *source, *translation;
+
+   // haleyjd 06/21/06: vc_maxfrac: this variable keeps track of the length of the
+   // column currently being drawn and allows the V_DrawPatchColumn variants to cap
+   // "frac" to this value and avoid the "sparkles" phenomenon, which for screen
+   // patches is quite terrible when it does occur
+   // SoM: Let's see if we can get rid of this...
+   fixed_t maxfrac;
+
+   VBuffer *buffer;
+
+   void (*colfunc)();
+} cb_patch_column_t; // It's cardboard now, bitches!
+
 
 #endif
 

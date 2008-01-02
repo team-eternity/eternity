@@ -318,9 +318,11 @@ static void MN_FileDrawer(void)
    w = bright - bleft + 1;
 
    // draw color rect -- must manually scale coordinates
+   // SoM: w = x2 - x1 + 1
    V_ColorBlock(&vbscreen, gameModeInfo->blackIndex,
-                realxarray[bleft], realyarray[btop], 
-                realxarray[w],     realyarray[h]);
+                video.x1lookup[bleft], video.y1lookup[btop], 
+                video.x2lookup[bleft + w - 1] - video.x1lookup[bleft] + 1,
+                video.y2lookup[btop + h - 1] - video.y1lookup[btop] + 1);
 
    // draw the dialog title
    if(help_description)

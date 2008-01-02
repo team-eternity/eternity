@@ -407,6 +407,7 @@ void R_SetViewSize(int blocks, int detail)
 void R_SetupViewScaling(void)
 {
    int i;
+   fixed_t ycenter = video.height << (FRACBITS - 1);
    // SoM: ANYRES
    // Moved stuff, reformatted a bit
    // haleyjd 04/03/05: removed unnecessary FixedDiv calls
@@ -421,15 +422,6 @@ void R_SetupViewScaling(void)
    video.yscalef = (float)video.height / SCREENHEIGHT;
    video.ystepf  = SCREENHEIGHT / (float)video.height;
 
-   realxarray[320] = video.width;
-   realyarray[200] = video.height;
-
-   for(i = 0; i < 320; ++i)
-      realxarray[i] = (i * video.xscale) >> FRACBITS;
-
-   for(i = 0; i < 200; ++i)
-      realyarray[i] = (i * video.yscale) >> FRACBITS;
-
    // SoM: ok, assemble the realx1/x2 arrays differently. To start, we are using floats
    // to do the scaling which is 100 times more accurate, secondly, I realized that the
    // reason the old single arrays were causing problems was they was only calculating the 
@@ -439,21 +431,22 @@ void R_SetupViewScaling(void)
    // coords, scaled, and then converted back to x, y, w, h
    for(i = 0; i < 319; i++)
    {
-      video.x1lookup[i] = (int)(i * video.xscalef);
-      video.x2lookup[i] = (int)((i + 1) * video.xscalef) - 1;
+      video.x1lookup[i] = (i * video.xscale) >> FRACBITS;
+      video.x2lookup[i] = (((i + 1) * video.xscale) >> FRACBITS) - 1;
    }
-   video.x1lookup[i] = (int)(i * video.xscalef);
+   video.x1lookup[i] = (i * video.xscale) >> FRACBITS;
    video.x2lookup[i] = video.width - 1;
    video.x1lookup[320] = video.x2lookup[320] = video.width;
 
+
    for(i = 0; i < 199; i++)
    {
-      video.y1lookup[i] = (int)(i * video.yscalef);
-      video.y2lookup[i] = (int)((i + 1) * video.yscalef) - 1;
+      video.y1lookup[i] = (ycenter + ((i - 100) * video.yscale)) >> FRACBITS;
+      video.y2lookup[i] = ((ycenter + ((i - 99) * video.yscale)) >> FRACBITS) - 1;
    }
-   video.y1lookup[i] = (int)(i * video.yscalef);
+   video.y1lookup[i] = (ycenter + ((i - 100) * video.yscale)) >> FRACBITS;
    video.y2lookup[i] = video.height - 1;
-   video.x1lookup[200] = video.x2lookup[200] = video.height;
+   video.y1lookup[200] = video.y2lookup[200] = video.height;
 
 
    if(setblocks == 11)
@@ -465,10 +458,21 @@ void R_SetupViewScaling(void)
    }
    else
    {
+      int x1, x2, y1, y2;
+
       scaledviewwidth  = setblocks * 32;
       scaledviewheight = (setblocks * 168 / 10) & ~7;     // killough 11/98
-      viewwidth  = realxarray[scaledviewwidth] >> detailshift; // haleyjd 09/10/06
-      viewheight = realyarray[scaledviewheight];
+
+      // SoM: phased out realxarray in favor of the *lookup tables.
+      // w = x2 - x1 + 1
+      x1 = (SCREENWIDTH - scaledviewwidth) >> 1;
+      x2 = x1 + scaledviewwidth - 1;
+
+      y1 = (SCREENHEIGHT - gameModeInfo->StatusBar->height - scaledviewheight) >> 1;
+      y2 = y1 + scaledviewheight - 1;
+
+      viewwidth  = (video.x2lookup[x2] - video.x1lookup[x1] + 1) >> detailshift; // haleyjd 09/10/06
+      viewheight = video.y2lookup[y2] - video.y1lookup[y1] + 1;
    }
 
    centerx     = viewwidth  / 2;

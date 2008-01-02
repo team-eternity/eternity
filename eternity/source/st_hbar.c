@@ -241,10 +241,10 @@ static void ST_shadowLineHi(int x, int y, int len,
    int mapnum, p, realx, realy;
 
    // start at origin of line
-   realx = realxarray[x];
-   realy = realyarray[y];
+   realx = video.x1lookup[x];
+   realy = video.y1lookup[y];
    dest = video.screens[0] + realy * video.width + realx;
-   len = realxarray[x + len] - realx;
+   len = video.x2lookup[x + len - 1] - realx + 1;
    mapnum = startmap << FRACBITS;
    mapstep *= video.ystep >> 1;
 

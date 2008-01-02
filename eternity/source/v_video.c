@@ -245,17 +245,17 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
    {
       int realx, realy, realw, realh;
 
-      realx = realxarray[srcx];
-      realy = realyarray[srcy];
+      realx = video.x1lookup[srcx];
+      realy = video.y1lookup[srcy];
       src = video.screens[srcscrn] + video.width * realy + realx;
 
-      realx = realxarray[destx];
-      realy = realyarray[desty];
+      realx = video.x1lookup[destx];
+      realy = video.y1lookup[desty];
       dest = video.screens[destscrn] + video.width * realy + realx;
 
       // I HOPE this will not extend the array bounds HEHE
-      realw = realxarray[width + destx] - realx;
-      realh = realyarray[height + desty] - realy;
+      realw = video.x2lookup[width + destx - 1] - realx + 1;
+      realh = video.y2lookup[height + desty - 1] - realy + 1;
 
       while(realh--)
       {
@@ -573,11 +573,11 @@ void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
    // SoM 1-30-04: ANYRES
    if(video.yscale > FRACUNIT)
    {
-      x = realxarray[x];
-      height = (height * video.yscale) >> FRACBITS;
+      width = video.x2lookup[x + width - 1] - video.x1lookup[x] + 1;
+      x = video.x1lookup[x];
 
-      y = realyarray[y];
-      width = (width * video.xscale) >> FRACBITS;
+      height = video.y2lookup[y + height - 1] - video.y1lookup[y] + 1;
+      y = video.y1lookup[y];
    }
 
    src = video.screens[scrn] + y * video.width + x;

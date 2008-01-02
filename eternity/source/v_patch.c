@@ -27,32 +27,12 @@
 #include "v_video.h"
 
 // patch rendering globals -- like dc_ in r_draw.c
-static VBuffer *vc_buffer;
-static int vc_x;
-static int vc_yl;
-static int vc_yh;
-static fixed_t vc_iscale;
-static fixed_t vc_texturemid;
-static int vc_centery;
-static fixed_t vc_centeryfrac;
-static int vc_centerx;
-static fixed_t vc_centerxfrac;
-// haleyjd 06/21/06: removed unused vc_texheight
-static byte *vc_source;
-static void (*vc_colfunc)();
-
-// haleyjd 06/21/06: vc_maxfrac: this variable keeps track of the length of the
-// column currently being drawn and allows the V_DrawPatchColumn variants to cap
-// "frac" to this value and avoid the "sparkles" phenomenon, which for screen
-// patches is quite terrible when it does occur
-static fixed_t vc_maxfrac;
+// SoM: AAAHHHHHHH
+static cb_patch_column_t patchcol;
 
 // translucency lookups
 static unsigned int *v_fg2rgb;
 static unsigned int *v_bg2rgb;
-
-// translation table
-static byte *vc_translation;
 
 //
 // V_DrawPatchColumn
@@ -66,24 +46,24 @@ static void V_DrawPatchColumn(void)
    register fixed_t frac;     // killough
    fixed_t          fracstep;
    
-   if((count = vc_yh - vc_yl + 1) <= 0)
+   if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
-      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
-      I_Error("V_DrawPatchColumn: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
+      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+      I_Error("V_DrawPatchColumn: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    // Framebuffer destination address.
    // haleyjd: no ylookup or columnofs here due to ability to draw to
    // arbitrary buffers -- would probably use too much memory.
-   dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
+   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale;
-   frac = vc_texturemid + 
-      FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
+   fracstep = patchcol.step;
+   frac = patchcol.texmid + 
+      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
 
    // Inner loop that does the actual texture mapping,
    //  e.g. a DDA-lile scaling.
@@ -93,27 +73,27 @@ static void V_DrawPatchColumn(void)
    // haleyjd 06/21/06: rewrote and specialized for screen patches
 
    {
-      register const byte *source = vc_source;
+      register const byte *source = patchcol.source;
       
       if(frac < 0)
          frac = 0;
-      if(frac > vc_maxfrac)
-         frac = vc_maxfrac;
+      if(frac > patchcol.maxfrac)
+         frac = patchcol.maxfrac;
       
       while((count -= 2) >= 0)
       {
          *dest = source[frac >> FRACBITS];
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
          *dest = source[frac >> FRACBITS];
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
       }
@@ -134,24 +114,24 @@ static void V_DrawPatchColumnTR(void)
    register fixed_t frac;     // killough
    fixed_t          fracstep;
    
-   if((count = vc_yh - vc_yl + 1) <= 0)
+   if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
-      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
-      I_Error("V_DrawPatchColumnTR: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
+      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+      I_Error("V_DrawPatchColumnTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    // Framebuffer destination address.
    // haleyjd: no ylookup or columnofs here due to ability to draw to
    // arbitrary buffers -- would probably use too much memory.
-   dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
+   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale;
-   frac = vc_texturemid + 
-      FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
+   fracstep = patchcol.step;
+   frac = patchcol.texmid + 
+      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
 
    // Inner loop that does the actual texture mapping,
    //  e.g. a DDA-lile scaling.
@@ -161,32 +141,32 @@ static void V_DrawPatchColumnTR(void)
    // haleyjd 06/21/06: rewrote and specialized for screen patches
 
    {
-      register const byte *source = vc_source;
+      register const byte *source = patchcol.source;
       
       if(frac < 0)
          frac = 0;
-      if(frac > vc_maxfrac)
-         frac = vc_maxfrac;
+      if(frac > patchcol.maxfrac)
+         frac = patchcol.maxfrac;
       
       while((count -= 2) >= 0)
       {
-         *dest = vc_translation[source[frac >> FRACBITS]];
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         *dest = patchcol.translation[source[frac >> FRACBITS]];
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
-         *dest = vc_translation[source[frac >> FRACBITS]];
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         *dest = patchcol.translation[source[frac >> FRACBITS]];
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
       }
       if(count & 1)
-         *dest = vc_translation[source[frac >> FRACBITS]];
+         *dest = patchcol.translation[source[frac >> FRACBITS]];
    }
 } 
 
@@ -210,51 +190,51 @@ void V_DrawPatchColumnTL(void)
    fixed_t          fracstep;
    unsigned int     fg, bg;
    
-   if((count = vc_yh - vc_yl + 1) <= 0)
+   if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
-      (unsigned)vc_yl >= (unsigned) vc_buffer->height) 
-      I_Error("V_DrawPatchColumnTL: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
+      (unsigned)patchcol.y1 >= (unsigned) patchcol.buffer->height) 
+      I_Error("V_DrawPatchColumnTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    // Framebuffer destination address.
    // haleyjd: no ylookup or columnofs here due to ability to draw to
    // arbitrary buffers -- would probably use too much memory.
-   dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
+   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale;
-   frac = vc_texturemid + 
-      FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
+   fracstep = patchcol.step;
+   frac = patchcol.texmid + 
+      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = vc_source;
+      register const byte *source = patchcol.source;
       
       if(frac < 0)
          frac = 0;
-      if(frac > vc_maxfrac)
-         frac = vc_maxfrac;
+      if(frac > patchcol.maxfrac)
+         frac = patchcol.maxfrac;
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
 
          DO_COLOR_BLEND();
 
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
       }
@@ -268,7 +248,7 @@ void V_DrawPatchColumnTL(void)
 #undef DO_COLOR_BLEND
 
 #define DO_COLOR_BLEND()          \
-   fg = v_fg2rgb[vc_translation[source[frac >> FRACBITS]]]; \
+   fg = v_fg2rgb[patchcol.translation[source[frac >> FRACBITS]]]; \
    bg = v_bg2rgb[*dest];          \
    fg = (fg + bg) | 0xF07C3E1F;   \
    *dest = RGB8k[0][0][(fg >> 5) & (fg >> 19)]
@@ -287,51 +267,51 @@ void V_DrawPatchColumnTRTL(void)
    fixed_t          fracstep;
    unsigned int     fg, bg;
    
-   if((count = vc_yh - vc_yl + 1) <= 0)
+   if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
-      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
-      I_Error("V_DrawPatchColumnTRTL: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
+      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+      I_Error("V_DrawPatchColumnTRTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    // Framebuffer destination address.
    // haleyjd: no ylookup or columnofs here due to ability to draw to
    // arbitrary buffers -- would probably use too much memory.
-   dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
+   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale; 
-   frac = vc_texturemid + 
-      FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
+   fracstep = patchcol.step; 
+   frac = patchcol.texmid + 
+      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = vc_source;
+      register const byte *source = patchcol.source;
       
       if(frac < 0)
          frac = 0;
-      if(frac > vc_maxfrac)
-         frac = vc_maxfrac;
+      if(frac > patchcol.maxfrac)
+         frac = patchcol.maxfrac;
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
 
          DO_COLOR_BLEND();
 
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
       }
@@ -369,51 +349,51 @@ void V_DrawPatchColumnAdd(void)
    fixed_t          fracstep;
    unsigned int     a, b;
    
-   if((count = vc_yh - vc_yl + 1) <= 0)
+   if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
-      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
-      I_Error("V_DrawPatchColumnAdd: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
+      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+      I_Error("V_DrawPatchColumnAdd: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    // Framebuffer destination address.
    // haleyjd: no ylookup or columnofs here due to ability to draw to
    // arbitrary buffers -- would probably use too much memory.
-   dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
+   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale; 
-   frac = vc_texturemid + 
-      FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
+   fracstep = patchcol.step; 
+   frac = patchcol.texmid + 
+      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = vc_source;
+      register const byte *source = patchcol.source;
       
       if(frac < 0)
          frac = 0;
-      if(frac > vc_maxfrac)
-         frac = vc_maxfrac;
+      if(frac > patchcol.maxfrac)
+         frac = patchcol.maxfrac;
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
 
          DO_COLOR_BLEND();
 
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
       }
@@ -428,7 +408,7 @@ void V_DrawPatchColumnAdd(void)
 
 #define DO_COLOR_BLEND() \
    /* mask out LSBs in green and red to allow overflow */ \
-   a = v_fg2rgb[vc_translation[source[frac >> FRACBITS]]] & 0xFFBFDFF; \
+   a = v_fg2rgb[patchcol.translation[source[frac >> FRACBITS]]] & 0xFFBFDFF; \
    b = v_bg2rgb[*dest] & 0xFFBFDFF;   \
    a  = a + b;                      /* add with overflow         */ \
    b  = a & 0x10040200;             /* isolate LSBs              */ \
@@ -451,51 +431,51 @@ void V_DrawPatchColumnAddTR(void)
    fixed_t          fracstep;
    unsigned int     a, b;
    
-   if((count = vc_yh - vc_yl + 1) <= 0)
+   if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)vc_x  >= (unsigned)vc_buffer->width || 
-      (unsigned)vc_yl >= (unsigned)vc_buffer->height) 
-      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i", vc_yl, vc_yh, vc_x); 
+   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
+      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    // Framebuffer destination address.
    // haleyjd: no ylookup or columnofs here due to ability to draw to
    // arbitrary buffers -- would probably use too much memory.
-   dest = vc_buffer->data + vc_yl * vc_buffer->pitch + vc_x;
+   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
 
    // Determine scaling, which is the only mapping to be done.
-   fracstep = vc_iscale; 
-   frac = vc_texturemid + 
-      FixedMul((vc_yl << FRACBITS) - vc_centeryfrac, fracstep);
+   fracstep = patchcol.step; 
+   frac = patchcol.texmid + 
+      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = vc_source;
+      register const byte *source = patchcol.source;
       
       if(frac < 0)
          frac = 0;
-      if(frac > vc_maxfrac)
-         frac = vc_maxfrac;
+      if(frac > patchcol.maxfrac)
+         frac = patchcol.maxfrac;
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
          
          DO_COLOR_BLEND();
          
-         dest += vc_buffer->pitch;
-         if((frac += fracstep) > vc_maxfrac)
+         dest += patchcol.buffer->pitch;
+         if((frac += fracstep) > patchcol.maxfrac)
          {
-            frac = vc_maxfrac;
+            frac = patchcol.maxfrac;
             fracstep = 0;
          }
       }
@@ -514,7 +494,7 @@ static fixed_t v_spryscale;
 static void V_DrawMaskedColumn(column_t *column)
 {
    int topscreen, bottomscreen;
-   fixed_t basetexturemid = vc_texturemid;
+   fixed_t basetexturemid = patchcol.texmid;
  
    // haleyjd 06/21/06: this isn't used any more
    // vc_texheight = 0; // killough 11/98
@@ -530,29 +510,29 @@ static void V_DrawMaskedColumn(column_t *column)
       // which for most screen patches look more like mud. Note this solution
       // probably isn't suitable for adaptation to the R_DrawColumn system
       // due to efficiency concerns.
-      vc_maxfrac = (column->length - 1) << FRACBITS;
+      patchcol.maxfrac = (column->length - 1) << FRACBITS;
 
       // Here's where "sparkles" come in -- killough:
-      // haleyjd: but not with vc_maxfrac :)
-      vc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
-      vc_yh = (bottomscreen - 1) >> FRACBITS;
+      // haleyjd: but not with patchcol.maxfrac :)
+      patchcol.y1 = (topscreen + FRACUNIT - 1) >> FRACBITS;
+      patchcol.y2 = (bottomscreen - 1) >> FRACBITS;
 
-      if(vc_yh >= vc_buffer->height)
-         vc_yh = vc_buffer->height - 1;
+      if(patchcol.y2 >= patchcol.buffer->height)
+         patchcol.y2 = patchcol.buffer->height - 1;
       
-      if(vc_yl < 0)
-         vc_yl = 0;
+      if(patchcol.y1 < 0)
+         patchcol.y1 = 0;
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-      if(vc_yl <= vc_yh && vc_yh < vc_buffer->height)
+      if(patchcol.y1 <= patchcol.y2 && patchcol.y2 < patchcol.buffer->height)
       {
-         vc_source = (byte *)column + 3;
-         vc_texturemid = basetexturemid - (column->topdelta << FRACBITS);
-         vc_colfunc();
+         patchcol.source = (byte *)column + 3;
+         patchcol.texmid = basetexturemid - (column->topdelta << FRACBITS);
+         patchcol.colfunc();
       }
       column = (column_t *)((byte *)column + column->length + 4);
    }
-   vc_texturemid = basetexturemid;
+   patchcol.texmid = basetexturemid;
 }
 
 //
@@ -566,20 +546,15 @@ static void V_DrawMaskedColumn(column_t *column)
 //
 void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 {
-   fixed_t    tx;
-   int        x1, x2, vc_x2;
+   int        x1, x2;
    fixed_t    scale, iscale, xiscale, startfrac = 0;
    patch_t    *patch = pi->patch;
    
-   vc_buffer      = buffer;
-   vc_centerx     = vc_buffer->width  >> 1;
-   vc_centerxfrac = vc_centerx << FRACBITS;
-   vc_centery     = vc_buffer->height >> 1;
-   vc_centeryfrac = vc_centery << FRACBITS;
-
-   // calculate edges of the shape
-   tx =  pi->x << FRACBITS;
-   tx -= (SHORT(patch->leftoffset) << FRACBITS);
+   patchcol.buffer      = buffer;
+   patchcol.centerx     = patchcol.buffer->width  >> 1;
+   patchcol.centerxfrac = patchcol.centerx << FRACBITS;
+   patchcol.centery     = patchcol.buffer->height >> 1;
+   patchcol.centeryfrac = patchcol.centery << FRACBITS;
 
    // haleyjd 10/01/06: round up the inverse scaling factors by 1/65536. This
    // ensures that fracstep steps up to the next pixel just fast enough to
@@ -587,21 +562,21 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    // not accurately represented in fixed point (ie. should be 0.333...).
    // The error is one pixel per every 65536, so it's totally irrelevant.
 
-   scale  = FixedDiv(vc_buffer->width, SCREENWIDTH);
-   iscale = FixedDiv(SCREENWIDTH, vc_buffer->width) + 1;
+   scale  = FixedDiv(patchcol.buffer->width, SCREENWIDTH);
+   iscale = FixedDiv(SCREENWIDTH, patchcol.buffer->width) + 1;
 
    // haleyjd 06/21/06: simplified redundant math
-   v_spryscale = FixedDiv(vc_buffer->height, SCREENHEIGHT);
-   vc_iscale   = FixedDiv(SCREENHEIGHT, vc_buffer->height) + 1;
+   v_spryscale = FixedDiv(patchcol.buffer->height, SCREENHEIGHT);
+   patchcol.step = FixedDiv(SCREENHEIGHT, patchcol.buffer->height) + 1;
    
-   x1 = FixedMul(tx, scale) >> FRACBITS;
+   // calculate edges of the shape
+   x1 = buffer->x1lookup[pi->x - SHORT(patch->leftoffset)];
 
    // off the right side
-   if(x1 > vc_buffer->width)
+   if(x1 > patchcol.buffer->width)
       return;
 
-   tx += SHORT(patch->width) << FRACBITS;
-   x2 = (FixedMul(tx, scale) >> FRACBITS) - 1;
+   x2 = buffer->x2lookup[pi->x - SHORT(patch->leftoffset) + SHORT(patch->width) - 1];
 
    // off the left side
    if(x2 < 0)
@@ -614,11 +589,15 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       x2 = buffer->width - tmpx;
    }
 
-   vc_texturemid = (100 << FRACBITS) -
+   patchcol.texmid = (100 << FRACBITS) -
                     ((pi->y - SHORT(patch->topoffset)) << FRACBITS);
 
-   vc_x  = x1 < 0 ? 0 : x1;
-   vc_x2 = x2 >= buffer->width ? buffer->width - 1 : x2;
+   patchcol.x  = x1 < 0 ? 0 : x1;
+   x2 = x2 >= buffer->width ? buffer->width - 1 : x2;
+   // SoM: Any time clipping occurs on screen coords, the resulting clipped coords should be
+   // checked to make sure we are still on screen.
+   if(x2 < x1)
+      return;
 
    if(pi->flipped)
    {
@@ -628,8 +607,8 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    else
       xiscale   = iscale;
 
-   if(vc_x > x1)
-      startfrac += xiscale * (vc_x - x1);
+   if(patchcol.x > x1)
+      startfrac += xiscale * (patchcol.x - x1);
 
    {
       column_t *column;
@@ -638,30 +617,30 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       switch(pi->drawstyle)
       {
       case PSTYLE_NORMAL:
-         vc_colfunc = V_DrawPatchColumn;
+         patchcol.colfunc = V_DrawPatchColumn;
          break;
       case PSTYLE_TLATED:
-         vc_colfunc = V_DrawPatchColumnTR;
+         patchcol.colfunc = V_DrawPatchColumnTR;
          break;
       case PSTYLE_TRANSLUC:
-         vc_colfunc = V_DrawPatchColumnTL;
+         patchcol.colfunc = V_DrawPatchColumnTL;
          break;
       case PSTYLE_TLTRANSLUC:
-         vc_colfunc = V_DrawPatchColumnTRTL;
+         patchcol.colfunc = V_DrawPatchColumnTRTL;
          break;
       case PSTYLE_ADD:
-         vc_colfunc = V_DrawPatchColumnAdd;
+         patchcol.colfunc = V_DrawPatchColumnAdd;
          break;
       case PSTYLE_TLADD:
-         vc_colfunc = V_DrawPatchColumnAddTR;
+         patchcol.colfunc = V_DrawPatchColumnAddTR;
          break;
       default:
          I_Error("V_DrawPatchInt: unknown patch drawstyle %d\n", pi->drawstyle);
       }
 
-      v_sprtopscreen = vc_centeryfrac - FixedMul(vc_texturemid, v_spryscale);
+      v_sprtopscreen = patchcol.centeryfrac - FixedMul(patchcol.texmid, v_spryscale);
       
-      for(; vc_x <= vc_x2; vc_x++, startfrac += xiscale)
+      for(; patchcol.x <= x2; patchcol.x++, startfrac += xiscale)
       {
          texturecolumn = startfrac >> FRACBITS;
          
@@ -679,7 +658,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 
 void V_SetPatchColrng(byte *colrng)
 {
-   vc_translation = colrng;
+   patchcol.translation = colrng;
 }
 
 void V_SetPatchTL(unsigned int *fg, unsigned int *bg)

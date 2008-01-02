@@ -122,9 +122,6 @@ typedef struct
    int y2lookup[201];
 } cb_video_t;
 
-extern int realxarray[321];
-extern int realyarray[201];
-
 extern cb_video_t video;
 
 #define SCREENWIDTH      320
