@@ -90,9 +90,7 @@ typedef struct
    int x;
    int y1, y2;
 
-   fixed_t texmid, frac, step;
-   fixed_t centery, centeryfrac;
-   fixed_t centerx, centerxfrac;
+   fixed_t frac, step;
 
    byte *source, *translation;
 

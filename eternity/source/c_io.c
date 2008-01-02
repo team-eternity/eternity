@@ -464,18 +464,20 @@ void C_Drawer(void)
 {
    int y;
    int count;
-   int real_height = (current_height * video.yscale) >> FRACBITS;
+   int real_height = video.y2lookup[current_height - 1] + 1;
    static int oldscreenheight = 0;
+   static int oldscreenwidth = 0;
    
    if(!consoleactive) 
       return;   // dont draw if not active
 
    // Check for change in screen res
-   
-   if(oldscreenheight != C_SCREENHEIGHT)
+   // SoM: Check width too.
+   if(oldscreenheight != C_SCREENHEIGHT || oldscreenwidth != C_SCREENWIDTH)
    {
       C_initBackdrop();       // re-init to the new screen size
       oldscreenheight = C_SCREENHEIGHT;
+      oldscreenwidth = C_SCREENWIDTH;
    }
 
    // fullscreen console for fullscreen mode

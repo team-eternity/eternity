@@ -1105,8 +1105,9 @@ void R_InitBuffer(int width, int height)
    // Handle resize,
    //  e.g. smaller view windows
    //  with border and/or status bar.
-   viewwindowx = (video.width-tviewwidth) >> 1;
+   //viewwindowx = (video.width-tviewwidth) >> 1;
    scaledwindowx = (SCREENWIDTH - width) >> 1;
+   viewwindowx = video.x1lookup[scaledwindowx];
    // Column offset. For windows.
    for (i = tviewwidth ; i--; )   // killough 11/98
       columnofs[i] = viewwindowx + i;
@@ -1118,8 +1119,8 @@ void R_InitBuffer(int width, int height)
       viewwindowy = scaledwindowy = 0;
    else
    {
-      viewwindowy = (video.height - ((st_height * video.yscale) >> FRACBITS) - viewheight) >> 1;
       scaledwindowy = (SCREENHEIGHT - st_height - height) >> 1;
+      viewwindowy = video.y1lookup[scaledwindowy];
    }
    
    // Precalculate all row offsets.

@@ -29,6 +29,7 @@
 // patch rendering globals -- like dc_ in r_draw.c
 // SoM: AAAHHHHHHH
 static cb_patch_column_t patchcol;
+static int ytop, columntop;
 
 // translucency lookups
 static unsigned int *v_fg2rgb;
@@ -62,8 +63,7 @@ static void V_DrawPatchColumn(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
-   frac = patchcol.texmid + 
-      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
+   frac = (patchcol.y1 * fracstep) & 0xFFFF;
 
    // Inner loop that does the actual texture mapping,
    //  e.g. a DDA-lile scaling.
@@ -130,8 +130,7 @@ static void V_DrawPatchColumnTR(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
-   frac = patchcol.texmid + 
-      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
+   frac = (patchcol.y1 * fracstep) & 0xFFFF;
 
    // Inner loop that does the actual texture mapping,
    //  e.g. a DDA-lile scaling.
@@ -206,8 +205,7 @@ void V_DrawPatchColumnTL(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
-   frac = patchcol.texmid + 
-      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
+   frac = (patchcol.y1 * fracstep) & 0xFFFF;
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -283,8 +281,7 @@ void V_DrawPatchColumnTRTL(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
-   frac = patchcol.texmid + 
-      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
+   frac = (patchcol.y1 * fracstep) & 0xFFFF;
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -365,8 +362,7 @@ void V_DrawPatchColumnAdd(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
-   frac = patchcol.texmid + 
-      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
+   frac = (patchcol.y1 * fracstep) & 0xFFFF;
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -447,8 +443,7 @@ void V_DrawPatchColumnAddTR(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
-   frac = patchcol.texmid + 
-      FixedMul((patchcol.y1 << FRACBITS) - patchcol.centeryfrac, fracstep);
+   frac = (patchcol.y1 * fracstep) & 0xFFFF;
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -488,22 +483,16 @@ void V_DrawPatchColumnAddTR(void)
 
 #undef DO_COLOR_BLEND
 
-static fixed_t v_sprtopscreen;
 static fixed_t v_spryscale;
 
 static void V_DrawMaskedColumn(column_t *column)
 {
-   int topscreen, bottomscreen;
-   fixed_t basetexturemid = patchcol.texmid;
- 
    // haleyjd 06/21/06: this isn't used any more
    // vc_texheight = 0; // killough 11/98
 
    while(column->topdelta != 0xff)
    {
       // calculate unclipped screen coordinates for post
-      topscreen = v_sprtopscreen + v_spryscale * column->topdelta;
-      bottomscreen = topscreen + v_spryscale * column->length;
 
       // haleyjd 06/21/06: calculate the maximum allowed value for the frac
       // column index; this avoids potential overflow leading to "sparkles",
@@ -514,8 +503,9 @@ static void V_DrawMaskedColumn(column_t *column)
 
       // Here's where "sparkles" come in -- killough:
       // haleyjd: but not with patchcol.maxfrac :)
-      patchcol.y1 = (topscreen + FRACUNIT - 1) >> FRACBITS;
-      patchcol.y2 = (bottomscreen - 1) >> FRACBITS;
+      columntop = ytop + column->topdelta;
+      patchcol.y1 = patchcol.buffer->y1lookup[columntop];
+      patchcol.y2 = patchcol.buffer->y2lookup[columntop + column->length - 1];
 
       if(patchcol.y2 >= patchcol.buffer->height)
          patchcol.y2 = patchcol.buffer->height - 1;
@@ -527,12 +517,10 @@ static void V_DrawMaskedColumn(column_t *column)
       if(patchcol.y1 <= patchcol.y2 && patchcol.y2 < patchcol.buffer->height)
       {
          patchcol.source = (byte *)column + 3;
-         patchcol.texmid = basetexturemid - (column->topdelta << FRACBITS);
          patchcol.colfunc();
       }
       column = (column_t *)((byte *)column + column->length + 4);
    }
-   patchcol.texmid = basetexturemid;
 }
 
 //
@@ -546,15 +534,11 @@ static void V_DrawMaskedColumn(column_t *column)
 //
 void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 {
-   int        x1, x2;
+   int        x1, x2, tx;
    fixed_t    scale, iscale, xiscale, startfrac = 0;
    patch_t    *patch = pi->patch;
    
    patchcol.buffer      = buffer;
-   patchcol.centerx     = patchcol.buffer->width  >> 1;
-   patchcol.centerxfrac = patchcol.centerx << FRACBITS;
-   patchcol.centery     = patchcol.buffer->height >> 1;
-   patchcol.centeryfrac = patchcol.centery << FRACBITS;
 
    // haleyjd 10/01/06: round up the inverse scaling factors by 1/65536. This
    // ensures that fracstep steps up to the next pixel just fast enough to
@@ -562,21 +546,22 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    // not accurately represented in fixed point (ie. should be 0.333...).
    // The error is one pixel per every 65536, so it's totally irrelevant.
 
-   scale  = FixedDiv(patchcol.buffer->width, SCREENWIDTH);
-   iscale = FixedDiv(SCREENWIDTH, patchcol.buffer->width) + 1;
+   scale = video.xscale;
+   iscale = video.xstep;
 
    // haleyjd 06/21/06: simplified redundant math
-   v_spryscale = FixedDiv(patchcol.buffer->height, SCREENHEIGHT);
-   patchcol.step = FixedDiv(SCREENHEIGHT, patchcol.buffer->height) + 1;
-   
+   v_spryscale = video.yscale;
+   patchcol.step = video.ystep;
+
    // calculate edges of the shape
-   x1 = buffer->x1lookup[pi->x - SHORT(patch->leftoffset)];
+   tx = pi->x - SHORT(patch->leftoffset);
+   x1 = buffer->x1lookup[tx];
 
    // off the right side
    if(x1 > patchcol.buffer->width)
       return;
 
-   x2 = buffer->x2lookup[pi->x - SHORT(patch->leftoffset) + SHORT(patch->width) - 1];
+   x2 = buffer->x2lookup[tx + SHORT(patch->width) - 1];
 
    // off the left side
    if(x2 < 0)
@@ -589,9 +574,6 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       x2 = buffer->width - tmpx;
    }
 
-   patchcol.texmid = (100 << FRACBITS) -
-                    ((pi->y - SHORT(patch->topoffset)) << FRACBITS);
-
    patchcol.x  = x1 < 0 ? 0 : x1;
    x2 = x2 >= buffer->width ? buffer->width - 1 : x2;
    // SoM: Any time clipping occurs on screen coords, the resulting clipped coords should be
@@ -599,10 +581,12 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    if(x2 < x1)
       return;
 
+   startfrac = (x1 * iscale) & 0xffff;
+
    if(pi->flipped)
    {
       xiscale   = -iscale;
-      startfrac = (SHORT(patch->width) << FRACBITS) - 1;
+      startfrac += (x2 - x1) * iscale;
    }
    else
       xiscale   = iscale;
@@ -638,7 +622,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          I_Error("V_DrawPatchInt: unknown patch drawstyle %d\n", pi->drawstyle);
       }
 
-      v_sprtopscreen = patchcol.centeryfrac - FixedMul(patchcol.texmid, v_spryscale);
+      ytop = pi->y - SHORT(patch->topoffset);
       
       for(; patchcol.x <= x2; patchcol.x++, startfrac += xiscale)
       {

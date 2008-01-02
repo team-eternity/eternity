@@ -407,15 +407,15 @@ void R_SetViewSize(int blocks, int detail)
 void R_SetupViewScaling(void)
 {
    int i;
-   fixed_t ycenter = video.height << (FRACBITS - 1);
+   fixed_t frac = 0, lastfrac;
    // SoM: ANYRES
    // Moved stuff, reformatted a bit
    // haleyjd 04/03/05: removed unnecessary FixedDiv calls
 
    video.xscale  = (video.width << FRACBITS) / SCREENWIDTH;
-   video.xstep   = (SCREENWIDTH << FRACBITS) / video.width;
+   video.xstep   = ((SCREENWIDTH << FRACBITS) / video.width) + 1;
    video.yscale  = (video.height << FRACBITS) / SCREENHEIGHT;
-   video.ystep   = (SCREENHEIGHT << FRACBITS) / video.height;
+   video.ystep   = ((SCREENHEIGHT << FRACBITS) / video.height) + 1;
 
    video.xscalef = (float)video.width / SCREENWIDTH;
    video.xstepf  = SCREENWIDTH / (float)video.width;
@@ -429,25 +429,38 @@ void R_SetupViewScaling(void)
    // because the scaling will change the final scaled widths depending on what their unscaled
    // screen coords were. Thusly, all rectangles should be converted to unscaled x1, y1, x2, y2
    // coords, scaled, and then converted back to x, y, w, h
-   for(i = 0; i < 319; i++)
+   video.x1lookup[0] = 0;
+   lastfrac = frac = 0;
+   for(i = 0; i < video.width; i++)
    {
-      video.x1lookup[i] = (i * video.xscale) >> FRACBITS;
-      video.x2lookup[i] = (((i + 1) * video.xscale) >> FRACBITS) - 1;
+      if(frac >> FRACBITS > lastfrac >> FRACBITS)
+      {
+         video.x1lookup[frac >> FRACBITS] = i;
+         video.x2lookup[lastfrac >> FRACBITS] = i-1;
+         lastfrac = frac;
+      }
+
+      frac += video.xstep;
    }
-   video.x1lookup[i] = (i * video.xscale) >> FRACBITS;
-   video.x2lookup[i] = video.width - 1;
+   video.x2lookup[319] = video.width - 1;
    video.x1lookup[320] = video.x2lookup[320] = video.width;
 
 
-   for(i = 0; i < 199; i++)
+   video.y1lookup[0] = 0;
+   lastfrac = frac = 0;
+   for(i = 0; i < video.height; i++)
    {
-      video.y1lookup[i] = (ycenter + ((i - 100) * video.yscale)) >> FRACBITS;
-      video.y2lookup[i] = ((ycenter + ((i - 99) * video.yscale)) >> FRACBITS) - 1;
-   }
-   video.y1lookup[i] = (ycenter + ((i - 100) * video.yscale)) >> FRACBITS;
-   video.y2lookup[i] = video.height - 1;
-   video.y1lookup[200] = video.y2lookup[200] = video.height;
+      if(frac >> FRACBITS > lastfrac >> FRACBITS)
+      {
+         video.y1lookup[frac >> FRACBITS] = i;
+         video.y2lookup[lastfrac >> FRACBITS] = i-1;
+         lastfrac = frac;
+      }
 
+      frac += video.ystep;
+   }
+   video.y2lookup[199] = video.height - 1;
+   video.y1lookup[200] = video.y2lookup[200] = video.height;
 
    if(setblocks == 11)
    {
@@ -468,7 +481,11 @@ void R_SetupViewScaling(void)
       x1 = (SCREENWIDTH - scaledviewwidth) >> 1;
       x2 = x1 + scaledviewwidth - 1;
 
-      y1 = (SCREENHEIGHT - gameModeInfo->StatusBar->height - scaledviewheight) >> 1;
+      if(scaledviewwidth == SCREENWIDTH)
+         y1 = 0;
+      else
+         y1 = (SCREENHEIGHT - gameModeInfo->StatusBar->height - scaledviewheight) >> 1;
+
       y2 = y1 + scaledviewheight - 1;
 
       viewwidth  = (video.x2lookup[x2] - video.x1lookup[x1] + 1) >> detailshift; // haleyjd 09/10/06
