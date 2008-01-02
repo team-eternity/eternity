@@ -75,27 +75,29 @@ static void V_DrawPatchColumn(void)
    {
       register const byte *source = patchcol.source;
       
-      if(frac < 0)
+      /*if(frac < 0)
          frac = 0;
       if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;
+         frac = patchcol.maxfrac;*/
       
       while((count -= 2) >= 0)
       {
          *dest = source[frac >> FRACBITS];
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
          *dest = source[frac >> FRACBITS];
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
       }
       if(count & 1)
          *dest = source[frac >> FRACBITS];
@@ -142,27 +144,29 @@ static void V_DrawPatchColumnTR(void)
    {
       register const byte *source = patchcol.source;
       
-      if(frac < 0)
+      /*if(frac < 0)
          frac = 0;
       if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;
+         frac = patchcol.maxfrac;*/
       
       while((count -= 2) >= 0)
       {
          *dest = patchcol.translation[source[frac >> FRACBITS]];
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
          *dest = patchcol.translation[source[frac >> FRACBITS]];
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
       }
       if(count & 1)
          *dest = patchcol.translation[source[frac >> FRACBITS]];
@@ -211,30 +215,32 @@ void V_DrawPatchColumnTL(void)
    {
       register const byte *source = patchcol.source;
       
-      if(frac < 0)
+      /*if(frac < 0)
          frac = 0;
       if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;
+         frac = patchcol.maxfrac;*/
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
 
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
       }
       if(count & 1)
       {
@@ -287,30 +293,32 @@ void V_DrawPatchColumnTRTL(void)
    {
       register const byte *source = patchcol.source;
       
-      if(frac < 0)
+      /*if(frac < 0)
          frac = 0;
       if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;
+         frac = patchcol.maxfrac;*/
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
 
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
       }
       if(count & 1)
       {
@@ -368,30 +376,32 @@ void V_DrawPatchColumnAdd(void)
    {
       register const byte *source = patchcol.source;
       
-      if(frac < 0)
+      /*if(frac < 0)
          frac = 0;
       if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;
+         frac = patchcol.maxfrac;*/
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
 
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
       }
       if(count & 1)
       {
@@ -449,30 +459,32 @@ void V_DrawPatchColumnAddTR(void)
    {
       register const byte *source = patchcol.source;
       
-      if(frac < 0)
+      /*if(frac < 0)
          frac = 0;
       if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;
+         frac = patchcol.maxfrac;*/
       
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
          
          DO_COLOR_BLEND();
          
          dest += patchcol.buffer->pitch;
-         if((frac += fracstep) > patchcol.maxfrac)
+         /*if((frac += fracstep) > patchcol.maxfrac)
          {
             frac = patchcol.maxfrac;
             fracstep = 0;
-         }
+         }*/
+         frac += fracstep;
       }
       if(count & 1)
       {
@@ -555,13 +567,13 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 
    // calculate edges of the shape
    tx = pi->x - SHORT(patch->leftoffset);
-   x1 = buffer->x1lookup[tx];
+   x1 = tx;
 
    // off the right side
-   if(x1 > patchcol.buffer->width)
+   if(x1 > SCREENWIDTH)
       return;
 
-   x2 = buffer->x2lookup[tx + SHORT(patch->width) - 1];
+   x2 = tx + SHORT(patch->width) - 1;
 
    // off the left side
    if(x2 < 0)
@@ -570,9 +582,12 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    if(pi->flipped)
    {
       int tmpx = x1;
-      x1 = buffer->width - x2;
-      x2 = buffer->width - tmpx;
+      x1 = SCREENWIDTH - x2;
+      x2 = SCREENWIDTH - tmpx;
    }
+
+   x1 = buffer->x1lookup[x1];
+   x2 = buffer->x2lookup[x2];
 
    patchcol.x  = x1 < 0 ? 0 : x1;
    x2 = x2 >= buffer->width ? buffer->width - 1 : x2;
@@ -630,7 +645,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          
 #ifdef RANGECHECK
          if(texturecolumn < 0 || texturecolumn >= SHORT(patch->width))
-            I_Error("V_DrawPatchInt: bad texturecolumn");
+            I_Error("V_DrawPatchInt: bad texturecolumn %i", texturecolumn);
 #endif
          
          column = (column_t *)((byte *)patch +
