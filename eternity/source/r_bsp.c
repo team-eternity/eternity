@@ -647,8 +647,8 @@ static void R_AddLine(seg_t *line)
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
    if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
-      seg.frontsec->ceilingpic != skyflatnum &&
-      seg.frontsec->ceilingpic != sky2flatnum &&
+      //seg.frontsec->ceilingpic != skyflatnum &&
+      //seg.frontsec->ceilingpic != sky2flatnum &&
       !((R_LinkedCeilingActive(seg.frontsec) && 
         viewz > seg.frontsec->c_portal->data.camera.planez) || 
         (R_LinkedFloorActive(seg.frontsec) && 
@@ -961,8 +961,8 @@ static void R_AddLine(seg_t *line)
    }
    else
    {
-      boolean mark, sky; // haleyjd
-      boolean toptexmissing, bottomtexmissing; // SoM
+      boolean mark; // haleyjd
+      boolean uppermissing, lowermissing;
 
       seg.twosided = true;
 
@@ -979,26 +979,24 @@ static void R_AddLine(seg_t *line)
       seg.high = seg.backsec->ceilingheightf - view.z;
       texhigh = (seg.backsec->ceilingz / 65536.0f) - view.z;
 
-      // haleyjd 09/20/07: only test for sky once
-      sky = ((seg.frontsec->ceilingpic == skyflatnum ||
-              seg.frontsec->ceilingpic == sky2flatnum) &&
-             (seg.backsec->ceilingpic  == skyflatnum ||
-              seg.backsec->ceilingpic  == sky2flatnum));
+      uppermissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
+                      seg.side->toptexture == 0);
 
-      // SoM: Test for missing textures only once.
-      toptexmissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight && 
-                       !seg.side->toptexture);
-      bottomtexmissing = (seg.frontsec->floorheight < seg.backsec->floorheight && 
-                          !seg.side->bottomtexture);
+      lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
+                      seg.side->bottomtexture == 0);
 
       // New clipsolid code will emulate the old doom behavior and still manages to 
       // keep valid closed door cases handled.
-      seg.clipsolid = (!sky &&
-         ((seg.frontsec->ceilingheight <= seg.backsec->floorheight && !bottomtexmissing) ||
-          (seg.frontsec->floorheight >= seg.backsec->ceilingheight && !toptexmissing) ||
-          (seg.backsec->ceilingheight <= seg.backsec->floorheight && !toptexmissing && !bottomtexmissing)));
+      seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
+          seg.backsec->ceilingheight != seg.frontsec->ceilingheight) &&
+          (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
+           seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
+           (seg.backsec->ceilingheight <= seg.backsec->floorheight && !uppermissing && !lowermissing)));
 
-      if(sky)
+      if((seg.frontsec->ceilingpic == skyflatnum ||
+              seg.frontsec->ceilingpic == sky2flatnum) &&
+             (seg.backsec->ceilingpic  == skyflatnum ||
+              seg.backsec->ceilingpic  == sky2flatnum))
          seg.top = seg.high;
 
       seg.markceiling = 

@@ -71,7 +71,6 @@ int validcount = 1;         // increment every time a check is made
 lighttable_t *fixedcolormap;
 int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
-fixed_t  yaspectmul; // ANYRES aspect ratio
 fixed_t  viewx, viewy, viewz;
 angle_t  viewangle;
 fixed_t  viewcos, viewsin;
@@ -422,6 +421,8 @@ void R_SetupViewScaling(void)
    video.yscalef = (float)video.height / SCREENHEIGHT;
    video.ystepf  = SCREENHEIGHT / (float)video.height;
 
+   video.scaled = (video.xscalef > 1.0f || video.yscalef > 1.0f);
+
    // SoM: ok, assemble the realx1/x2 arrays differently. To start, we are using floats
    // to do the scaling which is 100 times more accurate, secondly, I realized that the
    // reason the old single arrays were causing problems was they was only calculating the 
@@ -496,12 +497,6 @@ void R_SetupViewScaling(void)
    centery     = viewheight / 2;
    centerxfrac = centerx << FRACBITS;
    centeryfrac = centery << FRACBITS;
-
-   // haleyjd 04/03/05: Renamed yprojection to yaspectmul;
-   // this matches zdoom and is more descriptive. 
-   // It still works the same, though.
-   
-   yaspectmul = FixedDiv(video.yscale, video.xscale);
 
    // SoM: Cardboard
    view.xcenter = (view.width = (float)viewwidth) * 0.5f;

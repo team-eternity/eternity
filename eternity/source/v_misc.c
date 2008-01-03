@@ -471,7 +471,7 @@ void V_DrawLoading(void)
    memset(dest, white, reallinelen);
    // black line (unfilled)
 
-   if((video.yscale >> FRACBITS) > 1)
+   if(video.scaled)
    {
       yfrac = 0;
       ystep = video.ystep;
@@ -616,7 +616,7 @@ void V_ClassicFPSDrawer(void)
     tics = 20;
 
    // SoM: ANYRES
-   if(video.yscale > FRACUNIT)
+   if(video.scaled)
    {
       int baseoffset = video.y1lookup[SCREENHEIGHT - 1] * video.width;
       int offset;

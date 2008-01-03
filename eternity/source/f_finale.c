@@ -584,7 +584,7 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
       }
   else*/
    // SoM: ANYRES
-   if(video.yscale > FRACUNIT)
+   if(video.scaled)
    {
       byte *desttop = video.screens[0] + x;
 

@@ -112,6 +112,7 @@ typedef struct
 
    float xscalef, yscalef;
    float xstepf, ystepf;
+   boolean scaled; // SoM: should be set when the scale values are
 
    byte *screens[5];
 

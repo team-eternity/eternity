@@ -241,7 +241,7 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
   V_MarkRect (destx, desty, width, height);
 
    // SoM 1-30-04: ANYRES
-   if(video.yscale > FRACUNIT)
+   if(video.scaled)
    {
       int realx, realy, realw, realh;
 
@@ -571,7 +571,7 @@ void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
 #endif
 
    // SoM 1-30-04: ANYRES
-   if(video.yscale > FRACUNIT)
+   if(video.scaled)
    {
       width = video.x2lookup[x + width - 1] - video.x1lookup[x] + 1;
       x = video.x1lookup[x];

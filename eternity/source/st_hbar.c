@@ -279,7 +279,7 @@ static void ST_chainShadow(void)
    // choose a drawing function depending on resolution, for
    // maximum speed
    // SoM: ANYRES
-   if(video.yscale > FRACUNIT)
+   if(video.scaled)
       linefunc = ST_shadowLineHi;
    else
       linefunc = ST_shadowLine;

@@ -51,8 +51,6 @@ extern int      centerx;
 extern int      centery;
 extern fixed_t  centerxfrac;
 extern fixed_t  centeryfrac;
-// ANYRES
-extern fixed_t  yaspectmul;
 
 extern int      validcount;
 extern int      linecount;
