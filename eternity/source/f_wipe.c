@@ -60,7 +60,7 @@ static void Wipe_initWipe(void)
    // space unscaled!
    starting_height = current_height;
    
-   worms[0] = starting_height - M_Random()%16;
+   worms[0] = starting_height - (M_Random() & 15);
    
    for(x = 1; x < SCREENWIDTH; ++x)
    {
@@ -114,6 +114,22 @@ void Wipe_StartScreen(void)
    }
    
    return;
+}
+
+//
+// Wipe_SaveEndScreen
+//
+void Wipe_SaveEndScreen(void)
+{
+   memcpy(video.screens[3], video.screens[0], video.width * video.height);
+}
+
+//
+// Wipe_BlitEndScreen
+//
+void Wipe_BlitEndScreen(void)
+{
+   memcpy(video.screens[0], video.screens[3], video.width * video.height);
 }
 
 //

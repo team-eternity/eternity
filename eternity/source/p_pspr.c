@@ -1512,6 +1512,7 @@ void A_FireCustomBullets(mobj_t *mo)
    {
       int dmg = damage * (P_Random(pr_custombullets)%dmgmod + 1);
       angle_t angle = mo->angle;
+      fixed_t slope = bulletslope; // haleyjd 01/03/07: bug fix
       
       if(accurate <= 3 || accurate == 5)
       {
@@ -1524,14 +1525,14 @@ void A_FireCustomBullets(mobj_t *mo)
             angle += P_SubRandom(pr_custommisfire) << aimshift;
          }
 
-         P_LineAttack(mo, angle, MISSILERANGE, bulletslope, dmg);
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
       }
       else if(accurate == 4) // ssg spread
       {
          angle += P_SubRandom(pr_custommisfire) << 19;
-         bulletslope += P_SubRandom(pr_custommisfire) << 5;
+         slope += P_SubRandom(pr_custommisfire) << 5;
 
-         P_LineAttack(mo, angle, MISSILERANGE,  bulletslope, dmg);
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
       }
    }
 }

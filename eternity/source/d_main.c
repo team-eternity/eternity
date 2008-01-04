@@ -241,104 +241,110 @@ void D_Display(void)
    // need to do all this if the menus are going to cover it up :)
    if(!MN_CheckFullScreen())
    {
-      boolean wipedone = false;
-
-      while(!wipedone) // haleyjd 10/09/07: optional wipe blocking
+      switch(gamestate)                // do buffered drawing
       {
-         switch(gamestate)                // do buffered drawing
+      case GS_LEVEL:
+         // see if the border needs to be initially drawn
+         if(oldgamestate != GS_LEVEL)
+            R_FillBackScreen();    // draw the pattern into the back screen
+         HU_Erase();
+         
+         if(automapactive)
          {
-         case GS_LEVEL:
-            // see if the border needs to be initially drawn
-            if(oldgamestate != GS_LEVEL)
-               R_FillBackScreen();    // draw the pattern into the back screen
-            HU_Erase();
-            
-            if(automapactive)
-            {
-               AM_Drawer();
-            }
-            else
-            {
-               // see if the border needs to be updated to the screen
-               if(redrawborder)
-                  R_DrawViewBorder();    // redraw border
-               R_RenderPlayerView (&players[displayplayer], camera);
-            }
-            
-            ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
-            HU_Drawer();
-            break;
-         case GS_INTERMISSION:
-            IN_Drawer();
-            break;
-         case GS_FINALE:
-            F_Drawer();
-            break;
-         case GS_DEMOSCREEN:
-            D_PageDrawer();
-            break;
-         case GS_CONSOLE:
-            break;
-         }
-         
-         redrawsbar = false; // reset this now
-         redrawborder = false;
-         
-         // clean up border stuff
-         if(gamestate != oldgamestate && gamestate != GS_LEVEL)
-            I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
-         
-         oldgamestate = wipegamestate = gamestate;
-         
-         // draw pause pic
-         if(paused && !walkcam_active) // sf: not if walkcam active for
-         {                             // frads taking screenshots
-            char *lumpname = gameModeInfo->pausePatch; 
-            
-            // haleyjd 03/12/03: changed to work
-            // in heretic, and with user pause patches
-            patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
-            int width = SHORT(patch->width);
-            int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
-            // SoM 2-4-04: ANYRES
-            int y = 4 + (automapactive ? 0 : scaledwindowy);
-            
-            V_DrawPatch(x, y, &vbscreen, patch);
-         }
-         
-         if(inwipe)
-            Wipe_Drawer();
-         
-         C_Drawer();
-
-         if(inwipe && 
-            (wipewait == 1 || (wipewait == 2 && demoplayback)))
-         {
-            int wipestart = I_GetTime();
-            int tics = 0;
-
-            // wait one tic's worth of time
-            do
-            {
-               tics = I_GetTime() - wipestart;
-            }
-            while(!tics);
-
-            // run wipe logic from here
-            Wipe_Ticker();
-
-            // this stuff draws over a wipe
-            MN_Drawer();
-            NetUpdate();
-            if(v_ticker)
-               V_FPSDrawer();
-            I_FinishUpdate();
-
-            wipedone = !inwipe; // keep looping if inwipe
+            AM_Drawer();
          }
          else
-            wipedone = true;
+         {
+            // see if the border needs to be updated to the screen
+            if(redrawborder)
+               R_DrawViewBorder();    // redraw border
+            R_RenderPlayerView (&players[displayplayer], camera);
+         }
+         
+         ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
+         HU_Drawer();
+         break;
+      case GS_INTERMISSION:
+         IN_Drawer();
+         break;
+      case GS_FINALE:
+         F_Drawer();
+         break;
+      case GS_DEMOSCREEN:
+         D_PageDrawer();
+         break;
+      case GS_CONSOLE:
+         break;
       }
+         
+      redrawsbar = false; // reset this now
+      redrawborder = false;
+      
+      // clean up border stuff
+      if(gamestate != oldgamestate && gamestate != GS_LEVEL)
+         I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+      
+      oldgamestate = wipegamestate = gamestate;
+         
+      // draw pause pic
+      if(paused && !walkcam_active) // sf: not if walkcam active for
+      {                             // frads taking screenshots
+         char *lumpname = gameModeInfo->pausePatch; 
+         
+         // haleyjd 03/12/03: changed to work
+         // in heretic, and with user pause patches
+         patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
+         int width = SHORT(patch->width);
+         int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
+         // SoM 2-4-04: ANYRES
+         int y = 4 + (automapactive ? 0 : scaledwindowy);
+         
+         V_DrawPatch(x, y, &vbscreen, patch);
+      }
+
+      if(inwipe)
+      {
+         boolean wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
+         
+         // about to start wiping; if wipewait is enabled, save everything 
+         // that was just drawn
+         if(wait)
+         {
+            Wipe_SaveEndScreen();
+            
+            do
+            {
+               int starttime = I_GetTime();
+               int tics = 0;
+               
+               Wipe_Drawer();
+               
+               do
+               {
+                  tics = I_GetTime() - starttime;
+               }
+               while(!tics);
+               
+               Wipe_Ticker();
+               
+               C_Drawer();
+               MN_Drawer();
+               NetUpdate();
+               if(v_ticker)
+                  V_FPSDrawer();
+               I_FinishUpdate();
+               
+               if(inwipe)
+                  Wipe_BlitEndScreen();
+            }
+            while(inwipe);
+         }
+         else
+            Wipe_Drawer();
+      }
+      
+      C_Drawer();
+      
    } // if(!MN_CheckFullScreen())
 
    // menus go directly to the screen
