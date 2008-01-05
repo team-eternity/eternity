@@ -72,8 +72,9 @@ typedef struct doom_mapinter_s
 {
    // SoM: These are at the front of the struct because they need to be set initially
    // Temporary holder for thing_sectorlist threads
-   msecnode_t *sector_list;   // phares 3/16/98
-   mobj_t *BlockingMobj;      // haleyjd 1/17/00: global hit reference
+   struct doom_mapinter_s *prev; // SoM: previous entry in stack (for pop)
+   msecnode_t *sector_list;      // phares 3/16/98
+   mobj_t *BlockingMobj;         // haleyjd 1/17/00: global hit reference
 
    // -----------------------------------------------------------------------
    // The tm* items are used to hold information globally, usually for

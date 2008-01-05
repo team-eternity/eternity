@@ -59,8 +59,54 @@ static int ls_y; // Lost Soul position for Lost Soul checks      // phares
 
 
 // SoM: Todo: Turn this into a full fledged stack.
-static doom_mapinter_t  tmbase = {NULL, NULL, 0};
+static doom_mapinter_t  tmbase = {NULL, NULL, NULL, 0};
 doom_mapinter_t  *tm = &tmbase;
+
+static doom_mapinter_t  *unusedtm = NULL;
+
+// TM STACK
+
+// 
+// P_PushTMStack
+// Allocates or assigns a new head to the tm stack, copying the attributes of the current
+// head to it.
+void P_PushTMStack()
+{
+   doom_mapinter_t *newtm;
+
+   if(!unusedtm)
+      newtm = malloc(sizeof(doom_mapinter_t));
+   else
+   {
+      newtm = unusedtm;
+      unusedtm = unusedtm->prev;
+   }
+
+   memcpy(newtm, tm, sizeof(doom_mapinter_t));
+   newtm->prev = tm;
+   tm = newtm;
+}
+
+
+
+//
+// P_PopTMStack
+// Removes the current tm object from the stack and places it in the unused stack. If
+// tm is currently set to tmbase, this function will I_Error
+void P_PopTMStack()
+{
+   doom_mapinter_t *oldtm;
+
+
+   if(tm == &tmbase)
+      I_Error("P_PopTMStack called on tmbase\n");
+
+   oldtm = tm;
+   tm = tm->prev;
+   
+   oldtm->prev = unusedtm;
+   unusedtm = oldtm;   
+}
 
 
 int spechits_emulation;
@@ -2073,10 +2119,11 @@ static boolean PTR_AimTraverse(intercept_t *in)
       }
 
       if((li->frontsector->floorheight != li->backsector->floorheight || 
-         (demo_version >= 333 && useportalgroups && (R_LinkedFloorActive(li->frontsector) ||
-          R_LinkedFloorActive(li->backsector)) && 
-          li->frontsector->f_portal != li->backsector->f_portal)) &&
-         (demo_version < 333 || sidesector->floorheight <= trace.originz))
+            (demo_version >= 333 && useportalgroups && (R_LinkedFloorActive(li->frontsector) ||
+            R_LinkedFloorActive(li->backsector)) && 
+            li->frontsector->f_portal != li->backsector->f_portal)) &&
+         (demo_version < 333 || 
+            (useportalgroups && sidesector && sidesector->floorheight <= trace.originz)))
       {
          slope = FixedDiv (tm->openbottom - trace.originz , dist);
          if(slope > trace.bottomslope)
@@ -2084,10 +2131,11 @@ static boolean PTR_AimTraverse(intercept_t *in)
       }
 
       if((li->frontsector->ceilingheight != li->backsector->ceilingheight ||
-         (demo_version >= 333 && useportalgroups && (R_LinkedCeilingActive(li->frontsector) ||
-          R_LinkedCeilingActive(li->backsector)) && 
-          li->frontsector->c_portal != li->backsector->c_portal)) &&
-         (demo_version < 333 || sidesector->ceilingheight >= trace.originz))
+            (demo_version >= 333 && useportalgroups && (R_LinkedCeilingActive(li->frontsector) ||
+            R_LinkedCeilingActive(li->backsector)) && 
+            li->frontsector->c_portal != li->backsector->c_portal)) &&
+         (demo_version < 333 || 
+            (useportalgroups && sidesector && sidesector->ceilingheight >= trace.originz)))
       {
          slope = FixedDiv (tm->opentop - trace.originz , dist);
          if(slope < trace.topslope)
