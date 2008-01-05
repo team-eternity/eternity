@@ -733,18 +733,18 @@ void A_Punch(mobj_t *mo)
   // killough 8/2/98: make autoaiming prefer enemies
    if(demo_version<203 ||
       (slope = P_AimLineAttack(mo, angle, MELEERANGE, MF_FRIEND),
-       !linetarget))
+       !tm->linetarget))
       slope = P_AimLineAttack(mo, angle, MELEERANGE, 0);
 
    P_LineAttack(mo, angle, MELEERANGE, slope, damage);
 
-   if(!linetarget)
+   if(!tm->linetarget)
       return;
 
    P_WeaponSound(mo, gameModeInfo->playerSounds[sk_punch]);
 
    // turn to face target
-   mo->angle = R_PointToAngle2(mo->x, mo->y, linetarget->x, linetarget->y);
+   mo->angle = R_PointToAngle2(mo->x, mo->y, tm->linetarget->x, tm->linetarget->y);
 }
 
 //
@@ -763,12 +763,12 @@ void A_Saw(mobj_t *mo)
    // killough 8/2/98: make autoaiming prefer enemies
    if(demo_version<203 ||
       (slope = P_AimLineAttack(mo, angle, MELEERANGE+1, MF_FRIEND),
-       !linetarget))
+       !tm->linetarget))
       slope = P_AimLineAttack(mo, angle, MELEERANGE+1, 0);
 
    P_LineAttack(mo, angle, MELEERANGE+1, slope, damage);
    
-   if(!linetarget)
+   if(!tm->linetarget)
    {
       P_WeaponSound(mo, sfx_sawful);
       return;
@@ -777,7 +777,7 @@ void A_Saw(mobj_t *mo)
    P_WeaponSound(mo, sfx_sawhit);
    
    // turn to face target
-   angle = R_PointToAngle2(mo->x, mo->y, linetarget->x, linetarget->y);
+   angle = R_PointToAngle2(mo->x, mo->y, tm->linetarget->x, tm->linetarget->y);
 
    if(angle - mo->angle > ANG180)
    {
@@ -899,17 +899,17 @@ void A_FireOldBFG(mobj_t *mo)
          do
          {
             slope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-            if(!linetarget)
+            if(!tm->linetarget)
                slope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
-            if(!linetarget)
+            if(!tm->linetarget)
                slope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
-            if(!linetarget) // sf: looking up/down
+            if(!tm->linetarget) // sf: looking up/down
             {
                slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
                an = mo->angle;
             }
          }
-         while(mask && (mask=0, !linetarget));     // killough 8/2/98
+         while(mask && (mask=0, !tm->linetarget));     // killough 8/2/98
          an1 += an - mo->angle;
          // sf: despite killough's infinite wisdom.. even
          // he is prone to mistakes. seems negative numbers
@@ -978,12 +978,12 @@ static void P_BulletSlope(mobj_t *mo)
    do
    {
       bulletslope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-      if(!linetarget)
+      if(!tm->linetarget)
          bulletslope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
-      if(!linetarget)
+      if(!tm->linetarget)
          bulletslope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
    }
-   while (mask && (mask=0, !linetarget));  // killough 8/2/98
+   while (mask && (mask=0, !tm->linetarget));  // killough 8/2/98
 }
 
 //
@@ -1210,20 +1210,20 @@ void A_BFGSpray(mobj_t *mo)
       // killough 8/2/98: make autoaiming prefer enemies
       if(demo_version < 203 || 
          (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, MF_FRIEND), 
-         !linetarget))
+         !tm->linetarget))
          P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, 0);
       
-      if(!linetarget)
+      if(!tm->linetarget)
          continue;
       
-      P_SpawnMobj(linetarget->x, linetarget->y,
-                  linetarget->z + (linetarget->height>>2), 
+      P_SpawnMobj(tm->linetarget->x, tm->linetarget->y,
+                  tm->linetarget->z + (tm->linetarget->height>>2), 
                   E_SafeThingType(MT_EXTRABFG));
       
       for(damage = j = 0; j < 15; j++)
          damage += (P_Random(pr_bfg)&7) + 1;
       
-      P_DamageMobj(linetarget, mo->target, mo->target, damage,
+      P_DamageMobj(tm->linetarget, mo->target, mo->target, damage,
                    MOD_BFG_SPLASH);
    }
 }
@@ -1250,17 +1250,17 @@ void A_BouncingBFG(mobj_t *mo)
       
       // haleyjd: track last target with mo->tracer, don't fire
       // at same target more than one time in a row
-      if(!linetarget || (mo->tracer && mo->tracer == linetarget))
+      if(!tm->linetarget || (mo->tracer && mo->tracer == tm->linetarget))
          continue;
       if(an/6 == mo->angle/6) continue;
       
       // don't aim for shooter, or for friends of shooter
-      if(linetarget == mo->target ||
-         (linetarget->flags & mo->target->flags & MF_FRIEND))
+      if(tm->linetarget == mo->target ||
+         (tm->linetarget->flags & mo->target->flags & MF_FRIEND))
          continue; 
       
-      P_SpawnMobj(linetarget->x, linetarget->y,
-                  linetarget->z + (linetarget->height>>2),
+      P_SpawnMobj(tm->linetarget->x, tm->linetarget->y,
+                  tm->linetarget->z + (tm->linetarget->height>>2),
                   E_SafeThingType(MT_EXTRABFG));
 
       // spawn new bfg      
@@ -1268,25 +1268,25 @@ void A_BouncingBFG(mobj_t *mo)
       newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
       S_StartSound(newmo, newmo->info->seesound);
       P_SetTarget(&newmo->target, mo->target); // pass on the player
-      an2 = R_PointToAngle2(newmo->x, newmo->y, linetarget->x, linetarget->y);
+      an2 = R_PointToAngle2(newmo->x, newmo->y, tm->linetarget->x, tm->linetarget->y);
       newmo->angle = an2;
       
       an2 >>= ANGLETOFINESHIFT;
       newmo->momx = FixedMul(newmo->info->speed, finecosine[an2]);
       newmo->momy = FixedMul(newmo->info->speed, finesine[an2]);
 
-      dist = P_AproxDistance(linetarget->x - newmo->x, 
-                             linetarget->y - newmo->y);
+      dist = P_AproxDistance(tm->linetarget->x - newmo->x, 
+                             tm->linetarget->y - newmo->y);
       dist = dist / newmo->info->speed;
       
       if(dist < 1)
          dist = 1;
       
       newmo->momz = 
-         (linetarget->z + (linetarget->height>>1) - newmo->z) / dist;
+         (tm->linetarget->z + (tm->linetarget->height>>1) - newmo->z) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
-      P_SetTarget(&newmo->tracer, linetarget); // haleyjd: track target
+      P_SetTarget(&newmo->tracer, tm->linetarget); // haleyjd: track target
 
       P_CheckMissileSpawn(newmo);
 
@@ -1336,8 +1336,8 @@ void A_BFG11KHit(mobj_t *mo)
       
       P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
       
-      if(!linetarget) continue;
-      if(linetarget == mo->target)
+      if(!tm->linetarget) continue;
+      if(tm->linetarget == mo->target)
          continue;
       
       // decide on damage
@@ -1345,11 +1345,11 @@ void A_BFG11KHit(mobj_t *mo)
          damage += (P_Random(pr_bfg)&7) + 1;
       
       // dumbass flash
-      P_SpawnMobj(linetarget->x, linetarget->y,
-                  linetarget->z + (linetarget->height>>2), 
+      P_SpawnMobj(tm->linetarget->x, tm->linetarget->y,
+                  tm->linetarget->z + (tm->linetarget->height>>2), 
                   E_SafeThingType(MT_EXTRABFG));
       
-      P_DamageMobj(linetarget, mo->target, mo->target, damage,
+      P_DamageMobj(tm->linetarget, mo->target, mo->target, damage,
                    MOD_BFG_SPLASH);
    }
 }
@@ -1580,8 +1580,8 @@ void A_FirePlayerMissile(mobj_t *actor)
    {
       P_BulletSlope(actor);
 
-      if(linetarget)
-         P_SetTarget(&mo->tracer, linetarget);
+      if(tm->linetarget)
+         P_SetTarget(&mo->tracer, tm->linetarget);
    }
 }
 
@@ -1645,7 +1645,7 @@ void A_CustomPlayerMelee(mobj_t *mo)
       angle += P_SubRandom(pr_custompunch) << 18;
    
    if((slope = P_AimLineAttack(mo, angle, MELEERANGE, MF_FRIEND),
-      !linetarget))
+      !tm->linetarget))
       slope = P_AimLineAttack(mo, angle, MELEERANGE, 0);
 
    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
@@ -1653,7 +1653,7 @@ void A_CustomPlayerMelee(mobj_t *mo)
    
    P_LineAttack(mo, angle, MELEERANGE, slope, damage);
    
-   if(!linetarget)
+   if(!tm->linetarget)
    {
       // assume they want sawful on miss if sawhit specified
       if(sound == sfx_sawhit)
@@ -1666,7 +1666,7 @@ void A_CustomPlayerMelee(mobj_t *mo)
    
    // turn to face target   
    player->mo->angle = R_PointToAngle2(mo->x, mo->y,
-                                       linetarget->x, linetarget->y);
+                                       tm->linetarget->x, tm->linetarget->y);
 
    // apply chainsaw deflection if selected
    if(deftype == 3)
@@ -1748,10 +1748,10 @@ void A_PlayerThunk(mobj_t *mo)
       // record old target
       oldtarget = mo->target;
       P_BulletSlope(mo);
-      if(linetarget)
+      if(tm->linetarget)
       {
-         P_SetTarget(&(mo->target), linetarget);
-         localtarget = linetarget;
+         P_SetTarget(&(mo->target), tm->linetarget);
+         localtarget = tm->linetarget;
       }
       else
          return;

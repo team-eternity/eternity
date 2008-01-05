@@ -67,17 +67,101 @@ int     P_GetMoveFactor(const mobj_t *mo, int *friction);   // killough 8/28/98
 int     P_GetFriction(const mobj_t *mo, int *factor);       // killough 8/28/98
 void    P_ApplyTorque(mobj_t *mo);                          // killough 9/12/98
 
-// If "floatok" true, move would be ok if within "tmfloorz - tmceilingz".
-extern boolean floatok;
-extern boolean felldown;   // killough 11/98: indicates object pushed off ledge
-extern fixed_t tmfloorz;
-extern fixed_t tmceilingz;
-extern line_t *ceilingline;
-extern line_t *floorline;      // killough 8/23/98
-extern mobj_t *linetarget;     // who got hit (or NULL)
-extern msecnode_t *sector_list;                             // phares 3/16/98
-extern fixed_t tmbbox[4];         // phares 3/20/98
-extern line_t *blockline;   // killough 8/11/98
+
+typedef struct doom_mapinter_s
+{
+   // SoM: These are at the front of the struct because they need to be set initially
+   // Temporary holder for thing_sectorlist threads
+   msecnode_t *sector_list;   // phares 3/16/98
+   mobj_t *BlockingMobj;      // haleyjd 1/17/00: global hit reference
+
+   // -----------------------------------------------------------------------
+   // The tm* items are used to hold information globally, usually for
+   // line or object intersection checking
+   // SoM: These used to be prefixed with tm
+
+
+   // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
+   // haleyjd: values for tmtouch3dside:
+   // 0 == no 3DMidTex involved in clipping
+   // 1 == 3DMidTex involved but not responsible for floorz
+   // 2 == 3DMidTex responsible for floorz
+   int touch3dside; // Moved to the top of the struct because it needs an initial value
+
+   mobj_t    *thing;
+   int       flags;
+   fixed_t   x;
+   fixed_t   y;
+
+   fixed_t   bbox[4];  // bounding box for line intersection checks
+   fixed_t   floorz;   // floor you'd hit if free to fall
+   fixed_t   ceilingz; // ceiling of sector you're in
+   fixed_t   dropoffz; // dropoff on other side of line you're crossing
+
+   // SoM : the floorz and ceilingz of the sectors.
+   fixed_t   secfloorz;
+   fixed_t   secceilz;
+
+   // SoM: Stepup floorz from a thing... Not sure if it should be used?
+   // set this instead of tmfloorz
+   fixed_t   stepupfloorz;
+
+   // SoM 11/6/02: UGHAH
+   fixed_t   passfloorz;
+   fixed_t   passceilz;
+
+   // haleyjd
+   int       floorpic;
+
+   int       unstuck;     // killough 8/1/98: whether to allow unsticking
+   // SoM: End of tm* list
+   // -----------------------------------------------------------------------
+   
+   // If "floatok" true, move would be ok
+   // if within "tmfloorz - tmceilingz".
+   boolean   floatok;
+
+   // killough 11/98: if "felldown" true, object was pushed down ledge
+   boolean   felldown;
+
+   // keep track of the line that lowers the ceiling,
+   // so missiles don't explode against sky hack walls
+   line_t    *ceilingline;
+   line_t    *blockline;    // killough 8/11/98: blocking linedef
+   line_t    *floorline;    // killough 8/1/98: Highest touched floor
+
+   mobj_t    *linetarget; // who got hit (or NULL)
+
+   // keep track of special lines as they are hit,
+   // but don't process them until the move is proven valid
+   // 1/11/98 killough: removed limit on special lines crossed
+   line_t **spechit;    // new code -- killough
+   int spechit_max;     // killough
+   int numspechit;
+
+
+   // See P_LineOpening
+   fixed_t opentop;
+   fixed_t openbottom;
+   fixed_t openrange;
+   fixed_t lowfloor;
+
+   // SoM 11/3/02: opensecfloor, opensecceil.
+   fixed_t opensecfloor;
+   fixed_t opensecceil;
+
+   // moved front and back outside P_LineOpening and changed    // phares 3/7/98
+   // them to these so we can pick up the new friction value
+   // in PIT_CheckLine()
+   sector_t *openfrontsector; // made global                    // phares
+   sector_t *openbacksector;  // made global
+
+} doom_mapinter_t;
+
+
+// SoM: Todo: turn this into a stack.
+extern doom_mapinter_t  *tm;
+
 
 extern int spechits_emulation; // haleyjd 09/20/06
 

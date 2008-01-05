@@ -35,11 +35,6 @@
 #include "p_setup.h"
 #include "polyobj.h"
 
-// haleyjd
-extern int tmfloorpic;
-
-// SoM: monster 3D sides fix
-extern int tmtouch3dside;
 
 //
 // P_AproxDistance
@@ -153,100 +148,78 @@ fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
 // OPTIMIZE: keep this precalculated
 //
 
-fixed_t opentop;
-fixed_t openbottom;
-fixed_t openrange;
-fixed_t lowfloor;
-
-// SoM 11/3/02: opensecfloor, opensecceil.
-fixed_t opensecfloor;
-fixed_t opensecceil;
-
-// moved front and back outside P_LineOpening and changed    // phares 3/7/98
-// them to these so we can pick up the new friction value
-// in PIT_CheckLine()
-sector_t *openfrontsector; // made global                    // phares
-sector_t *openbacksector;  // made global
-
-/*
-// haleyjd 02/23/05
-boolean open3dmidtex;
-*/
 
 void P_LineOpening(line_t *linedef, mobj_t *mo)
 {
-   /*
-   open3dmidtex = false; // haleyjd: clear this flag before each line
-   */
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
    fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
 
    if(linedef->sidenum[1] == -1)      // single sided line
    {
-      openrange = 0;
+      tm->openrange = 0;
       return;
    }
    
-   openfrontsector = linedef->frontsector;
-   openbacksector = linedef->backsector;
+   tm->openfrontsector = linedef->frontsector;
+   tm->openbacksector = linedef->backsector;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedCeilingActive(openfrontsector) &&
-         R_LinkedCeilingActive(openbacksector) && 
-         openfrontsector->c_portal == openbacksector->c_portal)
-         frontceilz = backceilz = openfrontsector->ceilingheight + (1024 * FRACUNIT);
+      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openfrontsector) &&
+         R_LinkedCeilingActive(tm->openbacksector) && 
+         tm->openfrontsector->c_portal == tm->openbacksector->c_portal)
+         frontceilz = backceilz = tm->openfrontsector->ceilingheight + (1024 * FRACUNIT);
       else
 #endif
       {
-         frontceilz = openfrontsector->ceilingheight;
-         backceilz = openbacksector->ceilingheight;
+         frontceilz = tm->openfrontsector->ceilingheight;
+         backceilz = tm->openbacksector->ceilingheight;
       }
       
-      frontcz = openfrontsector->ceilingheight;
-      backcz = openbacksector->ceilingheight;
+      frontcz = tm->openfrontsector->ceilingheight;
+      backcz = tm->openbacksector->ceilingheight;
    }
 
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedFloorActive(openfrontsector) &&
-         R_LinkedFloorActive(openbacksector) && 
-         openfrontsector->f_portal == openbacksector->f_portal)
-         frontfloorz = backfloorz = openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openfrontsector) &&
+         R_LinkedFloorActive(tm->openbacksector) && 
+         tm->openfrontsector->f_portal == tm->openbacksector->f_portal)
+         frontfloorz = backfloorz = tm->openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
       else 
 #endif
       {
-         frontfloorz = openfrontsector->floorheight;
-         backfloorz = openbacksector->floorheight;
+         frontfloorz = tm->openfrontsector->floorheight;
+         backfloorz = tm->openbacksector->floorheight;
       }
 
-      frontfz = openfrontsector->floorheight;
-      backfz = openbacksector->floorheight;
+      frontfz = tm->openfrontsector->floorheight;
+      backfz = tm->openbacksector->floorheight;
    }
    
    if(frontceilz < backceilz)
-      opentop = frontceilz;
+      tm->opentop = frontceilz;
    else
-      opentop = backceilz;
+      tm->opentop = backceilz;
 
    
    if(frontfloorz > backfloorz)
    {
-      openbottom = frontfloorz;
-      lowfloor = backfloorz;
+      tm->openbottom = frontfloorz;
+      tm->lowfloor = backfloorz;
       // haleyjd
-      tmfloorpic = openfrontsector->floorpic;
+      tm->floorpic = tm->openfrontsector->floorpic;
    }
    else
    {
-      openbottom = backfloorz;
-      lowfloor = frontfloorz;
+      tm->openbottom = backfloorz;
+      tm->lowfloor = frontfloorz;
       // haleyjd
-      tmfloorpic = openbacksector->floorpic;
+      tm->floorpic = tm->openbacksector->floorpic;
    }
 
    if(frontcz < backcz)
@@ -259,8 +232,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    else
       obot = backfz;
 
-   opensecfloor = openbottom;
-   opensecceil = opentop;
+   tm->opensecfloor = tm->openbottom;
+   tm->opensecceil = tm->opentop;
 
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
@@ -288,29 +261,29 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
          D_abs(mo->z - textop) <= 24*FRACUNIT)
       {
-         opentop = openbottom;
-         openrange = 0;
+         tm->opentop = tm->openbottom;
+         tm->openrange = 0;
          return;
       }
       
       if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
       {
-         if(texbot < opentop)
-            opentop = texbot;
+         if(texbot < tm->opentop)
+            tm->opentop = texbot;
       }
       else
       {
-         if(textop > openbottom)
-            openbottom = textop;
+         if(textop > tm->openbottom)
+            tm->openbottom = textop;
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
          if(abs(mo->z - textop) <= 24*FRACUNIT)
-            tmtouch3dside = 1;
+            tm->touch3dside = 1;
       }
    }
 
-   openrange = opentop - openbottom;
+   tm->openrange = tm->opentop - tm->openbottom;
 }
 
 //
@@ -352,7 +325,7 @@ void P_UnsetThingPosition (mobj_t *thing)
       // If this Thing is being removed entirely, then the calling
       // routine will clear out the nodes in sector_list.
       
-      sector_list = thing->touching_sectorlist;
+      tm->sector_list = thing->touching_sectorlist;
       thing->touching_sectorlist = NULL; //to be restored by P_SetThingPosition
    }
 
@@ -423,8 +396,8 @@ void P_SetThingPosition(mobj_t *thing)
       // added, new sector links are created.
 
       P_CreateSecNodeList(thing, thing->x, thing->y);
-      thing->touching_sectorlist = sector_list; // Attach to Thing's mobj_t
-      sector_list = NULL; // clear for next time
+      thing->touching_sectorlist = tm->sector_list; // Attach to Thing's mobj_t
+      tm->sector_list = NULL; // clear for next time
    }
 
    // link into blockmap

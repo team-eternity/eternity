@@ -393,8 +393,6 @@ extern int doom_weapon_toggles;   // killough 10/98
 
 extern int HelperThing;          // type of thing to use for helper
 
-extern mobj_t *BlockingMobj;     // global hit reference for reflectivity
-
 extern int sky2flatnum;          // flat num of F_SKY2
 
 extern int Sky1ColumnOffset;

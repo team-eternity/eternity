@@ -46,27 +46,6 @@
 #include "r_main.h"
 
 // I HATE GLOBALS!!!
-
-extern mobj_t   *tmthing;
-extern fixed_t   tmx;
-extern fixed_t   tmy;
-extern int       tmflags;
-extern fixed_t   tmbbox[4];
-extern line_t   *ceilingline;
-extern line_t   *blockline;
-extern line_t   *floorline;
-extern int       tmunstuck;
-extern fixed_t   tmfloorz;
-extern fixed_t   tmceilingz;
-extern fixed_t   tmdropoffz;
-extern fixed_t   tmsecfloorz;
-extern fixed_t   tmsecceilz;
-extern fixed_t   tmstepupfloorz;
-extern fixed_t   tmpassfloorz;
-extern fixed_t   tmpassceilz;
-extern int       tmfloorpic;
-extern int       tmtouch3dside;
-extern int       numspechit;
 extern fixed_t   FloatBobOffsets[64];
 
 //
@@ -161,21 +140,21 @@ static mobj_t *testz_mobj; // used to hold object found by P_TestMobjZ
 //
 static boolean PIT_TestMobjZ(mobj_t *thing)
 {
-   fixed_t blockdist = thing->radius + tmthing->radius;
+   fixed_t blockdist = thing->radius + tm->thing->radius;
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
       thing->flags & (MF_SPECIAL|MF_NOCLIP|MF_CORPSE) || // other is special?
-      tmthing->flags & MF_SPECIAL ||                     // this is special?
-      thing == tmthing ||                                // same as self?
-      tmthing->z > thing->z + thing->height ||           // over?
-      tmthing->z + tmthing->height <= thing->z)          // under?
+      tm->thing->flags & MF_SPECIAL ||                   // this is special?
+      thing == tm->thing ||                              // same as self?
+      tm->thing->z > thing->z + thing->height ||         // over?
+      tm->thing->z + tm->thing->height <= thing->z)      // under?
    {
       return true;
    }
 
    // test against collision - from PIT_CheckThing:
-   if(D_abs(thing->x - tmx) >= blockdist || 
-      D_abs(thing->y - tmy) >= blockdist)
+   if(D_abs(thing->x - tm->x) >= blockdist || 
+      D_abs(thing->y - tm->y) >= blockdist)
       return true;
 
    // the thing may be blocking; save a pointer to it
@@ -196,20 +175,20 @@ boolean P_TestMobjZ(mobj_t *mo)
    if(mo->flags & MF_NOCLIP)
       return true;
 
-   tmx = mo->x;
-   tmy = mo->y;
-   tmthing = mo;
+   tm->x = mo->x;
+   tm->y = mo->y;
+   tm->thing = mo;
    
    // standard blockmap bounding box extension
-   tmbbox[BOXLEFT]   = tmx - mo->radius;
-   tmbbox[BOXRIGHT]  = tmx + mo->radius;
-   tmbbox[BOXBOTTOM] = tmy - mo->radius;
-   tmbbox[BOXTOP]    = tmy + mo->radius;
+   tm->bbox[BOXLEFT]   = tm->x - mo->radius;
+   tm->bbox[BOXRIGHT]  = tm->x + mo->radius;
+   tm->bbox[BOXBOTTOM] = tm->y - mo->radius;
+   tm->bbox[BOXTOP]    = tm->y + mo->radius;
    
-   xl = (tmbbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (tmbbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (tmbbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   xl = (tm->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
    // standard P_BlockThingsIterator loop
    for(x = xl; x <= xh; ++x)
@@ -272,8 +251,6 @@ boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
 static mobj_t *stepthing;
 
 extern boolean PIT_CheckLine(line_t *ld);
-extern fixed_t tmsecfloorz;
-extern fixed_t tmsecceilz;
 
 extern boolean P_Touched(mobj_t *thing, mobj_t *tmthing);
 extern int     P_MissileBlockHeight(mobj_t *mo);
@@ -303,10 +280,10 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
       return true;
 
-   blockdist = thing->radius + tmthing->radius;
+   blockdist = thing->radius + tm->thing->radius;
 
-   if(D_abs(thing->x - tmx) >= blockdist ||
-      D_abs(thing->y - tmy) >= blockdist)
+   if(D_abs(thing->x - tm->x) >= blockdist ||
+      D_abs(thing->y - tm->y) >= blockdist)
       return true; // didn't hit it
 
    // killough 11/98:
@@ -316,48 +293,48 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    
    // don't clip against self
   
-   if(thing == tmthing)
+   if(thing == tm->thing)
       return true;
 
    // haleyjd 1/17/00: set global hit reference
-   BlockingMobj = thing;
+   tm->BlockingMobj = thing;
 
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
 
-   if(!(tmthing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
+   if(!(tm->thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
    {
       // [RH] Let monsters walk on actors as well as floors
-      if(((tmthing->flags & MF_COUNTKILL) || (tmthing->flags3 & MF3_KILLABLE)) &&
-         topz >= tmfloorz && topz <= tmthing->z + 24*FRACUNIT)
+      if(((tm->thing->flags & MF_COUNTKILL) || (tm->thing->flags3 & MF3_KILLABLE)) &&
+         topz >= tm->floorz && topz <= tm->thing->z + 24*FRACUNIT)
       {
          stepthing = thing;
-         tmfloorz = topz;
+         tm->floorz = topz;
       }
    }
 
-   if(tmthing->flags3 & MF3_PASSMOBJ)
+   if(tm->thing->flags3 & MF3_PASSMOBJ)
    {
       // check if a mobj passed over/under another object
       
       // Some things prefer not to overlap each other, if possible
-      if(tmthing->flags3 & thing->flags3 & MF3_DONTOVERLAP)
+      if(tm->thing->flags3 & thing->flags3 & MF3_DONTOVERLAP)
          return false;
 
       // haleyjd: touchies need to explode if being exactly touched
-      if(thing->flags & MF_TOUCHY && !(tmthing->intflags & MIF_NOTOUCH))
+      if(thing->flags & MF_TOUCHY && !(tm->thing->intflags & MIF_NOTOUCH))
       {
-         if(tmthing->z == topz || tmthing->z + tmthing->height == thing->z)
+         if(tm->thing->z == topz || tm->thing->z + tm->thing->height == thing->z)
          {
-            P_Touched(thing, tmthing);
+            P_Touched(thing, tm->thing);
             // haleyjd: make the thing fly up a bit so it can run across
-            tmthing->momz += FRACUNIT; 
+            tm->thing->momz += FRACUNIT; 
             return true;
          }
       }
 
-      if((tmthing->z >= topz) || (tmthing->z + tmthing->height <= thing->z))
+      if((tm->thing->z >= topz) || (tm->thing->z + tm->thing->height <= thing->z))
          return true;
    }
 
@@ -368,20 +345,20 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    // thing, and the touchy thing is not the sole one moving relative to fixed
    // surroundings such as walls, then the touchy thing dies immediately.
 
-   if(!(tmthing->intflags & MIF_NOTOUCH)) // haleyjd: not when just testing
-      if(P_Touched(thing, tmthing))
+   if(!(tm->thing->intflags & MIF_NOTOUCH)) // haleyjd: not when just testing
+      if(P_Touched(thing, tm->thing))
          return true;
 
    // check for skulls slamming into things
    
-   if(P_SkullHit(thing, tmthing))
+   if(P_SkullHit(thing, tm->thing))
       return false;
 
    // missiles can hit other things
    // killough 8/10/98: bouncing non-solid things can hit other things too
    
-   if(tmthing->flags & MF_MISSILE || 
-      (tmthing->flags & MF_BOUNCES && !(tmthing->flags & MF_SOLID)))
+   if(tm->thing->flags & MF_MISSILE || 
+      (tm->thing->flags & MF_BOUNCES && !(tm->thing->flags & MF_SOLID)))
    {
       // haleyjd 07/06/05: some objects may use info->height instead
       // of their current height value in this situation, to avoid
@@ -390,23 +367,23 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
       int height = P_MissileBlockHeight(thing);
 
       // haleyjd: some missiles can go through ghosts
-      if(thing->flags3 & MF3_GHOST && tmthing->flags3 & MF3_THRUGHOST)
+      if(thing->flags3 & MF3_GHOST && tm->thing->flags3 & MF3_THRUGHOST)
          return true;
 
       // see if it went over / under
       
-      if(tmthing->z > thing->z + height) // haleyjd 07/06/05
+      if(tm->thing->z > thing->z + height) // haleyjd 07/06/05
          return true;    // overhead
 
-      if(tmthing->z + tmthing->height < thing->z)
+      if(tm->thing->z + tm->thing->height < thing->z)
          return true;    // underneath
 
-      if(tmthing->target &&
-         (tmthing->target->type == thing->type ||
-          (tmthing->target->type == knightType && thing->type == bruiserType)||
-          (tmthing->target->type == bruiserType && thing->type == knightType)))
+      if(tm->thing->target &&
+         (tm->thing->target->type == thing->type ||
+          (tm->thing->target->type == knightType && thing->type == bruiserType)||
+          (tm->thing->target->type == bruiserType && thing->type == knightType)))
       {
-         if(thing == tmthing->target)
+         if(thing == tm->thing->target)
             return true;                // Don't hit same species as originator.
          else if(!(thing->player))      // Explode, but do no damage.
             return false;               // Let players missile other players.
@@ -415,18 +392,18 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
       // killough 8/10/98: if moving thing is not a missile, no damage
       // is inflicted, and momentum is reduced if object hit is solid.
 
-      if(!(tmthing->flags & MF_MISSILE))
+      if(!(tm->thing->flags & MF_MISSILE))
       {
          if(!(thing->flags & MF_SOLID))
             return true;
          else
          {
-            tmthing->momx = -tmthing->momx;
-            tmthing->momy = -tmthing->momy;
-            if(!(tmthing->flags & MF_NOGRAVITY))
+            tm->thing->momx = -tm->thing->momx;
+            tm->thing->momy = -tm->thing->momy;
+            if(!(tm->thing->flags & MF_NOGRAVITY))
             {
-               tmthing->momx >>= 2;
-               tmthing->momy >>= 2;
+               tm->thing->momx >>= 2;
+               tm->thing->momy >>= 2;
             }
 
             return false;
@@ -438,9 +415,9 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
 
       // damage / explode
       
-      damage = ((P_Random(pr_damage)%8)+1)*tmthing->damage;
-      P_DamageMobj(thing, tmthing, tmthing->target, damage,
-                   tmthing->info->mod);
+      damage = ((P_Random(pr_damage)%8)+1)*tm->thing->damage;
+      P_DamageMobj(thing, tm->thing, tm->thing->target, damage,
+                   tm->thing->info->mod);
 
       // don't traverse any more
       return false;
@@ -449,11 +426,11 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    // haleyjd 1/16/00: Pushable objects -- at last!
    //   This is remarkably simpler than I had anticipated!
    
-   if(thing->flags2 & MF2_PUSHABLE && !(tmthing->flags3 & MF3_CANNOTPUSH))
+   if(thing->flags2 & MF2_PUSHABLE && !(tm->thing->flags3 & MF3_CANNOTPUSH))
    {
       // transfer one-fourth momentum along the x and y axes
-      thing->momx += tmthing->momx / 4;
-      thing->momy += tmthing->momy / 4;
+      thing->momx += tm->thing->momx / 4;
+      thing->momy += tm->thing->momy / 4;
    }
 
    // check for special pickup
@@ -462,8 +439,8 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
       // [RH] The next condition is to compensate for the extra height
       // that gets added by P_CheckPosition() so that you cannot pick
       // up things that are above your true height.
-      && thing->z < tmthing->z + tmthing->height - 24*FRACUNIT)
-      return P_CheckPickUp(thing, tmthing);
+      && thing->z < tm->thing->z + tm->thing->height - 24*FRACUNIT)
+      return P_CheckPickUp(thing, tm->thing);
 
    // killough 3/16/98: Allow non-solid moving objects to move through solid
    // ones, by allowing the moving thing (tmthing) to move if it's non-solid,
@@ -471,7 +448,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    // killough 4/11/98: Treat no-clipping things as not blocking
 
    return !((thing->flags & MF_SOLID && !(thing->flags & MF_NOCLIP))
-          && (tmthing->flags & MF_SOLID || demo_compatibility));
+          && (tm->thing->flags & MF_SOLID || demo_compatibility));
 }
 
 //
@@ -490,23 +467,23 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    mobj_t  *fakedblocker;
    fixed_t realheight = thing->height;
 
-   tmthing = thing;
-   tmflags = thing->flags;
+   tm->thing = thing;
+   tm->flags = thing->flags;
    
-   tmx = x;
-   tmy = y;
+   tm->x = x;
+   tm->y = y;
    
-   tmbbox[BOXTOP]    = y + tmthing->radius;
-   tmbbox[BOXBOTTOM] = y - tmthing->radius;
-   tmbbox[BOXRIGHT]  = x + tmthing->radius;
-   tmbbox[BOXLEFT]   = x - tmthing->radius;
+   tm->bbox[BOXTOP]    = y + tm->thing->radius;
+   tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
+   tm->bbox[BOXRIGHT]  = x + tm->thing->radius;
+   tm->bbox[BOXLEFT]   = x - tm->thing->radius;
    
    newsubsec = R_PointInSubsector(x,y);
-   floorline = blockline = ceilingline = NULL; // killough 8/1/98
+   tm->floorline = tm->blockline = tm->ceilingline = NULL; // killough 8/1/98
 
    // Whether object can get out of a sticky situation:
-   tmunstuck = thing->player &&        // only players
-      thing->player->mo == thing;      // not voodoo dolls
+   tm->unstuck = thing->player &&        // only players
+      thing->player->mo == thing;        // not voodoo dolls
 
    // The base floor / ceiling is from the subsector
    // that contains the point.
@@ -515,33 +492,33 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
-      !(tmthing->flags & MF_NOCLIP))
-      tmfloorz = tmdropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
+      !(tm->thing->flags & MF_NOCLIP))
+      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
    else
 #endif
-      tmfloorz = tmdropoffz = newsubsec->sector->floorheight;
+      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
-      !(tmthing->flags & MF_NOCLIP))
-      tmceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
+      !(tm->thing->flags & MF_NOCLIP))
+      tm->ceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
    else
 #endif
-      tmceilingz = newsubsec->sector->ceilingheight;
+      tm->ceilingz = newsubsec->sector->ceilingheight;
 
-   tmsecfloorz = tmpassfloorz = tmstepupfloorz = tmfloorz;
-   tmsecceilz = tmpassceilz = tmceilingz;
+   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->floorz;
+   tm->secceilz = tm->passceilz = tm->ceilingz;
 
    // haleyjd
-   tmfloorpic = newsubsec->sector->floorpic;
+   tm->floorpic = newsubsec->sector->floorpic;
    // SoM: 09/07/02: 3dsides monster fix
-   tmtouch3dside = 0;
+   tm->touch3dside = 0;
    validcount++;
    
-   numspechit = 0;
+   tm->numspechit = 0;
 
    // haleyjd 06/28/06: skullfly check from zdoom
-   if(tmflags & MF_NOCLIP && !(tmflags & MF_SKULLFLY))
+   if(tm->flags & MF_NOCLIP && !(tm->flags & MF_SKULLFLY))
       return true;
 
    // Check things first, possibly picking things up.
@@ -550,12 +527,12 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // based on their origin point, and can overlap
    // into adjacent blocks by up to MAXRADIUS units.
 
-   xl = (tmbbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (tmbbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (tmbbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   xl = (tm->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
-   BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thingblocker = NULL;
    fakedblocker = NULL;
    stepthing    = NULL;
@@ -579,24 +556,24 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
                // other things in the blocks and see if we hit something that is
                // definitely blocking. Otherwise, we need to check the lines, or we
                // could end up stuck inside a wall.
-               if(BlockingMobj == NULL)
+               if(tm->BlockingMobj == NULL)
                { 
                   // Thing slammed into something; don't let it move now.
                   thing->height = realheight;
 
                   return false;
                }
-               else if(!BlockingMobj->player && 
+               else if(!tm->BlockingMobj->player && 
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       BlockingMobj->z+BlockingMobj->height-thing->z <= 24*FRACUNIT)
+                       tm->BlockingMobj->z + tm->BlockingMobj->height-thing->z <= 24*FRACUNIT)
                {
-                  if(thingblocker == NULL || BlockingMobj->z > thingblocker->z)
-                     thingblocker = BlockingMobj;
-                  robin = BlockingMobj;
-                  BlockingMobj = NULL;
+                  if(thingblocker == NULL || tm->BlockingMobj->z > thingblocker->z)
+                     thingblocker = tm->BlockingMobj;
+                  robin = tm->BlockingMobj;
+                  tm->BlockingMobj = NULL;
                }
                else if(thing->player &&
-                       thing->z + thing->height - BlockingMobj->z <= 24*FRACUNIT)
+                       thing->z + thing->height - tm->BlockingMobj->z <= 24*FRACUNIT)
                {
                   if(thingblocker)
                   { 
@@ -608,9 +585,9 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
                   }
                   // Nothing is blocking us, but this actor potentially could
                   // if there is something else to step on.
-                  fakedblocker = BlockingMobj;
-                  robin = BlockingMobj;
-                  BlockingMobj = NULL;
+                  fakedblocker = tm->BlockingMobj;
+                  robin = tm->BlockingMobj;
+                  tm->BlockingMobj = NULL;
                }
                else
                { // Definitely blocking
@@ -628,31 +605,31 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
    // check lines
    
-   BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thing->height = realheight;
-   if(tmflags & MF_NOCLIP)
-      return (BlockingMobj = thingblocker) == NULL;
+   if(tm->flags & MF_NOCLIP)
+      return (tm->BlockingMobj = thingblocker) == NULL;
    
-   xl = (tmbbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (tmbbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (tmbbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (tmbbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
+   xl = (tm->bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
-   thingdropoffz = tmfloorz;
-   tmfloorz = tmdropoffz;
+   thingdropoffz = tm->floorz;
+   tm->floorz = tm->dropoffz;
 
    for(bx = xl; bx <= xh; ++bx)
       for(by = yl; by <= yh; ++by)
          if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
             return false; // doesn't fit
 
-   if(tmceilingz - tmfloorz < thing->height)
+   if(tm->ceilingz - tm->floorz < thing->height)
       return false;
          
    if(stepthing != NULL)
-      tmdropoffz = thingdropoffz;
+      tm->dropoffz = thingdropoffz;
    
-   return (BlockingMobj = thingblocker) == NULL;
+   return (tm->BlockingMobj = thingblocker) == NULL;
 }
 
 //
@@ -718,13 +695,13 @@ static boolean P_AdjustFloorCeil(mobj_t *thing, boolean midtex)
 
    isgood = P_CheckPosition3D(thing, thing->x, thing->y);
 
-   thing->floorz     = tmfloorz;
-   thing->secfloorz  = tmsecfloorz;
-   thing->passfloorz = tmpassfloorz;
-   thing->ceilingz   = tmceilingz;
-   thing->secceilz   = tmsecceilz;
-   thing->passceilz  = tmpassceilz;
-   thing->dropoffz   = tmdropoffz; // killough 11/98: remember dropoffs
+   thing->floorz     = tm->floorz;
+   thing->secfloorz  = tm->secfloorz;
+   thing->passfloorz = tm->passfloorz;
+   thing->ceilingz   = tm->ceilingz;
+   thing->secceilz   = tm->secceilz;
+   thing->passceilz  = tm->passceilz;
+   thing->dropoffz   = tm->dropoffz; // killough 11/98: remember dropoffs
    
    thing->flags3 = oldfl3;
 
@@ -745,18 +722,18 @@ static boolean PIT_FindAboveIntersectors(mobj_t *thing)
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
       (thing->flags & (MF_CORPSE|MF_SPECIAL)) ||  // Corpse or special?
-      thing == tmthing)                           // clipping against self?
+      thing == tm->thing)                         // clipping against self?
       return true;
    
-   blockdist = thing->radius + tmthing->radius;
+   blockdist = thing->radius + tm->thing->radius;
    
    // Didn't hit thing?
-   if(D_abs(thing->x - tmx) >= blockdist || 
-      D_abs(thing->y - tmy) >= blockdist)
+   if(D_abs(thing->x - tm->x) >= blockdist || 
+      D_abs(thing->y - tm->y) >= blockdist)
       return true;
 
    // Thing intersects above the base?
-   if(thing->z >= tmthing->z && thing->z <= tmthing->z + tmthing->height)
+   if(thing->z >= tm->thing->z && thing->z <= tm->thing->z + tm->thing->height)
       P_AddToCollection(&intersectors, thing);
 
    return true;
@@ -767,18 +744,18 @@ boolean PIT_FindBelowIntersectors(mobj_t *thing)
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
       (thing->flags & (MF_CORPSE|MF_SPECIAL)) ||  // Corpse or special?
-      thing == tmthing)                           // clipping against self?
+      thing == tm->thing)                           // clipping against self?
       return true;
 
-   blockdist = thing->radius+tmthing->radius;
+   blockdist = thing->radius + tm->thing->radius;
    
    // Didn't hit thing?
-   if(D_abs(thing->x - tmx) >= blockdist || 
-      D_abs(thing->y - tmy) >= blockdist)
+   if(D_abs(thing->x - tm->x) >= blockdist || 
+      D_abs(thing->y - tm->y) >= blockdist)
       return true;
 
-   if(thing->z + thing->height <= tmthing->z + tmthing->height &&
-      thing->z + thing->height > tmthing->z)
+   if(thing->z + thing->height <= tm->thing->z + tm->thing->height &&
+      thing->z + thing->height > tm->thing->z)
    { 
       // Thing intersects below the base
       P_AddToCollection(&intersectors, thing);
@@ -804,19 +781,19 @@ static void P_FindAboveIntersectors(mobj_t *actor)
    if(!(actor->flags & MF_SOLID))
       return;
 
-   tmx = x = actor->x;
-   tmy = y = actor->y;
-   tmthing = actor;
+   tm->x = x = actor->x;
+   tm->y = y = actor->y;
+   tm->thing = actor;
 
-   tmbbox[BOXTOP]    = y + actor->radius;
-   tmbbox[BOXBOTTOM] = y - actor->radius;
-   tmbbox[BOXRIGHT]  = x + actor->radius;
-   tmbbox[BOXLEFT]   = x - actor->radius;
+   tm->bbox[BOXTOP]    = y + actor->radius;
+   tm->bbox[BOXBOTTOM] = y - actor->radius;
+   tm->bbox[BOXRIGHT]  = x + actor->radius;
+   tm->bbox[BOXLEFT]   = x - actor->radius;
 
-   xl = (tmbbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (tmbbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (tmbbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   xl = (tm->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
    for(bx = xl; bx <= xh; bx++)
       for(by = yl; by <= yh; by++)
@@ -842,19 +819,19 @@ static void P_FindBelowIntersectors(mobj_t *actor)
    if(!(actor->flags & MF_SOLID))
       return;
 
-   tmx = x = actor->x;
-   tmy = y = actor->y;
-   tmthing = actor;
+   tm->x = x = actor->x;
+   tm->y = y = actor->y;
+   tm->thing = actor;
    
-   tmbbox[BOXTOP]    = y + actor->radius;
-   tmbbox[BOXBOTTOM] = y - actor->radius;
-   tmbbox[BOXRIGHT]  = x + actor->radius;
-   tmbbox[BOXLEFT]   = x - actor->radius;
+   tm->bbox[BOXTOP]    = y + actor->radius;
+   tm->bbox[BOXBOTTOM] = y - actor->radius;
+   tm->bbox[BOXRIGHT]  = x + actor->radius;
+   tm->bbox[BOXLEFT]   = x - actor->radius;
 
-   xl = (tmbbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (tmbbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (tmbbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (tmbbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   xl = (tm->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
    for(bx = xl; bx <= xh; bx++)
       for(by = yl; by <= yh; by++)

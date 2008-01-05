@@ -113,19 +113,6 @@ boolean ThingIsOnLine(mobj_t *t, line_t *l);  // killough 3/15/98
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                        int flags, boolean trav(intercept_t *));
 
-extern fixed_t opentop;
-extern fixed_t openbottom;
-extern fixed_t openrange;
-
-// SoM 11/3/02: 
-extern fixed_t opensecfloor;
-extern fixed_t opensecceil;
-
-// SoM 11/6/02: UGHAH
-extern fixed_t   tmpassfloorz;
-extern fixed_t   tmpassceilz;
-
-extern fixed_t lowfloor;
 extern linetracer_t trace;
 
 #endif  // __P_MAPUTL__

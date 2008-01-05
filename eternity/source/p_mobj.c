@@ -311,18 +311,18 @@ void P_XYMovement(mobj_t* mo)
 
          if(!(mo->flags & MF_MISSILE) && demo_version >= 203 &&
             (mo->flags & MF_BOUNCES ||
-             (!player && blockline &&
+             (!player && tm->blockline &&
               variable_friction && mo->z <= mo->floorz &&
               P_GetFriction(mo, NULL) > ORIG_FRICTION)))
          {
-            if (blockline)
+            if (tm->blockline)
             {
-               fixed_t r = ((blockline->dx >> FRACBITS) * mo->momx +
-                            (blockline->dy >> FRACBITS) * mo->momy) /
-                    ((blockline->dx >> FRACBITS)*(blockline->dx >> FRACBITS)+
-                     (blockline->dy >> FRACBITS)*(blockline->dy >> FRACBITS));
-               fixed_t x = FixedMul(r, blockline->dx);
-               fixed_t y = FixedMul(r, blockline->dy);
+               fixed_t r = ((tm->blockline->dx >> FRACBITS) * mo->momx +
+                            (tm->blockline->dy >> FRACBITS) * mo->momy) /
+                    ((tm->blockline->dx >> FRACBITS)*(tm->blockline->dx >> FRACBITS)+
+                     (tm->blockline->dy >> FRACBITS)*(tm->blockline->dy >> FRACBITS));
+               fixed_t x = FixedMul(r, tm->blockline->dx);
+               fixed_t y = FixedMul(r, tm->blockline->dy);
 
                // reflect momentum away from wall
 
@@ -350,14 +350,14 @@ void P_XYMovement(mobj_t* mo)
          else if(mo->flags & MF_MISSILE)
          {
             // haleyjd 1/17/00: feel the might of reflection!
-            if(demo_version >= 329 && BlockingMobj &&
-               (BlockingMobj->flags2 & MF2_REFLECTIVE))
+            if(demo_version >= 329 && tm->BlockingMobj &&
+               (tm->BlockingMobj->flags2 & MF2_REFLECTIVE))
             {
                angle_t refangle =
-                  R_PointToAngle2(BlockingMobj->x, BlockingMobj->y, mo->x, mo->y);
+                  R_PointToAngle2(tm->BlockingMobj->x, tm->BlockingMobj->y, mo->x, mo->y);
 
                // Change angle for reflection
-               if(BlockingMobj->flags2 & MF2_DEFLECTIVE)
+               if(tm->BlockingMobj->flags2 & MF2_DEFLECTIVE)
                {
                   // deflect it fully
                   if(P_Random(pr_reflect) < 128)
@@ -381,17 +381,17 @@ void P_XYMovement(mobj_t* mo)
                      P_SetTarget(&mo->tracer, mo->target);
                }
 
-               P_SetTarget(&mo->target, BlockingMobj);
+               P_SetTarget(&mo->target, tm->BlockingMobj);
                return;
             }
             // explode a missile
 
-            if(ceilingline && ceilingline->backsector &&
-               (ceilingline->backsector->ceilingpic == skyflatnum ||
-                ceilingline->backsector->ceilingpic == sky2flatnum))
+            if(tm->ceilingline && tm->ceilingline->backsector &&
+               (tm->ceilingline->backsector->ceilingpic == skyflatnum ||
+                tm->ceilingline->backsector->ceilingpic == sky2flatnum))
             {
                if (demo_compatibility ||  // killough
-                  mo->z > ceilingline->backsector->ceilingheight)
+                  mo->z > tm->ceilingline->backsector->ceilingheight)
                {
                   // Hack to prevent missiles exploding
                   // against the sky.
@@ -657,11 +657,11 @@ static void P_ZMovement(mobj_t* mo)
 
       if (mo->flags & MF_MISSILE)
       {
-         if(ceilingline &&
-            ceilingline->backsector &&
-            (mo->z > ceilingline->backsector->ceilingheight) &&
-            (ceilingline->backsector->ceilingpic == skyflatnum ||
-             ceilingline->backsector->ceilingpic == sky2flatnum))
+         if(tm->ceilingline &&
+            tm->ceilingline->backsector &&
+            (mo->z > tm->ceilingline->backsector->ceilingheight) &&
+            (tm->ceilingline->backsector->ceilingpic == skyflatnum ||
+             tm->ceilingline->backsector->ceilingpic == sky2flatnum))
          {
             P_RemoveMobj(mo);  // don't explode on skies
          }
@@ -937,7 +937,7 @@ static boolean P_DoZMovement(mobj_t *mobj)
    }
    else
    {
-      return (mobj->momz || BlockingMobj ||
+      return (mobj->momz || tm->BlockingMobj ||
               (mobj->z != mobj->floorz && P_TestFloatBob(mobj)));
    }
 }
@@ -1014,7 +1014,7 @@ void P_MobjThinker(mobj_t *mobj)
    if(cinema_pause && sentient(mobj))
       return;
 
-   BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
 
    // haleyjd 08/07/04: handle deep water plane hits
    if(mobj->subsector->sector->heightsec != -1)
@@ -1038,7 +1038,7 @@ void P_MobjThinker(mobj_t *mobj)
    }
 
    // momentum movement
-   BlockingMobj = NULL;
+   tm->BlockingMobj = NULL;
    if(mobj->momx | mobj->momy || mobj->flags & MF_SKULLFLY)
    {
       P_XYMovement(mobj);
@@ -1410,10 +1410,10 @@ void P_RemoveMobj (mobj_t *mobj)
    P_UnsetThingPosition(mobj);
 
    // Delete all nodes on the current sector_list               phares 3/16/98
-   if(sector_list)
+   if(tm->sector_list)
    {
-      P_DelSeclist(sector_list);
-      sector_list = NULL;
+      P_DelSeclist(tm->sector_list);
+      tm->sector_list = NULL;
    }
 
    // stop any playing sound
@@ -2111,18 +2111,18 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!linetarget)
+         if(!tm->linetarget)
             slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!linetarget)
+         if(!tm->linetarget)
             slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
-         if(!linetarget)
+         if(!tm->linetarget)
          {
             an = source->angle;
             // haleyjd: use true slope angle
             slope = finetangent[(ANG90 - source->player->pitch)>>ANGLETOFINESHIFT];
          }
       }
-      while(mask && (mask=0, !linetarget));  // killough 8/2/98
+      while(mask && (mask=0, !tm->linetarget));  // killough 8/2/98
    }
    else
    {

@@ -1121,11 +1121,11 @@ static void HU_CrossHairTick(hu_widget_t *widget)
                    players[displayplayer].mo->angle, 
                    16*64*FRACUNIT, 0);
 
-   if(linetarget)
+   if(tm->linetarget)
    {
       // target found
       crosshair->color = 
-         (linetarget->flags & MF_FRIEND) ? friendcolour : targetcolour;
+         (tm->linetarget->flags & MF_FRIEND) ? friendcolour : targetcolour;
    }
 }
 

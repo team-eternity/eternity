@@ -164,7 +164,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
       P_LineOpening(check, NULL);
       
-      if(openrange <= 0)
+      if(tm->openrange <= 0)
          continue;       // closed door
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
@@ -233,9 +233,9 @@ static boolean P_HitFriend(mobj_t *actor)
                           actor->y - actor->target->y),
 #endif
                        0),
-       linetarget) &&
-      linetarget != actor->target &&
-      !((linetarget->flags ^ actor->flags) & MF_FRIEND);
+       tm->linetarget) &&
+      tm->linetarget != actor->target &&
+      !((tm->linetarget->flags ^ actor->flags) & MF_FRIEND);
 }
 
 //
@@ -484,11 +484,11 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    {      // open any specials
       int good;
       
-      if(actor->flags & MF_FLOAT && floatok)
+      if(actor->flags & MF_FLOAT && tm->floatok)
       {
          fixed_t savedz = actor->z;
 
-         if(actor->z < tmfloorz)          // must adjust height
+         if(actor->z < tm->floorz)          // must adjust height
             actor->z += FLOATSPEED;
          else
             actor->z -= FLOATSPEED;
@@ -511,13 +511,13 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
          }
       }
 
-      if(!numspechit)
+      if(!tm->numspechit)
          return false;
 
 #ifdef RANGECHECK
       // haleyjd 01/09/07: SPECHIT_DEBUG
-      if(numspechit < 0)
-         I_Error("P_Move: numspechit == %d\n", numspechit);
+      if(tm->numspechit < 0)
+         I_Error("P_Move: numspechit == %d\n", tm->numspechit);
 #endif
 
       actor->movedir = DI_NODIR;
@@ -538,14 +538,14 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
       // Do NOT simply return false 1/4th of the time (causes monsters to
       // back out when they shouldn't, and creates secondary stickiness).
 
-      for(good = false; numspechit--; )
+      for(good = false; tm->numspechit--; )
       {
-         if(P_UseSpecialLine(actor, spechit[numspechit], 0))
-            good |= (spechit[numspechit] == blockline ? 1 : 2);
+         if(P_UseSpecialLine(actor, tm->spechit[tm->numspechit], 0))
+            good |= (tm->spechit[tm->numspechit] == tm->blockline ? 1 : 2);
       }
 
       // haleyjd 01/09/07: do not leave numspechit == -1
-      numspechit = 0;
+      tm->numspechit = 0;
 
       return good && (demo_version < 203 || comp[comp_doorstuck] ||
                       (P_Random(pr_opendoor) >= 230) ^ (good & 1));
@@ -559,7 +559,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
    if(demo_version < 331 || comp[comp_overunder])
    {
-      if(!(actor->flags & MF_FLOAT) && (!felldown || demo_version < 203))
+      if(!(actor->flags & MF_FLOAT) && (!tm->felldown || demo_version < 203))
       {
          fixed_t oldz = actor->z;
          actor->z = actor->floorz;
@@ -743,11 +743,11 @@ static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 static boolean PIT_AvoidDropoff(line_t *line)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
-      tmbbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
-      tmbbox[BOXLEFT]   < line->bbox[BOXRIGHT]  &&
-      tmbbox[BOXTOP]    > line->bbox[BOXBOTTOM] && // Linedef must be contacted
-      tmbbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
-      P_BoxOnLineSide(tmbbox, line) == -1)
+      tm->bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
+      tm->bbox[BOXLEFT]   < line->bbox[BOXRIGHT]  &&
+      tm->bbox[BOXTOP]    > line->bbox[BOXBOTTOM] && // Linedef must be contacted
+      tm->bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
+      P_BoxOnLineSide(tm->bbox, line) == -1)
    {
       fixed_t front = line->frontsector->floorheight;
       fixed_t back  = line->backsector->floorheight;
@@ -786,10 +786,10 @@ static boolean PIT_AvoidDropoff(line_t *line)
 //
 static fixed_t P_AvoidDropoff(mobj_t *actor)
 {
-   int yh=((tmbbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
-   int yl=((tmbbox[BOXBOTTOM]= actor->y-actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
-   int xh=((tmbbox[BOXRIGHT] = actor->x+actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
-   int xl=((tmbbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int yh=((tm->bbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int yl=((tm->bbox[BOXBOTTOM]= actor->y-actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int xh=((tm->bbox[BOXRIGHT] = actor->x+actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int xl=((tm->bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
    int bx, by;
 
    floorz = actor->z;            // remember floor height
@@ -3653,15 +3653,15 @@ void A_Cleric2Chase(mobj_t *actor)
    {
       P_AimLineAttack(target, target->angle, 16*64*FRACUNIT, 0);
 
-      if(!linetarget)
+      if(!tm->linetarget)
       {
          A_Chase(actor);
          return;
       }
 
       // if aiming at cleric, or at something nearby...
-      if(linetarget == actor ||
-         linetarget->subsector == actor->subsector)
+      if(tm->linetarget == actor ||
+         tm->linetarget->subsector == actor->subsector)
       {
          angle_t ang;
          
@@ -4285,8 +4285,8 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 
    slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
-   if(linetarget)
-      damage = linetarget->health;
+   if(tm->linetarget)
+      damage = tm->linetarget->health;
 
    P_LineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);
 }
@@ -4304,8 +4304,8 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
       
       slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
 
-      if(linetarget)
-         damage = linetarget->health;
+      if(tm->linetarget)
+         damage = tm->linetarget->health;
 
       P_LineAttack(plyr->mo, an, MISSILERANGE, slope, damage);
    }
@@ -4318,8 +4318,8 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 
    slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
-   if(linetarget)
-      P_RemoveMobj(linetarget);
+   if(tm->linetarget)
+      P_RemoveMobj(tm->linetarget);
 }
 
 void PE_AddCommands(void)
