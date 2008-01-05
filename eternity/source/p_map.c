@@ -2130,14 +2130,22 @@ static boolean PTR_AimTraverse(intercept_t *in)
          }
       }
 
-      if(li->frontsector->floorheight != li->backsector->floorheight)
+      if((li->frontsector->floorheight != li->backsector->floorheight || 
+         (demo_version >= 333 && useportalgroups && (R_LinkedFloorActive(li->frontsector) ||
+          R_LinkedFloorActive(li->backsector)) && 
+          li->frontsector->f_portal != li->backsector->f_portal)) &&
+         (demo_version < 333 || sidesector->floorheight <= trace.originz))
       {
          slope = FixedDiv (openbottom - trace.originz , dist);
          if(slope > trace.bottomslope)
             trace.bottomslope = slope;
       }
 
-      if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
+      if((li->frontsector->ceilingheight != li->backsector->ceilingheight ||
+         (demo_version >= 333 && useportalgroups && (R_LinkedCeilingActive(li->frontsector) ||
+          R_LinkedCeilingActive(li->backsector)) && 
+          li->frontsector->c_portal != li->backsector->c_portal)) &&
+         (demo_version < 333 || sidesector->ceilingheight >= trace.originz))
       {
          slope = FixedDiv (opentop - trace.originz , dist);
          if(slope < trace.topslope)
