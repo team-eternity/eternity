@@ -153,6 +153,7 @@ fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
 void P_LineOpening(line_t *linedef, mobj_t *mo)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
+   fixed_t frontdropz, backdropz;
    // SoM: used for 3dmidtex
    fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
 
@@ -213,16 +214,18 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          if(!P_CheckPortalHeight(mo, tm->openfrontsector, prtl_floor))
          {
             frontfloorz = tm->portalfloorz;
+            frontdropz = tm->portaldropoffz;
             // SoM: Something happened
             tm->openrange = 0;
             return;
          }
 
          frontfloorz = tm->portalfloorz;
+         frontdropz = tm->portaldropoffz;
       }
       else
 #endif
-         frontfloorz = tm->openfrontsector->floorheight;
+         frontfloorz = frontdropz = tm->openfrontsector->floorheight;
 
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openbacksector))
@@ -230,16 +233,18 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          if(!P_CheckPortalHeight(mo, tm->openbacksector, prtl_floor))
          {
             backfloorz = tm->portalfloorz;
+            backdropz = tm->portaldropoffz;
             // SoM: Something happened
             tm->openrange = 0;
             return;
          }
 
          backfloorz = tm->portalfloorz;
+         backdropz = tm->portaldropoffz;
       }
       else
 #endif
-         backfloorz = tm->openbacksector->floorheight;
+         backfloorz = backdropz = tm->openbacksector->floorheight;
 
       frontfz = tm->openfrontsector->floorheight;
       backfz = tm->openbacksector->floorheight;
@@ -254,17 +259,16 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    if(frontfloorz > backfloorz)
    {
       tm->openbottom = frontfloorz;
-      tm->lowfloor = backfloorz;
       // haleyjd
       tm->floorpic = tm->openfrontsector->floorpic;
    }
    else
    {
       tm->openbottom = backfloorz;
-      tm->lowfloor = frontfloorz;
       // haleyjd
       tm->floorpic = tm->openbacksector->floorpic;
    }
+   tm->lowfloor = frontdropz < backdropz ? frontdropz : backdropz;
 
    if(frontcz < backcz)
       otop = frontcz;
