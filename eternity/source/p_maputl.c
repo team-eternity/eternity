@@ -34,6 +34,7 @@
 #include "p_map.h"
 #include "p_setup.h"
 #include "polyobj.h"
+#include "p_map3d.h"
 
 
 //
@@ -168,17 +169,38 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openfrontsector) &&
-         R_LinkedCeilingActive(tm->openbacksector) && 
-         tm->openfrontsector->c_portal == tm->openbacksector->c_portal)
-         frontceilz = backceilz = tm->openfrontsector->ceilingheight + (1024 * FRACUNIT);
+      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openfrontsector))
+      {
+         if(!P_CheckPortalHeight(mo, tm->openfrontsector, prtl_ceiling))
+         {
+            frontceilz = tm->portalceilingz;
+            // SoM: Something happened
+            tm->openrange = 0;
+            return;
+         }
+         frontceilz = tm->portalceilingz;
+      }
       else
 #endif
-      {
          frontceilz = tm->openfrontsector->ceilingheight;
-         backceilz = tm->openbacksector->ceilingheight;
+
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openbacksector))
+      {
+         if(!P_CheckPortalHeight(mo, tm->openbacksector, prtl_ceiling))
+         {
+            backceilz = tm->portalceilingz;
+            // SoM: Something happened
+            tm->openrange = 0;
+            return;
+         }
+         backceilz = tm->portalceilingz;
       }
-      
+      else
+#endif
+         backceilz = tm->openbacksector->ceilingheight;
+
+     
       frontcz = tm->openfrontsector->ceilingheight;
       backcz = tm->openbacksector->ceilingheight;
    }
@@ -186,16 +208,38 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openfrontsector) &&
-         R_LinkedFloorActive(tm->openbacksector) && 
-         tm->openfrontsector->f_portal == tm->openbacksector->f_portal)
-         frontfloorz = backfloorz = tm->openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
-      else 
-#endif
+      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openfrontsector))
       {
-         frontfloorz = tm->openfrontsector->floorheight;
-         backfloorz = tm->openbacksector->floorheight;
+         if(!P_CheckPortalHeight(mo, tm->openfrontsector, prtl_floor))
+         {
+            frontfloorz = tm->portalfloorz;
+            // SoM: Something happened
+            tm->openrange = 0;
+            return;
+         }
+
+         frontfloorz = tm->portalfloorz;
       }
+      else
+#endif
+         frontfloorz = tm->openfrontsector->floorheight;
+
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openbacksector))
+      {
+         if(!P_CheckPortalHeight(mo, tm->openbacksector, prtl_floor))
+         {
+            backfloorz = tm->portalfloorz;
+            // SoM: Something happened
+            tm->openrange = 0;
+            return;
+         }
+
+         backfloorz = tm->portalfloorz;
+      }
+      else
+#endif
+         backfloorz = tm->openbacksector->floorheight;
 
       frontfz = tm->openfrontsector->floorheight;
       backfz = tm->openbacksector->floorheight;

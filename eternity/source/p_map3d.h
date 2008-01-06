@@ -42,8 +42,7 @@ typedef enum
 } prtl_foc_e;
 
 
-boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec, 
-                            prtl_foc_e surface);
+boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface);
 #endif // R_LINKEDPORTALS
 
 #endif 

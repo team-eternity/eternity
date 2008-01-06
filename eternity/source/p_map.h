@@ -45,6 +45,13 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff);
 boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y,boolean boss);
 // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
 boolean P_TeleportMoveStrict(mobj_t *thing, fixed_t x, fixed_t y, boolean boss);
+#ifdef R_LINKEDPORTALS
+// SoM: new function that won't telefrag things which the transporting mobj isn't
+// touching on the z axis.
+boolean P_PortalTeleportMove(mobj_t *thing, fixed_t x, fixed_t y);
+#endif
+
+
 void    P_SlideMove(mobj_t *mo);
 boolean P_CheckSight(mobj_t *t1, mobj_t *t2);
 void    P_UseLines(player_t *player);
@@ -157,6 +164,19 @@ typedef struct doom_mapinter_s
    sector_t *openfrontsector; // made global                    // phares
    sector_t *openbacksector;  // made global
 
+#ifdef R_LINKEDPORTALS
+   // SoM: Used by PIT_CheckPortalLine to determine how lines should effect the
+   // tm->floorz and tm->ceilingz. True means the portal is below tm->thing,
+   // false means the portal is above.
+   boolean  portalbelow;
+
+   // SoM: Also used by PIT_CheckPortalLine to determine if tm->thing is in physical contact
+   // with the portal or not.
+   boolean  portalcontact;
+
+
+   fixed_t portalfloorz, portaldropoffz, portalceilingz;
+#endif
 } doom_mapinter_t;
 
 

@@ -40,6 +40,9 @@
 typedef struct linkoffset_s
 {
    fixed_t x, y, z;
+
+   // SoM: used in collision detection.
+   int validcount;
 } linkoffset_t;
 
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);

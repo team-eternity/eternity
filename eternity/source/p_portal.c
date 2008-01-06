@@ -243,6 +243,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
    link->x = x;
    link->y = y;
    link->z = z;
+   link->validcount = 0;
 
    return 0;
 }
@@ -498,140 +499,6 @@ void P_LinkRejectTable(void)
 
 // -----------------------------------------
 // Begin portal teleportation
-
-static boolean PIT_StompThing3D(mobj_t *thing)
-{
-   fixed_t blockdist;
-   
-   if(!(thing->flags & MF_SHOOTABLE)) // Can't shoot it? Can't stomp it!
-   {
-      return true;
-   }
-   
-   blockdist = thing->radius + tm->thing->radius;
-   
-   if(D_abs(thing->x - tm->x) >= blockdist ||
-      D_abs(thing->y - tm->y) >= blockdist)
-      return true; // didn't hit it
-   
-   // don't clip against self
-   if(thing == tm->thing)
-      return true;
-
-   if(tm->thing->z >= thing->z + thing->height ||
-      thing->z >= tm->thing->z + tm->thing->height)
-      return true;
-
-   P_DamageMobj(thing, tm->thing, tm->thing, 10000, MOD_TELEFRAG); // Stomp!
-   
-   return true;
-}
-
-
-
-boolean P_PortalTeleportMove(mobj_t *thing, fixed_t x, fixed_t y)
-{
-   int xl, xh, yl, yh, bx, by;
-   subsector_t *newsubsec;
-
-   // kill anything occupying the position
-   
-   tm->thing = thing;
-   tm->flags = thing->flags;
-   
-   tm->x = x;
-   tm->y = y;
-   
-   tm->bbox[BOXTOP] = y + tm->thing->radius;
-   tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
-   tm->bbox[BOXRIGHT] = x + tm->thing->radius;
-   tm->bbox[BOXLEFT] = x - tm->thing->radius;
-   
-   newsubsec = R_PointInSubsector (x,y);
-   tm->ceilingline = NULL;
-   
-   // The base floor/ceiling is from the subsector
-   // that contains the point.
-   // Any contacted lines the step closer together
-   // will adjust them.
-   
-#ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) &&
-      !(tm->thing->flags & MF_NOCLIP))
-   {
-      if(!P_CheckPortalHeight(tm->thing, x, y, newsubsec->sector, prtl_floor))
-         return false;
-   }
-   else
-#endif
-      tm->floorz = newsubsec->sector->floorheight;
-
-#ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
-      !(tm->thing->flags & MF_NOCLIP))
-   {
-      if(!P_CheckPortalHeight(tm->thing, x, y, newsubsec->sector, prtl_ceiling))
-         return false;
-   }
-   else
-#endif
-      tm->ceilingz = newsubsec->sector->ceilingheight;
-
-   tm->secfloorz = tm->stepupfloorz = tm->passfloorz = tm->dropoffz = tm->floorz;
-   tm->secceilz = tm->passceilz = tm->ceilingz;
-
-   // haleyjd
-   tm->floorpic = newsubsec->sector->floorpic;
-   
-   // SoM 09/07/02: 3dsides monster fix
-   tm->touch3dside = 0;
-   
-   validcount++;
-   tm->numspechit = 0;
-   
-   // stomp on any things contacted
-   
-   xl = (tm->bbox[BOXLEFT] - bmaporgx - MAXRADIUS)>>MAPBLOCKSHIFT;
-   xh = (tm->bbox[BOXRIGHT] - bmaporgx + MAXRADIUS)>>MAPBLOCKSHIFT;
-   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS)>>MAPBLOCKSHIFT;
-   yh = (tm->bbox[BOXTOP] - bmaporgy + MAXRADIUS)>>MAPBLOCKSHIFT;
-
-   for(bx=xl ; bx<=xh ; bx++)
-   {
-      for(by=yl ; by<=yh ; by++)
-      {
-         if(!P_BlockThingsIterator(bx,by,PIT_StompThing3D))
-            return false;
-      }
-   }
-
-
-   // the move is ok,
-   // so unlink from the old position & link into the new position
-   
-   P_UnsetThingPosition(thing);
-   
-   thing->floorz = tm->floorz;
-   thing->ceilingz = tm->ceilingz;
-   thing->dropoffz = tm->dropoffz;        // killough 11/98
-
-   thing->passfloorz = tm->passfloorz;
-   thing->passceilz = tm->passceilz;
-   thing->secfloorz = tm->secfloorz;
-   thing->secceilz = tm->secceilz;
-   
-   thing->x = x;
-   thing->y = y;
-   
-   P_SetThingPosition(thing);
-   
-   return true;
-}
-
-
-
-
-
 //
 // EV_PortalTeleport
 //

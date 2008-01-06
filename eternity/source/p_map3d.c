@@ -253,7 +253,9 @@ boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
 static mobj_t *stepthing;
 
 extern boolean PIT_CheckLine(line_t *ld);
-
+#ifdef R_LINKEDPORTALS
+extern boolean PIT_CheckPortalLine(line_t *ld);
+#endif
 extern boolean P_Touched(mobj_t *thing, mobj_t *tmthing);
 extern int     P_MissileBlockHeight(mobj_t *mo);
 extern boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing);
@@ -464,13 +466,13 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
 #ifdef R_LINKEDPORTALS
 // --------------------------------------------------------------------------------
 // Begin portal-related clipping functions
-boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec, 
-                            prtl_foc_e surface)
+
+boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
 {
    int xl, xh, yl, yh, bx, by;
    linkoffset_t   *link;
    subsector_t    *newsubsec;
-   fixed_t        useheight;
+   fixed_t        useheight, useheight2;
    boolean        ret = true;
 
    fixed_t thingdropoffz;
@@ -483,20 +485,40 @@ boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec,
    if(surface == prtl_floor)
    {
       if(!useportalgroups || !R_LinkedFloorActive(sec) ||
-         !(link = P_GetLinkOffset(sec->groupid, sec->f_portal->data.camera.groupid)))
+         !(link = P_GetLinkOffset(thing->groupid, sec->f_portal->data.camera.groupid)))
       {
-         tm->floorz = sec->floorheight;
+         tm->portalfloorz = sec->floorheight;
+         tm->portaldropoffz = sec->floorheight;
          return true;
       }
+
+      // Portal has already been checked.
+      if(link->validcount == validcount)
+      {
+         tm->portalfloorz = tm->floorz;
+         tm->portaldropoffz = tm->dropoffz;
+         return true;
+      }
+
+      link->validcount = validcount;
    }
    else
    {
       if(!useportalgroups || !R_LinkedCeilingActive(sec) ||
-         !(link = P_GetLinkOffset(sec->groupid, sec->c_portal->data.camera.groupid)))
+         !(link = P_GetLinkOffset(thing->groupid, sec->c_portal->data.camera.groupid)))
       {
-         tm->ceilingz = sec->ceilingheight;
+         tm->portalceilingz = sec->ceilingheight;
          return true;
       }
+
+      // Portal has already been checked.
+      if(link->validcount == validcount)
+      {
+         tm->portalceilingz = tm->ceilingz;
+         return true;
+      }
+
+      link->validcount = validcount;
    }
 
    P_PushTMStack();
@@ -504,8 +526,8 @@ boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec,
    tm->thing = thing;
    tm->flags = thing->flags;
    
-   tm->x = x - link->x;
-   tm->y = y - link->y;
+   tm->x = thing->x - link->x;
+   tm->y = thing->y - link->y;
    
    tm->bbox[BOXTOP]    = tm->y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = tm->y - tm->thing->radius;
@@ -528,14 +550,18 @@ boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec,
       if(R_LinkedFloorActive(newsubsec->sector) && 
          !(tm->flags & MF_NOCLIP && !(tm->flags & MF_SKULLFLY)))
       {
-         if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_floor))
+         if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_floor))
          {
+            tm->floorz = tm->portalfloorz;
+            tm->dropoffz = tm->portaldropoffz;
             ret = false;
             goto finish;
          }
+         tm->floorz = tm->portalfloorz;
+         tm->dropoffz = tm->portaldropoffz;
       }
       else
-         tm->floorz = newsubsec->sector->floorheight;
+         tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
 
       tm->ceilingz = sec->ceilingheight;
    }
@@ -544,16 +570,18 @@ boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec,
       if(R_LinkedCeilingActive(newsubsec->sector) && 
          !(tm->flags & MF_NOCLIP && !(tm->flags & MF_SKULLFLY)))
       {
-         if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_ceiling))
+         if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_ceiling))
          {
+            tm->ceilingz = tm->portalceilingz;
             ret = false;
             goto finish;
          }
+         tm->ceilingz = tm->portalceilingz;
       }
       else
          tm->ceilingz = newsubsec->sector->ceilingheight;
 
-      tm->floorz = sec->floorheight;
+      tm->floorz = tm->dropoffz = sec->floorheight;
    }
 
    tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->dropoffz = tm->floorz;
@@ -563,9 +591,13 @@ boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec,
    tm->floorpic = newsubsec->sector->floorpic;
    // SoM: 09/07/02: 3dsides monster fix
    tm->touch3dside = 0;
-   validcount++;
    
    tm->numspechit = 0;
+
+   // SoM: ok, so valid count doesn't need to be incremented here because I realized the
+   // same geometry shouldn't be re-checked for the mobj anyway. So incrementing validcount
+   // can only lead to added overhead.
+   // validcount++;
 
    // Check things first, possibly picking things up.
    // The bounding box is extended by MAXRADIUS
@@ -669,9 +701,15 @@ boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec,
    thingdropoffz = tm->floorz;
    tm->floorz = tm->dropoffz;
 
+   tm->portalbelow = (surface == prtl_floor);
+
+   tm->portalcontact = surface == prtl_floor ? 
+                       (tm->thing->z < sec->f_portal->data.camera.planez) :
+                       (tm->thing->z + tm->thing->height > sec->c_portal->data.camera.planez);
+
    for(bx = xl; bx <= xh; ++bx)
       for(by = yl; by <= yh; ++by)
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckPortalLine))
          {
             ret = false;
             goto finish; // doesn't fit
@@ -692,14 +730,21 @@ boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec,
 
    
    finish: 
-   useheight = surface == prtl_floor ? tm->floorz : tm->ceilingz;
-
-   P_PopTMStack();
-
    if(surface == prtl_floor)
-      tm->floorz = useheight;
+   {
+      useheight = tm->floorz;
+      useheight2 = tm->dropoffz;
+      P_PopTMStack();
+      tm->portalfloorz = useheight;
+      tm->portaldropoffz = useheight2;
+   }
    else
-      tm->ceilingz = useheight;
+   {
+      useheight = tm->ceilingz;
+      P_PopTMStack();
+      tm->portalceilingz = useheight;
+   }
+
 
    return ret;
 }
@@ -742,6 +787,10 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    tm->unstuck = thing->player &&        // only players
       thing->player->mo == thing;        // not voodoo dolls
 
+   // SoM: Moved this up here because it needs to be incremented before the calls to 
+   // P_CheckPortalHeight
+   validcount++;
+
    // The base floor / ceiling is from the subsector
    // that contains the point.
    // Any contacted lines the step closer together
@@ -751,19 +800,31 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
       !(tm->thing->flags & MF_NOCLIP))
    {
-      if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_floor))
+      if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_floor))
+      {
+         tm->floorz = tm->portalfloorz;
+         tm->dropoffz = tm->portaldropoffz;
          return false;
+      }
+
+      tm->floorz = tm->portalfloorz;
+      tm->dropoffz = tm->portaldropoffz;
    }
    else
 #endif
-      tm->floorz = newsubsec->sector->floorheight;
+      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
       !(tm->thing->flags & MF_NOCLIP))
    {
-      if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_ceiling))
+      if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_ceiling))
+      {
+         tm->ceilingz = tm->portalceilingz;
          return false;
+      }
+
+      tm->ceilingz = tm->portalceilingz;
    }
    else
 #endif
@@ -776,7 +837,6 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    tm->floorpic = newsubsec->sector->floorpic;
    // SoM: 09/07/02: 3dsides monster fix
    tm->touch3dside = 0;
-   validcount++;
    
    tm->numspechit = 0;
 
