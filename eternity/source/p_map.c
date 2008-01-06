@@ -289,20 +289,28 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    // will adjust them.
    
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector))
-      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS); //newsubsec->sector->floorheight - tm->thing->height;
+   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) &&
+      !(tm->thing->flags & MF_NOCLIP))
+   {
+      if(!P_CheckPortalHeight(tm->thing, x, y, newsubsec->sector, prtl_floor))
+         return false;
+   }
    else
 #endif
-      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
+      tm->floorz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector))
-      tm->ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS); //newsubsec->sector->ceilingheight + tm->thing->height;
+   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
+      !(tm->thing->flags & MF_NOCLIP))
+   {
+      if(!P_CheckPortalHeight(tm->thing, x, y, newsubsec->sector, prtl_ceiling))
+         return false;
+   }
    else
 #endif
       tm->ceilingz = newsubsec->sector->ceilingheight;
 
-   tm->secfloorz = tm->stepupfloorz = tm->passfloorz = tm->floorz;
+   tm->secfloorz = tm->stepupfloorz = tm->passfloorz = tm->dropoffz = tm->floorz;
    tm->secceilz = tm->passceilz = tm->ceilingz;
 
    // haleyjd

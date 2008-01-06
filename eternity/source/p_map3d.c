@@ -45,6 +45,8 @@
 #include "p_setup.h"
 #include "r_main.h"
 
+#include "p_map3d.h"
+
 // I HATE GLOBALS!!!
 extern fixed_t   FloatBobOffsets[64];
 
@@ -257,6 +259,8 @@ extern int     P_MissileBlockHeight(mobj_t *mo);
 extern boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing);
 extern boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing);
 
+
+
 //
 // PIT_CheckThing3D
 // 
@@ -280,6 +284,11 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
       return true;
 
+   // don't clip against self
+  
+   if(thing == tm->thing)
+      return true;
+
    blockdist = thing->radius + tm->thing->radius;
 
    if(D_abs(thing->x - tm->x) >= blockdist ||
@@ -290,17 +299,15 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    //
    // This test has less information content (it's almost always false), so it
    // should not be moved up to first, as it adds more overhead than it removes.
-   
-   // don't clip against self
-  
-   if(thing == tm->thing)
-      return true;
 
    // haleyjd 1/17/00: set global hit reference
    tm->BlockingMobj = thing;
 
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
+
+   if(topz > tm->floorz)
+      tm->floorz = topz;
 
    if(!(tm->thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
@@ -451,6 +458,256 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
           && (tm->thing->flags & MF_SOLID || demo_compatibility));
 }
 
+
+
+
+#ifdef R_LINKEDPORTALS
+// --------------------------------------------------------------------------------
+// Begin portal-related clipping functions
+boolean P_CheckPortalHeight(mobj_t *thing, fixed_t x, fixed_t y, sector_t *sec, 
+                            prtl_foc_e surface)
+{
+   int xl, xh, yl, yh, bx, by;
+   linkoffset_t   *link;
+   subsector_t    *newsubsec;
+   fixed_t        useheight;
+   boolean        ret = true;
+
+   fixed_t thingdropoffz;
+
+   // haleyjd: from zdoom:
+   mobj_t  *thingblocker;
+   mobj_t  *fakedblocker;
+   fixed_t realheight = thing->height;
+
+   if(surface == prtl_floor)
+   {
+      if(!useportalgroups || !R_LinkedFloorActive(sec) ||
+         !(link = P_GetLinkOffset(sec->groupid, sec->f_portal->data.camera.groupid)))
+      {
+         tm->floorz = sec->floorheight;
+         return true;
+      }
+   }
+   else
+   {
+      if(!useportalgroups || !R_LinkedCeilingActive(sec) ||
+         !(link = P_GetLinkOffset(sec->groupid, sec->c_portal->data.camera.groupid)))
+      {
+         tm->ceilingz = sec->ceilingheight;
+         return true;
+      }
+   }
+
+   P_PushTMStack();
+
+   tm->thing = thing;
+   tm->flags = thing->flags;
+   
+   tm->x = x - link->x;
+   tm->y = y - link->y;
+   
+   tm->bbox[BOXTOP]    = tm->y + tm->thing->radius;
+   tm->bbox[BOXBOTTOM] = tm->y - tm->thing->radius;
+   tm->bbox[BOXRIGHT]  = tm->x + tm->thing->radius;
+   tm->bbox[BOXLEFT]   = tm->x - tm->thing->radius;
+   
+   newsubsec = R_PointInSubsector(tm->x, tm->y);
+
+   // Whether object can get out of a sticky situation:
+   tm->unstuck = thing->player &&        // only players
+      thing->player->mo == thing;        // not voodoo dolls
+
+   // The base floor / ceiling is from the subsector
+   // that contains the point.
+   // Any contacted lines the step closer together
+   // will adjust them.
+
+   if(surface == prtl_floor)
+   {
+      if(R_LinkedFloorActive(newsubsec->sector) && 
+         !(tm->flags & MF_NOCLIP && !(tm->flags & MF_SKULLFLY)))
+      {
+         if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_floor))
+         {
+            ret = false;
+            goto finish;
+         }
+      }
+      else
+         tm->floorz = newsubsec->sector->floorheight;
+
+      tm->ceilingz = sec->ceilingheight;
+   }
+   else
+   {
+      if(R_LinkedCeilingActive(newsubsec->sector) && 
+         !(tm->flags & MF_NOCLIP && !(tm->flags & MF_SKULLFLY)))
+      {
+         if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_ceiling))
+         {
+            ret = false;
+            goto finish;
+         }
+      }
+      else
+         tm->ceilingz = newsubsec->sector->ceilingheight;
+
+      tm->floorz = sec->floorheight;
+   }
+
+   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->dropoffz = tm->floorz;
+   tm->secceilz = tm->passceilz = tm->ceilingz;
+
+   // haleyjd
+   tm->floorpic = newsubsec->sector->floorpic;
+   // SoM: 09/07/02: 3dsides monster fix
+   tm->touch3dside = 0;
+   validcount++;
+   
+   tm->numspechit = 0;
+
+   // Check things first, possibly picking things up.
+   // The bounding box is extended by MAXRADIUS
+   // because mobj_ts are grouped into mapblocks
+   // based on their origin point, and can overlap
+   // into adjacent blocks by up to MAXRADIUS units.
+
+   xl = (tm->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+
+   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   thingblocker = NULL;
+   fakedblocker = NULL;
+   stepthing    = NULL;
+
+   // [RH] Fake taller height to catch stepping up into things.
+   if(thing->player)   
+      thing->height = realheight + 24*FRACUNIT;
+   
+   for(bx = xl; bx <= xh; ++bx)
+   {
+      for(by = yl; by <= yh; ++by)
+      {
+         // haleyjd: from zdoom:
+         mobj_t *robin = NULL;
+
+         do
+         {
+            if(!P_SBlockThingsIterator(bx, by, PIT_CheckThing3D, robin))
+            { 
+               // [RH] If a thing can be stepped up on, we need to continue checking
+               // other things in the blocks and see if we hit something that is
+               // definitely blocking. Otherwise, we need to check the lines, or we
+               // could end up stuck inside a wall.
+               if(tm->BlockingMobj == NULL)
+               { 
+                  // Thing slammed into something; don't let it move now.
+                  thing->height = realheight;
+
+                  ret = false;
+                  goto finish;
+               }
+               else if(!tm->BlockingMobj->player && 
+                       !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
+                       tm->BlockingMobj->z + tm->BlockingMobj->height-thing->z <= 24*FRACUNIT)
+               {
+                  if(thingblocker == NULL || tm->BlockingMobj->z > thingblocker->z)
+                     thingblocker = tm->BlockingMobj;
+                  robin = tm->BlockingMobj;
+                  tm->BlockingMobj = NULL;
+               }
+               else if(thing->player &&
+                       thing->z + thing->height - tm->BlockingMobj->z <= 24*FRACUNIT)
+               {
+                  if(thingblocker)
+                  { 
+                     // There is something to step up on. Return this thing as
+                     // the blocker so that we don't step up.
+                     thing->height = realheight;
+
+                     ret = false;
+                     goto finish;
+                  }
+                  // Nothing is blocking us, but this actor potentially could
+                  // if there is something else to step on.
+                  fakedblocker = tm->BlockingMobj;
+                  robin = tm->BlockingMobj;
+                  tm->BlockingMobj = NULL;
+               }
+               else
+               { // Definitely blocking
+                  thing->height = realheight;
+
+                  ret = false;
+                  goto finish;
+               }
+            }
+            else
+               robin = NULL;
+         } 
+         while(robin);
+      }
+   }
+
+
+   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   thing->height = realheight;
+   if(tm->flags & MF_NOCLIP)
+   {
+      ret = ((tm->BlockingMobj = thingblocker) == NULL);
+      goto finish;
+   }
+   
+   xl = (tm->bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
+
+   thingdropoffz = tm->floorz;
+   tm->floorz = tm->dropoffz;
+
+   for(bx = xl; bx <= xh; ++bx)
+      for(by = yl; by <= yh; ++by)
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
+         {
+            ret = false;
+            goto finish; // doesn't fit
+         }
+
+   if(tm->ceilingz - tm->floorz < thing->height)
+   {
+      ret = false;
+      goto finish; // doesn't fit
+   }
+         
+   if(stepthing != NULL)
+      tm->dropoffz = thingdropoffz;
+   
+   ret = ((tm->BlockingMobj = thingblocker) == NULL);
+   
+
+
+   
+   finish: 
+   useheight = surface == prtl_floor ? tm->floorz : tm->ceilingz;
+
+   P_PopTMStack();
+
+   if(surface == prtl_floor)
+      tm->floorz = useheight;
+   else
+      tm->ceilingz = useheight;
+
+   return ret;
+}
+
+// End portal-realted clipping functions
+// --------------------------------------------------------------------------------
+#endif
+
 //
 // P_CheckPosition3D
 //
@@ -493,20 +750,26 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
       !(tm->thing->flags & MF_NOCLIP))
-      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
+   {
+      if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_floor))
+         return false;
+   }
    else
 #endif
-      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
+      tm->floorz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
       !(tm->thing->flags & MF_NOCLIP))
-      tm->ceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
+   {
+      if(!P_CheckPortalHeight(tm->thing, tm->x, tm->y, newsubsec->sector, prtl_ceiling))
+         return false;
+   }
    else
 #endif
       tm->ceilingz = newsubsec->sector->ceilingheight;
 
-   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->floorz;
+   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->dropoffz = tm->floorz;
    tm->secceilz = tm->passceilz = tm->ceilingz;
 
    // haleyjd
