@@ -160,7 +160,13 @@ typedef struct doom_mapinter_s
 } doom_mapinter_t;
 
 
-// SoM: Todo: turn this into a stack.
+// Pushes the tm stack, clearing the new element
+void P_PushTMStack();
+
+// Pops the tm stack, storing the discarded element for later re-insertion.
+void P_PopTMStack();
+
+
 extern doom_mapinter_t  *tm;
 
 

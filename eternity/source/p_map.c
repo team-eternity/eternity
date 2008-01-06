@@ -68,21 +68,27 @@ static doom_mapinter_t  *unusedtm = NULL;
 
 // 
 // P_PushTMStack
-// Allocates or assigns a new head to the tm stack, copying the attributes of the current
-// head to it.
+// Allocates or assigns a new head to the tm stack
 void P_PushTMStack()
 {
    doom_mapinter_t *newtm;
 
    if(!unusedtm)
-      newtm = malloc(sizeof(doom_mapinter_t));
+      newtm = calloc(sizeof(doom_mapinter_t), 1);
    else
    {
+      // SoM: Do not clear out the spechit stuff
+      int msh = unusedtm->spechit_max;
+      line_t **sh = unusedtm->spechit;
+
       newtm = unusedtm;
       unusedtm = unusedtm->prev;
+      memset(newtm, 0, sizeof(*newtm));
+
+      newtm->spechit_max = msh;
+      newtm->spechit = sh;
    }
 
-   memcpy(newtm, tm, sizeof(doom_mapinter_t));
    newtm->prev = tm;
    tm = newtm;
 }
