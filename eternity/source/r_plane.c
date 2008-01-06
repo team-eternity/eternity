@@ -194,6 +194,74 @@ static void R_MapPlane(int y, int x1, int x2)
 
 
 /*
+static void R_MapPlane(int y, int x1, int x2)
+{
+   float dy, xstep, ystep, realy, slope;
+
+   static float scale = 2.0f
+
+#ifdef RANGECHECK
+   if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
+      I_Error("R_MapPlane: %i, %i at %i", x1, x2, y);
+#endif
+  
+   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
+   // center row because there are an even number of rows) some corrections need
+   // to be made depending on where the row lies relative to the ycenter row.
+   if(view.ycenter == y)
+      dy = 0.01f;
+   else if(y < view.ycenter)
+      dy = (float)fabs(view.ycenter - y) - 1;
+   else
+      dy = (float)fabs(view.ycenter - y) + 1;
+
+   slope = (float)fabs(plane.height / dy);
+   realy = slope * view.yfoc * scale;
+
+   xstep = view.sin * slope * view.focratio * scale;
+   ystep = view.cos * slope * view.focratio * scale;
+
+   span.xfrac = (unsigned)((((-plane.pviewy + plane.yoffset) * scale) + (-view.cos * realy) 
+                            + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
+   span.yfrac = (unsigned)((((plane.pviewx + plane.xoffset) * scale) + (view.sin * realy) 
+                            + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
+   span.xstep = (unsigned)(xstep * plane.fixedunit);
+   span.ystep = (unsigned)(ystep * plane.fixedunit);
+
+   // killough 2/28/98: Add offsets
+   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
+   {
+      int index = (int)(realy / 16.0f);
+      if(index >= MAXLIGHTZ )
+         index = MAXLIGHTZ-1;
+      span.colormap = plane.planezlight[index];
+   }
+   
+   span.y  = y;
+   span.x1 = x1;
+   span.x2 = x2;
+   span.source = plane.source;
+   
+   // BIG FLATS
+   flatfunc();
+
+   // visplane viewing -- sf
+   if(visplane_view)
+   {
+      if(y >= 0 && y < viewheight)
+      {
+         // SoM: ANYRES
+         if(x1 >= 0 && x1 <= viewwidth)
+            *(video.screens[0] + y*video.width + x1) = gameModeInfo->blackIndex;
+         if(x2 >= 0 && x2 <= viewwidth)
+            *(video.screens[0] + y*video.width + x2) = gameModeInfo->blackIndex;
+      }
+   }
+}
+*/
+
+
+/*
 //
 // R_MapPlane
 //
