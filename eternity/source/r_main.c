@@ -50,12 +50,9 @@
 #include "d_gi.h"
 #include "c_io.h"
 
-
-
 // SoM: Cardboard
 const float PI = 3.14159265f;
 cb_view_t view;
-
 
 // haleyjd 04/03/05: focal lengths made global, y len added
 fixed_t focallen_x;

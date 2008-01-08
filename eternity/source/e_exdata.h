@@ -98,6 +98,8 @@ typedef struct mapsectorext_s
    double floor_yoffs;
    double ceiling_xoffs;
    double ceiling_yoffs;
+   double floorangle;
+   double ceilingangle;
    int    topmap;
    int    midmap;
    int    bottommap;

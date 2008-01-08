@@ -45,6 +45,7 @@
 #include "w_wad.h"
 #include "i_system.h"
 #include "d_dehtbl.h" // for dehflags parsing
+#include "r_main.h"
 
 #define NEED_EDF_DEFINITIONS
 
@@ -627,12 +628,12 @@ static cfg_opt_t sector_opts[] =
    CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
    CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
 
-   CFG_FLOAT(FIELD_SECTOR_FLOORXOFFSET,   0.0f, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_FLOORYOFFSET,   0.0f, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGXOFFSET, 0.0f, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGYOFFSET, 0.0f, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0f, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0f, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORXOFFSET,   0.0, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORYOFFSET,   0.0, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGXOFFSET, 0.0, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGYOFFSET, 0.0, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0, CFGF_NONE),
    
    CFG_END()
 };
@@ -1822,6 +1823,10 @@ void E_LoadSectorExt(sector_t *sector)
    sector->floor_yoffs   = (fixed_t)(edsector->floor_yoffs   * FRACUNIT);
    sector->ceiling_xoffs = (fixed_t)(edsector->ceiling_xoffs * FRACUNIT);
    sector->ceiling_yoffs = (fixed_t)(edsector->ceiling_yoffs * FRACUNIT);
+
+   // flat angles
+   sector->floorbaseangle   = (float)(edsector->floorangle   * PI / 180.0f);
+   sector->ceilingbaseangle = (float)(edsector->ceilingangle * PI / 180.0f);
 
    // colormaps
    sector->topmap    = edsector->topmap;
