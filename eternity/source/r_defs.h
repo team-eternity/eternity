@@ -569,7 +569,10 @@ typedef struct visplane
 
    // SoM: Cardboard optimization
    float xoffsf, yoffsf, heightf;
-   float viewxf, viewyf, viewzf;  
+   float viewxf, viewyf, viewzf;
+
+   float angle, viewsin, viewcos; // haleyjd 01/05/08: angle
+
 } visplane_t;
 
 

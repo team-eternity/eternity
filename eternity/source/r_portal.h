@@ -53,26 +53,29 @@ typedef struct
 
 typedef struct
 {
-   short *floorpic, *ceilingpic;
+   short   *floorpic, *ceilingpic;
    fixed_t *floorz, *ceilingz;
-   short *floorlight, *ceilinglight;
+   short   *floorlight, *ceilinglight;
    fixed_t *floorxoff, *flooryoff;
    fixed_t *ceilingxoff, *ceilingyoff;
+   float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
+   float   *ceilingbaseangle, *ceilingangle;
 } horizonportal_t;
 
 typedef struct
 {
-   short *pic;
+   short   *pic;
    fixed_t *delta;
-   short *lightlevel;
+   short   *lightlevel;
    fixed_t *xoff, *yoff;
+   float   *baseangle, *angle; // haleyjd 01/05/08: angles
 } skyplaneportal_t;
 
 typedef struct rportal_s
 {
    rportaltype_e type;
 
-   union
+   union portaldata_u
    {
       cameraportal_t   camera;
       horizonportal_t  horizon;
@@ -94,8 +97,18 @@ typedef struct rportal_s
 rportal_t *R_GetSkyBoxPortal(mobj_t *camera);
 rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
 rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
-rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, fixed_t *floorz, fixed_t *ceilingz, short *floorlight, short *ceilinglight, fixed_t *floorxoff, fixed_t *flooryoff, fixed_t *ceilingxoff, fixed_t *ceilingyoff);
-rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta, short *lightlevel, fixed_t *xoff, fixed_t *yoff);
+
+rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, 
+                              fixed_t *floorz, fixed_t *ceilingz, 
+                              short *floorlight, short *ceilinglight, 
+                              fixed_t *floorxoff, fixed_t *flooryoff, 
+                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
+                              float *floorbaseangle, float *floorangle,
+                              float *ceilingbaseangle, float *ceilingangle);
+
+rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta, short *lightlevel, 
+                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
+                            float *angle);
 
 // SoM: Cardboard
 void R_PortalAdd(rportal_t *portal, int x, float ytop, float ybottom);

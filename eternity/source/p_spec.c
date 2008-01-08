@@ -4763,14 +4763,18 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
                                 &sector->ceilingz, 
                                 &sector->lightlevel, 
                                 &sector->ceiling_xoffs, 
-                                &sector->ceiling_yoffs);
+                                &sector->ceiling_yoffs,
+                                &sector->ceilingbaseangle,
+                                &sector->ceilingangle);
       break;
    case portal_horizon:
       portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic, 
                                   &sector->floorz, &sector->ceilingz,
                                   &sector->lightlevel, &sector->lightlevel,
                                   &sector->floor_xoffs, &sector->floor_yoffs,
-                                  &sector->ceiling_xoffs, &sector->ceiling_yoffs);
+                                  &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+                                  &sector->floorbaseangle, &sector->floorangle,
+                                  &sector->ceilingbaseangle, &sector->ceilingangle);
       break;
    case portal_skybox:
       // find the skybox camera object

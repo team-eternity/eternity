@@ -151,12 +151,12 @@ static void R_MapPlane(int y, int x1, int x2)
    slope = (float)fabs(plane.height / dy);
    realy = slope * view.yfoc;
 
-   xstep = view.sin * slope * view.focratio;
-   ystep = view.cos * slope * view.focratio;
+   xstep = plane.pviewsin * slope * view.focratio;
+   ystep = plane.pviewcos * slope * view.focratio;
 
-   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-view.cos * realy) 
+   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy) 
                             + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (view.sin * realy) 
+   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy) 
                             + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
    span.xstep = (unsigned)(xstep * plane.fixedunit);
    span.ystep = (unsigned)(ystep * plane.fixedunit);
@@ -399,12 +399,7 @@ static visplane_t *new_visplane(unsigned hash)
    visplane_t *check = freetail;
 
    if(!check)
-   {
       check = calloc(1, sizeof *check);
-      check->max_width = 0;
-      check->pad1 = check->pad2 = check->pad3 = check->pad4 = check->top = 
-         check->bottom = NULL;
-   }
    else 
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -438,12 +433,14 @@ static visplane_t *new_visplane(unsigned hash)
 // R_FindPlane
 //
 // killough 2/28/98: Add offsets
+// haleyjd 01/05/08: Add angle
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
-                        fixed_t xoffs, fixed_t yoffs)
+                        fixed_t xoffs, fixed_t yoffs, float angle)
 {
    visplane_t *check;
-   unsigned hash;                      // killough
+   unsigned int hash;                      // killough
+   float tsin, tcos;
    
    if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)  // killough 10/98
       lightlevel = height = 0;   // killough 7/19/98: most skies map together
@@ -451,13 +448,14 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    // New visplane algorithm uses hash table -- killough
    hash = visplane_hash(picnum, lightlevel, height);
 
-   for(check=visplanes[hash]; check; check = check->next)  // killough
+   for(check = visplanes[hash]; check; check = check->next)  // killough
    {
       if(height == check->height &&
          picnum == check->picnum &&
          lightlevel == check->lightlevel &&
          xoffs == check->xoffs &&      // killough 2/28/98: Add offset checks
          yoffs == check->yoffs &&
+         angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap && 
          viewx == check->viewx && 
@@ -476,6 +474,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->maxx = -1;
    check->xoffs = xoffs;               // killough 2/28/98: Save offsets
    check->yoffs = yoffs;
+   check->angle = angle;               // haleyjd 01/05/08: Save angle
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
 
@@ -483,9 +482,20 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->viewy = viewy;
    check->viewz = viewz;
    
-   check->viewxf = view.x;
-   check->viewyf = view.y;
+   // haleyjd 01/05/08: rotate viewpoint by flat angle.
+   // note that the signs of the sine terms must be reversed in order to flip
+   // the y-axis of the flat relative to world coordinates
+
+   tsin = (float) sin(check->angle);
+   tcos = (float) cos(check->angle);
+
+   check->viewxf = (float)( view.x * tcos + view.y * tsin);
+   check->viewyf = (float)(-view.x * tsin + view.y * tcos);
    check->viewzf = view.z;
+
+   // haleyjd 01/05/08: modify viewing angle with respect to flat angle
+   check->viewsin = (float) sin(view.angle + check->angle);
+   check->viewcos = (float) cos(view.angle + check->angle);
 
    check->heightf = (float)height / 65536.0f;
    check->xoffsf  = (float)xoffs / 65536.0f;
@@ -534,8 +544,12 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->lightlevel = pl->lightlevel;
       new_pl->colormap = pl->colormap;
       new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
-      new_pl->xoffs = pl->xoffs;           // killough 2/28/98
+      new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
       new_pl->yoffs = pl->yoffs;
+      new_pl->angle = pl->angle;                 // haleyjd 01/05/08
+      
+      new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
+      new_pl->viewcos = pl->viewcos;
 
       new_pl->viewx = pl->viewx;
       new_pl->viewy = pl->viewy;
@@ -848,10 +862,12 @@ static void do_draw_plane(visplane_t *pl)
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
 
-      plane.pviewx = pl->viewxf;
-      plane.pviewy = pl->viewyf;
-      plane.pviewz = pl->viewzf;
-      plane.height = pl->heightf - pl->viewzf;
+      plane.pviewx   = pl->viewxf;
+      plane.pviewy   = pl->viewyf;
+      plane.pviewz   = pl->viewzf;
+      plane.pviewsin = pl->viewsin; // haleyjd 01/05/08: Add angle
+      plane.pviewcos = pl->viewcos;
+      plane.height   = pl->heightf - pl->viewzf;
       
       //light = (pl->lightlevel >> LIGHTSEGSHIFT) + extralight;
 

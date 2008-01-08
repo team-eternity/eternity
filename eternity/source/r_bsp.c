@@ -1319,6 +1319,8 @@ static void R_Subsector(int num)
    sector_t    tempsec;              // killough 3/7/98: deep water hack
    int         floorlightlevel;      // killough 3/16/98: set floor lightlevel
    int         ceilinglightlevel;    // killough 4/11/98
+   float       floorangle;           // haleyjd 01/05/08: plane angles
+   float       ceilingangle;
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
@@ -1349,6 +1351,10 @@ static void R_Subsector(int num)
       seg.frontsec->frameid = frameid;
    }
 
+   // haleyjd 01/05/08: determine angles for floor and ceiling
+   floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
+   ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
+
    // killough 3/7/98: Add (x,y) offsets to flats, add deep water check
    // killough 3/16/98: add floorlightlevel
    // killough 10/98: add support for skies transferred from sidedefs
@@ -1366,7 +1372,8 @@ static void R_Subsector(int num)
                  seg.frontsec->floorpic,
                  floorlightlevel,                // killough 3/16/98
                  seg.frontsec->floor_xoffs,       // killough 3/7/98
-                 seg.frontsec->floor_yoffs) : NULL;
+                 seg.frontsec->floor_yoffs,
+                 floorangle) : NULL;
 
    seg.ceilingplane = !R_CeilingPortalActive(seg.frontsec) &&
      (seg.frontsec->ceilingheight > viewz ||
@@ -1382,7 +1389,8 @@ static void R_Subsector(int num)
                  seg.frontsec->ceilingpic,
                  ceilinglightlevel,              // killough 4/11/98
                  seg.frontsec->ceiling_xoffs,     // killough 3/7/98
-                 seg.frontsec->ceiling_yoffs) : NULL;
+                 seg.frontsec->ceiling_yoffs,
+                 ceilingangle) : NULL;
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 
    // instead of fake one. Improve sprite lighting by basing sprite

@@ -1317,8 +1317,8 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             }
             
             // haleyjd: hack for touchies: don't allow running through them when
-            // they die until they become non-solid (just being a corpse isn't good 
-            // enough)
+            // they die until they become non-solid (just being a corpse isn't 
+            // good enough)
             if(tm->BlockingMobj->flags & MF_TOUCHY)
             {
                if(tm->BlockingMobj->health <= 0)

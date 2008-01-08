@@ -207,27 +207,34 @@ rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic,
                               fixed_t *floorz, fixed_t *ceilingz, 
                               short *floorlight, short *ceilinglight, 
                               fixed_t *floorxoff, fixed_t *flooryoff, 
-                              fixed_t *ceilingxoff, fixed_t *ceilingyoff)
+                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
+                              float *floorbaseangle, float *floorangle,
+                              float *ceilingbaseangle, float *ceilingangle)
 {
    rportal_t *rover, *ret;
    horizonportal_t horizon;
 
    if(!floorpic || !ceilingpic || !floorz || !ceilingz || 
       !floorlight || !ceilinglight || !floorxoff || !flooryoff || 
-      !ceilingxoff || !ceilingyoff)
+      !ceilingxoff || !ceilingyoff || !floorbaseangle || !floorangle ||
+      !ceilingbaseangle || !ceilingangle)
       return NULL;
 
    memset(&horizon, 0, sizeof(horizon));
-   horizon.ceilinglight = ceilinglight;
-   horizon.floorlight   = floorlight;
-   horizon.ceilingpic   = ceilingpic;
-   horizon.floorpic     = floorpic;
-   horizon.ceilingz     = ceilingz;
-   horizon.floorz       = floorz;
-   horizon.ceilingxoff  = ceilingxoff;
-   horizon.ceilingyoff  = ceilingyoff;
-   horizon.floorxoff    = floorxoff;
-   horizon.flooryoff    = flooryoff;
+   horizon.ceilinglight     = ceilinglight;
+   horizon.floorlight       = floorlight;
+   horizon.ceilingpic       = ceilingpic;
+   horizon.floorpic         = floorpic;
+   horizon.ceilingz         = ceilingz;
+   horizon.floorz           = floorz;
+   horizon.ceilingxoff      = ceilingxoff;
+   horizon.ceilingyoff      = ceilingyoff;
+   horizon.floorxoff        = floorxoff;
+   horizon.flooryoff        = flooryoff;
+   horizon.floorbaseangle   = floorbaseangle; // haleyjd 01/05/08
+   horizon.floorangle       = floorangle;
+   horizon.ceilingbaseangle = ceilingbaseangle;
+   horizon.ceilingangle     = ceilingangle;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -252,12 +259,13 @@ rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic,
 //
 rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta, 
                             short *lightlevel, 
-                            fixed_t *xoff, fixed_t *yoff)
+                            fixed_t *xoff, fixed_t *yoff,
+                            float *baseangle, float *angle)
 {
    rportal_t *rover, *ret;
    skyplaneportal_t plane;
 
-   if(!pic || !delta || !lightlevel || !xoff || !yoff)
+   if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle)
       return NULL;
       
    memset(&plane, 0, sizeof(plane));
@@ -266,6 +274,8 @@ rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta,
    plane.lightlevel = lightlevel;
    plane.xoff = xoff;
    plane.yoff = yoff;
+   plane.baseangle = baseangle; // haleyjd 01/05/08: flat angles
+   plane.angle = angle;
     
 
    for(rover = portals; rover; rover = rover->next)
@@ -429,6 +439,7 @@ static void R_RenderPlanePortal(rportal_t *portal)
 {
    visplane_t *plane;
    int x;
+   float angle;
 
    if(portal->type != R_PLANE)
       return;
@@ -436,11 +447,15 @@ static void R_RenderPlanePortal(rportal_t *portal)
    if(portal->maxx < portal->minx)
       return;
 
+   // haleyjd 01/05/08: flat angle
+   angle = *portal->data.plane.baseangle + *portal->data.plane.angle;
+
    plane = R_FindPlane(*portal->data.plane.delta + viewz, 
                        *portal->data.plane.pic, 
                        *portal->data.plane.lightlevel, 
                        *portal->data.plane.xoff - viewx, 
-                       *portal->data.plane.yoff + viewy);
+                       *portal->data.plane.yoff + viewy,
+                       angle);
 
    plane = R_CheckPlane(plane, portal->minx, portal->maxx);
 
@@ -463,7 +478,7 @@ static void R_RenderPlanePortal(rportal_t *portal)
 static void R_RenderHorizonPortal(rportal_t *portal)
 {
    fixed_t lastx, lasty, lastz; // SoM 3/10/2005
-   float   lastxf, lastyf, lastzf;
+   float   lastxf, lastyf, lastzf, floorangle, ceilingangle;
    visplane_t *topplane, *bottomplane;
    int x;
 
@@ -473,16 +488,26 @@ static void R_RenderHorizonPortal(rportal_t *portal)
    if(portal->maxx < portal->minx)
       return;
 
+   // haleyjd 01/05/08: angles
+   floorangle = *portal->data.horizon.floorbaseangle + 
+                *portal->data.horizon.floorangle;
+
+   ceilingangle = *portal->data.horizon.ceilingbaseangle +
+                  *portal->data.horizon.ceilingangle;
+
    topplane = R_FindPlane(*portal->data.horizon.ceilingz, 
                           *portal->data.horizon.ceilingpic, 
                           *portal->data.horizon.ceilinglight, 
                           *portal->data.horizon.ceilingxoff, 
-                          *portal->data.horizon.ceilingyoff);
+                          *portal->data.horizon.ceilingyoff,
+                          ceilingangle);
+
    bottomplane = R_FindPlane(*portal->data.horizon.floorz, 
                              *portal->data.horizon.floorpic, 
                              *portal->data.horizon.floorlight, 
                              *portal->data.horizon.floorxoff, 
-                             *portal->data.horizon.flooryoff);
+                             *portal->data.horizon.flooryoff,
+                             floorangle);
 
    topplane = R_CheckPlane(topplane, portal->minx, portal->maxx);
    bottomplane = R_CheckPlane(bottomplane, portal->minx, portal->maxx);

@@ -695,8 +695,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    view.x = viewx / 65536.0f;
    view.y = viewy / 65536.0f;
    view.z = viewz / 65536.0f;
-   view.angle = (ANG90 - viewangle) * PI / (ANGLE_1 * 180);
-   view.pitch = (ANG90 - pitch) * PI / (ANGLE_1 * 180);
+   view.angle = (ANG90 - viewangle) * PI / ANG180;
+   view.pitch = (ANG90 - pitch) * PI / ANG180;
    view.sin = (float)sin(view.angle);
    view.cos = (float)cos(view.angle);
 

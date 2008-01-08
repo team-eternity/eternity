@@ -47,17 +47,16 @@ void R_InitPlanes(void);
 void R_ClearPlanes(void);
 void R_DrawPlanes(void);
 
-visplane_t *R_FindPlane(
-                        fixed_t height, 
+visplane_t *R_FindPlane(fixed_t height, 
                         int picnum,
                         int lightlevel,
                         fixed_t xoffs,  // killough 2/28/98: add x-y offsets
-                        fixed_t yoffs );
+                        fixed_t yoffs,
+                        float angle);   // haleyjd 01/08/05: add angle
 
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
 extern int visplane_view;
-
 
 typedef struct
 {
@@ -67,12 +66,11 @@ typedef struct
    lighttable_t *colormap;
 } cb_span_t;
 
-
 typedef struct
 {
    float xoffset, yoffset;
    float height;
-   float pviewx, pviewy, pviewz;
+   float pviewx, pviewy, pviewz, pviewsin, pviewcos;
    int   picnum;
 
    // SoM: we use different fixed point numbers for different flat sizes
@@ -83,7 +81,7 @@ typedef struct
    void *source;
 } cb_plane_t;
 
-extern cb_span_t span;
+extern cb_span_t  span;
 extern cb_plane_t plane;
 
 #endif
