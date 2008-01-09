@@ -482,6 +482,7 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    mobj_t  *thingblocker;
    mobj_t  *fakedblocker;
    fixed_t realheight = thing->height;
+   fixed_t tryx = tm->tryx, tryy = tm->tryy;
 
    if(surface == prtl_floor)
    {
@@ -527,8 +528,10 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    tm->thing = thing;
    tm->flags = thing->flags;
    
-   tm->x = thing->x - link->x;
-   tm->y = thing->y - link->y;
+   tm->tryx = tryx;
+   tm->tryy = tryy;
+   tm->x = tryx - link->x;
+   tm->y = tryy - link->y;
    
    tm->bbox[BOXTOP]    = tm->y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = tm->y - tm->thing->radius;
@@ -780,9 +783,9 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    tm->thing = thing;
    tm->flags = thing->flags;
    
-   tm->x = x;
-   tm->y = y;
-   
+   tm->x = tm->tryx = x;
+   tm->y = tm->tryy = y;
+
    tm->bbox[BOXTOP]    = y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
    tm->bbox[BOXRIGHT]  = x + tm->thing->radius;

@@ -310,8 +310,8 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    tm->thing = thing;
    tm->flags = thing->flags;
    
-   tm->x = x;
-   tm->y = y;
+   tm->x = tm->tryx = x;
+   tm->y = tm->tryy = y;
    
    tm->bbox[BOXTOP] = y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
@@ -741,14 +741,17 @@ boolean PIT_CheckPortalLine(line_t *ld)
             tm->floorz = ld->frontsector->floorheight;
          if(ld->frontsector->floorheight < tm->dropoffz)
             tm->dropoffz = ld->frontsector->floorheight;
+
+         return (ld->frontsector->ceilingheight - tm->thing->z <= (24 << FRACBITS));
       }
       else
       {
          if(ld->frontsector->ceilingheight < tm->ceilingz)
             tm->ceilingz = ld->frontsector->ceilingheight;
+
+         return (ld->frontsector->floorheight >= tm->thing->z + tm->thing->height);
       }
 
-      return true;
    }
 
    // killough 8/10/98: allow bouncing objects to pass through as missiles
@@ -797,6 +800,9 @@ boolean PIT_CheckPortalLine(line_t *ld)
 
       if(tm->floorz > tm->passfloorz)
          tm->passfloorz = tm->floorz;
+
+      if(tm->highceiling - tm->thing->z > (24 << FRACBITS))
+         return false;
    }
    else
    {
@@ -814,6 +820,9 @@ boolean PIT_CheckPortalLine(line_t *ld)
       // SoM 11/6/02: AGHAH
       if(tm->ceilingz < tm->passceilz)
          tm->passceilz = tm->ceilingz;
+
+      if(tm->lowfloor < tm->thing->z + tm->thing->height)
+         return false;
    }
 
    // if contacted a special line, add it to the list
@@ -1861,6 +1870,10 @@ static boolean PTR_SlideTraverse(intercept_t *in)
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line
    
+#ifdef R_LINKEDPORTALS
+   tm->tryx = slidemo->x;
+   tm->tryy = slidemo->y;
+#endif
    P_LineOpening(li, slidemo);
    
    if(tm->openrange < slidemo->height)

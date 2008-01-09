@@ -251,10 +251,17 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    }
    
    if(frontceilz < backceilz)
+   {
       tm->opentop = frontceilz;
+      // SoM: Used by linked portals
+      tm->highceiling = backceilz;
+   }
    else
+   {
       tm->opentop = backceilz;
-
+      // SoM: Used by linked portals
+      tm->highceiling = frontceilz;
+   }
    
    if(frontfloorz > backfloorz)
    {

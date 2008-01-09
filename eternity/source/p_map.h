@@ -149,6 +149,7 @@ typedef struct doom_mapinter_s
 
 
    // See P_LineOpening
+   fixed_t highceiling;
    fixed_t opentop;
    fixed_t openbottom;
    fixed_t openrange;
@@ -174,8 +175,13 @@ typedef struct doom_mapinter_s
    // with the portal or not.
    boolean  portalcontact;
 
-
+   // Return values basically
    fixed_t portalfloorz, portaldropoffz, portalceilingz;
+
+   // SoM: Ok, all the link offsets are from the original player position, but if
+   // tm->x and tm->y are being offset, and tm->thing->x and tm->thing->y are not
+   // the future location we're trying to check, we need to store the future location
+   fixed_t tryx, tryy;
 #endif
 } doom_mapinter_t;
 
