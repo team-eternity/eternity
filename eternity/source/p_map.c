@@ -737,15 +737,15 @@ boolean PIT_CheckPortalLine(line_t *ld)
 
       if(tm->portalbelow)
       {
-         if(ld->frontsector->ceilingheight > tm->floorz)
-            tm->floorz = ld->frontsector->ceilingheight;
+         if(ld->frontsector->floorheight > tm->floorz)
+            tm->floorz = ld->frontsector->floorheight;
          if(ld->frontsector->floorheight < tm->dropoffz)
             tm->dropoffz = ld->frontsector->floorheight;
       }
       else
       {
-         if(ld->frontsector->floorheight < tm->ceilingz)
-            tm->ceilingz = ld->frontsector->floorheight;
+         if(ld->frontsector->ceilingheight < tm->ceilingz)
+            tm->ceilingz = ld->frontsector->ceilingheight;
       }
 
       return true;

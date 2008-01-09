@@ -474,6 +474,7 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    subsector_t    *newsubsec;
    fixed_t        useheight, useheight2;
    boolean        ret = true;
+   mobj_t         *usemobj;
 
    fixed_t thingdropoffz;
 
@@ -584,7 +585,7 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
       tm->floorz = tm->dropoffz = sec->floorheight;
    }
 
-   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->dropoffz = tm->floorz;
+   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->floorz;
    tm->secceilz = tm->passceilz = tm->ceilingz;
 
    // haleyjd
@@ -699,7 +700,7 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    yh = (tm->bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
    thingdropoffz = tm->floorz;
-   tm->floorz = tm->dropoffz;
+   tm->floorz = tm->secfloorz; // secfloorz, maybe?
 
    tm->portalbelow = (surface == prtl_floor);
 
@@ -723,6 +724,9 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
          
    if(stepthing != NULL)
       tm->dropoffz = thingdropoffz;
+
+   if(tm->BlockingMobj && !thingblocker)
+      thingblocker = tm->BlockingMobj;
    
    ret = ((tm->BlockingMobj = thingblocker) == NULL);
    
@@ -734,15 +738,19 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    {
       useheight = tm->floorz;
       useheight2 = tm->dropoffz;
+      usemobj = tm->BlockingMobj;
       P_PopTMStack();
       tm->portalfloorz = useheight;
       tm->portaldropoffz = useheight2;
+      tm->BlockingMobj = usemobj;
    }
    else
    {
       useheight = tm->ceilingz;
+      usemobj = tm->BlockingMobj;
       P_PopTMStack();
       tm->portalceilingz = useheight;
+      tm->BlockingMobj = usemobj;
    }
 
 
@@ -830,7 +838,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #endif
       tm->ceilingz = newsubsec->sector->ceilingheight;
 
-   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->dropoffz = tm->floorz;
+   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->floorz;
    tm->secceilz = tm->passceilz = tm->ceilingz;
 
    // haleyjd
@@ -939,7 +947,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    yh = (tm->bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
    thingdropoffz = tm->floorz;
-   tm->floorz = tm->dropoffz;
+   tm->floorz = tm->secfloorz; // SoM: Secfloorz maybe??
 
    for(bx = xl; bx <= xh; ++bx)
       for(by = yl; by <= yh; ++by)
@@ -951,6 +959,9 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
          
    if(stepthing != NULL)
       tm->dropoffz = thingdropoffz;
+
+   if(tm->BlockingMobj && !thingblocker)
+      thingblocker = tm->BlockingMobj;
    
    return (tm->BlockingMobj = thingblocker) == NULL;
 }
