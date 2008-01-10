@@ -719,6 +719,9 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
             goto finish; // doesn't fit
          }
 
+   if(tm->BlockingMobj && !thingblocker)
+      thingblocker = tm->BlockingMobj;
+
    if(tm->ceilingz - tm->floorz < thing->height)
    {
       ret = false;
@@ -727,9 +730,6 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
          
    if(stepthing != NULL)
       tm->dropoffz = thingdropoffz;
-
-   if(tm->BlockingMobj && !thingblocker)
-      thingblocker = tm->BlockingMobj;
    
    ret = ((tm->BlockingMobj = thingblocker) == NULL);
    
@@ -957,14 +957,14 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
          if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
             return false; // doesn't fit
 
+   if(tm->BlockingMobj && !thingblocker)
+      thingblocker = tm->BlockingMobj;
+
    if(tm->ceilingz - tm->floorz < thing->height)
       return false;
          
    if(stepthing != NULL)
       tm->dropoffz = thingdropoffz;
-
-   if(tm->BlockingMobj && !thingblocker)
-      thingblocker = tm->BlockingMobj;
    
    return (tm->BlockingMobj = thingblocker) == NULL;
 }
