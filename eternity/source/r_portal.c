@@ -38,6 +38,7 @@ static rportal_t *portals = NULL, *last = NULL;
 // r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an
 // extra function (R_ClipSegToPortal) is called to prevent certain types of HOM
 // in portals.
+
 portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
 
 //
@@ -639,7 +640,8 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
    float   lastxf, lastyf, lastzf;
 
 #ifdef R_LINKEDPORTALS
-   if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && portal->type != R_LINKED)
+   if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && 
+      portal->type != R_LINKED)
 #else
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
 #endif
@@ -819,151 +821,6 @@ void R_RenderPortals(void)
          return;
    }
 }
-
-
-
-/*#ifdef R_LINKEDPORTALS
-boolean   R_LinkedFloorActive(sector_t *sector)
-{
-   return useportalgroups && sector->f_portal && sector->f_portal->type == R_LINKED &&
-          sector->floorheight <= sector->f_portal->data.camera.planez ? true : false;
-}
-
-
-boolean   R_LinkedCeilingActive(sector_t *sector)
-{
-   return useportalgroups && sector->c_portal && sector->c_portal->type == R_LINKED &&
-          sector->ceilingheight >= sector->c_portal->data.camera.planez ? true : false;
-}
-
-
-boolean   R_LinkedLineActive(line_t *line)
-{
-   return useportalgroups && line->portal && line->portal->type == R_LINKED ? true : false;
-}
-#endif
-
-
-fixed_t R_GetFloorPlanez(sector_t *sector)
-{
-#ifdef R_LINKEDPORTALS
-   if(sector->f_portal && sector->f_portal->type == R_LINKED && 
-      sector->floorheight <= sector->f_portal->data.camera.planez)
-      return sector->f_portal->data.camera.planez;
-   else
-#endif
-   return sector->floorheight;
-}
-
-fixed_t R_GetCeilingPlanez(sector_t *sector)
-{
-#ifdef R_LINKEDPORTALS
-   if(sector->c_portal && sector->c_portal->type == R_LINKED && 
-      sector->ceilingheight >= sector->c_portal->data.camera.planez)
-      return sector->c_portal->data.camera.planez;
-   else
-#endif
-   return sector->ceilingheight;
-}
-
-
-
-boolean R_FloorPortalActive(sector_t *sector)
-{
-#ifdef R_LINKEDPORTALS
-   if(sector->f_portal && sector->f_portal->type == R_LINKED)
-   {
-      if(sector->floorheight <= sector->f_portal->data.camera.planez)
-         return true;
-      else
-         return false;
-   }
-#endif
-   return sector->f_portal ? true : false;
-}
-
-
-
-boolean R_CeilingPortalActive(sector_t *sector)
-{
-#ifdef R_LINKEDPORTALS
-   if(sector->c_portal && sector->c_portal->type == R_LINKED)
-   {
-      if(sector->ceilingheight >= sector->c_portal->data.camera.planez)
-         return true;
-      else
-         return false;
-   }
-#endif
-   return sector->c_portal ? true : false;
-}
-
-
-
-
-boolean R_RenderFloorPortal(sector_t *sector)
-{
-#ifdef R_LINKEDPORTALS
-   if(sector->f_portal)
-   {
-      if(sector->f_portal->type == R_TWOWAY)
-      {
-         if(sector->floorheight < viewz)
-            return true;
-         else
-            return false;
-      }
-      else if(sector->f_portal->type == R_LINKED)
-      {
-         if(sector->floorheight < viewz && 
-            sector->floorheight <= sector->f_portal->data.camera.planez)
-            return true;
-         else
-            return false;
-      }
-      else
-         return true;
-   }
-   return false;
-#else
-   if(sector->f_portal && (sector->f_portal->type != R_TWOWAY || sector->floorheight < viewz))
-      return true;
-   return false;
-#endif
-}
-
-
-
-boolean R_RenderCeilingPortal(sector_t *sector)
-{
-#ifdef R_LINKEDPORTALS
-   if(sector->c_portal)
-   {
-      if(sector->c_portal->type == R_TWOWAY)
-      {
-         if(sector->ceilingheight > viewz)
-            return true;
-         else
-            return false;
-      }
-      else if(sector->c_portal->type == R_LINKED)
-      {
-         if(sector->ceilingheight > viewz && 
-            sector->ceilingheight >= sector->c_portal->data.camera.planez)
-            return true;
-         else
-            return false;
-      }
-      else
-         return true;
-   }
-   return false;
-#else
-   if(sector->c_portal && (sector->c_portal->type != R_TWOWAY || sector->ceilingheight > viewz))
-      return true;
-   return false;
-#endif
-}*/
 
 #ifdef R_LINKEDPORTALS
 // ----------------------------------------------------------------------------
