@@ -281,13 +281,15 @@ int ACS_indexForNum(int num)
 // operands on the stack.
 //
 static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
-                             int argc, int *argv)
+                             long arg0, long arg1, long arg2, long arg3, long arg4)
 {
    long args[5] = { 0, 0, 0, 0, 0 };
 
-   // args are on stack in last to first order
-   for(; argc > 0; --argc)
-      args[argc-1] = *argv++;
+   args[0] = arg0;
+   args[1] = arg1;
+   args[2] = arg2;
+   args[3] = arg3;
+   args[4] = arg4;
 
    // translate line specials & args for Hexen maps
    P_ConvertHexenLineSpec(&spec, args);
@@ -441,6 +443,7 @@ static void ACS_setLineSpecial(short spec, long *args, int tag)
 #define ST_OP2      stack[stp-1]
 #define ST_BINOP(x) stack[stp-2] = (x); --stp
 
+#define STACK_AT(x) stack[stp-(x)]
 
 // script states for T_ACSThinker
 enum
@@ -510,27 +513,32 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_LINESPEC1:
          ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
-                          script->lineSide, 1, stack);
+                          script->lineSide,
+                          STACK_AT(1), 0, 0, 0, 0);
          DECSTP();
          break;
       case OP_LINESPEC2:
          ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
-                          script->lineSide, 2, stack);
+                          script->lineSide,
+                          STACK_AT(2), STACK_AT(1), 0, 0, 0);
          DECSTP2();
          break;
       case OP_LINESPEC3:
          ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
-                          script->lineSide, 3, stack);
+                          script->lineSide,
+                          STACK_AT(3), STACK_AT(2), STACK_AT(1), 0, 0);
          DECSTP3();
          break;
       case OP_LINESPEC4:
          ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
-                          script->lineSide, 4, stack);
+                          script->lineSide,
+                          STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1), 0);
          DECSTP4();
          break;
       case OP_LINESPEC5:
          ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
-                          script->lineSide, 5, stack);
+                          script->lineSide,
+                          STACK_AT(5), STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1));
          DECSTP5();
          break;
       case OP_LINESPEC1_IMM:
@@ -1267,7 +1275,7 @@ boolean ACS_StartScript(int scrnum, int map, long *args,
    if((internalNum = ACS_indexForNum(scrnum)) == acsNumScripts)
    {
       // tink!
-      C_Printf(FC_ERROR "ACS_StartScript: no such script %d\a\n", scrnum);
+      doom_printf(FC_ERROR "ACS_StartScript: no such script %d\a\n", scrnum);
       return false;
    }
 
