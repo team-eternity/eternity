@@ -274,8 +274,7 @@ void E_ProcessStrings(cfg_t *cfg)
       {
          *(dehstr->ppstr) = strdup(value);
 
-         E_EDFLogPrintf("\t\t\tCopied to BEX string '%s'\n",
-                        mnemonic, bex);
+         E_EDFLogPrintf("\t\t\tCopied to BEX string '%s'\n", bex);
       }
    }
 }
