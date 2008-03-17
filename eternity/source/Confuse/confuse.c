@@ -34,10 +34,9 @@
 
 #include "confuse.h"
 
-extern DWFILE *currentFile; // haleyjd
 extern char *mytext; // haleyjd
 int mylex(cfg_t *cfg);
-void lexer_init(void);
+void lexer_init(DWFILE *);
 void lexer_reset(void);
 void lexer_set_unquoted_spaces(boolean);
 
@@ -889,15 +888,14 @@ int cfg_parse(cfg_t *cfg, const char *filename)
 
    cfg->lumpnum = -1; // haleyjd 07/20/05
 
-   D_OpenFile(&dwfile, filename, "r");
+   D_OpenFile(&dwfile, filename, "rb");
    
    if(!D_IsOpen(&dwfile))
       return CFG_FILE_ERROR;
 
    // haleyjd: initialize the lexer
-   lexer_init();
+   lexer_init(&dwfile);
 
-   currentFile = &dwfile;
    ret = cfg_parse_internal(cfg, 0);
 
    // haleyjd: wow, should probably close the file huh?
@@ -945,9 +943,8 @@ int cfg_parselump(cfg_t *cfg, const char *lumpname)
       return CFG_FILE_ERROR;
 
    // haleyjd 02/28/05: woops, forgot this!
-   lexer_init();
+   lexer_init(&dwfile);
    
-   currentFile = &dwfile;
    ret = cfg_parse_internal(cfg, 0);
 
    // haleyjd: wow, should probably close the file huh?

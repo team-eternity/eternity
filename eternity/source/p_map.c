@@ -2358,6 +2358,9 @@ static boolean PTR_AimTraverse(intercept_t *in)
          }
       }
 
+      // haleyjd 03/17/08: FIXME: code inside is completely broken.
+      // And also rather horrible to look at if you ask me.
+#if 0
       if((li->frontsector->floorheight != li->backsector->floorheight || 
             (demo_version >= 333 && useportalgroups && (R_LinkedFloorActive(li->frontsector) ||
             R_LinkedFloorActive(li->backsector)) && 
@@ -2381,6 +2384,21 @@ static boolean PTR_AimTraverse(intercept_t *in)
          if(slope < trace.topslope)
             trace.topslope = slope;
       }
+#else
+      if(li->frontsector->floorheight != li->backsector->floorheight)
+      {
+         slope = FixedDiv(tm->openbottom - trace.originz, dist);
+         if(slope > trace.bottomslope)
+            trace.bottomslope = slope;
+      }
+      
+      if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
+      {
+         slope = FixedDiv(tm->opentop - trace.originz, dist);
+         if(slope < trace.topslope)
+            trace.topslope = slope;
+      }
+#endif
 
       if(trace.topslope <= trace.bottomslope)
          return false;   // stop
