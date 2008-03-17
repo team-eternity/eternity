@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2004 Stephen McGranahan
+// Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,47 +20,50 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//      Creating, managing and rendering portals.
+//      Inline linked portal predicates.
 //      SoM created 12/23/07
+//      haleyjd 03/17/08: integrated demo_version checks
 //
 //-----------------------------------------------------------------------------
 
 #ifndef R_PORTALCHECK_H__
 #define R_PORTALCHECK_H__
 
+extern int demo_version;
 
-#ifdef R_LINKEDPORTALS
-d_inline static boolean   R_LinkedFloorActive(sector_t *sector)
+d_inline static boolean R_LinkedFloorActive(sector_t *sector)
 {
-   return (useportalgroups && sector->f_portal && 
+   return (demo_version >= 333 && 
+           useportalgroups && 
+           sector->f_portal && 
            sector->f_portal->type == R_LINKED &&
            sector->floorz <= sector->f_portal->data.camera.planez);
 }
 
 
-d_inline static boolean   R_LinkedCeilingActive(sector_t *sector)
+d_inline static boolean R_LinkedCeilingActive(sector_t *sector)
 {
-   return (useportalgroups && sector->c_portal && 
+   return (demo_version >= 333 &&
+           useportalgroups && 
+           sector->c_portal && 
            sector->c_portal->type == R_LINKED &&
            sector->ceilingz >= sector->c_portal->data.camera.planez);
 }
 
 
-d_inline static boolean   R_LinkedLineActive(line_t *line)
+d_inline static boolean R_LinkedLineActive(line_t *line)
 {
-   return (useportalgroups && line->portal && line->portal->type == R_LINKED);
+   return (demo_version >= 333 &&
+           useportalgroups && 
+           line->portal && line->portal->type == R_LINKED);
 }
-#endif
-
 
 d_inline static fixed_t R_GetFloorPlanez(sector_t *sector)
 {
    return 
-#ifdef R_LINKEDPORTALS
-      sector->f_portal && sector->f_portal->type == R_LINKED && 
-      sector->floorz <= sector->f_portal->data.camera.planez ?
+      (sector->f_portal && sector->f_portal->type == R_LINKED && 
+       sector->floorz <= sector->f_portal->data.camera.planez) ?
       sector->f_portal->data.camera.planez :
-#endif
       sector->floorz;
 }
 
@@ -68,36 +71,31 @@ d_inline static fixed_t R_GetFloorPlanez(sector_t *sector)
 d_inline static fixed_t R_GetCeilingPlanez(sector_t *sector)
 {
    return
-#ifdef R_LINKEDPORTALS
-      sector->c_portal && sector->c_portal->type == R_LINKED && 
-      sector->ceilingz >= sector->c_portal->data.camera.planez ?
+      (sector->c_portal && sector->c_portal->type == R_LINKED && 
+       sector->ceilingz >= sector->c_portal->data.camera.planez) ?
       sector->c_portal->data.camera.planez :
-#endif
       sector->ceilingz;
 }
 
-
 d_inline static boolean R_FloorPortalActive(sector_t *sector)
 {
+   // FIXME: possible to eliminate branch?
    return 
-#ifdef R_LINKEDPORTALS
-      sector->f_portal && sector->f_portal->type == R_LINKED && 
-      sector->floorz > sector->f_portal->data.camera.planez ? false : 
-#endif
+      (sector->f_portal && sector->f_portal->type == R_LINKED && 
+       sector->floorz > sector->f_portal->data.camera.planez) ? 
+      false : 
       (sector->f_portal != NULL);
 }
 
-
 d_inline static boolean R_CeilingPortalActive(sector_t *sector)
 {
+   // FIXME: possible to eliminate branch?
    return 
-#ifdef R_LINKEDPORTALS
-      sector->c_portal && sector->c_portal->type == R_LINKED && 
-      sector->ceilingz < sector->c_portal->data.camera.planez ? false : 
-#endif
+      (sector->c_portal && sector->c_portal->type == R_LINKED && 
+       sector->ceilingz < sector->c_portal->data.camera.planez) ? 
+      false : 
       (sector->c_portal != NULL);
 }
-
 
 d_inline static boolean R_RenderFloorPortal(sector_t *sector)
 {
@@ -115,9 +113,6 @@ d_inline static boolean R_RenderFloorPortal(sector_t *sector)
 #endif
 }
 
-
-
-
 d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
 {
    const rportal_t *cp = sector->c_portal;
@@ -133,6 +128,27 @@ d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
    return (cp && (cp->type != R_TWOWAY || sector->ceilingheight > viewz));
 #endif
 }
+
+//
+// SecFPortalCam
+//
+// haleyjd 3/17/08: Convenience routine to clean some shit up.
+//
+d_inline static cameraportal_t *R_FPCam(sector_t *s)
+{
+   return &(s->f_portal->data.camera);
+}
+
+//
+// SecCPortalCam
+//
+// ditto
+//
+d_inline static cameraportal_t *R_CPCam(sector_t *s)
+{
+   return &(s->c_portal->data.camera);
+}
+
 
 #endif
 

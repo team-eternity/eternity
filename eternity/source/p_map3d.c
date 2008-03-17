@@ -487,7 +487,7 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    if(surface == prtl_floor)
    {
       if(!useportalgroups || !R_LinkedFloorActive(sec) ||
-         !(link = P_GetLinkOffset(thing->groupid, sec->f_portal->data.camera.groupid)))
+         !(link = P_GetLinkOffset(thing->groupid, R_FPCam(sec)->groupid)))
       {
          tm->portalfloorz = sec->floorheight;
          tm->portaldropoffz = sec->floorheight;
@@ -507,7 +507,7 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    else
    {
       if(!useportalgroups || !R_LinkedCeilingActive(sec) ||
-         !(link = P_GetLinkOffset(thing->groupid, sec->c_portal->data.camera.groupid)))
+         !(link = P_GetLinkOffset(thing->groupid, R_CPCam(sec)->groupid)))
       {
          tm->portalceilingz = sec->ceilingheight;
          return true;
@@ -708,8 +708,8 @@ boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
    tm->portalbelow = (surface == prtl_floor);
 
    tm->portalcontact = surface == prtl_floor ? 
-                       (tm->thing->z < sec->f_portal->data.camera.planez) :
-                       (tm->thing->z + tm->thing->height > sec->c_portal->data.camera.planez);
+                       (tm->thing->z < R_FPCam(sec)->planez) :
+                       (tm->thing->z + tm->thing->height > R_CPCam(sec)->planez);
 
    for(bx = xl; bx <= xh; ++bx)
       for(by = yl; by <= yh; ++by)
@@ -808,7 +808,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // will adjust them.
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
+   if(R_LinkedFloorActive(newsubsec->sector) && 
       !(tm->thing->flags & MF_NOCLIP))
    {
       if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_floor))
@@ -826,8 +826,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
       tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
-      !(tm->thing->flags & MF_NOCLIP))
+   if(R_LinkedCeilingActive(newsubsec->sector) && !(tm->thing->flags & MF_NOCLIP))
    {
       if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_ceiling))
       {

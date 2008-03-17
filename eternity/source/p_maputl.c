@@ -170,7 +170,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openfrontsector))
+      if(mo && R_LinkedCeilingActive(tm->openfrontsector))
       {
          if(!P_CheckPortalHeight(mo, tm->openfrontsector, prtl_ceiling))
          {
@@ -186,7 +186,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          frontceilz = tm->openfrontsector->ceilingheight;
 
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openbacksector))
+      if(mo && R_LinkedCeilingActive(tm->openbacksector))
       {
          if(!P_CheckPortalHeight(mo, tm->openbacksector, prtl_ceiling))
          {
@@ -209,7 +209,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openfrontsector))
+      if(mo && R_LinkedFloorActive(tm->openfrontsector))
       {
          if(!P_CheckPortalHeight(mo, tm->openfrontsector, prtl_floor))
          {
@@ -228,7 +228,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          frontfloorz = frontdropz = tm->openfrontsector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openbacksector))
+      if(mo && R_LinkedFloorActive(tm->openbacksector))
       {
          if(!P_CheckPortalHeight(mo, tm->openbacksector, prtl_floor))
          {
@@ -608,318 +608,6 @@ boolean P_BlockThingsIterator(int x, int y, boolean func(mobj_t*))
          if(!func(mobj))
             return false;
    return true;
-}
-
-//
-// INTERCEPT ROUTINES
-//
-
-// 1/11/98 killough: Intercept limit removed
-static intercept_t *intercepts, *intercept_p;
-
-// Check for limit and double size if necessary -- killough
-static void check_intercept(void)
-{
-   static size_t num_intercepts;
-   size_t offset = intercept_p - intercepts;
-   if(offset >= num_intercepts)
-   {
-      num_intercepts = num_intercepts ? num_intercepts*2 : 128;
-      intercepts = realloc(intercepts, sizeof(*intercepts)*num_intercepts);
-      intercept_p = intercepts + offset;
-   }
-}
-
-linetracer_t trace;
-
-//
-// PIT_AddLineIntercepts
-//
-// Looks for lines in the given block
-// that intercept the given trace
-// to add to the intercepts list.
-//
-// A line is crossed if its endpoints
-// are on opposite sides of the trace.
-//
-// killough 5/3/98: reformatted, cleaned up
-//
-boolean PIT_AddLineIntercepts(line_t *ld)
-{
-   int       s1;
-   int       s2;
-   fixed_t   frac;
-   divline_t dl;
-
-   // avoid precision problems with two routines
-   if(trace.dx >  FRACUNIT*16 || trace.dy >  FRACUNIT*16 ||
-      trace.dx < -FRACUNIT*16 || trace.dy < -FRACUNIT*16)
-   {
-      s1 = P_PointOnDivlineSide (ld->v1->x, ld->v1->y, (divline_t *)&trace);
-      s2 = P_PointOnDivlineSide (ld->v2->x, ld->v2->y, (divline_t *)&trace);
-   }
-   else
-   {
-      s1 = P_PointOnLineSide (trace.x, trace.y, ld);
-      s2 = P_PointOnLineSide (trace.x+trace.dx, trace.y+trace.dy, ld);
-   }
-
-   if(s1 == s2)
-      return true;        // line isn't crossed
-   
-   // hit the line
-   P_MakeDivline(ld, &dl);
-   frac = P_InterceptVector((divline_t *)&trace, &dl);
-   
-   if(frac < 0)
-      return true;        // behind source
-
-   check_intercept();    // killough
-   
-   intercept_p->frac = frac;
-   intercept_p->isaline = true;
-   intercept_p->d.line = ld;
-   intercept_p++;
-   
-   return true;  // continue
-}
-
-//
-// PIT_AddThingIntercepts
-//
-// killough 5/3/98: reformatted, cleaned up
-//
-boolean PIT_AddThingIntercepts(mobj_t *thing)
-{
-   fixed_t   x1, y1;
-   fixed_t   x2, y2;
-   int       s1, s2;
-   divline_t dl;
-   fixed_t   frac;
-
-   // check a corner to corner crossection for hit
-   if((trace.dx ^ trace.dy) > 0)
-   {
-      x1 = thing->x - thing->radius;
-      y1 = thing->y + thing->radius;
-      x2 = thing->x + thing->radius;
-      y2 = thing->y - thing->radius;
-   }
-   else
-   {
-      x1 = thing->x - thing->radius;
-      y1 = thing->y - thing->radius;
-      x2 = thing->x + thing->radius;
-      y2 = thing->y + thing->radius;
-   }
-
-   s1 = P_PointOnDivlineSide (x1, y1, (divline_t *)&trace);
-   s2 = P_PointOnDivlineSide (x2, y2, (divline_t *)&trace);
-   
-   if(s1 == s2)
-      return true;                // line isn't crossed
-
-   dl.x = x1;
-   dl.y = y1;
-   dl.dx = x2-x1;
-   dl.dy = y2-y1;
-   
-   frac = P_InterceptVector ((divline_t *)&trace, &dl);
-   
-   if (frac < 0)
-      return true;                // behind source
-   
-   check_intercept();            // killough
-   
-   intercept_p->frac = frac;
-   intercept_p->isaline = false;
-   intercept_p->d.thing = thing;
-   intercept_p++;
-   
-   return true;          // keep going
-}
-
-//
-// P_TraverseIntercepts
-//
-// Returns true if the traverser function returns true
-// for all lines.
-//
-// killough 5/3/98: reformatted, cleaned up
-//
-boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
-{
-   intercept_t *in = NULL;
-   int count = intercept_p - intercepts;
-   while(count--)
-   {
-      fixed_t dist = D_MAXINT;
-      intercept_t *scan;
-      for(scan = intercepts; scan < intercept_p; scan++)
-         if(scan->frac < dist)
-            dist = (in=scan)->frac;
-      if(dist > maxfrac)
-         return true;    // checked everything in range
-      if(!func(in))
-         return false;           // don't bother going farther
-      in->frac = D_MAXINT;
-   }
-   return true;                  // everything was traversed
-}
-
-//
-// P_PathTraverse
-//
-// Traces a line from x1,y1 to x2,y2,
-// calling the traverser function for each.
-// Returns true if the traverser function returns true
-// for all lines.
-//
-// killough 5/3/98: reformatted, cleaned up
-//
-boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                       int flags, boolean trav(intercept_t *))
-{
-   fixed_t xt1, yt1;
-   fixed_t xt2, yt2;
-   fixed_t xstep, ystep;
-   fixed_t partial;
-   fixed_t xintercept, yintercept;
-   int     mapx, mapy;
-   int     mapxstep, mapystep;
-   int     count;
-   // SoM: just a little bit-o-change...
-   boolean result;
-
-   // Only PTR_s that use TPTs need to worry about this value.
-   trace.finished = false;
-
-   validcount++;
-   intercept_p = intercepts;
-   
-   if(!((x1-bmaporgx)&(MAPBLOCKSIZE-1)))
-      x1 += FRACUNIT;     // don't side exactly on a line
-   
-   if(!((y1-bmaporgy)&(MAPBLOCKSIZE-1)))
-      y1 += FRACUNIT;     // don't side exactly on a line
-
-   trace.x = trace.originx = x1;
-   trace.y = trace.originy = y1;
-   trace.dx = x2 - x1;
-   trace.dy = y2 - y1;
-   
-   x1 -= bmaporgx;
-   y1 -= bmaporgy;
-   xt1 = x1>>MAPBLOCKSHIFT;
-   yt1 = y1>>MAPBLOCKSHIFT;
-   
-   x2 -= bmaporgx;
-   y2 -= bmaporgy;
-   xt2 = x2>>MAPBLOCKSHIFT;
-   yt2 = y2>>MAPBLOCKSHIFT;
-
-   if(xt2 > xt1)
-   {
-      mapxstep = 1;
-      partial = FRACUNIT - ((x1>>MAPBTOFRAC)&(FRACUNIT-1));
-      ystep = FixedDiv (y2-y1,D_abs(x2-x1));
-   }
-   else if(xt2 < xt1)
-   {
-      mapxstep = -1;
-      partial = (x1>>MAPBTOFRAC)&(FRACUNIT-1);
-      ystep = FixedDiv (y2-y1,D_abs(x2-x1));
-   }
-   else
-   {
-      mapxstep = 0;
-      partial = FRACUNIT;
-      ystep = 256*FRACUNIT;
-   }
-
-   yintercept = (y1 >> MAPBTOFRAC) + FixedMul(partial, ystep);
-   
-   if(yt2 > yt1)
-   {
-      mapystep = 1;
-      partial = FRACUNIT - ((y1>>MAPBTOFRAC)&(FRACUNIT-1));
-      xstep = FixedDiv (x2-x1,D_abs(y2-y1));
-   }
-   else if(yt2 < yt1)
-   {
-      mapystep = -1;
-      partial = (y1>>MAPBTOFRAC)&(FRACUNIT-1);
-      xstep = FixedDiv (x2-x1,D_abs(y2-y1));
-   }
-   else
-   {
-      mapystep = 0;
-      partial = FRACUNIT;
-      xstep = 256*FRACUNIT;
-   }
-
-   xintercept = (x1 >> MAPBTOFRAC) + FixedMul(partial, xstep);
-   
-   // Step through map blocks.
-   // Count is present to prevent a round off error
-   // from skipping the break.
-   
-   mapx = xt1;
-   mapy = yt1;
-
-   for(count = 0; count < 64; count++)
-   {
-      if(flags & PT_ADDLINES)
-      {
-         if(!P_BlockLinesIterator(mapx, mapy, PIT_AddLineIntercepts))
-            return false; // early out
-      }
-      
-      if(flags & PT_ADDTHINGS)
-      {
-         if(!P_BlockThingsIterator(mapx, mapy, PIT_AddThingIntercepts))
-            return false; // early out
-      }
-      
-      if(mapx == xt2 && mapy == yt2)
-         break;
-      
-      if((yintercept >> FRACBITS) == mapy)
-      {
-         yintercept += ystep;
-         mapx += mapxstep;
-      }
-      else if((xintercept >> FRACBITS) == mapx)
-      {
-         xintercept += xstep;
-         mapy += mapystep;
-      }
-   }
-
-   // go through the sorted list
-   // SoM: just store this for a sec
-   result = P_TraverseIntercepts(trav, FRACUNIT);
-
-#ifdef R_LINKEDPORTALS
-   // Only check portals if no linetarget was acquired.
-   // Due to the way these are accumulated, there should be no recursion so the
-   // list will never be infinite. Note: TPT nodes are never created unless the 
-   // demo_version is >= 333 so I don't bother to check that here.
-
-   while(!trace.finished && P_CheckTPT())
-   {
-      tptnode_t *node = P_StartTPT();
-      result = P_PathTraverse(trace.x, trace.y, 
-                              trace.x + trace.dx, trace.y + trace.dy, 
-                              flags, trav);
-      P_FinishTPT(node);
-   }
-
-   if(trace.finished && P_CheckTPT())
-      P_ClearTPT();
-#endif
-
-   return result;
 }
 
 //----------------------------------------------------------------------------

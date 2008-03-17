@@ -33,19 +33,19 @@ p_anim.c        p_anim.h       p_ceilng.c  p_chase.c   p_chase.h   p_cmd.c     p
 p_enemy.c       p_enemy.h      p_floor.c   p_genlin.c  p_henemy.c  p_hubs.c    p_hubs.h	\
 p_info.c        p_info.h       p_inter.c   p_inter.h   p_lights.c  p_map.c     p_map.h		\
 p_map3d.c       p_map3d.h      p_maputl.c  p_maputl.h  p_mobj.c    p_mobj.h    polyobj.c	\
-polyobj.h       p_partcl.c     p_partcl.h  p_plats.c   p_portal.c  p_portal.h  p_pspr.c		\
-p_pspr.h        p_saveg.c      p_saveg.h   p_setup.c   p_setup.h   p_sight.c   p_skin.c		\
+polyobj.h       p_partcl.c     p_partcl.h  p_plats.c   p_portal.c  p_portal.h  p_pspr.c	\
+p_pspr.h        p_saveg.c      p_saveg.h   p_setup.c   p_setup.h   p_sight.c   p_skin.c	\
 p_skin.h        psnprntf.c     psnprntf.h  p_spec.c    p_spec.h    p_switch.c  p_telept.c	\
-p_tick.c        p_tick.h       p_user.c    p_user.h    r_bsp.c     r_bsp.h     r_data.c		\
-r_data.h        r_defs.h       r_draw.c    r_draw.h    r_drawl.c   r_drawl.h   r_drawq.c	\
-r_drawq.h       r_main.c       r_main.h    r_plane.c   r_pcheck.h					\
-r_plane.h       r_portal.c     r_portal.h  r_ripple.c  r_ripple.h  r_segs.c    r_segs.h		\
-r_sky.c         r_sky.h        r_span.c    r_state.h   r_things.c  r_things.h  rules.make	\
-sclinux.h       sounds.c       sounds.h    s_sndseq.c  s_sndseq.h  s_sound.c   s_sound.h	\
-st_hbar.c       st_lib.c       st_lib.h    st_stuff.c  st_stuff.h  tables.c    tables.h		\
-v_block.c       v_block.h      version.c   version.h   v_font.c    v_font.h    v_misc.c		\
-v_misc.h        v_patch.c      v_patch.h   v_video.c   v_video.h   wi_stuff.c  wi_stuff.h	\
-w_wad.c         w_wad.h        z_zone.c    z_zone.h
+p_tick.c        p_tick.h       p_trace.c   p_user.c    p_user.h    r_bsp.c     r_bsp.h \
+r_data.c		    r_data.h       r_defs.h    r_draw.c    r_draw.h    r_drawl.c   r_drawl.h \
+r_drawq.c	    r_drawq.h      r_main.c    r_main.h    r_plane.c   r_pcheck.h  r_plane.h \
+r_portal.c      r_portal.h     r_ripple.c  r_ripple.h  r_segs.c    r_segs.h    r_sky.c \
+r_sky.h         r_span.c       r_state.h   r_things.c  r_things.h  rules.make	 sclinux.h \
+sounds.c        sounds.h       s_sndseq.c  s_sndseq.h  s_sound.c   s_sound.h   st_hbar.c \
+st_lib.c        st_lib.h       st_stuff.c  st_stuff.h  tables.c    tables.h    v_block.c  \
+v_block.h       version.c      version.h   v_font.c    v_font.h    v_misc.c    v_misc.h \
+v_patch.c       v_patch.h      v_video.c   v_video.h   wi_stuff.c  wi_stuff.h	 w_wad.c \
+w_wad.h         z_zone.c       z_zone.h
 
 eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer sdl/libsdlet.a\
 Confuse/libetconfuse.a textscreen/libtextscreen.a

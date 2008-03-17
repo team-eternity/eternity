@@ -407,10 +407,12 @@ void P_ParticleThinker(void)
 #ifdef R_LINKEDPORTALS
       if(particle->z < floorheight && R_LinkedFloorActive(psec))
       {
+         cameraportal_t *fcam = R_FPCam(psec);
+
          P_UnsetParticlePosition(particle);
-         particle->x -= psec->f_portal->data.camera.deltax;
-         particle->y -= psec->f_portal->data.camera.deltay;
-         particle->z -= psec->f_portal->data.camera.deltaz;
+         particle->x -= fcam->deltax;
+         particle->y -= fcam->deltay;
+         particle->z -= fcam->deltaz;
          P_SetParticlePosition(particle);
       }
       else

@@ -650,9 +650,9 @@ static void R_AddLine(seg_t *line)
       //seg.frontsec->ceilingpic != skyflatnum &&
       //seg.frontsec->ceilingpic != sky2flatnum &&
       !((R_LinkedCeilingActive(seg.frontsec) && 
-        viewz > seg.frontsec->c_portal->data.camera.planez) || 
+        viewz > R_CPCam(seg.frontsec)->planez) || 
         (R_LinkedFloorActive(seg.frontsec) && 
-        viewz < seg.frontsec->f_portal->data.camera.planez)))
+        viewz < R_FPCam(seg.frontsec)->planez)))
       return;
 
    // Reject empty two-sided lines used for line specials.

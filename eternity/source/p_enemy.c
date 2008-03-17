@@ -121,12 +121,13 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
       other = 
          R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) 
-                             - sec->f_portal->data.camera.deltax,
+                             - R_FPCam(sec)->deltax,
                             ((check->v1->y + check->v2->y) >> 1) 
-                             - sec->f_portal->data.camera.deltay)->sector;
+                             - R_FPCam(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
+   
    if(R_LinkedCeilingActive(sec))
    {
       // Ok, because the same portal can be used on many sectors and even lines, the portal
@@ -135,8 +136,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-      R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - sec->c_portal->data.camera.deltax,
-                         ((check->v1->y + check->v2->y) >> 1) - sec->c_portal->data.camera.deltay)->sector;
+      R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - R_CPCam(sec)->deltax,
+                         ((check->v1->y + check->v2->y) >> 1) - R_CPCam(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }

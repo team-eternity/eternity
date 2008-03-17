@@ -36,9 +36,7 @@ typedef enum
    R_HORIZON,
    R_PLANE,
    R_TWOWAY, // SoM: two-way non-linked anchored portals
-#ifdef R_LINKEDPORTALS
    R_LINKED, // SoM: interactive portals  
-#endif
 } rportaltype_e;
 
 typedef struct
