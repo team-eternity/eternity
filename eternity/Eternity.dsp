@@ -208,6 +208,10 @@ SOURCE=.\Source\p_tick.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\p_trace.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\p_user.c
 # End Source File
 # Begin Source File

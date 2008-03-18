@@ -452,9 +452,6 @@ void R_StoreWallRange(const int start, const int stop)
    if(!segclip.line)
       I_Error("R_StoreWallRange: null segclip.line\n");
 #endif
-
-   if(segclip.line->linedef - lines == 23)
-      segclip.line = segclip.line;
    
    usesegloop = !seg.backsec || seg.clipsolid || 
                 seg.markceiling || seg.markfloor || 
