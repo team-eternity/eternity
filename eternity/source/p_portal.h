@@ -49,7 +49,7 @@ int P_CreatePortalGroup(sector_t *from);
 // R_BuildLinkTable
 // Builds the link table. This should only be called after all the portals for
 // the level have been created.
-void P_BuildLinkTable(void);
+boolean P_BuildLinkTable(void);
 
 //
 // P_LinkRejectTable

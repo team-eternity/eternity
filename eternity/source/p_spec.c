@@ -2835,7 +2835,12 @@ void P_SpawnSpecials(void)
 
 #ifdef R_LINKEDPORTALS
    // SoM: This seems like the place to put this.
-   P_BuildLinkTable();
+   if(!P_BuildLinkTable())
+   {
+      // SoM: There was an error... so kill the groupids
+      for(i = 0; i < numsectors; i++)
+         R_SetSectorGroupID(sectors + i, R_NOGROUP);
+   }
 #endif
 
    // haleyjd 02/20/06: spawn polyobjects
@@ -4862,6 +4867,9 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       break;
 #ifdef R_LINKEDPORTALS
    case portal_linked:
+      if(demo_version < 333)
+         return;
+
       frontsector = line->frontsector;
       if(!frontsector) 
          frontsector = line->backsector;

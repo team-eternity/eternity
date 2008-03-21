@@ -366,14 +366,14 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
 //
 // P_BuildLinkTable
 //
-void P_BuildLinkTable(void)
+boolean P_BuildLinkTable(void)
 {
    int i, p;
    sector_t *sec;
    linkoffset_t *link, *backlink;
 
    if(!groupcount)
-      return;
+      return true;
 
    // SoM: the last line of the table (starting at groupcount * groupcount) is
    // used as a temporary list for gathering links.
@@ -392,19 +392,19 @@ void P_BuildLinkTable(void)
       {
          C_Printf(FC_ERROR "P_BuildLinkTable: sector %i has a groupid out of "
                   "range.\nLinked portals are disabled.\a\n", i);
-         return;
+         return false;
       }
 
       if(!P_CheckLinkedPortal(sec->c_portal, sec))
-         return;
+         return false;
 
       if(!P_CheckLinkedPortal(sec->f_portal, sec))
-         return;
+         return false;
 
       for(p = 0; p < sec->linecount; ++p)
       {
          if(!P_CheckLinkedPortal(sec->lines[p]->portal, sec))
-            return;
+           return false;
       }
       // Sector checks out...
    }
@@ -430,14 +430,14 @@ void P_BuildLinkTable(void)
             {
                C_Printf(FC_ERROR "Portal groups %i and %i link and backlink do "
                         "not agree\nLinked portals are disabled\a\n", i, p);
-               return;
+               return false;
             }
          }
          else if(link || backlink)
          {
             C_Printf(FC_ERROR "Portal group %i references group %i without a "
                      "backlink.\nLinked portals are disabled\a\n", i, p);
-            return;
+            return false;
          }
       }
    }
@@ -451,11 +451,12 @@ void P_BuildLinkTable(void)
    for(i = 0; i < numsectors; i++)
    {
       if(sectors[i].groupid == R_NOGROUP)
-         sectors[i].groupid = 0;
+         R_SetSectorGroupID(sectors + i, 0);
    }
 
    // Everything checks out... let's run the portals
    useportalgroups = true;
+   return true;
 }
 
 
