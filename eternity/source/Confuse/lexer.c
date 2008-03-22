@@ -64,20 +64,6 @@ char *mytext; // haleyjd: equivalent to yytext
 
 static qstring_t qstring;
 
-// state enumeration for lexer FSA
-
-enum
-{
-   STATE_NONE,
-   STATE_SLCOMMENT,
-   STATE_MLCOMMENT,
-   STATE_MLCOMMENTSTAR,
-   STATE_SLASH,
-   STATE_STRING,
-   STATE_UNQUOTEDSTRING,
-   STATE_PLUS,
-};
-
 //
 // lexer_error
 //
@@ -491,6 +477,18 @@ include:
 }
 */
 
+// state enumeration for lexer FSA
+
+enum
+{
+   STATE_NONE,
+   STATE_SLCOMMENT,
+   STATE_MLCOMMENT,
+   STATE_STRING,
+   STATE_UNQUOTEDSTRING,
+   STATE_HEREDOC,
+};
+
 //
 // mylex
 //
@@ -676,6 +674,27 @@ include:
          }
          break;
 
+      case STATE_HEREDOC: // heredoc string - read to next ["']@[\r\n\0]
+         if((c == '"' || c == '\'') &&
+            *bufferpos == '@' &&
+            ((la = *(bufferpos + 1)) == '\r' ||
+              la == '\n' ||
+              la == '\0'))
+         {
+            ++bufferpos; // move forward past @
+            mytext = M_QStrBuffer(&qstring);
+            return CFGT_STR;
+         }
+         else // normal characters -- everything is literal
+         {
+            if(c == '\n')
+               cfg->line++; // still need to track line numbers
+
+            M_QStrPutc(&qstring, c);
+            continue;
+         }
+         break;
+
       default:
          break;
       }
@@ -747,6 +766,15 @@ include:
          state = STATE_STRING;
          stringtype = 2;
          continue;
+      case '@': // possibly open heredoc string
+         if(*bufferpos == '"' || *bufferpos == '\'') // look ahead to next character
+         {
+            ++bufferpos; // move past " or '
+            M_QStrClear(&qstring);
+            state = STATE_HEREDOC;
+            continue;
+         }
+         // fall through, @ is not special unless followed by " or '
       default:  // anything else is part of an unquoted string
          M_QStrClear(&qstring);
          M_QStrPutc(&qstring, c);
@@ -755,8 +783,9 @@ include:
       }
    }
 
-   if(state == STATE_STRING) // EOF in quoted string: not allowed
+   if(state == STATE_STRING || state == STATE_HEREDOC)
    {
+      // EOF in quoted/heredoc string - not allowed
       lexer_error(cfg, "EOF in string constant");
       return 0;
    }

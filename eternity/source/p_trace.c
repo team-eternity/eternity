@@ -253,29 +253,229 @@ void P_ClearTPT(void)
    tptlist = tptend = NULL;
 }
 
+//=============================================================================
+//
+// Aiming
+//
+
+//
+// P_AimAtThing
+//
+// Code to handle aiming tracers at things.
+// haleyjd 03/21/08
+//
+static boolean P_AimAtThing(intercept_t *in)
+{
+   mobj_t *th = in->d.thing;
+   fixed_t thingtopslope, thingbottomslope, dist;
+   
+   if(th == shootthing)
+      return true;    // can't shoot self
+   
+   if(!(th->flags & MF_SHOOTABLE))
+      return true;    // corpse or something
+   
+   // killough 7/19/98, 8/2/98:
+   // friends don't aim at friends (except players), at least not first
+   if(th->flags & shootthing->flags & aim_flags_mask && !th->player)
+      return true;
+   
+   // check angles to see if the thing can be aimed at
+   
+   // SoM: added distance so the slopes are calculated from the origin of the 
+   // aiming tracer to keep the slopes consistent.
+   if(demo_version >= 333)
+      dist = FixedMul(trace.attackrange, in->frac) + trace.movefrac;
+   else
+      dist = FixedMul(trace.attackrange, in->frac);   
+
+   thingtopslope = FixedDiv(th->z + th->height - trace.originz , dist);
+   
+   if(thingtopslope < trace.bottomslope)
+      return true;    // shot over the thing
+   
+   thingbottomslope = FixedDiv(th->z - trace.originz, dist);
+   
+   if(thingbottomslope > trace.topslope)
+      return true;    // shot under the thing
+   
+   // this thing can be hit!
+   
+   if(thingtopslope > trace.topslope)
+      thingtopslope = trace.topslope;
+   
+   if(thingbottomslope < trace.bottomslope)
+      thingbottomslope = trace.bottomslope;
+   
+   trace.aimslope = (thingtopslope + thingbottomslope) / 2;
+   tm->linetarget = th;
+
+   // We hit a thing so stop any furthur TPTs
+   trace.finished = true;
+   
+   return false;   // don't go any farther
+}
+   
+//
+// P_AimTraversePortal
+//
+// The shot is otherwise blocked by a 1S line; this routine checks to see
+// if that one-sided line is a portal, and if so, the tracer will 
+// propagate into it.
+//
+// haleyjd 03/21/08
+//
+// FIXME: return value is actually constant
+//
+static boolean P_AimTraversePortal(line_t *li)
+{
+   sector_t *fs = li->frontsector;
+   fixed_t slope, dist;
+   
+   if(!useportalgroups)
+      return false;
+
+   // The line is blocking so check for portals in the frontsector.
+   if(R_LinkedCeilingActive(fs) && trace.originz <= fs->ceilingheight)
+   {
+      slope = FixedDiv(fs->ceilingheight - trace.originz, dist);
+
+      if(trace.topslope > slope)
+      {
+         // Find the distance from the ogrigin to the intersection with the 
+         // plane.
+         fixed_t z = fs->ceilingheight;
+         fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
+         linkoffset_t *link = P_GetLinkOffset(fs->groupid, R_CPCam(fs)->groupid);
+
+         if(link)
+            P_NewAimTPT(link, frac, z, trace.topslope, slope);
+      }
+   }
+   
+   if(R_LinkedFloorActive(fs) && trace.originz >= fs->floorheight)
+   {
+      slope = FixedDiv(fs->floorheight - trace.originz, dist);
+
+      if(slope > trace.bottomslope)
+      {
+         // Find the distance from the origin to the intersection with the 
+         // plane.
+         fixed_t z = fs->floorheight;
+         fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
+         linkoffset_t *link = P_GetLinkOffset(fs->groupid, R_FPCam(fs)->groupid);
+
+         if(link)
+            P_NewAimTPT(link, frac, z, slope, trace.bottomslope);
+      }
+   }
+   
+   // also check line portals.
+   if(R_LinkedLineActive(li))
+   {
+      fixed_t slope2;
+      
+      slope  = FixedDiv(fs->floorheight - trace.originz, dist);
+      slope2 = FixedDiv(fs->ceilingheight - trace.originz, dist);
+
+      if(slope2 < trace.bottomslope && slope > trace.topslope)
+         return false;
+      else
+      {
+         fixed_t frac = dist - trace.movefrac + FRACUNIT;
+         linkoffset_t *link = 
+            P_GetLinkOffset(fs->groupid, li->portal->data.camera.groupid);
+
+         if(slope2 > trace.topslope)
+            slope2 = trace.topslope;
+         if(slope < trace.bottomslope)
+            slope = trace.bottomslope;
+         
+         if(link)
+            P_NewAimTPT(link, frac, trace.z, slope2, slope);
+      }
+   }
+   
+   return false;
+}
+
+//
+// PTR_AimTraverseComp
+//
+// Compatibility codepath for aim traversal, for demo_version < 333.
+// Sets linetarget and aimslope when a target is aimed at.
+// haleyjd 03/21/08
+//
+static boolean PTR_AimTraverseComp(intercept_t *in)
+{
+   fixed_t slope, dist;
+   
+   if(in->isaline)
+   {
+      // shoot a line
+      line_t *li = in->d.line;
+      
+      if(!(li->flags & ML_TWOSIDED))
+         return false;   // stop
+
+      // Crosses a two sided line.
+      // A two sided line will restrict
+      // the possible target ranges.
+      
+      P_LineOpening(li, NULL);
+      
+      if(tm->openbottom >= tm->opentop)
+         return false;   // stop
+
+      dist = FixedMul(trace.attackrange, in->frac);
+      
+      if(li->frontsector->floorheight != li->backsector->floorheight)
+      {
+         slope = FixedDiv(tm->openbottom - trace.z , dist);
+         if(slope > trace.bottomslope)
+            trace.bottomslope = slope;
+      }
+
+      if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
+      {
+         slope = FixedDiv(tm->opentop - trace.z , dist);
+         if(slope < trace.topslope)
+            trace.topslope = slope;
+      }
+
+      if(trace.topslope <= trace.bottomslope)
+         return false;   // stop
+      
+      return true;    // shot continues
+   }
+   else
+   {  
+      // shoot a thing
+      return P_AimAtThing(in);
+   }
+}
+
 //
 // PTR_AimTraverse
-// Sets linetaget and aimslope when a target is aimed at.
 //
-#ifdef R_LINKEDPORTALS
+// Sets linetarget and aimslope when a target is aimed at.
+//
 static boolean PTR_AimTraverse(intercept_t *in)
 {
-   fixed_t slope, thingtopslope, thingbottomslope, dist;
-   line_t *li;
-   mobj_t *th;
+   fixed_t slope, dist;
    sector_t *sidesector = NULL;
    int      lineside;
    
    if(in->isaline)
    {
-      li = in->d.line;
+      line_t *li = in->d.line;
       
-      dist = FixedMul (trace.attackrange, in->frac);
+      dist = FixedMul(trace.attackrange, in->frac);
 
-      if(demo_version >= 333 && useportalgroups)
+      if(useportalgroups)
       {
          dist += trace.movefrac;
-         lineside = P_PointOnLineSide(trace.x, trace.y, li);
+         lineside   = P_PointOnLineSide(trace.x, trace.y, li);
          sidesector = lineside ? li->backsector : li->frontsector; 
 
          // Marked twosided but really one sided?      
@@ -284,16 +484,16 @@ static boolean PTR_AimTraverse(intercept_t *in)
       }
 
       if(!(li->flags & ML_TWOSIDED))
-         goto blockedsolid;   // stop
+         return P_AimTraversePortal(li);   // stop?
 
       // Crosses a two sided line.
       // A two sided line will restrict
       // the possible target ranges.
 
-      P_LineOpening (li, NULL);
+      P_LineOpening(li, NULL);
       
       if(tm->openbottom >= tm->opentop)
-         goto blockedsolid;   // stop
+         return P_AimTraversePortal(li);   // stop?
 
       // Check the portals, even if the line doesn't block the tracer, a/the 
       // target may be sitting on top of a ledge. If we don't hit any monsters,
@@ -306,7 +506,7 @@ static boolean PTR_AimTraverse(intercept_t *in)
          slope = FixedDiv(sidesector->ceilingheight - trace.originz, dist);
          if(trace.topslope > slope)
          {
-            // Find the distance from the ogrigin to the intersection with the 
+            // Find the distance from the origin to the intersection with the 
             // plane.
             fixed_t z = sidesector->ceilingheight;
             fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
@@ -383,215 +583,18 @@ static boolean PTR_AimTraverse(intercept_t *in)
          return false;   // stop
       
       return true;    // shot continues
-
-      blockedsolid:
-      if(demo_version < 333 || !li->frontsector || !useportalgroups)
-         return false;
-
-      // The line is blocking so check for portals in the frontsector.
-      if(R_LinkedCeilingActive(li->frontsector) &&
-         trace.originz <= li->frontsector->ceilingheight)
-      {
-         slope = FixedDiv(li->frontsector->ceilingheight - trace.originz, dist);
-         if(trace.topslope > slope)
-         {
-            // Find the distance from the ogrigin to the intersection with the 
-            // plane.
-            fixed_t z = li->frontsector->ceilingheight;
-            fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
-            linkoffset_t *link = 
-               P_GetLinkOffset(li->frontsector->groupid, 
-                               R_CPCam(li->frontsector)->groupid);
-            if(link)
-               P_NewAimTPT(link, frac, z, trace.topslope, slope);
-         }
-      }
-
-      if(R_LinkedFloorActive(li->frontsector) &&
-         trace.originz >= li->frontsector->floorheight)
-      {
-         slope = FixedDiv(li->frontsector->floorheight - trace.originz, dist);
-         if(slope > trace.bottomslope)
-         {
-            // Find the distance from the origin to the intersection with the 
-            // plane.
-            fixed_t z = li->frontsector->floorheight;
-            fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
-            linkoffset_t *link = 
-               P_GetLinkOffset(li->frontsector->groupid, 
-                               R_FPCam(li->frontsector)->groupid);
-            if(link)
-               P_NewAimTPT(link, frac, z, slope, trace.bottomslope);
-         }
-      }
-
-      // also check line portals.
-      if(R_LinkedLineActive(li))
-      {
-         fixed_t slope2;
-
-         slope = FixedDiv(li->frontsector->floorheight - trace.originz, dist);
-         slope2 = FixedDiv(li->frontsector->ceilingheight - trace.originz, dist);
-         if(slope2 < trace.bottomslope && slope > trace.topslope)
-            return false;
-         else
-         {
-            fixed_t frac = dist - trace.movefrac + FRACUNIT;
-            linkoffset_t *link = 
-               P_GetLinkOffset(li->frontsector->groupid, 
-                               li->portal->data.camera.groupid);
-            if(slope2 > trace.topslope)
-               slope2 = trace.topslope;
-            if(slope < trace.bottomslope)
-               slope = trace.bottomslope;
-
-            if(link)
-               P_NewAimTPT(link, frac, trace.z, slope2, slope);
-         }
-      }
-
-      return false;
    }
-
-   // shoot a thing
-   
-   th = in->d.thing;
-   if(th == shootthing)
-      return true;    // can't shoot self
-
-   if(!(th->flags&MF_SHOOTABLE))
-      return true;    // corpse or something
-
-   // killough 7/19/98, 8/2/98:
-   // friends don't aim at friends (except players), at least not first
-   if(th->flags & shootthing->flags & aim_flags_mask && !th->player)
-      return true;
-
-   // check angles to see if the thing can be aimed at
-   
-   // SoM: added distance so the slopes are calculated from the origin of the 
-   // aiming tracer to keep the slopes consistent.
-   if(demo_version >= 333)
-      dist = FixedMul(trace.attackrange, in->frac) + trace.movefrac;
    else
-      dist = FixedMul(trace.attackrange, in->frac);
-
-   // SoM: From the origin
-   thingtopslope = FixedDiv(th->z + th->height - trace.originz, dist); 
-
-   if(thingtopslope < trace.bottomslope)
-      return true;    // shot over the thing
-   
-   thingbottomslope = FixedDiv (th->z - trace.originz, dist);
-   
-   if(thingbottomslope > trace.topslope)
-      return true;    // shot under the thing
-
-   // this thing can be hit!
-   
-   if(thingtopslope > trace.topslope)
-      thingtopslope = trace.topslope;
-   
-   if(thingbottomslope < trace.bottomslope)
-      thingbottomslope = trace.bottomslope;
-   
-   trace.aimslope = (thingtopslope+thingbottomslope)/2;
-   tm->linetarget = th;
-
-   // We hit a thing so stop any furthur TPTs
-   trace.finished = true;
-   
-   return false;   // don't go any farther
-}
-
-#else
-
-static boolean PTR_AimTraverse(intercept_t *in)
-{
-   fixed_t slope, thingtopslope, thingbottomslope, dist;
-   line_t *li;
-   mobj_t *th;
-   
-   if(in->isaline)
    {
-      li = in->d.line;
-      
-      if(!(li->flags & ML_TWOSIDED))
-         return false;   // stop
-
-      // Crosses a two sided line.
-      // A two sided line will restrict
-      // the possible target ranges.
-      
-      P_LineOpening (li, NULL);
-      
-      if(openbottom >= opentop)
-         return false;   // stop
-
-      dist = FixedMul (trace.attackrange, in->frac);
-      
-      if(li->frontsector->floorheight != li->backsector->floorheight)
-      {
-         slope = FixedDiv (openbottom - trace.z , dist);
-         if(slope > trace.bottomslope)
-            trace.bottomslope = slope;
-      }
-
-      if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
-      {
-         slope = FixedDiv (opentop - trace.z , dist);
-         if(slope < trace.topslope)
-            trace.topslope = slope;
-      }
-
-      if(trace.topslope <= trace.bottomslope)
-         return false;   // stop
-      
-      return true;    // shot continues
+      // shoot a thing
+      return P_AimAtThing(in);
    }
-
-   // shoot a thing
-   
-   th = in->d.thing;
-   if(th == shootthing)
-      return true;    // can't shoot self
-
-   if(!(th->flags&MF_SHOOTABLE))
-      return true;    // corpse or something
-
-   // killough 7/19/98, 8/2/98:
-   // friends don't aim at friends (except players), at least not first
-   if(th->flags & shootthing->flags & aim_flags_mask && !th->player)
-      return true;
-
-   // check angles to see if the thing can be aimed at
-   
-   dist = FixedMul(trace.attackrange, in->frac);
-   thingtopslope = FixedDiv(th->z+th->height - trace.z , dist);
-
-   if(thingtopslope < trace.bottomslope)
-      return true;    // shot over the thing
-   
-   thingbottomslope = FixedDiv (th->z - trace.z, dist);
-   
-   if(thingbottomslope > trace.topslope)
-      return true;    // shot under the thing
-
-   // this thing can be hit!
-   
-   if(thingtopslope > trace.topslope)
-      thingtopslope = trace.topslope;
-   
-   if(thingbottomslope < trace.bottomslope)
-      thingbottomslope = trace.bottomslope;
-   
-   trace.aimslope = (thingtopslope+thingbottomslope)/2;
-   linetarget = th;
-   
-   return false;   // don't go any farther
 }
 
-#endif
+//=============================================================================
+//
+// Shooting
+//
 
 //
 // P_Shoot2SLine
@@ -636,231 +639,103 @@ static boolean P_Shoot2SLine(line_t *li, int side, fixed_t dist)
 }
 
 //
-// PTR_ShootTraverse
+// P_ShotCheck2SLine
 //
-// haleyjd 11/21/01: fixed by SoM to allow bullets to puff on the
-// floors and ceilings rather than along the line which they actually
-// intersected far below or above the ceiling.
+// Routine to handle the crossing of a 2S line by a shot tracer.
+// Returns true if PTR_ShootTraverse should return.
 //
-static boolean PTR_ShootTraverse(intercept_t *in)
+static boolean P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
 {
-   fixed_t dist, thingtopslope, thingbottomslope, x, y, z, frac;
-   mobj_t *th;
-   boolean hitplane = false; // SoM: Remember if the bullet hit a plane.
-   int updown = 2; // haleyjd 05/02: particle puff z dist correction
-   
-   if(in->isaline)
-   {
-      line_t *li = in->d.line;
+   fixed_t dist;
+   boolean ret = false;
 
-      // haleyjd 03/13/05: move up point on line side check to here
-      // SoM: this was causing some trouble when shooting through linked 
-      // portals because although trace.x and trace.y are offset when 
-      // the shot travels through a portal, shootthing->x and 
-      // shootthing->y are NOT. Demo comped just in case.
-      int lineside;
-
-      if(demo_version >= 333)
-         lineside = P_PointOnLineSide(trace.x, trace.y, li);
-      else
-         lineside = P_PointOnLineSide(shootthing->x, shootthing->y, li);
+   if(li->flags & ML_TWOSIDED)
+   {  
+      // crosses a two sided (really 2s) line
+      P_LineOpening(li, NULL);
+      dist = FixedMul(trace.attackrange, in->frac);
       
-      // SoM: Shouldn't be called until A: we know the bullet passed or
-      // B: We know it didn't hit a plane first
-      if(li->special && (demo_version < 329 || comp[comp_planeshoot]))
-         P_ShootSpecialLine(shootthing, li, lineside);
-      
-      if(li->flags & ML_TWOSIDED)
-      {  
-         // crosses a two sided (really 2s) line
-         P_LineOpening(li, NULL);
-         dist = FixedMul(trace.attackrange, in->frac);
-         
-         // killough 11/98: simplify
-         // haleyjd 03/13/05: fixed bug that activates 2S line specials
-         // when shots hit the floor
-         if(P_Shoot2SLine(li, lineside, dist))
-            return true;
-      }
-      
-      // hit line
-      // position a bit closer
-
-      frac = in->frac - FixedDiv(4*FRACUNIT, trace.attackrange);
-      x = trace.x + FixedMul(trace.dx, frac);
-      y = trace.y + FixedMul(trace.dy, frac);
-      z = trace.z + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
-
-      if(demo_version >= 329 && !comp[comp_planeshoot])
-      {
-         // SoM: Check for colision with a plane.
-         sector_t*  sidesector = lineside ? li->backsector : li->frontsector;
-         fixed_t    zdiff;
-
-         // SoM: If we are in no-clip and are shooting on the backside of a
-         // 1s line, don't crash!
-         if(sidesector)
-         {
-            if(z < sidesector->floorheight)
-            {
-               fixed_t pfrac = FixedDiv(sidesector->floorheight - trace.z, 
-                                        trace.aimslope);
-         
-               // SoM: don't check for portals here anymore
-               if(sidesector->floorpic == skyflatnum ||
-                  sidesector->floorpic == sky2flatnum) 
-                  return false;
-
-               // SoM: Check here for portals
-               if(sidesector->f_portal)
-               {
-#ifdef R_LINKEDPORTALS
-                  if(R_LinkedFloorActive(sidesector))
-                  {
-                     linkoffset_t *link = 
-                        P_GetLinkOffset(sidesector->groupid, 
-                                        R_FPCam(sidesector)->groupid);
-                     if(link)
-                        P_NewShootTPT(link, pfrac, sidesector->floorheight);
-                  }
-#endif
-                  return false;
-               }
-
-               if(demo_version < 333)
-               {
-                  zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
-                                   D_abs(z - trace.originz));
-                  x += FixedMul(trace.x - x, zdiff);
-                  y += FixedMul(trace.y - y, zdiff);
-               }
-               else
-               {
-                  x = trace.x + FixedMul(trace.cos, pfrac);
-                  y = trace.y + FixedMul(trace.sin, pfrac);
-               }
-               z = sidesector->floorheight;
-               hitplane = true;
-               updown = 0; // haleyjd
-            }
-            else if(z > sidesector->ceilingheight)
-            {
-               fixed_t pfrac = FixedDiv(sidesector->ceilingheight - trace.z, trace.aimslope);
-               if(sidesector->ceilingpic == skyflatnum ||
-                  sidesector->ceilingpic == sky2flatnum) // SoM
-                  return false;
-
-               // SoM: Check here for portals
-               if(sidesector->c_portal)
-               {
-#ifdef R_LINKEDPORTALS
-                  if(R_LinkedCeilingActive(sidesector))
-                  {
-                     linkoffset_t *link = 
-                        P_GetLinkOffset(sidesector->groupid, 
-                                        R_CPCam(sidesector)->groupid);
-                     if(link)
-                        P_NewShootTPT(link, pfrac, sidesector->ceilingheight);
-                  }
-#endif
-                  return false;
-               }
-
-               if(demo_version < 333)
-               {
-                  zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
-                                   D_abs(z - trace.originz));
-                  x += FixedMul(trace.x - x, zdiff);
-                  y += FixedMul(trace.y - y, zdiff);
-               }
-               else
-               {
-                  x = trace.x + FixedMul(trace.cos, pfrac);
-                  y = trace.y + FixedMul(trace.sin, pfrac);
-               }
-
-               z = sidesector->ceilingheight;
-               hitplane = true;
-               updown = 1; // haleyjd
-            }
-#ifdef R_LINKEDPORTALS
-            else if(R_LinkedLineActive(li))
-            {
-               linkoffset_t *link = 
-                  P_GetLinkOffset(sidesector->groupid, 
-                                  li->portal->data.camera.groupid);
-
-               // SoM: Hit the center of the line
-               // check for line-side portals
-               // Do NOT position closer heh
-               frac = FixedMul(in->frac, trace.attackrange); 
-               z = trace.z + FixedMul(trace.aimslope, frac);
-               if(link)
-                  P_NewShootTPT(link, frac, z);
-
-               return false;
-            }
-         }
-         else if(R_LinkedLineActive(li))
-            return true;
-#else
-         }
-#endif
-
-         if(!hitplane && li->special)
-            P_ShootSpecialLine(shootthing, li, lineside);
-      }
-
-      if(li->frontsector->ceilingpic == skyflatnum ||
-         li->frontsector->ceilingpic == sky2flatnum || 
-         li->frontsector->c_portal)
-      {
-         // don't shoot the sky!
-         // don't shoot ceiling portals either
-         
-         if(z > li->frontsector->ceilingheight)
-            return false;
-         
-         // it's a sky hack wall
-         // fix bullet-eaters -- killough:
-         if(li->backsector && 
-            (li->backsector->ceilingpic == skyflatnum ||
-             li->backsector->ceilingpic == sky2flatnum))
-         {
-            if(demo_compatibility || li->backsector->ceilingheight < z)
-               return false;
-         }
-      }
-      
-      // don't shoot portal lines
-      if(!hitplane && li->portal)
-         return false;
-      
-      // Spawn bullet puffs.
-      P_SpawnPuff(x, y, z, 
-                  R_PointToAngle2(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true);
-      
-      // don't go any farther
-      
-      return false;
+      // killough 11/98: simplify
+      // haleyjd 03/13/05: fixed bug that activates 2S line specials
+      // when shots hit the floor
+      if(P_Shoot2SLine(li, lineside, dist))
+         ret = true;
    }
+
+   return ret;
+}
+
+//
+// P_PuffPosition
+//
+// Calculates the position for a bullet puff.
+// haleyjd 03/21/08
+//
+static void P_PuffPosition(intercept_t *in, fixed_t *frac, 
+                           fixed_t *x, fixed_t *y, fixed_t *z,
+                           fixed_t dist)
+{
+   *frac = in->frac - FixedDiv(dist, trace.attackrange);
+   *x = trace.x + FixedMul(trace.dx, *frac);
+   *y = trace.y + FixedMul(trace.dy, *frac);
+   *z = trace.z + FixedMul(trace.aimslope, FixedMul(*frac, trace.attackrange));
+}
+
+//
+// P_ShootSky
+//
+// Returns true if PTR_ShootTraverse should return (ie, shot hits sky).
+//
+static boolean P_ShootSky(line_t *li, fixed_t z)
+{
+   sector_t *fs = li->frontsector, *bs = li->backsector;
+
+   // don't shoot the sky!
+   // don't shoot ceiling portals either
+
+   if(fs->ceilingpic == skyflatnum  ||
+      fs->ceilingpic == sky2flatnum || 
+      fs->c_portal)
+   {      
+      if(z > fs->ceilingheight)
+         return true;
+      
+      // it's a sky hack wall
+      // fix bullet-eaters -- killough:
+      if(bs && 
+         (bs->ceilingpic == skyflatnum ||
+          bs->ceilingpic == sky2flatnum))
+      {
+         if(demo_compatibility || bs->ceilingheight < z)
+            return true;
+      }
+   }
+
+   return false;
+}
+
+//
+// P_ShootThing
+//
+// Routine to handle shooting a thing.
+// haleyjd 03/21/08
+//
+static boolean P_ShootThing(intercept_t *in)
+{
+   fixed_t x, y, z, frac, dist, thingtopslope, thingbottomslope;
+   mobj_t *th = in->d.thing;
    
-   // shoot a thing
-   
-   th = in->d.thing;
    if(th == shootthing)
       return true;  // can't shoot self
    
    if(!(th->flags & MF_SHOOTABLE))
       return true;  // corpse or something
-
+   
    // haleyjd: don't let players use melee attacks on ghosts
-   if(th->flags3 & MF3_GHOST && shootthing->player &&
+   if((th->flags3 & MF3_GHOST) && 
+      shootthing->player &&
       P_GetReadyWeapon(shootthing->player)->flags & WPF_NOHITGHOSTS)
-   {
       return true;
-   }
    
    // check angles to see if the thing can be aimed at
    
@@ -878,11 +753,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
    // hit thing
    // position a bit closer
    
-   frac = in->frac - FixedDiv(10*FRACUNIT, trace.attackrange);
-   
-   x = trace.x + FixedMul(trace.dx, frac);
-   y = trace.y + FixedMul(trace.dy, frac);
-   z = trace.z + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
+   P_PuffPosition(in, &frac, &x, &y, &z, 10*FRACUNIT);
    
    // Spawn bullet puffs or blood spots,
    // depending on target type. -- haleyjd: and status flags!
@@ -890,14 +761,14 @@ static boolean PTR_ShootTraverse(intercept_t *in)
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
       P_SpawnPuff(x, y, z, 
-                  R_PointToAngle2(0, 0, trace.dx, trace.dy) - ANG180,
-                  2, true);
+         R_PointToAngle2(0, 0, trace.dx, trace.dy) - ANG180,
+         2, true);
    }
    else
    {
       P_SpawnBlood(x, y, z,
-                   R_PointToAngle2(0, 0, trace.dx, trace.dy) - ANG180,
-                   trace.la_damage, th);
+         R_PointToAngle2(0, 0, trace.dx, trace.dy) - ANG180,
+         trace.la_damage, th);
    }
    
    if(trace.la_damage)
@@ -911,6 +782,231 @@ static boolean PTR_ShootTraverse(intercept_t *in)
    
    // don't go any further
    return false;
+}
+
+//
+// PTR_ShootTraverseComp
+//
+// Compatibility codepath for shot traversal.
+// This is called if (demo_version < 329 || comp[comp_planeshoot] == true)
+//
+// haleyjd 03/21/08
+//
+static boolean PTR_ShootTraverseComp(intercept_t *in)
+{
+   fixed_t x, y, z, frac;
+   
+   if(in->isaline)
+   {
+      line_t *li = in->d.line;
+
+      // haleyjd 03/13/05: move up point on line side check to here
+      int lineside = P_PointOnLineSide(shootthing->x, shootthing->y, li);
+      
+      if(li->special)
+         P_ShootSpecialLine(shootthing, li, lineside);
+
+      // shot crosses a 2S line?
+      if(P_ShotCheck2SLine(in, li, lineside))
+         return true;
+      
+      // hit line
+      // position a bit closer
+
+      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT);
+
+      // don't hit the sky
+      if(P_ShootSky(li, z))
+         return false;
+            
+      // Spawn bullet puffs.
+      P_SpawnPuff(x, y, z, 
+                  R_PointToAngle2(0, 0, li->dx, li->dy) - ANG90,
+                  2, true);
+      
+      // don't go any farther
+      return false;
+   }
+   else
+   {
+      // shoot a thing
+      return P_ShootThing(in);
+   }
+}
+
+//
+// PTR_ShootTraverse
+//
+// haleyjd 11/21/01: fixed by SoM to allow bullets to puff on the
+// floors and ceilings rather than along the line which they actually
+// intersected far below or above the ceiling.
+//
+static boolean PTR_ShootTraverse(intercept_t *in)
+{
+   fixed_t x, y, z, frac, zdiff;
+   boolean hitplane = false; // SoM: Remember if the bullet hit a plane.
+   int updown = 2; // haleyjd 05/02: particle puff z dist correction
+   sector_t *sidesector;
+   
+   if(in->isaline)
+   {
+      line_t *li = in->d.line;
+
+      // haleyjd 03/13/05: move up point on line side check to here
+      // SoM: this was causing some trouble when shooting through linked 
+      // portals because although trace.x and trace.y are offset when 
+      // the shot travels through a portal, shootthing->x and 
+      // shootthing->y are NOT. Demo comped just in case.
+      int lineside =
+         (demo_version >= 333) ?
+            P_PointOnLineSide(trace.x, trace.y, li) :
+            P_PointOnLineSide(shootthing->x, shootthing->y, li);
+      
+      // SoM: Shouldn't be called until A: we know the bullet passed or
+      // B: We know it didn't hit a plane first
+      //if(li->special && (demo_version < 329 || comp[comp_planeshoot]))
+      //   P_ShootSpecialLine(shootthing, li, lineside);
+     
+      if(P_ShotCheck2SLine(in, li, lineside))
+         return true;
+
+      // hit line
+      // position a bit closer
+
+      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT);
+      
+      // SoM: Check for colision with a plane.
+      sidesector = lineside ? li->backsector : li->frontsector;
+      
+      // SoM: If we are in no-clip and are shooting on the backside of a
+      // 1s line, don't crash!
+      if(sidesector)
+      {
+         if(z < sidesector->floorheight)
+         {
+            fixed_t pfrac = FixedDiv(sidesector->floorheight - trace.z, 
+                                     trace.aimslope);
+            
+            // SoM: don't check for portals here anymore
+            if(sidesector->floorpic == skyflatnum ||
+               sidesector->floorpic == sky2flatnum) 
+               return false;
+            
+            // SoM: Check here for portals
+            if(sidesector->f_portal)
+            {
+               if(R_LinkedFloorActive(sidesector))
+               {
+                  linkoffset_t *link = 
+                     P_GetLinkOffset(sidesector->groupid, 
+                                     R_FPCam(sidesector)->groupid);
+                  if(link)
+                     P_NewShootTPT(link, pfrac, sidesector->floorheight);
+               }
+               
+               return false;
+            }
+            
+            if(demo_version < 333)
+            {
+               zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
+                                D_abs(z - trace.originz));
+               x += FixedMul(trace.x - x, zdiff);
+               y += FixedMul(trace.y - y, zdiff);
+            }
+            else
+            {
+               x = trace.x + FixedMul(trace.cos, pfrac);
+               y = trace.y + FixedMul(trace.sin, pfrac);
+            }
+
+            z = sidesector->floorheight;
+            hitplane = true;
+            updown = 0; // haleyjd
+         }
+         else if(z > sidesector->ceilingheight)
+         {
+            fixed_t pfrac = FixedDiv(sidesector->ceilingheight - trace.z, trace.aimslope);
+            if(sidesector->ceilingpic == skyflatnum ||
+               sidesector->ceilingpic == sky2flatnum) // SoM
+               return false;
+            
+            // SoM: Check here for portals
+            if(sidesector->c_portal)
+            {
+               if(R_LinkedCeilingActive(sidesector))
+               {
+                  linkoffset_t *link = 
+                     P_GetLinkOffset(sidesector->groupid, 
+                     R_CPCam(sidesector)->groupid);
+                  if(link)
+                     P_NewShootTPT(link, pfrac, sidesector->ceilingheight);
+               }
+               
+               return false;
+            }
+            
+            if(demo_version < 333)
+            {
+               zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
+                  D_abs(z - trace.originz));
+               x += FixedMul(trace.x - x, zdiff);
+               y += FixedMul(trace.y - y, zdiff);
+            }
+            else
+            {
+               x = trace.x + FixedMul(trace.cos, pfrac);
+               y = trace.y + FixedMul(trace.sin, pfrac);
+            }
+            
+            z = sidesector->ceilingheight;
+            hitplane = true;
+            updown = 1; // haleyjd
+         }
+         else if(R_LinkedLineActive(li))
+         {
+            linkoffset_t *link = 
+               P_GetLinkOffset(sidesector->groupid, 
+                               li->portal->data.camera.groupid);
+            
+            // SoM: Hit the center of the line; check for line-side portals
+            // Do NOT position closer heh
+            frac = FixedMul(in->frac, trace.attackrange); 
+            z = trace.z + FixedMul(trace.aimslope, frac);
+            if(link)
+               P_NewShootTPT(link, frac, z);
+            
+            return false;
+         }
+      }
+      else if(R_LinkedLineActive(li))
+         return true;
+      
+      if(!hitplane && li->special)
+         P_ShootSpecialLine(shootthing, li, lineside);
+
+      // don't hit the sky
+      if(P_ShootSky(li, z))
+         return false;
+      
+      // don't shoot portal lines
+      if(!hitplane && li->portal)
+         return false;
+      
+      // Spawn bullet puffs.
+      P_SpawnPuff(x, y, z, 
+                  R_PointToAngle2(0, 0, li->dx, li->dy) - ANG90,
+                  updown, true);
+      
+      // don't go any farther
+      
+      return false;
+   }
+   else
+   {
+      // shoot a thing
+      return P_ShootThing(in);
+   }
 }
 
 //
@@ -943,7 +1039,7 @@ fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
 
    if(pitch == 0 || demo_version < 333)
    {
-      trace.topslope = 100*FRACUNIT/160;
+      trace.topslope    =  100*FRACUNIT/160;
       trace.bottomslope = -100*FRACUNIT/160;
    }
    else
@@ -966,7 +1062,8 @@ fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
    // killough 8/2/98: prevent friends from aiming at friends
    aim_flags_mask = mask;
    
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse);
+   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, 
+                  (demo_version < 333) ? PTR_AimTraverseComp : PTR_AimTraverse);
    
    return tm->linetarget ? trace.aimslope : lookslope;
 }
@@ -993,7 +1090,8 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
    trace.movefrac = 0;
 
    P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, 
-                  PTR_ShootTraverse);
+                  (demo_version < 329 || comp[comp_planeshoot]) ?
+                      PTR_ShootTraverseComp : PTR_ShootTraverse);
 }
 
 //
