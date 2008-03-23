@@ -109,7 +109,7 @@ static const char *singularities[] =
 // exception of the addition of "sk_none" to bump up everything
 // by one and to provide for a mnemonic for value zero.
 //
-static const char *skinindices[] =
+static const char *skinindices[NUMSKINSOUNDS + 1] =
 {
    "sk_none", // Note that sfxinfo stores the true index + 1
    "sk_plpain",
@@ -123,6 +123,7 @@ static const char *skinindices[] =
    "sk_plfeet",
    "sk_fallht",
    "sk_plwdth",
+   "sk_noway",
 };
 
 #define NUM_SKININDICES (sizeof(skinindices) / sizeof(char *))

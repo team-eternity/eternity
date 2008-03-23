@@ -42,6 +42,7 @@ enum
    sk_plfeet,
    sk_fallht,
    sk_plwdth, // haleyjd: wimpy death
+   sk_noway,  // haleyjd: noway sound, separate from oof
    NUMSKINSOUNDS
 };
 

@@ -49,29 +49,8 @@
 #include "e_player.h"
 #include "d_gi.h"
 
-/*
-skin_t marine = 
-{
-   SKIN_PLAYER, // haleyjd 09/26/04: skin type
-   "PLAY",
-   "marine",
-   0,           // haleyjd 05/11/03: player sprite number now set by EDF
-   {
-      "plpain",
-      "pdiehi",
-      "oof",
-      "slop",
-      "punch",
-      "radio",
-      "pldeth",
-      "plfall",
-      "plfeet",
-      "fallht",
-   }, 
-   "STF", 
-   default_faces
-};
-*/
+// haleyjd: default skin is now mapped through the player class and is defined
+// in EDF
 
 static int numskins = 0;      // haleyjd 03/22/03
 static int numskinsalloc = 0; // haleyjd 03/22/03
@@ -96,6 +75,7 @@ static const char *skinsoundnames[NUMSKINSOUNDS] =
    "dsplfeet",
    "dsfallht",
    "dsplwdth",
+   "dsnoway",
 };
 
 // forward prototypes

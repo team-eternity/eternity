@@ -61,6 +61,8 @@ void P_InitPortals(void);
 
 boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link);
 
+void R_SetSectorGroupID(sector_t *sector, int groupid);
+
 #endif
 
 #endif

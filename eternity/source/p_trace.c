@@ -327,10 +327,10 @@ static boolean P_AimAtThing(intercept_t *in)
 //
 // FIXME: return value is actually constant
 //
-static boolean P_AimTraversePortal(line_t *li)
+static boolean P_AimTraversePortal(line_t *li, fixed_t dist)
 {
    sector_t *fs = li->frontsector;
-   fixed_t slope, dist;
+   fixed_t slope;
    
    if(!useportalgroups)
       return false;
@@ -484,7 +484,7 @@ static boolean PTR_AimTraverse(intercept_t *in)
       }
 
       if(!(li->flags & ML_TWOSIDED))
-         return P_AimTraversePortal(li);   // stop?
+         return P_AimTraversePortal(li, dist);   // stop?
 
       // Crosses a two sided line.
       // A two sided line will restrict
@@ -493,7 +493,7 @@ static boolean PTR_AimTraverse(intercept_t *in)
       P_LineOpening(li, NULL);
       
       if(tm->openbottom >= tm->opentop)
-         return P_AimTraversePortal(li);   // stop?
+         return P_AimTraversePortal(li, dist);   // stop?
 
       // Check the portals, even if the line doesn't block the tracer, a/the 
       // target may be sitting on top of a ledge. If we don't hit any monsters,
@@ -1143,8 +1143,7 @@ static boolean PTR_UseTraverse(intercept_t *in)
       if(tm->openrange <= 0)
       {
          // can't use through a wall
-         // PCLASS_FIXME: add noway sound to skins
-         S_StartSound(usething, gameModeInfo->playerSounds[sk_oof]);
+         S_StartSound(usething, gameModeInfo->playerSounds[sk_noway]);
          return false;
       }
       // not a special line, but keep checking
@@ -1206,8 +1205,7 @@ void P_UseLines(player_t *player)
    
    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
       if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse))
-         // PCLASS_FIXME: add noway sound to skins
-         S_StartSound(usething, gameModeInfo->playerSounds[sk_oof]);
+         S_StartSound(usething, gameModeInfo->playerSounds[sk_noway]);
 }
 
 //

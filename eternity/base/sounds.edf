@@ -145,7 +145,7 @@ sound noway
    priority = 78
    dehackednum = 81
    singularity = sg_oof
-   skinindex = sk_oof
+   skinindex = sk_noway
 }
 
 sound barexp { pitchvariance = Doom; priority =  60; dehackednum =  82 }
