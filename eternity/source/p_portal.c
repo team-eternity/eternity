@@ -34,10 +34,6 @@
 #include "r_things.h"
 #include "p_setup.h"
 #include "p_map.h"
-#include "p_inter.h"
-#include "m_bbox.h"
-#include "p_maputl.h"
-#include "p_map3d.h"
 
 #ifdef R_LINKEDPORTALS
 
@@ -243,7 +239,6 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
    link->x = x;
    link->y = y;
    link->z = z;
-   link->validcount = 0;
 
    return 0;
 }

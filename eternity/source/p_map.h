@@ -149,7 +149,6 @@ typedef struct doom_mapinter_s
 
 
    // See P_LineOpening
-   fixed_t highceiling;
    fixed_t opentop;
    fixed_t openbottom;
    fixed_t openrange;
@@ -165,24 +164,6 @@ typedef struct doom_mapinter_s
    sector_t *openfrontsector; // made global                    // phares
    sector_t *openbacksector;  // made global
 
-#ifdef R_LINKEDPORTALS
-   // SoM: Used by PIT_CheckPortalLine to determine how lines should effect the
-   // tm->floorz and tm->ceilingz. True means the portal is below tm->thing,
-   // false means the portal is above.
-   boolean  portalbelow;
-
-   // SoM: Also used by PIT_CheckPortalLine to determine if tm->thing is in physical contact
-   // with the portal or not.
-   boolean  portalcontact;
-
-   // Return values basically
-   fixed_t portalfloorz, portaldropoffz, portalceilingz;
-
-   // SoM: Ok, all the link offsets are from the original player position, but if
-   // tm->x and tm->y are being offset, and tm->thing->x and tm->thing->y are not
-   // the future location we're trying to check, we need to store the future location
-   fixed_t tryx, tryy;
-#endif
 } doom_mapinter_t;
 
 

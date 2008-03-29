@@ -310,8 +310,8 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    tm->thing = thing;
    tm->flags = thing->flags;
    
-   tm->x = tm->tryx = x;
-   tm->y = tm->tryy = y;
+   tm->x = x;
+   tm->y = y;
    
    tm->bbox[BOXTOP] = y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
@@ -327,33 +327,15 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    // will adjust them.
    
 #ifdef R_LINKEDPORTALS
-   if(R_LinkedFloorActive(newsubsec->sector) && !(tm->thing->flags & MF_NOCLIP))
-   {
-      if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_floor))
-      {
-         tm->floorz = tm->portalfloorz;
-         tm->dropoffz = tm->portaldropoffz;
-         return false;
-      }
-
-      tm->floorz = tm->portalfloorz;
-      tm->dropoffz = tm->portaldropoffz;
-   }
+   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector))
+      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS); //newsubsec->sector->floorheight - tm->thing->height;
    else
 #endif
       tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-   if(R_LinkedCeilingActive(newsubsec->sector) && !(tm->thing->flags & MF_NOCLIP))
-   {
-      if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_ceiling))
-      {
-         tm->ceilingz = tm->portalceilingz;
-         return false;
-      }
- 
-      tm->ceilingz = tm->portalceilingz;
-   }
+   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector))
+      tm->ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS); //newsubsec->sector->ceilingheight + tm->thing->height;
    else
 #endif
       tm->ceilingz = newsubsec->sector->ceilingheight;
@@ -696,154 +678,6 @@ boolean PIT_CheckLine(line_t *ld)
    
    return true;
 }
-
-
-
-
-#ifdef R_LINKEDPORTALS
-//
-// PIT_CheckPortalLine
-//
-// Adjusts tmfloorz and tmceilingz as lines are contacted
-//
-boolean PIT_CheckPortalLine(line_t *ld)
-{
-   if(tm->bbox[BOXRIGHT] <= ld->bbox[BOXLEFT]
-      || tm->bbox[BOXLEFT] >= ld->bbox[BOXRIGHT]
-      || tm->bbox[BOXTOP] <= ld->bbox[BOXBOTTOM]
-      || tm->bbox[BOXBOTTOM] >= ld->bbox[BOXTOP] )
-      return true; // didn't hit it
-
-   if(P_BoxOnLineSide(tm->bbox, ld) != -1)
-      return true; // didn't hit it
-
-   // A line has been hit
-   
-   // The moving thing's destination position will cross the given line.
-   // If this should not be allowed, return false.
-   // If the line is special, keep track of it
-   // to process later if the move is proven ok.
-   // NOTE: specials are NOT sorted by order,
-   // so two special lines that are only 8 pixels apart
-   // could be crossed in either order.
-
-   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
-   if(!ld->backsector) // one sided line
-   {
-      // SoM: Removed the portal teleport code because if any line is ganna teleport a mobj,
-      // it should be in the portal group he's in.
-
-      if(tm->portalbelow)
-      {
-         if(ld->frontsector->floorheight > tm->floorz)
-            tm->floorz = ld->frontsector->floorheight;
-         if(ld->frontsector->floorheight < tm->dropoffz)
-            tm->dropoffz = ld->frontsector->floorheight;
-
-         return (ld->frontsector->ceilingheight - tm->thing->z <= (24 << FRACBITS));
-      }
-      else
-      {
-         if(ld->frontsector->ceilingheight < tm->ceilingz)
-            tm->ceilingz = ld->frontsector->ceilingheight;
-
-         return (ld->frontsector->floorheight >= tm->thing->z + tm->thing->height);
-      }
-
-   }
-
-   // killough 8/10/98: allow bouncing objects to pass through as missiles
-   if(!(tm->thing->flags & (MF_MISSILE | MF_BOUNCES)))
-   {
-      if(tm->portalcontact && ld->flags & ML_BLOCKING)           // explicitly blocking everything
-         return tm->unstuck && !untouched(ld);  // killough 8/1/98: allow escape
-
-      // killough 8/9/98: monster-blockers don't affect friends
-      // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(tm->portalcontact && 
-         !(tm->thing->flags & MF_FRIEND || tm->thing->player) && 
-         ld->flags & ML_BLOCKMONSTERS && 
-         !(ld->flags & ML_3DMIDTEX))
-         return false; // block monsters only
-   }
-
-   // set openrange, opentop, openbottom
-   // these define a 'window' from one sector to another across this line
-   
-   P_LineOpening(ld, tm->thing);
-
-   // adjust floor & ceiling heights
-   
-   if(tm->portalbelow)
-   {
-      // SoM: Only adjust floor heights
-      if(tm->openbottom > tm->floorz)
-      {
-         tm->floorz = tm->openbottom;
-
-         tm->floorline = ld;          // killough 8/1/98: remember floor linedef
-         tm->blockline = ld;
-      }
-
-      if(tm->lowfloor < tm->dropoffz)
-         tm->dropoffz = tm->lowfloor;
-
-      // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
-      // touching 3DMidTex lines.
-      if(demo_version >= 331 && tm->touch3dside)
-         tm->dropoffz = tm->floorz;
-
-      if(tm->opensecfloor > tm->secfloorz)
-         tm->secfloorz = tm->opensecfloor;
-
-      if(tm->floorz > tm->passfloorz)
-         tm->passfloorz = tm->floorz;
-
-      if(tm->highceiling - tm->thing->z > (24 << FRACBITS))
-         return false;
-   }
-   else
-   {
-      // SoM: Only adjust ceiling heights.
-      if(tm->opentop < tm->ceilingz)
-      {
-         tm->ceilingz = tm->opentop;
-         tm->ceilingline = ld;
-         tm->blockline = ld;
-      }
-
-      if(tm->opensecceil < tm->secceilz)
-         tm->secceilz = tm->opensecceil;
-
-      // SoM 11/6/02: AGHAH
-      if(tm->ceilingz < tm->passceilz)
-         tm->passceilz = tm->ceilingz;
-
-      if(tm->lowfloor < tm->thing->z + tm->thing->height)
-         return false;
-   }
-
-   // if contacted a special line, add it to the list
-   if(ld->special && tm->portalcontact)
-   {
-      // 1/11/98 killough: remove limit on lines hit, by array doubling
-      if(tm->numspechit >= tm->spechit_max)
-      {
-         tm->spechit_max = tm->spechit_max ? tm->spechit_max * 2 : 8;
-         tm->spechit = realloc(tm->spechit, sizeof(*tm->spechit) * tm->spechit_max);
-      }
-      tm->spechit[tm->numspechit++] = ld;
-
-      // haleyjd 09/20/06: spechit overflow emulation
-      if(demo_compatibility && spechits_emulation && 
-         tm->numspechit > MAXSPECHIT_OLD)
-         SpechitOverrun(ld);
-   }
-   
-   return true;
-}
-#endif
-
 
 //
 // P_Touched
@@ -1866,10 +1700,6 @@ static boolean PTR_SlideTraverse(intercept_t *in)
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line
    
-#ifdef R_LINKEDPORTALS
-   tm->tryx = slidemo->x;
-   tm->tryy = slidemo->y;
-#endif
    P_LineOpening(li, slidemo);
    
    if(tm->openrange < slidemo->height)

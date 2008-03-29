@@ -45,8 +45,6 @@
 #include "p_setup.h"
 #include "r_main.h"
 
-#include "p_map3d.h"
-
 // I HATE GLOBALS!!!
 extern fixed_t   FloatBobOffsets[64];
 
@@ -253,15 +251,11 @@ boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
 static mobj_t *stepthing;
 
 extern boolean PIT_CheckLine(line_t *ld);
-#ifdef R_LINKEDPORTALS
-extern boolean PIT_CheckPortalLine(line_t *ld);
-#endif
+
 extern boolean P_Touched(mobj_t *thing, mobj_t *tmthing);
 extern int     P_MissileBlockHeight(mobj_t *mo);
 extern boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing);
 extern boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing);
-
-
 
 //
 // PIT_CheckThing3D
@@ -286,11 +280,6 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
       return true;
 
-   // don't clip against self
-  
-   if(thing == tm->thing)
-      return true;
-
    blockdist = thing->radius + tm->thing->radius;
 
    if(D_abs(thing->x - tm->x) >= blockdist ||
@@ -301,15 +290,17 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    //
    // This test has less information content (it's almost always false), so it
    // should not be moved up to first, as it adds more overhead than it removes.
+   
+   // don't clip against self
+  
+   if(thing == tm->thing)
+      return true;
 
    // haleyjd 1/17/00: set global hit reference
    tm->BlockingMobj = thing;
 
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
-
-   if(topz > tm->floorz)
-      tm->floorz = topz;
 
    if(!(tm->thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
@@ -460,310 +451,6 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
           && (tm->thing->flags & MF_SOLID || demo_compatibility));
 }
 
-
-
-
-#ifdef R_LINKEDPORTALS
-// --------------------------------------------------------------------------------
-// Begin portal-related clipping functions
-
-boolean P_CheckPortalHeight(mobj_t *thing, sector_t *sec, prtl_foc_e surface)
-{
-   int xl, xh, yl, yh, bx, by;
-   linkoffset_t   *link;
-   subsector_t    *newsubsec;
-   fixed_t        useheight, useheight2;
-   boolean        ret = true;
-   mobj_t         *usemobj;
-
-   fixed_t thingdropoffz;
-
-   // haleyjd: from zdoom:
-   mobj_t  *thingblocker;
-   mobj_t  *fakedblocker;
-   fixed_t realheight = thing->height;
-   fixed_t tryx = tm->tryx, tryy = tm->tryy;
-
-   if(surface == prtl_floor)
-   {
-      if(!useportalgroups || !R_LinkedFloorActive(sec) ||
-         !(link = P_GetLinkOffset(thing->groupid, R_FPCam(sec)->groupid)))
-      {
-         tm->portalfloorz = sec->floorheight;
-         tm->portaldropoffz = sec->floorheight;
-         return true;
-      }
-
-      // Portal has already been checked.
-      if(link->validcount == validcount)
-      {
-         tm->portalfloorz = tm->floorz;
-         tm->portaldropoffz = tm->dropoffz;
-         return true;
-      }
-
-      link->validcount = validcount;
-   }
-   else
-   {
-      if(!useportalgroups || !R_LinkedCeilingActive(sec) ||
-         !(link = P_GetLinkOffset(thing->groupid, R_CPCam(sec)->groupid)))
-      {
-         tm->portalceilingz = sec->ceilingheight;
-         return true;
-      }
-
-      // Portal has already been checked.
-      if(link->validcount == validcount)
-      {
-         tm->portalceilingz = tm->ceilingz;
-         return true;
-      }
-
-      link->validcount = validcount;
-   }
-
-   P_PushTMStack();
-
-   tm->thing = thing;
-   tm->flags = thing->flags;
-   
-   tm->tryx = tryx;
-   tm->tryy = tryy;
-   tm->x = tryx - link->x;
-   tm->y = tryy - link->y;
-   
-   tm->bbox[BOXTOP]    = tm->y + tm->thing->radius;
-   tm->bbox[BOXBOTTOM] = tm->y - tm->thing->radius;
-   tm->bbox[BOXRIGHT]  = tm->x + tm->thing->radius;
-   tm->bbox[BOXLEFT]   = tm->x - tm->thing->radius;
-   
-   newsubsec = R_PointInSubsector(tm->x, tm->y);
-
-   // Whether object can get out of a sticky situation:
-   tm->unstuck = thing->player &&        // only players
-      thing->player->mo == thing;        // not voodoo dolls
-
-   // The base floor / ceiling is from the subsector
-   // that contains the point.
-   // Any contacted lines the step closer together
-   // will adjust them.
-
-   if(surface == prtl_floor)
-   {
-      if(R_LinkedFloorActive(newsubsec->sector) && 
-         !(tm->flags & MF_NOCLIP && !(tm->flags & MF_SKULLFLY)))
-      {
-         if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_floor))
-         {
-            tm->floorz = tm->portalfloorz;
-            tm->dropoffz = tm->portaldropoffz;
-            ret = false;
-            goto finish;
-         }
-         tm->floorz = tm->portalfloorz;
-         tm->dropoffz = tm->portaldropoffz;
-      }
-      else
-         tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
-
-      tm->ceilingz = sec->ceilingheight;
-   }
-   else
-   {
-      if(R_LinkedCeilingActive(newsubsec->sector) && 
-         !(tm->flags & MF_NOCLIP && !(tm->flags & MF_SKULLFLY)))
-      {
-         if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_ceiling))
-         {
-            tm->ceilingz = tm->portalceilingz;
-            ret = false;
-            goto finish;
-         }
-         tm->ceilingz = tm->portalceilingz;
-      }
-      else
-         tm->ceilingz = newsubsec->sector->ceilingheight;
-
-      tm->floorz = tm->dropoffz = sec->floorheight;
-   }
-
-   tm->secfloorz = tm->passfloorz = tm->stepupfloorz = tm->floorz;
-   tm->secceilz = tm->passceilz = tm->ceilingz;
-
-   // haleyjd
-   tm->floorpic = newsubsec->sector->floorpic;
-   // SoM: 09/07/02: 3dsides monster fix
-   tm->touch3dside = 0;
-   
-   tm->numspechit = 0;
-
-   // SoM: ok, so valid count doesn't need to be incremented here because I realized the
-   // same geometry shouldn't be re-checked for the mobj anyway. So incrementing validcount
-   // can only lead to added overhead.
-   // validcount++;
-
-   // Check things first, possibly picking things up.
-   // The bounding box is extended by MAXRADIUS
-   // because mobj_ts are grouped into mapblocks
-   // based on their origin point, and can overlap
-   // into adjacent blocks by up to MAXRADIUS units.
-
-   xl = (tm->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (tm->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (tm->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
-
-   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
-   thingblocker = NULL;
-   fakedblocker = NULL;
-   stepthing    = NULL;
-
-   // [RH] Fake taller height to catch stepping up into things.
-   if(thing->player)   
-      thing->height = realheight + 24*FRACUNIT;
-   
-   for(bx = xl; bx <= xh; ++bx)
-   {
-      for(by = yl; by <= yh; ++by)
-      {
-         // haleyjd: from zdoom:
-         mobj_t *robin = NULL;
-
-         do
-         {
-            if(!P_SBlockThingsIterator(bx, by, PIT_CheckThing3D, robin))
-            { 
-               // [RH] If a thing can be stepped up on, we need to continue checking
-               // other things in the blocks and see if we hit something that is
-               // definitely blocking. Otherwise, we need to check the lines, or we
-               // could end up stuck inside a wall.
-               if(tm->BlockingMobj == NULL)
-               { 
-                  // Thing slammed into something; don't let it move now.
-                  thing->height = realheight;
-
-                  ret = false;
-                  goto finish;
-               }
-               else if(!tm->BlockingMobj->player && 
-                       !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       tm->BlockingMobj->z + tm->BlockingMobj->height-thing->z <= 24*FRACUNIT)
-               {
-                  if(thingblocker == NULL || tm->BlockingMobj->z > thingblocker->z)
-                     thingblocker = tm->BlockingMobj;
-                  robin = tm->BlockingMobj;
-                  tm->BlockingMobj = NULL;
-               }
-               else if(thing->player &&
-                       thing->z + thing->height - tm->BlockingMobj->z <= 24*FRACUNIT)
-               {
-                  if(thingblocker)
-                  { 
-                     // There is something to step up on. Return this thing as
-                     // the blocker so that we don't step up.
-                     thing->height = realheight;
-
-                     ret = false;
-                     goto finish;
-                  }
-                  // Nothing is blocking us, but this actor potentially could
-                  // if there is something else to step on.
-                  fakedblocker = tm->BlockingMobj;
-                  robin = tm->BlockingMobj;
-                  tm->BlockingMobj = NULL;
-               }
-               else
-               { // Definitely blocking
-                  thing->height = realheight;
-
-                  ret = false;
-                  goto finish;
-               }
-            }
-            else
-               robin = NULL;
-         } 
-         while(robin);
-      }
-   }
-
-
-   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
-   thing->height = realheight;
-   if(tm->flags & MF_NOCLIP)
-   {
-      ret = ((tm->BlockingMobj = thingblocker) == NULL);
-      goto finish;
-   }
-   
-   xl = (tm->bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (tm->bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (tm->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (tm->bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
-
-   thingdropoffz = tm->floorz;
-   tm->floorz = tm->secfloorz; // secfloorz, maybe?
-
-   tm->portalbelow = (surface == prtl_floor);
-
-   tm->portalcontact = surface == prtl_floor ? 
-                       (tm->thing->z < R_FPCam(sec)->planez) :
-                       (tm->thing->z + tm->thing->height > R_CPCam(sec)->planez);
-
-   for(bx = xl; bx <= xh; ++bx)
-      for(by = yl; by <= yh; ++by)
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckPortalLine))
-         {
-            ret = false;
-            goto finish; // doesn't fit
-         }
-
-   if(tm->BlockingMobj && !thingblocker)
-      thingblocker = tm->BlockingMobj;
-
-   if(tm->ceilingz - tm->floorz < thing->height)
-   {
-      ret = false;
-      goto finish; // doesn't fit
-   }
-         
-   if(stepthing != NULL)
-      tm->dropoffz = thingdropoffz;
-   
-   ret = ((tm->BlockingMobj = thingblocker) == NULL);
-   
-
-
-   
-   finish: 
-   if(surface == prtl_floor)
-   {
-      useheight = tm->floorz;
-      useheight2 = tm->dropoffz;
-      usemobj = tm->BlockingMobj;
-      P_PopTMStack();
-      tm->portalfloorz = useheight;
-      tm->portaldropoffz = useheight2;
-      tm->BlockingMobj = usemobj;
-   }
-   else
-   {
-      useheight = tm->ceilingz;
-      usemobj = tm->BlockingMobj;
-      P_PopTMStack();
-      tm->portalceilingz = useheight;
-      tm->BlockingMobj = usemobj;
-   }
-
-
-   return ret;
-}
-
-// End portal-realted clipping functions
-// --------------------------------------------------------------------------------
-#endif
-
 //
 // P_CheckPosition3D
 //
@@ -783,9 +470,9 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    tm->thing = thing;
    tm->flags = thing->flags;
    
-   tm->x = tm->tryx = x;
-   tm->y = tm->tryy = y;
-
+   tm->x = x;
+   tm->y = y;
+   
    tm->bbox[BOXTOP]    = y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
    tm->bbox[BOXRIGHT]  = x + tm->thing->radius;
@@ -798,44 +485,23 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    tm->unstuck = thing->player &&        // only players
       thing->player->mo == thing;        // not voodoo dolls
 
-   // SoM: Moved this up here because it needs to be incremented before the calls to 
-   // P_CheckPortalHeight
-   validcount++;
-
    // The base floor / ceiling is from the subsector
    // that contains the point.
    // Any contacted lines the step closer together
    // will adjust them.
 
 #ifdef R_LINKEDPORTALS
-   if(R_LinkedFloorActive(newsubsec->sector) && 
+   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
       !(tm->thing->flags & MF_NOCLIP))
-   {
-      if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_floor))
-      {
-         tm->floorz = tm->portalfloorz;
-         tm->dropoffz = tm->portaldropoffz;
-         return false;
-      }
-
-      tm->floorz = tm->portalfloorz;
-      tm->dropoffz = tm->portaldropoffz;
-   }
+      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
    else
 #endif
       tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-   if(R_LinkedCeilingActive(newsubsec->sector) && !(tm->thing->flags & MF_NOCLIP))
-   {
-      if(!P_CheckPortalHeight(tm->thing, newsubsec->sector, prtl_ceiling))
-      {
-         tm->ceilingz = tm->portalceilingz;
-         return false;
-      }
-
-      tm->ceilingz = tm->portalceilingz;
-   }
+   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
+      !(tm->thing->flags & MF_NOCLIP))
+      tm->ceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
    else
 #endif
       tm->ceilingz = newsubsec->sector->ceilingheight;
@@ -847,6 +513,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    tm->floorpic = newsubsec->sector->floorpic;
    // SoM: 09/07/02: 3dsides monster fix
    tm->touch3dside = 0;
+   validcount++;
    
    tm->numspechit = 0;
 
@@ -949,15 +616,12 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    yh = (tm->bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
    thingdropoffz = tm->floorz;
-   tm->floorz = tm->secfloorz; // SoM: Secfloorz maybe??
+   tm->floorz = tm->dropoffz;
 
    for(bx = xl; bx <= xh; ++bx)
       for(by = yl; by <= yh; ++by)
          if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
             return false; // doesn't fit
-
-   if(tm->BlockingMobj && !thingblocker)
-      thingblocker = tm->BlockingMobj;
 
    if(tm->ceilingz - tm->floorz < thing->height)
       return false;
