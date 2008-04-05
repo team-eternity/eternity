@@ -518,20 +518,20 @@ static void R_RenderHorizonPortal(rportal_t *portal)
       if(portal->top[x] > portal->bottom[x])
          continue;
 
-      if(portal->top[x]    <= view.ycenter && 
-         portal->bottom[x] >= view.ycenter + 1.0f)
+      if(portal->top[x]    <= view.ycenter - 1.0f && 
+         portal->bottom[x] >= view.ycenter)
       {
          topplane->top[x]       = (int)portal->top[x];
-         topplane->bottom[x]    = centery;
-         bottomplane->top[x]    = centery + 1;
+         topplane->bottom[x]    = centery - 1;
+         bottomplane->top[x]    = centery;
          bottomplane->bottom[x] = (int)portal->bottom[x];
       }
-      else if(portal->top[x] <= view.ycenter)
+      else if(portal->top[x] <= view.ycenter - 1.0f)
       {
          topplane->top[x]    = (int)portal->top[x];
          topplane->bottom[x] = (int)portal->bottom[x];
       }
-      else if(portal->bottom[x] > view.ycenter)
+      else if(portal->bottom[x] > view.ycenter - 1.0f)
       {
          bottomplane->top[x]    = (int)portal->top[x];
          bottomplane->bottom[x] = (int)portal->bottom[x];
@@ -564,8 +564,8 @@ static void R_RenderHorizonPortal(rportal_t *portal)
 //
 static void R_RenderSkyboxPortal(rportal_t *portal)
 {
-   fixed_t lastx, lasty, lastz;
-   float   lastxf, lastyf, lastzf;
+   fixed_t lastx, lasty, lastz, lastangle;
+   float   lastxf, lastyf, lastzf, lastanglef;
 
    if(portal->type != R_SKYBOX)
       return;
@@ -602,9 +602,11 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    lastx = viewx;
    lasty = viewy;
    lastz = viewz;
+   lastangle = viewangle;
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
+   lastanglef = view.angle;
 
    viewx = portal->data.camera.mobj->x;
    viewy = portal->data.camera.mobj->y;
@@ -613,6 +615,15 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    view.y = viewy / 65536.0f;
    view.z = viewz / 65536.0f;
 
+   // SoM: The viewangle should also be offset by the skybox camera angle.
+   viewangle += portal->data.camera.mobj->angle;
+   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
+
+   view.angle = (ANG90 - viewangle) * PI / ANG180;
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
+
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes-1);
    R_PushMasked();
@@ -620,12 +631,20 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
 
+   // SoM: "pop" the view state.
    viewx = lastx;
    viewy = lasty;
    viewz = lastz;
+   viewangle = lastangle;
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
+   view.angle = lastanglef;
+
+   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
 
    if(portal->child)
       R_RenderSkyboxPortal(portal->child);
