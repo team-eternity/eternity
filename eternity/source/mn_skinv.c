@@ -27,6 +27,9 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "d_io.h"
+
 #include "doomstat.h"
 #include "doomtype.h"
 #include "info.h"
@@ -55,12 +58,13 @@ enum
 
 // static state variables
 
-static state_t *skview_state = NULL;
-static int skview_tics = 0;
-static int skview_action = SKV_WALKING;
-static int skview_rot = 0;
-static boolean skview_halfspeed = false;
-static int skview_typenum; // 07/12/03
+static state_t *skview_state     = NULL;
+static int      skview_tics      = 0;
+static int      skview_action    = SKV_WALKING;
+static int      skview_rot       = 0;
+static boolean  skview_halfspeed = false;
+static int      skview_typenum;                 // 07/12/03
+static boolean  skview_haswdth   = false;       // 03/29/08
 
 // haleyjd 09/29/07: rewrites for player class engine
 static statenum_t skview_atkstate2;
@@ -156,10 +160,34 @@ static boolean MN_SkinResponder(event_t *ev)
       // die normally
       if(skview_action != SKV_DEAD)
       {
-         S_StartSoundName(NULL,
-            (gamemode == shareware || M_Random() % 2) ? 
-               players[consoleplayer].skin->sounds[sk_pldeth] :
-               players[consoleplayer].skin->sounds[sk_pdiehi]);
+         // 03/29/08: sometimes play wimpy death if the player skin specifies one
+         if(skview_haswdth)
+         {
+            int rnd = M_Random() % ((gameModeInfo->id == shareware) ? 2 : 3);
+            int sndnum;
+
+            switch(rnd)
+            {
+            case 0:
+               sndnum = sk_pldeth;
+               break;
+            case 1:
+               sndnum = sk_plwdth;
+               break;
+            case 2:
+               sndnum = sk_pdiehi;
+               break;
+            }
+
+            S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sndnum]);
+         }
+         else
+         {
+            S_StartSoundName(NULL,
+               (gameModeInfo->id == shareware || M_Random() % 2) ? 
+                  players[consoleplayer].skin->sounds[sk_pldeth] :
+                  players[consoleplayer].skin->sounds[sk_pdiehi]);
+         }
          MN_SkinSetState(&states[mobjinfo[skview_typenum].deathstate]);
          skview_action = SKV_DEAD;
       }
@@ -334,6 +362,10 @@ void MN_InitSkinViewer(void)
 
    // haleyjd 09/29/07: save alternate attack state number
    skview_atkstate2 = pclass->altattack;
+
+   // haleyjd 03/29/08: determine if player skin has wimpy death sound
+   skview_haswdth = 
+      (strcasecmp(players[consoleplayer].skin->sounds[sk_plwdth], "none") != 0);
 
    MN_SkinSetState(&states[mobjinfo[skview_typenum].seestate]);
 

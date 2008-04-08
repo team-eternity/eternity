@@ -1098,6 +1098,7 @@ range will wrap around.
   Type:    Miscellaneous<br>
   Purpose: Causes an object to completely stop all movement. New to Eternity.<br>
   Thunk:   Yes.
+<br><br><br>
 
 <li> <b>SteamSpawn</b><br>
   Type:    Miscellaneous, parameterized
@@ -1130,16 +1131,8 @@ range will wrap around.
   Parameter Information:
   <ul>
   <li> Args1 = DeHackEd number of object type to spawn (must be valid, no default)
-  <li> Args2 = Fixed-point amount of z momentum to apply to object<br>
-            (default of 0 = +1/4 unit)
-  <li> Args3 = Mode select: (default of 0 = 0)
-            <ul>
-            <li> 0 = Normal (spawn at floor z, apply z momentum)
-            <li> 1 = Spawn at floor z, do not apply z momentum
-            <li> 2 = Spawn at random z within thing's height, apply z momentum
-            <li> 3 = Spawn at random z within thing's height, do not apply z momentum
-            </ul>
-  <li> Args4 = Optional radius of effect (default of 0 = 32 units)
+  <li> Args2 = Amount of z momentum to apply to object in eights of a unit per tic.<br>
+            (default of 0 = +1/4 unit per tic)
   </ul>
   <br>          
   Purpose: Teleport glitter spawning function. Can be used to make a fountain
@@ -1147,7 +1140,6 @@ range will wrap around.
            coordinate within a square around the source object, and will be 
            given z momentum specified in Args2. If the thing type given
            in Args1 is invalid, this codepointer will do nothing.<br>
-           Parameters 3 and 4 are new to Eternity Engine v3.31 Delta.<br>
            New to Eternity.<br>
   Thunk:   Yes.
 <br><br><br>
@@ -1254,7 +1246,7 @@ range will wrap around.
 <br><br><br>
 
 <li> <b>MakePod</b><br>
-  Type:    Miscellaneous, normal
+  Type:    Miscellaneous, normal<br>
   Purpose: Part of pod generator code, called by pod generators to spawn pods.
            The object's Counter 0 field is used to track the number of pods
            currently owned by this generator. If that number is higher than 16,

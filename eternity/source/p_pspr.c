@@ -230,11 +230,11 @@ int P_SwitchWeapon(player_t *player)
          break;
       case 6:
          if(player->weaponowned[wp_plasma] && player->ammo[am_cell] &&
-            gamemode != shareware)
+            gameModeInfo->id != shareware)
             newweapon = wp_plasma;
          break;
       case 7:
-         if(player->weaponowned[wp_bfg] && gamemode != shareware &&
+         if(player->weaponowned[wp_bfg] && gameModeInfo->id != shareware &&
             player->ammo[am_cell] >= (demo_compatibility ? 41 : 40))
             newweapon = wp_bfg;
          break;
@@ -244,7 +244,7 @@ int P_SwitchWeapon(player_t *player)
          break;
       case 9:
          if(player->weaponowned[wp_supershotgun] && 
-            gamemode == commercial &&
+            gameModeInfo->id == commercial &&
             player->ammo[am_shell] >= (demo_compatibility ? 3 : 2))
             newweapon = wp_supershotgun;
          break;

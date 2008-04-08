@@ -67,8 +67,8 @@ extern  int screenSize;     // killough 11/98
 // Game Mode - identify IWAD as shareware, retail etc.
 //
 
-extern GameMode_t gamemode;
-extern GameMission_t  gamemission;
+//extern GameMode_t gamemode;
+//extern GameMission_t  gamemission;
 
 // Set if homebrew PWAD stuff has been added.
 extern  boolean modifiedgame;

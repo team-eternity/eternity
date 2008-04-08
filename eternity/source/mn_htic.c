@@ -152,7 +152,7 @@ CONSOLE_COMMAND(mn_hnewgame, 0)
    }
 
    // chop off SoSR episodes if not present
-   if(gamemission != hticsosr)
+   if(gameModeInfo->missionInfo->id != hticsosr)
       menu_hepisode.menuitems[5].type = it_end;
    
    MN_StartMenu(&menu_hepisode);

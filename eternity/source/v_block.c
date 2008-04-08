@@ -198,7 +198,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
    dest = buffer->data + y * buffer->pitch + x;
    
    while(h--)
-   {
+   { 
       row = dest;      
       tw = w;
 

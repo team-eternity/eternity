@@ -1018,7 +1018,7 @@ void S_Start(void)
    {
       // dont know what music to play
       // we need a default
-      LevelInfo.musicName = (gamemode == commercial ? "runnin" : "e1m1");
+      LevelInfo.musicName = gameModeInfo->defMusName;
    }
    
    // sf: replacement music
@@ -1046,7 +1046,7 @@ void S_Start(void)
       }
       else
       {
-         if(gamemode == commercial)
+         if(gameModeInfo->id == commercial)
          {
             mnum = mus_runnin + gamemap - 1;
          }

@@ -135,7 +135,7 @@ void G_QuitDoom(void)
    if((!netgame || demoplayback) && !nosfxparm && snd_card &&
       gameModeInfo->type == Game_DOOM)
    {
-      if(gamemode == commercial) // doom2 sounds
+      if(gameModeInfo->id == commercial) // doom2 sounds
          S_StartSound(NULL, quitsounds2[(gametic>>2)&7]);
       else                       // doom
          S_StartSound(NULL, quitsounds[(gametic>>2)&7]);

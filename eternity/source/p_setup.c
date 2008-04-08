@@ -27,6 +27,7 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "d_main.h"
 #include "hu_stuff.h"
 #include "doomstat.h"
@@ -426,7 +427,7 @@ void P_LoadThings(int lump)
 
       // Do not spawn cool, new monsters if !commercial
       // haleyjd: removing this for Heretic and DeHackEd
-      if(demo_version < 331 && gamemode != commercial)
+      if(demo_version < 331 && gameModeInfo->id != commercial)
       {
          switch(ft->type)
          {
@@ -1672,7 +1673,7 @@ void P_InitThingLists(void)
 {
    // haleyjd: allow to work in any game mode
    // killough 3/26/98: Spawn icon landings:
-   if(gamemode == commercial || demo_version >= 331)
+   if(gameModeInfo->id == commercial || demo_version >= 331)
       P_SpawnBrainTargets();
 
    // haleyjd: spawn D'Sparil teleport spots

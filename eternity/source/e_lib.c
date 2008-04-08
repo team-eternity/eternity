@@ -605,5 +605,87 @@ char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen)
    return colonloc;
 }
 
+//
+// Keywords
+//
+
+#define NUMKEYWORDCHAINS 127
+
+static E_Keyword_t *e_keyword_chains[NUMKEYWORDCHAINS];
+
+//
+// E_AddKeywords
+//
+// Passed a NULL-terminated list of keyword objects, the array of keyword 
+// objects will be added to the global list under whatever context they
+// already specify.
+//
+void E_AddKeywords(E_Keyword_t *kw)
+{
+   E_Keyword_t *curkw = kw;
+
+   while(curkw->keyword)
+   {
+      unsigned int key = D_HashTableKey(curkw->keyword) % NUMKEYWORDCHAINS;
+
+      curkw->next = e_keyword_chains[key];
+      e_keyword_chains[key] = curkw;
+
+      ++curkw;
+   }
+}
+
+
+//
+// E_AddKeywordsInContext
+//
+// Passed a NULL-terminated list of keyword objects and a context name,
+// the array of keyword objects will be added to the global list under
+// that context.
+//
+void E_AddKeywordsInContext(E_Keyword_t *kw, const char *context)
+{
+   E_Keyword_t *curkw = kw;
+
+   while(curkw->keyword)
+   {
+      unsigned int key = D_HashTableKey(curkw->keyword) % NUMKEYWORDCHAINS;
+
+      curkw->next = e_keyword_chains[key];
+      e_keyword_chains[key] = curkw;
+
+      curkw->context = context;
+
+      ++curkw;
+   }
+}
+
+//
+// E_ValueForKeyword
+//
+// Returns an integer value associated with the given keyword/context pair.
+//
+int E_ValueForKeyword(const char *keyword, const char *context)
+{
+   int ret = 0;
+   unsigned int key = D_HashTableKey(keyword) % NUMKEYWORDCHAINS;
+   E_Keyword_t *curkw = e_keyword_chains[key];
+
+   while(curkw)
+   {
+      // found a match for both keyword and context?
+      if(!strcasecmp(keyword, curkw->keyword) &&
+         !strcasecmp(context, curkw->context))
+         break;
+
+      curkw = curkw->next;
+   }
+
+   if(curkw)
+      ret = curkw->value;
+
+   return ret;
+}
+
 // EOF
 

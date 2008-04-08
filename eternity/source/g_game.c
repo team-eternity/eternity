@@ -369,10 +369,10 @@ void G_BuildTiccmd(ticcmd_t* cmd)
         action_weapon3 ? wp_shotgun :
         action_weapon4 ? wp_chaingun :
         action_weapon5 ? wp_missile :
-        action_weapon6 && gamemode != shareware ? wp_plasma :
-        action_weapon7 && gamemode != shareware ? wp_bfg :
+        action_weapon6 && gameModeInfo->id != shareware ? wp_plasma :
+        action_weapon7 && gameModeInfo->id != shareware ? wp_bfg :
         action_weapon8 ? wp_chainsaw :
-        action_weapon9 && gamemode == commercial ? wp_supershotgun :
+        action_weapon9 && gameModeInfo->id == commercial ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -412,7 +412,7 @@ void G_BuildTiccmd(ticcmd_t* cmd)
          // in use, or if the SSG is not already in use and the
          // player prefers it.
 
-         if(newweapon == wp_shotgun && gamemode == commercial &&
+         if(newweapon == wp_shotgun && gameModeInfo->id == commercial &&
             player->weaponowned[wp_supershotgun] &&
             (!player->weaponowned[wp_shotgun] ||
              player->readyweapon == wp_shotgun ||
@@ -589,7 +589,7 @@ void G_SetGameMap(void)
 {
    gamemap = G_GetMapForName(gamemapname);
    
-   if(gamemode != commercial)
+   if(!(gameModeInfo->flags & GIF_MAPXY))
    {
       gameepisode = gamemap / 10;
       gamemap = gamemap % 10;
@@ -609,7 +609,7 @@ void G_SetGameMap(void)
    
    if(gamemap < 0)
       gamemap = 0;
-   if(gamemap > 9 && gamemode != commercial)
+   if(gamemap > 9 && !(gameModeInfo->flags & GIF_MAPXY))
       gamemap = 9;
 }
 
@@ -931,15 +931,24 @@ static void G_DoPlayDemo(void)
    demo_version =      // killough 7/19/98: use the version id stored in demo
       demover = *demo_p++;
 
-   // haleyjd 09/02/03: test for old Heretic, etc. demos here.
-   // Heretic demos don't even store the version -- the first byte 
-   // in the file is the skill level, and is thus easy to recognize.
-   // For full safety, I compare against 255, which is the value put
-   // in the old version byte by Eternity when it writes a demo.
+   // Supported demo formats:
+   // * 0.99 - 1.2:  first byte is skill level, 0-5; support is minimal.
+   // * 1.4  - 1.10: 13-byte header w/version number; 1.9 supported fully.
+   // * 1.11:        DOOM 1.91 longtics demo; supported fully.
+   // * 2.00 - 2.02: BOOM demos; support poor for maps using BOOM features.
+   // * 2.03:        MBF demos; support should be near perfect.
+   // * 2.55:        These are EE demos. True version number is stored later.
 
-   if(gameModeInfo->type != Game_DOOM && demo_version < 255)
+   // Note that SMMU demos cannot be supported due to the fact that they
+   // contain incorrect version numbers. Demo recording was also broken in
+   // several versions of the port anyway.
+
+   if(!((demover >=   0 && demover <= 4  ) || // Doom 1.2 or less
+        (demover >= 104 && demover <= 111) || // Doom 1.4 - 1.9, 1.10, 1.11
+        (demover >= 200 && demover <= 203) || // BOOM, MBF
+        (demover == 255)))                    // Eternity
    {
-      C_Printf("Non-DOOM format demos are not supported\n");
+      C_Printf("Unsupported demo format\n");
       gameaction = ga_nothing;
       Z_ChangeTag(demobuffer, PU_CACHE);
       D_AdvanceDemo();
@@ -949,7 +958,7 @@ static void G_DoPlayDemo(void)
    if(demover < 200)     // Autodetect old demos
    {
       // haleyjd 10/08/06: longtics support
-      longtics_demo = (demover == DOOM_191_VERSION);
+      longtics_demo = (demover >= DOOM_191_VERSION);
 
       demo_subversion = 0; // haleyjd: always 0 for old demos
 
@@ -1195,6 +1204,13 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
          cmd->angleturn = ((unsigned char)*demo_p++)<<8;
       
       cmd->buttons = (unsigned char)*demo_p++;
+
+      // old Heretic demo?
+      if(demo_version <= 4 && gameModeInfo->type == Game_Heretic)
+      {
+         demo_p++;
+         demo_p++;
+      }
       
       if(demo_version >= 337)
          cmd->actions = *demo_p++;
@@ -1297,7 +1313,7 @@ void G_ExitLevel(void)
 //
 void G_SecretExitLevel(void)
 {
-   secretexit = gamemode != commercial || haswolflevels || scriptSecret;
+   secretexit = gameModeInfo->id != commercial || haswolflevels || scriptSecret;
    gameaction = ga_completed;
 }
 
@@ -1332,7 +1348,7 @@ static void G_PlayerFinishLevel(int player)
 static void G_SetDOOMNextMap(void)
 {
    // wminfo.next is 0 biased, unlike gamemap
-   if(gamemode == commercial)
+   if(gameModeInfo->id == commercial)
    {
       if(secretexit)
       {
@@ -1474,7 +1490,7 @@ static void G_DoCompleted(void)
    if(automapactive)
       AM_Stop();
 
-   if(gamemode != commercial) // kilough 2/7/98
+   if(!(gameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
       switch(gamemap)
       {
@@ -1502,7 +1518,7 @@ static void G_DoCompleted(void)
       if(*LevelInfo.nextLevel) // only for normal exit
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextLevel);
-         if(gamemode != commercial)
+         if(!(gameModeInfo->flags & GIF_MAPXY))
             wminfo.next = wminfo.next % 10;
          wminfo.next--;
       }
@@ -1512,7 +1528,7 @@ static void G_DoCompleted(void)
       if(*LevelInfo.nextSecret) // only for secret exit
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextSecret);
-         if(gamemode != commercial)
+         if(!(gameModeInfo->flags & GIF_MAPXY))
             wminfo.next = wminfo.next % 10;
          wminfo.next--;
       }
@@ -1549,13 +1565,15 @@ static void G_DoCompleted(void)
 
 static void G_DoWorldDone(void)
 {
+   missioninfo_t *missionInfo = gameModeInfo->missionInfo;
+
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LEVEL;
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels
-   if((gamemission == hticsosr && gameepisode == 6 && gamemap == 4) ||
-      (gamemission == heretic && gameepisode == 4 && gamemap == 1))
+   if((missionInfo->id == hticsosr && gameepisode == 6 && gamemap == 4) ||
+      (missionInfo->id == heretic  && gameepisode == 4 && gamemap == 1))
    {
       gamemap--; // return to same level
    }
@@ -2547,7 +2565,7 @@ int G_GetMapForName(const char *name)
 
    M_Strupr(normName);
    
-   if(gamemode == commercial)
+   if(gameModeInfo->flags & GIF_MAPXY)
    {
       episode = 1;
       map = isMAPxy(normName) ? 
@@ -2576,7 +2594,7 @@ char *G_GetNameForMap(int episode, int map)
 
    memset(levelname, 0, 9);
 
-   if(gamemode == commercial)
+   if(gameModeInfo->flags & GIF_MAPXY)
    {
       sprintf(levelname, "MAP%02d", map);
    }
@@ -2598,7 +2616,7 @@ void G_DeferedInitNew(skill_t skill, char *levelname)
    strncpy(d_mapname, levelname, 8);
    d_map = G_GetMapForName(levelname);
    
-   if(gamemode != commercial)
+   if(!(gameModeInfo->flags & GIF_MAPXY))
    {
       d_episode = d_map / 10;
       d_map = d_map % 10;

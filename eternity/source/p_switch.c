@@ -65,24 +65,10 @@ button_t  buttonlist[MAXBUTTONS];
 void P_InitSwitchList(void)
 {
    int i, index = 0;
-   int episode; // = (gamemode == registered || gamemode==retail) ?
-                //   2 : gamemode == commercial ? 3 : 1;
+   int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
-   
-   switch(gamemode)
-   {
-   case registered:
-   case retail:
-   case hereticreg: // haleyjd
-      episode = 2;
-      break;
-   case commercial:
-      episode = 3;
-      break;
-   default:
-      episode = 1; // doom or heretic shareware
-      break;
-   }
+
+   episode = gameModeInfo->switchEpisode;
 
    //jff 3/23/98 read the switch table from a predefined lump             
    alphSwitchList = 
@@ -161,10 +147,7 @@ static void P_StartButton(line_t *line, int side, bwhere_e w,
 //
 void P_ClearButtons(void)
 {
-   int i;
-
-   for(i = 0; i < MAXBUTTONS; ++i)
-      memset(&buttonlist[i], 0, sizeof(button_t));
+   memset(buttonlist, 0, MAXBUTTONS * sizeof(button_t));
 }
 
 //

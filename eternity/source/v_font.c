@@ -117,7 +117,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       }
       else
       {
-         // haleyjd: get default text color from gamemode info
+         // haleyjd: get default text color from gameModeInfo
          color = *(gameModeInfo->defTextTrans); // Note: ptr to ptr
       }
    }

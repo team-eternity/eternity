@@ -281,7 +281,7 @@ char buf[3];
 
    doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
   
-   if(gamemode == commercial)
+   if(gameModeInfo->id == commercial)
    {
       musnum = mus_runnin + (buf[0]-'0')*10 + buf[1]-'0' - 1;
           
@@ -381,14 +381,14 @@ static void cheat_fa()
    // You can't own weapons that aren't in the game // phares 02/27/98
    for(i = 0; i < NUMWEAPONS; i++)
    {
-      if(!(((i == wp_plasma || i == wp_bfg) && gamemode == shareware) ||
-         (i == wp_supershotgun && gamemode != commercial)))
+      if(!(((i == wp_plasma || i == wp_bfg) && gameModeInfo->id == shareware) ||
+         (i == wp_supershotgun && gameModeInfo->id != commercial)))
          plyr->weaponowned[i] = true;
    }
       
    for(i = 0; i < NUMAMMO; i++)
    {
-      if(i != am_cell || gamemode != shareware)
+      if(i != am_cell || gameModeInfo->id != shareware)
          plyr->ammo[i] = plyr->maxammo[i];
    }
    //sf : doom_printf
@@ -448,68 +448,68 @@ static void cheat_behold()
 static void cheat_clev(buf)
 char buf[3];
 {
-  int epsd, map;
+   int epsd, map;
 
-  if (gamemode == commercial)
-    {
+   if(gameModeInfo->flags & GIF_MAPXY)
+   {
       epsd = 1; //jff was 0, but espd is 1-based 
       map = (buf[0] - '0')*10 + buf[1] - '0';
-    }
-  else
-    {
+   }
+   else
+   {
       epsd = buf[0] - '0';
       map = buf[1] - '0';
-    }
+   }
 
-  // Catch invalid maps.
-  {
-     int maxep = gameModeInfo->numEpisodes;
+   // Catch invalid maps.
+   {
+      int maxep = gameModeInfo->numEpisodes;
 
-     // Ohmygod - this is not going to work.
-     if(epsd < 1 || map < 1 || epsd > maxep)
-        return;
+      // Ohmygod - this is not going to work.
+      if(epsd < 1 || map < 1 || epsd > maxep)
+         return;
      
-     switch(gamemode)
-     {
-     default:
-     case retail:
-     case registered:
-     case shareware:
-     case hereticsw:
-        if(map > 9)
-           return;
-        break;
+      switch(gameModeInfo->id)
+      {
+      default:
+      case retail:
+      case registered:
+      case shareware:
+      case hereticsw:
+         if(map > 9)
+            return;
+         break;
 
-     case hereticreg:
-        if(map > 9)
-           return;
+      case hereticreg:
+         if(map > 9)
+            return;
 
-        if(gamemission == hticsosr)
-        {
-           if(epsd == maxep && map > 3)
-              return;
-        }
-        else
-        {
-           if(epsd == maxep && map > 1)
-              return;
-        }
-        break;
+         if(gameModeInfo->missionInfo->id == hticsosr)
+         {
+            if(epsd == maxep && map > 3)
+               return;
+         }
+         else
+         {
+            if(epsd == maxep && map > 1)
+               return;
+         }
+         break;
 
-     case commercial:
-        if(map > 32)
-           return;
-        break;
-     }
-  }
+      case commercial:
+         if(map > 32)
+            return;
+         break;
+      }
+   }
 
-  // So be it.
+   // So be it.
 
-  idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
+   idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
 
-  doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
+   doom_printf("%s", DEH_String("STSTR_CLEV")); // Ty 03/27/98 - externalized
 
-  G_DeferedInitNewNum(gameskill, epsd, map);
+   G_DeferedInitNewNum(gameskill, epsd, map);
 }
 
 // 'mypos' for player position
@@ -608,8 +608,8 @@ static void cheat_keyxx(key)
 
 static void cheat_weap()
 {                                   // Ty 03/27/98 - *not* externalized
-   doom_printf( gamemode==commercial ?           // killough 2/28/98
-     "Weapon number 1-9" : "Weapon number 1-8" );
+   doom_printf(gameModeInfo->id == commercial ?           // killough 2/28/98
+               "Weapon number 1-9" : "Weapon number 1-8" );
 }
 
 static void cheat_weapx(buf)
@@ -619,8 +619,8 @@ char buf[3];
 
   // WEAPON_FIXME: weap cheat
 
-  if ((w==wp_supershotgun && gamemode!=commercial) ||      // killough 2/28/98
-      ((w==wp_bfg || w==wp_plasma) && gamemode==shareware))
+  if ((w==wp_supershotgun && gameModeInfo->id!=commercial) ||      // killough 2/28/98
+      ((w==wp_bfg || w==wp_plasma) && gameModeInfo->id==shareware))
     return;
 
   if (w==wp_fist)           // make '1' apply beserker strength toggle

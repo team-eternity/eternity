@@ -815,6 +815,14 @@ void V_InitMisc(void)
    V_LoadFont();
    V_LoadBigFont(); // haleyjd 01/14/05
    V_InitBox();
+
+   // this only ever needs to be done once
+   if(!flexTranInit)
+   {
+      byte *palette = W_CacheLumpName("PLAYPAL", PU_STATIC);
+      V_InitFlexTranTable(palette);
+      Z_ChangeTag(palette, PU_CACHE);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////

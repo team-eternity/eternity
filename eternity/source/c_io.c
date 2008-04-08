@@ -104,21 +104,15 @@ static void C_initBackdrop(void)
 {
    patch_t *patch;
    const char *lumpname;
+   int lumpnum;
    VBuffer cback;
    boolean darken = false;
-   
-   switch(gamemode)
-   {
-   case commercial:
-   case retail: 
-      lumpname = "INTERPIC";
-      break;
-   default: 
-      lumpname = "TITLEPIC";
-      // haleyjd: if we use the titlepic, we need to darken it.
+
+   lumpname = gameModeInfo->consoleBack;
+
+   // haleyjd: if we use the titlepic, we need to darken it
+   if(!strcasecmp(lumpname, "TITLEPIC") || !strcasecmp(lumpname, "TITLE"))
       darken = true;
-      break;
-   }
    
    // allow for custom console background graphic
    if(W_CheckNumForName("CONSOLE") >= 0)
@@ -138,17 +132,32 @@ static void C_initBackdrop(void)
    cback.width = cback.pitch = C_SCREENWIDTH;
    cback.height = C_SCREENHEIGHT;
 
-   patch = W_CacheLumpName(lumpname, PU_STATIC);
+   lumpnum = W_GetNumForName(lumpname);
+   patch   = W_CacheLumpNum(lumpnum, PU_STATIC);
 
-   if(darken)
+   // haleyjd 03/30/08: support linear fullscreen graphics
+   if(W_LumpLength(lumpnum) == 64000)
    {
-      char *colormap = W_CacheLumpName("COLORMAP", PU_STATIC);
+      V_DrawBlock(0, 0, &cback, SCREENWIDTH, SCREENHEIGHT, (byte *)patch);
 
-      V_DrawPatchTranslated(0, 0, &cback, patch, colormap + 16 * 256, false);
-      Z_ChangeTag(colormap, PU_CACHE);
+      if(darken)
+      {
+         V_ColorBlockTL(&cback, gameModeInfo->blackIndex,
+                        0, 0, C_SCREENWIDTH, C_SCREENHEIGHT, FRACUNIT/2);
+      }
    }
    else
-      V_DrawPatch(0, 0, &cback, patch);
+   {
+      if(darken)
+      {
+         char *colormap = W_CacheLumpName("COLORMAP", PU_STATIC);
+         
+         V_DrawPatchTranslated(0, 0, &cback, patch, colormap + 16 * 256, false);
+         Z_ChangeTag(colormap, PU_CACHE);
+      }
+      else
+         V_DrawPatch(0, 0, &cback, patch);
+   }
 
    Z_ChangeTag(patch, PU_CACHE);
 }

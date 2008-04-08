@@ -111,9 +111,9 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
 #define FIELD_SECTOR_CEILINGXOFFSET "ceilingxoffset"
 #define FIELD_SECTOR_CEILINGYOFFSET "ceilingyoffset"
-#define FIELD_SECTOR_TOPMAP         "colormap_upper"
-#define FIELD_SECTOR_MIDMAP         "colormap_middle"
-#define FIELD_SECTOR_BOTTOMMAP      "colormap_lower"
+#define FIELD_SECTOR_TOPMAP         "colormaptop"
+#define FIELD_SECTOR_MIDMAP         "colormapmid"
+#define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
 
 // mapthing options and related data structures
 

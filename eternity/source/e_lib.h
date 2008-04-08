@@ -64,6 +64,22 @@ int E_StrToNumLinear(const char **strings, int numstrings, const char *value);
 long E_ParseFlags(const char *str, dehflagset_t *flagset);
 char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen);
 
+// keywords
+
+typedef struct E_Keyword_s
+{
+   const char *keyword;
+   int value;
+   const char *context;
+
+   // for hashing
+   struct E_Keyword_s *next;
+} E_Keyword_t;
+
+void E_AddKeywords(E_Keyword_t *kw);
+void E_AddKeywordsInContext(E_Keyword_t *kw, const char *context);
+int E_ValueForKeyword(const char *keyword, const char *context);
+
 #endif
 
 // EOF

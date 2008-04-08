@@ -91,9 +91,41 @@ enum
 #define GIF_HASDISK      0x00000001  // has flashing io disk
 #define GIF_SHAREWARE    0x00000002  // shareware game (no -file)
 #define GIF_MNBIGFONT    0x00000004  // uses big font for menu titles
+#define GIF_MAPXY        0x00000008  // gamemode uses MAPxy maps by default
+
+// Game mode handling - identify IWAD version
+//  to handle IWAD dependent animations etc.
+typedef enum 
+{
+  shareware,    // DOOM 1 shareware, E1, M9
+  registered,   // DOOM 1 registered, E3, M27
+  commercial,   // DOOM 2 retail, E1, M34
+  retail,       // DOOM 1 retail, E4, M36
+  hereticsw,    // Heretic shareware
+  hereticreg,   // Heretic full
+  indetermined, // Incomplete or corrupted IWAD
+  NumGameModes
+} GameMode_t;
+
+// Mission packs
+typedef enum
+{
+  doom,         // DOOM 1
+  doom2,        // DOOM 2
+  pack_tnt,     // TNT mission pack
+  pack_plut,    // Plutonia pack
+  heretic,      // Heretic
+  hticsosr,     // Heretic - Shadow of the Serpent Riders
+  none,
+  NumGameMissions
+} GameMission_t;
 
 //
 // Game Mode Types
+//
+// Some things have to vary only on the game-type being played, be it
+// Doom or Heretic (or eventually, Hexen or Strife). These are directly
+// tied to the state of the Enable system in EDF.
 //
 enum
 {
@@ -103,21 +135,41 @@ enum
 };
 
 //
-// gameinfo_t
+// missioninfo_t
+//
+// This structure holds mission-dependent information for the
+// gamemodeinfo_t structure. The gamemode info structure must be
+// assigned a missioninfo_t object during startup in d_main.c:IdentifyVersion.
+//
+typedef struct missioninfo_s
+{
+   GameMission_t id;            // mission id - replaces "gamemission" variable
+   
+   // override data - information here overrides that contained in the
+   // gamemodeinfo_t that uses this missioninfo object.
+
+   const char *versionNameOR;   // if not NULL, overrides name of the gamemode
+   const char *startupBannerOR; // if not NULL, overrides the startup banner 
+   int         numEpisodesOR;   // if not 0, overrides the number of episodes
+} missioninfo_t;
+
+//
+// gamemodeinfo_t
 //
 // This structure holds just about all the gamemode-pertinent
 // information that could easily be pulled out of the rest of
 // the source. This approach, as mentioned above, was inspired
 // by zdoom, but I've taken it and really run with it.
 //
-
-typedef struct gameinfo_s
+typedef struct gamemodeinfo_s
 {
+   GameMode_t id;             // id      - replaces "gamemode" variable
    int type;                  // main game mode type: doom, heretic, etc.
    int flags;                 // game mode flags
-
+   
    // startup stuff
-   // (none currently)
+   const char *versionName;   // descriptive version name
+   const char *startupBanner; // startup banner text
    
    // demo state information
    int titleTics;             // length of time to show title
@@ -127,8 +179,8 @@ typedef struct gameinfo_s
    int titleMusNum;           // music number to use for title
 
    // menu stuff
-   char *menuBackground;      // name of menu background flat
-   char *creditBackground;    // name of dynamic credit bg flat
+   const char *menuBackground;   // name of menu background flat
+   const char *creditBackground; // name of dynamic credit bg flat
    int   creditY;             // y coord for credit text
    int   creditTitleStep;     // step-down from credit title
    gimenucursor_t *menuCursor;   // pointer to the big menu cursor
@@ -145,7 +197,7 @@ typedef struct gameinfo_s
    boolean shadowTitles;      // if true, big font title text is shadowed
 
    // border stuff
-   char *borderFlat;          // name of flat to fill backscreen
+   const char *borderFlat;    // name of flat to fill backscreen
    giborder_t *border;        // pointer to a game border
 
    // HU / Video / Console stuff
@@ -156,9 +208,10 @@ typedef struct gameinfo_s
    int c_numCharsPerLine;     // number of chars per line in console
    int c_BellSound;           // sound used for \a in console
    int c_ChatSound;           // sound used by say command
+   const char *consoleBack;   // lump to use for default console backdrop
    gitextmetric_t *vtextinfo; // v_font text info
    gitextmetric_t *btextinfo; // big font text info
-   unsigned char blackIndex;  // palette index for black {16,16,16}
+   unsigned char blackIndex;  // palette index for black {0,0,0}
    unsigned char whiteIndex;  // palette index for white {255,255,255}
    int numHUDKeys;            // number of keys to show in HUD
 
@@ -169,7 +222,7 @@ typedef struct gameinfo_s
    const char *markNumFmt;    // automap mark number format string
 
    // Miscellaneous graphics
-   char *pausePatch;          // name of patch to show when paused
+   const char *pausePatch;    // name of patch to show when paused
 
    // Game interaction stuff
    int numEpisodes;           // number of game episodes
@@ -183,31 +236,35 @@ typedef struct gameinfo_s
    // Intermission and Finale stuff
    int interMusNum;           // intermission music number
    gitextmetric_t *ftextinfo; // finale text info
-   interfns_t    *interfuncs; // intermission function pointers
+   interfns_t *interfuncs;    // intermission function pointers
 
    // Sound
    musicinfo_t *s_music;      // pointer to musicinfo_t (sounds.h)
    int musMin;                // smallest music index value (0)
    int numMusic;              // maximum music index value
-   char *musPrefix;           // "D_" for DOOM, "MUS_" for Heretic
+   const char *musPrefix;     // "D_" for DOOM, "MUS_" for Heretic
+   const char *defMusName;    // default music name
    const char *defSoundName;  // default sound if one is missing
    const char **skinSounds;   // default skin sound mnemonics array
    int *playerSounds;         // player sound dehnum indirection
 
+   // Renderer stuff
+   int switchEpisode;         // "episode" number for switch texture defs
+
    // Miscellaneous stuff
    const char *endTextName;   // name of end text resource
 
-} gameinfo_t;
+   // Internal fields - these are set at runtime, so keep them last.
+   missioninfo_t *missionInfo; // gamemission-dependent info
 
-extern gameinfo_t *gameModeInfo;
+} gamemodeinfo_t;
 
-//extern gameinfo_t giDoomSW;
-extern gameinfo_t giDoomReg;
-//extern gameinfo_t giDoomRetail;
-extern gameinfo_t giDoomCommercial;
-extern gameinfo_t giHereticSW;
-extern gameinfo_t giHereticReg;
+extern missioninfo_t  *MissionInfoObjects[NumGameMissions];
+extern gamemodeinfo_t *GameModeInfoObjects[NumGameModes];
 
+extern gamemodeinfo_t *gameModeInfo;
+
+void D_SetGameModeInfo(GameMode_t, GameMission_t);
 void D_InitGameInfo(void);
 
 #endif

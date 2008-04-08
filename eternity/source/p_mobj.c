@@ -562,8 +562,8 @@ static void P_ZMovement(mobj_t* mo)
    if(demo_compatibility) // v1.9 demos
    {
       correct_lost_soul_bounce =
-         ((gamemode == retail || gamemode == commercial) &&
-          gamemission != doom2);
+         ((gameModeInfo->id == retail || gameModeInfo->id == commercial) &&
+          gameModeInfo->missionInfo->id != doom2);
    }
    else if(demo_version < 331) // BOOM - EE v3.29
       correct_lost_soul_bounce = true;

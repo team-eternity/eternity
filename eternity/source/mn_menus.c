@@ -115,7 +115,7 @@ void MN_InitMenus(void)
       savegamepresent[i] = false;
    }
 
-   if(gamemode == commercial)
+   if(gameModeInfo->id == commercial)
       MN_PatchOldMainMenu(); // haleyjd 05/16/04
 
    MN_InitCustomMenu();      // haleyjd 03/14/06
@@ -218,7 +218,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       return;
    }
    
-   if(gamemode == commercial)
+   if(gameModeInfo->id == commercial)
    {
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
@@ -251,7 +251,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
    else
    {
       // hack -- cut off thy flesh consumed if not retail
-      if(gamemode != retail)
+      if(gameModeInfo->id != retail)
          menu_episode.menuitems[5].type = it_end;
       
       MN_StartMenu(&menu_episode);
@@ -376,7 +376,7 @@ static void MN_DoNightmare(void)
       else
          G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
-   else if(gamemode == commercial && modifiedgame && startOnNewMap)
+   else if(gameModeInfo->id == commercial && modifiedgame && startOnNewMap)
    {
       // start on newest level from wad
       G_DeferedInitNew(sk_nightmare, firstlevel);
@@ -414,7 +414,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
       else
          G_DeferedInitNewNum(skill, start_episode, 1);
    }
-   else if(gamemode == commercial && modifiedgame && startOnNewMap)
+   else if(gameModeInfo->id == commercial && modifiedgame && startOnNewMap)
    {  
       // haleyjd 03/02/03: changed to use startOnNewMap config variable
       // start on newest level from wad

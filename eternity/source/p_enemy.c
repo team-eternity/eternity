@@ -3065,7 +3065,7 @@ void A_PlayerScream(mobj_t *mo)
       // haleyjd 09/29/07: wimpy death, if supported
       sound = sk_plwdth;
    }
-   else if(gamemode == shareware || mo->health >= -50)
+   else if(gameModeInfo->id == shareware || mo->health >= -50)
    {
       // Default death sound
       sound = sk_pldeth; 
@@ -4181,14 +4181,14 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 
    if(c_argc >= 2)
    {
-      flagsmode = 0;
+      flagsmode = 1;
       flags = c_argv[1];
    }
 
    if(c_argc >= 3)
    {
-      if(!strcasecmp(c_argv[2], "add"))
-         flagsmode = 1; // add
+      if(!strcasecmp(c_argv[2], "set"))
+         flagsmode = 0; // set
       else if(!strcasecmp(c_argv[2], "remove"))
          flagsmode = 2; // remove
    }
@@ -4205,7 +4205,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden)
 {
    // only in DOOM II ;)
-   if(gamemode == commercial)
+   if(gameModeInfo->id == commercial)
    {
       int vileType = E_ThingNumForName("Archvile");
       

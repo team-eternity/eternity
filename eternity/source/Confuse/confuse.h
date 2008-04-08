@@ -52,7 +52,8 @@ enum cfg_type_t
    CFGT_STR,     /**< string */
    CFGT_BOOL,    /**< boolean value */
    CFGT_SEC,     /**< section */
-   CFGT_FUNC     /**< function */
+   CFGT_FUNC,    /**< function */
+   CFGT_STRFUNC, /**< function-valued string */
 };
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
@@ -169,7 +170,7 @@ union cfg_value_t
 {
    long int number;        /**< integer value */
    double fpnumber;        /**< floating point value */
-   cfg_bool_t boolean;      /**< boolean value */
+   cfg_bool_t boolean;     /**< boolean value */
    char *string;           /**< string value */
    cfg_t *section;         /**< section value */
 };
@@ -293,6 +294,14 @@ struct cfg_opt_t
  */
 #define CFG_FUNC(name, func) \
                    {name, CFGT_FUNC, 0, 0, CFGF_NONE, 0, 0, 0, func, 0, 0}
+
+/** Initialize a function-valued string option.
+ * @param name The name of the option.
+ * @param def The default value.
+ * @param func The callback function.
+ */
+#define CFG_STRFUNC(name, def, func) \
+           {name, CFGT_STRFUNC, 0, 0, CFGF_NONE, 0, (void *)def, 0, func, 0, 0}
 
 /** Terminate list of options. This must be the last initializer in
  * the option list.
@@ -521,6 +530,159 @@ int cfg_parse_boolean(const char *s);
  */
 cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name);
 
+/** Set a value of an integer option.
+ *
+ * @param cfg The configuration file context.
+ * @param opt The option structure (eg, as returned from cfg_getopt())
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_opt_setnint(cfg_t *cfg, cfg_opt_t *opt, long int value, 
+                     unsigned int index);
+
+/** Set a value of an integer option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_setnint(cfg_t *cfg, const char *name, long int value,
+                 unsigned int index);
+
+/** Set a value of an integer option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ */
+void cfg_setint(cfg_t *cfg, const char *name, long int value);
+
+/** Set a value of an floating point option.
+ *
+ * @param cfg The configuration file context.
+ * @param opt The option structure (eg, as returned from cfg_getopt())
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_opt_setnfloat(cfg_t *cfg, cfg_opt_t *opt, double value,
+                       unsigned int index);
+
+/** Set a value of a floating point option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_setnfloat(cfg_t *cfg, const char *name, double value,
+                   unsigned int index);
+
+/** Set a value of a floating point option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ */
+void cfg_setfloat(cfg_t *cfg, const char *name, double value);
+
+/** Set a value of a boolean option.
+ *
+ * @param cfg The configuration file context.
+ * @param opt The option structure (eg, as returned from cfg_getopt())
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_opt_setnbool(cfg_t *cfg, cfg_opt_t *opt, cfg_bool_t value,
+                      unsigned int index);
+
+/** Set a value of a boolean option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_setnbool(cfg_t *cfg, const char *name, cfg_bool_t value,
+                  unsigned int index);
+
+/** Set a value of a boolean option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ */
+void cfg_setbool(cfg_t *cfg, const char *name, cfg_bool_t value);
+
+/** Set a value of a string option.
+ *
+ * @param cfg The configuration file context.
+ * @param opt The option structure (eg, as returned from cfg_getopt())
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_opt_setnstr(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                     unsigned int index);
+
+/** Set a value of a string option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ * @param index The index in the option value array that should be
+ * modified. It is an error to set values with indices larger than 0
+ * for options without the CFGF_LIST flag set.
+ */
+void cfg_setnstr(cfg_t *cfg, const char *name, const char *value,
+                 unsigned int index);
+
+/** Set a value of a string option given its name.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param value The value to set.
+ */
+void cfg_setstr(cfg_t *cfg, const char *name, const char *value);
+
+/** Set a list of values, deleting any values previously in the list.
+ * 
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param nvalues The number of values provided as additional arguments.
+ */
+void cfg_setlist(cfg_t *cfg, const char *name, unsigned int nvalues, ...);
+
+/** Set a list of values, adding the new values to the end of the list.
+ * 
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param nvalues The number of values provided as additional arguments.
+ */
+void cfg_addlist(cfg_t *cfg, const char *name, unsigned int nvalues, ...);
+
+/** Set a list of values from an array.
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param nvalues The number of values in the array.
+ * @param array Pointer to an array of the appropriate type cast to void pointer.
+ */
+void cfg_setlistptr(cfg_t *cfg, const char *name, unsigned int nvalues, 
+                    void *array);
 #endif
 
 /** @example cfgtest.c

@@ -120,12 +120,12 @@ void P_InitSkins(void)
    // haleyjd 09/26/04: initialize monster skins list
    P_InitMonsterSkins();
 
-   // create default gamemode skin
-   // P_CreateMarine();
-
    // FIXME: problem here with preferences
    if(default_skin == NULL) 
-      default_skin = Z_Strdup("marine", PU_STATIC, 0);
+   {
+      playerclass_t *dpc = E_PlayerClassForName(gameModeInfo->defPClassName);
+      default_skin = strdup(dpc->defaultskin->skinname);
+   }
 
    // haleyjd 11/14/06: add EDF skins
    P_AddEDFSkins();

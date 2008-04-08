@@ -67,6 +67,10 @@ int NullStateNum;
 
 #define ITEM_DELTA_NAME "name"
 
+// forward prototype for action function dispatcher
+static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
+                          const char **argv);
+
 //
 // Frame Options
 //
@@ -76,7 +80,7 @@ int NullStateNum;
    CFG_INT_CB(ITEM_FRAME_SPRFRAME, 0,           CFGF_NONE, E_SpriteFrameCB), \
    CFG_BOOL(ITEM_FRAME_FULLBRT,    cfg_false,   CFGF_NONE), \
    CFG_INT(ITEM_FRAME_TICS,        1,           CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_ACTION,      "NULL",      CFGF_NONE), \
+   CFG_STRFUNC(ITEM_FRAME_ACTION,  "NULL",      E_ActionFuncCB), \
    CFG_STR(ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
    CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
    CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
@@ -351,6 +355,29 @@ static void E_StateSprite(const char *tempstr, int i)
 }
 
 //
+// E_ActionFuncCB
+//
+// haleyjd 04/03/08: Callback function for the new function-valued string
+// option used to specify state action functions. This is called during 
+// parsing, not processing, and thus we do not look up/resolve anything
+// at this point. We are only interested in populating the cfg's args
+// values with the strings passed to this callback as parameters. The value
+// of the option has already been set to the name of the codepointer by
+// the libConfuse framework.
+//
+static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, 
+                          const char **argv)
+{
+   if(argc > 0)
+      cfg_setlistptr(cfg, "args", argc, (void *)argv);
+
+   return 0; // everything is good
+}
+
+// haleyjd 04/03/08: context for action-function parameter keywords
+static const char *e_actionfunc_context;
+
+//
 // E_StateAction
 //
 // Isolated code to process the frame action field.
@@ -366,6 +393,9 @@ static void E_StateAction(const char *tempstr, int i)
    }
 
    states[i].action = dp->cptr;
+
+   // haleyjd 04/03/08: set context for keyword lookup
+   e_actionfunc_context = dp->lookup;
 }
 
 enum
@@ -386,6 +416,68 @@ static const char *misc_prefixes[NUM_MISC_PREFIXES] =
    "frame",  "thing",  "sound", "flags", "flags2", "flags3",
    "bexptr", "string"
 };
+
+static void E_AssignMiscThing(long *target, int thingnum)
+{
+   // 09/19/03: add check for no dehacked number
+   // 03/22/06: auto-allocate dehacked numbers where possible
+   if(mobjinfo[thingnum].dehnum != -1 || E_AutoAllocThingDEHNum(thingnum))
+      *target = mobjinfo[thingnum].dehnum;
+   else
+   {
+      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
+                     "for thing %s\n", mobjinfo[thingnum].name);
+      *target = UnknownThingType;
+   }
+}
+
+static void E_AssignMiscState(long *target, int framenum)
+{
+   // 09/19/03: add check for no dehacked number
+   // 03/22/06: auto-allocate dehacked numbers where possible
+   if(states[framenum].dehnum != -1 || E_AutoAllocStateDEHNum(framenum))
+      *target = states[framenum].dehnum;
+   else
+   {
+      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
+                     "for frame %s\n", states[framenum].name);
+      *target = NullStateNum;
+   }
+}
+
+static void E_AssignMiscSound(long *target, sfxinfo_t *sfx)
+{
+   // 03/22/06: auto-allocate dehacked numbers where possible
+   if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
+      *target = sfx->dehackednum;
+   else
+   {
+      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
+                     "for sound %s\n", sfx->mnemonic);
+      *target = 0;
+   }
+}
+
+static void E_AssignMiscString(long *target, edf_string_t *str)
+{
+   if(!str || str->numkey < 0)
+   {
+      E_EDFLogPrintf("\t\tWarning: bad string %s\n", str->key);
+      *target = 0;
+   }
+   else
+      *target = str->numkey;
+}
+
+static void E_AssignMiscBexptr(long *target, deh_bexptr *dp)
+{
+   if(!dp)
+      E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n", dp->lookup);
+   
+   // get the index of this deh_bexptr in the master
+   // deh_bexptrs array, and store it in the arg field
+   *target = dp - deh_bexptrs;
+}
 
 //
 // E_ParseMiscField
@@ -420,20 +512,12 @@ static void E_ParseMiscField(char *value, long *target)
             int framenum = E_StateNumForName(strval);
             if(framenum == NUMSTATES)
             {
-               E_EDFLoggedErr(2, "E_ParseMiscField: invalid state '%s'\n",
+               E_EDFLogPrintf("\t\tWarning: invalid state '%s' in misc field\n",
                               strval);
-            }
-            
-            // 09/19/03: add check for no dehacked number
-            // 03/22/06: auto-allocate dehacked numbers where possible
-            if(states[framenum].dehnum != -1 || E_AutoAllocStateDEHNum(framenum))
-               *target = states[framenum].dehnum;
-            else
-            {
-               E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                              "for frame %s\n", strval);
                *target = NullStateNum;
             }
+            else
+               E_AssignMiscState(target, framenum);
          }
          break;
       case PREFIX_THING:
@@ -441,20 +525,12 @@ static void E_ParseMiscField(char *value, long *target)
             int thingnum = E_ThingNumForName(strval);
             if(thingnum == NUMMOBJTYPES)
             {
-               E_EDFLoggedErr(2, "E_ParseMiscField: invalid thing '%s'\n",
+               E_EDFLogPrintf("\t\tWarning: invalid thing '%s' in misc field\n",
                               strval);
-            }
-
-            // 09/19/03: add check for no dehacked number
-            // 03/22/06: auto-allocate dehacked numbers where possible
-            if(mobjinfo[thingnum].dehnum != -1 || E_AutoAllocThingDEHNum(thingnum))
-               *target = mobjinfo[thingnum].dehnum;
-            else
-            {
-               E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                              "for thing %s\n", strval);
                *target = UnknownThingType;
             }
+            else
+               E_AssignMiscThing(target, thingnum);
          }
          break;
       case PREFIX_SOUND:
@@ -463,19 +539,11 @@ static void E_ParseMiscField(char *value, long *target)
             if(!sfx)
             {
                // haleyjd 05/31/06: relaxed to warning
-               E_EDFLogPrintf("\t\tWarning: invalid sound '%s'\n", strval);
+               E_EDFLogPrintf("\t\tWarning: invalid sound '%s' in misc field\n", 
+                              strval);
                sfx = &S_sfx[0];
             }
-
-            // 03/22/06: auto-allocate dehacked numbers where possible
-            if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
-               *target = sfx->dehackednum;
-            else
-            {
-               E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                              "for sound %s\n", strval);
-               *target = 0;
-            }
+            E_AssignMiscSound(target, sfx);
          }
          break;
       case PREFIX_FLAGS:
@@ -490,40 +558,61 @@ static void E_ParseMiscField(char *value, long *target)
       case PREFIX_BEXPTR:
          {
             deh_bexptr *dp = D_GetBexPtr(strval);
-            
-            if(!dp)
-            {
-               E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n",
-                              strval);
-            }
-            
-            // get the index of this deh_bexptr in the master
-            // deh_bexptrs array, and store it in the arg field
-            *target = dp - deh_bexptrs;
+            E_AssignMiscBexptr(target, dp);
          }
          break;
       case PREFIX_STRING:
          {
             edf_string_t *str = E_StringForName(strval);
-            
-            if(!str || str->numkey < 0)
-            {
-               E_EDFLogPrintf("\t\tWarning: bad string %s\n", strval);
-               *target = 0;
-            }
-            else
-               *target = str->numkey;
+            E_AssignMiscString(target, str);
          }
          break;
       default:
-         E_EDFLoggedErr(2, "E_ParseMiscField: unknown value prefix '%s'\n",
+         E_EDFLogPrintf("\t\tWarning: unknown value prefix '%s'\n",
                         prefix);
+         *target = 0;
+         break;
       }
    }
-   else      
-      // must just be an integer value
+   else
+   {
+      char *endptr;
+      long val;
+
+      // see if it is a number
       // 11/11/03: use strtol to support hex and oct input
-      *target = strtol(value, NULL, 0);
+      val = strtol(value, &endptr, 0);
+
+      // haleyjd 04/02/08:
+      // no? then try certain namespaces in a predefined order of precedence
+      if(*endptr != '\0')
+      {
+         int temp;
+         sfxinfo_t *sfx;
+         edf_string_t *str;
+         deh_bexptr *dp;
+         
+         if((temp = E_ThingNumForName(value)) != NUMMOBJTYPES)   // thingtype?
+            E_AssignMiscThing(target, temp);
+         else if((temp = E_StateNumForName(value)) != NUMSTATES) // frame?
+            E_AssignMiscState(target, temp);
+         else if((sfx = E_EDFSoundForName(value)) != NULL)       // sound?
+            E_AssignMiscSound(target, sfx);
+         else if((str = E_StringForName(value)) != NULL)         // string?
+            E_AssignMiscString(target, str);
+         else if((dp = D_GetBexPtr(value)) != NULL)              // bexptr???
+            E_AssignMiscBexptr(target, dp);
+         else                                                    // try a keyword!
+         {
+            if(e_actionfunc_context)
+               *target = E_ValueForKeyword(value, e_actionfunc_context);
+            else
+               *target = 0;
+         }
+      }
+      else
+         *target = val;
+   }
 }
 
 enum
@@ -642,6 +731,12 @@ static void E_StatePtclEvt(const char *tempstr, int i)
    states[i].particle_evt = tempint;
 }
 
+// haleyjd 04/03/08: hack for function-style arguments to action function
+static boolean in_action;
+static boolean early_args_found;
+static boolean early_args_end;
+
+
 //
 // E_CmpTokenizer
 //
@@ -680,6 +775,21 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
          case '|':     // end of current token
          case ',':     // 03/01/05: added by user request
             return M_QStrBuffer(token);
+         case '(':
+            if(in_action)
+            {
+               early_args_found = true;
+               return M_QStrBuffer(token);
+            }
+            M_QStrPutc(token, c);
+            continue;
+         case ')':
+            if(in_action && early_args_found)
+            {
+               early_args_end = true;
+               continue;
+            }
+            // fall through
          default:      // everything else == part of value
             M_QStrPutc(token, c);
             continue;
@@ -743,6 +853,11 @@ static void E_ProcessCmpState(const char *value, int i)
    // first things first, we have to initialize the qstring
    M_QStrInitCreate(&buffer);
 
+   // initialize tokenizer variables
+   in_action = false;
+   early_args_found = false;
+   early_args_end = false;
+
    // process sprite
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
@@ -785,11 +900,34 @@ static void E_ProcessCmpState(const char *value, int i)
       states[i].tics = strtol(curtoken, NULL, 0);
 
    // process action
+   in_action = true;
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
       states[i].action = NULL;
    else
       E_StateAction(curtoken, i);
+
+   // haleyjd 04/03/08: check for early args found by tokenizer
+   if(early_args_found)
+   {
+      int argcount = 0;
+
+      for(j = 0; j < 5; ++j) // hard-coded args max
+         states[i].args[j] = 0;
+
+      // process args
+      while(!early_args_end)
+      {
+         NEXTTOKEN();
+         if(DEFAULTS(curtoken))
+            states[i].args[j] = 0;
+         else
+            E_ParseMiscField(curtoken, &(states[i].args[argcount]));
+         ++argcount;
+      }
+   }
+
+   in_action = false;
 
    // process nextframe
    NEXTTOKEN();
@@ -818,15 +956,20 @@ static void E_ProcessCmpState(const char *value, int i)
    else
       E_ParseMiscField(curtoken, &(states[i].misc2));
 
-   // process args
-   for(j = 0; j < 5; ++j) // hard-coded args max
+   if(!early_args_found) // do not do if early args specified
    {
-      NEXTTOKEN();
-      if(DEFAULTS(curtoken))
-         states[i].args[j] = 0;
-      else
-         E_ParseMiscField(curtoken, &(states[i].args[j]));
+      // process args
+      for(j = 0; j < 5; ++j) // hard-coded args max
+      {
+         NEXTTOKEN();
+         if(DEFAULTS(curtoken))
+            states[i].args[j] = 0;
+         else
+            E_ParseMiscField(curtoken, &(states[i].args[j]));
+      }
    }
+
+   early_args_found = false;
 
    // free the qstring
    M_QStrFree(&buffer);
@@ -852,6 +995,8 @@ static void E_ProcessState(int i, cfg_t *framesec, boolean def)
    int j;
    int tempint;
    char *tempstr;
+
+   e_actionfunc_context = NULL;
 
    // 11/14/03:
    // In definitions only, see if the cmp field is defined. If so,

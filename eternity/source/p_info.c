@@ -572,12 +572,13 @@ static void P_InfoDefaultLevelName(void)
    const char *bexname  = NULL;
    boolean deh_modified = false;
    boolean synth_type   = false;
+   missioninfo_t *missionInfo = gameModeInfo->missionInfo;
 
    if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= 32)
    {
       // DOOM II
-      bexname = gamemission == pack_tnt ? HU_TITLET :
-                gamemission == pack_plut ? HU_TITLEP : HU_TITLE2;
+      bexname = missionInfo->id == pack_tnt  ? HU_TITLET :
+                missionInfo->id == pack_plut ? HU_TITLEP : HU_TITLE2;
    }
    else if(isExMy(gamemapname) &&
            gameepisode > 0 && gameepisode <= gameModeInfo->numEpisodes &&
@@ -749,6 +750,8 @@ static void P_LoadInterTextLump(void)
 //
 static void P_InfoDefaultFinale(void)
 {
+   missioninfo_t *missionInfo = gameModeInfo->missionInfo;
+
    // set lump to NULL
    LevelInfo.interTextLump = NULL;
    LevelInfo.finaleSecretOnly = false;
@@ -757,7 +760,7 @@ static void P_InfoDefaultFinale(void)
    LevelInfo.endOfGame = false;
    LevelInfo.useEDFInterName = false;
 
-   switch(gamemode)
+   switch(gameModeInfo->id)
    {
    case shareware:
    case retail:
@@ -803,46 +806,46 @@ static void P_InfoDefaultFinale(void)
       case 6:
          LevelInfo.backDrop  = bgflat06;
          LevelInfo.interText = 
-            gamemission == pack_tnt  ? DEH_String("T1TEXT") :
-            gamemission == pack_plut ? DEH_String("P1TEXT") : 
-                                       DEH_String("C1TEXT");
+            missionInfo->id == pack_tnt  ? DEH_String("T1TEXT") :
+            missionInfo->id == pack_plut ? DEH_String("P1TEXT") : 
+                                           DEH_String("C1TEXT");
          break;
       case 11:
          LevelInfo.backDrop  = bgflat11;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? DEH_String("T2TEXT") :
-            gamemission == pack_plut ? DEH_String("P2TEXT") : 
-                                       DEH_String("C2TEXT");
+            missionInfo->id == pack_tnt  ? DEH_String("T2TEXT") :
+            missionInfo->id == pack_plut ? DEH_String("P2TEXT") : 
+                                           DEH_String("C2TEXT");
          break;
       case 20:
          LevelInfo.backDrop  = bgflat20;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? DEH_String("T3TEXT") :
-            gamemission == pack_plut ? DEH_String("P3TEXT") : 
-                                       DEH_String("C3TEXT");
+            missionInfo->id == pack_tnt  ? DEH_String("T3TEXT") :
+            missionInfo->id == pack_plut ? DEH_String("P3TEXT") : 
+                                           DEH_String("C3TEXT");
          break;
       case 30:
          LevelInfo.backDrop  = bgflat30;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? DEH_String("T4TEXT") :
-            gamemission == pack_plut ? DEH_String("P4TEXT") : 
-                                       DEH_String("C4TEXT");
+            missionInfo->id == pack_tnt  ? DEH_String("T4TEXT") :
+            missionInfo->id == pack_plut ? DEH_String("P4TEXT") : 
+                                           DEH_String("C4TEXT");
          LevelInfo.endOfGame = true;
          break;
       case 15:
          LevelInfo.backDrop  = bgflat15;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? DEH_String("T5TEXT") :
-            gamemission == pack_plut ? DEH_String("P5TEXT") : 
-                                       DEH_String("C5TEXT");
+            missionInfo->id == pack_tnt  ? DEH_String("T5TEXT") :
+            missionInfo->id == pack_plut ? DEH_String("P5TEXT") : 
+                                           DEH_String("C5TEXT");
          LevelInfo.finaleSecretOnly = true; // only after secret exit
          break;
       case 31:
          LevelInfo.backDrop  = bgflat31;
          LevelInfo.interText =
-            gamemission == pack_tnt  ? DEH_String("T6TEXT") :
-            gamemission == pack_plut ? DEH_String("P6TEXT") : 
-                                       DEH_String("C6TEXT");
+            missionInfo->id == pack_tnt  ? DEH_String("T6TEXT") :
+            missionInfo->id == pack_plut ? DEH_String("P6TEXT") : 
+                                           DEH_String("C6TEXT");
          LevelInfo.finaleSecretOnly = true; // only after secret exit
          break;
       default:
@@ -859,7 +862,7 @@ static void P_InfoDefaultFinale(void)
 
       // "hidden" levels have no statistics intermission
       // 10/10/05: do not catch shareware here
-      if(gamemode != hereticsw &&
+      if(gameModeInfo->id != hereticsw &&
          gameepisode >= gameModeInfo->numEpisodes)
          LevelInfo.killStats = true;
 
@@ -919,7 +922,7 @@ static void P_InfoDefaultSky(void)
    // DOOM determines the sky texture to be used
    // depending on the current episode, and the game version.
 
-   if(gamemode == commercial)
+   if(gameModeInfo->id == commercial)
    {      
       if(gamemap < 12)
          LevelInfo.skyName = "SKY1";
@@ -993,7 +996,7 @@ static void P_InfoDefaultBossSpecials(void)
    // most maps have no specials, so set to zero here
    LevelInfo.bossSpecs = 0;
 
-   if(gamemode == commercial)
+   if(gameModeInfo->id == commercial)
    {
       // DOOM II -- MAP07 has two specials
       if(gamemap == 7)
@@ -1045,7 +1048,7 @@ static void P_InfoDefaultBossSpecials(void)
 //
 static void P_InfoDefaultFinaleType(void)
 {
-   switch(gamemode)
+   switch(gameModeInfo->id)
    {
    case shareware:    // DOOM 1
    case registered:
@@ -1128,7 +1131,7 @@ static void P_SetParTime(void)
    {
       if(!newlevel || deh_pars) // if not a new map, OR deh pars loaded
       {
-         switch(gamemode)
+         switch(gameModeInfo->id)
          {
          case shareware:
          case retail:
@@ -1222,7 +1225,7 @@ static void P_ClearLevelVars(void)
    P_InfoDefaultFinaleType();
    
    // special handling for ExMy maps under DOOM II
-   if(gamemode == commercial && isExMy(levelmapname))
+   if(gameModeInfo->id == commercial && isExMy(levelmapname))
    {
       static char nextlevel[10];
       LevelInfo.nextLevel = nextlevel;

@@ -1449,24 +1449,21 @@ frame S_FIREBRAZIER8    { cmp = "KFR1|7|T| 3|*|S_FIREBRAZIER1"; dehackednum = 20
 frame S_KEYGIZMOB { cmp = "KGZ1|*|*|*|*|@next"; dehackednum = 2056 }
 frame S_KEYGIZMOBINIT    
 { 
-   cmp  = "KGZ1|*|*|*|SpawnAbove|S_KEYGIZMO3"
-   args = { thing:KeyGizmoOrb, frame:S_KGZ_BLUEFLOAT1, 60 } 
+   cmp  = "KGZ1|*|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_BLUEFLOAT1, 60)|S_KEYGIZMO3"
    dehackednum = 2057 
 }
 
 frame S_KEYGIZMOG { cmp = "KGZ1|*|*|*|*|@next"; dehackednum = 2058 }
 frame S_KEYGIZMOGINIT 
 { 
-   cmp  = "KGZ1|*|*|*|SpawnAbove|S_KEYGIZMO3"
-   args = { thing:KeyGizmoOrb, frame:S_KGZ_GREENFLOAT1, 60 }
+   cmp  = "KGZ1|*|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_GREENFLOAT1, 60)|S_KEYGIZMO3"
    dehackednum = 2059 
 }
 
 frame S_KEYGIZMOY { cmp = "KGZ1|*|*|*|*|@next"; dehackednum = 2060 }
 frame S_KEYGIZMOYINIT
 { 
-   cmp  = "KGZ1|*|*|*|SpawnAbove|S_KEYGIZMO3"
-   args = { thing:KeyGizmoOrb, frame:S_KGZ_YELLOWFLOAT1, 60 } 
+   cmp  = "KGZ1|*|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_YELLOWFLOAT1, 60)|S_KEYGIZMO3"
    dehackednum = 2061 
 }
 
@@ -1479,14 +1476,12 @@ frame S_KGZ_YELLOWFLOAT1 { cmp = "KGZY|*|T|-1";        dehackednum = 2066 }
 # TeleGlitterGen / TeleGlitter frames
 frame S_TELEGLITGEN1
 { 
-   cmp  = "TGLT|*|*|8|SpawnGlitter|@this"
-   args = { thing:TeleGlitterRed }
+   cmp  = "TGLT|*|*|8|SpawnGlitter(TeleGlitterRed)|@this"
    dehackednum = 2067 
 }
 frame S_TELEGLITGEN2
 { 
-   cmp  = "TGLT|5|*|8|SpawnGlitter|@this"
-   args = { thing:TeleGlitterBlue }
+   cmp  = "TGLT|5|*|8|SpawnGlitter(TeleGlitterBlue)|@this"
    dehackednum = 2068 
 }
 
@@ -1548,7 +1543,7 @@ frame S_MUMMY_DIE4  { cmp = "MUMM|11|*| 5|*           |@next"; dehackednum = 211
 frame S_MUMMY_DIE5  
 { 
    cmp  = "MUMM|12|*| 5|HticDrop|@next"
-   args = { thing:HAmmoWandWimpy, 84, 0, 0, 3 } 
+   args = { HAmmoWandWimpy, 84, 0, 0, 3 } 
    dehackednum = 2116 
 }
 
@@ -1569,20 +1564,17 @@ frame S_MUMMY_SOUL7 { cmp = "MUMM|22|*|5";         dehackednum = 2126 }
 frame S_MUMMYFX1_1
 { 
    cmp   = "FX15|*|T|5|PlaySound|@next"
-   misc1 = sound:ht_mumhed 
+   misc1 = ht_mumhed 
    dehackednum = 2127 
 }
 frame S_MUMMYFX1_2
 { 
-   cmp  = "FX15|1|T|5|HticTracer|@next"
-   args = { 10, 20 } 
-   dehackednum = 2128 
+   cmp  = "FX15|1|T|5|HticTracer(10, 20)|@next"   dehackednum = 2128 
 }
 frame S_MUMMYFX1_3  { cmp = "FX15|2|T|5|*|@next"; dehackednum = 2129 }
 frame S_MUMMYFX1_4
 { 
-   cmp  = "FX15|1|T|5|HticTracer|S_MUMMYFX1_1"
-   args = { 10, 20 } 
+   cmp  = "FX15|1|T|5|HticTracer(10, 20)|S_MUMMYFX1_1"
    dehackednum = 2130 
 }
 frame S_MUMMYFXI1_1 { cmp = "FX15|3|T|5|*|@next"; dehackednum = 2131 }
@@ -1613,7 +1605,7 @@ frame S_BEAST_DIE5  { cmp = "BEAS|21|*| 6|*          |@next"; dehackednum = 2151
 frame S_BEAST_DIE6
 { 
    cmp  = "BEAS|22|*| 6|HticDrop|@next"
-   args = { thing:HAmmoCBowWimpy, 84, 0, 0, 10 }
+   args = { HAmmoCBowWimpy, 84, 0, 0, 10 }
    dehackednum = 2152 
 }
 frame S_BEAST_DIE7  { cmp = "BEAS|23|*| 6|*          |@next"; dehackednum = 2153 }
@@ -1629,7 +1621,7 @@ frame S_BEAST_XDIE5 { cmp = "BEAS|13|*| 5|*          |@next"; dehackednum = 2160
 frame S_BEAST_XDIE6
 { 
    cmp  = "BEAS|14|*|6|HticDrop|@next"
-   args = { thing:HAmmoCBowWimpy, 84, 0, 0, 10 } 
+   args = { HAmmoCBowWimpy, 84, 0, 0, 10 } 
    dehackednum = 2161 
 }
 frame S_BEAST_XDIE7 { cmp = "BEAS|15|*| 5|*          |@next"; dehackednum = 2162 }
@@ -1684,7 +1676,7 @@ frame S_SNAKE_DIE6  { cmp = "SNKE|11|*| 5|*           |@next"; dehackednum = 220
 frame S_SNAKE_DIE7  
 { 
    cmp  = "SNKE|12|*| 5|HticDrop|@next"
-   args = { thing:HAmmoPhoenixWimpy, 84, 0, 0, 5 }
+   args = { HAmmoPhoenixWimpy, 84, 0, 0, 5 }
    dehackednum = 2203 
 }
 frame S_SNAKE_DIE8  { cmp = "SNKE|13|*| 5|*           |@next"; dehackednum = 2204 }
@@ -1730,7 +1722,7 @@ frame S_CLINK_DIE3  { cmp = "CLNK|10|*| 5|Scream     |@next"; dehackednum = 2235
 frame S_CLINK_DIE4
 {
    cmp  = "CLNK|11|*| 5|HticDrop|@next"
-   args = { thing:HAmmoSkullWimpy, 84, 0, 0, 20 }
+   args = { HAmmoSkullWimpy, 84, 0, 0, 20 }
    dehackednum = 2236 
 }
 frame S_CLINK_DIE5  { cmp = "CLNK|12|*| 5|*          |@next"; dehackednum = 2237 }
@@ -1759,15 +1751,13 @@ frame S_WIZARD_ATK8  { cmp = "WZRD| 2|*| 4|WizardAtk2|@next"; dehackednum = 2257
 frame S_WIZARD_ATK9  { cmp = "WZRD| 3|*|12|WizardAtk3|S_WIZARD_WALK1"; dehackednum = 2258 }
 frame S_WIZARD_PAIN1
 { 
-   cmp  = "WZRD| 4|*| 3|UnSetFlags|@next"
-   args = { 3, flags3:GHOST } 
+   cmp  = "WZRD| 4|*| 3|UnSetFlags(3, flags3:GHOST)|@next"
    dehackednum = 2259 
 }
 frame S_WIZARD_PAIN2 { cmp = "WZRD| 4|*| 3|Pain      |S_WIZARD_WALK1"; dehackednum = 2260 }
 frame S_WIZARD_DIE1
 { 
-   cmp  = "WZRD| 5|*| 6|UnSetFlags|@next"
-   args = { 3, flags3:GHOST } 
+   cmp  = "WZRD| 5|*| 6|UnSetFlags(3, flags3:GHOST)|@next"
    dehackednum = 2261 
 }
 frame S_WIZARD_DIE2  { cmp = "WZRD| 6|*| 6|Scream    |@next"; dehackednum = 2262 }
@@ -1812,7 +1802,7 @@ frame S_KNIGHT_DIE3  { cmp = "KNIG|10|*| 6|*           |@next"; dehackednum = 22
 frame S_KNIGHT_DIE4
 { 
    cmp  = "KNIG|11|*| 6|HticDrop|@next"
-   args = { thing:HAmmoCBowWimpy, 84, 0, 0, 5 } 
+   args = { HAmmoCBowWimpy, 84, 0, 0, 5 } 
    dehackednum = 2293 
 }
 frame S_KNIGHT_DIE5  { cmp = "KNIG|12|*| 6|*       |@next"; dehackednum = 2294 }
@@ -1823,7 +1813,7 @@ frame S_KNIGHT_DIE7  { cmp = "KNIG|14|*|-1";                dehackednum = 2296 }
 frame S_SPINAXE1
 {
    cmp   = "SPAX|*|T|3|PlaySound|@next"
-   misc1 = sound:ht_kgtatk
+   misc1 = ht_kgtatk
    dehackednum = 2297
 }
 frame S_SPINAXE2  { cmp = "SPAX|1|T|3|*|@next";      dehackednum = 2298 }
@@ -1864,7 +1854,7 @@ frame S_SRCR1_DIE7  { cmp = "SRCR|10|*| 6|*          |@next"; dehackednum = 2328
 frame S_SRCR1_DIE8
 { 
    cmp   = "SRCR|11|*|25|PlaySound|@next"
-   misc1 = sound:ht_sorzap
+   misc1 = ht_sorzap
    misc2 = 1
    dehackednum = 2329 
 }
@@ -1874,7 +1864,7 @@ frame S_SRCR1_DIE11 { cmp = "SRCR|14|*| 4|*          |@next"; dehackednum = 2332
 frame S_SRCR1_DIE12 
 {
    cmp   = "SRCR|11|*|20|PlaySound|@next"
-   misc1 = sound:ht_sorzap
+   misc1 = ht_sorzap
    misc2 = 1 
    dehackednum = 2333 
 }
@@ -1900,7 +1890,7 @@ frame S_SOR2_RISE2 { cmp = "SOR2| 1|*| 4|*          |@next"; dehackednum = 2348 
 frame S_SOR2_RISE3
 { 
    cmp   = "SOR2| 2|*| 4|PlaySound|@next"
-   misc1 = sound:ht_sorrise
+   misc1 = ht_sorrise
    misc2 = 1
    dehackednum = 2349 
 }
@@ -1910,7 +1900,7 @@ frame S_SOR2_RISE6 { cmp = "SOR2| 5|*| 4|*          |@next"; dehackednum = 2352 
 frame S_SOR2_RISE7 
 { 
    cmp = "SOR2| 6|*|12|PlaySound|S_SOR2_WALK1"
-   misc1 = sound:ht_sorsit
+   misc1 = ht_sorsit
    misc2 = 1
    dehackednum = 2353 
 }
@@ -1936,7 +1926,7 @@ frame S_SOR2_DIE2  { cmp = "SDTH| 1|*| 8|*          |@next"; dehackednum = 2372 
 frame S_SOR2_DIE3
 {
    cmp   = "SDTH| 2|*| 8|PlaySound|@next"
-   misc1 = sound:ht_sordsph
+   misc1 = ht_sordsph
    misc2 = 1
    dehackednum = 2373 
 }
@@ -1946,7 +1936,7 @@ frame S_SOR2_DIE6  { cmp = "SDTH| 5|*| 7|Sor2DthLoop|@next"; dehackednum = 2376 
 frame S_SOR2_DIE7
 { 
    cmp = "SDTH| 6|*| 6|PlaySound|@next"
-   misc1 = sound:ht_sordexp
+   misc1 = ht_sordexp
    misc2 = 1
    dehackednum = 2377 
 }
@@ -1956,7 +1946,7 @@ frame S_SOR2_DIE10 { cmp = "SDTH| 9|*| 6|Fall       |@next"; dehackednum = 2380 
 frame S_SOR2_DIE11
 { 
    cmp = "SDTH|10|*| 6|PlaySound|@next"
-   misc1 = sound:ht_sordbon
+   misc1 = ht_sordbon
    misc2 = 1
    dehackednum = 2381 
 }
@@ -1971,8 +1961,7 @@ frame S_SOR2FX1_2  { cmp = "FX16| 1|T|3|BlueSpark  |@next"; dehackednum = 2387 }
 frame S_SOR2FX1_3  { cmp = "FX16| 2|T|3|BlueSpark  |S_SOR2FX1_1"; dehackednum = 2388 }
 frame S_SOR2FXI1_1 
 { 
-   cmp  = "FX16| 6|T|5|HticExplode|@next"
-   args = { 1 } 
+   cmp  = "FX16| 6|T|5|HticExplode(dsparilbluespark)|@next"
    dehackednum = 2389 
 }
 frame S_SOR2FXI1_2 { cmp = "FX16| 7|T|5|*          |@next"; dehackednum = 2390 }
@@ -2040,14 +2029,14 @@ frame S_CKYY9  { cmp = "CKYY|8|T|3|*|S_CKYY1"; dehackednum = 2440 }
 frame S_SND_WIND
 { 
    cmp   = "TNT1|*|*|100|PlaySound|@this"
-   misc1 = sound:ht_wind
+   misc1 = ht_wind
    dehackednum = 2441 
 }
 
 frame S_SND_WATERFALL
 { 
    cmp = "TNT1|*|*| 85|PlaySound|@this"
-   misc1 = sound:ht_waterfl
+   misc1 = ht_waterfl
    dehackednum = 2442 
 }
 
@@ -2055,8 +2044,7 @@ frame S_SND_WATERFALL
 frame S_VOLCANO1 { cmp = "VLCO|0|*|350|*           |@next"; dehackednum = 2443 }
 frame S_VOLCANO2 
 { 
-   cmp  = "VLCO|0|*| 35|SetTics|@next"
-   args = { 105, 128 } 
+   cmp  = "VLCO|0|*| 35|SetTics(105, 128)|@next"
    dehackednum = 2444 
 }
 frame S_VOLCANO3 { cmp = "VLCO|1|*|  3|*           |@next"; dehackednum = 2445 }
@@ -2070,14 +2058,12 @@ frame S_VOLCANO9 { cmp = "VLCO|4|*| 10|VolcanoBlast|S_VOLCANO2"; dehackednum = 2
 # Volcano fire ball frames
 frame S_VOLCANOBALL1
 { 
-   cmp  = "VFBL|0|*|4|BeastPuff|@next"
-   args = { 1 }
+   cmp  = "VFBL|0|*|4|BeastPuff(noaddmomentum)|@next"
    dehackednum = 2452 
 }
 frame S_VOLCANOBALL2
 { 
-   cmp  = "VFBL|1|*|4|BeastPuff|@prev"
-   args = { 1 }
+   cmp  = "VFBL|1|*|4|BeastPuff(noaddmomentum)|@prev"
    dehackednum = 2453
 }
 frame S_VOLCANOBALLX1 { cmp = "XPL1|0|*|4|VolcBallImpact|@next"; dehackednum = 2454 }
@@ -2150,8 +2136,7 @@ frame S_MNTRFXI1_6 { cmp = "FX12|7|T|5";         dehackednum = 2510 }
 frame S_MNTRFX2_1  { cmp = "FX13| 0|*|2|MntrFloorFire|@this"; dehackednum = 2511 }
 frame S_MNTRFXI2_1
 { 
-   cmp = "FX13| 8|T|4|HticExplode|@next"
-   args = { 2 }
+   cmp = "FX13| 8|T|4|HticExplode(floorfire)|@next"
    dehackednum = 2512 
 }
 frame S_MNTRFXI2_2 { cmp = "FX13| 9|T|4|*            |@next"; dehackednum = 2513 }
@@ -2238,31 +2223,31 @@ frame S_LICHFXI4_3 { cmp = "FX07|4|*|4|*            |@next"; dehackednum = 2577 
 frame S_LICHFXI4_4 { cmp = "FX07|3|*|4";                     dehackednum = 2578 }
 
 # Heretic Ammo frames
-frame S_AMG1   { cmp = "AMG1|0|*|-1"; dehackednum = 2579  }
-frame S_AMG2_1 { cmp = "AMG2|0|*| 4|*|@next" dehackednum = 2580  }
-frame S_AMG2_2 { cmp = "AMG2|1|*| 4|*|@next" dehackednum = 2581  }
+frame S_AMG1   { cmp = "AMG1|0|*|-1";            dehackednum = 2579  }
+frame S_AMG2_1 { cmp = "AMG2|0|*| 4|*|@next"     dehackednum = 2580  }
+frame S_AMG2_2 { cmp = "AMG2|1|*| 4|*|@next"     dehackednum = 2581  }
 frame S_AMG2_3 { cmp = "AMG2|2|*| 4|*|S_AMG2_1"; dehackednum = 2582  }
-frame S_AMM1   { cmp = "AMM1|0|*|-1"; dehackednum = 2583  }
-frame S_AMM2   { cmp = "AMM2|0|*|-1"; dehackednum = 2584  }
-frame S_AMC1   { cmp = "AMC1|0|*|-1"; dehackednum = 2585  }
-frame S_AMC2_1 { cmp = "AMC2|0|*| 5|*|@next"; dehackednum = 2586  }
-frame S_AMC2_2 { cmp = "AMC2|1|*| 5|*|@next"; dehackednum = 2587  }
+frame S_AMM1   { cmp = "AMM1|0|*|-1";            dehackednum = 2583  }
+frame S_AMM2   { cmp = "AMM2|0|*|-1";            dehackednum = 2584  }
+frame S_AMC1   { cmp = "AMC1|0|*|-1";            dehackednum = 2585  }
+frame S_AMC2_1 { cmp = "AMC2|0|*| 5|*|@next";    dehackednum = 2586  }
+frame S_AMC2_2 { cmp = "AMC2|1|*| 5|*|@next";    dehackednum = 2587  }
 frame S_AMC2_3 { cmp = "AMC2|2|*| 5|*|S_AMC2_1"; dehackednum = 2588  }
-frame S_AMS1_1 { cmp = "AMS1|0|*| 5|*|@next"; dehackednum = 2589  }
-frame S_AMS1_2 { cmp = "AMS1|1|*| 5|*|@prev"; dehackednum = 2590  }
-frame S_AMS2_1 { cmp = "AMS2|0|*| 5|*|@next"; dehackednum = 2591  }
-frame S_AMS2_2 { cmp = "AMS2|1|*| 5|*|@prev"; dehackednum = 2592  }
-frame S_AMP1_1 { cmp = "AMP1|0|*| 4|*|@next"; dehackednum = 2593  }
-frame S_AMP1_2 { cmp = "AMP1|1|*| 4|*|@next"; dehackednum = 2594  }
+frame S_AMS1_1 { cmp = "AMS1|0|*| 5|*|@next";    dehackednum = 2589  }
+frame S_AMS1_2 { cmp = "AMS1|1|*| 5|*|@prev";    dehackednum = 2590  }
+frame S_AMS2_1 { cmp = "AMS2|0|*| 5|*|@next";    dehackednum = 2591  }
+frame S_AMS2_2 { cmp = "AMS2|1|*| 5|*|@prev";    dehackednum = 2592  }
+frame S_AMP1_1 { cmp = "AMP1|0|*| 4|*|@next";    dehackednum = 2593  }
+frame S_AMP1_2 { cmp = "AMP1|1|*| 4|*|@next";    dehackednum = 2594  }
 frame S_AMP1_3 { cmp = "AMP1|2|*| 4|*|S_AMP1_1"; dehackednum = 2595  }
-frame S_AMP2_1 { cmp = "AMP2|0|*| 4|*|@next"; dehackednum = 2596  }
-frame S_AMP2_2 { cmp = "AMP2|1|*| 4|*|@next"; dehackednum = 2597  }
+frame S_AMP2_1 { cmp = "AMP2|0|*| 4|*|@next";    dehackednum = 2596  }
+frame S_AMP2_2 { cmp = "AMP2|1|*| 4|*|@next";    dehackednum = 2597  }
 frame S_AMP2_3 { cmp = "AMP2|2|*| 4|*|S_AMP2_1"; dehackednum = 2598  }
-frame S_AMB1_1 { cmp = "AMB1|0|*| 4|*|@next"; dehackednum = 2599  }
-frame S_AMB1_2 { cmp = "AMB1|1|*| 4|*|@next"; dehackednum = 2600  }
+frame S_AMB1_1 { cmp = "AMB1|0|*| 4|*|@next";    dehackednum = 2599  }
+frame S_AMB1_2 { cmp = "AMB1|1|*| 4|*|@next";    dehackednum = 2600  }
 frame S_AMB1_3 { cmp = "AMB1|2|*| 4|*|S_AMB1_1"; dehackednum = 2601  }
-frame S_AMB2_1 { cmp = "AMB2|0|*| 4|*|@next"; dehackednum = 2602  }
-frame S_AMB2_2 { cmp = "AMB2|1|*| 4|*|@next"; dehackednum = 2603  }
+frame S_AMB2_1 { cmp = "AMB2|0|*| 4|*|@next";    dehackednum = 2602  }
+frame S_AMB2_2 { cmp = "AMB2|1|*| 4|*|@next";    dehackednum = 2603  }
 frame S_AMB2_3 { cmp = "AMB2|2|*| 4|*|S_AMB2_1"; dehackednum = 2604  }
 
 # HereticImp frames

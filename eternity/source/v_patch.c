@@ -591,8 +591,9 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 
    patchcol.x  = x1 < 0 ? 0 : x1;
    x2 = x2 >= buffer->width ? buffer->width - 1 : x2;
-   // SoM: Any time clipping occurs on screen coords, the resulting clipped coords should be
-   // checked to make sure we are still on screen.
+   
+   // SoM: Any time clipping occurs on screen coords, the resulting clipped 
+   // coords should be checked to make sure we are still on screen.
    if(x2 < x1)
       return;
 

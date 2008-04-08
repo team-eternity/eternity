@@ -61,8 +61,8 @@ void ST_Init(void);
 
 void ST_CacheFaces(patch_t **faces, char *facename);
 
-// haleyjd 10/12/03: structure for gamemode-independent 
-// status bar interface
+// haleyjd 10/12/03: structure for gamemode-independent status bar interface
+
 typedef struct stbarfns_s
 {
    // data

@@ -909,23 +909,14 @@ void R_HOMdrawer(void)
 //
 // R_ResetTrans
 //
-// Builds BOOM tranmap and initializes flex tran table if 
-// necessary. Called when general_translucency is changed at 
-// run-time.
+// Builds BOOM tranmap. 
+// Called when general_translucency is changed at run-time.
 //
 void R_ResetTrans(void)
 {
    if(general_translucency)
    {
       R_InitTranMap(0);
-
-      // this only ever needs to be done once
-      if(!flexTranInit)
-      {
-         byte *palette = W_CacheLumpName("PLAYPAL", PU_STATIC);
-         V_InitFlexTranTable(palette);
-         Z_ChangeTag(palette, PU_CACHE);
-      }
    }
 }
 

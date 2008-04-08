@@ -64,11 +64,43 @@
 #define DOOMDEFSOUND "DSPISTOL"
 #define HTICDEFSOUND "GLDHIT"
 
+// Default console backdrops
+// Used when no "CONSOLE" lump has been provided.
+// Most gamemodes use the titlepic, which is darkened by code in c_io.c.
+// Ultimate DOOM and DOOM II have a suitable graphic in the INTERPIC.
+#define CONBACK_DEFAULT "TITLEPIC"
+#define CONBACK_COMRET  "INTERPIC"
+#define CONBACK_HERETIC "TITLE" 
+
+// Version names
+#define VNAME_DOOM_SW   "DOOM Shareware version"
+#define VNAME_DOOM_REG  "DOOM Registered version"
+#define VNAME_DOOM_RET  "Ultimate DOOM version"
+#define VNAME_DOOM2     "DOOM II version"
+#define VNAME_TNT       "Final DOOM: TNT - Evilution version"
+#define VNAME_PLUT      "Final DOOM: The Plutonia Experiment version"
+#define VNAME_HTIC_SW   "Heretic Shareware version"
+#define VNAME_HTIC_REG  "Heretic Registered version"
+#define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
+#define VNAME_UNKNOWN   "Unknown Game version. May not work."
+
+// Startup banners
+#define BANNER_DOOM_SW   "DOOM Shareware Startup"
+#define BANNER_DOOM_REG  "DOOM Registered Startup"
+#define BANNER_DOOM_RET  "The Ultimate DOOM Startup"
+#define BANNER_DOOM2     "DOOM 2: Hell on Earth"
+#define BANNER_TNT       "DOOM 2: TNT - Evilution"
+#define BANNER_PLUT      "DOOM 2: Plutonia Experiment"
+#define BANNER_HTIC_SW   "Heretic Shareware Startup"
+#define BANNER_HTIC_REG  "Heretic Registered Startup"
+#define BANNER_HTIC_SOSR "Heretic: Shadow of the Serpent Riders"
+#define BANNER_UNKNOWN   "Public DOOM"
+
 // globals
 
 // holds the address of the gameinfo_t for the current gamemode,
 // determined at startup
-gameinfo_t *gameModeInfo;
+gamemodeinfo_t *gameModeInfo;
 
 // data
 
@@ -278,96 +310,108 @@ static int htic_soundnums[NUMSKINSOUNDS] =
 };
 
 //
+// Mission Information Structures
+//
+
+//
+// Doom
+//
+static missioninfo_t gmDoom =
+{
+   doom, // id
+   NULL, // versionNameOR
+   NULL, // startupBannerOR
+};
+
+//
+// Doom 2
+//
+static missioninfo_t gmDoom2 =
+{
+   doom2, // id
+   NULL,  // versionNameOR
+   NULL,  // startupBannerOR
+};
+
+//
+// Final Doom - TNT
+//
+static missioninfo_t gmFinalTNT =
+{
+   pack_tnt,   // id
+   VNAME_TNT,  // versionNameOR
+   BANNER_TNT, // startupBannerOR
+};
+
+//
+// Final Doom - Plutonia
+//
+static missioninfo_t gmFinalPlutonia =
+{
+   pack_plut,   // id
+   VNAME_PLUT,  // versionNameOR
+   BANNER_PLUT, // startupBannerOR
+};
+
+//
+// Heretic
+//
+static missioninfo_t gmHeretic =
+{
+   heretic, // id
+   NULL,    // versionNameOR
+   NULL,    // startupBannerOR
+};
+
+//
+// Heretic: Shadow of the Serpent Riders
+//
+static missioninfo_t gmHereticSoSR =
+{
+   hticsosr,         // id
+   VNAME_HTIC_SOSR,  // versionNameOR
+   BANNER_HTIC_SOSR, // startupBannerOR
+   6,                // numEpisodesOR
+};
+
+//
+// ???
+//
+static missioninfo_t gmUnknown =
+{
+   none,           // id
+   VNAME_UNKNOWN,  // versionNameOR
+   BANNER_UNKNOWN, // startupBannerOR
+};
+
+// Mission info object array
+
+missioninfo_t *MissionInfoObjects[NumGameMissions] =
+{
+   &gmDoom,          // doom
+   &gmDoom2,         // doom2
+   &gmFinalTNT,      // pack_tnt
+   &gmFinalPlutonia, // pack_plut
+   &gmHeretic,       // heretic
+   &gmHereticSoSR,   // hticsosr
+   &gmUnknown,       // none - ???
+};
+
+//
 // Game Mode Information Structures
 //
 
-/*
 //
 // DOOM Shareware
 //
-gameinfo_t giDoomSW =
+static gamemodeinfo_t giDoomSW =
 {
+   shareware,        // id
    Game_DOOM,        // type
-   GIF_SHAREWARE,    // flags
+   GIF_HASDISK | GIF_SHAREWARE, // flags
+   VNAME_DOOM_SW,    // versionName
 
-   170,              // titleTics
-   0,                // advisorTics
-   false,            // hasAdvisory
-   11*TICRATE,       // pageTics
-   mus_intro,        // titleMusNum
-
-   DOOMMENUBACK,     // menuBackground
-   DOOMCREDITBK,     // creditBackground
-   17,               // creditY
-   &giSkullCursor,   // menuCursor
-   &menu_main,       // mainMenu
-   &menu_savegame,   // saveMenu
-   &menu_loadgame,   // loadMenu
-   &menu_newgame,    // newGameMenu
-   doomMenuSounds,   // menuSounds
-   S_TBALL1,         // transFrame
-   sfx_shotgn,       // skvAtkSound
-   CR_RED,           // unselectColor
-   CR_GRAY,          // selectColor
-   CR_GREEN,         // variableColor
-   false,            // shadowTitles
-
-   DOOMBRDRFLAT,     // borderFlat
-   &giDoomBorder,    // border
-   
-   &cr_red,          // defTextTrans
-   CR_RED,           // colorNormal
-   CR_GRAY,          // colorHigh
-   CR_GOLD,          // colorError
-   40,               // c_numCharsPerLine
-   sfx_tink,         // c_BellSound
-   sfx_tink,         // c_ChatSound
-   &giDoomVText,     // vtextinfo
-   &giDoomBigText,   // btextinfo
-   0,                // blackIndex
-   4,                // whiteIndex
-   NUMCARDS,         // numHUDKeys
-
-   &DoomStatusBar,   // StatusBar
-
-   DOOMMARKS,        // markNumFmt
-
-   "M_PAUSE",        // pausePatch
-   
-   1,                // numEpisodes
-   MT_TFOG,          // teleFogType
-   0,                // teleFogHeight
-   sfx_telept,       // teleSound
-   100,              // thrustFactor
-   false,            // hasMadMelee
-
-   mus_inter,        // interMusNum
-   &giDoomFText,     // ftextinfo
-   &DoomIntermission,// interfuncs
-
-   S_music,          // s_music
-   mus_None,         // musMin
-   NUMMUSIC,         // numMusic
-   "d_",             // musPrefix
-   DOOMDEFSOUND,     // defSoundName
-
-   "ENDOOM",         // endTextName
-};
-*/
-
-//
-// DOOM Registered
-//
-// Note: since all the data is currently the same, I've eliminated the separate
-// structures for DOOM SW and Ultimate Doom, and I patch the episode number and
-// gamemode flags in d_main.c at startup, as I do for Heretic:SoSR. I'm keeping
-// the commented-out structures though in case more extensive differences show
-// up later as more things are moved into this module.
-//
-gameinfo_t giDoomReg =
-{
-   Game_DOOM,        // type
-   GIF_HASDISK,      // flags -- note: patched for shareware DOOM
+   BANNER_DOOM_SW,   // startupBanner
    
    170,              // titleTics
    0,                // advisorTics
@@ -402,6 +446,7 @@ gameinfo_t giDoomReg =
    40,               // c_numCharsPerLine
    sfx_tink,         // c_BellSound
    sfx_tink,         // c_ChatSound
+   CONBACK_DEFAULT,  // consoleBack
    &giDoomVText,     // vtextinfo
    &giDoomBigText,   // btextinfo
    0,                // blackIndex
@@ -414,7 +459,7 @@ gameinfo_t giDoomReg =
 
    "M_PAUSE",        // pausePatch
 
-   3,                // numEpisodes -- note 1 for SW DOOM, 4 for Ultimate
+   1,                // numEpisodes
    MT_TFOG,          // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -422,30 +467,36 @@ gameinfo_t giDoomReg =
    false,            // hasMadMelee
    "DoomMarine",     // defPClassName
 
-   mus_inter,        // interMusNum
-   &giDoomFText,     // ftextinfo
-   &DoomIntermission,// interfuncs
+   mus_inter,         // interMusNum
+   &giDoomFText,      // ftextinfo
+   &DoomIntermission, // interfuncs
 
    S_music,          // s_music
    mus_None,         // musMin
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
+   "e1m1",           // defMusName
    DOOMDEFSOUND,     // defSoundName
    doom_skindefs,    // skinSounds
    doom_soundnums,   // playerSounds
 
+   1,                // switchEpisode
+
    "ENDOOM",         // endTextName
 };
 
-/*
 //
-// The Ultimate DOOM (4 episodes)
+// DOOM Registered
 //
-gameinfo_t giDoomRetail =
+static gamemodeinfo_t giDoomReg =
 {
+   registered,       // id
    Game_DOOM,        // type
-   0,                // flags
+   GIF_HASDISK,      // flags
+   VNAME_DOOM_REG,   // versionName
 
+   BANNER_DOOM_REG,  // startupBanner
+   
    170,              // titleTics
    0,                // advisorTics
    false,            // hasAdvisory
@@ -454,7 +505,8 @@ gameinfo_t giDoomRetail =
 
    DOOMMENUBACK,     // menuBackground
    DOOMCREDITBK,     // creditBackground
-   17,               // creditY
+   20,               // creditY
+   12,               // creditTitleStep
    &giSkullCursor,   // menuCursor
    &menu_main,       // mainMenu
    &menu_savegame,   // saveMenu
@@ -478,6 +530,91 @@ gameinfo_t giDoomRetail =
    40,               // c_numCharsPerLine
    sfx_tink,         // c_BellSound
    sfx_tink,         // c_ChatSound
+   CONBACK_DEFAULT,  // consoleBack
+   &giDoomVText,     // vtextinfo
+   &giDoomBigText,   // btextinfo
+   0,                // blackIndex
+   4,                // whiteIndex
+   NUMCARDS,         // numHUDKeys
+
+   &DoomStatusBar,   // StatusBar
+
+   DOOMMARKS,        // markNumFmt
+
+   "M_PAUSE",        // pausePatch
+
+   3,                // numEpisodes
+   MT_TFOG,          // teleFogType
+   0,                // teleFogHeight
+   sfx_telept,       // teleSound
+   100,              // thrustFactor
+   false,            // hasMadMelee
+   "DoomMarine",     // defPClassName
+
+   mus_inter,        // interMusNum
+   &giDoomFText,     // ftextinfo
+   &DoomIntermission,// interfuncs
+
+   S_music,          // s_music
+   mus_None,         // musMin
+   NUMMUSIC,         // numMusic
+   "d_",             // musPrefix
+   "e1m1",           // defMusName
+   DOOMDEFSOUND,     // defSoundName
+   doom_skindefs,    // skinSounds
+   doom_soundnums,   // playerSounds
+
+   2,                // switchEpisode
+
+   "ENDOOM",         // endTextName
+};
+
+//
+// The Ultimate DOOM (4 episodes)
+//
+static gamemodeinfo_t giDoomRetail =
+{
+   retail,           // id
+   Game_DOOM,        // type
+   GIF_HASDISK,      // flags
+   VNAME_DOOM_RET,   // versionName
+
+   BANNER_DOOM_RET,  // startupBanner
+   
+   170,              // titleTics
+   0,                // advisorTics
+   false,            // hasAdvisory
+   11*TICRATE,       // pageTics
+   mus_intro,        // titleMusNum
+
+   DOOMMENUBACK,     // menuBackground
+   DOOMCREDITBK,     // creditBackground
+   20,               // creditY
+   12,               // creditTitleStep
+   &giSkullCursor,   // menuCursor
+   &menu_main,       // mainMenu
+   &menu_savegame,   // saveMenu
+   &menu_loadgame,   // loadMenu
+   &menu_newgame,    // newGameMenu
+   doomMenuSounds,   // menuSounds
+   S_TBALL1,         // transFrame
+   sfx_shotgn,       // skvAtkSound
+   CR_RED,           // unselectColor
+   CR_GRAY,          // selectColor
+   CR_GREEN,         // variableColor
+   false,            // shadowTitles   
+
+   DOOMBRDRFLAT,     // borderFlat
+   &giDoomBorder,    // border
+
+   &cr_red,          // defTextTrans
+   CR_RED,           // colorNormal
+   CR_GRAY,          // colorHigh
+   CR_GOLD,          // colorError
+   40,               // c_numCharsPerLine
+   sfx_tink,         // c_BellSound
+   sfx_tink,         // c_ChatSound
+   CONBACK_COMRET,   // consoleBack
    &giDoomVText,     // vtextinfo
    &giDoomBigText,   // btextinfo
    0,                // blackIndex
@@ -496,6 +633,7 @@ gameinfo_t giDoomRetail =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    false,            // hasMadMelee
+   "DoomMarine",     // defPClassName
 
    mus_inter,        // interMusNum
    &giDoomFText,     // ftextinfo
@@ -505,19 +643,28 @@ gameinfo_t giDoomRetail =
    mus_None,         // musMin
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
+   "e1m1",           // defMusName
    DOOMDEFSOUND,     // defSoundName
+   doom_skindefs,    // skinSounds
+   doom_soundnums,   // playerSounds
+
+   2,                // switchEpisode
 
    "ENDOOM",         // endTextName
 };
-*/
 
 //
 // DOOM II / Final DOOM
 //
-gameinfo_t giDoomCommercial =
+static gamemodeinfo_t giDoomCommercial =
 {
+   commercial,       // id
    Game_DOOM,        // type
-   GIF_HASDISK,      // flags
+
+   GIF_HASDISK | GIF_MAPXY, // flags
+
+   VNAME_DOOM2,      // versionName
+   BANNER_DOOM2,     // startupBanner
 
    11*TICRATE,       // titleTics
    0,                // advisorTics
@@ -552,6 +699,7 @@ gameinfo_t giDoomCommercial =
    40,               // c_numCharsPerLine
    sfx_tink,         // c_BellSound
    sfx_radio,        // c_ChatSound
+   CONBACK_COMRET,   // consoleBack
    &giDoomVText,     // vtextinfo
    &giDoomBigText,   // btextinfo
    0,                // blackIndex
@@ -580,9 +728,12 @@ gameinfo_t giDoomCommercial =
    mus_None,         // musMin
    NUMMUSIC,         // numMusic
    "d_",             // musPrefix
+   "runnin",         // defMusName
    DOOMDEFSOUND,     // defSoundName
    doom_skindefs,    // skinSounds
    doom_soundnums,   // playerSounds
+
+   3,                // switchEpisode
 
    "ENDOOM",         // endTextName
 };
@@ -590,10 +741,14 @@ gameinfo_t giDoomCommercial =
 //
 // Heretic Shareware
 //
-gameinfo_t giHereticSW =
+static gamemodeinfo_t giHereticSW =
 {
+   hereticsw,        // id
    Game_Heretic,     // type
    GIF_SHAREWARE | GIF_MNBIGFONT, // flags
+   VNAME_HTIC_SW,    // versionName
+
+   BANNER_HTIC_SW,   // startupBanner
 
    210,              // titleTics
    140,              // advisorTics
@@ -628,6 +783,7 @@ gameinfo_t giHereticSW =
    43,               // c_numCharsPerLine
    sfx_chat,         // c_BellSound
    sfx_chat,         // c_ChatSound
+   CONBACK_HERETIC,  // consoleBack
    &giHticVText,     // vtextinfo
    &giHticBigText,   // btextinfo
    0,                // blackIndex
@@ -656,9 +812,12 @@ gameinfo_t giHereticSW =
    hmus_None,        // musMin
    NUMHTICMUSIC,     // numMusic
    "mus_",           // musPrefix
+   "e1m1",           // defMusName
    HTICDEFSOUND,     // defSoundName
    htic_skindefs,    // skinSounds
    htic_soundnums,   // playerSounds
+
+   1,                // switchEpisode
 
    "ENDTEXT",        // endTextName
 };
@@ -670,10 +829,14 @@ gameinfo_t giHereticSW =
 // number of episodes, which is patched in this structure at
 // runtime.
 //
-gameinfo_t giHereticReg =
+static gamemodeinfo_t giHereticReg =
 {
+   hereticreg,       // id
    Game_Heretic,     // type   
    GIF_MNBIGFONT,    // flags
+   VNAME_HTIC_REG,   // versionName
+
+   BANNER_HTIC_REG,  // startupBanner
 
    210,              // titleTics
    140,              // advisorTics
@@ -708,6 +871,7 @@ gameinfo_t giHereticReg =
    43,               // c_numCharsPerLine
    sfx_chat,         // c_BellSound
    sfx_chat,         // c_ChatSound
+   CONBACK_HERETIC,  // consoleBack
    &giHticVText,     // vtextinfo
    &giHticBigText,   // btextinfo
    0,                // blackIndex
@@ -736,11 +900,26 @@ gameinfo_t giHereticReg =
    hmus_None,        // musMin
    NUMHTICMUSIC,     // numMusic
    "mus_",           // musPrefix
+   "e1m1",           // defMusName
    HTICDEFSOUND,     // defSoundName
    htic_skindefs,    // skinSounds
    htic_soundnums,   // playerSounds
 
+   2,                // switchEpisode
+
    "ENDTEXT",        // endTextName
+};
+
+// Game Mode Info Array
+gamemodeinfo_t *GameModeInfoObjects[NumGameModes] =
+{
+   &giDoomSW,         // shareware
+   &giDoomReg,        // registered
+   &giDoomCommercial, // commercial
+   &giDoomRetail,     // retail
+   &giHereticSW,      // hereticsw
+   &giHereticReg,     // hereticreg
+   &giDoomReg,        // indetermined - act like Doom, mostly.
 };
 
 //
@@ -757,6 +936,51 @@ void D_InitGameInfo(void)
 #endif
 
    gameModeInfo->teleFogType = E_SafeThingType(gameModeInfo->teleFogType);
+}
+
+//
+// OVERRIDE macro
+//
+// Keeps me from typing this over and over :)
+//
+#define OVERRIDE(a, b) \
+   if(mi-> a ## OR != b) \
+      gi-> a = mi-> a ## OR
+
+//
+// D_SetGameModeInfo
+//
+// Sets gameModeInfo, sets the missionInfo pointer, and then overrides any
+// data in gameModeInfo for which the missioninfo object has a replacement
+// value. This prevents checking for overrides throughout the source.
+//
+void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
+{
+   gamemodeinfo_t *gi;
+   missioninfo_t  *mi;
+
+   gameModeInfo = gi = GameModeInfoObjects[mode];
+
+   // If gamemode == indetermined, change the id in the structure.
+   // (We will be using object giDoomReg in that case).
+   if(mode == indetermined)
+      gi->id = indetermined;
+
+   // set the missioninfo pointer
+   gi->missionInfo = mi = MissionInfoObjects[mission];
+
+   // If gamemode == indetermined, we want to use the unknown gamemission
+   // information to set overrides, but *not* to actually set the mission
+   // information. Turns out the "none" value of gamemission has never 
+   // been used, and some code in the engine might crash if gamemission is
+   // actually set to "none".
+   if(mode == indetermined)
+      mi = &gmUnknown;
+
+   // apply overrides
+   OVERRIDE(versionName,   NULL);
+   OVERRIDE(startupBanner, NULL);
+   OVERRIDE(numEpisodes,      0);
 }
 
 // EOF

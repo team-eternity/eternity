@@ -289,7 +289,7 @@ void D_Display(void)
       // draw pause pic
       if(paused && !walkcam_active) // sf: not if walkcam active for
       {                             // frads taking screenshots
-         char *lumpname = gameModeInfo->pausePatch; 
+         const char *lumpname = gameModeInfo->pausePatch; 
          
          // haleyjd 03/12/03: changed to work
          // in heretic, and with user pause patches
@@ -502,87 +502,89 @@ typedef struct demostate_s
    char *name;
 } demostate_t;
 
-static const demostate_t demostates[][6] =
+static const demostate_t demostates[][NumGameModes] =
 {
    {
-      {D_DrawTitle, "TITLEPIC"}, // shareware
-      {D_DrawTitle, "TITLEPIC"}, // registerd
-      {D_DrawTitle, "TITLEPIC"}, // retail
-      {D_DrawTitle, "TITLEPIC"}, // commercial
-      {D_DrawTitle, "TITLE"},    // heretic shareware
-      {D_DrawTitle, "TITLE"},    // heretic registered/sosr
+      { D_DrawTitle,      "TITLEPIC" }, // shareware
+      { D_DrawTitle,      "TITLEPIC" }, // registerd
+      { D_DrawTitle,      "TITLEPIC" }, // retail
+      { D_DrawTitle,      "TITLEPIC" }, // commercial
+      { D_DrawTitle,      "TITLE"    }, // heretic shareware
+      { D_DrawTitle,      "TITLE"    }, // heretic registered/sosr
+      { D_SetPageName,     NULL      }, // indetermined - haleyjd 04/01/08
    },
 
    {
-      {G_DeferedPlayDemo, "DEMO1"},
-      {G_DeferedPlayDemo, "DEMO1"},
-      {G_DeferedPlayDemo, "DEMO1"},
-      {G_DeferedPlayDemo, "DEMO1"},
-      {D_DrawTitleA,      "TITLE"},
-      {D_DrawTitleA,      "TITLE"},
+      { G_DeferedPlayDemo, "DEMO1" },
+      { G_DeferedPlayDemo, "DEMO1" },
+      { G_DeferedPlayDemo, "DEMO1" },
+      { G_DeferedPlayDemo, "DEMO1" },
+      { D_DrawTitleA,      "TITLE" },
+      { D_DrawTitleA,      "TITLE" },
+      { NULL },
    },
 
    {
-      {D_SetPageName,     NULL},
-      {D_SetPageName,     NULL},
-      {D_SetPageName,     NULL},
-      {D_SetPageName,     NULL},
-      {G_DeferedPlayDemo, "DEMO1"},
-      {G_DeferedPlayDemo, "DEMO1"},
+      { D_SetPageName,     NULL    },
+      { D_SetPageName,     NULL    },
+      { D_SetPageName,     NULL    },
+      { D_SetPageName,     NULL    },
+      { G_DeferedPlayDemo, "DEMO1" },
+      { G_DeferedPlayDemo, "DEMO1" },
    },
 
    {
-      {G_DeferedPlayDemo, "DEMO2"},
-      {G_DeferedPlayDemo, "DEMO2"},
-      {G_DeferedPlayDemo, "DEMO2"},
-      {G_DeferedPlayDemo, "DEMO2"},
-      {D_SetPageName,     "ORDER"},
-      {D_SetPageName,     "CREDIT"},
+      { G_DeferedPlayDemo, "DEMO2"  },
+      { G_DeferedPlayDemo, "DEMO2"  },
+      { G_DeferedPlayDemo, "DEMO2"  },
+      { G_DeferedPlayDemo, "DEMO2"  },
+      { D_SetPageName,     "ORDER"  },
+      { D_SetPageName,     "CREDIT" },
    },
 
    {
-      {D_SetPageName,     "HELP2"},
-      {D_SetPageName,     "HELP2"},
-      {D_SetPageName,     "CREDIT"},
-      {D_DrawTitle,       "TITLEPIC"},
-      {G_DeferedPlayDemo, "DEMO2"},
-      {G_DeferedPlayDemo, "DEMO2"},
+      { D_SetPageName,     "HELP2"    },
+      { D_SetPageName,     "HELP2"    },
+      { D_SetPageName,     "CREDIT"   },
+      { D_DrawTitle,       "TITLEPIC" },
+      { G_DeferedPlayDemo, "DEMO2"    },
+      { G_DeferedPlayDemo, "DEMO2"    },
    },
 
    {
-      {G_DeferedPlayDemo, "DEMO3"},
-      {G_DeferedPlayDemo, "DEMO3"},
-      {G_DeferedPlayDemo, "DEMO3"},
-      {G_DeferedPlayDemo, "DEMO3"},
-      {D_SetPageName,     NULL},
-      {D_SetPageName,     NULL},
+      { G_DeferedPlayDemo, "DEMO3" },
+      { G_DeferedPlayDemo, "DEMO3" },
+      { G_DeferedPlayDemo, "DEMO3" },
+      { G_DeferedPlayDemo, "DEMO3" },
+      { D_SetPageName,     NULL    },
+      { D_SetPageName,     NULL    },
    },
 
    {
-      {NULL},
-      {NULL},
-      {NULL},
-      {D_SetPageName,     "CREDIT"},
-      {G_DeferedPlayDemo, "DEMO3"},
-      {G_DeferedPlayDemo, "DEMO3"},
+      { NULL },
+      { NULL },
+      { NULL },
+      { D_SetPageName,     "CREDIT" },
+      { G_DeferedPlayDemo, "DEMO3"  },
+      { G_DeferedPlayDemo, "DEMO3"  },
    },
 
    {
-      {NULL},
-      {NULL},
-      {NULL},
-      {G_DeferedPlayDemo, "DEMO4"},
-      {D_SetPageName,     "CREDIT"},
-      {D_SetPageName,     "CREDIT"},
+      { NULL },
+      { NULL },
+      { NULL },
+      { G_DeferedPlayDemo, "DEMO4"  },
+      { NULL },
+      { NULL },
    },
 
    {
-      {NULL},
-      {NULL},
-      {NULL},
-      {NULL},
-      {NULL},
-      {NULL},
+      { NULL },
+      { NULL },
+      { NULL },
+      { NULL },
+      { NULL },
+      { NULL },
    }
 };
 
@@ -604,12 +606,12 @@ void D_DoAdvanceDemo(void)
 
    // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
    // demo state resource names
-   state = &(demostates[++demosequence][gamemode]);
+   state = &(demostates[++demosequence][gameModeInfo->id]);
 
    if(!state->func) // time to wrap?
    {
       demosequence = 0;
-      state = &(demostates[0][gamemode]);
+      state = &(demostates[0][gameModeInfo->id]);
    }
 
    state->func(DEH_String(state->name));
@@ -928,7 +930,7 @@ static void D_SetGamePath(void)
    char gamedir[PATH_MAX + 1];
 
    psnprintf(gamedir, sizeof(gamedir), "%s/%s", 
-             basepath, gamemission_pathnames[gamemission]);
+             basepath, gamemission_pathnames[gameModeInfo->missionInfo->id]);
 
    if(!stat(gamedir, &sbuf)) // check for existence
    {
@@ -1496,6 +1498,8 @@ static void D_LoadResourceWad(void)
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
 
+static const char *game_name; // description of iwad
+
 //
 // IdentifyVersion
 //
@@ -1516,14 +1520,14 @@ static void D_LoadResourceWad(void)
 //   d) or $HOME
 //
 // jff 4/19/98 rewritten to use a more advanced search algorithm
-
-const char *game_name = "unknown game";      // description of iwad
-
+//
 void IdentifyVersion(void)
 {
    int         i;    //jff 3/24/98 index of args on commandline
    struct stat sbuf; //jff 3/24/98 used to test save path for existence
    char *iwad;
+   GameMode_t    gamemode;
+   GameMission_t gamemission;
 
    // locate the IWAD and determine game mode from it
 
@@ -1538,90 +1542,35 @@ void IdentifyVersion(void)
 		&gamemission,   // joel 10/16/98 gamemission added
 		&haswolflevels);
 
-      switch(gamemode)
+      // setup gameModeInfo
+      D_SetGameModeInfo(gamemode, gamemission);
+
+      // get appropriate name for the gamemode/mission
+      game_name = gameModeInfo->versionName;
+
+      // special hacks for localized DOOM II variants:
+      if(gamemode == commercial)
       {
-      case retail:
-         gameModeInfo = &giDoomReg;
-         gameModeInfo->numEpisodes = 4;       // haleyjd 05/21/06: patch this here
-         game_name = "Ultimate DOOM version"; // killough 8/8/98
-         break;
-
-      case registered:
-         gameModeInfo = &giDoomReg;
-         game_name = "DOOM Registered version";
-         break;
-
-      case shareware:
-         gameModeInfo = &giDoomReg;
-         gameModeInfo->numEpisodes = 1;
-         gameModeInfo->flags |= GIF_SHAREWARE; // haleyjd 05/21/06: patch these here
-         game_name = "DOOM Shareware version";
-         break;
-
-      case commercial:
-         gameModeInfo = &giDoomCommercial;
          // joel 10/16/98 Final DOOM fix
-         switch (gamemission)
+         if(gamemission == doom2)
          {
-         case pack_tnt:
-            game_name = "Final DOOM: TNT - Evilution version";
-            break;
-
-         case pack_plut:
-            game_name = "Final DOOM: The Plutonia Experiment version";
-            break;
-
-         case doom2:
-         default:
-
             i = strlen(iwad);
             if(i >= 10 && !strnicmp(iwad+i-10, "doom2f.wad", 10))
             {
                language = french;
                game_name = "DOOM II version, French language";
             }
-            else
-            {
-               game_name = haswolflevels ? "DOOM II version" :
-                  "DOOM II version, German edition, no Wolf levels";
-            }
-            break;
+            else if(!haswolflevels)
+               game_name = "DOOM II version, German edition, no Wolf levels";
          }
          // joel 10/16/98 end Final DOOM fix
 
          // haleyjd 10/13/05: freedoom override :)
          if(freedoom)
             game_name = "DOOM II, Freedoom version";
-         break;
-
-      case hereticsw:
-         gameModeInfo = &giHereticSW;
-         game_name = "Heretic Shareware version";
-         break;
-
-      case hereticreg:
-         gameModeInfo = &giHereticReg;
-         // haleyjd: patch # of episodes here if appropriate
-         if(gamemission == hticsosr)
-         {
-            gameModeInfo->numEpisodes = 6;
-            game_name = "Heretic: Shadow of the Serpent Riders version";
-         }
-         else
-            game_name = "Heretic Registered version";
-         break;
-
-      default:
-         break;
       }
 
       puts(game_name);
-
-      if(gamemode == indetermined)
-      {
-         gameModeInfo = &giDoomReg;
-         puts("Unknown Game Version, may not work");  // killough 8/8/98
-      }
 
       // haleyjd 11/23/06: set game path if -game wasn't used
       if(!gamepathset)
@@ -2391,57 +2340,7 @@ static void D_DoomInit(void)
    G_SetDefaultDMFlags(dmtype, true);
 
 #ifdef GAMEBAR
-   switch(gamemode)
-   {
-   case retail:
-      psnprintf(title, sizeof(title), "The Ultimate DOOM Startup");
-      break;
-   case shareware:
-      psnprintf(title, sizeof(title), "DOOM Shareware Startup");
-      break;
-   case registered:
-      psnprintf(title, sizeof(title), "DOOM Registered Startup");
-      break;
-   case commercial:
-      switch(gamemission)      // joel 10/16/98 Final DOOM fix
-      {
-      case pack_plut:
-         psnprintf(title, sizeof(title), "DOOM 2: Plutonia Experiment");
-         break;
-
-      case pack_tnt:
-         psnprintf(title, sizeof(title), "DOOM 2: TNT - Evilution");
-         break;
-
-      case doom2:
-      default:
-         psnprintf(title, sizeof(title), "DOOM 2: Hell on Earth");
-         break;
-      }
-      break;
-      // joel 10/16/98 end Final DOOM fix
-
-   case hereticsw:
-      psnprintf(title, sizeof(title), "Heretic Shareware Startup");
-      break;
-
-   case hereticreg:
-      switch(gamemission)
-      {
-      default:
-      case heretic:
-         psnprintf(title, sizeof(title), "Heretic Registered Startup");
-         break;
-      case hticsosr:
-         psnprintf(title, sizeof(title), "Heretic: Shadow of the Serpent Riders");
-         break;
-      }
-      break;
-
-   default:
-      psnprintf(title, sizeof(title), "Public DOOM");
-      break;
-   }
+   psnprintf(title, sizeof(title), gameModeInfo->startupBanner);
    printf("%s\n", title);
    printf("%s\nBuilt on %s at %s\n", title, version_date,
           version_time);    // killough 2/1/98
@@ -2597,7 +2496,7 @@ static void D_DoomInit(void)
        (p = M_CheckParm("-wart"))) && p < myargc - 1)
    {
       // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-      if(gamemode == commercial)
+      if(gameModeInfo->flags & GIF_MAPXY)
       {
          startmap = atoi(myargv[p + 1]);
          autostart = true;
@@ -2730,11 +2629,11 @@ static void D_DoomInit(void)
    }
    // End new startup strings
 
-   startupmsg("C_Init","Init console.");
-   C_Init();
-
    startupmsg("V_InitMisc","Init miscellaneous video patches.");
    V_InitMisc();
+
+   startupmsg("C_Init","Init console.");
+   C_Init();
 
    startupmsg("I_Init","Setting up machine state.");
    I_Init();

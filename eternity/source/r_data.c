@@ -929,8 +929,6 @@ void R_InitTranMap(int progress)
 
 void R_InitData(void)
 {
-   byte *palette;
-
    P_InitSkins();
    R_InitColormaps();                    // killough 3/20/98
    R_ClearSkyTextures();                 // haleyjd  8/30/02
@@ -940,10 +938,6 @@ void R_InitData(void)
    if(general_translucency)             // killough 3/1/98, 10/98
    {
       R_InitTranMap(1);          // killough 2/21/98, 3/6/98
-
-      palette = W_CacheLumpName("PLAYPAL", PU_STATIC);
-      V_InitFlexTranTable(palette);
-      Z_ChangeTag(palette, PU_CACHE);
    }
    else
    {
