@@ -2377,147 +2377,154 @@ endif()
 # These could move or disappear completely with no warning!
 #
 
-frame S_CLER_STND1 { sprite = CLER; tics = 6; action = Look; nextframe = S_CLER_STND2; dehackednum = 1581 }
-frame S_CLER_STND2 { sprite = CLER; spriteframe = 1; tics = 6; action = Look; nextframe = S_CLER_STND1; dehackednum = 1582 }
-frame S_CLER_WALK1 { sprite = CLER; tics = 4; action = Chase; nextframe = S_CLER_WALK2; dehackednum = 1583 }
-frame S_CLER_WALK2 { sprite = CLER; spriteframe = 1; tics = 4; action = Chase; nextframe = S_CLER_WALK3; dehackednum = 1584 }
-frame S_CLER_WALK3 { sprite = CLER; spriteframe = 2; tics = 4; action = Chase; nextframe = S_CLER_WALK4; dehackednum = 1585 }
-frame S_CLER_WALK4 { sprite = CLER; spriteframe = 3; tics = 4; action = Chase; nextframe = S_CLER_WALK1; dehackednum = 1586 }
-frame S_CLER_ATK1 { sprite = CLER; spriteframe = 4; tics = 6; action = SkelWhoosh; nextframe = S_CLER_ATK2; dehackednum = 1587 }
-frame S_CLER_ATK2 { sprite = CLER; spriteframe = 5; tics = 6; action = FaceTarget; nextframe = S_CLER_ATK3; dehackednum = 1588 }
-frame S_CLER_ATK3 { sprite = CLER; spriteframe = 6; tics = 6; action = ClericAtk; nextframe = S_CLER_WALK1; dehackednum = 1589 }
-frame S_CLER_PAIN { sprite = CLER; spriteframe = 7; tics = 8; action = Pain; nextframe = S_CLER_WALK1; dehackednum = 1590 }
-frame S_CLER_DTH1 { sprite = CLER; spriteframe = 8; tics = 8; action = Scream; nextframe = S_CLER_DTH2; dehackednum = 1591 }
-frame S_CLER_DTH2 { sprite = CLER; spriteframe = 9; tics = 8; nextframe = S_CLER_DTH3; dehackednum = 1592 }
-frame S_CLER_DTH3 { sprite = CLER; spriteframe = 10; tics = 8; nextframe = S_CLER_DTH4; dehackednum = 1593 }
-frame S_CLER_DTH4 { sprite = CLER; spriteframe = 11; tics = 8; nextframe = S_CLER_DTH5; dehackednum = 1594 }
-frame S_CLER_DTH5 { sprite = CLER; spriteframe = 12; tics = 8; nextframe = S_CLER_DTH6; dehackednum = 1595 }
-frame S_CLER_DTH6 { sprite = CLER; spriteframe = 13; tics = 8; nextframe = S_CLER_DTH7; dehackednum = 1596 }
-frame S_CLER_DTH7 { sprite = CLER; spriteframe = 14; tics = 8; nextframe = S_CLER_DTH8; dehackednum = 1597 }
-frame S_CLER_DTH8 { sprite = CLER; spriteframe = 15; tics = 8; action = Fall; nextframe = S_CLER_DTH9; dehackednum = 1598 }
-frame S_CLER_DTH9 { sprite = CLER; spriteframe = 16; tics = -1; dehackednum = 1599 }
-frame S_CLER_XDTH1 { sprite = CLER; spriteframe = 17; tics = 5; action = XScream; nextframe = S_CLER_XDTH2; dehackednum = 1600 }
-frame S_CLER_XDTH2 { sprite = CLER; spriteframe = 18; tics = 5; nextframe = S_CLER_XDTH3; dehackednum = 1601 }
-frame S_CLER_XDTH3 { sprite = CLER; spriteframe = 19; tics = 5; nextframe = S_CLER_XDTH4; dehackednum = 1602 }
-frame S_CLER_XDTH4 { sprite = CLER; spriteframe = 20; tics = 5; nextframe = S_CLER_XDTH5; dehackednum = 1603 }
-frame S_CLER_XDTH5 { sprite = CLER; spriteframe = 21; tics = 5; nextframe = S_CLER_XDTH6; dehackednum = 1604 }
-frame S_CLER_XDTH6 { sprite = CLER; spriteframe = 22; tics = 5; nextframe = S_CLER_XDTH7; dehackednum = 1605 }
-frame S_CLER_XDTH7 { sprite = CLER; spriteframe = 23; tics = 5; nextframe = S_CLER_XDTH8; dehackednum = 1606 }
-frame S_CLER_XDTH8 { sprite = CLER; spriteframe = 24; tics = 5; nextframe = S_CLER_XDTH9; dehackednum = 1607 }
-frame S_CLER_XDTH9 { sprite = CLER; spriteframe = 25; tics = 5; action = Fall; nextframe = S_CLER_XDTH10; dehackednum = 1608 }
-frame S_CLER_XDTH10 { sprite = CLER; spriteframe = 26; tics = -1; dehackednum = 1609 }
-frame S_CLER_RAISE1 { sprite = CLER; spriteframe = 15; tics = 5; nextframe = S_CLER_RAISE2; dehackednum = 1610 }
-frame S_CLER_RAISE2 { sprite = CLER; spriteframe = 14; tics = 5; nextframe = S_CLER_RAISE3; dehackednum = 1611 }
-frame S_CLER_RAISE3 { sprite = CLER; spriteframe = 13; tics = 5; nextframe = S_CLER_RAISE4; dehackednum = 1612 }
-frame S_CLER_RAISE4 { sprite = CLER; spriteframe = 12; tics = 5; nextframe = S_CLER_RAISE5; dehackednum = 1613 }
-frame S_CLER_RAISE5 { sprite = CLER; spriteframe = 11; tics = 5; nextframe = S_CLER_RAISE6; dehackednum = 1614 }
-frame S_CLER_RAISE6 { sprite = CLER; spriteframe = 10; tics = 5; nextframe = S_CLER_RAISE7; dehackednum = 1615 }
-frame S_CLER_RAISE7 { sprite = CLER; spriteframe = 9; tics = 5; nextframe = S_CLER_RAISE8; dehackednum = 1616 }
-frame S_CLER_RAISE8 { sprite = CLER; spriteframe = 8; tics = 5; nextframe = S_CLER_WALK1; dehackednum = 1617 }
-frame S_CBAL_1 { sprite = CBAL; fullbright = true; tics = 2; nextframe = S_CBAL_2; dehackednum = 1618 }
-frame S_CBAL_2 { sprite = CBAL; spriteframe = 1; fullbright = true; tics = 2; nextframe = S_CBAL_1; dehackednum = 1619 }
-frame S_CBAL_X1 { sprite = CBAL; spriteframe = 2; fullbright = true; tics = 5; nextframe = S_CBAL_X2; dehackednum = 1620 }
-frame S_CBAL_X2 { sprite = CBAL; spriteframe = 3; fullbright = true; tics = 5; nextframe = S_CBAL_X3; dehackednum = 1621 }
-frame S_CBAL_X3 { sprite = CBAL; spriteframe = 4; fullbright = true; tics = 5; nextframe = S_CBAL_X4; dehackednum = 1622 }
-frame S_CBAL_X4 { sprite = CBAL; spriteframe = 5; fullbright = true; tics = 5; dehackednum = 1623 }
+frame S_CLER_STND1  { cmp = "CLER| *|*| 6|Look      |@next"; dehackednum = 1581 }
+frame S_CLER_STND2  { cmp = "CLER| 1|*| 6|Look      |@prev"; dehackednum = 1582 }
+frame S_CLER_WALK1  { cmp = "CLER| *|*| 4|Chase     |@next"; dehackednum = 1583 }
+frame S_CLER_WALK2  { cmp = "CLER| 1|*| 4|Chase     |@next"; dehackednum = 1584 }
+frame S_CLER_WALK3  { cmp = "CLER| 2|*| 4|Chase     |@next"; dehackednum = 1585 }
+frame S_CLER_WALK4  { cmp = "CLER| 3|*| 4|Chase     |@next"; dehackednum = 1586 }
+frame S_CLER_ATK1   { cmp = "CLER| 4|*| 6|SkelWhoosh|@next"; dehackednum = 1587 }
+frame S_CLER_ATK2   { cmp = "CLER| 5|*| 6|FaceTarget|@next"; dehackednum = 1588 }
+frame S_CLER_ATK3   { cmp = "CLER| 6|*| 6|ClericAtk |S_CLER_WALK1"; dehackednum = 1589 }
+frame S_CLER_PAIN   { cmp = "CLER| 7|*| 8|Pain      |S_CLER_WALK1"; dehackednum = 1590 }
+frame S_CLER_DTH1   { cmp = "CLER| 8|*| 8|Scream    |@next"; dehackednum = 1591 }
+frame S_CLER_DTH2   { cmp = "CLER| 9|*| 8|*         |@next"; dehackednum = 1592 }
+frame S_CLER_DTH3   { cmp = "CLER|10|*| 8|*         |@next"; dehackednum = 1593 }
+frame S_CLER_DTH4   { cmp = "CLER|11|*| 8|*         |@next"; dehackednum = 1594 }
+frame S_CLER_DTH5   { cmp = "CLER|12|*| 8|*         |@next"; dehackednum = 1595 }
+frame S_CLER_DTH6   { cmp = "CLER|13|*| 8|*         |@next"; dehackednum = 1596 }
+frame S_CLER_DTH7   { cmp = "CLER|14|*| 8|*         |@next"; dehackednum = 1597 }
+frame S_CLER_DTH8   { cmp = "CLER|15|*| 8|Fall      |@next"; dehackednum = 1598 }
+frame S_CLER_DTH9   { cmp = "CLER|16|*|-1";                  dehackednum = 1599 }
+frame S_CLER_XDTH1  { cmp = "CLER|17|*| 5|XScream   |@next"; dehackednum = 1600 }
+frame S_CLER_XDTH2  { cmp = "CLER|18|*| 5|*         |@next"; dehackednum = 1601 }
+frame S_CLER_XDTH3  { cmp = "CLER|19|*| 5|*         |@next"; dehackednum = 1602 }
+frame S_CLER_XDTH4  { cmp = "CLER|20|*| 5|*         |@next"; dehackednum = 1603 }
+frame S_CLER_XDTH5  { cmp = "CLER|21|*| 5|*         |@next"; dehackednum = 1604 }
+frame S_CLER_XDTH6  { cmp = "CLER|22|*| 5|*         |@next"; dehackednum = 1605 }
+frame S_CLER_XDTH7  { cmp = "CLER|23|*| 5|*         |@next"; dehackednum = 1606 }
+frame S_CLER_XDTH8  { cmp = "CLER|24|*| 5|*         |@next"; dehackednum = 1607 }
+frame S_CLER_XDTH9  { cmp = "CLER|25|*| 5|Fall      |@next"; dehackednum = 1608 }
+frame S_CLER_XDTH10 { cmp = "CLER|26|*|-1";                  dehackednum = 1609 }
+frame S_CLER_RAISE1 { cmp = "CLER|15|*| 5|*         |@next"; dehackednum = 1610 }
+frame S_CLER_RAISE2 { cmp = "CLER|14|*| 5|*         |@next"; dehackednum = 1611 }
+frame S_CLER_RAISE3 { cmp = "CLER|13|*| 5|*         |@next"; dehackednum = 1612 }
+frame S_CLER_RAISE4 { cmp = "CLER|12|*| 5|*         |@next"; dehackednum = 1613 }
+frame S_CLER_RAISE5 { cmp = "CLER|11|*| 5|*         |@next"; dehackednum = 1614 }
+frame S_CLER_RAISE6 { cmp = "CLER|10|*| 5|*         |@next"; dehackednum = 1615 }
+frame S_CLER_RAISE7 { cmp = "CLER| 9|*| 5|*         |@next"; dehackednum = 1616 }
+frame S_CLER_RAISE8 { cmp = "CLER| 8|*| 5|*         |S_CLER_WALK1"; dehackednum = 1617 }
+frame S_CBAL_1      { cmp = "CBAL| *|T| 2|*         |@next"; dehackednum = 1618 }
+frame S_CBAL_2      { cmp = "CBAL| 1|T| 2|*         |@prev"; dehackednum = 1619 }
+frame S_CBAL_X1     { cmp = "CBAL| 2|T| 5|*         |@next"; dehackednum = 1620 }
+frame S_CBAL_X2     { cmp = "CBAL| 3|T| 5|*         |@next"; dehackednum = 1621 }
+frame S_CBAL_X3     { cmp = "CBAL| 4|T| 5|*         |@next"; dehackednum = 1622 }
+frame S_CBAL_X4     { cmp = "CBAL| 5|T| 5";                  dehackednum = 1623 }
 
-frame S_SPAWNFOG1 { sprite = TNT1; tics = 20; action = FogSpawn; nextframe = S_SPAWNFOG1; dehackednum = 1645 }
-frame S_FOGPATCHS1 { sprite = FOGS; tics = 7; action = FogMove; nextframe = S_FOGPATCHS2; dehackednum = 1646 }
-frame S_FOGPATCHS2 { sprite = FOGS; spriteframe = 1; tics = 7; action = FogMove; nextframe = S_FOGPATCHS3; dehackednum = 1647 }
-frame S_FOGPATCHS3 { sprite = FOGS; spriteframe = 2; tics = 7; action = FogMove; nextframe = S_FOGPATCHS4; dehackednum = 1648 }
-frame S_FOGPATCHS4 { sprite = FOGS; spriteframe = 3; tics = 7; action = FogMove; nextframe = S_FOGPATCHS5; dehackednum = 1649 }
-frame S_FOGPATCHS5 { sprite = FOGS; spriteframe = 4; tics = 7; action = FogMove; nextframe = S_FOGPATCHS1; dehackednum = 1650 }
-frame S_FOGPATCHS0 { sprite = FOGS; spriteframe = 4; tics = 5; dehackednum = 1651 }
-frame S_FOGPATCHM1 { sprite = FOGM; tics = 7; action = FogMove; nextframe = S_FOGPATCHM2; dehackednum = 1652 }
-frame S_FOGPATCHM2 { sprite = FOGM; spriteframe = 1; tics = 7; action = FogMove; nextframe = S_FOGPATCHM3; dehackednum = 1653 }
-frame S_FOGPATCHM3 { sprite = FOGM; spriteframe = 2; tics = 7; action = FogMove; nextframe = S_FOGPATCHM4; dehackednum = 1654 }
-frame S_FOGPATCHM4 { sprite = FOGM; spriteframe = 3; tics = 7; action = FogMove; nextframe = S_FOGPATCHM5; dehackednum = 1655 }
-frame S_FOGPATCHM5 { sprite = FOGM; spriteframe = 4; tics = 7; action = FogMove; nextframe = S_FOGPATCHM1; dehackednum = 1656 }
-frame S_FOGPATCHM0 { sprite = FOGS; tics = 5; nextframe = S_FOGPATCHMA; dehackednum = 1657 }
-frame S_FOGPATCHMA { sprite = FOGS; spriteframe = 1; tics = 5; nextframe = S_FOGPATCHMB; dehackednum = 1658 }
-frame S_FOGPATCHMB { sprite = FOGS; spriteframe = 2; tics = 5; nextframe = S_FOGPATCHMC; dehackednum = 1659 }
-frame S_FOGPATCHMC { sprite = FOGS; spriteframe = 3; tics = 5; nextframe = S_FOGPATCHMD; dehackednum = 1660 }
-frame S_FOGPATCHMD { sprite = FOGS; spriteframe = 4; tics = 5; nextframe = S_FOGPATCHS0; dehackednum = 1661 }
-frame S_FOGPATCHL1 { sprite = FOGL; tics = 7; action = FogMove; nextframe = S_FOGPATCHL2; dehackednum = 1662 }
-frame S_FOGPATCHL2 { sprite = FOGL; spriteframe = 1; tics = 7; action = FogMove; nextframe = S_FOGPATCHL3; dehackednum = 1663 }
-frame S_FOGPATCHL3 { sprite = FOGL; spriteframe = 2; tics = 7; action = FogMove; nextframe = S_FOGPATCHL4; dehackednum = 1664 }
-frame S_FOGPATCHL4 { sprite = FOGL; spriteframe = 3; tics = 7; action = FogMove; nextframe = S_FOGPATCHL5; dehackednum = 1665 }
-frame S_FOGPATCHL5 { sprite = FOGL; spriteframe = 4; tics = 7; action = FogMove; nextframe = S_FOGPATCHL1; dehackednum = 1666 }
-frame S_FOGPATCHL0 { sprite = FOGM; tics = 4; nextframe = S_FOGPATCHLA; dehackednum = 1667 }
-frame S_FOGPATCHLA { sprite = FOGM; spriteframe = 1; tics = 4; nextframe = S_FOGPATCHLB; dehackednum = 1668 }
-frame S_FOGPATCHLB { sprite = FOGM; spriteframe = 2; tics = 4; nextframe = S_FOGPATCHLC; dehackednum = 1669 }
-frame S_FOGPATCHLC { sprite = FOGM; spriteframe = 3; tics = 4; nextframe = S_FOGPATCHLD; dehackednum = 1670 }
-frame S_FOGPATCHLD { sprite = FOGM; spriteframe = 4; tics = 4; nextframe = S_FOGPATCHM0; dehackednum = 1671 }
-frame S_LCLER_WALK1 { sprite = CLER; tics = 4; action = Cleric2Chase; nextframe = S_LCLER_WALK2; dehackednum = 1672 }
-frame S_LCLER_WALK2 { sprite = CLER; spriteframe = 1; tics = 4; action = Cleric2Chase; nextframe = S_LCLER_WALK3; dehackednum = 1673 }
-frame S_LCLER_WALK3 { sprite = CLER; spriteframe = 2; tics = 4; action = Cleric2Chase; nextframe = S_LCLER_WALK4; dehackednum = 1674 }
-frame S_LCLER_WALK4 { sprite = CLER; spriteframe = 3; tics = 4; action = Cleric2Chase; nextframe = S_LCLER_WALK1; dehackednum = 1675 }
-frame S_LCLER_ATK1 { sprite = CLER; tics = 4; action = Cleric2Decide; nextframe = S_LCLER_ATK2; dehackednum = 1676 }
-frame S_LCLER_ATK2 { sprite = CLER; spriteframe = 4; tics = 6; action = SkelWhoosh; nextframe = S_LCLER_ATK3; dehackednum = 1677 }
-frame S_LCLER_ATK3 { sprite = CLER; spriteframe = 5; tics = 6; action = FaceTarget; nextframe = S_LCLER_ATK4; dehackednum = 1678 }
-frame S_LCLER_ATK4 { sprite = CLER; spriteframe = 6; tics = 6; action = Cleric2Attack; nextframe = S_LCLER_WALK1; dehackednum = 1679 }
-frame S_LCLER_PAIN { sprite = CLER; spriteframe = 7; tics = 8; action = Pain; nextframe = S_LCLER_WALK1; dehackednum = 1680 }
-frame S_LCLER_SPEC { sprite = LCLR; fullbright = true; tics = 3; nextframe = S_LCLER_SPEC2; dehackednum = 1681 }
-frame S_LCLER_SPEC2 { sprite = LCLR; spriteframe = 1; fullbright = true; tics = 3; nextframe = S_LCLER_SPEC3; dehackednum = 1682 }
-frame S_LCLER_SPEC3 { sprite = LCLR; spriteframe = 2; fullbright = true; tics = 4; nextframe = S_LCLER_WALK1; dehackednum = 1683 }
-frame S_LCLER_TELE1 { sprite = CLER; tics = 10; nextframe = S_LCLER_WALK1; dehackednum = 1684 }
-frame S_LCLER_BREAK1 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK2; dehackednum = 1685 }
-frame S_LCLER_BREAK2 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK3; dehackednum = 1686 }
-frame S_LCLER_BREAK3 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK4; dehackednum = 1687 }
-frame S_LCLER_BREAK4 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK5; dehackednum = 1688 }
-frame S_LCLER_BREAK5 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK6; dehackednum = 1689 }
-frame S_LCLER_BREAK6 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK7; dehackednum = 1690 }
-frame S_LCLER_BREAK7 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK8; dehackednum = 1691 }
-frame S_LCLER_BREAK8 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK9; dehackednum = 1692 }
-frame S_LCLER_BREAK9 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_BREAK10; dehackednum = 1693 }
-frame S_LCLER_BREAK10 { sprite = LCLR; fullbright = true; tics = 4; action = ClericBreak; nextframe = S_LCLER_WALK1; dehackednum = 1694 }
-frame S_DWARFSTAND1 { sprite = DWRF; tics = 16; action = Look; nextframe = S_DWARFSTAND2; dehackednum = 1695 }
-frame S_DWARFSTAND2 { sprite = DWRF; spriteframe = 1; tics = 16; action = Look; nextframe = S_DWARFSTAND1; dehackednum = 1696 }
-frame S_DWARFWALK1 { sprite = DWRF; tics = 4; action = Chase; nextframe = S_DWARFWALK2; dehackednum = 1697 }
-frame S_DWARFWALK2 { sprite = DWRF; spriteframe = 1; tics = 4; action = Chase; nextframe = S_DWARFWALK1; dehackednum = 1698 }
-frame S_DWARFPAIN { sprite = DWRF; spriteframe = 2; tics = 16; action = Pain; nextframe = S_DWARFWALK1; dehackednum = 1699 }
-frame S_DWARFDEATH1 { sprite = DWRF; spriteframe = 3; tics = 16; action = Scream; nextframe = S_DWARFDEATH2; dehackednum = 1700 }
-frame S_DWARFDEATH2 { sprite = DWRF; spriteframe = 3; tics = 35; action = DwarfDie; nextframe = S_DWARFDEATH3; dehackednum = 1701 }
-frame S_DWARFDEATH3 { sprite = TNT1; tics = 16; action = DwarfDie; nextframe = S_DWARFDEATH4; dehackednum = 1702 }
-frame S_DWARFDEATH4 { sprite = TNT1; tics = 16; action = Fall; nextframe = S_DWARFDEATH5; dehackednum = 1703 }
-frame S_DWARFDEATH5 { sprite = TNT1; tics = -1; dehackednum = 1704 }
-frame S_DWARFATK1 { sprite = DWRF; spriteframe = 2; tics = 4; action = DwarfLDOCMagic; nextframe = S_DWARFATK2; dehackednum = 1705 }
-frame S_DWARFREDAURA1 { sprite = DWRF; spriteframe = 7; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFREDAURA2; dehackednum = 1706 }
-frame S_DWARFREDAURA2 { sprite = DWRF; spriteframe = 8; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFREDAURA3; dehackednum = 1707 }
-frame S_DWARFREDAURA3 { sprite = DWRF; spriteframe = 9; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFATK2; dehackednum = 1708 }
-frame S_DWARFBLUEAURA1 { sprite = DWRF; spriteframe = 4; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFBLUEAURA2; dehackednum = 1709 }
-frame S_DWARFBLUEAURA2 { sprite = DWRF; spriteframe = 5; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFBLUEAURA3; dehackednum = 1710 }
-frame S_DWARFBLUEAURA3 { sprite = DWRF; spriteframe = 6; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFATK2; dehackednum = 1711 }
-frame S_DWARFGREENAURA1 { sprite = DWRF; spriteframe = 10; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFGREENAURA2; dehackednum = 1712 }
-frame S_DWARFGREENAURA2 { sprite = DWRF; spriteframe = 11; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFGREENAURA3; dehackednum = 1713 }
-frame S_DWARFGREENAURA3 { sprite = DWRF; spriteframe = 12; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFWALK1; dehackednum = 1714 }
-frame S_DWARFPURPLEAURA1 { sprite = DWRF; spriteframe = 13; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFPURPLEAURA2; dehackednum = 1715 }
-frame S_DWARFPURPLEAURA2 { sprite = DWRF; spriteframe = 14; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFPURPLEAURA3; dehackednum = 1716 }
-frame S_DWARFPURPLEAURA3 { sprite = DWRF; spriteframe = 15; fullbright = true; tics = 4; action = FaceTarget; nextframe = S_DWARFATK2; dehackednum = 1717 }
-frame S_DWARFATK2 { sprite = DWRF; spriteframe = 2; tics = 4; action = DwarfFWAEMagic; nextframe = S_DWARFWALK1; dehackednum = 1718 }
-frame S_CYBERGUARD1 { tics = 10; action = CyberGuardSigh; nextframe = S_CYBERGUARD1; dehackednum = 1719 }
-frame S_CYBERGUARD2LOOK { tics = 10; action = Look; nextframe = S_CYBERGUARD2LOOK; dehackednum = 1720 }
-frame S_CYBERGUARD2SEE { tics = 20; dehackednum = 1721 }
-frame S_ALTDWARFSTAND1 { sprite = FDWF; tics = 16; action = Look; nextframe = S_ALTDWARFSTAND2; dehackednum = 1722 }
-frame S_ALTDWARFSTAND2 { sprite = FDWF; spriteframe = 1; tics = 16; action = Look; nextframe = S_ALTDWARFSTAND1; dehackednum = 1723 }
-frame S_ALTDWARFWALK1 { sprite = FDWF; tics = 4; action = DwarfAlterEgoChase; nextframe = S_ALTDWARFWALK2; dehackednum = 1724 }
-frame S_ALTDWARFWALK2 { sprite = FDWF; spriteframe = 1; tics = 4; action = DwarfAlterEgoChase; nextframe = S_ALTDWARFWALK1; dehackednum = 1725 }
-frame S_ALTDWARFPAIN { sprite = FDWF; spriteframe = 2; tics = 16; action = Pain; nextframe = S_ALTDWARFWALK1; dehackednum = 1726 }
-frame S_ALTDWARFDEATH1 { sprite = FDWF; spriteframe = 3; tics = 16; action = Scream; nextframe = S_ALTDWARFDEATH2; dehackednum = 1727 }
-frame S_ALTDWARFDEATH2 { sprite = FDWF; spriteframe = 3; tics = 35; action = DwarfDie; nextframe = S_ALTDWARFDEATH3; dehackednum = 1728 }
-frame S_ALTDWARFDEATH3 { sprite = TNT1; tics = 16; action = DwarfDie; nextframe = S_ALTDWARFDEATH4; dehackednum = 1729 }
-frame S_ALTDWARFDEATH4 { sprite = TNT1; tics = 16; action = Fall; nextframe = S_ALTDWARFDEATH5; dehackednum = 1730 }
-frame S_ALTDWARFDEATH5 { sprite = TNT1; tics = -1; dehackednum = 1731 }
-frame S_ALTDWARFATTACK { sprite = FDWF; spriteframe = 2; tics = 4; action = DwarfAlterEgoAttack; nextframe = S_ALTDWARFWALK1; dehackednum = 1732 }
-frame S_GRENADEFLIGHT { sprite = GREN; tics = 135; action = Die; nextframe = S_GRENADEFLIGHT; dehackednum = 1733 }
-frame S_PNS2_1 { sprite = PNS2; fullbright = true; tics = 6; nextframe = S_PNS2_2; dehackednum = 1734 }
-frame S_PNS2_2 { sprite = PNS2; spriteframe = 1; fullbright = true; tics = 6; nextframe = S_PNS2_3; dehackednum = 1735 }
-frame S_PNS2_3 { sprite = PNS2; spriteframe = 2; fullbright = true; tics = 6; nextframe = S_PNS2_4; dehackednum = 1736 }
-frame S_PNS2_4 { sprite = PNS2; spriteframe = 3; fullbright = true; tics = 6; nextframe = S_PNS2_1; dehackednum = 1737 }
-frame S_PHOENIXSHOT1 { fullbright = true; tics = 5; action = PhoenixTracer; nextframe = S_PHOENIXSHOT1; dehackednum = 1738 }
-frame S_PHOENIXSHOTX1 { tics = 4; nextframe = S_PHOENIXSHOTX2; dehackednum = 1739 }
-frame S_PHOENIXSHOTX2 { tics = 4; nextframe = S_PHOENIXSHOTX3; dehackednum = 1740 }
-frame S_PHOENIXSHOTX3 { tics = 4; nextframe = S_PHOENIXSHOTX4; dehackednum = 1741 }
-frame S_PHOENIXSHOTX4 { tics = 4; nextframe = S_PHOENIXSHOTX5; dehackednum = 1742 }
-frame S_PHOENIXSHOTX5 { tics = 4; dehackednum = 1743 }
+frame S_SPAWNFOG1   { cmp = "TNT1| *|*|20|FogSpawn|@this"; dehackednum = 1645 }
+frame S_FOGPATCHS1  { cmp = "FOGS| *|*| 7|FogMove |@next"; dehackednum = 1646 }
+frame S_FOGPATCHS2  { cmp = "FOGS| 1|*| 7|FogMove |@next"; dehackednum = 1647 }
+frame S_FOGPATCHS3  { cmp = "FOGS| 2|*| 7|FogMove |@next"; dehackednum = 1648 }
+frame S_FOGPATCHS4  { cmp = "FOGS| 3|*| 7|FogMove |@next"; dehackednum = 1649 }
+frame S_FOGPATCHS5  { cmp = "FOGS| 4|*| 7|FogMove |@next"; dehackednum = 1650 }
+frame S_FOGPATCHS0  { cmp = "FOGS| 4|*| 5";                dehackednum = 1651 }
+frame S_FOGPATCHM1  { cmp = "FOGM| *|*| 7|FogMove |@next"; dehackednum = 1652 }
+frame S_FOGPATCHM2  { cmp = "FOGM| 1|*| 7|FogMove |@next"; dehackednum = 1653 }
+frame S_FOGPATCHM3  { cmp = "FOGM| 2|*| 7|FogMove |@next"; dehackednum = 1654 }
+frame S_FOGPATCHM4  { cmp = "FOGM| 3|*| 7|FogMove |@next"; dehackednum = 1655 }
+frame S_FOGPATCHM5  { cmp = "FOGM| 4|*| 7|FogMove |S_FOGPATCHM1"; dehackednum = 1656 }
+frame S_FOGPATCHM0  { cmp = "FOGS| *|*| 5|*       |@next"; dehackednum = 1657 }
+frame S_FOGPATCHMA  { cmp = "FOGS| 1|*| 5|*       |@next"; dehackednum = 1658 }
+frame S_FOGPATCHMB  { cmp = "FOGS| 2|*| 5|*       |@next"; dehackednum = 1659 }
+frame S_FOGPATCHMC  { cmp = "FOGS| 3|*| 5|*       |@next"; dehackednum = 1660 }
+frame S_FOGPATCHMD  { cmp = "FOGS| 4|*| 5|*       |S_FOGPATCHS0"; dehackednum = 1661 }
+frame S_FOGPATCHL1  { cmp = "FOGL| *|*| 7|FogMove |@next"; dehackednum = 1662 }
+frame S_FOGPATCHL2  { cmp = "FOGL| 1|*| 7|FogMove |@next"; dehackednum = 1663 }
+frame S_FOGPATCHL3  { cmp = "FOGL| 2|*| 7|FogMove |@next"; dehackednum = 1664 }
+frame S_FOGPATCHL4  { cmp = "FOGL| 3|*| 7|FogMove |@next"; dehackednum = 1665 }
+frame S_FOGPATCHL5  { cmp = "FOGL| 4|*| 7|FogMove |S_FOGPATCHL1"; dehackednum = 1666 }
+frame S_FOGPATCHL0  { cmp = "FOGM| *|*| 4|*       |@next"; dehackednum = 1667 }
+frame S_FOGPATCHLA  { cmp = "FOGM| 1|*| 4|*       |@next"; dehackednum = 1668 }
+frame S_FOGPATCHLB  { cmp = "FOGM| 2|*| 4|*       |@next"; dehackednum = 1669 }
+frame S_FOGPATCHLC  { cmp = "FOGM| 3|*| 4|*       |@next"; dehackednum = 1670 }
+frame S_FOGPATCHLD  { cmp = "FOGM| 4|*| 4|*       |S_FOGPATCHM0"; dehackednum = 1671 }
+
+frame S_LCLER_WALK1   { cmp = "CLER| *|*| 4|Cleric2Chase |@next"; dehackednum = 1672 }
+frame S_LCLER_WALK2   { cmp = "CLER| 1|*| 4|Cleric2Chase |@next"; dehackednum = 1673 }
+frame S_LCLER_WALK3   { cmp = "CLER| 2|*| 4|Cleric2Chase |@next"; dehackednum = 1674 }
+frame S_LCLER_WALK4   { cmp = "CLER| 3|*| 4|Cleric2Chase |S_LCLER_WALK1"; dehackednum = 1675 }
+frame S_LCLER_ATK1    { cmp = "CLER| *|*| 4|Cleric2Decide|@next"; dehackednum = 1676 }
+frame S_LCLER_ATK2    { cmp = "CLER| 4|*| 6|SkelWhoosh   |@next"; dehackednum = 1677 }
+frame S_LCLER_ATK3    { cmp = "CLER| 5|*| 6|FaceTarget   |@next"; dehackednum = 1678 }
+frame S_LCLER_ATK4    { cmp = "CLER| 6|*| 6|Cleric2Attack|S_LCLER_WALK1"; dehackednum = 1679 }
+frame S_LCLER_PAIN    { cmp = "CLER| 7|*| 8|Pain         |S_LCLER_WALK1"; dehackednum = 1680 }
+frame S_LCLER_SPEC    { cmp = "LCLR| *|T| 3|*            |@next"; dehackednum = 1681 }
+frame S_LCLER_SPEC2   { cmp = "LCLR| 1|T| 3|*            |@next"; dehackednum = 1682 }
+frame S_LCLER_SPEC3   { cmp = "LCLR| 2|T| 4|*            |S_LCLER_WALK1"; dehackednum = 1683 }
+frame S_LCLER_TELE1   { cmp = "CLER| *|T|10|*            |S_LCLER_WALK1"; dehackednum = 1684 }
+frame S_LCLER_BREAK1  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1685 }
+frame S_LCLER_BREAK2  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1686 }
+frame S_LCLER_BREAK3  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1687 }
+frame S_LCLER_BREAK4  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1688 }
+frame S_LCLER_BREAK5  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1689 }
+frame S_LCLER_BREAK6  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1690 }
+frame S_LCLER_BREAK7  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1691 }
+frame S_LCLER_BREAK8  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1692 }
+frame S_LCLER_BREAK9  { cmp = "LCLR| *|T| 4|ClericBreak  |@next"; dehackednum = 1693 }
+frame S_LCLER_BREAK10 { cmp = "LCLR| *|T| 4|ClericBreak  |S_LCLER_WALK1"; dehackednum = 1694 }
+
+frame S_DWARFSTAND1 { cmp = "DWRF|*|*|16|Look    |@next"; dehackednum = 1695 }
+frame S_DWARFSTAND2 { cmp = "DWRF|1|*|16|Look    |@prev"; dehackednum = 1696 }
+frame S_DWARFWALK1  { cmp = "DWRF|*|*| 4|Chase   |@next"; dehackednum = 1697 }
+frame S_DWARFWALK2  { cmp = "DWRF|1|*| 4|Chase   |@prev"; dehackednum = 1698 }
+frame S_DWARFPAIN   { cmp = "DWRF|2|*|16|Pain    |S_DWARFWALK1"; dehackednum = 1699 }
+frame S_DWARFDEATH1 { cmp = "DWRF|3|*|16|Scream  |@next"; dehackednum = 1700 }
+frame S_DWARFDEATH2 { cmp = "DWRF|3|*|35|DwarfDie|@next"; dehackednum = 1701 }
+frame S_DWARFDEATH3 { cmp = "TNT1|*|*|16|DwarfDie|@next"; dehackednum = 1702 }
+frame S_DWARFDEATH4 { cmp = "TNT1|*|*|16|Fall    |@next"; dehackednum = 1703 }
+frame S_DWARFDEATH5 { cmp = "TNT1|*|*|-1";                dehackednum = 1704 }
+frame S_DWARFATK1   { cmp = "DWRF|2|*| 4|DwarfLDOCMagic|S_DWARFATK2"; dehackednum = 1705 }
+
+frame S_DWARFREDAURA1    { cmp = "DWRF| 7|T|4|FaceTarget    |@next"; dehackednum = 1706 }
+frame S_DWARFREDAURA2    { cmp = "DWRF| 8|T|4|FaceTarget    |@next"; dehackednum = 1707 }
+frame S_DWARFREDAURA3    { cmp = "DWRF| 9|T|4|FaceTarget    |S_DWARFATK2";  dehackednum = 1708 }
+frame S_DWARFBLUEAURA1   { cmp = "DWRF| 4|T|4|FaceTarget    |@next"; dehackednum = 1709 }
+frame S_DWARFBLUEAURA2   { cmp = "DWRF| 5|T|4|FaceTarget    |@next"; dehackednum = 1710 }
+frame S_DWARFBLUEAURA3   { cmp = "DWRF| 6|T|4|FaceTarget    |S_DWARFATK2";  dehackednum = 1711 }
+frame S_DWARFGREENAURA1  { cmp = "DWRF|10|T|4|FaceTarget    |@next"; dehackednum = 1712 }
+frame S_DWARFGREENAURA2  { cmp = "DWRF|11|T|4|FaceTarget    |@next"; dehackednum = 1713 }
+frame S_DWARFGREENAURA3  { cmp = "DWRF|12|T|4|FaceTarget    |S_DWARFWALK1"; dehackednum = 1714 }
+frame S_DWARFPURPLEAURA1 { cmp = "DWRF|13|T|4|FaceTarget    |@next"; dehackednum = 1715 }
+frame S_DWARFPURPLEAURA2 { cmp = "DWRF|14|T|4|FaceTarget    |@next"; dehackednum = 1716 }
+frame S_DWARFPURPLEAURA3 { cmp = "DWRF|15|T|4|FaceTarget    |S_DWARFATK2";  dehackednum = 1717 }
+frame S_DWARFATK2        { cmp = "DWRF| 2|*|4|DwarfFWAEMagic|S_DWARFWALK1"; dehackednum = 1718 }
+
+frame S_CYBERGUARD1     { cmp="*|*|*|10|CyberGuardSigh|@this"; dehackednum = 1719 }
+frame S_CYBERGUARD2LOOK { cmp="*|*|*|10|Look          |@this"; dehackednum = 1720 }
+frame S_CYBERGUARD2SEE  { cmp="*|*|*|20"; dehackednum = 1721 }
+
+frame S_ALTDWARFSTAND1 { cmp="FDWF|*|*|16|Look              |@next"; dehackednum = 1722 }
+frame S_ALTDWARFSTAND2 { cmp="FDWF|1|*|16|Look              |@prev"; dehackednum = 1723 }
+frame S_ALTDWARFWALK1  { cmp="FDWF|*|*| 4|DwarfAlterEgoChase|@next"; dehackednum = 1724 }
+frame S_ALTDWARFWALK2  { cmp="FDWF|1|*| 4|DwarfAlterEgoChase|@prev"; dehackednum = 1725 }
+frame S_ALTDWARFPAIN   { cmp="FDWF|2|*|16|Pain              |S_ALTDWARFWALK1"; dehackednum = 1726 }
+frame S_ALTDWARFDEATH1 { cmp="FDWF|3|*|16|Scream            |@next"; dehackednum = 1727 }
+frame S_ALTDWARFDEATH2 { cmp="FDWF|3|*|35|DwarfDie          |@next"; dehackednum = 1728 }
+frame S_ALTDWARFDEATH3 { cmp="TNT1|*|*|16|DwarfDie          |@next"; dehackednum = 1729 }
+frame S_ALTDWARFDEATH4 { cmp="TNT1|*|*|16|Fall              |@next"; dehackednum = 1730 }
+frame S_ALTDWARFDEATH5 { cmp="TNT1|*|*|-1";                          dehackednum = 1731 }
+frame S_ALTDWARFATTACK { cmp="FDWF|2|*| 4|DwarfAlterEgoAttack|S_ALTDWARFWALK1"; dehackednum = 1732 }
+
+frame S_GRENADEFLIGHT  { cmp="GREN|*|*|135|Die|@this"; dehackednum = 1733 }
+
+frame S_PNS2_1         { cmp="PNS2|*|T|6|*|@next";    dehackednum = 1734 }
+frame S_PNS2_2         { cmp="PNS2|1|T|6|*|@next";    dehackednum = 1735 }
+frame S_PNS2_3         { cmp="PNS2|2|T|6|*|@next";    dehackednum = 1736 }
+frame S_PNS2_4         { cmp="PNS2|3|T|6|*|S_PNS2_1"; dehackednum = 1737 }
+frame S_PHOENIXSHOT1   { cmp="*   |*|T|5|PhoenixTracer|@this"; dehackednum = 1738 }
+frame S_PHOENIXSHOTX1  { cmp="*   |*|*|4|*|@next"; dehackednum = 1739 }
+frame S_PHOENIXSHOTX2  { cmp="*   |*|*|4|*|@next"; dehackednum = 1740 }
+frame S_PHOENIXSHOTX3  { cmp="*   |*|*|4|*|@next"; dehackednum = 1741 }
+frame S_PHOENIXSHOTX4  { cmp="*   |*|*|4|*|@next"; dehackednum = 1742 }
+frame S_PHOENIXSHOTX5  { cmp="*   |*|*|4"; dehackednum = 1743 }
 

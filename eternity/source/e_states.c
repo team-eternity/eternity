@@ -236,7 +236,8 @@ boolean E_AutoAllocStateDEHNum(int statenum)
    do
    {
       dehnum = edf_alloc_state_dehnum--;
-   } while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) != NUMSTATES);
+   } 
+   while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) != NUMSTATES);
 
    // ran out while looking for an unused number?
    if(dehnum < 0)
@@ -836,6 +837,12 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
 // Compressed format:
 // "sprite|spriteframe|fullbright|tics|action|nextframe|ptcl|misc|args"
 //
+// haleyjd 04/03/08: An alternate syntax is also now supported:
+// "sprite|spriteframe|fullbright|tics|action(args,...)|nextframe|ptcl|misc"
+//
+// This new syntax for argument specification is preferred, and the old
+// one is now deprecated.
+//
 // Fields at the end can be left off. "*" in a field means to use
 // the normal default value.
 //
@@ -969,7 +976,7 @@ static void E_ProcessCmpState(const char *value, int i)
       }
    }
 
-   early_args_found = false;
+   early_args_found = early_args_end = false;
 
    // free the qstring
    M_QStrFree(&buffer);
