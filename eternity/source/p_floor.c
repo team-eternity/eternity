@@ -137,9 +137,9 @@ result_e T_MovePlane
                // SoM: if the move in the master sector was bad,
                // keep the 3d sides consistant.
                if(move3dsides)
-                  P_Scroll3DSides(sector, false, sector->floorz - dest, crush);
+                  P_Scroll3DSides(sector, false, lastpos - dest, crush);
                if(moveattached)
-                  P_MoveAttached(sector, false, sector->floorz - dest, crush);
+                  P_MoveAttached(sector, false, lastpos - dest, crush);
                
                // Note from SoM: Shouldn't we return crushed if the
                // last move was rejected?
@@ -317,9 +317,9 @@ result_e T_MovePlane
             }
             if(moveattached)
             {
-               if(!P_MoveAttached(sector, true, lastpos-destheight, crush))
+               if(!P_MoveAttached(sector, true, destheight-lastpos, crush))
                {
-                  P_MoveAttached(sector, true, destheight-lastpos, crush);
+                  P_MoveAttached(sector, true, lastpos-destheight, crush);
                   return crushed;
                }
             }            
@@ -335,9 +335,9 @@ result_e T_MovePlane
                P_CheckSector(sector,crush,destheight-lastpos,1); //jff 3/19/98 use faster chk
                
                if(move3dsides)
-                  P_Scroll3DSides(sector, true, destheight-sector->ceilingz, crush);
+                  P_Scroll3DSides(sector, true, lastpos-destheight, crush);
                if(moveattached)
-                  P_MoveAttached(sector, true, destheight-sector->ceilingz, crush);
+                  P_MoveAttached(sector, true, lastpos-destheight, crush);
             }
             return pastdest;
          }
