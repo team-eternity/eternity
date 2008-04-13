@@ -33,9 +33,13 @@
 #include "m_dllist.h"
 #include "s_sndseq.h"
 
+// haleyjd 04/13/08: this replaces S_sfx[0].
+extern sfxinfo_t NullSound;
+
 sfxinfo_t *E_SoundForName(const char *);
 sfxinfo_t *E_EDFSoundForName(const char *name);
 sfxinfo_t *E_SoundForDEHNum(int);
+sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen);
 
 void E_NewWadSound(const char *);
 void E_PreCacheSounds(void);
@@ -114,11 +118,12 @@ extern cfg_opt_t edf_sndseq_opts[];
 extern cfg_opt_t edf_seqmgr_opts[];
 
 void    E_ProcessSounds(cfg_t *cfg);
-void    E_ProcessAdditiveSounds(cfg_t *cfg);
 void    E_ProcessSoundDeltas(cfg_t *cfg, boolean add);
 void    E_ProcessSndSeqs(cfg_t *cfg);
 void    E_ProcessAmbience(cfg_t *cfg);
 boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
+boolean E_NeedDefaultSounds(void);
+boolean E_NeedDefaultSequences(void);
 
 #define EDF_SEC_SOUND     "sound"
 #define EDF_SEC_SDELTA    "sounddelta"

@@ -1219,7 +1219,7 @@ static void E_ProcessSoundLumps(void)
       E_EDFLogPuts("\t\tNo ESNDSEQ lump found.\n");
    else
    {
-      E_ProcessAdditiveSounds(cfg);
+      E_ProcessSounds(cfg);
       E_ProcessSoundDeltas(cfg, true);
       E_ProcessAmbience(cfg);
       E_ProcessSndSeqs(cfg);
@@ -1232,7 +1232,7 @@ static void E_ProcessSoundLumps(void)
       E_EDFLogPuts("\t\tNo ESNDINFO lump found.\n");
    else
    {
-      E_ProcessAdditiveSounds(cfg);
+      E_ProcessSounds(cfg);
       E_ProcessSoundDeltas(cfg, true);
       E_ProcessAmbience(cfg);
       E_ProcessSndSeqs(cfg);
@@ -1488,51 +1488,48 @@ static void E_TryDefaultSounds(void)
 {
    cfg_t *soundcfg;
    const char *soundfn;
+   int numsfx;
 
-   E_EDFLogPuts("\t\tAttempting to load defaults from sounds.edf\n");
+   E_EDFLogPuts("\t\tAttempting to load default sounds.edf\n");
 
    soundfn = E_BuildDefaultFn("sounds.edf");
 
    soundcfg = E_ParseEDFFile(soundfn, sound_only_opts);
 
-   NUMSFX = cfg_size(soundcfg, EDF_SEC_SOUND);
+   numsfx = cfg_size(soundcfg, EDF_SEC_SOUND);
 
-   if(!NUMSFX)
-      E_EDFLoggedErr(2, "E_TryDefaultSounds: missing default sounds.\n");
+   if(E_NeedDefaultSounds())
+   {
+      if(!numsfx)
+         E_EDFLoggedErr(2, "E_TryDefaultSounds: missing default sounds.\n");
 
-   E_AllocSounds(soundcfg);
+      E_AllocSounds(soundcfg);
+   }
+
+   // haleyjd 04/13/08: Though no sequences are required, if there are none
+   // defined, we should parse sounds.edf for any that are defined there.
+   // This is for compatibility with older mods predating sequences.
+   if(E_NeedDefaultSequences())
+      E_ProcessSndSeqs(soundcfg);
 
    cfg_free(soundcfg);
 }
 
+// haleyjd 04/13/08: this replaces S_sfx[0].
+sfxinfo_t NullSound;
+
 //
 // E_AllocSounds
-//
-// Allocates and initializes the S_sfx table. This is here because it
-// needs to interact with defaults loading.
 //
 static void E_AllocSounds(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Processing sound definitions\n");
 
-   // find out how many sounds are defined
-   NUMSFX = cfg_size(cfg, EDF_SEC_SOUND);
-
-   // try defaults if zero
-   if(!NUMSFX)
-   {
-      E_EDFLogPuts("\t\tNo sounds defined, trying defaults\n");
-      E_TryDefaultSounds();
-      return;
-   }
-
    E_EDFLogPrintf("\t\t%d sound(s) defined\n", NUMSFX);
 
-   // add one to make room for S_sfx[0]
-   ++NUMSFX;
-
-   // let's allocate & initialize the sounds...
-   S_sfx = calloc(NUMSFX, sizeof(sfxinfo_t));
+   // initialize the null sound entry
+   strcpy(NullSound.name,     "none");
+   strcpy(NullSound.mnemonic, "none");
 
    // 08/10/05: must call this from here now, so that defaults
    // can kick in when no sounds exist
@@ -2040,6 +2037,10 @@ void E_ProcessLastChance(void)
    // player data defaults
    if(E_NeedDefaultPlayerData())
       E_TryDefaultPlayerData();
+
+   // sound defaults
+   if(E_NeedDefaultSounds() || E_NeedDefaultSequences())
+      E_TryDefaultSounds();
 }
 
 // Main EDF Routine

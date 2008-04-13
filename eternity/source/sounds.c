@@ -152,7 +152,6 @@ int H_Mus_Matrix[6][9] =
 // Reimplemented 'singularity' flag, adjusting many sounds below
 
 // haleyjd 11/05/03: made dynamic with EDF
-sfxinfo_t *S_sfx = NULL;
 int NUMSFX = 0;
 
 //----------------------------------------------------------------------------

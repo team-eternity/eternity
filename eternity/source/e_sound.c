@@ -82,7 +82,7 @@
 //
 // Static sound hash tables
 //
-#define NUMSFXCHAINS 257
+#define NUMSFXCHAINS 307
 static sfxinfo_t *sfxchains[NUMSFXCHAINS];
 static sfxinfo_t *sfx_dehchains[NUMSFXCHAINS];
 
@@ -192,7 +192,7 @@ sfxinfo_t *E_SoundForName(const char *name)
 //
 // E_EDFSoundForName
 //
-// This version returns a pointer to S_sfx[0] if the special
+// This version returns a pointer to NullSound if the special
 // mnemonic "none" is passed in. This allows EDF to get the reserved
 // DeHackEd number zero for it. Most other code segments should not
 // use this function.
@@ -200,7 +200,7 @@ sfxinfo_t *E_SoundForName(const char *name)
 sfxinfo_t *E_EDFSoundForName(const char *name)
 {
    if(!strcasecmp(name, "none"))
-      return &S_sfx[0];
+      return &NullSound;
 
    return E_SoundForName(name);
 }
@@ -216,16 +216,20 @@ sfxinfo_t *E_SoundForDEHNum(int dehnum)
    unsigned int hash = dehnum % NUMSFXCHAINS;
    sfxinfo_t  *rover = sfx_dehchains[hash];
 
+   // haleyjd 04/13/08: rewritten for dynamic hash chains
    while(rover && rover->dehackednum != dehnum)
-      rover = rover->dehnext;
+      rover = (sfxinfo_t *)(rover->numlinks.next);
 
    return rover;
 }
 
+// haleyjd 04/13/08: for last-chance defaults, keep count of sounds
+static int e_sound_count;
+
 //
 // E_AddSoundToHash
 //
-// Adds a new sfxinfo_t structure to the hash table.
+// Adds a new sfxinfo_t structure to the name hash table.
 //
 static void E_AddSoundToHash(sfxinfo_t *sfx)
 {
@@ -242,6 +246,8 @@ static void E_AddSoundToHash(sfxinfo_t *sfx)
    // link it in
    sfx->next = sfxchains[hash];
    sfxchains[hash] = sfx;
+
+   ++e_sound_count; // 04/13/08: count sounds added
 }
 
 //
@@ -256,15 +262,61 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
 {
    unsigned int hash = sfx->dehackednum % NUMSFXCHAINS;
 
-   if(E_SoundForDEHNum(sfx->dehackednum))
-      return;
-
    if(sfx->dehackednum == 0)
       E_EDFLoggedErr(2, "E_AddSoundToDEHHash: dehackednum zero is reserved!\n");
 
-   sfx->dehnext = sfx_dehchains[hash];
-   sfx_dehchains[hash] = sfx;
+   // haleyjd 04/13/08: use M_DLListInsert to support removal & reinsertion
+   M_DLListInsert((mdllistitem_t *)sfx,
+                  (mdllistitem_t **)(&sfx_dehchains[hash]));
 }
+
+//
+// E_DelSoundFromDEHHash
+//
+// haleyjd 04/13/08: Made sound dehackednum hash chains dynamically linked
+// to fully support DeHackEd number specification in sounds added after
+// primary EDF processing.
+//
+static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
+{
+   M_DLListRemove((mdllistitem_t *)sfx);
+}
+
+//
+// E_FindSoundForDEH
+//
+// haleyjd 04/13/08: There's a hackish little code segment in DeHackEd
+// that looks for a sound name match to a DeHackEd text string. Now that
+// the S_sfx table is gone, we need to do this search here,  using the
+// mnemonic hash table chains.
+//
+sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
+{
+   int i;
+   sfxinfo_t *cursfx;
+
+   // run down all the mnemonic hash chains so that we precache 
+   // all sounds, not just ones stored in S_sfx
+
+   for(i = 0; i < NUMSFXCHAINS; ++i)
+   {
+      cursfx = sfxchains[i];
+
+      while(cursfx)
+      {
+         // avoid short prefix erroneous match
+         if(strlen(cursfx->mnemonic) == fromlen &&
+            !strnicmp(cursfx->mnemonic, inbuffer, fromlen))
+            return cursfx;
+
+         cursfx = cursfx->next;
+      }
+   }
+
+   // no match
+   return NULL;
+}
+
 
 // haleyjd 03/22/06: automatic dehnum allocation
 //
@@ -293,7 +345,8 @@ boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
    do
    {
       dehnum = edf_alloc_sound_dehnum--;
-   } while(dehnum > 0 && E_SoundForDEHNum(dehnum) != NULL);
+   } 
+   while(dehnum > 0 && E_SoundForDEHNum(dehnum) != NULL);
 
    // ran out while searching for an unused number?
    if(dehnum <= 0)
@@ -386,8 +439,7 @@ void E_PreCacheSounds(void)
 //
 // Processes an EDF sound definition
 //
-static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, 
-                           boolean def, boolean add)
+static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 {
    boolean setLink = false;
    boolean explicitLumpName = false;
@@ -527,73 +579,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section,
 
       if(sfx->pitch_type == NUM_PITCHVARS)
          sfx->pitch_type = pitch_none;
-   }
-   
-   // process dehackednum -- not in deltas! 06/06/06: also not in additive sounds
-   if(def && !add)
-   {
-      sfx->dehackednum = cfg_getint(section, ITEM_SND_DEHNUM);
-
-      if(sfx->dehackednum != -1)
-         E_AddSoundToDEHHash(sfx); // add to DeHackEd num hash table
-   }
-}
-
-//
-// E_ProcessAdditiveSounds
-//
-// haleyjd 06/06/06: This allows more sounds to be defined via the ESNDINFO
-// and ESNDSEQ lumps. Overwriting the DeHackEd number of existing sounds is
-// not allowed, however.
-//
-void E_ProcessAdditiveSounds(cfg_t *cfg)
-{
-   unsigned int i, numsounds = cfg_size(cfg, EDF_SEC_SOUND);
-
-   E_EDFLogPrintf("\t\tProcessing additive sounds\n"
-                  "\t\t%d additive sounds defined\n", numsounds);
-
-   // first, hash any sounds that are new
-   for(i = 0; i < numsounds; ++i)
-   {
-      cfg_t *sndsec = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
-      const char *title = cfg_title(sndsec);
-      sfxinfo_t *sfx;
-
-      if(strlen(title) > 32)
-      {
-         E_EDFLoggedErr(2, "E_ProcessAdditiveSounds: invalid mnemonic '%s'\n",
-                        title);
-      }
-      
-      if((sfx = E_EDFSoundForName(title)))
-         continue; // nothing to do here...
-      else
-      {
-         // create a new one and hook into hashchain
-         sfx = Z_Calloc(1, sizeof(sfxinfo_t), PU_STATIC, NULL);
-      
-         strncpy(sfx->mnemonic, title, 33);
-
-         sfx->dehackednum = -1; // not accessible to DeHackEd
-         
-         E_AddSoundToHash(sfx);
-      }
-   }
-
-   // all the sounds in the EDF have been created, so process them
-   for(i = 0; i < numsounds; ++i)
-   {
-      cfg_t *sndsec = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
-      const char *title = cfg_title(sndsec);
-      sfxinfo_t *sfx;
-
-      sfx = E_SoundForName(title);
-
-      E_ProcessSound(sfx, sndsec, true, true);
-      
-      E_EDFLogPrintf("\t\tFinished sound %s(#%d)\n", title, i);
-   }
+   }   
 }
 
 //
@@ -601,22 +587,21 @@ void E_ProcessAdditiveSounds(cfg_t *cfg)
 //
 // Collects all the sound definitions and builds the sound hash
 // tables.
+// 04/13/08: rewritten to be fully dynamic.
 //
 void E_ProcessSounds(cfg_t *cfg)
 {
-   int i;
+   unsigned int i, numsfx = cfg_size(cfg, EDF_SEC_SOUND);
+   sfxinfo_t *sfx;
 
    E_EDFLogPuts("\t\tHashing sounds\n");
-   
-   // initialize S_sfx[0]
-   strcpy(S_sfx[0].name, "none");
-   strcpy(S_sfx[0].mnemonic, "none");
-   
+      
    // now, let's collect the mnemonics (this must be done ahead of time)
-   for(i = 1; i < NUMSFX; ++i)
+   for(i = 0; i < numsfx; ++i)
    {
       const char *mnemonic;
-      cfg_t *sndsection = cfg_getnsec(cfg, EDF_SEC_SOUND, i - 1);
+      cfg_t *sndsection = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
+      int idnum = cfg_getint(sndsection, ITEM_SND_DEHNUM);
       
       mnemonic = cfg_title(sndsection);
       
@@ -626,24 +611,57 @@ void E_ProcessSounds(cfg_t *cfg)
          E_EDFLoggedErr(2, "E_ProcessSounds: invalid sound mnemonic '%s'\n",
                         mnemonic);
       }
-      
-      // copy it to the sound
-      strncpy(S_sfx[i].mnemonic, mnemonic, 33);
-      
-      // add this sound to the hash table
-      E_AddSoundToHash(&S_sfx[i]);
+
+      // if one already exists by this name, use it
+      if((sfx = E_SoundForName(mnemonic)))
+      {
+         // handle dehackednum changes
+         if(sfx->dehackednum != idnum)
+         {
+            // if already in hash, remove it
+            if(sfx->dehackednum > 0)
+               E_DelSoundFromDEHHash(sfx);
+
+            // set new dehackednum
+            sfx->dehackednum = idnum;
+
+            // if > 0, rehash
+            if(sfx->dehackednum > 0)
+               E_AddSoundToDEHHash(sfx);
+         }
+      }
+      else
+      {
+         // create a new sound
+         sfx = calloc(1, sizeof(sfxinfo_t));
+
+         // copy mnemonic
+         strncpy(sfx->mnemonic, mnemonic, 33);
+         
+         // add this sound to the hash table
+         E_AddSoundToHash(sfx);
+
+         // set dehackednum
+         sfx->dehackednum = idnum;
+
+         // possibly add to numeric hash
+         if(sfx->dehackednum > 0)
+            E_AddSoundToDEHHash(sfx);
+      }            
    }
       
    E_EDFLogPuts("\t\tProcessing data\n");
 
    // finally, process the individual sounds
-   for(i = 1; i < NUMSFX; ++i)
+   for(i = 0; i < numsfx; ++i)
    {
-      cfg_t *section = cfg_getnsec(cfg, EDF_SEC_SOUND, i - 1);
+      cfg_t *section = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
+      const char *mnemonic = cfg_title(section);
+      sfxinfo_t *sfx = E_SoundForName(mnemonic);
 
-      E_ProcessSound(&S_sfx[i], section, true, false);
+      E_ProcessSound(sfx, section, true);
 
-      E_EDFLogPrintf("\t\tFinished sound %s(#%d)\n", S_sfx[i].mnemonic, i);
+      E_EDFLogPrintf("\t\tFinished sound %s(#%d)\n", sfx->mnemonic, i);
    }
 
    E_EDFLogPuts("\t\tFinished sound processing\n");
@@ -688,10 +706,21 @@ void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
             "E_ProcessSoundDeltas: sound '%s' does not exist\n", tempstr);
       }
 
-      E_ProcessSound(sfx, deltasec, false, add);
+      E_ProcessSound(sfx, deltasec, false);
 
       E_EDFLogPrintf("\t\tApplied sounddelta #%d to sound %s\n", i, tempstr);
    }
+}
+
+//
+// E_NeedDefaultSounds
+//
+// haleyjd 04/13/08: Returns true if EDF needs to load sounds.edf for
+// default fallbacks.
+//
+boolean E_NeedDefaultSounds(void)
+{
+   return (e_sound_count == 0);
 }
 
 //=============================================================================
@@ -813,6 +842,8 @@ static ESoundSeq_t *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
 static ESoundSeq_t *edf_door_sequences[NUM_SEQ_TRANSLATE];
 static ESoundSeq_t *edf_plat_sequences[NUM_SEQ_TRANSLATE];
 
+static int e_sequence_count; // 04/13/08: keep count of sequences
+
 //
 // E_AddSequenceToNameHash
 //
@@ -824,6 +855,8 @@ static void E_AddSequenceToNameHash(ESoundSeq_t *seq)
 
    seq->namenext = edf_seq_chains[keyval];
    edf_seq_chains[keyval] = seq;
+
+   ++e_sequence_count;
 }
 
 //
@@ -1478,6 +1511,16 @@ void E_ProcessSndSeqs(cfg_t *cfg)
 
    // process the environment sequence manager
    E_ProcessEnviroMgr(cfg);
+}
+
+//
+// E_NeedDefaultSequences
+//
+// haleyjd 04/13/08: Returns true if no sequences exist.
+//
+boolean E_NeedDefaultSequences(void)
+{
+   return (e_sequence_count == 0);
 }
 
 

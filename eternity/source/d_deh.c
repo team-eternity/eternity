@@ -1256,7 +1256,7 @@ void deh_procSounds(DWFILE *fpin, char *line)
       else if(!strcasecmp(key, deh_sfxinfo[3]))  // Zero 1
       {
          ; // haleyjd: NO!
-         // S_sfx[indexnum].link = (sfxinfo_t *)value;
+         // sfx->link = (sfxinfo_t *)value;
       }
       else if(!strcasecmp(key, deh_sfxinfo[4]))  // Zero 2
       {
@@ -1269,7 +1269,7 @@ void deh_procSounds(DWFILE *fpin, char *line)
       else if(!strcasecmp(key, deh_sfxinfo[6]))  // Zero 4
       {
          ; // haleyjd: NO!
-         //S_sfx[indexnum].data = (void *)value; // killough 5/3/98: changed cast
+         //sfx->data = (void *)value; // killough 5/3/98: changed cast
       }
       else if(!strcasecmp(key,deh_sfxinfo[7]))  // Neg. One 1
       {
@@ -1278,7 +1278,7 @@ void deh_procSounds(DWFILE *fpin, char *line)
       else if(!strcasecmp(key,deh_sfxinfo[8]))  // Neg. One 2
       {
          ; // sf: pointless and no longer works
-         //S_sfx[indexnum].lumpnum = value;
+         //sfx->lumpnum = value;
       }
       else
          deh_LogPrintf("Invalid sound string index for '%s'\n", key);
@@ -1706,6 +1706,7 @@ void deh_procText(DWFILE *fpin, char *line)
    int usedlen;         // shorter of fromlen and tolen if not matched
    boolean found = FALSE;  // to allow early exit once found
    char* line2 = NULL;     // duplicate line for rerouting
+   sfxinfo_t *sfx;
 
    // Ty 04/11/98 - Included file may have NOTEXT skip flag set
    if(includenotext) // flag to skip included deh-style text
@@ -1778,23 +1779,18 @@ void deh_procText(DWFILE *fpin, char *line)
 
       // Try sound effects entries - see sounds.c
       // haleyjd 10/08/06: use sfx mnemonics for comparisons
-      for(i = 1; i < NUMSFX; ++i)
+      // haleyjd 04/13/08: call EDF finder function to eliminate S_sfx
+      if((sfx = E_FindSoundForDEH(inbuffer, fromlen)))
       {
-         // avoid short prefix erroneous match
-         if(strlen(S_sfx[i].mnemonic) != fromlen)
-            continue;
-         if(!strnicmp(S_sfx[i].mnemonic,inbuffer,fromlen))
-         {
-            deh_LogPrintf("Changing name of sfx from %s to %*s\n",
-                          S_sfx[i].name, usedlen, &inbuffer[fromlen]);
+         deh_LogPrintf("Changing name of sfx from %s to %*s\n",
+                       sfx->name, usedlen, &inbuffer[fromlen]);
 
-            // haleyjd 09/03/03: changed to strncpy
-            memset(S_sfx[i].name, 0, 9);
-            strncpy(S_sfx[i].name, &inbuffer[fromlen], 9);
-            found = TRUE;
-            break;  // only one matches, quit early
-         }
+         // haleyjd 09/03/03: changed to strncpy
+         memset(sfx->name, 0, 9);
+         strncpy(sfx->name, &inbuffer[fromlen], usedlen);
+         found = TRUE;
       }
+
       if(!found)  // not yet
       {
          // Try music name entries - see sounds.c

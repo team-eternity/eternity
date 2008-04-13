@@ -542,7 +542,7 @@ static void E_ParseMiscField(char *value, long *target)
                // haleyjd 05/31/06: relaxed to warning
                E_EDFLogPrintf("\t\tWarning: invalid sound '%s' in misc field\n", 
                               strval);
-               sfx = &S_sfx[0];
+               sfx = &NullSound;
             }
             E_AssignMiscSound(target, sfx);
          }

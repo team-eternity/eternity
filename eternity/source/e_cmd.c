@@ -32,6 +32,7 @@
 #include "a_small.h"
 #include "e_things.h"
 #include "e_exdata.h"
+#include "e_sound.h"
 
 //
 // e_dumpthings
@@ -47,8 +48,9 @@ CONSOLE_COMMAND(e_dumpthings, 0)
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
+      //  04/13/08: do not display auto-allocated dehnums
       C_Printf("%5d\t%5d\t%s\n", 
-               mobjinfo[i].dehnum,
+               mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
                mobjinfo[i].doomednum,
                mobjinfo[i].name);
    }
@@ -165,14 +167,43 @@ CONSOLE_COMMAND(e_dumpitems, 0)
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
+      // 04/13/08: do not display auto-allocated dehnums
       if(mobjinfo[i].flags & MF_SPECIAL)
       {
          C_Printf("%5d\t%5d\t%s\n",
-                  mobjinfo[i].dehnum,
+                  mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
                   mobjinfo[i].doomednum,
                   mobjinfo[i].name);
       }
    }
+}
+
+//
+// e_playsound
+//
+// Plays an EDF sound.
+//
+CONSOLE_COMMAND(e_playsound, 0)
+{
+   sfxinfo_t *sfx;
+
+   if(c_argc < 1)
+   {
+      C_Printf("Usage: e_playsound name\n");
+      return;
+   }
+
+   sfx = E_SoundForName(c_argv[0]);
+
+   if(!sfx)
+   {
+      C_Printf("No such sound '%s'\n", c_argv[0]);
+      return;
+   }
+
+   C_Printf("Sound info: %s:%s:%d\n", sfx->mnemonic, sfx->name, sfx->dehackednum);
+
+   S_StartSfxInfo(NULL, sfx, 127, ATTN_NORMAL, false);
 }
 
 CONSOLE_COMMAND(e_listmapthings, cf_level)
@@ -322,6 +353,7 @@ void E_AddCommands(void)
    C_AddCommand(e_dumpthings);
    C_AddCommand(e_thingtype);
    C_AddCommand(e_dumpitems);
+   C_AddCommand(e_playsound);
    C_AddCommand(e_listmapthings);
    C_AddCommand(e_mapthing);
    C_AddCommand(e_listlinedefs);

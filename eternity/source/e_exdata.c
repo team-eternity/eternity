@@ -1799,7 +1799,7 @@ void E_LoadSectorExt(sector_t *sector)
    mapsectorext_t *edsector;
 
    // ExtraData record number is stored in sector tag
-   if(!LevelInfo.extraData || numEDLines == 0 ||
+   if(!LevelInfo.extraData || numEDSectors == 0 ||
       (edSectorIdx = E_EDSectorForRecordNum((unsigned short)(sector->tag))) == numEDSectors)
    {
       // if no ExtraData or no such record, zero special and tag,

@@ -660,7 +660,7 @@ static void E_ThingSound(const char *data, const char *fieldname,
       // haleyjd 05/31/06: relaxed to warning
       E_EDFLogPrintf("\t\tWarning: thing '%s': invalid %s '%s'\n",
                      mobjinfo[thingnum].name, fieldname, data);
-      sfx = &S_sfx[0];
+      sfx = &NullSound;
    }
    
    // haleyjd 03/22/06: support auto-allocation of dehnums where possible

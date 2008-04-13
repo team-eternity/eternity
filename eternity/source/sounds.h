@@ -31,6 +31,7 @@
 #define __SOUNDS__
 
 #include "doomtype.h"
+#include "m_dllist.h"
 
 //
 // SoundFX struct.
@@ -43,6 +44,9 @@ typedef struct musicinfo_s musicinfo_t;
 
 struct sfxinfo_s
 {
+   // haleyjd 04/13/08: numeric hash links
+   mdllistitem_t numlinks;
+
    // haleyjd: up to 8-character lump name
    char name[9];
 
@@ -111,7 +115,6 @@ struct sfxinfo_s
    
    // haleyjd 09/03/03: revised for dynamic EDF sounds
    sfxinfo_t *next;     // next in mnemonic hash chain
-   sfxinfo_t *dehnext;  // next in dehacked num chain
    int dehackednum;     // dehacked number
 };
 
@@ -138,10 +141,8 @@ struct musicinfo_s
 };
 
 // the complete set of sound effects
-// extern sfxinfo_t    S_sfx[];
 
 // haleyjd 11/05/03: made dynamic with EDF
-extern sfxinfo_t *S_sfx;
 extern int NUMSFX;
 
 // the complete set of music
