@@ -107,10 +107,11 @@ void P_InitSwitchList(void)
 // to remain active in gametics.
 // No return value.
 //
+// haleyjd 04/16/08: rewritten to store indices instead of pointers
 // haleyjd FIXME: wtf is there still a static limit on buttons??
 // haleyjd FIXME: wtf are buttons not saved in save games???
 //
-static void P_StartButton(line_t *line, int side, bwhere_e w, 
+static void P_StartButton(int sidenum, int sectornum, bwhere_e w, 
                           int texture, int time)
 {
    int i;
@@ -118,7 +119,7 @@ static void P_StartButton(line_t *line, int side, bwhere_e w,
    // See if button is already pressed
    for(i = 0; i < MAXBUTTONS; ++i)
    {
-      if(buttonlist[i].btimer && buttonlist[i].line == line)
+      if(buttonlist[i].btimer && buttonlist[i].side == sidenum)
          return;
    }
     
@@ -126,13 +127,11 @@ static void P_StartButton(line_t *line, int side, bwhere_e w,
    {
       if(!buttonlist[i].btimer)    // use first unused element of list
       {
-         buttonlist[i].line = line;
-         buttonlist[i].side = side;
+         buttonlist[i].side = sidenum;
          buttonlist[i].where = w;
          buttonlist[i].btexture = texture;
          buttonlist[i].btimer = time;
-         buttonlist[i].soundorg =
-            (mobj_t *)&line->frontsector->soundorg;
+         buttonlist[i].sector = sectornum;
          return;
       }
    }
@@ -155,10 +154,12 @@ void P_ClearButtons(void)
 //
 // Check buttons (retriggerable switches) and change texture on timeout.
 // haleyjd 10/16/05: moved here and turned into its own function.
+// haleyjd 04/16/08: rewritten to use indices instead of pointers
 //
 void P_RunButtons(void)
 {
    int i;
+   mobj_t *soundorg;
 
    for(i = 0; i < MAXBUTTONS; ++i)
    {
@@ -170,22 +171,22 @@ void P_RunButtons(void)
             switch(buttonlist[i].where)
             {
             case top:
-               sides[buttonlist[i].line->sidenum[0]].toptexture =
-                  buttonlist[i].btexture;
+               sides[buttonlist[i].side].toptexture = buttonlist[i].btexture;
                break;
 
             case middle:
-               sides[buttonlist[i].line->sidenum[0]].midtexture =
-                  buttonlist[i].btexture;
+               sides[buttonlist[i].side].midtexture = buttonlist[i].btexture;
                break;
 
             case bottom:
-               sides[buttonlist[i].line->sidenum[0]].bottomtexture =
-                  buttonlist[i].btexture;
+               sides[buttonlist[i].side].bottomtexture = buttonlist[i].btexture;
                break;
             }
+
+            soundorg = (mobj_t *)&(sectors[buttonlist[i].sector].soundorg);            
+            S_StartSoundName(soundorg, "EE_SwitchOn");
             
-            S_StartSoundName((mobj_t *)&buttonlist[i].soundorg, "EE_SwitchOn");
+            // clear out the button
             memset(&buttonlist[i], 0, sizeof(button_t));
          }
       }
@@ -203,24 +204,39 @@ void P_RunButtons(void)
 //
 // No return value
 //
+// haleyjd 04/16/08: rewritten for button_t changes.
+//
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 {
-   int     texTop;
-   int     texMid;
-   int     texBot;
-   int     i;
-   char    *sound; // haleyjd
+   int       texTop;
+   int       texMid;
+   int       texBot;
+   int       i;
+   char     *sound;     // haleyjd
+   int       sidenum;
+   sector_t *sector;
+   int       sectornum;
    
    if(!useAgain)
       line->special = 0;
 
+   sidenum = line->sidenum[side];
+
    // haleyjd: cannot start a button on a non-existant side
-   if(line->sidenum[side] == -1)
+   if(sidenum == -1)
       return;
 
-   texTop = sides[line->sidenum[side]].toptexture;
-   texMid = sides[line->sidenum[side]].midtexture;
-   texBot = sides[line->sidenum[side]].bottomtexture;
+   // haleyjd 04/16/08: get proper sector pointer and number
+   sector = side ? line->backsector : line->frontsector;
+
+   if(!sector) // ???; really should not happen.
+      return;
+
+   sectornum = sector - sectors;
+
+   texTop = sides[sidenum].toptexture;
+   texMid = sides[sidenum].midtexture;
+   texBot = sides[sidenum].bottomtexture;
 
    sound = "EE_SwitchOn"; // haleyjd
    
@@ -232,31 +248,31 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    {
       if(switchlist[i] == texTop) // if an upper texture
       {
-         S_StartSoundName(buttonlist->soundorg,sound); // switch activation sound
-         sides[line->sidenum[side]].toptexture = switchlist[i^1]; // chg texture
+         S_StartSoundName((mobj_t *)&sector->soundorg, sound);   // switch activation sound
+         sides[sidenum].toptexture = switchlist[i^1]; // chg texture
          
          if(useAgain)
-            P_StartButton(line,side,top,switchlist[i],BUTTONTIME); // start timer
+            P_StartButton(sidenum, sectornum, top, switchlist[i], BUTTONTIME); // start timer
          
          return;
       }
       else if(switchlist[i] == texMid) // if a normal texture
       {
-         S_StartSoundName(buttonlist->soundorg,sound); // switch activation sound
-         sides[line->sidenum[side]].midtexture = switchlist[i^1]; // chg texture
+         S_StartSoundName((mobj_t *)&sector->soundorg, sound);   // switch activation sound
+         sides[sidenum].midtexture = switchlist[i^1]; // chg texture
          
          if(useAgain)
-            P_StartButton(line,side,middle,switchlist[i],BUTTONTIME); // start timer
+            P_StartButton(sidenum, sectornum, middle, switchlist[i], BUTTONTIME); // start timer
          
          return;
       }
       else if(switchlist[i] == texBot) // if a lower texture
       {
-         S_StartSoundName(buttonlist->soundorg,sound); // switch activation sound
-         sides[line->sidenum[side]].bottomtexture = switchlist[i^1]; //chg texture
+         S_StartSoundName((mobj_t *)&sector->soundorg, sound);      // switch activation sound
+         sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
          
          if(useAgain)
-            P_StartButton(line,side,bottom,switchlist[i],BUTTONTIME); // start timer
+            P_StartButton(sidenum, sectornum, bottom, switchlist[i], BUTTONTIME); // start timer
          
          return;
       }

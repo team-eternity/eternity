@@ -593,12 +593,11 @@ typedef struct switchlist_s switchlist_t;
 
 typedef struct
 {
-  line_t   *line;
   int      side;
   bwhere_e where;
   int      btexture;
   int      btimer;
-  mobj_t   *soundorg;
+  int      sector;
 } button_t;
 
 // p_lights

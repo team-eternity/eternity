@@ -123,7 +123,7 @@ float     *spriteheight;
 // The directory will simply point inside other patches
 //  if there is only one patch in a given column,
 //  but any columns with multiple patches
-//  will have new column_ts generated.
+//  will have new column_t's generated.
 //
 
 //
@@ -133,7 +133,6 @@ float     *spriteheight;
 //
 // Rewritten by Lee Killough for performance and to fix Medusa bug
 //
-
 static void R_DrawColumnInCache(const column_t *patch, byte *cache,
 				int originy, int cacheheight, byte *marks)
 {
@@ -159,7 +158,7 @@ static void R_DrawColumnInCache(const column_t *patch, byte *cache,
          // so that column can later be converted into a series of posts, to
          // fix the Medusa bug.
 
-         memset (marks + position, 0xff, count);
+         memset(marks + position, 0xff, count);
       }
       
       patch = (column_t *)((byte *) patch + patch->length + 4);
@@ -176,69 +175,85 @@ static void R_DrawColumnInCache(const column_t *patch, byte *cache,
 
 static void R_GenerateComposite(int texnum)
 {
-  byte *block = Z_Malloc(texturecompositesize[texnum], PU_STATIC,
-                         (void **) &texturecomposite[texnum]);
-  texture_t *texture = textures[texnum];
-  // Composite the columns together.
-  texpatch_t *patch = texture->patches;
-  short *collump = texturecolumnlump[texnum];
-  unsigned *colofs = texturecolumnofs[texnum]; // killough 4/9/98: make 32-bit
-  int i = texture->patchcount;
-  // killough 4/9/98: marks to identify transparent regions in merged textures
-  byte *marks = calloc(texture->width, texture->height), *source;
+   byte *block = Z_Malloc(texturecompositesize[texnum], PU_STATIC,
+                          (void **) &texturecomposite[texnum]);
 
-  for (; --i >=0; patch++)
-    {
+   texture_t *texture = textures[texnum];
+   
+   // Composite the columns together.
+   texpatch_t   *patch   = texture->patches;
+   short        *collump = texturecolumnlump[texnum];
+   unsigned int *colofs  = texturecolumnofs[texnum]; // killough 4/9/98: make 32-bit
+   int          i        = texture->patchcount;
+   
+   // killough 4/9/98: marks to identify transparent regions in merged textures
+   byte *marks = calloc(texture->width, texture->height), *source;
+
+   for(; --i >= 0; ++patch)
+   {
       patch_t *realpatch = W_CacheLumpNum(patch->patch, PU_CACHE);
-      int x, x1 = patch->originx, x2 = x1 + SHORT(realpatch->width);
+      int x;
+      int x1 = patch->originx;
+      int x2 = x1 + SHORT(realpatch->width);
       const int *cofs = realpatch->columnofs - x1;
-
-      if (x1 < 0)
-        x1 = 0;
-      if (x2 > texture->width)
-        x2 = texture->width;
-      for (x = x1; x < x2 ; x++)
-        if (collump[x] == -1)      // Column has multiple patches?
-          // killough 1/25/98, 4/9/98: Fix medusa bug.
-          R_DrawColumnInCache((column_t*)((byte*) realpatch + LONG(cofs[x])),
-                              block + colofs[x], patch->originy,
-			      texture->height, marks + x*texture->height);
-    }
-
-  // killough 4/9/98: Next, convert multipatched columns into true columns,
-  // to fix Medusa bug while still allowing for transparent regions.
-
-  source = malloc(texture->height);       // temporary column
-  for (i=0; i < texture->width; i++)
-    if (collump[i] == -1)                 // process only multipatched columns
+      
+      if(x1 < 0)
+         x1 = 0;
+      
+      if(x2 > texture->width)
+         x2 = texture->width;
+      
+      for(x = x1; x < x2; ++x)
       {
-        column_t *col = (column_t *)(block + colofs[i] - 3);  // cached column
-        const byte *mark = marks + i * texture->height;
-        int j = 0;
+         // Column has multiple patches?
+         if(collump[x] == -1)
+         {
+            // killough 1/25/98, 4/9/98: Fix medusa bug.
+            R_DrawColumnInCache((column_t *)((byte *) realpatch + LONG(cofs[x])),
+                                block + colofs[x], 
+                                patch->originy,
+                                texture->height, 
+                                marks + x * texture->height);
+         }
+      }
+   }
 
-        // save column in temporary so we can shuffle it around
-        memcpy(source, (byte *) col + 3, texture->height);
+   // killough 4/9/98: Next, convert multipatched columns into true columns,
+   // to fix Medusa bug while still allowing for transparent regions.
 
-        for (;;)  // reconstruct the column by scanning transparency marks
-          {
-	    unsigned len;        // killough 12/98
+   source = malloc(texture->height); // temporary column
+   
+   for(i = 0; i < texture->width; ++i)
+   {
+      if(collump[i] == -1) // process only multipatched columns
+      {
+         column_t *col = (column_t *)(block + colofs[i] - 3); // cached column
+         const byte *mark = marks + i * texture->height;
+         int j = 0;
+         
+         // save column in temporary so we can shuffle it around
+         memcpy(source, (byte *) col + 3, texture->height);
+         
+         for(;;) // reconstruct the column by scanning transparency marks
+         {
+            unsigned len;        // killough 12/98
+            
+            while(j < texture->height && !mark[j]) // skip transparent cells
+               ++j;
+            
+            if(j >= texture->height)  // if at end of column
+            {
+               col->topdelta = -1;    // end-of-column marker
+               break;
+            }
 
-            while (j < texture->height && !mark[j]) // skip transparent cells
-              j++;
-
-            if (j >= texture->height)           // if at end of column
-              {
-                col->topdelta = -1;             // end-of-column marker
-                break;
-              }
-
-            col->topdelta = j;                  // starting offset of post
+            col->topdelta = j;        // starting offset of post
 
 	    // killough 12/98:
 	    // Use 32-bit len counter, to support tall 1s multipatched textures
 
-	    for (len = 0; j < texture->height && mark[j]; j++)
-              len++;                    // count opaque cells
+            for(len = 0; j < texture->height && mark[j]; ++j)
+               ++len; // count opaque cells
 
 	    col->length = len; // killough 12/98: intentionally truncate length
 
@@ -247,13 +262,15 @@ static void R_GenerateComposite(int texnum)
             col = (column_t *)((byte *) col + len + 4); // next post
           }
       }
-  free(source);         // free temporary column
-  free(marks);          // free transparency marks
+   }
 
-  // Now that the texture has been built in column cache,
-  // it is purgable from zone memory.
-
-  Z_ChangeTag(block, PU_CACHE);
+   free(source); // free temporary column
+   free(marks);  // free transparency marks
+   
+   // Now that the texture has been built in column cache,
+   // it is purgable from zone memory.
+   
+   Z_ChangeTag(block, PU_CACHE);
 }
 
 //
@@ -267,13 +284,13 @@ static void R_GenerateLookup(int texnum, int *const errors)
    
    // Composited texture not created yet.
    
-   short *collump = texturecolumnlump[texnum];
-   unsigned *colofs = texturecolumnofs[texnum]; // killough 4/9/98: make 32-bit
+   short        *collump = texturecolumnlump[texnum];
+   unsigned int *colofs  = texturecolumnofs[texnum]; // killough 4/9/98: make 32-bit
    
    // killough 4/9/98: keep count of posts in addition to patches.
    // Part of fix for medusa bug for multipatched 2s normals.
 
-   struct 
+   struct lookupcount_s
    {
       unsigned patches, posts;
    } *count = calloc(sizeof *count, texture->width);
@@ -283,15 +300,18 @@ static void R_GenerateLookup(int texnum, int *const errors)
    const texpatch_t *patch = texture->patches;
    int i = texture->patchcount;
    
-   while (--i >= 0)
+   while(--i >= 0)
    {
       int pat = patch->patch;
       const patch_t *realpatch = W_CacheLumpNum(pat, PU_CACHE);
-      int x, x1 = patch++->originx, x2 = x1 + SHORT(realpatch->width);
+      int x;
+      int x1 = patch++->originx;
+      int x2 = x1 + SHORT(realpatch->width);
       const int *cofs = realpatch->columnofs - x1;
       
       if(x2 > texture->width)
          x2 = texture->width;
+
       if(x1 < 0)
          x1 = 0;
 
@@ -352,11 +372,11 @@ static void R_GenerateLookup(int texnum, int *const errors)
                      if(badcol)
                      {
                         badcol = 0;
-                          // sf: changed to usermsg
-                          usermsg("\nWarning: Texture %8.8s "
-                                  "(height %d) has bad column(s)"
-                                  " starting at x = %d.",
-                                  texture->name, texture->height, x);
+                        // sf: changed to usermsg
+                        usermsg("\nWarning: Texture %8.8s "
+                                "(height %d) has bad column(s)"
+                                " starting at x = %d.",
+                                texture->name, texture->height, x);
                      }
                      break;
                   }
@@ -387,8 +407,8 @@ static void R_GenerateLookup(int texnum, int *const errors)
                // killough 8/8/98
                // sf: changed to use error_printf for graphical startup
                error_printf("\nR_GenerateLookup:"
-                  " Column %d is without a patch in texture %.8s",
-                  x, texture->name);
+                            " Column %d is without a patch in texture %.8s",
+                            x, texture->name);
                ++*errors;
             }
             else
@@ -476,8 +496,8 @@ void R_InitTextures(void)
    name[8] = 0;
    names = W_CacheLumpName("PNAMES", PU_STATIC);
    nummappatches = LONG(*((int *)names));
-   name_p = names+4;
-   patchlookup = malloc(nummappatches*sizeof(*patchlookup));  // killough
+   name_p = names + 4;
+   patchlookup = malloc(nummappatches * sizeof(*patchlookup)); // killough
 
    for(i = 0; i < nummappatches; ++i)
    {
@@ -501,6 +521,8 @@ void R_InitTextures(void)
             usermsg("\nWarning: patch %.8s, index %d does not exist",name,i);
       }
    }
+
+   // done with PNAMES
    Z_Free(names);
 
    // Load the map texture definitions from textures.lmp.
@@ -510,7 +532,7 @@ void R_InitTextures(void)
    maptex = maptex1 = W_CacheLumpName("TEXTURE1", PU_STATIC);
    numtextures1 = LONG(*maptex);
    maxoff = W_LumpLength(W_GetNumForName("TEXTURE1"));
-   directory = maptex+1;
+   directory = maptex + 1;
    
    if(W_CheckNumForName("TEXTURE2") != -1)
    {
@@ -529,18 +551,19 @@ void R_InitTextures(void)
    // killough 4/9/98: make column offsets 32-bit;
    // clean up malloc-ing to use sizeof
    
-   textures = Z_Malloc(numtextures*sizeof*textures, PU_STATIC, 0);
+   textures = Z_Malloc(numtextures*sizeof(*textures), PU_STATIC, 0);
    texturecolumnlump =
-      Z_Malloc(numtextures*sizeof*texturecolumnlump, PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecolumnlump), PU_STATIC, 0);
    texturecolumnofs =
-      Z_Malloc(numtextures*sizeof*texturecolumnofs, PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecolumnofs), PU_STATIC, 0);
    texturecomposite =
-      Z_Malloc(numtextures*sizeof*texturecomposite, PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecomposite), PU_STATIC, 0);
    texturecompositesize =
-      Z_Malloc(numtextures*sizeof*texturecompositesize, PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecompositesize), PU_STATIC, 0);
    texturewidthmask =
-      Z_Malloc(numtextures*sizeof*texturewidthmask, PU_STATIC, 0);
-   textureheight = Z_Malloc(numtextures*sizeof*textureheight, PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturewidthmask), PU_STATIC, 0);
+   textureheight = 
+      Z_Malloc(numtextures*sizeof(*textureheight), PU_STATIC, 0);
 
    {
       // Really complex printing shit...
@@ -573,31 +596,34 @@ void R_InitTextures(void)
       if(offset > maxoff)
         I_Error("R_InitTextures: bad texture directory");
 
-      mtexture = (maptexture_t *) ( (byte *)maptex + offset);
+      mtexture = (maptexture_t *)((byte *)maptex + offset);
 
 
-      texture = textures[i] = Z_Malloc(  sizeof(texture_t) +
-         sizeof(texpatch_t)*(SHORT(mtexture->patchcount)-1), PU_STATIC, 0 );
+      texture = textures[i] = 
+         Z_Malloc(sizeof(texture_t) + 
+                  sizeof(texpatch_t)*(SHORT(mtexture->patchcount)-1), 
+                  PU_STATIC, NULL);
 
-      texture->width = SHORT(mtexture->width);
-      texture->height = SHORT(mtexture->height);
+      texture->width      = SHORT(mtexture->width);
+      texture->height     = SHORT(mtexture->height);
       texture->patchcount = SHORT(mtexture->patchcount);
 
       memcpy(texture->name, mtexture->name, sizeof(texture->name));
       mpatch = mtexture->patches;
-      patch = texture->patches;
+      patch  = texture->patches;
 
       for(j = 0; j < texture->patchcount; ++j, ++mpatch, ++patch)
       {
          patch->originx = SHORT(mpatch->originx);
          patch->originy = SHORT(mpatch->originy);
-         patch->patch = patchlookup[SHORT(mpatch->patch)];
-         if (patch->patch == -1)
+         patch->patch   = patchlookup[SHORT(mpatch->patch)];
+         
+         if(patch->patch == -1)
          {
             // killough 8/8/98
             // sf: error_printf
             error_printf("\nR_InitTextures: Missing patch %d in texture %.8s",
-               SHORT(mpatch->patch), texture->name); // killough 4/17/98
+                         SHORT(mpatch->patch), texture->name);
             ++errors;
          }
       }
@@ -606,20 +632,20 @@ void R_InitTextures(void)
       // clean up malloc-ing to use sizeof
       // killough 12/98: fix sizeofs
       texturecolumnlump[i] =
-        Z_Malloc(texture->width*sizeof**texturecolumnlump, PU_STATIC,0);
+        Z_Malloc(texture->width * sizeof(**texturecolumnlump), PU_STATIC,0);
       texturecolumnofs[i] =
-        Z_Malloc(texture->width*sizeof**texturecolumnofs, PU_STATIC,0);
+        Z_Malloc(texture->width * sizeof(**texturecolumnofs), PU_STATIC,0);
 
       for(j = 1; j * 2 <= texture->width; j <<= 1)
         ;
-      texturewidthmask[i] = j-1;
-      textureheight[i] = texture->height<<FRACBITS;
+      texturewidthmask[i] = j - 1;
+      textureheight[i]    = texture->height << FRACBITS;
    }
    
    free(patchlookup);         // killough
    
    Z_Free(maptex1);
-   if (maptex2)
+   if(maptex2)
       Z_Free(maptex2);
    
    if(errors)
@@ -640,7 +666,7 @@ void R_InitTextures(void)
    // clean up malloc-ing to use sizeof
    
    texturetranslation =
-      Z_Malloc((numtextures+1)*sizeof*texturetranslation, PU_STATIC, 0);
+      Z_Malloc((numtextures + 1) * sizeof(*texturetranslation), PU_STATIC, 0);
 
    for(i = 0; i < numtextures; ++i)
       texturetranslation[i] = i;
@@ -652,7 +678,7 @@ void R_InitTextures(void)
    while(--i >= 0)
    {
       int j = W_LumpNameHash(textures[i]->name) % (unsigned)numtextures;
-      textures[i]->next = textures[j]->index;   // Prepend to chain
+      textures[i]->next  = textures[j]->index;   // Prepend to chain
       textures[j]->index = i;
    }
 }
@@ -686,6 +712,7 @@ void R_InitFlats(void)
 
 //
 // R_InitSpriteLumps
+//
 // Finds the width and hoffset of all sprites in the wad,
 // so the sprite does not need to be cached completely
 // just for having the header info ready during rendering.
@@ -702,12 +729,14 @@ void R_InitSpriteLumps(void)
    // killough 4/9/98: make columnd offsets 32-bit;
    // clean up malloc-ing to use sizeof
    
-   spritewidth = Z_Malloc(numspritelumps*sizeof*spritewidth, PU_STATIC, 0);
-   spriteoffset = Z_Malloc(numspritelumps*sizeof*spriteoffset, PU_STATIC, 0);
+   spritewidth = 
+      Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_STATIC, 0);
+   spriteoffset = 
+      Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_STATIC, 0);
    spritetopoffset =
-      Z_Malloc(numspritelumps*sizeof*spritetopoffset, PU_STATIC, 0);
-   spriteheight = Z_Malloc(numspritelumps * sizeof(float), PU_STATIC, 0);
-
+      Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_STATIC, 0);
+   spriteheight = 
+      Z_Malloc(numspritelumps * sizeof(float), PU_STATIC, 0);
    
    for(i = 0; i < numspritelumps; ++i)
    {
@@ -716,10 +745,11 @@ void R_InitSpriteLumps(void)
          V_LoadingIncrease();
       
       patch = W_CacheLumpNum(firstspritelump + i, PU_CACHE);
+
       spritewidth[i]     = SHORT(patch->width) << FRACBITS;
       spriteoffset[i]    = SHORT(patch->leftoffset) << FRACBITS;
       spritetopoffset[i] = SHORT(patch->topoffset) << FRACBITS;
-      spriteheight[i]    = (float)SHORT(patch->height);
+      spriteheight[i]    = (float)(SHORT(patch->height));
    }
 }
 
@@ -737,13 +767,13 @@ void R_InitColormaps(void)
 
    firstcolormaplump = W_GetNumForName("C_START");
    lastcolormaplump  = W_GetNumForName("C_END");
-   numcolormaps = lastcolormaplump - firstcolormaplump;
+   numcolormaps      = lastcolormaplump - firstcolormaplump;
    colormaps = Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_STATIC, 0);
    
    colormaps[0] = W_CacheLumpNum(W_GetNumForName("COLORMAP"), PU_STATIC);
    
    for(i = 1; i < numcolormaps; ++i)
-      colormaps[i] = W_CacheLumpNum(i+firstcolormaplump, PU_STATIC);
+      colormaps[i] = W_CacheLumpNum(i + firstcolormaplump, PU_STATIC);
 }
 
 // haleyjd: new global colormap system -- simply sets an index to
@@ -761,9 +791,11 @@ void R_SetGlobalLevelColormap(void)
    global_cmap_index = R_ColormapNumForName(LevelInfo.colorMap);
    global_fog_index  = R_ColormapNumForName(LevelInfo.outdoorFog);
 
-   // can't tolerate the error in this case
-   if(global_cmap_index < 0 || global_fog_index < 0)
-      I_Error("R_SetGlobalLevelColormap: colormap lump not found!\n");
+   // 04/15/08: this error can be tolerated; default to COLORMAP.
+   if(global_cmap_index < 0)
+      global_cmap_index = 0;
+   if(global_fog_index < 0)
+      global_fog_index = 0;
 }
 
 // killough 4/4/98: get colormap number from name
@@ -779,6 +811,11 @@ int R_ColormapNumForName(const char *name)
    return i;
 }
 
+
+int tran_filter_pct = 66;       // filter percent
+
+#define TSC 12        /* number of fixed point digits in filter percent */
+
 //
 // R_InitTranMap
 //
@@ -786,11 +823,6 @@ int R_ColormapNumForName(const char *name)
 //
 // By Lee Killough 2/21/98
 //
-
-int tran_filter_pct = 66;       // filter percent
-
-#define TSC 12        /* number of fixed point digits in filter percent */
-
 void R_InitTranMap(int progress)
 {
    int lump = W_CheckNumForName("TRANMAP");
@@ -807,10 +839,12 @@ void R_InitTranMap(int progress)
       char *fname;
       unsigned int fnamesize;
       
-      struct {
+      struct trmapcache_s 
+      {
          unsigned char pct;
          unsigned char playpal[256];
       } cache;
+      
       FILE *cachefp;
 
       // haleyjd 11/23/06: use basegamepath
