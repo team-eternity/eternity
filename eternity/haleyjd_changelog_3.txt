@@ -2,6 +2,501 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+04/16/08
+
+I started reformatting the texture caching/construction code in r_data.c -- this
+stuff is one of the larger messes still left from the DOOM source code.
+
+I also worked on fixing DOOM switch bugs:
+
+* Limit on buttons has been removed. The buttonlist array will be reallocated if
+  it manages to fill up. Buttons are now always used for switches, even if the
+  switch will not make a later sound.
+
+* Switch sounds always come from the correct origin now. The previous behavior
+  was actually semi-undefined and random, and cannot be emulated with the new
+  code. I do not intend to provide a comp flag for this, as it has absolutely no
+  impact on game play and cannot be intentionally exploited in a meaningful way.
+
+* Switch sounds can no longer be cut off by movement of the sector in which the
+  switch resides. This fix was necessitated by the previous one. Buttons now
+  contain their own independent sound origin (degenmobj_t) which has its
+  properties copied from the switch sector's.
+
+* Eternity parameterized switches activated from the back side will now change
+  the texture on the back side of the line properly, and the sound will eminate
+  from the line's backsector instead of its frontsector. I seem to have fallen
+  asleep half-way through writing this code earlier.
+
+--------------------------------------------------------------------------------
+04/13/08
+
+Change to the EDF sound DeHackEd hash table to make it fully dynamic. I have
+eliminated "additive" sounds as a result, and all sound entries are now treated
+uniformly. This means that you can even change the DeHackEd number of a sound
+by redefining it inside an ESNDINFO or ESNDSEQ lump.
+
+I also as a result made sound defaults parsing last-chance, as it should have
+already been, and I also fixed the outstanding issue of there being no defaults
+parsing for sound sequences.
+
+--------------------------------------------------------------------------------
+04/09/08
+
+Reformatted the sloppy old Eternity TC frames still in frames.edf -- these are
+going to all bite the dust very soon as I'm tired of looking at them.
+
+I also added delete.me files to ALL otherwise empty base/game folders, to ensure
+that they will end up in the distribution zip for the next release.
+
+--------------------------------------------------------------------------------
+04/08/08
+
+Various additions to libConfuse:
+
+* Function-valued options are now possible with some lexer and parser tweaks.
+  This is used to allow the action field of frames to provide the args in
+  parentheses. This syntax is also now supported in cmp frames, and the previous
+  method of args specification in cmp strings will be considered deprecated in
+  the next release.
+
+--------------------------------------------------------------------------------
+03/29/08
+
+SoM pulled out all of the linked portal clipping code so that he can start over
+with it. Various bugs and design issues required this.
+
+--------------------------------------------------------------------------------
+03/23/08
+
+Added a separate noway sound to skins for compatibility. Legacy skins only 
+normally allow "oof" and just use the oof sound for the noway sound. Even though
+the sounds are the same in the normal IWAD, they are still two different sound
+entries and could be replaced with different sounds by user mods.
+
+I also applied a minor fix to my previous tracer tweaks.
+
+--------------------------------------------------------------------------------
+03/21/08
+
+Added heredoc syntax to the libConfuse parser in anticipation of being able to
+store interpreted scripts directly in EDF. I am currently examining Lua as a 
+candidate language, but I am less than impressed with some of the features it
+lacks, and others that it does in ways I do not like. It certainly will not
+satisfy my desire for a scripting language that can bond to Doom's data 
+structures at a level of abstraction lower than function calls. In order for the
+action routines to be efficiently and maintainably moved out of native code, I
+really need structure-like access. Unfortunately virtually no languages seem to
+provide this, other than JavaScript which is pretty much already ruled out by
+its size and heap incompatibility.
+
+Further tracer code refactoring. I have broken up the functions into normal and
+compatibility codepaths in order to keep the logic understandable, and I have
+factored out a lot of common code into external functions, reducing the +1000
+line tracer functions to mere shells.
+
+--------------------------------------------------------------------------------
+03/18/08
+
+Removed a weird no-op assignment hack in the seg rendering code. SoM later 
+explained this as a debugging break-point that had escaped into the wild.
+
+--------------------------------------------------------------------------------
+03/17/08
+
+libConfuse files are now buffered in memory instead of being read directly 
+through DWFILE objects. This allows me to do arbitrary look-ahead during 
+tokenization without requiring the use of input stream rewinding, which is 
+hackish at best.
+
+I disabled adjustments that were made to tracers in revisions 406 and 408 due
+to some severe game-breaking glitches. It had become impossible to fire down
+off of ledges, and it was also impossible to beat Baphomet on DOOM II MAP30
+due to your aim passing through the 2S lines and causing you to fire your 
+rockets directly at the Boss Brain object instead of through the hole in its
+head.
+
+I took the opportunity to move all tracer-related code out of the overcrowded
+p_map and p_maputl modules into its own new module, p_trace, and refactored 
+some code while doing so.
+
+I moved all demo comp checks being made for linked portal tests into the already
+exising R_*Active inline functions. There's no sense to having to test for this
+separately everywhere. SoM followed up by making sure that no linked portal
+logic can activate during old demos.
+
+I also changed all access to sector floor/ceiling portal cameras to use a new
+inlined function instead of going through 8 or so levels of indirection. This
+was extending a lot of source lines well past column 90 in some cases, and was
+awful to look at.
+
+--------------------------------------------------------------------------------
+03/16/08
+
+Removed an accidental extra parameter to E_EDFLogPrintf in e_string.c. This
+was probably left over after some code refactoring.
+
+--------------------------------------------------------------------------------
+02/19/08
+
+Fixed a long-standing problem with ACS line special execution via stack
+arguments. My reading of the zdoom documentation incorrectly resulted in 
+misinterpretation and I was putting the arguments on the stack backward. I'm not
+sure when I would have noticed this if not for the "script 0 not found" error
+that it caused on the Shadow Wood. A lot of Hexen areas have suddenly come to
+life since fixing this, including the complicated rooms full of pits and 
+smashing pillars on the Guardian of Ice and Shadow Wood areas.
+
+--------------------------------------------------------------------------------
+01/25/08
+
+Made a test commit for Manc since the repository has moved to a new server.
+I added protocols for the new wipe functions to the headers and fixed an error
+in the HTML table of contents for the editing reference doc.
+
+--------------------------------------------------------------------------------
+01/13/08
+
+Removed a lot of dead code related to linked portals.
+
+--------------------------------------------------------------------------------
+01/08/08
+
+Began work to integrate flat rotation.
+
+--------------------------------------------------------------------------------
+01/03/08
+
+SoM made another fix to the Cardboard rendering hack for glass sector support, 
+and fixed a problem with screen resolutions of >= 320 width but 200 height.
+
+I made some changes which *might* increase the efficiency of screen wipes when
+wipewait is enabled after noticing that they were going painfully slow.
+
+--------------------------------------------------------------------------------
+01/02/08
+
+SoM added a critical fix by removing the realx/yarray lookups and replacing them
+with a different scaling lookup which works like expected. This fixes, amongst
+other things, some hacks in screen patch scaling, and most of the problem with
+garbage above the status bar in some resolutions.
+
+--------------------------------------------------------------------------------
+12/30/07
+
+Julian nominally joined Team Eternity as a full programmer and contributed some
+warning fixes and some other minor tweaks. We will probably not see him again
+for another whole year, though :P
+
+--------------------------------------------------------------------------------
+12/25/07
+
+Fixed a bug in Lost Soul charging caused by changes for linked portals. The
+code was using dest->target instead of actor->target to determine the location
+to charge to, causing Lost Soul charges to go basically nowhere most of the
+time. I don't know how long this was broken or why it took so long for me to
+notice/figure it out.
+
+--------------------------------------------------------------------------------
+12/22/07
+
+I made some needed modifications to jumping, including adjusting the jump
+height to match Hexen, removing the MIF_ONMOBJ flag from the player when he 
+jumps off the head of a monster (not doing this enabled you to literally fly 
+across the map by jumping up the side of a monster in just the right way...),
+and adding and tweaking a jump timer which keeps the player from jumping for a
+certain amount of tics after landing from a previous jump. I changed this value
+significantly from what is used in zdoom, as using the value they use caused
+the player to accumulate a significant amount of viewheight lowering on each
+consecutive jump. If you pogo-sticked in place long enough, your view would 
+literally be touching the ground every time you landed. The effect was a bit
+like sea sickness.
+
+--------------------------------------------------------------------------------
+12/21/07
+
+Joe added jumping at long last.
+
+--------------------------------------------------------------------------------
+12/16/07
+
+Added comp_planeshoot to the compatibility options menu, and I also changed the
+textual description of some of the other compatibility options, in particular
+the 3D object clipping option, to make their purpose and effects more clear.
+
+--------------------------------------------------------------------------------
+12/14/07
+
+Added a delete.me file under the base/shots directory so that it will appear in
+zips and tar.gz files, which don't generally like to store empty directories.
+
+I also got rid of the old extinct windirs.bat script, which was used to copy
+around eternity.wad and the EDFs when creating a new install of the source code
+before I came up with and committed to the repository the whole base hierarchy.
+
+--------------------------------------------------------------------------------
+12/03/07
+
+Invented a work-around for the problem of palette-changing lag in fullscreen 
+under recent SDL versions by adding support for rendering the game in 8-bit but
+copying the triple buffer to a 32-bit video surface. This way, palette changes
+only occur in the logical space and do not propagate to the hardware surface,
+where for some reason SDL now causes the program to block until the next 
+hardware screen refresh.
+
+The hack is activated by use of the -8in32 command-line parameter. This causes
+EE to ask for a video surface of the configured resolution but in 32-bit color
+depth rather than 8-bit, and enables the cross-bitdepth updating code.
+
+--------------------------------------------------------------------------------
+12/01/07
+
+Fixed a very early MacOS portability issue. For some reason errno was not 
+visible in lexer.c on this platform, so I added an include of the appropriate
+header.
+
+--------------------------------------------------------------------------------
+11/13/07
+
+Joe added functions to Small for changing flats and textures, to match those in
+ACS.
+
+--------------------------------------------------------------------------------
+10/20/07
+
+Found out that all this hubbub with Linux and Win32 netcode supposedly being 
+incompatible was due to Joe using the DOOM v1.9 (not Ultimate Doom) IWAD. Since
+E1M1 is significantly different between those versions of the game, an instant
+desync would result as soon as we did anything other than just move around in
+the opening area. Oh well, all the things I fixed needed to be done anyway ;)
+
+While co-opping with Joe I found a network-only sound engine bug. Due to some
+changes made in SMMU and EE, if a player started a sound before all the other
+players in the netgame had spawned, the game would crash. This was triggered by
+beginning the next level with the chainsaw selected as the current weapon. The
+rev-up sound would crash one node and hang up the other.
+
+--------------------------------------------------------------------------------
+10/19/07
+
+I completely changed the way that startup data is transmitted by removing the
+possibly dangerous and non-portable assumption that the netcmds array of ticcmd
+structs can be indexed and iterated over as a byte array.
+
+Joe and I still cannot play a netgame.
+
+--------------------------------------------------------------------------------
+10/17/07
+
+Added a VerifySDLVersions function to the debug version startup code after Joe
+turned out to be using a severely out-of-date version of SDL_net. This function
+tests the expected, compiled, and linked versions of the SDL libraries, and if
+any suffer a mismatch, a warning message appears.
+
+However, updating SDL_net did not fix our netgame problems. I continue to try
+to find the cause of these desyncs.
+
+--------------------------------------------------------------------------------
+10/16/07
+
+Began efforts to get the netcode working again by restoring huge segments of 
+code in d_main.c and d_net.c to their state as of MBF, and added the i_net.c 
+module from anarkavre's WinMBF-Net hack. I have met various trouble with some of
+the incomplete changes that were in SMMU v3.21 and I have been removing and
+remedying such problems one at a time as they show up.
+
+The console is currently unsafe to use in netgames due to an unknown number of
+commands which should be sync-critical but are not marked as net-commands. The
+console command transmission has also not been optimized or changed, and so
+remains extremely wonky.
+
+It is also currently unsafe to try to start a netgame with anything other than
+Eternity's default configuration, since there are an unidentified number of
+sync-critical variables which are NOT transmitted at startup, as a result of
+having to disable SMMU's broken console var startup transmission and re-enable
+the crappy BOOM startup code. This means if any variable new since BOOM is
+asserted in one client but not another, the game is going to desync.
+
+Joe and I have had no success getting the Linux and Win32 versions to cross-talk
+so far. I am experimenting with various changes and tweaks to try to fix it. In
+particular, I have added packing pragmas and attributes to all structures that
+are directly transmitted through the network buffer, and added a series of
+routines which handle network endianness conversion of 16- and 32-bit integers.
+
+SoM added a cool new feature, attached sectors. These help to solve the problem
+of having one tag per sector by allowing sectors to transfer effects applied to
+them to other sectors via control linedefs.
+
+--------------------------------------------------------------------------------
+10/10/07
+
+Finalized the new optional screen wipe blocking. By default it is off for normal
+play, but on during demo playback (starting demos instantly with the wipe 
+running causes you to miss several frames of playback). It can be set to 
+"never", "only in demos," or "always." I now run with it always enabled.
+
+I also tweaked some code to make the player unable to bob after dying, since I
+saw this happen several times while playing Heretic. If I died running into 
+stairs in just the right manner, my corpse would stick to the step with my view
+bobbing. This tweak may need a comp flag, but I doubt it breaks anything.
+
+--------------------------------------------------------------------------------
+10/09/07
+
+Readded the ability for the screen wipe routine to block the rest of the game by
+running in its own loop. Right now this is unconditional, but it will become
+optional after I get it fully working.
+
+--------------------------------------------------------------------------------
+10/02/07
+
+Used new player class extensions to add the Corvus player class and skin for
+Heretic, as well as the HereticPlayer mobj type (which is mostly identical to
+DoomPlayer, aside from the states it uses). Also added "wimpy" death sound 
+support to player skins and the PlayerSkull codepointer used to launch the
+player's spinning skull when he gibs in Heretic.
+
+--------------------------------------------------------------------------------
+09/29/07
+
+Yet more player class progress. The player's thing type and all uses of player
+states are now mapped either through the player class, or through mobjinfo as
+is appropriate for each particular use. I have had to write a number of support
+routines to enable some of these changes.
+
+For example, there is now a routine in e_player.c called E_IsPlayerWalkingState.
+This routine traces the walking states for a given player class object and 
+compares the states in that loop against the given state. This replaces a 
+previous hack which assumed that the player walking states were a contiguous set
+of four frames beginning at S_PLAY_WALK1.
+
+--------------------------------------------------------------------------------
+09/28/07
+
+Major progress on player classes. The default player skin is now mapped through
+the default player class, rather than being hard-coded as "Marine".
+
+--------------------------------------------------------------------------------
+09/27/07
+
+Tweaked PCX file writing after a complaint by entryway. I found ZSoft's official
+documentation for the PCX format and found that the wrong palette type has been
+written into the header all these years. According to the docs, type "2" means
+grayscale, even though type 2 PCXs can still contain a palette, and many
+interpreting programs ignore this header byte entirely. Amongst those that do
+respect this byte, however, is Windows Explorer under Win9x, which renders 
+DOOM's screenshot PCXs incorrectly in grayscale, giving them a sort of
+invulnerability-colormap look.
+
+The correct palette type byte value is 1.
+
+--------------------------------------------------------------------------------
+09/23/07
+
+Eternal revealed yet another problem - the ability to shoot floors and ceilings
+breaks some glass-covered switches. These are weird hacks that rely on bullets
+being able to pass certain closed glass sectors and hit a switch inside them.
+With plane shooting enabled, EE would instead stop the bullet tracers on the
+glass, making the switch inside inaccessible.
+
+So I added a new comp var, which really should have been there all along, 
+called comp_planeshoot. This toggles the ability to shoot planes on and off.
+
+I also added a tweak to EDF which forces all frames using the blank sprite 
+(which is by default TNT1) to use spriteframe #0.
+
+--------------------------------------------------------------------------------
+09/22/07
+
+Found another serious Cardboard bug while playing Eternal. This one is not a
+rendering problem, but rather a data flow issue. The segclip structure used to
+hold what were previously a lot of separate scattered-around rendering globals
+related to seg drawing was not being properly initialized or properly cleared
+out between segs.
+
+This means that not only were some parameters possibly carrying over between
+individual lines, but even between different maps, where the now invalid
+pointers could cause crashes. To top this off, an out-of-order execution issue
+in R_StoreWallRange causes certain values to be used from the segclip struct
+before it has even been initialized. On rare occasions this alone causes a 
+crash by accessing a NULL line pointer.
+
+Fixed all of this by moving up a memset in R_StoreWallRange, and also memsetting
+the segclip structure to all-zeroes between each seg rendering operation. I 
+also added a failsafe RANGECHECK to R_StoreWallRange which ensures that a NULL
+segclip.line, which should never happen, will not just crash the game.
+
+--------------------------------------------------------------------------------
+09/21/07
+
+Made some minor tweaks to SoM's Cardboard fix and resolved the remaining 
+redundant sky test FIXME.
+
+--------------------------------------------------------------------------------
+09/20/07
+
+While attempting to nail down the precise nature of the Cardboard rendering
+problem, I found a lot of unnecessary branches of the form:
+ 
+   foo = bar ? true : false;
+
+I replaced all of these with == ops and/or comparisons against 0, which are
+significantly faster (it's likely the compiler could optimize such constant
+expressions anyway, but I never count on the compiler to do something which can
+be simply optimized in the code).
+
+I also found two places in R_AddLine where there are redundant predicates
+testing for sky ceilings, where sky has earlier already been tested for. I put
+FIXME's on these, as I fear changing anything related to this code right now.
+
+SoM fixed the Eternal rendering bug this evening. It was indeed the 2S line
+rendering optimization. Unfortunately the optimization is now inapplicable in a
+large number of situations where it would ideally work. This is necessitated by
+DOOM's propensity for rendering through raised, closed sectors which have no
+textures on the surrounding 2S linedefs. These are generally referred to as
+"glass" sectors and have been extensively used in WADs such as Eternal to
+provide everything from unbreakable glass that blocks enemies' lines of sight,
+to a bizarre variant of transparent door which I've never seen documented on
+any page or FAQ of DOOM editing tricks.
+
+--------------------------------------------------------------------------------
+09/19/07
+
+Player classes continue to make minor progress.
+
+--------------------------------------------------------------------------------
+09/18/07
+
+I have identified a serious compatibility bug in Cardboard which is triggered
+on Eternal DOOM MAP03. This bug first appears in the initial Cardboard commit of
+r209 and causes the area behind the glass in the yellow key area to become a
+solid HOM. Preliminary testing indicates that this is somehow related to the
+Cardboard closed 2S lines optimization.
+
+--------------------------------------------------------------------------------
+09/17/07
+
+I made some enhancements to the silencer powerup effect, which isn't currently
+available to editors but will be made so along with the dynamic weapon system
+and inventory/pickups. Mainly, the effect now reduces the volume of sounds
+played by the player's weapons, as it does in Quake 2. Also made a small tweak
+to my previous vissprite fix.
+
+--------------------------------------------------------------------------------
+09/16/07
+
+Came up with a real fix to the Cardboard vissprite texturecolumn index overflow
+bug. The rangechecking code that was previously here has been promoted to an
+unconditional runtime check and has been made non-fatal. Instead, when the
+overstep has occured, the drawing loop will simply continue. At the start of the
+next iteration the loop ends automatically.
+
+--------------------------------------------------------------------------------
+09/13/07
+
+Continued turning special-case weapon behaviors into weapon flags.
+
+--------------------------------------------------------------------------------
 09/12/07
 
 I have turned back to the infant dynamic weapons system again for a change of
