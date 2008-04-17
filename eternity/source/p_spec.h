@@ -57,7 +57,7 @@
 
 // 4 players, 4 buttons each at once, max.
 // killough 2/14/98: redefine in terms of MAXPLAYERS
-#define MAXBUTTONS    (MAXPLAYERS*4)
+// #define MAXBUTTONS    (MAXPLAYERS*4)
 
 // 1 second, in ticks. 
 #define BUTTONTIME  TICRATE
@@ -593,11 +593,12 @@ typedef struct switchlist_s switchlist_t;
 
 typedef struct
 {
-  int      side;
-  bwhere_e where;
-  int      btexture;
-  int      btimer;
-  int      sector;
+  int         side;
+  bwhere_e    where;
+  int         btexture;
+  int         btimer;
+  degenmobj_t soundorg;
+  boolean     dopopout;
 } button_t;
 
 // p_lights
@@ -958,10 +959,6 @@ enum
 extern int             levelTime;
 extern int             levelTimeLimit;
 extern int             levelFragLimit;
-
-// haleyjd: this will still be needed externally by the save game code
-// list of retriggerable buttons active
-extern button_t buttonlist[MAXBUTTONS];
 
 extern platlist_t *activeplats;        // killough 2/14/98
 
