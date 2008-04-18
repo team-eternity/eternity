@@ -2,6 +2,16 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+04/17/08
+
+Added savegame support for buttons at long last. DOOM never saved the buttonlist
+which would cause reusable switches to freeze in the on or off state if you
+saved the game before they popped out and then reloaded it. Since I removed all
+of the line and sector pointers from the button_t structure to enable efficiency
+for the previous rewrites, writing and reading the structures to/from the save
+file is as simple as a call to memcpy.
+
+--------------------------------------------------------------------------------
 04/16/08
 
 I started reformatting the texture caching/construction code in r_data.c -- this
@@ -59,6 +69,31 @@ Various additions to libConfuse:
   parentheses. This syntax is also now supported in cmp frames, and the previous
   method of args specification in cmp strings will be considered deprecated in
   the next release.
+  
+* Keyword values are now supported in args and misc fields, including when
+  they are specified as arguments of a function value. The keywords are stored
+  in a large hashtable in e_edf.c and are relative to the context - the only
+  ones with meaning for a given codepointer are ones that the codepointer 
+  expects as possible values to its arguments.
+  
+* Cascading namespace resolution for unqualified names in args and misc fields.
+  This makes specifiers such as thing: and frame: unnecessary most of the time,
+  although they are still supported for situations where disambiguation is
+  required. The namespaces are searched in a fixed, pre-defined order.
+  
+I also did significant work on the gameModeInfo structure, moving more data
+into it, and merging it with the gamemode/gamemission variables. There is now
+once again one gamemodeinfo_t for each gamemode, and in addition, there are now
+missiondata_t structures which are applied over their respective gameModeInfo
+object at startup. They work much like EDF delta sections by replacing whatever
+fields in the gameModeInfo for which they do not possess the default value,
+which is typically 0 or NULL.
+
+My goal is to continue the process of getting rid of branches on gamemode and
+gamemission to the point where adding Hexen and Strife gamemodes will be nearly
+as simple as defining gamemodeinfo_t objects for them. It will already be a lot
+simpler than it was for Heretic, which I had begun support for before the  
+gameModeInfo system was even an idea.
 
 --------------------------------------------------------------------------------
 03/29/08
