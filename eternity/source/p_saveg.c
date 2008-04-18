@@ -486,7 +486,6 @@ void P_ArchiveThinkers(void)
 // first, so that no old target's reference count is decreased (when loading
 // savegames, old targets are indices, not really pointers to targets).
 //
-
 static void P_SetNewTarget(mobj_t **mop, mobj_t *targ)
 {
    *mop = NULL;
@@ -498,7 +497,6 @@ static void P_SetNewTarget(mobj_t **mop, mobj_t *targ)
 //
 // 2/14/98 killough: substantially modified to fix savegame bugs
 //
-
 void P_UnArchiveThinkers(void)
 {
    thinker_t *th;
@@ -1785,6 +1783,55 @@ void P_UnArchiveSoundSequences(void)
    for(i = 0; i < count; ++i)
       P_UnArchiveSndSeq();
 }
+
+//============================================================================
+//
+// haleyjd 04/17/08: Button saving
+//
+// Since Doom 0.99, buttons have never been saved in savegames, presumably
+// because id didn't know how to twizzle the line and sector pointers they
+// stored in the structures (but maybe they just forgot about it altogether).
+// This meant that switches scheduled to pop out at the time the game is saved
+// never did so after loading the save. No longer!
+//
+
+void P_ArchiveButtons(void)
+{
+   CheckSaveGame(sizeof(int) + numbuttonsalloc * sizeof(button_t));
+
+   // first, save number of buttons
+   memcpy(save_p, &numbuttonsalloc, sizeof(int));
+   save_p += sizeof(int);
+
+   // Save the button_t's directly. They no longer contain any pointers due to
+   // my recent rewrite of the button code.
+   if(numbuttonsalloc)
+   {
+      memcpy(save_p, buttonlist, numbuttonsalloc * sizeof(button_t));
+      save_p += numbuttonsalloc * sizeof(button_t);
+   }
+}
+
+void P_UnArchiveButtons(void)
+{
+   int numsaved;
+
+   // get number allocated when the game was saved
+   memcpy(&numsaved, save_p, sizeof(int));
+   save_p += sizeof(int);
+
+   // if not equal, we need to realloc buttonlist
+   if(numsaved != numbuttonsalloc)
+   {
+      buttonlist = realloc(buttonlist, numsaved * sizeof(button_t));
+      numbuttonsalloc = numsaved;
+   }
+
+   // copy the buttons from the save
+   memcpy(buttonlist, save_p, numsaved * sizeof(button_t));
+   save_p += numsaved * sizeof(button_t);
+}
+
 
 //----------------------------------------------------------------------------
 //

@@ -1835,6 +1835,8 @@ void G_SaveCurrentLevel(char *filename, char *description)
    Z_CheckHeap();
    P_ArchiveSoundSequences();
    Z_CheckHeap();
+   P_ArchiveButtons();
+   Z_CheckHeap();
    
    P_DeNumberObjects();
 
@@ -1991,6 +1993,7 @@ static void G_DoLoadGame(void)
    P_UnArchiveMap();    // killough 1/22/98: load automap information
    P_UnArchiveScripts(); // sf: scripting
    P_UnArchiveSoundSequences();
+   P_UnArchiveButtons();
    P_FreeObjTable();
 
    if(*save_p != 0xe6)

@@ -53,9 +53,7 @@
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "d_gi.h"
-#ifdef R_LINKEDPORTALS
 #include "r_main.h"
-#endif
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 

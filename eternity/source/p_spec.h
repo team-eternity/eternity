@@ -601,6 +601,10 @@ typedef struct
   boolean     dopopout;
 } button_t;
 
+// haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames
+extern button_t *buttonlist;
+extern int numbuttonsalloc;
+
 // p_lights
 
 typedef struct
