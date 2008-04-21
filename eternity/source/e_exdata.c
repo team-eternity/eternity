@@ -1755,7 +1755,7 @@ mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
 // have been initialized normally. Normal fields will be altered and
 // extended fields will be set in the linedef.
 //
-void E_LoadLineDefExt(line_t *line)
+void E_LoadLineDefExt(line_t *line, boolean applySpecial)
 {
    unsigned int edLineIdx;
    maplinedefext_t *edline;
@@ -1774,9 +1774,12 @@ void E_LoadLineDefExt(line_t *line)
    // get a pointer to the proper ExtraData line record
    edline = &EDLines[edLineIdx];
 
-   // apply standard fields to the line
-   line->special = edline->stdfields.special;
-   line->tag     = edline->stdfields.tag;
+   if(applySpecial)
+   {
+      // apply standard fields to the line
+      line->special = edline->stdfields.special;
+      line->tag     = edline->stdfields.tag;
+   }
 
    // apply extended fields to the line
 
@@ -1843,6 +1846,10 @@ void E_LoadSectorExt(sector_t *sector)
 //
 boolean E_IsParamSpecial(short special)
 {
+   // no param line specs in old demos
+   if(demo_version < 333)
+      return false;
+
    switch(special)
    {
    case 300: // Door_Raise
@@ -1911,6 +1918,7 @@ boolean E_IsParamSpecial(short special)
    case 373: // Light_Flicker
    case 374: // Light_Strobe
    case 375: // Radius_Quake
+   case 378: // Line_SetIdentification
       return true;
    default:
       return false;

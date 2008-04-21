@@ -1186,7 +1186,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
    int ok;
 
    // haleyjd 02/28/05: check for parameterized specials
-   if(demo_version >= 333 && E_IsParamSpecial(line->special))
+   if(E_IsParamSpecial(line->special))
    {
       P_ActivateParamLine(line, thing, side, SPAC_CROSS);
       return;
@@ -2103,7 +2103,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
 void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
 {
    // haleyjd 02/28/05: parameterized specials
-   if(demo_version >= 333 && E_IsParamSpecial(line->special))
+   if(E_IsParamSpecial(line->special))
    {
       P_ActivateParamLine(line, thing, side, SPAC_IMPACT);
       return;

@@ -610,8 +610,11 @@ void P_LoadLineDefs(int lump)
          sides[*ld->sidenum].special = ld->special;
 
       // haleyjd 02/26/05: ExtraData
+      // haleyjd 04/20/08: Implicit ExtraData lines
       if(ld->special == ED_LINE_SPECIAL)
-         E_LoadLineDefExt(ld);
+         E_LoadLineDefExt(ld, true);
+      else if(E_IsParamSpecial(ld->special))
+         E_LoadLineDefExt(ld, false);
    }
    Z_Free(data);
 }
@@ -796,7 +799,7 @@ void P_LoadLineDefs2(void)
 
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
-      ld->backsector  = ld->sidenum[1]!=-1 ? sides[ld->sidenum[1]].sector : 0;
+      ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : 0;
       
       switch(ld->special)
       {                       // killough 4/11/98: handle special types

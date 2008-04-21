@@ -326,7 +326,7 @@ extern void P_StartLineScript(line_t *line, mobj_t *thing);
 boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
 {
    // haleyjd: param lines make sidedness decisions on their own
-   boolean is_param = (demo_version >= 333 && E_IsParamSpecial(line->special));
+   boolean is_param = E_IsParamSpecial(line->special);
 
    if(side && !is_param) //jff 6/1/98 fix inadvertent deletion of side test
       return false;

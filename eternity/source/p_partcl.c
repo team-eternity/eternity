@@ -717,8 +717,8 @@ static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z,
       if(!p)
          break;
       
-      p->ttl = 48;
-      p->fade = FADEFROMTTL(48);
+      p->ttl = 96;
+      p->fade = FADEFROMTTL(96);
       p->trans = 255;
       p->size = 4;
       p->color = M_Random() & 0x80 ? color1 : color2;
