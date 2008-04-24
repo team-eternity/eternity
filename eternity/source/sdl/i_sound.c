@@ -89,12 +89,6 @@ typedef struct {
   unsigned char *data;
   unsigned char *startdata; // haleyjd
   unsigned char *enddata;
-  // Time/gametic that the channel started playing,
-  //  used to determine oldest, which automatically
-  //  has lowest priority.
-  // In case number of active sounds exceeds
-  //  available channels.
-  int starttime;
   // Hardware left and right channel volume lookup.
   int *leftvol_lookup;
   int *rightvol_lookup;
@@ -113,17 +107,21 @@ int steptable[256];
 // Volume lookups.
 int vol_lookup[128*256];
 
-/* cph 
- * stopchan
- * Stops a sound, unlocks the data 
- */
+//
+// stopchan
+//
+// cph 
+// Stops a sound, unlocks the data 
+//
 static void stopchan(int handle)
 {
    int cnum;
 
+#ifdef RANGECHECK
    // haleyjd 02/18/05: bounds checking
-   if(!snd_init || handle < 0 || handle >= MAX_CHANNELS)
-      return;
+    if(handle < 0 || handle >= MAX_CHANNELS)
+       return;
+#endif
 
    // haleyjd 02/18/05: sound channel locking in case of 
    // multithreaded access to channelinfo[].data. Make Eternity
@@ -156,6 +154,10 @@ static void stopchan(int handle)
    channelinfo[handle].id = NULL;
 }
 
+#define SOUNDHDRSIZE 8
+
+//
+// addsfx
 //
 // This function adds a sound to the
 //  list of currently active sounds,
@@ -168,7 +170,7 @@ static void stopchan(int handle)
 //
 static boolean addsfx(sfxinfo_t *sfx, int channel)
 {
-   size_t len;
+   size_t lumplen;
    int lump;
 
 #ifdef RANGECHECK
@@ -192,57 +194,95 @@ static boolean addsfx(sfxinfo_t *sfx, int channel)
    if(lump == -1)
       lump = W_GetNumForName(gameModeInfo->defSoundName);
    
-   len = W_LumpLength(lump);
+   lumplen = W_LumpLength(lump);
    
    // haleyjd 10/08/04: do not play zero-length sound lumps
-   if(len <= 8)
+   if(lumplen <= SOUNDHDRSIZE)
       return false;
 
    // haleyjd 06/03/06: rewrote again to make sound data properly freeable
    if(sfx->data == NULL)
    {   
       byte *data;
+      Uint32 samplerate, samplelen;
 
       // haleyjd: this should always be called (if lump is already loaded,
       // W_CacheLumpNum handles that for us).
       data = (byte *)W_CacheLumpNum(lump, PU_STATIC);
 
       // Check the header, and ensure this is a valid sound
-      if(data[0] != 0x03 || data[1] != 0x00 || 
-         data[6] != 0x00 || data[7] != 0x00)
+      if(data[0] != 0x03 || data[1] != 0x00)
       {
          Z_ChangeTag(data, PU_CACHE);
          return false;
       }
-      
-      // haleyjd 06/03/06
-      sfx->data = Z_Malloc(len, PU_STATIC, &sfx->data);
-      memcpy(sfx->data, data, len);
+
+      samplerate = (data[3] << 8) | data[2];
+      samplelen  = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+
+      // don't play sounds that think they're longer than they are
+      if(samplelen > lumplen - SOUNDHDRSIZE)
+      {
+         Z_ChangeTag(data, PU_CACHE);
+         return false;
+      }
+
+      sfx->alen = (Uint32)(((ULong64)samplelen * snd_samplerate) / samplerate);
+      sfx->data = Z_Malloc(sfx->alen, PU_STATIC, &sfx->data);
+
+      // haleyjd 04/23/08: Convert sound to target samplerate
+      if(sfx->alen != samplelen)
+      {  
+         unsigned int i;
+         byte *dest = (byte *)sfx->data;
+         byte *src  = data + SOUNDHDRSIZE;
+         
+         unsigned int step = (samplerate << 16) / snd_samplerate;
+         unsigned int stepremainder = 0, j = 0;
+
+         // do linear filtering operation
+         for(i = 0; i < sfx->alen && j < samplelen - 1; ++i)
+         {
+            int d = (((unsigned int)src[j  ] * (0x10000 - stepremainder)) +
+                     ((unsigned int)src[j+1] * stepremainder)) >> 16;
+
+            if(d > 255)
+               dest[i] = 255;
+            else if(d < 0)
+               dest[i] = 0;
+            else
+               dest[i] = (byte)d;
+
+            stepremainder += step;
+            j += (stepremainder >> 16);
+
+            stepremainder &= 0xffff;
+         }
+         // fill remainder (if any) with final sample byte
+         for(; i < sfx->alen; ++i)
+            dest[i] = src[j];
+      }
+      else
+      {
+         // sound is already at target samplerate, copy data
+         memcpy(sfx->data, data + SOUNDHDRSIZE, samplelen);
+      }
 
       // haleyjd 06/03/06: don't need original lump data any more
       Z_ChangeTag(data, PU_CACHE);
-
    }
    else
       Z_ChangeTag(sfx->data, PU_STATIC); // reset to static cache level
 
    channelinfo[channel].data = sfx->data;
-
-   /* Find padded length */   
-   len -= 8;
    
-   /* Set pointer to end of raw data. */
-   channelinfo[channel].enddata = channelinfo[channel].data + len - 1;
-   channelinfo[channel].samplerate = 
-      (channelinfo[channel].data[3] << 8) + channelinfo[channel].data[2];
-   channelinfo[channel].data += 8; /* Skip header */
+   // Set pointer to end of raw data.
+   channelinfo[channel].enddata = (byte *)sfx->data + sfx->alen - 1;
 
    // haleyjd 06/03/06: keep track of start of sound
    channelinfo[channel].startdata = channelinfo[channel].data;
    
    channelinfo[channel].stepremainder = 0;
-   // Should be gametic, I presume.
-   channelinfo[channel].starttime = gametic;
    
    // Preserve sound SFX id
    channelinfo[channel].id = sfx;
@@ -250,6 +290,12 @@ static boolean addsfx(sfxinfo_t *sfx, int channel)
    return true;
 }
 
+//
+// updateSoundParams
+//
+// Changes sound parameters in response to stereo panning and relative location
+// change.
+//
 static void updateSoundParams(int handle, int volume, int separation, int pitch)
 {
    int slot = handle;
@@ -271,9 +317,9 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    // Patched to shift left *then* divide, to minimize roundoff errors
    // as well as to use SAMPLERATE as defined above, not to assume 11025 Hz
    if(pitched_sounds)
-      channelinfo[slot].step = step + (((channelinfo[slot].samplerate<<16)/snd_samplerate)-65536);
+      channelinfo[slot].step = step;
    else
-      channelinfo[slot].step = ((channelinfo[slot].samplerate<<16)/snd_samplerate);
+      channelinfo[slot].step = 1 << 16;
    
    // Separation, that is, orientation/stereo.
    //  range is: 1 - 256
@@ -301,7 +347,7 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    
    // Get the proper lookup table piece
    //  for this volume level???
-   channelinfo[slot].leftvol_lookup = &vol_lookup[leftvol*256];
+   channelinfo[slot].leftvol_lookup  = &vol_lookup[leftvol*256];
    channelinfo[slot].rightvol_lookup = &vol_lookup[rightvol*256];
 }
 
@@ -344,10 +390,9 @@ void I_SetChannels(void)
    }
    
    // This table provides step widths for pitch parameters.
-   // I fail to see that this is currently used.
    for(i=-128 ; i<128 ; i++)
    {
-      steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0*snd_samplerate/11025)))*65536.0);
+      steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0 /* *snd_samplerate/11025 */)))*65536.0);
    }
    
    
@@ -365,6 +410,9 @@ void I_SetChannels(void)
    }
 }
 
+//
+// I_SetSfxVolume
+//
 void I_SetSfxVolume(int volume)
 {
   // Identical to DOS.
@@ -378,6 +426,8 @@ void I_SetSfxVolume(int volume)
 
 // jff 1/21/98 moved music volume down into MUSIC API with the rest
 
+//
+// I_GetSfxLumpNum
 //
 // Retrieve the raw data lump index
 //  for a given SFX name.
@@ -421,7 +471,7 @@ int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
    // haleyjd 06/03/06: look for an unused hardware channel
    for(handle = 0; handle < MAX_CHANNELS; ++handle)
    {
-      if(!I_SoundIsPlaying(handle))
+      if(channelinfo[handle].data == NULL)
          break;
    }
 
@@ -484,6 +534,14 @@ int I_SoundIsPlaying(int handle)
    return (channelinfo[handle].data != NULL);
 }
 
+//
+// I_SoundID
+//
+// haleyjd: returns the unique id number assigned to a specific instance
+// of a sound playing on a given channel. This is required to make sure
+// that the higher-level sound code doesn't start updating sounds that have
+// been displaced without it noticing.
+//
 int I_SoundID(int handle)
 {
    if(!snd_init)
@@ -508,38 +566,41 @@ void I_UpdateSound(void)
 {
 }
 
+// DEBUG: profiling info
+static unsigned int numcalls;
+static unsigned int timeInUpdate;
+
+#define STEP sizeof(Sint16)
+
 static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
 {
    // Mix current sound data.
    // Data, from raw sound, for right and left.
-   register unsigned char sample;
-   register int dl;
-   register int dr;
+   register Uint8  sample;
+   register Sint32 dl;
+   register Sint32 dr;
    
    // Pointers in audio stream, left, right, end.
-   short *leftout;
-   short *rightout;
-   short *leftend;
-
-   // Step in stream, left and right, thus two.
-   int step;
+   Sint16 *leftout;
+   Sint16 *rightout;
+   Sint16 *leftend;
    
    // Mixing channel index.
    int chan;
 
-   // haleyjd 02/18/05: error check
-   if(!stream)
-      return;
-   
+   // DEBUG: profiling
+   unsigned int time;
+   ++numcalls;
+   time = SDL_GetTicks();
+
    // Left and right channel
    //  are in audio stream, alternating.
-   leftout  = (signed short *)stream;
-   rightout = ((signed short *)stream)+1;
-   step = 2;
+   leftout  = (Sint16 *)stream;
+   rightout = leftout + 1;
    
    // Determine end, for left channel only
    //  (right channel is implicit).
-   leftend = leftout + (len / 4) * step;
+   leftend = leftout + len / STEP;
 
    // Mix sounds into the mixing buffer.
    // Loop over step*SAMPLECOUNT,
@@ -556,56 +617,52 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
       for(chan = 0; chan < MAX_CHANNELS; ++chan)
       {
          // Check channel, if active.
-         if(channelinfo[chan].data)
+         if(!channelinfo[chan].data)
+            continue;
+
+         // haleyjd 02/18/05: lock the channel to prevent possible race 
+         // conditions in the below loop that could modify 
+         // channelinfo[chan].data while it's being used here.
+         channelinfo[chan].lock = 1;
+         
+         // Get the raw data from the channel. 
+         // Sounds are now prefiltered.
+         sample = *(channelinfo[chan].data);
+            
+         // Add left and right part
+         //  for this channel (sound)
+         //  to the current data.
+         // Adjust volume accordingly.
+         dl += channelinfo[chan].leftvol_lookup[sample];
+         dr += channelinfo[chan].rightvol_lookup[sample];
+         
+         // Increment index ???
+         channelinfo[chan].stepremainder += channelinfo[chan].step;
+         
+         // MSB is next sample???
+         channelinfo[chan].data += channelinfo[chan].stepremainder >> 16;
+         
+         // Limit to LSB???
+         channelinfo[chan].stepremainder &= 0xffff;
+         
+         // Check whether we are done.
+         if(channelinfo[chan].data >= channelinfo[chan].enddata)
          {
-            // haleyjd 02/18/05: lock the channel to prevent possible race 
-            // conditions in the below loop that could modify 
-            // channelinfo[chan].data while it's being used here.
-            channelinfo[chan].lock = 1;
-
-            // Get the raw data from the channel. 
-            // no filtering
-            // sample = *channelinfo[chan].data;
-            // linear filtering
-            sample = (((unsigned int)channelinfo[chan].data[0] * (0x10000 - channelinfo[chan].stepremainder))
-               + ((unsigned int)channelinfo[chan].data[1] * (channelinfo[chan].stepremainder))) >> 16;
-            
-            // Add left and right part
-            //  for this channel (sound)
-            //  to the current data.
-            // Adjust volume accordingly.
-            dl += channelinfo[chan].leftvol_lookup[sample];
-            dr += channelinfo[chan].rightvol_lookup[sample];
-
-            // Increment index ???
-            channelinfo[chan].stepremainder += channelinfo[chan].step;
-
-            // MSB is next sample???
-            channelinfo[chan].data += channelinfo[chan].stepremainder >> 16;
-
-            // Limit to LSB???
-            channelinfo[chan].stepremainder &= 0xffff;
-            
-            // Check whether we are done.
-            if(channelinfo[chan].data >= channelinfo[chan].enddata)
-            {
-               // haleyjd 02/18/05: unlock channel
-               channelinfo[chan].lock = 0;
-
-               if(channelinfo[chan].loop &&
-                  !(paused || (menuactive && !demoplayback && !netgame)))
-               {
-                  // haleyjd 06/03/06: restart a looping sample if not paused
-                  channelinfo[chan].data = channelinfo[chan].startdata;
-                  channelinfo[chan].stepremainder = 0;
-                  channelinfo[chan].starttime = gametic;
-               }
-               else
-                  stopchan(chan);
-            }
             // haleyjd 02/18/05: unlock channel
             channelinfo[chan].lock = 0;
+            
+            if(channelinfo[chan].loop &&
+               !(paused || (menuactive && !demoplayback && !netgame)))
+            {
+               // haleyjd 06/03/06: restart a looping sample if not paused
+               channelinfo[chan].data = channelinfo[chan].startdata;
+               channelinfo[chan].stepremainder = 0;
+            }
+            else
+               stopchan(chan);
          }
+         else // haleyjd 02/18/05: unlock channel
+            channelinfo[chan].lock = 0;
       }
       
       // Clamp to range. Left hardware channel.
@@ -625,9 +682,12 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
          *rightout = (short)dr;
       
       // Increment current pointers in stream
-      leftout += step;
-      rightout += step;
+      leftout  += STEP;
+      rightout += STEP;
    }
+
+   // DEBUG: profiling
+   timeInUpdate += (SDL_GetTicks() - time);
 }
 
 // This would be used to write out the mixbuffer
@@ -640,12 +700,20 @@ void I_SubmitSound(void)
    // haleyjd: whatever it is, SDL doesn't need it either
 }
 
+//
+// I_ShutdownSound
+//
+// atexit handler.
+//
 void I_ShutdownSound(void)
 {
    if(snd_init)
    {
       Mix_CloseAudio();
       snd_init = 0;
+
+      // DEBUG: profiling
+      printf("I_SDLUpdateSound: %lu calls, %lu time\n", numcalls, timeInUpdate);
    }
 }
 
@@ -673,8 +741,11 @@ void I_CacheSound(sfxinfo_t *sound)
    }
 }
 
+//
+// I_InitSound
+//
 // SoM 9/14/02: Rewrite. code taken from prboom to use SDL_Mixer
-
+//
 void I_InitSound(void)
 {   
    if(!nosfxparm)
@@ -742,11 +813,19 @@ static void *music_block = NULL;
 // Macro to make code more readable
 #define CHECK_MUSIC(h) ((h) && music != NULL)
 
+//
+// I_ShutdownMusic
+//
+// atexit handler.
+//
 void I_ShutdownMusic(void)
 {
    I_UnRegisterSong(1);
 }
 
+//
+// I_InitMusic
+//
 void I_InitMusic(void)
 {
    switch(mus_card)
@@ -763,6 +842,11 @@ void I_InitMusic(void)
    atexit(I_ShutdownMusic);
 }
 
+//
+// I_PlaySong
+//
+// Plays the currently registered song.
+//
 void I_PlaySong(int handle, int looping)
 {
    if(CHECK_MUSIC(handle) && Mix_PlayMusic(music, looping ? -1 : 0) == -1)
@@ -775,6 +859,9 @@ void I_PlaySong(int handle, int looping)
    I_SetMusicVolume(snd_MusicVolume);
 }
 
+//
+// I_SetMusicVolume
+//
 void I_SetMusicVolume(int volume)
 {
    // haleyjd 09/04/06: adjust to use scale from 0 to 15
@@ -783,6 +870,9 @@ void I_SetMusicVolume(int volume)
 
 static int paused_midi_volume;
 
+//
+// I_PauseSong
+//
 void I_PauseSong(int handle)
 {
    if(CHECK_MUSIC(handle))
@@ -799,6 +889,9 @@ void I_PauseSong(int handle)
    }
 }
 
+//
+// I_ResumeSong
+//
 void I_ResumeSong(int handle)
 {
    if(CHECK_MUSIC(handle))
@@ -811,12 +904,18 @@ void I_ResumeSong(int handle)
    }
 }
 
+//
+// I_StopSong
+//
 void I_StopSong(int handle)
 {
    if(CHECK_MUSIC(handle))
       Mix_HaltMusic();
 }
 
+//
+// I_UnRegisterSong
+//
 void I_UnRegisterSong(int handle)
 {
    if(CHECK_MUSIC(handle))
@@ -840,6 +939,9 @@ void I_UnRegisterSong(int handle)
    }
 }
 
+//
+// I_RegisterSong
+//
 int I_RegisterSong(void *data, int size)
 {
    if(music != NULL)
@@ -892,7 +994,11 @@ int I_RegisterSong(void *data, int size)
    return music != NULL;
 }
 
+//
+// I_QrySongPlaying
+//
 // Is the song playing?
+//
 int I_QrySongPlaying(int handle)
 {
    // haleyjd: this is never called

@@ -96,7 +96,6 @@ struct sfxinfo_s
    }
    pitch_type;
 
-   
    // sound data
    void *data;
    
@@ -116,6 +115,9 @@ struct sfxinfo_s
    // haleyjd 09/03/03: revised for dynamic EDF sounds
    sfxinfo_t *next;     // next in mnemonic hash chain
    int dehackednum;     // dehacked number
+
+   // haleyjd 04/23/08: additional caching data
+   unsigned int alen;   // length of converted sound pointed to by data
 };
 
 //

@@ -2357,6 +2357,10 @@ void A_FatAttack1(mobj_t *actor)
    int    an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
    
+   // haleyjd: no crashing
+   if(!actor->target)
+      return;
+
    if(FatShotType == -1)
       FatShotType = E_SafeThingType(MT_FATSHOT);
    
@@ -2379,6 +2383,10 @@ void A_FatAttack2(mobj_t *actor)
    mobj_t *mo;
    int    an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
+
+   // haleyjd: no crashing
+   if(!actor->target)
+      return;
    
    if(FatShotType == -1)
       FatShotType = E_SafeThingType(MT_FATSHOT);
@@ -2400,6 +2408,10 @@ void A_FatAttack3(mobj_t *actor)
    mobj_t *mo;
    int    an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
+
+   // haleyjd: no crashing
+   if(!actor->target)
+      return;
    
    if(FatShotType == -1)
       FatShotType = E_SafeThingType(MT_FATSHOT);
