@@ -390,10 +390,10 @@ void I_EndDoom(void)
    // haleyjd: it's possible to have quit before we even initialized
    // gameModeInfo, so be sure it's valid before using it here. Also,
    // allow ENDOOM disable in configuration.
-   if(!gameModeInfo || !showendoom)
+   if(!GameModeInfo || !showendoom)
       return;
    
-   endoom_data = W_CacheLumpName(gameModeInfo->endTextName, PU_STATIC);
+   endoom_data = W_CacheLumpName(GameModeInfo->endTextName, PU_STATIC);
    
    // Set up text mode screen   
    TXT_Init();

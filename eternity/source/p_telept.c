@@ -78,8 +78,8 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
             // haleyjd 12/15/02: cph found out this was removed
             // in Final DOOM, so don't do it for Final DOOM demos.
             if(!(demo_compatibility &&
-               (gameModeInfo->missionInfo->id == pack_plut || 
-                gameModeInfo->missionInfo->id == pack_tnt)))
+               (GameModeInfo->missionInfo->id == pack_plut || 
+                GameModeInfo->missionInfo->id == pack_tnt)))
             {
                // SoM: so yeah... Need this for linked portals.
                if(demo_version >= 333)
@@ -108,16 +108,16 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
 
             // spawn teleport fog and emit sound at source
             S_StartSound(P_SpawnMobj(oldx, oldy, 
-                                     oldz + gameModeInfo->teleFogHeight, 
-                                     gameModeInfo->teleFogType), 
-                         gameModeInfo->teleSound);
+                                     oldz + GameModeInfo->teleFogHeight, 
+                                     GameModeInfo->teleFogType), 
+                         GameModeInfo->teleSound);
 
             // spawn teleport fog and emit sound at destination
             S_StartSound(P_SpawnMobj(m->x + 20*finecosine[m->angle>>ANGLETOFINESHIFT],
                                      m->y + 20*finesine[m->angle>>ANGLETOFINESHIFT],
-                                     thing->z + gameModeInfo->teleFogHeight, 
-                                     gameModeInfo->teleFogType),
-                         gameModeInfo->teleSound);
+                                     thing->z + GameModeInfo->teleFogHeight, 
+                                     GameModeInfo->teleFogType),
+                         GameModeInfo->teleSound);
 
             P_AdjustFloorClip(thing);
 

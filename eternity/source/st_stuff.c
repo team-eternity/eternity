@@ -653,7 +653,7 @@ static void ST_DoomTicker(void)
 //
 void ST_Ticker(void)
 {
-   gameModeInfo->StatusBar->Ticker();
+   GameModeInfo->StatusBar->Ticker();
 }
 
 static int st_palette = 0;
@@ -889,7 +889,7 @@ static void ST_DoomFSDrawer(void)
 //
 void ST_Drawer(boolean fullscreen, boolean refresh)
 {
-   stbarfns_t *StatusBar = gameModeInfo->StatusBar;
+   stbarfns_t *StatusBar = GameModeInfo->StatusBar;
 
    // haleyjd: test whether fullscreen graphical hud is enabled
    boolean fshud = hud_enabled && hud_overlaystyle == 4;
@@ -988,7 +988,7 @@ void ST_CacheFaces(patch_t **faces, char *facename)
    char namebuf[9];
 
    // haleyjd 10/11/03: not in other gamemodes
-   if(gameModeInfo->type != Game_DOOM)
+   if(GameModeInfo->type != Game_DOOM)
       return;
 
    // face states
@@ -1311,7 +1311,7 @@ void ST_Start(void)
 {
    if(!st_stopped)
       ST_Stop();
-   gameModeInfo->StatusBar->Start();
+   GameModeInfo->StatusBar->Start();
    st_stopped = false;
 }
 
@@ -1341,7 +1341,7 @@ void ST_Init(void)
    // game modes will need it.
    lu_palette = W_GetNumForName("PLAYPAL");
 
-   gameModeInfo->StatusBar->Init();
+   GameModeInfo->StatusBar->Init();
 }
 
 /***********************

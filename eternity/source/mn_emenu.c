@@ -394,7 +394,7 @@ void MN_ProcessMenus(cfg_t *cfg)
    if((override_name = cfg_getstr(cfg, ITEM_MN_EPISODE)))
    {
       // not allowed in a shareware gamemode!
-      if(gameModeInfo->flags & GIF_SHAREWARE)
+      if(GameModeInfo->flags & GIF_SHAREWARE)
       {
          E_EDFLoggedErr(1, "MN_ProcessMenus: can't override episodes " 
                            "in shareware. Register!\n");

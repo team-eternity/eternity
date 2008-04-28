@@ -167,7 +167,7 @@ void HU_FragsErase(void)
    if(!(GameType == gt_dm))
       return;
    
-   top_y = SCREENHEIGHT - gameModeInfo->StatusBar->height;
+   top_y = SCREENHEIGHT - GameModeInfo->StatusBar->height;
    
    R_VideoErase(0, FRAGSY, SCREENWIDTH, FRAGSY - top_y); // ANYRES
 }

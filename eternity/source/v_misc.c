@@ -194,10 +194,10 @@ static void V_LoadFont(void)
 
    // haleyjd 01/14/05: populate the vfont object with the proper
    // values for the current game mode.
-   small_font.cy    = gameModeInfo->vtextinfo->cy;
-   small_font.space = gameModeInfo->vtextinfo->space;
-   small_font.dw    = gameModeInfo->vtextinfo->dw;
-   small_font.absh  = gameModeInfo->vtextinfo->absh;
+   small_font.cy    = GameModeInfo->vtextinfo->cy;
+   small_font.space = GameModeInfo->vtextinfo->space;
+   small_font.dw    = GameModeInfo->vtextinfo->dw;
+   small_font.absh  = GameModeInfo->vtextinfo->absh;
 
    // init to NULL first
    for(i = 0; i < V_FONTSIZE; ++i)
@@ -209,7 +209,7 @@ static void V_LoadFont(void)
          continue;
 
       // haleyjd 08/16/02: heretic font support
-      if(gameModeInfo->type == Game_Heretic)
+      if(GameModeInfo->type == Game_Heretic)
       {
          switch(j)
          {
@@ -244,10 +244,10 @@ static void V_LoadBigFont(void)
 
    // haleyjd 03/26/05: populate the vfont object with the proper
    // values for the current game mode.
-   big_font.cy    = gameModeInfo->btextinfo->cy;
-   big_font.space = gameModeInfo->btextinfo->space;
-   big_font.dw    = gameModeInfo->btextinfo->dw;
-   big_font.absh  = gameModeInfo->btextinfo->absh;
+   big_font.cy    = GameModeInfo->btextinfo->cy;
+   big_font.space = GameModeInfo->btextinfo->space;
+   big_font.dw    = GameModeInfo->btextinfo->dw;
+   big_font.absh  = GameModeInfo->btextinfo->absh;
 
    // pass on and alter some values for the big number font
    big_num_font.cy    = big_font.cy;
@@ -446,9 +446,9 @@ void V_DrawLoading(void)
    int linelen;
    fixed_t yfrac, ystep;
 
-   // haleyjd 11/30/02: get palette indices from gameModeInfo
-   int white = gameModeInfo->whiteIndex;
-   int black = gameModeInfo->blackIndex;
+   // haleyjd 11/30/02: get palette indices from GameModeInfo
+   int white = GameModeInfo->whiteIndex;
+   int black = GameModeInfo->blackIndex;
 
    if(!loading_message)
       return;
@@ -536,9 +536,9 @@ void V_LoadingSetTo(int amount)
 // moved from i_video.c to make it a bit more
 // system non-specific
 
-// haleyjd 11/30/02: altered BLACK, WHITE defines to use gameModeInfo
-#define BLACK (gameModeInfo->blackIndex)
-#define WHITE (gameModeInfo->whiteIndex)
+// haleyjd 11/30/02: altered BLACK, WHITE defines to use GameModeInfo
+#define BLACK (GameModeInfo->blackIndex)
+#define WHITE (GameModeInfo->whiteIndex)
 #define FPS_HISTORY 80
 #define CHART_HEIGHT 40
 #define X_OFFSET 20

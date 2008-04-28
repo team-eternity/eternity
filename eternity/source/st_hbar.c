@@ -425,7 +425,7 @@ static void ST_HticFSDrawer(void)
 }
 
 //
-// Status Bar Object for gameModeInfo
+// Status Bar Object for GameModeInfo
 //
 stbarfns_t HticStatusBar =
 {

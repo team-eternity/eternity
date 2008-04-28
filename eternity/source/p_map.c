@@ -1605,7 +1605,7 @@ static void P_HitSlideLine(line_t *ld)
       {
          // haleyjd: only the player should oof
          if(slidemo->player)
-            S_StartSound(slidemo, gameModeInfo->playerSounds[sk_oof]); // oooff!
+            S_StartSound(slidemo, GameModeInfo->playerSounds[sk_oof]); // oooff!
          tmxmove /= 2; // absorb half the momentum
          tmymove = -tmymove/2;
       }
@@ -1620,7 +1620,7 @@ static void P_HitSlideLine(line_t *ld)
       {
          // haleyjd: only the player should oof
          if(slidemo->player)
-            S_StartSound(slidemo, gameModeInfo->playerSounds[sk_oof]); // oooff!
+            S_StartSound(slidemo, GameModeInfo->playerSounds[sk_oof]); // oooff!
          tmxmove = -tmxmove/2; // absorb half the momentum
          tmymove /= 2;
       }
@@ -1654,7 +1654,7 @@ static void P_HitSlideLine(line_t *ld)
    {
       // haleyjd: only the player should oof
       if(slidemo->player)
-         S_StartSound(slidemo, gameModeInfo->playerSounds[sk_oof]); // oooff!
+         S_StartSound(slidemo, GameModeInfo->playerSounds[sk_oof]); // oooff!
       moveangle = lineangle - deltaangle;
       movelen /= 2; // absorb
       moveangle >>= ANGLETOFINESHIFT;
@@ -1970,7 +1970,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
    {
       // sf: clear the skin which will mess things up
       // haleyjd 03/11/03: only in Doom
-      if(gameModeInfo->type == Game_DOOM)
+      if(GameModeInfo->type == Game_DOOM)
       {
          thing->skin = NULL;
          P_SetMobjState(thing, E_SafeState(S_GIBS));

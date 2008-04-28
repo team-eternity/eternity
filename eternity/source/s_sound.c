@@ -874,13 +874,13 @@ void S_ChangeMusicNum(int musnum, int looping)
 {
    musicinfo_t *music;
    
-   if(musnum <= gameModeInfo->musMin || musnum >= gameModeInfo->numMusic)
+   if(musnum <= GameModeInfo->musMin || musnum >= GameModeInfo->numMusic)
    {
       doom_printf(FC_ERROR "Bad music number %d\n", musnum);
       return;
    }
    
-   music = &(gameModeInfo->s_music[musnum]);
+   music = &(GameModeInfo->s_music[musnum]);
    
    S_ChangeMusic(music, looping);
 }
@@ -918,7 +918,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    S_StopMusic();
 
    psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-             gameModeInfo->musPrefix, music->name);
+             GameModeInfo->musPrefix, music->name);
 
    lumpnum = W_CheckNumForName(namebuf);
    if(lumpnum == -1)
@@ -1018,7 +1018,7 @@ void S_Start(void)
    {
       // dont know what music to play
       // we need a default
-      LevelInfo.musicName = gameModeInfo->defMusName;
+      LevelInfo.musicName = GameModeInfo->defMusName;
    }
    
    // sf: replacement music
@@ -1030,7 +1030,7 @@ void S_Start(void)
       {
          mnum = idmusnum; //jff 3/17/98 reload IDMUS music if not -1
       }
-      else if(gameModeInfo->type == Game_Heretic)
+      else if(GameModeInfo->type == Game_Heretic)
       {
          int gep = gameepisode;
          int gmp = gamemap;
@@ -1046,7 +1046,7 @@ void S_Start(void)
       }
       else
       {
-         if(gameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial)
          {
             mnum = mus_runnin + gamemap - 1;
          }
@@ -1252,8 +1252,8 @@ static void S_CreateMusicHashTable(void)
       musicinfos[i] = NULL;
    
    // hook in all natively defined music
-   for(i = 0; i < gameModeInfo->numMusic; ++i)
-      S_HookMusic(&(gameModeInfo->s_music[i]));
+   for(i = 0; i < GameModeInfo->numMusic; ++i)
+      S_HookMusic(&(GameModeInfo->s_music[i]));
 }
 
 musicinfo_t *S_MusicForName(const char *name)
@@ -1285,7 +1285,7 @@ void S_UpdateMusic(int lumpnum)
    int prefixlen;
 
    // haleyjd 11/03/06: enormous bug here for Heretic
-   prefixlen = strlen(gameModeInfo->musPrefix);
+   prefixlen = strlen(GameModeInfo->musPrefix);
 
    memset(sndname, 0, sizeof(sndname));
    strncpy(sndname, lumpinfo[lumpnum]->name + prefixlen, 8 - prefixlen);
@@ -1356,7 +1356,7 @@ CONSOLE_COMMAND(s_playmusic, 0)
    // check to see if the lump exists to avoid stopping the current music if it
    // is missing
    psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-             gameModeInfo->musPrefix, music->name);
+             GameModeInfo->musPrefix, music->name);
 
    if(W_CheckNumForName(namebuf) < 0)
    {

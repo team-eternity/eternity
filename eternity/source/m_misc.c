@@ -2414,10 +2414,10 @@ void M_ScreenShot(void)
    if(!success)
    {
       doom_printf(errno? strerror(errno) : FC_ERROR "Could not take screenshot");
-      S_StartSound(NULL, gameModeInfo->playerSounds[sk_oof]);
+      S_StartSound(NULL, GameModeInfo->playerSounds[sk_oof]);
    }
    else
-      S_StartSound(NULL, gameModeInfo->c_BellSound);
+      S_StartSound(NULL, GameModeInfo->c_BellSound);
 }
 
 // haleyjd: portable strupr function

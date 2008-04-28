@@ -574,10 +574,10 @@ void AM_loadPics(void)
    int i, lumpnum;
    char namebuf[9];
    
-   // haleyjd 10/09/05: get format string from gameModeInfo
+   // haleyjd 10/09/05: get format string from GameModeInfo
    for(i = 0; i < 10; ++i)
    {
-      sprintf(namebuf, gameModeInfo->markNumFmt, i);
+      sprintf(namebuf, GameModeInfo->markNumFmt, i);
       marknums[i] = W_CacheLumpName(namebuf, PU_STATIC);
    }
 
@@ -669,7 +669,7 @@ void AM_LevelInit(void)
    
    // SoM 2-4-04: ANYRES
    f_w = video.width;
-   f_h = video.height - ((gameModeInfo->StatusBar->height * video.yscale) >> FRACBITS);
+   f_h = video.height - ((GameModeInfo->StatusBar->height * video.yscale) >> FRACBITS);
 
    AM_findMinMaxBoundaries();
    scale_mtof = FixedDiv(min_scale_mtof, (int)(0.7*FRACUNIT));

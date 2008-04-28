@@ -93,7 +93,7 @@ static skin_t *P_SkinForName(char *s);
 static void P_ResolveSkinSounds(skin_t *skin)
 {
    int i;
-   const char **skinsounddefs = gameModeInfo->skinSounds;
+   const char **skinsounddefs = GameModeInfo->skinSounds;
 
    for(i = 0; i < NUMSKINSOUNDS; ++i)
    {
@@ -123,7 +123,7 @@ void P_InitSkins(void)
    // FIXME: problem here with preferences
    if(default_skin == NULL) 
    {
-      playerclass_t *dpc = E_PlayerClassForName(gameModeInfo->defPClassName);
+      playerclass_t *dpc = E_PlayerClassForName(GameModeInfo->defPClassName);
       default_skin = strdup(dpc->defaultskin->skinname);
    }
 

@@ -223,7 +223,7 @@ void F_TextWrite(void)
    int         lumpnum;
    
    // haleyjd: get finale font metrics
-   gitextmetric_t *fontmetrics = gameModeInfo->ftextinfo;
+   gitextmetric_t *fontmetrics = GameModeInfo->ftextinfo;
 
    // erase the entire screen to a tiled background
    
@@ -764,7 +764,7 @@ static void F_FinaleEndDrawer(void)
    switch(LevelInfo.finaleType)
    {
    case FINALE_DOOM_CREDITS:
-      if(gameModeInfo->flags & GIF_SHAREWARE)
+      if(GameModeInfo->flags & GIF_SHAREWARE)
          V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("HELP2",PU_CACHE));
       else
          V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("CREDIT",PU_CACHE));
@@ -779,7 +779,7 @@ static void F_FinaleEndDrawer(void)
       V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("ENDPIC",PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
-      if(gameModeInfo->flags & GIF_SHAREWARE)
+      if(GameModeInfo->flags & GIF_SHAREWARE)
          V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
                      W_CacheLumpName("ORDER", PU_CACHE));
       else

@@ -307,7 +307,7 @@ void I_EndDoom(void)
   int lump;
 
   // haleyjd 05/21/06: must use gameModeInfo here too...
-  if (lumpinfo && (lump = W_CheckNumForName(gameModeInfo->endTextName)) != -1) // killough 10/98
+  if (lumpinfo && (lump = W_CheckNumForName(GameModeInfo->endTextName)) != -1) // killough 10/98
     {  // killough 8/19/98: simplify
       memcpy(0xb8000 + (byte *) __djgpp_conventional_base,
 	     W_CacheLumpNum(lump, PU_CACHE), 0xf00);

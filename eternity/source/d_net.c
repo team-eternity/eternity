@@ -330,8 +330,8 @@ static void GetPackets(void)
             tflash = P_SpawnMobj(players[netconsole].mo->x,
                                  players[netconsole].mo->y,
                                  players[netconsole].mo->z + 
-                                    gameModeInfo->teleFogHeight,
-                                 gameModeInfo->teleFogType);
+                                    GameModeInfo->teleFogHeight,
+                                 GameModeInfo->teleFogType);
 	      
             tflash->momx = players[netconsole].mo->momx;
             tflash->momy = players[netconsole].mo->momy;
@@ -565,7 +565,7 @@ static void D_InitPlayers(void)
 
       // PCLASS_FIXME: subject to the NETCODE_FIXME above; only allows
       // player class to be set to default. Must change!
-      players[i].pclass = E_PlayerClassForName(gameModeInfo->defPClassName);
+      players[i].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
       players[i].skin = P_GetDefaultSkin(&players[i]);
    }
 }

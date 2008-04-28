@@ -289,7 +289,7 @@ void D_Display(void)
       // draw pause pic
       if(paused && !walkcam_active) // sf: not if walkcam active for
       {                             // frads taking screenshots
-         const char *lumpname = gameModeInfo->pausePatch; 
+         const char *lumpname = GameModeInfo->pausePatch; 
          
          // haleyjd 03/12/03: changed to work
          // in heretic, and with user pause patches
@@ -412,7 +412,7 @@ void D_PageDrawer(void)
       else
          V_DrawPatch(0, 0, &vbscreen, (patch_t *)t);
 
-      if(gameModeInfo->hasAdvisory && demosequence == 1)
+      if(GameModeInfo->hasAdvisory && demosequence == 1)
       {
          l = W_GetNumForName("ADVISOR");
          t = W_CacheLumpNum(l, PU_CACHE);
@@ -481,14 +481,14 @@ static void D_SetPageName(const char *name)
 
 static void D_DrawTitle(const char *name)
 {
-   S_StartMusic(gameModeInfo->titleMusNum);
-   pagetic = gameModeInfo->titleTics;
+   S_StartMusic(GameModeInfo->titleMusNum);
+   pagetic = GameModeInfo->titleTics;
    D_SetPageName(name);
 }
 
 static void D_DrawTitleA(const char *name)
 {
-   pagetic = gameModeInfo->advisorTics;
+   pagetic = GameModeInfo->advisorTics;
    D_SetPageName(name);
 }
 
@@ -601,17 +601,17 @@ void D_DoAdvanceDemo(void)
    advancedemo = usergame = paused = false;
    gameaction = ga_nothing;
 
-   pagetic = gameModeInfo->pageTics;
+   pagetic = GameModeInfo->pageTics;
    gamestate = GS_DEMOSCREEN;
 
    // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
    // demo state resource names
-   state = &(demostates[++demosequence][gameModeInfo->id]);
+   state = &(demostates[++demosequence][GameModeInfo->id]);
 
    if(!state->func) // time to wrap?
    {
       demosequence = 0;
-      state = &(demostates[0][gameModeInfo->id]);
+      state = &(demostates[0][GameModeInfo->id]);
    }
 
    state->func(DEH_String(state->name));
@@ -930,7 +930,7 @@ static void D_SetGamePath(void)
    char gamedir[PATH_MAX + 1];
 
    psnprintf(gamedir, sizeof(gamedir), "%s/%s", 
-             basepath, gamemission_pathnames[gameModeInfo->missionInfo->id]);
+             basepath, gamemission_pathnames[GameModeInfo->missionInfo->id]);
 
    if(!stat(gamedir, &sbuf)) // check for existence
    {
@@ -1546,7 +1546,7 @@ void IdentifyVersion(void)
       D_SetGameModeInfo(gamemode, gamemission);
 
       // get appropriate name for the gamemode/mission
-      game_name = gameModeInfo->versionName;
+      game_name = GameModeInfo->versionName;
 
       // special hacks for localized DOOM II variants:
       if(gamemode == commercial)
@@ -2051,7 +2051,7 @@ static void D_LoadEDF(gfs_t *gfs)
          // also, allow command line toggle
          if(!M_CheckParm("-edfenables"))
          {
-            if(gameModeInfo->type == Game_Heretic)
+            if(GameModeInfo->type == Game_Heretic)
                E_EDFSetEnableValue("DOOM", 0);
             else
                E_EDFSetEnableValue("HERETIC", 0);
@@ -2340,7 +2340,7 @@ static void D_DoomInit(void)
    G_SetDefaultDMFlags(dmtype, true);
 
 #ifdef GAMEBAR
-   psnprintf(title, sizeof(title), gameModeInfo->startupBanner);
+   psnprintf(title, sizeof(title), GameModeInfo->startupBanner);
    printf("%s\n", title);
    printf("%s\nBuilt on %s at %s\n", title, version_date,
           version_time);    // killough 2/1/98
@@ -2496,7 +2496,7 @@ static void D_DoomInit(void)
        (p = M_CheckParm("-wart"))) && p < myargc - 1)
    {
       // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-      if(gameModeInfo->flags & GIF_MAPXY)
+      if(GameModeInfo->flags & GIF_MAPXY)
       {
          startmap = atoi(myargv[p + 1]);
          autostart = true;
@@ -2568,7 +2568,7 @@ static void D_DoomInit(void)
    // haleyjd 03/22/03: there's no point in trying to detect fake IWADs,
    // especially after user wads have already been linked in, so I've removed
    // that kludge
-   if(modifiedgame && (gameModeInfo->flags & GIF_SHAREWARE))
+   if(modifiedgame && (GameModeInfo->flags & GIF_SHAREWARE))
       I_Error("\nYou cannot -file with the shareware version. Register!");
 
    // haleyjd 10/20/03: use D_ProcessDehInWads again
@@ -2981,8 +2981,8 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // new music -- haleyjd 06/17/06: should be strncasecmp, not strncmp
-      if(!strncasecmp(lumpinfo[i]->name, gameModeInfo->musPrefix,
-                      strlen(gameModeInfo->musPrefix)))
+      if(!strncasecmp(lumpinfo[i]->name, GameModeInfo->musPrefix,
+                      strlen(GameModeInfo->musPrefix)))
       {
          S_UpdateMusic(i);
          continue;

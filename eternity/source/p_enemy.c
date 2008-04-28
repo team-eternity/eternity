@@ -1075,7 +1075,7 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
       return false;
    }
 
-   if(gameModeInfo->hasMadMelee && GameType == gt_single &&
+   if(GameModeInfo->hasMadMelee && GameType == gt_single &&
       players[0].health <= 0)
    {
       // Heretic monsters go mad when player dies
@@ -2637,13 +2637,13 @@ void A_Scream(mobj_t *actor)
 
 void A_XScream(mobj_t *actor)
 {
-   int sound = gameModeInfo->playerSounds[sk_slop];
+   int sound = GameModeInfo->playerSounds[sk_slop];
    
    // haleyjd: falling damage
    if(!comp[comp_fallingdmg] && demo_version >= 329)
    {
       if(actor->player && actor->intflags & MIF_DIEDFALLING)
-         sound = gameModeInfo->playerSounds[sk_fallht];
+         sound = GameModeInfo->playerSounds[sk_fallht];
    }
    
    S_StartSound(actor, sound);
@@ -3075,7 +3075,7 @@ void A_PlayerScream(mobj_t *mo)
       // haleyjd 09/29/07: wimpy death, if supported
       sound = sk_plwdth;
    }
-   else if(gameModeInfo->id == shareware || mo->health >= -50)
+   else if(GameModeInfo->id == shareware || mo->health >= -50)
    {
       // Default death sound
       sound = sk_pldeth; 
@@ -3091,7 +3091,7 @@ void A_PlayerScream(mobj_t *mo)
       mo->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
       
-   S_StartSound(mo, gameModeInfo->playerSounds[sound]);
+   S_StartSound(mo, GameModeInfo->playerSounds[sound]);
 }
 
 //
@@ -4215,7 +4215,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden)
 {
    // only in DOOM II ;)
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {
       int vileType = E_ThingNumForName("Archvile");
       

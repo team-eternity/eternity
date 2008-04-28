@@ -369,10 +369,10 @@ void G_BuildTiccmd(ticcmd_t* cmd)
         action_weapon3 ? wp_shotgun :
         action_weapon4 ? wp_chaingun :
         action_weapon5 ? wp_missile :
-        action_weapon6 && gameModeInfo->id != shareware ? wp_plasma :
-        action_weapon7 && gameModeInfo->id != shareware ? wp_bfg :
+        action_weapon6 && GameModeInfo->id != shareware ? wp_plasma :
+        action_weapon7 && GameModeInfo->id != shareware ? wp_bfg :
         action_weapon8 ? wp_chainsaw :
-        action_weapon9 && gameModeInfo->id == commercial ? wp_supershotgun :
+        action_weapon9 && GameModeInfo->id == commercial ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -412,7 +412,7 @@ void G_BuildTiccmd(ticcmd_t* cmd)
          // in use, or if the SSG is not already in use and the
          // player prefers it.
 
-         if(newweapon == wp_shotgun && gameModeInfo->id == commercial &&
+         if(newweapon == wp_shotgun && GameModeInfo->id == commercial &&
             player->weaponowned[wp_supershotgun] &&
             (!player->weaponowned[wp_shotgun] ||
              player->readyweapon == wp_shotgun ||
@@ -589,7 +589,7 @@ void G_SetGameMap(void)
 {
    gamemap = G_GetMapForName(gamemapname);
    
-   if(!(gameModeInfo->flags & GIF_MAPXY))
+   if(!(GameModeInfo->flags & GIF_MAPXY))
    {
       gameepisode = gamemap / 10;
       gamemap = gamemap % 10;
@@ -604,12 +604,12 @@ void G_SetGameMap(void)
 
    // bound to maximum episode for gamemode
    // (only start episode 1 on shareware, etc)
-   if(gameepisode > gameModeInfo->numEpisodes)
-      gameepisode = gameModeInfo->numEpisodes;   
+   if(gameepisode > GameModeInfo->numEpisodes)
+      gameepisode = GameModeInfo->numEpisodes;   
    
    if(gamemap < 0)
       gamemap = 0;
-   if(gamemap > 9 && !(gameModeInfo->flags & GIF_MAPXY))
+   if(gamemap > 9 && !(GameModeInfo->flags & GIF_MAPXY))
       gamemap = 9;
 }
 
@@ -1206,7 +1206,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       cmd->buttons = (unsigned char)*demo_p++;
 
       // old Heretic demo?
-      if(demo_version <= 4 && gameModeInfo->type == Game_Heretic)
+      if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
       {
          demo_p++;
          demo_p++;
@@ -1313,7 +1313,7 @@ void G_ExitLevel(void)
 //
 void G_SecretExitLevel(void)
 {
-   secretexit = gameModeInfo->id != commercial || haswolflevels || scriptSecret;
+   secretexit = GameModeInfo->id != commercial || haswolflevels || scriptSecret;
    gameaction = ga_completed;
 }
 
@@ -1348,7 +1348,7 @@ static void G_PlayerFinishLevel(int player)
 static void G_SetDOOMNextMap(void)
 {
    // wminfo.next is 0 biased, unlike gamemap
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {
       if(secretexit)
       {
@@ -1490,7 +1490,7 @@ static void G_DoCompleted(void)
    if(automapactive)
       AM_Stop();
 
-   if(!(gameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
+   if(!(GameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
       switch(gamemap)
       {
@@ -1510,7 +1510,7 @@ static void G_DoCompleted(void)
    wminfo.last = gamemap - 1;
 
    // set the next gamemap
-   (NextMapFuncs[gameModeInfo->type])();
+   (NextMapFuncs[GameModeInfo->type])();
 
    // haleyjd: override with MapInfo values
    if(!secretexit)
@@ -1518,7 +1518,7 @@ static void G_DoCompleted(void)
       if(*LevelInfo.nextLevel) // only for normal exit
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextLevel);
-         if(!(gameModeInfo->flags & GIF_MAPXY))
+         if(!(GameModeInfo->flags & GIF_MAPXY))
             wminfo.next = wminfo.next % 10;
          wminfo.next--;
       }
@@ -1528,7 +1528,7 @@ static void G_DoCompleted(void)
       if(*LevelInfo.nextSecret) // only for secret exit
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextSecret);
-         if(!(gameModeInfo->flags & GIF_MAPXY))
+         if(!(GameModeInfo->flags & GIF_MAPXY))
             wminfo.next = wminfo.next % 10;
          wminfo.next--;
       }
@@ -1565,7 +1565,7 @@ static void G_DoCompleted(void)
 
 static void G_DoWorldDone(void)
 {
-   missioninfo_t *missionInfo = gameModeInfo->missionInfo;
+   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LEVEL;
@@ -2415,13 +2415,13 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
    mo = P_SpawnMobj(x + 20*finecosine[an], 
                     y + 20*finesine[an],
                     ss->sector->floorheight + 
-                       gameModeInfo->teleFogHeight, 
-                    gameModeInfo->teleFogType);
+                       GameModeInfo->teleFogHeight, 
+                    GameModeInfo->teleFogType);
 
    if(players[consoleplayer].viewz != 1)
    {
       // don't start sound on first frame
-      S_StartSound(mo, gameModeInfo->teleSound);
+      S_StartSound(mo, GameModeInfo->teleSound);
    }
 
    return true;
@@ -2568,7 +2568,7 @@ int G_GetMapForName(const char *name)
 
    M_Strupr(normName);
    
-   if(gameModeInfo->flags & GIF_MAPXY)
+   if(GameModeInfo->flags & GIF_MAPXY)
    {
       episode = 1;
       map = isMAPxy(normName) ? 
@@ -2597,7 +2597,7 @@ char *G_GetNameForMap(int episode, int map)
 
    memset(levelname, 0, 9);
 
-   if(gameModeInfo->flags & GIF_MAPXY)
+   if(GameModeInfo->flags & GIF_MAPXY)
    {
       sprintf(levelname, "MAP%02d", map);
    }
@@ -2619,7 +2619,7 @@ void G_DeferedInitNew(skill_t skill, char *levelname)
    strncpy(d_mapname, levelname, 8);
    d_map = G_GetMapForName(levelname);
    
-   if(!(gameModeInfo->flags & GIF_MAPXY))
+   if(!(GameModeInfo->flags & GIF_MAPXY))
    {
       d_episode = d_map / 10;
       d_map = d_map % 10;

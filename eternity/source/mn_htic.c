@@ -152,7 +152,7 @@ CONSOLE_COMMAND(mn_hnewgame, 0)
    }
 
    // chop off SoSR episodes if not present
-   if(gameModeInfo->missionInfo->id != hticsosr)
+   if(GameModeInfo->missionInfo->id != hticsosr)
       menu_hepisode.menuitems[5].type = it_end;
    
    MN_StartMenu(&menu_hepisode);
@@ -189,7 +189,7 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
    
    start_episode = atoi(c_argv[0]);
    
-   if((gameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
+   if((GameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {
       MN_Alert("only available in the registered version");
       return;

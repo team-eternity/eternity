@@ -130,7 +130,7 @@ void MN_PopupDrawer(void)
 
 boolean MN_PopupResponder(event_t *ev)
 {
-   int *menuSounds = gameModeInfo->menuSounds;
+   int *menuSounds = GameModeInfo->menuSounds;
    
    if(ev->type != ev_keydown)
       return false;
@@ -304,7 +304,7 @@ static void MN_FindCreditScreens(void)
    // game modes, even though its not necessary to weed them out
    // if they're not in the wad
 
-   if(gameModeInfo->type == Game_Heretic)
+   if(GameModeInfo->type == Game_Heretic)
       AddHelpScreen(DEH_String("ORDER"));
    else
       AddHelpScreen(DEH_String("HELP2"));
@@ -333,7 +333,7 @@ static void MN_FindHelpScreens(void)
    // sf: keep original help screens until key bindings rewritten
    // and i can restore the dynamic help screens
 
-   if(gameModeInfo->type == Game_Heretic)
+   if(GameModeInfo->type == Game_Heretic)
       AddHelpScreen(DEH_String("ORDER"));
    else
       AddHelpScreen("HELP");
@@ -407,12 +407,12 @@ void MN_DrawCredits(void)
    // sf: altered for SMMU
    // haleyjd: altered for Eternity :)
    
-   V_DrawDistortedBackground(gameModeInfo->creditBackground, &vbscreen);
+   V_DrawDistortedBackground(GameModeInfo->creditBackground, &vbscreen);
 
-   y = gameModeInfo->creditY;
+   y = GameModeInfo->creditY;
    str = FC_ABSCENTER FC_HI "The Eternity Engine";
    V_WriteTextBigShadowed(str, 0, y);
-   y += V_StringHeightBig(str) + gameModeInfo->creditTitleStep;
+   y += V_StringHeightBig(str) + GameModeInfo->creditTitleStep;
 
    // draw info categories
    for(i = 0; i < NUMCATS; ++i)
@@ -457,7 +457,7 @@ static boolean help_prev_menuactive;
 
 boolean MN_HelpResponder(event_t *ev)
 {
-   int *menuSounds = gameModeInfo->menuSounds;
+   int *menuSounds = GameModeInfo->menuSounds;
    
    if(ev->type != ev_keydown) return false;
    
@@ -552,7 +552,7 @@ CONSOLE_COMMAND(credits, 0)
 command_t *colour_command;
 int selected_colour;
 
-#define HIGHLIGHT_COLOUR (gameModeInfo->whiteIndex)
+#define HIGHLIGHT_COLOUR (GameModeInfo->whiteIndex)
 
 void MN_MapColourDrawer(void)
 {

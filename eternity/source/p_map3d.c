@@ -858,7 +858,7 @@ static void P_DoCrunch(mobj_t *thing)
    {
       // sf: clear the skin which will mess things up
       // haleyjd 03/11/03: not in heretic
-      if(gameModeInfo->type == Game_DOOM)
+      if(GameModeInfo->type == Game_DOOM)
       {
          thing->skin = NULL;
          P_SetMobjState(thing, E_SafeState(S_GIBS));

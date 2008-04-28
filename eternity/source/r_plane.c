@@ -185,9 +185,9 @@ static void R_MapPlane(int y, int x1, int x2)
       {
          // SoM: ANYRES
          if(x1 >= 0 && x1 <= viewwidth)
-            *(video.screens[0] + y*video.width + x1) = gameModeInfo->blackIndex;
+            *(video.screens[0] + y*video.width + x1) = GameModeInfo->blackIndex;
          if(x2 >= 0 && x2 <= viewwidth)
-            *(video.screens[0] + y*video.width + x2) = gameModeInfo->blackIndex;
+            *(video.screens[0] + y*video.width + x2) = GameModeInfo->blackIndex;
       }
    }
 }

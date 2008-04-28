@@ -108,7 +108,7 @@ static void C_initBackdrop(void)
    VBuffer cback;
    boolean darken = false;
 
-   lumpname = gameModeInfo->consoleBack;
+   lumpname = GameModeInfo->consoleBack;
 
    // haleyjd: if we use the titlepic, we need to darken it
    if(!strcasecmp(lumpname, "TITLEPIC") || !strcasecmp(lumpname, "TITLE"))
@@ -142,7 +142,7 @@ static void C_initBackdrop(void)
 
       if(darken)
       {
-         V_ColorBlockTL(&cback, gameModeInfo->blackIndex,
+         V_ColorBlockTL(&cback, GameModeInfo->blackIndex,
                         0, 0, C_SCREENWIDTH, C_SCREENHEIGHT, FRACUNIT/2);
       }
    }
@@ -610,7 +610,7 @@ static void C_AddMessage(const char *s)
 {
    const unsigned char *c;
    unsigned char *end;
-   unsigned char linecolor = gameModeInfo->colorNormal + 128;
+   unsigned char linecolor = GameModeInfo->colorNormal + 128;
 
    // haleyjd 09/04/02: set color to default at beginning
    if(V_StringWidth(messages[message_last]) > SCREENWIDTH-9 ||
@@ -647,7 +647,7 @@ static void C_AddMessage(const char *s)
       }
       if(*c == '\a') // alert
       {
-         S_StartSound(NULL, gameModeInfo->c_BellSound); // 'tink'!
+         S_StartSound(NULL, GameModeInfo->c_BellSound); // 'tink'!
       }
       if(*c == '\n')
       {
@@ -693,7 +693,7 @@ static void C_AdjustLineBreaks(char *str)
       else
          count++;
 
-      if(count == gameModeInfo->c_numCharsPerLine)
+      if(count == GameModeInfo->c_numCharsPerLine)
       {
          // 03/16/01: must add length since last space to new line
          count = i - (lastspace + 1);

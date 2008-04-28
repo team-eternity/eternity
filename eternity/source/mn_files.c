@@ -299,13 +299,13 @@ static void MN_FileDrawer(void)
                                         // single line
 
    // draw a background
-   V_DrawBackground(gameModeInfo->menuBackground, &vbscreen);
+   V_DrawBackground(GameModeInfo->menuBackground, &vbscreen);
 
    // draw box
    V_DrawBox(16, 16, SCREENWIDTH - 32, SCREENHEIGHT - 32);
 
    // calculate height of one text line
-   lheight = gameModeInfo->vtextinfo->absh;
+   lheight = GameModeInfo->vtextinfo->absh;
 
    // calculate unscaled top, bottom, and height of color box
    btop = 16 + 8 + lheight + 8;
@@ -319,7 +319,7 @@ static void MN_FileDrawer(void)
 
    // draw color rect -- must manually scale coordinates
    // SoM: w = x2 - x1 + 1
-   V_ColorBlock(&vbscreen, gameModeInfo->blackIndex,
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex,
                 video.x1lookup[bleft], video.y1lookup[btop], 
                 video.x2lookup[bleft + w - 1] - video.x1lookup[bleft] + 1,
                 video.y2lookup[btop + h - 1] - video.y1lookup[btop] + 1);
@@ -366,11 +366,11 @@ static void MN_FileDrawer(void)
       // if this is the selected item, use the appropriate color
       if(i == selected_item)
       {
-         color = gameModeInfo->selectColor;
+         color = GameModeInfo->selectColor;
          MN_DrawSmallPtr(x + 1, y + lheight / 2 - 4);
       }
       else
-         color = gameModeInfo->unselectColor;
+         color = GameModeInfo->unselectColor;
 
       // haleyjd 11/04/06: add "more" indicators when box is scrolled :)
       if((i == min && min > 0) || (i == max && max < num_mn_files - 1))
@@ -404,7 +404,7 @@ static boolean MN_FileResponder(event_t *ev)
       if(selected_item > 0) 
       {
          selected_item--;
-         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       }
       return true;
    }
@@ -415,7 +415,7 @@ static boolean MN_FileResponder(event_t *ev)
       if(selected_item < (num_mn_files-1)) 
       {
          selected_item++;
-         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       }
       return true;
    }
@@ -428,7 +428,7 @@ static boolean MN_FileResponder(event_t *ev)
          selected_item -= numfileboxlines;
          if(selected_item < 0)
             selected_item = 0;
-         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
    }
@@ -441,7 +441,7 @@ static boolean MN_FileResponder(event_t *ev)
          selected_item += numfileboxlines;
          if(selected_item >= num_mn_files) 
             selected_item = num_mn_files - 1;
-         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
    }
@@ -450,7 +450,7 @@ static boolean MN_FileResponder(event_t *ev)
    {
       action_menu_toggle = action_menu_previous = false;
       current_menuwidget = NULL; // cancel widget
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       return true;
    }
   
@@ -466,7 +466,7 @@ static boolean MN_FileResponder(event_t *ev)
             "%s \"%s\"", variable_name, mn_filelist[selected_item]);
          cmdtype = c_menu;
          C_RunTextCmd(tempstr);
-         S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_COMMAND]);
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
       if(select_dismiss)
          current_menuwidget = NULL; // cancel widget
@@ -491,7 +491,7 @@ static boolean MN_FileResponder(event_t *ev)
             if(n != selected_item) // only make sound if actually moving
             {
                selected_item = n;
-               S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+               S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
             }
             return true; // eat key
          }
@@ -587,7 +587,7 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
       {
          // don't add music entries that don't actually exist
          psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-                   gameModeInfo->musPrefix, music->name);
+                   GameModeInfo->musPrefix, music->name);
          
          if(W_CheckNumForName(namebuf) >= 0)
             MN_addFile(music->name);

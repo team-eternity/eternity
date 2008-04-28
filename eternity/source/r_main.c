@@ -482,7 +482,7 @@ void R_SetupViewScaling(void)
       if(scaledviewwidth == SCREENWIDTH)
          y1 = 0;
       else
-         y1 = (SCREENHEIGHT - gameModeInfo->StatusBar->height - scaledviewheight) >> 1;
+         y1 = (SCREENHEIGHT - GameModeInfo->StatusBar->height - scaledviewheight) >> 1;
 
       y2 = y1 + scaledviewheight - 1;
 
@@ -1021,7 +1021,7 @@ CONSOLE_VARIABLE(r_tranpct, tran_filter_pct, 0)
 CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
 {
    // haleyjd 10/09/05: get sound from gameModeInfo
-   S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
    
    if(gamestate == GS_LEVEL) // not in intercam
    {

@@ -1143,7 +1143,7 @@ static boolean PTR_UseTraverse(intercept_t *in)
       if(tm->openrange <= 0)
       {
          // can't use through a wall
-         S_StartSound(usething, gameModeInfo->playerSounds[sk_noway]);
+         S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
          return false;
       }
       // not a special line, but keep checking
@@ -1205,7 +1205,7 @@ void P_UseLines(player_t *player)
    
    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
       if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse))
-         S_StartSound(usething, gameModeInfo->playerSounds[sk_noway]);
+         S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
 }
 
 //

@@ -102,7 +102,7 @@ static boolean MN_SkinResponder(event_t *ev)
       action_menu_toggle = action_menu_previous = false;
 
       // kill the widget
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       current_menuwidget = NULL;
       return true;
    }
@@ -139,7 +139,7 @@ static boolean MN_SkinResponder(event_t *ev)
       // attack!
       if(skview_action == SKV_WALKING)
       {
-         S_StartSound(NULL, gameModeInfo->skvAtkSound);
+         S_StartSound(NULL, GameModeInfo->skvAtkSound);
          MN_SkinSetState(&states[skview_atkstate2]);
          skview_action = SKV_FIRING;
       }
@@ -163,7 +163,7 @@ static boolean MN_SkinResponder(event_t *ev)
          // 03/29/08: sometimes play wimpy death if the player skin specifies one
          if(skview_haswdth)
          {
-            int rnd = M_Random() % ((gameModeInfo->id == shareware) ? 2 : 3);
+            int rnd = M_Random() % ((GameModeInfo->id == shareware) ? 2 : 3);
             int sndnum;
 
             switch(rnd)
@@ -184,7 +184,7 @@ static boolean MN_SkinResponder(event_t *ev)
          else
          {
             S_StartSoundName(NULL,
-               (gameModeInfo->id == shareware || M_Random() % 2) ? 
+               (GameModeInfo->id == shareware || M_Random() % 2) ? 
                   players[consoleplayer].skin->sounds[sk_pldeth] :
                   players[consoleplayer].skin->sounds[sk_pdiehi]);
          }
@@ -212,7 +212,7 @@ static boolean MN_SkinResponder(event_t *ev)
       // "respawn" the player if dead
       if(skview_action == SKV_DEAD)
       {
-         S_StartSound(NULL, gameModeInfo->teleSound);
+         S_StartSound(NULL, GameModeInfo->teleSound);
          MN_SkinSetState(&states[mobjinfo[skview_typenum].seestate]);
          skview_action = SKV_WALKING;
       }
@@ -225,7 +225,7 @@ static boolean MN_SkinResponder(event_t *ev)
 }
 
 // haleyjd 05/29/06: got rid of cascading macros in preference of this
-#define INSTR_Y ((SCREENHEIGHT - 1) - (gameModeInfo->vtextinfo->cy * 5))
+#define INSTR_Y ((SCREENHEIGHT - 1) - (GameModeInfo->vtextinfo->cy * 5))
 
 //
 // MN_SkinInstructions
@@ -238,7 +238,7 @@ static void MN_SkinInstructions(void)
    char *msg = FC_GOLD "skin viewer";
 
    void (*textfunc)(const char *, int, int) = 
-      gameModeInfo->shadowTitles ? V_WriteTextBigShadowed : V_WriteTextBig;
+      GameModeInfo->shadowTitles ? V_WriteTextBigShadowed : V_WriteTextBig;
 
    // draw a title at the top, too
 
@@ -275,7 +275,7 @@ static void MN_SkinDrawer(void)
    patch_t *patch;
 
    // draw the normal menu background
-   V_DrawBackground(gameModeInfo->menuBackground, &vbscreen);
+   V_DrawBackground(GameModeInfo->menuBackground, &vbscreen);
 
    // draw instructions and title
    MN_SkinInstructions();

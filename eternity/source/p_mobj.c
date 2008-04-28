@@ -212,7 +212,7 @@ void P_ExplodeMissile(mobj_t *mo)
 
    P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
 
-   if(gameModeInfo->type == Game_DOOM)
+   if(GameModeInfo->type == Game_DOOM)
    {
       mo->tics -= P_Random(pr_explode) & 3;
 
@@ -532,15 +532,15 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
                !(mo->player->cheats & CF_GODMODE))
                P_FallingDamage(mo->player);
             else
-               S_StartSound(mo, gameModeInfo->playerSounds[sk_oof]);
+               S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
          }
          else if(mo->momz < -12*FRACUNIT)
-            S_StartSound(mo, gameModeInfo->playerSounds[sk_oof]);
+            S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
          else if(onthing || !E_GetThingFloorType(mo)->liquid)
-            S_StartSound(mo, gameModeInfo->playerSounds[sk_plfeet]);
+            S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
       }
       else if(onthing || !E_GetThingFloorType(mo)->liquid)
-         S_StartSound(mo, gameModeInfo->playerSounds[sk_oof]);
+         S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
 }
 
@@ -562,8 +562,8 @@ static void P_ZMovement(mobj_t* mo)
    if(demo_compatibility) // v1.9 demos
    {
       correct_lost_soul_bounce =
-         ((gameModeInfo->id == retail || gameModeInfo->id == commercial) &&
-          gameModeInfo->missionInfo->id != doom2);
+         ((GameModeInfo->id == retail || GameModeInfo->id == commercial) &&
+          GameModeInfo->missionInfo->id != doom2);
    }
    else if(demo_version < 331) // BOOM - EE v3.29
       correct_lost_soul_bounce = true;
@@ -867,22 +867,22 @@ void P_NightmareRespawn(mobj_t* mobj)
 
    mo = P_SpawnMobj(mobj->x, mobj->y,
                     mobj->subsector->sector->floorheight +
-                       gameModeInfo->teleFogHeight,
-                    gameModeInfo->teleFogType);
+                       GameModeInfo->teleFogHeight,
+                    GameModeInfo->teleFogType);
 
    // initiate teleport sound
 
-   S_StartSound(mo, gameModeInfo->teleSound);
+   S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn a teleport fog at the new spot
 
    ss = R_PointInSubsector(x,y);
 
    mo = P_SpawnMobj(x, y,
-                    ss->sector->floorheight + gameModeInfo->teleFogHeight,
-                    gameModeInfo->teleFogType);
+                    ss->sector->floorheight + GameModeInfo->teleFogHeight,
+                    GameModeInfo->teleFogType);
 
-   S_StartSound(mo, gameModeInfo->teleSound);
+   S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn the new monster
 
@@ -1999,7 +1999,7 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 
 void P_CheckMissileSpawn(mobj_t* th)
 {
-   if(gameModeInfo->type == Game_DOOM)
+   if(GameModeInfo->type == Game_DOOM)
    {
       th->tics -= P_Random(pr_missile)&3;
       if(th->tics < 1)
@@ -3288,16 +3288,16 @@ static cell sm_thingteleport(AMX *amx, cell *params)
       {
          // spawn teleport fog and emit sound at source
          S_StartSound(P_SpawnMobj(oldx, oldy,
-                  oldz + gameModeInfo->teleFogHeight,
-                  gameModeInfo->teleFogType),
-                  gameModeInfo->teleSound);
+                  oldz + GameModeInfo->teleFogHeight,
+                  GameModeInfo->teleFogType),
+                  GameModeInfo->teleSound);
 
          // spawn teleport fog and emit sound at destination
          S_StartSound(P_SpawnMobj(mo->x + 20*finecosine[mo->angle>>ANGLETOFINESHIFT],
                   mo->y + 20*finesine[mo->angle>>ANGLETOFINESHIFT],
-                  mo->z + gameModeInfo->teleFogHeight,
-                  gameModeInfo->teleFogType),
-                  gameModeInfo->teleSound);
+                  mo->z + GameModeInfo->teleFogHeight,
+                  GameModeInfo->teleFogType),
+                  GameModeInfo->teleSound);
       }
    }
 

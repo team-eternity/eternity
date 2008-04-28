@@ -572,7 +572,7 @@ static void P_InfoDefaultLevelName(void)
    const char *bexname  = NULL;
    boolean deh_modified = false;
    boolean synth_type   = false;
-   missioninfo_t *missionInfo = gameModeInfo->missionInfo;
+   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= 32)
    {
@@ -581,12 +581,12 @@ static void P_InfoDefaultLevelName(void)
                 missionInfo->id == pack_plut ? HU_TITLEP : HU_TITLE2;
    }
    else if(isExMy(gamemapname) &&
-           gameepisode > 0 && gameepisode <= gameModeInfo->numEpisodes &&
+           gameepisode > 0 && gameepisode <= GameModeInfo->numEpisodes &&
            gamemap > 0 && gamemap <= 9)
    {
-      if(gameModeInfo->type == Game_Heretic) // Heretic
+      if(GameModeInfo->type == Game_Heretic) // Heretic
       {
-         int maxEpisode = gameModeInfo->numEpisodes;
+         int maxEpisode = GameModeInfo->numEpisodes;
          
          // For Heretic, the last episode isn't "real" and contains
          // "secret" levels -- a name is synthesized for those
@@ -750,7 +750,7 @@ static void P_LoadInterTextLump(void)
 //
 static void P_InfoDefaultFinale(void)
 {
-   missioninfo_t *missionInfo = gameModeInfo->missionInfo;
+   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    // set lump to NULL
    LevelInfo.interTextLump = NULL;
@@ -760,7 +760,7 @@ static void P_InfoDefaultFinale(void)
    LevelInfo.endOfGame = false;
    LevelInfo.useEDFInterName = false;
 
-   switch(gameModeInfo->id)
+   switch(GameModeInfo->id)
    {
    case shareware:
    case retail:
@@ -862,8 +862,8 @@ static void P_InfoDefaultFinale(void)
 
       // "hidden" levels have no statistics intermission
       // 10/10/05: do not catch shareware here
-      if(gameModeInfo->id != hereticsw &&
-         gameepisode >= gameModeInfo->numEpisodes)
+      if(GameModeInfo->id != hereticsw &&
+         gameepisode >= GameModeInfo->numEpisodes)
          LevelInfo.killStats = true;
 
       if((gameepisode >= 1 && gameepisode <= 5) && gamemap == 8)
@@ -922,7 +922,7 @@ static void P_InfoDefaultSky(void)
    // DOOM determines the sky texture to be used
    // depending on the current episode, and the game version.
 
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {      
       if(gamemap < 12)
          LevelInfo.skyName = "SKY1";
@@ -931,7 +931,7 @@ static void P_InfoDefaultSky(void)
       else
          LevelInfo.skyName = "SKY3";
    }
-   else if(gameModeInfo->type == Game_Heretic)
+   else if(GameModeInfo->type == Game_Heretic)
    {
       // haleyjd: heretic skies
       switch(gameepisode)
@@ -996,7 +996,7 @@ static void P_InfoDefaultBossSpecials(void)
    // most maps have no specials, so set to zero here
    LevelInfo.bossSpecs = 0;
 
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {
       // DOOM II -- MAP07 has two specials
       if(gamemap == 7)
@@ -1048,7 +1048,7 @@ static void P_InfoDefaultBossSpecials(void)
 //
 static void P_InfoDefaultFinaleType(void)
 {
-   switch(gameModeInfo->id)
+   switch(GameModeInfo->id)
    {
    case shareware:    // DOOM 1
    case registered:
@@ -1131,7 +1131,7 @@ static void P_SetParTime(void)
    {
       if(!newlevel || deh_pars) // if not a new map, OR deh pars loaded
       {
-         switch(gameModeInfo->id)
+         switch(GameModeInfo->id)
          {
          case shareware:
          case retail:
@@ -1182,7 +1182,7 @@ static void P_SetOutdoorFog(void)
 static void P_ClearLevelVars(void)
 {
    // set default level type depending on game mode
-   switch(gameModeInfo->type)
+   switch(GameModeInfo->type)
    {
    case Game_DOOM:
       LevelInfo.levelType = LI_TYPE_DOOM;
@@ -1225,7 +1225,7 @@ static void P_ClearLevelVars(void)
    P_InfoDefaultFinaleType();
    
    // special handling for ExMy maps under DOOM II
-   if(gameModeInfo->id == commercial && isExMy(levelmapname))
+   if(GameModeInfo->id == commercial && isExMy(levelmapname))
    {
       static char nextlevel[10];
       LevelInfo.nextLevel = nextlevel;

@@ -427,7 +427,7 @@ void P_LoadThings(int lump)
 
       // Do not spawn cool, new monsters if !commercial
       // haleyjd: removing this for Heretic and DeHackEd
-      if(demo_version < 331 && gameModeInfo->id != commercial)
+      if(demo_version < 331 && GameModeInfo->id != commercial)
       {
          switch(ft->type)
          {
@@ -1676,7 +1676,7 @@ void P_InitThingLists(void)
 {
    // haleyjd: allow to work in any game mode
    // killough 3/26/98: Spawn icon landings:
-   if(gameModeInfo->id == commercial || demo_version >= 331)
+   if(GameModeInfo->id == commercial || demo_version >= 331)
       P_SpawnBrainTargets();
 
    // haleyjd: spawn D'Sparil teleport spots

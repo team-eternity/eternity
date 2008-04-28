@@ -107,7 +107,7 @@ static void *getsfx(sfxinfo_t *sfxinfo)
   //  default sound for replacement.
 
   if(sfxlump == -1)
-     sfxlump = W_GetNumForName(gameModeInfo->defSoundName);
+     sfxlump = W_GetNumForName(GameModeInfo->defSoundName);
 
   size = W_LumpLength(sfxlump);
 

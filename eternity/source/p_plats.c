@@ -109,7 +109,7 @@ void T_PlatRaise(plat_t *plat)
             case raiseToNearestAndChange:
                // haleyjd 07/16/04: In Heretic, this type of plat goes into 
                // stasis forever, preventing any additional actions
-               if(gameModeInfo->type == Game_Heretic)
+               if(GameModeInfo->type == Game_Heretic)
                   break;
             case blazeDWUS:
             case downWaitUpStay:

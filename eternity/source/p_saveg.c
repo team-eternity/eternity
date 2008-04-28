@@ -559,7 +559,7 @@ void P_UnArchiveThinkers(void)
 
          // PCLASS_FIXME: Need to save and restore proper player class!
          // Temporary hack.
-         players[playernum].pclass = E_PlayerClassForName(gameModeInfo->defPClassName);
+         players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
          
          // PCLASS_FIXME: Need to save skin and attempt to restore, then fall back
          // to default for player class if non-existant. Note: must be after player

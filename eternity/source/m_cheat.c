@@ -281,7 +281,7 @@ char buf[3];
 
    doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
   
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {
       musnum = mus_runnin + (buf[0]-'0')*10 + buf[1]-'0' - 1;
           
@@ -294,7 +294,7 @@ char buf[3];
          idmusnum = musnum; //jff 3/17/98 remember idmus number for restore
       }
    }
-   else if(gameModeInfo->type == Game_Heretic)
+   else if(GameModeInfo->type == Game_Heretic)
    {
       // haleyjd 03/10/03: heretic support
       // use H_Mus_Matrix for easy access
@@ -381,14 +381,14 @@ static void cheat_fa()
    // You can't own weapons that aren't in the game // phares 02/27/98
    for(i = 0; i < NUMWEAPONS; i++)
    {
-      if(!(((i == wp_plasma || i == wp_bfg) && gameModeInfo->id == shareware) ||
-         (i == wp_supershotgun && gameModeInfo->id != commercial)))
+      if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
+         (i == wp_supershotgun && GameModeInfo->id != commercial)))
          plyr->weaponowned[i] = true;
    }
       
    for(i = 0; i < NUMAMMO; i++)
    {
-      if(i != am_cell || gameModeInfo->id != shareware)
+      if(i != am_cell || GameModeInfo->id != shareware)
          plyr->ammo[i] = plyr->maxammo[i];
    }
    //sf : doom_printf
@@ -450,7 +450,7 @@ char buf[3];
 {
    int epsd, map;
 
-   if(gameModeInfo->flags & GIF_MAPXY)
+   if(GameModeInfo->flags & GIF_MAPXY)
    {
       epsd = 1; //jff was 0, but espd is 1-based 
       map = (buf[0] - '0')*10 + buf[1] - '0';
@@ -463,13 +463,13 @@ char buf[3];
 
    // Catch invalid maps.
    {
-      int maxep = gameModeInfo->numEpisodes;
+      int maxep = GameModeInfo->numEpisodes;
 
       // Ohmygod - this is not going to work.
       if(epsd < 1 || map < 1 || epsd > maxep)
          return;
      
-      switch(gameModeInfo->id)
+      switch(GameModeInfo->id)
       {
       default:
       case retail:
@@ -484,7 +484,7 @@ char buf[3];
          if(map > 9)
             return;
 
-         if(gameModeInfo->missionInfo->id == hticsosr)
+         if(GameModeInfo->missionInfo->id == hticsosr)
          {
             if(epsd == maxep && map > 3)
                return;
@@ -608,7 +608,7 @@ static void cheat_keyxx(key)
 
 static void cheat_weap()
 {                                   // Ty 03/27/98 - *not* externalized
-   doom_printf(gameModeInfo->id == commercial ?           // killough 2/28/98
+   doom_printf(GameModeInfo->id == commercial ?           // killough 2/28/98
                "Weapon number 1-9" : "Weapon number 1-8" );
 }
 
@@ -619,8 +619,8 @@ char buf[3];
 
   // WEAPON_FIXME: weap cheat
 
-  if ((w==wp_supershotgun && gameModeInfo->id!=commercial) ||      // killough 2/28/98
-      ((w==wp_bfg || w==wp_plasma) && gameModeInfo->id==shareware))
+  if ((w==wp_supershotgun && GameModeInfo->id!=commercial) ||      // killough 2/28/98
+      ((w==wp_bfg || w==wp_plasma) && GameModeInfo->id==shareware))
     return;
 
   if (w==wp_fist)           // make '1' apply beserker strength toggle

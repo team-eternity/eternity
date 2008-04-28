@@ -100,7 +100,7 @@
 
 // holds the address of the gameinfo_t for the current gamemode,
 // determined at startup
-gamemodeinfo_t *gameModeInfo;
+gamemodeinfo_t *GameModeInfo;
 
 // data
 
@@ -925,17 +925,17 @@ gamemodeinfo_t *GameModeInfoObjects[NumGameModes] =
 //
 // D_InitGameInfo
 //
-// Called after gameModeInfo is set to normalize some fields.
+// Called after GameModeInfo is set to normalize some fields.
 // EDF makes this necessary.
 //
 void D_InitGameInfo(void)
 {
 #ifdef RANGECHECK
-   if(!gameModeInfo)
-      I_Error("D_InitGameInfo: called before gameModeInfo set\n");
+   if(!GameModeInfo)
+      I_Error("D_InitGameInfo: called before GameModeInfo set\n");
 #endif
 
-   gameModeInfo->teleFogType = E_SafeThingType(gameModeInfo->teleFogType);
+   GameModeInfo->teleFogType = E_SafeThingType(GameModeInfo->teleFogType);
 }
 
 //
@@ -950,8 +950,8 @@ void D_InitGameInfo(void)
 //
 // D_SetGameModeInfo
 //
-// Sets gameModeInfo, sets the missionInfo pointer, and then overrides any
-// data in gameModeInfo for which the missioninfo object has a replacement
+// Sets GameModeInfo, sets the missionInfo pointer, and then overrides any
+// data in GameModeInfo for which the missioninfo object has a replacement
 // value. This prevents checking for overrides throughout the source.
 //
 void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
@@ -959,7 +959,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    gamemodeinfo_t *gi;
    missioninfo_t  *mi;
 
-   gameModeInfo = gi = GameModeInfoObjects[mode];
+   GameModeInfo = gi = GameModeInfoObjects[mode];
 
    // If gamemode == indetermined, change the id in the structure.
    // (We will be using object giDoomReg in that case).

@@ -133,9 +133,9 @@ void G_QuitDoom(void)
    extern int snd_card;
    
    if((!netgame || demoplayback) && !nosfxparm && snd_card &&
-      gameModeInfo->type == Game_DOOM)
+      GameModeInfo->type == Game_DOOM)
    {
-      if(gameModeInfo->id == commercial) // doom2 sounds
+      if(GameModeInfo->id == commercial) // doom2 sounds
          S_StartSound(NULL, quitsounds2[(gametic>>2)&7]);
       else                       // doom
          S_StartSound(NULL, quitsounds[(gametic>>2)&7]);
@@ -301,7 +301,7 @@ CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
 CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
 {
-   if(gameModeInfo->flags & GIF_SHAREWARE)
+   if(GameModeInfo->flags & GIF_SHAREWARE)
    {
       C_Printf(FC_ERROR"command not available in shareware games\n");
       return;

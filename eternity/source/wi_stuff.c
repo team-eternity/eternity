@@ -575,7 +575,7 @@ static void WI_initAnimatedBack(void)
    int   i;
    anim_t* a;
 
-   if(gameModeInfo->id == commercial)  // no animation for DOOM2
+   if(GameModeInfo->id == commercial)  // no animation for DOOM2
       return;
 
    if(wbs->epsd > 2)
@@ -616,7 +616,7 @@ static void WI_updateAnimatedBack(void)
    int     i;
    anim_t *a;
 
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
       return;
 
    if(wbs->epsd > 2)
@@ -675,7 +675,7 @@ static void WI_drawAnimatedBack(void)
    int     i;
    anim_t *a;
 
-   if(gameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
+   if(GameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
       return;
 
    if(wbs->epsd > 2)
@@ -826,7 +826,7 @@ static void WI_unloadData(void)
    if(wi_lname_next)
       Z_ChangeTag(wi_lname_next, PU_CACHE);
    
-   if(gameModeInfo->id != commercial)
+   if(GameModeInfo->id != commercial)
    {
       Z_ChangeTag(yah[0], PU_CACHE);
       Z_ChangeTag(yah[1], PU_CACHE);
@@ -973,7 +973,7 @@ static void WI_drawShowNextLoc(void)
    // draw animated background
    WI_drawAnimatedBack(); 
 
-   if(gameModeInfo->id != commercial)
+   if(GameModeInfo->id != commercial)
    {
       if(wbs->epsd > 2)
       {
@@ -998,7 +998,7 @@ static void WI_drawShowNextLoc(void)
 
    // draws which level you are entering..
    // check for end of game -- haleyjd 07/08/04: use map info
-   if((gameModeInfo->id != commercial) || !LevelInfo.endOfGame)
+   if((GameModeInfo->id != commercial) || !LevelInfo.endOfGame)
       WI_drawEL();  
 }
 
@@ -1181,7 +1181,7 @@ static void WI_updateDeathmatchStats(void)
       {   
          S_StartSound(NULL, sfx_slop);
 
-         if(gameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial)
             WI_initNoState();
          else
             WI_initShowNextLoc();
@@ -1498,7 +1498,7 @@ static void WI_updateNetgameStats(void)
       if(acceleratestage)
       {
          S_StartSound(NULL, sfx_sgcock);
-         if(gameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial)
             WI_initNoState();
          else
             WI_initShowNextLoc();
@@ -1721,7 +1721,7 @@ static void WI_updateStats(void)
       {
          S_StartSound(NULL, sfx_sgcock);
          
-         if(gameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial)
             WI_initNoState();
          else
             WI_initShowNextLoc();
@@ -1855,7 +1855,7 @@ static void WI_DrawBackground(void)
 {
    char  name[9];  // limited to 8 characters
    
-   if(gameModeInfo->id == commercial || (gameModeInfo->id == retail && wbs->epsd == 3))
+   if(GameModeInfo->id == commercial || (GameModeInfo->id == retail && wbs->epsd == 3))
       strcpy(name, LevelInfo.interPic);
    else 
       sprintf(name, "WIMAP%d", wbs->epsd);
@@ -1885,7 +1885,7 @@ static void WI_loadData(void)
 
 #if 0
    // UNUSED
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {   // darken the background image
       unsigned char *pic = screens[1];
       for(; pic != screens[1] + SCREENHEIGHT*SCREENWIDTH; ++pic)
@@ -1897,7 +1897,7 @@ static void WI_loadData(void)
    // killough 4/26/98: free lnames here (it was freed too early in Doom)
    // Z_Free(lnames);
 
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {
       // haleyjd 06/17/06: only load the patches that are needed, and also
       // allow them to be loaded for ANY valid MAPxy map, not just 1 - 32
@@ -2118,7 +2118,7 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    //    if (!wbs->maxsecret)
    //  wbs->maxsecret = 1;
 
-   if(gameModeInfo->id != retail)
+   if(GameModeInfo->id != retail)
    {
       if(wbs->epsd > 2)
          wbs->epsd -= 3;

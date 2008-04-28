@@ -117,8 +117,8 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       }
       else
       {
-         // haleyjd: get default text color from gameModeInfo
-         color = *(gameModeInfo->defTextTrans); // Note: ptr to ptr
+         // haleyjd: get default text color from GameModeInfo
+         color = *(GameModeInfo->defTextTrans); // Note: ptr to ptr
       }
    }
    
@@ -164,13 +164,13 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
             switch(c)
             {
             case TEXT_COLOR_NORMAL:
-               colnum = gameModeInfo->colorNormal;
+               colnum = GameModeInfo->colorNormal;
                break;
             case TEXT_COLOR_HI:
-               colnum = gameModeInfo->colorHigh;
+               colnum = GameModeInfo->colorHigh;
                break;
             case TEXT_COLOR_ERROR:
-               colnum = gameModeInfo->colorError;
+               colnum = GameModeInfo->colorError;
                break;
             default:
                colnum = c - 128;

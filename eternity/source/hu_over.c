@@ -374,7 +374,7 @@ void HU_DrawKeys(int x, int y)
    x += GAP;
    
    // haleyjd 10/09/05: don't show double keys in Heretic
-   for(i = 0; i < gameModeInfo->numHUDKeys; ++i)
+   for(i = 0; i < GameModeInfo->numHUDKeys; ++i)
    {
       if(players[displayplayer].cards[i])
       {

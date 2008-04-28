@@ -382,7 +382,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       break;
 
    case PFX_MEGASPHERE:
-      if(gameModeInfo->id != commercial)
+      if(GameModeInfo->id != commercial)
          return;
       player->health = mega_health;
       player->mo->health = player->health;
@@ -1267,7 +1267,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       !(inflictor->flags3 & MF3_NODMGTHRUST)) // haleyjd 11/14/02
    {
       // haleyjd: thrust factor differs for Heretic
-      short tf = gameModeInfo->thrustFactor;
+      short tf = GameModeInfo->thrustFactor;
 
       // SoM: restructured a bit
       fixed_t thrust = damage*(FRACUNIT>>3)*tf/target->info->mass;
@@ -1548,13 +1548,13 @@ void P_Whistle(mobj_t *actor, int mobjtype)
       if(P_TeleportMoveStrict(mo, x, y, false))
       {
          mobj_t *fog = P_SpawnMobj(prevx, prevy, 
-                                   prevz + gameModeInfo->teleFogHeight,
-                                   gameModeInfo->teleFogType);
-         S_StartSound(fog, gameModeInfo->teleSound);
+                                   prevz + GameModeInfo->teleFogHeight,
+                                   GameModeInfo->teleFogType);
+         S_StartSound(fog, GameModeInfo->teleSound);
 
-         fog = P_SpawnMobj(x, y, z + gameModeInfo->teleFogHeight,
-                           gameModeInfo->teleFogType);
-         S_StartSound(fog, gameModeInfo->teleSound);
+         fog = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
+                           GameModeInfo->teleFogType);
+         S_StartSound(fog, GameModeInfo->teleSound);
 
          // put the thing into its spawnstate and keep it still
          P_SetMobjState(mo, mo->info->spawnstate);

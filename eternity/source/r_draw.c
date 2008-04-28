@@ -1113,7 +1113,7 @@ void R_InitBuffer(int width, int height)
       columnofs[i] = viewwindowx + i;
    
    // Same with base row offset.
-   st_height = gameModeInfo->StatusBar->height;
+   st_height = GameModeInfo->StatusBar->height;
    
    if(tviewwidth == video.width)
       viewwindowy = scaledwindowy = 0;
@@ -1143,7 +1143,7 @@ void R_FillBackScreen (void)
   int x, y; 
   patch_t *patch;
 
-  giborder_t *border = gameModeInfo->border;
+  giborder_t *border = GameModeInfo->border;
 
   int offset = border->offset;
   int size   = border->size;
@@ -1151,10 +1151,10 @@ void R_FillBackScreen (void)
   if(scaledviewwidth == 320)
     return;
 
-  // haleyjd 08/16/02: some restructuring to use gameModeInfo
+  // haleyjd 08/16/02: some restructuring to use GameModeInfo
 
   // killough 11/98: use the function in m_menu.c
-  V_DrawBackground(gameModeInfo->borderFlat, &backscreen1);
+  V_DrawBackground(GameModeInfo->borderFlat, &backscreen1);
         
   patch = W_CacheLumpName(border->top, PU_CACHE);
 
@@ -1267,7 +1267,7 @@ void R_DrawViewBorder(void)
    // copy bottom 
    R_VideoErase(0, scaledwindowy + scaledviewheight, SCREENWIDTH, scaledwindowy);
 
-   st_height = gameModeInfo->StatusBar->height;
+   st_height = GameModeInfo->StatusBar->height;
    
    V_MarkRect(0,0,SCREENWIDTH, SCREENHEIGHT-st_height); 
 } 

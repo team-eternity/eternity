@@ -81,7 +81,7 @@ static void MN_PageMenu(menu_t *newpage);
         // gap from variable description to value
 #define GAP 20
 // haleyjd: changed to use gameModeInfo
-#define background_flat (gameModeInfo->menuBackground)
+#define background_flat (GameModeInfo->menuBackground)
 #define SKULL_HEIGHT 19
 #define BLINK_TIME 8
 
@@ -260,7 +260,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
    // draw an alternate patch?
    // haleyjd: gamemodes that use big menu font don't use pics, ever
  
-   if(item->patch && !(gameModeInfo->flags & GIF_MNBIGFONT))
+   if(item->patch && !(GameModeInfo->flags & GIF_MNBIGFONT))
    {
       patch_t *patch;
       int lumpnum;
@@ -303,7 +303,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
 
       void (*textfunc)(const char *, int, int) =
          (!(drawing_menu->flags & mf_skullmenu) &&
-          gameModeInfo->shadowTitles) ? 
+          GameModeInfo->shadowTitles) ? 
             V_WriteTextBigShadowed : V_WriteTextBig;
       
       textfunc(item->description, 
@@ -362,8 +362,8 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
             // include gap on fullscreen menus
             x += GAP;
             // adjust colour for different coloured variables
-            if(colour == gameModeInfo->unselectColor)
-               colour = gameModeInfo->variableColor;
+            if(colour == GameModeInfo->unselectColor)
+               colour = GameModeInfo->variableColor;
          }
          
          // write variable value text
@@ -404,8 +404,8 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
             else
                x += GAP;
             // adjust colour for different coloured variables
-            if(colour == gameModeInfo->unselectColor) 
-               colour = gameModeInfo->variableColor;
+            if(colour == GameModeInfo->unselectColor) 
+               colour = GameModeInfo->variableColor;
          }
 
          // draw it
@@ -465,7 +465,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          
          // create block
          // border
-         memset(block, gameModeInfo->blackIndex, BLOCK_SIZE*BLOCK_SIZE);
+         memset(block, GameModeInfo->blackIndex, BLOCK_SIZE*BLOCK_SIZE);
          
          if(colour)
          {
@@ -531,7 +531,7 @@ void MN_DrawMenu(menu_t *menu)
 
       item_colour = menu->selected == itemnum &&
          !(menu->flags & mf_skullmenu) ? 
-            gameModeInfo->selectColor : gameModeInfo->unselectColor;
+            GameModeInfo->selectColor : GameModeInfo->unselectColor;
       
       // draw item
 
@@ -590,7 +590,7 @@ void MN_DrawMenu(menu_t *menu)
       // make it flash
 
       // haleyjd: fix y coordinate to use appropriate text metrics
-      m_y = SCREENHEIGHT - gameModeInfo->vtextinfo->absh;
+      m_y = SCREENHEIGHT - GameModeInfo->vtextinfo->absh;
 
       if((menu_error_time / 8) % 2)
          MN_WriteTextColoured(menu_error_message, CR_TAN, 10, m_y);
@@ -602,7 +602,7 @@ void MN_DrawMenu(menu_t *menu)
       char *helpmsg = "";
       menuitem_t *menuitem;
       
-      m_y = SCREENHEIGHT - gameModeInfo->vtextinfo->absh;
+      m_y = SCREENHEIGHT - GameModeInfo->vtextinfo->absh;
 
       // write some help about the item
       menuitem = &menu->menuitems[menu->selected];
@@ -644,7 +644,7 @@ void MN_DrawMenu(menu_t *menu)
    {
       char *text = "<- PREV";
 
-      m_y = SCREENHEIGHT - (2*gameModeInfo->vtextinfo->absh + 1);
+      m_y = SCREENHEIGHT - (2*GameModeInfo->vtextinfo->absh + 1);
 
       MN_WriteTextColoured(text, CR_GOLD, 57 - MN_StringWidth(text), m_y);
    }
@@ -653,7 +653,7 @@ void MN_DrawMenu(menu_t *menu)
    {
       char *text = "NEXT ->";
 
-      m_y = SCREENHEIGHT - (2*gameModeInfo->vtextinfo->absh + 1);
+      m_y = SCREENHEIGHT - (2*GameModeInfo->vtextinfo->absh + 1);
 
       MN_WriteTextColoured(text, CR_GOLD, 310 - MN_StringWidth(text), m_y);
    }
@@ -705,8 +705,8 @@ static void MN_InitFont(void);
         // init menu
 void MN_Init(void)
 {
-   char *cursorPatch1 = gameModeInfo->menuCursor->patch1;
-   char *cursorPatch2 = gameModeInfo->menuCursor->patch2;
+   char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
+   char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
    int i;
 
    skulls[0] = W_GetNumForName(cursorPatch1);
@@ -732,7 +732,7 @@ void MN_Init(void)
    quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
 
    // haleyjd: init heretic stuff if appropriate
-   if(gameModeInfo->type == Game_Heretic)
+   if(GameModeInfo->type == Game_Heretic)
       MN_HInitSkull(); // initialize spinning skulls
    
    MN_InitMenus();   // create menu commands in mn_menus.c
@@ -807,7 +807,7 @@ boolean MN_Responder(event_t *ev)
    // haleyjd 04/29/02: these need to be unsigned
    unsigned char tempstr[128];
    unsigned char ch;
-   int *menuSounds = gameModeInfo->menuSounds; // haleyjd
+   int *menuSounds = GameModeInfo->menuSounds; // haleyjd
    static boolean ctrldown = false;
    static boolean shiftdown = false;
 
@@ -1011,7 +1011,7 @@ boolean MN_Responder(event_t *ev)
          {
             char *str = *(char **)(input_command->variable->variable);
             
-            if(current_menu != gameModeInfo->saveMenu || 
+            if(current_menu != GameModeInfo->saveMenu || 
                strcmp(str, DEH_String("EMPTYSTRING")))
                strcpy(input_buffer, str);
             else
@@ -1056,7 +1056,7 @@ boolean MN_Responder(event_t *ev)
          if(current_menu->prevpage)
             MN_PageMenu(current_menu->prevpage);
          else
-            S_StartSound(NULL, gameModeInfo->c_BellSound);
+            S_StartSound(NULL, GameModeInfo->c_BellSound);
 
          return true;
       }
@@ -1099,7 +1099,7 @@ boolean MN_Responder(event_t *ev)
          if(current_menu->nextpage)
             MN_PageMenu(current_menu->nextpage);
          else
-            S_StartSound(NULL, gameModeInfo->c_BellSound);
+            S_StartSound(NULL, GameModeInfo->c_BellSound);
 
          return true;
       }
@@ -1138,7 +1138,7 @@ boolean MN_Responder(event_t *ev)
       if(current_menu->prevpage)
          MN_PageMenu(current_menu->prevpage);
       else
-         S_StartSound(NULL, gameModeInfo->c_BellSound);
+         S_StartSound(NULL, GameModeInfo->c_BellSound);
       
       return true;
    }
@@ -1151,7 +1151,7 @@ boolean MN_Responder(event_t *ev)
       if(current_menu->nextpage)
          MN_PageMenu(current_menu->nextpage);
       else
-         S_StartSound(NULL, gameModeInfo->c_BellSound);
+         S_StartSound(NULL, GameModeInfo->c_BellSound);
 
       return true;
    }
@@ -1164,7 +1164,7 @@ boolean MN_Responder(event_t *ev)
       if(current_menu->content_names && current_menu->content_pages)
          MN_ShowContents();
       else
-         S_StartSound(NULL, gameModeInfo->c_BellSound);
+         S_StartSound(NULL, GameModeInfo->c_BellSound);
 
       return true;
    }
@@ -1216,7 +1216,7 @@ void MN_ActivateMenu(void)
    if(!menuactive)  // activate menu if not already
    {
       menuactive = true;
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
    }
 }
 
@@ -1271,7 +1271,7 @@ static void MN_PageMenu(menu_t *newpage)
    menu_error_time = 0;
    redrawsbar = redrawborder = true;
 
-   S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
 }
 
 //
@@ -1288,7 +1288,7 @@ void MN_PrevMenu(void)
    
    menu_error_time = 0;          // clear errors
    redrawsbar = redrawborder = true;  // need redraw
-   S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_PREVIOUS]);
+   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
 }
 
 //
@@ -1353,10 +1353,10 @@ void MN_StartControlPanel(void)
 
    // haleyjd 05/16/04: traditional DOOM main menu support
    // haleyjd 08/31/06: support for all of DOOM's original menus
-   if(gameModeInfo->id <= retail && (traditional_menu || mn_classic_menus))
+   if(GameModeInfo->id <= retail && (traditional_menu || mn_classic_menus))
       MN_StartMenu(&menu_old_main);
    else
-      MN_StartMenu(gameModeInfo->mainMenu);
+      MN_StartMenu(GameModeInfo->mainMenu);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1508,12 +1508,12 @@ static void MN_BoxWidgetDrawer(void)
    // write text in box
    while(curname)
    {
-      int color = gameModeInfo->unselectColor;
+      int color = GameModeInfo->unselectColor;
       int height = V_StringHeight(curname);
       
       if(box->selection_idx == i)
       {
-         color = gameModeInfo->selectColor;
+         color = GameModeInfo->selectColor;
 
          // draw small pointer
          MN_DrawSmallPtr(x - (smallptr_dims[0] + 1), 
@@ -1552,7 +1552,7 @@ static boolean MN_BoxWidgetResponder(event_t *ev)
       action_menu_up = action_menu_left = false;
       if(--box->selection_idx < 0)
          box->selection_idx = box->maxidx;
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       return true;
    }
 
@@ -1562,7 +1562,7 @@ static boolean MN_BoxWidgetResponder(event_t *ev)
       action_menu_down = action_menu_right = false;
       if(++box->selection_idx > box->maxidx)
          box->selection_idx = 0;
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       return true;
    }
 
@@ -1586,7 +1586,7 @@ static boolean MN_BoxWidgetResponder(event_t *ev)
          break;
       }
       
-      S_StartSound(NULL, gameModeInfo->menuSounds[MN_SND_COMMAND]);
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
       return true;
    }
 

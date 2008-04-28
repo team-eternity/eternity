@@ -69,7 +69,7 @@ void P_InitSwitchList(void)
    int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
 
-   episode = gameModeInfo->switchEpisode;
+   episode = GameModeInfo->switchEpisode;
 
    //jff 3/23/98 read the switch table from a predefined lump             
    alphSwitchList = 
@@ -553,7 +553,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
       if(thing->player && thing->player->health <= 0 && 
          !comp[comp_zombie])
       {
-         S_StartSound(thing, gameModeInfo->playerSounds[sk_oof]);
+         S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
          return false;
       }
       P_ChangeSwitchTexture(line,0,0);
@@ -632,7 +632,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
       if(thing->player && thing->player->health <= 0 &&
          !comp[comp_zombie])
       {
-         S_StartSound(thing, gameModeInfo->playerSounds[sk_oof]);
+         S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
          return false;
       }
       P_ChangeSwitchTexture(line,0,0);

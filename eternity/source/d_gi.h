@@ -262,7 +262,7 @@ typedef struct gamemodeinfo_s
 extern missioninfo_t  *MissionInfoObjects[NumGameMissions];
 extern gamemodeinfo_t *GameModeInfoObjects[NumGameModes];
 
-extern gamemodeinfo_t *gameModeInfo;
+extern gamemodeinfo_t *GameModeInfo;
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
 void D_InitGameInfo(void);

@@ -417,7 +417,7 @@ static void HU_MessageDraw(hu_widget_t *widget)
 
       // haleyjd 12/26/02: center messages in Heretic
       // FIXME/TODO: make this an option in DOOM?
-      if(gameModeInfo->type == Game_Heretic)
+      if(GameModeInfo->type == Game_Heretic)
          x = (SCREENWIDTH - V_StringWidth(msg)) >> 1;
       
       // haleyjd 06/04/05: use V_WriteTextColoured like it should.
@@ -1028,7 +1028,7 @@ void HU_CenterMessage(const char *s)
 {
    static qstring_t qstr;
    static boolean first = true;  
-   int st_height = gameModeInfo->StatusBar->height;
+   int st_height = GameModeInfo->StatusBar->height;
    hu_textwidget_t *tw = &centermessage_widget;
 
    if(first)
@@ -1265,7 +1265,7 @@ static void HU_InitLevelTime(void)
    HU_AddWidgetToHash((hu_widget_t *)&leveltime_widget);
 
    // set data
-   if(gameModeInfo->type == Game_Heretic)
+   if(GameModeInfo->type == Game_Heretic)
    {
       leveltime_widget.x = 240;
       leveltime_widget.y = 10;
@@ -1323,7 +1323,7 @@ static void HU_InitLevelName(void)
    HU_AddWidgetToHash((hu_widget_t *)&levelname_widget);
 
    // set data
-   if(gameModeInfo->type == Game_Heretic)
+   if(GameModeInfo->type == Game_Heretic)
    {
       levelname_widget.x = 20;
       levelname_widget.y = 145;
@@ -1554,7 +1554,7 @@ static void HU_InitCoords(void)
    HU_AddWidgetToHash((hu_widget_t *)&coordz_widget);
 
    // set data
-   if(gameModeInfo->type == Game_Heretic)
+   if(GameModeInfo->type == Game_Heretic)
    {
       coordx_widget.x = coordy_widget.x = coordz_widget.x = 20;
       coordx_widget.y = 10;
@@ -1658,7 +1658,7 @@ CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
-   S_StartSound(NULL, gameModeInfo->c_ChatSound);
+   S_StartSound(NULL, GameModeInfo->c_ChatSound);
    
    doom_printf("%s: %s", players[cmdsrc].name, c_args);
 }

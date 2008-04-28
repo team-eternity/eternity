@@ -230,11 +230,11 @@ int P_SwitchWeapon(player_t *player)
          break;
       case 6:
          if(player->weaponowned[wp_plasma] && player->ammo[am_cell] &&
-            gameModeInfo->id != shareware)
+            GameModeInfo->id != shareware)
             newweapon = wp_plasma;
          break;
       case 7:
-         if(player->weaponowned[wp_bfg] && gameModeInfo->id != shareware &&
+         if(player->weaponowned[wp_bfg] && GameModeInfo->id != shareware &&
             player->ammo[am_cell] >= (demo_compatibility ? 41 : 40))
             newweapon = wp_bfg;
          break;
@@ -244,7 +244,7 @@ int P_SwitchWeapon(player_t *player)
          break;
       case 9:
          if(player->weaponowned[wp_supershotgun] && 
-            gameModeInfo->id == commercial &&
+            GameModeInfo->id == commercial &&
             player->ammo[am_shell] >= (demo_compatibility ? 3 : 2))
             newweapon = wp_supershotgun;
          break;
@@ -741,7 +741,7 @@ void A_Punch(mobj_t *mo)
    if(!tm->linetarget)
       return;
 
-   P_WeaponSound(mo, gameModeInfo->playerSounds[sk_punch]);
+   P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
 
    // turn to face target
    mo->angle = R_PointToAngle2(mo->x, mo->y, tm->linetarget->x, tm->linetarget->y);

@@ -1005,7 +1005,7 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
       // if the gametype matches ANY specified, we will process the
       // block in question (can short circuit after first match)
-      if((type_match = (type_match || type == gameModeInfo->type)))
+      if((type_match = (type_match || type == GameModeInfo->type)))
          break;
    }
 
@@ -1043,7 +1043,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
       // if gametype equals NONE of the parameters, we will process
       // the block (can short circuit after first failure)
-      if(!(type_nomatch = (type_nomatch && type != gameModeInfo->type)))
+      if(!(type_nomatch = (type_nomatch && type != GameModeInfo->type)))
          break;
    }
 

@@ -435,7 +435,7 @@ void P_PlayerThink(player_t *player)
          !(player->mo->intflags & MIF_SCREAMED))
       {
          player->mo->intflags |= MIF_SCREAMED;
-         S_StartSound(player->mo, gameModeInfo->playerSounds[sk_plfall]);
+         S_StartSound(player->mo, GameModeInfo->playerSounds[sk_plfall]);
       }
    }
 
@@ -495,7 +495,7 @@ void P_PlayerThink(player_t *player)
             (player->readyweapon != wp_chainsaw ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
-         if(gameModeInfo->id == commercial &&
+         if(GameModeInfo->id == commercial &&
             newweapon == wp_shotgun &&
             player->weaponowned[wp_supershotgun] &&
             player->readyweapon != wp_supershotgun)
@@ -510,7 +510,7 @@ void P_PlayerThink(player_t *player)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          if((newweapon != wp_plasma && newweapon != wp_bfg)
-            || (gameModeInfo->id != shareware) )
+            || (GameModeInfo->id != shareware) )
             player->pendingweapon = newweapon;
       }
    }

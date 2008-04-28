@@ -210,7 +210,7 @@ void IN_Ticker(void)
 
    // intermission music
    if(intertime == 1)
-      S_ChangeMusicNum(gameModeInfo->interMusNum, true);
+      S_ChangeMusicNum(GameModeInfo->interMusNum, true);
 
    IN_checkForAccelerate();
 
@@ -242,7 +242,7 @@ void IN_Drawer(void)
 //
 void IN_DrawBackground(void)
 {
-   gameModeInfo->interfuncs->DrawBackground();
+   GameModeInfo->interfuncs->DrawBackground();
 }
 
 //
@@ -263,7 +263,7 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
 
    IN_StartCamera();  //set up camera
 
-   InterFuncs = gameModeInfo->interfuncs;
+   InterFuncs = GameModeInfo->interfuncs;
 
    InterFuncs->Start(wbstartstruct);
 }

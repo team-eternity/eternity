@@ -158,7 +158,7 @@ static dehflagset_t acs_gamemode_flags =
    0,             // mode
 };
 
-// table to translate from gameModeInfo->type to acs gamemode flag
+// table to translate from GameModeInfo->type to acs gamemode flag
 static int gameTypeToACSFlags[NumGameModeTypes] =
 {
    ACS_MODE_DOOM, // Game_DOOM,
@@ -1377,7 +1377,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
 
          flags = E_ParseFlags(tempstr, &acs_gamemode_flags);
 
-         if(flags & gameTypeToACSFlags[gameModeInfo->type])
+         if(flags & gameTypeToACSFlags[GameModeInfo->type])
             ACS_thingtypes[tempint] = i;
       }
    }

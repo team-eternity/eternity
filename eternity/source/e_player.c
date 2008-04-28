@@ -500,7 +500,7 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       // last player class with default flag set true will become the default
       // player class for the current gamemode.
       if(tmp == cfg_true)
-         gameModeInfo->defPClassName = pc->mnemonic;
+         GameModeInfo->defPClassName = pc->mnemonic;
    }
 }
 
@@ -547,11 +547,11 @@ boolean E_NeedDefaultPlayerData(void)
 //
 void E_VerifyDefaultPlayerClass(void)
 {
-   if(E_PlayerClassForName(gameModeInfo->defPClassName) == NULL)
+   if(E_PlayerClassForName(GameModeInfo->defPClassName) == NULL)
    {
       I_Error("E_VerifyDefaultPlayerClass: default playerclass '%s' "
               "does not exist!\n",
-              gameModeInfo->defPClassName);
+              GameModeInfo->defPClassName);
    }
 }
 

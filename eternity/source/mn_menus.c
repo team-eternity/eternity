@@ -115,7 +115,7 @@ void MN_InitMenus(void)
       savegamepresent[i] = false;
    }
 
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
       MN_PatchOldMainMenu(); // haleyjd 05/16/04
 
    MN_InitCustomMenu();      // haleyjd 03/14/06
@@ -191,7 +191,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    }
 
    if(cmdtype == c_menu)
-      MN_StartMenu(gameModeInfo->newGameMenu);
+      MN_StartMenu(GameModeInfo->newGameMenu);
 }
 
 // mn_newgame called from main menu:
@@ -218,7 +218,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       return;
    }
    
-   if(gameModeInfo->id == commercial)
+   if(GameModeInfo->id == commercial)
    {
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
@@ -251,7 +251,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
    else
    {
       // hack -- cut off thy flesh consumed if not retail
-      if(gameModeInfo->id != retail)
+      if(GameModeInfo->id != retail)
          menu_episode.menuitems[5].type = it_end;
       
       MN_StartMenu(&menu_episode);
@@ -274,7 +274,7 @@ void MN_QuitDoom(void)
 
    if(strcmp(str, "")) // support dehacked replacement
       source = str;
-   else if(gameModeInfo->type == Game_Heretic) // haleyjd: heretic support
+   else if(GameModeInfo->type == Game_Heretic) // haleyjd: heretic support
       source = HTICQUITMSG;
    else // normal doom messages
       source = endmsg[quitmsgnum];
@@ -329,7 +329,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
    
    start_episode = atoi(c_argv[0]);
    
-   if(gameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
+   if(GameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
       MN_Alert("%s", DEH_String("SWSTRING"));
       return;
@@ -376,7 +376,7 @@ static void MN_DoNightmare(void)
       else
          G_DeferedInitNewNum(sk_nightmare, start_episode, 1);
    }
-   else if(gameModeInfo->id == commercial && modifiedgame && startOnNewMap)
+   else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
    {
       // start on newest level from wad
       G_DeferedInitNew(sk_nightmare, firstlevel);
@@ -414,7 +414,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
       else
          G_DeferedInitNewNum(skill, start_episode, 1);
    }
-   else if(gameModeInfo->id == commercial && modifiedgame && startOnNewMap)
+   else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
    {  
       // haleyjd 03/02/03: changed to use startOnNewMap config variable
       // start on newest level from wad
@@ -653,7 +653,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
    // chain of console commands that was used by SMMU
 
    // haleyjd: generalized to all shareware modes
-   if(gameModeInfo->flags & GIF_SHAREWARE)
+   if(GameModeInfo->flags & GIF_SHAREWARE)
    {
       MN_Alert("You must purchase the full version\n"
                "to load external wad files.\n"
@@ -911,7 +911,7 @@ static void MN_DMFlagsDrawer(void)
         (
          values[!(dmflags & (1<<(i-2)))],
          (i == menu_dmflags.selected) ? 
-            gameModeInfo->selectColor : gameModeInfo->variableColor,
+            GameModeInfo->selectColor : GameModeInfo->variableColor,
          menuitem->x + 20, menuitem->y
         );
    }
@@ -1400,7 +1400,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
    }
    
    MN_ReadSaveStrings();  // get savegame descriptions
-   MN_StartMenu(gameModeInfo->loadMenu);
+   MN_StartMenu(GameModeInfo->loadMenu);
 }
 
 CONSOLE_COMMAND(mn_load, 0)
@@ -1530,7 +1530,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
    
    MN_ReadSaveStrings();
 
-   MN_StartMenu(gameModeInfo->saveMenu);
+   MN_StartMenu(GameModeInfo->saveMenu);
 }
 
 // haleyjd 02/23/02: Quick Save -- restored from MBF, converted to
@@ -1541,7 +1541,7 @@ CONSOLE_COMMAND(quicksave, 0)
 
    if(!usergame && (!demoplayback || netgame))  // killough 10/98
    {
-      S_StartSound(NULL, gameModeInfo->playerSounds[sk_oof]);
+      S_StartSound(NULL, GameModeInfo->playerSounds[sk_oof]);
       return;
    }
    
@@ -1552,7 +1552,7 @@ CONSOLE_COMMAND(quicksave, 0)
    {
       quickSaveSlot = -2; // means to pick a slot now
       MN_ReadSaveStrings();
-      MN_StartMenu(gameModeInfo->saveMenu);
+      MN_StartMenu(GameModeInfo->saveMenu);
       return;
    }
    
@@ -1817,7 +1817,7 @@ void MN_VideoModeDrawer(void)
    patch_t *patch;
    spritedef_t *sprdef;
    spriteframe_t *sprframe;
-   int frame = E_SafeState(gameModeInfo->transFrame);
+   int frame = E_SafeState(GameModeInfo->transFrame);
 
    // draw an imp fireball
 

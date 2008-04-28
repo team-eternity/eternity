@@ -192,7 +192,7 @@ static boolean addsfx(sfxinfo_t *sfx, int channel)
    
    // replace missing sounds with a reasonable default
    if(lump == -1)
-      lump = W_GetNumForName(gameModeInfo->defSoundName);
+      lump = W_GetNumForName(GameModeInfo->defSoundName);
    
    lumplen = W_LumpLength(lump);
    
@@ -735,7 +735,7 @@ void I_CacheSound(sfxinfo_t *sound)
  
       // replace missing sounds with a reasonable default
       if(lump == -1)
-         lump = W_GetNumForName(gameModeInfo->defSoundName);
+         lump = W_GetNumForName(GameModeInfo->defSoundName);
 
       W_CacheLumpNum(lump, PU_CACHE);
    }
