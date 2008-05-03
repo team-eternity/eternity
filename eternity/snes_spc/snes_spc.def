@@ -1,0 +1,26 @@
+LIBRARY snes_spc
+DESCRIPTION "snes_spc 0.9.0"
+EXPORTS
+    spc_new              @1
+    spc_delete           @2
+    spc_init_rom         @3
+    spc_set_output       @4
+    spc_sample_count     @5
+    spc_reset            @6
+    spc_soft_reset       @7
+    spc_read_port        @8
+    spc_write_port       @9
+    spc_end_frame        @10
+    spc_mute_voices      @11
+    spc_disable_surround @12
+    spc_set_tempo        @13
+    spc_load_spc         @14
+    spc_clear_echo       @15
+    spc_play             @16
+    spc_skip             @17
+    spc_filter_new       @18
+    spc_filter_delete    @19
+    spc_filter_run       @20
+    spc_filter_clear     @21
+    spc_filter_set_gain  @22
+    spc_filter_set_bass  @23

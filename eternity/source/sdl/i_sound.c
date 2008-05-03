@@ -44,6 +44,10 @@
 #include "../s_sound.h"
 #include "../mn_engin.h"
 
+#ifdef HAVE_SPCLIB
+#include "../../snes_spc/spc.h"
+#endif
+
 #ifdef LINUX
 // haleyjd 01/28/07: I don't understand why this is needed here...
 extern DECLSPEC Mix_Music * SDLCALL Mix_LoadMUS_RW(SDL_RWops *rw);
@@ -220,7 +224,7 @@ static boolean addsfx(sfxinfo_t *sfx, int channel)
       samplerate = (data[3] << 8) | data[2];
       samplelen  = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
 
-      // don't play sounds that think they're longer than they are
+      // don't play sounds that think they're longer than they really are
       if(samplelen > lumplen - SOUNDHDRSIZE)
       {
          Z_ChangeTag(data, PU_CACHE);
@@ -566,12 +570,100 @@ void I_UpdateSound(void)
 {
 }
 
-// DEBUG: profiling info
-static unsigned int numcalls;
-static unsigned int timeInUpdate;
-
 #define STEP sizeof(Sint16)
 
+#ifdef HAVE_SPCLIB
+// haleyjd 05/02/08: SPC support
+static SNES_SPC   *snes_spc   = NULL;
+static SPC_Filter *spc_filter = NULL;
+
+static int spc_preamp     = 1;
+static int spc_bass_boost = 8;
+
+//
+// I_EffectSPC
+//
+// SDL_mixer effect processor; mixes SPC data into the postmix stream.
+//
+static void I_EffectSPC(int chan, void *stream, int len, void *udata)
+{
+   short *leftout, *rightout, *leftend, *datal, *datar;
+   int numsamples, spcsamples;
+   int stepremainder = 0, i = 0;
+   int dl, dr;
+
+   static Sint16 *spc_buffer = NULL;
+   static int lastspcsamples = 0;
+
+   leftout  =  (Sint16 *)stream;
+   rightout = ((Sint16 *)stream) + 1;
+
+   numsamples = len / STEP;
+   leftend = leftout + numsamples;
+
+   spcsamples = ((int)(numsamples * 320.0 / 441.0) & 0xFFFFFFFE) + 2;
+
+   // realloc spc buffer?
+   if(spcsamples != lastspcsamples)
+   {
+      spc_buffer = (short *)realloc(spc_buffer, (spcsamples + 2) * 2 * sizeof(Sint16));
+      lastspcsamples = spcsamples;
+   }
+
+   // get spc samples
+   if(spc_play(snes_spc, spcsamples, spc_buffer))
+      return;
+
+   // filter samples
+   spc_filter_run(spc_filter, spc_buffer, spcsamples);
+
+   datal = spc_buffer;
+   datar = spc_buffer + 1;
+
+   while(leftout != leftend)
+   {
+      dl = *leftout + (((int)datal[0] * (0x10000 - stepremainder) +
+                        (int)datal[2] * stepremainder) >> 16);
+
+      dr = *rightout + (((int)datar[0] * (0x10000 - stepremainder) +
+                         (int)datar[2] * stepremainder) >> 16);
+
+      if(dl > SHRT_MAX)
+         *leftout = SHRT_MAX;
+      else if(dl < SHRT_MIN)
+         *leftout = SHRT_MIN;
+      else
+         *leftout = (short)dl;
+
+      if(dr > SHRT_MAX)
+         *rightout = SHRT_MAX;
+      else if(dr < SHRT_MIN)
+         *rightout = SHRT_MIN;
+      else
+         *rightout = (short)dr;
+
+      stepremainder += ((32000 << 16) / 44100);
+
+      i += (stepremainder >> 16);
+      
+      datal = spc_buffer + i * 2;
+      datar = datal + 1;
+
+      stepremainder &= 0xffff;
+
+      // step to next sample in mixer buffer
+      leftout  += 2;
+      rightout += 2;
+   }
+}
+#endif
+
+//
+// I_SDLUpdateSound
+//
+// SDL_mixer postmix callback routine. Possibly dispatched asynchronously.
+// We do our own mixing on up to 32 digital sound channels.
+//
 static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
 {
    // Mix current sound data.
@@ -587,11 +679,6 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
    
    // Mixing channel index.
    int chan;
-
-   // DEBUG: profiling
-   unsigned int time;
-   ++numcalls;
-   time = SDL_GetTicks();
 
    // Left and right channel
    //  are in audio stream, alternating.
@@ -685,9 +772,6 @@ static void I_SDLUpdateSound(void *userdata, Uint8 *stream, int len)
       leftout  += STEP;
       rightout += STEP;
    }
-
-   // DEBUG: profiling
-   timeInUpdate += (SDL_GetTicks() - time);
 }
 
 // This would be used to write out the mixbuffer
@@ -711,9 +795,6 @@ void I_ShutdownSound(void)
    {
       Mix_CloseAudio();
       snd_init = 0;
-
-      // DEBUG: profiling
-      printf("I_SDLUpdateSound: %lu calls, %lu time\n", numcalls, timeInUpdate);
    }
 }
 
@@ -849,6 +930,18 @@ void I_InitMusic(void)
 //
 void I_PlaySong(int handle, int looping)
 {
+#ifdef HAVE_SPCLIB
+   // if a SPC is set up, play it.
+   if(snes_spc)
+   {
+      if(!Mix_RegisterEffect(MIX_CHANNEL_POST, I_EffectSPC, NULL, NULL))
+      {
+         doom_printf("I_PlaySong: Mix_RegisterEffect failed\n");
+         return;
+      }
+   }
+   else
+#endif
    if(CHECK_MUSIC(handle) && Mix_PlayMusic(music, looping ? -1 : 0) == -1)
    {
       doom_printf("I_PlaySong: Mix_PlayMusic failed\n");
@@ -866,6 +959,14 @@ void I_SetMusicVolume(int volume)
 {
    // haleyjd 09/04/06: adjust to use scale from 0 to 15
    Mix_VolumeMusic((volume * 128) / 15);
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+   {
+      // if a SPC is playing, set its volume too
+      spc_filter_set_gain(spc_filter, volume * (256 * spc_preamp) / 15);
+   }
+#endif
 }
 
 static int paused_midi_volume;
@@ -887,6 +988,11 @@ void I_PauseSong(int handle)
          Mix_VolumeMusic(0);
       }
    }
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+      Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+#endif
 }
 
 //
@@ -902,6 +1008,11 @@ void I_ResumeSong(int handle)
       else
          Mix_VolumeMusic(paused_midi_volume);
    }
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+      Mix_RegisterEffect(MIX_CHANNEL_POST, I_EffectSPC, NULL, NULL);
+#endif
 }
 
 //
@@ -911,6 +1022,11 @@ void I_StopSong(int handle)
 {
    if(CHECK_MUSIC(handle))
       Mix_HaltMusic();
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+      Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+#endif
 }
 
 //
@@ -937,7 +1053,60 @@ void I_UnRegisterSong(int handle)
       rw = NULL;
       music_block = NULL;
    }
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+   {
+      // be certain the callback is unregistered first
+      Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+
+      // free the spc and filter objects
+      spc_delete(snes_spc);
+      spc_filter_delete(spc_filter);
+
+      snes_spc   = NULL;
+      spc_filter = NULL;
+   }
+#endif
 }
+
+#ifdef HAVE_SPCLIB
+//
+// I_TryLoadSPC
+//
+// haleyjd 04/02/08: Tries to load the music data as a SPC file.
+//
+int I_TryLoadSPC(void *data, int size)
+{
+   spc_err_t err;
+
+#ifdef RANGECHECK
+   if(snes_spc)
+      I_Error("I_TryLoadSPC: snes_spc object displaced\n");
+#endif
+
+   snes_spc = spc_new();
+   
+   if((err = spc_load_spc(snes_spc, data, size)))
+   {
+      doom_printf("Bad SPC data: %s", err);
+      spc_delete(snes_spc);
+      snes_spc = NULL;
+      return -1;
+   }
+
+   // It is a SPC, so set everything up for SPC playing
+   spc_filter = spc_filter_new();
+
+   spc_clear_echo(snes_spc);
+   spc_filter_clear(spc_filter);
+
+   spc_filter_set_gain(spc_filter, snd_MusicVolume * (256 * spc_preamp) / 15);
+   spc_filter_set_bass(spc_filter, spc_bass_boost);
+
+   return 0;
+}
+#endif
 
 //
 // I_RegisterSong
@@ -951,7 +1120,7 @@ int I_RegisterSong(void *data, int size)
    music = Mix_LoadMUS_RW(rw);
    
    // It's not recognized by SDL_mixer, is it a mus?
-   if(music == NULL) 
+   if(music == NULL)
    {      
       int err;
       MIDI mididata;
@@ -965,7 +1134,13 @@ int I_RegisterSong(void *data, int size)
       
       if((err = mmus2mid((byte *)data, &mididata, 89, 0))) 
       {         
-         // Nope, not a mus
+         // Nope, not a mus.
+
+#ifdef HAVE_SPCLIB
+         // Is it a SPC?
+         if(!(err = I_TryLoadSPC(data, size)))
+            return 1;
+#endif
          doom_printf(FC_ERROR "Error loading midi: %d", err);
          return 0;
       }
@@ -1004,7 +1179,11 @@ int I_QrySongPlaying(int handle)
    // haleyjd: this is never called
    // julian: and is that a reason not to code it?!?
    // haleyjd: ::shrugs::
+#ifdef HAVE_SPCLIB
+   return CHECK_MUSIC(handle) || snes_spc != NULL;
+#else
    return CHECK_MUSIC(handle);
+#endif
 }
 
 /************************
@@ -1016,9 +1195,14 @@ int I_QrySongPlaying(int handle)
 static char *sndcardstr[] = { "SDL mixer", "none" };
 static char *muscardstr[] = { "SDL mixer", "none" };
 
-VARIABLE_INT(snd_card, NULL,           -1, 0, sndcardstr);
-VARIABLE_INT(mus_card, NULL,           -1, 0, muscardstr);
-VARIABLE_INT(detect_voices, NULL,       0, 1, yesno);
+VARIABLE_INT(snd_card,       NULL,      -1,  0, sndcardstr);
+VARIABLE_INT(mus_card,       NULL,      -1,  0, muscardstr);
+VARIABLE_INT(detect_voices,  NULL,       0,  1, yesno);
+
+#ifdef HAVE_SPCLIB
+VARIABLE_INT(spc_preamp,     NULL,       1,  6, NULL);
+VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
+#endif
 
 CONSOLE_VARIABLE(snd_card, snd_card, 0) 
 {
@@ -1037,11 +1221,25 @@ CONSOLE_VARIABLE(mus_card, mus_card, 0)
 
 CONSOLE_VARIABLE(detect_voices, detect_voices, 0) {}
 
+#ifdef HAVE_SPCLIB
+CONSOLE_VARIABLE(snd_spcpreamp,    spc_preamp,     0) 
+{
+   I_SetMusicVolume(snd_MusicVolume);
+}
+
+CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0) {}
+#endif
+
 void I_Sound_AddCommands(void)
 {
    C_AddCommand(snd_card);
    C_AddCommand(mus_card);
    C_AddCommand(detect_voices);
+
+#ifdef HAVE_SPCLIB
+   C_AddCommand(snd_spcpreamp);
+   C_AddCommand(snd_spcbassboost);
+#endif
 }
 
 
