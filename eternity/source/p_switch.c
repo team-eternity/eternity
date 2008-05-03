@@ -136,10 +136,9 @@ button_t *P_FindFreeButton(void)
 // No return value.
 //
 // haleyjd 04/16/08: rewritten to store indices instead of pointers
-// haleyjd FIXME: wtf are buttons not saved in save games???
 //
-static void P_StartButton(int sidenum, sector_t *sector, bwhere_e w, 
-                          int texture, int time, boolean dopopout,
+static void P_StartButton(int sidenum, line_t *line, sector_t *sector, 
+                          bwhere_e w, int texture, int time, boolean dopopout,
                           const char *startsound)
 {
    int i;
@@ -158,8 +157,13 @@ static void P_StartButton(int sidenum, sector_t *sector, bwhere_e w,
    button->where    = w;
    button->btexture = texture;
    button->btimer   = time;
-   button->soundorg = sector->soundorg;
    button->dopopout = dopopout;
+
+   // 05/03/08: position sound origin on switch linedef
+   button->soundorg = sector->soundorg;
+
+   button->soundorg.x = line->v1->x + line->dx / 2;
+   button->soundorg.y = line->v1->y + line->dy / 2;
 
    // switch activation sound
    S_StartSoundName((mobj_t *)&(button->soundorg), startsound);
@@ -285,7 +289,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       {
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
          
-         P_StartButton(sidenum, sector, top, switchlist[i], BUTTONTIME,
+         P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
                        useAgain, sound); // start timer
          
          return;
@@ -294,7 +298,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       {
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
          
-         P_StartButton(sidenum, sector, middle, switchlist[i], BUTTONTIME,
+         P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
                        useAgain, sound); // start timer
          
          return;
@@ -303,7 +307,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       {
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
          
-         P_StartButton(sidenum, sector, bottom, switchlist[i], BUTTONTIME,
+         P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
                        useAgain, sound); // start timer
          
          return;
