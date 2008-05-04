@@ -577,8 +577,8 @@ void I_UpdateSound(void)
 static SNES_SPC   *snes_spc   = NULL;
 static SPC_Filter *spc_filter = NULL;
 
-static int spc_preamp     = 1;
-static int spc_bass_boost = 8;
+int spc_preamp     = 1;
+int spc_bass_boost = 8;
 
 //
 // I_EffectSPC
@@ -1227,7 +1227,11 @@ CONSOLE_VARIABLE(snd_spcpreamp,    spc_preamp,     0)
    I_SetMusicVolume(snd_MusicVolume);
 }
 
-CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0) {}
+CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0) 
+{
+   if(snes_spc)
+      spc_filter_set_bass(spc_filter, spc_bass_boost);
+}
 #endif
 
 void I_Sound_AddCommands(void)

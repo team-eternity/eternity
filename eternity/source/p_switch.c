@@ -121,6 +121,10 @@ button_t *P_FindFreeButton(void)
    numbuttonsalloc = numbuttonsalloc ? numbuttonsalloc * 2 : MAXPLAYERS * 4;
    buttonlist = realloc(buttonlist, numbuttonsalloc * sizeof(button_t));
 
+   // 05/04/08: be sure all the new buttons are initialized
+   for(i = oldnumbuttons; i < numbuttonsalloc; ++i)
+      memset(&buttonlist[i], 0, sizeof(button_t));
+
    // return the first new button
    return &buttonlist[oldnumbuttons];
 }

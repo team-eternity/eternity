@@ -110,6 +110,11 @@ extern int showendoom;
 extern int endoomdelay;
 #endif
 
+#ifdef HAVE_SPCLIB
+extern int spc_preamp;
+extern int spc_bass_boost;
+#endif
+
 // haleyjd 10/09/07: wipe waiting
 extern int wipewait;
 
@@ -1628,6 +1633,22 @@ default_t defaults[] =
       2, {0, 2}, dt_number, ss_none, wad_no,
       "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"
    },
+
+#ifdef HAVE_SPCLIB
+   {
+      "snd_spcpreamp",
+      &spc_preamp, NULL,
+      1, {1, 6}, dt_number, ss_none, wad_yes,
+      "preamp volume factor for SPC music"
+   },
+
+   {
+      "snd_spcbassboost",
+      &spc_bass_boost, NULL,
+      8, {1, 31}, dt_number, ss_none, wad_yes,
+      "bass boost for SPC music (logarithmic scale, 8 = normal)"
+   },
+#endif
 
    { NULL }         // last entry
 };
