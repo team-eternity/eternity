@@ -10,8 +10,8 @@ previously identified in the changelog:
 * Menus now display the name of the first key bound to the page up/down actions
   in the indicator text for the presence of a next or previous page.
   
-* Parameterized line actions now apply to the backsector of a line if started
-  from a linedef and given tag 0.
+* Parameterized lighting actions now apply to the backsector of a line if 
+  started from a linedef and given tag 0.
   
 * FLOATBOB objects no longer have MBF torque physics applied to them.
 

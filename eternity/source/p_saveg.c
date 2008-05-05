@@ -1790,7 +1790,7 @@ void P_UnArchiveSoundSequences(void)
 //
 // Since Doom 0.99, buttons have never been saved in savegames, presumably
 // because id didn't know how to twizzle the line and sector pointers they
-// stored in the structures (but maybe they just forgot about it altogether).
+// stored in the structure (but maybe they just forgot about it altogether).
 // This meant that switches scheduled to pop out at the time the game is saved
 // never did so after loading the save. No longer!
 //
