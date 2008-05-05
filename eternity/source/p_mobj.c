@@ -1128,8 +1128,9 @@ void P_MobjThinker(mobj_t *mobj)
       // killough 9/12/98: objects fall off ledges if they are hanging off
       // slightly push off of ledge if hanging more than halfway off
 
-      if(mobj->z > mobj->dropoffz &&      // Only objects contacting dropoff
-         !(mobj->flags & MF_NOGRAVITY) && // Only objects which fall
+      if(mobj->z > mobj->dropoffz       &&  // Only objects contacting dropoff
+         !(mobj->flags & MF_NOGRAVITY)  &&  // Only objects which fall
+         !(mobj->flags2 & MF2_FLOATBOB) &&  // haleyjd: not floatbobbers
          !comp[comp_falloff] && demo_version >= 203) // Not in old demos
          P_ApplyTorque(mobj);               // Apply torque
       else

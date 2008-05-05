@@ -2052,25 +2052,25 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
       success = ACS_TerminateScript(args[0], args[1]);
       break;
    case 368: // Light_RaiseByValue
-      success = EV_SetLight(args[0], setlight_add, args[1]);
+      success = EV_SetLight(line, args[0], setlight_add, args[1]);
       break;
    case 369: // Light_LowerByValue
-      success = EV_SetLight(args[0], setlight_sub, args[1]);
+      success = EV_SetLight(line, args[0], setlight_sub, args[1]);
       break;
    case 370: // Light_ChangeToValue
-      success = EV_SetLight(args[0], setlight_set, args[1]);
+      success = EV_SetLight(line, args[0], setlight_set, args[1]);
       break;
    case 371: // Light_Fade
-      success = EV_FadeLight(args[0], args[1], args[2]);
+      success = EV_FadeLight(line, args[0], args[1], args[2]);
       break;
    case 372: // Light_Glow
-      success = EV_GlowLight(args[0], args[1], args[2], args[3]);
+      success = EV_GlowLight(line, args[0], args[1], args[2], args[3]);
       break;
    case 373: // Light_Flicker
-      success = EV_FlickerLight(args[0], args[1], args[2]);
+      success = EV_FlickerLight(line, args[0], args[1], args[2]);
       break;
    case 374: // Light_Strobe
-      success = EV_StrobeLight(args[0], args[1], args[2], args[3], args[4]);
+      success = EV_StrobeLight(line, args[0], args[1], args[2], args[3], args[4]);
       break;
    case 375: // Radius_Quake
       success = P_StartQuake(args);
@@ -2389,6 +2389,7 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
    for(i = 0; i < numparams; ++i)
       args[i] = params[i + 1];
 
+   // FIXME: spac important?
    return P_ExecParamLineSpec(line, thing, spec, args, 0, SPAC_CROSS, true);
 }
 

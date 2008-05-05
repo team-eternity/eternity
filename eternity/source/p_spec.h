@@ -1135,17 +1135,17 @@ int EV_LightTurnOn(line_t *line, int bright);
 
 int EV_LightTurnOnPartway(int tag, fixed_t level);  // killough 10/10/98
 
-int EV_SetLight(int tag, setlight_e type, int lvl); // haleyjd 01/09/07
+int EV_SetLight(line_t *, int tag, setlight_e type, int lvl); // haleyjd 01/09/07
 
-int EV_FadeLight(int tag, int destvalue, int speed); // haleyjd 01/10/07
+int EV_FadeLight(line_t *, int tag, int destvalue, int speed); // haleyjd 01/10/07
 
 // haleyjd 01/10/07:
-int EV_GlowLight(int tag, int maxval, int minval, int speed); 
+int EV_GlowLight(line_t *, int tag, int maxval, int minval, int speed); 
 
 // haleyjd 01/16/07:
-int EV_StrobeLight(int tag, int maxval, int minval, int maxtime, int mintime);
+int EV_StrobeLight(line_t *, int tag, int maxval, int minval, int maxtime, int mintime);
 
-int EV_FlickerLight(int tag, int maxval, int minval);
+int EV_FlickerLight(line_t *, int tag, int maxval, int minval);
 
 // p_floor
 

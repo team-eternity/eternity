@@ -50,6 +50,7 @@
 #include "g_bind.h"    // haleyjd: dynamic key bindings
 #include "d_gi.h"      // haleyjd: global game mode info
 #include "v_font.h"    // haleyjd: new font engine
+#include "d_io.h"
 
 boolean inhelpscreens; // indicates we are in or just left a help screen
 
@@ -642,20 +643,32 @@ void MN_DrawMenu(menu_t *menu)
    // have multiple pages.
    if(menu->prevpage)
    {
-      char *text = "<- PREV";
+      char msgbuffer[64];
+      char *key = G_FirstBoundKey("menu_pageup");
+
+      if(!strcasecmp(key, "pgup"))
+         key = "page up";
+
+      psnprintf(msgbuffer, 64, "<- %s", key);
 
       m_y = SCREENHEIGHT - (2*GameModeInfo->vtextinfo->absh + 1);
 
-      MN_WriteTextColoured(text, CR_GOLD, 57 - MN_StringWidth(text), m_y);
+      MN_WriteTextColoured(msgbuffer, CR_GOLD, 10, m_y);
    }
 
    if(menu->nextpage)
    {
-      char *text = "NEXT ->";
+      char msgbuffer[64];
+      char *key = G_FirstBoundKey("menu_pagedown");
+
+      if(!strcasecmp(key, "pgdn"))
+         key = "page down";
+
+      psnprintf(msgbuffer, 64, "%s ->", key);
 
       m_y = SCREENHEIGHT - (2*GameModeInfo->vtextinfo->absh + 1);
 
-      MN_WriteTextColoured(text, CR_GOLD, 310 - MN_StringWidth(text), m_y);
+      MN_WriteTextColoured(msgbuffer, CR_GOLD, 310 - MN_StringWidth(msgbuffer), m_y);
    }
 }
 

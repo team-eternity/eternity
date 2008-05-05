@@ -491,13 +491,24 @@ int EV_LightTurnOnPartway(int tag, fixed_t level)
 // haleyjd 01/09/07: Depending on the value of "type", this function
 // sets, adds to, or subtracts from all tagged sectors' light levels.
 //
-int EV_SetLight(int tag, setlight_e type, int lvl)
+int EV_SetLight(line_t *line, int tag, setlight_e type, int lvl)
 {
    int i, rtn = 0;
    sector_t *s;
+   boolean backside = false;
+
+   if(line && tag == 0)
+   {
+      if(!line->backsector)
+         return rtn;
+      i = line->backsector - sectors;
+      backside = true;
+      goto dobackside;
+   }
 
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {      
+dobackside:
       s = &sectors[i];
 
       rtn = 1; // if any sector is changed, we return 1
@@ -519,6 +530,9 @@ int EV_SetLight(int tag, setlight_e type, int lvl)
          s->lightlevel = 0;
       else if(s->lightlevel > 255)
          s->lightlevel = 255;
+
+      if(backside)
+         return rtn;
    }
 
    return rtn;
@@ -532,18 +546,29 @@ int EV_SetLight(int tag, setlight_e type, int lvl)
 //
 // haleyjd 01/10/07: changes for param specs
 //
-int EV_FadeLight(int tag, int destvalue, int speed)
+int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
 {
    int i, rtn = 0;
    lightfade_t *lf;
+   boolean backside = false;
 
    // speed <= 0? hell no.
    if(speed <= 0)
       return rtn;
+
+   if(line && tag == 0)
+   {
+      if(!line->backsector)
+         return rtn;
+      i = line->backsector - sectors;
+      backside = true;
+      goto dobackside;
+   }
    
    // search all sectors for ones with tag
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
+dobackside:
       rtn = 1;
 
       lf = Z_Malloc(sizeof(*lf), PU_LEVSPEC, NULL);
@@ -558,6 +583,9 @@ int EV_FadeLight(int tag, int destvalue, int speed)
       lf->step = (lf->destlevel - lf->lightlevel) / speed; // delta per frame
 
       lf->type = fade_once;
+
+      if(backside)
+         return rtn;
    }
 
    return rtn;
@@ -572,10 +600,11 @@ int EV_FadeLight(int tag, int destvalue, int speed)
 // by fading the sector toward the lower light level, whether that requires
 // fading up or down.
 //
-int EV_GlowLight(int tag, int maxval, int minval, int speed)
+int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
 {
    int i, rtn = 0;
    lightfade_t *lf;
+   boolean backside = false;
 
    // speed <= 0? hell no.
    if(speed <= 0 || maxval == minval)
@@ -588,10 +617,20 @@ int EV_GlowLight(int tag, int maxval, int minval, int speed)
       maxval = minval;
       minval = temp;
    }
+
+   if(line && tag == 0)
+   {
+      if(!line->backsector)
+         return rtn;
+      i = line->backsector - sectors;
+      backside = true;
+      goto dobackside;
+   }
    
    // search all sectors for ones with tag
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
+dobackside:
       rtn = 1;
 
       lf = Z_Malloc(sizeof(*lf), PU_LEVSPEC, NULL);
@@ -611,6 +650,9 @@ int EV_GlowLight(int tag, int maxval, int minval, int speed)
       lf->step = (lf->destlevel - lf->lightlevel) / speed; // delta per frame
 
       lf->type = fade_glow;
+
+      if(backside)
+         return rtn;
    }
 
    return rtn;
@@ -624,13 +666,25 @@ int EV_GlowLight(int tag, int maxval, int minval, int speed)
 // independent durations for both levels. Uses the same thinker as the normal
 // strobe light effect.
 //
-int EV_StrobeLight(int tag, int maxval, int minval, int maxtime, int mintime)
+int EV_StrobeLight(line_t *line, int tag, 
+                   int maxval, int minval, int maxtime, int mintime)
 {
    strobe_t *flash;
    int i, rtn = 0;
+   boolean backside = false;
+
+   if(line && tag == 0)
+   {
+      if(!line->backsector)
+         return rtn;
+      i = line->backsector - sectors;
+      backside = true;
+      goto dobackside;
+   }
    
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
+dobackside:
       rtn = 1;
       flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
       
@@ -645,6 +699,9 @@ int EV_StrobeLight(int tag, int maxval, int minval, int maxtime, int mintime)
       flash->count      = 1;
 
       flash->sector->lightlevel = flash->maxlight;
+
+      if(backside)
+         return rtn;
    }
 
    return rtn;
@@ -658,13 +715,24 @@ int EV_StrobeLight(int tag, int maxval, int minval, int maxtime, int mintime)
 // at a randomized time period between 0.2 and 1.8 seconds (7 to 64 tics).
 // Uses the normal lightflash thinker.
 //
-int EV_FlickerLight(int tag, int maxval, int minval)
+int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
 {
    lightflash_t *flash;
    int i, rtn = 0;
+   boolean backside = false;
+
+   if(line && tag == 0)
+   {
+      if(!line->backsector)
+         return rtn;
+      i = line->backsector - sectors;
+      backside = true;
+      goto dobackside;
+   }
    
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
+dobackside:
       rtn = 1;
       flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
       
@@ -679,6 +747,9 @@ int EV_FlickerLight(int tag, int maxval, int minval)
       flash->count    = (P_Random(pr_lights) & flash->maxtime) + 1;
 
       flash->sector->lightlevel = flash->maxlight;
+
+      if(backside)
+         return rtn;
    }
 
    return rtn;

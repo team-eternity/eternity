@@ -2,6 +2,97 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+04/05/08
+
+In preparation for a maintenance release, I have done some mopping up of issues
+previously identified in the changelog:
+
+* Menus now display the name of the first key bound to the page up/down actions
+  in the indicator text for the presence of a next or previous page.
+  
+* Parameterized line actions now apply to the backsector of a line if started
+  from a linedef and given tag 0.
+  
+* FLOATBOB objects no longer have MBF torque physics applied to them.
+
+There are a few other issues remaining, but they are too complicated to fix at
+the moment.
+
+--------------------------------------------------------------------------------
+04/04/08
+
+Added some code to memset new buttons to zero when the array is reallocated, to
+avoid possible problems caused by uninitialized buttons. Added the SPC preamp
+and bass boost variables to the configuration file, and made the bass boost
+option actually do something (I left out some code that was needed in its
+command handler routine).
+
+--------------------------------------------------------------------------------
+04/03/08
+
+Some playtesting in Doom 2 revealed that my previous changes to switch sounds
+were yielding results far from satisfactory, since the sound of a switch could
+often occur at a point extremely distant from the switch linedef (this is due
+to the fact that a sector's sound origin is placed at its center, a point which
+can be outside the sector itself if it is large and concave or unconnected).
+
+Instead of simply copying the sector sound origin's properties directly,
+buttons now set the location of their degenmobj_t soundorg to the midpoint of
+the switch linedef, using this code:
+
+   button->soundorg.x = line->v1->x + line->dx / 2;
+   button->soundorg.y = line->v1->y + line->dy / 2;
+   
+Results are now perfectly what you would expect.
+
+What would be interesting is if all linedefs already had a sound origin at their
+midpoints...
+
+--------------------------------------------------------------------------------
+04/02/08
+
+Over the past few days I had been experimenting with the snes_spc 0.9.0 library
+for playing SPC music, having integrated SDL audio playback and filtering into
+one of the test programs it comes with. Today I added the library into Eternity
+as a subproject which compiles to snes_spc.dll under Win32, and added 
+conditionally compiled code (using symbol HAVE_SPCLIB) into i_sound.c to support
+playback and amplification/bass boost settings. Eternity now supports SPC music.
+
+--------------------------------------------------------------------------------
+04/28/08
+
+I got bored at work and decided to go ahead with a previous plan to change the
+gameModeInfo variable to GameModeInfo, since a capitalized name more properly
+reflects its status as a very important global variable.
+
+--------------------------------------------------------------------------------
+04/23/08
+
+Sound samples are now converted and filtered on load to 44.1 kHz instead of 
+being interpolated into the audio stream during playback. This has sped up 
+I_SDLUpdateSound quite a bit, at the cost of some memory.
+
+The FatAttack series of Mancubus attack codepointers will no longer crash the
+game if the enemy using them does not have a valid target. These are some of
+the only pointers that never bothered to check actor->target for validity.
+I'll fix any others that I happen to see from now on.
+
+--------------------------------------------------------------------------------
+04/20/08
+
+Esselfortium pointed out that it should be possible to use parameterized line
+special numbers directly on linedefs, since such specials never make use of the
+line tag field anyway. So it is now possible to use the line special numbers
+directly, and use only the tag field to refer to the ExtraData linedef record
+which holds the args and activation flags for the line. This makes line special
+270 (ExtraData Control Line) obsolete, but the special will still be supported
+for backward compatibility, and in case there are ever instances in the future
+where it is actually needed for something.
+
+I also lengthened the amount of time that blood drop particles stay on the
+ground, by user request.
+
+--------------------------------------------------------------------------------
 04/17/08
 
 Added savegame support for buttons at long last. DOOM never saved the buttonlist
