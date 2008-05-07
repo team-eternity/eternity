@@ -677,6 +677,9 @@ void GetTabs(char *key)
             !strncmp(browser->name, key, keylen))
          {
             // found a new tab
+
+            // CONSOLE_FIXME: overflowable array!
+
             tabs[numtabs] = browser;
             numtabs++;
          }
@@ -754,7 +757,6 @@ char *C_PrevTab(char *key)
 // Aliases
 //
 
-// fixed length array arrgh!
 // haleyjd 04/14/03: removed limit and rewrote all code
 alias_t aliases;
 char *cmdoptions;       // command line options for aliases
@@ -1233,7 +1235,7 @@ void C_RunCmdLineScripts(void)
             file = !strcasecmp(myargv[p], "-exec"); // allow multiple -exec
          else if(file)
          {
-            char filename[PATH_MAX+1];
+            char *filename = Z_Alloca(strlen(myargv[p] + 1));
 
             strcpy(filename, myargv[p]);
 

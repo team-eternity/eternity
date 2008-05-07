@@ -658,8 +658,9 @@ static int edf_echo(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
                        const char **argv)
 {
-   char currentpath[PATH_MAX + 1];
-   char filename[PATH_MAX + 1];
+   char *currentpath;
+   char *filename;
+   size_t len;
 
    if(argc != 1)
    {
@@ -677,7 +678,12 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
       return 1;
    }
 
+   currentpath = Z_Alloca(strlen(cfg->filename));
    M_GetFilePath(cfg->filename, currentpath, sizeof(currentpath));
+
+   len = strlen(currentpath) + strlen(argv[0]) + 2;
+   filename = Z_Alloca(len);
+
    psnprintf(filename, sizeof(filename), "%s/%s", currentpath, argv[0]);
    M_NormalizeSlashes(filename);
 

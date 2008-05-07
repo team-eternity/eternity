@@ -571,6 +571,7 @@ void I_UpdateSound(void)
 }
 
 #define STEP sizeof(Sint16)
+#define STEPSHIFT 1
 
 #ifdef HAVE_SPCLIB
 // haleyjd 05/02/08: SPC support
@@ -587,7 +588,7 @@ int spc_bass_boost = 8;
 //
 static void I_EffectSPC(int chan, void *stream, int len, void *udata)
 {
-   short *leftout, *rightout, *leftend, *datal, *datar;
+   Sint16 *leftout, *rightout, *leftend, *datal, *datar;
    int numsamples, spcsamples;
    int stepremainder = 0, i = 0;
    int dl, dr;
@@ -601,12 +602,15 @@ static void I_EffectSPC(int chan, void *stream, int len, void *udata)
    numsamples = len / STEP;
    leftend = leftout + numsamples;
 
-   spcsamples = ((int)(numsamples * 320.0 / 441.0) & 0xFFFFFFFE) + 2;
+   // round samples up to higher even number
+   spcsamples = ((int)(numsamples * 320.0 / 441.0) & ~1) + 2;
 
    // realloc spc buffer?
    if(spcsamples != lastspcsamples)
    {
-      spc_buffer = (short *)realloc(spc_buffer, (spcsamples + 2) * 2 * sizeof(Sint16));
+      // add extra buffer samples at end for filtering safety; stereo channels
+      spc_buffer = (short *)realloc(spc_buffer, 
+                                    (spcsamples + 2) * 2 * sizeof(Sint16));
       lastspcsamples = spcsamples;
    }
 
@@ -622,6 +626,9 @@ static void I_EffectSPC(int chan, void *stream, int len, void *udata)
 
    while(leftout != leftend)
    {
+      // linear filter spc samples to the output buffer, since the
+      // sample rate is higher (44.1 kHz vs. 32 kHz).
+
       dl = *leftout + (((int)datal[0] * (0x10000 - stepremainder) +
                         (int)datal[2] * stepremainder) >> 16);
 
@@ -633,27 +640,28 @@ static void I_EffectSPC(int chan, void *stream, int len, void *udata)
       else if(dl < SHRT_MIN)
          *leftout = SHRT_MIN;
       else
-         *leftout = (short)dl;
+         *leftout = (Sint16)dl;
 
       if(dr > SHRT_MAX)
          *rightout = SHRT_MAX;
       else if(dr < SHRT_MIN)
          *rightout = SHRT_MIN;
       else
-         *rightout = (short)dr;
+         *rightout = (Sint16)dr;
 
       stepremainder += ((32000 << 16) / 44100);
 
       i += (stepremainder >> 16);
       
-      datal = spc_buffer + i * 2;
+      datal = spc_buffer + (i << STEPSHIFT);
       datar = datal + 1;
 
+      // trim remainder to decimal portion
       stepremainder &= 0xffff;
 
       // step to next sample in mixer buffer
-      leftout  += 2;
-      rightout += 2;
+      leftout  += STEP;
+      rightout += STEP;
    }
 }
 #endif
@@ -1086,10 +1094,15 @@ int I_TryLoadSPC(void *data, int size)
 #endif
 
    snes_spc = spc_new();
+
+   if(snes_spc == NULL)
+   {
+      doom_printf("Failed to allocate snes_spc");
+      return -1;
+   }
    
    if((err = spc_load_spc(snes_spc, data, size)))
    {
-      doom_printf("Bad SPC data: %s", err);
       spc_delete(snes_spc);
       snes_spc = NULL;
       return -1;
@@ -1098,9 +1111,19 @@ int I_TryLoadSPC(void *data, int size)
    // It is a SPC, so set everything up for SPC playing
    spc_filter = spc_filter_new();
 
+   if(spc_filter == NULL)
+   {
+      doom_printf("Failed to allocate spc_filter");
+      spc_delete(snes_spc);
+      snes_spc = NULL;
+      return -1;
+   }
+
+   // clear echo buffer garbage, init filter
    spc_clear_echo(snes_spc);
    spc_filter_clear(spc_filter);
 
+   // set initial gain and bass parameters
    spc_filter_set_gain(spc_filter, snd_MusicVolume * (256 * spc_preamp) / 15);
    spc_filter_set_bass(spc_filter, spc_bass_boost);
 
@@ -1141,7 +1164,7 @@ int I_RegisterSong(void *data, int size)
          if(!(err = I_TryLoadSPC(data, size)))
             return 1;
 #endif
-         doom_printf(FC_ERROR "Error loading midi: %d", err);
+         doom_printf(FC_ERROR "Error loading music: %d", err);
          return 0;
       }
 

@@ -133,8 +133,8 @@ char    basedefault[PATH_MAX+1];  // default file
 char    baseiwad[PATH_MAX+1];     // jff 3/23/98: iwad directory
 char    basesavegame[PATH_MAX+1]; // killough 2/16/98: savegame directory
 
-char    basepath[PATH_MAX+1];     // haleyjd 11/23/06: path of "base" directory
-char    basegamepath[PATH_MAX+1]; // haleyjd 11/23/06: path of game directory
+char    *basepath;                // haleyjd 11/23/06: path of "base" directory
+char    *basegamepath;            // haleyjd 11/23/06: path of game directory
 
 // set from iwad: level to start new games from
 char firstlevel[9] = "";
@@ -715,22 +715,26 @@ char *D_DoomExeName(void)
 //  D_ExpandTilde
 //      expand tilde in base path name for linux home dir
 //
-static void D_ExpandTilde(char basedir[PATH_MAX + 1])
+static char *D_ExpandTilde(char *basedir)
 {
    if(basedir[0] == '~')
    {
       char *home = strdup(getenv("HOME"));
-      char *oldbasedir = strdup(basedir);
-      
-      memcpy(basedir + strlen(home), oldbasedir + 1, PATH_MAX - strlen(home) - 1);
-      memcpy(basedir, home, strlen(home));
-      
+      char *newalloc;
+      size_t len = strlen(home) + strlen(basedir) + 1;
+
+      newalloc = Z_Alloca(len);
+
+      strcpy(newalloc, home);
+      strcpy(newalloc + strlen(home), basedir + 1);
+            
       if(home)
          free(home);
-      
-      if(oldbasedir)
-         free(oldbasedir);
+
+      return newalloc;
    }
+
+   return Z_Strdupa(basedir);
 }
 
 // return codes for D_CheckBasePath
@@ -785,10 +789,8 @@ static void D_SetBasePath(void)
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    char *s;
-   char basedir[PATH_MAX + 1];
+   char *basedir;
    boolean havepath = false;
-
-   memset(basedir, 0, sizeof(basedir));
 
    // Priority:
    // 1. Command-line argument "-base"
@@ -799,8 +801,7 @@ static void D_SetBasePath(void)
    // check command-line
    if((p = M_CheckParm("-base")) && p < myargc - 1)
    {
-      psnprintf(basedir, PATH_MAX + 1, "%s", myargv[p + 1]);
-      D_ExpandTilde(basedir);
+      basedir = D_ExpandTilde(myargv[p + 1]);
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_CMDLINE;
@@ -809,8 +810,7 @@ static void D_SetBasePath(void)
    // check environment
    if(res != BASE_ISGOOD && (s = getenv("ETERNITYBASE")))
    {
-      strncpy(basedir, s, PATH_MAX + 1);
-      D_ExpandTilde(basedir);
+      basedir = D_ExpandTilde(s);
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_ENVIRON;
@@ -819,7 +819,7 @@ static void D_SetBasePath(void)
    // check working dir
    if(res != BASE_ISGOOD)
    {
-      strncpy(basedir, "./base", PATH_MAX + 1);
+      basedir = Z_Strdupa("./base");
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_WORKING;
@@ -828,7 +828,11 @@ static void D_SetBasePath(void)
    // check exe dir
    if(res != BASE_ISGOOD)
    {
-      psnprintf(basedir, PATH_MAX + 1, "%s/base", D_DoomExeDir());
+      const char *exedir = D_DoomExeDir();
+      size_t len = strlen(exedir) + 6;
+
+      basedir = Z_Alloca(len);
+      psnprintf(basedir, len, "%s/base", D_DoomExeDir());
 
       if((res = D_CheckBasePath(basedir)) == BASE_ISGOOD)
          source = BASE_EXEDIR;
@@ -840,8 +844,7 @@ static void D_SetBasePath(void)
       }
    }
 
-   strncpy(basepath, basedir, PATH_MAX + 1);
-   basepath[PATH_MAX] = '\0';
+   basepath = strdup(basedir);
    M_NormalizeSlashes(basepath);
 
    switch(source)
@@ -882,11 +885,16 @@ static void D_CheckGamePathParam(void)
 {
    int p;
    struct stat sbuf;
-   char gamedir[PATH_MAX + 1];
+   char *gamedir;
 
    if((p = M_CheckParm("-game")) && p < myargc - 1)
    {
-      psnprintf(gamedir, sizeof(gamedir), "%s/%s", basepath, myargv[p + 1]);
+      size_t len = strlen(basepath) + strlen(myargv[p + 1]) + 2;
+      gamedir = Z_Alloca(len);
+
+      psnprintf(gamedir, len, "%s/%s", basepath, myargv[p + 1]);
+
+      //psnprintf(gamedir, sizeof(gamedir), "%s/%s", basepath, myargv[p + 1]);
 
       gamepathparm = p + 1;
 
@@ -894,8 +902,7 @@ static void D_CheckGamePathParam(void)
       {
          if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
          {
-            strncpy(basegamepath, gamedir, PATH_MAX + 1);
-            basegamepath[PATH_MAX] = '\0';
+            basegamepath = strdup(gamedir);
             M_NormalizeSlashes(basegamepath);
             gamepathset = true;
          }
@@ -927,17 +934,20 @@ static const char *gamemission_pathnames[] =
 static void D_SetGamePath(void)
 {
    struct stat sbuf;
-   char gamedir[PATH_MAX + 1];
+   char *gamedir;
+   size_t len;
+   const char *mstr = gamemission_pathnames[GameModeInfo->missionInfo->id];
 
-   psnprintf(gamedir, sizeof(gamedir), "%s/%s", 
-             basepath, gamemission_pathnames[GameModeInfo->missionInfo->id]);
+   len = strlen(basepath) + strlen(mstr) + 2;
+   gamedir = Z_Alloca(len);
+
+   psnprintf(gamedir, len, "%s/%s", basepath, mstr);
 
    if(!stat(gamedir, &sbuf)) // check for existence
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
       {
-         strncpy(basegamepath, gamedir, PATH_MAX + 1);
-         basegamepath[PATH_MAX] = '\0';
+         basegamepath = strdup(gamedir);
          M_NormalizeSlashes(basegamepath);
       }
       else
@@ -952,12 +962,15 @@ static void D_SetGamePath(void)
 //
 // Looks for an optional root.edf file in base/game
 //
-static const char *D_CheckGameEDF(void)
+static char *D_CheckGameEDF(void)
 {
    struct stat sbuf;
-   static char game_edf[PATH_MAX + 1];
+   static char *game_edf;
+   size_t len = strlen(basegamepath) + 10;
 
-   psnprintf(game_edf, sizeof(game_edf), "%s/root.edf", basegamepath);
+   game_edf = malloc(len);
+
+   psnprintf(game_edf, len, "%s/root.edf", basegamepath);
 
    if(!stat(game_edf, &sbuf)) // check for existence
    {
@@ -970,7 +983,7 @@ static const char *D_CheckGameEDF(void)
 
 // haleyjd 08/20/07: gamepath autload directory structure
 static DIR *autoloads;
-static char autoload_dirname[PATH_MAX + 1];
+static char *autoload_dirname;
 
 //
 // D_EnumerateAutoloadDir
@@ -980,9 +993,11 @@ static char autoload_dirname[PATH_MAX + 1];
 static void D_EnumerateAutoloadDir(void)
 {
    if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
-   {  
-      psnprintf(autoload_dirname, sizeof(autoload_dirname), 
-                "%s/autoload", basegamepath);
+   {
+      size_t len = strlen(basegamepath) + 10;
+      autoload_dirname = malloc(len);
+
+      psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
       
       autoloads = opendir(autoload_dirname);
    }
@@ -995,7 +1010,7 @@ static void D_EnumerateAutoloadDir(void)
 //
 static void D_GameAutoloadWads(void)
 {
-   char fn[PATH_MAX + 1];
+   char *fn;
 
    if(autoloads)
    {
@@ -1005,8 +1020,11 @@ static void D_GameAutoloadWads(void)
       {
          if(strstr(direntry->d_name, ".wad"))
          {
-            psnprintf(fn, sizeof(fn), "%s/%s", 
-                      autoload_dirname, direntry->d_name);
+            size_t len = strlen(autoload_dirname) + strlen(direntry->d_name) + 2;
+
+            fn = Z_Alloca(len);
+
+            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
             M_NormalizeSlashes(fn);
             D_AddFile(fn);
          }
@@ -1023,7 +1041,7 @@ static void D_GameAutoloadWads(void)
 //
 static void D_GameAutoloadDEH(void)
 {
-   char fn[PATH_MAX + 1];
+   char *fn;
 
    if(autoloads)
    {
@@ -1034,8 +1052,11 @@ static void D_GameAutoloadDEH(void)
          if(strstr(direntry->d_name, ".deh") || 
             strstr(direntry->d_name, ".bex"))
          {
-            psnprintf(fn, sizeof(fn), "%s/%s",
-                      autoload_dirname, direntry->d_name);
+            size_t len = strlen(autoload_dirname) + strlen(direntry->d_name) + 2;
+
+            fn = Z_Alloca(len);
+
+            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
             M_NormalizeSlashes(fn);
             D_QueueDEH(fn, 0);
          }
@@ -1052,7 +1073,7 @@ static void D_GameAutoloadDEH(void)
 //
 static void D_GameAutoloadCSC(void)
 {
-   char fn[PATH_MAX + 1];
+   char *fn;
 
    if(autoloads)
    {
@@ -1062,8 +1083,11 @@ static void D_GameAutoloadCSC(void)
       {
          if(strstr(direntry->d_name, ".csc"))
          {
-            psnprintf(fn, sizeof(fn), "%s/%s",
-                      autoload_dirname, direntry->d_name);
+            size_t len = strlen(autoload_dirname) + strlen(direntry->d_name) + 2;
+
+            fn = Z_Alloca(len);
+
+            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
             M_NormalizeSlashes(fn);
             C_RunScriptFromFile(fn);
          }
@@ -1481,16 +1505,15 @@ char *FindIWADFile(void)
 //
 static void D_LoadResourceWad(void)
 {
-   char filestr[PATH_MAX + 1];
+   char *filestr;
+   size_t len = strlen(basegamepath) + 20;
 
-   // haleyjd 06/04/02: lengthened filestr, memset to 0
-   memset(filestr, 0, PATH_MAX + 1);
-
-   psnprintf(filestr, sizeof(filestr), "%s/eternity.wad", basegamepath);
+   filestr = Z_Alloca(len);
+   psnprintf(filestr, len, "%s/eternity.wad", basegamepath);
 
    // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.wad
    if(access(filestr, R_OK))
-      psnprintf(filestr, sizeof(filestr), "%s/doom/eternity.wad", basepath);
+      psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
    D_AddFile(filestr);
@@ -1642,9 +1665,14 @@ void FindResponseFile(void)
          char *file = NULL, *firstargv;
          char **moreargs = malloc(myargc * sizeof(char *));
          char **newargv;
-         char fname[PATH_MAX + 1];
+         char *fname;
+         size_t len;
 
-         strncpy(fname, &myargv[i][1], PATH_MAX + 1);
+         len = strlen(myargv[i]) + 6;
+
+         fname = Z_Alloca(len);
+
+         strncpy(fname, &myargv[i][1], len);
          M_AddDefaultExtension(fname, ".rsp");
 
          // read the response file into memory
@@ -1768,7 +1796,10 @@ static void D_ProcessDehCommandLine(void)
          {
             if(deh)
             {
-               char file[PATH_MAX+1];      // killough
+               char *file; // killough
+               size_t len = strlen(myargv[p]) + 6;
+               file = Z_Alloca(len);
+
                M_AddDefaultExtension(strcpy(file, myargv[p]), ".bex");
                if(access(file, F_OK))  // nope
                {
@@ -1804,7 +1835,9 @@ static void D_ProcessWadPreincludes(void)
                s++;
             if(*s)
             {
-               char file[PATH_MAX+1];
+               char *file;
+               size_t len = strlen(s) + 6;
+               file = Z_Alloca(len);
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
                   D_AddFile(file);
@@ -1831,7 +1864,9 @@ static void D_ProcessDehPreincludes(void)
                s++;
             if(*s)
             {
-               char file[PATH_MAX+1];
+               char *file;
+               size_t len = strlen(s) + 6;
+               file = Z_Alloca(len);
                M_AddDefaultExtension(strcpy(file, s), ".bex");
                if(!access(file, R_OK))
                   D_QueueDEH(file, 0); // haleyjd: queue it
@@ -1867,7 +1902,9 @@ static void D_AutoExecScripts(void)
                s++;
             if(*s)
             {
-               char file[PATH_MAX+1];
+               char *file;
+               size_t len = strlen(s) + 6;
+               file = Z_Alloca(len);
                M_AddDefaultExtension(strcpy(file, s), ".csc");
                if(!access(file, R_OK))
                   C_RunScriptFromFile(file);
@@ -1918,14 +1955,15 @@ static void D_ProcessDehInWads(void)
 static void D_ProcessGFSDeh(gfs_t *gfs)
 {
    int i;
-   char filename[PATH_MAX + 1];
+   char *filename;
 
    for(i = 0; i < gfs->numdehs; ++i)
    {
-      memset(filename, 0, PATH_MAX + 1);
+      size_t len = strlen(gfs->filepath) + strlen(gfs->dehnames[i]) + 2;
 
-      psnprintf(filename, sizeof(filename),
-                "%s/%s", gfs->filepath, gfs->dehnames[i]);
+      filename = Z_Alloca(len);
+
+      psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->dehnames[i]);
       M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
@@ -1938,7 +1976,7 @@ static void D_ProcessGFSDeh(gfs_t *gfs)
 static void D_ProcessGFSWads(gfs_t *gfs)
 {
    int i;
-   char filename[PATH_MAX + 1];
+   char *filename;
 
    // haleyjd 06/21/04: GFS should mark modified game when
    // wads are added!
@@ -1947,10 +1985,10 @@ static void D_ProcessGFSWads(gfs_t *gfs)
 
    for(i = 0; i < gfs->numwads; ++i)
    {
-      memset(filename, 0, PATH_MAX + 1);
+      size_t len = strlen(gfs->filepath) + strlen(gfs->wadnames[i]) + 2;
+      filename = Z_Alloca(len);
 
-      psnprintf(filename, sizeof(filename),
-                "%s/%s", gfs->filepath, gfs->wadnames[i]);
+      psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->wadnames[i]);
       M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
@@ -1963,14 +2001,14 @@ static void D_ProcessGFSWads(gfs_t *gfs)
 static void D_ProcessGFSCsc(gfs_t *gfs)
 {
    int i;
-   char filename[PATH_MAX + 1];
+   char *filename;
 
    for(i = 0; i < gfs->numcsc; ++i)
    {
-      memset(filename, 0, PATH_MAX + 1);
+      size_t len = strlen(gfs->filepath) + strlen(gfs->cscnames[i]) + 2;
+      filename = Z_Alloca(len);
 
-      psnprintf(filename, sizeof(filename),
-                "%s/%s", gfs->filepath, gfs->cscnames[i]);
+      psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->cscnames[i]);
       M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
@@ -1986,7 +2024,7 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
 // Looks for a loose EDF file on the command line, to support
 // drag-and-drop.
 //
-static boolean D_LooseEDF(char *buffer)
+static boolean D_LooseEDF(char **buffer)
 {
    int i;
    const char *dot;
@@ -2004,7 +2042,7 @@ static boolean D_LooseEDF(char *buffer)
       if(!dot || strncasecmp(dot, ".edf", 4))
          continue;
 
-      strncpy(buffer, myargv[i], PATH_MAX + 1);
+      *buffer = Z_Strdupa(myargv[i]);
       return true; // process only the first EDF found
    }
 
@@ -2019,32 +2057,41 @@ static boolean D_LooseEDF(char *buffer)
 static void D_LoadEDF(gfs_t *gfs)
 {
    int i;
-   char edfname[PATH_MAX + 1];
+   char *edfname = NULL;
    const char *shortname = NULL;
 
    // command line takes utmost precedence
    if((i = M_CheckParm("-edf")) && i < myargc - 1)
    {
       // command-line EDF file found
-      strncpy(edfname, myargv[i+1], sizeof(edfname));
+      edfname = Z_Strdupa(myargv[i + 1]);
    }
    else if(gfs && (shortname = G_GFSCheckEDF()))
    {
       // GFS specified an EDF file
-      psnprintf(edfname, sizeof(edfname), "%s/%s", gfs->filepath, shortname);
+      size_t len = strlen(gfs->filepath) + strlen(shortname) + 2;
+      edfname = Z_Alloca(len);
+      psnprintf(edfname, len, "%s/%s", gfs->filepath, shortname);
    }
    else
    {
       // use default
-      if(!D_LooseEDF(edfname)) // check for loose files (drag and drop)
+      if(!D_LooseEDF(&edfname)) // check for loose files (drag and drop)
       {
-         const char *fn;
+         char *fn;
 
          // haleyjd 08/20/07: check for root.edf in base/game first
          if((fn = D_CheckGameEDF()))
-            strncpy(edfname, fn, PATH_MAX + 1);
+         {
+            edfname = Z_Strdupa(fn);
+            free(fn);
+         }
          else
-            psnprintf(edfname, sizeof(edfname), "%s/%s",  basepath, "root.edf");
+         {
+            size_t len = strlen(basepath) + 10;
+            edfname = Z_Alloca(len);
+            psnprintf(edfname, len, "%s/root.edf",  basepath);
+         }
 
          // disable other game modes' definitions implicitly ONLY
          // when using the default root.edf
@@ -2075,7 +2122,7 @@ static void D_LooseWads(void)
 {
    int i;
    const char *dot;
-   char filename[PATH_MAX + 1];
+   char *filename;
 
    for(i = 1; i < myargc; ++i)
    {
@@ -2091,7 +2138,7 @@ static void D_LooseWads(void)
          continue;
 
       // add it
-      strncpy(filename, myargv[i], PATH_MAX + 1);
+      filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
       D_AddFile(filename);
@@ -2102,7 +2149,7 @@ static void D_LooseDehs(void)
 {
    int i;
    const char *dot;
-   char filename[PATH_MAX + 1];
+   char *filename;
 
    for(i = 1; i < myargc; ++i)
    {
@@ -2119,7 +2166,7 @@ static void D_LooseDehs(void)
          continue;
 
       // add it
-      strncpy(filename, myargv[i], PATH_MAX + 1);
+      filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       D_QueueDEH(filename, 0);
    }
@@ -2257,7 +2304,9 @@ static void D_DoomInit(void)
    // haleyjd 11/22/03: support loose GFS on the command line too
    if((p = M_CheckParm("-gfs")) && p < myargc - 1)
    {
-      char fn[PATH_MAX + 1];
+      char *fn;
+      size_t len = strlen(myargv[p + 1]) + 6;
+      fn = Z_Alloca(len);
 
       // haleyjd 01/19/05: corrected use of AddDefaultExtension
       M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
@@ -2275,9 +2324,11 @@ static void D_DoomInit(void)
    }
    else if(gamepathset) // haleyjd 08/19/07: look for default.gfs in specified game path
    {
-      char fn[PATH_MAX + 1];
+      char *fn;
+      size_t len = strlen(basegamepath) + 14;
+      fn = Z_Alloca(len);
 
-      psnprintf(fn, sizeof(fn), "%s/default.gfs", basegamepath);
+      psnprintf(fn, len, "%s/default.gfs", basegamepath);
       if(!access(fn, R_OK))
       {
          gfs = G_LoadGFS(fn);

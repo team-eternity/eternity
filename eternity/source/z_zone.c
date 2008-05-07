@@ -1082,7 +1082,7 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
 #endif
 
    // add an alloca_header_t to the requested allocation size
-   ptr = (Z_Malloc)(n + sizeof(alloca_header_t), PU_STATIC, NULL, file, line);
+   ptr = (Z_Calloc)(n + sizeof(alloca_header_t), 1, PU_STATIC, NULL, file, line);
 
    // add to linked list
    hdr = (alloca_header_t *)ptr;
@@ -1092,6 +1092,17 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
    // return a pointer to the actual allocation
    return (void *)((char *)ptr + sizeof(alloca_header_t));
 }
+
+//
+// Z_Strdupa
+//
+// haleyjd 05/07/08: Strdup that uses alloca, for convenience.
+//
+char *(Z_Strdupa)(const char *s, const char *file, int line)
+{      
+   return strcpy((Z_Alloca)(strlen(s)+1, file, line), s);
+}
+
 
 void (Z_CheckHeap)(const char *file, int line)
 {

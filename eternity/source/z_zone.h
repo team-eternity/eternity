@@ -84,6 +84,7 @@ void *(Z_Calloc)(size_t n, size_t n2, int tag, void **user, const char *, int);
 void *(Z_Realloc)(void *p, size_t n, int tag, void **user, const char *, int);
 char *(Z_Strdup)(const char *s, int tag, void **user, const char *, int);
 void *(Z_Alloca)(size_t n, const char *file, int line);
+char *(Z_Strdupa)(const char *s, const char *file, int line);
 void (Z_CheckHeap)(const char *,int);   // killough 3/22/98: add file/line info
 int (Z_CheckTag)(void *,const char *,int);
 void Z_DumpHistory(char *);
@@ -96,6 +97,7 @@ void Z_DumpHistory(char *);
 #define Z_Calloc(a,b,c,d)  (Z_Calloc)   (a,b,c,d,__FILE__,__LINE__)
 #define Z_Realloc(a,b,c,d) (Z_Realloc)  (a,b,c,d,__FILE__,__LINE__)
 #define Z_Alloca(a)        (Z_Alloca)   (a,      __FILE__,__LINE__)
+#define Z_Strdupa(a)       (Z_Strdupa)  (a,      __FILE__,__LINE__)
 #define Z_CheckHeap()      (Z_CheckHeap)(        __FILE__,__LINE__)
 #define Z_CheckTag(a)      (Z_CheckTag) (a,      __FILE__,__LINE__)
 

@@ -109,7 +109,6 @@ void C_queueChatChar(unsigned char c)
 //
 // Passed nothing, returns the character dequeued
 //
-
 unsigned char C_dequeueChatChar(void)
 {
   char c;
@@ -287,7 +286,6 @@ void C_SendNetData()
 //
 //      Update a network variable
 //
-
 void C_UpdateVar(command_t *command)
 {
   char tempstr[100];
