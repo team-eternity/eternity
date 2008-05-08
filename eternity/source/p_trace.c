@@ -326,6 +326,8 @@ static boolean P_AimAtThing(intercept_t *in)
 // haleyjd 03/21/08
 //
 // FIXME: return value is actually constant
+// SoM: The shot is actually absorbed by the linedef
+//      so yes this will always return false.
 //
 static boolean P_AimTraversePortal(line_t *li, fixed_t dist)
 {
