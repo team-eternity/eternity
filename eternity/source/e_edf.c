@@ -659,7 +659,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
                        const char **argv)
 {
    char *currentpath;
-   char *filename;
+   char *filename = NULL;
    size_t len;
 
    if(argc != 1)
@@ -679,12 +679,11 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    }
 
    currentpath = Z_Alloca(strlen(cfg->filename));
-   M_GetFilePath(cfg->filename, currentpath, sizeof(currentpath));
+   M_GetFilePath(cfg->filename, currentpath, strlen(currentpath) + 1);
 
-   len = strlen(currentpath) + strlen(argv[0]) + 2;
-   filename = Z_Alloca(len);
-
-   psnprintf(filename, sizeof(filename), "%s/%s", currentpath, argv[0]);
+   len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
+      
+   psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
    M_NormalizeSlashes(filename);
 
    // queue the file for later processing

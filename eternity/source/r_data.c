@@ -39,6 +39,7 @@
 #include "v_video.h"
 #include "p_info.h" // haleyjd
 #include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "m_misc.h"
 
 
 static void R_LoadDoom1();
@@ -836,7 +837,7 @@ void R_InitTranMap(int progress)
       // Compose a default transparent filter map based on PLAYPAL.
       unsigned char *playpal = W_CacheLumpName("PLAYPAL", PU_STATIC);
       
-      char *fname;
+      char *fname = NULL;
       unsigned int fnamesize;
       
       struct trmapcache_s 
@@ -849,9 +850,9 @@ void R_InitTranMap(int progress)
 
       // haleyjd 11/23/06: use basegamepath
       // haleyjd 12/06/06: use Z_Alloca for path length limit removal
-      fnamesize = strlen(basegamepath) + strlen("/tranmap.dat") + 1;
-      fname     = Z_Alloca(fnamesize);
-      psnprintf(fname, fnamesize, "%s%s", basegamepath, "/tranmap.dat");
+      fnamesize = M_StringAlloca(&fname, 1, 12, basegamepath);
+
+      psnprintf(fname, fnamesize, "%s/tranmap.dat", basegamepath);
       
       cachefp = fopen(fname, "r+b");
 

@@ -76,8 +76,9 @@ void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap)
 //
 int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   char currentpath[PATH_MAX + 1];
-   char filename[PATH_MAX + 1];
+   char *currentpath = NULL;
+   char *filename = NULL;
+   size_t len;
 
    if(argc != 1)
    {
@@ -95,8 +96,10 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    switch(cfg_lexer_source_type(cfg))
    {
    case -1: // physical file
-      M_GetFilePath(cfg->filename, currentpath, sizeof(currentpath));
-      psnprintf(filename, sizeof(filename), "%s/%s", currentpath, argv[0]);
+      len = M_StringAlloca(&currentpath, 1, 2, cfg->filename);
+      M_GetFilePath(cfg->filename, currentpath, len);
+      len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
+      psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
       M_NormalizeSlashes(filename);
       return cfg_lexer_include(cfg, filename, -1);
    
@@ -183,9 +186,16 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 const char *E_BuildDefaultFn(const char *filename)
 {
-   static char buffer[PATH_MAX + 1];
+   static char *buffer;
+   size_t len;
 
-   psnprintf(buffer, sizeof(buffer), "%s/%s", basepath, filename);
+   if(buffer)
+      free(buffer);
+
+   len = strlen(basepath) + strlen(filename) + 2;
+   buffer = malloc(len);
+
+   psnprintf(buffer, len, "%s/%s", basepath, filename);
    M_NormalizeSlashes(buffer);
 
    return buffer;

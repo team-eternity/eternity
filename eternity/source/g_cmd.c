@@ -618,7 +618,7 @@ void G_AddAutoloadFiles(void)
       variable->v_default = NULL;
       variable->type = vt_string;
       variable->min = 0;
-      variable->max = PATH_MAX;
+      variable->max = 1024;
       variable->defines = NULL;
       
       // now the command

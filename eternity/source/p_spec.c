@@ -4393,8 +4393,8 @@ void P_ConvertHereticSpecials(void)
          sector->special = (3 << DAMAGE_SHIFT) | HTIC_DMG_MASK;
          continue;
       case 15: // low friction -- ice
-         sector->friction = 0xf900;       // from heretic source
-         sector->movefactor = 0x276;      // precomputed by me
+         sector->friction = 0xf900;
+         sector->movefactor = 0x276;
          sector->special = FRICTION_MASK; // clear, set friction bit
          continue;
       default:

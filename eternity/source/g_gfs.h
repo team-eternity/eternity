@@ -45,9 +45,9 @@ typedef struct gfs_s
    char **dehnames;
    char **cscnames;
 
-   char iwad[PATH_MAX + 1];
-   char filepath[PATH_MAX + 1];
-   char edf[PATH_MAX + 1];
+   char *iwad;
+   char *filepath;
+   char *edf;
 
    int numwads;
    int numdehs;

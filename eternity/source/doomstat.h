@@ -292,9 +292,9 @@ extern angle_t consoleangle;
 //
 
 // File handling stuff.
-extern  char    basedefault[];
-extern  char    *basepath;
-extern  char    *basegamepath;
+extern  char   *basedefault;
+extern  char   *basepath;
+extern  char   *basegamepath;
 extern  FILE   *debugfile;
                 // sf:
 #define DEBUGMSG(s) if(debugfile) { fprintf(debugfile, s);    \

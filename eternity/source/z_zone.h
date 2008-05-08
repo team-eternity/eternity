@@ -83,6 +83,7 @@ void (Z_Init)(void);
 void *(Z_Calloc)(size_t n, size_t n2, int tag, void **user, const char *, int);
 void *(Z_Realloc)(void *p, size_t n, int tag, void **user, const char *, int);
 char *(Z_Strdup)(const char *s, int tag, void **user, const char *, int);
+void Z_FreeAlloca(void);
 void *(Z_Alloca)(size_t n, const char *file, int line);
 char *(Z_Strdupa)(const char *s, const char *file, int line);
 void (Z_CheckHeap)(const char *,int);   // killough 3/22/98: add file/line info

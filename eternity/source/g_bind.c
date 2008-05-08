@@ -740,18 +740,21 @@ static char *cfg_file = NULL;
 
 void G_LoadDefaults(void)
 {
-   char temp[PATH_MAX+1];
+   char *temp = NULL;
+   size_t len;
    DWFILE dwfile, *file = &dwfile;
+
+   len = M_StringAlloca(&temp, 1, 18, basegamepath);
 
    // haleyjd 03/15/03: fix for -cdrom
    // haleyjd 07/03/04: FIXME: doesn't work for linux
    // haleyjd 11/23/06: use basegamepath
 #ifdef EE_CDROM_SUPPORT
    if(cdrom_mode)
-      psnprintf(temp, sizeof(temp), "%s/%s", "c:/doomdata", "keys.csc");
+      psnprintf(temp, len, "%s", "c:/doomdata/keys.csc");
    else
 #endif
-      psnprintf(temp, sizeof(temp), "%s/%s", basegamepath, "keys.csc");
+      psnprintf(temp, len, "%s/keys.csc", basegamepath);
    
    cfg_file = strdup(temp);
 

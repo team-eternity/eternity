@@ -504,7 +504,7 @@ static boolean MN_FileResponder(event_t *ev)
 
 char *wad_directory; // directory where user keeps wads
 
-VARIABLE_STRING(wad_directory,  NULL,          PATH_MAX);
+VARIABLE_STRING(wad_directory,  NULL,          1024);
 CONSOLE_VARIABLE(wad_directory, wad_directory, 0)
 {
    char *a;

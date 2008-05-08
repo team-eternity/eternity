@@ -637,7 +637,7 @@ menu_t menu_wadmisc =
    mn_wad_pages,
 };
 
-VARIABLE_STRING(mn_wadname,  NULL,       PATH_MAX);
+VARIABLE_STRING(mn_wadname,  NULL,           1024);
 CONSOLE_VARIABLE(mn_wadname, mn_wadname,        0) {}
 
 CONSOLE_COMMAND(mn_loadwad, cf_notnet)
@@ -647,7 +647,8 @@ CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 
 CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 {
-   char filename[PATH_MAX];
+   char *filename = NULL;
+   size_t len;
 
    // haleyjd 03/12/06: this is much more resilient than the 
    // chain of console commands that was used by SMMU
@@ -668,7 +669,9 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
       return;
    }
 
-   psnprintf(filename, sizeof(filename), "%s/%s", wad_directory, mn_wadname);
+   len = M_StringAlloca(&filename, 2, 2, wad_directory, mn_wadname);
+
+   psnprintf(filename, len, "%s/%s", wad_directory, mn_wadname);
 
    if(D_AddNewFile(filename))
    {
@@ -1269,11 +1272,14 @@ void MN_ReadSaveStrings(void)
    
    for(i = 0; i < SAVESLOTS; i++)
    {
-      char name[PATH_MAX+1];    // killough 3/22/98
+      char *name = NULL;    // killough 3/22/98
+      size_t len;
       char description[SAVESTRINGSIZE]; // sf
       FILE *fp;  // killough 11/98: change to use stdio
 
-      G_SaveGameName(name, sizeof(name), i);
+      len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
+
+      G_SaveGameName(name, len, i);
 
       // haleyjd: fraggle got rid of this - perhaps cause of the crash?
       //          I've re-implemented it below to try to resolve the
@@ -1405,8 +1411,9 @@ CONSOLE_COMMAND(mn_loadgame, 0)
 
 CONSOLE_COMMAND(mn_load, 0)
 {
-   char name[PATH_MAX+1];     // killough 3/22/98
+   char *name;     // killough 3/22/98
    int slot;
+   size_t len;
    
    if(c_argc < 1)
       return;
@@ -1419,8 +1426,10 @@ CONSOLE_COMMAND(mn_load, 0)
       MN_Alert("You can't load an empty game!\n%s", DEH_String("PRESSKEY"));
       return;     // empty slot
    }
+
+   len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
    
-   G_SaveGameName(name, sizeof(name), slot);
+   G_SaveGameName(name, len, slot);
    G_LoadGame(name, slot, false);
    
    MN_ClearMenus();
@@ -1458,9 +1467,12 @@ CONSOLE_COMMAND(quickload, 0)
 
 CONSOLE_COMMAND(qload, cf_hidden)
 {
-   char name[PATH_MAX+1];     // killough 3/22/98
+   char *name = NULL;     // killough 3/22/98
+   size_t len;
+
+   len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
    
-   G_SaveGameName(name, sizeof(name), quickSaveSlot);
+   G_SaveGameName(name, len, quickSaveSlot);
    G_LoadGame(name, quickSaveSlot, false);
 }
 

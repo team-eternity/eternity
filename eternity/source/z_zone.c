@@ -1039,7 +1039,7 @@ static alloca_header_t *alloca_root;
 //
 // haleyjd 12/06/06: Frees all blocks allocated with Z_Alloca.
 //
-static void Z_FreeAlloca(void)
+void Z_FreeAlloca(void)
 {
    alloca_header_t *hdr = alloca_root, *next;
 
@@ -1070,12 +1070,8 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
    alloca_header_t *hdr;
    void *ptr;
 
-   // special case for n == 0: free all allocations
    if(n == 0)
-   {
-      Z_FreeAlloca();
       return NULL;
-   }
 
 #ifdef ZONEFILE
    Z_LogPrintf("* Z_Alloca(n = %lu, file = %s, line = %d)\n", n, file, line);
@@ -1096,7 +1092,7 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
 //
 // Z_Strdupa
 //
-// haleyjd 05/07/08: Strdup that uses alloca, for convenience.
+// haleyjd 05/07/08: strdup that uses alloca, for convenience.
 //
 char *(Z_Strdupa)(const char *s, const char *file, int line)
 {      

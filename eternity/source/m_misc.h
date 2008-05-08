@@ -61,6 +61,8 @@ void  M_ExtractFileBase(const char *, char *);               // killough
 char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void  M_NormalizeSlashes(char *);                            // killough 11/98
 
+int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...);
+
 extern int screenshot_pcx;                                   // killough 10/98
 extern int screenshot_gamma;                                 // haleyjd  03/06
 

@@ -1700,19 +1700,21 @@ default_t *M_LookupDefault(const char *name)
 //
 void M_SaveDefaults (void)
 {
-   char tmpfile[PATH_MAX+1];
+   char *tmpfile = NULL;
+   size_t len;
    register default_t *dp;
    unsigned int line, blanks;
    FILE *f;
 
-   memset(tmpfile, 0, sizeof(tmpfile));
+   //memset(tmpfile, 0, sizeof(tmpfile));
 
    // killough 10/98: for when exiting early
    if(!defaults_loaded || !defaultfile)
       return;
 
-   psnprintf(tmpfile, sizeof(tmpfile), "%s/tmp%.5s.cfg", 
-             D_DoomExeDir(), D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 14, D_DoomExeDir(), D_DoomExeName());
+
+   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", D_DoomExeDir(), D_DoomExeName());
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;
@@ -2374,12 +2376,15 @@ boolean WriteBMPfile(char *filename, byte *data, int width,
 void M_ScreenShot(void)
 {
    boolean success = false;
-   char path[PATH_MAX + 1];
+   char *path = NULL;
+   size_t len;
    
    errno = 0;
 
+   len = M_StringAlloca(&path, 1, 6, basepath);
+
    // haleyjd 11/23/06: use basepath/shots
-   psnprintf(path, sizeof(path), "%s/%s", basepath, "shots");
+   psnprintf(path, len, "%s/shots", basepath);
    
    // haleyjd 05/23/02: corrected uses of access to use defined
    // constants rather than integers, some of which were not even
@@ -2388,13 +2393,15 @@ void M_ScreenShot(void)
    if(!access(path, W_OK))
    {
       static int shot;
-      char lbmname[PATH_MAX+1];
+      char *lbmname = NULL;
       int tries = 10000;
+
+      len = M_StringAlloca(&lbmname, 1, 16, path);
       
       // haleyjd: changed prefix to etrn
       do
       {
-         psnprintf(lbmname, sizeof(lbmname), //jff 3/30/98 pcx or bmp?
+         psnprintf(lbmname, len, //jff 3/30/98 pcx or bmp?
                    screenshot_pcx ? "%s/etrn%02d.pcx" : "%s/etrn%02d.bmp", 
                    path, shot++);
       }
@@ -2639,6 +2646,41 @@ void M_NormalizeSlashes(char *str)
       if(*p++ == '/')
          while(*p == '/')
             p++;
+}
+
+int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
+{
+   va_list args;
+   size_t len = extra;
+
+   if(numstrs < 1)
+      I_Error("M_StringAlloca: invalid input\n");
+
+   len += strlen(str1);
+
+   --numstrs;
+
+   if(numstrs != 0)
+   {   
+      va_start(args, str1);
+      
+      while(numstrs != 0)
+      {
+         const char *str = va_arg(args, const char *);
+         
+         len += strlen(str);
+         
+         --numstrs;
+      }
+      
+      va_end(args);
+   }
+
+   ++len;
+
+   *str = Z_Alloca(len);
+
+   return len;
 }
 
 //----------------------------------------------------------------------------

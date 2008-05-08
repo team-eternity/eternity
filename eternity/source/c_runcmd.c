@@ -1235,7 +1235,9 @@ void C_RunCmdLineScripts(void)
             file = !strcasecmp(myargv[p], "-exec"); // allow multiple -exec
          else if(file)
          {
-            char *filename = Z_Alloca(strlen(myargv[p] + 1));
+            char *filename = NULL;
+            
+            M_StringAlloca(&filename, 1, 6, myargv[p]);
 
             strcpy(filename, myargv[p]);
 

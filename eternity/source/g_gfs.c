@@ -122,7 +122,7 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       char *str = cfg_getstr(cfg, SEC_EDFFILE);
 
-      strncpy(gfs.edf, str, PATH_MAX + 1);
+      gfs.edf = strdup(str);
 
       gfs.hasEDF = true;
    }
@@ -134,7 +134,7 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       char *str = cfg_getstr(cfg, SEC_IWAD);
 
-      strncpy(gfs.iwad, str, PATH_MAX + 1);
+      gfs.iwad = strdup(str);
 
       gfs.hasIWAD = true;
    }
@@ -144,10 +144,13 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       char *str = cfg_getstr(cfg, SEC_BASEPATH);
 
-      strncpy(gfs.filepath, str, PATH_MAX + 1);
+      gfs.filepath = strdup(str);
    }
    else
-      M_GetFilePath(filename, gfs.filepath, PATH_MAX + 1);
+   {
+      gfs.filepath = malloc(strlen(filename) + 1);
+      M_GetFilePath(filename, gfs.filepath, strlen(filename));
+   }
 
    cfg_free(cfg);
 
@@ -181,13 +184,19 @@ void G_FreeGFS(gfs_t *gfs)
    }
    free(gfs->cscnames);
 
-   memset(gfs->edf, 0, PATH_MAX + 1);
+   if(gfs->edf)
+      free(gfs->edf);
+   gfs->edf = NULL;
    gfs->hasEDF = false;
 
-   memset(gfs->iwad, 0, PATH_MAX + 1);
+   if(gfs->iwad)
+      free(gfs->iwad);
+   gfs->iwad = NULL;
    gfs->hasIWAD = false;
 
-   memset(gfs->filepath, 0, PATH_MAX + 1);
+   if(gfs->filepath)
+      free(gfs->filepath);
+   gfs->filepath = NULL;
 }
 
 //

@@ -822,6 +822,11 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
 
         totallen += pad ;
 
+        // haleyjd 05/07/08: this was forgotten!
+        if (*nmax <= 1)
+           return totallen;
+
+
         /* Sign now if zeropad */
         if (flags & FLAG_ZERO_PAD && signchar)
         {
