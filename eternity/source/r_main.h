@@ -177,6 +177,7 @@ typedef struct
    boolean twosided, clipsolid, maskedtex;
    short toptex, midtex, bottomtex;
    boolean markfloor, markceiling;
+   boolean markfportal, markcportal;
    boolean segtextured;
 
    int toptexmid, midtexmid, bottomtexmid;

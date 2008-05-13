@@ -944,8 +944,11 @@ static void R_AddLine(seg_t *line)
       else
          seg.midtexmid = (int)((textop + seg.toffsety) * FRACUNIT);
 
-      seg.markceiling = (seg.ceilingplane != NULL || R_RenderCeilingPortal(seg.frontsec));
-      seg.markfloor   = (seg.floorplane != NULL || R_RenderFloorPortal(seg.frontsec));
+      // SoM: these should be treated differently! 
+      seg.markcportal = R_RenderCeilingPortal(seg.frontsec);
+      seg.markfportal = R_RenderFloorPortal(seg.frontsec);
+      seg.markceiling = (seg.ceilingplane != NULL);
+      seg.markfloor   = (seg.floorplane != NULL);
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
 
@@ -999,13 +1002,17 @@ static void R_AddLine(seg_t *line)
               seg.backsec->ceilingpic  == sky2flatnum))
          seg.top = seg.high;
 
+      seg.markcportal = 
+         (R_RenderCeilingPortal(seg.frontsec) && 
+         (seg.clipsolid || seg.top != seg.high || 
+          seg.frontsec->c_portal != seg.backsec->c_portal));
+
       seg.markceiling = 
-         ((seg.ceilingplane || R_RenderCeilingPortal(seg.frontsec)) && 
+         (seg.ceilingplane && 
           (mark || seg.clipsolid || seg.top != seg.high || 
            seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
            seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
            seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
-           seg.frontsec->c_portal != seg.backsec->c_portal ||
            seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
            seg.frontsec->topmap != seg.backsec->topmap)); // haleyjd
 
@@ -1022,15 +1029,18 @@ static void R_AddLine(seg_t *line)
       else
          seg.toptex = 0;
 
+      seg.markfportal = 
+         (R_RenderFloorPortal(seg.frontsec) &&
+         (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
+          seg.frontsec->f_portal != seg.backsec->f_portal));
 
       seg.markfloor = 
-         ((seg.floorplane || R_RenderFloorPortal(seg.frontsec)) && 
+         (seg.floorplane && 
           (mark || seg.clipsolid ||  
            seg.frontsec->floorheight != seg.backsec->floorheight ||
            seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
            seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
            seg.frontsec->floorpic != seg.backsec->floorpic ||
-           seg.frontsec->f_portal != seg.backsec->f_portal ||
            seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
            seg.frontsec->bottommap != seg.backsec->bottommap)); // haleyjd
 
