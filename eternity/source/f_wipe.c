@@ -73,7 +73,7 @@ static void Wipe_initWipe(void)
    }
 }
 
-static byte *wipe_buffer;
+static byte *wipe_buffer = NULL;
 
 void Wipe_StartScreen(void)
 {
