@@ -1,0 +1,204 @@
+// EDF for Eternity Engine v3.35.00
+//  Sound definitions for Doom gamemodes.
+
+sound pistol { pitchvariance = Doom;    dehackednum =  1 }
+sound shotgn { pitchvariance = Doom;    dehackednum =  2 }
+sound sgcock { pitchvariance = Doom;    dehackednum =  3 }
+sound dshtgn { pitchvariance = Doom;    dehackednum =  4 }
+sound dbopn  { pitchvariance = Doom;    dehackednum =  5 }
+sound dbcls  { pitchvariance = Doom;    dehackednum =  6 }
+sound dbload { pitchvariance = Doom;    dehackednum =  7 }
+sound plasma { pitchvariance = Doom;    dehackednum =  8 }
+sound bfg    { pitchvariance = Doom;    dehackednum =  9 }
+sound sawup  { pitchvariance = DoomSaw; dehackednum = 10 }
+sound sawidl { pitchvariance = DoomSaw; priority = 118; dehackednum =  11 }
+sound sawful { pitchvariance = DoomSaw; dehackednum = 12 }
+sound sawhit { pitchvariance = DoomSaw; dehackednum = 13 }
+sound rlaunc { pitchvariance = Doom;    dehackednum = 14 }
+sound rxplod { pitchvariance = Doom;    priority =  70; dehackednum =  15 }
+sound firsht { pitchvariance = Doom;    priority =  70; dehackednum =  16 }
+sound firxpl { pitchvariance = Doom;    priority =  70; dehackednum =  17 }
+sound pstart { pitchvariance = Doom;    priority = 100; dehackednum =  18 }
+sound pstop  { pitchvariance = Doom;    priority = 100; dehackednum =  19 }
+sound doropn { pitchvariance = Doom;    priority = 100; dehackednum =  20 }
+sound dorcls { pitchvariance = Doom;    priority = 100; dehackednum =  21 }
+sound stnmov { pitchvariance = Doom;    priority = 119; dehackednum =  22 }
+sound swtchn { pitchvariance = Doom;    priority =  78; dehackednum =  23 }
+sound swtchx { pitchvariance = Doom;    priority =  78; dehackednum =  24 }
+
+sound plpain 
+{ 
+   pitchvariance = Doom
+   priority = 96
+   dehackednum = 25
+   skinindex = sk_plpain
+}
+
+sound dmpain { pitchvariance = Doom; priority =  96; dehackednum =  26 }
+sound popain { pitchvariance = Doom; priority =  96; dehackednum =  27 }
+sound vipain { pitchvariance = Doom; priority =  96; dehackednum =  28 }
+sound mnpain { pitchvariance = Doom; priority =  96; dehackednum =  29 }
+sound pepain { pitchvariance = Doom; priority =  96; dehackednum =  30 }
+
+sound slop
+{ 
+   pitchvariance = Doom
+   priority = 78
+   dehackednum = 31
+   skinindex = sk_slop
+}
+
+sound itemup { priority =  78; dehackednum =  32; singularity = sg_itemup }
+
+sound wpnup
+{
+   pitchvariance = Doom
+   priority = 78
+   dehackednum = 33
+   singularity = sg_wpnup
+}
+
+sound oof
+{
+   pitchvariance = Doom
+   priority = 96
+   dehackednum = 34
+   singularity = sg_oof
+   skinindex = sk_oof
+}
+
+sound telept { pitchvariance = Doom; priority =  32; dehackednum =  35 }
+sound posit1 { pitchvariance = Doom; priority =  98; dehackednum =  36 }
+sound posit2 { pitchvariance = Doom; priority =  98; dehackednum =  37 }
+sound posit3 { pitchvariance = Doom; priority =  98; dehackednum =  38 }
+sound bgsit1 { pitchvariance = Doom; priority =  98; dehackednum =  39 }
+sound bgsit2 { pitchvariance = Doom; priority =  98; dehackednum =  40 }
+sound sgtsit { pitchvariance = Doom; priority =  98; dehackednum =  41 }
+sound cacsit { pitchvariance = Doom; priority =  98; dehackednum =  42 }
+sound brssit { pitchvariance = Doom; priority =  94; dehackednum =  43 }
+sound cybsit { pitchvariance = Doom; priority =  92; dehackednum =  44 }
+sound spisit { pitchvariance = Doom; priority =  90; dehackednum =  45 }
+sound bspsit { pitchvariance = Doom; priority =  90; dehackednum =  46 }
+sound kntsit { pitchvariance = Doom; priority =  90; dehackednum =  47 }
+sound vilsit { pitchvariance = Doom; priority =  90; dehackednum =  48 }
+sound mansit { pitchvariance = Doom; priority =  90; dehackednum =  49 }
+sound pesit  { pitchvariance = Doom; priority =  90; dehackednum =  50 }
+sound sklatk { pitchvariance = Doom; priority =  70; dehackednum =  51 }
+sound sgtatk { pitchvariance = Doom; priority =  70; dehackednum =  52 }
+sound skepch { pitchvariance = Doom; priority =  70; dehackednum =  53 }
+sound vilatk { pitchvariance = Doom; priority =  70; dehackednum =  54 }
+sound claw   { pitchvariance = Doom; priority =  70; dehackednum =  55 }
+sound skeswg { pitchvariance = Doom; priority =  70; dehackednum =  56 }
+
+sound pldeth 
+{ 
+   pitchvariance = Doom
+   priority = 32
+   dehackednum = 57
+   skinindex = sk_pldeth
+}
+
+sound pdiehi 
+{
+   pitchvariance = Doom
+   priority = 32
+   dehackednum = 58
+   skinindex = sk_pdiehi
+}
+
+sound podth1 { pitchvariance = Doom; priority =  70; dehackednum =  59 }
+sound podth2 { pitchvariance = Doom; priority =  70; dehackednum =  60 }
+sound podth3 { pitchvariance = Doom; priority =  70; dehackednum =  61 }
+sound bgdth1 { pitchvariance = Doom; priority =  70; dehackednum =  62 }
+sound bgdth2 { pitchvariance = Doom; priority =  70; dehackednum =  63 }
+sound sgtdth { pitchvariance = Doom; priority =  70; dehackednum =  64 }
+sound cacdth { pitchvariance = Doom; priority =  70; dehackednum =  65 }
+sound skldth { pitchvariance = Doom; priority =  70; dehackednum =  66 }
+sound brsdth { pitchvariance = Doom; priority =  32; dehackednum =  67 }
+sound cybdth { pitchvariance = Doom; priority =  32; dehackednum =  68 }
+sound spidth { pitchvariance = Doom; priority =  32; dehackednum =  69 }
+sound bspdth { pitchvariance = Doom; priority =  32; dehackednum =  70 }
+sound vildth { pitchvariance = Doom; priority =  32; dehackednum =  71 }
+sound kntdth { pitchvariance = Doom; priority =  32; dehackednum =  72 }
+sound pedth  { pitchvariance = Doom; priority =  32; dehackednum =  73 }
+sound skedth { pitchvariance = Doom; priority =  32; dehackednum =  74 }
+sound posact { pitchvariance = Doom; priority = 120; dehackednum =  75 }
+sound bgact  { pitchvariance = Doom; priority = 120; dehackednum =  76 }
+sound dmact  { pitchvariance = Doom; priority = 120; dehackednum =  77 }
+sound bspact { pitchvariance = Doom; priority = 100; dehackednum =  78 }
+sound bspwlk { pitchvariance = Doom; priority = 100; dehackednum =  79 }
+sound vilact { pitchvariance = Doom; priority = 100; dehackednum =  80 }
+
+sound noway
+{
+   pitchvariance = Doom
+   priority = 78
+   dehackednum = 81
+   singularity = sg_oof
+   skinindex = sk_noway
+}
+
+sound barexp { pitchvariance = Doom; priority =  60; dehackednum =  82 }
+sound punch  { pitchvariance = Doom; dehackednum = 83; skinindex = sk_punch }
+sound hoof   { pitchvariance = Doom; priority =  70; dehackednum =  84 }
+sound metal  { pitchvariance = Doom; priority =  70; dehackednum =  85 }
+sound chgun  { pitchvariance = Doom; link = pistol;  dehackednum =  86 }
+sound tink   { priority =  60; dehackednum =  87 }
+sound bdopn  { pitchvariance = Doom; priority = 100; dehackednum =  88 }
+sound bdcls  { pitchvariance = Doom; priority = 100; dehackednum =  89 }
+sound itmbk  { pitchvariance = Doom; priority = 100; dehackednum =  90 }
+sound flame  { pitchvariance = Doom; priority =  32; dehackednum =  91 }
+sound flamst { pitchvariance = Doom; priority =  32; dehackednum =  92 }
+
+sound getpow
+{ 
+   pitchvariance = Doom
+   priority = 60
+   dehackednum = 93
+   singularity = sg_getpow
+}
+
+sound bospit { pitchvariance = Doom; priority =  70; dehackednum =  94 }
+sound boscub { pitchvariance = Doom; priority =  70; dehackednum =  95 }
+sound bossit { pitchvariance = Doom; priority =  70; dehackednum =  96 }
+sound bospn  { pitchvariance = Doom; priority =  70; dehackednum =  97 }
+sound bosdth { pitchvariance = Doom; priority =  70; dehackednum =  98 }
+sound manatk { pitchvariance = Doom; priority =  70; dehackednum =  99 }
+sound mandth { pitchvariance = Doom; priority =  70; dehackednum = 100 }
+sound sssit  { pitchvariance = Doom; priority =  70; dehackednum = 101 }
+sound ssdth  { pitchvariance = Doom; priority =  70; dehackednum = 102 }
+sound keenpn { pitchvariance = Doom; priority =  70; dehackednum = 103 }
+sound keendt { pitchvariance = Doom; priority =  70; dehackednum = 104 }
+sound skeact { pitchvariance = Doom; priority =  70; dehackednum = 105 }
+sound skesit { pitchvariance = Doom; priority =  70; dehackednum = 106 }
+sound skeatk { pitchvariance = Doom; priority =  70; dehackednum = 107 }
+sound radio  { pitchvariance = Doom; priority =  60; dehackednum = 108 }
+
+// A sound entry for the player wimpy death.
+// Doom didn't have this feature. To use this, provide a DSPLWDTH sound in a wad
+// and it will be enabled in the default Marine skin automatically.
+
+sound plwdth 
+{ 
+   pitchvariance = Doom; priority =  32; dehackednum = 125; 
+   skinindex = sk_plwdth
+}
+
+// Environmental Sound Defaults
+// These are altered by the game engine to point to sounds specifed by MapInfo.
+// Use these names in sound sequences to refer to the MapInfo-defined defaults.
+
+ifgametype(DOOM)
+
+sound EE_DoorOpen   { alias = doropn }
+sound EE_DoorClose  { alias = dorcls }
+sound EE_BDoorOpen  { alias = bdopn  }
+sound EE_BDoorClose { alias = bdcls  }
+sound EE_SwitchOn   { alias = swtchn }
+sound EE_SwitchEx   { alias = swtchx }
+sound EE_PlatStart  { alias = pstart }
+sound EE_PlatStop   { alias = pstop  }
+sound EE_PlatMove   { alias = stnmov }
+sound EE_FCMove     { alias = stnmov }
+
+endif()

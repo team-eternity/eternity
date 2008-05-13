@@ -256,6 +256,9 @@ static int edf_enable(cfg_t *cfg, cfg_opt_t *opt, int argc,
 static int edf_disable(cfg_t *cfg, cfg_opt_t *opt, int argc,
                        const char **argv);
 
+static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
+                                const char **argv);
+
 static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                           const char **argv);
 
@@ -343,6 +346,7 @@ static cfg_opt_t edf_opts[] =
    CFG_FUNC("endif",          E_Endif),
    CFG_FUNC("enable",         edf_enable),
    CFG_FUNC("disable",        edf_disable),
+   CFG_FUNC("includeifenabled", edf_includeifenabled),
    CFG_FUNC("ifgametype",     edf_ifgametype),
    CFG_FUNC("ifngametype",    edf_ifngametype),
    CFG_END()
@@ -363,6 +367,7 @@ static cfg_opt_t edf_opts[] =
    CFG_FUNC("endif",         E_Endif), \
    CFG_FUNC("enable",        edf_enable), \
    CFG_FUNC("disable",       edf_disable), \
+   CFG_FUNC("includeifenabled", edf_includeifenabled), \
    CFG_FUNC("ifgametype",    edf_ifgametype), \
    CFG_FUNC("ifngametype",   edf_ifngametype)
 
@@ -453,6 +458,7 @@ static cfg_opt_t pclass_only_opts[] =
    CFG_FUNC("endif",         E_Endif), \
    CFG_FUNC("enable",        edf_enable), \
    CFG_FUNC("disable",       edf_disable), \
+   CFG_FUNC("includeifenabled", edf_includeifenabled), \
    CFG_FUNC("ifgametype",    edf_ifgametype), \
    CFG_FUNC("ifngametype",   edf_ifngametype)
 
@@ -635,16 +641,6 @@ static void edf_error(cfg_t *cfg, const char *fmt, va_list ap)
 }
 
 //
-// edf_echo
-//
-// 04/04/08: Echoes a message to the EDF log file for end-user debugging 
-// purposes.
-//
-static int edf_echo(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
-{
-}
-
-//
 // bex_include
 //
 // 12/12/03: New include function that allows EDF to queue
@@ -695,6 +691,13 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
 //
 // "Enables" code
 //
+
+enum
+{
+   ENABLE_DOOM,
+   ENABLE_HERETIC,
+   NUMENABLES,
+};
 
 //
 // The enables values table -- this can be fiddled with by the
@@ -968,9 +971,56 @@ static int edf_disable(cfg_t *cfg, cfg_opt_t *opt, int argc,
       return 1;
    }
 
-   edf_enables[idx].enabled = 0;
+   // 05/12/08: don't allow disabling the active gamemode
+   if(!((GameModeInfo->type == Game_DOOM    && idx == ENABLE_DOOM) ||
+        (GameModeInfo->type == Game_Heretic && idx == ENABLE_HERETIC)))
+   {
+      edf_enables[idx].enabled = 0;
+   }
+
    return 0;
 }
+
+//
+// edf_includeifenabled
+//
+// 05/12/08: Includes a file in argv[0] if any of argv[1] - argv[N]
+// options are enabled.
+//
+static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
+                                const char **argv)
+{
+   int i, idx;
+   boolean enabled = false;
+
+   if(argc < 2)
+   {
+      cfg_error(cfg, "wrong number of args to includeifenabled()");
+      return 1;
+   }
+
+   for(i = 1; i < argc; ++i)
+   {
+      if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
+      {
+         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         return 1;
+      }
+
+      // use OR logic: the block will be evaluated if ANY
+      // option is enabled
+      // use short circuit for efficiency
+      if((enabled = enabled || edf_enables[idx].enabled))
+         break;
+   }
+
+   // if any options were enabled, include the file
+   if(enabled)
+      return E_Include(cfg, opt, 1, argv);
+   else
+      return 0;
+}
+
 
 //
 // Game type functions

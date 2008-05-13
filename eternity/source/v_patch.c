@@ -519,7 +519,9 @@ static void V_DrawMaskedColumn(column_t *column)
       patchcol.y1 = patchcol.buffer->y1lookup[columntop];
       patchcol.y2 = patchcol.buffer->y2lookup[columntop + column->length - 1];
 
-      if(patchcol.y2 >= patchcol.buffer->height)
+      // haleyjd 05/13/08: fix clipping; y2lookup not clamped properly
+      if((column->length > 0 && patchcol.y2 < patchcol.y1) ||
+         patchcol.y2 >= patchcol.buffer->height)
          patchcol.y2 = patchcol.buffer->height - 1;
       
       if(patchcol.y1 < 0)

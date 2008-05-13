@@ -1,0 +1,1008 @@
+// EDF for Eternity Engine v3.35.00
+//  Frames for Heretic gamemode objects.
+
+// Heretic items
+frame S_ITEM_PTN1_1 { cmp = "PTN1|*|*| 3|*|@next";         dehackednum = 2000 }
+frame S_ITEM_PTN1_2 { cmp = "PTN1|1|*| 3|*|@next";         dehackednum = 2001 }
+frame S_ITEM_PTN1_3 { cmp = "PTN1|2|*| 3|*|S_ITEM_PTN1_1"; dehackednum = 2002 }
+frame S_ITEM_SHLD1  { cmp = "SHLD|*|*|-1"; dehackednum = 2003 }
+frame S_ITEM_SHD2_1 { cmp = "SHD2|*|*|-1"; dehackednum = 2004 }
+frame S_ITEM_BAGH1  { cmp = "BAGH|*|*|-1"; dehackednum = 2005 }
+frame S_ITEM_SPMP1  { cmp = "SPMP|*|*|-1"; dehackednum = 2006 }
+
+// Pod frames
+frame S_POD_WAIT1 { cmp = "PPOD| *|*|10|*        |@this"; dehackednum = 2007 }
+frame S_POD_PAIN1 { cmp = "PPOD| 1|*|14|PodPain  |@prev"; dehackednum = 2008 }
+frame S_POD_DIE1  { cmp = "PPOD| 2|T| 5|RemovePod|@next"; dehackednum = 2009 }
+frame S_POD_DIE2  { cmp = "PPOD| 3|T| 5|Scream   |@next"; dehackednum = 2010 }
+frame S_POD_DIE3  { cmp = "PPOD| 4|T| 5|Explode  |@next"; dehackednum = 2011 }
+frame S_POD_DIE4  { cmp = "PPOD| 5|T|10";                 dehackednum = 2012 }
+frame S_POD_GROW1 { cmp = "PPOD| 8|*| 3|*        |@next"; dehackednum = 2013 }
+frame S_POD_GROW2 { cmp = "PPOD| 9|*| 3|*        |@next"; dehackednum = 2014 }
+frame S_POD_GROW3 { cmp = "PPOD|10|*| 3|*        |@next"; dehackednum = 2015 }
+frame S_POD_GROW4 { cmp = "PPOD|11|*| 3|*        |@next"; dehackednum = 2016 }
+frame S_POD_GROW5 { cmp = "PPOD|12|*| 3|*        |@next"; dehackednum = 2017 }
+frame S_POD_GROW6 { cmp = "PPOD|13|*| 3|*        |@next"; dehackednum = 2018 }
+frame S_POD_GROW7 { cmp = "PPOD|14|*| 3|*        |@next"; dehackednum = 2019 }
+frame S_POD_GROW8 { cmp = "PPOD|15|*| 3|*        |S_POD_WAIT1"; dehackednum = 2020 }
+
+// PodGoo frames
+frame S_PODGOO1   { cmp = "PPOD|6|*| 8|*|@next"; dehackednum = 2021 }
+frame S_PODGOO2   { cmp = "PPOD|7|*| 8|*|@prev"; dehackednum = 2022 }
+frame S_PODGOOX   { cmp = "PPOD|6|*|10";         dehackednum = 2023 }
+
+// PodGenerator frame
+frame S_PODGENERATOR { cmp = "TNT1|*|*|35|MakePod|@this"; dehackednum = 2024 }
+
+//
+// Heretic decorations
+//
+
+// Skulls
+frame S_SKULLHANG70_1 { cmp = "SKH1|*|*|-1"; dehackednum = 2025 }
+frame S_SKULLHANG60_1 { cmp = "SKH2|*|*|-1"; dehackednum = 2026 }
+frame S_SKULLHANG45_1 { cmp = "SKH3|*|*|-1"; dehackednum = 2027 }
+frame S_SKULLHANG35_1 { cmp = "SKH4|*|*|-1"; dehackednum = 2028 }
+
+// Furniture items
+frame S_CHANDELIER1 { cmp = "CHDL|*|*| 4|*|@next";         dehackednum = 2029 }
+frame S_CHANDELIER2 { cmp = "CHDL|1|*| 4|*|@next";         dehackednum = 2030 }
+frame S_CHANDELIER3 { cmp = "CHDL|2|*| 4|*|S_CHANDELIER1"; dehackednum = 2031 }
+frame S_WOODBARREL  { cmp = "BARL|*|*|-1"; dehackednum = 2032 }
+frame S_BCOLUMN     { cmp = "BRPL|*|*|-1"; dehackednum = 2033 }
+
+// Moss
+frame S_MOSS1 { cmp = "MOS1|*|*|-1"; dehackednum = 2034 }
+frame S_MOSS2 { cmp = "MOS2|*|*|-1"; dehackednum = 2035 }
+
+// Wall Torch
+frame S_WALLTORCH1 { cmp = "WTRH|*|T| 6|*|@next";        dehackednum = 2036 }
+frame S_WALLTORCH2 { cmp = "WTRH|1|T| 6|*|@next";        dehackednum = 2037 }
+frame S_WALLTORCH3 { cmp = "WTRH|2|T| 6|*|S_WALLTORCH1"; dehackednum = 2038 }
+
+// Hanging corpse
+frame S_HTICCORPSE { cmp = "HCOR|*|*|-1"; dehackednum = 2039 }
+
+// Torches, pillars, stalagmites, etc.
+frame S_SERPTORCH1      { cmp = "SRTC|*|*| 4|*|@next";        dehackednum = 2040 }
+frame S_SERPTORCH2      { cmp = "SRTC|1|*| 4|*|@next";        dehackednum = 2041 }
+frame S_SERPTORCH3      { cmp = "SRTC|2|*| 4|*|S_SERPTORCH1"; dehackednum = 2042 }
+frame S_SMALLPILLAR     { cmp = "SMPL|*|*|-1";         dehackednum = 2043 }
+frame S_STALAGMITESMALL { cmp = "STGS|*|*|-1";         dehackednum = 2044 }
+frame S_STALAGMITELARGE { cmp = "STGL|*|*|-1";         dehackednum = 2045 }
+frame S_STALACTITESMALL { cmp = "STCS|*|*|-1";         dehackednum = 2046 }
+frame S_STALACTITELARGE { cmp = "STCL|*|*|-1";         dehackednum = 2047 }
+frame S_FIREBRAZIER1    { cmp = "KFR1|*|T| 3|*|@next"; dehackednum = 2048 }
+frame S_FIREBRAZIER2    { cmp = "KFR1|1|T| 3|*|@next"; dehackednum = 2049 }
+frame S_FIREBRAZIER3    { cmp = "KFR1|2|T| 3|*|@next"; dehackednum = 2050 }
+frame S_FIREBRAZIER4    { cmp = "KFR1|3|T| 3|*|@next"; dehackednum = 2051 }
+frame S_FIREBRAZIER5    { cmp = "KFR1|4|T| 3|*|@next"; dehackednum = 2052 }
+frame S_FIREBRAZIER6    { cmp = "KFR1|5|T| 3|*|@next"; dehackednum = 2053 }
+frame S_FIREBRAZIER7    { cmp = "KFR1|6|T| 3|*|@next"; dehackednum = 2054 }
+frame S_FIREBRAZIER8    { cmp = "KFR1|7|T| 3|*|S_FIREBRAZIER1"; dehackednum = 2055 }
+
+// KeyGizmo frames
+frame S_KEYGIZMOB { cmp = "KGZ1|*|*|*|*|@next"; dehackednum = 2056 }
+frame S_KEYGIZMOBINIT    
+{ 
+   cmp  = "KGZ1|*|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_BLUEFLOAT1, 60)|S_KEYGIZMO3"
+   dehackednum = 2057 
+}
+
+frame S_KEYGIZMOG { cmp = "KGZ1|*|*|*|*|@next"; dehackednum = 2058 }
+frame S_KEYGIZMOGINIT 
+{ 
+   cmp  = "KGZ1|*|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_GREENFLOAT1, 60)|S_KEYGIZMO3"
+   dehackednum = 2059 
+}
+
+frame S_KEYGIZMOY { cmp = "KGZ1|*|*|*|*|@next"; dehackednum = 2060 }
+frame S_KEYGIZMOYINIT
+{ 
+   cmp  = "KGZ1|*|*|*|SpawnAbove(KeyGizmoOrb, S_KGZ_YELLOWFLOAT1, 60)|S_KEYGIZMO3"
+   dehackednum = 2061 
+}
+
+frame S_KEYGIZMO3        { cmp = "KGZ1|*|*|-1";        dehackednum = 2062 }
+frame S_KGZ_START        { cmp = "KGZB|*|*|*|*|@this"; dehackednum = 2063 }
+frame S_KGZ_BLUEFLOAT1   { cmp = "KGZB|*|T|-1";        dehackednum = 2064 }
+frame S_KGZ_GREENFLOAT1  { cmp = "KGZG|*|T|-1";        dehackednum = 2065 }
+frame S_KGZ_YELLOWFLOAT1 { cmp = "KGZY|*|T|-1";        dehackednum = 2066 }
+
+// TeleGlitterGen / TeleGlitter frames
+frame S_TELEGLITGEN1
+{ 
+   cmp  = "TGLT|*|*|8|SpawnGlitter(TeleGlitterRed)|@this"
+   dehackednum = 2067 
+}
+frame S_TELEGLITGEN2
+{ 
+   cmp  = "TGLT|5|*|8|SpawnGlitter(TeleGlitterBlue)|@this"
+   dehackednum = 2068 
+}
+
+frame S_TELEGLITTER1_1 { cmp = "TGLT|*|T|2|*           |@next"; dehackednum = 2069 }
+frame S_TELEGLITTER1_2 { cmp = "TGLT|1|T|2|AccelGlitter|@next"; dehackednum = 2070 }
+frame S_TELEGLITTER1_3 { cmp = "TGLT|2|T|2|*           |@next"; dehackednum = 2071 }
+frame S_TELEGLITTER1_4 { cmp = "TGLT|3|T|2|AccelGlitter|@next"; dehackednum = 2072 }
+frame S_TELEGLITTER1_5 { cmp = "TGLT|4|T|2|*           |S_TELEGLITTER1_1"; dehackednum = 2073 }
+frame S_TELEGLITTER2_1 { cmp = "TGLT|5|T|2|*           |@next"; dehackednum = 2074 }
+frame S_TELEGLITTER2_2 { cmp = "TGLT|6|T|2|AccelGlitter|@next"; dehackednum = 2075 }
+frame S_TELEGLITTER2_3 { cmp = "TGLT|7|T|2|*           |@next"; dehackednum = 2076 }
+frame S_TELEGLITTER2_4 { cmp = "TGLT|8|T|2|AccelGlitter|@next"; dehackednum = 2077 }
+frame S_TELEGLITTER2_5 { cmp = "TGLT|9|T|2|*           |S_TELEGLITTER2_1"; dehackednum = 2078 }
+
+// HereticTeleFog frames
+frame S_HTFOG1  { cmp = "TELE|*|T|6|*|@next"; dehackednum = 2079 }
+frame S_HTFOG2  { cmp = "TELE|1|T|6|*|@next"; dehackednum = 2080 }
+frame S_HTFOG3  { cmp = "TELE|2|T|6|*|@next"; dehackednum = 2081 }
+frame S_HTFOG4  { cmp = "TELE|3|T|6|*|@next"; dehackednum = 2082 }
+frame S_HTFOG5  { cmp = "TELE|4|T|6|*|@next"; dehackednum = 2083 }
+frame S_HTFOG6  { cmp = "TELE|5|T|6|*|@next"; dehackednum = 2084 }
+frame S_HTFOG7  { cmp = "TELE|6|T|6|*|@next"; dehackednum = 2085 }
+frame S_HTFOG8  { cmp = "TELE|7|T|6|*|@next"; dehackednum = 2086 }
+frame S_HTFOG9  { cmp = "TELE|6|T|6|*|@next"; dehackednum = 2087 }
+frame S_HTFOG10 { cmp = "TELE|5|T|6|*|@next"; dehackednum = 2088 }
+frame S_HTFOG11 { cmp = "TELE|4|T|6|*|@next"; dehackednum = 2089 }
+frame S_HTFOG12 { cmp = "TELE|3|T|6|*|@next"; dehackednum = 2090 }
+frame S_HTFOG13 { cmp = "TELE|2|T|6";         dehackednum = 2091 }
+
+// HereticBlood frames
+frame S_HTICBLOOD1 { cmp = "BLOD|2|*|8|*|@next"; dehackednum = 2092 }
+frame S_HTICBLOOD2 { cmp = "BLOD|1|*|8|*|@next"; dehackednum = 2093 }
+frame S_HTICBLOOD3 { cmp = "BLOD|*|*|8";         dehackednum = 2094 }
+
+// Golem frames
+frame S_MUMMY_LOOK1 { cmp = "MUMM| *|*|10|Look        |@next"; dehackednum = 2095 }
+frame S_MUMMY_LOOK2 { cmp = "MUMM| 1|*|10|Look        |@prev"; dehackednum = 2096 }
+frame S_MUMMY_WALK1 { cmp = "MUMM| *|*| 4|Chase       |@next"; dehackednum = 2097 }
+frame S_MUMMY_WALK2 { cmp = "MUMM| 1|*| 4|Chase       |@next"; dehackednum = 2098 }
+frame S_MUMMY_WALK3 { cmp = "MUMM| 2|*| 4|Chase       |@next"; dehackednum = 2099 }
+frame S_MUMMY_WALK4 { cmp = "MUMM| 3|*| 4|Chase       |S_MUMMY_WALK1"; dehackednum = 2100 }
+frame S_MUMMY_ATK1  { cmp = "MUMM| 4|*| 6|FaceTarget  |@next"; dehackednum = 2101 }
+frame S_MUMMY_ATK2  { cmp = "MUMM| 5|*| 6|MummyAttack |@next"; dehackednum = 2102 }
+frame S_MUMMY_ATK3  { cmp = "MUMM| 6|*| 6|FaceTarget  |S_MUMMY_WALK1"; dehackednum = 2103 }
+frame S_MUMMYL_ATK1 { cmp = "MUMM|23|*| 5|FaceTarget  |@next"; dehackednum = 2104 }
+frame S_MUMMYL_ATK2 { cmp = "MUMM|24|T| 5|FaceTarget  |@next"; dehackednum = 2105 }
+frame S_MUMMYL_ATK3 { cmp = "MUMM|23|*| 5|FaceTarget  |@next"; dehackednum = 2106 }
+frame S_MUMMYL_ATK4 { cmp = "MUMM|24|T| 5|FaceTarget  |@next"; dehackednum = 2107 }
+frame S_MUMMYL_ATK5 { cmp = "MUMM|23|*| 5|FaceTarget  |@next"; dehackednum = 2108 }
+frame S_MUMMYL_ATK6 { cmp = "MUMM|24|T|15|MummyAttack2|S_MUMMY_WALK1"; dehackednum = 2109 }
+frame S_MUMMY_PAIN1 { cmp = "MUMM| 7|*| 4|*           |@next"; dehackednum = 2110 }
+frame S_MUMMY_PAIN2 { cmp = "MUMM| 7|*| 4|Pain        |S_MUMMY_WALK1"; dehackednum = 2111 }
+frame S_MUMMY_DIE1  { cmp = "MUMM| 8|*| 5|*           |@next"; dehackednum = 2112 }
+frame S_MUMMY_DIE2  { cmp = "MUMM| 9|*| 5|Scream      |@next"; dehackednum = 2113 }
+frame S_MUMMY_DIE3  { cmp = "MUMM|10|*| 5|MummySoul   |@next"; dehackednum = 2114 }
+frame S_MUMMY_DIE4  { cmp = "MUMM|11|*| 5|*           |@next"; dehackednum = 2115 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_MUMMY_DIE5  
+{ 
+   cmp  = "MUMM|12|*| 5|HticDrop|@next"
+   args = { HAmmoWandWimpy, 84, 0, 0, 3 } 
+   dehackednum = 2116 
+}
+
+frame S_MUMMY_DIE6  { cmp = "MUMM|13|*| 5|*           |@next"; dehackednum = 2117 }
+frame S_MUMMY_DIE7  { cmp = "MUMM|14|*| 5|*           |@next"; dehackednum = 2118 }
+frame S_MUMMY_DIE8  { cmp = "MUMM|15|*|-1";                    dehackednum = 2119 }
+
+// GolemSoul frames
+frame S_MUMMY_SOUL1 { cmp = "MUMM|16|*|5|*|@next"; dehackednum = 2120 }
+frame S_MUMMY_SOUL2 { cmp = "MUMM|17|*|5|*|@next"; dehackednum = 2121 }
+frame S_MUMMY_SOUL3 { cmp = "MUMM|18|*|5|*|@next"; dehackednum = 2122 }
+frame S_MUMMY_SOUL4 { cmp = "MUMM|19|*|9|*|@next"; dehackednum = 2123 }
+frame S_MUMMY_SOUL5 { cmp = "MUMM|20|*|5|*|@next"; dehackednum = 2124 }
+frame S_MUMMY_SOUL6 { cmp = "MUMM|21|*|5|*|@next"; dehackednum = 2125 }
+frame S_MUMMY_SOUL7 { cmp = "MUMM|22|*|5";         dehackednum = 2126 }
+
+// GolemShot frames
+frame S_MUMMYFX1_1
+{ 
+   cmp   = "FX15|*|T|5|PlaySound|@next"
+   misc1 = ht_mumhed 
+   dehackednum = 2127 
+}
+frame S_MUMMYFX1_2
+{ 
+   cmp  = "FX15|1|T|5|HticTracer(10, 20)|@next"   dehackednum = 2128 
+}
+frame S_MUMMYFX1_3  { cmp = "FX15|2|T|5|*|@next"; dehackednum = 2129 }
+frame S_MUMMYFX1_4
+{ 
+   cmp  = "FX15|1|T|5|HticTracer(10, 20)|S_MUMMYFX1_1"
+   dehackednum = 2130 
+}
+frame S_MUMMYFXI1_1 { cmp = "FX15|3|T|5|*|@next"; dehackednum = 2131 }
+frame S_MUMMYFXI1_2 { cmp = "FX15|4|T|5|*|@next"; dehackednum = 2132 }
+frame S_MUMMYFXI1_3 { cmp = "FX15|5|T|5|*|@next"; dehackednum = 2133 }
+frame S_MUMMYFXI1_4 { cmp = "FX15|6|T|5";         dehackednum = 2134 }
+
+// Weredragon frames
+frame S_BEAST_LOOK1 { cmp = "BEAS| *|*|10|Look       |@next"; dehackednum = 2135 }
+frame S_BEAST_LOOK2 { cmp = "BEAS| 1|*|10|Look       |@prev"; dehackednum = 2136 }
+frame S_BEAST_WALK1 { cmp = "BEAS| *|*| 3|Chase      |@next"; dehackednum = 2137 }
+frame S_BEAST_WALK2 { cmp = "BEAS| 1|*| 3|Chase      |@next"; dehackednum = 2138 }
+frame S_BEAST_WALK3 { cmp = "BEAS| 2|*| 3|Chase      |@next"; dehackednum = 2139 }
+frame S_BEAST_WALK4 { cmp = "BEAS| 3|*| 3|Chase      |@next"; dehackednum = 2140 }
+frame S_BEAST_WALK5 { cmp = "BEAS| 4|*| 3|Chase      |@next"; dehackednum = 2141 }
+frame S_BEAST_WALK6 { cmp = "BEAS| 5|*| 3|Chase      |S_BEAST_WALK1"; dehackednum = 2142 }
+frame S_BEAST_ATK1  { cmp = "BEAS| 7|*|10|FaceTarget |@next"; dehackednum = 2143 }
+frame S_BEAST_ATK2  { cmp = "BEAS| 8|*|10|BeastAttack|S_BEAST_WALK1"; dehackednum = 2144 }
+frame S_BEAST_PAIN1 { cmp = "BEAS| 6|*| 3|*          |@next"; dehackednum = 2145 }
+frame S_BEAST_PAIN2 { cmp = "BEAS| 6|*| 3|Pain       |S_BEAST_WALK1"; dehackednum = 2146 }
+frame S_BEAST_DIE1  { cmp = "BEAS|17|*| 6|*          |@next"; dehackednum = 2147 }
+frame S_BEAST_DIE2  { cmp = "BEAS|18|*| 6|Scream     |@next"; dehackednum = 2148 }
+frame S_BEAST_DIE3  { cmp = "BEAS|19|*| 6|*          |@next"; dehackednum = 2149 }
+frame S_BEAST_DIE4  { cmp = "BEAS|20|*| 6|*          |@next"; dehackednum = 2150 }
+frame S_BEAST_DIE5  { cmp = "BEAS|21|*| 6|*          |@next"; dehackednum = 2151 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_BEAST_DIE6
+{ 
+   cmp  = "BEAS|22|*| 6|HticDrop|@next"
+   args = { HAmmoCBowWimpy, 84, 0, 0, 10 }
+   dehackednum = 2152 
+}
+frame S_BEAST_DIE7  { cmp = "BEAS|23|*| 6|*          |@next"; dehackednum = 2153 }
+frame S_BEAST_DIE8  { cmp = "BEAS|24|*| 6|*          |@next"; dehackednum = 2154 }
+frame S_BEAST_DIE9  { cmp = "BEAS|25|*|-1";                   dehackednum = 2155 }
+frame S_BEAST_XDIE1 { cmp = "BEAS| 9|*| 5|*          |@next"; dehackednum = 2156 }
+frame S_BEAST_XDIE2 { cmp = "BEAS|10|*| 6|Scream     |@next"; dehackednum = 2157 }
+frame S_BEAST_XDIE3 { cmp = "BEAS|11|*| 5|*          |@next"; dehackednum = 2158 }
+frame S_BEAST_XDIE4 { cmp = "BEAS|12|*| 6|*          |@next"; dehackednum = 2159 }
+frame S_BEAST_XDIE5 { cmp = "BEAS|13|*| 5|*          |@next"; dehackednum = 2160 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_BEAST_XDIE6
+{ 
+   cmp  = "BEAS|14|*|6|HticDrop|@next"
+   args = { HAmmoCBowWimpy, 84, 0, 0, 10 } 
+   dehackednum = 2161 
+}
+frame S_BEAST_XDIE7 { cmp = "BEAS|15|*| 5|*          |@next"; dehackednum = 2162 }
+frame S_BEAST_XDIE8 { cmp = "BEAS|16|*|-1";                   dehackednum = 2163 }
+
+// WeredragonShot frames
+frame S_BEASTBALL1  { cmp = "FRB1|*|*|2|BeastPuff|@next"; dehackednum = 2164 }
+frame S_BEASTBALL2  { cmp = "FRB1|*|*|2|BeastPuff|@next"; dehackednum = 2165 }
+frame S_BEASTBALL3  { cmp = "FRB1|1|*|2|BeastPuff|@next"; dehackednum = 2166 }
+frame S_BEASTBALL4  { cmp = "FRB1|1|*|2|BeastPuff|@next"; dehackednum = 2167 }
+frame S_BEASTBALL5  { cmp = "FRB1|2|*|2|BeastPuff|@next"; dehackednum = 2168 }
+frame S_BEASTBALL6  { cmp = "FRB1|2|*|2|BeastPuff|S_BEASTBALL1"; dehackednum = 2169 }
+frame S_BEASTBALLX1 { cmp = "FRB1|3|*|4|*        |@next"; dehackednum = 2170 }
+frame S_BEASTBALLX2 { cmp = "FRB1|4|*|4|*        |@next"; dehackednum = 2171 }
+frame S_BEASTBALLX3 { cmp = "FRB1|5|*|4|*        |@next"; dehackednum = 2172 }
+frame S_BEASTBALLX4 { cmp = "FRB1|6|*|4|*        |@next"; dehackednum = 2173 }
+frame S_BEASTBALLX5 { cmp = "FRB1|7|*|4";                 dehackednum = 2174 }
+
+// WeredragonSmoke frames
+frame S_PUFFY1 { cmp = "FRB1|3|*|4|*|@next"; dehackednum = 2175 }
+frame S_PUFFY2 { cmp = "FRB1|4|*|4|*|@next"; dehackednum = 2176 }
+frame S_PUFFY3 { cmp = "FRB1|5|*|4|*|@next"; dehackednum = 2177 }
+frame S_PUFFY4 { cmp = "FRB1|6|*|4|*|@next"; dehackednum = 2178 }
+frame S_PUFFY5 { cmp = "FRB1|7|*|4";         dehackednum = 2179 }
+
+// Ophidian frames
+frame S_SNAKE_LOOK1 { cmp = "SNKE| *|*|10|Look        |@next"; dehackednum = 2180 }
+frame S_SNAKE_LOOK2 { cmp = "SNKE| 1|*|10|Look        |@prev"; dehackednum = 2181 }
+frame S_SNAKE_WALK1 { cmp = "SNKE| *|*| 4|Chase       |@next"; dehackednum = 2182 }
+frame S_SNAKE_WALK2 { cmp = "SNKE| 1|*| 4|Chase       |@next"; dehackednum = 2183 }
+frame S_SNAKE_WALK3 { cmp = "SNKE| 2|*| 4|Chase       |@next"; dehackednum = 2184 }
+frame S_SNAKE_WALK4 { cmp = "SNKE| 3|*| 4|Chase       |S_SNAKE_WALK1"; dehackednum = 2185 }
+frame S_SNAKE_ATK1  { cmp = "SNKE| 5|*| 5|FaceTarget  |@next"; dehackednum = 2186 }
+frame S_SNAKE_ATK2  { cmp = "SNKE| 5|*| 5|FaceTarget  |@next"; dehackednum = 2187 }
+frame S_SNAKE_ATK3  { cmp = "SNKE| 5|*| 4|SnakeAttack |@next"; dehackednum = 2188 }
+frame S_SNAKE_ATK4  { cmp = "SNKE| 5|*| 4|SnakeAttack |@next"; dehackednum = 2189 }
+frame S_SNAKE_ATK5  { cmp = "SNKE| 5|*| 4|SnakeAttack |@next"; dehackednum = 2190 }
+frame S_SNAKE_ATK6  { cmp = "SNKE| 5|*| 5|FaceTarget  |@next"; dehackednum = 2191 }
+frame S_SNAKE_ATK7  { cmp = "SNKE| 5|*| 5|FaceTarget  |@next"; dehackednum = 2192 }
+frame S_SNAKE_ATK8  { cmp = "SNKE| 5|*| 5|FaceTarget  |@next"; dehackednum = 2193 }
+frame S_SNAKE_ATK9  { cmp = "SNKE| 5|*| 4|SnakeAttack2|S_SNAKE_WALK1"; dehackednum = 2194 }
+frame S_SNAKE_PAIN1 { cmp = "SNKE| 4|*| 3|*           |@next"; dehackednum = 2195 }
+frame S_SNAKE_PAIN2 { cmp = "SNKE| 4|*| 3|Pain        |S_SNAKE_WALK1"; dehackednum = 2196 }
+frame S_SNAKE_DIE1  { cmp = "SNKE| 6|*| 5|*           |@next"; dehackednum = 2197 }
+frame S_SNAKE_DIE2  { cmp = "SNKE| 7|*| 5|Scream      |@next"; dehackednum = 2198 }
+frame S_SNAKE_DIE3  { cmp = "SNKE| 8|*| 5|*           |@next"; dehackednum = 2199 }
+frame S_SNAKE_DIE4  { cmp = "SNKE| 9|*| 5|*           |@next"; dehackednum = 2200 }
+frame S_SNAKE_DIE5  { cmp = "SNKE|10|*| 5|*           |@next"; dehackednum = 2201 }
+frame S_SNAKE_DIE6  { cmp = "SNKE|11|*| 5|*           |@next"; dehackednum = 2202 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_SNAKE_DIE7  
+{ 
+   cmp  = "SNKE|12|*| 5|HticDrop|@next"
+   args = { HAmmoPhoenixWimpy, 84, 0, 0, 5 }
+   dehackednum = 2203 
+}
+frame S_SNAKE_DIE8  { cmp = "SNKE|13|*| 5|*           |@next"; dehackednum = 2204 }
+frame S_SNAKE_DIE9  { cmp = "SNKE|14|*| 5|*           |@next"; dehackednum = 2205 }
+frame S_SNAKE_DIE10 { cmp = "SNKE|15|*|-1";                    dehackednum = 2206 }
+
+// OphidianShotA frames
+frame S_SNAKEPRO_A1  { cmp = "SNFX|*|T|5|*|@next"; dehackednum = 2207 }
+frame S_SNAKEPRO_A2  { cmp = "SNFX|1|T|5|*|@next"; dehackednum = 2208 }
+frame S_SNAKEPRO_A3  { cmp = "SNFX|2|T|5|*|@next"; dehackednum = 2209 }
+frame S_SNAKEPRO_A4  { cmp = "SNFX|3|T|5|*|S_SNAKEPRO_A1"; dehackednum = 2210 }
+frame S_SNAKEPRO_AX1 { cmp = "SNFX|4|T|5|*|@next"; dehackednum = 2211 }
+frame S_SNAKEPRO_AX2 { cmp = "SNFX|5|T|5|*|@next"; dehackednum = 2212 }
+frame S_SNAKEPRO_AX3 { cmp = "SNFX|6|T|4|*|@next"; dehackednum = 2213 }
+frame S_SNAKEPRO_AX4 { cmp = "SNFX|7|T|3|*|@next"; dehackednum = 2214 }
+frame S_SNAKEPRO_AX5 { cmp = "SNFX|8|T|3";         dehackednum = 2215 }
+
+// OphidianShotB frames
+frame S_SNAKEPRO_B1  { cmp = "SNFX| 9|T|6|*|@next";         dehackednum = 2216 }
+frame S_SNAKEPRO_B2  { cmp = "SNFX|10|T|6|*|S_SNAKEPRO_B1"; dehackednum = 2217 }
+frame S_SNAKEPRO_BX1 { cmp = "SNFX|11|T|5|*|@next";         dehackednum = 2218 }
+frame S_SNAKEPRO_BX2 { cmp = "SNFX|12|T|5|*|@next";         dehackednum = 2219 }
+frame S_SNAKEPRO_BX3 { cmp = "SNFX|13|T|4|*|@next";         dehackednum = 2220 }
+frame S_SNAKEPRO_BX4 { cmp = "SNFX|14|T|3";                 dehackednum = 2221 }
+
+// SabreClaw frames
+frame S_CLINK_LOOK1 { cmp = "CLNK| *|*|10|Look       |@next"; dehackednum = 2222 }
+frame S_CLINK_LOOK2 { cmp = "CLNK| 1|*|10|Look       |@prev"; dehackednum = 2223 }
+frame S_CLINK_WALK1 { cmp = "CLNK| *|*| 3|Chase      |@next"; dehackednum = 2224 }
+frame S_CLINK_WALK2 { cmp = "CLNK| 1|*| 3|Chase      |@next"; dehackednum = 2225 }
+frame S_CLINK_WALK3 { cmp = "CLNK| 2|*| 3|Chase      |@next"; dehackednum = 2226 }
+frame S_CLINK_WALK4 { cmp = "CLNK| 3|*| 3|Chase      |S_CLINK_WALK1"; dehackednum = 2227 }
+frame S_CLINK_ATK1  { cmp = "CLNK| 4|*| 5|FaceTarget |@next"; dehackednum = 2228 }
+frame S_CLINK_ATK2  { cmp = "CLNK| 5|*| 4|FaceTarget |@next"; dehackednum = 2229 }
+frame S_CLINK_ATK3  { cmp = "CLNK| 6|*| 7|ClinkAttack|S_CLINK_WALK1"; dehackednum = 2230 }
+frame S_CLINK_PAIN1 { cmp = "CLNK| 7|*| 3|*          |@next"; dehackednum = 2231 }
+frame S_CLINK_PAIN2 { cmp = "CLNK| 7|*| 3|Pain       |S_CLINK_WALK1"; dehackednum = 2232 }
+frame S_CLINK_DIE1  { cmp = "CLNK| 8|*| 6|*          |@next"; dehackednum = 2233 }
+frame S_CLINK_DIE2  { cmp = "CLNK| 9|*| 6|*          |@next"; dehackednum = 2234 }
+frame S_CLINK_DIE3  { cmp = "CLNK|10|*| 5|Scream     |@next"; dehackednum = 2235 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_CLINK_DIE4
+{
+   cmp  = "CLNK|11|*| 5|HticDrop|@next"
+   args = { HAmmoSkullWimpy, 84, 0, 0, 20 }
+   dehackednum = 2236 
+}
+frame S_CLINK_DIE5  { cmp = "CLNK|12|*| 5|*          |@next"; dehackednum = 2237 }
+frame S_CLINK_DIE6  { cmp = "CLNK|13|*| 5|*          |@next"; dehackednum = 2238 }
+frame S_CLINK_DIE7  { cmp = "CLNK|14|*|-1";                   dehackednum = 2239 }
+
+// Disciple frames
+frame S_WIZARD_LOOK1 { cmp = "WZRD| *|*|10|Look      |@next"; dehackednum = 2240 }
+frame S_WIZARD_LOOK2 { cmp = "WZRD| 1|*|10|Look      |@prev"; dehackednum = 2241 }
+frame S_WIZARD_WALK1 { cmp = "WZRD| *|*| 3|Chase     |@next"; dehackednum = 2242 }
+frame S_WIZARD_WALK2 { cmp = "WZRD| *|*| 4|Chase     |@next"; dehackednum = 2243 }
+frame S_WIZARD_WALK3 { cmp = "WZRD| *|*| 3|Chase     |@next"; dehackednum = 2244 }
+frame S_WIZARD_WALK4 { cmp = "WZRD| *|*| 4|Chase     |@next"; dehackednum = 2245 }
+frame S_WIZARD_WALK5 { cmp = "WZRD| 1|*| 3|Chase     |@next"; dehackednum = 2246 }
+frame S_WIZARD_WALK6 { cmp = "WZRD| 1|*| 4|Chase     |@next"; dehackednum = 2247 }
+frame S_WIZARD_WALK7 { cmp = "WZRD| 1|*| 3|Chase     |@next"; dehackednum = 2248 }
+frame S_WIZARD_WALK8 { cmp = "WZRD| 1|*| 4|Chase     |S_WIZARD_WALK1"; dehackednum = 2249 }
+frame S_WIZARD_ATK1  { cmp = "WZRD| 2|*| 4|WizardAtk1|@next"; dehackednum = 2250 }
+frame S_WIZARD_ATK2  { cmp = "WZRD| 2|*| 4|WizardAtk2|@next"; dehackednum = 2251 }
+frame S_WIZARD_ATK3  { cmp = "WZRD| 2|*| 4|WizardAtk1|@next"; dehackednum = 2252 }
+frame S_WIZARD_ATK4  { cmp = "WZRD| 2|*| 4|WizardAtk2|@next"; dehackednum = 2253 }
+frame S_WIZARD_ATK5  { cmp = "WZRD| 2|*| 4|WizardAtk1|@next"; dehackednum = 2254 }
+frame S_WIZARD_ATK6  { cmp = "WZRD| 2|*| 4|WizardAtk2|@next"; dehackednum = 2255 }
+frame S_WIZARD_ATK7  { cmp = "WZRD| 2|*| 4|WizardAtk1|@next"; dehackednum = 2256 }
+frame S_WIZARD_ATK8  { cmp = "WZRD| 2|*| 4|WizardAtk2|@next"; dehackednum = 2257 }
+frame S_WIZARD_ATK9  { cmp = "WZRD| 3|*|12|WizardAtk3|S_WIZARD_WALK1"; dehackednum = 2258 }
+frame S_WIZARD_PAIN1
+{ 
+   cmp  = "WZRD| 4|*| 3|UnSetFlags(3, flags3:GHOST)|@next"
+   dehackednum = 2259 
+}
+frame S_WIZARD_PAIN2 { cmp = "WZRD| 4|*| 3|Pain      |S_WIZARD_WALK1"; dehackednum = 2260 }
+frame S_WIZARD_DIE1
+{ 
+   cmp  = "WZRD| 5|*| 6|UnSetFlags(3, flags3:GHOST)|@next"
+   dehackednum = 2261 
+}
+frame S_WIZARD_DIE2  { cmp = "WZRD| 6|*| 6|Scream    |@next"; dehackednum = 2262 }
+frame S_WIZARD_DIE3  { cmp = "WZRD| 7|*| 6|*         |@next"; dehackednum = 2263 }
+frame S_WIZARD_DIE4  { cmp = "WZRD| 8|*| 6|*         |@next"; dehackednum = 2264 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_WIZARD_DIE5  { cmp = "WZRD| 9|*| 6|HticDrop  |@next"; dehackednum = 2265 }
+frame S_WIZARD_DIE6  { cmp = "WZRD|10|*| 6|*         |@next"; dehackednum = 2266 }
+frame S_WIZARD_DIE7  { cmp = "WZRD|11|*| 6|*         |@next"; dehackednum = 2267 }
+frame S_WIZARD_DIE8  { cmp = "WZRD|12|*|-1";                  dehackednum = 2268 }
+
+// DiscipleShot frames
+frame S_WIZFX1_1  { cmp = "FX11|*|T|6|*|@next"; dehackednum = 2269 }
+frame S_WIZFX1_2  { cmp = "FX11|1|T|6|*|@prev"; dehackednum = 2270 }
+frame S_WIZFXI1_1 { cmp = "FX11|2|T|5|*|@next"; dehackednum = 2271 }
+frame S_WIZFXI1_2 { cmp = "FX11|3|T|5|*|@next"; dehackednum = 2272 }
+frame S_WIZFXI1_3 { cmp = "FX11|4|T|5|*|@next"; dehackednum = 2273 }
+frame S_WIZFXI1_4 { cmp = "FX11|5|T|5|*|@next"; dehackednum = 2274 }
+frame S_WIZFXI1_5 { cmp = "FX11|6|T|5";         dehackednum = 2275 }
+
+// DeathKnight frames
+frame S_KNIGHT_STND1 { cmp = "KNIG| *|*|10|Look        |@next"; dehackednum = 2276 }
+frame S_KNIGHT_STND2 { cmp = "KNIG| 1|*|10|Look        |@prev"; dehackednum = 2277 }
+frame S_KNIGHT_WALK1 { cmp = "KNIG| *|*| 4|Chase       |@next"; dehackednum = 2278 }
+frame S_KNIGHT_WALK2 { cmp = "KNIG| 1|*| 4|Chase       |@next"; dehackednum = 2279 }
+frame S_KNIGHT_WALK3 { cmp = "KNIG| 2|*| 4|Chase       |@next"; dehackednum = 2280 }
+frame S_KNIGHT_WALK4 { cmp = "KNIG| 3|*| 4|Chase       |S_KNIGHT_WALK1"; dehackednum = 2281 }
+frame S_KNIGHT_ATK1  { cmp = "KNIG| 4|*|10|FaceTarget  |@next"; dehackednum = 2282 }
+frame S_KNIGHT_ATK2  { cmp = "KNIG| 5|*| 8|FaceTarget  |@next"; dehackednum = 2283 }
+frame S_KNIGHT_ATK3  { cmp = "KNIG| 6|*| 8|KnightAttack|@next"; dehackednum = 2284 }
+frame S_KNIGHT_ATK4  { cmp = "KNIG| 4|*|10|FaceTarget  |@next"; dehackednum = 2285 }
+frame S_KNIGHT_ATK5  { cmp = "KNIG| 5|*| 8|FaceTarget  |@next"; dehackednum = 2286 }
+frame S_KNIGHT_ATK6  { cmp = "KNIG| 6|*| 8|KnightAttack|S_KNIGHT_WALK1"; dehackednum = 2287 }
+frame S_KNIGHT_PAIN1 { cmp = "KNIG| 7|*| 3|*           |@next"; dehackednum = 2288 }
+frame S_KNIGHT_PAIN2 { cmp = "KNIG| 7|*| 3|Pain        |S_KNIGHT_WALK1"; dehackednum = 2289 }
+frame S_KNIGHT_DIE1  { cmp = "KNIG| 8|*| 6|*           |@next"; dehackednum = 2290 }
+frame S_KNIGHT_DIE2  { cmp = "KNIG| 9|*| 6|Scream      |@next"; dehackednum = 2291 }
+frame S_KNIGHT_DIE3  { cmp = "KNIG|10|*| 6|*           |@next"; dehackednum = 2292 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_KNIGHT_DIE4
+{ 
+   cmp  = "KNIG|11|*| 6|HticDrop|@next"
+   args = { HAmmoCBowWimpy, 84, 0, 0, 5 } 
+   dehackednum = 2293 
+}
+frame S_KNIGHT_DIE5  { cmp = "KNIG|12|*| 6|*       |@next"; dehackednum = 2294 }
+frame S_KNIGHT_DIE6  { cmp = "KNIG|13|*| 6|*       |@next"; dehackednum = 2295 }
+frame S_KNIGHT_DIE7  { cmp = "KNIG|14|*|-1";                dehackednum = 2296 }
+
+// KnightAxe frames
+frame S_SPINAXE1
+{
+   cmp   = "SPAX|*|T|3|PlaySound|@next"
+   misc1 = ht_kgtatk
+   dehackednum = 2297
+}
+frame S_SPINAXE2  { cmp = "SPAX|1|T|3|*|@next";      dehackednum = 2298 }
+frame S_SPINAXE3  { cmp = "SPAX|2|T|3|*|S_SPINAXE1"; dehackednum = 2299 }
+frame S_SPINAXEX1 { cmp = "SPAX|3|T|6|*|@next";      dehackednum = 2300 }
+frame S_SPINAXEX2 { cmp = "SPAX|4|T|6|*|@next";      dehackednum = 2301 }
+frame S_SPINAXEX3 { cmp = "SPAX|5|T|6";              dehackednum = 2302 }
+
+// KnightAxeRed frames
+frame S_REDAXE1  { cmp = "RAXE|*|T|5|DripBlood|@next"; dehackednum = 2303 }
+frame S_REDAXE2  { cmp = "RAXE|1|T|5|DripBlood|@prev"; dehackednum = 2304 }
+frame S_REDAXEX1 { cmp = "RAXE|2|T|6|*        |@next"; dehackednum = 2305 }
+frame S_REDAXEX2 { cmp = "RAXE|3|T|6|*        |@next"; dehackednum = 2306 }
+frame S_REDAXEX3 { cmp = "RAXE|4|T|6";                 dehackednum = 2307 }
+
+// SerpentRiderDSparil frames
+frame S_SRCR1_LOOK1 { cmp = "SRCR| *|*|10|Look       |@next"; dehackednum = 2308 }
+frame S_SRCR1_LOOK2 { cmp = "SRCR| 1|*|10|Look       |@prev"; dehackednum = 2309 }
+frame S_SRCR1_WALK1 { cmp = "SRCR| *|*| 5|Sor1Chase  |@next"; dehackednum = 2310 }
+frame S_SRCR1_WALK2 { cmp = "SRCR| 1|*| 5|Sor1Chase  |@next"; dehackednum = 2311 }
+frame S_SRCR1_WALK3 { cmp = "SRCR| 2|*| 5|Sor1Chase  |@next"; dehackednum = 2312 }
+frame S_SRCR1_WALK4 { cmp = "SRCR| 3|*| 5|Sor1Chase  |S_SRCR1_WALK1"; dehackednum = 2313 }
+frame S_SRCR1_PAIN1 { cmp = "SRCR|16|*| 6|Sor1Pain   |S_SRCR1_WALK1"; dehackednum = 2314 }
+frame S_SRCR1_ATK1  { cmp = "SRCR|16|*| 7|FaceTarget |@next"; dehackednum = 2315 }
+frame S_SRCR1_ATK2  { cmp = "SRCR|17|*| 6|FaceTarget |@next"; dehackednum = 2316 }
+frame S_SRCR1_ATK3  { cmp = "SRCR|18|*|10|Srcr1Attack|S_SRCR1_WALK1"; dehackednum = 2317 }
+frame S_SRCR1_ATK4  { cmp = "SRCR|18|*|10|FaceTarget |@next"; dehackednum = 2318 }
+frame S_SRCR1_ATK5  { cmp = "SRCR|16|*| 7|FaceTarget |@next"; dehackednum = 2319 }
+frame S_SRCR1_ATK6  { cmp = "SRCR|17|*| 6|FaceTarget |@next"; dehackednum = 2320 }
+frame S_SRCR1_ATK7  { cmp = "SRCR|18|*|10|Srcr1Attack|S_SRCR1_WALK1"; dehackednum = 2321 }
+frame S_SRCR1_DIE1  { cmp = "SRCR| 4|*| 7|*          |@next"; dehackednum = 2322 }
+frame S_SRCR1_DIE2  { cmp = "SRCR| 5|*| 7|Scream     |@next"; dehackednum = 2323 }
+frame S_SRCR1_DIE3  { cmp = "SRCR| 6|*| 7|*          |@next"; dehackednum = 2324 }
+frame S_SRCR1_DIE4  { cmp = "SRCR| 7|*| 6|*          |@next"; dehackednum = 2325 }
+frame S_SRCR1_DIE5  { cmp = "SRCR| 8|*| 6|*          |@next"; dehackednum = 2326 }
+frame S_SRCR1_DIE6  { cmp = "SRCR| 9|*| 6|*          |@next"; dehackednum = 2327 }
+frame S_SRCR1_DIE7  { cmp = "SRCR|10|*| 6|*          |@next"; dehackednum = 2328 }
+frame S_SRCR1_DIE8
+{ 
+   cmp   = "SRCR|11|*|25|PlaySound|@next"
+   misc1 = ht_sorzap
+   misc2 = 1
+   dehackednum = 2329 
+}
+frame S_SRCR1_DIE9  { cmp = "SRCR|12|*| 5|*          |@next"; dehackednum = 2330 }
+frame S_SRCR1_DIE10 { cmp = "SRCR|13|*| 5|*          |@next"; dehackednum = 2331 }
+frame S_SRCR1_DIE11 { cmp = "SRCR|14|*| 4|*          |@next"; dehackednum = 2332 }
+frame S_SRCR1_DIE12 
+{
+   cmp   = "SRCR|11|*|20|PlaySound|@next"
+   misc1 = ht_sorzap
+   misc2 = 1 
+   dehackednum = 2333 
+}
+frame S_SRCR1_DIE13 { cmp = "SRCR|12|*| 5|*          |@next"; dehackednum = 2334 }
+frame S_SRCR1_DIE14 { cmp = "SRCR|13|*| 5|*          |@next"; dehackednum = 2335 }
+frame S_SRCR1_DIE15 { cmp = "SRCR|14|*| 4|*          |@next"; dehackednum = 2336 }
+frame S_SRCR1_DIE16 { cmp = "SRCR|11|*|12|*          |@next"; dehackednum = 2337 }
+frame S_SRCR1_DIE17 { cmp = "SRCR|15|*|-1|SorcererRise";      dehackednum = 2338 }
+
+// SRDSparilShot1 frames
+frame S_SRCRFX1_1  { cmp = "FX14|*|T|6|*|@next";       dehackednum = 2339 }
+frame S_SRCRFX1_2  { cmp = "FX14|1|T|6|*|@next";       dehackednum = 2340 }
+frame S_SRCRFX1_3  { cmp = "FX14|2|T|6|*|S_SRCRFX1_1"; dehackednum = 2341 }
+frame S_SRCRFXI1_1 { cmp = "FX14|3|T|5|*|@next";       dehackednum = 2342 }
+frame S_SRCRFXI1_2 { cmp = "FX14|4|T|5|*|@next";       dehackednum = 2343 }
+frame S_SRCRFXI1_3 { cmp = "FX14|5|T|5|*|@next";       dehackednum = 2344 }
+frame S_SRCRFXI1_4 { cmp = "FX14|6|T|5|*|@next";       dehackednum = 2345 }
+frame S_SRCRFXI1_5 { cmp = "FX14|7|T|5";               dehackednum = 2346 }
+
+// DSparil frames
+frame S_SOR2_RISE1 { cmp = "SOR2| *|*| 4|*          |@next"; dehackednum = 2347 }
+frame S_SOR2_RISE2 { cmp = "SOR2| 1|*| 4|*          |@next"; dehackednum = 2348 }
+frame S_SOR2_RISE3
+{ 
+   cmp   = "SOR2| 2|*| 4|PlaySound|@next"
+   misc1 = ht_sorrise
+   misc2 = 1
+   dehackednum = 2349 
+}
+frame S_SOR2_RISE4 { cmp = "SOR2| 3|*| 4|*          |@next"; dehackednum = 2350 }
+frame S_SOR2_RISE5 { cmp = "SOR2| 4|*| 4|*          |@next"; dehackednum = 2351 }
+frame S_SOR2_RISE6 { cmp = "SOR2| 5|*| 4|*          |@next"; dehackednum = 2352 }
+frame S_SOR2_RISE7 
+{ 
+   cmp = "SOR2| 6|*|12|PlaySound|S_SOR2_WALK1"
+   misc1 = ht_sorsit
+   misc2 = 1
+   dehackednum = 2353 
+}
+frame S_SOR2_LOOK1 { cmp = "SOR2|12|*|10|Look       |@next"; dehackednum = 2354 }
+frame S_SOR2_LOOK2 { cmp = "SOR2|13|*|10|Look       |@prev"; dehackednum = 2355 }
+frame S_SOR2_WALK1 { cmp = "SOR2|12|*| 4|Chase      |@next"; dehackednum = 2356 }
+frame S_SOR2_WALK2 { cmp = "SOR2|13|*| 4|Chase      |@next"; dehackednum = 2357 }
+frame S_SOR2_WALK3 { cmp = "SOR2|14|*| 4|Chase      |@next"; dehackednum = 2358 }
+frame S_SOR2_WALK4 { cmp = "SOR2|15|*| 4|Chase      |S_SOR2_WALK1"; dehackednum = 2359 }
+frame S_SOR2_PAIN1 { cmp = "SOR2|16|*| 3|*          |@next"; dehackednum = 2360 }
+frame S_SOR2_PAIN2 { cmp = "SOR2|16|*| 6|Pain       |S_SOR2_WALK1"; dehackednum = 2361 }
+frame S_SOR2_ATK1  { cmp = "SOR2|17|*| 9|Srcr2Decide|@next"; dehackednum = 2362 }
+frame S_SOR2_ATK2  { cmp = "SOR2|18|*| 9|FaceTarget |@next"; dehackednum = 2363 }
+frame S_SOR2_ATK3  { cmp = "SOR2|19|*|20|Srcr2Attack|S_SOR2_WALK1"; dehackednum = 2364 }
+frame S_SOR2_TELE1 { cmp = "SOR2|11|*| 6|*|@next";           dehackednum = 2365 }
+frame S_SOR2_TELE2 { cmp = "SOR2|10|*| 6|*|@next";           dehackednum = 2366 }
+frame S_SOR2_TELE3 { cmp = "SOR2| 9|*| 6|*|@next";           dehackednum = 2367 }
+frame S_SOR2_TELE4 { cmp = "SOR2| 8|*| 6|*|@next";           dehackednum = 2368 }
+frame S_SOR2_TELE5 { cmp = "SOR2| 7|*| 6|*|@next";           dehackednum = 2369 }
+frame S_SOR2_TELE6 { cmp = "SOR2| 6|*| 6|*|S_SOR2_WALK1";    dehackednum = 2370 }
+frame S_SOR2_DIE1  { cmp = "SDTH| *|*| 8|Sor2DthInit|@next"; dehackednum = 2371 }
+frame S_SOR2_DIE2  { cmp = "SDTH| 1|*| 8|*          |@next"; dehackednum = 2372 }
+frame S_SOR2_DIE3
+{
+   cmp   = "SDTH| 2|*| 8|PlaySound|@next"
+   misc1 = ht_sordsph
+   misc2 = 1
+   dehackednum = 2373 
+}
+frame S_SOR2_DIE4  { cmp = "SDTH| 3|*| 7|*          |@next"; dehackednum = 2374 }
+frame S_SOR2_DIE5  { cmp = "SDTH| 4|*| 7|*          |@next"; dehackednum = 2375 }
+frame S_SOR2_DIE6  { cmp = "SDTH| 5|*| 7|Sor2DthLoop|@next"; dehackednum = 2376 }
+frame S_SOR2_DIE7
+{ 
+   cmp = "SDTH| 6|*| 6|PlaySound|@next"
+   misc1 = ht_sordexp
+   misc2 = 1
+   dehackednum = 2377 
+}
+frame S_SOR2_DIE8  { cmp = "SDTH| 7|*| 6|*          |@next"; dehackednum = 2378 }
+frame S_SOR2_DIE9  { cmp = "SDTH| 8|*|18|*          |@next"; dehackednum = 2379 }
+frame S_SOR2_DIE10 { cmp = "SDTH| 9|*| 6|Fall       |@next"; dehackednum = 2380 }
+frame S_SOR2_DIE11
+{ 
+   cmp = "SDTH|10|*| 6|PlaySound|@next"
+   misc1 = ht_sordbon
+   misc2 = 1
+   dehackednum = 2381 
+}
+frame S_SOR2_DIE12 { cmp = "SDTH|11|*| 6|*          |@next"; dehackednum = 2382 }
+frame S_SOR2_DIE13 { cmp = "SDTH|12|*| 6|*          |@next"; dehackednum = 2383 }
+frame S_SOR2_DIE14 { cmp = "SDTH|13|*| 6|*          |@next"; dehackednum = 2384 }
+frame S_SOR2_DIE15 { cmp = "SDTH|14|*|-1|HticBossDeath";     dehackednum = 2385 }
+
+// DSparilShot1 frames
+frame S_SOR2FX1_1  { cmp = "FX16| *|T|3|BlueSpark  |@next"; dehackednum = 2386 }
+frame S_SOR2FX1_2  { cmp = "FX16| 1|T|3|BlueSpark  |@next"; dehackednum = 2387 }
+frame S_SOR2FX1_3  { cmp = "FX16| 2|T|3|BlueSpark  |S_SOR2FX1_1"; dehackednum = 2388 }
+frame S_SOR2FXI1_1 
+{ 
+   cmp  = "FX16| 6|T|5|HticExplode(dsparilbluespark)|@next"
+   dehackednum = 2389 
+}
+frame S_SOR2FXI1_2 { cmp = "FX16| 7|T|5|*          |@next"; dehackednum = 2390 }
+frame S_SOR2FXI1_3 { cmp = "FX16| 8|T|5|*          |@next"; dehackednum = 2391 }
+frame S_SOR2FXI1_4 { cmp = "FX16| 9|T|5|*          |@next"; dehackednum = 2392 }
+frame S_SOR2FXI1_5 { cmp = "FX16|10|T|5|*          |@next"; dehackednum = 2393 }
+frame S_SOR2FXI1_6 { cmp = "FX16|11|T|5";                   dehackednum = 2394 }
+
+// DSparilSpark frames
+frame S_SOR2FXSPARK1 { cmp = "FX16|3|T|12|*|@next"; dehackednum = 2395 }
+frame S_SOR2FXSPARK2 { cmp = "FX16|4|T|12|*|@next"; dehackednum = 2396 }
+frame S_SOR2FXSPARK3 { cmp = "FX16|5|T|12";         dehackednum = 2397 }
+
+// DSparilShot2 frames
+frame S_SOR2FX2_1  { cmp = "FX11|*|T|35|*        |@next"; dehackednum = 2398 }
+frame S_SOR2FX2_2  { cmp = "FX11|*|T| 5|GenWizard|@next"; dehackednum = 2399 }
+frame S_SOR2FX2_3  { cmp = "FX11|1|T| 5|*        |@prev"; dehackednum = 2400 }
+frame S_SOR2FXI2_1 { cmp = "FX11|2|T| 5|*        |@next"; dehackednum = 2401 }
+frame S_SOR2FXI2_2 { cmp = "FX11|3|T| 5|*        |@next"; dehackednum = 2402 }
+frame S_SOR2FXI2_3 { cmp = "FX11|4|T| 5|*        |@next"; dehackednum = 2403 }
+frame S_SOR2FXI2_4 { cmp = "FX11|5|T| 5|*        |@next"; dehackednum = 2404 }
+frame S_SOR2FXI2_5 { cmp = "FX11|6|T| 5";                 dehackednum = 2405 }
+
+// DSparilTeleFade frames
+frame S_SOR2TELEFADE1 { cmp = "SOR2| 6|*|8|*|@next"; dehackednum = 2406 }
+frame S_SOR2TELEFADE2 { cmp = "SOR2| 7|*|6|*|@next"; dehackednum = 2407 }
+frame S_SOR2TELEFADE3 { cmp = "SOR2| 8|*|6|*|@next"; dehackednum = 2408 }
+frame S_SOR2TELEFADE4 { cmp = "SOR2| 9|*|6|*|@next"; dehackednum = 2409 }
+frame S_SOR2TELEFADE5 { cmp = "SOR2|10|*|6|*|@next"; dehackednum = 2410 }
+frame S_SOR2TELEFADE6 { cmp = "SOR2|11|*|6";         dehackednum = 2411 }
+
+// Heretic keys
+frame S_AKYY1  { cmp = "AKYY|*|T|3|*|@next";   dehackednum = 2412 }
+frame S_AKYY2  { cmp = "AKYY|1|T|3|*|@next";   dehackednum = 2413 }
+frame S_AKYY3  { cmp = "AKYY|2|T|3|*|@next";   dehackednum = 2414 }
+frame S_AKYY4  { cmp = "AKYY|3|T|3|*|@next";   dehackednum = 2415 }
+frame S_AKYY5  { cmp = "AKYY|4|T|3|*|@next";   dehackednum = 2416 }
+frame S_AKYY6  { cmp = "AKYY|5|T|3|*|@next";   dehackednum = 2417 }
+frame S_AKYY7  { cmp = "AKYY|6|T|3|*|@next";   dehackednum = 2418 }
+frame S_AKYY8  { cmp = "AKYY|7|T|3|*|@next";   dehackednum = 2419 }
+frame S_AKYY9  { cmp = "AKYY|8|T|3|*|@next";   dehackednum = 2420 }
+frame S_AKYY10 { cmp = "AKYY|9|T|3|*|S_AKYY1"; dehackednum = 2421 }
+frame S_BKYY1  { cmp = "BKYY|*|T|3|*|@next";   dehackednum = 2422 }
+frame S_BKYY2  { cmp = "BKYY|1|T|3|*|@next";   dehackednum = 2423 }
+frame S_BKYY3  { cmp = "BKYY|2|T|3|*|@next";   dehackednum = 2424 }
+frame S_BKYY4  { cmp = "BKYY|3|T|3|*|@next";   dehackednum = 2425 }
+frame S_BKYY5  { cmp = "BKYY|4|T|3|*|@next";   dehackednum = 2426 }
+frame S_BKYY6  { cmp = "BKYY|5|T|3|*|@next";   dehackednum = 2427 }
+frame S_BKYY7  { cmp = "BKYY|6|T|3|*|@next";   dehackednum = 2428 }
+frame S_BKYY8  { cmp = "BKYY|7|T|3|*|@next";   dehackednum = 2429 }
+frame S_BKYY9  { cmp = "BKYY|8|T|3|*|@next";   dehackednum = 2430 }
+frame S_BKYY10 { cmp = "BKYY|9|T|3|*|S_BKYY1"; dehackednum = 2431 }
+frame S_CKYY1  { cmp = "CKYY|*|T|3|*|@next";   dehackednum = 2432 }
+frame S_CKYY2  { cmp = "CKYY|1|T|3|*|@next";   dehackednum = 2433 }
+frame S_CKYY3  { cmp = "CKYY|2|T|3|*|@next";   dehackednum = 2434 }
+frame S_CKYY4  { cmp = "CKYY|3|T|3|*|@next";   dehackednum = 2435 }
+frame S_CKYY5  { cmp = "CKYY|4|T|3|*|@next";   dehackednum = 2436 }
+frame S_CKYY6  { cmp = "CKYY|5|T|3|*|@next";   dehackednum = 2437 }
+frame S_CKYY7  { cmp = "CKYY|6|T|3|*|@next";   dehackednum = 2438 }
+frame S_CKYY8  { cmp = "CKYY|7|T|3|*|@next";   dehackednum = 2439 }
+frame S_CKYY9  { cmp = "CKYY|8|T|3|*|S_CKYY1"; dehackednum = 2440 }
+
+// Static ambient sound object frames
+
+frame S_SND_WIND
+{ 
+   cmp   = "TNT1|*|*|100|PlaySound|@this"
+   misc1 = ht_wind
+   dehackednum = 2441 
+}
+
+frame S_SND_WATERFALL
+{ 
+   cmp = "TNT1|*|*| 85|PlaySound|@this"
+   misc1 = ht_waterfl
+   dehackednum = 2442 
+}
+
+// Volcano frames
+frame S_VOLCANO1 { cmp = "VLCO|0|*|350|*           |@next"; dehackednum = 2443 }
+frame S_VOLCANO2 
+{ 
+   cmp  = "VLCO|0|*| 35|SetTics(105, 128)|@next"
+   dehackednum = 2444 
+}
+frame S_VOLCANO3 { cmp = "VLCO|1|*|  3|*           |@next"; dehackednum = 2445 }
+frame S_VOLCANO4 { cmp = "VLCO|2|*|  3|*           |@next"; dehackednum = 2446 }
+frame S_VOLCANO5 { cmp = "VLCO|3|*|  3|*           |@next"; dehackednum = 2447 }
+frame S_VOLCANO6 { cmp = "VLCO|1|*|  3|*           |@next"; dehackednum = 2448 }
+frame S_VOLCANO7 { cmp = "VLCO|2|*|  3|*           |@next"; dehackednum = 2449 }
+frame S_VOLCANO8 { cmp = "VLCO|3|*|  3|*           |@next"; dehackednum = 2450 }
+frame S_VOLCANO9 { cmp = "VLCO|4|*| 10|VolcanoBlast|S_VOLCANO2"; dehackednum = 2451 }
+
+// Volcano fire ball frames
+frame S_VOLCANOBALL1
+{ 
+   cmp  = "VFBL|0|*|4|BeastPuff(noaddmomentum)|@next"
+   dehackednum = 2452 
+}
+frame S_VOLCANOBALL2
+{ 
+   cmp  = "VFBL|1|*|4|BeastPuff(noaddmomentum)|@prev"
+   dehackednum = 2453
+}
+frame S_VOLCANOBALLX1 { cmp = "XPL1|0|*|4|VolcBallImpact|@next"; dehackednum = 2454 }
+frame S_VOLCANOBALLX2 { cmp = "XPL1|1|*|4|*             |@next"; dehackednum = 2455 }
+frame S_VOLCANOBALLX3 { cmp = "XPL1|2|*|4|*             |@next"; dehackednum = 2456 }
+frame S_VOLCANOBALLX4 { cmp = "XPL1|3|*|4|*             |@next"; dehackednum = 2457 }
+frame S_VOLCANOBALLX5 { cmp = "XPL1|4|*|4|*             |@next"; dehackednum = 2458 }
+frame S_VOLCANOBALLX6 { cmp = "XPL1|5|*|4";                      dehackednum = 2459 }
+
+// Small volcano fireball frames
+frame S_VOLCANOTBALL1  { cmp = "VTFB|0|*|4|*|@next"; dehackednum = 2460 }
+frame S_VOLCANOTBALL2  { cmp = "VTFB|1|*|4|*|@prev"; dehackednum = 2461 }
+frame S_VOLCANOTBALLX1 { cmp = "SFFI|2|*|4|*|@next"; dehackednum = 2462 }
+frame S_VOLCANOTBALLX2 { cmp = "SFFI|1|*|4|*|@next"; dehackednum = 2463 }
+frame S_VOLCANOTBALLX3 { cmp = "SFFI|0|*|4|*|@next"; dehackednum = 2464 }
+frame S_VOLCANOTBALLX4 { cmp = "SFFI|1|*|4|*|@next"; dehackednum = 2465 }
+frame S_VOLCANOTBALLX5 { cmp = "SFFI|2|*|4|*|@next"; dehackednum = 2466 }
+frame S_VOLCANOTBALLX6 { cmp = "SFFI|3|*|4|*|@next"; dehackednum = 2467 }
+frame S_VOLCANOTBALLX7 { cmp = "SFFI|4|*|4";         dehackednum = 2468 }
+
+// Maulotaur frames
+frame S_MNTR_LOOK1  { cmp = "MNTR| 0|*|10|Look          |@next"; dehackednum = 2469 }
+frame S_MNTR_LOOK2  { cmp = "MNTR| 1|*|10|Look          |@prev"; dehackednum = 2470 }
+frame S_MNTR_WALK1  { cmp = "MNTR| 0|*| 5|Chase         |@next"; dehackednum = 2471 }
+frame S_MNTR_WALK2  { cmp = "MNTR| 1|*| 5|Chase         |@next"; dehackednum = 2472 }
+frame S_MNTR_WALK3  { cmp = "MNTR| 2|*| 5|Chase         |@next"; dehackednum = 2473 }
+frame S_MNTR_WALK4  { cmp = "MNTR| 3|*| 5|Chase         |S_MNTR_WALK1"; dehackednum = 2474 }
+frame S_MNTR_ATK1_1 { cmp = "MNTR|21|*|10|FaceTarget    |@next"; dehackednum = 2475 }
+frame S_MNTR_ATK1_2 { cmp = "MNTR|22|*| 7|FaceTarget    |@next"; dehackednum = 2476 }
+frame S_MNTR_ATK1_3 { cmp = "MNTR|23|*|12|MinotaurAtk1  |S_MNTR_WALK1"; dehackednum = 2477 }
+frame S_MNTR_ATK2_1 { cmp = "MNTR|21|*|10|MinotaurDecide|@next"; dehackednum = 2478 }
+frame S_MNTR_ATK2_2 { cmp = "MNTR|24|*| 4|FaceTarget    |@next"; dehackednum = 2479 }
+frame S_MNTR_ATK2_3 { cmp = "MNTR|25|*| 9|MinotaurAtk2  |S_MNTR_WALK1"; dehackednum = 2480 }
+frame S_MNTR_ATK3_1 { cmp = "MNTR|21|*|10|FaceTarget    |@next"; dehackednum = 2481 }
+frame S_MNTR_ATK3_2 { cmp = "MNTR|22|*| 7|FaceTarget    |@next"; dehackednum = 2482 }
+frame S_MNTR_ATK3_3 { cmp = "MNTR|23|*|12|MinotaurAtk3  |S_MNTR_WALK1"; dehackednum = 2483 }
+frame S_MNTR_ATK3_4 { cmp = "MNTR|23|*|12|*             |S_MNTR_ATK3_1"; dehackednum = 2484 }
+frame S_MNTR_ATK4_1 { cmp = "MNTR|20|*| 2|MinotaurCharge|@this"; dehackednum = 2485 }
+frame S_MNTR_PAIN1  { cmp = "MNTR| 4|*| 3|*             |@next"; dehackednum = 2486 }
+frame S_MNTR_PAIN2  { cmp = "MNTR| 4|*| 6|Pain          |S_MNTR_WALK1"; dehackednum = 2487 }
+frame S_MNTR_DIE1   { cmp = "MNTR| 5|*| 6|*             |@next"; dehackednum = 2488 }
+frame S_MNTR_DIE2   { cmp = "MNTR| 6|*| 5|*             |@next"; dehackednum = 2489 }
+frame S_MNTR_DIE3   { cmp = "MNTR| 7|*| 6|Scream        |@next"; dehackednum = 2490 }
+frame S_MNTR_DIE4   { cmp = "MNTR| 8|*| 5|*             |@next"; dehackednum = 2491 }
+frame S_MNTR_DIE5   { cmp = "MNTR| 9|*| 6|*             |@next"; dehackednum = 2492 }
+frame S_MNTR_DIE6   { cmp = "MNTR|10|*| 5|*             |@next"; dehackednum = 2493 }
+frame S_MNTR_DIE7   { cmp = "MNTR|11|*| 6|*             |@next"; dehackednum = 2494 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_MNTR_DIE8   { cmp = "MNTR|12|*| 5|HticDrop      |@next"; dehackednum = 2495 }
+frame S_MNTR_DIE9   { cmp = "MNTR|13|*| 6|*             |@next"; dehackednum = 2496 }
+frame S_MNTR_DIE10  { cmp = "MNTR|14|*| 5|*             |@next"; dehackednum = 2497 }
+frame S_MNTR_DIE11  { cmp = "MNTR|15|*| 6|*             |@next"; dehackednum = 2498 }
+frame S_MNTR_DIE12  { cmp = "MNTR|16|*| 5|*             |@next"; dehackednum = 2499 }
+frame S_MNTR_DIE13  { cmp = "MNTR|17|*| 6|*             |@next"; dehackednum = 2500 }
+frame S_MNTR_DIE14  { cmp = "MNTR|18|*| 5|*             |@next"; dehackednum = 2501 }
+frame S_MNTR_DIE15  { cmp = "MNTR|19|*|-1|HticBossDeath";        dehackednum = 2502 }
+
+// MaulotaurShot frames
+frame S_MNTRFX1_1  { cmp = "FX12|0|T|6|*|@next"; dehackednum = 2503 }
+frame S_MNTRFX1_2  { cmp = "FX12|1|T|6|*|@prev"; dehackednum = 2504 }
+frame S_MNTRFXI1_1 { cmp = "FX12|2|T|5|*|@next"; dehackednum = 2505 }
+frame S_MNTRFXI1_2 { cmp = "FX12|3|T|5|*|@next"; dehackednum = 2506 }
+frame S_MNTRFXI1_3 { cmp = "FX12|4|T|5|*|@next"; dehackednum = 2507 }
+frame S_MNTRFXI1_4 { cmp = "FX12|5|T|5|*|@next"; dehackednum = 2508 }
+frame S_MNTRFXI1_5 { cmp = "FX12|6|T|5|*|@next"; dehackednum = 2509 }
+frame S_MNTRFXI1_6 { cmp = "FX12|7|T|5";         dehackednum = 2510 }
+
+// MaulotaurFloorFire frames
+frame S_MNTRFX2_1  { cmp = "FX13| 0|*|2|MntrFloorFire|@this"; dehackednum = 2511 }
+frame S_MNTRFXI2_1
+{ 
+   cmp = "FX13| 8|T|4|HticExplode(floorfire)|@next"
+   dehackednum = 2512 
+}
+frame S_MNTRFXI2_2 { cmp = "FX13| 9|T|4|*            |@next"; dehackednum = 2513 }
+frame S_MNTRFXI2_3 { cmp = "FX13|10|T|4|*            |@next"; dehackednum = 2514 }
+frame S_MNTRFXI2_4 { cmp = "FX13|11|T|4|*            |@next"; dehackednum = 2515 }
+frame S_MNTRFXI2_5 { cmp = "FX13|12|T|4";                     dehackednum = 2516 }
+
+// MaulotaurFloorFlame frames
+frame S_MNTRFX3_1 { cmp = "FX13|3|*|4|*|@next"; dehackednum = 2517 }
+frame S_MNTRFX3_2 { cmp = "FX13|2|*|4|*|@next"; dehackednum = 2518 }
+frame S_MNTRFX3_3 { cmp = "FX13|1|*|5|*|@next"; dehackednum = 2519 }
+frame S_MNTRFX3_4 { cmp = "FX13|2|*|5|*|@next"; dehackednum = 2520 }
+frame S_MNTRFX3_5 { cmp = "FX13|3|*|5|*|@next"; dehackednum = 2521 }
+frame S_MNTRFX3_6 { cmp = "FX13|4|*|5|*|@next"; dehackednum = 2522 }
+frame S_MNTRFX3_7 { cmp = "FX13|5|*|4|*|@next"; dehackednum = 2523 }
+frame S_MNTRFX3_8 { cmp = "FX13|6|*|4|*|@next"; dehackednum = 2524 }
+frame S_MNTRFX3_9 { cmp = "FX13|7|*|4";         dehackednum = 2525 }
+
+// HticPhoenixPuff frames
+frame S_PHOENIXPUFF1 { cmp = "FX04|1|*|4|*|@next"; dehackednum = 2526 }
+frame S_PHOENIXPUFF2 { cmp = "FX04|2|*|4|*|@next"; dehackednum = 2527 }
+frame S_PHOENIXPUFF3 { cmp = "FX04|3|*|4|*|@next"; dehackednum = 2528 }
+frame S_PHOENIXPUFF4 { cmp = "FX04|4|*|4|*|@next"; dehackednum = 2529 }
+frame S_PHOENIXPUFF5 { cmp = "FX04|5|*|4";         dehackednum = 2530 }
+
+// IronLich frames
+frame S_LICH_LOOK  { cmp = "HEAD|0|*|10|Look      |@this"; dehackednum = 2531 }
+frame S_LICH_FLOAT { cmp = "HEAD|0|*| 4|Chase     |@this"; dehackednum = 2532 }
+frame S_LICH_ATK1  { cmp = "HEAD|0|*| 5|FaceTarget|@next"; dehackednum = 2533 }
+frame S_LICH_ATK2  { cmp = "HEAD|1|*|20|LichAttack|S_LICH_FLOAT"; dehackednum = 2534 }
+frame S_LICH_PAIN1 { cmp = "HEAD|0|*| 4|*         |@next"; dehackednum = 2535 }
+frame S_LICH_PAIN2 { cmp = "HEAD|0|*| 4|Pain      |S_LICH_FLOAT"; dehackednum = 2536 }
+frame S_LICH_DIE1  { cmp = "HEAD|2|*| 7|*         |@next"; dehackednum = 2537 }
+frame S_LICH_DIE2  { cmp = "HEAD|3|*| 7|Scream    |@next"; dehackednum = 2538 }
+frame S_LICH_DIE3  { cmp = "HEAD|4|*| 7|*         |@next"; dehackednum = 2539 }
+frame S_LICH_DIE4  { cmp = "HEAD|5|*| 7|*         |@next"; dehackednum = 2540 }
+
+// FIXME: Eliminate HticDrop pointer
+frame S_LICH_DIE5  { cmp = "HEAD|6|*| 7|HticDrop  |@next"; dehackednum = 2541 }
+frame S_LICH_DIE6  { cmp = "HEAD|7|*| 7|*         |@next"; dehackednum = 2542 }
+frame S_LICH_DIE7  { cmp = "HEAD|8|*|-1|HticBossDeath"; dehackednum = 2543 }
+
+// IronLichShot1 frames
+frame S_LICHFX1_1  { cmp = "FX05|0|*|6|*            |@next"; dehackednum = 2544 }
+frame S_LICHFX1_2  { cmp = "FX05|1|*|6|*            |@next"; dehackednum = 2545 }
+frame S_LICHFX1_3  { cmp = "FX05|2|*|6|*            |S_LICHFX1_1"; dehackednum = 2546 }
+frame S_LICHFXI1_1 { cmp = "FX05|3|*|5|LichIceImpact|@next"; dehackednum = 2547 }
+frame S_LICHFXI1_2 { cmp = "FX05|4|*|5|*            |@next"; dehackednum = 2548 }
+frame S_LICHFXI1_3 { cmp = "FX05|5|*|5|*            |@next"; dehackednum = 2549 }
+frame S_LICHFXI1_4 { cmp = "FX05|6|*|5";                     dehackednum = 2550 }
+
+// IronLichShot2 frames
+frame S_LICHFX2_1  { cmp = "FX05|7|*|6|*|@next";       dehackednum = 2551 }
+frame S_LICHFX2_2  { cmp = "FX05|8|*|6|*|@next";       dehackednum = 2552 }
+frame S_LICHFX2_3  { cmp = "FX05|9|*|6|*|S_LICHFX2_1"; dehackednum = 2553 }
+frame S_LICHFXI2_1 { cmp = "FX05|3|*|5|*|@next";       dehackednum = 2554 }
+frame S_LICHFXI2_2 { cmp = "FX05|4|*|5|*|@next";       dehackednum = 2555 }
+frame S_LICHFXI2_3 { cmp = "FX05|5|*|5|*|@next";       dehackednum = 2556 }
+frame S_LICHFXI2_4 { cmp = "FX05|6|*|5";               dehackednum = 2557 }
+
+// IronLichShot3 frames
+frame S_LICHFX3_1  { cmp = "FX06|0|*|4|LichFireGrow|@next"; dehackednum = 2558 }
+frame S_LICHFX3_2  { cmp = "FX06|1|*|4|LichFireGrow|@next"; dehackednum = 2559 }
+frame S_LICHFX3_3  { cmp = "FX06|2|*|4|LichFireGrow|S_LICHFX3_1"; dehackednum = 2560 }
+frame S_LICHFX3_4  { cmp = "FX06|0|*|5|*           |@next"; dehackednum = 2561 }
+frame S_LICHFX3_5  { cmp = "FX06|1|*|5|*           |@next"; dehackednum = 2562 }
+frame S_LICHFX3_6  { cmp = "FX06|2|*|5|*           |S_LICHFX3_4"; dehackednum = 2563 }
+frame S_LICHFXI3_1 { cmp = "FX06|3|*|5|*           |@next"; dehackednum = 2564 }
+frame S_LICHFXI3_2 { cmp = "FX06|4|*|5|*           |@next"; dehackednum = 2565 }
+frame S_LICHFXI3_3 { cmp = "FX06|5|*|5|*           |@next"; dehackednum = 2566 }
+frame S_LICHFXI3_4 { cmp = "FX06|6|*|5";                    dehackednum = 2567 }
+
+// LichWhirlwind frames
+frame S_LICHFX4_1  { cmp = "FX07|3|*|3|*            |@next"; dehackednum = 2568 }
+frame S_LICHFX4_2  { cmp = "FX07|4|*|3|*            |@next"; dehackednum = 2569 }
+frame S_LICHFX4_3  { cmp = "FX07|5|*|3|*            |@next"; dehackednum = 2570 }
+frame S_LICHFX4_4  { cmp = "FX07|6|*|3|*            |@next"; dehackednum = 2571 }
+frame S_LICHFX4_5  { cmp = "FX07|0|*|3|WhirlwindSeek|@next"; dehackednum = 2572 }
+frame S_LICHFX4_6  { cmp = "FX07|1|*|3|WhirlwindSeek|@next"; dehackednum = 2573 }
+frame S_LICHFX4_7  { cmp = "FX07|2|*|3|WhirlwindSeek|S_LICHFX4_5"; dehackednum = 2574 }
+frame S_LICHFXI4_1 { cmp = "FX07|6|*|4|*            |@next"; dehackednum = 2575 }
+frame S_LICHFXI4_2 { cmp = "FX07|5|*|4|*            |@next"; dehackednum = 2576 }
+frame S_LICHFXI4_3 { cmp = "FX07|4|*|4|*            |@next"; dehackednum = 2577 }
+frame S_LICHFXI4_4 { cmp = "FX07|3|*|4";                     dehackednum = 2578 }
+
+// Heretic Ammo frames
+frame S_AMG1   { cmp = "AMG1|0|*|-1";            dehackednum = 2579  }
+frame S_AMG2_1 { cmp = "AMG2|0|*| 4|*|@next"     dehackednum = 2580  }
+frame S_AMG2_2 { cmp = "AMG2|1|*| 4|*|@next"     dehackednum = 2581  }
+frame S_AMG2_3 { cmp = "AMG2|2|*| 4|*|S_AMG2_1"; dehackednum = 2582  }
+frame S_AMM1   { cmp = "AMM1|0|*|-1";            dehackednum = 2583  }
+frame S_AMM2   { cmp = "AMM2|0|*|-1";            dehackednum = 2584  }
+frame S_AMC1   { cmp = "AMC1|0|*|-1";            dehackednum = 2585  }
+frame S_AMC2_1 { cmp = "AMC2|0|*| 5|*|@next";    dehackednum = 2586  }
+frame S_AMC2_2 { cmp = "AMC2|1|*| 5|*|@next";    dehackednum = 2587  }
+frame S_AMC2_3 { cmp = "AMC2|2|*| 5|*|S_AMC2_1"; dehackednum = 2588  }
+frame S_AMS1_1 { cmp = "AMS1|0|*| 5|*|@next";    dehackednum = 2589  }
+frame S_AMS1_2 { cmp = "AMS1|1|*| 5|*|@prev";    dehackednum = 2590  }
+frame S_AMS2_1 { cmp = "AMS2|0|*| 5|*|@next";    dehackednum = 2591  }
+frame S_AMS2_2 { cmp = "AMS2|1|*| 5|*|@prev";    dehackednum = 2592  }
+frame S_AMP1_1 { cmp = "AMP1|0|*| 4|*|@next";    dehackednum = 2593  }
+frame S_AMP1_2 { cmp = "AMP1|1|*| 4|*|@next";    dehackednum = 2594  }
+frame S_AMP1_3 { cmp = "AMP1|2|*| 4|*|S_AMP1_1"; dehackednum = 2595  }
+frame S_AMP2_1 { cmp = "AMP2|0|*| 4|*|@next";    dehackednum = 2596  }
+frame S_AMP2_2 { cmp = "AMP2|1|*| 4|*|@next";    dehackednum = 2597  }
+frame S_AMP2_3 { cmp = "AMP2|2|*| 4|*|S_AMP2_1"; dehackednum = 2598  }
+frame S_AMB1_1 { cmp = "AMB1|0|*| 4|*|@next";    dehackednum = 2599  }
+frame S_AMB1_2 { cmp = "AMB1|1|*| 4|*|@next";    dehackednum = 2600  }
+frame S_AMB1_3 { cmp = "AMB1|2|*| 4|*|S_AMB1_1"; dehackednum = 2601  }
+frame S_AMB2_1 { cmp = "AMB2|0|*| 4|*|@next";    dehackednum = 2602  }
+frame S_AMB2_2 { cmp = "AMB2|1|*| 4|*|@next";    dehackednum = 2603  }
+frame S_AMB2_3 { cmp = "AMB2|2|*| 4|*|S_AMB2_1"; dehackednum = 2604  }
+
+// HereticImp frames
+frame S_IMP_LOOK1    { cmp = "IMPX| 0|*|10|Look         |@next"; dehackednum = 2605 }
+frame S_IMP_LOOK2    { cmp = "IMPX| 1|*|10|Look         |@next"; dehackednum = 2606 }
+frame S_IMP_LOOK3    { cmp = "IMPX| 2|*|10|Look         |@next"; dehackednum = 2607 }
+frame S_IMP_LOOK4    { cmp = "IMPX| 1|*|10|Look         |S_IMP_LOOK1"; dehackednum = 2608 }
+frame S_IMP_FLY1     { cmp = "IMPX| 0|*| 3|Chase        |@next"; dehackednum = 2609 }
+frame S_IMP_FLY2     { cmp = "IMPX| 0|*| 3|Chase        |@next"; dehackednum = 2610 }
+frame S_IMP_FLY3     { cmp = "IMPX| 1|*| 3|Chase        |@next"; dehackednum = 2611 }
+frame S_IMP_FLY4     { cmp = "IMPX| 1|*| 3|Chase        |@next"; dehackednum = 2612 }
+frame S_IMP_FLY5     { cmp = "IMPX| 2|*| 3|Chase        |@next"; dehackednum = 2613 }
+frame S_IMP_FLY6     { cmp = "IMPX| 2|*| 3|Chase        |@next"; dehackednum = 2614 }
+frame S_IMP_FLY7     { cmp = "IMPX| 1|*| 3|Chase        |@next"; dehackednum = 2615 }
+frame S_IMP_FLY8     { cmp = "IMPX| 1|*| 3|Chase        |S_IMP_FLY1"; dehackednum = 2616 }
+frame S_IMP_MEATK1   { cmp = "IMPX| 3|*| 6|FaceTarget   |@next"; dehackednum = 2617 }
+frame S_IMP_MEATK2   { cmp = "IMPX| 4|*| 6|FaceTarget   |@next"; dehackednum = 2618 }
+frame S_IMP_MEATK3   { cmp = "IMPX| 5|*| 6|ImpMeleeAtk  |S_IMP_FLY1"; dehackednum = 2619 }
+frame S_IMP_MSATK1_1 { cmp = "IMPX| 0|*|10|FaceTarget   |@next"; dehackednum = 2620 }
+frame S_IMP_MSATK1_2 { cmp = "IMPX| 1|*| 6|ImpChargeAtk |@next"; dehackednum = 2621 }
+frame S_IMP_MSATK1_3 { cmp = "IMPX| 2|*| 6|*            |@next"; dehackednum = 2622 }
+frame S_IMP_MSATK1_4 { cmp = "IMPX| 1|*| 6|*            |@next"; dehackednum = 2623 }
+frame S_IMP_MSATK1_5 { cmp = "IMPX| 0|*| 6|*            |@next"; dehackednum = 2624 }
+frame S_IMP_MSATK1_6 { cmp = "IMPX| 1|*| 6|*            |S_IMP_MSATK1_3"; dehackednum = 2625 }
+frame S_IMP_MSATK2_1 { cmp = "IMPX| 3|*| 6|FaceTarget   |@next"; dehackednum = 2626 }
+frame S_IMP_MSATK2_2 { cmp = "IMPX| 4|*| 6|FaceTarget   |@next"; dehackednum = 2627 }
+frame S_IMP_MSATK2_3 { cmp = "IMPX| 5|*| 6|ImpMissileAtk|S_IMP_FLY1"; dehackednum = 2628 }
+frame S_IMP_PAIN1    { cmp = "IMPX| 6|*| 3|*            |@next"; dehackednum = 2629 }
+frame S_IMP_PAIN2    { cmp = "IMPX| 6|*| 3|Pain         |S_IMP_FLY1"; dehackednum = 2630 }
+frame S_IMP_DIE1     { cmp = "IMPX| 6|*| 4|ImpDeath     |@next"; dehackednum = 2631 }
+frame S_IMP_DIE2     { cmp = "IMPX| 7|*| 5|*            |@this"; dehackednum = 2632 }
+frame S_IMP_XDIE1    { cmp = "IMPX|18|*| 5|ImpXDeath1   |@next"; dehackednum = 2633 }
+frame S_IMP_XDIE2    { cmp = "IMPX|19|*| 5|*            |@next"; dehackednum = 2634 }
+frame S_IMP_XDIE3    { cmp = "IMPX|20|*| 5|*            |@next"; dehackednum = 2635 }
+frame S_IMP_XDIE4    { cmp = "IMPX|21|*| 5|ImpXDeath2   |@next"; dehackednum = 2636 }
+frame S_IMP_XDIE5    { cmp = "IMPX|22|*| 5|*            |@this"; dehackednum = 2637 }
+frame S_IMP_CRASH1   { cmp = "IMPX| 8|*| 7|ImpExplode   |@next"; dehackednum = 2638 }
+frame S_IMP_CRASH2   { cmp = "IMPX| 9|*| 7|Scream       |@next"; dehackednum = 2639 }
+frame S_IMP_CRASH3   { cmp = "IMPX|10|*| 7|*            |@next"; dehackednum = 2640 }
+frame S_IMP_CRASH4   { cmp = "IMPX|11|*|-1";                     dehackednum = 2641 }
+frame S_IMP_XCRASH1  { cmp = "IMPX|23|*| 7|*            |@next"; dehackednum = 2642 }
+frame S_IMP_XCRASH2  { cmp = "IMPX|24|*| 7|*            |@next"; dehackednum = 2643 }
+frame S_IMP_XCRASH3  { cmp = "IMPX|25|*|-1";                     dehackednum = 2644 }
+
+// HereticImpChunk frames
+frame S_IMP_CHUNKA1  { cmp = "IMPX|12|*|  5|*|@next"; dehackednum = 2645 }
+frame S_IMP_CHUNKA2  { cmp = "IMPX|13|*|700|*|@next"; dehackednum = 2646 }
+frame S_IMP_CHUNKA3  { cmp = "IMPX|14|*|700";         dehackednum = 2647 }
+frame S_IMP_CHUNKB1  { cmp = "IMPX|15|*|  5|*|@next"; dehackednum = 2648 }
+frame S_IMP_CHUNKB2  { cmp = "IMPX|16|*|700|*|@next"; dehackednum = 2649 }
+frame S_IMP_CHUNKB3  { cmp = "IMPX|17|*|700";         dehackednum = 2650 }
+
+// HereticImpShot frames
+frame S_IMPFX1  { cmp = "FX10|0|T|6|*|@next";    dehackednum = 2651 }
+frame S_IMPFX2  { cmp = "FX10|1|T|6|*|@next";    dehackednum = 2652 }
+frame S_IMPFX3  { cmp = "FX10|2|T|6|*|S_IMPFX1"; dehackednum = 2653 }
+frame S_IMPFXI1 { cmp = "FX10|3|T|5|*|@next";    dehackednum = 2654 }
+frame S_IMPFXI2 { cmp = "FX10|4|T|5|*|@next";    dehackednum = 2655 }
+frame S_IMPFXI3 { cmp = "FX10|5|T|5|*|@next";    dehackednum = 2656 }
+frame S_IMPFXI4 { cmp = "FX10|6|T|5";            dehackednum = 2657 }
+
+// HereticPlayer frames
+frame S_HPLAY       { cmp = "PLAY| 0|*|-1";                           dehackednum = 2658 }
+frame S_HPLAY_RUN1  { cmp = "PLAY| 0|*| 4|*           |@next";        dehackednum = 2659 }
+frame S_HPLAY_RUN2  { cmp = "PLAY| 1|*| 4|*           |@next";        dehackednum = 2660 }
+frame S_HPLAY_RUN3  { cmp = "PLAY| 2|*| 4|*           |@next";        dehackednum = 2661 }
+frame S_HPLAY_RUN4  { cmp = "PLAY| 3|*| 4|*           |S_HPLAY_RUN1"; dehackednum = 2662 }
+frame S_HPLAY_ATK1  { cmp = "PLAY| 4|*|12|*           |S_HPLAY";      dehackednum = 2663 }
+frame S_HPLAY_ATK2  { cmp = "PLAY| 5|T| 6|*           |@prev";        dehackednum = 2664 }
+frame S_HPLAY_PAIN  { cmp = "PLAY| 6|*| 4|*           |@next";        dehackednum = 2665 }
+frame S_HPLAY_PAIN2 { cmp = "PLAY| 6|*| 4|Pain        |S_HPLAY";      dehackednum = 2666 }
+frame S_HPLAY_DIE1  { cmp = "PLAY| 7|*| 6|*           |@next";        dehackednum = 2667 }
+frame S_HPLAY_DIE2  { cmp = "PLAY| 8|*| 6|PlayerScream|@next";        dehackednum = 2668 }
+frame S_HPLAY_DIE3  { cmp = "PLAY| 9|*| 6|*           |@next";        dehackednum = 2669 }
+frame S_HPLAY_DIE4  { cmp = "PLAY|10|*| 6|*           |@next";        dehackednum = 2670 }
+frame S_HPLAY_DIE5  { cmp = "PLAY|11|*| 6|Fall        |@next";        dehackednum = 2671 }
+frame S_HPLAY_DIE6  { cmp = "PLAY|12|*| 6|*           |@next";        dehackednum = 2672 }
+frame S_HPLAY_DIE7  { cmp = "PLAY|13|*| 6|*           |@next";        dehackednum = 2673 }
+frame S_HPLAY_DIE8  { cmp = "PLAY|14|*| 6|*           |@next";        dehackednum = 2674 }
+frame S_HPLAY_DIE9  { cmp = "PLAY|15|*|-1";                           dehackednum = 2675 }
+frame S_HPLAY_XDIE1 { cmp = "PLAY|16|*| 5|XScream     |@next";        dehackednum = 2676 }
+frame S_HPLAY_XDIE2 { cmp = "PLAY|17|*| 5|PlayerSkull |@next";        dehackednum = 2677 }
+frame S_HPLAY_XDIE3 { cmp = "PLAY|18|*| 5|Fall        |@next";        dehackednum = 2678 }
+frame S_HPLAY_XDIE4 { cmp = "PLAY|19|*| 5|*           |@next";        dehackednum = 2679 }
+frame S_HPLAY_XDIE5 { cmp = "PLAY|20|*| 5|*           |@next";        dehackednum = 2680 }
+frame S_HPLAY_XDIE6 { cmp = "PLAY|21|*| 5|*           |@next";        dehackednum = 2681 }
+frame S_HPLAY_XDIE7 { cmp = "PLAY|22|*| 5|*           |@next";        dehackednum = 2682 }
+frame S_HPLAY_XDIE8 { cmp = "PLAY|23|*| 5|*           |@next";        dehackednum = 2683 }
+frame S_HPLAY_XDIE9 { cmp = "PLAY|24|*|-1";                           dehackednum = 2684 }
+
+/*
+// HereticPlayer fiery death frames - Not Finished Yet (tm)
+frame S_HPLAY_FDTH1  { cmp = "FDTH| 0|T| 5|FlameSnd     |@next"; dehackednum = 2685 }
+frame S_HPLAY_FDTH2  { cmp = "FDTH| 1|T| 4|*            |@next"; dehackednum = 2686 }
+frame S_HPLAY_FDTH3  { cmp = "FDTH| 2|T| 5|*            |@next"; dehackednum = 2687 }
+frame S_HPLAY_FDTH4  { cmp = "FDTH| 3|T| 4|Scream       |@next"; dehackednum = 2688 }
+frame S_HPLAY_FDTH5  { cmp = "FDTH| 4|T| 5|*            |@next"; dehackednum = 2689 }
+frame S_HPLAY_FDTH6  { cmp = "FDTH| 5|T| 4|*            |@next"; dehackednum = 2690 }
+frame S_HPLAY_FDTH7  { cmp = "FDTH| 6|T| 5|FlameSnd     |@next"; dehackednum = 2691 }
+frame S_HPLAY_FDTH8  { cmp = "FDTH| 7|T| 4|*            |@next"; dehackednum = 2692 }
+frame S_HPLAY_FDTH9  { cmp = "FDTH| 8|T| 5|*            |@next"; dehackednum = 2693 }
+frame S_HPLAY_FDTH10 { cmp = "FDTH| 9|T| 4|*            |@next"; dehackednum = 2694 }
+frame S_HPLAY_FDTH11 { cmp = "FDTH|10|T| 5|*            |@next"; dehackednum = 2695 }
+frame S_HPLAY_FDTH12 { cmp = "FDTH|11|T| 4|*            |@next"; dehackednum = 2696 }
+frame S_HPLAY_FDTH13 { cmp = "FDTH|12|T| 5|*            |@next"; dehackednum = 2697 }
+frame S_HPLAY_FDTH14 { cmp = "FDTH|13|T| 4|*            |@next"; dehackednum = 2698 }
+frame S_HPLAY_FDTH15 { cmp = "FDTH|14|T| 5|NoBlocking   |@next"; dehackednum = 2699 }
+frame S_HPLAY_FDTH16 { cmp = "FDTH|15|T| 4|*            |@next"; dehackednum = 2700 }
+frame S_HPLAY_FDTH17 { cmp = "FDTH|16|T| 5|*            |@next"; dehackednum = 2701 }
+frame S_HPLAY_FDTH18 { cmp = "FDTH|17|T| 4|*            |@next"; dehackednum = 2702 }
+frame S_HPLAY_FDTH19 { cmp = "ACLO| 4|*|35|CheckBurnGone|@this"; dehackednum = 2703 }
+frame S_HPLAY_FDTH20 { cmp = "ACLO| 4|*| 8" }
+*/
+
+// HereticPlayerSkull frames
+frame S_HPLAYERSKULL1 { cmp = "BSKL|0|*| 5|*|@next";           dehackednum = 2704 }
+frame S_HPLAYERSKULL2 { cmp = "BSKL|1|*| 5|*|@next";           dehackednum = 2705 }
+frame S_HPLAYERSKULL3 { cmp = "BSKL|2|*| 5|*|@next";           dehackednum = 2706 }
+frame S_HPLAYERSKULL4 { cmp = "BSKL|3|*| 5|*|@next";           dehackednum = 2707 }
+frame S_HPLAYERSKULL5 { cmp = "BSKL|4|*| 5|*|S_HPLAYERSKULL1"; dehackednum = 2708 }
+frame S_HPLAYERSKULLX { cmp = "BSKL|5|*|-1";                   dehackednum = 2709 }
+

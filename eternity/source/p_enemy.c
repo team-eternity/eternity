@@ -3496,6 +3496,7 @@ void A_FaceMoveDir(mobj_t *actor)
 //
 void A_ClericAtk(mobj_t *actor)
 {
+   /*
    mobj_t* mo;
    fixed_t momz;
    angle_t angle;
@@ -3539,6 +3540,7 @@ void A_ClericAtk(mobj_t *actor)
       P_SpawnMissile(actor, actor->target, 
                      E_SafeThingType(MT_CLRBALL), z);
    }
+   */
 }
 
 //
@@ -3636,6 +3638,7 @@ void A_FogMove(mobj_t *actor)
 
 void A_Cleric2Chase(mobj_t *actor)
 {
+   /*
    mobj_t *target = actor->target;
 
    // decrement teleport and defend countdown timers
@@ -3646,10 +3649,8 @@ void A_Cleric2Chase(mobj_t *actor)
      actor->special2--;
 
    // sparkle if invulnerable
-   /*
    if(actor->flags2&MF2_INVULNERABLE)
      P_ClericSparkle(actor);
-     */
 
    // Try to evade missile attack!
    if(actor->args[0])
@@ -3696,10 +3697,12 @@ void A_Cleric2Chase(mobj_t *actor)
 
    if(!actor->args[0])
      A_Chase(actor);
+   */
 }
 
 boolean P_ClericDefense(mobj_t *actor)
 {
+   /*
    if(actor->special2 == 0 && actor->special3 == 0 &&
       (P_Random(pr_clr2attack) < 128))
    {
@@ -3724,8 +3727,8 @@ boolean P_ClericDefense(mobj_t *actor)
          case 2:  // invulnerability spell
             actor->flags2 |= MF2_INVULNERABLE;
             actor->flags2 |= MF2_REFLECTIVE;
-         default:   // just in case
-            break;
+         default:   // just incase
+            break; 
       }
       actor->special2 = (P_Random(pr_clr2attack)&0x7f)+32;
       actor->special3 = 1;
@@ -3743,75 +3746,21 @@ boolean P_ClericDefense(mobj_t *actor)
       actor->special2 = (P_Random(pr_clr2attack)&0x7f)+1; // reset count
       actor->special3 = 0;                                // not defending
    }
+   */
    return false; // no defense this turn
 }
 
 void A_Cleric2Attack(mobj_t *actor)
 {
-   fixed_t momz;
-   angle_t angle;
-   mobj_t *mo;
-   fixed_t z = actor->z + DEFAULTMISSILEZ;
-
-   if(!actor->target)
-     return;
-
-   /*
-   if(actor->flags2&MF2_INVULNERABLE)
-     P_ClericSparkle(actor);
-     */
-
-   A_FaceTarget(actor);
-
-   if(P_CheckMeleeRange(actor))
-   {
-      int damage;
-      S_StartSound(actor, sfx_clratk);
-      damage = ((P_Random(pr_clrattack)%8)+1)*4;
-      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
-      return;
-   }
-
-   // defend, time and luck permitting
-   if(P_ClericDefense(actor))
-     return;
-
-   // offensive spells
-   if((actor->health*3 < actor->info->spawnhealth) &&
-      (P_Random(pr_clr2attack) < 160))                  // limit break
-   {
-      P_SetMobjState(actor, E_SafeState(S_LCLER_BREAK1));
-      return;
-   }
-
-   if(P_Random(pr_clr2attack) < 128)  // Triple Mace
-   {
-      int clrball = E_SafeThingType(MT_CLRBALL);
-
-      mo = P_SpawnMissile(actor, actor->target, clrball, z);
-
-      if(mo)
-      {
-         momz = mo->momz;
-         angle = mo->angle;
-         P_SpawnMissileAngle(actor, clrball, angle-(ANG45/8), momz, z);
-         P_SpawnMissileAngle(actor, clrball, angle+(ANG45/8), momz, z);
-      }
-   }
-   else                         // Fire Attack
-   {
-     // TODO: fire attack
-   }
 }
 
 void P_ClericTeleport(mobj_t *actor)
 {
+   /*
    bossteleport_t bt;
 
-   /*
    if(actor->flags2&MF2_INVULNERABLE)
      P_ClericSparkle(actor);
-     */
 
    bt.mc        = &braintargets;            // use braintargets
    bt.rngNum    = pr_clr2choose;            // use this rng
@@ -3823,6 +3772,7 @@ void P_ClericTeleport(mobj_t *actor)
    bt.soundNum  = sfx_itmbk;                // use item respawn sound
 
    P_BossTeleport(&bt);
+   */
 }
 
 void A_Cleric2Decide(mobj_t *actor)
@@ -3830,7 +3780,6 @@ void A_Cleric2Decide(mobj_t *actor)
    /*
    if(actor->flags2&MF2_INVULNERABLE)
      P_ClericSparkle(actor);
-   */
 
    if(actor->special1 == 0 && !P_CollectionIsEmpty(&braintargets))
    {
@@ -3838,20 +3787,20 @@ void A_Cleric2Decide(mobj_t *actor)
       actor->special1 = (P_Random(pr_clericteleport)&0x7f)+1;
    }
    // fall through to attack state
+   */
 }
 
 void A_ClericBreak(mobj_t *actor)
 {
+   /*
    angle_t ang, an1;
    mobj_t *target = actor->target;
 
    if(!target)
      return;
 
-   /*
    if(actor->flags2&MF2_INVULNERABLE)
      P_ClericSparkle(actor);
-   */
 
    A_FaceTarget(actor);
 
@@ -3867,6 +3816,7 @@ void A_ClericBreak(mobj_t *actor)
 
    P_SpawnMissileAngle(actor, E_SafeThingType(MT_CLRBALL), an1, 0, 
                        actor->z + DEFAULTMISSILEZ);
+   */
 }
 
 //==================================================
@@ -3929,11 +3879,6 @@ void A_PhoenixTracer(mobj_t *actor)
 //==============================
 void A_CyberGuardSigh(mobj_t *actor)
 {
-   // make a little sound occasionally for ambience
-   // only used by inert cyberguard
-
-   if(P_Random(pr_see)<2)   // 10/17/99: make less frequent than activesound
-     S_StartSound(actor, sfx_dmact);
 }
 
 //==============================

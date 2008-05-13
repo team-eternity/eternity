@@ -497,31 +497,6 @@ typedef enum {
   sfx_hplrwdth,
   sfx_hplrcdth,
 
-  // Start Eternity TC New SFX -- TODO: eliminate or standardize
-  sfx_clratk = 182, // cleric sounds
-  sfx_clrpn,
-  sfx_clrdth,
-  sfx_cblsht, // cleric projectile sounds
-  sfx_cblexp,
-  sfx_clrdef, // leader cleric defense
-  sfx_dfdth,  // dwarf sounds
-  sfx_dwrfpn,
-  sfx_dfsit1,
-  sfx_dfsit2,
-  sfx_fdsit,
-  sfx_fdpn,
-  sfx_fddth,
-  sfx_heal,
-  sfx_harp,
-  sfx_wofp,
-  sfx_cone3,
-  sfx_icedth,
-  sfx_clsit1,
-  sfx_clsit2,
-  sfx_clsit3,
-  sfx_clsit4,
-  // End Eternity TC New SFX
-
   // haleyjd 11/05/03: NUMSFX is a variable now
   // NUMSFX
 } sfxenum_t;

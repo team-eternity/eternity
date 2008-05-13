@@ -1,190 +1,20 @@
-# sounds.edf - EDF file for Eternity Engine v3.33.02
-#     This file contains sound definitions. Note that some fields in the
-#     sound block have very special semantics, so you should read the docs
-#     before you mess with this at all. Confusion is bound to result otherwise.
+// EDF for Eternity Engine v3.35.00
+//  This file contains sound definitions. Note that some fields in the
+//  sound block have very special semantics, so you should read the docs
+//  before you mess with this at all. Confusion is bound to result otherwise.
 
-#     COMPATIBILITY WARNING: All sounds after sound "eedrip" have 
-#     NOT been standardized as of v3.33.02. These sounds should not 
-#     be used by editors, via EDF or DeHackEd, until their order and existence 
-#     have been finalized and officially documented.
 
-ifenabled(DOOM)
+// Include gamemode-specific sounds --------------------------------------------
 
-# DOOM sounds
-sound pistol { pitchvariance = Doom;    dehackednum =  1 }
-sound shotgn { pitchvariance = Doom;    dehackednum =  2 }
-sound sgcock { pitchvariance = Doom;    dehackednum =  3 }
-sound dshtgn { pitchvariance = Doom;    dehackednum =  4 }
-sound dbopn  { pitchvariance = Doom;    dehackednum =  5 }
-sound dbcls  { pitchvariance = Doom;    dehackednum =  6 }
-sound dbload { pitchvariance = Doom;    dehackednum =  7 }
-sound plasma { pitchvariance = Doom;    dehackednum =  8 }
-sound bfg    { pitchvariance = Doom;    dehackednum =  9 }
-sound sawup  { pitchvariance = DoomSaw; dehackednum = 10 }
-sound sawidl { pitchvariance = DoomSaw; priority = 118; dehackednum =  11 }
-sound sawful { pitchvariance = DoomSaw; dehackednum = 12 }
-sound sawhit { pitchvariance = DoomSaw; dehackednum = 13 }
-sound rlaunc { pitchvariance = Doom;    dehackednum = 14 }
-sound rxplod { pitchvariance = Doom;    priority =  70; dehackednum =  15 }
-sound firsht { pitchvariance = Doom;    priority =  70; dehackednum =  16 }
-sound firxpl { pitchvariance = Doom;    priority =  70; dehackednum =  17 }
-sound pstart { pitchvariance = Doom;    priority = 100; dehackednum =  18 }
-sound pstop  { pitchvariance = Doom;    priority = 100; dehackednum =  19 }
-sound doropn { pitchvariance = Doom;    priority = 100; dehackednum =  20 }
-sound dorcls { pitchvariance = Doom;    priority = 100; dehackednum =  21 }
-sound stnmov { pitchvariance = Doom;    priority = 119; dehackednum =  22 }
-sound swtchn { pitchvariance = Doom;    priority =  78; dehackednum =  23 }
-sound swtchx { pitchvariance = Doom;    priority =  78; dehackednum =  24 }
+// Doom : DeHackEd nums 1 - 108, 125
 
-sound plpain 
-{ 
-   pitchvariance = Doom
-   priority = 96
-   dehackednum = 25
-   skinindex = sk_plpain
-}
+includeifenabled("doom/sounds.edf", "DOOM")
 
-sound dmpain { pitchvariance = Doom; priority =  96; dehackednum =  26 }
-sound popain { pitchvariance = Doom; priority =  96; dehackednum =  27 }
-sound vipain { pitchvariance = Doom; priority =  96; dehackednum =  28 }
-sound mnpain { pitchvariance = Doom; priority =  96; dehackednum =  29 }
-sound pepain { pitchvariance = Doom; priority =  96; dehackednum =  30 }
+// Heretic : DeHackEd nums 300 - 397
 
-sound slop
-{ 
-   pitchvariance = Doom
-   priority = 78
-   dehackednum = 31
-   skinindex = sk_slop
-}
+includeifenabled("heretic/sounds.edf", "HERETIC")
 
-sound itemup { priority =  78; dehackednum =  32; singularity = sg_itemup }
-
-sound wpnup
-{
-   pitchvariance = Doom
-   priority = 78
-   dehackednum = 33
-   singularity = sg_wpnup
-}
-
-sound oof
-{
-   pitchvariance = Doom
-   priority = 96
-   dehackednum = 34
-   singularity = sg_oof
-   skinindex = sk_oof
-}
-
-sound telept { pitchvariance = Doom; priority =  32; dehackednum =  35 }
-sound posit1 { pitchvariance = Doom; priority =  98; dehackednum =  36 }
-sound posit2 { pitchvariance = Doom; priority =  98; dehackednum =  37 }
-sound posit3 { pitchvariance = Doom; priority =  98; dehackednum =  38 }
-sound bgsit1 { pitchvariance = Doom; priority =  98; dehackednum =  39 }
-sound bgsit2 { pitchvariance = Doom; priority =  98; dehackednum =  40 }
-sound sgtsit { pitchvariance = Doom; priority =  98; dehackednum =  41 }
-sound cacsit { pitchvariance = Doom; priority =  98; dehackednum =  42 }
-sound brssit { pitchvariance = Doom; priority =  94; dehackednum =  43 }
-sound cybsit { pitchvariance = Doom; priority =  92; dehackednum =  44 }
-sound spisit { pitchvariance = Doom; priority =  90; dehackednum =  45 }
-sound bspsit { pitchvariance = Doom; priority =  90; dehackednum =  46 }
-sound kntsit { pitchvariance = Doom; priority =  90; dehackednum =  47 }
-sound vilsit { pitchvariance = Doom; priority =  90; dehackednum =  48 }
-sound mansit { pitchvariance = Doom; priority =  90; dehackednum =  49 }
-sound pesit  { pitchvariance = Doom; priority =  90; dehackednum =  50 }
-sound sklatk { pitchvariance = Doom; priority =  70; dehackednum =  51 }
-sound sgtatk { pitchvariance = Doom; priority =  70; dehackednum =  52 }
-sound skepch { pitchvariance = Doom; priority =  70; dehackednum =  53 }
-sound vilatk { pitchvariance = Doom; priority =  70; dehackednum =  54 }
-sound claw   { pitchvariance = Doom; priority =  70; dehackednum =  55 }
-sound skeswg { pitchvariance = Doom; priority =  70; dehackednum =  56 }
-
-sound pldeth 
-{ 
-   pitchvariance = Doom
-   priority = 32
-   dehackednum = 57
-   skinindex = sk_pldeth
-}
-
-sound pdiehi 
-{
-   pitchvariance = Doom
-   priority = 32
-   dehackednum = 58
-   skinindex = sk_pdiehi
-}
-
-sound podth1 { pitchvariance = Doom; priority =  70; dehackednum =  59 }
-sound podth2 { pitchvariance = Doom; priority =  70; dehackednum =  60 }
-sound podth3 { pitchvariance = Doom; priority =  70; dehackednum =  61 }
-sound bgdth1 { pitchvariance = Doom; priority =  70; dehackednum =  62 }
-sound bgdth2 { pitchvariance = Doom; priority =  70; dehackednum =  63 }
-sound sgtdth { pitchvariance = Doom; priority =  70; dehackednum =  64 }
-sound cacdth { pitchvariance = Doom; priority =  70; dehackednum =  65 }
-sound skldth { pitchvariance = Doom; priority =  70; dehackednum =  66 }
-sound brsdth { pitchvariance = Doom; priority =  32; dehackednum =  67 }
-sound cybdth { pitchvariance = Doom; priority =  32; dehackednum =  68 }
-sound spidth { pitchvariance = Doom; priority =  32; dehackednum =  69 }
-sound bspdth { pitchvariance = Doom; priority =  32; dehackednum =  70 }
-sound vildth { pitchvariance = Doom; priority =  32; dehackednum =  71 }
-sound kntdth { pitchvariance = Doom; priority =  32; dehackednum =  72 }
-sound pedth  { pitchvariance = Doom; priority =  32; dehackednum =  73 }
-sound skedth { pitchvariance = Doom; priority =  32; dehackednum =  74 }
-sound posact { pitchvariance = Doom; priority = 120; dehackednum =  75 }
-sound bgact  { pitchvariance = Doom; priority = 120; dehackednum =  76 }
-sound dmact  { pitchvariance = Doom; priority = 120; dehackednum =  77 }
-sound bspact { pitchvariance = Doom; priority = 100; dehackednum =  78 }
-sound bspwlk { pitchvariance = Doom; priority = 100; dehackednum =  79 }
-sound vilact { pitchvariance = Doom; priority = 100; dehackednum =  80 }
-
-sound noway
-{
-   pitchvariance = Doom
-   priority = 78
-   dehackednum = 81
-   singularity = sg_oof
-   skinindex = sk_noway
-}
-
-sound barexp { pitchvariance = Doom; priority =  60; dehackednum =  82 }
-sound punch  { pitchvariance = Doom; dehackednum = 83; skinindex = sk_punch }
-sound hoof   { pitchvariance = Doom; priority =  70; dehackednum =  84 }
-sound metal  { pitchvariance = Doom; priority =  70; dehackednum =  85 }
-sound chgun  { pitchvariance = Doom; link = pistol;  dehackednum =  86 }
-sound tink   { priority =  60; dehackednum =  87 }
-sound bdopn  { pitchvariance = Doom; priority = 100; dehackednum =  88 }
-sound bdcls  { pitchvariance = Doom; priority = 100; dehackednum =  89 }
-sound itmbk  { pitchvariance = Doom; priority = 100; dehackednum =  90 }
-sound flame  { pitchvariance = Doom; priority =  32; dehackednum =  91 }
-sound flamst { pitchvariance = Doom; priority =  32; dehackednum =  92 }
-
-sound getpow
-{ 
-   pitchvariance = Doom
-   priority = 60
-   dehackednum = 93
-   singularity = sg_getpow
-}
-
-sound bospit { pitchvariance = Doom; priority =  70; dehackednum =  94 }
-sound boscub { pitchvariance = Doom; priority =  70; dehackednum =  95 }
-sound bossit { pitchvariance = Doom; priority =  70; dehackednum =  96 }
-sound bospn  { pitchvariance = Doom; priority =  70; dehackednum =  97 }
-sound bosdth { pitchvariance = Doom; priority =  70; dehackednum =  98 }
-sound manatk { pitchvariance = Doom; priority =  70; dehackednum =  99 }
-sound mandth { pitchvariance = Doom; priority =  70; dehackednum = 100 }
-sound sssit  { pitchvariance = Doom; priority =  70; dehackednum = 101 }
-sound ssdth  { pitchvariance = Doom; priority =  70; dehackednum = 102 }
-sound keenpn { pitchvariance = Doom; priority =  70; dehackednum = 103 }
-sound keendt { pitchvariance = Doom; priority =  70; dehackednum = 104 }
-sound skeact { pitchvariance = Doom; priority =  70; dehackednum = 105 }
-sound skesit { pitchvariance = Doom; priority =  70; dehackednum = 106 }
-sound skeatk { pitchvariance = Doom; priority =  70; dehackednum = 107 }
-sound radio  { pitchvariance = Doom; priority =  60; dehackednum = 108 }
-
-endif()
+// MBF sounds ------------------------------------------------------------------
 
 # killough 11/98: dog sounds
 
@@ -194,7 +24,7 @@ sound dgact  { pitchvariance = Doom; priority = 120; dehackednum = 111 }
 sound dgdth  { pitchvariance = Doom; priority =  70; dehackednum = 112 }
 sound dgpain { pitchvariance = Doom; priority =  96; dehackednum = 113 }
 
-# Eternity Engine sounds
+// Eternity Engine sounds ------------------------------------------------------
 
 sound eefly
 {
@@ -233,7 +63,7 @@ sound fallht
    skinindex = sk_fallht
 }
 
-sound burn   { pitchvariance = Doom; priority =  32; dehackednum = 121 }
+sound burn { pitchvariance = Doom; priority =  32; dehackednum = 121 }
 
 sound eehtsz
 { 
@@ -259,798 +89,12 @@ sound Earthquake
    dehackednum = 124
 }
 
-ifenabled(DOOM)
+// NOTE: DeHackEd num 125 == plwdth in doom/sounds.edf
 
-# A sound entry for the player wimpy death
-sound plwdth 
-{ 
-   pitchvariance = Doom; priority =  32; dehackednum = 125; 
-   skinindex = sk_plwdth
-}
 
-endif()
+// Default Sector Sound Sequences ----------------------------------------------
 
-# WARNING: all sounds below are not standardized yet -- if you use them, your mods
-# will break when used with future versions of Eternity, so don't use them.
-
-# haleyjd 10/08/02: heretic sounds
-
-ifenabled(HERETIC)
-
-sound ht_gldhit
-{
-   lump = "gldhit"; priority =  64; dehackednum = 300; pitchvariance = Heretic
-}
-
-sound ht_telept
-{
-   lump = "telept"; priority =  32; dehackednum = 301
-   pitchvariance = Heretic
-}
-
-sound ht_chat
-{
-   lump = "chat";   priority =  60; dehackednum = 302; pitchvariance = Heretic
-   skinindex = sk_radio
-}
-
-sound ht_keyup
-{
-   lump = "keyup";  priority =  78; dehackednum = 303; pitchvariance = Heretic
-}
-
-sound ht_itemup
-{
-   lump = "itemup"; priority =  78; dehackednum = 304; pitchvariance = Heretic
-}
-
-sound ht_mumsit
-{
-   lump = "mumsit"; priority =  98; dehackednum = 305; pitchvariance = Heretic
-}
-
-sound ht_mumat1
-{
-   lump = "mumat1"; priority =  70; dehackednum = 306; pitchvariance = Heretic
-}
-
-sound ht_mumat2
-{
-   lump = "mumat2"; priority =  70; dehackednum = 307; pitchvariance = Heretic
-}
-
-sound ht_mumpai
-{
-   lump = "mumpai"; priority =  96; dehackednum = 308; pitchvariance = Heretic
-}
-
-sound ht_mumdth
-{
-   lump = "mumdth"; priority =  70; dehackednum = 309; pitchvariance = Heretic
-}
-
-sound ht_mumhed
-{
-   lump = "mumhed"; priority =  70; dehackednum = 310; pitchvariance = Heretic
-}
-
-sound ht_clksit
-{
-   lump = "clksit"; priority =  96; dehackednum = 311; pitchvariance = Heretic
-}
-
-sound ht_clkatk
-{
-   lump = "clkatk"; priority =  70; dehackednum = 312; pitchvariance = Heretic
-}
-
-sound ht_clkpai
-{
-   lump = "clkpai"; priority =  96; dehackednum = 313; pitchvariance = Heretic
-}
-
-sound ht_clkdth
-{
-   lump = "clkdth"; priority =  70; dehackednum = 314; pitchvariance = Heretic
-}
-
-sound ht_clkact
-{
-   lump = "clkact"; priority = 120; dehackednum = 315; pitchvariance = Heretic
-}
-
-sound ht_wizsit
-{
-   lump = "wizsit"; priority =  95; dehackednum = 316; pitchvariance = Heretic
-}
-
-sound ht_wizatk
-{
-   lump = "wizatk"; priority =  70; dehackednum = 317; pitchvariance = Heretic
-}
-
-sound ht_wizdth
-{
-   lump = "wizdth"; priority =  70; dehackednum = 318; pitchvariance = Heretic
-}
-
-sound ht_wizact
-{
-   lump = "wizact"; priority = 120; dehackednum = 319; pitchvariance = Heretic
-}
-
-sound ht_wizpai
-{
-   lump = "wizpai"; priority =  96; dehackednum = 320; pitchvariance = Heretic
-}
-
-sound ht_sorzap
-{
-   lump = "sorzap"; priority =  32; dehackednum = 321; pitchvariance = Heretic
-}
-
-sound ht_sorrise
-{
-   lump = "sorrise";priority =  32; dehackednum = 322; pitchvariance = Heretic
-}
-
-sound ht_sorsit
-{
-   lump = "sorsit"; priority =  24; dehackednum = 323; pitchvariance = Heretic
-}
-
-sound ht_soratk
-{
-   lump = "soratk"; priority =  32; dehackednum = 324; pitchvariance = Heretic
-}
-
-sound ht_sorpai
-{
-   lump = "sorpai"; priority =  32; dehackednum = 325; pitchvariance = Heretic
-}
-
-sound ht_soract
-{
-   lump = "soract"; priority = 100; dehackednum = 326; pitchvariance = Heretic
-}
-
-sound ht_sordsph
-{
-   lump = "sordsph";priority =  32; dehackednum = 327; pitchvariance = Heretic
-}
-
-sound ht_sordexp
-{
-   lump = "sordexp";priority =  32; dehackednum = 328; pitchvariance = Heretic
-}
-
-sound ht_sordbon
-{
-   lump = "sordbon";priority =  32; dehackednum = 329; pitchvariance = Heretic
-}
-
-sound ht_wind
-{
-   lump = "wind";   priority = 255; dehackednum = 330; pitchvariance = Heretic
-}
-
-sound ht_waterfl
-{
-   lump = "waterfl";priority = 255; dehackednum = 331; pitchvariance = Heretic
-}
-
-sound ht_podexp
-{
-   lump = "podexp"; priority =  60; dehackednum = 332; pitchvariance = Heretic
-}
-
-sound ht_newpod
-{
-   lump = "newpod"; priority =  32; dehackednum = 333; pitchvariance = Heretic
-}
-
-sound ht_kgtsit
-{
-   lump = "kgtsit"; priority =  94; dehackednum = 334; pitchvariance = Heretic
-}
-
-sound ht_kgtatk
-{
-   lump = "kgtatk"; priority =  70; dehackednum = 335; pitchvariance = Heretic
-}
-
-sound ht_kgtat2
-{
-   lump = "kgtat2"; priority =  70; dehackednum = 336; pitchvariance = Heretic
-}
-
-sound ht_kgtdth
-{
-   lump = "kgtdth"; priority =  70; dehackednum = 337; pitchvariance = Heretic
-}
-
-sound ht_kgtpai
-{
-   lump = "kgtpai"; priority =  96; dehackednum = 338; pitchvariance = Heretic
-}
-
-sound ht_hrnhit
-{
-   lump = "hrnhit"; priority =  64; dehackednum = 339; pitchvariance = Heretic
-}
-
-sound ht_bstsit
-{
-   lump = "bstsit"; priority =  93; dehackednum = 340; pitchvariance = Heretic
-}
-
-sound ht_bstatk
-{
-   lump = "bstatk"; priority =  70; dehackednum = 341; pitchvariance = Heretic
-}
-
-sound ht_bstpai
-{
-   lump = "bstpai"; priority =  96; dehackednum = 342; pitchvariance = Heretic
-}
-
-sound ht_bstdth
-{
-   lump = "bstdth"; priority =  70; dehackednum = 343; pitchvariance = Heretic
-}
-
-sound ht_bstact
-{
-   lump = "bstact"; priority = 100; dehackednum = 344; pitchvariance = Heretic
-}
-
-sound ht_snksit
-{
-   lump = "snksit"; priority =  93; dehackednum = 345; pitchvariance = Heretic
-}
-
-sound ht_snkatk
-{
-   lump = "snkatk"; priority =  70; dehackednum = 346; pitchvariance = Heretic
-}
-
-sound ht_snkpai
-{
-   lump = "snkpai"; priority =  96; dehackednum = 347; pitchvariance = Heretic
-}
-
-sound ht_snkdth
-{
-   lump = "snkdth"; priority =  70; dehackednum = 348; pitchvariance = Heretic
-}
-
-sound ht_snkact
-{
-   lump = "snkact"; priority = 100; dehackednum = 349; pitchvariance = Heretic
-}
-
-sound ht_doropn
-{
-   lump = "doropn"; priority = 100; dehackednum = 350; pitchvariance = Heretic
-}
-
-sound ht_dorcls
-{
-   lump = "dorcls"; priority = 100; dehackednum = 351; pitchvariance = Heretic
-}
-
-sound ht_switch
-{
-   lump = "switch"; priority =  78; dehackednum = 352; pitchvariance = Heretic
-}
-
-sound ht_pstart
-{
-   lump = "pstart"; priority = 100; dehackednum = 353; pitchvariance = Heretic
-}
-
-sound ht_pstop
-{
-   lump = "pstop";  priority = 100; dehackednum = 354; pitchvariance = Heretic
-}
-
-sound ht_stnmov
-{
-   lump = "stnmov"; priority = 119; dehackednum = 355; pitchvariance = Heretic
-}
-
-sound ht_sbtpai
-{
-   lump = "sbtpai"; priority =  96; dehackednum = 356; pitchvariance = Heretic
-}
-
-sound ht_sbtdth
-{
-   lump = "sbtdth"; priority =  32; dehackednum = 357; pitchvariance = Heretic
-}
-
-sound ht_sbtact
-{
-   lump = "sbtact"; priority = 100; dehackednum = 358; pitchvariance = Heretic
-}
-
-sound ht_lobhit
-{
-   lump = "lobhit"; priority =  64; dehackednum = 359; pitchvariance = Heretic
-}
-
-sound ht_minsit
-{
-   lump = "minsit"; priority =  32; dehackednum = 360; pitchvariance = Heretic
-}
-
-sound ht_minat1
-{
-   lump = "minat1"; priority =  70; dehackednum = 361; pitchvariance = Heretic
-}
-
-sound ht_minat2
-{
-   lump = "minat2"; priority =  70; dehackednum = 362; pitchvariance = Heretic
-}
-
-sound ht_minpai
-{
-   lump = "minpai"; priority =  80; dehackednum = 363; pitchvariance = Heretic
-}
-
-sound ht_mindth
-{
-   lump = "mindth"; priority =  32; dehackednum = 364; pitchvariance = Heretic
-}
-
-sound ht_minact
-{
-   lump = "minact"; priority = 100; dehackednum = 365; pitchvariance = Heretic
-}
-
-sound ht_stfpow
-{
-   lump = "stfpow"; priority =  64; dehackednum = 366; pitchvariance = Heretic
-}
-
-sound ht_phohit
-{
-   lump = "phohit"; priority =  64; dehackednum = 367; pitchvariance = Heretic
-}
-
-sound ht_hedsit
-{
-   lump = "hedsit"; priority =  32; dehackednum = 368; pitchvariance = Heretic
-}
-
-sound ht_hedat1
-{
-   lump = "hedat1"; priority =  70; dehackednum = 369; pitchvariance = Heretic
-}
-
-sound ht_hedat2
-{
-   lump = "hedat2"; priority =  70; dehackednum = 370; pitchvariance = Heretic
-}
-
-sound ht_hedat3
-{
-   lump = "hedat3"; priority =  70; dehackednum = 371; pitchvariance = Heretic
-}
-
-sound ht_heddth
-{
-   lump = "heddth"; priority =  32; dehackednum = 372; pitchvariance = Heretic
-}
-
-sound ht_hedact
-{
-   lump = "hedact"; priority = 100; dehackednum = 373; pitchvariance = Heretic
-}
-
-sound ht_hedpai
-{
-   lump = "hedpai"; priority =  96; dehackednum = 374; pitchvariance = Heretic
-}
-
-sound ht_impsit
-{
-   lump = "impsit"; priority =  97; dehackednum = 375; pitchvariance = Heretic
-}
-
-sound ht_impat1
-{
-   lump = "impat1"; priority =  70; dehackednum = 376; pitchvariance = Heretic
-}
-
-sound ht_impat2
-{
-   lump = "impat2"; priority =  70; dehackednum = 377; pitchvariance = Heretic
-}
-
-sound ht_imppai
-{
-   lump = "imppai"; priority =  96; dehackednum = 378; pitchvariance = Heretic
-}
-
-sound ht_impdth
-{
-   lump = "impdth"; priority =  70; dehackednum = 379; pitchvariance = Heretic
-}
-
-sound ht_amb1
-{
-   lump = "amb1";   priority = 255; dehackednum = 380; 
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb2
-{
-   lump = "amb2";   priority = 255; dehackednum = 381
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb3
-{
-   lump = "amb3";   priority = 255; dehackednum = 382
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb4
-{
-   lump = "amb4";   priority = 255; dehackednum = 383
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb5
-{
-   lump = "amb5";   priority = 255; dehackednum = 384
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb6
-{
-   lump = "amb6";   priority = 255; dehackednum = 385
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb7
-{
-   lump = "amb7";   priority = 255; dehackednum = 386
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb8
-{
-   lump = "amb8";   priority = 255; dehackednum = 387
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb9
-{
-   lump = "amb9";   priority = 255; dehackednum = 388
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb10
-{
-   lump = "amb10";  priority = 255; dehackednum = 389
-   pitchvariance = HereticAmbient
-}
-
-sound ht_amb11
-{
-   lump = "amb11";  priority = 255; dehackednum = 390
-   pitchvariance = HereticAmbient
-}
-
-sound ht_dormov
-{
-   lump = "dormov"; priority = 119; dehackednum = 391; pitchvariance = Heretic
-}
-
-sound ht_plroof
-{
-   lump = "plroof"; priority = 96;  dehackednum = 392; pitchvariance = Heretic
-   skinindex = sk_oof
-}
-
-sound ht_plrpai
-{
-   lump = "plrpai"; priority = 96;  dehackednum = 393; pitchvariance = Heretic
-   skinindex = sk_plpain
-}
-
-sound ht_plrdth
-{
-   lump = "plrdth"; priority = 32;  dehackednum = 394; pitchvariance = Heretic
-   skinindex = sk_pldeth
-}
-
-sound ht_gibdth
-{
-   lump = "gibdth"; priority = 112; dehackednum = 395; pitchvariance = Heretic
-   skinindex = sk_slop
-}
-
-sound ht_plrwdth
-{
-   lump = "plrwdth"; priority = 32; dehackednum = 396; pitchvariance = Heretic
-   skinindex = sk_plwdth
-}
-
-sound ht_plrcdth
-{
-   lump = "plrcdth"; priority = 32; dehackednum = 397; pitchvariance = Heretic
-   skinindex = sk_pdiehi
-}
-
-endif()
-
-# Eternity TC Sounds -- these may be changed or removed without warning!
-# Some of these sounds are used by engine features too, though, and thus will be
-# moved up eventually.
-
-sound clratk { priority = 120; dehackednum = 182 }
-sound clrpn  { priority =  96; dehackednum = 183 }
-sound clrdth { priority =  32; dehackednum = 184 }
-sound cblsht { priority =  70; dehackednum = 185 }
-sound cblexp { priority =  70; dehackednum = 186 }
-sound clrdef { priority =  60; dehackednum = 187 }
-sound dfdth  { priority =  70; dehackednum = 188 }
-sound dwrfpn { priority =  96; dehackednum = 189 }
-sound dfsit1 { priority =  98; dehackednum = 190 }
-sound dfsit2 { priority =  98; dehackednum = 191 }
-sound fdsit  { priority =  98; dehackednum = 192 }
-sound fdpn   { priority =  96; dehackednum = 193 }
-sound fddth  { priority =  70; dehackednum = 194 }
-sound heal   { priority =  60; dehackednum = 195 }
-sound harp   { priority =  60; dehackednum = 196 }
-sound wofp   { priority =  60; dehackednum = 197 }
-sound cone3  { priority =  60; dehackednum = 198 }
-sound icedth { priority =  96; dehackednum = 199 }
-sound clsit1 { priority =  92; dehackednum = 200 }
-sound clsit2 { priority =  92; dehackednum = 201 }
-sound clsit3 { priority =  92; dehackednum = 202 }
-sound clsit4 { priority =  92; dehackednum = 203 }
-
-# 
-# Gametype-dependent sound aliases
-# 
-
-# Environmental Sound Defaults
-# These are altered by the game engine to point to sounds specifed by MapInfo.
-# Use these names in sound sequences to refer to the MapInfo-defined defaults.
-
-ifgametype(DOOM)
-
-sound EE_DoorOpen   { alias = doropn }
-sound EE_DoorClose  { alias = dorcls }
-sound EE_BDoorOpen  { alias = bdopn  }
-sound EE_BDoorClose { alias = bdcls  }
-sound EE_SwitchOn   { alias = swtchn }
-sound EE_SwitchEx   { alias = swtchx }
-sound EE_PlatStart  { alias = pstart }
-sound EE_PlatStop   { alias = pstop  }
-sound EE_PlatMove   { alias = stnmov }
-sound EE_FCMove     { alias = stnmov }
-
-endif()
-
-ifgametype(HERETIC)
-
-sound EE_DoorOpen   { alias = ht_doropn }
-sound EE_DoorClose  { alias = ht_dorcls }
-sound EE_BDoorOpen  { alias = ht_doropn }
-sound EE_BDoorClose { alias = ht_dorcls }
-sound EE_SwitchOn   { alias = ht_switch }
-sound EE_SwitchEx   { alias = ht_switch }
-sound EE_PlatStart  { alias = ht_pstart }
-sound EE_PlatStop   { alias = ht_pstop  }
-sound EE_PlatMove   { alias = ht_stnmov }
-sound EE_FCMove     { alias = ht_dormov }
-
-endif()
-
-# 
-# Heretic Environmental Ambience Sequences
-# 
-
-ifgametype(HERETIC)
-
-soundsequence EEHticAmbScream
-{
-   type = environment
-   id = 0
-   cmds = { "playuntildone ht_amb1" }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticAmbSquish
-{
-   type = environment
-   id = 1
-   cmds = { "playuntildone ht_amb2" }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticAmbDrops
-{
-   type = environment
-   id = 2
-   cmds =
-   {
-      "play ht_amb3",
-      "delayrand 16 47",
-      "play ht_amb7",
-      "delayrand 16 47",
-      "play ht_amb3",
-      "delayrand 16 47",
-      "play ht_amb7",
-      "delayrand 16 47",
-      "play ht_amb3",
-      "delayrand 16 47",
-      "playuntildone ht_amb7"
-   }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticSlowFootSteps
-{
-   type = environment
-   id = 3
-   cmds =
-   {
-      "playtime ht_amb4 15",
-      "playrelvol ht_amb11 -3",
-      "delay 15",
-      "playrelvol ht_amb4  -3",
-      "delay 15",
-      "playrelvol ht_amb11 -3",
-      "delay 15",
-      "playrelvol ht_amb4  -3",
-      "delay 15",
-      "playrelvol ht_amb11 -3",
-      "delay 15",
-      "playrelvol ht_amb4  -3",
-      "delay 15",
-      "playrelvol ht_amb11 -3",
-      "nostopcutoff"
-   }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticHeartBeat
-{
-   type = environment
-   id = 4
-   cmds =
-   {
-      "playtime ht_amb5 35",
-      "playtime ht_amb5 35",
-      "playtime ht_amb5 35",
-      "playuntildone ht_amb5"
-   }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticBells
-{
-   type = environment
-   id = 5
-   cmds =
-   {
-      "playtime ht_amb6 17",
-      "playrelvol ht_amb6 -8",
-      "delay 17",
-      "playrelvol ht_amb6 -8",
-      "delay 17",
-      "playrelvol ht_amb6 -8",
-      "nostopcutoff"
-   }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticGrowl
-{
-   type = environment
-   id = 6
-   cmds = { "playuntildone ht_bstsit" }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticMagic
-{
-   type = environment
-   id = 7
-   cmds = { "playuntildone ht_amb8" }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticLaughter
-{
-   type = environment
-   id = 8
-   cmds =
-   {
-      "playtime ht_amb9 16",
-      "playrelvol ht_amb9  -4",
-      "delay 16",
-      "playrelvol ht_amb9  -4",
-      "delay 16",
-      "playrelvol ht_amb10 -4",
-      "delay 16",
-      "playrelvol ht_amb10 -4",
-      "delay 16",
-      "playrelvol ht_amb10 -4",
-      "nostopcutoff"
-   }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-soundsequence EEHticFastFootSteps
-{
-   type = environment
-   id = 9
-   cmds =
-   {
-      "playtime ht_amb4 8",
-      "playrelvol ht_amb11 -3",
-      "delay 8",
-      "playrelvol ht_amb4  -3",
-      "delay 8",
-      "playrelvol ht_amb11 -3",
-      "delay 8",
-      "playrelvol ht_amb4  -3",
-      "delay 8",
-      "playrelvol ht_amb11 -3",
-      "delay 8",
-      "playrelvol ht_amb4  -3",
-      "delay 8",
-      "playrelvol ht_amb11 -3",
-      "nostopcutoff"
-   }
-   
-   volume = 96
-   minvolume = 32
-   attenuation = none
-}
-
-endif()
-
-#
-# Default Sector Sound Sequences
-#
-
-# Door Opening Sequences
+// Door Opening Sequences
 
 soundsequence EEDoorOpenNormal
 {
@@ -1070,7 +114,9 @@ soundsequence EEDoorOpenBlazing
    }
 }
 
-# DOOM Door Close Sequences
+// Note: All gamemode sequences will be kept here since they are related.
+
+// DOOM Door Close Sequences
 
 ifgametype(DOOM)
 
@@ -1092,8 +138,8 @@ soundsequence EEDoorCloseBlazing
    }
 }
 
-# Note: This sequence is only used in DOOM when comp_blazing is enabled.
-# It makes the (apparently) erroneous double-closing sound.
+// Note: This sequence is only used in DOOM when comp_blazing is enabled.
+// It makes the (apparently) erroneous double-closing sound.
 
 soundsequence EEDoorCloseBlazingComp
 {
@@ -1106,7 +152,7 @@ soundsequence EEDoorCloseBlazingComp
 
 endif()
 
-# Heretic Door Close Sequences
+// Heretic Door Close Sequences
 
 ifgametype(HERETIC)
 
@@ -1130,9 +176,9 @@ soundsequence EEDoorCloseBlazing
 
 endif()
 
-# Plat Sequences
+// Plat Sequences
 
-# This is used by most plat types, like the ordinary down-wait-up-stay type
+// This is used by most plat types, like the ordinary down-wait-up-stay type
 soundsequence EEPlatNormal
 {
    cmds =
@@ -1142,7 +188,7 @@ soundsequence EEPlatNormal
    }
 }
 
-# This is used by raise-and-change plat types.
+// This is used by raise-and-change plat types.
 soundsequence EEPlatRaise
 {
    cmds =
@@ -1152,15 +198,15 @@ soundsequence EEPlatRaise
    }
 }
 
-# This may seem pointless, but defining it allows the silent behavior of instant
-# move plats to be overridden by redefining this sequence.
+// This may seem pointless, but defining it allows the silent behavior of 
+// instant move plats to be overridden by redefining this sequence.
 soundsequence EEPlatSilent
 {
 }
 
-# Ceiling Sequences
+// Ceiling Sequences
 
-# Used by most ceiling actions
+// Used by most ceiling actions
 soundsequence EECeilingNormal
 {
    cmds =
@@ -1169,7 +215,7 @@ soundsequence EECeilingNormal
    }
 }
 
-# Used by "silent" crushers that aren't really silent
+// Used by "silent" crushers that aren't really silent
 soundsequence EECeilingSemiSilent
 {
    cmds =
@@ -1178,12 +224,12 @@ soundsequence EECeilingSemiSilent
    }
 }
 
-# Like above for plats, but for ceilings.
+// Like above for plats, but for ceilings.
 soundsequence EECeilingSilent
 {
 }
 
-# Floor Sequences
+// Floor Sequences
 
 soundsequence EEFloor
 {

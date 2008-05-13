@@ -140,16 +140,6 @@ typedef enum
 
   S_IMP_XCRASH1 = 2642,
 
-  // Start Eternity TC States -- TODO: Eliminate these
-  S_LCLER_SPEC = 1681,
-  S_LCLER_TELE1 = 1684,
-  S_LCLER_BREAK1,
-
-  S_DWARFREDAURA1 = 1706,
-  S_DWARFBLUEAURA1 = 1709,
-  S_DWARFGREENAURA1 = 1712,
-  S_DWARFPURPLEAURA1 = 1715,
-
   // haleyjd: NUMSTATES is now a variable
   //NUMSTATES  // Counter of how many there are
 
@@ -287,18 +277,11 @@ typedef enum {
   MT_HPLAYERSKULL = 399,
 
 // Start Eternity TC New Things
-  MT_CLRBALL = 222,           // cleric projectile
 
   MT_FOGPATCHS = 228,
   MT_FOGPATCHM,
   MT_FOGPATCHL,
-
-  MT_ALTERDWARF = 235,  // dwarf alterego
-  MT_GRENADE,     // grenade in flight
   
-  MT_PHOENIXSHOT = 238,
-  
-  MT_HALIFMUMMY = 241,
 // End Eternity TC New Things
 
   // haleyjd: NUMMOBJTYPES is a variable now

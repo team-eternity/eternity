@@ -1368,20 +1368,8 @@ extern void A_ImpExplode();
 extern void A_PlayerSkull();
 
 // eternity tc ptrs: TODO: remove these?
-extern void A_ClericAtk();
 extern void A_FogSpawn();
 extern void A_FogMove();
-extern void A_Cleric2Chase();
-extern void A_Cleric2Decide();
-extern void A_Cleric2Attack();
-extern void A_ClericBreak();
-extern void A_DwarfDie();
-extern void A_CyberGuardSigh();
-extern void A_DwarfLDOCMagic();
-extern void A_DwarfFWAEMagic();
-extern void A_DwarfAlterEgoChase();
-extern void A_DwarfAlterEgoAttack();
-extern void A_PhoenixTracer();
 
 // haleyjd 07/13/03: special death actions for killem cheat
 extern void A_PainNukeSpec();
@@ -1582,20 +1570,8 @@ deh_bexptr deh_bexptrs[] =
   {A_PlayerSkull,       "PlayerSkull"},
   
   // ETERNITY TC ptrs -- TODO: eliminate these
-  {A_ClericAtk, "ClericAtk"},
   {A_FogSpawn,  "FogSpawn"},
   {A_FogMove,   "FogMove"},
-  {A_Cleric2Chase, "Cleric2Chase"},
-  {A_Cleric2Decide, "Cleric2Decide"},
-  {A_Cleric2Attack, "Cleric2Attack"},
-  {A_ClericBreak,   "ClericBreak"},
-  {A_DwarfDie,      "DwarfDie"},
-  {A_CyberGuardSigh, "CyberGuardSigh"},
-  {A_DwarfLDOCMagic, "DwarfLDOCMagic"},
-  {A_DwarfFWAEMagic, "DwarfFWAEMagic"},
-  {A_DwarfAlterEgoChase,  "DwarfAlterEgoChase"},
-  {A_DwarfAlterEgoAttack, "DwarfAlterEgoAttack"},
-  {A_PhoenixTracer, "PhoenixTracer"},
 
   // This NULL entry must be the last in the list
   {NULL,             "NULL"},  // Ty 05/16/98
