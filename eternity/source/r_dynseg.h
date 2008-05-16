@@ -36,12 +36,29 @@ typedef struct dynaseg_s
 {
    seg_t seg; // a dynaseg is a seg, after all ;)
 
-   struct dynaseg_s *subnext; // next dynaseg in subsector
-
-   struct polyobj_s *polyobj;  // owner polyobject
-
-   struct dynaseg_s *freenext;  // next dynaseg on freelist
+   struct dynaseg_s *subnext;  // next dynaseg in subsector
+   struct dynaseg_s *freenext; // next dynaseg on freelist
 } dynaseg_t;
+
+//
+// rpolyobj_t
+//
+// Subsectors now hold pointers to rpolyobj_t's instead of to polyobj_t's.
+// An rpolyobj_t is a set of dynasegs belonging to a single polyobject.
+// It is necessary to keep dynasegs belonging to different polyobjects 
+// separate from each other so that the renderer can continue to efficiently
+// support multiple polyobjects per subsector (we do not want to do a z-sort 
+// on every single dynaseg, as that is significant unnecessary overhead).
+//
+typedef struct rpolyobj_s
+{
+   mdllistitem_t link;  // for subsector links; must be first
+
+   dynaseg_t *dynaSegs; // list of dynasegs
+
+   polyobj_t *polyobj;  // polyobject of which this rpolyobj is a fragment
+
+} rpolyobj_t;
 
 #endif // R_DYNASEGS
 

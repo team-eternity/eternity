@@ -97,6 +97,7 @@ typedef struct vertex_s
 
 #ifdef R_DYNASEGS
    struct vertex_s *dynanext;
+   boolean dynafree;          // if true, is on free list
 #endif
 } vertex_t;
 
@@ -333,10 +334,10 @@ typedef struct subsector_s
   // haleyjd 06/19/06: converted from short to long for 65535 segs
   long  numlines, firstline;
 
-  struct polyobj_s *polyList; // haleyjd 02/19/06: list of polyobjects
-
-#ifdef R_DYNASEGS
-  struct dynaseg_s *dynaSegs; // haleyjd 05/15/08: list of dynasegs
+#ifndef R_DYNASEGS
+  struct polyobj_s *polyList;  // haleyjd 02/19/06: list of polyobjects
+#else
+  struct rpolyobj_t *polyList; // haleyjd 05/15/08: list of polyobj fragments
 #endif
 } subsector_t;
 

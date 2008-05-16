@@ -101,6 +101,7 @@ static vertex_t *R_GetFreeDynaVertex(void)
 static void R_FreeDynaVertex(vertex_t *vtx)
 {
    vtx->dynanext = dynaVertexFreeList;
+   vtx->dynafree = true;
    dynaVertexFreeList = vtx;
 }
 
@@ -174,7 +175,6 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->seg.v1          = v1;
    ret->seg.v2          = v2;
    ret->seg.angle       = proto->seg.angle;
-   ret->polyobj         = proto->polyobj;
 
    R_DynaSegOffset(&proto->seg, proto->seg.linedef);
 
@@ -201,7 +201,11 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
 
    double d = a1 * b2 - a2 * b1;
 
-   if(d == 0.0) // lines are parallel??
+   // lines are parallel?? shouldn't be.
+   // FIXME: could this occur due to roundoff error in R_PointOnSide? 
+   //        Guess we'll find out the hard way ;)
+   //        If so I'll need my own R_PointOnSide routine.
+   if(d == 0.0) 
       I_Error("R_IntersectPoint: lines are parallel\n");
 
    *x = (b1 * c2 - b2 * c1) / d;
@@ -261,6 +265,10 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       I_Error("R_SplitLine: ss %i with numss = %i", num, numsubsectors);
 #endif
 
+   // FIXME: need to change to create/manage seg addition to an
+   // rpolyobj_t object for purposes of keeping segs z-sorted
+
+#if 0
    // link it in at the end of the list
    if(subsectors[num].dynaSegs)
    {
@@ -271,14 +279,15 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 
       seg->subnext = dseg;
    }
+#endif
 }
 
 //
-// R_GenDynaSegs
+// R_GenPolyObjDynaSegs
 //
 // Generates dynamic segs for a single polyobject.
 //
-void R_GenDynaSegs(polyobj_t *poly)
+void R_GenPolyObjDynaSegs(polyobj_t *poly)
 {
    int i;
 
@@ -325,15 +334,17 @@ void R_GenDynaSegs(polyobj_t *poly)
 //
 // This must also be called immediately before freeing a level, or all of the
 // dynasegs will be lost, and the dynaseg subsector list will be full of
-// dangling pointers.
+// dangerous dangling subsector pointers.
 //
 void R_ClearDynaSegs(void)
 {
    int i;
    
-   // no subsecs?
+   // no dynaseg-containing subsecs?
    if(!dynaSubsecs || !numDSS)
       return;
+
+   // FIXME: need to handle via rpolyobj_t's
 
    for(i = 0; i < numDSS; ++i)
    {
@@ -341,23 +352,23 @@ void R_ClearDynaSegs(void)
 
       while(ss->dynaSegs)
       {
-         dynaseg_t *ds   = ss->dynaSegs;
-         dynaseg_t *next = ds->subnext;
+         dynaseg_t *ds     = ss->dynaSegs;
+         dynaseg_t *nextds = ds->subnext;
 
          vertex_t *v1 = ds->seg.v1;
          vertex_t *v2 = ds->seg.v2;
 
          // put dynamic vertices on free list if they haven't already been
          // put there by another seg.
-         if(!v1->dynanext)
+         if(!v1->dynafree)
             R_FreeDynaVertex(v1);
-         if(!v2->dynanext)
+         if(!v2->dynafree)
             R_FreeDynaVertex(v2);
 
          // put this dynaseg on the free list
          R_FreeDynaSeg(ds);
 
-         ss->dynaSegs = next;
+         ss->dynaSegs = nextds;
       }
 
       // clear this subsector slot

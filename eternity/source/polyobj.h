@@ -53,7 +53,9 @@
 //
 typedef struct polyobj_s
 {
+#ifndef R_DYNASEGS
    mdllistitem_t link; // for subsector links; must be first
+#endif
 
    int id;    // numeric id
    int first; // for hashing: index of first polyobject in this hash chain
