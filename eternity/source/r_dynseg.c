@@ -44,6 +44,11 @@ static dynaseg_t *dynaSegFreeList;
 static vertex_t *dynaVertexFreeList;
 
 //
+// rpolyobj_t freelist
+//
+static rpolyobj_t *freePolyFragments;
+
+//
 // subsector list
 //
 // We must keep track of subsectors which have dynasegs added to them
@@ -138,6 +143,67 @@ static void R_FreeDynaSeg(dynaseg_t *seg)
 }
 
 //
+// R_GetFreeRPolyObj
+//
+// Gets an rpolyobj_t from the free list or creates a new one.
+//
+static rpolyobj_t *R_GetFreeRPolyObj(void)
+{
+   rpolyobj_t *ret = NULL;
+
+   if(freePolyFragments)
+   {
+      ret = freePolyFragments;
+      freePolyFragments = freePolyFragments->freenext;
+      memset(&ret, 0, sizeof(rpolyobj_t));
+   }
+   else
+      ret = calloc(1, sizeof(rpolyobj_t));
+
+   return ret;
+}
+
+//
+// R_FreeRPolyObj
+//
+// Puts an rpolyobj_t on the freelist.
+//
+static void R_FreeRPolyObj(rpolyobj_t *rpo)
+{
+   rpo->freenext = freePolyFragments;
+   freePolyFragments = rpo;
+}
+
+//
+// R_FindFragment
+//
+// Looks in the given subsector for a polyobject fragment corresponding
+// to the given polyobject. If one is not found, then a new one is created
+// and returned.
+//
+static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
+{
+   rpolyobj_t *rpo = ss->polyList;
+
+   while(rpo)
+   {
+      if(rpo->polyobj == po)
+         return rpo;
+
+      rpo = (rpolyobj_t *)(rpo->link.next);
+   }
+   
+   // there is not one, so create a new one and link it in
+   rpo = R_GetFreeRPolyObj();
+
+   rpo->polyobj = po;
+
+   M_DLListInsert((mdllistitem_t *)rpo, (mdllistitem_t **)&ss->polyList);
+
+   return rpo;
+}
+
+//
 // R_DynaSegOffset
 //
 // Computes the offset value of the seg relative to its parent linedef.
@@ -153,7 +219,7 @@ static void R_DynaSegOffset(seg_t *seg, line_t *line)
    if(dx == 0.0 && dy == 0.0)
       t = 0;
    else
-      t = sqrt((dx*dx) + (dy*dy));
+      t = sqrt((dx * dx) + (dy * dy));
 
    seg->offset = (fixed_t)(t / 65536.0);
 }
@@ -168,6 +234,7 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    dynaseg_t *ret = R_GetFreeDynaSeg();
 
    // properties inherited from prototype seg
+   ret->polyobj         = proto->polyobj;
    ret->seg.linedef     = proto->seg.linedef;
    ret->seg.frontsector = proto->seg.frontsector;
    ret->seg.backsector  = proto->seg.backsector;
@@ -204,7 +271,8 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
    // lines are parallel?? shouldn't be.
    // FIXME: could this occur due to roundoff error in R_PointOnSide? 
    //        Guess we'll find out the hard way ;)
-   //        If so I'll need my own R_PointOnSide routine.
+   //        If so I'll need my own R_PointOnSide routine with some
+   //        epsilon values.
    if(d == 0.0) 
       I_Error("R_IntersectPoint: lines are parallel\n");
 
@@ -220,8 +288,6 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
 //
 static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 {
-   int num;
-
    while(!(bspnum & NF_SUBSECTOR))
    {
       node_t *bsp = &nodes[bspnum];
@@ -253,33 +319,39 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
          R_SplitLine(nds, bsp->children[side_v2]);
       }
 
-      // continue on side 1
+      // continue on v1 side
       bspnum = bsp->children[side_v1];
    }
-   
+
    // reached a subsector: attach dynaseg
-   num = bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR;
-
-#ifdef RANGECHECK
-   if(num >= numsubsectors)
-      I_Error("R_SplitLine: ss %i with numss = %i", num, numsubsectors);
-#endif
-
-   // FIXME: need to change to create/manage seg addition to an
-   // rpolyobj_t object for purposes of keeping segs z-sorted
-
-#if 0
-   // link it in at the end of the list
-   if(subsectors[num].dynaSegs)
    {
-      dynaseg_t *seg = subsectors[num].dynaSegs;
-
-      while(seg->subnext)
-         seg = seg->subnext;
-
-      seg->subnext = dseg;
-   }
+      int num;
+      rpolyobj_t *fragment;
+      
+      num = bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR;
+      
+#ifdef RANGECHECK
+      if(num >= numsubsectors)
+         I_Error("R_SplitLine: ss %d with numss = %d", num, numsubsectors);
 #endif
+
+      // see if this subsector already has an rpolyobj_t for this polyobject
+      // if it does not, then one will be created.
+      fragment = R_FindFragment(&subsectors[num], dseg->polyobj);
+      
+      // link this seg in at the end of the list in the rpolyobj_t
+      if(fragment->dynaSegs)
+      {
+         dynaseg_t *seg = fragment->dynaSegs;
+         
+         while(seg->subnext)
+            seg = seg->subnext;
+         
+         seg->subnext = dseg;
+      }
+      else
+         fragment->dynaSegs = dseg;
+   }
 }
 
 //

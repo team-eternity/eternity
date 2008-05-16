@@ -38,6 +38,7 @@ typedef struct dynaseg_s
 
    struct dynaseg_s *subnext;  // next dynaseg in subsector
    struct dynaseg_s *freenext; // next dynaseg on freelist
+   struct polyobj_s *polyobj;  // polyobject
 } dynaseg_t;
 
 //
@@ -56,7 +57,9 @@ typedef struct rpolyobj_s
 
    dynaseg_t *dynaSegs; // list of dynasegs
 
-   polyobj_t *polyobj;  // polyobject of which this rpolyobj is a fragment
+   polyobj_t *polyobj;  // polyobject of which this rpolyobj_t is a fragment
+
+   struct rpolyobj_s *freenext; // next on freelist
 
 } rpolyobj_t;
 
