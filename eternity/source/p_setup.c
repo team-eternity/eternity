@@ -368,10 +368,24 @@ void P_LoadNodes(int lump)
       mapnode_t *mn = (mapnode_t *)data + i;
       int j;
 
-      no->x  = SHORT(mn->x)  << FRACBITS;
-      no->y  = SHORT(mn->y)  << FRACBITS;
-      no->dx = SHORT(mn->dx) << FRACBITS;
-      no->dy = SHORT(mn->dy) << FRACBITS;
+      no->x  = SHORT(mn->x);
+      no->y  = SHORT(mn->y);
+      no->dx = SHORT(mn->dx);
+      no->dy = SHORT(mn->dy);
+
+#ifdef R_DYNASEGS
+      // haleyjd 05/16/08: keep floating point versions as well for dynamic
+      // seg splitting operations
+      no->fx  = (double)no->x;
+      no->fy  = (double)no->y;
+      no->fdx = (double)no->dx;
+      no->fdy = (double)no->dy;
+#endif
+
+      no->x  <<= FRACBITS;
+      no->y  <<= FRACBITS;
+      no->dx <<= FRACBITS;
+      no->dy <<= FRACBITS;
 
       for(j = 0; j < 2; ++j)
       {

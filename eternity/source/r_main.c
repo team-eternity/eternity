@@ -173,13 +173,12 @@ void R_SetSpanEngine(void)
 
 //
 // R_PointOnSide
-// Traverse BSP (sub) tree,
-//  check point against partition plane.
+//
+// Traverse BSP (sub) tree, check point against partition plane.
 // Returns side 0 (front) or 1 (back).
 //
 // killough 5/2/98: reformatted
 //
-
 int R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
 {
    if(!node->dx)
@@ -223,6 +222,7 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 
 //
 // R_PointToAngle
+//
 // To get a global angle from cartesian coordinates,
 //  the coordinates are flipped until they are in
 //  the first octant of the coordinate system, then
@@ -233,7 +233,7 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 //  checking.
 //
 // killough 5/2/98: reformatted, cleaned up
-
+//
 angle_t R_PointToAngle(fixed_t x, fixed_t y)
 {       
   return (y -= viewy, (x -= viewx) || y) ?

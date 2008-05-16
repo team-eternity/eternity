@@ -51,7 +51,6 @@
 //
 // Polyobject Structure
 //
-
 typedef struct polyobj_s
 {
    mdllistitem_t link; // for subsector links; must be first
@@ -62,9 +61,11 @@ typedef struct polyobj_s
 
    int mirror; // numeric id of a mirroring polyobject
 
+#ifndef R_DYNASEGS
    int segCount;        // number of segs in polyobject
    int numSegsAlloc;    // number of segs allocated
    struct seg_s **segs; // the segs, a reallocating array.
+#endif
 
    int numVertices;            // number of vertices (generally == segCount)
    int numVerticesAlloc;       // number of vertices allocated
@@ -94,6 +95,7 @@ typedef struct polyobj_s
    thinker_t *thinker;  // pointer to a thinker affecting this polyobj
 
    boolean isBad; // a bad polyobject: should not be rendered/manipulated
+
 } polyobj_t;
 
 //

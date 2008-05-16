@@ -638,9 +638,9 @@ static void R_AddLine(seg_t *line)
 
    if(seg.backsec && seg.backsec->frameid != frameid)
    {
-      seg.backsec->floorheightf = (float)seg.backsec->floorheight / 65536.0f;
+      seg.backsec->floorheightf   = (float)seg.backsec->floorheight / 65536.0f;
       seg.backsec->ceilingheightf = (float)seg.backsec->ceilingheight / 65536.0f;
-      seg.backsec->frameid = frameid;
+      seg.backsec->frameid        = frameid;
    }
 
    // If the frontsector is closed, don't render the line!

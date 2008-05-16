@@ -244,6 +244,10 @@ SOURCE=.\source\r_drawq.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\r_dynseg.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\r_main.c
 # End Source File
 # Begin Source File
@@ -1034,6 +1038,10 @@ SOURCE=.\source\r_drawl.h
 # Begin Source File
 
 SOURCE=.\source\r_drawq.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\r_dynseg.h
 # End Source File
 # Begin Source File
 

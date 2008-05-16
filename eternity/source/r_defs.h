@@ -94,6 +94,10 @@ typedef struct vertex_s
    // These are cached per frame
    unsigned frameid;
    float tx, ty, proj_x, proj_dist;
+
+#ifdef R_DYNASEGS
+   struct vertex_s *dynanext;
+#endif
 } vertex_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.
@@ -331,6 +335,9 @@ typedef struct subsector_s
 
   struct polyobj_s *polyList; // haleyjd 02/19/06: list of polyobjects
 
+#ifdef R_DYNASEGS
+  struct dynaseg_s *dynaSegs; // haleyjd 05/15/08: list of dynasegs
+#endif
 } subsector_t;
 
 // phares 3/14/98
@@ -387,6 +394,10 @@ typedef struct
   fixed_t  x,  y, dx, dy;        // Partition line.
   fixed_t bbox[2][4];            // Bounding box for each child.
   unsigned short children[2];    // If NF_SUBSECTOR its a subsector.
+
+#ifdef R_DYNASEGS
+  double fx, fy, fdx, fdy;       // haleyjd 05/16/08: float versions
+#endif
 } node_t;
 
 // posts are runs of non masked source pixels
