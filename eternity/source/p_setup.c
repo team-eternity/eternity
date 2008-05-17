@@ -62,6 +62,9 @@
 #include "e_ttypes.h"
 #include "polyobj.h"
 #include "s_sndseq.h"
+#ifdef R_DYNASEGS
+#include "r_dynseg.h"
+#endif
 
 //
 // MAP related Lookup tables.
@@ -1510,6 +1513,11 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // Make sure all sounds are stopped before Z_FreeTags. - sf: why?
    //  sf: s_start split into s_start, s_stopsounds because of this requirement
    S_StopSounds();
+
+#ifdef R_DYNASEGS
+   // haleyjd 05/16/08: must clear dynamic segs before Z_FreeTags
+   R_ClearDynaSegs();
+#endif
    
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_PURGELEVEL - 1);

@@ -337,7 +337,7 @@ typedef struct subsector_s
 #ifndef R_DYNASEGS
   struct polyobj_s *polyList;  // haleyjd 02/19/06: list of polyobjects
 #else
-  struct rpolyobj_t *polyList; // haleyjd 05/15/08: list of polyobj fragments
+  struct rpolyobj_s *polyList; // haleyjd 05/15/08: list of polyobj fragments
 #endif
 } subsector_t;
 

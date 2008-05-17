@@ -52,7 +52,7 @@ static rpolyobj_t *freePolyFragments;
 // subsector list
 //
 // We must keep track of subsectors which have dynasegs added to them
-// every frame, for purposes of later releasing them.
+// every frame, for purposes of later removing them.
 //
 static subsector_t **dynaSubsecs;
 static int numDSS;
@@ -65,8 +65,17 @@ static int numDSSAlloc;
 // reallocating array for purposes of detaching the dynasegs at the beginning
 // of a new frame, or at the end of a level.
 //
-void R_AddDynaSubsec(subsector_t *ss)
+static void R_AddDynaSubsec(subsector_t *ss)
 {
+   int i;
+
+   // make sure subsector is not already tracked
+   for(i = 0; i < numDSS; ++i)
+   {
+      if(dynaSubsecs[i] == ss)
+         return;
+   }
+
    if(numDSS >= numDSSAlloc)
    {
       numDSSAlloc = numDSSAlloc ? numDSSAlloc * 2 : 32;
@@ -90,7 +99,7 @@ static vertex_t *R_GetFreeDynaVertex(void)
    {
       ret = dynaVertexFreeList;
       dynaVertexFreeList = dynaVertexFreeList->dynanext;
-      memset(&ret, 0, sizeof(vertex_t));
+      memset(ret, 0, sizeof(vertex_t));
    }
    else
       ret = calloc(1, sizeof(vertex_t));
@@ -105,8 +114,8 @@ static vertex_t *R_GetFreeDynaVertex(void)
 //
 static void R_FreeDynaVertex(vertex_t *vtx)
 {
-   vtx->dynanext = dynaVertexFreeList;
    vtx->dynafree = true;
+   vtx->dynanext = dynaVertexFreeList;
    dynaVertexFreeList = vtx;
 }
 
@@ -123,7 +132,7 @@ static dynaseg_t *R_GetFreeDynaSeg(void)
    {
       ret = dynaSegFreeList;
       dynaSegFreeList = dynaSegFreeList->freenext;
-      memset(&ret, 0, sizeof(dynaseg_t));
+      memset(ret, 0, sizeof(dynaseg_t));
    }
    else
       ret = calloc(1, sizeof(dynaseg_t));
@@ -155,7 +164,7 @@ static rpolyobj_t *R_GetFreeRPolyObj(void)
    {
       ret = freePolyFragments;
       freePolyFragments = freePolyFragments->freenext;
-      memset(&ret, 0, sizeof(rpolyobj_t));
+      memset(ret, 0, sizeof(rpolyobj_t));
    }
    else
       ret = calloc(1, sizeof(rpolyobj_t));
@@ -213,15 +222,15 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 static void R_DynaSegOffset(seg_t *seg, line_t *line)
 {
    double t;
-   double dx = line->v1->x - seg->v1->x;
-   double dy = line->v1->y - seg->v1->y;
-
+   double dx = line->v1->fx - seg->v1->fx;
+   double dy = line->v1->fy - seg->v1->fy;
+ 
    if(dx == 0.0 && dy == 0.0)
       t = 0;
    else
       t = sqrt((dx * dx) + (dy * dy));
 
-   seg->offset = (fixed_t)(t / 65536.0);
+   seg->offset = (fixed_t)(t * 65536.0);
 }
 
 //
@@ -239,11 +248,14 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->seg.frontsector = proto->seg.frontsector;
    ret->seg.backsector  = proto->seg.backsector;
    ret->seg.sidedef     = proto->seg.sidedef;
-   ret->seg.v1          = v1;
-   ret->seg.v2          = v2;
    ret->seg.angle       = proto->seg.angle;
 
-   R_DynaSegOffset(&proto->seg, proto->seg.linedef);
+   // vertices
+   ret->seg.v1          = v1;
+   ret->seg.v2          = v2;
+
+   // calculate texture offset
+   R_DynaSegOffset(&ret->seg, proto->seg.linedef);
 
    return ret;
 }
@@ -259,7 +271,7 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
    double b1 = seg->v1->fx - seg->v2->fx;
    double c1 = seg->v2->fx * seg->v1->fy - seg->v1->fx * seg->v2->fy;
 
-   double nx2 = bsp->fx + bsp->fdx
+   double nx2 = bsp->fx + bsp->fdx;
    double ny2 = bsp->fy + bsp->fdy;
    
    double a2 = ny2 - bsp->fy;
@@ -276,8 +288,8 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
    if(d == 0.0) 
       I_Error("R_IntersectPoint: lines are parallel\n");
 
-   *x = (b1 * c2 - b2 * c1) / d;
-   *y = (a2 * c1 - a1 * c2) / d;
+   *x = (float)((b1 * c2 - b2 * c1) / d);
+   *y = (float)((a2 * c1 - a1 * c2) / d);
 }
 
 //
@@ -351,6 +363,9 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       }
       else
          fragment->dynaSegs = dseg;
+
+      // add the subsector if it hasn't been added already
+      R_AddDynaSubsec(&subsectors[num]);
    }
 }
 
@@ -359,13 +374,9 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
 //
 // Generates dynamic segs for a single polyobject.
 //
-void R_GenPolyObjDynaSegs(polyobj_t *poly)
+static void R_GenPolyObjDynaSegs(polyobj_t *poly)
 {
    int i;
-
-   // bad polyobjects do not generate dynasegs
-   if(poly->isBad)
-      return;
 
    // iterate on the polyobject lines array
    for(i = 0; i < poly->numLines; ++i)
@@ -387,6 +398,17 @@ void R_GenPolyObjDynaSegs(polyobj_t *poly)
       *(idseg->seg.v1) = *(line->v1);
       *(idseg->seg.v2) = *(line->v2);
 
+      idseg->seg.v1->dynafree = false;
+      idseg->seg.v1->dynanext = NULL;
+      idseg->seg.v2->dynafree = false;
+      idseg->seg.v2->dynanext = NULL;
+
+      // cardboard data copied from linedef may not be valid
+      idseg->seg.v1->frameid = 0;
+      idseg->seg.v2->frameid = 0;
+
+      // Thank god we only do this once. All child segs will have the
+      // same angle and so they copy it from this one.
       idseg->seg.angle = R_PointToAngle2(idseg->seg.v1->x, idseg->seg.v1->y,
                                          idseg->seg.v2->x, idseg->seg.v2->y);
 
@@ -394,6 +416,20 @@ void R_GenPolyObjDynaSegs(polyobj_t *poly)
       // The dynasegs are stored in the subsectors in which they finally end up.
       R_SplitLine(idseg, numnodes - 1);
    }
+}
+
+//
+// R_AttachPolyObjects
+//
+// Called once per frame (after R_ClearDynaSegs). Generates dynamic segs for
+// all polyobjects.
+//
+void R_AttachPolyObjects(void)
+{
+   int i;
+  
+   for(i = 0; i < numPolyObjects; ++i)
+      R_GenPolyObjDynaSegs(&PolyObjects[i]);
 }
 
 //
@@ -416,38 +452,51 @@ void R_ClearDynaSegs(void)
    if(!dynaSubsecs || !numDSS)
       return;
 
-   // FIXME: need to handle via rpolyobj_t's
-
+   // iterate over stored subsector pointers
    for(i = 0; i < numDSS; ++i)
    {
       subsector_t *ss = dynaSubsecs[i];
-
-      while(ss->dynaSegs)
+      
+      // iterate on subsector rpolyobj_t lists
+      // this loop restarts each time until the list is empty
+      while(ss->polyList)
       {
-         dynaseg_t *ds     = ss->dynaSegs;
-         dynaseg_t *nextds = ds->subnext;
+         rpolyobj_t *rpo = ss->polyList;
 
-         vertex_t *v1 = ds->seg.v1;
-         vertex_t *v2 = ds->seg.v2;
+         // iterate on segs in rpolyobj_t
+         while(rpo->dynaSegs)
+         {
+            dynaseg_t *ds     = rpo->dynaSegs;
+            dynaseg_t *nextds = ds->subnext;
+            
+            vertex_t *v1 = ds->seg.v1;
+            vertex_t *v2 = ds->seg.v2;
+            
+            // put dynamic vertices on free list if they haven't already been
+            // put there by another seg
+            if(!v1->dynafree)
+               R_FreeDynaVertex(v1);
+            if(!v2->dynafree)
+               R_FreeDynaVertex(v2);
 
-         // put dynamic vertices on free list if they haven't already been
-         // put there by another seg.
-         if(!v1->dynafree)
-            R_FreeDynaVertex(v1);
-         if(!v2->dynafree)
-            R_FreeDynaVertex(v2);
+            // put his dynaseg on the free list
+            R_FreeDynaSeg(ds);
+            
+            rpo->dynaSegs = nextds;
+         }
 
-         // put this dynaseg on the free list
-         R_FreeDynaSeg(ds);
+         // unlink this rpolyobj_t
+         M_DLListRemove((mdllistitem_t *)rpo);
 
-         ss->dynaSegs = nextds;
+         // put it on the freelist
+         R_FreeRPolyObj(rpo);
       }
 
-      // clear this subsector slot
+      // no longer tracking this subsector
       dynaSubsecs[i] = NULL;
    }
 
-   // we aren't tracking any subsectors now
+   // no longer tracking any subsectors
    numDSS = 0;
 }
 

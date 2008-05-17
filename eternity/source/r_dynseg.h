@@ -29,6 +29,9 @@
 
 #ifdef R_DYNASEGS
 
+#include "r_defs.h"
+#include "polyobj.h"
+
 //
 // dynaseg
 //
@@ -62,6 +65,9 @@ typedef struct rpolyobj_s
    struct rpolyobj_s *freenext; // next on freelist
 
 } rpolyobj_t;
+
+void R_AttachPolyObjects(void);
+void R_ClearDynaSegs(void);
 
 #endif // R_DYNASEGS
 

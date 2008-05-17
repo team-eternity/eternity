@@ -29,6 +29,9 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "m_bbox.h"
+#ifdef R_DYNASEGS
+#include "r_dynseg.h"
+#endif
 
 //
 // P_CheckSight
@@ -156,7 +159,11 @@ static boolean P_CrossSubsector(int num, register los_t *los)
 {
    seg_t *seg;
    int count;
+#ifndef R_DYNASEGS
    polyobj_t *po; // haleyjd 02/23/06
+#else
+   rpolyobj_t *rpo; // haleyjd 05/16/08
+#endif
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
@@ -166,6 +173,7 @@ static boolean P_CrossSubsector(int num, register los_t *los)
    // haleyjd 02/23/06: this assignment should be after the above check
    seg = segs + subsectors[num].firstline;
 
+#ifndef R_DYNASEGS
    // haleyjd 02/23/06: check polyobject lines
    if((po = subsectors[num].polyList))
    {
@@ -180,6 +188,23 @@ static boolean P_CrossSubsector(int num, register los_t *los)
          po = (polyobj_t *)(po->link.next);
       }
    }
+#else
+   if((rpo = subsectors[num].polyList))
+   {
+      while(rpo)
+      {
+         polyobj_t *po = rpo->polyobj;
+
+         if(po->validcount != validcount)
+         {
+            po->validcount = validcount;
+            if(!P_CrossSubsecPolyObj(po, los))
+               return false;
+         }
+         rpo = (rpolyobj_t *)(rpo->link.next);
+      }
+   }
+#endif
 
    for(count = subsectors[num].numlines; --count >= 0; seg++)  // check lines
    {

@@ -41,6 +41,9 @@
 #include "r_draw.h"
 #include "r_drawq.h"
 #include "r_drawl.h"
+#ifdef R_DYNASEGS
+#include "r_dynseg.h"
+#endif
 #include "m_bbox.h"
 #include "r_sky.h"
 #include "s_sound.h"
@@ -840,7 +843,13 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_ClearDrawSegs();
    R_ClearPlanes();
    R_ClearSprites();
-   
+
+#ifdef R_DYNASEGS
+   // haleyjd 05/16/08: setup polyobjects
+   R_ClearDynaSegs();
+   R_AttachPolyObjects();
+#endif
+
     if(autodetect_hom)
       R_HOMdrawer();
    

@@ -238,7 +238,15 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
                                        PU_LEVEL, NULL);
    }
    po->lines[po->numLines++] = l;
+
+#ifdef R_DYNASEGS
+   // add vertices
+   Polyobj_addVertex(po, l->v1);
+   Polyobj_addVertex(po, l->v2);
+#endif
 }
+
+#ifndef R_DYNASEGS
 
 //
 // Polyobj_addSeg
@@ -388,6 +396,130 @@ static void Polyobj_findExplicit(polyobj_t *po)
    free(segitems);
 }
 
+#else // R_DYNASEGS
+
+// Line-finding functions
+
+//
+// Polyobj_findLines
+//
+// This method adds lines to a polyobject by following lines from vertex to
+// vertex.  The process stops when the original starting point is reached
+// or if a particular search ends unexpectedly (ie, the polyobject is not
+// closed).
+//
+static void Polyobj_findLines(polyobj_t *po, line_t *line)
+{
+   int startx, starty;
+   int i;
+
+   Polyobj_addLine(po, line);
+
+   // on first seg, save the initial vertex
+   startx = line->v1->x;
+   starty = line->v1->y;
+
+   // use goto instead of recursion for maximum efficiency - thanks to lament
+newline:
+
+   // terminal case: we have reached a seg where v2 is the same as v1 of the
+   // initial seg
+   if(line->v2->x == startx && line->v2->y == starty)
+      return;
+      
+   // search the lines for one whose starting vertex is equal to the current
+   // line's ending vertex.
+   for(i = 0; i < numlines; ++i)
+   {
+      if(lines[i].v1->x == line->v2->x && lines[i].v1->y == line->v2->y)
+      {
+         // add the new line and recurse
+         Polyobj_addLine(po, &lines[i]);
+         line = &lines[i];
+         goto newline;
+      }
+   }
+
+   // error: if we reach here, the line search never found another line to
+   // continue the loop, and thus the polyobject is open. This isn't allowed.
+   po->isBad = true;
+   doom_printf(FC_ERROR "polyobject %d is not closed", po->id);
+}
+
+// structure used to store linedefs during explicit search process
+typedef struct lineitem_s
+{
+   line_t *line;
+   int   num;
+} lineitem_t;
+
+//
+// Polyobj_lineCompare
+//
+// Callback for qsort that compares two lineitems.
+//
+static int Polyobj_lineCompare(const void *s1, const void *s2)
+{
+   lineitem_t *si1 = (lineitem_t *)s1;
+   lineitem_t *si2 = (lineitem_t *)s2;
+
+   return si2->num - si1->num;
+}
+
+//
+// Polyobj_findExplicit
+//
+// Searches for lines to put into a polyobject in an explicitly provided order.
+//
+static void Polyobj_findExplicit(polyobj_t *po)
+{
+   // temporary dynamic seg array
+   lineitem_t *lineitems = NULL;
+   int numLineItems = 0;
+   int numLineItemsAlloc = 0;
+
+   int i;
+
+   // first loop: save off all segs with polyobject's id number
+   for(i = 0; i < numlines; ++i)
+   {
+      if(lines[i].special == POLYOBJ_EXPLICIT_LINE  && 
+         lines[i].args[0] == po->id &&
+         lines[i].args[1] > 0)
+      {
+         if(numLineItems >= numLineItemsAlloc)
+         {
+            numLineItemsAlloc = numLineItemsAlloc ? numLineItemsAlloc*2 : 4;
+            lineitems = realloc(lineitems, numLineItemsAlloc*sizeof(lineitem_t));
+         }
+         lineitems[numLineItems].line = &lines[i];
+         lineitems[numLineItems].num  = lines[i].args[1];
+         ++numLineItems;
+      }
+   }
+
+   // make sure array isn't empty
+   if(numLineItems == 0)
+   {
+      po->isBad = true;
+      doom_printf(FC_ERROR "polyobject %d is empty", po->id);
+      return;
+   }
+
+   // sort the array if necessary
+   if(numLineItems >= 2)
+      qsort(lineitems, numLineItems, sizeof(lineitem_t), Polyobj_lineCompare);
+
+   // second loop: put the sorted segs into the polyobject
+   for(i = 0; i < numLineItems; ++i)
+      Polyobj_addLine(po, lineitems[i].line);
+
+   // free the temporary array
+   free(lineitems);
+}
+
+#endif
+
 // Setup functions
 
 //
@@ -401,7 +533,11 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    polyobj_t *po = &PolyObjects[num];
 
    // don't spawn a polyobject more than once
+#ifndef R_DYNASEGS
    if(po->segCount)
+#else
+   if(po->numLines)
+#endif
    {
       doom_printf(FC_ERROR "polyobj %d has more than one spawn spot", po->id);
       return;
@@ -417,6 +553,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    // TODO: support customized thrust?
    po->thrust = FRACUNIT;
 
+#ifndef R_DYNASEGS
    // 1. Search segs for "line start" special with tag matching this 
    //    polyobject's id number. If found, iterate through segs which
    //    share common vertices and record them into the polyobject.
@@ -459,7 +596,51 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
       // sound sequence is in args[3]
       po->seqId = po->segs[0]->linedef->args[3];
    }
+#else // R_DYNASEGS
+   // 1. Search lines for "line start" special with tag matching this 
+   //    polyobject's id number. If found, iterate through lines which
+   //    share common vertices and record them into the polyobject.
+   for(i = 0; i < numlines; ++i)
+   {
+      line_t *line = &lines[i];
 
+      // is it a START line with this polyobject's id?
+      if(line->special == POLYOBJ_START_LINE && 
+         line->args[0] == po->id)
+      {
+         Polyobj_findLines(po, line);
+         po->mirror = line->args[1];
+         if(po->mirror == po->id) // do not allow a self-reference
+            po->mirror = -1;
+         // sound sequence is in args[2]
+         po->seqId = line->args[2];
+         break;
+      }
+   }
+
+   // if an error occurred above, quit processing this object
+   if(po->isBad)
+      return;
+
+   // 2. If no such line existed in the first step, look for a line with the 
+   //    "explicit" special with tag matching this polyobject's id number. If
+   //    found, continue to search for all such lines, storing them in a 
+   //    temporary list of lines which is then copied into the polyobject in 
+   //    sorted order.
+   if(po->numLines == 0)
+   {
+      Polyobj_findExplicit(po);
+      // if an error occurred above, quit processing this object
+      if(po->isBad)
+         return;
+      po->mirror = po->lines[0]->args[2];
+      if(po->mirror == po->id) // do not allow a self-reference
+         po->mirror = -1;
+      // sound sequence is in args[3]
+      po->seqId = po->lines[0]->args[3];
+   }
+
+#endif
 
    // set the polyobject's spawn spot
    po->spawnSpot.x = spawnSpot->x;
@@ -480,7 +661,11 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    }
 }
 
+#ifndef R_DYNASEGS
 static void Polyobj_attachToSubsec(polyobj_t *po);
+#else
+static void Polyobj_setCenterPt(polyobj_t *po);
+#endif
 
 //
 // Polyobj_moveToSpawnSpot
@@ -530,9 +715,15 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &sspot);
    }
 
+#ifndef R_DYNASEGS
    // attach to subsector
    Polyobj_attachToSubsec(po);
+#else
+   Polyobj_setCenterPt(po);
+#endif
 }
+
+#ifndef R_DYNASEGS
 
 //
 // Polyobj_attachToSubsec
@@ -586,6 +777,40 @@ static void Polyobj_removeFromSubsec(polyobj_t *po)
       po->attached = false;
    }
 }
+
+#else // R_DYNASEGS
+
+static void Polyobj_setCenterPt(polyobj_t *po)
+{
+   subsector_t  *ss;
+   double center_x = 0.0, center_y = 0.0;
+   int i;
+
+   // never attach a bad polyobject
+   if(po->isBad)
+      return;
+
+   for(i = 0; i < po->numVertices; ++i)
+   {
+      center_x += (double)(po->vertices[i]->x) / FRACUNIT;
+      center_y += (double)(po->vertices[i]->y) / FRACUNIT;
+   }
+   
+   center_x /= po->numVertices;
+   center_y /= po->numVertices;
+   
+   po->centerPt.x = (fixed_t)(center_x * FRACUNIT);
+   po->centerPt.y = (fixed_t)(center_y * FRACUNIT);
+
+   ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
+
+#ifdef R_LINKEDPORTALS
+   // set spawnSpot's groupid for correct portal sound behavior
+   po->spawnSpot.groupid = ss->sector->groupid;
+#endif
+}
+
+#endif
 
 // Blockmap Functions
 
@@ -852,9 +1077,15 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
 
       
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
+#ifndef R_DYNASEGS      
       Polyobj_removeFromSubsec(po);   // unlink it from its subsector
+#endif      
       Polyobj_linkToBlockmap(po);     // relink to blockmap
+#ifndef R_DYNASEGS
       Polyobj_attachToSubsec(po);     // relink to subsector
+#else
+      Polyobj_setCenterPt(po);
+#endif
    }
 
    return !hitthing;
@@ -979,17 +1210,25 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
    }
    else
    {
+#ifndef R_DYNASEGS
       // update seg angles (used only by renderer)
       for(i = 0; i < po->segCount; ++i)
          po->segs[i]->angle += delta;
+#endif
 
       // update polyobject's angle
       po->angle += delta;
 
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
+#ifndef R_DYNASEGS
       Polyobj_removeFromSubsec(po);   // remove from subsector
+#endif
       Polyobj_linkToBlockmap(po);     // relink to blockmap
+#ifndef R_DYNASEGS
       Polyobj_attachToSubsec(po);     // relink to subsector
+#else
+      Polyobj_setCenterPt(po);
+#endif
    }
 
    return !hitthing;
