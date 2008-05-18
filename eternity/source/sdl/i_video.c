@@ -538,11 +538,10 @@ Uint32 RGB8to32[256];          // palette to true-color lookup table
 
 #define PRIMARY_BUFFER 0
 
+static SDL_Surface *primary_surface = NULL;
+
 void I_FinishUpdate(void)
 {
-   int pitch1;
-   int pitch2;
-
    if(noblit || !in_graphics_mode)
       return;
 
@@ -556,69 +555,10 @@ void I_FinishUpdate(void)
    if(!(SDL_GetAppState() & SDL_APPACTIVE))
       return;
 
-   // haleyjd 04/11/03: make sure the surface is locked
-   // 01/05/04: patched by schepe to stop crashes w/ alt+tab
-   if(SDL_LockSurface(sdlscreen) == -1)
-      return;
-
-   pitch1 = sdlscreen->pitch;
-   pitch2 = sdlscreen->w * sdlscreen->format->BytesPerPixel;
-
-   if(crossbitdepth)
+   if(primary_surface)
    {
-      // haleyjd 12/03/07: cross-bit-depth support:
-      // We are running the game in 8-bit but using a 32-bit video
-      // surface. Why? To avoid problems such as DirectX palette-setting
-      // lag under SDL in Win32. This may also be useful to users who can't
-      // get low-res 8-bit modes on their video cards otherwise.
-
-      byte *pixel  = video.screens[PRIMARY_BUFFER];
-      Uint32 *dest = (Uint32 *)sdlscreen->pixels;
-
-      if(pitch1 == pitch2)
-      {
-         Uint32 *mdest = ((Uint32 *)sdlscreen->pixels) + (video.width * video.height);
-
-         while(dest != mdest)
-            *dest++ = RGB8to32[*pixel++];
-      }
-      else
-      {
-         int x, y = -1;
-
-         while(++y < video.height)
-         {
-            x = -1;
-            dest = (Uint32 *)((byte *)sdlscreen->pixels + (y * pitch1));
-
-            while(++x < video.width)
-               *dest++ = RGB8to32[*pixel++];
-         }
-      }
+      SDL_BlitSurface(primary_surface, NULL, sdlscreen, NULL);
    }
-   else
-   {
-      // SoM 3/14/2002: Only one way to go about this without asm code
-      if(pitch1 == pitch2)
-      {
-         memcpy(sdlscreen->pixels, video.screens[PRIMARY_BUFFER], 
-                video.width * video.height);
-      }
-      else
-      {
-         // SoM: ok, so it would seem that the backward count is actually slower
-         // probably because it involves a lot more jumping around in memory. 
-         // This way the pointer runs linear through the memory buffer.
-         int y = -1;
-         
-         // SoM: optimized a bit
-         while(++y < video.height)
-            memcpy((char *)sdlscreen->pixels + (y * pitch1), 
-                   video.screens[PRIMARY_BUFFER] + (y * pitch2), pitch2);
-      }
-   }
-
-   SDL_UnlockSurface(sdlscreen);
 
    SDL_Flip(sdlscreen);
 }
@@ -628,9 +568,13 @@ void I_FinishUpdate(void)
 //
 void I_ReadScreen(byte *scr)
 {
-   int size = video.width * video.height;
-   
-   memcpy(scr, *video.screens, size);
+   VBuffer temp;
+
+   memcpy(&temp, &vbscreen, sizeof(VBuffer));
+   temp.data = scr;
+   temp.pitch = temp.width;
+
+   V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
 }
 
 //
@@ -694,40 +638,60 @@ void I_EndRead(void)
        scroll_offset + ((SCREENHEIGHT-15)<<hires), 16 << hires, 15 << hires);*/
 }
 
+
 void I_SetPalette(byte *palette)
 {
    int i;
    SDL_Color colors[256];
+   byte *basepal = palette;
    
    if(!in_graphics_mode)             // killough 8/11/98
       return;
 
-   if(crossbitdepth)
-   {
-      // haleyjd 12/03/07: if doing cross-bit-depth drawing, we do not set
-      // a hardware palette. Instead, we create the RGB8to32 lookup table.
-
-      for(i = 0; i < 256; ++i)
-      {
-         RGB8to32[i] = 
-            ((Uint32)(gammatable[usegamma][*(palette + 0)]) << 16) |
-            ((Uint32)(gammatable[usegamma][*(palette + 1)]) <<  8) |
-            ((Uint32)(gammatable[usegamma][*(palette + 2)]) <<  0);
-
-         palette += 3;
-      }
-
-      return;
-   }
-   
    for(i = 0; i < 256; ++i)
    {
       colors[i].r = gammatable[usegamma][*palette++];
       colors[i].g = gammatable[usegamma][*palette++];
       colors[i].b = gammatable[usegamma][*palette++];
    }
-   
-   SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+
+   if(!crossbitdepth)
+      SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+
+   if(primary_surface)
+      SDL_SetPalette(primary_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+}
+
+
+void I_UnsetPrimaryBuffer(void)
+{
+   if(primary_surface)
+   {
+      SDL_FreeSurface(primary_surface);
+      primary_surface = NULL;
+   }
+}
+
+void I_SetPrimaryBuffer(void)
+{
+   // Don't use this just yet...
+   /*if(sdlscreen && sdlscreen->format->BitsPerPixel == 8 && 
+      !SDL_MUSTLOCK(sdlscreen))
+   {
+      video.usescreen = true;
+      video.screens[0] = (byte *)sdlscreen->pixels;
+      video.pitch = sdlscreen->pitch;
+   }
+   else*/
+   if(sdlscreen)
+   {
+      video.usescreen = false;
+      primary_surface = 
+         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width, video.height, 8, 
+                              0, 0, 0, 0);
+      video.screens[0] = (byte *)primary_surface->pixels;
+      video.pitch = primary_surface->pitch;
+   }
 }
 
 //
@@ -746,6 +710,7 @@ static void I_ShutdownGraphicsPartway(void)
       in_graphics_mode = false;
       in_textmode = true;
       sdlscreen = NULL;
+      I_UnsetPrimaryBuffer();
    }
 }
 
@@ -994,6 +959,9 @@ void I_InitGraphics(void)
    
    Z_CheckHeap();
 }
+
+
+
 
 // the list of video modes is stored here in i_video.c
 // the console commands to change them are in v_misc.c,

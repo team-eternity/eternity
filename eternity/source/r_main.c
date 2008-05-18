@@ -906,12 +906,12 @@ void R_HOMdrawer(void)
    byte *dest;
    
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
-   dest = video.screens[0] + viewwindowy * video.width + viewwindowx;
+   dest = vbscreen.data + viewwindowy * vbscreen.pitch + viewwindowx;
 
    for(y = viewwindowy; y < viewwindowy + viewheight; ++y)
    {
       memset(dest, colour, viewwidth);
-      dest += video.width;
+      dest += vbscreen.pitch;
    }
 }
 

@@ -83,7 +83,7 @@ typedef struct
    //int bitdepth;
 
    int         width, height;
-   unsigned    pitch;
+   int         pitch;
    fixed_t     widthfrac, heightfrac;
    fixed_t     xscale, yscale;
    fixed_t     xstep, ystep;
@@ -92,6 +92,8 @@ typedef struct
    float       xstepf, ystepf;
    boolean     scaled; // SoM: should be set when the scale values are
 
+   // SoM: if set to true, screens[0] is the SDL_Screen surface
+   boolean     usescreen;
    byte        *screens[5];
 
    // SoM 1-31-04: This will insure that scaled patches and such are put in the right places

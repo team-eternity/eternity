@@ -306,7 +306,7 @@ static void R_LowDrawTLTRColumn(void)
 #undef SRCPIXEL_MASK
 
 #define SRCPIXEL \
-   column.colormap[6*256+dest [fuzzoffset[fuzzpos] ? video.width : -video.width]]
+   column.colormap[6*256+dest [fuzzoffset[fuzzpos] ? video.pitch : -video.pitch]]
 
 static void R_LowDrawFuzzColumn(void) 
 { 

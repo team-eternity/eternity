@@ -89,6 +89,9 @@ int console_enabled = true;
 // haleyjd 09/07/03: true logging capability
 static FILE *console_log = NULL;
 
+// SoM: This is used elsewhere now!
+static VBuffer cback = {NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0};
+
 /////////////////////////////////////////////////////////////////////////
 //
 // Main Console functions
@@ -101,7 +104,6 @@ static void C_initBackdrop(void)
    patch_t *patch;
    const char *lumpname;
    int lumpnum;
-   VBuffer cback;
    boolean darken = false;
 
    lumpname = GameModeInfo->consoleBack;
@@ -491,10 +493,8 @@ void C_Drawer(void)
 
 
    // draw backdrop
-
-   memcpy(video.screens[0],
-          backdrop + (video.height-real_height)*video.width,
-          real_height*video.width);
+   // SoM: use the VBuffer
+   V_BlitVBuffer(&vbscreen, 0, 0, &cback, 0, cback.height-real_height, cback.width, real_height);
 
    //////////////////////////////////////////////////////////////////////
    // draw text messages

@@ -235,7 +235,7 @@ static void R_FlushHTTL(void)
 }
 
 #define SRCPIXEL \
-   tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.width: -video.width]]
+   tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.pitch: -video.pitch]]
 
 static void R_FlushWholeFuzz(void)
 {
@@ -556,7 +556,7 @@ static void R_FlushQuadTL(void)
 
 /*
 #define SRCPIXEL(n, p) \
-   tempfuzzmap[6*256+dest[(n) + fuzzoffset[(p)] ? video.width: -video.width]];
+   tempfuzzmap[6*256+dest[(n) + fuzzoffset[(p)] ? video.pitch: -video.pitch]];
 
 static void R_FlushQuadFuzz(void)
 {

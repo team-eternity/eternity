@@ -1106,7 +1106,6 @@ void R_InitBuffer(int width, int height)
    // Handle resize,
    //  e.g. smaller view windows
    //  with border and/or status bar.
-   //viewwindowx = (video.width-tviewwidth) >> 1;
    scaledwindowx = (SCREENWIDTH - width) >> 1;
    viewwindowx = video.x1lookup[scaledwindowx];
    // Column offset. For windows.
@@ -1209,6 +1208,7 @@ void R_FillBackScreen (void)
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 { 
    unsigned int ofs;
+   VBuffer temp;
 
    // haleyjd 06/08/05: protect against bad erasings
    if(x + w > SCREENWIDTH || y + h > SCREENHEIGHT)
@@ -1225,7 +1225,12 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
       y = video.y1lookup[y];
    }
          
-   ofs = x + y * video.width;
+   memcpy(&temp, &vbscreen, sizeof(VBuffer));
+   temp.data = video.screens[1];
+   temp.pitch = temp.width;
+
+   V_BlitVBuffer(&vbscreen, x, y, &temp, x, y, w, h);
+   /*ofs = x + y * video.width;
 
    if(x == 0 && w == (unsigned int)video.width)
    {
@@ -1239,7 +1244,7 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
    {
       memcpy(video.screens[0] + ofs, video.screens[1] + ofs, w);
       ofs -= video.width;
-   }
+   }*/
 } 
 
 //

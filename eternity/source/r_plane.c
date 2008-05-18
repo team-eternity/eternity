@@ -185,9 +185,9 @@ static void R_MapPlane(int y, int x1, int x2)
       {
          // SoM: ANYRES
          if(x1 >= 0 && x1 <= viewwidth)
-            *(video.screens[0] + y*video.width + x1) = GameModeInfo->blackIndex;
+            *(vbscreen.data + y*vbscreen.pitch + x1) = GameModeInfo->blackIndex;
          if(x2 >= 0 && x2 <= viewwidth)
-            *(video.screens[0] + y*video.width + x2) = GameModeInfo->blackIndex;
+            *(vbscreen.data + y*vbscreen.pitch + x2) = GameModeInfo->blackIndex;
       }
    }
 }
@@ -366,9 +366,10 @@ void R_ClearPlanes(void)
 {
    int i;
    float a;
+   int scaled_height = consoleactive ? video.x1lookup[current_height] + 1 : 0;
 
    a = (float)(consoleactive ? 
-         (current_height-viewwindowy) < 0 ? 0 : current_height-viewwindowy : 0);
+         (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;

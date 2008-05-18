@@ -57,12 +57,17 @@ cb_video_t  video =
 {
    SCREENWIDTH, 
    SCREENHEIGHT, 
+   SCREENWIDTH,
    SCREENWIDTH * FRACUNIT,
    SCREENHEIGHT * FRACUNIT,
    FRACUNIT, 
    FRACUNIT, 
    FRACUNIT, 
-   FRACUNIT
+   FRACUNIT,
+   1.0f, 1.0f, 1.0f, 1.0f, 
+   false,
+   false, 
+   {NULL, NULL, NULL, NULL, NULL}
 };
 
 //
@@ -460,12 +465,12 @@ void V_DrawLoading(void)
   
    x = ((SCREENWIDTH/2)-45);
    y = (SCREENHEIGHT/2);
-   realx = video.x1lookup[x];
-   realy = video.y1lookup[y];
-   dest = video.screens[0] + (realy*video.width) + realx;
+   realx = vbscreen.x1lookup[x];
+   realy = vbscreen.y1lookup[y];
+   dest = vbscreen.data + (realy*vbscreen.pitch) + realx;
    linelen = (90*loading_amount) / loading_total;
-   reallinelen = video.x2lookup[x + linelen - 1] - realx + 1;
-   reallineend = video.x2lookup[x + 89] - realx - reallinelen + 1;
+   reallinelen = vbscreen.x2lookup[x + linelen - 1] - realx + 1;
+   reallineend = vbscreen.x2lookup[x + 89] - realx - reallinelen + 1;
 
    // white line
    memset(dest, white, reallinelen);
@@ -478,7 +483,7 @@ void V_DrawLoading(void)
 
       while(yfrac < FRACUNIT)
       {
-         dest += video.width;
+         dest += vbscreen.pitch;
          memset(dest, white, reallinelen);
          memset(dest + reallinelen, black, reallineend);
          yfrac += ystep;
@@ -577,7 +582,7 @@ void V_FPSDrawer(void)
       for(cy=0, y = Y_OFFSET; cy<CHART_HEIGHT; y++, cy++)
       {
          i = cy > (CHART_HEIGHT-history[cx]) ? BLACK : WHITE;
-         video.screens[0][y*video.width +x] = i; // ANYRES
+         vbscreen.data[y * vbscreen.pitch + x] = i; // ANYRES
       }
    }
 }
@@ -607,7 +612,7 @@ void V_FPSTicker(void)
 void V_ClassicFPSDrawer(void)
 {
   static int lasttic;
-  byte *s = video.screens[0];
+  byte *s = vbscreen.data;
   
   int i = I_GetTime();
   int tics = i - lasttic;
@@ -618,34 +623,34 @@ void V_ClassicFPSDrawer(void)
    // SoM: ANYRES
    if(video.scaled)
    {
-      int baseoffset = video.y1lookup[SCREENHEIGHT - 1] * video.width;
+      int baseoffset = vbscreen.y1lookup[SCREENHEIGHT - 1] * vbscreen.pitch;
       int offset;
       int x, y, w, h;
 
-      h = video.y2lookup[SCREENHEIGHT - 1] - video.y1lookup[SCREENHEIGHT - 1] + 1;
+      h = vbscreen.y2lookup[SCREENHEIGHT - 1] - vbscreen.y1lookup[SCREENHEIGHT - 1] + 1;
 
       for (i=0 ; i < tics * 2 ; i += 2)
       {
          offset = baseoffset;
          y = h;
-         x = video.x1lookup[i];
-         w = video.x2lookup[i] - video.x1lookup[i] + 1;
+         x = vbscreen.x1lookup[i];
+         w = vbscreen.x2lookup[i] - vbscreen.x1lookup[i] + 1;
          while(y--)
          {
             memset(s + offset + x, 0xff, w);
-            offset += video.width;
+            offset += vbscreen.pitch;
          }
       }
       for ( ; i < 20 * 2 ; i += 2)
       {
          offset = baseoffset;
          y = h;
-         x = video.x1lookup[i];
-         w = video.x2lookup[i] - video.x1lookup[i] + 1;
+         x = vbscreen.x1lookup[i];
+         w = vbscreen.x2lookup[i] - vbscreen.x1lookup[i] + 1;
          while(y--)
          {
             memset(s + offset + x, 0x0, w);
-            offset += video.width;
+            offset += vbscreen.pitch;
          }
       }
    }
@@ -758,7 +763,7 @@ void V_Init(void)
    if(s)
    {
       free(s);
-      free(video.screens[0]);
+      I_UnsetPrimaryBuffer();
    }
 #endif
    
@@ -770,8 +775,7 @@ void V_Init(void)
    video.pitch = video.width;
 #else
    // SoM: TODO: implement direct to SDL surface drawing.
-   video.screens[0] = calloc(1, size);
-   video.pitch = video.width;
+   I_SetPrimaryBuffer();
 #endif
 
    R_SetupViewScaling();

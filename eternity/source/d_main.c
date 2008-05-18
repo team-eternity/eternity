@@ -416,49 +416,9 @@ void D_PageDrawer(void)
          t = W_CacheLumpNum(l, PU_CACHE);
          V_DrawPatch(4, 160, &vbscreen, (patch_t *)t);
       }
-
-      // SoM 2-4-04: ANYRES
-      // TODO/FIXME: reimplement higher resolution titlescreen?
-      /*if(hires) // check for original title screen
-      {
-         long checksum = W_LumpCheckSum(l);
-         if(checksum == DOOM1TITLEPIC)
-         {
-            D_640PageDrawer("UDTTL");
-            return;
-         }
-         else if(checksum == DOOM2TITLEPIC)
-         {
-            D_640PageDrawer("D2TTL");
-            return;
-         }
-      }*/
    }
    else
       MN_DrawCredits();
-}
-
-        // sf: 640x400 title screens at satori's request
-void D_640PageDrawer(const char *key)
-{
-   char tempstr[10];
-
-   // draw the patches
-
-   sprintf(tempstr, "%s00", key);
-   V_DrawPatchUnscaled(0, 0, 0, W_CacheLumpName(tempstr, PU_CACHE));
-
-   sprintf(tempstr, "%s01", key);
-   V_DrawPatchUnscaled(0, SCREENHEIGHT, 0,
-                       W_CacheLumpName(tempstr, PU_CACHE));
-
-   sprintf(tempstr, "%s10", key);
-   V_DrawPatchUnscaled(SCREENWIDTH, 0, 0,
-                       W_CacheLumpName(tempstr, PU_CACHE));
-
-   sprintf(tempstr, "%s11", key);
-   V_DrawPatchUnscaled(SCREENWIDTH, SCREENHEIGHT, 0,
-                       W_CacheLumpName(tempstr, PU_CACHE));
 }
 
 //

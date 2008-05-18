@@ -141,6 +141,10 @@ void V_InitFlexTranTable(const byte *palette);
 void V_CacheBlock(int x, int y, int width, int height, byte *src,
                   byte *bdest);
 
+void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
+                   unsigned int sx, unsigned int sy, unsigned int width, 
+                   unsigned int height);
+
 #include "v_misc.h"
 
 extern VBuffer vbscreen;

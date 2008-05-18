@@ -586,15 +586,17 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
    // SoM: ANYRES
    if(video.scaled)
    {
-      byte *desttop = video.screens[0] + x;
+      byte *desttop = vbscreen.data + x;
 
       while (column->topdelta != 0xff)
       {
          register const byte *source = (byte *) column + 3;
-         register byte *dest = desttop + video.x1lookup[column->topdelta] * video.width;
-         register int count = video.x2lookup[column->topdelta + column->length - 1] -
-                              video.x1lookup[column->topdelta] + 1;
+         register byte *dest = desttop + vbscreen.x1lookup[column->topdelta] * 
+                               vbscreen.pitch;
+         register int count = vbscreen.x2lookup[column->topdelta + column->length - 1] -
+                              vbscreen.x1lookup[column->topdelta] + 1;
          register fixed_t frac;
+
          fixed_t step;
 
          frac = 0;
@@ -613,11 +615,11 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
    {
       while (column->topdelta != 0xff)
       {
-         byte *desttop = video.screens[0] + x;
+         byte *desttop = vbscreen.data + x;
          const byte *source = (byte *) column + 3;
          byte *dest = desttop + column->topdelta*SCREENWIDTH;
          int count = column->length;
-         for (;count--; dest += SCREENWIDTH)
+         for (;count--; dest += vbscreen.pitch)
             *dest = *source++;
          column = (column_t *)(source+1);
       }

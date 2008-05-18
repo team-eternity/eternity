@@ -206,7 +206,7 @@ static void ST_shadowLine(int x, int y, int len,
    int mapnum, i;
 
    // start at origin of line
-   dest = video.screens[0] + y*SCREENWIDTH + x;
+   dest = vbscreen.data + y*SCREENWIDTH + x;
 
    // step in x direction for len pixels
    for(i = x, mapnum = startmap; i < x + len; ++i)
@@ -243,7 +243,7 @@ static void ST_shadowLineHi(int x, int y, int len,
    // start at origin of line
    realx = video.x1lookup[x];
    realy = video.y1lookup[y];
-   dest = video.screens[0] + realy * video.width + realx;
+   dest = vbscreen.data + realy * vbscreen.pitch + realx;
    len = video.x2lookup[x + len - 1] - realx + 1;
    mapnum = startmap << FRACBITS;
    mapstep *= video.ystep >> 1;
@@ -256,11 +256,11 @@ static void ST_shadowLineHi(int x, int y, int len,
       mapnum += mapstep;
 
       // remap all four pixels in this scaled pixel's area
-      dest = video.screens[0] + realy * video.width + x;
+      dest = vbscreen.data + realy * vbscreen.pitch + x;
       for(p = video.yscale >> FRACBITS; p; p--)
       {
          *dest = colormap[*dest];
-         dest += video.width;
+         dest += vbscreen.pitch;
       }
    }
 }

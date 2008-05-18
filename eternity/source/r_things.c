@@ -1803,7 +1803,7 @@ void R_DrawParticle(vissprite_t *vis)
          return;
       ++ycount;
 
-      spacing = video.width - xcount;
+      spacing = video.pitch - xcount;
       dest = ylookup[yl] + columnofs[x1];
 
       // haleyjd 02/08/05: rewritten to remove inner loop invariants

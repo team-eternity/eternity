@@ -102,13 +102,13 @@ void Wipe_StartScreen(void)
       int wormx = (x << FRACBITS) / video.xscale;
       int wormy = video.y1lookup[worms[wormx] > 0 ? worms[wormx] : 0];
       
-      src = video.screens[0] + x;
+      src = vbscreen.data + x;
       dest = start_screen[x];
       
       for(y = 0; y < video.height - wormy; y++)
       {
          *dest = *src;
-         src += video.width;
+         src += vbscreen.pitch;
          dest++;
       }
    }
@@ -121,7 +121,14 @@ void Wipe_StartScreen(void)
 //
 void Wipe_SaveEndScreen(void)
 {
-   memcpy(video.screens[3], video.screens[0], video.width * video.height);
+   VBuffer temp;
+
+   memcpy(&temp, &vbscreen, sizeof(VBuffer));
+   temp.data = video.screens[3];
+   temp.width = temp.pitch = video.width;
+   temp.height = video.height;
+
+   V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, video.width, video.height);
 }
 
 //
@@ -129,7 +136,14 @@ void Wipe_SaveEndScreen(void)
 //
 void Wipe_BlitEndScreen(void)
 {
-   memcpy(video.screens[0], video.screens[3], video.width * video.height);
+   VBuffer temp;
+
+   memcpy(&temp, &vbscreen, sizeof(VBuffer));
+   temp.data = video.screens[3];
+   temp.width = temp.pitch = video.width;
+   temp.height = video.height;
+
+   V_BlitVBuffer(&vbscreen, 0, 0, &temp, 0, 0, video.width, video.height);
 }
 
 //
@@ -166,12 +180,12 @@ void Wipe_Drawer(void)
       wormy = video.y1lookup[wormy];
 
       src = start_screen[x];
-      dest = video.screens[0] + video.width * wormy + x;
+      dest = vbscreen.data + vbscreen.pitch * wormy + x;
       
       for(y = video.height - wormy; y--;)
       {
          *dest = *src++;
-         dest += video.width;
+         dest += vbscreen.pitch;
       }
    }
  

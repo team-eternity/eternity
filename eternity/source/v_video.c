@@ -224,6 +224,7 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
 {
   byte *src;
   byte *dest;
+  int  p1, p2;
 
 #ifdef RANGECHECK
   if (srcx<0
@@ -238,7 +239,10 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
     I_Error ("Bad V_CopyRect");
 #endif
 
-  V_MarkRect (destx, desty, width, height);
+   V_MarkRect (destx, desty, width, height);
+
+   p1 = srcscrn == 0 ? video.pitch : video.width;
+   p2 = destscrn == 0 ? video.pitch : video.width;
 
    // SoM 1-30-04: ANYRES
    if(video.scaled)
@@ -247,11 +251,11 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
 
       realx = video.x1lookup[srcx];
       realy = video.y1lookup[srcy];
-      src = video.screens[srcscrn] + video.width * realy + realx;
+      src = video.screens[srcscrn] + p1 * realy + realx;
 
       realx = video.x1lookup[destx];
       realy = video.y1lookup[desty];
-      dest = video.screens[destscrn] + video.width * realy + realx;
+      dest = video.screens[destscrn] + p2 * realy + realx;
 
       // I HOPE this will not extend the array bounds HEHE
       realw = video.x2lookup[width + destx - 1] - realx + 1;
@@ -260,19 +264,19 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
       while(realh--)
       {
          memcpy(dest, src, realw);
-         src += video.width;
-         dest += video.width;
+         src += p1;
+         dest += p2;
       }
    }
    else
    {
-      src = video.screens[srcscrn]+SCREENWIDTH*srcy+srcx;
+      src = video.screens[srcscrn]+p1*srcy+srcx;
       dest = video.screens[destscrn]+SCREENWIDTH*desty+destx;
 
       for ( ; height>0 ; height--)
       {
          memcpy (dest, src, width);
-         src += SCREENWIDTH;
+         src += p1;
          dest += SCREENWIDTH;
       }
    }
@@ -323,7 +327,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 // FIXME/TODO: supporting this in general resolutions requires
 // more work.
 //
-void V_DrawPatchUnscaled(int x, int y, int scrn, patch_t *patch)
+/*void V_DrawPatchUnscaled(int x, int y, int scrn, patch_t *patch)
 {
    byte *desttop;
    int  w = SHORT(patch->width), col = 0, colstop = w, colstep = 1;
@@ -398,7 +402,7 @@ void V_DrawPatchUnscaled(int x, int y, int scrn, patch_t *patch)
          column = (column_t *)(source+1); //killough 2/21/98 even faster
       }
    }
-}
+}*/
 
 
 //
@@ -560,6 +564,7 @@ void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src
 void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
 {
   byte *src;
+  int p;
 
 #ifdef RANGECHECK
   if (x<0
@@ -580,11 +585,13 @@ void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
       y = video.y1lookup[y];
    }
 
-   src = video.screens[scrn] + y * video.width + x;
+   p = scrn == 0 ? video.pitch : video.width;
+
+   src = video.screens[scrn] + y * p + x;
    while (height--)
    {
       memcpy (dest, src, width);
-      src += video.width;
+      src += p;
       dest += width;
    }
 }
@@ -701,6 +708,62 @@ void V_CacheBlock(int x, int y, int width, int height, byte *src,
       memcpy(dest, src, width);
       src += width;
       dest += SCREENWIDTH;
+   }
+}
+
+
+
+// SoM: blit from one vbuffer to another
+void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
+                   unsigned int sx, unsigned int sy, unsigned int width, 
+                   unsigned int height)
+{
+   byte *dbuf, *sbuf;
+   int i = height;
+   int slice = width, dpitch = dest->pitch, spitch = src->pitch;
+
+   if(dx < 0)
+   {
+      slice += dx;
+      sx += D_abs(dx);
+      dx = 0;
+   }
+
+   if(slice < 0 || (int)sx >= src->width)
+      return;
+
+   if(dy < 0)
+   {
+      i += dy;
+      sy += D_abs(dy);
+      dy = 0;
+   }
+
+   if((int)sy >= src->height || i < 0)
+      return;
+
+   if(dx + slice > dest->width)
+      slice = dest->width - dx;
+   if(dy + i > dest->height)
+      i = dest->height - dy;
+
+   if((int)sx + slice > src->width)
+      slice = src->width - (int)sx;
+
+   if((int)sy + i > src->height)
+      i = src->height - (int)sy;
+
+   if(slice < 0 || i < 0)
+      return;
+
+   dbuf = dest->data + (dpitch * dy) + dx;
+   sbuf = src->data + (spitch * sy) + sx;
+
+   while(i--)
+   {
+      memcpy(dbuf, sbuf, slice);
+      dbuf += dpitch;
+      sbuf += spitch;
    }
 }
 
