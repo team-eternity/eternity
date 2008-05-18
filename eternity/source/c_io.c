@@ -57,10 +57,6 @@
 // keep the last 32 typed commands
 #define HISTORY 32
 
-// SoM 2-4-04: ANYRES
-#define C_SCREENHEIGHT video.height
-#define C_SCREENWIDTH video.width
-
 extern const char *shiftxform;
 static void Egg();
 
@@ -124,13 +120,13 @@ static void C_initBackdrop(void)
    if(backdrop)
       Z_Free(backdrop);
    
-   backdrop = Z_Malloc(C_SCREENHEIGHT*C_SCREENWIDTH, PU_STATIC, 0);
+   backdrop = Z_Malloc(video.height*video.width, PU_STATIC, 0);
 
    // haleyjd 04/03/04: removed hack, setup VBuffer object
    memcpy(&cback, &vbscreen, sizeof(VBuffer));
    cback.data = backdrop;
-   cback.width = cback.pitch = C_SCREENWIDTH;
-   cback.height = C_SCREENHEIGHT;
+   cback.width = cback.pitch = video.width;
+   cback.height = video.height;
 
    lumpnum = W_GetNumForName(lumpname);
    patch   = W_CacheLumpNum(lumpnum, PU_STATIC);
@@ -143,7 +139,7 @@ static void C_initBackdrop(void)
       if(darken)
       {
          V_ColorBlockTL(&cback, GameModeInfo->blackIndex,
-                        0, 0, C_SCREENWIDTH, C_SCREENHEIGHT, FRACUNIT/2);
+                        0, 0, video.width, video.height, FRACUNIT/2);
       }
    }
    else
@@ -482,11 +478,11 @@ void C_Drawer(void)
 
    // Check for change in screen res
    // SoM: Check width too.
-   if(oldscreenheight != C_SCREENHEIGHT || oldscreenwidth != C_SCREENWIDTH)
+   if(oldscreenheight != video.height || oldscreenwidth != video.width)
    {
       C_initBackdrop();       // re-init to the new screen size
-      oldscreenheight = C_SCREENHEIGHT;
-      oldscreenwidth = C_SCREENWIDTH;
+      oldscreenheight = video.height;
+      oldscreenwidth = video.width;
    }
 
    // fullscreen console for fullscreen mode
@@ -497,8 +493,8 @@ void C_Drawer(void)
    // draw backdrop
 
    memcpy(video.screens[0],
-          backdrop + (C_SCREENHEIGHT-real_height)*C_SCREENWIDTH,
-          real_height*C_SCREENWIDTH);
+          backdrop + (video.height-real_height)*video.width,
+          real_height*video.width);
 
    //////////////////////////////////////////////////////////////////////
    // draw text messages
@@ -1044,13 +1040,13 @@ static void Egg(void)
    int x, y;
    extern unsigned char egg[];
 
-   for(x = 0; x < C_SCREENWIDTH; ++x)
+   for(x = 0; x < video.width; ++x)
    {
-      for(y = 0; y < C_SCREENHEIGHT; ++y)
+      for(y = 0; y < video.height; ++y)
       {
          unsigned char *s = egg + ((y % 44 * 42) + (x % 42));
          if(*s != 247)
-            backdrop[y * C_SCREENWIDTH + x] = *s;
+            backdrop[y * video.width + x] = *s;
       }
    }
 

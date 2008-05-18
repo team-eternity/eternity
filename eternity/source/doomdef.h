@@ -82,16 +82,17 @@ typedef struct
    // SoM: Not implemented (yet)
    //int bitdepth;
 
-   int width, height;
-   fixed_t widthfrac, heightfrac;
-   fixed_t xscale, yscale;
-   fixed_t xstep, ystep;
+   int         width, height;
+   unsigned    pitch;
+   fixed_t     widthfrac, heightfrac;
+   fixed_t     xscale, yscale;
+   fixed_t     xstep, ystep;
 
-   float xscalef, yscalef;
-   float xstepf, ystepf;
-   boolean scaled; // SoM: should be set when the scale values are
+   float       xscalef, yscalef;
+   float       xstepf, ystepf;
+   boolean     scaled; // SoM: should be set when the scale values are
 
-   byte *screens[5];
+   byte        *screens[5];
 
    // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
    int x1lookup[321];

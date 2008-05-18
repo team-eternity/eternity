@@ -218,8 +218,9 @@ static int  f_y;
 static int  f_w;
 static int  f_h;
 
+// SoM: This should NOT be used anymore.
+//static byte*  fb;            // pseudo-frame buffer
 static int  lightlev;        // used for funky strobing effect
-static byte*  fb;            // pseudo-frame buffer
 static int  amclock;
 
 static mpoint_t m_paninc;    // how far the window pans each tic (map coords)
@@ -505,7 +506,7 @@ void AM_initVariables(void)
    int pnum;   
    
    automapactive = true;
-   fb = video.screens[0];
+   //fb = video.screens[0];
    
    f_oldloc.x = D_MAXINT;
    amclock = 0;
@@ -1092,7 +1093,7 @@ void AM_clearFB(int color)
                   am_backdrop);
    }
    else
-      memset(fb, color, f_w*f_h);
+      V_ColorBlock(&vbscreen, (unsigned char)color, 0, 0, f_w, f_h);
 }
 
 //
@@ -1268,7 +1269,7 @@ void AM_drawFline(fline_t *fl, int color )
    }
 #endif
 
-#define PUTDOT(xx,yy,cc) fb[(yy)*f_w+(xx)]=(cc)
+#define PUTDOT(xx,yy,cc) vbscreen.data[(yy)*vbscreen.pitch+(xx)]=(cc)
 
    dx = fl->b.x - fl->a.x;
    ax = 2 * (dx < 0 ? -dx : dx);
@@ -2153,7 +2154,8 @@ void AM_drawMarks(void)
 //
 d_inline static void AM_drawCrosshair(int color)
 {
-   fb[(f_w*(f_h+1))/2] = color; // single point for now
+   vbscreen.data[(vbscreen.pitch * ((f_h + 1) >> 1)) + (vbscreen.width >> 1)] =
+      color; // single point for now
 }
 
 //

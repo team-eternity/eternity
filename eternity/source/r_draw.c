@@ -1100,7 +1100,8 @@ void R_InitBuffer(int width, int height)
    int st_height;
    int tviewwidth = viewwidth << detailshift;
    
-   linesize = video.width;    // killough 11/98
+   // SoM: use pitch damnyou!
+   linesize = video.pitch;    // killough 11/98
    
    // Handle resize,
    //  e.g. smaller view windows

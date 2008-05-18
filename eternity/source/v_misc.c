@@ -713,7 +713,7 @@ static void V_InitScreenVBuffer(void)
    vbscreen.data   = video.screens[0];
    vbscreen.width  = video.width;
    vbscreen.height = video.height;
-   vbscreen.pitch  = video.width; // TODO: fix to allow direct drawing!
+   vbscreen.pitch  = video.pitch;
    vbscreen.x1lookup = video.x1lookup;
    vbscreen.y1lookup = video.y1lookup;
    vbscreen.x2lookup = video.x2lookup;
@@ -767,8 +767,11 @@ void V_Init(void)
 #ifdef DJGPP
    screens0_bitmap = create_bitmap_ex(8, video.width, video.height);
    memset(video.screens[0] = screens0_bitmap->line[0], 0, size);
+   video.pitch = video.width;
 #else
+   // SoM: TODO: implement direct to SDL surface drawing.
    video.screens[0] = calloc(1, size);
+   video.pitch = video.width;
 #endif
 
    R_SetupViewScaling();
