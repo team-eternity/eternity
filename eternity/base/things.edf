@@ -325,6 +325,7 @@ thingtype DoomBuilderCameraSpot
 {
   inherits = Unknown
   doomednum = 32000
+  translucency = 33%
 }
 
 // Eternity TC Objects ---------------------------------------------------------

@@ -45,6 +45,7 @@
 #include "p_spec.h"
 #include "r_draw.h"
 #include "mn_engin.h"
+#include "am_map.h"
 
 /***************************************************************************
                 'defines': string values for variables
@@ -311,6 +312,9 @@ static char *wipewait_strs[] = { "never", "always", "demos" };
 VARIABLE_INT(wipewait, NULL, 0, 2, wipewait_strs);
 CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
 
+VARIABLE_BOOLEAN(map_draw_nodelines, NULL, onoff);
+CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
+
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
@@ -358,6 +362,7 @@ void P_AddCommands(void)
    C_AddCommand(spechits_emulation);
    C_AddCommand(p_markunknowns);
    C_AddCommand(wipewait);
+   C_AddCommand(am_drawnodelines);
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();

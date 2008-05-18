@@ -77,12 +77,16 @@ int mapportal_overlay;
 
 //jff 3/9/98 add option to not show secret sectors until entered
 int map_secret_after;
+
 //jff 4/3/98 add symbols for "no-color" for disable and "black color" for black
 #define NC 0
 #define BC 247
 
 // drawing stuff
 #define FB    0
+
+// haleyjd 05/17/08: ability to draw node lines on map
+boolean map_draw_nodelines;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -1781,6 +1785,34 @@ void AM_drawWalls(void)
    } // end for
 }
 
+
+//
+// AM_drawNodeLines
+//
+// haleyjd 05/17/08: Draws node partition lines on the automap as a debugging
+// aid or for the interest of the curious.
+//
+void AM_drawNodeLines(int bspnum)
+{
+   mline_t l;
+
+   while(!(bspnum & NF_SUBSECTOR))
+   {
+      node_t *bsp = &nodes[bspnum];
+
+      l.a.x = bsp->x;
+      l.a.y = bsp->y;
+      l.b.x = bsp->x + bsp->dx;
+      l.b.y = bsp->y + bsp->dy;
+
+      AM_drawMline(&l, mapcolor_frnd);
+
+      AM_drawNodeLines(bsp->children[1]);
+
+      bspnum = bsp->children[0];
+   }
+}
+
 //
 // AM_rotate()
 //
@@ -2000,7 +2032,7 @@ void AM_drawThings(int colors, int colorrange)
 {
    int     i;
    mobj_t *t;
-   fixed_t tx, ty; // SoM: Moved the thing coords to these variables for linked portals
+   fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
    
    // for all sectors
    for(i = 0; i < numsectors; ++i)
@@ -2176,6 +2208,11 @@ void AM_Drawer(void)
       AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
    
    AM_drawWalls();
+
+   // haleyjd 05/17/08:
+   if(map_draw_nodelines)
+      AM_drawNodeLines(numnodes - 1);
+
    AM_drawPlayers();
    
    if(ddt_cheating == 2)

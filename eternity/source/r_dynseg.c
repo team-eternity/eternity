@@ -293,6 +293,17 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
 }
 
 //
+// R_DSPointOnSide
+//
+// PointOnSide routine for dynasegs. The usual routine is not good enough for
+// this purpose. I need to know the distance from the partition plane, not just
+// what side we're on.
+//
+static double R_DSPointOnSide(double x, double y, node_t *node)
+{
+}
+
+//
 // R_SplitLine
 //
 // Given a single dynaseg representing the full length of a linedef, generates a

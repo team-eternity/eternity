@@ -116,6 +116,8 @@ extern int mapcolor_prtl;
 extern int mapportal_overlay; // julian: changed to int (size problem, could lead to memory error)
 #endif
 
+extern boolean map_draw_nodelines;
+
 #endif
 
 //----------------------------------------------------------------------------
