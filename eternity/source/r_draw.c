@@ -1207,7 +1207,7 @@ void R_FillBackScreen (void)
 //
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 { 
-   unsigned int ofs;
+   //unsigned int ofs;
    VBuffer temp;
 
    // haleyjd 06/08/05: protect against bad erasings
