@@ -49,41 +49,31 @@ static vertex_t *dynaVertexFreeList;
 static rpolyobj_t *freePolyFragments;
 
 //
-// subsector list
-//
-// We must keep track of subsectors which have dynasegs added to them
-// every frame, for purposes of later removing them.
-//
-static subsector_t **dynaSubsecs;
-static int numDSS;
-static int numDSSAlloc;
-
-//
 // R_AddDynaSubsec
 //
 // Keeps track of pointers to subsectors which hold dynasegs in a
-// reallocating array for purposes of detaching the dynasegs at the beginning
-// of a new frame, or at the end of a level.
+// reallocating array, for purposes of later detaching the dynasegs.
+// Each polyobject contains its own subsector array.
 //
-static void R_AddDynaSubsec(subsector_t *ss)
+static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 {
    int i;
 
    // make sure subsector is not already tracked
-   for(i = 0; i < numDSS; ++i)
+   for(i = 0; i < po->numDSS; ++i)
    {
-      if(dynaSubsecs[i] == ss)
+      if(po->dynaSubsecs[i] == ss)
          return;
    }
 
-   if(numDSS >= numDSSAlloc)
+   if(po->numDSS >= po->numDSSAlloc)
    {
-      numDSSAlloc = numDSSAlloc ? numDSSAlloc * 2 : 32;
-      dynaSubsecs = 
-         (subsector_t **)realloc(dynaSubsecs, 
-                                 numDSSAlloc * sizeof(subsector_t *));
+      po->numDSSAlloc = po->numDSSAlloc ? po->numDSSAlloc * 2 : 8;
+      po->dynaSubsecs = 
+         (subsector_t **)realloc(po->dynaSubsecs, 
+                                 po->numDSSAlloc * sizeof(subsector_t *));
    }
-   dynaSubsecs[numDSS++] = ss;
+   po->dynaSubsecs[po->numDSS++] = ss;
 }
 
 //
@@ -293,15 +283,19 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
 }
 
 //
-// R_DSPointOnSide
+// R_PartitionDistance
 //
-// PointOnSide routine for dynasegs. The usual routine is not good enough for
-// this purpose. I need to know the distance from the partition plane, not just
-// what side we're on.
+// This routine uses the general line equation, whose coefficients are now
+// precalculated in the BSP nodes, to determine the distance of the point
+// from the partition line. If the distance is too small, we may decide to
+// change our idea of sidedness.
 //
-static double R_DSPointOnSide(double x, double y, node_t *node)
+d_inline static double R_PartitionDistance(double x, double y, node_t *node)
 {
+   return fabs((node->a * x + node->b * y + node->c) / node->len);
 }
+
+#define DS_EPSILON 0.3125
 
 //
 // R_SplitLine
@@ -317,12 +311,29 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       seg_t  *seg = &dseg->seg;
 
       // test vertices against node line
-      int side_v1 = R_PointOnSide(seg->v1->x, seg->v1->y, bsp);
-      int side_v2 = R_PointOnSide(seg->v2->x, seg->v2->y, bsp);
+      int side_v1   = R_PointOnSide(seg->v1->x, seg->v1->y, bsp);
+      int side_v2   = R_PointOnSide(seg->v2->x, seg->v2->y, bsp);
 
-      // does the partition line cross this seg? if so, we must split it.
-      if(side_v1 != side_v2)
+      // test polyobj origin against node line also
+      int side_spot = R_PointOnSide(dseg->polyobj->centerPt.x, 
+                                    dseg->polyobj->centerPt.y,
+                                    bsp);
+
+      // get distance of vertices from partition line
+      double dist_v1 = R_PartitionDistance(seg->v1->fx, seg->v1->fy, bsp);
+      double dist_v2 = R_PartitionDistance(seg->v2->fx, seg->v2->fy, bsp);
+
+      // If the distances are less than epsilon, consider the points as being
+      // on the same side as the polyobj origin. Why? People like to build
+      // polyobject doors flush with their door tracks. This breaks using the
+      // usual assumptions.
+      if(dist_v1 <= DS_EPSILON && dist_v2 <= DS_EPSILON)
       {
+         side_v1 = side_spot;
+      }
+      else if(side_v1 != side_v2)
+      {
+         // if the partition line crosses this seg, we must split it.
          dynaseg_t *nds;
          vertex_t  *nv = R_GetFreeDynaVertex();
 
@@ -376,18 +387,25 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
          fragment->dynaSegs = dseg;
 
       // add the subsector if it hasn't been added already
-      R_AddDynaSubsec(&subsectors[num]);
+      R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
    }
 }
 
 //
-// R_GenPolyObjDynaSegs
+// R_AttachPolyObject
 //
 // Generates dynamic segs for a single polyobject.
 //
-static void R_GenPolyObjDynaSegs(polyobj_t *poly)
+void R_AttachPolyObject(polyobj_t *poly)
 {
    int i;
+
+   // never attach a bad polyobject
+   if(poly->isBad)
+      return;
+
+   if(poly->attached) // already attached?
+      return;
 
    // iterate on the polyobject lines array
    for(i = 0; i < poly->numLines; ++i)
@@ -427,88 +445,102 @@ static void R_GenPolyObjDynaSegs(polyobj_t *poly)
       // The dynasegs are stored in the subsectors in which they finally end up.
       R_SplitLine(idseg, numnodes - 1);
    }
+
+   poly->attached = true;
 }
 
 //
-// R_AttachPolyObjects
+// R_DetachPolyObject
 //
-// Called once per frame (after R_ClearDynaSegs). Generates dynamic segs for
-// all polyobjects.
+// Removes a polyobject from all subsectors to which it is attached, reclaiming
+// all dynasegs, vertices, and rpolyobj_t fragment objects associated with the
+// given polyobject.
 //
-void R_AttachPolyObjects(void)
+void R_DetachPolyObject(polyobj_t *poly)
 {
    int i;
-  
-   for(i = 0; i < numPolyObjects; ++i)
-      R_GenPolyObjDynaSegs(&PolyObjects[i]);
+
+   // a bad polyobject should never have been attached in the first place
+   if(poly->isBad)
+      return;
+
+   // not attached?
+   if(!poly->attached)
+      return;
+   
+   // no dynaseg-containing subsecs?
+   if(!poly->dynaSubsecs || !poly->numDSS)
+      return;
+
+   // iterate over stored subsector pointers
+   for(i = 0; i < poly->numDSS; ++i)
+   {
+      subsector_t *ss = poly->dynaSubsecs[i];
+      rpolyobj_t *rpo = ss->polyList;
+      rpolyobj_t *next;
+      
+      // iterate on subsector rpolyobj_t lists
+      while(rpo)
+      {
+         next = (rpolyobj_t *)(rpo->link.next);
+
+         if(rpo->polyobj == poly)
+         {
+            // iterate on segs in rpolyobj_t
+            while(rpo->dynaSegs)
+            {
+               dynaseg_t *ds     = rpo->dynaSegs;
+               dynaseg_t *nextds = ds->subnext;
+               
+               vertex_t *v1 = ds->seg.v1;
+               vertex_t *v2 = ds->seg.v2;
+               
+               // put dynamic vertices on free list if they haven't already been
+               // put there by another seg
+               if(!v1->dynafree)
+                  R_FreeDynaVertex(v1);
+               if(!v2->dynafree)
+                  R_FreeDynaVertex(v2);
+               
+               // put this dynaseg on the free list
+               R_FreeDynaSeg(ds);
+               
+               rpo->dynaSegs = nextds;
+            }
+            
+            // unlink this rpolyobj_t
+            M_DLListRemove((mdllistitem_t *)rpo);
+            
+            // put it on the freelist
+            R_FreeRPolyObj(rpo);
+         }
+
+         rpo = next;
+      }
+
+      // no longer tracking this subsector
+      poly->dynaSubsecs[i] = NULL;
+   }
+
+   // no longer tracking any subsectors
+   poly->numDSS = 0;
+   poly->attached = false;
 }
 
 //
 // R_ClearDynaSegs
 //
-// Call at the start of a frame to clear all dynasegs from subsectors that have
-// them attached. When this is done, all dynasegs and their vertices will be
-// placed on their respective freelists, and the dynaSegs list of every
-// subsector should be NULL.
+// Call at the end of a level to clear all dynasegs.
 //
-// This must also be called immediately before freeing a level, or all of the
-// dynasegs will be lost, and the dynaseg subsector list will be full of
-// dangerous dangling subsector pointers.
+// If this were not done, all dynasegs, their vertices, and polyobj fragments
+// would be lost.
 //
 void R_ClearDynaSegs(void)
 {
    int i;
-   
-   // no dynaseg-containing subsecs?
-   if(!dynaSubsecs || !numDSS)
-      return;
 
-   // iterate over stored subsector pointers
-   for(i = 0; i < numDSS; ++i)
-   {
-      subsector_t *ss = dynaSubsecs[i];
-      
-      // iterate on subsector rpolyobj_t lists
-      // this loop restarts each time until the list is empty
-      while(ss->polyList)
-      {
-         rpolyobj_t *rpo = ss->polyList;
-
-         // iterate on segs in rpolyobj_t
-         while(rpo->dynaSegs)
-         {
-            dynaseg_t *ds     = rpo->dynaSegs;
-            dynaseg_t *nextds = ds->subnext;
-            
-            vertex_t *v1 = ds->seg.v1;
-            vertex_t *v2 = ds->seg.v2;
-            
-            // put dynamic vertices on free list if they haven't already been
-            // put there by another seg
-            if(!v1->dynafree)
-               R_FreeDynaVertex(v1);
-            if(!v2->dynafree)
-               R_FreeDynaVertex(v2);
-
-            // put his dynaseg on the free list
-            R_FreeDynaSeg(ds);
-            
-            rpo->dynaSegs = nextds;
-         }
-
-         // unlink this rpolyobj_t
-         M_DLListRemove((mdllistitem_t *)rpo);
-
-         // put it on the freelist
-         R_FreeRPolyObj(rpo);
-      }
-
-      // no longer tracking this subsector
-      dynaSubsecs[i] = NULL;
-   }
-
-   // no longer tracking any subsectors
-   numDSS = 0;
+   for(i = 0; i < numPolyObjects; ++i)
+      R_DetachPolyObject(&PolyObjects[i]);
 }
 
 #endif

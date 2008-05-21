@@ -383,6 +383,12 @@ void P_LoadNodes(int lump)
       no->fy  = (double)no->y;
       no->fdx = (double)no->dx;
       no->fdy = (double)no->dy;
+
+      // haleyjd 05/20/08: precalculate general line equation coefficients
+      no->a   = -no->fdy;
+      no->b   =  no->fdx;
+      no->c   =  no->fdy * no->fx - no->fdx * no->fy;
+      no->len = sqrt(no->fdx * no->fdx + no->fdy * no->fdy);
 #endif
 
       no->x  <<= FRACBITS;

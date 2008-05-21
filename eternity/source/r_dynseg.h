@@ -66,7 +66,8 @@ typedef struct rpolyobj_s
 
 } rpolyobj_t;
 
-void R_AttachPolyObjects(void);
+void R_AttachPolyObject(polyobj_t *poly);
+void R_DetachPolyObject(polyobj_t *poly);
 void R_ClearDynaSegs(void);
 
 #endif // R_DYNASEGS

@@ -67,6 +67,10 @@ typedef struct polyobj_s
    int segCount;        // number of segs in polyobject
    int numSegsAlloc;    // number of segs allocated
    struct seg_s **segs; // the segs, a reallocating array.
+#else
+   struct subsector_s **dynaSubsecs; // list of subsectors holding fragments
+   int numDSS;                       // number of subsector pointers
+   int numDSSAlloc;                  // number of subsector pointers allocated
 #endif
 
    int numVertices;            // number of vertices (generally == segCount)

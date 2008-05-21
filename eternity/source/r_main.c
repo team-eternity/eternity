@@ -844,13 +844,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_ClearPlanes();
    R_ClearSprites();
 
-#ifdef R_DYNASEGS
-   // haleyjd 05/16/08: setup polyobjects
-   R_ClearDynaSegs();
-   R_AttachPolyObjects();
-#endif
-
-    if(autodetect_hom)
+   if(autodetect_hom)
       R_HOMdrawer();
    
    // check for new console commands.

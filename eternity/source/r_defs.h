@@ -398,6 +398,9 @@ typedef struct
 
 #ifdef R_DYNASEGS
   double fx, fy, fdx, fdy;       // haleyjd 05/16/08: float versions
+  double a, b, c;                // haleyjd 05/20/08: coefficients for
+                                 //  general form of partition line 
+  double len;                    //  length of partition line, for normalization
 #endif
 } node_t;
 

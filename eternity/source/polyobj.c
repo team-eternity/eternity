@@ -42,6 +42,9 @@
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_state.h"
+#ifdef R_DYNASEGS
+#include "r_dynseg.h"
+#endif
 #include "s_sndseq.h"
 #include "v_misc.h"
 
@@ -720,6 +723,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    Polyobj_attachToSubsec(po);
 #else
    Polyobj_setCenterPt(po);
+   R_AttachPolyObject(po);
 #endif
 }
 
@@ -1079,12 +1083,15 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
 #ifndef R_DYNASEGS      
       Polyobj_removeFromSubsec(po);   // unlink it from its subsector
-#endif      
+#else
+      R_DetachPolyObject(po);
+#endif
       Polyobj_linkToBlockmap(po);     // relink to blockmap
 #ifndef R_DYNASEGS
       Polyobj_attachToSubsec(po);     // relink to subsector
 #else
       Polyobj_setCenterPt(po);
+      R_AttachPolyObject(po);
 #endif
    }
 
@@ -1222,12 +1229,15 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
 #ifndef R_DYNASEGS
       Polyobj_removeFromSubsec(po);   // remove from subsector
+#else
+      R_DetachPolyObject(po);
 #endif
       Polyobj_linkToBlockmap(po);     // relink to blockmap
 #ifndef R_DYNASEGS
       Polyobj_attachToSubsec(po);     // relink to subsector
 #else
       Polyobj_setCenterPt(po);
+      R_AttachPolyObject(po);
 #endif
    }
 
