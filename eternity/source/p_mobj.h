@@ -628,7 +628,6 @@ d_inline static fixed_t getTargetY(mobj_t *mo)
    return mo->target->y + link->y;
 }
 
-
 // SoM: if I am not mistaken (which I shouldn't be) linked portals only ever make an
 // x and y offset... Maybe I should phase out the z offset stuff?
 d_inline static fixed_t getTargetZ(mobj_t *mo)
@@ -645,6 +644,36 @@ d_inline static fixed_t getTargetZ(mobj_t *mo)
    return mo->target->z + link->z;
 }
 
+// haleyjd 05/21/08: Functions like the above, but when we have a specific
+// mobj_t pointer we want to use, and not mo->target.
+
+d_inline static fixed_t getThingX(mobj_t *mo1, mobj_t *mo2)
+{
+   linkoffset_t *link;
+
+   if(!mo1 || !mo2)
+      return 0;
+
+   if(mo1->groupid == mo2->groupid ||
+      !(link = P_GetLinkOffset(mo1->groupid, mo2->groupid)))
+      return mo2->x;
+
+   return mo2->x + link->x;
+}
+
+d_inline static fixed_t getThingY(mobj_t *mo1, mobj_t *mo2)
+{
+   linkoffset_t *link;
+
+   if(!mo1 || !mo2)
+      return 0;
+
+   if(mo1->groupid == mo2->groupid ||
+      !(link = P_GetLinkOffset(mo1->groupid, mo2->groupid)))
+      return mo2->y;
+
+   return mo2->y + link->y;
+}
 
 #endif
 

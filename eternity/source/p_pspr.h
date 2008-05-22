@@ -33,6 +33,7 @@
 #include "m_fixed.h"
 #include "tables.h"
 #include "doomdef.h"
+#include "p_mobj.h"
 
 // Needs to include the precompiled sprite animation tables.
 //
@@ -78,6 +79,7 @@ typedef struct
 extern int weapon_preferences[2][NUMWEAPONS+1];      // killough 5/2/98
 int P_WeaponPreferred(int w1, int w2);
 extern int weapon_speed, default_weapon_speed;
+extern boolean action_from_pspr;                     // haleyjd 05/21/08
 
 struct player_s;
 int P_SwitchWeapon(struct player_s *player);
@@ -85,6 +87,8 @@ boolean P_CheckAmmo(struct player_s *player);
 void P_SetupPsprites(struct player_s *curplayer);
 void P_MovePsprites(struct player_s *curplayer);
 void P_DropWeapon(struct player_s *player);
+
+extern void P_BulletSlope(mobj_t *mo);
 
 weaponinfo_t *P_GetReadyWeapon(player_t *player);
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);

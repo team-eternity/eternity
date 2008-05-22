@@ -82,6 +82,13 @@ static const int recoil_values[] = {    // phares
    80,  // wp_supershotgun
 };
 
+// haleyjd 05/21/08:
+// This global is only asserted while an action function is being dispatched
+// from inside P_SetPsprite. This allows codepointer functions to behave 
+// differently if called by mobj_t's or by player weapons.
+boolean action_from_pspr = false;
+
+
 //
 // P_SetPsprite
 //
@@ -129,8 +136,9 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       // Modified handling.
       if(state->action)
       {
-         //state->action(player, psp);
+         action_from_pspr = true;
          state->action(player->mo);
+         action_from_pspr = false;
          if(!psp->state)
             break;
       }
@@ -968,7 +976,7 @@ static fixed_t bulletslope;
 // Sets a slope so a near miss is at aproximately
 // the height of the intended target
 //
-static void P_BulletSlope(mobj_t *mo)
+void P_BulletSlope(mobj_t *mo)
 {
    angle_t an = mo->angle;    // see which target is to be aimed at
    

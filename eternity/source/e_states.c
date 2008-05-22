@@ -579,10 +579,21 @@ static void E_ParseMiscField(char *value, long *target)
    {
       char *endptr;
       long val;
+      double dval;
 
       // see if it is a number
-      // 11/11/03: use strtol to support hex and oct input
-      val = strtol(value, &endptr, 0);
+      if(strchr(value, '.')) // has a decimal point?
+      {
+         dval = strtod(value, &endptr);
+
+         // convert result to fixed-point
+         val = (fixed_t)(dval * FRACUNIT);
+      }
+      else
+      {
+         // 11/11/03: use strtol to support hex and oct input
+         val = strtol(value, &endptr, 0);
+      }
 
       // haleyjd 04/02/08:
       // no? then try certain namespaces in a predefined order of precedence

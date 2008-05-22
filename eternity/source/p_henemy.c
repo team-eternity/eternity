@@ -42,6 +42,7 @@
 #include "p_maputl.h"
 #include "p_enemy.h"
 #include "p_map.h"
+#include "p_pspr.h"
 #include "p_spec.h"
 #include "p_info.h"
 #include "e_states.h"
@@ -59,6 +60,10 @@ void A_Chase(mobj_t *actor);
 void A_Fall(mobj_t *actor);
 void A_Pain(mobj_t *actor);
 void A_Die(mobj_t *actor);
+
+// stuff from p_pspr.c:
+
+void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
 //
 // A_SpawnGlitter
@@ -3059,15 +3064,162 @@ void A_TargetJump(mobj_t *mo)
 }
 
 //
+// A_JumpIfTargetInLOS
+//
+// ZDoom codepointer #1, implemented from scratch using wiki
+// documentation. 100% GPL version.
+//
+// args[0] : statenum
+// args[1] : fov
+// args[2] : proj_target
+//
+void A_JumpIfTargetInLOS(mobj_t *mo)
+{
+   int     statenum;
+
+   if(action_from_pspr)
+   {
+      // called from a weapon frame
+      player_t *player = mo->player;
+      pspdef_t *pspr   = &(player->psprites[player->curpsprite]);
+
+      // see if the player has an autoaim target
+      P_BulletSlope(mo);
+      if(!tm->linetarget)
+         return;
+
+      // prepare to jump!
+      statenum = pspr->state->args[0];
+
+      // validate state number
+      if((statenum = E_StateNumForDEHNum(statenum)) == NUMSTATES)
+         return;
+
+      P_SetPsprite(player, player->curpsprite, statenum);
+   }
+   else
+   {
+      mobj_t *target = mo->target;
+
+      // if a missile, determine what to do from args[2]
+      if(mo->flags & MF_MISSILE)
+      {
+         switch(mo->state->args[2])
+         {
+         default:
+         case 0: // 0 == use originator (mo->target)
+            break;
+         case 1: // 1 == use seeker target
+            target = mo->tracer;
+            break;
+         }
+      }
+
+      // no target? nothing else to do
+      if(!target)
+         return;
+
+      // check fov if one is specified
+      if(mo->state->args[1])
+      {
+         angle_t fov  = FixedToAngle(mo->state->args[1]);
+         angle_t tang = R_PointToAngle2(mo->x, mo->y,
+#ifdef R_LINKEDPORTALS
+                                        getThingX(mo, target), 
+                                        getThingY(mo, target));
+#else
+                                        target->x, target->y);
+#endif
+         angle_t minang = mo->angle - fov / 2;
+         angle_t maxang = mo->angle + fov / 2;
+
+         // if the angles are backward, compare differently
+         if((minang > maxang) ? tang < minang && tang > maxang 
+                              : tang < minang || tang > maxang)
+         {
+            return;
+         }
+      }
+
+      // check line of sight 
+      if(!P_CheckSight(mo, target))
+         return;
+
+      // prepare to jump!
+      statenum = mo->state->args[0];
+
+      // validate state number
+      if((statenum = E_StateNumForDEHNum(statenum)) == NUMSTATES)
+         return;
+      
+      P_SetMobjState(mo, statenum);
+   }
+
+}
+
+//
+// A_SetTranslucent
+//
+// ZDoom codepointer #2, implemented from scratch using wiki
+// documentation. 100% GPL version.
+// 
+// args[0] : alpha
+// args[1] : mode
+//
+void A_SetTranslucent(mobj_t *mo)
+{
+   fixed_t alpha = (fixed_t)(mo->state->args[0]);
+   int     mode  = mo->state->args[1];
+
+   // rangecheck alpha
+   if(alpha < 0)
+      alpha = 0;
+   else if(alpha > FRACUNIT)
+      alpha = FRACUNIT;
+
+   // unset any relevant flags first
+   mo->flags  &= ~MF_SHADOW;      // no shadow
+   mo->flags  &= ~MF_TRANSLUCENT; // no BOOM translucency
+   mo->flags3 &= ~MF3_TLSTYLEADD; // no additive
+   mo->translucency = FRACUNIT;   // no flex translucency
+
+   // set flags/translucency properly
+   switch(mode)
+   {
+   case 0: // 0 == normal translucency
+      mo->translucency = alpha;
+      break;
+   case 1: // 1 == additive
+      mo->translucency = alpha;
+      mo->flags3 |= MF3_TLSTYLEADD;
+      break;
+   case 2: // 2 == spectre fuzz
+      mo->flags |= MF_SHADOW;
+      break;
+   default: // ???
+      break;
+   }
+}
+
+//
+// A_AlertMonsters
+//
+// ZDoom codepointer #3, implemented from scratch using wiki
+// documentation. 100% GPL version.
+// 
+void A_AlertMonsters(mobj_t *mo)
+{
+   if(mo->target)
+      P_NoiseAlert(mo->target, mo->target);
+}
+
+//
 // Weapon Frame Scripting
 //
 // These are versions of the above, crafted especially to use the new
 // weapon counters.
 // haleyjd 03/31/06
 //
-
-// stuff from p_pspr.c:
-void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
 //
 // A_WeaponCtrJump
@@ -3092,7 +3244,7 @@ void A_WeaponCtrJump(mobj_t *mo)
    if(!(player = mo->player))
       return;
 
-   pspr = &player->psprites[player->curpsprite];
+   pspr = &(player->psprites[player->curpsprite]);
 
    statenum  = pspr->state->args[0];
    checktype = pspr->state->args[1];
@@ -3189,7 +3341,7 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    if(!(player = mo->player))
       return;
 
-   pspr = &player->psprites[player->curpsprite];
+   pspr = &(player->psprites[player->curpsprite]);
 
    cnum       = pspr->state->args[0];
    startstate = pspr->state->args[1];
@@ -3252,7 +3404,7 @@ void A_WeaponSetCtr(mobj_t *mo)
    if(!(player = mo->player))
       return;
 
-   pspr = &player->psprites[player->curpsprite];
+   pspr = &(player->psprites[player->curpsprite]);
 
    cnum      = pspr->state->args[0];
    value     = (short)(pspr->state->args[1]);
@@ -3333,7 +3485,7 @@ void A_WeaponCtrOp(mobj_t *mo)
    if(!(player = mo->player))
       return;
 
-   pspr = &player->psprites[player->curpsprite];
+   pspr = &(player->psprites[player->curpsprite]);
 
    c_oper1_num = pspr->state->args[0];
    c_oper2_num = pspr->state->args[1];
@@ -3436,7 +3588,7 @@ void A_WeaponCopyCtr(mobj_t *mo)
    if(!(player = mo->player))
       return;
 
-   pspr  = &player->psprites[player->curpsprite];
+   pspr  = &(player->psprites[player->curpsprite]);
    cnum1 = pspr->state->args[0];
    cnum2 = pspr->state->args[1];
 

@@ -1367,6 +1367,11 @@ extern void A_ImpXDeath2();
 extern void A_ImpExplode();
 extern void A_PlayerSkull();
 
+// zdoom-inspired pointers
+void A_JumpIfTargetInLOS();
+void A_SetTranslucent();
+void A_AlertMonsters();
+
 // eternity tc ptrs: TODO: remove these?
 extern void A_FogSpawn();
 extern void A_FogMove();
@@ -1568,7 +1573,12 @@ deh_bexptr deh_bexptrs[] =
   {A_ImpXDeath2,        "ImpXDeath2"},
   {A_ImpExplode,        "ImpExplode"},
   {A_PlayerSkull,       "PlayerSkull"},
-  
+
+  // zdoom-inspired pointers
+  {A_AlertMonsters,     "AlertMonsters"},
+  {A_JumpIfTargetInLOS, "JumpIfTargetInLOS"},
+  {A_SetTranslucent,    "SetTranslucent"},
+
   // ETERNITY TC ptrs -- TODO: eliminate these
   {A_FogSpawn,  "FogSpawn"},
   {A_FogMove,   "FogMove"},
