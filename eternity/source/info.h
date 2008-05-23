@@ -361,6 +361,7 @@ typedef struct
    int altsprite;     // haleyjd 09/26/04: alternate sprite
    int topdamage;     // haleyjd 09/22/06: burn damage for 3D clipping :)
    int topdamagemask; // haleyjd 09/23/06: time mask for topdamage
+   int alphavelocity; // haleyjd 05/23/08: alpha velocity
    
    // haleyjd: fields needed for EDF identification and hashing
    char name[41];     // name of this thing type (max 40 chars)

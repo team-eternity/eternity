@@ -104,6 +104,7 @@ int UnknownThingType;
 #define ITEM_TNG_BASICTYPE "basictype"
 #define ITEM_TNG_TOPDAMAGE "topdamage"
 #define ITEM_TNG_TOPDMGMASK "topdamagemask"
+#define ITEM_TNG_AVELOCITY "alphavelocity"
 #define ITEM_TNG_ACS_SPAWN "acs_spawndata"
 #define ITEM_TNG_ACS_NUM "num"
 #define ITEM_TNG_ACS_MODES "modes"
@@ -387,6 +388,7 @@ static int E_ModCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BASICTYPE,    "",       CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDAMAGE,    0,        CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDMGMASK,   0,        CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_AVELOCITY,  0.0f,     CFGF_NONE), \
    CFG_SEC(ITEM_TNG_ACS_SPAWN,    acs_data, CFGF_NOCASE), \
    CFG_END()
 
@@ -1354,6 +1356,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    // 09/23/06: process topdamagemask
    if(IS_SET(ITEM_TNG_TOPDMGMASK))
       mobjinfo[i].topdamagemask = cfg_getint(thingsec, ITEM_TNG_TOPDMGMASK);
+
+   // 05/23/08: process alphavelocity
+   if(IS_SET(ITEM_TNG_AVELOCITY))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_AVELOCITY);
+      mobjinfo[i].alphavelocity = (fixed_t)(tempfloat * FRACUNIT);
+   }
 
    // 01/17/07: process acs_spawndata
    if(cfg_size(thingsec, ITEM_TNG_ACS_SPAWN) > 0)

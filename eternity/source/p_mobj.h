@@ -281,6 +281,7 @@ typedef enum
    MF3_ALWAYSFAST   = 0x08000000,  // object is always in -fast mode
    MF3_PASSMOBJ     = 0x10000000,  // haleyjd: OVER_UNDER
    MF3_DONTOVERLAP  = 0x20000000,  // haleyjd: OVER_UNDER
+   MF3_CYCLEALPHA   = 0x40000000,  // alpha cycles from 0 to 65536 perpetually
 } mobjflag3_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -452,12 +453,12 @@ struct mobj_s
    short special2;
    short special3;
 
-   int effects;      // particle effect flag field
-   int translucency; // zdoom-style translucency level
-   int floatbob;     // floatbob offset
-   int damage;       // haleyjd 08/02/04: copy damage to mobj now
-   fixed_t floorclip;    // haleyjd 08/07/04: floor clip amount
-
+   int effects;       // particle effect flag field
+   int translucency;  // zdoom-style translucency level
+   int alphavelocity; // haleyjd 05/23/08: change in translucency
+   int floatbob;      // floatbob offset
+   int damage;        // haleyjd 08/02/04: copy damage to mobj now
+   fixed_t floorclip; // haleyjd 08/07/04: floor clip amount
 
    fixed_t secfloorz;
    fixed_t secceilz;
@@ -468,7 +469,6 @@ struct mobj_s
    // clipping pass (map architecture + 3d sides).
    fixed_t passfloorz;
    fixed_t passceilz;
-
 
    // scripting fields
    long args[5];       // arguments
@@ -481,16 +481,19 @@ struct mobj_s
    mobj_t **tid_prevn; // ptr to last thing's next pointer
 
 #ifdef R_LINKEDPORTALS
-   // SoM: When a mobj partially passes through a floor/ceiling portal, it needs to clip against
-   // two sets of map structures and map objects, the one it's currently in and then one it's
-   // passing into. The current plane (haha) is to spawn a dummy mobj on the other side of the
-   // portal and use that to occupy space for the mobj / send feedback to the main mobj as to
-   // where its position will be on the other side. This will require a lot of special clipping
-   // code...
+   // SoM: When a mobj partially passes through a floor/ceiling portal, it 
+   // needs to clip against two sets of map structures and map objects, the 
+   // one it's currently in and then one it's passing into. The current plane
+   // (haha) is to spawn a dummy mobj on the other side of the portal and use
+   // that to occupy space for the mobj / send feedback to the main mobj as to
+   // where its position will be on the other side. This will require a lot of
+   // special clipping code...
    mobj_t *portaldummy;
-   // This should only be set if the mobj is a portaldummy. This is the link back to the object
-   // that this is a dummy for. This link will be used for such things as the dummy taking damage
-   // (intersecting bullts and rockets, anyone?) 
+
+   // This should only be set if the mobj is a portaldummy. This is the link 
+   // back to the object that this is a dummy for. This link will be used for
+   // such things as the dummy taking damage (intersecting bullets and rockets, 
+   // anyone?)
    mobj_t *dummyto;
 #endif
 };

@@ -1011,6 +1011,24 @@ void P_MobjThinker(mobj_t *mobj)
    // removed old code which looked at target references
    // (we use pointer reference counting now)
 
+   // haleyjd 05/23/08: increment counters
+   if(mobj->alphavelocity)
+   {
+      mobj->translucency += mobj->alphavelocity;
+      if(mobj->translucency < 0)
+      {
+         mobj->translucency = 0;
+         if(mobj->flags3 & MF3_CYCLEALPHA)
+            mobj->alphavelocity = -mobj->alphavelocity;
+      }
+      else if(mobj->translucency > FRACUNIT)
+      {
+         mobj->translucency = FRACUNIT;
+         if(mobj->flags3 & MF3_CYCLEALPHA)
+            mobj->alphavelocity = -mobj->alphavelocity;
+      }
+   }
+
    // haleyjd: sentient things do not think during cinemas
    if(cinema_pause && sentient(mobj))
       return;
@@ -1183,7 +1201,7 @@ void P_MobjThinker(mobj_t *mobj)
    // calling action functions at transitions
    // killough 11/98: simplify
 
-   if (mobj->tics != -1)      // you can cycle through multiple states in a tic
+   if(mobj->tics != -1) // you can cycle through multiple states in a tic
    {
       if(!--mobj->tics)
          P_SetMobjState(mobj, mobj->state->nextstate);
@@ -1211,8 +1229,8 @@ void P_MobjThinker(mobj_t *mobj)
 
       if(can_respawn && mobj->movecount >= 12*35 &&
          !(leveltime & 31) && P_Random(pr_respawn) <= 4)
-      { // check for nightmare respawn
-
+      { 
+         // check for nightmare respawn
          if(mobj->flags2 & MF2_REMOVEDEAD)
             P_RemoveMobj(mobj);
          else
@@ -1270,7 +1288,8 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->skin = NULL;
 
    // haleyjd: zdoom-style translucency level
-   mobj->translucency = info->translucency;
+   mobj->translucency  = info->translucency;
+   mobj->alphavelocity = info->alphavelocity; // 5/23/08
 
    if(mobj->translucency != FRACUNIT)
    {

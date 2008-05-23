@@ -21,7 +21,7 @@
 //
 // DESCRIPTION:
 //
-// Hexen-inspired action functions
+// Hexen- and ZDoom-inspired action functions
 //
 // DISCLAIMER: None of this code was taken from Hexen. Any
 // resemblence is purely coincidental or is the result of work from
@@ -139,6 +139,40 @@ boolean P_StartQuake(long *args)
    }
 
    return ret;
+}
+
+//
+// A_FadeIn
+//
+// ZDoom-inspired action function, implemented using wiki docs.
+//
+// args[0] : alpha step
+//
+void A_FadeIn(mobj_t *mo)
+{
+   mo->translucency += mo->state->args[0];
+   
+   if(mo->translucency < 0)
+      mo->translucency = 0;
+   else if(mo->translucency > FRACUNIT)
+      mo->translucency = FRACUNIT;
+}
+
+//
+// A_FadeOut
+//
+// ZDoom-inspired action function, implemented using wiki docs.
+//
+// args[0] : alpha step
+//
+void A_FadeOut(mobj_t *mo)
+{
+   mo->translucency -= mo->state->args[0];
+   
+   if(mo->translucency < 0)
+      mo->translucency = 0;
+   else if(mo->translucency > FRACUNIT)
+      mo->translucency = FRACUNIT;
 }
 
 // EOF

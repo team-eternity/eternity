@@ -314,6 +314,7 @@ dehflags_t deh_mobjflags[] =
   {"ALWAYSFAST",       0x08000000, 2}, // object is always in -fast mode
   {"PASSMOBJ",         0x10000000, 2}, // OVER_UNDER
   {"DONTOVERLAP",      0x20000000, 2}, // OVER_UNDER
+  {"CYCLEALPHA",       0x40000000, 2}, // alpha cycles from 0 to 65536 perpetually
 
   { NULL,              0 }             // NULL terminator
 };
