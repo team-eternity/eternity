@@ -121,15 +121,15 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 
    // EDF FIXME: might should move to an initialization function
    if(!seenstate_tab)
-      seenstate_tab = Z_Calloc(NUMSTATES, sizeof(statenum_t), PU_STATIC, NULL);
+      seenstate_tab = calloc(NUMSTATES, sizeof(statenum_t));
 
    seenstate = seenstate_tab;
 
    // if recursion detected, clear state table
    if(recursion++)
    {
-      tempstate = malloc(sizeof(statenum_t)*NUMSTATES);
-      memset(seenstate=tempstate, 0, sizeof(statenum_t)*NUMSTATES);
+      tempstate = calloc(NUMSTATES, sizeof(statenum_t));
+      seenstate=tempstate;
    }
 
    do
@@ -178,7 +178,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 
    // haleyjd: free temporary state table (see notes above)
    if(tempstate)
-      Z_Free(tempstate);
+      free(tempstate);
 
    return ret;
 }

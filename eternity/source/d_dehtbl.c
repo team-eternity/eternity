@@ -1182,203 +1182,204 @@ const char *mapnamesh[] = // haleyjd: heretic map names
 
 // External references to action functions scattered about the code
 
-extern void A_Light0();
-extern void A_WeaponReady();
-extern void A_Lower();
-extern void A_Raise();
-extern void A_Punch();
-extern void A_ReFire();
-extern void A_FirePistol();
-extern void A_Light1();
-extern void A_FireShotgun();
-extern void A_Light2();
-extern void A_FireShotgun2();
-extern void A_CheckReload();
-extern void A_OpenShotgun2();
-extern void A_LoadShotgun2();
-extern void A_CloseShotgun2();
-extern void A_FireCGun();
-extern void A_GunFlash();
-extern void A_FireMissile();
-extern void A_Saw();
-extern void A_FirePlasma();
-extern void A_BFGsound();
-extern void A_FireBFG();
-extern void A_BFGSpray();
-extern void A_Explode();
-extern void A_Pain();
-extern void A_PlayerScream();
-extern void A_Fall();
-extern void A_XScream();
-extern void A_Look();
-extern void A_Chase();
-extern void A_FaceTarget();
-extern void A_PosAttack();
-extern void A_Scream();
-extern void A_SPosAttack();
-extern void A_VileChase();
-extern void A_VileStart();
-extern void A_VileTarget();
-extern void A_VileAttack();
-extern void A_StartFire();
-extern void A_Fire();
-extern void A_FireCrackle();
-extern void A_Tracer();
-extern void A_SkelWhoosh();
-extern void A_SkelFist();
-extern void A_SkelMissile();
-extern void A_FatRaise();
-extern void A_FatAttack1();
-extern void A_FatAttack2();
-extern void A_FatAttack3();
-extern void A_BossDeath();
-extern void A_CPosAttack();
-extern void A_CPosRefire();
-extern void A_TroopAttack();
-extern void A_SargAttack();
-extern void A_HeadAttack();
-extern void A_BruisAttack();
-extern void A_SkullAttack();
-extern void A_Metal();
-extern void A_SpidRefire();
-extern void A_BabyMetal();
-extern void A_BspiAttack();
-extern void A_Hoof();
-extern void A_CyberAttack();
-extern void A_PainAttack();
-extern void A_PainDie();
-extern void A_KeenDie();
-extern void A_BrainPain();
-extern void A_BrainScream();
-extern void A_BrainDie();
-extern void A_BrainAwake();
-extern void A_BrainSpit();
-extern void A_SpawnSound();
-extern void A_SpawnFly();
-extern void A_BrainExplode();
-extern void A_Detonate();        // killough 8/9/98
-extern void A_Mushroom();        // killough 10/98
-extern void A_Die();             // killough 11/98
-extern void A_Spawn();           // killough 11/98
-extern void A_Turn();            // killough 11/98
-extern void A_Face();            // killough 11/98
-extern void A_Scratch();         // killough 11/98
-extern void A_PlaySound();       // killough 11/98
-extern void A_RandomJump();      // killough 11/98
-extern void A_LineEffect();      // killough 11/98
-extern void A_Nailbomb();
+extern void A_Light0(mobj_t *);
+extern void A_WeaponReady(mobj_t *);
+extern void A_Lower(mobj_t *);
+extern void A_Raise(mobj_t *);
+extern void A_Punch(mobj_t *);
+extern void A_ReFire(mobj_t *);
+extern void A_FirePistol(mobj_t *);
+extern void A_Light1(mobj_t *);
+extern void A_FireShotgun(mobj_t *);
+extern void A_Light2(mobj_t *);
+extern void A_FireShotgun2(mobj_t *);
+extern void A_CheckReload(mobj_t *);
+extern void A_OpenShotgun2(mobj_t *);
+extern void A_LoadShotgun2(mobj_t *);
+extern void A_CloseShotgun2(mobj_t *);
+extern void A_FireCGun(mobj_t *);
+extern void A_GunFlash(mobj_t *);
+extern void A_FireMissile(mobj_t *);
+extern void A_Saw(mobj_t *);
+extern void A_FirePlasma(mobj_t *);
+extern void A_BFGsound(mobj_t *);
+extern void A_FireBFG(mobj_t *);
+extern void A_BFGSpray(mobj_t *);
+extern void A_Explode(mobj_t *);
+extern void A_Pain(mobj_t *);
+extern void A_PlayerScream(mobj_t *);
+extern void A_Fall(mobj_t *);
+extern void A_XScream(mobj_t *);
+extern void A_Look(mobj_t *);
+extern void A_Chase(mobj_t *);
+extern void A_FaceTarget(mobj_t *);
+extern void A_PosAttack(mobj_t *);
+extern void A_Scream(mobj_t *);
+extern void A_SPosAttack(mobj_t *);
+extern void A_VileChase(mobj_t *);
+extern void A_VileStart(mobj_t *);
+extern void A_VileTarget(mobj_t *);
+extern void A_VileAttack(mobj_t *);
+extern void A_StartFire(mobj_t *);
+extern void A_Fire(mobj_t *);
+extern void A_FireCrackle(mobj_t *);
+extern void A_Tracer(mobj_t *);
+extern void A_SkelWhoosh(mobj_t *);
+extern void A_SkelFist(mobj_t *);
+extern void A_SkelMissile(mobj_t *);
+extern void A_FatRaise(mobj_t *);
+extern void A_FatAttack1(mobj_t *);
+extern void A_FatAttack2(mobj_t *);
+extern void A_FatAttack3(mobj_t *);
+extern void A_BossDeath(mobj_t *);
+extern void A_CPosAttack(mobj_t *);
+extern void A_CPosRefire(mobj_t *);
+extern void A_TroopAttack(mobj_t *);
+extern void A_SargAttack(mobj_t *);
+extern void A_HeadAttack(mobj_t *);
+extern void A_BruisAttack(mobj_t *);
+extern void A_SkullAttack(mobj_t *);
+extern void A_Metal(mobj_t *);
+extern void A_SpidRefire(mobj_t *);
+extern void A_BabyMetal(mobj_t *);
+extern void A_BspiAttack(mobj_t *);
+extern void A_Hoof(mobj_t *);
+extern void A_CyberAttack(mobj_t *);
+extern void A_PainAttack(mobj_t *);
+extern void A_PainDie(mobj_t *);
+extern void A_KeenDie(mobj_t *);
+extern void A_BrainPain(mobj_t *);
+extern void A_BrainScream(mobj_t *);
+extern void A_BrainDie(mobj_t *);
+extern void A_BrainAwake(mobj_t *);
+extern void A_BrainSpit(mobj_t *);
+extern void A_SpawnSound(mobj_t *);
+extern void A_SpawnFly(mobj_t *);
+extern void A_BrainExplode(mobj_t *);
+extern void A_Detonate(mobj_t *);        // killough 8/9/98
+extern void A_Mushroom(mobj_t *);        // killough 10/98
+extern void A_Die(mobj_t *);             // killough 11/98
+extern void A_Spawn(mobj_t *);           // killough 11/98
+extern void A_Turn(mobj_t *);            // killough 11/98
+extern void A_Face(mobj_t *);            // killough 11/98
+extern void A_Scratch(mobj_t *);         // killough 11/98
+extern void A_PlaySound(mobj_t *);       // killough 11/98
+extern void A_RandomJump(mobj_t *);      // killough 11/98
+extern void A_LineEffect(mobj_t *);      // killough 11/98
+extern void A_Nailbomb(mobj_t *);
 
 // haleyjd: start new eternity action functions
-extern void A_SetFlags();
-extern void A_UnSetFlags();
-extern void A_BetaSkullAttack();
-extern void A_StartScript();        // haleyjd 1/25/00: Script wrapper
-extern void A_PlayerStartScript();
-extern void A_FireGrenade();
-extern void A_FireCustomBullets();
-extern void A_FirePlayerMissile();
-extern void A_CustomPlayerMelee();
-extern void A_GenTracer();
-extern void A_BFG11KHit();
-extern void A_BouncingBFG();
-extern void A_BFGBurst();
-extern void A_FireOldBFG();
-extern void A_KeepChasing();
-extern void A_Stop();
-extern void A_PlayerThunk();
-extern void A_MissileAttack();
-extern void A_MissileSpread();
-extern void A_BulletAttack();
-extern void A_HealthJump();
-extern void A_CounterJump();
-extern void A_CounterSwitch();
-extern void A_SetCounter();
-extern void A_CopyCounter();
-extern void A_CounterOp();
-extern void A_SetTics();
-extern void A_AproxDistance();
-extern void A_ShowMessage();
-extern void A_RandomWalk();
-extern void A_TargetJump();
-extern void A_ThingSummon();
-extern void A_KillChildren();
-extern void A_WeaponCtrJump();
-extern void A_WeaponCtrSwitch();
-extern void A_WeaponSetCtr();
-extern void A_WeaponCopyCtr();
-extern void A_WeaponCtrOp();
-extern void A_AmbientThinker();
-extern void A_SteamSpawn();
+extern void A_SetFlags(mobj_t *);
+extern void A_UnSetFlags(mobj_t *);
+extern void A_BetaSkullAttack(mobj_t *);
+extern void A_StartScript(mobj_t *); // haleyjd 1/25/00: Script wrapper
+extern void A_PlayerStartScript(mobj_t *);
+extern void A_FireGrenade(mobj_t *);
+extern void A_FireCustomBullets(mobj_t *);
+extern void A_FirePlayerMissile(mobj_t *);
+extern void A_CustomPlayerMelee(mobj_t *);
+extern void A_GenTracer(mobj_t *);
+extern void A_BFG11KHit(mobj_t *);
+extern void A_BouncingBFG(mobj_t *);
+extern void A_BFGBurst(mobj_t *);
+extern void A_FireOldBFG(mobj_t *);
+extern void A_KeepChasing(mobj_t *);
+extern void A_Stop(mobj_t *);
+extern void A_PlayerThunk(mobj_t *);
+extern void A_MissileAttack(mobj_t *);
+extern void A_MissileSpread(mobj_t *);
+extern void A_BulletAttack(mobj_t *);
+extern void A_HealthJump(mobj_t *);
+extern void A_CounterJump(mobj_t *);
+extern void A_CounterSwitch(mobj_t *);
+extern void A_SetCounter(mobj_t *);
+extern void A_CopyCounter(mobj_t *);
+extern void A_CounterOp(mobj_t *);
+extern void A_SetTics(mobj_t *);
+extern void A_AproxDistance(mobj_t *);
+extern void A_ShowMessage(mobj_t *);
+extern void A_RandomWalk(mobj_t *);
+extern void A_TargetJump(mobj_t *);
+extern void A_ThingSummon(mobj_t *);
+extern void A_KillChildren(mobj_t *);
+extern void A_WeaponCtrJump(mobj_t *);
+extern void A_WeaponCtrSwitch(mobj_t *);
+extern void A_WeaponSetCtr(mobj_t *);
+extern void A_WeaponCopyCtr(mobj_t *);
+extern void A_WeaponCtrOp(mobj_t *);
+extern void A_AmbientThinker(mobj_t *);
+extern void A_SteamSpawn(mobj_t *);
 
 // haleyjd 10/12/02: Heretic pointers
-extern void A_SpawnGlitter();
-extern void A_AccelGlitter();
-extern void A_SpawnAbove();
-extern void A_MummyAttack();
-extern void A_MummyAttack2();
-extern void A_MummySoul();
-extern void A_HticDrop();
-extern void A_HticTracer();
-extern void A_ClinkAttack();
-extern void A_WizardAtk1();
-extern void A_WizardAtk2();
-extern void A_WizardAtk3();
-extern void A_Srcr2Decide();
-extern void A_Srcr2Attack();
-extern void A_BlueSpark();
-extern void A_GenWizard();
-extern void A_Sor2DthInit();
-extern void A_Sor2DthLoop();
-extern void A_HticExplode();
-extern void A_HticBossDeath();
-extern void A_PodPain();
-extern void A_RemovePod();
-extern void A_MakePod();
-extern void A_KnightAttack();
-extern void A_DripBlood();
-extern void A_BeastAttack();
-extern void A_BeastPuff();
-extern void A_SnakeAttack();
-extern void A_SnakeAttack2();
-extern void A_Sor1Chase();
-extern void A_Sor1Pain();
-extern void A_Srcr1Attack();
-extern void A_SorcererRise();
-extern void A_VolcanoBlast();
-extern void A_VolcBallImpact();
-extern void A_MinotaurAtk1();
-extern void A_MinotaurDecide();
-extern void A_MinotaurAtk2();
-extern void A_MinotaurAtk3();
-extern void A_MinotaurCharge();
-extern void A_MntrFloorFire();
-extern void A_LichFire();
-extern void A_LichWhirlwind();
-extern void A_LichAttack();
-extern void A_WhirlwindSeek();
-extern void A_LichIceImpact();
-extern void A_LichFireGrow();
-extern void A_ImpChargeAtk();
-extern void A_ImpMeleeAtk();
-extern void A_ImpMissileAtk();
-extern void A_ImpDeath();
-extern void A_ImpXDeath1();
-extern void A_ImpXDeath2();
-extern void A_ImpExplode();
-extern void A_PlayerSkull();
+extern void A_SpawnGlitter(mobj_t *);
+extern void A_AccelGlitter(mobj_t *);
+extern void A_SpawnAbove(mobj_t *);
+extern void A_MummyAttack(mobj_t *);
+extern void A_MummyAttack2(mobj_t *);
+extern void A_MummySoul(mobj_t *);
+extern void A_HticDrop(mobj_t *);
+extern void A_HticTracer(mobj_t *);
+extern void A_ClinkAttack(mobj_t *);
+extern void A_WizardAtk1(mobj_t *);
+extern void A_WizardAtk2(mobj_t *);
+extern void A_WizardAtk3(mobj_t *);
+extern void A_Srcr2Decide(mobj_t *);
+extern void A_Srcr2Attack(mobj_t *);
+extern void A_BlueSpark(mobj_t *);
+extern void A_GenWizard(mobj_t *);
+extern void A_Sor2DthInit(mobj_t *);
+extern void A_Sor2DthLoop(mobj_t *);
+extern void A_HticExplode(mobj_t *);
+extern void A_HticBossDeath(mobj_t *);
+extern void A_PodPain(mobj_t *);
+extern void A_RemovePod(mobj_t *);
+extern void A_MakePod(mobj_t *);
+extern void A_KnightAttack(mobj_t *);
+extern void A_DripBlood(mobj_t *);
+extern void A_BeastAttack(mobj_t *);
+extern void A_BeastPuff(mobj_t *);
+extern void A_SnakeAttack(mobj_t *);
+extern void A_SnakeAttack2(mobj_t *);
+extern void A_Sor1Chase(mobj_t *);
+extern void A_Sor1Pain(mobj_t *);
+extern void A_Srcr1Attack(mobj_t *);
+extern void A_SorcererRise(mobj_t *);
+extern void A_VolcanoBlast(mobj_t *);
+extern void A_VolcBallImpact(mobj_t *);
+extern void A_MinotaurAtk1(mobj_t *);
+extern void A_MinotaurDecide(mobj_t *);
+extern void A_MinotaurAtk2(mobj_t *);
+extern void A_MinotaurAtk3(mobj_t *);
+extern void A_MinotaurCharge(mobj_t *);
+extern void A_MntrFloorFire(mobj_t *);
+extern void A_LichFire(mobj_t *);
+extern void A_LichWhirlwind(mobj_t *);
+extern void A_LichAttack(mobj_t *);
+extern void A_WhirlwindSeek(mobj_t *);
+extern void A_LichIceImpact(mobj_t *);
+extern void A_LichFireGrow(mobj_t *);
+extern void A_ImpChargeAtk(mobj_t *);
+extern void A_ImpMeleeAtk(mobj_t *);
+extern void A_ImpMissileAtk(mobj_t *);
+extern void A_ImpDeath(mobj_t *);
+extern void A_ImpXDeath1(mobj_t *);
+extern void A_ImpXDeath2(mobj_t *);
+extern void A_ImpExplode(mobj_t *);
+extern void A_PlayerSkull(mobj_t *);
 
 // zdoom-inspired pointers
-void A_JumpIfTargetInLOS();
-void A_SetTranslucent();
-void A_AlertMonsters();
+void A_JumpIfTargetInLOS(mobj_t *);
+void A_SetTranslucent(mobj_t *);
+void A_AlertMonsters(mobj_t *);
+void A_CheckPlayerDone(mobj_t *);
 
 // eternity tc ptrs: TODO: remove these?
-extern void A_FogSpawn();
-extern void A_FogMove();
+extern void A_FogSpawn(mobj_t *);
+extern void A_FogMove(mobj_t *);
 
 // haleyjd 07/13/03: special death actions for killem cheat
-extern void A_PainNukeSpec();
-extern void A_SorcNukeSpec();
+extern void A_PainNukeSpec(mobj_t *);
+extern void A_SorcNukeSpec(mobj_t *);
 
 // haleyjd 03/14/03: moved here, added hashing, eliminated useless
 // A_ prefixes on mnemonics
@@ -1578,6 +1579,7 @@ deh_bexptr deh_bexptrs[] =
   {A_AlertMonsters,     "AlertMonsters"},
   {A_JumpIfTargetInLOS, "JumpIfTargetInLOS"},
   {A_SetTranslucent,    "SetTranslucent"},
+  {A_CheckPlayerDone,   "CheckPlayerDone"},
 
   // ETERNITY TC ptrs -- TODO: eliminate these
   {A_FogSpawn,  "FogSpawn"},

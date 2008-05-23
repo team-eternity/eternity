@@ -24,6 +24,7 @@
 #include "sounds.h"
 #include "info.h"
 #include "d_think.h" // for actionf_t
+#include "p_mobj.h"
 
 // haleyjd 07/09/03: bexptr flags
 // BPF_PTHUNK -- allow player thunking to this pointer
@@ -31,10 +32,10 @@
 
 typedef struct
 {
-   actionf_t cptr; // actual pointer to the subroutine
-   char *lookup;   // mnemonic lookup string to be specified in BEX
-   int flags;      // haleyjd: flags
-   int next;       // haleyjd: for bex hash chaining   
+   void (*cptr)(mobj_t *); // actual pointer to the subroutine
+   char *lookup;           // mnemonic lookup string to be specified in BEX
+   int flags;              // haleyjd: flags
+   int next;               // haleyjd: for bex hash chaining   
 } deh_bexptr;
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c

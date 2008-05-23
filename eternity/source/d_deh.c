@@ -460,7 +460,7 @@ char *deh_misc[] =
 
 // to hold startup code pointers from INFO.C
 // haleyjd: now dynamic for EDF
-actionf_t *deh_codeptr;
+void (**deh_codeptr)(mobj_t *);
 
 // haleyjd 10/08/06: DeHackEd log file made module-global
 static FILE *fileout;
@@ -566,7 +566,7 @@ void ProcessDehFile(char *filename, const char *outfilename, int lumpnum)
       if(!i)
       {
          // haleyjd: allocate dynamically for EDF support
-         deh_codeptr = Z_Malloc(sizeof(actionf_t) * NUMSTATES,
+         deh_codeptr = Z_Malloc(sizeof(void (*)(mobj_t *)) * NUMSTATES,
                                 PU_STATIC, NULL);
       }
 

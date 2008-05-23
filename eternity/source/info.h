@@ -145,25 +145,27 @@ typedef enum
 
 } statenum_t;
 
+typedef struct mobj_s * mptr;
+
 // ********************************************************************
 // Definition of the state (frames) structure
 // ********************************************************************
 typedef struct
 {
-   spritenum_t sprite;       // sprite number to show
-   long        frame;        // which frame/subframe of the sprite is shown
-   long        tics;         // number of gametics this frame should last
-   void        (*action)();  // code pointer to function for action if any
-   statenum_t  nextstate;    // linked list pointer to next state or zero
-   long        misc1, misc2; // used for psprite positioning
-   long        particle_evt; // haleyjd: determines an event to run
-   long        args[5];      // haleyjd: state arguments
+   spritenum_t sprite;              // sprite number to show
+   long        frame;               // which frame/subframe of the sprite is shown
+   long        tics;                // number of gametics this frame should last
+   void        (*action)(mptr);     // code pointer to function for action if any
+   statenum_t  nextstate;           // linked list pointer to next state or zero
+   long        misc1, misc2;        // used for psprite positioning
+   long        particle_evt;        // haleyjd: determines an event to run
+   long        args[5];             // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
-   char        name[41];     // name of this state (max 40 chars)
-   int         dehnum;       // DeHackEd number for fast access, comp.
-   int         namenext;     // index of next state in name hash chain
-   int         dehnext;      // index of next state in DEH hash chain
+   char        name[41]; // name of this state (max 40 chars)
+   int         dehnum;   // DeHackEd number for fast access, comp.
+   int         namenext; // index of next state in name hash chain
+   int         dehnext;  // index of next state in DEH hash chain
 } state_t;
 
 // these are in info.c

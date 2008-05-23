@@ -2024,6 +2024,7 @@ void A_PlayerSkull(mobj_t *actor)
    mobj_t *head;
    static int skullType = -1;
 
+   // PCLASS_FIXME: skull type a playerclass property?
    if(skullType == -1)
       skullType = E_SafeThingType(MT_HPLAYERSKULL);
 
@@ -3211,6 +3212,25 @@ void A_AlertMonsters(mobj_t *mo)
 {
    if(mo->target)
       P_NoiseAlert(mo->target, mo->target);
+}
+
+//
+// A_CheckPlayerDone
+//
+// ZDoom codepointer #4. Needed for Heretic support also.
+// Extension: 
+//    args[0] == state DeHackEd number to transfer into
+//
+void A_CheckPlayerDone(mobj_t *mo)
+{
+   int statenum = mo->state->args[0];
+
+   if(!mo->player)
+   {
+      if((statenum = E_StateNumForDEHNum(statenum)) == NUMSTATES)
+         return;
+      P_SetMobjState(mo, statenum);
+   }
 }
 
 //
