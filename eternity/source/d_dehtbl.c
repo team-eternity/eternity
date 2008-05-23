@@ -1372,14 +1372,16 @@ void A_JumpIfTargetInLOS(mobj_t *);
 void A_SetTranslucent(mobj_t *);
 void A_AlertMonsters(mobj_t *);
 void A_CheckPlayerDone(mobj_t *);
+void A_FadeIn(mobj_t *);
+void A_FadeOut(mobj_t *);
 
 // eternity tc ptrs: TODO: remove these?
-extern void A_FogSpawn(mobj_t *);
-extern void A_FogMove(mobj_t *);
+void A_FogSpawn(mobj_t *);
+void A_FogMove(mobj_t *);
 
 // haleyjd 07/13/03: special death actions for killem cheat
-extern void A_PainNukeSpec(mobj_t *);
-extern void A_SorcNukeSpec(mobj_t *);
+void A_PainNukeSpec(mobj_t *);
+void A_SorcNukeSpec(mobj_t *);
 
 // haleyjd 03/14/03: moved here, added hashing, eliminated useless
 // A_ prefixes on mnemonics
@@ -1577,9 +1579,11 @@ deh_bexptr deh_bexptrs[] =
 
   // zdoom-inspired pointers
   {A_AlertMonsters,     "AlertMonsters"},
+  {A_CheckPlayerDone,   "CheckPlayerDone"},
+  {A_FadeIn,            "FadeIn"},
+  {A_FadeOut,           "FadeOut"},
   {A_JumpIfTargetInLOS, "JumpIfTargetInLOS"},
   {A_SetTranslucent,    "SetTranslucent"},
-  {A_CheckPlayerDone,   "CheckPlayerDone"},
 
   // ETERNITY TC ptrs -- TODO: eliminate these
   {A_FogSpawn,  "FogSpawn"},
