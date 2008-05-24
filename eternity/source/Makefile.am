@@ -6,7 +6,7 @@ games_PROGRAMS = eternity
 
 AM_CFLAGS = -I/usr/include/SDL -I/usr/local/include/SDL @SDL_CFLAGS@ -Wall\
 -D_SDL_VER -DNDEBUG -DAMX_NODYNALOAD -DR_LINKEDPORTALS -DR_PORTALS     \
--DOVER_UNDER -DPOLYOBJECTS -D_CONSOLE -DLINUX -lSDL_net
+-DOVER_UNDER -DPOLYOBJECTS -D_CONSOLE -DLINUX -fno-strict-aliasing
 
 eternity_SOURCES = \
 acs_intr.c      acs_intr.h     a_fixed.c   am_color.c  am_map.c    am_map.h    amx.c		\
@@ -47,5 +47,5 @@ v_block.h       version.c      version.h   v_font.c    v_font.h    v_misc.c    v
 v_patch.c       v_patch.h      v_video.c   v_video.h   wi_stuff.c  wi_stuff.h	 w_wad.c \
 w_wad.h         z_zone.c       z_zone.h
 
-eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer sdl/libsdlet.a\
+eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer -lSDL_net sdl/libsdlet.a\
 Confuse/libetconfuse.a textscreen/libtextscreen.a

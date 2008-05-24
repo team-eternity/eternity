@@ -1,5 +1,5 @@
 
-AM_CFLAGS = -I../ -I../textscreen @SDL_CFLAGS@ -I/usr/local/include/SDL -I/usr/include/SDL -D_SDL_VER -lSDL_net
+AM_CFLAGS = -I../ -I../textscreen @SDL_CFLAGS@ -I/usr/local/include/SDL -I/usr/include/SDL -D_SDL_VER -fno-strict-aliasing
 noinst_LIBRARIES = libsdlet.a
 
 libsdlet_a_SOURCES = i_main.c i_net.c i_video.c i_sound.c i_system.c \
