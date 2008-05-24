@@ -471,8 +471,8 @@ struct mobj_s
    fixed_t passceilz;
 
    // scripting fields
-   long args[5];       // arguments
-   unsigned short tid; // thing id used by scripts
+   long args[NUMMTARGS]; // arguments
+   unsigned short tid;   // thing id used by scripts
 
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are

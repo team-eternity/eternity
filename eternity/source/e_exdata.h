@@ -77,7 +77,7 @@ typedef struct maplinedefext_s
 
    // extended fields
    long extflags;
-   long args[5];
+   long args[NUMLINEARGS];
    long id;
 
    // internal fields (used by ExtraData only)

@@ -283,7 +283,7 @@ int ACS_indexForNum(int num)
 static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
                              long arg0, long arg1, long arg2, long arg3, long arg4)
 {
-   long args[5] = { 0, 0, 0, 0, 0 };
+   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
    args[0] = arg0;
    args[1] = arg1;
@@ -306,7 +306,7 @@ static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
 static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, short spec, int side,
                                 int argc, int *argv)
 {
-   long args[5] = { 0, 0, 0, 0, 0 };
+   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i = argc;
 
    // args follow instruction in the code from first to last
@@ -977,7 +977,7 @@ void T_ACSThinker(acsthinker_t *script)
          {
             int tag;
             short spec;
-            long args[5];
+            long args[NUMLINEARGS];
 
             for(temp = 5; temp > 0; --temp)
                args[temp-1] = POP();
@@ -1161,7 +1161,7 @@ void ACS_LoadScript(int lump)
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
 static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type, 
-                                     long args[5])
+                                     long args[NUMLINEARGS])
 {
    deferredacs_t *cur = acsDeferred, *newdacs;
 
@@ -1330,7 +1330,7 @@ boolean ACS_StartScript(int scrnum, int map, long *args,
 boolean ACS_TerminateScript(int scrnum, int mapnum)
 {
    boolean ret = false;
-   long foo[5] = { 0, 0, 0, 0, 0 };
+   long foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
    // ACS must be active on the current map or we do nothing
    if(!acsLoaded)
@@ -1365,7 +1365,7 @@ boolean ACS_TerminateScript(int scrnum, int mapnum)
 //
 boolean ACS_SuspendScript(int scrnum, int mapnum)
 {
-   long foo[5] = { 0, 0, 0, 0, 0 };
+   long foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    boolean ret = false;
 
    // ACS must be active on the current map or we do nothing

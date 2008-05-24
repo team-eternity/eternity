@@ -930,17 +930,20 @@ static void E_ProcessCmpState(const char *value, int i)
    {
       int argcount = 0;
 
-      for(j = 0; j < 5; ++j) // hard-coded args max
+      for(j = 0; j < NUMSTATEARGS; ++j)
          states[i].args[j] = 0;
 
       // process args
       while(!early_args_end)
       {
          NEXTTOKEN();
-         if(DEFAULTS(curtoken))
-            states[i].args[j] = 0;
-         else
-            E_ParseMiscField(curtoken, &(states[i].args[argcount]));
+         if(argcount < NUMSTATEARGS)
+         {
+            if(DEFAULTS(curtoken))
+               states[i].args[argcount] = 0;
+            else
+               E_ParseMiscField(curtoken, &(states[i].args[argcount]));
+         }
          ++argcount;
       }
    }
@@ -977,7 +980,7 @@ static void E_ProcessCmpState(const char *value, int i)
    if(!early_args_found) // do not do if early args specified
    {
       // process args
-      for(j = 0; j < 5; ++j) // hard-coded args max
+      for(j = 0; j < NUMSTATEARGS; ++j)
       {
          NEXTTOKEN();
          if(DEFAULTS(curtoken))
@@ -1106,9 +1109,9 @@ hitcmp:
    if(IS_SET(ITEM_FRAME_ARGS))
    {
       tempint = cfg_size(framesec, ITEM_FRAME_ARGS);
-      for(j = 0; j < 5; ++j) // hard-coded args max
+      for(j = 0; j < NUMSTATEARGS; ++j)
          states[i].args[j] = 0;
-      for(j = 0; j < tempint && j < 5; ++j) // hard-coded args max
+      for(j = 0; j < tempint && j < NUMSTATEARGS; ++j)
       {
          tempstr = cfg_getnstr(framesec, ITEM_FRAME_ARGS, j);
          E_ParseMiscField(tempstr, &(states[i].args[j]));

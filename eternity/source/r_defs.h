@@ -289,6 +289,8 @@ typedef enum
   ST_NEGATIVE
 } slopetype_t;
 
+#define NUMLINEARGS 5
+
 typedef struct line_s
 {
    vertex_t *v1, *v2;     // Vertices, from v1 to v2.
@@ -315,8 +317,8 @@ typedef struct line_s
    rportal_t *portal;
 
    // haleyjd 02/26/05: ExtraData fields
-   long extflags;         // activation flags for param specials
-   long args[5];          // argument values for param specials
+   long extflags;          // activation flags for param specials
+   long args[NUMLINEARGS]; // argument values for param specials
 } line_t;
 
 //

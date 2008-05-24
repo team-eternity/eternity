@@ -147,6 +147,8 @@ typedef enum
 
 typedef struct mobj_s * mptr;
 
+#define NUMSTATEARGS 5
+
 // ********************************************************************
 // Definition of the state (frames) structure
 // ********************************************************************
@@ -159,7 +161,7 @@ typedef struct
    statenum_t  nextstate;           // linked list pointer to next state or zero
    long        misc1, misc2;        // used for psprite positioning
    long        particle_evt;        // haleyjd: determines an event to run
-   long        args[5];             // haleyjd: state arguments
+   long        args[NUMSTATEARGS];  // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
    char        name[41]; // name of this state (max 40 chars)

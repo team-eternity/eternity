@@ -97,13 +97,15 @@ struct maplinedef_s
 
 typedef struct maplinedef_s maplinedef_t;
 
+#define NUMHXLINEARGS 5
+
 struct maplinedefhexen_s
 {
    short v1;
    short v2;
    short flags;
    byte  special;
-   byte  args[5];
+   byte  args[NUMHXLINEARGS];
    short sidenum[2];
 } __attribute__((packed));
 
@@ -233,6 +235,8 @@ struct mapthingdoom_s
 
 typedef struct mapthingdoom_s mapthingdoom_t;
 
+#define NUMHXTARGS 5
+
 struct mapthinghexen_s
 {
    short tid;
@@ -243,7 +247,7 @@ struct mapthinghexen_s
    short type;
    short options;
    byte  special;
-   byte  args[5];
+   byte  args[NUMHXTARGS];
 } __attribute__((packed));
 
 typedef struct mapthinghexen_s mapthinghexen_t;
@@ -251,6 +255,8 @@ typedef struct mapthinghexen_s mapthinghexen_t;
 // haleyjd 03/03/07: New mapthing_t structure. The structures above are used to
 // read things from the wad lump, but this new mapthing_t is used to store the
 // data in memory now. This eliminates some weirdness and redundancies
+
+#define NUMMTARGS 5
 
 typedef struct mapthing_s
 {
@@ -262,7 +268,8 @@ typedef struct mapthing_s
    short type;      // doomednum
    short options;   // bitflags
    long  special;   // scripting special
-   long  args[5];   // arguments for special
+
+   long  args[NUMMTARGS]; // arguments for special
 
    int   recordnum; // for ExtraData hashing
    int   next;

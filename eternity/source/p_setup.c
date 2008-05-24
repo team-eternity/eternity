@@ -730,7 +730,7 @@ void P_LoadHexenLineDefs(int lump)
 
       ld->special = mld->special;
       
-      for(argnum = 0; argnum < 5; ++argnum)
+      for(argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
          ld->args[argnum] = mld->args[argnum];
 
       // Do Hexen special translation, unconditionally

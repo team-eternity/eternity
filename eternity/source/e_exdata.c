@@ -746,11 +746,11 @@ static void E_ParseThingArgs(mapthing_t *mte, cfg_t *sec)
    numargs = cfg_size(sec, FIELD_ARGS);
    
    // init all args to 0
-   for(i = 0; i < 5; ++i) // hard-coded args max
+   for(i = 0; i < NUMMTARGS; ++i)
       mte->args[i] = 0;
    
    // parse the given args values
-   for(i = 0; i < numargs && i < 5; ++i) // hard-coded args max
+   for(i = 0; i < numargs && i < NUMMTARGS; ++i)
    {
       const char *argstr = cfg_getnstr(sec, FIELD_ARGS, i);
       E_ParseArg(argstr, &(mte->args[i]));
@@ -1463,11 +1463,11 @@ static void E_ParseLineArgs(maplinedefext_t *mlde, cfg_t *sec)
    numargs = cfg_size(sec, FIELD_LINE_ARGS);
    
    // init all args to 0
-   for(i = 0; i < 5; ++i) // hard-coded args max
+   for(i = 0; i < NUMLINEARGS; ++i)
       mlde->args[i] = 0;
    
    // parse the given args values
-   for(i = 0; i < numargs && i < 5; ++i) // hard-coded args max
+   for(i = 0; i < numargs && i < NUMLINEARGS; ++i)
    {
       const char *argstr = cfg_getnstr(sec, FIELD_LINE_ARGS, i);
       E_ParseArg(argstr, &(mlde->args[i]));

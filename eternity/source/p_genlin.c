@@ -1938,7 +1938,7 @@ static boolean pspec_ACSExecute(line_t *line, long *args, short special,
                                 int side, mobj_t *thing)
 {
    int snum, mnum;
-   long script_args[5] = { 0, 0, 0, 0, 0 };
+   long script_args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
 
    snum           = args[0];
@@ -2362,7 +2362,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
 //
 static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
 {
-   long args[5] = { 0, 0, 0, 0, 0 };
+   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numparams = params[0] / sizeof(cell);
    SmallContext_t *ctx;
    line_t *line  = NULL;
@@ -2400,7 +2400,7 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
 CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
 {
    short spec;
-   long args[5] = { 0, 0, 0, 0, 0 };
+   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numargs;
 
    if(!c_argc)
