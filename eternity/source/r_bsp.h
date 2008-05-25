@@ -41,6 +41,11 @@ extern unsigned long maxdrawsegs;
 
 extern drawseg_t *ds_p;
 
+// SoM: mark a range of the screen as being solid (closed).
+// these marks are then added to the solidsegs list by R_AddLine after all segments
+// of the line are rendered and the solidsegs array isn't being traversed.. >_<
+void R_MarkSolidSeg(int x1, int x2);
+
 boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
 boolean R_ClipInitialSegRange(void);
 

@@ -90,6 +90,80 @@ typedef struct
 static cliprange_t *newend;
 static cliprange_t solidsegs[MAXSEGS];
 
+// addend is one past the last valid added seg.
+static cliprange_t *addend;
+static cliprange_t addedsegs[MAXSEGS];
+
+
+static void R_AddSolidSeg(int x1, int x2)
+{
+   cliprange_t *rover = solidsegs;
+
+   while(rover->last < x1 - 1) rover++;
+
+   if(x1 < rover->first)
+   {
+      if(x2 < rover->first - 1)
+      {
+         memmove(rover + 1, rover, (++newend - rover) * sizeof(*rover));
+         rover->first = x1;
+         rover->last = x2;
+         goto verify;
+      }
+
+      rover->first = x1;
+   }
+
+   if(rover->last >= x2)
+      goto verify;
+
+   rover->last = x2;
+
+   if(rover->last >= (rover + 1)->first - 1)
+   {
+      (rover + 1)->first = rover->first;
+
+      while(rover + 1 < newend)
+      {
+         *rover = *(rover + 1);
+         *rover++;
+      }
+
+      newend = rover;
+   }
+   
+   verify:
+#ifdef RANGECHECK
+   // Verify the new segs
+   for(rover = solidsegs; (rover + 1) < newend; rover++)
+   {
+      if(rover->last >= (rover+1)->first)
+         I_Error("R_AddSolidSeg created a seg that overlaps next seg: (%i)->last = %i, (%i)->first = %i\n", rover - solidsegs, rover->last, (rover + 1) - solidsegs, (rover + 1)->last);
+   }
+#endif
+}
+
+
+
+void R_MarkSolidSeg(int x1, int x2)
+{
+   addend->first = x1;
+   addend->last = x2;
+   addend++;
+}
+
+
+static void R_AddMarkedSegs()
+{
+   cliprange_t *r;
+
+   for(r = addedsegs; r < addend; r++)
+      R_AddSolidSeg(r->first, r->last);
+
+   addend = addedsegs;
+}
+
+
 //
 // R_ClipSolidWallSegment
 //
@@ -119,7 +193,7 @@ static void R_ClipSolidWallSegment(int x1, int x2)
          memmove(start + 1, start, (++newend - start) * sizeof(*start));
          start->first = x1;
          start->last = x2;
-         return;
+         goto verifysegs;
       }
 
       // There is a fragment above *start.
@@ -131,7 +205,7 @@ static void R_ClipSolidWallSegment(int x1, int x2)
 
    // Bottom contained in start?
    if(x2 <= start->last)
-      return;
+      goto verifysegs;
 
    next = start;
    while(x2 >= (next + 1)->first - 1)
@@ -156,12 +230,22 @@ static void R_ClipSolidWallSegment(int x1, int x2)
    // because start now covers their area.
 crunch:
    if(next == start) // Post just extended past the bottom of one post.
-      return;
+      goto verifysegs;
    
    while(next++ != newend)      // Remove a post.
       *++start = *next;
    
-   newend = start + 1;
+   newend = start;
+
+   verifysegs:
+#ifdef RANGECHECK
+   // Verify the new segs
+   for(start = solidsegs; (start + 1) < newend; start++)
+   {
+      if(start->last >= (start+1)->first)
+         I_Error("R_ClipSolidWallSegment created a seg that overlaps next seg: (%i)->last = %i, (%i)->first = %i\n", start - solidsegs, start->last, (start + 1) - solidsegs, (start + 1)->last);
+   }
+#endif
 }
 
 //
@@ -174,7 +258,9 @@ crunch:
 //
 static void R_ClipPassWallSegment(int x1, int x2)
 {
-   cliprange_t *start = solidsegs;
+   cliprange_t *start;
+   
+   start = solidsegs;
    
    // Find the first range that touches the range
    //  (adjacent pixels are touching).
@@ -1146,6 +1232,9 @@ static void R_AddLine(seg_t *line)
       R_ClipSolidWallSegment(seg.x1, seg.x2);
    else
       R_ClipPassWallSegment(seg.x1, seg.x2);
+
+   // Add new solid segs when it is safe to do so...
+   R_AddMarkedSegs();
 }
 
 

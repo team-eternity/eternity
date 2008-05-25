@@ -394,6 +394,36 @@ static void R_RenderSegLoop(void)
    }
 }
 
+
+
+
+static void R_DetectClosedColumns()
+{
+   int i, stop = segclip.x2 + 1, startx;
+
+   for(i = segclip.x1; i < stop; i++)
+   {
+      // Find the first closed column
+      while(i < stop && floorclip[i] >= ceilingclip[i]) i++;
+
+      // End open
+      if(i == stop)
+         break;
+
+      startx = i;
+      // Find the first open column
+      while(i < stop && floorclip[i] < ceilingclip[i]) i++;
+
+      // from startx to i - 1 is solid.
+#ifdef RANGECHECK
+      if(startx > i - 1 || startx < 0 || i - 1 >= viewwidth || startx >= viewwidth || i - 1 < 0)
+         I_Error("R_DetectClosedColumns bad range %i, %i\n", startx, i - 1);
+#endif
+      R_MarkSolidSeg(startx, i-1);
+   }
+}
+
+
 static void R_StoreTextureColumns(void)
 {
    int i, texx;
@@ -646,7 +676,12 @@ void R_StoreWallRange(const int start, const int stop)
    }
 
    if(ds_p->silhouette || usesegloop || !ds_p->maskedtexturecol)
+   {
       R_RenderSegLoop();
+
+      if(!segclip.clipsolid)
+         R_DetectClosedColumns();
+   }
    else
       R_StoreTextureColumns();
    
