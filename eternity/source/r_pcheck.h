@@ -106,7 +106,7 @@ d_inline static boolean R_RenderFloorPortal(sector_t *sector)
       (fp &&
        ((fp->type != R_TWOWAY && fp->type != R_LINKED) ||
         (fp->type == R_TWOWAY && sector->floorheight < viewz) ||         
-        (fp->type == R_LINKED && sector->floorheight < viewz && 
+        (fp->type == R_LINKED && sector->floorheight <= viewz && 
                                  sector->floorz <= fp->data.camera.planez)));
 #else
    return (fp && (fp->type != R_TWOWAY || sector->floorheight < viewz));

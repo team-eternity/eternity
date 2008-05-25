@@ -983,7 +983,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
-      if(passheight > mobj->subsector->sector->ceilingheight)
+      if(passheight >= mobj->subsector->sector->ceilingheight)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
                                               R_CPCam(mobj->subsector->sector)->groupid);
