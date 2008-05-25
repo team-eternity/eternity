@@ -590,7 +590,7 @@ static void R_RenderSkyboxPortal(rportal_t *portal)
    }
 #endif
 
-   if(!R_SetupPortalClipsegs(portal->top, portal->bottom))
+   if(!R_SetupPortalClipsegs(portal->minx, portal->maxx, portal->top, portal->bottom))
       return;
 
    floorclip = portal->bottom;
@@ -693,8 +693,8 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
       }
    }
 #endif
-
-   if(!R_SetupPortalClipsegs(portal->top, portal->bottom))
+   
+   if(!R_SetupPortalClipsegs(portal->minx, portal->maxx, portal->top, portal->bottom))
       return;
 
    // haleyjd: temporary debug
@@ -705,18 +705,6 @@ static void R_RenderAnchoredPortal(rportal_t *portal)
 
    portalrender.minx = portal->minx;
    portalrender.maxx = portal->maxx;
-
-/*   portalrender.miny = MAX_SCREENHEIGHT;
-   portalrender.maxy = 0;
-   for(i = portal->minx; i <= portal->maxx; i++)
-   {
-      if(portal->top[i] < portalrender.miny)
-         portalrender.miny = portal->top[i];
-
-      if(portal->bottom[i] > portalrender.maxy)
-         portalrender.maxy = portal->bottom[i];
-   }*/
-
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -800,12 +788,13 @@ void R_RenderPortals(void)
 
    while(1)
    {
-      // SoM 3/14/2005: Set the portal rendering flag
-      portalrender.active = true;
       for(r = portals; r; r = r->next)
       {
          if(r->maxx < r->minx)
             continue;
+         // SoM 3/14/2005: Set the portal rendering flag
+         portalrender.active = true;
+         portalrender.p = r;
 
          switch(r->type)
          {

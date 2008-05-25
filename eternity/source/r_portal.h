@@ -120,6 +120,8 @@ typedef struct
    boolean active;
    int     minx, maxx;
    float   miny, maxy;
+
+   rportal_t *p;
 } portalrender_t;
 
 extern portalrender_t  portalrender;

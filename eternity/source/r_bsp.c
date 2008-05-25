@@ -229,10 +229,10 @@ void R_ClearClipSegs(void)
 }
 
 
-boolean R_SetupPortalClipsegs(float *top, float *bottom)
+boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
 {
-   int i = 0;
-   cliprange_t *solidseg;
+   int i = minx, stop = maxx + 1;
+   cliprange_t *solidseg = solidsegs;
    
    R_ClearClipSegs();
 
@@ -241,22 +241,20 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
    portalrender.maxy = 0;
    
    // extend first solidseg to one column left of first open post
-   while(i < viewwidth && bottom[i] < top[i]) 
+   while(i < stop && bottom[i] < top[i]) 
       ++i;
    
-   // first open post found, set last closed post to last closed post (i - 1);
-   solidsegs[0].last = i - 1;
-   
    // the entire thing is closed?
-   if(i == viewwidth)
+   if(i == stop)
       return false;
-   
-   solidseg = solidsegs + 1;
+
+   solidseg->last = i - 1;
+   solidseg++;   
    
    while(1)
    {
       //find the first closed post.
-      while(i < viewwidth && bottom[i] >= top[i]) 
+      while(i < stop && bottom[i] >= top[i]) 
       {
          if(top[i] < portalrender.miny) 
             portalrender.miny = top[i];
@@ -269,13 +267,13 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
       
       if(i == viewwidth)
          goto endopen;
-      
+
       // set the solidsegs
       solidseg->first = i;
       
       // find the first open post
-      while(i < viewwidth && top[i] > bottom[i]) i++;
-      if(i == viewwidth)
+      while(i < stop && top[i] > bottom[i]) i++;
+      if(i == stop)
          goto endclosed;
       
       solidseg->last = i - 1;
@@ -283,7 +281,7 @@ boolean R_SetupPortalClipsegs(float *top, float *bottom)
    }
    
 endopen:
-   solidseg->first = viewwidth;
+   solidseg->first = stop;
    solidseg->last = 0x7fff;
    newend = solidseg + 1;
    return true;
@@ -535,13 +533,15 @@ static void R_ClipSegToPortal(void)
       // SoM: Quickly reject the seg based on the bounding box of the portal
       if(y1 > portalrender.maxy && y2 > portalrender.maxy)
          return;
+      if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+         return;
 
       topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
          // skip past the closed or out of sight columns to find the first visible column
-         for(; i <= seg.x2 && (floorclip[i] < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
+         for(; i <= seg.x2 && floorclip[i] - top <= -1.0f; i++)
             top += topstep;
 
          if(i > seg.x2)
@@ -550,7 +550,7 @@ static void R_ClipSegToPortal(void)
          startx = i; // mark
 
          // skip past visible columns 
-         for(; i <= seg.x2 && floorclip[i] >= ceilingclip[i] && floorclip[i] - top > -1.0f; i++)
+         for(; i <= seg.x2 && floorclip[i] - top > -1.0f; i++)
             top += topstep;
 
          if(seg.clipsolid)
@@ -570,12 +570,14 @@ static void R_ClipSegToPortal(void)
       // SoM: Quickly reject the seg based on the bounding box of the portal
       if(y1 < portalrender.miny && y2 < portalrender.miny)
          return;
+      if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+         return;
 
       bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
-         for(; i <= seg.x2 && (floorclip[i] < ceilingclip[i] || bottom < (ceilingclip[i] + 1.0f)); i++)
+         for(; i <= seg.x2 && bottom < (ceilingclip[i] + 1.0f); i++)
             bottom += bottomstep;
 
          if(i > seg.x2)
@@ -583,7 +585,7 @@ static void R_ClipSegToPortal(void)
 
          startx = i;
 
-         for(; i <= seg.x2 && floorclip[i] >= ceilingclip[i] && bottom >= ceilingclip[i]; i++)
+         for(; i <= seg.x2 && bottom >= ceilingclip[i]; i++)
             bottom += bottomstep;
 
          if(seg.clipsolid)
@@ -594,10 +596,25 @@ static void R_ClipSegToPortal(void)
    }
    else
    {
-      if(seg.clipsolid)
-         R_ClipSolidWallSegment(seg.x1, seg.x2);
-      else
-         R_ClipPassWallSegment(seg.x1, seg.x2);
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+         return;
+
+      for(i = seg.x1; i <= seg.x2; i++)
+      {
+         while(i <= seg.x2 && floorclip[i] < ceilingclip[i]) i++;
+
+         if(i > seg.x2)
+            return;
+
+         startx = i;
+         while(i <= seg.x2 && floorclip[i] >= ceilingclip[i]) i++;
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+
+      }
    }
 }
 
@@ -1440,7 +1457,7 @@ static void R_Subsector(int num)
    seg.frontsec = sub->sector;
    count = sub->numlines;
    line = &segs[sub->firstline];
-   
+
    R_SectorColormap(seg.frontsec);
 
    // SoM: Cardboard optimization

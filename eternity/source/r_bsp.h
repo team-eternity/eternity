@@ -41,7 +41,7 @@ extern unsigned long maxdrawsegs;
 
 extern drawseg_t *ds_p;
 
-boolean R_SetupPortalClipsegs(float *top, float *bottom);
+boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
 boolean R_ClipInitialSegRange(void);
 
 void R_ClearClipSegs(void);
