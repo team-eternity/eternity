@@ -223,6 +223,9 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
 static void Polyobj_addLine(polyobj_t *po, line_t *l)
 {
    int i;
+#ifdef R_DYNASEGS
+   seg_t *s;
+#endif
 
    // First: search the existing line pointers for a match. If one is found,
    // do not add this line again.
@@ -246,6 +249,15 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
    // add vertices
    Polyobj_addVertex(po, l->v1);
    Polyobj_addVertex(po, l->v2);
+
+   // kill linedef's original segs
+   s = l->segs;
+
+   while(s)
+   {
+      s->nodraw = true;
+      s = s->linenext;
+   }
 #endif
 }
 

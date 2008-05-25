@@ -319,6 +319,8 @@ typedef struct line_s
    // haleyjd 02/26/05: ExtraData fields
    long extflags;          // activation flags for param specials
    long args[NUMLINEARGS]; // argument values for param specials
+
+   struct seg_s *segs;     // haleyjd: link to segs
 } line_t;
 
 //
@@ -387,6 +389,12 @@ typedef struct seg_s
   // backsector is NULL for one sided lines
 
   sector_t *frontsector, *backsector;
+
+  struct seg_s *linenext; // haleyjd: next seg by linedef
+
+#ifdef R_DYNASEGS
+  boolean nodraw; // don't render this seg, ever
+#endif
 } seg_t;
 
 //

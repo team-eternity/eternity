@@ -245,7 +245,7 @@ extern menu_t menu_hnewgame;
 // Skin Sound Defaults
 //
 
-static char *doom_skindefs[NUMSKINSOUNDS] =
+static const char *doom_skindefs[NUMSKINSOUNDS] =
 {
    "plpain",
    "pdiehi",
@@ -277,7 +277,7 @@ static int doom_soundnums[NUMSKINSOUNDS] =
    sfx_noway,
 };
 
-static char *htic_skindefs[NUMSKINSOUNDS] =
+static const char *htic_skindefs[NUMSKINSOUNDS] =
 {
    "ht_plrpai",
    "ht_plrcdth",

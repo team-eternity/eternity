@@ -226,6 +226,11 @@ void P_LoadSegs(int lump)
       li->sidedef = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
+      // haleyjd 05/24/08: link segs into parent linedef;
+      // allows fast reverse searches
+      li->linenext = ldef->segs;
+      ldef->segs   = li;
+
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;

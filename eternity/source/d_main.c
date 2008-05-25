@@ -1839,7 +1839,7 @@ static void D_ProcessDehPreincludes(void)
             if(*s)
             {
                char *file = NULL;
-               size_t len = M_StringAlloca(&file, 1, 6, s);
+               M_StringAlloca(&file, 1, 6, s);
 
                M_AddDefaultExtension(strcpy(file, s), ".bex");
                if(!access(file, R_OK))

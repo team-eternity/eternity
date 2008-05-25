@@ -642,10 +642,16 @@ static void R_AddLine(seg_t *line)
    static sector_t tempsec;
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
-   // SoM: one of the biproducts of the portal height enforcement: The top silhouette
-   // should be drawn at ceilingheight but the actual texture coords should start
-   // at ceilingz. Yeah Quasar, it did get a LITTLE complicated :/
+   // SoM: one of the byproducts of the portal height enforcement: The top 
+   // silhouette should be drawn at ceilingheight but the actual texture 
+   // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE 
+   // complicated :/
    float textop, texhigh, texlow, texbottom;
+
+#ifdef R_DYNASEGS
+   if(line->nodraw)
+      return;
+#endif
 
    tempsec.frameid = 0;
 

@@ -312,9 +312,6 @@ static int    cnt_time;
 static int    cnt_par;
 static int    cnt_pause;
 
-// # of commercial levels
-static int    NUMCMAPS; 
-
 //
 //  GRAPHICS
 //
