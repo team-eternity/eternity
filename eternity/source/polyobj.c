@@ -661,6 +661,9 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    po->spawnSpot.x = spawnSpot->x;
    po->spawnSpot.y = spawnSpot->y;
 
+   // 05/25/08: keep track of the spawn spot for now.
+   po->spawnSpotMobj = spawnSpot;
+
    // hash the polyobject by its numeric id
    if(Polyobj_GetForNum(po->id))
    {
@@ -720,7 +723,15 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 
    // update linedef bounding boxes
    for(i = 0; i < po->numLines; ++i)
+   {
+      mobj_t *mo;
+
       Polyobj_bboxSub(po->lines[i]->bbox, &dist);
+#ifdef R_LINKEDPORTALS
+      mo = po->spawnSpotMobj;
+      po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
+#endif
+   }
 
    // translate vertices and record original coordinates relative to spawn spot
    for(i = 0; i < po->numVertices; ++i)
@@ -1382,39 +1393,6 @@ void Polyobj_InitLevel(void)
       for(i = 0; i < numPolyObjects; ++i)
          Polyobj_linkToBlockmap(&PolyObjects[i]);
    }
-
-#if 0
-   // haleyjd 02/22/06: temporary debug
-   printf("DEBUG: numPolyObjects = %d\n", numPolyObjects);
-   for(i = 0; i < numPolyObjects; ++i)
-   {
-      int j;
-      polyobj_t *po = &PolyObjects[i];
-
-      printf("polyobj %d:\n", i);
-      printf("id = %d, first = %d, next = %d\n", po->id, po->first, po->next);
-      printf("segCount = %d, numSegsAlloc = %d\n", po->segCount, po->numSegsAlloc);
-      for(j = 0; j < po->segCount; ++j)
-         printf("\tseg %d: %p\n", j, po->segs[j]);
-      printf("numVertices = %d, numVerticesAlloc = %d\n", po->numVertices, po->numVerticesAlloc);
-      for(j = 0; j < po->numVertices; ++j)
-      {
-         printf("\tvtx %d: (%d, %d) / orig: (%d, %d)\n",
-                j, po->vertices[j]->x>>FRACBITS, po->vertices[j]->y>>FRACBITS,
-                po->origVerts[j].x>>FRACBITS, po->origVerts[j].y>>FRACBITS);
-      }
-      printf("numLines = %d, numLinesAlloc = %d\n", po->numLines, po->numLinesAlloc);
-      for(j = 0; j < po->numLines; ++j)
-         printf("\tline %d: %p\n", j, po->lines[j]);
-      printf("spawnSpot = (%d, %d)\n", po->spawnSpot.x >> FRACBITS, po->spawnSpot.y >> FRACBITS);
-      printf("centerPt = (%d, %d)\n", po->centerPt.x >> FRACBITS, po->centerPt.y >> FRACBITS);
-      printf("attached = %d, linked = %d, validcount = %d, isBad = %d\n",
-             po->attached, po->linked, po->validcount, po->isBad);
-      printf("blockbox: [%d, %d, %d, %d]\n", 
-             po->blockbox[BOXLEFT], po->blockbox[BOXRIGHT], po->blockbox[BOXBOTTOM],
-             po->blockbox[BOXTOP]);
-   }
-#endif
 
    // done with mobj queues
    M_QueueFree(&spawnqueue);

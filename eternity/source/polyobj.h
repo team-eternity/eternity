@@ -83,6 +83,7 @@ typedef struct polyobj_s
    int numLinesAlloc;     // number of linedefs allocated
    struct line_s **lines; // linedefs this polyobject must move
 
+   mobj_t *spawnSpotMobj;        // for use during init only!
    struct degenmobj_s spawnSpot; // location of spawn spot
    struct vertex_s    centerPt;  // center point
    fixed_t zdist;                // viewz distance for sorting

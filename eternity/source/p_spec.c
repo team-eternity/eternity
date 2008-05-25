@@ -4394,7 +4394,8 @@ void P_ConvertHereticSpecials(void)
          continue;
       case 15: // low friction -- ice
          sector->friction = 0xf900;
-         sector->movefactor = 0x276;
+         //sector->movefactor = 0x276;
+         sector->movefactor = ORIG_FRICTION_FACTOR >> 2;
          sector->special = FRICTION_MASK; // clear, set friction bit
          continue;
       default:

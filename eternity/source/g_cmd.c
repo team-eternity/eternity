@@ -49,6 +49,7 @@
 #include "sounds.h"   // haleyjd: restored exit sounds
 #include "p_partcl.h" // haleyjd: add particle event cmds
 #include "d_gi.h"     // haleyjd: gamemode pertinent info
+#include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 
 extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 
@@ -57,8 +58,6 @@ extern int invert_mouse;
 extern int screenshot_pcx;
 extern int screenshot_gamma;
 extern boolean sendpause;
-extern int forwardmove[2];
-extern int sidemove[2];
 extern int keylookspeed;
 
 ////////////////////////////////////////////////////////////////////////
@@ -237,11 +236,8 @@ int turbo_scale = 100;
 VARIABLE_INT(turbo_scale, NULL,         10, 400, NULL);
 CONSOLE_VARIABLE(turbo, turbo_scale, 0)
 {
-  C_Printf ("turbo scale: %i%%\n",turbo_scale);
-  forwardmove[0] = (0x19*turbo_scale)/100;
-  forwardmove[1] = (0x32*turbo_scale)/100;
-  sidemove[0] = (0x18*turbo_scale)/100;
-  sidemove[1] = (0x28*turbo_scale)/100;
+   C_Printf("turbo scale: %i%%\n",turbo_scale);
+   E_ApplyTurbo(turbo_scale);
 }
 
 CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)

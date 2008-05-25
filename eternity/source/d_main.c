@@ -82,6 +82,7 @@
 #include "g_gfs.h"
 #include "g_dmflag.h"
 #include "e_edf.h"
+#include "e_player.h"
 
 char **wadfiles;
 
@@ -2436,26 +2437,6 @@ static void D_DoomInit(void)
    }
 #endif
 
-   // turbo option
-   if((p = M_CheckParm("-turbo")))
-   {
-      extern int turbo_scale;
-      extern int forwardmove[2];
-      extern int sidemove[2];
-
-      if(p < myargc - 1)
-         turbo_scale = atoi(myargv[p + 1]);
-      if(turbo_scale < 10)
-         turbo_scale = 10;
-      if(turbo_scale > 400)
-         turbo_scale = 400;
-      printf ("turbo scale: %i%%\n",turbo_scale);
-      forwardmove[0] = forwardmove[0] * turbo_scale / 100;
-      forwardmove[1] = forwardmove[1] * turbo_scale / 100;
-      sidemove[0]    =    sidemove[0] * turbo_scale / 100;
-      sidemove[1]    =    sidemove[1] * turbo_scale / 100;
-   }
-
    // haleyjd 03/10/03: Load GFS Wads
    // 08/08/03: moved first, so that command line overrides
    if(haveGFS)
@@ -2672,6 +2653,22 @@ static void D_DoomInit(void)
    S_ProcDeferredSounds();
 
    V_InitColorTranslation(); //jff 4/24/98 load color translation lumps
+
+   // haleyjd: moved down turbo to here for player class support
+   if((p = M_CheckParm("-turbo")))
+   {
+      extern int turbo_scale;
+
+      if(p < myargc - 1)
+         turbo_scale = atoi(myargv[p + 1]);
+      if(turbo_scale < 10)
+         turbo_scale = 10;
+      if(turbo_scale > 400)
+         turbo_scale = 400;
+      printf("turbo scale: %i%%\n",turbo_scale);
+      E_ApplyTurbo(turbo_scale);
+   }
+
 
    // killough 2/22/98: copyright / "modified game" / SPA banners removed
 

@@ -42,6 +42,16 @@ typedef struct playerclass_s
    mobjtype_t type;      // index of mobj type used
    statenum_t altattack; // index of alternate attack state for weapon code
 
+   // speeds
+   fixed_t forwardmove[2];
+   fixed_t sidemove[2];
+   fixed_t angleturn[3]; // + slow turn
+   fixed_t lookspeed[2]; // haleyjd: look speeds (from zdoom)
+
+   // original speeds - before turbo is applied.
+   fixed_t oforwardmove[2];
+   fixed_t osidemove[2];
+
    // hashing data
    char mnemonic[33];
    struct playerclass_s *next;
@@ -52,6 +62,7 @@ playerclass_t *E_PlayerClassForName(const char *);
 void    E_VerifyDefaultPlayerClass(void);
 boolean E_IsPlayerClassThingType(mobjtype_t);
 boolean E_PlayerInWalkingState(player_t *);
+void    E_ApplyTurbo(int ts);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

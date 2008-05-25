@@ -53,11 +53,12 @@ extern int mapcolor_sngl;    // single player arrow color
 extern int mapcolor_plyr[4]; // colors for player arrows in multiplayer
 extern int mapcolor_frnd;    // colors for friends of player
 #ifdef R_LINKEDPORTALS
-extern int mapcolor_prtl;    // SoM: color for lines not in the player's portal group
+extern int mapcolor_prtl;    // SoM: color for lines not in player portal group
 
-// SoM: map mode. True means the portal groups are overlayed (the group the player is in being displayed in color and the
-// other groups being grayed out and underneath) and false means the map is not modified.
-extern boolean mapportal_overlay;
+// SoM: map mode. True means the portal groups are overlayed (the group the 
+// player is in being displayed in color and the other groups being grayed out 
+// and underneath) and false means the map is not modified.
+extern int mapportal_overlay;
 #endif
 
 VARIABLE_INT(mapcolor_back, NULL, 0, 255, NULL);

@@ -211,9 +211,9 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 //
 // P_AddLinkOffset
 //
-
-// Returns 0 if the link offset was added successfully, 1 if the start group is out of bounds,
-// and 2 of the target group is out of bounds.
+// Returns 0 if the link offset was added successfully, 1 if the start group is
+// out of bounds, and 2 of the target group is out of bounds.
+//
 int P_AddLinkOffset(int startgroup, int targetgroup, 
                     fixed_t x, fixed_t y, fixed_t z)
 {
@@ -225,10 +225,12 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 #endif
 
    if(startgroup < 0 || startgroup >= groupcount)
-      return 1; //I_Error("P_AddLinkOffset: start groupid %d out of bounds.\n", startgroup);
+      return 1; 
+      //I_Error("P_AddLinkOffset: start groupid %d out of bounds.\n", startgroup);
 
    if(targetgroup < 0 || targetgroup >= groupcount)
-      return 2; //I_Error("P_AddLinkOffset: target groupid %d out of bounds.\n", targetgroup);
+      return 2; 
+      //I_Error("P_AddLinkOffset: target groupid %d out of bounds.\n", targetgroup);
 
    if(startgroup == targetgroup)
       return 0;
@@ -284,8 +286,9 @@ static boolean P_CheckLinkedPortal(rportal_t *portal, sector_t *sec)
    // We've found a linked portal so add the entry to the table
    if(!(link = P_GetLinkOffset(sec->groupid, portal->data.camera.groupid)))
    {
-      int ret = P_AddLinkOffset(sec->groupid, portal->data.camera.groupid, 
-                                portal->data.camera.deltax, portal->data.camera.deltay, 
+      int ret = P_AddLinkOffset(sec->groupid, portal->data.camera.groupid,
+                                portal->data.camera.deltax, 
+                                portal->data.camera.deltay, 
                                 portal->data.camera.deltaz);
       if(ret)
          return false;

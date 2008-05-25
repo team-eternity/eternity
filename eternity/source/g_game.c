@@ -161,15 +161,10 @@ int mousebforward;  // causes a use action, however
 
 // haleyjd: joyb variables are obsolete -- removed
 
-#define MAXPLMOVE   (forwardmove[1])
-#define TURBOTHRESHOLD  0x32
-#define SLOWTURNTICS  6
-#define QUICKREVERSE 32768 // 180 degree reverse                    // phares
-
-fixed_t forwardmove[2] = {0x19, 0x32};
-fixed_t sidemove[2]    = {0x18, 0x28};
-fixed_t angleturn[3]   = {640, 1280, 320};  // + slow turn
-fixed_t	lookspeed[2]   = {450, 512};        // haleyjd: look speeds (from zdoom)
+#define MAXPLMOVE      (pc->forwardmove[1])
+#define TURBOTHRESHOLD (pc->oforwardmove[1])
+#define SLOWTURNTICS   6
+#define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
 boolean gamekeydown[NUMKEYS];
 int     turnheld;       // for accelerative turning
@@ -220,7 +215,7 @@ void G_CoolViewPoint();
 // NETCODE_FIXME: The ticcmd_t structure will probably need to be
 // altered to better support command packing.
 //
-void G_BuildTiccmd(ticcmd_t* cmd)
+void G_BuildTiccmd(ticcmd_t *cmd)
 {
    boolean strafe;
    boolean bstrafe;
@@ -235,6 +230,7 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    static int prevmlook = 0;
    ticcmd_t *base;
    int tmousex, tmousey;     // local mousex, mousey
+   playerclass_t *pc = players[consoleplayer].pclass;
 
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
@@ -285,38 +281,38 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    if(strafe)
    {
       if(action_right)
-         side += sidemove[speed];
+         side += pc->sidemove[speed];
       if(action_left)
-         side -= sidemove[speed];
+         side -= pc->sidemove[speed];
       if(joyxmove > 0)
-         side += sidemove[speed];
+         side += pc->sidemove[speed];
       if(joyxmove < 0)
-         side -= sidemove[speed];
+         side -= pc->sidemove[speed];
    }
    else
    {
       if(action_right)
-         cmd->angleturn -= angleturn[tspeed];
+         cmd->angleturn -= pc->angleturn[tspeed];
       if(action_left)
-         cmd->angleturn += angleturn[tspeed];
+         cmd->angleturn += pc->angleturn[tspeed];
       if(joyxmove > 0)
-         cmd->angleturn -= angleturn[tspeed];
+         cmd->angleturn -= pc->angleturn[tspeed];
       if(joyxmove < 0)
-         cmd->angleturn += angleturn[tspeed];
+         cmd->angleturn += pc->angleturn[tspeed];
    }
 
    if(action_forward)
-      forward += forwardmove[speed];
+      forward += pc->forwardmove[speed];
    if(action_backward)
-      forward -= forwardmove[speed];
+      forward -= pc->forwardmove[speed];
    if(joyymove < 0)
-      forward += forwardmove[speed];
+      forward += pc->forwardmove[speed];
    if(joyymove > 0)
-      forward -= forwardmove[speed];
+      forward -= pc->forwardmove[speed];
    if(action_moveright)
-      side += sidemove[speed];
+      side += pc->sidemove[speed];
    if(action_moveleft)
-      side -= sidemove[speed];
+      side -= pc->sidemove[speed];
    if(action_jump)                    // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
    mlook = allowmlook && (action_mlook || automlook);
@@ -523,9 +519,9 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    prevmlook = mlook;
    
    if(action_lookup)
-      look += lookspeed[speed];
+      look += pc->lookspeed[speed];
    if(action_lookdown)
-      look -= lookspeed[speed];
+      look -= pc->lookspeed[speed];
    if(action_center)
       sendcenterview = true;
 
@@ -574,10 +570,6 @@ void G_BuildTiccmd(ticcmd_t* cmd)
    }
 
    mousex = mousey = 0;
-   /*
-   if(ticnum == newtics - 1) // only if the last tic being built
-      mousex = mousey = 0;   // clear them
-      */
 }
 
 //
@@ -2134,6 +2126,7 @@ void G_Ticker(void)
          if(playeringame[i])
          {
             ticcmd_t *cmd = &players[i].cmd;
+            playerclass_t *pc = players[i].pclass;
             
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
             

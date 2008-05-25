@@ -70,8 +70,9 @@ int mapcolor_frnd;    // colors for friends of player
 #ifdef R_LINKEDPORTALS
 int mapcolor_prtl;    // SoM: color of lines not in the current portal group
 
-// SoM: map mode. True means the portal groups are overlayed (the group the player is in being displayed in color and the
-// other groups being grayed out and underneath) and false means the map is not modified.
+// SoM: map mode. True means the portal groups are overlayed (the group the 
+// player is in being displayed in color and the other groups being grayed 
+// out and underneath) and false means the map is not modified.
 int mapportal_overlay;
 #endif
 

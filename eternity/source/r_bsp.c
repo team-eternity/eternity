@@ -138,8 +138,15 @@ static void R_AddSolidSeg(int x1, int x2)
    for(rover = solidsegs; (rover + 1) < newend; rover++)
    {
       if(rover->last >= (rover+1)->first)
-         I_Error("R_AddSolidSeg created a seg that overlaps next seg: (%i)->last = %i, (%i)->first = %i\n", rover - solidsegs, rover->last, (rover + 1) - solidsegs, (rover + 1)->last);
+         I_Error("R_AddSolidSeg created a seg that overlaps next seg: "
+                 "(%i)->last = %i, (%i)->first = %i\n", 
+                 rover - solidsegs, 
+                 rover->last, 
+                 (rover + 1) - solidsegs, 
+                 (rover + 1)->last);
    }
+#else
+   return;
 #endif
 }
 
@@ -243,8 +250,15 @@ crunch:
    for(start = solidsegs; (start + 1) < newend; start++)
    {
       if(start->last >= (start+1)->first)
-         I_Error("R_ClipSolidWallSegment created a seg that overlaps next seg: (%i)->last = %i, (%i)->first = %i\n", start - solidsegs, start->last, (start + 1) - solidsegs, (start + 1)->last);
+         I_Error("R_ClipSolidWallSegment created a seg that overlaps next seg: "
+                 "(%i)->last = %i, (%i)->first = %i\n", 
+                 start - solidsegs, 
+                 start->last, 
+                 (start + 1) - solidsegs, 
+                 (start + 1)->last);
    }
+#else
+   return;
 #endif
 }
 

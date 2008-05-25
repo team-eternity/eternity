@@ -144,16 +144,36 @@ cfg_opt_t edf_skin_opts[] =
    CFG_END()
 };
 
-#define ITEM_PCLASS_DEFAULT     "default"
-#define ITEM_PCLASS_DEFAULTSKIN "defaultskin"
-#define ITEM_PCLASS_THINGTYPE   "thingtype"
-#define ITEM_PCLASS_ALTATTACK   "altattackstate"
+#define ITEM_PCLASS_DEFAULT        "default"
+#define ITEM_PCLASS_DEFAULTSKIN    "defaultskin"
+#define ITEM_PCLASS_THINGTYPE      "thingtype"
+#define ITEM_PCLASS_ALTATTACK      "altattackstate"
+#define ITEM_PCLASS_SPEEDWALK      "speedwalk"
+#define ITEM_PCLASS_SPEEDRUN       "speedrun"
+#define ITEM_PCLASS_SPEEDSTRAFE    "speedstrafe"
+#define ITEM_PCLASS_SPEEDSTRAFERUN "speedstraferun"
+#define ITEM_PCLASS_SPEEDTURN      "speedturn"
+#define ITEM_PCLASS_SPEEDTURNFAST  "speedturnfast"
+#define ITEM_PCLASS_SPEEDTURNSLOW  "speedturnslow"
+#define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
+#define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
 
 cfg_opt_t edf_pclass_opts[] =
 {
    CFG_STR(ITEM_PCLASS_DEFAULTSKIN, NULL, CFGF_NONE),
    CFG_STR(ITEM_PCLASS_THINGTYPE,   NULL, CFGF_NONE),
    CFG_STR(ITEM_PCLASS_ALTATTACK,   NULL, CFGF_NONE),
+
+   // speeds
+   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE),
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE),
 
    CFG_BOOL(ITEM_PCLASS_DEFAULT, cfg_false, CFGF_NONE),
 
@@ -492,6 +512,39 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       pc->altattack = statenum;
    }
 
+   // process player speed fields
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDWALK))
+      pc->forwardmove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDWALK);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDRUN))
+      pc->forwardmove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDRUN);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDSTRAFE))
+      pc->sidemove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFE);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN))
+      pc->sidemove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURN))
+      pc->angleturn[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURN);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURNFAST))
+      pc->angleturn[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURNFAST);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURNSLOW))
+      pc->angleturn[2] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURNSLOW);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKSLOW))
+      pc->lookspeed[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKSLOW);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKFAST))
+      pc->lookspeed[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKFAST);
+
+   // copy speeds to original speeds
+   memcpy(pc->oforwardmove, pc->forwardmove, 2 * sizeof(fixed_t));
+   memcpy(pc->osidemove,    pc->sidemove,    2 * sizeof(fixed_t));
+
    // default flag
    if(IS_SET(pcsec, ITEM_PCLASS_DEFAULT))
    {
@@ -620,6 +673,32 @@ boolean E_PlayerInWalkingState(player_t *player)
    while(curstate != seestate); // terminate when it loops
 
    return false;
+}
+
+//
+// E_ApplyTurbo
+//
+// Applies the turbo scale to all player classes.
+//
+void E_ApplyTurbo(int ts)
+{
+   int i;
+   playerclass_t *pc;
+
+   // run down all hash chains
+   for(i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   {
+      pc = edf_player_classes[i];
+
+      while(pc)
+      {
+         pc->forwardmove[0] = pc->oforwardmove[0] * ts / 100;
+         pc->forwardmove[1] = pc->oforwardmove[1] * ts / 100;
+         pc->sidemove[0]    =    pc->osidemove[0] * ts / 100;
+         pc->sidemove[1]    =    pc->osidemove[1] * ts / 100;
+         pc = pc->next;
+      }
+   }
 }
 
 // EOF
