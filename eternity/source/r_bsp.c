@@ -631,7 +631,7 @@ static void R_ClipSegToPortal(void)
       y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
 
       // SoM: Quickly reject the seg based on the bounding box of the portal
-      if(y1 > portalrender.maxy && y2 > portalrender.maxy)
+      if(portalrender.maxy - y1 < -1.0f && portalrender.maxy - y2 < -1.0f)
          return;
       if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
          return;
@@ -677,7 +677,7 @@ static void R_ClipSegToPortal(void)
 
       for(i = seg.x1; i <= seg.x2; i++)
       {
-         for(; i <= seg.x2 && bottom < (ceilingclip[i] + 1.0f); i++)
+         for(; i <= seg.x2 && bottom < ceilingclip[i]; i++)
             bottom += bottomstep;
 
          if(i > seg.x2)
