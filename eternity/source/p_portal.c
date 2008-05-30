@@ -248,7 +248,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 //
 // P_CheckLinkedPortal
 //
-static boolean P_CheckLinkedPortal(rportal_t *portal, sector_t *sec)
+static boolean P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
    int i = sec - sectors;
    linkoffset_t *link;

@@ -39,6 +39,8 @@ typedef enum
    R_LINKED, // SoM: interactive portals  
 } rportaltype_e;
 
+
+
 typedef struct
 {
    mobj_t    *mobj;
@@ -48,6 +50,9 @@ typedef struct
    fixed_t   planez;
 #endif
 } cameraportal_t;
+
+
+
 
 typedef struct
 {
@@ -60,6 +65,9 @@ typedef struct
    float   *ceilingbaseangle, *ceilingangle;
 } horizonportal_t;
 
+
+
+
 typedef struct
 {
    short   *pic;
@@ -69,7 +77,10 @@ typedef struct
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
 } skyplaneportal_t;
 
-typedef struct rportal_s
+
+
+
+typedef struct portal_s
 {
    rportaltype_e type;
 
@@ -80,39 +91,76 @@ typedef struct rportal_s
       skyplaneportal_t plane;
    } data;
 
+   struct portal_s *next;
+
+   // haleyjd: temporary debug
+   short tainted;
+} portal_t;
+
+
+
+
+portal_t *R_GetSkyBoxPortal(mobj_t *camera);
+portal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
+portal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
+
+portal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, 
+                             fixed_t *floorz, fixed_t *ceilingz, 
+                             short *floorlight, short *ceilinglight, 
+                             fixed_t *floorxoff, fixed_t *flooryoff, 
+                             fixed_t *ceilingxoff, fixed_t *ceilingyoff,
+                             float *floorbaseangle, float *floorangle,
+                             float *ceilingbaseangle, float *ceilingangle);
+
+portal_t *R_GetPlanePortal(short *pic, fixed_t *delta, short *lightlevel, 
+                           fixed_t *xoff, fixed_t *yoff, float *baseangle,
+                           float *angle);
+
+void R_ClearPortals(void);
+void R_RenderPortals(void);
+
+
+#ifdef R_LINKEDPORTALS
+portal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, 
+                            fixed_t planez, int groupid);
+#endif
+
+
+typedef enum
+{
+   pw_floor,
+   pw_ceiling,
+   pw_line
+} pwindowtype_e;
+
+typedef void (*R_WindowFunc)(struct pwindow_s *);
+
+typedef struct pwindow_s
+{
+   portal_t *portal;
+   struct line_s *line;
+   pwindowtype_e type;
+
+   fixed_t  vx, vy, vz;
+
    float top[MAX_SCREENWIDTH];
    float bottom[MAX_SCREENWIDTH];
    int minx, maxx;
 
-   fixed_t  vx, vy, vz;
+   R_WindowFunc func;
 
-   struct rportal_s *next, *child;
+   struct pwindow_s *next, *child;
+} pwindow_t;
 
-   // haleyjd: temporary debug
-   short tainted;
-} rportal_t;
-
-rportal_t *R_GetSkyBoxPortal(mobj_t *camera);
-rportal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
-rportal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
-
-rportal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, 
-                              fixed_t *floorz, fixed_t *ceilingz, 
-                              short *floorlight, short *ceilinglight, 
-                              fixed_t *floorxoff, fixed_t *flooryoff, 
-                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
-                              float *floorbaseangle, float *floorangle,
-                              float *ceilingbaseangle, float *ceilingangle);
-
-rportal_t *R_GetPlanePortal(short *pic, fixed_t *delta, short *lightlevel, 
-                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
-                            float *angle);
 
 // SoM: Cardboard
-void R_PortalAdd(rportal_t *portal, int x, float ytop, float ybottom);
+void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
 
-void R_ClearPortals(void);
-void R_RenderPortals(void);
+
+pwindow_t *R_GetFloorPortalWindow(portal_t *portal);
+pwindow_t *R_GetCeilingPortalWindow(portal_t *portal);
+pwindow_t *R_GetLinePortalWindow(portal_t *portal, struct line_s *line);
+
 
 // SoM 3/14/2004: flag if we are rendering portals.
 typedef struct
@@ -121,15 +169,10 @@ typedef struct
    int     minx, maxx;
    float   miny, maxy;
 
-   rportal_t *p;
+   pwindow_t *w;
 } portalrender_t;
 
 extern portalrender_t  portalrender;
-
-#ifdef R_LINKEDPORTALS
-rportal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, 
-                             fixed_t planez, int groupid);
-#endif
 #endif
 
 //----------------------------------------------------------------------------

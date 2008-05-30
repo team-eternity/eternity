@@ -4751,7 +4751,7 @@ void P_ConvertHexenLineSpec(short *special, long *args)
 static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 {
    sector_t  *sector, *frontsector;
-   rportal_t *portal = NULL;
+   portal_t  *portal = NULL;
    mobj_t    *skycam;
    static int CamType = -1;
    int s;

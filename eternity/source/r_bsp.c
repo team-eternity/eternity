@@ -621,7 +621,7 @@ static void R_ClipSegToPortal(void)
    // If the camera is below the bottom of the seg the bottom edge needs 
    // to be clipped. This is done so visplanes will still be rendered 
    // fully.
-   if(viewz > seg.frontsec->ceilingheight)
+   if(portalrender.w->type == pw_floor)
    {
       float top, topstep;
       float y1, y2;
@@ -660,7 +660,7 @@ static void R_ClipSegToPortal(void)
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
-   else if(viewz < seg.frontsec->floorheight)
+   else if(portalrender.w->type == pw_ceiling)
    {
       float bottom, bottomstep;
       float y1, y2;
@@ -1073,12 +1073,21 @@ static void R_AddLine(seg_t *line)
 
       // SoM: these should be treated differently! 
       seg.markcportal = R_RenderCeilingPortal(seg.frontsec);
+      seg.c_window    = seg.markcportal ?
+                        R_GetCeilingPortalWindow(seg.frontsec->c_portal) :
+                        NULL;
+
       seg.markfportal = R_RenderFloorPortal(seg.frontsec);
+      seg.f_window    = seg.markfportal ?
+                        R_GetFloorPortalWindow(seg.frontsec->f_portal) :
+                        NULL;
+
       seg.markceiling = (seg.ceilingplane != NULL);
       seg.markfloor   = (seg.floorplane != NULL);
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
-      seg.lineportal  = line->linedef->portal;
+      seg.l_window    = line->linedef->portal ?
+                        R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
 
 #ifdef R_LINKEDPORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
@@ -1135,6 +1144,9 @@ static void R_AddLine(seg_t *line)
          (seg.clipsolid || seg.top != seg.high || 
           seg.frontsec->c_portal != seg.backsec->c_portal));
 
+      seg.c_window = seg.markcportal ? 
+                     R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
+
       seg.markceiling = 
          (seg.ceilingplane && 
           (mark || seg.clipsolid || seg.top != seg.high || 
@@ -1161,6 +1173,9 @@ static void R_AddLine(seg_t *line)
          (R_RenderFloorPortal(seg.frontsec) &&
          (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
           seg.frontsec->f_portal != seg.backsec->f_portal));
+
+      seg.f_window = seg.markfportal ? 
+                     R_GetFloorPortalWindow(seg.frontsec->f_portal) : NULL;
 
       seg.markfloor = 
          (seg.floorplane && 
@@ -1212,10 +1227,10 @@ static void R_AddLine(seg_t *line)
       seg.maskedtex = !!seg.side->midtexture;
       seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-      seg.lineportal  = line->linedef->portal &&
-                        line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
-                        line->linedef->sidenum[0] == line->sidedef - sides ?
-                        line->linedef->portal : NULL;
+      seg.l_window = line->linedef->portal &&
+                     line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+                     line->linedef->sidenum[0] == line->sidedef - sides ?
+                     R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
    }
 
    if(x1 < 0)

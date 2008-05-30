@@ -220,7 +220,7 @@ static void R_RenderSegLoop(void)
             line = clipbot;
          
          if(line >= cliptop)
-            R_PortalAdd(segclip.frontsec->c_portal, i, (float)cliptop, (float)line);
+            R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
 
          ceilingclip[i] = (float)t;
       }
@@ -249,7 +249,7 @@ static void R_RenderSegLoop(void)
             line = cliptop;
 
          if(line <= clipbot)
-            R_PortalAdd(segclip.frontsec->f_portal, i, (float)line, (float)clipbot);
+            R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
 
          floorclip[i] = (float)b;
       }
@@ -324,9 +324,9 @@ static void R_RenderSegLoop(void)
             ceilingclip[i] = view.height - 1.0f;
             floorclip[i] = 0.0f;
          }
-         else if(segclip.twosided == false && segclip.lineportal)
+         else if(segclip.twosided == false && segclip.l_window)
          {
-            R_PortalAdd(segclip.lineportal, i, (float)t, (float)b);
+            R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
             ceilingclip[i] = view.height - 1.0f;
             floorclip[i] = 0.0f;
          }
@@ -386,17 +386,17 @@ static void R_RenderSegLoop(void)
                floorclip[i] = (float)b;
 
 
-            if(segclip.lineportal)
+            if(segclip.l_window)
             {
-               R_PortalAdd(segclip.line->linedef->portal, i, ceilingclip[i], floorclip[i]);
+               R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
          }
       }
-      else if(segclip.lineportal)
+      else if(segclip.l_window)
       {
-         R_PortalAdd(segclip.line->linedef->portal, i, (float)t, (float)b);
+         R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }

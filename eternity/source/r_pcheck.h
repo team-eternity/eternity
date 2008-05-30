@@ -99,7 +99,7 @@ d_inline static boolean R_CeilingPortalActive(sector_t *sector)
 
 d_inline static boolean R_RenderFloorPortal(sector_t *sector)
 {
-   const rportal_t *fp = sector->f_portal;
+   const portal_t *fp = sector->f_portal;
 
 #ifdef R_LINKEDPORTALS
    return 
@@ -115,7 +115,7 @@ d_inline static boolean R_RenderFloorPortal(sector_t *sector)
 
 d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
 {
-   const rportal_t *cp = sector->c_portal;
+   const portal_t *cp = sector->c_portal;
 
 #ifdef R_LINKEDPORTALS
    return 

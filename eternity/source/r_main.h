@@ -194,7 +194,8 @@ typedef struct
    sector_t *frontsec, *backsec;
    visplane_t *floorplane, *ceilingplane;
    seg_t *line;
-   rportal_t *lineportal;
+
+   pwindow_t *l_window, *f_window, *c_window;
 
    // SoM: used for portals
    fixed_t  frontfloorz, frontceilz, backfloorz, backceilz;

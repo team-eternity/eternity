@@ -226,8 +226,8 @@ struct sector_s
    int f_asurfacecount;
    attachedsurface_t *f_asurfaces;
 
-   rportal_t *c_portal;
-   rportal_t *f_portal;
+   portal_t *c_portal;
+   portal_t *f_portal;
 #ifdef R_LINKEDPORTALS
    int groupid;
 #endif
@@ -314,7 +314,7 @@ typedef struct line_s
    int firstid,  nextid;  // haleyjd 02/27/07: same but for line id's
 
    // SoM 12/10/03: wall portals
-   rportal_t *portal;
+   portal_t *portal;
 
    // haleyjd 02/26/05: ExtraData fields
    long extflags;          // activation flags for param specials
