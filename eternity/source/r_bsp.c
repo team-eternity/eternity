@@ -91,8 +91,8 @@ static cliprange_t *newend;
 static cliprange_t solidsegs[MAXSEGS];
 
 // addend is one past the last valid added seg.
-static cliprange_t *addend;
 static cliprange_t addedsegs[MAXSEGS];
+static cliprange_t *addend = addedsegs;
 
 
 static void R_AddSolidSeg(int x1, int x2)
@@ -322,6 +322,7 @@ void R_ClearClipSegs(void)
    solidsegs[1].first = viewwidth;
    solidsegs[1].last = 0x7fff; // ffff;      new short limit --  killough
    newend = solidsegs+2;
+   addend = addedsegs;
 
    // haleyjd 09/22/07: must clear seg and segclip structures
    memset(&seg, 0, sizeof(cb_seg_t));
@@ -1077,6 +1078,7 @@ static void R_AddLine(seg_t *line)
       seg.markfloor   = (seg.floorplane != NULL);
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
+      seg.lineportal  = line->linedef->portal;
 
 #ifdef R_LINKEDPORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
@@ -1209,6 +1211,11 @@ static void R_AddLine(seg_t *line)
       seg.midtex = 0;
       seg.maskedtex = !!seg.side->midtexture;
       seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
+
+      seg.lineportal  = line->linedef->portal &&
+                        line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+                        line->linedef->sidenum[0] == line->sidedef - sides ?
+                        line->linedef->portal : NULL;
    }
 
    if(x1 < 0)

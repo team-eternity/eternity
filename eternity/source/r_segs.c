@@ -269,9 +269,8 @@ static void R_RenderSegLoop(void)
          floorclip[i] = (float)b;
       }
 
-      if(segclip.line->linedef->portal)
-         R_PortalAdd(segclip.line->linedef->portal, i, (float)t, (float)b);
-      else if(segclip.segtextured)
+
+      if(segclip.segtextured)
       {
          int index;
 
@@ -322,6 +321,12 @@ static void R_RenderSegLoop(void)
 
             colfunc();
 
+            ceilingclip[i] = view.height - 1.0f;
+            floorclip[i] = 0.0f;
+         }
+         else if(segclip.twosided == false && segclip.lineportal)
+         {
+            R_PortalAdd(segclip.lineportal, i, (float)t, (float)b);
             ceilingclip[i] = view.height - 1.0f;
             floorclip[i] = 0.0f;
          }
@@ -379,7 +384,21 @@ static void R_RenderSegLoop(void)
             }
             else if(segclip.markfloor)
                floorclip[i] = (float)b;
+
+
+            if(segclip.lineportal)
+            {
+               R_PortalAdd(segclip.line->linedef->portal, i, ceilingclip[i], floorclip[i]);
+               ceilingclip[i] = view.height - 1.0f;
+               floorclip[i] = 0.0f;
+            }
          }
+      }
+      else if(segclip.lineportal)
+      {
+         R_PortalAdd(segclip.line->linedef->portal, i, (float)t, (float)b);
+         ceilingclip[i] = view.height - 1.0f;
+         floorclip[i] = 0.0f;
       }
       else
       {

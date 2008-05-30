@@ -4919,7 +4919,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
          int group;
 
-         if(line->frontsector && line->backsector)
+         /*if(line->frontsector && line->backsector)
          {
             C_Printf(FC_ERROR, "Line-Line portal line two sided. (line %i)", line - lines);
             return;
@@ -4928,7 +4928,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          {
             C_Printf(FC_ERROR, "Line-Line anchor line two sided. (line %i)", s);
             return;
-         }
+         }*/
 
          group = P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector :
                                                             lines[s].backsector);
@@ -4974,8 +4974,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    // attach portal to like-tagged 289 lines
    for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
    {
-      if(line == &lines[s] || lines[s].special != 289 ||
-         (lines[s].backsector && lines[s].frontsector)) // ignore 2S lines
+      if(line == &lines[s] || lines[s].special != 289)
          continue;
 
       lines[s].special = 0;
