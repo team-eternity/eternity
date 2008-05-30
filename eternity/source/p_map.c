@@ -577,7 +577,7 @@ boolean PIT_CheckLine(line_t *ld)
    if(!ld->backsector) // one sided line
    {
 #ifdef R_LINKEDPORTALS
-      linkoffset_t *link;
+      /*linkoffset_t *link;
 
       if(R_LinkedLineActive(ld) &&
          (link = P_GetLinkOffset(ld->frontsector->groupid, ld->portal->data.camera.groupid)))
@@ -596,7 +596,7 @@ boolean PIT_CheckLine(line_t *ld)
             SpechitOverrun(ld);
 
          return true;
-      }
+      }*/
 #endif
       tm->blockline = ld;
       return tm->unstuck && !untouched(ld) &&
@@ -659,8 +659,11 @@ boolean PIT_CheckLine(line_t *ld)
       tm->passceilz = tm->ceilingz;
 
    // if contacted a special line, add it to the list
-   
+#ifdef R_LINKEDPORTALS   
+   if(ld->special || ld->portal)
+#else
    if(ld->special)
+#endif
    {
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(tm->numspechit >= tm->spechit_max)
