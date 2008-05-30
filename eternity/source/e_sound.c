@@ -262,6 +262,11 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
 {
    unsigned int hash = sfx->dehackednum % NUMSFXCHAINS;
 
+#ifdef RANGECHECK
+   if(sfx->dehackednum < 0)
+      I_Error("E_AddSoundToDEHHash: internal error - dehnum == -1\n");
+#endif
+
    if(sfx->dehackednum == 0)
       E_EDFLoggedErr(2, "E_AddSoundToDEHHash: dehackednum zero is reserved!\n");
 
@@ -353,6 +358,8 @@ boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
       return false;
 
    // assign it!
+   sfx->dehackednum = dehnum;
+
    E_AddSoundToDEHHash(sfx);
 
    return true;

@@ -657,6 +657,7 @@ boolean E_IsPlayerClassThingType(mobjtype_t motype)
 boolean E_PlayerInWalkingState(player_t *player)
 {
    state_t *pstate, *curstate, *seestate;
+   int count = 0;
 
    pstate   = player->mo->state;
    seestate = &states[player->mo->info->seestate];
@@ -669,6 +670,12 @@ boolean E_PlayerInWalkingState(player_t *player)
          return true;
 
       curstate = &states[curstate->nextstate]; // try next state
+
+      if(++count >= 100) // seen 100 states? get out.
+      {
+         doom_printf(FC_ERROR "open player walk sequence detected\a\n");
+         break;
+      }
    }
    while(curstate != seestate); // terminate when it loops
 

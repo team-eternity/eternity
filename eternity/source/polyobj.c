@@ -727,7 +727,10 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       mobj_t *mo;
 
       Polyobj_bboxSub(po->lines[i]->bbox, &dist);
+
 #ifdef R_LINKEDPORTALS
+      // 05/25/08: must change lines' sector groupids for correct portal
+      // automap overlay behavior.
       mo = po->spawnSpotMobj;
       po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
 #endif

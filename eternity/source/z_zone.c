@@ -286,10 +286,8 @@ void Z_Init(void)
    size -= LEAVE_ASIDE;        // Leave aside some for other libraries
 
    // haleyjd 01/20/04: changed to prboom version:
-#ifdef INSTRUMENTED
    if(!(HEADER_SIZE >= sizeof(memblock_t) && MIN_RAM > LEAVE_ASIDE))
       I_Error("Z_Init: Sanity check failed");
-#endif
    
    size = (size+CHUNK_SIZE-1) & ~(CHUNK_SIZE-1);  // round to chunk size
    
@@ -739,6 +737,7 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 #endif
 }
 
+/*
 //
 // Z_ReallocOld
 //
@@ -1003,6 +1002,29 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 #endif
 
    return ptr;
+}
+*/
+
+//
+// Z_Realloc
+//
+// haleyjd 05/29/08: *Something* is wrong with my Z_Realloc routine, and I
+// cannot figure out what! So we're back to using Old Faithful for now.
+//
+void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
+                  const char *file, int line)
+{
+   void *p = (Z_Malloc)(n, tag, user, file, line);
+   if(ptr)
+   {
+      memblock_t *block = (memblock_t *)((char *)ptr - HEADER_SIZE);
+      if(p) // haleyjd 09/18/06: allow to return NULL without crashing
+         memcpy(p, ptr, n <= block->size ? n : block->size);
+      (Z_Free)(ptr, file, line);
+      if(user) // in case Z_Free nullified same user
+         *user=p;
+   }
+   return p;
 }
 
 //

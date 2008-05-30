@@ -699,6 +699,15 @@ SOURCE=.\Source\wi_stuff.c
 # Begin Source File
 
 SOURCE=.\Source\z_zone.c
+
+!IF  "$(CFG)" == "Eternity - Win32 Release"
+
+# SUBTRACT CPP /FA<none>
+
+!ELSEIF  "$(CFG)" == "Eternity - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # End Group
 # Begin Group "Header Files"
