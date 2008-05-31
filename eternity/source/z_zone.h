@@ -76,19 +76,23 @@ enum
 #define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */
 
 void *(Z_Malloc)(size_t size, int tag, void **ptr, const char *, int);
-void (Z_Free)(void *ptr, const char *, int);
-void (Z_FreeTags)(int lowtag, int hightag, const char *, int);
-void (Z_ChangeTag)(void *ptr, int tag, const char *, int);
-void (Z_Init)(void);
+void  (Z_Free)(void *ptr, const char *, int);
+void  (Z_FreeTags)(int lowtag, int hightag, const char *, int);
+void  (Z_ChangeTag)(void *ptr, int tag, const char *, int);
+void  (Z_Init)(void);
 void *(Z_Calloc)(size_t n, size_t n2, int tag, void **user, const char *, int);
 void *(Z_Realloc)(void *p, size_t n, int tag, void **user, const char *, int);
 char *(Z_Strdup)(const char *s, int tag, void **user, const char *, int);
-void Z_FreeAlloca(void);
+void   Z_FreeAlloca(void);
 void *(Z_Alloca)(size_t n, const char *file, int line);
 char *(Z_Strdupa)(const char *s, const char *file, int line);
-void (Z_CheckHeap)(const char *,int);   // killough 3/22/98: add file/line info
-int (Z_CheckTag)(void *,const char *,int);
-void Z_DumpHistory(char *);
+void  (Z_CheckHeap)(const char *,int);   // killough 3/22/98: add file/line info
+int   (Z_CheckTag)(void *,const char *,int);
+void   Z_DumpHistory(char *);
+
+void *Z_SysMalloc(size_t size);
+void *Z_SysCalloc(size_t n1, size_t n2);
+void  Z_SysFree(void *p);
 
 #define Z_Free(a)          (Z_Free)     (a,      __FILE__,__LINE__)
 #define Z_FreeTags(a,b)    (Z_FreeTags) (a,b,    __FILE__,__LINE__)

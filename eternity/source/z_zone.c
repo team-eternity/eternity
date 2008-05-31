@@ -1280,6 +1280,52 @@ void Z_DumpCore(void)
    fclose(outfile);
 }
 
+//
+// Z_SysMalloc
+//
+// Similar to Z_AllocLow in the original source, this function gives explicit
+// access to the C heap. There are allocations which are a detriment to the zone
+// system, such as large video buffers, which should be handled through this
+// function instead.
+//
+// Care must be taken, of course, to not mix zone and C heap allocations.
+//
+void *Z_SysMalloc(size_t size)
+{
+   void *ret;
+   
+   if(!(ret = (malloc)(size)))
+      I_Error("Z_SysMalloc: failed on allocation of %lu bytes\n", size);
+
+   return ret;
+}
+
+//
+// Z_SysCalloc
+//
+// Convenience routine to match above.
+//
+void *Z_SysCalloc(size_t n1, size_t n2)
+{
+   void *ret;
+
+   if(!(ret = (calloc)(n1, n2)))
+      I_Error("Z_SysCalloc: failed on allocation of %lu bytes\n", n1*n2);
+
+   return ret;
+}
+
+//
+// Z_SysFree
+//
+// For use with Z_SysAlloc.
+//
+void Z_SysFree(void *p)
+{
+   if(p)
+      (free)(p);
+}
+
 //-----------------------------------------------------------------------------
 //
 // $Log: z_zone.c,v $

@@ -759,15 +759,22 @@ void V_Init(void)
 #ifdef DJGPP
    if(s)
       free(s), destroy_bitmap(screens0_bitmap);
+
+   video.screens[3] = 
+      (video.screens[2] = 
+       (video.screens[1] = s = calloc(size,3)) + size) + size;
 #else
+   // haleyjd 05/30/08: removed screens from zone heap
    if(s)
    {
-      free(s);
+      Z_SysFree(s);
       I_UnsetPrimaryBuffer();
    }
+
+   video.screens[3] =
+      (video.screens[2] =
+       (video.screens[1] = s = Z_SysCalloc(size, 3)) + size) + size;
 #endif
-   
-   video.screens[3] = (video.screens[2] = (video.screens[1] = s = calloc(size,3)) + size) + size;
    
 #ifdef DJGPP
    screens0_bitmap = create_bitmap_ex(8, video.width, video.height);

@@ -43,62 +43,6 @@
 #include "e_player.h"
 
 //
-// Weapon Options
-//
-
-#define ITEM_WEAPON_AMMO        "ammo"
-#define ITEM_WEAPON_AMMOPERSHOT "ammopershot"
-#define ITEM_WEAPON_RECOIL      "recoil"
-#define ITEM_WEAPON_UPSTATE     "upstate"
-#define ITEM_WEAPON_DOWNSTATE   "downstate"
-#define ITEM_WEAPON_READYSTATE  "readystate"
-#define ITEM_WEAPON_ATTACKSTATE "attackstate"
-#define ITEM_WEAPON_FLASHSTATE  "flashstate"
-#define ITEM_WEAPON_UPSOUND     "upsound"
-#define ITEM_WEAPON_IDLESOUND   "idlesound"
-#define ITEM_WEAPON_FLAGS       "flags"
-
-cfg_opt_t edf_weapon_opts[] =
-{
-   CFG_STR(ITEM_WEAPON_AMMO,        NULL,       CFGF_NONE), // TODO: default ammo type?
-   CFG_INT(ITEM_WEAPON_AMMOPERSHOT, 1,          CFGF_NONE),
-   CFG_INT(ITEM_WEAPON_RECOIL,      0,          CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_UPSTATE,     "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_DOWNSTATE,   "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_READYSTATE,  "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_ATTACKSTATE, "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_FLASHSTATE,  "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_UPSOUND,     "none",     CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_IDLESOUND,   "none",     CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_FLAGS,       "",         CFGF_NONE),
-   
-   // TODO: more stuff.
-
-   CFG_END()
-};
-
-// haleyjd: weapon flags!
-static dehflags_t weapon_flags[] =
-{
-   { "NOTHRUST",     WPF_NOTHRUST     },
-   { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
-   { "NOTSHAREWARE", WPF_NOTSHAREWARE },
-   { "COMMERCIAL",   WPF_COMMERCIAL   },
-   { "SILENCER",     WPF_SILENCER     },
-   { "SILENT",       WPF_SILENT       },
-   { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
-   { "FLEEMELEE",    WPF_FLEEMELEE    },
-   { NULL,           0 }
-};
-
-static dehflagset_t weapon_flagset =
-{
-   weapon_flags, // flaglist
-   0,            // mode: single flags word
-};
-
-
-//
 // Player Class and Skin Options
 //
 
@@ -588,8 +532,9 @@ boolean E_NeedDefaultPlayerData(void)
    return !(num_edf_skins && num_edf_pclasses);
 }
 
+//==============================================================================
 //
-// Game Engine Interface
+// Game Engine Interface for Player Classes
 //
 
 //
@@ -707,6 +652,306 @@ void E_ApplyTurbo(int ts)
       }
    }
 }
+
+//==============================================================================
+//
+// Inventory
+//
+
+//
+// Ammo Subclass Options
+//
+
+#define ITEM_SUBCLASS_AMMO "ammo"
+
+#define ITEM_AMMO_BACKPACKAMOUNT    "backpackamount"
+#define ITEM_AMMO_BACKPACKMAXAMOUNT "backpackmaxamount"
+#define ITEM_AMMO_DROPAMOUNT        "dropamount"
+#define ITEM_AMMO_ID                "id"
+
+static cfg_opt_t edf_ammo_opts[] =
+{
+   CFG_INT(ITEM_AMMO_BACKPACKAMOUNT,    0, CFGF_NONE),
+   CFG_INT(ITEM_AMMO_BACKPACKMAXAMOUNT, 0, CFGF_NONE),
+   CFG_INT(ITEM_AMMO_DROPAMOUNT,        0, CFGF_NONE),
+   CFG_INT(ITEM_AMMO_ID,               -1, CFGF_NONE),
+
+   CFG_END()
+};
+
+//
+// ArmorPickup Subclass Options
+//
+
+#define ITEM_SUBCLASS_ARMORPICKUP "armorpickup"
+
+#define ITEM_ARMORPICKUP_SAVEAMOUNT  "saveamount"
+#define ITEM_ARMORPICKUP_SAVEPERCENT "savepercent"
+
+static cfg_opt_t edf_armorpickup_opts[] =
+{
+   CFG_INT(ITEM_ARMORPICKUP_SAVEAMOUNT,  0, CFGF_NONE),
+   CFG_INT(ITEM_ARMORPICKUP_SAVEPERCENT, 0, CFGF_NONE),
+
+   CFG_END()
+};
+
+//
+// ArmorBonus Subclass Options
+//
+
+#define ITEM_SUBCLASS_ARMORBONUS "armorbonus"
+
+#define ITEM_ARMORBONUS_SAVEPERCENT   "savepercent"
+#define ITEM_ARMORBONUS_MAXSAVEAMOUNT "maxsaveamount"
+#define ITEM_ARMORBONUS_SAVEAMOUNT    "saveamount"
+
+static cfg_opt_t edf_armorbonus_opts[] =
+{
+   CFG_INT(ITEM_ARMORBONUS_SAVEPERCENT,   0, CFGF_NONE),
+   CFG_INT(ITEM_ARMORBONUS_MAXSAVEAMOUNT, 0, CFGF_NONE),
+   CFG_INT(ITEM_ARMORBONUS_SAVEAMOUNT,    0, CFGF_NONE),
+
+   // TODO: maxbonus / maxbonusmax ??
+
+   CFG_END()
+};
+
+//
+// ClassArmor Subclass Options
+//
+
+#define ITEM_SUBCLASS_CLASSARMOR "classarmor"
+#define ITEM_CLASSARMOR_INDEX    "index"
+
+static cfg_opt_t edf_classarmor_opts[] =
+{
+   CFG_INT(ITEM_CLASSARMOR_INDEX, 0, CFGF_NONE),
+
+   CFG_END()
+};
+
+//
+// BackpackItem Subclass Options
+//
+
+#define ITEM_SUBCLASS_BACKPACKITEM "backpackitem"
+#define ITEM_BACKPACKITEM_TYPE     "type"
+
+static cfg_opt_t edf_backpackitem_opts[] =
+{
+   CFG_STR(ITEM_BACKPACKITEM_TYPE, "Normal", CFGF_NONE),
+
+   CFG_END()
+};
+
+//
+// TODO: CustomInventory Subclass Options
+//
+
+//
+// FakeInventory Subclass Options
+//
+
+#define ITEM_SUBCLASS_FAKEINVENTORY "fakeinventory"
+
+// TODO: no properties??
+
+//
+// Health Subclass Options
+//
+
+#define ITEM_SUBCLASS_HEALTH   "health"
+#define ITEM_HEALTH_LOWMESSAGE "lowmessage"
+
+static cfg_opt_t edf_health_opts[] =
+{
+   CFG_STR(ITEM_HEALTH_LOWMESSAGE, NULL, CFGF_NONE),
+   
+   CFG_END()
+};
+
+//
+// HealthPickup Subclass Options
+//
+
+#define ITEM_SUBCLASS_HEALTHPICKUP "healthpickup"
+#define ITEM_HEALTHPICKUP_HEALTH   "health"
+
+static cfg_opt_t edf_healthpickup_opts[] =
+{
+   CFG_INT(ITEM_HEALTHPICKUP_HEALTH, 0, CFGF_NONE),
+
+   CFG_END()
+};
+
+//
+// Key Subclass Options
+//
+
+#define ITEM_SUBCLASS_KEY "key"
+
+// TODO: properties
+// TODO: lock definition separate from key
+
+//
+// TODO: Powerup Subclass Options ??
+//
+// Would be token items that represent player powers, to allow giving/checking
+// through inventory API.
+//
+
+//
+// PowerupGiver Subclass Options
+//
+
+#define ITEM_SUBCLASS_POWERUPGIVER "powerupgiver"
+
+#define ITEM_POWERUPGIVER_DURATION "duration"
+#define ITEM_POWERUPGIVER_TYPE     "type"
+#define ITEM_POWERUPGIVER_MODE     "mode"
+
+static cfg_opt_t edf_powerupgiver_opts[] =
+{
+   CFG_INT(ITEM_POWERUPGIVER_DURATION, 0,    CFGF_NONE),
+   CFG_STR(ITEM_POWERUPGIVER_TYPE,     NULL, CFGF_NONE),
+   // TODO: what is mode again?
+
+   CFG_END()
+};
+
+//
+// PuzzleItem Subclass Options
+//
+
+#define ITEM_SUBCLASS_PUZZLEITEM "puzzleitem"
+
+#define ITEM_PUZZLEITEM_NUMBER      "number"
+#define ITEM_PUZZLEITEM_FAILMESSAGE "failmessage"
+
+static cfg_opt_t edf_puzzleitem_opts[] =
+{
+   CFG_INT(ITEM_PUZZLEITEM_NUMBER,      0,    CFGF_NONE),
+   CFG_STR(ITEM_PUZZLEITEM_FAILMESSAGE, NULL, CFGF_NONE),
+
+   CFG_END()
+};
+
+//
+// Weapon Subclass Options
+//
+
+#define ITEM_SUBCLASS_WEAPON    "weapon"
+
+#define ITEM_WEAPON_AMMO        "ammo"
+#define ITEM_WEAPON_AMMOPERSHOT "ammopershot"
+#define ITEM_WEAPON_RECOIL      "recoil"
+#define ITEM_WEAPON_UPSTATE     "upstate"
+#define ITEM_WEAPON_DOWNSTATE   "downstate"
+#define ITEM_WEAPON_READYSTATE  "readystate"
+#define ITEM_WEAPON_ATTACKSTATE "attackstate"
+#define ITEM_WEAPON_FLASHSTATE  "flashstate"
+#define ITEM_WEAPON_UPSOUND     "upsound"
+#define ITEM_WEAPON_IDLESOUND   "idlesound"
+#define ITEM_WEAPON_FLAGS       "flags"
+#define ITEM_WEAPON_ID          "id"
+
+static cfg_opt_t edf_weapon_opts[] =
+{
+   CFG_STR(ITEM_WEAPON_AMMO,        NULL,       CFGF_NONE), // TODO: default ammo type?
+   CFG_INT(ITEM_WEAPON_AMMOPERSHOT, 1,          CFGF_NONE),
+   CFG_INT(ITEM_WEAPON_RECOIL,      0,          CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_UPSTATE,     "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_DOWNSTATE,   "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_READYSTATE,  "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_ATTACKSTATE, "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_FLASHSTATE,  "S_NULL",   CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_UPSOUND,     "none",     CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_IDLESOUND,   "none",     CFGF_NONE),
+   CFG_STR(ITEM_WEAPON_FLAGS,       "",         CFGF_NONE),
+   CFG_INT(ITEM_WEAPON_ID,          -1,         CFGF_NONE),
+
+   CFG_END()
+};
+
+// haleyjd: weapon flags!
+static dehflags_t weapon_flags[] =
+{
+   { "NOTHRUST",     WPF_NOTHRUST     },
+   { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
+   { "NOTSHAREWARE", WPF_NOTSHAREWARE },
+   { "COMMERCIAL",   WPF_COMMERCIAL   },
+   { "SILENCER",     WPF_SILENCER     },
+   { "SILENT",       WPF_SILENT       },
+   { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
+   { "FLEEMELEE",    WPF_FLEEMELEE    },
+   { NULL,           0 }
+};
+
+static dehflagset_t weapon_flagset =
+{
+   weapon_flags, // flaglist
+   0,            // mode: single flags word
+};
+
+//
+// Inventory Options
+//
+// Inventory is the base class and defines the most basic options that apply to
+// all inventory items.
+//
+
+#define ITEM_INVENTORY_CLASS       "class"
+#define ITEM_INVENTORY_AMOUNT      "amount"
+#define ITEM_INVENTORY_MAXAMOUNT   "maxamount"
+#define ITEM_INVENTORY_ICON        "icon"
+#define ITEM_INVENTORY_PMESSAGE    "pickupmessage"
+#define ITEM_INVENTORY_PSOUND      "pickupsound"
+#define ITEM_INVENTORY_PFLASH      "pickupflash"
+#define ITEM_INVENTORY_USESOUND    "usesound"
+#define ITEM_INVENTORY_RESPAWNTICS "respawntics"
+#define ITEM_INVENTORY_GIVEQUEST   "givequest"
+// TODO: flags
+
+cfg_opt_t edf_inventory_opts[] =
+{
+   // class may either be a predefined inventory class, or the mnemonic of
+   // another inventory item from which to inherit properties
+   CFG_STR(ITEM_INVENTORY_CLASS, "Inventory", CFGF_NONE),
+
+   // Basic properties
+   CFG_INT(ITEM_INVENTORY_AMOUNT,      0,    CFGF_NONE),
+   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,   0,    CFGF_NONE),
+   CFG_STR(ITEM_INVENTORY_ICON,        NULL, CFGF_NONE),
+   CFG_STR(ITEM_INVENTORY_PMESSAGE,    NULL, CFGF_NONE),
+   CFG_STR(ITEM_INVENTORY_PSOUND,      NULL, CFGF_NONE),
+   CFG_STR(ITEM_INVENTORY_PFLASH,      NULL, CFGF_NONE),
+   CFG_STR(ITEM_INVENTORY_USESOUND,    NULL, CFGF_NONE),
+   CFG_INT(ITEM_INVENTORY_RESPAWNTICS, 0,    CFGF_NONE),
+   CFG_INT(ITEM_INVENTORY_GIVEQUEST,   0,    CFGF_NONE),
+
+   // Subclass property blocks - only one of these may appear in a given
+   // inventory item definition, and which one may appear is determined by
+   // the class of the item in question. Any others will be ignored.
+   CFG_SEC(ITEM_SUBCLASS_AMMO,         edf_ammo_opts,         CFGF_NOCASE),
+   CFG_SEC(ITEM_SUBCLASS_ARMORPICKUP,  edf_armorpickup_opts,  CFGF_NOCASE),
+   CFG_SEC(ITEM_SUBCLASS_ARMORBONUS,   edf_armorbonus_opts,   CFGF_NOCASE),
+   CFG_SEC(ITEM_SUBCLASS_CLASSARMOR,   edf_classarmor_opts,   CFGF_NOCASE),
+   CFG_SEC(ITEM_SUBCLASS_BACKPACKITEM, edf_backpackitem_opts, CFGF_NOCASE),
+   // TODO: CustomInventory
+   // TODO: FakeInventory
+   CFG_SEC(ITEM_SUBCLASS_HEALTH,       edf_health_opts,       CFGF_NOCASE),
+   CFG_SEC(ITEM_SUBCLASS_HEALTHPICKUP, edf_healthpickup_opts, CFGF_NOCASE),
+   // TODO: Key
+   // TODO: Powerup
+   CFG_SEC(ITEM_SUBCLASS_POWERUPGIVER, edf_powerupgiver_opts, CFGF_NOCASE),
+   CFG_SEC(ITEM_SUBCLASS_PUZZLEITEM,   edf_puzzleitem_opts,   CFGF_NOCASE),
+   CFG_SEC(ITEM_SUBCLASS_WEAPON,       edf_weapon_opts,       CFGF_NOCASE),
+
+   CFG_END()
+};
+
+
 
 // EOF
 
