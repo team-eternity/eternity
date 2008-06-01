@@ -537,6 +537,10 @@ SOURCE=.\Source\e_lib.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\e_mod.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\source\e_player.c
 # End Source File
 # Begin Source File
@@ -699,15 +703,6 @@ SOURCE=.\Source\wi_stuff.c
 # Begin Source File
 
 SOURCE=.\Source\z_zone.c
-
-!IF  "$(CFG)" == "Eternity - Win32 Release"
-
-# SUBTRACT CPP /FA<none>
-
-!ELSEIF  "$(CFG)" == "Eternity - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -1123,6 +1118,10 @@ SOURCE=.\Source\e_exdata.h
 # Begin Source File
 
 SOURCE=.\Source\e_lib.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_mod.h
 # End Source File
 # Begin Source File
 

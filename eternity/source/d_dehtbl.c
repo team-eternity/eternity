@@ -1753,8 +1753,9 @@ const char *DEH_String(const char *mnemonic)
    if(mnemonic == NULL)
       return NULL;
 
+   // 05/31/08: modified to return mnemonic on unknown string
    if(!(dehstr = D_GetBEXStr(mnemonic)))
-      I_Error("DEH_String: unknown BEX mnemonic %s\n", mnemonic);
+      return mnemonic;
 
    return *(dehstr->ppstr);
 }
