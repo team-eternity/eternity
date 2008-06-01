@@ -614,6 +614,9 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    floorclip = window->bottom;
    ceilingclip = window->top;
 
+   portalrender.minx = window->minx;
+   portalrender.maxx = window->maxx;
+
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
 

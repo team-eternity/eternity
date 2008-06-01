@@ -120,20 +120,19 @@ typedef struct degenmobj_s
 
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
+// SoM: these are flags now
 typedef enum
 {
-   AS_FLOOR,
-   AS_CEILING,
-   AS_BOTH,
-   AS_MIRRORFLOOR,
-   AS_MIRRORCEILING,
-   AS_MIRRORBOTH,
+   AS_FLOOR          = 0x01,
+   AS_CEILING        = 0x02,
+   AS_MIRRORFLOOR    = 0x04,
+   AS_MIRRORCEILING  = 0x08,
 } attachedtype_e;
 
 typedef struct
 {
    sector_t        *sector;
-   attachedtype_e  type;
+   int             type;
 } attachedsurface_t;
 
 

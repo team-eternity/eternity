@@ -4018,85 +4018,34 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
 
    for(i = 0; i < count; i++)
    {
-      if(list[i].type == AS_CEILING)
+      if(list[i].type & AS_CEILING)
       {
          list[i].sector->ceilingz += delta;
          list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
       }
-      else if(list[i].type == AS_FLOOR)
-      {
-         list[i].sector->floorz += delta;
-         list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
-         if(P_CheckSector(list[i].sector, crush, delta, 0))
-            ok = false;
-      }
-      else if(list[i].type == AS_BOTH)
-      {
-         // If the movement is positive, move the ceiling first
-         if(delta > 0)
-         {
-            list[i].sector->ceilingz += delta;
-            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, delta, 1))
-               ok = false;
-            list[i].sector->floorz += delta;
-            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, delta, 0))
-               ok = false;
-         }
-         else
-         {
-            list[i].sector->floorz += delta;
-            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, delta, 0))
-               ok = false;
-            list[i].sector->ceilingz += delta;
-            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, delta, 1))
-               ok = false;
-         }
-      }
-      else if(list[i].type == AS_MIRRORCEILING)
+      else if(list[i].type & AS_MIRRORCEILING)
       {
          list[i].sector->ceilingz -= delta;
          list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
       }
-      else if(list[i].type == AS_MIRRORFLOOR)
+
+      if(list[i].type & AS_FLOOR)
+      {
+         list[i].sector->floorz += delta;
+         list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
+         if(P_CheckSector(list[i].sector, crush, delta, 0))
+            ok = false;
+      }
+      else if(list[i].type & AS_MIRRORFLOOR)
       {
          list[i].sector->floorz -= delta;
          list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
-      }
-      else if(list[i].type == AS_MIRRORBOTH)
-      {
-         // Mirrored is different because it is flipped, so the order is reversed as well
-         if(delta > 0)
-         {
-            list[i].sector->floorz -= delta;
-            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, -delta, 0))
-               ok = false;
-            list[i].sector->ceilingz -= delta;
-            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, -delta, 1))
-               ok = false;
-         }
-         else
-         {
-            list[i].sector->ceilingz -= delta;
-            list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, -delta, 1))
-               ok = false;
-            list[i].sector->floorz -= delta;
-            list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
-            if(P_CheckSector(list[i].sector, crush, -delta, 0))
-               ok = false;
-         }
       }
    }
 
@@ -4183,11 +4132,9 @@ void P_AttachSectors(line_t *line)
             {
                if(attached[i].sector == slaveline->frontsector)
                {
-                  if(attached[i].type == AS_CEILING)
-                     attached[i].type = AS_BOTH;
-                  if(attached[i].type == AS_BOTH || attached[i].type == AS_FLOOR ||
-                     attached[i].type == AS_MIRRORFLOOR || attached[i].type == AS_MIRRORBOTH)
-                     break;
+                  if(!(attached[i].type & (AS_FLOOR | AS_MIRRORFLOOR)))
+                     attached[i].type |= AS_FLOOR;
+
                   break;
                }
             }
@@ -4208,12 +4155,10 @@ void P_AttachSectors(line_t *line)
             {
                if(attached[i].sector == slaveline->frontsector)
                {
-                  if(attached[i].type == AS_FLOOR)
-                     attached[i].type = AS_BOTH;
+                  if(!(attached[i].type & (AS_CEILING | AS_MIRRORCEILING)))
+                     attached[i].type |= AS_CEILING;
 
-                  if(attached[i].type == AS_BOTH || attached[i].type == AS_CEILING ||
-                     attached[i].type == AS_MIRRORCEILING || attached[i].type == AS_MIRRORBOTH)
-                     break;
+                  break;
                }
             }
 
@@ -4233,11 +4178,9 @@ void P_AttachSectors(line_t *line)
             {
                if(attached[i].sector == slaveline->frontsector)
                {
-                  if(attached[i].type == AS_MIRRORCEILING)
-                     attached[i].type = AS_MIRRORBOTH;
-                  if(attached[i].type == AS_BOTH || attached[i].type == AS_FLOOR ||
-                     attached[i].type == AS_MIRRORFLOOR || attached[i].type == AS_MIRRORBOTH)
-                     break;
+                  if(!(attached[i].type & (AS_FLOOR | AS_MIRRORFLOOR)))
+                     attached[i].type |= AS_MIRRORFLOOR;
+
                   break;
                }
             }
@@ -4258,12 +4201,9 @@ void P_AttachSectors(line_t *line)
             {
                if(attached[i].sector == slaveline->frontsector)
                {
-                  if(attached[i].type == AS_MIRRORFLOOR)
-                     attached[i].type = AS_MIRRORBOTH;
-
-                  if(attached[i].type == AS_BOTH || attached[i].type == AS_CEILING ||
-                     attached[i].type == AS_MIRRORCEILING || attached[i].type == AS_MIRRORBOTH)
-                     break;
+                  if(!(attached[i].type & (AS_CEILING | AS_MIRRORCEILING)))
+                     attached[i].type |= AS_MIRRORCEILING;
+                  break;
                }
             }
 
