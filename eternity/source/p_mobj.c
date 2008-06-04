@@ -1092,7 +1092,8 @@ void P_MobjThinker(mobj_t *mobj)
                   (!mobj->player || !mobj->player->powers[pw_ironfeet]))
                {
                   P_DamageMobj(mobj, onmo, onmo,
-                               onmo->info->topdamage, MOD_UNKNOWN);
+                               onmo->info->topdamage, 
+                               onmo->info->mod);
                }
             }
 

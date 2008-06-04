@@ -41,13 +41,17 @@
 // damagetype options
 //
 
-#define ITEM_DAMAGETYPE_NUM  "num"
-#define ITEM_DAMAGETYPE_OBIT "obituary"
+#define ITEM_DAMAGETYPE_NUM        "num"
+#define ITEM_DAMAGETYPE_OBIT       "obituary"
+#define ITEM_DAMAGETYPE_SELFOBIT   "obituaryself"
+#define ITEM_DAMAGETYPE_SOURCELESS "sourceless"
 
-cfg_opt_t edf_damagetype_opts[] =
+cfg_opt_t edf_dmgtype_opts[] =
 {
-   CFG_INT(ITEM_DAMAGETYPE_NUM,  -1,   CFGF_NONE),
-   CFG_STR(ITEM_DAMAGETYPE_OBIT, NULL, CFGF_NONE),
+   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,        CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_OBIT,        NULL,      CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    NULL,      CFGF_NONE),
+   CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, cfg_false, CFGF_NONE),
    CFG_END()
 };
 
@@ -71,7 +75,10 @@ static emod_t unknown_mod =
    "Unknown",      // name
    0,              // num
    "OB_DEFAULT",   // obituary
-   true            // obitIsBexString
+   "OB_DEFAULT",   // selfobituary
+   true,           // obitIsBexString
+   true,           // selfObitIsBexString
+   false,          // sourceless
 };
 
 // allocation starts at D_MAXINT and works toward 0
@@ -94,6 +101,46 @@ static void E_AddDamageTypeToNameHash(emod_t *mod)
    e_mod_namechains[key] = mod;
 }
 
+// need forward declaration for E_AutoAllocModNum
+static void E_AddDamageTypeToNumHash(emod_t *mod);
+
+//
+// E_AutoAllocModNum
+//
+// Automatically assigns an unused damage type number to a damage type
+// which was not given one by the author, to allow reference by name
+// anywhere without the chore of number allocation.
+//
+static boolean E_AutoAllocModNum(emod_t *mod)
+{
+   int num;
+
+#ifdef RANGECHECK
+   if(mod->num > 0)
+      I_Error("E_AutoAllocModNum: called for emod_t with valid num\n");
+#endif
+
+   // cannot assign because we're out of dehnums?
+   if(edf_alloc_modnum < 0)
+      return false;
+
+   do
+   {
+      num = edf_alloc_modnum--;
+   } 
+   while(num > 0 && E_DamageTypeForNum(num) != &unknown_mod);
+
+   // ran out while looking for an unused number?
+   if(num <= 0)
+      return false;
+
+   // assign it!
+   mod->num = num;
+   E_AddDamageTypeToNumHash(mod);
+
+   return true;
+}
+
 //
 // E_AddDamageTypeToNumHash
 //
@@ -103,8 +150,16 @@ static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
    unsigned int key = mod->num % NUMMODCHAINS;
 
+   // Auto-assign a numeric key to all damage types which don't have
+   // a valid one explicitly specified. This avoids some gigantic, 
+   // messy code rewrites by allowing mobjinfo to always store the 
+   // numeric key.
+
    if(mod->num <= 0)
+   {
+      E_AutoAllocModNum(mod);
       return;
+   }
 
    M_DLListInsert((mdllistitem_t *)mod, 
                   (mdllistitem_t **)(&e_mod_numchains[key]));
@@ -119,6 +174,23 @@ static void E_AddDamageTypeToNumHash(emod_t *mod)
 static void E_DelDamageTypeFromNumHash(emod_t *mod)
 {
    M_DLListRemove((mdllistitem_t *)mod);
+}
+
+//
+// E_EDFDamageTypeForName
+//
+// Finds a damage type for the given name. If the name does not exist, this
+// routine returns NULL rather than the Unknown type.
+//
+static emod_t *E_EDFDamageTypeForName(const char *name)
+{
+   unsigned int key = D_HashTableKey(name) % NUMMODCHAINS;
+   emod_t *mod = e_mod_namechains[key];
+
+   while(mod && strcasecmp(mod->name, name))
+      mod = mod->nextname;
+
+   return mod;
 }
 
 //
@@ -137,21 +209,19 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    num   = cfg_getint(dtsec, ITEM_DAMAGETYPE_NUM);
 
    // if one exists by this name already, modify it
-   if((mod = E_DamageTypeForName(title)))
+   if((mod = E_EDFDamageTypeForName(title)))
    {
       // check numeric key
       if(mod->num != num)
       {
-         // if old num > 0, remove from numeric hash
-         if(mod->num > 0)
-            E_DelDamageTypeFromNumHash(mod);
+         // remove from numeric hash
+         E_DelDamageTypeFromNumHash(mod);
 
          // change key
          mod->num = num;
 
-         // if new num > 0, add back to numeric hash
-         if(mod->num > 0)
-            E_AddDamageTypeToNumHash(mod);
+         // add back to numeric hash
+         E_AddDamageTypeToNumHash(mod);
       }
 
       // not a definition
@@ -159,6 +229,14 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    }
    else
    {
+      // do not override the Unknown type
+      if(!strcasecmp(title, "Unknown"))
+      {
+         E_EDFLogPuts("\t\tWarning: attempt to override default Unknown "
+                      "damagetype ignored\n");
+         return;
+      }
+
       // create a new mod
       mod = calloc(1, sizeof(emod_t));
 
@@ -196,6 +274,37 @@ static void E_ProcessDamageType(cfg_t *dtsec)
          mod->obituary = strdup(obituary);
       }
    }
+
+   // get self-obituary
+   if(def || cfg_size(dtsec, ITEM_DAMAGETYPE_SELFOBIT) > 0)
+   {
+      obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_SELFOBIT);
+
+      // if modifying, free any that already exists
+      if(!def && mod->obituary)
+      {
+         free(mod->selfobituary);
+         mod->selfobituary = NULL;
+      }
+
+      if(obituary)
+      {
+         // determine if obituary string is a BEX string
+         if(obituary[0] == '$' && strlen(obituary) > 1)
+         {
+            ++obituary;         
+            mod->selfObitIsBexString = true;
+         }
+         else
+            mod->selfObitIsBexString = false;
+
+         mod->selfobituary = strdup(obituary);
+      }
+   }
+
+   // process sourcless flag
+   if(def || cfg_size(dtsec, ITEM_DAMAGETYPE_SOURCELESS) > 0)
+      mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
    E_EDFLogPrintf("\t\t%s damagetype %s\n", 
                   def ? "Defined" : "Modified", mod->name);
@@ -260,43 +369,6 @@ emod_t *E_DamageTypeForNum(int num)
       mod = &unknown_mod;
 
    return mod;
-}
-
-//
-// E_AutoAllocModNum
-//
-// Automatically assigns an unused damage type number to a damage type
-// which was not given one by the author, to allow reference by name
-// anywhere without the chore of number allocation.
-//
-boolean E_AutoAllocModNum(emod_t *mod)
-{
-   int num;
-
-#ifdef RANGECHECK
-   if(mod->num >= 0)
-      I_Error("E_AutoAllocModNum: called for emod_t with valid num\n");
-#endif
-
-   // cannot assign because we're out of dehnums?
-   if(edf_alloc_modnum < 0)
-      return false;
-
-   do
-   {
-      num = edf_alloc_modnum--;
-   } 
-   while(num > 0 && E_DamageTypeForNum(num) != &unknown_mod);
-
-   // ran out while looking for an unused number?
-   if(num <= 0)
-      return false;
-
-   // assign it!
-   mod->num = num;
-   E_AddDamageTypeToNumHash(mod);
-
-   return true;
 }
 
 // EOF

@@ -327,9 +327,9 @@ CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
    playernum = cmdsrc;
    
    mobj = players[playernum].mo;
-   P_DamageMobj(mobj, NULL, mobj,
-      2*(players[playernum].health+players[playernum].armorpoints),
-      MOD_SUICIDE);
+   P_DamageMobj(mobj, NULL, NULL,
+                2*(players[playernum].health+players[playernum].armorpoints),
+                MOD_SUICIDE);
    mobj->momx = mobj->momy = mobj->momz = 0;
    players[playernum].momx = players[playernum].momy = 0;
 }

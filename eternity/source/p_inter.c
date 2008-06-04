@@ -46,6 +46,7 @@
 #include "e_states.h"
 #include "p_map.h"
 #include "a_small.h"
+#include "e_mod.h"
 
 #define BONUSADD        6
 
@@ -933,20 +934,56 @@ void P_KillMobj(mobj_t *source, mobj_t *target)
 #endif
 }
 
-static int MeansOfDeath;
+//
+// P_GetDeathMessageString
+//
+// Retrieves the string to use for a given EDF damagetype.
+//
+static const char *P_GetDeathMessageString(emod_t *mod, boolean self)
+{
+   const char *str;
+   boolean isbex;
+   const char *ret;
 
-void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
+   if(self)
+   {
+      str   = mod->selfobituary;
+      isbex = mod->selfObitIsBexString;
+   }
+   else
+   {
+      str   = mod->obituary;
+      isbex = mod->obitIsBexString;
+   }
+
+   if(isbex)
+      ret = DEH_String(str);
+   else
+      ret = str;
+
+   return ret;
+}
+
+//
+// P_DeathMessage
+//
+// Implements obituaries based on the type of damage which killed a player.
+//
+static void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor, 
+                           int MeansOfDeath)
 {
    boolean friendly = false;
    const char *message = NULL;
+   emod_t *mod;
 
    if(!target->player || !obituaries)
       return;
 
-   // voodoo doll death
-   if(inflictor && inflictor != target &&
-      inflictor->player == target->player)
-      MeansOfDeath = MOD_UNKNOWN;
+   // voodoo doll death?
+   //if(inflictor && inflictor != target && inflictor->player == target->player)
+   //   MeansOfDeath = MOD_UNKNOWN;
+
+   mod = E_DamageTypeForNum(MeansOfDeath);
 
    if(GameType == gt_coop)
       friendly = true;
@@ -954,58 +991,34 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
    // miscellaneous death types that cannot be determined
    // directly from the source or inflictor without difficulty
 
-   switch(MeansOfDeath)
-   {
-   case MOD_SUICIDE: message = DEH_String("OB_SUICIDE"); break;
-   case MOD_FALLING: message = DEH_String("OB_FALLING"); break;
-   case MOD_CRUSH:   message = DEH_String("OB_CRUSH");   break;
-   case MOD_SLIME:   message = DEH_String("OB_SLIME");   break;
-   case MOD_LAVA:    message = DEH_String("OB_LAVA");    break;
-   case MOD_BARREL:  message = DEH_String("OB_BARREL");  break;
-   case MOD_SPLASH:  message = DEH_String("OB_SPLASH");  break;
-   default: break;
-   }
+   if((source == NULL && inflictor == NULL) || mod->sourceless)
+      message = P_GetDeathMessageString(mod, false);
 
    if(source && !message)
    {
       if(source == target)
       {
          // killed self
-
-         switch(MeansOfDeath)
-         {
-         case MOD_R_SPLASH:
-            message = DEH_String("OB_R_SPLASH_SELF"); 
-            break;
-         case MOD_ROCKET:
-            message = DEH_String("OB_ROCKET_SELF");
-            break;
-         case MOD_BFG11K_SPLASH: 
-            message = DEH_String("OB_BFG11K_SELF");
-            break;
-         case MOD_GRENADE:
-            message = DEH_String("OB_GRENADE_SELF");
-            break;
-         default:
-            break;
-         }
+         message = P_GetDeathMessageString(mod, true);
       }
       else if(!source->player)
       {
          // monster kills
 
-         if(MeansOfDeath == MOD_HIT)
+         switch(MeansOfDeath)
          {
-            // melee attack
-            if(source->info->meleeobit)
-               message = source->info->meleeobit;
-         }            
-         else
-         {
-            // other attack
-            if(source->info->obituary)
-               message = source->info->obituary;
+         case MOD_HIT: // melee attack
+            message = source->info->meleeobit;
+            break;
+         default: // other attack
+            message = source->info->obituary;
+            break;
          }
+
+         // if the monster didn't define the proper obit, try the 
+         // obit defined by the mod of this attack
+         if(!message)
+            message = P_GetDeathMessageString(mod, false);
       }
    }
 
@@ -1020,18 +1033,11 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
    {
       if(MeansOfDeath == MOD_PLAYERMISC)
       {
-         // WEAPON_FIXME: player-on-player obits
-         // look at source's readyweapon to determine cause
-         switch(source->player->readyweapon)
-         {
-         case wp_fist:         MeansOfDeath = MOD_FIST;     break;
-         case wp_pistol:       MeansOfDeath = MOD_PISTOL;   break;
-         case wp_shotgun:      MeansOfDeath = MOD_SHOTGUN;  break;
-         case wp_chaingun:     MeansOfDeath = MOD_CHAINGUN; break;
-         case wp_chainsaw:     MeansOfDeath = MOD_CHAINSAW; break;
-         case wp_supershotgun: MeansOfDeath = MOD_SSHOTGUN; break;
-         default: break;
-         }
+         weaponinfo_t *weapon = P_GetReadyWeapon(source->player);
+
+         // redirect based on weapon mod
+         MeansOfDeath = weapon->mod;
+         mod = E_DamageTypeForNum(MeansOfDeath);
       }
 
       if(friendly)
@@ -1042,25 +1048,7 @@ void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor)
       else
       {
          // deathmatch deaths
-
-         switch(MeansOfDeath)
-         {
-         case MOD_FIST:       message = DEH_String("OB_FIST");       break;
-         case MOD_CHAINSAW:   message = DEH_String("OB_CHAINSAW");   break;
-         case MOD_PISTOL:     message = DEH_String("OB_PISTOL");     break;
-         case MOD_SHOTGUN:    message = DEH_String("OB_SHOTGUN");    break;
-         case MOD_SSHOTGUN:   message = DEH_String("OB_SSHOTGUN");   break;
-         case MOD_CHAINGUN:   message = DEH_String("OB_CHAINGUN");   break;
-         case MOD_ROCKET:     message = DEH_String("OB_ROCKET");     break;
-         case MOD_R_SPLASH:   message = DEH_String("OB_R_SPLASH");   break;
-         case MOD_PLASMA:     message = DEH_String("OB_PLASMA");     break;
-         case MOD_BFG:        message = DEH_String("OB_BFG");        break;
-         case MOD_BFG_SPLASH: message = DEH_String("OB_BFG_SPLASH"); break;
-         case MOD_BETABFG:    message = DEH_String("OB_BETABFG");    break;
-         case MOD_BFGBURST:   message = DEH_String("OB_BFGBURST");   break;
-         case MOD_GRENADE:    message = DEH_String("OB_GRENADE");    break;
-         default: break;
-         }
+         message = P_GetDeathMessageString(mod, false);
       }
    }
 
@@ -1222,8 +1210,6 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       target->tics = 1;
    }
 
-   MeansOfDeath = mod;
-
    if(target->flags & MF_SKULLFLY)
    {
       // haleyjd 07/30/04: generalized
@@ -1377,7 +1363,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    {
       // death messages for players
       if(player)
-         P_DeathMessage(source, target, inflictor);
+         P_DeathMessage(source, target, inflictor, mod);
 
       // haleyjd 09/29/07: wimpy death?
       if(damage <= 10)

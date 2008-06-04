@@ -27,6 +27,7 @@
 #ifndef __D_MOD_H__
 #define __D_MOD_H__
 
+// haleyjd 06/02/08: These are still useful for internal number usage.
 enum MODTypes
 {
    MOD_UNKNOWN,
@@ -55,11 +56,8 @@ enum MODTypes
    MOD_BFGBURST,
    MOD_PLAYERMISC,
    MOD_GRENADE,
-   NUM_MOD_TYPES
+   MOD_QUAKE,
 };
-
-// haleyjd 08/21/05: MOD strings for EDF modules
-extern const char *MODNames[NUM_MOD_TYPES];
 
 #endif
 

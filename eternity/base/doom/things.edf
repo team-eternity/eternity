@@ -20,7 +20,7 @@ thingtype DoomPlayer
   flags2 = FOOTCLIP
   flags3 = SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
   droptype = Backpack // this is currently disabled due to bugs!
-  mod = 24
+  mod = PlayerMisc
   dehackednum = 1
 }
 
@@ -635,7 +635,7 @@ thingtype DoomBarrel
   height = 42.0
   correct_height = 34.0
   flags = SOLID|SHOOTABLE|NOBLOOD
-  mod = 18
+  mod = Barrel
   acs_spawndata { num = 125; modes = doom }
   dehackednum = 31
 }
@@ -684,7 +684,7 @@ thingtype RocketShot
   damage = 20
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SPACMISSILE
   particlefx = ROCKET
-  mod = 5
+  mod = Rocket
   acs_spawndata { num = 127; modes = doom }
   dehackednum = 34
 }
@@ -700,7 +700,7 @@ thingtype PlasmaShot
   height = 8.0
   damage = 5
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
-  mod = 7
+  mod = Plasma
   acs_spawndata { num = 51; modes = doom }
   dehackednum = 35
 }
@@ -716,7 +716,7 @@ thingtype BFGShot
   damage = 100
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
   particlefx = BFG
-  mod = 8
+  mod = BFG
   acs_spawndata { num = 128; modes = doom }
   dehackednum = 36
 }

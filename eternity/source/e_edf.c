@@ -100,6 +100,7 @@
 #include "e_ttypes.h"
 #include "mn_emenu.h"
 #include "e_player.h"
+#include "e_mod.h"
 
 // EDF Keywords used by features implemented in this module
 
@@ -311,6 +312,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_MOD,       edf_dmgtype_opts,  CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_FRAME,     edf_frame_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_THING,     edf_thing_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SKIN,      edf_skin_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
@@ -2158,6 +2160,9 @@ void E_ProcessEDF(const char *filename)
 
    // 06/06/06: process sound sequences
    E_ProcessSndSeqs(cfg);
+
+   // 06/01/08: process damage types
+   E_ProcessDamageTypes(cfg);
 
    // allocate frames and things, build name hash tables, and
    // process frame and thing definitions

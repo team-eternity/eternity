@@ -2318,7 +2318,7 @@ void A_VileAttack(mobj_t *actor)
       return;
 
    S_StartSound(actor, sfx_barexp);
-   P_DamageMobj(actor->target, actor, actor, 20, MOD_UNKNOWN);
+   P_DamageMobj(actor->target, actor, actor, 20, actor->info->mod);
    actor->target->momz = 1000*FRACUNIT/actor->target->info->mass;
 
    an = actor->angle >> ANGLETOFINESHIFT;
@@ -2331,7 +2331,7 @@ void A_VileAttack(mobj_t *actor)
    // move the fire between the vile and the player
    fire->x = actor->target->x - FixedMul (24*FRACUNIT, finecosine[an]);
    fire->y = actor->target->y - FixedMul (24*FRACUNIT, finesine[an]);
-   P_RadiusAttack(fire, actor, 70, MOD_UNKNOWN);
+   P_RadiusAttack(fire, actor, 70, actor->info->mod);
 }
 
 //
@@ -3348,7 +3348,7 @@ void A_BetaSkullAttack(mobj_t *actor)
    
    A_FaceTarget(actor);
    damage = (P_Random(pr_skullfly)%8+1)*actor->damage;
-   P_DamageMobj(actor->target, actor, actor, damage, MOD_UNKNOWN);
+   P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
 }
 
 //

@@ -40,41 +40,6 @@
 #include "d_mod.h"
 
 //
-// Mod Strings: haleyjd -- stuck here because there's no better
-// place for them ;)
-//
-
-const char *MODNames[NUM_MOD_TYPES] =
-{
-   "UNKNOWN",
-   "FIST",
-   "PISTOL",
-   "SHOTGUN",
-   "CHAINGUN",
-   "ROCKET",
-   "R_SPLASH",
-   "PLASMA",
-   "BFG",
-   "BFG_SPLASH",
-   "CHAINSAW",
-   "SSHOTGUN",
-   "SLIME",
-   "LAVA",
-   "CRUSH",
-   "TELEFRAG",
-   "FALLING",
-   "SUICIDE",
-   "BARREL",
-   "SPLASH",
-   "HIT",
-   "BFG11K_SPLASH",
-   "BETABFG",
-   "BFGBURST",
-   "PLAYERMISC",
-   "GRENADE",
-};
-
-//
 // Text Replacement
 //
 
@@ -515,6 +480,8 @@ char *s_OB_BETABFG = OB_BETABFG;
 char *s_OB_BFGBURST = OB_BFGBURST;
 char *s_OB_GRENADE_SELF = OB_GRENADE_SELF;
 char *s_OB_GRENADE = OB_GRENADE;
+char *s_OB_TELEFRAG = OB_TELEFRAG;
+char *s_OB_QUAKE = OB_QUAKE;
 
 // Ty 05/03/98 - externalized
 char *savegamename;
@@ -957,6 +924,8 @@ dehstr_t deh_strlookup[] =
    { &s_OB_BFGBURST,       "OB_BFGBURST"       },
    { &s_OB_GRENADE_SELF,   "OB_GRENADE_SELF"   },
    { &s_OB_GRENADE,        "OB_GRENADE"        },
+   { &s_OB_TELEFRAG,       "OB_TELEFRAG"       },
+   { &s_OB_QUAKE,          "OB_QUAKE"          },
 };
 
 static int deh_numstrlookup = sizeof(deh_strlookup)/sizeof(dehstr_t);

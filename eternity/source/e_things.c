@@ -50,6 +50,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_sound.h"
+#include "e_mod.h"
 
 // 7/24/05: This is now global, for efficiency's sake
 
@@ -338,58 +339,55 @@ static cfg_opt_t acs_data[] =
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
-// MOD value-parsing callback
-static int E_ModCB(cfg_t *, cfg_opt_t *, const char *, void *);
-
 #define THINGTYPE_FIELDS \
-   CFG_INT(ITEM_TNG_DOOMEDNUM,    -1,       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SPAWNSTATE,   "S_NULL", CFGF_NONE), \
-   CFG_INT(ITEM_TNG_SPAWNHEALTH,  1000,     CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SEESTATE,     "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SEESOUND,     "none",   CFGF_NONE), \
-   CFG_INT(ITEM_TNG_REACTTIME,    8,        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_ATKSOUND,     "none",   CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PAINSTATE,    "S_NULL", CFGF_NONE), \
-   CFG_INT(ITEM_TNG_PAINCHANCE,   0,        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PAINSOUND,    "none",   CFGF_NONE), \
-   CFG_STR(ITEM_TNG_MELEESTATE,   "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_TNG_MISSILESTATE, "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEATHSTATE,   "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_TNG_XDEATHSTATE,  "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEATHSOUND,   "none",   CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_SPEED,     0,        CFGF_NONE, E_IntOrFixedCB), \
-   CFG_FLOAT(ITEM_TNG_RADIUS,     20.0f,    CFGF_NONE), \
-   CFG_FLOAT(ITEM_TNG_HEIGHT,     16.0f,    CFGF_NONE), \
-   CFG_INT(ITEM_TNG_MASS,         100,      CFGF_NONE), \
-   CFG_INT(ITEM_TNG_DAMAGE,       0,        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_ACTIVESOUND,  "none",   CFGF_NONE), \
-   CFG_STR(ITEM_TNG_FLAGS,        "",       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_FLAGS2,       "",       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_RAISESTATE,   "S_NULL", CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_TRANSLUC,  65536,    CFGF_NONE, E_TranslucCB), \
-   CFG_STR(ITEM_TNG_FLAGS3,       "",       CFGF_NONE), \
-   CFG_INT(ITEM_TNG_BLOODCOLOR,   0,        CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_FASTSPEED, 0,        CFGF_NONE, E_IntOrFixedCB), \
-   CFG_STR(ITEM_TNG_NUKESPEC,     "NULL",   CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PARTICLEFX,   "",       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DROPTYPE,     "NONE",   CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_MOD,       0,        CFGF_NONE, E_ModCB), \
-   CFG_STR(ITEM_TNG_OBIT1,        "NONE",   CFGF_NONE), \
-   CFG_STR(ITEM_TNG_OBIT2,        "NONE",   CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_COLOR,     0,        CFGF_NONE, E_ColorCB), \
-   CFG_STR(ITEM_TNG_CFLAGS,       "",       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_ADDFLAGS,     "",       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_REMFLAGS,     "",       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DMGSPECIAL,   "NONE",   CFGF_NONE), \
-   CFG_STR(ITEM_TNG_CRASHSTATE,   "S_NULL", CFGF_NONE), \
-   CFG_INT(ITEM_TNG_DEHNUM,       -1,       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SKINSPRITE,   "noskin", CFGF_NONE), \
-   CFG_FLOAT(ITEM_TNG_C3DHEIGHT,  0.0f,     CFGF_NONE), \
-   CFG_STR(ITEM_TNG_BASICTYPE,    "",       CFGF_NONE), \
-   CFG_INT(ITEM_TNG_TOPDAMAGE,    0,        CFGF_NONE), \
-   CFG_INT(ITEM_TNG_TOPDMGMASK,   0,        CFGF_NONE), \
-   CFG_FLOAT(ITEM_TNG_AVELOCITY,  0.0f,     CFGF_NONE), \
-   CFG_SEC(ITEM_TNG_ACS_SPAWN,    acs_data, CFGF_NOCASE), \
+   CFG_INT(ITEM_TNG_DOOMEDNUM,    -1,        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SPAWNSTATE,   "S_NULL",  CFGF_NONE), \
+   CFG_INT(ITEM_TNG_SPAWNHEALTH,  1000,      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SEESTATE,     "S_NULL",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SEESOUND,     "none",    CFGF_NONE), \
+   CFG_INT(ITEM_TNG_REACTTIME,    8,         CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ATKSOUND,     "none",    CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PAINSTATE,    "S_NULL",  CFGF_NONE), \
+   CFG_INT(ITEM_TNG_PAINCHANCE,   0,         CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PAINSOUND,    "none",    CFGF_NONE), \
+   CFG_STR(ITEM_TNG_MELEESTATE,   "S_NULL",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_MISSILESTATE, "S_NULL",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEATHSTATE,   "S_NULL",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_XDEATHSTATE,  "S_NULL",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEATHSOUND,   "none",    CFGF_NONE), \
+   CFG_INT_CB(ITEM_TNG_SPEED,     0,         CFGF_NONE, E_IntOrFixedCB), \
+   CFG_FLOAT(ITEM_TNG_RADIUS,     20.0f,     CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_HEIGHT,     16.0f,     CFGF_NONE), \
+   CFG_INT(ITEM_TNG_MASS,         100,       CFGF_NONE), \
+   CFG_INT(ITEM_TNG_DAMAGE,       0,         CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ACTIVESOUND,  "none",    CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS,        "",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS2,       "",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_RAISESTATE,   "S_NULL",  CFGF_NONE), \
+   CFG_INT_CB(ITEM_TNG_TRANSLUC,  65536,     CFGF_NONE, E_TranslucCB), \
+   CFG_STR(ITEM_TNG_FLAGS3,       "",        CFGF_NONE), \
+   CFG_INT(ITEM_TNG_BLOODCOLOR,   0,         CFGF_NONE), \
+   CFG_INT_CB(ITEM_TNG_FASTSPEED, 0,         CFGF_NONE, E_IntOrFixedCB), \
+   CFG_STR(ITEM_TNG_NUKESPEC,     "NULL",    CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PARTICLEFX,   "",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DROPTYPE,     "NONE",    CFGF_NONE), \
+   CFG_STR(ITEM_TNG_MOD,          "Unknown", CFGF_NONE), \
+   CFG_STR(ITEM_TNG_OBIT1,        "NONE",    CFGF_NONE), \
+   CFG_STR(ITEM_TNG_OBIT2,        "NONE",    CFGF_NONE), \
+   CFG_INT_CB(ITEM_TNG_COLOR,     0,         CFGF_NONE, E_ColorCB), \
+   CFG_STR(ITEM_TNG_CFLAGS,       "",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_ADDFLAGS,     "",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_REMFLAGS,     "",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DMGSPECIAL,   "NONE",    CFGF_NONE), \
+   CFG_STR(ITEM_TNG_CRASHSTATE,   "S_NULL",  CFGF_NONE), \
+   CFG_INT(ITEM_TNG_DEHNUM,       -1,        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_SKINSPRITE,   "noskin",  CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_C3DHEIGHT,  0.0f,      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_BASICTYPE,    "",        CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TOPDMGMASK,   0,         CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_AVELOCITY,  0.0f,      CFGF_NONE), \
+   CFG_SEC(ITEM_TNG_ACS_SPAWN,    acs_data,  CFGF_NOCASE), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -733,31 +731,6 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    {
       *(long *)result = num % TRANSLATIONCOLOURS;
    }
-
-   return 0;
-}
-
-
-static int E_ModCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, 
-                   void *result)
-{
-   long num;
-   char *endptr;
-
-   num = strtol(value, &endptr, 0);
-
-   // try mod name
-   if(*endptr != '\0')
-   {
-      num = E_StrToNumLinear(MODNames, NUM_MOD_TYPES, value);
-
-      if(num == NUM_MOD_TYPES)
-         num = MOD_UNKNOWN;
-
-      *(long *)result = num;
-   }
-   else
-      *(long *)result = num;
 
    return 0;
 }
@@ -1237,7 +1210,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       }
       
       if(dp->cptr != NULL)
-         M_AddNukeSpec(i, (void (*)(mobj_t*))(dp->cptr)); // yuck!
+         M_AddNukeSpec(i, dp->cptr);
    }
 
    // 07/13/03: process particlefx
@@ -1274,7 +1247,20 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
 
    // 07/13/03: process mod
    if(IS_SET(ITEM_TNG_MOD))
-      mobjinfo[i].mod = cfg_getint(thingsec, ITEM_TNG_MOD);
+   {
+      emod_t *mod;
+      char *endpos = NULL;
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_MOD);
+
+      tempint = strtol(tempstr, &endpos, 0);
+      
+      if(endpos && *endpos == '\0')
+         mod = E_DamageTypeForNum(tempint);  // it is a number
+      else
+         mod = E_DamageTypeForName(tempstr); // it is a name
+
+      mobjinfo[i].mod = mod->num; // mobjinfo stores the numeric key
+   }
 
    // 07/13/03: process obituaries
    if(IS_SET(ITEM_TNG_OBIT1))
@@ -1408,8 +1394,8 @@ void E_ProcessThings(cfg_t *cfg)
    E_EDFLogPuts("\t* Processing thing data\n");
 
    // allocate inheritance stack and hitlist
-   thing_hitlist = Z_Calloc(NUMMOBJTYPES, sizeof(byte), PU_STATIC, 0);
-   thing_pstack  = Z_Malloc(NUMMOBJTYPES * sizeof(int), PU_STATIC, 0);
+   thing_hitlist = calloc(NUMMOBJTYPES, sizeof(byte));
+   thing_pstack  = malloc(NUMMOBJTYPES * sizeof(int));
 
    // 01/17/07: initialize ACS thingtypes array
    for(i = 0; i < ACS_NUM_THINGTYPES; ++i)
@@ -1429,8 +1415,8 @@ void E_ProcessThings(cfg_t *cfg)
    }
 
    // free tables
-   Z_Free(thing_hitlist);
-   Z_Free(thing_pstack);
+   free(thing_hitlist);
+   free(thing_pstack);
 }
 
 //

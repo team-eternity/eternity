@@ -104,6 +104,8 @@ extern char* endmsg[];
 #define OB_BETABFG  "got a blast from the past"
 #define OB_BFGBURST "was caught in a plasma storm"
 #define OB_GRENADE  "tripped on a grenade"
+#define OB_TELEFRAG "turned inside out"
+#define OB_QUAKE    "got a bad case of the shakes"
 
 #endif
 //-----------------------------------------------------------------------------

@@ -131,7 +131,7 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Obituary: " FC_NORMAL "%s\n"
             FC_HI "Melee Obituary: " FC_NORMAL "%s\n\n",
             mobjinfo[num].damage, mobjinfo[num].dmgspecial,
-            mobjinfo[num].mod, 
+            mobjinfo[num].mod,
             mobjinfo[num].obituary ? mobjinfo[num].obituary : "none",
             mobjinfo[num].meleeobit ? mobjinfo[num].meleeobit : "none");
 

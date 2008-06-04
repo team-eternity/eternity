@@ -55,7 +55,8 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PUNCH1,
     S_NULL,
     0, false,
-    WPF_FLEEMELEE | WPF_NOHITGHOSTS | WPF_SILENCER
+    WPF_FLEEMELEE | WPF_NOHITGHOSTS | WPF_SILENCER,
+    MOD_FIST,
   },  
   {
     // pistol
@@ -67,6 +68,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_PISTOLFLASH,
     1, false,
     WPF_SILENCER,
+    MOD_PISTOL,
   },  
   {
     // shotgun
@@ -77,7 +79,8 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_SGUN1,
     S_SGUNFLASH1,
     1, false,
-    WPF_SILENCER
+    WPF_SILENCER,
+    MOD_SHOTGUN,
   },
   {
     // chaingun
@@ -89,6 +92,7 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_CHAINFLASH1,
     1, false,
     WPF_SILENCER,
+    MOD_CHAINGUN,
   },
   {
     // missile launcher
@@ -132,7 +136,8 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_SAW1,
     S_NULL,
     0, false,
-    WPF_NOTHRUST | WPF_FLEEMELEE | WPF_NOHITGHOSTS | WPF_SILENCER
+    WPF_NOTHRUST | WPF_FLEEMELEE | WPF_NOHITGHOSTS | WPF_SILENCER,
+    MOD_CHAINSAW,
   },
   {
     // super shotgun
@@ -143,7 +148,8 @@ weaponinfo_t    weaponinfo[NUMWEAPONS] =
     S_DSGUN1,
     S_DSGUNFLASH1,
     2, false,
-    WPF_SILENCER
+    WPF_SILENCER,
+    MOD_SSHOTGUN,
   },  
 };
 

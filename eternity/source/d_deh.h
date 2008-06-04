@@ -1160,6 +1160,7 @@ extern char *s_OB_BETABFG;
 extern char *s_OB_BFGBURST;
 extern char *s_OB_GRENADE_SELF;
 extern char *s_OB_GRENADE;
+extern char *s_OB_TELEFRAG;
 
 //
 // Builtin map names.

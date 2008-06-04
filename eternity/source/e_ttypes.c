@@ -47,6 +47,7 @@
 #include "e_edf.h"
 #include "e_ttypes.h"
 #include "e_things.h"
+#include "e_mod.h"
 
 //
 // Static Variables
@@ -389,10 +390,7 @@ static void E_ProcessTerrain(cfg_t *cfg, boolean def)
    if(IS_SET(ITEM_TERRAIN_DMGTYPE))
    {
       tempstr = cfg_getstr(cfg, ITEM_TERRAIN_DMGTYPE);
-      newTerrain->damagetype = 
-         E_StrToNumLinear(MODNames, NUM_MOD_TYPES, tempstr);
-      if(newTerrain->damagetype == NUM_MOD_TYPES)
-         newTerrain->damagetype = MOD_UNKNOWN;
+      newTerrain->damagetype = E_DamageTypeForName(tempstr)->num;
    }
 
    // process damagetimemask

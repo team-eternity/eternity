@@ -753,7 +753,7 @@ boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing)
 
       int damage = (P_Random(pr_skullfly) % 8 + 1) * tmthing->damage;
       
-      P_DamageMobj(thing, tmthing, tmthing, damage, MOD_UNKNOWN);
+      P_DamageMobj(thing, tmthing, tmthing, damage, tmthing->info->mod);
       
       tmthing->flags &= ~MF_SKULLFLY;
       tmthing->momx = tmthing->momy = tmthing->momz = 0;

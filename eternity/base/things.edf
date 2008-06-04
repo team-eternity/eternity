@@ -101,7 +101,7 @@ thingtype MBFBetaPlasma1
   height = 8.0
   damage = 4
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS|SPACMISSILE
-  mod = 22
+  mod = BetaBFG
   dehackednum = 141
 }
 
@@ -116,7 +116,7 @@ thingtype MBFBetaPlasma2
   height = 8.0
   damage = 4
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS|SPACMISSILE
-  mod = 22
+  mod = BetaBFG
   dehackednum = 142
 }
 
@@ -146,7 +146,7 @@ thingtype EEBetaPlasma3
   height = 8.0
   damage = 10
   cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|BOUNCES|NOCROSS
-  mod = 23
+  mod = BFGBurst
   dehackednum = 144
 }
 
@@ -382,4 +382,69 @@ thingtype ETCTotalInvisiSphere
   flags = SPECIAL|COUNTITEM|TRANSLUCENT
   dehackednum = 237
 }
+
+// Damage Types ----------------------------------------------------------------
+
+// Note: the "Unknown" type, number 0, is defined by the engine and cannot be
+// overridden or altered. It is unnecessary and is not recommended to assign
+// your own damage types numbers. They are provided for backward compatibility
+// only. If the obituary string begins with a $, it is a BEX mnemonic for the
+// internal string to use as the message.
+
+// Normal damagetypes
+
+damagetype Fist       { num =  1; obituary = "$OB_FIST"       }
+damagetype Pistol     { num =  2; obituary = "$OB_PISTOL"     } 
+damagetype Shotgun    { num =  3; obituary = "$OB_SHOTGUN"    }
+damagetype Chaingun   { num =  4; obituary = "$OB_CHAINGUN"   }
+damagetype Plasma     { num =  7; obituary = "$OB_PLASMA"     }
+damagetype BFG        { num =  8; obituary = "$OB_BFG"        }
+damagetype BFG_Splash { num =  9; obituary = "$OB_BFG_SPLASH" }
+damagetype Chainsaw   { num = 10; obituary = "$OB_CHAINSAW"   }
+damagetype SShotgun   { num = 11; obituary = "$OB_SSHOTGUN"   }
+damagetype BetaBFG    { num = 22; obituary = "$OB_BETABFG"    }
+damagetype BFGBurst   { num = 23; obituary = "$OB_BFGBURST"   }
+
+// Damagetypes that are sourceless, or want to be treated that way.
+
+damagetype Slime    { num = 12; obituary = "$OB_SLIME";    sourceless = true }
+damagetype Lava     { num = 13; obituary = "$OB_LAVA";     sourceless = true }
+damagetype Crush    { num = 14; obituary = "$OB_CRUSH";    sourceless = true }
+damagetype Telefrag { num = 15; obituary = "$OB_TELEFRAG"; sourceless = true }
+damagetype Falling  { num = 16; obituary = "$OB_FALLING";  sourceless = true }
+damagetype Suicide  { num = 17; obituary = "$OB_SUICIDE";  sourceless = true }
+damagetype Barrel   { num = 18; obituary = "$OB_BARREL";   sourceless = true }
+damagetype Splash   { num = 19; obituary = "$OB_SPLASH";   sourceless = true }
+damagetype Quake    { num = 26; obituary = "$OB_QUAKE";    sourceless = true }
+
+// Damage types that can kill oneself, and thus have a special message for it.
+
+damagetype Rocket
+{ 
+   num =  5
+   obituary     = "$OB_ROCKET"
+   obituaryself = "$OB_ROCKET_SELF"
+}
+
+damagetype R_Splash
+{
+   num =  6
+   obituary     = "$OB_R_SPLASH"
+   obituaryself = "$OB_R_SPLASH_SELF"
+}
+
+damagetype BFG11k_Splash { num = 21; obituaryself = "$OB_BFG11K_SELF" }
+
+damagetype Grenade
+{ 
+   num = 25
+   obituary     = "$OB_GRENADE"
+   obituaryself = "$OB_GRENADE_SELF"
+}
+
+// These two damagetypes are special in that the message they trigger depends on
+// the thing doing the damage, be it a monster, or a player weapon.
+
+damagetype Hit        { num = 20 }
+damagetype PlayerMisc { num = 24 }
 

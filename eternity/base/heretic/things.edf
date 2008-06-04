@@ -60,7 +60,7 @@ thingtype Pod
   flags = SOLID|SHOOTABLE|DROPOFF|NOBLOOD
   flags2 = NORESPAWN|PUSHABLE
   flags3 = SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER
-  mod = 18
+  mod = Barrel
   acs_spawndata { num = 125; modes = heretic }
   dehackednum = 305
 }
@@ -1286,7 +1286,7 @@ thingtype HereticPlayer
   flags2 = FOOTCLIP
   flags3 = SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
   droptype = BagOfHolding // this is currently disabled due to bugs!
-  mod = playermisc
+  mod = PlayerMisc
   dehackednum = 398
 }
 

@@ -42,7 +42,10 @@ typedef struct emod_s
    const char *name;
    int num;
    char *obituary;
+   char *selfobituary;
    boolean obitIsBexString;
+   boolean selfObitIsBexString;
+   boolean sourceless;
 
    struct emod_s *nextname; // next by name
 } emod_t;
@@ -54,6 +57,10 @@ emod_t *E_DamageTypeForNum(int num);
 #ifdef NEED_EDF_DEFINITIONS
 
 #define EDF_SEC_MOD "damagetype"
+
+extern cfg_opt_t edf_dmgtype_opts[];
+
+void E_ProcessDamageTypes(cfg_t *cfg);
 
 #endif
 
