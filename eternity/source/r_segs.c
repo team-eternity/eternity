@@ -309,7 +309,13 @@ static void R_RenderSegLoop(void)
             column.colormap = segclip.walllights[index];
          }
 
-         if(segclip.twosided == false && segclip.midtex)
+         if(segclip.twosided == false && segclip.l_window)
+         {
+            R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+            ceilingclip[i] = view.height - 1.0f;
+            floorclip[i] = 0.0f;
+         }
+         else if(segclip.twosided == false && segclip.midtex)
          {
             column.y1 = t;
             column.y2 = b;
@@ -321,12 +327,6 @@ static void R_RenderSegLoop(void)
 
             colfunc();
 
-            ceilingclip[i] = view.height - 1.0f;
-            floorclip[i] = 0.0f;
-         }
-         else if(segclip.twosided == false && segclip.l_window)
-         {
-            R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
             ceilingclip[i] = view.height - 1.0f;
             floorclip[i] = 0.0f;
          }

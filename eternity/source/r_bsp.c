@@ -1125,6 +1125,15 @@ static void R_AddLine(seg_t *line)
       lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
                       seg.side->bottomtexture == 0);
 
+      if((seg.frontsec->ceilingpic == skyflatnum ||
+              seg.frontsec->ceilingpic == sky2flatnum) &&
+             (seg.backsec->ceilingpic  == skyflatnum ||
+              seg.backsec->ceilingpic  == sky2flatnum))
+      {
+         seg.top = seg.high;
+         uppermissing = false;
+      }
+
       // New clipsolid code will emulate the old doom behavior and still manages to 
       // keep valid closed door cases handled.
       seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
@@ -1132,12 +1141,6 @@ static void R_AddLine(seg_t *line)
           (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
            seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
            (seg.backsec->ceilingheight <= seg.backsec->floorheight && !uppermissing && !lowermissing)));
-
-      if((seg.frontsec->ceilingpic == skyflatnum ||
-              seg.frontsec->ceilingpic == sky2flatnum) &&
-             (seg.backsec->ceilingpic  == skyflatnum ||
-              seg.backsec->ceilingpic  == sky2flatnum))
-         seg.top = seg.high;
 
       seg.markcportal = 
          (R_RenderCeilingPortal(seg.frontsec) && 
@@ -1154,7 +1157,8 @@ static void R_AddLine(seg_t *line)
            seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
            seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
            seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
-           seg.frontsec->topmap != seg.backsec->topmap)); // haleyjd
+           seg.frontsec->topmap != seg.backsec->topmap ||
+           seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
 
       if(seg.high < seg.top && side->toptexture)
       {
@@ -1185,7 +1189,8 @@ static void R_AddLine(seg_t *line)
            seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
            seg.frontsec->floorpic != seg.backsec->floorpic ||
            seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
-           seg.frontsec->bottommap != seg.backsec->bottommap)); // haleyjd
+           seg.frontsec->bottommap != seg.backsec->bottommap ||
+           seg.frontsec->f_portal != seg.backsec->f_portal)); // haleyjd
 
 #ifdef R_LINKEDPORTALS
       // SoM: some portal types should be rendered even if the player is above
