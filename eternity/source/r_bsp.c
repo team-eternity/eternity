@@ -774,8 +774,8 @@ static void R_AddLine(seg_t *line)
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
    if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
-      //seg.frontsec->ceilingpic != skyflatnum &&
-      //seg.frontsec->ceilingpic != sky2flatnum &&
+      seg.frontsec->ceilingpic != skyflatnum &&
+      seg.frontsec->ceilingpic != sky2flatnum &&
       !((R_LinkedCeilingActive(seg.frontsec) && 
         viewz > R_CPCam(seg.frontsec)->planez) || 
         (R_LinkedFloorActive(seg.frontsec) && 
@@ -1131,7 +1131,7 @@ static void R_AddLine(seg_t *line)
               seg.backsec->ceilingpic  == sky2flatnum))
       {
          seg.top = seg.high;
-         uppermissing = false;
+         //uppermissing = false;
       }
 
       // New clipsolid code will emulate the old doom behavior and still manages to 
