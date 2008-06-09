@@ -698,7 +698,8 @@ void R_StoreWallRange(const int start, const int stop)
    {
       R_RenderSegLoop();
 
-      if(!segclip.clipsolid)
+      if(!segclip.clipsolid && 
+         (ds_p->silhouette & SIL_TOP || ds_p->silhouette & SIL_BOTTOM))
          R_DetectClosedColumns();
    }
    else
