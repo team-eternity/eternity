@@ -57,6 +57,7 @@ enum MODTypes
    MOD_PLAYERMISC,
    MOD_GRENADE,
    MOD_QUAKE,
+   MOD_FIRE,
 };
 
 #endif

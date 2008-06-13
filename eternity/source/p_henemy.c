@@ -52,6 +52,7 @@
 #include "e_ttypes.h"
 #include "hu_stuff.h"
 #include "c_io.h"
+#include "e_lib.h"
 
 // external prototypes from p_enemy.c
 
@@ -876,6 +877,15 @@ void A_Sor2DthLoop(mobj_t *actor)
    }
 }
 
+E_Keyword_t kwds_A_HticExplode[] =
+{
+   { "default",            0  },
+   { "dsparilbspark",      1  },
+   { "floorfire",          2  },
+   { "timebomb",           3  },
+   { NULL }
+};
+
 //
 // A_HticExplode
 //
@@ -1081,6 +1091,13 @@ void A_MakePod(mobj_t *actor)
 //
 // Volcano Actions
 //
+
+E_Keyword_t kwds_A_SetTics[] =
+{
+   { "constant",           0  },
+   { "counter",            1  },
+   { NULL }
+};
 
 //
 // A_SetTics
@@ -1290,6 +1307,13 @@ void A_BeastAttack(mobj_t *actor)
       P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_BEASTBALL),
                      actor->z + DEFAULTMISSILEZ);
 }
+
+E_Keyword_t kwds_A_BeastPuff[] =
+{
+   { "momentum",        0  },
+   { "nomomentum",      1  },
+   { NULL }
+};
 
 void A_BeastPuff(mobj_t *actor)
 {
@@ -2058,6 +2082,13 @@ void A_PlayerSkull(mobj_t *actor)
 // Other Parameterized Codepointer Functions
 //
 
+E_Keyword_t kwds_A_MissileAttack[] =
+{
+   { "normal",          0  },
+   { "homing",          1  },
+   { NULL }
+};
+
 //
 // A_MissileAttack
 //
@@ -2205,6 +2236,15 @@ void A_MissileSpread(mobj_t *actor)
    }
 }
 
+E_Keyword_t kwds_A_BulletAttack[] =
+{
+   { "ba_always",            1  },
+   { "ba_never",             2  },
+   { "ba_ssg",               3  },
+   { "ba_monster",           4  },
+   { NULL }
+};
+
 //
 // A_BulletAttack
 //
@@ -2241,7 +2281,7 @@ void A_BulletAttack(mobj_t *actor)
    sfx = E_SoundForDEHNum(sound);
 
    A_FaceTarget(actor);
-   S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL, false);
+   S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
 
    slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
 
@@ -2272,6 +2312,15 @@ void A_BulletAttack(mobj_t *actor)
       }
    }
 }
+
+E_Keyword_t kwds_A_ThingSummon[] =
+{
+   { "kill",               0  },
+   { "remove",             1  },
+   { "normal",             0  },
+   { "makechild",          1  },
+   { NULL }
+};
 
 void A_ThingSummon(mobj_t *actor)
 {
@@ -2361,6 +2410,13 @@ void A_ThingSummon(mobj_t *actor)
    }
 }
 
+E_Keyword_t kwds_A_KillChildren[] =
+{
+   { "kill",               0  },
+   { "remove",             1  },
+   { NULL }
+};
+
 void A_KillChildren(mobj_t *actor)
 {
    thinker_t *th;
@@ -2430,6 +2486,14 @@ void A_AproxDistance(mobj_t *actor)
 
    *dest = dist >> FRACBITS;
 }
+
+E_Keyword_t kwds_A_ShowMessage[] =
+{
+   { "msg_console",            0  },
+   { "msg_normal",             1  },
+   { "msg_center",             2  },
+   { NULL }
+};
 
 //
 // A_ShowMessage
@@ -2501,7 +2565,7 @@ void A_AmbientThinker(mobj_t *mo)
    }
 
    // time to play the sound
-   S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop);
+   S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop, CHAN_AUTO);
 }
 
 void A_SteamSpawn(mobj_t *mo)
@@ -2618,6 +2682,25 @@ enum
    CPOP_INVERT,
 };
 
+E_Keyword_t kwds_A_HealthJump[] =
+{
+   { "less",                   0  },
+   { "lessorequal",            1  },
+   { "greater",                2  },
+   { "greaterorequal",         3  },
+   { "equal",                  4  },
+   { "notequal",               5  },
+   { "and",                    6  },
+   { "less_counter",           7  },
+   { "lessorequal_counter",    8  },
+   { "greater_counter",        9  },
+   { "greaterorequal_counter", 10 },
+   { "equal_counter",          11 },
+   { "notequal_counter",       12 },
+   { "and_counter",            13 },
+   { NULL }
+};
+
 //
 // A_HealthJump
 //
@@ -2689,6 +2772,25 @@ void A_HealthJump(mobj_t *mo)
    if(branch)
       P_SetMobjState(mo, statenum);
 }
+
+E_Keyword_t kwds_A_CounterJump[] =
+{
+   { "less",                   0  },
+   { "lessorequal",            1  },
+   { "greater",                2  },
+   { "greaterorequal",         3  },
+   { "equal",                  4  },
+   { "notequal",               5  },
+   { "and",                    6  },
+   { "less_counter",           7  },
+   { "lessorequal_counter",    8  },
+   { "greater_counter",        9  },
+   { "greaterorequal_counter", 10 },
+   { "equal_counter",          11 },
+   { "notequal_counter",       12 },
+   { "and_counter",            13 },
+   { NULL }
+};
 
 //
 // A_CounterJump
@@ -2826,6 +2928,25 @@ void A_CounterSwitch(mobj_t *mo)
    P_SetMobjState(mo, startstate + *counter);
 }
 
+E_Keyword_t kwds_A_SetCounter[] =
+{
+   { "assign",             0  },
+   { "add",                1  },
+   { "sub",                2  },
+   { "mul",                3  },
+   { "div",                4  },
+   { "mod",                5  },
+   { "and",                6  },
+   { "andnot",             7  },
+   { "or",                 8  },
+   { "xor",                9  },
+   { "rand",               10 },
+   { "randmod",            11 },
+   { "rshift",             13 },
+   { "lshift",             14 },
+   { NULL }
+};
+
 //
 // A_SetCounter
 //
@@ -2895,6 +3016,26 @@ void A_SetCounter(mobj_t *mo)
       break;
    }
 }
+
+E_Keyword_t kwds_A_CounterOp[] =
+{
+   { "add",                1  },
+   { "sub",                2  },
+   { "mul",                3  },
+   { "div",                4  },
+   { "mod",                5  },
+   { "and",                6  },
+   { "or",                 8  },
+   { "xor",                9  },
+   { "hitdice",            12 },
+   { "rshift",             13 },
+   { "lshift",             14 },
+   { "abs",                15 },
+   { "negate",             16 },
+   { "not",                17 },
+   { "invert",             18 },
+   { NULL }
+};
 
 //
 // A_CounterOp
@@ -3241,6 +3382,27 @@ void A_CheckPlayerDone(mobj_t *mo)
 // haleyjd 03/31/06
 //
 
+E_Keyword_t kwds_A_WeaponCtrJump[] =
+{
+   { "less",                   0  },
+   { "lessorequal",            1  },
+   { "greater",                2  },
+   { "greaterorequal",         3  },
+   { "equal",                  4  },
+   { "notequal",               5  },
+   { "and",                    6  },
+   { "less_counter",           7  },
+   { "lessorequal_counter",    8  },
+   { "greater_counter",        9  },
+   { "greaterorequal_counter", 10 },
+   { "equal_counter",          11 },
+   { "notequal_counter",       12 },
+   { "and_counter",            13 },
+   { "weapon",                 0  },
+   { "flash",                  1  },
+   { NULL }
+};
+
 //
 // A_WeaponCtrJump
 //
@@ -3338,6 +3500,13 @@ void A_WeaponCtrJump(mobj_t *mo)
       
 }
 
+E_Keyword_t kwds_A_WeaponCtrSwitch[] =
+{
+   { "weapon",             0  },
+   { "flash",              1  },
+   { NULL }
+};
+
 //
 // A_WeaponCtrSwitch
 //
@@ -3400,6 +3569,25 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    // jump!
    P_SetPsprite(player, psprnum, startstate + *counter);
 }
+
+E_Keyword_t kwds_A_WeaponSetCtr[] =
+{
+   { "assign",             0  },
+   { "add",                1  },
+   { "sub",                2  },
+   { "mul",                3  },
+   { "div",                4  },
+   { "mod",                5  },
+   { "and",                6  },
+   { "andnot",             7  },
+   { "or",                 8  },
+   { "xor",                9  },
+   { "rand",               10 },
+   { "randmod",            11 },
+   { "rshift",             13 },
+   { "lshift",             14 },
+   { NULL }
+};
 
 //
 // A_WeaponSetCtr
@@ -3479,6 +3667,26 @@ void A_WeaponSetCtr(mobj_t *mo)
       break;
    }
 }
+
+E_Keyword_t kwds_A_WeaponCtrOp[] =
+{
+   { "add",                1  },
+   { "sub",                2  },
+   { "mul",                3  },
+   { "div",                4  },
+   { "mod",                5  },
+   { "and",                6  },
+   { "or",                 8  },
+   { "xor",                9  },
+   { "hitdice",            12 },
+   { "rshift",             13 },
+   { "lshift",             14 },
+   { "abs",                15 },
+   { "negate",             16 },
+   { "not",                17 },
+   { "invert",             18 },
+   { NULL }
+};
 
 //
 // A_WeaponCtrOp

@@ -47,6 +47,7 @@
 #include "p_map.h"
 #include "a_small.h"
 #include "e_mod.h"
+#include "e_things.h"
 
 #define BONUSADD        6
 
@@ -818,7 +819,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 //
 // P_KillMobj
 //
-void P_KillMobj(mobj_t *source, mobj_t *target)
+void P_KillMobj(mobj_t *source, mobj_t *target, int mod)
 {
    mobjtype_t item;
    mobj_t     *mo;
@@ -870,7 +871,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target)
 
       target->flags &= ~MF_SOLID;
       target->player->playerstate = PST_DEAD;
-      P_DropWeapon (target->player);
+      P_DropWeapon(target->player);
 
       if(target->player == &players[consoleplayer] && automapactive)
       {
@@ -883,11 +884,22 @@ void P_KillMobj(mobj_t *source, mobj_t *target)
       target->info->xdeathstate != NullStateNum)
       P_SetMobjState (target, target->info->xdeathstate);
    else
-      P_SetMobjState (target, target->info->deathstate);
+   {
+      // haleyjd 06/05/08: damagetype death states
+      statenum_t st = target->info->deathstate;
+      emodstatenode_t *node;
 
-   target->tics -= P_Random(pr_killtics)&3;
+      if(mod > 0 &&
+         (node = E_StateForModNum(target->info->dmg_deathstates, mod)))
+         st = node->state - states;
+
+      P_SetMobjState(target, st);
+   }
+
+   // FIXME: make a flag? Also, probably not done in Heretic/Hexen.
+   target->tics -= P_Random(pr_killtics) & 3;
    
-   if (target->tics < 1)
+   if(target->tics < 1)
       target->tics = 1;
 
    // Drop stuff.
@@ -1358,6 +1370,15 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       
    }
 
+   // haleyjd 06/05/08: special adjustments to mod type based on inflictor
+   // thingtype flags (I'd rather not do this at all, but it's necessary
+   // since the FIREDAMAGE flag has been around forever).
+   if(inflictor)
+   {
+      if(inflictor->flags3 & MF3_FIREDAMAGE)
+         mod = MOD_FIRE;
+   }
+
    // do the damage
    if((target->health -= damage) <= 0)
    {
@@ -1369,7 +1390,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       if(damage <= 10)
          target->intflags |= MIF_WIMPYDEATH;
 
-      P_KillMobj(source, target);
+      P_KillMobj(source, target, mod);
       return;
    }
 
@@ -1401,7 +1422,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       }
    }
 
-   if((justhit = (P_Random (pr_painchance) < target->info->painchance 
+   if((justhit = (P_Random(pr_painchance) < target->info->painchance 
       && !(target->flags & MF_SKULLFLY)))) //killough 11/98: see below
    { 
       // haleyjd 01/15/06: fix for demo comp problem introduced in MBF
@@ -1411,8 +1432,18 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
       // haleyjd 10/06/99: remove pain for zero-damage projectiles
       // FIXME: this needs a comp flag
-      if(!(demo_version >= 329 && damage <= 0))
-         P_SetMobjState(target, target->info->painstate);
+      if(damage > 0 || demo_version < 329)
+      {
+         statenum_t st = target->info->painstate;
+         emodstatenode_t *node = NULL;
+
+         // haleyjd  06/05/08: check for special damagetype painstate
+         if(mod > 0 && 
+            (node = E_StateForModNum(target->info->dmg_painstates, mod)))
+            st = node->state - states;
+
+         P_SetMobjState(target, st);
+      }
    }
    
    target->reactiontime = 0;           // we're awake now...
@@ -1468,7 +1499,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
             target->flags |= MF_JUSTHIT;    // fight back!
          }
 
-         P_SetMobjState (target, target->info->seestate);
+         P_SetMobjState(target, target->info->seestate);
       }
    }
 

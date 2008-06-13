@@ -55,6 +55,7 @@ void    E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def);
 void    E_ProcessThings(cfg_t *cfg);
 void    E_ProcessThingDeltas(cfg_t *cfg);
 boolean E_AutoAllocThingDEHNum(int thingnum);
+void    E_SetThingDefaultSprites(void);
 #endif
 
 // For Game Engine:
@@ -64,6 +65,10 @@ int E_SafeThingType(int dehnum);            //   fallback version
 int E_ThingNumForName(const char *name);    // mnemonic lookup
 int E_GetThingNumForName(const char *name); //   fatal error version
 int E_SafeThingName(const char *name);      //   fallback version
+
+// thingtype custom-damagetype pain/death states
+emodstatenode_t *E_StateForMod(emodstatenode_t *list, emod_t *mod);
+emodstatenode_t *E_StateForModNum(emodstatenode_t *list, int num);
 
 #endif
 

@@ -147,7 +147,11 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
       mobj->tics = st->tics;
 
       // sf: skins
-      mobj->sprite = (mobj->skin ? mobj->skin->sprite : st->sprite);
+      // haleyjd 06/11/08: only replace if st->sprite == default sprite
+      if(mobj->skin && st->sprite == mobj->info->defsprite)
+         mobj->sprite = mobj->skin->sprite;
+      else
+         mobj->sprite = st->sprite;
 
       mobj->frame = st->frame;
 
@@ -1327,7 +1331,10 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    mobj->state  = st;
    mobj->tics   = st->tics;
-   mobj->sprite = (mobj->skin ? mobj->skin->sprite : st->sprite);
+   if(mobj->skin && st->sprite == mobj->info->defsprite)
+      mobj->sprite = mobj->skin->sprite;
+   else
+      mobj->sprite = st->sprite;
    mobj->frame  = st->frame;
 
    // NULL head of sector list // phares 3/13/98
@@ -1440,7 +1447,7 @@ void P_RemoveMobj (mobj_t *mobj)
 
    // stop any playing sound
 
-   S_StopSound(mobj);
+   S_StopSound(mobj, CHAN_ALL);
 
    // killough 11/98:
    //
@@ -2161,7 +2168,7 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
    if(source->player && source->player->powers[pw_silencer] &&
       P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
-                           ATTN_NORMAL);
+                           ATTN_NORMAL, CHAN_AUTO);
    else
       S_StartSound(th, th->info->seesound);
 
@@ -2195,7 +2202,10 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
    st = &states[state];
    mobj->state = st;
    mobj->tics = st->tics;
-   mobj->sprite = (mobj->skin ? mobj->skin->sprite : st->sprite);
+   if(mobj->skin && st->sprite == mobj->info->defsprite)
+      mobj->sprite = mobj->skin->sprite;
+   else
+      mobj->sprite = st->sprite;
    mobj->frame = st->frame;
 
    return true;

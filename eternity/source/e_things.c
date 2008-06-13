@@ -68,11 +68,17 @@ int UnknownThingType;
 #define ITEM_TNG_REACTTIME "reactiontime"
 #define ITEM_TNG_ATKSOUND "attacksound"
 #define ITEM_TNG_PAINSTATE "painstate"
+#define ITEM_TNG_PAINSTATES "dmg_painstates"
+#define ITEM_TNG_PNSTATESADD "dmg_painstates.add"
+#define ITEM_TNG_PNSTATESREM "dmg_painstates.remove"
 #define ITEM_TNG_PAINCHANCE "painchance"
 #define ITEM_TNG_PAINSOUND "painsound"
 #define ITEM_TNG_MELEESTATE "meleestate"
 #define ITEM_TNG_MISSILESTATE "missilestate"
 #define ITEM_TNG_DEATHSTATE "deathstate"
+#define ITEM_TNG_DEATHSTATES "dmg_deathstates"
+#define ITEM_TNG_DTHSTATESADD "dmg_deathstates.add"
+#define ITEM_TNG_DTHSTATESREM "dmg_deathstates.remove"
 #define ITEM_TNG_XDEATHSTATE "xdeathstate"
 #define ITEM_TNG_DEATHSOUND "deathsound"
 #define ITEM_TNG_SPEED "speed"
@@ -101,6 +107,7 @@ int UnknownThingType;
 #define ITEM_TNG_DMGSPECIAL "dmgspecial"
 #define ITEM_TNG_CRASHSTATE "crashstate"
 #define ITEM_TNG_SKINSPRITE "skinsprite"
+#define ITEM_TNG_DEFSPRITE  "defaultsprite"
 #define ITEM_TNG_C3DHEIGHT "correct_height"
 #define ITEM_TNG_BASICTYPE "basictype"
 #define ITEM_TNG_TOPDAMAGE "topdamage"
@@ -348,11 +355,17 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(ITEM_TNG_REACTTIME,    8,         CFGF_NONE), \
    CFG_STR(ITEM_TNG_ATKSOUND,     "none",    CFGF_NONE), \
    CFG_STR(ITEM_TNG_PAINSTATE,    "S_NULL",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PAINSTATES,   0,         CFGF_LIST), \
+   CFG_STR(ITEM_TNG_PNSTATESADD,  0,         CFGF_LIST), \
+   CFG_STR(ITEM_TNG_PNSTATESREM,  0,         CFGF_LIST), \
    CFG_INT(ITEM_TNG_PAINCHANCE,   0,         CFGF_NONE), \
    CFG_STR(ITEM_TNG_PAINSOUND,    "none",    CFGF_NONE), \
    CFG_STR(ITEM_TNG_MELEESTATE,   "S_NULL",  CFGF_NONE), \
    CFG_STR(ITEM_TNG_MISSILESTATE, "S_NULL",  CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEATHSTATE,   "S_NULL",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEATHSTATES,  0,         CFGF_LIST), \
+   CFG_STR(ITEM_TNG_DTHSTATESADD, 0,         CFGF_LIST), \
+   CFG_STR(ITEM_TNG_DTHSTATESREM, 0,         CFGF_LIST), \
    CFG_STR(ITEM_TNG_XDEATHSTATE,  "S_NULL",  CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEATHSOUND,   "none",    CFGF_NONE), \
    CFG_INT_CB(ITEM_TNG_SPEED,     0,         CFGF_NONE, E_IntOrFixedCB), \
@@ -382,6 +395,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_CRASHSTATE,   "S_NULL",  CFGF_NONE), \
    CFG_INT(ITEM_TNG_DEHNUM,       -1,        CFGF_NONE), \
    CFG_STR(ITEM_TNG_SKINSPRITE,   "noskin",  CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEFSPRITE,    NULL,      CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_C3DHEIGHT,  0.0f,      CFGF_NONE), \
    CFG_STR(ITEM_TNG_BASICTYPE,    "",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE), \
@@ -694,6 +708,245 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 }
 
 //
+// E_StateForMod
+//
+// Returns the state node from the given mobjinfo for the given mod type,
+// if such exists. If not, NULL is returned.
+//
+emodstatenode_t *E_StateForMod(emodstatenode_t *list, emod_t *mod)
+{
+   emodstatenode_t *node = list;
+
+   while(node)
+   {
+      if(node->mod == mod)
+         break;
+
+      node = (emodstatenode_t *)(node->links.next);
+   }
+
+   return node;
+}
+
+//
+// E_StateForModNum
+//
+// Convenience wrapper routine to get the state node for a given
+// mod type by number, rather than with a pointer to the damagetype object.
+//
+emodstatenode_t *E_StateForModNum(emodstatenode_t *list, int num)
+{
+   emod_t *mod = E_DamageTypeForNum(num);
+   emodstatenode_t *ret = NULL;
+
+   if(mod->num != 0)
+      ret = E_StateForMod(list, mod);
+
+   return ret;
+}
+
+//
+// E_AddDamageTypeState
+//
+// Adds a deathstate for a particular dynamic damage type to the given
+// mobjinfo. An mobjinfo can only contain one deathstate for each 
+// damagetype.
+//
+static void E_AddDamageTypeState(emodstatenode_t **list, 
+                                 state_t *state, emod_t *mod)
+{
+   emodstatenode_t *emsnode;
+   boolean isnew = false;
+   
+   // if one exists for this mod already, use it, else create a new one.
+   if((emsnode = E_StateForMod(*list, mod)) == NULL)
+   {
+      emsnode = calloc(1, sizeof(emodstatenode_t));
+      isnew = true; // needs to be linked
+   }
+
+   emsnode->state = state;
+   emsnode->mod   = mod;
+
+   // attach to appropriate list in mobjinfo if necessary
+   if(isnew)
+      M_DLListInsert((mdllistitem_t *)emsnode, (mdllistitem_t **)list);
+}
+
+//
+// E_RemoveDamageTypeState
+//
+// Removes the specified custom damagetype state from the mobjinfo,
+// if it is attached to it already. If not, this is ignored.
+//
+static void E_RemoveDamageTypeState(emodstatenode_t *list, emod_t *mod)
+{
+   emodstatenode_t *emsnode;
+
+   // if this object doesn't have a state for this type, ignore this.
+   if((emsnode = E_StateForMod(list, mod)) == NULL)
+      return;
+
+   // detach it
+   M_DLListRemove((mdllistitem_t *)emsnode);
+
+   // delete it
+   free(emsnode);
+}
+
+//
+// E_DisposeDamageTypeList
+//
+// Trashes all the states in the given list.
+//
+static void E_DisposeDamageTypeList(emodstatenode_t *list)
+{
+   emodstatenode_t *rover;
+
+   // restart from the beginning until the list is empty
+   while((rover = list))
+   {
+      M_DLListRemove((mdllistitem_t *)rover);
+
+      free(rover);
+   }
+}
+
+//
+// E_CopyDamageTypeList
+//
+// Copies a damagetype list from one thing to another.
+//
+static void E_CopyDamageTypeList(emodstatenode_t *src, emodstatenode_t **dst)
+{
+   emodstatenode_t *rover = src;
+
+   // destination list should be empty; if not, make it so.
+   if(*dst)
+   {
+      E_DisposeDamageTypeList(*dst);
+      *dst = NULL;
+   }
+
+   // add a copy of all the objects in the source list to the dest list
+   while(rover)
+   {
+      E_AddDamageTypeState(dst, rover->state, rover->mod);
+
+      rover = (emodstatenode_t *)(rover->links.next);
+   }
+}
+
+// Modes for E_ProcessDamageTypeStates
+enum
+{
+   E_DTS_MODE_ADD,
+   E_DTS_MODE_REMOVE,
+   E_DTS_MODE_OVERWRITE,
+};
+
+// Fields for E_ProcessDamageTypeStates
+enum
+{
+   E_DTS_FIELD_PAIN,
+   E_DTS_FIELD_DEATH,
+};
+
+//
+// E_ProcessDamageTypeStates
+//
+// Given the parent cfg object, the name of a list item within it,
+// the destination mobjinfo, and the mode to work in (add, remove, or
+// overwrite), this routine modifies the mobjinfo's custom damagetype
+// state lists appropriately.
+//
+// The list is a flat list of strings. In add or overwrite mode, every 
+// set of two strings is a mod/state pair. In remove mode, all the strings
+// are mod types (we don't care about the states in that case).
+//
+static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
+                                      mobjinfo_t *mi, int mode, int field)
+{
+   emodstatenode_t **list = NULL;
+
+   switch(field)
+   {
+   case E_DTS_FIELD_PAIN:
+      list = &mi->dmg_painstates;
+      break;
+   case E_DTS_FIELD_DEATH:
+      list = &mi->dmg_deathstates;
+      break;
+   default:
+      I_Error("E_ProcessDamageTypeStates: unknown field type\n");
+      break;
+   }
+   // first things first, if we are in overwrite mode, we will dispose of
+   // the appropriate list of states if any have been added already.
+   if(mode == E_DTS_MODE_OVERWRITE)
+   {
+      E_DisposeDamageTypeList(*list);
+      *list = NULL;
+   }
+
+   // add / overwrite mode
+   if(mode == E_DTS_MODE_ADD || mode == E_DTS_MODE_OVERWRITE)
+   {
+      int numstrs = (int)(cfg_size(cfg, name)); // get count of strings
+      int i;
+
+      if(numstrs % 2) // not divisible by two? ignore last one
+         --numstrs;
+
+      if(numstrs <= 0) // woops? nothing to do.
+         return;
+
+      for(i = 0; i < numstrs / 2; i += 2)
+      {
+         const char *modname, *statename;
+         int statenum;
+         state_t *state;
+         emod_t  *mod;
+
+         modname   = cfg_getnstr(cfg, name, i);
+         statename = cfg_getnstr(cfg, name, i + 1);
+
+         mod      = E_DamageTypeForName(modname);
+         statenum = E_StateNumForName(statename);
+
+         // unknown state? ignore
+         if(statenum == NUMSTATES)
+            continue;
+
+         state = &states[statenum];
+
+         if(mod->num == 0) // if this is "Unknown", ignore it.
+            continue;
+
+         // add it to the thing
+         E_AddDamageTypeState(list, state, mod);
+      }
+   }
+   else
+   {
+      // remove mode
+      unsigned int numstrs = cfg_size(cfg, name); // get count
+      unsigned int i;
+
+      for(i = 0; i < numstrs; ++i)
+      {
+         const char *modname = cfg_getnstr(cfg, name, i);
+         emod_t *mod = E_DamageTypeForName(modname);
+
+         if(mod->num == 0) // if this is "Unknown", ignore it.
+            continue;
+
+         E_RemoveDamageTypeState(*list, mod);
+      }
+   }
+}
+
+//
 // E_ColorCB
 //
 // libConfuse value-parsing callback for the thingtype translation
@@ -837,6 +1090,18 @@ static void E_CopyThing(int num, int pnum)
 
    // copy nukespec if one exists for parent type
    M_CopyNukeSpec(num, pnum);
+
+   // copy damagetype states
+
+   // lists inherited from parent are invalid
+   this_mi->dmg_deathstates = NULL;
+   this_mi->dmg_painstates  = NULL;
+
+   // deep-copy lists from parent
+   E_CopyDamageTypeList(mobjinfo[pnum].dmg_deathstates, 
+                        &this_mi->dmg_deathstates);
+   E_CopyDamageTypeList(mobjinfo[pnum].dmg_painstates,
+                        &this_mi->dmg_painstates);
 
    // must restore name and dehacked num data
    this_mi->dehnum   = dehnum;
@@ -1328,6 +1593,17 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       mobjinfo[i].altsprite = E_SpriteNumForName(tempstr);
    }
 
+   // 06/11/08: process defaultsprite (for skin handling)
+   if(IS_SET(ITEM_TNG_DEFSPRITE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_DEFSPRITE);
+
+      if(tempstr)
+         mobjinfo[i].defsprite = E_SpriteNumForName(tempstr);
+      else
+         mobjinfo[i].defsprite = -1;
+   }
+
    // 07/06/05: process correct 3D thing height
    if(IS_SET(ITEM_TNG_C3DHEIGHT))
    {
@@ -1348,6 +1624,40 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    {
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_AVELOCITY);
       mobjinfo[i].alphavelocity = (fixed_t)(tempfloat * FRACUNIT);
+   }
+
+   // 06/05/08: process custom-damage painstates
+   if(IS_SET(ITEM_TNG_PAINSTATES))
+   {
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PAINSTATES, &mobjinfo[i],
+                                E_DTS_MODE_OVERWRITE, E_DTS_FIELD_PAIN);
+   }
+   if(IS_SET(ITEM_TNG_PNSTATESADD))
+   {
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PNSTATESADD, &mobjinfo[i],
+                                E_DTS_MODE_ADD, E_DTS_FIELD_PAIN);
+   }
+   if(IS_SET(ITEM_TNG_PNSTATESREM))
+   {
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_PNSTATESREM, &mobjinfo[i],
+                                E_DTS_MODE_REMOVE, E_DTS_FIELD_PAIN);
+   }
+
+   // 06/05/08: process custom-damage deathstates
+   if(IS_SET(ITEM_TNG_DEATHSTATES))
+   {
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DEATHSTATES, &mobjinfo[i],
+                                E_DTS_MODE_OVERWRITE, E_DTS_FIELD_DEATH);
+   }
+   if(IS_SET(ITEM_TNG_DTHSTATESADD))
+   {
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DTHSTATESADD, &mobjinfo[i],
+                                E_DTS_MODE_ADD, E_DTS_FIELD_DEATH);
+   }
+   if(IS_SET(ITEM_TNG_DTHSTATESREM))
+   {
+      E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DTHSTATESREM, &mobjinfo[i],
+                                E_DTS_MODE_REMOVE, E_DTS_FIELD_DEATH);
    }
 
    // 01/17/07: process acs_spawndata
@@ -1453,6 +1763,23 @@ void E_ProcessThingDeltas(cfg_t *cfg)
 
       E_EDFLogPrintf("\t\tApplied thingdelta #%d to %s(#%d)\n",
                      i, mobjinfo[mobjType].name, mobjType);
+   }
+}
+
+//
+// E_SetThingDefaultSprites
+//
+// Post-processing routine; sets things' unspecified default sprites to the
+// sprite in the thing's spawnstate.
+//
+void E_SetThingDefaultSprites(void)
+{
+   int i;
+
+   for(i = 0; i < NUMMOBJTYPES; ++i)
+   {
+      if(mobjinfo[i].defsprite == -1)
+         mobjinfo[i].defsprite = states[mobjinfo[i].spawnstate].sprite;
    }
 }
 

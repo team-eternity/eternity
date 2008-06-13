@@ -375,9 +375,6 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
    return 0; // everything is good
 }
 
-// haleyjd 04/03/08: context for action-function parameter keywords
-static const char *e_actionfunc_context;
-
 //
 // E_StateAction
 //
@@ -394,9 +391,6 @@ static void E_StateAction(const char *tempstr, int i)
    }
 
    states[i].action = dp->cptr;
-
-   // haleyjd 04/03/08: set context for keyword lookup
-   e_actionfunc_context = dp->lookup;
 }
 
 enum
@@ -615,12 +609,7 @@ static void E_ParseMiscField(char *value, long *target)
          else if((dp = D_GetBexPtr(value)) != NULL)              // bexptr???
             E_AssignMiscBexptr(target, dp);
          else                                                    // try a keyword!
-         {
-            if(e_actionfunc_context)
-               *target = E_ValueForKeyword(value, e_actionfunc_context);
-            else
-               *target = 0;
-         }
+            *target = E_ValueForKeyword(value);
       }
       else
          *target = val;
@@ -1016,8 +1005,6 @@ static void E_ProcessState(int i, cfg_t *framesec, boolean def)
    int j;
    int tempint;
    char *tempstr;
-
-   e_actionfunc_context = NULL;
 
    // 11/14/03:
    // In definitions only, see if the cmp field is defined. If so,

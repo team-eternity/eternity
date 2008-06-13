@@ -29,6 +29,9 @@
 #ifndef __INFO__
 #define __INFO__
 
+#include "e_mod.h"
+#include "m_dllist.h"
+
 // haleyjd 07/17/04: sprite constants removed
 
 typedef int spritenum_t;
@@ -292,6 +295,18 @@ typedef enum {
   //NUMMOBJTYPES  // Counter of how many there are
 } mobjtype_t;
 
+// mod-state node structure
+// used to link together custom damagetype frames for mobjinfo
+// haleyjd: gotta put it here to avoid a chicken-or-egg problem
+// between info.h and e_things.h .... grrr.
+
+typedef struct emodstatenode_s
+{
+   mdllistitem_t links; // links to next, prev->next
+   emod_t  *mod;        // pointer to mod
+   state_t *state;      // pointer to state
+} emodstatenode_t;
+
 // ********************************************************************
 // Definition of the Thing structure
 // ********************************************************************
@@ -361,6 +376,7 @@ typedef struct
    int crashstate;    // haleyjd 08/07/04: a dead object hitting the ground
                       //  will enter this state if it has one.
    int altsprite;     // haleyjd 09/26/04: alternate sprite
+   int defsprite;     // haleyjd 06/11/08: need to track default sprite
    int topdamage;     // haleyjd 09/22/06: burn damage for 3D clipping :)
    int topdamagemask; // haleyjd 09/23/06: time mask for topdamage
    int alphavelocity; // haleyjd 05/23/08: alpha velocity
@@ -370,6 +386,10 @@ typedef struct
    int dehnum;        // DeHackEd number for fast lookup and comparison
    int namenext;      // next mobjinfo_t in name hash chain
    int dehnext;       // next mobjinfo_t in DEH hash chain
+
+   // 06/04/08: custom damagetype state chains
+   emodstatenode_t *dmg_painstates;  // custom pain states
+   emodstatenode_t *dmg_deathstates; // custom death states
 
 } mobjinfo_t;
 

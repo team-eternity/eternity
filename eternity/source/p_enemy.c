@@ -54,6 +54,8 @@
 #include "e_ttypes.h"
 #include "d_gi.h"
 #include "r_main.h"
+#include "e_lib.h"
+#include "e_sound.h"
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -1382,7 +1384,7 @@ static void P_MakeActiveSound(mobj_t *actor)
    if(actor->info->activesound && P_Random(pr_see) < 3)
    {
       int sound = actor->info->activesound;
-      mobj_t *sndsource = actor;
+      int attn  = ATTN_NORMAL;
 
       // haleyjd: some heretic enemies use their seesound on
       // occasion, so I've made this a general feature
@@ -1393,10 +1395,17 @@ static void P_MakeActiveSound(mobj_t *actor)
       }
 
       // haleyjd: some heretic enemies snort at full volume :)
+      // haleyjd: but when they do so, they do not cut off a sound
+      // they are already playing.
       if(actor->flags3 & MF3_LOUDACTIVE)
-         sndsource = NULL;
+      {
+         sfxinfo_t *sfx = E_SoundForDEHNum(sound);
+         if(sfx && S_CheckSoundPlaying(actor, sfx))
+            return;
+         attn = ATTN_NONE;
+      }
 
-      S_StartSound(sndsource, sound);
+      S_StartSoundAtVolume(actor, sound, 127, attn, CHAN_AUTO);
    }
 }
 
@@ -2460,12 +2469,13 @@ void P_SkullFly(mobj_t *actor, fixed_t speed)
    actor->momz = (getTargetZ(actor)+ (dest->height >> 1) - actor->z) / dist;
 }
 
-//
-// SkullAttack
-// Fly at the player like a missile.
-//
 #define SKULLSPEED              (20*FRACUNIT)
 
+//
+// A_SkullAttack
+//
+// Fly at the player like a missile.
+//
 void A_SkullAttack(mobj_t *actor)
 {   
    if(!actor->target)
@@ -2486,9 +2496,9 @@ void A_Stop(mobj_t *actor)
 
 //
 // A_PainShootSkull
+//
 // Spawn a lost soul and launch it at the target
 //
-
 void A_PainShootSkull(mobj_t *actor, angle_t angle)
 {
    fixed_t       x,y,z;
@@ -2500,11 +2510,11 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    if(skullType == -1)
       skullType = E_SafeThingType(MT_SKULL);
 
-// The original code checked for 20 skulls on the level,    // phares
-// and wouldn't spit another one if there were. If not in   // phares
-// compatibility mode, we remove the limit.                 // phares
+   // The original code checked for 20 skulls on the level,    // phares
+   // and wouldn't spit another one if there were. If not in   // phares
+   // compatibility mode, we remove the limit.                 // phares
 
-   if (comp[comp_pain])  // killough 10/98: compatibility-optioned
+   if(comp[comp_pain])  // killough 10/98: compatibility-optioned
    {
       // count total number of skulls currently on the level
       int count = 20;
@@ -2532,7 +2542,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    y = actor->y + FixedMul(prestep, finesine[an]);
    z = actor->z + 8*FRACUNIT;
    
-   if (comp[comp_skull])   // killough 10/98: compatibility-optioned
+   if(comp[comp_skull])   // killough 10/98: compatibility-optioned
       newmobj = P_SpawnMobj(x, y, z, skullType);                    // phares
    else                                                             //   V
    {
@@ -2561,8 +2571,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    }                                                                // phares
 
    // killough 7/20/98: PEs shoot lost souls with the same friendliness
-   newmobj->flags = 
-      (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
    P_UpdateThinker(&newmobj->thinker);
@@ -2597,16 +2606,16 @@ void A_PainAttack(mobj_t *actor)
 void A_PainDie(mobj_t *actor)
 {
    A_Fall(actor);
-   A_PainShootSkull(actor, actor->angle+ANG90);
-   A_PainShootSkull(actor, actor->angle+ANG180);
-   A_PainShootSkull(actor, actor->angle+ANG270);
+   A_PainShootSkull(actor, actor->angle + ANG90);
+   A_PainShootSkull(actor, actor->angle + ANG180);
+   A_PainShootSkull(actor, actor->angle + ANG270);
 }
 
 void A_Scream(mobj_t *actor)
 {
    int sound;
    
-   switch (actor->info->deathsound)
+   switch(actor->info->deathsound)
    {
    case 0:
       return;
@@ -2629,7 +2638,7 @@ void A_Scream(mobj_t *actor)
 
    // Check for bosses.
    // haleyjd: generalize to all bosses
-   if(actor->flags2&MF2_BOSS)
+   if(actor->flags2 & MF2_BOSS)
       S_StartSound(NULL, sound); // full volume
    else
       S_StartSound(actor, sound);
@@ -3160,6 +3169,14 @@ void A_Face(mobj_t *mo)
    mo->angle = (angle_t)(((ULong64) mo->state->misc1 << 32) / 360);
 }
 
+E_Keyword_t kwds_A_Scratch[] =
+{
+   { "usemisc1",           0  },
+   { "usedamage",          1  },
+   { "usecounter",         2  },
+   { NULL }
+};
+
 //
 // A_Scratch
 //
@@ -3219,6 +3236,13 @@ void A_Scratch(mobj_t *mo)
       P_DamageMobj(mo->target, mo, mo, damage, MOD_HIT);
    }
 }
+
+E_Keyword_t kwds_A_PlaySound[] =
+{
+   { "normal",             0  },
+   { "fullvolume",         1  },
+   { NULL }
+};
 
 void A_PlaySound(mobj_t *mo)
 {
@@ -3351,6 +3375,13 @@ void A_BetaSkullAttack(mobj_t *actor)
    P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
 }
 
+E_Keyword_t kwds_A_StartScript[] =
+{
+   { "gamescript",         0  },
+   { "levelscript",        1  },
+   { NULL }
+};
+
 //
 // A_StartScript
 //
@@ -3406,6 +3437,13 @@ void A_StartScript(mobj_t *actor)
    // destroy any child context that might have been created
    A_DestroyChildContext(useContext);
 }
+
+E_Keyword_t kwds_A_PlayerStartScript[] =
+{
+   { "gamescript",         0  },
+   { "levelscript",        1  },
+   { NULL }
+};
 
 //
 // A_PlayerStartScript
@@ -4009,6 +4047,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    static int fountainType = -1;
    static int dripType = -1;
    static int ambienceType = -1;
+   static int enviroType = -1;
 
    fixed_t  x, y, z;
    mobj_t   *newmobj;
@@ -4021,6 +4060,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       fountainType = E_ThingNumForName("EEParticleFountain");
       dripType     = E_ThingNumForName("EEParticleDrip");
       ambienceType = E_ThingNumForName("EEAmbience");
+      enviroType   = E_ThingNumForName("EEEnviroSequence");
    }
 
    // if it's a missile, shoot it
@@ -4101,6 +4141,16 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
 
       if(ambnum == 64)
          ambnum = 0;
+   }
+
+   if(type == enviroType)
+   {
+      static int envnum;
+
+      newmobj->args[0] = envnum++;
+
+      if(envnum == 64)
+         envnum = 0;
    }
 
    // adjust count* flags to avoid messing up the map

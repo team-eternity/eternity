@@ -70,15 +70,13 @@ typedef struct E_Keyword_s
 {
    const char *keyword;
    int value;
-   const char *context;
 
    // for hashing
    struct E_Keyword_s *next;
 } E_Keyword_t;
 
 void E_AddKeywords(E_Keyword_t *kw);
-void E_AddKeywordsInContext(E_Keyword_t *kw, const char *context);
-int E_ValueForKeyword(const char *keyword, const char *context);
+int E_ValueForKeyword(const char *keyword);
 
 #endif
 

@@ -2114,9 +2114,6 @@ void E_ProcessEDF(const char *filename)
    cfg_t *cfg;
    int lnum = -1;
 
-   // do some init work
-   E_EDFAddCodeptrKeywords();
-
    // check for -edfout to enable verbose logging
    if(M_CheckParm("-edfout"))
       E_EDFOpenVerboseLog();
@@ -2204,6 +2201,9 @@ void E_ProcessEDF(const char *filename)
    // process last-chance defaults
    E_ProcessLastChance();
 
+   // post-processing routines
+   E_SetThingDefaultSprites();
+
    // check heap integrity for safety
    E_EDFLogPuts("Checking zone heap integrity\n");
    Z_CheckHeap();
@@ -2230,179 +2230,6 @@ int E_SpriteNumForName(const char *name)
       sprnum = sprnext[sprnum];
 
    return sprnum;
-}
-
-//=============================================================================
-//
-// Codepointer keyword sets
-//
-// haleyjd 04/02/08: Due to competition from certain source ports which shall
-// remain unnamed, it is now necessary to support named values as arguments to
-// codepointers. This is accomplished using a generalized keyword hashing
-// system implemented in e_lib.c
-//
-
-static E_Keyword_t codeptr_keywords[] =
-{
-   { "always",             1,  "FireCustomBullets" },
-   { "first",              2,  "FireCustomBullets" },
-   { "never",              3,  "FireCustomBullets" },
-   { "ssg",                4,  "FireCustomBullets" },
-   { "monster",            5,  "FireCustomBullets" },
-   { "normal",             0,  "FirePlayerMissile" },
-   { "homing",             1,  "FirePlayerMissile" },
-   { "none",               1,  "CustomPlayerMelee" },
-   { "punch",              2,  "CustomPlayerMelee" },
-   { "chainsaw",           3 , "CustomPlayerMelee" },
-   { "noface",             0,  "PlayerThunk"       },
-   { "face",               1,  "PlayerThunk"       },
-   { "attacker",           0,  "PlayerThunk"       },
-   { "aimtarget",          1,  "PlayerThunk"       },
-   { "nouseammo",          0,  "PlayerThunk"       },
-   { "useammo",            1,  "PlayerThunk"       },
-   { "less",               0,  "WeaponCtrJump"     },
-   { "lessorequal",        1,  "WeaponCtrJump"     },
-   { "greater",            2,  "WeaponCtrJump"     },
-   { "greaterorequal",     3,  "WeaponCtrJump"     },
-   { "equal",              4,  "WeaponCtrJump"     },
-   { "notequal",           5,  "WeaponCtrJump"     },
-   { "and",                6,  "WeaponCtrJump"     },
-   { "less_ctr",           7,  "WeaponCtrJump"     },
-   { "lessorequal_ctr",    8,  "WeaponCtrJump"     },
-   { "greater_ctr",        9,  "WeaponCtrJump"     },
-   { "greaterorequal_ctr", 10, "WeaponCtrJump"     },
-   { "equal_ctr",          11, "WeaponCtrJump"     },
-   { "notequal_ctr",       12, "WeaponCtrJump"     },
-   { "and_ctr",            13, "WeaponCtrJump"     },
-   { "weapon",             0,  "WeaponCtrJump"     },
-   { "flash",              1,  "WeaponCtrJump"     },
-   { "weapon",             0,  "WeaponCtrSwitch"   },
-   { "flash",              1,  "WeaponCtrSwitch"   },
-   { "assign",             0,  "WeaponSetCtr"      },
-   { "add",                1,  "WeaponSetCtr"      },
-   { "sub",                2,  "WeaponSetCtr"      },
-   { "mul",                3,  "WeaponSetCtr"      },
-   { "div",                4,  "WeaponSetCtr"      },
-   { "mod",                5,  "WeaponSetCtr"      },
-   { "and",                6,  "WeaponSetCtr"      },
-   { "andnot",             7,  "WeaponSetCtr"      },
-   { "or",                 8,  "WeaponSetCtr"      },
-   { "xor",                9,  "WeaponSetCtr"      },
-   { "rnd",                10, "WeaponSetCtr"      },
-   { "rndmod",             11, "WeaponSetCtr"      },
-   { "shr",                13, "WeaponSetCtr"      },
-   { "shl",                14, "WeaponSetCtr"      },
-   { "add",                1,  "WeaponCtrOp"       },
-   { "sub",                2,  "WeaponCtrOp"       },
-   { "mul",                3,  "WeaponCtrOp"       },
-   { "div",                4,  "WeaponCtrOp"       },
-   { "mod",                5,  "WeaponCtrOp"       },
-   { "and",                6,  "WeaponCtrOp"       },
-   { "or",                 8,  "WeaponCtrOp"       },
-   { "xor",                9,  "WeaponCtrOp"       },
-   { "hitdice",            12, "WeaponCtrOp"       },
-   { "shr",                13, "WeaponCtrOp"       },
-   { "shl",                14, "WeaponCtrOp"       },
-   { "abs",                15, "WeaponCtrOp"       },
-   { "neg",                16, "WeaponCtrOp"       },
-   { "not",                17, "WeaponCtrOp"       },
-   { "invert",             18, "WeaponCtrOp"       },
-   { "normal",             0,  "PlaySound"         },
-   { "fullvolume",         1,  "PlaySound"         },
-   { "default",            0,  "HticExplode"       },
-   { "dsparilbluespark",   1,  "HticExplode"       },
-   { "floorfire",          2,  "HticExplode"       },
-   { "timebomb",           3,  "HticExplode"       },
-   { "usemisc1",           0,  "Scratch"           },
-   { "usedamage",          1,  "Scratch"           },
-   { "usecounter",         2,  "Scratch"           },
-   { "nothoming",          0,  "MissileAttack"     },
-   { "homing",             1,  "MissileAttack"     },
-   { "always",             1,  "BulletAttack"      },
-   { "never",              2,  "BulletAttack"      },
-   { "ssg",                3,  "BulletAttack"      },
-   { "monster",            4,  "BulletAttack"      },
-   { "kill",               0,  "ThingSummon"       },
-   { "remove",             1,  "ThingSummon"       },
-   { "normal",             0,  "ThingSummon"       },
-   { "makechild",          1,  "ThingSummon"       },
-   { "addmomentum",        0,  "BeastPuff"         },
-   { "noaddmomentum",      1,  "BeastPuff"         },
-   { "kill",               0,  "KillChildren"      },
-   { "remove",             1,  "KillChildren"      },
-   { "less",               0,  "HealthJump"        },
-   { "lessorequal",        1,  "HealthJump"        },
-   { "greater",            2,  "HealthJump"        },
-   { "greaterorequal",     3,  "HealthJump"        },
-   { "equal",              4,  "HealthJump"        },
-   { "notequal",           5,  "HealthJump"        },
-   { "and",                6,  "HealthJump"        },
-   { "less_ctr",           7,  "HealthJump"        },
-   { "lessorequal_ctr",    8,  "HealthJump"        },
-   { "greater_ctr",        9,  "HealthJump"        },
-   { "greaterorequal_ctr", 10, "HealthJump"        },
-   { "equal_ctr",          11, "HealthJump"        },
-   { "notequal_ctr",       12, "HealthJump"        },
-   { "and_ctr",            13, "HealthJump"        },
-   { "less",               0,  "CounterJump"       },
-   { "lessorequal",        1,  "CounterJump"       },
-   { "greater",            2,  "CounterJump"       },
-   { "greaterorequal",     3,  "CounterJump"       },
-   { "equal",              4,  "CounterJump"       },
-   { "notequal",           5,  "CounterJump"       },
-   { "and",                6,  "CounterJump"       },
-   { "less_ctr",           7,  "CounterJump"       },
-   { "lessorequal_ctr",    8,  "CounterJump"       },
-   { "greater_ctr",        9,  "CounterJump"       },
-   { "greaterorequal_ctr", 10, "CounterJump"       },
-   { "equal_ctr",          11, "CounterJump"       },
-   { "notequal_ctr",       12, "CounterJump"       },
-   { "and_ctr",            13, "CounterJump"       },
-   { "assign",             0,  "SetCounter"        },
-   { "add",                1,  "SetCounter"        },
-   { "sub",                2,  "SetCounter"        },
-   { "mul",                3,  "SetCounter"        },
-   { "div",                4,  "SetCounter"        },
-   { "mod",                5,  "SetCounter"        },
-   { "and",                6,  "SetCounter"        },
-   { "andnot",             7,  "SetCounter"        },
-   { "or",                 8,  "SetCounter"        },
-   { "xor",                9,  "SetCounter"        },
-   { "rnd",                10, "SetCounter"        },
-   { "rndmod",             11, "SetCounter"        },
-   { "shr",                13, "SetCounter"        },
-   { "shl",                14, "SetCounter"        },
-   { "add",                1,  "CounterOp"         },
-   { "sub",                2,  "CounterOp"         },
-   { "mul",                3,  "CounterOp"         },
-   { "div",                4,  "CounterOp"         },
-   { "mod",                5,  "CounterOp"         },
-   { "and",                6,  "CounterOp"         },
-   { "or",                 8,  "CounterOp"         },
-   { "xor",                9,  "CounterOp"         },
-   { "hitdice",            12, "CounterOp"         },
-   { "shr",                13, "CounterOp"         },
-   { "shl",                14, "CounterOp"         },
-   { "abs",                15, "CounterOp"         },
-   { "neg",                16, "CounterOp"         },
-   { "not",                17, "CounterOp"         },
-   { "invert",             18, "CounterOp"         },
-   { "constant",           0,  "SetTics"           },
-   { "counter",            1,  "SetTics"           },
-   { "gamescript",         0,  "StartScript"       },
-   { "levelscript",        1,  "StartScript"       },
-   { "gamescript",         0,  "PlayerStartScript" },
-   { "levelscript",        1,  "PlayerStartScript" },
-   { "console",            0,  "ShowMessage"       },
-   { "normal",             1,  "ShowMessage"       },
-   { "center",             2,  "ShowMessage"       },
-
-   { NULL } // must be last
-};
-
-static void E_EDFAddCodeptrKeywords(void)
-{
-   E_AddKeywords(codeptr_keywords);
 }
 
 // EOF

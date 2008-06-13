@@ -219,7 +219,11 @@ int P_SubRandom(pr_class_t);
 // haleyjd: function to get a random within a given range
 int P_RangeRandom(pr_class_t pr_class, int min, int max);
 
+unsigned long P_RandomEx(pr_class_t pr_class);
+
 #define M_RangeRandom(min, max) P_RangeRandom(pr_misc, (min), (max))
+
+#define M_RandomEx() P_RandomEx(pr_misc)
 
 // Fix randoms for demos.
 void M_ClearRandom(void);

@@ -37,6 +37,7 @@
 // haleyjd: removed now-unnecessary headers
 #include "z_zone.h"
 #include "info.h"
+#include "e_things.h"
 
 // ********************************************************************
 // Sprite names

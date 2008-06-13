@@ -75,6 +75,7 @@
 #define ITEM_SND_CLIPPING_DIST "clipping_dist"
 #define ITEM_SND_CLOSE_DIST    "close_dist"
 #define ITEM_SND_PITCHVAR      "pitchvariance"
+#define ITEM_SND_SUBCHANNEL    "subchannel"
 #define ITEM_SND_DEHNUM        "dehackednum"
 
 #define ITEM_DELTA_NAME "name"
@@ -126,7 +127,7 @@ static const char *skinindices[NUMSKINSOUNDS + 1] =
    "sk_noway",
 };
 
-#define NUM_SKININDICES (sizeof(skinindices) / sizeof(char *))
+#define NUM_SKININDICES (sizeof(skinindices) / sizeof(const char *))
 
 //
 // Pitch variance types
@@ -140,7 +141,24 @@ static const char *pitchvars[] =
    "HereticAmbient"
 };
 
-#define NUM_PITCHVARS (sizeof(pitchvars) / sizeof(char *))
+#define NUM_PITCHVARS (sizeof(pitchvars) / sizeof(const char *))
+
+//
+// Subchannel types
+//
+static const char *subchans[] =
+{
+   "Auto",
+   "Weapon",
+   "Voice",
+   "Item",
+   "Body",
+   "SoundSlot5",
+   "SoundSlot6",
+   "SoundSlot7"
+};
+
+#define NUM_SUBCHANS (sizeof(subchans) / sizeof(const char *))
 
 #define SOUND_OPTIONS \
    CFG_STR(ITEM_SND_LUMP,          NULL,              CFGF_NONE), \
@@ -155,6 +173,7 @@ static const char *pitchvars[] =
    CFG_INT(ITEM_SND_CLIPPING_DIST, S_CLIPPING_DIST_I, CFGF_NONE), \
    CFG_INT(ITEM_SND_CLOSE_DIST,    S_CLOSE_DIST_I,    CFGF_NONE), \
    CFG_STR(ITEM_SND_PITCHVAR,      "none",            CFGF_NONE), \
+   CFG_STR(ITEM_SND_SUBCHANNEL,    "Auto",            CFGF_NONE), \
    CFG_INT(ITEM_SND_DEHNUM,        -1,                CFGF_NONE), \
    CFG_END()
 
@@ -397,6 +416,7 @@ void E_NewWadSound(const char *name)
       sfx->pitch = sfx->volume = -1;
       sfx->clipping_dist = S_CLIPPING_DIST;
       sfx->close_dist = S_CLOSE_DIST;
+      sfx->subchannel = CHAN_AUTO;
       sfx->skinsound = 0;
       sfx->data = NULL;
       sfx->dehackednum = -1; // not accessible to DeHackEd
@@ -586,14 +606,24 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 
       if(sfx->pitch_type == NUM_PITCHVARS)
          sfx->pitch_type = pitch_none;
-   }   
+   }
+
+   // haleyjd 06/12/08: process subchannel
+   if(IS_SET(ITEM_SND_SUBCHANNEL))
+   {
+      const char *s = cfg_getstr(section, ITEM_SND_SUBCHANNEL);
+
+      sfx->subchannel = E_StrToNumLinear(subchans, NUM_SUBCHANS, s);
+
+      if(sfx->subchannel == NUM_SUBCHANS)
+         sfx->subchannel = CHAN_AUTO;
+   }
 }
 
 //
 // E_ProcessSounds
 //
-// Collects all the sound definitions and builds the sound hash
-// tables.
+// Collects all the sound definitions and builds the sound hash tables.
 // 04/13/08: rewritten to be fully dynamic.
 //
 void E_ProcessSounds(cfg_t *cfg)

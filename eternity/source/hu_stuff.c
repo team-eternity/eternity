@@ -1404,6 +1404,9 @@ static boolean HU_ChatRespond(event_t *ev)
 {
    char ch;
    static boolean shiftdown;
+
+   // haleyjd 06/11/08: get HUD actions
+   G_KeyResponder(ev, kac_hud);
    
    if(ev->data1 == KEYD_RSHIFT) 
       shiftdown = (ev->type == ev_keydown);

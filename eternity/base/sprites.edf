@@ -69,7 +69,7 @@ spritenames +=
   "PPOD","KNIG","SPAX","RAXE","BLOD","BEAS","FRB1","SNKE","SNFX","SRCR",
   "FX14","VLCO","VFBL","XPL1","VTFB","SFFI","MNTR","FX12","FX13","FX04",
   "FX05","FX06","FX07","AMG1","AMG2","AMM1","AMM2","AMC1","AMC2","AMB1",
-  "AMB2","AMS1","AMS2","AMP1","AMP2","IMPX","FX10","BSKL"
+  "AMB2","AMS1","AMS2","AMP1","AMP2","IMPX","FX10","BSKL","FDTH","ACLO"
 }
 
 endif()

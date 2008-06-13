@@ -40,6 +40,7 @@
 #include "p_tick.h"
 #include "e_sound.h"
 #include "s_sound.h"
+#include "e_lib.h"
 
 //
 // T_QuakeThinker
@@ -55,7 +56,7 @@ void T_QuakeThinker(quakethinker_t *qt)
    // quake is finished?
    if(qt->duration == 0)
    {
-      S_StopSound(soundorg);
+      S_StopSound(soundorg, CHAN_ALL);
       P_RemoveThinker(&(qt->origin.thinker));
       return;
    }
@@ -64,7 +65,7 @@ void T_QuakeThinker(quakethinker_t *qt)
 
    // loop quake sound
    if(quakesound && !S_CheckSoundPlaying(soundorg, quakesound))
-      S_StartSfxInfo(soundorg, quakesound, 127, ATTN_NORMAL, true);
+      S_StartSfxInfo(soundorg, quakesound, 127, ATTN_NORMAL, true, CHAN_AUTO);
 
    tics = qt->duration--;
 
@@ -173,6 +174,68 @@ void A_FadeOut(mobj_t *mo)
       mo->translucency = 0;
    else if(mo->translucency > FRACUNIT)
       mo->translucency = FRACUNIT;
+}
+
+//
+// A_ClearSkin
+//
+// Codepointer needed for Heretic/Hexen/Strife support.
+//
+void A_ClearSkin(mobj_t *mo)
+{
+   mo->skin   = NULL;
+   mo->sprite = mo->state->sprite;
+}
+
+E_Keyword_t kwds_A_PlaySoundEx[] =
+{
+   { "chan_auto",   0 },
+   { "chan_weapon", 1 },
+   { "chan_voice",  2 },
+   { "chan_item",   3 },
+   { "chan_body",   4 },
+   { "attn_normal", 0 },
+   { "attn_idle",   1 },
+   { "attn_static", 2 },
+   { "attn_none",   3 },
+   { NULL }
+};
+
+//
+// A_PlaySoundEx
+//
+// ZDoom-inspired action function, implemented using wiki docs.
+//
+// args[0] : sound
+// args[1] : subchannel
+// args[2] : loop?
+// args[3] : attenuation
+// args[4] : EE extension - volume
+//
+void A_PlaySoundEx(mobj_t *mo)
+{
+   int sound    =   mo->state->args[0];
+   int channel  =   mo->state->args[1];
+   boolean loop = !!mo->state->args[2];
+   int attn     =   mo->state->args[3];
+   int volume   =   mo->state->args[4];
+   sfxinfo_t *sfx = NULL;
+
+   if(!(sfx = E_SoundForDEHNum(sound)))
+      return;
+
+   // rangechecking
+   if(attn < 0 || attn >= ATTN_NUM)
+      attn = ATTN_NORMAL;
+
+   if(channel < CHAN_AUTO || channel >= NUMSCHANNELS)
+      channel = CHAN_AUTO;
+
+   // note: volume 0 == 127, for convenience
+   if(volume <= 0 || volume > 127)
+      volume = 127;
+
+   S_StartSfxInfo(mo, sfx, volume, attn, loop, channel);
 }
 
 // EOF

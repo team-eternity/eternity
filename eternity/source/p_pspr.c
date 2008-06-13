@@ -52,6 +52,7 @@
 #include "d_dehtbl.h"
 #include "p_info.h"
 #include "d_gi.h"
+#include "e_lib.h"
 
 int weapon_speed = 6;
 int default_weapon_speed = 6;
@@ -436,7 +437,7 @@ static void P_WeaponSoundInfo(mobj_t *mo, sfxinfo_t *sound)
       P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
       volume = WEAPON_VOLUME_SILENCED;
 
-   S_StartSfxInfo(mo, sound, volume, ATTN_NORMAL, false);
+   S_StartSfxInfo(mo, sound, volume, ATTN_NORMAL, false, CHAN_AUTO);
 }
 
 //
@@ -452,7 +453,7 @@ static void P_WeaponSound(mobj_t *mo, int sfx_id)
       P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
       volume = WEAPON_VOLUME_SILENCED;
 
-   S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL);
+   S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL, CHAN_AUTO);
 }
 
 //
@@ -1458,6 +1459,16 @@ void A_FireGrenade(mobj_t *mo)
 {
 }
 
+E_Keyword_t kwds_A_FireCustomBullets[] =
+{
+   { "always",             1  },
+   { "first",              2  },
+   { "never",              3  },
+   { "ssg",                4  },
+   { "monster",            5  },
+   { NULL }
+};
+
 //
 // A_FireCustomBullets
 //
@@ -1545,6 +1556,13 @@ void A_FireCustomBullets(mobj_t *mo)
    }
 }
 
+E_Keyword_t kwds_A_FirePlayerMissile[] =
+{
+   { "normal",             0  },
+   { "homing",             1  },
+   { NULL }
+};
+
 //
 // A_FirePlayerMissile
 //
@@ -1592,6 +1610,14 @@ void A_FirePlayerMissile(mobj_t *actor)
          P_SetTarget(&mo->tracer, tm->linetarget);
    }
 }
+
+E_Keyword_t kwds_A_CustomPlayerMelee[] =
+{
+   { "none",               1  },
+   { "punch",              2  },
+   { "chainsaw",           3  },
+   { NULL }
+};
 
 //
 // A_CustomPlayerMelee
@@ -1698,6 +1724,17 @@ void A_CustomPlayerMelee(mobj_t *mo)
    }
 }
 
+E_Keyword_t kwds_A_PlayerThunk[] =
+{
+   { "noface",             0  },
+   { "face",               1  },
+   { "attacker",           0  },
+   { "aimtarget",          1  },
+   { "nouseammo",          0  },
+   { "useammo",            1  },
+   { NULL }
+};
+
 //
 // A_PlayerThunk
 //
@@ -1735,10 +1772,6 @@ void A_PlayerThunk(mobj_t *mo)
 
    // validate codepointer index
    if(cptrnum < 0 || cptrnum >= num_bexptrs)
-      return;
-
-   // make sure codepointer is thunkable
-   if(!(deh_bexptrs[cptrnum].flags & BPF_PTHUNK))
       return;
 
    // validate and resolve state

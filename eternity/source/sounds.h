@@ -42,6 +42,21 @@ struct sfxinfo_s;
 typedef struct sfxinfo_s sfxinfo_t;
 typedef struct musicinfo_s musicinfo_t;
 
+// haleyjd 06/12/08: origin subchannels
+typedef enum
+{
+   CHAN_ALL = -1, // to S_StopSound, this means stop everything
+   CHAN_AUTO,
+   CHAN_WEAPON,
+   CHAN_VOICE,
+   CHAN_ITEM,
+   CHAN_BODY,
+   CHAN_SLOT5,
+   CHAN_SLOT6,
+   CHAN_SLOT7,
+   NUMSCHANNELS
+} schannel_e;
+
 struct sfxinfo_s
 {
    // haleyjd 04/13/08: numeric hash links
@@ -118,6 +133,9 @@ struct sfxinfo_s
 
    // haleyjd 04/23/08: additional caching data
    unsigned int alen;   // length of converted sound pointed to by data
+
+   // haleyjd 06/12/08: origin subchannels - default = CHAN_AUTO.
+   schannel_e subchannel;
 };
 
 //

@@ -404,17 +404,22 @@ skin_t *P_GetDefaultSkin(player_t *player)
 
 void P_SetSkin(skin_t *skin, int playernum)
 {
+   player_t *pl = &players[playernum];
+
    if(!playeringame[playernum])
       return;
    
-   players[playernum].skin = skin;
+   pl->skin = skin;
+   
    if(gamestate == GS_LEVEL)
    {
-      players[playernum].mo->skin = skin;
-      players[playernum].mo->sprite = skin->sprite;
+      mobj_t *mo = pl->mo;
+      mo->skin = skin;
+      if(mo->state && mo->state->sprite == mo->info->defsprite)
+         mo->sprite = skin->sprite;
    }
    
-   if(playernum == consoleplayer) 
+   if(playernum == consoleplayer)
       default_skin = skin->skinname;
 }
 

@@ -767,7 +767,7 @@ thingtype Dsparil
   height = 70.0
   mass = 300
   activesound = ht_soract
-  flags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
+  flags  = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
   flags2 = E3M8BOSS|BOSS|FOOTCLIP
   flags3 = LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 143; modes = heretic }
@@ -1278,6 +1278,12 @@ thingtype HereticPlayer
   painsound = ht_plrpai
   missilestate = S_HPLAY_ATK1
   deathstate = S_HPLAY_DIE1
+  // custom damagetype deathstates
+  dmg_deathstates =
+  {
+     Fire, S_HPLAY_FDTH1,
+     Lava, S_HPLAY_FDTH1
+  }  
   xdeathstate = S_HPLAY_XDIE1
   deathsound = ht_plrdth
   radius = 16.0

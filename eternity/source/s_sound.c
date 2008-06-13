@@ -82,6 +82,7 @@ typedef struct channel_s
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
   const mobj_t *origin;    // origin of sound
+  schannel_e subchannel;   // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
   soundattn_e attenuation; // attenuation type -- haleyjd 05/29/06
   int pitch;               // pitch modifier -- haleyjd 06/03/06
@@ -313,7 +314,7 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 //   Note that a higher priority number means lower priority!
 //
 static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
-                        int priority, int singularity)
+                        int priority, int singularity, schannel_e schan)
 {
    // channel number to use
    int cnum;
@@ -326,11 +327,13 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
 
    // kill old sound
    // killough 12/98: replace is_pickup hack with singularity flag
+   // haleyjd 06/12/08: only if subchannel matches
    for(cnum = 0; cnum < numChannels; ++cnum)
    {
       if(channels[cnum].sfxinfo &&
          channels[cnum].singularity == singularity &&
-         channels[cnum].origin == origin)
+         channels[cnum].origin == origin &&
+         channels[cnum].subchannel == schan)
       {
          S_StopChannel(cnum);
          break;
@@ -387,7 +390,8 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
 // haleyjd 06/03/06: added ability to loop sound samples
 //
 void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
-                    int volumeScale, soundattn_e attenuation, boolean loop)
+                    int volumeScale, soundattn_e attenuation, boolean loop,
+                    schannel_e subchannel)
 {
    int sep, pitch, o_priority, priority, singularity, cnum, handle;
    int volume = snd_SfxVolume;
@@ -542,8 +546,13 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
          pitch = 255;
    }
 
+   // haleyjd 06/12/08: determine subchannel. If auto, try using the sound's
+   // preferred subchannel (which is also auto by default).
+   if(subchannel == CHAN_AUTO)
+      subchannel = sfx->subchannel;
+
    // try to find a channel
-   if((cnum = S_getChannel(origin, sfx, priority, singularity)) < 0)
+   if((cnum = S_getChannel(origin, sfx, priority, singularity, subchannel)) < 0)
       return;
 
 #ifdef RANGECHECK
@@ -568,6 +577,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       // haleyjd 05/29/06: record volume scale value and attenuation type
       // haleyjd 06/03/06: record pitch too (wtf is going on here??)
       // haleyjd 09/27/06: store priority and singularity values (!!!)
+      // haleyjd 06/12/08: store subchannel
       channels[cnum].volume      = volumeScale;
       channels[cnum].attenuation = attenuation;
       channels[cnum].pitch       = pitch;
@@ -575,8 +585,8 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       channels[cnum].priority    = priority;    // scaled priority
       channels[cnum].singularity = singularity;
       channels[cnum].looping     = loop;
-      
-      channels[cnum].idnum = I_SoundID(handle);
+      channels[cnum].subchannel  = subchannel;
+      channels[cnum].idnum       = I_SoundID(handle); // unique instance id
    }
    else // haleyjd: the sound didn't start, so clear the channel info
       memset(&channels[cnum], 0, sizeof(channel_t));
@@ -590,7 +600,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 // anything useful (it was always called with snd_SfxVolume...).
 //
 void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
-                          int volume, soundattn_e attn)
+                          int volume, soundattn_e attn, schannel_e subchannel)
 {
    // haleyjd: changed to use EDF DeHackEd number hashing,
    // to enable full use of dynamically defined sounds ^_^
@@ -600,7 +610,7 @@ void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id,
    if(!sfx)
       return;
 
-   S_StartSfxInfo(origin, sfx, volume, attn, false);
+   S_StartSfxInfo(origin, sfx, volume, attn, false, subchannel);
 }
 
 //
@@ -613,7 +623,7 @@ void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id,
 //
 void S_StartSound(const mobj_t *origin, int sfx_id)
 {
-   S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL);
+   S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
 }
 
 //
@@ -622,7 +632,8 @@ void S_StartSound(const mobj_t *origin, int sfx_id)
 // haleyjd 05/29/06: as below, but allows volume scaling.
 //
 void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name, 
-                              int volume, soundattn_e attn)
+                              int volume, soundattn_e attn, 
+                              schannel_e subchannel)
 {
    sfxinfo_t *sfx;
    
@@ -631,7 +642,7 @@ void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name,
       return;
 
    if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx, volume, attn, false);
+      S_StartSfxInfo(origin, sfx, volume, attn, false, subchannel);
 }
 
 //
@@ -644,7 +655,7 @@ void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name,
 //
 void S_StartSoundName(const mobj_t *origin, const char *name)
 {
-   S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL);
+   S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL, CHAN_AUTO);
 }
 
 //
@@ -653,7 +664,7 @@ void S_StartSoundName(const mobj_t *origin, const char *name)
 // haleyjd 06/03/06: support playing looped sounds.
 //
 void S_StartSoundLooped(const mobj_t *origin, char *name, int volume, 
-                        soundattn_e attn)
+                        soundattn_e attn, schannel_e subchannel)
 {
    sfxinfo_t *sfx;
    
@@ -661,13 +672,13 @@ void S_StartSoundLooped(const mobj_t *origin, char *name, int volume,
       return;
 
    if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx, volume, attn, true);
+      S_StartSfxInfo(origin, sfx, volume, attn, true, subchannel);
 }
 
 //
 // S_StopSound
 //
-void S_StopSound(const mobj_t *origin)
+void S_StopSound(const mobj_t *origin, schannel_e subchannel)
 {
    int cnum;
    
@@ -678,7 +689,8 @@ void S_StopSound(const mobj_t *origin)
    for(cnum = 0; cnum < numChannels; ++cnum)
    {
       if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
-         channels[cnum].idnum == I_SoundID(channels[cnum].handle))
+         channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
+         (subchannel == CHAN_ALL || channels[cnum].subchannel == subchannel))
       {
          S_StopChannel(cnum);
          break;

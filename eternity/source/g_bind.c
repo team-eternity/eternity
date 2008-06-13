@@ -187,7 +187,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    {"weapon9",   kac_game,       at_variable,     {&action_weapon9}},
    {"nextweapon",kac_game,       at_variable,     {&action_nextweapon}},
 
-   {"frags",     kac_game,       at_variable,     {&action_frags}},
+   {"frags",     kac_hud,        at_variable,     {&action_frags}},
 
    // Menu Actions
 

@@ -925,7 +925,7 @@ void T_ACSThinker(acsthinker_t *script)
                src = (mobj_t *)&(script->line->frontsector->soundorg);
 
             S_StartSoundNameAtVolume(src, acs_stringtbl[strnum], vol, 
-                                     ATTN_NORMAL);
+                                     ATTN_NORMAL, CHAN_AUTO);
          }
          break;
       case OP_AMBIENTSOUND:
@@ -934,7 +934,7 @@ void T_ACSThinker(acsthinker_t *script)
             int strnum = POP();
 
             S_StartSoundNameAtVolume(NULL, acs_stringtbl[strnum], vol, 
-                                     ATTN_NORMAL);
+                                     ATTN_NORMAL, CHAN_AUTO);
          }
          break;
       case OP_SOUNDSEQUENCE:
@@ -997,7 +997,7 @@ void T_ACSThinker(acsthinker_t *script)
             while((mo = P_FindMobjFromTID(tid, mo, NULL)))
             {
                S_StartSoundNameAtVolume(mo, acs_stringtbl[strnum], vol,
-                                        ATTN_NORMAL);
+                                        ATTN_NORMAL, CHAN_AUTO);
             }
          }
          break;

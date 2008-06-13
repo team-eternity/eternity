@@ -624,78 +624,95 @@ char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen)
 static E_Keyword_t *e_keyword_chains[NUMKEYWORDCHAINS];
 
 //
-// E_AddKeywords
+// E_FindKeyword
 //
-// Passed a NULL-terminated list of keyword objects, the array of keyword 
-// objects will be added to the global list under whatever context they
-// already specify.
+// Returns an E_Keyword_t for the given keyword.
+// Returns NULL if not defined.
 //
-void E_AddKeywords(E_Keyword_t *kw)
+E_Keyword_t *E_FindKeyword(const char *keyword)
 {
-   E_Keyword_t *curkw = kw;
-
-   while(curkw->keyword)
-   {
-      unsigned int key = D_HashTableKey(curkw->keyword) % NUMKEYWORDCHAINS;
-
-      curkw->next = e_keyword_chains[key];
-      e_keyword_chains[key] = curkw;
-
-      ++curkw;
-   }
-}
-
-
-//
-// E_AddKeywordsInContext
-//
-// Passed a NULL-terminated list of keyword objects and a context name,
-// the array of keyword objects will be added to the global list under
-// that context.
-//
-void E_AddKeywordsInContext(E_Keyword_t *kw, const char *context)
-{
-   E_Keyword_t *curkw = kw;
-
-   while(curkw->keyword)
-   {
-      unsigned int key = D_HashTableKey(curkw->keyword) % NUMKEYWORDCHAINS;
-
-      curkw->next = e_keyword_chains[key];
-      e_keyword_chains[key] = curkw;
-
-      curkw->context = context;
-
-      ++curkw;
-   }
-}
-
-//
-// E_ValueForKeyword
-//
-// Returns an integer value associated with the given keyword/context pair.
-//
-int E_ValueForKeyword(const char *keyword, const char *context)
-{
-   int ret = 0;
    unsigned int key = D_HashTableKey(keyword) % NUMKEYWORDCHAINS;
    E_Keyword_t *curkw = e_keyword_chains[key];
 
    while(curkw)
    {
-      // found a match for both keyword and context?
-      if(!strcasecmp(keyword, curkw->keyword) &&
-         !strcasecmp(context, curkw->context))
+      // found a match for keyword?
+      if(!strcasecmp(keyword, curkw->keyword))
          break;
 
       curkw = curkw->next;
    }
 
-   if(curkw)
-      ret = curkw->value;
+   return curkw;
+}
+
+//
+// E_ValueForKeyword
+//
+// Returns an integer value associated with the given keyword.
+//
+int E_ValueForKeyword(const char *keyword)
+{
+   int ret = 0;
+   E_Keyword_t *kw = NULL;
+
+   if((kw = E_FindKeyword(keyword)) != NULL )
+      ret = kw->value;
 
    return ret;
 }
 
+static E_Keyword_t builtin_keywords[] =
+{
+   { "false", 0 },
+   { "true",  1 },
+   { NULL }
+};
+
+//
+// E_AddKeywords
+//
+// Passed a NULL-terminated list of keyword objects, the array of keyword 
+// objects will be added to the global hash.
+//
+void E_AddKeywords(E_Keyword_t *kw)
+{
+   static boolean firsttime = true;
+   E_Keyword_t *curkw = kw;
+   E_Keyword_t *oldkw = NULL;
+
+   // on first call, also add builtin keywords
+   if(firsttime)
+   {
+      firsttime = false;
+      E_AddKeywords(builtin_keywords);
+   }
+
+   for(; curkw->keyword; ++curkw)
+   {
+      if((oldkw = E_FindKeyword(curkw->keyword)) != NULL)
+      {
+         // value is the same, this is ok.
+         if(curkw->value == oldkw->value)
+            continue;
+
+         // Internal error - two action funcs are defining the same
+         // keyword with different values. We must prevent this.
+         I_Error("E_AddKeywords: internal error: keyword %s "
+                 "redefined to have value %d\n"
+                 "\t(previously defined with value %d)\n", 
+                 curkw->keyword, curkw->value, oldkw->value);
+      }
+      else
+      {
+         unsigned int key = D_HashTableKey(curkw->keyword) % NUMKEYWORDCHAINS;
+         
+         curkw->next = e_keyword_chains[key];
+         e_keyword_chains[key] = curkw;
+      }
+   }
+}
+
 // EOF
+
 

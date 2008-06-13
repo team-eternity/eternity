@@ -193,6 +193,8 @@ static emod_t *E_EDFDamageTypeForName(const char *name)
    return mod;
 }
 
+#define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
+
 //
 // E_ProcessDamageType
 //
@@ -248,8 +250,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       E_AddDamageTypeToNumHash(mod);
    }
 
-   // get obituary
-   if(def || cfg_size(dtsec, ITEM_DAMAGETYPE_OBIT) > 0)
+   if(IS_SET(dtsec, ITEM_DAMAGETYPE_OBIT))
    {
       obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_OBIT);
 
@@ -276,12 +277,12 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    }
 
    // get self-obituary
-   if(def || cfg_size(dtsec, ITEM_DAMAGETYPE_SELFOBIT) > 0)
+   if(IS_SET(dtsec, ITEM_DAMAGETYPE_SELFOBIT))
    {
       obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_SELFOBIT);
 
       // if modifying, free any that already exists
-      if(!def && mod->obituary)
+      if(!def && mod->selfobituary)
       {
          free(mod->selfobituary);
          mod->selfobituary = NULL;
@@ -303,7 +304,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    }
 
    // process sourcless flag
-   if(def || cfg_size(dtsec, ITEM_DAMAGETYPE_SOURCELESS) > 0)
+   if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
       mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
    E_EDFLogPrintf("\t\t%s damagetype %s\n", 

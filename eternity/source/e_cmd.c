@@ -203,7 +203,7 @@ CONSOLE_COMMAND(e_playsound, 0)
 
    C_Printf("Sound info: %s:%s:%d\n", sfx->mnemonic, sfx->name, sfx->dehackednum);
 
-   S_StartSfxInfo(NULL, sfx, 127, ATTN_NORMAL, false);
+   S_StartSfxInfo(NULL, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
 }
 
 CONSOLE_COMMAND(e_listmapthings, cf_level)

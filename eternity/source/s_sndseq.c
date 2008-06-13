@@ -94,13 +94,14 @@ void S_StopSequence(mobj_t *mo)
       {
          // if allowed, stop any other sound playing
          if(curSeq->sequence->nostopcutoff == false)
-            S_StopSound(curSeq->origin);
+            S_StopSound(curSeq->origin, CHAN_ALL);
 
          // if a stopsound is defined, play it
          if(curSeq->sequence->stopsound)
          {
             S_StartSfxInfo(curSeq->origin, curSeq->sequence->stopsound,
-                           curSeq->volume, curSeq->attenuation, false);
+                           curSeq->volume, curSeq->attenuation, false,
+                           CHAN_AUTO);
          }
 
          // unlink and delete this object
@@ -156,7 +157,7 @@ void S_KillSequence(mobj_t *mo)
       if(curSeq->origin == mo)
       {
          // stop any sound playing
-         S_StopSound(curSeq->origin);
+         S_StopSound(curSeq->origin, CHAN_ALL);
 
          // unlink and delete this object
          M_DLListRemove((mdllistitem_t *)curSeq);
@@ -385,7 +386,7 @@ static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
    if(seq->currentSound)
    {
       S_StartSfxInfo(seq->origin, seq->currentSound, seq->volume, 
-                     seq->attenuation, loop);
+                     seq->attenuation, loop, CHAN_AUTO);
    }
 }
 
@@ -497,7 +498,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       {
          // if allowed, stop any other sound playing
          if(curSeq->sequence->nostopcutoff == false)
-            S_StopSound(curSeq->origin);
+            S_StopSound(curSeq->origin, CHAN_ALL);
          
          // unlink and delete this object
          M_DLListRemove((mdllistitem_t *)curSeq);

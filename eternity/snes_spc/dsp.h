@@ -10,7 +10,11 @@
 	extern "C" {
 #endif
 
+#ifndef __cplusplus
 typedef struct SPC_DSP SPC_DSP;
+#else
+class SPC_DSP;
+#endif
 
 /* Creates new DSP emulator. NULL if out of memory. */
 SPC_DSP* spc_dsp_new( void );

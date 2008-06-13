@@ -448,3 +448,8 @@ damagetype Grenade
 damagetype Hit        { num = 20 }
 damagetype PlayerMisc { num = 24 }
 
+// These damagetypes are special in that things with certain flag values will 
+// inflict them regardless of the value of their mod field.
+
+damagetype Fire { num = 27 }
+

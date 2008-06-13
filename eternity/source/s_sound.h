@@ -69,6 +69,7 @@ typedef enum
    ATTN_IDLE,   // idle: use DOOM's old values all the time
    ATTN_STATIC, // static: fade out quickly
    ATTN_NONE,   // none: Moooo!
+   ATTN_NUM     // number of types
 } soundattn_e;
 
 //
@@ -79,14 +80,15 @@ void S_StartSound(const mobj_t *origin, int sound_id);
 void S_StartSoundName(const mobj_t *origin, const char *name);
 void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
                     int volumeScale, soundattn_e attenuation,
-                    boolean loop);
+                    boolean loop, schannel_e subchannel);
 void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
-                          int volume, soundattn_e attn);
+                          int volume, soundattn_e attn, schannel_e subchannel);
 void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name, 
-                              int volume, soundattn_e attn);
+                              int volume, soundattn_e attn,
+                              schannel_e subchannel);
 
 // Stop sound for thing at <origin>
-void S_StopSound(const mobj_t *origin);
+void S_StopSound(const mobj_t *origin, schannel_e subchannel);
 
 // Start music using <music_id> from sounds.h
 void S_StartMusic(int music_id);

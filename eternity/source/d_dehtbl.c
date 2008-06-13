@@ -38,6 +38,7 @@
 #include "d_dehtbl.h"
 #include "m_queue.h"
 #include "d_mod.h"
+#include "e_lib.h"
 
 //
 // Text Replacement
@@ -1151,190 +1152,191 @@ const char *mapnamesh[] = // haleyjd: heretic map names
 
 // External references to action functions scattered about the code
 
-extern void A_Light0(mobj_t *);
-extern void A_WeaponReady(mobj_t *);
-extern void A_Lower(mobj_t *);
-extern void A_Raise(mobj_t *);
-extern void A_Punch(mobj_t *);
-extern void A_ReFire(mobj_t *);
-extern void A_FirePistol(mobj_t *);
-extern void A_Light1(mobj_t *);
-extern void A_FireShotgun(mobj_t *);
-extern void A_Light2(mobj_t *);
-extern void A_FireShotgun2(mobj_t *);
-extern void A_CheckReload(mobj_t *);
-extern void A_OpenShotgun2(mobj_t *);
-extern void A_LoadShotgun2(mobj_t *);
-extern void A_CloseShotgun2(mobj_t *);
-extern void A_FireCGun(mobj_t *);
-extern void A_GunFlash(mobj_t *);
-extern void A_FireMissile(mobj_t *);
-extern void A_Saw(mobj_t *);
-extern void A_FirePlasma(mobj_t *);
-extern void A_BFGsound(mobj_t *);
-extern void A_FireBFG(mobj_t *);
-extern void A_BFGSpray(mobj_t *);
-extern void A_Explode(mobj_t *);
-extern void A_Pain(mobj_t *);
-extern void A_PlayerScream(mobj_t *);
-extern void A_Fall(mobj_t *);
-extern void A_XScream(mobj_t *);
-extern void A_Look(mobj_t *);
-extern void A_Chase(mobj_t *);
-extern void A_FaceTarget(mobj_t *);
-extern void A_PosAttack(mobj_t *);
-extern void A_Scream(mobj_t *);
-extern void A_SPosAttack(mobj_t *);
-extern void A_VileChase(mobj_t *);
-extern void A_VileStart(mobj_t *);
-extern void A_VileTarget(mobj_t *);
-extern void A_VileAttack(mobj_t *);
-extern void A_StartFire(mobj_t *);
-extern void A_Fire(mobj_t *);
-extern void A_FireCrackle(mobj_t *);
-extern void A_Tracer(mobj_t *);
-extern void A_SkelWhoosh(mobj_t *);
-extern void A_SkelFist(mobj_t *);
-extern void A_SkelMissile(mobj_t *);
-extern void A_FatRaise(mobj_t *);
-extern void A_FatAttack1(mobj_t *);
-extern void A_FatAttack2(mobj_t *);
-extern void A_FatAttack3(mobj_t *);
-extern void A_BossDeath(mobj_t *);
-extern void A_CPosAttack(mobj_t *);
-extern void A_CPosRefire(mobj_t *);
-extern void A_TroopAttack(mobj_t *);
-extern void A_SargAttack(mobj_t *);
-extern void A_HeadAttack(mobj_t *);
-extern void A_BruisAttack(mobj_t *);
-extern void A_SkullAttack(mobj_t *);
-extern void A_Metal(mobj_t *);
-extern void A_SpidRefire(mobj_t *);
-extern void A_BabyMetal(mobj_t *);
-extern void A_BspiAttack(mobj_t *);
-extern void A_Hoof(mobj_t *);
-extern void A_CyberAttack(mobj_t *);
-extern void A_PainAttack(mobj_t *);
-extern void A_PainDie(mobj_t *);
-extern void A_KeenDie(mobj_t *);
-extern void A_BrainPain(mobj_t *);
-extern void A_BrainScream(mobj_t *);
-extern void A_BrainDie(mobj_t *);
-extern void A_BrainAwake(mobj_t *);
-extern void A_BrainSpit(mobj_t *);
-extern void A_SpawnSound(mobj_t *);
-extern void A_SpawnFly(mobj_t *);
-extern void A_BrainExplode(mobj_t *);
-extern void A_Detonate(mobj_t *);        // killough 8/9/98
-extern void A_Mushroom(mobj_t *);        // killough 10/98
-extern void A_Die(mobj_t *);             // killough 11/98
-extern void A_Spawn(mobj_t *);           // killough 11/98
-extern void A_Turn(mobj_t *);            // killough 11/98
-extern void A_Face(mobj_t *);            // killough 11/98
-extern void A_Scratch(mobj_t *);         // killough 11/98
-extern void A_PlaySound(mobj_t *);       // killough 11/98
-extern void A_RandomJump(mobj_t *);      // killough 11/98
-extern void A_LineEffect(mobj_t *);      // killough 11/98
-extern void A_Nailbomb(mobj_t *);
+void A_Light0(mobj_t *);
+void A_WeaponReady(mobj_t *);
+void A_Lower(mobj_t *);
+void A_Raise(mobj_t *);
+void A_Punch(mobj_t *);
+void A_ReFire(mobj_t *);
+void A_FirePistol(mobj_t *);
+void A_Light1(mobj_t *);
+void A_FireShotgun(mobj_t *);
+void A_Light2(mobj_t *);
+void A_FireShotgun2(mobj_t *);
+void A_CheckReload(mobj_t *);
+void A_OpenShotgun2(mobj_t *);
+void A_LoadShotgun2(mobj_t *);
+void A_CloseShotgun2(mobj_t *);
+void A_FireCGun(mobj_t *);
+void A_GunFlash(mobj_t *);
+void A_FireMissile(mobj_t *);
+void A_Saw(mobj_t *);
+void A_FirePlasma(mobj_t *);
+void A_BFGsound(mobj_t *);
+void A_FireBFG(mobj_t *);
+void A_BFGSpray(mobj_t *);
+void A_Explode(mobj_t *);
+void A_Pain(mobj_t *);
+void A_PlayerScream(mobj_t *);
+void A_Fall(mobj_t *);
+void A_XScream(mobj_t *);
+void A_Look(mobj_t *);
+void A_Chase(mobj_t *);
+void A_FaceTarget(mobj_t *);
+void A_PosAttack(mobj_t *);
+void A_Scream(mobj_t *);
+void A_SPosAttack(mobj_t *);
+void A_VileChase(mobj_t *);
+void A_VileStart(mobj_t *);
+void A_VileTarget(mobj_t *);
+void A_VileAttack(mobj_t *);
+void A_StartFire(mobj_t *);
+void A_Fire(mobj_t *);
+void A_FireCrackle(mobj_t *);
+void A_Tracer(mobj_t *);
+void A_SkelWhoosh(mobj_t *);
+void A_SkelFist(mobj_t *);
+void A_SkelMissile(mobj_t *);
+void A_FatRaise(mobj_t *);
+void A_FatAttack1(mobj_t *);
+void A_FatAttack2(mobj_t *);
+void A_FatAttack3(mobj_t *);
+void A_BossDeath(mobj_t *);
+void A_CPosAttack(mobj_t *);
+void A_CPosRefire(mobj_t *);
+void A_TroopAttack(mobj_t *);
+void A_SargAttack(mobj_t *);
+void A_HeadAttack(mobj_t *);
+void A_BruisAttack(mobj_t *);
+void A_SkullAttack(mobj_t *);
+void A_Metal(mobj_t *);
+void A_SpidRefire(mobj_t *);
+void A_BabyMetal(mobj_t *);
+void A_BspiAttack(mobj_t *);
+void A_Hoof(mobj_t *);
+void A_CyberAttack(mobj_t *);
+void A_PainAttack(mobj_t *);
+void A_PainDie(mobj_t *);
+void A_KeenDie(mobj_t *);
+void A_BrainPain(mobj_t *);
+void A_BrainScream(mobj_t *);
+void A_BrainDie(mobj_t *);
+void A_BrainAwake(mobj_t *);
+void A_BrainSpit(mobj_t *);
+void A_SpawnSound(mobj_t *);
+void A_SpawnFly(mobj_t *);
+void A_BrainExplode(mobj_t *);
+void A_Detonate(mobj_t *);        // killough 8/9/98
+void A_Mushroom(mobj_t *);        // killough 10/98
+void A_Die(mobj_t *);             // killough 11/98
+void A_Spawn(mobj_t *);           // killough 11/98
+void A_Turn(mobj_t *);            // killough 11/98
+void A_Face(mobj_t *);            // killough 11/98
+void A_Scratch(mobj_t *);         // killough 11/98
+void A_PlaySound(mobj_t *);       // killough 11/98
+void A_RandomJump(mobj_t *);      // killough 11/98
+void A_LineEffect(mobj_t *);      // killough 11/98
+void A_Nailbomb(mobj_t *);
 
 // haleyjd: start new eternity action functions
-extern void A_SetFlags(mobj_t *);
-extern void A_UnSetFlags(mobj_t *);
-extern void A_BetaSkullAttack(mobj_t *);
-extern void A_StartScript(mobj_t *); // haleyjd 1/25/00: Script wrapper
-extern void A_PlayerStartScript(mobj_t *);
-extern void A_FireGrenade(mobj_t *);
-extern void A_FireCustomBullets(mobj_t *);
-extern void A_FirePlayerMissile(mobj_t *);
-extern void A_CustomPlayerMelee(mobj_t *);
-extern void A_GenTracer(mobj_t *);
-extern void A_BFG11KHit(mobj_t *);
-extern void A_BouncingBFG(mobj_t *);
-extern void A_BFGBurst(mobj_t *);
-extern void A_FireOldBFG(mobj_t *);
-extern void A_KeepChasing(mobj_t *);
-extern void A_Stop(mobj_t *);
-extern void A_PlayerThunk(mobj_t *);
-extern void A_MissileAttack(mobj_t *);
-extern void A_MissileSpread(mobj_t *);
-extern void A_BulletAttack(mobj_t *);
-extern void A_HealthJump(mobj_t *);
-extern void A_CounterJump(mobj_t *);
-extern void A_CounterSwitch(mobj_t *);
-extern void A_SetCounter(mobj_t *);
-extern void A_CopyCounter(mobj_t *);
-extern void A_CounterOp(mobj_t *);
-extern void A_SetTics(mobj_t *);
-extern void A_AproxDistance(mobj_t *);
-extern void A_ShowMessage(mobj_t *);
-extern void A_RandomWalk(mobj_t *);
-extern void A_TargetJump(mobj_t *);
-extern void A_ThingSummon(mobj_t *);
-extern void A_KillChildren(mobj_t *);
-extern void A_WeaponCtrJump(mobj_t *);
-extern void A_WeaponCtrSwitch(mobj_t *);
-extern void A_WeaponSetCtr(mobj_t *);
-extern void A_WeaponCopyCtr(mobj_t *);
-extern void A_WeaponCtrOp(mobj_t *);
-extern void A_AmbientThinker(mobj_t *);
-extern void A_SteamSpawn(mobj_t *);
+void A_SetFlags(mobj_t *);
+void A_UnSetFlags(mobj_t *);
+void A_BetaSkullAttack(mobj_t *);
+void A_StartScript(mobj_t *); // haleyjd 1/25/00: Script wrapper
+void A_PlayerStartScript(mobj_t *);
+void A_FireGrenade(mobj_t *);
+void A_FireCustomBullets(mobj_t *);
+void A_FirePlayerMissile(mobj_t *);
+void A_CustomPlayerMelee(mobj_t *);
+void A_GenTracer(mobj_t *);
+void A_BFG11KHit(mobj_t *);
+void A_BouncingBFG(mobj_t *);
+void A_BFGBurst(mobj_t *);
+void A_FireOldBFG(mobj_t *);
+void A_KeepChasing(mobj_t *);
+void A_Stop(mobj_t *);
+void A_PlayerThunk(mobj_t *);
+void A_MissileAttack(mobj_t *);
+void A_MissileSpread(mobj_t *);
+void A_BulletAttack(mobj_t *);
+void A_HealthJump(mobj_t *);
+void A_CounterJump(mobj_t *);
+void A_CounterSwitch(mobj_t *);
+void A_SetCounter(mobj_t *);
+void A_CopyCounter(mobj_t *);
+void A_CounterOp(mobj_t *);
+void A_SetTics(mobj_t *);
+void A_AproxDistance(mobj_t *);
+void A_ShowMessage(mobj_t *);
+void A_RandomWalk(mobj_t *);
+void A_TargetJump(mobj_t *);
+void A_ThingSummon(mobj_t *);
+void A_KillChildren(mobj_t *);
+void A_WeaponCtrJump(mobj_t *);
+void A_WeaponCtrSwitch(mobj_t *);
+void A_WeaponSetCtr(mobj_t *);
+void A_WeaponCopyCtr(mobj_t *);
+void A_WeaponCtrOp(mobj_t *);
+void A_AmbientThinker(mobj_t *);
+void A_SteamSpawn(mobj_t *);
 
 // haleyjd 10/12/02: Heretic pointers
-extern void A_SpawnGlitter(mobj_t *);
-extern void A_AccelGlitter(mobj_t *);
-extern void A_SpawnAbove(mobj_t *);
-extern void A_MummyAttack(mobj_t *);
-extern void A_MummyAttack2(mobj_t *);
-extern void A_MummySoul(mobj_t *);
-extern void A_HticDrop(mobj_t *);
-extern void A_HticTracer(mobj_t *);
-extern void A_ClinkAttack(mobj_t *);
-extern void A_WizardAtk1(mobj_t *);
-extern void A_WizardAtk2(mobj_t *);
-extern void A_WizardAtk3(mobj_t *);
-extern void A_Srcr2Decide(mobj_t *);
-extern void A_Srcr2Attack(mobj_t *);
-extern void A_BlueSpark(mobj_t *);
-extern void A_GenWizard(mobj_t *);
-extern void A_Sor2DthInit(mobj_t *);
-extern void A_Sor2DthLoop(mobj_t *);
-extern void A_HticExplode(mobj_t *);
-extern void A_HticBossDeath(mobj_t *);
-extern void A_PodPain(mobj_t *);
-extern void A_RemovePod(mobj_t *);
-extern void A_MakePod(mobj_t *);
-extern void A_KnightAttack(mobj_t *);
-extern void A_DripBlood(mobj_t *);
-extern void A_BeastAttack(mobj_t *);
-extern void A_BeastPuff(mobj_t *);
-extern void A_SnakeAttack(mobj_t *);
-extern void A_SnakeAttack2(mobj_t *);
-extern void A_Sor1Chase(mobj_t *);
-extern void A_Sor1Pain(mobj_t *);
-extern void A_Srcr1Attack(mobj_t *);
-extern void A_SorcererRise(mobj_t *);
-extern void A_VolcanoBlast(mobj_t *);
-extern void A_VolcBallImpact(mobj_t *);
-extern void A_MinotaurAtk1(mobj_t *);
-extern void A_MinotaurDecide(mobj_t *);
-extern void A_MinotaurAtk2(mobj_t *);
-extern void A_MinotaurAtk3(mobj_t *);
-extern void A_MinotaurCharge(mobj_t *);
-extern void A_MntrFloorFire(mobj_t *);
-extern void A_LichFire(mobj_t *);
-extern void A_LichWhirlwind(mobj_t *);
-extern void A_LichAttack(mobj_t *);
-extern void A_WhirlwindSeek(mobj_t *);
-extern void A_LichIceImpact(mobj_t *);
-extern void A_LichFireGrow(mobj_t *);
-extern void A_ImpChargeAtk(mobj_t *);
-extern void A_ImpMeleeAtk(mobj_t *);
-extern void A_ImpMissileAtk(mobj_t *);
-extern void A_ImpDeath(mobj_t *);
-extern void A_ImpXDeath1(mobj_t *);
-extern void A_ImpXDeath2(mobj_t *);
-extern void A_ImpExplode(mobj_t *);
-extern void A_PlayerSkull(mobj_t *);
+void A_SpawnGlitter(mobj_t *);
+void A_AccelGlitter(mobj_t *);
+void A_SpawnAbove(mobj_t *);
+void A_MummyAttack(mobj_t *);
+void A_MummyAttack2(mobj_t *);
+void A_MummySoul(mobj_t *);
+void A_HticDrop(mobj_t *);
+void A_HticTracer(mobj_t *);
+void A_ClinkAttack(mobj_t *);
+void A_WizardAtk1(mobj_t *);
+void A_WizardAtk2(mobj_t *);
+void A_WizardAtk3(mobj_t *);
+void A_Srcr2Decide(mobj_t *);
+void A_Srcr2Attack(mobj_t *);
+void A_BlueSpark(mobj_t *);
+void A_GenWizard(mobj_t *);
+void A_Sor2DthInit(mobj_t *);
+void A_Sor2DthLoop(mobj_t *);
+void A_HticExplode(mobj_t *);
+void A_HticBossDeath(mobj_t *);
+void A_PodPain(mobj_t *);
+void A_RemovePod(mobj_t *);
+void A_MakePod(mobj_t *);
+void A_KnightAttack(mobj_t *);
+void A_DripBlood(mobj_t *);
+void A_BeastAttack(mobj_t *);
+void A_BeastPuff(mobj_t *);
+void A_SnakeAttack(mobj_t *);
+void A_SnakeAttack2(mobj_t *);
+void A_Sor1Chase(mobj_t *);
+void A_Sor1Pain(mobj_t *);
+void A_Srcr1Attack(mobj_t *);
+void A_SorcererRise(mobj_t *);
+void A_VolcanoBlast(mobj_t *);
+void A_VolcBallImpact(mobj_t *);
+void A_MinotaurAtk1(mobj_t *);
+void A_MinotaurDecide(mobj_t *);
+void A_MinotaurAtk2(mobj_t *);
+void A_MinotaurAtk3(mobj_t *);
+void A_MinotaurCharge(mobj_t *);
+void A_MntrFloorFire(mobj_t *);
+void A_LichFire(mobj_t *);
+void A_LichWhirlwind(mobj_t *);
+void A_LichAttack(mobj_t *);
+void A_WhirlwindSeek(mobj_t *);
+void A_LichIceImpact(mobj_t *);
+void A_LichFireGrow(mobj_t *);
+void A_ImpChargeAtk(mobj_t *);
+void A_ImpMeleeAtk(mobj_t *);
+void A_ImpMissileAtk(mobj_t *);
+void A_ImpDeath(mobj_t *);
+void A_ImpXDeath1(mobj_t *);
+void A_ImpXDeath2(mobj_t *);
+void A_ImpExplode(mobj_t *);
+void A_PlayerSkull(mobj_t *);
+void A_ClearSkin(mobj_t *mo);
 
 // zdoom-inspired pointers
 void A_JumpIfTargetInLOS(mobj_t *);
@@ -1343,6 +1345,7 @@ void A_AlertMonsters(mobj_t *);
 void A_CheckPlayerDone(mobj_t *);
 void A_FadeIn(mobj_t *);
 void A_FadeOut(mobj_t *);
+void A_PlaySoundEx(mobj_t *mo);
 
 // eternity tc ptrs: TODO: remove these?
 void A_FogSpawn(mobj_t *);
@@ -1352,199 +1355,232 @@ void A_FogMove(mobj_t *);
 void A_PainNukeSpec(mobj_t *);
 void A_SorcNukeSpec(mobj_t *);
 
+// Keyword sets for parameterized codepointers
+#define EXTKWDS(a) extern kwds_ ## a []
+#define KWDS(a)           kwds_ ## a
+
+EXTKWDS(A_FireCustomBullets);
+EXTKWDS(A_FirePlayerMissile);
+EXTKWDS(A_CustomPlayerMelee);
+EXTKWDS(A_PlayerThunk);
+EXTKWDS(A_WeaponCtrJump);
+EXTKWDS(A_WeaponCtrSwitch);
+EXTKWDS(A_WeaponSetCtr);
+EXTKWDS(A_WeaponCtrOp);
+EXTKWDS(A_PlaySound);
+EXTKWDS(A_HticExplode);
+EXTKWDS(A_Scratch);
+EXTKWDS(A_MissileAttack);
+EXTKWDS(A_BulletAttack);
+EXTKWDS(A_ThingSummon);
+EXTKWDS(A_KillChildren);
+EXTKWDS(A_HealthJump);
+EXTKWDS(A_CounterJump);
+EXTKWDS(A_SetCounter);
+EXTKWDS(A_CounterOp);
+EXTKWDS(A_SetTics);
+EXTKWDS(A_StartScript);
+EXTKWDS(A_PlayerStartScript);
+EXTKWDS(A_ShowMessage);
+EXTKWDS(A_PlaySoundEx);
+
 // haleyjd 03/14/03: moved here, added hashing, eliminated useless
 // A_ prefixes on mnemonics
 
 deh_bexptr deh_bexptrs[] =
 {
-  {A_Light0,            "Light0"},
-  {A_WeaponReady,       "WeaponReady"},
-  {A_Lower,             "Lower"},
-  {A_Raise,             "Raise"},
-  {A_Punch,             "Punch"},
-  {A_ReFire,            "ReFire"},
-  {A_FirePistol,        "FirePistol"},
-  {A_Light1,            "Light1"},
-  {A_FireShotgun,       "FireShotgun"},
-  {A_Light2,            "Light2"},
-  {A_FireShotgun2,      "FireShotgun2"},
-  {A_CheckReload,       "CheckReload"},
-  {A_OpenShotgun2,      "OpenShotgun2"},
-  {A_LoadShotgun2,      "LoadShotgun2"},
-  {A_CloseShotgun2,     "CloseShotgun2"},
-  {A_FireCGun,          "FireCGun"},
-  {A_GunFlash,          "GunFlash"},
-  {A_FireMissile,       "FireMissile"},
-  {A_Saw,               "Saw"},
-  {A_FirePlasma,        "FirePlasma"},
-  {A_BFGsound,          "BFGsound"},
-  {A_FireBFG,           "FireBFG"},
-  {A_BFGSpray,          "BFGSpray"},
-  {A_Explode,           "Explode",      BPF_PTHUNK},
-  {A_Pain,              "Pain",         BPF_PTHUNK},
-  {A_PlayerScream,      "PlayerScream", BPF_PTHUNK},
-  {A_Fall,              "Fall",         BPF_PTHUNK},
-  {A_XScream,           "XScream",      BPF_PTHUNK},
-  {A_Look,              "Look"},
-  {A_Chase,             "Chase"},
-  {A_FaceTarget,        "FaceTarget",   BPF_PTHUNK},
-  {A_PosAttack,         "PosAttack",    BPF_PTHUNK},
-  {A_Scream,            "Scream",       BPF_PTHUNK},
-  {A_SPosAttack,        "SPosAttack",   BPF_PTHUNK},
-  {A_VileChase,         "VileChase"},
-  {A_VileStart,         "VileStart",    BPF_PTHUNK},
-  {A_VileTarget,        "VileTarget"},
-  {A_VileAttack,        "VileAttack",   BPF_PTHUNK},
-  {A_StartFire,         "StartFire"},
-  {A_Fire,              "Fire"},
-  {A_FireCrackle,       "FireCrackle"},
-  {A_Tracer,            "Tracer"},
-  {A_SkelWhoosh,        "SkelWhoosh",   BPF_PTHUNK},
-  {A_SkelFist,          "SkelFist",     BPF_PTHUNK},
-  {A_SkelMissile,       "SkelMissile",  BPF_PTHUNK},
-  {A_FatRaise,          "FatRaise",     BPF_PTHUNK},
-  {A_FatAttack1,        "FatAttack1",   BPF_PTHUNK},
-  {A_FatAttack2,        "FatAttack2",   BPF_PTHUNK},
-  {A_FatAttack3,        "FatAttack3",   BPF_PTHUNK},
-  {A_BossDeath,         "BossDeath"},
-  {A_CPosAttack,        "CPosAttack",   BPF_PTHUNK},
-  {A_CPosRefire,        "CPosRefire",   BPF_PTHUNK},
-  {A_TroopAttack,       "TroopAttack",  BPF_PTHUNK},
-  {A_SargAttack,        "SargAttack",   BPF_PTHUNK},
-  {A_HeadAttack,        "HeadAttack",   BPF_PTHUNK},
-  {A_BruisAttack,       "BruisAttack",  BPF_PTHUNK},
-  {A_SkullAttack,       "SkullAttack",  BPF_PTHUNK},
-  {A_Metal,             "Metal"},
-  {A_SpidRefire,        "SpidRefire",   BPF_PTHUNK},
-  {A_BabyMetal,         "BabyMetal"},
-  {A_BspiAttack,        "BspiAttack",   BPF_PTHUNK},
-  {A_Hoof,              "Hoof"},
-  {A_CyberAttack,       "CyberAttack",  BPF_PTHUNK},
-  {A_PainAttack,        "PainAttack",   BPF_PTHUNK},
-  {A_PainDie,           "PainDie",      BPF_PTHUNK},
-  {A_KeenDie,           "KeenDie"},
-  {A_BrainPain,         "BrainPain",    BPF_PTHUNK},
-  {A_BrainScream,       "BrainScream",  BPF_PTHUNK},
-  {A_BrainDie,          "BrainDie",     BPF_PTHUNK},
-  {A_BrainAwake,        "BrainAwake",   BPF_PTHUNK},
-  {A_BrainSpit,         "BrainSpit",    BPF_PTHUNK},
-  {A_SpawnSound,        "SpawnSound"},
-  {A_SpawnFly,          "SpawnFly"},
-  {A_BrainExplode,      "BrainExplode", BPF_PTHUNK},
-  {A_Detonate,          "Detonate",     BPF_PTHUNK}, // killough 8/9/98
-  {A_Mushroom,          "Mushroom",     BPF_PTHUNK}, // killough 10/98
-  {A_Die,               "Die",          BPF_PTHUNK}, // killough 11/98
-  {A_Spawn,             "Spawn",        BPF_PTHUNK}, // killough 11/98
-  {A_Turn,              "Turn",         BPF_PTHUNK}, // killough 11/98
-  {A_Face,              "Face",         BPF_PTHUNK}, // killough 11/98
-  {A_Scratch,           "Scratch",      BPF_PTHUNK}, // killough 11/98
-  {A_PlaySound,         "PlaySound",    BPF_PTHUNK}, // killough 11/98
-  {A_RandomJump,        "RandomJump"},           // killough 11/98
-  {A_LineEffect,        "LineEffect"},           // killough 11/98
-  {A_Nailbomb,          "Nailbomb",     BPF_PTHUNK}, //sf
+  {A_Light0,        "Light0"},
+  {A_WeaponReady,   "WeaponReady"},
+  {A_Lower,         "Lower"},
+  {A_Raise,         "Raise"},
+  {A_Punch,         "Punch"},
+  {A_ReFire,        "ReFire"},
+  {A_FirePistol,    "FirePistol"},
+  {A_Light1,        "Light1"},
+  {A_FireShotgun,   "FireShotgun"},
+  {A_Light2,        "Light2"},
+  {A_FireShotgun2,  "FireShotgun2"},
+  {A_CheckReload,   "CheckReload"},
+  {A_OpenShotgun2,  "OpenShotgun2"},
+  {A_LoadShotgun2,  "LoadShotgun2"},
+  {A_CloseShotgun2, "CloseShotgun2"},
+  {A_FireCGun,      "FireCGun"},
+  {A_GunFlash,      "GunFlash"},
+  {A_FireMissile,   "FireMissile"},
+  {A_Saw,           "Saw"},
+  {A_FirePlasma,    "FirePlasma"},
+  {A_BFGsound,      "BFGsound"},
+  {A_FireBFG,       "FireBFG"},
+  {A_BFGSpray,      "BFGSpray"},
+  {A_Explode,       "Explode" },
+  {A_Pain,          "Pain" },
+  {A_PlayerScream,  "PlayerScream" },
+  {A_Fall,          "Fall" },
+  {A_XScream,       "XScream" },
+  {A_Look,          "Look"},
+  {A_Chase,         "Chase"},
+  {A_FaceTarget,    "FaceTarget"},
+  {A_PosAttack,     "PosAttack"},
+  {A_Scream,        "Scream"},
+  {A_SPosAttack,    "SPosAttack"},
+  {A_VileChase,     "VileChase"},
+  {A_VileStart,     "VileStart"},
+  {A_VileTarget,    "VileTarget"},
+  {A_VileAttack,    "VileAttack"},
+  {A_StartFire,     "StartFire"},
+  {A_Fire,          "Fire"},
+  {A_FireCrackle,   "FireCrackle"},
+  {A_Tracer,        "Tracer"},
+  {A_SkelWhoosh,    "SkelWhoosh"},
+  {A_SkelFist,      "SkelFist"},
+  {A_SkelMissile,   "SkelMissile"},
+  {A_FatRaise,      "FatRaise"},
+  {A_FatAttack1,    "FatAttack1"},
+  {A_FatAttack2,    "FatAttack2"},
+  {A_FatAttack3,    "FatAttack3"},
+  {A_BossDeath,     "BossDeath"},
+  {A_CPosAttack,    "CPosAttack"},
+  {A_CPosRefire,    "CPosRefire"},
+  {A_TroopAttack,   "TroopAttack"},
+  {A_SargAttack,    "SargAttack"},
+  {A_HeadAttack,    "HeadAttack"},
+  {A_BruisAttack,   "BruisAttack"},
+  {A_SkullAttack,   "SkullAttack"},
+  {A_Metal,         "Metal"},
+  {A_SpidRefire,    "SpidRefire"},
+  {A_BabyMetal,     "BabyMetal"},
+  {A_BspiAttack,    "BspiAttack"},
+  {A_Hoof,          "Hoof"},
+  {A_CyberAttack,   "CyberAttack"},
+  {A_PainAttack,    "PainAttack"},
+  {A_PainDie,       "PainDie"},
+  {A_KeenDie,       "KeenDie"},
+  {A_BrainPain,     "BrainPain"},
+  {A_BrainScream,   "BrainScream"},
+  {A_BrainDie,      "BrainDie"},
+  {A_BrainAwake,    "BrainAwake"},
+  {A_BrainSpit,     "BrainSpit"},
+  {A_SpawnSound,    "SpawnSound"},
+  {A_SpawnFly,      "SpawnFly"},
+  {A_BrainExplode,  "BrainExplode"},
+  
+  // killough 8/9/98 - 11/98: MBF Pointers  
+  {A_Detonate,      "Detonate"},
+  {A_Mushroom,      "Mushroom"},
+  {A_Die,           "Die"},
+  {A_Spawn,         "Spawn"},
+  {A_Turn,          "Turn"},
+  {A_Face,          "Face"},
+  {A_Scratch,       "Scratch",   KWDS(A_Scratch) },
+  {A_PlaySound,     "PlaySound", KWDS(A_PlaySound) },
+  {A_RandomJump,    "RandomJump"},
+  {A_LineEffect,    "LineEffect"},
+  
+  {A_Nailbomb,      "Nailbomb"}, // sf
 
   // haleyjd: start new eternity codeptrs
-  {A_StartScript,       "StartScript"},
-  {A_PlayerStartScript, "PlayerStartScript"},
-  {A_SetFlags,          "SetFlags",        BPF_PTHUNK},
-  {A_UnSetFlags,        "UnSetFlags",      BPF_PTHUNK},
-  {A_BetaSkullAttack,   "BetaSkullAttack", BPF_PTHUNK}, // haleyjd: MBF comp.
-  {A_FireGrenade,       "FireGrenade"},
-  {A_FireCustomBullets, "FireCustomBullets"},
-  {A_FirePlayerMissile, "FirePlayerMissile"},
-  {A_CustomPlayerMelee, "CustomPlayerMelee"},
+  {A_StartScript,       "StartScript",       KWDS(A_StartScript)       },
+  {A_PlayerStartScript, "PlayerStartScript", KWDS(A_PlayerStartScript) },
+  {A_SetFlags,          "SetFlags" },
+  {A_UnSetFlags,        "UnSetFlags" },
+  {A_BetaSkullAttack,   "BetaSkullAttack" },
+  {A_FireGrenade,       "FireGrenade" },
+  {A_FireCustomBullets, "FireCustomBullets", KWDS(A_FireCustomBullets) },
+  {A_FirePlayerMissile, "FirePlayerMissile", KWDS(A_FirePlayerMissile) },
+  {A_CustomPlayerMelee, "CustomPlayerMelee", KWDS(A_CustomPlayerMelee) },
   {A_GenTracer,         "GenTracer"},
   {A_BFG11KHit,         "BFG11KHit"},
   {A_BouncingBFG,       "BouncingBFG"},
   {A_BFGBurst,          "BFGBurst"},
-  {A_FireOldBFG,        "FireOldBFG"},   // haleyjd: added for EDF
-  {A_KeepChasing,       "KeepChasing"},  // haleyjd: lost pointer!
-  {A_Stop,              "Stop",          BPF_PTHUNK}, // haleyjd: ditto
-  {A_PlayerThunk,       "PlayerThunk"},
-  {A_MissileAttack,     "MissileAttack", BPF_PTHUNK},
-  {A_MissileSpread,     "MissileSpread", BPF_PTHUNK},
-  {A_BulletAttack,      "BulletAttack",  BPF_PTHUNK},
-  {A_HealthJump,        "HealthJump"},
-  {A_CounterJump,       "CounterJump"},
+  {A_FireOldBFG,        "FireOldBFG"},
+  {A_KeepChasing,       "KeepChasing"},
+  {A_Stop,              "Stop" },
+  {A_PlayerThunk,       "PlayerThunk",       KWDS(A_PlayerThunk) },
+  {A_MissileAttack,     "MissileAttack",     KWDS(A_MissileAttack) },
+  {A_MissileSpread,     "MissileSpread"},
+  {A_BulletAttack,      "BulletAttack",      KWDS(A_BulletAttack) },
+  {A_HealthJump,        "HealthJump",        KWDS(A_HealthJump) },
+  {A_CounterJump,       "CounterJump",       KWDS(A_CounterJump) },
   {A_CounterSwitch,     "CounterSwitch"},
-  {A_SetCounter,        "SetCounter",    BPF_PTHUNK},
-  {A_CopyCounter,       "CopyCounter",   BPF_PTHUNK},
-  {A_CounterOp,         "CounterOp",     BPF_PTHUNK},
-  {A_SetTics,           "SetTics",       BPF_PTHUNK},
-  {A_AproxDistance,     "AproxDistance", BPF_PTHUNK},
-  {A_ShowMessage,       "ShowMessage",   BPF_PTHUNK},
+  {A_SetCounter,        "SetCounter",        KWDS(A_SetCounter) },
+  {A_CopyCounter,       "CopyCounter"},
+  {A_CounterOp,         "CounterOp",         KWDS(A_CounterOp) },
+  {A_SetTics,           "SetTics",           KWDS(A_SetTics) },
+  {A_AproxDistance,     "AproxDistance"},
+  {A_ShowMessage,       "ShowMessage",       KWDS(A_ShowMessage) },
   {A_RandomWalk,        "RandomWalk"},
   {A_TargetJump,        "TargetJump"},
-  {A_ThingSummon,       "ThingSummon",   BPF_PTHUNK},
-  {A_KillChildren,      "KillChildren",  BPF_PTHUNK},
-  {A_WeaponCtrJump,     "WeaponCtrJump"},
-  {A_WeaponCtrSwitch,   "WeaponCtrSwitch"},
-  {A_WeaponSetCtr,      "WeaponSetCtr"},
+  {A_ThingSummon,       "ThingSummon",       KWDS(A_ThingSummon) },
+  {A_KillChildren,      "KillChildren",      KWDS(A_KillChildren) },
+  {A_WeaponCtrJump,     "WeaponCtrJump",     KWDS(A_WeaponCtrJump) },
+  {A_WeaponCtrSwitch,   "WeaponCtrSwitch",   KWDS(A_WeaponCtrSwitch) },
+  {A_WeaponSetCtr,      "WeaponSetCtr",      KWDS(A_WeaponSetCtr) },
   {A_WeaponCopyCtr,     "WeaponCopyCtr"},
-  {A_WeaponCtrOp,       "WeaponCtrOp"},
+  {A_WeaponCtrOp,       "WeaponCtrOp",       KWDS(A_WeaponCtrOp) },
   {A_AmbientThinker,    "AmbientThinker"},
-  {A_SteamSpawn,        "SteamSpawn",    BPF_PTHUNK },
+  {A_SteamSpawn,        "SteamSpawn" },
 
   // haleyjd 07/13/03: nuke specials
   {A_PainNukeSpec,      "PainNukeSpec"},
   {A_SorcNukeSpec,      "SorcNukeSpec"},
 
   // haleyjd: Heretic pointers
-  {A_SpawnGlitter,      "SpawnGlitter",  BPF_PTHUNK},
-  {A_AccelGlitter,      "AccelGlitter",  BPF_PTHUNK},
-  {A_SpawnAbove,        "SpawnAbove",    BPF_PTHUNK},
-  {A_MummyAttack,       "MummyAttack",   BPF_PTHUNK},
-  {A_MummyAttack2,      "MummyAttack2",  BPF_PTHUNK},
-  {A_MummySoul,         "MummySoul",     BPF_PTHUNK},
-  {A_HticDrop,          "HticDrop",      BPF_PTHUNK},
+  {A_SpawnGlitter,      "SpawnGlitter"},
+  {A_AccelGlitter,      "AccelGlitter"},
+  {A_SpawnAbove,        "SpawnAbove"},
+  {A_MummyAttack,       "MummyAttack"},
+  {A_MummyAttack2,      "MummyAttack2"},
+  {A_MummySoul,         "MummySoul"},
+  {A_HticDrop,          "HticDrop"},
   {A_HticTracer,        "HticTracer"},
-  {A_ClinkAttack,       "ClinkAttack",   BPF_PTHUNK},
-  {A_WizardAtk1,        "WizardAtk1",    BPF_PTHUNK},
-  {A_WizardAtk2,        "WizardAtk2",    BPF_PTHUNK},
-  {A_WizardAtk3,        "WizardAtk3",    BPF_PTHUNK},
+  {A_ClinkAttack,       "ClinkAttack"},
+  {A_WizardAtk1,        "WizardAtk1"},
+  {A_WizardAtk2,        "WizardAtk2"},
+  {A_WizardAtk3,        "WizardAtk3"},
   {A_Srcr2Decide,       "Srcr2Decide"},
-  {A_Srcr2Attack,       "Srcr2Attack",   BPF_PTHUNK},
-  {A_BlueSpark,         "BlueSpark",     BPF_PTHUNK},
+  {A_Srcr2Attack,       "Srcr2Attack"},
+  {A_BlueSpark,         "BlueSpark"},
   {A_GenWizard,         "GenWizard"},
-  {A_Sor2DthInit,       "Sor2DthInit",   BPF_PTHUNK},
+  {A_Sor2DthInit,       "Sor2DthInit"},
   {A_Sor2DthLoop,       "Sor2DthLoop"},
-  {A_HticExplode,       "HticExplode",   BPF_PTHUNK},
+  {A_HticExplode,       "HticExplode",       KWDS(A_HticExplode) },
   {A_HticBossDeath,     "HticBossDeath"},
-  {A_PodPain,           "PodPain",       BPF_PTHUNK},
-  {A_RemovePod,         "RemovePod",     BPF_PTHUNK},
-  {A_MakePod,           "MakePod",       BPF_PTHUNK},
-  {A_KnightAttack,      "KnightAttack",  BPF_PTHUNK},
-  {A_DripBlood,         "DripBlood",     BPF_PTHUNK},
-  {A_BeastAttack,       "BeastAttack",   BPF_PTHUNK},
-  {A_BeastPuff,         "BeastPuff",     BPF_PTHUNK},
+  {A_PodPain,           "PodPain"},
+  {A_RemovePod,         "RemovePod"},
+  {A_MakePod,           "MakePod"},
+  {A_KnightAttack,      "KnightAttack"},
+  {A_DripBlood,         "DripBlood"},
+  {A_BeastAttack,       "BeastAttack"},
+  {A_BeastPuff,         "BeastPuff"},
   {A_SnakeAttack,       "SnakeAttack"},
   {A_SnakeAttack2,      "SnakeAttack2"},
   {A_Sor1Chase,         "Sor1Chase"},
-  {A_Sor1Pain,          "Sor1Pain",      BPF_PTHUNK},
+  {A_Sor1Pain,          "Sor1Pain"},
   {A_Srcr1Attack,       "Srcr1Attack"},
-  {A_SorcererRise,      "SorcererRise",  BPF_PTHUNK},
-  {A_VolcanoBlast,      "VolcanoBlast",  BPF_PTHUNK},
+  {A_SorcererRise,      "SorcererRise"},
+  {A_VolcanoBlast,      "VolcanoBlast"},
   {A_VolcBallImpact,    "VolcBallImpact"},
-  {A_MinotaurAtk1,      "MinotaurAtk1",  BPF_PTHUNK},
+  {A_MinotaurAtk1,      "MinotaurAtk1"},
   {A_MinotaurDecide,    "MinotaurDecide"},
-  {A_MinotaurAtk2,      "MinotaurAtk2",  BPF_PTHUNK},
+  {A_MinotaurAtk2,      "MinotaurAtk2"},
   {A_MinotaurAtk3,      "MinotaurAtk3"},
   {A_MinotaurCharge,    "MinotaurCharge"},
   {A_MntrFloorFire,     "MntrFloorFire"},
-  {A_LichFire,          "LichFire",      BPF_PTHUNK},
-  {A_LichWhirlwind,     "LichWhirlwind", BPF_PTHUNK},
-  {A_LichAttack,        "LichAttack",    BPF_PTHUNK},
+  {A_LichFire,          "LichFire"},
+  {A_LichWhirlwind,     "LichWhirlwind"},
+  {A_LichAttack,        "LichAttack"},
   {A_WhirlwindSeek,     "WhirlwindSeek" },
-  {A_LichIceImpact,     "LichIceImpact", BPF_PTHUNK},
+  {A_LichIceImpact,     "LichIceImpact"},
   {A_LichFireGrow,      "LichFireGrow" },
   {A_ImpChargeAtk,      "ImpChargeAtk" },
-  {A_ImpMeleeAtk,       "ImpMeleeAtk",   BPF_PTHUNK},
-  {A_ImpMissileAtk,     "ImpMissileAtk", BPF_PTHUNK},
+  {A_ImpMeleeAtk,       "ImpMeleeAtk"},
+  {A_ImpMissileAtk,     "ImpMissileAtk"},
   {A_ImpDeath,          "ImpDeath"},
   {A_ImpXDeath1,        "ImpXDeath1"},
   {A_ImpXDeath2,        "ImpXDeath2"},
   {A_ImpExplode,        "ImpExplode"},
   {A_PlayerSkull,       "PlayerSkull"},
+  {A_ClearSkin,         "ClearSkin"},
 
   // zdoom-inspired pointers
   {A_AlertMonsters,     "AlertMonsters"},
@@ -1552,6 +1588,7 @@ deh_bexptr deh_bexptrs[] =
   {A_FadeIn,            "FadeIn"},
   {A_FadeOut,           "FadeOut"},
   {A_JumpIfTargetInLOS, "JumpIfTargetInLOS"},
+  {A_PlaySoundEx,       "PlaySoundEx",       KWDS(A_PlaySoundEx) },
   {A_SetTranslucent,    "SetTranslucent"},
 
   // ETERNITY TC ptrs -- TODO: eliminate these
@@ -1767,6 +1804,10 @@ static void D_BEXPtrHashInit(void)
 
       deh_bexptrs[i].next = bexcpchains[key];
       bexcpchains[key] = i;
+
+      // haleyjd 06/12/08: also add EDF keywords if defined
+      if(deh_bexptrs[i].kwds)
+         E_AddKeywords((E_Keyword_t *)deh_bexptrs[i].kwds);
    }
 }
 
