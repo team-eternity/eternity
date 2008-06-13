@@ -480,10 +480,10 @@ static int untouched(line_t *ld)
 {
    fixed_t x, y, tmbbox[4];
    return 
-     (tm->bbox[BOXRIGHT] = (x=tm->thing->x)+tm->thing->radius) <= ld->bbox[BOXLEFT] ||
-     (tm->bbox[BOXLEFT] = x-tm->thing->radius) >= ld->bbox[BOXRIGHT] ||
-     (tm->bbox[BOXTOP] = (y=tm->thing->y)+tm->thing->radius) <= ld->bbox[BOXBOTTOM] ||
-     (tm->bbox[BOXBOTTOM] = y-tm->thing->radius) >= ld->bbox[BOXTOP] ||
+     (tmbbox[BOXRIGHT] = (x=tm->thing->x)+tm->thing->radius) <= ld->bbox[BOXLEFT] ||
+     (tmbbox[BOXLEFT] = x-tm->thing->radius) >= ld->bbox[BOXRIGHT] ||
+     (tmbbox[BOXTOP] = (y=tm->thing->y)+tm->thing->radius) <= ld->bbox[BOXBOTTOM] ||
+     (tmbbox[BOXBOTTOM] = y-tm->thing->radius) >= ld->bbox[BOXTOP] ||
      P_BoxOnLineSide(tmbbox, ld) != -1;
 }
 
@@ -562,6 +562,9 @@ boolean PIT_CheckLine(line_t *ld)
 
    if(P_BoxOnLineSide(tm->bbox, ld) != -1)
       return true; // didn't hit it
+
+   if(ld - lines == 9608)
+      ld = ld;
 
    // A line has been hit
    
