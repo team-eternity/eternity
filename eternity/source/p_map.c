@@ -563,9 +563,6 @@ boolean PIT_CheckLine(line_t *ld)
    if(P_BoxOnLineSide(tm->bbox, ld) != -1)
       return true; // didn't hit it
 
-   if(ld - lines == 9608)
-      ld = ld;
-
    // A line has been hit
    
    // The moving thing's destination position will cross the given line.
