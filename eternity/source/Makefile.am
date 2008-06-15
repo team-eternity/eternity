@@ -24,7 +24,7 @@ f_wipe.h        g_bind.c       g_bind.h    g_cmd.c     g_dmflag.c  g_dmflag.h  g
 g_game.h        g_gfs.c        g_gfs.h     hi_stuff.c  hi_stuff.h  hu_frags.c  hu_frags.h	\
 hu_over.c       hu_over.h      hu_stuff.c  hu_stuff.h  i_net.h     info.c      info.h		\
 in_lude.c       in_lude.h      i_sound.h   i_system.h  i_video.h   m_argv.c    m_argv.h	\
-m_bbox.c        m_bbox.h       m_cheat.c   p_xenemy.c  p_xenemy.h						\
+m_bbox.c        m_bbox.h       m_cheat.c   p_xenemy.c  p_xenemy.h  e_mod.c     e_mod.h					\
 m_cheat.h       m_dllist.h     m_fcvt.c    m_fcvt.h    m_fixed.h   m_misc.c    m_misc.h	\
 mn_emenu.c      mn_emenu.h     mn_engin.c  mn_engin.h  mn_files.c  mn_files.h  mn_htic.c	\
 mn_htic.h       mn_menus.c     mn_menus.h  mn_misc.c   mn_misc.h   mn_skinv.c  m_qstr.c	\

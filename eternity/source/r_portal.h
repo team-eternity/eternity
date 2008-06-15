@@ -133,6 +133,7 @@ typedef enum
    pw_line
 } pwindowtype_e;
 
+struct pwindow_s;	//prototype to shut up gcc warnings
 typedef void (*R_WindowFunc)(struct pwindow_s *);
 
 typedef struct pwindow_s
@@ -151,7 +152,6 @@ typedef struct pwindow_s
 
    struct pwindow_s *next, *child;
 } pwindow_t;
-
 
 // SoM: Cardboard
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
