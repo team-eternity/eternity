@@ -88,8 +88,9 @@ extern int  usegamma;// SoM: ANYRES no long need hires        // killough 11/98
 
 // haleyjd: DOSDoom-style translucency lookup tables
 extern boolean flexTranInit;
-extern unsigned int Col2RGB[65][256];
-extern byte RGB8k[16][32][16];
+extern unsigned int Col2RGB8[65][256];
+unsigned int *Col2RGB8_LessPrecision[65];
+extern byte RGB32k[32][32][32];
 
 //jff 4/24/98 loads color translation lumps
 void V_InitColorTranslation(void);

@@ -612,7 +612,6 @@ void R_ProjectSprite(mobj_t *thing)
    if((thing->flags2 & MF2_DONTDRAW) || !thing->translucency)
       return; // don't generate vissprite
 
-
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = (thing->x / 65536.0f) - view.x;
    tempy = (thing->y / 65536.0f) - view.y;
@@ -1813,13 +1812,13 @@ void R_DrawParticle(vissprite_t *vis)
          {
             unsigned int bg, fg;
             unsigned int *fg2rgb, *bg2rgb;
-            fixed_t fglevel, bglevel;
+            unsigned int fglevel, bglevel;
 
             // look up translucency information
             fglevel = ((vis->mobjflags + 1) << 8) & ~0x3ff;
             bglevel = FRACUNIT - fglevel;
-            fg2rgb  = Col2RGB[fglevel >> 10];
-            bg2rgb  = Col2RGB[bglevel >> 10];
+            fg2rgb  = Col2RGB8[fglevel >> 10];
+            bg2rgb  = Col2RGB8[bglevel >> 10];
             fg      = fg2rgb[color]; // foreground color is invariant
 
             do // step in y
@@ -1829,8 +1828,8 @@ void R_DrawParticle(vissprite_t *vis)
                do // step in x
                {
                   bg = bg2rgb[*dest];
-                  bg = (fg + bg) | 0xf07c3e1f;
-                  *dest++ = RGB8k[0][0][(bg >> 5) & (bg >> 19)];
+                  bg = (fg + bg) | 0x1f07c1f;
+                  *dest++ = RGB32k[0][0][bg & (bg >> 15)];
                } 
                while(--count);
                dest += spacing;  // go to next row

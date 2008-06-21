@@ -346,8 +346,8 @@ static void R_FlushWholeFlex(void)
          // haleyjd 09/12/04: use precalculated lookups
          fg = temp_fg2rgb[*source];
          bg = temp_bg2rgb[*dest];
-         fg = (fg+bg) | 0xf07c3e1f;
-         *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+         fg = (fg+bg) | 0x1f07c1f;
+         *dest = RGB32k[0][0][fg & (fg>>15)];
          
          source += 4;
          dest += linesize;
@@ -380,8 +380,8 @@ static void R_FlushHTFlex(void)
             // haleyjd 09/12/04: use precalculated lookups
             fg = temp_fg2rgb[*source];
             bg = temp_bg2rgb[*dest];
-            fg = (fg+bg) | 0xf07c3e1f;
-            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest = RGB32k[0][0][fg & (fg>>15)];
             
             source += 4;
             dest += linesize;
@@ -400,8 +400,8 @@ static void R_FlushHTFlex(void)
             // haleyjd 09/12/04: use precalculated lookups
             fg = temp_fg2rgb[*source];
             bg = temp_bg2rgb[*dest];
-            fg = (fg+bg) | 0xf07c3e1f;
-            *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest = RGB32k[0][0][fg & (fg>>15)];
             
             source += 4;
             dest += linesize;
@@ -429,16 +429,16 @@ static void R_FlushWholeFlexAdd(void)
       while(--count >= 0)
       {
          // mask out LSBs in green and red to allow overflow
-         a = temp_fg2rgb[*source] & 0xFFBFDFF;
-         b = temp_bg2rgb[*dest] & 0xFFBFDFF;
+         a = temp_fg2rgb[*source] + temp_bg2rgb[*dest];
+         b = a;
          
-         a  = a + b;                      // add with overflow
-         b  = a & 0x10040200;             // isolate LSBs
-         b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-         a |= 0xF07C3E1F;                 // apply normal tl mask
-         a |= b;                          // mask in clamped values
+         a |= 0x01f07c1f;
+         b &= 0x40100400;
+         a &= 0x3fffffff;
+         b  = b - (b >> 5);
+         a |= b;
          
-         *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+         *dest = RGB32k[0][0][a & (a >> 15)];
          
          source += 4;
          dest += linesize;
@@ -469,16 +469,16 @@ static void R_FlushHTFlexAdd(void)
          while(--count >= 0)
          {
             // mask out LSBs in green and red to allow overflow
-            a = temp_fg2rgb[*source] & 0xFFBFDFF;
-            b = temp_bg2rgb[*dest] & 0xFFBFDFF;
+            a = temp_fg2rgb[*source] + temp_bg2rgb[*dest];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest = RGB32k[0][0][a & (a >> 15)];
             
             source += 4;
             dest += linesize;
@@ -495,16 +495,16 @@ static void R_FlushHTFlexAdd(void)
          while(--count >= 0)
          {
             // mask out LSBs in green and red to allow overflow
-            a = temp_fg2rgb[*source] & 0xFFBFDFF;
-            b = temp_bg2rgb[*dest] & 0xFFBFDFF;
+            a = temp_fg2rgb[*source] + temp_bg2rgb[*dest];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest = RGB32k[0][0][a & (a >> 15)];
             
             source += 4;
             dest += linesize;
@@ -611,23 +611,23 @@ static void R_FlushQuadFlex(void)
       // haleyjd 09/12/04: use precalculated lookups
       fg = temp_fg2rgb[*source];
       bg = temp_bg2rgb[*dest];
-      fg = (fg+bg) | 0xf07c3e1f;
-      *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+      fg = (fg+bg) | 0x1f07c1f;
+      *dest = RGB32k[0][0][fg & (fg>>15)];
 
       fg = temp_fg2rgb[source[1]];
       bg = temp_bg2rgb[dest[1]];
-      fg = (fg+bg) | 0xf07c3e1f;
-      dest[1] = RGB8k[0][0][(fg>>5) & (fg>>19)];
+      fg = (fg+bg) | 0x1f07c1f;
+      dest[1] = RGB32k[0][0][fg & (fg>>15)];
 
       fg = temp_fg2rgb[source[2]];
       bg = temp_bg2rgb[dest[2]];
-      fg = (fg+bg) | 0xf07c3e1f;
-      dest[2] = RGB8k[0][0][(fg>>5) & (fg>>19)];
+      fg = (fg+bg) | 0x1f07c1f;
+      dest[2] = RGB32k[0][0][fg & (fg>>15)];
 
       fg = temp_fg2rgb[source[3]];
       bg = temp_bg2rgb[dest[3]];
-      fg = (fg+bg) | 0xf07c3e1f;
-      dest[3] = RGB8k[0][0][(fg>>5) & (fg>>19)];
+      fg = (fg+bg) | 0x1f07c1f;
+      dest[3] = RGB32k[0][0][fg & (fg>>15)];
 
       source += 4;
       dest += linesize;
@@ -646,41 +646,41 @@ static void R_FlushQuadFlexAdd(void)
    while(--count >= 0)
    {
       // haleyjd 02/08/05: this is NOT gonna be very fast.
-      a = temp_fg2rgb[*source] & 0xFFBFDFF;
-      b = temp_bg2rgb[*dest] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+      a = temp_fg2rgb[*source] + temp_bg2rgb[*dest];
+      b = a;
+      a |= 0x01f07c1f;
+      b &= 0x40100400;
+      a &= 0x3fffffff;
+      b  = b - (b >> 5);
+      a |= b;
+      *dest = RGB32k[0][0][a & (a >> 15)];
 
-      a = temp_fg2rgb[source[1]] & 0xFFBFDFF;
-      b = temp_bg2rgb[dest[1]] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      dest[1] = RGB8k[0][0][(a >> 5) & (a >> 19)];
+      a = temp_fg2rgb[source[1]] + temp_bg2rgb[dest[1]];
+      b = a;
+      a |= 0x01f07c1f;
+      b &= 0x40100400;
+      a &= 0x3fffffff;
+      b  = b - (b >> 5);
+      a |= b;
+      dest[1] = RGB32k[0][0][a & (a >> 15)];
 
-      a = temp_fg2rgb[source[2]] & 0xFFBFDFF;
-      b = temp_bg2rgb[dest[2]] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      dest[2] = RGB8k[0][0][(a >> 5) & (a >> 19)];
+      a = temp_fg2rgb[source[2]] + temp_bg2rgb[dest[2]];
+      b = a;
+      a |= 0x01f07c1f;
+      b &= 0x40100400;
+      a &= 0x3fffffff;
+      b  = b - (b >> 5);
+      a |= b;
+      dest[2] = RGB32k[0][0][a & (a >> 15)];
 
-      a = temp_fg2rgb[source[3]] & 0xFFBFDFF;
-      b = temp_bg2rgb[dest[3]] & 0xFFBFDFF;
-      a  = a + b;                      
-      b  = a & 0x10040200;             
-      b  = (b - (b >> 5)) & 0xF83C1E0; 
-      a |= 0xF07C3E1F;                 
-      a |= b;                          
-      dest[3] = RGB8k[0][0][(a >> 5) & (a >> 19)];
+      a = temp_fg2rgb[source[3]] + temp_bg2rgb[dest[3]];
+      b = a;
+      a |= 0x01f07c1f;
+      b &= 0x40100400;
+      a &= 0x3fffffff;
+      b  = b - (b >> 5);
+      a |= b;
+      dest[3] = RGB32k[0][0][a & (a >> 15)];
 
       source += 4;
       dest += linesize;
@@ -805,12 +805,12 @@ static byte *R_GetBufferFlexTrans(void)
       // haleyjd 09/12/04: optimization -- calculate flex tran lookups
       // here instead of every time a column is flushed.
       {
-         fixed_t fglevel, bglevel;
+         unsigned int fglevel, bglevel;
          
          fglevel = temptranslevel & ~0x3ff;
          bglevel = FRACUNIT - fglevel;
-         temp_fg2rgb  = Col2RGB[fglevel >> 10];
-         temp_bg2rgb  = Col2RGB[bglevel >> 10];
+         temp_fg2rgb  = Col2RGB8[fglevel >> 10];
+         temp_bg2rgb  = Col2RGB8[bglevel >> 10];
       }
 
       R_FlushWholeColumns = R_FlushWholeFlex;
@@ -847,12 +847,12 @@ static byte *R_GetBufferFlexAdd(void)
       temptranslevel = column.translevel;
       
       {
-         fixed_t fglevel, bglevel;
+         unsigned int fglevel, bglevel;
          
          fglevel = temptranslevel & ~0x3ff;
          bglevel = FRACUNIT;
-         temp_fg2rgb  = Col2RGB[fglevel >> 10];
-         temp_bg2rgb  = Col2RGB[bglevel >> 10];
+         temp_fg2rgb  = Col2RGB8_LessPrecision[fglevel >> 10];
+         temp_bg2rgb  = Col2RGB8_LessPrecision[bglevel >> 10];
       }
 
       R_FlushWholeColumns = R_FlushWholeFlexAdd;

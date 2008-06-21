@@ -187,12 +187,12 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
       return;
 
    {
-      fixed_t fglevel, bglevel;
+      unsigned int fglevel, bglevel;
 
       fglevel = tl & ~0x3ff;
       bglevel = FRACUNIT - fglevel;
-      fg2rgb  = Col2RGB[fglevel >> 10];
-      bg2rgb  = Col2RGB[bglevel >> 10];
+      fg2rgb  = Col2RGB8[fglevel >> 10];
+      bg2rgb  = Col2RGB8[bglevel >> 10];
    }
 
    dest = buffer->data + y * buffer->pitch + x;
@@ -204,8 +204,8 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
 
       while(tw--)
       {
-         col     = (fg2rgb[color] + bg2rgb[*row]) | 0xf07c3e1f;
-         *row++ = RGB8k[0][0][(col >> 5) & (col >> 19)];
+         col    = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
+         *row++ = RGB32k[0][0][col & (col >> 15)];
       }
 
       dest += buffer->pitch;

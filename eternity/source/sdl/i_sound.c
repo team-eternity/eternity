@@ -522,8 +522,7 @@ void I_StopSound(int handle)
 //
 // I_SoundIsPlaying
 //
-// haleyjd: wow, this can actually do something in the Windows
-// version :P
+// haleyjd: wow, this can actually do something in the Windows version :P
 //
 int I_SoundIsPlaying(int handle)
 {

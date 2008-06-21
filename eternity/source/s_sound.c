@@ -693,7 +693,6 @@ void S_StopSound(const mobj_t *origin, schannel_e subchannel)
          (subchannel == CHAN_ALL || channels[cnum].subchannel == subchannel))
       {
          S_StopChannel(cnum);
-         break;
       }
    }
 }

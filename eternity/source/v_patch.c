@@ -176,8 +176,8 @@ static void V_DrawPatchColumnTR(void)
 #define DO_COLOR_BLEND()                       \
    fg = v_fg2rgb[source[frac >> FRACBITS]];    \
    bg = v_bg2rgb[*dest];                       \
-   fg = (fg + bg) | 0xF07C3E1F;                \
-   *dest = RGB8k[0][0][(fg >> 5) & (fg >> 19)]
+   fg = (fg + bg) | 0x1f07c1f;                 \
+   *dest = RGB32k[0][0][fg & (fg >> 15)]
 
 //
 // V_DrawPatchColumnTL
@@ -254,8 +254,8 @@ void V_DrawPatchColumnTL(void)
 #define DO_COLOR_BLEND()          \
    fg = v_fg2rgb[patchcol.translation[source[frac >> FRACBITS]]]; \
    bg = v_bg2rgb[*dest];          \
-   fg = (fg + bg) | 0xF07C3E1F;   \
-   *dest = RGB8k[0][0][(fg >> 5) & (fg >> 19)]
+   fg = (fg + bg) | 0x1f07c1f;    \
+   *dest = RGB32k[0][0][fg & (fg >> 15)]
 
 //
 // V_DrawPatchColumnTRTL
@@ -331,14 +331,14 @@ void V_DrawPatchColumnTRTL(void)
 
 #define DO_COLOR_BLEND() \
    /* mask out LSBs in green and red to allow overflow */ \
-   a = v_fg2rgb[source[frac >> FRACBITS]] & 0xFFBFDFF; \
-   b = v_bg2rgb[*dest] & 0xFFBFDFF;   \
-   a  = a + b;                      /* add with overflow         */ \
-   b  = a & 0x10040200;             /* isolate LSBs              */ \
-   b  = (b - (b >> 5)) & 0xF83C1E0; /* convert to clamped values */ \
-   a |= 0xF07C3E1F;                 /* apply normal tl mask      */ \
-   a |= b;                          /* mask in clamped values    */ \
-   *dest = RGB8k[0][0][(a >> 5) & (a >> 19)]
+   a = v_fg2rgb[source[frac >> FRACBITS]] + v_bg2rgb[*dest]; \
+   b = a; \
+   a |= 0x01f07c1f; \
+   b &= 0x40100400; \
+   a &= 0x3fffffff; \
+   b  = b - (b >> 5); \
+   a |= b; \
+   *dest = RGB32k[0][0][a & (a >> 15)]
 
 
 //
@@ -414,14 +414,14 @@ void V_DrawPatchColumnAdd(void)
 
 #define DO_COLOR_BLEND() \
    /* mask out LSBs in green and red to allow overflow */ \
-   a = v_fg2rgb[patchcol.translation[source[frac >> FRACBITS]]] & 0xFFBFDFF; \
-   b = v_bg2rgb[*dest] & 0xFFBFDFF;   \
-   a  = a + b;                      /* add with overflow         */ \
-   b  = a & 0x10040200;             /* isolate LSBs              */ \
-   b  = (b - (b >> 5)) & 0xF83C1E0; /* convert to clamped values */ \
-   a |= 0xF07C3E1F;                 /* apply normal tl mask      */ \
-   a |= b;                          /* mask in clamped values    */ \
-   *dest = RGB8k[0][0][(a >> 5) & (a >> 19)]
+   a = v_fg2rgb[patchcol.translation[source[frac >> FRACBITS]]] + v_bg2rgb[*dest]; \
+   b = a; \
+   a |= 0x01f07c1f; \
+   b &= 0x40100400; \
+   a &= 0x3fffffff; \
+   b  = b - (b >> 5); \
+   a |= b; \
+   *dest = RGB32k[0][0][a & (a >> 15)]
 
 //
 // V_DrawPatchColumnAddTR

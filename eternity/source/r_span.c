@@ -59,8 +59,49 @@ extern int  columnofs[MAXWIDTH];
 //  and the inner loop has to step in texture space u and v.
 //
 
-
 #ifndef USEASM
+
+#define SPAN_PROLOGUE() \
+   unsigned xf = span.xfrac, xs = span.xstep; \
+   unsigned yf = span.yfrac, ys = span.ystep; \
+   register byte *dest; \
+   byte *source = (byte *)span.source; \
+   lighttable_t *colormap = span.colormap; \
+   int count = span.x2 - span.x1 + 1;\
+   \
+   dest = ylookup[span.y] + columnofs[span.x1];
+
+// SoM: Why didn't I see this earlier? the spot variable is a waste now
+// because we don't have the uber complicated math to calculate it now, 
+// so that was a memory write we didn't need!
+#define SPAN_LOOP(xshift, yshift, xmask) \
+   while(count >= 4) \
+   { \
+      dest[0] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest[2] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest += 4; \
+      count -= 4; \
+   } \
+   while(count-- > 0) \
+   { \
+      *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+   }
 
 
 // SoM: we only need 6 bits for the integer part (0 thru 63) so the rest
@@ -73,185 +114,27 @@ extern int  columnofs[MAXWIDTH];
 
 void R_DrawSpanCB_8_64(void)
 {
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1];
-
-   while(count >= 4)
-   {
-      // SoM: Why didn't I see this earlier? the spot variable is a waste now
-      // because we don't have the uber complicated math to calculate it now, 
-      // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[1] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[3] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 4;
-      count -= 4;
-      
-   }
-   while(count-- > 0)
-   {
-      *dest++ = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]];
-      xf += xs;
-      yf += ys;
-   }
+   SPAN_PROLOGUE()
+   SPAN_LOOP(20, 26, 0xFC0)
 }
-
 
 void R_DrawSpanCB_8_128(void)
 {
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1];
-
-   while(count >= 4)
-   {
-      // SoM: Why didn't I see this earlier? the spot variable is a waste now
-      // because we don't have the uber complicated math to calculate it now, 
-      // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[1] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[3] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 4;
-      count -= 4;
-      
-   }
-   while(count--)
-   {
-      *dest++ = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]];
-      xf += xs;
-      yf += ys;
-   }
+   SPAN_PROLOGUE()
+   SPAN_LOOP(18, 25, 0x3F80)
 }
-
 
 void R_DrawSpanCB_8_256(void)
 {
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1];
-
-   while(count >= 4)
-   {
-      // SoM: Why didn't I see this earlier? the spot variable is a waste now
-      // because we don't have the uber complicated math to calculate it now, 
-      // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[1] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[3] = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 4;
-      count -= 4;
-      
-   }
-   while(count--)
-   {
-      *dest++ = colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]];
-      xf += xs;
-      yf += ys;
-   }
+   SPAN_PROLOGUE();
+   SPAN_LOOP(16, 24, 0xFF00)
 }
-
-
 
 void R_DrawSpanCB_8_512(void)
 {
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1];
-
-   while(count >= 4)
-   {
-      // SoM: Why didn't I see this earlier? the spot variable is a waste now
-      // because we don't have the uber complicated math to calculate it now, 
-      // so that was a memory write we didn't need!
-      dest[0] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[1] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[3] = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 4;
-      count -= 4;
-      
-   }
-   while(count--)
-   {
-      *dest++ = colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]];
-      xf += xs;
-      yf += ys;
-   }
+   SPAN_PROLOGUE()
+   SPAN_LOOP(14, 23, 0x3FE00)
 }
-
-
 
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
@@ -305,7 +188,6 @@ static void R_DrawSpan_OLD(void)
    } 
 }
 
-
 // SoM: Removed the original span drawing code.
 
 // lpspandrawer: uses the optimized but low-precision span drawing
@@ -343,188 +225,70 @@ spandrawer_t r_spandrawer =
 // drawing code but double up on pixels, making it blocky.
 //
 
+#define LD_SPAN_PROLOGUE() \
+   unsigned xf = span.xfrac, xs = span.xstep; \
+   unsigned yf = span.yfrac, ys = span.ystep; \
+   register byte *dest; \
+   byte *source = (byte *)span.source; \
+   lighttable_t *colormap = span.colormap; \
+   int count = span.x2 - span.x1 + 1; \
+   \
+   dest = ylookup[span.y] + columnofs[span.x1 << 1];
+
+#define LD_SPAN_LOOP(xshift, yshift, xmask) \
+   while(count >= 4) \
+   { \
+      dest[0] = dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest[2] = dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest[4] = dest[5] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest[6] = dest[7] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      xf += xs; \
+      yf += ys; \
+      \
+      dest += 8; \
+      count -= 4; \
+   } \
+   while(count-- > 0) \
+   { \
+      dest[0] = dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+      \
+      dest += 2; \
+      \
+      xf += xs; \
+      yf += ys; \
+   }
 
 static void R_DrawSpan_LD64(void) 
 { 
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1 << 1];
-
-   while(count >= 4)
-   {
-      // SoM: Why didn't I see this earlier? the spot variable is a waste now
-      // because we don't have the uber complicated math to calculate it now, 
-      // so that was a memory write we didn't need!
-      dest[0] = dest[1] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = dest[3] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[4] = dest[5] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[6] = dest[7] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 8;
-      count -= 4;
-      
-   }
-   while(count-- > 0)
-   {
-      dest[0] = dest[1] = colormap[source[((xf >> 20) & 0xFC0) | (yf >> 26)]];
-
-      dest += 2;
-
-      xf += xs;
-      yf += ys;
-   }
+   LD_SPAN_PROLOGUE()
+   LD_SPAN_LOOP(20, 26, 0xFC0)
 }
 
 static void R_DrawSpan_LD128(void) 
 { 
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1 << 1];
-   
-   while(count >= 4)
-   {
-      dest[0] = dest[1] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = dest[3] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[4] = dest[5] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[6] = dest[7] = colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 8;
-      count -= 4;
-   }
-   while (count--)
-   { 
-      *dest = *(dest + 1) =
-         colormap[source[((xf >> 18) & 0x3F80) | (yf >> 25)]]; 
-      dest += 2;
-      xf += xs;
-      yf += ys;
-   } 
+   LD_SPAN_PROLOGUE()
+   LD_SPAN_LOOP(18, 25, 0x3F80)
 }
 
 static void R_DrawSpan_LD256(void) 
 { 
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   byte *colormap = (byte *)span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1 << 1];
-   
-   while(count >= 4)
-   {
-      dest[0] = dest[1] =
-         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = dest[3] =
-         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[4] = dest[5] =
-         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[6] = dest[7] =
-         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 8;
-      count -= 4;
-      
-   }
-   while(count--)
-   { 
-      *dest = *(dest + 1) =
-         colormap[source[((xf >> 16) & 0xFF00) | (yf >> 24)]]; 
-      dest += 2;
-      xf += xs;
-      yf += ys;
-   } 
+   LD_SPAN_PROLOGUE()
+   LD_SPAN_LOOP(16, 24, 0xFF00)
 }
 
 static void R_DrawSpan_LD512(void) 
 { 
-   unsigned xf = span.xfrac, xs = span.xstep;
-   unsigned yf = span.yfrac, ys = span.ystep;
-   register byte *dest;
-   byte *source = (byte *)span.source;
-   byte *colormap = (byte *)span.colormap;
-   int count = span.x2 - span.x1 + 1;
-
-   dest = ylookup[span.y] + columnofs[span.x1 << 1];
-   
-   while(count >= 4)
-   {
-      dest[0] = dest[1] =
-         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[2] = dest[3] =
-         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[4] = dest[5] =
-         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest[6] = dest[7] =
-         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      xf += xs;
-      yf += ys;
-      
-      dest += 8;
-      count -= 4;
-      
-   }
-   while(count--)
-   { 
-      *dest = *(dest + 1) =
-         colormap[source[((xf >> 14) & 0x3FE00) | (yf >> 23)]]; 
-      dest += 2;
-      xf += xs;
-      yf += ys;
-   } 
+   LD_SPAN_PROLOGUE()
+   LD_SPAN_LOOP(14, 23, 0x3FE00)
 }
 
 // low-detail spandrawer

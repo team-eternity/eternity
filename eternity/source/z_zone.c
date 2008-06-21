@@ -482,8 +482,8 @@ allocated:
    virtual_memory += size + HEADER_SIZE;
 
    // haleyjd 10/03/06: Big problem: extra wasn't being initialized for vm
-   // blocks. This caused the memset used to randomize freed memory with 
-   // INSTRUMENTED to stomp all over the C heap.
+   // blocks. This caused the memset used to randomize freed memory when 
+   // INSTRUMENTED is defined to stomp all over the C heap.
    block->extra = 0;
 #endif
    /* cph - the next line was lost in the #ifdef above, and also added an
@@ -509,14 +509,14 @@ void (Z_Free)(void *p, const char *file, int line)
 
 #ifdef ZONEIDCHECK
       if(block->id != ZONEID)
-        I_Error("Z_Free: freed a pointer without ZONEID\n"
-                "Source: %s:%d"
+         I_Error("Z_Free: freed a pointer without ZONEID\n"
+                 "Source: %s:%d"
 
 #ifdef INSTRUMENTED
-                "\nSource of malloc: %s:%d"
-                , file, line, block->file, block->line
+                 "\nSource of malloc: %s:%d"
+                 , file, line, block->file, block->line
 #else
-                , file, line
+                 , file, line
 #endif
                 );
       block->id = 0;              // Nullify id so another free fails
@@ -573,9 +573,9 @@ void (Z_Free)(void *p, const char *file, int line)
          }
 
          other = block->next;        // Possibly merge with next block
-         if (other->tag == PU_FREE && other != zone)
+         if(other->tag == PU_FREE && other != zone)
          {
-            if (rover == other) // Move back rover if it points at next block
+            if(rover == other) // Move back rover if it points at next block
                rover = block;
             (block->next = other->next)->prev = block;
             block->size += other->size + HEADER_SIZE;
@@ -1123,15 +1123,12 @@ char *(Z_Strdupa)(const char *s, const char *file, int line)
 
 
 void (Z_CheckHeap)(const char *file, int line)
-{
-   // haleyjd 03/25/03: do not perform touching-next-block test
-   // for vm blocks in C heap memory -- they will not pass in general.
-   
+{   
    memblock_t *block = zone;   // Start at base of zone mem
    do                          // Consistency check (last node treated special)
    {
-      if((!block->vm && block->next != zone &&
-         (memblock_t *)((char *) block+HEADER_SIZE+block->size) != block->next) ||
+      if((block->next != zone &&
+          (memblock_t *)((char *) block+HEADER_SIZE+block->size) != block->next) ||
          block->next->prev != block || block->prev->next != block)
       {
          I_Error("Z_CheckHeap: Block size does not touch the next block\n"
@@ -1142,7 +1139,7 @@ void (Z_CheckHeap)(const char *file, int line)
 #else
                  , file, line
 #endif
-                 );
+                );
       }
    }
    while((block = block->next) != zone);

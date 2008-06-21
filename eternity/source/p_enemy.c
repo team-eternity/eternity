@@ -4065,26 +4065,25 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
 
    // if it's a missile, shoot it
    if(mobjinfo[type].flags & MF_MISSILE)
+      newmobj = P_SpawnPlayerMissile(plyr->mo, type);
+   else
    {
-      P_SpawnPlayerMissile(plyr->mo, type);
-      return;
+      // do a good old Pain-Elemental style summoning
+      an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
+      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
+      
+      x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
+      y = plyr->mo->y + FixedMul(prestep, finesine[an]);
+      
+      z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+      
+      if(Check_Sides(plyr->mo, x, y))
+         return;
+      
+      newmobj = P_SpawnMobj(x, y, z, type);
+      
+      newmobj->angle = plyr->mo->angle;
    }
-
-   // do a good old Pain-Elemental style summoning
-   an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
-   prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
-   
-   x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
-   y = plyr->mo->y + FixedMul(prestep, finesine[an]);
-   
-   z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
-
-   if(Check_Sides(plyr->mo, x, y))
-      return;
-   
-   newmobj = P_SpawnMobj(x, y, z, type);
-   
-   newmobj->angle = plyr->mo->angle;
 
    // tweak the object's flags
    if(flagsmode != -1)

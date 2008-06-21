@@ -64,6 +64,7 @@ typedef struct
    unsigned xfrac, yfrac, xstep, ystep;
    void *source;
    lighttable_t *colormap;
+   unsigned int *fg2rgb, *bg2rgb; // haleyjd 06/20/08: tl lookups
 } cb_span_t;
 
 typedef struct

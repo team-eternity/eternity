@@ -481,10 +481,10 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
 
    // figure out the RGB tables to use for the tran level
    {
-      fixed_t fglevel, bglevel;
+      unsigned int fglevel, bglevel;
       fglevel = tl & ~0x3ff;
       bglevel = FRACUNIT - fglevel;
-      V_SetPatchTL(Col2RGB[fglevel >> 10], Col2RGB[bglevel >> 10]);
+      V_SetPatchTL(Col2RGB8[fglevel >> 10], Col2RGB8[bglevel >> 10]);
    }
 
    V_DrawPatchInt(&pi, buffer);
@@ -526,10 +526,11 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
 
    // figure out the RGB tables to use for the tran level
    {
-      fixed_t fglevel, bglevel;
+      unsigned int fglevel, bglevel;
       fglevel = tl & ~0x3ff;    // normal foreground level
       bglevel = FRACUNIT;       // full background level
-      V_SetPatchTL(Col2RGB[fglevel >> 10], Col2RGB[bglevel >> 10]);
+      V_SetPatchTL(Col2RGB8_LessPrecision[fglevel >> 10], 
+                   Col2RGB8_LessPrecision[bglevel >> 10]);
    }
 
    V_DrawPatchInt(&pi, buffer);
@@ -638,25 +639,35 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 }
 
 // haleyjd: DOSDoom-style single translucency lookup-up table
-// generation code. This code has a 24k footprint but allows
-// a much wider range of translucency effects than BOOM-style
-// translucency. This will be used for particles, for variable
-// mapthing trans levels, and for screen patches.
+// generation code. This code has a 32k (plus a bit more) 
+// footprint but allows a much wider range of translucency effects
+// than BOOM-style translucency. This will be used for particles, 
+// for variable mapthing trans levels, and for screen patches.
 
-#define RPART(c)         (((c)>>16)&0xff)
-#define GPART(c)         (((c)>>8)&0xff)
-#define BPART(c)         ((c)&0xff)
-#define MAKERGB(r, g, b) (((r)<<16)|((g)<<8)|(b))
+// haleyjd: Updated 06/21/08 to use 32k lookup, mainly to fix
+// additive translucency. Note this code is included in Odamex and
+// so it can be considered GPL as used here, rather than BSD. But,
+// I don't care either way. It is effectively dual-licensed I suppose.
 
 boolean flexTranInit = false;
-unsigned int Col2RGB[65][256];
-byte RGB8k[16][32][16];
+unsigned int  Col2RGB8[65][256];
+unsigned int *Col2RGB8_LessPrecision[65];
+byte RGB32k[32][32][32];
+
+static unsigned int Col2RGB8_2[63][256];
+
+#define MAKECOLOR(a) (((a)<<3)|((a)>>2))
+
+typedef struct tpalcol_s
+{
+   unsigned int r, g, b;
+} tpalcol_t;
 
 void V_InitFlexTranTable(const byte *palette)
 {
    int i, r, g, b, x, y;
-   unsigned int *tempRGBpal;
-   const byte   *palRover;
+   tpalcol_t  *tempRGBpal;
+   const byte *palRover;
 
    // mark that we've initialized the flex tran table
    flexTranInit = true;
@@ -664,30 +675,50 @@ void V_InitFlexTranTable(const byte *palette)
    tempRGBpal = Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL);
    
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
-      tempRGBpal[i] = MAKERGB(palRover[0], palRover[1], palRover[2]);
-   
-   // build RGB table
-   for(r = 0; r < 16; r++)
    {
-      for(g = 0; g < 32; g++)
+      tempRGBpal[i].r = palRover[0];
+      tempRGBpal[i].g = palRover[1];
+      tempRGBpal[i].b = palRover[2];
+   }
+
+   // build RGB table
+   for(r = 0; r < 32; ++r)
+   {
+      for(g = 0; g < 32; ++g)
       {
-         for(b = 0; b < 16; b++)
-            RGB8k[r][g][b] = 
-               V_FindBestColor(palette, r*16, g*8, b *16);
+         for(b = 0; b < 32; ++b)
+         {
+            RGB32k[r][g][b] = 
+               V_FindBestColor(palette, 
+                               MAKECOLOR(r), MAKECOLOR(g), MAKECOLOR(b));
+         }
       }
    }
    
    // build lookup table
-   for(x = 0; x < 65; x++)
+   for(x = 0; x < 65; ++x)
    {
-      for(y = 0; y < 256; y++)
+      for(y = 0; y < 256; ++y)
       {
-         Col2RGB[x][y] = (((RPART(tempRGBpal[y])*x)>>5)<<9)  |
-                         (((GPART(tempRGBpal[y])*x)>>4)<<18) |
-                          ((BPART(tempRGBpal[y])*x)>>5);
+         Col2RGB8[x][y] = (((tempRGBpal[y].r*x)>>4)<<20)  |
+                            ((tempRGBpal[y].g*x)>>4) |
+                          (((tempRGBpal[y].b*x)>>4)<<10);
       }
    }
-   
+
+   // build a secondary lookup with red and blue lsbs masked out for additive 
+   // blending; otherwise, the overflow messes up the calculation and you get 
+   // something very ugly.
+   for(x = 1; x < 64; ++x)
+   {
+      Col2RGB8_LessPrecision[x] = Col2RGB8_2[x - 1];
+      
+      for(y = 0; y < 256; ++y)
+         Col2RGB8_2[x-1][y] = Col2RGB8[x][y] & 0x3feffbff;
+   }
+   Col2RGB8_LessPrecision[0]  = Col2RGB8[0];
+   Col2RGB8_LessPrecision[64] = Col2RGB8[64];
+
    Z_Free(tempRGBpal);
 }
 

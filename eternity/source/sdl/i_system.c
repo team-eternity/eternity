@@ -187,9 +187,7 @@ void I_EnumerateJoysticks(void)
 boolean I_SetJoystickDevice(int deviceNum)
 {
    if(deviceNum >= SDL_NumJoysticks())
-   {
       return false;
-   }
    else
    {
       sdlJoystick = SDL_JoystickOpen(deviceNum);

@@ -466,12 +466,12 @@ static void R_LowDrawFlexColumn(void)
 #endif 
 
    {
-      fixed_t fglevel, bglevel;
+      unsigned int fglevel, bglevel;
       
       fglevel = column.translevel & ~0x3ff;
       bglevel = FRACUNIT - fglevel;
-      fg2rgb  = Col2RGB[fglevel >> 10];
-      bg2rgb  = Col2RGB[bglevel >> 10];
+      fg2rgb  = Col2RGB8[fglevel >> 10];
+      bg2rgb  = Col2RGB8[bglevel >> 10];
    }
 
    dest  = ylookup[column.y1] + columnofs[x];
@@ -504,8 +504,8 @@ static void R_LowDrawFlexColumn(void)
 
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
             
             dest += linesize;          // killough 11/98
             dest2 += linesize;
@@ -522,9 +522,9 @@ static void R_LowDrawFlexColumn(void)
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
 
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
@@ -533,9 +533,9 @@ static void R_LowDrawFlexColumn(void)
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
 
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
@@ -546,9 +546,9 @@ static void R_LowDrawFlexColumn(void)
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
+            fg = (fg+bg) | 0x1f07c1f;
 
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
          }
       }
    }
@@ -586,12 +586,12 @@ static void R_LowDrawFlexTRColumn(void)
 #endif 
 
    {
-      fixed_t fglevel, bglevel;
+      unsigned int fglevel, bglevel;
       
       fglevel = column.translevel & ~0x3ff;
       bglevel = FRACUNIT - fglevel;
-      fg2rgb  = Col2RGB[fglevel >> 10];
-      bg2rgb  = Col2RGB[bglevel >> 10];
+      fg2rgb  = Col2RGB8[fglevel >> 10];
+      bg2rgb  = Col2RGB8[bglevel >> 10];
    }
 
    dest  = ylookup[column.y1] + columnofs[x];
@@ -622,8 +622,8 @@ static void R_LowDrawFlexTRColumn(void)
 
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
             
             dest += linesize;          // killough 11/98
             dest2 += linesize;
@@ -640,9 +640,9 @@ static void R_LowDrawFlexTRColumn(void)
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
 
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
@@ -651,9 +651,9 @@ static void R_LowDrawFlexTRColumn(void)
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
+            fg = (fg+bg) | 0x1f07c1f;
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
 
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
@@ -664,9 +664,9 @@ static void R_LowDrawFlexTRColumn(void)
             bg = ((unsigned int)*dest + *dest2) >> 1;
             fg = fg2rgb[fg];
             bg = bg2rgb[bg];
-            fg = (fg+bg) | 0xf07c3e1f;
-
-            *dest2 = *dest = RGB8k[0][0][(fg>>5) & (fg>>19)];
+            fg = (fg+bg) | 0x1f07c1f;
+            
+            *dest2 = *dest = RGB32k[0][0][fg & (fg>>15)];
          }
       }
    }
@@ -675,7 +675,7 @@ static void R_LowDrawFlexTRColumn(void)
 #undef SRCPIXEL 
 
 #define SRCPIXEL \
-   fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]] & 0xFFBFDFF
+   fg2rgb[colormap[source[(frac>>FRACBITS) & heightmask]]]
 
 //
 // R_DrawAddColumn
@@ -705,12 +705,12 @@ static void R_LowDrawAddColumn(void)
 #endif 
 
    {
-      fixed_t fglevel, bglevel;
+      unsigned int fglevel, bglevel;
       
       fglevel = column.translevel & ~0x3ff;
       bglevel = FRACUNIT;
-      fg2rgb  = Col2RGB[fglevel >> 10];
-      bg2rgb  = Col2RGB[bglevel >> 10];
+      fg2rgb  = Col2RGB8_LessPrecision[fglevel >> 10];
+      bg2rgb  = Col2RGB8_LessPrecision[bglevel >> 10];
    }
 
    dest  = ylookup[column.y1] + columnofs[x];
@@ -737,16 +737,17 @@ static void R_LowDrawAddColumn(void)
          do
          {
             // mask out LSBs in green and red to allow overflow
-            a = fg2rgb[colormap[source[frac>>FRACBITS]]] & 0xFFBFDFF;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
+            a = fg2rgb[colormap[source[frac>>FRACBITS]]] +
+                bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest2 = *dest = RGB32k[0][0][a & (a >> 15)];
             
             dest += linesize;          // killough 11/98
             dest2 += linesize;
@@ -759,46 +760,46 @@ static void R_LowDrawAddColumn(void)
       {
          while((count -= 2) >= 0)   // texture height is a power of 2 -- killough
          {
-            a = SRCPIXEL;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
+            a = SRCPIXEL + bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest2 = *dest = RGB32k[0][0][a & (a >> 15)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
 
-            a = SRCPIXEL;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
+            a = SRCPIXEL + bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest2 = *dest = RGB32k[0][0][a & (a >> 15)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;            
          }
          if(count & 1)
          {
-            a = SRCPIXEL;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
+            a = SRCPIXEL + bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest2 = *dest = RGB32k[0][0][a & (a >> 15)];
          }
       }
    }   
@@ -807,10 +808,10 @@ static void R_LowDrawAddColumn(void)
 #undef SRCPIXEL
 
 #define SRCPIXEL \
-   fg2rgb[colormap[column.translation[source[frac>>FRACBITS]]]] & 0xFFBFDFF
+   fg2rgb[colormap[column.translation[source[frac>>FRACBITS]]]]
 
 #define SRCPIXEL_MASK \
-   fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]] & 0xFFBFDFF
+   fg2rgb[colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]
 
 //
 // R_DrawAddTlatedColumn
@@ -841,12 +842,12 @@ static void R_LowDrawAddTRColumn(void)
 #endif 
 
    {
-      fixed_t fglevel, bglevel;
+      unsigned int fglevel, bglevel;
       
       fglevel = column.translevel & ~0x3ff;
       bglevel = FRACUNIT;
-      fg2rgb  = Col2RGB[fglevel >> 10];
-      bg2rgb  = Col2RGB[bglevel >> 10];
+      fg2rgb  = Col2RGB8_LessPrecision[fglevel >> 10];
+      bg2rgb  = Col2RGB8_LessPrecision[bglevel >> 10];
    }
 
    dest  = ylookup[column.y1] + columnofs[x];
@@ -873,16 +874,16 @@ static void R_LowDrawAddTRColumn(void)
          do
          {
             // mask out LSBs in green and red to allow overflow
-            a = SRCPIXEL;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
-            
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
-            
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            a = SRCPIXEL + bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
+
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
+                        
+            *dest2 = *dest = RGB32k[0][0][a  & (a >> 15)];
             
             dest += linesize;          // killough 11/98
             dest2 += linesize;
@@ -895,46 +896,46 @@ static void R_LowDrawAddTRColumn(void)
       {
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
-            a = SRCPIXEL_MASK;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK + bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest2 = *dest = RGB32k[0][0][a & (a >> 15)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;
 
-            a = SRCPIXEL_MASK;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK + bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest2 = *dest = RGB32k[0][0][a & (a >> 15)];
             dest += linesize;   // killough 11/98
             dest2 += linesize;
             frac += fracstep;            
          }
          if(count & 1)
          {
-            a = SRCPIXEL_MASK;
-            b = bg2rgb[((unsigned int)*dest + *dest2) >> 1] & 0xFFBFDFF;
+            a = SRCPIXEL_MASK + bg2rgb[((unsigned int)*dest + *dest2) >> 1];
+            b = a;
             
-            a  = a + b;                      // add with overflow
-            b  = a & 0x10040200;             // isolate LSBs
-            b  = (b - (b >> 5)) & 0xF83C1E0; // convert to clamped values
-            a |= 0xF07C3E1F;                 // apply normal tl mask
-            a |= b;                          // mask in clamped values
+            a |= 0x01f07c1f;
+            b &= 0x40100400;
+            a &= 0x3fffffff;
+            b  = b - (b >> 5);
+            a |= b;
             
-            *dest2 = *dest = RGB8k[0][0][(a >> 5) & (a >> 19)];
+            *dest2 = *dest = RGB32k[0][0][a & (a >> 15)];
          }
       }
    }
