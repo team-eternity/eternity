@@ -108,7 +108,8 @@ int       *flattranslation;             // for global animation
 int       *texturetranslation;
 
 // SoM: large flats
-int       *flatsize;
+// haleyjd: changed to byte
+byte       *flatsize;
 
 // needed for pre-rendering
 fixed_t   *spritewidth, *spriteoffset, *spritetopoffset;
@@ -706,8 +707,26 @@ void R_InitFlats(void)
    
    for(i = 0; i < numflats; ++i)
    {
+      int size;
+      
       flattranslation[i] = i;
-      flatsize[i] = W_LumpLength(firstflat + i);
+      size = W_LumpLength(firstflat + i);
+
+      switch(size)
+      {
+      case 16384: // 128x128
+         flatsize[i] = FLAT_128;
+         break;
+      case 65536: // 256x256
+         flatsize[i] = FLAT_256;
+         break;
+      case 262144: // 512x512
+         flatsize[i] = FLAT_512;
+         break;
+      default: // all other sizes are treated as 64x64
+         flatsize[i] = FLAT_64;
+         break;
+      }
    }
 }
 

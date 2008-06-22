@@ -38,16 +38,275 @@
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
 
-//#ifdef DJGPP
-//#define USEASM /* sf: changed #ifdef DJGPP to #ifdef USEASM */
-//#endif
-
 extern byte *ylookup[MAXHEIGHT]; 
 extern int  columnofs[MAXWIDTH]; 
 
+//==============================================================================
+//
+// Span Macros
+//
 
 //
+// SPAN_PROLOGUE_8
+//
+// 8-bit prologue code. This is shared between all span drawers. It should be
+// immediately followed by the prologue macro for the particular blending mode,
+// if one exists
+//
+#define SPAN_PROLOGUE_8() \
+   unsigned xf = span.xfrac, xs = span.xstep; \
+   unsigned yf = span.yfrac, ys = span.ystep; \
+   register byte *dest; \
+   byte *source = (byte *)span.source; \
+   lighttable_t *colormap = span.colormap; \
+   int count = span.x2 - span.x1 + 1;
+
+//
+// TL_SPAN_PROLOGUE_8
+//
+// Extra prologue for translucent spans
+//
+#define TL_SPAN_PROLOGUE_8() \
+   unsigned int t; \
+   SPAN_PROLOGUE_8()
+
+//
+// ADD_SPAN_PROLOGUE_8
+//
+// Extra prologue for additive spans
+//
+#define ADD_SPAN_PROLOGUE_8() \
+   unsigned int a, b; \
+   SPAN_PROLOGUE_8()
+
+//
+// SPAN_PRIMEDEST_8
+//
+// Should follow prologue code.
+// Sets up the destination pointer.
+//
+#define SPAN_PRIMEDEST_8() dest = ylookup[span.y] + columnofs[span.x1];
+
+//
+// LD_SPAN_PRIMEDEST_8
+//
+// For low detail. The x coordinate is multiplied by a factor of two.
+//
+#define LD_SPAN_PRIMEDEST_8() dest = ylookup[span.y] + columnofs[span.x1 << 1];
+
+//
+// PUTPIXEL_8
+//
+// Normal pixel write, and step to the next texel.
+//
+#define PUTPIXEL_8(i, xshift, yshift, xmask) \
+   dest[i] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// PUTPIXEL_EXTRA_8
+//
+// Pixel write for wrap-up after unrolled loop.
+//
+#define PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
+   *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// TL_PUTPIXEL_8
+//
+// Translucent pixel write.
+//
+#define TL_PUTPIXEL_8(i, xshift, yshift, xmask) \
+   t = span.bg2rgb[dest[i]] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   t |= 0x01f07c1f; \
+   dest[i] = RGB32k[0][0][t & (t >> 15)]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// TL_PUTPIXEL_EXTRA_8
+//
+#define TL_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
+   t = span.bg2rgb[*dest] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   t |= 0x01f07c1f; \
+   *dest++ = RGB32k[0][0][t & (t >> 15)]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// ADD_PUTPIXEL_8
+//
+// Additive blend pixel write.
+//
+#define ADD_PUTPIXEL_8(i, xshift, yshift, xmask) \
+   a = span.bg2rgb[dest[i]] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   b = a; \
+   a |= 0x01f07c1f; \
+   b &= 0x40100400; \
+   a &= 0x3fffffff; \
+   b  = b - (b >> 5); \
+   a |= b; \
+   dest[i] = RGB32k[0][0][a & (a >> 15)]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// ADD_PUTPIXEL_EXTRA_8
+//
+#define ADD_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
+   a = span.bg2rgb[*dest] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   b = a; \
+   a |= 0x01f07c1f; \
+   b &= 0x40100400; \
+   a &= 0x3fffffff; \
+   b  = b - (b >> 5); \
+   a |= b; \
+   *dest++ = RGB32k[0][0][a & (a >> 15)]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// LD_PUTPIXEL_8
+//
+// Low detail pixel write.
+// This has been made slightly suboptimal in interest of using the same loop macro.
+// This is only supported as a gimmick and so I don't really care too much ;)
+// Two writes are accomplished at once due to half-width rendering.
+//
+#define LD_PUTPIXEL_8(i, xshift, yshift, xmask) \
+   dest[i<<1] = dest[(i<<1)+1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// LD_PUTPIXEL_EXTRA_8
+//
+#define LD_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
+   dest[0] = dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
+   dest += 2; \
+   xf += xs; \
+   yf += ys;
+
+//
+// LDTL_PUTPIXEL_8
+//
+#define LDTL_PUTPIXEL_8(i, xshift, yshift, xmask) \
+   t = span.bg2rgb[dest[i<<1]] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   t |= 0x01f07c1f; \
+   dest[i<<1] = dest[(i<<1)+1] = RGB32k[0][0][t & (t >> 15)]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// LDTL_PUTPIXEL_EXTRA_8
+//
+#define LDTL_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
+   t = span.bg2rgb[*dest] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   t |= 0x01f07c1f; \
+   dest[0] = dest[1] = RGB32k[0][0][t & (t >> 15)]; \
+   dest += 2; \
+   xf += xs; \
+   yf += ys;
+
+//
+// LDA_PUTPIXEL_8
+//
+#define LDA_PUTPIXEL_8(i, xshift, yshift, xmask) \
+   a = span.bg2rgb[dest[i<<1]] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   b = a; \
+   a |= 0x01f07c1f; \
+   b &= 0x40100400; \
+   a &= 0x3fffffff; \
+   b  = b - (b >> 5); \
+   a |= b; \
+   dest[i<<1] = dest[(i<<1)+1] = RGB32k[0][0][a & (a >> 15)]; \
+   xf += xs; \
+   yf += ys;
+
+//
+// LDA_PUTPIXEL_EXTRA_8
+//
+#define LDA_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
+   a = span.bg2rgb[*dest] + \
+       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
+   b = a; \
+   a |= 0x01f07c1f; \
+   b &= 0x40100400; \
+   a &= 0x3fffffff; \
+   b  = b - (b >> 5); \
+   a |= b; \
+   dest[0] = dest[1] = RGB32k[0][0][a & (a >> 15)]; \
+   dest += 2; \
+   xf += xs; \
+   yf += ys;
+
+//
+// DESTSTEP_8
+//
+// Steps to next destination and counts down pixels in unrolled loop.
+//
+#define DESTSTEP_8() \
+   dest += 4; \
+   count -= 4;
+
+//
+// LD_DESTSTEP_8
+//
+// As above, but for low detail mode. Steps twice as far in screenspace.
+//
+#define LD_DESTSTEP_8() \
+   dest += 8; \
+   count -= 4;
+
+//
+// SPAN_FUNC_8
+//
+// Defines a span drawer with an unrolled span drawing loop.
+// Note: this may not be ideal for use with complex blending modes.
+// We may need to define a normal loop for those, as code complexity may
+// negate the speed benefit of unrolling by causing a cache miss.
+//
+// SoM: Why didn't I see this earlier? the spot variable is a waste now
+// because we don't have the uber complicated math to calculate it now, 
+// so that was a memory write we didn't need!
+//
+#define SPAN_FUNC(name, plog, pdest, xshift, yshift, xmask, pp, ppx, dstp) \
+   static void name (void) \
+   { \
+      plog() \
+      pdest() \
+      while(count >= 4) \
+      { \
+         pp(0, xshift, yshift, xmask) \
+         \
+         pp(1, xshift, yshift, xmask) \
+         \
+         pp(2, xshift, yshift, xmask) \
+         \
+         pp(3, xshift, yshift, xmask) \
+         \
+         dstp() \
+      } \
+      while(count-- > 0) \
+      { \
+         ppx(xshift, yshift, xmask) \
+      } \
+   }
+
+//==============================================================================
+//
 // R_DrawSpan_*
+//
 // With DOOM style restrictions on view orientation,
 //  the floors and ceilings consist of horizontal slices
 //  or spans with constant z depth.
@@ -59,51 +318,6 @@ extern int  columnofs[MAXWIDTH];
 //  and the inner loop has to step in texture space u and v.
 //
 
-#ifndef USEASM
-
-#define SPAN_PROLOGUE() \
-   unsigned xf = span.xfrac, xs = span.xstep; \
-   unsigned yf = span.yfrac, ys = span.ystep; \
-   register byte *dest; \
-   byte *source = (byte *)span.source; \
-   lighttable_t *colormap = span.colormap; \
-   int count = span.x2 - span.x1 + 1;\
-   \
-   dest = ylookup[span.y] + columnofs[span.x1];
-
-// SoM: Why didn't I see this earlier? the spot variable is a waste now
-// because we don't have the uber complicated math to calculate it now, 
-// so that was a memory write we didn't need!
-#define SPAN_LOOP(xshift, yshift, xmask) \
-   while(count >= 4) \
-   { \
-      dest[0] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest[2] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest += 4; \
-      count -= 4; \
-   } \
-   while(count-- > 0) \
-   { \
-      *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-   }
-
-
 // SoM: we only need 6 bits for the integer part (0 thru 63) so the rest
 // can be used for the fraction part. This allows calculation of the memory
 // address in the texture with two shifts, an OR and one AND. (see below)
@@ -112,29 +326,17 @@ extern int  columnofs[MAXWIDTH];
 // Ok, because I was able to eliminate the variable spot below, this function
 // is now FASTER than doom's original span renderer. Whodathunkit?
 
-void R_DrawSpanCB_8_64(void)
-{
-   SPAN_PROLOGUE()
-   SPAN_LOOP(20, 26, 0xFC0)
-}
+SPAN_FUNC(R_DrawSpanCB_8_64,  SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-void R_DrawSpanCB_8_128(void)
-{
-   SPAN_PROLOGUE()
-   SPAN_LOOP(18, 25, 0x3F80)
-}
+SPAN_FUNC(R_DrawSpanCB_8_128, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-void R_DrawSpanCB_8_256(void)
-{
-   SPAN_PROLOGUE();
-   SPAN_LOOP(16, 24, 0xFF00)
-}
+SPAN_FUNC(R_DrawSpanCB_8_256, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
-void R_DrawSpanCB_8_512(void)
-{
-   SPAN_PROLOGUE()
-   SPAN_LOOP(14, 23, 0x3FE00)
-}
+SPAN_FUNC(R_DrawSpanCB_8_512, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
+          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
@@ -190,32 +392,40 @@ static void R_DrawSpan_OLD(void)
 
 // SoM: Removed the original span drawing code.
 
-// lpspandrawer: uses the optimized but low-precision span drawing
-// routine for 64x64 flats. Same as above for others.
-spandrawer_t r_lpspandrawer =
-{
-   R_DrawSpan_OLD,
-   R_DrawSpanCB_8_128,
-   R_DrawSpanCB_8_256,
-   R_DrawSpanCB_8_512,
-   65536.0f,
-   33554432.0f,
-   16777216.0f,
-   8388608.0f
-};
+//==============================================================================
+//
+// TL Span Drawers
+//
+// haleyjd 06/21/08: TL span drawers are needed for double flats and for portal
+// visplane layering.
+//
 
-// the normal, high-precision span drawer
-spandrawer_t r_spandrawer =
-{
-   R_DrawSpanCB_8_64,
-   R_DrawSpanCB_8_128,
-   R_DrawSpanCB_8_256,
-   R_DrawSpanCB_8_512,
-   67108864.0f,
-   33554432.0f,
-   16777216.0f,
-   8388608.0f
-};
+SPAN_FUNC(R_DrawSpanTL_8_64,  TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanTL_8_128, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanTL_8_256, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanTL_8_512, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
+          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
+// Additive blending
+
+SPAN_FUNC(R_DrawSpanAdd_8_64,  ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanAdd_8_128, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanAdd_8_256, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanAdd_8_512, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
+          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
 
 //==============================================================================
 //
@@ -223,88 +433,107 @@ spandrawer_t r_spandrawer =
 //
 // haleyjd 09/10/06: These are for low-detail mode. They use the high-precision
 // drawing code but double up on pixels, making it blocky.
+// Low detail shall only be supported in 8-bit color.
 //
 
-#define LD_SPAN_PROLOGUE() \
-   unsigned xf = span.xfrac, xs = span.xstep; \
-   unsigned yf = span.yfrac, ys = span.ystep; \
-   register byte *dest; \
-   byte *source = (byte *)span.source; \
-   lighttable_t *colormap = span.colormap; \
-   int count = span.x2 - span.x1 + 1; \
-   \
-   dest = ylookup[span.y] + columnofs[span.x1 << 1];
+SPAN_FUNC(R_DrawSpan_LD64,  SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-#define LD_SPAN_LOOP(xshift, yshift, xmask) \
-   while(count >= 4) \
-   { \
-      dest[0] = dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest[2] = dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest[4] = dest[5] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest[6] = dest[7] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      xf += xs; \
-      yf += ys; \
-      \
-      dest += 8; \
-      count -= 4; \
-   } \
-   while(count-- > 0) \
-   { \
-      dest[0] = dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-      \
-      dest += 2; \
-      \
-      xf += xs; \
-      yf += ys; \
-   }
+SPAN_FUNC(R_DrawSpan_LD128, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-static void R_DrawSpan_LD64(void) 
-{ 
-   LD_SPAN_PROLOGUE()
-   LD_SPAN_LOOP(20, 26, 0xFC0)
-}
+SPAN_FUNC(R_DrawSpan_LD256, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-static void R_DrawSpan_LD128(void) 
-{ 
-   LD_SPAN_PROLOGUE()
-   LD_SPAN_LOOP(18, 25, 0x3F80)
-}
+SPAN_FUNC(R_DrawSpan_LD512, SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
+          LD_PUTPIXEL_8, LD_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
 
-static void R_DrawSpan_LD256(void) 
-{ 
-   LD_SPAN_PROLOGUE()
-   LD_SPAN_LOOP(16, 24, 0xFF00)
-}
+// Translucent variants
 
-static void R_DrawSpan_LD512(void) 
-{ 
-   LD_SPAN_PROLOGUE()
-   LD_SPAN_LOOP(14, 23, 0x3FE00)
-}
+SPAN_FUNC(R_DrawSpanTL_LD64,  TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanTL_LD128, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanTL_LD256, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanTL_LD512, TL_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
+          LDTL_PUTPIXEL_8, LDTL_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+// Additive variants
+
+SPAN_FUNC(R_DrawSpanAdd_LD64,  ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
+          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanAdd_LD128, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
+          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanAdd_LD256, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
+          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+SPAN_FUNC(R_DrawSpanAdd_LD512, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
+          LDA_PUTPIXEL_8, LDA_PUTPIXEL_EXTRA_8, LD_DESTSTEP_8)
+
+//==============================================================================
+//
+// Span Engine Objects
+//
+
+#define XS64  (1 << 26)
+#define XS128 (1 << 25)
+#define XS256 (1 << 24)
+#define XS512 (1 << 23)
+#define XSOLD (1 << 16)
+
+// lpspandrawer: uses the optimized but low-precision span drawing
+// routine for opaque 64x64 flats. Same as above for others.
+spandrawer_t r_lpspandrawer =
+{
+   {
+      { R_DrawSpan_OLD,     R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512  },
+      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512  },
+      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512 },
+   },
+
+   {
+      { XSOLD, XS128, XS256, XS512 },
+      { XS64,  XS128, XS256, XS512 },
+      { XS64,  XS128, XS256, XS512 },
+   },
+};
+// the normal, high-precision span drawer
+spandrawer_t r_spandrawer =
+{
+   {
+      { R_DrawSpanCB_8_64,  R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512  },
+      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512  },
+      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512 },
+   },
+
+   {
+      { XS64, XS128, XS256, XS512 },
+      { XS64, XS128, XS256, XS512 },
+      { XS64, XS128, XS256, XS512 },
+   },
+};
 
 // low-detail spandrawer
 spandrawer_t r_lowspandrawer =
 {
-   R_DrawSpan_LD64,
-   R_DrawSpan_LD128,
-   R_DrawSpan_LD256,
-   R_DrawSpan_LD512,
-   67108864.0f,
-   33554432.0f,
-   16777216.0f,
-   8388608.0f
-};
+   {
+      { R_DrawSpan_LD64,    R_DrawSpan_LD128,    R_DrawSpan_LD256,    R_DrawSpan_LD512    },
+      { R_DrawSpanTL_LD64,  R_DrawSpanTL_LD128,  R_DrawSpanTL_LD256,  R_DrawSpanTL_LD512  },
+      { R_DrawSpanAdd_LD64, R_DrawSpanAdd_LD128, R_DrawSpanAdd_LD256, R_DrawSpanAdd_LD512 },
+   },
 
-#endif
+   {
+      { XS64, XS128, XS256, XS512 },
+      { XS64, XS128, XS256, XS512 },
+      { XS64, XS128, XS256, XS512 },
+   },
+};
 
 // EOF
 

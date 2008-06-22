@@ -62,7 +62,7 @@ extern int *flattranslation;
 extern int *texturetranslation;
 
 // SoM: flat lump size
-extern int *flatsize;
+extern byte *flatsize;
 
 // Sprite....
 extern int firstspritelump;

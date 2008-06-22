@@ -829,9 +829,10 @@ static void do_draw_plane(visplane_t *pl)
    {
       int stop, light;
       int swirling;
+      byte fs;
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      swirling = (flattranslation[pl->picnum] == -1) && flatsize[pl->picnum] == 4096;
+      swirling = (flattranslation[pl->picnum] == -1) && flatsize[pl->picnum] == FLAT_64;
 
       if(swirling)
          plane.source = R_DistortedFlat(pl->picnum);
@@ -849,24 +850,13 @@ static void do_draw_plane(visplane_t *pl)
       }
 
       // SoM: support for flats of different sizes!!
-      switch(flatsize[flattranslation[pl->picnum]])
-      {
-      case 16384:
-         flatfunc = r_span_engine->DrawSpan128;
-         plane.fixedunit = r_span_engine->fixedunit128;
-         break;
-      case 65536:
-         flatfunc = r_span_engine->DrawSpan256;
-         plane.fixedunit = r_span_engine->fixedunit256;
-         break;
-      case 262144:
-         flatfunc = r_span_engine->DrawSpan512;
-         plane.fixedunit = r_span_engine->fixedunit512;
-         break;
-      default:
-         flatfunc = r_span_engine->DrawSpan64;
-         plane.fixedunit = r_span_engine->fixedunit64;
-      };
+      fs = flatsize[flattranslation[pl->picnum]];
+      
+      // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
+      // span drawstyles (ie. translucency)
+
+      flatfunc        = r_span_engine->DrawSpan[0][fs];
+      plane.fixedunit = r_span_engine->fixedunits[0][fs];
         
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;

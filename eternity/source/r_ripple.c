@@ -34,6 +34,7 @@
 
 #include "r_defs.h"
 #include "r_data.h"
+#include "r_draw.h"
 #include "w_wad.h"
 #include "v_video.h"
 #include "z_zone.h"
@@ -81,7 +82,7 @@ byte *R_DistortedFlat(int flatnum)
    int leveltic = gametic;
    
    // SoM: different flat sizes?
-   if(flatsize[flatnum] != 4096)
+   if(flatsize[flatnum] != FLAT_64)
       return W_CacheLumpNum(firstflat + flatnum, PU_CACHE);
 
    // built this tic?

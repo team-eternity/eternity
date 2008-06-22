@@ -63,6 +63,25 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
 // start of a 64*64 tile image
 extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
 
+// haleyjd 06/22/08: Span styles enumeration
+enum
+{
+   SPAN_STYLE_NORMAL,
+   SPAN_STYLE_TL,
+   SPAN_STYLE_ADD,
+   SPAN_NUMSTYLES
+};
+
+// haleyjd 06/22/08: Flat sizes enumeration
+enum
+{
+   FLAT_64,
+   FLAT_128,
+   FLAT_256,
+   FLAT_512,
+   FLAT_NUMSIZES
+};
+
 //
 // spandrawer_t
 //
@@ -72,14 +91,11 @@ extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
 //
 typedef struct spandrawer_s
 {
-   void (*DrawSpan64) (void);
-   void (*DrawSpan128)(void);
-   void (*DrawSpan256)(void);
-   void (*DrawSpan512)(void);
+   void (*DrawSpan[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
    
    // SoM: store the fixed point units here so the rasterizer can pre-shift 
    // everything
-   float fixedunit64, fixedunit128, fixedunit256, fixedunit512;
+   float fixedunits[SPAN_NUMSTYLES][FLAT_NUMSIZES];
 } spandrawer_t;
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
