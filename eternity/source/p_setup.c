@@ -1487,7 +1487,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    // haleyjd 03/15/03: clear levelscript callbacks
    // haleyjd 01/07/07: reset ACS interpreter state
-   A_RemoveCallbacks(SC_VM_LEVELSCRIPT);
+   SM_RemoveCallbacks(SC_VM_LEVELSCRIPT);
    ACS_InitLevel();
 
    if(debugfile)
@@ -1690,7 +1690,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
       camera = NULL;        // camera off
 
    // haleyjd 03/15/03: load and initialize any level scripts
-   A_InitLevelScript();
+   SM_InitLevelScript();
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    // ACS_FIXME: support ACS in Doom maps somehow?   

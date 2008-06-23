@@ -225,10 +225,10 @@ void HU_Start(void)
 
    // execute script event handlers
    if(gameScriptLoaded)
-      A_OptScriptCallback(&GameScript, "OnHUDStart");
+      SM_OptScriptCallback(&GameScript, "OnHUDStart");
 
    if(levelScriptLoaded)
-      A_OptScriptCallback(&LevelScript, "OnHUDStart");
+      SM_OptScriptCallback(&LevelScript, "OnHUDStart");
 }
 
 //
@@ -243,10 +243,10 @@ void HU_Drawer(void)
 
    // execute script event handlers
    if(gameScriptLoaded)
-      A_OptScriptCallback(&GameScript, "OnHUDPreDraw");
+      SM_OptScriptCallback(&GameScript, "OnHUDPreDraw");
 
    if(levelScriptLoaded)
-      A_OptScriptCallback(&LevelScript, "OnHUDPreDraw");
+      SM_OptScriptCallback(&LevelScript, "OnHUDPreDraw");
 
    // call all widget drawer functions
    for(i = 0; i < NUMWIDGETCHAINS; ++i)
@@ -1716,7 +1716,7 @@ static cell AMX_NATIVE_CALL sm_movewidget(AMX *amx, cell *params)
    hu_widget_t *widget;
 
    // get name of widget
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -1761,12 +1761,12 @@ static cell AMX_NATIVE_CALL sm_newpatchwidget(AMX *amx, cell *params)
    int err;
    char *name, *patch;
 
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
    }
-   if((err = A_GetSmallString(amx, &patch, params[2])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &patch, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       free(name);
@@ -1789,14 +1789,14 @@ static cell AMX_NATIVE_CALL sm_setwidgetpatch(AMX *amx, cell *params)
    hu_patchwidget_t *pw;
 
    // get name of widget
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
    }
 
    // get name of patch
-   if((err = A_GetSmallString(amx, &patch, params[2])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &patch, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       free(name);
@@ -1828,7 +1828,7 @@ static cell AMX_NATIVE_CALL sm_patchwidgetcolor(AMX *amx, cell *params)
    hu_patchwidget_t *pw;
 
    // get name of widget
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -1855,12 +1855,12 @@ static cell AMX_NATIVE_CALL sm_newtextwidget(AMX *amx, cell *params)
    int err;
    char *name, *msg;
 
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
    }
-   if((err = A_GetSmallString(amx, &msg, params[2])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &msg, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       free(name);
@@ -1895,7 +1895,7 @@ static cell AMX_NATIVE_CALL sm_getwidgettext(AMX *amx, cell *params)
    }
 
    // get name of widget
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -1930,14 +1930,14 @@ static cell AMX_NATIVE_CALL sm_setwidgettext(AMX *amx, cell *params)
    hu_textwidget_t *tw;
 
    // get name of widget
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
    }
 
    // get value
-   if((err = A_GetSmallString(amx, &value, params[2])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &value, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       free(name);
@@ -1970,7 +1970,7 @@ static cell AMX_NATIVE_CALL sm_togglewidget(AMX *amx, cell *params)
    char *name;
    hu_widget_t *widget;
 
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -1989,7 +1989,7 @@ static cell AMX_NATIVE_CALL sm_centermsgtimed(AMX *amx, cell *params)
    int tics, err;
    char *text;
 
-   if((err = A_GetSmallString(amx, &text, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &text, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;

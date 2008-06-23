@@ -142,7 +142,7 @@ typedef struct sc_callback_s
 // Note that the AMX is also given a pointer back to its SmallContext
 // container, so that native functions can retrieve the context data.
 // This is done using the Small USERDATA facility and the helper
-// function A_GetContextForAMX.
+// function SM_GetContextForAMX.
 //
 typedef struct SmallContext_s
 {
@@ -154,29 +154,29 @@ typedef struct SmallContext_s
    sc_vm_e vm;                    // vm this context is or is a child of   
 } SmallContext_t;
 
-SmallContext_t *A_GetContextForAMX(AMX *);
-SmallContext_t *A_CreateChildContext(SmallContext_t *, SmallContext_t *);
-void A_DestroyChildContext(SmallContext_t *);
+SmallContext_t *SM_GetContextForAMX(AMX *);
+SmallContext_t *SM_CreateChildContext(SmallContext_t *, SmallContext_t *);
+void SM_DestroyChildContext(SmallContext_t *);
 
-int  A_GetSmallString(AMX *amx, char **dest, cell addr);
-byte *A_GetAMXDataSegment(AMX *amx, long *size);
-void A_ClearInvocation(SmallContext_t *);
-void A_InitGameScript(void);
-void A_InitLevelScript(void);
-void A_InitSmall(void);
-sc_callback_t *A_GetCallbackList(void);
-void A_LinkCallback(sc_callback_t *);
-void A_ExecuteCallbacks(void);
-void A_RemoveCallbacks(int vm);
-void A_RemoveCallback(sc_callback_t *callback);
-int  A_AddCallback(char *scrname, sc_vm_e vm, 
+int  SM_GetSmallString(AMX *amx, char **dest, cell addr);
+byte *SM_GetAMXDataSegment(AMX *amx, long *size);
+void SM_ClearInvocation(SmallContext_t *);
+void SM_InitGameScript(void);
+void SM_InitLevelScript(void);
+void SM_InitSmall(void);
+sc_callback_t *SM_GetCallbackList(void);
+void SM_LinkCallback(sc_callback_t *);
+void SM_ExecuteCallbacks(void);
+void SM_RemoveCallbacks(int vm);
+void SM_RemoveCallback(sc_callback_t *callback);
+int  SM_AddCallback(char *scrname, sc_vm_e vm, 
                    int waittype, int waitdata, int waitflags);
-cell A_ExecScriptV(AMX *amx, int fnNum);
-cell A_ExecScriptByNum(AMX *amx, int number, int numparams, 
+cell SM_ExecScriptV(AMX *amx, int fnNum);
+cell SM_ExecScriptByNum(AMX *amx, int number, int numparams, 
                        cell params[]);
-cell A_ExecScriptByNumV(AMX *amx, int number);
+cell SM_ExecScriptByNumV(AMX *amx, int number);
 
-void A_OptScriptCallback(SmallContext_t *ctx, const char *cbname);
+void SM_OptScriptCallback(SmallContext_t *ctx, const char *cbname);
 
 extern boolean gameScriptLoaded;
 extern boolean levelScriptLoaded;

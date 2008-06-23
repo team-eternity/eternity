@@ -2745,7 +2745,7 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
    int type, spottid, tid, ang;
    angle_t angle;
    mobj_t *mo, *spawnspot = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -2796,7 +2796,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
    int err, tid;
    char *sndname;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -2805,7 +2805,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
    }
 
    // get sound name
-   if((err = A_GetSmallString(amx, &sndname, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &sndname, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -2830,7 +2830,7 @@ static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
 {
    int tid, sndnum;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -2860,7 +2860,7 @@ static cell AMX_NATIVE_CALL sm_thinginfosound(AMX *amx, cell *params)
 {
    int tid, typenum;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -2939,7 +2939,7 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
 {
    int value = 0, field, tid;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -2977,7 +2977,7 @@ static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
 {
    int field, value, tid;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -3012,7 +3012,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    char *flags;
    long *results;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -3024,7 +3024,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    op  = (int)params[2];
 
    // get sound name
-   if((err = A_GetSmallString(amx, &flags, params[3])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &flags, params[3])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -3067,7 +3067,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 {
    int tid, friendly;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -3108,7 +3108,7 @@ static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
    int tid;
    boolean friendly = false;
    mobj_t *mo = NULL;
-   SmallContext_t *ctx = A_GetContextForAMX(amx);
+   SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -3135,7 +3135,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
    int tid;
    fixed_t x, y, z;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -3170,7 +3170,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust(AMX *amx, cell *params)
    angle_t angle = FixedToAngle((fixed_t)params[1]);
    fixed_t force = (fixed_t)params[2];
    int     tid   = params[3];
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -3206,7 +3206,7 @@ static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
 {
    int tid, valuetoget;
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {
@@ -3293,7 +3293,7 @@ static cell sm_thingteleport(AMX *amx, cell *params)
    fixed_t oldz;
 
    mobj_t *mo = NULL;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {

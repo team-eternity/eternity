@@ -2797,8 +2797,8 @@ static void D_DoomInit(void)
       D_SetGraphicsMode();
 
    // initialize Small, load game scripts; 01/07/07: init ACS
-   A_InitSmall();
-   A_InitGameScript();
+   SM_InitSmall();
+   SM_InitGameScript();
    ACS_Init();
 
    // haleyjd: updated for eternity

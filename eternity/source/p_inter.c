@@ -1591,7 +1591,7 @@ void P_Whistle(mobj_t *actor, int mobjtype)
 //
 static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
 {
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
    mobj_t *rover = NULL;
 
    if(gamestate != GS_LEVEL)
@@ -1627,7 +1627,7 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 {
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
    mobj_t *rover = NULL;
    mobj_t *inflictor = NULL;
    mobj_t *source = NULL;
@@ -1659,7 +1659,7 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_thinghate(AMX *amx, cell *params)
 {
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
    mobj_t *obj = NULL, *targ = NULL;
 
    if(gamestate != GS_LEVEL)

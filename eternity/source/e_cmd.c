@@ -369,7 +369,7 @@ static cell AMX_NATIVE_CALL sm_thingnumforname(AMX *amx, cell *params)
    char *buff;
    int num, err;
 
-   if((err = A_GetSmallString(amx, &buff, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &buff, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return 0;

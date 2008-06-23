@@ -1397,7 +1397,7 @@ static void P_ArchiveSmallAMX(AMX *amx)
    byte *data;
 
    // get both size of and pointer to data segment
-   data = A_GetAMXDataSegment(amx, &amx_size);
+   data = SM_GetAMXDataSegment(amx, &amx_size);
 
    // check for enough room to save both the size and 
    // the whole data segment
@@ -1427,7 +1427,7 @@ static void P_UnArchiveSmallAMX(AMX *amx)
    byte *data;
 
    // get pointer to AMX data segment and current data segment size
-   data = A_GetAMXDataSegment(amx, &cur_amx_size);
+   data = SM_GetAMXDataSegment(amx, &cur_amx_size);
 
    // read the archived size
    memcpy(&arch_amx_size, save_p, sizeof(long));
@@ -1462,7 +1462,7 @@ static void P_UnArchiveSmallAMX(AMX *amx)
 static void P_ArchiveCallbacks(void)
 {
    int callback_count = 0;
-   sc_callback_t *list = A_GetCallbackList();
+   sc_callback_t *list = SM_GetCallbackList();
    sc_callback_t *rover;
 
    for(rover = list->next; rover != list; rover = rover->next)
@@ -1496,7 +1496,7 @@ static void P_UnArchiveCallbacks(void)
    char vm;
 
    // kill any existing callbacks
-   A_RemoveCallbacks(-1);
+   SM_RemoveCallbacks(-1);
 
    // read until the end marker is hit
    while((vm = *save_p) != SC_VM_END)
@@ -1509,7 +1509,7 @@ static void P_UnArchiveCallbacks(void)
       newCallback->next = newCallback->prev = NULL;
 
       // put this callback into the callback list
-      A_LinkCallback(newCallback);
+      SM_LinkCallback(newCallback);
 
       save_p += sizeof(sc_callback_t);
    }

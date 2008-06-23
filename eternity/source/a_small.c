@@ -88,13 +88,13 @@ SmallContext_t *curLSContext;
 //
 
 //
-// A_GetContextForAMX
+// SM_GetContextForAMX
 //
 // Small natives must call this to retrieve a pointer to the context
 // for the AMX that is passed to them. It is stored using Small's
 // user data facility.
 //
-SmallContext_t *A_GetContextForAMX(AMX *amx)
+SmallContext_t *SM_GetContextForAMX(AMX *amx)
 {
    void *context;
 
@@ -104,10 +104,10 @@ SmallContext_t *A_GetContextForAMX(AMX *amx)
 }
 
 //
-// A_CreateChildContext
+// SM_CreateChildContext
 //
 // This function allows reentrant calls to amx_Exec on the same vm
-// by creating a cloned AMX. A_DestroyChildContext below must be
+// by creating a cloned AMX. SM_DestroyChildContext below must be
 // called afterward to copy the clone's data segment back to the
 // parent and then destroy the clone.
 //
@@ -115,8 +115,8 @@ SmallContext_t *A_GetContextForAMX(AMX *amx)
 // execution. It will return parent if a child context wasn't
 // created.
 //
-SmallContext_t *A_CreateChildContext(SmallContext_t *parent, 
-                                     SmallContext_t *child)
+SmallContext_t *SM_CreateChildContext(SmallContext_t *parent, 
+                                      SmallContext_t *child)
 {
    long dataSize, sthpSize, totalSize;
    byte *data;
@@ -128,7 +128,7 @@ SmallContext_t *A_CreateChildContext(SmallContext_t *parent,
 #ifdef RANGECHECK
    // Big bug if this happens!
    if(parent->child)
-      I_Error("A_CreateChildContext: child SmallContext displaced\n");
+      I_Error("SM_CreateChildContext: child SmallContext displaced\n");
 #endif
 
    memset(child, 0, sizeof(SmallContext_t));
@@ -140,7 +140,7 @@ SmallContext_t *A_CreateChildContext(SmallContext_t *parent,
    data = malloc(totalSize);
 
    if(amx_Clone(&child->smallAMX, &parent->smallAMX, data) != AMX_ERR_NONE)
-      I_Error("A_CreateChildContext: internal Small error\n");
+      I_Error("SM_CreateChildContext: internal Small error\n");
 
    // set child AMX to point back to its context
    amx_SetUserData(&child->smallAMX, 
@@ -164,20 +164,20 @@ SmallContext_t *A_CreateChildContext(SmallContext_t *parent,
    parent->child = child;
 
    // this context was created as a child context;
-   // A_DestroyChildContext should destroy it.
+   // SM_DestroyChildContext should destroy it.
    child->isChild = true;
 
    return child;
 }
 
 //
-// A_DestroyChildContext
+// SM_DestroyChildContext
 //
-// Cleans up after A_CreateChildContext. This function will ignore any
+// Cleans up after SM_CreateChildContext. This function will ignore any
 // context that wasn't created as a child to begin with, and is thus
 // safe to always call, even in non-reentrant situations.
 //
-void A_DestroyChildContext(SmallContext_t *context)
+void SM_DestroyChildContext(SmallContext_t *context)
 {
    sc_vm_e vmNum;
    byte *dest;
@@ -192,11 +192,11 @@ void A_DestroyChildContext(SmallContext_t *context)
 #ifdef RANGECHECK
    // A context is marked as a child but has no parent??
    if(!parent)
-      I_Error("A_DestroyChildContext: child context with no parent!\n");
+      I_Error("SM_DestroyChildContext: child context with no parent!\n");
 #endif
 
    // copy child data segment back into parent
-   dest = A_GetAMXDataSegment(&parent->smallAMX, &size);
+   dest = SM_GetAMXDataSegment(&parent->smallAMX, &size);
    memcpy(dest, context->smallAMX.data, size);
 
    // free the previously allocated child data segment
@@ -221,12 +221,12 @@ void A_DestroyChildContext(SmallContext_t *context)
 
 
 //
-// A_AMXProgramSize
+// SM_AMXProgramSize
 //
 // Returns the total amount of memory to allocate for an entire
 // AMX script.
 //
-static size_t A_AMXProgramSize(char *lumpname)
+static size_t SM_AMXProgramSize(char *lumpname)
 {
    int lumpnum;
    AMX_HEADER hdr;
@@ -245,12 +245,12 @@ static size_t A_AMXProgramSize(char *lumpname)
 }
 
 //
-// A_AMXLoadProgram
+// SM_AMXLoadProgram
 //
 // Loads a script from the requested lump and initializes the
 // corresponding AMX structure.
 //
-static int A_AMXLoadProgram(AMX *amx, char *lumpname, void *memblock)
+static int SM_AMXLoadProgram(AMX *amx, char *lumpname, void *memblock)
 {
    int lumpnum;
    byte *lump;
@@ -314,13 +314,13 @@ const char *AMXAPI aux_StrError(int errnum)
 }
 
 //
-// A_AMXError
+// SM_AMXError
 //
 // Handles both internal AMX errors and implementation-defined
 // errors caused by setup or native functions. Prints information
 // to the console and makes a warning sound.
 //
-static void A_AMXError(int err)
+static void SM_AMXError(int err)
 {
    const char *errmsg = NULL;
    static const char *msgs[SC_ERR_NUMERRS] =
@@ -373,14 +373,14 @@ extern AMX_NATIVE_INFO hustuff_Natives[];
 extern AMX_NATIVE_INFO    ptcl_Natives[];
 
 //
-// A_RegisterNatives
+// SM_RegisterNatives
 //
 // Registers all native functions with the given AMX.
 // The native functions registered here are in various modules. 
 // I feel this is preferable to putting all natives in one giant, 
 // entangled module.
 //
-static int A_RegisterNatives(AMX *amx)
+static int SM_RegisterNatives(AMX *amx)
 {
    // register each module's natives
    amx_Register(amx, cons_io_Natives, -1); // c_io   
@@ -406,12 +406,12 @@ static int A_RegisterNatives(AMX *amx)
 }
 
 //
-// A_GetSmallString
+// SM_GetSmallString
 //
 // Convenience method that does everything necessary to allocate
 // and read a string from a Small VM address.
 //
-int A_GetSmallString(AMX *amx, char **dest, cell addr)
+int SM_GetSmallString(AMX *amx, char **dest, cell addr)
 {
    cell *cellstr;
    int err, len;
@@ -427,12 +427,12 @@ int A_GetSmallString(AMX *amx, char **dest, cell addr)
 }
 
 //
-// A_GetAMXDataSegment
+// SM_GetAMXDataSegment
 //
 // Returns a pointer to the given AMX's data segment, and can
 // optionally return the size of the segment in bytes in *size.
 //
-byte *A_GetAMXDataSegment(AMX *amx, long *size)
+byte *SM_GetAMXDataSegment(AMX *amx, long *size)
 {
    AMX_HEADER *hdr = (AMX_HEADER *)amx->base;
 
@@ -447,12 +447,12 @@ byte *A_GetAMXDataSegment(AMX *amx, long *size)
 //
 
 //
-// A_ClearInvocation
+// SM_ClearInvocation
 //
 // Resets the invocation structure to its default state.
 // This must be done after any script execution.
 //
-void A_ClearInvocation(SmallContext_t *sc)
+void SM_ClearInvocation(SmallContext_t *sc)
 {
    memset(&sc->invocationData, 0, sizeof(sc_invoke_t));
 }
@@ -462,7 +462,7 @@ void A_ClearInvocation(SmallContext_t *sc)
 //
 // Optional Engine Callback Dispatchers
 //
-void A_OptScriptCallback(SmallContext_t *ctx, const char *cbname)
+void SM_OptScriptCallback(SmallContext_t *ctx, const char *cbname)
 {
    int index;
    AMX *amx = &ctx->smallAMX;
@@ -470,17 +470,17 @@ void A_OptScriptCallback(SmallContext_t *ctx, const char *cbname)
    if(amx_FindPublic(amx, cbname, &index) == AMX_ERR_NONE)
    {
       ctx->invocationData.invokeType = SC_INVOKE_CALLBACK;
-      A_ExecScriptV(amx, index);
-      A_ClearInvocation(ctx);
+      SM_ExecScriptV(amx, index);
+      SM_ClearInvocation(ctx);
    }
 }
 
 //
-// A_InitGameScript
+// SM_InitGameScript
 //
 // Sets up the global gamescript VM.
 //
-void A_InitGameScript(void)
+void SM_InitGameScript(void)
 {
    int memsize;
    int error;
@@ -493,7 +493,7 @@ void A_InitGameScript(void)
 
    gameScriptLoaded = false;
 
-   C_Printf(FC_HI "A_InitGameScript: " 
+   C_Printf(FC_HI "SM_InitGameScript: " 
             FC_NORMAL "loading game scripts\n");
 
    // 07/19/03: go ahead and check if GAMESCR exists
@@ -503,9 +503,9 @@ void A_InitGameScript(void)
    if(W_CheckNumForName("GAMESCR") == -1)
       return;
 
-   if(!(memsize = A_AMXProgramSize("GAMESCR")))
+   if(!(memsize = SM_AMXProgramSize("GAMESCR")))
    {
-      A_AMXError(SC_ERR_READ | SC_ERR_MASK);
+      SM_AMXError(SC_ERR_READ | SC_ERR_MASK);
       return;
    }
 
@@ -520,18 +520,18 @@ void A_InitGameScript(void)
    gameScriptData = Z_Malloc(memsize, PU_STATIC, NULL);
 
    // load the GAMESCR lump
-   error = A_AMXLoadProgram(amx, "GAMESCR", gameScriptData);
+   error = SM_AMXLoadProgram(amx, "GAMESCR", gameScriptData);
 
    if(error != AMX_ERR_NONE)
    {
-      A_AMXError(error);
+      SM_AMXError(error);
       return;
    }
 
    // register native functions
-   if((error = A_RegisterNatives(amx)) != AMX_ERR_NONE)
+   if((error = SM_RegisterNatives(amx)) != AMX_ERR_NONE)
    {
-      A_AMXError(error);
+      SM_AMXError(error);
       return;
    }
 
@@ -545,15 +545,15 @@ void A_InitGameScript(void)
    amx_SetUserData(amx, AMX_USERTAG('C','N','T','X'), &GameScript);
 
    // run the init script, if it exists
-   A_OptScriptCallback(&GameScript, "OnInit");
+   SM_OptScriptCallback(&GameScript, "OnInit");
 }
 
 //
-// A_InitLevelScript
+// SM_InitLevelScript
 //
 // Sets up the levelscript VM for the current level.
 //
-void A_InitLevelScript(void)
+void SM_InitLevelScript(void)
 {
    int memsize;
    int error;
@@ -577,9 +577,9 @@ void A_InitLevelScript(void)
    if(!LevelInfo.hasScripts) // current level has no scripts
       return;
 
-   if(!(memsize = A_AMXProgramSize(LevelInfo.scriptLump)))
+   if(!(memsize = SM_AMXProgramSize(LevelInfo.scriptLump)))
    {
-      A_AMXError(SC_ERR_READ | SC_ERR_MASK);
+      SM_AMXError(SC_ERR_READ | SC_ERR_MASK);
       return;
    }
 
@@ -587,18 +587,18 @@ void A_InitLevelScript(void)
    levelScriptData = Z_Malloc(memsize, PU_STATIC, NULL);
 
    // load the script
-   error = A_AMXLoadProgram(amx, LevelInfo.scriptLump, levelScriptData);
+   error = SM_AMXLoadProgram(amx, LevelInfo.scriptLump, levelScriptData);
 
    if(error != AMX_ERR_NONE)
    {
-      A_AMXError(error);
+      SM_AMXError(error);
       return;
    }
 
    // register native functions
-   if((error = A_RegisterNatives(amx)) != AMX_ERR_NONE)
+   if((error = SM_RegisterNatives(amx)) != AMX_ERR_NONE)
    {
-      A_AMXError(error);
+      SM_AMXError(error);
       return;
    }
 
@@ -616,7 +616,7 @@ void A_InitLevelScript(void)
    // in a saved game, so running the script again would be unexpected.
 
    if(gameaction != ga_loadgame)
-      A_OptScriptCallback(&LevelScript, "OnInit");
+      SM_OptScriptCallback(&LevelScript, "OnInit");
 }
 
 //
@@ -624,29 +624,29 @@ void A_InitLevelScript(void)
 //
 
 //
-// A_ExecScriptV
+// SM_ExecScriptV
 //
 // Execute a script by internal AMX number, passing no params.
 //
-cell A_ExecScriptV(AMX *amx, int fnNum)
+cell SM_ExecScriptV(AMX *amx, int fnNum)
 {
    int err;
    cell retval;
 
    if((err = amx_Exec(amx, &retval, fnNum, 0)) != AMX_ERR_NONE)
    {
-      A_AMXError(err);
+      SM_AMXError(err);
    }
 
    return retval;
 }
 
 //
-// A_ExecScriptNameV
+// SM_ExecScriptNameV
 //
 // Execute a script, passing no parameters
 //
-cell A_ExecScriptNameV(AMX *amx, char *fn)
+cell SM_ExecScriptNameV(AMX *amx, char *fn)
 {
    int err;
    int index;
@@ -654,24 +654,24 @@ cell A_ExecScriptNameV(AMX *amx, char *fn)
 
    if((err = amx_FindPublic(amx, fn, &index)) != AMX_ERR_NONE)
    {
-      A_AMXError(err);
+      SM_AMXError(err);
       return 0;
    }
 
    if((err = amx_Exec(amx, &retval, index, 0)) != AMX_ERR_NONE)
    {
-      A_AMXError(err);
+      SM_AMXError(err);
    }
 
    return retval;
 }
 
 //
-// A_ExecScriptNameI
+// SM_ExecScriptNameI
 //
 // Execute a script, passing a given number of integer parameters
 //
-cell A_ExecScriptNameI(AMX *amx, char *fn, 
+cell SM_ExecScriptNameI(AMX *amx, char *fn, 
                        int numparams, cell params[])
 {
    int err;
@@ -680,27 +680,27 @@ cell A_ExecScriptNameI(AMX *amx, char *fn,
 
    if((err = amx_FindPublic(amx, fn, &index)) != AMX_ERR_NONE)
    {
-      A_AMXError(err);
+      SM_AMXError(err);
       return 0;
    }
 
    if((err = amx_Execv(amx, &retval, index, numparams, params)) 
          != AMX_ERR_NONE)
    {
-      A_AMXError(err);
+      SM_AMXError(err);
    }
 
    return retval;
 }
 
 //
-// A_ExecScriptByNum
+// SM_ExecScriptByNum
 //
 // Implements call by number, for use from linedefs and frames.
 // The number given is translated into "Script<number>", which
 // must match the name of a public function in the given AMX.
 //
-cell A_ExecScriptByNum(AMX *amx, int number, int numparams, 
+cell SM_ExecScriptByNum(AMX *amx, int number, int numparams, 
                        cell params[])
 {
    char scriptname[64];
@@ -708,17 +708,17 @@ cell A_ExecScriptByNum(AMX *amx, int number, int numparams,
    psnprintf(scriptname, sizeof(scriptname), 
              "%s%d", "Script", number);
 
-   return A_ExecScriptNameI(amx, scriptname, numparams, params);
+   return SM_ExecScriptNameI(amx, scriptname, numparams, params);
 }
 
-cell A_ExecScriptByNumV(AMX *amx, int number)
+cell SM_ExecScriptByNumV(AMX *amx, int number)
 {
    char scriptname[64];
 
    psnprintf(scriptname, sizeof(scriptname), 
              "%s%d", "Script", number);
 
-   return A_ExecScriptNameV(amx, scriptname);
+   return SM_ExecScriptNameV(amx, scriptname);
 }
 
 //
@@ -729,7 +729,7 @@ static sc_callback_t *currentcb;
 static sc_callback_t callBackHead;
 
 //
-// A_GetCallbackList
+// SM_GetCallbackList
 //
 // This is needed by the save/load game code, so it can save
 // callbacks, and then clear out and restore the old callback
@@ -737,17 +737,17 @@ static sc_callback_t callBackHead;
 // I don't like introducing more globals, there are too many
 // as it is ;)
 //
-sc_callback_t *A_GetCallbackList(void) 
+sc_callback_t *SM_GetCallbackList(void) 
 { 
    return &callBackHead; 
 }
 
 //
-// A_LinkCallback
+// SM_LinkCallback
 //
 // Puts a pre-built callback into the callback list.
 //
-void A_LinkCallback(sc_callback_t *callback)
+void SM_LinkCallback(sc_callback_t *callback)
 {
    // insert callback at head of list (order is irrelevant)
    callback->prev = &callBackHead;
@@ -757,13 +757,13 @@ void A_LinkCallback(sc_callback_t *callback)
 }
 
 //
-// A_AddCallback
+// SM_AddCallback
 //
 // Schedules a callback for the given vm -- the indicated
 // script will be called at the time indicated by its wait type
 // and data. Callbacks are kept in a double-linked list.
 //
-int A_AddCallback(char *scrname, sc_vm_e vm, int waittype,
+int SM_AddCallback(char *scrname, sc_vm_e vm, int waittype,
                   int waitdata, int waitflags)
 {
    AMX *pvm;
@@ -804,19 +804,19 @@ int A_AddCallback(char *scrname, sc_vm_e vm, int waittype,
    newCallback->flags     = waitflags;
 
    // link callback into list
-   A_LinkCallback(newCallback);
+   SM_LinkCallback(newCallback);
    
    return AMX_ERR_NONE;
 }
 
 //
-// A_RemoveCallback
+// SM_RemoveCallback
 //
 // Unlinks and frees the indicated callback structure.
 // This is safe to call in a loop that uses currentcb to track
 // its position (this works just like the thinker list code).
 //
-void A_RemoveCallback(sc_callback_t *callback)
+void SM_RemoveCallback(sc_callback_t *callback)
 {
    // modify currentcb
    currentcb = callback->prev;
@@ -827,30 +827,30 @@ void A_RemoveCallback(sc_callback_t *callback)
 }
 
 //
-// A_RemoveCallbacks
+// SM_RemoveCallbacks
 //
 // Removes all callbacks matching the vm class, or all callbacks if
 // vm is equal to -1.
 //
-void A_RemoveCallbacks(int vm)
+void SM_RemoveCallbacks(int vm)
 {
    for(currentcb = callBackHead.next; 
        currentcb != &callBackHead; 
        currentcb = currentcb->next)
    {
       if(vm == -1 || vm == currentcb->vm)
-         A_RemoveCallback(currentcb);
+         SM_RemoveCallback(currentcb);
    }
 }
 
 //
-// A_WaitFinished
+// SM_WaitFinished
 //
 // Returns true if the given callback is ready to execute.
 // This code is actually the only thing that has made its
 // way here from FraggleScript :)
 //
-static boolean A_WaitFinished(sc_callback_t *callback)
+static boolean SM_WaitFinished(sc_callback_t *callback)
 {
    // check pause flags
 
@@ -883,14 +883,14 @@ static boolean A_WaitFinished(sc_callback_t *callback)
 }
 
 //
-// A_ExecuteCallbacks
+// SM_ExecuteCallbacks
 //
 // Runs down the double-linked list of callbacks and checks each
 // to see if it is ready to execute. If a callback executes, it is
 // immediately removed. Callbacks should be re-registered by the
 // callback script if continuous timer-style execution is desired.
 //
-void A_ExecuteCallbacks(void)
+void SM_ExecuteCallbacks(void)
 {
    AMX *vm;
    SmallContext_t *context;
@@ -914,7 +914,7 @@ void A_ExecuteCallbacks(void)
          break;
       }
 
-      if(A_WaitFinished(currentcb))
+      if(SM_WaitFinished(currentcb))
       {
          // execute the callback
          context->invocationData.invokeType = SC_INVOKE_CALLBACK;
@@ -923,23 +923,23 @@ void A_ExecuteCallbacks(void)
          if((err = amx_Exec(vm, &retval, currentcb->scriptNum, 0))
                  != AMX_ERR_NONE)
          {
-            A_AMXError(err);
+            SM_AMXError(err);
          }
 
-         A_ClearInvocation(context);
+         SM_ClearInvocation(context);
 
          // remove this callback from the list
-         A_RemoveCallback(currentcb);
+         SM_RemoveCallback(currentcb);
       }
    }
 }
 
 //
-// A_InitSmall
+// SM_InitSmall
 //
 // Called at program startup. Sets up basic stuff needed for Small.
 //
-void A_InitSmall(void)
+void SM_InitSmall(void)
 {
    // initialize the double-linked callback list
    callBackHead.next = callBackHead.prev = &callBackHead;
@@ -954,7 +954,7 @@ void A_InitSmall(void)
 //
 // Prints a list of running callback data to the console
 //
-CONSOLE_COMMAND(a_running, 0)
+CONSOLE_COMMAND(sm_running, 0)
 {
    sc_callback_t *cb;
    int i = 0;
@@ -972,7 +972,7 @@ CONSOLE_COMMAND(a_running, 0)
 //
 // Executes a script with no arguments from the console
 //
-CONSOLE_COMMAND(a_execv, cf_notnet)
+CONSOLE_COMMAND(sm_execv, cf_notnet)
 {
    SmallContext_t *context;
    sc_vm_e vmNum;
@@ -1014,9 +1014,9 @@ CONSOLE_COMMAND(a_execv, cf_notnet)
    if(gamestate == GS_LEVEL && players[cmdsrc].mo)
       context->invocationData.trigger = players[cmdsrc].mo;
 
-   A_ExecScriptNameV(vm, c_argv[1]);
+   SM_ExecScriptNameV(vm, c_argv[1]);
 
-   A_ClearInvocation(context);
+   SM_ClearInvocation(context);
 }
 
 //
@@ -1025,7 +1025,7 @@ CONSOLE_COMMAND(a_execv, cf_notnet)
 // Executes a script with any number of integer parameters
 // from the console
 //
-CONSOLE_COMMAND(a_execi, cf_notnet)
+CONSOLE_COMMAND(sm_execi, cf_notnet)
 {
    SmallContext_t *context;
    AMX *vm;
@@ -1078,18 +1078,18 @@ CONSOLE_COMMAND(a_execi, cf_notnet)
    if(gamestate == GS_LEVEL && players[cmdsrc].mo)
       context->invocationData.trigger = players[cmdsrc].mo;
 
-   A_ExecScriptNameI(vm, c_argv[1], argcount, params);
+   SM_ExecScriptNameI(vm, c_argv[1], argcount, params);
 
-   A_ClearInvocation(context);
+   SM_ClearInvocation(context);
 
    Z_Free(params);
 }
 
 void A_AddCommands(void)
 {
-   C_AddCommand(a_running);
-   C_AddCommand(a_execv);
-   C_AddCommand(a_execi);
+   C_AddCommand(sm_running);
+   C_AddCommand(sm_execv);
+   C_AddCommand(sm_execi);
 }
 
 // local natives -- these classify as core functionality
@@ -1101,7 +1101,7 @@ void A_AddCommands(void)
 //
 static cell AMX_NATIVE_CALL sm_invoketype(AMX *amx, cell *params)
 {
-   return A_GetContextForAMX(amx)->invocationData.invokeType;
+   return SM_GetContextForAMX(amx)->invocationData.invokeType;
 }
 
 //
@@ -1112,7 +1112,7 @@ static cell AMX_NATIVE_CALL sm_invoketype(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_getCcmdSrc(AMX *amx, cell *params)
 {
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
    sc_invoke_t *invocation = &context->invocationData;
 
    if(invocation->invokeType != SC_INVOKE_CCMD)
@@ -1133,7 +1133,7 @@ static cell AMX_NATIVE_CALL sm_getCcmdSrc(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_getPlayerSrc(AMX *amx, cell *params)
 {
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
    sc_invoke_t *invocation = &context->invocationData;
 
    switch(invocation->invokeType)
@@ -1166,7 +1166,7 @@ static cell AMX_NATIVE_CALL sm_getPlayerSrc(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_getThingSrc(AMX *amx, cell *params)
 {
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
    mobj_t *mo;
 
    if((mo = context->invocationData.trigger))
@@ -1226,12 +1226,12 @@ static cell AMX_NATIVE_CALL sm_setcallback(AMX *amx, cell *params)
    sc_vm_e vm;
    char *scrname;
    int err;
-   SmallContext_t *context = A_GetContextForAMX(amx);
+   SmallContext_t *context = SM_GetContextForAMX(amx);
 
    vm = context->vm;
 
    // get script name
-   if((err = A_GetSmallString(amx, &scrname, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &scrname, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -1241,7 +1241,7 @@ static cell AMX_NATIVE_CALL sm_setcallback(AMX *amx, cell *params)
    waitdata  = (int)params[3];
    waitflags = (int)params[4];
 
-   if((err = A_AddCallback(scrname, vm, waittype, waitdata, waitflags))
+   if((err = SM_AddCallback(scrname, vm, waittype, waitdata, waitflags))
            != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
@@ -1265,7 +1265,7 @@ static cell exec_across(AMX *origAMX, cell *params, SmallContext_t *execContext)
    cell *scrparams;
 
    // get script name
-   if((err = A_GetSmallString(origAMX, &scrname, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(origAMX, &scrname, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(origAMX, err);
       return 0;
@@ -1279,14 +1279,14 @@ static cell exec_across(AMX *origAMX, cell *params, SmallContext_t *execContext)
       scrparams = Z_Malloc(numparams * sizeof(cell), PU_STATIC, NULL);
       memcpy(scrparams, params + 1, numparams * sizeof(cell));
 
-      retval = A_ExecScriptNameI(&execContext->smallAMX, scrname, 
+      retval = SM_ExecScriptNameI(&execContext->smallAMX, scrname, 
                                  numparams, scrparams);
       
       Z_Free(scrparams);
    }
    else
    {
-      retval = A_ExecScriptNameV(&execContext->smallAMX, scrname);
+      retval = SM_ExecScriptNameV(&execContext->smallAMX, scrname);
    }
 
    Z_Free(scrname);
@@ -1302,7 +1302,7 @@ static cell exec_across(AMX *origAMX, cell *params, SmallContext_t *execContext)
 //
 static cell AMX_NATIVE_CALL sm_execgs(AMX *amx, cell *params)
 {
-   SmallContext_t *LScontext = A_GetContextForAMX(amx);
+   SmallContext_t *LScontext = SM_GetContextForAMX(amx);
    SmallContext_t *GScontext = curGSContext;
    SmallContext_t *useContext;
    SmallContext_t newGSContext;
@@ -1323,7 +1323,7 @@ static cell AMX_NATIVE_CALL sm_execgs(AMX *amx, cell *params)
    }
 
    // possibly create a child context of the Gamescript
-   useContext = A_CreateChildContext(GScontext, &newGSContext);
+   useContext = SM_CreateChildContext(GScontext, &newGSContext);
 
    // copy the Levelscript's invocation data to the current context
    memcpy(&useContext->invocationData, &LScontext->invocationData,
@@ -1333,10 +1333,10 @@ static cell AMX_NATIVE_CALL sm_execgs(AMX *amx, cell *params)
    retval = exec_across(amx, params, useContext);
 
    // clear the invocation data
-   A_ClearInvocation(useContext);
+   SM_ClearInvocation(useContext);
 
    // destroy any child context that might have been created
-   A_DestroyChildContext(useContext);
+   SM_DestroyChildContext(useContext);
 
    // return the script's return value
    return retval;
@@ -1350,7 +1350,7 @@ static cell AMX_NATIVE_CALL sm_execgs(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_execls(AMX *amx, cell *params)
 {
-   SmallContext_t *GScontext = A_GetContextForAMX(amx);
+   SmallContext_t *GScontext = SM_GetContextForAMX(amx);
    SmallContext_t *LScontext = curLSContext;
    SmallContext_t *useContext;
    SmallContext_t newLSContext;
@@ -1371,7 +1371,7 @@ static cell AMX_NATIVE_CALL sm_execls(AMX *amx, cell *params)
    }
 
    // possibly create a child context of the Levelscript
-   useContext = A_CreateChildContext(LScontext, &newLSContext);
+   useContext = SM_CreateChildContext(LScontext, &newLSContext);
 
    // copy the Gamescript's invocation data to the current context
    memcpy(&useContext->invocationData, &GScontext->invocationData,
@@ -1381,10 +1381,10 @@ static cell AMX_NATIVE_CALL sm_execls(AMX *amx, cell *params)
    retval = exec_across(amx, params, useContext);
 
    // clear the invocation data
-   A_ClearInvocation(useContext);
+   SM_ClearInvocation(useContext);
 
    // destroy any child context that might have been created
-   A_DestroyChildContext(useContext);
+   SM_DestroyChildContext(useContext);
 
    // return the script's return value
    return retval;
@@ -1398,7 +1398,7 @@ static cell A_GetPublicVarValue(AMX *execAMX, AMX *varAMX, cell nameaddr)
    cell *physvaraddr;
 
    // get name of public variable from the executing AMX
-   if((err = A_GetSmallString(execAMX, &varname, nameaddr)) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(execAMX, &varname, nameaddr)) != AMX_ERR_NONE)
    {
       amx_RaiseError(execAMX, err);
       return -1;
@@ -1434,7 +1434,7 @@ static cell A_SetPublicVarValue(AMX *execAMX, AMX *varAMX, cell nameaddr, cell v
    cell *physvaraddr;
 
    // get name of public variable from the executing AMX
-   if((err = A_GetSmallString(execAMX, &varname, nameaddr)) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(execAMX, &varname, nameaddr)) != AMX_ERR_NONE)
    {
       amx_RaiseError(execAMX, err);
       return -1;

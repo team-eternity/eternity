@@ -3422,20 +3422,20 @@ void A_StartScript(mobj_t *actor)
    }
 
    // possibly create a child context for the selected VM
-   useContext = A_CreateChildContext(rootContext, &newContext);
+   useContext = SM_CreateChildContext(rootContext, &newContext);
 
    // set invocation data
    useContext->invocationData.invokeType = SC_INVOKE_THING;
    useContext->invocationData.trigger = actor;
 
    // execute
-   A_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);
+   SM_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);
 
    // clear invocation data
-   A_ClearInvocation(useContext);
+   SM_ClearInvocation(useContext);
 
    // destroy any child context that might have been created
-   A_DestroyChildContext(useContext);
+   SM_DestroyChildContext(useContext);
 }
 
 E_Keyword_t kwds_A_PlayerStartScript[] =
@@ -3492,7 +3492,7 @@ void A_PlayerStartScript(mobj_t *mo)
    }
 
    // possibly create a child context for the selected VM
-   useContext = A_CreateChildContext(rootContext, &newContext);
+   useContext = SM_CreateChildContext(rootContext, &newContext);
 
    // set invocation data
    useContext->invocationData.invokeType = SC_INVOKE_PLAYER;
@@ -3500,13 +3500,13 @@ void A_PlayerStartScript(mobj_t *mo)
    useContext->invocationData.trigger = mo;
 
    // execute
-   A_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);
+   SM_ExecScriptByNum(&useContext->smallAMX, scriptnum, 3, params);
 
    // clear invocation data
-   A_ClearInvocation(useContext);
+   SM_ClearInvocation(useContext);
 
    // destroy any child context that might have been created
-   A_DestroyChildContext(useContext);
+   SM_DestroyChildContext(useContext);
 }
 
 //

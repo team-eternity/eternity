@@ -1139,7 +1139,7 @@ void P_StartLineScript(line_t *line, mobj_t *thing)
       SmallContext_t newContext;
 
       // possibly create a child context for the Levelscript
-      useContext = A_CreateChildContext(curLSContext, &newContext);
+      useContext = SM_CreateChildContext(curLSContext, &newContext);
 
       // set invocation data
       useContext->invocationData.invokeType = SC_INVOKE_LINE;
@@ -1147,13 +1147,13 @@ void P_StartLineScript(line_t *line, mobj_t *thing)
       useContext->invocationData.line = line;
 
       // execute
-      A_ExecScriptByNumV(&useContext->smallAMX, line->tag);
+      SM_ExecScriptByNumV(&useContext->smallAMX, line->tag);
 
       // clear invocation
-      A_ClearInvocation(useContext);
+      SM_ClearInvocation(useContext);
 
       // destroy any child context that might have been created
-      A_DestroyChildContext(useContext);         
+      SM_DestroyChildContext(useContext);         
    }
    else
       doom_printf(FC_ERROR "P_StartLineScript: No Levelscript.\n");
@@ -4964,7 +4964,7 @@ static cell AMX_NATIVE_CALL sm_sectorcolormap(AMX *amx, cell *params)
       return -1;
    }
 
-   if((err = A_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &name, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;

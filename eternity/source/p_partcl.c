@@ -1460,7 +1460,7 @@ static cell AMX_NATIVE_CALL sm_ptclexplosionthing(AMX *amx, cell *params)
    int tid;
    byte col1, col2;
    mobj_t *mo = NULL;
-   SmallContext_t *ctx = A_GetContextForAMX(amx);
+   SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
    {

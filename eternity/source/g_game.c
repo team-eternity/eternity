@@ -2228,7 +2228,7 @@ void G_Ticker(void)
       Wipe_Ticker();
 
    // haleyjd 03/15/03: execute scheduled Small callbacks
-   A_ExecuteCallbacks();
+   SM_ExecuteCallbacks();
    
    if(gamestate == GS_LEVEL)
    {
@@ -3545,7 +3545,7 @@ static cell AMX_NATIVE_CALL sm_startgame(AMX *amx, cell *params)
    skill = (int)(params[1]) - 1;
 
    // get level name
-   if((err = A_GetSmallString(amx, &levelname, params[2])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &levelname, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return 0;

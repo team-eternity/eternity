@@ -1400,7 +1400,7 @@ static cell AMX_NATIVE_CALL sm_globalsound(AMX *amx, cell *params)
    char *sndname;
 
    // get sound name
-   if((err = A_GetSmallString(amx, &sndname, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &sndname, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return 0;
@@ -1433,7 +1433,7 @@ static cell AMX_NATIVE_CALL sm_sectorsound(AMX *amx, cell *params)
       return -1;
    }
 
-   if((err = A_GetSmallString(amx, &sndname, params[1])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &sndname, params[1])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return 0;

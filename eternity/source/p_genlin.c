@@ -2238,7 +2238,7 @@ static cell AMX_NATIVE_CALL sm_changeceilingtex(AMX *amx, cell *params)
 
    tag = params[1];
 
-   if((err = A_GetSmallString(amx, &flat, params[2])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &flat, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -2269,7 +2269,7 @@ static cell AMX_NATIVE_CALL sm_changefloortex(AMX *amx, cell *params)
 
    tag = params[1];
 
-   if((err = A_GetSmallString(amx, &flat, params[2])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &flat, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -2303,7 +2303,7 @@ static cell AMX_NATIVE_CALL sm_changelinetex(AMX *amx, cell *params)
    side = params[2];       // Front/Back
    pos = params[3];    // Upper/Middle/Lower
 
-   if((err = A_GetSmallString(amx, &texname, params[4])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &texname, params[4])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -2337,7 +2337,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
    side = params[2];       // Front/Back
    pos = params[3];    // Upper/Middle/Lower
 
-   if((err = A_GetSmallString(amx, &texname, params[4])) != AMX_ERR_NONE)
+   if((err = SM_GetSmallString(amx, &texname, params[4])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
       return -1;
@@ -2374,7 +2374,7 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
       return -1;
    }
 
-   ctx = A_GetContextForAMX(amx);
+   ctx = SM_GetContextForAMX(amx);
 
    // If invocation type is SC_INVOKE_LINE, we can pass on the line and
    // thing that triggered this script. This results in the action acting
