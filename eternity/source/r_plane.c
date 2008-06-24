@@ -831,6 +831,9 @@ static void do_draw_plane(visplane_t *pl)
       int swirling;
       byte fs;
 
+      int picnum = flattranslation[pl->picnum] == -1 ? pl->picnum : flattranslation[pl->picnum];
+
+
       // haleyjd 05/19/06: rewritten to avoid crashes
       swirling = (flattranslation[pl->picnum] == -1) && flatsize[pl->picnum] == FLAT_64;
 
@@ -838,19 +841,16 @@ static void do_draw_plane(visplane_t *pl)
          plane.source = R_DistortedFlat(pl->picnum);
       else
       {
-         if(flattranslation[pl->picnum] == -1)
-            flattranslation[pl->picnum] = pl->picnum;
-
          // haleyjd 09/16/06: this was being allocated at PU_STATIC and changed
          // to PU_CACHE below, generating a lot of unnecessary allocator noise.
          // As long as no other memory ops are needed between here and the end
          // of this function (including called functions), this can be PU_CACHE.
          plane.source = 
-            W_CacheLumpNum(firstflat + flattranslation[pl->picnum], PU_CACHE);
+            W_CacheLumpNum(firstflat + picnum, PU_CACHE);
       }
 
       // SoM: support for flats of different sizes!!
-      fs = flatsize[flattranslation[pl->picnum]];
+      fs = flatsize[picnum];
       
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
