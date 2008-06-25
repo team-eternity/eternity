@@ -811,6 +811,8 @@ static void R_AddLine(seg_t *line)
       // SoM 12/10/03: PORTALS
       && seg.backsec->c_portal == seg.frontsec->c_portal
       && seg.backsec->f_portal == seg.frontsec->f_portal
+
+      && !seg.line->linedef->portal
       )
       return;
       
