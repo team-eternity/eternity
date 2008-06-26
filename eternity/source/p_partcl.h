@@ -26,10 +26,10 @@ typedef struct particle_s
    fixed_t x, y, z;
    fixed_t velx, vely, velz;
    fixed_t accx, accy, accz;
+   unsigned int trans;
+   unsigned int fade;
    byte	ttl;
-   byte	trans;
    byte	size;
-   byte	fade;
    byte color;
    int  next;
    int  styleflags; // haleyjd 07/03/03

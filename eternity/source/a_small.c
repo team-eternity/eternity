@@ -1085,7 +1085,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
    Z_Free(params);
 }
 
-void A_AddCommands(void)
+void SM_AddCommands(void)
 {
    C_AddCommand(sm_running);
    C_AddCommand(sm_execv);

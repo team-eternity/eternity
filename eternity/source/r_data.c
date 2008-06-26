@@ -169,12 +169,13 @@ static void R_DrawColumnInCache(const column_t *patch, byte *cache,
 
 //
 // R_GenerateComposite
+//
 // Using the texture definition,
 //  the composite texture is created from the patches,
 //  and each column is cached.
 //
 // Rewritten by Lee Killough for performance and to fix Medusa bug
-
+//
 static void R_GenerateComposite(int texnum)
 {
    byte *block = Z_Malloc(texturecompositesize[texnum], PU_STATIC,

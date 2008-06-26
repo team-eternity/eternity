@@ -308,7 +308,7 @@ extern void       AM_AddCommands(void);        // am_color.c
 
 extern void       PE_AddCommands(void);        // p_enemy.c  -- haleyjd
 extern void   G_Bind_AddCommands(void);        // g_bind.c   -- haleyjd
-extern void        A_AddCommands(void);        // a_small.c  -- haleyjd
+extern void       SM_AddCommands(void);        // a_small.c  -- haleyjd
 extern void      G_DMAddCommands(void);        // g_dmflag.c -- haleyjd
 extern void        E_AddCommands(void);        // e_cmd.c    -- haleyjd
 extern void P_AddGenLineCommands(void);        // p_genlin.c -- haleyjd
@@ -348,7 +348,7 @@ void C_AddCommands()
   AM_AddCommands();
   PE_AddCommands();  // haleyjd
   G_Bind_AddCommands();
-  A_AddCommands();
+  SM_AddCommands();
   G_DMAddCommands();
   E_AddCommands();
   P_AddGenLineCommands();

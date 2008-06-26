@@ -1815,7 +1815,7 @@ void R_DrawParticle(vissprite_t *vis)
             unsigned int fglevel, bglevel;
 
             // look up translucency information
-            fglevel = ((vis->mobjflags + 1) << 8) & ~0x3ff;
+            fglevel = (unsigned int)(vis->mobjflags) & ~0x3ff;
             bglevel = FRACUNIT - fglevel;
             fg2rgb  = Col2RGB8[fglevel >> 10];
             bg2rgb  = Col2RGB8[bglevel >> 10];

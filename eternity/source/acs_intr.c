@@ -170,29 +170,22 @@ enum
 // Static Variables
 //
 
-// pointer to the ACS lump, to which jumps are relative
-static byte *acsdata;
-
-// string table
-static char **acs_stringtbl;
-
-static qstring_t acsPrintBuffer;
-
-// The scripts, as read from the ACS header.
-static acscript_t *scripts;
-static int        acsNumScripts;
-
 // map variables
 static int ACSmapvars[32];
 
 // world variables
 static int ACSworldvars[64];
 
-// if true, we can use ACS on this map
-static boolean acsLoaded;
-
 // deferred scripts
 static deferredacs_t *acsDeferred;
+
+// haleyjd 06/24/08: level script vm for ACS
+static acsvm_t acsLevelScriptVM;
+
+static acsvm_t **acsVMs;   // virtual machines
+static int numACSVMs;      // number of vm's
+static int numACSVMsAlloc; // number of vm pointers allocated
+
 
 //
 // Global Variables
@@ -209,8 +202,25 @@ int ACS_thingtypes[ACS_NUM_THINGTYPES];
 // Static Functions
 //
 
-static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type, 
-                                     long args[5]);
+//
+// ACS_addVirtualMachine
+//
+// haleyjd 06/24/08: keeps track of all ACS virtual machines.
+//
+static void ACS_addVirtualMachine(acsvm_t *vm)
+{
+   if(numACSVMs >= numACSVMsAlloc)
+   {
+      numACSVMsAlloc = numACSVMsAlloc ? numACSVMsAlloc * 2 : 4;
+      acsVMs = (acsvm_t **)realloc(acsVMs, numACSVMsAlloc * sizeof(acsvm_t *));
+   }
+
+   acsVMs[numACSVMs] = vm;
+   vm->id = numACSVMs++;
+}
+
+static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
+                                       int type, long args[5]);
 
 //
 // ACS_stopScript
@@ -231,12 +241,13 @@ static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
 // Starts an open script (a script indicated to start at the beginning of
 // the level).
 //
-static void ACS_runOpenScript(acscript_t *acs, int iNum)
+static void ACS_runOpenScript(acscript_t *acs, int iNum, int vmID)
 {
    acsthinker_t *newScript;
 
    newScript = Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL);
 	
+   newScript->vmID        = vmID;
    newScript->scriptNum   = acs->number;
    newScript->internalNum = iNum;
 
@@ -263,12 +274,12 @@ static void ACS_runOpenScript(acscript_t *acs, int iNum)
 //
 // Currently uses a linear search, since the set is small and fixed-size.
 //
-int ACS_indexForNum(int num)
+int ACS_indexForNum(acsvm_t *vm, int num)
 {
    int idx;
 
-   for(idx = 0; idx < acsNumScripts; ++idx)
-      if(scripts[idx].number == num)
+   for(idx = 0; idx < vm->numScripts; ++idx)
+      if(vm->scripts[idx].number == num)
          break;
 
    return idx;
@@ -466,7 +477,8 @@ void T_ACSThinker(acsthinker_t *script)
    register int stp    = script->stp;
    register int *stack = script->stack;
 
-   acscript_t *acscript = &scripts[script->internalNum];
+   acsvm_t    *vm       = acsVMs[script->vmID];
+   acscript_t *acscript = &(vm->scripts[script->internalNum]);
    int action = ACTION_RUN;
    int opcode, temp, count = 0;
 
@@ -734,11 +746,11 @@ void T_ACSThinker(acsthinker_t *script)
          ACSworldvars[IPNEXT()] -= 1;
          break;
       case OP_BRANCH:
-         ip = (int *)(acsdata + IPCURR());
+         ip = (int *)(vm->data + IPCURR());
          break;
       case OP_BRANCHNOTZERO:
          if((temp = POP()))
-            ip = (int *)(acsdata + IPCURR());
+            ip = (int *)(vm->data + IPCURR());
          else
             ++ip;
          break;
@@ -803,19 +815,19 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_CHANGEFLOOR:
          temp = POP(); // get flat string index
-         P_ChangeFloorTex(acs_stringtbl[temp], POP()); // get tag
+         P_ChangeFloorTex(vm->stringtable[temp], POP()); // get tag
          break;
       case OP_CHANGEFLOOR_IMM:
          temp = *ip++; // get tag
-         P_ChangeFloorTex(acs_stringtbl[IPNEXT()], temp);
+         P_ChangeFloorTex(vm->stringtable[IPNEXT()], temp);
          break;
       case OP_CHANGECEILING:
          temp = POP(); // get flat string index
-         P_ChangeCeilingTex(acs_stringtbl[temp], POP()); // get tag
+         P_ChangeCeilingTex(vm->stringtable[temp], POP()); // get tag
          break;
       case OP_CHANGECEILING_IMM:
          temp = IPNEXT(); // get tag
-         P_ChangeCeilingTex(acs_stringtbl[IPNEXT()], temp);
+         P_ChangeCeilingTex(vm->stringtable[IPNEXT()], temp);
          break;
       case OP_RESTART:
          ip = acscript->code;
@@ -851,7 +863,7 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_BRANCHZERO:
          if(!(temp = POP()))
-            ip = (int *)(acsdata + IPCURR());
+            ip = (int *)(vm->data + IPCURR());
          else
             ++ip;
          break;
@@ -876,31 +888,31 @@ void T_ACSThinker(acsthinker_t *script)
          if(PEEK() == IPNEXT()) // compare top of stack against op+1
          {
             DECSTP(); // take the value off the stack
-            ip = (int *)(acsdata + IPCURR()); // jump to op+2
+            ip = (int *)(vm->data + IPCURR()); // jump to op+2
          }
          else
             ++ip; // increment past offset at op+2, leave value on stack
          break;
       case OP_STARTPRINT:
-         M_QStrClear(&acsPrintBuffer);
+         M_QStrClear(&vm->printBuffer);
          break;
       case OP_ENDPRINT:
          if(script->trigger && script->trigger->player)
-            player_printf(script->trigger->player, acsPrintBuffer.buffer);
+            player_printf(script->trigger->player, vm->printBuffer.buffer);
          else
-            player_printf(&players[consoleplayer], acsPrintBuffer.buffer);
+            player_printf(&players[consoleplayer], vm->printBuffer.buffer);
          break;
       case OP_PRINTSTRING:
-         M_QStrCat(&acsPrintBuffer, acs_stringtbl[POP()]);
+         M_QStrCat(&vm->printBuffer, vm->stringtable[POP()]);
          break;
       case OP_PRINTINT:
          {
             char buffer[33];
-            M_QStrCat(&acsPrintBuffer, M_Itoa(POP(), buffer, 10));
+            M_QStrCat(&vm->printBuffer, M_Itoa(POP(), buffer, 10));
          }
          break;
       case OP_PRINTCHAR:
-         M_QStrPutc(&acsPrintBuffer, (char)POP());
+         M_QStrPutc(&vm->printBuffer, (char)POP());
          break;
       case OP_PLAYERCOUNT:
          PUSH(ACS_countPlayers());
@@ -924,7 +936,7 @@ void T_ACSThinker(acsthinker_t *script)
             if(script->line)
                src = (mobj_t *)&(script->line->frontsector->soundorg);
 
-            S_StartSoundNameAtVolume(src, acs_stringtbl[strnum], vol, 
+            S_StartSoundNameAtVolume(src, vm->stringtable[strnum], vol, 
                                      ATTN_NORMAL, CHAN_AUTO);
          }
          break;
@@ -933,7 +945,7 @@ void T_ACSThinker(acsthinker_t *script)
             int vol    = POP();
             int strnum = POP();
 
-            S_StartSoundNameAtVolume(NULL, acs_stringtbl[strnum], vol, 
+            S_StartSoundNameAtVolume(NULL, vm->stringtable[strnum], vol, 
                                      ATTN_NORMAL, CHAN_AUTO);
          }
          break;
@@ -943,10 +955,10 @@ void T_ACSThinker(acsthinker_t *script)
             int strnum = POP();
 
             if(script->line && (sec = script->line->frontsector))
-               S_StartSectorSequenceName(sec, acs_stringtbl[strnum], false);
+               S_StartSectorSequenceName(sec, vm->stringtable[strnum], false);
             else
             {
-               S_StartSequenceName(NULL, acs_stringtbl[strnum], 
+               S_StartSequenceName(NULL, vm->stringtable[strnum], 
                                    SEQ_ORIGIN_OTHER, -1);
             }
          }
@@ -960,7 +972,7 @@ void T_ACSThinker(acsthinker_t *script)
             side   = POP();
             tag    = POP();
 
-            P_ChangeLineTex(acs_stringtbl[strnum], pos, side, tag, false);
+            P_ChangeLineTex(vm->stringtable[strnum], pos, side, tag, false);
          }
          break;
       case OP_SETLINEBLOCKING:
@@ -996,13 +1008,13 @@ void T_ACSThinker(acsthinker_t *script)
 
             while((mo = P_FindMobjFromTID(tid, mo, NULL)))
             {
-               S_StartSoundNameAtVolume(mo, acs_stringtbl[strnum], vol,
+               S_StartSoundNameAtVolume(mo, vm->stringtable[strnum], vol,
                                         ATTN_NORMAL, CHAN_AUTO);
             }
          }
          break;
       case OP_ENDPRINTBOLD:
-         HU_CenterMsgTimedColor(acsPrintBuffer.buffer, FC_GOLD, 20*35);
+         HU_CenterMsgTimedColor(vm->printBuffer.buffer, FC_GOLD, 20*35);
          break;
       default:
          // unknown opcode, must stop execution
@@ -1036,7 +1048,10 @@ void T_ACSThinker(acsthinker_t *script)
 void ACS_Init(void)
 {
    // initialize the qstring used to construct player messages
-   M_QStrInitCreate(&acsPrintBuffer);
+   M_QStrInitCreate(&(acsLevelScriptVM.printBuffer));
+
+   // add levelscript vm as vm #0
+   ACS_addVirtualMachine(&acsLevelScriptVM);
 }
 
 //
@@ -1073,15 +1088,13 @@ void ACS_NewGame(void)
 //
 void ACS_InitLevel(void)
 {
-   acsLoaded = false;
+   acsLevelScriptVM.loaded = false;
 }
 
 //
 // ACS_LoadScript
 //
-// Called at level start from P_SetupLevel.
-//
-void ACS_LoadScript(int lump)
+void ACS_LoadScript(acsvm_t *vm, int lump)
 {
    long *rover;
    int i, numstrings;
@@ -1089,51 +1102,51 @@ void ACS_LoadScript(int lump)
    // zero length or too-short lump?
    if(W_LumpLength(lump) < 6)
    {
-      acsdata = NULL;
+      vm->data = NULL;
       return;
    }
 
    // load the lump
-   acsdata = W_CacheLumpNum(lump, PU_LEVEL);
+   vm->data = W_CacheLumpNum(lump, PU_LEVEL);
 
-   rover = (long *)acsdata;
+   rover = (long *)vm->data;
 
    // check magic id string: currently supports Hexen format only
    if(LONG(*rover++) != 0x00534341) // "ACS\0"
       return;
 
    // set rover to information table
-   rover = (long *)(acsdata + LONG(*rover));
+   rover = (long *)(vm->data + LONG(*rover));
 
    // read number of scripts
-   acsNumScripts = LONG(*rover++);
+   vm->numScripts = LONG(*rover++);
 
-   if(acsNumScripts <= 0) // no scripts defined?
+   if(vm->numScripts <= 0) // no scripts defined?
       return;
 
    // allocate scripts array
-   scripts = Z_Malloc(acsNumScripts * sizeof(acscript_t), PU_LEVEL, NULL);
+   vm->scripts = Z_Malloc(vm->numScripts * sizeof(acscript_t), PU_LEVEL, NULL);
 
-   acsLoaded = true;
+   vm->loaded = true;
 
    // read script information entries
-   for(i = 0; i < acsNumScripts; ++i)
+   for(i = 0; i < vm->numScripts; ++i)
    {
-      scripts[i].number  = LONG(*rover++); // read script number
-      scripts[i].code    = (int *)(acsdata + LONG(*rover++)); // set entry pt
-      scripts[i].numArgs = LONG(*rover++); // number of args
+      vm->scripts[i].number  = LONG(*rover++); // read script number
+      vm->scripts[i].code    = (int *)(vm->data + LONG(*rover++)); // set entry pt
+      vm->scripts[i].numArgs = LONG(*rover++); // number of args
 
       // handle open scripts: scripts > 1000 should start at the
       // beginning of the level
-      if(scripts[i].number >= 1000)
+      if(vm->scripts[i].number >= 1000)
       {
-         scripts[i].number -= 1000;
-         ACS_runOpenScript(&scripts[i], i);
+         vm->scripts[i].number -= 1000;
+         ACS_runOpenScript(&(vm->scripts[i]), i, vm->id);
       }
       else
-         scripts[i].sreg = ACS_STATE_STOPPED;
+         vm->scripts[i].sreg = ACS_STATE_STOPPED;
 
-      scripts[i].sdata = 0;
+      vm->scripts[i].sdata = 0;
    }
 
    // we are now positioned at the string table; read number of strings
@@ -1142,26 +1155,37 @@ void ACS_LoadScript(int lump)
    // allocate string table
    if(numstrings > 0)
    {
-      acs_stringtbl = (char **)Z_Malloc(numstrings * sizeof(char *), 
-                                        PU_LEVEL, NULL);
+      vm->stringtable = (char **)Z_Malloc(numstrings * sizeof(char *), 
+                                          PU_LEVEL, NULL);
       
       // set string pointers
       for(i = 0; i < numstrings; ++i)
-         acs_stringtbl[i] = (char *)(acsdata + LONG(*rover++));
+         vm->stringtable[i] = (char *)(vm->data + LONG(*rover++));
    }
+}
 
+//
+// ACS_LoadLevelScript
+//
+// Loads the level scripts and initializes the levelscript virtual machine.
+// Called from P_SetupLevel.
+//
+void ACS_LoadLevelScript(int lump)
+{
+   ACS_LoadScript(&acsLevelScriptVM, lump);
+   
    // zero map variables
    memset(ACSmapvars, 0, sizeof(ACSmapvars));
 }
 
 //
-// ACS_addDeferredScript
+// ACS_addDeferredScriptVM
 //
 // Adds a deferred script that will be executed when the indicated
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
-static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type, 
-                                     long args[NUMLINEARGS])
+static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
+                                       int type, long args[NUMLINEARGS])
 {
    deferredacs_t *cur = acsDeferred, *newdacs;
 
@@ -1179,6 +1203,9 @@ static boolean ACS_addDeferredScript(int scrnum, int mapnum, int type,
 
    // set script number
    newdacs->scriptNum = scrnum; 
+
+   // set vm id #
+   newdacs->vmID = vm->id;
 
    // set action type
    newdacs->type = type;
@@ -1208,22 +1235,26 @@ void ACS_RunDeferredScripts(void)
 
    while(cur)
    {
+      acsvm_t *vm;
+
       next = (deferredacs_t *)(cur->link.next);
+
+      vm = acsVMs[cur->vmID];
 
       if(cur->targetMap == gamemap)
       {
          switch(cur->type)
          {
          case ACS_DEFERRED_EXECUTE:
-            ACS_StartScript(cur->scriptNum, 0, cur->args, NULL, NULL, 0, 
-                            &newScript);
+            ACS_StartScriptVM(vm, cur->scriptNum, 0, cur->args, NULL, NULL, 0, 
+                              &newScript);
             if(newScript)
                newScript->delay = TICRATE;
             break;
          case ACS_DEFERRED_SUSPEND:
-            if((internalNum = ACS_indexForNum(cur->scriptNum)) != acsNumScripts)
+            if((internalNum = ACS_indexForNum(vm, cur->scriptNum)) != vm->numScripts)
             {
-               acscript_t *script = &scripts[internalNum];
+               acscript_t *script = &(vm->scripts[internalNum]);
 
                if(script->sreg != ACS_STATE_STOPPED &&
                   script->sreg != ACS_STATE_TERMINATE)
@@ -1231,9 +1262,9 @@ void ACS_RunDeferredScripts(void)
             }
             break;
          case ACS_DEFERRED_TERMINATE:
-            if((internalNum = ACS_indexForNum(cur->scriptNum)) != acsNumScripts)
+            if((internalNum = ACS_indexForNum(vm, cur->scriptNum)) != vm->numScripts)
             {
-               acscript_t *script = &scripts[internalNum];
+               acscript_t *script = &(vm->scripts[internalNum]);
 
                if(script->sreg != ACS_STATE_STOPPED)
                   script->sreg = ACS_STATE_TERMINATE;
@@ -1251,35 +1282,35 @@ void ACS_RunDeferredScripts(void)
 }
 
 //
-// ACS_StartScript
+// ACS_StartScriptVM
 //
 // Standard method for starting an ACS script.
 //
-boolean ACS_StartScript(int scrnum, int map, long *args, 
-                        mobj_t *mo, line_t *line, int side,
-                        acsthinker_t **scr)
+boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args, 
+                          mobj_t *mo, line_t *line, int side,
+                          acsthinker_t **scr)
 {
    acscript_t   *scrData;
    acsthinker_t *newScript;
    int i, internalNum;
 
    // ACS must be active on the current map or we do nothing
-   if(!acsLoaded)
+   if(!vm->loaded)
       return false;
 
    // should the script be deferred to a different map?
    if(map > 0 && map != gamemap)
-      return ACS_addDeferredScript(scrnum, map, ACS_DEFERRED_EXECUTE, args);
+      return ACS_addDeferredScriptVM(vm, scrnum, map, ACS_DEFERRED_EXECUTE, args);
 
    // look for the script
-   if((internalNum = ACS_indexForNum(scrnum)) == acsNumScripts)
+   if((internalNum = ACS_indexForNum(vm, scrnum)) == vm->numScripts)
    {
       // tink!
       doom_printf(FC_ERROR "ACS_StartScript: no such script %d\a\n", scrnum);
       return false;
    }
 
-   scrData = &scripts[internalNum];
+   scrData = &(vm->scripts[internalNum]);
 
    // if the script is suspended, restart it
    if(scrData->sreg == ACS_STATE_SUSPEND)
@@ -1322,27 +1353,40 @@ boolean ACS_StartScript(int scrnum, int map, long *args,
 }
 
 //
-// ACS_TerminateScript
+// ACS_StartScript
+//
+// Convenience routine; starts a script in the levelscript vm.
+//
+boolean ACS_StartScript(int scrnum, int map, long *args, 
+                        mobj_t *mo, line_t *line, int side,
+                        acsthinker_t **scr)
+{
+   return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
+                            line, side, scr);
+}
+
+//
+// ACS_TerminateScriptVM
 //
 // Attempts to terminate the given script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-boolean ACS_TerminateScript(int scrnum, int mapnum)
+boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
    boolean ret = false;
    long foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
    // ACS must be active on the current map or we do nothing
-   if(!acsLoaded)
+   if(!vm->loaded)
       return false;
 
    if(mapnum > 0 && mapnum == gamemap)
    {
       int internalNum;
 
-      if((internalNum = ACS_indexForNum(scrnum)) != acsNumScripts)
+      if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
-         acscript_t *script = &scripts[internalNum];
+         acscript_t *script = &(vm->scripts[internalNum]);
 
          if(script->sreg != ACS_STATE_STOPPED)
          {
@@ -1352,33 +1396,43 @@ boolean ACS_TerminateScript(int scrnum, int mapnum)
       }
    }
    else
-      ret = ACS_addDeferredScript(scrnum, mapnum, ACS_DEFERRED_TERMINATE, foo);
+      ret = ACS_addDeferredScriptVM(vm, scrnum, mapnum, ACS_DEFERRED_TERMINATE, foo);
 
    return ret;
 }
 
 //
-// ACS_SuspendScript
+// ACS_TerminateScript
+//
+// Convenience routine; terminates a level script.
+//
+boolean ACS_TerminateScript(int scrnum, int mapnum)
+{
+   return ACS_TerminateScriptVM(&acsLevelScriptVM, scrnum, mapnum);
+}
+
+//
+// ACS_SuspendScriptVM
 //
 // Attempts to suspend the given script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-boolean ACS_SuspendScript(int scrnum, int mapnum)
+boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
    long foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    boolean ret = false;
 
    // ACS must be active on the current map or we do nothing
-   if(!acsLoaded)
+   if(!vm->loaded)
       return false;
 
    if(mapnum > 0 && mapnum == gamemap)
    {
       int internalNum;
 
-      if((internalNum = ACS_indexForNum(scrnum)) != acsNumScripts)
+      if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
-         acscript_t *script = &scripts[internalNum];
+         acscript_t *script = &(vm->scripts[internalNum]);
 
          if(script->sreg != ACS_STATE_STOPPED &&
             script->sreg != ACS_STATE_TERMINATE)
@@ -1389,9 +1443,19 @@ boolean ACS_SuspendScript(int scrnum, int mapnum)
       }
    }
    else
-      ret = ACS_addDeferredScript(scrnum, mapnum, ACS_DEFERRED_SUSPEND, foo);
+      ret = ACS_addDeferredScriptVM(vm, scrnum, mapnum, ACS_DEFERRED_SUSPEND, foo);
 
    return ret;
+}
+
+//
+// ACS_SuspendScript
+//
+// Convenience routine; suspends a level script.
+//
+boolean ACS_SuspendScript(int scrnum, int mapnum)
+{
+   return ACS_SuspendScriptVM(&acsLevelScriptVM, scrnum, mapnum);
 }
 
 // EOF

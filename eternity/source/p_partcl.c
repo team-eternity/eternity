@@ -346,7 +346,7 @@ void P_ParticleThinker(void)
    prev = NULL;
    while(i != -1) 
    {
-      byte oldtrans;
+      unsigned int oldtrans;
       
       particle = Particles + i;
       i = particle->next;
@@ -478,7 +478,7 @@ void P_RunEffects(void)
 // about struct member order and alignment in memory
 //
 
-#define FADEFROMTTL(a) (255/(a))
+#define FADEFROMTTL(a) (FRACUNIT/(a))
 
 #define PARTICLE_VELRND ((FRACUNIT / 4096)  * (M_Random() - 128))
 #define PARTICLE_ACCRND ((FRACUNIT / 16384) * (M_Random() - 128))
@@ -499,7 +499,7 @@ static particle_t *JitterParticle(int ttl)
       particle->accy = PARTICLE_ACCRND;
       particle->accz = PARTICLE_ACCRND;
       
-      particle->trans = 255;	// fully opaque
+      particle->trans = FRACUNIT;	// fully opaque
       particle->ttl = ttl;
       particle->fade = FADEFROMTTL(ttl);
    }
@@ -719,7 +719,7 @@ static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z,
       
       p->ttl = 96;
       p->fade = FADEFROMTTL(96);
-      p->trans = 255;
+      p->trans = FRACUNIT;
       p->size = 4;
       p->color = M_Random() & 0x80 ? color1 : color2;
       p->velz = 128 * -3000 + M_Random();
@@ -793,7 +793,7 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
       
       p->ttl = ttl;
       p->fade = FADEFROMTTL(ttl);
-      p->trans = 255;
+      p->trans = FRACUNIT;
       p->size = 2 + M_Random() % 5;
       p->color = M_Random() & 0x80 ? color1 : color2;      
       p->velz = M_Random() * 512;
@@ -899,7 +899,7 @@ void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z,
       
       p->ttl = 15 + M_Random() % 6;
       p->fade = FADEFROMTTL(p->ttl);
-      p->trans = 255;
+      p->trans = FRACUNIT;
       p->size = 2 + M_Random() % 5;
       p->color = M_Random() & 0x80 ? color1 : color2;      
       p->velz = M_Random() < 32 ? M_Random() * 96 : M_Random() * -96;
@@ -969,7 +969,7 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
       
       p->ttl = 12;
       p->fade = FADEFROMTTL(12);
-      p->trans = 255;
+      p->trans = FRACUNIT;
       p->styleflags = 0;
       p->size = 2 + M_Random() % 5;
       p->color = M_Random() & 0x80 ? color1 : color2;
@@ -1083,7 +1083,7 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
       
       p->ttl = ttl;
       p->fade = FADEFROMTTL(ttl);
-      p->trans = 255;
+      p->trans = FRACUNIT;
       p->size = 4;
       p->color = M_Random() & 0x80 ? color1 : color2;
       p->velz = !consistant ? (M_Random() * zvel) : 128 * zvel + M_Random();
@@ -1188,7 +1188,7 @@ static void P_FlyEffect(mobj_t *actor)
 
       p->size = 4; // ???
       p->ttl = 1;
-      p->trans = 255;
+      p->trans = FRACUNIT;
       p->styleflags = 0;
    }
 }
@@ -1238,7 +1238,7 @@ static void P_BFGEffect(mobj_t *actor)
 
       p->size = 4;
       p->ttl = 1;
-      p->trans = 169;
+      p->trans = 2*FRACUNIT/3;
       p->styleflags = PS_FULLBRIGHT;
    }
 }
@@ -1273,7 +1273,7 @@ static void P_DripEffect(mobj_t *actor)
       return;
       
    p->ttl   = 18;
-   p->trans = 144;
+   p->trans = 9*FRACUNIT/16;
    p->fade  = p->trans / p->ttl;
    
    p->color = (byte)(actor->args[0]);
@@ -1360,7 +1360,7 @@ static void P_ExplosionParticles(fixed_t x, fixed_t y, fixed_t z,
 
       p->ttl = 26;
       p->fade = FADEFROMTTL(26);
-      p->trans = 255;
+      p->trans = FRACUNIT;
 
       // 2^11 = 2048, 2^12 = 4096
       p->x = x + (((M_Random() % 32) - 16)*4096);

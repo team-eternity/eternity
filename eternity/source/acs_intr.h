@@ -30,6 +30,7 @@
 
 #include "p_mobj.h"
 #include "m_dllist.h"
+#include "m_qstr.h"
 
 //
 // Defines
@@ -81,6 +82,7 @@ typedef struct acsthinker_s
    thinker_t thinker;         // must be first
 
    // script info
+   int vmID;                  // vm id number
    int scriptNum;             // script number in ACS itself
    int internalNum;           // internal script number
 
@@ -114,10 +116,28 @@ typedef struct deferredacs_s
 {
    mdllistitem_t link;     // list links
    int  scriptNum;         // ACS script number to execute
+   int  vmID;              // id # of vm on which to execute the script
    int  targetMap;         // target map number
    int  type;              // type of action to perform...
    long args[NUMLINEARGS]; // additional arguments from linedef
 } deferredacs_t;
+
+//
+// acsvm
+//
+// haleyjd 06/24/08: I am rewriting the interpreter to be modular in hopes of
+// eventual support for ZDoomish features such as ACS libraries.
+//
+typedef struct acsvm_s
+{
+   byte       *data;         // ACS lump; jumps are relative to this
+   char       **stringtable; // self-explanatory, yes?
+   qstring_t  printBuffer;   // used for message printing
+   acscript_t *scripts;      // the scripts...
+   int        numScripts;    // ... and how many there are.
+   boolean    loaded;        // for static vms, if it's valid or not
+   int        id;            // vm id number
+} acsvm_t;
 
 
 // Global function prototypes
@@ -126,8 +146,12 @@ void T_ACSThinker(acsthinker_t *script);
 void ACS_Init(void);
 void ACS_NewGame(void);
 void ACS_InitLevel(void);
-void ACS_LoadScript(int lump);
+void ACS_LoadScript(acsvm_t *vm, int lump);
+void ACS_LoadLevelScript(int lump);
 void ACS_RunDeferredScripts(void);
+boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args, 
+                          mobj_t *mo, line_t *line, int side,
+                          acsthinker_t **scr);
 boolean ACS_StartScript(int scrnum, int map, long *args, mobj_t *mo, 
                         line_t *line, int side, acsthinker_t **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
