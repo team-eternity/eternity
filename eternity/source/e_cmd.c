@@ -49,7 +49,7 @@ CONSOLE_COMMAND(e_dumpthings, 0)
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
       //  04/13/08: do not display auto-allocated dehnums
-      C_Printf("%5d\t%5d\t%s\n", 
+      C_Printf("%5d  %5d  %s\n", 
                mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
                mobjinfo[i].doomednum,
                mobjinfo[i].name);
@@ -170,7 +170,7 @@ CONSOLE_COMMAND(e_dumpitems, 0)
       // 04/13/08: do not display auto-allocated dehnums
       if(mobjinfo[i].flags & MF_SPECIAL)
       {
-         C_Printf("%5d\t%5d\t%s\n",
+         C_Printf("%5d  %5d  %s\n",
                   mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
                   mobjinfo[i].doomednum,
                   mobjinfo[i].name);
@@ -223,7 +223,7 @@ CONSOLE_COMMAND(e_listmapthings, cf_level)
 
    for(i = 0; i < numthings; ++i)
    {
-      C_Printf("%5d\t%5d\t%5d\n", 
+      C_Printf("%5d  %5d  %5d\n", 
                things[i].recordnum, things[i].next, 
                things[i].type, things[i].tid);
    }
@@ -291,7 +291,7 @@ CONSOLE_COMMAND(e_listlinedefs, cf_level)
 
    for(i = 0; i < numlines; ++i)
    {
-      C_Printf("%5d\t%5d\t%5d\t%5d\n", 
+      C_Printf("%5d %5d %5d %5d\n", 
                lines[i].recordnum, lines[i].next, 
                lines[i].stdfields.special,
                lines[i].stdfields.tag);

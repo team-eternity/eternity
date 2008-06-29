@@ -1228,13 +1228,13 @@ VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
 
 CONSOLE_VARIABLE(snd_card, snd_card, 0) 
 {
-   if(!snd_init && menuactive)
+   if(snd_card != 0 && !snd_init && menuactive)
       MN_ErrorMsg("you must restart the program to turn on sound");
 }
 
 CONSOLE_VARIABLE(mus_card, mus_card, 0)
 {
-   if(!mus_init && menuactive)
+   if(mus_card != 0 && !mus_init && menuactive)
       MN_ErrorMsg("you must restart the program to turn on music");
 
    if(mus_card == 0)
@@ -1244,12 +1244,12 @@ CONSOLE_VARIABLE(mus_card, mus_card, 0)
 CONSOLE_VARIABLE(detect_voices, detect_voices, 0) {}
 
 #ifdef HAVE_SPCLIB
-CONSOLE_VARIABLE(snd_spcpreamp,    spc_preamp,     0) 
+CONSOLE_VARIABLE(snd_spcpreamp, spc_preamp, 0) 
 {
    I_SetMusicVolume(snd_MusicVolume);
 }
 
-CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0) 
+CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0)
 {
    if(snes_spc)
       spc_filter_set_bass(spc_filter, spc_bass_boost);

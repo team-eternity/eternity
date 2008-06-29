@@ -554,6 +554,19 @@ void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src
 }
 
 //
+// V_DrawMaskedBlockTR
+//
+// Draw a translated, masked linear block of pixels into the view buffer. 
+//
+// haleyjd 06/29/08
+// 
+void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
+                         int srcpitch, byte *src, byte *cmap)
+{
+   buffer->MaskedBlockDrawer(x, y, buffer, width, height, srcpitch, src, cmap);
+}
+
+//
 // V_GetBlock
 //
 // Gets a linear block of pixels from the view buffer.

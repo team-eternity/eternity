@@ -1531,7 +1531,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 #endif
    
    // free the old level
-   Z_FreeTags(PU_LEVEL, PU_PURGELEVEL - 1);
+   Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
 
    P_FreeSecNodeList(); // sf: free the psecnode_t linked list in p_map.c
    P_InitThinkers();   

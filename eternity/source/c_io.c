@@ -46,6 +46,7 @@
 #include "i_system.h"
 #include "i_video.h"
 #include "v_video.h"
+#include "v_font.h"
 #include "doomstat.h"
 #include "w_wad.h"
 #include "s_sound.h"
@@ -104,13 +105,9 @@ static void C_initBackdrop(void)
    patch_t *patch;
    const char *lumpname;
    int lumpnum;
-   boolean darken = false;
+   boolean darken = true;
 
    lumpname = GameModeInfo->consoleBack;
-
-   // haleyjd: if we use the titlepic, we need to darken it
-   if(!strcasecmp(lumpname, "TITLEPIC") || !strcasecmp(lumpname, "TITLE"))
-      darken = true;
    
    // allow for custom console background graphic
    if(W_CheckNumForName("CONSOLE") >= 0)
@@ -491,10 +488,10 @@ void C_Drawer(void)
    if(gamestate == GS_CONSOLE)
       current_height = SCREENHEIGHT;
 
-
    // draw backdrop
    // SoM: use the VBuffer
-   V_BlitVBuffer(&vbscreen, 0, 0, &cback, 0, cback.height-real_height, cback.width, real_height);
+   V_BlitVBuffer(&vbscreen, 0, 0, &cback, 0, 
+                 cback.height - real_height, cback.width, real_height);
 
    //////////////////////////////////////////////////////////////////////
    // draw text messages
@@ -516,7 +513,7 @@ void C_Drawer(void)
       if(y < 0) break;        // past top of screen?
       
       // draw this line
-      V_WriteText(messages[count], 0, y);
+      V_FontWriteText(&linear_fonts[0], messages[count], 0, y);
    }
 
    //////////////////////////////////
@@ -542,7 +539,7 @@ void C_Drawer(void)
                    "%s%s_", a_prompt, input_point);
       }
       
-      V_WriteText(tempstr, 0, current_height-8);
+      V_FontWriteText(&linear_fonts[0], tempstr, 0, current_height-8);
    }
 }
 
@@ -607,6 +604,7 @@ static void C_AddMessage(const char *s)
    const unsigned char *c;
    unsigned char *end;
    unsigned char linecolor = GameModeInfo->colorNormal + 128;
+   boolean lastend;
 
    // haleyjd 09/04/02: set color to default at beginning
    if(V_StringWidth(messages[message_last]) > SCREENWIDTH-9 ||
@@ -620,14 +618,16 @@ static void C_AddMessage(const char *s)
 
    for(c = (const unsigned char *)s; *c; c++)
    {
+      lastend = false;
+
       // >= 128 for colours / control chars
-      if(*c == '\t' || (*c > 31 && *c < 127) || *c >= 128)
+      if(*c == '\t' || (*c > 28 && *c < 127) || *c >= 128)
       {
          if((*c >= TEXT_COLOR_MIN && *c <= TEXT_COLOR_MAX) ||
             (*c >= TEXT_COLOR_NORMAL && *c <= TEXT_COLOR_ERROR))
             linecolor = *c;
 
-         if(V_StringWidth(messages[message_last]) > SCREENWIDTH-9 ||
+         if(V_FontStringWidth(&linear_fonts[0], messages[message_last]) > SCREENWIDTH-8 ||
             strlen(messages[message_last]) >= LINELENGTH - 1)
          {
             // might possibly over-run, go onto next line
@@ -651,8 +651,12 @@ static void C_AddMessage(const char *s)
          end = (unsigned char *)(messages[message_last] + strlen(messages[message_last]));
          *end++ = linecolor; // keep current color on next line
          *end = '\0';
+         lastend = true;
       }
    }
+
+   if(!lastend)
+      C_ScrollUp();
 }
 
 // haleyjd: this function attempts to break up formatted strings 
@@ -706,6 +710,7 @@ static void C_AdjustLineBreaks(char *str)
       }
    }
 
+   /*
    if(firstspace)
    {      
       // temporarily put a \0 in the first space
@@ -724,6 +729,7 @@ static void C_AdjustLineBreaks(char *str)
       // restore the string to normal
       str[firstspace] = temp;
    }
+   */
 }
 
 static void C_AppendToLog(const char *text);
@@ -767,10 +773,10 @@ void C_Puts(const char *s)
    C_Printf("%s\n", s);
 }
 
-
 void C_Separator(void)
 {
-   C_Puts("{|||||||||||||||||||||||||||||}");
+   C_Puts("\x1D\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E"
+          "\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1F");
 }
 
 //

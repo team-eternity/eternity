@@ -70,7 +70,8 @@ typedef struct
       ns_sprites,
       ns_flats,
       ns_colormaps,
-      ns_translations
+      ns_translations,
+      ns_fonts
    } li_namespace;
    
    void *cache;  //sf

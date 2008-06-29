@@ -410,6 +410,9 @@ static void W_InitResources(void)          // sf
    // haleyjd 01/12/04: add translation markers
    W_CoalesceMarkedResource("T_START", "T_END", ns_translations);
 
+   // haleyjd 06/29/08: add fonts
+   W_CoalesceMarkedResource("FONSTART", "FONEND", ns_fonts);
+
    // set up caching
    // sf: caching now done in the lumpinfo_t's
    

@@ -666,38 +666,6 @@ const char *comp_strings[] =
   "planeshoot", //          09/22/07: plane shooting
 };
 
-static void Handler_CompFloors(void)
-{
-   // toggle normally
-   comp[comp_floors] = !comp[comp_floors];
-   default_comp[comp_floors] = comp[comp_floors];
-
-   // turning on comp_floors turns on comp_overunder
-   if(comp[comp_floors] && demo_version >= 331)
-   {
-      default_comp[comp_overunder] = comp[comp_overunder] = 1;
-   }
-}
-
-static void Handler_CompOverUnder(void)
-{
-   // if comp_floors is on...
-   if(comp[comp_floors] && demo_version >= 331)
-   {
-      // force comp_overunder on and post a message
-      default_comp[comp_overunder] = comp[comp_overunder] = 1;
-      C_Printf("Must disable comp_floors to enable Z clipping\n");
-      if(menuactive)
-         MN_ErrorMsg("Must disable comp_floors to enable Z clipping");
-   }
-   else
-   {
-      // toggle normally
-      comp[comp_overunder] = !comp[comp_overunder];
-      default_comp[comp_overunder] = comp[comp_overunder];
-   }
-}
-
 static void Handler_CompTHeights(void)
 {
    P_ChangeThingHeights();
@@ -728,18 +696,9 @@ void G_AddCompat(void)
       psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
       command->name = strdup(tempstr);
       command->type = ct_variable;
-      // haleyjd 02/27/03: comp_floors and comp_overunder must be
-      // mutually exclusive
+
       switch(i)
       {
-      case comp_floors:
-      case comp_overunder:
-         command->flags = cf_server | cf_netvar | cf_handlerset;
-         if(i == comp_floors)
-            command->handler = Handler_CompFloors;
-         else
-            command->handler = Handler_CompOverUnder;
-         break;
       case comp_theights:
          command->flags = cf_server | cf_netvar;
          command->handler = Handler_CompTHeights;

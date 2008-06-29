@@ -62,15 +62,23 @@
 // PU - purge tags.
 enum 
 {
-   PU_FREE,    // block is free
-   PU_STATIC,  // block is static (remains until explicitly freed)
-   PU_SOUND,   // currently unused
-   PU_MUSIC,   // currently unused
-   PU_LEVEL,   // allocation belongs to level (freed at next level load)
-   PU_LEVSPEC, // used for thinker_t's (same as PU_LEVEL basically)
-   PU_CACHE,   // block is cached (may be implicitly freed at any time!)
+   PU_FREE,     // block is free
+   PU_STATIC,   // block is static (remains until explicitly freed)
 
-   PU_MAX      // Must always be last -- killough
+   // domain-specific allocation lifetimes
+
+   PU_SOUND,    // currently unused
+   PU_MUSIC,    // currently unused
+   PU_RENDERER, // haleyjd 06/29/08: for data allocated via R_Init
+   
+   // these must remain together:
+
+   PU_LEVEL,    // allocation belongs to level (freed at next level load)
+   PU_LEVSPEC,  // used for thinker_t's (same as PU_LEVEL basically)
+
+   PU_CACHE,    // block is cached (may be implicitly freed at any time!)
+
+   PU_MAX       // Must always be last -- killough
 };
 
 #define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */

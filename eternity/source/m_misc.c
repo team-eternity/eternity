@@ -1902,18 +1902,6 @@ boolean M_ParseOption(const char *p, boolean wad)
 }
 
 //
-// haleyjd 02/28/03: function to resolve comp flag conflicts
-//
-static void CheckCompConflicts(void)
-{
-   // if comp_floors is on, comp_overunder must be on
-   if(comp[comp_floors] && demo_version >= 331)
-   {
-      default_comp[comp_overunder] = comp[comp_overunder] = 1;
-   }
-}
-
-//
 // M_LoadOptions()
 //
 // killough 11/98:
@@ -1942,8 +1930,6 @@ void M_LoadOptions(void)
       free(buf);
       Z_ChangeTag(options, PU_CACHE);
    }
-
-   CheckCompConflicts(); // haleyjd
 
    //  M_Trans();           // reset translucency in case of change
    //  MN_ResetMenu();       // reset menu in case of change
@@ -2033,8 +2019,6 @@ void M_LoadDefaults (void)
    }
 
    defaults_loaded = true;            // killough 10/98
-
-   CheckCompConflicts(); // haleyjd
    
    //jff 3/4/98 redundant range checks for hud deleted here
 }

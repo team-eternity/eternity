@@ -278,6 +278,43 @@ static void V_LoadBigFont(void)
    }
 }
 
+vfont_t *linear_fonts;
+int numlinearfonts;
+static int firstfontlump, lastfontlump;
+
+//
+// V_LoadLinearFonts
+//
+// haleyjd 06/29/08: load linear fonts between FONSTART and FONEND lumps.
+//
+static void V_LoadLinearFonts(void)
+{
+   int i;
+
+   // count number of lumps
+   firstfontlump = W_CheckNumForName("FONSTART");
+   lastfontlump  = W_CheckNumForName("FONEND");
+
+   if(firstfontlump == -1 || lastfontlump == -1)
+      numlinearfonts = 0;
+   else
+      numlinearfonts = (lastfontlump - firstfontlump) - 1;
+
+   if(numlinearfonts <= 0)
+      I_Error("V_LoadLinearFonts: missing CONCHARS font\n");
+
+   linear_fonts = malloc(numlinearfonts * sizeof(vfont_t));
+
+   firstfontlump += 1;
+   
+   for(i = 0; i < numlinearfonts; ++i)
+   {
+      // FIXME: no error
+      if(!V_LoadLinearFont(&linear_fonts[i], firstfontlump + i))
+         I_Error("V_LoadLinearFonts: invalid font lump\n");
+   }
+}
+
 //
 // haleyjd 01/14/05: The following functions persist as convenience
 // methods, and only call down to the vfont engine using the appropriate
@@ -827,7 +864,8 @@ void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 void V_InitMisc(void)
 {
    V_LoadFont();
-   V_LoadBigFont(); // haleyjd 01/14/05
+   V_LoadBigFont();     // haleyjd 01/14/05
+   V_LoadLinearFonts(); // haleyjd 06/29/08
    V_InitBox();
 
    // this only ever needs to be done once

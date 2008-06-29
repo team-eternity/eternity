@@ -400,6 +400,22 @@ static int ST_calcPainOffset(void)
    return lastcalc;
 }
 
+// haleyjd 06/27/08: made priorities into an enumeration
+enum
+{
+   ST_PRIORITY_NONE          = 0,
+   ST_PRIORITY_GODMODE       = 4,
+   ST_PRIORITY_RAMPAGE       = 5,
+   ST_PRIORITY_PAIN_SELF     = 6,
+   ST_PRIORITY_MUCHPAIN_SELF = 7,
+   ST_PRIORITY_PAIN          = 7,
+   ST_PRIORITY_MUCHPAIN      = 8,
+   ST_PRIORITY_EVILGRIN      = 8,
+   ST_PRIORITY_FALLING       = 9,
+   ST_PRIORITY_DEAD          = 10,
+   ST_PRIORITY_MAX           = 11,
+};
+
 //
 // ST_updateFaceWidget
 //
@@ -414,21 +430,32 @@ static void ST_updateFaceWidget(void)
    angle_t     badguyangle;
    angle_t     diffang;
    static int  lastattackdown = -1;
-   static int  priority = 0;
+   static int  priority = ST_PRIORITY_NONE;
    boolean     doevilgrin;
    
-   if(priority < 10)
+   if(priority < ST_PRIORITY_MAX)
    {
       // dead
       if(!plyr->health)
       {
-         priority = 9;
+         priority = ST_PRIORITY_DEAD;
          st_faceindex = ST_DEADFACE;
          st_facecount = 1;
       }
    }
 
-   if(priority < 9)
+   // haleyjd 06/27/08: ouch face when player screams from falling
+   if(priority < ST_PRIORITY_DEAD)
+   {
+      if(plyr->mo->intflags & MIF_SCREAMED)
+      {
+         priority = ST_PRIORITY_FALLING;
+         st_faceindex = ST_calcPainOffset() + ST_OUCHOFFSET;
+         st_facecount = 1;
+      }
+   }
+
+   if(priority < ST_PRIORITY_FALLING)
    {
       if(plyr->bonuscount)
       {
@@ -446,26 +473,26 @@ static void ST_updateFaceWidget(void)
          if(doevilgrin)
          {
             // evil grin if just picked up weapon
-            priority = 8;
+            priority = ST_PRIORITY_EVILGRIN;
             st_facecount = ST_EVILGRINCOUNT;
             st_faceindex = ST_calcPainOffset() + ST_EVILGRINOFFSET;
          }
       }
    }
 
-   if(priority < 8)
+   if(priority < ST_PRIORITY_EVILGRIN)
    {
       if(plyr->damagecount && plyr->attacker && plyr->attacker != plyr->mo)
       {
          // being attacked
-         priority = 7;
+         priority = ST_PRIORITY_PAIN;
 
          // haleyjd 10/12/03: classic DOOM problem of missing OUCH face
          // was due to inversion of this test:
          // if(plyr->health - st_oldhealth > ST_MUCHPAIN)
          if(st_oldhealth - plyr->health > ST_MUCHPAIN)
          {
-            priority = 8;
+            priority = ST_PRIORITY_MUCHPAIN;
             st_facecount = ST_TURNCOUNT;
             st_faceindex = ST_calcPainOffset() + ST_OUCHOFFSET;
          }
@@ -511,7 +538,7 @@ static void ST_updateFaceWidget(void)
       }
    }
 
-   if(priority < 7)
+   if(priority < ST_PRIORITY_PAIN)
    {
       // getting hurt because of your own damn stupidity
       if(plyr->damagecount)
@@ -521,20 +548,20 @@ static void ST_updateFaceWidget(void)
          // if(plyr->health - st_oldhealth > ST_MUCHPAIN)
          if(st_oldhealth - plyr->health > ST_MUCHPAIN)
          {
-            priority = 7;
+            priority = ST_PRIORITY_MUCHPAIN_SELF;
             st_facecount = ST_TURNCOUNT;
             st_faceindex = ST_calcPainOffset() + ST_OUCHOFFSET;
          }
          else
          {
-            priority = 6;
+            priority = ST_PRIORITY_PAIN_SELF;
             st_facecount = ST_TURNCOUNT;
             st_faceindex = ST_calcPainOffset() + ST_RAMPAGEOFFSET;
          }
       }
    }
 
-   if(priority < 6)
+   if(priority < ST_PRIORITY_PAIN_SELF)
    {
       // rapid firing
       if(plyr->attackdown)
@@ -543,7 +570,7 @@ static void ST_updateFaceWidget(void)
             lastattackdown = ST_RAMPAGEDELAY;
          else if(!--lastattackdown)
          {
-            priority = 5;
+            priority = ST_PRIORITY_RAMPAGE;
             st_faceindex = ST_calcPainOffset() + ST_RAMPAGEOFFSET;
             st_facecount = 1;
             lastattackdown = 1;
@@ -553,12 +580,12 @@ static void ST_updateFaceWidget(void)
          lastattackdown = -1;
    }
 
-   if(priority < 5)
+   if(priority < ST_PRIORITY_RAMPAGE)
    {
       // invulnerability
       if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability])
       {
-         priority = 4;
+         priority = ST_PRIORITY_GODMODE;
          
          st_faceindex = ST_GODFACE;
          st_facecount = 1;
@@ -571,7 +598,7 @@ static void ST_updateFaceWidget(void)
       // sf: remove st_randomnumber
       st_faceindex = ST_calcPainOffset() + (M_Random() % 3);
       st_facecount = ST_STRAIGHTFACECOUNT;
-      priority = 0;
+      priority = ST_PRIORITY_NONE;
    }
    
    st_facecount--;

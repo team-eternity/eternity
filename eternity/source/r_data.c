@@ -554,19 +554,19 @@ void R_InitTextures(void)
    // killough 4/9/98: make column offsets 32-bit;
    // clean up malloc-ing to use sizeof
    
-   textures = Z_Malloc(numtextures*sizeof(*textures), PU_STATIC, 0);
+   textures = Z_Malloc(numtextures*sizeof(*textures), PU_RENDERER, 0);
    texturecolumnlump =
-      Z_Malloc(numtextures*sizeof(*texturecolumnlump), PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecolumnlump), PU_RENDERER, 0);
    texturecolumnofs =
-      Z_Malloc(numtextures*sizeof(*texturecolumnofs), PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecolumnofs), PU_RENDERER, 0);
    texturecomposite =
-      Z_Malloc(numtextures*sizeof(*texturecomposite), PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecomposite), PU_RENDERER, 0);
    texturecompositesize =
-      Z_Malloc(numtextures*sizeof(*texturecompositesize), PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturecompositesize), PU_RENDERER, 0);
    texturewidthmask =
-      Z_Malloc(numtextures*sizeof(*texturewidthmask), PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*texturewidthmask), PU_RENDERER, 0);
    textureheight = 
-      Z_Malloc(numtextures*sizeof(*textureheight), PU_STATIC, 0);
+      Z_Malloc(numtextures*sizeof(*textureheight), PU_RENDERER, 0);
 
    {
       // Really complex printing shit...
@@ -605,7 +605,7 @@ void R_InitTextures(void)
       texture = textures[i] = 
          Z_Malloc(sizeof(texture_t) + 
                   sizeof(texpatch_t)*(SHORT(mtexture->patchcount)-1), 
-                  PU_STATIC, NULL);
+                  PU_RENDERER, NULL);
 
       texture->width      = SHORT(mtexture->width);
       texture->height     = SHORT(mtexture->height);
@@ -635,9 +635,9 @@ void R_InitTextures(void)
       // clean up malloc-ing to use sizeof
       // killough 12/98: fix sizeofs
       texturecolumnlump[i] =
-        Z_Malloc(texture->width * sizeof(**texturecolumnlump), PU_STATIC,0);
+        Z_Malloc(texture->width * sizeof(**texturecolumnlump), PU_RENDERER,0);
       texturecolumnofs[i] =
-        Z_Malloc(texture->width * sizeof(**texturecolumnofs), PU_STATIC,0);
+        Z_Malloc(texture->width * sizeof(**texturecolumnofs), PU_RENDERER,0);
 
       for(j = 1; j * 2 <= texture->width; j <<= 1)
         ;
@@ -669,7 +669,7 @@ void R_InitTextures(void)
    // clean up malloc-ing to use sizeof
    
    texturetranslation =
-      Z_Malloc((numtextures + 1) * sizeof(*texturetranslation), PU_STATIC, 0);
+      Z_Malloc((numtextures + 1) * sizeof(*texturetranslation), PU_RENDERER, 0);
 
    for(i = 0; i < numtextures; ++i)
       texturetranslation[i] = i;
@@ -702,9 +702,9 @@ void R_InitFlats(void)
    // clean up malloc-ing to use sizeof
    
    flattranslation =
-      Z_Malloc((numflats+1) * sizeof(*flattranslation), PU_STATIC, 0);
+      Z_Malloc((numflats+1) * sizeof(*flattranslation), PU_RENDERER, 0);
 
-   flatsize = Z_Malloc((numflats+1) * sizeof(*flatsize), PU_STATIC, 0);
+   flatsize = Z_Malloc((numflats+1) * sizeof(*flatsize), PU_RENDERER, 0);
    
    for(i = 0; i < numflats; ++i)
    {
@@ -751,13 +751,13 @@ void R_InitSpriteLumps(void)
    // clean up malloc-ing to use sizeof
    
    spritewidth = 
-      Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_STATIC, 0);
+      Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_RENDERER, 0);
    spriteoffset = 
-      Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_STATIC, 0);
+      Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_RENDERER, 0);
    spritetopoffset =
-      Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_STATIC, 0);
+      Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, 0);
    spriteheight = 
-      Z_Malloc(numspritelumps * sizeof(float), PU_STATIC, 0);
+      Z_Malloc(numspritelumps * sizeof(float), PU_RENDERER, 0);
    
    for(i = 0; i < numspritelumps; ++i)
    {
@@ -789,12 +789,12 @@ void R_InitColormaps(void)
    firstcolormaplump = W_GetNumForName("C_START");
    lastcolormaplump  = W_GetNumForName("C_END");
    numcolormaps      = lastcolormaplump - firstcolormaplump;
-   colormaps = Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_STATIC, 0);
+   colormaps = Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0);
    
-   colormaps[0] = W_CacheLumpNum(W_GetNumForName("COLORMAP"), PU_STATIC);
+   colormaps[0] = W_CacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER);
    
    for(i = 1; i < numcolormaps; ++i)
-      colormaps[i] = W_CacheLumpNum(i + firstcolormaplump, PU_STATIC);
+      colormaps[i] = W_CacheLumpNum(i + firstcolormaplump, PU_RENDERER);
 }
 
 // haleyjd: new global colormap system -- simply sets an index to
@@ -851,7 +851,7 @@ void R_InitTranMap(int progress)
    // If a translucency filter map lump is present, use it
    
    if(lump != -1)  // Set a pointer to the translucency filter maps.
-      main_tranmap = W_CacheLumpNum(lump, PU_STATIC);   // killough 4/11/98
+      main_tranmap = W_CacheLumpNum(lump, PU_RENDERER);   // killough 4/11/98
    else
    {
       // Compose a default transparent filter map based on PLAYPAL.
@@ -876,7 +876,7 @@ void R_InitTranMap(int progress)
       
       cachefp = fopen(fname, "r+b");
 
-      main_tranmap = Z_Malloc(256*256, PU_STATIC, 0);  // killough 4/11/98
+      main_tranmap = Z_Malloc(256*256, PU_RENDERER, 0);  // killough 4/11/98
       
       // Use cached translucency filter if it's available
 
@@ -1180,39 +1180,16 @@ void R_PrecacheLevel(void)
    free(hitlist);
 }
 
+//
+// R_FreeData
+//
+// Called when adding a new wad file. Frees all data loaded through R_Init.
+// R_Init must then be immediately called again.
+//
 void R_FreeData(void)
 {
-   int i;
-   
-   // haleyjd 03/25/03: the colormaps DO need to be freed here
-   for(i = 0; i < numcolormaps; ++i)
-      Z_Free(colormaps[i]);
-   
-   Z_Free(colormaps);
-   
-   for(i = 0; i < numtextures; ++i)
-   {
-      Z_Free(textures[i]);
-      Z_Free(texturecolumnofs[i]);
-      Z_Free(texturecolumnlump[i]);
-   }
-   Z_Free(textures);
-   Z_Free(texturecolumnofs);
-   Z_Free(texturecolumnlump);
-   Z_Free(texturecomposite);
-   Z_Free(texturecompositesize);
-   Z_Free(textureheight);
-   Z_Free(texturetranslation);
-   Z_Free(texturewidthmask);
-   
-   Z_Free(spritewidth);
-   Z_Free(spriteoffset);
-   Z_Free(spritetopoffset);
-   
-   Z_Free(flattranslation);
-   Z_Free(flatsize);
-
-   Z_Free(main_tranmap);
+   // haleyjd: let's harness the power of the zone heap and make this simple.
+   Z_FreeTags(PU_RENDERER, PU_RENDERER);
 }
 
 /********************************

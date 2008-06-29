@@ -126,6 +126,9 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
 void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, 
                  byte *src);
 
+void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
+                         int srcpitch, byte *src, byte *cmap);
+
 // Reads a linear block of pixels into the view buffer.
 
 void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest);

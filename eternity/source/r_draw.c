@@ -1025,41 +1025,29 @@ translat_t translations[TRANSLATIONCOLOURS] =
 //
 void R_InitTranslationTables(void)
 {
-   int numlumps, i, c;
+   int numtlumps, i, c;
    
-   // don't leak the allocation
-   if(translationtables)
-   {
-      for(i = 0; i < numtranslations; ++i)
-         Z_Free(translationtables[i]);
-
-      Z_Free(translationtables);
-
-      // SoM: let's try... this.
-      translationtables = NULL;
-   }
-
    // count number of lumps
    firsttranslationlump = W_CheckNumForName("T_START");
    lasttranslationlump  = W_CheckNumForName("T_END");
 
    if(firsttranslationlump == -1 || lasttranslationlump == -1)
-      numlumps = 0;
+      numtlumps = 0;
    else
-      numlumps = (lasttranslationlump - firsttranslationlump) - 1;
+      numtlumps = (lasttranslationlump - firsttranslationlump) - 1;
 
    // set numtranslations
-   numtranslations = TRANSLATIONCOLOURS + numlumps;
+   numtranslations = TRANSLATIONCOLOURS + numtlumps;
 
    // allocate the array of pointers
-   translationtables = Z_Malloc(sizeof(byte *) * numtranslations, PU_STATIC, 0);
+   translationtables = Z_Malloc(sizeof(byte *) * numtranslations, PU_RENDERER, 0);
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; ++i)
    {
       byte *transtbl;
 
-      transtbl = translationtables[i] = Z_Malloc(256, PU_STATIC, 0);
+      transtbl = translationtables[i] = Z_Malloc(256, PU_RENDERER, 0);
 
       for(c = 0; c < 256; ++c)
       {
@@ -1074,7 +1062,7 @@ void R_InitTranslationTables(void)
    {
       int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
 
-      translationtables[i] = W_CacheLumpNum(lumpnum, PU_STATIC);
+      translationtables[i] = W_CacheLumpNum(lumpnum, PU_RENDERER);
    }
 }
 

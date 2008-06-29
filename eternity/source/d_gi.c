@@ -780,7 +780,7 @@ static gamemodeinfo_t giHereticSW =
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
-   43,               // c_numCharsPerLine
+   40,               // c_numCharsPerLine
    sfx_chat,         // c_BellSound
    sfx_chat,         // c_ChatSound
    CONBACK_HERETIC,  // consoleBack
@@ -868,7 +868,7 @@ static gamemodeinfo_t giHereticReg =
    CR_GRAY,          // colorNormal
    CR_GOLD,          // colorHigh
    CR_RED,           // colorError
-   43,               // c_numCharsPerLine
+   40,               // c_numCharsPerLine
    sfx_chat,         // c_BellSound
    sfx_chat,         // c_ChatSound
    CONBACK_HERETIC,  // consoleBack

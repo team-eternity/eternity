@@ -46,6 +46,8 @@ typedef struct VBuffer_s
    int pitch;
 
    void (*BlockDrawer)(int, int, struct VBuffer_s *, int, int, byte *);
+   void (*MaskedBlockDrawer)(int, int, struct VBuffer_s *, int, int, int, 
+                             byte *, byte *);
    void (*TileBlock64)(struct VBuffer_s *, byte *);
 
    int  *x1lookup;

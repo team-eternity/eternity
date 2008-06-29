@@ -27,14 +27,17 @@
 #include "z_zone.h"
 #include "v_video.h"
 
+//==============================================================================
 //
 // V_DrawBlock Implementors
 //
 // * V_BlockDrawer   -- unscaled
 // * V_BlockDrawer2x -- fast 2x scaling
 // * V_BlockDrawerS  -- general scaling
+//
 
-static void V_BlockDrawer(int x, int y, VBuffer *buffer, int width, int height, byte *src)
+static void V_BlockDrawer(int x, int y, VBuffer *buffer, 
+                          int width, int height, byte *src)
 {
    byte *dest;
 
@@ -46,6 +49,9 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer, int width, int height, 
    }
 #endif
 
+   if(!(width || height))
+      return;
+
    dest = buffer->data + y * buffer->pitch + x;
    
    while(height--)
@@ -56,7 +62,8 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer, int width, int height, 
    }
 }
 
-static void V_BlockDrawer2x(int x, int y, VBuffer *buffer, int width, int height, byte *src)
+static void V_BlockDrawer2x(int x, int y, VBuffer *buffer, 
+                            int width, int height, byte *src)
 {
    byte *dest;
 
@@ -68,33 +75,38 @@ static void V_BlockDrawer2x(int x, int y, VBuffer *buffer, int width, int height
    }
 #endif
 
+   if(!(width || height))
+      return;
+
    dest = buffer->data + y * (buffer->pitch << 1) + (x << 1);
    
-   if(width)
+   while(height--)
    {
-      while(height--)
+      byte *d = dest;
+      int t = width;
+      do
       {
-         byte *d = dest;
-         int t = width;
-         do
-         {
-            d[buffer->pitch] 
-               = d[buffer->pitch + 1] 
-               = d[0] 
-               = d[1] 
-               = *src++;
-         } while(d += 2, --t);
-         
-         dest += (buffer->pitch << 1);
-      }
+         d[buffer->pitch] 
+            = d[buffer->pitch + 1] 
+            = d[0] 
+            = d[1] 
+            = *src++;
+      } while(d += 2, --t);
+      
+      dest += (buffer->pitch << 1);
    }
 }
 
-static void V_BlockDrawerS(int x, int y, VBuffer *buffer, int width, int height, byte *src)
+static void V_BlockDrawerS(int x, int y, VBuffer *buffer, 
+                           int width, int height, byte *src)
 {
    byte *dest, *row;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
+
+   if(x < 0 || x + width > 320 ||
+      y < 0 || y + height > 200)
+      return;
       
    realx = buffer->x1lookup[x];
    realy = buffer->y1lookup[y];
@@ -112,6 +124,9 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer, int width, int height,
       I_Error("V_BlockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
+
+   if(!(width || height))
+      return;
 
    while(h--)
    {
@@ -132,6 +147,138 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer, int width, int height,
    }
 }
 
+//==============================================================================
+// 
+// Masked block drawers
+//
+// haleyjd 06/29/08
+//
+
+static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer, 
+                                int width, int height, int srcpitch,
+                                byte *source, byte *cmap)
+{
+   byte *src, *dest, *row;
+   int u, v;
+
+   if(x < 0 || x + width > buffer->width ||
+      y < 0 || y + height > buffer->height)
+   {
+      return;
+   }
+
+
+   if(!(width || height))
+      return;
+
+   dest = buffer->data + y * buffer->pitch + x;
+   
+   for(v = 0; v <= height; ++v)
+   {
+      src = source + v * srcpitch;
+      row = dest;
+
+      for(u = 0; u <= width; ++u)
+      {
+         if(*src)
+            *row++ = cmap[*src];
+         ++src;
+      }
+
+      dest += buffer->pitch;
+   }
+}
+
+static void V_MaskedBlockDrawer2x(int x, int y, VBuffer *buffer, 
+                                  int width, int height, int srcpitch,
+                                  byte *source, byte *cmap)
+{
+   byte *src, *dest;
+   int u, v;
+
+   if(x < 0 || x + width > buffer->width/2 ||
+      y < 0 || y + height > buffer->height/2)
+   {
+      return;
+   }
+
+   if(!(width || height))
+      return;
+
+   dest = buffer->data + y * (buffer->pitch << 1) + (x << 1);
+   
+   for(v = 0; v <= height; ++v)
+   {
+      byte *row = dest;
+      src = source + v * srcpitch;
+      u = width;
+      do
+      {
+         if(*src)
+         {
+            row[buffer->pitch] 
+               = row[buffer->pitch + 1] 
+               = row[0] 
+               = row[1] 
+               = cmap[*src];
+         }
+         ++src;
+      } while(row += 2, --u);
+      
+      dest += (buffer->pitch << 1);
+   }
+}
+
+static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer, 
+                                 int width, int height, int srcpitch,
+                                 byte *src, byte *cmap)
+{
+   byte *dest, *row;
+   fixed_t xstep, ystep, xfrac, yfrac;
+   int xtex, ytex, w, h, i, realx, realy;
+
+   if(x < 0 || x + width > 320 ||
+      y < 0 || y + height > 200)
+      return;
+      
+   realx = buffer->x1lookup[x];
+   realy = buffer->y1lookup[y];
+   w     = buffer->x2lookup[x + width - 1] - realx + 1;
+   h     = buffer->y2lookup[y + height - 1] - realy + 1;
+   xstep = buffer->ixscale;
+   ystep = buffer->iyscale;
+   yfrac = 0;
+   dest  = buffer->data + realy * buffer->pitch + realx;
+
+   if(realx < 0 || realx + w > buffer->width ||
+      realy < 0 || realy + h > buffer->height)
+      return;
+
+   if(!(width || height))
+      return;
+
+   while(h--)
+   {
+      row = dest;
+      i = w;
+      xfrac = 0;
+      ytex = (yfrac >> FRACBITS) * srcpitch;
+      
+      while(i--)
+      {
+         xtex = (xfrac >> FRACBITS);
+         if(src[ytex + xtex])
+            *row = cmap[src[ytex + xtex]];
+         ++row;
+         xfrac += xstep;
+      }
+
+      dest += buffer->pitch;
+      yfrac += ystep;
+   }
+}
+
+//==============================================================================
 //
 // Color block drawing
 //
@@ -335,11 +482,13 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
    switch(drawtype)
    {
    case DRAWTYPE_UNSCALED:
-      buffer->BlockDrawer = V_BlockDrawer;
-      buffer->TileBlock64 = V_TileBlock64;
+      buffer->BlockDrawer       = V_BlockDrawer;
+      buffer->MaskedBlockDrawer = V_MaskedBlockDrawer;
+      buffer->TileBlock64       = V_TileBlock64;
       break;
    case DRAWTYPE_2XSCALED:
-      buffer->BlockDrawer = V_BlockDrawer2x;
+      buffer->BlockDrawer       = V_BlockDrawer2x;
+      buffer->MaskedBlockDrawer = V_MaskedBlockDrawer2x;
       // 2x version of V_TileBlock only works for 640x400
       if(buffer->width == 640 && buffer->height == 400)
          buffer->TileBlock64 = V_TileBlock64_2x;
@@ -347,8 +496,9 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
          buffer->TileBlock64 = V_TileBlock64S;
       break;
    case DRAWTYPE_GENSCALED:
-      buffer->BlockDrawer = V_BlockDrawerS;
-      buffer->TileBlock64 = V_TileBlock64S;
+      buffer->BlockDrawer       = V_BlockDrawerS;
+      buffer->MaskedBlockDrawer = V_MaskedBlockDrawerS;
+      buffer->TileBlock64       = V_TileBlock64S;
       break;
    default:
       break;

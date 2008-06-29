@@ -68,8 +68,8 @@ typedef struct acscript_s
    int number;   // the number of this script in ACS itself
    int numArgs;  // number of arguments this script wants
    int *code;    // bytecode entry point
-   int sreg;     // state register
-   int sdata;    // special data for state
+
+   struct acsthinker_s *threads;
 } acscript_t;
 
 //
@@ -81,6 +81,10 @@ typedef struct acsthinker_s
 {
    thinker_t thinker;         // must be first
 
+   // thread links
+   struct acsthinker_s **prev;
+   struct acsthinker_s *next;
+
    // script info
    int vmID;                  // vm id number
    int scriptNum;             // script number in ACS itself
@@ -91,9 +95,19 @@ typedef struct acsthinker_s
    int stack[ACS_STACK_LEN];  // value stack
    int stp;                   // stack pointer
    int locals[ACS_NUMLOCALS]; // local variables and arguments
+   int sreg;                  // state register
+   int sdata;                 // special data for state
+   
+   // info copied from acscript and acsvm
+   int  *code;                // entry point
+   byte *data;                // base code pointer for jumps
+   char **stringtable;        // strings
+   qstring_t *printBuffer;    // buffer for message printing
+   acscript_t *acscript;      // for convenience of access
+   struct acsvm_s *vm;        // for convenience of access
 
    // misc
-   int delay;                 // counter for script delays
+   int    delay;              // counter for script delays
    mobj_t *trigger;           // thing that activated
    line_t *line;              // line that activated
    int    lineSide;           // line side of activation
@@ -151,7 +165,7 @@ void ACS_LoadLevelScript(int lump);
 void ACS_RunDeferredScripts(void);
 boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args, 
                           mobj_t *mo, line_t *line, int side,
-                          acsthinker_t **scr);
+                          acsthinker_t **scr, boolean always);
 boolean ACS_StartScript(int scrnum, int map, long *args, mobj_t *mo, 
                         line_t *line, int side, acsthinker_t **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);

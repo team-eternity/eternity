@@ -62,7 +62,14 @@ typedef struct vfont_s
    patch_t **fontgfx; // graphics patches for font (not owned)
 
    int cw;  // constant width, used only when centering is on
+   
+   boolean linear;  // linear graphic lump?
+   byte    *data;   // data for linear graphic
+   int     lsize;   // character size in linear graphic
 } vfont_t;
+
+extern vfont_t *linear_fonts;
+extern int numlinearfonts;
 
 void  V_FontWriteText(vfont_t *font, const char *s, int x, int y);
 void  V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
@@ -72,6 +79,8 @@ int   V_FontStringHeight(vfont_t *font, const char *s);
 int   V_FontStringWidth(vfont_t *font, const char *s);
 void  V_FontSetAbsCentered(void);
 short V_FontMaxWidth(vfont_t *font);
+
+boolean V_LoadLinearFont(vfont_t *font, int lumpnum);
 
 vfont_t *V_FontSelect(int fontnum);
 

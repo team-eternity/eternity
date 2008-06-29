@@ -629,62 +629,62 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
 //
 // F_BunnyScroll
 //
-void F_BunnyScroll (void)
+void F_BunnyScroll(void)
 {
-  int         scrolled;
-  int         x;
-  patch_t*    p1;
-  patch_t*    p2;
-  char        name[10];
-  int         stage;
-  static int  laststage;
-              
-  p1 = W_CacheLumpName ("PFUB2", PU_LEVEL);
-  p2 = W_CacheLumpName ("PFUB1", PU_LEVEL);
-
-  V_MarkRect (0, 0, SCREENWIDTH, SCREENHEIGHT);
-      
-  scrolled = 320 - (finalecount-230)/2;
-  if (scrolled > 320)
+   int         scrolled;
+   int         x;
+   patch_t*    p1;
+   patch_t*    p2;
+   char        name[10];
+   int         stage;
+   static int  laststage;
+   
+   p1 = W_CacheLumpName ("PFUB2", PU_LEVEL);
+   p2 = W_CacheLumpName ("PFUB1", PU_LEVEL);
+   
+   V_MarkRect (0, 0, SCREENWIDTH, SCREENHEIGHT);
+   
+   scrolled = 320 - (finalecount-230)/2;
+   if(scrolled > 320)
       scrolled = 320;
-  if (scrolled < 0)
+   if(scrolled < 0)
       scrolled = 0;
               
    // ANYRES
-  for ( x = 0 ; x < video.width ; x++)
-  {
-    int scaledx = (x * video.ystep) >> FRACBITS;
-
-    if (scaledx+scrolled < 320)
-      F_DrawPatchCol (x, p1, scaledx+scrolled);
-    else
-      F_DrawPatchCol (x, p2, scaledx+scrolled - 320);           
-  }
+   for(x = 0; x < video.width; ++x)
+   {
+      int scaledx = (x * video.ystep) >> FRACBITS;
       
-  if (finalecount < 1130)
-    return;
-  if (finalecount < 1180)
-  {
-    V_DrawPatch ((SCREENWIDTH-13*8)/2,
-                 (SCREENHEIGHT-8*8)/2,&vbscreen, 
-                 W_CacheLumpName ("END0",PU_CACHE));
-    laststage = 0;
-    return;
-  }
+      if(scaledx + scrolled < 320)
+         F_DrawPatchCol(x, p1, scaledx + scrolled);
+      else
+         F_DrawPatchCol(x, p2, scaledx + scrolled - 320);           
+   }
       
-  stage = (finalecount-1180) / 5;
-  if (stage > 6)
-    stage = 6;
-  if (stage > laststage)
-  {
-    S_StartSound (NULL, sfx_pistol);
-    laststage = stage;
-  }
-      
-  sprintf(name,"END%i", stage);
-  V_DrawPatch ((SCREENWIDTH-13*8)/2, 
-               (SCREENHEIGHT-8*8)/2,&vbscreen, 
-               W_CacheLumpName (name,PU_CACHE));
+   if(finalecount < 1130)
+      return;
+   if(finalecount < 1180)
+   {
+      V_DrawPatch((SCREENWIDTH - 13 * 8) / 2,
+                  (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
+                  W_CacheLumpName("END0", PU_CACHE));
+      laststage = 0;
+      return;
+   }
+   
+   stage = (finalecount - 1180) / 5;
+   if(stage > 6)
+      stage = 6;
+   if(stage > laststage)
+   {
+      S_StartSound (NULL, sfx_pistol);
+      laststage = stage;
+   }
+   
+   sprintf(name,"END%i", stage);
+   V_DrawPatch((SCREENWIDTH - 13 * 8) / 2, 
+               (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
+               W_CacheLumpName(name, PU_CACHE));
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish

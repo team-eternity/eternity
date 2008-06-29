@@ -39,6 +39,7 @@
 #include "v_video.h"
 #include "v_misc.h"
 #include "v_font.h"
+#include "w_wad.h"
 
 extern vfont_t small_font, hud_font, big_font, big_num_font;
 
@@ -75,10 +76,11 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
       else
          c = c - font->start;
 
-      if(c >= font->size || !(patch = font->fontgfx[c]))
+      if(c >= font->size || (!font->linear && !(patch = font->fontgfx[c])))
          length += font->space;
       else
-         length += (SHORT(patch->width) - font->dw);
+         length += font->linear ? font->lsize - font->dw 
+                                : (SHORT(patch->width) - font->dw);
    }   
    
    return length;
@@ -96,7 +98,8 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 //
 void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
 {
-   patch_t *patch = NULL;   // patch for current character
+   patch_t *patch = NULL;   // patch for current character -OR-
+   byte    *src   = NULL;   // source char for linear font
    int     w;               // width of patch
    
    const unsigned char *ch; // pointer to string
@@ -202,6 +205,8 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          cy += font->cy;
          continue;
       }
+      if(c == '\a') // don't draw BELs in linear fonts
+         continue;
       
       // normalize character
       if(font->upper)
@@ -210,34 +215,47 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          c = c - font->start;
 
       // check if within font bounds, draw a space if not
-      if(c >= font->size || !(patch = font->fontgfx[c]))
+      if(c >= font->size || (!font->linear && !(patch = font->fontgfx[c])))
       {
          cx += font->space;
          continue;
       }
 
-      // check against screen bounds
-      // haleyjd 12/29/05: text is now clipped by patch drawing code
-
-      w = SHORT(patch->width);
+      w = font->linear ? font->lsize : SHORT(patch->width);
 
       // possibly adjust x coordinate for centering
       tx = (font->centered ? cx + (font->cw >> 1) - (w >> 1) : cx);
+
+      // check against screen bounds
+      // haleyjd 12/29/05: text is now clipped by patch drawing code
       
-      // draw character
-      if(tl)
-         V_DrawPatchTL(tx, cy, &vbscreen, patch, color, FTRANLEVEL);
+      if(font->linear)
+      {
+         // TODO: translucent masked block support
+         // TODO: shadowed linear?
+         int lx = (c & 31) * font->lsize;
+         int ly = (c >> 5) * font->lsize;
+         src = font->data + ly * (font->lsize << 5) + lx;
+
+         V_DrawMaskedBlockTR(tx, cy, &vbscreen, font->lsize, font->lsize,
+                             font->lsize << 5, src, color);
+      }
       else
       {
-         // haleyjd 10/04/05: text shadowing
-         if(shadowChar)
+         // draw character
+         if(tl)
+            V_DrawPatchTL(tx, cy, &vbscreen, patch, color, FTRANLEVEL);
+         else
          {
-            char *cm = (char *)(colormaps[0] + 33*256);
-            V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, 
-                          FRACUNIT*2/3);
+            // haleyjd 10/04/05: text shadowing
+            if(shadowChar)
+            {
+               char *cm = (char *)(colormaps[0] + 33*256);
+               V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, FRACUNIT*2/3);
+            }
+            
+            V_DrawPatchTranslated(tx, cy, &vbscreen, patch, color, false);
          }
-
-         V_DrawPatchTranslated(tx, cy, &vbscreen, patch, color, false);
       }
       
       // move over in x direction, applying width delta if appropriate
@@ -357,10 +375,11 @@ int V_FontStringWidth(vfont_t *font, const char *s)
       else
          c = c - font->start;
 
-      if(c >= font->size || !(patch = font->fontgfx[c]))
+      if(c >= font->size || (!font->linear && !(patch = font->fontgfx[c])))
          length += font->space;
       else
-         length += (SHORT(patch->width) - font->dw);
+         length += font->linear ? font->lsize - font->dw 
+                                : (SHORT(patch->width) - font->dw);
    }
    
    if(length > longest_width)
@@ -378,6 +397,9 @@ short V_FontMaxWidth(vfont_t *font)
 {
    unsigned int i;
    short w = 0, pw;
+
+   if(font->linear)
+      return font->lsize;
 
    for(i = 0; i < font->size; ++i)
    {
@@ -414,8 +436,59 @@ vfont_t *V_FontSelect(int fontnum)
    case VFONT_BIG_NUM:    // "big" font for spaced numbers, v_misc.c
       return &big_num_font;
    default:
-      return NULL;
+      return (fontnum <= VFONT_BIG_NUM + numlinearfonts) ?
+         &linear_fonts[fontnum - VFONT_BIG_NUM - 1] : NULL;
    }
+}
+
+//
+// V_LoadLinearFont
+//
+// haleyjd 06/29/08: populates a pre-allocated vfont_t with information
+// on a linear font graphic.
+//
+boolean V_LoadLinearFont(vfont_t *font, int lumpnum)
+{
+   int size, i;
+   boolean foundsize = false;
+
+   size = W_LumpLength(lumpnum);
+
+   for(i = 5; i <= 32; ++i)
+   {
+      if(i * i * 128 == size)
+      {
+         font->lsize = i;
+         foundsize = true;
+         break;
+      }
+   }
+
+   if(!foundsize)
+      return false;
+
+   font->data = W_CacheLumpNum(lumpnum, PU_STATIC);
+   font->start = 0;
+   font->end   = 127;
+   font->size  = 128; // full ASCII range is supported
+
+   // set metrics - linear fonts are monospace
+   font->cw    = font->lsize;
+   font->cy    = font->lsize;
+   font->dw    = 0;
+   font->absh  = font->lsize;
+   font->space = font->lsize;
+
+   // set flags
+   font->centered = false; // not block-centered
+   font->color    = true;  // supports color translations
+   font->linear   = true;  // is linear, obviously ;)
+   font->upper    = false; // not all-caps
+
+   // patch array is unused
+   font->fontgfx = NULL;
+
+   return true;
 }
 
 // EOF
