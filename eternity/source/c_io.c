@@ -104,22 +104,27 @@ static void C_initBackdrop(void)
 {
    patch_t *patch;
    const char *lumpname;
-   int lumpnum;
+   int lumpnum, cmapnum = 16;
    boolean darken = true;
 
    lumpname = GameModeInfo->consoleBack;
+
+   // 07/02/08: don't make INTERPIC quite as dark
+   if(!strcasecmp(lumpname, "INTERPIC"))
+      cmapnum = 10;
    
    // allow for custom console background graphic
    if(W_CheckNumForName("CONSOLE") >= 0)
    {
       lumpname = "CONSOLE";
-      darken = false;
+      darken = false; // I assume it is already suitable for use.
    }
    
    if(backdrop)
-      Z_Free(backdrop);
+      Z_SysFree(backdrop);
    
-   backdrop = Z_Malloc(video.height*video.width, PU_STATIC, 0);
+   // haleyjd 07/02/08: large static buffer; use Z_SysMalloc
+   backdrop = Z_SysMalloc(video.height * video.width);
 
    // haleyjd 04/03/04: removed hack, setup VBuffer object
    memcpy(&cback, &vbscreen, sizeof(VBuffer));
@@ -145,10 +150,21 @@ static void C_initBackdrop(void)
    {
       if(darken)
       {
-         char *colormap = W_CacheLumpName("COLORMAP", PU_STATIC);
+         char *colormap;
+         int clumpnum, csize;
+
+         // 07/02/08: for safety we need to use a temporary copy of the colormap
+         // here, and not alter the cache level of the lump. This could cause the
+         // renderer to lose its hold on the colormap if this routine is called 
+         // during gameplay due to a resolution change.
+         clumpnum = W_GetNumForName("COLORMAP");
+         csize    = W_LumpLength(clumpnum);
+
+         colormap = malloc(csize);
+         W_ReadLump(clumpnum, colormap);
          
-         V_DrawPatchTranslated(0, 0, &cback, patch, colormap + 16 * 256, false);
-         Z_ChangeTag(colormap, PU_CACHE);
+         V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
+         free(colormap);
       }
       else
          V_DrawPatch(0, 0, &cback, patch);
@@ -167,14 +183,16 @@ static void C_initBackdrop(void)
 static void C_updateInputPoint(void)
 {
    for(input_point = inputtext;
-       V_StringWidth(input_point) > SCREENWIDTH-20; input_point++);
+       V_FontStringWidth(&linear_fonts[0], input_point) > SCREENWIDTH-20; input_point++);
 }
 
 // initialise the console
 
 void C_Init(void)
 {
-   C_initBackdrop();
+   // haleyjd 07/03/08: this is called on first entry to C_Drawer, so don't call
+   // it here.
+   // C_initBackdrop();
    
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
@@ -509,8 +527,8 @@ void C_Drawer(void)
       // back one line in the history
       y -= 8;
       
-      if(--count < 0) break;    // end of message history?
-      if(y < 0) break;        // past top of screen?
+      if(--count < 0) break;   // end of message history?
+      if(y <= -8) break;       // past top of screen?
       
       // draw this line
       V_FontWriteText(&linear_fonts[0], messages[count], 0, y);
@@ -607,7 +625,7 @@ static void C_AddMessage(const char *s)
    boolean lastend;
 
    // haleyjd 09/04/02: set color to default at beginning
-   if(V_StringWidth(messages[message_last]) > SCREENWIDTH-9 ||
+   if(V_FontStringWidth(&linear_fonts[0], messages[message_last]) > SCREENWIDTH-9 ||
       strlen(messages[message_last]) >= LINELENGTH - 1)
    {
       C_ScrollUp();
@@ -776,7 +794,8 @@ void C_Puts(const char *s)
 void C_Separator(void)
 {
    C_Puts("\x1D\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E"
-          "\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1F");
+          "\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E\x1E"
+          "\x1E\x1E\x1E\x1F");
 }
 
 //

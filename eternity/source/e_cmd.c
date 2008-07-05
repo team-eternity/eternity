@@ -44,7 +44,7 @@ CONSOLE_COMMAND(e_dumpthings, 0)
 {
    int i;
 
-   C_Printf("deh#\ted#\tname\n");
+   C_Printf("deh#   ed#    name\n");
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
@@ -163,7 +163,7 @@ CONSOLE_COMMAND(e_dumpitems, 0)
 {
    int i;
 
-   C_Printf("deh#\ted#\tname\n");
+   C_Printf("deh#   ed#    name\n");
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
@@ -219,11 +219,11 @@ CONSOLE_COMMAND(e_listmapthings, cf_level)
       return;
    }
 
-   C_Printf("rec\tnext\ttype\ttid\n");
+   C_Printf("rec    next   type   tid\n");
 
    for(i = 0; i < numthings; ++i)
    {
-      C_Printf("%5d  %5d  %5d\n", 
+      C_Printf("%5d  %5d  %5d   %5d\n", 
                things[i].recordnum, things[i].next, 
                things[i].type, things[i].tid);
    }
@@ -287,7 +287,7 @@ CONSOLE_COMMAND(e_listlinedefs, cf_level)
       return;
    }
 
-   C_Printf("rec\tnext\tspec\ttag\n");
+   C_Printf("rec    next   spec   tag\n");
 
    for(i = 0; i < numlines; ++i)
    {

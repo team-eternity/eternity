@@ -32,101 +32,113 @@
 // V_DrawBlock Implementors
 //
 // * V_BlockDrawer   -- unscaled
-// * V_BlockDrawer2x -- fast 2x scaling
 // * V_BlockDrawerS  -- general scaling
 //
 
 static void V_BlockDrawer(int x, int y, VBuffer *buffer, 
-                          int width, int height, byte *src)
+                          int width, int height, byte *source)
 {
-   byte *dest;
+   byte *src, *dest;
+   int cx1, cy1, cx2, cy2, cw, ch;
+   int dx, dy;
 
-#ifdef RANGECHECK
-   if(x < 0 || x + width > buffer->width ||
-      y < 0 || y + height > buffer->height)
-   {
-      I_Error("V_BlockDrawer: block exceeds buffer boundaries.\n");
-   }
-#endif
+   // clip to screen
 
-   if(!(width || height))
+   // entirely off-screen?
+   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
       return;
 
-   dest = buffer->data + y * buffer->pitch + x;
-   
-   while(height--)
+   cx1 = x >= 0 ? x : 0;
+   cy1 = y >= 0 ? y : 0;
+   cx2 = x + width - 1;
+   cy2 = y + height - 1;
+
+   if(cx2 >= 320)
+      cx2 = 319;
+
+   if(cy2 >= 199)
+      cy2 = 199;
+
+   // change in origin due to clipping
+   dx = cx1 - x;
+   dy = cy1 - y;
+
+   // clipped rect width/height
+   cw = cx2 - cx1 + 1;
+   ch = cy2 - cy1 + 1;
+
+   // zero-size rect?
+   if(cw <= 0 || ch <= 0)
+      return;
+
+   src  = source + dy * width + dx;
+   dest = buffer->data + cy1 * buffer->pitch + cx1;
+
+   while(ch--)
    {
-      memcpy(dest, src, width);
+      memcpy(dest, src, cw);
       src += width;
       dest += buffer->pitch;
    }
 }
 
-static void V_BlockDrawer2x(int x, int y, VBuffer *buffer, 
-                            int width, int height, byte *src)
-{
-   byte *dest;
-
-#ifdef RANGECHECK
-   if(x < 0 || x + width > buffer->width/2 ||
-      y < 0 || y + height > buffer->height/2)
-   {
-      I_Error("V_BlockDrawer2x: block exceeds buffer boundaries.\n");
-   }
-#endif
-
-   if(!(width || height))
-      return;
-
-   dest = buffer->data + y * (buffer->pitch << 1) + (x << 1);
-   
-   while(height--)
-   {
-      byte *d = dest;
-      int t = width;
-      do
-      {
-         d[buffer->pitch] 
-            = d[buffer->pitch + 1] 
-            = d[0] 
-            = d[1] 
-            = *src++;
-      } while(d += 2, --t);
-      
-      dest += (buffer->pitch << 1);
-   }
-}
-
 static void V_BlockDrawerS(int x, int y, VBuffer *buffer, 
-                           int width, int height, byte *src)
+                           int width, int height, byte *source)
 {
-   byte *dest, *row;
+   byte *src, *dest, *row;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
+   int cx1, cy1, cx2, cy2, cw, ch;
+   int dx, dy;
+   
+   // clip to screen within 320x200 coordinate space
+   
+   // entirely off-screen?
+   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
+      return;
+   
+   cx1 = x >= 0 ? x : 0;
+   cy1 = y >= 0 ? y : 0;
+   cx2 = x + width - 1;
+   cy2 = y + height - 1;
 
-   if(x < 0 || x + width > 320 ||
-      y < 0 || y + height > 200)
+   if(cx2 >= 320)
+      cx2 = 319;
+
+   if(cy2 >= 199)
+      cy2 = 199;
+   
+   // change in origin due to clipping
+   dx = cx1 - x;
+   dy = cy1 - y;
+   
+   // clipped rect width/height
+   cw = cx2 - cx1 + 1;
+   ch = cy2 - cy1 + 1;
+   
+   // zero-size rect?
+   if(cw <= 0 || ch <= 0)
       return;
       
-   realx = buffer->x1lookup[x];
-   realy = buffer->y1lookup[y];
-   w     = buffer->x2lookup[x + width - 1] - realx + 1;
-   h     = buffer->y2lookup[y + height - 1] - realy + 1;
+   realx = buffer->x1lookup[cx1];
+   realy = buffer->y1lookup[cy1];
+   w     = buffer->x2lookup[cx2] - realx + 1;
+   h     = buffer->y2lookup[cy2] - realy + 1;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
    yfrac = 0;
-   dest  = buffer->data + realy * buffer->pitch + realx;
+
+   src  = source + dy * width + dx;
+   dest = buffer->data + realy * buffer->pitch + realx;
 
 #ifdef RANGECHECK
+   // sanity check
    if(realx < 0 || realx + w > buffer->width ||
       realy < 0 || realy + h > buffer->height)
    {
       I_Error("V_BlockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
-
-   if(!(width || height))
-      return;
 
    while(h--)
    {
@@ -158,104 +170,112 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
                                 int width, int height, int srcpitch,
                                 byte *source, byte *cmap)
 {
-   byte *src, *dest, *row;
-   int u, v;
-
-   if(x < 0 || x + width > buffer->width ||
-      y < 0 || y + height > buffer->height)
-   {
-      return;
-   }
-
-
-   if(!(width || height))
-      return;
-
-   dest = buffer->data + y * buffer->pitch + x;
-   
-   for(v = 0; v <= height; ++v)
-   {
-      src = source + v * srcpitch;
-      row = dest;
-
-      for(u = 0; u <= width; ++u)
-      {
-         if(*src)
-            *row++ = cmap[*src];
-         ++src;
-      }
-
-      dest += buffer->pitch;
-   }
-}
-
-static void V_MaskedBlockDrawer2x(int x, int y, VBuffer *buffer, 
-                                  int width, int height, int srcpitch,
-                                  byte *source, byte *cmap)
-{
    byte *src, *dest;
-   int u, v;
+   int cx1, cy1, cx2, cy2, cw, ch;
+   int dx, dy, i;
 
-   if(x < 0 || x + width > buffer->width/2 ||
-      y < 0 || y + height > buffer->height/2)
-   {
-      return;
-   }
+   // clip to screen
 
-   if(!(width || height))
+   // entirely off-screen?
+   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
       return;
 
-   dest = buffer->data + y * (buffer->pitch << 1) + (x << 1);
-   
-   for(v = 0; v <= height; ++v)
+   cx1 = x >= 0 ? x : 0;
+   cy1 = y >= 0 ? y : 0;
+   cx2 = x + width - 1;
+   cy2 = y + height - 1;
+
+   if(cx2 >= 320)
+      cx2 = 319;
+
+   if(cy2 >= 199)
+      cy2 = 199;
+
+   // change in origin due to clipping
+   dx = cx1 - x;
+   dy = cy1 - y;
+
+   // clipped rect width/height
+   cw = cx2 - cx1 + 1;
+   ch = cy2 - cy1 + 1;
+
+   // zero-size rect?
+   if(cw <= 0 || ch <= 0)
+      return;
+
+   src  = source + dy * srcpitch + dx;
+   dest = buffer->data + cy1 * buffer->pitch + cx1;
+
+   while(ch--)
    {
-      byte *row = dest;
-      src = source + v * srcpitch;
-      u = width;
-      do
+      for(i = 0; i < cw; ++i)
       {
-         if(*src)
-         {
-            row[buffer->pitch] 
-               = row[buffer->pitch + 1] 
-               = row[0] 
-               = row[1] 
-               = cmap[*src];
-         }
-         ++src;
-      } while(row += 2, --u);
-      
-      dest += (buffer->pitch << 1);
+         if(*(src + i))
+            *(dest + i) = cmap[*(src + i)];
+      }
+      src += srcpitch;
+      dest += buffer->pitch;
    }
 }
 
 static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer, 
                                  int width, int height, int srcpitch,
-                                 byte *src, byte *cmap)
+                                 byte *source, byte *cmap)
 {
-   byte *dest, *row;
+   byte *src, *dest, *row;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
-
-   if(x < 0 || x + width > 320 ||
-      y < 0 || y + height > 200)
+   int cx1, cy1, cx2, cy2, cw, ch;
+   int dx, dy;
+   
+   // clip to screen within 320x200 coordinate space
+   
+   // entirely off-screen?
+   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
       return;
-      
-   realx = buffer->x1lookup[x];
-   realy = buffer->y1lookup[y];
-   w     = buffer->x2lookup[x + width - 1] - realx + 1;
-   h     = buffer->y2lookup[y + height - 1] - realy + 1;
+   
+   cx1 = x >= 0 ? x : 0;
+   cy1 = y >= 0 ? y : 0;
+   cx2 = x + width - 1;
+   cy2 = y + height - 1;
+
+   if(cx2 >= 320)
+      cx2 = 319;
+
+   if(cy2 >= 199)
+      cy2 = 199;
+   
+   // change in origin due to clipping
+   dx = cx1 - x;
+   dy = cy1 - y;
+   
+   // clipped rect width/height
+   cw = cx2 - cx1 + 1;
+   ch = cy2 - cy1 + 1;
+   
+   // zero-size rect?
+   if(cw <= 0 || ch <= 0)
+      return;
+
+   realx = buffer->x1lookup[cx1];
+   realy = buffer->y1lookup[cy1];
+   w     = buffer->x2lookup[cx2] - realx + 1;
+   h     = buffer->y2lookup[cy2] - realy + 1;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
    yfrac = 0;
-   dest  = buffer->data + realy * buffer->pitch + realx;
 
+   src  = source + dy * srcpitch + dx;
+   dest = buffer->data + realy * buffer->pitch + realx;
+
+#ifdef RANGECHECK
+   // sanity check
    if(realx < 0 || realx + w > buffer->width ||
       realy < 0 || realy + h > buffer->height)
-      return;
-
-   if(!(width || height))
-      return;
+   {
+      I_Error("V_BlockDrawerS: block exceeds buffer boundaries.\n");
+   }
+#endif
 
    while(h--)
    {
@@ -405,38 +425,6 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
 }
 
 //
-//
-// Scaled 2x
-//
-// NOTE: This version ONLY works for 640x400 buffers.
-//
-static void V_TileBlock64_2x(VBuffer *buffer, byte *src)
-{
-   int x, y;
-   byte *back_dest = buffer->data;
-   byte *back_src  = src;
-
-   for(y = 0; y < SCREENHEIGHT; src = ((++y & 63) << 6) + back_src,
-       back_dest += buffer->pitch)
-   {
-      for(x = 0; x < SCREENWIDTH/64; ++x)
-      {
-         int i = 63;
-
-         do
-         {
-            back_dest[i * 2]
-               = back_dest[i * 2 + SCREENWIDTH * 2]
-               = back_dest[i * 2 + 1]
-               = back_dest[i * 2 + SCREENWIDTH * 2 + 1]
-               = src[i];
-         } while(--i >= 0);
-         back_dest += 128;
-      }
-   }
-}
-
-//
 // General scaling
 //
 static void V_TileBlock64S(VBuffer *buffer, byte *src)
@@ -487,14 +475,6 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
       buffer->TileBlock64       = V_TileBlock64;
       break;
    case DRAWTYPE_2XSCALED:
-      buffer->BlockDrawer       = V_BlockDrawer2x;
-      buffer->MaskedBlockDrawer = V_MaskedBlockDrawer2x;
-      // 2x version of V_TileBlock only works for 640x400
-      if(buffer->width == 640 && buffer->height == 400)
-         buffer->TileBlock64 = V_TileBlock64_2x;
-      else
-         buffer->TileBlock64 = V_TileBlock64S;
-      break;
    case DRAWTYPE_GENSCALED:
       buffer->BlockDrawer       = V_BlockDrawerS;
       buffer->MaskedBlockDrawer = V_MaskedBlockDrawerS;

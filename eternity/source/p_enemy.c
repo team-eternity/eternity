@@ -4065,7 +4065,14 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
 
    // if it's a missile, shoot it
    if(mobjinfo[type].flags & MF_MISSILE)
+   {
       newmobj = P_SpawnPlayerMissile(plyr->mo, type);
+
+      // set the tracer target in case it is a homing missile
+      P_BulletSlope(plyr->mo);
+      if(tm->linetarget)
+         P_SetTarget(&newmobj->tracer, tm->linetarget);
+   }
    else
    {
       // do a good old Pain-Elemental style summoning
