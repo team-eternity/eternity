@@ -804,13 +804,13 @@ void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data)
    vbuf->data     = data;
    vbuf->width    = 320;
    vbuf->height   = 200;
-   vbuf->pitch    = 200;
+   vbuf->pitch    = 320;
    vbuf->x1lookup = unscaled_xlookup;
    vbuf->x2lookup = unscaled_xlookup;
    vbuf->y1lookup = unscaled_ylookup;
    vbuf->y2lookup = unscaled_ylookup;
-   vbuf->ixscale  = FRACUNIT;
-   vbuf->iyscale  = FRACUNIT;
+   vbuf->ixscale  = ((SCREENWIDTH << FRACBITS) / vbuf->width) + 1;
+   vbuf->iyscale  = ((SCREENHEIGHT << FRACBITS) / vbuf->height) + 1;
 
    V_SetupBufferFuncs(vbuf, DRAWTYPE_UNSCALED);
 }

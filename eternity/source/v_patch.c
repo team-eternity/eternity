@@ -552,20 +552,15 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    fixed_t    scale, iscale, xiscale, startfrac = 0;
    patch_t    *patch = pi->patch;
    
-   patchcol.buffer      = buffer;
+   patchcol.buffer = buffer;
 
-   // haleyjd 10/01/06: round up the inverse scaling factors by 1/65536. This
-   // ensures that fracstep steps up to the next pixel just fast enough to
-   // prevent non-uniform scaling in modes where the inverse scaling factor is
-   // not accurately represented in fixed point (ie. should be 0.333...).
-   // The error is one pixel per every 65536, so it's totally irrelevant.
+   // haleyjd 08/16/08: scale and step values must come from the VBuffer, NOT
+   // the Cardboard video structure...
 
-   scale = video.xscale;
-   iscale = video.xstep;
-
-   // haleyjd 06/21/06: simplified redundant math
-   v_spryscale = video.yscale;
-   patchcol.step = video.ystep;
+   scale         = (buffer->width << FRACBITS) / SCREENWIDTH;
+   iscale        = buffer->ixscale;
+   v_spryscale   = (buffer->height << FRACBITS) / SCREENHEIGHT;
+   patchcol.step = buffer->iyscale;
 
    // calculate edges of the shape
    tx = pi->x - SHORT(patch->leftoffset);
