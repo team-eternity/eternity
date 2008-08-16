@@ -780,6 +780,42 @@ static void V_InitScreenVBuffer(void)
 }
 
 //
+// V_InitUnscaledBuffer
+//
+// Sets up a VBuffer object for drawing into a 320x200 linear buffer.
+//
+void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data)
+{
+   static int unscaled_xlookup[321];
+   static int unscaled_ylookup[201];
+   static boolean firsttime = true;
+   
+   if(firsttime)
+   {
+      int i;
+
+      firsttime = false;
+      for(i = 0; i < 321; ++i)
+         unscaled_xlookup[i] = i;
+      for(i = 0; i < 201; ++i)
+         unscaled_ylookup[i] = i;
+   }
+
+   vbuf->data     = data;
+   vbuf->width    = 320;
+   vbuf->height   = 200;
+   vbuf->pitch    = 200;
+   vbuf->x1lookup = unscaled_xlookup;
+   vbuf->x2lookup = unscaled_xlookup;
+   vbuf->y1lookup = unscaled_ylookup;
+   vbuf->y2lookup = unscaled_ylookup;
+   vbuf->ixscale  = FRACUNIT;
+   vbuf->iyscale  = FRACUNIT;
+
+   V_SetupBufferFuncs(vbuf, DRAWTYPE_UNSCALED);
+}
+
+//
 // V_Init
 //
 // Allocates the 4 full screen buffers in low DOS memory

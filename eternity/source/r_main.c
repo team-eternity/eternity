@@ -423,13 +423,14 @@ void R_SetupViewScaling(void)
 
    video.scaled = (video.xscalef > 1.0f || video.yscalef > 1.0f);
 
-   // SoM: ok, assemble the realx1/x2 arrays differently. To start, we are using floats
-   // to do the scaling which is 100 times more accurate, secondly, I realized that the
-   // reason the old single arrays were causing problems was they was only calculating the 
-   // top-left corner of the scaled pixels. Calculating widths through these arrays is wrong
-   // because the scaling will change the final scaled widths depending on what their unscaled
-   // screen coords were. Thusly, all rectangles should be converted to unscaled x1, y1, x2, y2
-   // coords, scaled, and then converted back to x, y, w, h
+   // SoM: ok, assemble the realx1/x2 arrays differently. To start, we are using
+   // floats to do the scaling which is 100 times more accurate, secondly, I 
+   // realized that the reason the old single arrays were causing problems was 
+   // they were only calculating the top-left corner of the scaled pixels. 
+   // Calculating widths through these arrays is wrong because the scaling will
+   // change the final scaled widths depending on what their unscaled screen 
+   // coords were. Thusly, all rectangles should be converted to unscaled 
+   // x1, y1, x2, y2 coords, scaled, and then converted back to x, y, w, h
    video.x1lookup[0] = 0;
    lastfrac = frac = 0;
    for(i = 0; i < video.width; i++)

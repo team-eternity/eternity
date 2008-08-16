@@ -62,7 +62,8 @@ void IN_checkForAccelerate(void);    // killough 3/28/98: used to
 extern int acceleratestage;          // accelerate intermission screens
 static int midstage;                 // whether we're in "mid-stage"
 
-byte *DemonBuffer; // haleyjd 08/23/02
+static void F_InitDemonScroller(void);
+static byte *DemonBuffer; // haleyjd 08/23/02
 
 //
 // F_StartFinale
@@ -179,9 +180,7 @@ void F_Ticker(void)
                S_StartMusic(mus_bunny);
                break;
             case FINALE_HTIC_DEMON: // demon scroller
-               DemonBuffer = Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer));
-               W_ReadLump(W_GetNumForName("FINAL2"), DemonBuffer);
-               W_ReadLump(W_GetNumForName("FINAL1"), DemonBuffer+64000);
+               F_InitDemonScroller();
                break;
             default:
                break;
@@ -720,7 +719,53 @@ void F_DrawUnderwater(void)
    }
 }
 
+//
+// F_InitDemonScroller
+//
+// Sets up the Heretic episode 3 ending sequence.
+//
+static void F_InitDemonScroller(void)
+{
+   int lnum1, lnum2;
+   int lsize1, lsize2;
+   VBuffer vbuf;
+
+   DemonBuffer = Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer));
+
+   // get screens
+   lnum1  = W_GetNumForName("FINAL1");
+   lnum2  = W_GetNumForName("FINAL2");
+   lsize1 = W_LumpLength(lnum1);
+   lsize2 = W_LumpLength(lnum2);
+
+   // init VBuffer
+   V_InitUnscaledBuffer(&vbuf, DemonBuffer);
+   
+   if(lsize2 == 64000) // raw screen
+      W_ReadLump(lnum2, DemonBuffer);
+   else
+   {
+      patch_t *p = (patch_t *)W_CacheLumpNum(lnum2, PU_CACHE);
+      V_DrawPatchGeneral(0, 0, &vbuf, p, false);
+   }
+
+   if(lsize1 == 64000) // raw screen
+      W_ReadLump(lnum1, DemonBuffer + 64000);
+   else
+   {
+      patch_t *p = (patch_t *)W_CacheLumpNum(lnum1, PU_CACHE);
+
+      // adjust pointer to second screen of DemonBuffer
+      vbuf.data = DemonBuffer + 64000;
+      V_DrawPatchGeneral(0, 0, &vbuf, p, false);
+   }   
+}
+
+//
+// F_DemonScroll
+//
 // haleyjd: Heretic episode 3 demon scroller
+//
 void F_DemonScroll(void)
 {
    static int yval = 0;

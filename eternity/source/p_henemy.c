@@ -3296,7 +3296,6 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
       
       P_SetMobjState(mo, statenum);
    }
-
 }
 
 //

@@ -4048,6 +4048,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    static int dripType = -1;
    static int ambienceType = -1;
    static int enviroType = -1;
+   static int vileFireType = -1;
 
    fixed_t  x, y, z;
    mobj_t   *newmobj;
@@ -4061,6 +4062,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       dripType     = E_ThingNumForName("EEParticleDrip");
       ambienceType = E_ThingNumForName("EEAmbience");
       enviroType   = E_ThingNumForName("EEEnviroSequence");
+      vileFireType = E_ThingNumForName("VileFire");
    }
 
    // if it's a missile, shoot it
@@ -4116,6 +4118,18 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          break;
       default:
          break;
+      }
+   }
+
+   // code to tweak interesting objects
+   if(type == vileFireType)
+   {
+      P_BulletSlope(plyr->mo);
+      if(tm->linetarget)
+      {
+         P_SetTarget(&newmobj->target, plyr->mo);
+         P_SetTarget(&newmobj->tracer, tm->linetarget);
+         A_Fire(newmobj);
       }
    }
 
@@ -4326,12 +4340,26 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
 CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
-   fixed_t slope;
 
-   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
    if(tm->linetarget)
       P_RemoveMobj(tm->linetarget);
+}
+
+CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
+{
+   player_t *plyr = &players[consoleplayer];
+
+   P_BulletSlope(plyr->mo);
+   if(!tm->linetarget)
+      return;
+   
+   S_StartSound(plyr->mo, sfx_barexp);
+   P_DamageMobj(tm->linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
+   tm->linetarget->momz = 1000*FRACUNIT/tm->linetarget->info->mass;
+
+   P_RadiusAttack(tm->linetarget, plyr->mo, 70, MOD_UNKNOWN);
 }
 
 void PE_AddCommands(void)
@@ -4343,6 +4371,7 @@ void PE_AddCommands(void)
    C_AddCommand(mdk);
    C_AddCommand(mdkbomb);
    C_AddCommand(banish);
+   C_AddCommand(vilehit);
 }
 
 //----------------------------------------------------------------------------

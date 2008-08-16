@@ -82,11 +82,11 @@ enum
 };
 
 void V_SetupBufferFuncs(VBuffer *buffer, int drawtype);
+void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data);
 
-
-
-// SoM: In my continual effort to weed out multiple column drawers I discovered the new patch
-// system is derrived from the old screen sprite code. I've cleaned it up a bit.
+// SoM: In my continual effort to weed out multiple column drawers I discovered
+// the new patch system is derrived from the old screen sprite code. I've cleaned
+// it up a bit.
 typedef struct
 {
    int x;
@@ -96,10 +96,10 @@ typedef struct
 
    byte *source, *translation;
 
-   // haleyjd 06/21/06: vc_maxfrac: this variable keeps track of the length of the
-   // column currently being drawn and allows the V_DrawPatchColumn variants to cap
-   // "frac" to this value and avoid the "sparkles" phenomenon, which for screen
-   // patches is quite terrible when it does occur
+   // haleyjd 06/21/06: vc_maxfrac: this variable keeps track of the length of 
+   // the column currently being drawn and allows the V_DrawPatchColumn variants
+   // to cap "frac" to this value and avoid the "sparkles" phenomenon, which for 
+   // screen patches is quite terrible when it does occur
    // SoM: Let's see if we can get rid of this...
    fixed_t maxfrac;
 

@@ -1280,7 +1280,7 @@ void Z_DumpCore(void)
 //
 // Z_SysMalloc
 //
-// Similar to Z_AllocLow in the original source, this function gives explicit
+// Similar to I_AllocLow in the original source, this function gives explicit
 // access to the C heap. There are allocations which are a detriment to the zone
 // system, such as large video buffers, which should be handled through this
 // function instead.
