@@ -346,7 +346,7 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
       return;
    
    player->ammo[ammotype] -= 
-      (weapon->enableaps || !compat_amt) ? weapon->ammopershot : compat_amt;
+      (weapon->enableaps || compat_amt < 0) ? weapon->ammopershot : compat_amt;
 }
 
 int lastshottic; // killough 3/22/98
@@ -1520,7 +1520,7 @@ void A_FireCustomBullets(mobj_t *mo)
       !(player->cheats & CF_INFAMMO))
    {
       // now settable in weapon, not needed as a parameter here
-      P_SubtractAmmo(player, 0);
+      P_SubtractAmmo(player, -1);
    }
 
    A_FireSomething(player, 0);
@@ -1597,7 +1597,7 @@ void A_FirePlayerMissile(mobj_t *actor)
    if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
      !(player->cheats & CF_INFAMMO))
    {
-      P_SubtractAmmo(player, 0);
+      P_SubtractAmmo(player, -1);
    }
 
    mo = P_SpawnPlayerMissile(actor, thingnum);
@@ -1670,7 +1670,7 @@ void A_CustomPlayerMelee(mobj_t *mo)
    if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
       !(player->cheats & CF_INFAMMO))
    {
-      P_SubtractAmmo(player, 0);
+      P_SubtractAmmo(player, -1);
    }
    
    angle = player->mo->angle;
@@ -1816,7 +1816,7 @@ void A_PlayerThunk(mobj_t *mo)
       if(weaponinfo[player->readyweapon].ammo < NUMAMMO &&
          !(player->cheats & CF_INFAMMO))
       {
-         P_SubtractAmmo(player, 0);
+         P_SubtractAmmo(player, -1);
       }
    }
 
