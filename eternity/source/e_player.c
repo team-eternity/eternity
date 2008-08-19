@@ -885,6 +885,7 @@ static dehflags_t weapon_flags[] =
    { "SILENT",       WPF_SILENT       },
    { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
    { "FLEEMELEE",    WPF_FLEEMELEE    },
+   { "ALWAYSRECOIL", WPF_ALWAYSRECOIL },
    { NULL,           0 }
 };
 

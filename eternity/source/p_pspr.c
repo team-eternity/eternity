@@ -68,20 +68,7 @@ extern void P_Thrust(player_t *, angle_t, fixed_t);
 int weapon_recoil;      // weapon recoil
 
 // The following array holds the recoil values         // phares
-
-// WEAPON_FIXME: recoil -> EDF weapon property
-
-static const int recoil_values[] = {    // phares
-   10,  // wp_fist
-   10,  // wp_pistol
-   30,  // wp_shotgun
-   10,  // wp_chaingun
-   100, // wp_missile
-   20,  // wp_plasma
-   100, // wp_bfg
-   0,   // wp_chainsaw
-   80,  // wp_supershotgun
-};
+// haleyjd 08/18/08: recoil moved into weaponinfo
 
 // haleyjd 05/21/08:
 // This global is only asserted while an action function is being dispatched
@@ -379,9 +366,9 @@ static void P_FireWeapon(player_t *player)
 
 //
 // P_DropWeapon
+//
 // Player died, so put the weapon away.
 //
-
 void P_DropWeapon(player_t *player)
 {
    P_SetPsprite(player, ps_weapon, weaponinfo[player->readyweapon].downstate);
@@ -664,18 +651,22 @@ void A_Raise(mobj_t *mo)
 //
 // WEAPON_FIXME: "adder" parameter is not reliable for EDF editing
 //
-static void A_FireSomething(player_t* player,int adder)
+static void A_FireSomething(player_t* player, int adder)
 {
    P_SetPsprite(player, ps_flash,
       weaponinfo[player->readyweapon].flashstate+adder);
-
-   // WEAPON_FIXME: recoil -> EDF weapon property
    
    // killough 3/27/98: prevent recoil in no-clipping mode
    if(!(player->mo->flags & MF_NOCLIP))
-      if(weapon_recoil && (demo_version >= 203 || !compatibility))
+   {
+      // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
+      if(weaponinfo[player->readyweapon].flags & WPF_ALWAYSRECOIL ||
+         (weapon_recoil && (demo_version >= 203 || !compatibility)))
+      {
          P_Thrust(player, ANG180 + player->mo->angle,
-                  2048*recoil_values[player->readyweapon]); // phares
+                  2048*weaponinfo[player->readyweapon].recoil); // phares
+      }
+   }
 }
 
 //
@@ -878,7 +869,7 @@ void A_FireOldBFG(mobj_t *mo)
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
       P_Thrust(player, ANG180 + mo->angle,
-               512*recoil_values[wp_plasma]);
+               512*weaponinfo[wp_plasma].recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
 
@@ -1130,8 +1121,6 @@ void A_FireCGun(mobj_t *mo)
    
    // sf: removed beta
 
-   // PCLASS_FIXME: secondary attack state
-   
    P_SetMobjState(mo, player->pclass->altattack);
    
    P_SubtractAmmo(player, 1);

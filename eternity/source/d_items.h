@@ -42,6 +42,7 @@ enum
    WPF_SILENT       = 0x00000020, // weapon is always silent
    WPF_NOAUTOFIRE   = 0x00000040, // weapon won't autofire in A_WeaponReady
    WPF_FLEEMELEE    = 0x00000080, // monsters consider it a melee weapon
+   WPF_ALWAYSRECOIL = 0x00000100, // weapon always has recoil
 };
 
 // Weapon info: sprite frames, ammunition use.
@@ -59,6 +60,7 @@ typedef struct
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
    long        flags;
    int         mod;
+   int         recoil;
 } weaponinfo_t;
 
 extern weaponinfo_t weaponinfo[NUMWEAPONS];
