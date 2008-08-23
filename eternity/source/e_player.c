@@ -952,7 +952,110 @@ cfg_opt_t edf_inventory_opts[] =
    CFG_END()
 };
 
+//==============================================================================
+//
+// Inventory Static Variables
+//
 
+// numinventory: the number of inventory items defined. This can grow.
+static int numinventory;
+
+// inv_hitlist: keeps track of what inventory items are initialized
+static byte *inv_hitlist = NULL;
+
+// inv_pstack: used by recursive E_ProcessInventoryItem to track inheritance
+static int  *inv_pstack  = NULL;
+static int   inv_pindex  = 0;
+
+//==============================================================================
+//
+// Inventory Processing
+//
+
+//
+// E_CheckInventoryInherit
+//
+// Makes sure the inventory being inherited from has not already been inherited
+// during the current inheritance chain. Returns false if the check fails, and 
+// true if it succeeds.
+//
+static boolean E_CheckInventoryInherit(int pnum)
+{
+   int i;
+
+   for(i = 0; i < numinventory; ++i)
+   {
+      // circular inheritance
+      if(inv_pstack[i] == pnum)
+         return false;
+
+      // found end of list
+      if(inv_pstack[i] == -1)
+         break;
+   }
+
+   return true;
+}
+
+//
+// E_AddInventoryToPStack
+//
+// Adds a type number to the inheritance stack.
+//
+static void E_AddInventoryToPStack(int num)
+{
+   // Overflow shouldn't happen since it would require cyclic
+   // inheritance as well, but I'll guard against it anyways.
+   
+   if(inv_pindex >= numinventory)
+      E_EDFLoggedErr(2, "E_AddInventoryToPStack: max inheritance depth exceeded\n");
+
+   inv_pstack[inv_pindex++] = num;
+}
+
+//
+// E_ResetInventoryPStack
+//
+// Resets the inventory inheritance stack, setting all the pstack values to -1,
+// and setting pindex back to zero.
+//
+static void E_ResetInventoryPStack(void)
+{
+   int i;
+
+   for(i = 0; i < numinventory; ++i)
+      inv_pstack[i] = -1;
+
+   inv_pindex = 0;
+}
+
+//
+// E_CopyInventory
+//
+// Copies one inventory item into another.
+//
+static void E_CopyInventory(int num, int pnum)
+{
+}
+
+//
+// E_ProcessInventoryItem
+//
+// Static routine to process a single inventory definition.
+// Inheritance is handled via recursion as with mobjinfo.
+//
+static void E_ProcessInventoryItem(cfg_t *cfg)
+{
+}
+
+//
+// E_ProcessInventoryItems
+//
+// Processes all inventory definitions.
+//
+void E_ProcessInventoryItems(cfg_t *cfg)
+{
+}
 
 // EOF
 

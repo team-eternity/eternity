@@ -29,11 +29,7 @@
 // patch rendering globals -- like dc_ in r_draw.c
 // SoM: AAAHHHHHHH
 static cb_patch_column_t patchcol;
-static int ytop, columntop;
-
-// translucency lookups
-static unsigned int *v_fg2rgb;
-static unsigned int *v_bg2rgb;
+static int ytop;
 
 //
 // V_DrawPatchColumn
@@ -74,29 +70,14 @@ static void V_DrawPatchColumn(void)
 
    {
       register const byte *source = patchcol.source;
-      
-      /*if(frac < 0)
-         frac = 0;
-      if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;*/
-      
+            
       while((count -= 2) >= 0)
       {
          *dest = source[frac >> FRACBITS];
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
          *dest = source[frac >> FRACBITS];
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
       }
       if(count & 1)
@@ -143,29 +124,14 @@ static void V_DrawPatchColumnTR(void)
 
    {
       register const byte *source = patchcol.source;
-      
-      /*if(frac < 0)
-         frac = 0;
-      if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;*/
-      
+            
       while((count -= 2) >= 0)
       {
          *dest = patchcol.translation[source[frac >> FRACBITS]];
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
          *dest = patchcol.translation[source[frac >> FRACBITS]];
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
       }
       if(count & 1)
@@ -174,8 +140,8 @@ static void V_DrawPatchColumnTR(void)
 } 
 
 #define DO_COLOR_BLEND()                       \
-   fg = v_fg2rgb[source[frac >> FRACBITS]];    \
-   bg = v_bg2rgb[*dest];                       \
+   fg = patchcol.fg2rgb[source[frac >> FRACBITS]];    \
+   bg = patchcol.bg2rgb[*dest];                       \
    fg = (fg + bg) | 0x1f07c1f;                 \
    *dest = RGB32k[0][0][fg & (fg >> 15)]
 
@@ -198,7 +164,7 @@ void V_DrawPatchColumnTL(void)
                                  
 #ifdef RANGECHECK 
    if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
-      (unsigned)patchcol.y1 >= (unsigned) patchcol.buffer->height) 
+      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
       I_Error("V_DrawPatchColumnTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
@@ -214,32 +180,17 @@ void V_DrawPatchColumnTL(void)
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
       register const byte *source = patchcol.source;
-      
-      /*if(frac < 0)
-         frac = 0;
-      if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;*/
-      
+            
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
       }
       if(count & 1)
@@ -252,8 +203,8 @@ void V_DrawPatchColumnTL(void)
 #undef DO_COLOR_BLEND
 
 #define DO_COLOR_BLEND()          \
-   fg = v_fg2rgb[patchcol.translation[source[frac >> FRACBITS]]]; \
-   bg = v_bg2rgb[*dest];          \
+   fg = patchcol.fg2rgb[patchcol.translation[source[frac >> FRACBITS]]]; \
+   bg = patchcol.bg2rgb[*dest];          \
    fg = (fg + bg) | 0x1f07c1f;    \
    *dest = RGB32k[0][0][fg & (fg >> 15)]
 
@@ -293,31 +244,16 @@ void V_DrawPatchColumnTRTL(void)
    {
       register const byte *source = patchcol.source;
       
-      /*if(frac < 0)
-         frac = 0;
-      if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;*/
-      
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
       }
       if(count & 1)
@@ -331,7 +267,7 @@ void V_DrawPatchColumnTRTL(void)
 
 #define DO_COLOR_BLEND() \
    /* mask out LSBs in green and red to allow overflow */ \
-   a = v_fg2rgb[source[frac >> FRACBITS]] + v_bg2rgb[*dest]; \
+   a = patchcol.fg2rgb[source[frac >> FRACBITS]] + patchcol.bg2rgb[*dest]; \
    b = a; \
    a |= 0x01f07c1f; \
    b &= 0x40100400; \
@@ -376,31 +312,16 @@ void V_DrawPatchColumnAdd(void)
    {
       register const byte *source = patchcol.source;
       
-      /*if(frac < 0)
-         frac = 0;
-      if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;*/
-      
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
       }
       if(count & 1)
@@ -414,7 +335,7 @@ void V_DrawPatchColumnAdd(void)
 
 #define DO_COLOR_BLEND() \
    /* mask out LSBs in green and red to allow overflow */ \
-   a = v_fg2rgb[patchcol.translation[source[frac >> FRACBITS]]] + v_bg2rgb[*dest]; \
+   a = patchcol.fg2rgb[patchcol.translation[source[frac >> FRACBITS]]] + patchcol.bg2rgb[*dest]; \
    b = a; \
    a |= 0x01f07c1f; \
    b &= 0x40100400; \
@@ -459,31 +380,16 @@ void V_DrawPatchColumnAddTR(void)
    {
       register const byte *source = patchcol.source;
       
-      /*if(frac < 0)
-         frac = 0;
-      if(frac > patchcol.maxfrac)
-         frac = patchcol.maxfrac;*/
-      
       while((count -= 2) >= 0)
       {
          DO_COLOR_BLEND();
 
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
          
          DO_COLOR_BLEND();
          
          dest += patchcol.buffer->pitch;
-         /*if((frac += fracstep) > patchcol.maxfrac)
-         {
-            frac = patchcol.maxfrac;
-            fracstep = 0;
-         }*/
          frac += fracstep;
       }
       if(count & 1)
@@ -495,27 +401,13 @@ void V_DrawPatchColumnAddTR(void)
 
 #undef DO_COLOR_BLEND
 
-static fixed_t v_spryscale;
-
 static void V_DrawMaskedColumn(column_t *column)
 {
-   // haleyjd 06/21/06: this isn't used any more
-   // vc_texheight = 0; // killough 11/98
-
    while(column->topdelta != 0xff)
    {
       // calculate unclipped screen coordinates for post
 
-      // haleyjd 06/21/06: calculate the maximum allowed value for the frac
-      // column index; this avoids potential overflow leading to "sparkles",
-      // which for most screen patches look more like mud. Note this solution
-      // probably isn't suitable for adaptation to the R_DrawColumn system
-      // due to efficiency concerns.
-      patchcol.maxfrac = (column->length - 1) << FRACBITS;
-
-      // Here's where "sparkles" come in -- killough:
-      // haleyjd: but not with patchcol.maxfrac :)
-      columntop = ytop + column->topdelta;
+      int columntop = ytop + column->topdelta;
       patchcol.y1 = patchcol.buffer->y1lookup[columntop];
       patchcol.y2 = patchcol.buffer->y2lookup[columntop + column->length - 1];
 
@@ -559,7 +451,6 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 
    scale         = (buffer->width << FRACBITS) / SCREENWIDTH;
    iscale        = buffer->ixscale;
-   v_spryscale   = (buffer->height << FRACBITS) / SCREENHEIGHT;
    patchcol.step = buffer->iyscale;
 
    // calculate edges of the shape
@@ -660,8 +551,8 @@ void V_SetPatchColrng(byte *colrng)
 
 void V_SetPatchTL(unsigned int *fg, unsigned int *bg)
 {
-   v_fg2rgb = fg;
-   v_bg2rgb = bg;
+   patchcol.fg2rgb = fg;
+   patchcol.bg2rgb = bg;
 }
 
 //

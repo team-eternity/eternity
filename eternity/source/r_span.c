@@ -481,6 +481,7 @@ SPAN_FUNC(R_DrawSpanAdd_LD512, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23,
 // Span Engine Objects
 //
 
+// x-shift factors; precision decreases with texture size
 #define XS64  (1 << 26)
 #define XS128 (1 << 25)
 #define XS256 (1 << 24)
@@ -503,6 +504,7 @@ spandrawer_t r_lpspandrawer =
       { XS64,  XS128, XS256, XS512 },
    },
 };
+
 // the normal, high-precision span drawer
 spandrawer_t r_spandrawer =
 {

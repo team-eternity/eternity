@@ -303,7 +303,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       }
    }
 
-   // process sourcless flag
+   // process sourceless flag
    if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
       mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
