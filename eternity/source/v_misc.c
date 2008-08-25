@@ -815,6 +815,9 @@ void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data)
    V_SetupBufferFuncs(vbuf, DRAWTYPE_UNSCALED);
 }
 
+extern void I_SetPrimaryBuffer(void);
+extern void I_UnsetPrimaryBuffer(void);
+
 //
 // V_Init
 //

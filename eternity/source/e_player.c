@@ -902,6 +902,24 @@ static dehflagset_t weapon_flagset =
 // all inventory items.
 //
 
+// inventory flags
+
+static dehflags_t inv_flagvalues[] =
+{
+   { "QUIET",         INVF_QUIET         },
+   { "AUTOACTIVATE",  INVF_AUTOACTIVATE  },
+   { "UNDROPPABLE",   INVF_UNDROPPABLE   },
+   { "INVBAR",        INVF_INVBAR        },
+   { "HUBPOWER",      INVF_HUBPOWER      },
+   { "INTERHUBSTRIP", INVF_INTERHUBSTRIP },
+   { "ALWAYSPICKUP",  INVF_ALWAYSPICKUP  },
+   { "BIGPOWERUP",    INVF_BIGPOWERUP    },
+   { "KEEPDEPLETED",  INVF_KEEPDEPLETED  },
+   { NULL,            0                  },
+};
+
+static dehflagset_t inv_flagset = { inv_flagvalues, 0 };
+
 #define ITEM_INVENTORY_CLASS       "class"
 #define ITEM_INVENTORY_AMOUNT      "amount"
 #define ITEM_INVENTORY_MAXAMOUNT   "maxamount"
@@ -912,7 +930,7 @@ static dehflagset_t weapon_flagset =
 #define ITEM_INVENTORY_USESOUND    "usesound"
 #define ITEM_INVENTORY_RESPAWNTICS "respawntics"
 #define ITEM_INVENTORY_GIVEQUEST   "givequest"
-// TODO: flags
+#define ITEM_INVENTORY_FLAGS       "flags"
 
 cfg_opt_t edf_inventory_opts[] =
 {
@@ -930,6 +948,7 @@ cfg_opt_t edf_inventory_opts[] =
    CFG_STR(ITEM_INVENTORY_USESOUND,    NULL, CFGF_NONE),
    CFG_INT(ITEM_INVENTORY_RESPAWNTICS, 0,    CFGF_NONE),
    CFG_INT(ITEM_INVENTORY_GIVEQUEST,   0,    CFGF_NONE),
+   CFG_STR(ITEM_INVENTORY_FLAGS,       NULL, CFGF_NONE),
 
    // Subclass property blocks - only one of these may appear in a given
    // inventory item definition, and which one may appear is determined by

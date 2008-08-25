@@ -451,7 +451,10 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       // haleyjd 05/06/08: but not all. If height > viewz, set height to
       // 1 instead of 0, to keep ceilings mapping with ceilings, and floors
       // mapping with floors.
-      height = (height > viewz);
+      if(height > viewz)
+         height = 1;
+      
+      //height = (height > viewz);
    }
 
    // New visplane algorithm uses hash table -- killough

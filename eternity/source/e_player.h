@@ -68,19 +68,6 @@ void    E_ApplyTurbo(int ts);
 
 // Inventory subclass enumeration
 
-/*
-#define ITEM_INVENTORY_CLASS       "class"
-#define ITEM_INVENTORY_AMOUNT      "amount"
-#define ITEM_INVENTORY_MAXAMOUNT   "maxamount"
-#define ITEM_INVENTORY_ICON        "icon"
-#define ITEM_INVENTORY_PMESSAGE    "pickupmessage"
-#define ITEM_INVENTORY_PSOUND      "pickupsound"
-#define ITEM_INVENTORY_PFLASH      "pickupflash"
-#define ITEM_INVENTORY_USESOUND    "usesound"
-#define ITEM_INVENTORY_RESPAWNTICS "respawntics"
-#define ITEM_INVENTORY_GIVEQUEST   "givequest"
-*/
-
 typedef enum
 {
    INV_GENERIC, // not subclassed - a no-op inventory item
@@ -97,7 +84,7 @@ enum
    INVF_INTERHUBSTRIP = 0x00000020, // removed on hub or level transfer
    INVF_ALWAYSPICKUP  = 0x00000040, // item is always picked up
    INVF_BIGPOWERUP    = 0x00000080, // same as MF3_SUPERITEM
-   INVF_KEEPDELETED   = 0x00000100, // icon remains even when used up
+   INVF_KEEPDEPLETED  = 0x00000100, // icon remains even when used up
 };
 
 typedef struct inventoryitem_s
