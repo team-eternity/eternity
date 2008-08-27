@@ -2,7 +2,263 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
-04/05/08
+06/26/08
+
+The ACS virtual machine has now been decoupled from the level script codebase,
+allowing multiple ACS virtual machines to exist on independent codebases at one
+time. This may open the door to supporting such ZDoom features as ACS libraries
+in the future. This is not currently planned as a short-term feature, however.
+
+--------------------------------------------------------------------------------
+06/22/08
+
+I fixed a bug in sound subchannels which would have caused all sounds played by
+an object to cut off if any of the sound subchannels were stopped.
+
+I macroized the span drawers to enable easy addition of code for translucent 
+and additive-blended flats, which will be needed for two features - portal
+overlays, and Doom64-style double flats.
+
+In the process, I upgraded EE's flex-tran lookup tables to the 32K versions 
+used by ZDoom. For some reason, my implementation of additive translucency was
+not working properly, and in order to fix it I needed to change up to the newer
+system. Additive transluceny is now vastly improved, and normal translucency
+looks significantly less green.
+
+I have also renamed all functions of the Small scripting interface code to use
+a SM_ prefix instead of A_, which is for action functions. I have NO idea what
+I was thinking when I overloaded it originally.
+
+--------------------------------------------------------------------------------
+06/13/08
+
+Damage types mop-up: actor elemental pain and death states can now be specified
+in lists within the EDF thingtype definition.
+
+I added a defaultsprite field to mobjinfo as well, which is needed for 
+controlling the remapping behavior of player skins and monsters with more than
+29 frames (which must use additional sprite names). This allowed me to safely
+implement the Heretic player's burning death sequence, which cannot be remapped
+through the Corvus skin. If an EDF thingtype does not define a defaultsprite,
+its defaultsprite is instead read from the sprite field in its spawnstate, for
+what should be near-100% backward compatibility.
+
+Mobj sound subchannels have now been implemented, which means that each object
+can now have up to 8 simultaneous sounds playing, rather than just one. Unlike
+ZDoom, however, EE does not by default change the behavior of any sounds in 
+DOOM. All sounds are setup to use CHAN_AUTO by default. If the EDF sound 
+definition specifies a specific channel to play on, that will override the
+default behavior.
+
+Heretic is a different story however, as it already allowed certain objects to
+play more than one sound under special cirumstances. One such circumstance is
+D'Sparil, who never cuts off his demonic chants and seems to be able to say
+more than one thing at a time. I have thus made the appropriate changes to the
+sound-playing codepointers in his frames to specify what channel each sound he
+makes should play on. All Heretic monsters have additionally been altered to use
+the new PlaySoundEx codepointer (once again implemented from ZDoom's online
+documentation) rather than the old MBF PlaySound pointer.
+
+EDF keywords for action function parameters have been changed so that they are
+contextless - in other words, I don't care what action function the frame is
+using; each keyword always has the same meaning. This fixes some ugliness in the
+source and some usability issues, particularly with framedeltas that do not 
+happen to set the action field before trying to specify arguments. Keywords are
+now specified in arrays near the codepointers that use them, and the BEX hash
+init routine takes care of collecting these and turning them into one large
+table. If a keyword conflict is detected during table building, it will be
+reported and the program will abort, allowing development to catch the problem
+immediately.
+
+I got rid of a line of HOM that was showing up at the bottom of the console by
+adjusting the console clipping code in the renderer to start one pixel higher.
+
+--------------------------------------------------------------------------------
+06/04/08
+
+Custom damage types are now integrated, but custom actor and pain states are
+still a TODO item.  I added a Quake damagetype for the damage done by Hexen
+earthquakes, and defined a BEX obituary string for death by shaking.
+
+--------------------------------------------------------------------------------
+06/01/08
+
+Groundwork has been laid for the support of custom damage types in EDF. MODs
+(or Means of Death) were previously only an internal enumeration; they have now
+been promoted to named and numbered objects that are stored in a hash table,
+and make reference to the strings they cause as obituaries. 
+
+The most important use of these, however, is for supporting multiple elemental
+pain and death states for thingtypes.
+
+I have modified DEH_String to return the value given to it as a parameter when
+that parameter specifies an invalid BEX mnemonic. This prevents the issue of
+having to check for NULL that would otherwise exist, and also makes sense in a
+round-about kind of way, since passing any other string to it in most contexts
+would mean you actually just wanted to use that string.
+
+--------------------------------------------------------------------------------
+05/31/08
+
+Added Z_SysMalloc, Z_SysCalloc, and Z_SysFree functions to z_zone for allowing
+the direct use of C heap memory. This is needed so that we can move large static
+buffers off the zone heap and keep it in good shape regardless of how large a
+screen resolution cap that EE implements.
+
+The zone system was designed in essence to dynamically cache data. Placing any
+static allocations on it in actuality fails to make sense. However, I am not
+eliminating any use of PU_STATIC other than for exceptionally large, one-time-
+allocated buffers like the screen, primarily because use of two heaps at once
+will inevitably lead to code maintenance issues such as mixing the wrong malloc
+and free, causing bizarre-looking and hard-to-fix bugs.
+
+I have defined libConfuse options for most of what will become EDF inventory
+subclasses. These largely match the classes defined by ZDoom, with a few natural
+differences for EE, and also where I feel I have the opportunity to address
+what appear to be design oversights or questionable decisions in that port.
+
+--------------------------------------------------------------------------------
+05/29/08
+
+Added an unreasonably high limit (100 states) on the number of walking frames
+that a single player thingtype can have, in order to ensure that the function
+E_IsPlayerInWalkingState will always terminate regardless of how the frames
+have been (mis)defined in EDF.
+
+I fixed a bug in EDF sound DeHackEd-number auto-allocation.
+
+I also had to comment out my magnificent enhanced Z_Realloc implementation and
+restore the old original function. There's something wrong with it which causes
+an extremely rare heap corruption problem (block size does not touch next block)
+which was apparently the cause of EDF occasionally crashing out at startup
+(libConfuse generates several thousand calls to realloc during the course of
+parsing the EDF files). I cannot find the problem in the function after walking
+the code several dozen times, so I'm stumped on it.
+
+--------------------------------------------------------------------------------
+05/25/08
+
+Moved specification of player movement speed values into EDF player classes.
+
+Fixed PolyObjects to draw in the correct place on the automap when they exist
+inside linked portals. Dynasegs messed this up temporarily.
+
+--------------------------------------------------------------------------------
+05/23/08
+
+More codepointers:
+
+* CheckPlayerDone
+* FadeIn
+* FadeOut
+
+I have also implemented an alphavelocity field for EDF thingtypes, and I have
+also added a new flag MF3_CYCLEALPHA, which causes an item to constantly cycle
+its translucency from 0 to 100%, inspired by the effect ZDoom applies to its
+partial invisibility sphere. Alpha velocity and cycling are powered by a counter
+in P_MobjThinker.
+
+On top of this, I also eliminated all instances of hard-coded "args max"; that
+is, everywhere I previously deliberately coded args arrays to be limited to 5.
+This is important since I am contemplating extending frames to contain at least
+8 arguments.
+
+--------------------------------------------------------------------------------
+05/22/08
+
+I have begun adding some ZDoom-equivalent codepointers by referring to the 
+documentation provided on the ZDoom wiki. I have not been using any ZDoom code
+whatsoever during this process, and so the resulting action functions are 100%
+original GPL code.
+
+The first round of codepointer implementation added the following:
+* AlertMonsters
+* JumpIfTargetInLOS
+* SetTranslucent
+
+--------------------------------------------------------------------------------
+05/16/08 - 05/21/08
+
+Prompted by problems esselfortium was having with his new level, I have designed
+and completed the implementation of a true dynamic seg system for the rendering
+of PolyObjects. "Dynasegs" are exactly what they sound like - segs that are
+generated dynamically and, via application of binary space partitioning theory,
+are recursively split through the BSP tree until they end up attached to the
+appropriate subsector. This allows PolyObjects to span nodelines without causing
+the PolyObjects' lines to block out normal linedefs in front of them by
+violating DOOM's front-to-back drawing order assumptions used by the screenspace
+clipper.
+
+This system is powered by application of the generic line function 
+ax + by + c = 0 ; the vertices of each linedef are classified with respect to
+each node line. If the sidedness of the vertices differs, then the intersection
+point is calculated and the initial starting seg is split. The two resulting
+segs then recursively descend to the appropriate child nodes on either side for 
+yet more splitting. This continues until each seg settles into a subsector, 
+into which it is linked for later rendering.
+
+The real segs of the PolyObjects are not used under this system, and in fact I
+have had to add code to the seg drawer which causes the original segs to never
+render, as they sometimes appeared to be stretching from the location where
+the PolyObject was built to the location where it was rendered.
+
+There are some possible numeric instability issues, particularly in the use of
+the R_PointOnSide function, but initial testing hasn't revealed any cases where
+this is important so far. If it becomes an issue, I will have to provide my
+own equivalent routine which does a more stable test.
+
+Note that when classifying segs with respect to the node lines, it is important
+to employ an epsilon value. If a dynaseg is too close to the partition line,
+then the usual course of action should be to classify that seg as being on the
+same side of the partition line as the PolyObject's midpoint. Without this
+epsilon test, dynasegs actually render worse than normal PolyObjects in some
+circumstances - ironically, being more mathematically correct makes them cause
+more rendering problems.
+
+This is only an issue, of course, because people technically use PolyObjects
+incorrectly. BSP theory can only tolerate dynamic leaves / surfaces so long as
+such surfaces are separated from the static surfaces in the scene by a plane.
+When DOOM and Hexen mappers build PolyObject doors with the PolyObject lines 
+exactly coincident to the lines of the door jamb surrounding it, they are
+violating this fundamental rule. Since PolyObject doors NEED to be coincident
+with the door jambs in order to look good, it is absolutely necessary to account
+for this by use of the epsilon test.
+
+--------------------------------------------------------------------------------
+05/13/08
+
+Eliminated most of the remaining Eternity Total Conversion things, frames, and
+sounds defined in EDF, as well as the codepointers to which they made reference.
+The few that now remain will eventually be absorbed into Hexen support (this is
+the fog spawner, primarily).
+
+EDFs have now been split into subordinate files for each gamemode that live in
+that gamemode's directory under the base folder, and are conditionally included
+by the root EDF when the respective gamemodes are enabled. A new function,
+includeifenabled, was added to support this and get around the fact that
+including a file inside an ifenabled call would preclude the use of any
+ifenabled function calls inside the included file.
+
+Fixed a serious bug in screen patch clipping from SoM's recent scaling changes
+that was causing patches part-way off-screen to not draw at all, like it worked
+before the system was redesigned.
+
+--------------------------------------------------------------------------------
+05/08/08
+
+Eliminated almost all uses of PATH_MAX in the source. This required extensive
+changes to file path handling code segments, particularly in d_main.c - Z_Alloca
+and a new Z_Strdupa function were used to help out with this.
+
+--------------------------------------------------------------------------------
+05/06/08
+
+Eternity will no longer map sky visplanes for both the floor and the ceiling
+together. This caused sectors with sky in both the floor and ceiling to display
+HOM on the floor, and is an original vanilla glitch.
+
+--------------------------------------------------------------------------------
+05/05/08
 
 In preparation for a maintenance release, I have done some mopping up of issues
 previously identified in the changelog:
@@ -19,7 +275,7 @@ There are a few other issues remaining, but they are too complicated to fix at
 the moment.
 
 --------------------------------------------------------------------------------
-04/04/08
+05/04/08
 
 Added some code to memset new buttons to zero when the array is reallocated, to
 avoid possible problems caused by uninitialized buttons. Added the SPC preamp
@@ -28,7 +284,7 @@ option actually do something (I left out some code that was needed in its
 command handler routine).
 
 --------------------------------------------------------------------------------
-04/03/08
+05/03/08
 
 Some playtesting in Doom 2 revealed that my previous changes to switch sounds
 were yielding results far from satisfactory, since the sound of a switch could
@@ -49,7 +305,7 @@ What would be interesting is if all linedefs already had a sound origin at their
 midpoints...
 
 --------------------------------------------------------------------------------
-04/02/08
+05/02/08
 
 Over the past few days I had been experimenting with the snes_spc 0.9.0 library
 for playing SPC music, having integrated SDL audio playback and filtering into
