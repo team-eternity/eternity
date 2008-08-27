@@ -2,6 +2,116 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+08/25/08
+
+Inventory base-class flags are now defined for a ZDoom-equivalent level of
+functionality.
+
+I have applied a fix for the upcoming "Evil Unleashed" E5 project - sky floor
+visplanes of differing height are no longer merged. This is apparently something
+that ZDoom has done for a long time. I am concerned that this could cause a
+compatibility issue with older maps, though, so I'll need to stay aware. If
+such a problem is found, I'll provide a comp var to handle it.
+
+--------------------------------------------------------------------------------
+08/23/08
+
+Tuned up the screen patch code to eliminate a bunch of dead code and unused
+variables left after SoM's scaling fix rewrite. I am also laying significant
+ground work for the EDF inventory/pickups/weapon system.
+
+--------------------------------------------------------------------------------
+08/18/08
+
+Recoil values are now mapped through the weaponinfo structure (as they should
+have been all along) in preparation for EDF weapon support. I also added a new
+weapon flag, ALWAYSRECOIL. Besides being a good feature for editors, I believe
+this will be needed for the Heretic Phoenix Rod, which has always had a recoil
+effect on it.
+
+--------------------------------------------------------------------------------
+08/17/08
+
+I have repaired EE's ability to allow the BFG to use zero ammo per shot by
+making a small change to the P_SubtractAmmo function - the value passed in the
+second parameter must be tested for a less-than-zero condition, not a less-
+than-or-equal-to condition.
+
+--------------------------------------------------------------------------------
+08/16/08
+
+By request I have implemented the ability to use screen patches as well as
+linear graphics for the Heretic Demon Scroller episode finale. This just
+required some creative use of the VBuffer code. A new function has been written
+to support the creation of unscaled (320x200) VBuffers.
+
+I also had to fix another problem caused by SoM's recent scaling rewrite.
+V_DrawPatchInt was using the Cardboard video struct to initialize the screen
+patch scaling factors, when it actually needed to calculate these based on the
+dimensions of the passed-in VBuffer object.
+
+A while back I added some new toy console commands and tweaks to the summon
+command that allow you to pretend you're an Arch-vile. By combining the summon
+of a VileFire object with the new vilehit command, you get a very authentic
+attack. It's really fun to launch enemies with this.
+
+--------------------------------------------------------------------------------
+07/05/08
+
+Blocks and masked blocks alike are all now fully clipped to the boundaries of
+the screen, like screen patches, forever eliminating any potential for those
+annoying "V_DrawBlock: block exceeds framebuffer boundary" errors, and allowing
+the console text to properly clip at the top.
+
+I tweaked console background drawing to change the amount of shading applied,
+especially to the background used in Ultimate Doom, which is already very dark
+on its own.
+
+I altered all of the e_ family of console commands to account for the better
+formatting capabilities of the new console font.
+
+You can now spawn homing fireballs from the console if you are aiming at an
+enemy when you issue the summon command. If the player has an aim target, it
+will be set as the tracer target of the fireball. Fireballs which have homing
+maintenance pointers will then properly home-in. This is fun to use with the
+Revenant missiles.
+
+--------------------------------------------------------------------------------
+06/29/08
+
+EE hit a major milestone today with its 500th SVN revision. It has been about
+300 revisions since the last release, which should speak untold volumes about
+the amount of work that's going into the next upcoming release.
+
+The ACS interpreter has been further decoupled so that multiple threads of
+execution can be supported on an individual script within the same codebase.
+This will allow implementation of ZDoom features such as ACS_ExecuteAlways, but
+this is again currently low priority. Getting the system up to basic Hexen-level
+functionality is my main concern.
+
+I finally broke down and wrote up support for the drawing of fonts that are
+made up of a single linear-format graphic. Users can now provide fonts between
+FONSTART and FONEND lumps, and these are automatically enumerated by the engine
+to succeed the natively-defined fonts; this makes user fonts automatically
+accessible to all Eternity features that allow the specification of a font, 
+such as HUD text widget scripting. I took immediate advantage of the new system
+by providing a new console font which is of constant width and distinguishes
+properly between upper and lower case; console readability and formatting are
+vastly improved with this change, especially in Heretic where it was a major
+problem.
+
+I also added a new zone allocator tag, PU_RENDERER. This is used to replace an
+unmaintainable code segment in the renderer added by fraggle in SMMU which is
+called before R_Init when wad files are loaded at runtime - a giant list of
+Z_Free calls on all renderer-related allocations. These allocations now use
+the PU_RENDERER tag, and the list of frees is replaced with a single call to
+Z_FreeTags(PU_RENDERER, PU_RENDERER). If we are going to maintain the zone
+system, we ought to be using it to its fullest potential :)
+
+The Doomguy will now make the status bar OUCH face when he screams during a 
+terminal fall with falling damage active. This looks really awesome IMO.
+
+--------------------------------------------------------------------------------
 06/26/08
 
 The ACS virtual machine has now been decoupled from the level script codebase,

@@ -902,24 +902,6 @@ static dehflagset_t weapon_flagset =
 // all inventory items.
 //
 
-// inventory flags
-
-static dehflags_t inv_flagvalues[] =
-{
-   { "QUIET",         INVF_QUIET         },
-   { "AUTOACTIVATE",  INVF_AUTOACTIVATE  },
-   { "UNDROPPABLE",   INVF_UNDROPPABLE   },
-   { "INVBAR",        INVF_INVBAR        },
-   { "HUBPOWER",      INVF_HUBPOWER      },
-   { "INTERHUBSTRIP", INVF_INTERHUBSTRIP },
-   { "ALWAYSPICKUP",  INVF_ALWAYSPICKUP  },
-   { "BIGPOWERUP",    INVF_BIGPOWERUP    },
-   { "KEEPDEPLETED",  INVF_KEEPDEPLETED  },
-   { NULL,            0                  },
-};
-
-static dehflagset_t inv_flagset = { inv_flagvalues, 0 };
-
 #define ITEM_INVENTORY_CLASS       "class"
 #define ITEM_INVENTORY_AMOUNT      "amount"
 #define ITEM_INVENTORY_MAXAMOUNT   "maxamount"
@@ -970,6 +952,24 @@ cfg_opt_t edf_inventory_opts[] =
 
    CFG_END()
 };
+
+// inventory flags
+
+static dehflags_t inv_flagvalues[] =
+{
+   { "QUIET",         INVF_QUIET         },
+   { "AUTOACTIVATE",  INVF_AUTOACTIVATE  },
+   { "UNDROPPABLE",   INVF_UNDROPPABLE   },
+   { "INVBAR",        INVF_INVBAR        },
+   { "HUBPOWER",      INVF_HUBPOWER      },
+   { "INTERHUBSTRIP", INVF_INTERHUBSTRIP },
+   { "ALWAYSPICKUP",  INVF_ALWAYSPICKUP  },
+   { "BIGPOWERUP",    INVF_BIGPOWERUP    },
+   { "KEEPDEPLETED",  INVF_KEEPDEPLETED  },
+   { NULL,            0                  },
+};
+
+static dehflagset_t inv_flagset = { inv_flagvalues, 0 };
 
 //==============================================================================
 //
