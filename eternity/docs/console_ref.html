@@ -93,7 +93,7 @@ the Eternity console, as well as pointers on console command syntax.
           mapcolor_bdor, mapcolor_ydor, mapcolor_frnd, mapcolor_wall, 
           mapcolor_clsd, mapcolor_tele, mapcolor_secr, mapcolor_exit,
           mapcolor_unsn, mapcolor_sprt, mapcolor_hair, mapcolor_sngl, 
-          mapcolor_back, mapcolor_fchg
+          mapcolor_back, mapcolor_fchg, am_drawnodelines
       <li><a href="#varstatus">Status Bar variables</a><br>
           ammo_red, ammo_yellow, health_red, health_yellow, health_green,
           armor_red, armor_yellow, armor_green, st_rednum, st_singlekey,
@@ -1709,12 +1709,12 @@ Synopsis:
 <p>
 Synopsis:
 <pre>
-	* mapcolor_rkey	* mapcolor_ydor	* mapcolor_secr	* mapcolor_sngl
-	* mapcolor_bkey	* mapcolor_frnd	* mapcolor_exit	* mapcolor_back
-	* mapcolor_ykey	* mapcolor_wall	* mapcolor_unsn * mapcolor_fchg
-	* mapcolor_rdor	* mapcolor_clsd	* mapcolor_sprt * map_coords
-	* mapcolor_bdor	* mapcolor_tele	* mapcolor_hair
-</pre>
+   * mapcolor_rkey   * mapcolor_ydor   * mapcolor_secr   * mapcolor_sngl
+   * mapcolor_bkey   * mapcolor_frnd   * mapcolor_exit   * mapcolor_back
+   * mapcolor_ykey   * mapcolor_wall   * mapcolor_unsn   * mapcolor_fchg
+   * mapcolor_rdor   * mapcolor_clsd   * mapcolor_sprt   * map_coords
+   * mapcolor_bdor   * mapcolor_tele   * mapcolor_hair   * am_drawnodelines
+</pre> 
 <ul>	
 <li> mapcolor_rkey<br>
 	type: integer<br>
@@ -1805,6 +1805,11 @@ Synopsis:
 	type: integer<br>
 	value range: 0 - 255<br>
 	value = color of lines at floor height changes<br>
+	<br>
+<li> am_drawnodelines<br>
+   type: on / off<br>
+   on  = node lines from the BSP are drawn on the automap using the friendly thing color<br>
+   off = normal automap behavior<br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 	
