@@ -41,7 +41,7 @@ the Eternity console, as well as pointers on console command syntax.
       <li><a href="#cmdnetworking">Networking</a><br>
           disconnect, playerinfo, frags, kick, say
       <li><a href="#cmdcheats">Cheats</a><br>
-          god, noclip, nuke, infammo, mdk, mdkbomb
+          god, noclip, nuke, infammo, mdk, mdkbomb, spacejump, viles, vilehit, banish
       <li><a href="#cmdvideo">Video Options</a><br>
           v_modelist, animshot, screenshot
       <li><a href="#cmdsound">Sound Options</a><br>
@@ -111,7 +111,7 @@ the Eternity console, as well as pointers on console command syntax.
           v_diskicon, v_retrace, v_mode, v_ticker, shot_type, shot_gamma, screensize, wipewait
       <li><a href="#varsound">Sound options</a><br>
           detect_voices, snd_card, mus_card, sfx_volume, music_volume,
-          s_flippan, s_precache, s_pitched, snd_channels
+          s_flippan, s_precache, s_pitched, snd_channels, snd_spcpreamp, snd_spcbassboost
       <li><a href="#varchat">Chat Macros</a><br>
           chatmacro0, chatmacro1, chatmacro2, chatmacro3, chatmacro4, 
           chatmacro5, chatmacro6, chatmacro7, chatmacro8, chatmacro9
@@ -663,6 +663,10 @@ Synopsis of Commands:
 	* infammo
 	* mdk
 	* mdkbomb
+	* spacejump
+	* viles
+	* vilehit
+	* banish
 </pre>
 <ul>
 <li> god<br><br>
@@ -696,7 +700,30 @@ Synopsis of Commands:
 
   As above, but fires 60 such tracers in a circle around the player.<br>
   Flags: only in level, not in network games, hidden
+  <br><br>
+<li> spacejump<br><br>
+
+  Allows the player to jump any number of times in midair; useful for testing
+  linked portals.<br>
+  Flags: only in level, not in network games, hidden
+  <br><br>
+<li> viles <br><br>
+ 
+  A special command for DOOM II only. Try it and see what happens :)<br>
+  Flags: only in level, not in network games, hidden
+  <br><br>
+<li> vilehit<br><br>
+
+  If the player is autoaiming at an enemy, the player will perform an Arch-vile 
+  attack on that enemy.<br>
+  Flags: only in level, not in network games
+  <br><br>
+<li> banish<br><br>
   
+  If the player is autoaiming at an enemy, the enemy will be removed from the 
+  play simulation and its memory will be freed once no other objects reference
+  it.<br>
+  Flags: only in level, not in network games
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -949,6 +976,8 @@ Synopsis of Commands:
   as though it has been invoked without any linedef to reference, and thus certain
   effects such as sector special transfers will not occur even if specified by the
   special type or arguments.
+  <br>
+  Flags: not in a network game, only in levels.
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -984,7 +1013,7 @@ Synopsis of Commands:
   <br><br>
 <li> e_dumpitems<br><br>
 
-  Lists all EDF thing type mnemonics and DeHackEd/doomed numbers for thing
+  Lists all EDF thing type mnemonics and DeHackEd/DoomEd numbers for thing
   types which are collectable items.  Useful in conjunction with the give
   command.
   <br><br>
@@ -1161,7 +1190,7 @@ Synopsis:
 	<br>
 <li> bfgtype<br>
 	type: named values<br>
-	values: bfg9000, classic, bfg11k<br>
+	values: bfg9000, classic, bfg11k, bouncing, "plasma burst"<br>
 	value = type of BFG which all players will use<br>
 	Flags: netvar, server-only<br>
 	<br>
@@ -2141,11 +2170,11 @@ Synopsis:
 <p>
 Synopsis:
 <pre>
-   * detect_voices   * s_flippan
+   * detect_voices   * s_flippan       * snd_spcbassboost
    * snd_card        * s_precache
    * mus_card        * s_pitched
    * sfx_volume      * snd_channels
-   * music_volume
+   * music_volume    * snd_spcpreamp
 </pre>	
 <ul>	
 <li> detect_voices<br>
@@ -2214,7 +2243,7 @@ Synopsis:
 	<br>
 <li> s_pitched<br>
 	type: on / off<br>
-	on  = emulates crappy DOOM v1.1 variable-pitched sound effects<br>
+	on  = enable variable-pitched sound effects<br>
 	off = sounds always play at real pitch<br>
 	<br>
 <li> snd_channels<br>
@@ -2229,7 +2258,17 @@ Synopsis:
 	        This value affects the number of sounds the game will
 	        *attempt* to play at one time. If set too low, you will
 	        lose sound unnecessarily. Setting it too high will use 
-	        more memory and take more time to process.
+	        more memory and take more time to process.<br>
+	<br>
+<li> snd_spcpreamp<br>
+   type: integer<br>
+   value range: 1 - 6<br>
+   value = amplification factor for SPC music.<br>
+   <br>
+<li> snd_spcbassboost<br>
+   type: integer<br>
+   value range: 0 - 31<br>
+   value = logarithmic bass boost scale for SPC music.<br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 	        

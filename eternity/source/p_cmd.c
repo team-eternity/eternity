@@ -80,7 +80,7 @@ char *skills[]=
    "nightmare"
 };
 
-char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing bfg", "plasma burst bfg"};
+char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"};
 char *dmstr[] = { "single", "coop", "deathmatch" };
 
 /*************************************************************************
@@ -318,9 +318,6 @@ CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
-//
-// haleyjd: FIXME -- DEBUG
-//
 CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
 {
    if(gamestate == GS_LEVEL)
