@@ -2811,10 +2811,14 @@ static void D_DoomInit(void)
             "Version %i.%02i.%02i '%s' \n\n",
             version/100, version%100, SUBVERSION, version_name);
 
-#ifdef TOKE_MEMORIAL
+#if defined(TOKE_MEMORIAL)
    // haleyjd 08/30/06: for v3.33.50 Phoenix: RIP Toke
    C_Printf(FC_GREEN "Dedicated to the memory of our friend\n"
-            "Dylan 'Toke' McIntosh  Jan 14 1983 - Aug 19 2006 \n");
+            "Dylan 'Toke' McIntosh  Jan 14 1983 - Aug 19 2006\n");
+#elif defined(ASSY_MEMORIAL)
+   // haleyjd 08/29/08
+   C_Printf(FC_GREEN "Dedicated to the memory of our friend\n"
+            "Jason 'Amaster' Masihdas 12 Oct 1981 - 14 Jun 2007\n");
 #endif
 
    // haleyjd: if we didn't do textmode startup, these didn't show up

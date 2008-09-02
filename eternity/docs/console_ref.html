@@ -2,13 +2,12 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<meta name="GENERATOR" content="UltraEdit-32">
 <title>Eternity Engine Console Reference</title>
 </head>
 
 <body bgcolor="#CECECE">
 <hr>
-<b>The Eternity Engine v3.33.50 Console Reference -- 10/22/06</b>
+<b>The Eternity Engine v3.35.90 Console Reference -- 09/02/08</b>
 <hr>
 
 <p>
@@ -45,13 +44,15 @@ the Eternity console, as well as pointers on console command syntax.
           god, noclip, nuke, infammo, mdk, mdkbomb
       <li><a href="#cmdvideo">Video Options</a><br>
           v_modelist, animshot, screenshot
+      <li><a href="#cmdsound">Sound Options</a><br>
+          s_playmusic
       <li><a href="#cmdplayer">Player Options</a><br>
           listskins, listwads
       <li><a href="#cmddemos">Demos</a><br>
           timedemo, playdemo, stopdemo
       <li><a href="#cmdgameplay">Gameplay</a><br>
           pause, i_error, spawn, endgame, starttitle, quit, map, kill,
-          addfile, exitlevel, defdmflags, summon, give, whistle
+          addfile, exitlevel, defdmflags, summon, give, whistle, p_linespec
       <li><a href="#cmdedf">EDF- and ExtraData-Related Commands</a><br>
           e_dumpthings, e_thingtype, e_dumpitems, e_listmapthings, e_mapthing,
           e_listlinedefs, e_linedef
@@ -77,7 +78,7 @@ the Eternity console, as well as pointers on console command syntax.
           use_joystick, use_mouse, joysens_x, joysens_y
       <li><a href="#varenvironment">Environment / Physics variables</a><br>
           autoaim, allowmlook, bobbing, pushers, nukage, varfriction,
-          recoil, bfglook
+          recoil, bfglook, p_markunknowns
       <li><a href="#varai">AI variables</a><br>
           mon_infight, mon_avoid, mon_climb, mon_friction, mon_remember,
           mon_backing, mon_helpfriends, mon_distfriend
@@ -107,7 +108,7 @@ the Eternity console, as well as pointers on console command syntax.
       <li><a href="#varparticle">Particle Events</a><br>
           pevt_rexpl, pevt_bfgexpl
       <li><a href="#varvideo">Video variables</a><br>
-          v_diskicon, v_retrace, v_mode, v_ticker, shot_type, shot_gamma, screensize
+          v_diskicon, v_retrace, v_mode, v_ticker, shot_type, shot_gamma, screensize, wipewait
       <li><a href="#varsound">Sound options</a><br>
           detect_voices, snd_card, mus_card, sfx_volume, music_volume,
           s_flippan, s_precache, s_pitched, snd_channels
@@ -733,6 +734,26 @@ Synopsis of Commands:
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
+<a name="cmdsound">  
+<hr width="75%" align="left">
+<b>Sound Options</b>
+<hr width="75%" align="left">
+</a>
+<p>
+Synopsis of Commands:
+<pre>
+	* s_playmusic
+</pre>
+<ul>	
+<li> s_playmusic name<br><br>
+
+  Plays the given lump as music, if that lump can be found in the music hash
+  table. Only lumps listed in the internal music table, or new lumps with
+  names beginning with "D_" in DOOM or "MUS_" in Heretic are available.
+</ul>
+<a href="#contents">Return to Table of Contents</a>
+
+<p>
 <a name="cmdplayer">	
 <hr width="75%" align="left">
 <b>Player Options</b>
@@ -809,7 +830,7 @@ Synopsis of Commands:
 	* pause       * quit       * defdmflags
 	* i_error     * map        * summon
 	* spawn       * kill       * give
-	* endgame     * addfile
+	* endgame     * addfile    * p_linespec
 	* starttitle  * exitlevel
 </pre>
 <ul>	
@@ -889,11 +910,18 @@ Synopsis of Commands:
   </pre>
   Flags: server-only, net command
   <br><br>
-<li> summon thingtypename &lt;num&gt;<br><br>
+<li> summon thingtypename &lt;flagslist&gt; &lt;mode&gt;<br><br>
   
-  Allows spawning of things via their EDF thing type name. "num" is an
-  optional parameter which has the same meanings as the third parameter
-  to the spawn console command above.<br>
+  Allows spawning of things via their EDF thing type name. An EDF/BEX
+  flag list can optionally be provided, with the flags separated by commas
+  only. By default, this will cause the listed flags to be added to the
+  thing along with its normal flags. By specifying the third parameter as
+  "set" or "remove", it is possible to set the thing's flags value to only
+  the listed flags, or to remove the listed flags if the thingtype has them
+  set by default.<br>
+  Example to spawn a friendly thing:<br>
+  $ summon doomimp friend
+  <br>
   Flags: not in a network game, only in levels, hidden
   <br><br>
 <li> give thingtypename &lt;num&gt;<br><br>
@@ -913,6 +941,14 @@ Synopsis of Commands:
   also not be teleported across blocking lines.
   <br>
   Flags: not in a network game, only in levels
+  <br><br>
+<li> p_linespec name &lt;arg&gt; &lt;arg&gt; &lt;arg&gt; &lt;arg&gt; &lt;arg&gt;<br><br>
+  
+  Executes the named Eternity Engine parameterized line special (as documented in 
+  editref.html) with the given parameters. The line special is restricted to behaving
+  as though it has been invoked without any linedef to reference, and thus certain
+  effects such as sector special transfers will not occur even if specified by the
+  special type or arguments.
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -1360,11 +1396,11 @@ Synopsis:
 <p>
 Synopsis:
 <pre>
-	* autoaim	* varfriction
-	* allowmlook	* recoil
-	* bobbing	* bfglook
-	* pushers
-	* nukage
+   * autoaim      * varfriction
+   * allowmlook   * recoil
+   * bobbing      * bfglook
+   * pushers      * p_markunknowns
+   * nukage
 </pre>	
 <ul>	
 <li> autoaim<br>
@@ -1415,6 +1451,12 @@ Synopsis:
 	value = ability to mlook with BFG -- fixedgun allows mlook to occur,
 	        but will not allow the unfair effects of BFG mlooking<br>
 	Flags: netvar, server-only<br>
+<br>
+<li> p_markunknowns<br>
+   type: yes / no<br>
+   yes = location of unknown thingtypes will be marked with EDF Unknown objects<br>
+   no  = only messages are displayed when unknown things are used in a map<br>
+   NOTE: this affects single-player non-demo games only.	
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -2040,6 +2082,7 @@ Synopsis:
 	* shot_type
 	* shot_gamma
 	* screensize
+	* wipewait
 </pre>	
 <ul>	
 <li> v_diskicon<br>
@@ -2078,6 +2121,14 @@ Synopsis:
 	type: integer<br>
 	value range: 0 - 8<br>
 	value = size of game screen<br>
+	<br>
+<li> wipewait<br>
+   type: named values<br>
+   values: never, always, demos<br>
+   value = whether or not the screen wipe routine blocks the main game loop.<br>
+           "demos" means to do this during demo playback only. This allows seeing
+           the first few frames of a demo when watching demos from the command
+           line or a frontend.
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -2090,11 +2141,11 @@ Synopsis:
 <p>
 Synopsis:
 <pre>
-	* detect_voices	* s_flippan
-	* snd_card	* s_precache
-	* mus_card	* s_pitched
-	* sfx_volume	* snd_channels
-	* music_volume
+   * detect_voices   * s_flippan
+   * snd_card        * s_precache
+   * mus_card        * s_pitched
+   * sfx_volume      * snd_channels
+   * music_volume
 </pre>	
 <ul>	
 <li> detect_voices<br>

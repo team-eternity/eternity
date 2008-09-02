@@ -1204,7 +1204,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
          demo_p++;
       }
       
-      if(demo_version >= 337)
+      if(demo_version >= 335)
          cmd->actions = *demo_p++;
       else
          cmd->actions = 0;
