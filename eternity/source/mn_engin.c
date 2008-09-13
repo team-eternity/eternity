@@ -947,6 +947,7 @@ boolean MN_Responder(event_t *ev)
 
    if(action_menu_up)
    {
+      boolean paged = false;
       action_menu_up = false;
 
       // skip gaps
@@ -954,21 +955,31 @@ boolean MN_Responder(event_t *ev)
       {
          if(--current_menu->selected < 0)
          {
-            // jump to end of menu
             int i;
+
+            if(current_menu->prevpage)
+            {
+               current_menu->selected++; // undo move, because the menu remembers
+               paged = true; // paging makes a sound already, so remember this
+               MN_PageMenu(current_menu->prevpage);
+            }
+
+            // jump to end of menu
             for(i=0; current_menu->menuitems[i].type != it_end; i++);
             current_menu->selected = i-1;
          }
       }
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
       
-      S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
+      if(!paged)
+         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
       return true;  // eatkey
    }
   
    if(action_menu_down)
    {
+      boolean paged = false;
       action_menu_down = false;
 
       do
@@ -976,12 +987,19 @@ boolean MN_Responder(event_t *ev)
          ++current_menu->selected;
          if(current_menu->menuitems[current_menu->selected].type == it_end)
          {
+            if(current_menu->nextpage)
+            {
+               current_menu->selected--; // undo move, because the menu remembers
+               paged = true;             // don't make a double sound below
+               MN_PageMenu(current_menu->nextpage);
+            }
             current_menu->selected = 0;     // jump back to start
          }
       }
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
       
-      S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
+      if(!paged)
+         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
       return true;  // eatkey
    }
