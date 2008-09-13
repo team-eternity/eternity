@@ -7,7 +7,7 @@
 
 <body bgcolor="#CECECE">
 
-<h2>Eternity Engine Editing Reference v1.90 -- 10/22/06</h2>
+<h2>Eternity Engine Editing Reference v1.91 -- 09/02/08</h2>
 
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
@@ -115,7 +115,11 @@
             <li><a href="#pillarvars">Pillar varieties</a>
             <li><a href="#pillarlines">Pillar linedef types</a>
             </ul>
-        <li><a href="#genlines">Section 17. Detailed Generalized Linedef Specification</a>
+        <li><a href="#attached">Section 17. Attached Sectors</a>
+            <ul>
+            <li>
+            </ul>
+        <li><a href="#genlines">Section 18. Detailed Generalized Linedef Specification</a>
             <ul>
             <li><a href="#ranges">Line ranges/nomenclature</a>
             <li><a href="#genfloors">Floors</a>
@@ -126,7 +130,7 @@
             <li><a href="#genstairs">Stairs</a>
             <li><a href="#gencrush">Crushers</a>
             </ul>
-        <li><a href="#paramlines">Section 18. Detailed Parameterized Linedef Specification</a>
+        <li><a href="#paramlines">Section 19. Detailed Parameterized Linedef Specification</a>
             <ul>
             <li><a href="#paramfloors">Floors</a>
             <li><a href="#paramceils">Ceilings</a>
@@ -134,12 +138,14 @@
             <li><a href="#paramstairs">Stairs</a>
             <li><a href="#parampolyobj">PolyObjects</a>
             <li><a href="#parampillars">Pillars</a>
+            <li><a href="#paramlights">Lighting</a>
+            <li><a href="#parammisc">Miscellaneous</a>
             </ul>
         </ul>
     <li><a href="#part2">Part II Sector Types</a>
         <ul>
-        <li><a href="#sectors">Section 19. Regular sector types</a>
-        <li><a href="#gensectors">Section 20. Generalized sector types</a>
+        <li><a href="#sectors">Section 1. Regular sector types</a>
+        <li><a href="#gensectors">Section 2. Generalized sector types</a>
         </ul>
     <li><a href="#part3">Part III Linedef Flags</a>
     <li><a href="#part4">Part IV Thing Flags</a>
@@ -156,9 +162,9 @@
         </ul>
     <li><a href="#extradata">Part VII ExtraData</a>
         <ul>
-        <li><a href="#edintro">21.1 ExtraData Introduction</a>
-        <li><a href="#edthing">21.2 ExtraData Control Objects</a>
-        <li><a href="#edlines">21.3 ExtraData Control Linedefs</a>
+        <li><a href="#edintro">1.1 ExtraData Introduction</a>
+        <li><a href="#edthing">1.2 ExtraData Control Objects</a>
+        <li><a href="#edlines">1.3 ExtraData Control Linedefs</a>
         </ul>
     </ul>
 </ul>
@@ -1523,8 +1529,8 @@ Extended Elevator types
 </a>
 <br>
 The lighting linedef types change the lighting in the tagged
-sector. All are regular or extended types, there are no
-generalized lighting types. All are switched or walkovers. 
+sector. All are regular, extended, or parameterized types, 
+there are no generalized lighting types.
 
 <p>
 <a name="lighttarg">
@@ -1564,6 +1570,43 @@ Each tagged sector is set to a light level of 35 units.<br>
 <li> 255 Units<br>
 <br>
 Each tagged sector is set to a light level of 255 units.
+<br>
+<li> Raise by Param<br>
+<br>
+Available with parameterized lines only. Raises tagged sectors' light
+levels by a given amount.
+<br>
+<li> Lower by Param<br>
+<br>
+Available with parameterized lines only. Lowers tagged sectors' light
+levels by a given amount.
+<br>
+<li> Change to Param<br>
+<br>
+Available with parameterized lines only. Changes all tagged sectors'
+light levels to the given level.
+<br>
+<li> Fade<br>
+<br>
+Available with parameterized lines only. Fades all tagged sectors'
+light levels up or down to the given level.
+<br>
+<li> Glow<br>
+<br>
+Available with parameterized lines only. Causes all tagged sectors to
+fade continuously between two given light levels at a given speed.
+<br>
+<li> Flicker<br>
+<br>
+Available with parameterized lines only. Causes all tagged sectors to
+blink between two given light levels at random. Sector flickering is
+not synchronized.
+<br>
+<li> Strobe<br>
+<br>
+Available with parameterized lines only. Causes all tagged sectors to
+blink between two given light levels on a period between given minimum
+and maximum amounts of time. Sector strobing is not synchronized. 
 </ul>
  
 
@@ -1603,6 +1646,24 @@ Regular and Extended Lighting types
 172   Ext    S1    Blinking
 156   Ext    WR    Blinking
 17    Reg    W1    Blinking
+</pre>
+
+There are currently seven types of parameterized lighting specials, each 
+performing a different type of lighting action. See the 
+<a href="#paramlights">Parameterized Lighting</a> section for full 
+information on how to use these specials.
+<pre>
+Parameterized Stair Types
+-------------------------------------------------------------------------------
+#      Class   Function                           ExtraData Name
+
+368    Param   Raise light by given amount        Light_RaiseByValue
+369    Param   Lower light by given amount        Light_LowerByValue
+370    Param   Change light to given level        Light_ChangeToValue
+371    Param   Fade light to given level          Light_Fade
+372    Param   Fade light between two levels      Light_Glow
+373    Param   Flicker light between two levels   Light_Flicker
+374    Param   As above, but with given period    Light_Strobe
 </pre>
 <a href="#contents">Return to Table of Contents</a>
  
@@ -2687,7 +2748,7 @@ also appear on the line in sector A with special 289, giving it a window-like ef
 <hr width="75%" align="left">
 </a>
 <br>
-These linedefs are used to start Small Levelscripts. See the
+These linedefs are used to start Small Levelscripts or ACS scripts. See the
 <a href="small_usagedoc.html">Small Usage Documentation</a> for full information
 on how to use these linedefs along with a Small script to add dynamic actions to
 your maps.
@@ -2701,6 +2762,16 @@ your maps.
 277 S1 Start script with tag number
 278 GR Start script with tag number
 279 G1 Start script with tag number
+
+Parameterized Types
+---------------------------------------------------------
+#   ExtraData Name   Parameters
+
+365 ACS_Execute      scriptnum, mapnum, arg1, arg2, arg3
+366 ACS_Suspend      scriptnum, mapnum
+367 ACS_Terminate    scriptnum, mapnum
+
+---------------------------------------------------------
 </pre>
 These linedefs exist for all activation models. The two one-way
 script activators will only be activated when the player crosses
@@ -3121,10 +3192,12 @@ Parameterized Stair Types
 <a href="#contents">Return to Table of Contents</a>
 
 
+<!-- TODO: ATTACHED SECTORS -->
+
 <p>
 <a name="genlines">
 <hr width="75%" align="left">
-<b>Section 17. Detailed Generalized Linedef Specification</b>
+<b>Section 18. Detailed Generalized Linedef Specification</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3459,7 +3532,7 @@ Notes:
 <p>
 <a name="paramlines">
 <hr width="75%" align="left">
-<b>Section 18. Detailed Parameterized Linedef Specification</b>
+<b>Section 19. Detailed Parameterized Linedef Specification</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3819,9 +3892,81 @@ cdist     : For Open type only, this is the distance the
             ceiling will move to its highest neighboring 
             ceiling.          
 ------------------------------------------------------------------------------
+ 
+<a name="paramlights">Parameterized Lighting Types</a>
+------------------------------------------------------------------------------
+#    Function                            ExtraData Name
+
+368  Raise light by value                Light_RaiseByValue
+369  Lower light by value                Light_LowerByValue
+370  Set light to value                  Light_ChangeToValue
+371  Fade light to value                 Light_FadeToValue
+372  Fade continuously between values    Light_Glow
+373  Flicker between levels randomly     Light_Flicker
+374  Flicker with specified periodicity  Light_Strobe
+
+Parameters
+---------------------------------------------------------------------
+Light_RaiseByValue        tag, level
+Light_LowerByValue        tag, level
+Light_ChangeToValue       tag, level
+Light_Fade                tag, destlevel, speed
+Light_Glow                tag, maxlevel, minlevel, speed
+Light_Flicker             tag, maxlevel, minlevel
+Light_Strobe              tag, maxlevel, minlevel, maxtime, mintime
+
+Values
+---------------------------------------------------------------
+tag       : Tag of sector(s) to change light levels within.            
+            If the tag is zero, the sector on the backside of a 
+            2S line with this special will be used.
+level     : A light level between 0 and 255.
+destlevel : A light level between 0 and 255.
+speed     : Speed of light level changes in levels per gametic.
+maxlevel  : The high light level of a perpetual fade or flicker.
+minlevel  : The low light level of a perpetual fade or flicker.
+maxtime   : Maximum amount of time in gametics between flickers.
+mintime   : Minimum amount of time in gametics between flickers.            
+
+------------------------------------------------------------------------------
+
+<a name="parammisc">Miscellaneous Parameterized Line Specials</a>
+------------------------------------------------------------------------------
+#    Function                            ExtraData Name
+
+365  Start ACS script                    ACS_Execute
+366  Suspend ACS script                  ACS_Suspend
+367  Terminate ACS script                ACS_Terminate
+375  Start earthquake                    Radius_Quake
+
+Parameters
+---------------------------------------------------------------------
+ACS_Execute      scriptnum, mapnum, arg1, arg2, arg3
+ACS_Suspend      scriptnum, mapnum
+ACS_Terminate    scriptnum, mapnum
+
+    scriptnum    = ACS script number to execute/suspend/terminate
+    mapnum       = Map number on which to schedule action, or 0
+                   for current map
+    arg1 - arg3  = Arguments passed on to called script        
+    
+    
+Radius_Quake     intensity, duration, damageradius, quakeradius, tid
+
+    intensity    = "Richter" scale value from 1 to 9 (out-of-range
+                   values are allowed, but may cause HOM to appear).
+    duration     = length of earthquake in gametics
+    damageradius = if greater than 0, the number of 64-unit blocks
+                   from the epicenter in which players will take 
+                   damage and experience additional thrust
+    quakeradius  = number of 64-unit blocks from the epicenter in
+                   which players will experience view-shaking
+    tid          = tid of mapthing(s) to use as earthquake epicenters                
+
+------------------------------------------------------------------------------
 </pre>
 <a href="#contents">Return to Table of Contents</a>
- 
+  
 <p>
 <a name="part2">
 <hr>
@@ -3838,7 +3983,7 @@ at once. No extended sector types are implemented at this time.
 <p>
 <a name="sectors">
 <hr width="75%" align="left">
-<b>Section 19. Regular Sector types</b>
+<b>Section 1. Regular Sector types</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -3881,7 +4026,7 @@ ignored.<br>
 <p>
 <a name="gensectors">
 <hr width="75%" align="left">
-<b>Section 20. Generalized sector types</b>
+<b>Section 2. Generalized sector types</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -4534,7 +4679,7 @@ Console Reference</a>. This lump is ASCII text.
 <p>
 <a name="edintro">
 <hr width="75%" align="left">
-<b>Section 21.1. ExtraData Introduction</b>
+<b>Section 1.1. ExtraData Introduction</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -4563,7 +4708,7 @@ ExtraData scripts must be attached to the maps which use them via the use of
 <p>
 <a name="edthing">
 <hr width="75%" align="left">
-<b>Section 21.2. ExtraData Control Objects</b>
+<b>Section 1.2. ExtraData Control Objects</b>
 <hr width="75%" align="left">
 </a>
 <br>
@@ -4621,7 +4766,7 @@ Eternity Engine fields in the future.
 <p>
 <a name="edlines">
 <hr width="75%" align="left">
-<b>Section 21.3. ExtraData Control Linedefs</b>
+<b>Section 1.3. ExtraData Control Linedefs</b>
 <hr width="75%" align="left">
 </a>
 <br>

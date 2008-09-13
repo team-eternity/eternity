@@ -425,7 +425,7 @@ manual_ceiling:
          break;
       }
     
-      if(cd->direction)
+      if(ceiling->direction == plat_up)
          ceiling->topheight = targheight;
       else
          ceiling->bottomheight = targheight;
@@ -1680,6 +1680,7 @@ static boolean pspec_Ceiling(line_t *line, long *args, short special,
    cd.direction    = param_ceiling_data[normspec][0];
    cd.target_type  = param_ceiling_data[normspec][1];
    cd.trigger_type = trigger_type;
+   cd.speed_value  = 0;
    cd.crush        = -1;
 
    switch(special)

@@ -532,7 +532,7 @@ dobackside:
          s->lightlevel = 255;
 
       if(backside)
-         return rtn;
+         break;
    }
 
    return rtn;
@@ -585,7 +585,7 @@ dobackside:
       lf->type = fade_once;
 
       if(backside)
-         return rtn;
+         break;
    }
 
    return rtn;

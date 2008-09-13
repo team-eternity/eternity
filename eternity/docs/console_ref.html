@@ -124,7 +124,7 @@ the Eternity console, as well as pointers on console command syntax.
           comp_floors, comp_skymap, comp_pursuit, comp_doorstuck, 
           comp_staylift, comp_zombie, comp_stairs, comp_infcheat, 
           comp_zerotags, comp_terrain, comp_respawnfix, comp_fallingdmg, 
-          comp_soul, comp_overunder
+          comp_soul, comp_overunder, comp_planeshoot
       <li><a href="#varmisc">Misc. Configuration</a><br>
           use_startmap, i_gamespeed, i_ledsoff, startonnewmap, i_waitatexit,
           i_showendoom, i_endoomdelay, i_grabmouse
@@ -2318,16 +2318,17 @@ All variables are of the on / off type and are server-only net commands.
 <br><br>
 Synopsis:
 <pre>
-	* comp_telefrag	* comp_blazing	 * comp_floors	  * comp_zombie
-	* comp_dropoff	* comp_doorlight * comp_skymap	  * comp_stairs
-	* comp_vile	* comp_model	 * comp_pursuit	  * comp_infcheat
-	* comp_pain	* comp_god	 * comp_doorstuck * comp_zerotags
-	* comp_skull	* comp_falloff	 * comp_staylift  * comp_terrain
+   * comp_telefrag     * comp_blazing     * comp_floors      * comp_zombie
+   * comp_dropoff      * comp_doorlight   * comp_skymap      * comp_stairs
+   * comp_vile         * comp_model       * comp_pursuit     * comp_infcheat
+   * comp_pain         * comp_god         * comp_doorstuck   * comp_zerotags
+   * comp_skull        * comp_falloff     * comp_staylift    * comp_terrain
 
-	* comp_respawnfix	
-	* comp_fallingdmg
-	* comp_soul
-	* comp_overunder
+   * comp_respawnfix   * comp_theights	
+   * comp_fallingdmg
+   * comp_soul
+   * comp_overunder
+   * comp_planeshoot
 </pre>
 <ul>
 <li> comp_telefrag<br>
@@ -2361,9 +2362,7 @@ Synopsis:
      Toggles MBF torque simulation physics
      <br><br>
 <li> comp_floors<br>
-     Toggles use of DOOM's floor movement model<br>
-     NOTE: This setting is incompatible with extended 3D object clipping. If this 
-     variable is set to on, comp_overunder will be forced on as well.
+     Toggles use of DOOM's floor movement model
      <br><br>
 <li> comp_skymap<br>
      Determines whether invulnerability affects drawing of sky textures
@@ -2391,9 +2390,17 @@ Synopsis:
      Determines lost soul floor/ceiling bouncing behavior.
      <br><br>
 <li> comp_overunder<br>
-     Toggles Eternity extended 3D object clipping.<br>
-     NOTE: If comp_floors is on, this variable will be forced on. To use 3D object clipping,
-     make sure comp_floors is off first. This variable supercedes comp_scratch.
+     Toggles Eternity extended 3D object clipping.
+     <br><br>
+<li> comp_planeshoot<br>
+     Toggles ability to shoot floors and ceilings with tracer weapons.<br>
+     Note: This variable is required in particular for Eternal DOOM compatibility.
+     <br><br>
+<li> comp_theights<br>
+     Works along with comp_overunder. If disabled, decorative thingtypes from the DOOM 
+     and DOOM II gamemodes will have their heights corrected using the <b>correctheight</b>
+     as defined by the EDF thingtype definition. For gameplay reasons, monsters do not
+     define correct heights in the default EDF.
      <br><br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
