@@ -115,7 +115,7 @@
             <li><a href="#pillarvars">Pillar varieties</a>
             <li><a href="#pillarlines">Pillar linedef types</a>
             </ul>
-        <li><a href="#attached">Section 17. Attached Sectors</a>
+        <li><a href="#attached">Section 17. Attached Surfaces</a>
             <ul>
             <li>
             </ul>
@@ -2798,7 +2798,7 @@ including other PolyObjects and normal walls.
 <br><br>
 PolyObjects fully clip normal objects such as the player and enemies, optionally
 doing crushing damage depending upon the type of spawn spot used. They also
-block bullet tracers and monsters' lines of site. They do not, however, clip
+block bullet tracers and monsters' lines of sight. They do not, however, clip
 sound propagation, so it may be necessary to use sound blocking lines near areas
 where PolyObjects are meant to function as a normal wall until they move.
 <br><br>
@@ -2806,13 +2806,8 @@ Although Eternity does allow PolyObjects to move between different subsectors,
 this will only work properly if the subsectors on both sides of a line have the
 same properties (floor & ceiling heights, light level, and flat) -- otherwise,
 temporary rendering oddities such as bleeding or disappearing lines may occur.
-Also, the proper rendering of PolyObjects in certain situations is dependent
-upon how the BSP builder splits sectors into subsectors. To get PolyObjects to
-render properly in areas where they may partially occlude normal walls, such as
-when functioning as doors, it may be necessary to "tweak" the area they are in, 
-particularly by enclosing them within a convex sector made of invisible 2S lines
-(this was common practice for sliding door PolyObjects in Hexen as well).
-However, Eternity does not require a "PolyObject-aware" node builder.
+However, due to its implementation of PolyObjects via true dynamic seg 
+generation, Eternity does not require a "PolyObject-aware" node builder.
 <br><br>
 Finally, unlike zdoom, Eternity allows PolyObjects to be used in DOOM-format
 maps via the use of <a href="#extradata">ExtraData</a>.  See the subsections
@@ -3192,7 +3187,54 @@ Parameterized Stair Types
 <a href="#contents">Return to Table of Contents</a>
 
 
-<!-- TODO: ATTACHED SECTORS -->
+<p>
+<a name="attached">
+<hr width="75%" align="left">
+<b>Section 17. Attached Surfaces</b>
+<hr width="75%" align="left">
+</a>
+<br>
+Attached surfaces cause multiple sectors to move together. This allows for the 
+creation of complex lifts, doors, or elevators comprised of multiple sectors
+which will remain synchronized even if any sector's movement is blocked by a 
+player or other object.
+<br><br>
+<!-- TODO: clean up and expand -->
+
+Attached surface linedefs are as follows:
+
+* 379 -- Attach_SetCeilingControl
+
+The sector on the front side of this line will have its ceiling used to control the movement of the 
+attached surfaces that share this line's tag number.
+
+* 380 -- Attach_SetFloorControl
+
+The sector on the front side of this line will have its floor used to control the movement of the 
+attached surfaces that share this line's tag.
+
+* 381 -- Attach_FloorToControl
+
+The sector on the front side of this line will have its floor movement controlled by the surface 
+whose control line shares this line's tag.
+
+* 382 -- Attach_CeilingToControl
+
+The sector on the front side of this line will have its ceiling movement controlled by the surface 
+whose control line shares this line's tag.
+
+* 383 -- Attach_MirrorFloorToControl
+
+The sector on the front side of this line will have its floor movement controlled inversely by the 
+surface whose control line shares this line's tag.
+
+* 384 -- Attach_MirrorCeilingToControl
+
+The sector on the front side of this line will have its ceiling movement controlled inversely by the 
+surface whose control line shares this line's tag.
+
+<a href="#contents">Return to Table of Contents</a>
+
 
 <p>
 <a name="genlines">
