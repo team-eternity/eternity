@@ -33,9 +33,12 @@
 
 #include <windows.h>
 #include <winbase.h>
-#include <shlwapi.h>
+//#include <shlwapi.h>
 
 extern void I_Error(const char *error, ...);
+
+// ratchafratcharatchen...
+typedef BOOL (WINAPI *prfs)(LPTSTR);
 
 //
 // WIN_GetExeDir
@@ -51,6 +54,10 @@ extern void I_Error(const char *error, ...);
 //
 void WIN_GetExeDir(char *buffer, unsigned long size)
 {
+   static BOOL (WINAPI *pPathRemoveFileSpec)(LPTSTR);
+   static int firsttime = 1;
+   HMODULE hmod; // son of a bitch
+
    // get the name of the current process's module
    DWORD nRet = GetModuleFileName(NULL, (LPTSTR)buffer, (DWORD)size);
 
@@ -59,8 +66,21 @@ void WIN_GetExeDir(char *buffer, unsigned long size)
    if(!nRet || nRet == size)
       I_Error("WIN_GetExeDir: could not determine module file name.\n");
 
+   // Microsoft is driving me insane with this bullshit.
+   if(firsttime == 1)
+   {
+      firsttime = 0;
+      hmod = LoadLibrary("shlwapi.dll");
+      if(hmod == NULL)
+         abort();
+      pPathRemoveFileSpec = (prfs)(GetProcAddress(hmod, "PathRemoveFileSpecA"));
+   }
+
+   if(!pPathRemoveFileSpec)
+      abort();
+
    // remove the file name, leaving only the full path
-   PathRemoveFileSpec((LPTSTR)buffer);
+   pPathRemoveFileSpec((LPTSTR)buffer);
 }
 
 // EOF
