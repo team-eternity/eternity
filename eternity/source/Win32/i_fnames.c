@@ -31,14 +31,12 @@
 
 #define WIN32_LEAN_AND_MEAN
 
+#include <stdlib.h>
 #include <windows.h>
 #include <winbase.h>
-//#include <shlwapi.h>
 
 extern void I_Error(const char *error, ...);
-
-// ratchafratcharatchen...
-typedef BOOL (WINAPI *prfs)(LPTSTR);
+extern void M_GetFilePath(const char *fn, char *bane, size_t len);
 
 //
 // WIN_GetExeDir
@@ -54,33 +52,21 @@ typedef BOOL (WINAPI *prfs)(LPTSTR);
 //
 void WIN_GetExeDir(char *buffer, unsigned long size)
 {
-   static BOOL (WINAPI *pPathRemoveFileSpec)(LPTSTR);
-   static int firsttime = 1;
-   HMODULE hmod; // son of a bitch
-
    // get the name of the current process's module
    DWORD nRet = GetModuleFileName(NULL, (LPTSTR)buffer, (DWORD)size);
+   char *dupstr;
 
    // if 0 or if the full buffer size, it's not a value we can use
    // and the only available option is to exit the program
    if(!nRet || nRet == size)
       I_Error("WIN_GetExeDir: could not determine module file name.\n");
 
-   // Microsoft is driving me insane with this bullshit.
-   if(firsttime == 1)
-   {
-      firsttime = 0;
-      hmod = LoadLibrary("shlwapi.dll");
-      if(hmod == NULL)
-         abort();
-      pPathRemoveFileSpec = (prfs)(GetProcAddress(hmod, "PathRemoveFileSpecA"));
-   }
-
-   if(!pPathRemoveFileSpec)
-      abort();
+   dupstr = strdup(buffer);
 
    // remove the file name, leaving only the full path
-   pPathRemoveFileSpec((LPTSTR)buffer);
+   M_GetFilePath(dupstr, buffer, size);
+
+   free(dupstr);
 }
 
 // EOF
