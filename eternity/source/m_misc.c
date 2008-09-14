@@ -2614,7 +2614,7 @@ void M_NormalizeSlashes(char *str)
 {
    char *p;
    
-   // Convert backslashes to slashes
+   // Convert all backslashes to slashes
    for(p = str; *p; p++)
    {
       if(*p == '\\')

@@ -40,6 +40,7 @@
 #include "../i_video.h"
 #include "../m_argv.h"
 #include "../m_bbox.h"
+#include "../m_qstr.h"
 #include "../mn_engin.h"
 #include "../r_draw.h"
 #include "../st_stuff.h"
@@ -731,6 +732,77 @@ void I_ShutdownGraphics(void)
 
 extern boolean setsizeneeded;
 
+// states for geometry parser
+enum
+{
+   STATE_WIDTH,
+   STATE_HEIGHT,
+   STATE_FLAGS,
+};
+
+static void I_ParseGeom(const char *geom, 
+                        int *w, int *h, boolean *fs, boolean *vs, boolean *hw)
+{
+   const char *c = geom;
+   int state = STATE_WIDTH;
+   qstring_t qstr;
+
+   M_QStrInitCreate(&qstr);
+
+   while(*c)
+   {
+      switch(state)
+      {
+      case STATE_WIDTH:
+         if(*c >= '0' && *c <= '9')
+            M_QStrPutc(&qstr, *c);
+         else
+         {
+            *w = atoi(qstr.buffer);
+            M_QStrClear(&qstr);
+            state = STATE_HEIGHT;
+         }
+         break;
+      case STATE_HEIGHT:
+         if(*c >= '0' && *c <= '9')
+            M_QStrPutc(&qstr, *c);
+         else
+         {
+            *h = atoi(qstr.buffer);
+            state = STATE_FLAGS;
+            continue; // don't increment the pointer
+         }
+         break;
+      case STATE_FLAGS:
+         switch(tolower(*c))
+         {
+         case 'w': // window
+            *fs = false;
+            break;
+         case 'f': // fullscreen
+            *fs = true;
+            break;
+         case 'a': // async update
+            *vs = false;
+            break;
+         case 'v': // vsync update
+            *vs = true;
+            break;
+         case 's': // software
+            *hw = false;
+            break;
+         case 'h': // hardware 
+            *hw = true;
+            break;
+         }
+         break;
+      }
+      ++c;
+   }
+
+   M_QStrFree(&qstr);
+}
+
 static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs, 
                              boolean *hw)
 {
@@ -740,6 +812,9 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
    if(firsttime)
    {
       firsttime = false;
+
+      if((p = M_CheckParm("-geom")) && p < myargc - 1)
+         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= 1024)
