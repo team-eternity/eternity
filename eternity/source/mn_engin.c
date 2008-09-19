@@ -142,7 +142,60 @@ static void MN_GetItemVariable(menuitem_t *item)
    }
 }
 
-        // width of slider, in mid-patches
+//
+// MN_FindFirstSelectable
+//
+// haleyjd 09/18/08: Finds the first selectable item in the menu,
+// and returns the index of the item in the menuitem array.
+//
+static int MN_FindFirstSelectable(menu_t *menu)
+{
+   int i = 0, ret = 0;
+
+   for(; menu->menuitems[i].type != it_end; ++i)
+   {
+      if(!is_a_gap(&menu->menuitems[i]))
+      {
+         ret = i;
+         break;
+      }
+   }
+
+   return ret;
+}
+
+//
+// MN_FindLastSelectable
+//
+// haleyjd 09/18/08: Finds the last selectable item in the menu,
+// and returns the index of the item in the menuitem array.
+//
+static int MN_FindLastSelectable(menu_t *menu)
+{
+   int i = 0, ret = 0;
+
+   // first, find end
+   for(; menu->menuitems[i].type != it_end; ++i)
+      ; /* do nothing loop */
+   
+   // back up one, but not beyond the beginning
+   if(i > 0)
+      --i;
+
+   // search backward
+   for(; i >= 0; --i)
+   {
+      if(!is_a_gap(&menu->menuitems[i]))
+      {
+         ret = i;
+         break;
+      }
+   }
+
+   return ret;
+}
+
+// width of slider, in mid-patches
 #define SLIDE_PATCHES 9
 
 //
@@ -957,15 +1010,18 @@ boolean MN_Responder(event_t *ev)
          {
             int i;
 
+            // haleyjd: in paged menus, go to the previous page
             if(current_menu->prevpage)
             {
-               current_menu->selected++; // undo move, because the menu remembers
+               // set selected item to the first selectable item
+               current_menu->selected = MN_FindFirstSelectable(current_menu);
                paged = true; // paging makes a sound already, so remember this
-               MN_PageMenu(current_menu->prevpage);
+               MN_PageMenu(current_menu->prevpage); // modifies current_menu!
             }
 
             // jump to end of menu
-            for(i=0; current_menu->menuitems[i].type != it_end; i++);
+            for(i = 0; current_menu->menuitems[i].type != it_end; ++i)
+               ; /* do-nothing loop */
             current_menu->selected = i-1;
          }
       }
@@ -987,12 +1043,15 @@ boolean MN_Responder(event_t *ev)
          ++current_menu->selected;
          if(current_menu->menuitems[current_menu->selected].type == it_end)
          {
+            // haleyjd: in paged menus, go to the next page
             if(current_menu->nextpage)
             {
-               current_menu->selected--; // undo move, because the menu remembers
+               // set selected item to the last selectable item
+               current_menu->selected = MN_FindLastSelectable(current_menu);
                paged = true;             // don't make a double sound below
-               MN_PageMenu(current_menu->nextpage);
+               MN_PageMenu(current_menu->nextpage); // modifies current_menu!
             }
+
             current_menu->selected = 0;     // jump back to start
          }
       }

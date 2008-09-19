@@ -35,6 +35,11 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
+// haleyjd: we do not need SDL_main under Win32.
+#if defined(_MSC_VER) && !defined(_WIN32_WCE)
+#undef main
+#endif
+
 // SoM 3/13/2001: Use SDL's signal handler
 
 void I_Quit(void);
