@@ -26,6 +26,10 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef __FreeBSD__ // [Kate] Update as necessary
+#define NO_FCVT
+#endif
+
 #ifdef NO_FCVT
 
 // NOTE: Do not include z_zone.h into this file.

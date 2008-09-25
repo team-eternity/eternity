@@ -31,30 +31,34 @@
 
 #ifdef _MSC_VER
 
-  #include <direct.h>
-  #include <io.h>
-  #define F_OK 0
-  #define W_OK 2
-  #define R_OK 4
-  #define S_ISDIR(x) (((sbuf.st_mode & S_IFDIR)==S_IFDIR)?1:0)
-  #ifndef TRUE
-     #define TRUE true
-  #endif
-  #ifndef FALSE
-     #define FALSE false
-  #endif
-  #define strcasecmp _stricmp
-  #define strncasecmp _strnicmp
-  #ifndef PATH_MAX
-     #define PATH_MAX _MAX_PATH
-  #endif
+   #include <direct.h>
+   #include <io.h>
+   #define F_OK 0
+   #define W_OK 2
+   #define R_OK 4
+   #define S_ISDIR(x) (((sbuf.st_mode & S_IFDIR)==S_IFDIR)?1:0)
+   #ifndef TRUE
+      #define TRUE true
+   #endif
+   #ifndef FALSE
+      #define FALSE false
+   #endif
+   #define strcasecmp _stricmp
+   #define strncasecmp _strnicmp
+   #ifndef PATH_MAX
+      #define PATH_MAX _MAX_PATH
+   #endif
 
 #else
 #include <unistd.h>
 #endif
 
 #ifdef LINUX
-#include <linux/limits.h>
+   #ifdef __FreeBSD__ // [Kate] Yeeaah...
+   #include <limits.h>
+   #else
+   #include <linux/limits.h>
+   #endif
 #endif
 
 #endif

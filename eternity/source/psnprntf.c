@@ -13,15 +13,18 @@
  */
 
 #ifndef NO_FCVT
-# ifdef WIN32
-#  ifndef CYGWIN
-#   define FCVT _fcvt
-#  else
-#   define FCVT fcvt
-#  endif
-# else
-#  define FCVT fcvt
-# endif
+   #ifdef __FreeBSD__ // [Kate] Update as necessary
+   #define NO_FCVT
+   #endif
+   #ifdef WIN32
+      #ifndef CYGWIN
+      #define FCVT _fcvt
+      #else
+      #define FCVT fcvt
+      #endif
+   #else
+      #define FCVT fcvt
+   #endif
 #endif
 
 #ifdef NO_FCVT
