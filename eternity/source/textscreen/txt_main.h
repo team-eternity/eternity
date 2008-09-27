@@ -56,5 +56,9 @@ void TXT_UpdateScreenArea(int x, int y, int w, int h);
 
 void TXT_UpdateScreen(void);
 
+// Wait for next update
+
+void TXT_Sleep(int timeout);
+
 #endif /* #ifndef TXT_MAIN_H */
 

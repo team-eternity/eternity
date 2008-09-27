@@ -403,8 +403,6 @@ void I_EndDoom(void)
    screendata = TXT_GetScreenData();
    memcpy(screendata, endoom_data, 4000);
    
-   TXT_UpdateScreen();
-   
    // Wait for 10 seconds, or until a keypress or mouse click
    // haleyjd: delay period specified in config (default = 350)
    waiting = true;
@@ -412,22 +410,23 @@ void I_EndDoom(void)
    
    while(waiting && I_GetTime() < start_ms + endoomdelay)
    {
-      if(!SDL_PollEvent(&ev))
-      {
-         I_Sleep(100);
-         continue;
+      TXT_UpdateScreen();
+
+      if(SDL_PollEvent(&ev))
+      {      
+         switch(ev.type)
+         {
+         case SDL_MOUSEBUTTONDOWN:
+         case SDL_KEYDOWN:
+         case SDL_QUIT:
+            waiting = false;
+            break;
+         default:
+            break;
+         }
       }
-      
-      switch(ev.type)
-      {
-      case SDL_MOUSEBUTTONDOWN:
-      case SDL_KEYDOWN:
-      case SDL_QUIT:
-         waiting = false;
-         break;
-      default:
-         break;
-      }
+
+      TXT_Sleep(0);
    }
    
    // Shut down text mode screen   

@@ -44,6 +44,10 @@
 #define CHAR_W 8
 #define CHAR_H 16
 
+// Time between character blinks in ms
+
+#define BLINK_PERIOD 250
+
 static SDL_Surface *screen;
 static unsigned char *screendata;
 
@@ -124,6 +128,18 @@ static txt_inline void UpdateCharacter(int x, int y)
     fg = p[1] & 0xf;
     bg = (p[1] >> 4) & 0xf;
 
+    if (bg & 0x8)
+    {
+        // blinking
+
+        bg &= ~0x8;
+
+        if (((SDL_GetTicks() / BLINK_PERIOD) % 2) == 0)
+        {
+            fg = bg;
+        }
+    }
+
     p = &int10_font_16[character * CHAR_H];
 
     // haleyjd: void * math is not standard C
@@ -169,4 +185,54 @@ void TXT_UpdateScreen(void)
 {
     TXT_UpdateScreenArea(0, 0, SCREEN_W, SCREEN_H);
 }
+
+void TXT_Sleep(int timeout)
+{
+    unsigned int start_time;
+
+    // haleyjd: just assume there are blinking characters.
+    int time_to_next_blink;
+    
+    time_to_next_blink = BLINK_PERIOD - (SDL_GetTicks() % BLINK_PERIOD);
+    
+    // There are blinking characters on the screen, so we 
+    // must time out after a while
+    
+    if (timeout == 0 || timeout > time_to_next_blink)
+    {
+        // Add one so it is always positive
+       
+        timeout = time_to_next_blink + 1;
+    }
+
+    if (timeout == 0)
+    {
+        // We can just wait forever until an event occurs
+
+        SDL_WaitEvent(NULL);
+    }
+    else
+    {
+        // Sit in a busy loop until the timeout expires or we have to
+        // redraw the blinking screen
+
+        start_time = SDL_GetTicks();
+
+        while (SDL_GetTicks() < start_time + timeout)
+        {
+            if (SDL_PollEvent(NULL) != 0)
+            {
+                // Received an event, so stop waiting
+
+                break;
+            }
+
+            // Don't hog the CPU
+
+            SDL_Delay(1);
+        }
+    }
+}
+
+// EOF
 

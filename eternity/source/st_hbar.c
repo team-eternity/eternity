@@ -192,76 +192,59 @@ static void ST_drawBackground(void)
    V_DrawPatch(290, 148, &vbscreen, W_CacheLumpName("RTFCTOP", PU_CACHE));
 }
 
-//
-// ST_shadowLine
-//
-// Can be used to form a horizontal shadowed line over part of 
-// the screen via use of the normal light-fading colormaps.
-// This version is for 320x200 resolution.
-//
-static void ST_shadowLine(int x, int y, int len,
-                          int startmap, int mapstep)
+#define SHADOW_BOX_WIDTH  16
+#define SHADOW_BOX_HEIGHT 10
+
+static void ST_BlockDrawerS(int x, int y, int startmap, int mapdir)
 {
-   byte *dest, *colormap;
-   int mapnum, i;
+   byte *dest, *row, *colormap;
+   int w, h, i, realx, realy;
+   int cx1, cy1, cx2, cy2, cw, ch;
 
-   // start at origin of line
-   dest = vbscreen.data + y*SCREENWIDTH + x;
+   fixed_t mapnum, mapstep;
+   
+   cx1 = x;
+   cy1 = y;
+   cx2 = x + SHADOW_BOX_WIDTH  - 1;
+   cy2 = y + SHADOW_BOX_HEIGHT - 1;
+      
+   // clipped rect width/height
+   cw = cx2 - cx1 + 1;
+   ch = cy2 - cy1 + 1;
+         
+   realx = vbscreen.x1lookup[cx1];
+   realy = vbscreen.y1lookup[cy1];
+   w     = vbscreen.x2lookup[cx2] - realx + 1;
+   h     = vbscreen.y2lookup[cy2] - realy + 1;
 
-   // step in x direction for len pixels
-   for(i = x, mapnum = startmap; i < x + len; ++i)
-   {
-      // get pointer to colormap
-      colormap = colormaps[0] + mapnum*256;
-
-      // remap the color currently on-screen
-      *dest = colormap[*dest];
-
-      ++dest;
-
-      // move colormap level up or down after even-numbered pixels
-      if(~i&1)
-         mapnum += mapstep;
-   }
-}
-
-//
-// ST_shadowLineHi
-//
-// Can be used to form a horizontal shadowed line over part of 
-// the screen via use of the normal light-fading colormaps.
-// This version is for 640x400 resolution.
-//
-// ANYRES generalize for any resolution 
-//
-static void ST_shadowLineHi(int x, int y, int len,
-                            int startmap, int mapstep)
-{
-   byte *dest, *colormap;
-   int mapnum, p, realx, realy;
-
-   // start at origin of line
-   realx = video.x1lookup[x];
-   realy = video.y1lookup[y];
    dest = vbscreen.data + realy * vbscreen.pitch + realx;
-   len = video.x2lookup[x + len - 1] - realx + 1;
-   mapnum = startmap << FRACBITS;
-   mapstep *= video.ystep >> 1;
 
-   // step in x direction for len scaled pixels
-   for(x = realx; x < realx + len; ++x)
+   mapstep = mapdir * (16 << FRACBITS) / w;
+
+#ifdef RANGECHECK
+   // sanity check
+   if(realx < 0 || realx + w > vbscreen.width ||
+      realy < 0 || realy + h > vbscreen.height)
    {
-      // get pointer to colormap
-      colormap = colormaps[0] + (mapnum >> FRACBITS) * 256;
-      mapnum += mapstep;
+      I_Error("ST_BlockDrawerS: block exceeds buffer boundaries.\n");
+   }
+#endif
 
-      // remap all four pixels in this scaled pixel's area
-      dest = vbscreen.data + realy * vbscreen.pitch + x;
-      for(p = video.yscale >> FRACBITS; p; p--)
+   while(h--)
+   {
+      row = dest;
+      i = w;
+      mapnum = startmap << FRACBITS;
+      
+      while(i--)
       {
-         *dest = colormap[*dest];
-         dest += vbscreen.pitch;
+         colormap = colormaps[0] + (mapnum >> FRACBITS) * 256;
+         *row = colormap[*row];
+         ++row;
+         mapnum += mapstep;
       }
+
+      dest += vbscreen.pitch;
    }
 }
 
@@ -273,25 +256,8 @@ static void ST_shadowLineHi(int x, int y, int len,
 //
 static void ST_chainShadow(void)
 {
-   int i;
-   void (*linefunc)(int, int, int, int, int);
-
-   // choose a drawing function depending on resolution, for
-   // maximum speed
-   // SoM: ANYRES
-   if(video.scaled)
-      linefunc = ST_shadowLineHi;
-   else
-      linefunc = ST_shadowLine;
-
-   // draw 10 16-pixel shadow lines on each end of the life chain
-   // by remapping the colors using odd colormap levels from 9 to
-   // 23 (note the two regions fade in opposite directions).
-   for(i = 0; i < 10; ++i)
-   {
-      linefunc(277, 190+i, 16,  9,  2); // right side (fades ->)
-      linefunc(19,  190+i, 16, 23, -2); // left side  (fades <-)
-   }
+   ST_BlockDrawerS(277, 190,  9,  1);
+   ST_BlockDrawerS( 19, 190, 23, -1);
 }
 
 //
