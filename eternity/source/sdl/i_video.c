@@ -384,8 +384,17 @@ static void I_GetEvent(void)
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
          if(mouseAccel_type == 0)
          {
-            mouseevent.data3 -= (event.motion.yrel << FRACBITS) / mouseyden * 200;
-            mouseevent.data2 += (event.motion.xrel << FRACBITS) / mousexden * 320;
+            // haleyjd 09/29/08: NOT IN WINDOWED MODE!
+            if(fullscreen)
+            {
+               mouseevent.data3 -= (event.motion.yrel << FRACBITS) / mouseyden * 200;
+               mouseevent.data2 += (event.motion.xrel << FRACBITS) / mousexden * 320;
+            }
+            else
+            {
+               mouseevent.data3 -= (event.motion.yrel << FRACBITS);
+               mouseevent.data2 += (event.motion.xrel << FRACBITS);
+            }
          }
          else if(mouseAccel_type == 1)
          {
@@ -469,7 +478,7 @@ static void I_GetEvent(void)
    }
 
    // SoM: if paused, delay for a short amount of time to allow other threads 
-   // to process on the system. Otherwise eternity will use almost 100% of the
+   // to process on the system. Otherwise Eternity will use almost 100% of the
    // CPU even while paused.
    if(paused && !window_focused)
       I_WaitVBL(1);
@@ -971,7 +980,7 @@ static boolean I_InitGraphicsMode(void)
    
    // haleyjd 10/09/05: from Chocolate DOOM:
    // clear out any events waiting at the start   
-   while(SDL_PollEvent(&dummy));   
+   while(SDL_PollEvent(&dummy));
    
    return false;
 }

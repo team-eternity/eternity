@@ -2005,8 +2005,8 @@ static menuitem_t mn_mouse_items[] =
    {it_toggle,     "enable mouse",                 "use_mouse"},
    {it_gap},
    {it_info,       FC_GOLD "sensitivity"},
-   {it_slider,     "horizontal",                   "sens_horiz"},
-   {it_slider,     "vertical",                     "sens_vert"},
+   {it_variable,   "horizontal",                   "sens_horiz"},
+   {it_variable,   "vertical",                     "sens_vert"},
    {it_gap},
    {it_info,       FC_GOLD "misc."},
    {it_toggle,     "invert mouse",                 "invertmouse"},
@@ -3575,6 +3575,10 @@ CONSOLE_COMMAND(mn_old_options, 0)
 {
    // propagate horizontal mouse sensitivity to combined setting
    mouseSensitivity_c = mouseSensitivity_horiz / 4;
+
+   // bound to max 16
+   if(mouseSensitivity_c > 16)
+      mouseSensitivity_c = 16;
 
    MN_StartMenu(&menu_old_options);
 }

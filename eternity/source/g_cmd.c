@@ -205,12 +205,12 @@ CONSOLE_VARIABLE(invertmouse, invert_mouse, 0) {}
 
 // horizontal mouse sensitivity
 
-VARIABLE_INT(mouseSensitivity_horiz, NULL, 0, 64, NULL);
+VARIABLE_INT(mouseSensitivity_horiz, NULL, 0, 1024, NULL);
 CONSOLE_VARIABLE(sens_horiz, mouseSensitivity_horiz, 0) {}
 
 // vertical mouse sensitivity
 
-VARIABLE_INT(mouseSensitivity_vert, NULL, 0, 64, NULL);
+VARIABLE_INT(mouseSensitivity_vert, NULL, 0, 1024, NULL);
 CONSOLE_VARIABLE(sens_vert, mouseSensitivity_vert, 0) {}
 
 int mouseSensitivity_c;
