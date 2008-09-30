@@ -697,24 +697,159 @@ static void R_ClipSegToPortal(void)
    }
    else
    {
+      // Line based portal. This requires special clipping...
       // SoM: Quickly reject the seg based on the bounding box of the portal
       if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
          return;
 
-      for(i = seg.x1; i <= seg.x2; i++)
+      // I'm not sure the first case ever even happens...
+      if(!seg.floorplane && !seg.ceilingplane)
       {
-         while(i <= seg.x2 && floorclip[i] < ceilingclip[i]) i++;
+         // Should this case ever actually happen?
+         float top, topstep, bottom, bottomstep;
+         float y1, y2;
 
-         if(i > seg.x2)
+         bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
+         y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+
+         // SoM: Quickly reject the seg based on the bounding box of the portal
+         if(y1 < portalrender.miny && y2 < portalrender.miny)
             return;
 
-         startx = i;
-         while(i <= seg.x2 && floorclip[i] >= ceilingclip[i]) i++;
-         if(seg.clipsolid)
-            R_ClipSolidWallSegment(startx, i - 1);
-         else
-            R_ClipPassWallSegment(startx, i - 1);
+         bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
 
+         // I totally overlooked this when I moved all the wall panel projection 
+         // to r_segs.c
+         top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
+         y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+
+         // SoM: Quickly reject the seg based on the bounding box of the portal
+         if(portalrender.maxy - y1 < -1.0f && portalrender.maxy - y2 < -1.0f)
+            return;
+
+         topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+         
+         for(i = seg.x1; i <= seg.x2; i++)
+         {
+            for(; i <= seg.x2 && (bottom < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
+            {
+               bottom += bottomstep;
+               top += topstep;
+            }
+
+            if(i > seg.x2)
+               return;
+
+            startx = i;
+
+            for(; i <= seg.x2 && bottom >= ceilingclip[i] && floorclip[i] - top > -1.0f; i++)
+            {
+               bottom += bottomstep;
+               top += topstep;
+            }
+
+            if(seg.clipsolid)
+               R_ClipSolidWallSegment(startx, i - 1);
+            else
+               R_ClipPassWallSegment(startx, i - 1);
+         }
+      }
+      else if(!seg.floorplane)
+      {
+         // If the seg has no floor plane, the camera is most likely below it,
+         // so rejection is carried out as if the seg is being viewed through
+         // a ceiling portal.
+
+         float bottom, bottomstep;
+         float y1, y2;
+
+         bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
+         y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+
+         // SoM: Quickly reject the seg based on the bounding box of the portal
+         if(y1 < portalrender.miny && y2 < portalrender.miny)
+            return;
+
+         bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+
+         for(i = seg.x1; i <= seg.x2; i++)
+         {
+            for(; i <= seg.x2 && bottom < ceilingclip[i]; i++)
+               bottom += bottomstep;
+
+            if(i > seg.x2)
+               return;
+
+            startx = i;
+
+            for(; i <= seg.x2 && bottom >= ceilingclip[i]; i++)
+               bottom += bottomstep;
+
+            if(seg.clipsolid)
+               R_ClipSolidWallSegment(startx, i - 1);
+            else
+               R_ClipPassWallSegment(startx, i - 1);
+         }
+      }
+      else if(!seg.ceilingplane)
+      {
+         // If the seg has no floor plane, the camera is most likely above it,
+         // so rejection is carried out as if the seg is being viewed through
+         // a floor portal.
+
+         float top, topstep;
+         float y1, y2;
+
+         // I totally overlooked this when I moved all the wall panel projection 
+         // to r_segs.c
+         top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
+         y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+
+         // SoM: Quickly reject the seg based on the bounding box of the portal
+         if(portalrender.maxy - y1 < -1.0f && portalrender.maxy - y2 < -1.0f)
+            return;
+
+         topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+
+         for(i = seg.x1; i <= seg.x2; i++)
+         {
+            // skip past the closed or out of sight columns to find the first visible column
+            for(; i <= seg.x2 && floorclip[i] - top <= -1.0f; i++)
+               top += topstep;
+
+            if(i > seg.x2)
+               return;
+
+            startx = i; // mark
+
+            // skip past visible columns 
+            for(; i <= seg.x2 && floorclip[i] - top > -1.0f; i++)
+               top += topstep;
+
+            if(seg.clipsolid)
+               R_ClipSolidWallSegment(startx, i - 1);
+            else
+               R_ClipPassWallSegment(startx, i - 1);
+         }
+      }
+      else
+      {
+         // Seg is most likely being viewed from straight on...
+         for(i = seg.x1; i <= seg.x2; i++)
+         {
+            while(i <= seg.x2 && floorclip[i] < ceilingclip[i]) i++;
+
+            if(i > seg.x2)
+               return;
+
+            startx = i;
+            while(i <= seg.x2 && floorclip[i] >= ceilingclip[i]) i++;
+            if(seg.clipsolid)
+               R_ClipSolidWallSegment(startx, i - 1);
+            else
+               R_ClipPassWallSegment(startx, i - 1);
+
+         }
       }
    }
 }
@@ -984,8 +1119,7 @@ static void R_AddLine(seg_t *line)
    // still needs to be rendered to keep groups of single post walls from not
    // being rendered and causing slime trails.
 
-   // SoM: changed from simple 0.5 rounding. This actually fixes many accuracy
-   // problems the line rasterizing and texturing code was having.
+   // 
    floorx1 = (float)floor(x1 + 0.999f);
    floorx2 = (float)floor(x2 - 0.001f);
 
