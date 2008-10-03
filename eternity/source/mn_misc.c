@@ -424,7 +424,7 @@ void MN_DrawCredits(void)
       y += V_StringHeight(val_strs[i]);
    }
 
-   V_WriteText(FC_ABSCENTER "Copyright 2006 Team Eternity et al.\n"
+   V_WriteText(FC_ABSCENTER "Copyright 2008 Team Eternity et al.\n"
                "http://doomworld.com/eternity/", 0, y);
 }
 

@@ -1104,9 +1104,6 @@ void S_Init(int sfxVolume, int musicVolume)
    {
       usermsg("\tdefault sfx volume %d", sfxVolume);  // killough 8/8/98
 
-      // haleyjd 05/30/02
-      I_SetChannels();
-
       S_SetSfxVolume(sfxVolume);
 
       // Allocating the internal channels for mixing

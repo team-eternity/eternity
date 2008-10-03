@@ -405,6 +405,10 @@ SOURCE=.\Source\d_items.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\d_iwad.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\d_main.c
 # End Source File
 # Begin Source File
@@ -458,6 +462,10 @@ SOURCE=.\Source\g_gfs.c
 # Begin Source File
 
 SOURCE=.\Source\Win32\i_fnames.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\Win32\i_iwad.c
 # End Source File
 # Begin Source File
 
@@ -766,6 +774,10 @@ SOURCE=.\Source\d_io.h
 # Begin Source File
 
 SOURCE=.\Source\d_items.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\d_iwad.h
 # End Source File
 # Begin Source File
 

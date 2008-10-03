@@ -755,7 +755,9 @@ void A_Srcr2Attack(mobj_t *actor)
    if(!actor->target)
       return;
    
-   S_StartSound(NULL, actor->info->attacksound);
+   // haleyjd 10/01/08: use CHAN_WEAPON; D'Sparil never seems to cut off his
+   // own sounds.
+   S_StartSoundAtVolume(actor, actor->info->attacksound, 127, ATTN_NONE, CHAN_WEAPON);
 
    if(P_CheckMeleeRange(actor))
    {

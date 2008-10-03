@@ -138,27 +138,18 @@ char    *basegamepath;            // haleyjd 11/23/06: path of game directory
 // set from iwad: level to start new games from
 char firstlevel[9] = "";
 
-//jff 4/19/98 list of standard IWAD names
-const char *const standard_iwads[]=
-{
-   "/doom2f.wad",   // DOOM II, French Version
-   "/doom2.wad",    // DOOM II
-   "/plutonia.wad", // Final DOOM: Plutonia
-   "/tnt.wad",      // Final DOOM: TNT
-   "/doom.wad",     // Registered/Ultimate DOOM
-   "/doom1.wad",    // Shareware DOOM
-   "/doomu.wad",    // CPhipps - allow doomu.wad
-   "/freedoom.wad", // Freedoom -- haleyjd 01/31/03
-   "/heretic.wad",  // Heretic  -- haleyjd 10/10/05
-   "/heretic1.wad", // Shareware Heretic
-};
-
-static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
-
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t* cmd);
 void D_DoAdvanceDemo(void);
+
+//sf:
+void startupmsg(char *func, char *desc)
+{
+   // add colours in console mode
+   usermsg(in_textmode ? "%s: %s" : FC_HI "%s: " FC_NORMAL "%s",
+           func, desc);
+}
 
 //
 // EVENT HANDLING
@@ -966,6 +957,14 @@ static void D_GameAutoloadWads(void)
 {
    char *fn = NULL;
 
+   // haleyjd 09/30/08: not in shareware gamemodes, otherwise having any wads
+   // in your base/game/autoload directory will make shareware unplayable
+   if(GameModeInfo->flags & GIF_SHAREWARE)
+   {
+      startupmsg("D_GameAutoloadWads", "ignoring base/game/autoload wad files");
+      return;
+   }
+
    if(autoloads)
    {
       struct dirent *direntry;
@@ -1266,6 +1265,23 @@ boolean WadFileStatus(char *filename,boolean *isdir)
    filename[i] = 0;               //remove .wad
    return false;                  //and report doesn't exist
 }
+
+//jff 4/19/98 list of standard IWAD names
+static const char *const standard_iwads[]=
+{
+   "/doom2f.wad",   // DOOM II, French Version
+   "/doom2.wad",    // DOOM II
+   "/plutonia.wad", // Final DOOM: Plutonia
+   "/tnt.wad",      // Final DOOM: TNT
+   "/doom.wad",     // Registered/Ultimate DOOM
+   "/doom1.wad",    // Shareware DOOM
+   "/doomu.wad",    // CPhipps - allow doomu.wad
+   "/freedoom.wad", // Freedoom -- haleyjd 01/31/03
+   "/heretic.wad",  // Heretic  -- haleyjd 10/10/05
+   "/heretic1.wad", // Shareware Heretic
+};
+
+static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
 
 //
 // FindIWADFile
@@ -1799,7 +1815,8 @@ static void D_ProcessDehCommandLine(void)
 
 static void D_ProcessWadPreincludes(void)
 {
-   if(!M_CheckParm("-noload"))
+   // haleyjd 09/30/08: don't do in shareware
+   if(!M_CheckParm("-noload") && !(GameModeInfo->flags & GIF_SHAREWARE))
    {
       int i;
       char *s;
@@ -1961,8 +1978,14 @@ static void D_ProcessGFSWads(gfs_t *gfs)
    int i;
    char *filename = NULL;
 
-   // haleyjd 06/21/04: GFS should mark modified game when
-   // wads are added!
+   // haleyjd 09/30/08: don't load GFS wads in shareware gamemodes
+   if(GameModeInfo->flags & GIF_SHAREWARE)
+   {
+      startupmsg("D_ProcessGFSWads", "ignoring GFS wad files");
+      return;
+   }
+
+   // haleyjd 06/21/04: GFS should mark modified game when wads are added!
    if(gfs->numwads > 0)
       modifiedgame = true;
 
@@ -2209,14 +2232,6 @@ static gfs_t *D_LooseGFS(void)
    return NULL;
 }
 
-        //sf:
-void startupmsg(char *func, char *desc)
-{
-   // add colours in console mode
-   usermsg(in_textmode ? "%s: %s" : FC_HI "%s: " FC_NORMAL "%s",
-           func, desc);
-}
-
 // sf: this is really part of D_DoomMain but I made it into
 // a seperate function
 // this stuff needs to be kept together
@@ -2262,7 +2277,7 @@ extern int levelFragLimit;
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
-        "Copyright 2006 James Haley and Stephen McGranahan\n"
+        "Copyright 2008 James Haley and Stephen McGranahan\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"
@@ -2461,7 +2476,7 @@ static void D_DoomInit(void)
       {
          if(*myargv[p] == '-')
          {
-            file = !strcasecmp(myargv[p],"-file");
+            file = !strcasecmp(myargv[p], "-file");
          }
          else
          {

@@ -1,4 +1,4 @@
-// EDF for Eternity Engine v3.35.00
+// EDF for Eternity Engine v3.35.90
 //  Thing type definitions for Heretic gamemode.
 
 thingtype CrystalVial 
@@ -368,6 +368,7 @@ thingtype Golem
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 4; modes = heretic }
+  obituary_melee = "was pummeled by a Golem"
   dehackednum = 336
 }
 
@@ -393,6 +394,8 @@ thingtype NitroGolem
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 2; modes = heretic }
+  obituary_normal = "was burned by a Nitrogolem"
+  obituary_melee  = "was beaten by a Nitrogolem"
   dehackednum = 337
 }
 
@@ -417,6 +420,7 @@ thingtype GolemGhost
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 8; modes = heretic }
+  obituary_melee = "was spooked by a Golem Ghost"
   dehackednum = 338
 }
 
@@ -442,6 +446,8 @@ thingtype NitroGolemGhost
   activesound = ht_mumsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 9; modes = heretic }
+  obituary_normal = "was burned by a Nitrogolem Ghost"
+  obituary_melee  = "was beaten by a Nitrogolem Ghost"
   dehackednum = 339
 }
 
@@ -488,6 +494,8 @@ thingtype Weredragon
   activesound = ht_bstact
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 3; modes = heretic }
+  obituary_normal = "was flamed by a Weredragon"
+  obituary_melee  = "was torn apart by a Weredragon"
   dehackednum = 342
 }
 
@@ -537,6 +545,7 @@ thingtype Ophidian
   activesound = ht_snkact
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 132; modes = heretic }
+  obituary_normal = "was smoked by an Ophidian"
   dehackednum = 345
 }
 
@@ -588,6 +597,7 @@ thingtype SabreClaw
   activesound = ht_clkact
   cflags = SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 1; modes = heretic }
+  obituary_melee = "was sliced to bits by a Sabreclaw"
   dehackednum = 348
 }
 
@@ -612,6 +622,8 @@ thingtype Disciple
   flags = SOLID|SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL
   flags3 = ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   acs_spawndata { num = 19; modes = heretic }
+  obituary_normal = "was schooled by a Disciple"
+  obituary_melee  = "was slapped by a Disciple"
   dehackednum = 349
 }
 
@@ -651,6 +663,8 @@ thingtype DeathKnight
   activesound = ht_kgtsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 6; modes = heretic }
+  obituary_normal = "was axed by a Death Knight"
+  obituary_melee  = "was chopped down by a Death Knight"
   dehackednum = 351
 }
 
@@ -676,6 +690,8 @@ thingtype DeathKnightGhost
   activesound = ht_kgtsit
   cflags = SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|GHOST|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 129; modes = heretic }
+  obituary_normal = "was spooked by a Knight Ghost"
+  obituary_melee  = "was chopped by a Knight Ghost"
   dehackednum = 352
 }
 
@@ -733,6 +749,8 @@ thingtype SerpentRiderDsparil
   cflags = SOLID|SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
   nukespecial = SorcNukeSpec
   acs_spawndata { num = 142; modes = heretic }
+  obituary_normal = "was burned by D'Sparil's serpent"
+  obituary_melee  = "was devoured by D'Sparil's serpent"
   dehackednum = 355
 }
 
@@ -771,6 +789,8 @@ thingtype Dsparil
   flags2 = E3M8BOSS|BOSS|FOOTCLIP
   flags3 = LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 143; modes = heretic }
+  obituary_normal = "brought about the end of Parthoris"
+  obituary_melee  = "utterly failed to save Parthoris"
   dehackednum = 357
 }
 
@@ -876,6 +896,7 @@ thingtype HereticVolcano
   height = 20.0
   flags = SOLID
   acs_spawndata { num = 150; modes = heretic }
+  obituary_normal = "needs to stay away from volcanoes"
   dehackednum = 368
 }
 
@@ -932,6 +953,8 @@ thingtype Maulotaur
   flags2 = BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE
   flags3 = INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 114; modes = heretic } // note: different from zdoom
+  obituary_normal = "bowed down before the Maulotaur"
+  obituary_melee  = "was pounded flat by the Maulotaur"
   dehackednum = 371
 }
 
@@ -1007,6 +1030,8 @@ thingtype IronLich
   flags2 = E1M8BOSS|E4M8BOSS|NOSPLASH
   flags3 = SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 20; modes = heretic }
+  obituary_normal = "was punished by the Iron Lich"
+  obituary_melee  = "was bitten by the Iron Lich"
   dehackednum = 376
 }
 
@@ -1210,6 +1235,7 @@ thingtype HereticImp
   flags2 = NOSTRAFE|SPAWNFLOAT|RANGEHALF
   flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
   acs_spawndata { num = 5; modes = heretic }
+  obituary_melee = "was scratched by a Gargoyle"
   dehackednum = 393
 }
 
@@ -1238,6 +1264,8 @@ thingtype HereticImpLeader
   flags2 = SPAWNFLOAT
   flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
   acs_spawndata { num = 7; modes = heretic }
+  obituary_normal = "was burned by a Gargoyle Leader"
+  obituary_melee  = "was scratched by a Gargoyle Leader"
   dehackednum = 394
 }
 

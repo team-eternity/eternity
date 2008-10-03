@@ -1325,6 +1325,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
          int saved;
          
          // haleyjd 10/10/02: heretic armor -- its better! :P
+         // HTIC_FIXME
          if(player->hereticarmor)
             saved = player->armortype == 1 ? damage/2 : (damage*3)/4;
          else

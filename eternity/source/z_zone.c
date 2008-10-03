@@ -1313,6 +1313,22 @@ void *Z_SysCalloc(size_t n1, size_t n2)
 }
 
 //
+// Z_SysRealloc
+//
+// Turns out I need this in the sound code to avoid possible multithreaded
+// race conditions.
+//
+void *Z_SysRealloc(void *ptr, size_t size)
+{
+   void *ret;
+
+   if(!(ret = (realloc)(ptr, size)))
+      I_Error("Z_SysRealloc: failed on allocation of %lu bytes\n", size);
+
+   return ret;
+}
+
+//
 // Z_SysFree
 //
 // For use with Z_SysAlloc.

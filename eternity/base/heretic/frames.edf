@@ -1,4 +1,4 @@
-// EDF for Eternity Engine v3.35.00
+// EDF for Eternity Engine v3.35.90
 //  Frames for Heretic gamemode objects.
 
 // Heretic items
@@ -920,24 +920,24 @@ frame S_HPLAY_XDIE8 { cmp = "PLAY|23|*| 5|*           |@next";        dehackednu
 frame S_HPLAY_XDIE9 { cmp = "PLAY|24|*|-1";                           dehackednum = 2684 }
 
 // HereticPlayer fiery death frames
-frame S_HPLAY_FDTH1  { cmp = "FDTH| 0|T| 5|PlaySoundEx(ht_hedat1)|@next"; dehackednum = 2685 }
-frame S_HPLAY_FDTH2  { cmp = "FDTH| 1|T| 4|*                     |@next"; dehackednum = 2686 }
-frame S_HPLAY_FDTH3  { cmp = "FDTH| 2|T| 5|*                     |@next"; dehackednum = 2687 }
-frame S_HPLAY_FDTH4  { cmp = "FDTH| 3|T| 4|Scream                |@next"; dehackednum = 2688 }
-frame S_HPLAY_FDTH5  { cmp = "FDTH| 4|T| 5|*                     |@next"; dehackednum = 2689 }
-frame S_HPLAY_FDTH6  { cmp = "FDTH| 5|T| 4|*                     |@next"; dehackednum = 2690 }
-frame S_HPLAY_FDTH7  { cmp = "FDTH| 6|T| 5|PlaySoundEx(ht_hedat1)|@next"; dehackednum = 2691 }
-frame S_HPLAY_FDTH8  { cmp = "FDTH| 7|T| 4|*                     |@next"; dehackednum = 2692 }
-frame S_HPLAY_FDTH9  { cmp = "FDTH| 8|T| 5|*                     |@next"; dehackednum = 2693 }
-frame S_HPLAY_FDTH10 { cmp = "FDTH| 9|T| 4|*                     |@next"; dehackednum = 2694 }
-frame S_HPLAY_FDTH11 { cmp = "FDTH|10|T| 5|*                     |@next"; dehackednum = 2695 }
-frame S_HPLAY_FDTH12 { cmp = "FDTH|11|T| 4|*                     |@next"; dehackednum = 2696 }
-frame S_HPLAY_FDTH13 { cmp = "FDTH|12|T| 5|*                     |@next"; dehackednum = 2697 }
-frame S_HPLAY_FDTH14 { cmp = "FDTH|13|T| 4|*                     |@next"; dehackednum = 2698 }
-frame S_HPLAY_FDTH15 { cmp = "FDTH|14|T| 5|Fall                  |@next"; dehackednum = 2699 }
-frame S_HPLAY_FDTH16 { cmp = "FDTH|15|T| 4|*                     |@next"; dehackednum = 2700 }
-frame S_HPLAY_FDTH17 { cmp = "FDTH|16|T| 5|*                     |@next"; dehackednum = 2701 }
-frame S_HPLAY_FDTH18 { cmp = "FDTH|17|T| 4|*                     |@next"; dehackednum = 2702 }
+frame S_HPLAY_FDTH1  { cmp = "FDTH| 0|T| 5|PlaySoundEx(ht_hedat1, chan_body)|@next"; dehackednum = 2685 }
+frame S_HPLAY_FDTH2  { cmp = "FDTH| 1|T| 4|*                                |@next"; dehackednum = 2686 }
+frame S_HPLAY_FDTH3  { cmp = "FDTH| 2|T| 5|*                                |@next"; dehackednum = 2687 }
+frame S_HPLAY_FDTH4  { cmp = "FDTH| 3|T| 4|Scream                           |@next"; dehackednum = 2688 }
+frame S_HPLAY_FDTH5  { cmp = "FDTH| 4|T| 5|*                                |@next"; dehackednum = 2689 }
+frame S_HPLAY_FDTH6  { cmp = "FDTH| 5|T| 4|*                                |@next"; dehackednum = 2690 }
+frame S_HPLAY_FDTH7  { cmp = "FDTH| 6|T| 5|PlaySoundEx(ht_hedat1, chan_body)|@next"; dehackednum = 2691 }
+frame S_HPLAY_FDTH8  { cmp = "FDTH| 7|T| 4|*                                |@next"; dehackednum = 2692 }
+frame S_HPLAY_FDTH9  { cmp = "FDTH| 8|T| 5|*                                |@next"; dehackednum = 2693 }
+frame S_HPLAY_FDTH10 { cmp = "FDTH| 9|T| 4|*                                |@next"; dehackednum = 2694 }
+frame S_HPLAY_FDTH11 { cmp = "FDTH|10|T| 5|*                                |@next"; dehackednum = 2695 }
+frame S_HPLAY_FDTH12 { cmp = "FDTH|11|T| 4|*                                |@next"; dehackednum = 2696 }
+frame S_HPLAY_FDTH13 { cmp = "FDTH|12|T| 5|*                                |@next"; dehackednum = 2697 }
+frame S_HPLAY_FDTH14 { cmp = "FDTH|13|T| 4|*                                |@next"; dehackednum = 2698 }
+frame S_HPLAY_FDTH15 { cmp = "FDTH|14|T| 5|Fall                             |@next"; dehackednum = 2699 }
+frame S_HPLAY_FDTH16 { cmp = "FDTH|15|T| 4|*                                |@next"; dehackednum = 2700 }
+frame S_HPLAY_FDTH17 { cmp = "FDTH|16|T| 5|*                                |@next"; dehackednum = 2701 }
+frame S_HPLAY_FDTH18 { cmp = "FDTH|17|T| 4|*                                |@next"; dehackednum = 2702 }
 
 // body stays in this state until player has respawned
 frame S_HPLAY_FDTH19 

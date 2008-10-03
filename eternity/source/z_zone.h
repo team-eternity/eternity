@@ -54,6 +54,7 @@
 #include <strings.h>
 #endif
 #include <assert.h>
+#include <errno.h>
 
 #include "psnprntf.h"
 
@@ -100,6 +101,7 @@ void   Z_DumpHistory(char *);
 
 void *Z_SysMalloc(size_t size);
 void *Z_SysCalloc(size_t n1, size_t n2);
+void *Z_SysRealloc(void *ptr, size_t size);
 void  Z_SysFree(void *p);
 
 #define Z_Free(a)          (Z_Free)     (a,      __FILE__,__LINE__)
