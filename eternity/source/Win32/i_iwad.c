@@ -132,7 +132,7 @@ static char *steam_install_subdirs[] =
    "steamapps\\common\\final doom\\base",
    "steamapps\\common\\ultimate doom\\base",
    "steamapps\\common\\hexen\\base",
-   "steamapps\\common\\heretic shadow of the serpent riders"
+   "steamapps\\common\\heretic shadow of the serpent riders\\base"
 };
 
 #define num_steam_install_subdirs (sizeof(steam_install_subdirs) / sizeof(char *))
