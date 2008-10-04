@@ -23,10 +23,6 @@
 //
 // Parameterized and Heretic-inspired action functions
 //
-// DISCLAIMER: None of this code was taken from Heretic. Any
-// resemblence is purely coincidental or is the result of work from
-// a common base source.
-//
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"

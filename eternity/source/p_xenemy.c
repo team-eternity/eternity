@@ -23,10 +23,6 @@
 //
 // Hexen- and ZDoom-inspired action functions
 //
-// DISCLAIMER: None of this code was taken from Hexen. Any
-// resemblence is purely coincidental or is the result of work from
-// a common base source.
-//
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
@@ -236,6 +232,183 @@ void A_PlaySoundEx(mobj_t *mo)
       volume = 127;
 
    S_StartSfxInfo(mo, sfx, volume, attn, loop, channel);
+}
+
+//==============================================================================
+// 
+// Hexen Codepointers
+//
+
+//
+// A_SetInvulnerable
+//
+// Not strictly necessary for EE but a convenience routine nonetheless.
+//
+void A_SetInvulnerable(mobj_t *actor)
+{
+   actor->flags |= MF2_INVULNERABLE;
+}
+
+void A_UnSetInvulnerable(mobj_t *actor)
+{
+   actor->flags &= ~MF2_INVULNERABLE;
+}
+
+//
+// A_SetReflective
+//
+// As above.
+//
+void A_SetReflective(mobj_t *actor)
+{
+   actor->flags |= MF2_REFLECTIVE;
+
+   // note: no special case for Centaurs; use SetFlags pointer instead
+}
+
+void A_UnSetReflective(mobj_t *actor)
+{
+   actor->flags &= ~MF2_REFLECTIVE;
+}
+
+//
+// P_UpdateMorphedMonster
+//
+boolean P_UpdateMorphedMonster(mobj_t *actor, int tics)
+{
+   // HEXEN_TODO
+   return false;
+}
+
+//
+// A_PigLook
+//
+void A_PigLook(mobj_t *actor)
+{
+   if(P_UpdateMorphedMonster(actor, 10))
+      return;
+
+   A_Look(actor);
+}
+
+//
+// A_PigChase
+//
+void A_PigChase(mobj_t *actor)
+{
+   if(P_UpdateMorphedMonster(actor, 3))
+      return;
+
+   A_Chase(actor);
+}
+
+//
+// A_PigAttack
+//
+void A_PigAttack(mobj_t *actor)
+{
+   if(P_UpdateMorphedMonster(actor, 18))
+      return;
+
+   if(!actor->target)
+      return;
+
+   /*
+   HEXEN_TODO
+   if(P_CheckMeleeRange(actor))
+   {
+      P_DamageMobj(actor->target, actor, actor, 2+(P_Random()&1));
+      S_StartSound(actor, SFX_PIG_ATTACK);
+   }
+   */
+}
+
+//
+// A_PigPain
+//
+void A_PigPain(mobj_t *actor)
+{
+   A_Pain(actor);
+
+   if(actor->z <= actor->floorz)
+      actor->momz = 7 * FRACUNIT / 2;
+}
+
+// HEXEN_TODO: Dark Servant Maulotaur variation
+
+//
+// A_HexenExplode
+//
+// Hexen explosion effects pointer
+//
+void A_HexenExplode(mobj_t *actor)
+{
+   // HEXEN_TODO
+   // Note: requires new blast radius semantics
+}
+
+// HEXEN_TODO: A_FreeTargMobj needed?
+
+//
+// A_SerpentUnHide
+//
+void A_SerpentUnHide(mobj_t *actor)
+{
+   actor->flags2    &= ~MF2_DONTDRAW;
+   actor->floorclip  = 24 * FRACUNIT;
+}
+
+//
+// A_SerpentHide
+//
+void A_SerpentHide(mobj_t *actor)
+{
+   actor->flags2    |= MF2_DONTDRAW;
+   actor->floorclip  = 0;
+}
+
+//
+// A_SerpentChase
+//
+void A_SerpentChase(mobj_t *actor)
+{
+   // HEXEN_TODO
+}
+
+//
+// A_LowerFloorClip
+//
+// Note: was A_SerpentRaiseHump in Hexen
+// Parameters:
+// * args[0] == amount to lower floorclip in eighths of a unit
+//
+void A_LowerFloorClip(mobj_t *actor)
+{
+   fixed_t lowerAmt = actor->state->args[0] * FRACUNIT / 8;
+
+   actor->floorclip -= lowerAmt;
+}
+
+//
+// A_RaiseFloorClip
+//
+// Note: was A_SerpentLowerHump in Hexen
+// Parameters:
+// * args[0] == amount to raise floorclip in eighths of a unit
+//
+void A_RaiseFloorClip(mobj_t *actor)
+{
+   fixed_t raiseAmt = actor->state->args[0] * FRACUNIT / 8;
+
+   actor->floorclip += raiseAmt;
+}
+
+//
+// A_SerpentHumpDecide
+//
+void A_SerpentHumpDecide(mobj_t *actor)
+{
+   // HEXEN_TODO
 }
 
 // EOF
