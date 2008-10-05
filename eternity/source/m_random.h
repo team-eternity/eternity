@@ -137,15 +137,15 @@ typedef enum {
   pr_fogcount,
   pr_fogfloat,
   pr_floathealth, // floatbobbing seed
-  pr_clericteleport, // TODO: reuse these
-  pr_clr2attack, 
-  pr_clr2choose,
-  pr_dwarfatk,
+  pr_subtics,     // A_SubTics
+  pr_centauratk,  // A_CentaurAttack
+  pr_dropequip,   // A_DropEquipment
+  pr_bishop1,
   pr_steamspawn, // steam spawn codepointer 
   pr_mincharge,  // minotaur inflictor special
   pr_reflect,    // missile reflection
   pr_tglitz,     // teleglitter z coord
-  pr_clericevade,
+  pr_bishop2,
   pr_custombullets, // parameterized pointers
   pr_custommisfire,
   pr_custompunch,
@@ -193,6 +193,27 @@ typedef enum {
   pr_quake,      // T_QuakeThinker
   pr_quakedmg,   // quake damage
   pr_skullpop,   // Heretic skull flying
+  pr_centaurdef, // A_CentaurDefend
+  pr_bishop3,
+  pr_spawnblur,  // A_SpawnBlur
+  pr_chaosbite,  // A_DemonAttack1
+  pr_wraithm,    // A_WraithMelee
+  pr_wraithd, 
+  pr_wraithfx2,
+  pr_wraithfx3,
+  pr_wraithfx4a,
+  pr_wraithfx4b,
+  pr_wraithfx4c,
+  pr_ettin,
+  pr_affritrock, // A_AffritSpawnRock
+  pr_smbounce,   // A_SmBounce
+  pr_affrits,    // A_AffritSplotch
+  pr_icelook,    // A_IceGuyLook
+  pr_icelook2,
+  pr_icechase,   // A_IceGuyChase
+  pr_icechase2, 
+  pr_dragonfx,   // A_DragonFX2
+  pr_dropmace,   // A_DropMace
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
