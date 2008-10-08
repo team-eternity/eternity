@@ -1218,6 +1218,10 @@ void MN_SaveGame(void)
    
    // haleyjd: keep track of valid saveslots
    savegamepresent[save_slot] = true;
+
+   // haleyjd 10/08/08: GIF_SAVESOUND flag
+   if(GameModeInfo->flags & GIF_SAVESOUND)
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
 }
 
 // create the savegame console commands
@@ -1433,6 +1437,10 @@ CONSOLE_COMMAND(mn_load, 0)
    G_LoadGame(name, slot, false);
    
    MN_ClearMenus();
+
+   // haleyjd 10/08/08: GIF_SAVESOUND flag
+   if(GameModeInfo->flags & GIF_SAVESOUND)
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
 }
 
 // haleyjd 02/23/02: Quick Load -- restored from MBF and converted

@@ -504,7 +504,6 @@ struct mobj_s
 // External declarations (formerly in p_local.h) -- killough 5/2/98
 
 #define VIEWHEIGHT      (41*FRACUNIT)
-#define PLAYERRADIUS    (16*FRACUNIT)
 
 // sf: gravity >>> defaultgravity
 #define DEFAULTGRAVITY  FRACUNIT

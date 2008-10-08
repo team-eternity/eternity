@@ -57,7 +57,6 @@ extern int automlook;
 extern int invert_mouse;
 extern int screenshot_pcx;
 extern int screenshot_gamma;
-extern boolean sendpause;
 extern int keylookspeed;
 
 ////////////////////////////////////////////////////////////////////////

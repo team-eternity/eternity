@@ -1213,6 +1213,10 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       if(target->flags3 & MF3_NOFRIENDDMG && source && 
          source->flags & MF_FRIEND)
          return;
+
+      // haleyjd 07/30/04: generalized
+      if(target->flags & MF_SKULLFLY && target->flags3 & MF3_INVULNCHARGE)
+         return;
    }
 
    // a dormant thing being destroyed gets restored to normal first
@@ -1223,12 +1227,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    }
 
    if(target->flags & MF_SKULLFLY)
-   {
-      // haleyjd 07/30/04: generalized
-      if(target->flags3 & MF3_INVULNCHARGE)
-         return;
       target->momx = target->momy = target->momz = 0;
-   }
 
    player = target->player;
    if(player && gameskill == sk_baby)

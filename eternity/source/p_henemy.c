@@ -2064,15 +2064,16 @@ void A_PlayerSkull(mobj_t *actor)
    // fiddle with player properties
    if(head->player)
    {
-      head->player->mo          = head; // set player's thing to head
-      head->player->pitch       = 0;    // don't look up or down
-      head->player->damagecount = 32;   // see red for a while
+      head->player->mo          = head;  // set player's thing to head
+      head->player->pitch       = 0;     // don't look up or down
+      head->player->damagecount = 32;    // see red for a while
+      head->player->attacker    = actor; // look at old body
    }
    
    // send head flying
    head->momx = 512 * P_SubRandom(pr_skullpop);
    head->momy = 512 * P_SubRandom(pr_skullpop);
-   head->momz =  64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
+   head->momz = 64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
 }
 
 

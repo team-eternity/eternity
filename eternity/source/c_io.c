@@ -344,6 +344,8 @@ boolean C_Responder(event_t *ev)
       // set console
       action_console_toggle = false;
       current_target = (current_target == c_height ? 0 : c_height);
+      if(gamestate == GS_LEVEL)
+         sendpause = true;
       return true;
    }
 

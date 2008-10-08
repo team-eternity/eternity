@@ -300,6 +300,16 @@ void P_DeathThink(player_t *player)
    }
    else if(player->damagecount)
       player->damagecount--;
+
+   // haleyjd 10/05/08:
+   // handle looking slightly up when the player is attached to a non-player
+   // object and is dead. This was done for the decapitation deaths in Heretic
+   // and Hexen.
+   if(!E_IsPlayerClassThingType(player->mo->type))
+   {
+      if(player->mo->z <= player->mo->floorz && player->pitch > -ANGLE_1 * 15)
+         player->pitch -= 2*ANGLE_1/3;
+   }
       
    if(player->cmd.buttons & BT_USE)
       player->playerstate = PST_REBORN;

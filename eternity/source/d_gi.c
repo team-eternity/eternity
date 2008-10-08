@@ -230,7 +230,7 @@ static int hticMenuSounds[MN_SND_NUMSOUNDS] =
    sfx_hdorcls, // deactivate
    sfx_hswitch, // key up/down
    sfx_hdorcls, // command
-   sfx_hdorcls, // previous menu
+   sfx_hswitch, // previous menu
    sfx_keyup,   // key left/right
 };
 
@@ -745,7 +745,7 @@ static gamemodeinfo_t giHereticSW =
 {
    hereticsw,        // id
    Game_Heretic,     // type
-   GIF_SHAREWARE | GIF_MNBIGFONT, // flags
+   GIF_SHAREWARE | GIF_MNBIGFONT | GIF_SAVESOUND, // flags
    VNAME_HTIC_SW,    // versionName
 
    BANNER_HTIC_SW,   // startupBanner
@@ -833,7 +833,7 @@ static gamemodeinfo_t giHereticReg =
 {
    hereticreg,       // id
    Game_Heretic,     // type   
-   GIF_MNBIGFONT,    // flags
+   GIF_MNBIGFONT | GIF_SAVESOUND,    // flags
    VNAME_HTIC_REG,   // versionName
 
    BANNER_HTIC_REG,  // startupBanner

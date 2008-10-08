@@ -4362,6 +4362,36 @@ CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
    P_RadiusAttack(tm->linetarget, plyr->mo, 70, MOD_UNKNOWN);
 }
 
+void P_SpawnPlayer(mapthing_t* mthing);
+
+static void P_ResurrectPlayer(void)
+{
+   player_t *p = &players[consoleplayer];
+
+   if(p->health <= 0 || p->mo->health <= 0)
+   {
+      mapthing_t mthing;
+      mobj_t *oldmo = p->mo;
+
+      memset(&mthing, 0, sizeof(mapthing_t));
+
+      mthing.x     = (short)(p->mo->x >> FRACBITS);
+      mthing.y     = (short)(p->mo->y >> FRACBITS);
+      mthing.angle = (short)(p->mo->angle / ANGLE_1);
+      mthing.type  = (p - players) + 1;
+
+      p->health = 100;
+      P_SpawnPlayer(&mthing);
+      oldmo->player = NULL;
+      P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);
+   }
+}
+
+CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
+{
+   P_ResurrectPlayer();
+}
+
 void PE_AddCommands(void)
 {
    C_AddCommand(summon);
@@ -4372,6 +4402,7 @@ void PE_AddCommands(void)
    C_AddCommand(mdkbomb);
    C_AddCommand(banish);
    C_AddCommand(vilehit);
+   C_AddCommand(resurrect);
 }
 
 //----------------------------------------------------------------------------

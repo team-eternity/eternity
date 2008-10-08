@@ -76,6 +76,28 @@ int weapon_recoil;      // weapon recoil
 // differently if called by mobj_t's or by player weapons.
 boolean action_from_pspr = false;
 
+static long pspr_tempargs[NUMSTATEARGS];
+
+static void P_SetupPlayerGunAction(player_t *player, pspdef_t *psp)
+{
+   mobj_t *mo = player->mo;
+
+   // haleyjd 10/06/08: temporarily copy psprite args to player state args
+   memcpy(pspr_tempargs, mo->state->args, NUMSTATEARGS * sizeof(long));
+   memcpy(mo->state->args, psp->state->args, NUMSTATEARGS * sizeof(long));
+
+   action_from_pspr = true;
+}
+
+static void P_FinishPlayerGunAction(player_t *player)
+{
+   mobj_t *mo = player->mo;
+
+   // restore args
+   memcpy(mo->state->args, pspr_tempargs, NUMSTATEARGS * sizeof(long));
+
+   action_from_pspr = false;
+}
 
 //
 // P_SetPsprite
@@ -124,9 +146,12 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       // Modified handling.
       if(state->action)
       {
-         action_from_pspr = true;
+         P_SetupPlayerGunAction(player, psp);
+
          state->action(player->mo);
-         action_from_pspr = false;
+         
+         P_FinishPlayerGunAction(player);
+         
          if(!psp->state)
             break;
       }
@@ -965,7 +990,7 @@ static fixed_t bulletslope;
 //
 // P_BulletSlope
 //
-// Sets a slope so a near miss is at aproximately
+// Sets a slope so a near miss is at approximately
 // the height of the intended target
 //
 void P_BulletSlope(mobj_t *mo)

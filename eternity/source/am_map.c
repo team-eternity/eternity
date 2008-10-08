@@ -130,6 +130,9 @@ typedef struct
    fixed_t slp, islp;
 } islope_t;
 
+// haleyjd: moved here, as this is the only place it is used
+#define PLAYERRADIUS    (16*FRACUNIT)
+
 //
 // The vector graphics for the automap.
 //  A line drawing of the player pointing right,
