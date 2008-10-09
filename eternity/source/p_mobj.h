@@ -305,6 +305,8 @@ enum
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
 };
 
+#define NUMMOBJCOUNTERS 8
+
 // ammo + weapon in a dropped backpack 
 
 typedef struct
@@ -447,11 +449,8 @@ struct mobj_s
 
    // New Fields for Eternity -- haleyjd
 
-   // specials -- these are used by some codepointers to maintain state
-   // Note: these are now known as "counters" on the user-side of things.
-   short special1;
-   short special2;
-   short special3;
+   // counters - these were known as special1/2/3 in Heretic and Hexen
+   int counters[NUMMOBJCOUNTERS];
 
    int effects;       // particle effect flag field
    int translucency;  // zdoom-style translucency level

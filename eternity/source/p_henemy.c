@@ -501,10 +501,10 @@ void A_WizardAtk3(mobj_t *actor)
 
 void A_Sor1Chase(mobj_t *actor)
 {
-   if(actor->special1)
+   if(actor->counters[0])
    {
       // decrement fast walk timer
-      actor->special1--;
+      actor->counters[0]--;
       actor->tics -= 3;
       // don't make tics less than 1
       if(actor->tics < 1)
@@ -516,7 +516,7 @@ void A_Sor1Chase(mobj_t *actor)
 
 void A_Sor1Pain(mobj_t *actor)
 {
-   actor->special1 = 20; // Number of steps to walk fast
+   actor->counters[0] = 20; // Number of steps to walk fast
    A_Pain(actor);
 }
 
@@ -563,13 +563,13 @@ void A_Srcr1Attack(mobj_t *actor)
       // desperation -- attack twice
       if(actor->health * 3 < actor->info->spawnhealth)
       {
-         if(actor->special2)
+         if(actor->counters[1])
          {
-            actor->special2 = 0;
+            actor->counters[1] = 0;
          }
          else
          { 
-            actor->special2 = 1;
+            actor->counters[1] = 1;
             P_SetMobjState(actor, E_SafeState(S_SRCR1_ATK4));
          }
       }
@@ -859,7 +859,7 @@ void A_GenWizard(mobj_t *actor)
 
 void A_Sor2DthInit(mobj_t *actor)
 {
-   actor->special1 = 7; // Animation loop counter
+   actor->counters[0] = 7; // Animation loop counter
 
    // kill monsters early
    // kill only friends or enemies depending on friendliness
@@ -868,7 +868,7 @@ void A_Sor2DthInit(mobj_t *actor)
 
 void A_Sor2DthLoop(mobj_t *actor)
 {
-   if(--actor->special1)
+   if(--actor->counters[0])
    { 
       // Need to loop
       P_SetMobjState(actor, E_SafeState(S_SOR2_DIE4));
@@ -1035,10 +1035,8 @@ void A_RemovePod(mobj_t *actor)
 
    if(actor->tracer)
    {
-      if(actor->tracer->special1 > 0)
-      {
-         actor->tracer->special1--;
-      }
+      if(actor->tracer->counters[0] > 0)
+         actor->tracer->counters[0]--;
    }
 }
 
@@ -1058,7 +1056,7 @@ void A_MakePod(mobj_t *actor)
    fixed_t x, y, z;
 
    // limit pods per generator to avoid crowding, slow-down
-   if(actor->special1 >= MAXGENPODS)
+   if(actor->counters[0] >= MAXGENPODS)
       return;
 
    x = actor->x;
@@ -1083,7 +1081,7 @@ void A_MakePod(mobj_t *actor)
    // use tracer field to link pod to generator, and increment
    // generator's pod count
    P_SetTarget(&mo->tracer, actor);
-   actor->special1++;
+   actor->counters[0]++;
 }
 
 //
@@ -1113,17 +1111,9 @@ void A_SetTics(mobj_t *actor)
    // if counter toggle is set, args[0] is a counter number
    if(actor->state->args[2])
    {
-      switch(baseamt)
-      {
-      case 0:
-         baseamt = actor->special1; break;
-      case 1:
-         baseamt = actor->special2; break;
-      case 2:
-         baseamt = actor->special3; break;
-      default: // invalid
-         return;
-      }
+      if(baseamt < 0 || baseamt >= NUMMOBJCOUNTERS)
+         return; // invalid
+      baseamt = actor->counters[baseamt];
    }
 
    actor->tics = baseamt + (rnd ? P_Random(pr_settics) % rnd : 0);
@@ -1473,13 +1463,13 @@ void A_MinotaurDecide(mobj_t *actor)
       actor->momy = FixedMul(13*FRACUNIT, finesine[angle]);
       
       // set a timer
-      actor->special1 = TICRATE >> 1;
+      actor->counters[0] = TICRATE >> 1;
    }
    else if(P_CheckFloorFire(dist, target))
    { 
       // floor fire
       P_SetMobjState(actor, E_SafeState(S_MNTR_ATK3_1));
-      actor->special2 = 0;
+      actor->counters[1] = 0;
    }
    else
       A_FaceTarget(actor);
@@ -1500,12 +1490,12 @@ void A_MinotaurCharge(mobj_t *actor)
    if(puffType == -1)
       puffType = E_SafeThingType(MT_PHOENIXPUFF);
 
-   if(actor->special1) // test charge timer
+   if(actor->counters[0]) // test charge timer
    {
       // spawn some smoke and count down the charge
       puff = P_SpawnMobj(actor->x, actor->y, actor->z, puffType);
       puff->momz = FRACUNIT << 1;
-      --actor->special1;
+      --actor->counters[0];
    }
    else
    {
@@ -1591,10 +1581,10 @@ void A_MinotaurAtk3(mobj_t *actor)
       S_StartSound(mo, sfx_minat1);
    }
 
-   if(P_Random(pr_minatk3) < 192 && actor->special2 == 0)
+   if(P_Random(pr_minatk3) < 192 && actor->counters[1] == 0)
    {
       P_SetMobjState(actor, E_SafeState(S_MNTR_ATK3_4));
-      actor->special2 = 1;
+      actor->counters[1] = 1;
    }
 }
 
@@ -1682,7 +1672,7 @@ void A_LichFire(mobj_t *actor)
       fire->damage = 0;
 
       // set a counter for growth
-      fire->special1 = (i + 1) << 1;
+      fire->counters[0] = (i + 1) << 1;
       
       P_CheckMissileSpawn(fire);
    }
@@ -1710,9 +1700,9 @@ void A_LichWhirlwind(mobj_t *actor)
    // use mo->tracer to track target
    P_SetTarget(&mo->tracer, target);
    
-   mo->special1 = 20*TICRATE; // duration
-   mo->special2 = 50;         // timer for active sound
-   mo->special3 = 60;         // explocount limit
+   mo->counters[0] = 20*TICRATE; // duration
+   mo->counters[1] = 50;         // timer for active sound
+   mo->counters[2] = 60;         // explocount limit
 
    S_StartSound(actor, sfx_hedat3);
 }
@@ -1783,7 +1773,7 @@ void A_LichAttack(mobj_t *actor)
 void A_WhirlwindSeek(mobj_t *actor)
 {
    // decrement duration counter
-   if((actor->special1 -= 3) < 0)
+   if((actor->counters[0] -= 3) < 0)
    {
       actor->momx = actor->momy = actor->momz = 0;
       P_SetMobjState(actor, actor->info->deathstate);
@@ -1792,9 +1782,9 @@ void A_WhirlwindSeek(mobj_t *actor)
    }
    
    // decrement active sound counter
-   if((actor->special2 -= 3) < 0)
+   if((actor->counters[1] -= 3) < 0)
    {
-      actor->special2 = 58 + (P_Random(pr_whirlseek) & 31);
+      actor->counters[1] = 58 + (P_Random(pr_whirlseek) & 31);
       S_StartSound(actor, sfx_hedat3);
    }
    
@@ -1870,7 +1860,7 @@ void A_LichFireGrow(mobj_t *actor)
 
    actor->z += 9*FRACUNIT;
    
-   if(--actor->special1 == 0) // count down growth timer
+   if(--actor->counters[0] == 0) // count down growth timer
    {
       actor->damage = actor->info->damage; // restore normal damage
       P_SetMobjState(actor, frameNum);  // don't grow any more
@@ -1976,7 +1966,7 @@ void A_ImpXDeath1(mobj_t *actor)
 
    // set special1 so the crashstate goes to the
    // extreme crash death
-   actor->special1 = 666;
+   actor->counters[0] = 666;
 }
 
 //
@@ -2030,7 +2020,7 @@ void A_ImpExplode(mobj_t *actor)
    mo->momz = 9*FRACUNIT;
 
    // extreme death crash
-   if(actor->special1 == 666)
+   if(actor->counters[0] == 666)
       P_SetMobjState(actor, stateNum);
 }
 
@@ -2455,20 +2445,16 @@ void A_KillChildren(mobj_t *actor)
 void A_AproxDistance(mobj_t *actor)
 {
    mobj_t *target;
-   short *dest = NULL;
-   fixed_t dist;
+   int *dest = NULL;
+   fixed_t distance;
+   int cnum;
 
-   switch(actor->state->args[0])
-   {
-   case 0:
-      dest = &actor->special1; break;
-   case 1:
-      dest = &actor->special2; break;
-   case 2:
-      dest = &actor->special3; break;
-   default:
+   cnum = actor->state->args[0];
+
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
       return; // invalid
-   }
+
+   dest = &(actor->counters[cnum]);
 
    if(!(target = actor->target))
    {
@@ -2477,13 +2463,13 @@ void A_AproxDistance(mobj_t *actor)
    }
    
 #ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor));
+   distance = P_AproxDistance(actor->x - getTargetX(actor), 
+                              actor->y - getTargetY(actor));
 #else   
-   dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
+   distance = P_AproxDistance(actor->x - target->x, actor->y - target->y);
 #endif
 
-   *dest = dist >> FRACBITS;
+   *dest = distance >> FRACBITS;
 }
 
 E_Keyword_t kwds_A_ShowMessage[] =
@@ -2550,14 +2536,14 @@ void A_AmbientThinker(mobj_t *mo)
       loop = true;
       break;
    case E_AMBIENCE_PERIODIC:
-      if(mo->special1-- >= 0) // not time yet?
+      if(mo->counters[0]-- >= 0) // not time yet?
          return;
-      mo->special1 = amb->period; // reset sound period
+      mo->counters[0] = amb->period; // reset sound period
       break;
    case E_AMBIENCE_RANDOM:
-      if(mo->special1-- >= 0) // not time yet?
+      if(mo->counters[0]-- >= 0) // not time yet?
          return;
-      mo->special1 = M_RangeRandom(amb->minperiod, amb->maxperiod);
+      mo->counters[0] = M_RangeRandom(amb->minperiod, amb->maxperiod);
       break;
    default: // ???
       return;
@@ -2732,20 +2718,10 @@ void A_HealthJump(mobj_t *mo)
       // turn it into the corresponding immediate operation
       checktype -= CPC_NUMIMMEDIATE;
 
-      switch(checkhealth)
-      {
-      case 0:
-         checkhealth = mo->special1;
-         break;
-      case 1:
-         checkhealth = mo->special2;
-         break;
-      case 2:
-         checkhealth = mo->special3;
-         break;
-      default:
+      if(checkhealth < 0 || checkhealth >= NUMMOBJCOUNTERS)
          return; // invalid counter number
-      }
+
+      checkhealth = mo->counters[checkhealth];
    }
 
    switch(checktype)
@@ -2809,24 +2785,17 @@ void A_CounterJump(mobj_t *mo)
    int checktype  = mo->state->args[1];
    short value    = (short)(mo->state->args[2]);
    int cnum       = mo->state->args[3];
-   short *counter;
+   int *counter;
    
    // validate state number
    statenum = E_StateNumForDEHNum(statenum);
    if(statenum == NUMSTATES)
       return;
 
-   switch(cnum)
-   {
-   case 0:
-      counter = &mo->special1; break;
-   case 1:
-      counter = &mo->special2; break;
-   case 2:
-      counter = &mo->special3; break;
-   default:
-      return;
-   }
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   counter = &(mo->counters[cnum]);
 
    // 08/02/04:
    // support getting check value from a counter
@@ -2838,20 +2807,10 @@ void A_CounterJump(mobj_t *mo)
       // turn it into the corresponding immediate operation
       checktype -= CPC_NUMIMMEDIATE;
 
-      switch(value)
-      {
-      case 0:
-         value = mo->special1;
-         break;
-      case 1:
-         value = mo->special2;
-         break;
-      case 2:
-         value = mo->special3;
-         break;
-      default:
+      if(value < 0 || value >= NUMMOBJCOUNTERS)
          return; // invalid counter number
-      }
+
+      value = mo->counters[value];
    }
 
    switch(checktype)
@@ -2895,20 +2854,13 @@ void A_CounterSwitch(mobj_t *mo)
    int cnum = mo->state->args[0];
    int startstate = mo->state->args[1];
    int numstates  = mo->state->args[2] - 1;
-   short *counter;
+   int *counter;
 
    // get counter
-   switch(cnum)
-   {
-   case 0:
-      counter = &mo->special1; break;
-   case 1:
-      counter = &mo->special2; break;
-   case 2:
-      counter = &mo->special3; break;
-   default:
-      return;
-   }
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   counter = &(mo->counters[cnum]);
 
    // verify startstate
    startstate = E_StateNumForDEHNum(startstate);
@@ -2962,19 +2914,12 @@ void A_SetCounter(mobj_t *mo)
    int cnum = mo->state->args[0];
    short value = (short)(mo->state->args[1]);
    int specialop = mo->state->args[2];
-   short *counter;
+   int *counter;
 
-   switch(cnum)
-   {
-   case 0:
-      counter = &mo->special1; break;
-   case 1:
-      counter = &mo->special2; break;
-   case 2:
-      counter = &mo->special3; break;
-   default:
-      return;
-   }
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   counter = &(mo->counters[cnum]);
 
    switch(specialop)
    {
@@ -3054,43 +2999,22 @@ void A_CounterOp(mobj_t *mo)
    int c_dest_num  = mo->state->args[2];   
    int specialop   = mo->state->args[3];
    
-   short *c_oper1, *c_oper2, *c_dest;
+   int *c_oper1, *c_oper2, *c_dest;
 
-   switch(c_oper1_num)
-   {
-   case 0:
-      c_oper1 = &mo->special1; break;
-   case 1:
-      c_oper1 = &mo->special2; break;
-   case 2:
-      c_oper1 = &mo->special3; break;
-   default:
-      return;
-   }
+   if(c_oper1_num < 0 || c_oper1_num >= NUMMOBJCOUNTERS)
+      return; // invalid
 
-   switch(c_oper2_num)
-   {
-   case 0:
-      c_oper2 = &mo->special1; break;
-   case 1:
-      c_oper2 = &mo->special2; break;
-   case 2:
-      c_oper2 = &mo->special3; break;
-   default:
-      return;
-   }
+   c_oper1 = &(mo->counters[c_oper1_num]);
 
-   switch(c_dest_num)
-   {
-   case 0:
-      c_dest = &mo->special1; break;
-   case 1:
-      c_dest = &mo->special2; break;
-   case 2:
-      c_dest = &mo->special3; break;
-   default:
-      return;
-   }
+   if(c_oper2_num < 0 || c_oper2_num >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   c_oper2 = &(mo->counters[c_oper2_num]);
+
+   if(c_dest_num < 0 || c_dest_num >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   c_dest = &(mo->counters[c_dest_num]);
 
    switch(specialop)
    {
@@ -3150,31 +3074,17 @@ void A_CopyCounter(mobj_t *mo)
 {
    int cnum1 = mo->state->args[0];
    int cnum2 = mo->state->args[1];
-   short *src, *dest;
+   int *src, *dest;
 
-   switch(cnum1)
-   {
-   case 0:
-      src = &mo->special1; break;
-   case 1:
-      src = &mo->special2; break;
-   case 2:
-      src = &mo->special3; break;
-   default:
-      return;
-   }
+   if(cnum1 < 0 || cnum1 >= NUMMOBJCOUNTERS)
+      return; // invalid
 
-   switch(cnum2)
-   {
-   case 0:
-      dest = &mo->special1; break;
-   case 1:
-      dest = &mo->special2; break;
-   case 2:
-      dest = &mo->special3; break;
-   default:
-      return;
-   }
+   src = &(mo->counters[cnum1]);
+
+   if(cnum2 < 0 || cnum2 >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   dest = &(mo->counters[cnum2]);
 
    *dest = *src;
 }

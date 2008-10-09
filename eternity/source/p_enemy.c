@@ -3193,7 +3193,7 @@ E_Keyword_t kwds_A_Scratch[] =
 //
 void A_Scratch(mobj_t *mo)
 {
-   int damage;
+   int damage, cnum;
 
    // haleyjd: demystified
    if(!mo->target)
@@ -3210,20 +3210,13 @@ void A_Scratch(mobj_t *mo)
       damage = mo->damage;
       break;
    case 2: // use a counter
-      switch(mo->state->args[1])
-      {
-      case 0:
-         damage = mo->special1;
-         break;
-      case 1:
-         damage = mo->special2;
-         break;
-      case 2:
-         damage = mo->special3;
-         break;
-      default:
+      cnum = mo->state->args[1];
+
+      if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
          return; // invalid
-      }
+
+      damage = mo->counters[cnum];
+      break;
    }
 
    A_FaceTarget(mo);
@@ -3596,10 +3589,10 @@ void A_FogSpawn(mobj_t *actor)
    mobj_t *mo = NULL;
    angle_t delta;
 
-   if(actor->special1-- > 0)
+   if(actor->counters[0]-- > 0)
      return;
 
-   actor->special1 = FOGFREQUENCY; // reset frequency
+   actor->counters[0] = FOGFREQUENCY; // reset frequency
 
    switch(P_Random(pr_cloudpick)%3)
    {
@@ -3624,7 +3617,7 @@ void A_FogSpawn(mobj_t *actor)
       mo->args[0] = (P_Random(pr_fogangle)%FOGSPEED)+1; // haleyjd: narrowed range
       mo->args[3] = (P_Random(pr_fogcount)&0x7f)+1;
       mo->args[4] = 1;
-      mo->special2 = P_Random(pr_fogfloat)&63;
+      mo->counters[1] = P_Random(pr_fogfloat)&63;
    }
 }
 
@@ -3649,9 +3642,9 @@ void A_FogMove(mobj_t *actor)
 
    if((actor->args[3]%4) == 0)
    {
-      weaveindex = actor->special2;
+      weaveindex = actor->counters[1];
       actor->z += FloatBobOffsets[weaveindex]>>1;
-      actor->special2 = (weaveindex+1)&63;
+      actor->counters[1] = (weaveindex+1)&63;
    }
    angle = actor->angle>>ANGLETOFINESHIFT;
    actor->momx = FixedMul(speed, finecosine[angle]);
@@ -3662,9 +3655,9 @@ void A_FogMove(mobj_t *actor)
 //=====================================================
 // Leader Cleric Boss
 //
-// special1 --------- counter to teleport time
-// special2 --------- count-down to end of defense
-// special3 --------- boolean, currently defending
+// counters[0] --------- counter to teleport time
+// counters[1] --------- count-down to end of defense
+// counters[2] --------- boolean, currently defending
 // 
 // args[0]  --------- time to run to evade missile
 //
@@ -3681,10 +3674,10 @@ void A_Cleric2Chase(mobj_t *actor)
 
    // decrement teleport and defend countdown timers
    // while walking
-   if(actor->special1 && !actor->args[0]) // not when strafing
-     actor->special1--;
-   if(actor->special2)
-     actor->special2--;
+   if(actor->counters[0] && !actor->args[0]) // not when strafing
+     actor->counters[0]--;
+   if(actor->counters[1])
+     actor->counters[1]--;
 
    // sparkle if invulnerable
    if(actor->flags2&MF2_INVULNERABLE)
@@ -3741,7 +3734,7 @@ void A_Cleric2Chase(mobj_t *actor)
 boolean P_ClericDefense(mobj_t *actor)
 {
    /*
-   if(actor->special2 == 0 && actor->special3 == 0 &&
+   if(actor->counters[1] == 0 && actor->counters[2] == 0 &&
       (P_Random(pr_clr2attack) < 128))
    {
       if(!actor->health)
@@ -3768,11 +3761,11 @@ boolean P_ClericDefense(mobj_t *actor)
          default:   // just incase
             break; 
       }
-      actor->special2 = (P_Random(pr_clr2attack)&0x7f)+32;
-      actor->special3 = 1;
+      actor->counters[1] = (P_Random(pr_clr2attack)&0x7f)+32;
+      actor->counters[2] = 1;
       return true;  // defended this turn
    }
-   else if(actor->special2 == 0 && actor->special3 == 1)
+   else if(actor->counters[1] == 0 && actor->counters[2] == 1)
    {
       actor->flags3 &= ~MF3_GHOST;
       actor->flags &= ~MF_SHADOW;
@@ -3781,8 +3774,8 @@ boolean P_ClericDefense(mobj_t *actor)
         actor->flags2 &= ~MF2_INVULNERABLE;
         actor->flags2 &= ~MF2_REFLECTIVE;
       }
-      actor->special2 = (P_Random(pr_clr2attack)&0x7f)+1; // reset count
-      actor->special3 = 0;                                // not defending
+      actor->counters[1] = (P_Random(pr_clr2attack)&0x7f)+1; // reset count
+      actor->counters[2] = 0;                                // not defending
    }
    */
    return false; // no defense this turn
@@ -3819,10 +3812,10 @@ void A_Cleric2Decide(mobj_t *actor)
    if(actor->flags2&MF2_INVULNERABLE)
      P_ClericSparkle(actor);
 
-   if(actor->special1 == 0 && !P_CollectionIsEmpty(&braintargets))
+   if(actor->counters[0] == 0 && !P_CollectionIsEmpty(&braintargets))
    {
       P_ClericTeleport(actor);
-      actor->special1 = (P_Random(pr_clericteleport)&0x7f)+1;
+      actor->counters[0] = (P_Random(pr_clericteleport)&0x7f)+1;
    }
    // fall through to attack state
    */
@@ -3890,8 +3883,8 @@ boolean P_CheckAlterEgo(mobjtype_t type)
 
 void A_DwarfAlterEgoChase(mobj_t *actor)
 {
-   if(actor->special1)
-    actor->special1--;
+   if(actor->counters[0])
+    actor->counters[0]--;
    else
    {
      A_Die(actor);

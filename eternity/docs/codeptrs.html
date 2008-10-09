@@ -3,103 +3,291 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="GENERATOR" content="UltraEdit-32">
-<title>Eternity Engine Definitive Codepointer Reference</title>
+<title>Eternity Engine Codepointer Reference</title>
 </head>
 
 <body bgcolor="#CECECE">
 
 <hr>
-<b>The Eternity Engine Definitive Code Pointer Reference -- 10/22/06</b>
+<b>Eternity Engine Codepointer Reference -- 10/08/08</b>
 <hr>
 
 <p>
 <a href="../etcengine.html">Return to the Eternity Engine Page</a>
 
 <p>
-This is a reference that should be of value to DeHackEd patch authors.
-It exposes full information on all the code pointers available in
-the Eternity Engine, including both those from DOOM and those added in
-later ports. This reference attempts to expose all issues related to
-their use, as well as common pitfalls that lead to nasty crashes.
+This reference exposes full information on all "codepointers", also known
+as action routines, available in the Eternity Engine, including both those 
+from DOOM and those added in later ports.
 
 <ul>
 <li><a name="contents"><b>Table of Contents</b></a>
     <ul>
     <li><a href="#changes">Changes</a>
-    <li><a href="#pitfall">General Pitfall and Note on the Type Information</a>
     <li><a href="#damage">Note on Damage Formulae</a>
     <li><a href="#pgp">Player Gun Frame Code Pointers</a>
         <ul>
-        <li><a href="#wmp">Weapon Maintenance Pointers</a><br>
-            Light0, Light1, Light2, WeaponReady, Lower, Raise, ReFire, CheckReload, GunFlash
-        <li><a href="#pap">Player Attack Pointers</a><br>
-            Punch, FirePistol, FireShotgun, FireShotgun2, FireCGun, FireMissile, Saw,
-            FirePlasma, FireBFG
-        <li><a href="#mwp">Miscellaneous Weapon Pointers</a><br>
-            BFGsound, OpenShotgun2, LoadShotgun2, CloseShotgun2
-        <li><a href="#ppap">Parameterized Player Attack Pointers</a><br>
-            FireCustomBullets, FirePlayerMissile, CustomPlayerMelee, PlayerThunk
-        <li><a href="#pfrscript">Weapon Frame Scripting Pointers</a><br>
-            WeaponCtrJump, WeaponCtrSwitch, WeaponSetCtr, WeaponCtrOp, WeaponCopyCtr
+        <li><a href="#wmp">Weapon Maintenance Pointers</a>
+            <ul>
+            <li> <a href="#">Light0</a>
+            <li> <a href="#">Light1</a> 
+            <li> <a href="#">Light2</a>
+            <li> <a href="#">WeaponReady</a>
+            <li> <a href="#">Lower</a>
+            <li> <a href="#">Raise</a>
+            <li> <a href="#">ReFire</a>
+            <li> <a href="#">CheckReload</a>
+            <li> <a href="#">GunFlash</a>
+            </ul>
+        <li><a href="#pap">Player Attack Pointers</a>
+            <ul>
+            <li> <a href="#">Punch</a>
+            <li> <a href="#">FirePistol</a>
+            <li> <a href="#">FireShotgun</a>
+            <li> <a href="#">FireShotgun2</a>
+            <li> <a href="#">FireCGun</a>
+            <li> <a href="#">FireMissile</a>
+            <li> <a href="#">Saw</a>
+            <li> <a href="#">FirePlasma</a>
+            <li> <a href="#">FireBFG</a>
+            </ul>
+        <li><a href="#mwp">Miscellaneous Weapon Pointers</a>
+            <ul>
+            <li> <a href="#">BFGsound</a>
+            <li> <a href="#">OpenShotgun2</a>
+            <li> <a href="#">LoadShotgun2</a>
+            <li> <a href="#">CloseShotgun2</a>
+            </ul>
+        <li><a href="#ppap">Parameterized Player Attack Pointers</a>
+            <ul>
+            <li> <a href="#">FireCustomBullets</a>
+            <li> <a href="#">FirePlayerMissile</a>
+            <li> <a href="#">CustomPlayerMelee</a>
+            <li> <a href="#">PlayerThunk</a>
+            </ul>
+        <li><a href="#pfrscript">Weapon Frame Scripting Pointers</a>
+            <ul>
+            <li> <a href="#">WeaponCtrJump</a>
+            <li> <a href="#">WeaponCtrSwitch</a>
+            <li> <a href="#">WeaponSetCtr</a>
+            <li> <a href="#">WeaponCtrOp</a>
+            <li> <a href="#">WeaponCopyCtr</a>
+            </ul>
         </ul>
     <li><a href="#genptr">General Codepointers</a>
         <ul>
-        <li><a href="#genmisc">Miscellaneous Pointers</a><br>
-            BFGSpray, BFG11KHit, BouncingBFG, BFGBurst, Mushroom, Nailbomb, SetFlags,
-            UnSetFlags, Fall, Die, BrainScream, BrainExplode, SpawnFly, Fire, Spawn,
-            Turn, LineEffect, Stop, SteamSpawn
-        <li><a href="#hticmisc">Heretic Miscellaneous Pointers</a><br>
-            SpawnGlitter, AccelGlitter, SpawnAbove, MummySoul, BlueSpark, GenWizard,
-            Sor2DthInit, Sor2DthLoop, PodPain, RemovePod, MakePod, DripBlood
-        <li><a href="#miscsnd">Miscellaneous / Sound Pointers</a><br>
-            StartFire, FireCrackle, SkelWhoosh, FatRaise, SpawnSound
+        <li><a href="#genmisc">Miscellaneous Pointers</a>
+            <ul>
+            <li> <a href="#">BFGSpray</a>
+            <li> <a href="#">BFG11KHit</a>
+            <li> <a href="#">BouncingBFG</a>
+            <li> <a href="#">BFGBurst</a>
+            <li> <a href="#">Mushroom</a>
+            <li> <a href="#">Nailbomb</a>
+            <li> <a href="#">SetFlags</a>
+            <li> <a href="#">UnSetFlags</a>
+            <li> <a href="#">Fall</a>
+            <li> <a href="#">Die</a>
+            <li> <a href="#">BrainScream</a>
+            <li> <a href="#">BrainExplode</a>
+            <li> <a href="#">SpawnFly</a>
+            <li> <a href="#">Fire</a>
+            <li> <a href="#">Spawn</a>
+            <li> <a href="#">Turn</a>
+            <li> <a href="#">LineEffect</a>
+            <li> <a href="#">Stop</a>
+            <li> <a href="#">SteamSpawn</a>
+            </ul>
+        <li><a href="#hticmisc">Heretic Miscellaneous Pointers</a>
+            <ul>
+            <li> <a href="#">SpawnGlitter</a>
+            <li> <a href="#">AccelGlitter</a>
+            <li> <a href="#">SpawnAbove</a>
+            <li> <a href="#">MummySoul</a>
+            <li> <a href="#">BlueSpark</a>
+            <li> <a href="#">GenWizard</a>
+            <li> <a href="#">Sor2DthInit</a>
+            <li> <a href="#">Sor2DthLoop</a>
+            <li> <a href="#">PodPain</a>
+            <li> <a href="#">RemovePod</a>
+            <li> <a href="#">MakePod</a>
+            <li> <a href="#">DripBlood</a>
+            </ul>
+        <li><a href="#miscsnd">Miscellaneous / Sound Pointers</a>
+            <ul>
+            <li> <a href="#">StartFire</a>
+            <li> <a href="#">FireCrackle</a>
+            <li> <a href="#">SkelWhoosh</a>
+            <li> <a href="#">FatRaise</a>
+            <li> <a href="#">SpawnSound</a>
+            </ul>
         <li><a href="#hticsnd">Heretic Misc / Sound Pointers</a><br>
-            Sor1Pain
+            <ul>
+            <li> <a href="#">Sor1Pain</a>
+            </ul>
         <li><a href="#objsound">Object Sound Pointers</a><br>
-            PlaySound, Pain, Scream, XScream, PlayerScream, BrainPain, BrainAwake,
-            VileStart, AmbientThinker
+            <ul>
+            <li> <a href="#">PlaySound</a>
+            <li> <a href="#">Pain</a>
+            <li> <a href="#">Scream</a>
+            <li> <a href="#">XScream</a>
+            <li> <a href="#">PlayerScream</a>
+            <li> <a href="#">BrainPain</a>
+            <li> <a href="#">BrainAwake</a>
+            <li> <a href="#">VileStart</a>
+            <li> <a href="#">AmbientThinker</a>
+            </ul>
         <li><a href="#aiptr">AI Pointers</a><br>
-            Look, Chase, VileChase, FaceTarget, KeepChasing, RandomWalk
+            <ul>
+            <li> <a href="#">Look</a>
+            <li> <a href="#">Chase</a>
+            <li> <a href="#">VileChase</a>
+            <li> <a href="#">FaceTarget</a>
+            <li> <a href="#">KeepChasing</a>
+            <li> <a href="#">RandomWalk</a>
+            </ul>
         <li><a href="#hticai">Heretic AI Pointers</a><br>
-            Sor1Chase
+            <ul>
+            <li> <a href="#">Sor1Chase</a>
+            </ul>
         <li><a href="#aiwalk">AI Pointers with Walking Sounds</a><br>
-            Metal, BabyMetal, Hoof
+            <ul>
+            <li> <a href="#">Metal</a>
+            <li> <a href="#">BabyMetal</a>
+            <li> <a href="#">Hoof</a>
+            </ul>
         <li><a href="#blast">Blast Radius Attack Pointers</a><br>
-            Explode, Detonate
+            <ul>
+            <li> <a href="#">Explode</a>
+            <li> <a href="#">Detonate</a>
+            </ul>
         <li><a href="#hticblast">Heretic Blast Radius Attack Pointers</a><br>
-            HticExplode
+            <ul>
+            <li> <a href="#">HticExplode</a>
+            </ul>
         <li><a href="#monatk">Monster Attack Pointers</a><br>
-            PosAttack, SPosAttack, VileTarget, VileAttack, SkelFist, SkelMissile, FatAttack1,
-            FatAttack2, FatAttack3, CPosAttack, TroopAttack, SargAttack, HeadAttack, BruisAttack,
-            SkullAttack, BspiAttack, CyberAttack, PainAttack, BrainSpit 
+            <ul>
+            <li> <a href="#">PosAttack</a>
+            <li> <a href="#">SPosAttack</a>
+            <li> <a href="#">VileTarget</a>
+            <li> <a href="#">VileAttack</a>
+            <li> <a href="#">SkelFist</a>
+            <li> <a href="#">SkelMissile</a>
+            <li> <a href="#">FatAttack1</a>
+            <li> <a href="#">FatAttack2</a>
+            <li> <a href="#">FatAttack3</a>
+            <li> <a href="#">CPosAttack</a>
+            <li> <a href="#">TroopAttack</a>
+            <li> <a href="#">SargAttack</a>
+            <li> <a href="#">HeadAttack</a>
+            <li> <a href="#">BruisAttack</a>
+            <li> <a href="#">SkullAttack</a>
+            <li> <a href="#">BspiAttack</a>
+            <li> <a href="#">CyberAttack</a>
+            <li> <a href="#">PainAttack</a>
+            <li> <a href="#">BrainSpit</a>
+            </ul>
         <li><a href="#monparam">Parameterized Monster Attacks</a><br>
-            BetaSkullAttack, Scratch, MissileAttack, MissileSpread, BulletAttack, ThingSummon
+            <ul>
+            <li> <a href="#">BetaSkullAttack</a>
+            <li> <a href="#">Scratch</a>
+            <li> <a href="#">MissileAttack</a>
+            <li> <a href="#">MissileSpread</a>
+            <li> <a href="#">BulletAttack</a>
+            <li> <a href="#">ThingSummon</a>
+            </ul>
         <li><a href="#hticmon">Heretic Monster Attack Pointers</a><br>
-            MummyAttack, MummyAttack2, ClinkAttack, WizardAtk1, WizardAtk2, WizardAtk3,
-            Srcr2Decide, Srcr2Attack, KnightAttack, BeastAttack, BeastPuff, SnakeAttack,
-            SnakeAttack2, Srcr1Attack, VolcanoBlast, VolcBallImpact, MinotaurAtk1, 
-            MinotaurDecide, MinotaurAtk2, MinotaurAtk3, MinotaurCharge, MntrFloorFire,
-            LichFire, LichWhirlwind, LichAttack, LichIceImpact, LichFireGrow, ImpChargeAtk,
-            ImpMeleeAtk, ImpMissileAtk
+            <ul>
+            <li> <a href="#">MummyAttack</a>
+            <li> <a href="#">MummyAttack2</a>
+            <li> <a href="#">ClinkAttack</a>
+            <li> <a href="#">WizardAtk1</a>
+            <li> <a href="#">WizardAtk2</a>
+            <li> <a href="#">WizardAtk3</a>
+            <li> <a href="#">Srcr2Decide</a>
+            <li> <a href="#">Srcr2Attack</a>
+            <li> <a href="#">KnightAttack</a>
+            <li> <a href="#">BeastAttack</a>
+            <li> <a href="#">BeastPuff</a>
+            <li> <a href="#">SnakeAttack</a>
+            <li> <a href="#">SnakeAttack2</a>
+            <li> <a href="#">Srcr1Attack</a>
+            <li> <a href="#">VolcanoBlast</a>
+            <li> <a href="#">VolcBallImpact</a>
+            <li> <a href="#">MinotaurAtk1</a>
+            <li> <a href="#">MinotaurDecide</a>
+            <li> <a href="#">MinotaurAtk2</a>
+            <li> <a href="#">MinotaurAtk3</a>
+            <li> <a href="#">MinotaurCharge</a>
+            <li> <a href="#">MntrFloorFire</a>
+            <li> <a href="#">LichFire</a>
+            <li> <a href="#">LichWhirlwind</a>
+            <li> <a href="#">LichAttack</a>
+            <li> <a href="#">LichIceImpact</a>
+            <li> <a href="#">LichFireGrow</a>
+            <li> <a href="#">ImpChargeAtk</a>
+            <li> <a href="#">ImpMeleeAtk</a>
+            <li> <a href="#">ImpMissileAtk</a>
+            </ul>
         <li><a href="#home">Homing Missile Maintenance Pointers</a><br>
-            Tracer, GenTracer
+            <ul>
+            <li> <a href="#">Tracer</a>
+            <li> <a href="#">GenTracer</a>
+            </ul>
         <li><a href="#htichome">Heretic Homing Missile Maintenance Pointers</a><br>
-            HticTracer, WhirlwindSeek
+            <ul>
+            <li> <a href="#">HticTracer</a>
+            <li> <a href="#">WhirlwindSeek</a>
+            </ul>
         <li><a href="#los">Line of Sight Checking Pointers</a><br>
-            CPosRefire, SpidRefire
+            <ul>
+            <li> <a href="#">CPosRefire</a>
+            <li> <a href="#">SpidRefire</a>
+            </ul>
         <li><a href="#specmon">Special Monster Death Effects</a><br>
-            PainDie, KeenDie, BossDeath, BrainDie, KillChildren
+            <ul>
+            <li> <a href="#">PainDie</a>
+            <li> <a href="#">KeenDie</a>
+            <li> <a href="#">BossDeath</a>
+            <li> <a href="#">BrainDie</a>
+            <li> <a href="#">KillChildren</a>
+            </ul>
         <li><a href="#hticspecmon">Heretic Special Monster Death Effects</a><br>
-            HticBossDeath, SorcererRise, ImpDeath, ImpXDeath1, ImpXDeath2, ImpExplode
+            <ul>
+            <li> <a href="#">HticBossDeath</a>
+            <li> <a href="#">SorcererRise</a>
+            <li> <a href="#">ImpDeath</a>
+            <li> <a href="#">ImpXDeath1</a>
+            <li> <a href="#">ImpXDeath2</a>
+            <li> <a href="#">ImpExplode</a>
+            </ul>
         <li><a href="#nukespecs">Massacre Cheat Specials</a><br>
-            PainNukeSpec, SorcNukeSpec
+            <ul>
+            <li> <a href="#">PainNukeSpec</a>
+            <li> <a href="#">SorcNukeSpec</a>
+            </ul>
         <li><a href="#frscript">Frame Scripting Pointers</a><br>
-            RandomJump, HealthJump, TargetJump, CounterJump, CounterSwitch, SetCounter, CounterOp, CopyCounter,
-            SetTics, AproxDistance
+            <ul>
+            <li> <a href="#">RandomJump</a>
+            <li> <a href="#">HealthJump</a>
+            <li> <a href="#">TargetJump</a>
+            <li> <a href="#">CounterJump</a>
+            <li> <a href="#">CounterSwitch</a>
+            <li> <a href="#">SetCounter</a>
+            <li> <a href="#">CounterOp</a>
+            <li> <a href="#">CopyCounter</a>
+            <li> <a href="#">SetTics</a>
+            <li> <a href="#">AproxDistance</a>
+            </ul>
         <li><a href="#small">Small Scripting System</a><br>
-            StartScript, PlayerStartScript
+            <ul>
+            <li> <a href="#">StartScript</a>
+            <li> <a href="#">PlayerStartScript</a>
+            </ul>
         <li><a href="#edf">EDF-Related Pointers</a><br>
-            ShowMessage
+            <ul>
+            <li> <a href="#">ShowMessage</a>
+            </ul>
         </ul>
     </ul>
 </ul>
@@ -109,38 +297,10 @@ their use, as well as common pitfalls that lead to nasty crashes.
 <hr width="60%" align="left"></a>
 
 <ul>
+<li>10/08/08: Revamped almost the entire document.
 <li>10/22/06: Added AmbientThinker and SteamSpawn.
 </ul>
 
-<a href="#contents">Return to Table of Contents</a>
-
-<p>
-<a name="pitfall"><hr width="60%" align="left">
-<b>General Pitfall and Note on the Type Information:</b>
-<hr width="60%" align="left"></a>
-
-<p>
-General code pointers can be used in any frame that is not a player gun frame.
-Player Gun Frame code pointers cannot be used anywhere except in player gun
-frames. If a code pointer is used in the wrong type of frame, the internal 
-function call stack will be corrupted, a "Segmentation Violation" error will 
-most likely occur, and Cyberdemons will come to get you in the night. This
-isn't an Eternity bug or limitation. This problem would eventually manifest
-itself even in the original doom.exe, as a sudden, unexplained Venetian Blinds
-crash. There is additionally no way to type-check codepointers at run-time,
-so the user must accept this responsibility.
-
-<p>
-Note that as of Eternity Engine v3.31 public beta 3, there is a special
-codepointer called PlayerThunk, usable via EDF, which allows player gun frames
-to call a select set of monster codepointers by proxy.
-
-<p>
-Parameterized pointers take parameters via fields on the frame in which they
-are used. The code pointer parameter information will indicate what fields are
-used as parameters, and what parameter values mean.
-
-<p>
 <a href="#contents">Return to Table of Contents</a>
 
 <p>

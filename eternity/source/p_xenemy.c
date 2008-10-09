@@ -617,7 +617,7 @@ void A_BishopAttack(mobj_t *actor)
                    ((P_Random(pr_bishop1) & 7) + 1) * 4, MOD_HIT);
    }
    else
-      actor->special1 = (P_Random(pr_bishop1) & 3) + 5;
+      actor->counters[0] = (P_Random(pr_bishop1) & 3) + 5;
 }
 
 void A_BishopAttack2(mobj_t *actor)
@@ -636,8 +636,8 @@ void A_BishopMissileWeave(mobj_t *actor)
    int weaveXY, weaveZ;
    int angle;
    
-   weaveXY = actor->special2 >> 16;
-   weaveZ  = actor->special2 & 0xFFFF;
+   weaveXY = actor->counters[1] >> 16;
+   weaveZ  = actor->counters[1] & 0xFFFF;
    angle   = (actor->angle + ANG90) >> ANGLETOFINESHIFT;
    
    newX     = actor->x - FixedMul(finecosine[angle], FloatBobOffsets[weaveXY] << 1);
@@ -652,7 +652,7 @@ void A_BishopMissileWeave(mobj_t *actor)
    weaveZ    = (weaveZ + 2) & 63;   
    actor->z += FloatBobOffsets[weaveZ];
    
-   actor->special2 = weaveZ + (weaveXY << 16);
+   actor->counters[1] = weaveZ + (weaveXY << 16);
 }
 
 //
@@ -660,7 +660,7 @@ void A_BishopMissileWeave(mobj_t *actor)
 //
 void A_BishopDoBlur(mobj_t *actor)
 {
-   actor->special1 = (P_Random(pr_bishop2) & 3) + 3; // Random number of blurs
+   actor->counters[0] = (P_Random(pr_bishop2) & 3) + 3; // Random number of blurs
 
    if(P_Random(pr_bishop2) < 120)
       P_ThrustMobj(actor, actor->angle + ANG90, 11*FRACUNIT); // Thrust left
@@ -689,7 +689,7 @@ void A_SpawnBlur(mobj_t *actor)
    int atkState  = E_SafeState(actor->state->args[1]);
    int thingType = E_SafeThingType(actor->state->args[2]);
    
-   if(!--actor->special1)
+   if(!--actor->counters[0])
    {
       actor->momx = 0;
       actor->momy = 0;
@@ -709,9 +709,9 @@ void A_SpawnBlur(mobj_t *actor)
 //
 void A_BishopChase(mobj_t *actor)
 {
-   actor->z -= FloatBobOffsets[actor->special2] >> 1;
-   actor->special2 = (actor->special2 + 4) & 63;
-   actor->z += FloatBobOffsets[actor->special2] >> 1;
+   actor->z -= FloatBobOffsets[actor->counters[1]] >> 1;
+   actor->counters[1] = (actor->counters[1] + 4) & 63;
+   actor->z += FloatBobOffsets[actor->counters[1]] >> 1;
 }
 
 //
@@ -793,24 +793,14 @@ void A_PainCounterBEQ(mobj_t *actor)
 {
    int stateNum   = E_SafeState(actor->state->args[0]);
    int counterNum = (int)(actor->state->args[1]);
-   short *counter;
+   int *counter;
 
    A_Pain(actor);
 
-   switch(counterNum)
-   {
-   case 0:
-      counter = &actor->special1;
-      break;
-   case 1:
-      counter = &actor->special2;
-      break;
-   case 2:
-      counter = &actor->special3;
-      break;
-   default:
-      return;
-   }
+   if(counterNum < 0 || counterNum >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   counter = &(actor->counters[counterNum]);
 
    if(!*counter)
       P_SetMobjState(actor, stateNum);
@@ -874,7 +864,7 @@ static boolean P_RaiseMobj(mobj_t *actor)
 void A_WraithInit(mobj_t *actor)
 {
    actor->z += 48 * FRACUNIT;
-   actor->special1 = 0;         // index into floatbob
+   actor->counters[0] = 0;         // index into floatbob
 }
 
 //
@@ -1047,9 +1037,9 @@ void A_WraithLook(mobj_t *actor)
 //
 void A_WraithChase(mobj_t *actor)
 {
-   int weaveindex = actor->special1;
+   int weaveindex = actor->counters[0];
    actor->z += FloatBobOffsets[weaveindex];
-   actor->special1 = (weaveindex + 2) & 63;
+   actor->counters[0] = (weaveindex + 2) & 63;
 
    A_Chase(actor);
    A_WraithFX4(actor);
@@ -1121,11 +1111,11 @@ void A_AffritSpawnRock(mobj_t *actor)
    mo->momy = (P_Random(pr_affritrock) - 128) << 10;
    mo->momz = (P_Random(pr_affritrock) << 10);
    
-   mo->special1 = 2; // Number bounces
+   mo->counters[0] = 2; // Number bounces
    
    // Initialize fire demon
-   actor->special2  = 0;
-   actor->flags    &= ~MF_JUSTATTACKED;
+   actor->counters[1]  = 0;
+   actor->flags       &= ~MF_JUSTATTACKED;
 }
 
 //

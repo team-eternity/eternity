@@ -196,7 +196,7 @@ void P_ExplodeMissile(mobj_t *mo)
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
    {
-      if(++mo->special2 < mo->special3)
+      if(++mo->counters[1] < mo->counters[2])
          return;
    }
 
@@ -2957,9 +2957,9 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
       case TF_TYPE:         value = mo->type;         break;
       case TF_TICS:         value = mo->tics;         break;
       case TF_HEALTH:       value = mo->health;       break;
-      case TF_SPECIAL1:     value = mo->special1;     break;
-      case TF_SPECIAL2:     value = mo->special2;     break;
-      case TF_SPECIAL3:     value = mo->special3;     break;
+      case TF_SPECIAL1:     value = mo->counters[0];  break;
+      case TF_SPECIAL2:     value = mo->counters[1];  break;
+      case TF_SPECIAL3:     value = mo->counters[2];  break;
       case TF_EFFECTS:      value = mo->effects;      break;
       case TF_TRANSLUCENCY: value = mo->translucency; break;
       default:              value = 0;                break;
@@ -2993,12 +2993,12 @@ static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
    {
       switch(field)
       {
-      case TF_TICS:   mo->tics = value;   break;
-      case TF_HEALTH: mo->health = value; break;
-      case TF_SPECIAL1: mo->special1 = (short)value; break;
-      case TF_SPECIAL2: mo->special2 = (short)value; break;
-      case TF_SPECIAL3: mo->special3 = (short)value; break;
-      case TF_EFFECTS:  mo->effects = value; break;
+      case TF_TICS:         mo->tics         = value; break;
+      case TF_HEALTH:       mo->health       = value; break;
+      case TF_SPECIAL1:     mo->counters[0]  = value; break;
+      case TF_SPECIAL2:     mo->counters[1]  = value; break;
+      case TF_SPECIAL3:     mo->counters[2]  = value; break;
+      case TF_EFFECTS:      mo->effects      = value; break;
       case TF_TRANSLUCENCY: mo->translucency = value; break;
       }
    }
