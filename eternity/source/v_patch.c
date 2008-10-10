@@ -476,12 +476,8 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       x2 = SCREENWIDTH - tmpx;
    }
 
-   // haleyjd 10/10/08: FIXME: beyond ugly. A more general solution should be
-   // doable by extending the x1/x2 lookup arrays by SCREENWIDTH in either
-   // direction. This would allow them to handle coordinate overflow properly.
-   //x1 = (x1 * scale) >> FRACBITS;
-   //x2 = (x2 * scale + (scale - FRACUNIT)) >> FRACBITS;
-
+   // haleyjd 10/10/08: must handle coordinates outside the screen buffer
+   // very carefully here.
    if(x1 >= 0)
       x1 = buffer->x1lookup[x1];
    else
@@ -500,9 +496,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    if(x2 < x1)
       return;
 
-   // haleyjd 10/10/08: not when negative? causes texturecolumn overflow
-   //if(x1 >= 0)
-      startfrac = (x1 * iscale) & 0xffff;
+   startfrac = (x1 * iscale) & 0xffff;
 
    if(pi->flipped)
    {
