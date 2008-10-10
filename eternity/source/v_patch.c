@@ -440,9 +440,11 @@ static void V_DrawMaskedColumn(column_t *column)
 //
 void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 {
-   int        x1, x2, tx;
+   int        x1, x2, tx, w;
    fixed_t    scale, iscale, xiscale, startfrac = 0;
    patch_t    *patch = pi->patch;
+
+   w = SHORT(patch->width); // haleyjd: holy crap, stop calling this 800 times
    
    patchcol.buffer = buffer;
 
@@ -474,8 +476,21 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       x2 = SCREENWIDTH - tmpx;
    }
 
-   x1 = buffer->x1lookup[x1];
-   x2 = buffer->x2lookup[x2];
+   // haleyjd 10/10/08: FIXME: beyond ugly. A more general solution should be
+   // doable by extending the x1/x2 lookup arrays by SCREENWIDTH in either
+   // direction. This would allow them to handle coordinate overflow properly.
+   //x1 = (x1 * scale) >> FRACBITS;
+   //x2 = (x2 * scale + (scale - FRACUNIT)) >> FRACBITS;
+
+   if(x1 >= 0)
+      x1 = buffer->x1lookup[x1];
+   else
+      x1 = -buffer->x1lookup[-x1 - 1];
+
+   if(x2 < 320)
+      x2 = buffer->x2lookup[x2];
+   else
+      x2 = buffer->x2lookup[320];
 
    patchcol.x  = x1 < 0 ? 0 : x1;
    x2 = x2 >= buffer->width ? buffer->width - 1 : x2;
@@ -485,7 +500,9 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    if(x2 < x1)
       return;
 
-   startfrac = (x1 * iscale) & 0xffff;
+   // haleyjd 10/10/08: not when negative? causes texturecolumn overflow
+   //if(x1 >= 0)
+      startfrac = (x1 * iscale) & 0xffff;
 
    if(pi->flipped)
    {
@@ -533,7 +550,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          texturecolumn = startfrac >> FRACBITS;
          
 #ifdef RANGECHECK
-         if(texturecolumn < 0 || texturecolumn >= SHORT(patch->width))
+         if(texturecolumn < 0 || texturecolumn >= w)
             I_Error("V_DrawPatchInt: bad texturecolumn %i", texturecolumn);
 #endif
          

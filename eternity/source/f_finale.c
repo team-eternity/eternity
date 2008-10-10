@@ -591,7 +591,7 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
       {
          register const byte *source = (byte *) column + 3;
          register byte *dest = desttop + vbscreen.x1lookup[column->topdelta] * 
-                               vbscreen.pitch;
+                              vbscreen.pitch;
          register int count = vbscreen.x2lookup[column->topdelta + column->length - 1] -
                               vbscreen.x1lookup[column->topdelta] + 1;
          register fixed_t frac;
@@ -650,6 +650,7 @@ void F_BunnyScroll(void)
       scrolled = 0;
               
    // ANYRES
+   /*
    for(x = 0; x < video.width; ++x)
    {
       int scaledx = (x * video.ystep) >> FRACBITS;
@@ -658,6 +659,17 @@ void F_BunnyScroll(void)
          F_DrawPatchCol(x, p1, scaledx + scrolled);
       else
          F_DrawPatchCol(x, p2, scaledx + scrolled - 320);           
+   }
+   */
+   if(scrolled > 0)
+      V_DrawPatchGeneral(320 - scrolled, 0, &vbscreen, p2, false);
+   if(scrolled < 320)
+      V_DrawPatchGeneral(-scrolled, 0, &vbscreen, p1, false);
+   {
+      char num[33];
+      memset(num, 0, 33);
+      M_Itoa(scrolled, num, 10);
+      V_WriteText(num, 0, 0);
    }
       
    if(finalecount < 1130)
