@@ -468,13 +468,15 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    // off the left side
    if(x2 < 0)
       return;
- 
+
+   /*
    if(pi->flipped)
    {
       int tmpx = x1;
       x1 = SCREENWIDTH - x2;
       x2 = SCREENWIDTH - tmpx;
    }
+   */
 
    // haleyjd 10/10/08: must handle coordinates outside the screen buffer
    // very carefully here.
