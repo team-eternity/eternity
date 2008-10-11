@@ -456,55 +456,55 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    patchcol.step = buffer->iyscale;
 
    // calculate edges of the shape
-   tx = pi->x - SHORT(patch->leftoffset);
-   x1 = tx;
-
-   // off the right side
-   if(x1 > SCREENWIDTH)
-      return;
-
-   x2 = tx + SHORT(patch->width) - 1;
-
-   // off the left side
-   if(x2 < 0)
-      return;
-
    if(pi->flipped)
    {
-      int tmpx = x1;
-      x1 = SCREENWIDTH - x2;
-      x2 = SCREENWIDTH - tmpx;
+      // If flipped, then offsets are flipped as well which means they 
+      // technically offset from the right side of the patch (x2)
+      x2 = pi->x + SHORT(patch->leftoffset);
+      x1 = tx = x2 - (SHORT(patch->width) - 1);
    }
+   else
+   {
+      x1 = tx = pi->x - SHORT(patch->leftoffset);
+      x2 = tx + SHORT(patch->width) - 1;
+   }
+
+   // off the left side
+   if(x2 < 0 || x1 >= SCREENWIDTH)
+      return;
+
+   xiscale = pi->flipped ? -iscale : iscale;
 
    // haleyjd 10/10/08: must handle coordinates outside the screen buffer
    // very carefully here.
    if(x1 >= 0)
       x1 = buffer->x1lookup[x1];
    else
-      x1 = -buffer->x1lookup[-x1 - 1];
+      x1 = -buffer->x2lookup[-x1 - 1];
 
    if(x2 < 320)
       x2 = buffer->x2lookup[x2];
    else
-      x2 = buffer->x2lookup[320];
+      x2 = buffer->x2lookup[319];
 
    patchcol.x  = x1 < 0 ? 0 : x1;
-   x2 = x2 >= buffer->width ? buffer->width - 1 : x2;
    
    // SoM: Any time clipping occurs on screen coords, the resulting clipped 
    // coords should be checked to make sure we are still on screen.
    if(x2 < x1)
       return;
 
-   startfrac = (x1 * iscale) & 0xffff;
-
+   // SoM: Ok, so the startfrac should ALWAYS be the last post of the patch 
+   // when the patch is flipped minus the fractional "bump" from the screen
+   // scaling, then the patchcol.x to x1 clipping will place the frac in the
+   // correct column no matter what. This also ensures that scaling will be
+   // uniform. If the resolution is 320x2X0 the iscale will be 65537 which
+   // will create some fractional bump down, so it is safe to assume this 
+   // puts us just below patch->width << 16
    if(pi->flipped)
-   {
-      xiscale   = -iscale;
-      startfrac += (x2 - x1) * iscale;
-   }
+      startfrac = (SHORT(patch->width) << 16) - ((x1 * iscale) & 0xffff) - 1;
    else
-      xiscale   = iscale;
+      startfrac = (x1 * iscale) & 0xffff;
 
    if(patchcol.x > x1)
       startfrac += xiscale * (patchcol.x - x1);
