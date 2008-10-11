@@ -461,15 +461,15 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       // If flipped, then offsets are flipped as well which means they 
       // technically offset from the right side of the patch (x2)
       x2 = pi->x + SHORT(patch->leftoffset);
-      x1 = tx = x2 - (SHORT(patch->width) - 1);
+      x1 = tx = x2 - (w - 1);
    }
    else
    {
       x1 = tx = pi->x - SHORT(patch->leftoffset);
-      x2 = tx + SHORT(patch->width) - 1;
+      x2 = tx + w - 1;
    }
 
-   // off the left side
+   // off the left or right side?
    if(x2 < 0 || x1 >= SCREENWIDTH)
       return;
 
@@ -502,7 +502,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    // will create some fractional bump down, so it is safe to assume this 
    // puts us just below patch->width << 16
    if(pi->flipped)
-      startfrac = (SHORT(patch->width) << 16) - ((x1 * iscale) & 0xffff) - 1;
+      startfrac = (w << 16) - ((x1 * iscale) & 0xffff) - 1;
    else
       startfrac = (x1 * iscale) & 0xffff;
 
