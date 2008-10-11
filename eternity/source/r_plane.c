@@ -871,13 +871,13 @@ static void do_draw_plane(visplane_t *pl)
       plane.pviewcos = pl->viewcos;
       plane.height   = pl->heightf - pl->viewzf;
       
-      //light = (pl->lightlevel >> LIGHTSEGSHIFT) + extralight;
+      //light = (pl->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
       // SoM 10/19/02: deep water colormap fix
       if(fixedcolormap)
          light = (255  >> LIGHTSEGSHIFT);
       else
-         light = (pl->lightlevel >> LIGHTSEGSHIFT) + extralight;
+         light = (pl->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
       if(light >= LIGHTLEVELS)
          light = LIGHTLEVELS-1;

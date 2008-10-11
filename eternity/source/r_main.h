@@ -66,8 +66,15 @@ extern boolean  showpsprites;
 
 // Lighting constants.
 
-#define LIGHTLEVELS       16
-#define LIGHTSEGSHIFT      4
+// SoM: I am really speechless at this... just... why?
+// Lighting in doom was originally clamped off to just 16 brightness levels
+// for sector lighting. Simply changing the constants is enough to change this
+// it seriously bottles the mind why this wasn't done in doom from the start 
+// except for maybe memory usage savings. 
+#define LIGHTLEVELS       32
+#define LIGHTSEGSHIFT      3
+#define LIGHTBRIGHT        2
+
 #define LIGHTSCALESHIFT   12
 #define LIGHTZSHIFT       20
 

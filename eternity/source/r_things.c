@@ -827,7 +827,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
    // Well, now it will be done.
    sec->validcount = validcount;
    
-   lightnum = (lightlevel >> LIGHTSEGSHIFT)+extralight;
+   lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
    
    if(lightnum < 0)
       spritelights = scalelight[0];
@@ -1023,7 +1023,7 @@ void R_DrawPlayerSprites(void)
    R_FakeFlat(viewplayer->mo->subsector->sector, &tmpsec,
               &floorlightlevel, &ceilinglightlevel, 0);
    lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1)) 
-                 + extralight;
+                 + (extralight * LIGHTBRIGHT);
 
    if(lightnum < 0)
       spritelights = scalelight[0];
@@ -1735,7 +1735,7 @@ void R_ProjectParticle(particle_t *particle)
                     &ceilinglightlevel, false);
 
          lightnum = (floorlightlevel + ceilinglightlevel) / 2;
-         lightnum = (lightnum >> LIGHTSEGSHIFT) + extralight;
+         lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
          
          if(lightnum >= LIGHTLEVELS || fixedcolormap)
             ltable = scalelight[LIGHTLEVELS - 1];      

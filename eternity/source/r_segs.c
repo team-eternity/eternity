@@ -87,15 +87,15 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    
    // killough 4/13/98: get correct lightlevel for 2s normal textures
    lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, NULL, NULL, false)
-               ->lightlevel >> LIGHTSEGSHIFT)+extralight;
+               ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
    {  
       if(ds->curline->linedef->v1->y == ds->curline->linedef->v2->y)
-         --lightnum;
+         lightnum -= LIGHTBRIGHT;
       else if(ds->curline->linedef->v1->x == ds->curline->linedef->v2->x)
-         ++lightnum;
+         lightnum += LIGHTBRIGHT;
    }
 
    // SoM 10/19/02: deep water colormap fix
@@ -599,15 +599,15 @@ void R_StoreWallRange(const int start, const int stop)
    // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
    if(!fixedcolormap)
    {
-      int lightnum = (segclip.frontsec->lightlevel >> LIGHTSEGSHIFT) + extralight;
+      int lightnum = (segclip.frontsec->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
       // haleyjd 08/11/00: optionally skip this to evenly apply colormap
       if(LevelInfo.unevenLight)
       {  
          if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
-            --lightnum;
+            lightnum -= LIGHTBRIGHT;
          else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
-            ++lightnum;
+            lightnum += LIGHTBRIGHT;
       }
 
       if(lightnum < 0)
