@@ -308,9 +308,13 @@ CONSOLE_VARIABLE(p_markunknowns, markUnknowns, 0) {}
 extern int wipewait;
 
 static char *wipewait_strs[] = { "never", "always", "demos" };
+static char *wipetype_strs[] = { "none", "melt", "fade" };
 
 VARIABLE_INT(wipewait, NULL, 0, 2, wipewait_strs);
 CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
+
+VARIABLE_INT(wipetype, NULL, 0, 2, wipetype_strs);
+CONSOLE_VARIABLE(wipetype, wipetype, 0) {}
 
 VARIABLE_BOOLEAN(map_draw_nodelines, NULL, onoff);
 CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
@@ -359,6 +363,7 @@ void P_AddCommands(void)
    C_AddCommand(spechits_emulation);
    C_AddCommand(p_markunknowns);
    C_AddCommand(wipewait);
+   C_AddCommand(wipetype);
    C_AddCommand(am_drawnodelines);
    
    P_Chase_AddCommands();

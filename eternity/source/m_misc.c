@@ -65,6 +65,7 @@
 #include "p_partcl.h"
 #include "r_things.h"
 #include "d_gi.h"
+#include "f_wipe.h"
 
 #include <errno.h>
 #include <sys/stat.h>
@@ -1632,6 +1633,13 @@ default_t defaults[] =
       &wipewait, NULL,
       2, {0, 2}, dt_number, ss_none, wad_no,
       "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"
+   },
+
+   {
+      "wipetype",
+      &wipetype, NULL,
+      1, {0, 2}, dt_number, ss_none, wad_yes,
+      "0 = none, 1 = melt, 2 = fade"
    },
 
 #ifdef HAVE_SPCLIB

@@ -38,22 +38,34 @@
 #include "m_random.h"
 #include "f_wipe.h"
 
-// array of pointers to the
-// column data for 'superfast' melt
+// common globals
+boolean inwipe = false;
+int wipetype;
+
+// common statics
+static int current_wipetype;
+static byte *wipe_buffer = NULL;
+
+//==============================================================================
+//
+// haleyjd 10/12/08: melt wipe
+//
+// Separated from main functions below to allow for multiple wipe routines.
+//
+
+// array of column pointers into wipe_buffer for 'superfast' melt
 static byte *start_screen[MAX_SCREENWIDTH] = {0};
 
 // y co-ordinate of various columns
 static int worms[SCREENWIDTH];
 
-boolean        inwipe = false;
-static int     starting_height;
+static int starting_height;
 
-static void Wipe_initWipe(void)
+static void Wipe_meltStartScreen(void)
 {
-   int x;
-   
-   inwipe = true;
-   
+   int x, y;
+   byte *dest, *src;
+
    // SoM 2-4-04: ANYRES
    // use console height
    // SoM: wtf? Why did I scale this before??? This should be within the 320x200
@@ -71,29 +83,9 @@ static void Wipe_initWipe(void)
       else if(worms[x] == -16)
          worms[x] = -15;
    }
-}
 
-static byte *wipe_buffer = NULL;
-
-void Wipe_StartScreen(void)
-{
-   register int x, y;
-   register byte *dest, *src;
-
-   Wipe_initWipe();
-  
-   if(!wipe_buffer)
-   {
-      // SoM: Reformatted and cleaned up (ANYRES)
-      // haleyjd: make purgable, allocate at required size
-      wipe_buffer = Z_Malloc(video.height * video.width, PU_STATIC, 
-                             (void **)&wipe_buffer);
-      
-      for(x = 0; x < video.width; ++x)
-         start_screen[x] = wipe_buffer + (x * video.height);
-   }
-   else
-      Z_ChangeTag(wipe_buffer, PU_STATIC); // buffer is in use
+   for(x = 0; x < video.width; ++x)
+      start_screen[x] = wipe_buffer + (x * video.height);
 
    // SoM 2-4-04: ANYRES
    for(x = 0; x < video.width; ++x)
@@ -112,8 +104,185 @@ void Wipe_StartScreen(void)
          dest++;
       }
    }
-   
-   return;
+}
+
+static void Wipe_meltDrawer(void)
+{
+   register int x, y;
+   register byte *dest, *src;
+
+   // SoM 2-4-04: ANYRES
+   for(x = 0; x < video.width; ++x)
+   {
+      int wormy, wormx;
+      
+      wormx = (x << FRACBITS) / video.xscale;
+      wormy = worms[wormx] > 0 ? worms[wormx] : 0;  // limit check
+
+      wormy = video.y1lookup[wormy];
+
+      src = start_screen[x];
+      dest = vbscreen.data + vbscreen.pitch * wormy + x;
+      
+      for(y = video.height - wormy; y--;)
+      {
+         *dest = *src++;
+         dest += vbscreen.pitch;
+      }
+   }
+ 
+   redrawsbar = true; // clean up status bar
+}
+
+static boolean Wipe_meltTicker(void)
+{
+   boolean done;
+   int x;
+  
+   done = true;  // default to true
+
+   // SoM 2-4-04: ANYRES
+   for(x = 0; x < SCREENWIDTH; ++x)
+   {
+      if(worms[x] < 0)
+      {
+         ++worms[x];
+         done = false;
+      }
+      else if(worms[x] < SCREENHEIGHT)
+      {
+         int dy;
+
+         dy = (worms[x] < 16) ? worms[x] + 1 : 8;
+
+         if(worms[x] + dy >= SCREENHEIGHT)
+            dy = SCREENHEIGHT - worms[x];
+         worms[x] += dy;
+         done = false;
+      }
+   }
+  
+   return done;
+}
+
+//==============================================================================
+//
+// haleyjd 10/12/08: crossfade wipe reimplementation
+//
+// Vanilla Doom had an attempt at this, but it was not being done in a way that
+// would actually work in 8-bit, and so it was left disabled in the commercial
+// releases. This evidently provided inspiration for Rogue during Strife
+// development, however, because it's precisely the fade effect it uses for
+// hub transitions. This wipe might also be useful for Heretic and Hexen, where
+// it would be more fitting than Doom's melt wipe (those games used no wipe by
+// default, which to me is odd).
+//
+
+#define MAXFADE 64 // there are 64 levels in the Col2RGB8 table
+static int fadelvl;
+
+static void Wipe_fadeStartScreen(void)
+{
+   fadelvl = 0;
+   I_ReadScreen(wipe_buffer);
+}
+
+static void Wipe_fadeDrawer(void)
+{
+   if(fadelvl <= MAXFADE)
+   {
+      byte *src, *dest;
+      unsigned int *fg2rgb = Col2RGB8[fadelvl];
+      unsigned int *bg2rgb = Col2RGB8[MAXFADE - fadelvl];
+      int x, y;
+
+      src = wipe_buffer;
+
+      for(y = 0; y < vbscreen.height; ++y)
+      {
+         dest = vbscreen.data + y * vbscreen.pitch;
+
+         for(x = 0; x < vbscreen.width; ++x)
+         {
+            unsigned int fg, bg;
+            
+            fg = fg2rgb[*dest];
+            bg = bg2rgb[*src++];
+            fg = (fg + bg) | 0x1f07c1f;
+            *dest++ = RGB32k[0][0][fg & (fg >> 15)];
+         }
+      }
+   }
+}
+
+static boolean Wipe_fadeTicker(void)
+{
+   fadelvl += 2;
+
+   return fadelvl > MAXFADE;
+}
+
+
+//==============================================================================
+//
+// Wipe Objects
+//
+
+typedef struct fwipe_s
+{
+   void    (*StartScreen)(void);
+   void    (*Drawer)(void);
+   boolean (*Ticker)(void);
+} fwipe_t;
+
+static fwipe_t wipers[] =
+{
+   // none
+   { NULL, NULL, NULL },
+
+   // melt wipe
+   {
+      Wipe_meltStartScreen,
+      Wipe_meltDrawer,
+      Wipe_meltTicker,
+   },
+
+   // crossfade wipe
+   {
+      Wipe_fadeStartScreen,
+      Wipe_fadeDrawer,
+      Wipe_fadeTicker,
+   },
+};
+
+//==============================================================================
+//
+// Core Wipe Routines - External Interface
+//
+
+void Wipe_StartScreen(void)
+{
+   if(wipetype == 0)
+      return;
+
+   inwipe = true;
+
+   // echo wipetype to current_wipetype so that configuration changes do not
+   // occur during a non-blocking screenwipe (would be disasterous)
+   current_wipetype = wipetype;
+
+   if(!wipe_buffer)
+   {
+      // SoM: Reformatted and cleaned up (ANYRES)
+      // haleyjd: make purgable, allocate at required size
+      wipe_buffer = Z_Malloc(video.height * video.width, PU_STATIC, 
+                             (void **)&wipe_buffer);
+   }
+   else
+      Z_ChangeTag(wipe_buffer, PU_STATIC); // buffer is in use
+
+
+   wipers[current_wipetype].StartScreen();
 }
 
 //
@@ -166,60 +335,16 @@ void Wipe_ScreenReset(void)
 
 void Wipe_Drawer(void)
 {
-   register int x, y;
-   register byte *dest, *src;
+   if(!inwipe)
+      return;
 
-   // SoM 2-4-04: ANYRES
-   for(x = 0; x < video.width; ++x)
-   {
-      int wormy, wormx;
-      
-      wormx = (x << FRACBITS) / video.xscale;
-      wormy = worms[wormx] > 0 ? worms[wormx] : 0;  // limit check
-
-      wormy = video.y1lookup[wormy];
-
-      src = start_screen[x];
-      dest = vbscreen.data + vbscreen.pitch * wormy + x;
-      
-      for(y = video.height - wormy; y--;)
-      {
-         *dest = *src++;
-         dest += vbscreen.pitch;
-      }
-   }
- 
-   redrawsbar = true; // clean up status bar
+   wipers[current_wipetype].Drawer();
 }
 
 void Wipe_Ticker(void)
 {
-   boolean done;
-   int x;
-  
-   done = true;  // default to true
+   boolean done = wipers[current_wipetype].Ticker();
 
-   // SoM 2-4-04: ANYRES
-   for(x = 0; x < SCREENWIDTH; ++x)
-   {
-      if(worms[x] < 0)
-      {
-         ++worms[x];
-         done = false;
-      }
-      else if(worms[x] < SCREENHEIGHT)
-      {
-         int dy;
-
-         dy = (worms[x] < 16) ? worms[x] + 1 : 8;
-
-         if(worms[x] + dy >= SCREENHEIGHT)
-            dy = SCREENHEIGHT - worms[x];
-         worms[x] += dy;
-         done = false;
-      }
-   }
-  
    if(done)
    {
       inwipe = false;
