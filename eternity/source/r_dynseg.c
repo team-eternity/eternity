@@ -24,8 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifdef R_DYNASEGS
-
 #include "z_zone.h"
 #include "r_defs.h"
 #include "r_main.h"
@@ -542,8 +540,6 @@ void R_ClearDynaSegs(void)
    for(i = 0; i < numPolyObjects; ++i)
       R_DetachPolyObject(&PolyObjects[i]);
 }
-
-#endif
 
 // EOF
 

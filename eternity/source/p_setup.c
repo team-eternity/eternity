@@ -62,9 +62,7 @@
 #include "e_ttypes.h"
 #include "polyobj.h"
 #include "s_sndseq.h"
-#ifdef R_DYNASEGS
 #include "r_dynseg.h"
-#endif
 
 //
 // MAP related Lookup tables.
@@ -381,7 +379,6 @@ void P_LoadNodes(int lump)
       no->dx = SHORT(mn->dx);
       no->dy = SHORT(mn->dy);
 
-#ifdef R_DYNASEGS
       // haleyjd 05/16/08: keep floating point versions as well for dynamic
       // seg splitting operations
       no->fx  = (double)no->x;
@@ -394,7 +391,6 @@ void P_LoadNodes(int lump)
       no->b   =  no->fdx;
       no->c   =  no->fdy * no->fx - no->fdx * no->fy;
       no->len = sqrt(no->fdx * no->fdx + no->fdy * no->fdy);
-#endif
 
       no->x  <<= FRACBITS;
       no->y  <<= FRACBITS;
@@ -1525,10 +1521,8 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    //  sf: s_start split into s_start, s_stopsounds because of this requirement
    S_StopSounds();
 
-#ifdef R_DYNASEGS
    // haleyjd 05/16/08: must clear dynamic segs before Z_FreeTags
    R_ClearDynaSegs();
-#endif
    
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_LEVSPEC);

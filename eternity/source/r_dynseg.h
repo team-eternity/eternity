@@ -27,8 +27,6 @@
 #ifndef R_DYNSEG_H__
 #define R_DYNSEG_H__
 
-#ifdef R_DYNASEGS
-
 #include "r_defs.h"
 #include "polyobj.h"
 
@@ -69,8 +67,6 @@ typedef struct rpolyobj_s
 void R_AttachPolyObject(polyobj_t *poly);
 void R_DetachPolyObject(polyobj_t *poly);
 void R_ClearDynaSegs(void);
-
-#endif // R_DYNASEGS
 
 #endif
 

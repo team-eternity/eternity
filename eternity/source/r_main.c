@@ -41,9 +41,7 @@
 #include "r_draw.h"
 #include "r_drawq.h"
 #include "r_drawl.h"
-#ifdef R_DYNASEGS
 #include "r_dynseg.h"
-#endif
 #include "m_bbox.h"
 #include "r_sky.h"
 #include "s_sound.h"

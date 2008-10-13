@@ -53,25 +53,15 @@
 //
 typedef struct polyobj_s
 {
-#ifndef R_DYNASEGS
-   mdllistitem_t link; // for subsector links; must be first
-#endif
-
    int id;    // numeric id
    int first; // for hashing: index of first polyobject in this hash chain
    int next;  // for hashing: next polyobject in this hash chain
 
    int mirror; // numeric id of a mirroring polyobject
 
-#ifndef R_DYNASEGS
-   int segCount;        // number of segs in polyobject
-   int numSegsAlloc;    // number of segs allocated
-   struct seg_s **segs; // the segs, a reallocating array.
-#else
    struct subsector_s **dynaSubsecs; // list of subsectors holding fragments
    int numDSS;                       // number of subsector pointers
    int numDSSAlloc;                  // number of subsector pointers allocated
-#endif
 
    int numVertices;            // number of vertices (generally == segCount)
    int numVerticesAlloc;       // number of vertices allocated

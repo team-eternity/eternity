@@ -558,10 +558,12 @@ void F_CastDrawer(void)
 }
 
 
+#if 0
 //
 // F_DrawPatchCol
 //
-
+// haleyjd 10/12/08: extinct
+//
 static void F_DrawPatchCol(int x, patch_t *patch, int col)
 {
   const column_t *column = 
@@ -624,6 +626,7 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
       }
    }
 }
+#endif
 
 //
 // F_BunnyScroll
@@ -631,7 +634,6 @@ static void F_DrawPatchCol(int x, patch_t *patch, int col)
 void F_BunnyScroll(void)
 {
    int         scrolled;
-   int         x;
    patch_t*    p1;
    patch_t*    p2;
    char        name[10];
@@ -650,27 +652,10 @@ void F_BunnyScroll(void)
       scrolled = 0;
               
    // ANYRES
-   /*
-   for(x = 0; x < video.width; ++x)
-   {
-      int scaledx = (x * video.ystep) >> FRACBITS;
-      
-      if(scaledx + scrolled < 320)
-         F_DrawPatchCol(x, p1, scaledx + scrolled);
-      else
-         F_DrawPatchCol(x, p2, scaledx + scrolled - 320);           
-   }
-   */
    if(scrolled > 0)
       V_DrawPatchGeneral(320 - scrolled, 0, &vbscreen, p2, false);
    if(scrolled < 320)
       V_DrawPatchGeneral(-scrolled, 0, &vbscreen, p1, false);
-   {
-      char num[33];
-      memset(num, 0, 33);
-      M_Itoa(scrolled, num, 10);
-      V_WriteText(num, 0, 0);
-   }
       
    if(finalecount < 1130)
       return;

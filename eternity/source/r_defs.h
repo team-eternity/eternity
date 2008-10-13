@@ -95,10 +95,8 @@ typedef struct vertex_s
    unsigned frameid;
    float tx, ty, proj_x, proj_dist;
 
-#ifdef R_DYNASEGS
    struct vertex_s *dynanext;
    boolean dynafree;          // if true, is on free list
-#endif
 } vertex_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.
@@ -337,11 +335,7 @@ typedef struct subsector_s
   // haleyjd 06/19/06: converted from short to long for 65535 segs
   long  numlines, firstline;
 
-#ifndef R_DYNASEGS
-  struct polyobj_s *polyList;  // haleyjd 02/19/06: list of polyobjects
-#else
   struct rpolyobj_s *polyList; // haleyjd 05/15/08: list of polyobj fragments
-#endif
 } subsector_t;
 
 // phares 3/14/98
@@ -391,9 +385,7 @@ typedef struct seg_s
 
   struct seg_s *linenext; // haleyjd: next seg by linedef
 
-#ifdef R_DYNASEGS
   boolean nodraw; // don't render this seg, ever
-#endif
 } seg_t;
 
 //
@@ -405,12 +397,10 @@ typedef struct
   fixed_t bbox[2][4];            // Bounding box for each child.
   unsigned short children[2];    // If NF_SUBSECTOR its a subsector.
 
-#ifdef R_DYNASEGS
   double fx, fy, fdx, fdy;       // haleyjd 05/16/08: float versions
   double a, b, c;                // haleyjd 05/20/08: coefficients for
                                  //  general form of partition line 
   double len;                    //  length of partition line, for normalization
-#endif
 } node_t;
 
 // posts are runs of non masked source pixels
