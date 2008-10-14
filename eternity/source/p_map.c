@@ -917,8 +917,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    // haleyjd 1/16/00: Pushable objects -- at last!
    //   This is remarkably simpler than I had anticipated!
    
-   if(demo_version >= 329 && thing->flags2 & MF2_PUSHABLE &&
-      (demo_version < 331 || !(tm->thing->flags3 & MF3_CANNOTPUSH)))
+   if(thing->flags2 & MF2_PUSHABLE && !(tm->thing->flags3 & MF3_CANNOTPUSH))
    {
       // transfer one-fourth momentum along the x and y axes
       thing->momx += tm->thing->momx / 4;
