@@ -1333,3 +1333,201 @@ thingtype HereticPlayerSkull
   cflags = CORPSE|DROPOFF|LOGRAV|CANNOTPUSH
   dehackednum = 399
 }
+
+// Artifacts
+
+thingtype HArtiInvisibility
+{
+  doomednum    = 7075
+  spawnstate   = S_ARTI_INVS1
+  cflags       = SPECIAL|COUNTITEM|FLOATBOB
+  translucency = 26624
+  dehackednum  = 400
+}
+
+thingtype HArtiQuartzFlask
+{
+  doomednum   = 7082
+  spawnstate  = S_ARTI_PTN2_1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 401
+}
+
+thingtype HArtiFly
+{
+  doomednum   = 7083
+  spawnstate  = S_ARTI_SOAR1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 402
+}
+
+thingtype HArtiInvulnerability 
+{
+  doomednum   = 7084
+  spawnstate  = S_ARTI_INVU1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 403
+}
+
+thingtype HArtiTomeOfPower 
+{
+  doomednum   = 7086
+  spawnstate  = S_ARTI_PWBK1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 404
+}
+
+thingtype HArtiEgg
+{
+  doomednum   = 7030
+  spawnstate  = S_ARTI_EGGC1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 405
+}
+
+thingtype HArtiSuperHeal
+{
+  doomednum   = 7032
+  spawnstate  = S_ARTI_SPHL1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 406
+}
+
+thingtype HArtiTorch 
+{
+  doomednum   = 7033
+  spawnstate  = S_ARTI_TRCH1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 407
+}
+
+thingtype HArtiFireBomb
+{
+  doomednum   = 7034
+  spawnstate  = S_ARTI_FBMB1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 408
+}
+
+thingtype HereticFireBomb
+{
+  spawnstate   = S_HFIREBOMB1
+  deathsound   = ht_phohit
+  cflags       = NOGRAVITY
+  translucency = 26624
+  dehackednum  = 409
+}
+
+thingtype HArtiTeleport
+{
+  doomednum   = 7036
+  spawnstate  = S_ARTI_ATLP1
+  cflags      = SPECIAL|COUNTITEM|FLOATBOB
+  dehackednum = 410
+}
+
+// Weapons
+
+thingtype HWeaponGauntlets 
+{
+  doomednum   = 7205
+  spawnstate  = S_WGNT
+  cflags      = SPECIAL
+  dehackednum = 411
+}
+
+thingtype HWeaponBlaster
+{
+  doomednum   = 7053
+  spawnstate  = S_BLSR
+  cflags      = SPECIAL
+  dehackednum = 412
+}
+
+thingtype HWeaponSkullRod
+{
+  doomednum   = 7204
+  spawnstate  = S_WSKL
+  cflags      = SPECIAL
+  dehackednum = 413
+}
+
+thingtype HWeaponPhoenixRod
+{
+  doomednum   = 7203
+  spawnstate  = S_WPHX
+  cflags      = SPECIAL
+  dehackednum = 414
+}
+
+thingtype HWeaponCrossbow
+{
+  doomednum   = 7201
+  spawnstate  = S_WBOW
+  cflags      = SPECIAL
+  dehackednum = 415
+}
+
+// Weapon FX
+
+thingtype HereticStaffPuff
+{
+  spawnstate  = S_STAFFPUFF1
+  attacksound = ht_stfhit
+  cflags      = NOBLOCKMAP|NOGRAVITY
+  dehackednum = 416
+}
+
+thingtype HereticStaffPuff2
+{
+  spawnstate  = S_STAFFPUFF2_1
+  attacksound = ht_stfpow
+  cflags      = NOBLOCKMAP|NOGRAVITY
+  dehackednum = 417
+}
+
+thingtype HereticBeakPuff
+{
+  spawnstate  = S_STAFFPUFF1
+  attacksound = ht_chicatk
+  cflags      = NOBLOCKMAP|NOGRAVITY
+  dehackednum = 418
+}
+
+thingtype HereticGauntletPuff1 
+{
+  spawnstate   = S_GAUNTLETPUFF1_1
+  cflags       = NOBLOCKMAP|NOGRAVITY
+  translucency = 26624
+  dehackednum  = 419
+}
+
+thingtype HereticGauntletPuff2
+{
+  spawnstate   = S_GAUNTLETPUFF2_1
+  cflags       = NOBLOCKMAP|NOGRAVITY
+  translucency = 26624
+  dehackednum  = 420
+}
+
+thingtype HereticBlasterSmoke
+{
+  spawnstate   = S_BLASTERSMOKE1
+  cflags       = NOBLOCKMAP|NOGRAVITY|CANNOTPUSH
+  translucency = 26624
+  dehackednum  = 421
+}
+
+thingtype HereticRipper
+{
+  spawnstate = S_HRIPPER1
+  deathstate = S_HRIPPERX1
+  deathsound = ht_hrnhit
+  speed = 14.0
+  radius = 8.0
+  height = 6.0
+  damage = 1
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP
+  dehackednum = 422
+}
+

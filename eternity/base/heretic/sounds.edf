@@ -1,4 +1,4 @@
-// EDF for Eternity Engine v3.35.00
+// EDF for Eternity Engine v3.35.90
 //  Sound definitions for Heretic gamemodes.
 
 sound ht_gldhit
@@ -508,6 +508,16 @@ sound ht_plrcdth
 {
    lump = "plrcdth"; priority = 32; dehackednum = 397; pitchvariance = Heretic
    skinindex = sk_pdiehi
+}
+
+sound ht_stfhit
+{
+   lump = "stfhit"; priority = 64; dehackednum = 398; pitchvariance = Heretic
+}
+
+sound ht_chicatk
+{
+   lump = "chicatk"; priority = 64; dehackednum = 399; pitchvariance = Heretic
 }
 
 // Environmental Sound Defaults

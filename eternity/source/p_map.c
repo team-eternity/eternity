@@ -881,6 +881,38 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
             return false;               // Let players missile other players.
       }
       
+      // haleyjd 10/15/08: rippers
+      if(tm->thing->flags3 & MF3_RIP)
+      {
+         // TODO: P_RipperBlood
+         /*
+         if(!(thing->flags&MF_NOBLOOD))
+         { 
+            // Ok to spawn some blood
+            P_RipperBlood(tmthing);
+         }
+         */
+         
+         // TODO: ripper sound - gamemode dependent? thing dependent?
+         //S_StartSound(tm->thing, sfx_ripslop);
+         
+         damage = ((P_Random(pr_rip) & 3) + 2) * tm->thing->damage;
+         
+         P_DamageMobj(thing, tm->thing, tm->thing->target, damage, 
+                      tm->thing->info->mod);
+         
+         if(thing->flags2 & MF2_PUSHABLE && !(tm->thing->flags3 & MF3_CANNOTPUSH))
+         { 
+            // Push thing
+            thing->momx += tm->thing->momx >> 2;
+            thing->momy += tm->thing->momy >> 2;
+         }
+         
+         // TODO: huh?
+         //numspechit = 0;
+         return true;
+      }
+
       // killough 8/10/98: if moving thing is not a missile, no damage
       // is inflicted, and momentum is reduced if object hit is solid.
 

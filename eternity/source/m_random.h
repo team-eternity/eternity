@@ -214,6 +214,7 @@ typedef enum {
   pr_icechase2, 
   pr_dragonfx,   // A_DragonFX2
   pr_dropmace,   // A_DropMace
+  pr_rip,        // ripper missile damage
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

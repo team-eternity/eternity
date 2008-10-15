@@ -920,24 +920,24 @@ frame S_HPLAY_XDIE8 { cmp = "PLAY|23|*| 5|*           |@next";        dehackednu
 frame S_HPLAY_XDIE9 { cmp = "PLAY|24|*|-1";                           dehackednum = 2684 }
 
 // HereticPlayer fiery death frames
-frame S_HPLAY_FDTH1  { cmp = "FDTH| 0|T| 5|PlaySoundEx(ht_hedat1, chan_body)|@next"; dehackednum = 2685 }
-frame S_HPLAY_FDTH2  { cmp = "FDTH| 1|T| 4|*                                |@next"; dehackednum = 2686 }
-frame S_HPLAY_FDTH3  { cmp = "FDTH| 2|T| 5|*                                |@next"; dehackednum = 2687 }
-frame S_HPLAY_FDTH4  { cmp = "FDTH| 3|T| 4|Scream                           |@next"; dehackednum = 2688 }
-frame S_HPLAY_FDTH5  { cmp = "FDTH| 4|T| 5|*                                |@next"; dehackednum = 2689 }
-frame S_HPLAY_FDTH6  { cmp = "FDTH| 5|T| 4|*                                |@next"; dehackednum = 2690 }
-frame S_HPLAY_FDTH7  { cmp = "FDTH| 6|T| 5|PlaySoundEx(ht_hedat1, chan_body)|@next"; dehackednum = 2691 }
-frame S_HPLAY_FDTH8  { cmp = "FDTH| 7|T| 4|*                                |@next"; dehackednum = 2692 }
-frame S_HPLAY_FDTH9  { cmp = "FDTH| 8|T| 5|*                                |@next"; dehackednum = 2693 }
-frame S_HPLAY_FDTH10 { cmp = "FDTH| 9|T| 4|*                                |@next"; dehackednum = 2694 }
-frame S_HPLAY_FDTH11 { cmp = "FDTH|10|T| 5|*                                |@next"; dehackednum = 2695 }
-frame S_HPLAY_FDTH12 { cmp = "FDTH|11|T| 4|*                                |@next"; dehackednum = 2696 }
-frame S_HPLAY_FDTH13 { cmp = "FDTH|12|T| 5|*                                |@next"; dehackednum = 2697 }
-frame S_HPLAY_FDTH14 { cmp = "FDTH|13|T| 4|*                                |@next"; dehackednum = 2698 }
-frame S_HPLAY_FDTH15 { cmp = "FDTH|14|T| 5|Fall                             |@next"; dehackednum = 2699 }
-frame S_HPLAY_FDTH16 { cmp = "FDTH|15|T| 4|*                                |@next"; dehackednum = 2700 }
-frame S_HPLAY_FDTH17 { cmp = "FDTH|16|T| 5|*                                |@next"; dehackednum = 2701 }
-frame S_HPLAY_FDTH18 { cmp = "FDTH|17|T| 4|*                                |@next"; dehackednum = 2702 }
+frame S_HPLAY_FDTH1  { cmp = "FDTH|A|T| 5|PlaySoundEx(ht_hedat1, chan_body)|@next"; dehackednum = 2685 }
+frame S_HPLAY_FDTH2  { cmp = "FDTH|B|T| 4|*                                |@next"; dehackednum = 2686 }
+frame S_HPLAY_FDTH3  { cmp = "FDTH|C|T| 5|*                                |@next"; dehackednum = 2687 }
+frame S_HPLAY_FDTH4  { cmp = "FDTH|D|T| 4|Scream                           |@next"; dehackednum = 2688 }
+frame S_HPLAY_FDTH5  { cmp = "FDTH|E|T| 5|*                                |@next"; dehackednum = 2689 }
+frame S_HPLAY_FDTH6  { cmp = "FDTH|F|T| 4|*                                |@next"; dehackednum = 2690 }
+frame S_HPLAY_FDTH7  { cmp = "FDTH|G|T| 5|PlaySoundEx(ht_hedat1, chan_body)|@next"; dehackednum = 2691 }
+frame S_HPLAY_FDTH8  { cmp = "FDTH|H|T| 4|*                                |@next"; dehackednum = 2692 }
+frame S_HPLAY_FDTH9  { cmp = "FDTH|I|T| 5|*                                |@next"; dehackednum = 2693 }
+frame S_HPLAY_FDTH10 { cmp = "FDTH|J|T| 4|*                                |@next"; dehackednum = 2694 }
+frame S_HPLAY_FDTH11 { cmp = "FDTH|K|T| 5|*                                |@next"; dehackednum = 2695 }
+frame S_HPLAY_FDTH12 { cmp = "FDTH|L|T| 4|*                                |@next"; dehackednum = 2696 }
+frame S_HPLAY_FDTH13 { cmp = "FDTH|M|T| 5|*                                |@next"; dehackednum = 2697 }
+frame S_HPLAY_FDTH14 { cmp = "FDTH|N|T| 4|*                                |@next"; dehackednum = 2698 }
+frame S_HPLAY_FDTH15 { cmp = "FDTH|O|T| 5|Fall                             |@next"; dehackednum = 2699 }
+frame S_HPLAY_FDTH16 { cmp = "FDTH|P|T| 4|*                                |@next"; dehackednum = 2700 }
+frame S_HPLAY_FDTH17 { cmp = "FDTH|Q|T| 5|*                                |@next"; dehackednum = 2701 }
+frame S_HPLAY_FDTH18 { cmp = "FDTH|R|T| 4|*                                |@next"; dehackednum = 2702 }
 
 // body stays in this state until player has respawned
 frame S_HPLAY_FDTH19 
@@ -955,4 +955,116 @@ frame S_HPLAYERSKULL3 { cmp = "BSKL|C|*| 5|*|@next";           dehackednum = 270
 frame S_HPLAYERSKULL4 { cmp = "BSKL|D|*| 5|*|@next";           dehackednum = 2708 }
 frame S_HPLAYERSKULL5 { cmp = "BSKL|E|*| 5|*|S_HPLAYERSKULL1"; dehackednum = 2709 }
 frame S_HPLAYERSKULLX { cmp = "BSKL|F|*|-1";                   dehackednum = 2710 }
+
+// Artifact frames
+
+// Shadowsphere (HArtiInvisibility)
+frame S_ARTI_INVS1 { cmp = "INVS|A|T|-1"; dehackednum = 2711 }
+
+// Quartz Flask (HArtiQuartzFlask)
+frame S_ARTI_PTN2_1 { cmp = "PTN2|A|*|4|*|@next";         dehackednum = 2712 }
+frame S_ARTI_PTN2_2 { cmp = "PTN2|B|*|4|*|@next";         dehackednum = 2713 }
+frame S_ARTI_PTN2_3 { cmp = "PTN2|C|*|4|*|S_ARTI_PTN2_1"; dehackednum = 2714 }
+
+// Wings of Wrath (HArtiFly)
+frame S_ARTI_SOAR1 { cmp = "SOAR|A|*|5|*|@next";        dehackednum = 2715 }
+frame S_ARTI_SOAR2 { cmp = "SOAR|B|*|5|*|@next";        dehackednum = 2716 }
+frame S_ARTI_SOAR3 { cmp = "SOAR|C|*|5|*|@next";        dehackednum = 2717 }
+frame S_ARTI_SOAR4 { cmp = "SOAR|B|*|5|*|S_ARTI_SOAR1"; dehackednum = 2718 }
+
+// Ring of Invulnerability (HArtiInvulnerability)
+frame S_ARTI_INVU1 { cmp = "INVU|A|*|3|*|@next";        dehackednum = 2719 }
+frame S_ARTI_INVU2 { cmp = "INVU|B|*|3|*|@next";        dehackednum = 2720 }
+frame S_ARTI_INVU3 { cmp = "INVU|C|*|3|*|@next";        dehackednum = 2721 }
+frame S_ARTI_INVU4 { cmp = "INVU|D|*|3|*|S_ARTI_INVU1"; dehackednum = 2722 }
+
+// Tome of Power (HArtiTomeOfPower)
+frame S_ARTI_PWBK1 { cmp = "PWBK|A|*|-1"; dehackednum = 2723 }
+
+// Morph Ovum (HArtiEgg)
+frame S_ARTI_EGGC1 { cmp = "EGGC|A|*|6|*|@next";        dehackednum = 2724 }
+frame S_ARTI_EGGC2 { cmp = "EGGC|B|*|6|*|@next";        dehackednum = 2725 }
+frame S_ARTI_EGGC3 { cmp = "EGGC|C|*|6|*|@next";        dehackednum = 2726 }
+frame S_ARTI_EGGC4 { cmp = "EGGC|B|*|6|*|S_ARTI_EGGC1"; dehackednum = 2727 }
+
+// Mystic Urn (HArtiSuperHeal)
+frame S_ARTI_SPHL1 { cmp = "SPHL|A|*|-1"; dehackednum = 2728 }
+
+// Torch (HArtiTorch)
+frame S_ARTI_TRCH1 { cmp = "TRCH|A|T|3|*|@next";        dehackednum = 2729 }
+frame S_ARTI_TRCH2 { cmp = "TRCH|B|T|3|*|@next";        dehackednum = 2730 }
+frame S_ARTI_TRCH3 { cmp = "TRCH|C|T|3|*|S_ARTI_TRCH1"; dehackednum = 2731 }
+
+// Timebomb of the Ancients (HArtiFireBomb)
+frame S_ARTI_FBMB1 { cmp = "FBMB|E|*|-1"; dehackednum = 2732 }
+
+// Timebomb (HereticFireBomb)
+frame S_HFIREBOMB1  { cmp = "FBMB|A|*|10|*                    |@next"; dehackednum = 2733 }
+frame S_HFIREBOMB2  { cmp = "FBMB|B|*|10|*                    |@next"; dehackednum = 2734 }
+frame S_HFIREBOMB3  { cmp = "FBMB|C|*|10|*                    |@next"; dehackednum = 2735 }
+frame S_HFIREBOMB4  { cmp = "FBMB|D|*|10|*                    |@next"; dehackednum = 2736 }
+frame S_HFIREBOMB5  { cmp = "FBMB|E|*| 6|Scream               |@next"; dehackednum = 2737 }
+frame S_HFIREBOMB6  { cmp = "XPL1|A|T| 4|HticExplode(timebomb)|@next"; dehackednum = 2738 }
+frame S_HFIREBOMB7  { cmp = "XPL1|B|T| 4|*                    |@next"; dehackednum = 2739 }
+frame S_HFIREBOMB8  { cmp = "XPL1|C|T| 4|*                    |@next"; dehackednum = 2740 }
+frame S_HFIREBOMB9  { cmp = "XPL1|D|T| 4|*                    |@next"; dehackednum = 2741 }
+frame S_HFIREBOMB10 { cmp = "XPL1|E|T| 4|*                    |@next"; dehackednum = 2742 }
+frame S_HFIREBOMB11 { cmp = "XPL1|F|T| 4";                             dehackednum = 2743 }
+
+// Chaos Device (HArtiTeleport)
+frame S_ARTI_ATLP1 { cmp = "ATLP|A|*|4|*|@next";        dehackednum = 2744 }
+frame S_ARTI_ATLP2 { cmp = "ATLP|B|*|4|*|@next";        dehackednum = 2745 }
+frame S_ARTI_ATLP3 { cmp = "ATLP|C|*|4|*|@next";        dehackednum = 2746 }
+frame S_ARTI_ATPL4 { cmp = "ATLP|B|*|4|*|S_ARTI_ATLP1"; dehackednum = 2747 }
+
+// Weapon pickup frames
+
+frame S_WGNT { cmp = "WGNT|A|*|-1"; dehackednum = 2748 } // Gauntlets of the Necromancer
+frame S_BLSR { cmp = "WBLS|A|*|-1"; dehackednum = 2749 } // Dragonclaw
+frame S_WMCE { cmp = "WMCE|A|*|-1"; dehackednum = 2750 } // Fire Mace
+frame S_WSKL { cmp = "WSKL|A|*|-1"; dehackednum = 2751 } // Skull Rod
+frame S_WPHX { cmp = "WPHX|A|*|-1"; dehackednum = 2752 } // Phoenix Rod
+frame S_WBOW { cmp = "WBOW|A|*|-1"; dehackednum = 2753 } // Ethereal Crossbow
+
+// Weapon FX frames
+
+// HereticStaffPuff
+frame S_STAFFPUFF1 { cmp = "PUF3|A|T|4|*|@next"; dehackednum = 2754 }
+frame S_STAFFPUFF2 { cmp = "PUF3|B|*|4|*|@next"; dehackednum = 2755 }
+frame S_STAFFPUFF3 { cmp = "PUF3|C|*|4|*|@next"; dehackednum = 2756 }
+frame S_STAFFPUFF4 { cmp = "PUF3|D|*|4|";        dehackednum = 2757 }
+
+// HereticStaffPuff2
+frame S_STAFFPUFF2_1 { cmp = "PUF4|A|T|4|*|@next"; dehackednum = 2758 }
+frame S_STAFFPUFF2_2 { cmp = "PUF4|B|T|4|*|@next"; dehackednum = 2759 }
+frame S_STAFFPUFF2_3 { cmp = "PUF4|C|T|4|*|@next"; dehackednum = 2760 }
+frame S_STAFFPUFF2_4 { cmp = "PUF4|D|T|4|*|@next"; dehackednum = 2761 }
+frame S_STAFFPUFF2_5 { cmp = "PUF4|E|T|4|*|@next"; dehackednum = 2762 }
+frame S_STAFFPUFF2_6 { cmp = "PUF4|F|T|4";         dehackednum = 2763 }
+
+// HereticGauntletPuff1, 2
+frame S_GAUNTLETPUFF1_1 { cmp = "PUF1|A|T|4|*|@next"; dehackednum = 2764 }
+frame S_GAUNTLETPUFF1_2 { cmp = "PUF1|B|T|4|*|@next"; dehackednum = 2765 }
+frame S_GAUNTLETPUFF1_3 { cmp = "PUF1|C|T|4|*|@next"; dehackednum = 2766 }
+frame S_GAUNTLETPUFF1_4 { cmp = "PUF1|D|T|4";         dehackednum = 2767 }
+frame S_GAUNTLETPUFF2_1 { cmp = "PUF1|E|T|4|*|@next"; dehackednum = 2768 }
+frame S_GAUNTLETPUFF2_2 { cmp = "PUF1|F|T|4|*|@next"; dehackednum = 2769 }
+frame S_GAUNTLETPUFF2_3 { cmp = "PUF1|G|T|4|*|@next"; dehackednum = 2770 }
+frame S_GAUNTLETPUFF2_4 { cmp = "PUF1|H|T|4";         dehackednum = 2771 }
+
+// HereticBlasterSmoke
+frame S_BLASTERSMOKE1 { cmp = "FX18|H|*|4|*|@next"; dehackednum = 2772 }
+frame S_BLASTERSMOKE2 { cmp = "FX18|I|*|4|*|@next"; dehackednum = 2773 }
+frame S_BLASTERSMOKE3 { cmp = "FX18|J|*|4|*|@next"; dehackednum = 2774 }
+frame S_BLASTERSMOKE4 { cmp = "FX18|K|*|4|*|@next"; dehackednum = 2775 }
+frame S_BLASTERSMOKE5 { cmp = "FX18|L|*|4";         dehackednum = 2776 }
+
+// HereticRipper
+frame S_HRIPPER1  { cmp = "FX18|M|*|4|*|@next"; dehackednum = 2777 }
+frame S_HRIPPER2  { cmp = "FX18|N|*|5|*|@prev"; dehackednum = 2778 }
+frame S_HRIPPERX1 { cmp = "FX18|O|T|4|*|@next"; dehackednum = 2779 } 
+frame S_HRIPPERX2 { cmp = "FX18|P|T|4|*|@next"; dehackednum = 2780 }
+frame S_HRIPPERX3 { cmp = "FX18|Q|T|4|*|@next"; dehackednum = 2781 }
+frame S_HRIPPERX4 { cmp = "FX18|R|T|4|*|@next"; dehackednum = 2782 }
+frame S_HRIPPERX5 { cmp = "FX18|S|T|4";         dehackednum = 2783 }
 

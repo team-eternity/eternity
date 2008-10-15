@@ -282,6 +282,7 @@ typedef enum
    MF3_PASSMOBJ     = 0x10000000,  // haleyjd: OVER_UNDER
    MF3_DONTOVERLAP  = 0x20000000,  // haleyjd: OVER_UNDER
    MF3_CYCLEALPHA   = 0x40000000,  // alpha cycles from 0 to 65536 perpetually
+   MF3_RIP          = 0x80000000,  // ripper - goes through everything
 } mobjflag3_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
