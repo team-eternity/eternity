@@ -71,9 +71,16 @@ extern boolean  showpsprites;
 // for sector lighting. Simply changing the constants is enough to change this
 // it seriously bottles the mind why this wasn't done in doom from the start 
 // except for maybe memory usage savings. 
-#define LIGHTLEVELS       32
-#define LIGHTSEGSHIFT      3
-#define LIGHTBRIGHT        2
+//#define OLDMAPS
+#ifdef OLDMAPS
+   #define LIGHTLEVELS       16
+   #define LIGHTSEGSHIFT      4
+   #define LIGHTBRIGHT        1
+#else
+   #define LIGHTLEVELS       32
+   #define LIGHTSEGSHIFT      3
+   #define LIGHTBRIGHT        2
+#endif
 
 #define LIGHTSCALESHIFT   12
 #define LIGHTZSHIFT       20

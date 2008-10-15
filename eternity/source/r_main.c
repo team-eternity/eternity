@@ -361,7 +361,10 @@ void R_InitLightTables (void)
    //  for each level / distance combination.
    for(i = 0; i < LIGHTLEVELS; ++i)
    {
-      int j, startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+      // SoM: the LIGHTBRIGHT constant must be used to scale the start offset of 
+      // the colormaps, otherwise the levels are staggered and become slightly 
+      // darker.
+      int j, startmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
       for(j = 0; j < MAXLIGHTZ; ++j)
       {
          int scale = FixedDiv ((SCREENWIDTH/2*FRACUNIT), (j+1)<<LIGHTZSHIFT);
@@ -528,7 +531,7 @@ void R_ExecuteSetViewSize (void)
    //  for each level / scale combination.
    for(i = 0; i < LIGHTLEVELS; ++i)
    {
-      int j, startmap = ((LIGHTLEVELS-1-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+      int j, startmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
       for(j = 0; j < MAXLIGHTSCALE; ++j)
       {                                       // killough 11/98:
          int t, level = startmap - j*1/DISTMAP;
