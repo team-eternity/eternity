@@ -520,6 +520,11 @@ sound ht_chicatk
    lump = "chicatk"; priority = 64; dehackednum = 399; pitchvariance = Heretic
 }
 
+sound ht_hrnsht
+{
+   lump = "hrnsht"; priority = 64; dehackednum = 400; pitchvariance = Heretic
+}
+
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.
 // Use these names in sound sequences to refer to the MapInfo-defined defaults.

@@ -2896,7 +2896,11 @@ static void D_DoomInit(void)
    }
    else if((p = M_CheckParm("-timedemo")) && ++p < myargc)
    {
-      G_TimeDemo(myargv[p], false);
+      // haleyjd 10/16/08: restored to MBF status
+      singletics = true;
+      timingdemo = true;            // show stats after quit
+      G_DeferedPlayDemo(myargv[p]);
+      singledemo = true;            // quit after one demo
    }
    else if((p = M_CheckParm("-playdemo")) && ++p < myargc)
    {

@@ -1068,3 +1068,42 @@ frame S_HRIPPERX3 { cmp = "FX18|Q|T|4|*|@next"; dehackednum = 2781 }
 frame S_HRIPPERX4 { cmp = "FX18|R|T|4|*|@next"; dehackednum = 2782 }
 frame S_HRIPPERX5 { cmp = "FX18|S|T|4";         dehackednum = 2783 }
 
+// HereticBlasterPuff1, 2
+frame S_BLASTERPUFF1_1 { cmp = "FX17|A|T|4|*|@next"; dehackednum = 2784 }
+frame S_BLASTERPUFF1_2 { cmp = "FX17|B|T|4|*|@next"; dehackednum = 2785 }
+frame S_BLASTERPUFF1_3 { cmp = "FX17|C|T|4|*|@next"; dehackednum = 2786 }
+frame S_BLASTERPUFF1_4 { cmp = "FX17|D|T|4|*|@next"; dehackednum = 2787 }
+frame S_BLASTERPUFF1_5 { cmp = "FX17|E|T|4";         dehackednum = 2788 }
+frame S_BLASTERPUFF2_1 { cmp = "FX17|F|T|3|*|@next"; dehackednum = 2789 }
+frame S_BLASTERPUFF2_2 { cmp = "FX17|G|T|3|*|@next"; dehackednum = 2790 }
+frame S_BLASTERPUFF2_3 { cmp = "FX17|H|T|4|*|@next"; dehackednum = 2791 }
+frame S_BLASTERPUFF2_4 { cmp = "FX17|I|T|4|*|@next"; dehackednum = 2792 }
+frame S_BLASTERPUFF2_5 { cmp = "FX17|J|T|4|*|@next"; dehackednum = 2793 }
+frame S_BLASTERPUFF2_6 { cmp = "FX17|K|T|4|*|@next"; dehackednum = 2794 }
+frame S_BLASTERPUFF2_7 { cmp = "FX17|L|T|4";         dehackednum = 2795 }
+
+// HereticHornRodFX1
+frame S_HRODFX1_1  { cmp = "FX00|A|T|6|*|@next"; dehackednum = 2796 }
+frame S_HRODFX1_2  { cmp = "FX00|B|T|6|*|@prev"; dehackednum = 2797 }
+frame S_HRODFXI1_1 { cmp = "FX00|H|T|5|*|@next"; dehackednum = 2798 }
+frame S_HRODFXI1_2 { cmp = "FX00|I|T|5|*|@next"; dehackednum = 2799 } 
+frame S_HRODFXI1_3 { cmp = "FX00|J|T|4|*|@next"; dehackednum = 2800 }
+frame S_HRODFXI1_4 { cmp = "FX00|K|T|4|*|@next"; dehackednum = 2801 }
+frame S_HRODFXI1_5 { cmp = "FX00|L|T|3|*|@next"; dehackednum = 2802 }
+frame S_HRODFXI1_6 { cmp = "FX00|M|T|3";         dehackednum = 2803 }
+
+// HereticGoldWandFX1,2 + HereticGoldWandPuff1,2
+frame S_GWANDFX1_1   { cmp = "FX01|A|T|6|*|@next"; dehackednum = 2804 }
+frame S_GWANDFX1_2   { cmp = "FX01|B|T|6|*|@prev"; dehackednum = 2805 }
+frame S_GWANDFXI1_1  { cmp = "FX01|E|T|3|*|@next"; dehackednum = 2806 }
+frame S_GWANDFXI1_2  { cmp = "FX01|F|T|3|*|@next"; dehackednum = 2807 }
+frame S_GWANDFXI1_3  { cmp = "FX01|G|T|3|*|@next"; dehackednum = 2808 }
+frame S_GWANDFXI1_4  { cmp = "FX01|H|T|3";         dehackednum = 2809 }
+frame S_GWANDFX2_1   { cmp = "FX01|C|T|6|*|@next"; dehackednum = 2810 }
+frame S_GWANDFX2_2   { cmp = "FX01|D|T|6|*|@prev"; dehackednum = 2811 }
+frame S_GWANDPUFF1_1 { cmp = "PUF2|A|T|3|*|@next"; dehackednum = 2812 }
+frame S_GWANDPUFF1_2 { cmp = "PUF2|B|T|3|*|@next"; dehackednum = 2813 }
+frame S_GWANDPUFF1_3 { cmp = "PUF2|C|T|3|*|@next"; dehackednum = 2814 }
+frame S_GWANDPUFF1_4 { cmp = "PUF2|D|T|3|*|@next"; dehackednum = 2815 }
+frame S_GWANDPUFF1_5 { cmp = "PUF2|E|T|3";         dehackednum = 2816 }
+

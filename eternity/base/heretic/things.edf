@@ -1531,3 +1531,70 @@ thingtype HereticRipper
   dehackednum = 422
 }
 
+thingtype HereticBlasterPuff1 
+{
+  spawnstate  = S_BLASTERPUFF1_1
+  cflags      = NOBLOCKMAP|NOGRAVITY
+  dehackednum = 423
+}
+
+thingtype HereticBlasterPuff2
+{
+  spawnstate  = S_BLASTERPUFF2_1
+  cflags      = NOBLOCKMAP|NOGRAVITY
+  dehackednum = 424
+}
+
+thingtype HereticHornRodFX1
+{
+  spawnstate  = S_HRODFX1_1
+  seesound    = ht_hrnsht
+  deathstate  = S_HRODFXI1_1
+  deathsound  = ht_hrnhit
+  speed       = 22.0
+  radius      = 12.0
+  height      = 8.0
+  damage      = 3
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST
+  dehackednum = 425
+}
+
+thingtype HereticGoldWandFX1
+{
+  spawnstate  = S_GWANDFX1_1
+  deathstate  = S_GWANDFXI1_1
+  deathsound  = ht_gldhit
+  speed       = 22.0
+  radius      = 10.0
+  height      = 6.0
+  damage      = 2
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY
+  dehackednum = 426
+}
+
+thingtype HereticGoldWandFX2
+{
+  spawnstate  = S_GWANDFX2_1
+  deathstate  = S_GWANDFXI1_1
+  speed       = 18.0
+  radius      = 10.0
+  height      = 6.0
+  damage      = 1
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY
+  dehackednum = 427
+}
+
+thingtype HereticGoldWandPuff1
+{
+  spawnstate  = S_GWANDPUFF1_1
+  cflags      = NOBLOCKMAP|NOGRAVITY
+  dehackednum = 428
+}
+
+thingtype HereticGoldWandPuff2
+{
+  spawnstate  = S_GWANDFXI1_1
+  cflags      = NOBLOCKMAP|NOGRAVITY
+  dehackednum = 429
+}
+

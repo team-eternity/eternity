@@ -1155,8 +1155,13 @@ static void G_DoPlayDemo(void)
    
    if(timingdemo)
    {
-      starttime = I_GetTime_RealTime();
-      startgametic = gametic;
+      static int first = 1;
+      if(first)
+      {
+         starttime = I_GetTime_RealTime();
+         startgametic = gametic;
+         first = 0;
+      }
    }
 }
 
@@ -3336,23 +3341,12 @@ boolean G_CheckDemoStatus(void)
    if(timingdemo)
    {
       int endtime = I_GetTime_RealTime();
-      
+
       // killough -- added fps information and made it work for longer demos:
-      unsigned realtics = endtime - starttime;
-      unsigned gametics = gametic - startgametic;
-      
-      C_Printf("\n" FC_HI "%-.1f frames per second\n",
-               (unsigned)gametics * (double)TICRATE / realtics);
-      
-      singletics = false;
-      demoplayback = false;
-      Z_ChangeTag(demobuffer, PU_CACHE);
-      G_ReloadDefaults();    // killough 3/1/98
-      netgame = false;       // killough 3/29/98
-      timingdemo = false;
-      C_SetConsole();
-      //ResetNet();      
-      return false;
+      unsigned int realtics = endtime - starttime;
+      I_Error("Timed %u gametics in %u realtics = %-.1f frames per second",
+              (unsigned int)(gametic), realtics,
+              (unsigned int)(gametic) * (double) TICRATE / realtics);
    }              
 
    if(demoplayback)

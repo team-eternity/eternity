@@ -510,6 +510,7 @@ SOURCE=.\Source\textscreen\txt_main.c
 # Begin Source File
 
 SOURCE=.\Source\a_fixed.c
+# SUBTRACT CPP /FA<none>
 # End Source File
 # Begin Source File
 
