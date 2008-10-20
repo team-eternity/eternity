@@ -897,7 +897,7 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifdisabled()");
+      cfg_error(cfg, "wrong number of args to ifdisabledany()");
       return 1;
    }
 

@@ -1337,6 +1337,7 @@ void A_ImpXDeath2(mobj_t *);
 void A_ImpExplode(mobj_t *);
 void A_PlayerSkull(mobj_t *);
 void A_ClearSkin(mobj_t *mo);
+void A_PhoenixPuff(mobj_t *mo);
 
 // haleyjd 10/04/08: Hexen pointers
 void A_SetInvulnerable(mobj_t *mo);
@@ -1656,7 +1657,8 @@ deh_bexptr deh_bexptrs[] =
   POINTER(ImpXDeath2),        
   POINTER(ImpExplode),        
   POINTER(PlayerSkull),       
-  POINTER(ClearSkin),         
+  POINTER(ClearSkin),
+  POINTER(PhoenixPuff),
 
   // haleyjd 10/04/08: Hexen pointers
   POINTER(SetInvulnerable),

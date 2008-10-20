@@ -74,6 +74,13 @@ typedef struct
    short colormap;        // unused in Doom but might be used in Phase 2 Boom
 } mappatch_t;
 
+// haleyjd 10/18/08: Rogue took away the unused stuff for Strife.
+typedef struct
+{
+   short originx;
+   short originy;
+   short patch;
+} strife_mappatch_t;
 
 //
 // Texture definition.
@@ -82,14 +89,25 @@ typedef struct
 //
 typedef struct
 {
-   char       name[8];
-   boolean    masked;
-   short      width;
-   short      height;
-   char       pad[4];       // unused in Doom but might be used in Boom Phase 2
-   short      patchcount;
+   char            name[8];
+   boolean         masked;
+   short           width;
+   short           height;
+   char            pad[4];       // unused in Doom but might be used in Boom Phase 2
+   short           patchcount;
    mappatch_t patches[1];
 } maptexture_t;
+
+// haleyjd 10/18/08: Rogue took away most of the unused stuff for Strife.
+typedef struct
+{
+   char              name[8];
+   boolean           unused;
+   short             width;
+   short             height;
+   short             patchcount;
+   strife_mappatch_t patches[1];
+} strife_maptexture_t;
 
 // killough 4/17/98: make firstcolormaplump,lastcolormaplump external
 int firstcolormaplump, lastcolormaplump;      // killough 4/17/98
@@ -127,6 +145,12 @@ float     *spriteheight;
 //  but any columns with multiple patches
 //  will have new column_t's generated.
 //
+
+#if 0
+static int R_ExamineTextureFormat()
+{
+}
+#endif
 
 //
 // R_DrawColumnInCache

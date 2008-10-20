@@ -221,7 +221,8 @@ void D_Display(void)
 
    // save the current screen if about to wipe
    // no melting consoles
-   if(gamestate != wipegamestate && wipegamestate != GS_CONSOLE)
+   if(gamestate != wipegamestate &&
+      !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
       Wipe_StartScreen();
 
    if(inwipe || c_moving || menuactive)

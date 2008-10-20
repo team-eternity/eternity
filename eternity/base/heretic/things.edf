@@ -1598,3 +1598,17 @@ thingtype HereticGoldWandPuff2
   dehackednum = 429
 }
 
+thingtype HereticPhoenixFX1
+{
+  spawnstate  = S_PHOENIXFX1_1
+  seesound    = ht_phosht
+  deathstate  = S_PHOENIXFXI1_1
+  deathsound  = ht_phohit
+  speed       = 20.0
+  radius      = 11.0
+  height      = 8.0
+  damage      = 20
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST
+  dehackednum = 430
+}
+

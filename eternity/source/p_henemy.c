@@ -2063,9 +2063,37 @@ void A_PlayerSkull(mobj_t *actor)
    // send head flying
    head->momx = 512 * P_SubRandom(pr_skullpop);
    head->momy = 512 * P_SubRandom(pr_skullpop);
-   head->momz = 64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
+   head->momz =  64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
 }
 
+//
+// A_PhoenixPuff
+//
+// Parameters:
+// * args[0] : thing type
+//
+void A_PhoenixPuff(mobj_t *actor)
+{
+   int thingtype = E_SafeThingType(actor->state->args[0]);
+   mobj_t *puff;
+   angle_t angle;
+   
+   P_HticTracer(actor, ANGLE_1 * 5, ANGLE_1 * 10);
+   
+   puff = P_SpawnMobj(actor->x, actor->y, actor->z, thingtype);
+   
+   angle = actor->angle + ANG90;
+   angle >>= ANGLETOFINESHIFT;
+   puff->momx = FixedMul(13 * FRACUNIT / 10, finecosine[angle]);
+   puff->momy = FixedMul(13 * FRACUNIT / 10, finesine[angle]);
+   
+   puff = P_SpawnMobj(actor->x, actor->y, actor->z, thingtype);
+   
+   angle = actor->angle - ANG90;
+   angle >>= ANGLETOFINESHIFT;
+   puff->momx = FixedMul(13 * FRACUNIT / 10, finecosine[angle]);
+   puff->momy = FixedMul(13 * FRACUNIT / 10, finesine[angle]);
+}
 
 //
 // Other Parameterized Codepointer Functions
