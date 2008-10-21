@@ -228,7 +228,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    else
       otop = backcz;
 
-   if(frontfz < backfz)
+   if(frontfz > backfz)
       obot = frontfz;
    else
       obot = backfz;
@@ -244,6 +244,10 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       fixed_t textop, texbot, texmid;
       side_t *side = &sides[linedef->sidenum[0]];
       
+      if(linedef - lines == 1882 && mo->player)
+      {
+         linedef = linedef;
+      }
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
          texbot = side->rowoffset + obot;
