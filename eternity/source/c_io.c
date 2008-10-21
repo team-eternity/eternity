@@ -948,7 +948,9 @@ void C_Popup(void)
 
 void C_InstaPopup(void)
 {
-   current_target = current_height = 0;
+   // haleyjd 10/20/08: no popup in GS_CONSOLE gamestate!
+   if(gamestate != GS_CONSOLE)
+      current_target = current_height = 0;
 }
 
 //

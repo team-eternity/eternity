@@ -567,7 +567,7 @@ void D_DoAdvanceDemo(void)
 
    state->func(DEH_String(state->name));
 
-   //C_InstaPopup();       // make console go away
+   C_InstaPopup();       // make console go away
 }
 
 //
@@ -578,7 +578,6 @@ void D_StartTitle(void)
    gameaction = ga_nothing;
    demosequence = -1;
    D_AdvanceDemo();
-   C_InstaPopup();       // pop up the console straight away
 }
 
 //

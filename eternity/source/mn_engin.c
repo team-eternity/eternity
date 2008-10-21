@@ -1317,6 +1317,13 @@ void MN_ActivateMenu(void)
 //
 void MN_StartMenu(menu_t *menu)
 {
+   // haleyjd 10/20/08: no menus in console mode!
+   if(gamestate == GS_CONSOLE)
+   {
+      C_Printf(FC_ERROR "Menus cannot be opened during console gamestate.\a\n");
+      return;
+   }
+
    if(!menuactive)
    {
       C_InstaPopup();          // haleyjd 03/11/06: get rid of console...
