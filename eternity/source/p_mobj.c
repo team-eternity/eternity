@@ -941,7 +941,8 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          }
       }
    }
-   else if(R_LinkedCeilingActive(mobj->subsector->sector))
+   
+   if(!ret && R_LinkedCeilingActive(mobj->subsector->sector))
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
