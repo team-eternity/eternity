@@ -354,8 +354,8 @@ void P_XYMovement(mobj_t* mo)
          else if(mo->flags & MF_MISSILE)
          {
             // haleyjd 1/17/00: feel the might of reflection!
-            if(demo_version >= 329 && tm->BlockingMobj &&
-               (tm->BlockingMobj->flags2 & MF2_REFLECTIVE))
+            if(tm->BlockingMobj &&
+               tm->BlockingMobj->flags2 & MF2_REFLECTIVE)
             {
                angle_t refangle =
                   R_PointToAngle2(tm->BlockingMobj->x, tm->BlockingMobj->y, mo->x, mo->y);
@@ -913,44 +913,11 @@ void P_NightmareRespawn(mobj_t* mobj)
    P_RemoveMobj(mobj);
 }
 
-//
-// P_TestFloatBob
-//
-// haleyjd: extracted predicate for float bob test
-//
-static boolean P_TestFloatBob(mobj_t *mobj)
-{
-   return demo_version < 331 ||
-      !(mobj->flags2 & MF2_FLOATBOB) ||
-       (mobj->z - FloatBobOffsets[(mobj->floatbob + leveltime) & 63] != mobj->floorz);
-}
-
-//
-// P_DoZMovement
-//
-// haleyjd: extracted predicate for P_ZMovement call because it got too
-// complicated. We only want to consider certain terms depending on the
-// demo version and whether or not 3D object clipping is enabled.
-//
-static boolean P_DoZMovement(mobj_t *mobj)
-{
-   if(demo_version < 331 || comp[comp_overunder])
-   {
-      return (mobj->momz ||
-              (mobj->z != mobj->floorz && P_TestFloatBob(mobj)));
-   }
-   else
-   {
-      return (mobj->momz || tm->BlockingMobj ||
-              (mobj->z != mobj->floorz && P_TestFloatBob(mobj)));
-   }
-}
-
-
-
 #ifdef R_LINKEDPORTALS
 static boolean P_CheckPortalTeleport(mobj_t *mobj)
 {
+   boolean ret = false;
+
    if(R_LinkedFloorActive(mobj->subsector->sector))
    {
       fixed_t passheight;
@@ -970,12 +937,11 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          if(link)
          {
             EV_PortalTeleport(mobj, link);
-            return true;
+            ret = true;
          }
       }
    }
-
-   if(R_LinkedCeilingActive(mobj->subsector->sector))
+   else if(R_LinkedCeilingActive(mobj->subsector->sector))
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
@@ -994,12 +960,12 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          if(link)
          {
             EV_PortalTeleport(mobj, link);
-            return true;
+            ret = true;
          }
       }
    }
 
-   return false;
+   return ret;
 }
 #endif
 
@@ -1009,7 +975,8 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
 //
 void P_MobjThinker(mobj_t *mobj)
 {
-   int oldwaterstate, waterstate;
+   int oldwaterstate, waterstate = 0;
+   fixed_t z;
 
    // killough 11/98:
    // removed old code which looked at target references
@@ -1033,10 +1000,6 @@ void P_MobjThinker(mobj_t *mobj)
       }
    }
 
-   // haleyjd: sentient things do not think during cinemas
-   if(cinema_pause && sentient(mobj))
-      return;
-
    tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
 
    // haleyjd 08/07/04: handle deep water plane hits
@@ -1046,13 +1009,10 @@ void P_MobjThinker(mobj_t *mobj)
 
       waterstate = (mobj->z < hs->floorheight);
    }
-   else
-      waterstate = 0;
 
    // haleyjd 03/12/03: Heretic Wind transfer specials
    // haleyjd 03/19/06: moved here from P_XYMovement
-   if(demo_version >= 331 && (mobj->flags3 & MF3_WINDTHRUST) &&
-      !(mobj->flags & MF_NOCLIP))
+   if(mobj->flags3 & MF3_WINDTHRUST && !(mobj->flags & MF_NOCLIP))
    {
       sector_t *sec = mobj->subsector->sector;
 
@@ -1069,12 +1029,21 @@ void P_MobjThinker(mobj_t *mobj)
          return;       // mobj was removed
    }
 
-   if(demo_version >= 331 && mobj->flags2 & MF2_FLOATBOB) // haleyjd
-      mobj->z += FloatBobDiffs[(mobj->floatbob + leveltime) & 63];
+   if(demo_version < 331 || comp[comp_overunder])
+      tm->BlockingMobj = NULL;
 
+   z = mobj->z;
+
+   if(mobj->flags2 & MF2_FLOATBOB) // haleyjd
+   {
+      int idx = (mobj->floatbob + leveltime) & 63;
+
+      mobj->z += FloatBobDiffs[idx];
+      z = mobj->z - FloatBobOffsets[idx];
+   }
 
    // haleyjd: OVER_UNDER: major changes
-   if(P_DoZMovement(mobj))
+   if(mobj->momz || tm->BlockingMobj || z != mobj->floorz)
    {
       if(demo_version >= 331 && !comp[comp_overunder]  &&
          ((mobj->flags3 & MF3_PASSMOBJ) || (mobj->flags & MF_SPECIAL)))
@@ -1137,10 +1106,6 @@ void P_MobjThinker(mobj_t *mobj)
       else
          P_ZMovement(mobj);
 
-#ifdef R_LINKEDPORTALS
-      P_CheckPortalTeleport(mobj);
-#endif
-
       if(mobj->thinker.function == P_RemoveThinkerDelayed) // killough
          return;       // mobj was removed
    }
@@ -1158,14 +1123,10 @@ void P_MobjThinker(mobj_t *mobj)
          P_ApplyTorque(mobj);               // Apply torque
       else
          mobj->intflags &= ~MIF_FALLING, mobj->gear = 0;  // Reset torque
+   }
 
 #ifdef R_LINKEDPORTALS
-      P_CheckPortalTeleport(mobj);
-#endif
-   }
-#ifdef R_LINKEDPORTALS
-   else
-      P_CheckPortalTeleport(mobj);
+   P_CheckPortalTeleport(mobj);
 #endif
 
    // haleyjd 11/06/05: handle crashstate here

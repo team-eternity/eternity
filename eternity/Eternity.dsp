@@ -50,8 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 snes_spc/Release/snes_spc.lib kernel32.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /map /machine:I386 /nodefaultlib
-# SUBTRACT LINK32 /profile
+# ADD LINK32 snes_spc/Release/snes_spc.lib kernel32.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /machine:I386 /nodefaultlib
 
 !ELSEIF  "$(CFG)" == "Eternity - Win32 Debug"
 
@@ -510,7 +509,6 @@ SOURCE=.\Source\textscreen\txt_main.c
 # Begin Source File
 
 SOURCE=.\Source\a_fixed.c
-# SUBTRACT CPP /FA<none>
 # End Source File
 # Begin Source File
 

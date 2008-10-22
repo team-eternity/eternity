@@ -22,7 +22,6 @@
 // DESCRIPTION:
 //      Inline linked portal predicates.
 //      SoM created 12/23/07
-//      haleyjd 03/17/08: integrated demo_version checks
 //
 //-----------------------------------------------------------------------------
 
@@ -33,8 +32,7 @@ extern int demo_version;
 
 d_inline static boolean R_LinkedFloorActive(sector_t *sector)
 {
-   return (demo_version >= 333 && 
-           useportalgroups && 
+   return (useportalgroups && 
            sector->f_portal && 
            sector->f_portal->type == R_LINKED &&
            sector->floorz <= sector->f_portal->data.camera.planez);
@@ -43,8 +41,7 @@ d_inline static boolean R_LinkedFloorActive(sector_t *sector)
 
 d_inline static boolean R_LinkedCeilingActive(sector_t *sector)
 {
-   return (demo_version >= 333 &&
-           useportalgroups && 
+   return (useportalgroups && 
            sector->c_portal && 
            sector->c_portal->type == R_LINKED &&
            sector->ceilingz >= sector->c_portal->data.camera.planez);
@@ -53,8 +50,7 @@ d_inline static boolean R_LinkedCeilingActive(sector_t *sector)
 
 d_inline static boolean R_LinkedLineActive(line_t *line)
 {
-   return (demo_version >= 333 &&
-           useportalgroups && 
+   return (useportalgroups && 
            line->portal && line->portal->type == R_LINKED);
 }
 
@@ -130,7 +126,7 @@ d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
 }
 
 //
-// SecFPortalCam
+// R_FPCam
 //
 // haleyjd 3/17/08: Convenience routine to clean some shit up.
 //
@@ -140,7 +136,7 @@ d_inline static cameraportal_t *R_FPCam(sector_t *s)
 }
 
 //
-// SecCPortalCam
+// R_CPCam
 //
 // ditto
 //
