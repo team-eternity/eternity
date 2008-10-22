@@ -203,6 +203,18 @@ static void R_RenderSegLoop(void)
    int i, texx;
    float basescale;
 
+   // haleyjd 06/30/07: cardboard invuln fix.
+   // haleyjd 10/21/08: moved up loop-invariant calculation
+   if(fixedcolormap)
+   {
+      // haleyjd 10/31/02: invuln fix
+      if(fixedcolormap == 
+         fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
+         column.colormap = fixedcolormap;
+      else
+         column.colormap = walllights[MAXLIGHTSCALE-1];
+   }
+
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       cliptop = (int)ceilingclip[i];
@@ -286,17 +298,7 @@ static void R_RenderSegLoop(void)
 
          // calculate lighting
          // SoM: ANYRES
-         // haleyjd 06/30/07: cardboard invuln fix.
-         if(fixedcolormap)
-         {
-            // haleyjd 10/31/02: invuln fix
-            if(fixedcolormap == 
-               fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
-               column.colormap = fixedcolormap;
-            else
-               column.colormap = walllights[MAXLIGHTSCALE-1];
-         }
-         else
+         if(!fixedcolormap)
          {
             // SoM: it took me about 5 solid minutes of looking at the old doom code
             // and running test levels through it to do the math and get 2560 as the
