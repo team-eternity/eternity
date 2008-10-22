@@ -882,9 +882,6 @@ static void R_AddLine(seg_t *line)
    // complicated :/
    float textop, texhigh, texlow, texbottom;
 
-   if(line->nodraw)
-      return;
-
    tempsec.frameid = 0;
 
    seg.clipsolid = false;
@@ -1714,7 +1711,10 @@ static void R_Subsector(int num)
       R_AddDynaSegs(sub);
 
    while(count--)
-      R_AddLine(line++);
+   {
+      if(!line->nodraw) // haleyjd
+         R_AddLine(line++);
+   }
 }
 
 //
