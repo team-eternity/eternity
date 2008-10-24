@@ -551,8 +551,9 @@ static void I_ReadMouse(void)
    {
       ev.type = ev_mouse;
       ev.data1 = 0; // FIXME?
-      ev.data2 = AccelerateMouse(x);
-      ev.data3 = -AccelerateMouse(y);
+      // SoM: So the values that go to Eternity should be 16.16 fixed point...
+      ev.data2 = AccelerateMouse(x) << FRACBITS;
+      ev.data3 = -AccelerateMouse(y) << FRACBITS;
       
       D_PostEvent(&ev);
    }
