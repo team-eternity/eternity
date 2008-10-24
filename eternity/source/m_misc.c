@@ -494,6 +494,14 @@ default_t defaults[] =
       "0 for no mouse accel, 1 for parabolic, 2 for choco-doom"
    },
 
+   // haleyjd 10/24/08
+   {
+      "mouse_novert",
+      &novert, NULL,
+      0, {0, 1}, dt_number, ss_none, wad_no,
+      "0 for normal mouse, 1 for no vertical movement"
+   },
+
    {
       "sfx_volume",
       &snd_SfxVolume, NULL,

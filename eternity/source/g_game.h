@@ -117,6 +117,8 @@ extern boolean scriptSecret;   // haleyjd
 
 extern boolean sendpause;
 
+extern int novert; // haleyjd
+
 #endif
 
 //----------------------------------------------------------------------------

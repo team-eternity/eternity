@@ -426,6 +426,9 @@ char *accel_options[]={ "off", "parabolic", "choco" };
 VARIABLE_INT(mouseAccel_type, NULL, 0, 2, accel_options);
 CONSOLE_VARIABLE(mouse_accel, mouseAccel_type, 0) {}
 
+VARIABLE_BOOLEAN(novert, NULL, onoff);
+CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
+
 // haleyjd: new stuff
 
 extern int map_point_coordinates;
@@ -735,6 +738,7 @@ void G_AddCommands(void)
    C_AddCommand(sens_horiz);
    C_AddCommand(sens_combined);
    C_AddCommand(mouse_accel);
+   C_AddCommand(mouse_novert);
    C_AddCommand(invertmouse);
    C_AddCommand(turbo);
    C_AddCommand(playdemo);
