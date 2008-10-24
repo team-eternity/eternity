@@ -74,6 +74,18 @@ SDL_Surface *sdlscreen;
 //
 //////////////////////////////////////////////////////////////////////////
 
+// Mouse acceleration
+//
+// This emulates some of the behavior of DOS mouse drivers by increasing
+// the speed when the mouse is moved fast.
+//
+// The mouse input values are input directly to the game, but when
+// the values exceed the value of mouse_threshold, they are multiplied
+// by mouse_acceleration to increase the speed.
+
+float mouse_acceleration = 2.0;
+int   mouse_threshold = 10;
+
 //
 // MouseShouldBeGrabbed
 //
@@ -331,20 +343,36 @@ void I_StartFrame(void)
 extern void MN_QuitDoom(void);
 extern int mouseAccel_type;
 
+//
+// AccelerateMouse
+//
+// haleyjd 10/23/08: From Choco-Doom
+//
+static int AccelerateMouse(int val)
+{
+   if(val < 0)
+      return -AccelerateMouse(-val);
+
+   return (val > mouse_threshold) ?
+             (int)((val - mouse_threshold) * mouse_acceleration + mouse_threshold) :
+             val;
+}
+
 // SoM 3/14/2002: Rewrote event function for use with SDL
 static void I_GetEvent(void)
 {
    SDL_Event event;
-   event_t   d_event;   
    
-   event_t     mouseevent = { ev_mouse, 0, 0, 0 };
-   static int  buttons = 0;
-   fixed_t     mousefrac;
+   event_t    d_event    = { 0, 0, 0, 0 };
+   event_t    mouseevent = { ev_mouse, 0, 0, 0 };
+   static int buttons = 0;
+   fixed_t    mousefrac;
+   
    // This might be only a windows problem... but it seems the 
-   int         mousexden = fullscreen ? video.width : video.width >> 1;
-   int         mouseyden = fullscreen ? video.height : video.height >> 1;
+   int mousexden = fullscreen ? video.width : video.width >> 1;
+   int mouseyden = fullscreen ? video.height : video.height >> 1;
+   
    int sendmouseevent = 0;
-
    
    while(SDL_PollEvent(&event))
    {
@@ -378,7 +406,7 @@ static void I_GetEvent(void)
          break;
       
       case SDL_MOUSEMOTION:       
-         if(!usemouse)
+         if(!usemouse || mouseAccel_type == 2)
             continue;
 
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
@@ -407,56 +435,56 @@ static void I_GetEvent(void)
          sendmouseevent = 1;
          break;
       
-      case SDL_MOUSEBUTTONUP:
+      case SDL_MOUSEBUTTONUP:      
          if(!usemouse)
             continue;
          sendmouseevent = 1;
          d_event.type = ev_keyup;
+
          if(event.button.button == SDL_BUTTON_LEFT)
          {
-            buttons &= ~1;
+            buttons &= ~1;            
             d_event.data1 = KEYD_MOUSE1;
          }
          else if(event.button.button == SDL_BUTTON_MIDDLE)
          {
             // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
-            buttons &= ~4;
+            buttons &= ~4;            
             d_event.data1 = KEYD_MOUSE3;
          }
          else
          {
-            buttons &= ~2;
+            buttons &= ~2;            
             d_event.data1 = KEYD_MOUSE2;
          }
          D_PostEvent(&d_event);
          break;
-      
+
       case SDL_MOUSEBUTTONDOWN:
          if(!usemouse)
             continue;
          sendmouseevent = 1;
-         d_event.type = ev_keydown;
+         d_event.type =  ev_keydown;
          if(event.button.button == SDL_BUTTON_LEFT)
          {
-            buttons |= 1;
+            buttons |= 1;            
             d_event.data1 = KEYD_MOUSE1;
          }
          else if(event.button.button == SDL_BUTTON_MIDDLE)
          {
             // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
-            buttons |= 4;
+            buttons |= 4;            
             d_event.data1 = KEYD_MOUSE3;
          }
          else
          {
-            buttons |= 2;
+            buttons |= 2;            
             d_event.data1 = KEYD_MOUSE2;
          }
          D_PostEvent(&d_event);
          break;
 
       case SDL_QUIT:
-         // haleyjd 05/28/06: call MN_QuitDoom instead of C_RunTextCmd("quit")
          MN_QuitDoom();
          break;
 
@@ -485,11 +513,62 @@ static void I_GetEvent(void)
 }
 
 //
+// CenterMouse
+//
+// haleyjd 10/23/08: from Choco-Doom:
+// Warp the mouse back to the middle of the screen
+//
+static void CenterMouse(void)
+{
+   // Warp the the screen center
+   
+   SDL_WarpMouse(video.width / 2, video.height / 2);
+   
+   // Clear any relative movement caused by warping
+   
+   SDL_PumpEvents();
+   SDL_GetRelativeMouseState(NULL, NULL);
+}
+
+//
+// I_ReadMouse
+//
+// haleyjd 10/23/08: from Choco-Doom:
+//
+// Read the change in mouse state to generate mouse motion events
+//
+// This is to combine all mouse movement for a tic into one mouse
+// motion event.
+//
+static void I_ReadMouse(void)
+{
+   int x, y;
+   event_t ev;
+   
+   SDL_GetRelativeMouseState(&x, &y);
+   
+   if(x != 0 || y != 0) 
+   {
+      ev.type = ev_mouse;
+      ev.data1 = 0; // FIXME?
+      ev.data2 = AccelerateMouse(x);
+      ev.data3 = -AccelerateMouse(y);
+      
+      D_PostEvent(&ev);
+   }
+
+   if(MouseShouldBeGrabbed())
+      CenterMouse();
+}
+//
 // I_StartTic
 //
 void I_StartTic(void)
 {
    I_GetEvent();
+
+   if(usemouse && mouseAccel_type == 2)
+      I_ReadMouse();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1106,8 +1185,8 @@ CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
 VARIABLE_BOOLEAN(usejoystick, NULL, yesno);
 
-CONSOLE_VARIABLE(use_mouse, usemouse, 0) {}
-CONSOLE_VARIABLE(use_joystick, usejoystick, 0) {}
+CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
+CONSOLE_VARIABLE(i_usejoystick, usejoystick, 0) {}
 
 // haleyjd 04/15/02: joystick sensitivity variables
 VARIABLE_INT(joystickSens_x, NULL, -32768, 32767, NULL);
@@ -1122,8 +1201,8 @@ CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 
 void I_Video_AddCommands(void)
 {
-   C_AddCommand(use_mouse);
-   C_AddCommand(use_joystick);
+   C_AddCommand(i_usemouse);
+   C_AddCommand(i_usejoystick);
    
    C_AddCommand(v_diskicon);
    C_AddCommand(v_retrace);

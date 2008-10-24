@@ -422,8 +422,8 @@ CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 
 // SoM: mouse accel
-char *accel_options[]={"off", "parabolic"};
-VARIABLE_INT(mouseAccel_type, NULL, 0, 1, accel_options);
+char *accel_options[]={ "off", "parabolic", "choco" };
+VARIABLE_INT(mouseAccel_type, NULL, 0, 2, accel_options);
 CONSOLE_VARIABLE(mouse_accel, mouseAccel_type, 0) {}
 
 // haleyjd: new stuff

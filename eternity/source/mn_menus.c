@@ -2010,7 +2010,7 @@ static menuitem_t mn_mouse_items[] =
 {
    {it_title,      FC_GOLD "mouse settings",       NULL,   "m_mouse"},
    {it_gap},
-   {it_toggle,     "enable mouse",                 "use_mouse"},
+   {it_toggle,     "enable mouse",                 "i_usemouse"},
    {it_gap},
    {it_info,       FC_GOLD "sensitivity"},
    {it_variable,   "horizontal",                   "sens_horiz"},
@@ -2020,7 +2020,7 @@ static menuitem_t mn_mouse_items[] =
    {it_toggle,     "invert mouse",                 "invertmouse"},
    {it_toggle,     "smooth turning",               "smooth_turning"},
 #ifndef _SDL_VER
-   {it_toggle,     "enable joystick",              "use_joystick"},
+   {it_toggle,     "enable joystick",              "i_usejoystick"},
 #endif
    {it_gap},
    {it_info,       FC_GOLD"mouselook"},
