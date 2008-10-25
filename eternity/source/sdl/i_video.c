@@ -415,23 +415,29 @@ static void I_GetEvent(void)
             // haleyjd 09/29/08: NOT IN WINDOWED MODE!
             if(fullscreen)
             {
-               mouseevent.data3 -= (event.motion.yrel << FRACBITS) / mouseyden * 200;
-               mouseevent.data2 += (event.motion.xrel << FRACBITS) / mousexden * 320;
+               mouseevent.data3 -= (event.motion.yrel * 200) / mouseyden;
+               mouseevent.data2 += (event.motion.xrel * 320) / mousexden;
             }
             else
             {
-               mouseevent.data3 -= (event.motion.yrel << FRACBITS);
-               mouseevent.data2 += (event.motion.xrel << FRACBITS);
+               mouseevent.data3 -= event.motion.yrel;
+               mouseevent.data2 += event.motion.xrel;
             }
          }
          else if(mouseAccel_type == 1)
          {
             mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 7; 
-            mouseevent.data3 -= (FixedMul(D_abs(mousefrac), mousefrac) + mousefrac) * 20;
+            mouseevent.data3 -= ((FixedMul(D_abs(mousefrac), mousefrac) + mousefrac) * 20) >> FRACBITS;
 
             mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 5; 
-            mouseevent.data2 += (FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac) * 20;
+            mouseevent.data2 += ((FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac) * 20) >> FRACBITS;
          }
+         else if(mouseAccel_type == 3)
+         {
+            mouseevent.data2 += (int)(event.motion.xrel + (float)(event.motion.xrel * 0.25f));
+            mouseevent.data3 -= (int)(event.motion.yrel + (float)(event.motion.yrel * 0.25f));
+         }
+
          sendmouseevent = 1;
          break;
       
@@ -552,8 +558,8 @@ static void I_ReadMouse(void)
       ev.type = ev_mouse;
       ev.data1 = 0; // FIXME?
       // SoM: So the values that go to Eternity should be 16.16 fixed point...
-      ev.data2 = AccelerateMouse(x) << FRACBITS;
-      ev.data3 = -AccelerateMouse(y) << FRACBITS;
+      ev.data2 = AccelerateMouse(x);
+      ev.data3 = -AccelerateMouse(y);
       
       D_PostEvent(&ev);
    }

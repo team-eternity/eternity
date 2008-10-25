@@ -422,8 +422,8 @@ CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 
 // SoM: mouse accel
-char *accel_options[]={ "off", "parabolic", "choco" };
-VARIABLE_INT(mouseAccel_type, NULL, 0, 2, accel_options);
+char *accel_options[]={ "off", "parabolic", "choco", "linear" };
+VARIABLE_INT(mouseAccel_type, NULL, 0, 3, accel_options);
 CONSOLE_VARIABLE(mouse_accel, mouseAccel_type, 0) {}
 
 VARIABLE_BOOLEAN(novert, NULL, onoff);

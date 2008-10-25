@@ -850,8 +850,8 @@ boolean G_Responder(event_t* ev)
       mousey = (ev->data3 * (mouseSensitivity_vert*4)) / FRACUNIT;   // haleyjd 05/30/05: fixed
 #else
       // SoM: this mimics the doom2 behavior better. 
-      mousex = (ev->data2 * (mouseSensitivity_horiz + 5) / 5) >> FRACBITS;
-      mousey = (ev->data3 * (mouseSensitivity_vert + 5) / 5) >> FRACBITS;
+      mousex += (ev->data2 * (mouseSensitivity_horiz + 5) / 10);
+      mousey += (ev->data3 * (mouseSensitivity_vert + 5) / 10);
 #endif
       return true;    // eat events
       
