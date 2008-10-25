@@ -361,18 +361,13 @@ static int AccelerateMouse(int val)
 // SoM 3/14/2002: Rewrote event function for use with SDL
 static void I_GetEvent(void)
 {
-   SDL_Event event;
-   
-   event_t    d_event    = { 0, 0, 0, 0 };
-   event_t    mouseevent = { ev_mouse, 0, 0, 0 };
    static int buttons = 0;
-   fixed_t    mousefrac;
+
+   SDL_Event  event;
+   int        sendmouseevent = 0;
+   event_t    d_event        = { 0, 0, 0, 0 };
+   event_t    mouseevent     = { ev_mouse, 0, 0, 0 };
    
-   // This might be only a windows problem... but it seems the 
-   int mousexden = fullscreen ? video.width : video.width >> 1;
-   int mouseyden = fullscreen ? video.height : video.height >> 1;
-   
-   int sendmouseevent = 0;
    
    while(SDL_PollEvent(&event))
    {
@@ -417,14 +412,6 @@ static void I_GetEvent(void)
             mouseevent.data2 += event.motion.xrel;
          }
          else if(mouseAccel_type == 1)
-         {
-            mousefrac = (event.motion.yrel << FRACBITS) / mouseyden * 7; 
-            mouseevent.data3 -= ((FixedMul(D_abs(mousefrac), mousefrac) + mousefrac) * 20) >> FRACBITS;
-
-            mousefrac = (event.motion.xrel << FRACBITS) / mousexden * 5; 
-            mouseevent.data2 += ((FixedMul(D_abs(mousefrac), mousefrac) + 6 * mousefrac) * 20) >> FRACBITS;
-         }
-         else if(mouseAccel_type == 3)
          {
             mouseevent.data2 += (int)(event.motion.xrel + (float)(event.motion.xrel * 0.25f));
             mouseevent.data3 -= (int)(event.motion.yrel + (float)(event.motion.yrel * 0.25f));
@@ -507,7 +494,7 @@ static void I_GetEvent(void)
    // to process on the system. Otherwise Eternity will use almost 100% of the
    // CPU even while paused.
    if(paused || !window_focused)
-      SDL_Delay(10);
+      SDL_Delay(1);
 }
 
 //

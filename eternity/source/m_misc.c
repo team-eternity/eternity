@@ -491,7 +491,7 @@ default_t defaults[] =
       "mouse_accel",
       &mouseAccel_type, NULL,
       0, {0, 2}, dt_number, ss_none, wad_no,
-      "0 for no mouse accel, 1 for parabolic, 2 for choco-doom"
+      "0 for no mouse accel, 1 for linear, 2 for choco-doom"
    },
 
    // haleyjd 10/24/08
