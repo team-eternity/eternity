@@ -950,7 +950,9 @@ static void CreateCursors(void)
       SDL_FreeCursor(cursors[0]);
 
    // Save the default cursor so it can be recalled later
-   cursors[1] = SDL_GetCursor();
+   if(!cursors[1])
+      cursors[1] = SDL_GetCursor();
+
    // Create an empty cursor
    cursors[0] = SDL_CreateCursor(&empty_cursor_data,
                                  &empty_cursor_data,
