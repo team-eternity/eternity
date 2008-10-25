@@ -68,15 +68,6 @@ static boolean fullscreen;
 
 SDL_Surface *sdlscreen;
 
-
-// SoM: Added empty cursor code from Choclate DOOM with a little
-// modification... It seems the cursors were being created each time the
-// graphics mode was set. In EE, this is not an option because 
-// I_InitGraphicsMode is called each time the screen resolution changes. This
-// could result in a memory leak... 
-// Empty mouse cursor
-static SDL_Cursor *cursors[2] = {NULL, NULL};
-
 ///////////////////////////////////////////////////////////////////////////
 //
 // Input Code
@@ -608,13 +599,13 @@ static void UpdateGrab(void)
    
    if(grab && !currently_grabbed)
    {
-      SDL_SetCursor(cursors[0]);
+      SDL_ShowCursor(SDL_DISABLE);
       SDL_WM_GrabInput(SDL_GRAB_ON);
    }
    
    if(!grab && currently_grabbed)
    {
-      SDL_SetCursor(cursors[1]);
+      SDL_ShowCursor(SDL_ENABLE);
       SDL_WM_GrabInput(SDL_GRAB_OFF);
    }
    
@@ -939,25 +930,6 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
    }
 }
 
-
-
-
-static void CreateCursors(void)
-{
-   static Uint8 empty_cursor_data = 0;
-
-   if(cursors[0])
-      SDL_FreeCursor(cursors[0]);
-
-   // Save the default cursor so it can be recalled later
-   if(!cursors[1])
-      cursors[1] = SDL_GetCursor();
-
-   // Create an empty cursor
-   cursors[0] = SDL_CreateCursor(&empty_cursor_data,
-                                 &empty_cursor_data,
-                                 1, 1, 0, 0);
-}
 //
 // killough 11/98: New routine, for setting hires and page flipping
 //
@@ -1085,7 +1057,6 @@ static boolean I_InitGraphicsMode(void)
    
    I_InitDiskFlash();        // Initialize disk icon
    I_SetPalette(W_CacheLumpName("PLAYPAL",PU_CACHE));
-   CreateCursors();
    
    // haleyjd 10/09/05: from Chocolate DOOM:
    // clear out any events waiting at the start   
