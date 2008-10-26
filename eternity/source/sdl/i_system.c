@@ -80,6 +80,15 @@ int  I_GetTime_RealTime (void)
    return ((ticks - basetime)*TICRATE)/1000;
 }
 
+//
+// I_GetTicks
+//
+// haleyjd 10/26/08
+//
+unsigned int I_GetTicks(void)
+{
+   return SDL_GetTicks();
+}
 
 void I_SetTime(int newtime)
 {

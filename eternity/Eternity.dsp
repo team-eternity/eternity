@@ -253,6 +253,15 @@ SOURCE=.\Source\r_main.c
 # Begin Source File
 
 SOURCE=.\Source\r_plane.c
+
+!IF  "$(CFG)" == "Eternity - Win32 Release"
+
+# SUBTRACT CPP /FA<none>
+
+!ELSEIF  "$(CFG)" == "Eternity - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
