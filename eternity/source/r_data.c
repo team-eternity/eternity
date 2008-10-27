@@ -74,14 +74,6 @@ typedef struct
    short colormap;        // unused in Doom but might be used in Phase 2 Boom
 } mappatch_t;
 
-// haleyjd 10/18/08: Rogue took away the unused stuff for Strife.
-typedef struct
-{
-   short originx;
-   short originy;
-   short patch;
-} strife_mappatch_t;
-
 //
 // Texture definition.
 // A DOOM wall texture is a list of patches
@@ -89,25 +81,14 @@ typedef struct
 //
 typedef struct
 {
-   char            name[8];
-   boolean         masked;
-   short           width;
-   short           height;
-   char            pad[4];       // unused in Doom but might be used in Boom Phase 2
-   short           patchcount;
+   char       name[8];
+   boolean    masked;
+   short      width;
+   short      height;
+   char       pad[4];       // unused in Doom but might be used in Boom Phase 2
+   short      patchcount;
    mappatch_t patches[1];
 } maptexture_t;
-
-// haleyjd 10/18/08: Rogue took away most of the unused stuff for Strife.
-typedef struct
-{
-   char              name[8];
-   boolean           unused;
-   short             width;
-   short             height;
-   short             patchcount;
-   strife_mappatch_t patches[1];
-} strife_maptexture_t;
 
 // killough 4/17/98: make firstcolormaplump,lastcolormaplump external
 int firstcolormaplump, lastcolormaplump;      // killough 4/17/98
@@ -146,12 +127,6 @@ float     *spriteheight;
 //  will have new column_t's generated.
 //
 
-#if 0
-static int R_ExamineTextureFormat()
-{
-}
-#endif
-
 //
 // R_DrawColumnInCache
 // Clip and draw a column
@@ -160,7 +135,7 @@ static int R_ExamineTextureFormat()
 // Rewritten by Lee Killough for performance and to fix Medusa bug
 //
 static void R_DrawColumnInCache(const column_t *patch, byte *cache,
-				int originy, int cacheheight, byte *marks)
+                                int originy, int cacheheight, byte *marks)
 {
    while(patch->topdelta != 0xff)
    {
@@ -491,6 +466,106 @@ byte *R_GetColumn(int tex, int col)
    
    return texturecomposite[tex] + ofs;
 }
+
+//=============================================================================
+//
+// haleyjd 10/27/08: new texture reading code
+//
+
+static mappatch_t   tp; // temporary patch
+static maptexture_t tt; // temporary texture
+
+enum
+{
+   texture_doom,
+   texture_strife
+};
+static int textureformat;
+
+//
+// Binary texture reading routines
+//
+// Unlike the old code, these are data-alignment and structure-packing
+// safe, so they should work on any platform. Also, when reading the
+// textures this way, we don't need separate storage structures for
+// Doom and Strife.
+//
+
+#define TEXSHORT(x) (*(x) | (((short)*((x) + 1)) << 8)); (x) += 2
+
+static byte *R_ReadDoomPatch(byte *rawpatch)
+{
+   byte *rover = rawpatch;
+
+   tp.originx = TEXSHORT(rover);
+   tp.originy = TEXSHORT(rover);
+   tp.patch   = TEXSHORT(rover);
+   rover     += 4; // skip "stepdir" and "colormap"
+
+   return rover; // positioned at next patch
+}
+
+static byte *R_ReadStrifePatch(byte *rawpatch)
+{
+   byte *rover = rawpatch;
+
+   tp.originx = TEXSHORT(rover);
+   tp.originy = TEXSHORT(rover);
+   tp.patch   = TEXSHORT(rover);
+
+   // Rogue removed the unused fields
+
+   return rover; // positioned at next patch
+}
+
+static byte *R_ReadDoomTexture(byte *rawtexture)
+{
+   byte *rover = rawtexture;
+   int i;
+
+   for(i = 0; i < 8; ++i)
+      tt.name[i] = (char)*rover++;
+
+   rover += 4; // skip "masked" - btw, using sizeof on an enum type == naughty
+
+   tt.width       = TEXSHORT(rover);
+   tt.height      = TEXSHORT(rover);
+   rover         += 4;               // skip "pad" bytes
+   tt.patchcount  = TEXSHORT(rover);
+
+   return rover; // positioned for patch reading
+}
+
+static byte *R_ReadStrifeTexture(byte *rawtexture)
+{
+   byte *rover = rawtexture;
+   int i;
+
+   for(i = 0; i < 8; ++i)
+      tt.name[i] = (char)*rover++;
+   
+   rover += 4; // skip "unused"
+
+   tt.width      = TEXSHORT(rover);
+   tt.height     = TEXSHORT(rover);
+   tt.patchcount = TEXSHORT(rover);
+
+   // ^^^ Rogue removed the pad bytes, who knows why.
+
+   return rover; // positioned for patch reading
+}
+
+#if 0
+// Not done yet :P
+static void R_DetectTextureFormat(byte *maptex, byte *directory)
+{
+}
+#endif
+
+//
+// End new texture reading code
+//
+//=============================================================================
 
 //
 // R_InitTextures
