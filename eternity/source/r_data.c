@@ -477,10 +477,24 @@ static maptexture_t tt; // temporary texture
 
 enum
 {
+   texture_unknown, // not determined yet
    texture_doom,
    texture_strife
 };
-static int textureformat;
+
+typedef struct texturelump_s
+{
+   int  lumpnum;     // number of lump
+   int  maxoff;      // max offset, determined from size of lump
+   byte *data;       // cached data
+   byte *directory;  // directory pointer
+   int  numtextures; // number of textures
+   int  format;      // format of textures in this lump
+} texturelump_t;
+
+// locations of pad[3] and pad[4] relative to start of maptexture_t
+#define MTEX_OFFSET_PAD3 18
+#define MTEX_OFFSET_PAD4 19
 
 //
 // Binary texture reading routines
@@ -492,6 +506,12 @@ static int textureformat;
 //
 
 #define TEXSHORT(x) (*(x) | (((short)*((x) + 1)) << 8)); (x) += 2
+
+#define TEXINT(x)  \
+   (*(x) | \
+    (((int)*((x) + 1)) <<  8) | \
+    (((int)*((x) + 2)) << 16) | \
+    (((int)*((x) + 3)) << 24)); (x) += 4
 
 static byte *R_ReadDoomPatch(byte *rawpatch)
 {
@@ -555,12 +575,174 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
    return rover; // positioned for patch reading
 }
 
-#if 0
-// Not done yet :P
-static void R_DetectTextureFormat(byte *maptex, byte *directory)
+typedef struct texturehandler_s
 {
+   byte *(*ReadTexture)(byte *);
+   byte *(*ReadPatch)(byte *);
+} texturehandler_t;
+
+static texturehandler_t TextureHandlers[] =
+{   
+   { R_ReadDoomTexture,   R_ReadDoomPatch   }, // texture_doom
+   { R_ReadStrifeTexture, R_ReadStrifePatch }, // texture_strife
+};
+
+//
+// R_InitTextureLump
+//
+// Sets up a texturelump structure.
+//
+static texturelump_t *R_InitTextureLump(const char *lname, boolean required)
+{
+   texturelump_t *tlump = calloc(1, sizeof(texturelump_t));
+
+   if(required)
+      tlump->lumpnum = W_GetNumForName(lname);
+   else
+      tlump->lumpnum = W_CheckNumForName(lname);
+
+   if(tlump->lumpnum >= 0)
+   {
+      byte *temp;
+
+      tlump->maxoff      = W_LumpLength(tlump->lumpnum);
+      tlump->data = temp = W_CacheLumpNum(tlump->lumpnum, PU_STATIC);
+      tlump->numtextures = TEXINT(temp);
+      tlump->directory   = temp;
+   }
+
+   return tlump;
 }
-#endif
+
+//
+// R_FreeTextureLump
+//
+// Undoes R_InitTextureLump
+//
+static void R_FreeTextureLump(texturelump_t *tlump)
+{
+   if(tlump->data)
+      Z_Free(tlump->data);
+   Z_Free(tlump);
+}
+
+//
+// R_DetectTextureFormat
+//
+// Decides rather arbitrarily whether we are dealing with DOOM or Strife
+// format textures, based on the value of two of the bytes at the "pad"
+// offset into each texture (according to ZDoom, due to some crappy tools,
+// we cannot use the first two pad bytes for the same purpose).
+//
+// I am not allowing hybrid lumps. The entire lump must be in one format
+// or the other - this may differ from ZDoom (or I misread their code).
+//
+static void R_DetectTextureFormat(texturelump_t *tlump)
+{
+   int i;
+   int format = texture_doom; // we start out assuming DOOM format...
+   byte *directory = tlump->directory;
+
+   for(i = 0; i < tlump->numtextures; ++i)
+   {
+      int offset;
+      byte *mtexture;
+
+      offset = TEXINT(directory);
+
+      // technically this check is not strict enough, but it's the best
+      // that can be done without knowing the complete layout of the lump
+      // a priori, which is impossible of course
+      if(offset > tlump->maxoff)
+         I_Error("R_DetectTextureFormat: bad texture directory\n");
+
+      mtexture = tlump->data + offset;
+
+      // ...and if we find any non-zero pad[3/4] bytes, we call it Strife
+      if(mtexture[MTEX_OFFSET_PAD3] != 0 || mtexture[MTEX_OFFSET_PAD4] != 0)
+      {
+         format = texture_strife;
+         break; // we found one, that's good enough
+      }
+   }
+
+   // set the format
+   tlump->format = format;
+}
+
+//
+// R_ReadTextureLump
+//
+static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlookup,
+                             int *errors)
+{
+   int i, j;
+   int texnum = startnum;
+   byte *directory = tlump->directory;
+
+   for(i = 0; i < tlump->numtextures; ++i, ++texnum)
+   {
+      int offset;
+      byte *rawtex, *rawpatch;
+      texture_t  *texture;
+      texpatch_t *patch;
+
+      if(!(texnum & 127))     // killough
+         V_LoadingIncrease(); // sf
+
+      offset = TEXINT(directory);
+
+      rawtex = tlump->data + offset;
+
+      rawpatch = TextureHandlers[tlump->format - 1].ReadTexture(rawtex);
+
+      texture = textures[texnum] = 
+         Z_Malloc(sizeof(texture_t) + 
+                  sizeof(texpatch_t) * (tt.patchcount - 1), 
+                  PU_RENDERER, NULL);
+
+      texture->width      = tt.width;
+      texture->height     = tt.height;
+      texture->patchcount = tt.patchcount;
+
+      memcpy(texture->name, tt.name, sizeof(texture->name));
+
+      patch = texture->patches;
+
+      for(j = 0; j < texture->patchcount; ++j, ++patch)
+      {
+         rawpatch = TextureHandlers[tlump->format - 1].ReadPatch(rawpatch);
+
+         patch->originx = tp.originx;
+         patch->originy = tp.originy;
+         patch->patch   = patchlookup[tp.patch];
+         
+         if(patch->patch == -1)
+         {
+            // killough 8/8/98
+            // sf: error_printf
+            error_printf("\nR_ReadTextureLump: Missing patch %d in texture %.8s",
+                         tp.patch, texture->name);
+            ++*errors;
+         }
+      }
+
+      // killough 4/9/98: make column offsets 32-bit;
+      // clean up malloc-ing to use sizeof
+      // killough 12/98: fix sizeofs
+      texturecolumnlump[texnum] =
+        Z_Malloc(texture->width * sizeof(**texturecolumnlump), PU_RENDERER, NULL);
+      texturecolumnofs[texnum] =
+        Z_Malloc(texture->width * sizeof(**texturecolumnofs), PU_RENDERER, NULL);
+
+      for(j = 1; j * 2 <= texture->width; j <<= 1)
+        ;
+      texturewidthmask[texnum] = j - 1;
+      textureheight[texnum]    = texture->height << FRACBITS;
+   }
+
+   return texnum;
+}
 
 //
 // End new texture reading code
@@ -568,39 +750,45 @@ static void R_DetectTextureFormat(byte *maptex, byte *directory)
 //=============================================================================
 
 //
-// R_InitTextures
+// R_InitLoading
 //
-// Initializes the texture list
-//  with the textures from the world map.
+// haleyjd 10/27/08: split out of R_InitTextures
 //
-void R_InitTextures(void)
+static void R_InitLoading(void)
 {
-   maptexture_t *mtexture;
-   texture_t    *texture;
-   mappatch_t   *mpatch;
-   texpatch_t   *patch;
-   int  i, j;
-   int  *maptex;
-   int  *maptex1, *maptex2;
+   // Really complex printing shit...
+   int temp1 = W_GetNumForName("S_START");
+   int temp2 = W_GetNumForName("S_END") - 1;
+   
+   // 1/18/98 killough:  reduce the number of initialization dots
+   // and make more accurate
+   // sf: reorganised to use loading pic
+   int temp3 = 6 + (temp2 - temp1 + 255) / 128 + (numtextures + 255) / 128;
+   
+   V_SetLoading(temp3, "R_Init:");
+}
+
+//
+// R_LoadPNames
+//
+// haleyjd 10/27/08: split out of R_InitTextures
+//
+static int *R_LoadPNames(void)
+{
+   int  i;
+   int  nummappatches;
+   int  *patchlookup;
    char name[9];
    char *names;
    char *name_p;
-   int  *patchlookup;
-   int  nummappatches;
-   int  offset;
-   int  maxoff, maxoff2;
-   int  numtextures1, numtextures2;
-   int  *directory;
-   int  errors = 0;
-   // sf: removed dumb texturewidth (?)
-   
+
    // Load the patch names from pnames.lmp.
    name[8] = 0;
    names = W_CacheLumpName("PNAMES", PU_STATIC);
    nummappatches = LONG(*((int *)names));
    name_p = names + 4;
    patchlookup = malloc(nummappatches * sizeof(*patchlookup)); // killough
-
+   
    for(i = 0; i < nummappatches; ++i)
    {
       strncpy(name, name_p + i * 8, 8);
@@ -620,159 +808,62 @@ void R_InitTextures(void)
          patchlookup[i] = (W_CheckNumForName)(name, ns_sprites);
          
          if(patchlookup[i] == -1 && devparm)    // killough 8/8/98
-            usermsg("\nWarning: patch %.8s, index %d does not exist",name,i);
+            usermsg("\nWarning: patch %.8s, index %d does not exist", name, i);
       }
    }
 
    // done with PNAMES
    Z_Free(names);
 
-   // Load the map texture definitions from textures.lmp.
-   // The data is contained in one or two lumps,
-   //  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
-   
-   maptex = maptex1 = W_CacheLumpName("TEXTURE1", PU_STATIC);
-   numtextures1 = LONG(*maptex);
-   maxoff = W_LumpLength(W_GetNumForName("TEXTURE1"));
-   directory = maptex + 1;
-   
-   if(W_CheckNumForName("TEXTURE2") != -1)
-   {
-      maptex2 = W_CacheLumpName("TEXTURE2", PU_STATIC);
-      numtextures2 = LONG(*maptex2);
-      maxoff2 = W_LumpLength(W_GetNumForName("TEXTURE2"));
-   }
-   else
-   {
-      maptex2 = NULL;
-      numtextures2 = 0;
-      maxoff2 = 0;
-   }
-   numtextures = numtextures1 + numtextures2;
+   return patchlookup;
+}
 
+//
+// R_InitGlobalLookups
+//
+// haleyjd 10/27/08: split out of R_InitTextures
+//
+static void R_InitGlobalLookups(void)
+{
+   int i;
+
+   // allocate global lookups
    // killough 4/9/98: make column offsets 32-bit;
    // clean up malloc-ing to use sizeof
-   
-   textures = Z_Malloc(numtextures*sizeof(*textures), PU_RENDERER, 0);
+   textures = 
+      Z_Malloc(numtextures * sizeof(*textures),             PU_RENDERER, 0);
    texturecolumnlump =
-      Z_Malloc(numtextures*sizeof(*texturecolumnlump), PU_RENDERER, 0);
+      Z_Malloc(numtextures * sizeof(*texturecolumnlump),    PU_RENDERER, 0);
    texturecolumnofs =
-      Z_Malloc(numtextures*sizeof(*texturecolumnofs), PU_RENDERER, 0);
+      Z_Malloc(numtextures * sizeof(*texturecolumnofs),     PU_RENDERER, 0);
    texturecomposite =
-      Z_Malloc(numtextures*sizeof(*texturecomposite), PU_RENDERER, 0);
+      Z_Malloc(numtextures * sizeof(*texturecomposite),     PU_RENDERER, 0);
    texturecompositesize =
-      Z_Malloc(numtextures*sizeof(*texturecompositesize), PU_RENDERER, 0);
+      Z_Malloc(numtextures * sizeof(*texturecompositesize), PU_RENDERER, 0);
    texturewidthmask =
-      Z_Malloc(numtextures*sizeof(*texturewidthmask), PU_RENDERER, 0);
+      Z_Malloc(numtextures * sizeof(*texturewidthmask),     PU_RENDERER, 0);
    textureheight = 
-      Z_Malloc(numtextures*sizeof(*textureheight), PU_RENDERER, 0);
+      Z_Malloc(numtextures * sizeof(*textureheight),        PU_RENDERER, 0);
 
-   {
-      // Really complex printing shit...
-      int temp1 = W_GetNumForName("S_START");
-      int temp2 = W_GetNumForName("S_END") - 1;
-      
-      // 1/18/98 killough:  reduce the number of initialization dots
-      // and make more accurate
-      // sf: reorganised to use loading pic
-      int temp3 = 6 + (temp2 - temp1 + 255) / 128 + (numtextures + 255) / 128;
-      
-      V_SetLoading(temp3, "R_Init:");
-   }
-
-   for(i = 0; i < numtextures; ++i, ++directory)
-   {
-      if(!(i&127))          // killough
-         V_LoadingIncrease(); //sf
-      
-      if(i == numtextures1)
-      {
-         // Start looking in second texture file.
-         maptex = maptex2;
-         maxoff = maxoff2;
-         directory = maptex+1;
-      }
-      
-      offset = LONG(*directory);
-
-      if(offset > maxoff)
-        I_Error("R_InitTextures: bad texture directory");
-
-      mtexture = (maptexture_t *)((byte *)maptex + offset);
-
-
-      texture = textures[i] = 
-         Z_Malloc(sizeof(texture_t) + 
-                  sizeof(texpatch_t)*(SHORT(mtexture->patchcount)-1), 
-                  PU_RENDERER, NULL);
-
-      texture->width      = SHORT(mtexture->width);
-      texture->height     = SHORT(mtexture->height);
-      texture->patchcount = SHORT(mtexture->patchcount);
-
-      memcpy(texture->name, mtexture->name, sizeof(texture->name));
-      mpatch = mtexture->patches;
-      patch  = texture->patches;
-
-      for(j = 0; j < texture->patchcount; ++j, ++mpatch, ++patch)
-      {
-         patch->originx = SHORT(mpatch->originx);
-         patch->originy = SHORT(mpatch->originy);
-         patch->patch   = patchlookup[SHORT(mpatch->patch)];
-         
-         if(patch->patch == -1)
-         {
-            // killough 8/8/98
-            // sf: error_printf
-            error_printf("\nR_InitTextures: Missing patch %d in texture %.8s",
-                         SHORT(mpatch->patch), texture->name);
-            ++errors;
-         }
-      }
-
-      // killough 4/9/98: make column offsets 32-bit;
-      // clean up malloc-ing to use sizeof
-      // killough 12/98: fix sizeofs
-      texturecolumnlump[i] =
-        Z_Malloc(texture->width * sizeof(**texturecolumnlump), PU_RENDERER,0);
-      texturecolumnofs[i] =
-        Z_Malloc(texture->width * sizeof(**texturecolumnofs), PU_RENDERER,0);
-
-      for(j = 1; j * 2 <= texture->width; j <<= 1)
-        ;
-      texturewidthmask[i] = j - 1;
-      textureheight[i]    = texture->height << FRACBITS;
-   }
-   
-   free(patchlookup);         // killough
-   
-   Z_Free(maptex1);
-   if(maptex2)
-      Z_Free(maptex2);
-   
-   if(errors)
-   {
-      fclose(error_file);
-      I_Error("\n\n%d errors.\nerrors dumped to %s\n", errors, error_filename);
-   }
-
-   // Precalculate whatever possible.
-   for(i = 0; i < numtextures; ++i)
-      R_GenerateLookup(i, &errors);
-   
-   if(errors)
-      I_Error("\n\n%d errors.", errors);
-   
    // Create translation table for global animation.
    // killough 4/9/98: make column offsets 32-bit;
-   // clean up malloc-ing to use sizeof
-   
+   // clean up malloc-ing to use sizeof   
    texturetranslation =
       Z_Malloc((numtextures + 1) * sizeof(*texturetranslation), PU_RENDERER, 0);
 
    for(i = 0; i < numtextures; ++i)
       texturetranslation[i] = i;
-   
+}
+
+//
+// R_InitTextureHash
+//
+// haleyjd 10/27/08: split out of R_InitTextures
+//
+static void R_InitTextureHash(void)
+{
+   int i;
+
    // killough 1/31/98: Initialize texture hash table
    for(i = 0; i < numtextures; ++i)
       textures[i]->index = -1;
@@ -783,6 +874,71 @@ void R_InitTextures(void)
       textures[i]->next  = textures[j]->index;   // Prepend to chain
       textures[j]->index = i;
    }
+}
+
+//
+// R_InitTextures
+//
+// Initializes the texture list with the textures from the world map.
+//
+void R_InitTextures(void)
+{
+   int *patchlookup;
+   int errors = 0;
+   int texnum = 0;
+   int i;
+   
+   texturelump_t *maptex1;
+   texturelump_t *maptex2;
+
+   // load PNAMES
+   patchlookup = R_LoadPNames();
+
+   // Load the map texture definitions from textures.lmp.
+   // The data is contained in one or two lumps,
+   //  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
+   maptex1 = R_InitTextureLump("TEXTURE1", true);
+   maptex2 = R_InitTextureLump("TEXTURE2", false);
+
+   // calculate total textures
+   numtextures = maptex1->numtextures + maptex2->numtextures;
+
+   // init lookup tables
+   R_InitGlobalLookups();
+
+   // initialize loading dots / bar
+   R_InitLoading();
+
+   // detect texture formats
+   R_DetectTextureFormat(maptex1);
+   R_DetectTextureFormat(maptex2);
+
+   // read texture lumps
+   texnum = R_ReadTextureLump(maptex1, texnum, patchlookup, &errors);
+   texnum = R_ReadTextureLump(maptex2, texnum, patchlookup, &errors);
+
+   // done with patch lookup
+   free(patchlookup);
+
+   // done with texturelumps
+   R_FreeTextureLump(maptex1);
+   R_FreeTextureLump(maptex2);
+   
+   if(errors)
+   {
+      fclose(error_file);
+      I_Error("\n\n%d texture errors.\nerrors dumped to %s\n", errors, error_filename);
+   }
+
+   // Precalculate whatever possible.
+   for(i = 0; i < numtextures; ++i)
+      R_GenerateLookup(i, &errors);
+   
+   if(errors)
+      I_Error("\n\n%d texture errors.", errors);      
+
+   // initialize texture hashing
+   R_InitTextureHash();
 }
 
 //
