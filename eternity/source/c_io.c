@@ -341,11 +341,30 @@ boolean C_Responder(event_t *ev)
    // activate console?
    if(action_console_toggle && console_enabled)
    {
+      boolean goingup = current_target == c_height;
+
       // set console
       action_console_toggle = false;
-      current_target = (current_target == c_height ? 0 : c_height);
+
+      current_target = goingup ? 0 : c_height;
+
+      // Because of the possiblity of pre-existing pause conditions, this can't
+      // be a simple toggle anymore
       if(gamestate == GS_LEVEL)
-         sendpause = true;
+      {
+         if(goingup && consolepause)
+         {
+            if(paused)
+               sendpause = true;
+            consolepause = false;
+         }
+         else if(!goingup && !paused)
+         {
+            sendpause = true;
+            consolepause = true;
+         }
+      }
+
       return true;
    }
 
