@@ -763,7 +763,7 @@ void I_SetPrimaryBuffer(void)
    {
       video.usescreen = false;
       primary_surface = 
-         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width, video.height, 8, 
+         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + 1, video.height, 8, 
                               0, 0, 0, 0);
       video.screens[0] = (byte *)primary_surface->pixels;
       video.pitch = primary_surface->pitch;
