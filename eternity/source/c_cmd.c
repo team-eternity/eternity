@@ -31,6 +31,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "d_io.h"  // SoM 3/12/2002: strncasecmp
+
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "c_net.h"
@@ -120,11 +122,24 @@ CONSOLE_COMMAND(cmdlist, 0)
    int charnum = 33;
    int maxchar = 'z';
 
+   // SoM: This could be a little better
+   char *mask = NULL;
+   int  masklen = 0;
+
    // haleyjd 07/08/04: optional filter parameter -- the provided
    // character will be used to make the loop below run only for one
    // letter
-   if(c_argc == 1 && strlen(c_argv[0]) == 1)
-      charnum = maxchar = c_argv[0][0];
+   if(c_argc == 1)
+   {
+      if(strlen(c_argv[0]) == 1)
+         charnum = maxchar = c_argv[0][0];
+      else
+      {
+         charnum = maxchar = c_argv[0][0];
+         mask = c_argv[0];
+         masklen = strlen(mask);
+      }
+   }
    
    // list each command from the hash chains
    
@@ -139,6 +154,7 @@ CONSOLE_COMMAND(cmdlist, 0)
          for(current = cmdroots[i]; current; current = current->next)
          {
             if(current->name[0] == charnum && 
+               (!mask || !strncasecmp(current->name, mask, masklen)) &&
                !(current->flags & cf_hidden))
             {
                C_Printf("%s\n", current->name);
@@ -289,6 +305,58 @@ CONSOLE_COMMAND(closelog, 0)
    C_CloseConsoleLog();
 }
 
+
+// SoM: omg why didn't we have this before?
+CONSOLE_COMMAND(cvarhelp, 0)
+{
+   command_t *current;
+   variable_t *var;
+   int i, count;
+   char *name;
+
+
+   if(c_argc != 1)
+   {
+      C_Printf("Usage: cvarhelp <variablename>\nOutputs a list of possible values for the given variable\n");
+      return;
+   }
+
+   name = c_argv[0];
+
+   for(i = 0; i < CMDCHAINS; ++i)
+   {
+      for(current = cmdroots[i]; current; current = current->next)
+      {
+         if(current->type == ct_variable &&
+            !strcasecmp(current->name, name) &&
+            !(current->flags & cf_hidden))
+         {
+            var = current->variable;
+
+            if(var->type == vt_int)
+            {
+               if(var->defines && var->min <= var->max)
+               {
+                  C_Printf("Possible values for '%s': ", name);
+                  for(count = var->min; count <= var->max; count++)
+                  {
+                     C_Printf("%s", var->defines[count - var->min]);
+                  }
+               }
+               else
+                  C_Printf("Value range for '%s': %i through %i\n", name, var->min, var->max);
+            }
+            else
+               C_Printf("Value for '%s': String no more than %i characters long\n", name, var->max);
+
+            return;
+         }
+      }
+   }
+
+   C_Printf("variable %s not found\n", name);
+}
+
         /******** add commands *******/
 
 // command-adding functions in other modules
@@ -332,6 +400,9 @@ void C_AddCommands()
   C_AddCommand(dumplog); // haleyjd
   C_AddCommand(openlog);
   C_AddCommand(closelog);
+
+  // SoM: I can never remember the values for a console variable
+  C_AddCommand(cvarhelp);
   
   // add commands in other modules
   Cheat_AddCommands();
