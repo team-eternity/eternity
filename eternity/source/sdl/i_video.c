@@ -750,6 +750,7 @@ void I_UnsetPrimaryBuffer(void)
 
 void I_SetPrimaryBuffer(void)
 {
+   int bump = (video.width == 512 || video.width == 1024) ? 4 : 0;
    // Don't use this just yet...
    /*if(sdlscreen && sdlscreen->format->BitsPerPixel == 8 && 
       !SDL_MUSTLOCK(sdlscreen))
@@ -763,7 +764,7 @@ void I_SetPrimaryBuffer(void)
    {
       video.usescreen = false;
       primary_surface = 
-         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + 1, video.height, 8, 
+         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height, 8, 
                               0, 0, 0, 0);
       video.screens[0] = (byte *)primary_surface->pixels;
       video.pitch = primary_surface->pitch;
