@@ -86,7 +86,628 @@ LINK32=link.exe
 # Name "Eternity - Win32 Debug"
 # Begin Group "Source Files"
 
-# PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# PROP Default_Filter ""
+# Begin Group "AM_"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\am_color.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\am_map.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\am_map.h
+# End Source File
+# End Group
+# Begin Group "AMX"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\a_fixed.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\a_small.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\a_small.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\amx.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\amx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\amxcore.c
+# End Source File
+# End Group
+# Begin Group "C_"
+
+# PROP Default_Filter ""
+# Begin Group "C_ Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\c_cmd.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\c_io.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\c_net.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\c_runcmd.c
+# End Source File
+# End Group
+# Begin Group "C_ Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\c_io.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\c_net.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\c_runcmd.h
+# End Source File
+# End Group
+# End Group
+# Begin Group "Confuse"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Confuse\confuse.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Confuse\confuse.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Confuse\lexer.c
+# End Source File
+# End Group
+# Begin Group "D_"
+
+# PROP Default_Filter ""
+# Begin Group "D_ Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\d_deh.c
+
+!IF  "$(CFG)" == "Eternity - Win32 Release"
+
+# ADD CPP /O2
+
+!ELSEIF  "$(CFG)" == "Eternity - Win32 Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_dehtbl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_dialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_gi.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_io.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_items.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\d_iwad.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_main.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_net.c
+# End Source File
+# End Group
+# Begin Group "D_ Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\d_deh.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_dehtbl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_dialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\d_dwfile.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_englsh.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_event.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_french.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_gi.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_io.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_items.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\d_iwad.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_keywds.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_main.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_mod.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_net.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_player.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_textur.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_think.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\d_ticcmd.h
+# End Source File
+# End Group
+# End Group
+# Begin Group "doom"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\doomdata.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\doomdef.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\doomdef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\doomstat.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\doomstat.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\doomtype.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\dstrings.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\dstrings.h
+# End Source File
+# End Group
+# Begin Group "E_"
+
+# PROP Default_Filter ""
+# Begin Group "E_ Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\e_cmd.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_edf.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_exdata.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_lib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_mod.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_player.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_sound.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_states.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_string.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_things.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_ttypes.c
+# End Source File
+# End Group
+# Begin Group "E_ Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\e_edf.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_exdata.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_lib.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_mod.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_player.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_states.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_string.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_things.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\e_ttypes.h
+# End Source File
+# End Group
+# End Group
+# Begin Group "F_"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\f_finale.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\f_finale.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\f_wipe.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\f_wipe.h
+# End Source File
+# End Group
+# Begin Group "G_"
+
+# PROP Default_Filter ""
+# Begin Group "G_ Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\g_bind.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\g_cmd.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\g_dmflag.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\g_game.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\g_gfs.c
+# End Source File
+# End Group
+# Begin Group "G_ Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\g_bind.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\g_dmflag.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\g_game.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\g_gfs.h
+# End Source File
+# End Group
+# End Group
+# Begin Group "HU_"
+
+# PROP Default_Filter ""
+# Begin Group "HU_ Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\hu_frags.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\hu_over.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\hu_stuff.c
+# End Source File
+# End Group
+# Begin Group "HU_ Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Hu_frags.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Hu_over.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Hu_stuff.h
+# End Source File
+# End Group
+# End Group
+# Begin Group "M_"
+
+# PROP Default_Filter ""
+# Begin Group "M_ Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\m_argv.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_bbox.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_cheat.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_fcvt.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_misc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_qstr.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_queue.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_random.c
+# End Source File
+# End Group
+# Begin Group "M_ Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\m_argv.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_bbox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_cheat.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_dllist.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_fcvt.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_fixed.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_misc.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_qstr.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_queue.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_random.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\m_swap.h
+# End Source File
+# End Group
+# End Group
+# Begin Group "Mn_"
+
+# PROP Default_Filter ""
+# Begin Group "Mn_ Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\mn_emenu.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_engin.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\mn_files.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_htic.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_menus.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_misc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_skinv.c
+# End Source File
+# End Group
+# Begin Group "Mn_ Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\mn_emenu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_engin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\mn_files.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_htic.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_menus.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_misc.h
+# End Source File
+# End Group
+# End Group
 # Begin Group "P_"
 
 # PROP Default_Filter ""
@@ -439,414 +1060,33 @@ SOURCE=.\Source\r_things.h
 # End Source File
 # End Group
 # End Group
-# Begin Group "M_"
-
-# PROP Default_Filter ""
-# Begin Group "M_ Source"
+# Begin Group "S_"
 
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\m_argv.c
+SOURCE=.\source\s_sndseq.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\m_bbox.c
+SOURCE=.\source\s_sndseq.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\m_cheat.c
+SOURCE=.\Source\s_sound.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\m_fcvt.c
+SOURCE=.\Source\s_sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\m_misc.c
+SOURCE=.\Source\sounds.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\m_qstr.c
+SOURCE=.\Source\sounds.h
 # End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_queue.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_random.c
-# End Source File
-# End Group
-# Begin Group "M_ Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\m_argv.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_bbox.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_cheat.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_dllist.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_fcvt.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_fixed.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_misc.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_qstr.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_queue.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_random.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\m_swap.h
-# End Source File
-# End Group
-# End Group
-# Begin Group "Mn_"
-
-# PROP Default_Filter ""
-# Begin Group "Mn_ Source"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\source\mn_emenu.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_engin.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\mn_files.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_htic.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_menus.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_misc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_skinv.c
-# End Source File
-# End Group
-# Begin Group "Mn_ Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\source\mn_emenu.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_engin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\mn_files.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_htic.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_menus.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_misc.h
-# End Source File
-# End Group
-# End Group
-# Begin Group "C_"
-
-# PROP Default_Filter ""
-# Begin Group "C_ Source"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\c_cmd.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\c_io.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\c_net.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\c_runcmd.c
-# End Source File
-# End Group
-# Begin Group "C_ Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\c_io.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\c_net.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\c_runcmd.h
-# End Source File
-# End Group
-# End Group
-# Begin Group "D_"
-
-# PROP Default_Filter ""
-# Begin Group "D_ Source"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\d_deh.c
-
-!IF  "$(CFG)" == "Eternity - Win32 Release"
-
-# ADD CPP /O2
-
-!ELSEIF  "$(CFG)" == "Eternity - Win32 Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_dehtbl.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_dialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_gi.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_io.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_items.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\d_iwad.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_main.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_net.c
-# End Source File
-# End Group
-# Begin Group "D_ Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\d_deh.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_dehtbl.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_dialog.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\d_dwfile.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_englsh.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_event.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_french.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_gi.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_io.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_items.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\d_iwad.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_keywds.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_main.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_mod.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_net.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_player.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_textur.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_think.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\d_ticcmd.h
-# End Source File
-# End Group
-# End Group
-# Begin Group "HU_"
-
-# PROP Default_Filter ""
-# Begin Group "HU_ Source"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\hu_frags.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\hu_over.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\hu_stuff.c
-# End Source File
-# End Group
-# Begin Group "HU_ Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\Hu_frags.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Hu_over.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Hu_stuff.h
-# End Source File
-# End Group
-# End Group
-# Begin Group "G_"
-
-# PROP Default_Filter ""
-# Begin Group "G_ Source"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\g_bind.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\g_cmd.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\g_dmflag.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\g_game.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\g_gfs.c
-# End Source File
-# End Group
-# Begin Group "G_ Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\g_bind.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\g_dmflag.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\g_game.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\g_gfs.h
-# End Source File
-# End Group
 # End Group
 # Begin Group "SDL"
 
@@ -940,146 +1180,6 @@ SOURCE=.\Source\textscreen\txt_main.h
 # End Source File
 # End Group
 # End Group
-# Begin Group "AMX"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\a_fixed.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\a_small.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\a_small.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\amx.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\amx.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\amxcore.c
-# End Source File
-# End Group
-# Begin Group "E_"
-
-# PROP Default_Filter ""
-# Begin Group "E_ Source"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\e_cmd.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_edf.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_exdata.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_lib.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\e_mod.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\e_player.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_sound.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_states.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_string.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_things.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_ttypes.c
-# End Source File
-# End Group
-# Begin Group "E_ Headers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\e_edf.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_exdata.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_lib.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\e_mod.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\e_player.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_sound.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_states.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_string.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_things.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\e_ttypes.h
-# End Source File
-# End Group
-# End Group
-# Begin Group "Confuse"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\Confuse\confuse.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Confuse\confuse.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Confuse\lexer.c
-# End Source File
-# End Group
 # Begin Group "ST_"
 
 # PROP Default_Filter ""
@@ -1155,106 +1255,6 @@ SOURCE=.\Source\v_patch.h
 SOURCE=.\Source\v_video.h
 # End Source File
 # End Group
-# End Group
-# Begin Group "S_"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\source\s_sndseq.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\s_sndseq.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\s_sound.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\s_sound.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\sounds.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\sounds.h
-# End Source File
-# End Group
-# Begin Group "AM_"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\am_color.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\am_map.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\am_map.h
-# End Source File
-# End Group
-# Begin Group "doom"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\doomdata.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\doomdef.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\doomdef.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\doomstat.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\doomstat.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\doomtype.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\dstrings.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\dstrings.h
-# End Source File
-# End Group
-# Begin Group "F_"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Source\f_finale.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\f_finale.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\f_wipe.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\f_wipe.h
-# End Source File
 # End Group
 # Begin Group "Misc"
 
