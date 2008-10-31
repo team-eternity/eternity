@@ -87,6 +87,18 @@ LINK32=link.exe
 # Begin Group "Source Files"
 
 # PROP Default_Filter ""
+# Begin Group "ACS_"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\acs_intr.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\acs_intr.h
+# End Source File
+# End Group
 # Begin Group "AM_"
 
 # PROP Default_Filter ""
@@ -129,6 +141,10 @@ SOURCE=.\Source\amx.h
 # Begin Source File
 
 SOURCE=.\Source\amxcore.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\osdefs.h
 # End Source File
 # End Group
 # Begin Group "C_"
@@ -323,6 +339,10 @@ SOURCE=.\Source\d_ticcmd.h
 # Begin Group "doom"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\dhticstr.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\doomdata.h
@@ -556,6 +576,34 @@ SOURCE=.\Source\Hu_stuff.h
 # End Source File
 # End Group
 # End Group
+# Begin Group "IN"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\hi_stuff.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\hi_stuff.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\in_lude.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\in_lude.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\wi_stuff.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\wi_stuff.h
+# End Source File
+# End Group
 # Begin Group "M_"
 
 # PROP Default_Filter ""
@@ -716,6 +764,10 @@ SOURCE=.\Source\mn_misc.h
 # PROP Default_Filter "c"
 # Begin Source File
 
+SOURCE=.\source\linkoffs.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\p_anim.c
 # End Source File
 # Begin Source File
@@ -842,6 +894,10 @@ SOURCE=.\Source\p_user.c
 
 SOURCE=.\source\p_xenemy.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\source\polyobj.c
+# End Source File
 # End Group
 # Begin Group "P_ Headers"
 
@@ -925,6 +981,10 @@ SOURCE=.\Source\p_user.h
 # Begin Source File
 
 SOURCE=.\source\p_xenemy.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\polyobj.h
 # End Source File
 # End Group
 # End Group
@@ -1256,6 +1316,30 @@ SOURCE=.\Source\v_video.h
 # End Source File
 # End Group
 # End Group
+# Begin Group "W_"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\w_wad.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\w_wad.h
+# End Source File
+# End Group
+# Begin Group "Z_"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\z_zone.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\z_zone.h
+# End Source File
+# End Group
 # Begin Group "Misc"
 
 # PROP Default_Filter ""
@@ -1264,23 +1348,7 @@ SOURCE=.\Source\v_video.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\source\acs_intr.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\hi_stuff.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\in_lude.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\info.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\polyobj.c
 # End Source File
 # Begin Source File
 
@@ -1294,53 +1362,13 @@ SOURCE=.\Source\tables.c
 
 SOURCE=.\Source\version.c
 # End Source File
-# Begin Source File
-
-SOURCE=.\Source\w_wad.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\wi_stuff.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\z_zone.c
-# End Source File
 # End Group
 # Begin Group "Misc Headers"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\source\acs_intr.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\dhticstr.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\hi_stuff.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\in_lude.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\info.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\linkoffs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\osdefs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\polyobj.h
 # End Source File
 # Begin Source File
 
@@ -1353,18 +1381,6 @@ SOURCE=.\Source\tables.h
 # Begin Source File
 
 SOURCE=.\Source\version.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\w_wad.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\wi_stuff.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\z_zone.h
 # End Source File
 # End Group
 # End Group
