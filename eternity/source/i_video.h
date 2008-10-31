@@ -37,7 +37,7 @@
 // determines the hardware configuration
 // and sets up the video mode
 
-void I_InitGraphics (void);
+void I_InitGraphics(void);
 void I_ShutdownGraphics(void);
 
 // Takes full 8 bit values.
@@ -51,12 +51,11 @@ void I_WaitVBL(int count);
 
 void I_ReadScreen (byte* scr);
 
-int I_DoomCode2ScanCode(int);   // killough
-int I_ScanCode2DoomCode(int);   // killough
 
 void I_ResetVidMode();
 
- extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
+extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
+
 #ifdef DJGPP
  extern int page_flip;  // killough 8/15/98: enables page flipping (320x200)
  extern int disk_icon;  // killough 10/98
@@ -80,11 +79,15 @@ extern videomode_t videomodes[];
 void I_CheckVESA();
 void I_SetMode(int i);
 
+// Below here has been moved to i_input.c
 // haleyjd
 #ifdef _SDL_VER
 extern int joystickSens_x;
 extern int joystickSens_y;
 #endif
+
+int I_DoomCode2ScanCode(int);   // killough
+int I_ScanCode2DoomCode(int);   // killough
 
 #endif
 

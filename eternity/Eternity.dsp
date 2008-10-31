@@ -1160,6 +1160,10 @@ SOURCE=.\Source\Win32\i_fnames.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\sdl\i_input.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\source\Win32\i_iwad.c
 # End Source File
 # Begin Source File
