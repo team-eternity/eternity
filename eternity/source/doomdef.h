@@ -80,7 +80,7 @@ typedef enum {
 typedef struct
 {
    // SoM: Not implemented (yet)
-   //int bitdepth;
+   int         bitdepth, pixelsize;
 
    int         width, height;
    int         pitch;
@@ -92,8 +92,6 @@ typedef struct
    float       xstepf, ystepf;
    boolean     scaled; // SoM: should be set when the scale values are
 
-   // SoM: if set to true, screens[0] is the SDL_Screen surface
-   boolean     usescreen;
    byte        *screens[5];
 
    // SoM 1-31-04: This will insure that scaled patches and such are put in the right places

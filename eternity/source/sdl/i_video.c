@@ -269,7 +269,6 @@ void I_SetPrimaryBuffer(void)
 
    if(sdlscreen)
    {
-      video.usescreen = false;
       primary_surface = 
          SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height, 8, 
                               0, 0, 0, 0);
@@ -542,6 +541,8 @@ static boolean I_InitGraphicsMode(void)
 
    video.width  = v_w;
    video.height = v_h;
+   video.bitdepth = 8;
+   video.pixelsize = 1;
    
    V_Init();      
    

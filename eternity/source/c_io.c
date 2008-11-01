@@ -91,7 +91,7 @@ int console_enabled = true;
 static FILE *console_log = NULL;
 
 // SoM: This is used elsewhere now!
-static VBuffer cback = {NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, 0, 0};
+static VBuffer cback = {NULL, 0, 0, 0, 1, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, 0, 0};
 
 /////////////////////////////////////////////////////////////////////////
 //

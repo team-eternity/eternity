@@ -43,7 +43,7 @@ typedef struct VBuffer_s
    byte *data; // video memory
    int  width;
    int  height;
-   int  pitch;
+   int  pitch, pixelsize;
 
    void (*BlockDrawer)(int, int, struct VBuffer_s *, int, int, byte *);
    void (*MaskedBlockDrawer)(int, int, struct VBuffer_s *, int, int, int, 

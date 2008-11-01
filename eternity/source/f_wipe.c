@@ -294,8 +294,7 @@ void Wipe_SaveEndScreen(void)
 
    memcpy(&temp, &vbscreen, sizeof(VBuffer));
    temp.data = video.screens[3];
-   temp.width = temp.pitch = video.width;
-   temp.height = video.height;
+   temp.pitch = video.width;
 
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, video.width, video.height);
 }
@@ -309,8 +308,7 @@ void Wipe_BlitEndScreen(void)
 
    memcpy(&temp, &vbscreen, sizeof(VBuffer));
    temp.data = video.screens[3];
-   temp.width = temp.pitch = video.width;
-   temp.height = video.height;
+   temp.pitch = video.width;
 
    V_BlitVBuffer(&vbscreen, 0, 0, &temp, 0, 0, video.width, video.height);
 }

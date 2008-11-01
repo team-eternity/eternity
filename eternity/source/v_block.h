@@ -27,6 +27,8 @@
 #ifndef V_BLOCK_H__
 #define V_BLOCK_H__
 
+void V_ColorBlockScaled(VBuffer *buffer, byte color, int x, int y, int w, int h);
+
 // haleyjd 02/02/05: color block drawing functions
 // These are currently only available in unscaled versions.
 

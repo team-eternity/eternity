@@ -898,17 +898,11 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 //
 void R_HOMdrawer(void)
 {
-   int y, colour;
-   byte *dest;
+   int colour;
    
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
-   dest = vbscreen.data + viewwindowy * vbscreen.pitch + viewwindowx;
 
-   for(y = viewwindowy; y < viewwindowy + viewheight; ++y)
-   {
-      memset(dest, colour, viewwidth);
-      dest += vbscreen.pitch;
-   }
+   V_ColorBlock(&vbscreen, (byte)colour, viewwindowx, viewwindowy, viewwidth, viewheight);
 }
 
 //

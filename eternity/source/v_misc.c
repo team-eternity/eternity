@@ -55,6 +55,7 @@ static int prevmode = 0;
 
 cb_video_t  video = 
 {
+   8, 1,
    SCREENWIDTH, 
    SCREENHEIGHT, 
    SCREENWIDTH,
@@ -66,7 +67,6 @@ cb_video_t  video =
    FRACUNIT,
    1.0f, 1.0f, 1.0f, 1.0f, 
    false,
-   false, 
    {NULL, NULL, NULL, NULL, NULL}
 };
 
