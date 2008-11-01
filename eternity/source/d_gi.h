@@ -88,11 +88,14 @@ enum
 
 // Game Mode Flags
 
-#define GIF_HASDISK      0x00000001  // has flashing io disk
-#define GIF_SHAREWARE    0x00000002  // shareware game (no -file)
-#define GIF_MNBIGFONT    0x00000004  // uses big font for menu titles
-#define GIF_MAPXY        0x00000008  // gamemode uses MAPxy maps by default
-#define GIF_SAVESOUND    0x00000010  // makes a sound in save & load menus
+#define GIF_HASDISK      0x00000001 // has flashing io disk
+#define GIF_SHAREWARE    0x00000002 // shareware game (no -file)
+#define GIF_MNBIGFONT    0x00000004 // uses big font for menu titles
+#define GIF_MAPXY        0x00000008 // gamemode uses MAPxy maps by default
+#define GIF_SAVESOUND    0x00000010 // makes a sound in save & load menus
+#define GIF_HASADVISOR   0x00000020 // displays advisory popup on title screen
+#define GIF_SHADOWTITLES 0x00000040 // shadows titles in menus
+#define GIF_HASMADMELEE  0x00000080 // has mad melee when player dies in SP
 
 // Game mode handling - identify IWAD version
 //  to handle IWAD dependent animations etc.

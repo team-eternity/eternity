@@ -44,6 +44,7 @@ boolean fullscreen;
 
 void    I_InitKeyboard();      // i_system.c
 
+boolean MouseShouldBeGrabbed(void);
 
 // ----------------------------------------------------------------------------
 // WM
