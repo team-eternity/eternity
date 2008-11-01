@@ -995,7 +995,7 @@ CONSOLE_VARIABLE(gamma, usegamma, 0)
    player_printf(&players[consoleplayer], "%s", msg);
 
    // change to new gamma val
-   I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+   I_SetPalette(NULL);
 }
 
 CONSOLE_VARIABLE(lefthanded, lefthanded, 0) {}

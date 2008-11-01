@@ -83,7 +83,7 @@ boolean  noblit;
 static boolean in_graphics_mode;
 static int     scroll_offset;
 
-static SDL_Color colors[256];
+static SDL_Color basepal[256], colors[256];
 static boolean   setpalette = false;
 
 // haleyjd 12/03/07: 8-on-32 graphics support
@@ -217,16 +217,28 @@ void I_EndRead(void)
 void I_SetPalette(byte *palette)
 {
    int i;
-   byte *basepal = palette;
    
    if(!in_graphics_mode)             // killough 8/11/98
       return;
 
-   for(i = 0; i < 256; ++i)
+   if(!palette)
    {
-      colors[i].r = gammatable[usegamma][*palette++];
-      colors[i].g = gammatable[usegamma][*palette++];
-      colors[i].b = gammatable[usegamma][*palette++];
+      // Gamma change
+      for(i = 0; i < 256; ++i)
+      {
+         colors[i].r = gammatable[usegamma][basepal[i].r];
+         colors[i].g = gammatable[usegamma][basepal[i].g];
+         colors[i].b = gammatable[usegamma][basepal[i].b];
+      }
+   }
+   else
+   {
+      for(i = 0; i < 256; ++i)
+      {
+         colors[i].r = gammatable[usegamma][(basepal[i].r = *palette++)];
+         colors[i].g = gammatable[usegamma][(basepal[i].g = *palette++)];
+         colors[i].b = gammatable[usegamma][(basepal[i].b = *palette++)];
+      }
    }
 
    setpalette = true;
