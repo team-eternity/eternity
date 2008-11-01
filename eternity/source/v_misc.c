@@ -483,10 +483,8 @@ static char *loading_message;
 // SoM: ANYRES
 void V_DrawLoading(void)
 {
-   int x, y, realx, realy, reallinelen, reallineend;
-   byte *dest;
+   int x, y;
    int linelen;
-   fixed_t yfrac, ystep;
 
    // haleyjd 11/30/02: get palette indices from GameModeInfo
    int white = GameModeInfo->whiteIndex;
@@ -502,71 +500,57 @@ void V_DrawLoading(void)
   
    x = ((SCREENWIDTH/2)-45);
    y = (SCREENHEIGHT/2);
-   realx = vbscreen.x1lookup[x];
-   realy = vbscreen.y1lookup[y];
-   dest = vbscreen.data + (realy*vbscreen.pitch) + realx;
    linelen = (90*loading_amount) / loading_total;
-   reallinelen = vbscreen.x2lookup[x + linelen - 1] - realx + 1;
-   reallineend = vbscreen.x2lookup[x + 89] - realx - reallinelen + 1;
 
-   // white line
-   memset(dest, white, reallinelen);
-   // black line (unfilled)
-
-   if(video.scaled)
-   {
-      yfrac = 0;
-      ystep = video.ystep;
-
-      while(yfrac < FRACUNIT)
-      {
-         dest += vbscreen.pitch;
-         memset(dest, white, reallinelen);
-         memset(dest + reallinelen, black, reallineend);
-         yfrac += ystep;
-      }
-   }
+   // White line
+   if(linelen > 0)
+      V_ColorBlockScaled(&vbscreen, (byte)white, x, y, linelen, 1);
+   // Black line
+   if(linelen < 90)
+      V_ColorBlockScaled(&vbscreen, (byte)black, x + linelen, y, 90 - linelen, 1);
 
    I_FinishUpdate();
 }
 
+
 void V_SetLoading(int total, char *mess)
 {
-  loading_total = total ? total : 1;
-  loading_amount = 0;
-  loading_message = mess;
+   loading_total = total ? total : 1;
+   loading_amount = 0;
+   loading_message = mess;
 
-  if(in_textmode)
-    {
+   if(in_textmode)
+   {
       int i;
       printf(" %s ", mess);
       putchar('[');
       for(i=0; i<total; i++) putchar(' ');     // gap
       putchar(']');
       for(i=0; i<=total; i++) putchar('\b');    // backspace
-    }
-  else
+   }
+   else
     V_DrawLoading();
 }
 
+
 void V_LoadingIncrease(void)
 {
-  loading_amount++;
-  if(in_textmode)
-    {
+   loading_amount++;
+   if(in_textmode)
+   {
       putchar('.');
       if(loading_amount == loading_total) putchar('\n');
-    }
-  else
-    V_DrawLoading();
+   }
+   else
+      V_DrawLoading();
 
-  if(loading_amount == loading_total) loading_message = NULL;
+   if(loading_amount == loading_total) loading_message = NULL;
 }
 
 void V_LoadingSetTo(int amount)
 {
-  loading_amount = amount;
-  if(!in_textmode) V_DrawLoading();
+   loading_amount = amount;
+   if(!in_textmode) V_DrawLoading();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -619,7 +603,7 @@ void V_FPSDrawer(void)
       for(cy=0, y = Y_OFFSET; cy<CHART_HEIGHT; y++, cy++)
       {
          i = cy > (CHART_HEIGHT-history[cx]) ? BLACK : WHITE;
-         vbscreen.data[y * vbscreen.pitch + x] = i; // ANYRES
+         V_ColorBlock(&vbscreen, (byte)i, x, y, 1, 1);
       }
    }
 }
@@ -649,7 +633,6 @@ void V_FPSTicker(void)
 void V_ClassicFPSDrawer(void)
 {
   static int lasttic;
-  byte *s = vbscreen.data;
   
   int i = I_GetTime();
   int tics = i - lasttic;
@@ -660,43 +643,17 @@ void V_ClassicFPSDrawer(void)
    // SoM: ANYRES
    if(video.scaled)
    {
-      int baseoffset = vbscreen.y1lookup[SCREENHEIGHT - 1] * vbscreen.pitch;
-      int offset;
-      int x, y, w, h;
-
-      h = vbscreen.y2lookup[SCREENHEIGHT - 1] - vbscreen.y1lookup[SCREENHEIGHT - 1] + 1;
-
-      for (i=0 ; i < tics * 2 ; i += 2)
-      {
-         offset = baseoffset;
-         y = h;
-         x = vbscreen.x1lookup[i];
-         w = vbscreen.x2lookup[i] - vbscreen.x1lookup[i] + 1;
-         while(y--)
-         {
-            memset(s + offset + x, 0xff, w);
-            offset += vbscreen.pitch;
-         }
-      }
-      for ( ; i < 20 * 2 ; i += 2)
-      {
-         offset = baseoffset;
-         y = h;
-         x = vbscreen.x1lookup[i];
-         w = vbscreen.x2lookup[i] - vbscreen.x1lookup[i] + 1;
-         while(y--)
-         {
-            memset(s + offset + x, 0x0, w);
-            offset += vbscreen.pitch;
-         }
-      }
+      for (i=0 ; i<tics*2 ; i+=2)
+         V_ColorBlockScaled(&vbscreen, 0xff, i, SCREENHEIGHT-1, 1, 1);
+      for ( ; i<20*2 ; i+=2)
+         V_ColorBlockScaled(&vbscreen, 0x00, i, SCREENHEIGHT-1, 1, 1);
    }
    else
    {
       for (i=0 ; i<tics*2 ; i+=2)
-         s[(SCREENHEIGHT-1)*SCREENWIDTH + i] = 0xff;
+         V_ColorBlock(&vbscreen, 0xff, i, SCREENHEIGHT-1, 1, 1);
       for ( ; i<20*2 ; i+=2)
-         s[(SCREENHEIGHT-1)*SCREENWIDTH + i] = 0x0;
+         V_ColorBlock(&vbscreen, 0x00, i, SCREENHEIGHT-1, 1, 1);
    }
 }
 
@@ -762,6 +719,8 @@ static void V_InitScreenVBuffer(void)
    vbscreen.y2lookup = video.y2lookup;
    vbscreen.ixscale = video.xstep;
    vbscreen.iyscale = video.ystep;
+   vbscreen.scalew = SCREENWIDTH;
+   vbscreen.scaleh = SCREENHEIGHT;
    
    if(video.width == 320 && video.height == 200)
       drawtype = DRAWTYPE_UNSCALED;

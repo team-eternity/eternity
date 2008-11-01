@@ -303,6 +303,50 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
 // Color block drawing
 //
 
+
+void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
+{
+   byte *d;
+   int  i, size;
+   int x2, y2;
+
+   x2 = x + w - 1;
+   y2 = y + h - 1;
+
+   if(x < 0)
+      x = 0;
+
+   if(y < 0)
+      y = 0;
+
+   if(x2 >= dest->scalew)
+      x2 = dest->scalew - 1;
+
+   if(y2 >= dest->scaleh)
+      y2 = dest->scaleh - 1;
+
+   if(x > x2 || y > y2)
+      return;
+
+   x = dest->x1lookup[x];
+   x2 = dest->x2lookup[x2];
+
+   y = dest->y1lookup[y];
+   y2 = dest->y2lookup[y2];
+
+   w = x2 - x + 1;
+   h = y2 - y + 1;
+
+   d = dest->data + y * dest->pitch + x;
+   size = w;
+
+   for(i = 0; i < h; i++)
+   {
+      memset(d, color, size);
+      d += dest->pitch;
+   }
+}
+
 //
 // V_ColorBlock
 //

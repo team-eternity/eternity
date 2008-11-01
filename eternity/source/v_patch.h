@@ -41,15 +41,17 @@ typedef struct PatchInfo_s
 typedef struct VBuffer_s
 {
    byte *data; // video memory
-   int width;
-   int height;
-   int pitch;
+   int  width;
+   int  height;
+   int  pitch;
 
    void (*BlockDrawer)(int, int, struct VBuffer_s *, int, int, byte *);
    void (*MaskedBlockDrawer)(int, int, struct VBuffer_s *, int, int, int, 
                              byte *, byte *);
    void (*TileBlock64)(struct VBuffer_s *, byte *);
 
+   // SoM: Include the screen size
+   int  scalew, scaleh;
    int  *x1lookup;
    int  *y1lookup;
    int  *x2lookup;
