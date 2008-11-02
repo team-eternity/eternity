@@ -27,9 +27,9 @@
 #include "v_video.h"
 
 // patch rendering globals -- like dc_ in r_draw.c
-// SoM: AAAHHHHHHH
 static cb_patch_column_t patchcol;
 static int ytop;
+
 
 //
 // V_DrawPatchColumn
@@ -59,7 +59,7 @@ static void V_DrawPatchColumn(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
-   frac = (patchcol.y1 * fracstep) & 0xFFFF;
+   frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // Inner loop that does the actual texture mapping,
    //  e.g. a DDA-lile scaling.
@@ -113,7 +113,7 @@ static void V_DrawPatchColumnTR(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
-   frac = (patchcol.y1 * fracstep) & 0xFFFF;
+   frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // Inner loop that does the actual texture mapping,
    //  e.g. a DDA-lile scaling.
@@ -175,7 +175,7 @@ void V_DrawPatchColumnTL(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
-   frac = (patchcol.y1 * fracstep) & 0xFFFF;
+   frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -238,7 +238,7 @@ void V_DrawPatchColumnTRTL(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
-   frac = (patchcol.y1 * fracstep) & 0xFFFF;
+   frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -306,7 +306,7 @@ void V_DrawPatchColumnAdd(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
-   frac = (patchcol.y1 * fracstep) & 0xFFFF;
+   frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -374,7 +374,7 @@ void V_DrawPatchColumnAddTR(void)
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
-   frac = (patchcol.y1 * fracstep) & 0xFFFF;
+   frac = patchcol.frac + ((patchcol.y1 * fracstep) & 0xFFFF);
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
@@ -403,29 +403,42 @@ void V_DrawPatchColumnAddTR(void)
 
 static void V_DrawMaskedColumn(column_t *column)
 {
-   while(column->topdelta != 0xff)
+   for(;column->topdelta != 0xff; column = (column_t *)((byte *)column + column->length + 4))
    {
       // calculate unclipped screen coordinates for post
 
       int columntop = ytop + column->topdelta;
-      patchcol.y1 = patchcol.buffer->y1lookup[columntop];
-      patchcol.y2 = patchcol.buffer->y2lookup[columntop + column->length - 1];
+
+      if(columntop + column->length - 1 < 0 || columntop > patchcol.buffer->scaleh)
+         continue;
+
+      if(columntop >= 0)
+      {
+         patchcol.y1 = patchcol.buffer->y1lookup[columntop];
+         patchcol.frac = 0;
+      }
+      else
+      {
+         patchcol.frac = (-columntop) << FRACBITS;
+         patchcol.y1 = 0;
+      }
+
+      if(columntop + column->length - 1 < patchcol.buffer->scaleh)
+         patchcol.y2 = patchcol.buffer->y2lookup[columntop + column->length - 1];
+      else
+         patchcol.y2 = patchcol.buffer->y2lookup[patchcol.buffer->scaleh - 1];
 
       // haleyjd 05/13/08: fix clipping; y2lookup not clamped properly
       if((column->length > 0 && patchcol.y2 < patchcol.y1) ||
          patchcol.y2 >= patchcol.buffer->height)
          patchcol.y2 = patchcol.buffer->height - 1;
       
-      if(patchcol.y1 < 0)
-         patchcol.y1 = 0;
-
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(patchcol.y1 <= patchcol.y2 && patchcol.y2 < patchcol.buffer->height)
       {
          patchcol.source = (byte *)column + 3;
          patchcol.colfunc();
       }
-      column = (column_t *)((byte *)column + column->length + 4);
    }
 }
 
