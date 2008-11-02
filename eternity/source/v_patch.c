@@ -600,6 +600,93 @@ void V_SetupBufferFuncs(VBuffer *buffer, int drawtype)
 //
 
 //
+// V_PatchToLinear
+//
+// haleyjd 11/02/08: converts a patch into a linear buffer
+//
+byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
+                      int *width, int *height)
+{
+   int w = SHORT(patch->width);
+   int h = SHORT(patch->height);
+   int col = w - 1, colstop = -1, colstep = -1;
+
+   byte *desttop;
+   byte *buffer = malloc(w * h);
+
+   memset(buffer, fillcolor, w * h);
+  
+   if(!flipped)
+      col = 0, colstop = w, colstep = 1;
+
+   desttop = buffer;
+      
+   for(; col != colstop; col += colstep, ++desttop)
+   {
+      const column_t *column = 
+         (const column_t *)((byte *)patch + LONG(patch->columnofs[col]));
+      
+      // step through the posts in a column
+      while(column->topdelta != 0xff)
+      {
+         // killough 2/21/98: Unrolled and performance-tuned         
+         register const byte *source = (byte *)column + 3;
+         register byte *dest = desttop + column->topdelta * w;
+         register int count = column->length;
+         int diff;
+
+         // haleyjd 11/02/08: clip to indicated height
+         if((diff = (count + column->topdelta) - h) > 0)
+            count -= diff;
+
+         // haleyjd: make sure there's something left to draw
+         if(count <= 0)
+            break;
+         
+         if((count -= 4) >= 0)
+         {
+            do
+            {
+               register byte s0, s1;
+               s0 = source[0];
+               s1 = source[1];
+               dest[0] = s0;
+               dest[w] = s1;
+               dest += w * 2;
+               s0 = source[2];
+               s1 = source[3];
+               source += 4;
+               dest[0] = s0;
+               dest[w] = s1;
+               dest += w * 2;
+            }
+            while((count -= 4) >= 0);
+         }
+         if(count += 4)
+         {
+            do
+            {
+               *dest = *source++;
+               dest += w;
+            }
+            while(--count);
+         }
+         column = (column_t *)(source + 1); // killough 2/21/98 even faster
+      }
+   }
+
+   // optionally return width and height
+   if(width)
+      *width = w;
+   if(height)
+      *height = h;
+
+   // voila!
+   return buffer;
+}
+
+
+//
 // V_LinearToPatch
 //
 // haleyjd 07/07/07: converts a linear graphic to a patch

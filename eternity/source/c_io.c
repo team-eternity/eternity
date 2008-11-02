@@ -588,8 +588,11 @@ void C_Drawer(void)
 
 void C_Update(void)
 {
-   C_Drawer();
-   I_FinishUpdate();
+   if(!nodrawers)
+   {
+      C_Drawer();
+      I_FinishUpdate();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////
