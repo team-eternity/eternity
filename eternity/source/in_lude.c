@@ -130,7 +130,7 @@ void IN_StartCamera(void)
          intercam.heightsec = subsec->sector->heightsec;
       }
       // FIXME: does this bite the player's setting for the next map?
-      R_SetViewSize(11, detailshift);     // force fullscreen
+      R_SetViewSize(11, c_detailshift);     // force fullscreen
    }
    else            // no camera, boring interpic
    {

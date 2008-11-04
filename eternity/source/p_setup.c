@@ -1671,7 +1671,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    DEBUGMSG("done\n");
    
-   R_SetViewSize(screenSize+3, detailshift); //sf
+   R_SetViewSize(screenSize+3, c_detailshift); //sf
 
 #if 0
    V_LoadingIncrease();

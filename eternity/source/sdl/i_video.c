@@ -339,7 +339,12 @@ static void I_ParseGeom(const char *geom,
             M_QStrPutc(&qstr, *c);
          else
          {
-            *w = atoi(qstr.buffer);
+            int width = atoi(qstr.buffer);
+            if(width < 320)
+               width = 320;
+            else if(width > 1024)
+               width = 1024;
+            *w = width;
             M_QStrClear(&qstr);
             state = STATE_HEIGHT;
          }
@@ -349,7 +354,12 @@ static void I_ParseGeom(const char *geom,
             M_QStrPutc(&qstr, *c);
          else
          {
-            *h = atoi(qstr.buffer);
+            int height = atoi(qstr.buffer);
+            if(height < 200)
+               height = 200;
+            else if(height > 768)
+               height = 768;
+            *h = height;
             state = STATE_FLAGS;
             continue; // don't increment the pointer
          }

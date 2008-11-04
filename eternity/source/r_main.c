@@ -1026,7 +1026,7 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
    {
       hide_menu = 20;             // hide the menu for a few tics
       
-      R_SetViewSize(screenSize + 3, detailshift);
+      R_SetViewSize(screenSize + 3, c_detailshift);
 
       // haleyjd 10/19/03: reimplement proper hud behavior
       switch(screenSize)
