@@ -75,8 +75,6 @@ SDL_Surface *sdlscreen;
 // Graphics Code
 
 
-#define NEWSETPAL
-
 int      use_vsync;     // killough 2/8/98: controls whether vsync is called
 boolean  noblit;
 
@@ -123,7 +121,6 @@ void I_FinishUpdate(void)
    }
 
 
-#ifdef NEWSETPAL
    if(setpalette)
    {
       if(!crossbitdepth)
@@ -135,7 +132,6 @@ void I_FinishUpdate(void)
       setpalette = false;
    }
    else if(!setpalette || crossbitdepth || (sdlscreen->flags & SDL_DOUBLEBUF))
-#endif
       SDL_Flip(sdlscreen);
 }
 
@@ -156,37 +152,50 @@ void I_ReadScreen(byte *scr)
 //
 
 int disk_icon;
-static VBuffer *disk = NULL, *disk_bg = NULL;
+static SDL_Rect drect;
+static SDL_Surface *disk = NULL, *disk_bg = NULL;
 
 static void I_InitDiskFlash(void)
 {
-   int w, h;
+   VBuffer diskvb;
 
    if(disk)
    {
-      V_FreeVBuffer(disk);
-      V_FreeVBuffer(disk_bg);
+      SDL_FreeSurface(disk);
+      SDL_FreeSurface(disk_bg);
    }
 
    if(vbscreen.scaled)
    {
-      w = vbscreen.x2lookup[16 - 1] + 1;
-      h = vbscreen.y2lookup[15 - 1] + 1;
+      drect.x = vbscreen.x1lookup[vbscreen.scalew - 16];
+      drect.y = vbscreen.y1lookup[vbscreen.scaleh - 15];
+      drect.w = vbscreen.x2lookup[vbscreen.scalew - 1] - drect.x + 1;
+      drect.h = vbscreen.y2lookup[vbscreen.scaleh - 1] - drect.y + 1;
    }
    else
    {
-      w = 16;
-      h = 15;
+      drect.x = vbscreen.width - 16;
+      drect.y = vbscreen.height - 15;
+      drect.w = 16;
+      drect.h = 15;
    }
 
-   disk = V_CreateVBuffer(w, h, video.bitdepth);
-   disk_bg = V_CreateVBuffer(w, h, video.bitdepth);
+   disk = SDL_CreateRGBSurface(0, drect.w, drect.h, video.bitdepth, 0, 0, 0, 0);
+   disk_bg = SDL_CreateRGBSurface(0, drect.w, drect.h, video.bitdepth, 0, 0, 0, 0);
+   
+   if(sdlscreen->format->palette)
+   {
+      SDL_SetPalette(disk, SDL_LOGPAL, colors, 0, 256);
+      SDL_SetPalette(disk_bg, SDL_LOGPAL, colors, 0, 256);
+   }
 
-   V_SetScaling(disk, 16, 15);
+   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disk->pitch, disk->format->BitsPerPixel, disk->pixels);
+   V_SetScaling(&diskvb, 16, 15);
 
-   V_DrawPatchDirect(0, -1, disk,
+   V_DrawPatchDirect(0, -1, &diskvb,
                     W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", 
                                     PU_CACHE));
+   V_FreeVBuffer(&diskvb);
 }
 
 //
@@ -195,20 +204,12 @@ static void I_InitDiskFlash(void)
 
 void I_BeginRead(void)
 {
-   SDL_Rect r;
-
    if(!disk_icon || !disk || !disk_bg || !in_graphics_mode)
       return;
 
-   V_BlitVBuffer(disk_bg, 0, 0, &vbscreen, 0, 0, disk_bg->width, disk_bg->height);
-   V_BlitVBuffer(&vbscreen, 0, 0, disk, 0, 0, disk->width, disk->height);
-
-
-   r.x = r.y = 0;
-   r.w = disk->width;
-   r.h = disk->height;
-   SDL_BlitSurface(primary_surface, &r, sdlscreen, &r);
-   SDL_UpdateRect(sdlscreen, 0, 0, disk->width, disk->height);
+   SDL_BlitSurface(sdlscreen, &drect, disk_bg, NULL);
+   SDL_BlitSurface(disk, NULL, sdlscreen, &drect);
+   SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
 
 //
@@ -217,18 +218,11 @@ void I_BeginRead(void)
 
 void I_EndRead(void)
 {
-   SDL_Rect r;
-
    if(!disk_icon || !disk_bg || !in_graphics_mode)
       return;
-
    
-   V_BlitVBuffer(&vbscreen, 0, 0, disk_bg, 0, 0, disk_bg->width, disk_bg->height);
-   r.x = r.y = 0;
-   r.w = disk->width;
-   r.h = disk->height;
-   SDL_BlitSurface(primary_surface, &r, sdlscreen, &r);
-   SDL_UpdateRect(sdlscreen, 0, 0, disk->width, disk->height);
+   SDL_BlitSurface(disk_bg, NULL, sdlscreen, &drect);
+   SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
 
 
@@ -260,14 +254,6 @@ void I_SetPalette(byte *palette)
    }
 
    setpalette = true;
-
-#ifndef NEWSETPAL
-   if(!crossbitdepth)
-      SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
-
-   if(primary_surface)
-      SDL_SetPalette(primary_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
-#endif
 }
 
 
@@ -579,8 +565,8 @@ static boolean I_InitGraphicsMode(void)
    
    setsizeneeded = true;
    
-   I_InitDiskFlash();        // Initialize disk icon
    I_SetPalette(W_CacheLumpName("PLAYPAL",PU_CACHE));
+   I_InitDiskFlash();        // Initialize disk icon
    
    // haleyjd 10/09/05: from Chocolate DOOM:
    // clear out any events waiting at the start   

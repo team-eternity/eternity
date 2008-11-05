@@ -222,13 +222,6 @@ default_t defaults[] =
    },
 
    {
-      "v_diskicon",
-      &disk_icon, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable loading icon flashing"
-   },
-
-   {
       "textmode_startup",
       &textmode_startup, NULL,
       0, {0,1}, dt_number, ss_gen, wad_no,
@@ -249,14 +242,12 @@ default_t defaults[] =
       "Percentage of normal speed (35 fps) realtic clock runs at"
    },
 
-#ifdef DJGPP
    { // killough 10/98
       "disk_icon",
       &disk_icon, NULL,
       1, {0,1}, dt_number, ss_gen, wad_no,
       "1 to enable flashing icon during disk IO"
    },
-#endif
   
    { // killough 2/21/98
       "pitched_sounds",
