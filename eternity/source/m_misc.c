@@ -222,6 +222,13 @@ default_t defaults[] =
    },
 
    {
+      "v_diskicon",
+      &disk_icon, NULL,
+      0, {0,1}, dt_number, ss_gen, wad_no,
+      "1 to enable loading icon flashing"
+   },
+
+   {
       "textmode_startup",
       &textmode_startup, NULL,
       0, {0,1}, dt_number, ss_gen, wad_no,

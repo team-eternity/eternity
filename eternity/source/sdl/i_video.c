@@ -155,16 +155,12 @@ void I_ReadScreen(byte *scr)
 // killough 10/98: init disk icon
 //
 
-int disk_icon = 0;
+int disk_icon;
 static VBuffer *disk = NULL, *disk_bg = NULL;
 
 static void I_InitDiskFlash(void)
 {
    int w, h;
-
-   // Hack for now
-   if(!disk_icon)
-      return;
 
    if(disk)
    {
@@ -700,7 +696,7 @@ void I_SetMode(int i)
 VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
 VARIABLE_BOOLEAN(disk_icon, NULL,  onoff);
 
-CONSOLE_VARIABLE(v_diskicon, disk_icon, 1) {}
+CONSOLE_VARIABLE(v_diskicon, disk_icon, 0) {}
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
    V_ResetMode();
