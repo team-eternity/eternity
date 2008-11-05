@@ -38,27 +38,9 @@ typedef struct PatchInfo_s
    int drawstyle;   // drawing style (normal, tr, tl, trtl, etc.)
 } PatchInfo;
 
-typedef struct VBuffer_s
-{
-   byte *data; // video memory
-   int  width;
-   int  height;
-   int  pitch, pixelsize;
 
-   void (*BlockDrawer)(int, int, struct VBuffer_s *, int, int, byte *);
-   void (*MaskedBlockDrawer)(int, int, struct VBuffer_s *, int, int, int, 
-                             byte *, byte *);
-   void (*TileBlock64)(struct VBuffer_s *, byte *);
-
-   // SoM: Include the screen size
-   int  scalew, scaleh;
-   int  *x1lookup;
-   int  *y1lookup;
-   int  *x2lookup;
-   int  *y2lookup;
-   fixed_t ixscale;
-   fixed_t iyscale;
-} VBuffer;
+// VBuffer moved
+#include "v_buffer.h"
 
 enum
 {
@@ -73,7 +55,6 @@ enum
 
 void V_SetPatchColrng(byte *colrng);
 void V_SetPatchTL(unsigned int *fg, unsigned int *bg);
-
 void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer);
 
 enum

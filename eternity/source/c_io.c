@@ -79,7 +79,6 @@ int c_speed=10;       // pixels/tic it moves
 int current_target = 0;
 int current_height = 0;
 boolean c_showprompt;
-static byte *backdrop = NULL;
 static char inputtext[INPUTLENGTH];
 static char *input_point;      // left-most point you see of the command line
 
@@ -90,8 +89,9 @@ int console_enabled = true;
 // haleyjd 09/07/03: true logging capability
 static FILE *console_log = NULL;
 
-// SoM: This is used elsewhere now!
-static VBuffer cback = {NULL, 0, 0, 0, 1, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, 0, 0};
+// SoM: Use the new VBuffer system
+static VBuffer cback;
+static boolean cbackneedfree = false;
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -120,18 +120,16 @@ static void C_initBackdrop(void)
       darken = false; // I assume it is already suitable for use.
    }
    
-   if(backdrop)
-      Z_SysFree(backdrop);
+   if(cbackneedfree)
+   {
+      V_FreeVBuffer(&cback);
+   }
+   else
+      cbackneedfree = true;
+
+   V_InitVBuffer(&cback, video.width, video.height, video.bitdepth);
+   V_SetScaling(&cback, SCREENWIDTH, SCREENHEIGHT);
    
-   // haleyjd 07/02/08: large static buffer; use Z_SysMalloc
-   backdrop = Z_SysMalloc(video.height * video.width);
-
-   // haleyjd 04/03/04: removed hack, setup VBuffer object
-   memcpy(&cback, &vbscreen, sizeof(VBuffer));
-   cback.data = backdrop;
-   cback.width = cback.pitch = video.width;
-   cback.height = video.height;
-
    lumpnum = W_GetNumForName(lumpname);
    patch   = W_CacheLumpNum(lumpnum, PU_STATIC);
 
@@ -507,10 +505,10 @@ void C_Drawer(void)
 {
    int y;
    int count;
-   int real_height = video.y2lookup[current_height - 1] + 1;
+   int real_height;
    static int oldscreenheight = 0;
    static int oldscreenwidth = 0;
-   
+
    if(!consoleactive) 
       return;   // dont draw if not active
 
@@ -525,7 +523,9 @@ void C_Drawer(void)
 
    // fullscreen console for fullscreen mode
    if(gamestate == GS_CONSOLE)
-      current_height = SCREENHEIGHT;
+      current_height = cback.scaled ? SCREENHEIGHT : cback.height;
+
+   real_height = cback.scaled ? cback.y2lookup[current_height - 1] + 1: current_height;
 
    // draw backdrop
    // SoM: use the VBuffer
@@ -1097,7 +1097,7 @@ static void Egg(void)
       {
          unsigned char *s = egg + ((y % 44 * 42) + (x % 42));
          if(*s != 247)
-            backdrop[y * video.width + x] = *s;
+            cback.data[y * video.width + x] = *s;
       }
    }
 

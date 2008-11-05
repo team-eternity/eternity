@@ -1195,9 +1195,6 @@ void R_FillBackScreen (void)
 //
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 { 
-   //unsigned int ofs;
-   VBuffer temp;
-
    // haleyjd 06/08/05: protect against bad erasings
    if(x + w > SCREENWIDTH || y + h > SCREENHEIGHT)
       return;
@@ -1212,27 +1209,8 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
       x = video.x1lookup[x];
       y = video.y1lookup[y];
    }
-         
-   memcpy(&temp, &vbscreen, sizeof(VBuffer));
-   temp.data = video.screens[1];
-   temp.pitch = temp.width;
 
-   V_BlitVBuffer(&vbscreen, x, y, &temp, x, y, w, h);
-   /*ofs = x + y * video.width;
-
-   if(x == 0 && w == (unsigned int)video.width)
-   {
-      memcpy(video.screens[0]+ofs, video.screens[1]+ofs, w * h);   // LFB copy
-      return;
-   }
-
-   ofs += (h - 1) * video.width;
-
-   while(h-- > 0)
-   {
-      memcpy(video.screens[0] + ofs, video.screens[1] + ofs, w);
-      ofs -= video.width;
-   }*/
+   V_BlitVBuffer(&vbscreen, x, y, &backscreen1, x, y, w, h);
 } 
 
 //

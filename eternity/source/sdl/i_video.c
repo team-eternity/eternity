@@ -146,40 +146,51 @@ void I_ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   memcpy(&temp, &vbscreen, sizeof(VBuffer));
-   temp.data = scr;
-   temp.pitch = temp.width;
-
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, vbscreen.width, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
+   V_FreeVBuffer(&temp);
 }
 
 //
 // killough 10/98: init disk icon
 //
 
-int disk_icon;
-static SDL_Surface *diskflash, *old_data;
+int disk_icon = 0;
+static VBuffer *disk = NULL, *disk_bg = NULL;
 
 static void I_InitDiskFlash(void)
 {
-/*  byte temp[32*32];
+   int w, h;
 
-  if (diskflash)
-    {
-      SDL_FreeSurface(diskflash);
-      SDL_FreeSurface(old_data);
-    }
+   // Hack for now
+   if(!disk_icon)
+      return;
 
-  //sf : disk is actually 16x15
-  diskflash = SDL_CreateRGBSurface(SDL_SWSURFACE, 16<<hires, 15<<hires, 8, 0, 0, 0, 0);
-  old_data = SDL_CreateRGBSurface(SDL_SWSURFACE, 16<<hires, 15<<hires, 8, 0, 0, 0, 0);
+   if(disk)
+   {
+      V_FreeVBuffer(disk);
+      V_FreeVBuffer(disk_bg);
+   }
 
-  V_GetBlock(0, 0, 0, 16, 15, temp);
-  V_DrawPatchDirect(0, -1, &vbscreen, 
+   if(vbscreen.scaled)
+   {
+      w = vbscreen.x2lookup[16 - 1] + 1;
+      h = vbscreen.y2lookup[15 - 1] + 1;
+   }
+   else
+   {
+      w = 16;
+      h = 15;
+   }
+
+   disk = V_CreateVBuffer(w, h, video.bitdepth);
+   disk_bg = V_CreateVBuffer(w, h, video.bitdepth);
+
+   V_SetScaling(disk, 16, 15);
+
+   V_DrawPatchDirect(0, -1, disk,
                     W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", 
                                     PU_CACHE));
-  V_GetBlock(0, 0, 0, 16, 15, (char *)diskflash->pixels);
-  V_DrawBlock(0, 0, &vbscreen, 16, 15, temp);*/
 }
 
 //
@@ -188,16 +199,20 @@ static void I_InitDiskFlash(void)
 
 void I_BeginRead(void)
 {
-   if(!disk_icon || !in_graphics_mode)
+   SDL_Rect r;
+
+   if(!disk_icon || !disk || !disk_bg || !in_graphics_mode)
       return;
 
-  /*blit(screen, old_data,
-       (SCREENWIDTH-16) << hires,
-       scroll_offset + ((SCREENHEIGHT-15)<<hires),
-       0, 0, 16 << hires, 15 << hires);
+   V_BlitVBuffer(disk_bg, 0, 0, &vbscreen, 0, 0, disk_bg->width, disk_bg->height);
+   V_BlitVBuffer(&vbscreen, 0, 0, disk, 0, 0, disk->width, disk->height);
 
-  blit(diskflash, screen, 0, 0, (SCREENWIDTH-16) << hires,
-       scroll_offset + ((SCREENHEIGHT-15)<<hires), 16 << hires, 15 << hires);*/
+
+   r.x = r.y = 0;
+   r.w = disk->width;
+   r.h = disk->height;
+   SDL_BlitSurface(primary_surface, &r, sdlscreen, &r);
+   SDL_UpdateRect(sdlscreen, 0, 0, disk->width, disk->height);
 }
 
 //
@@ -206,11 +221,18 @@ void I_BeginRead(void)
 
 void I_EndRead(void)
 {
-   if(!disk_icon || !in_graphics_mode)
+   SDL_Rect r;
+
+   if(!disk_icon || !disk_bg || !in_graphics_mode)
       return;
 
-/*  blit(old_data, screen, 0, 0, (SCREENWIDTH-16) << hires,
-       scroll_offset + ((SCREENHEIGHT-15)<<hires), 16 << hires, 15 << hires);*/
+   
+   V_BlitVBuffer(&vbscreen, 0, 0, disk_bg, 0, 0, disk_bg->width, disk_bg->height);
+   r.x = r.y = 0;
+   r.w = disk->width;
+   r.h = disk->height;
+   SDL_BlitSurface(primary_surface, &r, sdlscreen, &r);
+   SDL_UpdateRect(sdlscreen, 0, 0, disk->width, disk->height);
 }
 
 
@@ -678,7 +700,7 @@ void I_SetMode(int i)
 VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
 VARIABLE_BOOLEAN(disk_icon, NULL,  onoff);
 
-CONSOLE_VARIABLE(v_diskicon, disk_icon, 0) {}
+CONSOLE_VARIABLE(v_diskicon, disk_icon, 1) {}
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
    V_ResetMode();

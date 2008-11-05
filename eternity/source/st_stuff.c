@@ -1303,12 +1303,18 @@ VBuffer backscreen4;
 //
 static void ST_DoomStart(void)
 {
+   static boolean freebackscreen = false;
+
    ST_initData();
    ST_createWidgets();
 
-   memcpy(&backscreen4, &vbscreen, sizeof(VBuffer));
-   backscreen4.data  = video.screens[4];
-   backscreen4.pitch = backscreen4.width;
+   if(freebackscreen)
+      V_FreeVBuffer(&backscreen4);
+   else
+      freebackscreen = true;
+
+   V_InitVBufferFrom(&backscreen4, video.width, video.height, video.width, video.bitdepth, video.screens[4]);
+   V_SetScaling(&backscreen4, SCREENWIDTH, SCREENHEIGHT);
 }
 
 static boolean st_stopped = true;

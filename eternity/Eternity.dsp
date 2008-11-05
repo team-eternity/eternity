@@ -1280,6 +1280,10 @@ SOURCE=.\Source\v_block.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\v_buffer.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\v_font.c
 # End Source File
 # Begin Source File
@@ -1301,6 +1305,10 @@ SOURCE=.\Source\v_video.c
 # Begin Source File
 
 SOURCE=.\Source\v_block.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\v_buffer.h
 # End Source File
 # Begin Source File
 

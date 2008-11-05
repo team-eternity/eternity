@@ -757,59 +757,6 @@ void V_CacheBlock(int x, int y, int width, int height, byte *src,
 
 
 
-// SoM: blit from one vbuffer to another
-void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
-                   unsigned int sx, unsigned int sy, unsigned int width, 
-                   unsigned int height)
-{
-   byte *dbuf, *sbuf;
-   int i = height;
-   int slice = width, dpitch = dest->pitch, spitch = src->pitch;
-
-   if(dx < 0)
-   {
-      slice += dx;
-      sx += D_abs(dx);
-      dx = 0;
-   }
-
-   if(slice < 0 || (int)sx >= src->width)
-      return;
-
-   if(dy < 0)
-   {
-      i += dy;
-      sy += D_abs(dy);
-      dy = 0;
-   }
-
-   if((int)sy >= src->height || i < 0)
-      return;
-
-   if(dx + slice > dest->width)
-      slice = dest->width - dx;
-   if(dy + i > dest->height)
-      i = dest->height - dy;
-
-   if((int)sx + slice > src->width)
-      slice = src->width - (int)sx;
-
-   if((int)sy + i > src->height)
-      i = src->height - (int)sy;
-
-   if(slice < 0 || i < 0)
-      return;
-
-   dbuf = dest->data + (dpitch * dy) + dx;
-   sbuf = src->data + (spitch * sy) + sx;
-
-   while(i--)
-   {
-      memcpy(dbuf, sbuf, slice);
-      dbuf += dpitch;
-      sbuf += spitch;
-   }
-}
 
 //----------------------------------------------------------------------------
 //

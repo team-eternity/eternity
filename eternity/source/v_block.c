@@ -45,7 +45,7 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
    // clip to screen
 
    // entirely off-screen?
-   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
+   if(x + width < 0 || y + height < 0 || x >= buffer->width || y >= buffer->height)
       return;
 
    cx1 = x >= 0 ? x : 0;
@@ -53,11 +53,11 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
    cx2 = x + width - 1;
    cy2 = y + height - 1;
 
-   if(cx2 >= 320)
-      cx2 = 319;
+   if(cx2 >= buffer->width)
+      cx2 = buffer->width - 1;
 
-   if(cy2 >= 199)
-      cy2 = 199;
+   if(cy2 >= buffer->height)
+      cy2 = buffer->height - 1;
 
    // change in origin due to clipping
    dx = cx1 - x;
@@ -72,7 +72,7 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
       return;
 
    src  = source + dy * width + dx;
-   dest = buffer->data + cy1 * buffer->pitch + cx1;
+   dest = buffer->ylut[cy1] + buffer->xlut[cx1];
 
    while(ch--)
    {
@@ -91,10 +91,10 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    int cx1, cy1, cx2, cy2, cw, ch;
    int dx, dy;
    
-   // clip to screen within 320x200 coordinate space
+   // clip to screen within scaled coordinate space
    
    // entirely off-screen?
-   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
+   if(x + width < 0 || y + height < 0 || x >= buffer->scalew || y >= buffer->scaleh)
       return;
    
    cx1 = x >= 0 ? x : 0;
@@ -102,11 +102,11 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    cx2 = x + width - 1;
    cy2 = y + height - 1;
 
-   if(cx2 >= 320)
-      cx2 = 319;
+   if(cx2 >= buffer->scalew)
+      cx2 = buffer->scalew - 1;
 
-   if(cy2 >= 199)
-      cy2 = 199;
+   if(cy2 >= buffer->scaleh)
+      cy2 = buffer->scaleh - 1;
    
    // change in origin due to clipping
    dx = cx1 - x;
@@ -129,7 +129,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    yfrac = 0;
 
    src  = source + dy * width + dx;
-   dest = buffer->data + realy * buffer->pitch + realx;
+   dest = buffer->ylut[realy] + buffer->xlut[realx];
 
 #ifdef RANGECHECK
    // sanity check
@@ -177,7 +177,7 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
    // clip to screen
 
    // entirely off-screen?
-   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
+   if(x + width < 0 || y + height < 0 || x >= buffer->width || y >= buffer->height)
       return;
 
    cx1 = x >= 0 ? x : 0;
@@ -185,11 +185,11 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
    cx2 = x + width - 1;
    cy2 = y + height - 1;
 
-   if(cx2 >= 320)
-      cx2 = 319;
+   if(cx2 >= buffer->width)
+      cx2 = buffer->width - 1;
 
-   if(cy2 >= 199)
-      cy2 = 199;
+   if(cy2 >= buffer->height)
+      cy2 = buffer->height - 1;
 
    // change in origin due to clipping
    dx = cx1 - x;
@@ -204,7 +204,7 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
       return;
 
    src  = source + dy * srcpitch + dx;
-   dest = buffer->data + cy1 * buffer->pitch + cx1;
+   dest = buffer->ylut[cy1] + buffer->xlut[cx1];
 
    while(ch--)
    {
@@ -228,10 +228,10 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    int cx1, cy1, cx2, cy2, cw, ch;
    int dx, dy;
    
-   // clip to screen within 320x200 coordinate space
+   // clip to screen within scaled coordinate space
    
    // entirely off-screen?
-   if(x + width < 0 || y + height < 0 || x >= 320 || y >= 200)
+   if(x + width < 0 || y + height < 0 || x >= buffer->scalew || y >= buffer->scaleh)
       return;
    
    cx1 = x >= 0 ? x : 0;
@@ -239,11 +239,11 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    cx2 = x + width - 1;
    cy2 = y + height - 1;
 
-   if(cx2 >= 320)
-      cx2 = 319;
+   if(cx2 >= buffer->scalew)
+      cx2 = buffer->scalew - 1;
 
-   if(cy2 >= 199)
-      cy2 = 199;
+   if(cy2 >= buffer->scaleh)
+      cy2 = buffer->scaleh - 1;
    
    // change in origin due to clipping
    dx = cx1 - x;
@@ -266,7 +266,7 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    yfrac = 0;
 
    src  = source + dy * srcpitch + dx;
-   dest = buffer->data + realy * buffer->pitch + realx;
+   dest = buffer->ylut[realy] + buffer->xlut[realx];
 
 #ifdef RANGECHECK
    // sanity check
@@ -337,7 +337,7 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    w = x2 - x + 1;
    h = y2 - y + 1;
 
-   d = dest->data + y * dest->pitch + x;
+   d = dest->ylut[y] + dest->xlut[x];
    size = w;
 
    for(i = 0; i < h; i++)

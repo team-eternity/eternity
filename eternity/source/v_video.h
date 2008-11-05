@@ -35,6 +35,7 @@
 #include "v_patch.h"
 // Needed because we are refering to patches.
 #include "r_data.h"
+#include "v_buffer.h"
 
 //
 // VIDEO
@@ -145,14 +146,13 @@ void V_InitFlexTranTable(const byte *palette);
 void V_CacheBlock(int x, int y, int width, int height, byte *src,
                   byte *bdest);
 
-void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
-                   unsigned int sx, unsigned int sy, unsigned int width, 
-                   unsigned int height);
 
 #include "v_misc.h"
 
 extern VBuffer vbscreen;
 extern VBuffer backscreen1;
+extern VBuffer backscreen2;
+extern VBuffer backscreen3;
 
 #endif
 

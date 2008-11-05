@@ -641,7 +641,7 @@ void V_ClassicFPSDrawer(void)
     tics = 20;
 
    // SoM: ANYRES
-   if(video.scaled)
+   if(vbscreen.scaled)
    {
       for (i=0 ; i<tics*2 ; i+=2)
          V_ColorBlockScaled(&vbscreen, 0xff, i, SCREENHEIGHT-1, 1, 1);
@@ -700,79 +700,38 @@ void V_TextFPSDrawer(void)
 
 VBuffer vbscreen;
 VBuffer backscreen1;
+VBuffer backscreen2;
+VBuffer backscreen3;
+
+static boolean vbscreenneedsfree = false;
 
 //
 // V_InitScreenVBuffer
 //
 static void V_InitScreenVBuffer(void)
 {
-   int drawtype;
-
-   // haleyjd: set up VBuffer for the screen
-   vbscreen.data   = video.screens[0];
-   vbscreen.width  = video.width;
-   vbscreen.height = video.height;
-   vbscreen.pitch  = video.pitch;
-   vbscreen.x1lookup = video.x1lookup;
-   vbscreen.y1lookup = video.y1lookup;
-   vbscreen.x2lookup = video.x2lookup;
-   vbscreen.y2lookup = video.y2lookup;
-   vbscreen.ixscale = video.xstep;
-   vbscreen.iyscale = video.ystep;
-   vbscreen.scalew = SCREENWIDTH;
-   vbscreen.scaleh = SCREENHEIGHT;
-   
-   if(video.width == 320 && video.height == 200)
-      drawtype = DRAWTYPE_UNSCALED;
-   else if(video.width == 640 && video.height == 400)
-      drawtype = DRAWTYPE_2XSCALED;
-   else
-      drawtype = DRAWTYPE_GENSCALED;
-
-   V_SetupBufferFuncs(&vbscreen, drawtype);
-
-   // copy most attributes to the first backscreen
-
-   memcpy(&backscreen1, &vbscreen, sizeof(VBuffer));
-   backscreen1.data = video.screens[1];
-   backscreen1.pitch = backscreen1.width;
-}
-
-//
-// V_InitUnscaledBuffer
-//
-// Sets up a VBuffer object for drawing into a 320x200 linear buffer.
-//
-void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data)
-{
-   static int unscaled_xlookup[321];
-   static int unscaled_ylookup[201];
-   static boolean firsttime = true;
-   
-   if(firsttime)
+   if(vbscreenneedsfree)
    {
-      int i;
-
-      firsttime = false;
-      for(i = 0; i < 321; ++i)
-         unscaled_xlookup[i] = i;
-      for(i = 0; i < 201; ++i)
-         unscaled_ylookup[i] = i;
+      V_FreeVBuffer(&vbscreen);
+      V_FreeVBuffer(&backscreen1);
+      V_FreeVBuffer(&backscreen2);
+      V_FreeVBuffer(&backscreen3);
    }
+   else
+      vbscreenneedsfree = true;
 
-   vbuf->data     = data;
-   vbuf->width    = 320;
-   vbuf->height   = 200;
-   vbuf->pitch    = 320;
-   vbuf->x1lookup = unscaled_xlookup;
-   vbuf->x2lookup = unscaled_xlookup;
-   vbuf->y1lookup = unscaled_ylookup;
-   vbuf->y2lookup = unscaled_ylookup;
-   vbuf->ixscale  = ((SCREENWIDTH << FRACBITS) / vbuf->width) + 1;
-   vbuf->iyscale  = ((SCREENHEIGHT << FRACBITS) / vbuf->height) + 1;
+   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch, video.bitdepth, video.screens[0]);
+   V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
 
-   V_SetupBufferFuncs(vbuf, DRAWTYPE_UNSCALED);
+   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width, video.bitdepth, video.screens[1]);
+   V_SetScaling(&backscreen1, SCREENWIDTH, SCREENHEIGHT);
+
+   // Only vbscreen and backscreen1 need scaling set.
+   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width, video.bitdepth, video.screens[2]);
+   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, video.bitdepth, video.screens[3]);
 }
+
+
 
 extern void I_SetPrimaryBuffer(void);
 extern void I_UnsetPrimaryBuffer(void);

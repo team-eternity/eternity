@@ -52,10 +52,7 @@ static void V_DrawPatchColumn(void)
       I_Error("V_DrawPatchColumn: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   // Framebuffer destination address.
-   // haleyjd: no ylookup or columnofs here due to ability to draw to
-   // arbitrary buffers -- would probably use too much memory.
-   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
+   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
@@ -106,10 +103,7 @@ static void V_DrawPatchColumnTR(void)
       I_Error("V_DrawPatchColumnTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   // Framebuffer destination address.
-   // haleyjd: no ylookup or columnofs here due to ability to draw to
-   // arbitrary buffers -- would probably use too much memory.
-   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
+   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
@@ -168,10 +162,7 @@ void V_DrawPatchColumnTL(void)
       I_Error("V_DrawPatchColumnTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   // Framebuffer destination address.
-   // haleyjd: no ylookup or columnofs here due to ability to draw to
-   // arbitrary buffers -- would probably use too much memory.
-   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
+   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
@@ -231,10 +222,7 @@ void V_DrawPatchColumnTRTL(void)
       I_Error("V_DrawPatchColumnTRTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   // Framebuffer destination address.
-   // haleyjd: no ylookup or columnofs here due to ability to draw to
-   // arbitrary buffers -- would probably use too much memory.
-   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
+   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
@@ -299,10 +287,7 @@ void V_DrawPatchColumnAdd(void)
       I_Error("V_DrawPatchColumnAdd: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   // Framebuffer destination address.
-   // haleyjd: no ylookup or columnofs here due to ability to draw to
-   // arbitrary buffers -- would probably use too much memory.
-   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
+   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
@@ -367,10 +352,7 @@ void V_DrawPatchColumnAddTR(void)
       I_Error("V_DrawPatchColumnAddTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   // Framebuffer destination address.
-   // haleyjd: no ylookup or columnofs here due to ability to draw to
-   // arbitrary buffers -- would probably use too much memory.
-   dest = patchcol.buffer->data + patchcol.y1 * patchcol.buffer->pitch + patchcol.x;
+   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
@@ -401,6 +383,8 @@ void V_DrawPatchColumnAddTR(void)
 
 #undef DO_COLOR_BLEND
 
+
+
 static void V_DrawMaskedColumn(column_t *column)
 {
    for(;column->topdelta != 0xff; column = (column_t *)((byte *)column + column->length + 4))
@@ -408,9 +392,6 @@ static void V_DrawMaskedColumn(column_t *column)
       // calculate unclipped screen coordinates for post
 
       int columntop = ytop + column->topdelta;
-
-      if(columntop + column->length - 1 < 0 || columntop > patchcol.buffer->scaleh)
-         continue;
 
       if(columntop >= 0)
       {
@@ -442,6 +423,42 @@ static void V_DrawMaskedColumn(column_t *column)
    }
 }
 
+
+
+static void V_DrawMaskedColumnUnscaled(column_t *column)
+{
+   for(;column->topdelta != 0xff; column = (column_t *)((byte *)column + column->length + 4))
+   {
+      // calculate unclipped screen coordinates for post
+
+      int columntop = ytop + column->topdelta;
+
+      if(columntop >= 0)
+      {
+         patchcol.y1 = columntop;
+         patchcol.frac = 0;
+      }
+      else
+      {
+         patchcol.frac = (-columntop) << FRACBITS;
+         patchcol.y1 = 0;
+      }
+
+      if(columntop + column->length - 1 < patchcol.buffer->height)
+         patchcol.y2 = columntop + column->length - 1;
+      else
+         patchcol.y2 = patchcol.buffer->height - 1;
+
+      // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
+      if(patchcol.y1 <= patchcol.y2 && patchcol.y2 < patchcol.buffer->height)
+      {
+         patchcol.source = (byte *)column + 3;
+         patchcol.colfunc();
+      }
+   }
+}
+
+
 //
 // V_DrawPatchInt
 //
@@ -456,17 +473,12 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    int        x1, x2, tx, w;
    fixed_t    scale, iscale, xiscale, startfrac = 0;
    patch_t    *patch = pi->patch;
+   int        maxw, maxh;
+   void       (*maskcolfunc)(column_t *);
 
    w = SHORT(patch->width); // haleyjd: holy crap, stop calling this 800 times
    
    patchcol.buffer = buffer;
-
-   // haleyjd 08/16/08: scale and step values must come from the VBuffer, NOT
-   // the Cardboard video structure...
-
-   scale         = (buffer->width << FRACBITS) / SCREENWIDTH;
-   iscale        = buffer->ixscale;
-   patchcol.step = buffer->iyscale;
 
    // calculate edges of the shape
    if(pi->flipped)
@@ -482,23 +494,46 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       x2 = tx + w - 1;
    }
 
+   // haleyjd 08/16/08: scale and step values must come from the VBuffer, NOT
+   // the Cardboard video structure...
+
+   if(buffer->scaled)
+   {
+      scale         = (buffer->width << FRACBITS) / buffer->scalew;
+      iscale        = buffer->ixscale;
+      patchcol.step = buffer->iyscale;
+      maxw          = buffer->scalew;
+      maxh          = buffer->scaleh;
+      maskcolfunc   = V_DrawMaskedColumn;
+   }
+   else
+   {
+      scale = iscale = patchcol.step = FRACUNIT;
+      maxw = buffer->width;
+      maxh = buffer->height;
+      maskcolfunc   = V_DrawMaskedColumnUnscaled;
+   }
+
    // off the left or right side?
-   if(x2 < 0 || x1 >= SCREENWIDTH)
+   if(x2 < 0 || x1 >= maxw)
       return;
 
    xiscale = pi->flipped ? -iscale : iscale;
 
-   // haleyjd 10/10/08: must handle coordinates outside the screen buffer
-   // very carefully here.
-   if(x1 >= 0)
-      x1 = buffer->x1lookup[x1];
-   else
-      x1 = -buffer->x2lookup[-x1 - 1];
+   if(buffer->scaled)
+   {
+      // haleyjd 10/10/08: must handle coordinates outside the screen buffer
+      // very carefully here.
+      if(x1 >= 0)
+         x1 = buffer->x1lookup[x1];
+      else
+         x1 = -buffer->x2lookup[-x1 - 1];
 
-   if(x2 < 320)
-      x2 = buffer->x2lookup[x2];
-   else
-      x2 = buffer->x2lookup[319];
+      if(x2 < buffer->scalew)
+         x2 = buffer->x2lookup[x2];
+      else
+         x2 = buffer->x2lookup[buffer->scalew - 1];
+   }
 
    patchcol.x  = x1 < 0 ? 0 : x1;
    
@@ -563,7 +598,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          
          column = (column_t *)((byte *)patch +
             LONG(patch->columnofs[texturecolumn]));
-         V_DrawMaskedColumn(column);
+         maskcolfunc(column);
       }
    }
 }

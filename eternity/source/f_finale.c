@@ -736,7 +736,7 @@ static void F_InitDemonScroller(void)
    lsize2 = W_LumpLength(lnum2);
 
    // init VBuffer
-   V_InitUnscaledBuffer(&vbuf, DemonBuffer);
+   V_InitVBufferFrom(&vbuf, 320, 400, 320, video.bitdepth, DemonBuffer);
    
    if(lsize2 == 64000) // raw screen
       W_ReadLump(lnum2, DemonBuffer);
@@ -751,11 +751,10 @@ static void F_InitDemonScroller(void)
    else
    {
       patch_t *p = (patch_t *)W_CacheLumpNum(lnum1, PU_CACHE);
+      V_DrawPatchGeneral(0, 200, &vbuf, p, false);
+   }
 
-      // adjust pointer to second screen of DemonBuffer
-      vbuf.data = DemonBuffer + 64000;
-      V_DrawPatchGeneral(0, 0, &vbuf, p, false);
-   }   
+   V_FreeVBuffer(&vbuf);
 }
 
 //

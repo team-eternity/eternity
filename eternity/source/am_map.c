@@ -1277,7 +1277,7 @@ void AM_drawFline(fline_t *fl, int color )
    }
 #endif
 
-#define PUTDOT(xx,yy,cc) vbscreen.data[(yy)*vbscreen.pitch+(xx)]=(cc)
+#define PUTDOT(xx,yy,cc) *(vbscreen.ylut[(yy)] + vbscreen.xlut[(xx)]) = (cc)
 
    dx = fl->b.x - fl->a.x;
    ax = 2 * (dx < 0 ? -dx : dx);

@@ -2413,9 +2413,7 @@ void M_ScreenShot(void)
          // (PU_CACHE could cause crash)
          
          byte *pal = W_CacheLumpName ("PLAYPAL", PU_STATIC);
-         byte *linear = video.screens[2];
-         
-         I_ReadScreen(linear);
+         V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
 
          // save the pcx file
          //jff 3/30/98 write pcx or bmp depending on mode
@@ -2423,7 +2421,7 @@ void M_ScreenShot(void)
          // killough 10/98: detect failure and remove file if error
          // SoM: ANYRES
          if(!(success = (screenshot_pcx ? WritePCXfile : WriteBMPfile)
-            (lbmname, linear, video.width, video.height, pal)))
+            (lbmname, backscreen2.data, video.width, video.height, pal)))
          {
             int t = errno;
             remove(lbmname);
