@@ -99,8 +99,8 @@ void V_InitColorTranslation(void);
 // Allocates buffer screens, call before R_Init.
 void V_Init (void);
 
-void V_CopyRect(int srcx,  int srcy,  int srcscrn, int width, int height,
-		int destx, int desty, int destscrn);
+void V_CopyRect(int srcx,  int srcy,  VBuffer *src, int width, int height,
+		int destx, int desty, VBuffer *dest);
 
 // killough 11/98: Consolidated V_DrawPatch and V_DrawPatchFlipped
 

@@ -361,7 +361,7 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
       I_Error("V_ColorBlock: block exceeds buffer boundaries.\n");
 #endif
 
-   dest = buffer->data + y * buffer->pitch + x;
+   dest = buffer->ylut[y] + buffer->xlut[x];
    
    while(h--)
    {
@@ -406,7 +406,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
       bg2rgb  = Col2RGB8[bglevel >> 10];
    }
 
-   dest = buffer->data + y * buffer->pitch + x;
+   dest = buffer->ylut[y] + buffer->xlut[x];
    
    while(h--)
    { 

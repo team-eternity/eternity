@@ -34,8 +34,10 @@
 //
 // Background and foreground screen numbers
 //
-#define BG 4
-#define FG 0
+#define BG &backscreen4
+#define FG &vbscreen
+
+extern VBuffer backscreen4;
 
 //
 // Typedefs of widgets

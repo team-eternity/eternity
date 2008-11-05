@@ -152,7 +152,7 @@ void IN_slamBackground(void)
    if(realbackdrop)
       R_RenderPlayerView(players+displayplayer, &intercam);
    else
-      V_CopyRect(0, 0, 1, SCREENWIDTH, SCREENHEIGHT, 0, 0, 0);  // killough 11/98
+      V_CopyRect(0, 0, &backscreen1, SCREENWIDTH, SCREENHEIGHT, 0, 0, &vbscreen);  // killough 11/98
 }
 
 // ====================================================================

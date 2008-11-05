@@ -598,7 +598,7 @@ static void I_ResetScreen(void)
    if(gamestate == GS_INTERMISSION)
    {
       IN_DrawBackground();
-      V_CopyRect(0, 0, 1, SCREENWIDTH, SCREENHEIGHT, 0, 0, 0);
+      V_CopyRect(0, 0, &backscreen1, SCREENWIDTH, SCREENHEIGHT, 0, 0, &vbscreen);
    }
 
    Wipe_ScreenReset(); // haleyjd: reset wipe engine

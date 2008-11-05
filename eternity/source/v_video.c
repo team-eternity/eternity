@@ -219,14 +219,15 @@ void V_MarkRect(int x, int y, int width, int height)
 //
 // No return value.
 
-void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
-		int height, int destx, int desty, int destscrn )
+void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
+		int height, int destx, int desty, VBuffer *dest)
 {
-  byte *src;
-  byte *dest;
+  byte *srcp;
+  byte *destp;
   int  p1, p2;
 
-#ifdef RANGECHECK
+   // This stuff is no longer current anyway
+/*#ifdef RANGECHECK
   if (srcx<0
       ||srcx+width > SCREENWIDTH
       || srcy<0
@@ -239,45 +240,46 @@ void V_CopyRect(int srcx, int srcy, int srcscrn, int width,
     I_Error ("Bad V_CopyRect");
 #endif
 
-   V_MarkRect (destx, desty, width, height);
+   V_MarkRect (destx, desty, width, height);*/
 
-   p1 = srcscrn == 0 ? video.pitch : video.width;
-   p2 = destscrn == 0 ? video.pitch : video.width;
+   p1 = src->pitch;
+   p2 = dest->pitch;
 
-   // SoM 1-30-04: ANYRES
-   if(video.scaled)
+   if(dest->scaled)
    {
-      int realx, realy, realw, realh;
+      int realx, realy;
 
-      realx = video.x1lookup[srcx];
-      realy = video.y1lookup[srcy];
-      src = video.screens[srcscrn] + p1 * realy + realx;
+      realx = dest->x1lookup[srcx];
+      realy = dest->y1lookup[srcy];
+
+      srcp = src->ylut[realy] + src->xlut[realx];
 
       realx = video.x1lookup[destx];
       realy = video.y1lookup[desty];
-      dest = video.screens[destscrn] + p2 * realy + realx;
+      
+      destp = dest->ylut[realy] + dest->xlut[realx];
 
       // I HOPE this will not extend the array bounds HEHE
-      realw = video.x2lookup[width + destx - 1] - realx + 1;
-      realh = video.y2lookup[height + desty - 1] - realy + 1;
-
-      while(realh--)
-      {
-         memcpy(dest, src, realw);
-         src += p1;
-         dest += p2;
-      }
+      width = video.x2lookup[width + destx - 1] - realx + 1;
+      height = video.y2lookup[height + desty - 1] - realy + 1;
    }
    else
    {
-      src = video.screens[srcscrn]+p1*srcy+srcx;
-      dest = video.screens[destscrn]+SCREENWIDTH*desty+destx;
+      srcp = src->ylut[srcy] + src->xlut[srcx];
+      destp = dest->ylut[desty] + src->xlut[destx];
+   }
 
-      for ( ; height>0 ; height--)
+   /*if(p1 == p2 && width == src->width && width == dest->width)
+   {
+      memcpy(destp, srcp, p1 * height);
+   }
+   else*/
+   {
+      while(height--)
       {
-         memcpy (dest, src, width);
-         src += p1;
-         dest += SCREENWIDTH;
+         memcpy(destp, srcp, width);
+         srcp += p1;
+         destp += p2;
       }
    }
 }

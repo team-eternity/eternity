@@ -328,13 +328,13 @@ static void ST_refreshBackground(void)
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X, 0, &backscreen4, sbar);
+      V_DrawPatch(ST_X, 0, BG, sbar);
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
       if(GameType != gt_single)
       {
-         V_DrawPatchTranslated(ST_FX, 0, &backscreen4, faceback,
+         V_DrawPatchTranslated(ST_FX, 0, BG, faceback,
             plyr->colormap ?
                (char *)translationtables[(plyr->colormap - 1)] :
                NULL, 
