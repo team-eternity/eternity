@@ -3557,13 +3557,13 @@ static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 
 static void MN_OldOptionsDrawer(void)
 {
-   V_DrawPatchDirect(108, 15, &vbscreen,
+   V_DrawPatch(108, 15, &vbscreen,
                      W_CacheLumpName("M_OPTTTL", PU_CACHE));
 
-   V_DrawPatchDirect(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
+   V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
                      W_CacheLumpName(msgNames[showMessages], PU_CACHE));
 
-   V_DrawPatchDirect(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
+   V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
                      W_CacheLumpName(detailNames[c_detailshift], PU_CACHE));
 }
 
@@ -3603,7 +3603,7 @@ static menuitem_t mn_old_sound_items[] =
 
 static void MN_OldSoundDrawer(void)
 {
-   V_DrawPatchDirect(60, 38, &vbscreen, W_CacheLumpName("M_SVOL", PU_CACHE));
+   V_DrawPatch(60, 38, &vbscreen, W_CacheLumpName("M_SVOL", PU_CACHE));
 }
 
 menu_t menu_old_sound =

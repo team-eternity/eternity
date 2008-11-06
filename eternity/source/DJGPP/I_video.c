@@ -437,7 +437,7 @@ static void I_InitDiskFlash(void)
    old_data = create_bitmap_ex(8, 16<<hires, 15<<hires);
    
    V_GetBlock(0, 0, 0, 16, 15, temp);
-   V_DrawPatchDirect(0, -1, &vbscreen, 
+   V_DrawPatch(0, -1, &vbscreen, 
                      W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", 
                                      PU_CACHE));
    V_GetBlock(0, 0, 0, 16, 15, diskflash->line[0]);

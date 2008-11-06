@@ -190,22 +190,6 @@ void V_InitColorTranslation(void)
     *p->map1 = *p->map2 = W_CacheLumpName(p->name, PU_STATIC);
 }
 
-//
-// V_MarkRect
-//
-// Marks a rectangular portion of the screen specified by
-// upper left origin and height and width dirty to minimize
-// the amount of screen update necessary. No return value.
-//
-// killough 11/98: commented out, macroized to no-op, since it's unused now
-
-#if 0
-void V_MarkRect(int x, int y, int width, int height)
-{
-  M_AddToBox(dirtybox, x, y);
-  M_AddToBox(dirtybox, x+width-1, y+height-1);
-}
-#endif
 
 //
 // V_CopyRect
@@ -227,20 +211,32 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
   int  p1, p2;
 
    // This stuff is no longer current anyway
-/*#ifdef RANGECHECK
-  if (srcx<0
-      ||srcx+width > SCREENWIDTH
-      || srcy<0
-      || srcy+height > SCREENHEIGHT
-      ||destx<0||destx+width > SCREENWIDTH
-      || desty<0
-      || desty+height > SCREENHEIGHT
-      || (unsigned)srcscrn>4
-      || (unsigned)destscrn>4)
-    I_Error ("Bad V_CopyRect");
+#ifdef RANGECHECK
+   if(dest->scaled)
+   {
+      if (srcx<0
+           ||srcx+width > dest->scalew
+           || srcy<0
+           || srcy+height > dest->scaleh
+           ||destx<0||destx+width > dest->scalew
+           || desty<0
+           || desty+height > dest->scaleh
+           || !src || !dest)
+         I_Error ("Bad V_CopyRect");
+   }
+   else
+   {
+      if (srcx<0
+           ||srcx+width > src->width
+           || srcy<0
+           || srcy+height > src->height
+           ||destx<0||destx+width > dest->width
+           || desty<0
+           || desty+height > dest->height
+           || !src || !dest)
+         I_Error ("Bad V_CopyRect");
+   }
 #endif
-
-   V_MarkRect (destx, desty, width, height);*/
 
    p1 = src->pitch;
    p2 = dest->pitch;
@@ -269,11 +265,11 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
       destp = dest->ylut[desty] + src->xlut[destx];
    }
 
-   /*if(p1 == p2 && width == src->width && width == dest->width)
+   if(p1 == p2 && width == src->width && width == dest->width)
    {
       memcpy(destp, srcp, p1 * height);
    }
-   else*/
+   else
    {
       while(height--)
       {
@@ -317,94 +313,6 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
    V_DrawPatchInt(&pi, buffer);
 }
 
-//
-// V_DrawPatchUnscaled
-//
-// sf: drawpatch but not scaled like drawpatch is
-// haleyjd 04/11/03: removed useless code for lowres drawing
-//
-// SoM: So I'm guessing that this is really scaled to 640x400 and not truly unscaled?
-// or at least, is that how I should handle it?
-//
-// FIXME/TODO: supporting this in general resolutions requires
-// more work.
-//
-/*void V_DrawPatchUnscaled(int x, int y, int scrn, patch_t *patch)
-{
-   byte *desttop;
-   int  w = SHORT(patch->width), col = 0, colstop = w, colstep = 1;
-   
-#ifdef RANGECHECK
-   if(video.width == SCREENWIDTH || video.height == SCREENHEIGHT)
-      I_Error("V_DrawPatchUnscaled called in 320x200 video mode\n");
-#endif
-   
-   y -= SHORT(patch->topoffset);
-   x -= SHORT(patch->leftoffset);
-   
-   // haleyjd: fix for hires
-   // haleyjd 05/18/02: no message, just return
-   // SoM: This makes more sense I guess
-   if((unsigned)x + w > (unsigned)video.width || 
-      (unsigned)y + SHORT(patch->height) > (unsigned)video.height || 
-      (unsigned)scrn>4)
-   {
-      return;      // killough 1/19/98: commented out printfs
-   }
-
-#if 0
-   if (!scrn)
-      V_MarkRect (x, y, SHORT(patch->width), SHORT(patch->height));
-#endif
-   
-   desttop = video.screens[scrn]+y*(SCREENWIDTH*2)+x;
-   
-   for(; col != colstop; col += colstep, desttop++)
-   {
-      const column_t *column = 
-         (const column_t *)((byte *)patch + LONG(patch->columnofs[col]));
-
-      // step through the posts in a column
-      while(column->topdelta != 0xff)
-      {
-         // killough 2/21/98: Unrolled and performance-tuned
-         
-         register const byte *source = (byte *) column + 3;
-         register byte *dest = desttop + column->topdelta*SCREENWIDTH*2;
-         register int count = column->length;
-
-         if((count-=4)>=0)
-         {
-            do
-            {
-               register byte s0,s1;
-               s0 = source[0];
-               s1 = source[1];
-               dest[0] = s0;
-               dest[SCREENWIDTH*2] = s1;
-               dest += SCREENWIDTH*4;
-               s0 = source[2];
-               s1 = source[3];
-               source += 4;
-               dest[0] = s0;
-               dest[SCREENWIDTH*2] = s1;
-               dest += SCREENWIDTH*4;
-            }
-            while((count-=4)>=0);
-         }
-         if(count+=4)
-         {
-            do
-            {
-               *dest = *source++;
-               dest += SCREENWIDTH*2;
-            }
-            while(--count);
-         }
-         column = (column_t *)(source+1); //killough 2/21/98 even faster
-      }
-   }
-}*/
 
 
 //
@@ -568,6 +476,8 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
    buffer->MaskedBlockDrawer(x, y, buffer, width, height, srcpitch, src, cmap);
 }
 
+
+#ifdef DJGPP
 //
 // V_GetBlock
 //
@@ -611,6 +521,7 @@ void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
       dest += width;
    }
 }
+#endif
 
 // 
 // V_FindBestColor

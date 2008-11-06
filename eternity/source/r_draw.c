@@ -1240,8 +1240,6 @@ void R_DrawViewBorder(void)
    R_VideoErase(0, scaledwindowy + scaledviewheight, SCREENWIDTH, scaledwindowy);
 
    st_height = GameModeInfo->StatusBar->height;
-   
-   V_MarkRect(0,0,SCREENWIDTH, SCREENHEIGHT-st_height); 
 } 
 
 // haleyjd: experimental column drawer for masked sky textures

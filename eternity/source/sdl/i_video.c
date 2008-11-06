@@ -192,9 +192,9 @@ static void I_InitDiskFlash(void)
    V_InitVBufferFrom(&diskvb, drect.w, drect.h, disk->pitch, disk->format->BitsPerPixel, disk->pixels);
    V_SetScaling(&diskvb, 16, 15);
 
-   V_DrawPatchDirect(0, -1, &diskvb,
-                    W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", 
-                                    PU_CACHE));
+   V_DrawPatch(0, -1, &diskvb,
+               W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", PU_CACHE));
+
    V_FreeVBuffer(&diskvb);
 }
 

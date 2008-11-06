@@ -258,22 +258,22 @@ static void MN_DrawThermo(int x, int y, int thermWidth, int thermDot)
    int xx, i;
 
    xx = x;
-   V_DrawPatchDirect(xx, y, &vbscreen,
+   V_DrawPatch(xx, y, &vbscreen,
                      W_CacheLumpName("M_THERML", PU_CACHE));
    
    xx += 8;
    
    for(i = 0; i < thermWidth; ++i)
    {
-      V_DrawPatchDirect(xx, y, &vbscreen,
+      V_DrawPatch(xx, y, &vbscreen,
                         W_CacheLumpName("M_THERMM", PU_CACHE));
       xx += 8;
    }
    
-   V_DrawPatchDirect(xx, y, &vbscreen,
+   V_DrawPatch(xx, y, &vbscreen,
                      W_CacheLumpName("M_THERMR", PU_CACHE));
    
-   V_DrawPatchDirect((x + 8) + thermDot*8, y, &vbscreen,
+   V_DrawPatch((x + 8) + thermDot*8, y, &vbscreen,
                      W_CacheLumpName("M_THERMO", PU_CACHE));
 }
 

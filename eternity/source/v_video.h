@@ -41,11 +41,6 @@
 // VIDEO
 //
 
-#define CENTERY     (SCREENHEIGHT/2)
-
-// Screen 0 is the screen updated by I_Update screen.
-// Screen 1 is an extra buffer.
-
 //jff 2/16/98 palette color ranges for translation
 //jff 2/18/98 conversion to palette lookups for speed
 //jff 4/24/98 now pointers to lumps loaded 
@@ -85,64 +80,105 @@ typedef enum
 
 extern int  dirtybox[4];
 extern byte gammatable[5][256];
-extern int  usegamma;// SoM: ANYRES no long need hires        // killough 11/98
+extern int  usegamma;
 
+// ----------------------------------------------------------------------------
 // haleyjd: DOSDoom-style translucency lookup tables
+
 extern boolean flexTranInit;
 extern unsigned int Col2RGB8[65][256];
 unsigned int *Col2RGB8_LessPrecision[65];
 extern byte RGB32k[32][32][32];
 
-//jff 4/24/98 loads color translation lumps
+
+// ----------------------------------------------------------------------------
+// Initalization
+
+// V_InitColorTranslation (jff 4/24/98)
+// Loads color translation lumps
 void V_InitColorTranslation(void);
 
-// Allocates buffer screens, call before R_Init.
+// V_Init
+// Allocates buffer screens and sets up the VBuffers for the screen surfaces.
 void V_Init (void);
 
+// V_InitFlexTranTable
+// Initializes the tables used in Flex translucency calculations, given the
+// data in the given palette.
+void V_InitFlexTranTable(const byte *palette);
+
+// ----------------------------------------------------------------------------
+// Screen patch, block, and pixel related functions
+
+// V_CopyRect
+// Copies an area from one VBuffer to another. If the destination VBuffer has
+// scaling enabled, the coordinates of the rectangle will all be scaled
+// according to the destination scaling information, but the actual pixels are
+// copied directly.
 void V_CopyRect(int srcx,  int srcy,  VBuffer *src, int width, int height,
-		int destx, int desty, VBuffer *dest);
+		          int destx, int desty, VBuffer *dest);
 
-// killough 11/98: Consolidated V_DrawPatch and V_DrawPatchFlipped
+// V_DrawPatchGeneral (killough 11/98)
+// Consolidated V_DrawPatch and V_DrawPatchFlipped. This function renders a
+// patch to a VBuffer object utilizing any scaling information the buffer has.
+void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch, 
+                        boolean flipped);
 
-void V_DrawPatchGeneral(int x,int y,VBuffer *buffer,patch_t *patch, boolean flipped);
-        //sf: unscaled drawpatch
-void V_DrawPatchUnscaled(int x,int y,int scrn,patch_t *patch);
-
+// V_DrawPatch
+// Macro-ized version of V_DrawPatchGeneral
 #define V_DrawPatch(x,y,s,p)        V_DrawPatchGeneral(x,y,s,p,false)
+
+// V_DrawPatchFlipped
+// Macro-ized version of V_DrawPatchGeneral
 #define V_DrawPatchFlipped(x,y,s,p) V_DrawPatchGeneral(x,y,s,p,true)
 
-#define V_DrawPatchDirect V_DrawPatch       /* killough 5/2/98 */
 
-void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, char *outr,
-                           boolean flipped);
+// V_DrawPatchTranslated
+// Renders a patch to the given VBuffer like V_DrawPatchGeneral, but applies
+// The given color translation to the patch.
+void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, 
+                           char *outr, boolean flipped);
 
+// V_DrawPatchTL
+// Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
+// the patch with the given opacity. If a color translation table is supplied
+// (outr != NULL) the patch is translated as well.
 void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch, 
                    char *outr, int tl);
 
+// V_DrawPatchAdd
+// Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
+// the patch with additive blending of the given amount. If a color translation
+// table is supplied (outr != NULL) the patch is translated as well.
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
                     char *outr, int tl);
 
-// Draw a linear block of pixels into the view buffer.
-
+// V_DrawBlock
+// Draw a linear block of pixels into the view buffer, using the buffer's
+// scaling information (if present)
 void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, 
                  byte *src);
 
+// V_DrawMaskedBlockTR
+// Draw a translated, masked linear block of pixels into a view buffer, using
+//  the buffer's scaling information (if present)
 void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
                          int srcpitch, byte *src, byte *cmap);
 
+#ifdef DJGPP
 // Reads a linear block of pixels into the view buffer.
-
 void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest);
+#endif
 
-#define V_MarkRect(x,y,width,height)  /* killough 11/98: unused */
 
-// haleyjd: a function that requantizes a color into the default
-//          game palette
-
+// V_FindBestColor (haleyjd)
+// A function that requantizes a color into the default game palette
 byte V_FindBestColor(const byte *palette, int r, int g, int b);
 
-void V_InitFlexTranTable(const byte *palette);
 
+// V_CacheBlock
+// Copies a block of pixels from the source linear buffer into the destination
+// linear buffer.
 void V_CacheBlock(int x, int y, int width, int height, byte *src,
                   byte *bdest);
 

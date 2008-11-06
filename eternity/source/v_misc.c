@@ -437,25 +437,25 @@ void V_DrawBox(int x, int y, int w, int h)
    int i,j;
    
    // top rows
-   V_DrawPatchDirect(x, y, &vbscreen, bgp[0]);    // ul
+   V_DrawPatch(x, y, &vbscreen, bgp[0]);    // ul
    for(j = x+xs; j < x+w-xs; j += xs)     // uc
-      V_DrawPatchDirect(j, y, &vbscreen, bgp[1]);
-   V_DrawPatchDirect(j, y, &vbscreen, bgp[2]);    // ur
+      V_DrawPatch(j, y, &vbscreen, bgp[1]);
+   V_DrawPatch(j, y, &vbscreen, bgp[2]);    // ur
    
    // middle rows
    for(i = y+ys; i < y+h-ys; i += ys)
    {
-      V_DrawPatchDirect(x, i, &vbscreen, bgp[3]);    // cl
+      V_DrawPatch(x, i, &vbscreen, bgp[3]);    // cl
       for(j = x+xs; j < x+w-xs; j += xs)     // cc
-         V_DrawPatchDirect(j, i, &vbscreen, bgp[4]);
-      V_DrawPatchDirect(j, i, &vbscreen, bgp[5]);    // cr
+         V_DrawPatch(j, i, &vbscreen, bgp[4]);
+      V_DrawPatch(j, i, &vbscreen, bgp[5]);    // cr
    }
    
    // bottom row
-   V_DrawPatchDirect(x, i, &vbscreen, bgp[6]);    // ll
+   V_DrawPatch(x, i, &vbscreen, bgp[6]);    // ll
    for(j = x+xs; j < x+w-xs; j += xs)     // lc
-      V_DrawPatchDirect(j, i, &vbscreen, bgp[7]);
-   V_DrawPatchDirect(j, i, &vbscreen, bgp[8]);    // lr
+      V_DrawPatch(j, i, &vbscreen, bgp[7]);
+   V_DrawPatch(j, i, &vbscreen, bgp[8]);    // lr
 }
 
 void V_InitBox(void)
