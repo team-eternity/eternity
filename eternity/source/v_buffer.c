@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2004 James Haley
+// Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,12 +25,13 @@
 //
 //-----------------------------------------------------------------------------
 
-
-#include "v_buffer.h"
 #include "z_zone.h"
+#include "v_buffer.h"
 #include "v_patch.h"
 
-
+//
+// VB_MakeXYLUT
+//
 static void VB_MakeXYLUT(VBuffer *vb)
 {
    int i;
@@ -47,7 +48,9 @@ static void VB_MakeXYLUT(VBuffer *vb)
       vb->xlut[i] = i * vb->pixelsize;
 }
 
-
+//
+// VB_AllocateData
+//
 static void VB_AllocateData(VBuffer *buffer)
 {
    if(buffer->data && buffer->owndata)
@@ -59,9 +62,9 @@ static void VB_AllocateData(VBuffer *buffer)
    VB_MakeXYLUT(buffer);
 }
 
-
-
-
+//
+// VB_SetData
+//
 static void VB_SetData(VBuffer *buffer, byte *pixels)
 {
    if(buffer->data && buffer->owndata)
@@ -73,16 +76,20 @@ static void VB_SetData(VBuffer *buffer, byte *pixels)
    VB_MakeXYLUT(buffer);
 }
 
-
-
+//
 // V_InitVBuffer
+//
 // Initializes the given vbuffer and allocates pixeldata for it.
+//
 void V_InitVBuffer(VBuffer *vb, int width, int height, int bitdepth)
 {
    int     psize;
 
    if(width < 0 || height < 0)
-      I_Error("V_InitVBuffer: Invalid dimensions. Width=%i and height=%i", width, height);
+   {
+      I_Error("V_InitVBuffer: Invalid dimensions. Width=%i and height=%i",
+              width, height);
+   }
 
    if(bitdepth != 8)
       I_Error("V_InitVBuffer: Invalid bitdepth. %i", bitdepth);
@@ -103,14 +110,20 @@ void V_InitVBuffer(VBuffer *vb, int width, int height, int bitdepth)
    V_SetupBufferFuncs(vb, DRAWTYPE_UNSCALED);
 }
 
+//
 // V_CreateVBuffer
+//
 // Allocates a new VBuffer object and returns it
+//
 VBuffer *V_CreateVBuffer(int width, int height, int bitdepth)
 {
    VBuffer *ret;
 
    if(width < 0 || height < 0)
-      I_Error("V_CreateVBuffer: Invalid dimensions. Width=%i and height=%i", width, height);
+   {
+      I_Error("V_CreateVBuffer: Invalid dimensions. Width=%i and height=%i",
+              width, height);
+   }
 
    if(bitdepth != 8)
       I_Error("V_CreateVBuffer: Invalid bitdepth. %i", bitdepth);
@@ -123,17 +136,22 @@ VBuffer *V_CreateVBuffer(int width, int height, int bitdepth)
    return ret;
 }
 
-
-
+//
 // V_InitVBufferFrom
+//
 // Gives a VBuffer object the given pixeldata. The VBuffer does not OWN the
 // given data and so it will not be freed by V_FreeVBuffer
-void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch, int bitdepth, byte *data)
+//
+void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch, 
+                       int bitdepth, byte *data)
 {
    int     psize;
 
    if(width < 0 || height < 0)
-      I_Error("V_CreateVBufferFrom: Invalid dimensions. Width=%i and height=%i", width, height);
+   {
+      I_Error("V_CreateVBufferFrom: Invalid dimensions. Width=%i and height=%i", 
+              width, height);
+   }
 
    if(bitdepth != 8)
       I_Error("V_CreateVBufferFrom: Invalid bitdepth. %i", bitdepth);
@@ -154,17 +172,23 @@ void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch, int bitdep
    VB_SetData(vb, data);
 }
 
-
+//
 // V_CreateVBufferFrom
+//
 // Allocates a new VBuffer object with the given pixeldata. The VBuffer created
 // by this funciton does not OWN the given data and so it will not be freed by
 // V_FreeVBuffer
-VBuffer *V_CreateVBufferFrom(int width, int height, int pitch, int bitdepth, byte *data)
+//
+VBuffer *V_CreateVBufferFrom(int width, int height, int pitch, 
+                             int bitdepth, byte *data)
 {
    VBuffer *ret;
 
    if(width < 0 || height < 0)
-      I_Error("V_CreateVBufferFrom: Invalid dimensions. Width=%i and height=%i", width, height);
+   {
+      I_Error("V_CreateVBufferFrom: Invalid dimensions. Width=%i and height=%i", 
+              width, height);
+   }
 
    if(bitdepth != 8)
       I_Error("V_CreateVBufferFrom: Invalid bitdepth. %i", bitdepth);
@@ -177,12 +201,13 @@ VBuffer *V_CreateVBufferFrom(int width, int height, int pitch, int bitdepth, byt
    return ret;
 }
 
-
-
-
+//
 // V_InitSubVBuffer
+//
 // Inits a VBuffer object to share pixel data with another. 
-void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, int width, int height)
+//
+void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, 
+                      int width, int height)
 {
    int     psize;
 
@@ -190,10 +215,17 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, int width, int
       return;
 
    if(width < 0 || height < 0)
-      I_Error("V_SubVBuffer: Invalid dimensions. Width=%i and height=%i", width, height);
+   {
+      I_Error("V_SubVBuffer: Invalid dimensions. Width=%i and height=%i", 
+              width, height);
+   }
 
-   if(x < 0 || y < 0 || x + width - 1 > parent->width || y + height - 1 > parent->height)
-      I_Error("V_SubVBuffer: Invalid dimensions. x = %i, y = %i, width=%i, height=%i", x, y, width, height);
+   if(x < 0 || y < 0 || 
+      x + width - 1 > parent->width || y + height - 1 > parent->height)
+   {
+      I_Error("V_SubVBuffer: Invalid dimensions. x=%i, y=%i, w=%i, h=%i", 
+              x, y, width, height);
+   }
 
    psize = parent->pixelsize;
    memset(vb, 0, sizeof(VBuffer));
@@ -213,9 +245,11 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, int width, int
    VB_SetData(vb, parent->data + y * parent->pitch + x * parent->pixelsize);
 }
 
-
+//
 // V_SubVBuffer
+//
 // Allocates a new VBuffer object that shares pixel data with another. 
+//
 VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height)
 {
    VBuffer *ret;
@@ -227,13 +261,13 @@ VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height)
    return ret;
 }
 
-
-
-
+//
 // V_FreeVBuffer
+//
 // Frees the given VBuffer object. If the VBuffer owns it's pixeldata, the data
 // will be freed. If the VBuffer has child buffers (created with V_SubVBuffer)
 // the child buffers will be given their own pixeldata.
+//
 void V_FreeVBuffer(VBuffer *buffer)
 {
    V_UnsetScaling(buffer);
@@ -252,9 +286,9 @@ void V_FreeVBuffer(VBuffer *buffer)
       memset(buffer, 0, sizeof(VBuffer));
 }
 
-
-
-
+//
+// V_UnsetScaling
+//
 void V_UnsetScaling(VBuffer *buffer)
 {
    if(!buffer || !buffer->scaled)
@@ -278,8 +312,9 @@ void V_UnsetScaling(VBuffer *buffer)
    V_SetupBufferFuncs(buffer, DRAWTYPE_UNSCALED);
 }
 
-
-
+//
+// V_SetScaling
+//
 void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
 {
    int     i;
@@ -361,8 +396,11 @@ void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
 }
 
 
-
+//
+// V_BlitVBuffer
+//
 // SoM: blit from one vbuffer to another
+//
 void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
                    unsigned int sx, unsigned int sy, unsigned int width, 
                    unsigned int height)
@@ -415,4 +453,6 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
       sbuf += spitch;
    }
 }
+
+// EOF
 

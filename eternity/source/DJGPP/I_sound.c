@@ -152,7 +152,7 @@ static void *getsfx(sfxinfo_t *sfxinfo)
 // See soundserver initdata().
 //
 
-void I_SetChannels()
+static void I_SetChannels()
 {
   // no-op.
 }
@@ -174,7 +174,7 @@ void I_SetSfxVolume(int volume)
 // Retrieve the raw data lump index
 //  for a given SFX name.
 //
-int I_GetSfxLumpNum(sfxinfo_t *sfx)
+static int I_GetSfxLumpNum(sfxinfo_t *sfx)
 {
    char namebuf[16];
    

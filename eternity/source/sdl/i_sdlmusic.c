@@ -1,0 +1,554 @@
+// Emacs style mode select   -*- C++ -*-
+//-----------------------------------------------------------------------------
+//
+// Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//----------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//      SDL_mixer music interface
+//
+//-----------------------------------------------------------------------------
+
+#include "SDL.h"
+#include "SDL_audio.h"
+#include "SDL_thread.h"
+#include "SDL_mixer.h"
+
+#include "../z_zone.h"
+#include "../d_io.h"
+#include "../c_runcmd.h"
+#include "../c_io.h"
+#include "../doomstat.h"
+#include "../i_sound.h"
+#include "../i_system.h"
+#include "../w_wad.h"
+#include "../g_game.h"     //jff 1/21/98 added to use dprintf in I_RegisterSong
+#include "../d_main.h"
+#include "../v_misc.h"
+#include "../m_argv.h"
+#include "../d_gi.h"
+#include "../s_sound.h"
+#include "../mn_engin.h"
+
+#ifdef HAVE_SPCLIB
+#include "../../snes_spc/spc.h"
+#endif
+
+#ifdef LINUX
+// haleyjd 01/28/07: I don't understand why this is needed here...
+extern DECLSPEC Mix_Music * SDLCALL Mix_LoadMUS_RW(SDL_RWops *rw);
+#endif
+
+#define STEP sizeof(Sint16)
+#define STEPSHIFT 1
+
+#ifdef HAVE_SPCLIB
+// haleyjd 05/02/08: SPC support
+static SNES_SPC   *snes_spc   = NULL;
+static SPC_Filter *spc_filter = NULL;
+
+int spc_preamp     = 1;
+int spc_bass_boost = 8;
+
+void I_SDLMusicSetSPCBass(void)
+{
+   if(snes_spc)
+      spc_filter_set_bass(spc_filter, spc_bass_boost);
+}
+
+//
+// I_EffectSPC
+//
+// SDL_mixer effect processor; mixes SPC data into the postmix stream.
+//
+static void I_EffectSPC(int chan, void *stream, int len, void *udata)
+{
+   Sint16 *leftout, *rightout, *leftend, *datal, *datar;
+   int numsamples, spcsamples;
+   int stepremainder = 0, i = 0;
+   int dl, dr;
+
+   static Sint16 *spc_buffer = NULL;
+   static int lastspcsamples = 0;
+
+   leftout  =  (Sint16 *)stream;
+   rightout = ((Sint16 *)stream) + 1;
+
+   numsamples = len / STEP;
+   leftend = leftout + numsamples;
+
+   // round samples up to higher even number
+   spcsamples = ((int)(numsamples * 320.0 / 441.0) & ~1) + 2;
+
+   // realloc spc buffer?
+   if(spcsamples != lastspcsamples)
+   {
+      // add extra buffer samples at end for filtering safety; stereo channels
+      spc_buffer = (short *)Z_SysRealloc(spc_buffer, 
+                                         (spcsamples + 2) * 2 * sizeof(Sint16));
+      lastspcsamples = spcsamples;
+   }
+
+   // get spc samples
+   if(spc_play(snes_spc, spcsamples, spc_buffer))
+      return;
+
+   // filter samples
+   spc_filter_run(spc_filter, spc_buffer, spcsamples);
+
+   datal = spc_buffer;
+   datar = spc_buffer + 1;
+
+   while(leftout != leftend)
+   {
+      // linear filter spc samples to the output buffer, since the
+      // sample rate is higher (44.1 kHz vs. 32 kHz).
+
+      dl = *leftout + (((int)datal[0] * (0x10000 - stepremainder) +
+                        (int)datal[2] * stepremainder) >> 16);
+
+      dr = *rightout + (((int)datar[0] * (0x10000 - stepremainder) +
+                         (int)datar[2] * stepremainder) >> 16);
+
+      if(dl > SHRT_MAX)
+         *leftout = SHRT_MAX;
+      else if(dl < SHRT_MIN)
+         *leftout = SHRT_MIN;
+      else
+         *leftout = (Sint16)dl;
+
+      if(dr > SHRT_MAX)
+         *rightout = SHRT_MAX;
+      else if(dr < SHRT_MIN)
+         *rightout = SHRT_MIN;
+      else
+         *rightout = (Sint16)dr;
+
+      stepremainder += ((32000 << 16) / 44100);
+
+      i += (stepremainder >> 16);
+      
+      datal = spc_buffer + (i << STEPSHIFT);
+      datar = datal + 1;
+
+      // trim remainder to decimal portion
+      stepremainder &= 0xffff;
+
+      // step to next sample in mixer buffer
+      leftout  += STEP;
+      rightout += STEP;
+   }
+}
+#endif
+
+//
+// MUSIC API.
+//
+
+// julian (10/25/2005): rewrote (nearly) entirely
+
+#include "mmus2mid.h"
+#include "../m_misc.h"
+
+// Only one track at a time
+static Mix_Music *music = NULL;
+
+// Some tracks are directly streamed from the RWops;
+// we need to free them in the end
+static SDL_RWops *rw = NULL;
+
+// Same goes for buffers that were allocated to convert music;
+// since this concerns mus, we could do otherwise but this 
+// approach is better for consistency
+static void *music_block = NULL;
+
+// Macro to make code more readable
+#define CHECK_MUSIC(h) ((h) && music != NULL)
+
+static void I_SDLUnRegisterSong(int);
+
+//
+// I_SDLShutdownMusic
+//
+// atexit handler.
+//
+static void I_SDLShutdownMusic(void)
+{
+   I_SDLUnRegisterSong(1);
+}
+
+//
+// I_SDLShutdownSoundForMusic
+//
+// Registered only if sound is initialized by the music module.
+//
+static void I_SDLShutdownSoundForMusic(void)
+{
+   Mix_CloseAudio();
+}
+
+//
+// I_SDLInitSoundForMusic
+//
+// Called only if sound was not initialized by I_InitSound
+//
+static int I_SDLInitSoundForMusic(void)
+{
+   int audio_buffers;
+
+   /* Initialize variables */
+   audio_buffers = 512 * 44100 / 11025;
+   
+   // haleyjd: the docs say we should do this
+   if(SDL_InitSubSystem(SDL_INIT_AUDIO))
+      return 0;
+   
+   if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
+      return 0;
+
+   return 1;
+}
+
+extern boolean snd_init;
+
+//
+// I_SDLInitMusic
+//
+static int I_SDLInitMusic(void)
+{
+   int success = 0;
+
+   // if sound was not initialized, we must initialize it
+   if(!snd_init)
+   {
+      if((success = I_SDLInitSoundForMusic()))
+         atexit(I_SDLShutdownSoundForMusic);
+   }
+   else
+      success = 1;
+
+   return success;
+}
+
+//
+// I_SDLPlaySong
+//
+// Plays the currently registered song.
+//
+static void I_SDLPlaySong(int handle, int looping)
+{
+#ifdef HAVE_SPCLIB
+   // if a SPC is set up, play it.
+   if(snes_spc)
+   {
+      if(!Mix_RegisterEffect(MIX_CHANNEL_POST, I_EffectSPC, NULL, NULL))
+      {
+         doom_printf("I_PlaySong: Mix_RegisterEffect failed\n");
+         return;
+      }
+   }
+   else
+#endif
+   if(CHECK_MUSIC(handle) && Mix_PlayMusic(music, looping ? -1 : 0) == -1)
+   {
+      doom_printf("I_PlaySong: Mix_PlayMusic failed\n");
+      return;
+   }
+}
+
+//
+// I_SDLSetMusicVolume
+//
+static void I_SDLSetMusicVolume(int volume)
+{
+   // haleyjd 09/04/06: adjust to use scale from 0 to 15
+   Mix_VolumeMusic((volume * 128) / 15);
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+   {
+      // if a SPC is playing, set its volume too
+      spc_filter_set_gain(spc_filter, volume * (256 * spc_preamp) / 15);
+   }
+#endif
+}
+
+static int paused_midi_volume;
+
+//
+// I_SDLPauseSong
+//
+static void I_SDLPauseSong(int handle)
+{
+   if(CHECK_MUSIC(handle))
+   {
+      // Not for mids
+      if(Mix_GetMusicType(music) != MUS_MID)
+         Mix_PauseMusic();
+      else
+      {
+         // haleyjd 03/21/06: set MIDI volume to zero on pause
+         paused_midi_volume = Mix_VolumeMusic(-1);
+         Mix_VolumeMusic(0);
+      }
+   }
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+      Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+#endif
+}
+
+//
+// I_SDLResumeSong
+//
+static void I_SDLResumeSong(int handle)
+{
+   if(CHECK_MUSIC(handle))
+   {
+      // Not for mids
+      if(Mix_GetMusicType(music) != MUS_MID)
+         Mix_ResumeMusic();
+      else
+         Mix_VolumeMusic(paused_midi_volume);
+   }
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+      Mix_RegisterEffect(MIX_CHANNEL_POST, I_EffectSPC, NULL, NULL);
+#endif
+}
+
+//
+// I_SDLStopSong
+//
+static void I_SDLStopSong(int handle)
+{
+   if(CHECK_MUSIC(handle))
+      Mix_HaltMusic();
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+      Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+#endif
+}
+
+//
+// I_SDLUnRegisterSong
+//
+static void I_SDLUnRegisterSong(int handle)
+{
+   if(CHECK_MUSIC(handle))
+   {   
+      // Stop and free song
+      I_SDLStopSong(handle);
+      Mix_FreeMusic(music);
+      
+      // Free RWops
+      if(rw != NULL)
+         SDL_FreeRW(rw);
+      
+      // Free music block
+      if(music_block != NULL)
+         free(music_block);
+      
+      // Reinitialize all this
+      music = NULL;
+      rw = NULL;
+      music_block = NULL;
+   }
+
+#ifdef HAVE_SPCLIB
+   if(snes_spc)
+   {
+      // be certain the callback is unregistered first
+      Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+
+      // free the spc and filter objects
+      spc_delete(snes_spc);
+      spc_filter_delete(spc_filter);
+
+      snes_spc   = NULL;
+      spc_filter = NULL;
+   }
+#endif
+}
+
+#ifdef HAVE_SPCLIB
+//
+// I_TryLoadSPC
+//
+// haleyjd 04/02/08: Tries to load the music data as a SPC file.
+//
+static int I_TryLoadSPC(void *data, int size)
+{
+   spc_err_t err;
+
+#ifdef RANGECHECK
+   if(snes_spc)
+      I_Error("I_TryLoadSPC: snes_spc object displaced\n");
+#endif
+
+   snes_spc = spc_new();
+
+   if(snes_spc == NULL)
+   {
+      doom_printf("Failed to allocate snes_spc");
+      return -1;
+   }
+   
+   if((err = spc_load_spc(snes_spc, data, size)))
+   {
+      spc_delete(snes_spc);
+      snes_spc = NULL;
+      return -1;
+   }
+
+   // It is a SPC, so set everything up for SPC playing
+   spc_filter = spc_filter_new();
+
+   if(spc_filter == NULL)
+   {
+      doom_printf("Failed to allocate spc_filter");
+      spc_delete(snes_spc);
+      snes_spc = NULL;
+      return -1;
+   }
+
+   // clear echo buffer garbage, init filter
+   spc_clear_echo(snes_spc);
+   spc_filter_clear(spc_filter);
+
+   // set initial gain and bass parameters
+   spc_filter_set_gain(spc_filter, snd_MusicVolume * (256 * spc_preamp) / 15);
+   spc_filter_set_bass(spc_filter, spc_bass_boost);
+
+   return 0;
+}
+#endif
+
+//
+// I_SDLRegisterSong
+//
+static int I_SDLRegisterSong(void *data, int size)
+{
+   if(music != NULL)
+      I_UnRegisterSong(1);
+   
+   rw    = SDL_RWFromMem(data, size);
+   music = Mix_LoadMUS_RW(rw);
+   
+   // It's not recognized by SDL_mixer, is it a mus?
+   if(music == NULL)
+   {      
+      int err;
+      MIDI mididata;
+      UBYTE *mid;
+      int midlen;
+      
+      SDL_FreeRW(rw);
+      rw = NULL;
+
+      memset(&mididata, 0, sizeof(MIDI));
+      
+      if((err = mmus2mid((byte *)data, &mididata, 89, 0))) 
+      {         
+         // Nope, not a mus.
+
+#ifdef HAVE_SPCLIB
+         // Is it a SPC?
+         if(!(err = I_TryLoadSPC(data, size)))
+            return 1;
+#endif
+         doom_printf(FC_ERROR "Error loading music: %d", err);
+         return 0;
+      }
+
+      // Hurrah! Let's make it a mid and give it to SDL_mixer
+      MIDIToMidi(&mididata, &mid, &midlen);
+      rw    = SDL_RWFromMem(mid, midlen);
+      music = Mix_LoadMUS_RW(rw);
+
+      if(music == NULL) 
+      {   
+         // Conversion failed, free everything
+         SDL_FreeRW(rw);
+         rw = NULL;
+         free(mid);         
+      } 
+      else 
+      {   
+         // Conversion succeeded
+         // -> save memory block to free when unregistering
+         music_block = mid;
+      }
+   }
+   
+   // the handle is a simple boolean
+   return music != NULL;
+}
+
+//
+// I_SDLQrySongPlaying
+//
+// Is the song playing?
+//
+static int I_SDLQrySongPlaying(int handle)
+{
+   // haleyjd: this is never called
+   // julian: and is that a reason not to code it?!?
+   // haleyjd: ::shrugs::
+#ifdef HAVE_SPCLIB
+   return CHECK_MUSIC(handle) || snes_spc != NULL;
+#else
+   return CHECK_MUSIC(handle);
+#endif
+}
+
+/*
+typedef struct i_musicdriver_s
+{
+   int  (*InitMusic)(void);
+   void (*ShutdownMusic)(void);
+   void (*SetMusicVolume)(int);
+   void (*PauseSong)(int);
+   void (*ResumeSong)(int);
+   int  (*RegisterSong)(void *, int);
+   void (*PlaySong)(int, int);
+   void (*StopSong)(int);
+   void (*UnRegisterSong)(int);
+   int  (*QrySongPlaying)(int);
+} i_musicdriver_t;
+*/
+
+i_musicdriver_t i_sdlmusicdriver =
+{
+   I_SDLInitMusic,      // InitMusic
+   I_SDLShutdownMusic,  // ShutdownMusic
+   I_SDLSetMusicVolume, // SetMusicVolume
+   I_SDLPauseSong,      // PauseSong
+   I_SDLResumeSong,     // ResumeSong
+   I_SDLRegisterSong,   // RegisterSong
+   I_SDLPlaySong,       // PlaySong
+   I_SDLStopSong,       // StopSong
+   I_SDLUnRegisterSong, // UnRegisterSong
+   I_SDLQrySongPlaying, // QrySongPlaying
+};
+
+// EOF
+

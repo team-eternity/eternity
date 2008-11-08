@@ -43,7 +43,7 @@ r_pcheck.h  r_plane.h   r_portal.c  r_portal.h  r_ripple.c  r_ripple.h  r_segs.c
 r_segs.h    r_sky.c     r_sky.h     r_span.c    r_state.h   r_things.c  r_things.h  \
 rules.make  sclinux.h   sounds.c    sounds.h    s_sndseq.c  s_sndseq.h  s_sound.c   \
 s_sound.h   st_hbar.c   st_lib.c    st_lib.h    st_stuff.c  st_stuff.h  tables.c    \
-tables.h    v_block.c   v_block.h   v_buffer.c   v_buffer.h   version.c   version.h   \
+tables.h    v_block.c   v_block.h   v_buffer.c  v_buffer.h  version.c   version.h   \
 v_font.c    v_font.h    v_misc.c    v_misc.h    v_patch.c   v_patch.h   v_video.c   \
 v_video.h   wi_stuff.c  wi_stuff.h  w_wad.c     w_wad.h     z_zone.c    z_zone.h
 

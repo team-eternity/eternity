@@ -27,24 +27,26 @@
 #ifndef I_SOUND_H__
 #define I_SOUND_H__
 
-#include <stdio.h>
-
 #ifdef DJGPP
   #include <allegro.h>
 #endif
 
-#include "sounds.h"
-
-// UNIX hack, to be removed.
-#ifdef SNDSERV
-extern FILE* sndserver;
-extern char* sndserver_filename;
-#endif
+typedef struct i_sounddriver_s
+{
+   int  (*InitSound)(void);
+   void (*CacheSound)(sfxinfo_t *);
+   void (*UpdateSound)(void);
+   void (*SubmitSound)(void);
+   void (*ShutdownSound)(void);
+   int  (*StartSound)(sfxinfo_t *, int, int, int, int, int, int);
+   int  (*SoundID)(int);
+   void (*StopSound)(int);
+   int  (*SoundIsPlaying)(int);
+   void (*UpdateSoundParams)(int, int, int, int);
+} i_sounddriver_t;
 
 // Init at program start...
-void I_InitSound();
-
-void I_CacheSound(sfxinfo_t *sound);
+void I_InitSound(void);
 
 // ... update sound buffer and audio device at runtime...
 void I_UpdateSound(void);
@@ -53,21 +55,18 @@ void I_SubmitSound(void);
 // ... shut down and relase at program termination.
 void I_ShutdownSound(void);
 
+// Cache sound data
+void I_CacheSound(sfxinfo_t *sound);
+
 //
 //  SFX I/O
 //
 
-// Initialize channels?
-void I_SetChannels();
-
-// Get raw data lump index for sound descriptor.
-int I_GetSfxLumpNum (sfxinfo_t *sfxinfo);
-
 // Starts a sound in a particular sound channel.
-
 int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
                  int pri, int loop);
 
+// Returns unique instance ID for a playing sound.
 int I_SoundID(int handle);
 
 // Stops a sound channel.
@@ -85,6 +84,21 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch);
 //
 //  MUSIC I/O
 //
+
+typedef struct i_musicdriver_s
+{
+   int  (*InitMusic)(void);
+   void (*ShutdownMusic)(void);
+   void (*SetMusicVolume)(int);
+   void (*PauseSong)(int);
+   void (*ResumeSong)(int);
+   int  (*RegisterSong)(void *, int);
+   void (*PlaySong)(int, int);
+   void (*StopSong)(int);
+   void (*UnRegisterSong)(int);
+   int  (*QrySongPlaying)(int);
+} i_musicdriver_t;
+
 void I_InitMusic(void);
 void I_ShutdownMusic(void);
 
