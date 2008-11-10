@@ -1180,6 +1180,18 @@ SOURCE=.\source\Win32\i_opndir.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\sdl\i_pcsound.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\sdl\i_sdlmusic.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\sdl\i_sdlsound.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\sdl\i_sound.c
 # End Source File
 # Begin Source File

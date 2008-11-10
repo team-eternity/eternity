@@ -119,6 +119,10 @@ struct sfxinfo_s
    
    // haleyjd: EDF mnemonic
    char mnemonic[33];
+
+   // haleyjd: explicitly provided PC speaker effect lump
+   char pcslump[9];
+   boolean nopcsound; // if true, does not play even if lump is present
    
    // this is checked every second to see if sound
    // can be thrown out (if 0, then decrement, if -1,

@@ -76,6 +76,8 @@
 #define ITEM_SND_CLOSE_DIST    "close_dist"
 #define ITEM_SND_PITCHVAR      "pitchvariance"
 #define ITEM_SND_SUBCHANNEL    "subchannel"
+#define ITEM_SND_PCSLUMP       "pcslump"
+#define ITEM_SND_NOPCSOUND     "nopcsound"
 #define ITEM_SND_DEHNUM        "dehackednum"
 
 #define ITEM_DELTA_NAME "name"
@@ -174,6 +176,8 @@ static const char *subchans[] =
    CFG_INT(ITEM_SND_CLOSE_DIST,    S_CLOSE_DIST_I,    CFGF_NONE), \
    CFG_STR(ITEM_SND_PITCHVAR,      "none",            CFGF_NONE), \
    CFG_STR(ITEM_SND_SUBCHANNEL,    "Auto",            CFGF_NONE), \
+   CFG_STR(ITEM_SND_PCSLUMP,       NULL,              CFGF_NONE), \
+   CFG_BOOL(ITEM_SND_NOPCSOUND,    cfg_false,         CFGF_NONE), \
    CFG_INT(ITEM_SND_DEHNUM,        -1,                CFGF_NONE), \
    CFG_END()
 
@@ -403,7 +407,7 @@ void E_NewWadSound(const char *name)
    if(!sfx)
    {
       // create a new one and hook into hashchain
-      sfx = Z_Calloc(1, sizeof(sfxinfo_t), PU_STATIC, NULL);
+      sfx = calloc(1, sizeof(sfxinfo_t));
       
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
@@ -617,6 +621,23 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 
       if(sfx->subchannel == NUM_SUBCHANS)
          sfx->subchannel = CHAN_AUTO;
+   }
+
+   // haleyjd 11/07/08: process explicit pc speaker lump name
+   if(IS_SET(ITEM_SND_PCSLUMP))
+   {
+      const char *s = cfg_getstr(section, ITEM_SND_PCSLUMP);
+
+      if(s != NULL)
+         strncpy(sfx->pcslump, s, 9);
+   }
+
+   // haleyjd 11/08/08: process "nopcsound" flag
+   if(IS_SET(ITEM_SND_NOPCSOUND))
+   {
+      cfg_bool_t nopcsound = cfg_getbool(section, ITEM_SND_NOPCSOUND);
+
+      sfx->nopcsound = (nopcsound == cfg_true);
    }
 }
 
