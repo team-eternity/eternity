@@ -389,18 +389,19 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
       } 
       else 
       {
+         // haleyjd 11/10/08: modified to print invalid values
          val->number = strtol(value, &endptr, 0);
          if(*endptr != '\0')
-         {
-            cfg_error(cfg, _("invalid integer value for option '%s'"),
-                      opt->name);
+         {            
+            cfg_error(cfg, _("invalid integer value '%s' for option '%s'"),
+                      value, opt->name);
             return 0;
          }
          if(errno == ERANGE) 
          {
             cfg_error(cfg,
-               _("integer value for option '%s' is out of range"),
-               opt->name);
+               _("integer value '%s' for option '%s' is out of range"),
+               value, opt->name);
             return 0;
          }
       }

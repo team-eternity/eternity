@@ -358,10 +358,12 @@ static void I_SDLUnRegisterSong(int handle)
       // Stop and free song
       I_SDLStopSong(handle);
       Mix_FreeMusic(music);
-      
+
+#if 0
       // Free RWops
       if(rw != NULL)
          SDL_FreeRW(rw);
+#endif
       
       // Free music block
       if(music_block != NULL)
@@ -461,7 +463,7 @@ static int I_SDLRegisterSong(void *data, int size)
       UBYTE *mid;
       int midlen;
       
-      SDL_FreeRW(rw);
+      //SDL_FreeRW(rw);
       rw = NULL;
 
       memset(&mididata, 0, sizeof(MIDI));
@@ -487,7 +489,7 @@ static int I_SDLRegisterSong(void *data, int size)
       if(music == NULL) 
       {   
          // Conversion failed, free everything
-         SDL_FreeRW(rw);
+         //SDL_FreeRW(rw);
          rw = NULL;
          free(mid);         
       } 

@@ -26,14 +26,16 @@
 //
 //-----------------------------------------------------------------------------
 
+#if 0 // not finished
+
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_thread.h"
 #include "SDL_mixer.h"
 
 #include "../z_zone.h"
+#include "../sounds.h"
 #include "../i_sound.h"
-#include "../s_sound.h"
 #include "../psnprntf.h"
 
 //=============================================================================
@@ -250,6 +252,8 @@ i_sounddriver_t i_pcsound_driver =
    I_PCSSoundIsPlaying,    // SoundIsPlaying
    I_PCSUpdateSoundParams, // UpdateSoundParams
 };
+
+#endif
 
 // EOF
 
