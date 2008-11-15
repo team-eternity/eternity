@@ -191,6 +191,7 @@ void I_CacheSound(sfxinfo_t *sound)
 
 #ifdef _SDL_VER
 extern i_sounddriver_t i_sdlsound_driver;
+extern i_sounddriver_t i_pcsound_driver;
 #endif
 
 //
@@ -213,6 +214,15 @@ void I_InitSound(void)
          if((success = i_sounddriver->InitSound()))
          {
             atexit(I_ShutdownSound);  
+            snd_init = true;
+         }
+         break;
+
+      case 1:
+         i_sounddriver = &i_pcsound_driver;
+         if((success = i_sounddriver->InitSound()))
+         {
+            atexit(I_ShutdownSound);
             snd_init = true;
          }
          break;
@@ -369,10 +379,10 @@ int I_QrySongPlaying(int handle)
 
 // system specific sound console commands
 
-static char *sndcardstr[] = { "SDL mixer", "none" };
+static char *sndcardstr[] = { "SDL mixer", "none", "PC Speaker" };
 static char *muscardstr[] = { "SDL mixer", "none" };
 
-VARIABLE_INT(snd_card,       NULL,      -1,  0, sndcardstr);
+VARIABLE_INT(snd_card,       NULL,      -1,  1, sndcardstr);
 VARIABLE_INT(mus_card,       NULL,      -1,  0, muscardstr);
 VARIABLE_INT(detect_voices,  NULL,       0,  1, yesno);
 
@@ -386,17 +396,14 @@ VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
 
 CONSOLE_VARIABLE(snd_card, snd_card, 0) 
 {
-   if(snd_card != 0 && !snd_init && menuactive)
-      MN_ErrorMsg("you must restart the program to turn on sound");
+   if(snd_card != 0 && menuactive)
+      MN_ErrorMsg("takes effect after restart");
 }
 
 CONSOLE_VARIABLE(mus_card, mus_card, 0)
 {
-   if(mus_card != 0 && !mus_init && menuactive)
-      MN_ErrorMsg("you must restart the program to turn on music");
-
-   if(mus_card == 0)
-      S_StopMusic();
+   if(mus_card != 0 && menuactive)
+      MN_ErrorMsg("takes effect after restart");
 }
 
 CONSOLE_VARIABLE(detect_voices, detect_voices, 0) {}

@@ -752,24 +752,6 @@ static int I_SDLInitSound(void)
    return 1;
 }
 
-/*
-
-typedef struct i_sounddriver_s
-{
-   int  (*InitSound)(void);
-   void (*CacheSound)(sfxinfo_t *);
-   void (*UpdateSound)(void);
-   void (*SubmitSound)(void);
-   void (*ShutdownSound)(void);
-   int  (*StartSound)(sfxinfo_t *, int, int, int, int, int, int);
-   int  (*SoundID)(int);
-   void (*StopSound)(int);
-   int  (*SoundIsPlaying)(int);
-   void (*UpdateSoundParams)(int, int, int, int);
-} i_sounddriver_t;
-
-*/
-
 //
 // SDL Sound Driver Object
 //

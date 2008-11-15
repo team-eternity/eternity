@@ -106,12 +106,12 @@ typedef struct default_s
 #elif defined(_SDL_VER)
   #define SND_DEFAULT -1
   #define SND_MIN     -1
-  #define SND_MAX      0
-  #define SND_DESCR    "code to select digital sound, -1 is SDL sound, 0 is no sound"
+  #define SND_MAX      1
+  #define SND_DESCR    "code to select digital sound, -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
   #define MUS_DEFAULT -1
   #define MUS_MIN     -1
   #define MUS_MAX      0
-  #define MUS_DESCR    "code to select MIDI device, -1 is MCI midi, 0 is no MIDI"
+  #define MUS_DESCR    "code to select music device, -1 is SDL_mixer, 0 is no music"
 #else
   #define SND_DEFAULT  0
   #define SND_MIN      0
