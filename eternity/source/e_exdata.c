@@ -604,6 +604,9 @@ static struct exlinespec
    { 382, "Attach_CeilingToControl" },
    { 383, "Attach_MirrorFloorToControl" },
    { 384, "Attach_MirrorCeilingToControl" },
+
+   // Apply tagged portals to frontsector
+   { 385, "Apply_PortalToFrontsector" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

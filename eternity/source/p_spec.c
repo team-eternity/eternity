@@ -4828,6 +4828,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       }
       else if(line->special == 376)
       {
+         // Line-Line linked portals
          anchortype = 377;
          planez = 0; // SoM: What should this really be? I dunno.
       }
@@ -4919,6 +4920,45 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 
       lines[s].special = 0;
       lines[s].portal = portal;
+   }
+
+   // Attach portal to front-sectors of 
+   // attach portal to like-tagged 385 lines
+   for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+   {
+      if(line == &lines[s] || lines[s].special != 385 || !lines[s].frontsector)
+         continue;
+
+      lines[s].special = 0;
+
+      switch(effects)
+      {
+      case portal_ceiling:
+         lines[s].frontsector->c_portal = portal;
+#ifdef R_LINKEDPORTALS
+         if(portal->type == R_LINKED)
+         {
+            lines[s].frontsector->ceilingheight = R_GetCeilingPlanez(sectors + s);
+            // Check groupid?
+         }
+#endif
+         break;
+      case portal_floor:
+         lines[s].frontsector->f_portal = portal;
+#ifdef R_LINKEDPORTALS
+         if(portal->type == R_LINKED)
+         {
+            lines[s].frontsector->floorheight = R_GetFloorPlanez(sectors + s);
+            // Check groupid?
+         }
+#endif
+         break;
+      case portal_both:
+         lines[s].frontsector->c_portal = lines[s].frontsector->f_portal = portal;
+         break;
+      default:
+         I_Error("P_SpawnPortal: unknown portal effect\n");
+      }
    }
 }
 
