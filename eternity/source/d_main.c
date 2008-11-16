@@ -403,7 +403,7 @@ void D_PageDrawer(void)
       else
          V_DrawPatch(0, 0, &vbscreen, (patch_t *)t);
 
-      if(GameModeInfo->hasAdvisory && demosequence == 1)
+      if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
          l = W_GetNumForName("ADVISOR");
          t = W_CacheLumpNum(l, PU_CACHE);

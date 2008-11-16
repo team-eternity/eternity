@@ -1077,7 +1077,7 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
       return false;
    }
 
-   if(GameModeInfo->hasMadMelee && GameType == gt_single &&
+   if(GameModeInfo->flags & GIF_HASMADMELEE && GameType == gt_single &&
       players[0].health <= 0)
    {
       // Heretic monsters go mad when player dies

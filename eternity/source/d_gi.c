@@ -415,7 +415,6 @@ static gamemodeinfo_t giDoomSW =
    
    170,              // titleTics
    0,                // advisorTics
-   false,            // hasAdvisory
    11*TICRATE,       // pageTics
    mus_intro,        // titleMusNum
 
@@ -434,7 +433,6 @@ static gamemodeinfo_t giDoomSW =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
-   false,            // shadowTitles   
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
@@ -464,7 +462,6 @@ static gamemodeinfo_t giDoomSW =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
-   false,            // hasMadMelee
    "DoomMarine",     // defPClassName
 
    mus_inter,         // interMusNum
@@ -499,7 +496,6 @@ static gamemodeinfo_t giDoomReg =
    
    170,              // titleTics
    0,                // advisorTics
-   false,            // hasAdvisory
    11*TICRATE,       // pageTics
    mus_intro,        // titleMusNum
 
@@ -518,7 +514,6 @@ static gamemodeinfo_t giDoomReg =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
-   false,            // shadowTitles   
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
@@ -548,7 +543,6 @@ static gamemodeinfo_t giDoomReg =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
-   false,            // hasMadMelee
    "DoomMarine",     // defPClassName
 
    mus_inter,        // interMusNum
@@ -583,7 +577,6 @@ static gamemodeinfo_t giDoomRetail =
    
    170,              // titleTics
    0,                // advisorTics
-   false,            // hasAdvisory
    11*TICRATE,       // pageTics
    mus_intro,        // titleMusNum
 
@@ -602,7 +595,6 @@ static gamemodeinfo_t giDoomRetail =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
-   false,            // shadowTitles   
 
    DOOMBRDRFLAT,     // borderFlat
    &giDoomBorder,    // border
@@ -632,7 +624,6 @@ static gamemodeinfo_t giDoomRetail =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
-   false,            // hasMadMelee
    "DoomMarine",     // defPClassName
 
    mus_inter,        // interMusNum
@@ -668,7 +659,6 @@ static gamemodeinfo_t giDoomCommercial =
 
    11*TICRATE,       // titleTics
    0,                // advisorTics
-   false,            // hasAdvisory
    11*TICRATE,       // pageTics
    mus_dm2ttl,       // titleMusNum
 
@@ -687,7 +677,6 @@ static gamemodeinfo_t giDoomCommercial =
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
-   false,            // shadowTitles   
 
    DM2BRDRFLAT,      // borderFlat
    &giDoomBorder,    // border
@@ -717,7 +706,6 @@ static gamemodeinfo_t giDoomCommercial =
    0,                // teleFogHeight
    sfx_telept,       // teleSound
    100,              // thrustFactor
-   false,            // hasMadMelee
    "DoomMarine",     // defPClassName
 
    mus_dm2int,       // interMusNum
@@ -745,14 +733,13 @@ static gamemodeinfo_t giHereticSW =
 {
    hereticsw,        // id
    Game_Heretic,     // type
-   GIF_SHAREWARE | GIF_MNBIGFONT | GIF_SAVESOUND, // flags
+   GIF_SHAREWARE | GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | GIF_HASMADMELEE, // flags
    VNAME_HTIC_SW,    // versionName
 
    BANNER_HTIC_SW,   // startupBanner
 
    210,              // titleTics
    140,              // advisorTics
-   true,             // hasAdvisory
    200,              // pageTics
    hmus_titl,        // titleMusNum
 
@@ -771,7 +758,6 @@ static gamemodeinfo_t giHereticSW =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
-   true,             // shadowTitles   
 
    HSWBRDRFLAT,      // borderFlat
    &giHticBorder,    // border
@@ -801,7 +787,6 @@ static gamemodeinfo_t giHereticSW =
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
    150,              // thrustFactor
-   true,             // hasMadMelee
    "Corvus",         // defPClassName
 
    hmus_intr,        // interMusNum
@@ -833,14 +818,13 @@ static gamemodeinfo_t giHereticReg =
 {
    hereticreg,       // id
    Game_Heretic,     // type   
-   GIF_MNBIGFONT | GIF_SAVESOUND,    // flags
+   GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | GIF_HASMADMELEE,    // flags
    VNAME_HTIC_REG,   // versionName
 
    BANNER_HTIC_REG,  // startupBanner
 
    210,              // titleTics
    140,              // advisorTics
-   true,             // hasAdvisory
    200,              // pageTics
    hmus_titl,        // titleMusNum
 
@@ -859,7 +843,6 @@ static gamemodeinfo_t giHereticReg =
    CR_GRAY,          // unselectColor
    CR_RED,           // selectColor
    CR_GREEN,         // variableColor
-   true,             // shadowTitles   
 
    HREGBRDRFLAT,     // borderFlat
    &giHticBorder,    // border
@@ -889,7 +872,6 @@ static gamemodeinfo_t giHereticReg =
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
    150,              // thrustFactor
-   true,             // hasMadMelee
    "Corvus",         // defPClassName
 
    hmus_intr,        // interMusNum

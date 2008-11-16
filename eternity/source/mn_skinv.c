@@ -238,7 +238,7 @@ static void MN_SkinInstructions(void)
    char *msg = FC_GOLD "skin viewer";
 
    void (*textfunc)(const char *, int, int) = 
-      GameModeInfo->shadowTitles ? V_WriteTextBigShadowed : V_WriteTextBig;
+      GameModeInfo->flags & GIF_SHADOWTITLES ? V_WriteTextBigShadowed : V_WriteTextBig;
 
    // draw a title at the top, too
 

@@ -93,7 +93,7 @@ enum
 #define GIF_MNBIGFONT    0x00000004 // uses big font for menu titles
 #define GIF_MAPXY        0x00000008 // gamemode uses MAPxy maps by default
 #define GIF_SAVESOUND    0x00000010 // makes a sound in save & load menus
-#define GIF_HASADVISOR   0x00000020 // displays advisory popup on title screen
+#define GIF_HASADVISORY  0x00000020 // displays advisory popup on title screen
 #define GIF_SHADOWTITLES 0x00000040 // shadows titles in menus
 #define GIF_HASMADMELEE  0x00000080 // has mad melee when player dies in SP
 
@@ -178,7 +178,6 @@ typedef struct gamemodeinfo_s
    // demo state information
    int titleTics;             // length of time to show title
    int advisorTics;           // for Heretic, len. to show advisory
-   boolean hasAdvisory;       // shows an advisory at title screen
    int pageTics;              // length of general demo state pages
    int titleMusNum;           // music number to use for title
 
@@ -198,7 +197,6 @@ typedef struct gamemodeinfo_s
    int unselectColor;         // color of unselected menu item text
    int selectColor;           // color of selected menu item text
    int variableColor;         // color of variable text
-   boolean shadowTitles;      // if true, big font title text is shadowed
 
    // border stuff
    const char *borderFlat;    // name of flat to fill backscreen
@@ -234,7 +232,6 @@ typedef struct gamemodeinfo_s
    fixed_t teleFogHeight;     // amount to add to telefog z coord
    int teleSound;             // sound id for teleportation
    short thrustFactor;        // damage thrust factor
-   boolean hasMadMelee;       // game mode has mad melee when player dies
    const char *defPClassName; // default playerclass name
 
    // Intermission and Finale stuff

@@ -357,7 +357,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
 
       void (*textfunc)(const char *, int, int) =
          (!(drawing_menu->flags & mf_skullmenu) &&
-          GameModeInfo->shadowTitles) ? 
+          GameModeInfo->flags & GIF_SHADOWTITLES) ? 
             V_WriteTextBigShadowed : V_WriteTextBig;
       
       textfunc(item->description, 
