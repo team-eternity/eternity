@@ -381,7 +381,7 @@ void MN_DrawCredits(void)
       // determine widest category string
       int w;
 
-      for(i = 0; i < 5; ++i)
+      for(i = 0; i < NUMCATS; ++i)
       {
          w = V_StringWidth(cat_strs[i]);
 
@@ -390,7 +390,7 @@ void MN_DrawCredits(void)
       }
 
       // determine widest value string
-      for(i = 0; i < 5; ++i)
+      for(i = 0; i < NUMCATS; ++i)
       {
          w = V_StringWidth(val_strs[i]);
 
