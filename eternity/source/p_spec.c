@@ -4938,7 +4938,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 #ifdef R_LINKEDPORTALS
          if(portal->type == R_LINKED)
          {
-            lines[s].frontsector->ceilingheight = R_GetCeilingPlanez(sectors + s);
+            lines[s].frontsector->ceilingheight = R_GetCeilingPlanez(lines[s].frontsector);
             // Check groupid?
          }
 #endif
@@ -4948,7 +4948,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 #ifdef R_LINKEDPORTALS
          if(portal->type == R_LINKED)
          {
-            lines[s].frontsector->floorheight = R_GetFloorPlanez(sectors + s);
+            lines[s].frontsector->floorheight = R_GetFloorPlanez(lines[s].frontsector);
             // Check groupid?
          }
 #endif
