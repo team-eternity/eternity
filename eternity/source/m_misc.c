@@ -87,6 +87,7 @@ extern int viewheight;
 extern int mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
 extern int realtic_clock_rate;         // killough 4/13/98: adjustable timer
 extern int leds_always_off;            // killough 3/6/98
+extern int cpusaver;
 extern int showMessages;
 extern int screenSize;
 
@@ -466,6 +467,13 @@ default_t defaults[] =
       &leds_always_off, NULL,
       0, {0,1}, dt_number, ss_gen, wad_no,
       "1 to keep keyboard LEDs turned off"
+   },
+
+   { // SoM
+      "powersaver",
+      &cpusaver, NULL,
+      0, {0,1}, dt_number, ss_gen, wad_no,
+      "1 to enable 'power saving' mode which causes EE to use less CPU"
    },
 
    // CONFIG_FIXME: there are issues with mouse sensitivity range.
