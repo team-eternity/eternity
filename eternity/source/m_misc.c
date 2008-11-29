@@ -472,8 +472,8 @@ default_t defaults[] =
    { // SoM
       "powersaver",
       &cpusaver, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable 'power saving' mode which causes EE to use less CPU"
+      0, {0,15}, dt_number, ss_gen, wad_no,
+      "a value > 0 will call the system delay function and reduce the CPU usage"
    },
 
    // CONFIG_FIXME: there are issues with mouse sensitivity range.

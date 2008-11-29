@@ -72,7 +72,7 @@ void I_Delay(void)
 {
    if(cpusaver)
    {
-      SDL_Delay(1);
+      SDL_Delay(cpusaver);
    }
 }
 
@@ -482,7 +482,7 @@ int leds_always_off;
 VARIABLE_BOOLEAN(leds_always_off, NULL,     yesno);
 VARIABLE_INT(realtic_clock_rate, NULL,  0, 500, NULL);
 
-VARIABLE_BOOLEAN(cpusaver, NULL, onoff);
+VARIABLE_INT(cpusaver, NULL, 0, 10, NULL);
 CONSOLE_VARIABLE(powersaver, cpusaver, 0) {}
 
 CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
