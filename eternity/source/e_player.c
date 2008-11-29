@@ -880,7 +880,7 @@ static dehflags_t weapon_flags[] =
    { "NOTHRUST",     WPF_NOTHRUST     },
    { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
    { "NOTSHAREWARE", WPF_NOTSHAREWARE },
-   { "COMMERCIAL",   WPF_COMMERCIAL   },
+   { "UNUSED",       WPF_UNUSED       },
    { "SILENCER",     WPF_SILENCER     },
    { "SILENT",       WPF_SILENT       },
    { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },

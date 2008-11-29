@@ -1639,7 +1639,7 @@ static void R_Subsector(int num)
    
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
-                            &ceilinglightlevel, false);   // killough 4/11/98
+                             &ceilinglightlevel, false);   // killough 4/11/98
 
    if(seg.frontsec->frameid != frameid)
    {

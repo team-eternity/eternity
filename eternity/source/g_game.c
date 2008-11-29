@@ -371,7 +371,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         action_weapon6 && GameModeInfo->id != shareware ? wp_plasma :
         action_weapon7 && GameModeInfo->id != shareware ? wp_bfg :
         action_weapon8 ? wp_chainsaw :
-        action_weapon9 && GameModeInfo->id == commercial ? wp_supershotgun :
+        action_weapon9 && enable_ssg ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -411,7 +411,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // in use, or if the SSG is not already in use and the
          // player prefers it.
 
-         if(newweapon == wp_shotgun && GameModeInfo->id == commercial &&
+         if(newweapon == wp_shotgun && enable_ssg &&
             player->weaponowned[wp_supershotgun] &&
             (!player->weaponowned[wp_shotgun] ||
              player->readyweapon == wp_shotgun ||

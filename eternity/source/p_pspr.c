@@ -219,7 +219,6 @@ int P_SwitchWeapon(player_t *player)
    // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
    // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
    // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
-   // haleyjd WEAPON_FIXME: commercial-only must become EDF weapon property
    // haleyjd WEAPON_FIXME: must support arbitrary weapons
    // haleyjd WEAPON_FIXME: chainsaw/fist issues
 
@@ -265,7 +264,7 @@ int P_SwitchWeapon(player_t *player)
          break;
       case 9:
          if(player->weaponowned[wp_supershotgun] && 
-            GameModeInfo->id == commercial &&
+            enable_ssg &&
             player->ammo[am_shell] >= (demo_compatibility ? 3 : 2))
             newweapon = wp_supershotgun;
          break;

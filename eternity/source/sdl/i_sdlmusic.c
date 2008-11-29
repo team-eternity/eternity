@@ -24,6 +24,9 @@
 //
 //-----------------------------------------------------------------------------
 
+// haleyjd 11/22/08: I don't understand why this is needed here...
+#define USE_RWOPS
+
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_thread.h"
@@ -47,11 +50,6 @@
 
 #ifdef HAVE_SPCLIB
 #include "../../snes_spc/spc.h"
-#endif
-
-#ifdef LINUX
-// haleyjd 01/28/07: I don't understand why this is needed here...
-extern DECLSPEC Mix_Music * SDLCALL Mix_LoadMUS_RW(SDL_RWops *rw);
 #endif
 
 #define STEP sizeof(Sint16)

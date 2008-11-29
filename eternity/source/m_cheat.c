@@ -382,7 +382,7 @@ static void cheat_fa()
    for(i = 0; i < NUMWEAPONS; i++)
    {
       if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
-         (i == wp_supershotgun && GameModeInfo->id != commercial)))
+         (i == wp_supershotgun && !enable_ssg)))
          plyr->weaponowned[i] = true;
    }
       
@@ -608,7 +608,7 @@ static void cheat_keyxx(key)
 
 static void cheat_weap()
 {                                   // Ty 03/27/98 - *not* externalized
-   doom_printf(GameModeInfo->id == commercial ?           // killough 2/28/98
+   doom_printf(enable_ssg ?           // killough 2/28/98
                "Weapon number 1-9" : "Weapon number 1-8" );
 }
 
@@ -619,7 +619,7 @@ char buf[3];
 
   // WEAPON_FIXME: weap cheat
 
-  if ((w==wp_supershotgun && GameModeInfo->id!=commercial) ||      // killough 2/28/98
+  if ((w==wp_supershotgun && !enable_ssg) ||      // killough 2/28/98
       ((w==wp_bfg || w==wp_plasma) && GameModeInfo->id==shareware))
     return;
 

@@ -28,7 +28,14 @@
 // We are referring to sprite numbers.
 #include "info.h"
 #include "d_items.h"
+#include "d_gi.h"
 #include "e_states.h"
+#include "w_wad.h"
+
+// haleyjd 11/28/08: bit of a hack - replace checks on gamemode == commercial
+// with tests on this flag to see if we want to be able to use the super 
+// shotgun. This may need to change a bit when dynamic weapons are finished.
+boolean enable_ssg = false;
 
 //
 // PSPRITE ACTIONS for weapons.
@@ -182,6 +189,11 @@ void D_InitWeaponInfo(void)
       weaponinfo[i].readystate = E_SafeState(weaponinfo[i].readystate);
       weaponinfo[i].upstate    = E_SafeState(weaponinfo[i].upstate);
    }
+
+   // haleyjd 11/28/08: SSG enable
+   if(GameModeInfo->type == Game_DOOM && 
+      (W_CheckNumForName)("SHT2A0", ns_sprites) > 0)
+      enable_ssg = true;
 }
 
 //----------------------------------------------------------------------------

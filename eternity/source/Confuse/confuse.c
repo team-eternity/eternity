@@ -595,8 +595,6 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          tok = mylex(cfg); // haleyjd: use custom lexer
       else
          --skip_token;
-
-      skip_token = cfg_false;
       
       if(tok == 0)
       {
