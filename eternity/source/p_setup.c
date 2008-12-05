@@ -150,6 +150,26 @@ d_inline static long ShortToLong(short value)
 }
 
 //
+// SafeUintIndex
+//
+// haleyjd 12/04/08: Inline routine to convert an effectively unsigned short
+// index into a long index, safely checking against the provided upper bound
+// and substituting the value of 0 in the event of an overflow.
+//
+d_inline static long SafeUintIndex(short input, int limit, const char *func, const char *item)
+{
+   long ret = (long)(SHORT(input)) & 0xffff;
+
+   if(ret >= limit)
+   {
+      C_Printf(FC_ERROR "%s error: %s #%d out of range\a\n", func, item, ret);
+      ret = 0;
+   }
+
+   return ret;
+}
+
+//
 // P_LoadVertexes
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -210,14 +230,14 @@ void P_LoadSegs(int lump)
       line_t *ldef;
 
       // haleyjd 06/19/06: convert indices to unsigned
-      li->v1 = &vertexes[(long)SHORT(ml->v1) & 0xffff];
-      li->v2 = &vertexes[(long)SHORT(ml->v2) & 0xffff];
+      li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "vertex", "vertex")];
+      li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "vertex", "vertex")];
 
       li->angle  = (SHORT(ml->angle))  << 16;
       li->offset = (SHORT(ml->offset)) << 16;
 
       // haleyjd 06/19/06: convert indices to unsigned
-      linedef = (long)SHORT(ml->linedef) & 0xffff;
+      linedef = SafeUintIndex(ml->linedef, numlines, "vertex", "line");
       ldef = &lines[linedef];
       li->linedef = ldef;
       side = SHORT(ml->side);
@@ -243,9 +263,10 @@ void P_LoadSegs(int lump)
 // P_LoadSubsectors
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 void P_LoadSubsectors(int lump)
 {
+   mapsubsector_t *mss;
    byte *data;
    int  i;
    
@@ -255,11 +276,13 @@ void P_LoadSubsectors(int lump)
    
    for(i = 0; i < numsubsectors; ++i)
    {
+      mss = &(((mapsubsector_t *)data)[i]);
+
       // haleyjd 06/19/06: convert indices to unsigned
       subsectors[i].numlines =
-         (long)SHORT(((mapsubsector_t *) data)[i].numsegs) & 0xffff;
+         (long)SHORT(mss->numsegs) & 0xffff;
       subsectors[i].firstline =
-         (long)SHORT(((mapsubsector_t *) data)[i].firstseg) & 0xffff;
+         (long)SHORT(mss->firstseg) & 0xffff;
    }
    
    Z_Free(data);
@@ -451,7 +474,8 @@ void P_LoadThings(int lump)
 
       // Do not spawn cool, new monsters if !commercial
       // haleyjd: removing this for Heretic and DeHackEd
-      if(demo_version < 331 && GameModeInfo->id != commercial)
+      if(demo_version < 331 && GameModeInfo->type == Game_DOOM &&
+         GameModeInfo->id != commercial)
       {
          switch(ft->type)
          {
@@ -593,8 +617,8 @@ void P_LoadLineDefs(int lump)
       ld->line_id = -1;
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[(long)SHORT(mld->v1) & 0xffff];
-      v2 = ld->v2 = &vertexes[(long)SHORT(mld->v2) & 0xffff];
+      v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", "vertex")];
+      v2 = ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", "vertex")];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
@@ -628,6 +652,18 @@ void P_LoadLineDefs(int lump)
       // haleyjd 06/19/06: convert indices, except -1, to unsigned
       ld->sidenum[0] = ShortToLong(SHORT(mld->sidenum[0]));
       ld->sidenum[1] = ShortToLong(SHORT(mld->sidenum[1]));
+
+      // haleyjd 12/04/08: rangechecking for safety
+      if(ld->sidenum[0] >= numsides)
+      {
+         C_Printf(FC_ERROR "line error: bad side 0 #%d\a\n", ld->sidenum[0]);
+         ld->sidenum[0] = 0;
+      }
+      if(ld->sidenum[1] >= numsides)
+      {
+         C_Printf(FC_ERROR "line error: bad side 1 #%d\a\n", ld->sidenum[1]);
+         ld->sidenum[1] = 0;
+      }
 
       // killough 4/4/98: support special sidedef interpretation below
       if(ld->sidenum[0] != -1 && ld->special)
@@ -809,7 +845,10 @@ void P_LoadLineDefs2(void)
       // killough 11/98: fix common wad errors (missing sidedefs):
       
       if(ld->sidenum[0] == -1)
+      {
+         C_Printf(FC_ERROR "line error: missing first sidedef replaced\a\n");
          ld->sidenum[0] = 0;  // Substitute dummy sidedef for missing right side
+      }
 
       if(ld->sidenum[1] == -1)
          ld->flags &= ~ML_TWOSIDED;  // Clear 2s flag for missing left side
@@ -849,7 +888,7 @@ void P_LoadLineDefs2(void)
 // P_LoadSideDefs
 //
 // killough 4/4/98: split into two functions
-
+//
 void P_LoadSideDefs(int lump)
 {
    numsides = W_LumpLength(lump) / sizeof(mapsidedef_t);
@@ -880,7 +919,7 @@ void P_LoadSideDefs2(int lump)
       // textures if invalid as colormaps but valid as textures.
 
       // haleyjd 06/19/06: convert indices to unsigned
-      sd->sector = sec = &sectors[(long)SHORT(msd->sector) & 0xffff];
+      sd->sector = sec = &sectors[SafeUintIndex(msd->sector, numsectors, "side", "sector")];
 
       switch(sd->special)
       {
@@ -1369,19 +1408,36 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
 //
 static void P_LoadReject(int lump)
 {
-   int size = W_LumpLength(lump);
+   int size;
+   int expectedsize;
 
-   if(size > 0)
+   size = W_LumpLength(lump);
+
+   // haleyjd: round numsectors^2 to next higher multiple of 8, then divide by
+   // 8 to get the expected reject size for this level
+   expectedsize = (((numsectors * numsectors) + 7) & ~7) / 8;
+
+   // 12/04/08: be super-smart about REJECT lumps:
+   // 1. if size >= expectedsize, all is good.
+   // 2. if size <  expectedsize, allocate a zero-filled buffer and copy
+   //    in whatever exists from the actual lump.
+   if(size >= expectedsize)
       rejectmatrix = W_CacheLumpNum(lump, PU_LEVEL);
    else
    {
-      // round numsectors^2 to next higher multiple of 8,
-      // then divide by 8 to get the proper reject size
-      size = (((numsectors * numsectors) + 7) & ~7) / 8;
-
       // set to all zeroes so that the reject has no effect
-      rejectmatrix = Z_Calloc(1, size, PU_LEVEL, 0);
+      rejectmatrix = Z_Calloc(1, expectedsize, PU_LEVEL, NULL);
+
+      if(size > 0)
+      {
+         byte *temp = W_CacheLumpNum(lump, PU_CACHE);
+         memcpy(rejectmatrix, temp, size);
+      }
    }
+
+   // warn on too-large rejects, but do nothing special.
+   if(size > expectedsize)
+      C_Printf(FC_ERROR "P_LoadReject warning: reject is too large\a\n");
 }
 
 //
@@ -1503,7 +1559,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // determine map format; if invalid, abort
    if((mapformat = P_CheckLevel(lumpnum)) == LEVEL_FORMAT_INVALID)
    {
-      C_Printf(FC_ERROR"Not a level: '%s'\n", mapname);
+      C_Printf(FC_ERROR "Not a level: '%s'\n", mapname);
       C_SetConsole();
       return;
    }
