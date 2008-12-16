@@ -52,7 +52,7 @@
 // haleyjd 04/15/02:
 #include "../i_system.h"
 #include "../in_lude.h"
-
+#include "../d_gi.h"
 
 // ----------------------------------------------------------------------------
 // WM-related stuff (see i_input.c)
@@ -158,6 +158,10 @@ static SDL_Surface *disk = NULL, *disk_bg = NULL;
 static void I_InitDiskFlash(void)
 {
    VBuffer diskvb;
+
+   // haleyjd 05/21/06: no disk in some game modes...
+   if(!(GameModeInfo->flags & GIF_HASDISK))
+      return;
 
    if(disk)
    {
