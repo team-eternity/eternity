@@ -192,7 +192,9 @@ void P_UnArchivePlayers(void)
 //
 // P_ArchiveWorld
 //
-void P_ArchiveWorld (void)
+// Saves dynamic properties of sectors, lines, and sides.
+//
+void P_ArchiveWorld(void)
 {
    int            i;
    const sector_t *sec;
@@ -209,9 +211,11 @@ void P_ArchiveWorld (void)
    // haleyjd 03/04/07: must save sector colormap indices
    
    size_t size = 
-      (sizeof(short)*5 + sizeof(sec->floorz) + sizeof(sec->ceilingz) +
+      (sizeof(short)*5 + 
+       sizeof(sec->floorz) + sizeof(sec->ceilingz) + 
        sizeof(sec->friction) + sizeof(sec->movefactor) + 
-       sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap))
+       sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap) +
+       sizeof(sec->flags) + sizeof(sec->wassecret))
       * numsectors + sizeof(short)*3*numlines + 4;
 
    for(i = 0; i < numlines; ++i)
@@ -254,6 +258,12 @@ void P_ArchiveWorld (void)
       put = (void *)((char *) put + sizeof(sec->midmap));
       memcpy(put, &sec->bottommap, sizeof(sec->bottommap));
       put = (void *)((char *) put + sizeof(sec->bottommap));
+
+      // haleyjd 12/28/08: save sector flags, wassecret flag
+      memcpy(put, &sec->flags, sizeof(sec->flags));
+      put = (void *)((char *) put + sizeof(sec->flags));
+      memcpy(put, &sec->wassecret, sizeof(sec->wassecret));
+      put = (void *)((char *) put + sizeof(sec->wassecret));
 
       *put++ = sec->floorpic;
       *put++ = sec->ceilingpic;
@@ -299,7 +309,9 @@ void P_ArchiveWorld (void)
 //
 // P_UnArchiveWorld
 //
-void P_UnArchiveWorld (void)
+// Restores dynamic properties of sectors, lines, and sides.
+//
+void P_UnArchiveWorld(void)
 {
    int          i;
    sector_t     *sec;
@@ -313,8 +325,7 @@ void P_UnArchiveWorld (void)
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; i++, sec++)
    {
-      // killough 10/98: load full floor & ceiling heights, including fractions
-      
+      // killough 10/98: load full floor & ceiling heights, including fractions      
       memcpy(&sec->floorz, get, sizeof(sec->floorz));
       get = (void *)((char *) get + sizeof(sec->floorz));
       memcpy(&sec->ceilingz, get, sizeof(sec->ceilingz));
@@ -333,6 +344,12 @@ void P_UnArchiveWorld (void)
       get = (void *)((char *) get + sizeof(sec->midmap));
       memcpy(&sec->bottommap, get, sizeof(sec->bottommap));
       get = (void *)((char *) get + sizeof(sec->bottommap));
+
+      // haleyjd 12/28/08: save sector flags, wassecret flag
+      memcpy(&sec->flags, get, sizeof(sec->flags));
+      get = (void *)((char *) get + sizeof(sec->flags));
+      memcpy(&sec->wassecret, get, sizeof(sec->wassecret));
+      get = (void *)((char *) get + sizeof(sec->wassecret));
 
       sec->floorpic     = *get++;
       sec->ceilingpic   = *get++;

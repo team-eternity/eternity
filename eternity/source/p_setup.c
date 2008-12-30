@@ -137,6 +137,9 @@ size_t     num_deathmatchstarts;   // killough
 mapthing_t *deathmatch_p;
 mapthing_t playerstarts[MAXPLAYERS];
 
+// haleyjd 12/28/08: made module-global
+static int mapformat;
+
 //
 // ShortToLong
 //
@@ -156,7 +159,8 @@ d_inline static long ShortToLong(short value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static long SafeUintIndex(short input, int limit, const char *func, const char *item)
+d_inline static long SafeUintIndex(short input, int limit, const char *func,
+                                   const char *item)
 {
    long ret = (long)(SHORT(input)) & 0xffff;
 
@@ -317,7 +321,6 @@ void P_LoadSectors(int lump)
       ss->ceilingpic         = R_FlatNumForName(ms->ceilingpic);
       ss->lightlevel         = SHORT(ms->lightlevel);
       ss->special            = SHORT(ms->special);
-      ss->oldspecial         = SHORT(ms->special);
       ss->tag                = SHORT(ms->tag);
       ss->thinglist          = NULL;
       ss->touching_thinglist = NULL;            // phares 3/14/98
@@ -345,7 +348,6 @@ void P_LoadSectors(int lump)
       ss->c_attsectors = ss->f_attsectors = NULL;
 
       // SoM 10/14/07:
-      ss->c_asurfacecount = ss->f_asurfacecount = 0;
       ss->c_asurfaces = ss->f_asurfaces = NULL;
 
       // SoM: init portals
@@ -354,7 +356,7 @@ void P_LoadSectors(int lump)
       ss->groupid = R_NOGROUP;
 #endif
 
-      ss->floorz = ss->floorheight;
+      ss->floorz   = ss->floorheight;
       ss->ceilingz = ss->ceilingheight;
 
       ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
@@ -362,9 +364,12 @@ void P_LoadSectors(int lump)
       // haleyjd 09/24/06: sound sequences -- set default
       ss->sndSeqID = defaultSndSeq;
 
-      // haleyjd 07/05/07: flat rotation angles
-      ss->floorangle = ss->floorbaseangle = ss->ceilingangle =
-         ss->ceilingbaseangle = 0.0f;
+      // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
+      if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
+      {
+         ss->flags   |= (ss->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
+         ss->special &= ~GENSECTOFLAGSMASK;
+      }
    }
 
    Z_Free(data);
@@ -1441,6 +1446,27 @@ static void P_LoadReject(int lump)
 }
 
 //
+// Map lumps table
+//
+// For Doom- and Hexen-format maps.
+//
+static const char *levellumps[] =
+{
+   "label",    // ML_LABEL,    A separator, name, ExMx or MAPxx
+   "THINGS",   // ML_THINGS,   Monsters, items..
+   "LINEDEFS", // ML_LINEDEFS, LineDefs, from editing
+   "SIDEDEFS", // ML_SIDEDEFS, SideDefs, from editing
+   "VERTEXES", // ML_VERTEXES, Vertices, edited and BSP splits generated
+   "SEGS",     // ML_SEGS,     LineSegs, from LineDefs split by BSP
+   "SSECTORS", // ML_SSECTORS, SubSectors, list of LineSegs
+   "NODES",    // ML_NODES,    BSP nodes
+   "SECTORS",  // ML_SECTORS,  Sectors, from editing
+   "REJECT",   // ML_REJECT,   LUT, sector-sector visibility
+   "BLOCKMAP", // ML_BLOCKMAP  LUT, motion clipping, walls/grid element
+   "BEHAVIOR"  // ML_BEHAVIOR  haleyjd: ACS bytecode; used to id hexen maps
+};
+
+//
 // P_CheckLevel
 //
 // sf 11/9/99
@@ -1448,23 +1474,6 @@ static void P_LoadReject(int lump)
 // conform to the MAPxy or ExMy standard previously
 // imposed
 //
-
-char *levellumps[] =
-{
-   "label",        // ML_LABEL,    A separator, name, ExMx or MAPxx
-   "THINGS",       // ML_THINGS,   Monsters, items..
-   "LINEDEFS",     // ML_LINEDEFS, LineDefs, from editing
-   "SIDEDEFS",     // ML_SIDEDEFS, SideDefs, from editing
-   "VERTEXES",     // ML_VERTEXES, Vertices, edited and BSP splits generated
-   "SEGS",         // ML_SEGS,     LineSegs, from LineDefs split by BSP
-   "SSECTORS",     // ML_SSECTORS, SubSectors, list of LineSegs
-   "NODES",        // ML_NODES,    BSP nodes
-   "SECTORS",      // ML_SECTORS,  Sectors, from editing
-   "REJECT",       // ML_REJECT,   LUT, sector-sector visibility
-   "BLOCKMAP",     // ML_BLOCKMAP  LUT, motion clipping, walls/grid element
-   "BEHAVIOR"      // ML_BEHAVIOR  haleyjd: used to id hexen maps
-};
-
 int P_CheckLevel(int lumpnum)
 {
    int i, ln;
@@ -1490,11 +1499,6 @@ int P_CheckLevel(int lumpnum)
 
    return LEVEL_FORMAT_HEXEN;
 }
-
-//
-// P_SetupLevel
-//
-// killough 5/3/98: reformatted, cleaned up
 
 void P_ConvertHereticSpecials(void); // haleyjd
 
@@ -1524,7 +1528,7 @@ static void P_NewLevelMsg(void)
 //
 void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 {
-   int i, lumpnum, mapformat;
+   int i, lumpnum;
    
    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
    wminfo.partime = 180;
@@ -1592,6 +1596,8 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_LoadLevelInfo(lumpnum);  // load MapInfo
    E_LoadExtraData();         // haleyjd 10/08/03: load ExtraData
 
+   DEBUGMSG("P_SetupLevel: loaded level info\n");
+
    // haleyjd: set global colormap -- see r_data.c
    R_SetGlobalLevelColormap();
 
@@ -1601,14 +1607,14 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
       V_SetLoading(4, "loading");
 #endif
 
-   DEBUGMSG("hu_newlevel\n");
    P_NewLevelMsg();
+   
+   // wake up heads-up display
+   DEBUGMSG("HU_Start\n");
    HU_Start();
    
    // must be after p_loadlevelinfo as the music lump name is gotten there
    S_Start();
-
-   DEBUGMSG("P_SetupLevel: loaded level info\n");
    
    // load the sky
    R_StartSky();
@@ -1719,13 +1725,13 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    V_LoadingIncrease();
 #endif
 
-   DEBUGMSG("Precaching graphics\n");
+   DEBUGMSG("Precaching graphics...\n");
    
    // preload graphics
    if(precache)
       R_PrecacheLevel();
 
-   DEBUGMSG("done\n");
+   DEBUGMSG("...done\n");
    
    R_SetViewSize(screenSize+3, c_detailshift); //sf
 
@@ -1775,7 +1781,7 @@ void P_InitThingLists(void)
 //
 // P_Init
 //
-void P_Init (void)
+void P_Init(void)
 {
    P_InitParticleEffects();  // haleyjd 09/30/01
    P_InitSwitchList();

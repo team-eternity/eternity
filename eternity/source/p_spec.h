@@ -79,6 +79,15 @@
 #define FRICTION_SHIFT  8
 #define PUSH_MASK       0x200
 #define PUSH_SHIFT      9
+#define KILLSOUND_MASK  0x400
+#define KILLSOUND_SHIFT 10
+#define MOVESOUND_MASK  0x800
+#define MOVESOUND_SHIFT 11
+
+// haleyjd 12/28/08: mask used to get generalized special bits that are now
+// part of the sector flags
+#define GENSECTOFLAGSMASK \
+   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK)
 
 // Note: bits 10, 11 used for sound killing flags (see doomdef.h)
 
@@ -745,7 +754,7 @@ typedef struct
 typedef struct
 {
    int newspecial;
-   int oldspecial;
+   unsigned int flags;
 } spectransfer_t;
 
 // p_doors

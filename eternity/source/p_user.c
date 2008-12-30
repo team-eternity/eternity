@@ -349,6 +349,16 @@ static void P_HereticCurrent(player_t *player)
 }
 
 //
+// P_SectorIsSpecial
+//
+// haleyjd 12/28/08: Determines whether or not a sector is special.
+//
+d_inline static boolean P_SectorIsSpecial(sector_t *sector)
+{
+   return (sector->special || sector->flags);
+}
+
+//
 // P_PlayerThink
 //
 void P_PlayerThink(player_t *player)
@@ -452,7 +462,7 @@ void P_PlayerThink(player_t *player)
    // Determine if there's anything about the sector you're in that's
    // going to affect you, like painful floors.
 
-   if(player->mo->subsector->sector->special)
+   if(P_SectorIsSpecial(player->mo->subsector->sector))
       P_PlayerInSpecialSector(player);
 
    // haleyjd 08/23/05: terrain-based effects

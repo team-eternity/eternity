@@ -133,8 +133,15 @@ typedef struct
    int             type;
 } attachedsurface_t;
 
-
-
+// haleyjd 12/28/08: sector flags
+enum
+{
+   SECF_SECRET        = 0x00000001, // bit 7 of generalized special
+   SECF_FRICTION      = 0x00000002, // bit 8 of generalized special
+   SECF_PUSH          = 0x00000004, // bit 9 of generalized special
+   SECF_KILLSOUND     = 0x00000008, // bit A of generalized special
+   SECF_KILLMOVESOUND = 0x00000010, // bit B of generalized special
+};
 
 //
 // The SECTORS record, at runtime.
@@ -150,7 +157,6 @@ struct sector_s
    short ceilingpic;
    short lightlevel;
    short special;
-   short oldspecial;      //jff 2/16/98 remembers if sector WAS secret (automap)
    short tag;
    int nexttag, firsttag; // killough 1/30/98: improves searches for tags.
    int soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
@@ -249,10 +255,17 @@ struct sector_s
    unsigned frameid;
    float ceilingheightf, floorheightf;
 
-   // SoM: the actual, factual floor and ceiling heights these are used by linked portals
-   // but ifdefing them would be a nightmare and the source will still compile with these 
-   // outside the ifdefs.
+   // SoM: the actual, factual floor and ceiling heights; these are used by 
+   // linked portals but ifdefing them would be a nightmare and the source 
+   // will still compile with these outside the ifdefs.
    fixed_t floorz, ceilingz;
+
+   // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
+   // generalized sector types outside of DOOM-format maps.
+   unsigned int flags;
+   
+   // haleyjd 12/28/08: replaces oldspecial hack
+   boolean wassecret;
 };
 
 //

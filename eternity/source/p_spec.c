@@ -1105,10 +1105,9 @@ int P_CheckTag(line_t *line)
 // jff 3/14/98 added to simplify checks for whether sector is secret
 //  in automap and other places
 //
-
 boolean P_IsSecret(sector_t *sec)
 {
-   return (sec->special == 9 || sec->special & SECRET_MASK);
+   return (sec->flags & SECF_SECRET);
 }
 
 //
@@ -1120,10 +1119,9 @@ boolean P_IsSecret(sector_t *sec)
 // jff 3/14/98 added to simplify checks for whether sector is secret
 //  in automap and other places
 //
-
 boolean P_WasSecret(sector_t *sec)
 {
-   return (sec->oldspecial == 9 || sec->oldspecial & SECRET_MASK);
+   return sec->wassecret;
 }
 
 //
@@ -2342,17 +2340,19 @@ void P_PlayerInSpecialSector(player_t *player)
    if(player->mo->z != sector->floorz)
       return;
 
+   // haleyjd 12/28/08: handle secrets
+   if(sector->flags & SECF_SECRET)
+   {
+      player->secretcount++;
+      sector->wassecret = true;
+      sector->flags &= ~SECF_SECRET;
+   }
+
    // Has hit ground.
    // jff add if to handle old vs generalized types
    if(sector->special < 32) // regular sector specials
    {
-      if(sector->special == 9)     // killough 12/98
-      {
-         // Tally player in secret sector, clear secret special
-         player->secretcount++;
-         sector->special = 0;
-      }
-      else if(enable_nuke)  // killough 12/98: nukage disabling cheat
+      if(enable_nuke)  // killough 12/98: nukage disabling cheat
       {
          switch(sector->special)
          {
@@ -2457,14 +2457,6 @@ void P_PlayerInSpecialSector(player_t *player)
             }
             break;
          }
-      }
-
-      if(sector->special & SECRET_MASK)
-      {
-         player->secretcount++;
-         sector->special &= ~SECRET_MASK;
-         if(sector->special < 32)   // if all extended bits clear,
-            sector->special = 0;    // sector is not special anymore
       }
 
       // phares 3/19/98:
@@ -2631,15 +2623,15 @@ void P_SpawnSpecials(void)
    // reset levelTime.
    levelTime = 0;
 
-   //  Init special sectors.
+   // Init special sectors.
    sector = sectors;
    for(i = 0; i < numsectors; ++i, ++sector)
    {
+      if(sector->flags & SECF_SECRET) // jff 3/15/98 count extended
+         ++totalsecret;               // secret sectors too
+
       if(!sector->special)
          continue;
-
-      if(sector->special & SECRET_MASK) //jff 3/15/98 count extended
-         ++totalsecret;                 // secret sectors too
 
       switch(sector->special & 31)
       {
@@ -2670,8 +2662,12 @@ void P_SpawnSpecials(void)
          break;
       case 9:
          // secret sector
-         if(sector->special < 32) //jff 3/14/98 bits don't count unless not
-            ++totalsecret;        // a generalized sector type
+         if(!(sector->flags & SECF_SECRET) && 
+            sector->special < 32)    // jff 3/14/98 bits don't count unless not
+         {                           // a generalized sector type
+            ++totalsecret;
+            sector->flags |= SECF_SECRET; // haleyjd: set flag
+         }
          break;
 
       case 10:
@@ -3208,7 +3204,7 @@ static void P_SpawnFriction(void)
             // drag on CPU. New code adjusts friction of sector only once
             // at level startup, and then uses this friction value.
             
-            sectors[s].friction = friction;
+            sectors[s].friction   = friction;
             sectors[s].movefactor = movefactor;
          }
       }
@@ -3374,7 +3370,7 @@ void T_Pusher(pusher_t *p)
    // Be sure the special sector type is still turned on. If so, proceed.
    // Else, bail out; the sector type has been changed on us.
    
-   if(!(sec->special & PUSH_MASK))
+   if(!(sec->flags & SECF_PUSH))
       return;
 
    // For constant pushers (wind/current) there are 3 situations:
@@ -3634,6 +3630,12 @@ line_t *P_FindLine(int tag, int *searchPosition)
 // features.
 //
 
+// haleyjd 12/28/08: the following sector flags are considered to be part of
+// the sector special (not all sector flags may be considered to be such).
+
+#define SPECIALFLAGSMASK \
+   (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND)
+
 //
 // P_SetupSpecialTransfer
 //
@@ -3643,7 +3645,7 @@ line_t *P_FindLine(int tag, int *searchPosition)
 void P_SetupSpecialTransfer(sector_t *sector, spectransfer_t *spec)
 {
    spec->newspecial = sector->special;
-   spec->oldspecial = sector->oldspecial;
+   spec->flags      = sector->flags & SPECIALFLAGSMASK;
 }
 
 //
@@ -3670,7 +3672,7 @@ void P_ZeroSpecialTransfer(spectransfer_t *spec)
 void P_TransferSectorSpecial(sector_t *sector, spectransfer_t *spec)
 {
    sector->special    = spec->newspecial;
-   sector->oldspecial = spec->oldspecial;
+   sector->flags      = (sector->flags & ~SPECIALFLAGSMASK) | spec->flags;
 }
 
 //
@@ -3681,8 +3683,9 @@ void P_TransferSectorSpecial(sector_t *sector, spectransfer_t *spec)
 //
 void P_DirectTransferSectorSpecial(sector_t *src, sector_t *dest)
 {
-   dest->special    = src->special;
-   dest->oldspecial = src->oldspecial;
+   dest->special     = src->special;
+   dest->flags      &= ~SPECIALFLAGSMASK;
+   dest->flags      |= src->flags & SPECIALFLAGSMASK;
 }
 
 //
@@ -3693,8 +3696,8 @@ void P_DirectTransferSectorSpecial(sector_t *src, sector_t *dest)
 //
 void P_ZeroSectorSpecial(sector_t *sec)
 {
-   sec->special    = 0;
-   sec->oldspecial = 0;
+   sec->special     = 0;
+   sec->flags      &= ~SPECIALFLAGSMASK;
 }
 
 //============================================================================
@@ -4244,9 +4247,6 @@ void P_AttachSectors(line_t *line)
    }
 }
 
-
-
-
 //
 // P_ConvertHereticSpecials
 //
@@ -4260,11 +4260,7 @@ void P_ConvertHereticSpecials(void)
    int i;
    line_t *line;
    sector_t *sector;
-
-   fixed_t pushForces[5] = 
-   { 
-      2048*5,  2048*10, 2048*25, 2048*30, 2048*35
-   };
+   fixed_t pushForces[5] = { 2048*5,  2048*10, 2048*25, 2048*30, 2048*35 };
 
    // convert heretic line specials
    for(i = 0; i < numlines; ++i)
@@ -4336,7 +4332,8 @@ void P_ConvertHereticSpecials(void)
          sector->friction = 0xf900;
          //sector->movefactor = 0x276;
          sector->movefactor = ORIG_FRICTION_FACTOR >> 2;
-         sector->special = FRICTION_MASK; // clear, set friction bit
+         sector->special  = 0;             // clear special
+         sector->flags   |= SECF_FRICTION; // set friction bit
          continue;
       default:
          break;

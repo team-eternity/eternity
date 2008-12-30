@@ -159,10 +159,11 @@ typedef enum {
                 // kill all sounds due to moving
 #define SF_KILLMOVESOUND      2048
 
-        // a macro to find out whether to make moving sounds in a sector
-#define silentmove(s) ((s)->special & SF_KILLMOVESOUND)
+// a macro to find out whether to make moving sounds in a sector
+#define silentmove(s) ((s)->flags & SECF_KILLMOVESOUND)
 
-typedef enum {
+typedef enum 
+{
   sk_none=-1, //jff 3/24/98 create unpicked skill setting
   sk_baby=0,
   sk_easy,

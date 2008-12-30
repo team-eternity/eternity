@@ -166,12 +166,12 @@ static boolean S_CheckSectorKill(const camera_t *ear, const mobj_t *src)
    { 
       // are we in a killed-sound sector?
       if(ear && 
-         R_PointInSubsector(ear->x, ear->y)->sector->special & SF_KILLSOUND)
+         R_PointInSubsector(ear->x, ear->y)->sector->flags & SECF_KILLSOUND)
          return true;
       
       // source in a killed-sound sector?
       if(src &&
-         R_PointInSubsector(src->x, src->y)->sector->special & SF_KILLSOUND)
+         R_PointInSubsector(src->x, src->y)->sector->flags & SECF_KILLSOUND)
          return true;
    }
 
