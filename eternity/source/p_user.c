@@ -355,7 +355,7 @@ static void P_HereticCurrent(player_t *player)
 //
 d_inline static boolean P_SectorIsSpecial(sector_t *sector)
 {
-   return (sector->special || sector->flags);
+   return (sector->special || sector->flags || sector->damage);
 }
 
 //

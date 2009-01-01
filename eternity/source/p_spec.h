@@ -89,12 +89,6 @@
 #define GENSECTOFLAGSMASK \
    (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK)
 
-// Note: bits 10, 11 used for sound killing flags (see doomdef.h)
-
-// haleyjd 03/12/03: heretic damage now uses generalized bit 12
-#define HTIC_DMG_MASK   0x1000
-#define HTIC_DMG_SHIFT  12
-
 //jff 02/04/98 Define masks, shifts, for fields in 
 // generalized linedef types
 
@@ -755,6 +749,10 @@ typedef struct
 {
    int newspecial;
    unsigned int flags;
+   int damage;
+   int damagemask;
+   int damagemod;
+   int damageflags;
 } spectransfer_t;
 
 // p_doors

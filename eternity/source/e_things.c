@@ -901,7 +901,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
       if(numstrs <= 0) // woops? nothing to do.
          return;
 
-      for(i = 0; i < numstrs / 2; i += 2)
+      for(i = 0; i < numstrs; i += 2)
       {
          const char *modname, *statename;
          int statenum;

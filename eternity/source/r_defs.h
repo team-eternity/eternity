@@ -143,6 +143,16 @@ enum
    SECF_KILLMOVESOUND = 0x00000010, // bit B of generalized special
 };
 
+// haleyjd 12/31/08: sector damage flags
+enum
+{
+   SDMG_LEAKYSUIT  = 0x00000001, // rad suit leaks at random
+   SDMG_IGNORESUIT = 0x00000002, // rad suit is ignored entirely
+   SDMG_ENDGODMODE = 0x00000004, // turns off god mode if on
+   SDMG_EXITLEVEL  = 0x00000008, // exits when player health <= 10
+   SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
+};
+
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
@@ -252,7 +262,7 @@ struct sector_s
    // Cardboard optimization
    // They are set in R_Subsector and R_FakeFlat and are
    // only valid for that sector for that frame.
-   unsigned frameid;
+   unsigned int frameid;
    float ceilingheightf, floorheightf;
 
    // SoM: the actual, factual floor and ceiling heights; these are used by 
@@ -266,6 +276,12 @@ struct sector_s
    
    // haleyjd 12/28/08: replaces oldspecial hack
    boolean wassecret;
+
+   // haleyjd 12/31/08: sector damage properties
+   int damage;      // if > 0, sector is damaging
+   int damagemask;  // damage is done when !(leveltime & mask)
+   int damagemod;   // damage method to use
+   int damageflags; // special damage behaviors
 };
 
 //

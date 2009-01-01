@@ -2301,26 +2301,6 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
         // sf: changed to enable_nuke for console
 int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 
-// haleyjd 10/08/02: better support for heretic nukage types
-
-#define DOOMNUKAGE 0
-#define HTICNUKAGE 1
-
-typedef struct nukage_s
-{
-   int dmgAmount;  // how much damage to inflict
-   int dmgTics;    // how often to inflict damage
-} nukage_t;
-
-nukage_t nukageValues[4][2] =
-{
-   //    DOOM        Heretic
-   { {  0, 0x00 }, { 0, 0x00 } }, // extended type 0
-   { {  5, 0x1f }, { 4, 0x1f } }, // extended type 1
-   { { 10, 0x1f }, { 5, 0x0f } }, // extended type 2
-   { { 20, 0x1f }, { 8, 0x0f } }, // extended type 3
-};
-
 //
 // P_PlayerInSpecialSector
 //
@@ -2331,7 +2311,6 @@ nukage_t nukageValues[4][2] =
 //
 void P_PlayerInSpecialSector(player_t *player)
 {
-   int dmgAmt, dmgTics, dmgType;
    sector_t *sector = player->mo->subsector->sector;
 
    // TODO: waterzones should damage whenever you're in them
@@ -2340,131 +2319,56 @@ void P_PlayerInSpecialSector(player_t *player)
    if(player->mo->z != sector->floorz)
       return;
 
-   // haleyjd 12/28/08: handle secrets
+   // haleyjd 12/28/08: We handle secrets uniformly now, through the
+   // sector flags field. We also keep track of former secret status
+   // much more smartly (and permanently).
    if(sector->flags & SECF_SECRET)
    {
-      player->secretcount++;
-      sector->wassecret = true;
-      sector->flags &= ~SECF_SECRET;
+      player->secretcount++;         // credit the player
+      sector->wassecret = true;      // remember secretness for automap
+      sector->flags &= ~SECF_SECRET; // clear the flag
    }
 
-   // Has hit ground.
-   // jff add if to handle old vs generalized types
-   if(sector->special < 32) // regular sector specials
+   // Has hit ground
+
+   // haleyjd 12/31/08: generalized sector damage engine
+   if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
-      if(enable_nuke)  // killough 12/98: nukage disabling cheat
+      if(!player->powers[pw_ironfeet]          ||  // no rad suit?
+         sector->damageflags & SDMG_IGNORESUIT ||  // ignores suit?
+         (sector->damageflags & SDMG_LEAKYSUIT &&  // suit leaks?
+          (P_Random(pr_slimehurt) < 5))
+        )
       {
-         switch(sector->special)
+         // disables god mode?
+         // killough 2/21/98: add compatibility switch on godmode cheat clearing;
+         //                   does not affect invulnerability
+         if(sector->damageflags & SDMG_ENDGODMODE && comp[comp_god])
+            player->cheats &= ~CF_GODMODE;
+
+         // check time
+         if(!(leveltime & sector->damagemask))
          {
-         case 5:
-            // 5/10 unit damage per 31 ticks
-            if(!player->powers[pw_ironfeet])
-            {
-               if(!(leveltime & 0x1f))
-                  P_DamageMobj(player->mo, NULL, NULL, 10, MOD_SLIME);
-            }
-            break;
+            // do the damage
+            P_DamageMobj(player->mo, NULL, NULL, sector->damage, 
+                         sector->damagemod);
 
-         case 7:
-            // 2/5 unit damage per 31 ticks
-            if(!player->powers[pw_ironfeet])
-            {
-               if(!(leveltime & 0x1f))
-                  P_DamageMobj(player->mo, NULL, NULL, 5, MOD_SLIME);
-            }
-            break;
-
-         case 16:
-            // 10/20 unit damage per 31 ticks
-         case 4:
-            // 10/20 unit damage plus blinking light (light already spawned)
-            if(!player->powers[pw_ironfeet] || 
-               (P_Random(pr_slimehurt) < 5))  // even with suit, take damage
-            {
-               if(!(leveltime & 0x1f))
-                  P_DamageMobj(player->mo, NULL, NULL, 20, MOD_SLIME);
-            }
-            break;
-
-         case 11:
-            // Exit on health < 11, take 10/20 damage per 31 ticks
-            if(comp[comp_god])   // killough 2/21/98: add compatibility switch
-               player->cheats &= ~CF_GODMODE; // on godmode cheat clearing
-            // does not affect invulnerability
-            if(!(leveltime & 0x1f))
-               P_DamageMobj(player->mo, NULL, NULL, 20, MOD_SLIME);
-            if(player->health <= 10)
-               G_ExitLevel();
-            break;
-
-         default:
-            //jff 1/24/98 Don't exit as DOOM2 did, just ignore
-            break;
+            // possibly cause a terrain hit
+            if(sector->damageflags & SDMG_TERRAINHIT)
+               E_HitFloor(player->mo);
          }
+
+         // possibly exit the level
+         if(sector->damageflags & SDMG_EXITLEVEL && player->health <= 10)
+            G_ExitLevel();
       }
    }
-   else //jff 3/14/98 handle extended sector types for secrets and damage
-   {
-      if(enable_nuke)  // killough 12/98: nukage disabling cheat
-      {
-         // haleyjd 03/12/03: heretic damage selection
-         // HTIC_FIXME: I don't like this.
-         if(demo_version >= 331 && (sector->special & HTIC_DMG_MASK))
-            dmgType = HTICNUKAGE;
-         else
-            dmgType = DOOMNUKAGE;
 
-         switch((sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT)
-         {
-         case 0: // no damage
-            break;
-         case 1: // 2/5 damage per 31 ticks
-            dmgAmt  = nukageValues[1][dmgType].dmgAmount;
-            dmgTics = nukageValues[1][dmgType].dmgTics;
-            if(!player->powers[pw_ironfeet])
-            {
-               if(!(leveltime&dmgTics))
-                  P_DamageMobj(player->mo, NULL, NULL, dmgAmt, MOD_SLIME);
-            }
-            break;
-         case 2: // 5/10 damage per 31 ticks
-            dmgAmt  = nukageValues[2][dmgType].dmgAmount;
-            dmgTics = nukageValues[2][dmgType].dmgTics;
-            if(!player->powers[pw_ironfeet])
-            {
-               if(!(leveltime & dmgTics))
-               {
-                  P_DamageMobj(player->mo, NULL, NULL, dmgAmt, MOD_SLIME);
-                  
-                  if(dmgType == HTICNUKAGE)
-                     E_HitFloor(player->mo);
-               }
-            }
-            break;
-         case 3: // 10/20 damage per 31 ticks
-            dmgAmt  = nukageValues[3][dmgType].dmgAmount;
-            dmgTics = nukageValues[3][dmgType].dmgTics;
-            if(!player->powers[pw_ironfeet]
-               || (P_Random(pr_slimehurt) < 5))  // take damage even with suit
-            {
-               if(!(leveltime & dmgTics))
-               {
-                  P_DamageMobj(player->mo, NULL, NULL, dmgAmt, MOD_SLIME);
-                  
-                  if(dmgType == HTICNUKAGE)
-                     E_HitFloor(player->mo);
-               }
-            }
-            break;
-         }
-      }
-
-      // phares 3/19/98:
-      //
-      // If FRICTION_MASK or PUSH_MASK is set, we don't care at this
-      // point, since the code to deal with those situations is
-      // handled by Thinkers.
-   }
+   // phares 3/19/98:
+   //
+   // If FRICTION_MASK or PUSH_MASK is set, we don't care at this
+   // point, since the code to deal with those situations is
+   // handled by Thinkers.
 }
 
 //
@@ -2627,6 +2531,7 @@ void P_SpawnSpecials(void)
    sector = sectors;
    for(i = 0; i < numsectors; ++i, ++sector)
    {
+      // haleyjd: count generalized secrets here
       if(sector->flags & SECF_SECRET) // jff 3/15/98 count extended
          ++totalsecret;               // secret sectors too
 
@@ -2653,13 +2558,39 @@ void P_SpawnSpecials(void)
       case 4:
          // strobe fast/death slime
          P_SpawnStrobeFlash(sector, FASTDARK, 0);
-         sector->special |= 3 << DAMAGE_SHIFT; //jff 3/14/98 put damage bits in
+         // haleyjd 12/31/08: sector damage conversion
+         // sector->special |= 3 << DAMAGE_SHIFT; //jff 3/14/98 put damage bits in
+         sector->damage       = 20;
+         sector->damagemask   = 0x1f;
+         sector->damagemod    = MOD_SLIME;
+         sector->damageflags |= SDMG_LEAKYSUIT;
+         break;
+
+      case 5:
+         // haleyjd 12/31/08: sector damage conversion
+         if(sector->special < 32)
+         {
+            sector->damage     = 10;
+            sector->damagemask = 0x1f;
+            sector->damagemod  = MOD_SLIME;
+         }
+         break;
+
+      case 7:
+         // haleyjd 12/31/08: sector damage conversion
+         if(sector->special < 32)
+         {
+            sector->damage     = 5;
+            sector->damagemask = 0x1f;
+            sector->damagemod  = MOD_SLIME;
+         }
          break;
 
       case 8:
          // glowing light
          P_SpawnGlowingLight(sector);
          break;
+
       case 9:
          // secret sector
          if(!(sector->flags & SECF_SECRET) && 
@@ -2673,6 +2604,17 @@ void P_SpawnSpecials(void)
       case 10:
          // door close in 30 seconds
          P_SpawnDoorCloseIn30(sector);
+         break;
+
+      case 11:
+         // haleyjd 12/31/08: sector damage conversion
+         if(sector->special < 32)
+         {
+            sector->damage       = 20;
+            sector->damagemask   = 0x1f;
+            sector->damagemod    = MOD_SLIME;
+            sector->damageflags |= SDMG_IGNORESUIT|SDMG_ENDGODMODE|SDMG_EXITLEVEL;
+         }
          break;
          
       case 12:
@@ -2688,6 +2630,17 @@ void P_SpawnSpecials(void)
       case 14:
          // door raise in 5 minutes
          P_SpawnDoorRaiseIn5Mins(sector, i);
+         break;
+
+      case 16:
+         // haleyjd 12/31/08: sector damage conversion
+         if(sector->special < 32)
+         {
+            sector->damage       = 20;
+            sector->damagemask   = 0x1f;
+            sector->damagemod    = MOD_SLIME;
+            sector->damageflags |= SDMG_LEAKYSUIT;
+         }
          break;
          
       case 17:
@@ -3644,8 +3597,12 @@ line_t *P_FindLine(int tag, int *searchPosition)
 //
 void P_SetupSpecialTransfer(sector_t *sector, spectransfer_t *spec)
 {
-   spec->newspecial = sector->special;
-   spec->flags      = sector->flags & SPECIALFLAGSMASK;
+   spec->newspecial  = sector->special;
+   spec->flags       = sector->flags & SPECIALFLAGSMASK;
+   spec->damage      = sector->damage;
+   spec->damagemask  = sector->damagemask;
+   spec->damagemod   = sector->damagemod;
+   spec->damageflags = sector->damageflags;
 }
 
 //
@@ -3671,8 +3628,12 @@ void P_ZeroSpecialTransfer(spectransfer_t *spec)
 //
 void P_TransferSectorSpecial(sector_t *sector, spectransfer_t *spec)
 {
-   sector->special    = spec->newspecial;
-   sector->flags      = (sector->flags & ~SPECIALFLAGSMASK) | spec->flags;
+   sector->special     = spec->newspecial;
+   sector->flags       = (sector->flags & ~SPECIALFLAGSMASK) | spec->flags;
+   sector->damage      = spec->damage;
+   sector->damagemask  = spec->damagemask;
+   sector->damagemod   = spec->damagemod;
+   sector->damageflags = spec->damageflags;
 }
 
 //
@@ -3686,6 +3647,10 @@ void P_DirectTransferSectorSpecial(sector_t *src, sector_t *dest)
    dest->special     = src->special;
    dest->flags      &= ~SPECIALFLAGSMASK;
    dest->flags      |= src->flags & SPECIALFLAGSMASK;
+   dest->damage      = src->damage;
+   dest->damagemask  = src->damagemask;
+   dest->damagemod   = src->damagemod;
+   dest->damageflags = src->damageflags;
 }
 
 //
@@ -3698,6 +3663,10 @@ void P_ZeroSectorSpecial(sector_t *sec)
 {
    sec->special     = 0;
    sec->flags      &= ~SPECIALFLAGSMASK;
+   sec->damage      = 0;
+   sec->damagemask  = 0;
+   sec->damagemod   = MOD_UNKNOWN;
+   sec->damageflags = 0;
 }
 
 //============================================================================
@@ -4308,32 +4277,45 @@ void P_ConvertHereticSpecials(void)
 
       switch(sector->special)
       {
-      case 4: // scroll east lava damage
-         // blinks 0.5 seconds, 5 per 15 damage, heretic-style
-         sector->special = 2 | (2 << DAMAGE_SHIFT) | HTIC_DMG_MASK;
-         // heretic current pusher type
+      case 4: // Scroll_EastLavaDamage
+         // custom damage parameters:
+         sector->damage       = 5;
+         sector->damagemask   = 0x0f;
+         sector->damagemod    = MOD_LAVA;
+         sector->damageflags |= SDMG_TERRAINHIT;
+         // heretic current pusher type:
          sector->hticPushType  = 20;
          sector->hticPushAngle = 0;
          sector->hticPushForce = 2048*28;
-         // scrolls to the east
-         Add_Scroller(sc_floor, (-FRACUNIT/2)<<3, 0, -1,
-                      sector - sectors, 0);
+         // scrolls to the east:
+         Add_Scroller(sc_floor, (-FRACUNIT/2)<<3, 0, -1, sector - sectors, 0);
+         sector->special = 0;
          continue;
-      case 5: // handle heretic nukage types
-         sector->special = (2 << DAMAGE_SHIFT) | HTIC_DMG_MASK;
+      case 5: // Damage_LavaWimpy
+         sector->damage       = 5;
+         sector->damagemask   = 0x0f;
+         sector->damagemod    = MOD_LAVA;
+         sector->damageflags |= SDMG_TERRAINHIT;
+         sector->special      = 0;
          continue;
-      case 7:
-         sector->special = (1 << DAMAGE_SHIFT) | HTIC_DMG_MASK;
+      case 7: // Damage_Sludge
+         sector->damage     = 4;
+         sector->damagemask = 0x1f;
+         sector->special    = 0;
          continue;
-      case 16:
-         sector->special = (3 << DAMAGE_SHIFT) | HTIC_DMG_MASK;
+      case 16: // Damage_LavaHefty
+         sector->damage       = 8;
+         sector->damagemask   = 0x0f;
+         sector->damagemod    = MOD_LAVA;
+         sector->damageflags |= SDMG_TERRAINHIT;
+         sector->special      = 0;
          continue;
-      case 15: // low friction -- ice
-         sector->friction = 0xf900;
+      case 15: // Friction_Low
+         sector->friction   = 0xf900;
          //sector->movefactor = 0x276;
          sector->movefactor = ORIG_FRICTION_FACTOR >> 2;
-         sector->special  = 0;             // clear special
-         sector->flags   |= SECF_FRICTION; // set friction bit
+         sector->special    = 0;             // clear special
+         sector->flags     |= SECF_FRICTION; // set friction bit
          continue;
       default:
          break;

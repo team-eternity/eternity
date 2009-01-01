@@ -365,10 +365,37 @@ void P_LoadSectors(int lump)
       ss->sndSeqID = defaultSndSeq;
 
       // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
+      //         12/31/08: convert BOOM generalized damage
       if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
       {
-         ss->flags   |= (ss->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
-         ss->special &= ~GENSECTOFLAGSMASK;
+         int damagetype;
+
+         // convert special bits into flags (correspondence is direct by design)
+         ss->flags |= (ss->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
+
+         // convert damage
+         damagetype = (ss->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
+         switch(damagetype)
+         {
+         case 1:
+            ss->damage     = 5;
+            ss->damagemask = 0x1f;
+            ss->damagemod  = MOD_SLIME;
+            break;
+         case 2:
+            ss->damage     = 10;
+            ss->damagemask = 0x1f;
+            ss->damagemod  = MOD_SLIME;
+            break;
+         case 3:
+            ss->damage       = 20;
+            ss->damagemask   = 0x1f;
+            ss->damagemod    = MOD_SLIME;
+            ss->damageflags |= SDMG_LEAKYSUIT;
+            break;
+         default:
+            break;
+         }
       }
    }
 
