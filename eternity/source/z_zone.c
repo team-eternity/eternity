@@ -359,8 +359,8 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 
 #ifdef ZONEIDCHECK
    if(tag >= PU_PURGELEVEL && !user)
-      I_Error ("Z_Malloc: an owner is required for purgable blocks\n"
-               "Source: %s:%d", file, line);
+      I_Error("Z_Malloc: an owner is required for purgable blocks\n"
+              "Source: %s:%d", file, line);
 #endif
 
    if(!size)

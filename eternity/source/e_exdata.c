@@ -100,17 +100,19 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_NUM            "recordnum"
 #define FIELD_SECTOR_SPECIAL        "special"
 #define FIELD_SECTOR_TAG            "tag"
-#define FIELD_SECTOR_DAMAGEAMOUNT   "damageamount"
+#define FIELD_SECTOR_FLAGS          "flags"
+#define FIELD_SECTOR_DAMAGE         "damage"
 #define FIELD_SECTOR_DAMAGEMASK     "damagemask"
 #define FIELD_SECTOR_DAMAGEMOD      "damagemod"
+#define FIELD_SECTOR_DAMAGEFLAGS    "damageflags"
 #define FIELD_SECTOR_FLOORTERRAIN   "floorterrain"
 #define FIELD_SECTOR_FLOORANGLE     "floorangle"
-#define FIELD_SECTOR_FLOORXOFFSET   "floorxoffset"
-#define FIELD_SECTOR_FLOORYOFFSET   "flooryoffset"
+#define FIELD_SECTOR_FLOOROFFSETX   "flooroffsetx"
+#define FIELD_SECTOR_FLOOROFFSETY   "flooroffsety"
 #define FIELD_SECTOR_CEILINGTERRAIN "ceilingterrain"
 #define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
-#define FIELD_SECTOR_CEILINGXOFFSET "ceilingxoffset"
-#define FIELD_SECTOR_CEILINGYOFFSET "ceilingyoffset"
+#define FIELD_SECTOR_CEILINGOFFSETX "ceilingoffsetx"
+#define FIELD_SECTOR_CEILINGOFFSETY "ceilingoffsety"
 #define FIELD_SECTOR_TOPMAP         "colormaptop"
 #define FIELD_SECTOR_MIDMAP         "colormapmid"
 #define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
@@ -622,21 +624,23 @@ static cfg_opt_t sector_opts[] =
    CFG_INT(FIELD_SECTOR_NUM,              0,          CFGF_NONE),
    CFG_INT_CB(FIELD_SECTOR_SPECIAL,       0,          CFGF_NONE, E_SectorSpecCB),
    CFG_INT(FIELD_SECTOR_TAG,              0,          CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_DAMAGEAMOUNT,     0,          CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_FLAGS,            "",         CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_DAMAGE,           0,          CFGF_NONE),
    CFG_INT(FIELD_SECTOR_DAMAGEMASK,       0,          CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_DAMAGEMOD,        0,          CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DAMAGEMOD,        "Unknown",  CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DAMAGEFLAGS,      "",         CFGF_NONE),
    CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     "@flat",    CFGF_NONE),
    CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   "@flat",    CFGF_NONE),
    CFG_STR(FIELD_SECTOR_TOPMAP,           "@default", CFGF_NONE),
    CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
    CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
 
-   CFG_FLOAT(FIELD_SECTOR_FLOORXOFFSET,   0.0, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_FLOORYOFFSET,   0.0, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGXOFFSET, 0.0, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGYOFFSET, 0.0, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0, CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0, CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETX,   0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETY,   0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETX, 0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETY, 0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0,        CFGF_NONE),
    
    CFG_END()
 };
@@ -1637,30 +1641,52 @@ static void E_ProcessEDSectors(cfg_t *cfg)
    // read fields
    for(i = 0; i < numEDSectors; ++i)
    {
-      cfg_t *sectorsec;
+      cfg_t *section;
       int tempint;
+      const char *tempstr;
+      mapsectorext_t *sec = &EDSectors[i];
 
-      sectorsec = cfg_getnsec(cfg, SEC_SECTOR, i);
+      section = cfg_getnsec(cfg, SEC_SECTOR, i);
 
       // get the record number
-      tempint = EDSectors[i].recordnum = cfg_getint(sectorsec, FIELD_SECTOR_NUM);
+      tempint = sec->recordnum = cfg_getint(section, FIELD_SECTOR_NUM);
 
       // guard against duplicate record numbers
       if(E_EDSectorForRecordNum(tempint) != numEDSectors)
          I_Error("E_ProcessEDSectors: duplicate record number %d\n", tempint);
 
       // hash this ExtraData sector record by its recordnum field
-      tempint = EDSectors[i].recordnum % NUMSECCHAINS;
-      EDSectors[i].next = sector_chains[tempint];
+      tempint = sec->recordnum % NUMSECCHAINS;
+      sec->next = sector_chains[tempint];
       sector_chains[tempint] = i;
 
       // standard fields
 
       // special
-      EDSectors[i].stdfields.special = (short)cfg_getint(sectorsec, FIELD_SECTOR_SPECIAL);
+      sec->stdfields.special = (short)cfg_getint(section, FIELD_SECTOR_SPECIAL);
 
       // tag
-      EDSectors[i].stdfields.tag = (short)cfg_getint(sectorsec, FIELD_SECTOR_TAG);
+      sec->stdfields.tag = (short)cfg_getint(section, FIELD_SECTOR_TAG);
+
+      // extended fields
+
+      // flags
+      // TODO
+
+      // damage properties
+
+      // damage
+      sec->damage = cfg_getint(section, FIELD_SECTOR_DAMAGE);
+
+      // damagemask
+      sec->damagemask = cfg_getint(section, FIELD_SECTOR_DAMAGEMASK);
+      
+      // damagemod
+      tempstr = cfg_getstr(section, FIELD_SECTOR_DAMAGEMOD);
+      sec->damagemod = E_DamageTypeNumForName(tempstr);
+
+      // damageflags
+      // TODO
    }
 }
 
@@ -1823,6 +1849,12 @@ void E_LoadSectorExt(sector_t *sector)
    sector->tag     = edsector->stdfields.tag;
 
    // apply extended fields to the sector
+
+   // damage fields
+   sector->damage      = edsector->damage;
+   sector->damagemask  = edsector->damagemask;
+   sector->damagemod   = edsector->damagemod;
+   sector->damageflags = edsector->damageflags;
 
    // flat offsets
    sector->floor_xoffs   = (fixed_t)(edsector->floor_xoffs   * FRACUNIT);

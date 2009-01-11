@@ -103,6 +103,10 @@ typedef struct mapsectorext_s
    int    topmap;
    int    midmap;
    int    bottommap;
+   int    damage;
+   int    damagemask;
+   int    damagemod;
+   int    damageflags;
 
    // internal fields (used by ExtraData only)
    int recordnum;

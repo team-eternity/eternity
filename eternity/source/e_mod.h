@@ -52,6 +52,7 @@ typedef struct emod_s
 
 emod_t *E_DamageTypeForName(const char *name);
 emod_t *E_DamageTypeForNum(int num);
+int     E_DamageTypeNumForName(const char *name);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
@@ -62,7 +63,7 @@ extern cfg_opt_t edf_dmgtype_opts[];
 
 void E_ProcessDamageTypes(cfg_t *cfg);
 
-#endif
+#endif // NEED_EDF_DEFINITIONS
 
 #endif
 

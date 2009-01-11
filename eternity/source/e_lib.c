@@ -597,6 +597,10 @@ char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen)
       strval = colonloc + 1;
       rover = value;
       i = 0;
+      
+      // 01/10/09: initialize buffer
+      memset(prefixbuf, 0, buflen);
+
       while(rover != colonloc && i < buflen - 1) // leave room for \0
       {
          prefixbuf[i] = *rover;
@@ -656,7 +660,7 @@ int E_ValueForKeyword(const char *keyword)
    int ret = 0;
    E_Keyword_t *kw = NULL;
 
-   if((kw = E_FindKeyword(keyword)) != NULL )
+   if((kw = E_FindKeyword(keyword)) != NULL)
       ret = kw->value;
 
    return ret;

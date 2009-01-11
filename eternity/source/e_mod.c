@@ -372,5 +372,19 @@ emod_t *E_DamageTypeForNum(int num)
    return mod;
 }
 
+//
+// E_DamageTypeNumForName
+//
+// 01/01/09:
+// Given a name, returns the corresponding damagetype number, or 0 if the
+// requested type is not found by name.
+//
+int E_DamageTypeNumForName(const char *name)
+{ 
+   emod_t *mod = E_DamageTypeForName(name);
+
+   return mod ? mod->num : 0;
+}
+
 // EOF
 

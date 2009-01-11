@@ -2,6 +2,583 @@
 Changes since Eternity Engine v3.33.50
 ================================================================================
 --------------------------------------------------------------------------------
+12/31/08
+
+Sector damage has been completely rewritten to function through four new fields
+in the sector: damage, damagemask, damagemod, and damageflags. These enable an
+incredible variety of sector damage behaviors, and these flags replace all 
+previous code for doing sector damage, even for effects such as sector type 11.
+It will accordingly be possible to replicate and customize all such effects
+via use of ExtraData and/or UDMF.
+
+--------------------------------------------------------------------------------
+12/30/08
+
+I have defined sector flags for purposes such as friction, push effects, and
+SMMU sound properties, in order to replace the BOOM generalized sector special
+system. In the process, I fixed the "oldspecial" hack from BOOM and two problems
+related to it: the field was not saved in save games, and it was unnecessarily
+transferred between sectors, causing sectors to appear secret that never were
+(this was apparently intentional in BOOM, but I cannot figure out Jim Flynn's
+logic behind doing it - it makes no sense at all, so now it is gone).
+
+--------------------------------------------------------------------------------
+12/16/08
+
+I fixed up the disk flasher to not activate in gamemodes that do not support it,
+such as Heretic. SoM was supposed to have done this originally, but it slipped
+his mind ;)  I had to have him commit it for me, however, because due to an
+overzealous firewall, I can no longer perform SVN commits at work.
+
+--------------------------------------------------------------------------------
+12/04/08
+
+I have implemented secure map loading. Almost all indices are now fully
+rangechecked against the array they are accessing, so problems like bad segs or
+bad sector references get redirected to the first entry in the lump. While not
+guaranteed to produce an error-free experience, it will prevent virtually all
+crashes possible from loading malformed levels.
+
+In addition I have revamped REJECT handling so that too-large rejects are
+warned about but used normally, too-small rejects are padded out to the 
+appropriate size, and 0-length rejects are handled as before (allocated at size
+and filled completely with zeroes).
+
+--------------------------------------------------------------------------------
+11/28/08
+
+For Evil Unleashed, I have implemented toggling of the super shotgun's 
+availability in DOOM gamemodes by testing for the presence of the SHT2A0 lump,
+instead of assuming that it should only be available in commercial mode. I
+have accordingly eliminated the COMMERCIAL weapons flag, as that was a stupid
+idea anyway.
+
+--------------------------------------------------------------------------------
+11/25/08
+
+SoM added a powersaver command which can make EE sleep, giving up some CPU
+cycles so that it does not burn out CSonicGo's laptop battery so quickly. It
+is possible that some more work needs to be done with this, though, due to the
+performance drop it currently precipitates.
+
+--------------------------------------------------------------------------------
+11/16/08
+
+Finally got around to converting all those GameModeInfo booleans into the flags
+I earlier defined.
+
+--------------------------------------------------------------------------------
+11/14/08
+
+PC speaker emulation is now complete and is available as an additional sound
+driver setting under the sound menu.
+
+SoM added a new sort of portal linedef which can apply tagged portals directly
+to its front sector. Evidently this is very handy for mappers.
+
+--------------------------------------------------------------------------------
+11/11/08
+
+I had to remove all calls to SDL_FreeRW which Julian had placed in his rewrite
+of the music engine a few years ago. Turns out these are not needed and are
+inappropriate. They cause a double free problem on the C heap which for some
+reason only becomes troublesome to Eternity if a digital music format such as
+OGG is loaded - some difference between this and MIDI dealing with subsequent
+memory allocations causes it to become a problem.
+
+--------------------------------------------------------------------------------
+11/10/08
+
+Extensive work has been done on PC speaker sound. It should be functional very
+soon. I have begun adding EDF support for the feature. Sound definitions now
+include the ability to explicitly specify a PC speaker data lump in addition to
+their normal digital lump. When no such lump is specified, the engine searches
+for various other possibilities, including adding the DP prefix in place of DS
+when the sound is normally so prefixed.
+
+There is also a new EDF sound field which disables the playing of that sound as
+a PC speaker lump altogether, even if the PC speaker data lump is available.
+There were a number of sounds in DOOM for which this is the case, primarily the
+chainsaw idle sound and the various demons' snorts and pain sounds. I imagine
+that if these were to play, the game would sound really annoying, and most of
+the important sounds would get cut off.
+
+--------------------------------------------------------------------------------
+11/07/08
+
+Fixed a new pair of int-to-bool conversion warnings in snes_spc that decided to
+pop up after I fixed the first one (stupid VC++...)
+
+I broke up i_sound.c, moving SDL-specific digital audio and music code into
+modules i_sdlsound and i_sdlmusic, introducing new driver structures to hold
+function pointers into the routines implemented there. This allows the generic
+low-level code in i_sound.c to deal with sound support for any potential library
+OR platform. This is mainly needed at the present to deal with PC speaker 
+support, but it could be useful in the future for supporting alternate digital
+sound libraries such as OpenAL as well.
+
+Related to this, I repaired the ability to have music when the -nosfx parameter
+is used, by writing up code that the music engine can call to initialize and
+setup SDL and SDL_mixer if and only if the digital sound engine hasn't done it
+first. I could have done this originally, I just ended up taking the lazy route.
+The condition of the sound and music code at that time was pretty damn bad, so
+you really cannot blame me ;)
+
+--------------------------------------------------------------------------------
+11/05/08
+
+SoM has completed a massive expansion of my VBuffer pseudo-class that has 
+transformed it into EE's primary means of dealing with the screen buffer,
+period. VBuffers are now powerful, general graphic canvas objects that can 
+blit and scale. The old screens array is now pretty much history.
+
+As a result of this work, SoM was also able to finally fix the disk flasher to
+work in SDL builds. It's nice to see that old feature available again, although
+EE has made it entirely optional, and it is disabled by default, since with the
+blazing access speed of modern hard-drives, it's nearly invisible anyway.
+
+--------------------------------------------------------------------------------
+11/04/08
+
+Fixed a big problem with confusion between the detailshift and c_detailshift
+variables. One is supposed to be private to the renderer, and the other is for
+use by the configuration and console code, so that the state of the variable is
+not changed during bad times such as while rendering a frame. Failure to use
+the proper one meant that the configuration variable wasn't being propagated to
+the renderer at startup, leaving the game starting up in high detail mode even
+when low detail was enabled.
+
+Found out that the parameters extracted from the -geom command-line parameter
+were not being rangechecked when Kate tried to test out 1200x800 mode (which
+EE doesn't support quite yet).
+
+--------------------------------------------------------------------------------
+11/01/08
+
+SoM eliminated almost all direct access to the video buffers outside of the
+V_ and R_ modules, reducing the number of drawing pipelines, which is important
+progress toward the ability to have features such as true color support.
+
+Vertical screen patch clipping has now been fully repaired.
+
+I fixed up C_Drawer so that it is not called while the -nodraw parameter is
+active. Now only the R_Init loading box currently appears, which is hard to
+get rid of without introducing some hacks.
+
+--------------------------------------------------------------------------------
+10/31/08
+
+SoM split i_video.c up, creating a new module i_input.c, as I had noted needed
+to be done ages ago. :)
+
+SoM was also very busy with the following:
+
+* Palette update, when needed, is now performed during the screen update process
+  in lieu of a call to SDL_Flip, instead of during gameplay. This is good for a
+  number of reasons, not the least of which is the fact that it helps to abate
+  problems with SDL's severe bug in DirectX 8-bit video modes which results in
+  it moving the entire surface out of and back into video memory while applying
+  an extremely expensive remapping operation to the entire buffer.
+
+* Palette changes are no longer lost when the user changes the gamma level
+  setting, which is a bug stemming from the vanilla codebase. This was caused by
+  not caching the current palette as set by the gameplay logic for effects such
+  as radiation suit shielding, damage, and item flashes. This caching is now
+  necessary anyway to support palette change on screen update, so it kills two
+  birds with one stone.
+
+I have defined a set of flags for use by the GameModeInfo structure, with the
+goal of eliminating all of the boolean variables in the structure, which are
+just wasting a lot of space.
+
+--------------------------------------------------------------------------------
+10/29/08
+
+SoM found a real optimization to work on in the form of adding virtual screen
+space to the screen buffers for resolutions whose horizontal dimension is a 
+power of two, such as 1024x768, which have been noted to suffer from extremely
+disproportionate problems with cache misses.
+
+Fraggle explained this to me as a key clustering sort of problem. The cache is
+mapped to main memory through a hardware variation of a hash table. Each cache
+line represents a chunk of memory that is N bytes long, and N is invariably a
+power of two, such as 1024.
+
+This means that if your screen buffer is such a size, then every step down a 
+row of pixels on the screen causes a cache line change, which means a potential
+cache miss. DOOM's approach of rendering vertical columns is unfortunately not
+very good when operating on buffers in main memory, as it typically has to do
+now. The addressing runs orthogonal to the direction of access, giving poor
+locality of reference to begin with. DOOM got away with this because it was
+using a small screen size and could write directly into the VGA buffer.
+
+Screen sizes of greater than 1024x768 are particularly vulnerable. Those below
+this, even power of two sizes, do not seem to suffer the same degree of
+crippling slow-down. Since EE will be adding widescreen support soon and raising
+the resolution cap considerably, this is important.
+
+Adding four bytes to the horizontal screen dimension was enough for SoM to see
+a 20 FPS improvement in timedemos in 1024x768. This approach has previously
+been implemented in the PrBoom-plus port, and thus we had been looking at adding
+it for quite a while.
+
+While he was at it, SoM also fixed up my console pausing feature, and improved
+the console command list to have a full filter parameter that searches for
+strings matching a prefix, as opposed to the simple alphabetic filter I had
+earlier implemented.
+
+--------------------------------------------------------------------------------
+10/27/08 - 10/28/08
+
+I have completed a new texture loader which streams in the texture definitions
+through a byte pointer. It is capable of detecting and seamlessly handling both
+DOOM- and Strife-format textures, and I'm quite proud of it. I also cleaned up
+the gigantic mess that was R_Init, and to me at least, it seems to run just a
+little faster as a result. I don't think compilers are very good at optimizing
+1000-line-long functions; there's just too much crap in the way of doing 
+proper register allocation for them to deal with that much at once. Almost all
+of the stuff I moved out should have been written in separate routines 
+originally, anyway, as they each deal with discrete, unrelated subproblems of
+texture loading.
+
+I also fixed a "conversion of bool to int" warning in the snes_spc library with
+a simple !! on the argument. This occurs on the interface between the C and C++
+code in the library, since C does not have a builtin boolean type.
+
+--------------------------------------------------------------------------------
+10/26/08
+
+I added an I_GetTicks routine which calls a platform-appropriate low-level
+timing routine for the purpose of timing optimizations. However, its resolution
+under Windows via use of the SDL_GetTicks routine is apparently insufficient,
+as it tends to return 0 a lot when timing routines such as R_FindPlane.
+
+I attempted to apply entryway's suggested optimization to R_FindPlane, which
+was to avoid calling sin and cos for flats with 0 angle, which is technically
+unnecessary. However, according to both timing and fastdemo results, this had
+absolutely NO measurable effect.
+
+sin and cos are implemented in Visual C++ with the optimizer running as single
+opcodes, fsin and fcos, which according to tables of Pentium IV and AMD CPU
+instruction timings, take somewhere in the neighborhood of 13 cycles for 
+arguments between 0 and pi/2 (this is due to a hardware lookup table embedded 
+directly in the FPU). Evidently a branch to check for angle 0.0f just doesn't 
+save any real time.
+
+--------------------------------------------------------------------------------
+10/25/08
+
+I have integrated Chocolate Doom's mouse acceleration behavior as an option
+against Eternity's usual mouse behavior, for the benefit of those users who
+find it to be better. I also added Choco's code for "novert" driver emulation.
+novert was a program used by a lot of serious old-schoolers to eliminate all
+vertical mouse movement, which by default causes relatively useless drift in 
+the player's forward/backward momentum.
+
+SoM made some CPU usage improvements, since EE runs down CSonicGo's laptop
+battery too quickly :P
+
+--------------------------------------------------------------------------------
+10/22/08
+
+Performed some streamlining of P_MobjThinker, even though my attempts at 
+profiling EE seem to be leading me astray (I think that something is wrong with
+Visual C++'s profiler...)
+
+Removed various additional unnecessary or redundant demo version checks,
+including many dealing with linked portals, which are handled instead by the
+assertion of the useportalgroups variable, which is itself unasserted when
+demo_version < 333, as well as code to deal with the FLOATBOB and REFLECTIVE
+flags.
+
+--------------------------------------------------------------------------------
+10/21/08
+
+SoM fixed an apparently long-lived and until-now-unnoticed bug with 3DMidTex
+clipping involving the lower-unpegged line flag. The clip window of the line
+would be improperly offset, allowing you to pass through the texture but
+blocking you at another visually unrelated location. It was just a little bad
+math.
+
+In preparation for attempts at some more serious optimizations in EE, I have
+moved the line->nodraw flag check from R_AddLine up to R_Subsector. There's
+just no point in making the function call if the line won't be drawn.
+
+I also moved a serious chunk of loop-invariant code dealing with handling of the
+fixedcolormap variable outside of the inner segloop. This is the most critical
+path of execution and yet it has sloppy stuff like that in it. And this stuff
+has been there all along, having survived both Lee's earlier serious 
+optimizations, as well as Cardboard reorganization. That's what's amazing about
+it. Sometimes stuff like this doesn't catch the eye.
+
+--------------------------------------------------------------------------------
+10/20/08
+
+Yet even more Heretic work. We are so painfully close to complete support. It
+now depends almost entirely on the finishing of the EDF weapons, inventory, and
+pickup definition systems.
+
+I tweaked the behavior of screenwipes on the transition from GS_CONSOLE to
+GS_LEVEL so that demos don't start up before the game engine has a chance to 
+stabilize the screen resolution, etc. This makes sure that you have more time to
+process what's going on before the demo just suddenly starts playing, resulting
+in you missing some frames.
+
+In the process of this fix, I also found some serious issues with GS_CONSOLE
+that have evidently existed since SMMU:
+
+* Menus could be opened in GS_CONSOLE, which could cause some serious problems
+  with responder/ticker/drawer order of execution, and the resulting undefined
+  behavior would result in the game completely shutting down without any
+  error message. You are now locked out of the menu system while you are in
+  GS_CONSOLE gamestate. A message appears in the console if menu_toggle is 
+  activated alerting the user of this.
+
+* The console's C_InstaPopup routine didn't bother to check if the gamemode was
+  GS_CONSOLE, so it would leave you staring at a screenful of HOM with no way
+  to control the game if anything managed to activate it.
+
+I have also added screen-centering to EE for windowed video modes, via setting
+the appropriate SDL environment variable at startup.
+
+--------------------------------------------------------------------------------
+10/16/08
+
+More Heretic fixes and additions. Fixed the ability to use -timedemo for
+entryway, who is interested in profiling EE against other ports.
+
+--------------------------------------------------------------------------------
+10/15/08
+
+Heretic thingtype support is now at 77% after massive addition of inventory and
+weapon additions (the thingtypes are currently inert and do nothing but look
+pretty). Mapthing types are now 99% implemented; the only unimplemented mapthing
+type is the mace spot, which is handled very specially in Heretic (some might
+say strangely...)
+
+Added the MF3_RIP flag to support Heretic projectiles that pass through 
+shootable things. The flags3 field is now unfortunately 100% used, however, so
+with the next needed flag it'll become necessary to rewrite all code segments
+that utilize the deh_ProcFlagsCombined routine to handle an array of four
+results rather than three. This is going to be a little bit of work, but not
+much, since I anticipated most of the problems back when combined flag support
+was initially added.
+
+--------------------------------------------------------------------------------
+10/14/08
+
+Eliminated the unnecessary demo version check on the PUSHABLE flag. There's no
+need for any demo version checks on flags in the MF2/MF3 flag fields, because
+such flags never existed and are not set on any of the original objects, or at
+least not in a way that makes any difference in behavior (some may be set to
+on to provide for original behaviors, of course).
+
+This causes the first demo in Heretic v1.3 to sync for longer than it did
+before, as the player was previously stopped by unpushable pods in the hallway.
+Heretic demo support is still a lost cause, but I have enabled the playing of
+Heretic demos nonetheless, because they make the title sequence more interesting
+even when they desync ;)
+
+--------------------------------------------------------------------------------
+10/13/08
+
+Restructured the screenwipe engine to support multiple arbitrary wipe effects.
+I immediately took advantage of the new system to support the Strife cross-fade
+effect, which can now be used in any gamemode by setting the wipetype console
+variable to "fade" - as a Heretic purism fix, you can also now set the wipetype
+to "none," which will disable the wipe engine altogether. EE will probably
+default to using the cross-fade wipe in Heretic and Hexen, however, because I
+think it fits those games very well, and that Raven's leaving out of a wipe
+routine was a mistake. Their sudden abrupt transitions look kind of sloppy by
+comparison.
+
+--------------------------------------------------------------------------------
+10/12/08
+
+I have removed the R_DYNASEGS define and the now-dead code for the old handling
+of PolyObjects that it was holding out of the engine. The dynaseg code has
+proven stable and perfectly working in all tests thrown at it thus far.
+
+Removed some dead code and debugging stuff from the bunny scroller.
+
+--------------------------------------------------------------------------------
+10/11/08
+
+SoM has seriously cleaned up and fixed the patch scaling code, so that 
+horizontal clipping now works properly again. There are still lingering problems
+with vertical clipping, which will also be addressed soon.
+
+SoM also found time to apply a patch to the renderer which enables the drawing
+of a full 32 unique lighting levels, the most that can be supported by the 
+normal COLORMAP lump without significant changes to the renderer. This makes new
+maps that use tons of lighting sectors look a lot better, while having minimal
+impact on old maps (it's practically impossible to tell the difference where it
+exists).
+
+--------------------------------------------------------------------------------
+10/10/08
+
+Repaired some serious issues with the bunny scroller in non-320x200-aspect
+resolutions (most of the bunny scroll wasn't visible). Some of these bugs are
+stemming from serious problems in SoM's recent screen patch scaling rewrite,
+which need to be addressed as soon as possible.
+
+Made changes to Heretic menu sound behavior so that it matches the vanilla EXE
+more closely where applicable. I have started to lean more and more toward 
+Heretic purism since the GPLing of the source code. My excuse for having
+incompatibilities has suddenly vanished, and with Choco-Heretic on the horizon,
+people will probably be expecting compatible behavior from Eternity.
+
+--------------------------------------------------------------------------------
+10/08/08
+
+Moved the PLAYERRADIUS define to am_map.c because that's the only place where 
+it has ever been used.
+
+Added the ability for bringing down the console to pause the game, but this is
+in beta and has several known problems.
+
+--------------------------------------------------------------------------------
+10/04/08
+
+With the recent release of the Heretic and Hexen sources into the realm of the
+GPL, the way has been cleared for the mass addition of Hexen codepointers in 
+advance of actual Hexen gamemode and EDF support. Most of the functions are
+only stubs, many are functionally incomplete, and yet others may change in
+implementation more than once before they get documented and added to the array
+of BEX pointers.
+
+--------------------------------------------------------------------------------
+10/02/08
+
+I have made further adjustments to D'Sparil's sound behaviors for Heretic
+compatibility. I'm really not sure which of D'Sparil's sounds could and could
+not cut each off in the vanilla executable, but I've at least gotten it to
+where the most conspicuous ones will not do this.
+
+Added the d_iwad.c module from Chocolate Doom, but EE is not currently capable
+of using this code. It'll have to sit around and get bit-rot until I feel like
+modifying the d_main IWAD finding code to support what I want it to be able to
+do, which is provide an IWAD loading menu for cases where no immediate wad was
+found, or where multiple valid wads are available.
+
+Most importantly, I have rewritten the sound update loop to be perfectly 
+thread-safe after further investigation of SDL_mixer's multi-core problems,
+which are caused by some sort of unknown thread contention/race condition issue.
+It turns out that we ourselves have not been perfect in this department either,
+and the SDL_mixer thread can get into race conditions with the low-level sound
+code if the channels array is modified during sound buffer updates.
+
+I've fixed it up by using semaphores to protect the channel data, and by 
+completely inverting the sound loops for efficiency reasons. As a side-effect,
+the sound update loop is also even faster than before. Locality of access and
+register motion are vastly improved.
+
+After extensive testing, this does appear to improve stability on multi-core
+systems, but does not eliminate 100% of the crashes - some of them are still
+stemming from somewhere within SDL or SDL_mixer itself, and so far my efforts
+to get those improved have fallen on deaf ears. The SDL guys don't seem to be
+interested in any of my bug reports or patches.
+
+--------------------------------------------------------------------------------
+09/29/08
+
+I have disabled the adjustment/scaling of mouse input relative to the screen
+resolution in windowed modes, because this scaling is inappropriate and unneeded
+under Windows, at least. It actually causes the mouse behavior to differ
+between resolutions, since the behavior of the SDL mouse input under windowed
+video modes appears to be entirely defined by the desktop resolution and Windows
+system settings for mouse sensitivity.
+
+SoM finally fixed a line portal HOM issue that had apparently been driving him
+nuts for a while.
+
+--------------------------------------------------------------------------------
+09/27/08
+
+I updated the text screen emulation code with segments from the most recent
+Chocolate Doom commit in order to add proper support for blinking text, which
+was previously being interpreted as extended foreground/background colors 
+instead (this was a bug in fraggle's original implementation that we dragged in
+and then neglected to fix for ages).
+
+Rewrote the Heretic status bar chain-end shader routines after I found out that
+they were broken in aspect ratios other than that of 320x200. The single new
+routine is now based on V_DrawBlockS and is used for all resolutions, even 
+unscaled.
+
+--------------------------------------------------------------------------------
+09/25/08
+
+FreeBSD portability tweaks courtesy of Kate:
+
+* linux/limits.h is just limits.h on that platform.
+* NO_FCVT must be defined to provide an fcvt function for psnprintf.
+* malloc.h is needed in mmus2mid.c for reasons I cannot imagine.
+
+--------------------------------------------------------------------------------
+09/18/08
+
+Eliminated our dependency on the SDLmain library under the belief that it may
+have been linked to unnecessary Win32 libraries causing the phantom dwmapi
+dependency. It turns out that for a Win32 console library, SDLmain simply isn't
+doing anything at all - it just redefines our own main, and then calls it
+directly without doing anything else.
+
+But, this still has not removed the dwmpai dependency. I don't think it's 
+possible to do anything about it.
+
+Fixed a weird bug in my menu paging change of 9/13 that could leave the item
+selection caret on non-selectable menu items. This wasn't really harmful, as in
+it didn't crash anything, but it was very weird to see and confusing to use.
+
+--------------------------------------------------------------------------------
+09/14/08
+
+Added -geom command-line parameter to match PrBoom-plus. It allows the user to
+specify all parameters of the video mode in a simple string like the following:
+
+   -geom 1024x768w
+
+This particular parameter would put the game in 1024x768 windowed mode.
+
+--------------------------------------------------------------------------------
+09/13/08
+
+Applied a tweak to the menu system which allows the page to change if the user
+moves up or down beyond the first or last item on a page respectively, after
+continuous complaints about the way that paging works. If I keep adding new ways
+to page between menus, we're going to break some kind of record for redundant
+interface gestures :P
+
+Attempted to fix a problem which is apparently wide-spread. Software compiled
+under Vista using VC2008 and the most recent Win32 SDK results in an executable
+that will not run on Windows XP boxes if they have Internet Explorer 7 
+installed. There's some kind of ridiculous dependency leak which results in the
+software trying to load dwmapi.dll at startup. This is a Vista-only DLL which is
+part of the dynamic loading business.
+
+I initially attempted to get rid of the link to shell32.lib by using 
+LoadLibrary to get at the RemoveFileSpec routine, but this did nothing. So I
+rewrote the code in question again to simply use our own portable M_GetFilePath
+routine from m_misc.c - this still did not remove the phantom dependency, 
+however.
+
+I think that MS needs to stop being lazy and have different compiles of IE for
+XP and Vista, instead of making everybody else's stuff break. It simply isn't
+possible for EE to use LoadLibrary on every single system function it calls.
+Without doing that, I'm not sure how it will ever be possible to weed out this
+dependency; it appears to be traceable through multiple dynamic libraries.
+
+--------------------------------------------------------------------------------
+09/12/08
+
+Repaired a serious bug in parameterized ceilings: an uninitialized variable in
+the setup routine would end up propagating a semi-random direction into the
+ceiling thinker, causing erratic behavior as a result of most parameterized
+ceiling actions. 
+
+--------------------------------------------------------------------------------
 08/25/08
 
 Inventory base-class flags are now defined for a ZDoom-equivalent level of

@@ -556,7 +556,7 @@ static int call_function(cfg_t *cfg, cfg_opt_t *opt, cfg_opt_t *funcopt)
       argv[i] = funcopt->values[i]->string;
    ret = (*opt->func)(cfg, opt, funcopt->nvalues, argv);
    cfg_free_value(funcopt); // haleyjd: CVS fix
-   free((char **)argv);
+   free((void *)argv);
    return ret;
 }
 

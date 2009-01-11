@@ -303,7 +303,7 @@ void E_CollectStates(cfg_t *scfg)
       // if appropriate
       tempint = cfg_getint(statecfg, ITEM_FRAME_DEHNUM);
       states[i].dehnum = tempint;
-      if(tempint != -1)
+      if(tempint >= 0)
       {
          int dehkey = tempint % NUMSTATECHAINS;
          int cnum;
@@ -416,7 +416,7 @@ static void E_AssignMiscThing(long *target, int thingnum)
 {
    // 09/19/03: add check for no dehacked number
    // 03/22/06: auto-allocate dehacked numbers where possible
-   if(mobjinfo[thingnum].dehnum != -1 || E_AutoAllocThingDEHNum(thingnum))
+   if(mobjinfo[thingnum].dehnum >= 0 || E_AutoAllocThingDEHNum(thingnum))
       *target = mobjinfo[thingnum].dehnum;
    else
    {
@@ -430,7 +430,7 @@ static void E_AssignMiscState(long *target, int framenum)
 {
    // 09/19/03: add check for no dehacked number
    // 03/22/06: auto-allocate dehacked numbers where possible
-   if(states[framenum].dehnum != -1 || E_AutoAllocStateDEHNum(framenum))
+   if(states[framenum].dehnum >= 0 || E_AutoAllocStateDEHNum(framenum))
       *target = states[framenum].dehnum;
    else
    {
@@ -442,8 +442,12 @@ static void E_AssignMiscState(long *target, int framenum)
 
 static void E_AssignMiscSound(long *target, sfxinfo_t *sfx)
 {
+   // 01/04/09: check for NULL just in case
+   if(!sfx)
+      sfx = &NullSound;
+
    // 03/22/06: auto-allocate dehacked numbers where possible
-   if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
+   if(sfx->dehackednum >= 0 || E_AutoAllocSoundDEHNum(sfx))
       *target = sfx->dehackednum;
    else
    {
@@ -453,21 +457,21 @@ static void E_AssignMiscSound(long *target, sfxinfo_t *sfx)
    }
 }
 
-static void E_AssignMiscString(long *target, edf_string_t *str)
+static void E_AssignMiscString(long *target, edf_string_t *str, const char *name)
 {
    if(!str || str->numkey < 0)
    {
-      E_EDFLogPrintf("\t\tWarning: bad string %s\n", str->key);
+      E_EDFLogPrintf("\t\tWarning: bad string %s\n", name);
       *target = 0;
    }
    else
       *target = str->numkey;
 }
 
-static void E_AssignMiscBexptr(long *target, deh_bexptr *dp)
+static void E_AssignMiscBexptr(long *target, deh_bexptr *dp, const char *name)
 {
    if(!dp)
-      E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n", dp->lookup);
+      E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n", name);
    
    // get the index of this deh_bexptr in the master
    // deh_bexptrs array, and store it in the arg field
@@ -553,13 +557,13 @@ static void E_ParseMiscField(char *value, long *target)
       case PREFIX_BEXPTR:
          {
             deh_bexptr *dp = D_GetBexPtr(strval);
-            E_AssignMiscBexptr(target, dp);
+            E_AssignMiscBexptr(target, dp, strval);
          }
          break;
       case PREFIX_STRING:
          {
             edf_string_t *str = E_StringForName(strval);
-            E_AssignMiscString(target, str);
+            E_AssignMiscString(target, str, strval);
          }
          break;
       default:
@@ -605,9 +609,9 @@ static void E_ParseMiscField(char *value, long *target)
          else if((sfx = E_EDFSoundForName(value)) != NULL)       // sound?
             E_AssignMiscSound(target, sfx);
          else if((str = E_StringForName(value)) != NULL)         // string?
-            E_AssignMiscString(target, str);
+            E_AssignMiscString(target, str, value);
          else if((dp = D_GetBexPtr(value)) != NULL)              // bexptr???
-            E_AssignMiscBexptr(target, dp);
+            E_AssignMiscBexptr(target, dp, value);
          else                                                    // try a keyword!
             *target = E_ValueForKeyword(value);
       }
@@ -688,14 +692,17 @@ static void E_StateNextFrame(const char *tempstr, int i)
    }
    else if((tempint = E_StateNumForName(tempstr)) == NUMSTATES)
    {
-      // check for DeHackEd num specification
-      if(!strncasecmp(tempstr, "dehnum:", 7) && strlen(tempstr) > 7)
+      char *endptr = NULL;
+      long result;
+
+      result = strtol(tempstr, &endptr, 0);
+      if(*endptr == '\0')
       {
-         // use strtol on the remaining portion of the string;
+         // check for DeHackEd num specification;
          // the resulting value must be a valid frame deh number
-         tempint = E_GetStateNumForDEHNum(strtol(tempstr + 7, NULL, 0));
+         tempint = E_GetStateNumForDEHNum(result);
       }
-      else
+      else      
       {
          // error
          E_EDFLoggedErr(2, 
