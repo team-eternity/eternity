@@ -2277,7 +2277,7 @@ extern int levelFragLimit;
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
-        "Copyright 2008 James Haley and Stephen McGranahan\n"
+        "Copyright 2009 James Haley and Stephen McGranahan\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"
@@ -2606,6 +2606,15 @@ static void D_DoomInit(void)
 
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
+
+   // haleyjd 01/11/09: process affinity mask stuff
+#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+   {
+      extern void I_SetAffinityMask(void);
+
+      I_SetAffinityMask();
+   }
+#endif
 
    bodyquesize = default_bodyquesize; // killough 10/98
 

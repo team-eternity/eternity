@@ -117,6 +117,10 @@ extern int spc_preamp;
 extern int spc_bass_boost;
 #endif
 
+#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+extern unsigned int process_affinity_mask;
+#endif
+
 // haleyjd 10/09/07: wipe waiting
 extern int wipewait;
 
@@ -1669,6 +1673,15 @@ default_t defaults[] =
       &spc_bass_boost, NULL,
       8, {1, 31}, dt_number, ss_none, wad_yes,
       "bass boost for SPC music (logarithmic scale, 8 = normal)"
+   },
+#endif
+
+#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+   {
+      "process_affinity_mask",
+      &process_affinity_mask, NULL,
+      0, {0, UL}, dt_number, ss_none, wad_no,
+      "process affinity mask - warning: expert setting only!"
    },
 #endif
 
