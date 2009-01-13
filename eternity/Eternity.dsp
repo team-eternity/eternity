@@ -1156,6 +1156,10 @@ SOURCE=.\Source\sounds.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\source\Win32\i_cpu.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\i_fnames.c
 # End Source File
 # Begin Source File

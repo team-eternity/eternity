@@ -112,8 +112,14 @@ static void C_GetTokens(const char *command)
       }
       
       // add char to line
-      sprintf(cmdtokens[numtokens-1], "%s%c",
-         cmdtokens[numtokens-1], *rover);
+      {
+         // 01/12/09: repaired by fraggle to fix mystery sprintf issue on linux
+         char *p = cmdtokens[numtokens - 1];
+         p += strlen(p);
+         *p = *rover;
+         ++p;
+         *p = '\0';
+      }
       rover++;
    }
 }
