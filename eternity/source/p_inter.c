@@ -381,7 +381,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       break;
 
    case PFX_MEGASPHERE:
-      if(GameModeInfo->id != commercial)
+      if(demo_version < 335 && GameModeInfo->id != commercial)
          return;
       player->health = mega_health;
       player->mo->health = player->health;

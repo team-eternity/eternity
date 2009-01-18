@@ -502,7 +502,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    tcos = (float) cos(check->angle);
    check->viewxf =  view.x * tcos + view.y * tsin;
    check->viewyf = -view.x * tsin + view.y * tcos;
-   check->viewzf = view.z;
+   check->viewzf =  view.z;
 
    // haleyjd 01/05/08: modify viewing angle with respect to flat angle
    check->viewsin = (float) sin(view.angle + check->angle);
