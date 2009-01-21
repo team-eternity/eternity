@@ -115,7 +115,7 @@ typedef struct memblock {
 static memblock_t *rover;                // roving pointer to memory blocks
 static memblock_t *zone;                 // pointer to first block
 static memblock_t *zonebase;             // pointer to entire zone memory
-static size_t zonebase_size;             // zone memory allocated size
+static size_t     zonebase_size;         // zone memory allocated size
 static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
 
 #ifdef INSTRUMENTED
@@ -509,9 +509,9 @@ void (Z_Free)(void *p, const char *file, int line)
 
 #ifdef ZONEIDCHECK
       if(block->id != ZONEID)
+      {
          I_Error("Z_Free: freed a pointer without ZONEID\n"
                  "Source: %s:%d"
-
 #ifdef INSTRUMENTED
                  "\nSource of malloc: %s:%d"
                  , file, line, block->file, block->line
@@ -519,8 +519,24 @@ void (Z_Free)(void *p, const char *file, int line)
                  , file, line
 #endif
                 );
+      }
       block->id = 0;              // Nullify id so another free fails
 #endif
+
+      // haleyjd 01/20/09: check invalid tags
+      // catches double frees and possible selective heap corruption
+      if(block->tag == PU_FREE || block->tag >= PU_MAX)
+      {
+         I_Error("Z_Free: freed a pointer with invalid tag %d\n"
+                 "Source: %s:%d"
+#ifdef INSTRUMENTED
+                 "\nSource of malloc: %s:%d"
+                 , block->tag, file, line, block->file, block->line
+#else
+                 , block->tag, file, line
+#endif
+                );
+      }
 
 #ifdef INSTRUMENTED
       // scramble memory -- weed out any bugs
@@ -1193,21 +1209,21 @@ void Z_PrintZoneHeap(void)
 
    const char *fmtstr =
 #if defined(ZONEIDCHECK) && defined(INSTRUMENTED)
-      "{ %8X : %p : %p : %8u : %p : %d : %d : %s : %d }\n"
+      "%p: { %8X : %p : %p : %8u : %p : %d : %d : %s : %d }\n"
 #elif defined(INSTRUMENTED)
-      "{ %p : %p : %8u : %p : %d : %d : %s : %d }\n"
+      "%p: { %p : %p : %8u : %p : %d : %d : %s : %d }\n"
 #elif defined(ZONEIDCHECK)
-      "{ %8X : %p : %p : %8u : %p : %d : %d }\n"
+      "%p: { %8X : %p : %p : %8u : %p : %d : %d }\n"
 #else
-      "{ %p : %p : %8u : %p : %d : %d }\n"
+      "%p: { %p : %p : %8u : %p : %d : %d }\n"
 #endif
       ;
 
    const char *freestr =
 #if defined(ZONEIDCHECK)
-      "{ %8X : %p : %p : %8u }\n"
+      "%p: { %8X : %p : %p : %8u }\n"
 #else
-      "{ %p : %p : %8u }\n"
+      "%p: { %p : %p : %8u }\n"
 #endif
       ;
 
@@ -1219,7 +1235,7 @@ void Z_PrintZoneHeap(void)
    {
       if(block->tag != PU_FREE)
       {
-         fprintf(outfile, fmtstr,
+         fprintf(outfile, fmtstr, block,
 #if defined(ZONEIDCHECK)
                  block->id, 
 #endif
@@ -1232,7 +1248,7 @@ void Z_PrintZoneHeap(void)
       }
       else
       {
-         fprintf(outfile, freestr,
+         fprintf(outfile, freestr, block,
 #if defined(ZONEIDCHECK)
                  block->id, 
 #endif
