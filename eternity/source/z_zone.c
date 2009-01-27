@@ -40,13 +40,16 @@
 #include <dpmi.h>
 #endif
 
-// Uncomment this to see real-time memory allocation
-// statistics, and to enable extra debugging features
+// Uncomment this to see real-time memory allocation statistics.
 //#define INSTRUMENTED
+
+// Uncomment this to use memory scrambling on allocations and frees.
+// haleyjd 01/27/09: made independent of INSTRUMENTED
+//#define ZONESCRAMBLE
 
 // Uncomment this to exhaustively run memory checks
 // while the game is running (this is EXTREMELY slow).
-// Only useful if INSTRUMENTED is also defined.
+// haleyjd 01/27/09: made independent of INSTRUMENTED
 //#define CHECKHEAP
 
 // Uncomment this to perform id checks on zone blocks,
@@ -348,13 +351,14 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    
 #ifdef INSTRUMENTED
    size_t size_orig = size;
-#ifdef CHECKHEAP
-   Z_CheckHeap();
-#endif
    
    file_history[malloc_history][history_index[malloc_history]] = file;
    line_history[malloc_history][history_index[malloc_history]++] = line;
    history_index[malloc_history] &= ZONE_HISTORY-1;
+#endif
+
+#ifdef CHECKHEAP
+   Z_CheckHeap();
 #endif
 
 #ifdef ZONEIDCHECK
@@ -446,12 +450,14 @@ allocated:
 
 #ifdef INSTRUMENTED
          Z_PrintStats();           // print memory allocation stats
+#endif
+#ifdef ZONESCRAMBLE
          // scramble memory -- weed out any bugs
          memset(block, gametic & 0xff, size);
 #endif
 #ifdef ZONEFILE
-         Z_LogPrintf("* Z_Malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", 
-                     size, tag, user, file, line);
+         Z_LogPrintf("* %p = Z_Malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", 
+                     block, size, tag, user, file, line);
 #endif
          return block;
       }
@@ -494,10 +500,10 @@ allocated:
 
 void (Z_Free)(void *p, const char *file, int line)
 {
-#ifdef INSTRUMENTED
 #ifdef CHECKHEAP
    Z_CheckHeap();
 #endif
+#ifdef INSTRUMENTED
    file_history[free_history][history_index[free_history]] = file;
    line_history[free_history][history_index[free_history]++] = line;
    history_index[free_history] &= ZONE_HISTORY-1;
@@ -538,9 +544,9 @@ void (Z_Free)(void *p, const char *file, int line)
                 );
       }
 
-#ifdef INSTRUMENTED
+#ifdef ZONESCRAMBLE
       // scramble memory -- weed out any bugs
-      memset(p, gametic & 0xff, block->size - block->extra);
+      memset(p, gametic & 0xff, block->size);
 #endif
 
       if(block->user)            // Nullify user if one exists
@@ -689,10 +695,8 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 {
    memblock_t *block = (memblock_t *)((char *) ptr - HEADER_SIZE);
    
-#ifdef INSTRUMENTED
 #ifdef CHECKHEAP
    Z_CheckHeap();
-#endif
 #endif
 
 #ifdef ZONEIDCHECK
@@ -1040,6 +1044,12 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
       if(user) // in case Z_Free nullified same user
          *user=p;
    }
+
+#ifdef ZONEFILE
+   Z_LogPrintf("* %p = Z_Realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n", 
+               p, ptr, n, tag, user, file, line);
+#endif
+
    return p;
 }
 
@@ -1111,12 +1121,12 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
    if(n == 0)
       return NULL;
 
-#ifdef ZONEFILE
-   Z_LogPrintf("* Z_Alloca(n = %lu, file = %s, line = %d)\n", n, file, line);
-#endif
-
    // add an alloca_header_t to the requested allocation size
    ptr = (Z_Calloc)(n + sizeof(alloca_header_t), 1, PU_STATIC, NULL, file, line);
+
+#ifdef ZONEFILE
+   Z_LogPrintf("* %p = Z_Alloca(n = %lu, file = %s, line = %d)\n", ptr, n, file, line);
+#endif
 
    // add to linked list
    hdr = (alloca_header_t *)ptr;
@@ -1161,7 +1171,9 @@ void (Z_CheckHeap)(const char *file, int line)
    while((block = block->next) != zone);
 
 #ifdef ZONEFILE
+#ifndef CHECKHEAP
    Z_LogPrintf("* Z_CheckHeap(file=%s:%d)\n", file, line);
+#endif
 #endif
 }
 
@@ -1177,10 +1189,8 @@ int (Z_CheckTag)(void *ptr, const char *file, int line)
 {
    memblock_t *block = (memblock_t *)((char *) ptr - HEADER_SIZE);
    
-#ifdef INSTRUMENTED
 #ifdef CHECKHEAP
    Z_CheckHeap();
-#endif
 #endif
 
 #ifdef ZONEIDCHECK

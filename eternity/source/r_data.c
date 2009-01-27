@@ -1464,74 +1464,119 @@ doom1text_t *txtrconv;
 int numconvs = 0;
 int numconvsalloc = 0;
 
-#define RemoveEndSpaces(s)      \
-        while(*((s)+strlen(s)-1) == ' ') *((s)+strlen(s)-1) = 0;
-
-static void R_LoadDoom1Parse(char *line)
+// haleyjd 01/27/09: state table for proper FSA parsing
+enum
 {
-   while(*line == ' ')
-      line++;
-   
-   if(line[0] == ';') 
-      return;      // comment
-   
-   if(!*line || *line < 32) 
-      return;      // empty line
-   
-   // haleyjd 09/07/05: this was wasting tons of memory before with
-   // lots of little mallocs; make the whole thing dynamic
-   if(numconvs >= numconvsalloc)
-   {
-      txtrconv = realloc(txtrconv, 
-                         (numconvsalloc = numconvsalloc ?
-                          numconvsalloc*2 : 56) * sizeof *txtrconv);
-   }
+   D1_STATE_COMMENT,
+   D1_STATE_SCAN,
+   D1_STATE_TEX1,
+   D1_STATE_TEX2,
+};
 
-   strncpy(txtrconv[numconvs].doom1, line, 8);
-   RemoveEndSpaces(txtrconv[numconvs].doom1);
-   strncpy(txtrconv[numconvs].doom2, line+9, 8);
-   RemoveEndSpaces(txtrconv[numconvs].doom2);
-   
-   numconvs++;
-}
-
+//
+// R_LoadDoom1
+//
+// Parses the DOOM -> DOOM II texture conversion table.
+// haleyjd: rewritten 01/27/09 to remove heap corruption.
+//
 static void R_LoadDoom1(void)
 {
    char *lump;
    char *startofline, *rover;
-   int ll, lumpnum;
+   int lumplen, lumpnum;
+   int state = D1_STATE_SCAN;
+   int tx1, tx2;
+
+   char texture1[9];
+   char texture2[9];
    
    if((lumpnum = W_CheckNumForName("TXTRCONV")) == -1)
       return;
-  
-   lump = W_CacheLumpNum(lumpnum, PU_STATIC);
+
+   memset(texture1, 0, sizeof(texture1));
+   memset(texture2, 0, sizeof(texture2));
+   tx1 = tx2 = 0;
+
+   lumplen = W_LumpLength(lumpnum);
+   lump    = calloc(1, lumplen + 1);
    
-   ll = W_LumpLength(lumpnum);
+   W_ReadLump(lumpnum, lump);
    
    startofline = rover = lump;
    numconvs = 0;
    
-   while(rover < lump+ll)
+   while(*rover)
    {
-      if(*rover == '\n') // newline
+      switch(state)
       {
-         *rover = 0;
-         R_LoadDoom1Parse(startofline);
-         *rover = '\n';
-         startofline = rover+1;
+      case D1_STATE_SCAN:
+         if(*rover == ';')
+            state = D1_STATE_COMMENT;
+         else if(isalnum(*rover))
+         {
+            texture1[tx1++] = *rover;
+            state = D1_STATE_TEX1;
+         }
+         break;
+
+      case D1_STATE_COMMENT:
+         if(*rover == 0x0D || *rover == 0x0A)
+            state = D1_STATE_SCAN;
+         break;
+
+      case D1_STATE_TEX1:
+         if(*rover == 0x0D || *rover == 0x0A) // no linebreak during this state
+            I_Error("R_LoadDoom1: malformed TXTRCONV lump: bad linebreak\n");
+
+         if(isspace(*rover))
+            state = D1_STATE_TEX2;
+         else
+         {
+            if(tx1 >= 8)
+               I_Error("R_LoadDoom1: malformed TXTRCONV lump: tx1 >= 8 chars\n");
+            texture1[tx1++] = *rover;
+         }
+         break;
+
+      case D1_STATE_TEX2:
+          // finished with this entry?
+         if(*rover == 0x0D || *rover == 0x0A || *(rover+1) == '\0')
+         {
+            // haleyjd 09/07/05: this was wasting tons of memory before with
+            // lots of little mallocs; make the whole thing dynamic
+            if(numconvs >= numconvsalloc)
+            {
+               txtrconv = realloc(txtrconv, 
+                                  (numconvsalloc = numconvsalloc ?
+                                   numconvsalloc*2 : 56) * sizeof *txtrconv);
+            }
+            
+            strncpy(txtrconv[numconvs].doom1, texture1, 9);
+            strncpy(txtrconv[numconvs].doom2, texture2, 9);
+            
+            numconvs++;
+
+            // clear out temps
+            memset(texture1, 0, sizeof(texture1));
+            memset(texture2, 0, sizeof(texture2));
+            tx1 = tx2 = 0;
+
+            state = D1_STATE_SCAN;
+         }
+         else if(!isspace(*rover)) // skip spaces
+         {
+            if(tx2 >= 8)
+               I_Error("R_LoadDoom2: malformed TXTRCONV lump: tx2 >= 8 chars\n");
+            texture2[tx2++] = *rover;
+         }
+         break;
       }
-      // replace control characters with spaces
-      if(*rover < ' ') 
-         *rover = ' ';
+
       rover++;
    }
-   R_LoadDoom1Parse(startofline);  // parse the last line
    
-   // _must_ be freed, not changetagged, as the
-   // lump has changed slightly and may not work
-   // if this has to be loaded again
-   
-   Z_Free(lump);   
+   // finished with lump
+   free(lump);
 }
 
 static int R_Doom1Texture(const char *name)
