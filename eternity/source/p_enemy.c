@@ -4361,7 +4361,7 @@ static void P_ResurrectPlayer(void)
 {
    player_t *p = &players[consoleplayer];
 
-   if(p->health <= 0 || p->mo->health <= 0)
+   if(p->health <= 0 || p->mo->health <= 0 || p->playerstate == PST_DEAD)
    {
       mapthing_t mthing;
       mobj_t *oldmo = p->mo;

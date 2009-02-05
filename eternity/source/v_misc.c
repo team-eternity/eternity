@@ -490,6 +490,10 @@ void V_DrawLoading(void)
    int white = GameModeInfo->whiteIndex;
    int black = GameModeInfo->blackIndex;
 
+   // haleyjd 01/29/09: not if -nodraw was used
+   if(nodrawers)
+      return;
+
    if(!loading_message)
       return;
   

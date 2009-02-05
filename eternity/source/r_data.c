@@ -538,6 +538,13 @@ static byte *R_ReadStrifePatch(byte *rawpatch)
    return rover; // positioned at next patch
 }
 
+static byte *R_ReadUnknownPatch(byte *rawpatch)
+{
+   I_Error("R_ReadUnknownPatch called\n");
+
+   return NULL;
+}
+
 static byte *R_ReadDoomTexture(byte *rawtexture)
 {
    byte *rover = rawtexture;
@@ -575,6 +582,13 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
    return rover; // positioned for patch reading
 }
 
+static byte *R_ReadUnknownTexture(byte *rawtexture)
+{
+   I_Error("R_ReadUnknownTexture called\n");
+
+   return NULL;
+}
+
 typedef struct texturehandler_s
 {
    byte *(*ReadTexture)(byte *);
@@ -582,9 +596,10 @@ typedef struct texturehandler_s
 } texturehandler_t;
 
 static texturehandler_t TextureHandlers[] =
-{   
-   { R_ReadDoomTexture,   R_ReadDoomPatch   }, // texture_doom
-   { R_ReadStrifeTexture, R_ReadStrifePatch }, // texture_strife
+{
+   { R_ReadUnknownTexture, R_ReadUnknownPatch }, // texture_none (do not call!)
+   { R_ReadDoomTexture,    R_ReadDoomPatch    }, // texture_doom
+   { R_ReadStrifeTexture,  R_ReadStrifePatch  }, // texture_strife
 };
 
 //
@@ -694,7 +709,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
 
       rawtex = tlump->data + offset;
 
-      rawpatch = TextureHandlers[tlump->format - 1].ReadTexture(rawtex);
+      rawpatch = TextureHandlers[tlump->format].ReadTexture(rawtex);
 
       texture = textures[texnum] = 
          Z_Malloc(sizeof(texture_t) + 
@@ -711,7 +726,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
 
       for(j = 0; j < texture->patchcount; ++j, ++patch)
       {
-         rawpatch = TextureHandlers[tlump->format - 1].ReadPatch(rawpatch);
+         rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
 
          patch->originx = tp.originx;
          patch->originy = tp.originy;
@@ -1566,7 +1581,7 @@ static void R_LoadDoom1(void)
          else if(!isspace(*rover)) // skip spaces
          {
             if(tx2 >= 8)
-               I_Error("R_LoadDoom2: malformed TXTRCONV lump: tx2 >= 8 chars\n");
+               I_Error("R_LoadDoom1: malformed TXTRCONV lump: tx2 >= 8 chars\n");
             texture2[tx2++] = *rover;
          }
          break;
