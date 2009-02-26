@@ -30,6 +30,7 @@
 
 #include "doomtype.h"
 #include "r_defs.h"
+#include "m_dllist.h"
 
 enum
 {
@@ -39,6 +40,16 @@ enum
    VFONT_BIG_NUM,
 };
 
+typedef struct vfontfilter_s
+{
+   unsigned int start;    // first character
+   unsigned int end;      // last character
+   unsigned int *chars;   // chars array
+   unsigned int numchars; // number of chars
+   const char   *mask;    // loading string
+
+} vfontfilter_t;
+
 //
 // vfont structure
 //
@@ -46,6 +57,8 @@ enum
 //
 typedef struct vfont_s
 {
+   mdllistitem_t numlinks; // for EDF hashing
+
    unsigned int start; // first character in font
    unsigned int end;   // last character in font
    unsigned int size;  // number of characters in font
@@ -66,10 +79,14 @@ typedef struct vfont_s
    boolean linear;  // linear graphic lump?
    byte    *data;   // data for linear graphic
    int     lsize;   // character size in linear graphic
-} vfont_t;
 
-extern vfont_t *linear_fonts;
-extern int numlinearfonts;
+   int  num;                 // numeric id
+   char name[33];            // EDF mnemonic
+   struct vfont_s *namenext; // next by name
+   vfontfilter_t *filters;   // graphic loading filters
+   unsigned int numfilters;  // number of filters
+   int patchnumoffset;       // used during font loading only
+} vfont_t;
 
 void  V_FontWriteText(vfont_t *font, const char *s, int x, int y);
 void  V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
@@ -79,10 +96,6 @@ int   V_FontStringHeight(vfont_t *font, const char *s);
 int   V_FontStringWidth(vfont_t *font, const char *s);
 void  V_FontSetAbsCentered(void);
 short V_FontMaxWidth(vfont_t *font);
-
-boolean V_LoadLinearFont(vfont_t *font, int lumpnum);
-
-vfont_t *V_FontSelect(int fontnum);
 
 #endif
 

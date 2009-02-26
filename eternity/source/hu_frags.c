@@ -28,7 +28,7 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
+#include "z_zone.h"
 
 #include "hu_frags.h"
 #include "c_io.h"
@@ -40,10 +40,9 @@
 #include "r_draw.h"
 #include "w_wad.h"
 #include "v_video.h"
-#include "z_zone.h"
-
 #include "g_bind.h"
 #include "d_gi.h"
+#include "e_fonts.h"
 
 #define FRAGSX 125
 #define FRAGSY 10
@@ -63,6 +62,8 @@ int show_scores;                // enable scores
 void HU_FragsInit(void)
 {
 }
+
+extern vfont_t *hud_font;
 
 void HU_FragsDrawer(void)
 {
@@ -89,7 +90,8 @@ void HU_FragsDrawer(void)
          sortedplayers[i]==players+consoleplayer ? FC_HI : FC_NORMAL,
          sortedplayers[i]->name);
       
-      V_WriteText(tempstr, NAMEX - V_StringWidth(tempstr), y);
+      V_FontWriteText(hud_font, tempstr, 
+                      NAMEX - V_FontStringWidth(hud_font, tempstr), y);
       
       // box behind frag pic
       // haleyjd 01/12/04: changed translation handling
@@ -107,7 +109,8 @@ void HU_FragsDrawer(void)
 
        // draw the frags
        psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
-       V_WriteText(tempstr, FRAGNUMX + 16 - V_StringWidth(tempstr)/2, y);
+       V_FontWriteText(hud_font, tempstr, 
+                       FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr)/2, y);
        y += 10;
    }
 }

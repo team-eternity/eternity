@@ -101,6 +101,7 @@
 #include "mn_emenu.h"
 #include "e_player.h"
 #include "e_mod.h"
+#include "e_fonts.h"
 
 // EDF Keywords used by features implemented in this module
 
@@ -323,6 +324,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_MENU,      edf_menu_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_STR(SEC_CASTORDER,     0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,     0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,     0,                 CFGF_LIST), // schepe
@@ -335,6 +337,16 @@ static cfg_opt_t edf_opts[] =
    CFG_INT(ITEM_INTERFADE,   -1,                 CFGF_NONE),
    CFG_INT_CB(ITEM_INTERTL,   0,                 CFGF_NONE, E_TranslucCB),
    CFG_STR(ITEM_MN_EPISODE,   NULL,              CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
+   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
+   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
    CFG_FUNC("include",        E_Include),
    CFG_FUNC("lumpinclude",    E_LumpInclude),
    CFG_FUNC("include_prev",   E_IncludePrev),
@@ -440,6 +452,24 @@ static cfg_opt_t pclass_only_opts[] =
    CFG_END()
 };
 
+// Options for stuff in fonts.edf only
+static cfg_opt_t font_only_opts[] =
+{
+   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
+   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
+   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
+   DEF_FUNCTIONS,
+   CFG_END()
+};
+
 
 //
 // Separate Lump opt Arrays. These are for lumps that can be parsed
@@ -501,6 +531,24 @@ static cfg_opt_t sndseq_lump_opts[] =
    CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
    CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
+   LUMP_FUNCTIONS,
+   CFG_END()
+};
+
+// Options for stuff in EFONTS lump
+static cfg_opt_t font_lump_opts[] =
+{
+   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
+   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
+   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
+   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
    LUMP_FUNCTIONS,
    CFG_END()
 };
@@ -1298,6 +1346,26 @@ static void E_ProcessSoundLumps(void)
 }
 
 //
+// E_ProcessFontLump
+//
+// Loads and processes the EFONTS lump.
+//
+void E_ProcessFontLump(void)
+{
+   cfg_t *cfg;
+
+   E_EDFLogPuts("\t* Parsing EFONTS lump...\n");
+
+   if(!(cfg = E_ParseEDFLumpOptional("EFONTS", font_lump_opts)))
+      E_EDFLogPuts("\t\tNo EFONTS lump found.\n");
+   else
+   {
+      E_ProcessFonts(cfg);
+      cfg_free(cfg);
+   }
+}
+
+//
 // E_TryDefaultTerrain
 //
 // Loads the default terrain.edf as a last-chance default when zero
@@ -1755,6 +1823,26 @@ static void E_TryDefaultPlayerData(void)
    cfg_free(pcfg);
 }
 
+//
+// E_TryDefaultFonts
+//
+// Last-chance defaults processing for fonts.
+//
+static void E_TryDefaultFonts(void)
+{
+   cfg_t *fcfg;
+   const char *ffn;
+
+   E_EDFLogPuts("\t\tAttempting to load default fonts.edf\n");
+
+   ffn  = E_BuildDefaultFn("fonts.edf");
+   fcfg = E_ParseEDFFile(ffn, font_only_opts);
+
+   E_ProcessFonts(fcfg);
+
+   // free the temporary cfg
+   cfg_free(fcfg);
+}
 
 static void E_TryDefaultCast(void);
 
@@ -2075,6 +2163,9 @@ void E_ProcessEDFLumps(void)
 
    // process ESNDSEQ and ESNDINFO
    E_ProcessSoundLumps();
+
+   // process EFONTS
+   E_ProcessFontLump();
 }
 
 //
@@ -2098,6 +2189,10 @@ void E_ProcessLastChance(void)
    // sound defaults
    if(E_NeedDefaultSounds() || E_NeedDefaultSequences())
       E_TryDefaultSounds();
+
+   // font defaults
+   if(E_NeedDefaultFonts())
+      E_TryDefaultFonts();
 }
 
 // Main EDF Routine
@@ -2138,7 +2233,7 @@ void E_ProcessEDF(const char *filename)
 
    // NOTE: The order of most of the following calls is extremely 
    // important and must be preserved, unless the static routines 
-   // above are rewritten accordingly.
+   // above and in other files are rewritten accordingly.
 
    // process strings
    E_ProcessStrings(cfg);
@@ -2179,6 +2274,9 @@ void E_ProcessEDF(const char *filename)
 
    // 03/13/05: process dynamic menus
    MN_ProcessMenus(cfg);
+
+   // 02/25/09: process fonts
+   E_ProcessFonts(cfg);
 
    // 01/11/04: process misc vars
    E_ProcessMiscVars(cfg);

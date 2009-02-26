@@ -2750,6 +2750,9 @@ static void D_DoomInit(void)
    startupmsg("MN_Init","Init menu.");
    MN_Init();
 
+   startupmsg("F_Init", "Init finale.");
+   F_Init();
+
    startupmsg("S_Init","Setting up sound.");
    S_Init(snd_SfxVolume, snd_MusicVolume);
 

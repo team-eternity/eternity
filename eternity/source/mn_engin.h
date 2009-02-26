@@ -218,6 +218,9 @@ extern int menutime;
 // haleyjd
 extern int quickSaveSlot;
 extern boolean menu_toggleisback;
+extern const char *mn_fontname;
+extern const char *mn_bigfontname;
+extern const char *mn_normalfontname;
 
 #endif
                             

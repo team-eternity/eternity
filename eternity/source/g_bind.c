@@ -46,6 +46,7 @@
 #include "w_wad.h"
 #include "d_io.h" // SoM 3/14/2002: strncasecmp
 #include "g_bind.h"
+#include "e_fonts.h"
 
 // Action variables
 // These variables are asserted as positive values when the action
@@ -647,6 +648,8 @@ boolean G_KeyResponder(event_t *ev, int bclass)
 
 static const char *binding_action; // name of action we are editing
 
+extern vfont_t *menu_font_normal;
+
 //
 // G_BindDrawer
 //
@@ -660,8 +663,8 @@ void G_BindDrawer(void)
    // draw the menu in the background   
    MN_DrawMenu(current_menu);
    
-   width  = V_StringWidth(msg);
-   height = V_StringHeight(msg);
+   width  = V_FontStringWidth(menu_font_normal, msg);
+   height = V_FontStringHeight(menu_font_normal, msg);
    x = (SCREENWIDTH  - width)  / 2;
    y = (SCREENHEIGHT - height) / 2;
    
@@ -669,7 +672,7 @@ void G_BindDrawer(void)
    V_DrawBox(x - 4, y - 4, width + 8, height + 8);
 
    // write text in box   
-   V_WriteText(msg, x, y);
+   V_FontWriteText(menu_font_normal, msg, x, y);
 }
 
 //

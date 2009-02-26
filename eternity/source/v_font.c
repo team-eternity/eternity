@@ -41,8 +41,6 @@
 #include "v_font.h"
 #include "w_wad.h"
 
-extern vfont_t small_font, hud_font, big_font, big_num_font;
-
 static boolean fixedColor = false;
 static int fixedColNum = 0;
 static char *altMap = NULL;
@@ -183,7 +181,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
             // check that colrng number is within bounds
             if(colnum < 0 || colnum >= CR_LIMIT)
             {
-               C_Printf("V_WriteText: invalid colour %i\n", colnum);
+               C_Printf("V_FontWriteText: invalid color %i\n", colnum);
                continue;
             }
             else
@@ -413,82 +411,6 @@ short V_FontMaxWidth(vfont_t *font)
    }
 
    return w;
-}
-
-//
-// V_FontSelect
-//
-// haleyjd 10/08/05: allows selection of a font based on a numeric id
-// number. This could be extended in the future to allow lookup of user
-// fonts by a hashed id number (providing against conflict with native
-// font id numbers).
-//
-vfont_t *V_FontSelect(int fontnum)
-{
-   switch(fontnum)
-   {
-   case VFONT_SMALL:      // "small" (normal) font defined in v_misc.c
-      return &small_font;
-   case VFONT_HUD:        // hud font defined in hu_over.c
-      return &hud_font;
-   case VFONT_BIG:        // "big" font defined in v_misc.c
-      return &big_font;
-   case VFONT_BIG_NUM:    // "big" font for spaced numbers, v_misc.c
-      return &big_num_font;
-   default:
-      return (fontnum <= VFONT_BIG_NUM + numlinearfonts) ?
-         &linear_fonts[fontnum - VFONT_BIG_NUM - 1] : NULL;
-   }
-}
-
-//
-// V_LoadLinearFont
-//
-// haleyjd 06/29/08: populates a pre-allocated vfont_t with information
-// on a linear font graphic.
-//
-boolean V_LoadLinearFont(vfont_t *font, int lumpnum)
-{
-   int size, i;
-   boolean foundsize = false;
-
-   size = W_LumpLength(lumpnum);
-
-   for(i = 5; i <= 32; ++i)
-   {
-      if(i * i * 128 == size)
-      {
-         font->lsize = i;
-         foundsize = true;
-         break;
-      }
-   }
-
-   if(!foundsize)
-      return false;
-
-   font->data = W_CacheLumpNum(lumpnum, PU_STATIC);
-   font->start = 0;
-   font->end   = 127;
-   font->size  = 128; // full ASCII range is supported
-
-   // set metrics - linear fonts are monospace
-   font->cw    = font->lsize;
-   font->cy    = font->lsize;
-   font->dw    = 0;
-   font->absh  = font->lsize;
-   font->space = font->lsize;
-
-   // set flags
-   font->centered = false; // not block-centered
-   font->color    = true;  // supports color translations
-   font->linear   = true;  // is linear, obviously ;)
-   font->upper    = false; // not all-caps
-
-   // patch array is unused
-   font->fontgfx = NULL;
-
-   return true;
 }
 
 // EOF

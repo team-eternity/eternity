@@ -60,6 +60,8 @@ extern int current_target;
 extern boolean c_showprompt;
 extern int console_enabled; // haleyjd: exported
 
+extern const char *c_fontname;
+
 #endif
 
 // EOF

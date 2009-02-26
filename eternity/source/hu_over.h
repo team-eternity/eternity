@@ -19,8 +19,8 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __HU_OVER_H__
-#define __HU_OVER_H__
+#ifndef HU_OVER_H__
+#define HU_OVER_H__
 
     /*************** heads up font **************/
 
@@ -28,6 +28,8 @@ void HU_LoadFont(void);
 void HU_WriteText(const char *s, int x, int y);
 int  HU_StringWidth(const char *s);
 int  HU_StringHeight(const char *s);
+
+extern const char *hud_overfontname;
 
     /************** overlay drawing ***************/
 

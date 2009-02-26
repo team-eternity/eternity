@@ -405,7 +405,7 @@ void DLG_Drawer(void)
    V_DrawPatch(DIALOGPIC_X, DIALOGPIC_Y, &vbscreen, dlgpic);
 
    // draw character name
-   V_WriteText(dlgname, DIALOGNAME_X, DIALOGNAME_Y);
+   V_FontWriteText(in_font, dlgname, DIALOGNAME_X, DIALOGNAME_Y);
 
    if(!clearbox && currentdialog->waittype != DWT_NONE)
    {

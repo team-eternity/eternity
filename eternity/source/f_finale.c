@@ -40,6 +40,7 @@
 #include "c_io.h"
 #include "f_finale.h"
 #include "e_states.h"
+#include "e_fonts.h"
 
 // Stage of animation:
 //  0 = text, 1 = art screen, 2 = character cast, 3 = Heretic underwater scene
@@ -65,6 +66,20 @@ static int midstage;                 // whether we're in "mid-stage"
 static void F_InitDemonScroller(void);
 static byte *DemonBuffer; // haleyjd 08/23/02
 
+vfont_t *f_font;
+const char *f_fontname;
+
+//
+// F_Init
+//
+// haleyjd 02/25/09: Added to resolve finale font.
+//
+void F_Init(void)
+{
+   if(!(f_font = E_FontForName(f_fontname)))
+      I_Error("F_InitFont: bad EDF font name %s\n", f_fontname);
+}
+
 //
 // F_StartFinale
 //
@@ -85,9 +100,10 @@ void F_StartFinale(void)
    finalecount = 0;
 }
 
-
-
-boolean F_Responder (event_t *event)
+//
+// F_Responder
+//
+boolean F_Responder(event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
@@ -104,9 +120,12 @@ boolean F_Responder (event_t *event)
    return false;
 }
 
-// Get_TextSpeed() returns the value of the text display speed  // phares
+// 
+// Get_TextSpeed() 
+//
+// Returns the value of the text display speed  // phares
 // Rewritten to allow user-directed acceleration -- killough 3/28/98
-
+//
 static float Get_TextSpeed(void)
 {
    return 
@@ -216,13 +235,16 @@ void F_TextWrite(void)
    int         w, h;         // killough 8/9/98: move variables below
    int         count;
    const char  *ch;
-   int         c;
+   unsigned int c;
    int         cx;
    int         cy;
    int         lumpnum;
    
    // haleyjd: get finale font metrics
    gitextmetric_t *fontmetrics = GameModeInfo->ftextinfo;
+
+   if(f_font->linear) // FIXME/TODO: linear font support here
+      return;
 
    // erase the entire screen to a tiled background
    
@@ -257,28 +279,28 @@ void F_TextWrite(void)
       if(c == '\n')
       {
          cx = fontmetrics->x;
-         cy += fontmetrics->cy;
+         cy += f_font->cy;
          continue;
       }
       
       // haleyjd: added null pointer check
-      c = toupper(c) - V_FONTSTART;
+      c = toupper(c) - f_font->start;
 
-      if(c < 0 || c > V_FONTSIZE || !v_font[c])
+      if(c >= f_font->size || !f_font->fontgfx[c])
       {
-         cx += fontmetrics->space;
+         cx += f_font->space;
          continue;
       }
       
-      w = SHORT(v_font[c]->width);
+      w = SHORT(f_font->fontgfx[c]->width);
       if(cx + w > SCREENWIDTH)
          continue; // haleyjd: continue if text off right side
 
-      h = SHORT(v_font[c]->height);
+      h = SHORT(f_font->fontgfx[c]->height);
       if(cy + h > SCREENHEIGHT)
          break; // haleyjd: break if text off bottom
 
-      V_DrawPatch(cx, cy, &vbscreen, v_font[c]);
+      V_DrawPatch(cx, cy, &vbscreen, f_font->fontgfx[c]);
       
       cx += w;
    }
@@ -509,7 +531,8 @@ boolean F_CastResponder(event_t* ev)
 //
 void F_CastPrint(const char *text)
 {
-   V_WriteText(text, 160 - V_StringWidth(text) / 2, 180);
+   V_FontWriteText(f_font, text, 
+                   160 - V_FontStringWidth(f_font, text) / 2, 180);
 }
 
 

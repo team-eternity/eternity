@@ -53,6 +53,7 @@
 #include "d_gi.h"
 #include "g_bind.h"
 #include "a_small.h" // haleyjd
+#include "e_fonts.h"
 
 #define MESSAGES 384
 // keep the last 32 typed commands
@@ -92,6 +93,9 @@ static FILE *console_log = NULL;
 // SoM: Use the new VBuffer system
 static VBuffer cback;
 static boolean cbackneedfree = false;
+
+vfont_t *c_font;
+const char *c_fontname;
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -181,7 +185,7 @@ static void C_initBackdrop(void)
 static void C_updateInputPoint(void)
 {
    for(input_point = inputtext;
-       V_FontStringWidth(&linear_fonts[0], input_point) > SCREENWIDTH-20; input_point++);
+       V_FontStringWidth(c_font, input_point) > SCREENWIDTH-20; input_point++);
 }
 
 // initialise the console
@@ -191,6 +195,9 @@ void C_Init(void)
    // haleyjd 07/03/08: this is called on first entry to C_Drawer, so don't call
    // it here.
    // C_initBackdrop();
+
+   if(!(c_font = E_FontForName(c_fontname)))
+      I_Error("C_Init: bad EDF font name %s\n", c_fontname);
    
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
@@ -546,13 +553,13 @@ void C_Drawer(void)
    {
       // move up one line on the screen
       // back one line in the history
-      y -= 8;
+      y -= c_font->absh;
       
-      if(--count < 0) break;   // end of message history?
-      if(y <= -8) break;       // past top of screen?
+      if(--count < 0) break;        // end of message history?
+      if(y <= -c_font->absh) break; // past top of screen?
       
       // draw this line
-      V_FontWriteText(&linear_fonts[0], messages[count], 0, y);
+      V_FontWriteText(c_font, messages[count], 0, y);
    }
 
    //////////////////////////////////
@@ -578,7 +585,7 @@ void C_Drawer(void)
                    "%s%s_", a_prompt, input_point);
       }
       
-      V_FontWriteText(&linear_fonts[0], tempstr, 0, current_height-8);
+      V_FontWriteText(c_font, tempstr, 0, current_height-8);
    }
 }
 
@@ -649,7 +656,7 @@ static void C_AddMessage(const char *s)
    boolean lastend;
 
    // haleyjd 09/04/02: set color to default at beginning
-   if(V_FontStringWidth(&linear_fonts[0], messages[message_last]) > SCREENWIDTH-9 ||
+   if(V_FontStringWidth(c_font, messages[message_last]) > SCREENWIDTH-9 ||
       strlen(messages[message_last]) >= LINELENGTH - 1)
    {
       C_ScrollUp();
@@ -669,7 +676,7 @@ static void C_AddMessage(const char *s)
             (*c >= TEXT_COLOR_NORMAL && *c <= TEXT_COLOR_ERROR))
             linecolor = *c;
 
-         if(V_FontStringWidth(&linear_fonts[0], messages[message_last]) > SCREENWIDTH-8 ||
+         if(V_FontStringWidth(c_font, messages[message_last]) > SCREENWIDTH-8 ||
             strlen(messages[message_last]) >= LINELENGTH - 1)
          {
             // might possibly over-run, go onto next line
@@ -762,7 +769,8 @@ static void C_AdjustLineBreaks(char *str)
       // if the first segment of the string doesn't fit on the 
       // current line, move the console up one line in advance
 
-      if(V_StringWidth(str) + V_StringWidth(messages[message_last]) > SCREENWIDTH - 9
+      if(V_FontStringWidth(c_font, str) + 
+         V_FontStringWidth(c_font, messages[message_last]) > SCREENWIDTH - 9
          || strlen(str) + strlen(messages[message_last]) >= LINELENGTH - 1)
       {
          C_ScrollUp();

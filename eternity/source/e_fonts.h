@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2009 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,45 +19,42 @@
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:
-// 
-// Shared intermission code
+// DESCRIPTION:  
+//    EDF Font Definitions
 //
 //-----------------------------------------------------------------------------
 
-#ifndef IN_LUDE_H__
-#define IN_LUDE_H__
+#ifndef E_FONTS_H__
+#define E_FONTS_H__
 
-// Intermission object struct
-typedef struct interfns_s
-{
-   void (*Ticker)(void);         // called by IN_Ticker
-   void (*DrawBackground)(void); // called various places
-   void (*Drawer)(void);         // called by IN_Drawer
-   void (*Start)(wbstartstruct_t *wbstartstruct); // called by IN_Start
-} interfns_t;
+#include "v_font.h"
 
-// intercam
-#define MAXCAMERAS 128
+#ifdef NEED_EDF_DEFINITIONS
 
-extern int intertime;
-extern int acceleratestage;
+#define EDF_SEC_FONT "font"
 
-extern MobjCollection camerathings;
-extern mobj_t *wi_camera;
+#define ITEM_FONT_HUD     "hu_font"
+#define ITEM_FONT_HUDO    "hu_overlayfont"
+#define ITEM_FONT_MENU    "mn_font"
+#define ITEM_FONT_BMENU   "mn_font_big"
+#define ITEM_FONT_NMENU   "mn_font_normal"
+#define ITEM_FONT_FINAL   "f_font"
+#define ITEM_FONT_INTR    "in_font"
+#define ITEM_FONT_INTRB   "in_font_big"
+#define ITEM_FONT_INTRBN "in_font_bignum"
+#define ITEM_FONT_CONS    "c_font"
 
-extern const char *in_fontname;
-extern const char *in_bigfontname;
-extern const char *in_bignumfontname;
+extern cfg_opt_t edf_font_opts[];
+boolean E_NeedDefaultFonts(void);
+void    E_ProcessFonts(cfg_t *);
 
-void IN_AddCameras(void);
-void IN_slamBackground(void);
-void IN_checkForAccelerate(void);
-void IN_Ticker(void);
-void IN_Drawer(void);
-void IN_DrawBackground(void);
-void IN_Start(wbstartstruct_t *wbstartstruct);
+#endif
+
+vfont_t *E_FontForName(const char *);
+vfont_t *E_FontForNum(int);
+int      E_FontNumForName(const char *);
 
 #endif
 
 // EOF
+

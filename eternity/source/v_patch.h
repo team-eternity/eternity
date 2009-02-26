@@ -92,6 +92,8 @@ typedef struct
 
 } cb_patch_column_t; // It's cardboard now, bitches!
 
+byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
+                      int *width, int *height);
 
 #endif
 

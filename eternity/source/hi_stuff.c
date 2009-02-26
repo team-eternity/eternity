@@ -34,6 +34,11 @@
 #include "s_sound.h"
 #include "d_gi.h"
 #include "e_string.h"
+#include "e_fonts.h"
+
+extern vfont_t *in_font;
+extern vfont_t *in_bigfont;
+extern vfont_t *in_bignumfont;
 
 extern char gamemapname[9];
 
@@ -224,16 +229,16 @@ static void HI_drawNewLevelName(int y)
    int x;
    const char *thisLevelName;
 
-   x = (SCREENWIDTH - V_StringWidth(HIS_NOWENTERING)) >> 1;
-   V_WriteText(HIS_NOWENTERING, x, y);
+   x = (SCREENWIDTH - V_FontStringWidth(in_font, HIS_NOWENTERING)) >> 1;
+   V_FontWriteText(in_font, HIS_NOWENTERING, x, y);
 
    if(nextMapName)
       thisLevelName = nextMapName->string;
    else
       thisLevelName = "new level";
 
-   x = (SCREENWIDTH - V_StringWidthBig(thisLevelName)) >> 1;
-   V_WriteTextBigShadowed(thisLevelName, x, y + 10);
+   x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, thisLevelName)) >> 1;
+   V_FontWriteTextShadowed(in_bigfont, thisLevelName, x, y + 10);
 }
 
 //
@@ -252,11 +257,11 @@ static void HI_drawOldLevelName(int y)
    else
       oldLevelName = "new level";
 
-   x = (SCREENWIDTH - V_StringWidthBig(oldLevelName)) >> 1;
-   V_WriteTextBigShadowed(oldLevelName, x, y);
+   x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, oldLevelName)) >> 1;
+   V_FontWriteTextShadowed(in_bigfont, oldLevelName, x, y);
 
-   x = (SCREENWIDTH - V_StringWidth(HIS_FINISHED)) >> 1;
-   V_WriteText(HIS_FINISHED, x, y + 22);
+   x = (SCREENWIDTH - V_FontStringWidth(in_font, HIS_FINISHED)) >> 1;
+   V_FontWriteText(in_font, HIS_FINISHED, x, y + 22);
 }
 
 //
@@ -379,12 +384,12 @@ static void HI_drawLevelStat(int stat, int max, int x, int y)
    char str[16];
 
    sprintf(str, "%3d", stat);
-   V_WriteNumTextBigShadowed(str, x, y);
+   V_FontWriteTextShadowed(in_bignumfont, str, x, y);
    
-   V_WriteTextBigShadowed("/", x + 37, y);
+   V_FontWriteTextShadowed(in_bigfont, "/", x + 37, y);
 
    sprintf(str, "%3d", max);
-   V_WriteNumTextBigShadowed(str, x + 48, y);
+   V_FontWriteTextShadowed(in_bignumfont, str, x + 48, y);
 }
 
 //
@@ -401,16 +406,16 @@ static void HI_drawTime(int h, int m, int s, int x, int y)
    if(h)
    {
       sprintf(timestr, "%02d", h);
-      V_WriteNumTextBigShadowed(timestr, x, y);
-      V_WriteTextBigShadowed(":", x + 26, y);
+      V_FontWriteTextShadowed(in_bignumfont, timestr, x, y);
+      V_FontWriteTextShadowed(in_bigfont, ":", x + 26, y);
    }
 
    sprintf(timestr, "%02d", m);
-   V_WriteNumTextBigShadowed(timestr, x + 34, y);
-   V_WriteTextBigShadowed(":", x + 60, y);
+   V_FontWriteTextShadowed(in_bignumfont, timestr, x + 34, y);
+   V_FontWriteTextShadowed(in_bigfont, ":", x + 60, y);
 
    sprintf(timestr, "%02d", s);
-   V_WriteNumTextBigShadowed(timestr, x + 68, y);
+   V_FontWriteTextShadowed(in_bignumfont, timestr, x + 68, y);
 }
 
 //
@@ -425,9 +430,9 @@ static void HI_drawSingleStats(void)
 {
    static int statstage = 0;
 
-   V_WriteTextBigShadowed(HIS_KILLS,   50,  65);
-   V_WriteTextBigShadowed(HIS_ITEMS,   50,  90);
-   V_WriteTextBigShadowed(HIS_SECRETS, 50, 115);
+   V_FontWriteTextShadowed(in_bigfont, HIS_KILLS,   50,  65);
+   V_FontWriteTextShadowed(in_bigfont, HIS_ITEMS,   50,  90);
+   V_FontWriteTextShadowed(in_bigfont, HIS_SECRETS, 50, 115);
 
    HI_drawOldLevelName(3);
 
@@ -503,7 +508,7 @@ static void HI_drawSingleStats(void)
          
          seconds = time;
 
-         V_WriteTextBigShadowed(HIS_TIME, 85, 160);
+         V_FontWriteTextShadowed(in_bigfont, HIS_TIME, 85, 160);
          HI_drawTime(hours, minutes, seconds, 155, 160);
       }
       else

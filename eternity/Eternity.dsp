@@ -228,10 +228,6 @@ SOURCE=.\Source\d_dehtbl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\d_dialog.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\d_gi.c
 # End Source File
 # Begin Source File
@@ -396,6 +392,10 @@ SOURCE=.\Source\e_exdata.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\e_fonts.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\e_lib.c
 # End Source File
 # Begin Source File
@@ -437,6 +437,10 @@ SOURCE=.\Source\e_edf.h
 # Begin Source File
 
 SOURCE=.\Source\e_exdata.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_fonts.h
 # End Source File
 # Begin Source File
 

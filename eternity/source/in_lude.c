@@ -36,12 +36,13 @@
 #include "v_video.h"
 #include "r_main.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "d_gi.h"
 #include "p_enemy.h"
 #include "p_info.h"
 #include "g_game.h"
 #include "e_things.h" 
-#include "s_sndseq.h"
+#include "e_fonts.h"
 
 // Globals
 
@@ -52,6 +53,13 @@ int intertime;
 int acceleratestage; // killough 3/28/98: made global
 
 static interfns_t *InterFuncs = NULL;
+
+vfont_t *in_font;
+vfont_t *in_bigfont;
+vfont_t *in_bignumfont;
+const char *in_fontname;
+const char *in_bigfontname;
+const char *in_bignumfontname;
 
 //
 // Intermission Camera
@@ -259,6 +267,16 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
    {
       G_WorldDone();
       return;
+   }
+
+   if(!in_font)
+   {
+      if(!(in_font = E_FontForName(in_fontname)))
+         I_Error("IN_Start: bad EDF font name %s\n", in_fontname);
+      if(!(in_bigfont = E_FontForName(in_bigfontname)))
+         I_Error("IN_Start: bad EDF font name %s\n", in_bigfontname);
+      if(!(in_bignumfont = E_FontForName(in_bignumfontname)))
+         I_Error("IN_Start: bad EDF font name %s\n", in_bignumfontname);
    }
 
    IN_StartCamera();  //set up camera

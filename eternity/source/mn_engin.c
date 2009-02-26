@@ -49,8 +49,8 @@
 #include "v_video.h"
 #include "g_bind.h"    // haleyjd: dynamic key bindings
 #include "d_gi.h"      // haleyjd: global game mode info
-#include "v_font.h"    // haleyjd: new font engine
 #include "d_io.h"
+#include "e_fonts.h"
 
 boolean inhelpscreens; // indicates we are in or just left a help screen
 
@@ -68,10 +68,11 @@ static command_t *input_command = NULL;       // NULL if not typing in
 // haleyjd 04/29/02: needs to be unsigned
 static unsigned char input_buffer[1024] = "";
 
-// haleyjd: menu font, most attributes are copied from the small font
-static vfont_t menu_font;
-
 static void MN_PageMenu(menu_t *newpage);
+
+vfont_t *menu_font;
+vfont_t *menu_font_big;
+vfont_t *menu_font_normal;
 
 /////////////////////////////////////////////////////////////////////////////
 // 
@@ -292,7 +293,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       !centeraligned;
 
    // haleyjd: most items are the size of one text line
-   int item_height = menu_font.cy;
+   int item_height = menu_font->cy;
 
    // skip drawing if a gap
    if(item->type == it_gap)
@@ -355,22 +356,22 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
    {
       // if it_title, we draw the description centered
 
-      void (*textfunc)(const char *, int, int) =
+      void (*textfunc)(vfont_t *, const char *, int, int) =
          (!(drawing_menu->flags & mf_skullmenu) &&
           GameModeInfo->flags & GIF_SHADOWTITLES) ? 
-            V_WriteTextBigShadowed : V_WriteTextBig;
+            V_FontWriteTextShadowed : V_FontWriteText;
       
-      textfunc(item->description, 
-               (SCREENWIDTH - V_StringWidthBig(item->description)) / 2,
+      textfunc(menu_font_big, item->description, 
+               (SCREENWIDTH - V_FontStringWidth(menu_font_big, item->description)) / 2,
                y);
-      item_height = V_StringHeightBig(item->description);
+      item_height = V_FontStringHeight(menu_font_big, item->description);
    }
    else if(item->type != it_bigslider || !item->patch)
    {
       int item_x;
       desc_width = 
          item->flags & MENUITEM_BIGFONT ?
-            V_StringWidthBig(item->description) 
+            V_FontStringWidth(menu_font_big, item->description) 
             : MN_StringWidth(item->description);
       
       if(item->flags & MENUITEM_CENTERED || centeraligned)
@@ -383,8 +384,8 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       // write description
       if(item->flags & MENUITEM_BIGFONT)
       {
-         V_WriteTextBig(item->description, item_x, y);
-         item_height = V_StringHeightBig(item->description);
+         V_FontWriteText(menu_font_big, item->description, item_x, y);
+         item_height = V_FontStringHeight(menu_font_big, item->description);
       }
       else
          MN_WriteTextColoured(item->description, colour, item_x, y);
@@ -766,7 +767,7 @@ menuwidget_t *current_menuwidget = NULL;
 
 int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
 
-static void MN_InitFont(void);
+static void MN_InitFonts(void);
 
         // init menu
 void MN_Init(void)
@@ -802,7 +803,7 @@ void MN_Init(void)
       MN_HInitSkull(); // initialize spinning skulls
    
    MN_InitMenus();   // create menu commands in mn_menus.c
-   MN_InitFont();    // create menu font
+   MN_InitFonts();   // create menu fonts
 }
 
 //////////////////////////////////
@@ -1465,34 +1466,38 @@ void MN_StartControlPanel(void)
 // better for the menu
 //
 // haleyjd: duplicate code eliminated via use of vfont engine.
-// A copy of the small_font object is made here and given a different
-// dw value to affect the change in drawing.
 //
 
-static void MN_InitFont(void)
+// haleyjd 02/25/09: font name set by EDF:
+const char *mn_fontname;
+const char *mn_normalfontname;
+const char *mn_bigfontname;
+
+static void MN_InitFonts(void)
 {
-   vfont_t *sf = V_FontSelect(VFONT_SMALL);
+   if(!(menu_font = E_FontForName(mn_fontname)))
+      I_Error("MN_InitFont: bad EDF font name %s\n", mn_fontname);
 
-   // copy over all properties of the normal small font
-   menu_font = *sf;
+   if(!(menu_font_big = E_FontForName(mn_bigfontname)))
+      I_Error("MN_InitFont: bad EDF font name %s\n", mn_bigfontname);
 
-   // set width delta to 1 to move characters together
-   menu_font.dw = 1;
+   if(!(menu_font_normal = E_FontForName(mn_normalfontname)))
+      I_Error("MN_InitFont: bad EDF font name %s\n", mn_normalfontname);
 }
 
 void MN_WriteText(const char *s, int x, int y)
 {
-   V_FontWriteText(&menu_font, s, x, y);
+   V_FontWriteText(menu_font, s, x, y);
 }
 
 void MN_WriteTextColoured(const char *s, int colour, int x, int y)
 {
-   V_FontWriteTextColored(&menu_font, s, colour, x, y);
+   V_FontWriteTextColored(menu_font, s, colour, x, y);
 }
 
 int MN_StringWidth(const char *s)
 {
-   return V_FontStringWidth(&menu_font, s);
+   return V_FontStringWidth(menu_font, s);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -1543,7 +1548,7 @@ static void MN_BoxSetDimensions(box_widget *box)
          box->width = width;
 
       // add string height + 1 for every string in box
-      box->height += V_StringHeight(curname) + 1;
+      box->height += V_FontStringHeight(menu_font_normal, curname) + 1;
 
       curname = box->item_names[++i];
    }
@@ -1557,7 +1562,7 @@ static void MN_BoxSetDimensions(box_widget *box)
       box->width = width;
 
    // leave a gap after title
-   box->height += V_StringHeight(box->title) + 8;
+   box->height += V_FontStringHeight(menu_font_normal, box->title) + 8;
 
    // add 9 to width and 8 to height to account for box border
    box->width  += 9;
@@ -1600,13 +1605,13 @@ static void MN_BoxWidgetDrawer(void)
    MN_WriteTextColoured(box->title, CR_GOLD, x, y);
 
    // leave a gap
-   y += V_StringHeight(box->title) + 8;
+   y += V_FontStringHeight(menu_font_normal, box->title) + 8;
 
    // write text in box
    while(curname)
    {
       int color = GameModeInfo->unselectColor;
-      int height = V_StringHeight(curname);
+      int height = V_FontStringHeight(menu_font_normal, curname);
       
       if(box->selection_idx == i)
       {

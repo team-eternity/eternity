@@ -32,9 +32,9 @@
 #include "doomstat.h"
 #include "d_dehtbl.h"
 #include "d_main.h"
+#include "e_fonts.h"
 #include "m_qstr.h"
 #include "s_sound.h"
-#include "v_font.h"
 #include "v_video.h"
 #include "v_misc.h"
 #include "w_wad.h"
@@ -43,6 +43,8 @@
 #include "mn_misc.h"
 
 #include "d_gi.h" // haleyjd: gamemode info
+
+extern vfont_t *menu_font_big;
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -71,33 +73,32 @@ enum
    popup_question
 } popup_message_type;
 
+extern vfont_t *menu_font;
+extern vfont_t *menu_font_normal;
+
 //
-// WriteCentredText
+// WriteCenteredText
 //
 // Local routine to draw centered messages. Candidate for
 // absorption into future generalized font code. Rewritten
-// 02/22/04 to use qstring module. Beware British spelling
-// in function name ;)
+// 02/22/04 to use qstring module. 
 //
-static void WriteCentredText(char *message)
+static void WriteCenteredText(char *message)
 {
    static qstring_t qstring;
    static qstring_t *pqstr = NULL;
-   vfont_t *font;
    char *rover;
    const char *buffer;
    int x, y;
 
    if(!pqstr)
       pqstr = M_QStrCreate(&qstring);
-
-   font = V_FontSelect(VFONT_SMALL);
    
    // rather than reallocate memory every time we draw it,
    // use one buffer and increase the size as neccesary
    // haleyjd 02/22/04: qstring handles this for us now
 
-   y = (SCREENHEIGHT - V_StringHeight(popup_message)) / 2;
+   y = (SCREENHEIGHT - V_FontStringHeight(menu_font_normal, popup_message)) / 2;
    M_QStrClear(pqstr);
    rover = message;
 
@@ -106,10 +107,10 @@ static void WriteCentredText(char *message)
       if(*rover == '\n')
       {
          buffer = M_QStrBuffer(pqstr);
-         x = (SCREENWIDTH - V_StringWidth(buffer)) / 2;
-         V_WriteText(buffer, x, y);         
+         x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
+         V_FontWriteText(menu_font_normal, buffer, x, y);         
          M_QStrClear(pqstr); // clear buffer
-         y += font->absh; // next line
+         y += menu_font_normal->absh; // next line
       }
       else      // add next char
          M_QStrPutc(pqstr, *rover);
@@ -119,13 +120,13 @@ static void WriteCentredText(char *message)
 
    // dont forget the last line.. prob. not \n terminated
    buffer = M_QStrBuffer(pqstr);
-   x = (SCREENWIDTH - V_StringWidth(buffer)) / 2;
-   V_WriteText(buffer, x, y);   
+   x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
+   V_FontWriteText(menu_font_normal, buffer, x, y);   
 }
 
 void MN_PopupDrawer(void)
 {
-   WriteCentredText(popup_message);
+   WriteCenteredText(popup_message);
 }
 
 boolean MN_PopupResponder(event_t *ev)
@@ -383,7 +384,7 @@ void MN_DrawCredits(void)
 
       for(i = 0; i < NUMCATS; ++i)
       {
-         w = V_StringWidth(cat_strs[i]);
+         w = V_FontStringWidth(menu_font_normal, cat_strs[i]);
 
          if(w > cat_width)
             cat_width = w;
@@ -392,7 +393,7 @@ void MN_DrawCredits(void)
       // determine widest value string
       for(i = 0; i < NUMCATS; ++i)
       {
-         w = V_StringWidth(val_strs[i]);
+         w = V_FontStringWidth(menu_font_normal, val_strs[i]);
 
          if(w > val_width)
             val_width = w;
@@ -411,21 +412,26 @@ void MN_DrawCredits(void)
 
    y = GameModeInfo->creditY;
    str = FC_ABSCENTER FC_HI "The Eternity Engine";
-   V_WriteTextBigShadowed(str, 0, y);
-   y += V_StringHeightBig(str) + GameModeInfo->creditTitleStep;
+   V_FontWriteTextShadowed(menu_font_big, str, 0, y);
+   y += V_FontStringHeight(menu_font_big, str) + GameModeInfo->creditTitleStep;
 
    // draw info categories
    for(i = 0; i < NUMCATS; ++i)
    {
-      V_WriteText(cat_strs[i], 
-                  line_x + (cat_width - V_StringWidth(cat_strs[i])), y);
-      V_WriteText(val_strs[i], line_x + cat_width + 16, y);
+      V_FontWriteText(menu_font_normal, cat_strs[i], 
+                      line_x + (cat_width - 
+                                V_FontStringWidth(menu_font_normal, 
+                                                  cat_strs[i])), 
+                                                  y);
 
-      y += V_StringHeight(val_strs[i]);
+      V_FontWriteText(menu_font_normal, val_strs[i], line_x + cat_width + 16, y);
+
+      y += V_FontStringHeight(menu_font_normal, val_strs[i]);
    }
 
-   V_WriteText(FC_ABSCENTER "Copyright 2009 Team Eternity et al.\n"
-               "http://doomworld.com/eternity/", 0, y);
+   V_FontWriteText(menu_font_normal, 
+                   FC_ABSCENTER "Copyright 2009 Team Eternity et al.\n"
+                   "http://doomworld.com/eternity/", 0, y);
 }
 
 void MN_HelpDrawer(void)

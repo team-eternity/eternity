@@ -41,6 +41,7 @@
 #include "d_main.h"
 #include "dstrings.h"
 #include "dhticstr.h" // haleyjd
+#include "e_fonts.h"
 #include "e_states.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -895,6 +896,9 @@ CONSOLE_COMMAND(mn_dmflags, cf_server)
 
 // haleyjd 04/14/03: dmflags menu drawer (a big hack, mostly)
 
+extern vfont_t *menu_font;
+extern vfont_t *menu_font_normal;
+
 static void MN_DMFlagsDrawer(void)
 {
    int i;
@@ -910,8 +914,9 @@ static void MN_DMFlagsDrawer(void)
    {
       menuitem = &(menu_dmflags.menuitems[i]);
                   
-      V_WriteTextColoured
+      V_FontWriteTextColored
         (
+         menu_font,
          values[!(dmflags & (1<<(i-2)))],
          (i == menu_dmflags.selected) ? 
             GameModeInfo->selectColor : GameModeInfo->variableColor,
@@ -922,7 +927,7 @@ static void MN_DMFlagsDrawer(void)
    menuitem = &(menu_dmflags.menuitems[8]);
    // draw dmflags value
    psnprintf(buf, sizeof(buf), FC_GOLD "%lu", dmflags);
-   V_WriteText(buf, menuitem->x + 4, menuitem->y);
+   V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y);
 }
 
 static void toggle_dm_flag(unsigned long flag)

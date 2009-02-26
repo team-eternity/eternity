@@ -45,6 +45,9 @@
 #include "c_io.h"
 #include "d_deh.h"
 #include "e_string.h"
+#include "e_fonts.h"
+
+extern vfont_t *in_bigfont;
 
 extern char gamemapname[9];
 
@@ -429,9 +432,9 @@ static void WI_drawLF(void)
       // draw <LevelName> 
       if(mapName)
       {
-         V_WriteTextBig(mapName->string, 
-            (SCREENWIDTH - V_StringWidthBig(mapName->string)) / 2, y);
-         y += (5 * V_StringHeightBig(mapName->string)) / 4;
+         V_FontWriteText(in_bigfont, mapName->string, 
+            (SCREENWIDTH - V_FontStringWidth(in_bigfont, mapName->string)) / 2, y);
+         y += (5 * V_FontStringHeight(in_bigfont, mapName->string)) / 4;
       }
       else
       {
@@ -494,8 +497,8 @@ static void WI_drawEL(void)
       // draw level
       if(nextMapName)
       {
-         V_WriteTextBig(nextMapName->string,
-            (SCREENWIDTH - V_StringWidthBig(nextMapName->string)) / 2,
+         V_FontWriteText(in_bigfont, nextMapName->string,
+            (SCREENWIDTH - V_FontStringWidth(in_bigfont, nextMapName->string)) / 2,
             y);
       }
       else

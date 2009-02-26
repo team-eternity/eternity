@@ -46,6 +46,7 @@
 #include "d_gi.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_fonts.h"
 
 // player skin sprite states
 enum
@@ -227,6 +228,9 @@ static boolean MN_SkinResponder(event_t *ev)
 // haleyjd 05/29/06: got rid of cascading macros in preference of this
 #define INSTR_Y ((SCREENHEIGHT - 1) - (GameModeInfo->vtextinfo->cy * 5))
 
+extern vfont_t *menu_font_big;
+extern vfont_t *menu_font_normal;
+
 //
 // MN_SkinInstructions
 //
@@ -237,16 +241,19 @@ static void MN_SkinInstructions(void)
 {
    char *msg = FC_GOLD "skin viewer";
 
-   void (*textfunc)(const char *, int, int) = 
-      GameModeInfo->flags & GIF_SHADOWTITLES ? V_WriteTextBigShadowed : V_WriteTextBig;
+   void (*textfunc)(vfont_t *, const char *, int, int) = 
+      GameModeInfo->flags & GIF_SHADOWTITLES ? 
+        V_FontWriteTextShadowed : V_FontWriteText;
 
    // draw a title at the top, too
 
-   textfunc(msg, 160 - V_StringWidthBig(msg)/2, 8);
+   textfunc(menu_font_big, msg, 
+            160 - V_FontStringWidth(menu_font_big, msg)/2, 8);
 
    // haleyjd 05/29/06: rewrote to be binding neutral and to draw all of
-   // it with one call to V_WriteText instead of five.
-   V_WriteText("instructions:\n"
+   // it with one call to V_FontWriteText instead of five.
+   V_FontWriteText(menu_font_normal, 
+               "instructions:\n"
                FC_GRAY "left" FC_RED " = rotate left, "
                FC_GRAY "right" FC_RED " = rotate right\n"
                FC_GRAY "ctrl" FC_RED " = fire, "

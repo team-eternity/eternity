@@ -42,6 +42,8 @@ typedef struct {
 extern int max_castorder;
 extern castinfo_t *castorder;
 
+extern const char *f_fontname;
+
 //
 // FINALE
 //
@@ -60,16 +62,19 @@ enum
    FINALE_NUMFINALES
 };
 
-// Called by main loop.
-boolean F_Responder (event_t* ev);
+// haleyjd 02/25/09
+void F_Init(void);
 
 // Called by main loop.
-void F_Ticker (void);
+boolean F_Responder(event_t* ev);
 
 // Called by main loop.
-void F_Drawer (void);
+void F_Ticker(void);
 
-void F_StartFinale (void);
+// Called by main loop.
+void F_Drawer(void);
+
+void F_StartFinale(void);
 
 #endif
 

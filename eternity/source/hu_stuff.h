@@ -82,6 +82,8 @@ extern int hu_timecolor;
 extern int hu_levelnamecolor;
 extern int hu_coordscolor;
 
+extern const char *hud_fontname;
+
 #endif
 
 // EOF

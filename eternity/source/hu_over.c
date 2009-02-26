@@ -46,6 +46,7 @@
 #include "w_wad.h"
 #include "d_gi.h"
 #include "v_font.h"
+#include "e_fonts.h"
 
 
 // internal for other defines:
@@ -92,33 +93,10 @@ int hud_hidestatus = 0;
 // *not* the general doom font as it is in the original sources and
 // most ports
 
-#define HU_FONTSTART '!'    /* the first font characters */
-#define HU_FONTEND   (0x7f) /*jff 2/16/98 '_' the last font characters */
-
-// Calculate # of glyphs in font.
-#define HU_FONTSIZE  (HU_FONTEND - HU_FONTSTART + 1) 
-
-static patch_t *hu_font[HU_FONTSIZE];
+// haleyjd 02/25/09: hud font set by EDF:
+const char *hud_overfontname;
+vfont_t *hud_overfont;
 static boolean hu_fontloaded = false;
-
-// haleyjd 01/14/05: new vfont object for HUD font
-vfont_t hud_font = 
-{
-   HU_FONTSTART, // first character
-   HU_FONTEND,   // last character
-   HU_FONTSIZE,  // size of font
-
-   8,            // linebreak size
-   4,            // space size
-   0,            // char width delta
-   8,            // max character height
-
-   true,         // color enabled
-   true,         // caps only
-   false,        // no centering
-
-   hu_font,      // patch array
-};
 
 //
 // HU_LoadFont
@@ -128,27 +106,8 @@ vfont_t hud_font =
 //
 void HU_LoadFont(void)
 {
-   int i, j;
-   char lumpname[9];
-
-   for(i = 0, j = HU_FONTSTART; i < HU_FONTSIZE; ++i, ++j)
-   {
-      lumpname[0] = 0;
-      if((j >= '0' && j <= '9') || (j >= 'A' && j <= 'Z') )
-         sprintf(lumpname, "DIG%c", j);
-      if(j == 45 || j == 47 || j == 58 || j == 91 || j == 93)
-         sprintf(lumpname, "DIG%i", j);
-      if(j >=123 && j <= 127)
-         sprintf(lumpname, "STBR%i", j);
-      if(j=='_')
-         strcpy(lumpname, "DIG45");
-      if(j=='(')
-         strcpy(lumpname, "DIG91");
-      if(j==')')
-         strcpy(lumpname, "DIG93");
-      
-      hu_font[i] = lumpname[0] ? W_CacheLumpName(lumpname, PU_STATIC) : NULL;
-   }
+   if(!(hud_overfont = E_FontForName(hud_overfontname)))
+      I_Error("HU_LoadFont: bad EDF hu_font name %s\n", hud_overfontname);
 
    hu_fontloaded = true;
 }
@@ -162,7 +121,7 @@ void HU_LoadFont(void)
 void HU_WriteText(const char *s, int x, int y)
 {
    if(hu_fontloaded)
-      V_FontWriteText(&hud_font, s, x, y);
+      V_FontWriteText(hud_overfont, s, x, y);
 }
 
 //
@@ -173,7 +132,7 @@ void HU_WriteText(const char *s, int x, int y)
 //
 int HU_StringWidth(const char *s)
 {
-   return V_FontStringWidth(&hud_font, s);
+   return V_FontStringWidth(hud_overfont, s);
 }
 
 //
@@ -184,7 +143,7 @@ int HU_StringWidth(const char *s)
 //
 int HU_StringHeight(const char *s)
 {
-   return V_FontStringHeight(&hud_font, s);
+   return V_FontStringHeight(hud_overfont, s);
 }
 
 #define BARSIZE 15

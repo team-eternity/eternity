@@ -36,7 +36,7 @@
 #include "w_wad.h"
 #include "d_gi.h"
 #include "r_main.h" // haleyjd
-#include "v_font.h"
+#include "e_fonts.h"
 
 extern int gamma_correct;
 
@@ -110,317 +110,6 @@ void V_ResetMode(void)
 
 patch_t *bgp[9];        // background for boxes
 
-///////////////////////////////////////////////////////////////////////////
-//
-// Font
-//
-
-// haleyjd 01/14/05: big font defines
-#define B_FONTSTART '!'
-#define B_FONTEND   'Z'
-#define B_FONTSIZE  (B_FONTEND - B_FONTSTART + 1)
-
-patch_t *v_font[V_FONTSIZE];        // still used externally
-static patch_t *b_font[B_FONTSIZE]; // used only in this module
-
-// haleyjd 01/14/05: vfont object for small font
-vfont_t small_font =
-{
-   V_FONTSTART, // first character
-   V_FONTEND,   // last character
-   V_FONTSIZE,  // number of characters
-
-   // these differ in the small font between game modes
-   0,           // cy: set below
-   0,           // space: set below
-   0,           // dw: set below
-   0,           // absh: set below
-
-   true,        // color enabled
-   true,        // caps only
-   false,       // no centering
-
-   v_font,      // patch array
-};
-
-// haleyjd 01/14/05: vfont object for big font
-vfont_t big_font =
-{
-   B_FONTSTART, // first character
-   B_FONTEND,   // last character
-   B_FONTSIZE,  // number of characters
-
-   // these differ in the big font between game modes
-   0,           // cy: set below
-   0,           // space: set below
-   0,           // dw: set below
-   0,           // absh: set blow
-
-   false,       // color enabled
-   true,        // caps only
-   false,       // no centering
-
-   b_font,      // patch array
-};
-
-// same as big font, but used for drawing numbers
-vfont_t big_num_font =
-{
-   B_FONTSTART, // first character
-   B_FONTEND,   // last character
-   B_FONTSIZE,  // number of characters
-
-   // these are also now set below
-   0,           // cy
-   0,           // space
-   0,           // dw
-   0,           // absh
-
-   false,       // color enabled
-   true,        // caps only
-   true,        // centering on
-
-   b_font,      // patch array
-
-   12,          // cw: box to center characters within
-};
-
-//
-// V_LoadFont
-//
-// Loads the general small font used almost everywhere.
-// This font differs between DOOM and Heretic, and in Heretic
-// it is quite a mess.
-//
-static void V_LoadFont(void)
-{
-   int i, j;
-   char tempstr[9];
-
-   // haleyjd 01/14/05: populate the vfont object with the proper
-   // values for the current game mode.
-   small_font.cy    = GameModeInfo->vtextinfo->cy;
-   small_font.space = GameModeInfo->vtextinfo->space;
-   small_font.dw    = GameModeInfo->vtextinfo->dw;
-   small_font.absh  = GameModeInfo->vtextinfo->absh;
-
-   // init to NULL first
-   for(i = 0; i < V_FONTSIZE; ++i)
-      v_font[i] = NULL;
-
-   for(i = 0, j = V_FONTSTART; i < V_FONTSIZE; i++, j++)
-   {
-      if(j > 96 && j != 121 && j != 123 && j != 124 && j != 125)
-         continue;
-
-      // haleyjd 08/16/02: heretic font support
-      if(GameModeInfo->type == Game_Heretic)
-      {
-         switch(j)
-         {
-         case 91:
-            strcpy(tempstr, "FONTA00"); // bit of a hack here
-            break;
-         case 95:
-            strcpy(tempstr, "FONTA59"); // this one is numbered wrong
-            break;
-         default:
-            sprintf(tempstr, "FONTA%.2d", j - 32);
-            break;
-         }
-      }
-      else
-         sprintf(tempstr, "STCFN%.3d", j);
-
-      v_font[i] = W_CacheLumpName(tempstr, PU_STATIC);
-   }
-}
-
-//
-// V_LoadBigFont
-//
-// haleyjd 03/26/05
-// Loads the large font. Now available in DOOM, too.
-//
-static void V_LoadBigFont(void)
-{
-   int i, j;
-   char tempstr[9];
-
-   // haleyjd 03/26/05: populate the vfont object with the proper
-   // values for the current game mode.
-   big_font.cy    = GameModeInfo->btextinfo->cy;
-   big_font.space = GameModeInfo->btextinfo->space;
-   big_font.dw    = GameModeInfo->btextinfo->dw;
-   big_font.absh  = GameModeInfo->btextinfo->absh;
-
-   // pass on and alter some values for the big number font
-   big_num_font.cy    = big_font.cy;
-   big_num_font.space = 12;            // bigger space
-   big_num_font.dw    = 0;             // no width delta
-   big_num_font.absh  = big_font.absh;
-   
-   // init to NULL first
-   for(i = 0; i < B_FONTSIZE; ++i)
-      b_font[i] = NULL;
-
-   // FONTB may not exist, check to make sure
-   if(W_CheckNumForName("FONTB01") == -1)
-      return;
-   
-   for(i = 0, j = B_FONTSTART; i < B_FONTSIZE; i++, j++)
-   {     
-      int num;
-      
-      sprintf(tempstr, "FONTB%.2d", j - 32);
-      if((num = W_CheckNumForName(tempstr)) != -1)
-         b_font[i] = W_CacheLumpNum(num, PU_STATIC);
-   }
-}
-
-vfont_t *linear_fonts;
-int numlinearfonts;
-static int firstfontlump, lastfontlump;
-
-//
-// V_LoadLinearFonts
-//
-// haleyjd 06/29/08: load linear fonts between FONSTART and FONEND lumps.
-//
-static void V_LoadLinearFonts(void)
-{
-   int i;
-
-   // count number of lumps
-   firstfontlump = W_CheckNumForName("FONSTART");
-   lastfontlump  = W_CheckNumForName("FONEND");
-
-   if(firstfontlump == -1 || lastfontlump == -1)
-      numlinearfonts = 0;
-   else
-      numlinearfonts = (lastfontlump - firstfontlump) - 1;
-
-   if(numlinearfonts <= 0)
-      I_Error("V_LoadLinearFonts: missing CONCHARS font\n");
-
-   linear_fonts = malloc(numlinearfonts * sizeof(vfont_t));
-
-   firstfontlump += 1;
-   
-   for(i = 0; i < numlinearfonts; ++i)
-   {
-      // FIXME: no error
-      if(!V_LoadLinearFont(&linear_fonts[i], firstfontlump + i))
-         I_Error("V_LoadLinearFonts: invalid font lump\n");
-   }
-}
-
-//
-// haleyjd 01/14/05: The following functions persist as convenience
-// methods, and only call down to the vfont engine using the appropriate
-// vfont objects. This way I don't need to change every call in the 
-// engine right now.
-//
-
-//
-// V_WriteText
-//
-// sf: write a text line to x, y
-// haleyjd 01/14/05: now uses vfont engine
-//
-void V_WriteText(const char *s, int x, int y)
-{
-   V_FontWriteText(&small_font, s, x, y);
-}
-
-void V_WriteTextShadowed(const char *s, int x, int y)
-{
-   V_FontWriteTextShadowed(&small_font, s, x, y);
-}
-
-//
-// V_WriteTextBig
-//
-// haleyjd 01/14/05: big font support
-//
-void V_WriteTextBig(const char *s, int x, int y)
-{
-   V_FontWriteText(&big_font, s, x, y);
-}
-
-void V_WriteTextBigShadowed(const char *s, int x, int y)
-{
-   V_FontWriteTextShadowed(&big_font, s, x, y);
-}
-
-//
-// V_WriteNumTextBig
-//
-// Uses a big font object specialized for drawing numbers.
-//
-void V_WriteNumTextBig(const char *s, int x, int y)
-{
-   V_FontWriteText(&big_num_font, s, x, y);
-}
-
-void V_WriteNumTextBigShadowed(const char *s, int x, int y)
-{
-   V_FontWriteTextShadowed(&big_num_font, s, x, y);
-}
-
-//
-// V_WriteTextColoured
-//
-// write text in a particular colour
-// haleyjd 01/14/05: now uses vfont engine
-//
-void V_WriteTextColoured(const char *s, int colour, int x, int y)
-{
-   V_FontWriteTextColored(&small_font, s, colour, x, y);
-}
-
-//
-// V_StringHeight
-//
-// find height(in pixels) of a string 
-// haleyjd 01/14/05: now uses vfont engine
-//
-int V_StringHeight(const char *s)
-{
-   return V_FontStringHeight(&small_font, s);
-}
-
-//
-// V_StringHeightBig
-//
-// haleyjd 01/14/05: big font support
-//
-int V_StringHeightBig(const char *s)
-{
-   return V_FontStringHeight(&big_font, s);
-}
-
-//
-// V_StringWidth
-//
-// haleyjd 01/14/05: now uses vfont engine
-//
-int V_StringWidth(const char *s)
-{
-   return V_FontStringWidth(&small_font, s);
-}
-
-//
-// V_StringWidthBig
-//
-// haleyjd 01/14/05: big font support
-//
-int V_StringWidthBig(const char *s)
-{
-   return V_FontStringWidth(&big_font, s);
-}
-
-
 ////////////////////////////////////////////////////////////////////////////
 //
 // Box Drawing
@@ -485,6 +174,7 @@ void V_DrawLoading(void)
 {
    int x, y;
    int linelen;
+   vfont_t *font;
 
    // haleyjd 11/30/02: get palette indices from GameModeInfo
    int white = GameModeInfo->whiteIndex;
@@ -498,9 +188,11 @@ void V_DrawLoading(void)
       return;
   
    V_DrawBox((SCREENWIDTH/2)-50, (SCREENHEIGHT/2)-30, 100, 40);
+
+   font = E_FontForName("ee_smallfont");
    
-   V_WriteText(loading_message, (SCREENWIDTH/2)-30, 
-               (SCREENHEIGHT/2)-20);
+   V_FontWriteText(font, loading_message, (SCREENWIDTH/2)-30, 
+                   (SCREENHEIGHT/2)-20);
   
    x = ((SCREENWIDTH/2)-45);
    y = (SCREENHEIGHT/2);
@@ -666,6 +358,7 @@ void V_TextFPSDrawer(void)
    static char fpsStr[16];
    static int  fhistory[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
    static int  lasttic = 0;
+   vfont_t *font;
    
    float fps = 0;
    int   i, thistic, totaltics = 0;
@@ -696,8 +389,10 @@ void V_TextFPSDrawer(void)
    psnprintf(fpsStr, sizeof(fpsStr), FC_GRAY "FPS: %.2f", fps);
    
    lasttic = thistic;
+
+   font = E_FontForName("ee_smallfont");
       
-   V_WriteText(fpsStr, 5, 10);
+   V_FontWriteText(font, fpsStr, 5, 10);
 }
 
 // haleyjd: VBuffer stuff
@@ -824,9 +519,6 @@ void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 
 void V_InitMisc(void)
 {
-   V_LoadFont();
-   V_LoadBigFont();     // haleyjd 01/14/05
-   V_LoadLinearFonts(); // haleyjd 06/29/08
    V_InitBox();
 
    // this only ever needs to be done once

@@ -1,0 +1,75 @@
+// fonts.edf - EDF File for Eternity Engine 3.35.92
+
+// DOOM-only fonts.
+
+ifgametype(DOOM)
+
+// Small font - this is used by the HUD, finale, and V-system by default
+font ee_smallfont
+{
+   id          = 0;
+   start       = '!';
+   end         = 0x7f;
+   linesize    = 8;
+   spacesize   = 4;
+   tallestchar = 8;
+   colorable   = true;
+   uppercase   = true;
+   
+   filter { start = '!'; end = 0x7f; mask = "STCFN%.3d" }
+}
+
+// Big font - used by intermission and menus occasionally
+font ee_bigfont
+{
+   id          = 2;
+   start       = '!';
+   end         = 'Z';
+   linesize    = 12;
+   spacesize   = 8;
+   widthdelta  = 1;
+   tallestchar = 12;
+   uppercase   = true;
+   
+   patchnumoffset = 32;
+   
+   filter { start = '!'; end = 'Z'; mask = "FONTB%.2d" }
+}
+
+// Big number font - used only in special circumstances
+font ee_bignumfont
+{
+   id            = 3;
+   start         = '!';
+   end           = 'Z';
+   linesize      = 12;
+   spacesize     = 12;
+   tallestchar   = 12;
+   centerwidth   = 12;
+   uppercase     = true;
+   blockcentered = true;
+
+   patchnumoffset = 32;
+   
+   filter { start = '!'; end = 'Z'; mask = "FONTB%.2d" }
+}
+
+// Menu font - this is a special copy of the smallfont used by the menus;
+// widthdelta is set to 1 to move the text closer together.
+font ee_menufont
+{
+   id          = 5;
+   start       = '!';
+   end         = 0x7f;
+   linesize    = 8;
+   spacesize   = 4;
+   widthdelta  = 1;
+   tallestchar = 8;
+   colorable   = true;
+   uppercase   = true;
+   
+   filter { start = '!'; end = 0x7f; mask = "STCFN%.3d" }
+}
+
+endif()
+

@@ -56,6 +56,7 @@
 #include "d_io.h"
 #include "m_qstr.h"
 #include "a_small.h"
+#include "e_fonts.h"
 
 char *chat_macros[10];
 const char* shiftxform;
@@ -64,6 +65,9 @@ const char english_shiftxform[];
 boolean chat_active = false;
 int obituaries = 0;
 int obcolour = CR_BRICK;       // the colour of death messages
+
+vfont_t *hud_font;
+const char *hud_fontname;
 
 static boolean HU_ChatRespond(event_t *ev);
 
@@ -195,7 +199,10 @@ void HU_Init(void)
 {
    shiftxform = english_shiftxform;
 
-   HU_LoadFont();
+   if(!(hud_font = E_FontForName(hud_fontname)))
+      I_Error("HU_Init: bad EDF font name %s\n", hud_fontname);
+
+   HU_LoadFont(); // overlay font
    HU_InitNativeWidgets();
 }
 
@@ -418,11 +425,11 @@ static void HU_MessageDraw(hu_widget_t *widget)
       // haleyjd 12/26/02: center messages in Heretic
       // FIXME/TODO: make this an option in DOOM?
       if(GameModeInfo->type == Game_Heretic)
-         x = (SCREENWIDTH - V_StringWidth(msg)) >> 1;
+         x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) >> 1;
       
-      // haleyjd 06/04/05: use V_WriteTextColoured like it should.
+      // haleyjd 06/04/05: use V_FontWriteTextColored like it should.
       // Color codes within strings will still override the default.
-      V_WriteTextColoured(msg, mess_colour, x, y);
+      V_FontWriteTextColored(hud_font, msg, mess_colour, x, y);
    }
 }
 
@@ -925,8 +932,8 @@ static void HU_TextWidgetDefaults(hu_textwidget_t *tw)
    tw->widget.clear  = HU_TextWidgetClear;
    tw->widget.type   = WIDGET_TEXT;
 
-   // all widgets default to small font
-   tw->font = V_FontSelect(VFONT_SMALL);
+   // all widgets default to normal hud font
+   tw->font = hud_font;
 }
 
 //
@@ -977,8 +984,8 @@ static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
    // set properties
    newtw->x = x;
    newtw->y = y;   
-   if(!(newtw->font = V_FontSelect(font)))
-      newtw->font = V_FontSelect(VFONT_SMALL);
+   if(!(newtw->font = E_FontForNum(font)))
+      newtw->font = hud_font;
    newtw->cleartic = cleartic >= 0 ? cleartic : 0;
    newtw->flags = flags;
 
@@ -1049,9 +1056,9 @@ void HU_CenterMessage(const char *s)
    M_QStrCat(&qstr, s);
   
    tw->message = M_QStrBuffer(&qstr);
-   tw->x = (SCREENWIDTH-V_StringWidth(s)) / 2;
-   tw->y = (SCREENHEIGHT-V_StringHeight(s) -
-            ((scaledviewheight==SCREENHEIGHT) ? 0 : st_height-8)) / 2;
+   tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
+   tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
+            ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
    tw->cleartic = leveltime + (message_timer * 35) / 1000;
 
    HU_UpdateEraseData(tw);
@@ -1276,7 +1283,7 @@ static void HU_InitLevelTime(void)
       leveltime_widget.y = SCREENHEIGHT - ST_HEIGHT - 8;
    }
    leveltime_widget.message = NULL;
-   leveltime_widget.font = V_FontSelect(VFONT_SMALL);
+   leveltime_widget.font = hud_font;
    leveltime_widget.cleartic = 0;
    leveltime_widget.flags = TW_AUTOMAP_ONLY;
 }
@@ -1334,7 +1341,7 @@ static void HU_InitLevelName(void)
       levelname_widget.y = SCREENHEIGHT - ST_HEIGHT - 8;
    }
    levelname_widget.message = NULL;
-   levelname_widget.font = V_FontSelect(VFONT_SMALL);
+   levelname_widget.font = hud_font;
    levelname_widget.cleartic = 0;
    levelname_widget.flags = TW_AUTOMAP_ONLY;
 }
@@ -1391,7 +1398,7 @@ static void HU_InitChat(void)
    chat_widget.x = 0;
    chat_widget.y = 0;
    chat_widget.message = NULL;
-   chat_widget.font = V_FontSelect(VFONT_SMALL);
+   chat_widget.font = hud_font;
    chat_widget.cleartic = 0;
 }
 
@@ -1572,7 +1579,7 @@ static void HU_InitCoords(void)
       coordz_widget.y = 25;
    }
    coordx_widget.message = coordy_widget.message = coordz_widget.message = NULL;
-   coordx_widget.font = coordy_widget.font = coordz_widget.font = V_FontSelect(VFONT_SMALL);
+   coordx_widget.font = coordy_widget.font = coordz_widget.font = hud_font;
    coordx_widget.cleartic = coordy_widget.cleartic = coordz_widget.cleartic = 0;
    coordx_widget.flags = coordy_widget.flags = coordz_widget.flags = TW_AUTOMAP_ONLY;
 }

@@ -224,8 +224,11 @@ static int IsMarker(const char *marker, const char *name)
       (*name == *marker && !strncasecmp(name+1, marker, 7));
 }
 
+//
+// W_CoalesceMarkedResource
+//
 // killough 4/17/98: add namespace tags
-
+//
 static void W_CoalesceMarkedResource(const char *start_marker,
                                      const char *end_marker, int li_namespace)
 {
@@ -295,11 +298,14 @@ static void W_CoalesceMarkedResource(const char *start_marker,
    }
 }
 
+//
+// W_LumpNameHash
+//
 // Hash function used for lump names.
 // Must be mod'ed with table size.
 // Can be used for any 8-character names.
 // by Lee Killough
-
+//
 unsigned W_LumpNameHash(const char *s)
 {
   unsigned hash;
@@ -409,9 +415,6 @@ static void W_InitResources(void)          // sf
    
    // haleyjd 01/12/04: add translation markers
    W_CoalesceMarkedResource("T_START", "T_END", ns_translations);
-
-   // haleyjd 06/29/08: add fonts
-   W_CoalesceMarkedResource("FONSTART", "FONEND", ns_fonts);
 
    // set up caching
    // sf: caching now done in the lumpinfo_t's

@@ -43,12 +43,18 @@ extern int v_mode;
 // Font
 //
 
+const char *small_font_name;
+const char *big_font_name;
+const char *big_num_font_name;
+
+/*
 #define V_FONTSTART    '!'     // the first font character
 #define V_FONTEND      (0x7f) // jff 2/16/98 '_' the last font characters
 // Calculate # of glyphs in font.
 #define V_FONTSIZE     (V_FONTEND - V_FONTSTART + 1) 
 
 extern patch_t *v_font[V_FONTSIZE];
+*/
 
 // haleyjd 10/30/06: enum for text control characters
 enum
@@ -95,19 +101,6 @@ enum
 #define FC_SHADOW       "\x8e"
 // haleyjd 03/29/06: absolute centering toggle (143)
 #define FC_ABSCENTER    "\x8f"
-
-void V_WriteText(const char *s, int x, int y);
-void V_WriteTextColoured(const char *s, int colour, int x, int y);
-void V_WriteTextShadowed(const char *s, int x, int y);
-int  V_StringWidth(const char *s);
-int  V_StringHeight(const char *s);
-
-void V_WriteTextBig(const char *s, int x, int y);
-void V_WriteTextBigShadowed(const char *s, int x, int y);
-void V_WriteNumTextBig(const char *s, int x, int y);
-void V_WriteNumTextBigShadowed(const char *s, int x, int y);
-int  V_StringWidthBig(const char *s);
-int  V_StringHeightBig(const char *s);
 
 ///////////////////////////////////////////////////////////////////////////
 //

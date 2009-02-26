@@ -38,6 +38,9 @@
 #include "v_video.h"
 #include "v_misc.h"
 #include "w_wad.h"
+#include "e_fonts.h"
+
+extern vfont_t *menu_font_big;
 
 extern int start_episode;
 extern char *start_mapname;
@@ -242,7 +245,8 @@ static void MN_HSaveDrawer(void)
    int x, y, i;
    const char *title = "save game";
 
-   V_WriteTextBig(title, 160 - V_StringWidthBig(title) / 2, 10);
+   V_FontWriteText(menu_font_big, title, 
+                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10);
 
    x = HSAVEGAME_BOX_X;
    y = HSAVEGAME_BOX_Y;
@@ -306,7 +310,8 @@ static void MN_HLoadDrawer(void)
    if(!emptystr)
       emptystr = strdup(DEH_String("EMPTYSTRING"));
 
-   V_WriteTextBig(title, 160 - V_StringWidthBig(title) / 2, 10);
+   V_FontWriteText(menu_font_big, title, 
+                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10);
 
    x = HLOADGAME_BOX_X;
    y = HLOADGAME_BOX_Y;
