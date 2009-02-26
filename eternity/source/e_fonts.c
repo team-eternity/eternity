@@ -107,8 +107,8 @@ enum
 
 static const char *fontfmts[] =
 {
-   "linear",
-   "patch"
+   "linear",  // a linear block of pixel data; the default format.
+   "patch"    // a DOOM patch, which will be converted to linear.
 };
 
 #define NUMFONTCHAINS 31
@@ -148,7 +148,7 @@ static boolean E_AutoAllocFontNum(vfont_t *font)
 
 #ifdef RANGECHECK
    if(font->num > 0)
-      I_Error("E_AutoAllocModNum: called for emod_t with valid num\n");
+      I_Error("E_AutoAllocFontNum: called for vfont_t with valid num\n");
 #endif
 
    // cannot assign because we're out of dehnums?
@@ -206,6 +206,35 @@ static void E_DelFontFromNumHash(vfont_t *font)
 }
 
 //
+// E_IsLinearLumpUsed
+//
+// Runs down font hash chains to see if any other linear font is
+// using the resource in question, before freeing it.
+// Returns true if the resource is used, and false otherwise.
+//
+static boolean E_IsLinearLumpUsed(vfont_t *font, byte *data)
+{
+   int i;
+
+   // run down all hash chains
+   for(i = 0; i < NUMFONTCHAINS; ++i)
+   {
+      vfont_t *rover = e_font_namechains[i];
+
+      // run down the chain
+      while(rover)
+      {
+         if(rover != font && rover->linear && rover->data == data)
+            return true; // is used
+         rover = rover->namenext;
+      }
+   }
+
+   // didn't find one, doc
+   return false;
+}
+
+//
 // E_LoadLinearFont
 //
 // Populates a pre-allocated vfont_t with information on a linear font 
@@ -216,6 +245,13 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
    byte *lump;
    int w, h, size, i, lumpnum;
    boolean foundsize = false;
+
+   // handle disposal of previous font graphics 
+   if(font->data && !E_IsLinearLumpUsed(font, font->data))
+   {
+      free(font->data);
+      font->data = NULL;
+   }
 
    lumpnum = W_GetNumForName(name);
 
@@ -276,7 +312,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 // Because it's exceptionally dangerous to allow the specification of format
 // strings by the end user, I'm going to make sure it cannot be abused.
 //
-void E_VerifyFilter(const char *str)
+static void E_VerifyFilter(const char *str)
 {
    const char *rover = str;
    boolean inpct = false;
@@ -286,6 +322,7 @@ void E_VerifyFilter(const char *str)
    {
       if(inpct)
       {
+         // formatting lengths are ok, and are indeed necessary
          if((*rover >= '0' && *rover <= '9') || *rover == '.')
          {
             ++rover;
@@ -323,12 +360,55 @@ void E_VerifyFilter(const char *str)
          inpct = true;
       }
 
-      ++rover;
+      ++rover; // let's not forget to do this!
    }
 }
 
 //
+// E_FreeFilterData
+//
+static void E_FreeFilterData(vfontfilter_t *f)
+{
+   if(f->chars)
+   {
+      free(f->chars);
+      f->chars = NULL;
+   }
+
+   if(f->mask)
+   {
+      free((void *)f->mask);
+      f->mask = NULL;
+   }
+}
+
+//
+// E_FreeFontFilters
+//
+// Frees all the filters in a font that is being overwritten.
+//
+static void E_FreeFontFilters(vfont_t *font)
+{
+   unsigned int i;
+
+   if(!font->filters)
+      return;
+
+   for(i = 0; i < font->numfilters; ++i)
+      E_FreeFilterData(&(font->filters[i]));
+
+   free(font->filters);
+   font->filters = NULL;
+}
+
+//
 // E_ProcessFontFilter
+//
+// Patch fonts can specify any number of filter objects (at least one is
+// required), which have two methods for specifying the lump that belongs
+// to a given character or range of characters. The filters use mask strings
+// that are C format strings, but the validity of these are checked at load
+// by the routine above.
 //
 static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 {
@@ -396,12 +476,75 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 }
 
 //
+// E_IsPatchUsed
+//
+// Returns true if some other font is using the patch in question,
+// to support proper disposal of shared resources.
+//
+static boolean E_IsPatchUsed(vfont_t *font, patch_t *p)
+{
+   int i;
+
+   // run down all hash chains
+   for(i = 0; i < NUMFONTCHAINS; ++i)
+   {
+      vfont_t *rover = e_font_namechains[i];
+
+      // run down the chain
+      while(rover)
+      {
+         if(rover != font && rover->fontgfx)
+         {
+            unsigned int j;
+            
+            // run down the font graphics
+            for(j = 0; j < font->size; ++j)
+               if(font->fontgfx[j] == p)
+                  return true; // got a match
+         }
+         rover = rover->namenext;
+      }
+   }
+
+   // didn't find one, doc
+   return false;
+}
+
+//
+// E_DisposePatches
+//
+// Dumps all dumpable patches when overwriting a font.
+//
+static void E_DisposePatches(vfont_t *font)
+{
+   unsigned int i;
+
+   if(!font->fontgfx)
+      return;
+
+   for(i = 0; i < font->size; ++i)
+   {
+      if(font->fontgfx[i] && !E_IsPatchUsed(font, font->fontgfx[i]))
+         Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
+   }
+
+   // get rid of the patch array
+   free(font->fontgfx);
+}
+
+//
 // E_LoadPatchFont
 //
+// Creates the fontgfx array and precaches all patches as determined via
+// execution of the filter objects in the font.
+// 
 void E_LoadPatchFont(vfont_t *font)
 {
    unsigned int i, j, k, m;
    char lumpname[9];
+
+   // dump any pre-existing patch array
+   E_DisposePatches(font);
 
    // first calculate font size
    font->size = (font->end - font->start + 1);
@@ -435,11 +578,14 @@ void E_LoadPatchFont(vfont_t *font)
 
       if(filtertouse)
       {
+         int lnum;
+
          memset(lumpname, 0, sizeof(lumpname));
          psnprintf(lumpname, sizeof(lumpname), 
                    filtertouse->mask, j - font->patchnumoffset);
-         if(W_CheckNumForName(lumpname) >= 0) // no errors
-            font->fontgfx[i] = W_CacheLumpName(lumpname, PU_STATIC);
+
+         if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
+            font->fontgfx[i] = W_CacheLumpNum(lnum, PU_STATIC);
       }
    }
 }
@@ -448,6 +594,8 @@ void E_LoadPatchFont(vfont_t *font)
 
 //
 // E_ProcessFont
+//
+// Processes a single EDF font object.
 //
 static void E_ProcessFont(cfg_t *sec)
 {
@@ -499,7 +647,8 @@ static void E_ProcessFont(cfg_t *sec)
       char *pos = NULL;
       tempstr = cfg_getstr(sec, ITEM_FONT_START);
 
-      tempnum = strtol(tempstr, &pos, 0);
+      if(strlen(tempstr) > 1)
+         tempnum = strtol(tempstr, &pos, 0);
 
       if(pos && *pos == '\0') // it is a number?
          font->start = tempnum; 
@@ -513,7 +662,8 @@ static void E_ProcessFont(cfg_t *sec)
       char *pos = NULL;
       tempstr = cfg_getstr(sec, ITEM_FONT_END);
 
-      tempnum = strtol(tempstr, &pos, 0);
+      if(strlen(tempstr) > 1)
+         tempnum = strtol(tempstr, &pos, 0);
 
       if(pos && *pos == '\0') // is it a number?
          font->end = tempnum;
@@ -575,6 +725,9 @@ static void E_ProcessFont(cfg_t *sec)
       unsigned int i;
       unsigned int numfilters;
 
+      // handle disposal of pre-existing filters
+      E_FreeFontFilters(font);
+
       // process font filter objects now
       if((numfilters = cfg_size(sec, ITEM_FONT_FILTER)) <= 0)
          E_EDFLoggedErr(2, "E_ProcessFont: at least one filter is required\n");
@@ -618,6 +771,11 @@ static void E_ProcessFontVars(cfg_t *cfg)
    in_bignumfontname = strdup(cfg_getstr(cfg, ITEM_FONT_INTRBN));
    c_fontname        = strdup(cfg_getstr(cfg, ITEM_FONT_CONS));
 }
+
+//=============================================================================
+//
+// Global Routines
+//
 
 static unsigned int edf_num_fonts;
 
