@@ -222,13 +222,13 @@ static void P_AddSpriteLumps(const char *named)
 {
    int i, n = strlen(named);
    
-   for(i = 0; i < numlumps; i++)
+   for(i = 0; i < w_GlobalDir.numlumps; i++)
    {
-      if(!strncasecmp(lumpinfo[i]->name, named, n))
+      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, named, n))
       {
          // mark as sprites so that W_CoalesceMarkedResource
          // will group them as sprites
-         lumpinfo[i]->li_namespace = ns_sprites;
+         w_GlobalDir.lumpinfo[i]->li_namespace = ns_sprites;
       }
    }
 }
@@ -300,7 +300,7 @@ void P_ParseSkin(int lumpnum)
    newskin = Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0);
 
    newskin->spritename = Z_Malloc(5, PU_STATIC, 0);
-   strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
+   strncpy(newskin->spritename, w_GlobalDir.lumpinfo[lumpnum+1]->name, 4);
    newskin->spritename[4] = 0;
 
    newskin->facename = "STF";      // default status bar face
@@ -317,7 +317,7 @@ void P_ParseSkin(int lumpnum)
    rover = lump; 
    comment = false;
 
-   while(rover < lump+lumpinfo[lumpnum]->size)
+   while(rover < lump + w_GlobalDir.lumpinfo[lumpnum]->size)
    {
       if((*rover=='/' && *(rover+1)=='/') ||        // '//'
          (*rover==';') || (*rover=='#') )           // ';', '#'

@@ -304,6 +304,7 @@ static void E_DisposePatches(vfont_t *font)
 
    // get rid of the patch array
    free(font->fontgfx);
+   font->fontgfx = NULL;
 }
 
 //=============================================================================

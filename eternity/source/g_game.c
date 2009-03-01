@@ -1716,7 +1716,7 @@ ULong64 G_Signature(void)
    // sf: use gamemapname now, not gameepisode and gamemap
    lump = W_CheckNumForName(gamemapname);
    
-   if(lump != -1 && (i = lump + 10) < numlumps)
+   if(lump != -1 && (i = lump + 10) < w_GlobalDir.numlumps)
    {
       do
       {

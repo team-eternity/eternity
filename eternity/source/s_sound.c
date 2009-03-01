@@ -1171,7 +1171,7 @@ void S_Chgun(void)
 void S_UpdateSound(int lumpnum)
 {
    // haleyjd 09/03/03: now calls down to master EDF sound hash
-   E_NewWadSound(lumpinfo[lumpnum]->name);
+   E_NewWadSound(w_GlobalDir.lumpinfo[lumpnum]->name);
 }
 
 typedef struct squeueitem_s
@@ -1205,7 +1205,7 @@ void S_UpdateSoundDeferred(int lumpnum)
 
    newsq = calloc(1, sizeof(squeueitem_t));
 
-   strncpy(newsq->lumpname, lumpinfo[lumpnum]->name, 9);
+   strncpy(newsq->lumpname, w_GlobalDir.lumpinfo[lumpnum]->name, 9);
 
    M_QueueInsert(&(newsq->mqitem), &defsndqueue);
 }
@@ -1296,7 +1296,7 @@ void S_UpdateMusic(int lumpnum)
    prefixlen = strlen(GameModeInfo->musPrefix);
 
    memset(sndname, 0, sizeof(sndname));
-   strncpy(sndname, lumpinfo[lumpnum]->name + prefixlen, 8 - prefixlen);
+   strncpy(sndname, w_GlobalDir.lumpinfo[lumpnum]->name + prefixlen, 8 - prefixlen);
    
    // check if one already in the table first
    

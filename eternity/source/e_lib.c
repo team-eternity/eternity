@@ -165,10 +165,10 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = lumpinfo[i]->next) >= 0)
+   while((i = w_GlobalDir.lumpinfo[i]->next) >= 0)
    {
-      if(lumpinfo[i]->li_namespace == ns_global &&
-         !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))
+      if(w_GlobalDir.lumpinfo[i]->li_namespace == ns_global &&
+         !strncasecmp(w_GlobalDir.lumpinfo[i]->name, cfg->filename, 8))
       {
          return cfg_lexer_include(cfg, cfg->filename, i);
       }

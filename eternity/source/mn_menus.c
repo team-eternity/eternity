@@ -230,7 +230,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       // present -- this assumes the resource wad is loaded first.
       if(startMapLump < 0 || 
          (modifiedgame && 
-          lumpinfo[startMapLump]->file == firstWadHandle))
+          w_GlobalDir.lumpinfo[startMapLump]->file == firstWadHandle))
          mapPresent = false;
 
 

@@ -1508,8 +1508,8 @@ int P_CheckLevel(int lumpnum)
    for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
    {
       ln = lumpnum + i;
-      if(ln >= numlumps ||     // past the last lump?
-         strncmp(lumpinfo[ln]->name, levellumps[i], 8))
+      if(ln >= w_GlobalDir.numlumps ||     // past the last lump?
+         strncmp(w_GlobalDir.lumpinfo[ln]->name, levellumps[i], 8))
       {
          // If "BEHAVIOR" wasn't found, we assume we are dealing with
          // a DOOM-format map, and it is not an error; any other missing
@@ -1596,7 +1596,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    }
 
    // haleyjd 07/22/04: moved up
-   newlevel = (lumpinfo[lumpnum]->file != iwadhandle);
+   newlevel = (w_GlobalDir.lumpinfo[lumpnum]->file != iwadhandle);
    doom1level = false;
 
    strncpy(levelmapname, mapname, 8);

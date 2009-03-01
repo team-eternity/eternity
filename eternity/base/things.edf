@@ -288,7 +288,7 @@ thingtype EEAmbience
 {
   doomednum = 14065
   spawnstate = S_EE_AMBIENCE_SPAWN
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+  cflags = NOBLOCKMAP|NOGRAVITY
 }
 
 // Environmental Sequence Point
@@ -297,7 +297,7 @@ thingtype EEEnviroSequence
 {
   doomednum  = 1300
   spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+  cflags = NOBLOCKMAP|NOGRAVITY
 }
 
 // Sector Sequence Override
@@ -306,7 +306,7 @@ thingtype EESectorSequence
 {
   doomednum  = 1500
   spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+  cflags = NOBLOCKMAP|NOGRAVITY
 }
 
 // What's this??? o_O

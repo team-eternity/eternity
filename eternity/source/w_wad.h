@@ -92,13 +92,25 @@ typedef struct
 
 } lumpinfo_t;
 
-extern lumpinfo_t **lumpinfo;   //sf: ptr to ptr
-extern int        numlumps;
+//
+// haleyjd 03/01/09: Wad Directory structure
+//
+// Adding this allows a level of indirection to be added to the wad system,
+// letting us have wads that are not part of the master directory.
+//
+typedef struct waddir_s
+{
+   lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
+   int        numlumps;   // number of lumps
+   int        ispublic;   // if false, don't call D_NewWadLumps
+} waddir_t;
 
-void W_InitMultipleFiles(char *const*filenames);
+extern waddir_t w_GlobalDir; // the global wad directory
+
+void W_InitMultipleFiles(waddir_t *dir, char *const*filenames);
 
 // sf: add a new wad file after the game has already begun
-int W_AddNewFile(char *filename);
+int W_AddNewFile(waddir_t *dir, char *filename);
 
 // killough 4/17/98: if W_CheckNumForName() called with only
 // one argument, pass ns_global as the default namespace
@@ -115,7 +127,6 @@ int     W_ReadLumpHeader(int lump, void *dest, size_t size);
 #define W_CacheLumpName(name,tag) W_CacheLumpNum (W_GetNumForName(name),(tag))
 
 unsigned W_LumpNameHash(const char *s);           // killough 1/31/98
-void W_InitLumpHash(void);
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
 

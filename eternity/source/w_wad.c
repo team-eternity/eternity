@@ -39,8 +39,7 @@
 //
 
 // Location of each lump on disk.
-lumpinfo_t **lumpinfo;          // sf : array of ptrs
-int        numlumps;            // killough
+waddir_t w_GlobalDir = { NULL, 0, true };
 
 // haleyjd: WAD_TODO: put wad system globals into structure
 FILE *iwadhandle;     // sf: the handle of the main iwad
@@ -90,7 +89,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type);
 //
 // Reload hack removed by Lee Killough
 //
-static int W_AddFile(const char *name) // killough 1/31/98: static, const
+static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: static, const
 {
    wadinfo_t   header;
    lumpinfo_t* lump_p;
@@ -131,7 +130,7 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
   
    if(in_textmode)
       printf(" adding %s\n", filename);   // killough 8/8/98
-   startlump = numlumps;
+   startlump = dir->numlumps;
 
    // killough:
    if(strlen(filename) <= 4 || strcasecmp(filename+strlen(filename)-4, ".wad" ))
@@ -142,7 +141,7 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
       singleinfo.filepos = 0;
       singleinfo.size = LONG(M_FileLength(fileno(handle)));
       M_ExtractFileBase(filename, singleinfo.name);
-      numlumps++;
+      dir->numlumps++;
    }
    else
    {
@@ -166,16 +165,16 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
       fseek(handle, header.infotableofs, SEEK_SET);
       fread(fileinfo, length, 1, handle);
       
-      numlumps += header.numlumps;
+      dir->numlumps += header.numlumps;
    }
 
    free(filename);           // killough 11/98
    
    // Fill in lumpinfo
-   lumpinfo = realloc(lumpinfo, numlumps * sizeof(lumpinfo_t *));
+   dir->lumpinfo = realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *));
 
    // space for new lumps
-   newlumps = malloc((numlumps - startlump) * sizeof(lumpinfo_t));
+   newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
    lump_p   = newlumps;
    
    // update IWAD handle?   
@@ -189,9 +188,9 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
          iwadhandle = handle;
    }
   
-   for(i = startlump; i < (unsigned)numlumps; i++, lump_p++, fileinfo++)
+   for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
    {
-      lumpinfo[i]      = lump_p;
+      dir->lumpinfo[i] = lump_p;
       lump_p->type     = lump_direct; // haleyjd
       lump_p->file     = handle;
       lump_p->position = (size_t)(LONG(fileinfo->filepos));
@@ -206,7 +205,8 @@ static int W_AddFile(const char *name) // killough 1/31/98: static, const
    
    free(fileinfo2free); // killough
    
-   D_NewWadLumps(handle, w_sound_update_type);
+   if(dir->ispublic)
+      D_NewWadLumps(handle, w_sound_update_type);
    
    return false; // no error
 }
@@ -229,17 +229,17 @@ static int IsMarker(const char *marker, const char *name)
 //
 // killough 4/17/98: add namespace tags
 //
-static void W_CoalesceMarkedResource(const char *start_marker,
+static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
                                      const char *end_marker, int li_namespace)
 {
-   lumpinfo_t **marked = malloc(sizeof(*marked) * numlumps);
+   lumpinfo_t **marked = malloc(sizeof(*marked) * dir->numlumps);
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
-   lumpinfo_t *lump = lumpinfo[0];
+   lumpinfo_t *lump = dir->lumpinfo[0];
   
-   for(i = 0; i < (unsigned)numlumps; i++)
+   for(i = 0; i < (unsigned)dir->numlumps; i++)
    {
-      lump = lumpinfo[i];
+      lump = dir->lumpinfo[i];
       
       // If this is the first start marker, add start marker to marked lumps
       if(IsMarker(start_marker, lump->name))       // start marker found
@@ -276,25 +276,25 @@ static void W_CoalesceMarkedResource(const char *start_marker,
       }
       else
       {
-         lumpinfo[num_unmarked] = lump;       // else move down THIS list
+         dir->lumpinfo[num_unmarked] = lump;       // else move down THIS list
          num_unmarked++;
       }
    }
    
    // Append marked list to end of unmarked list
-   memcpy(lumpinfo + num_unmarked, marked, num_marked * sizeof(lumpinfo_t *));
+   memcpy(dir->lumpinfo + num_unmarked, marked, num_marked * sizeof(lumpinfo_t *));
 
    free(marked);                                   // free marked list
    
-   numlumps = num_unmarked + num_marked;           // new total number of lumps
+   dir->numlumps = num_unmarked + num_marked;           // new total number of lumps
    
    if(mark_end)                                    // add end marker
    {
-      lumpinfo[numlumps] = malloc(sizeof(lumpinfo_t));
-      lumpinfo[numlumps]->size = 0;  // killough 3/20/98: force size to be 0
-      lumpinfo[numlumps]->li_namespace = ns_global;   // killough 4/17/98
-      strncpy(lumpinfo[numlumps]->name, end_marker, 8);
-      numlumps++;
+      dir->lumpinfo[dir->numlumps] = malloc(sizeof(lumpinfo_t));
+      dir->lumpinfo[dir->numlumps]->size = 0;  // killough 3/20/98: force size to be 0
+      dir->lumpinfo[dir->numlumps]->li_namespace = ns_global;   // killough 4/17/98
+      strncpy(dir->lumpinfo[dir->numlumps]->name, end_marker, 8);
+      dir->numlumps++;
    }
 }
 
@@ -339,12 +339,15 @@ unsigned W_LumpNameHash(const char *s)
 // killough 4/17/98: add namespace parameter to prevent collisions
 // between different resources such as flats, sprites, colormaps
 //
-int (W_CheckNumForName)(register const char *name, register int li_namespace)
+// haleyjd 03/01/09: added InDir version.
+//
+int W_CheckNumForNameInDir(waddir_t *dir, const char *name, int li_namespace)
 {
    // Hash function maps the name to one of possibly numlump chains.
    // It has been tuned so that the average chain length never exceeds 2.
    
-   register int i = lumpinfo[W_LumpNameHash(name) % (unsigned)numlumps]->index;
+   register int i = dir->lumpinfo[W_LumpNameHash(name) % 
+                                  (unsigned)dir->numlumps]->index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -352,12 +355,22 @@ int (W_CheckNumForName)(register const char *name, register int li_namespace)
    // worth the overhead, considering namespace collisions are rare in
    // Doom wads.
 
-   while(i >= 0 && (strncasecmp(lumpinfo[i]->name, name, 8) ||
-         lumpinfo[i]->li_namespace != li_namespace))
-      i = lumpinfo[i]->next;
+   while(i >= 0 && (strncasecmp(dir->lumpinfo[i]->name, name, 8) ||
+         dir->lumpinfo[i]->li_namespace != li_namespace))
+      i = dir->lumpinfo[i]->next;
 
    // Return the matching lump, or -1 if none found.   
    return i;
+}
+
+//
+// W_CheckNumForName
+//
+// haleyjd: Now a global directory convenience routine.
+//
+int (W_CheckNumForName)(register const char *name, register int li_namespace)
+{
+   return W_CheckNumForNameInDir(&w_GlobalDir, name, li_namespace);
 }
 
 //
@@ -365,22 +378,22 @@ int (W_CheckNumForName)(register const char *name, register int li_namespace)
 //
 // killough 1/31/98: Initialize lump hash table
 //
-void W_InitLumpHash(void)
+void W_InitLumpHash(waddir_t *dir)
 {
    int i;
    
-   for(i = 0; i < numlumps; i++)
-      lumpinfo[i]->index = -1;                     // mark slots empty
+   for(i = 0; i < dir->numlumps; i++)
+      dir->lumpinfo[i]->index = -1;                  // mark slots empty
 
    // Insert nodes to the beginning of each chain, in first-to-last
    // lump order, so that the last lump of a given name appears first
    // in any chain, observing pwad ordering rules. killough
 
-   for(i = 0; i < numlumps; i++)
+   for(i = 0; i < dir->numlumps; i++)
    {                                           // hash function:
-      int j = W_LumpNameHash(lumpinfo[i]->name) % (unsigned)numlumps;
-      lumpinfo[i]->next = lumpinfo[j]->index;     // Prepend to list
-      lumpinfo[j]->index = i;
+      int j = W_LumpNameHash(dir->lumpinfo[i]->name) % (unsigned)dir->numlumps;
+      dir->lumpinfo[i]->next = dir->lumpinfo[j]->index;     // Prepend to list
+      dir->lumpinfo[j]->index = i;
    }
 }
 
@@ -399,28 +412,31 @@ int W_GetNumForName(const char* name)     // killough -- const added
    return i;
 }
 
-static void W_InitResources(void)          // sf
+//
+// W_InitResources
+//
+static void W_InitResources(waddir_t *dir) // sf
 {
    //jff 1/23/98
    // get all the sprites and flats into one marked block each
    // killough 1/24/98: change interface to use M_START/M_END explicitly
    // killough 4/17/98: Add namespace tags to each entry
    
-   W_CoalesceMarkedResource("S_START", "S_END", ns_sprites);
+   W_CoalesceMarkedResource(dir, "S_START", "S_END", ns_sprites);
    
-   W_CoalesceMarkedResource("F_START", "F_END", ns_flats);
+   W_CoalesceMarkedResource(dir, "F_START", "F_END", ns_flats);
 
    // killough 4/4/98: add colormap markers
-   W_CoalesceMarkedResource("C_START", "C_END", ns_colormaps);
+   W_CoalesceMarkedResource(dir, "C_START", "C_END", ns_colormaps);
    
    // haleyjd 01/12/04: add translation markers
-   W_CoalesceMarkedResource("T_START", "T_END", ns_translations);
+   W_CoalesceMarkedResource(dir, "T_START", "T_END", ns_translations);
 
    // set up caching
    // sf: caching now done in the lumpinfo_t's
    
    // killough 1/31/98: initialize lump hash table
-   W_InitLumpHash();
+   W_InitLumpHash(dir);
 }
 
 //
@@ -433,32 +449,32 @@ static void W_InitResources(void)          // sf
 // Lump names can appear multiple times.
 // The name searcher looks backwards, so a later file overrides earlier ones.
 //
-void W_InitMultipleFiles(char *const *filenames)
+void W_InitMultipleFiles(waddir_t *dir, char *const *filenames)
 {
-   numlumps = 0;
+   dir->numlumps = 0;
    
-   lumpinfo = Z_Malloc(1, PU_STATIC, 0);
+   dir->lumpinfo = NULL;
 
    // haleyjd 09/13/03: set new sound lump parsing to deferred
    w_sound_update_type = 0;
    
    // open all the files, load headers, and count lumps
    while(*filenames)
-      W_AddFile(*filenames++);
+      W_AddFile(dir, *filenames++);
    
-   if(!numlumps)
+   if(!dir->numlumps)
       I_Error("W_InitFiles: no files found");
    
-   W_InitResources();
+   W_InitResources(dir);
 }
 
-int W_AddNewFile(char *filename)
+int W_AddNewFile(waddir_t *dir, char *filename)
 {
    // haleyjd 09/13/03: use S_UpdateSound here
    w_sound_update_type = 1;
-   if(W_AddFile(filename)) 
+   if(W_AddFile(dir, filename)) 
       return true;
-   W_InitResources();              // reinit lump lookups etc
+   W_InitResources(dir);         // reinit lump lookups etc
    return false;
 }
 
@@ -467,11 +483,16 @@ int W_AddNewFile(char *filename)
 //
 // Returns the buffer size needed to load the given lump.
 //
+int W_LumpLengthInDir(waddir_t *dir, int lump)
+{
+   if(lump < 0 || lump >= dir->numlumps)
+      I_Error("W_LumpLength: %i >= numlumps", lump);
+   return dir->lumpinfo[lump]->size;
+}
+
 int W_LumpLength(int lump)
 {
-   if(lump < 0 || lump >= numlumps)
-      I_Error("W_LumpLength: %i >= numlumps", lump);
-   return lumpinfo[lump]->size;
+   return W_LumpLengthInDir(&w_GlobalDir, lump);
 }
 
 //
@@ -479,21 +500,26 @@ int W_LumpLength(int lump)
 //
 // Loads the lump into the given buffer, which must be >= W_LumpLength().
 //
-void W_ReadLump(int lump, void *dest)
+void W_ReadLumpInDir(waddir_t *dir, int lump, void *dest)
 {
    size_t c;
    lumpinfo_t *l;
    
-   if(lump < 0 || lump >= numlumps)
+   if(lump < 0 || lump >= dir->numlumps)
       I_Error("W_ReadLump: %d >= numlumps", lump);
 
-   l = lumpinfo[lump];
+   l = dir->lumpinfo[lump];
 
    // killough 1/31/98: Reload hack (-wart) removed
 
    c = LumpHandlers[l->type].readLump(l, dest, l->size);
    if(c < l->size)
       I_Error("W_ReadLump: only read %d of %d on lump %d", c, l->size, lump);
+}
+
+void W_ReadLump(int lump, void *dest)
+{
+   W_ReadLumpInDir(&w_GlobalDir, lump, dest);
 }
 
 //
@@ -503,15 +529,15 @@ void W_ReadLump(int lump, void *dest)
 // just need a small piece of data from the beginning of a lump. There's hardly
 // any use reading in the whole thing in that case.
 //
-int W_ReadLumpHeader(int lump, void *dest, size_t size)
+int W_ReadLumpHeaderInDir(waddir_t *dir, int lump, void *dest, size_t size)
 {
    size_t c;
    lumpinfo_t *l;
    
-   if(lump < 0 || lump >= numlumps)
-      I_Error("W_ReadLumpHeader: %d >= numlumps",lump);
+   if(lump < 0 || lump >= dir->numlumps)
+      I_Error("W_ReadLumpHeader: %d >= numlumps", lump);
    
-   l = lumpinfo[lump];
+   l = dir->lumpinfo[lump];
 
    if(l->size < size || l->size == 0)
       return 0;
@@ -523,20 +549,25 @@ int W_ReadLumpHeader(int lump, void *dest, size_t size)
    return c;
 }
 
+int W_ReadLumpHeader(int lump, void *dest, size_t size)
+{
+   return W_ReadLumpHeaderInDir(&w_GlobalDir, lump, dest, size);
+}
+
 //
 // W_CacheLumpNum
 //
 // killough 4/25/98: simplified
 //
-void *W_CacheLumpNum(int lump, int tag)
+void *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag)
 {
    // haleyjd 08/14/02: again, should not be RANGECHECK only
-   if(lump < 0 || lump >= numlumps)
+   if(lump < 0 || lump >= dir->numlumps)
       I_Error("W_CacheLumpNum: %i >= numlumps", lump);
    
-   if(!lumpinfo[lump]->cache)      // read the lump in
+   if(!(dir->lumpinfo[lump]->cache))      // read the lump in
    {
-      W_ReadLump(lump, Z_Malloc(W_LumpLength(lump), tag, &lumpinfo[lump]->cache));
+      W_ReadLump(lump, Z_Malloc(W_LumpLength(lump), tag, &(dir->lumpinfo[lump]->cache)));
    }
    else
    {
@@ -544,13 +575,18 @@ void *W_CacheLumpNum(int lump, int tag)
       // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that 
       // must be done using Z_ChangeTag explicitly)
       
-      int oldtag = Z_CheckTag(lumpinfo[lump]->cache);
+      int oldtag = Z_CheckTag(dir->lumpinfo[lump]->cache);
 
       if(tag < oldtag) 
-         Z_ChangeTag(lumpinfo[lump]->cache, tag);
+         Z_ChangeTag(dir->lumpinfo[lump]->cache, tag);
    }
    
-   return lumpinfo[lump]->cache;
+   return dir->lumpinfo[lump]->cache;
+}
+
+void *W_CacheLumpNum(int lump, int tag)
+{
+   return W_CacheLumpNumInDir(&w_GlobalDir, lump, tag);
 }
 
 // W_CacheLumpName macroized in w_wad.h -- killough

@@ -1926,9 +1926,9 @@ static void D_ProcessDehInWad(int i)
 {
    if(i >= 0)
    {
-      D_ProcessDehInWad(lumpinfo[i]->next);
-      if(!strncasecmp(lumpinfo[i]->name, "dehacked", 8) &&
-         lumpinfo[i]->li_namespace == ns_global)
+      D_ProcessDehInWad(w_GlobalDir.lumpinfo[i]->next);
+      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "dehacked", 8) &&
+         w_GlobalDir.lumpinfo[i]->li_namespace == ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
    }
 }
@@ -1937,7 +1937,8 @@ static void D_ProcessDehInWads(void)
 {
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root =
-      lumpinfo[W_LumpNameHash("dehacked") % (unsigned)numlumps];
+      w_GlobalDir.lumpinfo[W_LumpNameHash("dehacked") % 
+                           (unsigned)w_GlobalDir.numlumps];
 
    D_ProcessDehInWad(root->index);
 }
@@ -2634,7 +2635,7 @@ static void D_DoomInit(void)
    D_GameAutoloadWads();
 
    startupmsg("W_Init", "Init WADfiles.");
-   W_InitMultipleFiles(wadfiles);
+   W_InitMultipleFiles(&w_GlobalDir, wadfiles);
    usermsg("");  // gap
 
    // Check for -file in shareware
@@ -3045,9 +3046,9 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
 
    memset(wad_firstlevel, 0, 9);
 
-   for(i = 0; i < numlumps; ++i)
+   for(i = 0; i < w_GlobalDir.numlumps; ++i)
    {
-      if(lumpinfo[i]->file != handle)
+      if(w_GlobalDir.lumpinfo[i]->file != handle)
          continue;
 
       // haleyjd: changed check for "THINGS" lump to a fullblown
@@ -3056,7 +3057,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
 
       if((format = P_CheckLevel(i)) != LEVEL_FORMAT_INVALID) // a level
       {
-         char *name = lumpinfo[i]->name;
+         char *name = w_GlobalDir.lumpinfo[i]->name;
 
          // ignore ones called 'start' as these are checked elsewhere
          if((!*wad_firstlevel && strcmp(name, "START")) ||
@@ -3069,13 +3070,13 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // new sound
-      if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
+      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
       {
          S_Chgun();
          continue;
       }
 
-      if(!strncmp(lumpinfo[i]->name, "DS", 2))
+      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "DS", 2))
       {
          switch(sound_update_type)
          {
@@ -3090,7 +3091,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // new music -- haleyjd 06/17/06: should be strncasecmp, not strncmp
-      if(!strncasecmp(lumpinfo[i]->name, GameModeInfo->musPrefix,
+      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, GameModeInfo->musPrefix,
                       strlen(GameModeInfo->musPrefix)))
       {
          S_UpdateMusic(i);
@@ -3098,7 +3099,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // skins
-      if(!strncmp(lumpinfo[i]->name, "S_SKIN", 6))
+      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "S_SKIN", 6))
       {
          P_ParseSkin(i);
          continue;
@@ -3136,7 +3137,7 @@ void usermsg(const char *s, ...)
 boolean D_AddNewFile(char *s)
 {
   c_showprompt = false;
-  if(W_AddNewFile(s))
+  if(W_AddNewFile(&w_GlobalDir, s))
      return false;
   modifiedgame = true;
   D_AddFile(s);   // add to the list of wads

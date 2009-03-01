@@ -187,11 +187,12 @@ void P_LoadLevelInfo(int lumpnum)
    foundGlobalMap = false;
 
    // run down the hash chain for EMAPINFO
-   lump = lumpinfo[W_LumpNameHash("EMAPINFO") % (unsigned)numlumps];   
+   lump = w_GlobalDir.lumpinfo[W_LumpNameHash("EMAPINFO") % 
+                               (unsigned)w_GlobalDir.numlumps];   
    
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
-      lump = lumpinfo[glumpnum];
+      lump = w_GlobalDir.lumpinfo[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
          lump->li_namespace == ns_global)
@@ -238,7 +239,7 @@ static void P_ParseLevelInfo(int lumpnum)
    // problem and to use qstring_t to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = lumpinfo[lumpnum]->size))
+   if(!(size = w_GlobalDir.lumpinfo[lumpnum]->size))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
