@@ -45,6 +45,11 @@
 #include "e_edf.h"
 #include "e_fonts.h"
 
+//=============================================================================
+//
+// Data Tables
+//
+
 #define ITEM_FONT_ID     "id"
 #define ITEM_FONT_START  "start"
 #define ITEM_FONT_END    "end"
@@ -116,6 +121,11 @@ static const char *fontfmts[] =
 static vfont_t *e_font_namechains[NUMFONTCHAINS];
 static vfont_t *e_font_numchains[NUMFONTCHAINS];
 
+//=============================================================================
+//
+// Hashing Routines
+//
+
 //
 // E_AddFontToNameHash
 //
@@ -175,7 +185,7 @@ static boolean E_AutoAllocFontNum(vfont_t *font)
 //
 // E_AddFontToNumHash
 //
-// Puts the emod_t into the numeric hash table.
+// Puts the vfont_t into the numeric hash table.
 //
 static void E_AddFontToNumHash(vfont_t *font)
 {
@@ -204,6 +214,11 @@ static void E_DelFontFromNumHash(vfont_t *font)
 {
    M_DLListRemove((mdllistitem_t *)font);
 }
+
+//=============================================================================
+//
+// Resource Disposal
+//
 
 //
 // E_IsLinearLumpUsed
@@ -235,6 +250,68 @@ static boolean E_IsLinearLumpUsed(vfont_t *font, byte *data)
 }
 
 //
+// E_IsPatchUsed
+//
+// Returns true if some other font is using the patch in question,
+// to support proper disposal of shared resources.
+//
+static boolean E_IsPatchUsed(vfont_t *font, patch_t *p)
+{
+   int i;
+
+   // run down all hash chains
+   for(i = 0; i < NUMFONTCHAINS; ++i)
+   {
+      vfont_t *rover = e_font_namechains[i];
+
+      // run down the chain
+      while(rover)
+      {
+         if(rover != font && rover->fontgfx)
+         {
+            unsigned int j;
+            
+            // run down the font graphics
+            for(j = 0; j < font->size; ++j)
+               if(font->fontgfx[j] == p)
+                  return true; // got a match
+         }
+         rover = rover->namenext;
+      }
+   }
+
+   // didn't find one, doc
+   return false;
+}
+
+//
+// E_DisposePatches
+//
+// Dumps all dumpable patches when overwriting a font.
+//
+static void E_DisposePatches(vfont_t *font)
+{
+   unsigned int i;
+
+   if(!font->fontgfx)
+      return;
+
+   for(i = 0; i < font->size; ++i)
+   {
+      if(font->fontgfx[i] && !E_IsPatchUsed(font, font->fontgfx[i]))
+         Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
+   }
+
+   // get rid of the patch array
+   free(font->fontgfx);
+}
+
+//=============================================================================
+//
+// Initialization / Resource Loading
+//
+
+//
 // E_LoadLinearFont
 //
 // Populates a pre-allocated vfont_t with information on a linear font 
@@ -245,6 +322,9 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
    byte *lump;
    int w, h, size, i, lumpnum;
    boolean foundsize = false;
+
+   // in case this font was changed from patch to block:
+   E_DisposePatches(font);
 
    // handle disposal of previous font graphics 
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
@@ -476,63 +556,6 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 }
 
 //
-// E_IsPatchUsed
-//
-// Returns true if some other font is using the patch in question,
-// to support proper disposal of shared resources.
-//
-static boolean E_IsPatchUsed(vfont_t *font, patch_t *p)
-{
-   int i;
-
-   // run down all hash chains
-   for(i = 0; i < NUMFONTCHAINS; ++i)
-   {
-      vfont_t *rover = e_font_namechains[i];
-
-      // run down the chain
-      while(rover)
-      {
-         if(rover != font && rover->fontgfx)
-         {
-            unsigned int j;
-            
-            // run down the font graphics
-            for(j = 0; j < font->size; ++j)
-               if(font->fontgfx[j] == p)
-                  return true; // got a match
-         }
-         rover = rover->namenext;
-      }
-   }
-
-   // didn't find one, doc
-   return false;
-}
-
-//
-// E_DisposePatches
-//
-// Dumps all dumpable patches when overwriting a font.
-//
-static void E_DisposePatches(vfont_t *font)
-{
-   unsigned int i;
-
-   if(!font->fontgfx)
-      return;
-
-   for(i = 0; i < font->size; ++i)
-   {
-      if(font->fontgfx[i] && !E_IsPatchUsed(font, font->fontgfx[i]))
-         Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
-   }
-
-   // get rid of the patch array
-   free(font->fontgfx);
-}
-
-//
 // E_LoadPatchFont
 //
 // Creates the fontgfx array and precaches all patches as determined via
@@ -545,6 +568,14 @@ void E_LoadPatchFont(vfont_t *font)
 
    // dump any pre-existing patch array
    E_DisposePatches(font);
+
+   // in case this font was changed from block to patch:
+   if(font->data && !E_IsLinearLumpUsed(font, font->data))
+   {
+      free(font->data);
+      font->data = NULL;
+      font->linear = false;
+   }
 
    // first calculate font size
    font->size = (font->end - font->start + 1);
@@ -589,6 +620,11 @@ void E_LoadPatchFont(vfont_t *font)
       }
    }
 }
+
+//=============================================================================
+//
+// EDF Processing
+//
 
 #define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
 
