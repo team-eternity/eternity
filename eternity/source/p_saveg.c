@@ -215,7 +215,9 @@ void P_ArchiveWorld(void)
        sizeof(sec->floorz) + sizeof(sec->ceilingz) + 
        sizeof(sec->friction) + sizeof(sec->movefactor) + 
        sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap) +
-       sizeof(sec->flags) + sizeof(sec->wassecret))
+       sizeof(sec->flags) + sizeof(sec->wassecret) +
+       sizeof(sec->damage) + sizeof(sec->damageflags) + 
+       sizeof(sec->damagemask) + sizeof(sec->damagemod))
       * numsectors + sizeof(short)*3*numlines + 4;
 
    for(i = 0; i < numlines; ++i)
@@ -264,6 +266,16 @@ void P_ArchiveWorld(void)
       put = (void *)((char *) put + sizeof(sec->flags));
       memcpy(put, &sec->wassecret, sizeof(sec->wassecret));
       put = (void *)((char *) put + sizeof(sec->wassecret));
+
+      // haleyjd 03/02/09: save sector damage properties
+      memcpy(put, &sec->damage, sizeof(sec->damage));
+      put = (void *)((char *) put + sizeof(sec->damage));
+      memcpy(put, &sec->damageflags, sizeof(sec->damageflags));
+      put = (void *)((char *) put + sizeof(sec->damageflags));
+      memcpy(put, &sec->damagemask, sizeof(sec->damagemask));
+      put = (void *)((char *) put + sizeof(sec->damagemask));
+      memcpy(put, &sec->damagemod, sizeof(sec->damagemod));
+      put = (void *)((char *) put + sizeof(sec->damagemod));
 
       *put++ = sec->floorpic;
       *put++ = sec->ceilingpic;
@@ -345,11 +357,21 @@ void P_UnArchiveWorld(void)
       memcpy(&sec->bottommap, get, sizeof(sec->bottommap));
       get = (void *)((char *) get + sizeof(sec->bottommap));
 
-      // haleyjd 12/28/08: save sector flags, wassecret flag
+      // haleyjd 12/28/08: retrieve sector flags, wassecret flag
       memcpy(&sec->flags, get, sizeof(sec->flags));
       get = (void *)((char *) get + sizeof(sec->flags));
       memcpy(&sec->wassecret, get, sizeof(sec->wassecret));
       get = (void *)((char *) get + sizeof(sec->wassecret));
+
+      // haleyjd 03/02/09: retrieve sector damage info
+      memcpy(&sec->damage, get, sizeof(sec->damage));
+      get = (void *)((char *) get + sizeof(sec->damage));
+      memcpy(&sec->damageflags, get, sizeof(sec->damageflags));
+      get = (void *)((char *) get + sizeof(sec->damageflags));
+      memcpy(&sec->damagemask, get, sizeof(sec->damagemask));
+      get = (void *)((char *) get + sizeof(sec->damagemask));
+      memcpy(&sec->damagemod, get, sizeof(sec->damagemod));
+      get = (void *)((char *) get + sizeof(sec->damagemod));
 
       sec->floorpic     = *get++;
       sec->ceilingpic   = *get++;
