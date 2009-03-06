@@ -1,10 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// $Id: txt_main.h,v 1.1 2005/10/02 03:16:03 fraggle Exp $
-//
-// Copyright(C) 1993-1996 Id Software, Inc.
-// Copyright(C) 2005 Simon Howard
+// Copyright(C) 2005,2006 Simon Howard
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -21,19 +18,54 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 // 02111-1307, USA.
 //
-// $Log: txt_main.h,v $
-// Revision 1.1  2005/10/02 03:16:03  fraggle
-// Text mode emulation code
-//
-//
 //-----------------------------------------------------------------------------
 //
-// Text mode emulation in SDL
+// Base interface that abstracts the text mode screen.
 //
 //-----------------------------------------------------------------------------
 
 #ifndef TXT_MAIN_H
 #define TXT_MAIN_H
+
+// For the moment, txt_sdl.c is the only implementation of the base 
+// text mode screen API:
+
+#include "txt_sdl.h"
+
+// Special keypress values that correspond to mouse button clicks
+
+#define TXT_MOUSE_BASE   0x10000
+#define TXT_MOUSE_LEFT   (TXT_MOUSE_BASE + 0)
+#define TXT_MOUSE_RIGHT  (TXT_MOUSE_BASE + 1)
+#define TXT_MOUSE_MIDDLE (TXT_MOUSE_BASE + 2)
+#define TXT_MAX_MOUSE_BUTTONS  16
+
+// Screen size
+
+#define TXT_SCREEN_W 80
+#define TXT_SCREEN_H 25
+
+#define TXT_COLOR_BLINKING (1 << 3)
+
+typedef enum
+{
+    TXT_COLOR_BLACK,
+    TXT_COLOR_BLUE,
+    TXT_COLOR_GREEN,
+    TXT_COLOR_CYAN,
+    TXT_COLOR_RED,
+    TXT_COLOR_MAGENTA,
+    TXT_COLOR_BROWN,
+    TXT_COLOR_GREY,
+    TXT_COLOR_DARK_GREY,
+    TXT_COLOR_BRIGHT_BLUE,
+    TXT_COLOR_BRIGHT_GREEN,
+    TXT_COLOR_BRIGHT_CYAN,
+    TXT_COLOR_BRIGHT_RED,
+    TXT_COLOR_BRIGHT_MAGENTA,
+    TXT_COLOR_YELLOW,
+    TXT_COLOR_BRIGHT_WHITE,
+} txt_color_t;
 
 // Initialise the screen
 // Returns 1 if successful, 0 if failed.
@@ -56,9 +88,32 @@ void TXT_UpdateScreenArea(int x, int y, int w, int h);
 
 void TXT_UpdateScreen(void);
 
-// Wait for next update
+// Read a character from the keyboard
+
+int TXT_GetChar(void);
+
+// Provides a short description of a key code, placing into the 
+// provided buffer.
+
+void TXT_GetKeyDescription(int key, char *buf);
+
+// Retrieve the current position of the mouse
+
+void TXT_GetMousePosition(int *x, int *y);
+
+// Sleep until an event is received or the screen needs updating
+// Optional timeout in ms (timeout == 0 : sleep forever)
 
 void TXT_Sleep(int timeout);
+
+// Controls whether keys are returned from TXT_GetChar based on keyboard
+// mapping, or raw key code.
+
+void TXT_EnableKeyMapping(int enable);
+
+// Set the window title of the window containing the text mode screen
+
+void TXT_SetWindowTitle(char *title);
 
 #endif /* #ifndef TXT_MAIN_H */
 

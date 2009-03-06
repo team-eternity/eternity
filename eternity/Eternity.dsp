@@ -646,6 +646,10 @@ SOURCE=.\Source\m_queue.c
 
 SOURCE=.\Source\m_random.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\source\m_syscfg.c
+# End Source File
 # End Group
 # Begin Group "M_ Headers"
 
@@ -1218,10 +1222,6 @@ SOURCE=.\Source\sdl\mmus2mid.c
 
 SOURCE=.\Source\sdl\ser_main.c
 # End Source File
-# Begin Source File
-
-SOURCE=.\Source\textscreen\txt_main.c
-# End Source File
 # End Group
 # Begin Group "SDL Headers"
 
@@ -1253,14 +1253,6 @@ SOURCE=.\Source\i_video.h
 # Begin Source File
 
 SOURCE=.\Source\sdl\mmus2mid.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\textscreen\txt_font.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\textscreen\txt_main.h
 # End Source File
 # End Group
 # End Group
@@ -1413,6 +1405,174 @@ SOURCE=.\Source\tables.h
 # Begin Source File
 
 SOURCE=.\Source\version.h
+# End Source File
+# End Group
+# End Group
+# Begin Group "TXT_"
+
+# PROP Default_Filter ""
+# Begin Group "TXT Source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_button.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_checkbox.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_desktop.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_dropdown.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_gui.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_inputbox.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_io.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_label.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_radiobutton.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_scrollpane.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_sdl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_separator.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_spinctrl.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_strut.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_table.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_widget.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_window.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_window_action.c
+# End Source File
+# End Group
+# Begin Group "TXT Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\textscreen\textscreen.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_button.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_checkbox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_desktop.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_dropdown.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\textscreen\txt_font.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_gui.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_inputbox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_io.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_label.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\textscreen\txt_main.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_radiobutton.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_scrollpane.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_sdl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_separator.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_spinctrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_strut.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_table.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_widget.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_window.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\textscreen\txt_window_action.h
 # End Source File
 # End Group
 # End Group

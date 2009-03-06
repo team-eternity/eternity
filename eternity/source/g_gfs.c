@@ -33,13 +33,17 @@
 //
 //--------------------------------------------------------------------------
 
+#define NEED_EDF_DEFINITIONS
+
 #include "z_zone.h"
+
+#include "Confuse/confuse.h"
+
 #include "i_system.h"
 #include "doomtype.h"
 #include "m_misc.h"
 #include "g_gfs.h"
-
-#include "Confuse/confuse.h"
+#include "e_lib.h"
 
 static gfs_t gfs;
 
@@ -61,11 +65,6 @@ static cfg_opt_t gfs_opts[] =
    CFG_END()
 };
 
-static void gfs_error(cfg_t *cfg, const char *fmt, va_list ap)
-{
-   I_ErrorVA(fmt, ap);
-}
-
 gfs_t *G_LoadGFS(const char *filename)
 {
    static boolean loaded = false;
@@ -78,7 +77,7 @@ gfs_t *G_LoadGFS(const char *filename)
 
    cfg = cfg_init(gfs_opts, CFGF_NOCASE);
 
-   cfg_set_error_function(cfg, gfs_error);
+   cfg_set_error_function(cfg, E_ErrorCB);
 
    if(cfg_parse(cfg, filename))
       I_Error("G_LoadGFS: failed to parse GFS file\n");

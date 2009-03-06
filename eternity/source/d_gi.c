@@ -310,6 +310,21 @@ static int htic_soundnums[NUMSKINSOUNDS] =
 };
 
 //
+// IWAD paths
+//
+
+// set by system config:
+char *gi_path_doomsw;
+char *gi_path_doomreg;
+char *gi_path_doomu;
+char *gi_path_doom2;
+char *gi_path_tnt;
+char *gi_path_plut;
+char *gi_path_hticsw;
+char *gi_path_hticreg;
+char *gi_path_sosr;
+
+//
 // Mission Information Structures
 //
 
@@ -321,6 +336,7 @@ static missioninfo_t gmDoom =
    doom, // id
    NULL, // versionNameOR
    NULL, // startupBannerOR
+   NULL, // iwadPathOR
 };
 
 //
@@ -331,6 +347,7 @@ static missioninfo_t gmDoom2 =
    doom2, // id
    NULL,  // versionNameOR
    NULL,  // startupBannerOR
+   NULL,  // iwadPathOR
 };
 
 //
@@ -338,9 +355,10 @@ static missioninfo_t gmDoom2 =
 //
 static missioninfo_t gmFinalTNT =
 {
-   pack_tnt,   // id
-   VNAME_TNT,  // versionNameOR
-   BANNER_TNT, // startupBannerOR
+   pack_tnt,     // id
+   VNAME_TNT,    // versionNameOR
+   BANNER_TNT,   // startupBannerOR
+   &gi_path_tnt, // iwadPathOR
 };
 
 //
@@ -348,9 +366,10 @@ static missioninfo_t gmFinalTNT =
 //
 static missioninfo_t gmFinalPlutonia =
 {
-   pack_plut,   // id
-   VNAME_PLUT,  // versionNameOR
-   BANNER_PLUT, // startupBannerOR
+   pack_plut,     // id
+   VNAME_PLUT,    // versionNameOR
+   BANNER_PLUT,   // startupBannerOR
+   &gi_path_plut, // iwadPathOR
 };
 
 //
@@ -361,6 +380,7 @@ static missioninfo_t gmHeretic =
    heretic, // id
    NULL,    // versionNameOR
    NULL,    // startupBannerOR
+   NULL,    // iwadPathOR
 };
 
 //
@@ -372,6 +392,7 @@ static missioninfo_t gmHereticSoSR =
    VNAME_HTIC_SOSR,  // versionNameOR
    BANNER_HTIC_SOSR, // startupBannerOR
    6,                // numEpisodesOR
+   &gi_path_sosr,    // iwadPath
 };
 
 //
@@ -382,6 +403,7 @@ static missioninfo_t gmUnknown =
    none,           // id
    VNAME_UNKNOWN,  // versionNameOR
    BANNER_UNKNOWN, // startupBannerOR
+   NULL,           // iwadPathOR
 };
 
 // Mission info object array
@@ -406,12 +428,13 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
 //
 static gamemodeinfo_t giDoomSW =
 {
-   shareware,        // id
-   Game_DOOM,        // type
+   shareware,                   // id
+   Game_DOOM,                   // type
    GIF_HASDISK | GIF_SHAREWARE, // flags
+   
    VNAME_DOOM_SW,    // versionName
-
    BANNER_DOOM_SW,   // startupBanner
+   &gi_path_doomsw,  // iwadPath
    
    170,              // titleTics
    0,                // advisorTics
@@ -490,9 +513,10 @@ static gamemodeinfo_t giDoomReg =
    registered,       // id
    Game_DOOM,        // type
    GIF_HASDISK,      // flags
+   
    VNAME_DOOM_REG,   // versionName
-
    BANNER_DOOM_REG,  // startupBanner
+   &gi_path_doomreg, // iwadPath
    
    170,              // titleTics
    0,                // advisorTics
@@ -571,9 +595,10 @@ static gamemodeinfo_t giDoomRetail =
    retail,           // id
    Game_DOOM,        // type
    GIF_HASDISK,      // flags
+   
    VNAME_DOOM_RET,   // versionName
-
    BANNER_DOOM_RET,  // startupBanner
+   &gi_path_doomu,   // iwadPath
    
    170,              // titleTics
    0,                // advisorTics
@@ -649,13 +674,13 @@ static gamemodeinfo_t giDoomRetail =
 //
 static gamemodeinfo_t giDoomCommercial =
 {
-   commercial,       // id
-   Game_DOOM,        // type
-
+   commercial,              // id
+   Game_DOOM,               // type
    GIF_HASDISK | GIF_MAPXY, // flags
 
    VNAME_DOOM2,      // versionName
    BANNER_DOOM2,     // startupBanner
+   &gi_path_doom2,   // iwadPath
 
    11*TICRATE,       // titleTics
    0,                // advisorTics
@@ -733,10 +758,12 @@ static gamemodeinfo_t giHereticSW =
 {
    hereticsw,        // id
    Game_Heretic,     // type
-   GIF_SHAREWARE | GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | GIF_HASMADMELEE, // flags
-   VNAME_HTIC_SW,    // versionName
+   GIF_SHAREWARE   | GIF_MNBIGFONT    | GIF_SAVESOUND | 
+   GIF_HASADVISORY | GIF_SHADOWTITLES | GIF_HASMADMELEE, // flags
 
+   VNAME_HTIC_SW,    // versionName
    BANNER_HTIC_SW,   // startupBanner
+   &gi_path_hticsw,  // iwadPath
 
    210,              // titleTics
    140,              // advisorTics
@@ -819,9 +846,10 @@ static gamemodeinfo_t giHereticReg =
    hereticreg,       // id
    Game_Heretic,     // type   
    GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | GIF_HASMADMELEE,    // flags
+   
    VNAME_HTIC_REG,   // versionName
-
    BANNER_HTIC_REG,  // startupBanner
+   &gi_path_hticreg, // iwadPath
 
    210,              // titleTics
    140,              // advisorTics
@@ -963,6 +991,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(versionName,   NULL);
    OVERRIDE(startupBanner, NULL);
    OVERRIDE(numEpisodes,      0);
+   OVERRIDE(iwadPath,      NULL);
 }
 
 // EOF

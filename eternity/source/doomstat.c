@@ -36,6 +36,9 @@ Language_t   language = english;
 // Set if homebrew PWAD stuff has been added.
 boolean modifiedgame;
 
+// haleyjd 03/05/09: support using same config for all DOOM game modes
+boolean use_doom_config = false;
+
 //-----------------------------------------------------------------------------
 
 boolean in_textmode = true;        // game in graphics mode yet?

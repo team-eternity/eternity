@@ -1573,7 +1573,7 @@ void IdentifyVersion(void)
 
          // haleyjd 10/13/05: freedoom override :)
          if(freedoom)
-            game_name = "DOOM II, Freedoom version";
+            game_name = "DOOM II, FreeDoom version";
       }
 
       puts(game_name);
@@ -1585,11 +1585,22 @@ void IdentifyVersion(void)
       // haleyjd 11/23/06: set basedefault here, and use basegamepath.
       // get config file from same directory as executable
       // killough 10/98
+      if(GameModeInfo->type == Game_DOOM && use_doom_config)
+      {
+         // hack for DOOM modes: optional use of /doom config
+         size_t len = strlen(basepath) + strlen("/doom") +
+                      strlen(D_DoomExeName()) + 8;
+         basedefault = malloc(len);
+         
+         psnprintf(basedefault, len, "%s/doom/%s.cfg",
+                   basepath, D_DoomExeName());
+      }
+      else
       {
          size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
-
+         
          basedefault = malloc(len);
-
+         
          psnprintf(basedefault, len, "%s/%s.cfg", 
                    basegamepath, D_DoomExeName());
       }
@@ -2233,11 +2244,54 @@ static gfs_t *D_LooseGFS(void)
    return NULL;
 }
 
+// I am not going to make an entire header just for this :P
+extern void M_LoadSysConfig(const char *filename);
+
+//
+// D_LoadSysConfig
+//
+// Load the system config. Prerequisites: base path must be determined.
+//
+static void D_LoadSysConfig(void)
+{
+   char *filename = NULL;
+   size_t len = M_StringAlloca(&filename, 2, 2, basepath, "system.cfg");
+
+   psnprintf(filename, len, "%s/system.cfg", basepath);
+
+   M_LoadSysConfig(filename);
+}
+
+#if 0
+//
+// D_DoIWADMenu
+//
+//
+static const char *D_DoIWADMenu(void)
+{
+   const char *choice = NULL;
+
+   if(TXT_Init())
+   {
+      TXT_SetDesktopTitle("The Eternity Engine");
+
+      TXT_GUIMainLoop();
+
+      TXT_Shutdown();
+   }
+
+   return choice;
+}
+#endif
+
+//
+// D_SetGraphicsMode
+//
 // sf: this is really part of D_DoomMain but I made it into
 // a seperate function
 // this stuff needs to be kept together
-
-void D_SetGraphicsMode(void)
+//
+static void D_SetGraphicsMode(void)
 {
    int p, mode;
 
@@ -2275,6 +2329,11 @@ static char title[128];
 extern int levelTimeLimit;
 extern int levelFragLimit;
 
+//
+// D_StartupMessage
+//
+// A little reminder for Certain People (Ichaelmay Ardyhay)
+//
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
@@ -2324,6 +2383,9 @@ static void D_DoomInit(void)
 
    // haleyjd 08/19/07: check for -game parameter first
    D_CheckGamePathParam();
+
+   // haleyjd 03/05/09: load system config as early as possible
+   D_LoadSysConfig();
 
    // haleyjd 03/10/03: GFS support
    // haleyjd 11/22/03: support loose GFS on the command line too
@@ -2923,7 +2985,7 @@ static void D_DoomInit(void)
 
    DEBUGMSG("start gamestate: title screen etc.\n");
 
-   startlevel = Z_Strdup(G_GetNameForMap(startepisode, startmap), PU_STATIC, 0);
+   startlevel = strdup(G_GetNameForMap(startepisode, startmap));
 
    if(slot && ++slot < myargc)
    {

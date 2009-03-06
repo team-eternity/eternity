@@ -404,7 +404,6 @@ void I_EndDoom(void)
    unsigned char *screendata;
    int start_ms;
    boolean waiting;
-   SDL_Event ev;
    
    // haleyjd: it's possible to have quit before we even initialized
    // gameModeInfo, so be sure it's valid before using it here. Also,
@@ -433,21 +432,10 @@ void I_EndDoom(void)
    {
       TXT_UpdateScreen();
 
-      if(SDL_PollEvent(&ev))
-      {      
-         switch(ev.type)
-         {
-         case SDL_MOUSEBUTTONDOWN:
-         case SDL_KEYDOWN:
-         case SDL_QUIT:
-            waiting = false;
-            break;
-         default:
-            break;
-         }
-      }
+      if(TXT_GetChar() >= 0)
+         waiting = false;
 
-      TXT_Sleep(0);
+      TXT_Sleep(1);
    }
    
    // Shut down text mode screen   

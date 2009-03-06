@@ -1,9 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //---------------------------------------------------------------------------
 //
-// $Id: txt_font.h,v 1.1 2005/10/02 03:16:03 fraggle Exp $
-//
-// Copyright(C) 2005 Simon Howard
+// Copyright(C) 2005,2006 Simon Howard
 // Copyright (C) 2002-2004  The DOSBox Team
 //
 // This program is free software; you can redistribute it and/or modify
@@ -20,11 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 //
-// $Log: txt_font.h,v $
-// Revision 1.1  2005/10/02 03:16:03  fraggle
-// Text mode emulation code
-//
-//
 //---------------------------------------------------------------------------
 // 
 // VGA font data
@@ -32,8 +25,8 @@
 //
 //---------------------------------------------------------------------------
 
-#ifndef TXT_FONT_H__
-#define TXT_FONT_H__
+#ifndef __FONT_H__
+#define __FONT_H__
 
 static unsigned char int10_font_16[256 * 16] = 
 {
@@ -551,5 +544,5 @@ static unsigned char int10_font_16[256 * 16] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-#endif /* TXT_FONT_H__ */
+#endif /* __FONT_H__ */
 

@@ -155,6 +155,7 @@ typedef struct missioninfo_s
    const char *versionNameOR;   // if not NULL, overrides name of the gamemode
    const char *startupBannerOR; // if not NULL, overrides the startup banner 
    int         numEpisodesOR;   // if not 0, overrides the number of episodes
+   char      **iwadPathOR;      // if not NULL, overrides iwadpath variable
 } missioninfo_t;
 
 //
@@ -174,6 +175,7 @@ typedef struct gamemodeinfo_s
    // startup stuff
    const char *versionName;   // descriptive version name
    const char *startupBanner; // startup banner text
+   char **iwadPath;           // iwad path variable
    
    // demo state information
    int titleTics;             // length of time to show title
@@ -264,6 +266,18 @@ extern missioninfo_t  *MissionInfoObjects[NumGameMissions];
 extern gamemodeinfo_t *GameModeInfoObjects[NumGameModes];
 
 extern gamemodeinfo_t *GameModeInfo;
+
+// set by system config:
+extern char *gi_path_doomsw;
+extern char *gi_path_doomreg;
+extern char *gi_path_doomu;
+extern char *gi_path_doom2;
+extern char *gi_path_tnt;
+extern char *gi_path_plut;
+extern char *gi_path_hticsw;
+extern char *gi_path_hticreg;
+extern char *gi_path_sosr;
+
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
 void D_InitGameInfo(void);

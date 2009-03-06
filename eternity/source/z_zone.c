@@ -517,9 +517,9 @@ void (Z_Free)(void *p, const char *file, int line)
       if(block->id != ZONEID)
       {
          I_Error("Z_Free: freed a pointer without ZONEID\n"
-                 "Source: %s:%d"
+                 "Source: %s:%d\n"
 #ifdef INSTRUMENTED
-                 "\nSource of malloc: %s:%d"
+                 "Source of malloc: %s:%d\n"
                  , file, line, block->file, block->line
 #else
                  , file, line
@@ -534,9 +534,9 @@ void (Z_Free)(void *p, const char *file, int line)
       if(block->tag == PU_FREE || block->tag >= PU_MAX)
       {
          I_Error("Z_Free: freed a pointer with invalid tag %d\n"
-                 "Source: %s:%d"
+                 "Source: %s:%d\n"
 #ifdef INSTRUMENTED
-                 "\nSource of malloc: %s:%d"
+                 "Source of malloc: %s:%d\n"
                  , block->tag, file, line, block->file, block->line
 #else
                  , block->tag, file, line
