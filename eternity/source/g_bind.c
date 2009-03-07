@@ -599,9 +599,9 @@ boolean G_KeyResponder(event_t *ev, int bclass)
          if(bclass == kac_game)
          {
             if(key == KEYD_MWHEELUP)
-               doom_printf("wheelup");
+               doom_printf("+wheelup");
             else if(key == KEYD_MWHEELDOWN)
-               doom_printf("wheeldown");
+               doom_printf("+wheeldown");
          }
                   
          if(keybindings[key].bindings[bclass])
@@ -633,7 +633,15 @@ boolean G_KeyResponder(event_t *ev, int bclass)
       int key = tolower(ev->data1);
 
       keybindings[key].keydown[bclass] = false;
-      
+
+      if(bclass == kac_game)
+      {
+         if(key == KEYD_MWHEELUP)
+            doom_printf("-wheelup");
+         else if(key == KEYD_MWHEELDOWN)
+            doom_printf("-wheeldown");
+      }
+
       if(keybindings[key].bindings[bclass])
       {
          switch(keybindings[key].bindings[bclass]->type)
