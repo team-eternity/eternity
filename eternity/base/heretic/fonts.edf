@@ -4,7 +4,7 @@
 
 ifgametype(HERETIC)
 
-// Small font - this is used by the HUD, finale, and V-system by default
+// Small font - this is used by the HUD and V-system by default
 font ee_smallfont
 {
    id          = 0;
@@ -69,6 +69,26 @@ font ee_menufont
    linesize    = 9;
    spacesize   = 5;
    widthdelta  = 1;
+   tallestchar = 10;
+   colorable   = true;
+   uppercase   = true;
+   
+   patchnumoffset = 32;
+   
+   filter { chars = { 91 };          mask = "FONTA00"   }
+   filter { chars = { 95 };          mask = "FONTA59"   }
+   filter { start = '!'; end = 0x7f; mask = "FONTA%.2d" }
+}
+
+// Finale font - yet another copy of the smallfont. This one does NOT
+// have a widthdelta.
+font ee_finalefont
+{
+   id          = 6;
+   start       = '!';
+   end         = 0x7f;
+   linesize    = 9;
+   spacesize   = 5;
    tallestchar = 10;
    colorable   = true;
    uppercase   = true;

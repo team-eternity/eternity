@@ -342,7 +342,7 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
    CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_FINAL,   "ee_finalefont",   CFGF_NONE),
    CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
    CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),

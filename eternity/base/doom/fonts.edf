@@ -4,7 +4,7 @@
 
 ifgametype(DOOM)
 
-// Small font - this is used by the HUD, finale, and V-system by default
+// Small font - this is used by the HUD and V-system by default
 font ee_smallfont
 {
    id          = 0;
@@ -64,6 +64,22 @@ font ee_menufont
    linesize    = 8;
    spacesize   = 4;
    widthdelta  = 1;
+   tallestchar = 8;
+   colorable   = true;
+   uppercase   = true;
+   
+   filter { start = '!'; end = 0x7f; mask = "STCFN%.3d" }
+}
+
+// Finale font - this is yet another copy of the smallfont, used by the finale.
+// This one has a bigger linebreak step.
+font ee_finalefont
+{
+   id          = 6;
+   start       = '!';
+   end         = 0x7f;
+   linesize    = 11;
+   spacesize   = 4;
    tallestchar = 8;
    colorable   = true;
    uppercase   = true;
