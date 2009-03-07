@@ -510,6 +510,7 @@ static void I_GetEvent(void)
          if(!usemouse)
             continue;
          d_event.type = ev_keyup;
+         d_event.data1 = 0;
 
          switch(event.button.button)
          {
