@@ -535,8 +535,7 @@ static void I_GetEvent(void)
             break;
          }
 
-         if(d_event.data1)
-            D_PostEvent(&d_event);
+         D_PostEvent(&d_event);
          break;
 
       case SDL_QUIT:
