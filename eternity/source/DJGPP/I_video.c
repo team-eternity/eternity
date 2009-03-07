@@ -789,12 +789,12 @@ VARIABLE_INT(usemouse, NULL,            0, 1, yesno);
 VARIABLE_INT(usejoystick, NULL,         0, 1, yesno);
 
 CONSOLE_VARIABLE(use_mouse, usemouse, 0) {}
-CONSOLE_VARIABLE(use_joystick, usejoystick, 0) {}
+CONSOLE_VARIABLE(i_usejoystick, usejoystick, 0) {}
 
 void I_Video_AddCommands(void)
 {
    C_AddCommand(use_mouse);
-   C_AddCommand(use_joystick);
+   C_AddCommand(i_usejoystick);
    
    C_AddCommand(v_diskicon);
    C_AddCommand(v_retrace);

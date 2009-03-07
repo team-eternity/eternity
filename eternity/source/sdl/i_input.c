@@ -229,21 +229,31 @@ int I_DoomCode2ScanCode(int a)
 extern SDL_Joystick *sdlJoystick;
 extern int          usejoystick;
 extern int          joystickpresent;
+extern int          sdlJoystickNumButtons;
 
 int joystickSens_x;
 int joystickSens_y;
 
+static int keyForButtonNum[8] =
+{
+   KEYD_JOY1, KEYD_JOY2, KEYD_JOY3, KEYD_JOY4,
+   KEYD_JOY5, KEYD_JOY6, KEYD_JOY7, KEYD_JOY8
+};
 
+//
 // I_JoystickEvents
-// gathers joystick data and creates an event_t for later processing by G_Responder().
+//
+// Gathers joystick data and creates an event_t for later processing 
+// by G_Responder().
+//
 static void I_JoystickEvents(void)
 {
    // haleyjd 04/15/02: SDL joystick support
 
    event_t event;
-   int joy_b1, joy_b2, joy_b3, joy_b4;
+   int i, joyb[8];
    Sint16 joy_x, joy_y;
-   static int old_joy_b1, old_joy_b2, old_joy_b3, old_joy_b4;
+   static int old_joyb[8];
    
    if(!joystickpresent || !usejoystick || !sdlJoystick)
       return;
@@ -253,14 +263,11 @@ static void I_JoystickEvents(void)
    event.data1 = 0;
    
    // read the button settings
-   if((joy_b1 = SDL_JoystickGetButton(sdlJoystick, 0)))
-      event.data1 |= 1;
-   if((joy_b2 = SDL_JoystickGetButton(sdlJoystick, 1)))
-      event.data1 |= 2;
-   if((joy_b3 = SDL_JoystickGetButton(sdlJoystick, 2)))
-      event.data1 |= 4;
-   if((joy_b4 = SDL_JoystickGetButton(sdlJoystick, 3)))
-      event.data1 |= 8;
+   for(i = 0; i < 8 && i < sdlJoystickNumButtons; ++i)
+   {
+      if((joyb[i] = SDL_JoystickGetButton(sdlJoystick, i)))
+         event.data1 |= (1 << i);
+   }
    
    // Read the x,y settings. Convert to -1 or 0 or +1.
    joy_x = SDL_JoystickGetAxis(sdlJoystick, 0);
@@ -286,34 +293,16 @@ static void I_JoystickEvents(void)
    
    // build button events (make joystick buttons virtual keyboard keys
    // as originally suggested by lee killough in the boom suggestions file)
-   
-   if(joy_b1 != old_joy_b1)
+
+   for(i = 0; i < 8; ++i)
    {
-      event.type = joy_b1 ? ev_keydown : ev_keyup;
-      event.data1 = KEYD_JOY1;
-      D_PostEvent(&event);
-      old_joy_b1 = joy_b1;
-   }
-   if(joy_b2 != old_joy_b2)
-   {
-      event.type = joy_b2 ? ev_keydown : ev_keyup;
-      event.data1 = KEYD_JOY2;
-      D_PostEvent(&event);
-      old_joy_b2 = joy_b2;
-   }
-   if(joy_b3 != old_joy_b3)
-   {
-      event.type = joy_b3 ? ev_keydown : ev_keyup;
-      event.data1 = KEYD_JOY3;
-      D_PostEvent(&event);
-      old_joy_b3 = joy_b3;
-   }
-   if(joy_b4 != old_joy_b4)
-   {
-      event.type = joy_b4 ? ev_keydown : ev_keyup;
-      event.data1 = KEYD_JOY4;
-      D_PostEvent(&event);
-      old_joy_b4 = joy_b4;
+      if(joyb[i] != old_joyb[i])
+      {
+         event.type  = joyb[i] ? ev_keydown : ev_keyup;
+         event.data1 = keyForButtonNum[i];
+         D_PostEvent(&event);
+         old_joyb[i] = joyb[i];
+      }
    }   
 }
 
@@ -568,3 +557,6 @@ void I_StartTic(void)
    if(usemouse && mouseAccel_type == 2)
       I_ReadMouse();
 }
+
+// EOF
+

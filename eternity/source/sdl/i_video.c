@@ -616,6 +616,9 @@ void I_InitGraphics(void)
    
    if(!firsttime)
       return;
+
+   // haleyjd 03/06/09: do SDL_INIT_VIDEO now
+   SDL_InitSubSystem(SDL_INIT_VIDEO);
    
    firsttime = false;
    
@@ -625,6 +628,9 @@ void I_InitGraphics(void)
 
    // init keyboard
    I_InitKeyboard();
+
+   // enable key repeat
+   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 
    //
    // enter graphics mode

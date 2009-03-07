@@ -63,6 +63,9 @@ extern int action_weapon1, action_weapon2, action_weapon3;
 extern int action_weapon4, action_weapon5, action_weapon6;
 extern int action_weapon7, action_weapon8, action_weapon9;
 extern int action_nextweapon;
+extern int action_weaponup;
+extern int action_weapondown;
+
 
 extern int action_frags;
 
@@ -135,6 +138,8 @@ enum keyaction_e
    ka_weapon8,   
    ka_weapon9,   
    ka_nextweapon,
+   ka_weaponup,
+   ka_weapondown,
    ka_frags,   
    ka_menu_toggle,   
    ka_menu_help,     

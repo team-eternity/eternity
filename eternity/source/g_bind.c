@@ -84,6 +84,9 @@ int action_weapon9;     // select weapon 9
 
 int action_nextweapon;  // toggle to next-favored weapon
 
+int action_weaponup;    // haleyjd: next weapon in order
+int action_weapondown;  // haleyjd: prev weapon in order
+
 int action_frags;       // show frags
 
 // Menu Actions -- handled by MN_Responder
@@ -187,6 +190,8 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    {"weapon8",   kac_game,       at_variable,     {&action_weapon8}},
    {"weapon9",   kac_game,       at_variable,     {&action_weapon9}},
    {"nextweapon",kac_game,       at_variable,     {&action_nextweapon}},
+   {"weaponup",  kac_game,       at_variable,     {&action_weaponup}},
+   {"weapondown",kac_game,       at_variable,     {&action_weapondown}},
 
    {"frags",     kac_hud,        at_variable,     {&action_frags}},
 
@@ -318,6 +323,10 @@ void G_InitKeyBindings(void)
    keybindings[KEYD_JOY2].name        = "joy2";
    keybindings[KEYD_JOY3].name        = "joy3";
    keybindings[KEYD_JOY4].name        = "joy4";
+   keybindings[KEYD_JOY5].name        = "joy5";
+   keybindings[KEYD_JOY6].name        = "joy6";
+   keybindings[KEYD_JOY7].name        = "joy7";
+   keybindings[KEYD_JOY8].name        = "joy8";
    
    keybindings[','].name = "<";
    keybindings['.'].name = ">";

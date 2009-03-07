@@ -188,6 +188,95 @@ static void P_BringUpWeapon(player_t *player)
    P_SetPsprite(player, ps_weapon, newstate);
 }
 
+// weaponinfo are in a stupid order, so let's do next/last in 
+// a more proper manner. Come EDF weapon support, this will become
+// unnecessary, as we can go by "slots" instead.
+//
+// mapping: from ordinal to wp_*
+//
+static int ordinalToWp[NUMWEAPONS] =
+{
+   wp_fist, wp_chainsaw, wp_pistol, wp_shotgun,
+   wp_supershotgun, wp_chaingun, wp_missile, wp_plasma, wp_bfg
+};
+
+// reverse mapping: from wp_* to ordinal number
+static int wpToOrdinal[NUMWEAPONS] =
+{
+   0, 2, 3, 5, 6, 7, 8, 1, 4
+};
+
+//
+// P_NextWeapon
+//
+// haleyjd 03/06/09: Yes this will have to be rewritten for EDF weapons,
+// but I'm tired of not having it, so here is the temporary version.
+//
+int P_NextWeapon(player_t *player)
+{
+   int currentweapon = wpToOrdinal[player->readyweapon];
+   int newweapon     = currentweapon;
+   int weaptotry;
+   int ammototry;
+
+   do
+   {
+      ++newweapon;
+
+      if(newweapon >= NUMWEAPONS)
+         newweapon = 0;
+
+      weaptotry = ordinalToWp[newweapon];
+      ammototry = weaponinfo[weaptotry].ammo;
+   }
+   while((!player->weaponowned[weaptotry] ||
+          (ammototry != am_noammo &&
+           player->ammo[ammototry] <= 0)) && 
+          newweapon != currentweapon);
+
+   newweapon = ordinalToWp[newweapon];
+
+   if(newweapon == player->readyweapon)
+      newweapon = wp_nochange;
+
+   return newweapon;
+}
+
+//
+// P_PrevWeapon
+//
+// haleyjd 03/06/09: Like the above.
+//
+int P_PrevWeapon(player_t *player)
+{
+   int currentweapon = wpToOrdinal[player->readyweapon];
+   int newweapon     = currentweapon;
+   int weaptotry;
+   int ammototry;
+
+   do
+   {
+      --newweapon;
+
+      if(newweapon < 0)
+         newweapon = NUMWEAPONS - 1;
+
+      weaptotry = ordinalToWp[newweapon];
+      ammototry = weaponinfo[weaptotry].ammo;
+   }
+   while((!player->weaponowned[weaptotry] ||
+          (ammototry != am_noammo &&
+           player->ammo[ammototry] <= 0)) && 
+         newweapon != currentweapon);
+
+   newweapon = ordinalToWp[newweapon];
+
+   if(newweapon == player->readyweapon)
+      newweapon = wp_nochange;
+
+   return newweapon;
+}
+
 // The first set is where the weapon preferences from             // killough,
 // default.cfg are stored. These values represent the keys used   // phares
 // in DOOM2 to bring up the weapon, i.e. 6 = plasma gun. These    //    |

@@ -336,6 +336,7 @@ static missioninfo_t gmDoom =
    doom, // id
    NULL, // versionNameOR
    NULL, // startupBannerOR
+   0,    // numEpisodesOR
    NULL, // iwadPathOR
 };
 
@@ -347,6 +348,7 @@ static missioninfo_t gmDoom2 =
    doom2, // id
    NULL,  // versionNameOR
    NULL,  // startupBannerOR
+   0,     // numEpisodesOR
    NULL,  // iwadPathOR
 };
 
@@ -358,6 +360,7 @@ static missioninfo_t gmFinalTNT =
    pack_tnt,     // id
    VNAME_TNT,    // versionNameOR
    BANNER_TNT,   // startupBannerOR
+   0,            // numEpisodesOR
    &gi_path_tnt, // iwadPathOR
 };
 
@@ -369,6 +372,7 @@ static missioninfo_t gmFinalPlutonia =
    pack_plut,     // id
    VNAME_PLUT,    // versionNameOR
    BANNER_PLUT,   // startupBannerOR
+   0,             // numEpisodesOR
    &gi_path_plut, // iwadPathOR
 };
 
@@ -380,6 +384,7 @@ static missioninfo_t gmHeretic =
    heretic, // id
    NULL,    // versionNameOR
    NULL,    // startupBannerOR
+   0,       // numEpisodesOR
    NULL,    // iwadPathOR
 };
 
@@ -403,6 +408,7 @@ static missioninfo_t gmUnknown =
    none,           // id
    VNAME_UNKNOWN,  // versionNameOR
    BANNER_UNKNOWN, // startupBannerOR
+   0,              // numEpisodesOR
    NULL,           // iwadPathOR
 };
 

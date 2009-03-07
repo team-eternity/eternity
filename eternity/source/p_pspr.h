@@ -81,6 +81,9 @@ int P_WeaponPreferred(int w1, int w2);
 extern int weapon_speed, default_weapon_speed;
 extern boolean action_from_pspr;                     // haleyjd 05/21/08
 
+int P_NextWeapon(player_t *player);
+int P_PrevWeapon(player_t *player);
+
 struct player_s;
 int P_SwitchWeapon(struct player_s *player);
 boolean P_CheckAmmo(struct player_s *player);

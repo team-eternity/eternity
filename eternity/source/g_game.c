@@ -424,6 +424,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
    }
 
+   // haleyjd 03/06/09: next/prev weapon actions
+   if(action_weaponup)
+      newweapon = P_NextWeapon(&players[consoleplayer]);
+   else if(action_weapondown)
+      newweapon = P_PrevWeapon(&players[consoleplayer]);
+
    if(newweapon != wp_nochange)
    {
       cmd->buttons |= BT_CHANGE;

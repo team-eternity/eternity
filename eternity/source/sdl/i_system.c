@@ -165,6 +165,7 @@ void I_Shutdown(void)
 
 jsdata_t *joysticks = NULL;
 int numJoysticks = 0;
+int sdlJoystickNumButtons;
 
 //
 // I_EnumerateJoysticks
@@ -219,7 +220,7 @@ boolean I_SetJoystickDevice(int deviceNum)
       // check that the device has at least 2 axes and
       // 4 buttons
       if(SDL_JoystickNumAxes(sdlJoystick) < 2 ||
-	 SDL_JoystickNumButtons(sdlJoystick) < 4)
+	 (sdlJoystickNumButtons = SDL_JoystickNumButtons(sdlJoystick)) < 4)
 	 return false;
 
       return true;

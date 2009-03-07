@@ -293,6 +293,10 @@ typedef enum {
 #define KEYD_JOY2       (0x80 + 0x64)
 #define KEYD_JOY3       (0x80 + 0x65)
 #define KEYD_JOY4       (0x80 + 0x66)
+#define KEYD_JOY5       (0x80 + 0x67)
+#define KEYD_JOY6       (0x80 + 0x68)
+#define KEYD_JOY7       (0x80 + 0x69)
+#define KEYD_JOY8       (0x80 + 0x6a)
 
 // phares 4/19/98:
 // Defines Setup Screen groups that config variables appear in.

@@ -2129,7 +2129,7 @@ static menuitem_t mn_joystick_items[] =
 {
    {it_title,        FC_GOLD "joystick settings", NULL, "M_JOYSET" },
    {it_gap},
-   {it_toggle,       "enable joystick",           "use_joystick"},
+   {it_toggle,       "enable joystick",           "i_usejoystick"},
    {it_runcmd,       "select joystick...",        "mn_joysticks" },
    {it_gap},
    {it_info,         FC_GOLD "sensitivity"},
@@ -2936,6 +2936,7 @@ static menuitem_t mn_movekeys_items[] =
    {it_binding,      "strafe right",    "moveright"},
    {it_binding,      "180 degree turn", "flip"},
    {it_binding,      "use",             "use"},
+   {it_binding,      "attack/fire",     "attack"},
    {it_end}
 };
 
@@ -3012,9 +3013,9 @@ static menuitem_t mn_weaponbindings_items[] =
    {it_binding, "weapon 7",             "weapon7"},
    {it_binding, "weapon 8",             "weapon8"},
    {it_binding, "weapon 9",             "weapon9"},
-   {it_gap},
-   {it_binding, "next weapon",          "nextweapon"},
-   {it_binding, "attack/fire",          "attack"},
+   {it_binding, "next best weapon",     "nextweapon"},
+   {it_binding, "next weapon",          "weaponup"},
+   {it_binding, "previous weapon",      "weapondown"},
    {it_end}
 };
 
