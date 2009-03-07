@@ -408,14 +408,20 @@ static void I_ReadMouse(void)
 // ----------------------------------------------------------------------------
 // Events
 
+extern int gametic;
+
 static void I_GetEvent(void)
 {
-   static int buttons = 0;
+   static int     buttons = 0;
+   static Uint32  mwheeluptic = 0, mwheeldowntic = 0;
+   Uint32         calltic;
 
    SDL_Event  event;
    int        sendmouseevent = 0;
    event_t    d_event        = { 0, 0, 0, 0 };
    event_t    mouseevent     = { ev_mouse, 0, 0, 0 };
+
+   calltic = gametic;
 
    while(SDL_PollEvent(&event))
    {
@@ -497,9 +503,11 @@ static void I_GetEvent(void)
             break;
          case SDL_BUTTON_WHEELUP:
             d_event.data1 = KEYD_MWHEELUP;
+            mwheeluptic = calltic;
             break;
          case SDL_BUTTON_WHEELDOWN:
             d_event.data1 = KEYD_MWHEELDOWN;
+            mwheeldowntic = calltic;
             break;
          }
 
@@ -536,7 +544,8 @@ static void I_GetEvent(void)
             break;
          }
 
-         D_PostEvent(&d_event);
+         if(d_event.data1)
+            D_PostEvent(&d_event);
          break;
 
       case SDL_QUIT:
@@ -552,6 +561,23 @@ static void I_GetEvent(void)
       default:
          break;
       }
+   }
+
+
+   if(mwheeluptic && mwheeluptic + 1 < calltic)
+   {
+      d_event.type = ev_keyup;
+      d_event.data1 = KEYD_MWHEELUP;
+      D_PostEvent(&d_event);
+      mwheeluptic = 0;
+   }
+
+   if(mwheeldowntic && mwheeldowntic + 1 < calltic)
+   {
+      d_event.type = ev_keyup;
+      d_event.data1 = KEYD_MWHEELDOWN;
+      D_PostEvent(&d_event);
+      mwheeldowntic = 0;
    }
 
    if(sendmouseevent)
