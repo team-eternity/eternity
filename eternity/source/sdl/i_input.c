@@ -416,8 +416,7 @@ static void I_GetEvent(void)
    int        sendmouseevent = 0;
    event_t    d_event        = { 0, 0, 0, 0 };
    event_t    mouseevent     = { ev_mouse, 0, 0, 0 };
-   
-   
+
    while(SDL_PollEvent(&event))
    {
       // haleyjd 10/08/05: from Chocolate DOOM
@@ -453,7 +452,8 @@ static void I_GetEvent(void)
          if(!usemouse || mouseAccel_type == 2)
             continue;
 
-         // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most people like it the most.
+         // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most 
+         // people  like it the most.
          if(mouseAccel_type == 0)
          {
             mouseevent.data3 -= event.motion.yrel;
@@ -463,60 +463,80 @@ static void I_GetEvent(void)
          {
             // Simple linear acceleration
             // Evaluates to 1.25 * x. So Why don't I just do that? .... shut up
-            mouseevent.data2 += (int)(event.motion.xrel + (float)(event.motion.xrel * 0.25f));
-            mouseevent.data3 -= (int)(event.motion.yrel + (float)(event.motion.yrel * 0.25f));
+            mouseevent.data2 += (int)(event.motion.xrel + 
+                                      (float)(event.motion.xrel * 0.25f));
+            mouseevent.data3 -= (int)(event.motion.yrel + 
+                                      (float)(event.motion.yrel * 0.25f));
          }
 
          sendmouseevent = 1;
-         break;
-      
-      case SDL_MOUSEBUTTONUP:      
-         if(!usemouse)
-            continue;
-         sendmouseevent = 1;
-         d_event.type = ev_keyup;
-
-         if(event.button.button == SDL_BUTTON_LEFT)
-         {
-            buttons &= ~1;            
-            d_event.data1 = KEYD_MOUSE1;
-         }
-         else if(event.button.button == SDL_BUTTON_MIDDLE)
-         {
-            // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
-            buttons &= ~4;            
-            d_event.data1 = KEYD_MOUSE3;
-         }
-         else
-         {
-            buttons &= ~2;            
-            d_event.data1 = KEYD_MOUSE2;
-         }
-         D_PostEvent(&d_event);
          break;
 
       case SDL_MOUSEBUTTONDOWN:
          if(!usemouse)
             continue;
-         sendmouseevent = 1;
          d_event.type =  ev_keydown;
-         if(event.button.button == SDL_BUTTON_LEFT)
+
+         switch(event.button.button)
          {
+         case SDL_BUTTON_LEFT:
+            sendmouseevent = 1;
             buttons |= 1;            
             d_event.data1 = KEYD_MOUSE1;
-         }
-         else if(event.button.button == SDL_BUTTON_MIDDLE)
-         {
+            break;
+         case SDL_BUTTON_MIDDLE:
             // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
+            sendmouseevent = 1;
             buttons |= 4;            
             d_event.data1 = KEYD_MOUSE3;
-         }
-         else
-         {
+            break;
+         case SDL_BUTTON_RIGHT:
+            sendmouseevent = 1;
             buttons |= 2;            
             d_event.data1 = KEYD_MOUSE2;
+            break;
+         case SDL_BUTTON_WHEELUP:
+            d_event.data1 = KEYD_MWHEELUP;
+            break;
+         case SDL_BUTTON_WHEELDOWN:
+            d_event.data1 = KEYD_MWHEELDOWN;
+            break;
          }
+
          D_PostEvent(&d_event);
+         break;
+      
+      case SDL_MOUSEBUTTONUP:      
+         if(!usemouse)
+            continue;
+         d_event.type = ev_keyup;
+
+         switch(event.button.button)
+         {
+         case SDL_BUTTON_LEFT:
+            sendmouseevent = 1;
+            buttons &= ~1;            
+            d_event.data1 = KEYD_MOUSE1;
+            break;
+         case SDL_BUTTON_MIDDLE:
+            // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
+            sendmouseevent = 1;
+            buttons &= ~4;            
+            d_event.data1 = KEYD_MOUSE3;
+            break;
+         case SDL_BUTTON_RIGHT:
+            sendmouseevent = 1;
+            buttons &= ~2;            
+            d_event.data1 = KEYD_MOUSE2;
+            break;
+         case SDL_BUTTON_WHEELUP:
+            break;
+         case SDL_BUTTON_WHEELDOWN:
+            break;
+         }
+
+         if(d_event.data1)
+            D_PostEvent(&d_event);
          break;
 
       case SDL_QUIT:

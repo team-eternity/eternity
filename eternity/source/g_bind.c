@@ -318,6 +318,8 @@ void G_InitKeyBindings(void)
    keybindings[KEYD_MOUSE1].name      = "mouse1";
    keybindings[KEYD_MOUSE2].name      = "mouse2";
    keybindings[KEYD_MOUSE3].name      = "mouse3";
+   keybindings[KEYD_MWHEELUP].name    = "wheelup";
+   keybindings[KEYD_MWHEELDOWN].name  = "wheeldown";
    
    keybindings[KEYD_JOY1].name        = "joy1";
    keybindings[KEYD_JOY2].name        = "joy2";
@@ -593,6 +595,14 @@ boolean G_KeyResponder(event_t *ev, int bclass)
       //if(!keybindings[key].keydown[bclass])
       {
          keybindings[key].keydown[bclass] = true;
+
+         if(bclass == kac_game)
+         {
+            if(key == KEYD_MWHEELUP)
+               doom_printf("wheelup");
+            else if(key == KEYD_MWHEELDOWN)
+               doom_printf("wheeldown");
+         }
                   
          if(keybindings[key].bindings[bclass])
          {
