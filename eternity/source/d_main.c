@@ -1061,6 +1061,52 @@ static void D_CloseAutoloadDir(void)
    }
 }
 
+static char **iwadVarForNum[] =
+{
+   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
+   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,
+   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,
+};
+
+//
+// D_DoIWADMenu
+//
+// Crazy fancy graphical IWAD choosing menu.
+// Paths are stored in the system.cfg file, and only the games with paths
+// stored can be picked from the menu.
+// This feature is only available for SDL builds.
+//
+static const char *D_DoIWADMenu(void)
+{
+   const char *iwadToUse = NULL;
+
+#ifdef _SDL_VER
+   extern int I_Pick_DoPicker(boolean haveIWADs[]);
+   boolean haveIWADs[9];
+   int i, choice = -1;
+   boolean foundone = false;
+
+   // populate haveIWADs array based on system.cfg variables
+   for(i = 0; i < 9; ++i)
+   {
+      if((haveIWADs[i] = (*iwadVarForNum[i] != NULL)))
+         foundone = true;
+   }
+
+   if(foundone) // at least one IWAD must be specified!
+   {
+      startupmsg("D_DoIWADMenu", "Init IWAD choice subsystem.");
+      choice = I_Pick_DoPicker(haveIWADs);
+   }
+
+   if(choice >= 0)
+      iwadToUse = *iwadVarForNum[choice];
+#endif
+
+   return iwadToUse;
+}
+
+
 // macros for CheckIWAD
 
 #define isIWAD(name) \
@@ -1382,6 +1428,16 @@ char *FindIWADFile(void)
       {
          M_StringAlloca(&customiwad, 1, 8, iwad);
          M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
+      }
+   }
+   else // try wad picker
+   {
+      const char *name = D_DoIWADMenu();
+      if(name)
+      {
+         baseiwad = strdup(name);
+         M_NormalizeSlashes(baseiwad);
+         return baseiwad;
       }
    }
 
@@ -2261,28 +2317,6 @@ static void D_LoadSysConfig(void)
 
    M_LoadSysConfig(filename);
 }
-
-#if 0
-//
-// D_DoIWADMenu
-//
-//
-static const char *D_DoIWADMenu(void)
-{
-   const char *choice = NULL;
-
-   if(TXT_Init())
-   {
-      TXT_SetDesktopTitle("The Eternity Engine");
-
-      TXT_GUIMainLoop();
-
-      TXT_Shutdown();
-   }
-
-   return choice;
-}
-#endif
 
 //
 // D_SetGraphicsMode

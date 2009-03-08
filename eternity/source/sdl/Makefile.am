@@ -5,4 +5,4 @@ noinst_LIBRARIES = libsdlet.a
 libsdlet_a_SOURCES = \
 i_input.c  i_main.c   i_net.c    i_video.c    i_sound.c   i_system.c \
 mmus2mid.c mmus2mid.h ser_main.c i_sdlsound.c i_pcsound.c i_sdlmusic.c \
-i_cpu_posix.c
+i_cpu_posix.c i_picker.c

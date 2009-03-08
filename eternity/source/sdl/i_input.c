@@ -563,7 +563,6 @@ static void I_GetEvent(void)
       }
    }
 
-
    if(mwheeluptic && mwheeluptic + 1 < calltic)
    {
       d_event.type = ev_keyup;

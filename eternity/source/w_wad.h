@@ -116,11 +116,13 @@ int W_AddNewFile(waddir_t *dir, char *filename);
 // one argument, pass ns_global as the default namespace
 
 #define W_CheckNumForName(name) (W_CheckNumForName)(name, ns_global)
+int     W_CheckNumForNameInDir(waddir_t *dir, const char *name, int);
 int     (W_CheckNumForName)(const char* name, int);   // killough 4/17/98
 int     W_GetNumForName(const char* name);
 int     W_LumpLength(int lump);
 void    W_ReadLump(int lump, void *dest);
-void*   W_CacheLumpNum(int lump, int tag);
+void   *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag);
+void   *W_CacheLumpNum(int lump, int tag);
 long    W_LumpCheckSum(int lumpnum);
 int     W_ReadLumpHeader(int lump, void *dest, size_t size);
 

@@ -1196,6 +1196,10 @@ SOURCE=.\source\sdl\i_pcsound.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\sdl\i_picker.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\source\sdl\i_sdlmusic.c
 # End Source File
 # Begin Source File

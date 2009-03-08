@@ -891,8 +891,13 @@ boolean MN_Responder(event_t *ev)
       shiftdown = (ev->type == ev_keydown);
 
    // we only care about key presses
-   if(ev->type != ev_keydown)
+   switch(ev->type)
+   {
+   case ev_keydown:
+      break;
+   default: // not interested in anything else
       return false;
+   }
 
    // are we displaying a widget?
    if(current_menuwidget)
@@ -1003,14 +1008,14 @@ boolean MN_Responder(event_t *ev)
    {
       boolean paged = false;
       action_menu_up = false;
-
+      
       // skip gaps
       do
       {
          if(--current_menu->selected < 0)
          {
             int i;
-
+            
             // haleyjd: in paged menus, go to the previous page
             if(current_menu->prevpage)
             {
@@ -1019,7 +1024,7 @@ boolean MN_Responder(event_t *ev)
                paged = true; // paging makes a sound already, so remember this
                MN_PageMenu(current_menu->prevpage); // modifies current_menu!
             }
-
+            
             // jump to end of menu
             for(i = 0; current_menu->menuitems[i].type != it_end; ++i)
                ; /* do-nothing loop */
@@ -1030,7 +1035,7 @@ boolean MN_Responder(event_t *ev)
       
       if(!paged)
          S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
-
+      
       return true;  // eatkey
    }
   
@@ -1038,7 +1043,7 @@ boolean MN_Responder(event_t *ev)
    {
       boolean paged = false;
       action_menu_down = false;
-
+      
       do
       {
          ++current_menu->selected;
@@ -1052,7 +1057,7 @@ boolean MN_Responder(event_t *ev)
                paged = true;             // don't make a double sound below
                MN_PageMenu(current_menu->nextpage); // modifies current_menu!
             }
-
+            
             current_menu->selected = 0;     // jump back to start
          }
       }
@@ -1138,9 +1143,8 @@ boolean MN_Responder(event_t *ev)
    if(action_menu_left)
    {
       menuitem_t *menuitem;
-
       action_menu_left = false;
-
+      
       // haleyjd 10/07/05: if ctrl is down, go to previous menu
       if(ctrldown)
       {
@@ -1148,10 +1152,10 @@ boolean MN_Responder(event_t *ev)
             MN_PageMenu(current_menu->prevpage);
          else
             S_StartSound(NULL, GameModeInfo->c_BellSound);
-
+         
          return true;
       }
-
+      
       menuitem = &current_menu->menuitems[current_menu->selected];
       
       switch(menuitem->type)
@@ -1173,7 +1177,6 @@ boolean MN_Responder(event_t *ev)
       default:
          break;
       }
-
       return true;
    }
   
@@ -1181,9 +1184,8 @@ boolean MN_Responder(event_t *ev)
    if(action_menu_right)
    {
       menuitem_t *menuitem;
-
       action_menu_right = false;
-
+      
       // haleyjd 10/07/05: if ctrl is down, go to next menu
       if(ctrldown)
       {
@@ -1191,12 +1193,12 @@ boolean MN_Responder(event_t *ev)
             MN_PageMenu(current_menu->nextpage);
          else
             S_StartSound(NULL, GameModeInfo->c_BellSound);
-
+         
          return true;
       }
       
       menuitem = &current_menu->menuitems[current_menu->selected];
-
+      
       switch(menuitem->type)
       {
       case it_slider:
@@ -1217,7 +1219,7 @@ boolean MN_Responder(event_t *ev)
       default:
          break;
       }
-
+      
       return true;
    }
 

@@ -128,7 +128,7 @@ static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: stati
       }
    }
   
-   if(in_textmode)
+   if(dir->ispublic && in_textmode)
       printf(" adding %s\n", filename);   // killough 8/8/98
    startlump = dir->numlumps;
 
@@ -178,7 +178,7 @@ static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: stati
    lump_p   = newlumps;
    
    // update IWAD handle?   
-   if(isWad)
+   if(isWad && dir->ispublic)
    {
       // haleyjd 06/21/04: track handle of first wad added also
       if(firstWadHandle == NULL)
@@ -567,7 +567,10 @@ void *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag)
    
    if(!(dir->lumpinfo[lump]->cache))      // read the lump in
    {
-      W_ReadLump(lump, Z_Malloc(W_LumpLength(lump), tag, &(dir->lumpinfo[lump]->cache)));
+      W_ReadLumpInDir(dir, lump, 
+                      Z_Malloc(W_LumpLengthInDir(dir, lump), 
+                               tag, 
+                               &(dir->lumpinfo[lump]->cache)));
    }
    else
    {
