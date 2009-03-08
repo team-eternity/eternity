@@ -616,9 +616,6 @@ void I_InitGraphics(void)
    
    if(!firsttime)
       return;
-
-   // haleyjd 03/06/09: do SDL_INIT_VIDEO now
-   SDL_InitSubSystem(SDL_INIT_VIDEO);
    
    firsttime = false;
    

@@ -489,8 +489,9 @@ static void I_Pick_Shutdown(void)
 {
    I_Pick_FreeWad();
 
-   if(pickvideoinit)
-      SDL_QuitSubSystem(SDL_INIT_VIDEO);
+//   haleyjd: I hate SDL.
+//   if(pickvideoinit)
+//      SDL_QuitSubSystem(SDL_INIT_VIDEO);
    
    pickvideoinit = false;
 }
@@ -502,9 +503,6 @@ static void I_Pick_Shutdown(void)
 
 int I_Pick_DoPicker(boolean haveIWADs[])
 {
-   if(SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
-      return -1;
-
    haveIWADArray = haveIWADs;
 
    pickvideoinit = true;

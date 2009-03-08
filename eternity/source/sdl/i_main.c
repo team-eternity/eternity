@@ -48,7 +48,7 @@ void I_Quit(void);
 // haleyjd 07/06/04: changed to a macro to eliminate local variable
 // note: sound init is handled separately in i_sound.c
 
-#define BASE_INIT_FLAGS (SDL_INIT_JOYSTICK)
+#define BASE_INIT_FLAGS (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
 
 #ifdef _DEBUG
 #define INIT_FLAGS (BASE_INIT_FLAGS | SDL_INIT_NOPARACHUTE)
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
    // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
 #endif
-      
+   
    Z_Init();
    atexit(I_Quit);
    
