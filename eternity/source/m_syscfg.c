@@ -101,11 +101,11 @@ void M_LoadSysConfig(const char *filename)
 
    cfg = cfg_init(sys_opts, CFGF_NOCASE);
 
-   cfg_set_error_function(cfg, E_ErrorCB);
+   cfg_set_error_function(cfg, syscfg_error);
 
    if(cfg_parse(cfg, filename))
    {
-      printf("M_LoadSysConfig: no system config found, using defaults.\n");
+      printf("M_LoadSysConfig: system.cfg not found or invalid, using defaults.\n");
       cfg_free(cfg);
       return; // Oh well. Variables will default.
    }
