@@ -111,8 +111,7 @@ void M_LoadSysConfig(const char *filename)
    }
 
    // process use_doom_config
-   use_doom_config = 
-      cfg_getbool(cfg, ITEM_USE_DOOM_CONFIG) == cfg_true ? true : false;
+   use_doom_config = (cfg_getbool(cfg, ITEM_USE_DOOM_CONFIG) == cfg_true);
 
    // process iwads
    for(i = 0; iwadPathItems[i] != NULL; ++i)
@@ -128,3 +127,6 @@ void M_LoadSysConfig(const char *filename)
 
    printf("M_LoadSysConfig: system defaults loaded.\n");
 }
+
+// EOF
+

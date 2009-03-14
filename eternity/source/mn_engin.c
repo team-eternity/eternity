@@ -1006,7 +1006,7 @@ boolean MN_Responder(event_t *ev)
 
    if(action_menu_up)
    {
-      boolean paged = false;
+      boolean cancelsnd = false;
       action_menu_up = false;
       
       // skip gaps
@@ -1016,13 +1016,23 @@ boolean MN_Responder(event_t *ev)
          {
             int i;
             
-            // haleyjd: in paged menus, go to the previous page
-            if(current_menu->prevpage)
+            if(!ctrldown) // 3/13/09: control cancels these behaviors
             {
-               // set selected item to the first selectable item
-               current_menu->selected = MN_FindFirstSelectable(current_menu);
-               paged = true; // paging makes a sound already, so remember this
-               MN_PageMenu(current_menu->prevpage); // modifies current_menu!
+               // haleyjd: in paged menus, go to the previous page
+               if(current_menu->prevpage)
+               {
+                  // set selected item to the first selectable item
+                  current_menu->selected = MN_FindFirstSelectable(current_menu);
+                  cancelsnd = true; // paging makes a sound already, so remember this
+                  MN_PageMenu(current_menu->prevpage); // modifies current_menu!
+               }
+               else if(current_menu->nextpage)
+               {
+                  // 03/13/09: don't do normal wrap behavior on first page
+                  current_menu->selected = MN_FindFirstSelectable(current_menu);
+                  cancelsnd = true; // cancel the sound cuz we didn't do anything
+                  break; // exit the loop
+               }               
             }
             
             // jump to end of menu
@@ -1033,7 +1043,7 @@ boolean MN_Responder(event_t *ev)
       }
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
       
-      if(!paged)
+      if(!cancelsnd)
          S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
       
       return true;  // eatkey
@@ -1041,7 +1051,7 @@ boolean MN_Responder(event_t *ev)
   
    if(action_menu_down)
    {
-      boolean paged = false;
+      boolean cancelsnd = false;
       action_menu_down = false;
       
       do
@@ -1049,13 +1059,22 @@ boolean MN_Responder(event_t *ev)
          ++current_menu->selected;
          if(current_menu->menuitems[current_menu->selected].type == it_end)
          {
-            // haleyjd: in paged menus, go to the next page
-            if(current_menu->nextpage)
+            if(!ctrldown) // 03/13/09: control cancels these behaviors
             {
-               // set selected item to the last selectable item
-               current_menu->selected = MN_FindLastSelectable(current_menu);
-               paged = true;             // don't make a double sound below
-               MN_PageMenu(current_menu->nextpage); // modifies current_menu!
+               // haleyjd: in paged menus, go to the next page               
+               if(current_menu->nextpage)
+               {
+                  // set selected item to the last selectable item
+                  current_menu->selected = MN_FindLastSelectable(current_menu);
+                  cancelsnd = true;             // don't make a double sound below
+                  MN_PageMenu(current_menu->nextpage); // modifies current_menu!
+               }
+               else if(current_menu->prevpage && !current_menu->nextpage)
+               {
+                  current_menu->selected = MN_FindLastSelectable(current_menu);
+                  cancelsnd = true; // cancel the sound cuz we didn't do anything
+                  break; // exit the loop
+               }
             }
             
             current_menu->selected = 0;     // jump back to start
@@ -1063,7 +1082,7 @@ boolean MN_Responder(event_t *ev)
       }
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
       
-      if(!paged)
+      if(!cancelsnd)
          S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
       return true;  // eatkey
