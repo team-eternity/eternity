@@ -40,6 +40,7 @@
 #include "../i_video.h"
 #include "../doomstat.h"
 #include "../m_misc.h"
+#include "../m_syscfg.h"
 #include "../g_game.h"
 #include "../w_wad.h"
 #include "../v_video.h"
@@ -290,7 +291,7 @@ static char errmsg[2048];    // buffer of error message -- killough
 
 static int has_exited;
 
-void I_Quit (void)
+void I_Quit(void)
 {
    has_exited = 1;   /* Prevent infinitely recursive exits -- killough */
    
@@ -308,6 +309,7 @@ void I_Quit (void)
    SDL_Quit();
 
    M_SaveDefaults();
+   M_SaveSysConfig();
    G_SaveDefaults(); // haleyjd
    
    // Under Visual C++, the console window likes to rudely slam

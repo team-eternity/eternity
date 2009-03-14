@@ -1690,52 +1690,58 @@ default_t defaults[] =
    { NULL }         // last entry
 };
 
-static char *defaultfile;
-static boolean defaults_loaded = false;      // killough 10/98
+// haleyjd 03/14/09: main defaultfile object
+static defaultfile_t maindefaults =
+{
+   defaults,
+   sizeof defaults / sizeof *defaults - 1,
+};
+
+//static char *defaultfile;
+//static boolean defaults_loaded = false;      // killough 10/98
 
 // killough 10/98: keep track of comments in .cfg files
-static struct { char *text; int line; } *comments;
-static size_t comment, comment_alloc;
-static int config_help_header;  // killough 10/98
+//static struct { char *text; int line; } *comments;
+//static size_t comment, comment_alloc;
+//static int config_help_header;  // killough 10/98
 
-#define NUMDEFAULTS ((unsigned)(sizeof defaults / sizeof *defaults - 1))
+//#define NUMDEFAULTS ((unsigned)(sizeof defaults / sizeof *defaults - 1))
 
 // killough 11/98: hash function for name lookup
-static unsigned default_hash(const char *name)
+static unsigned default_hash(defaultfile_t *df, const char *name)
 {
   unsigned hash = 0;
   while (*name)
     hash = hash*2 + toupper(*name++);
-  return hash % NUMDEFAULTS;
+  return hash % df->numdefaults;
 }
 
-default_t *M_LookupDefault(const char *name)
+default_t *M_LookupDefault(defaultfile_t *df, const char *name)
 {
-   static int hash_init;
    register default_t *dp;
 
    // Initialize hash table if not initialized already
-   if(!hash_init)
+   if(!df->hashInit)
    {
-      for(hash_init = 1, dp = defaults; dp->name; dp++)
+      for(df->hashInit = true, dp = df->defaults; dp->name; dp++)
       {
-         unsigned h = default_hash(dp->name);
-         dp->next = defaults[h].first;
-         defaults[h].first = dp;
+         unsigned h = default_hash(df, dp->name);
+         dp->next = df->defaults[h].first;
+         df->defaults[h].first = dp;
       }
    }
 
    // Look up name in hash table
-   for(dp = defaults[default_hash(name)].first;
+   for(dp = df->defaults[default_hash(df, name)].first;
        dp && strcasecmp(name, dp->name); dp = dp->next);
 
    return dp;
 }
 
 //
-// M_SaveDefaults
+// M_SaveDefaultFile
 //
-void M_SaveDefaults (void)
+void M_SaveDefaultFile(defaultfile_t *df)
 {
    char *tmpfile = NULL;
    size_t len;
@@ -1746,7 +1752,7 @@ void M_SaveDefaults (void)
    //memset(tmpfile, 0, sizeof(tmpfile));
 
    // killough 10/98: for when exiting early
-   if(!defaults_loaded || !defaultfile)
+   if(!df->loaded || !df->fileName)
       return;
 
    len = M_StringAlloca(&tmpfile, 2, 14, D_DoomExeDir(), D_DoomExeName());
@@ -1761,7 +1767,7 @@ void M_SaveDefaults (void)
    // 3/3/98 explain format of file
    // killough 10/98: use executable's name
 
-   if(config_help && !config_help_header &&
+   if(config_help && !df->helpHeader &&
       fprintf(f,";%s.cfg format:\n"
               ";[min-max(default)] description of variable\n"
               ";* at end indicates variable is settable in wads\n"
@@ -1770,22 +1776,22 @@ void M_SaveDefaults (void)
 
    // killough 10/98: output comment lines which were read in during input
 
-   for(blanks = 1, line = 0, dp = defaults; ; dp++, blanks = 0)
+   for(blanks = 1, line = 0, dp = df->defaults; ; dp++, blanks = 0)
    {
       int brackets = 0, value;
 
-      for(;line < comment && comments[line].line <= dp-defaults; line++)
+      for(; line < df->numcomments && df->comments[line].line <= dp - df->defaults; ++line)
       {
-         if(*comments[line].text != '[' || (brackets = 1, config_help))
+         if(*(df->comments[line].text) != '[' || (brackets = 1, config_help))
          {
             // If we haven't seen any blank lines
             // yet, and this one isn't blank,
             // output a blank line for separation
 
             if((!blanks && (blanks = 1, 
-                            *comments[line].text != '\n' &&
+                            *(df->comments[line].text) != '\n' &&
                             putc('\n',f) == EOF)) ||
-               fputs(comments[line].text, f) == EOF)
+               fputs(df->comments[line].text, f) == EOF)
                goto error;
          }
       }
@@ -1841,15 +1847,25 @@ void M_SaveDefaults (void)
    {
    error:
       I_Error("Could not write defaults to %s: %s\n%s left unchanged\n",
-              tmpfile, errno ? strerror(errno): "(Unknown Error)",defaultfile);
+              tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
       return;
    }
 
-   remove(defaultfile);
+   remove(df->fileName);
 
-   if(rename(tmpfile, defaultfile))
-      I_Error("Could not write defaults to %s: %s\n", defaultfile,
-              errno ? strerror(errno): "(Unknown Error)");
+   if(rename(tmpfile, df->fileName))
+      I_Error("Could not write defaults to %s: %s\n", df->fileName,
+              errno ? strerror(errno) : "(Unknown Error)");
+}
+
+//
+// M_SaveDefaults
+//
+// haleyjd 3/14/09: This is now only to write the primary config file.
+//
+void M_SaveDefaults(void)
+{
+   M_SaveDefaultFile(&maindefaults);
 }
 
 //
@@ -1859,7 +1875,7 @@ void M_SaveDefaults (void)
 //
 // This function parses .cfg file lines, or lines in OPTIONS lumps
 //
-boolean M_ParseOption(const char *p, boolean wad)
+boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
 {
    char name[80], strparm[100];
    default_t *dp;
@@ -1872,7 +1888,7 @@ boolean M_ParseOption(const char *p, boolean wad)
    // killough 10/98: move to be made part of main test, add comment-handling
 
    if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !isalnum(*name) ||
-      !(dp = M_LookupDefault(name)) || (*strparm == '"') == !dp->isstr ||
+      !(dp = M_LookupDefault(df, name)) || (*strparm == '"') == !dp->isstr ||
       (wad && !dp->wad_allowed))
    {
       return 1;
@@ -1962,7 +1978,7 @@ void M_LoadOptions(void)
          strncpy(buf, p, len)[len] = 0;
          p += len;
          size -= len;
-         M_ParseOption(buf, true);
+         M_ParseOption(&maindefaults, buf, true);
       }
       free(buf);
       Z_ChangeTag(options, PU_CACHE);
@@ -1973,12 +1989,11 @@ void M_LoadOptions(void)
 }
 
 //
-// M_LoadDefaults
+// M_LoadDefaultFile
 //
-void M_LoadDefaults (void)
+void M_LoadDefaultFile(defaultfile_t *df)
 {
    register default_t *dp;
-   int i;
    FILE *f;
 
    // set everything to base values
@@ -1990,38 +2005,28 @@ void M_LoadDefaults (void)
    // in it or not. This provides consistency later on when/if we need to
    // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
 
-   for(dp = defaults; dp->name; dp++)
+   for(dp = df->defaults; dp->name; dp++)
    {
       *dp->location =
          dp->isstr ? (int) strdup((char *) dp->defaultvalue) : dp->defaultvalue;
    }
 
-   // check for a custom default file
-   
-   if (!defaultfile)
-   {
-      if((i = M_CheckParm("-config")) && i < myargc-1)
-         printf(" default file: %s\n", defaultfile = strdup(myargv[i+1]));
-      else
-         defaultfile = strdup(basedefault);
-   }
-
-   M_NormalizeSlashes(defaultfile);
+   M_NormalizeSlashes(df->fileName);
    
    // read the file in, overriding any set defaults
    //
    // killough 9/21/98: Print warning if file missing, and use fgets for reading
 
-   if(!(f = fopen(defaultfile, "r")))
-      printf("Warning: Cannot read %s -- using built-in defaults\n",defaultfile);
+   if(!(f = fopen(df->fileName, "r")))
+      printf("Warning: Cannot read %s -- using built-in defaults\n", df->fileName);
    else
    {
-      int skipblanks = 1, line = comment = config_help_header = 0;
+      int skipblanks = 1, line = df->numcomments = df->helpHeader = 0;
       char s[256];
 
       while(fgets(s, sizeof s, f))
       {
-         if(!M_ParseOption(s, false))
+         if(!M_ParseOption(df, s, false))
             line++;       // Line numbers
          else
          {             // Remember comment lines
@@ -2034,7 +2039,7 @@ void M_LoadDefaults (void)
             {
                skipblanks = 0;    // stop skipping blanks.
                if(strstr(p, ".cfg format:"))
-                  config_help_header = 1;
+                  df->helpHeader = true;
             }
             else
             {
@@ -2044,20 +2049,43 @@ void M_LoadDefaults (void)
                   skipblanks = 1, p = "\n";
             }
 
-            if(comment >= comment_alloc)
-               comments = realloc(comments, sizeof *comments *
-                                  (comment_alloc = comment_alloc ?
-                                   comment_alloc * 2 : 10));
-            comments[comment].line = line;
-            comments[comment++].text = strdup(p);
+            if(df->numcomments >= df->numcommentsalloc)
+               df->comments = realloc(df->comments, sizeof *(df->comments) *
+                                      (df->numcommentsalloc = df->numcommentsalloc ?
+                                       df->numcommentsalloc * 2 : df->numdefaults));
+            df->comments[df->numcomments].line = line;
+            df->comments[df->numcomments++].text = strdup(p);
          }
       }
-      fclose (f);
+      fclose(f);
    }
 
-   defaults_loaded = true;            // killough 10/98
+   df->loaded = true;            // killough 10/98
    
    //jff 3/4/98 redundant range checks for hud deleted here
+}
+
+//
+// M_LoadDefaults
+//
+// haleyjd 03/14/09: This is now the function to handle the default config.
+//
+void M_LoadDefaults(void)
+{
+   int p;
+   
+   defaultfile_t *df = &maindefaults;
+
+   // check for a custom default file   
+   if(!df->fileName)
+   {
+      if((p = M_CheckParm("-config")) && p < myargc - 1)
+         printf(" default file: %s\n", df->fileName = strdup(myargv[p + 1]));
+      else
+         df->fileName = strdup(basedefault);
+   }
+
+   M_LoadDefaultFile(df);
 }
 
 //

@@ -40,8 +40,6 @@ void    M_ScreenShot(void);
 void    M_LoadDefaults(void);
 void    M_SaveDefaults(void);
 int     M_DrawText(int x,int y,boolean direct, char *string);
-struct default_s *M_LookupDefault(const char *name);     // killough 11/98
-boolean M_ParseOption(const char *name, boolean wad);    // killough 11/98
 void    M_LoadOptions(void);                             // killough 11/98
 
 // haleyjd: Portable versions of common non-standard C functions.
@@ -90,6 +88,30 @@ typedef struct default_s
   int orig_default;                         // Original default, if modified
   struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 } default_t;
+
+// haleyjd 03/14/09: defaultfile_t structure
+typedef struct defaultfile_s
+{
+   default_t   *defaults;   // array of defaults
+   size_t      numdefaults; // length of defaults array
+   boolean     hashInit;    // if true, this default file's hash table is setup
+   char        *fileName;   // name of corresponding file
+   boolean     loaded;      // if true, defaults are loaded
+   boolean     helpHeader;  // has help header?
+   struct comment_s
+   { 
+      char *text; 
+      int line; 
+   } *comments;             // stored comments
+   size_t numcomments;      // number of comments stored
+   size_t numcommentsalloc; // number of comments allocated
+} defaultfile_t;
+
+// killough 11/98:
+default_t *M_LookupDefault(defaultfile_t *df, const char *name);
+boolean    M_ParseOption(defaultfile_t *df, const char *name, boolean wad);
+void       M_LoadDefaultFile(defaultfile_t *df);
+void       M_SaveDefaultFile(defaultfile_t *df);
 
 #define UL (-123456789) /* magic number for no min or max for parameter */
 

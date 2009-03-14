@@ -698,6 +698,10 @@ SOURCE=.\Source\m_random.h
 
 SOURCE=.\Source\m_swap.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\source\m_syscfg.h
+# End Source File
 # End Group
 # End Group
 # Begin Group "Mn_"

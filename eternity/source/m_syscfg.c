@@ -26,17 +26,13 @@
 //
 //-----------------------------------------------------------------------------
 
-#define NEED_EDF_DEFINITIONS
-
 #include "z_zone.h"
-
-#include "Confuse/confuse.h"
-
 #include "doomstat.h"
-#include "e_lib.h"
+#include "d_main.h"
+#include "m_misc.h"
 #include "d_gi.h"
 
-#define ITEM_USE_DOOM_CONFIG "use_doom_config"
+#define ITEM_USE_DOOM_CONFIG    "use_doom_config"
 
 #define ITEM_IWAD_DOOM_SW       "iwad_doom_shareware"
 #define ITEM_IWAD_DOOM          "iwad_doom"
@@ -48,21 +44,85 @@
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
 #define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
 
-static cfg_opt_t sys_opts[] =
+static default_t sysdefaults[] =
 {
-   CFG_BOOL(ITEM_USE_DOOM_CONFIG, cfg_false, CFGF_NONE),
-   
-   CFG_STR(ITEM_IWAD_DOOM_SW,       NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_DOOM,          NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_ULTIMATE_DOOM, NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_DOOM2,         NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_TNT,           NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_PLUTONIA,      NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_HERETIC_SW,    NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_HERETIC,       NULL, CFGF_NONE),
-   CFG_STR(ITEM_IWAD_HERETIC_SOSR,  NULL, CFGF_NONE),
-   
-   CFG_END()
+   {
+      ITEM_USE_DOOM_CONFIG,
+      &use_doom_config, NULL,
+      0, {0,1}, dt_number, ss_none, wad_no,
+      "1 to use base/doom/eternity.cfg for all DOOM gamemodes"
+   },
+
+   {
+      ITEM_IWAD_DOOM_SW,
+      (int *)&gi_path_doomsw, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Doom Shareware IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_DOOM,
+      (int *)&gi_path_doomreg, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Doom Registered IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_ULTIMATE_DOOM,
+      (int *)&gi_path_doomu, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Ultimate Doom IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_DOOM2,
+      (int *)&gi_path_doom2, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Doom 2 IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_TNT,
+      (int *)&gi_path_tnt, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Final DOOM: TNT - Evilution IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_PLUTONIA,
+      (int *)&gi_path_plut, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Final DOOM: The Plutonia Experiment IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_HERETIC_SW,
+      (int *)&gi_path_hticsw, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Heretic Shareware IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_HERETIC,
+      (int *)&gi_path_hticreg, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Heretic Registered IWAD Path"
+   },
+
+   {
+      ITEM_IWAD_HERETIC_SOSR,
+      (int *)&gi_path_doomsw, NULL,
+      (int) "", {0}, dt_string, ss_none, wad_no,
+      "Heretic: Shadow of the Serpent Riders IWAD Path"
+   },
+
+   { NULL }
+};
+
+static defaultfile_t sysdeffile =
+{
+   sysdefaults,
+   sizeof(sysdefaults) / sizeof *sysdefaults - 1,
 };
 
 static char **iwadPaths[] =
@@ -76,56 +136,46 @@ static char **iwadPaths[] =
    &gi_path_hticsw,
    &gi_path_hticreg,
    &gi_path_sosr,
-};
-
-static const char *iwadPathItems[] =
-{
-   ITEM_IWAD_DOOM_SW,
-   ITEM_IWAD_DOOM,
-   ITEM_IWAD_ULTIMATE_DOOM,
-   ITEM_IWAD_DOOM2,
-   ITEM_IWAD_TNT,
-   ITEM_IWAD_PLUTONIA,
-   ITEM_IWAD_HERETIC_SW,
-   ITEM_IWAD_HERETIC,
-   ITEM_IWAD_HERETIC_SOSR,
    NULL
 };
 
-static void syscfg_error(cfg_t *cfg, const char *foo, va_list ap) {}
-
 void M_LoadSysConfig(const char *filename)
 {
-   cfg_t *cfg;
    int i;
 
-   cfg = cfg_init(sys_opts, CFGF_NOCASE);
+   startupmsg("M_LoadSysConfig", "Loading base/system.cfg");
 
-   cfg_set_error_function(cfg, syscfg_error);
+   sysdeffile.fileName = strdup(filename);
 
-   if(cfg_parse(cfg, filename))
-   {
-      printf("M_LoadSysConfig: system.cfg not found or invalid, using defaults.\n");
-      cfg_free(cfg);
-      return; // Oh well. Variables will default.
-   }
-
-   // process use_doom_config
-   use_doom_config = (cfg_getbool(cfg, ITEM_USE_DOOM_CONFIG) == cfg_true);
+   M_LoadDefaultFile(&sysdeffile);
 
    // process iwads
-   for(i = 0; iwadPathItems[i] != NULL; ++i)
+   for(i = 0; iwadPaths[i] != NULL; ++i)
    {
-      char *str = cfg_getstr(cfg, iwadPathItems[i]);
+      char *str = *iwadPaths[i];
 
-      if(str)
-         *iwadPaths[i] = strdup(str);
+      // if iwads are set to empty strings, free them and set them to NULL.
+      if(str && *str == '\0')
+      {
+         free(str);
+         *iwadPaths[i] = NULL;
+      }
+   }
+}
+
+void M_SaveSysConfig(void)
+{
+   int i;
+
+   // process iwads
+   for(i = 0; iwadPaths[i] != NULL; ++i)
+   {
+      // if iwads are NULL, set to empty string
+      if(*iwadPaths[i] == NULL)
+         *iwadPaths[i] = "";
    }
 
-   // done.
-   cfg_free(cfg);
-
-   printf("M_LoadSysConfig: system defaults loaded.\n");
+   M_SaveDefaultFile(&sysdeffile);
 }
 
 // EOF
