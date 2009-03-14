@@ -111,7 +111,7 @@ static default_t sysdefaults[] =
 
    {
       ITEM_IWAD_HERETIC_SOSR,
-      (int *)&gi_path_doomsw, NULL,
+      (int *)&gi_path_sosr, NULL,
       (int) "", {0}, dt_string, ss_none, wad_no,
       "Heretic: Shadow of the Serpent Riders IWAD Path"
    },
