@@ -834,12 +834,14 @@ default_t defaults[] =
       "key to pause the game"
    },
 
+   /*
    {
       "key_autorun",
       &key_autorun, NULL,
       KEYD_CAPSLOCK, {0,255}, dt_number, ss_keys, wad_no,
       "key to toggle always run mode"
    },
+   */
 
    {
       "key_chat",

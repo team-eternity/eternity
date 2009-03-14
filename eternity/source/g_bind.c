@@ -89,6 +89,8 @@ int action_weapondown;  // haleyjd: prev weapon in order
 
 int action_frags;       // show frags
 
+int action_autorun;     // autorun
+
 // Menu Actions -- handled by MN_Responder
 
 int action_menu_help;
@@ -174,6 +176,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    {"flip",      kac_game,       at_variable,     {&action_flip}},
    {"speed",     kac_game,       at_variable,     {&action_speed}},
    {"jump",      kac_game,       at_variable,     {&action_jump}},      //  -- joek 12/22/07
+   {"autorun",   kac_game,       at_variable,     {&action_autorun}},
 
    {"mlook",     kac_game,       at_variable,     {&action_mlook}},
    {"lookup",    kac_game,       at_variable,     {&action_lookup}},

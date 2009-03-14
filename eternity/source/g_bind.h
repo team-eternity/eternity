@@ -55,6 +55,7 @@ extern int action_attack;
 extern int action_strafe;
 extern int action_flip;
 extern int action_jump;
+extern int action_autorun;
 
 extern int action_mlook;
 extern int action_center;
@@ -124,6 +125,7 @@ enum keyaction_e
    ka_flip,
    ka_speed,
    ka_jump,
+   ka_autorun,
    ka_mlook,     
    ka_lookup,    
    ka_lookdown,  

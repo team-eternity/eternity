@@ -151,7 +151,7 @@ int             mouseAccel_type = 0;
 // haleyjd: these keys are not dynamically rebindable
 
 int key_escape = KEYD_ESCAPE;
-int key_autorun;             
+//int key_autorun;             
 int key_chat;
 int key_help = KEYD_F1;
 int key_spy;
@@ -809,6 +809,12 @@ boolean G_Responder(event_t* ev)
    if(gamestate == GS_FINALE && F_Responder(ev))
       return true;  // finale ate the event
 
+   if(action_autorun)
+   {
+      action_autorun = 0;
+      autorun = !autorun;
+   }
+   /*
 #ifdef DJGPP
    // sf: just what _was_ this doing in m_responder anyway?
    if(ev->type == ev_keydown && ev->data1 == key_autorun) // Autorun
@@ -819,15 +825,17 @@ boolean G_Responder(event_t* ev)
 #else
    if(ev->type == ev_keydown && ev->data1 == key_autorun)
    {
-     autorun = true;
-     return true;
+      autorun = true;
+      return true;
    }
    if(ev->type == ev_keyup && ev->data1 == key_autorun)
    {
-     autorun = false;
-     return true;
+      autorun = false;
+      return true;
    }
 #endif
+   */
+
    switch(ev->type)
    {
    case ev_keydown:

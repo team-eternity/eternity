@@ -228,37 +228,8 @@ boolean I_SetJoystickDevice(int deviceNum)
 }
 
 void I_InitKeyboard(void)
-{
-   //SDLMod   mod;
-   
-   keyboard_installed = 1;
-   
-   /*
-   oldmod = SDL_GetModState();
-   switch(key_autorun)
-   {
-   case KEYD_CAPSLOCK:
-      mod = KMOD_CAPS;
-      break;
-   case KEYD_NUMLOCK:
-      mod = KMOD_NUM;
-      break;
-   case KEYD_SCROLLLOCK:
-      mod = KMOD_MODE;
-      break;
-   default:
-      mod = KMOD_NONE;
-   }
-   
-   if(autorun)
-   {
-      SDL_SetModState(mod);
-   }
-   else
-   {
-      SDL_SetModState(KMOD_NONE);
-   }
-   */
+{   
+   keyboard_installed = 1;   
 }
 
 void I_Init(void)

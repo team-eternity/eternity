@@ -436,32 +436,16 @@ VARIABLE_BOOLEAN(map_point_coordinates, NULL, onoff);
 CONSOLE_VARIABLE(map_coords, map_point_coordinates, 0) {}
 
 VARIABLE_INT(dogs, &default_dogs, 0, 3, NULL);
-CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet)
-{
-   // haleyjd 11/06/05: test if this is necessary
-   /*
-   int count;
-
-   if(!c_argc)
-   {
-      C_Printf("usage: numhelpers <num>\n num: 0-3\n");
-      return;
-   }
-
-   count = atoi(c_argv[0]);
-
-   if(count < 0) count = 0;
-   if(count > 3) count = 3;
-
-   dogs = count; // set internal variables appropriately
-   */
-}
+CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
 
 VARIABLE_BOOLEAN(dog_jumping, &default_dog_jumping, onoff);
 CONSOLE_NETVAR(dogjumping, dog_jumping, cf_server, netcmd_dogjumping) {}
 
 VARIABLE_BOOLEAN(startOnNewMap, NULL, yesno);
 CONSOLE_VARIABLE(startonnewmap, startOnNewMap, 0) {}
+
+VARIABLE_BOOLEAN(autorun, NULL, onoff);
+CONSOLE_VARIABLE(autorun, autorun, 0) {}
 
 ////////////////////////////////////////////////////////////////
 //
@@ -767,6 +751,7 @@ void G_AddCommands(void)
    C_AddCommand(grenade_trails);
    C_AddCommand(bfg_cloud);
    C_AddCommand(startonnewmap);
+   C_AddCommand(autorun);
 
    G_AddChatMacros();
    G_AddWeapPrefs();

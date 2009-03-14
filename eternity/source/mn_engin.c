@@ -857,7 +857,7 @@ void MN_Drawer(void)
    if(!menuactive || hide_menu) 
       return;
  
-   MN_DrawMenu(current_menu);  
+   MN_DrawMenu(current_menu);
 }
 
 static void MN_ShowContents(void);
@@ -1069,8 +1069,9 @@ boolean MN_Responder(event_t *ev)
                   cancelsnd = true;             // don't make a double sound below
                   MN_PageMenu(current_menu->nextpage); // modifies current_menu!
                }
-               else if(current_menu->prevpage && !current_menu->nextpage)
+               else if(current_menu->prevpage)
                {
+                  // don't wrap the pointer when on the last page
                   current_menu->selected = MN_FindLastSelectable(current_menu);
                   cancelsnd = true; // cancel the sound cuz we didn't do anything
                   break; // exit the loop

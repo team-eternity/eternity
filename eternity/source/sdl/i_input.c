@@ -412,9 +412,12 @@ extern int gametic;
 
 static void I_GetEvent(void)
 {
-   static int     buttons = 0;
-   static Uint32  mwheeluptic = 0, mwheeldowntic = 0;
-   Uint32         calltic;
+   static int    buttons = 0;
+   static Uint32 mwheeluptic = 0, mwheeldowntic = 0;
+#ifdef _WIN32
+   static Uint32 capslocktic = 0;
+#endif
+   Uint32        calltic;
 
    SDL_Event  event;
    int        sendmouseevent = 0;
@@ -427,7 +430,7 @@ static void I_GetEvent(void)
    {
       // haleyjd 10/08/05: from Chocolate DOOM
       if(!window_focused && 
-         (event.type == SDL_MOUSEMOTION || 
+         (event.type == SDL_MOUSEMOTION     || 
           event.type == SDL_MOUSEBUTTONDOWN || 
           event.type == SDL_MOUSEBUTTONUP))
       {
@@ -439,6 +442,10 @@ static void I_GetEvent(void)
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
          d_event.data1 = I_TranslateKey(event.key.keysym.sym);
+#ifdef _WIN32
+         if(d_event.data1 == KEYD_CAPSLOCK)
+            capslocktic = gametic;
+#endif
          // haleyjd 08/29/03: don't post out-of-range keys
          // FIXME/TODO: eliminate shiftxform, etc.
          if(d_event.data1 > 0 && d_event.data1 < 256)
@@ -448,6 +455,13 @@ static void I_GetEvent(void)
       case SDL_KEYUP:
          d_event.type = ev_keyup;
          d_event.data1 = I_TranslateKey(event.key.keysym.sym);
+#ifdef _WIN32
+         if(d_event.data1 == KEYD_CAPSLOCK)
+         {
+            d_event.type = ev_keydown;
+            capslocktic = gametic;
+         }
+#endif
          // haleyjd 08/29/03: don't post out-of-range keys
          // FIXME/TODO: eliminate shiftxform, etc.
          if(d_event.data1 > 0 && d_event.data1 < 256)
@@ -578,6 +592,16 @@ static void I_GetEvent(void)
       D_PostEvent(&d_event);
       mwheeldowntic = 0;
    }
+
+#ifdef _WIN32
+   if(capslocktic && capslocktic + 1 < calltic)
+   {
+      d_event.type  = ev_keyup;
+      d_event.data1 = KEYD_CAPSLOCK;
+      D_PostEvent(&d_event);
+      capslocktic = 0;
+   }
+#endif
 
    if(sendmouseevent)
    {
