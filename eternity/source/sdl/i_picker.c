@@ -31,12 +31,12 @@
 #include "../m_misc.h"
 #include "../w_wad.h"
 
-static SDL_Surface *pickscreen;
-static waddir_t pickwad;
-static int currentiwad;
-static boolean *haveIWADArray;
+static SDL_Surface *pickscreen; // SDL screen surface
+static waddir_t pickwad;        // private directory for startup.wad
+static int currentiwad;         // currently selected IWAD
+static boolean *haveIWADArray;  // valid IWADs, passed here from d_main.c
 
-// picker iwads
+// picker iwad enumeration
 enum
 {
    IWAD_DOOMSW,
@@ -51,6 +51,7 @@ enum
    NUMPICKIWADS
 };
 
+// name of title screen lumps in startup.wad
 static const char *iwadPicNames[NUMPICKIWADS] =
 {
    "DOOMSW",
@@ -60,10 +61,11 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "TNT",
    "PLUTONIA",
    "HERETIC",
-   "HERETIC",
+   "HERETIC",   // warning: causes trouble with Z_Free below...
    "HTICSOSR",
 };
 
+// palette enumeration
 enum
 {
    PAL_DOOM,
@@ -71,12 +73,14 @@ enum
    NUMPICKPALS,
 };
 
+// name of palette lumps in startup.wad
 static const char *palNames[NUMPICKPALS] =
 {
    "DOOMPAL",
    "HTICPAL",
 };
 
+// palette-for-pic lookup table
 static int iwadPicPals[NUMPICKIWADS] =
 {
    PAL_DOOM, 
@@ -90,6 +94,7 @@ static int iwadPicPals[NUMPICKIWADS] =
    PAL_HTIC,
 };
 
+// IWAD game names
 static const char *titles[NUMPICKIWADS] =
 {
    "DOOM Shareware Version",
@@ -103,15 +108,20 @@ static const char *titles[NUMPICKIWADS] =
    "Heretic: Shadow of the Serpent Riders",
 };
 
-static byte *bgframe;
-static byte *iwadpics[NUMPICKIWADS];
-static byte *pals[NUMPICKPALS];
+static byte *bgframe;                // background graphics
+static byte *iwadpics[NUMPICKIWADS]; // iwad title pics
+static byte *pals[NUMPICKPALS];      // palettes
 
 //=============================================================================
 // 
 // Data
 //
 
+//
+// I_Pick_LoadGfx
+//
+// Caches the background graphics into the private directory for startup.wad
+//
 static void I_Pick_LoadGfx(void)
 {
    int lumpnum;
@@ -120,6 +130,12 @@ static void I_Pick_LoadGfx(void)
       bgframe = W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC);
 }
 
+//
+// I_Pick_LoadIWAD
+//
+// Caches a particular IWAD titlescreen pic from startup.wad. If the 
+// corresponding palette hasn't been loaded, that is also cached.
+//
 static void I_Pick_LoadIWAD(int num)
 {
    int lumpnum;
@@ -143,6 +159,13 @@ static void I_Pick_LoadIWAD(int num)
    }
 }
 
+//
+// I_Pick_OpenWad
+//
+// Opens base/startup.wad into the private pickwad directory. Nothing in
+// startup.wad carries over into the main game; it is completely closed and
+// freed below.
+//
 static boolean I_Pick_OpenWad(void)
 {
    char *filename;
@@ -157,20 +180,37 @@ static boolean I_Pick_OpenWad(void)
    return true;
 }
 
+//
+// I_Pick_FreeWad
+//
+// Frees all resources loaded from startup.wad, closes the physical WAD
+// file, and destroys the pickwad private wad directory. All of this is
+// failsafe in case initialization of the picker subsystem fails partway
+// through.
+//
+// Note that it's necessary to use Z_Free and not Z_ChangeTag on all
+// resources loaded from a private wad directory if the private wad directory
+// is destroyed. Otherwise the zone heap will maintain dangling pointers into
+// the freed wad directory, and heap corruption would occur at a seemingly
+// random time after an arbitrary Z_Malloc call freed the cached resources.
+// (Just a handy lesson in the proper use of private wad directories.)
+//
 static void I_Pick_FreeWad(void)
 {
    int i;
 
-   // first free any resources loaded from the directory
+   // free the background pic
    if(bgframe)
       Z_Free(bgframe);
 
+   // free iwad pictures
    for(i = 0; i < NUMPICKIWADS; ++i)
    {
       if(iwadpics[i] && i != IWAD_HTICREG) // hack warning :P
          Z_Free(iwadpics[i]);
    }
 
+   // free palettes
    for(i = 0; i < NUMPICKPALS; ++i)
    {
       if(pals[i])
@@ -180,7 +220,7 @@ static void I_Pick_FreeWad(void)
    // close the wad file if it is open
    if(pickwad.lumpinfo)
    {
-      if(pickwad.lumpinfo[0]->file)
+      if(pickwad.lumpinfo[0]->file) // kind of redundant, but who knows
          fclose(pickwad.lumpinfo[0]->file);
 
       // free the private wad directory
@@ -193,6 +233,11 @@ static void I_Pick_FreeWad(void)
 // Drawing
 //
 
+//
+// I_Pick_ClearScreen
+//
+// Blanks the picker screen.
+//
 static void I_Pick_ClearScreen(void)
 {
    boolean firsttime = true;
@@ -212,6 +257,12 @@ static void I_Pick_ClearScreen(void)
    SDL_FillRect(pickscreen, &dstrect, color);
 }
 
+//
+// I_Pick_DrawBG
+//
+// Blits the 24-bit linear RGB background picture to the picker screen.
+// Yes, the graphic is pretty large.
+//
 static void I_Pick_DrawBG(void)
 {
    boolean locked = false;
@@ -255,6 +306,13 @@ static void I_Pick_DrawBG(void)
       SDL_UnlockSurface(pickscreen);
 }
 
+//
+// I_Pick_DrawIWADPic
+//
+// Draws the 8-bit raw linear titlepic for the currently selected IWAD in the
+// upper right corner. The titlescreens are 320x240 so that they appear in the
+// proper aspect ratio.
+//
 static void I_Pick_DrawIWADPic(int pic)
 {
    boolean locked = false;
@@ -304,6 +362,11 @@ static void I_Pick_DrawIWADPic(int pic)
       SDL_UnlockSurface(pickscreen);
 }
 
+//
+// I_Pick_Drawer
+//
+// Main drawing routine.
+//
 static void I_Pick_Drawer(void)
 {
    I_Pick_DrawBG();
@@ -321,6 +384,12 @@ static void I_Pick_Drawer(void)
 // Event Handling
 //
 
+//
+// I_Pick_DoLeft
+//
+// Called for left arrow keydown and mouse click events. Moves the IWAD 
+// selection back to the previous valid IWAD.
+//
 static void I_Pick_DoLeft(void)
 {
    int startwad = currentiwad;
@@ -336,6 +405,12 @@ static void I_Pick_DoLeft(void)
    SDL_WM_SetCaption(titles[currentiwad], NULL);
 }
 
+//
+// I_Pick_DoRight
+//
+// Called for right arrow keydown and mouse click events. Moves the IWAD
+// selection forward to the next valid IWAD.
+//
 static void I_Pick_DoRight(void)
 {
    int startwad = currentiwad;
@@ -351,17 +426,33 @@ static void I_Pick_DoRight(void)
    SDL_WM_SetCaption(titles[currentiwad], NULL);
 }
 
+//
+// I_Pick_DoAbort
+//
+// Called for escape keydown and mouse clicks. Exits the program.
+//
 static void I_Pick_DoAbort(void)
 {
    I_Error("Eternity Engine aborted.\n");
 }
 
+//
+// I_Pick_MouseInRect
+//
+// Tests a mouse button down event for a location within the specified
+// rectangle.
+//
 static boolean I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 {
    return (x >= rect->x && x <= rect->x + rect->w &&
            y >= rect->y && y <= rect->y + rect->h);
 }
 
+//
+// I_Pick_MouseEvent
+//
+// Tests mouse button down events against all valid button rectangles.
+//
 static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
 {
    SDL_Rect r;
@@ -427,7 +518,12 @@ static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
 // Main Loop
 //
 
-static void I_Pick_MainLoop(boolean haveIWADs[])
+//
+// I_Pick_MainLoop
+//
+// Drives the IWAD picker subprogram, drawing the graphics and getting input.
+//
+static void I_Pick_MainLoop(void)
 {
    boolean doloop = true;
    SDL_Event ev;
@@ -485,6 +581,11 @@ static void I_Pick_MainLoop(boolean haveIWADs[])
 
 static boolean pickvideoinit = false;
 
+//
+// I_Pick_Shutdown
+//
+// Called when the picker subprogram is finished. Frees resources.
+//
 static void I_Pick_Shutdown(void)
 {
    I_Pick_FreeWad();
@@ -501,12 +602,20 @@ static void I_Pick_Shutdown(void)
 // Global routines
 //
 
+//
+// I_Pick_DoPicker
+//
+// Called from d_main.c if the user has specified at least one valid IWAD path
+// in the system.cfg file under the Eternity base directory. The valid IWAD
+// paths are marked in the haveIWADs array as "true" values.
+//
 int I_Pick_DoPicker(boolean haveIWADs[])
 {
    haveIWADArray = haveIWADs;
 
    pickvideoinit = true;
 
+   // open the screen
    if(!(pickscreen = SDL_SetVideoMode(540, 380, 32, SDL_SWSURFACE)))
       return -1;
 
@@ -520,9 +629,10 @@ int I_Pick_DoPicker(boolean haveIWADs[])
    // load basic graphics
    I_Pick_LoadGfx();
 
+   // clear the screen
    I_Pick_ClearScreen();
 
-   // find first iwad
+   // find first valid iwad
    currentiwad = -1;
    do
    {
@@ -530,18 +640,23 @@ int I_Pick_DoPicker(boolean haveIWADs[])
    }
    while(!haveIWADs[currentiwad] && currentiwad < NUMPICKIWADS);
 
+   // this really shouldn't happen, but I check for safety
    if(currentiwad == NUMPICKIWADS)
    {
       I_Pick_Shutdown();
       return -1;
    }
 
+   // set window title to currently selected game
    SDL_WM_SetCaption(titles[currentiwad], NULL);
 
-   I_Pick_MainLoop(haveIWADs);
+   // run the program
+   I_Pick_MainLoop();
 
+   // user is finished, free stuff and get everything back to normal
    I_Pick_Shutdown();
 
+   // the currently selected file is returned to d_main.c
    return currentiwad;
 }
 

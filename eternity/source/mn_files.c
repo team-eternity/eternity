@@ -45,6 +45,7 @@
 #include "m_misc.h"
 #include "mn_engin.h"
 #include "s_sound.h"
+#include "v_font.h"
 #include "w_wad.h"
 
 ////////////////////////////////////////////////////////////////////////////
@@ -282,6 +283,7 @@ static char *variable_name;
 static char *help_description;
 static int numfileboxlines;
 static boolean select_dismiss;
+extern vfont_t *menu_font;
 
 //
 // MN_FileDrawer
@@ -305,7 +307,7 @@ static void MN_FileDrawer(void)
    V_DrawBox(16, 16, SCREENWIDTH - 32, SCREENHEIGHT - 32);
 
    // calculate height of one text line
-   lheight = GameModeInfo->vtextinfo->absh;
+   lheight = menu_font->absh;
 
    // calculate unscaled top, bottom, and height of color box
    btop = 16 + 8 + lheight + 8;

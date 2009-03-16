@@ -1061,6 +1061,7 @@ static void D_CloseAutoloadDir(void)
    }
 }
 
+// variable-for-index lookup for D_DoIWADMenu
 static char **iwadVarForNum[] =
 {
    &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
@@ -1089,7 +1090,7 @@ static const char *D_DoIWADMenu(void)
    // populate haveIWADs array based on system.cfg variables
    for(i = 0; i < 9; ++i)
    {
-      if((haveIWADs[i] = (*iwadVarForNum[i] != NULL)))
+      if((haveIWADs[i] = (**iwadVarForNum[i] != '\0')))
          foundone = true;
    }
 
@@ -1433,7 +1434,7 @@ char *FindIWADFile(void)
    else // try wad picker
    {
       const char *name = D_DoIWADMenu();
-      if(name)
+      if(name && *name)
       {
          baseiwad = strdup(name);
          M_NormalizeSlashes(baseiwad);

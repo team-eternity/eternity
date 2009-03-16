@@ -57,28 +57,28 @@ static default_t sysdefaults[] =
       ITEM_IWAD_DOOM_SW,
       (int *)&gi_path_doomsw, NULL,
       (int) "", {0}, dt_string, ss_none, wad_no,
-      "Doom Shareware IWAD Path"
+      "DOOM Shareware IWAD Path"
    },
 
    {
       ITEM_IWAD_DOOM,
       (int *)&gi_path_doomreg, NULL,
       (int) "", {0}, dt_string, ss_none, wad_no,
-      "Doom Registered IWAD Path"
+      "DOOM Registered IWAD Path"
    },
 
    {
       ITEM_IWAD_ULTIMATE_DOOM,
       (int *)&gi_path_doomu, NULL,
       (int) "", {0}, dt_string, ss_none, wad_no,
-      "Ultimate Doom IWAD Path"
+      "Ultimate DOOM IWAD Path"
    },
 
    {
       ITEM_IWAD_DOOM2,
       (int *)&gi_path_doom2, NULL,
       (int) "", {0}, dt_string, ss_none, wad_no,
-      "Doom 2 IWAD Path"
+      "DOOM 2 IWAD Path"
    },
 
    {
@@ -125,56 +125,17 @@ static defaultfile_t sysdeffile =
    sizeof(sysdefaults) / sizeof *sysdefaults - 1,
 };
 
-static char **iwadPaths[] =
-{
-   &gi_path_doomsw,
-   &gi_path_doomreg,
-   &gi_path_doomu,
-   &gi_path_doom2,
-   &gi_path_tnt,
-   &gi_path_plut,
-   &gi_path_hticsw,
-   &gi_path_hticreg,
-   &gi_path_sosr,
-   NULL
-};
-
 void M_LoadSysConfig(const char *filename)
 {
-   int i;
-
    startupmsg("M_LoadSysConfig", "Loading base/system.cfg");
 
    sysdeffile.fileName = strdup(filename);
 
    M_LoadDefaultFile(&sysdeffile);
-
-   // process iwads
-   for(i = 0; iwadPaths[i] != NULL; ++i)
-   {
-      char *str = *iwadPaths[i];
-
-      // if iwads are set to empty strings, free them and set them to NULL.
-      if(str && *str == '\0')
-      {
-         free(str);
-         *iwadPaths[i] = NULL;
-      }
-   }
 }
 
 void M_SaveSysConfig(void)
 {
-   int i;
-
-   // process iwads
-   for(i = 0; iwadPaths[i] != NULL; ++i)
-   {
-      // if iwads are NULL, set to empty string
-      if(*iwadPaths[i] == NULL)
-         *iwadPaths[i] = "";
-   }
-
    M_SaveDefaultFile(&sysdeffile);
 }
 
