@@ -298,7 +298,7 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch)
 
    // haleyjd 06/03/06: support looping samples
    loop = channel_looping[handle] && 
-          !(paused || (menuactive && !demoplayback && !netgame))
+          !(paused || ((menuactive || consoleactive) && !demoplayback && !netgame))
 
    adjust_sample(&channel[handle], vol*VOLSCALE+VOLSCALE-1,
                  correctSep, PITCH(pitch), loop);

@@ -30,6 +30,7 @@
 #include "../doomdef.h"
 #include "../doomstat.h"
 #include "../d_main.h"
+#include "../c_io.h"
 
 
 // Grab the mouse? (int type for config code)
@@ -97,7 +98,7 @@ boolean MouseShouldBeGrabbed(void)
       return false;
    
    // when menu is active or game is paused, release the mouse 
-   if(menuactive || paused)
+   if(menuactive || consoleactive || paused)
       return false;
    
    // only grab mouse when playing levels (but not demos)

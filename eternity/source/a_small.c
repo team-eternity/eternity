@@ -856,7 +856,7 @@ static boolean SM_WaitFinished(sc_callback_t *callback)
 
    if((callback->flags & SCBF_PAUSABLE && paused) ||
       (callback->flags & SCBF_MPAUSE && 
-       menuactive && !demoplayback && !netgame))
+       (menuactive || consoleactive) && !demoplayback && !netgame))
       return false;
 
    switch(callback->wait_type)

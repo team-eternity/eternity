@@ -293,7 +293,7 @@ struct dialogcmd_s
 //
 void DLG_Ticker(void)
 {
-   if((menuactive && !demoplayback && !netgame) || paused)
+   if(((menuactive || consoleactive) && !demoplayback && !netgame) || paused)
       return; // don't run dialog sequences when game is stopped
 
    // shouldn't happen, but failsafes never killed anybody
@@ -388,7 +388,7 @@ void DLG_Drawer(void)
 {
    redrawborder = true;
 
-   if((menuactive && !demoplayback && !netgame) || paused)
+   if(((menuactive || consoleactive) && !demoplayback && !netgame) || paused)
       return; // don't run dialog sequences when game is stopped
 
    // not ready to start drawing yet

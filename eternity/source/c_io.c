@@ -353,23 +353,6 @@ boolean C_Responder(event_t *ev)
 
       current_target = goingup ? 0 : c_height;
 
-      // Because of the possiblity of pre-existing pause conditions, this can't
-      // be a simple toggle anymore
-      if(gamestate == GS_LEVEL)
-      {
-         if(goingup && consolepause)
-         {
-            if(paused)
-               sendpause = true;
-            consolepause = false;
-         }
-         else if(!goingup && !paused)
-         {
-            sendpause = true;
-            consolepause = true;
-         }
-      }
-
       return true;
    }
 

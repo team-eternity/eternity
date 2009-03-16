@@ -116,7 +116,6 @@ extern boolean hub_changelevel;
 extern boolean scriptSecret;   // haleyjd
 
 extern boolean sendpause;
-extern boolean consolepause;
 
 extern int novert; // haleyjd
 

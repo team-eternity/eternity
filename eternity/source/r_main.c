@@ -669,7 +669,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
-         !((menuactive && !demoplayback && !netgame) || paused))
+         !(((menuactive || consoleactive) && !demoplayback && !netgame) || paused))
       {
          int strength = player->quake;
 

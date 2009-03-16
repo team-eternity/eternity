@@ -25,6 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #include "doomstat.h"
+#include "c_io.h"
 #include "d_main.h"
 #include "p_user.h"
 #include "p_chase.h"
@@ -253,7 +254,7 @@ void P_Ticker(void)
    // 
    // All of this complicated mess is used to preserve demo sync.
    
-   if(paused || (menuactive && !demoplayback && !netgame &&
+   if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
                  players[consoleplayer].viewz != 1))
       return;
    

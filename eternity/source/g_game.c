@@ -103,8 +103,6 @@ int             gamemap;
 char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 }; 
 boolean         paused;
 boolean         sendpause;     // send a pause event next tic
-// SoM: This is set to true if the console paused the game
-boolean         consolepause;  // If false, don't unpause when the console is raised
 boolean         sendsave;      // send a save event next tic
 boolean         usergame;      // ok to save / end game
 boolean         timingdemo;    // if true, exit with report on completion
@@ -682,7 +680,7 @@ static void G_DoLoadLevel(void)
    memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0;
-   consolepause = sendpause = sendsave = paused = false;
+   sendpause = sendsave = paused = false;
    memset(mousebuttons, 0, sizeof(mousebuttons));
    G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
 
@@ -2132,7 +2130,7 @@ void G_Ticker(void)
    // P_Ticker() does not stop netgames if a menu is activated, so
    // we do not need to stop if a menu is pulled up during netgames.
 
-   if(paused & 2 || (!demoplayback && menuactive && !netgame))
+   if(paused & 2 || (!demoplayback && (menuactive || consoleactive) && !netgame))
    {
       basetic++;  // For revenant tracers and RNG -- we must maintain sync
    }

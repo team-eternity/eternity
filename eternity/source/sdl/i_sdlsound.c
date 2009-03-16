@@ -657,7 +657,8 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          // Check whether we are done
          if(chan->data >= chan->enddata)
          {
-            if(chan->loop && !paused && (!menuactive || demoplayback || netgame))
+            if(chan->loop && !paused && 
+               ((!menuactive && !consoleactive) || demoplayback || netgame))
             {
                // haleyjd 06/03/06: restart a looping sample if not paused
                chan->data = chan->startdata;
