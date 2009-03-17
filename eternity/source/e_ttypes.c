@@ -26,6 +26,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_gi.h"
 #include "d_io.h"
 #include "d_dehtbl.h"
 #include "d_mod.h"
@@ -434,6 +435,10 @@ static void E_ProcessTerrain(cfg_t *cfg, boolean def)
 
    if(IS_SET(ITEM_TERRAIN_MINVER))
       newTerrain->minversion = cfg_getint(cfg, ITEM_TERRAIN_MINVER);
+
+   // games other than DOOM have always had terrain types
+   if(GameModeInfo->type != Game_DOOM)
+      newTerrain->minversion = 0;
 
    if(def)
    {

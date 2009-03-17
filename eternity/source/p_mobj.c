@@ -435,7 +435,7 @@ void P_XYMovement(mobj_t* mo)
    // no friction for missiles or skulls ever, no friction when airborne
    if(mo->flags & (MF_MISSILE | MF_SKULLFLY) ||
       (mo->z > mo->floorz &&
-       (demo_version < 331 || comp[comp_overunder] ||
+       (comp[comp_overunder] ||
         !(mo->intflags & MIF_ONMOBJ)))) // haleyjd: OVER_UNDER
       return;
 
@@ -846,7 +846,7 @@ void P_NightmareRespawn(mobj_t* mobj)
    if(demo_version >= 331)
       mobj->flags |= MF_SOLID;
 
-   if(demo_version >= 331 && !comp[comp_overunder]) // haleyjd: OVER_UNDER
+   if(!comp[comp_overunder]) // haleyjd: OVER_UNDER
    {
       fixed_t sheight = mobj->height;
 
@@ -1030,7 +1030,7 @@ void P_MobjThinker(mobj_t *mobj)
          return;       // mobj was removed
    }
 
-   if(demo_version < 331 || comp[comp_overunder])
+   if(comp[comp_overunder])
       tm->BlockingMobj = NULL;
 
    z = mobj->z;
@@ -1046,7 +1046,7 @@ void P_MobjThinker(mobj_t *mobj)
    // haleyjd: OVER_UNDER: major changes
    if(mobj->momz || tm->BlockingMobj || z != mobj->floorz)
    {
-      if(demo_version >= 331 && !comp[comp_overunder]  &&
+      if(!comp[comp_overunder]  &&
          ((mobj->flags3 & MF3_PASSMOBJ) || (mobj->flags & MF_SPECIAL)))
       {
          mobj_t *onmo;
@@ -1307,32 +1307,29 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    P_SetThingPosition(mobj);
 
    mobj->dropoffz =           // killough 11/98: for tracking dropoffs
-      mobj->floorz   = mobj->subsector->sector->floorheight;
+      mobj->floorz = mobj->subsector->sector->floorheight;
    mobj->ceilingz = mobj->subsector->sector->ceilingheight;
 
    mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
       mobj->ceilingz - mobj->height : z;
 
    // haleyjd 10/13/02: floatrand
-   if(demo_version >= 331 && z == FLOATRANDZ)
+   // haleyjd 03/16/09: changed to Heretic method
+   if(z == FLOATRANDZ)
    {
-      int rnd, minz, maxz;
-
-      // special thanks to fraggle for reminding me of how to do this
-      rnd  = P_Random(pr_spawnfloat);
-      rnd |= P_Random(pr_spawnfloat) << 8;
-
-      minz = (mobj->floorz + MINFLTRNDZ) / FRACUNIT;
-      maxz = (mobj->ceilingz - mobj->height) / FRACUNIT;
-
-      if(minz >= maxz)
-         mobj->z = mobj->floorz;
+      fixed_t space = (mobj->ceilingz - mobj->height) - mobj->floorz;
+      if(space > 48*FRACUNIT)
+      {
+         space -= 40*FRACUNIT;
+         mobj->z = ((space * P_Random(pr_spawnfloat)) >> 8)
+                     + mobj->floorz + 40*FRACUNIT;
+      }
       else
-         mobj->z = (minz + rnd%(maxz - minz + 1))*FRACUNIT;
+         mobj->z = mobj->floorz;
    }
 
    // haleyjd: initialize floatbob seed
-   if(demo_version >= 331 && mobj->flags2 & MF2_FLOATBOB)
+   if(mobj->flags2 & MF2_FLOATBOB)
    {
       mobj->floatbob = P_Random(pr_floathealth);
       mobj->z += FloatBobOffsets[(mobj->floatbob + leveltime - 1) & 63];
@@ -1757,7 +1754,7 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing)
          return NULL;  // sf
    }
 
-  // don't spawn keycards and players in deathmatch
+   // don't spawn keycards and players in deathmatch
 
    if(GameType == gt_dm && (mobjinfo[i].flags & MF_NOTDMATCH))
       return NULL;        // sf
@@ -2274,10 +2271,8 @@ void P_AdjustFloorClip(mobj_t *thing)
    fixed_t shallowestclip = 0x7fffffff;
    const msecnode_t *m;
 
-   // no floorclipping in old demos or if terrain types are off;
    // absorb test for FOOTCLIP flag here
-   if(demo_version < 331 || comp[comp_terrain] ||
-      !(thing->flags2 & MF2_FOOTCLIP))
+   if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP))
    {
       thing->floorclip = 0;
       return;

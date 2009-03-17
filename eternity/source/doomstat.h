@@ -85,6 +85,7 @@ extern int demo_subversion;
 // which break playback but are otherwise unnoticable or are just desirable:
 
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
+#define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
 
 // killough 7/19/98: whether monsters should fight against each other
 extern int monster_infighting, default_monster_infighting;

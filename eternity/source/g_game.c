@@ -970,6 +970,13 @@ static void G_DoPlayDemo(void)
       compatibility = true;
       memset(comp, 0xff, sizeof comp);  // killough 10/98: a vector now
 
+      // haleyjd 03/17/09: in old Heretic demos, some should be true
+      if(GameModeInfo->type == Game_Heretic)
+      {
+         comp[comp_terrain]   = false; // terrain on
+         comp[comp_overunder] = false; // 3D clipping on
+      }
+
       // killough 3/2/98: force these variables to be 0 in demo_compatibility
 
       variable_friction = 0;
@@ -2662,76 +2669,76 @@ static int G_GetHelpers(void)
 
 void G_ReloadDefaults(void)
 {
-  // killough 3/1/98: Initialize options based on config file
-  // (allows functions above to load different values for demos
-  // and savegames without messing up defaults).
-
-  weapon_recoil = default_weapon_recoil;    // weapon recoil
-
-  player_bobbing = default_player_bobbing;  // haleyjd: readded
-
-  variable_friction = allow_pushers = true;
-
-  monsters_remember = default_monsters_remember;   // remember former enemies
-
-  monster_infighting = default_monster_infighting; // killough 7/19/98
-
-  // dogs = netgame ? 0 : G_GetHelpers();             // killough 7/19/98
-  if(GameType == gt_single) // haleyjd 04/10/03
-     dogs = G_GetHelpers();
-  else
-     dogs = 0;
-
-  dog_jumping = default_dog_jumping;
-
-  distfriend = default_distfriend;                 // killough 8/8/98
-
-  monster_backing = default_monster_backing;     // killough 9/8/98
-
-  monster_avoid_hazards = default_monster_avoid_hazards; // killough 9/9/98
-
-  monster_friction = default_monster_friction;     // killough 10/98
-
-  help_friends = default_help_friends;             // killough 9/9/98
-
-  autoaim = default_autoaim;
-
-  allowmlook = default_allowmlook;
-
-  monkeys = default_monkeys;
-
-  bfgtype = default_bfgtype;               // killough 7/19/98
-
-  // jff 1/24/98 reset play mode to command line spec'd version
-  // killough 3/1/98: moved to here
-  respawnparm = clrespawnparm;
-  fastparm = clfastparm;
-  nomonsters = clnomonsters;
-
-  //jff 3/24/98 set startskill from defaultskill in config file, unless
-  // it has already been set by a -skill parameter
-  if (startskill==sk_none)
-    startskill = (skill_t)(defaultskill-1);
-
-  demoplayback = false;
-  singledemo = false; // haleyjd: restore from MBF
-  netdemo = false;
-
-  // killough 2/21/98:
-  memset(playeringame+1, 0, sizeof(*playeringame)*(MAXPLAYERS-1));
-
-  consoleplayer = 0;
-
-  compatibility = false;     // killough 10/98: replaced by comp[] vector
-  memcpy(comp, default_comp, sizeof comp);
-
-  demo_version = version;     // killough 7/19/98: use this version's id
-  demo_subversion = SUBVERSION; // haleyjd 06/17/01
-
-  // killough 3/31/98, 4/5/98: demo sync insurance
-  demo_insurance = default_demo_insurance == 1;
-  
-  G_ScrambleRand();
+   // killough 3/1/98: Initialize options based on config file
+   // (allows functions above to load different values for demos
+   // and savegames without messing up defaults).
+   
+   weapon_recoil = default_weapon_recoil;    // weapon recoil
+   
+   player_bobbing = default_player_bobbing;  // haleyjd: readded
+   
+   variable_friction = allow_pushers = true;
+   
+   monsters_remember = default_monsters_remember;   // remember former enemies
+   
+   monster_infighting = default_monster_infighting; // killough 7/19/98
+   
+   // dogs = netgame ? 0 : G_GetHelpers();             // killough 7/19/98
+   if(GameType == gt_single) // haleyjd 04/10/03
+      dogs = G_GetHelpers();
+   else
+      dogs = 0;
+   
+   dog_jumping = default_dog_jumping;
+   
+   distfriend = default_distfriend;                 // killough 8/8/98
+   
+   monster_backing = default_monster_backing;     // killough 9/8/98
+   
+   monster_avoid_hazards = default_monster_avoid_hazards; // killough 9/9/98
+   
+   monster_friction = default_monster_friction;     // killough 10/98
+   
+   help_friends = default_help_friends;             // killough 9/9/98
+   
+   autoaim = default_autoaim;
+   
+   allowmlook = default_allowmlook;
+   
+   monkeys = default_monkeys;
+   
+   bfgtype = default_bfgtype;               // killough 7/19/98
+   
+   // jff 1/24/98 reset play mode to command line spec'd version
+   // killough 3/1/98: moved to here
+   respawnparm = clrespawnparm;
+   fastparm = clfastparm;
+   nomonsters = clnomonsters;
+   
+   //jff 3/24/98 set startskill from defaultskill in config file, unless
+   // it has already been set by a -skill parameter
+   if (startskill==sk_none)
+      startskill = (skill_t)(defaultskill-1);
+   
+   demoplayback = false;
+   singledemo = false; // haleyjd: restore from MBF
+   netdemo = false;
+   
+   // killough 2/21/98:
+   memset(playeringame+1, 0, sizeof(*playeringame)*(MAXPLAYERS-1));
+   
+   consoleplayer = 0;
+   
+   compatibility = false;     // killough 10/98: replaced by comp[] vector
+   memcpy(comp, default_comp, sizeof comp);
+   
+   demo_version = version;     // killough 7/19/98: use this version's id
+   demo_subversion = SUBVERSION; // haleyjd 06/17/01
+   
+   // killough 3/31/98, 4/5/98: demo sync insurance
+   demo_insurance = default_demo_insurance == 1;
+   
+   G_ScrambleRand();
 }
 
         // sf: seperate function
@@ -3065,7 +3072,7 @@ byte *G_WriteOptions(byte *demo_p)
    // haleyjd 04/06/05: allowmlook is sync critical
    *demo_p++ = allowmlook; // byte 60
    
-   // CURRENT BYTES LEFT: 4
+   // CURRENT BYTES LEFT: 3
 
    //----------------
    // Padding at end
@@ -3151,11 +3158,12 @@ byte *G_ReadOptions(byte *demo_p)
       }
      
       // Options new to v2.04, etc.
-      if(demo_version >= 331)
+
+      // haleyjd 05/23/04: autoaim is sync-critical
+      if(demo_version > 331 ||
+         (demo_version == 331 && demo_subversion > 7))
       {
-         // haleyjd 05/23/04: autoaim is sync-critical
-         if(demo_version > 331 || demo_subversion > 7)
-            autoaim = *demo_p++;
+         autoaim = *demo_p++;
       }
 
       if(demo_version >= 333)
@@ -3184,7 +3192,7 @@ byte *G_ReadOptions(byte *demo_p)
       
       help_friends = 0;                 // killough 9/9/98
       
-      bfgtype = bfg_normal;                  // killough 7/19/98
+      bfgtype = bfg_normal;             // killough 7/19/98
       
       dogs = 0;                         // killough 7/19/98
       dog_jumping = 0;                  // killough 10/98

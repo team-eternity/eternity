@@ -197,7 +197,7 @@ boolean P_CheckMeleeRange(mobj_t *actor)
    mobj_t *pl = actor->target;
    
    // haleyjd 02/15/02: revision of joel's fix for z height check
-   if(pl && demo_version >= 329 && !comp[comp_overunder])
+   if(pl && !comp[comp_overunder])
    {
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
@@ -415,7 +415,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    // haleyjd: OVER_UNDER:
    // [RH] Instead of yanking non-floating monsters to the ground,
    // let gravity drop them down, unless they're moving down a step.
-   if(demo_version >= 331 && !comp[comp_overunder])
+   if(!comp[comp_overunder])
    {
       if(!(actor->flags & MF_NOGRAVITY) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
@@ -496,7 +496,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 
          // haleyjd: OVER_UNDER:
          // [RH] Check to make sure there's nothing in the way of the float
-         if(demo_version >= 331 && !comp[comp_overunder])
+         if(!comp[comp_overunder])
          {
             if(P_TestMobjZ(actor))
             {
@@ -558,7 +558,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 
    // killough 11/98: fall more slowly, under gravity, if felldown==true
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
-   if(demo_version < 331 || comp[comp_overunder])
+   if(comp[comp_overunder])
    {
       if(!(actor->flags & MF_FLOAT) && (!tm->felldown || demo_version < 203))
       {
@@ -839,7 +839,7 @@ static void P_NewChaseDir(mobj_t *actor)
       if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
-         (demo_version < 331 || comp[comp_overunder] || 
+         (comp[comp_overunder] || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
          !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
       {

@@ -1056,7 +1056,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
    subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
-   if(demo_version >= 331 && !comp[comp_overunder])
+   if(!comp[comp_overunder])
       return P_CheckPosition3D(thing, x, y);
    
    tm->thing = thing;
@@ -1168,7 +1168,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
    tm->felldown = tm->floatok = false;               // killough 11/98
 
    // haleyjd: OVER_UNDER
-   if(demo_version >= 331 && !comp[comp_overunder])
+   if(!comp[comp_overunder])
    {
       oldz = thing->z;
 
@@ -1231,7 +1231,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
          // too big a step up
          if(tm->floorz - thing->z > 24*FRACUNIT)
             return ret;
-         else if(demo_version >= 331 && !comp[comp_overunder] && thing->z < tm->floorz)
+         else if(!comp[comp_overunder] && thing->z < tm->floorz)
          { 
             // haleyjd: OVER_UNDER:
             // [RH] Check to make sure there's nothing in the way for the step up
@@ -1291,7 +1291,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             // [RH] If the thing is standing on something, use its current z as 
             // the floorz. This is so that it does not walk off of things onto a 
             // drop off.
-            if(demo_version >= 331 && !comp[comp_overunder] &&
+            if(!comp[comp_overunder] &&
                thing->intflags & MIF_ONMOBJ)
             {
                floorz = thing->z > tm->floorz ? thing->z : tm->floorz;
@@ -1744,7 +1744,7 @@ static boolean PTR_SlideTraverse(intercept_t *in)
    
    if(tm->openbottom - slidemo->z > 24*FRACUNIT )
       goto isblocking;  // too big a step up
-   else if(demo_version >= 331 && !comp[comp_overunder] &&
+   else if(!comp[comp_overunder] &&
            slidemo->z < tm->openbottom) // haleyjd: OVER_UNDER
    { 
       // [RH] Check to make sure there's nothing in the way for the step up
@@ -2118,7 +2118,7 @@ boolean P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
       return P_ChangeSector(sector, crunch);
 
    // haleyjd: call down to P_ChangeSector3D instead.
-   if(demo_version >= 331 && !comp[comp_overunder])
+   if(!comp[comp_overunder])
       return P_ChangeSector3D(sector, crunch, amt, floorOrCeil);
    
    nofit = false;

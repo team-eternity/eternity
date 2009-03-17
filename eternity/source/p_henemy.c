@@ -651,9 +651,38 @@ void P_BossTeleport(bossteleport_t *bt)
    if(P_CollectionIsEmpty(bt->mc))
       return;
 
-   targ = P_CollectionGetRandom(bt->mc, bt->rngNum);
-
    boss = bt->boss;
+
+   // if minimum distance is specified, use a different point selection method
+   if(bt->minDistance)
+   {
+      int i = P_Random(bt->rngNum) % bt->mc->num;
+      int starti = i;
+      fixed_t x, y;
+      boolean foundSpot = true;
+
+      while(1)
+      {
+         targ = P_CollectionGetAt(bt->mc, (unsigned int)i);
+         x = targ->x;
+         y = targ->y;
+         if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
+         {
+            foundSpot = true;
+            break;
+         }
+
+         // wrapped around? abort loop
+         if((i = (i + 1) % bt->mc->num) == starti)
+            break;
+      }
+
+      // no spot? no teleport
+      if(!foundSpot)
+         return;
+   }
+   else
+      targ = P_CollectionGetRandom(bt->mc, bt->rngNum);
 
    prevx = boss->x;
    prevy = boss->y;
@@ -682,54 +711,28 @@ void P_BossTeleport(bossteleport_t *bt)
    }
 }
 
-//
-// P_SorcTeleportProb
-//
-// haleyjd 11/19/02: a function to calculate the probability
-// ramp for D'Sparil's teleportation. Raven used a simple eight-
-// level lookup array. Of course, I cannot use their code, so
-// I've come up with an interesting formula that rather closely
-// matches their output, and is actually superior in terms of
-// smoothness of the probability curve.
-//
-static int P_SorcTeleportProb(mobj_t *actor)
-{
-   int chance;
-   float pct;
-
-   if(actor->info->spawnhealth == 0)
-      return 0;
-
-   pct = (float)(actor->health) / (float)(actor->info->spawnhealth);
-
-   if(pct == 1.0f)
-      return 0;
-   else if(pct > 0.499f)
-      return (chance = (int)(128.0f * (1.0f - pct))) >= 16 ? chance : 16;
-   else if(pct > 0.125f)
-      return (int)(128.0f * (1.0f - pct)) + 40;
-   else
-      return 192;
-}
-
 void A_Srcr2Decide(mobj_t *actor)
 {
+   int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
+   int index    = actor->health / (actor->info->spawnhealth / 8);
+   
    // if no spots, no teleportation
    if(P_CollectionIsEmpty(&sorcspots))
       return;
 
-   if(P_Random(pr_sorctele1) < P_SorcTeleportProb(actor))
+   if(P_Random(pr_sorctele1) < chance[index])
    {
       bossteleport_t bt;
 
-      bt.mc        = &sorcspots;                       // use sorcspots
-      bt.rngNum    = pr_sorctele2;                     // use this rng
-      bt.boss      = actor;                            // teleport D'Sparil
-      bt.state     = E_SafeState(S_SOR2_TELE1);        // set him to this state
-      bt.fxtype    = E_SafeThingType(MT_SOR2TELEFADE); // spawn a DSparil TeleFade
-      bt.zpamt     = 0;                                // add 0 to fx z coord
-      bt.hereThere = BOSSTELE_ORIG;                    // spawn fx only at origin
-      bt.soundNum  = sfx_htelept;                      // use htic teleport sound
+      bt.mc          = &sorcspots;                       // use sorcspots
+      bt.rngNum      = pr_sorctele2;                     // use this rng
+      bt.boss        = actor;                            // teleport D'Sparil
+      bt.state       = E_SafeState(S_SOR2_TELE1);        // set him to this state
+      bt.fxtype      = E_SafeThingType(MT_SOR2TELEFADE); // spawn a DSparil TeleFade
+      bt.zpamt       = 0;                                // add 0 to fx z coord
+      bt.hereThere   = BOSSTELE_ORIG;                    // spawn fx only at origin
+      bt.soundNum    = sfx_htelept;                      // use htic teleport sound
+      bt.minDistance = 128 * FRACUNIT;                   // minimum distance
 
       P_BossTeleport(&bt);
    }
@@ -1494,7 +1497,7 @@ void A_MinotaurCharge(mobj_t *actor)
    {
       // spawn some smoke and count down the charge
       puff = P_SpawnMobj(actor->x, actor->y, actor->z, puffType);
-      puff->momz = FRACUNIT << 1;
+      puff->momz = 2 * FRACUNIT;
       --actor->counters[0];
    }
    else
@@ -1745,10 +1748,10 @@ void A_LichAttack(mobj_t *actor)
    
    // determine distance and use it to alter attack probabilities
 #ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor)) > 512*FRACUNIT;
+   dist = (P_AproxDistance(actor->x - getTargetX(actor), 
+                          actor->y - getTargetY(actor)) > 512*FRACUNIT);
 #else
-   dist = P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT;
+   dist = (P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT);
 #endif
    
    randAttack = P_Random(pr_lichattack);
@@ -1789,7 +1792,7 @@ void A_WhirlwindSeek(mobj_t *actor)
    }
    
    // test if tracer has become an invalid target
-   if(actor->tracer && 
+   if(!ancient_demo && actor->tracer && 
       (actor->tracer->flags3 & MF3_GHOST ||
        actor->tracer->health < 0))
    {
@@ -1876,12 +1879,12 @@ void A_LichFireGrow(mobj_t *actor)
 //
 // Almost identical to the Lost Soul's attack, but adds a frequent
 // failure to attack so that the imps do not constantly charge.
-//
-// haleyjd 12/17/07: changed probability for better behavior.
+// Note that this makes them nearly paralyzed in "Black Plague" 
+// skill level, however...
 //
 void A_ImpChargeAtk(mobj_t *actor)
 {   
-   if(!actor->target || P_Random(pr_impcharge) < 128)
+   if(!actor->target || P_Random(pr_impcharge) > 64)
    {
       P_SetMobjState(actor, actor->info->seestate);
    }
@@ -2571,7 +2574,7 @@ void A_AmbientThinker(mobj_t *mo)
    case E_AMBIENCE_RANDOM:
       if(mo->counters[0]-- >= 0) // not time yet?
          return;
-      mo->counters[0] = M_RangeRandom(amb->minperiod, amb->maxperiod);
+      mo->counters[0] = (int)M_RangeRandomEx(amb->minperiod, amb->maxperiod);
       break;
    default: // ???
       return;

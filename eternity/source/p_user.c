@@ -192,7 +192,7 @@ void P_MovePlayer(player_t* player)
    
    // haleyjd: OVER_UNDER
    onground = mo->z <= mo->floorz ||
-      (demo_version >= 331 && !comp[comp_overunder] && mo->intflags & MIF_ONMOBJ);
+      (!comp[comp_overunder] && mo->intflags & MIF_ONMOBJ);
    
    // killough 10/98:
    //
@@ -267,7 +267,7 @@ void P_DeathThink(player_t *player)
    else
    {
       onground = player->mo->z <= player->mo->floorz ||
-                    (demo_version >= 331 && !comp[comp_overunder] &&
+                    (!comp[comp_overunder] &&
                      player->mo->intflags & MIF_ONMOBJ);
    }
    

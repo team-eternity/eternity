@@ -463,7 +463,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       {
          int min = CMD_ARG1(data);
          int max = CMD_ARG2(data);
-         curSeq->delayCounter = M_RangeRandom(min, max);
+         curSeq->delayCounter = (int)M_RangeRandomEx(min, max);
       }
       curSeq->cmdPtr += 3;
       break;
@@ -592,8 +592,8 @@ static void S_ResetEnviroSeqEngine(void)
    else
       nextEnviroSpot = NULL; // broken, but shouldn't matter
 
-   enviroTics = M_RangeRandom(EnviroSeqManager.minStartWait,
-                              EnviroSeqManager.maxStartWait);
+   enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
+                                     EnviroSeqManager.maxStartWait);
 }
 
 //
@@ -643,8 +643,8 @@ static void S_RunEnviroSequence(void)
       {
          memset(&enviroSeq, 0, sizeof(SndSeq_t));
          EnviroSequence = NULL;
-         enviroTics = M_RangeRandom(EnviroSeqManager.minEnviroWait,
-                                    EnviroSeqManager.maxEnviroWait);
+         enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
+                                           EnviroSeqManager.maxEnviroWait);
          nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
       }
       else

@@ -255,12 +255,12 @@ frame S_BEAST_XDIE7 { cmp = "BEAS|P|*| 5|*          |@next"; dehackednum = 2162 
 frame S_BEAST_XDIE8 { cmp = "BEAS|Q|*|-1";                   dehackednum = 2163 }
 
 // WeredragonShot frames
-frame S_BEASTBALL1  { cmp = "FRB1|A|*|2|BeastPuff|@next"; dehackednum = 2164 }
-frame S_BEASTBALL2  { cmp = "FRB1|A|*|2|BeastPuff|@next"; dehackednum = 2165 }
-frame S_BEASTBALL3  { cmp = "FRB1|B|*|2|BeastPuff|@next"; dehackednum = 2166 }
-frame S_BEASTBALL4  { cmp = "FRB1|B|*|2|BeastPuff|@next"; dehackednum = 2167 }
-frame S_BEASTBALL5  { cmp = "FRB1|C|*|2|BeastPuff|@next"; dehackednum = 2168 }
-frame S_BEASTBALL6  { cmp = "FRB1|C|*|2|BeastPuff|S_BEASTBALL1"; dehackednum = 2169 }
+frame S_BEASTBALL1  { cmp = "FRB1|A|*|2|BeastPuff(nomomentum)|@next"; dehackednum = 2164 }
+frame S_BEASTBALL2  { cmp = "FRB1|A|*|2|BeastPuff(nomomentum)|@next"; dehackednum = 2165 }
+frame S_BEASTBALL3  { cmp = "FRB1|B|*|2|BeastPuff(nomomentum)|@next"; dehackednum = 2166 }
+frame S_BEASTBALL4  { cmp = "FRB1|B|*|2|BeastPuff(nomomentum)|@next"; dehackednum = 2167 }
+frame S_BEASTBALL5  { cmp = "FRB1|C|*|2|BeastPuff(nomomentum)|@next"; dehackednum = 2168 }
+frame S_BEASTBALL6  { cmp = "FRB1|C|*|2|BeastPuff(nomomentum)|S_BEASTBALL1"; dehackednum = 2169 }
 frame S_BEASTBALLX1 { cmp = "FRB1|D|*|4|*        |@next"; dehackednum = 2170 }
 frame S_BEASTBALLX2 { cmp = "FRB1|E|*|4|*        |@next"; dehackednum = 2171 }
 frame S_BEASTBALLX3 { cmp = "FRB1|F|*|4|*        |@next"; dehackednum = 2172 }
