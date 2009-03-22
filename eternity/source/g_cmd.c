@@ -447,6 +447,63 @@ CONSOLE_VARIABLE(startonnewmap, startOnNewMap, 0) {}
 VARIABLE_BOOLEAN(autorun, NULL, onoff);
 CONSOLE_VARIABLE(autorun, autorun, 0) {}
 
+// haleyjd 03/22/09: iwad cvars
+
+VARIABLE_STRING(gi_path_doomsw,  NULL, UL);
+VARIABLE_STRING(gi_path_doomreg, NULL, UL);
+VARIABLE_STRING(gi_path_doomu,   NULL, UL);
+VARIABLE_STRING(gi_path_doom2,   NULL, UL);
+VARIABLE_STRING(gi_path_tnt,     NULL, UL);
+VARIABLE_STRING(gi_path_plut,    NULL, UL);
+VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
+VARIABLE_STRING(gi_path_hticreg, NULL, UL);
+VARIABLE_STRING(gi_path_sosr,    NULL, UL);
+
+CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  0) 
+{
+   M_NormalizeSlashes(gi_path_doomsw);
+}
+
+CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg, 0) 
+{
+   M_NormalizeSlashes(gi_path_doomreg);
+}
+
+CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,   0) 
+{
+   M_NormalizeSlashes(gi_path_doomu);
+}
+
+CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,   0) 
+{
+   M_NormalizeSlashes(gi_path_doom2);
+}
+
+CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     0) 
+{
+   M_NormalizeSlashes(gi_path_tnt);
+}
+
+CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    0) 
+{
+   M_NormalizeSlashes(gi_path_plut);
+}
+
+CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  0) 
+{
+   M_NormalizeSlashes(gi_path_hticsw);
+}
+
+CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, 0) 
+{
+   M_NormalizeSlashes(gi_path_hticreg);
+}
+
+CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    0) 
+{
+   M_NormalizeSlashes(gi_path_sosr);
+}
+
 ////////////////////////////////////////////////////////////////
 //
 // Chat Macros
@@ -752,6 +809,17 @@ void G_AddCommands(void)
    C_AddCommand(bfg_cloud);
    C_AddCommand(startonnewmap);
    C_AddCommand(autorun);
+
+   // haleyjd 03/22/09: iwad paths
+   C_AddCommand(iwad_doom_shareware);
+   C_AddCommand(iwad_doom);
+   C_AddCommand(iwad_ultimate_doom);
+   C_AddCommand(iwad_doom2);
+   C_AddCommand(iwad_tnt);
+   C_AddCommand(iwad_plutonia);
+   C_AddCommand(iwad_heretic_shareware);
+   C_AddCommand(iwad_heretic);
+   C_AddCommand(iwad_heretic_sosr);
 
    G_AddChatMacros();
    G_AddWeapPrefs();

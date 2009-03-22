@@ -23,6 +23,7 @@
 #define __C_RUNCMD_H__
 
 #include "d_dwfile.h"
+#include "m_misc.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
 // variables need tweaks and extensions to fully support archiving in
@@ -253,9 +254,9 @@ void C_RunCmdLineScripts(void);
 
 /**** tab completion ****/
 
-void C_InitTab();
-char *C_NextTab(char *key);
-char *C_PrevTab(char *key);
+void C_InitTab(void);
+const char *C_NextTab(const char *key);
+const char *C_PrevTab(const char *key);
 
 /**** aliases ****/
 

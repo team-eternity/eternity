@@ -54,6 +54,7 @@
 #include "g_bind.h"
 #include "a_small.h" // haleyjd
 #include "e_fonts.h"
+#include "m_qstr.h"
 
 #define MESSAGES 384
 // keep the last 32 typed commands
@@ -80,7 +81,7 @@ int c_speed=10;       // pixels/tic it moves
 int current_target = 0;
 int current_height = 0;
 boolean c_showprompt;
-static char inputtext[INPUTLENGTH];
+static qstring_t inputtext;
 static char *input_point;      // left-most point you see of the command line
 
 // for scrolling command line
@@ -184,7 +185,7 @@ static void C_initBackdrop(void)
 //
 static void C_updateInputPoint(void)
 {
-   for(input_point = inputtext;
+   for(input_point = inputtext.buffer;
        V_FontStringWidth(c_font, input_point) > SCREENWIDTH-20; input_point++);
 }
 
@@ -192,9 +193,8 @@ static void C_updateInputPoint(void)
 
 void C_Init(void)
 {
-   // haleyjd 07/03/08: this is called on first entry to C_Drawer, so don't call
-   // it here.
-   // C_initBackdrop();
+   // haleyjd: initialize console qstrings
+   M_QStrCreateSize(&inputtext, 100);
 
    if(!(c_font = E_FontForName(c_fontname)))
       I_Error("C_Init: bad EDF font name %s\n", c_fontname);
@@ -376,9 +376,8 @@ boolean C_Responder(event_t *ev)
       // tab-completion list depending on whether
       // shift is being held down
       action_console_tab = false;
-      strcpy(inputtext, shiftdown ? C_NextTab(inputtext) :
-             C_PrevTab(inputtext));
-      
+      M_QStrCpy(&inputtext, shiftdown ? C_NextTab(inputtext.buffer) :
+                C_PrevTab(inputtext.buffer));      
       C_updateInputPoint(); // reset scrolling
       return true;
     }
@@ -388,19 +387,19 @@ boolean C_Responder(event_t *ev)
    {
       action_console_enter = false;
 
-      C_addToHistory(inputtext);      // add to history
+      C_addToHistory(inputtext.buffer); // add to history
       
-      if(!strcmp(inputtext, "r0x0rz delux0rz"))
-         Egg(); //shh!
+      if(!M_QStrCmp(&inputtext, "r0x0rz delux0rz"))
+         Egg(); // shh!
       
       // run the command
       cmdtype = c_typed;
-      C_RunTextCmd(inputtext);
+      C_RunTextCmd(inputtext.buffer);
       
       C_InitTab();            // reset tab completion
       
-      inputtext[0] = 0;       // clear inputtext now
-      C_updateInputPoint();   // reset scrolling
+      M_QStrClear(&inputtext); // clear inputtext now
+      C_updateInputPoint();    // reset scrolling
       
       return true;
    }
@@ -419,7 +418,7 @@ boolean C_Responder(event_t *ev)
          (history_current <= 0) ? 0 : history_current - 1;
       
       // read history from inputtext
-      strcpy(inputtext, history[history_current]);
+      M_QStrCpy(&inputtext, history[history_current]);
       
       C_InitTab();            // reset tab completion
       C_updateInputPoint();   // reset scrolling
@@ -436,8 +435,8 @@ boolean C_Responder(event_t *ev)
          ? history_last : history_current + 1;
 
       // the last history is an empty string
-      strcpy(inputtext, (history_current == history_last) ?
-             "" : (char*)history[history_current]);
+      M_QStrCpy(&inputtext, (history_current == history_last) ?
+                "" : (char*)history[history_current]);
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -454,8 +453,7 @@ boolean C_Responder(event_t *ev)
    {
       action_console_backspace = false;
 
-      if(strlen(inputtext) > 0)
-         inputtext[strlen(inputtext) - 1] = '\0';
+      M_QStrDelc(&inputtext);
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -470,9 +468,9 @@ boolean C_Responder(event_t *ev)
    // only care about valid characters
    // dont allow too many characters on one command line
    
-   if(ch > 31 && ch < 127 && (strlen(inputtext) < INPUTLENGTH - 1))
+   if(ch > 31 && ch < 127)
    {
-      psnprintf(inputtext, sizeof(inputtext), "%s%c", inputtext, ch);
+      M_QStrPutc(&inputtext, ch);
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling

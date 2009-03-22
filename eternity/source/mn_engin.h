@@ -132,6 +132,7 @@ typedef struct menu_s
    struct menu_s *dynanext;
 
    struct menu_s *curpage;        // haleyjd 10/02/06: for multipage menus
+   int widest_width;              // haleyjd 03/22/09: for LALIGNED flag
 } menu_t;
 
 // menu 'widgets':

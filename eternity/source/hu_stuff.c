@@ -1470,7 +1470,6 @@ static boolean HU_ChatRespond(event_t *ev)
    if(ch > 31 && ch < 127)
    {
       psnprintf(chatinput, sizeof(chatinput), "%s%c", chatinput, ch);
-      C_InitTab();
       return true;
    }
    return false;

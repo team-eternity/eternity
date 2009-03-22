@@ -561,11 +561,13 @@ CONSOLE_COMMAND(mn_demos, cf_notnet)
 
 extern menu_t menu_loadwad;
 extern menu_t menu_wadmisc;
+extern menu_t menu_wadiwads;
 
 static const char *mn_wad_names[] =
 {
-   "file selection",
-   "misc settings",
+   "File Selection",
+   "Misc Settings",
+   "IWAD Paths",
    NULL
 };
 
@@ -573,41 +575,60 @@ static menu_t *mn_wad_pages[] =
 {
    &menu_loadwad,
    &menu_wadmisc,
+   &menu_wadiwads,
    NULL
 };
 
 static menuitem_t mn_loadwad_items[] =
 {
-   {it_title,    FC_GOLD "load wad",    NULL,                   "M_WAD"},
+   {it_title,    FC_GOLD "Load Wad",       NULL,               "M_WAD"},
    {it_gap},
-   {it_info,     FC_GOLD "file selection", NULL,                NULL, MENUITEM_CENTERED },
+   {it_info,     FC_GOLD "File Selection", NULL,                NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "wad name:",            "mn_wadname" },
-   {it_variable, "wad directory:",       "wad_directory" },
-   {it_runcmd,   "select wad...",        "mn_selectwad" },
+   {it_variable, "Wad name:",              "mn_wadname" },
+   {it_variable, "Wad directory:",         "wad_directory" },
+   {it_runcmd,   "Select wad...",          "mn_selectwad" },
    {it_gap},
-   {it_runcmd,   "load wad",             "mn_loadwaditem",      NULL, MENUITEM_CENTERED },
+   {it_runcmd,   "Load wad",               "mn_loadwaditem",    NULL, MENUITEM_CENTERED },
    {it_end},
 };
 
 static menuitem_t mn_wadmisc_items[] =
 {
-   {it_title,    FC_GOLD "wad options", NULL,                   "M_WADOPT"},
+   {it_title,    FC_GOLD "Wad Options", NULL,                   "M_WADOPT"},
    {it_gap},
-   {it_info,     FC_GOLD "misc settings", NULL,                 NULL, MENUITEM_CENTERED },
+   {it_info,     FC_GOLD "Misc Settings", NULL,                 NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_toggle,   "use start map",        "use_startmap" },
-   {it_toggle,   "start on 1st new map", "startonnewmap" },
+   {it_toggle,   "Use start map",        "use_startmap" },
+   {it_toggle,   "Start on 1st new map", "startonnewmap" },
    {it_gap},
-   {it_info,     FC_GOLD "autoloaded files", NULL,              NULL, MENUITEM_CENTERED },
+   {it_info,     FC_GOLD "Autoloaded Files", NULL,              NULL, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "wad file 1:",         "auto_wad_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "wad file 2:",         "auto_wad_2",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "deh file 1:",         "auto_deh_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "deh file 2:",         "auto_deh_2",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "csc file 1:",         "auto_csc_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "csc file 2:",         "auto_csc_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "WAD file 1:",         "auto_wad_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "WAD file 2:",         "auto_wad_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "DEH file 1:",         "auto_deh_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "DEH file 2:",         "auto_deh_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "CSC file 1:",         "auto_csc_1",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "CSC file 2:",         "auto_csc_2",           NULL, MENUITEM_LALIGNED },
    {it_end},
+};
+
+static menuitem_t mn_wadiwad_items[] =
+{
+   {it_title,    FC_GOLD "Wad Options", NULL,                     "M_WADOPT"},
+   {it_gap},
+   {it_info,     FC_GOLD "IWAD Paths",  NULL,                     NULL, MENUITEM_CENTERED },
+   {it_gap}, 
+   {it_variable, "DOOM (SW):",          "iwad_doom_shareware",    NULL, MENUITEM_LALIGNED },
+   {it_variable, "DOOM (Reg):",         "iwad_doom",              NULL, MENUITEM_LALIGNED },
+   {it_variable, "Ultimate DOOM:",      "iwad_ultimate_doom",     NULL, MENUITEM_LALIGNED },
+   {it_variable, "DOOM II:",            "iwad_doom2",             NULL, MENUITEM_LALIGNED },
+   {it_variable, "Evilution:",          "iwad_tnt",               NULL, MENUITEM_LALIGNED },
+   {it_variable, "Plutonia:",           "iwad_plutonia",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", NULL, MENUITEM_LALIGNED },
+   {it_variable, "Heretic (Reg):",      "iwad_heretic",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "Heretic SoSR:",       "iwad_heretic_sosr",      NULL, MENUITEM_LALIGNED },
+   {it_end}
 };
 
 menu_t menu_loadwad =
@@ -628,6 +649,20 @@ menu_t menu_wadmisc =
 {
    mn_wadmisc_items,
    &menu_loadwad,
+   &menu_wadiwads,
+   &menu_loadwad, // rootpage
+   200, 15,
+   4,
+   mf_background,
+   NULL,
+   mn_wad_names,
+   mn_wad_pages,
+};
+
+menu_t menu_wadiwads =
+{
+   mn_wadiwad_items,
+   &menu_wadmisc,
    NULL,
    &menu_loadwad, // rootpage
    200, 15,
@@ -638,8 +673,8 @@ menu_t menu_wadmisc =
    mn_wad_pages,
 };
 
-VARIABLE_STRING(mn_wadname,  NULL,           1024);
-CONSOLE_VARIABLE(mn_wadname, mn_wadname,        0) {}
+VARIABLE_STRING(mn_wadname,  NULL,       UL);
+CONSOLE_VARIABLE(mn_wadname, mn_wadname,  0) {}
 
 CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 {   
@@ -682,50 +717,6 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
    else
       MN_ErrorMsg("Failed to load wad file");
 }
-
-//////////////////////////////////////////////////////////////
-//
-// Multiplayer Menu
-//
-// Access to the new Multiplayer features of SMMU
-//
-
-//
-// NETCODE_FIXME: Eliminate this and consolidate all unique options into
-// the normal setup menu hierarchy. I do not intend to support the
-// starting of netgames from within the engine, as it never even worked
-// under SMMU to begin with (the one time this was tested, it crashed).
-// Netgames will have to be started from the command line or via use of
-// a launcher utility, like for most other ports.
-//
-
-/*
-static menuitem_t mn_multiplayer_items[] =
-{
-   {it_title,  FC_GOLD "multiplayer",  NULL,                "M_MULTI"},
-   {it_gap},
-   {it_info,   FC_GOLD "connect:"},
-   {it_runcmd, "serial/modem...",         "mn_serial"},
-   {it_runcmd, "tcp/ip...",               "mn_tcpip"},
-   {it_gap},
-   {it_runcmd, "disconnect",              "disconnect"},
-   {it_end}
-};
-
-menu_t menu_multiplayer =
-{
-   mn_multiplayer_items,
-   NULL, NULL, NULL,                             // pages
-   100, 15,                                      // x,y offsets
-   4,                                            // starting item
-   mf_background|mf_leftaligned,                 // fullscreen
-};
-
-CONSOLE_COMMAND(mn_multi, 0)
-{
-   MN_StartMenu(&menu_multiplayer);
-}
-*/
 
 /////////////////////////////////////////////////////////////////
 //

@@ -202,6 +202,21 @@ qstring_t *M_QStrPutc(qstring_t *qstr, char ch)
 }
 
 //
+// M_QStrDelc
+//
+// Deletes a character from the end of the qstring.
+//
+qstring_t *M_QStrDelc(qstring_t *qstr)
+{
+   if(qstr->index > 0)
+      qstr->index--;
+
+   qstr->buffer[qstr->index] = '\0';
+
+   return qstr;
+}
+
+//
 // M_QStrCat
 //
 // Concatenates a C string onto the end of a qstring, expanding
@@ -220,6 +235,29 @@ qstring_t *M_QStrCat(qstring_t *qstr, const char *str)
    qstr->index = newsize - 1;
 
    return qstr;
+}
+
+//
+// M_QStrCmp
+//
+// String compare.
+//
+int M_QStrCmp(qstring_t *qstr, const char *str)
+{
+   return strcmp(qstr->buffer, str);
+}
+
+//
+// M_QStrCpy
+//
+// Copies a C string into the qstring. The qstring is cleared first,
+// and then set to the contents of *str.
+//
+qstring_t *M_QStrCpy(qstring_t *qstr, const char *str)
+{
+   M_QStrClear(qstr);
+   
+   return M_QStrCat(qstr, str);
 }
 
 //

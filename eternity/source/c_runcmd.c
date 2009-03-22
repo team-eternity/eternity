@@ -125,11 +125,12 @@ static void C_GetTokens(const char *command)
 }
 
 //
-// C_RunIndivTextCmd.
+// C_RunIndivTextCmd
+//
 // called once a typed command line has been broken
 // into individual commands (multiple commands on one
 // line are allowed with the ';' character)
-
+//
 static void C_RunIndivTextCmd(const char *cmdname)
 {
    command_t *command;
@@ -143,7 +144,10 @@ static void C_RunIndivTextCmd(const char *cmdname)
    
    // find the command being run from the first token.
    command = C_GetCmdForName(cmdtokens[0]);
-   if(!numtokens) return; // no command
+   
+   if(!numtokens) 
+      return; // no command
+   
    if(!command)    // no _command_ called that
    {
       // alias?
@@ -154,12 +158,13 @@ static void C_RunIndivTextCmd(const char *cmdname)
          C_RunAlias(alias);
       }
       else         // no alias either
-         C_Printf("unknown command: '%s'\n",cmdtokens[0]);
-      return;
+         C_Printf("unknown command: '%s'\n", cmdtokens[0]);
    }
-   
-   // run the command (buffer it)
-   C_RunCommand(command, cmdname+strlen(cmdtokens[0]));
+   else
+   {
+      // run the command (buffer it)
+      C_RunCommand(command, cmdname+strlen(cmdtokens[0]));
+   }
 }
 
 // check the flags of a command to see if it
@@ -359,7 +364,7 @@ void C_RunTextCmd(const char *command)
          
          // left
          // copy sub command, alloc slightly more than needed
-         sub_command = malloc(rover-command+3); 
+         sub_command = calloc(1, rover-command+3); 
          strncpy(sub_command, command, rover-command);
          sub_command[rover-command] = '\0';   // end string
          
@@ -505,21 +510,24 @@ static char *C_ValueForDefine(variable_t *variable, char *s)
       if(!strcmp(s, "+"))     // increase value
       {
          int value = *(int *)variable->variable + 1;
-         if(value > variable->max) value = variable->max;
+         if(variable->max != UL && value > variable->max) 
+            value = variable->max;
          sprintf(returnstr, "%i", value);
          return returnstr;
       }
       if(!strcmp(s, "-"))     // decrease value
       {
          int value = *(int *)variable->variable - 1;
-         if(value < variable->min) value = variable->min;
+         if(variable->min != UL && value < variable->min)
+            value = variable->min;
          sprintf(returnstr, "%i", value);
          return returnstr;
       }
       if(!strcmp(s, "/"))     // toggle value
       {
          int value = *(int *)variable->variable + 1;
-         if(value > variable->max) value = variable->min; // wrap around
+         if(variable->max != UL && value > variable->max)
+            value = variable->min; // wrap around
          sprintf(returnstr, "%i", value);
          return returnstr;
       }
@@ -546,7 +554,8 @@ static void C_SetVariable(command_t *command)
    }
    
    // change it?
-   if(C_CheckFlags(command)) return;       // no
+   if(C_CheckFlags(command)) 
+      return; // no
    
    // ok, set the value
    variable = command->variable;
@@ -579,9 +588,11 @@ static void C_SetVariable(command_t *command)
    // check the min/max sizes
    
    errormsg = NULL;
-   if(size > variable->max)
+   
+   // haleyjd 03/22/09: allow unlimited bounds
+   if(variable->max != UL && size > variable->max)
       errormsg = "value too big";
-   if(size < variable->min)
+   if(variable->min != UL && size < variable->min)
       errormsg = "value too small";
    
    if(errormsg)
@@ -644,37 +655,43 @@ static void C_SetVariable(command_t *command)
 // Tab Completion
 //
 
-static char origkey[100];
+static qstring_t origkey;
 static boolean gotkey;
 static command_t *tabs[128];
 static int numtabs = 0;
 static int thistab = -1;
 
-// given a key (eg. "r_sw"), will look through all
-// the commands in the hash chains and gather
-// all the commands which begin with this into a
-// list 'tabs'
-
-void GetTabs(char *key)
+//
+// GetTabs
+//
+// given a key (eg. "r_sw"), will look through all the commands in the hash
+// chains and gather all the commands which begin with this into a list 'tabs'
+//
+static void GetTabs(const char *key)
 {
    int i;
    int keylen;
    
    numtabs = 0;
-   while(*key==' ') key++;
+   while(*key==' ')
+      key++;
+
+   if(!origkey.buffer)
+      M_QStrCreateSize(&origkey, 100);
    
-   strcpy(origkey, key);
+   M_QStrCpy(&origkey, key);
    gotkey = true;
    
-   if(!*key) return;
+   if(!*key)
+      return;
    
    keylen = strlen(key);
 
    // check each hash chain in turn
    
-   for(i=0; i<CMDCHAINS; i++)
+   for(i = 0; i < CMDCHAINS; i++)
    {
-      command_t* browser = cmdroots[i];
+      command_t *browser = cmdroots[i];
       
       // go through each link in this chain
       for(; browser; browser = browser->next)
@@ -685,7 +702,6 @@ void GetTabs(char *key)
             // found a new tab
 
             // CONSOLE_FIXME: overflowable array!
-
             tabs[numtabs] = browser;
             numtabs++;
          }
@@ -698,7 +714,12 @@ void GetTabs(char *key)
 void C_InitTab(void)
 {
    numtabs = 0;
-   origkey[0] = '\0';
+
+   if(!origkey.buffer)
+      M_QStrCreateSize(&origkey, 100);
+   else
+      M_QStrClear(&origkey);
+
    gotkey = false;
    thistab = -1;
 }
@@ -706,11 +727,15 @@ void C_InitTab(void)
 // called when tab pressed. get the next tab
 // from the list
 
-char *C_NextTab(char *key)
+const char *C_NextTab(const char *key)
 {
-   static char returnstr[100];
+   static qstring_t returnstr;
+   const char *ret = NULL;
 
-   memset(returnstr, 0, 100);
+   if(!returnstr.buffer)
+      M_QStrCreateSize(&returnstr, 100);
+   else
+      M_QStrClear(&returnstr);
    
    // get tabs if not done already
    if(!gotkey)
@@ -718,31 +743,38 @@ char *C_NextTab(char *key)
    
    // select next tab
    thistab = thistab == -1 ? 0 : thistab+1;  
-   
+
    if(thistab >= numtabs)
    {
       thistab = -1;
-      return origkey;
+      ret = origkey.buffer;
    }
-   
-   sprintf(returnstr,"%s ",tabs[thistab]->name);
-   return returnstr;
+   else
+   {   
+      M_QStrCpy(&returnstr, tabs[thistab]->name);
+      M_QStrPutc(&returnstr, ' ');
+      ret = returnstr.buffer;
+   }
+
+   return ret;
 }
 
 // called when shift-tab pressed. get the
 // previous tab from the lift
 
-char *C_PrevTab(char *key)
+const char *C_PrevTab(const char *key)
 {
-   static char returnstr[100];
+   static qstring_t returnstr;
+   const char *ret = NULL;
 
-   memset(returnstr, 0, 100);
+   if(!returnstr.buffer)
+      M_QStrCreateSize(&returnstr, 100);
+   else
+      M_QStrClear(&returnstr);
    
    // get tabs if neccesary
    if(!gotkey)
-   {
       GetTabs(key);
-   }
    
    // select prev.
    thistab = thistab == -1 ? numtabs - 1 : thistab - 1;
@@ -751,11 +783,16 @@ char *C_PrevTab(char *key)
    if(thistab < 0)
    {
       thistab = -1;
-      return origkey;
+      ret = origkey.buffer;
+   }
+   else
+   {
+      M_QStrCpy(&returnstr, tabs[thistab]->name);
+      M_QStrPutc(&returnstr, ' ');
+      ret = returnstr.buffer;
    }
    
-   sprintf(returnstr,"%s ",tabs[thistab]->name);
-   return returnstr;
+   return ret;
 }
 
 /////////////////////////////////////////////////////////////////////////

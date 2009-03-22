@@ -279,6 +279,37 @@ static void MN_DrawThermo(int x, int y, int thermWidth, int thermDot)
 }
 
 //
+// MN_CalcWidestWidth
+//
+// haleyjd 03/22/09: A fix for LALIGNED menus: the menu item values will
+// all draw at a fixed position from the widest description string.
+//
+static void MN_CalcWidestWidth(menu_t *menu)
+{
+   int itemnum;
+
+   if(menu->widest_width) // do only once
+      return;
+
+   for(itemnum = 0; menu->menuitems[itemnum].type != it_end; ++itemnum)
+   {
+      menuitem_t *item = &(menu->menuitems[itemnum]);
+
+      // only LALIGNED items are taken into account
+      if(item->flags & MENUITEM_LALIGNED)
+      {
+         int desc_width = 
+            item->flags & MENUITEM_BIGFONT ?
+               V_FontStringWidth(menu_font_big, item->description) 
+               : MN_StringWidth(item->description);
+
+         if(desc_width > menu->widest_width)
+            menu->widest_width = desc_width;
+      }
+   }
+}
+
+//
 // MN_DrawMenuItem
 //
 // draw a menu item. returns the height in pixels
@@ -455,7 +486,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          {
             // include gap on fullscreen menus
             if(item->flags & MENUITEM_LALIGNED)
-               x = 8 + desc_width + 16;
+               x = 8 + drawing_menu->widest_width + 16;  // haleyjd: use widest_width
             else
                x += GAP;
             // adjust colour for different coloured variables
@@ -568,9 +599,12 @@ void MN_DrawMenu(menu_t *menu)
    // draw background
 
    if(menu->flags & mf_background)
-      V_DrawBackground(background_flat, &vbscreen);
+      V_DrawBackground(background_flat, &vbscreen);         
   
    // menu-specific drawer function
+
+   // haleyjd: calculate widest width for LALIGNED flag
+   MN_CalcWidestWidth(menu);
 
    if(menu->drawer)
       menu->drawer();
