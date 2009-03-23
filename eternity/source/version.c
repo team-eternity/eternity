@@ -31,17 +31,17 @@
 int version = 335;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char SUBVERSION = 90;
+unsigned char SUBVERSION = 92;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Simorgh";
+const char version_name[] = "Nekhbet";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.35.90 \"Simorgh\" -- Dedicated to Jason \"Amaster\" Masihdas";
+const char ee_wmCaption[] = "Eternity Engine v3.35.92 \"Nekhbet\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -67,6 +67,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.35.90 \"Simorgh\" -- Dedicated t
 // 3.33.33 'Paladin'   -- 05/17/06
 // 3.33.50 'Phoenix'   -- 10/23/06
 // 3.35.90 'Simorgh'   -- 01/11/09
+// 3.35.92 'Nekhbet'   -- 03/22/09
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

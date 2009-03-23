@@ -459,50 +459,67 @@ VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
 VARIABLE_STRING(gi_path_hticreg, NULL, UL);
 VARIABLE_STRING(gi_path_sosr,    NULL, UL);
 
+static void G_TestIWADPath(char *path)
+{
+   M_NormalizeSlashes(path);
+
+   // test for read access, and warn if non-existent
+   if(access(path, R_OK))
+   {
+      if(menuactive)
+         MN_ErrorMsg("Warning: cannot access filepath");
+      else
+         C_Printf(FC_ERROR "Warning: cannot access filepath\n");
+   }
+}
+
 CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  0) 
 {
-   M_NormalizeSlashes(gi_path_doomsw);
+   G_TestIWADPath(gi_path_doomsw);
 }
 
 CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg, 0) 
 {
-   M_NormalizeSlashes(gi_path_doomreg);
+   G_TestIWADPath(gi_path_doomreg);
 }
 
 CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,   0) 
 {
-   M_NormalizeSlashes(gi_path_doomu);
+   G_TestIWADPath(gi_path_doomu);
 }
 
 CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,   0) 
 {
-   M_NormalizeSlashes(gi_path_doom2);
+   G_TestIWADPath(gi_path_doom2);
 }
 
 CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     0) 
 {
-   M_NormalizeSlashes(gi_path_tnt);
+   G_TestIWADPath(gi_path_tnt);
 }
 
 CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    0) 
 {
-   M_NormalizeSlashes(gi_path_plut);
+   G_TestIWADPath(gi_path_plut);
 }
 
 CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  0) 
 {
-   M_NormalizeSlashes(gi_path_hticsw);
+   G_TestIWADPath(gi_path_hticsw);
 }
 
 CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, 0) 
 {
-   M_NormalizeSlashes(gi_path_hticreg);
+   G_TestIWADPath(gi_path_hticreg);
 }
 
 CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    0) 
 {
-   M_NormalizeSlashes(gi_path_sosr);
+   G_TestIWADPath(gi_path_sosr);
 }
+
+VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
+CONSOLE_VARIABLE(use_doom_config, use_doom_config, 0) {}
 
 ////////////////////////////////////////////////////////////////
 //
@@ -820,6 +837,7 @@ void G_AddCommands(void)
    C_AddCommand(iwad_heretic_shareware);
    C_AddCommand(iwad_heretic);
    C_AddCommand(iwad_heretic_sosr);
+   C_AddCommand(use_doom_config);
 
    G_AddChatMacros();
    G_AddWeapPrefs();

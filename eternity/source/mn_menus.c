@@ -1639,6 +1639,7 @@ static menuitem_t mn_optionsp2_items[] =
    {it_info,   FC_GOLD "game files"},
    {it_runcmd, "wad options",            "mn_loadwad" },
    {it_runcmd, "demo settings",          "mn_demos"   },
+   {it_runcmd, "configuration",          "mn_config"  },
    {it_gap},
    {it_info,   FC_GOLD "menus"},
    {it_runcmd, "menu options",           "mn_menus"   },
@@ -1681,8 +1682,8 @@ static void MN_InitCustomMenu(void)
 
    if(!(menu = MN_DynamicMenuForName("_MN_Custom")))
    {
-      mn_optionsp2_items[12].type        = it_info;
-      mn_optionsp2_items[12].description = FC_BRICK "custom menu";
+      mn_optionsp2_items[13].type        = it_info;
+      mn_optionsp2_items[13].description = FC_BRICK "custom menu";
    }
 }
 
@@ -1773,13 +1774,15 @@ CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 
 extern menu_t menu_video;
 extern menu_t menu_sysvideo;
+extern menu_t menu_video_pg2;
 extern menu_t menu_particles;
 
 static const char *mn_vidpage_names[] =
 {
-   "mode / rendering / misc",
-   "system / console / screenshots",
-   "particles",
+   "Mode / Rendering / Misc",
+   "System / Console / Screenshots",
+   "Screen Wipe",
+   "Particles",
    NULL
 };
 
@@ -1787,6 +1790,7 @@ static menu_t *mn_vidpage_menus[] =
 {
    &menu_video,
    &menu_sysvideo,
+   &menu_video_pg2,
    &menu_particles,
    NULL
 };
@@ -1863,9 +1867,9 @@ CONSOLE_COMMAND(mn_video, 0)
 
 static menuitem_t mn_sysvideo_items[] =
 {
-   {it_title,    FC_GOLD "video options",   NULL, "m_video"},
+   {it_title,    FC_GOLD "Video Options",   NULL, "m_video"},
    {it_gap},
-   {it_info,     FC_GOLD "system"},
+   {it_info,     FC_GOLD "System"},
    {it_toggle,   "textmode startup",        "textmode_startup"},
 #ifdef _SDL_VER
    {it_toggle,   "wait at exit",            "i_waitatexit"},
@@ -1874,11 +1878,11 @@ static menuitem_t mn_sysvideo_items[] =
    {it_variable, "endoom delay",            "i_endoomdelay"},
 #endif
    {it_gap},
-   {it_info,     FC_GOLD "console"},
+   {it_info,     FC_GOLD "Console"},
    {it_variable, "console speed",           "c_speed"},
    {it_variable, "console height",          "c_height"},
    {it_gap},
-   {it_info,     FC_GOLD "screenshots"},
+   {it_info,     FC_GOLD "Screenshots"},
    {it_toggle,   "screenshot format",       "shot_type"},
    {it_toggle,   "gamma correct shots",     "shot_gamma"},
    {it_end}
@@ -1888,6 +1892,30 @@ menu_t menu_sysvideo =
 {
    mn_sysvideo_items,
    &menu_video,          // prev page
+   &menu_video_pg2,      // next page
+   &menu_video,          // rootpage
+   200, 15,              // x,y offset
+   3,                    // start on first selectable
+   mf_background,        // full-screen menu
+   NULL,
+   mn_vidpage_names,
+   mn_vidpage_menus
+};
+
+static menuitem_t mn_video_page2_items[] =
+{
+   {it_title,   FC_GOLD "Video Options",    NULL, "m_video"},
+   {it_gap},
+   {it_info,    FC_GOLD "Screen Wipe"},
+   {it_toggle,  "wipe type",                "wipetype"},
+   {it_toggle,  "game waits",               "wipewait"},
+   {it_end}
+};
+
+menu_t menu_video_pg2 =
+{
+   mn_video_page2_items,
+   &menu_sysvideo,       // prev page
    &menu_particles,      // next page
    &menu_video,          // rootpage
    200, 15,              // x,y offset
@@ -1900,13 +1928,13 @@ menu_t menu_sysvideo =
 
 static menuitem_t mn_particles_items[] =
 {
-   {it_title,  FC_GOLD "video options", NULL,              "m_video"},
+   {it_title,  FC_GOLD "Video Options", NULL,              "m_video"},
    {it_gap},
-   {it_info,         FC_GOLD "particles"},
+   {it_info,         FC_GOLD "Particles"},
    {it_toggle, "render particle effects",  "draw_particles"},
    {it_toggle, "particle translucency",    "r_ptcltrans"},
    {it_gap},
-   {it_info,         FC_GOLD "effects"},
+   {it_info,         FC_GOLD "Effects"},
    {it_toggle, "blood splat type",         "bloodsplattype"},
    {it_toggle, "bullet puff type",         "bulletpufftype"},
    {it_toggle, "enable rocket trail",      "rocket_trails"},
@@ -1920,7 +1948,7 @@ static menuitem_t mn_particles_items[] =
 menu_t menu_particles =
 {
    mn_particles_items,   // menu items
-   &menu_sysvideo,       // previous page
+   &menu_video_pg2,      // previous page
    NULL,                 // next page
    &menu_video,          // rootpage
    200, 15,              // x,y offset
@@ -1983,24 +2011,29 @@ CONSOLE_COMMAND(mn_sound, 0)
 // Mouse & Joystick Options
 //
 
-#ifdef _SDL_VER
 static const char *mn_mousejoy_names[] =
 {
    "mouse",
+   "mouselook",
+#ifdef _SDL_VER
    "joystick",
+#endif
    NULL
 };
 
 extern menu_t menu_mouse;
+extern menu_t menu_mouse_mlook;
 extern menu_t menu_joystick;
 
 static menu_t *mn_mousejoy_pages[] =
 {
    &menu_mouse,
+   &menu_mouse_mlook,
+#ifdef _SDL_VER
    &menu_joystick,
+#endif
    NULL
 };
-#endif
 
 static menuitem_t mn_mouse_items[] =
 {
@@ -2015,9 +2048,36 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       FC_GOLD "misc."},
    {it_toggle,     "invert mouse",                 "invertmouse"},
    {it_toggle,     "smooth turning",               "smooth_turning"},
+   {it_toggle,     "mouse acceleration",           "mouse_accel"},
+   {it_toggle,     "novert emulation",             "mouse_novert"},
 #ifndef _SDL_VER
    {it_toggle,     "enable joystick",              "i_usejoystick"},
 #endif
+   {it_end}
+};
+
+menu_t menu_mouse =
+{
+   mn_mouse_items,               // menu items
+   NULL,                         // previous page
+   &menu_mouse_mlook,            // next page
+   &menu_mouse,                  // rootpage
+   200, 15,                      // x, y offset
+   2,                            // first selectable
+   mf_background,                // full-screen menu
+   NULL,                         // no drawer
+   mn_mousejoy_names,            // TOC stuff
+   mn_mousejoy_pages,
+};
+
+CONSOLE_COMMAND(mn_mouse, 0)
+{
+   MN_StartMenu(&menu_mouse);
+}
+
+static menuitem_t mn_mouse_mlook_items[] =
+{
+   {it_title,      FC_GOLD "Mouse Settings",       NULL,   "m_mouse"},
    {it_gap},
    {it_info,       FC_GOLD"mouselook"},
    {it_toggle,     "enable mouselook",             "allowmlook" },
@@ -2026,31 +2086,23 @@ static menuitem_t mn_mouse_items[] =
    {it_end}
 };
 
-menu_t menu_mouse =
+menu_t menu_mouse_mlook =
 {
-   mn_mouse_items,               // menu items
-   NULL,                         // previous page
+   mn_mouse_mlook_items,         // menu items
+   &menu_mouse,                  // previous page
 #ifdef _SDL_VER
    &menu_joystick,               // next page
-   &menu_mouse,                  // rootpage
 #else
-   NULL,                         // next page
-   NULL,                         // rootpage
+   NULL,
 #endif
+   &menu_mouse,                  // rootpage
    200, 15,                      // x, y offset
-   2,                            // first selectable
+   3,                            // first selectable
    mf_background,                // full-screen menu
    NULL,                         // no drawer
-#ifdef _SDL_VER                  
    mn_mousejoy_names,            // TOC stuff
    mn_mousejoy_pages,
-#endif
 };
-
-CONSOLE_COMMAND(mn_mouse, 0)
-{
-   MN_StartMenu(&menu_mouse);
-}
 
 //------------------------------------------------------------------------
 //
@@ -2132,7 +2184,7 @@ static menuitem_t mn_joystick_items[] =
 menu_t menu_joystick =
 {
    mn_joystick_items,
-   &menu_mouse,          // previous page
+   &menu_mouse_mlook,    // previous page
    NULL,                 // next page
    &menu_mouse,          // rootpage
    200, 15,              // x,y offset
@@ -2928,6 +2980,7 @@ static menuitem_t mn_movekeys_items[] =
    {it_binding,      "180 degree turn", "flip"},
    {it_binding,      "use",             "use"},
    {it_binding,      "attack/fire",     "attack"},
+   {it_binding,      "toggle autorun",  "autorun"},
    {it_end}
 };
 
@@ -3413,6 +3466,36 @@ CONSOLE_COMMAND(mn_menus, 0)
 }
 
 //
+// Config menu - configuring the configuration files O_o
+//
+
+static menuitem_t mn_config_items[] =
+{
+   {it_title,    FC_GOLD "Configuration" },
+   {it_gap},
+   {it_info,     FC_GOLD "Doom Game Modes"},
+   {it_toggle,   "use base/doom config",     "use_doom_config" },
+   {it_end}
+};
+
+menu_t menu_config =
+{
+   mn_config_items,
+   NULL,
+   NULL,
+   NULL,
+   200, 15,
+   3,
+   mf_background,
+   NULL,
+};
+
+CONSOLE_COMMAND(mn_config, 0)
+{
+   MN_StartMenu(&menu_config);
+}
+
+//
 // Skin Viewer Command
 //
 
@@ -3698,6 +3781,8 @@ void MN_AddMenus(void)
    C_AddCommand(mn_menus);
    C_AddCommand(mn_searchstr);
    C_AddCommand(mn_search);
+
+   C_AddCommand(mn_config);
    
    // haleyjd: quicksave, quickload
    C_AddCommand(quicksave);
