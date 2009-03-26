@@ -1,10 +1,302 @@
 ================================================================================
-Changes since Eternity Engine v3.33.50
+Changes since Eternity Engine v3.35.90
 ================================================================================
+--------------------------------------------------------------------------------
+03/22/09
+
+I have added support for console variables which lack lower or upper bounds on 
+their values, in order to support unlimited-length file paths (though truth be
+told, due to operating system limitations, file paths are still effectively
+limited to anywhere from between 512 to 1024 characters - but at least EE will
+not be to blame for this).
+
+I altered the LALIGNED menuitem flag so that all items using it on a menu page
+will draw their value components at the same x coordinate, making them aligned
+to a global standard. This vastly improves the appearance of LALIGNED menuitem
+groups, including particularly the one on the new IWAD paths page of the Wad
+Options menu.
+
+I have also added several options that were new since v3.33.33 to appropriate
+locations in the menu system.
+
+We are now prepared for the maintenance release. The version will be 3.35.92,
+and the user-suggested version name is "Nekhbet," a reference to the Egyptian
+hawk goddess, the personification of Upper Egypt, who holds a staff with a 
+shen ring representing "all" or infinity, which in reference to time, would mean
+"eternity." A fitting name, I believe.
+
+--------------------------------------------------------------------------------
+03/17/09
+
+I have made some changes to improve Heretic compatibility:
+
+1. D'Sparil's teleport probability and teleport spot selection have been 
+   restored to their vanilla behavior, now that the GPLing of the code allows me
+   to use it directly. EE still fixes the potential infinite loop, however, by
+   adding a termination condition in the new distance-checking spot selection
+   codepath through P_BossTeleport. In vanilla Heretic, if a level were made
+   where the spots were all less than 128 units apart, and D'Sparil tried to
+   teleport while in the midst of them, the game would lock up.
+   
+2. Gargoyle charging probabily has been reverted to 64/256 from 128/256, even
+   though this causes a serious issue in Black Plague skill level where the
+   imps seem to freeze constantly. This is, unfortunately, a "part" of the game
+   which fixing would cause the game balance to be thrown off significantly. I
+   was prompted to change this after watching some particularly brilliant
+   youtube runs of the game in Black Plague skill level. Noticing how the imp
+   stalls were often advantageous to the player makes me think that changing
+   this is probably not as good an idea as I previously thought it would be.
+   
+3. Weredragon fireball smoke no longer burns. This is another change like the
+   previous one. After seeing players strafing through those smoke trails
+   repeatedly, I got the idea that maybe Raven didn't fix this problem
+   intentionally, as it might make the beastballs too dangerous.
+   
+4. Iron Lich tornadoes can still change targets, which is an innovation I
+   added, but they will not do so if an old demo is trying to play. This has
+   almost zero impact on normal gameplay, but is very cool-looking when it
+   happens, so I'm leaving this tweak in place.
+   
+5. If old demos are trying to play, 3D object clipping and TerrainTypes will
+   be enabled. Even though Heretic demos stand pretty much zero chance of
+   ever syncing in EE once the player touches any mobj_t's or shoots a gun,
+   I'd like the reasons for the desyncs to at least be limited to things that
+   I simply cannot help, and not just say "screw it all."
+   
+--------------------------------------------------------------------------------
+03/16/09
+
+After continued problems with the console pausing feature, I have altered it to
+work in the same manner as menu pausing, rather than having it create a
+sendpause event. "consoleactive" is now checked along with "menuactive" in 
+various places, so that the console only pauses the game during single-player
+play, and not during netgames or while playing demos.
+
+--------------------------------------------------------------------------------
+03/15/09
+
+I added full comments to the i_picker.c module, and I also changed the IWAD
+path variables to never be NULL, but rather default to the empty string, so that
+I can safely attach console variables to them.
+
+--------------------------------------------------------------------------------
+03/14/09
+
+I have finally decoupled autorun from the capslock key and killed off any code
+expecting it to be bound there. There is now an autorun console variable, as
+well as an autorun keybinding action. Capslock has also been hacked to behave
+like a normal key under Windows, as I've been told it behaves under Linux. In
+Windows, capslock alternately sends a keyup and keydown event every time it is
+pressed once. This doesn't work with EE's dynamic keybinding system.
+
+--------------------------------------------------------------------------------
+03/13/09
+
+I made a workaround for an issue in the menu system that was driving me up the
+wall. The previous change that allows paging to take place if you move past the
+first or last item on a menu using menu_up or menu_down actions was making me
+angry because I was accustomed to the previous behavior, having used it for 
+years. So, I made it possible to trigger the old behavior by holding down Ctrl,
+which still requires some learning on my part, but at least makes it possible to
+have both behaviors at the same time.  I also killed off the wrapping behavior
+that would take place on the first and last pages respectively, which makes what
+is going on a whole lot less confusing.
+
+--------------------------------------------------------------------------------
+03/08/09
+
+I have completed a graphical IWAD choosing frontend for Eternity, implemented
+using SDL. It displays the titlescreens for the various games over a background,
+all of which are stored in a new base/startup.wad file, which uses the previous
+private wad directory system I mentioned adding recently. Only those games with
+an IWAD specified in the system.cfg file are displayed for choosing.
+
+Esselfortium created the background graphic, after the ugly one I made for
+initial testing was deemed far too hideous for public use ;)  Unfortunately,
+several people were turned to stone by it before we managed to make the switch.
+
+--------------------------------------------------------------------------------
+03/07/09
+
+Added a specific finale font to EDF after I noticed that the finale line step
+was off (this was previously handled with a special textmetric object in the
+GameModeInfo structure).
+
+After numerous commits, SoM and I have added mousewheel support. The mousewheel
+behaves badly (in my opinion) under SDL, and doesn't work too well with EE's
+keybinding system without some serious workarounds in the low-level input code.
+
+--------------------------------------------------------------------------------
+03/06/09
+
+Added the long-planned system.cfg file, with support for specifying that all
+DOOM gamemodes should use the base/doom/Eternity.cfg file rather than their
+individual game-folder configurations. This allows you to have either one or
+many configs for those games, depending on your preferences. There are some 
+other settings that I plan to add in short order, including most importantly the
+ability to store IWAD settings (these cannot go in the base/game configs because
+those cannot be used until we know what game we're using, and unless -game is
+used, that information can only be ascertained from the IWAD file).
+
+I started getting around to a bunch of the usability issues that EE has 
+accumulated as FIXME's for the past few years, in preparation for an upcoming
+maintenance release. As of now, we have support for 8-button gamepads,
+and next/previous weapon actions that are suitable for gamepad and mousewheel
+use.
+
+--------------------------------------------------------------------------------
+03/02/09
+
+I noticed that I forgot to add several of the new UDMF-related sector damage
+properties to the savegame code, so that sector transfers involving damaging
+floor types would be broken if you saved and then reloaded the game. Heretic
+E2M2 was a simple level for triggering this problem, since it has some lower-
+and-change-type floors right in the first room. It is, in fact, the level I
+have always historically used to test changes to the sector type transfer
+system. This is the third time I have used it for that purpose ;)
+
+--------------------------------------------------------------------------------
+03/01/09
+
+I made some simple alterations to the wad file system that enable modules to
+open private wad files that are not linked into the main wad directory. In
+effect, I simply moved the main wad directory variables into a structure, and
+changed the W_ functions to take a pointer to that structure instead of using
+the main wad file directory explicitly.
+
+My initial idea for this is to base the new savegame format on WAD files, which
+would enable the data inside to be more easily examined and even edited. 
+However, there are some serious problems with the way I would like this to work
+which remain unsolved. No decisions have been made yet.
+
+Esselfortium mentioned a weird bug with EDF ambience sounds not being relocated
+by linked portals. Turns out I had put the NOSECTOR flag on the EEAmbience and
+EEEnvironmentSequence objects, which prevents them from having the appropriate
+group id set as a side effect of not being attached to a sector. I have removed
+this flag from several EE control point objects where it is inappropriate.
+
+--------------------------------------------------------------------------------
+02/28/09
+
+Finished adding changes to the EDF font system that enable the proper freeing of
+resources when font objects are overwritten (defined multiple times with the
+same mnemonic).
+
+--------------------------------------------------------------------------------
+02/26/09
+
+After some problems and complaints with how the block font system I added in
+3.33.50 turned up, I decided to design and implement a complete EDF font system,
+which externalizes all the previously natively defined details of font
+construction for both patch and block fonts. All fonts are now defined in 
+fonts.edf, and all native subsystems now check global EDF-set variables to see
+what fonts they should use for various purposes.
+
 --------------------------------------------------------------------------------
 02/19/09
 
 Test commit for Manc.
+
+--------------------------------------------------------------------------------
+02/04/09
+
+By request, I changed the resurrect console command to work any time that the
+player is in PST_DEAD state, even if health is greater than zero. This allows
+you to escape certain situations such as being a zombie player.
+
+I also managed to very simply disable the R_Init loading box when -nodraw is
+active, by adding a check for the parameter's variable in the box drawing
+routine. Now all you get in -nodraw mode is a perfectly black screen.
+
+--------------------------------------------------------------------------------
+01/27/09
+
+By implementing some more changes to the zone system, I was finally able to nail
+down the precise location of the malloc responsible for the heap corruption.
+Take a wild guess what it was before I tell you -- it was the TXTRCONV parser
+from SMMU. The code was assuming that the lump was null-terminated, a problem I
+had earlier in the SMMU skin parser, SMMU console script parser, and SMMU
+MAPINFO parser. 
+
+This particular problem managed to stay just under the radar for all these years
+because it was highly sensitive to the *exact* alignment of the zone heap. As
+mentioned in the previous commit, even one configuration value differing could
+be enough to cause this error to disappear. If there were any zeroes between the
+end of the lump and the next block, the parser would stop there, leaving only
+the very last entry in the TXTRCONV table possible corrupt. Because of what
+tended to be loaded into the memory location previously, this had a very high
+probability of happening.
+
+The changes I made were to separate the CHECKHEAP and zone memory scrambling
+functions from the INSTRUMENTED define, allowing all three to be enabled 
+independently. INSTRUMENTED itself can have side-effects on the heap, since it
+writes additional values into the zone memory headers. Memory scrambling can
+also be fatal to attempts to find heap corruption problems, and is generally
+only useful for finding pointer-class errors, such as accessing freed memory
+(it has been excellent at catching this in the past, particularly when mobj_t's
+are being inappropriately referenced). 
+
+In this case, the ability to compile with CHECKHEAP in place but without zone
+scrambling or INSTRUMENTED enabled me to nail down the precise cause of the heap
+corruption, because it stopped the program at the exact time that the next block
+was corrupted, rather than at the next time that block happened to be touched
+by the zone heap, which was quite a bit later. None of my log files were able to
+pinpoint the TXTRCONV lump as being the source of this problem, due to it having
+been freed for a long time before the first level's Z_CheckHeap call.
+
+--------------------------------------------------------------------------------
+01/20/09
+
+Esselfortium has finally succeeded in triggering the mysterious heap corruption
+issue that has been dodging in and out of my sights for a couple of years now,
+in a way that can be reliably replicated, but ONLY through the EXACT use of his
+complete setup - any difference in directory structure, files loaded, or even
+configuration file settings will cause the error to disappear. As such, I've had
+him send me his whole EE directory minus anything that it's impossible to have
+loaded in the way he's launching it, and I've been able to replicate the error
+consistently.
+
+There are still some issues with debugging the zone heap which I believe I can
+tune up to accelerate cracking this one. The first one I have added today is a
+paranoid check in Z_Free for invalid block tags - in particular, PU_FREE, or
+anything greater than or equal to PU_MAX. The first would indicate a double 
+free taking place, which is something I had initially suspected for this problem
+due to the way in which the zone blocks are being corrupted (this assumption
+has proven itself false, however). The latter would indicate simple heap
+corruption, as no value outside the range from PU_FREE to PU_MAX should ever be
+written into a zoneblock's tag field.
+
+--------------------------------------------------------------------------------
+01/17/09
+
+Applied a belated change for the Lost Episode - Evil Unleashed project.
+Megaspheres may now be collected by the player in any DOOM gamemode, not only in
+DOOM 2.
+
+--------------------------------------------------------------------------------
+01/12/09
+
+Fraggle provided a fix for a strange Linux-only sprintf issue, where use of the
+"%s%c" idiom to append a character to the end of the same string was going
+haywire (sounds to me like maybe sprintf is being implemented with memcpy,
+which AFAIK is not adhering to the specification, since the specification 
+doesn't say sprintf is forbidden from formatting into any of the same strings it
+takes as arguments - at least, not that I've ever heard). The offending code in
+the console had been there since SMMU and never had a problem until now, so who
+knows what it's really about.
+
+================================================================================
+Changes since Eternity Engine v3.33.50
+================================================================================
+--------------------------------------------------------------------------------
+01/11/09
+
+Added a processor affinity setting and supporting code in i_cpu.c for SDL 
+builds on Windows and Linux. Setting processor affinity prevents the mysterious
+SDL_mixer multicore issue, which is some kind of thread contention problem
+(I suspect race conditions and/or inappropriate handling of resource locks).
+This is the final commit for 3.35.90 release, which will be codenamed "Simorgh,"
+for the wise and holy mythical bird of Persian origin.
 
 --------------------------------------------------------------------------------
 12/31/08
