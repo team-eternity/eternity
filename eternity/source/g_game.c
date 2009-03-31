@@ -3175,8 +3175,12 @@ byte *G_ReadOptions(byte *demo_p)
    else  // defaults for versions < 2.02
    {
       int i;  // killough 10/98: a compatibility vector now
-      for(i = 0; i < COMP_TOTAL; ++i)
+      for(i = 0; i <= comp_zerotags; ++i)
          comp[i] = compatibility;
+
+      // haleyjd 03/31/09: nothing above comp_zerotags existed pre-EE
+      for(i = comp_zerotags + 1; i < COMP_TOTAL; ++i)
+         comp[i] = true;
 
       // haleyjd 05/18/06: BOOM fix: allow zombie exits
       if(demo_version >= 200 && demo_version <= 202)
