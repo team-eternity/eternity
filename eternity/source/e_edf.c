@@ -1853,15 +1853,15 @@ static void E_TryDefaultCast(void);
 //
 static void E_ProcessCast(cfg_t *cfg)
 {
-   int i, ci_size, cs_size;
+   int i, numcastorder = 0, numcastsections = 0;
    cfg_t **ci_order;
 
    E_EDFLogPuts("\t* Processing cast call\n");
    
    // get number of cast sections
-   cs_size = cfg_size(cfg, SEC_CAST);
+   numcastsections = cfg_size(cfg, SEC_CAST);
 
-   if(!cs_size)
+   if(!numcastsections)
    {
       E_EDFLogPuts("\t\tNo cast members defined\n");
 
@@ -1870,24 +1870,24 @@ static void E_ProcessCast(cfg_t *cfg)
       return;
    }
 
-   E_EDFLogPrintf("\t\t%d cast member(s) defined\n", cs_size);
+   E_EDFLogPrintf("\t\t%d cast member(s) defined\n", numcastsections);
 
    // check if the "castorder" array is defined for imposing an
    // order on the castinfo sections
-   ci_size = cfg_size(cfg, SEC_CASTORDER);
+   numcastorder = cfg_size(cfg, SEC_CASTORDER);
 
-   E_EDFLogPrintf("\t\t%d cast member(s) in castorder\n", ci_size);
+   E_EDFLogPrintf("\t\t%d cast member(s) in castorder\n", numcastorder);
 
    // determine size of castorder
-   max_castorder = (ci_size > 0) ? ci_size : cs_size;
+   max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
    // allocate with size+1 for an end marker
    castorder = malloc(sizeof(castinfo_t)*(max_castorder + 1));
    ci_order  = malloc(sizeof(cfg_t *) * max_castorder);
 
-   if(ci_size > 0)
+   if(numcastorder > 0)
    {
-      for(i = 0; i < ci_size; ++i)
+      for(i = 0; i < numcastorder; ++i)
       {
          const char *title = cfg_getnstr(cfg, SEC_CASTORDER, i);         
          cfg_t *section    = cfg_gettsec(cfg, SEC_CAST, title);
@@ -1906,7 +1906,7 @@ static void E_ProcessCast(cfg_t *cfg)
    {
       // no castorder array is defined, so use the cast members
       // in the order they are encountered (for backward compatibility)
-      for(i = 0; i < cs_size; ++i)
+      for(i = 0; i < numcastsections; ++i)
          ci_order[i] = cfg_getnsec(cfg, SEC_CAST, i);
    }
 

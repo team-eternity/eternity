@@ -240,7 +240,7 @@ static void I_Pick_FreeWad(void)
 //
 static void I_Pick_ClearScreen(void)
 {
-   boolean firsttime = true;
+   static boolean firsttime = true;
    Uint32 color;
    SDL_Rect dstrect;
 

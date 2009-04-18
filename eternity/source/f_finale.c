@@ -364,9 +364,11 @@ void F_StartCast(void)
 
    // types are now set through EDF
    
+   // haleyjd 04/17/09: check against max_castorder; don't trash memory.
+
    // if a cast name was left NULL by EDF, it means we're going to
    // use the old DeHackEd names
-   for(i = 0; i < OLDCASTMAX; ++i)
+   for(i = 0; i < OLDCASTMAX && i < max_castorder; ++i)
    {
       if(!castorder[i].name)
          castorder[i].name = DEH_String(oldnames[i]);
