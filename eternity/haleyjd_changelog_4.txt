@@ -1,0 +1,55 @@
+================================================================================
+Changes since Eternity Engine v3.35.92
+================================================================================
+--------------------------------------------------------------------------------
+04/19/09
+
+I discovered that a subtle problem still existed with my new approach to
+button_t sound-playing for switches which could result in the switch sounds 
+jumping to global position (0,0) - this was due to the fact that button_t's
+would be immediately cleared, even while the sound they just started was still
+playing.
+
+To fix this, I went ahead and implemented my previous idea of linedef sound
+origins, which consist of a degenmobj_t which is positioned at the center point
+of every linedef at startup (and yes, polyobjects drag this around too, keeping 
+it consistent with the linedef's location).
+
+This may open the door in the future for some new linedef-based features, an
+area of DOOM-editing which I do not think has been exploited to even a fraction
+of its potential by any port so far.
+
+--------------------------------------------------------------------------------
+04/17/09
+
+Esselfortium found that Eternity could crash when less than 17 members were a 
+part of the cast call sequence. A small logical error lead to some very
+selective trashing of memory near the castinfo array. This was due to use of 
+OLDCASTMAX without checking if numcastinfo was less than that value when
+populating cast members with the default names defined via BEX strings.
+
+Also, the screen clear routine in the IWAD picker module was always resolving
+RGB (0,0,0) to a surface-format color value on every call because I forgot the
+keyword "static" before the firsttime variable's declaration. I fixed that up.
+
+--------------------------------------------------------------------------------
+03/31/09
+
+While trying to play an interesting PrBoom 2.02 demo posted on Doomworld where
+a Pain Elemental is fooled into killing a Boss Brain whilst trying to attack a
+Revenant while the player is dead, ending the level, I discovered that a simple
+logic error in MBF's comp vector handling prevented such demos from synching
+artificially. Basically, if the demo was recorded with "compatibility," the old
+BOOM setting, disabled, then MBF's logic would set the entire comp vector to 
+"false," including any comp vars that didn't exist as of 2.02. This was just
+plain wrong.
+
+The proper action is to set all the comp vector values that were included as
+part of "compatibility" originally to the state of that variable, and to set any
+newer ones to true unconditionally. Eternity should have excellent PrBoom 2.02
+demo compatibility so long as the demos in question are not for maps that use
+certain BOOM features - friction, mainly.
+
+================================================================================
+EOF
+================================================================================
