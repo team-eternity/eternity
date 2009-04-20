@@ -77,6 +77,7 @@ void P_InitPortals(void)
 void R_SetSectorGroupID(sector_t *sector, int groupid)
 {
    mobj_t *mo;
+   int i;
 
    sector->groupid = groupid;
 
@@ -86,6 +87,10 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
 
    for(mo = sector->thinglist; mo; mo = mo->snext)
       mo->groupid = groupid;
+
+   // haleyjd 04/19/09: propagate to line sound origins
+   for(i = 0; i < sector->linecount; ++i)
+      sector->lines[i]->soundorg.groupid = groupid;
 }
 
 
@@ -444,8 +449,8 @@ boolean P_BuildLinkTable(void)
    for(i = 0; i < groupcount; ++i)
       P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
 
-   // SoM: one last step. Find all map architecture with a group id of -1 and assign it to
-   // group 0
+   // SoM: one last step. Find all map architecture with a group id of -1 and 
+   // assign it to group 0
    for(i = 0; i < numsectors; i++)
    {
       if(sectors[i].groupid == R_NOGROUP)

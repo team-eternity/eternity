@@ -338,6 +338,7 @@ typedef struct line_s
    int tranlump;          // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag; // killough 4/17/98: improves searches for tags.
    int firstid,  nextid;  // haleyjd 02/27/07: same but for line id's
+   degenmobj_t soundorg;  // haleyjd 04/19/09: line sound origin
 
    // SoM 12/10/03: wall portals
    portal_t *portal;

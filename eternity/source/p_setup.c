@@ -701,6 +701,11 @@ void P_LoadLineDefs(int lump)
       if(ld->sidenum[0] != -1 && ld->special)
          sides[*ld->sidenum].special = ld->special;
 
+      // haleyjd 04/19/09: position line sound origin
+      ld->soundorg.x       = ld->v1->x + ld->dx / 2;
+      ld->soundorg.y       = ld->v1->y + ld->dy / 2;
+      ld->soundorg.groupid = R_NOGROUP;
+
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
       if(ld->special == ED_LINE_SPECIAL)
@@ -852,6 +857,11 @@ void P_LoadHexenLineDefs(int lump)
       // killough 4/4/98: support special sidedef interpretation below
       if(ld->sidenum[0] != -1 && ld->special)
          sides[*ld->sidenum].special = ld->special;
+
+      // haleyjd 04/19/09: position line sound origin
+      ld->soundorg.x       = ld->v1->x + ld->dx / 2;
+      ld->soundorg.y       = ld->v1->y + ld->dy / 2;
+      ld->soundorg.groupid = R_NOGROUP;
 
       // haleyjd 02/26/05: ExtraData
       // FIXME/TODO: how to support ExtraData via Hexen??
@@ -1319,6 +1329,8 @@ void P_GroupLines(void)
                             sector->blockbox[BOXBOTTOM])/2;
 #ifdef R_LINKEDPORTALS
       // SoM: same for group id.
+      // haleyjd: note - groups have not been built yet, so this is just for
+      // initialization.
       sector->soundorg.groupid = sector->groupid;
 #endif
 
@@ -1631,7 +1643,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 #if 0
    // when loading a hub level, display a 'loading' box
    if(hub_changelevel)
-      V_SetLoading(4, "loading");
+      V_SetLoading(4, "Loading");
 #endif
 
    P_NewLevelMsg();

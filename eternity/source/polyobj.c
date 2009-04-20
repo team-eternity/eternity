@@ -519,6 +519,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       // automap overlay behavior.
       mo = po->spawnSpotMobj;
       po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
+      po->lines[i]->soundorg.groupid     = mo->subsector->sector->groupid;
 #endif
    }
 
@@ -826,8 +827,14 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       // translate the spawnSpot as well
       po->spawnSpot.x += vec.x;
       po->spawnSpot.y += vec.y;          
-
       
+      // 04/19/09: translate sound origins
+      for(i = 0; i < po->numLines; ++i)
+      {
+         po->lines[i]->soundorg.x += vec.x;
+         po->lines[i]->soundorg.y += vec.y;
+      }
+
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
       R_DetachPolyObject(po);
       Polyobj_linkToBlockmap(po);     // relink to blockmap
@@ -903,6 +910,10 @@ static void Polyobj_rotateLine(line_t *ld)
       ld->bbox[BOXBOTTOM] = v2->y;
       ld->bbox[BOXTOP]    = v1->y;
    }
+
+   // 04/19/09: reposition sound origin
+   ld->soundorg.x = v1->x + ld->dx / 2;
+   ld->soundorg.y = v1->y + ld->dy / 2;
 }
 
 //

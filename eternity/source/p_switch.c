@@ -156,21 +156,18 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
    }
 
    button = P_FindFreeButton();
-    
+   
+   button->line     = line - lines;
    button->side     = sidenum;
    button->where    = w;
    button->btexture = texture;
    button->btimer   = time;
    button->dopopout = dopopout;
 
-   // 05/03/08: position sound origin on switch linedef
-   button->soundorg = sector->soundorg;
-
-   button->soundorg.x = line->v1->x + line->dx / 2;
-   button->soundorg.y = line->v1->y + line->dy / 2;
+   // 04/19/09: rewritten to use linedef sound origin
 
    // switch activation sound
-   S_StartSoundName((mobj_t *)&(button->soundorg), startsound);
+   S_StartSoundName((mobj_t *)&(line->soundorg), startsound);
    
    // haleyjd 04/16/08: and thus dies one of the last static limits.
    // I_Error("P_StartButton: no button slots left!");
@@ -214,6 +211,8 @@ void P_RunButtons(void)
             // switch.
             if(button->dopopout)
             {
+               line_t *line = &lines[button->line]; // 04/19/09: line soundorgs
+
                switch(button->where)
                {
                case top:
@@ -229,7 +228,7 @@ void P_RunButtons(void)
                   break;
                }
                
-               S_StartSoundName((mobj_t *)&(button->soundorg), "EE_SwitchOn");
+               S_StartSoundName((mobj_t *)&(line->soundorg), "EE_SwitchOn");
             }
             
             // clear out the button

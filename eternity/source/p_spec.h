@@ -596,12 +596,12 @@ typedef struct switchlist_s switchlist_t;
 
 typedef struct
 {
-  int         side;
-  bwhere_e    where;
-  int         btexture;
-  int         btimer;
-  degenmobj_t soundorg;
-  boolean     dopopout;
+   int      line;
+   int      side;
+   bwhere_e where;
+   int      btexture;
+   int      btimer;
+   boolean  dopopout;
 } button_t;
 
 // haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames
