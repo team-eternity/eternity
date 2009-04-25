@@ -52,6 +52,9 @@ extern char gamemapname[9];
 #define HIS_SECRETS     "SECRETS"
 #define HIS_SECRET      "SECRET"
 #define HIS_TIME        "TIME"
+#define HIS_TOTAL       "TOTAL"
+#define HIS_VICTIMS     "VICTIMS"
+#define HIS_KILLERS     "K\0I\0L\0L\0E\0R\0S"
 
 
 // Private Data
@@ -127,6 +130,11 @@ static int hi_dead_faces[4];
 // 03/27/05: EDF strings for intermission level names
 static edf_string_t *mapName;
 static edf_string_t *nextMapName;
+
+// 04/25/09: deathmatch data
+static fixed_t dSlideX[MAXPLAYERS];
+static fixed_t dSlideY[MAXPLAYERS];
+static int slaughterboy;
 
 // Private functions
 
@@ -207,6 +215,55 @@ static void HI_loadData(void)
 
    // draw the background to the back buffer
    HI_DrawBackground();
+}
+
+//
+// HI_initStats
+//
+// Sets up deathmatch stuff.
+//
+static void HI_initStats(void)
+{
+   int i;
+   int posnum = 0;
+   int slaughterfrags;
+   int slaughtercount;
+   int playercount = 0;
+
+   if(GameType != gt_dm)
+      return;
+
+   slaughterboy   = 0;
+   slaughterfrags = D_MININT;
+   slaughtercount = 0;
+
+   for(i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(/*playeringame[i]*/ 1)
+      {
+         dSlideX[i] = 43 * posnum * FRACUNIT / 20;
+         dSlideY[i] = 36 * posnum * FRACUNIT / 20;
+         ++posnum;
+         ++playercount;
+      }
+
+      // determine players with the most kills
+      if(players[i].totalfrags > slaughterfrags)
+      {
+         slaughterboy   = 1 << i;
+         slaughterfrags = players[i].totalfrags;
+         slaughtercount = 1;
+      }
+      else if(players[i].totalfrags == slaughterfrags)
+      {
+         slaughterboy |= 1 << i;
+         ++slaughtercount;
+      }
+   }
+   
+   // no slaughterboy stuff if everyone is equal
+   if(slaughtercount == playercount)
+      slaughterboy = 0;
 }
 
 static void HI_Stop(void)
@@ -399,11 +456,20 @@ static void HI_drawLevelStat(int stat, int max, int x, int y)
 //
 // Draws a single "Font B" number with a percentage sign.
 //
-static void HI_drawLevelStatPct(int stat, int x, int y)
+static void HI_drawLevelStatPct(int stat, int x, int y, int pctx)
 {
    char str[16];
 
-   sprintf(str, "%3d%%", stat);
+   sprintf(str, "%3d", stat);
+   V_FontWriteTextShadowed(in_bignumfont, str,  x,    y);
+   V_FontWriteTextShadowed(in_bigfont,    "%",  pctx, y);
+}
+
+static void HI_drawFragCount(int count, int x, int y)
+{
+   char str[16];
+
+   sprintf(str, "%3d", count);
    V_FontWriteTextShadowed(in_bignumfont, str, x, y);
 }
 
@@ -534,6 +600,11 @@ static void HI_drawSingleStats(void)
    }
 }
 
+//
+// HI_drawCoopStats
+//
+// Draws the cooperative-mode statistics matrix. Nothing fancy.
+//
 static void HI_drawCoopStats(void)
 {
    int i, ypos;
@@ -573,9 +644,9 @@ static void HI_drawCoopStats(void)
             if(hi_wbs.maxsecret != 0)
                secrets = hi_wbs.plyr[i].ssecret * 100 / hi_wbs.maxsecret;
 
-            HI_drawLevelStatPct(kills,   85,  ypos + 10);
-            HI_drawLevelStatPct(items,   160, ypos + 10);
-            HI_drawLevelStatPct(secrets, 237, ypos + 10);
+            HI_drawLevelStatPct(kills,   85,  ypos + 10, 121);
+            HI_drawLevelStatPct(items,   160, ypos + 10, 196);
+            HI_drawLevelStatPct(secrets, 237, ypos + 10, 273);
          }
 
          ypos += 37;
@@ -583,8 +654,123 @@ static void HI_drawCoopStats(void)
    }
 }
 
+static int dmstatstage;
+
+//
+// HI_dmFaceTLLevel
+//
+// Returns a translucency level at which to draw a face on the DM stats screen.
+//
+static fixed_t HI_dmFaceTLLevel(int playernum)
+{
+   fixed_t ret;
+
+   if(intertime < 100 || playernum == consoleplayer)
+      ret = FRACUNIT;
+   else if(intertime < 120)
+      ret = FRACUNIT - (intertime - 100) * ((FRACUNIT - HTIC_GHOST_TRANS) / 20);
+   else
+      ret = HTIC_GHOST_TRANS;
+
+   return ret;
+}
+
+//
+// HI_drawDMStats
+//
+// Draws deathmatch statistics.
+//
 static void HI_drawDMStats(void)
 {
+   int i, j;
+   int xpos, ypos, kpos;
+
+   V_FontWriteTextShadowed(in_bigfont, HIS_TOTAL, 265, 30);
+   V_FontWriteText(in_font, HIS_VICTIMS, 140, 8);
+
+   for(i = 0; i < 7; ++i)
+      V_FontWriteText(in_font, HIS_KILLERS + i*2, 10, 80 + 9 * i);
+
+   xpos = 90;
+   ypos = 55;
+
+   if(intertime <= 1)
+      return;
+
+   if(intertime < 20)
+   {
+      dmstatstage = 0;
+
+      for(i = 0; i < MAXPLAYERS; ++i)
+      {
+         if(/*playeringame[i]*/ 1)
+         {
+            V_DrawPatchShadowed(40, (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
+                                &vbscreen,
+                                W_CacheLumpNum(hi_faces[i], PU_CACHE), 
+                                NULL, FRACUNIT);
+            V_DrawPatchShadowed((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS, 18,
+                                &vbscreen,
+                                W_CacheLumpNum(hi_dead_faces[i], PU_CACHE),
+                                NULL, FRACUNIT);                                
+         }
+      }
+   }
+
+   if(intertime >= 20)
+   {
+      if(dmstatstage == 0)
+      {
+         S_StartSound(NULL, sfx_hdorcls);
+         dmstatstage = 1;
+      }
+
+      if(intertime >= 100)
+      {
+         if(dmstatstage == 1)
+         {
+            if(slaughterboy)
+               /*S_StartSound(NULL, sfx_hwpnup)*/;
+            dmstatstage = 2;
+         }
+      }
+
+      for(i = 0; i < MAXPLAYERS; ++i)
+      {
+         if(/*playeringame[i]*/ 1)
+         {
+            int tllevel = HI_dmFaceTLLevel(i);
+
+            V_DrawPatchTL(40, ypos, &vbscreen,
+                          W_CacheLumpNum(hi_faces[i], PU_CACHE),
+                          NULL, tllevel);
+            V_DrawPatchTL(xpos, 18, &vbscreen,
+                          W_CacheLumpNum(hi_dead_faces[i], PU_CACHE),
+                          NULL, tllevel);
+            kpos = 86;
+
+            for(j = 0; j < MAXPLAYERS; ++j)
+            {
+               if(/*playeringame[i]*/ 1)
+               {
+                  HI_drawFragCount(players[i].frags[j], kpos, ypos + 10);
+                  kpos += 43;
+               }
+            }
+
+            if(slaughterboy & (1 << i)) // is this player a leader?
+            {
+               if(!(intertime & 16))
+                  HI_drawFragCount(players[i].totalfrags, 263, ypos + 10);
+            }
+            else
+               HI_drawFragCount(players[i].totalfrags, 263, ypos + 10);
+
+            ypos += 36;
+            xpos += 43;
+         }
+      }
+   }
 }
 
 static void HI_Ticker(void)
@@ -735,6 +921,7 @@ static void HI_Start(wbstartstruct_t *wbstartstruct)
    hi_wbs = *wbstartstruct;
 
    HI_loadData();
+   HI_initStats();
 }
 
 // Heretic Intermission object
