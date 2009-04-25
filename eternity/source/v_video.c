@@ -447,6 +447,21 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
 }
 
 //
+// V_DrawPatchShadowed
+//
+// Convenience routine; draws the patch twice, first using colormap 33,
+// and then normally.
+//
+void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
+                         char *outr, int tl)
+{
+   char *cm = (char *)(colormaps[0] + 33*256);
+
+   V_DrawPatchTL(x + 2, y + 2, buffer, patch, cm,   FRACUNIT*2/3);
+   V_DrawPatchTL(x,     y,     buffer, patch, outr, tl);
+}
+
+//
 // V_DrawBlock
 //
 // Draw a linear block of pixels into the view buffer. 

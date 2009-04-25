@@ -153,6 +153,14 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
                     char *outr, int tl);
 
+// V_DrawPatchShadowed
+// Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
+// the patch twice, first 2 units to the left and down using colormap 33, and
+// then again at the specified location with the normal parameters.
+void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
+                         char *outr, int tl);
+
+
 // V_DrawBlock
 // Draw a linear block of pixels into the view buffer, using the buffer's
 // scaling information (if present)

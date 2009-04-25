@@ -47,8 +47,10 @@ extern char gamemapname[9];
 #define HIS_NOWENTERING "NOW ENTERING:"
 #define HIS_FINISHED    "FINISHED"
 #define HIS_KILLS       "KILLS"
+#define HIS_BONUS       "BONUS"
 #define HIS_ITEMS       "ITEMS"
 #define HIS_SECRETS     "SECRETS"
+#define HIS_SECRET      "SECRET"
 #define HIS_TIME        "TIME"
 
 
@@ -257,10 +259,10 @@ static void HI_drawOldLevelName(int y)
    else
       oldLevelName = "new level";
 
-   x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, oldLevelName)) >> 1;
+   x = (SCREENWIDTH - V_FontStringWidth(in_bigfont, oldLevelName)) / 2;
    V_FontWriteTextShadowed(in_bigfont, oldLevelName, x, y);
 
-   x = (SCREENWIDTH - V_FontStringWidth(in_font, HIS_FINISHED)) >> 1;
+   x = (SCREENWIDTH - V_FontStringWidth(in_font, HIS_FINISHED)) / 2;
    V_FontWriteText(in_font, HIS_FINISHED, x, y + 22);
 }
 
@@ -393,6 +395,19 @@ static void HI_drawLevelStat(int stat, int max, int x, int y)
 }
 
 //
+// HI_drawLevelStatPct
+//
+// Draws a single "Font B" number with a percentage sign.
+//
+static void HI_drawLevelStatPct(int stat, int x, int y)
+{
+   char str[16];
+
+   sprintf(str, "%3d%%", stat);
+   V_FontWriteTextShadowed(in_bignumfont, str, x, y);
+}
+
+//
 // HI_drawTime
 //
 // Draws a "Font B" HH:MM:SS time indication. Nothing is
@@ -519,6 +534,59 @@ static void HI_drawSingleStats(void)
    }
 }
 
+static void HI_drawCoopStats(void)
+{
+   int i, ypos;
+   static int statstage;
+
+   V_FontWriteTextShadowed(in_bigfont, HIS_KILLS,   95, 35);
+   V_FontWriteTextShadowed(in_bigfont, HIS_BONUS,  155, 35);
+   V_FontWriteTextShadowed(in_bigfont, HIS_SECRET, 232, 35);
+
+   HI_drawOldLevelName(3);
+
+   ypos = 50;
+
+   if(intertime < 40)
+      statstage = 0;
+   else if(intertime >= 40 && statstage == 0)
+   {
+      statstage = 1;
+      S_StartSound(NULL, sfx_hdorcls);
+   }
+
+   for(i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(playeringame[i])
+      {
+         V_DrawPatchShadowed(25, ypos, &vbscreen, 
+                             W_CacheLumpNum(hi_faces[i], PU_CACHE), 
+                             NULL, FRACUNIT);
+         if(statstage == 1)
+         {
+            int kills = 0, items = 0, secrets = 0;
+
+            if(hi_wbs.maxkills != 0)
+               kills = hi_wbs.plyr[i].skills * 100 / hi_wbs.maxkills;
+            if(hi_wbs.maxitems != 0)
+               items = hi_wbs.plyr[i].sitems * 100 / hi_wbs.maxitems;
+            if(hi_wbs.maxsecret != 0)
+               secrets = hi_wbs.plyr[i].ssecret * 100 / hi_wbs.maxsecret;
+
+            HI_drawLevelStatPct(kills,   85,  ypos + 10);
+            HI_drawLevelStatPct(items,   160, ypos + 10);
+            HI_drawLevelStatPct(secrets, 237, ypos + 10);
+         }
+
+         ypos += 37;
+      }
+   }
+}
+
+static void HI_drawDMStats(void)
+{
+}
+
 static void HI_Ticker(void)
 {
    if(interstate == INTR_WAITING)
@@ -636,10 +704,10 @@ static void HI_Drawer(void)
          HI_drawSingleStats();
          break;
       case gt_coop:
-         // IN_DrawCoopStats();
+         HI_drawCoopStats();
          break;
       default:
-         // IN_DrawDMStats();
+         HI_drawDMStats();
          break;
       }
       break;
