@@ -239,25 +239,25 @@ static void HI_initStats(void)
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
-      if(/*playeringame[i]*/ 1)
+      if(playeringame[i])
       {
          dSlideX[i] = 43 * posnum * FRACUNIT / 20;
          dSlideY[i] = 36 * posnum * FRACUNIT / 20;
          ++posnum;
          ++playercount;
-      }
 
-      // determine players with the most kills
-      if(players[i].totalfrags > slaughterfrags)
-      {
-         slaughterboy   = 1 << i;
-         slaughterfrags = players[i].totalfrags;
-         slaughtercount = 1;
-      }
-      else if(players[i].totalfrags == slaughterfrags)
-      {
-         slaughterboy |= 1 << i;
-         ++slaughtercount;
+         // determine players with the most kills
+         if(players[i].totalfrags > slaughterfrags)
+         {
+            slaughterboy   = 1 << i;
+            slaughterfrags = players[i].totalfrags;
+            slaughtercount = 1;
+         }
+         else if(players[i].totalfrags == slaughterfrags)
+         {
+            slaughterboy |= 1 << i;
+            ++slaughtercount;
+         }
       }
    }
    
@@ -703,7 +703,7 @@ static void HI_drawDMStats(void)
 
       for(i = 0; i < MAXPLAYERS; ++i)
       {
-         if(/*playeringame[i]*/ 1)
+         if(playeringame[i])
          {
             V_DrawPatchShadowed(40, (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
                                 &vbscreen,
@@ -730,14 +730,14 @@ static void HI_drawDMStats(void)
          if(dmstatstage == 1)
          {
             if(slaughterboy)
-               /*S_StartSound(NULL, sfx_hwpnup)*/;
+               S_StartSound(NULL, sfx_hwpnup);
             dmstatstage = 2;
          }
       }
 
       for(i = 0; i < MAXPLAYERS; ++i)
       {
-         if(/*playeringame[i]*/ 1)
+         if(playeringame[i])
          {
             int tllevel = HI_dmFaceTLLevel(i);
 
@@ -751,7 +751,7 @@ static void HI_drawDMStats(void)
 
             for(j = 0; j < MAXPLAYERS; ++j)
             {
-               if(/*playeringame[i]*/ 1)
+               if(playeringame[j])
                {
                   HI_drawFragCount(players[i].frags[j], kpos, ypos + 10);
                   kpos += 43;

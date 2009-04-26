@@ -518,6 +518,11 @@ typedef enum {
   sfx_hgibdth,
   sfx_hplrwdth,
   sfx_hplrcdth,
+  sfx_hstfhit,
+  sfx_hchicatk,
+  sfx_hhrnsht,
+  sfx_hphosht,
+  sfx_hwpnup,
 
   // haleyjd 11/05/03: NUMSFX is a variable now
   // NUMSFX
