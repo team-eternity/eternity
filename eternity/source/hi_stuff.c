@@ -768,7 +768,7 @@ static void HI_drawDMStats(void)
             if(i == consoleplayer)
             {
                V_ColorBlockTLScaled(&vbscreen, blockcolor, xpos, ypos + 3, 
-                                    (263-(xpos-3)+1) + 48, 36 - 3, 
+                                    (263-(xpos-3)+1) + 48, 36 - 5, 
                                     FRACUNIT/3);
             }
 
