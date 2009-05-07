@@ -303,7 +303,6 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
 // Color block drawing
 //
 
-
 void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
 {
    byte *d;
@@ -343,6 +342,77 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    for(i = 0; i < h; i++)
    {
       memset(d, color, size);
+      d += dest->pitch;
+   }
+}
+
+void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
+                          int tl)
+{
+   byte *d, *row;
+   int  i, size, tw;
+   int x2, y2;
+   unsigned int *fg2rgb, *bg2rgb, col;
+
+   // haleyjd 05/06/09: optimizations for opaque and invisible
+   if(tl == FRACUNIT)
+   {
+      V_ColorBlockScaled(dest, color, x, y, w, h);
+      return;
+   }
+   else if(tl == 0)
+      return;
+
+   {
+      unsigned int fglevel, bglevel;
+      
+      fglevel = tl & ~0x3ff;
+      bglevel = FRACUNIT - fglevel;
+      fg2rgb  = Col2RGB8[fglevel >> 10];
+      bg2rgb  = Col2RGB8[bglevel >> 10];
+   }
+
+   x2 = x + w - 1;
+   y2 = y + h - 1;
+
+   if(x < 0)
+      x = 0;
+
+   if(y < 0)
+      y = 0;
+
+   if(x2 >= dest->scalew)
+      x2 = dest->scalew - 1;
+
+   if(y2 >= dest->scaleh)
+      y2 = dest->scaleh - 1;
+
+   if(x > x2 || y > y2)
+      return;
+
+   x = dest->x1lookup[x];
+   x2 = dest->x2lookup[x2];
+
+   y = dest->y1lookup[y];
+   y2 = dest->y2lookup[y2];
+
+   w = x2 - x + 1;
+   h = y2 - y + 1;
+
+   d = dest->ylut[y] + dest->xlut[x];
+   size = w;
+
+   for(i = 0; i < h; i++)
+   {
+      row = d;
+      tw = w;
+
+      while(tw--)
+      {
+         col    = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
+         *row++ = RGB32k[0][0][col & (col >> 15)];
+      }
+
       d += dest->pitch;
    }
 }
@@ -410,7 +480,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
    
    while(h--)
    { 
-      row = dest;      
+      row = dest;
       tw = w;
 
       while(tw--)

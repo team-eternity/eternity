@@ -136,6 +136,10 @@ static fixed_t dSlideX[MAXPLAYERS];
 static fixed_t dSlideY[MAXPLAYERS];
 static int slaughterboy;
 
+// 05/06/09: color block bg stuff
+static byte blockcolor;
+static int  blockfade;
+
 // Private functions
 
 static void HI_DrawBackground(void);
@@ -217,6 +221,23 @@ static void HI_loadData(void)
    HI_DrawBackground();
 }
 
+// Uncomment this define to see all players in single-player mode
+#define HI_DEBUG_ALLPLAYERS
+
+//
+// HI_playerInGame
+//
+// Returns true if the player is considered to be participating.
+//
+static boolean HI_playerInGame(int playernum)
+{
+#ifdef HI_DEBUG_ALLPLAYERS
+   return true;
+#else
+   return playeringame[playernum];
+#endif
+}
+
 //
 // HI_initStats
 //
@@ -233,13 +254,16 @@ static void HI_initStats(void)
    if(GameType != gt_dm)
       return;
 
+   blockcolor = 144;
+   blockfade  = -1;
+
    slaughterboy   = 0;
    slaughterfrags = D_MININT;
    slaughtercount = 0;
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
-      if(playeringame[i])
+      if(HI_playerInGame(i))
       {
          dSlideX[i] = 43 * posnum * FRACUNIT / 20;
          dSlideY[i] = 36 * posnum * FRACUNIT / 20;
@@ -628,7 +652,7 @@ static void HI_drawCoopStats(void)
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
-      if(playeringame[i])
+      if(HI_playerInGame(i))
       {
          V_DrawPatchShadowed(25, ypos, &vbscreen, 
                              W_CacheLumpNum(hi_faces[i], PU_CACHE), 
@@ -665,7 +689,7 @@ static fixed_t HI_dmFaceTLLevel(int playernum)
 {
    fixed_t ret;
 
-   if(intertime < 100 || playernum == consoleplayer)
+   if(intertime < 100 || !slaughterboy || (slaughterboy & (1 << playernum)))
       ret = FRACUNIT;
    else if(intertime < 120)
       ret = FRACUNIT - (intertime - 100) * ((FRACUNIT - HTIC_GHOST_TRANS) / 20);
@@ -703,16 +727,16 @@ static void HI_drawDMStats(void)
 
       for(i = 0; i < MAXPLAYERS; ++i)
       {
-         if(playeringame[i])
+         if(HI_playerInGame(i))
          {
-            V_DrawPatchShadowed(40, (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
-                                &vbscreen,
-                                W_CacheLumpNum(hi_faces[i], PU_CACHE), 
-                                NULL, FRACUNIT);
-            V_DrawPatchShadowed((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS, 18,
-                                &vbscreen,
-                                W_CacheLumpNum(hi_dead_faces[i], PU_CACHE),
-                                NULL, FRACUNIT);                                
+            V_DrawPatchGeneral(40, (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
+                               &vbscreen,
+                               W_CacheLumpNum(hi_faces[i], PU_CACHE), 
+                               false);
+            V_DrawPatchGeneral((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS, 18,
+                               &vbscreen,
+                               W_CacheLumpNum(hi_dead_faces[i], PU_CACHE),
+                               false);
          }
       }
    }
@@ -737,9 +761,16 @@ static void HI_drawDMStats(void)
 
       for(i = 0; i < MAXPLAYERS; ++i)
       {
-         if(playeringame[i])
+         if(HI_playerInGame(i))
          {
             int tllevel = HI_dmFaceTLLevel(i);
+
+            if(i == consoleplayer)
+            {
+               V_ColorBlockTLScaled(&vbscreen, blockcolor, xpos, ypos + 3, 
+                                    (263-(xpos-3)+1) + 48, 36 - 3, 
+                                    FRACUNIT/3);
+            }
 
             V_DrawPatchTL(40, ypos, &vbscreen,
                           W_CacheLumpNum(hi_faces[i], PU_CACHE),
@@ -751,7 +782,7 @@ static void HI_drawDMStats(void)
 
             for(j = 0; j < MAXPLAYERS; ++j)
             {
-               if(playeringame[j])
+               if(HI_playerInGame(j))
                {
                   HI_drawFragCount(players[i].frags[j], kpos, ypos + 10);
                   kpos += 43;
@@ -775,6 +806,17 @@ static void HI_drawDMStats(void)
 
 static void HI_Ticker(void)
 {
+   if(GameType == gt_dm)
+   {      
+      if(!(intertime % 3))
+         blockcolor += blockfade;
+
+      if(blockcolor == 144 && blockfade == 1)
+         blockfade = -1;
+      else if(blockcolor == 137 && blockfade == -1)
+         blockfade = 1;
+   }
+
    if(interstate == INTR_WAITING)
    {
       countdown--;
