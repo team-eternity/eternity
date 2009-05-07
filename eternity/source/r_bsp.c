@@ -523,6 +523,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       if(underwater && (tempsec->floorheight   = sec->floorheight,
                         tempsec->ceilingheight = s->floorheight-1, !back))
       {
+         // SoM: kill any ceiling portals that may try to render
+         tempsec->c_portal = NULL;
+
          // head-below-floor hack
          tempsec->floorpic    = s->floorpic;
          tempsec->floor_xoffs = s->floor_xoffs;
@@ -561,6 +564,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
               viewz >= sectors[heightsec].ceilingheight &&
               sec->ceilingheight > s->ceilingheight)
       {   
+         // SoM: kill any floor portals that may try to render
+         tempsec->f_portal = NULL;
+
          // Above-ceiling hack
          tempsec->ceilingheight = s->ceilingheight;
          tempsec->floorheight   = s->ceilingheight + 1;
@@ -591,6 +597,14 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
          }
       }
+      else if(heightsec != -1)
+      {
+         if(sec->ceilingheight != s->ceilingheight)
+            tempsec->c_portal = NULL;
+         if(sec->floorheight != s->floorheight)
+            tempsec->f_portal = NULL;
+      }
+      
       sec = tempsec;               // Use other sector
    }
 
