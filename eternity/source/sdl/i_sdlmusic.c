@@ -520,22 +520,6 @@ static int I_SDLQrySongPlaying(int handle)
 #endif
 }
 
-/*
-typedef struct i_musicdriver_s
-{
-   int  (*InitMusic)(void);
-   void (*ShutdownMusic)(void);
-   void (*SetMusicVolume)(int);
-   void (*PauseSong)(int);
-   void (*ResumeSong)(int);
-   int  (*RegisterSong)(void *, int);
-   void (*PlaySong)(int, int);
-   void (*StopSong)(int);
-   void (*UnRegisterSong)(int);
-   int  (*QrySongPlaying)(int);
-} i_musicdriver_t;
-*/
-
 i_musicdriver_t i_sdlmusicdriver =
 {
    I_SDLInitMusic,      // InitMusic

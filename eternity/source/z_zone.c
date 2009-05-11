@@ -390,10 +390,10 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
       {
          start = block->prev;
          Z_Free((char *) block + HEADER_SIZE);
-         /* cph - If start->next == block, we did not merge with the previous
-          *       If !=, we did, so we continue from start.
-          *  Important: we've reset start!
-          */
+
+         // cph - If start->next == block, we did not merge with the previous
+         //       If !=, we did, so we continue from start.
+         //  Important: we've reset start!
          if(start->next == block)
             start = start->next;
          else
@@ -492,8 +492,8 @@ allocated:
    // INSTRUMENTED is defined to stomp all over the C heap.
    block->extra = 0;
 #endif
-   /* cph - the next line was lost in the #ifdef above, and also added an
-    *  extra HEADER_SIZE to block->size, which was incorrect */
+   // cph - the next line was lost in the #ifdef above, and also added an
+   // extra HEADER_SIZE to block->size, which was incorrect
    block->size = size;
    goto allocated;
 }

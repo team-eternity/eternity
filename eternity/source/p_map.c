@@ -2173,6 +2173,13 @@ msecnode_t *headsecnode = NULL;
 //      There _is_ code to free the list in g_game.c. But this is called
 //      too late: some msecnode_t's are used during the loading of the
 //      level. 
+//
+// haleyjd 05/11/09: This in fact was never a problem. Clear the pointer
+// before or after Z_FreeTags; it doesn't matter as long as you clear it
+// at some point in or before P_SetupLevel and before we start attaching
+// mobj_t's to sectors. I don't know what the hubbub above is about, but
+// I almost copied this change into WinMBF unnecessarily. I will leave it
+// be here, because as I said, changing it has no effect whatsoever.
 
 //
 // P_FreeSecNodeList
