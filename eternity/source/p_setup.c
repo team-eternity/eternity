@@ -200,8 +200,8 @@ void P_LoadVertexes(int lump)
       vertexes[i].y = SHORT(((mapvertex_t *) data)[i].y) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
-      vertexes[i].fx = vertexes[i].x / 65536.0f;
-      vertexes[i].fy = vertexes[i].y / 65536.0f;
+      vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
+      vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
       
       // SoM: Initialize the frameid marker
       vertexes[i].frameid = 0;
@@ -355,6 +355,9 @@ void P_LoadSectors(int lump)
 #ifdef R_LINKEDPORTALS
       ss->groupid = R_NOGROUP;
 #endif
+
+      // SoM: Slopes!
+      ss->c_slope = ss->f_slope = NULL;
 
       ss->floorz   = ss->floorheight;
       ss->ceilingz = ss->ceilingheight;
@@ -654,6 +657,9 @@ void P_LoadLineDefs(int lump)
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
+      // SoM: Calculate line normal
+      P_MakeLineNormal(ld);
+
       ld->tranlump = -1;   // killough 4/11/98: no translucency by default
 
       ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
@@ -822,6 +828,9 @@ void P_LoadHexenLineDefs(int lump)
       v2 = ld->v2 = &vertexes[(long)SHORT(mld->v2) & 0xffff];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
+
+      // SoM: Calculate line normal
+      P_MakeLineNormal(ld);
 
       ld->tranlump = -1;   // killough 4/11/98: no translucency by default
 
@@ -1428,8 +1437,8 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
                   v->x = (int)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
                   v->y = (int)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
                   // Cardboard store float versions of vertices.
-                  v->fx = v->x / 65536.0f;
-                  v->fy = v->y / 65536.0f;
+                  v->fx = M_FixedToFloat(v->x);
+                  v->fy = M_FixedToFloat(v->y);
                }
             }  // Obfuscated C contest entry:   :)
          }

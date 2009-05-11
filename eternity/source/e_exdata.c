@@ -609,6 +609,20 @@ static struct exlinespec
 
    // Apply tagged portals to frontsector
    { 385, "Apply_PortalToFrontsector" },
+
+   // Slopes
+   { 386, "Slope_FrontsectorFloor" },
+   { 387, "Slope_FrontsectorCeiling" },
+   { 388, "Slope_FrontsectorFloorAndCeiling" },
+   { 389, "Slope_BacksectorFloor" },
+   { 390, "Slope_BacksectorCeiling" },
+   { 391, "Slope_BacksectorFloorAndCeiling" },
+   { 392, "Slope_BackFloorAndFrontCeiling" },
+   { 393, "Slope_BackCeilingAndFrontFloor" },
+   
+   { 394, "Slope_FrontFloorToTaggedSlope" },
+   { 395, "Slope_FrontCeilingToTaggedSlope" },
+   { 396, "Slope_FrontFloorAndCeilingToTaggedSlope" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))

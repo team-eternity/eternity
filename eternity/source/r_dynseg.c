@@ -218,7 +218,7 @@ static void R_DynaSegOffset(seg_t *seg, line_t *line)
    else
       t = sqrt((dx * dx) + (dy * dy));
 
-   seg->offset = (fixed_t)(t * 65536.0);
+   seg->offset = M_DoubleToFixed(t);
 }
 
 //
@@ -338,8 +338,8 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
          R_IntersectPoint(seg, bsp, &nv->fx, &nv->fy);
 
          // also set fixed-point coordinates
-         nv->x = (fixed_t)(nv->fx * 65536.0);
-         nv->y = (fixed_t)(nv->fy * 65536.0);
+         nv->x = M_FloatToFixed(nv->fx);
+         nv->y = M_FloatToFixed(nv->fy);
 
          // create new dynaseg from nv to seg->v2
          nds = R_CreateDynaSeg(dseg, nv, seg->v2);

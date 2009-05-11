@@ -527,7 +527,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       colfunc = r_column_engine->DrawColumn;  // killough 3/14/98, 4/11/98
 
 
-   column.step = (int)(vis->ystep * FRACUNIT);
+   column.step = M_FloatToFixed(vis->ystep);
    column.texmid = vis->texturemid;
    maskedcolumn.scale = vis->scale;
    maskedcolumn.ytop = vis->ytop;
@@ -537,8 +537,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    if(vis->footclip)
    {
       footclipon = true;
-      baseclip = vis->ybottom - (vis->footclip / 65536.0f) * maskedcolumn.scale;
-
+      baseclip = vis->ybottom - M_FixedToFloat(vis->footclip) * maskedcolumn.scale;
    }
 
    w = SHORT(patch->width);
@@ -613,8 +612,8 @@ void R_ProjectSprite(mobj_t *thing)
       return; // don't generate vissprite
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
-   tempx = (thing->x / 65536.0f) - view.x;
-   tempy = (thing->y / 65536.0f) - view.y;
+   tempx = M_FixedToFloat(thing->x) - view.x;
+   tempy = M_FixedToFloat(thing->y) - view.y;
    ty1   = (tempy * view.cos) + (tempx * view.sin);
 
    // lies in front of the front view plane
@@ -678,9 +677,9 @@ void R_ProjectSprite(mobj_t *thing)
 
 
    // Calculate the edges of the shape
-   swidth = spritewidth[lump] / 65536.0f;
-   //stopoffset = spritetopoffset[lump] / 65536.0f;
-   sleftoffset = spriteoffset[lump] / 65536.0f;
+   swidth = M_FixedToFloat(spritewidth[lump]);
+   //stopoffset = spritetopoffset[lump] / FPFRACUNIT;
+   sleftoffset = M_FixedToFloat(spriteoffset[lump]);
 
    tx1 -= flip ? swidth - sleftoffset : sleftoffset;
    tx2 = tx1 + swidth;
@@ -699,7 +698,7 @@ void R_ProjectSprite(mobj_t *thing)
    intx2 = (int)(x2 - 0.001f);
 
    // SoM: forgot about footclipping
-   tz1 = ((thing->z + spritetopoffset[lump] - thing->floorclip) / 65536.0f) - view.z;
+   tz1 = M_FixedToFloat(thing->z + spritetopoffset[lump] - thing->floorclip) - view.z;
    y1 = (view.ycenter - (tz1 * idist * view.yfoc));
    if(y1 >= view.height)
       return;
@@ -905,8 +904,8 @@ void R_DrawPSprite(pspdef_t *psp)
    flip = ( (boolean) sprframe->flip[0] ) ^ lefthanded;
    
    // calculate edges of the shape
-   tx  = (psp->sx / 65536.0f) - 160.0f;
-   tx -= (spriteoffset[lump] / 65536.0f);
+   tx  = M_FixedToFloat(psp->sx) - 160.0f;
+   tx -= M_FixedToFloat(spriteoffset[lump]);
 
       // haleyjd
    w = (float)(spritewidth[lump] >> FRACBITS);
@@ -947,7 +946,7 @@ void R_DrawPSprite(pspdef_t *psp)
    vis->translucency = FRACUNIT; // haleyjd: default zdoom trans.
    vis->footclip = 0; // haleyjd
    vis->scale = view.pspriteyscale;
-   vis->ytop = (view.height * 0.5f) - ((vis->texturemid / 65536.0f) * vis->scale);
+   vis->ytop = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
    vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
 #ifdef R_LINKEDPORTALS
    vis->sector = viewplayer->mo->subsector->sector - sectors;
@@ -1257,7 +1256,7 @@ void R_DrawSprite(vissprite_t *spr)
       int phs = viewcamera ? viewcamera->heightsec :
                    viewplayer->mo->subsector->sector->heightsec;
 
-      mh = (sectors[spr->heightsec].floorheight / 65536.0f) - view.z;
+      mh = M_FixedToFloat(sectors[spr->heightsec].floorheight) - view.z;
       if(sectors[spr->heightsec].floorheight > spr->gz &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
@@ -1276,7 +1275,7 @@ void R_DrawSprite(vissprite_t *spr)
                      cliptop[x] = h;
       }
 
-      mh = (sectors[spr->heightsec].ceilingheight / 65536.0f) - view.z;
+      mh = M_FixedToFloat(sectors[spr->heightsec].ceilingheight) - view.z;
       if(sectors[spr->heightsec].ceilingheight < spr->gzt &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
@@ -1390,7 +1389,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
       int phs = viewcamera ? viewcamera->heightsec :
                    viewplayer->mo->subsector->sector->heightsec;
 
-      mh = (sectors[spr->heightsec].floorheight / 65536.0f) - view.z;
+      mh = M_FixedToFloat(sectors[spr->heightsec].floorheight) - view.z;
       if(sectors[spr->heightsec].floorheight > spr->gz &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
@@ -1409,7 +1408,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
                      cliptop[x] = h;
       }
 
-      mh = (sectors[spr->heightsec].ceilingheight / 65536.0f) - view.z;
+      mh = M_FixedToFloat(sectors[spr->heightsec].ceilingheight) - view.z;
       if(sectors[spr->heightsec].ceilingheight < spr->gzt &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
@@ -1437,7 +1436,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 
       sector_t *sector = sectors + spr->sector;
 
-      mh = (sector->floorheight / 65536.0f) - view.z;
+      mh = M_FixedToFloat(sector->floorheight) - view.z;
       if(R_LinkedFloorActive(sector) && sector->floorheight > spr->gz)
       {
          h = view.ycenter - (mh * spr->scale);
@@ -1450,7 +1449,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
       }
 
 
-      mh = (sector->ceilingheight / 65536.0f) - view.z;
+      mh = M_FixedToFloat(sector->ceilingheight) - view.z;
       if(R_LinkedCeilingActive(sector) && sector->ceilingheight < spr->gzt)
       {
          h = view.ycenter - (mh * spr->scale);
@@ -1609,8 +1608,8 @@ void R_ProjectParticle(particle_t *particle)
    float y1, y2;
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
-   tempx = (particle->x / 65536.0f) - view.x;
-   tempy = (particle->y / 65536.0f) - view.y;
+   tempx = M_FixedToFloat(particle->x) - view.x;
+   tempy = M_FixedToFloat(particle->y) - view.y;
    ty1   = (tempy * view.cos) + (tempx * view.sin);
 
    // lies in front of the front view plane
@@ -1635,7 +1634,7 @@ void R_ProjectParticle(particle_t *particle)
    if(x1 >= viewwidth || x2 < 0)
       return;
 
-   tz = (particle->z / 65536.0f) - view.z;
+   tz = M_FixedToFloat(particle->z) - view.z;
 
    y1 = (view.ycenter - (tz * yscale));
    y2 = (view.ycenter - ((tz - 1.0f) * yscale));

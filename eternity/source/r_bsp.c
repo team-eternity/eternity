@@ -907,8 +907,8 @@ static void R_AddLine(seg_t *line)
 
    if(seg.backsec && seg.backsec->frameid != frameid)
    {
-      seg.backsec->floorheightf   = (float)seg.backsec->floorheight / 65536.0f;
-      seg.backsec->ceilingheightf = (float)seg.backsec->ceilingheight / 65536.0f;
+      seg.backsec->floorheightf   = M_FixedToFloat(seg.backsec->floorheight);
+      seg.backsec->ceilingheightf = M_FixedToFloat(seg.backsec->ceilingheight);
       seg.backsec->frameid        = frameid;
    }
 
@@ -1145,9 +1145,8 @@ static void R_AddLine(seg_t *line)
 
    side = line->sidedef;
    
-   seg.toffsetx = toffsetx + (side->textureoffset / 65536.0f) 
-                     + (line->offset / 65536.0f);
-   seg.toffsety = toffsety + (side->rowoffset / 65536.0f);
+   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset + line->offset); 
+   seg.toffsety = toffsety + M_FixedToFloat(side->rowoffset);
 
    if(seg.toffsetx < 0)
    {
@@ -1197,8 +1196,8 @@ static void R_AddLine(seg_t *line)
    seg.top = seg.frontsec->ceilingheightf - view.z;
    seg.bottom = seg.frontsec->floorheightf - view.z;
 
-   textop = (seg.frontsec->ceilingz / 65536.0f) - view.z;
-   texbottom = (seg.frontsec->floorz / 65536.0f) - view.z;
+   textop = M_FixedToFloat(seg.frontsec->ceilingz) - view.z;
+   texbottom = M_FixedToFloat(seg.frontsec->floorz) - view.z;
 
    seg.f_portalignore = seg.c_portalignore = false;
 
@@ -1210,9 +1209,9 @@ static void R_AddLine(seg_t *line)
       seg.midtexh  = textureheight[side->midtexture] >> FRACBITS;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.midtexmid = (int)((texbottom + seg.midtexh + seg.toffsety) * FRACUNIT);
+         seg.midtexmid = M_FloatToFixed(texbottom + seg.midtexh + seg.toffsety);
       else
-         seg.midtexmid = (int)((textop + seg.toffsety) * FRACUNIT);
+         seg.midtexmid = M_FloatToFixed(textop + seg.toffsety);
 
       // SoM: these should be treated differently! 
       seg.markcportal = R_RenderCeilingPortal(seg.frontsec);
@@ -1260,7 +1259,7 @@ static void R_AddLine(seg_t *line)
               seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
 
       seg.high = seg.backsec->ceilingheightf - view.z;
-      texhigh = (seg.backsec->ceilingz / 65536.0f) - view.z;
+      texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
 
       uppermissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
                       seg.side->toptexture == 0);
@@ -1309,9 +1308,9 @@ static void R_AddLine(seg_t *line)
          seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
 
          if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = (int)((textop + seg.toffsety) * FRACUNIT);
+            seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
          else
-            seg.toptexmid = (int)((texhigh + seg.toptexh + seg.toffsety) * FRACUNIT);
+            seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety);
       }
       else
          seg.toptex = 0;
@@ -1357,16 +1356,16 @@ static void R_AddLine(seg_t *line)
 #endif
 
       seg.low = seg.backsec->floorheightf - view.z;
-      texlow = (seg.backsec->floorz / 65536.0f) - view.z;
+      texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
       if(seg.bottom < seg.low && side->bottomtexture)
       {
          seg.bottomtex = texturetranslation[side->bottomtexture];
          seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = (int)((textop + seg.toffsety) * FRACUNIT);
+            seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
          else
-            seg.bottomtexmid = (int)((texlow + seg.toffsety) * FRACUNIT);
+            seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety);
       }
       else
          seg.bottomtex = 0;
@@ -1657,8 +1656,8 @@ static void R_Subsector(int num)
 
    if(seg.frontsec->frameid != frameid)
    {
-      seg.frontsec->floorheightf = (float)seg.frontsec->floorheight / 65536.0f;
-      seg.frontsec->ceilingheightf = (float)seg.frontsec->ceilingheight / 65536.0f;
+      seg.frontsec->floorheightf = M_FixedToFloat(seg.frontsec->floorheight);
+      seg.frontsec->ceilingheightf = M_FixedToFloat(seg.frontsec->ceilingheight);
       seg.frontsec->frameid = frameid;
    }
 

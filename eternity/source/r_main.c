@@ -292,12 +292,12 @@ static void R_InitTextureMapping (void)
    view.focratio = view.yfoc / view.xfoc;
 
    // Unfortunately, cardboard still has to co-exist with the old fixed point code
-   focallen_x = (int)(view.xfoc * FRACUNIT);
-   focallen_y = (int)(view.yfoc * FRACUNIT);
+   focallen_x = M_FloatToFixed(view.xfoc);
+   focallen_y = M_FloatToFixed(view.yfoc);
 
    // SoM: rewrote old LUT generation code to work with variable FOV
    i = 0;
-   limit = -(int)((view.xcenter / view.xfoc) * 65536.0f);
+   limit = -M_FloatToFixed(view.xcenter / view.xfoc);
    while(i < FINEANGLES/2 && finetangent[i] < limit)
       viewangletox[i++] = viewwidth + 1;
 
@@ -694,9 +694,9 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
-   view.x = viewx / 65536.0f;
-   view.y = viewy / 65536.0f;
-   view.z = viewz / 65536.0f;
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
    view.angle = (ANG90 - viewangle) * PI / ANG180;
    view.pitch = (ANG90 - pitch) * PI / ANG180;
    view.sin = (float)sin(view.angle);

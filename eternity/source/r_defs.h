@@ -153,6 +153,23 @@ enum
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
 };
 
+
+
+// SoM: Internal plane slope structure
+typedef struct
+{
+   // First the fixed stuff:
+   // Origin vector for the plane
+   fixed_t ox, oy, oz;
+   // Diectional vector
+   fixed_t dx, dy, dz;
+
+   // Float variations:
+   float oxf, oyf, ozf;
+   float dxf, dyf, dzf;
+} pslope_t;
+
+
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
@@ -282,6 +299,10 @@ struct sector_s
    int damagemask;  // damage is done when !(leveltime & mask)
    int damagemod;   // damage method to use
    int damageflags; // special damage behaviors
+
+   // SoM 5/10/09: Happy birthday to me. Err, Slopes!
+   pslope_t *f_slope;
+   pslope_t *c_slope;
 };
 
 //
@@ -342,6 +363,9 @@ typedef struct line_s
 
    // SoM 12/10/03: wall portals
    portal_t *portal;
+
+   // SoM 05/11/09: Pre-calculated 2D normal for the line
+   float nx, ny;
 
    // haleyjd 02/26/05: ExtraData fields
    long extflags;          // activation flags for param specials

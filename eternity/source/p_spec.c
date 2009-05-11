@@ -63,6 +63,7 @@
 #include "e_exdata.h"
 #include "a_small.h"
 #include "polyobj.h"
+#include "p_slopes.h"
 
 //
 // Animating textures and planes
@@ -2779,6 +2780,18 @@ void P_SpawnSpecials(void)
       case 380:
          P_AttachSectors(lines + i);
          break;
+
+
+      // SoM 05/10/09: Slopes
+      case 386:
+      case 387:
+      case 388:
+      case 389:
+      case 390:
+      case 391:
+      case 392:
+      case 393:
+         P_SpawnSlope_Line(i);
       }
    }
 

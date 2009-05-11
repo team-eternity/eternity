@@ -508,9 +508,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->viewsin = (float) sin(view.angle + check->angle);
    check->viewcos = (float) cos(view.angle + check->angle);
    
-   check->heightf = (float)height / 65536.0f;
-   check->xoffsf  = (float)xoffs / 65536.0f;
-   check->yoffsf  = (float)yoffs / 65536.0f;
+   check->heightf = M_FixedToFloat(height);
+   check->xoffsf  = M_FixedToFloat(xoffs);
+   check->yoffsf  = M_FixedToFloat(yoffs);
    
    // SoM: memset should use the check->max_width
    //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
@@ -639,9 +639,9 @@ void do_draw_newsky(visplane_t *pl)
 
       // haleyjd: don't stretch textures over 200 tall
       if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
-         column.step = (int)(view.pspriteystep * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep);
       
       for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
@@ -661,9 +661,9 @@ void do_draw_newsky(visplane_t *pl)
 
       // haleyjd: don't stretch textures over 200 tall
       if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
-         column.step = (int)(view.pspriteystep * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep);
       
       for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
@@ -701,9 +701,9 @@ void do_draw_newsky(visplane_t *pl)
 
       // haleyjd: don't stretch textures over 200 tall
       if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
-         column.step = (int)(view.pspriteystep * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep);
       
       for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
       {
@@ -810,9 +810,9 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd:  don't stretch textures over 200 tall
       // 10/07/06: don't stretch skies in old demos (no mlook)
       if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = (int)(view.pspriteystep * 0.5f * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
-         column.step = (int)(view.pspriteystep * 65536.0f);
+         column.step = M_FloatToFixed(view.pspriteystep);
 
 
       // killough 10/98: Use sky scrolling offset, and possibly flip picture

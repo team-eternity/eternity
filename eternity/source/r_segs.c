@@ -144,7 +144,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // SoM: performance tuning (tm Lee Killough 1998)
    scale = dist * view.yfoc;
    scalestep = diststep * view.yfoc;
-   texmidf = column.texmid / 65536.0f;
+   texmidf = M_FixedToFloat(column.texmid);
 
    // draw the columns
    for(column.x = x1; column.x <= x2; ++column.x, dist += diststep, scale += scalestep)
@@ -165,7 +165,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
          maskedcolumn.scale = scale;
          maskedcolumn.ytop = view.ycenter - (texmidf * scale);
-         column.step = (int)(65536.0f / scale);
+         column.step = (int)(FPFRACUNIT / scale);
 
          // killough 1/25/98: here's where Medusa came in, because
          // it implicitly assumed that the column was all one patch.
@@ -288,7 +288,7 @@ static void R_RenderSegLoop(void)
 
          basescale = 1.0f / (segclip.dist * view.yfoc);
 
-         column.step = (int)(basescale * FRACUNIT);
+         column.step = M_FloatToFixed(basescale);
          column.x = i;
 
          texx = (int)(((segclip.len) * basescale) + segclip.toffsetx);

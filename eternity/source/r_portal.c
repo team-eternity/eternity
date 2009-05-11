@@ -563,9 +563,9 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    viewx = window->vx;   
    viewy = window->vy;   
    viewz = window->vz;   
-   view.x = viewx / 65536.0f;
-   view.y = viewy / 65536.0f;
-   view.z = viewz / 65536.0f;
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
 
    if(window->child)
       R_RenderHorizonPortal(window->child);
@@ -632,9 +632,9 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    viewx = portal->data.camera.mobj->x;
    viewy = portal->data.camera.mobj->y;
    viewz = portal->data.camera.mobj->z;
-   view.x = viewx / 65536.0f;
-   view.y = viewy / 65536.0f;
-   view.z = viewz / 65536.0f;
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
 
    // SoM: The viewangle should also be offset by the skybox camera angle.
    viewangle += portal->data.camera.mobj->angle;
@@ -743,9 +743,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    viewx  = window->vx - portal->data.camera.deltax;
    viewy  = window->vy - portal->data.camera.deltay;
    viewz  = window->vz - portal->data.camera.deltaz;
-   view.x = viewx / 65536.0f;
-   view.y = viewy / 65536.0f;
-   view.z = viewz / 65536.0f;
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes-1);

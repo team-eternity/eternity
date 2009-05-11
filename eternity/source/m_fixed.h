@@ -173,6 +173,19 @@ d_inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
 
 #endif // DJGPP
 
+
+// SoM: this is only the case for 16.16 bit fixed point. If a different 
+// precision is desired, this must be changed accordingly
+#define FPFRACUNIT 65536.0
+// SoM 5/10/09: Thses are now macroized for the sake of uniformity
+#define M_FloatToFixed(f) ((fixed_t)((f) * FPFRACUNIT))
+#define M_FixedToFloat(f) ((float)((f) / FPFRACUNIT))
+
+#define M_FixedToDouble(f) ((double)((f) / FPFRACUNIT))
+#define M_DoubleToFixed(f) ((fixed_t)((f) * FPFRACUNIT))
+
+
+
 #endif
 
 //----------------------------------------------------------------------------

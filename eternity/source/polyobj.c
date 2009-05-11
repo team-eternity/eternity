@@ -144,24 +144,24 @@ d_inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
 {
    dst->x += add->x;
    dst->y += add->y;
-   dst->fx = (float)dst->x / 65536.0f;
-   dst->fy = (float)dst->y / 65536.0f;
+   dst->fx = M_FixedToFloat(dst->x);
+   dst->fy = M_FixedToFloat(dst->y);
 }
 
 d_inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
 {
    dst->x -= sub->x;
    dst->y -= sub->y;
-   dst->fx = (float)dst->x / 65536.0f;
-   dst->fy = (float)dst->y / 65536.0f;
+   dst->fx = M_FixedToFloat(dst->x);
+   dst->fy = M_FixedToFloat(dst->y);
 }
 
 d_inline static void Polyobj_vecSub2(vertex_t *dst, vertex_t *v1, vertex_t *v2)
 {
    dst->x = v1->x - v2->x;
    dst->y = v1->y - v2->y;
-   dst->fx = (float)dst->x / 65536.0f;
-   dst->fy = (float)dst->y / 65536.0f;
+   dst->fx = M_FixedToFloat(dst->x);
+   dst->fy = M_FixedToFloat(dst->y);
 }
 
 // Reallocating array maintenance
@@ -547,15 +547,15 @@ static void Polyobj_setCenterPt(polyobj_t *po)
 
    for(i = 0; i < po->numVertices; ++i)
    {
-      center_x += (double)(po->vertices[i]->x) / FRACUNIT;
-      center_y += (double)(po->vertices[i]->y) / FRACUNIT;
+      center_x += M_FixedToDouble(po->vertices[i]->x);
+      center_y += M_FixedToDouble(po->vertices[i]->y);
    }
    
    center_x /= po->numVertices;
    center_y /= po->numVertices;
    
-   po->centerPt.x = (fixed_t)(center_x * FRACUNIT);
-   po->centerPt.y = (fixed_t)(center_y * FRACUNIT);
+   po->centerPt.x = M_DoubleToFixed(center_x);
+   po->centerPt.y = M_DoubleToFixed(center_y);
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
@@ -863,8 +863,8 @@ d_inline static void Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, int ang
    v->x += c->x;
    v->y += c->y;
 
-   v->fx = (float)v->x / 65536.0f;
-   v->fy = (float)v->y / 65536.0f;
+   v->fx = M_FixedToFloat(v->x);
+   v->fy = M_FixedToFloat(v->y);
 }
 
 //

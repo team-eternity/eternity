@@ -880,6 +880,10 @@ SOURCE=.\Source\p_skin.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\p_slopes.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\p_spec.c
 # End Source File
 # Begin Source File
@@ -977,6 +981,10 @@ SOURCE=.\Source\p_setup.h
 # Begin Source File
 
 SOURCE=.\Source\p_skin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\p_slopes.h
 # End Source File
 # Begin Source File
 
