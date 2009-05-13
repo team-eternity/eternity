@@ -37,7 +37,7 @@ Language_t   language = english;
 boolean modifiedgame;
 
 // haleyjd 03/05/09: support using same config for all DOOM game modes
-boolean use_doom_config = false;
+int use_doom_config = false;
 
 //-----------------------------------------------------------------------------
 

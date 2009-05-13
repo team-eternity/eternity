@@ -124,3 +124,6 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
                    unsigned int height);
 
 #endif //V_BUFFER_H__
+
+// EOF
+

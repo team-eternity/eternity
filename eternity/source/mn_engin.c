@@ -497,7 +497,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
          // draw it
          MN_WriteTextColoured
             (
-               varvalue,
+               (char *)varvalue,
                colour,
                x + (leftaligned ? MN_StringWidth(item->description) : 0),
                y
@@ -955,7 +955,7 @@ boolean MN_Responder(event_t *ev)
          unsigned char *temp;
          
          // place " marks round the new value
-         temp = strdup((const char *)input_buffer);
+         temp = (unsigned char *)strdup((const char *)input_buffer);
          psnprintf((char *)input_buffer, sizeof(input_buffer), "\"%s\"", temp);
          free(temp);
          
@@ -969,7 +969,7 @@ boolean MN_Responder(event_t *ev)
       // check for backspace
       if(ev->data1 == KEYD_BACKSPACE && input_buffer[0])
       {
-         input_buffer[strlen(input_buffer)-1] = '\0';
+         input_buffer[strlen((char *)input_buffer)-1] = '\0';
          return true; // eatkey
       }
       // probably just a normal character
@@ -980,12 +980,12 @@ boolean MN_Responder(event_t *ev)
       {
          ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
 
-         if(strlen(input_buffer) <=
+         if(strlen((char *)input_buffer) <=
             ((var->type == vt_string) ? (unsigned)var->max :
              (var->type == vt_int) ? 33 : 20))
          {
-            input_buffer[strlen(input_buffer) + 1] = 0;
-            input_buffer[strlen(input_buffer)] = ch;
+            input_buffer[strlen((char *)input_buffer) + 1] = 0;
+            input_buffer[strlen((char *)input_buffer)] = ch;
          }
       }
       
@@ -1144,9 +1144,9 @@ boolean MN_Responder(event_t *ev)
             break;
          
          // toggle value now
-         psnprintf(tempstr, sizeof(tempstr), "%s /", menuitem->data);
+         psnprintf((char *)tempstr, sizeof(tempstr), "%s /", menuitem->data);
          cmdtype = c_menu;
-         C_RunTextCmd(tempstr);
+         C_RunTextCmd((char *)tempstr);
          
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
          break;
@@ -1163,7 +1163,7 @@ boolean MN_Responder(event_t *ev)
             
             if(current_menu != GameModeInfo->saveMenu || 
                strcmp(str, DEH_String("EMPTYSTRING")))
-               strcpy(input_buffer, str);
+               strcpy((char *)input_buffer, str);
             else
                input_buffer[0] = 0;
          }
@@ -1223,9 +1223,9 @@ boolean MN_Responder(event_t *ev)
             break;
          
          // change variable
-         psnprintf(tempstr, sizeof(tempstr), "%s -", menuitem->data);
+         psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
          cmdtype = c_menu;
-         C_RunTextCmd(tempstr);
+         C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
       default:
@@ -1264,9 +1264,9 @@ boolean MN_Responder(event_t *ev)
             break;
          
          // change variable
-         psnprintf(tempstr, sizeof(tempstr), "%s +", menuitem->data);
+         psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
          cmdtype = c_menu;
-         C_RunTextCmd(tempstr);
+         C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
          

@@ -497,7 +497,7 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
    back_dest->TileBlock64(back_dest, src);
 }
 
-char *R_DistortedFlat(int);
+byte *R_DistortedFlat(int);
 
 //
 // V_DrawDistortedBackground

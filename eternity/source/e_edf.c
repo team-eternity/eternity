@@ -267,11 +267,6 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                            const char **argv);
 
-static int edf_echo(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv);
-
-// prototypes for keyword-related functions
-static void E_EDFAddCodeptrKeywords(void);
-
 // EDF libConfuse option structures
 
 // sprite-based pickup items

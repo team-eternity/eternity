@@ -1429,8 +1429,8 @@ void A_PainNukeSpec(mobj_t *);
 void A_SorcNukeSpec(mobj_t *);
 
 // Keyword sets for parameterized codepointers
-#define EXTKWDS(a) extern kwds_ ## a []
-#define KWDS(a)           kwds_ ## a
+#define EXTKWDS(a) extern E_Keyword_t kwds_ ## a []
+#define KWDS(a)    kwds_ ## a
 
 EXTKWDS(A_FireCustomBullets);
 EXTKWDS(A_FirePlayerMissile);

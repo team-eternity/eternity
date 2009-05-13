@@ -752,12 +752,14 @@ boolean M_FindCheats(int key)
         // sf: removed beta flag
 
   for (matchedbefore = ret = i = 0; cheat[i].cheat; i++)
+  {
     if ((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
         !(cheat[i].when & not_dm   && (GameType == gt_dm) && !demoplayback) &&
         !(cheat[i].when & not_coop && (GameType == gt_coop)) &&
         !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
         !(cheat[i].when & not_menu && menuactive) &&
         !(cheat[i].when & not_deh  && cheat[i].deh_modified))
+    {
       if (cheat[i].arg < 0)               // if additional args are required
         {
           cht = i;                        // remember this cheat code
@@ -771,6 +773,8 @@ boolean M_FindCheats(int key)
             matchedbefore = ret = 1;      // responder has eaten key
             cheat[i].func(cheat[i].arg);  // call cheat handler
           }
+    }
+  }
   return ret;
 }
 

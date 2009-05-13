@@ -42,3 +42,6 @@ void P_SpawnSlope_Line(int linenum);
 
 
 #endif
+
+// EOF
+

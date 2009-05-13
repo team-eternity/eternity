@@ -98,3 +98,4 @@ byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
 #endif
 
 // EOF
+

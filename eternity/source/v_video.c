@@ -342,7 +342,7 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLATED;   
-      V_SetPatchColrng(outr);
+      V_SetPatchColrng((byte *)outr);
    }
    else
       pi.drawstyle = PSTYLE_NORMAL;
@@ -384,7 +384,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLTRANSLUC;
-      V_SetPatchColrng(outr);
+      V_SetPatchColrng((byte *)outr);
    }
    else
       pi.drawstyle = PSTYLE_TRANSLUC;
@@ -429,7 +429,7 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLADD;
-      V_SetPatchColrng(outr);
+      V_SetPatchColrng((byte *)outr);
    }
    else
       pi.drawstyle = PSTYLE_ADD;

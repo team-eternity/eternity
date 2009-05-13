@@ -2275,6 +2275,8 @@ void G_Ticker(void)
       case GS_DEMOSCREEN:
          D_PageTicker();
          break;
+      default:
+         break;
       }
    }
 }

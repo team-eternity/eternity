@@ -104,7 +104,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    unsigned int c;          // current character
    int cx, cy, tx;          // current screen position
 
-   char    *color = NULL;     // current color range translation tbl
+   byte    *color = NULL;     // current color range translation tbl
    boolean tl = false;        // current translucency state
    boolean useAltMap = false; // using alternate colormap source?
 
@@ -113,20 +113,20 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       if(fixedColor)
       {
          // haleyjd 03/27/03: use fixedColor if it was set
-         color = colrngs[fixedColNum];
+         color = (byte *)colrngs[fixedColNum];
          fixedColor = false;
       }
       else
       {
          // haleyjd: get default text color from GameModeInfo
-         color = *(GameModeInfo->defTextTrans); // Note: ptr to ptr
+         color = (byte *) *(GameModeInfo->defTextTrans); // Note: ptr to ptr
       }
    }
    
    // haleyjd 10/04/05: support alternate colormap sources
    if(altMap)
    {
-      color = altMap;
+      color = (byte *)altMap;
       altMap = NULL;
       useAltMap = true;
    }
@@ -137,7 +137,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    // (abscenter toggle), then center line
    
    cx = (*ch == TEXT_CONTROL_ABSCENTER) ? 
-          (SCREENWIDTH - V_FontLineWidth(font, s)) >> 1 : x;
+          (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : x;
    cy = y;
    
    while((c = *ch++))
@@ -185,7 +185,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
                continue;
             }
             else
-               color = colrngs[colnum];
+               color = (byte *)colrngs[colnum];
          }
          continue;
       }
@@ -242,7 +242,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       {
          // draw character
          if(tl)
-            V_DrawPatchTL(tx, cy, &vbscreen, patch, color, FTRANLEVEL);
+            V_DrawPatchTL(tx, cy, &vbscreen, patch, (char *)color, FTRANLEVEL);
          else
          {
             // haleyjd 10/04/05: text shadowing
@@ -252,7 +252,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
                V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, FRACUNIT*2/3);
             }
             
-            V_DrawPatchTranslated(tx, cy, &vbscreen, patch, color, false);
+            V_DrawPatchTranslated(tx, cy, &vbscreen, patch, (byte *)color, false);
          }
       }
       

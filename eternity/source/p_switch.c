@@ -106,7 +106,6 @@ void P_InitSwitchList(void)
 button_t *P_FindFreeButton(void)
 {
    int i;
-   button_t *ret = NULL;
    int oldnumbuttons;
 
    // look for a free button

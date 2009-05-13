@@ -124,7 +124,7 @@ static void R_AddSolidSeg(int x1, int x2)
       while(rover + 1 < newend)
       {
          *rover = *(rover + 1);
-         *rover++;
+         rover++;
       }
 
       newend = rover;

@@ -49,7 +49,7 @@ typedef enum
   bfg_burst,    // haleyjd
 } bfg_t;
 
-extern boolean use_doom_config;
+extern int use_doom_config;
 
 // ------------------------
 // Command line parameters.
