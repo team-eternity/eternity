@@ -407,22 +407,25 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    if(!snd_card || nosfxparm)
       return;
 
-   // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to 
-   // other sounds, but we choose one at random.
-   while(sfx->randomsounds)
-   {
-      // make sure the sound we get is valid
-      if(!(sfx = sfx->randomsounds[M_Random() % sfx->numrandomsounds]))
-         return;
-   }
-
    // haleyjd 09/24/06: Sound aliases. These are similar to links, but we skip
    // through them now, up here, instead of below. This allows aliases to simply
    // serve as alternate names for the same sounds, in contrast to links which
    // provide a way of playing the same sound with different parameters.
 
-   while(sfx->alias)
-      sfx = sfx->alias;
+   // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to 
+   // other sounds, but we choose one at random.
+
+   while(sfx->alias || sfx->randomsounds)
+   {
+      if(sfx->alias)
+         sfx = sfx->alias;
+      else if(sfx->randomsounds)
+      {
+         // make sure the sound we get is valid
+         if(!(sfx = sfx->randomsounds[M_Random() % sfx->numrandomsounds]))
+            return;
+      }
+   }
 
    // haleyjd:  we must weed out degenmobj_t's before trying to 
    // dereference these fields -- a thinker check perhaps?
