@@ -69,6 +69,7 @@
 #define ITEM_SND_PRIORITY      "priority"
 #define ITEM_SND_LINK          "link"
 #define ITEM_SND_ALIAS         "alias"
+#define ITEM_SND_RANDOM        "random"
 #define ITEM_SND_SKININDEX     "skinindex"
 #define ITEM_SND_LINKVOL       "linkvol"
 #define ITEM_SND_LINKPITCH     "linkpitch"
@@ -169,6 +170,7 @@ static const char *subchans[] =
    CFG_INT(ITEM_SND_PRIORITY,      64,                CFGF_NONE), \
    CFG_STR(ITEM_SND_LINK,          "none",            CFGF_NONE), \
    CFG_STR(ITEM_SND_ALIAS,         "none",            CFGF_NONE), \
+   CFG_STR(ITEM_SND_RANDOM,        0,                 CFGF_LIST), \
    CFG_STR(ITEM_SND_SKININDEX,     "sk_none",         CFGF_NONE), \
    CFG_INT(ITEM_SND_LINKVOL,       -1,                CFGF_NONE), \
    CFG_INT(ITEM_SND_LINKPITCH,     -1,                CFGF_NONE), \
@@ -474,6 +476,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 {
    boolean setLink = false;
    boolean explicitLumpName = false;
+   int tempint;
 
    // preconditions: 
    
@@ -557,6 +560,23 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 
       // will be automatically nullified same as above
       sfx->alias = E_SoundForName(name);
+   }
+
+   // haleyjd 05/12/09: process random alternatives
+   if((tempint = cfg_size(section, ITEM_SND_RANDOM)) > 0)
+   {
+      int i;
+
+      if(sfx->randomsounds)
+         free(sfx->randomsounds);
+
+      sfx->numrandomsounds = tempint;
+
+      sfx->randomsounds = 
+         (sfxinfo_t **)malloc(sfx->numrandomsounds * sizeof(sfxinfo_t *));
+
+      for(i = 0; i < sfx->numrandomsounds; ++i)
+         sfx->randomsounds[i] = E_SoundForName(cfg_getnstr(section, ITEM_SND_RANDOM, i));
    }
    
    // process the skin index

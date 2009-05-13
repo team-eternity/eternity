@@ -46,6 +46,14 @@ extern char **myargv;
 
 unsigned int process_affinity_mask;
 
+// haleyjd 05/12/09: Load SetAffinityProcessMask dynamically to avoid
+// problems on Win9x systems. Although it's in the 6.0 headers, this 
+// function apparently only exists on NT kernels. Win9x never supported
+// multiple processors anyway so I fail to see the necessity of even
+// calling the function there if it did exist.
+
+typedef BOOL (WINAPI *SetAffinityFunc)(HANDLE, DWORD);
+
 //
 // I_SetAffinityMask
 //
@@ -58,8 +66,32 @@ unsigned int process_affinity_mask;
 //
 void I_SetAffinityMask(void)
 {
-   int p = M_CheckParm("-affinity");
+   int p;
+   HMODULE kernel32_dll;
+   SetAffinityFunc SetAffinity;
+   
+   // Find the kernel interface DLL.
+   
+   kernel32_dll = LoadLibrary("kernel32.dll");
+   
+   if(kernel32_dll == NULL)
+   {
+      // This should never happen...      
+      fprintf(stderr, "Failed to load kernel32.dll\n");
+      return;
+   }
+   
+   // Find the SetProcessAffinityMask function.   
+   SetAffinity = 
+      (SetAffinityFunc)GetProcAddress(kernel32_dll, "SetProcessAffinityMask");
 
+   if(!SetAffinity)
+   {
+      startupmsg("I_SetAffinityMask", "system does not support multiple CPUs.");
+      return;
+   }
+
+   p = M_CheckParm("-affinity");
    if(p && p < myargc - 1)
       process_affinity_mask = atoi(myargv[p + 1]);
 
@@ -68,7 +100,7 @@ void I_SetAffinityMask(void)
    // SDL_mixer that causes occasional crashes.
    if(process_affinity_mask)
    {      
-      if(!SetProcessAffinityMask(GetCurrentProcess(), process_affinity_mask))
+      if(!SetAffinity(GetCurrentProcess(), process_affinity_mask))
          startupmsg("I_SetAffinityMask", "failed to set process affinity mask.");
       else
          startupmsg("I_SetAffinityMask", "applied affinity mask.");      

@@ -569,7 +569,7 @@ static boolean I_InitGraphicsMode(void)
    
    setsizeneeded = true;
    
-   I_SetPalette(W_CacheLumpName("PLAYPAL",PU_CACHE));
+   I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
    I_InitDiskFlash();        // Initialize disk icon
    
    // haleyjd 10/09/05: from Chocolate DOOM:

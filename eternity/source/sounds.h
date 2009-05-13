@@ -88,6 +88,10 @@ struct sfxinfo_s
 
    // haleyjd 09/24/06: referenced sound if an alias
    sfxinfo_t *alias;
+
+   // haleyjd 05/12/09: random sounds
+   sfxinfo_t **randomsounds;
+   int numrandomsounds;
    
    // pitch if a link
    int pitch;

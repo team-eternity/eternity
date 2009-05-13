@@ -774,10 +774,10 @@ static void ST_drawWidgets(boolean refresh)
    int i;
 
    // used by w_arms[] widgets
-   st_armson = st_statusbaron && !(GameType == gt_dm);
+   st_armson = st_statusbaron && GameType != gt_dm;
 
    // used by w_frags widget
-   st_fragson = GameType == gt_dm && st_statusbaron;
+   st_fragson = st_statusbaron && GameType == gt_dm;
 
    // haleyjd: draw widgets common to status bar and fullscreen 
    ST_drawCommonWidgets(refresh);
@@ -923,7 +923,7 @@ void ST_Drawer(boolean fullscreen, boolean refresh)
 
    st_statusbaron  = !fullscreen || automapactive || fshud;
    st_backgroundon = !fullscreen || automapactive;
-   st_firsttime = st_firsttime || refresh;
+   st_firsttime    = st_firsttime || refresh;
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
@@ -936,10 +936,9 @@ void ST_Drawer(boolean fullscreen, boolean refresh)
       // hud is enabled and hud_overlaystyle is "graphical"
       if(fshud)
          StatusBar->FSDrawer();
-      return;
    }
-   
-   StatusBar->Drawer();
+   else
+      StatusBar->Drawer();
 }
 
 static void ST_loadGraphics(void)
