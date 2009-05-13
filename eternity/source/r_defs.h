@@ -275,7 +275,7 @@ struct sector_s
    // Cardboard optimization
    // They are set in R_Subsector and R_FakeFlat and are
    // only valid for that sector for that frame.
-   unsigned int frameid;
+   //unsigned int frameid;
    float ceilingheightf, floorheightf;
 
    // SoM: the actual, factual floor and ceiling heights; these are used by 

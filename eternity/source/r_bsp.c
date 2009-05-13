@@ -605,6 +605,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->f_portal = NULL;
       }
       
+      tempsec->ceilingheightf= M_FixedToFloat(tempsec->ceilingheight);
+      tempsec->floorheightf  = M_FixedToFloat(tempsec->floorheight);
       sec = tempsec;               // Use other sector
    }
 
@@ -898,21 +900,12 @@ static void R_AddLine(seg_t *line)
    // complicated :/
    float textop, texhigh, texlow, texbottom;
 
-   tempsec.frameid = 0;
-
    seg.clipsolid = false;
    if(line->backsector)
       seg.backsec = R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true);
    else
       seg.backsec = NULL;
    seg.line = line;
-
-   if(seg.backsec && seg.backsec->frameid != frameid)
-   {
-      seg.backsec->floorheightf   = M_FixedToFloat(seg.backsec->floorheight);
-      seg.backsec->ceilingheightf = M_FixedToFloat(seg.backsec->ceilingheight);
-      seg.backsec->frameid        = frameid;
-   }
 
    // If the frontsector is closed, don't render the line!
    // This fixes a very specific type of slime trail.
@@ -1540,19 +1533,9 @@ static void R_Subsector(int num)
 
    R_SectorColormap(seg.frontsec);
 
-   // SoM: Cardboard optimization
-   tempsec.frameid = 0;
-   
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
-
-   if(seg.frontsec->frameid != frameid)
-   {
-      seg.frontsec->floorheightf = M_FixedToFloat(seg.frontsec->floorheight);
-      seg.frontsec->ceilingheightf = M_FixedToFloat(seg.frontsec->ceilingheight);
-      seg.frontsec->frameid = frameid;
-   }
 
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;

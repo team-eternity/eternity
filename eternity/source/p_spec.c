@@ -4005,30 +4005,26 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
    {
       if(list[i].type & AS_CEILING)
       {
-         list[i].sector->ceilingz += delta;
-         list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
+         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingz + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
-         list[i].sector->ceilingz -= delta;
-         list[i].sector->ceilingheight = R_GetCeilingPlanez(list[i].sector);
+         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingz - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
       }
 
       if(list[i].type & AS_FLOOR)
       {
-         list[i].sector->floorz += delta;
-         list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
+         P_SetFloorHeight(list[i].sector, list[i].sector->floorz + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
-         list[i].sector->floorz -= delta;
-         list[i].sector->floorheight = R_GetFloorPlanez(list[i].sector);
+         P_SetFloorHeight(list[i].sector, list[i].sector->floorz - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
       }
@@ -4885,14 +4881,14 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          sectors[s].c_portal = portal;
 #ifdef R_LINKEDPORTALS
          if(portal->type == R_LINKED)
-            sectors[s].ceilingheight = R_GetCeilingPlanez(sectors + s);
+            P_SetCeilingHeight(sectors + s, sectors[s].ceilingz);
 #endif
          break;
       case portal_floor:
          sectors[s].f_portal = portal;
 #ifdef R_LINKEDPORTALS
          if(portal->type == R_LINKED)
-            sectors[s].floorheight = R_GetFloorPlanez(sectors + s);
+            P_SetFloorHeight(sectors + s, sectors[s].floorz);
 #endif
          break;
       case portal_both:
@@ -4930,7 +4926,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 #ifdef R_LINKEDPORTALS
          if(portal->type == R_LINKED)
          {
-            lines[s].frontsector->ceilingheight = R_GetCeilingPlanez(lines[s].frontsector);
+            P_SetCeilingHeight(lines[s].frontsector, lines[s].frontsector->ceilingz);
             // Check groupid?
          }
 #endif
@@ -4940,7 +4936,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 #ifdef R_LINKEDPORTALS
          if(portal->type == R_LINKED)
          {
-            lines[s].frontsector->floorheight = R_GetFloorPlanez(lines[s].frontsector);
+            P_SetFloorHeight(lines[s].frontsector, lines[s].frontsector->floorz);
             // Check groupid?
          }
 #endif

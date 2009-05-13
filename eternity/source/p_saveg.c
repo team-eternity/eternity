@@ -384,8 +384,8 @@ void P_UnArchiveWorld(void)
       sec->soundtarget  = NULL;
 
       // SoM: update the heights
-      sec->floorheight = R_GetFloorPlanez(sec);
-      sec->ceilingheight = R_GetCeilingPlanez(sec);
+      P_SetFloorHeight(sec, sec->floorz);
+      P_SetCeilingHeight(sec, sec->ceilingz);
    }
 
    // do lines

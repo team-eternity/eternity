@@ -614,8 +614,6 @@ void R_IncrementFrameid(void)
 
    if(!frameid)
    {
-      int i;
-
       // it wrapped!
       C_Printf("Congratulations! You have just played through 4,294,967,295 "
                "rendered frames of Doom. At a constant rate of 35 frames per "
@@ -623,10 +621,6 @@ void R_IncrementFrameid(void)
                "GET A LIFE.\a\n");
 
       frameid = 1;
-
-      // reset everything that uses this
-      for(i = 0; i < numsectors; i++)
-         sectors[i].frameid = 0;
    }
 }
 

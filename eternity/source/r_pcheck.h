@@ -54,25 +54,6 @@ d_inline static boolean R_LinkedLineActive(line_t *line)
            line->portal && line->portal->type == R_LINKED);
 }
 
-d_inline static fixed_t R_GetFloorPlanez(sector_t *sector)
-{
-   return 
-      (sector->f_portal && sector->f_portal->type == R_LINKED && 
-       sector->floorz <= sector->f_portal->data.camera.planez) ?
-      sector->f_portal->data.camera.planez :
-      sector->floorz;
-}
-
-
-d_inline static fixed_t R_GetCeilingPlanez(sector_t *sector)
-{
-   return
-      (sector->c_portal && sector->c_portal->type == R_LINKED && 
-       sector->ceilingz >= sector->c_portal->data.camera.planez) ?
-      sector->c_portal->data.camera.planez :
-      sector->ceilingz;
-}
-
 d_inline static boolean R_FloorPortalActive(sector_t *sector)
 {
    // FIXME: possible to eliminate branch?
