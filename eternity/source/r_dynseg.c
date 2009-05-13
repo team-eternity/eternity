@@ -430,10 +430,6 @@ void R_AttachPolyObject(polyobj_t *poly)
       idseg->seg.v2->dynafree = false;
       idseg->seg.v2->dynanext = NULL;
 
-      // cardboard data copied from linedef may not be valid
-      idseg->seg.v1->frameid = 0;
-      idseg->seg.v2->frameid = 0;
-
       // Thank god we only do this once. All child segs will have the
       // same angle and so they copy it from this one.
       idseg->seg.angle = R_PointToAngle2(idseg->seg.v1->x, idseg->seg.v1->y,

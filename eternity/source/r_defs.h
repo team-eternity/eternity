@@ -91,10 +91,6 @@ typedef struct vertex_s
    // These should always be kept current to x and y
    float   fx, fy;
 
-   // These are cached per frame
-   unsigned frameid;
-   float tx, ty, proj_x, proj_dist;
-
    struct vertex_s *dynanext;
    boolean dynafree;          // if true, is on free list
 } vertex_t;

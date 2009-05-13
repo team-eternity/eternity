@@ -63,7 +63,7 @@
 #include "polyobj.h"
 #include "s_sndseq.h"
 #include "r_dynseg.h"
-
+#include "p_slopes.h"
 //
 // MAP related Lookup tables.
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
@@ -202,9 +202,6 @@ void P_LoadVertexes(int lump)
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
-      
-      // SoM: Initialize the frameid marker
-      vertexes[i].frameid = 0;
    }
 
    // Free buffer memory.

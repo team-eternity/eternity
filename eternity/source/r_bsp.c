@@ -881,13 +881,15 @@ extern int       *texturewidthmask;
 
 static void R_AddLine(seg_t *line)
 {
+   static sector_t tempsec;
+
    float x1, x2;
    float toffsetx, toffsety;
    float i1, i2, pstep;
    float dx, dy, length;
+   float nearclip = NEARCLIP;
    vertex_t  t1, t2, temp;
    side_t *side;
-   static sector_t tempsec;
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
    // SoM: one of the byproducts of the portal height enforcement: The top 
@@ -964,169 +966,60 @@ static void R_AddLine(seg_t *line)
    v1 = line->v1;
    v2 = line->v2;
 
-   if(v1->frameid != frameid)
-   {
-      temp.fx = v1->fx - view.x;
-      temp.fy = v1->fy - view.y;
-      t1.fx = v1->tx = (temp.fx * view.cos) - (temp.fy * view.sin);
-      t1.fy = v1->ty = (temp.fy * view.cos) + (temp.fx * view.sin);
-   }
-   else
-   {
-      t1.fx = v1->tx;
-      t1.fy = v1->ty;
-   }
-
-   if(v2->frameid != frameid)
-   {
-      temp.fx = v2->fx - view.x;
-      temp.fy = v2->fy - view.y;
-      t2.fx = v2->tx = (temp.fx * view.cos) - (temp.fy * view.sin);
-      t2.fy = v2->ty = (temp.fy * view.cos) + (temp.fx * view.sin);
-   }
-   else
-   {
-      t2.fx = v2->tx;
-      t2.fy = v2->ty;
-   }
+   temp.fx = v1->fx - view.x;
+   temp.fy = v1->fy - view.y;
+   t1.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t1.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+   temp.fx = v2->fx - view.x;
+   temp.fy = v2->fy - view.y;
+   t2.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t2.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
 
    // SoM: Portal lines are not texture and as a result can be clipped MUCH 
    // closer to the camera than normal lines can. This closer clipping 
    // distance is used to stave off the flash that can sometimes occur when
    // passing through a linked portal line.
    if(line->linedef->portal)
+      nearclip = PNEARCLIP;
+
+   // Simple reject for lines entirely behind the view plane.
+   if(t1.fy < nearclip && t2.fy < nearclip)
+      return;
+
+   toffsetx = toffsety = 0;
+
+   if(t1.fy < nearclip)
    {
-      if(t1.fy < PNEARCLIP && t2.fy < PNEARCLIP)
-         return; // Don't mark the vertices.
+      float move, movey;
 
-      toffsetx = toffsety = 0;
-      if(t1.fy < PNEARCLIP)
-      {
-         float move, movey;
+      // SoM: optimization would be to store the line slope in float 
+      // format in the segs
+      movey = nearclip - t1.fy;
+      move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
 
-         // SoM: optimization would be to store the line slope in float 
-         // format in the segs
-         movey = PNEARCLIP - t1.fy;
-         move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
-
-         t1.fx += move;
-         toffsetx += (float)sqrt(move * move + movey * movey);
-         t1.fy = PNEARCLIP;
-         i1 = 1.0f / PNEARCLIP;
-         x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
-         // Don't mark the vertices.
-      }
-      else if(v1->frameid == frameid)
-      {
-         // if it's already marked that's ok
-         i1 = v1->proj_dist;
-         x1 = v1->proj_x;
-      }
-      else
-      {
-         i1 = 1.0f / t1.fy;
-         x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
-      }
-
-      if(t2.fy < PNEARCLIP)
-      {
-         // SoM: optimization would be to store the line slope in float 
-         // format in the segs
-         t2.fx += (PNEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
-         t2.fy = PNEARCLIP;
-         i2 = 1.0f / PNEARCLIP;
-         x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
-         // Don't mark the vertices.
-      }
-      else if(v2->frameid == frameid)
-      {
-         // if it's already marked that's ok
-         i2 = v2->proj_dist;
-         x2 = v2->proj_x;
-      }
-      else
-      {
-         i2 = 1.0f / t2.fy;
-         x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
-      }
+      t1.fx += move;
+      toffsetx += (float)sqrt(move * move + movey * movey);
+      t1.fy = nearclip;
    }
-   else
+
+   i1 = 1.0f / t1.fy;
+   x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+
+
+   if(t2.fy < nearclip)
    {
-      // Simple reject for lines entirely behind the view plane.
-      if(t1.fy < NEARCLIP && t2.fy < NEARCLIP)
-      {
-         // Make sure both vertices are marked.
-         v1->frameid = v2->frameid = frameid;
-         return;
-      }
-
-      toffsetx = toffsety = 0;
-
-      if(t1.fy < NEARCLIP)
-      {
-         float move, movey;
-
-         // SoM: optimization would be to store the line slope in float 
-         // format in the segs
-         movey = NEARCLIP - t1.fy;
-         move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
-
-         t1.fx += move;
-         toffsetx += (float)sqrt(move * move + movey * movey);
-         t1.fy = NEARCLIP;
-         i1 = 1.0f / NEARCLIP;
-         x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
-
-         // SoM: you can't store the clipped vertex projection so mark it as
-         // finished and t1.fy < NEARCLIP will be true when the vertex is used
-         // again, so it won't be cached.
-         v1->frameid = frameid;
-      }
-      else if(v1->frameid == frameid)
-      {
-         i1 = v1->proj_dist;
-         x1 = v1->proj_x;
-      }
-      else
-      {
-         i1 = v1->proj_dist = 1.0f / t1.fy;
-         x1 = v1->proj_x = (view.xcenter + (t1.fx * i1 * view.xfoc));
-         v1->frameid = frameid;
-      }
-
-
-      if(t2.fy < NEARCLIP)
-      {
-         // SoM: optimization would be to store the line slope in float 
-         // format in the segs
-         t2.fx += (NEARCLIP - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
-         t2.fy = NEARCLIP;
-         i2 = 1.0f / NEARCLIP;
-         x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
-
-         // SoM: you can't store the clipped vertex projection so mark it as 
-         // finished and t2.fy < NEARCLIP will be true when the vertex is used
-         // again, so it won't be cached.
-         v2->frameid = frameid;
-      }
-      else if(v2->frameid == frameid)
-      {
-         i2 = v2->proj_dist;
-         x2 = v2->proj_x;
-      }
-      else
-      {
-         i2 = v2->proj_dist = 1.0f / t2.fy;
-         x2 = v2->proj_x = (view.xcenter + (t2.fx * i2 * view.xfoc));
-         v2->frameid = frameid;
-      }
+      // SoM: optimization would be to store the line slope in float 
+      // format in the segs
+      t2.fx += (nearclip - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+      t2.fy = nearclip;
    }
+
+   i2 = 1.0f / t2.fy;
+   x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
 
    // SoM: Handle the case where a wall is only occupying a single post but 
    // still needs to be rendered to keep groups of single post walls from not
    // being rendered and causing slime trails.
-
-   // 
    floorx1 = (float)floor(x1 + 0.999f);
    floorx2 = (float)floor(x2 - 0.001f);
 
