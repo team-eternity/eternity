@@ -888,7 +888,7 @@ static void R_AddLine(seg_t *line)
    float x1, x2;
    float toffsetx, toffsety;
    float i1, i2, pstep;
-   float dx, dy, length;
+   float dx, dy, length, lclip1, lclip2;
    float nearclip = NEARCLIP;
    vertex_t  t1, t2, temp;
    side_t *side;
@@ -959,6 +959,11 @@ static void R_AddLine(seg_t *line)
    v1 = line->v1;
    v2 = line->v2;
 
+   dx = v2->fx - v1->fx;
+   dy = v2->fy - v1->fy;
+   length = lclip2 = (float)sqrt(dx * dx + dy * dy);
+   lclip1 = 0.0f;
+
    temp.fx = v1->fx - view.x;
    temp.fy = v1->fy - view.y;
    t1.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
@@ -985,13 +990,10 @@ static void R_AddLine(seg_t *line)
    {
       float move, movey;
 
-      // SoM: optimization would be to store the line slope in float 
-      // format in the segs
       movey = nearclip - t1.fy;
-      move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+      t1.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
-      t1.fx += move;
-      toffsetx += (float)sqrt(move * move + movey * movey);
+      lclip1 = (float)sqrt(move * move + movey * movey);
       t1.fy = nearclip;
    }
 
@@ -1001,9 +1003,12 @@ static void R_AddLine(seg_t *line)
 
    if(t2.fy < nearclip)
    {
-      // SoM: optimization would be to store the line slope in float 
-      // format in the segs
-      t2.fx += (nearclip - t2.fy) * ((t2.fx - t1.fx) / (t2.fy - t1.fy));
+      float move, movey;
+
+      movey = nearclip - t2.fy;
+      t2.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
+
+      lclip2 = length - (float)sqrt(move * move + movey * movey);
       t2.fy = nearclip;
    }
 
@@ -1065,22 +1070,21 @@ static void R_AddLine(seg_t *line)
       }
    }
 
-   dx = t2.fx - t1.fx;
-   dy = t2.fy - t1.fy;
-   length = (float)sqrt(dx * dx + dy * dy);
-
    seg.dist = i1;
    seg.dist2 = i2;
    seg.diststep = (i2 - i1) * pstep;
 
-   seg.len = 0;
-   seg.len2 = length * i2 * view.yfoc;
-   seg.lenstep = length * i2 * pstep * view.yfoc;
+   // Multiply these for the heights below
+   i1 *= view.yfoc; i2 *= view.yfoc;
+
+   seg.len = lclip1 * i1;
+   seg.len2 = lclip2 * i2;
+   seg.lenstep = (seg.len2 - seg.len) * pstep;
 
    seg.side = side;
 
-   seg.top = seg.frontsec->ceilingheightf - view.z;
-   seg.bottom = seg.frontsec->floorheightf - view.z;
+   seg.top = seg.top2 = seg.frontsec->ceilingheightf - view.z;
+   seg.bottom = seg.bottom2 = seg.frontsec->floorheightf - view.z;
 
    textop = M_FixedToFloat(seg.frontsec->ceilingz) - view.z;
    texbottom = M_FixedToFloat(seg.frontsec->floorz) - view.z;
@@ -1144,7 +1148,7 @@ static void R_AddLine(seg_t *line)
               seg.frontsec->heightsec != seg.backsec->heightsec ||
               seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
 
-      seg.high = seg.backsec->ceilingheightf - view.z;
+      seg.high = seg.high2 = seg.backsec->ceilingheightf - view.z;
       texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
 
       uppermissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
@@ -1159,6 +1163,7 @@ static void R_AddLine(seg_t *line)
               seg.backsec->ceilingpic  == sky2flatnum))
       {
          seg.top = seg.high;
+         seg.top2 = seg.high2;
          //uppermissing = false;
       }
 
@@ -1241,7 +1246,7 @@ static void R_AddLine(seg_t *line)
       }
 #endif
 
-      seg.low = seg.backsec->floorheightf - view.z;
+      seg.low = seg.low2 = seg.backsec->floorheightf - view.z;
       texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
       if(seg.bottom < seg.low && side->bottomtexture)
       {

@@ -537,7 +537,6 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.len2 -= clipx2 * segclip.lenstep;
    }
 
-
    i1 = segclip.dist * view.yfoc;
    i2 = segclip.dist2 * view.yfoc;
 
@@ -553,41 +552,31 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.diststep = (segclip.dist2 - segclip.dist) * pstep;
    }
 
-   if(!segclip.backsec)
-   {
-      segclip.top = 
-      y1 = view.ycenter - (seg.top * i1);
-      y2 = view.ycenter - (seg.top * i2);
-      segclip.topstep = (y2 - y1) * pstep;
+   segclip.top = 
+   y1 = view.ycenter - (seg.top * i1);
+   y2 = view.ycenter - (seg.top2 * i2);
+   segclip.topstep = (y2 - y1) * pstep;
 
-      segclip.bottom = 
-      y1 = view.ycenter - (seg.bottom * i1) - 1;
-      y2 = view.ycenter - (seg.bottom * i2) - 1;
-      segclip.bottomstep = (y2 - y1) * pstep;
-   }
-   else
+   segclip.bottom = 
+   y1 = view.ycenter - (seg.bottom * i1) - 1;
+   y2 = view.ycenter - (seg.bottom2 * i2) - 1;
+   segclip.bottomstep = (y2 - y1) * pstep;
+
+   if(segclip.backsec)
    {
-      segclip.top = 
-      y1 = view.ycenter - (seg.top * i1);
-      y2 = view.ycenter - (seg.top * i2);
-      segclip.topstep = (y2 - y1) * pstep;
       if(segclip.toptex)
       {
          segclip.high = 
          y1 = view.ycenter - (seg.high * i1) - 1;
-         y2 = view.ycenter - (seg.high * i2) - 1;
+         y2 = view.ycenter - (seg.high2 * i2) - 1;
          segclip.highstep = (y2 - y1) * pstep;
       }
 
-      segclip.bottom = 
-      y1 = view.ycenter - (seg.bottom * i1) - 1;
-      y2 = view.ycenter - (seg.bottom * i2) - 1;
-      segclip.bottomstep = (y2 - y1) * pstep;
       if(segclip.bottomtex)
       {
          segclip.low = 
          y1 = view.ycenter - (seg.low * i1);
-         y2 = view.ycenter - (seg.low * i2);
+         y2 = view.ycenter - (seg.low2 * i2);
          segclip.lowstep = (y2 - y1) * pstep;
       }
    }
@@ -654,6 +643,8 @@ void R_StoreWallRange(const int start, const int stop)
       ds_p->sprtopclip = ds_p->sprbottomclip = NULL;
       ds_p->silhouette = 0;
 
+      // SoM: TODO: This can be a bit problematic for slopes because we'll have 
+      // to check the line for textures at both ends...
       if(segclip.frontsec->floorheight > segclip.backsec->floorheight)
       {
          ds_p->silhouette = SIL_BOTTOM;
