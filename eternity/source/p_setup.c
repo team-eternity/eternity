@@ -255,9 +255,22 @@ void P_LoadSegs(int lump)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
          li->backsector = NULL;
+
+      P_CalcSegLength(li);
    }
    
    Z_Free(data);
+}
+
+
+// SoM 5/13/09: calculate seg length
+void P_CalcSegLength(seg_t *seg)
+{
+   float dx, dy;
+
+   dx = seg->v2->fx - seg->v1->fx;
+   dy = seg->v2->fy - seg->v1->fy;
+   seg->len = (float)sqrt(dx * dx + dy * dy);
 }
 
 //

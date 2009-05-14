@@ -435,6 +435,9 @@ typedef struct seg_s
 
   struct seg_s *linenext; // haleyjd: next seg by linedef
 
+  // SoM: Precached seg length in float format
+  float  len;
+
   boolean nodraw; // don't render this seg, ever
 } seg_t;
 

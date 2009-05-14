@@ -82,6 +82,9 @@ extern olo_t olo;
 extern int olo_loaded;
 #endif
 
+
+void P_CalcSegLength(seg_t *seg);
+
 #endif
 
 //----------------------------------------------------------------------------
