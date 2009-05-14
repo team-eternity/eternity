@@ -29,6 +29,8 @@
 #include "r_main.h"
 #include "r_dynseg.h"
 
+extern void P_CalcSegLength(seg_t *);
+
 //
 // dynaseg free list
 //
@@ -381,6 +383,9 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       }
       else
          fragment->dynaSegs = dseg;
+
+      // 05/13/09: calculate seg length for SoM
+      P_CalcSegLength(&dseg->seg);
 
       // add the subsector if it hasn't been added already
       R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
