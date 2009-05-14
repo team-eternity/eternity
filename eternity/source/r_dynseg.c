@@ -258,13 +258,11 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
    double a1 = seg->v2->fy - seg->v1->fy;
    double b1 = seg->v1->fx - seg->v2->fx;
    double c1 = seg->v2->fx * seg->v1->fy - seg->v1->fx * seg->v2->fy;
-
-   double nx2 = bsp->fx + bsp->fdx;
-   double ny2 = bsp->fy + bsp->fdy;
    
-   double a2 = ny2 - bsp->fy;
-   double b2 = bsp->fx - nx2;
-   double c2 = nx2 * bsp->fy - bsp->fx * ny2;
+   // haleyjd 05/13/09: massive optimization
+   double a2 = -bsp->a;
+   double b2 = -bsp->b;
+   double c2 = -bsp->c;
 
    double d = a1 * b2 - a2 * b1;
 
