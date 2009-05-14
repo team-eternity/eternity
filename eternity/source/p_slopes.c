@@ -195,8 +195,8 @@ fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y)
 // Returns the height of the sloped plane at (x, y) as a float
 float P_GetZAtf(pslope_t *slope, float x, float y)
 {
-   float dist = (x - slope->ox) * slope->dx + (y - slope->oy) * slope->dy;
-   return slope->oz + (dist * slope->dz);
+   float dist = (x - slope->oxf) * slope->dxf + (y - slope->oyf) * slope->dyf;
+   return slope->ozf + (dist * slope->dzf);
 }
 
 // EOF

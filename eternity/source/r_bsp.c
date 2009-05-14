@@ -32,6 +32,7 @@
 #include "r_plane.h"
 #include "r_things.h"
 #include "r_dynseg.h"
+#include "p_slopes.h"
 
 drawseg_t *ds_p;
 
@@ -888,7 +889,7 @@ static void R_AddLine(seg_t *line)
    float x1, x2;
    float toffsetx, toffsety;
    float i1, i2, pstep;
-   float dx, dy, length, lclip1, lclip2;
+   float length, lclip1, lclip2;
    float nearclip = NEARCLIP;
    vertex_t  t1, t2, temp;
    side_t *side;
@@ -959,9 +960,7 @@ static void R_AddLine(seg_t *line)
    v1 = line->v1;
    v2 = line->v2;
 
-   dx = v2->fx - v1->fx;
-   dy = v2->fy - v1->fy;
-   length = lclip2 = (float)sqrt(dx * dx + dy * dy);
+   length = lclip2 = line->len;
    lclip1 = 0.0f;
 
    temp.fx = v1->fx - view.x;
@@ -1008,7 +1007,7 @@ static void R_AddLine(seg_t *line)
       movey = nearclip - t2.fy;
       t2.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
-      lclip2 = length - (float)sqrt(move * move + movey * movey);
+      lclip2 -= (float)sqrt(move * move + movey * movey);
       t2.fy = nearclip;
    }
 
@@ -1074,11 +1073,8 @@ static void R_AddLine(seg_t *line)
    seg.dist2 = i2;
    seg.diststep = (i2 - i1) * pstep;
 
-   // Multiply these for the heights below
-   i1 *= view.yfoc; i2 *= view.yfoc;
-
-   seg.len = lclip1 * i1;
-   seg.len2 = lclip2 * i2;
+   seg.len = lclip1 * i1 * view.yfoc;
+   seg.len2 = lclip2 * i2 * view.yfoc;
    seg.lenstep = (seg.len2 - seg.len) * pstep;
 
    seg.side = side;
@@ -1275,6 +1271,7 @@ static void R_AddLine(seg_t *line)
    {
       seg.dist += seg.diststep * -x1;
       seg.len += seg.lenstep * -x1;
+
       seg.x1frac = 0.0f;
       seg.x1 = 0;
    }
