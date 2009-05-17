@@ -340,11 +340,10 @@ typedef struct line_s
    fixed_t dx, dy;        // Precalculated v2 - v1 for side checking.
    short flags;           // Animation related.
    short special;         
-   short tag;
-   long  line_id;         // haleyjd 02/27/07: line id's
+   int   tag;             // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
-   long  sidenum[2];      // Visual appearance: SideDefs.
+   int   sidenum[2];      // Visual appearance: SideDefs.
 
    fixed_t bbox[4];       // A bounding box, for the linedef's extent
    slopetype_t slopetype; // To aid move clipping.
@@ -354,7 +353,6 @@ typedef struct line_s
    void *specialdata;     // thinker_t for reversable actions
    int tranlump;          // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag; // killough 4/17/98: improves searches for tags.
-   int firstid,  nextid;  // haleyjd 02/27/07: same but for line id's
    degenmobj_t soundorg;  // haleyjd 04/19/09: line sound origin
 
    // SoM 12/10/03: wall portals
@@ -364,8 +362,8 @@ typedef struct line_s
    float nx, ny;
 
    // haleyjd 02/26/05: ExtraData fields
-   long extflags;          // activation flags for param specials
-   long args[NUMLINEARGS]; // argument values for param specials
+   int  extflags;          // activation flags for param specials
+   int  args[NUMLINEARGS]; // argument values for param specials
 
    struct seg_s *segs;     // haleyjd: link to segs
 } line_t;

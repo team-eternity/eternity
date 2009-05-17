@@ -649,8 +649,8 @@ void P_LoadLineDefs(int lump)
    int  i;
 
    numlines = W_LumpLength(lump) / sizeof(maplinedef_t);
-   lines = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
-   data = W_CacheLumpNum(lump, PU_STATIC);
+   lines    = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
+   data     = W_CacheLumpNum(lump, PU_STATIC);
 
    for(i = 0; i < numlines; ++i)
    {
@@ -661,9 +661,6 @@ void P_LoadLineDefs(int lump)
       ld->flags   = SHORT(mld->flags);
       ld->special = SHORT(mld->special);
       ld->tag     = SHORT(mld->tag);
-
-      // haleyjd 02/27/07
-      ld->line_id = -1;
 
       // haleyjd 06/19/06: convert indices to unsigned
       v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", "vertex")];
@@ -834,8 +831,7 @@ void P_LoadHexenLineDefs(int lump)
       // Convert line flags after setting special?
       P_ConvertHexenLineFlags(ld);
 
-      ld->tag = 0;
-      ld->line_id = -1; // haleyjd 02/27/07
+      ld->tag = -1; // haleyjd 02/27/07
 
       // haleyjd 06/19/06: convert indices to unsigned
       v1 = ld->v1 = &vertexes[(long)SHORT(mld->v1) & 0xffff];
@@ -1778,7 +1774,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
       P_ConvertHereticSpecials();
    
    // set up world state
-   P_SpawnSpecials();
+   P_SpawnSpecials(mapformat);
 
    // haleyjd
    P_InitLightning();

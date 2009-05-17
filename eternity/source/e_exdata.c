@@ -1525,6 +1525,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       cfg_t *linesec;
       const char *tempstr;
       int tempint;
+      boolean tagset = false;
 
       linesec = cfg_getnsec(cfg, SEC_LINEDEF, i);
 
@@ -1547,6 +1548,8 @@ static void E_ProcessEDLines(cfg_t *cfg)
 
       // tag
       EDLines[i].stdfields.tag = (short)cfg_getint(linesec, FIELD_LINE_TAG);
+      if(cfg_size(linesec, FIELD_LINE_TAG) > 0)
+         tagset = true;
 
       // extflags
       tempstr = cfg_getstr(linesec, FIELD_LINE_EXTFLAGS);
@@ -1559,7 +1562,10 @@ static void E_ProcessEDLines(cfg_t *cfg)
       E_ParseLineArgs(&EDLines[i], linesec);
 
       // 03/03/07: line id
-      EDLines[i].id = cfg_getint(linesec, FIELD_LINE_ID);
+      if(!tagset)
+         EDLines[i].id = cfg_getint(linesec, FIELD_LINE_ID);
+      else
+         EDLines[i].id = -1;
 
       // TODO: any other new fields
    }
@@ -1807,10 +1813,10 @@ void E_LoadLineDefExt(line_t *line, boolean applySpecial)
    if(!LevelInfo.extraData || numEDLines == 0 ||
       (edLineIdx = E_EDLineForRecordNum((unsigned short)(line->tag))) == numEDLines)
    {
-      // if no ExtraData or no such record, zero special and tag,
+      // if no ExtraData or no such record, zero special and clear tag,
       // and we're finished here.
       line->special = 0;
-      line->tag = 0;
+      line->tag = -1;
       return;
    }
 
@@ -1833,7 +1839,8 @@ void E_LoadLineDefExt(line_t *line, boolean applySpecial)
    memcpy(line->args, edline->args, 5*sizeof(long));
 
    // 03/03/07: id
-   line->line_id = edline->id;
+   if(edline->id != -1) // haleyjd: only use this field when it is specified
+      line->tag = edline->id;
 }
 
 //

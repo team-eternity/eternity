@@ -2177,17 +2177,10 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean us
    line_t *l = NULL;
    int linenum = -1, texnum;
    
-   line_t *(*GetID)(int, int *);
-
    texnum = R_TextureNumForName(texture);
    linenum = -1;
 
-   if(usetag)
-      GetID = P_FindLine;
-   else
-      GetID = P_FindLineForID;
-
-   while((l = GetID(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != NULL)
    {
       if(l->sidenum[side] == -1)
          continue;

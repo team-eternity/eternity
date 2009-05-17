@@ -440,7 +440,7 @@ static void ACS_setLineBlocking(int tag, int block)
    line_t *l;
    int linenum = -1;
 
-   while((l = P_FindLineForID(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != NULL)
    {
       // clear the flag
       l->flags &= ~ML_BLOCKING;
@@ -464,7 +464,7 @@ static void ACS_setLineSpecial(short spec, long *args, int tag)
    // do special/args translation for Hexen maps
    P_ConvertHexenLineSpec(&spec, args);
 
-   while((l = P_FindLineForID(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != NULL)
    {
       l->special = spec;
       memcpy(l->args, args, 5 * sizeof(long));

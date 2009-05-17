@@ -791,7 +791,7 @@ int P_FindSectorFromTag(const int tag, int start)
 //
 // Hash the sector tags across the sectors and linedefs.
 //
-static void P_InitTagLists(void)
+static void P_InitTagLists(int mapformat)
 {
    register int i;
    
@@ -806,26 +806,19 @@ static void P_InitTagLists(void)
    }
    
    // killough 4/17/98: same thing, only for linedefs
-   // haleyjd 02/28/07: also for line id's
    
    for(i = numlines; --i >= 0; )   // Initially make all slots empty.
-   {
       lines[i].firsttag = -1;
-      lines[i].firstid  = -1;
-   }
    
    for(i = numlines; --i >= 0; )   // Proceed from last to first linedef
    {                               // so that lower linedefs appear first
-      int j = (unsigned)lines[i].tag % (unsigned)numlines; // Hash func
-      lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
-      lines[j].firsttag = i;
-
-      // haleyjd: lines with id of -1 are not hashed
-      if(lines[i].line_id != -1)
+      // haleyjd 05/16/09: unified id into tag;
+      // added mapformat parameter to test here:
+      if(mapformat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
       {
-         j = (unsigned)lines[i].line_id % (unsigned)numlines;
-         lines[i].nextid = lines[j].firstid;
-         lines[j].firstid = i;
+         int j = (unsigned)lines[i].tag % (unsigned)numlines; // Hash func
+         lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
+         lines[j].firsttag = i;
       }
    }
 }
@@ -2509,7 +2502,7 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 //
 // After the map has been loaded, scan for specials that spawn thinkers
 //
-void P_SpawnSpecials(void)
+void P_SpawnSpecials(int mapformat)
 {
    sector_t *sector;
    int      i;
@@ -2661,7 +2654,7 @@ void P_SpawnSpecials(void)
    // P_InitTagLists() must be called before P_FindSectorFromLineTag()
    // or P_FindLineFromLineTag() can be called.
 
-   P_InitTagLists();   // killough 1/30/98: Create xref tables for tags
+   P_InitTagLists(mapformat);   // killough 1/30/98: Create xref tables for tags
    
    P_SpawnScrollers(); // killough 3/7/98: Add generalized scrollers
    
@@ -2771,7 +2764,7 @@ void P_SpawnSpecials(void)
 #endif
       case 378: // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
-         P_SetLineID(i, lines[i].args[0]);
+         P_SetLineID(&lines[i], lines[i].args[0]);
          lines[i].special = 0;             // clear special
          break;
 
@@ -3584,6 +3577,51 @@ line_t *P_FindLine(int tag, int *searchPosition)
    return line;
 }
 
+//
+// P_SetLineID
+//
+// haleyjd 05/16/09: For Hexen
+//
+void P_SetLineID(line_t *line, int id)
+{
+   // remove from any chain it's already in
+   if(line->tag >= 0)
+   {
+      int chain = (unsigned)line->tag % (unsigned)numlines;
+      int i;
+      int thisLineNum = line - lines;
+      line_t *prevline = NULL;
+
+      // walk the chain
+      for(i = lines[chain].firsttag; i != -1; i = lines[i].nexttag)
+      {
+         if(line == &lines[i])
+         {
+            // remove this line
+            if(prevline)
+               prevline->nexttag = line->nexttag; // prev->next = this->next
+            else
+               lines[chain].firsttag = line->nexttag; // list = this->next
+         }
+         // not a match, keep looking
+         // record this line in case it's the one before the one we're looking for
+         prevline = &lines[i]; 
+      }
+   }
+
+   // set the new id
+   line->tag = id;
+   line->nexttag = -1;
+
+   if(line->tag >= 0)
+   {
+      int chain = (unsigned)line->tag % (unsigned)numlines; // Hash func
+   
+      line->nexttag = lines[chain].firsttag;   // Prepend linedef to chain
+      lines[chain].firsttag = line - lines;
+   }
+}
+
 //=============================================================================
 //
 // haleyjd 09/06/07: Sector Special Transfer Logic
@@ -3680,56 +3718,6 @@ void P_ZeroSectorSpecial(sector_t *sec)
    sec->damagemask  = 0;
    sec->damagemod   = MOD_UNKNOWN;
    sec->damageflags = 0;
-}
-
-//============================================================================
-//
-// Line IDs
-//
-// haleyjd 02/28/07: Hexen requires slightly different semantics for its line
-// ids than Doom supports through line tags (chiefly, the default value is -1
-// rather than 0). I'll exploit this as an excuse to add a second tag field to
-// linedefs ;)
-//
-
-//
-// P_FindLineForID
-//
-// Returns a linedef for a linedef id. Linedef ids are in-table hashed just like
-// tags. This is pretty much the same as P_FindLine above.
-//
-line_t *P_FindLineForID(int id, int *searchPosition)
-{
-   line_t *line = NULL;
-
-   int start =
-      (*searchPosition >= 0 ? lines[*searchPosition].nextid :
-       lines[(unsigned)id % (unsigned)numlines].firstid);
-
-   while(start >= 0 && lines[start].line_id != id)
-      start = lines[start].nextid;
-
-   if(start >= 0)
-      line = &lines[start];
-
-   *searchPosition = start;
-
-   return line;
-}
-
-void P_SetLineID(int i, long id)
-{
-   line_t *line = &lines[i];
-
-   line->line_id = id;
-
-   if(line->line_id != -1)
-   {
-      int key = (unsigned)line->line_id % (unsigned)numlines;
-
-      line->nextid = lines[key].firstid;
-      lines[key].firstid = i;
-   }
 }
 
 //============================================================================

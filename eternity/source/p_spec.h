@@ -1205,7 +1205,7 @@ void P_InitPicAnims(void);
 void P_InitSwitchList(void);
 
 // at map load
-void P_SpawnSpecials(void);
+void P_SpawnSpecials(int);
 
 // every tic
 void P_UpdateSpecials(void);
@@ -1285,10 +1285,6 @@ boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int cr
 
 line_t *P_FindLine(int tag, int *searchPosition);
 
-line_t *P_FindLineForID(int id, int *searchPosition);
-
-void    P_SetLineID(int i, long id);
-
 // haleyjd: sector special transfers
 void P_SetupSpecialTransfer(sector_t *, spectransfer_t *);
 
@@ -1299,6 +1295,8 @@ void P_TransferSectorSpecial(sector_t *, spectransfer_t *);
 void P_DirectTransferSectorSpecial(sector_t *, sector_t *);
 
 void P_ZeroSectorSpecial(sector_t *);
+
+void P_SetLineID(line_t *line, int id);
 
 // haleyjd: parameterized lines
 
