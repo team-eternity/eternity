@@ -479,6 +479,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 }
 
 
+
 //
 // R_StoreWallRange
 //
@@ -490,7 +491,6 @@ void R_StoreWallRange(const int start, const int stop)
    float clipx1;
    float clipx2;
 
-   float y1, y2, i1, i2;
    float pstep;
 
    boolean usesegloop;
@@ -530,55 +530,46 @@ void R_StoreWallRange(const int start, const int stop)
    {
       segclip.dist += clipx1 * segclip.diststep;
       segclip.len += clipx1 * segclip.lenstep;
+
+      segclip.top += clipx1 * segclip.topstep;
+      segclip.bottom += clipx1 * segclip.bottomstep;
+
+      if(segclip.toptex)
+         segclip.high += clipx1 * segclip.highstep;
+      if(segclip.bottomtex)
+         segclip.low += clipx1 * segclip.lowstep;
    }
    if(clipx2)
    {
       segclip.dist2 -= clipx2 * segclip.diststep;
       segclip.len2 -= clipx2 * segclip.lenstep;
+
+      segclip.top2 -= clipx2 * segclip.topstep;
+      segclip.bottom2 -= clipx2 * segclip.bottomstep;
+
+      if(segclip.toptex)
+         segclip.high2 -= clipx2 * segclip.highstep;
+      if(segclip.bottomtex)
+         segclip.low2 -= clipx2 * segclip.lowstep;
    }
-
-   i1 = segclip.dist * view.yfoc;
-   i2 = segclip.dist2 * view.yfoc;
-
-   if(stop == start)
-      pstep = 1.0f;
-   else
-      pstep = 1.0f / (float)(stop - start);
 
    // Recalculate the lenstep to help lessen the rounding error.
    if(clipx1 || clipx2)
    {
+      if(stop == start)
+         pstep = 1.0f;
+      else
+         pstep = 1.0f / (float)(stop - start);
+
       segclip.lenstep = (segclip.len2 - segclip.len) * pstep;
       segclip.diststep = (segclip.dist2 - segclip.dist) * pstep;
-   }
+      segclip.topstep = (segclip.top2 - segclip.top) * pstep;
+      segclip.bottomstep = (segclip.bottom2 - segclip.bottom) * pstep;
 
-   segclip.top = 
-   y1 = view.ycenter - (seg.top * i1);
-   y2 = view.ycenter - (seg.top2 * i2);
-   segclip.topstep = (y2 - y1) * pstep;
-
-   segclip.bottom = 
-   y1 = view.ycenter - (seg.bottom * i1) - 1;
-   y2 = view.ycenter - (seg.bottom2 * i2) - 1;
-   segclip.bottomstep = (y2 - y1) * pstep;
-
-   if(segclip.backsec)
-   {
       if(segclip.toptex)
-      {
-         segclip.high = 
-         y1 = view.ycenter - (seg.high * i1) - 1;
-         y2 = view.ycenter - (seg.high2 * i2) - 1;
-         segclip.highstep = (y2 - y1) * pstep;
-      }
-
+         segclip.highstep = (segclip.high2 - segclip.high) * pstep;
       if(segclip.bottomtex)
-      {
-         segclip.low = 
-         y1 = view.ycenter - (seg.low * i1);
-         y2 = view.ycenter - (seg.low2 * i2);
-         segclip.lowstep = (y2 - y1) * pstep;
-      }
+         segclip.lowstep = (segclip.low2 - segclip.low) * pstep;
    }
 
    // Lighting

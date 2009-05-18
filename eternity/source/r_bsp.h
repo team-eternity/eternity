@@ -47,7 +47,6 @@ extern drawseg_t *ds_p;
 void R_MarkSolidSeg(int x1, int x2);
 
 boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
-boolean R_ClipInitialSegRange(void);
 
 void R_ClearClipSegs(void);
 void R_ClearDrawSegs(void);

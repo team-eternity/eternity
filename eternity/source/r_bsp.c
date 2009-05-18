@@ -62,10 +62,17 @@ void R_ClearDrawSegs(void)
 // should use it, since smaller arrays fit better in cache.
 //
 
+// SoM 05/14/09: This actually becomes a bit of an optimization problem
+// see, currently the code has to clip segs to the screen manually, and
+// then clip them based on solid segs. This could be reduced to a single
+// clip based on solidsegs because the first solidseg is from MININT, -1
+// to viewwidth, MAXINT
+
 typedef struct 
 {
-  short first, last;      // killough
+  int first, last;
 } cliprange_t;
+
 
 // 1/11/98: Lee Killough
 //
@@ -316,10 +323,10 @@ static void R_ClipPassWallSegment(int x1, int x2)
 //
 void R_ClearClipSegs(void)
 {
-   solidsegs[0].first = -0x7fff; // ffff;    new short limit --  killough
+   solidsegs[0].first = D_MININT;
    solidsegs[0].last = -1;
    solidsegs[1].first = viewwidth;
-   solidsegs[1].last = 0x7fff; // ffff;      new short limit --  killough
+   solidsegs[1].last = D_MAXINT;
    newend = solidsegs+2;
    addend = addedsegs;
 
@@ -382,58 +389,17 @@ boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
    
 endopen:
    solidseg->first = stop;
-   solidseg->last = 0x7fff;
+   solidseg->last = D_MAXINT;
    newend = solidseg + 1;
    return true;
    
 endclosed:
-   solidseg->last = 0x7fff;
+   solidseg->last = D_MAXINT;
    newend = solidseg + 1;
    return true;
 }
 
 
-
-// 
-// R_ClipInitialSegRange
-//
-// Used by R_ClipSeg to quickly reject segs outside the open range of the 
-// portal and to clip segs to the portals open range on the x-axis
-//
-boolean R_ClipInitialSegRange(void)
-{
-   float clipx;
-
-   if(seg.x2 < portalrender.minx || seg.x1 > portalrender.maxx)
-      return false;
-
-
-   if(portalrender.minx > seg.x1)
-   {
-      clipx = portalrender.minx - seg.x1frac;
-
-      seg.x1 = portalrender.minx;
-      seg.x1frac = (float)portalrender.minx;
-
-      seg.dist += clipx * seg.diststep;
-      seg.len += clipx * seg.lenstep;
-   }
-   // ok, the left edge is done
-
-   // do the right edge
-   if(portalrender.maxx < seg.x2)
-   {
-      clipx = portalrender.maxx - seg.x2frac;
-
-      seg.x2 = portalrender.maxx;
-      seg.x2frac = (float)portalrender.maxx;
-
-      seg.dist2 += clipx * seg.diststep;
-      seg.len2 += clipx * seg.lenstep;
-   }
-
-   return true;
-}
 
 // killough 1/18/98 -- This function is used to fix the automap bug which
 // showed lines behind closed doors simply because the door had a dropoff.
@@ -627,46 +593,70 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 //
 // SoM 6/24/2007: Moved this here and rewrote it a bit.
 //
-static void R_ClipSegToPortal(void)
+static void R_ClipSegToPortal()
 {
    int i, startx;
+   float clipx1, clipx2;
+   int start, stop;
 
    // The way we handle segs depends on relative camera position. If the 
    // camera is above we need to reject segs based on the top of the seg.
    // If the camera is below the bottom of the seg the bottom edge needs 
    // to be clipped. This is done so visplanes will still be rendered 
    // fully.
+
+   // SoM: Quickly reject the seg based on the bounding box of the portal
+   if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+      return;
+
+   if(portalrender.minx > seg.x1)
+   {
+      start = portalrender.minx;
+      clipx1 = start - seg.x1frac;
+   }
+   else
+   {
+      start = seg.x1;
+      clipx1 = 0.0;
+   }
+
+   if(portalrender.maxx < seg.x2)
+   {
+      stop = portalrender.maxx;
+      clipx2 = seg.x2frac - stop;
+   }
+   else
+   {
+      stop = seg.x2;
+      clipx2 = 0.0;
+   }
+
    if(portalrender.w->type == pw_floor)
    {
-      float top, topstep;
-      float y1, y2;
+      float top, top2, topstep;
 
-      // I totally overlooked this when I moved all the wall panel projection 
-      // to r_segs.c
-      top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
-      y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+      top = seg.top + seg.topstep * clipx1;
+      top2 = seg.top2 - seg.topstep * clipx2;
 
       // SoM: Quickly reject the seg based on the bounding box of the portal
-      if(portalrender.maxy - y1 < -1.0f && portalrender.maxy - y2 < -1.0f)
-         return;
-      if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+      if(portalrender.maxy - top < -1.0f && portalrender.maxy - top2 < -1.0f)
          return;
 
-      topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+      topstep = seg.topstep;
 
-      for(i = seg.x1; i <= seg.x2; i++)
+      for(i = start; i <= stop; i++)
       {
          // skip past the closed or out of sight columns to find the first visible column
-         for(; i <= seg.x2 && floorclip[i] - top <= -1.0f; i++)
+         for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
             top += topstep;
 
-         if(i > seg.x2)
+         if(i > stop)
             return;
 
          startx = i; // mark
 
          // skip past visible columns 
-         for(; i <= seg.x2 && floorclip[i] - top > -1.0f; i++)
+         for(; i <= stop && floorclip[i] - top > -1.0f; i++)
             top += topstep;
 
          if(seg.clipsolid)
@@ -677,31 +667,28 @@ static void R_ClipSegToPortal(void)
    }
    else if(portalrender.w->type == pw_ceiling)
    {
-      float bottom, bottomstep;
-      float y1, y2;
+      float bottom, bottom2, bottomstep;
 
-      bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
-      y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+      bottom = seg.bottom + seg.bottomstep * clipx1;
+      bottom2 = seg.bottom2 - seg.bottomstep * clipx2;
 
       // SoM: Quickly reject the seg based on the bounding box of the portal
-      if(y1 < portalrender.miny && y2 < portalrender.miny)
-         return;
-      if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+      if(bottom < portalrender.miny && bottom2 < portalrender.miny)
          return;
 
-      bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+      bottomstep = seg.bottomstep;
 
-      for(i = seg.x1; i <= seg.x2; i++)
+      for(i = start; i <= stop; i++)
       {
-         for(; i <= seg.x2 && bottom < ceilingclip[i]; i++)
+         for(; i <= stop && bottom < ceilingclip[i]; i++)
             bottom += bottomstep;
 
-         if(i > seg.x2)
+         if(i > stop)
             return;
 
          startx = i;
 
-         for(; i <= seg.x2 && bottom >= ceilingclip[i]; i++)
+         for(; i <= stop && bottom >= ceilingclip[i]; i++)
             bottom += bottomstep;
 
          if(seg.clipsolid)
@@ -713,51 +700,47 @@ static void R_ClipSegToPortal(void)
    else
    {
       // Line based portal. This requires special clipping...
-      // SoM: Quickly reject the seg based on the bounding box of the portal
-      if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
-         return;
 
       // I'm not sure the first case ever even happens...
       if(!seg.floorplane && !seg.ceilingplane)
       {
          // Should this case ever actually happen?
-         float top, topstep, bottom, bottomstep;
-         float y1, y2;
+         float top, top2, topstep, bottom, bottom2, bottomstep;
 
-         bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
-         y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+         bottom = seg.bottom + seg.bottomstep * clipx1;
+         bottom2 = seg.bottom2 - seg.bottomstep * clipx2;
 
          // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(y1 < portalrender.miny && y2 < portalrender.miny)
+         if(bottom < portalrender.miny && bottom2 < portalrender.miny)
             return;
 
-         bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+         bottomstep = seg.bottomstep;
 
          // I totally overlooked this when I moved all the wall panel projection 
          // to r_segs.c
-         top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
-         y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+         top = seg.top + seg.topstep * clipx1;
+         top2 = seg.top2 - seg.topstep * clipx2;
 
          // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(portalrender.maxy - y1 < -1.0f && portalrender.maxy - y2 < -1.0f)
+         if(portalrender.maxy - top < -1.0f && portalrender.maxy - top2 < -1.0f)
             return;
 
-         topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+         topstep = seg.topstep;
          
-         for(i = seg.x1; i <= seg.x2; i++)
+         for(i = start; i <= stop; i++)
          {
-            for(; i <= seg.x2 && (bottom < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
+            for(; i <= stop && (bottom < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
             {
                bottom += bottomstep;
                top += topstep;
             }
 
-            if(i > seg.x2)
+            if(i > stop)
                return;
 
             startx = i;
 
-            for(; i <= seg.x2 && bottom >= ceilingclip[i] && floorclip[i] - top > -1.0f; i++)
+            for(; i <= stop && bottom >= ceilingclip[i] && floorclip[i] - top > -1.0f; i++)
             {
                bottom += bottomstep;
                top += topstep;
@@ -775,29 +758,28 @@ static void R_ClipSegToPortal(void)
          // so rejection is carried out as if the seg is being viewed through
          // a ceiling portal.
 
-         float bottom, bottomstep;
-         float y1, y2;
+         float bottom, bottom2, bottomstep;
 
-         bottom = y1 = view.ycenter - (seg.bottom * seg.dist * view.yfoc) - 1;
-         y2 = view.ycenter - (seg.bottom * seg.dist2 * view.yfoc) - 1;
+         bottom = seg.bottom + seg.bottomstep * clipx1;
+         bottom2 = seg.bottom2 - seg.bottomstep * clipx2;
 
          // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(y1 < portalrender.miny && y2 < portalrender.miny)
+         if(bottom < portalrender.miny && bottom2 < portalrender.miny)
             return;
 
-         bottomstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+         bottomstep = seg.bottomstep;
 
-         for(i = seg.x1; i <= seg.x2; i++)
+         for(i = start; i <= stop; i++)
          {
-            for(; i <= seg.x2 && bottom < ceilingclip[i]; i++)
+            for(; i <= stop && bottom < ceilingclip[i]; i++)
                bottom += bottomstep;
 
-            if(i > seg.x2)
+            if(i > stop)
                return;
 
             startx = i;
 
-            for(; i <= seg.x2 && bottom >= ceilingclip[i]; i++)
+            for(; i <= stop && bottom >= ceilingclip[i]; i++)
                bottom += bottomstep;
 
             if(seg.clipsolid)
@@ -812,33 +794,32 @@ static void R_ClipSegToPortal(void)
          // so rejection is carried out as if the seg is being viewed through
          // a floor portal.
 
-         float top, topstep;
-         float y1, y2;
+         float top, top2, topstep;
 
          // I totally overlooked this when I moved all the wall panel projection 
          // to r_segs.c
-         top = y1 = view.ycenter - (seg.top * seg.dist * view.yfoc);
-         y2 = view.ycenter - (seg.top * seg.dist2 * view.yfoc);
+         top = seg.top + seg.topstep * clipx1;
+         top2 = seg.top2 - seg.topstep * clipx2;
 
          // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(portalrender.maxy - y1 < -1.0f && portalrender.maxy - y2 < -1.0f)
+         if(portalrender.maxy - top < -1.0f && portalrender.maxy - top2 < -1.0f)
             return;
 
-         topstep = seg.x2frac > seg.x1frac ? (y2 - y1) / (seg.x2frac - seg.x1frac) : 0.0f;
+         topstep = seg.topstep;
 
-         for(i = seg.x1; i <= seg.x2; i++)
+         for(i = start; i <= stop; i++)
          {
             // skip past the closed or out of sight columns to find the first visible column
-            for(; i <= seg.x2 && floorclip[i] - top <= -1.0f; i++)
+            for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
                top += topstep;
 
-            if(i > seg.x2)
+            if(i > stop)
                return;
 
             startx = i; // mark
 
             // skip past visible columns 
-            for(; i <= seg.x2 && floorclip[i] - top > -1.0f; i++)
+            for(; i <= stop && floorclip[i] - top > -1.0f; i++)
                top += topstep;
 
             if(seg.clipsolid)
@@ -850,20 +831,20 @@ static void R_ClipSegToPortal(void)
       else
       {
          // Seg is most likely being viewed from straight on...
-         for(i = seg.x1; i <= seg.x2; i++)
+         for(i = start; i <= stop; i++)
          {
-            while(i <= seg.x2 && floorclip[i] < ceilingclip[i]) i++;
+            while(i <= stop && floorclip[i] < ceilingclip[i]) i++;
 
-            if(i > seg.x2)
+            if(i > stop)
                return;
 
             startx = i;
-            while(i <= seg.x2 && floorclip[i] >= ceilingclip[i]) i++;
+            while(i <= stop && floorclip[i] >= ceilingclip[i]) i++;
+
             if(seg.clipsolid)
                R_ClipSolidWallSegment(startx, i - 1);
             else
                R_ClipPassWallSegment(startx, i - 1);
-
          }
       }
    }
@@ -1073,14 +1054,21 @@ static void R_AddLine(seg_t *line)
    seg.dist2 = i2;
    seg.diststep = (i2 - i1) * pstep;
 
-   seg.len = lclip1 * i1 * view.yfoc;
-   seg.len2 = lclip2 * i2 * view.yfoc;
+   i1 *= view.yfoc; i2 *= view.yfoc;
+
+   seg.len = lclip1 * i1;
+   seg.len2 = lclip2 * i2;
    seg.lenstep = (seg.len2 - seg.len) * pstep;
 
    seg.side = side;
 
-   seg.top = seg.top2 = seg.frontsec->ceilingheightf - view.z;
-   seg.bottom = seg.bottom2 = seg.frontsec->floorheightf - view.z;
+   seg.top = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i1);
+   seg.top2 = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i2);
+   seg.topstep = (seg.top2 - seg.top) * pstep;
+
+   seg.bottom = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
+   seg.bottom2 = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i2) - 1.0f;
+   seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
    textop = M_FixedToFloat(seg.frontsec->ceilingz) - view.z;
    texbottom = M_FixedToFloat(seg.frontsec->floorz) - view.z;
@@ -1144,7 +1132,10 @@ static void R_AddLine(seg_t *line)
               seg.frontsec->heightsec != seg.backsec->heightsec ||
               seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
 
-      seg.high = seg.high2 = seg.backsec->ceilingheightf - view.z;
+      seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
+      seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+      seg.highstep = (seg.high2 - seg.high) * pstep;
+
       texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
 
       uppermissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
@@ -1160,6 +1151,7 @@ static void R_AddLine(seg_t *line)
       {
          seg.top = seg.high;
          seg.top2 = seg.high2;
+         seg.topstep = seg.highstep;
          //uppermissing = false;
       }
 
@@ -1173,7 +1165,7 @@ static void R_AddLine(seg_t *line)
 
       seg.markcportal = 
          (R_RenderCeilingPortal(seg.frontsec) && 
-         (seg.clipsolid || seg.top != seg.high || 
+         (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
           seg.frontsec->c_portal != seg.backsec->c_portal));
 
       seg.c_window = seg.markcportal ? 
@@ -1189,7 +1181,7 @@ static void R_AddLine(seg_t *line)
            seg.frontsec->topmap != seg.backsec->topmap ||
            seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
 
-      if(seg.high < seg.top && side->toptexture)
+      if(seg.high > seg.top && side->toptexture)
       {
          seg.toptex = texturetranslation[side->toptexture];
          seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
@@ -1242,9 +1234,12 @@ static void R_AddLine(seg_t *line)
       }
 #endif
 
-      seg.low = seg.low2 = seg.backsec->floorheightf - view.z;
+      seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
+      seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+      seg.lowstep = (seg.low2 - seg.low) * pstep;
+
       texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
-      if(seg.bottom < seg.low && side->bottomtexture)
+      if(seg.bottom > seg.low && side->bottomtexture)
       {
          seg.bottomtex = texturetranslation[side->bottomtexture];
          seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
@@ -1267,35 +1262,10 @@ static void R_AddLine(seg_t *line)
                      R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
    }
 
-   if(x1 < 0)
-   {
-      seg.dist += seg.diststep * -x1;
-      seg.len += seg.lenstep * -x1;
-
-      seg.x1frac = 0.0f;
-      seg.x1 = 0;
-   }
-   else
-   {
-      seg.x1 = (int)floorx1;
-      seg.x1frac = x1;
-   }
-
-   if(x2 >= view.width)
-   {
-      float clipx = x2 - view.width + 1.0f;
-
-      seg.dist2 -= seg.diststep * clipx;
-      seg.len2 -= seg.lenstep * clipx;
-
-      seg.x2frac = view.width - 1.0f;
-      seg.x2 = viewwidth - 1;
-   }
-   else
-   {
-      seg.x2 = (int)floorx2;
-      seg.x2frac = x2;
-   }
+   seg.x1 = (int)floorx1;
+   seg.x1frac = x1;
+   seg.x2 = (int)floorx2;
+   seg.x2frac = x2;
 
    if(portalrender.active)
       R_ClipSegToPortal();
