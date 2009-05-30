@@ -398,10 +398,7 @@ void D_PageDrawer(void)
       // haleyjd 04/22/06: use lump size of 64000 to distinguish raw pages.
       // Valid fullscreen patch graphics should be larger than this.
 
-      if(W_LumpLength(l) == 64000)
-         V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT, t);
-      else
-         V_DrawPatch(0, 0, &vbscreen, (patch_t *)t);
+      V_DrawFSBackground(&vbscreen, t, W_LumpLength(l));
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {

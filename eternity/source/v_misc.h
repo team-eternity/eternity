@@ -133,6 +133,7 @@ extern int v_ticker;
 // Background 'tile' fill
 //
 
+void V_DrawBackgroundCached(byte *src, VBuffer *back_dest);
 void V_DrawBackground(const char *patchname, VBuffer *back_dest);
 void V_DrawDistortedBackground(const char* patchname, VBuffer *back_dest);
 

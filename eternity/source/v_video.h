@@ -173,6 +173,11 @@ void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height,
 void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
                          int srcpitch, byte *src, byte *cmap);
 
+// haleyjd 05/18/09: Fullscreen background drawing helpers
+void V_DrawBlockFS(VBuffer *buffer, byte *src);
+void V_DrawPatchFS(VBuffer *buffer, patch_t *patch);
+void V_DrawFSBackground(VBuffer *dest, void *source, int len);
+
 #ifdef DJGPP
 // Reads a linear block of pixels into the view buffer.
 void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest);

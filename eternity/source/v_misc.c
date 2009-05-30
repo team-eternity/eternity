@@ -484,10 +484,19 @@ void V_Init(void)
 }
 
 //
-// V_DrawBackground
+// V_DrawBackgroundCached
 //
 // Tiles a 64 x 64 flat over the entirety of the provided VBuffer
 // surface. Used by menus, intermissions, finales, etc.
+//
+void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
+{
+   back_dest->TileBlock64(back_dest, src);
+}
+
+//
+// V_DrawBackground
+//
 //
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {

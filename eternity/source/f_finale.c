@@ -827,13 +827,14 @@ void F_DemonScroll(void)
 //
 static void F_FinaleEndDrawer(void)
 {
+   // haleyjd 05/18/09: handle shareware once up here
+   boolean sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
+
    switch(LevelInfo.finaleType)
    {
    case FINALE_DOOM_CREDITS:
-      if(GameModeInfo->flags & GIF_SHAREWARE)
-         V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("HELP2",PU_CACHE));
-      else
-         V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("CREDIT",PU_CACHE));
+      V_DrawPatch(0, 0, &vbscreen, 
+                  W_CacheLumpName(sw ? "HELP2" : "CREDIT", PU_CACHE));
       break;
    case FINALE_DOOM_DEIMOS:
       V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("VICTORY2",PU_CACHE));
@@ -845,12 +846,8 @@ static void F_FinaleEndDrawer(void)
       V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("ENDPIC",PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
-      if(GameModeInfo->flags & GIF_SHAREWARE)
-         V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                     W_CacheLumpName("ORDER", PU_CACHE));
-      else
-         V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                     W_CacheLumpName("CREDIT", PU_CACHE));
+      V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT,
+                  W_CacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
       break;
    case FINALE_HTIC_WATER:
       F_DrawUnderwater();

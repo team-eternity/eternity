@@ -443,18 +443,11 @@ void MN_HelpDrawer(void)
    else
    {
       // haleyjd: support raw lumps
-      byte *raw;
       int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
+      byte *raw   = W_CacheLumpNum(lumpnum, PU_CACHE);
 
-      raw = W_CacheLumpNum(helpscreens[viewing_helpscreen].lumpnum, PU_CACHE);
-
-      // haleyjd 04/22/06: use lump size of 64000 to distinguish raw screens.
-      // Any valid full-screen patch graphic should be larger.
-      if(W_LumpLength(lumpnum) == 64000)
-         V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT, raw);
-      else
-         V_DrawPatch(0, 0, &vbscreen, (patch_t *)raw);
-      
+      // haleyjd 05/18/09: use smart background drawer
+      V_DrawFSBackground(&vbscreen, raw, W_LumpLength(lumpnum));      
    }
 }
 

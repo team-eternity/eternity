@@ -1279,6 +1279,7 @@ void A_WeaponCopyCtr(mobj_t *);
 void A_WeaponCtrOp(mobj_t *);
 void A_AmbientThinker(mobj_t *);
 void A_SteamSpawn(mobj_t *);
+void A_EjectCasing(mobj_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnGlitter(mobj_t *);
@@ -1596,6 +1597,7 @@ deh_bexptr deh_bexptrs[] =
   POINTERK(WeaponCtrOp),
   POINTER(AmbientThinker),
   POINTER(SteamSpawn),
+  POINTER(EjectCasing),
 
   // haleyjd 07/13/03: nuke specials
   POINTER(PainNukeSpec),

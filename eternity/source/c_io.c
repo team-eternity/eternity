@@ -141,7 +141,7 @@ static void C_initBackdrop(void)
    // haleyjd 03/30/08: support linear fullscreen graphics
    if(W_LumpLength(lumpnum) == 64000)
    {
-      V_DrawBlock(0, 0, &cback, SCREENWIDTH, SCREENHEIGHT, (byte *)patch);
+      V_DrawBlockFS(&cback, (byte *)patch);
 
       if(darken)
       {
@@ -170,7 +170,7 @@ static void C_initBackdrop(void)
          free(colormap);
       }
       else
-         V_DrawPatch(0, 0, &cback, patch);
+         V_DrawPatchFS(&cback, patch);
    }
 
    Z_ChangeTag(patch, PU_CACHE);

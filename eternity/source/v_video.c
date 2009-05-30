@@ -491,6 +491,49 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
    buffer->MaskedBlockDrawer(x, y, buffer, width, height, srcpitch, src, cmap);
 }
 
+//
+// V_DrawBlockFS
+//
+// haleyjd 05/18/09: Convenience routine to do V_DrawBlock but with
+// the assumption that the graphic is fullscreen, 320x200.
+//
+void V_DrawBlockFS(VBuffer *buffer, byte *src)
+{
+   buffer->BlockDrawer(0, 0, buffer, SCREENWIDTH, SCREENHEIGHT, src);
+}
+
+//
+// V_DrawPatchFS
+//
+// haleyjd 05/18/09: Convenience routine to do V_DrawPatch but with
+// the assumption that the graphic is fullscreen, 320x200.
+//
+void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
+{
+   V_DrawPatchGeneral(0, 0, buffer, patch, false);
+}
+
+//
+// V_DrawFSBackground
+//
+// haleyjd 05/18/09: A single smart function which will determine the
+// format of a fullscreen graphic resource and draw it properly.
+//
+void V_DrawFSBackground(VBuffer *dest, void *source, int len)
+{
+   switch(len)
+   {
+   case 4096:  // 64x64 flat
+      V_DrawBackgroundCached((byte *)source, dest);
+      break;
+   case 64000: // 320x200 linear
+      V_DrawBlockFS(dest, (byte *)source);
+      break;
+   default:    // anything else is treated like a patch (let god sort it out)
+      V_DrawPatchFS(dest, (patch_t *)source);
+      break;
+   }
+}
 
 #ifdef DJGPP
 //
