@@ -2122,12 +2122,14 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
    y = source->y;
    z = source->z + 4*8*FRACUNIT - source->floorclip;
 
-   th = P_SpawnMobj (x,y,z, type);
+   th = P_SpawnMobj(x, y, z, type);
 
    if(source->player && source->player->powers[pw_silencer] &&
       P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
+   {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
                            ATTN_NORMAL, CHAN_AUTO);
+   }
    else
       S_StartSound(th, th->info->seesound);
 

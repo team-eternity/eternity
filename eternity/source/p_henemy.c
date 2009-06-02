@@ -3328,25 +3328,27 @@ void A_EjectCasing(mobj_t *actor)
    angle_t angle = actor->angle;
    fixed_t x, y, z;
    fixed_t frontdist;
+   int     frontdisti;
    fixed_t sidedist;
+   fixed_t zheight;
    int     thingtype;
    mobj_t *mo;
 
-   frontdist = actor->state->args[0] * FRACUNIT / 16;
-   sidedist  = actor->state->args[1] * FRACUNIT / 16;
+   frontdisti = actor->state->args[0];
+   
+   frontdist  = frontdisti * FRACUNIT / 16;
+   sidedist   = actor->state->args[1] * FRACUNIT / 16;
+   zheight    = actor->state->args[2] * FRACUNIT / 16;
 
    // account for mlook - EXPERIMENTAL
    if(actor->player)
    {
       int pitch = actor->player->pitch;
+            
+      z = actor->z + actor->player->viewheight + zheight;
       
-      // shorten distance
-      frontdist -= (pitch / ANGLE_1) * FRACUNIT / 32;
-      
-      z = actor->player->viewheight + actor->state->args[2] * FRACUNIT / 16;
-      
-      // modify height
-      z += (pitch / ANGLE_1) * (5 * FRACUNIT / 32);
+      // modify height according to pitch - hack warning.
+      z -= (pitch / ANGLE_1) * ((10 * frontdisti / 256) * FRACUNIT / 32);
    }
    else
       z = actor->z + actor->state->args[2] * FRACUNIT / 16;
@@ -3354,15 +3356,7 @@ void A_EjectCasing(mobj_t *actor)
    x = actor->x + FixedMul(frontdist, finecosine[angle>>ANGLETOFINESHIFT]);
    y = actor->y + FixedMul(frontdist, finesine[angle>>ANGLETOFINESHIFT]);
 
-   // account for bobbing - EXPERIMENTAL
-   if(actor->player && action_from_pspr)
-   {
-      x += actor->player->psprites[actor->player->curpsprite].sx;
-      z += actor->player->psprites[actor->player->curpsprite].sy;
-   }
-
-
-   // adjust x/y along a vector orthogonal to the object's angle
+   // adjust x/y along a vector orthogonal to the source object's angle
    angle = angle - ANG90;
 
    x += FixedMul(sidedist, finecosine[angle>>ANGLETOFINESHIFT]);
@@ -3372,12 +3366,30 @@ void A_EjectCasing(mobj_t *actor)
 
    mo = P_SpawnMobj(x, y, z, thingtype);
 
-   mo->angle       = sidedist >= 0 ? angle : angle + ANG180;
-   mo->counters[0] = (sidedist >= 0);
+   mo->angle = sidedist >= 0 ? angle : angle + ANG180;
 }
 
-void A_CasingFall(mobj_t *actor)
+//
+// A_CasingThrust
+//
+// A casing-specific thrust function.
+//    args[0] : lateral force in 16ths of a unit
+//    args[1] : z force in 16ths of a unit
+//
+void A_CasingThrust(mobj_t *actor)
 {
+   fixed_t moml, momz;
+
+   moml = actor->state->args[0] * FRACUNIT / 16;
+   momz = actor->state->args[1] * FRACUNIT / 16;
+   
+   actor->momx = FixedMul(moml, finecosine[actor->angle>>ANGLETOFINESHIFT]);
+   actor->momy = FixedMul(moml, finesine[actor->angle>>ANGLETOFINESHIFT]);
+   
+   // randomize
+   actor->momx += P_SubRandom(pr_casing) << 8;
+   actor->momy += P_SubRandom(pr_casing) << 8;
+   actor->momz = momz + (P_SubRandom(pr_casing) << 8);
 }
 
 //

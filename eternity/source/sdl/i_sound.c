@@ -430,9 +430,11 @@ void I_Sound_AddCommands(void)
    C_AddCommand(mus_card);
    C_AddCommand(detect_voices);
 
+#ifdef _SDL_VER
 #ifdef HAVE_SPCLIB
    C_AddCommand(snd_spcpreamp);
    C_AddCommand(snd_spcbassboost);
+#endif
 #endif
 }
 
