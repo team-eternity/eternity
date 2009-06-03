@@ -1281,6 +1281,8 @@ void A_AmbientThinker(mobj_t *);
 void A_SteamSpawn(mobj_t *);
 void A_EjectCasing(mobj_t *);
 void A_CasingThrust(mobj_t *);
+void A_JumpIfNoAmmo(mobj_t *);
+void A_CheckReloadEx(mobj_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnGlitter(mobj_t *);
@@ -1600,6 +1602,8 @@ deh_bexptr deh_bexptrs[] =
   POINTER(SteamSpawn),
   POINTER(EjectCasing),
   POINTER(CasingThrust),
+  POINTER(JumpIfNoAmmo),
+  POINTER(CheckReloadEx),
 
   // haleyjd 07/13/03: nuke specials
   POINTER(PainNukeSpec),

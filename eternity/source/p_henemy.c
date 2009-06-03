@@ -3861,5 +3861,123 @@ void A_WeaponCopyCtr(mobj_t *mo)
    *dest = *src;
 }
 
+//
+// A_JumpIfNoAmmo
+//
+// ZDoom-compatible ammo jump. For weapons only!
+//    args[0] : state to jump to if not enough ammo
+//
+void A_JumpIfNoAmmo(mobj_t *mo)
+{
+   if(action_from_pspr)
+   {
+      player_t *p     = mo->player;
+      state_t  *s     = p->psprites[p->curpsprite].state;
+      int statenum    = E_StateNumForDEHNum(s->args[0]);
+      weaponinfo_t *w = P_GetReadyWeapon(p);
+
+      if(statenum == NUMSTATES) // bad state?
+         return;
+
+      if(w->ammo < NUMAMMO && p->ammo[w->ammo] < w->ammopershot)
+         P_SetPsprite(p, p->curpsprite, statenum);
+   }
+}
+
+//
+// A_CheckReloadEx
+//
+// An extended version of the above that can compare against flexible values
+// rather than assuming weapon's ammo per shot is the value to compare against.
+// Args:
+//    args[0] : state to jump to if test fails
+//    args[1] : test to perform
+//    args[2] : immediate value OR counter number to compare against
+//    args[3] : psprite to affect (weapon or flash)
+//
+// Note: uses the exact same keyword set as A_WeaponCtrJump. Not redefined.
+//
+void A_CheckReloadEx(mobj_t *mo)
+{
+   boolean branch = false;
+   int statenum, checktype, psprnum;
+   short value;
+   player_t *player;
+   pspdef_t *pspr;
+   weaponinfo_t *w;
+   int ammo;
+
+   if(!(player = mo->player))
+      return;
+
+   w = P_GetReadyWeapon(player);
+
+   if(w->ammo >= am_noammo)
+      return;
+
+   ammo = player->ammo[w->ammo];
+
+   pspr = &(player->psprites[player->curpsprite]);
+
+   statenum  = pspr->state->args[0];
+   checktype = pspr->state->args[1];
+   value     = (short)(pspr->state->args[2]);
+   psprnum   = pspr->state->args[3];
+   
+   // validate state number
+   statenum = E_StateNumForDEHNum(statenum);
+   if(statenum == NUMSTATES)
+      return;
+
+   // validate psprite number
+   if(psprnum < 0 || psprnum >= NUMPSPRITES)
+      return;
+
+   // 08/02/04:
+   // support getting check value from a counter
+   // if checktype is greater than the last immediate operator,
+   // then the comparison value is actually a counter number
+
+   if(checktype >= CPC_NUMIMMEDIATE)
+   {
+      // turn it into the corresponding immediate operation
+      checktype -= CPC_NUMIMMEDIATE;
+
+      switch(value)
+      {
+      case 0:
+      case 1:
+      case 2:
+         value = player->weaponctrs[player->readyweapon][value];
+         break;
+      default:
+         return; // invalid counter number
+      }
+   }
+
+   switch(checktype)
+   {
+   case CPC_LESS:
+      branch = (ammo < value); break;
+   case CPC_LESSOREQUAL:
+      branch = (ammo <= value); break;
+   case CPC_GREATER:
+      branch = (ammo > value); break;
+   case CPC_GREATEROREQUAL:
+      branch = (ammo >= value); break;
+   case CPC_EQUAL:
+      branch = (ammo == value); break;
+   case CPC_NOTEQUAL:
+      branch = (ammo != value); break;
+   case CPC_BITWISEAND:
+      branch = (ammo & value); break;
+   default:
+      break;
+   }
+
+   if(branch)
+      P_SetPsprite(player, psprnum, statenum);      
+}
+
 // EOF
 

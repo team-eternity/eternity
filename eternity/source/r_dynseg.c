@@ -312,11 +312,6 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       int side_v1   = R_PointOnSide(seg->v1->x, seg->v1->y, bsp);
       int side_v2   = R_PointOnSide(seg->v2->x, seg->v2->y, bsp);
 
-      // test polyobj origin against node line also
-      int side_spot = R_PointOnSide(dseg->polyobj->centerPt.x, 
-                                    dseg->polyobj->centerPt.y,
-                                    bsp);
-
       // get distance of vertices from partition line
       double dist_v1 = R_PartitionDistance(seg->v1->fx, seg->v1->fy, bsp);
       double dist_v2 = R_PartitionDistance(seg->v2->fx, seg->v2->fy, bsp);
@@ -327,7 +322,10 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       // usual assumptions.
       if(dist_v1 <= DS_EPSILON && dist_v2 <= DS_EPSILON)
       {
-         side_v1 = side_spot;
+         // test polyobj origin against node line
+         side_v1 = R_PointOnSide(dseg->polyobj->centerPt.x, 
+                                 dseg->polyobj->centerPt.y,
+                                 bsp);
       }
       else if(side_v1 != side_v2)
       {
