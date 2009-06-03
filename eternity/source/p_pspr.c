@@ -74,29 +74,66 @@ int weapon_recoil;      // weapon recoil
 // This global is only asserted while an action function is being dispatched
 // from inside P_SetPsprite. This allows codepointer functions to behave 
 // differently if called by mobj_t's or by player weapons.
-boolean action_from_pspr = false;
 
-static long pspr_tempargs[NUMSTATEARGS];
+int action_from_pspr;
 
+typedef struct gunaction_s
+{
+   state_t *s;               // state args were copied to
+   long args[NUMSTATEARGS];  // saved args
+   struct gunaction_s *next; // next action
+} gunaction_t;
+
+static gunaction_t *gunactions;
+
+//
+// P_SetupPlayerGunAction
+//
+// Enables copying of psp->state->args to mo->state->args during psprite
+// action function callback so that parameterized pointers work seamlessly.
+//
 static void P_SetupPlayerGunAction(player_t *player, pspdef_t *psp)
 {
+   // create a new gunaction
+   gunaction_t *ga = calloc(1, sizeof(gunaction_t));
    mobj_t *mo = player->mo;
 
-   // haleyjd 10/06/08: temporarily copy psprite args to player state args
-   memcpy(pspr_tempargs, mo->state->args, NUMSTATEARGS * sizeof(long));
+   memcpy(ga->args, mo->state->args, NUMSTATEARGS * sizeof(long));
    memcpy(mo->state->args, psp->state->args, NUMSTATEARGS * sizeof(long));
 
-   action_from_pspr = true;
+   action_from_pspr++;
+
+   // save pointer to state
+   ga->s = mo->state;
+
+   // put gun action on the stack
+   ga->next   = gunactions;
+   gunactions = ga;
 }
 
-static void P_FinishPlayerGunAction(player_t *player)
+//
+// P_FinishPlayerGunAction
+//
+// Fixes the state args back up after a psprite action call.
+//
+static void P_FinishPlayerGunAction(void)
 {
-   mobj_t *mo = player->mo;
+   gunaction_t *ga;
 
-   // restore args
-   memcpy(mo->state->args, pspr_tempargs, NUMSTATEARGS * sizeof(long));
+   // take the current gunaction off the stack
+   if(!gunactions)
+      I_Error("P_FinishPlayerGunAction: stack underflow\n");
 
-   action_from_pspr = false;
+   ga = gunactions;
+   gunactions = ga->next;
+
+   // copy saved args back to state
+   memcpy(ga->s->args, ga->args, NUMSTATEARGS * sizeof(long));
+
+   action_from_pspr--;
+
+   // free the gunaction
+   free(ga);
 }
 
 //
@@ -150,7 +187,7 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
 
          state->action(player->mo);
          
-         P_FinishPlayerGunAction(player);
+         P_FinishPlayerGunAction();
          
          if(!psp->state)
             break;
