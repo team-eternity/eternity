@@ -35,37 +35,6 @@
 
 
 
-// P_CrossProduct3f
-// Gets the cross product of v1 and v2 and stores in dest 
-void P_CrossProduct3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
-{
-   v3float_t tmp;
-   tmp.x = (v1->y * v2->z) - (v1->z * v2->y);
-   tmp.y = (v1->z * v2->x) - (v1->x * v2->z);
-   tmp.z = (v1->x * v2->y) - (v1->y * v2->x);
-   *dest = tmp;
-}
-
-
-// P_SubVec3f
-// Subtracts v2 from v1 and stores the result in dest
-void P_SubVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
-{
-   v3float_t tmp;
-   tmp.x = (v1->x - v2->x);
-   tmp.y = (v1->y - v2->y);
-   tmp.z = (v1->z - v2->z);
-   *dest = tmp;
-}
-
-
-// P_CrossVec3f
-float P_CrossVec3f(const v3float_t *v1, const v3float_t *v2)
-{
-   return (v1->x * v2->x) + (v1->y * v2->y) + (v1->z * v2->z);
-} 
-
-
 
 
 // P_MakeSlope
@@ -102,16 +71,16 @@ static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, const float
 
       if(isceiling)
       {
-         P_SubVec3f(&d1, &v1, &v3);
-         P_SubVec3f(&d2, &v2, &v3);
+         M_SubVec3f(&d1, &v1, &v3);
+         M_SubVec3f(&d2, &v2, &v3);
       }
       else
       {
-         P_SubVec3f(&d1, &v1, &v2);
-         P_SubVec3f(&d2, &v3, &v2);
+         M_SubVec3f(&d1, &v1, &v2);
+         M_SubVec3f(&d2, &v3, &v2);
       }
 
-      P_CrossProduct3f(&ret->normalf, &d1, &d2);
+      M_CrossProduct3f(&ret->normalf, &d1, &d2);
 
       len = (float)sqrt(ret->normalf.x * ret->normalf.x +
                         ret->normalf.y * ret->normalf.y + 

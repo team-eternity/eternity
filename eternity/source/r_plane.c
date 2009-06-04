@@ -428,9 +428,9 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = P_CrossVec3f(&s, &slope->A) * plane.tsizef;
-   slopespan.ivfrac = P_CrossVec3f(&s, &slope->B) * plane.tsizef;
-   slopespan.idfrac = P_CrossVec3f(&s, &slope->C);
+   slopespan.iufrac = M_DotVec3f(&s, &slope->A) * plane.tsizef;
+   slopespan.ivfrac = M_DotVec3f(&s, &slope->B) * plane.tsizef;
+   slopespan.idfrac = M_DotVec3f(&s, &slope->C);
 
    slopespan.iustep = slope->A.x * plane.tsizef;
    slopespan.ivstep = slope->B.x * plane.tsizef;
@@ -481,23 +481,6 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
    return true;
 }
 
-
-
-// Translates a 3-float vector (x, y, z) in right-handed coordinate space based 
-// on the doom camera.
-void R_TranslateVec3f(v3float_t *v)
-{
-   float tx, ty, tz;
-
-   tx = v->x - view.x;
-   ty = view.z - v->y;
-   tz = v->z - view.y;
-
-   // Just like wall projection.
-   v->x = (tx * view.cos) - (tz * view.sin);
-   v->z = (tz * view.cos) + (tx * view.sin);
-   v->y = ty;
-}
 
 
 
@@ -558,16 +541,16 @@ static void R_CalcSlope(visplane_t *vp)
    rslope->N.z = rslope->P.z - tsizef;
    rslope->N.y = P_GetZAtf(vp->pslope, rslope->N.x, rslope->N.z);
 
-   R_TranslateVec3f(&rslope->P);
-   R_TranslateVec3f(&rslope->M);
-   R_TranslateVec3f(&rslope->N);
+   M_TranslateVec3f(&rslope->P);
+   M_TranslateVec3f(&rslope->M);
+   M_TranslateVec3f(&rslope->N);
 
-   P_SubVec3f(&rslope->M, &rslope->M, &rslope->P);
-   P_SubVec3f(&rslope->N, &rslope->N, &rslope->P);
+   M_SubVec3f(&rslope->M, &rslope->M, &rslope->P);
+   M_SubVec3f(&rslope->N, &rslope->N, &rslope->P);
 
-   P_CrossProduct3f(&rslope->A, &rslope->P, &rslope->N);
-   P_CrossProduct3f(&rslope->B, &rslope->P, &rslope->M);
-   P_CrossProduct3f(&rslope->C, &rslope->M, &rslope->N);
+   M_CrossProduct3f(&rslope->A, &rslope->P, &rslope->N);
+   M_CrossProduct3f(&rslope->B, &rslope->P, &rslope->M);
+   M_CrossProduct3f(&rslope->C, &rslope->M, &rslope->N);
 
    // This is helpful for removing some of the muls when calculating light.
    rslope->A.x *= 0.5f;

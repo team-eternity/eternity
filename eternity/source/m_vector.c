@@ -30,13 +30,12 @@
 
 
 // 
-// M_TranslateVector
+// M_TranslateVec3f
 //
 // Translates the given vector (in doom's coordinate system) to the camera
 // space (in right-handed coordinate system) This function is used for slopes.
 // 
-
-void M_TranslateVector(v3float_t *vec)
+void M_TranslateVec3f(v3float_t *vec)
 {
    float tx, ty, tz;
 
@@ -55,37 +54,24 @@ void M_TranslateVector(v3float_t *vec)
 //
 // M_AddVec3f
 //
-// Adds v2 to v1
-void M_AddVec3f(v3float_t *v1, const v3float_t *v2)
+// Adds v2 to v1 stores in dest
+void M_AddVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
 {
-   v1->x += v2->x;
-   v1->y += v2->y;
-   v1->z += v2->z;
+   dest->x = v1->x + v2->x;
+   dest->y = v1->y + v2->y;
+   dest->z = v1->z + v2->z;
 }
 
 
 // 
 // M_SubVec3f
 //
-// Subtracts v2 from v1
-void M_SubVec3f(v3float_t *v1, const v3float_t *v2)
+// Subtracts v2 from v1 stores in dest
+void M_SubVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
 {
-   v1->x -= v2->x;
-   v1->y -= v2->y;
-   v1->z -= v2->z;
-}
-
-
-
-//
-// M_CrossVec3f
-// 
-// Calculates the cross product of the v1 and v2 and stores the result in dest.
-void M_CrossVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
-{
-   dest->x = (v1->y * v2->z) - (v1->z * v2->y);
-   dest->y = (v1->z * v2->x) - (v1->x * v2->z);
-   dest->z = (v1->x * v2->y) - (v1->y * v2->x);
+   dest->x = v1->x - v2->x;
+   dest->y = v1->y - v2->y;
+   dest->z = v1->z - v2->z;
 }
 
 
@@ -98,3 +84,20 @@ float M_DotVec3f(const v3float_t *v1, const v3float_t *v2)
 {
    return (v1->x * v2->x) + (v1->y * v2->y) + (v1->z * v2->z);
 }
+
+
+//
+// M_CrossProduct3f
+//
+// Gets the cross product of v1 and v2 and stores in dest 
+void M_CrossProduct3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
+{
+   v3float_t tmp;
+   tmp.x = (v1->y * v2->z) - (v1->z * v2->y);
+   tmp.y = (v1->z * v2->x) - (v1->x * v2->z);
+   tmp.z = (v1->x * v2->y) - (v1->y * v2->x);
+   memcpy(dest, &tmp, sizeof(v3float_t));
+}
+
+
+
