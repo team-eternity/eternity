@@ -55,6 +55,7 @@
 #include "p_info.h"
 #include "p_anim.h"
 #include "p_user.h"
+#include "p_slopes.h"
 
 #define MAXVISPLANES 128    /* must be a power of 2 */
 
@@ -107,6 +108,9 @@ int     visplane_view=0;
 
 cb_span_t  span;
 cb_plane_t plane;
+cb_slopespan_t slopespan;
+
+float slopevis; // SoM: used in slope lighting
 
 // BIG FLATS
 void R_Throw(void)
@@ -115,6 +119,7 @@ void R_Throw(void)
 }
 
 void (*flatfunc)(void) = R_Throw;
+void (*slopefunc)(void) = R_Throw;
 
 //
 // R_InitPlanes
@@ -123,6 +128,30 @@ void (*flatfunc)(void) = R_Throw;
 void R_InitPlanes(void)
 {
 }
+
+
+
+//
+// R_SpanLight
+// Returns a colormap index from the given distance and lightlevel info
+static int R_SpanLight(float dist)
+{
+   int map = (int)(plane.startmap - (1280.0f / dist)) + 1 - (extralight * LIGHTBRIGHT);
+
+   return map < 0 ? 0 : map >= NUMCOLORMAPS ? NUMCOLORMAPS - 1 : map;
+}
+
+
+// 
+// R_PlaneLight
+// Sets up the internal light level barriers inside the plane struct
+static void R_PlaneLight()
+{
+   // This formula was taken (almost) directly from r_main.c where the zlight
+   // table is generated.
+   plane.startmap = 2.0f * (30.0f - (plane.lightlevel / 8.0f));
+}
+
 
 //
 // R_MapPlane
@@ -163,12 +192,7 @@ static void R_MapPlane(int y, int x1, int x2)
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
-   {
-      int index = (int)(realy / 16.0f);
-      if(index >= MAXLIGHTZ )
-         index = MAXLIGHTZ-1;
-      span.colormap = plane.planezlight[index];
-   }
+      span.colormap = plane.colormap + R_SpanLight(realy) * 256;
    
    span.y  = y;
    span.x1 = x1;
@@ -354,6 +378,222 @@ static void R_MapPlane(int y, int x1, int x2)
 }
 */
 
+
+
+static void R_SlopeLights(int len, float startmap, float endmap)
+{
+   int i;
+   float map, step;
+
+   if(plane.fixedcolormap)
+   {
+      for(i = 0; i < len; i++)
+         slopespan.colormap[i] = plane.fixedcolormap;
+      return;
+   }
+
+   map = startmap;
+   if(len > 1)
+      step = (float)(endmap - startmap) / (len - 1);
+   else
+      step = 0;
+
+   for(i = 0; i < len; i++)
+   {
+      int index = (int)(map / 256.0f * NUMCOLORMAPS) + 1;
+
+      index -= (extralight * LIGHTBRIGHT);
+
+      if(index < 0)
+         slopespan.colormap[i] = (byte *)(plane.colormap);
+      else if(index >= NUMCOLORMAPS)
+         slopespan.colormap[i] = (byte *)(plane.colormap + ((NUMCOLORMAPS - 1) * 256));
+      else
+         slopespan.colormap[i] = (byte *)(plane.colormap + (index * 256));
+
+      map += step;
+   }
+}
+
+
+static void R_MapSlope(int y, int x1, int x2)
+{
+   rslope_t *slope = plane.slope;
+   int count = x2 - x1;
+   v3float_t s;
+   float map1, map2;
+   float base;
+
+   s.x = x1 - view.xcenter;
+   s.y = y - view.ycenter + 1;
+   s.z = view.xfoc;
+
+   slopespan.iufrac = P_CrossVec3f(&s, &slope->A) * plane.tsizef;
+   slopespan.ivfrac = P_CrossVec3f(&s, &slope->B) * plane.tsizef;
+   slopespan.idfrac = P_CrossVec3f(&s, &slope->C);
+
+   slopespan.iustep = slope->A.x * plane.tsizef;
+   slopespan.ivstep = slope->B.x * plane.tsizef;
+   slopespan.idstep = slope->C.x;
+
+   slopespan.source = plane.source;
+   slopespan.x1 = x1;
+   slopespan.x2 = x2;
+   slopespan.y = y;
+
+   // Setup lighting
+   base = 4.0f * (plane.lightlevel) - 448.0f;
+
+   map1 = base - (256.0f - (slope->shade - slope->plight * slopespan.idfrac));
+   if(count > 0)
+   {
+      float id = slopespan.idfrac + slopespan.idstep * (x2 - x1);
+      map2 = base - (256.0f - (slope->shade - slope->plight * id));
+   }
+   else
+      map2 = map1;
+
+   R_SlopeLights(x2 - x1 + 1, (256.0f - map1), (256.0f - map2));
+ 
+   slopefunc();
+}
+
+
+
+
+//
+// R_CompareSlopes
+// 
+// SoM: Returns true if the texture spaces of the give slope structs are the
+// same.
+boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
+{
+   if((!!s1) != (!!s2))
+      return false;
+   if(s1 == s2)
+      return true;
+   // TODO: This should really use a sigma value.
+   if(s1->normalf.x != s2->normalf.x ||
+      s1->normalf.y != s2->normalf.y ||
+      s1->normalf.z != s2->normalf.z ||
+      P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf) != 0.0f)
+      return false;
+   return true;
+}
+
+
+
+// Translates a 3-float vector (x, y, z) in right-handed coordinate space based 
+// on the doom camera.
+void R_TranslateVec3f(v3float_t *v)
+{
+   float tx, ty, tz;
+
+   tx = v->x - view.x;
+   ty = view.z - v->y;
+   tz = v->z - view.y;
+
+   // Just like wall projection.
+   v->x = (tx * view.cos) - (tz * view.sin);
+   v->z = (tz * view.cos) + (tx * view.sin);
+   v->y = ty;
+}
+
+
+
+//
+// R_CalcSlope
+//
+// SoM: Calculates the rslope info from the OHV vectors and rotation/offset 
+// information in the plane struct
+static void R_CalcSlope(visplane_t *vp)
+{
+   // This is where the crap gets calculated. Yay
+   int x, y, tsizei;
+   float ixscale, iyscale, tsizef;
+   rslope_t *rslope = &vp->rslope;
+
+   if(!vp->pslope)
+      return;
+
+   switch(flatsize[vp->picnum])
+   {
+      case FLAT_64:
+         tsizei = 64;
+         tsizef = 64.0f;
+         break;
+      case FLAT_128:
+         tsizei = 128;
+         tsizef = 128.0f;
+         break;
+      case FLAT_256:
+         tsizei = 256;
+         tsizef = 256.0f;
+         break;
+      case FLAT_512:
+         tsizei = 512;
+         tsizef = 512.0f;
+         break;
+      default:
+         I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", vp->picnum);
+   }
+
+
+   x = (int)vp->pslope->of.x;
+   y = (int)vp->pslope->of.y;
+
+   x -= x % tsizei;
+   y -= y % tsizei;
+
+   // TODO: rotation/offsets
+   rslope->P.x = (float)x;
+   rslope->P.z = (float)y;
+   rslope->P.y = P_GetZAtf(vp->pslope, rslope->P.x, rslope->P.z);
+
+   rslope->M.x = rslope->P.x - tsizef;
+   rslope->M.z = rslope->P.z;
+   rslope->M.y = P_GetZAtf(vp->pslope, rslope->M.x, rslope->M.z);
+
+   rslope->N.x = rslope->P.x;
+   rslope->N.z = rslope->P.z - tsizef;
+   rslope->N.y = P_GetZAtf(vp->pslope, rslope->N.x, rslope->N.z);
+
+   R_TranslateVec3f(&rslope->P);
+   R_TranslateVec3f(&rslope->M);
+   R_TranslateVec3f(&rslope->N);
+
+   P_SubVec3f(&rslope->M, &rslope->M, &rslope->P);
+   P_SubVec3f(&rslope->N, &rslope->N, &rslope->P);
+
+   P_CrossProduct3f(&rslope->A, &rslope->P, &rslope->N);
+   P_CrossProduct3f(&rslope->B, &rslope->P, &rslope->M);
+   P_CrossProduct3f(&rslope->C, &rslope->M, &rslope->N);
+
+   // This is helpful for removing some of the muls when calculating light.
+   rslope->A.x *= 0.5f;
+   rslope->A.y *= 0.5f / view.focratio;
+   rslope->A.z *= 0.5f;
+
+   rslope->B.x *= 0.5f;
+   rslope->B.y *= 0.5f / view.focratio;
+   rslope->B.z *= 0.5f;
+
+   rslope->C.x *= 0.5f;
+   rslope->C.y *= 0.5f / view.focratio;
+   rslope->C.z *= 0.5f;
+
+   rslope->zat = P_GetZAtf(vp->pslope, vp->viewxf, vp->viewyf);
+
+   // More help from randy. I was totally lost on this... 
+   ixscale = iyscale = 1.0f / tsizef;
+
+   rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - vp->viewzf);
+   rslope->shade = 256.0f * 2.0f - (vp->lightlevel + 16.0f) * 256.0f / 128.0f;
+}
+
+
+
+
 //
 // R_ClearPlanes
 // At begining of frame.
@@ -430,6 +670,10 @@ static visplane_t *new_visplane(unsigned hash)
    return check;
 }
 
+
+
+
+
 //
 // R_FindPlane
 //
@@ -437,7 +681,8 @@ static visplane_t *new_visplane(unsigned hash)
 // haleyjd 01/05/08: Add angle
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
-                        fixed_t xoffs, fixed_t yoffs, float angle)
+                        fixed_t xoffs, fixed_t yoffs, float angle,
+                        pslope_t *slope)
 {
    visplane_t *check;
    unsigned int hash;                      // killough
@@ -454,7 +699,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       if(height > viewz)
          height = 1;
       
-      //height = (height > viewz);
+      //height = (height > viewz) ? 1 : 0;
    }
 
    // New visplane algorithm uses hash table -- killough
@@ -472,7 +717,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          fixedcolormap == check->fixedcolormap && 
          viewx == check->viewx && 
          viewy == check->viewy && 
-         viewz == check->viewz
+         viewz == check->viewz &&
+         R_CompareSlopes(check->pslope, slope)
         )
         return check;
    }
@@ -489,6 +735,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->angle = angle;               // haleyjd 01/05/08: Save angle
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
+   check->fullcolormap = fullcolormap;
 
    check->viewx = viewx;
    check->viewy = viewy;
@@ -511,6 +758,11 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->heightf = M_FixedToFloat(height);
    check->xoffsf  = M_FixedToFloat(xoffs);
    check->yoffsf  = M_FixedToFloat(yoffs);
+
+   // SoM: set up slope type stuff
+   check->pslope = slope;
+   if(slope)
+      R_CalcSlope(check);
    
    // SoM: memset should use the check->max_width
    //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
@@ -574,6 +826,11 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->heightf = pl->heightf;
       new_pl->xoffsf = pl->xoffsf;
       new_pl->yoffsf = pl->yoffsf;
+
+      new_pl->pslope = pl->pslope;
+      memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
+      new_pl->fullcolormap = pl->fullcolormap;
+
       pl = new_pl;
       pl->minx = start;
       pl->maxx = stop;
@@ -592,16 +849,20 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 //
 static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
 {
+   void (*MapFunc)(int, int, int);
+
 #ifdef RANGECHECK
    // haleyjd: do not allow this loop to trash the BSS data
    if(b2 >= MAX_SCREENHEIGHT)
       I_Error("R_MakeSpans: b2 >= MAX_SCREENHEIGHT\n");
 #endif
 
+   MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
+
    for(; t2 > t1 && t1 <= b1; t1++)
-      R_MapPlane(t1, spanstart[t1], x - 1);
+      MapFunc(t1, spanstart[t1], x - 1);
    for(; b2 < b1 && t1 <= b1; b1--)
-      R_MapPlane(b1, spanstart[b1], x - 1);
+      MapFunc(b1, spanstart[b1], x - 1);
    while(t2 < t1 && t2 <= b2)
       spanstart[t2++] = x;
    while(b2 > b1 && t2 <= b2)
@@ -858,6 +1119,7 @@ static void do_draw_plane(visplane_t *pl)
       // span drawstyles (ie. translucency)
 
       flatfunc        = r_span_engine->DrawSpan[0][fs];
+      slopefunc       = r_span_engine->DrawSlope[0][fs];
       plane.fixedunit = r_span_engine->fixedunits[0][fs];
         
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
@@ -888,8 +1150,38 @@ static void do_draw_plane(visplane_t *pl)
       pl->top[pl->minx-1] = pl->top[stop] = 0x7FFFFFFF;
 
       plane.planezlight = pl->colormap[light];//zlight[light];
+      plane.colormap = pl->fullcolormap;
       // haleyjd 10/16/06
       plane.fixedcolormap = pl->fixedcolormap;
+
+      // SoM: slopes
+      plane.slope = pl->pslope ? &pl->rslope : NULL;
+      plane.lightlevel = pl->lightlevel;
+
+      R_PlaneLight();
+
+      switch(fs)
+      {
+         case FLAT_64:
+            plane.tsizei = 64;
+            plane.tsizef = 64.0f;
+            break;
+         case FLAT_128:
+            plane.tsizei = 128;
+            plane.tsizef = 128.0f;
+            break;
+         case FLAT_256:
+            plane.tsizei = 256;
+            plane.tsizef = 256.0f;
+            break;
+         case FLAT_512:
+            plane.tsizei = 512;
+            plane.tsizef = 512.0f;
+            break;
+         default:
+            I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", pl->picnum);
+      }
+
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);

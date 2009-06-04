@@ -932,6 +932,9 @@ static void R_AddLine(seg_t *line)
       && seg.backsec->f_portal == seg.frontsec->f_portal
 
       && !seg.line->linedef->portal
+
+      && seg.backsec->f_slope == seg.frontsec->f_slope
+      && seg.backsec->c_slope == seg.frontsec->c_slope
       )
       return;
       
@@ -1062,12 +1065,46 @@ static void R_AddLine(seg_t *line)
 
    seg.side = side;
 
-   seg.top = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i1);
-   seg.top2 = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i2);
+   if(seg.frontsec->c_slope)
+   {
+      float z1, z2, zstep;
+
+      z1 = P_GetZAtf(seg.frontsec->c_slope, v1->fx, v1->fy);
+      z2 = P_GetZAtf(seg.frontsec->c_slope, v2->fx, v2->fy);
+      zstep = (z2 - z1) / seg.line->len;
+
+      z1 += lclip1 * zstep;
+      z2 -= (seg.line->len - lclip2) * zstep;
+      seg.top = view.ycenter - ((z1 - view.z) * i1);
+      seg.top2 = view.ycenter - ((z2 - view.z) * i2);
+   }
+   else
+   {
+      seg.top = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i1);
+      seg.top2 = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i2);
+   }
    seg.topstep = (seg.top2 - seg.top) * pstep;
 
-   seg.bottom = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
-   seg.bottom2 = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i2) - 1.0f;
+
+   if(seg.frontsec->f_slope)
+   {
+      float z1, z2, zstep;
+
+      z1 = P_GetZAtf(seg.frontsec->f_slope, v1->fx, v1->fy);
+      z2 = P_GetZAtf(seg.frontsec->f_slope, v2->fx, v2->fy);
+      zstep = (z2 - z1) / seg.line->len;
+
+      z1 += lclip1 * zstep;
+      z2 -= (seg.line->len - lclip2) * zstep;
+      seg.bottom = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
+      seg.bottom2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
+   }
+   else
+   {      
+      seg.bottom = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
+      seg.bottom2 = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i2) - 1.0f;
+   }
+
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
    textop = M_FixedToFloat(seg.frontsec->ceilingz) - view.z;
@@ -1132,8 +1169,25 @@ static void R_AddLine(seg_t *line)
               seg.frontsec->heightsec != seg.backsec->heightsec ||
               seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
 
-      seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
-      seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+      if(seg.backsec->c_slope)
+      {
+         float z1, z2, zstep;
+
+         z1 = P_GetZAtf(seg.backsec->c_slope, v1->fx, v1->fy);
+         z2 = P_GetZAtf(seg.backsec->c_slope, v2->fx, v2->fy);
+         zstep = (z2 - z1) / seg.line->len;
+
+         z1 += lclip1 * zstep;
+         z2 -= (seg.line->len - lclip2) * zstep;
+
+         seg.high = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
+         seg.high2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
+      }
+      else
+      {
+         seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
+         seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+      }
       seg.highstep = (seg.high2 - seg.high) * pstep;
 
       texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
@@ -1155,6 +1209,7 @@ static void R_AddLine(seg_t *line)
          //uppermissing = false;
       }
 
+      // TODO: Fix for use with portals.
       // New clipsolid code will emulate the old doom behavior and still manages to 
       // keep valid closed door cases handled.
       seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
@@ -1173,7 +1228,7 @@ static void R_AddLine(seg_t *line)
 
       seg.markceiling = 
          (seg.ceilingplane && 
-          (mark || seg.clipsolid || seg.top != seg.high || 
+          (mark || seg.clipsolid || seg.top != seg.high || seg.top2 != seg.high2 ||
            seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
            seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
            seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
@@ -1181,7 +1236,7 @@ static void R_AddLine(seg_t *line)
            seg.frontsec->topmap != seg.backsec->topmap ||
            seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
 
-      if(seg.high > seg.top && side->toptexture)
+      if((seg.high > seg.top || seg.high2 > seg.top2) && side->toptexture)
       {
          seg.toptex = texturetranslation[side->toptexture];
          seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
@@ -1204,8 +1259,7 @@ static void R_AddLine(seg_t *line)
 
       seg.markfloor = 
          (seg.floorplane && 
-          (mark || seg.clipsolid ||  
-           seg.frontsec->floorheight != seg.backsec->floorheight ||
+          (mark || seg.clipsolid || seg.low != seg.bottom || seg.low2 != seg.bottom2 ||
            seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
            seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
            seg.frontsec->floorpic != seg.backsec->floorpic ||
@@ -1234,12 +1288,28 @@ static void R_AddLine(seg_t *line)
       }
 #endif
 
-      seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
-      seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+      if(seg.backsec->f_slope)
+      {
+         float z1, z2, zstep;
+
+         z1 = P_GetZAtf(seg.backsec->f_slope, v1->fx, v1->fy);
+         z2 = P_GetZAtf(seg.backsec->f_slope, v2->fx, v2->fy);
+         zstep = (z2 - z1) / seg.line->len;
+
+         z1 += lclip1 * zstep;
+         z2 -= (seg.line->len - lclip2) * zstep;
+         seg.low = view.ycenter - ((z1 - view.z) * i1);
+         seg.low2 = view.ycenter - ((z2 - view.z) * i2);
+      }
+      else
+      {
+         seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
+         seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+      }
       seg.lowstep = (seg.low2 - seg.low) * pstep;
 
       texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
-      if(seg.bottom > seg.low && side->bottomtexture)
+      if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
       {
          seg.bottomtex = texturetranslation[side->bottomtexture];
          seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
@@ -1489,6 +1559,9 @@ static void R_Subsector(int num)
    int         ceilinglightlevel;    // killough 4/11/98
    float       floorangle;           // haleyjd 01/05/08: plane angles
    float       ceilingangle;
+
+   boolean     visible;
+   v3float_t   cam;
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
@@ -1517,9 +1590,19 @@ static void R_Subsector(int num)
    // killough 3/16/98: add floorlightlevel
    // killough 10/98: add support for skies transferred from sidedefs
 
+   // SoM: Slopes!
+   cam.x = view.x;
+   cam.y = view.y;
+   cam.z = view.z;
+
+   visible  = (!seg.frontsec->f_slope && seg.frontsec->floorheight < viewz)
+           || (seg.frontsec->f_slope 
+           &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
+                                &seg.frontsec->f_slope->normalf) > 0.0f);
+
    // SoM: If there is an active portal, forget about the floorplane.
    seg.floorplane = !R_FloorPortalActive(seg.frontsec) && 
-     (seg.frontsec->floorheight < viewz || // killough 3/7/98
+     (visible || // killough 3/7/98
      (seg.frontsec->heightsec != -1 &&
       (sectors[seg.frontsec->heightsec].ceilingpic == skyflatnum ||
        sectors[seg.frontsec->heightsec].ceilingpic == sky2flatnum))) ?
@@ -1531,10 +1614,15 @@ static void R_Subsector(int num)
                  floorlightlevel,                // killough 3/16/98
                  seg.frontsec->floor_xoffs,       // killough 3/7/98
                  seg.frontsec->floor_yoffs,
-                 floorangle) : NULL;
+                 floorangle, seg.frontsec->f_slope) : NULL;
+
+   visible  = (!seg.frontsec->c_slope && seg.frontsec->ceilingheight > viewz)
+           || (seg.frontsec->c_slope 
+           &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
+                                &seg.frontsec->c_slope->normalf) > 0.0f);
 
    seg.ceilingplane = !R_CeilingPortalActive(seg.frontsec) &&
-     (seg.frontsec->ceilingheight > viewz ||
+     (visible ||
      (seg.frontsec->ceilingpic == skyflatnum ||
       seg.frontsec->ceilingpic == sky2flatnum) ||
      (seg.frontsec->heightsec != -1 &&
@@ -1548,7 +1636,7 @@ static void R_Subsector(int num)
                  ceilinglightlevel,              // killough 4/11/98
                  seg.frontsec->ceiling_xoffs,     // killough 3/7/98
                  seg.frontsec->ceiling_yoffs,
-                 ceilingangle) : NULL;
+                 ceilingangle, seg.frontsec->c_slope) : NULL;
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 
    // instead of fake one. Improve sprite lighting by basing sprite

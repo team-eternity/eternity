@@ -92,6 +92,7 @@ enum
 typedef struct spandrawer_s
 {
    void (*DrawSpan[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
+   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
    
    // SoM: store the fixed point units here so the rasterizer can pre-shift 
    // everything

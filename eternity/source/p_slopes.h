@@ -49,6 +49,24 @@ fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y);
 float P_GetZAtf(pslope_t *slope, float x, float y);
 
 
+// Returns the distance of the given point from the given origin and normal.
+float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, 
+                       const v3float_t *pnormal);
+
+// Vector ops... (should be in own file maybe?)
+
+// P_CrossProduct3f
+// Gets the cross product of v1 and v2 and stores in dest 
+void P_CrossProduct3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2);
+
+// P_SubVec3f
+// Subtracts v2 from v1 and stores the result in dest
+void P_SubVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2);
+
+// P_CrossVec3f
+float P_CrossVec3f(const v3float_t *v1, const v3float_t *v2);
+
+
 #endif
 
 // EOF

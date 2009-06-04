@@ -30,24 +30,97 @@
 #include "r_state.h"
 #include "m_bbox.h"
 #include "p_spec.h"
+#include "p_slopes.h"
+
+
+
+
+// P_CrossProduct3f
+// Gets the cross product of v1 and v2 and stores in dest 
+void P_CrossProduct3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
+{
+   v3float_t tmp;
+   tmp.x = (v1->y * v2->z) - (v1->z * v2->y);
+   tmp.y = (v1->z * v2->x) - (v1->x * v2->z);
+   tmp.z = (v1->x * v2->y) - (v1->y * v2->x);
+   *dest = tmp;
+}
+
+
+// P_SubVec3f
+// Subtracts v2 from v1 and stores the result in dest
+void P_SubVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
+{
+   v3float_t tmp;
+   tmp.x = (v1->x - v2->x);
+   tmp.y = (v1->y - v2->y);
+   tmp.z = (v1->z - v2->z);
+   *dest = tmp;
+}
+
+
+// P_CrossVec3f
+float P_CrossVec3f(const v3float_t *v1, const v3float_t *v2)
+{
+   return (v1->x * v2->x) + (v1->y * v2->y) + (v1->z * v2->z);
+} 
 
 
 
 
 // P_MakeSlope
 // Alocates and fill the contents of a slope structure.
-static pslope_t *P_MakeSlope(float ox, float oy, float oz, float dx, float dy, float dz)
+static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, const float zdelta, boolean isceiling)
 {
    pslope_t *ret = Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL);
    memset(ret, 0, sizeof(*ret));
 
-   ret->ox = M_FloatToFixed(ret->oxf = ox);
-   ret->oy = M_FloatToFixed(ret->oyf = oy);
-   ret->oz = M_FloatToFixed(ret->ozf = oz);
+   ret->o.x = M_FloatToFixed(ret->of.x = o->x);
+   ret->o.y = M_FloatToFixed(ret->of.y = o->y);
+   ret->o.z = M_FloatToFixed(ret->of.z = o->z);
 
-   ret->dx = M_FloatToFixed(ret->dxf = dx);
-   ret->dy = M_FloatToFixed(ret->dyf = dy);
-   ret->dz = M_FloatToFixed(ret->dzf = dz);
+   ret->d.x = M_FloatToFixed(ret->df.x = d->x);
+   ret->d.y = M_FloatToFixed(ret->df.y = d->y);
+
+   ret->zdelta = M_FloatToFixed(ret->zdeltaf = zdelta);
+
+   {
+      v3float_t v1, v2, v3, d1, d2;
+      float len;
+
+      v1.x = o->x;
+      v1.y = o->y;
+      v1.z = o->z;
+
+      v2.x = v1.x;
+      v2.y = v1.y + 10.0f;
+      v2.z = P_GetZAtf(ret, v2.x, v2.y);
+
+      v3.x = v1.x + 10.0f;
+      v3.y = v1.y;
+      v3.z = P_GetZAtf(ret, v3.x, v3.y);
+
+      if(isceiling)
+      {
+         P_SubVec3f(&d1, &v1, &v3);
+         P_SubVec3f(&d2, &v2, &v3);
+      }
+      else
+      {
+         P_SubVec3f(&d1, &v1, &v2);
+         P_SubVec3f(&d2, &v3, &v2);
+      }
+
+      P_CrossProduct3f(&ret->normalf, &d1, &d2);
+
+      len = (float)sqrt(ret->normalf.x * ret->normalf.x +
+                        ret->normalf.y * ret->normalf.y + 
+                        ret->normalf.z * ret->normalf.z);
+
+      ret->normalf.x /= len;
+      ret->normalf.y /= len;
+      ret->normalf.z /= len;
+   }
 
    return ret;
 }
@@ -55,18 +128,10 @@ static pslope_t *P_MakeSlope(float ox, float oy, float oz, float dx, float dy, f
 
 // P_CopySlope
 // Allocates and returns a copy of the given slope structure.
-static pslope_t *P_CopySlope(pslope_t *src)
+static pslope_t *P_CopySlope(const pslope_t *src)
 {
    pslope_t *ret = Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL);
-   memset(ret, 0, sizeof(*ret));
-
-   ret->ox = src->ox; ret->oxf = src->oxf;
-   ret->oy = src->oy; ret->oyf = src->oyf;
-   ret->oz = src->oz; ret->ozf = src->ozf;
-
-   ret->dx = src->dx; ret->dxf = src->dxf;
-   ret->dy = src->dy; ret->dyf = src->dyf;
-   ret->dz = src->dz; ret->dzf = src->dzf;
+   memcpy(ret, src, sizeof(*ret));
 
    return ret;
 }
@@ -107,7 +172,8 @@ void P_SpawnSlope_Line(int linenum)
    line_t *line = lines + linenum;
    int special = line->special;
    pslope_t *fslope = NULL, *cslope = NULL;
-   float ox, oy;
+   v3float_t origin;
+   v2float_t direction;
    float dz;
    int   i;
 
@@ -121,8 +187,8 @@ void P_SpawnSlope_Line(int linenum)
    if(!line->frontsector || !line->backsector)
       I_Error("P_SpawnSlope_Line used on a line without two sides.");
 
-   ox = (line->v2->fx + line->v1->fx) * 0.5f;
-   oy = (line->v2->fy + line->v1->fy) * 0.5f;
+   origin.x = (line->v2->fx + line->v1->fx) * 0.5f;
+   origin.y = (line->v2->fy + line->v1->fy) * 0.5f;
 
    // Note to self: This is really backwards. The origin really needs to be 
    // from the actual floor/ceiling height of the sector and slope away.
@@ -131,31 +197,44 @@ void P_SpawnSlope_Line(int linenum)
    if(frontfloor)
    {
       // SoM: TODO this is for testing and development.
+      direction.x = line->nx;
+      direction.y = line->ny;
+      origin.z = line->backsector->floorheightf;
       dz = -0.2f;
+
       fslope = line->frontsector->f_slope = 
-         P_MakeSlope(ox, oy, line->backsector->floorheightf, line->nx, line->ny, dz);
+         P_MakeSlope(&origin, &direction, dz, false);
    }
    else if(backfloor)
    {
       // SoM: TODO this is for testing and development.
+      direction.x = line->ny;
+      direction.y = -line->nx;
+      origin.z = line->frontsector->floorheightf;
       dz = -0.2f;
       fslope = line->backsector->f_slope = 
-         P_MakeSlope(ox, oy, line->frontsector->floorheightf, line->ny, -line->nx, dz);
+         P_MakeSlope(&origin, &direction, dz, false);
    }
 
    if(frontceil)
    {
       // SoM: TODO this is for testing and development.
+      direction.x = line->nx;
+      direction.y = line->ny;
+      origin.z = line->backsector->ceilingheightf;
       dz = 0.2f;
       cslope = line->frontsector->c_slope = 
-         P_MakeSlope(ox, oy, line->backsector->ceilingheightf, line->nx, line->ny, dz);
+         P_MakeSlope(&origin, &direction, dz, true);
    }
    else if(backceil)
    {
       // SoM: TODO this is for testing and development.
+      direction.x = line->ny;
+      direction.y = -line->nx;
+      origin.z = line->frontsector->ceilingheightf;
       dz = 0.2f;
       cslope = line->backsector->c_slope = 
-         P_MakeSlope(ox, oy, line->frontsector->ceilingheightf, line->ny, -line->nx, dz);
+         P_MakeSlope(&origin, &direction, dz, true);
    }
 
 
@@ -184,10 +263,10 @@ void P_SpawnSlope_Line(int linenum)
 // Returns the height of the sloped plane at (x, y) as a fixed_t
 fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y)
 {
-   fixed_t dist = FixedMul(x - slope->ox, slope->dx) +
-                  FixedMul(y - slope->oy, slope->dy);
+   fixed_t dist = FixedMul(x - slope->o.x, slope->d.x) +
+                  FixedMul(y - slope->o.y, slope->d.y);
 
-   return slope->oz + FixedMul(dist, slope->dz);
+   return slope->o.z + FixedMul(dist, slope->zdelta);
 }
 
 
@@ -195,8 +274,17 @@ fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y)
 // Returns the height of the sloped plane at (x, y) as a float
 float P_GetZAtf(pslope_t *slope, float x, float y)
 {
-   float dist = (x - slope->oxf) * slope->dxf + (y - slope->oyf) * slope->dyf;
-   return slope->ozf + (dist * slope->dzf);
+   float dist = (x - slope->of.x) * slope->df.x + (y - slope->of.y) * slope->df.y;
+   return slope->of.z + (dist * slope->zdeltaf);
+}
+
+
+
+float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, const v3float_t *pnormal)
+{
+   return (point->x - pori->x) * pnormal->x + 
+          (point->y - pori->y) * pnormal->y +
+          (point->z - pori->z) * pnormal->z;
 }
 
 // EOF

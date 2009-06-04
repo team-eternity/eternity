@@ -50,9 +50,10 @@ void R_DrawPlanes(void);
 visplane_t *R_FindPlane(fixed_t height, 
                         int picnum,
                         int lightlevel,
-                        fixed_t xoffs,  // killough 2/28/98: add x-y offsets
+                        fixed_t xoffs,    // killough 2/28/98: add x-y offsets
                         fixed_t yoffs,
-                        float angle);   // haleyjd 01/08/05: add angle
+                        float angle,      // haleyjd 01/08/05: add angle
+                        pslope_t *slope); // SoM: slopes
 
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
@@ -77,13 +78,37 @@ typedef struct
    // SoM: we use different fixed point numbers for different flat sizes
    float fixedunit;
 
+   int lightlevel;
+   float startmap;
    lighttable_t **planezlight;
+   lighttable_t *colormap;
    lighttable_t *fixedcolormap;
    void *source;
+
+   // SoM: slopes.
+   rslope_t *slope;
+   int      tsizei;
+   float    tsizef;
 } cb_plane_t;
+
+
+typedef struct
+{
+   int y, x1, x2;
+
+   float iufrac, ivfrac, idfrac;
+   float iustep, ivstep, idstep;
+
+   void *source;
+
+   lighttable_t *colormap[MAX_SCREENWIDTH];
+} cb_slopespan_t;
+
 
 extern cb_span_t  span;
 extern cb_plane_t plane;
+
+extern cb_slopespan_t slopespan;
 
 #endif
 

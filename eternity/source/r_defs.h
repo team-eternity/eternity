@@ -46,6 +46,9 @@ typedef struct patch_s patch_t;
 // SECTORS do store MObjs anyway.
 #include "p_mobj.h"
 
+// SoM: Slopes need vectors!
+#include "m_vector.h"
+
 
 // SoM: I had to move this for linked portals.
 typedef struct sector_s sector_t;
@@ -151,19 +154,38 @@ enum
 
 
 
+
+
+
 // SoM: Internal plane slope structure
 typedef struct
 {
-   // First the fixed stuff:
+   // --- Information used in clipping/projection ---
    // Origin vector for the plane
-   fixed_t ox, oy, oz;
-   // Diectional vector
-   fixed_t dx, dy, dz;
+   v3fixed_t o;
+   v3float_t of;
+   // The normal of the 3d plane the slope creates.
+   v3float_t normalf;
 
-   // Float variations:
-   float oxf, oyf, ozf;
-   float dxf, dyf, dzf;
+   // 2-Dimentional vector (x, y) normalized. Used to determine distance from
+   // the origin in 2d mapspace.
+   v2fixed_t d;
+   v2float_t df;
+
+   // The rate at which z changes based on distance from the origin plane.
+   fixed_t zdelta;
+   float   zdeltaf;
+
+   // --- Information used in texture mapping the plane ---
 } pslope_t;
+
+
+typedef struct
+{
+   v3float_t P, M, N;
+   v3float_t A, B, C;
+   float     zat, plight, shade;
+} rslope_t;
 
 
 //
@@ -612,6 +634,7 @@ typedef struct visplane
    int picnum, lightlevel, minx, maxx;
    fixed_t height;
    lighttable_t *(*colormap)[MAXLIGHTZ];
+   lighttable_t *fullcolormap;   // SoM: Used by slopes.
    lighttable_t *fixedcolormap;  // haleyjd 10/16/06
    fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
 
@@ -638,6 +661,9 @@ typedef struct visplane
 
    float angle, viewsin, viewcos; // haleyjd 01/05/08: angle
 
+   // Slopes!
+   pslope_t *pslope;
+   rslope_t rslope;
 } visplane_t;
 
 

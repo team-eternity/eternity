@@ -267,15 +267,17 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
     0;
 }
 
+
+extern float slopevis; // SoM: used in slope lighting
+
 //
 // R_InitTextureMapping
 //
 // killough 5/2/98: reformatted
-
 static void R_InitTextureMapping (void)
 {
    register int i, x, limit;
-   float vtan, ratio;
+   float vtan, ratio, slopet;
    
    // Use tangent table to generate viewangletox:
    //  viewangletox will give the next greatest x
@@ -294,6 +296,10 @@ static void R_InitTextureMapping (void)
    // Unfortunately, cardboard still has to co-exist with the old fixed point code
    focallen_x = M_FloatToFixed(view.xfoc);
    focallen_y = M_FloatToFixed(view.yfoc);
+
+   // SoM: Thanks to 'Randi' of Zdoom fame!
+   slopet = (float)tan((90.0f + (float)fov / 2.0f) * PI / 180.0f);
+   slopevis = 8.0f * slopet * 16.0f * 320.0f / (float)view.width;
 
    // SoM: rewrote old LUT generation code to work with variable FOV
    i = 0;

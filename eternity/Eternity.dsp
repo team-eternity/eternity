@@ -650,6 +650,10 @@ SOURCE=.\Source\m_random.c
 
 SOURCE=.\source\m_syscfg.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\source\m_vector.c
+# End Source File
 # End Group
 # Begin Group "M_ Headers"
 
@@ -701,6 +705,10 @@ SOURCE=.\Source\m_swap.h
 # Begin Source File
 
 SOURCE=.\source\m_syscfg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\m_vector.h
 # End Source File
 # End Group
 # End Group
