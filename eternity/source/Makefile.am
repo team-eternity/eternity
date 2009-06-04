@@ -46,7 +46,7 @@ s_sndseq.c  s_sndseq.h  s_sound.c   s_sound.h   st_hbar.c   st_lib.c    st_lib.h
 st_stuff.c  st_stuff.h  tables.c    tables.h    v_block.c   v_block.h   v_buffer.c  \
 v_buffer.h  version.c   version.h   v_font.c    v_font.h    v_misc.c    v_misc.h    \
 v_patch.c   v_patch.h   v_video.c   v_video.h   wi_stuff.c  wi_stuff.h  w_wad.c     \
-w_wad.h     z_zone.c    z_zone.h
+w_wad.h     z_zone.c    z_zone.h    m_vector.c  m_vector.h
 
 eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer -lSDL_net sdl/libsdlet.a\
 Confuse/libetconfuse.a textscreen/libtextscreen.a
