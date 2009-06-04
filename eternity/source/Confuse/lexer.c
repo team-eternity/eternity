@@ -72,7 +72,7 @@ static qstring_t qstring;
 //
 static void lexer_error(cfg_t *cfg, const char *msg)
 {
-   cfg_error(cfg, "lexer error: %s", msg);
+   cfg_error(cfg, "lexer error @ %s:%d:\n\t%s", cfg->filename, cfg->line, msg);
 }
 
 // haleyjd 12/23/06: if true, unquoted strings can contain spaces
@@ -157,8 +157,24 @@ void lexer_reset(void)
    lexer_free_buffer();
 }
 
-// state enumeration for lexer FSA
+//=============================================================================
+//
+// lexer state handlers
+//
 
+// lexerstate structure; because lots of arguments annoy me :)
+typedef struct lexerstate_s
+{
+   cfg_t *cfg;       // current cfg_t
+   int   state;      // current state of the lexer
+   int   stringtype; // type of string being parsed
+   char  c;          // current character
+} lexerstate_t;
+
+// lexer function protocol
+typedef int (*lexfunc_t)(lexerstate_t *);
+
+// state enumeration for lexer FSA
 enum
 {
    STATE_NONE,
@@ -166,7 +182,332 @@ enum
    STATE_MLCOMMENT,
    STATE_STRING,
    STATE_UNQUOTEDSTRING,
-   STATE_HEREDOC,
+   STATE_HEREDOC
+};
+
+//
+// lexer_state_slcomment
+//
+// discard input up to next \n
+//
+static int lexer_state_slcomment(lexerstate_t *ls)
+{
+   if(ls->c == '\n')
+   {
+      ls->cfg->line++;
+      ls->state = STATE_NONE;
+   }
+
+   return -1; // continue parsing
+}
+
+//
+// lexer_state_mlcomment
+//
+// look for '*' to signal end of comment
+//
+static int lexer_state_mlcomment(lexerstate_t *ls)
+{
+   if(ls->c == '\n')
+      ls->cfg->line++; // keep count of lines
+   
+   if(ls->c == '*')
+   {
+      if(*bufferpos == '/') // look ahead to next char
+      {
+         ++bufferpos; // move past '/'
+         ls->state = STATE_NONE;
+      }
+   }
+
+   return -1; // continue parsing
+}
+
+//
+// lexer_state_string
+//
+static int lexer_state_string(lexerstate_t *ls)
+{
+   int ret = -1;
+
+   switch(ls->c)
+   {
+   case '\f':
+   case '\n': // free linebreak -- not allowed
+      lexer_error(ls->cfg, "unterminated string constant");
+      ret = 0;
+      break;
+   case '\\': // escaped characters or line continuation
+      {
+         char s = *bufferpos++;
+         
+         switch(s)
+         {
+         case '\0':
+            lexer_error(ls->cfg, "EOF in string constant");
+            ret = 0;
+            break;
+         case '\r':
+         case '\n':
+            // line continuance for quoted strings!
+            // increment the line
+            ls->cfg->line++;
+            
+            // loop until a non-whitespace char is found
+            while(isspace((s = *bufferpos++)));
+            
+            // better not be EOF!
+            if(s == '\0')
+            {
+               lexer_error(ls->cfg, "EOF in string constant");
+               ret = 0;
+               break;
+            }
+            
+            // put back the last char
+            --bufferpos;
+            break;
+         case 'n':
+            M_QStrPutc(&qstring, '\n');
+            break;
+         case 't':
+            M_QStrPutc(&qstring, '\t');
+            break;
+         case 'a':
+            M_QStrPutc(&qstring, '\a');
+            break;
+         case 'b':
+            M_QStrPutc(&qstring, '\b');
+            break;                     
+         case '0':
+            M_QStrPutc(&qstring, '\0');
+            break;
+            // haleyjd 03/14/06: color codes
+         case 'K':
+            M_QStrPutc(&qstring, (char)128);
+            break;
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+         case '8':
+         case '9':
+            M_QStrPutc(&qstring, (char)((s - '0') + 128));
+            break;
+            // haleyjd 03/14/06: special codes
+         case 'T': // translucency
+            M_QStrPutc(&qstring, (char)138);
+            break;
+         case 'N': // normal
+            M_QStrPutc(&qstring, (char)139);
+            break;
+         case 'H': // hi
+            M_QStrPutc(&qstring, (char)140);
+            break;
+         case 'E': // error
+            M_QStrPutc(&qstring, (char)141);
+            break;
+         case 'S': // shadowed
+            M_QStrPutc(&qstring, (char)142);
+            break;
+         case 'C': // absCentered
+            M_QStrPutc(&qstring, (char)143);
+            break;
+         default:
+            M_QStrPutc(&qstring, s);
+            break;
+         }
+      }
+      break;
+   case '"':
+      if(ls->stringtype == 1) // double-quoted string, end it
+      {
+         mytext = M_QStrBuffer(&qstring);
+         ret = CFGT_STR;
+      }
+      else
+         M_QStrPutc(&qstring, ls->c);
+      break;
+   case '\'':
+      if(ls->stringtype == 2) // single-quoted string, end it
+      {               
+         mytext = M_QStrBuffer(&qstring);
+         ret = CFGT_STR;
+      }
+      else
+         M_QStrPutc(&qstring, ls->c);
+      break;
+   default:
+      M_QStrPutc(&qstring, ls->c);
+      break;
+   }
+
+   return ret;
+}
+
+//
+// lexer_state_unquotedstring
+//
+static int lexer_state_unquotedstring(lexerstate_t *ls)
+{
+   char c = ls->c;
+
+   if((!unquoted_spaces && (c == ' ' || c == '\t'))    || 
+      c == '"'  || c == '\'' || c == '\n' || c == '\f' || 
+      c == '='  || c == '{'  || c == '}'  || c == '('  || 
+      c == ')'  || c == '+'  || c == ','  || c == '#'  || 
+      c == '/'  || c == ';')
+   {
+      // any special character ends an unquoted string
+      --bufferpos; // put it back
+      mytext = M_QStrBuffer(&qstring);
+      
+      return CFGT_STR; // return a string token
+   }
+   else // normal characters
+   {
+      M_QStrPutc(&qstring, c);
+      
+      return -1; // continue parsing
+   }
+}
+
+//
+// lexer_state_heredoc
+//
+static int lexer_state_heredoc(lexerstate_t *ls)
+{
+   if((ls->c == '"' || ls->c == '\'') && *bufferpos == '@')
+   {
+      ++bufferpos; // move forward past @
+      mytext = M_QStrBuffer(&qstring);
+
+      return CFGT_STR; // return a string token
+   }
+   else // normal characters -- everything is literal
+   {
+      if(ls->c == '\n')
+         ls->cfg->line++; // still need to track line numbers
+      
+      M_QStrPutc(&qstring, ls->c);
+
+      return -1; // continue parsing
+   }
+}
+
+//
+// lexer_state_none
+//
+static int lexer_state_none(lexerstate_t *ls)
+{
+   int ret = -1;
+   char la;
+
+   switch(ls->c)
+   {
+   case ';':  // throw away optional semicolons
+   case ' ':  // throw away whitespace
+   case '\f':
+   case '\t':
+      break;
+   case '\n': // count and throw away line breaks
+      ls->cfg->line++;
+      break;
+   case '#':
+      ls->state = STATE_SLCOMMENT;
+      break;
+   case '/':
+      la = *bufferpos; // look ahead to next character
+      switch(la)
+      {
+      case '/':
+      case '*':
+         ++bufferpos; // move past / or *
+         ls->state = (la == '/') ? STATE_SLCOMMENT : STATE_MLCOMMENT;
+         break;
+      default:
+         lexer_error(ls->cfg, "unexpected character after /");
+         ret = 0;
+      }
+      break;
+   case '{':
+      mytext = "{";
+      ret = '{';
+      break;
+   case '}':
+      mytext = "}";
+      ret = '}';
+      break;
+   case '(':
+      mytext = "(";
+      ret = '(';
+      break;
+   case ')':
+      mytext = ")";
+      ret = ')';
+      break;
+   case '=':
+      mytext = "=";
+      ret = '=';
+      break;
+   case '+':
+      if(*bufferpos != '=') // look ahead to next character
+      {
+         lexer_error(ls->cfg, "unexpected character after +");
+         ret = 0;
+      }
+      else
+      {
+         ++bufferpos; // move past =
+         mytext = "+=";
+         ret = '+';
+      }
+      break;
+   case ',':
+      mytext = ",";
+      ret = ',';
+      break;
+   case '"': // open double-quoted string
+      M_QStrClear(&qstring);
+      ls->state = STATE_STRING;
+      ls->stringtype = 1;
+      break;
+   case '\'': // open single-quoted string
+      M_QStrClear(&qstring);
+      ls->state = STATE_STRING;
+      ls->stringtype = 2;
+      break;
+   case '@': // possibly open heredoc string
+      if(*bufferpos == '"' || *bufferpos == '\'') // look ahead to next character
+      {
+         ++bufferpos; // move past " or '
+         M_QStrClear(&qstring);
+         ls->state = STATE_HEREDOC;
+         break;
+      }
+      // fall through, @ is not special unless followed by " or '
+   default:  // anything else is part of an unquoted string
+      M_QStrClear(&qstring);
+      M_QStrPutc(&qstring, ls->c);
+      ls->state = STATE_UNQUOTEDSTRING;
+      break;
+   }
+
+   return ret;
+}
+
+// state handler routine table
+static lexfunc_t lexerfuncs[] =
+{
+   lexer_state_none,
+   lexer_state_slcomment,
+   lexer_state_mlcomment,
+   lexer_state_string,
+   lexer_state_unquotedstring,
+   lexer_state_heredoc,
 };
 
 //
@@ -176,305 +517,40 @@ enum
 //
 int mylex(cfg_t *cfg)
 {
-   int state = STATE_NONE;
-   int stringtype = 0;
+   lexerstate_t ls;
    int ret;
-   char c, la;
+
+   ls.state      = STATE_NONE;
+   ls.stringtype = 0;
+   ls.cfg        = cfg;
 
 include:
-   while((c = *bufferpos++))
+   while((ls.c = *bufferpos++))
    {
-      if(c == '\r') // keep reading on \r's
-         continue;
-
-      switch(state)
+      if(ls.c != '\r') // keep reading on \r's
       {
-      case STATE_SLCOMMENT: // reading single-line comment
-         // discard input up to next \n
-         if(c == '\n')
-         {
-            cfg->line++;
-            state = STATE_NONE;
-         }
-         continue;
-
-      case STATE_MLCOMMENT: // reading multiline comment
-         if(c == '\n')
-            cfg->line++;
-         // look for '*' to signal end of comment
-         if(c == '*')
-         {
-            if(*bufferpos == '/') // look ahead to next char
-            {
-               ++bufferpos; // move past '/'
-               state = STATE_NONE;
-            }
-         }
-         continue;
-
-      case STATE_STRING: // reading a quoted string
-         switch(c)
-         {
-         case '\t': // collapse hard tabs to spaces
-            M_QStrPutc(&qstring, ' ');
-            break;
-         case '\f':
-         case '\n': // free linebreak -- not allowed
-            lexer_error(cfg, "unterminated string constant");
-            return 0;
-         case '\\': // escaped characters or line continuation
-            {
-               char s = *bufferpos++;
-
-               if(s == '\0')
-               {                  
-                  lexer_error(cfg, "EOF in string constant");
-                  return 0;
-               }
-               else
-               {
-                  switch(s)
-                  {
-                  case '\r':
-                  case '\n':
-                     // line continuance for quoted strings!
-                     // increment the line
-                     cfg->line++;
-
-                     // loop until a non-whitespace char is found
-                     while(isspace((s = *bufferpos++)));
-                     
-                     // better not be EOF!
-                     if(s == '\0')
-                     {
-                        lexer_error(cfg, "EOF in string constant");
-                        return 0;
-                     }
-
-                     // put back the last char
-                     --bufferpos;
-                     break;
-                  case 'n':
-                     M_QStrPutc(&qstring, '\n');
-                     break;
-                  case 't':
-                     M_QStrPutc(&qstring, '\t');
-                     break;
-                  case 'a':
-                     M_QStrPutc(&qstring, '\a');
-                     break;
-                  case 'b':
-                     M_QStrPutc(&qstring, '\b');
-                     break;                     
-                  case '0':
-                     M_QStrPutc(&qstring, '\0');
-                     break;
-                     // haleyjd 03/14/06: color codes
-                  case 'K':
-                     M_QStrPutc(&qstring, (char)128);
-                     break;
-                  case '1':
-                  case '2':
-                  case '3':
-                  case '4':
-                  case '5':
-                  case '6':
-                  case '7':
-                  case '8':
-                  case '9':
-                     M_QStrPutc(&qstring, (char)((s - '0') + 128));
-                     break;
-                     // haleyjd 03/14/06: special codes
-                  case 'T': // translucency
-                     M_QStrPutc(&qstring, (char)138);
-                     break;
-                  case 'N': // normal
-                     M_QStrPutc(&qstring, (char)139);
-                     break;
-                  case 'H': // hi
-                     M_QStrPutc(&qstring, (char)140);
-                     break;
-                  case 'E': // error
-                     M_QStrPutc(&qstring, (char)141);
-                     break;
-                  case 'S': // shadowed
-                     M_QStrPutc(&qstring, (char)142);
-                     break;
-                  case 'C': // absCentered
-                     M_QStrPutc(&qstring, (char)143);
-                     break;
-                  default:
-                     M_QStrPutc(&qstring, s);
-                     break;
-                  }
-                  continue;
-               }
-            }
-            break;
-         case '"':
-            if(stringtype == 1) // double-quoted string, end it
-            {
-               mytext = M_QStrBuffer(&qstring);
-               return CFGT_STR;
-            }
-            else
-               M_QStrPutc(&qstring, c);
-            continue;
-         case '\'':
-            if(stringtype == 2) // single-quoted string, end it
-            {               
-               mytext = M_QStrBuffer(&qstring);
-               return CFGT_STR;
-            }
-            else
-               M_QStrPutc(&qstring, c);
-            continue;
-         default:
-            M_QStrPutc(&qstring, c);
-            continue;
-         }
-         break;
-         
-      case STATE_UNQUOTEDSTRING: // unquoted string
-         if((!unquoted_spaces && (c == ' ' || c == '\t'))    || 
-            c == '"'  || c == '\'' || c == '\n' || c == '\f' || 
-            c == '='  || c == '{'  || c == '}'  || c == '('  || 
-            c == ')'  || c == '+'  || c == ','  || c == '#'  || 
-            c == '/'  || c == ';')
-         {
-            // any special character ends an unquoted string
-            --bufferpos; // put it back
-            mytext = M_QStrBuffer(&qstring);
-            return CFGT_STR;
-         }
-         else // normal characters
-         {
-            M_QStrPutc(&qstring, c);
-            continue;
-         }
-         break;
-
-      case STATE_HEREDOC: // heredoc string - read to next ["']@
-         if((c == '"' || c == '\'') && *bufferpos == '@')
-         {
-            ++bufferpos; // move forward past @
-            mytext = M_QStrBuffer(&qstring);
-            return CFGT_STR;
-         }
-         else // normal characters -- everything is literal
-         {
-            if(c == '\n')
-               cfg->line++; // still need to track line numbers
-
-            M_QStrPutc(&qstring, c);
-            continue;
-         }
-         break;
-
-      default:
-         break;
-      }
-
-      // STATE_NONE:
-      switch(c)
-      {
-      case ';':  // throw away optional semicolons
-      case ' ':  // throw away whitespace
-      case '\f':
-      case '\t':
-         continue;
-      case '\n': // count and throw away line breaks
-         cfg->line++;
-         continue;
-      case '#':
-         state = STATE_SLCOMMENT;
-         continue;
-      case '/':
-         la = *bufferpos; // look ahead to next character
-         switch(la)
-         {
-         case '/':
-         case '*':
-            ++bufferpos; // move past / or *
-            state = (la == '/') ? STATE_SLCOMMENT : STATE_MLCOMMENT;
-            continue;
-         default:
-            lexer_error(cfg, "unexpected character after /");
-            return 0;
-         }
-         continue;
-      case '{':
-         mytext = "{";
-         return '{';
-      case '}':
-         mytext = "}";
-         return '}';
-      case '(':
-         mytext = "(";
-         return '(';
-      case ')':
-         mytext = ")";
-         return ')';
-      case '=':
-         mytext = "=";
-         return '=';
-      case '+':
-         ret = 0;
-         if(*bufferpos != '=') // look ahead to next character
-            lexer_error(cfg, "unexpected character after +");
-         else
-         {
-            ++bufferpos; // move past =
-            mytext = "+=";
-            ret = '+';
-         }
-         return ret;
-      case ',':
-         mytext = ",";
-         return ',';
-      case '"': // open double-quoted string
-         M_QStrClear(&qstring);
-         state = STATE_STRING;
-         stringtype = 1;
-         continue;
-      case '\'': // open single-quoted string
-         M_QStrClear(&qstring);
-         state = STATE_STRING;
-         stringtype = 2;
-         continue;
-      case '@': // possibly open heredoc string
-         if(*bufferpos == '"' || *bufferpos == '\'') // look ahead to next character
-         {
-            ++bufferpos; // move past " or '
-            M_QStrClear(&qstring);
-            state = STATE_HEREDOC;
-            continue;
-         }
-         // fall through, @ is not special unless followed by " or '
-      default:  // anything else is part of an unquoted string
-         M_QStrClear(&qstring);
-         M_QStrPutc(&qstring, c);
-         state = STATE_UNQUOTEDSTRING;
-         continue;
+         if((ret = lexerfuncs[ls.state](&ls)) != -1)
+            return ret;
       }
    }
 
-   if(state == STATE_STRING || state == STATE_HEREDOC)
+   // handle special cases at EOF:
+   switch(ls.state)
    {
-      // EOF in quoted/heredoc string - not allowed
+   case STATE_STRING:
+   case STATE_HEREDOC:
+      // EOF in quoted or heredoc string - not allowed
       lexer_error(cfg, "EOF in string constant");
       return 0;
-   }
-   else if(state == STATE_UNQUOTEDSTRING)
-   {
+
+   case STATE_UNQUOTEDSTRING:
       // EOF after unquoted string -- return the string, next
       // call will return EOF
       --bufferpos;
       mytext = M_QStrBuffer(&qstring);
       return CFGT_STR;
-   }
-   else
-   {
+
+   default:      
       // EOF handling -- check the include stack
       if(--include_stack_ptr < 0)
       {
@@ -496,9 +572,9 @@ include:
          cfg->line     = include_stack[include_stack_ptr].line;
          cfg->lumpnum  = include_stack[include_stack_ptr].lumpnum;
 
-         state = STATE_NONE; // make sure it's not in an odd state
+         ls.state = STATE_NONE; // make sure it's not in an odd state
          goto include; // haleyjd: goto -- kill me now!
-      }      
+      }   
    }
 
    return EOF; // probably not reachable, but whatever
