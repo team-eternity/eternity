@@ -1156,6 +1156,7 @@ static void R_AddLine(seg_t *line)
    {
       boolean mark; // haleyjd
       boolean uppermissing, lowermissing;
+      boolean heightchange;
 
       seg.twosided = true;
 
@@ -1226,9 +1227,13 @@ static void R_AddLine(seg_t *line)
       seg.c_window = seg.markcportal ? 
                      R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
 
+      heightchange = seg.frontsec->c_slope != seg.backsec->c_slope ?
+                     (seg.top != seg.high || seg.top2 != seg.high2) :
+                     seg.backsec->ceilingheight != seg.frontsec->ceilingheight;
+
       seg.markceiling = 
          (seg.ceilingplane && 
-          (mark || seg.clipsolid || seg.top != seg.high || seg.top2 != seg.high2 ||
+          (mark || seg.clipsolid || heightchange ||
            seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
            seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
            seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
@@ -1257,9 +1262,33 @@ static void R_AddLine(seg_t *line)
       seg.f_window = seg.markfportal ? 
                      R_GetFloorPortalWindow(seg.frontsec->f_portal) : NULL;
 
+      if(seg.backsec->f_slope)
+      {
+         float z1, z2, zstep;
+
+         z1 = P_GetZAtf(seg.backsec->f_slope, v1->fx, v1->fy);
+         z2 = P_GetZAtf(seg.backsec->f_slope, v2->fx, v2->fy);
+         zstep = (z2 - z1) / seg.line->len;
+
+         z1 += lclip1 * zstep;
+         z2 -= (seg.line->len - lclip2) * zstep;
+         seg.low = view.ycenter - ((z1 - view.z) * i1);
+         seg.low2 = view.ycenter - ((z2 - view.z) * i2);
+      }
+      else
+      {
+         seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
+         seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+      }
+      seg.lowstep = (seg.low2 - seg.low) * pstep;
+
+      heightchange = seg.frontsec->f_slope != seg.backsec->f_slope ?
+                     (seg.low != seg.bottom || seg.low2 != seg.bottom2) :
+                     seg.backsec->floorheight != seg.frontsec->floorheight;
+
       seg.markfloor = 
          (seg.floorplane && 
-          (mark || seg.clipsolid || seg.low != seg.bottom || seg.low2 != seg.bottom2 ||
+          (mark || seg.clipsolid || heightchange ||
            seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
            seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
            seg.frontsec->floorpic != seg.backsec->floorpic ||
@@ -1287,26 +1316,6 @@ static void R_AddLine(seg_t *line)
             seg.c_portalignore = true;
       }
 #endif
-
-      if(seg.backsec->f_slope)
-      {
-         float z1, z2, zstep;
-
-         z1 = P_GetZAtf(seg.backsec->f_slope, v1->fx, v1->fy);
-         z2 = P_GetZAtf(seg.backsec->f_slope, v2->fx, v2->fy);
-         zstep = (z2 - z1) / seg.line->len;
-
-         z1 += lclip1 * zstep;
-         z2 -= (seg.line->len - lclip2) * zstep;
-         seg.low = view.ycenter - ((z1 - view.z) * i1);
-         seg.low2 = view.ycenter - ((z2 - view.z) * i2);
-      }
-      else
-      {
-         seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
-         seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
-      }
-      seg.lowstep = (seg.low2 - seg.low) * pstep;
 
       texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
       if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
