@@ -28,7 +28,6 @@
 #include "m_vector.h"
 #include "r_main.h"
 
-
 // 
 // M_TranslateVec3f
 //
@@ -49,12 +48,11 @@ void M_TranslateVec3f(v3float_t *vec)
    vec->y = ty;
 }
 
-
-
 //
 // M_AddVec3f
 //
 // Adds v2 to v1 stores in dest
+//
 void M_AddVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
 {
    dest->x = v1->x + v2->x;
@@ -62,11 +60,11 @@ void M_AddVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
    dest->z = v1->z + v2->z;
 }
 
-
 // 
 // M_SubVec3f
 //
 // Subtracts v2 from v1 stores in dest
+//
 void M_SubVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
 {
    dest->x = v1->x - v2->x;
@@ -74,22 +72,21 @@ void M_SubVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
    dest->z = v1->z - v2->z;
 }
 
-
-
 // 
 // M_DotVec3f
 //
 // Returns the dot product of v1 and v2
+//
 float M_DotVec3f(const v3float_t *v1, const v3float_t *v2)
 {
    return (v1->x * v2->x) + (v1->y * v2->y) + (v1->z * v2->z);
 }
 
-
 //
 // M_CrossProduct3f
 //
 // Gets the cross product of v1 and v2 and stores in dest 
+//
 void M_CrossProduct3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
 {
    v3float_t tmp;
@@ -99,5 +96,5 @@ void M_CrossProduct3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2)
    memcpy(dest, &tmp, sizeof(v3float_t));
 }
 
-
+// EOF
 

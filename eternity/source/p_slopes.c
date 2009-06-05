@@ -32,14 +32,13 @@
 #include "p_spec.h"
 #include "p_slopes.h"
 
-
-
-
-
-
+//
 // P_MakeSlope
+//
 // Alocates and fill the contents of a slope structure.
-static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, const float zdelta, boolean isceiling)
+//
+static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, 
+                             const float zdelta, boolean isceiling)
 {
    pslope_t *ret = Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL);
    memset(ret, 0, sizeof(*ret));
@@ -94,9 +93,11 @@ static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, const float
    return ret;
 }
 
-
+//
 // P_CopySlope
+//
 // Allocates and returns a copy of the given slope structure.
+//
 static pslope_t *P_CopySlope(const pslope_t *src)
 {
    pslope_t *ret = Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL);
@@ -105,10 +106,11 @@ static pslope_t *P_CopySlope(const pslope_t *src)
    return ret;
 }
 
-
-
+//
 // P_MakeLineNormal
+//
 // Calculates a 2D normal for the given line and stores it in the line
+//
 void P_MakeLineNormal(line_t *line)
 {
    float linedx, linedy, length;
@@ -116,26 +118,28 @@ void P_MakeLineNormal(line_t *line)
    linedx = line->v2->fx - line->v1->fx;
    linedy = line->v2->fy - line->v1->fy;
 
-   length = (float)sqrt(linedx * linedx + linedy * linedy);
-   line->nx = linedy / length;
+   length   = (float)sqrt(linedx * linedx + linedy * linedy);
+   line->nx =  linedy / length;
    line->ny = -linedx / length;
 }
 
-
+//
 // P_GetExtent
+//
 // Returns the distance to the first line within the sector that
-// is intersected by a line parallel to the plane normal with the point (ox, oy) 
+// is intersected by a line parallel to the plane normal with the point (ox, oy)
+//
 float P_GetExtent(sector_t *sector, line_t *line, float ox, float oy)
 {
    return 0.0f;
 }
 
-
-
-
+//
 // P_SpawnSlope_Line
+//
 // Creates one or more slopes based on the given line type and front/back
 // sectors.
+//
 void P_SpawnSlope_Line(int linenum)
 {
    line_t *line = lines + linenum;
@@ -147,12 +151,15 @@ void P_SpawnSlope_Line(int linenum)
    int   i;
 
    boolean frontfloor = (special == 386 || special == 388 || special == 393);
-   boolean backfloor = (special == 389 || special == 391 || special == 392);
-   boolean frontceil = (special == 387 || special == 388 || special == 392);
-   boolean backceil = (special == 390 || special == 391 || special == 393);
+   boolean backfloor  = (special == 389 || special == 391 || special == 392);
+   boolean frontceil  = (special == 387 || special == 388 || special == 392);
+   boolean backceil   = (special == 390 || special == 391 || special == 393);
+
+   // SLOPE_FIXME: no fatal errors.
 
    if(!frontfloor && !backfloor && !frontceil && !backceil)
       I_Error("P_SpawnSlope_Line called with non-slope line special.");
+
    if(!line->frontsector || !line->backsector)
       I_Error("P_SpawnSlope_Line used on a line without two sides.");
 
@@ -222,14 +229,16 @@ void P_SpawnSlope_Line(int linenum)
    }
 }
 
-
-
-
-// ----------------------------------------------------------------------------
+// ============================================================================
+//
 // Various utilities related to slopes
+//
 
-
+//
+// P_GetZAt
+//
 // Returns the height of the sloped plane at (x, y) as a fixed_t
+//
 fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y)
 {
    fixed_t dist = FixedMul(x - slope->o.x, slope->d.x) +
@@ -238,18 +247,22 @@ fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y)
    return slope->o.z + FixedMul(dist, slope->zdelta);
 }
 
-
-
+//
+// P_GetZAtf
+//
 // Returns the height of the sloped plane at (x, y) as a float
+//
 float P_GetZAtf(pslope_t *slope, float x, float y)
 {
    float dist = (x - slope->of.x) * slope->df.x + (y - slope->of.y) * slope->df.y;
    return slope->of.z + (dist * slope->zdeltaf);
 }
 
-
-
-float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, const v3float_t *pnormal)
+//
+// P_DistFromPlanef
+//
+float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, 
+                       const v3float_t *pnormal)
 {
    return (point->x - pori->x) * pnormal->x + 
           (point->y - pori->y) * pnormal->y +
