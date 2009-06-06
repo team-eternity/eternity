@@ -31,6 +31,7 @@
 #include "m_bbox.h"
 #include "p_spec.h"
 #include "p_slopes.h"
+#include "c_io.h"
 
 //
 // P_MakeSlope
@@ -174,13 +175,17 @@ void P_SpawnSlope_Line(int linenum)
    boolean frontceil  = (special == 387 || special == 388 || special == 392);
    boolean backceil   = (special == 390 || special == 391 || special == 393);
 
-   // SLOPE_FIXME: no fatal errors.
-
    if(!frontfloor && !backfloor && !frontceil && !backceil)
-      I_Error("P_SpawnSlope_Line called with non-slope line special.");
+   {
+      C_Printf(FC_ERROR "P_SpawnSlope_Line called with non-slope line special.");
+      return;
+   }
 
    if(!line->frontsector || !line->backsector)
-      I_Error("P_SpawnSlope_Line used on a line without two sides.");
+   {
+      C_Printf(FC_ERROR "P_SpawnSlope_Line used on a line without two sides.");
+      return;
+   }
 
    origin.x = (line->v2->fx + line->v1->fx) * 0.5f;
    origin.y = (line->v2->fy + line->v1->fy) * 0.5f;
@@ -193,9 +198,11 @@ void P_SpawnSlope_Line(int linenum)
 
       extent = P_GetExtent(line->frontsector, line, &origin, &direction);
 
-      // SoM: Should print an error message in the console
       if(extent < 0.0f)
+      {
+         C_Printf(FC_ERROR "P_SpawnSlope_Line failed to get frontsector extent on line number %i\n", linenum);
          return;
+      }
 
       // reposition the origin according to the extent
       point.x = origin.x + direction.x * extent;
@@ -228,9 +235,11 @@ void P_SpawnSlope_Line(int linenum)
 
       extent = P_GetExtent(line->backsector, line, &origin, &direction);
 
-      // SoM: Should print an error message in the console
       if(extent == -1.0f)
+      {
+         C_Printf(FC_ERROR "P_SpawnSlope_Line failed to get backsector extent on line number %i\n", linenum);
          return;
+      }
 
       // reposition the origin according to the extent
       point.x = origin.x + direction.x * extent;

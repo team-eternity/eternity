@@ -121,6 +121,27 @@ void R_Throw(void)
 void (*flatfunc)(void) = R_Throw;
 void (*slopefunc)(void) = R_Throw;
 
+
+
+static struct flatdims_s
+{
+   int i;
+   float f;
+} flatdims[FLAT_NUMSIZES] = {
+   // FLAT_64
+   { 64,  64.0f},
+
+   // FLAT_128
+   {128, 128.0f},
+
+   // FLAT_256
+   {256, 256.0f},
+
+   // FLAT_512
+   {512, 512.0f}
+};
+
+
 //
 // R_InitPlanes
 // Only at game startup.
@@ -415,37 +436,8 @@ static void R_CalcSlope(visplane_t *pl)
    if(!pl->pslope)
       return;
 
-   // SLOPE_FIXME: tablify: 
-   // given:
-   // static struct flatdims_s
-   // {
-   //    int i, float f;
-   // } dimsforflatsize[FLAT_NUMSIZES] = { ... };
-   // access:
-   // dimsforflatsize[flatsize[pl->picnum]].i, .f
-   switch(flatsize[pl->picnum])
-   {
-      case FLAT_64:
-         tsizei = 64;
-         tsizef = 64.0f;
-         break;
-      case FLAT_128:
-         tsizei = 128;
-         tsizef = 128.0f;
-         break;
-      case FLAT_256:
-         tsizei = 256;
-         tsizef = 256.0f;
-         break;
-      case FLAT_512:
-         tsizei = 512;
-         tsizef = 512.0f;
-         break;
-      default:
-         // SLOPE_FIXME: fatal error is bad
-         I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", pl->picnum);
-   }
-
+   tsizei = flatdims[flatsize[pl->picnum]].i;
+   tsizef = flatdims[flatsize[pl->picnum]].f;
 
    x = (int)pl->pslope->of.x;
    y = (int)pl->pslope->of.y;
@@ -1063,29 +1055,8 @@ static void do_draw_plane(visplane_t *pl)
 
       R_PlaneLight();
 
-      // SLOPE_FIXME: TABLIFY AS IN R_CalcSlope
-      switch(fs)
-      {
-         case FLAT_64:
-            plane.tsizei = 64;
-            plane.tsizef = 64.0f;
-            break;
-         case FLAT_128:
-            plane.tsizei = 128;
-            plane.tsizef = 128.0f;
-            break;
-         case FLAT_256:
-            plane.tsizei = 256;
-            plane.tsizef = 256.0f;
-            break;
-         case FLAT_512:
-            plane.tsizei = 512;
-            plane.tsizef = 512.0f;
-            break;
-         default:
-            // SLOPE_FIXME: No fatal errors!
-            I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", pl->picnum);
-      }
+      plane.tsizei = flatdims[flatsize[pl->picnum]].i;
+      plane.tsizef = flatdims[flatsize[pl->picnum]].f;
 
       plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 
