@@ -129,23 +129,25 @@ void R_InitPlanes(void)
 {
 }
 
-
-
 //
 // R_SpanLight
+//
 // Returns a colormap index from the given distance and lightlevel info
+//
 static int R_SpanLight(float dist)
 {
-   int map = (int)(plane.startmap - (1280.0f / dist)) + 1 - (extralight * LIGHTBRIGHT);
+   int map = 
+      (int)(plane.startmap - (1280.0f / dist)) + 1 - (extralight * LIGHTBRIGHT);
 
    return map < 0 ? 0 : map >= NUMCOLORMAPS ? NUMCOLORMAPS - 1 : map;
 }
 
-
 // 
 // R_PlaneLight
+//
 // Sets up the internal light level barriers inside the plane struct
-static void R_PlaneLight()
+//
+static void R_PlaneLight(void)
 {
    // This formula was taken (almost) directly from r_main.c where the zlight
    // table is generated.
@@ -216,7 +218,8 @@ static void R_MapPlane(int y, int x1, int x2)
    }
 }
 
-
+// haleyjd: NOTE: This version below has scaling implemented. Don't delete it!
+// TODO: integrate flat scaling.
 /*
 static void R_MapPlane(int y, int x1, int x2)
 {
@@ -284,102 +287,9 @@ static void R_MapPlane(int y, int x1, int x2)
 }
 */
 
-
-/*
 //
-// R_MapPlane
+// R_SlopeLights
 //
-// BASIC PRIMITIVE
-//
-static void R_MapPlane(int y, int x1, int x2)
-{
-   float dy, xstep, ystep, realy, slope;
-
-   float tviewx, tviewy, tviewcos, tviewsin;
-   float t_a;
-
-#ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
-      I_Error("R_MapPlane: %i, %i at %i", x1, x2, y);
-#endif
-  
-   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
-   // center row because there are an even number of rows) some corrections need
-   // to be made depending on where the row lies relative to the ycenter row.
-   if(view.ycenter == y)
-      dy = 0.01f;
-   else if(y < view.ycenter)
-      dy = (float)fabs(view.ycenter - y) - 1;
-   else
-      dy = (float)fabs(view.ycenter - y) + 1;
-
-   slope = (float)fabs(plane.height / dy);
-   realy = slope * view.yfoc;
-
-   tviewx = plane.pviewx;
-   tviewy = plane.pviewy;
-   tviewsin   = view.sin;
-   tviewcos   = view.cos;
-
-#define PROT (45*PI/180.0f)
-
-   // signs of sine terms must be reversed to flip y axis
-   plane.pviewx = (float)( tviewx * cos(PROT) + tviewy * sin(PROT));
-   plane.pviewy = (float)(-tviewx * sin(PROT) + tviewy * cos(PROT));
-
-   t_a = ((ANG90 - viewangle) + ANG45) * PI / ANG180;
-   view.cos = (float)cos(t_a);
-   view.sin = (float)sin(t_a);
-
-   xstep = view.sin * slope * view.focratio;
-   ystep = view.cos * slope * view.focratio;
-
-   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-view.cos * realy) 
-                            + ((x1 - view.xcenter + 0.2) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (view.sin * realy) 
-                            + ((x1 - view.xcenter + 0.2) * ystep)) * plane.fixedunit);
-   span.xstep = (unsigned)(xstep * plane.fixedunit);
-   span.ystep = (unsigned)(ystep * plane.fixedunit);
-
-   // killough 2/28/98: Add offsets
-   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
-   {
-      int index = (int)(realy / 16.0f);
-      if(index >= MAXLIGHTZ )
-         index = MAXLIGHTZ-1;
-      span.colormap = plane.planezlight[index];
-   }
-   
-   span.y  = y;
-   span.x1 = x1;
-   span.x2 = x2;
-   span.source = plane.source;
-   
-   // BIG FLATS
-   flatfunc();
-
-   // visplane viewing -- sf
-   if(visplane_view)
-   {
-      if(y >= 0 && y < viewheight)
-      {
-         // SoM: ANYRES
-         if(x1 >= 0 && x1 <= viewwidth)
-            *(video.screens[0] + y*video.width + x1) = gameModeInfo->blackIndex;
-         if(x2 >= 0 && x2 <= viewwidth)
-            *(video.screens[0] + y*video.width + x2) = gameModeInfo->blackIndex;
-      }
-   }
-
-   plane.pviewx = tviewx;
-   plane.pviewy = tviewy;
-   view.sin = tviewsin;
-   view.cos = tviewcos;
-}
-*/
-
-
-
 static void R_SlopeLights(int len, float startmap, float endmap)
 {
    int i;
@@ -415,7 +325,9 @@ static void R_SlopeLights(int len, float startmap, float endmap)
    }
 }
 
-
+//
+// R_MapSlope
+//
 static void R_MapSlope(int y, int x1, int x2)
 {
    rslope_t *slope = plane.slope;
@@ -458,37 +370,36 @@ static void R_MapSlope(int y, int x1, int x2)
    slopefunc();
 }
 
-
-
-
 //
 // R_CompareSlopes
 // 
 // SoM: Returns true if the texture spaces of the give slope structs are the
 // same.
+//
 boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
-   if((!!s1) != (!!s2))
+   if((!!s1) != (!!s2)) // SLOPE_FIXME: huh-wha?? plz2document
       return false;
+   
    if(s1 == s2)
       return true;
-   // TODO: This should really use a sigma value.
+   
+   // SLOPE_FIXME: This should really use an epsilon value.
    if(s1->normalf.x != s2->normalf.x ||
       s1->normalf.y != s2->normalf.y ||
       s1->normalf.z != s2->normalf.z ||
       P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf) != 0.0f)
       return false;
+
    return true;
 }
-
-
-
 
 //
 // R_CalcSlope
 //
 // SoM: Calculates the rslope info from the OHV vectors and rotation/offset 
 // information in the plane struct
+//
 static void R_CalcSlope(visplane_t *vp)
 {
    // This is where the crap gets calculated. Yay
@@ -499,6 +410,14 @@ static void R_CalcSlope(visplane_t *vp)
    if(!vp->pslope)
       return;
 
+   // SLOPE_FIXME: tablify: 
+   // given:
+   // static struct flatdims_s
+   // {
+   //    int i, float f;
+   // } dimsforflatsize[FLAT_NUMSIZES] = { ... };
+   // access:
+   // dimsforflatsize[flatsize[vp->picnum]].i, .f
    switch(flatsize[vp->picnum])
    {
       case FLAT_64:
@@ -518,6 +437,7 @@ static void R_CalcSlope(visplane_t *vp)
          tsizef = 512.0f;
          break;
       default:
+         // SLOPE_FIXME: fatal error is bad
          I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", vp->picnum);
    }
 
@@ -574,16 +494,10 @@ static void R_CalcSlope(visplane_t *vp)
    rslope->shade = 256.0f * 2.0f - (vp->lightlevel + 16.0f) * 256.0f / 128.0f;
 }
 
-
-
-
 //
 // R_ClearPlanes
-// At begining of frame.
 //
-// SoM: uses double floating point for calculation of the global scales because
-// it is much more accurate. This is done only once per frame so this really has
-// no effect on speed.
+// At begining of frame.
 //
 void R_ClearPlanes(void)
 {
@@ -616,8 +530,12 @@ void R_ClearPlanes(void)
    num_visplanes = 0;    // reset
 }
 
-// New function, by Lee Killough
 
+//
+// new_visplane
+//
+// New function, by Lee Killough
+//
 static visplane_t *new_visplane(unsigned hash)
 {
    visplane_t *check = freetail;
@@ -653,10 +571,6 @@ static visplane_t *new_visplane(unsigned hash)
    return check;
 }
 
-
-
-
-
 //
 // R_FindPlane
 //
@@ -690,6 +604,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 
    for(check = visplanes[hash]; check; check = check->next)  // killough
    {
+      // FIXME: ok this has gotten out of hand now!
+      // We need a more intelligent hash function or something.
       if(height == check->height &&
          picnum == check->picnum &&
          lightlevel == check->lightlevel &&
@@ -840,6 +756,8 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
       I_Error("R_MakeSpans: b2 >= MAX_SCREENHEIGHT\n");
 #endif
 
+   // SLOPE_FIXME: can we make this decision earlier?
+   // SLOPE_FIXME: (cont'd) plane is constant inside this function, so probably.
    MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 
    for(; t2 > t1 && t1 <= b1; t1++)
@@ -963,10 +881,12 @@ void do_draw_newsky(visplane_t *pl)
    }
 }
 
+//
+// do_draw_plane
+//
 // New function, by Lee Killough
-// haleyjd 08/30/02: slight restructuring to use hashed
-// sky texture info cache
-
+// haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
+//
 static void do_draw_plane(visplane_t *pl)
 {
    register int x;
@@ -1077,11 +997,12 @@ static void do_draw_plane(visplane_t *pl)
       int swirling;
       byte fs;
 
-      int picnum = flattranslation[pl->picnum] == -1 ? pl->picnum : flattranslation[pl->picnum];
-
+      int picnum = flattranslation[pl->picnum] == -1 
+                      ? pl->picnum : flattranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      swirling = (flattranslation[pl->picnum] == -1) && flatsize[pl->picnum] == FLAT_64;
+      swirling = (flattranslation[pl->picnum] == -1) 
+                    && flatsize[pl->picnum] == FLAT_64;
 
       if(swirling)
          plane.source = R_DistortedFlat(pl->picnum);
@@ -1143,6 +1064,7 @@ static void do_draw_plane(visplane_t *pl)
 
       R_PlaneLight();
 
+      // SLOPE_FIXME: TABLIFY AS IN R_CalcSlope
       switch(fs)
       {
          case FLAT_64:
@@ -1162,9 +1084,9 @@ static void do_draw_plane(visplane_t *pl)
             plane.tsizef = 512.0f;
             break;
          default:
+            // SLOPE_FIXME: No fatal errors!
             I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", pl->picnum);
       }
-
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);
