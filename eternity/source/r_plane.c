@@ -293,7 +293,7 @@ static void R_MapPlane(int y, int x1, int x2)
 static void R_SlopeLights(int len, float startmap, float endmap)
 {
    int i;
-   float map, step;
+   fixed_t map, map2, step;
 
    if(plane.fixedcolormap)
    {
@@ -302,15 +302,17 @@ static void R_SlopeLights(int len, float startmap, float endmap)
       return;
    }
 
-   map = startmap;
+   map = M_FloatToFixed((startmap / 256.0f * NUMCOLORMAPS));
+   map2 = M_FloatToFixed((endmap / 256.0f * NUMCOLORMAPS));
+
    if(len > 1)
-      step = (float)(endmap - startmap) / (len - 1);
+      step = (map2 - map) / (len - 1);
    else
       step = 0;
 
    for(i = 0; i < len; i++)
    {
-      int index = (int)(map / 256.0f * NUMCOLORMAPS) + 1;
+      int index = (int)(map >> FRACBITS) + 1;
 
       index -= (extralight * LIGHTBRIGHT);
 
@@ -370,6 +372,9 @@ static void R_MapSlope(int y, int x1, int x2)
    slopefunc();
 }
 
+
+
+#define CompFloats(x, y) (fabs(x - y) < 0.001f)
 //
 // R_CompareSlopes
 // 
@@ -378,21 +383,21 @@ static void R_MapSlope(int y, int x1, int x2)
 //
 boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
-   if((!!s1) != (!!s2)) // SLOPE_FIXME: huh-wha?? plz2document
+   if(!s1 != !s2)
       return false;
    
    if(s1 == s2)
       return true;
    
-   // SLOPE_FIXME: This should really use an epsilon value.
-   if(s1->normalf.x != s2->normalf.x ||
-      s1->normalf.y != s2->normalf.y ||
-      s1->normalf.z != s2->normalf.z ||
-      P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf) != 0.0f)
+   if(CompFloats(s1->normalf.x, s2->normalf.x) ||
+      CompFloats(s1->normalf.y, s2->normalf.y) ||
+      CompFloats(s1->normalf.z, s2->normalf.z) ||
+      fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f)
       return false;
 
    return true;
 }
+#undef CompFloats
 
 //
 // R_CalcSlope
@@ -400,14 +405,14 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 // SoM: Calculates the rslope info from the OHV vectors and rotation/offset 
 // information in the plane struct
 //
-static void R_CalcSlope(visplane_t *vp)
+static void R_CalcSlope(visplane_t *pl)
 {
    // This is where the crap gets calculated. Yay
    int x, y, tsizei;
    float ixscale, iyscale, tsizef;
-   rslope_t *rslope = &vp->rslope;
+   rslope_t *rslope = &pl->rslope;
 
-   if(!vp->pslope)
+   if(!pl->pslope)
       return;
 
    // SLOPE_FIXME: tablify: 
@@ -417,8 +422,8 @@ static void R_CalcSlope(visplane_t *vp)
    //    int i, float f;
    // } dimsforflatsize[FLAT_NUMSIZES] = { ... };
    // access:
-   // dimsforflatsize[flatsize[vp->picnum]].i, .f
-   switch(flatsize[vp->picnum])
+   // dimsforflatsize[flatsize[pl->picnum]].i, .f
+   switch(flatsize[pl->picnum])
    {
       case FLAT_64:
          tsizei = 64;
@@ -438,12 +443,12 @@ static void R_CalcSlope(visplane_t *vp)
          break;
       default:
          // SLOPE_FIXME: fatal error is bad
-         I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", vp->picnum);
+         I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", pl->picnum);
    }
 
 
-   x = (int)vp->pslope->of.x;
-   y = (int)vp->pslope->of.y;
+   x = (int)pl->pslope->of.x;
+   y = (int)pl->pslope->of.y;
 
    x -= x % tsizei;
    y -= y % tsizei;
@@ -451,15 +456,15 @@ static void R_CalcSlope(visplane_t *vp)
    // TODO: rotation/offsets
    rslope->P.x = (float)x;
    rslope->P.z = (float)y;
-   rslope->P.y = P_GetZAtf(vp->pslope, rslope->P.x, rslope->P.z);
+   rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
 
    rslope->M.x = rslope->P.x - tsizef;
    rslope->M.z = rslope->P.z;
-   rslope->M.y = P_GetZAtf(vp->pslope, rslope->M.x, rslope->M.z);
+   rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
 
    rslope->N.x = rslope->P.x;
    rslope->N.z = rslope->P.z - tsizef;
-   rslope->N.y = P_GetZAtf(vp->pslope, rslope->N.x, rslope->N.z);
+   rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
 
    M_TranslateVec3f(&rslope->P);
    M_TranslateVec3f(&rslope->M);
@@ -485,13 +490,13 @@ static void R_CalcSlope(visplane_t *vp)
    rslope->C.y *= 0.5f / view.focratio;
    rslope->C.z *= 0.5f;
 
-   rslope->zat = P_GetZAtf(vp->pslope, vp->viewxf, vp->viewyf);
+   rslope->zat = P_GetZAtf(pl->pslope, pl->viewxf, pl->viewyf);
 
    // More help from randy. I was totally lost on this... 
    ixscale = iyscale = 1.0f / tsizef;
 
-   rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - vp->viewzf);
-   rslope->shade = 256.0f * 2.0f - (vp->lightlevel + 16.0f) * 256.0f / 128.0f;
+   rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - pl->viewzf);
+   rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
 }
 
 //
@@ -748,22 +753,16 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 //
 static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
 {
-   void (*MapFunc)(int, int, int);
-
 #ifdef RANGECHECK
    // haleyjd: do not allow this loop to trash the BSS data
    if(b2 >= MAX_SCREENHEIGHT)
       I_Error("R_MakeSpans: b2 >= MAX_SCREENHEIGHT\n");
 #endif
 
-   // SLOPE_FIXME: can we make this decision earlier?
-   // SLOPE_FIXME: (cont'd) plane is constant inside this function, so probably.
-   MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
-
    for(; t2 > t1 && t1 <= b1; t1++)
-      MapFunc(t1, spanstart[t1], x - 1);
+      plane.MapFunc(t1, spanstart[t1], x - 1);
    for(; b2 < b1 && t1 <= b1; b1--)
-      MapFunc(b1, spanstart[b1], x - 1);
+      plane.MapFunc(b1, spanstart[b1], x - 1);
    while(t2 < t1 && t2 <= b2)
       spanstart[t2++] = x;
    while(b2 > b1 && t2 <= b2)
@@ -1087,6 +1086,8 @@ static void do_draw_plane(visplane_t *pl)
             // SLOPE_FIXME: No fatal errors!
             I_Error("R_CalcSlope: Invalid flat size at picnum=%i\n", pl->picnum);
       }
+
+      plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);

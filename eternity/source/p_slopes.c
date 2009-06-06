@@ -129,9 +129,28 @@ void P_MakeLineNormal(line_t *line)
 // Returns the distance to the first line within the sector that
 // is intersected by a line parallel to the plane normal with the point (ox, oy)
 //
-float P_GetExtent(sector_t *sector, line_t *line, float ox, float oy)
+float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
 {
-   return 0.0f;
+   float fardist = -1.0f;
+   int i;
+
+   // Poll all the lines and find the vertex that is the furthest away from
+   // the slope line.
+   for(i = 0; i < sector->linecount; i++)
+   {
+      line_t *li = sector->lines[i];
+      float dist;
+      
+      // Don't compare to the slope line.
+      if(li == line)
+         continue;
+      
+      dist = (float)fabs((li->v1->fx - o->x) * d->x + (li->v1->fy - o->y) * d->y);
+      if(dist > fardist)
+         fardist = dist;
+   }
+
+   return fardist;
 }
 
 //
@@ -145,9 +164,9 @@ void P_SpawnSlope_Line(int linenum)
    line_t *line = lines + linenum;
    int special = line->special;
    pslope_t *fslope = NULL, *cslope = NULL;
-   v3float_t origin;
+   v3float_t origin, point;
    v2float_t direction;
-   float dz;
+   float dz, extent;
    int   i;
 
    boolean frontfloor = (special == 386 || special == 388 || special == 393);
@@ -166,51 +185,75 @@ void P_SpawnSlope_Line(int linenum)
    origin.x = (line->v2->fx + line->v1->fx) * 0.5f;
    origin.y = (line->v2->fy + line->v1->fy) * 0.5f;
 
-   // Note to self: This is really backwards. The origin really needs to be 
-   // from the actual floor/ceiling height of the sector and slope away.
-   // Done the way it is currently, moving slopes along with sectors will 
-   // be kind of a pain...
-   if(frontfloor)
+   if(frontfloor || frontceil)
    {
-      // SoM: TODO this is for testing and development.
+      // Do the front sector
       direction.x = line->nx;
       direction.y = line->ny;
-      origin.z = line->backsector->floorheightf;
-      dz = -0.2f;
 
-      fslope = line->frontsector->f_slope = 
-         P_MakeSlope(&origin, &direction, dz, false);
-   }
-   else if(backfloor)
-   {
-      // SoM: TODO this is for testing and development.
-      direction.x = line->ny;
-      direction.y = -line->nx;
-      origin.z = line->frontsector->floorheightf;
-      dz = -0.2f;
-      fslope = line->backsector->f_slope = 
-         P_MakeSlope(&origin, &direction, dz, false);
-   }
+      extent = P_GetExtent(line->frontsector, line, &origin, &direction);
 
-   if(frontceil)
-   {
-      // SoM: TODO this is for testing and development.
-      direction.x = line->nx;
-      direction.y = line->ny;
-      origin.z = line->backsector->ceilingheightf;
-      dz = 0.2f;
-      cslope = line->frontsector->c_slope = 
-         P_MakeSlope(&origin, &direction, dz, true);
+      // SoM: Should print an error message in the console
+      if(extent < 0.0f)
+         return;
+
+      // reposition the origin according to the extent
+      point.x = origin.x + direction.x * extent;
+      point.y = origin.y + direction.y * extent;
+      direction.x = -direction.x;
+      direction.y = -direction.y;
+
+      if(frontfloor)
+      {
+         point.z = line->frontsector->floorheightf;
+         dz = (line->backsector->floorheightf - point.z) / extent;
+
+         fslope = line->frontsector->f_slope = 
+            P_MakeSlope(&point, &direction, dz, false);
+      }
+      if(frontceil)
+      {
+         point.z = line->frontsector->ceilingheightf;
+         dz = (line->backsector->ceilingheightf - point.z) / extent;
+
+         cslope = line->frontsector->c_slope = 
+            P_MakeSlope(&point, &direction, dz, true);
+      }
    }
-   else if(backceil)
+   if(backfloor || backceil)
    {
-      // SoM: TODO this is for testing and development.
-      direction.x = line->ny;
-      direction.y = -line->nx;
-      origin.z = line->frontsector->ceilingheightf;
-      dz = 0.2f;
-      cslope = line->backsector->c_slope = 
-         P_MakeSlope(&origin, &direction, dz, true);
+      // Backsector
+      direction.x = -line->nx;
+      direction.y = -line->ny;
+
+      extent = P_GetExtent(line->backsector, line, &origin, &direction);
+
+      // SoM: Should print an error message in the console
+      if(extent == -1.0f)
+         return;
+
+      // reposition the origin according to the extent
+      point.x = origin.x + direction.x * extent;
+      point.y = origin.y + direction.y * extent;
+      direction.x = -direction.x;
+      direction.y = -direction.y;
+
+      if(backfloor)
+      {
+         point.z = line->backsector->floorheightf;
+         dz = (line->frontsector->floorheightf - point.z) / extent;
+
+         fslope = line->backsector->f_slope = 
+            P_MakeSlope(&point, &direction, dz, false);
+      }
+      if(backceil)
+      {
+         point.z = line->backsector->ceilingheightf;
+         dz = (line->frontsector->ceilingheightf - point.z) / extent;
+
+         cslope = line->backsector->c_slope = 
+            P_MakeSlope(&point, &direction, dz, true);
+      }
    }
 
 

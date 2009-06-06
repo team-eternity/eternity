@@ -1229,7 +1229,7 @@ static void R_AddLine(seg_t *line)
 
       heightchange = seg.frontsec->c_slope != seg.backsec->c_slope ?
                      (seg.top != seg.high || seg.top2 != seg.high2) :
-                     seg.backsec->ceilingheight != seg.frontsec->ceilingheight;
+                     (seg.top != seg.high);
 
       seg.markceiling = 
          (seg.ceilingplane && 
@@ -1241,7 +1241,7 @@ static void R_AddLine(seg_t *line)
            seg.frontsec->topmap != seg.backsec->topmap ||
            seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
 
-      if((seg.high > seg.top || seg.high2 > seg.top2) && side->toptexture)
+      if(heightchange && side->toptexture)
       {
          seg.toptex = texturetranslation[side->toptexture];
          seg.toptexh = textureheight[side->toptexture] >> FRACBITS;

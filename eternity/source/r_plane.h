@@ -89,6 +89,8 @@ typedef struct
    rslope_t *slope;
    int      tsizei;
    float    tsizef;
+
+   void (*MapFunc)(int, int, int);
 } cb_plane_t;
 
 
