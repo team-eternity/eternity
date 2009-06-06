@@ -410,10 +410,10 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
    if(s1 == s2)
       return true;
    
-   if(CompFloats(s1->normalf.x, s2->normalf.x) ||
-      CompFloats(s1->normalf.y, s2->normalf.y) ||
-      CompFloats(s1->normalf.z, s2->normalf.z) ||
-      fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f)
+   if(!CompFloats(s1->normalf.x, s2->normalf.x) ||
+      !CompFloats(s1->normalf.y, s2->normalf.y) ||
+      !CompFloats(s1->normalf.z, s2->normalf.z) ||
+      fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) >= 0.001f)
       return false;
 
    return true;
@@ -1050,7 +1050,14 @@ static void do_draw_plane(visplane_t *pl)
       plane.fixedcolormap = pl->fixedcolormap;
 
       // SoM: slopes
+#if 1
+      if(pl->pslope)
+         plane.slope = &pl->rslope;
+      else
+         plane.slope = NULL;
+#else
       plane.slope = pl->pslope ? &pl->rslope : NULL;
+#endif
       plane.lightlevel = pl->lightlevel;
 
       R_PlaneLight();
