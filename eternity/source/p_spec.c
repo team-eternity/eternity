@@ -3589,7 +3589,6 @@ void P_SetLineID(line_t *line, int id)
    {
       int chain = (unsigned)line->tag % (unsigned)numlines;
       int i;
-      int thisLineNum = line - lines;
       line_t *prevline = NULL;
 
       // walk the chain
@@ -3603,6 +3602,7 @@ void P_SetLineID(line_t *line, int id)
             else
                lines[chain].firsttag = line->nexttag; // list = this->next
          }
+
          // not a match, keep looking
          // record this line in case it's the one before the one we're looking for
          prevline = &lines[i]; 
@@ -4671,8 +4671,8 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    mobj_t    *skycam;
    static int CamType = -1;
    int s;
-   fixed_t deltax, deltay, deltaz, planez;
-   int anchortype; // SoM 3-10-04: new plan.
+   fixed_t deltax, deltay, deltaz, planez = 0;
+   int anchortype = 0; // SoM 3-10-04: new plan.
 
    if(!(sector = line->frontsector))
       return;

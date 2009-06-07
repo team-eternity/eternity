@@ -1604,7 +1604,7 @@ void deh_procCheat(DWFILE *fpin, char *line) // done
                     }
                   }
                 }
-                cheat[iy].cheat = (unsigned char *)strdup(p);
+                cheat[iy].cheat = strdup(p);
                 deh_LogPrintf("Assigned new cheat '%s' to cheat '%s'at index %d\n",
                               p, cheat[ix].deh_cheat, iy); // killough 4/18/98
             }

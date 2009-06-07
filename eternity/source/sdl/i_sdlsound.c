@@ -102,6 +102,7 @@ static void stopchan(int handle)
 {
    int cnum;
    boolean freeSound = true;
+   sfxinfo_t *sfx;
    
 #ifdef RANGECHECK
    // haleyjd 02/18/05: bounds checking
@@ -112,37 +113,44 @@ static void stopchan(int handle)
    // haleyjd 10/02/08: critical section
    if(SDL_SemWait(channelinfo[handle].semaphore) == 0)
    {
+      // haleyjd 06/07/09: store this here so that we can release the
+      // semaphore as quickly as possible.
+      sfx = channelinfo[handle].id;
+
       channelinfo[handle].stopChannel = false;
 
       if(channelinfo[handle].data)
       {
+         // haleyjd 06/07/09: bug fix!
+         // this channel isn't interested in the sound any more, 
+         // even if we didn't free it. This prevented some sounds from
+         // getting freed unnecessarily.
+         channelinfo[handle].id   = NULL;
          channelinfo[handle].data = NULL;
-         
-         if(channelinfo[handle].id)
-         {
-            // haleyjd 06/03/06: see if we can free the sound
-            for(cnum = 0; cnum < MAX_CHANNELS; ++cnum)
-            {
-               if(cnum == handle)
-                  continue;
-               if(channelinfo[cnum].id &&
-                  channelinfo[cnum].id->data == channelinfo[handle].id->data)
-               {
-                  freeSound = false; // still being used by some channel
-                  break;
-               }
-            }
-            
-            // set sample to PU_CACHE level
-            if(freeSound)
-            {
-               Z_ChangeTag(channelinfo[handle].id->data, PU_CACHE);
-               channelinfo[handle].id = NULL;
-            }
-         }
       }
 
+      // haleyjd 06/07/09: release the semaphore now. The faster the better.
       SDL_SemPost(channelinfo[handle].semaphore);
+         
+      if(sfx)
+      {
+         // haleyjd 06/03/06: see if we can free the sound
+         for(cnum = 0; cnum < MAX_CHANNELS; ++cnum)
+         {
+            if(cnum == handle)
+               continue;
+            if(channelinfo[cnum].id &&
+               channelinfo[cnum].id->data == sfx)
+            {
+               freeSound = false; // still being used by some channel
+               break;
+            }
+         }
+         
+         // set sample to PU_CACHE level
+         if(freeSound)
+            Z_ChangeTag(sfx, PU_CACHE);
+      }
    }
 }
 
@@ -341,26 +349,25 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    if(leftvol < 0 || leftvol > 127)
       I_Error("leftvol out of bounds");
 
-   // haleyjd 10/02/08: critical section
-   if(SDL_SemWait(channelinfo[slot].semaphore) == 0)
-   {
-      // Set stepping
-      // MWM 2000-12-24: Calculates proportion of channel samplerate
-      // to global samplerate for mixing purposes.
-      // Patched to shift left *then* divide, to minimize roundoff errors
-      // as well as to use SAMPLERATE as defined above, not to assume 11025 Hz
-      if(pitched_sounds)
-         channelinfo[slot].step = step;
-      else
-         channelinfo[slot].step = 1 << 16;
-      
-      // Get the proper lookup table piece
-      //  for this volume level???
-      channelinfo[slot].leftvol_lookup  = &vol_lookup[leftvol*256];
-      channelinfo[slot].rightvol_lookup = &vol_lookup[rightvol*256];
+   // haleyjd 06/07/09: critical section is not needed here because this data
+   // can be out of sync without affecting the sound update loop. This may cause
+   // momentary out-of-sync volume between the left and right sound channels, but
+   // the impact would be practically unnoticeable.
 
-      SDL_SemPost(channelinfo[slot].semaphore);
-   }
+   // Set stepping
+   // MWM 2000-12-24: Calculates proportion of channel samplerate
+   // to global samplerate for mixing purposes.
+   // Patched to shift left *then* divide, to minimize roundoff errors
+   // as well as to use SAMPLERATE as defined above, not to assume 11025 Hz
+   if(pitched_sounds)
+      channelinfo[slot].step = step;
+   else
+      channelinfo[slot].step = 1 << 16;
+   
+   // Get the proper lookup table piece
+   //  for this volume level???
+   channelinfo[slot].leftvol_lookup  = &vol_lookup[leftvol*256];
+   channelinfo[slot].rightvol_lookup = &vol_lookup[rightvol*256];
 }
 
 //

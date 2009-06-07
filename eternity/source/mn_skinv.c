@@ -165,7 +165,7 @@ static boolean MN_SkinResponder(event_t *ev)
          if(skview_haswdth)
          {
             int rnd = M_Random() % ((GameModeInfo->id == shareware) ? 2 : 3);
-            int sndnum;
+            int sndnum = 0;
 
             switch(rnd)
             {

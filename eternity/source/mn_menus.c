@@ -1297,7 +1297,8 @@ void MN_ReadSaveStrings(void)
          continue;
       }
 
-      fread(description, SAVESTRINGSIZE, 1, fp);
+      if(fread(description, SAVESTRINGSIZE, 1, fp) < 1)
+         doom_printf("%s", FC_ERROR "Warning: savestring read failed");
       if(savegamenames[i])
          Z_Free(savegamenames[i]);
       savegamenames[i] = Z_Strdup(description, PU_STATIC, 0);  // haleyjd
@@ -2824,98 +2825,6 @@ CONSOLE_COMMAND(mn_enemies, 0)
 {
    MN_StartMenu(&menu_enemies);
 }
-
-
-/////////////////////////////////////////////////////////////////
-//
-// Framerate test
-//
-// Option on "video options" menu allows you to timedemo your
-// computer on demo2. When you finish you are presented with
-// this menu
-
-/*
-// test framerates
-// SoM: ANYRES
-// tons of new video modes
-int framerates[12] = {2462, 1870, 2460, 698, 489};
-int this_framerate;
-void MN_FrameRateDrawer(void);
-
-static menuitem_t mn_framerate_items[] =
-{
-   {it_title,  FC_GOLD "framerate"},
-   {it_gap},
-   {it_info,   "this graph shows your framerate against that"},
-   {it_info,   "of a fast modern computer (using the same"},
-   {it_info,   "vidmode)"},
-   {it_gap},
-   {it_runcmd, "ok",          "mn_prevmenu"},
-   {it_gap},
-   {it_end},
-};
-
-menu_t menu_framerate = 
-{
-   mn_framerate_items,
-   NULL, NULL, NULL,                      // pages
-   15, 15,                                // x, y
-   6,                                     // starting item
-   mf_background | mf_leftaligned,        // align left
-   MN_FrameRateDrawer,
-};
-
-#define BARCOLOR 208
-
-// SoM: ANYRES
-void MN_FrameRateDrawer(void)
-{
-   int x, y, ytop;
-   int scrwidth = v_width;
-   int linelength;
-   char tempstr[50];
-   
-   // fast computers framerate is always 3/4 of screen
-   
-   psnprintf(tempstr, sizeof(tempstr), "your computer: %i.%i fps",
-             this_framerate/10, this_framerate%10);
-   MN_WriteText(tempstr, 50, 80);
-  
-   ytop = realyarray[93];
-   linelength = (3 * scrwidth * this_framerate) / (4 * framerates[v_mode]);
-   if(linelength > scrwidth) linelength = scrwidth-2;
-   
-   // draw your computers framerate
-   for(x=0; x<linelength; x++)
-   {
-      y = ytop + (globalyscale >> FRACBITS);
-      while(y-- >= ytop)
-         *(screens[0] + y * scrwidth + x) = BARCOLOR;
-   }
-
-   psnprintf(tempstr, sizeof(tempstr),
-             "fast computer (k6-2 450): %i.%i fps",
-             framerates[v_mode]/10, framerates[v_mode]%10);
-   MN_WriteText(tempstr, 50, 110);
-
-   ytop = realyarray[103];
-   
-   // draw my computers framerate
-   for(x=0; x<(scrwidth*3)/4; x++)
-   {
-      y = ytop + (globalyscale >> FRACBITS);
-      while(y-- >= ytop)
-         *(screens[0] + y*scrwidth + x) = BARCOLOR;
-   }
-}
-
-void MN_ShowFrameRate(int framerate)
-{
-   this_framerate = framerate;
-   MN_StartMenu(&menu_framerate);
-   D_StartTitle();      // user does not need to see the console
-}
-*/
 
 //------------------------------------------------------------------------
 //

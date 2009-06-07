@@ -1659,10 +1659,10 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    {
    default:
    case 0: // console
-      C_Printf(msg);
+      C_Printf("%s", msg);
       break;
    case 1: // message
-      doom_printf(msg);
+      doom_printf("%s", msg);
       break;
    case 2: // center message
       HU_CenterMessage(msg);

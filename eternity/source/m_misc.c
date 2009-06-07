@@ -2488,7 +2488,8 @@ void M_ScreenShot(void)
    // killough 10/98: print error message and change sound effect if error
    if(!success)
    {
-      doom_printf(errno? strerror(errno) : FC_ERROR "Could not take screenshot");
+      doom_printf("%s",
+         errno ? strerror(errno) : FC_ERROR "Could not take screenshot");
       S_StartSound(NULL, GameModeInfo->playerSounds[sk_oof]);
    }
    else

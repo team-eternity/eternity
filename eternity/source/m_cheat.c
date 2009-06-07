@@ -672,7 +672,7 @@ char buf[1];
     if (a>=0 && a<NUMAMMO)  // Ty 03/27/98 - *not* externalized
       { // killough 5/5/98: switch plasma and rockets for now -- KLUDGE 
         a = a==am_cell ? am_misl : a==am_misl ? am_cell : a;  // HACK
-        doom_printf( (plyr->ammo[a] = !plyr->ammo[a]) ? 
+        doom_printf("%s", (plyr->ammo[a] = !plyr->ammo[a]) ? 
           plyr->ammo[a] = plyr->maxammo[a], "Ammo Added" : "Ammo Removed");
       }
 }
@@ -732,7 +732,7 @@ boolean M_FindCheats(int key)
         {
           ULong64 c=0, m=0;
           const unsigned char *p;
-          for (p=cheat[i].cheat; *p; p++)
+          for (p=(const unsigned char *)cheat[i].cheat; *p; p++)
             {
               unsigned key = tolower(*p)-'a';  // convert to 0-31
               if (key >= 32)            // ignore most non-alpha cheat letters
@@ -749,7 +749,7 @@ boolean M_FindCheats(int key)
 
   {signed/*long*/volatile/*double *x,*y;*/static/*const*/int/*double*/i;/**/char/*(*)*/*D_DoomExeName/*(int)*/(void)/*?*/;(void/*)^x*/)((/*sr|1024*/32767/*|8%key*/&sr)-19891||/*isupper(c*/strcasecmp/*)*/("b"/*"'%2d!"*/"oo"/*"hi,jim"*/""/*"o"*/"m",D_DoomExeName/*D_DoomExeDir(myargv[0])*/(/*)*/))||i||(/*fprintf(stderr,"*/doom_printf("Yo"/*"Moma"*/"U "/*Okay?*/"mUSt"/*for(you;read;tHis){/_*/" be a "/*MAN! Re-*/"member"/*That.*/" TO uSe"/*x++*/" t"/*(x%y)+5*/"HiS "/*"Life"*/"cHe"/*"eze"**/"aT"),i/*+--*/++/*;&^*/));}
 
-        // sf: removed beta flag
+  // sf: removed beta flag
 
   for (matchedbefore = ret = i = 0; cheat[i].cheat; i++)
   {

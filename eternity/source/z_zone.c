@@ -1318,7 +1318,7 @@ void *Z_SysMalloc(size_t size)
    void *ret;
    
    if(!(ret = (malloc)(size)))
-      I_Error("Z_SysMalloc: failed on allocation of %lu bytes\n", (unsigned int)size);
+      I_Error("Z_SysMalloc: failed on allocation of %u bytes\n", size);
 
    return ret;
 }
@@ -1333,7 +1333,7 @@ void *Z_SysCalloc(size_t n1, size_t n2)
    void *ret;
 
    if(!(ret = (calloc)(n1, n2)))
-      I_Error("Z_SysCalloc: failed on allocation of %lu bytes\n", (unsigned int)n1*n2);
+      I_Error("Z_SysCalloc: failed on allocation of %u bytes\n", n1*n2);
 
    return ret;
 }
@@ -1349,7 +1349,7 @@ void *Z_SysRealloc(void *ptr, size_t size)
    void *ret;
 
    if(!(ret = (realloc)(ptr, size)))
-      I_Error("Z_SysRealloc: failed on allocation of %lu bytes\n", (unsigned int)size);
+      I_Error("Z_SysRealloc: failed on allocation of %u bytes\n", size);
 
    return ret;
 }

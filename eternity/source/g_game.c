@@ -1868,7 +1868,11 @@ void G_SaveCurrentLevel(char *filename, char *description)
    Z_CheckHeap();
 
    if(!M_WriteFile(filename, savebuffer, length))
-      doom_printf(errno ? strerror(errno) : FC_ERROR"Could not save game: Error unknown");
+   {
+      const char *str = 
+         errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
+      doom_printf("%s", str);
+   }
    else if(!hub_changelevel) // sf: no 'game saved' message for hubs
       doom_printf("%s", DEH_String("GGSAVED"));  // Ty 03/27/98 - externalized
 

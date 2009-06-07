@@ -66,7 +66,7 @@ extern int keylookspeed;
 
 CONSOLE_COMMAND(i_error, 0)
 {
-   I_Error(c_args);
+   I_Error("%s", c_args);
 }
 
 CONSOLE_COMMAND(z_print, cf_hidden)

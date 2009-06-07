@@ -540,7 +540,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       {
          int bx, by;
          int colour;
-         char block[BLOCK_SIZE*BLOCK_SIZE];
+         byte block[BLOCK_SIZE*BLOCK_SIZE];
          
          MN_GetItemVariable(item);
          
@@ -558,7 +558,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
             // middle
             for(bx=1; bx<BLOCK_SIZE-1; bx++)
                for(by=1; by<BLOCK_SIZE-1; by++)
-                  block[by*BLOCK_SIZE+bx] = colour;
+                  block[by*BLOCK_SIZE+bx] = (byte)colour;
          }
          
          // draw it         

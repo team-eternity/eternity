@@ -252,7 +252,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
                V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, FRACUNIT*2/3);
             }
             
-            V_DrawPatchTranslated(tx, cy, &vbscreen, patch, (byte *)color, false);
+            V_DrawPatchTranslated(tx, cy, &vbscreen, patch, (char *)color, false);
          }
       }
       

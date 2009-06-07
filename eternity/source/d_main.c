@@ -736,7 +736,6 @@ static void D_SetBasePath(void)
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    char *s;
    char *basedir = NULL;
-   boolean havepath = false;
 
    // Priority:
    // 1. Command-line argument "-base"
@@ -1107,10 +1106,6 @@ static const char *D_DoIWADMenu(void)
 
 // macros for CheckIWAD
 
-#define isIWAD(name) \
-   ((name)[0] == 'I' && (name)[1] == 'W' && \
-    (name)[2] == 'A' && (name)[3] == 'D')
-
 #define isMapExMy(name) \
    ((name)[0] == 'E' && (name)[2] == 'M' && !(name)[4])
 
@@ -1122,31 +1117,6 @@ static const char *D_DoIWADMenu(void)
 
 #define isMC(name) \
    ((name)[0] == 'M' && (name)[1] == 'C' && !(name)[3])
-
-#define isADVISOR(name) \
-   ((name)[0] == 'A' && (name)[1] == 'D' && (name)[2] == 'V' && \
-    (name)[3] == 'I' && (name)[4] == 'S' && (name)[5] == 'O' && \
-    (name)[6] == 'R' && !(name)[7])
-
-#define isTINTTAB(name) \
-   ((name)[0] == 'T' && (name)[1] == 'I' && (name)[2] == 'N' && \
-    (name)[3] == 'T' && (name)[4] == 'T' && (name)[5] == 'A' && \
-    (name)[6] == 'B' && !(name)[7])
-
-#define isSNDCURVE(name) \
-   ((name)[0] == 'S' && (name)[1] == 'N' && (name)[2] == 'D' && \
-    (name)[3] == 'C' && (name)[4] == 'U' && (name)[5] == 'R' && \
-    (name)[6] == 'V' && (name)[7] == 'E')
-
-#define isEXTENDED(name) \
-   ((name)[0] == 'E' && (name)[1] == 'X' && (name)[2] == 'T' && \
-    (name)[3] == 'E' && (name)[4] == 'N' && (name)[5] == 'D' && \
-    (name)[6] == 'E' && (name)[7] == 'D')
-
-#define isFREEDOOM(name) \
-   ((name)[0] == 'F' && (name)[1] == 'R' && (name)[2] == 'E' && \
-    (name)[3] == 'E' && (name)[4] == 'D' && (name)[5] == 'O' && \
-    (name)[6] == 'O' && (name)[7] == 'M')
 
 // haleyjd 10/13/05: special stuff for FreeDOOM :)
 static boolean freedoom = false;
@@ -1184,9 +1154,17 @@ static void CheckIWAD(const char *iwadname,
       I_Error("Can't open IWAD: %s\n",iwadname);
 
    // read IWAD header
-   if(fread(&header, 1, sizeof header, fp) != sizeof header ||
-      !isIWAD(header.identification))
-      I_Error("IWAD tag not present: %s\n", iwadname);
+   if(fread(&header, sizeof header, 1, fp) < 1 ||
+      strncmp(header.identification, "IWAD", 4))
+   {
+      // haleyjd 06/06/09: do not error out here, due to some bad tools
+      // resetting peoples' IWADs to PWADs. Only error if it is also 
+      // not a PWAD.
+      if(strncmp(header.identification, "PWAD", 4))
+         I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
+      else
+         usermsg("Warning: IWAD tag not present: %s\n", iwadname);
+   }
 
    fseek(fp, LONG(header.infotableofs), SEEK_SET);
 
@@ -1219,11 +1197,15 @@ static void CheckIWAD(const char *iwadname,
          ++tnt;
       else if(isMC(n))
          ++plut;
-      else if(isADVISOR(n) || isTINTTAB(n) || isSNDCURVE(n))
+      else if(!strncmp(n, "ADVISOR",  7) || 
+              !strncmp(n, "TINTTAB",  7) || 
+              !strncmp(n, "SNDCURVE", 8))
+      {
          ++raven;
-      else if(isEXTENDED(n))
+      }
+      else if(!strncmp(n, "EXTENDED", 8))
          ++sosr;
-      else if(isFREEDOOM(n))
+      else if(!strncmp(n, "FREEDOOM", 8))
          freedoom = true;
    }
 

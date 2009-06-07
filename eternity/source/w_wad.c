@@ -148,7 +148,8 @@ static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: stati
       // WAD file
       isWad = true; // haleyjd 05/23/04
       
-      fread(&header, sizeof(header), 1, handle);
+      if(fread(&header, sizeof(header), 1, handle) < 1)
+         I_Error("Failed reading header for wad file %s\n", filename);
       
       if(strncmp(header.identification, "IWAD", 4) && 
          strncmp(header.identification, "PWAD", 4))
@@ -163,7 +164,9 @@ static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: stati
       fileinfo2free = fileinfo = malloc(length);    // killough
       
       fseek(handle, header.infotableofs, SEEK_SET);
-      fread(fileinfo, length, 1, handle);
+
+      if(fread(fileinfo, length, 1, handle) < 1)
+         I_Error("Failed reading directory for wad file %s\n", filename);
       
       dir->numlumps += header.numlumps;
    }
