@@ -863,6 +863,346 @@ static void R_ClipSegToPortal()
 #define PNEARCLIP 0.001f
 extern int       *texturewidthmask;
 
+
+
+static void R_2S_Sloped(float pstep, float i1, float i2, float textop, float texbottom, vertex_t *v1, vertex_t *v2, float lclip1, float lclip2)
+{
+   boolean mark; // haleyjd
+   boolean heightchange;
+   float texhigh, texlow;
+   side_t *side = seg.side;
+   seg_t  *line = seg.line;
+
+   seg.twosided = true;
+
+   // haleyjd 03/04/07: reformatted and eliminated numerous unnecessary
+   // conditional statements (predicates already provide the needed
+   // true/false value without a branch). Also added tweak for sector
+   // colormaps.
+
+   mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
+           seg.frontsec->heightsec != -1 ||
+           seg.frontsec->heightsec != seg.backsec->heightsec ||
+           seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
+
+   if(seg.backsec->c_slope)
+   {
+      float z1, z2, zstep;
+
+      z1 = P_GetZAtf(seg.backsec->c_slope, v1->fx, v1->fy);
+      z2 = P_GetZAtf(seg.backsec->c_slope, v2->fx, v2->fy);
+      zstep = (z2 - z1) / seg.line->len;
+
+      z1 += lclip1 * zstep;
+      z2 -= (seg.line->len - lclip2) * zstep;
+
+      seg.high = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
+      seg.high2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
+   }
+   else
+   {
+      seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
+      seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+   }
+   seg.highstep = (seg.high2 - seg.high) * pstep;
+
+   texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
+
+   if(seg.backsec->f_slope)
+   {
+      float z1, z2, zstep;
+
+      z1 = P_GetZAtf(seg.backsec->f_slope, v1->fx, v1->fy);
+      z2 = P_GetZAtf(seg.backsec->f_slope, v2->fx, v2->fy);
+      zstep = (z2 - z1) / seg.line->len;
+
+      z1 += lclip1 * zstep;
+      z2 -= (seg.line->len - lclip2) * zstep;
+      seg.low = view.ycenter - ((z1 - view.z) * i1);
+      seg.low2 = view.ycenter - ((z2 - view.z) * i2);
+   }
+   else
+   {
+      seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
+      seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+   }
+   seg.lowstep = (seg.low2 - seg.low) * pstep;
+
+   // TODO: Fix for use with portals.
+   seg.clipsolid = (seg.bottom <= seg.high && seg.bottom2 <= seg.high2) ||
+                   (seg.low <= seg.top && seg.low2 <= seg.top2) ||
+                   (seg.low <= seg.high && seg.low2 <= seg.high2);
+
+   if((seg.frontsec->ceilingpic == skyflatnum ||
+           seg.frontsec->ceilingpic == sky2flatnum) &&
+          (seg.backsec->ceilingpic  == skyflatnum ||
+           seg.backsec->ceilingpic  == sky2flatnum))
+   {
+      seg.top = seg.high;
+      seg.top2 = seg.high2;
+      seg.topstep = seg.highstep;
+   }
+
+   // -- Ceilings -- 
+   // SoM: TODO: Float comparisons should be done within an epsilon
+   heightchange = seg.frontsec->c_slope != seg.backsec->c_slope ?
+                  (seg.top != seg.high || seg.top2 != seg.high2) :
+                  (seg.top != seg.high);
+
+   seg.markcportal = 
+      (R_RenderCeilingPortal(seg.frontsec) && 
+      (seg.clipsolid || heightchange ||
+       seg.frontsec->c_portal != seg.backsec->c_portal));
+
+   seg.c_window = seg.markcportal ? 
+                  R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
+
+   seg.markceiling = 
+      (seg.ceilingplane && 
+       (mark || seg.clipsolid || heightchange ||
+        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
+        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
+        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+        seg.frontsec->topmap != seg.backsec->topmap ||
+        seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
+
+   if(heightchange && side->toptexture)
+   {
+      seg.toptex = texturetranslation[side->toptexture];
+      seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
+
+      if(seg.line->linedef->flags & ML_DONTPEGTOP)
+         seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
+      else
+         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety);
+   }
+   else
+      seg.toptex = 0;
+
+   // -- Floors -- 
+   // SoM: TODO: Float comparisons should be done within an epsilon
+   heightchange = seg.frontsec->f_slope != seg.backsec->f_slope ?
+                  (seg.low != seg.bottom || seg.low2 != seg.bottom2) :
+                  seg.backsec->floorheight != seg.frontsec->floorheight;
+
+   seg.markfportal = 
+      (R_RenderFloorPortal(seg.frontsec) &&
+      (seg.clipsolid || heightchange ||
+       seg.frontsec->f_portal != seg.backsec->f_portal));
+
+   seg.f_window = seg.markfportal ? 
+                  R_GetFloorPortalWindow(seg.frontsec->f_portal) : NULL;
+
+   seg.markfloor = 
+      (seg.floorplane && 
+       (mark || seg.clipsolid || heightchange ||
+        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
+        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+        seg.frontsec->floorpic != seg.backsec->floorpic ||
+        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+        seg.frontsec->bottommap != seg.backsec->bottommap ||
+        seg.frontsec->f_portal != seg.backsec->f_portal)); // haleyjd
+
+#ifdef R_LINKEDPORTALS
+   // SoM: some portal types should be rendered even if the player is above
+   // or below the ceiling or floor plane.
+   // haleyjd 03/12/06: inverted predicates to simplify
+   if(seg.backsec->f_portal != seg.frontsec->f_portal)
+   {
+      if(seg.frontsec->f_portal && 
+         seg.frontsec->f_portal->type != R_LINKED &&
+         seg.frontsec->f_portal->type != R_TWOWAY)
+         seg.f_portalignore = true;
+   }
+
+   if(seg.backsec->c_portal != seg.frontsec->c_portal)
+   {
+      if(seg.frontsec->c_portal && 
+         seg.frontsec->c_portal->type != R_LINKED &&
+         seg.frontsec->c_portal->type != R_TWOWAY)
+         seg.c_portalignore = true;
+   }
+#endif
+
+   texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
+   if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
+   {
+      seg.bottomtex = texturetranslation[side->bottomtexture];
+      seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
+
+      if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
+         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
+      else
+         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety);
+   }
+   else
+      seg.bottomtex = 0;
+
+   seg.midtex = 0;
+   seg.maskedtex = !!seg.side->midtexture;
+   seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
+
+   seg.l_window = line->linedef->portal &&
+                  line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+                  line->linedef->sidenum[0] == line->sidedef - sides ?
+                  R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+}
+
+
+
+static void R_2S_Normal(float pstep, float i1, float i2, float textop, float texbottom)
+{
+   boolean mark; // haleyjd
+   boolean uppermissing, lowermissing;
+   float texhigh, texlow;
+   side_t *side = seg.side;
+   seg_t  *line = seg.line;
+
+   seg.twosided = true;
+
+   // haleyjd 03/04/07: reformatted and eliminated numerous unnecessary
+   // conditional statements (predicates already provide the needed
+   // true/false value without a branch). Also added tweak for sector
+   // colormaps.
+
+   mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
+           seg.frontsec->heightsec != -1 ||
+           seg.frontsec->heightsec != seg.backsec->heightsec ||
+           seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
+
+   seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
+   seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+   seg.highstep = (seg.high2 - seg.high) * pstep;
+
+   texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
+
+   uppermissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
+                   seg.side->toptexture == 0);
+
+   lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
+                   seg.side->bottomtexture == 0);
+
+   if((seg.frontsec->ceilingpic == skyflatnum ||
+           seg.frontsec->ceilingpic == sky2flatnum) &&
+          (seg.backsec->ceilingpic  == skyflatnum ||
+           seg.backsec->ceilingpic  == sky2flatnum))
+   {
+      seg.top = seg.high;
+      seg.top2 = seg.high2;
+      seg.topstep = seg.highstep;
+      //uppermissing = false;
+   }
+
+   // New clipsolid code will emulate the old doom behavior and still manages to 
+   // keep valid closed door cases handled.
+   seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
+       seg.backsec->ceilingheight != seg.frontsec->ceilingheight) &&
+       (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
+        seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
+        (seg.backsec->ceilingheight <= seg.backsec->floorheight && !uppermissing && !lowermissing)));
+
+   seg.markcportal = 
+      (R_RenderCeilingPortal(seg.frontsec) && 
+      (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
+       seg.frontsec->c_portal != seg.backsec->c_portal));
+
+   seg.c_window = seg.markcportal ? 
+                  R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
+
+   seg.markceiling = 
+      (seg.ceilingplane && 
+       (mark || seg.clipsolid || seg.top != seg.high || 
+        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
+        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
+        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+        seg.frontsec->topmap != seg.backsec->topmap ||
+        seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
+
+   if(seg.high > seg.top && side->toptexture)
+   {
+      seg.toptex = texturetranslation[side->toptexture];
+      seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
+
+      if(seg.line->linedef->flags & ML_DONTPEGTOP)
+         seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
+      else
+         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety);
+   }
+   else
+      seg.toptex = 0;
+
+   seg.markfportal = 
+      (R_RenderFloorPortal(seg.frontsec) &&
+      (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
+       seg.frontsec->f_portal != seg.backsec->f_portal));
+
+   seg.f_window = seg.markfportal ? 
+                  R_GetFloorPortalWindow(seg.frontsec->f_portal) : NULL;
+
+   seg.markfloor = 
+      (seg.floorplane && 
+       (mark || seg.clipsolid ||  
+        seg.frontsec->floorheight != seg.backsec->floorheight ||
+        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
+        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+        seg.frontsec->floorpic != seg.backsec->floorpic ||
+        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+        seg.frontsec->bottommap != seg.backsec->bottommap ||
+        seg.frontsec->f_portal != seg.backsec->f_portal)); // haleyjd
+
+#ifdef R_LINKEDPORTALS
+   // SoM: some portal types should be rendered even if the player is above
+   // or below the ceiling or floor plane.
+   // haleyjd 03/12/06: inverted predicates to simplify
+   if(seg.backsec->f_portal != seg.frontsec->f_portal)
+   {
+      if(seg.frontsec->f_portal && 
+         seg.frontsec->f_portal->type != R_LINKED &&
+         seg.frontsec->f_portal->type != R_TWOWAY)
+         seg.f_portalignore = true;
+   }
+
+   if(seg.backsec->c_portal != seg.frontsec->c_portal)
+   {
+      if(seg.frontsec->c_portal && 
+         seg.frontsec->c_portal->type != R_LINKED &&
+         seg.frontsec->c_portal->type != R_TWOWAY)
+         seg.c_portalignore = true;
+   }
+#endif
+
+   seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
+   seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+   seg.lowstep = (seg.low2 - seg.low) * pstep;
+
+   texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
+   if(seg.bottom > seg.low && side->bottomtexture)
+   {
+      seg.bottomtex = texturetranslation[side->bottomtexture];
+      seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
+
+      if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
+         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
+      else
+         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety);
+   }
+   else
+      seg.bottomtex = 0;
+
+   seg.midtex = 0;
+   seg.maskedtex = !!seg.side->midtexture;
+   seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
+
+   seg.l_window = line->linedef->portal &&
+                  line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+                  line->linedef->sidenum[0] == line->sidedef - sides ?
+                  R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+   }
+
+
+
 static void R_AddLine(seg_t *line)
 {
    static sector_t tempsec;
@@ -880,7 +1220,7 @@ static void R_AddLine(seg_t *line)
    // silhouette should be drawn at ceilingheight but the actual texture 
    // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE 
    // complicated :/
-   float textop, texhigh, texlow, texbottom;
+   float textop, texbottom;
 
    seg.clipsolid = false;
    if(line->backsector)
@@ -892,7 +1232,8 @@ static void R_AddLine(seg_t *line)
    // If the frontsector is closed, don't render the line!
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
-   if(seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
+   if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
+      seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       seg.frontsec->ceilingpic != skyflatnum &&
       seg.frontsec->ceilingpic != sky2flatnum &&
       !((R_LinkedCeilingActive(seg.frontsec) && 
@@ -1154,191 +1495,11 @@ static void R_AddLine(seg_t *line)
    }
    else
    {
-      boolean mark; // haleyjd
-      boolean uppermissing, lowermissing;
-      boolean heightchange;
-
-      seg.twosided = true;
-
-      // haleyjd 03/04/07: reformatted and eliminated numerous unnecessary
-      // conditional statements (predicates already provide the needed
-      // true/false value without a branch). Also added tweak for sector
-      // colormaps.
-
-      mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
-              seg.frontsec->heightsec != -1 ||
-              seg.frontsec->heightsec != seg.backsec->heightsec ||
-              seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
-
-      if(seg.backsec->c_slope)
-      {
-         float z1, z2, zstep;
-
-         z1 = P_GetZAtf(seg.backsec->c_slope, v1->fx, v1->fy);
-         z2 = P_GetZAtf(seg.backsec->c_slope, v2->fx, v2->fy);
-         zstep = (z2 - z1) / seg.line->len;
-
-         z1 += lclip1 * zstep;
-         z2 -= (seg.line->len - lclip2) * zstep;
-
-         seg.high = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
-         seg.high2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
-      }
+      if(seg.frontsec->f_slope || seg.frontsec->c_slope ||
+         seg.backsec->f_slope || seg.backsec->c_slope)
+         R_2S_Sloped(pstep, i1, i2, textop, texbottom, v1, v2, lclip1, lclip2);
       else
-      {
-         seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
-         seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
-      }
-      seg.highstep = (seg.high2 - seg.high) * pstep;
-
-      texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
-
-      uppermissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
-                      seg.side->toptexture == 0);
-
-      lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
-                      seg.side->bottomtexture == 0);
-
-      if((seg.frontsec->ceilingpic == skyflatnum ||
-              seg.frontsec->ceilingpic == sky2flatnum) &&
-             (seg.backsec->ceilingpic  == skyflatnum ||
-              seg.backsec->ceilingpic  == sky2flatnum))
-      {
-         seg.top = seg.high;
-         seg.top2 = seg.high2;
-         seg.topstep = seg.highstep;
-         //uppermissing = false;
-      }
-
-      // TODO: Fix for use with portals.
-      // New clipsolid code will emulate the old doom behavior and still manages to 
-      // keep valid closed door cases handled.
-      seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
-          seg.backsec->ceilingheight != seg.frontsec->ceilingheight) &&
-          (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
-           seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
-           (seg.backsec->ceilingheight <= seg.backsec->floorheight && !uppermissing && !lowermissing)));
-
-      seg.markcportal = 
-         (R_RenderCeilingPortal(seg.frontsec) && 
-         (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
-          seg.frontsec->c_portal != seg.backsec->c_portal));
-
-      seg.c_window = seg.markcportal ? 
-                     R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
-
-      heightchange = seg.frontsec->c_slope != seg.backsec->c_slope ?
-                     (seg.top != seg.high || seg.top2 != seg.high2) :
-                     (seg.top != seg.high);
-
-      seg.markceiling = 
-         (seg.ceilingplane && 
-          (mark || seg.clipsolid || heightchange ||
-           seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
-           seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
-           seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
-           seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
-           seg.frontsec->topmap != seg.backsec->topmap ||
-           seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
-
-      if(heightchange && side->toptexture)
-      {
-         seg.toptex = texturetranslation[side->toptexture];
-         seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
-
-         if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
-         else
-            seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety);
-      }
-      else
-         seg.toptex = 0;
-
-      seg.markfportal = 
-         (R_RenderFloorPortal(seg.frontsec) &&
-         (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
-          seg.frontsec->f_portal != seg.backsec->f_portal));
-
-      seg.f_window = seg.markfportal ? 
-                     R_GetFloorPortalWindow(seg.frontsec->f_portal) : NULL;
-
-      if(seg.backsec->f_slope)
-      {
-         float z1, z2, zstep;
-
-         z1 = P_GetZAtf(seg.backsec->f_slope, v1->fx, v1->fy);
-         z2 = P_GetZAtf(seg.backsec->f_slope, v2->fx, v2->fy);
-         zstep = (z2 - z1) / seg.line->len;
-
-         z1 += lclip1 * zstep;
-         z2 -= (seg.line->len - lclip2) * zstep;
-         seg.low = view.ycenter - ((z1 - view.z) * i1);
-         seg.low2 = view.ycenter - ((z2 - view.z) * i2);
-      }
-      else
-      {
-         seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
-         seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
-      }
-      seg.lowstep = (seg.low2 - seg.low) * pstep;
-
-      heightchange = seg.frontsec->f_slope != seg.backsec->f_slope ?
-                     (seg.low != seg.bottom || seg.low2 != seg.bottom2) :
-                     seg.backsec->floorheight != seg.frontsec->floorheight;
-
-      seg.markfloor = 
-         (seg.floorplane && 
-          (mark || seg.clipsolid || heightchange ||
-           seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
-           seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
-           seg.frontsec->floorpic != seg.backsec->floorpic ||
-           seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
-           seg.frontsec->bottommap != seg.backsec->bottommap ||
-           seg.frontsec->f_portal != seg.backsec->f_portal)); // haleyjd
-
-#ifdef R_LINKEDPORTALS
-      // SoM: some portal types should be rendered even if the player is above
-      // or below the ceiling or floor plane.
-      // haleyjd 03/12/06: inverted predicates to simplify
-      if(seg.backsec->f_portal != seg.frontsec->f_portal)
-      {
-         if(seg.frontsec->f_portal && 
-            seg.frontsec->f_portal->type != R_LINKED &&
-            seg.frontsec->f_portal->type != R_TWOWAY)
-            seg.f_portalignore = true;
-      }
-
-      if(seg.backsec->c_portal != seg.frontsec->c_portal)
-      {
-         if(seg.frontsec->c_portal && 
-            seg.frontsec->c_portal->type != R_LINKED &&
-            seg.frontsec->c_portal->type != R_TWOWAY)
-            seg.c_portalignore = true;
-      }
-#endif
-
-      texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
-      if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
-      {
-         seg.bottomtex = texturetranslation[side->bottomtexture];
-         seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
-
-         if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
-         else
-            seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety);
-      }
-      else
-         seg.bottomtex = 0;
-
-      seg.midtex = 0;
-      seg.maskedtex = !!seg.side->midtexture;
-      seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
-
-      seg.l_window = line->linedef->portal &&
-                     line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
-                     line->linedef->sidenum[0] == line->sidedef - sides ?
-                     R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+         R_2S_Normal(pstep, i1, i2, textop, texbottom);
    }
 
    seg.x1 = (int)floorx1;

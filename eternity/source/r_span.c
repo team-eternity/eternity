@@ -482,6 +482,9 @@ SPAN_FUNC(R_DrawSpanAdd_LD512, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23,
 // Slope span drawers
 //
 
+#define SPANJUMP 16
+#define INTERPSTEP (0.0625f)
+
 void R_DrawSlope_8_64(void)
 {
    float iu = slopespan.iufrac, iv = slopespan.ivfrac;
@@ -516,8 +519,6 @@ void R_DrawSlope_8_64(void)
       id += ids;
    }
 #else
-   #define SPANJUMP 16
-   #define INTERPSTEP (1.0f / 16.0f)
    while(count >= SPANJUMP)
    {
       float ustart, uend;
@@ -552,8 +553,6 @@ void R_DrawSlope_8_64(void)
 
       count -= SPANJUMP;
    }
-   #undef SPANJUMP
-   #undef INTERPSTEP
    if(count > 0)
    {
       float ustart, uend;
@@ -591,15 +590,255 @@ void R_DrawSlope_8_64(void)
 
 void R_DrawSlope_8_128(void)
 {
+   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   float ius = slopespan.iustep, ivs = slopespan.ivstep;
+   float id = slopespan.idfrac, ids = slopespan.idstep;
+   
+   byte *src, *dest, *colormap;
+   int count;
+   fixed_t mapindex = 0;
+
+   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+      return;
+
+   src = (byte *)slopespan.source;
+   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
+
+   while(count >= SPANJUMP)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      // TODO: 
+      mulstart = 65536.0f / id;
+      id += ids * SPANJUMP;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * SPANJUMP;
+      iv += ivs * SPANJUMP;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) * INTERPSTEP);
+      vstep = (int)((vend - vstart) * INTERPSTEP);
+
+      incount = SPANJUMP;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> 9) & 0x3F80) | ((ufrac >> 16) & 0x7F)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+
+      count -= SPANJUMP;
+   }
+   if(count > 0)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned  ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * count;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * count;
+      iv += ivs * count;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) / count);
+      vstep = (int)((vend - vstart) / count);
+
+      incount = count;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> 9) & 0x3F80) | ((ufrac >> 16) & 0x7F)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+   }
 }
 
 void R_DrawSlope_8_256(void)
 {
+   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   float ius = slopespan.iustep, ivs = slopespan.ivstep;
+   float id = slopespan.idfrac, ids = slopespan.idstep;
+   
+   byte *src, *dest, *colormap;
+   int count;
+   fixed_t mapindex = 0;
+
+   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+      return;
+
+   src = (byte *)slopespan.source;
+   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
+
+   while(count >= SPANJUMP)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      // TODO: 
+      mulstart = 65536.0f / id;
+      id += ids * SPANJUMP;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * SPANJUMP;
+      iv += ivs * SPANJUMP;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) * INTERPSTEP);
+      vstep = (int)((vend - vstart) * INTERPSTEP);
+
+      incount = SPANJUMP;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> 8) & 0xFF00) | ((ufrac >> 16) & 0xFF)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+
+      count -= SPANJUMP;
+   }
+   if(count > 0)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned  ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * count;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * count;
+      iv += ivs * count;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) / count);
+      vstep = (int)((vend - vstart) / count);
+
+      incount = count;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> 8) & 0xFF00) | ((ufrac >> 16) & 0xFF)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+   }
 }
 
 void R_DrawSlope_8_512(void)
 {
+   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   float ius = slopespan.iustep, ivs = slopespan.ivstep;
+   float id = slopespan.idfrac, ids = slopespan.idstep;
+   
+   byte *src, *dest, *colormap;
+   int count;
+   fixed_t mapindex = 0;
+
+   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+      return;
+
+   src = (byte *)slopespan.source;
+   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
+
+   while(count >= SPANJUMP)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      // TODO: 
+      mulstart = 65536.0f / id;
+      id += ids * SPANJUMP;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * SPANJUMP;
+      iv += ivs * SPANJUMP;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) * INTERPSTEP);
+      vstep = (int)((vend - vstart) * INTERPSTEP);
+
+      incount = SPANJUMP;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> 7) & 0x3FE00) | ((ufrac >> 16) & 0x1FF)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+
+      count -= SPANJUMP;
+   }
+   if(count > 0)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned  ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * count;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * count;
+      iv += ivs * count;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) / count);
+      vstep = (int)((vend - vstart) / count);
+
+      incount = count;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> 7) & 0x3FE00) | ((ufrac >> 16) & 0x1FF)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+   }
 }
+
+#undef SPANJUMP
+#undef INTERPSTEP
 
 
 //==============================================================================
