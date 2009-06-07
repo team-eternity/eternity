@@ -149,6 +149,10 @@ float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
       dist = (float)fabs((li->v1->fx - o->x) * d->x + (li->v1->fy - o->y) * d->y);
       if(dist > fardist)
          fardist = dist;
+
+      dist = (float)fabs((li->v2->fx - o->x) * d->x + (li->v2->fy - o->y) * d->y);
+      if(dist > fardist)
+         fardist = dist;
    }
 
    return fardist;
@@ -235,7 +239,7 @@ void P_SpawnSlope_Line(int linenum)
 
       extent = P_GetExtent(line->backsector, line, &origin, &direction);
 
-      if(extent == -1.0f)
+      if(extent < 0.0f)
       {
          C_Printf(FC_ERROR "P_SpawnSlope_Line failed to get backsector extent on line number %i\n", linenum);
          return;
