@@ -140,7 +140,7 @@ static void stopchan(int handle)
             if(cnum == handle)
                continue;
             if(channelinfo[cnum].id &&
-               channelinfo[cnum].id->data == sfx)
+               channelinfo[cnum].id->data == sfx->data)
             {
                freeSound = false; // still being used by some channel
                break;
@@ -149,7 +149,7 @@ static void stopchan(int handle)
          
          // set sample to PU_CACHE level
          if(freeSound)
-            Z_ChangeTag(sfx, PU_CACHE);
+            Z_ChangeTag(sfx->data, PU_CACHE);
       }
    }
 }
