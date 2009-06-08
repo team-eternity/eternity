@@ -167,12 +167,11 @@ float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
 void P_SpawnSlope_Line(int linenum)
 {
    line_t *line = lines + linenum;
-   int special = line->special;
+   int i, special = line->special;
    pslope_t *fslope = NULL, *cslope = NULL;
    v3float_t origin, point;
    v2float_t direction;
    float dz, extent;
-   int   i;
 
    boolean frontfloor = (special == 386 || special == 388 || special == 393);
    boolean backfloor  = (special == 389 || special == 391 || special == 392);
@@ -269,6 +268,8 @@ void P_SpawnSlope_Line(int linenum)
       }
    }
 
+   if(!line->tag)
+      return;
 
    // Check for copy linedefs
    for(i = -1; (i = P_FindLineFromLineTag(line, i)) >= 0; )
