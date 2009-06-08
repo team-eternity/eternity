@@ -152,10 +152,9 @@ enum
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
 };
 
-
-
-
-
+//
+// Slope Structures
+//
 
 // SoM: Internal plane slope structure
 typedef struct
@@ -268,7 +267,8 @@ struct sector_s
    int *c_attsectors;
 
 
-   // SoM 10/14/07: And now surfaces of other sectors can be attached to a sector's floor and/or ceiling
+   // SoM 10/14/07: And now surfaces of other sectors can be attached to a 
+   // sector's floor and/or ceiling
    int c_asurfacecount;
    attachedsurface_t *c_asurfaces;
    int f_asurfacecount;
