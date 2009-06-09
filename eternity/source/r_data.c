@@ -1107,6 +1107,26 @@ int tran_filter_pct = 66;       // filter percent
 
 #define TSC 12        /* number of fixed point digits in filter percent */
 
+// haleyjd 06/09/09: moved outside and added packing pragmas
+
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
+struct trmapcache_s 
+{
+   char signature[4];          // haleyjd 06/09/09: added
+   unsigned char pct;
+   unsigned char playpal[768]; // haleyjd 06/09/09: corrected 256->768
+} __attribute__((packed));
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
+
+// haleyjd 06/09/09: for version control of tranmap.dat
+#define TRANMAPSIG "Etm1"
+
 //
 // R_InitTranMap
 //
@@ -1130,11 +1150,7 @@ void R_InitTranMap(int progress)
       char *fname = NULL;
       unsigned int fnamesize;
       
-      struct trmapcache_s 
-      {
-         unsigned char pct;
-         unsigned char playpal[256];
-      } cache;
+      struct trmapcache_s cache;
       
       FILE *cachefp;
 
@@ -1152,6 +1168,7 @@ void R_InitTranMap(int progress)
 
       if(!cachefp ? cachefp = fopen(fname, "wb") , 1 :
          fread(&cache, 1, sizeof cache, cachefp) != sizeof cache ||
+         strncmp(cache.signature, TRANMAPSIG, 4) ||
          cache.pct != tran_filter_pct ||
          memcmp(cache.playpal, playpal, sizeof cache.playpal) ||
          fread(main_tranmap, 256, 256, cachefp) != 256 ) // killough 4/11/98
@@ -1224,8 +1241,9 @@ void R_InitTranMap(int progress)
 
          if(cachefp)        // write out the cached translucency map
          {
+            strncpy(cache.signature, TRANMAPSIG, 4);
             cache.pct = tran_filter_pct;
-            memcpy(cache.playpal, playpal, 256);
+            memcpy(cache.playpal, playpal, 768); // haleyjd: corrected 256->768
             fseek(cachefp, 0, SEEK_SET);
             fwrite(&cache, 1, sizeof cache, cachefp);
             fwrite(main_tranmap, 256, 256, cachefp);

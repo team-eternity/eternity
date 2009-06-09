@@ -2770,7 +2770,6 @@ static void D_DoomInit(void)
       E_ApplyTurbo(turbo_scale);
    }
 
-
    // killough 2/22/98: copyright / "modified game" / SPA banners removed
 
    // haleyjd 11/13/05: moved down CD-ROM mode notice and changed to
