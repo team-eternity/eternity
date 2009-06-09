@@ -55,6 +55,7 @@
 #endif
 #include <assert.h>
 #include <errno.h>
+#include <float.h>
 
 #include "psnprntf.h"
 

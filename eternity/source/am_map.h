@@ -70,7 +70,7 @@ void AM_Coordinates(const mobj_t *, fixed_t *, fixed_t *, fixed_t *);
 
 typedef struct
 {
-   fixed_t x, y;
+   double x, y;
 } mpoint_t;
 
 extern mpoint_t *markpoints;
