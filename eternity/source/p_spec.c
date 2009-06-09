@@ -1275,6 +1275,20 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
             return;
          linefunc = EV_DoGenStairs;
       }
+      else if(demo_version >= 335 && (unsigned)line->special >= GenCrusherBase)
+      {
+         // haleyjd 06/09/09: This was completely forgotten in BOOM, disabling
+         // all generalized walk-over crusher types!
+
+         if(!thing->player)
+         {
+            if(!(line->special & CrusherMonster))
+               return; // monsters disallowed
+         }
+         if(!line->tag) //jff 2/27/98 all walk generalized types require tag
+            return;
+         linefunc = EV_DoGenCrusher;
+      }
 
       if(linefunc) // if it was a valid generalized type
       {
@@ -2189,7 +2203,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
       {
          if(!thing->player)
          {
-            if(!(line->special & StairMonster))
+            if(!(line->special & CrusherMonster))
                return; // monsters disallowed
          }
          if(!line->tag) //jff 2/27/98 all gun generalized types require tag
