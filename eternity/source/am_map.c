@@ -430,7 +430,7 @@ void AM_findMinMaxBoundaries(void)
    double a, b;
    
    min_x = min_y = DBL_MAX;
-   max_x = max_y = DBL_MIN;
+   max_x = max_y = -DBL_MAX;
    
    for(i = 0; i < numlines; ++i)
    {
