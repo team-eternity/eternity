@@ -429,7 +429,7 @@ void AM_findMinMaxBoundaries(void)
    int i;
    double a, b;
    
-   min_x = min_y = DBL_MAX;
+   min_x = min_y =  DBL_MAX;
    max_x = max_y = -DBL_MAX;
    
    for(i = 0; i < numlines; ++i)
@@ -739,20 +739,27 @@ void AM_Stop(void)
 void AM_Start(void)
 {
    static int lastlevel = -1, lastepisode = -1, 
-              last_width = -1, last_height = -1;
+              last_width = -1, last_height = -1,
+              last_overlay = -1;
    
    if(!stopped)
       AM_Stop();
+
    redrawsbar = redrawborder = true;  // sf: redraw needed
    stopped = false;
    
    // SoM: ANYRES
+   // haleyjd 06/10/09: added portal overlay
    if(lastlevel != gamemap || lastepisode != gameepisode || 
-      last_width != video.width || last_height != video.height)
+      last_width != video.width || last_height != video.height ||
+      last_overlay != mapportal_overlay)
    {
       last_width = video.width;
       last_height = video.height;
+      last_overlay = mapportal_overlay;
+
       AM_LevelInit();
+      
       lastlevel = gamemap;
       lastepisode = gameepisode;
    }
