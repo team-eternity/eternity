@@ -432,20 +432,50 @@ void AM_findMinMaxBoundaries(void)
    min_x = min_y = DBL_MAX;
    max_x = max_y = DBL_MIN;
    
-   // FIXME: work by linedef and translate using group links
-   for(i = 0; i < numvertexes; ++i)
+   for(i = 0; i < numlines; ++i)
    {
-      if(vertexes[i].fx < min_x)
-         min_x = vertexes[i].fx;
-      else if (vertexes[i].fx > max_x)
-         max_x = vertexes[i].fx;
-      
-      if(vertexes[i].fy < min_y)
-         min_y = vertexes[i].fy;
-      else if (vertexes[i].fy > max_y)
-         max_y = vertexes[i].fy;
+      double x1, x2, y1, y2;
+
+      x1 = lines[i].v1->fx;
+      y1 = lines[i].v1->fy;
+      x2 = lines[i].v2->fx;
+      y2 = lines[i].v2->fy;
+
+      if(mapportal_overlay && useportalgroups &&
+         lines[i].frontsector->groupid > 0)
+      {
+         linkoffset_t *link;
+
+         if((link = P_GetLinkOffset(0, lines[i].frontsector->groupid)))
+         {
+            x1 += M_FixedToDouble(link->x);
+            y1 += M_FixedToDouble(link->y);
+            x2 += M_FixedToDouble(link->x);
+            y2 += M_FixedToDouble(link->y);
+         }
+      }
+
+      if(x1 < min_x)
+         min_x = x1;
+      else if(x1 > max_x)
+         max_x = x1;
+
+      if(x2 < min_x)
+         min_x = x2;
+      else if(x2 > max_x)
+         max_x = x2;
+
+      if(y1 < min_y)
+         min_y = y1;
+      else if(y1 > max_y)
+         max_y = y1;
+
+      if(y2 < min_y)
+         min_y = y2;
+      else if(y2 > max_y)
+         max_y = y2;
    }
-  
+     
    max_w = max_x - min_x;
    max_h = max_y - min_y;
    
@@ -1584,7 +1614,7 @@ void AM_drawWalls(void)
       {
          line_t *line = &lines[i];
 
-         if(line->frontsector && line->frontsector->groupid == plrgroup)
+         if(line->frontsector->groupid == plrgroup)
             continue;
 
          l.a.x = line->v1->fx;
@@ -1592,7 +1622,7 @@ void AM_drawWalls(void)
          l.b.x = line->v2->fx;
          l.b.y = line->v2->fy;
 
-         if(line->frontsector && line->frontsector->groupid > 0)
+         if(line->frontsector->groupid > 0)
          {
             linkoffset_t *link;
 
