@@ -1357,16 +1357,42 @@ void AM_drawFline(fline_t *fl, int color )
    }
 }
 
-#if 0
+//
+// AM_putWuDot
+//
+// haleyjd 06/13/09: Pixel plotter for Wu line drawing.
+//
+static void AM_putWuDot(int x, int y, int color, int weight)
+{
+   byte *dest = vbscreen.ylut[y] + vbscreen.xlut[x];
+   unsigned int *fg2rgb = Col2RGB8[weight];
+   unsigned int *bg2rgb = Col2RGB8[64 - weight];
+   unsigned int fg, bg;
+
+   fg = fg2rgb[color];
+   bg = bg2rgb[*dest];
+   fg = (fg + bg) | 0x1f07c1f;
+   *dest = RGB32k[0][0][fg & (fg >> 15)];
+}
+
+
+// Given 65536, we need 2048; 65536 / 2048 == 32 == 2^5
+#define wu_fineshift 5
+
+// Given 64 levels in the Col2RGB8 table, 65536 / 64 == 1024 == 2^10
+#define wu_fixedshift 10
+
 //
 // AM_drawFLineWu
 //
-// haleyjd 06/12/09: Wu line drawing for the automap.
+// haleyjd 06/12/09: Wu line drawing for the automap, with trigonometric
+// brightness correction by SoM. I call this the Wu-McGranahan line drawing
+// algorithm.
 //
 void AM_drawFLineWu(fline_t *fl, int color)
 {
    int dx, dy, xdir = 1;
-   int x, y;
+   int x, y;   
 
    // swap end points if necessary
    if(fl->a.y > fl->b.y)
@@ -1404,24 +1430,57 @@ void AM_drawFLineWu(fline_t *fl, int color)
    if(dy > dx)
    {
       // line is y-axis major.
+      unsigned short erroracc = 0, 
+         erroradj = (unsigned short)(((unsigned int)dx << 16) / (unsigned int)dy);
 
       while(--dy)
       {
+         unsigned short erroracctmp = erroracc;
+
+         erroracc += erroradj;
+
+         // if error has overflown, advance x coordinate
+         if(erroracc <= erroracctmp)
+            x += xdir;
+         
+         y += 1; // advance y
+
+         // the trick is in the trig!
+         AM_putWuDot(x,        y, color, 
+                     finecosine[erroracc >> wu_fineshift] >> wu_fixedshift);
+         AM_putWuDot(x + xdir, y, color, 
+                     finesine[erroracc >> wu_fineshift] >> wu_fixedshift);
       }
    }
    else
    {
       // line is x-axis major.
+      unsigned short erroracc = 0, 
+         erroradj = (unsigned short)(((unsigned int)dy << 16) / (unsigned int)dx);
 
       while(--dx)
       {
+         unsigned short erroracctmp = erroracc;
+
+         erroracc += erroradj;
+
+         // if error has overflown, advance y coordinate
+         if(erroracc <= erroracctmp)
+            y += 1;
+         
+         x += xdir; // advance x
+
+         // the trick is in the trig!
+         AM_putWuDot(x, y,     color, 
+                     finecosine[erroracc >> wu_fineshift] >> wu_fixedshift);
+         AM_putWuDot(x, y + 1, color, 
+                     finesine[erroracc >> wu_fineshift] >> wu_fixedshift);
       }
    }
 
    // draw last pixel
    PUTDOT(fl->b.x, fl->b.y, color);
 }
-#endif
 
 //
 // AM_drawMline()
@@ -1443,8 +1502,13 @@ void AM_drawMline(mline_t *ml, int color)
    if(color == 247) // jff 4/3/98 if color is 247 (xparent), use black
       color=0;
    
+   /*
    if(AM_clipMline(ml, &fl))
       AM_drawFline(&fl, color); // draws it on frame buffer using fb coords
+   */
+   // TEST:
+   if(AM_clipMline(ml, &fl))
+      AM_drawFLineWu(&fl, color);
 }
 
 //
