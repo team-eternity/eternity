@@ -195,7 +195,7 @@ mline_t cross_mark[] =
 
 #define TTG_MINUSP5 ((fixed_t)(-.5 * R))
 #define TTG_MINUSP7 ((fixed_t)(-.7 * R))
-#define TTG_P7      ((fixed_t)(.7 * R))
+#define TTG_P7      ((fixed_t)( .7 * R))
 mline_t thintriangle_guy[] =
 {
   { { -.5, -.7 }, { 1.0,   0 } },
@@ -1273,6 +1273,9 @@ boolean AM_clipMline(mline_t *ml, fline_t *fl)
 }
 #undef DOOUTCODE
 
+// haleyjd 06/12/09: this macro is now shared by Bresenham and Wu
+#define PUTDOT(xx,yy,cc) *(vbscreen.ylut[(yy)] + vbscreen.xlut[(xx)]) = (cc)
+
 //
 // AM_drawFline()
 //
@@ -1308,8 +1311,6 @@ void AM_drawFline(fline_t *fl, int color )
       return;
    }
 #endif
-
-#define PUTDOT(xx,yy,cc) *(vbscreen.ylut[(yy)] + vbscreen.xlut[(xx)]) = (cc)
 
    dx = fl->b.x - fl->a.x;
    ax = 2 * (dx < 0 ? -dx : dx);
@@ -1356,6 +1357,72 @@ void AM_drawFline(fline_t *fl, int color )
    }
 }
 
+#if 0
+//
+// AM_drawFLineWu
+//
+// haleyjd 06/12/09: Wu line drawing for the automap.
+//
+void AM_drawFLineWu(fline_t *fl, int color)
+{
+   int dx, dy, xdir = 1;
+   int x, y;
+
+   // swap end points if necessary
+   if(fl->a.y > fl->b.y)
+   {
+      fpoint_t tmp = fl->a;
+
+      fl->a = fl->b;
+      fl->b = tmp;
+   }
+
+   // determine change in x, y and direction of travel
+   dx = fl->b.x - fl->a.x;
+   dy = fl->b.y - fl->a.y;
+
+   if(dx < 0)
+   {
+      dx   = -dx;
+      xdir = -xdir;      
+   }   
+
+   // detect special cases -- horizontal, vertical, and 45 degrees;
+   // revert to Bresenham
+   if(dx == 0 || dy == 0 || dx == dy)
+   {
+      AM_drawFline(fl, color);
+      return;
+   }
+
+   // draw first pixel
+   PUTDOT(fl->a.x, fl->a.y, color);
+
+   x = fl->a.x;
+   y = fl->a.y;
+
+   if(dy > dx)
+   {
+      // line is y-axis major.
+
+      while(--dy)
+      {
+      }
+   }
+   else
+   {
+      // line is x-axis major.
+
+      while(--dx)
+      {
+      }
+   }
+
+   // draw last pixel
+   PUTDOT(fl->b.x, fl->b.y, color);
+}
+#endif
+
 //
 // AM_drawMline()
 //
@@ -1367,7 +1434,7 @@ void AM_drawFline(fline_t *fl, int color )
 // in the defaults file.
 // Returns nothing.
 //
-void AM_drawMline(mline_t *ml, int color )
+void AM_drawMline(mline_t *ml, int color)
 {
    static fline_t fl;
    

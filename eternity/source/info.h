@@ -171,6 +171,7 @@ typedef struct
    int         dehnum;   // DeHackEd number for fast access, comp.
    int         namenext; // index of next state in name hash chain
    int         dehnext;  // index of next state in DEH hash chain
+   int         index;    // 06/12/09: number of state in states array
 } state_t;
 
 // these are in info.c
