@@ -139,7 +139,7 @@ void P_ArchivePlayers(void)
          {
             if(dest->psprites[j].state)
                dest->psprites[j].state =
-               (state_t *)(dest->psprites[j].state - states);
+               (state_t *)(dest->psprites[j].state->index);
          }
       }
    }
@@ -455,7 +455,7 @@ void P_ArchiveThinkers(void)
          mobj = (mobj_t *)save_p;
          memcpy(mobj, th, sizeof(*mobj));
          save_p += sizeof(*mobj);
-         mobj->state = (state_t *)(mobj->state - states);
+         mobj->state = (state_t *)(mobj->state->index);
 
          // killough 2/14/98: convert pointers into indices.
          // Fixes many savegame problems, by properly saving
@@ -588,7 +588,7 @@ void P_UnArchiveThinkers(void)
       PADSAVEP();
       memcpy(mobj, save_p, sizeof(mobj_t));
       save_p += sizeof(mobj_t);
-      mobj->state = states + (int) mobj->state;
+      mobj->state = &states[(int)(mobj->state)];
 
       if(mobj->player)
       {

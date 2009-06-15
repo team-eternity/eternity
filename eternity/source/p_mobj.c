@@ -142,7 +142,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
          break;                 // killough 4/9/98
       }
 
-      st = states + state;
+      st = &states[state];
       mobj->state = st;
       mobj->tics = st->tics;
 

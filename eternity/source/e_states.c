@@ -320,6 +320,9 @@ void E_CollectStates(cfg_t *scfg)
          states[i].dehnext = state_dehchains[dehkey];
          state_dehchains[dehkey] = i;
       }
+
+      // haleyjd 06/15/09: set state index
+      states[i].index = i;
    }
 
    // verify the existence of the S_NULL frame

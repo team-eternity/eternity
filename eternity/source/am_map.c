@@ -1377,19 +1377,21 @@ static void AM_putWuDot(int x, int y, int color, int weight)
 
 
 // Given 65536, we need 2048; 65536 / 2048 == 32 == 2^5
+// Why 2048? ANG90 == 0x40000000 which >> 19 == 0x800 == 2048.
+// The trigonometric correction is based on an angle from 0 to 90.
 #define wu_fineshift 5
 
 // Given 64 levels in the Col2RGB8 table, 65536 / 64 == 1024 == 2^10
 #define wu_fixedshift 10
 
 //
-// AM_drawFLineWu
+// AM_drawFlineWu
 //
 // haleyjd 06/12/09: Wu line drawing for the automap, with trigonometric
 // brightness correction by SoM. I call this the Wu-McGranahan line drawing
 // algorithm.
 //
-void AM_drawFLineWu(fline_t *fl, int color)
+void AM_drawFlineWu(fline_t *fl, int color)
 {
    int dx, dy, xdir = 1;
    int x, y;   
@@ -1446,7 +1448,7 @@ void AM_drawFLineWu(fline_t *fl, int color)
          y += 1; // advance y
 
          // the trick is in the trig!
-         AM_putWuDot(x,        y, color, 
+         AM_putWuDot(x, y, color, 
                      finecosine[erroracc >> wu_fineshift] >> wu_fixedshift);
          AM_putWuDot(x + xdir, y, color, 
                      finesine[erroracc >> wu_fineshift] >> wu_fixedshift);
@@ -1471,7 +1473,7 @@ void AM_drawFLineWu(fline_t *fl, int color)
          x += xdir; // advance x
 
          // the trick is in the trig!
-         AM_putWuDot(x, y,     color, 
+         AM_putWuDot(x, y, color, 
                      finecosine[erroracc >> wu_fineshift] >> wu_fixedshift);
          AM_putWuDot(x, y + 1, color, 
                      finesine[erroracc >> wu_fineshift] >> wu_fixedshift);
@@ -1508,7 +1510,7 @@ void AM_drawMline(mline_t *ml, int color)
    */
    // TEST:
    if(AM_clipMline(ml, &fl))
-      AM_drawFLineWu(&fl, color);
+      AM_drawFlineWu(&fl, color);
 }
 
 //

@@ -1279,11 +1279,11 @@ void A_FireCGun(mobj_t *mo)
    // needs some modification to be safer
    // haleyjd WEAPON_FIXME: hackish and dangerous for EDF, needs fix.
    if(demo_version < 331 || 
-      ((psp->state - states) >= E_StateNumForDEHNum(S_CHAIN1) &&
-       (psp->state - states) < E_StateNumForDEHNum(S_CHAIN3)))
+      (psp->state->index >= E_StateNumForDEHNum(S_CHAIN1) &&
+       psp->state->index < E_StateNumForDEHNum(S_CHAIN3)))
    {      
       // phares
-      A_FireSomething(player, psp->state - &states[E_SafeState(S_CHAIN1)]);
+      A_FireSomething(player, psp->state->index - states[E_SafeState(S_CHAIN1)].index);
    }
    else
       A_FireSomething(player, 0); // new default behavior

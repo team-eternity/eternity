@@ -891,7 +891,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, int mod)
 
       if(mod > 0 &&
          (node = E_StateForModNum(target->info->dmg_deathstates, mod)))
-         st = node->state - states;
+         st = node->state->index;
 
       P_SetMobjState(target, st);
    }
@@ -1440,7 +1440,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
          // haleyjd  06/05/08: check for special damagetype painstate
          if(mod > 0 && 
             (node = E_StateForModNum(target->info->dmg_painstates, mod)))
-            st = node->state - states;
+            st = node->state->index;
 
          P_SetMobjState(target, st);
       }
