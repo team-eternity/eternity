@@ -295,7 +295,7 @@ static boolean am_usebackdrop = false;
 // Passed the line slope is desired for and an islope_t structure for return
 // Returns nothing
 //
-void AM_getIslope(mline_t *ml, islope_t *is )
+static void AM_getIslope(mline_t *ml, islope_t *is )
 {
    double dx, dy;
    
@@ -318,7 +318,7 @@ void AM_getIslope(mline_t *ml, islope_t *is )
 //
 // Passed nothing, returns nothing
 //
-void AM_activateNewScale(void)
+static void AM_activateNewScale(void)
 {
    m_x += m_w / 2.0;
    m_y += m_h / 2.0;
@@ -338,7 +338,7 @@ void AM_activateNewScale(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_saveScaleAndLoc(void)
+static void AM_saveScaleAndLoc(void)
 {
    old_m_x = m_x;
    old_m_y = m_y;
@@ -354,7 +354,7 @@ void AM_saveScaleAndLoc(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_restoreScaleAndLoc(void)
+static void AM_restoreScaleAndLoc(void)
 {
    m_w = old_m_w;
    m_h = old_m_h;
@@ -401,7 +401,7 @@ void AM_restoreScaleAndLoc(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_addMark(void)
+static void AM_addMark(void)
 {
    // killough 2/22/98:
    // remove limit on automap marks
@@ -424,7 +424,7 @@ void AM_addMark(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_findMinMaxBoundaries(void)
+static void AM_findMinMaxBoundaries(void)
 {
    int i;
    double a, b;
@@ -496,7 +496,7 @@ void AM_findMinMaxBoundaries(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_changeWindowLoc(void)
+static void AM_changeWindowLoc(void)
 {
    if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
    {
@@ -532,7 +532,7 @@ extern void ST_AutomapEvent(int type);
 // Status bar is notified that the automap has been entered
 // Passed nothing, returns nothing
 //
-void AM_initVariables(void)
+static void AM_initVariables(void)
 {
    int pnum;   
    
@@ -601,7 +601,7 @@ void AM_initVariables(void)
 // Sets the marknums[i] variables to the patches for each digit
 // Passed nothing, returns nothing;
 //
-void AM_loadPics(void)
+static void AM_loadPics(void)
 {
    int i, lumpnum;
    char namebuf[9];
@@ -653,7 +653,7 @@ void AM_loadPics(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_unloadPics(void)
+static void AM_unloadPics(void)
 {
    int i;
    
@@ -691,7 +691,7 @@ void AM_clearMarks(void)
 // Passed nothing, returns nothing
 // Affects automap's global variables
 //
-void AM_LevelInit(void)
+static void AM_LevelInit(void)
 {
    f_x = f_y = 0;
    
@@ -774,7 +774,7 @@ void AM_Start(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_minOutWindowScale()
+static void AM_minOutWindowScale()
 {
    scale_mtof = min_scale_mtof;
    scale_ftom = 1.0 / scale_mtof;
@@ -788,7 +788,7 @@ void AM_minOutWindowScale()
 //
 // Passed nothing, returns nothing
 //
-void AM_maxOutWindowScale(void)
+static void AM_maxOutWindowScale(void)
 {
    scale_mtof = max_scale_mtof;
    scale_ftom = 1.0 / scale_mtof;
@@ -1018,7 +1018,7 @@ void AM_HandlerZoomin(event_t *ev)
 //
 // Passed nothing, returns nothing
 //
-void AM_changeWindowScale(void)
+static void AM_changeWindowScale(void)
 {
    // Change the scaling multipliers
    scale_mtof = scale_mtof * mtof_zoommul;
@@ -1039,7 +1039,7 @@ void AM_changeWindowScale(void)
 //
 // Passed nothing, returns nothing
 //
-void AM_doFollowPlayer(void)
+static void AM_doFollowPlayer(void)
 {
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
@@ -1122,7 +1122,7 @@ void AM_Ticker(void)
 //
 // Clear automap frame buffer.
 //
-void AM_clearFB(int color)
+static void AM_clearFB(int color)
 {
    // haleyjd 12/22/02: backdrop support
    if(am_usebackdrop && am_backdrop)
@@ -1149,7 +1149,7 @@ void AM_clearFB(int color)
 // clipping on them in the lines frame coordinates.
 // Returns true if any part of line was not clipped
 //
-boolean AM_clipMline(mline_t *ml, fline_t *fl)
+static boolean AM_clipMline(mline_t *ml, fline_t *fl)
 {
    enum
    {
@@ -1285,7 +1285,7 @@ boolean AM_clipMline(mline_t *ml, fline_t *fl)
 // Passed the frame coordinates of line, and the color to be drawn
 // Returns nothing
 //
-void AM_drawFline(fline_t *fl, int color )
+static void AM_drawFline(fline_t *fl, int color )
 {
    register int x;
    register int y;
@@ -1391,7 +1391,7 @@ static void AM_putWuDot(int x, int y, int color, int weight)
 // brightness correction by SoM. I call this the Wu-McGranahan line drawing
 // algorithm.
 //
-void AM_drawFlineWu(fline_t *fl, int color)
+static void AM_drawFlineWu(fline_t *fl, int color)
 {
    int dx, dy, xdir = 1;
    int x, y;   
@@ -1495,7 +1495,7 @@ void AM_drawFlineWu(fline_t *fl, int color)
 // in the defaults file.
 // Returns nothing.
 //
-void AM_drawMline(mline_t *ml, int color)
+static void AM_drawMline(mline_t *ml, int color)
 {
    static fline_t fl;
    
@@ -1521,7 +1521,7 @@ void AM_drawMline(mline_t *ml, int color)
 // Passed the color to draw the grid lines
 // Returns nothing
 //
-void AM_drawGrid(int color)
+static void AM_drawGrid(int color)
 {
    fixed_t x, y;
    fixed_t start, end;
@@ -1574,7 +1574,7 @@ void AM_drawGrid(int color)
 //
 // jff 4/3/98 add routine to get color of generalized keyed door
 //
-int AM_DoorColor(int type)
+static int AM_DoorColor(int type)
 {
    if(GenLockedBase <= type && type < GenDoorBase)
    {
@@ -1740,7 +1740,7 @@ d_inline static boolean AM_drawAsClosedDoor(line_t *line)
 // jff 4/3/98 changed mapcolor_xxxx=0 as control to disable feature
 // jff 4/3/98 changed mapcolor_xxxx=-1 to disable drawing line completely
 //
-void AM_drawWalls(void)
+static void AM_drawWalls(void)
 {
    int i;
    static mline_t l;
@@ -1959,7 +1959,7 @@ void AM_drawWalls(void)
 // haleyjd 05/17/08: Draws node partition lines on the automap as a debugging
 // aid or for the interest of the curious.
 //
-void AM_drawNodeLines(int bspnum)
+static void AM_drawNodeLines(int bspnum)
 {
    mline_t l;
 
@@ -2011,14 +2011,9 @@ static void AM_rotate(double *x, double *y, angle_t a)
 // the color to draw it with, and the map coordinates to draw it at.
 // Returns nothing
 //
-void AM_drawLineCharacter
-( mline_t*  lineguy,
-  int   lineguylines,
-  double scale,
-  angle_t angle,
-  int   color,
-  fixed_t x,
-  fixed_t y )
+static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines, 
+                                 double scale, angle_t angle, int color,
+                                 fixed_t x, fixed_t y)
 {
    int   i;
    mline_t l;
@@ -2071,7 +2066,7 @@ void AM_drawLineCharacter
 //
 // Passed nothing, returns nothing
 //
-void AM_drawPlayers(void)
+static void AM_drawPlayers(void)
 {
    int   i;
    player_t* p;
@@ -2196,7 +2191,7 @@ void AM_drawPlayers(void)
 // Passed colors and colorrange, no longer used
 // Returns nothing
 //
-void AM_drawThings(int colors, int colorrange)
+static void AM_drawThings(int colors, int colorrange)
 {
    int     i;
    mobj_t *t;
@@ -2306,7 +2301,7 @@ void AM_drawThings(int colors, int colorrange)
 //
 // SoM: ANYRES support
 //
-void AM_drawMarks(void)
+static void AM_drawMarks(void)
 {
    int i;
    for(i = 0; i < markpointnum; ++i) // killough 2/22/98: remove automap mark limit
