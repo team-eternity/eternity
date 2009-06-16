@@ -78,9 +78,6 @@ ticcmd_t* I_BaseTiccmd (void);
 
 void I_Quit(void);
 
-// Allocates from low memory under dos, just mallocs under unix
-
-#define I_AllocLow(length) calloc((length),1)            /* killough */
 #define I_Tactile(on, off, total)
 
 // killough 3/20/98: add const
@@ -96,10 +93,8 @@ void I_ErrorVA(const char *error, va_list args);
 extern int mousepresent;                // killough
 
 #ifdef DJGPP
-
-  extern int leds_always_off;   // killough 10/98
-  void I_ResetLEDs(void);       // killough 10/98
-
+extern int leds_always_off;   // killough 10/98
+void I_ResetLEDs(void);       // killough 10/98
 #endif
 
 void I_EndDoom(void);         // killough 2/22/98: endgame screen
@@ -132,6 +127,9 @@ typedef struct jsdata_s
 extern jsdata_t *joysticks;
 
 #endif
+
+// haleyjd 06/16/09: I_Sleep prototype
+void I_Sleep(int ms);
 
 #endif
 

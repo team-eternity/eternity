@@ -313,6 +313,9 @@ void D_Display(void)
                do
                {
                   tics = I_GetTime() - starttime;
+
+                  // haleyjd 06/16/09: sleep to avoid hogging 100% CPU
+                  I_Sleep(1);
                }
                while(!tics);
                

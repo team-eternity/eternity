@@ -171,9 +171,10 @@ static boolean Wipe_meltTicker(void)
 //
 // Vanilla Doom had an attempt at this, but it was not being done in a way that
 // would actually work in 8-bit, and so it was left disabled in the commercial
-// releases. This evidently provided inspiration for Rogue during Strife
-// development, however, because it's precisely the fade effect it uses for
-// hub transitions. This wipe might also be useful for Heretic and Hexen, where
+// releases. This provided direct inspiration for Rogue during Strife 
+// development, however; the hub transition crossfade wipe used there was
+// implemented directly on top of the unfinished code according to the
+// disassembly. This wipe might also be useful for Heretic and Hexen, where
 // it would be more fitting than Doom's melt wipe (those games used no wipe by
 // default, which to me is odd).
 //

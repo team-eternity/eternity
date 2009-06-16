@@ -432,6 +432,7 @@ static void AM_findMinMaxBoundaries(void)
    min_x = min_y =  DBL_MAX;
    max_x = max_y = -DBL_MAX;
    
+   // haleyjd: rewritten to work by line so as to have access to portal groups
    for(i = 0; i < numlines; ++i)
    {
       double x1, x2, y1, y2;
@@ -2027,7 +2028,7 @@ static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines,
       l.a.x = lineguy[i].a.x;
       l.a.y = lineguy[i].a.y;
 
-      if(scale)
+      if(scale != 0.0)
       {
          l.a.x = scale * l.a.x;
          l.a.y = scale * l.a.y;
