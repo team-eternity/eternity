@@ -1183,6 +1183,35 @@ void E_ProcessStateDeltas(cfg_t *cfg)
 // of those strings is done here, where they are turned into states.
 //
 
+// parsing
+
+// parser state enumeration
+// FIXME: tenative, based on initial draw-up of FSA
+enum
+{
+   PSTATE_EXPECTLABEL,
+   PSTATE_EXPECTSTATEORKW,
+   PSTATE_EXPECTSPRITE,
+   PSTATE_EXPECTFRAMES,
+   PSTATE_EXPECTTICS,
+   PSTATE_EXPECTACTION,
+   PSTATE_EXPECTPAREN,
+   PSTATE_EXPECTARG,
+   PSTATE_EXPECTCOMMAORPAREN,
+   PSTATE_EXPECTPLUS,
+   PSTATE_EXPECTOFFSET,
+   PSTATE_NUMSTATES
+};
+
+// parser state structure
+typedef struct pstate_s
+{
+   int state; // state of the parser, as defined by the above enumeration
+   qstring_t *linebuffer;  // qstring to use as line buffer
+   qstring_t *tokenbuffer; // qstring to use as token buffer
+   int index; // current index into line buffer for tokenization
+} pstate_t;
+
 // tokenization
 
 // token types
@@ -1198,24 +1227,84 @@ enum
    TOKEN_EOL      // end of line
 };
 
-// parser state enumeration
-// FIXME: tenative, based on initial draw-up of FSA
+// tokenizer states
 enum
 {
-   PS_EXPECTLABEL,
-   PS_EXPECTSTATEORKW,
-   PS_EXPECTSPRITE,
-   PS_EXPECTFRAMES,
-   PS_EXPECTTICS,
-   PS_EXPECTACTION,
-   PS_EXPECTPAREN,
-   PS_EXPECTARG,
-   PS_EXPECTCOMMAORPAREN,
-   PS_EXPECTLABEL,
-   PS_EXPECTPLUS,
-   PS_EXPECTOFFSET,
-   PS_NUMSTATES
+   TSTATE_SCAN, // scanning for start of a token
+   TSTATE_DONE  // finished; return token to parser
 };
+
+// tokenizer state structure
+typedef struct tkstate_s
+{
+   int state;        // current state of tokenizer
+   int i;            // index into string
+   int tokentype;    // token type, once decided upon
+   int tokenerror;   // token error code
+   qstring_t *line;  // line text
+   qstring_t *token; // token text
+} tkstate_t;
+
+//=============================================================================
+//
+// Tokenizer Callbacks
+//
+
+static void DoTokenStateScan(tkstate_t *tks)
+{
+}
+
+// tokenizer callback type
+typedef void (*tksfunc_t)(tkstate_t *);
+
+// tokenizer state function table
+static tksfunc_t tstatefuncs[] =
+{
+   DoTokenStateScan, // scanning for start of a token
+};
+
+//
+// E_GetDSToken
+//
+// Gets the next token from the DECORATE states string.
+//
+static int E_GetDSToken(pstate_t *ps)
+{
+   tkstate_t tks;
+
+   // set up tokenizer state - transfer in parser state details
+   tks.state = TSTATE_SCAN;
+   tks.i     = ps->index;
+   tks.line  = ps->linebuffer;
+   tks.token = ps->tokenbuffer;
+
+   M_QStrClear(tks.token);
+
+   while(tks.state != TSTATE_DONE)
+   {
+#ifdef RANGECHECK
+      if(tks.state < 0 || tks.state >= TSTATE_DONE)
+         I_Error("E_GetDSToken: Internal error: undefined state\n");
+#endif
+
+      tstatefuncs[tks.state](&tks);
+
+      // step to next character
+      ++tks.i;
+   }
+
+   /*
+   // determine keyword status for text tokens
+   if(tks.tokentype == TOKEN_TEXT)
+      tks.tokentype = TextToKeyword(tks.token->buffer);
+   */
+
+   // write back string index
+   ps->index = tks.i;
+
+   return tks.tokentype;
+}
+
 
 // EOF
 
