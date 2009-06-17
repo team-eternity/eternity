@@ -1174,5 +1174,48 @@ void E_ProcessStateDeltas(cfg_t *cfg)
    }
 }
 
+//=============================================================================
+//
+// DECORATE State Parser
+//
+// haleyjd 06/16/09: EDF now supports DECORATE-format state definitions inside
+// thingtype "states" fields, which accept heredoc strings. The processing
+// of those strings is done here, where they are turned into states.
+//
+
+// tokenization
+
+// token types
+enum
+{
+   TOKEN_LABEL,   // [A-Za-z.]+':'
+   TOKEN_KEYWORD, // loop, stop, wait, goto
+   TOKEN_PLUS,    // '+'
+   TOKEN_LPAREN,  // '('
+   TOKEN_COMMA,   // ','
+   TOKEN_RPAREN,  // ')'
+   TOKEN_TEXT,    // anything else (numbers, strings, etc.)
+   TOKEN_EOL      // end of line
+};
+
+// parser state enumeration
+// FIXME: tenative, based on initial draw-up of FSA
+enum
+{
+   PS_EXPECTLABEL,
+   PS_EXPECTSTATEORKW,
+   PS_EXPECTSPRITE,
+   PS_EXPECTFRAMES,
+   PS_EXPECTTICS,
+   PS_EXPECTACTION,
+   PS_EXPECTPAREN,
+   PS_EXPECTARG,
+   PS_EXPECTCOMMAORPAREN,
+   PS_EXPECTLABEL,
+   PS_EXPECTPLUS,
+   PS_EXPECTOFFSET,
+   PS_NUMSTATES
+};
+
 // EOF
 
