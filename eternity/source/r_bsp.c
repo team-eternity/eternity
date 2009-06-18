@@ -1112,7 +1112,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
 
    seg.markceiling = 
       (seg.ceilingplane && 
-       (mark || seg.clipsolid || seg.top != seg.high || 
+       (mark || seg.clipsolid || 
+        seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
