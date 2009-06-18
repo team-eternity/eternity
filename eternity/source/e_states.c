@@ -1217,7 +1217,7 @@ typedef struct pstate_s
 // token types
 enum
 {
-   TOKEN_LABEL,   // [A-Za-z.]+':'
+   TOKEN_LABEL,   // [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?':'
    TOKEN_KEYWORD, // loop, stop, wait, goto
    TOKEN_PLUS,    // '+'
    TOKEN_LPAREN,  // '('
@@ -1230,8 +1230,11 @@ enum
 // tokenizer states
 enum
 {
-   TSTATE_SCAN, // scanning for start of a token
-   TSTATE_DONE  // finished; return token to parser
+   TSTATE_SCAN,   // scanning for start of a token
+   TSTATE_TEXT,   // scanning in a label, keyword, or text token
+   TSTATE_LABEL,  // scanning after '.' in a label
+   TSTATE_STRING, // scanning in a string literal
+   TSTATE_DONE    // finished; return token to parser
 };
 
 // tokenizer state structure
@@ -1250,8 +1253,156 @@ typedef struct tkstate_s
 // Tokenizer Callbacks
 //
 
+//
+// DoTokenStateScan
+//
+// Scanning for the start of a token.
+//
 static void DoTokenStateScan(tkstate_t *tks)
 {
+   const char *str  = tks->line->buffer;
+   int i            = tks->i;
+   qstring_t *token = tks->token;
+
+   if(isalnum(str[i]) || str[i] == '_' || str[i] == '-')
+   {
+      // start a text token - we'll determine the more specific type, if any,
+      // later.
+      M_QStrPutc(token, str[i]);
+      tks->tokentype = TOKEN_TEXT;
+      tks->state     = TSTATE_TEXT;
+   }
+   else
+   {
+      switch(str[i])
+      {
+      case ' ':
+      case '\t': // whitespace
+         break;  // keep scanning
+      case '\0': // end of input
+         tks->tokentype = TOKEN_EOL;
+         tks->state     = TSTATE_DONE;
+         break;
+      case '"':  // string
+         tks->state = TSTATE_STRING;
+         break;
+      case '+':  // plus
+         M_QStrPutc(token, '+');
+         tks->tokentype = TOKEN_PLUS;
+         tks->state     = TSTATE_DONE;
+         break;
+      case '(':  // lparen
+         M_QStrPutc(token, '(');
+         tks->tokentype = TOKEN_LPAREN;
+         tks->state     = TSTATE_DONE;
+         break;
+      case ',':  // comma
+         M_QStrPutc(token, ',');
+         tks->tokentype = TOKEN_COMMA;
+         tks->state     = TSTATE_DONE;
+         break;
+      case ')':  // rparen
+         M_QStrPutc(token, ')');
+         tks->tokentype = TOKEN_RPAREN;
+         tks->state     = TSTATE_DONE;
+         break;
+      default:
+         break;
+      }
+   }
+}
+
+//
+// isDecorateKeyword
+//
+// Returns true if the string matches a DECORATE state keyword, and false
+// otherwise.
+//
+static boolean isDecorateKeyword(const char *text)
+{
+   // there are only four keywords, so hashing is pointless.
+   static const char *keywords[] =
+   {
+      "loop",
+      "wait",
+      "stop",
+      "goto",
+      NULL
+   };
+
+   int i = 0;
+
+   while(keywords[i] && strcasecmp(text, keywords[i]))
+      ++i;
+
+   return (keywords[i] != NULL);
+}
+
+//
+// DoTokenStateText
+//
+// At this point we are in a label, a keyword, or a plain text token,
+// but we don't know which yet.
+//
+static void DoTokenStateText(tkstate_t *tks)
+{
+   const char *str  = tks->line->buffer;
+   int i            = tks->i;
+   qstring_t *token = tks->token;
+
+   if(isalnum(str[i]) || str[i] == '_')
+   {
+      // continuing in label, keyword, or text
+      M_QStrPutc(token, str[i]);
+   }
+   else if(str[i] == '.')
+   {
+      // '.' can only occur inside labels, so at this point we know we are
+      // dealing with a label token. Keep parsing, but no further periods
+      // will be allowed.
+      tks->tokentype = TOKEN_LABEL;
+      tks->state     = TSTATE_LABEL;
+   }
+   else if(str[i] == ':')
+   {
+      // colon at the end means this is a label, and we are at the end of it.
+      tks->tokentype = TOKEN_LABEL;
+      tks->state     = TSTATE_DONE;
+   }
+   else // anything else ends this token, and steps back
+   {
+      // see if it is a keyword
+      if(isDecorateKeyword(token->buffer))
+         tks->tokentype = TOKEN_KEYWORD;
+      tks->state = TSTATE_DONE;
+      --tks->i; // the char we're on is the start of a new token, so back up.
+   }
+}
+
+//
+// DoTokenStateLabel
+//
+// Scans inside a label after encountering a dot, which is used for custom
+// death and pain state specification.
+//
+static void DoTokenStateLabel(tkstate_t *tks)
+{
+   const char *str  = tks->line->buffer;
+   int i            = tks->i;
+   qstring_t *token = tks->token;
+
+   if(isalnum(str[i]) || str[i] == '_')
+   {
+      // continuing in label
+      M_QStrPutc(token, str[i]);
+   }
+   else if(str[i] == ':')
+   {
+      // colon at the end means this is a label, and we are at the end of it.
+      tks->state = TSTATE_DONE;
+   }
+   else // anything else is an error - FIXME: improve error message
+      I_Error("DoTokenStateLabel: malformed label in states heredoc.\n");
 }
 
 // tokenizer callback type
@@ -1260,7 +1411,9 @@ typedef void (*tksfunc_t)(tkstate_t *);
 // tokenizer state function table
 static tksfunc_t tstatefuncs[] =
 {
-   DoTokenStateScan, // scanning for start of a token
+   DoTokenStateScan,  // scanning for start of a token
+   DoTokenStateText,  // scanning inside a label, keyword, or text
+   DoTokenStateLabel, // scanning inside a label after a dot
 };
 
 //
