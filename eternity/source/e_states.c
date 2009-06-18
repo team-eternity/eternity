@@ -1223,8 +1223,18 @@ enum
    TOKEN_LPAREN,  // '('
    TOKEN_COMMA,   // ','
    TOKEN_RPAREN,  // ')'
-   TOKEN_TEXT,    // anything else (numbers, strings, etc.)
-   TOKEN_EOL      // end of line
+   TOKEN_STRING,  // string literal
+   TOKEN_TEXT,    // anything else (numbers, words, etc.)
+   TOKEN_EOL,     // end of line
+   TOKEN_ERROR,   // an error token
+};
+
+// token errors
+enum
+{
+   TERR_NONE,      // not an error
+   TERR_BADLABEL,  // malformed label
+   TERR_BADSTRING, // malformed string constant
 };
 
 // tokenizer states
@@ -1284,7 +1294,8 @@ static void DoTokenStateScan(tkstate_t *tks)
          tks->state     = TSTATE_DONE;
          break;
       case '"':  // string
-         tks->state = TSTATE_STRING;
+         tks->tokentype = TOKEN_STRING;
+         tks->state     = TSTATE_STRING;
          break;
       case '+':  // plus
          M_QStrPutc(token, '+');
@@ -1357,11 +1368,23 @@ static void DoTokenStateText(tkstate_t *tks)
    }
    else if(str[i] == '.')
    {
-      // '.' can only occur inside labels, so at this point we know we are
-      // dealing with a label token. Keep parsing, but no further periods
-      // will be allowed.
-      tks->tokentype = TOKEN_LABEL;
-      tks->state     = TSTATE_LABEL;
+      char *endpos = NULL;
+
+      // we see a '.' which could either be the decimal point in a float
+      // value, or the dot name separator in a label. If the token is only
+      // numbers up to this point, we will consider it a number, but the
+      // parser can sort this out if the wrong token type appears when it
+      // is expecting TOKEN_LABEL.
+      
+      strtol(token->buffer, &endpos, 10);
+      
+      if(*endpos != '\0')
+      {      
+         // it's not just a number, so assume it's a label
+         tks->tokentype = TOKEN_LABEL;
+         tks->state     = TSTATE_LABEL;
+      }
+      // otherwise, proceed as normal
    }
    else if(str[i] == ':')
    {
@@ -1401,8 +1424,69 @@ static void DoTokenStateLabel(tkstate_t *tks)
       // colon at the end means this is a label, and we are at the end of it.
       tks->state = TSTATE_DONE;
    }
-   else // anything else is an error - FIXME: improve error message
-      I_Error("DoTokenStateLabel: malformed label in states heredoc.\n");
+   else // anything else is an error
+   {
+      tks->tokentype  = TOKEN_ERROR;
+      tks->tokenerror = TERR_BADLABEL;
+      tks->state      = TSTATE_DONE;
+   }
+}
+
+//
+// DoTokenStateString
+//
+// Parsing inside a string literal.
+//
+static void DoTokenStateString(tkstate_t *tks)
+{
+   const char *str  = tks->line->buffer;
+   int i            = tks->i;
+   qstring_t *token = tks->token;
+
+   if(str[i] == '\\')
+   {
+      // look ahead one character
+      char nextchar = str[i+1];
+      char chartoput;
+
+      switch(nextchar)
+      {
+      case 'n':
+         chartoput = '\n';
+         break;
+      case 't':
+         chartoput = '\t';
+         break;
+      case '\0': // EOL -- error
+         tks->tokentype  = TOKEN_ERROR;
+         tks->tokenerror = TERR_BADSTRING;
+         tks->state      = TSTATE_DONE;
+         return;
+      default:
+         chartoput = nextchar;
+      }
+
+      M_QStrPutc(token, chartoput);
+      ++tks->i; // skip forward one character
+   }
+   else if(str[i] == '"') // end of string
+   {
+      tks->tokentype = TOKEN_STRING;
+      tks->state     = TSTATE_DONE;
+   }
+   else
+   {
+      if(str[i] == '\0') // EOL - error
+      {
+         tks->tokentype  = TOKEN_ERROR;
+         tks->tokenerror = TERR_BADSTRING;
+         tks->state      = TSTATE_DONE;
+         return;
+      }
+
+      // add character and continue scanning
+      M_QStrPutc(token, str[i]);
+   }
 }
 
 // tokenizer callback type
@@ -1411,9 +1495,10 @@ typedef void (*tksfunc_t)(tkstate_t *);
 // tokenizer state function table
 static tksfunc_t tstatefuncs[] =
 {
-   DoTokenStateScan,  // scanning for start of a token
-   DoTokenStateText,  // scanning inside a label, keyword, or text
-   DoTokenStateLabel, // scanning inside a label after a dot
+   DoTokenStateScan,   // scanning for start of a token
+   DoTokenStateText,   // scanning inside a label, keyword, or text
+   DoTokenStateLabel,  // scanning inside a label after a dot
+   DoTokenStateString, // scanning inside a string literal
 };
 
 //
@@ -1426,10 +1511,12 @@ static int E_GetDSToken(pstate_t *ps)
    tkstate_t tks;
 
    // set up tokenizer state - transfer in parser state details
-   tks.state = TSTATE_SCAN;
-   tks.i     = ps->index;
-   tks.line  = ps->linebuffer;
-   tks.token = ps->tokenbuffer;
+   tks.state      = TSTATE_SCAN;
+   tks.tokentype  = -1;
+   tks.tokenerror = TERR_NONE;
+   tks.i          = ps->index;
+   tks.line       = ps->linebuffer;
+   tks.token      = ps->tokenbuffer;
 
    M_QStrClear(tks.token);
 
@@ -1445,12 +1532,6 @@ static int E_GetDSToken(pstate_t *ps)
       // step to next character
       ++tks.i;
    }
-
-   /*
-   // determine keyword status for text tokens
-   if(tks.tokentype == TOKEN_TEXT)
-      tks.tokentype = TextToKeyword(tks.token->buffer);
-   */
 
    // write back string index
    ps->index = tks.i;
