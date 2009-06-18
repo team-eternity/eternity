@@ -376,7 +376,7 @@ void F_StartCast(void)
 
    wipegamestate = -1;         // force a screen wipe
    castnum = 0;
-   caststate = &states[mobjinfo[castorder[castnum].type].seestate];
+   caststate = states[mobjinfo[castorder[castnum].type].seestate];
    casttics = caststate->tics;
    castdeath = false;
    finalestage = 2;    
@@ -405,7 +405,7 @@ void F_CastTicker(void)
       if(castorder[castnum].name == NULL)
          castnum = 0;
       S_StartSound(NULL, mobjinfo[castorder[castnum].type].seesound);
-      caststate = &states[mobjinfo[castorder[castnum].type].seestate];
+      caststate = states[mobjinfo[castorder[castnum].type].seestate];
       castframes = 0;
    }
    else
@@ -413,17 +413,17 @@ void F_CastTicker(void)
       // just advance to next state in animation
 
       // haleyjd: modified to use a field set through EDF
-      //if(caststate == &states[S_PLAY_ATK1])
+      //if(caststate == states[S_PLAY_ATK1])
       //   goto stopattack;    // Oh, gross hack!
 
       int i;
       int statenum = mobjinfo[castorder[castnum].type].missilestate;
 
-      if(caststate == &states[statenum] && castorder[castnum].stopattack)
+      if(caststate == states[statenum] && castorder[castnum].stopattack)
          goto stopattack; // not quite as hackish as it used to be
 
       st = caststate->nextstate;
-      caststate = &states[st];
+      caststate = states[st];
       castframes++;
 
       // haleyjd: new sound event method -- each actor type
@@ -447,18 +447,20 @@ void F_CastTicker(void)
       // go into attack frame
       castattacking = true;
       if(castonmelee)
-         caststate=&states[(stnum = mobjinfo[castorder[castnum].type].meleestate)];
+         caststate = states[(stnum = mobjinfo[castorder[castnum].type].meleestate)];
       else
-         caststate=&states[(stnum = mobjinfo[castorder[castnum].type].missilestate)];
+         caststate = states[(stnum = mobjinfo[castorder[castnum].type].missilestate)];
+
       castonmelee ^= 1;
-      if(caststate == &states[NullStateNum])
+
+      if(caststate == states[NullStateNum])
       {
          if(castonmelee)
-            caststate=
-            &states[(stnum = mobjinfo[castorder[castnum].type].meleestate)];
+            caststate =
+             states[(stnum = mobjinfo[castorder[castnum].type].meleestate)];
          else
-            caststate=
-            &states[(stnum = mobjinfo[castorder[castnum].type].missilestate)];
+            caststate =
+             states[(stnum = mobjinfo[castorder[castnum].type].missilestate)];
       }
 
       // haleyjd 07/04/04: check for sounds matching the missile or
@@ -479,12 +481,12 @@ void F_CastTicker(void)
    if(castattacking)
    {
       if(castframes == 24 ||
-         caststate == &states[mobjinfo[castorder[castnum].type].seestate])
+         caststate == states[mobjinfo[castorder[castnum].type].seestate])
       {
       stopattack:
          castattacking = false;
          castframes = 0;
-         caststate = &states[mobjinfo[castorder[castnum].type].seestate];
+         caststate = states[mobjinfo[castorder[castnum].type].seestate];
       }
    }
       
@@ -507,7 +509,7 @@ boolean F_CastResponder(event_t* ev)
    
    // go into death frame
    castdeath  = true;
-   caststate  = &states[mobjinfo[castorder[castnum].type].deathstate];
+   caststate  = states[mobjinfo[castorder[castnum].type].deathstate];
    casttics   = caststate->tics;
    castframes = 0;
    castattacking = false;

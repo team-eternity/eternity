@@ -227,7 +227,7 @@ void P_MovePlayer(player_t* player)
          }
       }
 
-      if(mo->state == &states[mo->info->spawnstate])
+      if(mo->state == states[mo->info->spawnstate])
          P_SetMobjState(mo, mo->info->seestate);
    }
 }

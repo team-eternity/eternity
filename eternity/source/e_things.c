@@ -918,7 +918,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
          if(statenum == NUMSTATES)
             continue;
 
-         state = &states[statenum];
+         state = states[statenum];
 
          if(mod->num == 0) // if this is "Unknown", ignore it.
             continue;
@@ -1779,7 +1779,7 @@ void E_SetThingDefaultSprites(void)
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
       if(mobjinfo[i].defsprite == -1)
-         mobjinfo[i].defsprite = states[mobjinfo[i].spawnstate].sprite;
+         mobjinfo[i].defsprite = states[mobjinfo[i].spawnstate]->sprite;
    }
 }
 

@@ -85,7 +85,8 @@ int NUMSPRITES = 0;
 // extended way a BEX file can handle this.
 
 // haleyjd: made dynamic via EDF
-state_t *states = NULL;
+// haleyjd 6/18/09: made into pointer-to-pointer
+state_t **states = NULL;
 int NUMSTATES = 0;
 
 

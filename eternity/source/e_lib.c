@@ -502,10 +502,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       if(*endptr != '\0')
       {
          if(cfg)
-         {
-            cfg_error(cfg, "invalid integer value for option '%s'",
-                      opt->name);
-         }
+            cfg_error(cfg, "invalid integer value for option '%s'", opt->name);
          return -1;
       }
       if(errno == ERANGE) 
@@ -513,8 +510,8 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-               "integer value for option '%s' is out of range",
-               opt->name);
+                      "integer value for option '%s' is out of range",
+                      opt->name);
          }
          return -1;
       }

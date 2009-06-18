@@ -1846,7 +1846,7 @@ void MN_VideoModeDrawer(void)
    if(!(menu_video.menuitems[10].flags & MENUITEM_POSINIT))
       return;
    
-   sprdef = &sprites[states[frame].sprite];
+   sprdef = &sprites[states[frame]->sprite];
    // haleyjd 08/15/02
    if(!(sprdef->spriteframes))
       return;

@@ -1483,7 +1483,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
       P_SetTarget(&target->target, source);       // killough 11/98
       target->threshold = BASETHRESHOLD;
-      if(target->state == &states[target->info->spawnstate]
+      if(target->state == states[target->info->spawnstate]
          && target->info->seestate != NullStateNum)
       {
          // haleyjd 01/15/06: a problem occurs here because the first

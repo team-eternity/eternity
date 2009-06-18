@@ -2862,8 +2862,8 @@ void G_SetFastParms(int fast_pending)
          {
             // killough 4/10/98
             // don't change 1->0 since it causes cycles
-            if(states[i].tics != 1 || demo_compatibility)
-               states[i].tics >>= 1;  
+            if(states[i]->tics != 1 || demo_compatibility)
+               states[i]->tics >>= 1;  
          }
          // haleyjd 07/13/03: use new speed set list to adjust
          // mobj type speeds for -fast mode
@@ -2878,7 +2878,7 @@ void G_SetFastParms(int fast_pending)
       {
          for(i = demonRun1; i <= demonPain2; i++)
          {
-            states[i].tics <<= 1;
+            states[i]->tics <<= 1;
          }
          rover = SpeedSetList.next;
          while(rover)

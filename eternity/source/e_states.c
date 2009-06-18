@@ -135,8 +135,8 @@ int E_StateNumForDEHNum(int dehnum)
       return NullStateNum;
 
    statenum = state_dehchains[statekey];
-   while(statenum != NUMSTATES && states[statenum].dehnum != dehnum)
-      statenum = states[statenum].dehnext;
+   while(statenum != NUMSTATES && states[statenum]->dehnum != dehnum)
+      statenum = states[statenum]->dehnext;
 
    return statenum;
 }
@@ -186,8 +186,8 @@ int E_StateNumForName(const char *name)
    unsigned int statekey = D_HashTableKey(name) % NUMSTATECHAINS;
    
    statenum = state_namechains[statekey];
-   while(statenum != NUMSTATES && strcasecmp(name, states[statenum].name))
-      statenum = states[statenum].namenext;
+   while(statenum != NUMSTATES && strcasecmp(name, states[statenum]->name))
+      statenum = states[statenum]->namenext;
    
    return statenum;
 }
@@ -222,7 +222,7 @@ boolean E_AutoAllocStateDEHNum(int statenum)
 {
    unsigned int key;
    int dehnum;
-   state_t *st = &states[statenum];
+   state_t *st = states[statenum];
 
 #ifdef RANGECHECK
    if(st->dehnum != -1)
@@ -265,9 +265,18 @@ boolean E_AutoAllocStateDEHNum(int statenum)
 void E_CollectStates(cfg_t *scfg)
 {
    int i;
+   state_t *statestructs;
 
-   // allocate array
-   states = Z_Malloc(sizeof(state_t)*NUMSTATES, PU_STATIC, NULL);
+   // 6/18/09: allocate structures
+   statestructs = Z_Malloc(sizeof(state_t) * NUMSTATES, PU_STATIC, NULL);
+
+   // 6/18/09: allocate pointer array
+   states = Z_Malloc(sizeof(state_t *) * NUMSTATES, PU_STATIC, NULL);
+
+   // set pointers in states[] to proper state structure;
+   // must be done first, unfortunately.
+   for(i = 0; i < NUMSTATES; ++i)
+      states[i] = &statestructs[i];
 
    // initialize hash slots
    for(i = 0; i < NUMSTATECHAINS; ++i)
@@ -291,18 +300,18 @@ void E_CollectStates(cfg_t *scfg)
       }
 
       // copy it to the state
-      memset(states[i].name, 0, 41);
-      strncpy(states[i].name, name, 41);
+      memset(states[i]->name, 0, 41);
+      strncpy(states[i]->name, name, 41);
 
       // hash it
       key = D_HashTableKey(name) % NUMSTATECHAINS;
-      states[i].namenext = state_namechains[key];
+      states[i]->namenext = state_namechains[key];
       state_namechains[key] = i;
 
       // process dehackednum and add state to dehacked hash table,
       // if appropriate
       tempint = cfg_getint(statecfg, ITEM_FRAME_DEHNUM);
-      states[i].dehnum = tempint;
+      states[i]->dehnum = tempint;
       if(tempint >= 0)
       {
          int dehkey = tempint % NUMSTATECHAINS;
@@ -314,15 +323,15 @@ void E_CollectStates(cfg_t *scfg)
             E_EDFLoggedErr(2, 
                "E_CollectStates: frame '%s' reuses dehackednum %d\n"
                "                 Conflicting frame: '%s'\n",
-               states[i].name, tempint, states[cnum].name);
+               states[i]->name, tempint, states[cnum]->name);
          }
          
-         states[i].dehnext = state_dehchains[dehkey];
+         states[i]->dehnext = state_dehchains[dehkey];
          state_dehchains[dehkey] = i;
       }
 
       // haleyjd 06/15/09: set state index
-      states[i].index = i;
+      states[i]->index = i;
    }
 
    // verify the existence of the S_NULL frame
@@ -342,7 +351,7 @@ static void E_StateSprite(const char *tempstr, int i)
 {
    // check for special 'BLANK' identifier
    if(!strcasecmp(tempstr, "BLANK"))
-      states[i].sprite = blankSpriteNum;
+      states[i]->sprite = blankSpriteNum;
    else
    {
       // resolve normal sprite name
@@ -351,10 +360,10 @@ static void E_StateSprite(const char *tempstr, int i)
       {
          // haleyjd 05/31/06: downgraded to warning
          E_EDFLogPrintf("\t\tWarning: frame '%s': invalid sprite '%s'\n",
-                        states[i].name, tempstr);
+                        states[i]->name, tempstr);
          sprnum = blankSpriteNum;
       }
-      states[i].sprite = sprnum;
+      states[i]->sprite = sprnum;
    }
 }
 
@@ -390,10 +399,10 @@ static void E_StateAction(const char *tempstr, int i)
    if(!dp)
    {
       E_EDFLoggedErr(2, "E_ProcessState: frame '%s': bad action '%s'\n",
-                     states[i].name, tempstr);
+                     states[i]->name, tempstr);
    }
 
-   states[i].action = dp->cptr;
+   states[i]->action = dp->cptr;
 }
 
 enum
@@ -433,12 +442,12 @@ static void E_AssignMiscState(long *target, int framenum)
 {
    // 09/19/03: add check for no dehacked number
    // 03/22/06: auto-allocate dehacked numbers where possible
-   if(states[framenum].dehnum >= 0 || E_AutoAllocStateDEHNum(framenum))
-      *target = states[framenum].dehnum;
+   if(states[framenum]->dehnum >= 0 || E_AutoAllocStateDEHNum(framenum))
+      *target = states[framenum]->dehnum;
    else
    {
       E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                     "for frame %s\n", states[framenum].name);
+                     "for frame %s\n", states[framenum]->name);
       *target = NullStateNum;
    }
 }
@@ -710,12 +719,12 @@ static void E_StateNextFrame(const char *tempstr, int i)
          // error
          E_EDFLoggedErr(2, 
             "E_ProcessState: frame '%s': bad nextframe '%s'\n",
-            states[i].name, tempstr);
+            states[i]->name, tempstr);
 
       }
    }
 
-   states[i].nextstate = tempint;
+   states[i]->nextstate = tempint;
 }
 
 //
@@ -736,10 +745,10 @@ static void E_StatePtclEvt(const char *tempstr, int i)
    {
       E_EDFLoggedErr(2, 
          "E_ProcessState: frame '%s': bad ptclevent '%s'\n",
-         states[i].name, tempstr);
+         states[i]->name, tempstr);
    }
 
-   states[i].particle_evt = tempint;
+   states[i]->particle_evt = tempint;
 }
 
 // haleyjd 04/03/08: hack for function-style arguments to action function
@@ -878,27 +887,27 @@ static void E_ProcessCmpState(const char *value, int i)
    // process sprite
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].sprite = blankSpriteNum;
+      states[i]->sprite = blankSpriteNum;
    else
       E_StateSprite(curtoken, i);
 
    // process spriteframe
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].frame = 0;
+      states[i]->frame = 0;
    else
    {
       // call the value-parsing callback explicitly
-      if(E_SpriteFrameCB(NULL, NULL, curtoken, &(states[i].frame)) == -1)
+      if(E_SpriteFrameCB(NULL, NULL, curtoken, &(states[i]->frame)) == -1)
       {
          E_EDFLoggedErr(2, 
             "E_ProcessCmpState: frame '%s': bad spriteframe '%s'\n",
-            states[i].name, curtoken);
+            states[i]->name, curtoken);
       }
 
       // haleyjd 09/22/07: if blank sprite, force to frame 0
-      if(states[i].sprite == blankSpriteNum)
-         states[i].frame = 0;
+      if(states[i]->sprite == blankSpriteNum)
+         states[i]->frame = 0;
    }
 
    // process fullbright
@@ -906,21 +915,21 @@ static void E_ProcessCmpState(const char *value, int i)
    if(DEFAULTS(curtoken) == 0)
    {
       if(curtoken[0] == 't' || curtoken[0] == 'T')
-         states[i].frame |= FF_FULLBRIGHT;
+         states[i]->frame |= FF_FULLBRIGHT;
    }
 
    // process tics
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].tics = 1;
+      states[i]->tics = 1;
    else
-      states[i].tics = strtol(curtoken, NULL, 0);
+      states[i]->tics = strtol(curtoken, NULL, 0);
 
    // process action
    in_action = true;
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].action = NULL;
+      states[i]->action = NULL;
    else
       E_StateAction(curtoken, i);
 
@@ -930,7 +939,7 @@ static void E_ProcessCmpState(const char *value, int i)
       int argcount = 0;
 
       for(j = 0; j < NUMSTATEARGS; ++j)
-         states[i].args[j] = 0;
+         states[i]->args[j] = 0;
 
       // process args
       while(!early_args_end)
@@ -939,9 +948,9 @@ static void E_ProcessCmpState(const char *value, int i)
          if(argcount < NUMSTATEARGS)
          {
             if(DEFAULTS(curtoken))
-               states[i].args[argcount] = 0;
+               states[i]->args[argcount] = 0;
             else
-               E_ParseMiscField(curtoken, &(states[i].args[argcount]));
+               E_ParseMiscField(curtoken, &(states[i]->args[argcount]));
          }
          ++argcount;
       }
@@ -952,29 +961,29 @@ static void E_ProcessCmpState(const char *value, int i)
    // process nextframe
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].nextstate = NullStateNum;
+      states[i]->nextstate = NullStateNum;
    else
       E_StateNextFrame(curtoken, i);
 
    // process particle event
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].particle_evt = 0;
+      states[i]->particle_evt = 0;
    else
       E_StatePtclEvt(curtoken, i);
 
    // process misc1, misc2
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].misc1 = 0;
+      states[i]->misc1 = 0;
    else
-      E_ParseMiscField(curtoken, &(states[i].misc1));
+      E_ParseMiscField(curtoken, &(states[i]->misc1));
 
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i].misc2 = 0;
+      states[i]->misc2 = 0;
    else
-      E_ParseMiscField(curtoken, &(states[i].misc2));
+      E_ParseMiscField(curtoken, &(states[i]->misc2));
 
    if(!early_args_found) // do not do if early args specified
    {
@@ -983,9 +992,9 @@ static void E_ProcessCmpState(const char *value, int i)
       {
          NEXTTOKEN();
          if(DEFAULTS(curtoken))
-            states[i].args[j] = 0;
+            states[i]->args[j] = 0;
          else
-            E_ParseMiscField(curtoken, &(states[i].args[j]));
+            E_ParseMiscField(curtoken, &(states[i]->args[j]));
       }
    }
 
@@ -1042,22 +1051,22 @@ static void E_ProcessState(int i, cfg_t *framesec, boolean def)
 
    // process spriteframe
    if(IS_SET(ITEM_FRAME_SPRFRAME))
-      states[i].frame = cfg_getint(framesec, ITEM_FRAME_SPRFRAME);
+      states[i]->frame = cfg_getint(framesec, ITEM_FRAME_SPRFRAME);
 
    // haleyjd 09/22/07: if sprite == blankSpriteNum, force to frame 0
-   if(states[i].sprite == blankSpriteNum)
-      states[i].frame = 0;
+   if(states[i]->sprite == blankSpriteNum)
+      states[i]->frame = 0;
 
    // check for fullbright
    if(IS_SET(ITEM_FRAME_FULLBRT))
    {
       if(cfg_getbool(framesec, ITEM_FRAME_FULLBRT) == cfg_true)
-         states[i].frame |= FF_FULLBRIGHT;
+         states[i]->frame |= FF_FULLBRIGHT;
    }
 
    // process tics
    if(IS_SET(ITEM_FRAME_TICS))
-      states[i].tics = cfg_getint(framesec, ITEM_FRAME_TICS);
+      states[i]->tics = cfg_getint(framesec, ITEM_FRAME_TICS);
 
    // resolve codepointer
    if(IS_SET(ITEM_FRAME_ACTION))
@@ -1091,13 +1100,13 @@ hitcmp:
    if(IS_SET(ITEM_FRAME_MISC1))
    {
       tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC1);
-      E_ParseMiscField(tempstr, &(states[i].misc1));
+      E_ParseMiscField(tempstr, &(states[i]->misc1));
    }
 
    if(IS_SET(ITEM_FRAME_MISC2))
    {
       tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC2);
-      E_ParseMiscField(tempstr, &(states[i].misc2));
+      E_ParseMiscField(tempstr, &(states[i]->misc2));
    }
 
    // args field parsing (even more complicated, but similar)
@@ -1107,11 +1116,11 @@ hitcmp:
    {
       tempint = cfg_size(framesec, ITEM_FRAME_ARGS);
       for(j = 0; j < NUMSTATEARGS; ++j)
-         states[i].args[j] = 0;
+         states[i]->args[j] = 0;
       for(j = 0; j < tempint && j < NUMSTATEARGS; ++j)
       {
          tempstr = cfg_getnstr(framesec, ITEM_FRAME_ARGS, j);
-         E_ParseMiscField(tempstr, &(states[i].args[j]));
+         E_ParseMiscField(tempstr, &(states[i]->args[j]));
       }
    }
 }
@@ -1133,7 +1142,7 @@ void E_ProcessStates(cfg_t *cfg)
 
       E_ProcessState(i, framesec, true);
 
-      E_EDFLogPrintf("\t\tFinished frame %s(#%d)\n", states[i].name, i);
+      E_EDFLogPrintf("\t\tFinished frame %s(#%d)\n", states[i]->name, i);
    }
 }
 
@@ -1170,7 +1179,7 @@ void E_ProcessStateDeltas(cfg_t *cfg)
       E_ProcessState(stateNum, deltasec, false);
 
       E_EDFLogPrintf("\t\tApplied framedelta #%d to %s(#%d)\n",
-                     i, states[stateNum].name, stateNum);
+                     i, states[stateNum]->name, stateNum);
    }
 }
 
@@ -1323,6 +1332,17 @@ static void DoTokenStateScan(tkstate_t *tks)
    }
 }
 
+// there are only four keywords, so hashing is pointless.
+static const char *decorate_kwds[] =
+{
+   "loop",
+   "wait",
+   "stop",
+   "goto",
+};
+
+#define NUMDECKWDS (sizeof(decorate_kwds) / sizeof(const char *))
+
 //
 // isDecorateKeyword
 //
@@ -1331,22 +1351,7 @@ static void DoTokenStateScan(tkstate_t *tks)
 //
 static boolean isDecorateKeyword(const char *text)
 {
-   // there are only four keywords, so hashing is pointless.
-   static const char *keywords[] =
-   {
-      "loop",
-      "wait",
-      "stop",
-      "goto",
-      NULL
-   };
-
-   int i = 0;
-
-   while(keywords[i] && strcasecmp(text, keywords[i]))
-      ++i;
-
-   return (keywords[i] != NULL);
+   return (E_StrToNumLinear(decorate_kwds, NUMDECKWDS, text) != NUMDECKWDS);
 }
 
 //

@@ -171,7 +171,7 @@ void P_UnArchivePlayers(void)
             {
                if(players[i].psprites[j].state)
                   players[i].psprites[j].state =
-                  &states[ (int)players[i].psprites[j].state ];
+                   states[ (int)players[i].psprites[j].state ];
             }
          }
          
@@ -588,7 +588,7 @@ void P_UnArchiveThinkers(void)
       PADSAVEP();
       memcpy(mobj, save_p, sizeof(mobj_t));
       save_p += sizeof(mobj_t);
-      mobj->state = &states[(int)(mobj->state)];
+      mobj->state = states[(int)(mobj->state)];
 
       if(mobj->player)
       {

@@ -573,7 +573,7 @@ void ProcessDehFile(char *filename, const char *outfilename, int lumpnum)
       }
 
       for(; i < NUMSTATES; ++i)  // remember what they start as for deh xref
-         deh_codeptr[i] = states[i].action;
+         deh_codeptr[i] = states[i]->action;
    }
 
    deh_loaded = true;
@@ -726,7 +726,7 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
       else
       {
          // copy codepointer to state
-         states[indexnum].action = bexptr->cptr;
+         states[indexnum]->action = bexptr->cptr;
          deh_LogPrintf("- applied codepointer %p to states[%d]\n", 
                        bexptr->cptr, indexnum);
       }
@@ -1036,26 +1036,24 @@ void deh_procFrame(DWFILE *fpin, char *line)
       if(!strcasecmp(key,deh_state[0]))  // Sprite number
       {
          deh_LogPrintf(" - sprite = %ld\n", value);
-         states[indexnum].sprite = (spritenum_t)value;
+         states[indexnum]->sprite = (spritenum_t)value;
       }
       else if(!strcasecmp(key,deh_state[1]))  // Sprite subnumber
       {
          deh_LogPrintf(" - frame = %ld\n", value);
-         states[indexnum].frame = value; // long
+         states[indexnum]->frame = value; // long
       }
       else if(!strcasecmp(key,deh_state[2]))  // Duration
       {
          deh_LogPrintf(" - tics = %ld\n", value);
-         states[indexnum].tics = value; // long
+         states[indexnum]->tics = value; // long
       }
       else if(!strcasecmp(key,deh_state[3]))  // Next frame
       {
          deh_LogPrintf(" - nextstate = %ld\n", value);
 
          // haleyjd: resolve state number through EDF
-         //states[indexnum].nextstate = (statenum_t)value;
-
-         states[indexnum].nextstate = E_GetStateNumForDEHNum(value);
+         states[indexnum]->nextstate = E_GetStateNumForDEHNum(value);
 
       }
       else if(!strcasecmp(key,deh_state[4]))  // Codep frame (not set in Frame deh block)
@@ -1066,43 +1064,43 @@ void deh_procFrame(DWFILE *fpin, char *line)
       else if(!strcasecmp(key,deh_state[5]))  // Unknown 1
       {
          deh_LogPrintf(" - misc1 = %ld\n", value);
-         states[indexnum].misc1 = value; // long
+         states[indexnum]->misc1 = value; // long
       }
       else if(!strcasecmp(key,deh_state[6]))  // Unknown 2
       {
          deh_LogPrintf(" - misc2 = %ld\n", value);
-         states[indexnum].misc2 = value; // long
+         states[indexnum]->misc2 = value; // long
       }
       else if(!strcasecmp(key,deh_state[7])) // Particle event
       {
          // haleyjd 08/09/02: particle event setting
          deh_LogPrintf(" - particle_evt = %ld\n", value);
-         states[indexnum].particle_evt = value;
+         states[indexnum]->particle_evt = value;
       }
       else if(!strcasecmp(key,deh_state[8])) // Args1
       {
          deh_LogPrintf(" - args[0] = %ld\n", value);
-         states[indexnum].args[0] = value;
+         states[indexnum]->args[0] = value;
       }
       else if(!strcasecmp(key,deh_state[9])) // Args2
       {
          deh_LogPrintf(" - args[1] = %ld\n", value);
-         states[indexnum].args[1] = value;
+         states[indexnum]->args[1] = value;
       }
       else if(!strcasecmp(key,deh_state[10])) // Args3
       {
          deh_LogPrintf(" - args[2] = %ld\n", value);
-         states[indexnum].args[2] = value;
+         states[indexnum]->args[2] = value;
       }
       else if(!strcasecmp(key,deh_state[11])) // Args4
       {
          deh_LogPrintf(" - args[3] = %ld\n", value);
-         states[indexnum].args[3] = value;
+         states[indexnum]->args[3] = value;
       }
       else if(!strcasecmp(key,deh_state[12])) // Args5
       {
          deh_LogPrintf(" - args[4] = %ld\n", value);
-         states[indexnum].args[4] = value;
+         states[indexnum]->args[4] = value;
       }
       else
          deh_LogPrintf("Invalid frame string index for '%s'\n", key);
@@ -1171,7 +1169,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
       if(!strcasecmp(key, deh_state[4])) // Codep frame (not set in Frame deh block)
       {
-         states[indexnum].action = deh_codeptr[value];
+         states[indexnum]->action = deh_codeptr[value];
          deh_LogPrintf(" - applied %p from codeptr[%ld] to states[%d]\n",
                        deh_codeptr[value], value, indexnum);
          

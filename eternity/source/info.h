@@ -176,7 +176,7 @@ typedef struct
 
 // these are in info.c
 
-extern state_t *states;
+extern state_t **states;
 extern int NUMSTATES;
 
 extern char **sprnames;

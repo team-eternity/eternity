@@ -168,7 +168,7 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
       if(stnum == E_StateNumForDEHNum(S_BFG1) && bfgtype == bfg_classic)
          stnum = E_SafeState(S_OLDBFG1); // Skip to alternative weapon frame
 
-      state = &states[stnum];
+      state = states[stnum];
       psp->state = state;
       psp->tics = state->tics;        // could be 0
 
@@ -620,14 +620,14 @@ void A_WeaponReady(mobj_t *mo)
    // WEAPON_FIXME: chainsaw particulars (idle sound)
 
    // get out of attack state
-   if(mo->state == &states[mo->info->missilestate] || 
-      mo->state == &states[player->pclass->altattack])
+   if(mo->state == states[mo->info->missilestate] || 
+      mo->state == states[player->pclass->altattack])
    {
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
    if(player->readyweapon == wp_chainsaw && 
-      psp->state == &states[E_SafeState(S_SAW)])
+      psp->state == states[E_SafeState(S_SAW)])
       S_StartSound(player->mo, sfx_sawidl);
 
    // check for change
@@ -1283,7 +1283,7 @@ void A_FireCGun(mobj_t *mo)
        psp->state->index < E_StateNumForDEHNum(S_CHAIN3)))
    {      
       // phares
-      A_FireSomething(player, psp->state->index - states[E_SafeState(S_CHAIN1)].index);
+      A_FireSomething(player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
    }
    else
       A_FireSomething(player, 0); // new default behavior
@@ -1946,7 +1946,7 @@ void A_PlayerThunk(mobj_t *mo)
    if(statenum >= 0)
    {
       oldstate = mo->state;
-      mo->state = &states[statenum];
+      mo->state = states[statenum];
    }
 
    // if ammo should be used, subtract it now

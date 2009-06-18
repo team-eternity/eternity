@@ -142,7 +142,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
          break;                 // killough 4/9/98
       }
 
-      st = &states[state];
+      st = states[state];
       mobj->state = st;
       mobj->tics = st->tics;
 
@@ -1289,7 +1289,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    // do not set the state with P_SetMobjState,
    // because action routines can not be called yet
 
-   st = &states[info->spawnstate];
+   st = states[info->spawnstate];
 
    mobj->state  = st;
    mobj->tics   = st->tics;
@@ -2160,7 +2160,7 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
       return false;
    }
 
-   st = &states[state];
+   st = states[state];
    mobj->state = st;
    mobj->tics = st->tics;
    if(mobj->skin && st->sprite == mobj->info->defsprite)

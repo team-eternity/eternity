@@ -605,7 +605,7 @@ boolean E_PlayerInWalkingState(player_t *player)
    int count = 0;
 
    pstate   = player->mo->state;
-   seestate = &states[player->mo->info->seestate];
+   seestate = states[player->mo->info->seestate];
 
    curstate = seestate;
 
@@ -614,7 +614,7 @@ boolean E_PlayerInWalkingState(player_t *player)
       if(curstate == pstate) // found a match
          return true;
 
-      curstate = &states[curstate->nextstate]; // try next state
+      curstate = states[curstate->nextstate]; // try next state
 
       if(++count >= 100) // seen 100 states? get out.
       {
