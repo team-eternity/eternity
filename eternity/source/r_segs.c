@@ -507,7 +507,8 @@ void R_StoreWallRange(const int start, const int stop)
    usesegloop = !seg.backsec || seg.clipsolid || 
                 seg.markceiling || seg.markfloor || 
                 seg.toptex || seg.midtex || seg.bottomtex || 
-                seg.f_portalignore || seg.c_portalignore || 
+                seg.f_portalignore || seg.c_portalignore ||
+                seg.markfportal || seg.markcportal || 
                 segclip.line->linedef->portal;
 
    clipx1 = (float)(start - segclip.x1frac);
