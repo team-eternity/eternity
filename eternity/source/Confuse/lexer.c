@@ -162,13 +162,25 @@ void lexer_reset(void)
 // lexer state handlers
 //
 
+// haleyjd 6/19/09 (happy birthday to me!): heredoc type enumeration.
+// We support more than one kind for convenience. This allows strings to be
+// stored that contain one of the delimiter types, but not all of them. This
+// is an acknowledged limitation of this sort of heredoc, but is not important
+// for Eternity's applications of the tool in general.
+enum
+{
+   HEREDOC_SINGLE, // uses @' '@
+   HEREDOC_DOUBLE, // uses @" "@
+};
+
 // lexerstate structure; because lots of arguments annoy me :)
 typedef struct lexerstate_s
 {
-   cfg_t *cfg;       // current cfg_t
-   int   state;      // current state of the lexer
-   int   stringtype; // type of string being parsed
-   char  c;          // current character
+   cfg_t *cfg;        // current cfg_t
+   int   state;       // current state of the lexer
+   int   stringtype;  // type of string being parsed
+   int   heredoctype; // type of heredoc delimiter being used
+   char  c;           // current character
 } lexerstate_t;
 
 // lexer function protocol
@@ -380,7 +392,22 @@ static int lexer_state_unquotedstring(lexerstate_t *ls)
 //
 static int lexer_state_heredoc(lexerstate_t *ls)
 {
-   if((ls->c == '"' || ls->c == '\'') && *bufferpos == '@')
+   char c = '\0';
+
+   // 6/19/09: match against specific opening heredoc delimiter;
+   // more strict, and offers more flexibility as a result.
+   switch(ls->heredoctype)
+   {
+   case HEREDOC_SINGLE:
+      c = '\'';
+      break;
+   case HEREDOC_DOUBLE:
+      c = '"';
+      break;
+   }
+
+   // check for end of heredoc
+   if(ls->c == c && *bufferpos == '@')
    {
       ++bufferpos; // move forward past @
       mytext = M_QStrBuffer(&qstring);
@@ -483,7 +510,17 @@ static int lexer_state_none(lexerstate_t *ls)
    case '@': // possibly open heredoc string
       if(*bufferpos == '"' || *bufferpos == '\'') // look ahead to next character
       {
-         ++bufferpos; // move past " or '
+         // 6/19/09: keep track of heredoc type by opening delimiter
+         switch(*bufferpos)
+         {
+         case '\'':
+            ls->heredoctype = HEREDOC_SINGLE;
+            break;
+         case '"':
+            ls->heredoctype = HEREDOC_DOUBLE;
+            break;
+         }
+         ++bufferpos; // move past secondary delimiter character
          M_QStrClear(&qstring);
          ls->state = STATE_HEREDOC;
          break;

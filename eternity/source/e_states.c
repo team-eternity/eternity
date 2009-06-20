@@ -1192,17 +1192,39 @@ void E_ProcessStateDeltas(cfg_t *cfg)
 // of those strings is done here, where they are turned into states.
 //
 
-// parsing
+/*
+  Grammar
+
+  <labeledunit> := <label><eol><frameblock><labeledunit> | nil
+    <label> := [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?':'
+    <eol>   := '\n'
+    <frameblock> := <frame><frameblock> | <frame>
+      <frame> := <keyword><eol> | <frame_token_list><eol>
+         <keyword> := "stop" | "wait" | "loop" | <goto>
+            <goto> := "goto" | "goto" <jumplabel>
+              <jumplabel> := <jlabel> | <jlabel> '+' number
+                <jlabel> := [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?
+         <frame_token_list> := <sprite><frameletters><tics><action>
+                             | <sprite><frameletters><tics><bright><action>
+           <sprite> := [A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]
+           <frameletters> := [A-Z\[\\\]]+
+           <tics> := [0-9]+
+           <bright> := "bright"
+           <action> := <name>
+                     | <name> '(' <arglist> ')'
+              <name> := [A-Za-z0-9_]+
+              <arglist> := <arg> ',' <arglist> | <arg>
+                <arg> := "string" | number
+*/
 
 // parser state enumeration
-// FIXME: tenative, based on initial draw-up of FSA
 enum
 {
    PSTATE_EXPECTLABEL,
    PSTATE_EXPECTSTATEORKW,
-   PSTATE_EXPECTSPRITE,
    PSTATE_EXPECTFRAMES,
    PSTATE_EXPECTTICS,
+   PSTATE_EXPECTBRIGHTORACTION,
    PSTATE_EXPECTACTION,
    PSTATE_EXPECTPAREN,
    PSTATE_EXPECTARG,
@@ -1242,7 +1264,6 @@ enum
 enum
 {
    TERR_NONE,      // not an error
-   TERR_BADLABEL,  // malformed label
    TERR_BADSTRING, // malformed string constant
 };
 
@@ -1283,6 +1304,7 @@ static void DoTokenStateScan(tkstate_t *tks)
    int i            = tks->i;
    qstring_t *token = tks->token;
 
+   // allow A-Za-z0-9, underscore, and leading - for numbers
    if(isalnum(str[i]) || str[i] == '_' || str[i] == '-')
    {
       // start a text token - we'll determine the more specific type, if any,
@@ -1298,35 +1320,38 @@ static void DoTokenStateScan(tkstate_t *tks)
       case ' ':
       case '\t': // whitespace
          break;  // keep scanning
-      case '\0': // end of input
+      case '\0': // end of line, which is significant in DECORATE
          tks->tokentype = TOKEN_EOL;
          tks->state     = TSTATE_DONE;
          break;
-      case '"':  // string
+      case '"':  // quoted string
          tks->tokentype = TOKEN_STRING;
          tks->state     = TSTATE_STRING;
          break;
-      case '+':  // plus
+      case '+':  // plus - used in relative goto statement
          M_QStrPutc(token, '+');
          tks->tokentype = TOKEN_PLUS;
          tks->state     = TSTATE_DONE;
          break;
-      case '(':  // lparen
+      case '(':  // lparen - for action argument lists
          M_QStrPutc(token, '(');
          tks->tokentype = TOKEN_LPAREN;
          tks->state     = TSTATE_DONE;
          break;
-      case ',':  // comma
+      case ',':  // comma - for action argument lists
          M_QStrPutc(token, ',');
          tks->tokentype = TOKEN_COMMA;
          tks->state     = TSTATE_DONE;
          break;
-      case ')':  // rparen
+      case ')':  // rparen - for action argument lists
          M_QStrPutc(token, ')');
          tks->tokentype = TOKEN_RPAREN;
          tks->state     = TSTATE_DONE;
          break;
-      default:
+      default: // whatever it is, we don't care for it.
+         M_QStrPutc(token, str[i]);
+         tks->tokentype = TOKEN_ERROR;
+         tks->state     = TSTATE_DONE;
          break;
       }
    }
@@ -1429,11 +1454,15 @@ static void DoTokenStateLabel(tkstate_t *tks)
       // colon at the end means this is a label, and we are at the end of it.
       tks->state = TSTATE_DONE;
    }
-   else // anything else is an error
+   else
    {
-      tks->tokentype  = TOKEN_ERROR;
-      tks->tokenerror = TERR_BADLABEL;
-      tks->state      = TSTATE_DONE;
+      // anything else means we may have been mistaken about this being a 
+      // label after all, or this is a label in the context of a goto statement;
+      // in that case, we mark the token as text type and the parser can sort 
+      // out the damage by watching out for it.
+      tks->tokentype = TOKEN_TEXT;
+      tks->state     = TSTATE_DONE;
+      --tks->i; // back up one char since we ate something unrelated
    }
 }
 
@@ -1448,47 +1477,19 @@ static void DoTokenStateString(tkstate_t *tks)
    int i            = tks->i;
    qstring_t *token = tks->token;
 
-   if(str[i] == '\\')
+   // note: DECORATE does not support escapes in strings?!?
+   switch(str[i])
    {
-      // look ahead one character
-      char nextchar = str[i+1];
-      char chartoput;
-
-      switch(nextchar)
-      {
-      case 'n':
-         chartoput = '\n';
-         break;
-      case 't':
-         chartoput = '\t';
-         break;
-      case '\0': // EOL -- error
-         tks->tokentype  = TOKEN_ERROR;
-         tks->tokenerror = TERR_BADSTRING;
-         tks->state      = TSTATE_DONE;
-         return;
-      default:
-         chartoput = nextchar;
-      }
-
-      M_QStrPutc(token, chartoput);
-      ++tks->i; // skip forward one character
-   }
-   else if(str[i] == '"') // end of string
-   {
+   case '"': // end of string
       tks->tokentype = TOKEN_STRING;
       tks->state     = TSTATE_DONE;
-   }
-   else
-   {
-      if(str[i] == '\0') // EOL - error
-      {
-         tks->tokentype  = TOKEN_ERROR;
-         tks->tokenerror = TERR_BADSTRING;
-         tks->state      = TSTATE_DONE;
-         return;
-      }
-
+      break;
+   case '\0': // EOL - error
+      tks->tokentype  = TOKEN_ERROR;
+      tks->tokenerror = TERR_BADSTRING;
+      tks->state      = TSTATE_DONE;
+      break;
+   default:
       // add character and continue scanning
       M_QStrPutc(token, str[i]);
    }
