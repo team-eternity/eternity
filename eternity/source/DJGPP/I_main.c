@@ -53,8 +53,8 @@ static void handler(int s)
   // If corrupted memory could cause crash, dump memory
   // allocation history, which points out probable causes
 
-  if (s==SIGSEGV || s==SIGILL || s==SIGFPE)
-    Z_DumpHistory(buf);
+  //if (s==SIGSEGV || s==SIGILL || s==SIGFPE)
+  //  Z_DumpHistory(buf);
 
   I_Error(buf);
 }

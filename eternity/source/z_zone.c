@@ -165,49 +165,7 @@ void Z_PrintStats(void)           // Print allocation statistics
 }
 #endif
 
-#ifdef INSTRUMENTED
-
-// killough 4/26/98: Add history information
-
-enum {malloc_history, free_history, NUM_HISTORY_TYPES};
-
-static const char *file_history[NUM_HISTORY_TYPES][ZONE_HISTORY];
-static int line_history[NUM_HISTORY_TYPES][ZONE_HISTORY];
-static int history_index[NUM_HISTORY_TYPES];
-static const char *const desc[NUM_HISTORY_TYPES] = {"malloc()'s", "free()'s"};
-
-void Z_DumpHistory(char *buf)
-{
-   int i,j;
-   char s[1024];
-
-   strcat(buf,"\n");
-   for(i = 0; i < NUM_HISTORY_TYPES; i++)
-   {
-      psnprintf(s, sizeof(s), "\nLast several %s:\n\n", desc[i]);
-      // FIXME: could overflow
-      strcat(buf,s);
-      for(j = 0; j < ZONE_HISTORY; j++)
-      {
-         int k = (history_index[i]-j-1) & (ZONE_HISTORY-1);
-         if(file_history[i][k])
-         {
-            psnprintf(s, sizeof(s), "File: %s, Line: %d\n", 
-                      file_history[i][k], line_history[i][k]);
-            // FIXME: could overflow
-            strcat(buf,s);
-         }
-      }
-   }
-}
-#else
-
-void Z_DumpHistory(char *buf)
-{
-}
-
-#endif
-
+// haleyjd 06/20/09: removed unused, crashy, and non-useful Z_DumpHistory
 
 #ifdef ZONEFILE
 
@@ -350,11 +308,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    memblock_t *start;
    
 #ifdef INSTRUMENTED
-   size_t size_orig = size;
-   
-   file_history[malloc_history][history_index[malloc_history]] = file;
-   line_history[malloc_history][history_index[malloc_history]++] = line;
-   history_index[malloc_history] &= ZONE_HISTORY-1;
+   size_t size_orig = size;   
 #endif
 
 #ifdef CHECKHEAP
@@ -502,11 +456,6 @@ void (Z_Free)(void *p, const char *file, int line)
 {
 #ifdef CHECKHEAP
    Z_CheckHeap();
-#endif
-#ifdef INSTRUMENTED
-   file_history[free_history][history_index[free_history]] = file;
-   line_history[free_history][history_index[free_history]++] = line;
-   history_index[free_history] &= ZONE_HISTORY-1;
 #endif
 
    if(p)
@@ -1274,7 +1223,7 @@ void Z_PrintZoneHeap(void)
          fputs("\tWARNING: purgable block with no user\n", outfile);
       if(block->tag >= PU_MAX)
          fputs("\tWARNING: invalid cache level\n", outfile);
-      if(!block->vm && block->next != zone &&
+      if(block->next != zone &&
          (memblock_t *)((char *)block + HEADER_SIZE + block->size) != block->next)
          fputs("\tWARNING: block size doesn't touch next block\n", outfile);
       if(block->next->prev != block || block->prev->next != block)

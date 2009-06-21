@@ -315,7 +315,7 @@ typedef struct emodstatenode_s
 // and not actual pointers.  Most can be set to zero if the action or
 // sound doesn't apply (like lamps generally don't attack or whistle).
 
-typedef struct
+typedef struct mobjinfo_s
 {
    int doomednum;     // Thing number used in id's editor, and now
                       //  probably by every other editor too
@@ -391,6 +391,9 @@ typedef struct
    // 06/04/08: custom damagetype state chains
    emodstatenode_t *dmg_painstates;  // custom pain states
    emodstatenode_t *dmg_deathstates; // custom death states
+
+   // 06/19/09: inheritance chain for DECORATE-like semantics where required
+   struct mobjinfo_s *parent;
 
 } mobjinfo_t;
 

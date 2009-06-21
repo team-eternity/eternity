@@ -1974,6 +1974,10 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
    unsigned int key;
    deh_bexptr *bexptr;
 
+   // 6/19/09: allow optional A_ prefix in all contexts.
+   if(strlen(mnemonic) > 2 && !strncasecmp(mnemonic, "A_", 2))
+      mnemonic += 2;
+
    // calculate key for mnemonic
    key = D_HashTableKey(mnemonic) % NUMCPTRCHAINS;
 
@@ -1983,7 +1987,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
 
    bexptr = &deh_bexptrs[bexcpchains[key]];
 
-   while(stricmp(mnemonic, bexptr->lookup))
+   while(strcasecmp(mnemonic, bexptr->lookup))
    {
       // end of hash chain?
       if(bexptr->next == -1)

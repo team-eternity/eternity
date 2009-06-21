@@ -1177,10 +1177,15 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
          
          // copy parent to this thing
          E_CopyThing(i, pnum);
+
+         // haleyjd 06/19/09: keep track of parent explicitly
+         mobjinfo[i].parent = &mobjinfo[pnum];
          
          // we inherit, so treat defaults as no value
          inherits = true;
       }
+      else
+         mobjinfo[i].parent = NULL; // 6/19/09: no parent.
 
       // mark this thingtype as processed
       thing_hitlist[i] = 1;
