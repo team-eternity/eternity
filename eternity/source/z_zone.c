@@ -407,7 +407,7 @@ allocated:
 #endif
 #ifdef ZONESCRAMBLE
          // scramble memory -- weed out any bugs
-         memset(block, gametic & 0xff, size);
+         memset(block, 1 | (gametic & 0xff), size);
 #endif
 #ifdef ZONEFILE
          Z_LogPrintf("* %p = Z_Malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", 
@@ -495,7 +495,7 @@ void (Z_Free)(void *p, const char *file, int line)
 
 #ifdef ZONESCRAMBLE
       // scramble memory -- weed out any bugs
-      memset(p, gametic & 0xff, block->size);
+      memset(p, 1 | (gametic & 0xff), block->size);
 #endif
 
       if(block->user)            // Nullify user if one exists
