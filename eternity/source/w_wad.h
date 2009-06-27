@@ -130,6 +130,8 @@ int     W_ReadLumpHeader(int lump, void *dest, size_t size);
 
 unsigned W_LumpNameHash(const char *s);           // killough 1/31/98
 
+void W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
+
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
 
 extern FILE *iwadhandle;

@@ -619,6 +619,34 @@ long W_LumpCheckSum(int lumpnum)
    return checksum;
 }
 
+//
+// W_FreeDirectoryLumps
+//
+// haleyjd 06/26/09
+// Frees all the lumps cached in a private directory.
+//
+// Note that it's necessary to use Z_Free and not Z_ChangeTag 
+// on all resources loaded from a private wad directory if the 
+// directory is destroyed. Otherwise the zone heap will maintain
+// dangling pointers into the freed wad directory, and heap 
+// corruption would occur at a seemingly random time after an 
+// arbitrary Z_Malloc call freed the cached resources.
+//
+void W_FreeDirectoryLumps(waddir_t *waddir)
+{
+   int i;
+   lumpinfo_t **li = waddir->lumpinfo;
+
+   for(i = 0; i < waddir->numlumps; ++i)
+   {
+      if(li[i]->cache)
+      {
+         Z_Free(li[i]->cache);
+         li[i]->cache = NULL;
+      }
+   }
+}
+
 //=============================================================================
 //
 // haleyjd 07/12/07: Implementor functions for individual lump types

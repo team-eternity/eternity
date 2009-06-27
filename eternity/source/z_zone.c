@@ -134,34 +134,33 @@ int printstats = 0;                    // killough 8/23/98
 
 void Z_PrintStats(void)           // Print allocation statistics
 {
-
-  if (printstats)
-    {
+   if(printstats)
+   {
       unsigned long total_memory = free_memory + active_memory +
-	purgable_memory + inactive_memory +
-	virtual_memory;
+                                   purgable_memory + inactive_memory +
+                                   virtual_memory;
       double s = 100.0 / total_memory;
 
       doom_printf(
-              "%-5lu\t%6.01f%%\tstatic\n"
-	      "%-5lu\t%6.01f%%\tpurgable\n"
-	      "%-5lu\t%6.01f%%\tfree\n"
-	      "%-5lu\t%6.01f%%\tfragmentary\n"
-	      "%-5lu\t%6.01f%%\tvirtual\n"
-	      "%-5lu\t\ttotal\n",
-	      active_memory,
-	      active_memory*s,
-	      purgable_memory,
-	      purgable_memory*s,
-	      free_memory,
-	      free_memory*s,
-	      inactive_memory,
-	      inactive_memory*s,
-	      virtual_memory,
-	      virtual_memory*s,
-	      total_memory
-	      );
-    }
+         "%-5lu\t%6.01f%%\tstatic\n"
+         "%-5lu\t%6.01f%%\tpurgable\n"
+         "%-5lu\t%6.01f%%\tfree\n"
+         "%-5lu\t%6.01f%%\tfragmentary\n"
+         "%-5lu\t%6.01f%%\tvirtual\n"
+         "%-5lu\t\ttotal\n",
+         active_memory,
+         active_memory*s,
+         purgable_memory,
+         purgable_memory*s,
+         free_memory,
+         free_memory*s,
+         inactive_memory,
+         inactive_memory*s,
+         virtual_memory,
+         virtual_memory*s,
+         total_memory
+         );
+   }
 }
 #endif
 

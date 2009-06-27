@@ -61,7 +61,7 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "TNT",
    "PLUTONIA",
    "HERETIC",
-   "HERETIC",   // warning: causes trouble with Z_Free below...
+   "HERETIC",
    "HTICSOSR",
 };
 
@@ -188,38 +188,15 @@ static boolean I_Pick_OpenWad(void)
 // failsafe in case initialization of the picker subsystem fails partway
 // through.
 //
-// Note that it's necessary to use Z_Free and not Z_ChangeTag on all
-// resources loaded from a private wad directory if the private wad directory
-// is destroyed. Otherwise the zone heap will maintain dangling pointers into
-// the freed wad directory, and heap corruption would occur at a seemingly
-// random time after an arbitrary Z_Malloc call freed the cached resources.
-// (Just a handy lesson in the proper use of private wad directories.)
 //
 static void I_Pick_FreeWad(void)
 {
-   int i;
-
-   // free the background pic
-   if(bgframe)
-      Z_Free(bgframe);
-
-   // free iwad pictures
-   for(i = 0; i < NUMPICKIWADS; ++i)
-   {
-      if(iwadpics[i] && i != IWAD_HTICREG) // hack warning :P
-         Z_Free(iwadpics[i]);
-   }
-
-   // free palettes
-   for(i = 0; i < NUMPICKPALS; ++i)
-   {
-      if(pals[i])
-         Z_Free(pals[i]);
-   }
-
    // close the wad file if it is open
    if(pickwad.lumpinfo)
    {
+      // free all resources loaded from the wad
+      W_FreeDirectoryLumps(&pickwad);
+
       if(pickwad.lumpinfo[0]->file) // kind of redundant, but who knows
          fclose(pickwad.lumpinfo[0]->file);
 
