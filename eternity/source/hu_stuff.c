@@ -1253,7 +1253,7 @@ static void HU_LevelTimeTick(hu_widget_t *widget)
       return;
    }
    
-   seconds = levelTime / 35;
+   seconds = leveltime / 35;
    timestr[0] = '\0';
    
    psnprintf(timestr, sizeof(timestr), "%c%02i:%02i:%02i", 

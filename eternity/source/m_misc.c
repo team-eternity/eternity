@@ -464,7 +464,7 @@ default_t defaults[] =
       &traditional_menu, NULL,
       0, {0,1}, dt_number, ss_none, wad_yes,
       "1 to emulate DOOM's main menu"
-   },   // Reserved TIDs 
+   },
 
    { // killough 3/6/98
       "leds_always_off",
@@ -833,15 +833,6 @@ default_t defaults[] =
       KEYD_PAUSE, {0,255}, dt_number, ss_keys, wad_no,
       "key to pause the game"
    },
-
-   /*
-   {
-      "key_autorun",
-      &key_autorun, NULL,
-      KEYD_CAPSLOCK, {0,255}, dt_number, ss_keys, wad_no,
-      "key to toggle always run mode"
-   },
-   */
 
    {
       "key_chat",

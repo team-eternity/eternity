@@ -2423,7 +2423,6 @@ void P_PlayerOnSpecialFlat(player_t *player)
 
 // sf: rearranged variables
 
-int             levelTime;              // sf
 int             levelTimeLimit;
 int             levelFragLimit; // Ty 03/18/98 Added -frags support
 
@@ -2432,8 +2431,6 @@ void P_UpdateSpecials(void)
    anim_t *anim;
    int    pic;
    int    i;
-
-   levelTime++;
 
    // Downcount level timer, exit level if elapsed
    if(levelTimeLimit && leveltime >= levelTimeLimit*35*60 )
@@ -2531,9 +2528,6 @@ void P_SpawnSpecials(int mapformat)
    
    // sf: changed -frags: not loaded at start of every level
    //     to allow changing by console
-
-   // reset levelTime.
-   levelTime = 0;
 
    // Init special sectors.
    sector = sectors;
