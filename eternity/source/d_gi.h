@@ -254,6 +254,9 @@ typedef struct gamemodeinfo_s
    // Renderer stuff
    int switchEpisode;         // "episode" number for switch texture defs
 
+   // Configuration
+   default_or_t *defaultORs;  // default overrides for configuration file
+
    // Miscellaneous stuff
    const char *endTextName;   // name of end text resource
 

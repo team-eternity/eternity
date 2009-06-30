@@ -71,22 +71,22 @@ extern int screenshot_gamma;                                 // haleyjd  03/06
 
 typedef struct default_s
 {
-  const char *const name;                   // name
-  int  *const location;                     // default variable
-  int  *const current;                      // possible nondefault variable
-  int   const defaultvalue;                 // built-in default value
-  struct {int min, max;} const limit;       // numerical limits
-  enum {dt_number, dt_string} const isstr;  // number or string
-  ss_types const setupscreen;               // setup screen this appears on
-  enum {wad_no, wad_yes} const wad_allowed; // whether it's allowed in wads
-  const char *const help;                   // description of parameter
-
-  // internal fields (initialized implicitly to 0) follow
-
-  struct default_s *first, *next;           // hash table pointers
-  int modified;                             // Whether it's been modified
-  int orig_default;                         // Original default, if modified
-  struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
+   const char *const name;                   // name
+   int  *const location;                     // default variable
+   int  *const current;                      // possible nondefault variable
+   int  defaultvalue;                        // built-in default value
+   struct {int min, max;} const limit;       // numerical limits
+   enum {dt_number, dt_string} const isstr;  // number or string
+   ss_types const setupscreen;               // setup screen this appears on
+   enum {wad_no, wad_yes} const wad_allowed; // whether it's allowed in wads
+   const char *const help;                   // description of parameter
+   
+   // internal fields (initialized implicitly to 0) follow
+   
+   struct default_s *first, *next;           // hash table pointers
+   int modified;                             // Whether it's been modified
+   int orig_default;                         // Original default, if modified
+   struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 } default_t;
 
 // haleyjd 03/14/09: defaultfile_t structure
@@ -106,6 +106,13 @@ typedef struct defaultfile_s
    size_t numcomments;      // number of comments stored
    size_t numcommentsalloc; // number of comments allocated
 } defaultfile_t;
+
+// haleyjd 06/29/09: default overrides
+typedef struct default_or_s
+{
+   const char *name;
+   int defaultvalue;
+} default_or_t;
 
 // killough 11/98:
 default_t *M_LookupDefault(defaultfile_t *df, const char *name);

@@ -1681,6 +1681,53 @@ default_t defaults[] =
    { NULL }         // last entry
 };
 
+//
+// haleyjd 06/29/09: Default Overrides
+//
+// The following tables are mapped through GameModeInfo and are used to 
+// override selected defaults in the primary defaults array above by replacing
+// the default values specified there. This is the cleanest way to provide
+// gamemode-dependent default values for only some of the options that I can
+// think up.
+//
+
+default_or_t HereticDefaultORs[] =
+{
+   // misc
+   { "disk_icon",        0 }, // no disk icon (makes consistent)
+   { "pitched_sounds",   1 }, // pitched sounds should be on
+   { "allowmlook",       1 }, // mlook defaults to on
+   { "wipetype",         2 }, // use crossfade wipe by default
+   { "hud_overlaystyle", 4 }, // use graphical HUD style
+   
+   // compatibility
+   { "comp_terrain",   0 }, // terrain active
+   { "comp_soul",      1 }, // SKULLFLY objects do not bounce
+   { "comp_overunder", 0 }, // 3D object clipping is on
+   
+   // colors
+   // TODO: player color
+   // TODO: additional automap colors
+   { "mapcolor_back",     103     },
+   { "mapcolor_grid",     40      },
+   { "mapcolor_wall",     96      },
+   { "mapcolor_fchg",     110     },
+   { "mapcolor_cchg",     75      },
+   { "mapcolor_tele",     96      },
+   { "mapcolor_secr",     0       },
+   { "mapcolor_exit",     0       },
+   { "mapcolor_unsn",     40      },
+   { "mapcolor_flat",     43      },
+   { "mapcolor_prtl",     43      },
+   { "hu_timecolor",      CR_GRAY },
+   { "hu_levelnamecolor", CR_GRAY },
+   { "hu_coordscolor",    CR_GRAY },
+   { "mess_colour",       CR_GRAY },
+
+   // this must be last
+   { NULL }
+};
+
 // haleyjd 03/14/09: main defaultfile object
 static defaultfile_t maindefaults =
 {
@@ -1727,6 +1774,31 @@ default_t *M_LookupDefault(defaultfile_t *df, const char *name)
        dp && strcasecmp(name, dp->name); dp = dp->next);
 
    return dp;
+}
+
+//
+// M_ApplyGameModeDefaults
+//
+// haleyjd 06/30/09
+//
+static void M_ApplyGameModeDefaults(defaultfile_t *df)
+{
+   default_or_t *ovr = GameModeInfo->defaultORs;
+
+   // not all gamemodes have default overrides
+   if(!ovr)
+      return;
+
+   while(ovr->name)
+   {
+      default_t *def = M_LookupDefault(df, ovr->name);
+
+      // replace the default value
+      if(def)
+         def->defaultvalue = ovr->defaultvalue;
+
+      ++ovr;
+   }
 }
 
 //
@@ -2075,6 +2147,9 @@ void M_LoadDefaults(void)
       else
          df->fileName = strdup(basedefault);
    }
+
+   // haleyjd 06/30/09: apply gamemode defaults first
+   M_ApplyGameModeDefaults(df);
 
    M_LoadDefaultFile(df);
 }

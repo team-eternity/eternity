@@ -20,7 +20,7 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    "System" configuration file, read-only.
+//    "System" configuration file.
 //    Sets some low-level stuff that must be read before the main config
 //    file can be loaded.
 //
@@ -119,12 +119,20 @@ static default_t sysdefaults[] =
    { NULL }
 };
 
+//
+// System Configuration File Object
+//
 static defaultfile_t sysdeffile =
 {
    sysdefaults,
    sizeof(sysdefaults) / sizeof *sysdefaults - 1,
 };
 
+//
+// M_LoadSysConfig
+//
+// Parses the system configuration file from the base folder.
+//
 void M_LoadSysConfig(const char *filename)
 {
    startupmsg("M_LoadSysConfig", "Loading base/system.cfg");
@@ -134,6 +142,11 @@ void M_LoadSysConfig(const char *filename)
    M_LoadDefaultFile(&sysdeffile);
 }
 
+//
+// M_SaveSysConfig
+//
+// Saves values to the system configuration file in the base folder.
+//
 void M_SaveSysConfig(void)
 {
    M_SaveDefaultFile(&sysdeffile);

@@ -325,6 +325,11 @@ char *gi_path_hticreg;
 char *gi_path_sosr;
 
 //
+// Default Override Objects
+//
+extern default_or_t HereticDefaultORs;
+
+//
 // Mission Information Structures
 //
 
@@ -508,6 +513,8 @@ static gamemodeinfo_t giDoomSW =
 
    1,                // switchEpisode
 
+   NULL,             // defaultORs
+
    "ENDOOM",         // endTextName
 };
 
@@ -589,6 +596,8 @@ static gamemodeinfo_t giDoomReg =
    doom_soundnums,   // playerSounds
 
    2,                // switchEpisode
+
+   NULL,             // defaultORs
 
    "ENDOOM",         // endTextName
 };
@@ -672,6 +681,8 @@ static gamemodeinfo_t giDoomRetail =
 
    2,                // switchEpisode
 
+   NULL,             // defaultORs
+
    "ENDOOM",         // endTextName
 };
 
@@ -753,6 +764,8 @@ static gamemodeinfo_t giDoomCommercial =
    doom_soundnums,   // playerSounds
 
    3,                // switchEpisode
+
+   NULL,             // defaultORs
 
    "ENDOOM",         // endTextName
 };
@@ -836,6 +849,8 @@ static gamemodeinfo_t giHereticSW =
    htic_soundnums,   // playerSounds
 
    1,                // switchEpisode
+
+   &HereticDefaultORs, // defaultORs
 
    "ENDTEXT",        // endTextName
 };
@@ -922,6 +937,8 @@ static gamemodeinfo_t giHereticReg =
    htic_soundnums,   // playerSounds
 
    2,                // switchEpisode
+   
+   &HereticDefaultORs, // defaultORs
 
    "ENDTEXT",        // endTextName
 };
