@@ -899,6 +899,21 @@ typedef struct
    int     tag;    // tag
 } pillardata_t;
 
+// haleyjd 06/30/09: waggle floors
+typedef struct
+{
+   thinker_t thinker;
+   sector_t *sector;
+   fixed_t originalHeight;
+   fixed_t accumulator;
+   fixed_t accDelta;
+   fixed_t targetScale;
+   fixed_t scale;
+   fixed_t scaleDelta;
+   int ticker;
+   int state;
+} floorwaggle_t;
+
 // p_spec
 
 // killough 3/7/98: Add generalized scroll effects
@@ -1075,6 +1090,8 @@ void T_MoveElevator(elevator_t *elevator);
 
 void T_MovePillar(pillar_t *pillar);	// joek
 
+void T_FloorWaggle(floorwaggle_t *waggle); // haleyjd
+
 // p_spec
 
 void T_Scroll(scroll_t *);      // killough 3/7/98: scroll effect thinker
@@ -1162,6 +1179,9 @@ int EV_DoDonut(line_t *line);
 int EV_PillarBuild(line_t *line, pillardata_t *pd);	// joek: pillars
 
 int EV_PillarOpen(line_t *line, pillardata_t *pd);
+
+int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
+                        int offset, int timer);
 
 void P_ChangeFloorTex(const char *name, int tag);
 

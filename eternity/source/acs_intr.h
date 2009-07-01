@@ -65,9 +65,10 @@ enum
 //
 typedef struct acscript_s
 {
-   int number;   // the number of this script in ACS itself
-   int numArgs;  // number of arguments this script wants
-   int *code;    // bytecode entry point
+   int number;     // the number of this script in ACS itself
+   int numArgs;    // number of arguments this script wants
+   int *code;      // bytecode entry point
+   boolean isOpen; // if true, is an open script
 
    struct acsthinker_s *threads;
 } acscript_t;

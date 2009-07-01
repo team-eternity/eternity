@@ -95,7 +95,7 @@ result_e T_MovePlane
    switch(floorOrCeiling)
    {
    case 0:
-      move3dsides = (sector->f_attached && demo_version >= 331);
+      move3dsides  = (sector->f_attached  && demo_version >= 331);
       moveattached = (sector->f_asurfaces && demo_version >= 331);
       
       // Moving a floor
@@ -1589,6 +1589,136 @@ void P_ChangeFloorTex(const char *name, int tag)
       sectors[secnum].floorpic = flatnum;
 }
 
+//=============================================================================
+//
+// Waggle Floors
+//
+// haleyjd 06/30/09: joe was supposed to do these but he quit instead :P
+//
+
+#define WGLSTATE_EXPAND 1
+#define WGLSTATE_STABLE 2
+#define WGLSTATE_REDUCE 3
+
+//
+// T_FloorWaggle
+//
+// haleyjd: thinker for floor waggle action.
+//
+void T_FloorWaggle(floorwaggle_t *waggle)
+{
+   fixed_t destheight;
+   fixed_t dist;
+   extern fixed_t FloatBobOffsets[64];
+
+   switch(waggle->state)
+   {
+   case WGLSTATE_EXPAND:
+      if((waggle->scale += waggle->scaleDelta) >= waggle->targetScale)
+      {
+         waggle->scale = waggle->targetScale;
+         waggle->state = WGLSTATE_STABLE;
+      }
+      break;
+   case WGLSTATE_REDUCE:
+      if((waggle->scale -= waggle->scaleDelta) <= 0)
+      { 
+         // Remove
+         /*
+         waggle->sector->floorheight = waggle->originalHeight;
+         P_ChangeSector(waggle->sector, 8);
+         */
+         destheight = waggle->originalHeight;
+         dist       = waggle->originalHeight - waggle->sector->floorz;
+         T_MovePlane(waggle->sector, abs(dist), destheight, 8, 0, 
+                     destheight >= waggle->sector->floorz ? plat_down : plat_up);
+
+         waggle->sector->floordata = NULL;
+         // HEXEN_TODO: P_TagFinished
+         // P_TagFinished(waggle->sector->tag);
+         P_RemoveThinker(&waggle->thinker);
+         return;
+      }
+      break;
+   case WGLSTATE_STABLE:
+      if(waggle->ticker != -1)
+      {
+         if(!--waggle->ticker)
+            waggle->state = WGLSTATE_REDUCE;
+      }
+      break;
+   }
+
+   waggle->accumulator += waggle->accDelta;
+   
+   destheight = 
+      waggle->originalHeight + 
+         FixedMul(FloatBobOffsets[(waggle->accumulator >> FRACBITS) & 63],
+                  waggle->scale);
+   dist = destheight - waggle->sector->floorz;
+
+   T_MovePlane(waggle->sector, abs(dist), destheight, 8, 0, 
+               destheight >= waggle->sector->floorz ? plat_up : plat_down);
+      
+}
+
+//
+// EV_StartFloorWaggle
+//
+int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
+                        int offset, int timer)
+{
+   int           sectorIndex = -1;
+   int           retCode = 0;
+   boolean       manual = false;
+   sector_t      *sector;
+   floorwaggle_t *waggle;
+
+   if(tag == 0)
+   {
+      if(!line || !(sector = line->backsector))
+         return retCode;
+      sectorIndex = sector - sectors;
+      manual = true;
+      goto manual_waggle;
+   }
+   
+   while((sectorIndex = P_FindSectorFromTag(tag, sectorIndex)) >= 0)
+   {
+      sector = &sectors[sectorIndex];
+
+manual_waggle:
+      // Already busy with another thinker
+      if(sector->floordata)
+      {
+         if(manual)
+            return retCode;
+         else
+            continue;
+      }
+
+      retCode = 1;
+      waggle = Z_Malloc(sizeof(*waggle), PU_LEVSPEC, 0);
+      sector->floordata = waggle;      
+      waggle->thinker.function = T_FloorWaggle;
+      P_AddThinker(&waggle->thinker);
+
+      waggle->sector         = sector;
+      waggle->originalHeight = sector->floorheight;
+      waggle->accumulator    = offset * FRACUNIT;
+      waggle->accDelta       = speed << 10;
+      waggle->scale          = 0;
+      waggle->targetScale    = height << 10;
+      waggle->scaleDelta     = waggle->targetScale / (35+((3*35)*height)/255);
+      waggle->ticker         = timer ? timer * 35 : -1;
+      waggle->state          = WGLSTATE_EXPAND;
+
+      if(manual)
+         return retCode;
+   }
+
+   return retCode;
+}
 
 //----------------------------------------------------------------------------
 //

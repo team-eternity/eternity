@@ -4650,7 +4650,11 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 135: // thing spawn
    case 136: // thing projectile gravity
    case 137: // thing spawn no fog
+      *special = 0; // TODO ^^^^
+      break;
    case 138: // floor waggle
+      *special = 397;
+      break;
    // UNUSED: 139
    case 140: // sector sound change
    // UNUSED: 141-255

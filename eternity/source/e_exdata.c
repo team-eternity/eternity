@@ -623,6 +623,9 @@ static struct exlinespec
    { 394, "Slope_FrontFloorToTaggedSlope" },
    { 395, "Slope_FrontCeilingToTaggedSlope" },
    { 396, "Slope_FrontFloorAndCeilingToTaggedSlope" },
+
+   // Floor_Waggle
+   { 397, "Floor_Waggle" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -1975,6 +1978,7 @@ boolean E_IsParamSpecial(short special)
    case 374: // Light_Strobe
    case 375: // Radius_Quake
    case 378: // Line_SetIdentification
+   case 397: // Floor_Waggle
       return true;
    default:
       return false;

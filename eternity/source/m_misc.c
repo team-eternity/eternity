@@ -1735,16 +1735,6 @@ static defaultfile_t maindefaults =
    sizeof defaults / sizeof *defaults - 1,
 };
 
-//static char *defaultfile;
-//static boolean defaults_loaded = false;      // killough 10/98
-
-// killough 10/98: keep track of comments in .cfg files
-//static struct { char *text; int line; } *comments;
-//static size_t comment, comment_alloc;
-//static int config_help_header;  // killough 10/98
-
-//#define NUMDEFAULTS ((unsigned)(sizeof defaults / sizeof *defaults - 1))
-
 // killough 11/98: hash function for name lookup
 static unsigned default_hash(defaultfile_t *df, const char *name)
 {
@@ -1754,6 +1744,12 @@ static unsigned default_hash(defaultfile_t *df, const char *name)
   return hash % df->numdefaults;
 }
 
+//
+// M_LookupDefault
+//
+// Hashes/looks up defaults in the given defaultfile object by name.
+// Returns the default_t object, or NULL if not found.
+//
 default_t *M_LookupDefault(defaultfile_t *df, const char *name)
 {
    register default_t *dp;
@@ -1779,7 +1775,8 @@ default_t *M_LookupDefault(defaultfile_t *df, const char *name)
 //
 // M_ApplyGameModeDefaults
 //
-// haleyjd 06/30/09
+// haleyjd 06/30/09: Overwrites defaults in the defaultfile with values
+// specified by name in the current gamemode's default overrides array.
 //
 static void M_ApplyGameModeDefaults(defaultfile_t *df)
 {
@@ -2154,6 +2151,11 @@ void M_LoadDefaults(void)
    M_LoadDefaultFile(df);
 }
 
+//=============================================================================
+//
+// File IO Routines
+//
+
 //
 // M_WriteFile
 //
@@ -2217,6 +2219,22 @@ int M_ReadFile(char const *name, byte **buffer)
    return -1;
 }
 
+// 
+// M_FileLength
+//
+// Gets the length of a file given its handle.
+// FIXME/TODO: don't use POSIX fstat; is slower and less portable
+// haleyjd 03/09/06: made global
+//
+int M_FileLength(int handle)
+{
+   struct stat fileinfo;
+   if(fstat(handle, &fileinfo) == -1)
+      I_Error("M_FileLength: failure in fstat\n");
+   return fileinfo.st_size;
+}
+
+//=============================================================================
 //
 // SCREEN SHOTS
 //
@@ -2254,8 +2272,8 @@ typedef struct
 // haleyjd 09/27/07: Changed pcx->palette_type from 2 to 1.
 // According to authoritative ZSoft documentation, 1 = Color, 2 == Grayscale.
 //
-boolean WritePCXfile(char *filename, byte *data, int width,
-                     int height, byte *palette)
+static boolean WritePCXfile(char *filename, byte *data, int width,
+                            int height, byte *palette)
 {
    int    i;
    int    length;
@@ -2381,11 +2399,11 @@ typedef struct tagBITMAPINFOHEADER BITMAPINFOHEADER;
 
 //
 // WriteBMPfile
+//
 // jff 3/30/98 Add capability to write a .BMP file (256 color uncompressed)
 //
-
-boolean WriteBMPfile(char *filename, byte *data, int width,
-                     int height, byte *palette)
+static boolean WriteBMPfile(char *filename, byte *data, int width,
+                            int height, byte *palette)
 {
    int i, wid;
    BITMAPFILEHEADER bmfh;
@@ -2487,7 +2505,7 @@ boolean WriteBMPfile(char *filename, byte *data, int width,
 // the code is faster, and no annoying "screenshot" message appears.
 //
 // killough 10/98: improved error-handling
-
+//
 void M_ScreenShot(void)
 {
    boolean success = false;
@@ -2528,7 +2546,8 @@ void M_ScreenShot(void)
          // (PU_CACHE could cause crash)
          
          byte *pal = W_CacheLumpName ("PLAYPAL", PU_STATIC);
-         V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
+         V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, 
+                       vbscreen.width, vbscreen.height);
 
          // save the pcx file
          //jff 3/30/98 write pcx or bmp depending on mode
@@ -2561,6 +2580,11 @@ void M_ScreenShot(void)
    else
       S_StartSound(NULL, GameModeInfo->c_BellSound);
 }
+
+//=============================================================================
+//
+// Portable non-standard libc functions
+//
 
 // haleyjd: portable strupr function
 char *M_Strupr(char *string)
@@ -2645,7 +2669,16 @@ char *M_Itoa(int value, char *string, int radix)
 #endif
 }
 
+//=============================================================================
+//
+// Filename and Path Routines
+//
+
+//
+// M_GetFilePath
+//
 // haleyjd: general file path name extraction
+//
 void M_GetFilePath(const char *fn, char *base, size_t len)
 {
    boolean found_slash = false;
@@ -2679,21 +2712,9 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
       *base = '.';
 }
 
-// 
-// M_FileLength
 //
-// Gets the length of a file given its handle.
-// FIXME/TODO: don't use POSIX fstat; is slower and less portable
-// haleyjd 03/09/06: made global
+// M_ExtractFileBase
 //
-int M_FileLength(int handle)
-{
-   struct stat fileinfo;
-   if(fstat(handle, &fileinfo) == -1)
-      I_Error("M_FileLength: failure in fstat\n");
-   return fileinfo.st_size;
-}
-
 void M_ExtractFileBase(const char *path, char *dest)
 {
    const char *src = path + strlen(path) - 1;
@@ -2716,6 +2737,8 @@ void M_ExtractFileBase(const char *path, char *dest)
          *dest++ = toupper(*src++);
 }
 
+//
+// M_AddDefaultExtension
 //
 // 1/18/98 killough: adds a default extension to a path
 // Note: Backslashes are treated specially, for MS-DOS.
@@ -2762,6 +2785,17 @@ void M_NormalizeSlashes(char *str)
             p++;
 }
 
+//
+// M_StringAlloca
+//
+// haleyjd: This routine takes any number of strings and a number of extra
+// characters, calculates their combined length, and calls Z_Alloca to create
+// a temporary buffer of that size. This is extremely useful for allocation of
+// file paths, and is used extensively in d_main.c.  The pointer returned is
+// to a temporary Z_Alloca buffer, which lives until the next main loop
+// iteration, so don't cache it. Note that this idiom is not possible with the
+// normal non-standard alloca function, which allocates stack space.
+//
 int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 {
    va_list args;

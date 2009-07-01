@@ -2102,6 +2102,7 @@ boolean P_ChangeSector(sector_t *sector, int crunch)
 
 //
 // P_CheckSector
+//
 // jff 3/19/98 added to just check monsters on the periphery
 // of a moving sector instead of all in bounding box of the
 // sector. Both more accurate and faster.

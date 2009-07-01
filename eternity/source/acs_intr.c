@@ -1200,11 +1200,11 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
       vm->scripts[i].numArgs = LONG(*rover++); // number of args
 
       // handle open scripts: scripts > 1000 should start at the
-      // beginning of the level
+      // beginning of the level      
       if(vm->scripts[i].number >= 1000)
       {
          vm->scripts[i].number -= 1000;
-         ACS_runOpenScript(vm, &(vm->scripts[i]), i, vm->id);
+         vm->scripts[i].isOpen = true;
       }
    }
 
@@ -1221,6 +1221,13 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
       for(i = 0; i < numstrings; ++i)
          vm->stringtable[i] = (char *)(vm->data + LONG(*rover++));
    }
+
+   // haleyjd 06/30/09: open scripts must be started *here*, not above.
+   for(i = 0; i < vm->numScripts; ++i)
+   {
+      if(vm->scripts[i].isOpen)
+         ACS_runOpenScript(vm, &(vm->scripts[i]), i, vm->id);
+   }   
 }
 
 //
