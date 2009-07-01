@@ -1515,7 +1515,7 @@ static void G_DoCompleted(void)
          gameaction = ga_victory;
          return;
       case 9:
-         for(i=0 ; i<MAXPLAYERS ; i++)
+         for(i = 0; i < MAXPLAYERS; ++i)
             players[i].didsecret = true;
          break;
       }
@@ -1618,6 +1618,38 @@ static void G_DoWorldDone(void)
    AM_clearMarks(); //jff 4/12/98 clear any marks on the automap
 }
 
+//
+// G_ForceFinale
+//
+// haleyjd 07/01/09: Used by the Hexen Teleport_EndGame special.
+// If the map does not have a finale sequence defined, it will be given
+// a default sequence.
+//
+void G_ForceFinale(void)
+{
+   // in DOOM 2, we want a cast call
+   if(GameModeInfo->id == commercial)
+      LevelInfo.endOfGame = true;
+
+   // modify finale type?
+   if(LevelInfo.finaleType == FINALE_TEXT)
+   {
+      if(GameModeInfo->type == Game_DOOM)      
+         LevelInfo.finaleType = FINALE_DOOM_CREDITS;
+      else if(GameModeInfo->type == Game_Heretic)
+         LevelInfo.finaleType = FINALE_HTIC_CREDITS;
+   }
+
+   // no text defined? make up something.
+   if(!LevelInfo.interText)
+      LevelInfo.interText = "You have won.";
+
+   // set other variables for consistency
+   LevelInfo.killFinale = false;
+   LevelInfo.finaleSecretOnly = false;
+
+   gameaction = ga_victory;
+}
 
 #define VERSIONSIZE   16
 

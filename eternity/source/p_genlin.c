@@ -41,6 +41,7 @@
 #include "c_runcmd.h"
 #include "c_io.h"
 #include "c_net.h"
+#include "g_game.h"
 
 //////////////////////////////////////////////////////////
 //
@@ -2080,7 +2081,12 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
       success = EV_StartFloorWaggle(line, args[0], args[1], args[2], args[3], args[4]);
       break;
    case 398: // Thing_Spawn
-      success = EV_ThingSpawn(args, true);
+   case 399: // Thing_SpawnNoFog
+      success = EV_ThingSpawn(args, (special == 398));
+      break;
+   case 400: // Teleport_EndGame
+      G_ForceFinale();
+      success = true;
       break;
    default:
       break;
@@ -2502,6 +2508,7 @@ SCRIPT_SPEC(374, light_strobe)
 SCRIPT_SPEC(375, radius_quake)
 SCRIPT_SPEC(397, floor_waggle)
 SCRIPT_SPEC(398, thing_spawn)
+SCRIPT_SPEC(399, thing_spawnnofog)
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
@@ -2578,6 +2585,7 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_SetLineTextureTag",           sm_changelinetextag            },
    { "_Floor_Waggle",                sm_floor_waggle                },
    { "_Thing_Spawn",                 sm_thing_spawn                 },
+   { "_Thing_SpawnNoFog",            sm_thing_spawnnofog            },
    { NULL, NULL }
 };
 

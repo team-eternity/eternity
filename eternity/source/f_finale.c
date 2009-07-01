@@ -77,7 +77,7 @@ const char *f_fontname;
 void F_Init(void)
 {
    if(!(f_font = E_FontForName(f_fontname)))
-      I_Error("F_InitFont: bad EDF font name %s\n", f_fontname);
+      I_Error("F_Init: bad EDF font name %s\n", f_fontname);
 }
 
 //
@@ -583,77 +583,6 @@ void F_CastDrawer(void)
    else
       V_DrawPatch(160, 170, &vbscreen, patch);
 }
-
-
-#if 0
-//
-// F_DrawPatchCol
-//
-// haleyjd 10/12/08: extinct
-//
-static void F_DrawPatchCol(int x, patch_t *patch, int col)
-{
-  const column_t *column = 
-    (const column_t *)((byte *) patch + LONG(patch->columnofs[col]));
-
-  // step through the posts in a column
-  // SoM 2-4-04: ANYRES
-  /*if (hires)
-    while (column->topdelta != 0xff)
-      {
-	byte *desttop = screens[0] + x*2;
-	const byte *source = (byte *) column + 3;
-	byte *dest = desttop + column->topdelta*SCREENWIDTH*4;
-	int count = column->length;
-	for (;count--; dest += SCREENWIDTH*4)
-	  dest[0] = dest[SCREENWIDTH*2] = dest[1] = dest[SCREENWIDTH*2+1] = 
-	    *source++;
-	column = (column_t *)(source+1);
-      }
-  else*/
-   // SoM: ANYRES
-   if(video.scaled)
-   {
-      byte *desttop = vbscreen.data + x;
-
-      while (column->topdelta != 0xff)
-      {
-         register const byte *source = (byte *) column + 3;
-         register byte *dest = desttop + vbscreen.x1lookup[column->topdelta] * 
-                              vbscreen.pitch;
-         register int count = vbscreen.x2lookup[column->topdelta + column->length - 1] -
-                              vbscreen.x1lookup[column->topdelta] + 1;
-         register fixed_t frac;
-
-         fixed_t step;
-
-         frac = 0;
-         step = video.ystep;
-
-         for (;count--; dest += video.width)
-         {
-            *dest = source[frac >> FRACBITS];
-            frac += step;
-         }
-
-         column = (column_t *)(source + column->length + 1);
-      }
-   }
-   else
-   {
-      while (column->topdelta != 0xff)
-      {
-         byte *desttop = vbscreen.data + x;
-         const byte *source = (byte *) column + 3;
-         byte *dest = desttop + column->topdelta*SCREENWIDTH;
-         int count = column->length;
-         for (;count--; dest += vbscreen.pitch)
-            *dest = *source++;
-         column = (column_t *)(source+1);
-      }
-   }
-}
-#endif
 
 //
 // F_BunnyScroll

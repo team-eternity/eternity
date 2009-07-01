@@ -4566,8 +4566,10 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 72:  // thrust mobj
    case 73:  // damage mobj
    case 74:  // teleport new map (hubs)
-   case 75:  // teleport end game
       *special = 0; // TODO ^^^^
+      break;
+   case 75:  // teleport end game
+      *special = 400;
       break;
    // UNUSED: 76-79
    case 80:  // ACS execute
@@ -4653,8 +4655,10 @@ void P_ConvertHexenLineSpec(short *special, long *args)
       *special = 398;
       break;
    case 136: // thing projectile gravity
-   case 137: // thing spawn no fog
       *special = 0; // TODO ^^^^
+      break;
+   case 137: // thing spawn no fog
+      *special = 399;
       break;
    case 138: // floor waggle
       *special = 397;

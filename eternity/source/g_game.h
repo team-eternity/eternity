@@ -53,6 +53,7 @@ void G_ScrambleRand();
 void G_ExitLevel(void);
 void G_SecretExitLevel(void);
 void G_WorldDone(void);
+void G_ForceFinale(void);
 void G_Ticker(void);
 void G_ScreenShot(void);
 void G_ReloadDefaults(void);     // killough 3/1/98: loads game defaults
