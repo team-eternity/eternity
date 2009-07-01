@@ -1065,10 +1065,10 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
    tm->x = x;
    tm->y = y;
    
-   tm->bbox[BOXTOP] = y + tm->thing->radius;
+   tm->bbox[BOXTOP]    = y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
-   tm->bbox[BOXRIGHT] = x + tm->thing->radius;
-   tm->bbox[BOXLEFT] = x - tm->thing->radius;
+   tm->bbox[BOXRIGHT]  = x + tm->thing->radius;
+   tm->bbox[BOXLEFT]   = x - tm->thing->radius;
    
    newsubsec = R_PointInSubsector(x,y);
    tm->floorline = tm->blockline = tm->ceilingline = NULL; // killough 8/1/98

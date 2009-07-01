@@ -2079,6 +2079,9 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
    case 397: // Floor_Waggle
       success = EV_StartFloorWaggle(line, args[0], args[1], args[2], args[3], args[4]);
       break;
+   case 398: // Thing_Spawn
+      success = EV_ThingSpawn(args, true);
+      break;
    default:
       break;
    }
@@ -2498,6 +2501,7 @@ SCRIPT_SPEC(373, light_flicker)
 SCRIPT_SPEC(374, light_strobe)
 SCRIPT_SPEC(375, radius_quake)
 SCRIPT_SPEC(397, floor_waggle)
+SCRIPT_SPEC(398, thing_spawn)
 
 AMX_NATIVE_INFO genlin_Natives[] =
 {
@@ -2573,6 +2577,7 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_SetLineTexture",              sm_changelinetex               },
    { "_SetLineTextureTag",           sm_changelinetextag            },
    { "_Floor_Waggle",                sm_floor_waggle                },
+   { "_Thing_Spawn",                 sm_thing_spawn                 },
    { NULL, NULL }
 };
 

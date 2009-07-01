@@ -4647,7 +4647,11 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 132: // thing remove
    case 133: // thing destroy
    case 134: // thing projectile
+      *special = 0; // TODO ^^^^
+      break;
    case 135: // thing spawn
+      *special = 398;
+      break;
    case 136: // thing projectile gravity
    case 137: // thing spawn no fog
       *special = 0; // TODO ^^^^

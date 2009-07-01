@@ -672,7 +672,7 @@ boolean P_CheckPositionExt(mobj_t *mo, fixed_t x, fixed_t y)
    mo->flags &= ~MF_PICKUP;
    mo->intflags |= MIF_NOTOUCH; // haleyjd: don't blow up touchies!
 
-   xygood = P_CheckPosition3D(mo, x, y);
+   xygood = P_CheckPosition(mo, x, y);
    mo->flags = flags;
    mo->intflags &= ~MIF_NOTOUCH;
 

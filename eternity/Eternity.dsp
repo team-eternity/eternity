@@ -904,6 +904,10 @@ SOURCE=.\Source\p_telept.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\p_things.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\p_tick.c
 # End Source File
 # Begin Source File

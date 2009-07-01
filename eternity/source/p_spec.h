@@ -1212,6 +1212,10 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean us
 // haleyjd 02/23/04
 extern mobj_t *genDoorThing;
 
+// p_things
+
+int EV_ThingSpawn(long *args, boolean fog);
+
 ////////////////////////////////////////////////////////////////
 //
 // Linedef and sector special thinker spawning
