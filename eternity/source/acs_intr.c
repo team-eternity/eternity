@@ -252,16 +252,53 @@ static void ACS_removeThread(acsthinker_t *script)
 }
 
 //
+// ACS_scriptFinished
+//
+// Called when a script stops executing. Looks for other scripts in the
+// same VM which are waiting on this one. All threads of the specified
+// script must be terminated first.
+//
+static void ACS_scriptFinished(acsthinker_t *script)
+{
+   int i;
+   acsvm_t *vm          = script->vm;
+   acscript_t *acscript = script->acscript;
+   acsthinker_t *th;
+
+   // first check that all threads of the same script have terminated
+   if(acscript->threads)
+      return; // nope
+
+   // find scripts waiting on this one (same VM only)
+   
+   // loop on vm scripts array
+   for(i = 0; i < vm->numScripts; ++i)
+   {
+      // loop on threads list for each script
+      for(th = vm->scripts[i].threads; th; th = th->next)
+      {
+         if(th->sreg  == ACS_STATE_WAITSCRIPT &&
+            th->sdata == acscript->number)
+         {
+            // wake up the script
+            th->sreg  = ACS_STATE_RUNNING;
+            th->sdata = 0;
+         }
+      }
+   }
+}
+
+//
 // ACS_stopScript
 //
 // Ultimately terminates the script and removes its thinker.
 //
 static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
 {
-   // acscript->sreg = ACS_STATE_STOPPED;   
    ACS_removeThread(script);
    
-   // TODO: notify waiting scripts that this script has ended
+   // notify waiting scripts that this script has ended
+   ACS_scriptFinished(script);
 
    P_SetTarget(&script->trigger, NULL);
 
@@ -412,7 +449,6 @@ static int ACS_countThings(int type, int tid)
 
    return count;
 }
-
 
 //
 // ACS_countPlayers

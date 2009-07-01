@@ -150,7 +150,7 @@ typedef struct acsvm_s
    qstring_t  printBuffer;   // used for message printing
    acscript_t *scripts;      // the scripts...
    int        numScripts;    // ... and how many there are.
-   boolean    loaded;        // for static vms, if it's valid or not
+   boolean    loaded;        // for static VMs, if it's valid or not
    int        id;            // vm id number
 } acsvm_t;
 

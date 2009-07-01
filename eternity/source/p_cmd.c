@@ -46,6 +46,7 @@
 #include "r_draw.h"
 #include "mn_engin.h"
 #include "am_map.h"
+#include "acs_intr.h"
 
 /***************************************************************************
                 'defines': string values for variables
@@ -328,6 +329,21 @@ CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
       players[0].mo->momz = 10*FRACUNIT;
 }
 
+CONSOLE_COMMAND(puke, cf_notnet)
+{
+   int i;
+   long args[5] = { 0, 0, 0, 0, 0 };
+
+   if(c_argc < 1)
+      return;
+
+   for(i = 1; i < c_argc; ++i)
+      args[i - 1] = atoi(c_argv[i]);
+
+   ACS_StartScript(atoi(c_argv[0]), gamemap, args,
+                   players[cmdsrc].mo, NULL, 0, NULL);
+}
+
 void P_AddCommands(void)
 {
    C_AddCommand(creator);
@@ -365,12 +381,12 @@ void P_AddCommands(void)
    C_AddCommand(wipewait);
    C_AddCommand(wipetype);
    C_AddCommand(am_drawnodelines);
+
+   C_AddCommand(spacejump);
+   C_AddCommand(puke);
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();
-
-   // haleyjd: FIXME: DEBUG
-   C_AddCommand(spacejump);
 }
 
 // EOF
