@@ -287,6 +287,10 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 
    for(i = 0; i < numswitches * 2; ++i)
    {
+      // haleyjd 07/02/09: we do not match "-" as a switch texture
+      if(switchlist[i] == 0)
+         continue;
+
       if(switchlist[i] == texTop) // if an upper texture
       {
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture

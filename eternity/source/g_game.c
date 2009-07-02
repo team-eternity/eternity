@@ -1629,12 +1629,10 @@ void G_ForceFinale(void)
 {
    // in DOOM 2, we want a cast call
    if(GameModeInfo->id == commercial)
-      LevelInfo.endOfGame = true;
-
-   // modify finale type?
-   if(LevelInfo.finaleType == FINALE_TEXT)
+      LevelInfo.endOfGame = true;   
+   else if(LevelInfo.finaleType == FINALE_TEXT) // modify finale type?
    {
-      if(GameModeInfo->type == Game_DOOM)      
+      if(GameModeInfo->type == Game_DOOM)
          LevelInfo.finaleType = FINALE_DOOM_CREDITS;
       else if(GameModeInfo->type == Game_Heretic)
          LevelInfo.finaleType = FINALE_HTIC_CREDITS;

@@ -4042,6 +4042,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    static int ambienceType = -1;
    static int enviroType = -1;
    static int vileFireType = -1;
+   static int spawnSpotType = -1;
 
    fixed_t  x, y, z;
    mobj_t   *newmobj;
@@ -4051,11 +4052,12 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // resolve EDF types (done once for efficiency)
    if(fountainType == -1)
    {
-      fountainType = E_ThingNumForName("EEParticleFountain");
-      dripType     = E_ThingNumForName("EEParticleDrip");
-      ambienceType = E_ThingNumForName("EEAmbience");
-      enviroType   = E_ThingNumForName("EEEnviroSequence");
-      vileFireType = E_ThingNumForName("VileFire");
+      fountainType  = E_ThingNumForName("EEParticleFountain");
+      dripType      = E_ThingNumForName("EEParticleDrip");
+      ambienceType  = E_ThingNumForName("EEAmbience");
+      enviroType    = E_ThingNumForName("EEEnviroSequence");
+      vileFireType  = E_ThingNumForName("VileFire");
+      spawnSpotType = E_ThingNumForName("BossSpawnSpot");
    }
 
    // if it's a missile, shoot it
@@ -4165,6 +4167,9 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       if(envnum == 64)
          envnum = 0;
    }
+
+   if(type == spawnSpotType)
+      P_SpawnBrainTargets();
 
    // adjust count* flags to avoid messing up the map
 

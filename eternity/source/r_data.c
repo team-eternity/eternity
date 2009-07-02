@@ -1360,7 +1360,7 @@ int R_TextureNumForName(const char *name)  // const added -- killough
       
       if(i == -1)
       {
-         C_Printf(FC_ERROR "texture %.8s not found\n", name);
+         C_Printf(FC_ERROR "Texture %.8s not found\n", name);
          return 0; // haleyjd: zero means no texture
       }
    }
