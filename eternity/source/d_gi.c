@@ -37,6 +37,7 @@
 #include "p_info.h"
 #include "info.h"
 #include "e_things.h"
+#include "f_finale.h"
 
 // definitions
 
@@ -95,6 +96,10 @@
 #define BANNER_HTIC_REG  "Heretic Registered Startup"
 #define BANNER_HTIC_SOSR "Heretic: Shadow of the Serpent Riders"
 #define BANNER_UNKNOWN   "Public DOOM"
+
+// Default finales caused by Teleport_EndGame special
+#define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
+#define DEF_HTIC_FINALE  FINALE_HTIC_CREDITS
 
 // globals
 
@@ -568,6 +573,7 @@ static gamemodeinfo_t giDoomSW =
    mus_inter,         // interMusNum
    &giDoomFText,      // ftextinfo
    &DoomIntermission, // interfuncs
+   DEF_DOOM_FINALE,   // teleEndGameFinaleType
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -655,6 +661,7 @@ static gamemodeinfo_t giDoomReg =
    mus_inter,        // interMusNum
    &giDoomFText,     // ftextinfo
    &DoomIntermission,// interfuncs
+   DEF_DOOM_FINALE,  // teleEndGameFinaleType
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -742,6 +749,7 @@ static gamemodeinfo_t giDoomRetail =
    mus_inter,        // interMusNum
    &giDoomFText,     // ftextinfo
    &DoomIntermission,// interfuncs
+   DEF_DOOM_FINALE,  // teleEndGameFinaleType
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -767,7 +775,8 @@ static gamemodeinfo_t giDoomCommercial =
 {
    commercial,              // id
    Game_DOOM,               // type
-   GIF_HASDISK | GIF_MAPXY | GIF_HASEXITSOUNDS | GIF_WOLFHACK, // flags
+   GIF_HASDISK | GIF_MAPXY | GIF_HASEXITSOUNDS | GIF_WOLFHACK | 
+   GIF_SETENDOFGAME, // flags
 
    VNAME_DOOM2,      // versionName
    BANNER_DOOM2,     // startupBanner
@@ -829,6 +838,7 @@ static gamemodeinfo_t giDoomCommercial =
    mus_dm2int,       // interMusNum
    &giDoomFText,     // ftextinfo
    &DoomIntermission,// interfuncs
+   FINALE_TEXT,      // teleEndGameFinaleType
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -917,6 +927,7 @@ static gamemodeinfo_t giHereticSW =
    hmus_intr,        // interMusNum
    &giHticFText,     // ftextinfo
    &HticIntermission,// interfuncs
+   DEF_HTIC_FINALE,  // teleEndGameFinaleType
 
    H_music,          // s_music
    hmus_None,        // musMin
@@ -1009,6 +1020,7 @@ static gamemodeinfo_t giHereticReg =
    hmus_intr,        // interMusNum
    &giHticFText,     // ftextinfo
    &HticIntermission,// interfuncs
+   DEF_HTIC_FINALE,  // teleEndGameFinaleType
 
    H_music,          // s_music
    hmus_None,        // musMin

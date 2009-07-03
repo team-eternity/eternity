@@ -127,6 +127,7 @@ typedef struct exitrule_s
 #define GIF_HASMADMELEE   0x00000080 // has mad melee when player dies in SP
 #define GIF_HASEXITSOUNDS 0x00000100 // has sounds at exit
 #define GIF_WOLFHACK      0x00000200 // is subject to German-edition restriction
+#define GIF_SETENDOFGAME  0x00000400 // Teleport_EndGame sets LevelInfo.endOfGame
 
 // Game mode handling - identify IWAD version
 //  to handle IWAD dependent animations etc.
@@ -273,6 +274,7 @@ typedef struct gamemodeinfo_s
    int interMusNum;           // intermission music number
    gitextmetric_t *ftextinfo; // finale text info
    interfns_t *interfuncs;    // intermission function pointers
+   int teleEndGameFinaleType; // Teleport_EndGame causes this finale by default
 
    // Sound
    musicinfo_t *s_music;      // pointer to musicinfo_t (sounds.h)
