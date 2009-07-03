@@ -447,6 +447,7 @@ static gamemodeinfo_t giDoomSW =
    BANNER_DOOM_SW,   // startupBanner
    &gi_path_doomsw,  // iwadPath
    
+   demostates_doom,  // demostates
    170,              // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -531,6 +532,7 @@ static gamemodeinfo_t giDoomReg =
    BANNER_DOOM_REG,  // startupBanner
    &gi_path_doomreg, // iwadPath
    
+   demostates_doom,  // demostates
    170,              // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -615,6 +617,7 @@ static gamemodeinfo_t giDoomRetail =
    BANNER_DOOM_RET,  // startupBanner
    &gi_path_doomu,   // iwadPath
    
+   demostates_udoom, // demostates
    170,              // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -699,6 +702,7 @@ static gamemodeinfo_t giDoomCommercial =
    BANNER_DOOM2,     // startupBanner
    &gi_path_doom2,   // iwadPath
 
+   demostates_doom2, // demostates
    11*TICRATE,       // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -784,6 +788,7 @@ static gamemodeinfo_t giHereticSW =
    BANNER_HTIC_SW,   // startupBanner
    &gi_path_hticsw,  // iwadPath
 
+   demostates_hsw,   // demostates
    210,              // titleTics
    140,              // advisorTics
    200,              // pageTics
@@ -872,6 +877,7 @@ static gamemodeinfo_t giHereticReg =
    BANNER_HTIC_REG,  // startupBanner
    &gi_path_hticreg, // iwadPath
 
+   demostates_hreg,  // demostates
    210,              // titleTics
    140,              // advisorTics
    200,              // pageTics

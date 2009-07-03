@@ -445,98 +445,69 @@ static void D_DrawTitleA(const char *name)
 
 // killough 11/98: tabulate demo sequences
 
-typedef void (*dsfunc_t)(const char *);
-
-typedef struct demostate_s
+const demostate_t demostates_doom[] =
 {
-   dsfunc_t func;
-   char *name;
-} demostate_t;
+   { D_DrawTitle,       "TITLEPIC" }, // shareware, registered
+   { G_DeferedPlayDemo, "DEMO1"    },
+   { D_SetPageName,     NULL       },
+   { G_DeferedPlayDemo, "DEMO2"    },
+   { D_SetPageName,     "HELP2"    },
+   { G_DeferedPlayDemo, "DEMO3"    },
+   { NULL }
+};
 
-static const demostate_t demostates[][NumGameModes] =
+const demostate_t demostates_doom2[] =
 {
-   {
-      { D_DrawTitle,      "TITLEPIC" }, // shareware
-      { D_DrawTitle,      "TITLEPIC" }, // registerd
-      { D_DrawTitle,      "TITLEPIC" }, // retail
-      { D_DrawTitle,      "TITLEPIC" }, // commercial
-      { D_DrawTitle,      "TITLE"    }, // heretic shareware
-      { D_DrawTitle,      "TITLE"    }, // heretic registered/sosr
-      { D_SetPageName,     NULL      }, // indetermined - haleyjd 04/01/08
-   },
+   { D_DrawTitle,       "TITLEPIC" }, // commercial
+   { G_DeferedPlayDemo, "DEMO1"    },
+   { D_SetPageName,     NULL       },
+   { G_DeferedPlayDemo, "DEMO2"    },
+   { D_SetPageName,     "CREDIT"   },
+   { G_DeferedPlayDemo, "DEMO3"    },
+   { NULL }
+};
 
-   {
-      { G_DeferedPlayDemo, "DEMO1" },
-      { G_DeferedPlayDemo, "DEMO1" },
-      { G_DeferedPlayDemo, "DEMO1" },
-      { G_DeferedPlayDemo, "DEMO1" },
-      { D_DrawTitleA,      "TITLE" },
-      { D_DrawTitleA,      "TITLE" },
-      { NULL },
-   },
+const demostate_t demostates_udoom[] =
+{
+   { D_DrawTitle,       "TITLEPIC" }, // retail
+   { G_DeferedPlayDemo, "DEMO1"    },
+   { D_SetPageName,     NULL       },
+   { G_DeferedPlayDemo, "DEMO2"    },
+   { D_DrawTitle,       "TITLEPIC" },
+   { G_DeferedPlayDemo, "DEMO3"    },
+   { D_SetPageName,     "CREDIT"   },
+   { G_DeferedPlayDemo, "DEMO4"    },
+   { NULL }
+};
 
-   {
-      { D_SetPageName,     NULL    },
-      { D_SetPageName,     NULL    },
-      { D_SetPageName,     NULL    },
-      { D_SetPageName,     NULL    },
-      { G_DeferedPlayDemo, "DEMO1" },
-      { G_DeferedPlayDemo, "DEMO1" },
-   },
+const demostate_t demostates_hsw[] =
+{
+   { D_DrawTitle,       "TITLE" }, // heretic shareware
+   { D_DrawTitleA,      "TITLE" },
+   { G_DeferedPlayDemo, "DEMO1" },
+   { D_SetPageName,     "ORDER" },
+   { G_DeferedPlayDemo, "DEMO2" },
+   { D_SetPageName,     NULL    },
+   { G_DeferedPlayDemo, "DEMO3" },
+   { NULL }
+};
 
-   {
-      { G_DeferedPlayDemo, "DEMO2"  },
-      { G_DeferedPlayDemo, "DEMO2"  },
-      { G_DeferedPlayDemo, "DEMO2"  },
-      { G_DeferedPlayDemo, "DEMO2"  },
-      { D_SetPageName,     "ORDER"  },
-      { D_SetPageName,     "CREDIT" },
-   },
+const demostate_t demostates_hreg[] =
+{
+   { D_DrawTitle,       "TITLE"  }, // heretic registered/sosr
+   { D_DrawTitleA,      "TITLE"  },
+   { G_DeferedPlayDemo, "DEMO1"  },
+   { D_SetPageName,     "CREDIT" },
+   { G_DeferedPlayDemo, "DEMO2"  },
+   { D_SetPageName,     NULL     },
+   { G_DeferedPlayDemo, "DEMO3"  },
+   { NULL }
+};
 
-   {
-      { D_SetPageName,     "HELP2"    },
-      { D_SetPageName,     "HELP2"    },
-      { D_SetPageName,     "CREDIT"   },
-      { D_DrawTitle,       "TITLEPIC" },
-      { G_DeferedPlayDemo, "DEMO2"    },
-      { G_DeferedPlayDemo, "DEMO2"    },
-   },
-
-   {
-      { G_DeferedPlayDemo, "DEMO3" },
-      { G_DeferedPlayDemo, "DEMO3" },
-      { G_DeferedPlayDemo, "DEMO3" },
-      { G_DeferedPlayDemo, "DEMO3" },
-      { D_SetPageName,     NULL    },
-      { D_SetPageName,     NULL    },
-   },
-
-   {
-      { NULL },
-      { NULL },
-      { NULL },
-      { D_SetPageName,     "CREDIT" },
-      { G_DeferedPlayDemo, "DEMO3"  },
-      { G_DeferedPlayDemo, "DEMO3"  },
-   },
-
-   {
-      { NULL },
-      { NULL },
-      { NULL },
-      { G_DeferedPlayDemo, "DEMO4"  },
-      { NULL },
-      { NULL },
-   },
-
-   {
-      { NULL },
-      { NULL },
-      { NULL },
-      { NULL },
-      { NULL },
-      { NULL },
-   }
+const demostate_t demostates_unknown[] =
+{
+   { D_SetPageName, NULL }, // indetermined - haleyjd 04/01/08
+   { NULL }
 };
 
 //
@@ -546,6 +517,7 @@ static const demostate_t demostates[][NumGameModes] =
 
 void D_DoAdvanceDemo(void)
 {
+   const demostate_t *demostates = GameModeInfo->demostates;
    const demostate_t *state;
 
    players[consoleplayer].playerstate = PST_LIVE;  // not reborn
@@ -557,12 +529,12 @@ void D_DoAdvanceDemo(void)
 
    // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
    // demo state resource names
-   state = &(demostates[++demosequence][GameModeInfo->id]);
+   state = &(demostates[++demosequence]);
 
    if(!state->func) // time to wrap?
    {
       demosequence = 0;
-      state = &(demostates[0][GameModeInfo->id]);
+      state = &(demostates[0]);
    }
 
    state->func(DEH_String(state->name));

@@ -86,6 +86,22 @@ enum
    MN_SND_NUMSOUNDS,
 };
 
+// haleyjd 07/02/09: moved demostate_t to header for GameModeInfo
+
+typedef void (*dsfunc_t)(const char *);
+
+typedef struct demostate_s
+{
+   dsfunc_t func;
+   char *name;
+} demostate_t;
+
+extern const demostate_t demostates_doom[];
+extern const demostate_t demostates_doom2[];
+extern const demostate_t demostates_udoom[];
+extern const demostate_t demostates_hsw[];
+extern const demostate_t demostates_hreg[];
+
 // Game Mode Flags
 
 #define GIF_HASDISK      0x00000001 // has flashing io disk
@@ -178,6 +194,7 @@ typedef struct gamemodeinfo_s
    char **iwadPath;           // iwad path variable
    
    // demo state information
+   const demostate_t *demostates; // demostates table
    int titleTics;             // length of time to show title
    int advisorTics;           // for Heretic, len. to show advisory
    int pageTics;              // length of general demo state pages
