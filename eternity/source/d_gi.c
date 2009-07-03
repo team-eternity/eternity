@@ -98,7 +98,7 @@
 
 // globals
 
-// holds the address of the gameinfo_t for the current gamemode,
+// holds the address of the gamemodeinfo_t for the current gamemode,
 // determined at startup
 gamemodeinfo_t *GameModeInfo;
 
@@ -234,6 +234,7 @@ static int hticMenuSounds[MN_SND_NUMSOUNDS] =
    sfx_keyup,   // key left/right
 };
 
+// gamemode-dependent menus (defined in mn_menus.c et al.)
 extern menu_t menu_savegame;
 extern menu_t menu_hsavegame;
 extern menu_t menu_loadgame;
@@ -308,6 +309,35 @@ static int htic_soundnums[NUMSKINSOUNDS] =
    sfx_hplrwdth,
    sfx_hplroof,
 };
+
+//
+// Exit sounds
+//
+
+static int quitsounds[8] =
+{
+   sfx_pldeth,
+   sfx_dmpain,
+   sfx_popain,
+   sfx_slop,
+   sfx_telept,
+   sfx_posit1,
+   sfx_posit3,
+   sfx_sgtatk
+};
+
+static int quitsounds2[8] =
+{
+   sfx_vilact,
+   sfx_getpow,
+   sfx_boscub,
+   sfx_slop,
+   sfx_skeswg,
+   sfx_kntdth,
+   sfx_bspact,
+   sfx_sgtatk
+};
+
 
 //
 // IWAD paths
@@ -441,7 +471,7 @@ static gamemodeinfo_t giDoomSW =
 {
    shareware,                   // id
    Game_DOOM,                   // type
-   GIF_HASDISK | GIF_SHAREWARE, // flags
+   GIF_HASDISK | GIF_SHAREWARE | GIF_HASEXITSOUNDS, // flags
    
    VNAME_DOOM_SW,    // versionName
    BANNER_DOOM_SW,   // startupBanner
@@ -517,6 +547,7 @@ static gamemodeinfo_t giDoomSW =
    NULL,             // defaultORs
 
    "ENDOOM",         // endTextName
+   quitsounds,       // exitSounds
 };
 
 //
@@ -526,7 +557,7 @@ static gamemodeinfo_t giDoomReg =
 {
    registered,       // id
    Game_DOOM,        // type
-   GIF_HASDISK,      // flags
+   GIF_HASDISK | GIF_HASEXITSOUNDS,      // flags
    
    VNAME_DOOM_REG,   // versionName
    BANNER_DOOM_REG,  // startupBanner
@@ -602,6 +633,7 @@ static gamemodeinfo_t giDoomReg =
    NULL,             // defaultORs
 
    "ENDOOM",         // endTextName
+   quitsounds,       // exitSounds
 };
 
 //
@@ -611,7 +643,7 @@ static gamemodeinfo_t giDoomRetail =
 {
    retail,           // id
    Game_DOOM,        // type
-   GIF_HASDISK,      // flags
+   GIF_HASDISK | GIF_HASEXITSOUNDS,      // flags
    
    VNAME_DOOM_RET,   // versionName
    BANNER_DOOM_RET,  // startupBanner
@@ -687,6 +719,7 @@ static gamemodeinfo_t giDoomRetail =
    NULL,             // defaultORs
 
    "ENDOOM",         // endTextName
+   quitsounds,       // exitSounds
 };
 
 //
@@ -696,7 +729,7 @@ static gamemodeinfo_t giDoomCommercial =
 {
    commercial,              // id
    Game_DOOM,               // type
-   GIF_HASDISK | GIF_MAPXY, // flags
+   GIF_HASDISK | GIF_MAPXY | GIF_HASEXITSOUNDS, // flags
 
    VNAME_DOOM2,      // versionName
    BANNER_DOOM2,     // startupBanner
@@ -772,6 +805,7 @@ static gamemodeinfo_t giDoomCommercial =
    NULL,             // defaultORs
 
    "ENDOOM",         // endTextName
+   quitsounds2,      // exitSounds
 };
 
 //
@@ -858,6 +892,7 @@ static gamemodeinfo_t giHereticSW =
    &HereticDefaultORs, // defaultORs
 
    "ENDTEXT",        // endTextName
+   NULL,             // exitSounds
 };
 
 //
@@ -871,7 +906,8 @@ static gamemodeinfo_t giHereticReg =
 {
    hereticreg,       // id
    Game_Heretic,     // type   
-   GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | GIF_HASMADMELEE,    // flags
+   GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | 
+   GIF_SHADOWTITLES | GIF_HASMADMELEE,    // flags
    
    VNAME_HTIC_REG,   // versionName
    BANNER_HTIC_REG,  // startupBanner
@@ -947,6 +983,7 @@ static gamemodeinfo_t giHereticReg =
    &HereticDefaultORs, // defaultORs
 
    "ENDTEXT",        // endTextName
+   NULL,             // exitSounds
 };
 
 // Game Mode Info Array

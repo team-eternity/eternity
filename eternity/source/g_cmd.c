@@ -99,44 +99,18 @@ CONSOLE_COMMAND(pause, cf_server)
    sendpause = true;
 }
 
+//
 // haleyjd: Restoration of original exit behavior
-
-int quitsounds[8] =
-{
-   sfx_pldeth,
-   sfx_dmpain,
-   sfx_popain,
-   sfx_slop,
-   sfx_telept,
-   sfx_posit1,
-   sfx_posit3,
-   sfx_sgtatk
-};
-
-int quitsounds2[8] =
-{
-   sfx_vilact,
-   sfx_getpow,
-   sfx_boscub,
-   sfx_slop,
-   sfx_skeswg,
-   sfx_kntdth,
-   sfx_bspact,
-   sfx_sgtatk
-};
-
+//
 void G_QuitDoom(void)
 {
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;
    
    if((!netgame || demoplayback) && !nosfxparm && snd_card &&
-      GameModeInfo->type == Game_DOOM)
+      GameModeInfo->flags & GIF_HASEXITSOUNDS)
    {
-      if(GameModeInfo->id == commercial) // doom2 sounds
-         S_StartSound(NULL, quitsounds2[(gametic>>2)&7]);
-      else                       // doom
-         S_StartSound(NULL, quitsounds[(gametic>>2)&7]);
+      S_StartSound(NULL, GameModeInfo->exitSounds[(gametic>>2)&7]);
       I_WaitVBL(105);
    }
    
