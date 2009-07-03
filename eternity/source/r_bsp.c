@@ -1058,6 +1058,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
    float texhigh, texlow;
    side_t *side = seg.side;
    seg_t  *line = seg.line;
+   fixed_t frontc, backc;
 
    seg.twosided = true;
 
@@ -1070,6 +1071,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
            seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
+
+   frontc = seg.frontsec->ceilingheight;
+   backc = seg.backsec->ceilingheight;
 
    seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
    seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
@@ -1091,6 +1095,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
       seg.top = seg.high;
       seg.top2 = seg.high2;
       seg.topstep = seg.highstep;
+      frontc = backc;
       //uppermissing = false;
    }
 
@@ -1112,8 +1117,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
 
    seg.markceiling = 
       (seg.ceilingplane && 
-       (mark || seg.clipsolid || 
-        seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
+       (mark || seg.clipsolid || frontc != backc || 
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
