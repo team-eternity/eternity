@@ -102,6 +102,19 @@ extern const demostate_t demostates_udoom[];
 extern const demostate_t demostates_hsw[];
 extern const demostate_t demostates_hreg[];
 
+//
+// Exit Rule Sets
+//
+
+typedef struct exitrule_s
+{
+   int gameepisode;  // current episode (1 for games like DOOM 2, 
+                     //   -1 if doesn't matter, -2 to terminate array)
+   int gamemap;      // current map the game is on (1-based, -1 if doesn't matter)   
+   int destmap;      // destination map (0-based for wminfo)
+   boolean isSecret; // this rule applies for secret exits   
+} exitrule_t;
+
 // Game Mode Flags
 
 #define GIF_HASDISK       0x00000001 // has flashing io disk
@@ -249,6 +262,7 @@ typedef struct gamemodeinfo_s
 
    // Game interaction stuff
    int numEpisodes;           // number of game episodes
+   exitrule_t *exitRules;     // exit rule set
    int teleFogType;           // DeHackEd number of telefog object
    fixed_t teleFogHeight;     // amount to add to telefog z coord
    int teleSound;             // sound id for teleportation

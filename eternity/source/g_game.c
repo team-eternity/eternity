@@ -1355,134 +1355,33 @@ static void G_PlayerFinishLevel(int player)
 }
 
 //
-// G_SetDOOMNextMap
+// G_SetNextMap
 //
-// Function called via function pointer array "NextMapFuncs" when
-// in DOOM or DOOM II mode. Sets default next map or secret map.
-// Note that exiting with a secret line on maps that don't normally
-// have a secret exit will cause the same map to be replayed. MapInfo
-// can override this behavior by setting the nextsecret variable.
+// haleyjd 07/03/09: Replaces gamemode-dependent exit determination
+// functions with interpretation of a rule set held in GameModeInfo.
 //
-static void G_SetDOOMNextMap(void)
+static void G_SetNextMap(void)
 {
-   // wminfo.next is 0 biased, unlike gamemap
-   if(GameModeInfo->id == commercial)
+   exitrule_t *exitrule = GameModeInfo->exitRules;
+   exitrule_t *theRule = NULL;
+
+   // find a rule
+   for(; exitrule->gameepisode != -2; ++exitrule)
    {
-      if(secretexit)
+      if((exitrule->gameepisode == -1 || exitrule->gameepisode == gameepisode) &&
+         (exitrule->gamemap == -1 || exitrule->gamemap == gamemap) &&
+         exitrule->isSecret == secretexit)
       {
-         switch(gamemap)
-         {
-         case 15:
-            wminfo.next = 30; break;
-         case 31:
-            wminfo.next = 31; break;
-         default:
-            break;
-         }
-      }
-      else
-      {
-         switch(gamemap)
-         {
-         case 31:
-         case 32:
-            wminfo.next = 15; break;
-         default:
-            wminfo.next = gamemap;
-         }
+         theRule = exitrule;
+         break;
       }
    }
-   else // gamemode != commercial
-   {
-      if(secretexit)
-      {
-         wminfo.next = 8;  // go to secret level
-      }
-      else
-      {
-         if(gamemap == 9)
-         {
-            // returning from secret level
-            switch(gameepisode)
-            {
-            case 1:
-               wminfo.next = 3;
-               break;
-            case 2:
-               wminfo.next = 5;
-               break;
-            case 3:
-               wminfo.next = 6;
-               break;
-            case 4:
-               wminfo.next = 2;
-               break;
-            }
-         }
-         else
-            wminfo.next = gamemap;          // go to next level
-      }
-   }
+
+   if(theRule)
+      wminfo.next = theRule->destmap;
+   else if(!secretexit)
+      wminfo.next = gamemap;
 }
-
-//
-// G_SetHticNextMap
-//
-// Function called via function pointer array "NextMapFuncs" when
-// in Heretic mode. Sets default next map or secret map.
-//
-static void G_SetHticNextMap(void)
-{
-   // haleyjd 10/15/02: Heretic secrets
-   if(secretexit)
-   {
-      wminfo.next = 8;
-   }
-   else
-   {
-      if(gamemap == 9)
-      {
-         // returning from secret level
-         switch(gameepisode)
-         {
-         case 1:
-            wminfo.next = 6;
-            break;
-         case 2:
-            wminfo.next = 4;
-            break;
-         case 3:
-            wminfo.next = 4;
-            break;
-         case 4:
-            wminfo.next = 4;
-            break;
-         case 5:
-            wminfo.next = 3;
-            break;
-         }
-      }
-      else
-         wminfo.next = gamemap;          // go to next level
-   }
-}
-
-//
-// NextMapFuncs
-//
-// haleyjd: This function pointer array contains the above functions,
-// one per gamemode type, that set the next map or next secret map
-// default values appropriately. This is much better than combining
-// them all into one big mess with a hundred branches.
-//
-
-typedef void (*nextfunc_t)(void);
-
-static nextfunc_t NextMapFuncs[NumGameModeTypes] =
-{
-   G_SetDOOMNextMap,
-   G_SetHticNextMap,
-};
 
 //
 // G_DoCompleted
@@ -1528,7 +1427,7 @@ static void G_DoCompleted(void)
    wminfo.last = gamemap - 1;
 
    // set the next gamemap
-   (NextMapFuncs[GameModeInfo->type])();
+   G_SetNextMap();
 
    // haleyjd: override with MapInfo values
    if(!secretexit)

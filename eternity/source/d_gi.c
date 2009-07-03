@@ -338,6 +338,41 @@ static int quitsounds2[8] =
    sfx_sgtatk
 };
 
+//
+// Exit Rule Sets
+//
+// haleyjd 07/03/09: replaces hard-coded functions in g_game.c
+//
+
+static exitrule_t DoomExitRules[] =
+{
+   {  1,  9, 3, false }, // normal exit: E1M9 -> E1M4
+   {  2,  9, 5, false }, // normal exit: E2M9 -> E2M6
+   {  3,  9, 6, false }, // normal exit: E3M9 -> E3M7
+   {  4,  9, 2, false }, // normal exit: E4M9 -> E4M3
+   { -1, -1, 8, true  }, // secret exits: any map goes to ExM9
+   { -2 }
+};
+
+static exitrule_t Doom2ExitRules[] =
+{
+   {  1, 31, 15, false }, // normal exit: MAP31 -> MAP16
+   {  1, 32, 15, false }, // normal exit: MAP32 -> MAP16
+   {  1, 15, 30, true  }, // secret exit: MAP15 -> MAP31
+   {  1, 31, 31, true  }, // secret exit: MAP31 -> MAP32
+   { -2 }
+};
+
+static exitrule_t HereticExitRules[] =
+{
+   {  1,  9, 6, false }, // normal exit: E1M9 -> E1M7
+   {  2,  9, 4, false }, // normal exit: E2M9 -> E2M5
+   {  3,  9, 4, false }, // normal exit: E3M9 -> E3M5
+   {  4,  9, 4, false }, // normal exit: E4M9 -> E4M5
+   {  5,  9, 3, false }, // normal exit: E5M9 -> E5M4
+   { -1, -1, 8, true  }, // secret exits: any map goes to ExM9
+   { -2 }
+};
 
 //
 // IWAD paths
@@ -523,6 +558,7 @@ static gamemodeinfo_t giDoomSW =
    "M_PAUSE",        // pausePatch
 
    1,                // numEpisodes
+   DoomExitRules,    // exitRules
    MT_TFOG,          // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -609,6 +645,7 @@ static gamemodeinfo_t giDoomReg =
    "M_PAUSE",        // pausePatch
 
    3,                // numEpisodes
+   DoomExitRules,    // exitRules
    MT_TFOG,          // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -695,6 +732,7 @@ static gamemodeinfo_t giDoomRetail =
    "M_PAUSE",        // pausePatch
 
    4,                // numEpisodes
+   DoomExitRules,    // exitRules
    MT_TFOG,          // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -781,6 +819,7 @@ static gamemodeinfo_t giDoomCommercial =
    "M_PAUSE",        // pausePatch
 
    1,                // numEpisodes
+   Doom2ExitRules,   // exitRules
    MT_TFOG,          // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -868,6 +907,7 @@ static gamemodeinfo_t giHereticSW =
    "PAUSED",         // pausePatch
 
    1,                // numEpisodes
+   HereticExitRules, // exitRules
    MT_HTFOG,         // teleFogType
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
@@ -959,6 +999,7 @@ static gamemodeinfo_t giHereticReg =
    "PAUSED",         // pausePatch
 
    4,                // numEpisodes -- note 6 for SoSR gamemission
+   HereticExitRules, // exitRules
    MT_HTFOG,         // teleFogType
    32*FRACUNIT,      // teleFogHeight
    sfx_htelept,      // teleSound
