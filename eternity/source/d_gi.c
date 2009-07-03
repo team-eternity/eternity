@@ -729,7 +729,7 @@ static gamemodeinfo_t giDoomCommercial =
 {
    commercial,              // id
    Game_DOOM,               // type
-   GIF_HASDISK | GIF_MAPXY | GIF_HASEXITSOUNDS, // flags
+   GIF_HASDISK | GIF_MAPXY | GIF_HASEXITSOUNDS | GIF_WOLFHACK, // flags
 
    VNAME_DOOM2,      // versionName
    BANNER_DOOM2,     // startupBanner

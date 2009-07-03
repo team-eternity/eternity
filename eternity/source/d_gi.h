@@ -113,6 +113,7 @@ extern const demostate_t demostates_hreg[];
 #define GIF_SHADOWTITLES  0x00000040 // shadows titles in menus
 #define GIF_HASMADMELEE   0x00000080 // has mad melee when player dies in SP
 #define GIF_HASEXITSOUNDS 0x00000100 // has sounds at exit
+#define GIF_WOLFHACK      0x00000200 // is subject to German-edition restriction
 
 // Game mode handling - identify IWAD version
 //  to handle IWAD dependent animations etc.

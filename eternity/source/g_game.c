@@ -1330,7 +1330,8 @@ void G_ExitLevel(void)
 //
 void G_SecretExitLevel(void)
 {
-   secretexit = GameModeInfo->id != commercial || haswolflevels || scriptSecret;
+   secretexit = 
+      !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    gameaction = ga_completed;
 }
 
