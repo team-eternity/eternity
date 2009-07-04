@@ -99,7 +99,6 @@ boolean savegamepresent[SAVESLOTS];
 static void MN_PatchOldMainMenu(void);
 static void MN_InitCustomMenu(void);
 static void MN_InitSearchStr(void);
-extern void MN_LinkClassicMenus(int link);
 
 void MN_InitMenus(void)
 {

@@ -115,8 +115,32 @@ typedef struct exitrule_s
    boolean isSecret; // this rule applies for secret exits   
 } exitrule_t;
 
-// Game Mode Flags
+//
+// MapInfo-related Stuff
+//
 
+// Default finale data
+
+typedef struct finalerule_s
+{
+   int gameepisode;       // episode where applies, or -1 to match all; -2 ends.
+   int gamemap;           // map where applies, or -1 to match all
+   const char *backDrop;  // BEX mnemonic of background graphic string
+   const char *interText; // BEX mnemonic of intertext string
+   boolean endOfGame;     // if true, LevelInfo.endOfGame is set
+   boolean secretOnly;    // if true, LevelInfo.finaleSecretOnly is set
+} finalerule_t;
+
+typedef struct finaledata_s
+{
+   int musicnum;          // index into gamemodeinfo_t::s_music
+   boolean killStatsHack; // kill stats if !GIF_SHAREWARE && episode >= numEpisodes
+   finalerule_t *rules;   // rules array
+} finaledata_t;
+
+//
+// Game Mode Flags
+//
 enum
 {
    GIF_HASDISK       = 0x00000001, // has flashing io disk
@@ -188,10 +212,11 @@ typedef struct missioninfo_s
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
 
-   const char *versionNameOR;   // if not NULL, overrides name of the gamemode
-   const char *startupBannerOR; // if not NULL, overrides the startup banner 
-   int         numEpisodesOR;   // if not 0, overrides the number of episodes
-   char      **iwadPathOR;      // if not NULL, overrides iwadpath variable
+   const char   *versionNameOR;   // if not NULL, overrides name of the gamemode
+   const char   *startupBannerOR; // if not NULL, overrides the startup banner 
+   int           numEpisodesOR;   // if not 0, overrides the number of episodes
+   char        **iwadPathOR;      // if not NULL, overrides iwadpath variable
+   finaledata_t *finaleDataOR;    // if not NULL, overrides finaleData variable
 } missioninfo_t;
 
 //
@@ -279,6 +304,7 @@ typedef struct gamemodeinfo_s
    gitextmetric_t *ftextinfo; // finale text info
    interfns_t *interfuncs;    // intermission function pointers
    int teleEndGameFinaleType; // Teleport_EndGame causes this finale by default
+   finaledata_t *finaleData;  // Default finale data for MapInfo
 
    // Sound
    musicinfo_t *s_music;      // pointer to musicinfo_t (sounds.h)

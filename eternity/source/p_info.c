@@ -749,168 +749,76 @@ static void P_LoadInterTextLump(void)
 // Note: The newer finale type is handled somewhat differently and is thus
 // in a different function below.
 //
+// haleyjd: rewritten 07/03/09 to tablify info through GameModeInfo.
+//
 static void P_InfoDefaultFinale(void)
 {
-   missioninfo_t *missionInfo = GameModeInfo->missionInfo;
+   finaledata_t *fdata   = GameModeInfo->finaleData;
+   finalerule_t *rule    = fdata->rules;
+   finalerule_t *theRule = NULL;
 
-   // set lump to NULL
-   LevelInfo.interTextLump = NULL;
+   // universal defaults
+   LevelInfo.interTextLump    = NULL;
    LevelInfo.finaleSecretOnly = false;
-   LevelInfo.killFinale = false;
-   LevelInfo.killStats = false;
-   LevelInfo.endOfGame = false;
-   LevelInfo.useEDFInterName = false;
+   LevelInfo.killFinale       = false;
+   LevelInfo.killStats        = false;
+   LevelInfo.endOfGame        = false;
+   LevelInfo.useEDFInterName  = false;
 
-   switch(GameModeInfo->id)
+   // set data from the finaledata object
+   if(fdata->musicnum != mus_None)
+      LevelInfo.interMusic = (GameModeInfo->s_music[fdata->musicnum]).name;
+   else
+      LevelInfo.interMusic = NULL;
+
+   // check killStats flag - a bit of a hack, this is for Heretic's "hidden"
+   // levels in episode 6, which have no statistics intermission.
+   if(fdata->killStatsHack)
    {
-   case shareware:
-   case retail:
-   case registered:
-      // DOOM modes
-      LevelInfo.interMusic = S_music[mus_victor].name;
-      
-      if((gameepisode >= 1 && gameepisode <= 4) && gamemap == 8)
-      {
-         switch(gameepisode)
-         {
-         case 1:
-            LevelInfo.backDrop  = bgflatE1;
-            LevelInfo.interText = DEH_String("E1TEXT");
-            break;
-         case 2:
-            LevelInfo.backDrop  = bgflatE2;
-            LevelInfo.interText = DEH_String("E2TEXT");
-            break;
-         case 3:
-            LevelInfo.backDrop  = bgflatE3;
-            LevelInfo.interText = DEH_String("E3TEXT");
-            break;
-         case 4:
-            LevelInfo.backDrop  = bgflatE4;
-            LevelInfo.interText = DEH_String("E4TEXT");
-            break;
-         }
-      }
-      else
-      {
-         LevelInfo.backDrop  = bgflatE1;
-         LevelInfo.interText = NULL;
-      }
-      break;
-   
-   case commercial:
-      // DOOM II modes
-      LevelInfo.interMusic = S_music[mus_read_m].name;
-
-      switch(gamemap)
-      {
-      case 6:
-         LevelInfo.backDrop  = bgflat06;
-         LevelInfo.interText = 
-            missionInfo->id == pack_tnt  ? DEH_String("T1TEXT") :
-            missionInfo->id == pack_plut ? DEH_String("P1TEXT") : 
-                                           DEH_String("C1TEXT");
-         break;
-      case 11:
-         LevelInfo.backDrop  = bgflat11;
-         LevelInfo.interText =
-            missionInfo->id == pack_tnt  ? DEH_String("T2TEXT") :
-            missionInfo->id == pack_plut ? DEH_String("P2TEXT") : 
-                                           DEH_String("C2TEXT");
-         break;
-      case 20:
-         LevelInfo.backDrop  = bgflat20;
-         LevelInfo.interText =
-            missionInfo->id == pack_tnt  ? DEH_String("T3TEXT") :
-            missionInfo->id == pack_plut ? DEH_String("P3TEXT") : 
-                                           DEH_String("C3TEXT");
-         break;
-      case 30:
-         LevelInfo.backDrop  = bgflat30;
-         LevelInfo.interText =
-            missionInfo->id == pack_tnt  ? DEH_String("T4TEXT") :
-            missionInfo->id == pack_plut ? DEH_String("P4TEXT") : 
-                                           DEH_String("C4TEXT");
-         LevelInfo.endOfGame = true;
-         break;
-      case 15:
-         LevelInfo.backDrop  = bgflat15;
-         LevelInfo.interText =
-            missionInfo->id == pack_tnt  ? DEH_String("T5TEXT") :
-            missionInfo->id == pack_plut ? DEH_String("P5TEXT") : 
-                                           DEH_String("C5TEXT");
-         LevelInfo.finaleSecretOnly = true; // only after secret exit
-         break;
-      case 31:
-         LevelInfo.backDrop  = bgflat31;
-         LevelInfo.interText =
-            missionInfo->id == pack_tnt  ? DEH_String("T6TEXT") :
-            missionInfo->id == pack_plut ? DEH_String("P6TEXT") : 
-                                           DEH_String("C6TEXT");
-         LevelInfo.finaleSecretOnly = true; // only after secret exit
-         break;
-      default:
-         LevelInfo.backDrop  = bgflat06;
-         LevelInfo.interText = NULL;
-         break;
-      }
-      break;
-
-   case hereticsw:
-   case hereticreg:
-      // Heretic modes
-      LevelInfo.interMusic = H_music[hmus_cptd].name;
-
-      // "hidden" levels have no statistics intermission
-      // 10/10/05: do not catch shareware here
-      if(GameModeInfo->id != hereticsw &&
+      if(!(GameModeInfo->flags & GIF_SHAREWARE) && 
          gameepisode >= GameModeInfo->numEpisodes)
          LevelInfo.killStats = true;
+   }
 
-      if((gameepisode >= 1 && gameepisode <= 5) && gamemap == 8)
+   // look for a rule that applies to this level in particular
+   for(; rule->gameepisode != -2; ++rule)
+   {
+      if((rule->gameepisode == -1 || rule->gameepisode == gameepisode) &&
+         (rule->gamemap == -1 || rule->gamemap == gamemap))
       {
-         switch(gameepisode)
-         {
-         case 1:
-            LevelInfo.backDrop  = bgflathE1;
-            LevelInfo.interText = DEH_String("H1TEXT");
-            break;
-         case 2:
-            LevelInfo.backDrop  = bgflathE2;
-            LevelInfo.interText = DEH_String("H2TEXT");
-            break;
-         case 3:
-            LevelInfo.backDrop  = bgflathE3;
-            LevelInfo.interText = DEH_String("H3TEXT");
-            break;
-         case 4:
-            LevelInfo.backDrop  = bgflathE4;
-            LevelInfo.interText = DEH_String("H4TEXT");
-            break;
-         case 5:
-            LevelInfo.backDrop  = bgflathE5;
-            LevelInfo.interText = DEH_String("H5TEXT");
-            break;
-         }
+         theRule = rule;
+         break;
       }
-      else
-      {
-         LevelInfo.backDrop  = bgflathE1;
-         LevelInfo.interText = NULL;
-      }
-      break;
+   }
 
-   default:
-      LevelInfo.interMusic = NULL;
+   if(theRule)
+   {
+      // set backdrop graphic and intertext
+      LevelInfo.backDrop  = DEH_String(rule->backDrop);
+      LevelInfo.interText = DEH_String(rule->interText);
+
+      // check for endOfGame flag
+      if(rule->endOfGame)
+         LevelInfo.endOfGame = true;
+
+      // check for secretOnly flag
+      if(rule->secretOnly)
+         LevelInfo.finaleSecretOnly = true;
+   }
+   else
+   {
+      // This shouldn't really happen but I'll be proactive about it.
+      // The finale data sets all have rules to cover defaulted maps.
+
       // haleyjd: note -- this cannot use F_SKY1 like it did in BOOM
       // because heretic.wad contains an invalid F_SKY1 flat. This 
       // caused crashes during development of Heretic support, so now
       // it uses the F_SKY2 flat which is provided in eternity.wad.
-      LevelInfo.backDrop   = "F_SKY2";
-      LevelInfo.interText  = NULL;
-      break;
+      LevelInfo.backDrop  = "F_SKY2";
+      LevelInfo.interText = NULL;
    }
 }
+
 
 //
 // P_InfoDefaultSky

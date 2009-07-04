@@ -70,6 +70,8 @@ static unsigned char input_buffer[1024] = "";
 
 static void MN_PageMenu(menu_t *newpage);
 
+extern void MN_LinkClassicMenus(int link);
+
 vfont_t *menu_font;
 vfont_t *menu_font_big;
 vfont_t *menu_font_normal;

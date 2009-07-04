@@ -393,6 +393,127 @@ static exitrule_t HereticExitRules[] =
 };
 
 //
+// Default Finale Data
+//
+
+// Doom: Shareware, Registered, Retail
+
+static finalerule_t DoomFinaleRules[] =
+{
+   {  1,  8, "BGFLATE1", "E1TEXT" },
+   {  2,  8, "BGFLATE2", "E2TEXT" },
+   {  3,  8, "BGFLATE3", "E3TEXT" },
+   {  4,  8, "BGFLATE4", "E4TEXT" },
+   { -1, -1, "BGFLATE1", NULL     },
+   { -2 }
+};
+
+static finaledata_t DoomFinale =
+{
+   mus_victor,
+   false,
+   DoomFinaleRules
+};
+
+// DOOM 2
+
+static finalerule_t Doom2FinaleRules[] =
+{
+   {  1,  6, "BGFLAT06", "C1TEXT"              },
+   {  1, 11, "BGFLAT11", "C2TEXT"              },
+   {  1, 20, "BGFLAT20", "C3TEXT"              },
+   {  1, 30, "BGFLAT30", "C4TEXT", true        }, // end of game
+   {  1, 15, "BGFLAT15", "C5TEXT", false, true }, // only after secret
+   {  1, 31, "BGFLAT31", "C6TEXT", false, true }, // only after secret
+   { -1, -1, "BGFLAT06", NULL                  },
+   { -2 }
+};
+
+static finaledata_t Doom2Finale =
+{
+   mus_read_m,
+   false,
+   Doom2FinaleRules
+};
+
+// Final Doom: TNT
+
+static finalerule_t TNTFinaleRules[] =
+{
+   {  1,  6, "BGFLAT06", "T1TEXT"              },
+   {  1, 11, "BGFLAT11", "T2TEXT"              },
+   {  1, 20, "BGFLAT20", "T3TEXT"              },
+   {  1, 30, "BGFLAT30", "T4TEXT", true        }, // end of game
+   {  1, 15, "BGFLAT15", "T5TEXT", false, true }, // only after secret
+   {  1, 31, "BGFLAT31", "T6TEXT", false, true }, // only after secret
+   { -1, -1, "BGFLAT06", NULL                  },
+   { -2 }
+};
+
+static finaledata_t TNTFinale =
+{
+   mus_read_m,
+   false,
+   TNTFinaleRules
+};
+
+// Final Doom: Plutonia
+
+static finalerule_t PlutFinaleRules[] =
+{
+   {  1,  6, "BGFLAT06", "P1TEXT"              },
+   {  1, 11, "BGFLAT11", "P2TEXT"              },
+   {  1, 20, "BGFLAT20", "P3TEXT"              },
+   {  1, 30, "BGFLAT30", "P4TEXT", true        }, // end of game
+   {  1, 15, "BGFLAT15", "P5TEXT", false, true }, // only after secret
+   {  1, 31, "BGFLAT31", "P6TEXT", false, true }, // only after secret
+   { -1, -1, "BGFLAT06", NULL                  },
+   { -2 }
+};
+
+static finaledata_t PlutFinale =
+{
+   mus_read_m,
+   false,
+   PlutFinaleRules
+};
+
+// Heretic (Shareware / Registered / SoSR)
+
+static finalerule_t HereticFinaleRules[] =
+{
+   {  1,  8, "BGFLATHE1", "H1TEXT" },
+   {  2,  8, "BGFLATHE2", "H2TEXT" },
+   {  3,  8, "BGFLATHE3", "H3TEXT" },
+   {  4,  8, "BGFLATHE4", "H4TEXT" },
+   {  5,  8, "BGFLATHE5", "H5TEXT" },
+   { -1, -1, "BGFLATHE1", NULL     },
+   { -2 }
+};
+
+static finaledata_t HereticFinale =
+{
+   hmus_cptd,
+   true,
+   HereticFinaleRules
+};
+
+// Unknown gamemode
+
+static finalerule_t UnknownFinaleRules[] =
+{
+   { -1, -1, "F_SKY2", NULL },
+   { -2 }
+};
+
+static finaledata_t UnknownFinale =
+{
+   mus_None, // special case
+   false,
+   UnknownFinaleRules
+};
+
+//
 // IWAD paths
 //
 
@@ -426,6 +547,7 @@ static missioninfo_t gmDoom =
    NULL, // startupBannerOR
    0,    // numEpisodesOR
    NULL, // iwadPathOR
+   NULL, // finaleDataOR
 };
 
 //
@@ -438,6 +560,7 @@ static missioninfo_t gmDoom2 =
    NULL,  // startupBannerOR
    0,     // numEpisodesOR
    NULL,  // iwadPathOR
+   NULL,  // finaleDataOR
 };
 
 //
@@ -450,6 +573,7 @@ static missioninfo_t gmFinalTNT =
    BANNER_TNT,   // startupBannerOR
    0,            // numEpisodesOR
    &gi_path_tnt, // iwadPathOR
+   &TNTFinale,   // finaleDataOR
 };
 
 //
@@ -462,6 +586,7 @@ static missioninfo_t gmFinalPlutonia =
    BANNER_PLUT,   // startupBannerOR
    0,             // numEpisodesOR
    &gi_path_plut, // iwadPathOR
+   &PlutFinale,   // finaleDataOR
 };
 
 //
@@ -474,6 +599,7 @@ static missioninfo_t gmHeretic =
    NULL,    // startupBannerOR
    0,       // numEpisodesOR
    NULL,    // iwadPathOR
+   NULL,    // finaleDataOR
 };
 
 //
@@ -485,7 +611,8 @@ static missioninfo_t gmHereticSoSR =
    VNAME_HTIC_SOSR,  // versionNameOR
    BANNER_HTIC_SOSR, // startupBannerOR
    6,                // numEpisodesOR
-   &gi_path_sosr,    // iwadPath
+   &gi_path_sosr,    // iwadPathOR
+   NULL,             // finaleDataOR
 };
 
 //
@@ -498,6 +625,7 @@ static missioninfo_t gmUnknown =
    BANNER_UNKNOWN, // startupBannerOR
    0,              // numEpisodesOR
    NULL,           // iwadPathOR
+   &UnknownFinale, // finaleDataOR
 };
 
 // Mission info object array
@@ -587,6 +715,7 @@ static gamemodeinfo_t giDoomSW =
    &giDoomFText,      // ftextinfo
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
+   &DoomFinale,       // finaleData
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -675,6 +804,7 @@ static gamemodeinfo_t giDoomReg =
    &giDoomFText,     // ftextinfo
    &DoomIntermission,// interfuncs
    DEF_DOOM_FINALE,  // teleEndGameFinaleType
+   &DoomFinale,      // finaleData
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -763,6 +893,7 @@ static gamemodeinfo_t giDoomRetail =
    &giDoomFText,     // ftextinfo
    &DoomIntermission,// interfuncs
    DEF_DOOM_FINALE,  // teleEndGameFinaleType
+   &DoomFinale,       // finaleData
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -851,6 +982,7 @@ static gamemodeinfo_t giDoomCommercial =
    &giDoomFText,     // ftextinfo
    &DoomIntermission,// interfuncs
    FINALE_TEXT,      // teleEndGameFinaleType
+   &Doom2Finale,     // finaleData
 
    S_music,          // s_music
    mus_None,         // musMin
@@ -939,6 +1071,7 @@ static gamemodeinfo_t giHereticSW =
    &giHticFText,     // ftextinfo
    &HticIntermission,// interfuncs
    DEF_HTIC_FINALE,  // teleEndGameFinaleType
+   &HereticFinale,   // finaleData
 
    H_music,          // s_music
    hmus_None,        // musMin
@@ -1031,6 +1164,7 @@ static gamemodeinfo_t giHereticReg =
    &giHticFText,     // ftextinfo
    &HticIntermission,// interfuncs
    DEF_HTIC_FINALE,  // teleEndGameFinaleType
+   &HereticFinale,   // finaleData
 
    H_music,          // s_music
    hmus_None,        // musMin
@@ -1121,6 +1255,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(startupBanner, NULL);
    OVERRIDE(numEpisodes,      0);
    OVERRIDE(iwadPath,      NULL);
+   OVERRIDE(finaleData,    NULL);
 }
 
 // EOF

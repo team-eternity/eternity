@@ -1490,7 +1490,7 @@ static void G_DoWorldDone(void)
 
    // haleyjd: handle heretic hidden levels
    if((missionInfo->id == hticsosr && gameepisode == 6 && gamemap == 4) ||
-      (missionInfo->id == heretic  && gameepisode == 4 && gamemap == 1))
+      (missionInfo->id == heretic  && gameepisode == 4 && gamemap == 2))
    {
       gamemap--; // return to same level
    }
