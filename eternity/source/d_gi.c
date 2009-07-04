@@ -101,6 +101,19 @@
 #define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
 #define DEF_HTIC_FINALE  FINALE_HTIC_CREDITS
 
+//
+// Common Flags
+//
+// The following sets of GameModeInfo flags define the basic characteristics
+// of the intrinsic gametypes.
+//
+
+#define DOOM_GIFLAGS (GIF_HASDISK | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS)
+
+#define HERETIC_GIFLAGS \
+   (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
+    GIF_HASMADMELEE)
+
 // globals
 
 // holds the address of the gamemodeinfo_t for the current gamemode,
@@ -509,9 +522,9 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
 //
 static gamemodeinfo_t giDoomSW =
 {
-   shareware,                   // id
-   Game_DOOM,                   // type
-   GIF_HASDISK | GIF_SHAREWARE | GIF_HASEXITSOUNDS, // flags
+   shareware,                    // id
+   Game_DOOM,                    // type
+   GIF_SHAREWARE | DOOM_GIFLAGS, // flags
    
    VNAME_DOOM_SW,    // versionName
    BANNER_DOOM_SW,   // startupBanner
@@ -599,7 +612,7 @@ static gamemodeinfo_t giDoomReg =
 {
    registered,       // id
    Game_DOOM,        // type
-   GIF_HASDISK | GIF_HASEXITSOUNDS,      // flags
+   DOOM_GIFLAGS,     // flags
    
    VNAME_DOOM_REG,   // versionName
    BANNER_DOOM_REG,  // startupBanner
@@ -687,7 +700,7 @@ static gamemodeinfo_t giDoomRetail =
 {
    retail,           // id
    Game_DOOM,        // type
-   GIF_HASDISK | GIF_HASEXITSOUNDS,      // flags
+   DOOM_GIFLAGS,     // flags
    
    VNAME_DOOM_RET,   // versionName
    BANNER_DOOM_RET,  // startupBanner
@@ -773,10 +786,9 @@ static gamemodeinfo_t giDoomRetail =
 //
 static gamemodeinfo_t giDoomCommercial =
 {
-   commercial,              // id
-   Game_DOOM,               // type
-   GIF_HASDISK | GIF_MAPXY | GIF_HASEXITSOUNDS | GIF_WOLFHACK | 
-   GIF_SETENDOFGAME, // flags
+   commercial,       // id
+   Game_DOOM,        // type
+   DOOM_GIFLAGS | GIF_MAPXY | GIF_WOLFHACK | GIF_SETENDOFGAME, // flags
 
    VNAME_DOOM2,      // versionName
    BANNER_DOOM2,     // startupBanner
@@ -864,8 +876,7 @@ static gamemodeinfo_t giHereticSW =
 {
    hereticsw,        // id
    Game_Heretic,     // type
-   GIF_SHAREWARE   | GIF_MNBIGFONT    | GIF_SAVESOUND | 
-   GIF_HASADVISORY | GIF_SHADOWTITLES | GIF_HASMADMELEE, // flags
+   GIF_SHAREWARE | HERETIC_GIFLAGS, // flags
 
    VNAME_HTIC_SW,    // versionName
    BANNER_HTIC_SW,   // startupBanner
@@ -957,8 +968,7 @@ static gamemodeinfo_t giHereticReg =
 {
    hereticreg,       // id
    Game_Heretic,     // type   
-   GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | 
-   GIF_SHADOWTITLES | GIF_HASMADMELEE,    // flags
+   HERETIC_GIFLAGS,  // flags
    
    VNAME_HTIC_REG,   // versionName
    BANNER_HTIC_REG,  // startupBanner

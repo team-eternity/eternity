@@ -99,6 +99,7 @@ boolean savegamepresent[SAVESLOTS];
 static void MN_PatchOldMainMenu(void);
 static void MN_InitCustomMenu(void);
 static void MN_InitSearchStr(void);
+extern void MN_LinkClassicMenus(int link);
 
 void MN_InitMenus(void)
 {
@@ -3506,7 +3507,7 @@ int mn_classic_menus;
 // on or off. When it's on, the old main menu above is patched to point to the
 // other old menus.
 //
-static void MN_LinkClassicMenus(int link)
+void MN_LinkClassicMenus(int link)
 {
    if(link) // turn on classic menus
    {

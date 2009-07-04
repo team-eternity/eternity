@@ -838,6 +838,9 @@ void MN_Init(void)
    
    MN_InitMenus();   // create menu commands in mn_menus.c
    MN_InitFonts();   // create menu fonts
+
+   // haleyjd 07/03/09: sync up mn_classic_menus
+   MN_LinkClassicMenus(mn_classic_menus);
 }
 
 //////////////////////////////////
@@ -1507,8 +1510,11 @@ void MN_StartControlPanel(void)
 
    // haleyjd 05/16/04: traditional DOOM main menu support
    // haleyjd 08/31/06: support for all of DOOM's original menus
-   if(GameModeInfo->id <= retail && (traditional_menu || mn_classic_menus))
+   if(GameModeInfo->flags & GIF_CLASSICMENUS && 
+      (traditional_menu || mn_classic_menus))
+   {
       MN_StartMenu(&menu_old_main);
+   }
    else
       MN_StartMenu(GameModeInfo->mainMenu);
 }
