@@ -308,6 +308,7 @@ typedef struct gamemodeinfo_s
 
    // Sound
    musicinfo_t *s_music;      // pointer to musicinfo_t (sounds.h)
+   int (*MusicForMap)(void);  // pointer to S_MusicForMap* routine
    int musMin;                // smallest music index value (0)
    int numMusic;              // maximum music index value
    const char *musPrefix;     // "D_" for DOOM, "MUS_" for Heretic

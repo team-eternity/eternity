@@ -41,7 +41,7 @@
 static byte grey1, grey2, grey3, grey4, red, green, blue, yellow, black,
             red1, green1, blue1, yellow1, purple, purple1, white,
             rblue1, rblue2, rblue3, rblue4, orange, yorange, dred, grey5,
-            maroon1, maroon2, mdred;
+            maroon1, maroon2, mdred, dred2;
 
 static struct particleColorList {
    byte *color, r, g, b;
@@ -73,6 +73,7 @@ static struct particleColorList {
    {&maroon1,   154, 49,  49 },
    {&maroon2,   125, 24,  24 },
    {&mdred,     165, 0,   0  },
+   {&dred2,     115, 0,   0  },
    {NULL}
 };
 
@@ -859,7 +860,7 @@ static struct bloodColor
    byte *color2;
 } mobjBloodColors[NUMBLOODCOLORS] =
 {
-   { &red,    &dred },
+   { &red,    &dred2 },
    { &grey1,  &grey5 },
    { &green,  &green1 },
    { &blue,   &blue },
@@ -877,6 +878,7 @@ void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    particle_t *p;
    angle_t an;
    int bloodcolor = mo->info->bloodcolor;
+   int tempcol;
 
    // get blood colors
    if(bloodcolor < 0 || bloodcolor >= NUMBLOODCOLORS)
@@ -890,31 +892,49 @@ void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    if(M_Random() < 72)
       P_BloodDrop(count, x, y, z, angle, color1, color2);
 
-   count += 3*(M_Random() & 31)/2; // a LOT more blood.
+   // swap colors if reversed
+   if(color2 < color1)
+   {
+      tempcol = color1;
+      color1  = color2;
+      color2  = tempcol;
+   }
+
+   count += 3*((M_Random() & 31) + 1)/2; // a LOT more blood.
+
+   // haleyjd 07/04/09: randomize z coordinate a bit (128/32 == 4 units)
+   z += 3*FRACUNIT + (M_Random() - 128) * FRACUNIT/32;
+
 
    for(; count; --count)
    {
       if(!(p = newParticle()))
          break;
       
-      p->ttl = 15 + M_Random() % 6;
+      p->ttl = 25 + M_Random() % 6;
       p->fade = FADEFROMTTL(p->ttl);
       p->trans = FRACUNIT;
-      p->size = 2 + M_Random() % 5;
-      p->color = M_Random() & 0x80 ? color1 : color2;      
-      p->velz = M_Random() < 32 ? M_Random() * 96 : M_Random() * -96;
-      p->accz = -FRACUNIT/22;
+      p->size = 1 + M_Random() % 4;
+      
+      // if colors are part of same ramp, use all in between
+      if(color1 != color2 && abs(color2 - color1) <= 16)
+         p->color = M_RangeRandom(color1, color2);
+      else
+         p->color = M_Random() & 0x80 ? color1 : color2;
+      
       p->styleflags = 0;
       
-      an = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
+      an      = (angle + ((M_Random() - 128) << 23)) >> ANGLETOFINESHIFT;
       p->velx = (M_Random() * finecosine[an]) / 768;
       p->vely = (M_Random() * finesine[an]) / 768;
-      p->accx = p->velx / 8;
-      p->accy = p->vely / 8;
-      an = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;
-      p->x = x + (M_Random() % 20) * finecosine[an];
-      p->y = y + (M_Random() % 20) * finesine[an];
-      p->z = z + (M_Random() - 128) * -4000;
+
+      an      = (angle + ((M_Random() - 128) << 22)) >> ANGLETOFINESHIFT;      
+      p->x    = x + (M_Random() % 15) * finecosine[an];
+      p->y    = y + (M_Random() % 15) * finesine[an];
+      p->z    = z + (M_Random() - 128) * -3500;
+      p->velz = (M_Random() < 32) ? M_Random() * 140 : M_Random() * -128;
+      p->accz = -FRACUNIT/16;
+      
       P_SetParticlePosition(p);
    }
 }

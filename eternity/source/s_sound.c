@@ -889,10 +889,13 @@ void S_SetSfxVolume(int volume)
    snd_SfxVolume = volume;
 }
 
+//
+// S_ChangeMusicNum
+//
 // sf: created changemusicnum, not limited to original musics
 // change by music number
 // removed mus_new
-
+//
 void S_ChangeMusicNum(int musnum, int looping)
 {
    musicinfo_t *music;
@@ -908,7 +911,11 @@ void S_ChangeMusicNum(int musnum, int looping)
    S_ChangeMusic(music, looping);
 }
 
+//
+// S_ChangeMusicName
+//
 // change by name
+//
 void S_ChangeMusicName(const char *name, int looping)
 {
    musicinfo_t *music;
@@ -924,6 +931,9 @@ void S_ChangeMusicName(const char *name, int looping)
    }
 }
 
+//
+// S_ChangeMusic
+//
 void S_ChangeMusic(musicinfo_t *music, int looping)
 {
    int lumpnum;
@@ -943,8 +953,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    psnprintf(namebuf, sizeof(namebuf), "%s%s", 
              GameModeInfo->musPrefix, music->name);
 
-   lumpnum = W_CheckNumForName(namebuf);
-   if(lumpnum == -1)
+   if((lumpnum = W_CheckNumForName(namebuf)) == -1)
    {
       doom_printf(FC_ERROR"bad music name '%s'\n",
                   music->name);
@@ -953,8 +962,9 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 
    // load & register it
    // haleyjd: changed to PU_STATIC
-   music->data = W_CacheLumpNum(lumpnum, PU_STATIC);
    // julian: added lump length
+
+   music->data = W_CacheLumpNum(lumpnum, PU_STATIC);   
    music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
 
    // play it
@@ -1017,6 +1027,72 @@ void S_StopLoopedSounds(void)
             S_StopChannel(cnum);
 }
 
+//=============================================================================
+//
+// S_Start Music Handlers
+//
+// haleyjd 07/04/09: These are pointed to by GameModeInfo.
+//
+
+//
+// Doom
+//
+// Probably the most complicated music determination, between the 
+// original episodes and the addition of episode 4, which is all 
+// over the place.
+//
+int S_MusicForMapDoom(void)
+{
+   static const int spmus[] =     // Song - Who? - Where?
+   {
+      mus_e3m4,     // American     e4m1
+      mus_e3m2,     // Romero       e4m2
+      mus_e3m3,     // Shawn        e4m3
+      mus_e1m5,     // American     e4m4
+      mus_e2m7,     // Tim          e4m5
+      mus_e2m4,     // Romero       e4m6
+      mus_e2m6,     // J.Anderson   e4m7 CHIRON.WAD
+      mus_e2m5,     // Shawn        e4m8
+      mus_e1m9      // Tim          e4m9
+   };
+            
+   // sf: simplified
+   return 
+      gameepisode < 4 ?
+         mus_e1m1 + (gameepisode-1)*9 + gamemap-1 :
+         spmus[gamemap-1];
+}
+
+//
+// Doom 2
+//
+// Drastically simpler.
+//
+int S_MusicForMapDoom2(void)
+{
+   return (mus_runnin + gamemap - 1);
+}
+
+//
+// Heretic
+//
+// Also simple, thanks to H_Mus_Matrix, which is my own invention.
+//
+int S_MusicForMapHtic(void)
+{
+   int gep = gameepisode;
+   int gmp = gamemap;
+   
+   // ensure bounds just for safety
+   if(gep < 1) gep = 1;
+   if(gep > 6) gep = 6;
+   
+   if(gmp < 1) gmp = 1;
+   if(gmp > 9) gmp = 9;
+   
+   return H_Mus_Matrix[gep - 1][gmp - 1];
+}
+
 //
 // S_Start
 //
@@ -1050,50 +1126,9 @@ void S_Start(void)
    else
    {
       if(idmusnum != -1)
-      {
          mnum = idmusnum; //jff 3/17/98 reload IDMUS music if not -1
-      }
-      else if(GameModeInfo->type == Game_Heretic)
-      {
-         int gep = gameepisode;
-         int gmp = gamemap;
-
-         // ensure bounds just for safety
-         if(gep < 1) gep = 1;
-         if(gep > 6) gep = 6;
-
-         if(gmp < 1) gmp = 1;
-         if(gmp > 9) gmp = 9;
-
-         mnum = H_Mus_Matrix[gep - 1][gmp - 1];
-      }
       else
-      {
-         if(GameModeInfo->id == commercial)
-         {
-            mnum = mus_runnin + gamemap - 1;
-         }
-         else
-         {
-            static const int spmus[] =     // Song - Who? - Where?
-            {
-               mus_e3m4,     // American     e4m1
-               mus_e3m2,     // Romero       e4m2
-               mus_e3m3,     // Shawn        e4m3
-               mus_e1m5,     // American     e4m4
-               mus_e2m7,     // Tim          e4m5
-               mus_e2m4,     // Romero       e4m6
-               mus_e2m6,     // J.Anderson   e4m7 CHIRON.WAD
-               mus_e2m5,     // Shawn        e4m8
-               mus_e1m9      // Tim          e4m9
-            };
-            
-            // sf: simplified
-            mnum = gameepisode < 4 ?
-               mus_e1m1 + (gameepisode-1)*9 + gamemap-1 :
-               spmus[gamemap-1];
-         }
-      }
+         mnum = GameModeInfo->MusicForMap();
          
       // start music
       S_ChangeMusicNum(mnum, true);

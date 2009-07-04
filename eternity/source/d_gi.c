@@ -514,6 +514,14 @@ static finaledata_t UnknownFinale =
 };
 
 //
+// Music Selection Routines - defined in s_sound.c
+//
+
+extern int S_MusicForMapDoom(void);
+extern int S_MusicForMapDoom2(void);
+extern int S_MusicForMapHtic(void);
+
+//
 // IWAD paths
 //
 
@@ -717,14 +725,15 @@ static gamemodeinfo_t giDoomSW =
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
    &DoomFinale,       // finaleData
 
-   S_music,          // s_music
-   mus_None,         // musMin
-   NUMMUSIC,         // numMusic
-   "d_",             // musPrefix
-   "e1m1",           // defMusName
-   DOOMDEFSOUND,     // defSoundName
-   doom_skindefs,    // skinSounds
-   doom_soundnums,   // playerSounds
+   S_music,           // s_music
+   S_MusicForMapDoom, // MusicForMap
+   mus_None,          // musMin
+   NUMMUSIC,          // numMusic
+   "d_",              // musPrefix
+   "e1m1",            // defMusName
+   DOOMDEFSOUND,      // defSoundName
+   doom_skindefs,     // skinSounds
+   doom_soundnums,    // playerSounds
 
    1,                // switchEpisode
 
@@ -806,14 +815,15 @@ static gamemodeinfo_t giDoomReg =
    DEF_DOOM_FINALE,  // teleEndGameFinaleType
    &DoomFinale,      // finaleData
 
-   S_music,          // s_music
-   mus_None,         // musMin
-   NUMMUSIC,         // numMusic
-   "d_",             // musPrefix
-   "e1m1",           // defMusName
-   DOOMDEFSOUND,     // defSoundName
-   doom_skindefs,    // skinSounds
-   doom_soundnums,   // playerSounds
+   S_music,           // s_music
+   S_MusicForMapDoom, // MusicForMap
+   mus_None,          // musMin
+   NUMMUSIC,          // numMusic
+   "d_",              // musPrefix
+   "e1m1",            // defMusName
+   DOOMDEFSOUND,      // defSoundName
+   doom_skindefs,     // skinSounds
+   doom_soundnums,    // playerSounds
 
    2,                // switchEpisode
 
@@ -889,20 +899,21 @@ static gamemodeinfo_t giDoomRetail =
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
 
-   mus_inter,        // interMusNum
-   &giDoomFText,     // ftextinfo
-   &DoomIntermission,// interfuncs
-   DEF_DOOM_FINALE,  // teleEndGameFinaleType
+   mus_inter,         // interMusNum
+   &giDoomFText,      // ftextinfo
+   &DoomIntermission, // interfuncs
+   DEF_DOOM_FINALE,   // teleEndGameFinaleType
    &DoomFinale,       // finaleData
 
-   S_music,          // s_music
-   mus_None,         // musMin
-   NUMMUSIC,         // numMusic
-   "d_",             // musPrefix
-   "e1m1",           // defMusName
-   DOOMDEFSOUND,     // defSoundName
-   doom_skindefs,    // skinSounds
-   doom_soundnums,   // playerSounds
+   S_music,           // s_music
+   S_MusicForMapDoom, // MusicForMap
+   mus_None,          // musMin
+   NUMMUSIC,          // numMusic
+   "d_",              // musPrefix
+   "e1m1",            // defMusName
+   DOOMDEFSOUND,      // defSoundName
+   doom_skindefs,     // skinSounds
+   doom_soundnums,    // playerSounds
 
    2,                // switchEpisode
 
@@ -978,20 +989,21 @@ static gamemodeinfo_t giDoomCommercial =
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
 
-   mus_dm2int,       // interMusNum
-   &giDoomFText,     // ftextinfo
-   &DoomIntermission,// interfuncs
-   FINALE_TEXT,      // teleEndGameFinaleType
-   &Doom2Finale,     // finaleData
+   mus_dm2int,        // interMusNum
+   &giDoomFText,      // ftextinfo
+   &DoomIntermission, // interfuncs
+   FINALE_TEXT,       // teleEndGameFinaleType
+   &Doom2Finale,      // finaleData
 
-   S_music,          // s_music
-   mus_None,         // musMin
-   NUMMUSIC,         // numMusic
-   "d_",             // musPrefix
-   "runnin",         // defMusName
-   DOOMDEFSOUND,     // defSoundName
-   doom_skindefs,    // skinSounds
-   doom_soundnums,   // playerSounds
+   S_music,            // s_music
+   S_MusicForMapDoom2, // MusicForMap
+   mus_None,           // musMin
+   NUMMUSIC,           // numMusic
+   "d_",               // musPrefix
+   "runnin",           // defMusName
+   DOOMDEFSOUND,       // defSoundName
+   doom_skindefs,      // skinSounds
+   doom_soundnums,     // playerSounds
 
    3,                // switchEpisode
 
@@ -1067,20 +1079,21 @@ static gamemodeinfo_t giHereticSW =
    150,              // thrustFactor
    "Corvus",         // defPClassName
 
-   hmus_intr,        // interMusNum
-   &giHticFText,     // ftextinfo
-   &HticIntermission,// interfuncs
-   DEF_HTIC_FINALE,  // teleEndGameFinaleType
-   &HereticFinale,   // finaleData
+   hmus_intr,         // interMusNum
+   &giHticFText,      // ftextinfo
+   &HticIntermission, // interfuncs
+   DEF_HTIC_FINALE,   // teleEndGameFinaleType
+   &HereticFinale,    // finaleData
 
-   H_music,          // s_music
-   hmus_None,        // musMin
-   NUMHTICMUSIC,     // numMusic
-   "mus_",           // musPrefix
-   "e1m1",           // defMusName
-   HTICDEFSOUND,     // defSoundName
-   htic_skindefs,    // skinSounds
-   htic_soundnums,   // playerSounds
+   H_music,           // s_music
+   S_MusicForMapHtic, // MusicForMap
+   hmus_None,         // musMin
+   NUMHTICMUSIC,      // numMusic
+   "mus_",            // musPrefix
+   "e1m1",            // defMusName
+   HTICDEFSOUND,      // defSoundName
+   htic_skindefs,     // skinSounds
+   htic_soundnums,    // playerSounds
 
    1,                // switchEpisode
 
@@ -1160,27 +1173,28 @@ static gamemodeinfo_t giHereticReg =
    150,              // thrustFactor
    "Corvus",         // defPClassName
 
-   hmus_intr,        // interMusNum
-   &giHticFText,     // ftextinfo
-   &HticIntermission,// interfuncs
-   DEF_HTIC_FINALE,  // teleEndGameFinaleType
-   &HereticFinale,   // finaleData
+   hmus_intr,         // interMusNum
+   &giHticFText,      // ftextinfo
+   &HticIntermission, // interfuncs
+   DEF_HTIC_FINALE,   // teleEndGameFinaleType
+   &HereticFinale,    // finaleData
 
-   H_music,          // s_music
-   hmus_None,        // musMin
-   NUMHTICMUSIC,     // numMusic
-   "mus_",           // musPrefix
-   "e1m1",           // defMusName
-   HTICDEFSOUND,     // defSoundName
-   htic_skindefs,    // skinSounds
-   htic_soundnums,   // playerSounds
+   H_music,           // s_music
+   S_MusicForMapHtic, // MusicForMap
+   hmus_None,         // musMin
+   NUMHTICMUSIC,      // numMusic
+   "mus_",            // musPrefix
+   "e1m1",            // defMusName
+   HTICDEFSOUND,      // defSoundName
+   htic_skindefs,     // skinSounds
+   htic_soundnums,    // playerSounds
 
-   2,                // switchEpisode
+   2,                  // switchEpisode
    
    &HereticDefaultORs, // defaultORs
 
-   "ENDTEXT",        // endTextName
-   NULL,             // exitSounds
+   "ENDTEXT",          // endTextName
+   NULL,               // exitSounds
 };
 
 // Game Mode Info Array
