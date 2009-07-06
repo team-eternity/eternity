@@ -41,6 +41,7 @@
 #include "a_small.h"
 #include "s_sndseq.h"
 #include "d_gi.h"
+#include "acs_intr.h"
 
 byte *save_p;
 
@@ -96,7 +97,7 @@ void P_DeNumberObjects(void)
 //
 static int P_MobjNum(mobj_t *mo)
 {
-   long l = mo ? (long)mo->thinker.prev : 0;   // 0 = NULL
+   int l = mo ? (int)mo->thinker.prev : 0;   // 0 = NULL
    
    // extra check for invalid thingnum (prob. still ptr)
    if(l < 0 || l > num_thinkers) 
@@ -699,6 +700,7 @@ enum {
    tc_quake,         // haleyjd 02/28/07: earthquake
    tc_lightfade,     // haleyjd 02/28/07: lightfade thinker
    tc_floorwaggle,   // haleyjd 07/05/09: floor waggle
+   tc_acs,           // haleyjd 07/06/09: acs
    tc_endspecials
 } specials_e;
 
@@ -712,18 +714,19 @@ enum {
 // T_StrobeFlash, (strobe_t: sector_t *),
 // T_Glow, (glow_t: sector_t *),
 // T_PlatRaise, (plat_t: sector_t *), - active list
-// T_MoveElevator, (plat_t: sector_t *), - active list      -- jff 2/22/98
-// T_Scroll                                                 -- killough 3/7/98
-// T_Pusher                                                 -- phares 3/22/98
-// T_FireFlicker                                            -- killough 10/4/98
-// T_PolyObjRotate                                          -- haleyjd 03/26/06:
-// T_PolyObjMove                                             -     
-// T_PolyDoorSlide                                           - polyobjects
-// T_PolyDoorSwing                                           -     
-// T_MovePillar                                             -- joek: pillars
-// T_QuakeThinker                                           -- haleyjd: quakes
-// T_LightFade                                              -- haleyjd: param light
-// T_FloorWaggle                                            -- haleyjd: floor waggle
+// T_MoveElevator, (plat_t: sector_t *), - active list -- jff 2/22/98
+// T_Scroll                                            -- killough 3/7/98
+// T_Pusher                                            -- phares 3/22/98
+// T_FireFlicker                                       -- killough 10/4/98
+// T_PolyObjRotate                                     -- haleyjd 03/26/06:
+// T_PolyObjMove                                        -     
+// T_PolyDoorSlide                                      - polyobjects
+// T_PolyDoorSwing                                      -     
+// T_MovePillar                                        -- joek: pillars
+// T_QuakeThinker                                      -- haleyjd: quakes
+// T_LightFade                                         -- haleyjd: param light
+// T_FloorWaggle                                       -- haleyjd: floor waggle
+// T_ACSThinker                                        -- haleyjd: ACS
 //
 
 void P_ArchiveSpecials(void)
@@ -779,6 +782,7 @@ void P_ArchiveSpecials(void)
             th->function == T_QuakeThinker  ? 4 + sizeof(quakethinker_t)  :
             th->function == T_LightFade     ? 4 + sizeof(lightfade_t)     :
             th->function == T_FloorWaggle   ? 4 + sizeof(floorwaggle_t)   :
+            th->function == T_ACSThinker    ? 4 + sizeof(acsthinker_t)    :
             0;
       }
    }
@@ -1017,6 +1021,19 @@ void P_ArchiveSpecials(void)
          memcpy(save_p, th, sizeof(floorwaggle_t));
          save_p += sizeof(floorwaggle_t);
          waggle->sector = (sector_t *)(waggle->sector - sectors);
+         continue;
+      }
+
+      if(th->function == T_ACSThinker)
+      {
+         acsthinker_t *acs;
+         *save_p++ = tc_acs;
+         acs = (acsthinker_t *)save_p;
+         memcpy(save_p, th, sizeof(acsthinker_t));
+         save_p += sizeof(acsthinker_t);
+         acs->ip      = (int *)(acs->ip - acs->code);
+         acs->line    = acs->line ? (line_t *)(acs->line - lines + 1) : NULL;
+         acs->trigger = (mobj_t *)P_MobjNum(acs->trigger);
          continue;
       }
    }
@@ -1282,6 +1299,21 @@ void P_UnArchiveSpecials(void)
             waggle->thinker.function = T_FloorWaggle;
             waggle->sector = &sectors[(int)waggle->sector];
             P_AddThinker(&waggle->thinker);
+            break;
+         }
+
+      case tc_acs:
+         {
+            mobj_t *mo;
+            acsthinker_t *acs = Z_Malloc(sizeof(acsthinker_t), PU_LEVEL, NULL);
+            memcpy(acs, save_p, sizeof(acsthinker_t));
+            save_p += sizeof(acsthinker_t);
+            acs->thinker.function = T_ACSThinker;
+            acs->line = acs->line ? &lines[(size_t)acs->line - 1] : NULL;
+            mo = P_MobjForNum((int)acs->trigger);
+            P_SetNewTarget(&acs->trigger, mo);
+            P_AddThinker(&acs->thinker);
+            ACS_RestartSavedScript(acs);
             break;
          }
 
@@ -1582,7 +1614,10 @@ static void P_UnArchiveCallbacks(void)
    ++save_p;
 }
 
-/*************** main script saving functions ***************/
+//=============================================================================
+//
+// Script saving functions
+//
 
 //
 // P_ArchiveScripts
@@ -1896,6 +1931,24 @@ void P_UnArchiveButtons(void)
    save_p += numsaved * sizeof(button_t);
 }
 
+//=============================================================================
+//
+// haleyjd 07/06/09: ACS Save/Load
+//
+
+void P_ArchiveACS(void)
+{
+   // save map vars
+   // save world vars
+   // TODO: save deferred scripts
+}
+
+void P_UnArchiveACS(void)
+{
+   // load map vars
+   // load world vars (TODO: not on hub transfer)
+   // TODO: load deferred scripts (TODO: not on hub transfer)
+}
 
 //----------------------------------------------------------------------------
 //

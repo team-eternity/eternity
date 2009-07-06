@@ -157,13 +157,13 @@ typedef struct acsvm_s
 
 // Global function prototypes
 
-void T_ACSThinker(acsthinker_t *script);
-void ACS_Init(void);
-void ACS_NewGame(void);
-void ACS_InitLevel(void);
-void ACS_LoadScript(acsvm_t *vm, int lump);
-void ACS_LoadLevelScript(int lump);
-void ACS_RunDeferredScripts(void);
+void    T_ACSThinker(acsthinker_t *script);
+void    ACS_Init(void);
+void    ACS_NewGame(void);
+void    ACS_InitLevel(void);
+void    ACS_LoadScript(acsvm_t *vm, int lump);
+void    ACS_LoadLevelScript(int lump);
+void    ACS_RunDeferredScripts(void);
 boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args, 
                           mobj_t *mo, line_t *line, int side,
                           acsthinker_t **scr, boolean always);
@@ -171,10 +171,14 @@ boolean ACS_StartScript(int scrnum, int map, long *args, mobj_t *mo,
                         line_t *line, int side, acsthinker_t **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
 boolean ACS_SuspendScript(int scrnum, int mapnum);
+void    ACS_PrepareForLoad(void);
+void    ACS_RestartSavedScript(acsthinker_t *th);
 
 // extern vars.
 
 extern int ACS_thingtypes[ACS_NUM_THINGTYPES];
+extern int ACSmapvars[32];
+extern int ACSworldvars[64];
 
 #endif
 

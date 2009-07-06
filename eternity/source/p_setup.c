@@ -1807,7 +1807,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    SM_InitLevelScript();
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
-   // ACS_FIXME: support ACS in Doom maps somehow?   
    if(mapformat == LEVEL_FORMAT_HEXEN)
       ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
 

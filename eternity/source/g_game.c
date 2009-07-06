@@ -691,9 +691,6 @@ static void G_DoLoadLevel(void)
    // killough 5/13/98: in case netdemo has consoleplayer other than green
    ST_Start();
 
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
-
    C_Popup();  // pop up the console
    
    // sf: if loading a hub level, restore position relative to sector
@@ -1516,6 +1513,8 @@ static void G_DoWorldDone(void)
    G_DoLoadLevel();
    gameaction = ga_nothing;
    AM_clearMarks(); //jff 4/12/98 clear any marks on the automap
+   // haleyjd 01/07/07: run deferred ACS scripts
+   ACS_RunDeferredScripts();
 }
 
 //
@@ -1759,29 +1758,20 @@ void G_SaveCurrentLevel(char *filename, char *description)
    save_p += sizeof(dmflags);
    
    // killough 3/22/98: add Z_CheckHeap after each call to ensure consistency
+   // haleyjd 07/06/09: just Z_CheckHeap after the end. This stuff works by now.
    
    P_NumberObjects();    // turn ptrs to numbers
 
-   Z_CheckHeap();
    P_ArchivePlayers();
-   Z_CheckHeap();
    P_ArchiveWorld();
-   Z_CheckHeap();
    P_ArchivePolyObjects(); // haleyjd 03/27/06
-   Z_CheckHeap();
    P_ArchiveThinkers();
-   Z_CheckHeap();
    P_ArchiveSpecials();
    P_ArchiveRNG();    // killough 1/18/98: save RNG information
-   Z_CheckHeap();
    P_ArchiveMap();    // killough 1/22/98: save automap information
-   Z_CheckHeap();
    P_ArchiveScripts();   // sf: archive scripts
-   Z_CheckHeap();
    P_ArchiveSoundSequences();
-   Z_CheckHeap();
    P_ArchiveButtons();
-   Z_CheckHeap();
    
    P_DeNumberObjects();
 
@@ -1875,7 +1865,7 @@ static void G_DoLoadGame(void)
       checksum = G_Signature();
       if (memcmp(&checksum, save_p, sizeof checksum))
       {
-         char *msg = malloc(strlen((const char *)(save_p + sizeof checksum)) + 128);
+         char *msg = calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128);
          strcpy(msg,"Incompatible Savegame!!!\n");
          if(save_p[sizeof checksum])
             strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
@@ -1933,15 +1923,18 @@ static void G_DoLoadGame(void)
    memcpy(&dmflags, save_p, sizeof(dmflags));
    save_p += sizeof(dmflags);
 
+   // haleyjd 07/06/09: prepare ACS for loading
+   ACS_PrepareForLoad();
+
    // dearchive all the modifications
    P_UnArchivePlayers();
    P_UnArchiveWorld();
-   P_UnArchivePolyObjects(); // haleyjd 03/27/06
+   P_UnArchivePolyObjects();    // haleyjd 03/27/06
    P_UnArchiveThinkers();
    P_UnArchiveSpecials();
-   P_UnArchiveRNG();    // killough 1/18/98: load RNG information
-   P_UnArchiveMap();    // killough 1/22/98: load automap information
-   P_UnArchiveScripts(); // sf: scripting
+   P_UnArchiveRNG();            // killough 1/18/98: load RNG information
+   P_UnArchiveMap();            // killough 1/22/98: load automap information
+   P_UnArchiveScripts();        // sf: scripting
    P_UnArchiveSoundSequences();
    P_UnArchiveButtons();
    P_FreeObjTable();
@@ -1955,6 +1948,9 @@ static void G_DoLoadGame(void)
       return; 
    }
 
+   // haleyjd: move up Z_CheckHeap to before Z_Free (safer)
+   Z_CheckHeap(); 
+
    // done
    Z_Free(savebuffer);
    
@@ -1963,8 +1959,6 @@ static void G_DoLoadGame(void)
    
    // draw the pattern into the back screen
    R_FillBackScreen();
-   
-   Z_CheckHeap();
 
    // killough 12/98: support -recordfrom and -loadgame -playdemo
    if(!command_loadgame)
@@ -1982,6 +1976,9 @@ static void G_DoLoadGame(void)
    //  for 'seamless' travel between levels
    if(hub_changelevel) 
       P_RestorePlayerPosition();
+
+   // haleyjd 01/07/07: run deferred ACS scripts
+   ACS_RunDeferredScripts();
 }
 
 //

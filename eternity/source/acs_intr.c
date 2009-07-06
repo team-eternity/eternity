@@ -165,16 +165,9 @@ enum
    /* 101 */ OP_ENDPRINTBOLD,
 };
 
-
 //
 // Static Variables
 //
-
-// map variables
-static int ACSmapvars[32];
-
-// world variables
-static int ACSworldvars[64];
 
 // deferred scripts
 static deferredacs_t *acsDeferred;
@@ -197,6 +190,12 @@ static int numACSVMsAlloc; // number of vm pointers allocated
 // responsibility for populating this list.
 
 int ACS_thingtypes[ACS_NUM_THINGTYPES];
+
+// map variables
+int ACSmapvars[32];
+
+// world variables
+int ACSworldvars[64];
 
 //
 // Static Functions
@@ -1459,8 +1458,8 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args,
    P_SetTarget(&newScript->trigger, mo);
 
    // copy in some important data
-   newScript->code = scrData->code;
-   newScript->data = vm->data;
+   newScript->code        = scrData->code;
+   newScript->data        = vm->data;
    newScript->stringtable = vm->stringtable;
    newScript->printBuffer = &vm->printBuffer;
    newScript->acscript    = scrData;
@@ -1601,6 +1600,61 @@ boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 boolean ACS_SuspendScript(int scrnum, int mapnum)
 {
    return ACS_SuspendScriptVM(&acsLevelScriptVM, scrnum, mapnum);
+}
+
+//=============================================================================
+//
+// Save/Load Code
+//
+
+//
+// ACS_PrepareForLoad
+//
+// Gets the ACS system ready for a savegame load.
+//
+void ACS_PrepareForLoad(void)
+{
+   int i, j;
+
+   for(i = 0; i < numACSVMs; ++i)
+   {
+      for(j = 0; j < acsVMs[i]->numScripts; ++j)
+      {
+         // any OPEN script threads created during ACS_LoadLevelScript
+         // have been destroyed, so clear out the threads list of all 
+         // scripts
+         acsVMs[i]->scripts[j].threads = NULL;
+      }
+   }
+
+}
+
+//
+// ACS_RestartSavedScript
+//
+// Fixes up an acsthinker_t loaded from a savegame.
+//
+void ACS_RestartSavedScript(acsthinker_t *th)
+{
+   // nullify list links for safety
+   th->prev = NULL;
+   th->next = NULL;
+
+   // reinitialize pointers
+   th->vm          = acsVMs[th->vmID];
+   th->acscript    = &(th->vm->scripts[th->internalNum]);
+   th->code        = th->acscript->code;
+   th->data        = th->vm->data;
+   th->stringtable = th->vm->stringtable;
+   th->printBuffer = &(th->vm->printBuffer);
+
+   // note: line and trigger pointers are restored in p_saveg.c
+
+   // restore ip to be relative to new codebase (saved value is offset)
+   th->ip = (int *)(th->code + (size_t)th->ip);
+
+   // add the thread
+   ACS_addThread(th, th->acscript);
 }
 
 // EOF
