@@ -698,6 +698,7 @@ enum {
    tc_pillar,        // joek: pillars
    tc_quake,         // haleyjd 02/28/07: earthquake
    tc_lightfade,     // haleyjd 02/28/07: lightfade thinker
+   tc_floorwaggle,   // haleyjd 07/05/09: floor waggle
    tc_endspecials
 } specials_e;
 
@@ -722,6 +723,7 @@ enum {
 // T_MovePillar                                             -- joek: pillars
 // T_QuakeThinker                                           -- haleyjd: quakes
 // T_LightFade                                              -- haleyjd: param light
+// T_FloorWaggle                                            -- haleyjd: floor waggle
 //
 
 void P_ArchiveSpecials(void)
@@ -776,6 +778,7 @@ void P_ArchiveSpecials(void)
             th->function == T_MovePillar    ? 4 + sizeof(pillar_t)        :
             th->function == T_QuakeThinker  ? 4 + sizeof(quakethinker_t)  :
             th->function == T_LightFade     ? 4 + sizeof(lightfade_t)     :
+            th->function == T_FloorWaggle   ? 4 + sizeof(floorwaggle_t)   :
             0;
       }
    }
@@ -978,7 +981,7 @@ void P_ArchiveSpecials(void)
 
       if(th->function == T_MovePillar)
       {
-      	pillar_t *pillar;
+      	 pillar_t *pillar;
          *save_p++ = tc_pillar;     
          pillar = (pillar_t *)save_p;
          memcpy(save_p, th, sizeof(pillar_t));
@@ -1003,6 +1006,17 @@ void P_ArchiveSpecials(void)
          memcpy(save_p, th, sizeof(lightfade_t));
          save_p += sizeof(lightfade_t);
          fade->sector = (sector_t *)(fade->sector - sectors);
+         continue;
+      }
+
+      if(th->function == T_FloorWaggle)
+      {
+         floorwaggle_t *waggle;
+         *save_p++ = tc_floorwaggle;
+         waggle = (floorwaggle_t *)save_p;
+         memcpy(save_p, th, sizeof(floorwaggle_t));
+         save_p += sizeof(floorwaggle_t);
+         waggle->sector = (sector_t *)(waggle->sector - sectors);
          continue;
       }
    }
@@ -1257,6 +1271,17 @@ void P_UnArchiveSpecials(void)
             fade->thinker.function = T_LightFade;
             fade->sector = &sectors[(int)fade->sector];
             P_AddThinker(&fade->thinker);
+            break;
+         }
+      
+      case tc_floorwaggle:
+         {
+            floorwaggle_t *waggle = Z_Malloc(sizeof(floorwaggle_t), PU_LEVEL, NULL);
+            memcpy(waggle, save_p, sizeof(floorwaggle_t));
+            save_p += sizeof(floorwaggle_t);
+            waggle->thinker.function = T_FloorWaggle;
+            waggle->sector = &sectors[(int)waggle->sector];
+            P_AddThinker(&waggle->thinker);
             break;
          }
 
