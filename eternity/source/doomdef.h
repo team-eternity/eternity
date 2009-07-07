@@ -73,8 +73,8 @@ typedef enum {
 // when multiple screen sizes are supported
 
 // SoM 2-4-04: ANYRES
-#define MAX_SCREENWIDTH  1024
-#define MAX_SCREENHEIGHT 768
+#define MAX_SCREENWIDTH  1280
+#define MAX_SCREENHEIGHT 800
 
 // SoM: replaced globals with a struct and a single global
 typedef struct
