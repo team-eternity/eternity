@@ -453,9 +453,10 @@ void V_Init(void)
    if(s)
       free(s), destroy_bitmap(screens0_bitmap);
 
-   video.screens[3] = 
-      (video.screens[2] = 
-       (video.screens[1] = s = calloc(size,3)) + size) + size;
+   video.screens[4] =
+      (video.screens[3] = 
+         (video.screens[2] = 
+            (video.screens[1] = s = calloc(size,4)) + size) + size) + size;
 #else
    // haleyjd 05/30/08: removed screens from zone heap
    if(s)
@@ -464,9 +465,10 @@ void V_Init(void)
       I_UnsetPrimaryBuffer();
    }
 
-   video.screens[3] =
-      (video.screens[2] =
-       (video.screens[1] = s = Z_SysCalloc(size, 3)) + size) + size;
+   video.screens[4] =
+      (video.screens[3] =
+         (video.screens[2] =
+            (video.screens[1] = s = Z_SysCalloc(size, 4)) + size) + size) + size;
 #endif
    
 #ifdef DJGPP

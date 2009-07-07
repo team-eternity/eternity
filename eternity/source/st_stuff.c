@@ -1312,7 +1312,8 @@ static void ST_DoomStart(void)
    else
       freebackscreen = true;
 
-   V_InitVBufferFrom(&backscreen4, video.width, video.height, video.width, video.bitdepth, video.screens[4]);
+   V_InitVBufferFrom(&backscreen4, video.width, video.height, video.width, 
+                     video.bitdepth, video.screens[4]);
    V_SetScaling(&backscreen4, SCREENWIDTH, SCREENHEIGHT);
 }
 
@@ -1357,7 +1358,7 @@ static void ST_DoomInit(void)
    ST_loadData();
    
    // SoM: allocate enough for ANYRES
-   video.screens[4] = Z_Malloc(MAX_SCREENWIDTH * 150, PU_STATIC, 0);
+   //video.screens[4] = Z_Malloc(MAX_SCREENWIDTH * 150, PU_STATIC, 0);
 }
 
 //
