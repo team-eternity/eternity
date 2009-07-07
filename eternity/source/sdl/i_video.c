@@ -350,7 +350,7 @@ static void I_ParseGeom(const char *geom,
             int width = atoi(qstr.buffer);
             if(width < 320)
                width = 320;
-            else if(width > 1024)
+            else if(width > MAX_SCREENWIDTH)
                width = 1024;
             *w = width;
             M_QStrClear(&qstr);
@@ -365,7 +365,7 @@ static void I_ParseGeom(const char *geom,
             int height = atoi(qstr.buffer);
             if(height < 200)
                height = 200;
-            else if(height > 768)
+            else if(height > MAX_SCREENHEIGHT)
                height = 768;
             *h = height;
             state = STATE_FLAGS;
