@@ -416,11 +416,11 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
          I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
-         (p = atoi(myargv[p + 1])) >= 320 && p <= 1024)
+         (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
          *w = p;
       
       if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
-         (p = atoi(myargv[p + 1])) >= 200 && p <= 768)
+         (p = atoi(myargv[p + 1])) >= 200 && p <= MAX_SCREENHEIGHT)
          *h = p;
       
       if(M_CheckParm("-fullscreen"))
