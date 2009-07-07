@@ -287,7 +287,7 @@ static void R_InitTextureMapping (void)
 
    // Cardboard
    ratio = 1.6f / ((float)video.width / (float)video.height);
-   view.fov = (float)fov * PI / 180.0f; // 90 degrees
+   view.fov = (float)fov * PI / 180.0f;
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;
    view.yfoc = detailshift ? (view.xfoc * ratio) * 2.0f : (view.xfoc * ratio);

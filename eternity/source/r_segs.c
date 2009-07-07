@@ -417,12 +417,77 @@ static void R_RenderSegLoop(void)
 
 
 
+// SoM: This function is needed in multiple places now to fix some cases
+// of sprites showing up behind walls in some portal areas.
+static void R_CheckDSAlloc()
+{
+   // drawsegs need to be taken care of here
+   if(ds_p == drawsegs + maxdrawsegs)
+   {
+      unsigned newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
+      drawsegs = realloc(drawsegs, sizeof(drawseg_t) * newmax);
+      ds_p = drawsegs + maxdrawsegs;
+      maxdrawsegs = newmax;
+   }
+}
 
+
+
+
+// Simply sets ds_p's properties to that of a closed drawseg.
+static void R_CloseDSP()
+{
+   ds_p->silhouette = SIL_BOTH;
+   ds_p->sprtopclip = screenheightarray;
+   ds_p->sprbottomclip = zeroarray;
+   ds_p->bsilheight = D_MAXINT;
+   ds_p->tsilheight = D_MININT;
+   ds_p->maskedtexturecol = NULL;
+}
+
+
+
+
+#define NEXTDSP(model, newx1) ds_p++; R_CheckDSAlloc(); *ds_p = model; ds_p->x1 = newx1; ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
+#define SETX2(model, newx2) ds_p->dist2 -= segclip.diststep * (model.x2 - (newx2)); ds_p->x2 = newx2
+
+
+
+
+// This function iterates through the x range of segclip, and checks for columns
+// that became closed in the clipping arrays after the segclip is rendered. Any
+// new closed regions are then added to the solidsegs array to speed up rejection
+// of new segs trying to render to closed areas of clipping space.
 static void R_DetectClosedColumns()
 {
-   int i, stop = segclip.x2 + 1, startx;
+   drawseg_t model  = *ds_p;
+   int       startx = segclip.x1;
+   int       stop   = segclip.x2 + 1;
+   int       i      = segclip.x1;
 
-   for(i = segclip.x1; i < stop; i++)
+   // The new code will create new drawsegs for any newly created solidsegs.
+   // Determine the initial state (open or closed) of the drawseg.
+   if(floorclip[i] < ceilingclip[i])
+   {
+      // Find the first open column
+      while(i < stop && floorclip[i] < ceilingclip[i]) i++;
+
+      // Mark the closed area.
+      R_CloseDSP();
+      R_MarkSolidSeg(startx, i - 1);
+
+      // End closed
+      if(i == stop)
+         return;
+
+      SETX2(model, i - 1);
+
+      // Continue on, at least one open column was found, so copy the model
+      // and enter the loop.
+      NEXTDSP(model, i);
+   }
+
+   for(; i < stop; i++)
    {
       // Find the first closed column
       while(i < stop && floorclip[i] >= ceilingclip[i]) i++;
@@ -430,6 +495,13 @@ static void R_DetectClosedColumns()
       // End open
       if(i == stop)
          break;
+
+      // Mark the close of the open drawseg
+      SETX2(model, i - 1);
+
+      // There is at least one closed column, so create another drawseg.
+      NEXTDSP(model, i);
+      R_CloseDSP();
 
       startx = i;
       // Find the first open column
@@ -440,9 +512,26 @@ static void R_DetectClosedColumns()
       if(startx > i - 1 || startx < 0 || i - 1 >= viewwidth || startx >= viewwidth || i - 1 < 0)
          I_Error("R_DetectClosedColumns bad range %i, %i\n", startx, i - 1);
 #endif
+      // SoM: This creates a bug clipping sprites:
+      // What happens when there is a solid seg created, but no drawseg marked
+      // as solid? Sprites appear through architecture. The solution is to
+      // modify the drawseg created before this function was called to only be 
+      // open where the seg has not created a solid seg.
       R_MarkSolidSeg(startx, i-1);
+
+      // End closed
+      if(i == stop)
+         break;
+
+      SETX2(model, i - 1);
+
+      // There is at least one open column, so create another drawseg.
+      NEXTDSP(model, i);
    }
 }
+
+#undef NEXTDSP
+#undef SETX2
 
 
 static void R_StoreTextureColumns(void)
@@ -504,13 +593,6 @@ void R_StoreWallRange(const int start, const int stop)
       I_Error("R_StoreWallRange: null segclip.line\n");
 #endif
    
-   usesegloop = !seg.backsec || seg.clipsolid || 
-                seg.markceiling || seg.markfloor || 
-                seg.toptex || seg.midtex || seg.bottomtex || 
-                seg.f_portalignore || seg.c_portalignore ||
-                seg.markfportal || seg.markcportal || 
-                segclip.line->linedef->portal;
-
    clipx1 = (float)(start - segclip.x1frac);
 
    clipx2 = (float)(segclip.x2frac - stop);
@@ -603,13 +685,7 @@ void R_StoreWallRange(const int start, const int stop)
 
 
    // drawsegs need to be taken care of here
-   if(ds_p == drawsegs + maxdrawsegs)
-   {
-      unsigned newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
-      drawsegs = realloc(drawsegs, sizeof(drawseg_t) * newmax);
-      ds_p = drawsegs + maxdrawsegs;
-      maxdrawsegs = newmax;
-   }
+   R_CheckDSAlloc();
 
    ds_p->x1 = start;
    ds_p->x2 = stop;
@@ -623,12 +699,13 @@ void R_StoreWallRange(const int start, const int stop)
    
    if(segclip.clipsolid)
    {
-      ds_p->silhouette = SIL_BOTH;
+      /*ds_p->silhouette = SIL_BOTH;
       ds_p->sprtopclip = screenheightarray;
       ds_p->sprbottomclip = zeroarray;
       ds_p->bsilheight = D_MAXINT;
       ds_p->tsilheight = D_MININT;
-      ds_p->maskedtexturecol = NULL;
+      ds_p->maskedtexturecol = NULL;*/
+      R_CloseDSP();
    }
    else
    {
@@ -679,14 +756,16 @@ void R_StoreWallRange(const int start, const int stop)
          ds_p->maskedtexturecol = NULL;
    }
 
-   if(ds_p->silhouette || usesegloop || !ds_p->maskedtexturecol)
-   {
-      R_RenderSegLoop();
+   usesegloop = !seg.backsec || seg.clipsolid || 
+                seg.markceiling || seg.markfloor || 
+                seg.toptex || seg.midtex || seg.bottomtex || 
+                seg.f_portalignore || seg.c_portalignore ||
+                seg.markfportal || seg.markcportal || 
+                segclip.line->linedef->portal || 
+                ds_p->silhouette || !ds_p->maskedtexturecol;
 
-      if(!segclip.clipsolid && 
-         (ds_p->silhouette & SIL_TOP || ds_p->silhouette & SIL_BOTTOM))
-         R_DetectClosedColumns();
-   }
+   if(usesegloop)
+      R_RenderSegLoop();
    else
       R_StoreTextureColumns();
    
@@ -717,6 +796,11 @@ void R_StoreWallRange(const int start, const int stop)
       ds_p->silhouette |= SIL_BOTTOM;
       ds_p->bsilheight = D_MAXINT;
    }
+
+   if(!segclip.clipsolid && 
+      (ds_p->silhouette & SIL_TOP || ds_p->silhouette & SIL_BOTTOM))
+      R_DetectClosedColumns();
+
    ++ds_p;
 }
 
