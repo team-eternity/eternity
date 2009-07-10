@@ -37,6 +37,7 @@ enum
    DM_BARRELRESPAWN = 0x00000004, // barrels respawn (dm3)
    DM_PLAYERDROP    = 0x00000008, // players drop items (dm3)
    DM_RESPAWNSUPER  = 0x00000010, // respawning super powerups
+   DM_INSTAGIB      = 0x00000020, // any damage gibs players
 };
 
 // default dmflags for certain game modes

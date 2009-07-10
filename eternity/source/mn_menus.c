@@ -859,6 +859,7 @@ static menuitem_t mn_dmflags_items[] =
    {it_runcmd,   "respawning barrels",         "mn_dfbarrel"},
    {it_runcmd,   "players drop items",         "mn_dfplyrdrop"},
    {it_runcmd,   "respawning super items",     "mn_dfrespsupr"},
+   {it_runcmd,   "instagib",                   "mn_dfinstagib"},
    {it_gap},
    {it_info,     FC_GOLD "dmflags =",          NULL,            NULL, MENUITEM_CENTERED},
    {it_end}
@@ -898,10 +899,10 @@ static void MN_DMFlagsDrawer(void)
    menuitem_t *menuitem;
 
    // don't draw anything before the menu has been initialized
-   if(!(menu_dmflags.menuitems[8].flags & MENUITEM_POSINIT))
+   if(!(menu_dmflags.menuitems[9].flags & MENUITEM_POSINIT))
       return;
 
-   for(i = 2; i < 7; i++)
+   for(i = 2; i < 8; i++)
    {
       menuitem = &(menu_dmflags.menuitems[i]);
                   
@@ -915,7 +916,7 @@ static void MN_DMFlagsDrawer(void)
         );
    }
 
-   menuitem = &(menu_dmflags.menuitems[8]);
+   menuitem = &(menu_dmflags.menuitems[9]);
    // draw dmflags value
    psnprintf(buf, sizeof(buf), FC_GOLD "%lu", dmflags);
    V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y);
@@ -954,6 +955,10 @@ CONSOLE_COMMAND(mn_dfrespsupr, cf_server|cf_hidden)
    toggle_dm_flag(DM_RESPAWNSUPER);
 }
 
+CONSOLE_COMMAND(mn_dfinstagib, cf_server|cf_hidden)
+{
+   toggle_dm_flag(DM_INSTAGIB);
+}
 
 /////////////////////////////////////////////////////////////////
 //
@@ -3651,6 +3656,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_dfbarrel);
    C_AddCommand(mn_dfplyrdrop);
    C_AddCommand(mn_dfrespsupr);
+   C_AddCommand(mn_dfinstagib);
    
    // different connect types
    //C_AddCommand(mn_ser_answer);

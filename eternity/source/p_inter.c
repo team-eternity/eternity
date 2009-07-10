@@ -1307,6 +1307,10 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    // player specific
    if(player)
    {
+      // haleyjd 07/10/09: instagib
+      if(dmflags & DM_INSTAGIB)
+         damage = 10000;
+
       // end of game hell hack
       if(target->subsector->sector->special == 11 && damage >= target->health)
          damage = target->health - 1;
