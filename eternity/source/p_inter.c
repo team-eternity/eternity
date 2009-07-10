@@ -1308,7 +1308,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    if(player)
    {
       // haleyjd 07/10/09: instagib
-      if(dmflags & DM_INSTAGIB)
+      if(source && dmflags & DM_INSTAGIB)
          damage = 10000;
 
       // end of game hell hack
