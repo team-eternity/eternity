@@ -356,8 +356,8 @@ void V_ClassicFPSDrawer(void)
 void V_TextFPSDrawer(void)
 {
    static char fpsStr[16];
-   static int  fhistory[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-   static int  lasttic = 0;
+   static int  fhistory[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+   static int  lasttic = 0, slot = 0;
    vfont_t *font;
    
    float fps = 0;
@@ -365,26 +365,14 @@ void V_TextFPSDrawer(void)
    
    thistic = I_GetTime();
    
-   for(i = 0; i < 9; i++)
-   {
-      fhistory[i] = fhistory[i+1];
+   fhistory[slot & 15] = thistic != lasttic ? thistic - lasttic : 1;
+   slot++;
+
+   for(i = 0; i < 16; i++)
       totaltics += fhistory[i];
-   }
    
-   fhistory[9] = thistic - lasttic;
-   
-   if(fhistory[9] == 0)
-      fhistory[9] = 1;
-   
-   totaltics += fhistory[9];
-   
-   fps = (float)totaltics;
-   fps /= 10;
-   
-   if(fps)
-   {
-      fps = (float)TICRATE / fps;
-   }
+   if(totaltics)
+      fps = (float)TICRATE / (totaltics / 16.0f);
    
    psnprintf(fpsStr, sizeof(fpsStr), FC_GRAY "FPS: %.2f", fps);
    
