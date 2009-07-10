@@ -267,14 +267,12 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
     0;
 }
 
-
-
 //
 // R_ResetFOV
 // 
 // SoM: Called by I_InitGraphicsMode when the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
-
+//
 void R_ResetFOV(int width, int height)
 {
    double ratio = (double)width / (double)height;
@@ -286,9 +284,6 @@ void R_ResetFOV(int width, int height)
    else if(ratio == (16.0 / 9.0))
       fov = 106;
 }
-
-
-
 
 extern float slopevis; // SoM: used in slope lighting
 
@@ -319,7 +314,8 @@ static void R_InitTextureMapping (void)
    view.yfoc = detailshift ? (view.xfoc * ratio) * 2.0f : (view.xfoc * ratio);
    view.focratio = view.yfoc / view.xfoc;
 
-   // Unfortunately, cardboard still has to co-exist with the old fixed point code
+   // Unfortunately, cardboard still has to co-exist with the old fixed point
+   // code
    focallen_x = M_FloatToFixed(view.xfoc);
    focallen_y = M_FloatToFixed(view.yfoc);
 
@@ -373,14 +369,13 @@ static void R_InitTextureMapping (void)
    clipangle = xtoviewangle[0];
 }
 
+#define DISTMAP 2
+
 //
 // R_InitLightTables
 // Only inits the zlight table,
 //  because the scalelight table changes with view size.
 //
-
-#define DISTMAP 2
-
 void R_InitLightTables (void)
 {
    int i;
@@ -542,7 +537,7 @@ void R_SetupViewScaling(void)
 //
 // R_ExecuteSetViewSize
 //
-void R_ExecuteSetViewSize (void)
+void R_ExecuteSetViewSize(void)
 {
    int i;
 
@@ -601,7 +596,6 @@ void R_ExecuteSetViewSize (void)
 //
 // R_Init
 //
-
 void R_Init(void)
 {
    R_InitData();
@@ -616,7 +610,7 @@ void R_Init(void)
 // R_PointInSubsector
 //
 // killough 5/2/98: reformatted, cleaned up
-
+//
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y)
 {
    int nodenum = numnodes-1;
@@ -627,6 +621,7 @@ subsector_t *R_PointInSubsector(fixed_t x, fixed_t y)
 
 int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 
+unsigned int frameid = 0;
 
 //
 // R_IncrementFrameid
@@ -638,8 +633,6 @@ int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 // be searched and all frameids reset to prevent mishaps in the rendering 
 // process.
 //
-unsigned int frameid = 0;
-
 void R_IncrementFrameid(void)
 {
    frameid++;
@@ -925,7 +918,8 @@ void R_HOMdrawer(void)
    
    colour = !flashing_hom || (gametic % 20) < 9 ? 0xb0 : 0;
 
-   V_ColorBlock(&vbscreen, (byte)colour, viewwindowx, viewwindowy, viewwidth, viewheight);
+   V_ColorBlock(&vbscreen, (byte)colour, viewwindowx, viewwindowy, viewwidth,
+                viewheight);
 }
 
 //

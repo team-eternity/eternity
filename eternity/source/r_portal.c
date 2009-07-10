@@ -97,7 +97,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
    pwindow_t *child;
 
    if(parent->child)
-      I_Error("R_CreateChildWindow: called for parent that already had a child.\n");
+      I_Error("R_CreateChildWindow: child portal displaced\n");
 
    child = R_NewPortalWindow();
 
@@ -107,7 +107,6 @@ static void R_CreateChildWindow(pwindow_t *parent)
    child->type = parent->type;
    child->func = parent->func;
 }
-
 
 //
 // R_WindowAdd
@@ -206,12 +205,6 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    }
 }
 
-
-
-
-
-
-
 //
 // R_CreatePortal
 //
@@ -276,7 +269,6 @@ portal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
    return ret;
 }
 
-
 //
 // R_GetTwoWayPortal
 //
@@ -311,7 +303,6 @@ portal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 
    return ret;
 }
-
 
 //
 // R_GetSkyBoxPortal
@@ -432,8 +423,6 @@ portal_t *R_GetPlanePortal(short *pic, fixed_t *delta,
    ret->data.plane = plane;
    return ret;
 }
-
-
 
 //
 // R_InitPortals
@@ -824,7 +813,6 @@ void R_UntaintPortals(void)
    }
 }
 
-
 static void R_SetPortalFunction(pwindow_t *window)
 {
    switch(window->portal->type)
@@ -855,8 +843,6 @@ static void R_SetPortalFunction(pwindow_t *window)
       break;
    }
 }
-
-
 
 //
 // R_Get*PortalWindow
@@ -956,10 +942,6 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 
    return rover;
 }
-
-
-
-
 
 //
 // R_RenderPortals

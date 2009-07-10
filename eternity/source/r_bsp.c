@@ -156,8 +156,6 @@ static void R_AddSolidSeg(int x1, int x2)
 #endif
 }
 
-
-
 void R_MarkSolidSeg(int x1, int x2)
 {
    addend->first = x1;
@@ -165,8 +163,7 @@ void R_MarkSolidSeg(int x1, int x2)
    addend++;
 }
 
-
-static void R_AddMarkedSegs()
+static void R_AddMarkedSegs(void)
 {
    cliprange_t *r;
 
@@ -175,7 +172,6 @@ static void R_AddMarkedSegs()
 
    addend = addedsegs;
 }
-
 
 //
 // R_ClipSolidWallSegment
@@ -335,7 +331,9 @@ void R_ClearClipSegs(void)
    memset(&segclip, 0, sizeof(cb_seg_t));
 }
 
-
+//
+// R_SetupPortalClipsegs
+//
 boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
 {
    int i = minx, stop = maxx + 1;
@@ -399,14 +397,15 @@ endclosed:
    return true;
 }
 
-
-
+//
+// R_DoorClosed
+//
 // killough 1/18/98 -- This function is used to fix the automap bug which
 // showed lines behind closed doors simply because the door had a dropoff.
 //
 // It assumes that Doom has already ruled out a door being closed because
 // of front-back closure (e.g. front floor is taller than back ceiling).
-
+//
 int R_DoorClosed(void)
 {
    return
@@ -602,7 +601,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
 static float slopemark[MAX_SCREENWIDTH];
 
-R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
+void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 {
    int i;
 
@@ -617,7 +616,6 @@ R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
          slopemark[i] = -1;
    }
 }
-
 
 static boolean R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
@@ -654,8 +652,7 @@ static boolean R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float
    return true;
 }
 
-
-void R_ClipSegToFPortal()
+void R_ClipSegToFPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -668,7 +665,8 @@ void R_ClipSegToFPortal()
    {
       for(i = start; i <= stop; i++)
       {
-         // skip past the closed or out of sight columns to find the first visible column
+         // skip past the closed or out of sight columns to find the first 
+         // visible column
          while(i <= stop && floorclip[i] - slopemark[i] <= -1.0) i++;
 
          if(i > stop)
@@ -722,8 +720,7 @@ void R_ClipSegToFPortal()
    }
 }
 
-
-void R_ClipSegToCPortal()
+void R_ClipSegToCPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -786,9 +783,7 @@ void R_ClipSegToCPortal()
    }
 }
 
-
-
-void R_ClipSegToLPortal()
+void R_ClipSegToLPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -903,7 +898,8 @@ void R_ClipSegToLPortal()
 
       for(i = start; i <= stop; i++)
       {
-         // skip past the closed or out of sight columns to find the first visible column
+         // skip past the closed or out of sight columns to find the first 
+         // visible column
          for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
             top += topstep;
 
@@ -943,29 +939,20 @@ void R_ClipSegToLPortal()
    }
 }
 
+extern R_ClipSegFunc segclipfuncs[] = 
+{
+   R_ClipSegToFPortal,
+   R_ClipSegToCPortal,
+   R_ClipSegToLPortal
+};
 
-extern R_ClipSegFunc segclipfuncs[] = {
-R_ClipSegToFPortal,
-R_ClipSegToCPortal,
-R_ClipSegToLPortal};
-
-
-
-
-
-//
-// R_AddLine
-//
-// Clips the given segment
-// and adds any visible pieces to the line list.
-//
 #define NEARCLIP 0.05f
 #define PNEARCLIP 0.001f
 extern int       *texturewidthmask;
 
-
-
-static void R_2S_Sloped(float pstep, float i1, float i2, float textop, float texbottom, vertex_t *v1, vertex_t *v2, float lclip1, float lclip2)
+static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
+                        float texbottom, vertex_t *v1, vertex_t *v2, 
+                        float lclip1, float lclip2)
 {
    boolean mark; // haleyjd
    boolean heightchange;
@@ -1149,9 +1136,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop, float tex
                   R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
 }
 
-
-
-static void R_2S_Normal(float pstep, float i1, float i2, float textop, float texbottom)
+static void R_2S_Normal(float pstep, float i1, float i2, float textop, 
+                        float texbottom)
 {
    boolean mark; // haleyjd
    boolean uppermissing, lowermissing;
@@ -1205,7 +1191,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
        seg.backsec->ceilingheight != seg.frontsec->ceilingheight) &&
        (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
         seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
-        (seg.backsec->ceilingheight <= seg.backsec->floorheight && !uppermissing && !lowermissing)));
+        (seg.backsec->ceilingheight <= seg.backsec->floorheight && 
+         !uppermissing && !lowermissing)));
 
    seg.markcportal = 
       (seg.c_portal && 
@@ -1304,10 +1291,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
                   line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
                   line->linedef->sidenum[0] == line->sidedef - sides ?
                   R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
-   }
+}
 
-
-
+//
+// R_AddLine
+//
+// Clips the given segment
+// and adds any visible pieces to the line list.
+//
 static void R_AddLine(seg_t *line)
 {
    static sector_t tempsec;
