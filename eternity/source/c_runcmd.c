@@ -1209,10 +1209,12 @@ void C_RunScript(DWFILE *dwfile)
 
       switch(state)
       {
+#if 0
       case CSC_COMMENT:
          if(c == '\n')        // eat up to the next \n
             state = CSC_NONE;
          continue;
+#endif
 
       case CSC_SLASH:
          if(c == '/')         // start the comment now
@@ -1242,6 +1244,7 @@ void C_RunScript(DWFILE *dwfile)
       case '\f':
       case '\n':
          continue;
+#if 0
       case '#':
       case ';':
          state = CSC_COMMENT; // start a comment
@@ -1249,6 +1252,7 @@ void C_RunScript(DWFILE *dwfile)
       case '/':
          state = CSC_SLASH;   // maybe start a comment...
          continue;
+#endif
       default:                // anything else starts a command
          M_QStrClear(&qstring);
          M_QStrPutc(&qstring, c);

@@ -825,8 +825,14 @@ void G_SaveDefaults(void)
       {
          if(keybindings[i].bindings[j])
          {
+            const char *keyname = keybindings[i].name;
+
+            // haleyjd 07/10/09: semicolon requires special treatment.
+            if(keyname[0] == ';')
+               keyname = "\";\"";
+
             fprintf(file, "bind %s \"%s\"\n",
-                    keybindings[i].name,
+                    keyname,
                     keybindings[i].bindings[j]->name);
          }
       }
