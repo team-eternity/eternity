@@ -277,12 +277,27 @@ void R_ResetFOV(int width, int height)
 {
    double ratio = (double)width / (double)height;
 
+   // Special case for tallscreen modes
+   if((width == 320 && height == 200) ||
+      (width == 640 && height == 400))
+   {
+      fov = 90;
+      return;
+   }
+
+   // Below are special cases which are handled outside the general equation.
    if(ratio == (4.0 / 3.0))
       fov = 90;
    else if(ratio == 1.6)
       fov = 100;
    else if(ratio == (16.0 / 9.0))
       fov = 106;
+   else
+   {
+      // The general equation is as follows:
+      // y = mx + b -> fov = (75/2) * ratio + 40
+      fov = (int)((75.0/2.0) * ratio + 40.0);
+   }
 }
 
 extern float slopevis; // SoM: used in slope lighting
