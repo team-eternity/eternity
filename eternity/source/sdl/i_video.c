@@ -327,7 +327,7 @@ enum
 {
    STATE_WIDTH,
    STATE_HEIGHT,
-   STATE_FLAGS,
+   STATE_FLAGS
 };
 
 static void I_ParseGeom(const char *geom, 
@@ -335,7 +335,9 @@ static void I_ParseGeom(const char *geom,
 {
    const char *c = geom;
    int state = STATE_WIDTH;
+   int tmpwidth = 320, tmpheight = 200;
    qstring_t qstr;
+   boolean errorflag = false;
 
    M_QStrInitCreate(&qstr);
 
@@ -349,13 +351,17 @@ static void I_ParseGeom(const char *geom,
          else
          {
             int width = atoi(qstr.buffer);
-            if(width < 320)
-               width = 320;
-            else if(width > MAX_SCREENWIDTH)
-               width = 1024;
-            *w = width;
-            M_QStrClear(&qstr);
-            state = STATE_HEIGHT;
+            if(width < 320 || width > MAX_SCREENWIDTH)
+            {
+               state = STATE_FLAGS;
+               errorflag = true;
+            }
+            else
+            {
+               tmpwidth = width;
+               M_QStrClear(&qstr);
+               state = STATE_HEIGHT;
+            }
          }
          break;
       case STATE_HEIGHT:
@@ -364,13 +370,17 @@ static void I_ParseGeom(const char *geom,
          else
          {
             int height = atoi(qstr.buffer);
-            if(height < 200)
-               height = 200;
-            else if(height > MAX_SCREENHEIGHT)
-               height = 768;
-            *h = height;
-            state = STATE_FLAGS;
-            continue; // don't increment the pointer
+            if(height < 200 || height > MAX_SCREENHEIGHT)
+            {
+               state = STATE_FLAGS;
+               errorflag = true;
+            }
+            else
+            {
+               tmpheight = height;
+               state = STATE_FLAGS;
+               continue; // don't increment the pointer
+            }
          }
          break;
       case STATE_FLAGS:
@@ -394,11 +404,23 @@ static void I_ParseGeom(const char *geom,
          case 'h': // hardware 
             *hw = true;
             break;
+         default:
+            break;
          }
          break;
       }
       ++c;
    }
+
+   // if an error occurs setting w/h, we default.
+   if(errorflag)
+   {
+      tmpwidth  = 320;
+      tmpheight = 200;
+   }
+
+   *w = tmpwidth;
+   *h = tmpheight;
 
    M_QStrFree(&qstr);
 }
