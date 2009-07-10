@@ -283,10 +283,11 @@ void R_ResetFOV(int width, int height)
    {
       fov = 90;
       return;
-   }
+   }   
 
    // The general equation is as follows:
    // y = mx + b -> fov = (75/2) * ratio + 40
+   // This gives 90 for 4:3, 100 for 16:10, and 106 for 16:9.
    fov = (int)((75.0/2.0) * ratio + 40.0);
 }
 
