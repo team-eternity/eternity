@@ -285,11 +285,20 @@ static void C_DoRunCommand(command_t *command, char *options)
    cmdtype = c_typed; cmdsrc = consoleplayer;   // clear for next time
 }
 
-// take all the argvs and put them all together in the args string
-
-static void C_ArgvtoArgs()
+//
+// C_ArgvtoArgs
+//
+// Take all the argvs and put them all together in the args string
+//
+// CONSOLE_FIXME: Horrible.
+// haleyjd 07/08/09: rewritten to avoid undefined sprintf behavior.
+//
+static void C_ArgvtoArgs(void)
 {
    int i, n;
+   qstring_t tempBuf;
+
+   M_QStrInitCreate(&tempBuf);
    
    for(i=0; i<c_argc; i++)
    {
@@ -301,26 +310,49 @@ static void C_ArgvtoArgs()
       }
    }
    
-   c_args[0] = 0;
-   
-   for(i=0; i<c_argc; i++)
-      sprintf(c_args, "%s%s ", c_args, c_argv[i]);
+   for(i = 0; i < c_argc; ++i)
+   {
+      // haleyjd: use qstring_t to avoid sprintf problems and to be secure
+      M_QStrCat(&tempBuf, c_argv[i]);
+      M_QStrPutc(&tempBuf, ' ');
+   }
+
+   // haleyjd: psnprintf into c_args; ensures string is null-terminated even
+   // if it has to be truncated.
+   psnprintf(c_args, sizeof(c_args), "%s", tempBuf.buffer);
+
+   M_QStrFree(&tempBuf);
 }
 
-// return a string of all the argvs linked together, but with each
+//
+// C_QuotedArgvToArgs
+//
+// Return a string of all the argvs linked together, but with each
 // argv in quote marks "
-
-static char *C_QuotedArgvToArgs()
+//
+static char *C_QuotedArgvToArgs(void)
 {
    int i;
-   static char returnvar[1024];
+   static qstring_t returnbuf;
+   static boolean firsttime = true;
 
-   memset(returnvar, 0, 1024);
+   if(firsttime)
+   {
+      M_QStrInitCreate(&returnbuf);
+      firsttime = false;
+   }
+   else
+      M_QStrClear(&returnbuf);
    
-   for(i=0 ; i<c_argc; i++)
-      sprintf(returnvar, "%s\"%s\" ", returnvar, c_argv[i]);
+   // haleyjd: use qstring to eliminate undefined sprintf behavior
+   for(i = 0; i < c_argc; ++i)
+   {
+      M_QStrPutc(&returnbuf, '"');
+      M_QStrCat(&returnbuf, c_argv[i]);
+      M_QStrCat(&returnbuf, "\" ");      
+   }
    
-   return returnvar;
+   return returnbuf.buffer;
 }
 
 // see if the command needs to be sent to other computers

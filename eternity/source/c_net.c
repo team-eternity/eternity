@@ -46,10 +46,12 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "m_qstr.h"
 
-int incomingdest[MAXPLAYERS];
-char incomingmsg[MAXPLAYERS][256];
-int cmdsrc = 0;           // the source of a network console command
+int       incomingdest[MAXPLAYERS];
+qstring_t incomingmsg[MAXPLAYERS];
+
+int  cmdsrc = 0;           // the source of a network console command
 
 command_t *c_netcmds[NUMNETCMDS];
 
@@ -154,15 +156,15 @@ void C_SendCmd(int dest, int cmdnum, char *s,...)
    C_queueChatChar(0);
 }
 
-void C_NetInit()
+void C_NetInit(void)
 {
   int i;
   
-  for(i=0; i<MAXPLAYERS; i++)
-    {
-      incomingdest[i] = -1;
-      *incomingmsg[i] = 0;
-    }
+  for(i = 0; i < MAXPLAYERS; ++i)
+  {
+     incomingdest[i] = -1;
+     M_QStrInitCreate(&incomingmsg[i]);
+  }
   
   players[consoleplayer].colormap = default_colour;
   strcpy(players[consoleplayer].name, default_name);
@@ -204,13 +206,9 @@ void C_DealWithChar(unsigned char c, int source)
    if(c)
    {
       if(incomingdest[source] == -1)  // first char: the destination
-      {
          incomingdest[source] = c-1;
-      }
-      else                  // append to string
-      {
-         sprintf(incomingmsg[source], "%s%c", incomingmsg[source], c);
-      }
+      else
+         M_QStrPutc(&incomingmsg[source], c); // append to string
    }
    else
    {
@@ -222,7 +220,7 @@ void C_DealWithChar(unsigned char c, int source)
             cmdsrc = source;
             cmdtype = c_netcmd;
             // the first byte is the command num
-            netcmdnum = incomingmsg[source][0];
+            netcmdnum = *(incomingmsg[source].buffer);
             
             if(netcmdnum >= NUMNETCMDS || netcmdnum <= 0)
                C_Printf(FC_ERROR"unknown netcmd: %i\n", netcmdnum);
@@ -231,10 +229,10 @@ void C_DealWithChar(unsigned char c, int source)
                // C_Printf("%s, %s", c_netcmds[netcmdnum].name,
                //          incomingmsg[source]+1);
                C_RunCommand(c_netcmds[netcmdnum],
-                  incomingmsg[source] + 1);
+                            incomingmsg[source].buffer + 1);
             }
          }
-         *incomingmsg[source] = 0;
+         M_QStrClear(&incomingmsg[source]);
          incomingdest[source] = -1;
       }
    }

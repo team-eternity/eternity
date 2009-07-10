@@ -789,17 +789,15 @@ static void D_ArbitrateNetStart(void)
    */
 }
 
+extern int viewangleoffset;
+
 //
 // D_CheckNetGame
 // Works out player numbers among the net participants
 //
-
 //
 // NETCODE_FIXME: Handle this more like other ports.
 //
-
-extern int viewangleoffset;
-
 void D_CheckNetGame(void)
 {
    int i;

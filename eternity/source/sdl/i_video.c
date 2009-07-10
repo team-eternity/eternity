@@ -193,7 +193,8 @@ static void I_InitDiskFlash(void)
       SDL_SetPalette(disk_bg, SDL_LOGPAL, colors, 0, 256);
    }
 
-   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disk->pitch, disk->format->BitsPerPixel, disk->pixels);
+   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disk->pitch, 
+                     disk->format->BitsPerPixel, disk->pixels);
    V_SetScaling(&diskvb, 16, 15);
 
    V_DrawPatch(0, -1, &diskvb,

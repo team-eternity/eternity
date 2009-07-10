@@ -419,18 +419,20 @@ static void V_InitScreenVBuffer(void)
    else
       vbscreenneedsfree = true;
 
-   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch, video.bitdepth, video.screens[0]);
+   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch, 
+                     video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
 
-   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width, video.bitdepth, video.screens[1]);
+   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width, 
+                     video.bitdepth, video.screens[1]);
    V_SetScaling(&backscreen1, SCREENWIDTH, SCREENHEIGHT);
 
    // Only vbscreen and backscreen1 need scaling set.
-   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width, video.bitdepth, video.screens[2]);
-   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, video.bitdepth, video.screens[3]);
+   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width, 
+                     video.bitdepth, video.screens[2]);
+   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, 
+                     video.bitdepth, video.screens[3]);
 }
-
-
 
 extern void I_SetPrimaryBuffer(void);
 extern void I_UnsetPrimaryBuffer(void);
