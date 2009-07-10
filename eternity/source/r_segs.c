@@ -698,15 +698,7 @@ void R_StoreWallRange(const int start, const int stop)
    ds_p->colormap = scalelight;
    
    if(segclip.clipsolid)
-   {
-      /*ds_p->silhouette = SIL_BOTH;
-      ds_p->sprtopclip = screenheightarray;
-      ds_p->sprbottomclip = zeroarray;
-      ds_p->bsilheight = D_MAXINT;
-      ds_p->tsilheight = D_MININT;
-      ds_p->maskedtexturecol = NULL;*/
       R_CloseDSP();
-   }
    else
    {
       ds_p->sprtopclip = ds_p->sprbottomclip = NULL;

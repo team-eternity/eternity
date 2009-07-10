@@ -593,47 +593,224 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 //
 // SoM 6/24/2007: Moved this here and rewrote it a bit.
 //
-static void R_ClipSegToPortal()
+
+// The way we handle segs depends on relative camera position. If the 
+// camera is above we need to reject segs based on the top of the seg.
+// If the camera is below the bottom of the seg the bottom edge needs 
+// to be clipped. This is done so visplanes will still be rendered 
+// fully.
+
+static float slopemark[MAX_SCREENWIDTH];
+
+R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
+{
+   int i;
+
+   if(type == pw_floor)
+   {
+      for(i = minx; i <= maxx; i++)
+         slopemark[i] = view.height;
+   }
+   else if(type == pw_ceiling)
+   {
+      for(i = minx; i <= maxx; i++)
+         slopemark[i] = -1;
+   }
+}
+
+
+static boolean R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
+{
+   // SoM: Quickly reject the seg based on the bounding box of the portal
+   if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+      return false;
+
+   // Do initial clipping.
+   if(portalrender.minx > seg.x1)
+   {
+      *start = portalrender.minx;
+      *clipx1 = *start - seg.x1frac;
+   }
+   else
+   {
+      *start = seg.x1;
+      *clipx1 = 0.0;
+   }
+
+   if(portalrender.maxx < seg.x2)
+   {
+      *stop = portalrender.maxx;
+      *clipx2 = seg.x2frac - *stop;
+   }
+   else
+   {
+      *stop = seg.x2;
+      *clipx2 = 0.0;
+   }
+
+   if(*start > *stop)
+      return false;
+
+   return true;
+}
+
+
+void R_ClipSegToFPortal()
 {
    int i, startx;
    float clipx1, clipx2;
    int start, stop;
 
-   // The way we handle segs depends on relative camera position. If the 
-   // camera is above we need to reject segs based on the top of the seg.
-   // If the camera is below the bottom of the seg the bottom edge needs 
-   // to be clipped. This is done so visplanes will still be rendered 
-   // fully.
+   if(!R_ClipInitialSegRange(&start, &stop, &clipx1, &clipx2))
+      return; 
 
-   // SoM: Quickly reject the seg based on the bounding box of the portal
-   if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
-      return;
-
-   if(portalrender.minx > seg.x1)
+   if(seg.ceilingplane && seg.ceilingplane->pslope)
    {
-      start = portalrender.minx;
-      clipx1 = start - seg.x1frac;
+      for(i = start; i <= stop; i++)
+      {
+         // skip past the closed or out of sight columns to find the first visible column
+         while(i <= stop && floorclip[i] - slopemark[i] <= -1.0) i++;
+
+         if(i > stop)
+            return;
+
+         startx = i; // mark
+
+         // skip past visible columns 
+         while(i <= stop && floorclip[i] - slopemark[i] > -1.0f) i++;
+
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+      }
    }
    else
    {
-      start = seg.x1;
-      clipx1 = 0.0;
-   }
+      float top, top2;
 
-   if(portalrender.maxx < seg.x2)
+      top = seg.top + seg.topstep * clipx1;
+      top2 = seg.top2 - seg.topstep * clipx2;
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(portalrender.maxy - top < -1.0f && portalrender.maxy - top2 < -1.0f)
+         return;
+
+      for(i = start; i <= stop; i++)
+      {
+         // skip past the closed or out of sight columns to find the first visible column
+         for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
+            top += seg.topstep;
+
+         if(i > stop)
+            return;
+
+         startx = i; // mark
+
+         // skip past visible columns 
+         for(; i <= stop && floorclip[i] - top > -1.0f; i++)
+         {
+            slopemark[i] = top;
+            top += seg.topstep;
+         }
+
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+      }
+   }
+}
+
+
+void R_ClipSegToCPortal()
+{
+   int i, startx;
+   float clipx1, clipx2;
+   int start, stop;
+
+   if(!R_ClipInitialSegRange(&start, &stop, &clipx1, &clipx2))
+      return; 
+
+   if(seg.floorplane && seg.floorplane->pslope)
    {
-      stop = portalrender.maxx;
-      clipx2 = seg.x2frac - stop;
+      for(i = start; i <= stop; i++)
+      {
+         while(i <= stop && slopemark[i] < ceilingclip[i]) i++;
+
+         if(i > stop)
+            return;
+
+         startx = i;
+
+         while(i <= stop && slopemark[i] >= ceilingclip[i]) i++;
+
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+      }
    }
    else
    {
-      stop = seg.x2;
-      clipx2 = 0.0;
-   }
+      float bottom, bottom2;
 
-   if(portalrender.w->type == pw_floor)
+      bottom = seg.bottom + seg.bottomstep * clipx1;
+      bottom2 = seg.bottom2 - seg.bottomstep * clipx2;
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(bottom < portalrender.miny && bottom2 < portalrender.miny)
+         return;
+
+      for(i = start; i <= stop; i++)
+      {
+         for(; i <= stop && bottom < ceilingclip[i]; i++)
+            bottom += seg.bottomstep;
+
+         if(i > stop)
+            return;
+
+         startx = i;
+
+         for(; i <= stop && bottom >= ceilingclip[i]; i++)
+         {
+            slopemark[i] = bottom;
+            bottom += seg.bottomstep;
+         }
+
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+      }
+   }
+}
+
+
+
+void R_ClipSegToLPortal()
+{
+   int i, startx;
+   float clipx1, clipx2;
+   int start, stop;
+
+   // Line based portal. This requires special clipping...
+   if(!R_ClipInitialSegRange(&start, &stop, &clipx1, &clipx2))
+      return; 
+
+   // This can actually happen with slopes!
+   if(!seg.floorplane && !seg.ceilingplane)
    {
-      float top, top2, topstep;
+      float top, top2, topstep, bottom, bottom2, bottomstep;
+
+      bottom = seg.bottom + seg.bottomstep * clipx1;
+      bottom2 = seg.bottom2 - seg.bottomstep * clipx2;
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(bottom < portalrender.miny && bottom2 < portalrender.miny)
+         return;
+
+      bottomstep = seg.bottomstep;
 
       top = seg.top + seg.topstep * clipx1;
       top2 = seg.top2 - seg.topstep * clipx2;
@@ -643,21 +820,25 @@ static void R_ClipSegToPortal()
          return;
 
       topstep = seg.topstep;
-
+      
       for(i = start; i <= stop; i++)
       {
-         // skip past the closed or out of sight columns to find the first visible column
-         for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
+         for(; i <= stop && (bottom < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
+         {
+            bottom += bottomstep;
             top += topstep;
+         }
 
          if(i > stop)
             return;
 
-         startx = i; // mark
+         startx = i;
 
-         // skip past visible columns 
-         for(; i <= stop && floorclip[i] - top > -1.0f; i++)
+         for(; i <= stop && bottom >= ceilingclip[i] && floorclip[i] - top > -1.0f; i++)
+         {
+            bottom += bottomstep;
             top += topstep;
+         }
 
          if(seg.clipsolid)
             R_ClipSolidWallSegment(startx, i - 1);
@@ -665,8 +846,12 @@ static void R_ClipSegToPortal()
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
-   else if(portalrender.w->type == pw_ceiling)
+   else if(!seg.floorplane)
    {
+      // If the seg has no floor plane, the camera is most likely below it,
+      // so rejection is carried out as if the seg is being viewed through
+      // a ceiling portal.
+
       float bottom, bottom2, bottomstep;
 
       bottom = seg.bottom + seg.bottomstep * clipx1;
@@ -697,158 +882,73 @@ static void R_ClipSegToPortal()
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
+   else if(!seg.ceilingplane)
+   {
+      // If the seg has no floor plane, the camera is most likely above it,
+      // so rejection is carried out as if the seg is being viewed through
+      // a floor portal.
+
+      float top, top2, topstep;
+
+      // I totally overlooked this when I moved all the wall panel projection 
+      // to r_segs.c
+      top = seg.top + seg.topstep * clipx1;
+      top2 = seg.top2 - seg.topstep * clipx2;
+
+      // SoM: Quickly reject the seg based on the bounding box of the portal
+      if(portalrender.maxy - top < -1.0f && portalrender.maxy - top2 < -1.0f)
+         return;
+
+      topstep = seg.topstep;
+
+      for(i = start; i <= stop; i++)
+      {
+         // skip past the closed or out of sight columns to find the first visible column
+         for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
+            top += topstep;
+
+         if(i > stop)
+            return;
+
+         startx = i; // mark
+
+         // skip past visible columns 
+         for(; i <= stop && floorclip[i] - top > -1.0f; i++)
+            top += topstep;
+
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
+      }
+   }
    else
    {
-      // Line based portal. This requires special clipping...
-
-      // I'm not sure the first case ever even happens...
-      if(!seg.floorplane && !seg.ceilingplane)
+      // Seg is most likely being viewed from straight on...
+      for(i = start; i <= stop; i++)
       {
-         // Should this case ever actually happen?
-         float top, top2, topstep, bottom, bottom2, bottomstep;
+         while(i <= stop && floorclip[i] < ceilingclip[i]) i++;
 
-         bottom = seg.bottom + seg.bottomstep * clipx1;
-         bottom2 = seg.bottom2 - seg.bottomstep * clipx2;
-
-         // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(bottom < portalrender.miny && bottom2 < portalrender.miny)
+         if(i > stop)
             return;
 
-         bottomstep = seg.bottomstep;
+         startx = i;
+         while(i <= stop && floorclip[i] >= ceilingclip[i]) i++;
 
-         // I totally overlooked this when I moved all the wall panel projection 
-         // to r_segs.c
-         top = seg.top + seg.topstep * clipx1;
-         top2 = seg.top2 - seg.topstep * clipx2;
-
-         // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(portalrender.maxy - top < -1.0f && portalrender.maxy - top2 < -1.0f)
-            return;
-
-         topstep = seg.topstep;
-         
-         for(i = start; i <= stop; i++)
-         {
-            for(; i <= stop && (bottom < ceilingclip[i] || floorclip[i] - top <= -1.0f); i++)
-            {
-               bottom += bottomstep;
-               top += topstep;
-            }
-
-            if(i > stop)
-               return;
-
-            startx = i;
-
-            for(; i <= stop && bottom >= ceilingclip[i] && floorclip[i] - top > -1.0f; i++)
-            {
-               bottom += bottomstep;
-               top += topstep;
-            }
-
-            if(seg.clipsolid)
-               R_ClipSolidWallSegment(startx, i - 1);
-            else
-               R_ClipPassWallSegment(startx, i - 1);
-         }
-      }
-      else if(!seg.floorplane)
-      {
-         // If the seg has no floor plane, the camera is most likely below it,
-         // so rejection is carried out as if the seg is being viewed through
-         // a ceiling portal.
-
-         float bottom, bottom2, bottomstep;
-
-         bottom = seg.bottom + seg.bottomstep * clipx1;
-         bottom2 = seg.bottom2 - seg.bottomstep * clipx2;
-
-         // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(bottom < portalrender.miny && bottom2 < portalrender.miny)
-            return;
-
-         bottomstep = seg.bottomstep;
-
-         for(i = start; i <= stop; i++)
-         {
-            for(; i <= stop && bottom < ceilingclip[i]; i++)
-               bottom += bottomstep;
-
-            if(i > stop)
-               return;
-
-            startx = i;
-
-            for(; i <= stop && bottom >= ceilingclip[i]; i++)
-               bottom += bottomstep;
-
-            if(seg.clipsolid)
-               R_ClipSolidWallSegment(startx, i - 1);
-            else
-               R_ClipPassWallSegment(startx, i - 1);
-         }
-      }
-      else if(!seg.ceilingplane)
-      {
-         // If the seg has no floor plane, the camera is most likely above it,
-         // so rejection is carried out as if the seg is being viewed through
-         // a floor portal.
-
-         float top, top2, topstep;
-
-         // I totally overlooked this when I moved all the wall panel projection 
-         // to r_segs.c
-         top = seg.top + seg.topstep * clipx1;
-         top2 = seg.top2 - seg.topstep * clipx2;
-
-         // SoM: Quickly reject the seg based on the bounding box of the portal
-         if(portalrender.maxy - top < -1.0f && portalrender.maxy - top2 < -1.0f)
-            return;
-
-         topstep = seg.topstep;
-
-         for(i = start; i <= stop; i++)
-         {
-            // skip past the closed or out of sight columns to find the first visible column
-            for(; i <= stop && floorclip[i] - top <= -1.0f; i++)
-               top += topstep;
-
-            if(i > stop)
-               return;
-
-            startx = i; // mark
-
-            // skip past visible columns 
-            for(; i <= stop && floorclip[i] - top > -1.0f; i++)
-               top += topstep;
-
-            if(seg.clipsolid)
-               R_ClipSolidWallSegment(startx, i - 1);
-            else
-               R_ClipPassWallSegment(startx, i - 1);
-         }
-      }
-      else
-      {
-         // Seg is most likely being viewed from straight on...
-         for(i = start; i <= stop; i++)
-         {
-            while(i <= stop && floorclip[i] < ceilingclip[i]) i++;
-
-            if(i > stop)
-               return;
-
-            startx = i;
-            while(i <= stop && floorclip[i] >= ceilingclip[i]) i++;
-
-            if(seg.clipsolid)
-               R_ClipSolidWallSegment(startx, i - 1);
-            else
-               R_ClipPassWallSegment(startx, i - 1);
-         }
+         if(seg.clipsolid)
+            R_ClipSolidWallSegment(startx, i - 1);
+         else
+            R_ClipPassWallSegment(startx, i - 1);
       }
    }
 }
+
+
+extern R_ClipSegFunc segclipfuncs[] = {
+R_ClipSegToFPortal,
+R_ClipSegToCPortal,
+R_ClipSegToLPortal};
+
 
 
 
@@ -950,7 +1050,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop, float tex
                   (seg.top != seg.high);
 
    seg.markcportal = 
-      (R_RenderCeilingPortal(seg.frontsec) && 
+      (seg.c_portal && 
       (seg.clipsolid || heightchange ||
        seg.frontsec->c_portal != seg.backsec->c_portal));
 
@@ -987,7 +1087,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop, float tex
                   seg.backsec->floorheight != seg.frontsec->floorheight;
 
    seg.markfportal = 
-      (R_RenderFloorPortal(seg.frontsec) &&
+      (seg.f_portal &&
       (seg.clipsolid || heightchange ||
        seg.frontsec->f_portal != seg.backsec->f_portal));
 
@@ -1108,7 +1208,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
         (seg.backsec->ceilingheight <= seg.backsec->floorheight && !uppermissing && !lowermissing)));
 
    seg.markcportal = 
-      (R_RenderCeilingPortal(seg.frontsec) && 
+      (seg.c_portal && 
       (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
        seg.frontsec->c_portal != seg.backsec->c_portal));
 
@@ -1139,7 +1239,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop, float tex
       seg.toptex = 0;
 
    seg.markfportal = 
-      (R_RenderFloorPortal(seg.frontsec) &&
+      (seg.f_portal &&
       (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->f_portal != seg.backsec->f_portal));
 
@@ -1512,8 +1612,8 @@ static void R_AddLine(seg_t *line)
    seg.x2 = (int)floorx2;
    seg.x2frac = x2;
 
-   if(portalrender.active)
-      R_ClipSegToPortal();
+   if(portalrender.active && portalrender.segClipFunc)
+      portalrender.segClipFunc();
    else if(seg.clipsolid)
       R_ClipSolidWallSegment(seg.x1, seg.x2);
    else
@@ -1775,8 +1875,12 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
                                 &seg.frontsec->f_slope->normalf) > 0.0f);
 
+   seg.f_portal = R_FloorPortalActive(seg.frontsec) 
+               && (!portalrender.active || portalrender.w->type != pw_ceiling)
+               && visible ? seg.frontsec->f_portal : NULL;
+
    // SoM: If there is an active portal, forget about the floorplane.
-   seg.floorplane = !R_FloorPortalActive(seg.frontsec) && 
+   seg.floorplane = !seg.f_portal && 
      (visible || // killough 3/7/98
      (seg.frontsec->heightsec != -1 &&
       (sectors[seg.frontsec->heightsec].ceilingpic == skyflatnum ||
@@ -1796,7 +1900,11 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
                                 &seg.frontsec->c_slope->normalf) > 0.0f);
 
-   seg.ceilingplane = !R_CeilingPortalActive(seg.frontsec) &&
+   seg.c_portal = R_CeilingPortalActive(seg.frontsec) 
+               && (!portalrender.active || portalrender.w->type != pw_floor)
+               && visible ? seg.frontsec->c_portal : NULL;
+
+   seg.ceilingplane = !seg.c_portal &&
      (visible ||
      (seg.frontsec->ceilingpic == skyflatnum ||
       seg.frontsec->ceilingpic == sky2flatnum) ||

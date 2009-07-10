@@ -268,6 +268,28 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 }
 
 
+
+//
+// R_ResetFOV
+// 
+// SoM: Called by I_InitGraphicsMode when the video mode is changed.
+// Sets the base-line fov for the given screen ratio.
+
+void R_ResetFOV(int width, int height)
+{
+   double ratio = (double)width / (double)height;
+
+   if(ratio == (4.0 / 3.0))
+      fov = 90;
+   else if(ratio == 1.6)
+      fov = 100;
+   else if(ratio == (16.0 / 9.0))
+      fov = 106;
+}
+
+
+
+
 extern float slopevis; // SoM: used in slope lighting
 
 //
@@ -286,7 +308,11 @@ static void R_InitTextureMapping (void)
    // Calc focal length so fov angles cover SCREENWIDTH
 
    // Cardboard
-   ratio = 1.6f / ((float)video.width / (float)video.height);
+   if(video.height == 200 || video.height == 400)
+      ratio = 1.0f;
+   else 
+      ratio = 1.2f;
+
    view.fov = (float)fov * PI / 180.0f;
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;

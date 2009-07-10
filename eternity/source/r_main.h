@@ -127,6 +127,14 @@ void R_SectorColormap(sector_t *s);
 // sf: camera point added
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_Drawer.
                                                                  // sf: G_Drawer???
+
+//
+// R_ResetFOV
+// 
+// SoM: Called by I_InitGraphicsMode when the video mode is changed.
+// Sets the base-line fov for the given screen ratio.
+void R_ResetFOV(int width, int height);
+
 void R_Init(void);                           // Called by startup code.
 void R_SetViewSize(int blocks, int detail);  // Called by M_Responder.
 
@@ -209,6 +217,7 @@ typedef struct
    visplane_t *floorplane, *ceilingplane;
    seg_t *line;
 
+   portal_t  *f_portal, *c_portal;
    pwindow_t *l_window, *f_window, *c_window;
 
    // SoM: used for portals
@@ -220,8 +229,6 @@ extern cb_view_t  view;
 extern cb_seg_t   seg;
 extern cb_seg_t   segclip;
 
-// SoM: Anchored portals need to increment the frameid as well
-void R_IncrementFrameid(void);
 // SoM: frameid frame counter.
 void R_IncrementFrameid(void); // Needed by the portal functions... 
 extern unsigned   frameid;

@@ -135,6 +135,10 @@ typedef enum
 
 struct pwindow_s;	//prototype to shut up gcc warnings
 typedef void (*R_WindowFunc)(struct pwindow_s *);
+typedef void (*R_ClipSegFunc)();
+
+
+extern R_ClipSegFunc segclipfuncs[];
 
 typedef struct pwindow_s
 {
@@ -149,6 +153,7 @@ typedef struct pwindow_s
    int minx, maxx;
 
    R_WindowFunc func;
+   R_ClipSegFunc clipfunc;
 
    struct pwindow_s *next, *child;
 } pwindow_t;
@@ -170,6 +175,8 @@ typedef struct
    float   miny, maxy;
 
    pwindow_t *w;
+
+   void (*segClipFunc)();
 } portalrender_t;
 
 extern portalrender_t  portalrender;

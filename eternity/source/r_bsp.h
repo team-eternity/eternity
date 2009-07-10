@@ -50,6 +50,12 @@ boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
 
 void R_ClearClipSegs(void);
 void R_ClearDrawSegs(void);
+
+// SoM: This is called by portal rendering functions to clear the array that marks 
+// the tops of slopes so the clipsegtoportal functions show all the slope that's 
+// in the window.
+R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type);
+
 void R_RenderBSPNode(int bspnum);
 int R_DoorClosed(void);   // killough 1/17/98
 

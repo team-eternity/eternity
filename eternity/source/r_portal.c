@@ -611,6 +611,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    if(!R_SetupPortalClipsegs(window->minx, window->maxx, window->top, window->bottom))
       return;
 
+   R_ClearSlopeMark(window->minx, window->maxx, window->type);
+
    floorclip = window->bottom;
    ceilingclip = window->top;
 
@@ -674,6 +676,9 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 //
 // R_RenderAnchoredPortal
 //
+extern byte *ylookup[MAX_SCREENWIDTH]; 
+extern int  columnofs[MAX_SCREENHEIGHT];
+
 static void R_RenderAnchoredPortal(pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
@@ -694,8 +699,35 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > 6)
    {
+#ifdef RANGECHECK
+/*      int i, y1, y2, count;
+
+      for(i = window->minx; i <= window->maxx; i++)
+      {
+         byte *dest;
+
+         y1 = (int)window->top[i];
+         y2 = (int)window->bottom[i];
+
+         count = y2 - y1 + 1;
+         if(count <= 0)
+            continue;
+
+         dest = ylookup[y1] + columnofs[i];
+
+         while(count > 0)
+         {
+            *dest = 176;
+            dest += video.pitch;
+
+            count--;
+         }
+      }*/
+#endif
+
       portal->tainted++;
       doom_printf("refused to draw portal %p (t=%d)", portal, portal->tainted);
+
       return;
    } 
 
@@ -718,6 +750,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    
    if(!R_SetupPortalClipsegs(window->minx, window->maxx, window->top, window->bottom))
       return;
+
+   R_ClearSlopeMark(window->minx, window->maxx, window->type);
 
    // haleyjd: temporary debug
    portal->tainted++;
@@ -797,12 +831,15 @@ static void R_SetPortalFunction(pwindow_t *window)
    {
    case R_PLANE:
       window->func = R_RenderPlanePortal;
+      window->clipfunc = NULL;
       break;
    case R_HORIZON:
       window->func = R_RenderHorizonPortal;
+      window->clipfunc = NULL;
       break;
    case R_SKYBOX:
       window->func = R_RenderSkyboxPortal;
+      window->clipfunc = NULL;
       break;
    case R_ANCHORED:
    case R_TWOWAY:
@@ -810,9 +847,11 @@ static void R_SetPortalFunction(pwindow_t *window)
    case R_LINKED:
 #endif
       window->func = R_RenderAnchoredPortal;
+      window->clipfunc = segclipfuncs[window->type];
       break;
    default:
       window->func = R_RenderPortalNOP;
+      window->clipfunc = NULL;
       break;
    }
 }
@@ -935,12 +974,14 @@ void R_RenderPortals(void)
    {
       portalrender.active = true;
       portalrender.w = windowhead;
+      portalrender.segClipFunc = windowhead->clipfunc;
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
 
       portalrender.active = false;
       portalrender.w = NULL;
+      portalrender.segClipFunc = NULL;
 
       // free the window structs
       w = windowhead->child;
