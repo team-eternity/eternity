@@ -579,7 +579,6 @@ thingtype BossBrain
   deathstate = S_BRAIN_DIE1
   deathsound = bosdth
   radius = 16.0
-  correct_height = 86.0
   mass = 10000000
   flags = SOLID|SHOOTABLE
   dehackednum = 26
