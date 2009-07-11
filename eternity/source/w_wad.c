@@ -463,7 +463,13 @@ void W_InitMultipleFiles(waddir_t *dir, char *const *filenames)
    
    // open all the files, load headers, and count lumps
    while(*filenames)
-      W_AddFile(dir, *filenames++);
+   {
+      // haleyjd 07/11/09: ignore empty filenames
+      if((*filenames)[0])
+         W_AddFile(dir, *filenames);
+
+      ++filenames;
+   }
    
    if(!dir->numlumps)
       I_Error("W_InitFiles: no files found");
