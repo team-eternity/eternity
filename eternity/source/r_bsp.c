@@ -1868,7 +1868,8 @@ static void R_Subsector(int num)
 
    seg.f_portal = R_FloorPortalActive(seg.frontsec) 
                && (!portalrender.active || portalrender.w->type != pw_ceiling)
-               && visible ? seg.frontsec->f_portal : NULL;
+               && (visible || seg.frontsec->f_portal->type < R_TWOWAY)
+               ? seg.frontsec->f_portal : NULL;
 
    // SoM: If there is an active portal, forget about the floorplane.
    seg.floorplane = !seg.f_portal && 
@@ -1893,7 +1894,8 @@ static void R_Subsector(int num)
 
    seg.c_portal = R_CeilingPortalActive(seg.frontsec) 
                && (!portalrender.active || portalrender.w->type != pw_floor)
-               && visible ? seg.frontsec->c_portal : NULL;
+               && (visible || seg.frontsec->c_portal->type < R_TWOWAY) 
+               ? seg.frontsec->c_portal : NULL;
 
    seg.ceilingplane = !seg.c_portal &&
      (visible ||
