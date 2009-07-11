@@ -576,28 +576,6 @@ boolean PIT_CheckLine(line_t *ld)
    // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
    if(!ld->backsector) // one sided line
    {
-#ifdef R_LINKEDPORTALS
-      /*linkoffset_t *link;
-
-      if(R_LinkedLineActive(ld) &&
-         (link = P_GetLinkOffset(ld->frontsector->groupid, ld->portal->data.camera.groupid)))
-      {
-         // 1/11/98 killough: remove limit on lines hit, by array doubling
-         if(tm->numspechit >= tm->spechit_max)
-         {
-            tm->spechit_max = tm->spechit_max ? tm->spechit_max * 2 : 8;
-            tm->spechit = realloc(tm->spechit, sizeof(*tm->spechit) * tm->spechit_max);
-         }
-         tm->spechit[tm->numspechit++] = ld;
-
-         // haleyjd 09/20/06: spechit overflow emulation
-         if(demo_compatibility && spechits_emulation && 
-            tm->numspechit > MAXSPECHIT_OLD)
-            SpechitOverrun(ld);
-
-         return true;
-      }*/
-#endif
       tm->blockline = ld;
       return tm->unstuck && !untouched(ld) &&
          FixedMul(tm->x-tm->thing->x,ld->dy) > FixedMul(tm->y-tm->thing->y,ld->dx);

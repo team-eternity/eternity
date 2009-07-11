@@ -181,46 +181,6 @@ extern int spechits_emulation; // haleyjd 09/20/06
 
 
 
-#ifdef R_LINKEDPORTALS
-// ---- Linked portals ----
-// Tracer-Portal-Translation
-
-// tpt_t is the main struct that holds in the information needed to translate the curretly running tracer to a new portal group.
-typedef struct tptnode_s
-{
-   // The type of tracer involved.
-   enum
-   {
-      tShoot,
-      tAim,
-      tUse,
-   } type;
-
-   // -- Used by both types --
-   // Translated tracer coords keep the distance to be traveled constant
-   fixed_t x, y, dx, dy;
-   // Translated z coord should continue from height of the portal or whatever height it hit the portal line.
-   fixed_t z;
-   fixed_t originx, originy, originz;
-   // Accumulated travel along the line. Should be the XY distance between (x,y) 
-   // and (originx, originy) 
-   fixed_t movefrac;
-   fixed_t attackrange;
-
-   // -- Used by tAim --
-   fixed_t topslope, bottomslope;
-
-   // -- Singly linked list --
-   struct tptnode_s *next;
-} tptnode_t;
-
-
-
-boolean    P_CheckTPT(void);
-tptnode_t *P_StartTPT();
-void       P_FinishTPT(tptnode_t *node);
-void       P_ClearTPT();
-#endif
 
 #endif // __P_MAP__
 

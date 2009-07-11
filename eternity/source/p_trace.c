@@ -49,209 +49,6 @@ static mobj_t *shootthing;
 
 static int aim_flags_mask; // killough 8/2/98: for more intelligent autoaiming
 
-// SoM: Moved globals into a structure. See p_maputl.h
-
-static tptnode_t *tptlist, *tptend, *tptunused;
-
-//
-// TPT - Tracer Portal Transport system
-//
-
-//
-// TPT_NewNode
-//
-// Adds a usable TPT node to the list, either removing one from the 
-// freelist or creating a new one.
-//
-static tptnode_t *TPT_NewNode(void)
-{
-   tptnode_t *ret;
-
-   // Make a new node or unlink an existing node from the unused list.
-   if(!tptunused)
-      ret = (tptnode_t *)Z_Malloc(sizeof(tptnode_t), PU_STATIC, 0);
-   else
-   {
-      ret = tptunused;
-      tptunused = tptunused->next;
-   }
-
-   // Link it to the end of the list.
-   if(!tptlist)
-      tptlist = tptend = ret;
-   else
-   {
-      tptend->next = ret;
-      tptend = ret;
-   }
-
-   ret->next = NULL;
-   return ret;
-}
-
-//
-// P_InitTPTNode
-//
-// haleyjd 03/17/08:
-//
-// Populates a TPT node with information that is common to all node
-// types. Removes code duplication in functions below.
-//
-static tptnode_t *P_InitTPTNode(linkoffset_t *link, fixed_t frac)
-{
-   tptnode_t *node = TPT_NewNode();
-
-   node->x  = trace.x + FixedMul(frac, trace.cos);
-   node->x -= link->x;
-
-   node->y  = trace.y + FixedMul(frac, trace.sin);
-   node->y -= link->y;
-
-   node->originx = trace.originx - link->x;
-   node->originy = trace.originy - link->y;
-   node->originz = trace.originz - link->z;
-
-   node->movefrac    = trace.movefrac + frac;
-   node->attackrange = trace.attackrange - frac;
-
-   node->dx = FixedMul(trace.attackrange, trace.cos);
-   node->dy = FixedMul(trace.attackrange, trace.sin);
-
-   return node;
-}
-
-//
-// P_NewShootTPT
-//
-// Puts a new TPT node on the list for a bullet tracer.
-//
-void P_NewShootTPT(linkoffset_t *link, fixed_t frac, fixed_t newz)
-{
-   tptnode_t *node = P_InitTPTNode(link, frac);
-
-   node->type = tShoot;
-   node->z    = newz - link->z;
-}
-
-//
-// P_NewAimTPT
-//
-// Puts a new TPT node on the list for an aiming tracer.
-//
-void P_NewAimTPT(linkoffset_t *link, fixed_t frac, fixed_t newz, 
-                 fixed_t newtopslope, fixed_t newbottomslope)
-{
-   tptnode_t *node = P_InitTPTNode(link, frac);
-
-   node->type        = tAim;   
-   node->z           = newz - link->z;
-   node->topslope    = newtopslope;
-   node->bottomslope = newbottomslope;
-}
-
-//
-// P_NewUseTPT
-//
-// Puts a new TPT node on the list for a line-use trace.
-//
-void P_NewUseTPT(linkoffset_t *link, fixed_t frac)
-{
-   tptnode_t *node = P_InitTPTNode(link, frac);
-
-   node->type = tUse;
-}
-
-//
-// P_CheckTPT
-//
-// Returns true if there are any TPT nodes on the list, false otherwise.
-//
-boolean P_CheckTPT(void)
-{
-   return (tptlist != NULL);
-}
-
-//
-// P_StartTPT
-//
-// Populates the trace structure with information from a TPT node,
-// if any exists, and returns the node.
-//
-tptnode_t *P_StartTPT(void)
-{
-   tptnode_t *ret = tptlist;
-   
-   if(!ret)
-      return NULL;
-
-   tptlist = ret->next;
-
-   if(!tptlist)
-      tptend = NULL;
-   else
-      ret->next = NULL;
-
-   // haleyjd 03/17/08: refactored to remove code duplication
-   trace.x           = ret->x;
-   trace.y           = ret->y;
-   trace.z           = ret->z;
-   trace.dx          = ret->dx;
-   trace.dy          = ret->dy;
-   trace.originx     = ret->originx;
-   trace.originy     = ret->originy;
-   trace.originz     = ret->originz;
-   trace.movefrac    = ret->movefrac;
-   trace.attackrange = ret->attackrange;
-
-   switch(ret->type)
-   {
-   case tShoot:
-   case tUse:
-      break;
-   
-   case tAim:
-      trace.topslope    = ret->topslope;
-      trace.bottomslope = ret->bottomslope;
-      break;
-
-   default:
-      I_Error("P_StartTPT: node has invalid type value %d\n", (int)ret->type);
-   }
-
-   return ret;
-}
-
-//
-// P_FinishTPT
-//
-// Puts a TPT node onto the free list.
-//
-void P_FinishTPT(tptnode_t *node)
-{
-   // Link the node back into the unused list
-   node->next = tptunused;
-   tptunused = node;
-}
-
-//
-// P_ClearTPT
-//
-// Call this after you use TPT!
-//
-void P_ClearTPT(void)
-{
-   tptnode_t *rover;
-
-   while((rover = tptlist))
-   {
-      tptlist = rover->next;
-
-      rover->next = tptunused;
-      tptunused = rover;
-   }
-
-   tptlist = tptend = NULL;
-}
 
 //=============================================================================
 //
@@ -317,98 +114,11 @@ static boolean P_AimAtThing(intercept_t *in)
 }
    
 //
-// P_AimTraversePortal
+// PTR_AimTraverse
 //
-// The shot is otherwise blocked by a 1S line; this routine checks to see
-// if that one-sided line is a portal, and if so, the tracer will 
-// propagate into it.
-//
-// haleyjd 03/21/08
-//
-// FIXME: return value is actually constant
-// SoM: The shot is actually absorbed by the linedef
-//      so yes this will always return false.
-//
-static boolean P_AimTraversePortal(line_t *li, fixed_t dist)
-{
-   sector_t *fs = li->frontsector;
-   fixed_t slope;
-   
-   if(!useportalgroups)
-      return false;
-
-   // The line is blocking so check for portals in the frontsector.
-   if(R_LinkedCeilingActive(fs) && trace.originz <= fs->ceilingheight)
-   {
-      slope = FixedDiv(fs->ceilingheight - trace.originz, dist);
-
-      if(trace.topslope > slope)
-      {
-         // Find the distance from the ogrigin to the intersection with the 
-         // plane.
-         fixed_t z = fs->ceilingheight;
-         fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
-         linkoffset_t *link = P_GetLinkOffset(fs->groupid, R_CPCam(fs)->groupid);
-
-         if(link)
-            P_NewAimTPT(link, frac, z, trace.topslope, slope);
-      }
-   }
-   
-   if(R_LinkedFloorActive(fs) && trace.originz >= fs->floorheight)
-   {
-      slope = FixedDiv(fs->floorheight - trace.originz, dist);
-
-      if(slope > trace.bottomslope)
-      {
-         // Find the distance from the origin to the intersection with the 
-         // plane.
-         fixed_t z = fs->floorheight;
-         fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
-         linkoffset_t *link = P_GetLinkOffset(fs->groupid, R_FPCam(fs)->groupid);
-
-         if(link)
-            P_NewAimTPT(link, frac, z, slope, trace.bottomslope);
-      }
-   }
-   
-   // also check line portals.
-   if(R_LinkedLineActive(li))
-   {
-      fixed_t slope2;
-      
-      slope  = FixedDiv(fs->floorheight - trace.originz, dist);
-      slope2 = FixedDiv(fs->ceilingheight - trace.originz, dist);
-
-      if(slope2 < trace.bottomslope && slope > trace.topslope)
-         return false;
-      else
-      {
-         fixed_t frac = dist - trace.movefrac + FRACUNIT;
-         linkoffset_t *link = 
-            P_GetLinkOffset(fs->groupid, li->portal->data.camera.groupid);
-
-         if(slope2 > trace.topslope)
-            slope2 = trace.topslope;
-         if(slope < trace.bottomslope)
-            slope = trace.bottomslope;
-         
-         if(link)
-            P_NewAimTPT(link, frac, trace.z, slope2, slope);
-      }
-   }
-   
-   return false;
-}
-
-//
-// PTR_AimTraverseComp
-//
-// Compatibility codepath for aim traversal, for demo_version < 333.
 // Sets linetarget and aimslope when a target is aimed at.
-// haleyjd 03/21/08
 //
-static boolean PTR_AimTraverseComp(intercept_t *in)
+static boolean PTR_AimTraverse(intercept_t *in)
 {
    fixed_t slope, dist;
    
@@ -457,141 +167,7 @@ static boolean PTR_AimTraverseComp(intercept_t *in)
    }
 }
 
-//
-// PTR_AimTraverse
-//
-// Sets linetarget and aimslope when a target is aimed at.
-//
-static boolean PTR_AimTraverse(intercept_t *in)
-{
-   fixed_t slope, dist;
-   sector_t *sidesector = NULL;
-   int      lineside;
-   
-   if(in->isaline)
-   {
-      line_t *li = in->d.line;
-      
-      dist = FixedMul(trace.attackrange, in->frac);
 
-      if(useportalgroups)
-      {
-         dist += trace.movefrac;
-         lineside   = P_PointOnLineSide(trace.x, trace.y, li);
-         sidesector = lineside ? li->backsector : li->frontsector; 
-
-         // Marked twosided but really one sided?      
-         if(!sidesector)
-            return false;
-      }
-
-      if(!(li->flags & ML_TWOSIDED))
-         return P_AimTraversePortal(li, dist);   // stop?
-
-      // Crosses a two sided line.
-      // A two sided line will restrict
-      // the possible target ranges.
-
-      P_LineOpening(li, NULL);
-      
-      if(tm->openbottom >= tm->opentop)
-         return P_AimTraversePortal(li, dist);   // stop?
-
-      // Check the portals, even if the line doesn't block the tracer, a/the 
-      // target may be sitting on top of a ledge. If we don't hit any monsters,
-      // we'll need to continue looking through portals, so store the 
-      // intersection.
-      if(R_LinkedCeilingActive(sidesector) &&  
-         trace.originz <= sidesector->ceilingheight &&
-         li->frontsector->c_portal != li->backsector->c_portal)
-      {
-         slope = FixedDiv(sidesector->ceilingheight - trace.originz, dist);
-         if(trace.topslope > slope)
-         {
-            // Find the distance from the origin to the intersection with the 
-            // plane.
-            fixed_t z = sidesector->ceilingheight;
-            fixed_t frac = FixedDiv(z - trace.z, trace.topslope);
-            linkoffset_t *link = 
-               P_GetLinkOffset(sidesector->groupid, 
-                               R_CPCam(sidesector)->groupid);
-            if(link)
-               P_NewAimTPT(link, frac, z, trace.topslope, slope);
-         }
-      }
-
-      if(R_LinkedFloorActive(sidesector) &&
-         trace.originz >= sidesector->floorheight &&
-         li->frontsector->f_portal != li->backsector->f_portal)
-      {
-         slope = FixedDiv(sidesector->floorheight - trace.originz, dist);
-         if(slope > trace.bottomslope)
-         {
-            // Find the distance from the origin to the intersection with the 
-            // plane.
-            fixed_t z = sidesector->floorheight;
-            fixed_t frac = FixedDiv(z - trace.z, trace.bottomslope);
-            linkoffset_t *link = 
-               P_GetLinkOffset(sidesector->groupid, 
-                               R_FPCam(sidesector)->groupid);
-            if(link)
-               P_NewAimTPT(link, frac, z, slope, trace.bottomslope);
-         }
-      }
-
-      // haleyjd 03/17/08: FIXME: code inside is completely broken.
-      // And also rather horrible to look at if you ask me.
-#if 0
-      if((li->frontsector->floorheight != li->backsector->floorheight || 
-            ((R_LinkedFloorActive(li->frontsector) ||
-              R_LinkedFloorActive(li->backsector)) && 
-            li->frontsector->f_portal != li->backsector->f_portal)) &&
-         (demo_version < 333 || 
-            (useportalgroups && sidesector && sidesector->floorheight <= trace.originz)))
-      {
-         slope = FixedDiv (tm->openbottom - trace.originz , dist);
-         if(slope > trace.bottomslope)
-            trace.bottomslope = slope;
-      }
-
-      if((li->frontsector->ceilingheight != li->backsector->ceilingheight ||
-            ((R_LinkedCeilingActive(li->frontsector) ||
-              R_LinkedCeilingActive(li->backsector)) && 
-            li->frontsector->c_portal != li->backsector->c_portal)) &&
-         (demo_version < 333 || 
-            (useportalgroups && sidesector && sidesector->ceilingheight >= trace.originz)))
-      {
-         slope = FixedDiv (tm->opentop - trace.originz , dist);
-         if(slope < trace.topslope)
-            trace.topslope = slope;
-      }
-#else
-      if(li->frontsector->floorheight != li->backsector->floorheight)
-      {
-         slope = FixedDiv(tm->openbottom - trace.originz, dist);
-         if(slope > trace.bottomslope)
-            trace.bottomslope = slope;
-      }
-      
-      if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
-      {
-         slope = FixedDiv(tm->opentop - trace.originz, dist);
-         if(slope < trace.topslope)
-            trace.topslope = slope;
-      }
-#endif
-
-      if(trace.topslope <= trace.bottomslope)
-         return false;   // stop
-      
-      return true;    // shot continues
-   }
-   else
-   {
-      // shoot a thing
-      return P_AimAtThing(in);
-   }
-}
 
 //=============================================================================
 //
@@ -894,21 +470,6 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                sidesector->floorpic == sky2flatnum) 
                return false;
             
-            // SoM: Check here for portals
-            if(sidesector->f_portal)
-            {
-               if(R_LinkedFloorActive(sidesector))
-               {
-                  linkoffset_t *link = 
-                     P_GetLinkOffset(sidesector->groupid, 
-                                     R_FPCam(sidesector)->groupid);
-                  if(link)
-                     P_NewShootTPT(link, pfrac, sidesector->floorheight);
-               }
-               
-               return false;
-            }
-            
             if(demo_version < 333)
             {
                zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
@@ -933,21 +494,6 @@ static boolean PTR_ShootTraverse(intercept_t *in)
                sidesector->ceilingpic == sky2flatnum) // SoM
                return false;
             
-            // SoM: Check here for portals
-            if(sidesector->c_portal)
-            {
-               if(R_LinkedCeilingActive(sidesector))
-               {
-                  linkoffset_t *link = 
-                     P_GetLinkOffset(sidesector->groupid, 
-                     R_CPCam(sidesector)->groupid);
-                  if(link)
-                     P_NewShootTPT(link, pfrac, sidesector->ceilingheight);
-               }
-               
-               return false;
-            }
-            
             if(demo_version < 333)
             {
                zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
@@ -965,24 +511,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
             hitplane = true;
             updown = 1; // haleyjd
          }
-         else if(R_LinkedLineActive(li))
-         {
-            linkoffset_t *link = 
-               P_GetLinkOffset(sidesector->groupid, 
-                               li->portal->data.camera.groupid);
-            
-            // SoM: Hit the center of the line; check for line-side portals
-            // Do NOT position closer heh
-            frac = FixedMul(in->frac, trace.attackrange); 
-            z = trace.z + FixedMul(trace.aimslope, frac);
-            if(link)
-               P_NewShootTPT(link, frac, z);
-            
-            return false;
-         }
       }
-      else if(R_LinkedLineActive(li))
-         return true;
       
       if(!hitplane && li->special)
          P_ShootSpecialLine(shootthing, li, lineside);
@@ -1064,8 +593,7 @@ fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
    // killough 8/2/98: prevent friends from aiming at friends
    aim_flags_mask = mask;
    
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, 
-                  (demo_version < 333) ? PTR_AimTraverseComp : PTR_AimTraverse);
+   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse);
    
    return tm->linetarget ? trace.aimslope : lookslope;
 }
@@ -1107,29 +635,6 @@ static mobj_t *usething;
 
 static boolean PTR_UseTraverse(intercept_t *in)
 {
-#ifdef R_LINKEDPORTALS
-   if(R_LinkedLineActive(in->d.line))
-   {
-      linkoffset_t *link;
-      sector_t *sidesector;
-      int side = P_PointOnLineSide(trace.originx, trace.originy, in->d.line);
-
-      if(side)
-         return true;
-      sidesector = in->d.line->frontsector;
-      if(!sidesector)
-         return true;
-
-      link = P_GetLinkOffset(sidesector->groupid, 
-                             in->d.line->portal->data.camera.groupid);
-      if(!link)
-         return false;
-
-      P_NewUseTPT(link, in->frac);
-      return false;
-   }
-   else
-#endif
    if(in->d.line->special)
    {
       P_UseSpecialLine(usething, in->d.line,
@@ -1499,25 +1004,6 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    // go through the sorted list
    // SoM: just store this for a sec
    result = P_TraverseIntercepts(trav, FRACUNIT);
-
-#ifdef R_LINKEDPORTALS
-   // Only check portals if no linetarget was acquired.
-   // Due to the way these are accumulated, there should be no recursion so the
-   // list will never be infinite. Note: TPT nodes are never created unless the 
-   // demo_version is >= 333 so I don't bother to check that here.
-
-   while(!trace.finished && P_CheckTPT())
-   {
-      tptnode_t *node = P_StartTPT();
-      result = P_PathTraverse(trace.x, trace.y, 
-                              trace.x + trace.dx, trace.y + trace.dy, 
-                              flags, trav);
-      P_FinishTPT(node);
-   }
-
-   if(trace.finished && P_CheckTPT())
-      P_ClearTPT();
-#endif
 
    return result;
 }
