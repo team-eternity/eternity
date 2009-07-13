@@ -184,10 +184,11 @@ static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: stati
    if(isWad && dir->ispublic)
    {
       // haleyjd 06/21/04: track handle of first wad added also
-      if(firstWadHandle == NULL)
+      if(!firstWadHandle)
          firstWadHandle = handle;
 
-      if(!strncmp(header.identification, "IWAD", 4))
+      // haleyjd 07/13/09: only track the first IWAD found
+      if(!iwadhandle && !strncmp(header.identification, "IWAD", 4))
          iwadhandle = handle;
    }
   
