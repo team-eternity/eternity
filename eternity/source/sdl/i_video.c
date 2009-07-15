@@ -416,6 +416,17 @@ static void I_ParseGeom(const char *geom,
       ++c;
    }
 
+   // handle termination of loop during STATE_HEIGHT (no flags)
+   if(state == STATE_HEIGHT)
+   {
+      int height = atoi(qstr.buffer);
+
+      if(height < 200 || height > MAX_SCREENHEIGHT)
+         errorflag = true;
+      else
+         tmpheight = height;
+   }
+
    // if an error occurs setting w/h, we default.
    if(errorflag)
    {
