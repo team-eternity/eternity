@@ -90,8 +90,8 @@ static boolean crossbitdepth;
 static SDL_Surface *primary_surface = NULL;
 
 // haleyjd 07/15/09
-char *i_default_videomode = "640x480w";
-char *i_videomode         = NULL;
+char *i_default_videomode;
+char *i_videomode;
 
 //
 // I_UpdateNoBlit
@@ -481,13 +481,11 @@ static boolean I_InitGraphicsMode(void)
    int      flags          = SDL_SWSURFACE;
    SDL_Event dummy;
 
-#ifdef RANGECHECK
    if(!i_default_videomode)
-      I_Error("I_InitGraphicsMode: death murder kill!\n");
-#endif
+      i_default_videomode = strdup("640x480w");
 
    if(!i_videomode)
-      i_videomode = i_default_videomode;
+      i_videomode = strdup(i_default_videomode);
 
    // haleyjd 10/09/05: from Chocolate DOOM
    // mouse grabbing   
@@ -713,9 +711,10 @@ CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
    V_ResetMode();
 }
 
-CONSOLE_COMMAND(i_default_videomode, cf_buffered)
+CONSOLE_COMMAND(i_default_videomode, 0)
 {
-   free(i_default_videomode);
+   if(i_default_videomode)
+      free(i_default_videomode);
 
    i_default_videomode = strdup(i_videomode);
 }
