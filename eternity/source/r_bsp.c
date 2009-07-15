@@ -486,8 +486,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 	 (heightsec != -1 && viewz <= sectors[heightsec].floorheight);
 
       // Replace floor and ceiling height with other sector's heights.
-      P_SetFloorHeight(tempsec, s->floorheight);
-      P_SetCeilingHeight(tempsec, s->ceilingheight);
+      tempsec->floorheight   = s->floorheight;
+      tempsec->ceilingheight = s->ceilingheight;
 
       // killough 11/98: prevent sudden light changes from non-water sectors:
       if(underwater && (tempsec->floorheight   = sec->floorheight,
@@ -504,7 +504,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // haleyjd 03/13/05: removed redundant if(underwater) check
          if(s->ceilingpic == skyflatnum || s->ceilingpic == sky2flatnum)
          {
-            P_SetFloorHeight(tempsec, tempsec->ceilingheight+1);
+            tempsec->floorheight   = tempsec->ceilingheight+1;
             tempsec->ceilingpic    = tempsec->floorpic;
             tempsec->ceiling_xoffs = tempsec->floor_xoffs;
             tempsec->ceiling_yoffs = tempsec->floor_yoffs;
@@ -538,8 +538,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->f_portal = NULL;
 
          // Above-ceiling hack
-         P_SetCeilingHeight(tempsec, s->ceilingheight);
-         P_SetFloorHeight(tempsec, s->ceilingheight + 1);
+         tempsec->ceilingheight = s->ceilingheight;
+         tempsec->floorheight   = s->ceilingheight + 1;
 
          tempsec->floorpic    = tempsec->ceilingpic    = s->ceilingpic;
          tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
@@ -547,7 +547,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
          if(s->floorpic != skyflatnum && s->floorpic != sky2flatnum)
          {
-            P_SetCeilingHeight(tempsec, sec->ceilingheight + 1);
+            tempsec->ceilingheight = sec->ceilingheight;
             tempsec->floorpic      = s->floorpic;
             tempsec->floor_xoffs   = s->floor_xoffs;
             tempsec->floor_yoffs   = s->floor_yoffs;
@@ -575,6 +575,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->f_portal = NULL;
       }
       
+      tempsec->ceilingheightf= M_FixedToFloat(tempsec->ceilingheight);
+      tempsec->floorheightf  = M_FixedToFloat(tempsec->floorheight);
       sec = tempsec;               // Use other sector
    }
 
