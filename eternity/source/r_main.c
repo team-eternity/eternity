@@ -273,6 +273,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 // SoM: Called by I_InitGraphicsMode when the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
 //
+// SoM: This is used by the sprite code
 void R_ResetFOV(int width, int height)
 {
    double ratio = (double)width / (double)height;
@@ -583,20 +584,10 @@ void R_ExecuteSetViewSize(void)
       }
    }
 
-   if(view.tan < 1.0f)
-   {
-      view.pspritexscale = view.width / ((float)SCREENWIDTH * view.tan);
-      view.pspritexstep = ((float)SCREENWIDTH * view.tan) / view.width;
-      view.pspriteyscale = view.pspritexscale * view.focratio;
-      view.pspriteystep = 1.0f / view.pspriteyscale;
-   }
-   else
-   {
-      view.pspritexscale = view.width / (float)SCREENWIDTH;
-      view.pspritexstep = (float)SCREENWIDTH / view.width;
-      view.pspriteyscale = view.pspritexscale * view.focratio;
-      view.pspriteystep = 1.0f / view.pspriteyscale;
-   }
+   view.pspritexscale = view.width / ((float)SCREENWIDTH * view.tan);
+   view.pspritexstep = ((float)SCREENWIDTH * view.tan) / view.width;
+   view.pspriteyscale = view.pspritexscale * view.focratio;
+   view.pspriteystep = 1.0f / view.pspriteyscale;
 }
 
 //

@@ -54,6 +54,8 @@
 #include "../in_lude.h"
 #include "../d_gi.h"
 
+#include "../r_main.h"
+
 // ----------------------------------------------------------------------------
 // WM-related stuff (see i_input.c)
 
@@ -538,6 +540,8 @@ static boolean I_InitGraphicsMode(void)
       v_w = 320;
       v_h = 200;
    }
+
+   R_ResetFOV(v_w, v_h);
 
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
