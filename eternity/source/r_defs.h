@@ -300,11 +300,6 @@ struct sector_s
    //unsigned int frameid;
    float ceilingheightf, floorheightf;
 
-   // SoM: the actual, factual floor and ceiling heights; these are used by 
-   // linked portals but ifdefing them would be a nightmare and the source 
-   // will still compile with these outside the ifdefs.
-   fixed_t floorz, ceilingz;
-
    // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
    // generalized sector types outside of DOOM-format maps.
    unsigned int flags;

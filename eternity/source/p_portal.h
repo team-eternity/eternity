@@ -66,15 +66,13 @@ void R_SetSectorGroupID(sector_t *sector, int groupid);
 
 
 // P_SetFloorHeight
-// This function will set the floor height, and updated the rendered floor 
-// height based on the presense of active linked portals, and update
+// This function will set the floor height, and update
 // the float version of the floor height as well.
 void P_SetFloorHeight(sector_t *sec, fixed_t h);
 
 
 // P_SetCeilingHeight
-// This function will set the ceiling height, and updated the rendered ceiling 
-// height based on the presense of active linked portals, and update
+// This function will set the ceiling height, and update
 // the float version of the ceiling height as well.
 void P_SetCeilingHeight(sector_t *sec, fixed_t h);
 

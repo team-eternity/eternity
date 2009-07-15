@@ -173,7 +173,7 @@ void T_PlatRaise(plat_t *plat)
    case waiting: // plat is waiting
       if(!--plat->count)  // downcount and check for delay elapsed
       {
-         if(plat->sector->floorz == plat->low)
+         if(plat->sector->floorheight == plat->low)
             plat->status = up;     // if at bottom, start up
          else
             plat->status = down;   // if at top, start down
@@ -251,7 +251,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
 
       //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
       //going down forever -- default low to plat height when triggered
-      plat->low = sec->floorz;
+      plat->low = sec->floorheight;
       
       // set up plat according to type  
       switch(type)
@@ -259,7 +259,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       case raiseToNearestAndChange:
          plat->speed = PLATSPEED/2;
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = P_FindNextHighestFloor(sec,sec->floorz);
+         plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
          plat->wait = 0;
          plat->status = up;
          //jff 3/14/98 clear old field as well
@@ -270,7 +270,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       case raiseAndChange:
          plat->speed = PLATSPEED/2;
          sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = sec->floorz + amount*FRACUNIT;
+         plat->high = sec->floorheight + amount*FRACUNIT;
          plat->wait = 0;
          plat->status = up;
          
@@ -281,10 +281,10 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->speed = PLATSPEED * 4;
          plat->low = P_FindLowestFloorSurrounding(sec);
          
-         if(plat->low > sec->floorz)
-            plat->low = sec->floorz;
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
          
-         plat->high = sec->floorz;
+         plat->high = sec->floorheight;
          plat->wait = 35*PLATWAIT;
          plat->status = down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
@@ -294,10 +294,10 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->speed = PLATSPEED * 8;
          plat->low = P_FindLowestFloorSurrounding(sec);
          
-         if(plat->low > sec->floorz)
-            plat->low = sec->floorz;
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
          
-         plat->high = sec->floorz;
+         plat->high = sec->floorheight;
          plat->wait = 35*PLATWAIT;
          plat->status = down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
@@ -307,13 +307,13 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->speed = PLATSPEED;
          plat->low = P_FindLowestFloorSurrounding(sec);
          
-         if(plat->low > sec->floorz)
-            plat->low = sec->floorz;
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
          
          plat->high = P_FindHighestFloorSurrounding(sec);
          
-         if(plat->high < sec->floorz)
-            plat->high = sec->floorz;
+         if(plat->high < sec->floorheight)
+            plat->high = sec->floorheight;
          
          plat->wait = 35*PLATWAIT;
          plat->status = P_Random(pr_plats) & 1;
@@ -327,8 +327,8 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
          plat->crush = 10;          //jff 3/14/98 crush anything in the way
          
          // set up toggling between ceiling, floor inclusive
-         plat->low    = sec->ceilingz;
-         plat->high   = sec->floorz;
+         plat->low    = sec->ceilingheight;
+         plat->high   = sec->floorheight;
          plat->status = down;
 
          P_PlatSequence(plat->sector, "EEPlatSilent");

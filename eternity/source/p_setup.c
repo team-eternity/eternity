@@ -369,9 +369,6 @@ void P_LoadSectors(int lump)
       // SoM: Slopes!
       ss->c_slope = ss->f_slope = NULL;
 
-      ss->floorz   = ss->floorheight;
-      ss->ceilingz = ss->ceilingheight;
-
       // SoM: These are kept current with floorheight and ceilingheight now
       ss->floorheightf = M_FixedToFloat(ss->floorheight);
       ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);

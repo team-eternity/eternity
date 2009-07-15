@@ -459,6 +459,13 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    }
 
 
+   if(sec->heightsec != -1 || sec->f_portal || sec->c_portal)
+   {
+      // SoM: This was moved here for use with portals
+      // Replace sector being drawn, with a copy to be hacked
+      *tempsec = *sec;
+   }
+   
    if(sec->heightsec != -1)
    {
       int underwater; // haleyjd: restructured
@@ -478,12 +485,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       underwater = 
 	 (heightsec != -1 && viewz <= sectors[heightsec].floorheight);
 
-      // Replace sector being drawn, with a copy to be hacked
-      *tempsec = *sec;
-
       // Replace floor and ceiling height with other sector's heights.
-      tempsec->floorheight   = s->floorheight;
-      tempsec->ceilingheight = s->ceilingheight;
+      P_SetFloorHeight(tempsec, s->floorheight);
+      P_SetCeilingHeight(tempsec, s->ceilingheight);
 
       // killough 11/98: prevent sudden light changes from non-water sectors:
       if(underwater && (tempsec->floorheight   = sec->floorheight,
@@ -500,7 +504,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // haleyjd 03/13/05: removed redundant if(underwater) check
          if(s->ceilingpic == skyflatnum || s->ceilingpic == sky2flatnum)
          {
-            tempsec->floorheight   = tempsec->ceilingheight+1;
+            P_SetFloorHeight(tempsec, tempsec->ceilingheight+1);
             tempsec->ceilingpic    = tempsec->floorpic;
             tempsec->ceiling_xoffs = tempsec->floor_xoffs;
             tempsec->ceiling_yoffs = tempsec->floor_yoffs;
@@ -534,8 +538,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->f_portal = NULL;
 
          // Above-ceiling hack
-         tempsec->ceilingheight = s->ceilingheight;
-         tempsec->floorheight   = s->ceilingheight + 1;
+         P_SetCeilingHeight(tempsec, s->ceilingheight);
+         P_SetFloorHeight(tempsec, s->ceilingheight + 1);
 
          tempsec->floorpic    = tempsec->ceilingpic    = s->ceilingpic;
          tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
@@ -543,7 +547,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
          if(s->floorpic != skyflatnum && s->floorpic != sky2flatnum)
          {
-            tempsec->ceilingheight = sec->ceilingheight;
+            P_SetCeilingHeight(tempsec, sec->ceilingheight + 1);
             tempsec->floorpic      = s->floorpic;
             tempsec->floor_xoffs   = s->floor_xoffs;
             tempsec->floor_yoffs   = s->floor_yoffs;
@@ -571,9 +575,46 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->f_portal = NULL;
       }
       
-      tempsec->ceilingheightf= M_FixedToFloat(tempsec->ceilingheight);
-      tempsec->floorheightf  = M_FixedToFloat(tempsec->floorheight);
       sec = tempsec;               // Use other sector
+   }
+
+   if(sec->c_portal)
+   {
+#ifdef R_LINKEDPORTALS
+      if(sec->c_portal->type == R_LINKED)
+      {
+         if(sec->ceilingheight < R_CPCam(sec)->planez)
+            tempsec->c_portal = NULL;
+         else
+            P_SetCeilingHeight(tempsec, R_CPCam(sec)->planez);
+         sec = tempsec;
+      }
+      else
+#endif
+      if(sec->c_portal->flags & R_HIDDEN)
+      {
+         tempsec->c_portal = NULL;
+         sec = tempsec;
+      }
+   }
+   if(sec->f_portal)
+   {
+#ifdef R_LINKEDPORTALS
+      if(sec->f_portal->type == R_LINKED)
+      {
+         if(sec->floorheight > R_FPCam(sec)->planez)
+            tempsec->f_portal = NULL;
+         else
+            P_SetFloorHeight(tempsec, R_FPCam(sec)->planez);
+         sec = tempsec;
+      }
+      else
+#endif
+      if(sec->f_portal->flags & R_HIDDEN)
+      {
+         tempsec->f_portal = NULL;
+         sec = tempsec;
+      }
    }
 
    return sec;
@@ -993,7 +1034,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
-   texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
+   texhigh = seg.backsec->ceilingheightf - view.z;
 
    if(seg.backsec->f_slope)
    {
@@ -1112,7 +1153,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
 #endif
 
-   texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
+   texlow = seg.backsec->floorheightf - view.z;
    if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
@@ -1165,7 +1206,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
-   texhigh = M_FixedToFloat(seg.backsec->ceilingz) - view.z;
+   texhigh = seg.backsec->ceilingheightf - view.z;
 
    uppermissing = (seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
                    seg.side->toptexture == 0);
@@ -1269,7 +1310,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
    seg.lowstep = (seg.low2 - seg.low) * pstep;
 
-   texlow = M_FixedToFloat(seg.backsec->floorz) - view.z;
+   texlow = seg.backsec->floorheightf - view.z;
    if(seg.bottom > seg.low && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
@@ -1544,8 +1585,8 @@ static void R_AddLine(seg_t *line)
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
-   textop = M_FixedToFloat(seg.frontsec->ceilingz) - view.z;
-   texbottom = M_FixedToFloat(seg.frontsec->floorz) - view.z;
+   textop = seg.frontsec->ceilingheightf - view.z;
+   texbottom = seg.frontsec->floorheightf - view.z;
 
    seg.f_portalignore = seg.c_portalignore = false;
 

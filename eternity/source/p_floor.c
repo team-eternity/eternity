@@ -103,9 +103,9 @@ result_e T_MovePlane
       {
       case plat_down:
          // Moving a floor down
-         if(sector->floorz - speed < dest)
+         if(sector->floorheight - speed < dest)
          {
-            lastpos = sector->floorz;
+            lastpos = sector->floorheight;
 
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
@@ -165,8 +165,8 @@ result_e T_MovePlane
                }
             }            
             
-            lastpos = sector->floorz;
-            P_SetFloorHeight(sector, sector->floorz - speed);
+            lastpos = sector->floorheight;
+            P_SetFloorHeight(sector, sector->floorheight - speed);
             flag = P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
 
             // haleyjd 02/15/01: last of cph's current demo fixes:
@@ -193,11 +193,11 @@ result_e T_MovePlane
          // jff 02/04/98 keep floor from moving thru ceilings
          // jff 2/22/98 weaken check to demo_compatibility
          destheight = (demo_version < 203 || comp[comp_floors] ||
-                       dest<sector->ceilingz)? // killough 10/98
-                       dest : sector->ceilingz;
-         if(sector->floorz + speed > destheight)
+                       dest<sector->ceilingheight)? // killough 10/98
+                       dest : sector->ceilingheight;
+         if(sector->floorheight + speed > destheight)
          {
-            lastpos = sector->floorz;
+            lastpos = sector->floorheight;
 
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
@@ -254,8 +254,8 @@ result_e T_MovePlane
             }            
 
             // crushing is possible
-            lastpos = sector->floorz;
-            P_SetFloorHeight(sector, sector->floorz + speed);
+            lastpos = sector->floorheight;
+            P_SetFloorHeight(sector, sector->floorheight + speed);
             flag = P_CheckSector(sector,crush,speed,0); //jff 3/19/98 use faster chk
             if(flag == true)
             {
@@ -292,11 +292,11 @@ result_e T_MovePlane
          // moving a ceiling down
          // jff 02/04/98 keep ceiling from moving thru floors
          // jff 2/22/98 weaken check to demo_compatibility
-         destheight = (comp[comp_floors] || dest>sector->floorz)?
-                       dest : sector->floorz; // killough 10/98: add comp flag
-         if(sector->ceilingz - speed < destheight)
+         destheight = (comp[comp_floors] || dest>sector->floorheight)?
+                       dest : sector->floorheight; // killough 10/98: add comp flag
+         if(sector->ceilingheight - speed < destheight)
          {
-            lastpos = sector->ceilingz;
+            lastpos = sector->ceilingheight;
 
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
@@ -354,8 +354,8 @@ result_e T_MovePlane
             }            
 
             // crushing is possible
-            lastpos = sector->ceilingz;
-            P_SetCeilingHeight(sector, sector->ceilingz - speed);
+            lastpos = sector->ceilingheight;
+            P_SetCeilingHeight(sector, sector->ceilingheight - speed);
             flag = P_CheckSector(sector,crush,-speed,1); //jff 3/19/98 use faster chk
             
             if(flag == true)
@@ -380,9 +380,9 @@ result_e T_MovePlane
          
       case plat_up:
          // moving a ceiling up
-         if(sector->ceilingz + speed > dest)
+         if(sector->ceilingheight + speed > dest)
          {
-            lastpos = sector->ceilingz;
+            lastpos = sector->ceilingheight;
 
             // SoM 9/19/02: If we are go, move 3d sides first.
             if(move3dsides)
@@ -440,8 +440,8 @@ result_e T_MovePlane
             }
 
             
-            lastpos = sector->ceilingz;
-            P_SetCeilingHeight(sector, sector->ceilingz + speed);
+            lastpos = sector->ceilingheight;
+            P_SetCeilingHeight(sector, sector->ceilingheight + speed);
             P_CheckSector(sector,crush,speed,1); //jff 3/19/98 use faster chk
          }
          break;
@@ -817,7 +817,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            P_FindNextLowestFloor(sec,floor->sector->floorz);
+            P_FindNextLowestFloor(sec,floor->sector->floorheight);
          break;
 
       case turboLower:
@@ -825,7 +825,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED * 4;
          floor->floordestheight = P_FindHighestFloorSurrounding(sec);
-         if (floor->floordestheight != sec->floorz)
+         if (floor->floordestheight != sec->floorheight)
             floor->floordestheight += 8*FRACUNIT;
          break;
 
@@ -836,8 +836,8 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-         if(floor->floordestheight > sec->ceilingz)
-            floor->floordestheight = sec->ceilingz;
+         if(floor->floordestheight > sec->ceilingheight)
+            floor->floordestheight = sec->ceilingheight;
          floor->floordestheight -=
             (8*FRACUNIT)*(floortype == raiseFloorCrush);
          break;
@@ -847,7 +847,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED*4;
          floor->floordestheight =
-            P_FindNextHighestFloor(sec,sec->floorz);
+            P_FindNextHighestFloor(sec,sec->floorheight);
          break;
 
       case raiseFloorToNearest:
@@ -855,7 +855,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            P_FindNextHighestFloor(sec,sec->floorz);
+            P_FindNextHighestFloor(sec,sec->floorheight);
          break;
 
       case raiseFloor24:
@@ -863,7 +863,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            floor->sector->floorz + 24 * FRACUNIT;
+            floor->sector->floorheight + 24 * FRACUNIT;
          break;
 
          // jff 2/03/30 support straight raise by 32 (fast)
@@ -872,7 +872,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED*4;
          floor->floordestheight =
-            floor->sector->floorz + 32 * FRACUNIT;
+            floor->sector->floorheight + 32 * FRACUNIT;
          break;
 
       case raiseFloor512:
@@ -880,7 +880,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            floor->sector->floorz + 512 * FRACUNIT;
+            floor->sector->floorheight + 512 * FRACUNIT;
          break;
 
       case raiseFloor24AndChange:
@@ -888,7 +888,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            floor->sector->floorz + 24 * FRACUNIT;
+            floor->sector->floorheight + 24 * FRACUNIT;
          sec->floorpic = line->frontsector->floorpic;
          //jff 3/14/98 transfer both old and new special
          P_DirectTransferSectorSpecial(line->frontsector, sec);
@@ -927,12 +927,12 @@ int EV_DoFloor(line_t *line, floor_e floortype )
             if(comp[comp_model])
             {
                floor->floordestheight =
-                  floor->sector->floorz + minsize;
+                  floor->sector->floorheight + minsize;
             }
             else
             {
                floor->floordestheight =
-                  (floor->sector->floorz>>FRACBITS) + 
+                  (floor->sector->floorheight>>FRACBITS) + 
                   (minsize>>FRACBITS);
                if(floor->floordestheight>32000)
                   floor->floordestheight = 32000;   //jff 3/13/98 do not
@@ -1127,7 +1127,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
          }
 
          floor->speed = speed;
-         height = sec->floorz + stairsize;
+         height = sec->floorheight + stairsize;
          floor->floordestheight = height;
          
          texture = sec->floorpic;
@@ -1300,7 +1300,7 @@ int EV_DoDonut(line_t*  line)
          floor->speed = FLOORSPEED / 2;
          floor->texture = s3->floorpic;
          P_ZeroSpecialTransfer(&(floor->special));
-         floor->floordestheight = s3->floorz;
+         floor->floordestheight = s3->floorheight;
          P_FloorSequence(floor->sector);
         
          //  Spawn lowering donut-hole pillar
@@ -1313,7 +1313,7 @@ int EV_DoDonut(line_t*  line)
          floor->direction = plat_down;
          floor->sector = s1;
          floor->speed = FLOORSPEED / 2;
-         floor->floordestheight = s3->floorz;
+         floor->floordestheight = s3->floorheight;
          P_FloorSequence(floor->sector);
          break;
       }
@@ -1368,9 +1368,9 @@ int EV_DoElevator
          elevator->sector = sec;
          elevator->speed = ELEVATORSPEED;
          elevator->floordestheight =
-            P_FindNextLowestFloor(sec,sec->floorz);
+            P_FindNextLowestFloor(sec,sec->floorheight);
          elevator->ceilingdestheight =
-            elevator->floordestheight + sec->ceilingz - sec->floorz;
+            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
          break;
 
       // elevator up to next floor
@@ -1379,20 +1379,20 @@ int EV_DoElevator
          elevator->sector = sec;
          elevator->speed = ELEVATORSPEED;
          elevator->floordestheight =
-            P_FindNextHighestFloor(sec,sec->floorz);
+            P_FindNextHighestFloor(sec,sec->floorheight);
          elevator->ceilingdestheight =
-            elevator->floordestheight + sec->ceilingz - sec->floorz;
+            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
          break;
 
       // elevator to floor height of activating switch's front sector
       case elevateCurrent:
          elevator->sector = sec;
          elevator->speed = ELEVATORSPEED;
-         elevator->floordestheight = line->frontsector->floorz;
+         elevator->floordestheight = line->frontsector->floorheight;
          elevator->ceilingdestheight =
-            elevator->floordestheight + sec->ceilingz - sec->floorz;
+            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
          elevator->direction =
-            elevator->floordestheight>sec->floorz ? plat_up : plat_down;
+            elevator->floordestheight>sec->floorheight ? plat_up : plat_down;
          break;
 
       default:
@@ -1436,7 +1436,7 @@ manual_pillar:
       // already being buggered about with, 
       // or ceiling <= floor, therefore closed
       if(sector->floordata || sector->ceilingdata || 
-         sector->ceilingz <= sector->floorz)
+         sector->ceilingheight <= sector->floorheight)
       {
          if(manual)
             return returnval;
@@ -1453,29 +1453,29 @@ manual_pillar:
       
       if(pd->height == 0) // height == 0 so we meet in the middle
       {
-         destheight = sector->floorz + 
-                         ((sector->ceilingz - sector->floorz) / 2);
+         destheight = sector->floorheight + 
+                         ((sector->ceilingheight - sector->floorheight) / 2);
       }
       else // else we meet at floorheight + args[2]
-         destheight = sector->floorz + pd->height;
+         destheight = sector->floorheight + pd->height;
 
       if(pd->height == 0) // height is 0 so we meet halfway
       {
          pillar->ceilingSpeed = pd->speed;
          pillar->floorSpeed   = pd->speed;
       }      
-      else if(destheight-sector->floorz > sector->ceilingz-destheight)
+      else if(destheight-sector->floorheight > sector->ceilingheight-destheight)
       {
          pillar->floorSpeed = pd->speed;
-         pillar->ceilingSpeed = FixedDiv(sector->ceilingz - destheight,
-                                   FixedDiv(destheight - sector->floorz,
+         pillar->ceilingSpeed = FixedDiv(sector->ceilingheight - destheight,
+                                   FixedDiv(destheight - sector->floorheight,
                                             pillar->floorSpeed));
       }
       else
       {
          pillar->ceilingSpeed = pd->speed;
-         pillar->floorSpeed = FixedDiv(destheight - sector->floorz,
-                                 FixedDiv(sector->ceilingz - destheight, 
+         pillar->floorSpeed = FixedDiv(destheight - sector->floorheight,
+                                 FixedDiv(sector->ceilingheight - destheight, 
                                           pillar->ceilingSpeed));
       } 
       
@@ -1525,7 +1525,7 @@ int EV_PillarOpen(line_t *line, pillardata_t *pd)
 manual_pillar:
       // already being buggered about with
       if(sector->floordata || sector->ceilingdata ||
-         sector->floorz != sector->ceilingz)
+         sector->floorheight != sector->ceilingheight)
       {
          if(manual)
             return returnval;
@@ -1550,19 +1550,19 @@ manual_pillar:
       else               // else we meet at ceilingheight + args[3]
          pillar->ceilingdest = sector->ceilingheight + pd->cdist;
        
-      if(pillar->ceilingdest - sector->ceilingz > 
-            sector->floorz - pillar->floordest)
+      if(pillar->ceilingdest - sector->ceilingheight > 
+            sector->floorheight - pillar->floordest)
       {
          pillar->ceilingSpeed = pd->speed;
-         pillar->floorSpeed = FixedDiv(sector->floorz - pillar->floordest, 
-                                 FixedDiv(pillar->ceilingdest - sector->ceilingz,
+         pillar->floorSpeed = FixedDiv(sector->floorheight - pillar->floordest, 
+                                 FixedDiv(pillar->ceilingdest - sector->ceilingheight,
                                           pillar->ceilingSpeed));
       }
       else
       {
          pillar->floorSpeed = pd->speed;
-         pillar->ceilingSpeed = FixedDiv(pillar->ceilingdest - sector->ceilingz,
-                                   FixedDiv(sector->floorz - pillar->floordest, 
+         pillar->ceilingSpeed = FixedDiv(pillar->ceilingdest - sector->ceilingheight,
+                                   FixedDiv(sector->floorheight - pillar->floordest, 
                                             pillar->floorSpeed));
       }
 
@@ -1629,9 +1629,9 @@ void T_FloorWaggle(floorwaggle_t *waggle)
          P_ChangeSector(waggle->sector, 8);
          */
          destheight = waggle->originalHeight;
-         dist       = waggle->originalHeight - waggle->sector->floorz;
+         dist       = waggle->originalHeight - waggle->sector->floorheight;
          T_MovePlane(waggle->sector, abs(dist), destheight, 8, 0, 
-                     destheight >= waggle->sector->floorz ? plat_down : plat_up);
+                     destheight >= waggle->sector->floorheight ? plat_down : plat_up);
 
          waggle->sector->floordata = NULL;
          // HEXEN_TODO: P_TagFinished
@@ -1655,10 +1655,10 @@ void T_FloorWaggle(floorwaggle_t *waggle)
       waggle->originalHeight + 
          FixedMul(FloatBobOffsets[(waggle->accumulator >> FRACBITS) & 63],
                   waggle->scale);
-   dist = destheight - waggle->sector->floorz;
+   dist = destheight - waggle->sector->floorheight;
 
    T_MovePlane(waggle->sector, abs(dist), destheight, 8, 0, 
-               destheight >= waggle->sector->floorz ? plat_up : plat_down);
+               destheight >= waggle->sector->floorheight ? plat_up : plat_down);
       
 }
 

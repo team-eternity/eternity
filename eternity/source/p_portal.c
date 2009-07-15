@@ -547,36 +547,24 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 // SoM: Sector utility functions
 
 // P_SetFloorHeight
-// This function will set the floor height, and updated the rendered floor 
-// height based on the presense of active linked portals, and update
+// This function will set the floor height, and update
 // the float version of the floor height as well.
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
    // TODO: Support for diabling a linked portal on a surface
-   sec->floorz = h;
-   sec->floorheight =
-      (sec->f_portal && sec->f_portal->type == R_LINKED && 
-      h <= sec->f_portal->data.camera.planez) ?
-      sec->f_portal->data.camera.planez : h;
-
+   sec->floorheight = h;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
 }
 
 
 
 // P_SetCeilingHeight
-// This function will set the ceiling height, and updated the rendered ceiling 
-// height based on the presense of active linked portals, and update
+// This function will set the ceiling height, and update
 // the float version of the ceiling height as well.
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
    // TODO: Support for diabling a linked portal on a surface
-   sec->ceilingz = h;
-   sec->ceilingheight =
-      (sec->c_portal && sec->c_portal->type == R_LINKED && 
-       h >= sec->c_portal->data.camera.planez) ?
-      sec->c_portal->data.camera.planez : h;
-
+   sec->ceilingheight = h;
    sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
 }
 

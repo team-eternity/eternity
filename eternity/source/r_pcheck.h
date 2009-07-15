@@ -35,7 +35,7 @@ d_inline static boolean R_LinkedFloorActive(sector_t *sector)
    return (useportalgroups && 
            sector->f_portal && 
            sector->f_portal->type == R_LINKED &&
-           sector->floorz <= sector->f_portal->data.camera.planez);
+           sector->floorheight <= sector->f_portal->data.camera.planez);
 }
 
 
@@ -44,7 +44,7 @@ d_inline static boolean R_LinkedCeilingActive(sector_t *sector)
    return (useportalgroups && 
            sector->c_portal && 
            sector->c_portal->type == R_LINKED &&
-           sector->ceilingz >= sector->c_portal->data.camera.planez);
+           sector->ceilingheight >= sector->c_portal->data.camera.planez);
 }
 
 
@@ -59,7 +59,7 @@ d_inline static boolean R_FloorPortalActive(sector_t *sector)
    // FIXME: possible to eliminate branch?
    return 
       (sector->f_portal && sector->f_portal->type == R_LINKED && 
-       sector->floorz > sector->f_portal->data.camera.planez) ? 
+       sector->floorheight > sector->f_portal->data.camera.planez) ? 
       false : 
       (sector->f_portal != NULL);
 }
@@ -69,7 +69,7 @@ d_inline static boolean R_CeilingPortalActive(sector_t *sector)
    // FIXME: possible to eliminate branch?
    return 
       (sector->c_portal && sector->c_portal->type == R_LINKED && 
-       sector->ceilingz < sector->c_portal->data.camera.planez) ? 
+       sector->ceilingheight < sector->c_portal->data.camera.planez) ? 
       false : 
       (sector->c_portal != NULL);
 }
@@ -84,7 +84,7 @@ d_inline static boolean R_RenderFloorPortal(sector_t *sector)
        ((fp->type != R_TWOWAY && fp->type != R_LINKED) ||
         (fp->type == R_TWOWAY && sector->floorheight < viewz) ||         
         (fp->type == R_LINKED && sector->floorheight <= viewz && 
-                                 sector->floorz <= fp->data.camera.planez)));
+                                 sector->floorheight <= fp->data.camera.planez)));
 #else
    return (fp && (fp->type != R_TWOWAY || sector->floorheight < viewz));
 #endif
@@ -100,7 +100,7 @@ d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
        ((cp->type != R_TWOWAY && cp->type != R_LINKED) ||
         (cp->type == R_TWOWAY && sector->ceilingheight > viewz) ||         
         (cp->type == R_LINKED && sector->ceilingheight > viewz && 
-                                 sector->ceilingz >= cp->data.camera.planez)));
+                                 sector->ceilingheight >= cp->data.camera.planez)));
 #else
    return (cp && (cp->type != R_TWOWAY || sector->ceilingheight > viewz));
 #endif

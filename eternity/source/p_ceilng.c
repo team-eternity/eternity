@@ -292,8 +292,8 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
       {
       case fastCrushAndRaise:
          ceiling->crush = 10;
-         ceiling->topheight = sec->ceilingz;
-         ceiling->bottomheight = sec->floorz + (8*FRACUNIT);
+         ceiling->topheight = sec->ceilingheight;
+         ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED * 2;
          break;
@@ -302,10 +302,10 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
          noise = CNOISE_SEMISILENT;
       case crushAndRaise:
          ceiling->crush = 10;
-         ceiling->topheight = sec->ceilingz;
+         ceiling->topheight = sec->ceilingheight;
       case lowerAndCrush:
       case lowerToFloor:
-         ceiling->bottomheight = sec->floorz;
+         ceiling->bottomheight = sec->floorheight;
          if(type != lowerToFloor)
             ceiling->bottomheight += 8*FRACUNIT;
          ceiling->direction = plat_down;

@@ -215,6 +215,7 @@ static portal_t *R_CreatePortal(void)
    portal_t *ret;
 
    ret = Z_Malloc(sizeof(portal_t), PU_LEVEL, NULL);
+   memset(ret, 0, sizeof(*ret));
 
    if(!portals)
       portals = last = ret;
@@ -223,13 +224,6 @@ static portal_t *R_CreatePortal(void)
       last->next = ret;
       last = ret;
    }
-
-   ret->type = R_NONE;
-   ret->next = NULL;
-
-   ret->tainted = 0; // haleyjd 05/19/06
-
-   memset(&ret->data, 0, sizeof(ret->data));
 
    return ret;
 }

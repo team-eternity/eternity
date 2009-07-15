@@ -40,6 +40,24 @@ typedef enum
 } rportaltype_e;
 
 
+// These are flags used to represent configurable options for portals
+typedef enum
+{
+   // If set the portal will be turned off
+   R_HIDDEN = 0x1,
+
+#ifdef R_LINKEDPORTALS
+   // Linked portal options:
+   // If set, the linked portal will not allow travel between 
+   R_BLOCKING = 0x2,
+#endif
+} rportalflag_e;
+
+
+#ifdef R_LINKEDPORTALS
+#define R_NOTRAVEL  (R_HIDDEN|R_BLOCKING)
+#endif
+
 
 typedef struct
 {
@@ -90,6 +108,8 @@ typedef struct portal_s
       horizonportal_t  horizon;
       skyplaneportal_t plane;
    } data;
+
+   int    flags;
 
    struct portal_s *next;
 
