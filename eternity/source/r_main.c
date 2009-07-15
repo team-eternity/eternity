@@ -274,6 +274,8 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 // Sets the base-line fov for the given screen ratio.
 //
 // SoM: This is used by the sprite code
+float maxtangent = 1.0f;
+
 void R_ResetFOV(int width, int height)
 {
    double ratio = (double)width / (double)height;
@@ -290,6 +292,8 @@ void R_ResetFOV(int width, int height)
    // y = mx + b -> fov = (75/2) * ratio + 40
    // This gives 90 for 4:3, 100 for 16:10, and 106 for 16:9.
    fov = (int)((75.0/2.0) * ratio + 40.0);
+
+   maxtangent = (float)tan((float)fov * PI / 360.0f);
 }
 
 extern float slopevis; // SoM: used in slope lighting
@@ -584,8 +588,17 @@ void R_ExecuteSetViewSize(void)
       }
    }
 
-   view.pspritexscale = view.width / ((float)SCREENWIDTH * view.tan);
-   view.pspritexstep = ((float)SCREENWIDTH * view.tan) / view.width;
+   if(view.tan > maxtangent)
+   {
+      view.pspritexscale = view.width / ((float)SCREENWIDTH * maxtangent);
+      view.pspritexstep = ((float)SCREENWIDTH * maxtangent) / view.width;
+   }
+   else
+   {
+      view.pspritexscale = view.width / ((float)SCREENWIDTH * view.tan);
+      view.pspritexstep = ((float)SCREENWIDTH * view.tan) / view.width;
+   }
+
    view.pspriteyscale = view.pspritexscale * view.focratio;
    view.pspriteystep = 1.0f / view.pspriteyscale;
 }
