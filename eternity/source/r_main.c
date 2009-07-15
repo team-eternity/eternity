@@ -267,6 +267,8 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
     0;
 }
 
+float maxtangent = 1.0f;
+
 //
 // R_ResetFOV
 // 
@@ -274,8 +276,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 // Sets the base-line fov for the given screen ratio.
 //
 // SoM: This is used by the sprite code
-float maxtangent = 1.0f;
-
+//
 void R_ResetFOV(int width, int height)
 {
    double ratio = (double)width / (double)height;
