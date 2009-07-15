@@ -2282,18 +2282,7 @@ static void D_LoadSysConfig(void)
 //
 static void D_SetGraphicsMode(void)
 {
-   int p, mode;
-
    DEBUGMSG("** set graphics mode\n");
-
-   // haleyjd 04/07/04: v_mode command-line override
-   if((p = M_CheckParm("-v_mode")) && p < myargc - 1)
-   {
-      mode = atoi(myargv[p + 1]);
-
-      if(mode >= 0 && mode < V_NumModes())
-         v_mode = mode;
-   }
 
    // set graphics mode
    I_InitGraphics();

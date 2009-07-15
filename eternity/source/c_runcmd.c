@@ -641,6 +641,8 @@ static void C_SetVariable(command_t *command)
    // 5/8/99 set default value also
    // 16/9/99 cf_handlerset flag for variables set from
    // the handler instead
+
+   // haleyjd 07/15/09: cmdtype, NOT cmdsrc in tests below!!!
    
    if(!(command->flags & cf_handlerset))
    {
@@ -648,14 +650,14 @@ static void C_SetVariable(command_t *command)
       {
       case vt_int:
          *(int*)variable->variable = atoi(c_argv[0]);
-         if(variable->v_default && cmdsrc==c_typed)  // default
+         if(variable->v_default && cmdtype == c_typed)  // default
             *(int*)variable->v_default = atoi(c_argv[0]);
          break;
          
       case vt_string:
          free(*(char**)variable->variable);
          *(char**)variable->variable = strdup(c_argv[0]);
-         if(variable->v_default && cmdsrc==c_typed)  // default
+         if(variable->v_default && cmdtype == c_typed)  // default
          {
             free(*(char**)variable->v_default);
             *(char**)variable->v_default = strdup(c_argv[0]);
@@ -666,7 +668,7 @@ static void C_SetVariable(command_t *command)
          // haleyjd 03/13/06: static strings
          memset(variable->variable, 0, variable->max+1);
          strcpy((char *)variable->variable, c_argv[0]);
-         if(variable->v_default && cmdsrc==c_typed)
+         if(variable->v_default && cmdtype == c_typed)
          {
             memset(variable->v_default, 0, variable->max+1);
             strcpy((char *)variable->v_default, c_argv[0]);

@@ -1724,6 +1724,7 @@ CONSOLE_COMMAND(mn_endgame, 0)
 // Set video mode
 //
 
+#if 0
 static const char **mn_vidmode_desc;
 static const char **mn_vidmode_cmds;
 
@@ -1772,6 +1773,7 @@ CONSOLE_COMMAND(mn_vidmode, cf_hidden)
                      NULL, mn_vidmode_cmds);
    MN_ShowBoxWidget();
 }
+#endif
 
 /////////////////////////////////////////////////////////////////
 //
@@ -1805,21 +1807,19 @@ void MN_VideoModeDrawer();
 
 static menuitem_t mn_video_items[] =
 {
-   {it_title,        FC_GOLD "video options",           NULL, "m_video"},
+   {it_title,        FC_GOLD "Video Options",           NULL, "m_video"},
    {it_gap},
-   {it_info,         FC_GOLD "mode"},
-   {it_runcmd,       "set video mode...",       "mn_vidmode"},
-   {it_toggle,       "wait for retrace",        "v_retrace"},
-   {it_slider,       "gamma correction",        "gamma"},   
+   {it_info,         FC_GOLD "Mode"                                    },
+   {it_variable_nd,  "video mode",              "i_videomode"          },
+   {it_runcmd,       "make default video mode", "i_default_videomode"  },
+   {it_toggle,       "wait for retrace",        "v_retrace"            },
+   {it_slider,       "gamma correction",        "gamma"                },   
    {it_gap},
-   {it_info,         FC_GOLD "rendering"},
-   {it_slider,       "screen size",             "screensize"},
-   {it_toggle,       "hom detector flashes",    "r_homflash"},
-   {it_toggle,       "translucency",            "r_trans"},
-   {it_variable,     "translucency percentage", "r_tranpct"},
-   {it_gap},
-   {it_info,         FC_GOLD "misc."},
-   {it_toggle,       "loading disk icon",       "v_diskicon"},
+   {it_info,         FC_GOLD "Rendering"                               },
+   {it_slider,       "screen size",             "screensize"           },
+   {it_toggle,       "hom detector flashes",    "r_homflash"           },
+   {it_toggle,       "translucency",            "r_trans"              },
+   {it_variable,     "translucency percentage", "r_tranpct"            },
    {it_end}
 };
 
@@ -1861,7 +1861,7 @@ void MN_VideoModeDrawer(void)
    patch = W_CacheLumpNum(lump + firstspritelump, PU_CACHE);
    
    // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[10].y - 5;
+   y = menu_video.menuitems[11].y - 5;
    V_DrawBox(270, y, 20, 20);
    V_DrawPatchTL(282, y + 12, &vbscreen, patch, NULL, FTRANLEVEL);
 }
@@ -1915,6 +1915,9 @@ static menuitem_t mn_video_page2_items[] =
    {it_info,    FC_GOLD "Screen Wipe"},
    {it_toggle,  "wipe type",                "wipetype"},
    {it_toggle,  "game waits",               "wipewait"},
+   {it_gap},
+   {it_info,    FC_GOLD "Misc."},
+   {it_toggle,  "loading disk icon",       "v_diskicon"},
    {it_end}
 };
 
@@ -3668,7 +3671,9 @@ void MN_AddMenus(void)
    C_AddCommand(mn_mouse);
    C_AddCommand(mn_video);
    C_AddCommand(mn_particle);  // haleyjd: particle options menu
+#if 0
    C_AddCommand(mn_vidmode);
+#endif
    C_AddCommand(mn_sound);
    C_AddCommand(mn_weapons);
    C_AddCommand(mn_compat);

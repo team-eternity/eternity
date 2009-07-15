@@ -64,6 +64,7 @@ boolean menu_toggleisback;
 
         // input for typing in new value
 static command_t *input_command = NULL;       // NULL if not typing in
+static int input_cmdtype = c_typed;           // haleyjd 07/15/09
 
 // haleyjd 04/29/02: needs to be unsigned
 static unsigned char input_buffer[1024] = "";
@@ -470,6 +471,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       
    case it_toggle:
    case it_variable:
+   case it_variable_nd:
       {
          unsigned char varvalue[1024];             // temp buffer
          
@@ -698,8 +700,10 @@ void MN_DrawMenu(menu_t *menu)
       // write some help about the item
       menuitem = &menu->menuitems[menu->selected];
       
-      if(menuitem->type == it_variable)       // variable
+      switch(menuitem->type)
       {
+      case it_variable:
+      case it_variable_nd: // variable
          if(input_command)
             helpmsg = "press escape to cancel";
          else
@@ -708,10 +712,8 @@ void MN_DrawMenu(menu_t *menu)
             psnprintf(msgbuffer, 64, "press %s to change", key);
             helpmsg = msgbuffer;
          }
-      }
-      
-      if(menuitem->type == it_toggle)         // togglable variable
-      {
+         break;
+      case it_toggle: // togglable variable
          // enter to change boolean variables
          // left/right otherwise
          
@@ -724,6 +726,19 @@ void MN_DrawMenu(menu_t *menu)
          }
          else
             helpmsg = "use left/right to change value";
+         break;
+      case it_runcmd:
+         {
+            char *key = G_FirstBoundKey("menu_confirm");
+            psnprintf(msgbuffer, 64, "press %s to execute command", key);
+            helpmsg = msgbuffer;
+         }
+         break;
+      case it_slider:
+         helpmsg = "use left/right to change value";
+         break;
+      default:
+         break;
       }
 
       MN_WriteTextColoured(helpmsg, CR_GOLD, 10, m_y);
@@ -965,9 +980,10 @@ boolean MN_Responder(event_t *ev)
          free(temp);
          
          // set the command
-         cmdtype = c_menu;
+         cmdtype = input_cmdtype;
          C_RunCommand(input_command, (const char *)input_buffer);
          input_command = NULL;
+         input_cmdtype = c_typed;
          return true; // eat key
       }
 
@@ -1157,6 +1173,7 @@ boolean MN_Responder(event_t *ev)
          break;
          
       case it_variable:
+      case it_variable_nd:
          // get input for new value
          input_command = C_GetCmdForName(menuitem->data);
          
@@ -1174,6 +1191,12 @@ boolean MN_Responder(event_t *ev)
          }
          else
             input_buffer[0] = 0;             // clear input buffer
+
+         // haleyjd 07/15/09: set input_cmdtype for it_variable_nd:
+         //   default value will not be set by console for type == c_menu.
+         if(menuitem->type == it_variable_nd)
+            input_cmdtype = c_menu;
+
          break;
 
       case it_automap:

@@ -106,10 +106,12 @@ extern int textmode_startup;
 
 // haleyjd: SDL-specific configuration values
 #ifdef _SDL_VER
-extern int waitAtExit;
-extern int grabmouse;
-extern int showendoom;
-extern int endoomdelay;
+extern int  waitAtExit;
+extern int  grabmouse;
+extern int  showendoom;
+extern int  endoomdelay;
+extern char *i_videomode;
+extern char *i_default_videomode;
 #endif
 
 #ifdef HAVE_SPCLIB
@@ -218,13 +220,14 @@ default_t defaults[] =
    },
 #endif
 
-   // CONFIG_FIXME: wtf is 32? this isn't a proper limit on ANY platform
+#ifdef _SDL_VER
    {
-      "v_mode",
-      &v_mode, NULL,
-      0, {0,32}, dt_number, ss_gen, wad_no,
-      "graphics mode"
+      "i_videomode",
+      (int *)&i_default_videomode, (int *)&i_videomode,
+      (int)"640x480w", {0}, dt_string, ss_none, wad_no,
+      "description of video mode parameters (WWWWxHHHH[flags])"
    },
+#endif
 
    {
       "textmode_startup",

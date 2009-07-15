@@ -79,7 +79,6 @@ int      use_vsync;     // killough 2/8/98: controls whether vsync is called
 boolean  noblit;
 
 static boolean in_graphics_mode;
-static int     scroll_offset;
 
 static SDL_Color basepal[256], colors[256];
 static boolean   setpalette = false;
@@ -90,6 +89,9 @@ static boolean crossbitdepth;
 
 static SDL_Surface *primary_surface = NULL;
 
+// haleyjd 07/15/09
+char *i_default_videomode = "640x480w";
+char *i_videomode         = NULL;
 
 //
 // I_UpdateNoBlit
@@ -415,8 +417,8 @@ static void I_ParseGeom(const char *geom,
    // if an error occurs setting w/h, we default.
    if(errorflag)
    {
-      tmpwidth  = 320;
-      tmpheight = 200;
+      tmpwidth  = 640;
+      tmpheight = 480;
    }
 
    *w = tmpwidth;
@@ -473,12 +475,11 @@ static boolean I_InitGraphicsMode(void)
    boolean  wantfullscreen = false;
    boolean  wantvsync      = false;
    boolean  wanthardware   = false;
-   int      v_w            = SCREENWIDTH;
-   int      v_h            = SCREENHEIGHT;
+   int      v_w            = 640;
+   int      v_h            = 480;
    int      v_bd           = 8;
    int      flags          = SDL_SWSURFACE;
    SDL_Event dummy;
-
 
    // haleyjd 10/09/05: from Chocolate DOOM
    // mouse grabbing   
@@ -497,41 +498,10 @@ static boolean I_InitGraphicsMode(void)
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
       wantvsync = true;
-   
-   scroll_offset = 0;
-   switch(v_mode)
-   {
-   case 2:
-   case 3:
-      v_w = 320;
-      v_h = 240;
-      break;
-   case 4:
-   case 5:
-      v_w = 640;
-      v_h = 400;
-      break;
-   case 6:
-   case 7:
-      v_w = 640;
-      v_h = 480;
-      break;
-   case 8:
-   case 9:
-      v_w = 800;
-      v_h = 600;
-      break;
-   case 10:
-   case 11:
-      v_w = 1024;
-      v_h = 768;
-      break;
-   }
-   
-   // odd modes are fullscreen
-   if(v_mode & 1)
-      wantfullscreen = true;
 
+   // haleyjd 07/15/09: set defaults using geom string from configuration file
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware);
+   
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware);
@@ -545,25 +515,23 @@ static boolean I_InitGraphicsMode(void)
    if(wantfullscreen)
       flags |= SDL_FULLSCREEN;
      
-   // SoM: 4/15/02: Saftey mode
-   if(v_mode > 0 && SDL_VideoModeOK(v_w, v_h, v_bd, flags))
+   if(!SDL_VideoModeOK(v_w, v_h, v_bd, flags) ||
+      !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
    {
-      sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags);
-      if(!sdlscreen)
+      // try 320x200w safety mode
+      if(!SDL_VideoModeOK(320, 200, 8, SDL_SWSURFACE) ||
+         !(sdlscreen = SDL_SetVideoMode(320, 200, 8, SDL_SWSURFACE)))
       {
-         I_SetMode(0);
-         MN_ErrorMsg(BADVID);
-         return true;
+         I_Error("I_InitGraphicsMode: couldn't set mode %dx%dx%d;\n"
+                 "   Also failed to set safety mode 320x200x8.\n"
+                 "   Check your SDL video driver settings.\n",
+                 v_w, v_h, v_bd);
       }
+
+      // reset these for below population of video struct
+      v_w = 320;
+      v_h = 200;
    }
-   else if(v_mode == 0 && SDL_VideoModeOK(v_w, v_h, v_bd, flags))
-   {
-      sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags);
-      if(!sdlscreen)
-         I_Error("Couldn't set video mode %ix%i\n", v_w, v_h);
-   }
-   else 
-      I_Error("Couldn't set video mode %ix%i\n", v_w, v_h);
 
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
@@ -573,16 +541,14 @@ static boolean I_InitGraphicsMode(void)
    if(sdlscreen->format->BitsPerPixel != 32)
       crossbitdepth = false;
 
-   MN_ErrorMsg("");       // clear any error messages
-
    SDL_WM_SetCaption(ee_wmCaption, NULL);
 
    UpdateFocus();
    UpdateGrab();
 
-   video.width  = v_w;
-   video.height = v_h;
-   video.bitdepth = 8;
+   video.width     = v_w;
+   video.height    = v_h;
+   video.bitdepth  = 8;
    video.pixelsize = 1;
    
    V_Init();      
@@ -695,8 +661,6 @@ void I_SetMode(int i)
 {
    static int firsttime = true;    // the first time to set mode
    
-   v_mode = i;
-   
    if(firsttime)
       I_InitGraphicsMode();
    else
@@ -735,6 +699,19 @@ CONSOLE_VARIABLE(joySens_y, joystickSens_y, 0) {}
 VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
 CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 
+VARIABLE_STRING(i_videomode, &i_default_videomode, UL);
+CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
+{
+   V_ResetMode();
+}
+
+CONSOLE_COMMAND(i_default_videomode, cf_buffered)
+{
+   free(i_default_videomode);
+
+   i_default_videomode = strdup(i_videomode);
+}
+
 void I_Video_AddCommands(void)
 {
    C_AddCommand(i_usemouse);
@@ -747,6 +724,9 @@ void I_Video_AddCommands(void)
    C_AddCommand(joySens_y);
 
    C_AddCommand(i_grabmouse);
+
+   C_AddCommand(i_videomode);
+   C_AddCommand(i_default_videomode);
 }
 
 //----------------------------------------------------------------------------

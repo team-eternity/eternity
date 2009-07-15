@@ -36,7 +36,6 @@ void V_Mode(void);
 void V_ModeList(void);
 void V_ResetMode(void);
 int  V_NumModes(void); // haleyjd: made global
-extern int v_mode;
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -46,15 +45,6 @@ extern int v_mode;
 const char *small_font_name;
 const char *big_font_name;
 const char *big_num_font_name;
-
-/*
-#define V_FONTSTART    '!'     // the first font character
-#define V_FONTEND      (0x7f) // jff 2/16/98 '_' the last font characters
-// Calculate # of glyphs in font.
-#define V_FONTSIZE     (V_FONTEND - V_FONTSTART + 1) 
-
-extern patch_t *v_font[V_FONTSIZE];
-*/
 
 // haleyjd 10/30/06: enum for text control characters
 enum

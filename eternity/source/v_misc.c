@@ -50,10 +50,9 @@ extern int gamma_correct;
 // contain a member of type char* called description:
 // see i_video.c for more info
 
-int v_mode = 0;
 static int prevmode = 0;
 
-cb_video_t  video = 
+cb_video_t video = 
 {
    8, 1,
    SCREENWIDTH, 
@@ -93,19 +92,8 @@ int V_NumModes(void)
 // Called after changing video mode
 //
 void V_ResetMode(void)
-{
-   // check for invalid mode
-   
-   if(v_mode >= V_NumModes() || v_mode < 0)
-   {
-      C_Printf(FC_ERROR"invalid mode %i\n", v_mode);
-      v_mode = prevmode;
-      return;
-   }
-   
-   prevmode = v_mode;
-   
-   I_SetMode(v_mode);
+{   
+   I_SetMode(0);
 }
 
 patch_t *bgp[9];        // background for boxes
@@ -536,15 +524,8 @@ void V_InitMisc(void)
 // Console Commands
 //
 
-VARIABLE_INT(v_mode,   NULL, 0, 11, NULL);
-
 char *str_ticker[] = { "off", "chart", "classic", "text" };
 VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
-
-CONSOLE_VARIABLE(v_mode, v_mode, cf_buffered)
-{
-   V_ResetMode();
-}
 
 CONSOLE_COMMAND(v_modelist, 0)
 {
@@ -564,7 +545,6 @@ CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}
 
 void V_AddCommands(void)
 {
-   C_AddCommand(v_mode);
    C_AddCommand(v_modelist);
    C_AddCommand(v_ticker);
 }

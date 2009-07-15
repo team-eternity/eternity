@@ -60,6 +60,7 @@ typedef struct menuitem_s
     it_runcmd,           // run console command
     it_variable,         // variable
                          // enter pressed to type in new value
+    it_variable_nd,      // variable, but doesn't set default value -- haleyjd
     it_toggle,           // togglable variable
                          // can use left/right to change value
     it_title,            // the menu title
