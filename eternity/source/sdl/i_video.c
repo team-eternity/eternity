@@ -481,6 +481,14 @@ static boolean I_InitGraphicsMode(void)
    int      flags          = SDL_SWSURFACE;
    SDL_Event dummy;
 
+#ifdef RANGECHECK
+   if(!i_default_videomode)
+      I_Error("I_InitGraphicsMode: death murder kill!\n");
+#endif
+
+   if(!i_videomode)
+      i_videomode = i_default_videomode;
+
    // haleyjd 10/09/05: from Chocolate DOOM
    // mouse grabbing   
    if(M_CheckParm("-grabmouse"))
