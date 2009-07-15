@@ -294,6 +294,11 @@ void R_ResetFOV(int width, int height)
    // This gives 90 for 4:3, 100 for 16:10, and 106 for 16:9.
    fov = (int)((75.0/2.0) * ratio + 40.0);
 
+   if(fov < 20)
+      fov = 20;
+   else if(fov > 179)
+      fov = 179;
+
    maxtangent = (float)tan((float)fov * PI / 360.0f);
 }
 
