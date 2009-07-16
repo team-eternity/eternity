@@ -235,8 +235,6 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    // properties inherited from prototype seg
    ret->polyobj         = proto->polyobj;
    ret->seg.linedef     = proto->seg.linedef;
-   ret->seg.frontsector = proto->seg.frontsector;
-   ret->seg.backsector  = proto->seg.backsector;
    ret->seg.sidedef     = proto->seg.sidedef;
    ret->seg.angle       = proto->seg.angle;
 
@@ -385,6 +383,9 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       // 05/13/09: calculate seg length for SoM
       P_CalcSegLength(&dseg->seg);
 
+      // 07/15/09: rendering consistency - set frontsector/backsector here
+      dseg->seg.frontsector = dseg->seg.backsector  = subsectors[num].sector;
+
       // add the subsector if it hasn't been added already
       R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
    }
@@ -417,8 +418,6 @@ void R_AttachPolyObject(polyobj_t *poly)
       idseg->polyobj         = poly;
       idseg->seg.linedef     = line;
       idseg->seg.offset      = 0;
-      idseg->seg.frontsector = line->frontsector;
-      idseg->seg.backsector  = line->backsector;
       idseg->seg.sidedef     = &sides[line->sidenum[0]];
       idseg->seg.v1          = R_GetFreeDynaVertex();
       idseg->seg.v2          = R_GetFreeDynaVertex();
