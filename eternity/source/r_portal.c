@@ -228,26 +228,54 @@ static portal_t *R_CreatePortal(void)
    return ret;
 }
 
+
+
+//
+// R_CalculateDeltas
+// Calculates the deltas (offset) between two linedefs.
+static void R_CalculateDeltas
+(
+   int markerlinenum, 
+   int anchorlinenum, 
+   fixed_t *dx, fixed_t *dy, fixed_t *dz
+)
+
+{
+   line_t *m = lines + markerlinenum;
+   line_t *a = lines + anchorlinenum;
+
+   *dx = ((a->v1->x + a->v2->x) / 2) - ((m->v1->x + m->v2->x) / 2);
+   *dy = ((a->v1->y + a->v2->y) / 2) - ((m->v1->y + m->v2->y) / 2);
+   *dz = 0; /// ???
+}
+
+
+
 //
 // R_GetAnchoredPortal
 //
 // Either finds a matching existing anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
+portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
 {
    portal_t *rover, *ret;
-   cameraportal_t cam;
+   anchordata_t adata;
 
-   memset(&cam, 0, sizeof(cam));
-   cam.deltax = deltax;
-   cam.deltay = deltay;
-   cam.deltaz = deltaz;
+   memset(&adata, 0, sizeof(adata));
+
+   R_CalculateDeltas(markerlinenum, anchorlinenum, 
+                     &adata.deltax, &adata.deltay, &adata.deltaz);
+
+   adata.maker = markerlinenum;
+   adata.anchor = anchorlinenum;
 
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type != R_ANCHORED || 
-         memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+         adata.deltax != rover->data.anchor.deltax ||
+         adata.deltay != rover->data.anchor.deltay ||
+         adata.deltaz != rover->data.anchor.deltaz)
          continue;
 
       return rover;
@@ -255,7 +283,7 @@ portal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 
    ret = R_CreatePortal();
    ret->type = R_ANCHORED;
-   ret->data.camera = cam;
+   ret->data.anchor = adata;
 
    // haleyjd: temporary debug
    ret->tainted = 0;
@@ -269,20 +297,25 @@ portal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 // Either finds a matching existing two-way anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
 {
    portal_t *rover, *ret;
-   cameraportal_t cam;
+   anchordata_t adata;
 
-   memset(&cam, 0, sizeof(cam));
-   cam.deltax = deltax;
-   cam.deltay = deltay;
-   cam.deltaz = deltaz;
+   memset(&adata, 0, sizeof(adata));
+
+   R_CalculateDeltas(markerlinenum, anchorlinenum, 
+                     &adata.deltax, &adata.deltay, &adata.deltaz);
+
+   adata.maker = markerlinenum;
+   adata.anchor = anchorlinenum;
 
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type != R_TWOWAY || 
-         memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+         adata.deltax != rover->data.anchor.deltax ||
+         adata.deltay != rover->data.anchor.deltay ||
+         adata.deltaz != rover->data.anchor.deltaz)
          continue;
 
       return rover;
@@ -290,7 +323,7 @@ portal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz)
 
    ret = R_CreatePortal();
    ret->type = R_TWOWAY;
-   ret->data.camera = cam;
+   ret->data.anchor = adata;
 
    // haleyjd: temporary debug
    ret->tainted = 0;
@@ -310,7 +343,7 @@ portal_t *R_GetSkyBoxPortal(mobj_t *camera)
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_SKYBOX || rover->data.camera.mobj != camera)
+      if(rover->type != R_SKYBOX || rover->data.camera != camera)
          continue;
 
       return rover;
@@ -318,7 +351,7 @@ portal_t *R_GetSkyBoxPortal(mobj_t *camera)
 
    ret = R_CreatePortal();
    ret->type = R_SKYBOX;
-   ret->data.camera.mobj = camera;
+   ret->data.camera = camera;
    return ret;
 }
 
@@ -337,7 +370,7 @@ portal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic,
                              float *ceilingbaseangle, float *ceilingangle)
 {
    portal_t *rover, *ret;
-   horizonportal_t horizon;
+   horizondata_t horizon;
 
    if(!floorpic || !ceilingpic || !floorz || !ceilingz || 
       !floorlight || !ceilinglight || !floorxoff || !flooryoff || 
@@ -388,7 +421,7 @@ portal_t *R_GetPlanePortal(short *pic, fixed_t *delta,
                            float *baseangle, float *angle)
 {
    portal_t *rover, *ret;
-   skyplaneportal_t plane;
+   skyplanedata_t plane;
 
    if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle)
       return NULL;
@@ -614,15 +647,15 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    lastzf = view.z;
    lastanglef = view.angle;
 
-   viewx = portal->data.camera.mobj->x;
-   viewy = portal->data.camera.mobj->y;
-   viewz = portal->data.camera.mobj->z;
+   viewx = portal->data.camera->x;
+   viewy = portal->data.camera->y;
+   viewz = portal->data.camera->z;
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
 
    // SoM: The viewangle should also be offset by the skybox camera angle.
-   viewangle += portal->data.camera.mobj->angle;
+   viewangle += portal->data.camera->angle;
    viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
@@ -668,12 +701,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
 
-#ifdef R_LINKEDPORTALS
-   if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && 
-      portal->type != R_LINKED)
-#else
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
-#endif
       return;
 
    if(window->maxx < window->minx)
@@ -709,7 +737,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 #endif
 
       portal->tainted++;
-      doom_printf("refused to draw portal %p (t=%d)", portal, portal->tainted);
+      doom_printf("refused to draw portal (line=%i) (t=%d)", 
+                  portal->data.anchor.maker, 
+                  portal->tainted);
 
       return;
    } 
@@ -757,9 +787,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx - portal->data.camera.deltax;
-   viewy  = window->vy - portal->data.camera.deltay;
-   viewz  = window->vz - portal->data.camera.deltaz;
+   viewx  = window->vx - portal->data.anchor.deltax;
+   viewy  = window->vy - portal->data.anchor.deltay;
+   viewz  = window->vz - portal->data.anchor.deltaz;
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
@@ -782,6 +812,129 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    if(window->child)
       R_RenderAnchoredPortal(window->child);
 }
+
+
+
+
+#ifdef R_LINKEDPORTALS
+static void R_RenderLinkedPortal(pwindow_t *window)
+{
+   fixed_t lastx, lasty, lastz;
+   float   lastxf, lastyf, lastzf;
+   portal_t *portal = window->portal;
+
+   if(portal->type != R_LINKED || window->maxx < window->minx)
+      return;
+
+   // haleyjd: temporary debug
+   if(portal->tainted > 6)
+   {
+#ifdef RANGECHECK
+/*      int i, y1, y2, count;
+
+      for(i = window->minx; i <= window->maxx; i++)
+      {
+         byte *dest;
+
+         y1 = (int)window->top[i];
+         y2 = (int)window->bottom[i];
+
+         count = y2 - y1 + 1;
+         if(count <= 0)
+            continue;
+
+         dest = ylookup[y1] + columnofs[i];
+
+         while(count > 0)
+         {
+            *dest = 176;
+            dest += video.pitch;
+
+            count--;
+         }
+      }*/
+#endif
+
+      portal->tainted++;
+      doom_printf("refused to draw portal (line=%i) (t=%d)", 
+                  portal->data.link.maker, 
+                  portal->tainted);
+
+      return;
+   } 
+
+#ifdef RANGECHECK
+   {
+      int i;
+      for(i = 0; i < MAX_SCREENWIDTH; i++)
+      {
+         if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
+            || window->bottom[i] > viewheight || window->top[i] < -1 
+            || window->top[i] > viewheight))
+         {
+            I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
+                    "information. x:%i, ytop:%i, ybottom:%i\n", 
+                    i, window->top[i], window->bottom[i]);
+         }
+      }
+   }
+#endif
+   
+   if(!R_SetupPortalClipsegs(window->minx, window->maxx, window->top, window->bottom))
+      return;
+
+   R_ClearSlopeMark(window->minx, window->maxx, window->type);
+
+   // haleyjd: temporary debug
+   portal->tainted++;
+
+   floorclip = window->bottom;
+   ceilingclip = window->top;
+
+   portalrender.minx = window->minx;
+   portalrender.maxx = window->maxx;
+
+   ++validcount;
+   R_SetMaskedSilhouette(ceilingclip, floorclip);
+
+   lastx = viewx;
+   lasty = viewy;
+   lastz = viewz;
+   lastxf = view.x;
+   lastyf = view.y;
+   lastzf = view.z;
+
+
+   // SoM 3/10/2005: Use the coordinates stored in the portal struct
+   viewx  = window->vx - portal->data.link.deltax;
+   viewy  = window->vy - portal->data.link.deltay;
+   viewz  = window->vz - portal->data.link.deltaz;
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
+
+   R_IncrementFrameid();
+   R_RenderBSPNode(numnodes-1);
+
+   R_PushMasked();
+
+   floorclip = floorcliparray;
+   ceilingclip = ceilingcliparray;
+
+   viewx  = lastx;
+   viewy  = lasty;
+   viewz  = lastz;
+   view.x = lastxf;
+   view.y = lastyf;
+   view.z = lastzf;
+
+   if(window->child)
+      R_RenderLinkedPortal(window->child);
+}
+#endif
+
+
+
 
 //
 // R_UntaintPortals
@@ -807,6 +960,8 @@ void R_UntaintPortals(void)
    }
 }
 
+
+
 static void R_SetPortalFunction(pwindow_t *window)
 {
    switch(window->portal->type)
@@ -825,12 +980,15 @@ static void R_SetPortalFunction(pwindow_t *window)
       break;
    case R_ANCHORED:
    case R_TWOWAY:
-#ifdef R_LINKEDPORTALS
-   case R_LINKED:
-#endif
       window->func = R_RenderAnchoredPortal;
       window->clipfunc = segclipfuncs[window->type];
       break;
+#ifdef R_LINKEDPORTALS
+   case R_LINKED:
+      window->func = R_RenderLinkedPortal;
+      window->clipfunc = segclipfuncs[window->type];
+      break;
+#endif
    default:
       window->func = R_RenderPortalNOP;
       window->clipfunc = NULL;
@@ -849,6 +1007,8 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal)
 
    while(rover)
    {
+      // SoM: TODO: There could be the possibility of multiple portals
+      // being able to share a single window set.
       if(rover->portal == portal && rover->type == pw_floor)
          return rover;
    
@@ -982,23 +1142,30 @@ void R_RenderPortals(void)
 // ----------------------------------------------------------------------------
 // SoM: Begin linked portals
 
-portal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, 
-                             fixed_t planez, int groupid)
+portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
+                            fixed_t planez,    int groupid)
 {
    portal_t *rover, *ret;
-   cameraportal_t cam;
+   linkdata_t ldata;
 
-   memset(&cam, 0, sizeof(cam));
-   cam.deltax = deltax;
-   cam.deltay = deltay;
-   cam.deltaz = deltaz;
-   cam.groupid = groupid;
-   cam.planez = planez;
+   memset(&ldata, 0, sizeof(ldata));
+   ldata.groupid = groupid;
+   ldata.planez = planez;
+
+   R_CalculateDeltas(markerlinenum, anchorlinenum, 
+                     &ldata.deltax, &ldata.deltay, &ldata.deltaz);
+
+   ldata.maker = markerlinenum;
+   ldata.anchor = anchorlinenum;
 
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type != R_LINKED || 
-         memcmp(&cam, &(rover->data.camera), sizeof(cam)))
+         ldata.deltax != rover->data.link.deltax ||
+         ldata.deltay != rover->data.link.deltay ||
+         ldata.deltaz != rover->data.link.deltaz ||
+         ldata.groupid != rover->data.link.groupid ||
+         ldata.planez != rover->data.link.planez)
          continue;
 
       return rover;
@@ -1006,7 +1173,11 @@ portal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz,
 
    ret = R_CreatePortal();
    ret->type = R_LINKED;
-   ret->data.camera = cam;
+   ret->data.link = ldata;
+
+   // haleyjd: temporary debug
+   ret->tainted = 0;
+
    return ret;
 }
 

@@ -4691,7 +4691,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    mobj_t    *skycam;
    static int CamType = -1;
    int s;
-   fixed_t deltax, deltay, deltaz, planez = 0;
+   fixed_t planez = 0;
    int anchortype = 0; // SoM 3-10-04: new plan.
 
    if(!(sector = line->frontsector))
@@ -4750,14 +4750,9 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
-         if(line == &lines[s] || lines[s].special != anchortype)          
+         if(lines[s].special != anchortype || line == &lines[s])
             continue;
 
-         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) 
-                      - ((line->v1->x + line->v2->x) / 2);
-         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) 
-                      - ((line->v1->y + line->v2->y) / 2);
-         deltaz = 0; /// ???
          break;
       }
       if(s < 0)
@@ -4766,7 +4761,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          return;
       }
 
-      portal = R_GetAnchoredPortal(deltax, deltay, deltaz);
+      portal = R_GetAnchoredPortal(line - lines, s);
       break;
    case portal_twoway:
       // two way and linked portals can only be applied to either the floor or ceiling.
@@ -4784,14 +4779,8 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
-         if(line == &lines[s] || lines[s].special != anchortype)          
+         if(lines[s].special != anchortype || line == &lines[s])
             continue;
-
-         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) 
-                      - ((line->v1->x + line->v2->x) / 2);
-         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) 
-                      - ((line->v1->y + line->v2->y) / 2);
-         deltaz = 0; /// ???
          break;
       }
       if(s < 0)
@@ -4800,7 +4789,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          return;
       }
 
-      portal = R_GetTwoWayPortal(deltax, deltay, deltaz);
+      portal = R_GetTwoWayPortal(line - lines, s);
       break;
 #ifdef R_LINKEDPORTALS
    case portal_linked:
@@ -4834,14 +4823,9 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
-         if(line == &lines[s] || lines[s].special != anchortype)          
+         if(lines[s].special != anchortype || line == &lines[s])
             continue;
 
-         deltax = ((lines[s].v1->x + lines[s].v2->x) / 2) 
-                      - ((line->v1->x + line->v2->x) / 2);
-         deltay = ((lines[s].v1->y + lines[s].v2->y) / 2) 
-                      - ((line->v1->y + line->v2->y) / 2);
-         deltaz = 0; /// ???
          break;
       }
       if(s < 0)
@@ -4850,27 +4834,16 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          return;
       }
 
-      portal = R_GetLinkedPortal(deltax, deltay, deltaz, planez, P_CreatePortalGroup(frontsector));
+      portal = R_GetLinkedPortal(line - lines, s, planez, P_CreatePortalGroup(frontsector));
 
       if(line->special == 376)
       {
          int group;
 
-         /*if(line->frontsector && line->backsector)
-         {
-            C_Printf(FC_ERROR, "Line-Line portal line two sided. (line %i)", line - lines);
-            return;
-         }
-         if(lines[s].frontsector && lines[s].backsector)
-         {
-            C_Printf(FC_ERROR, "Line-Line anchor line two sided. (line %i)", s);
-            return;
-         }*/
-
          group = P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector :
                                                             lines[s].backsector);
 
-         line->portal = R_GetLinkedPortal(-deltax, -deltay, -deltaz, planez, group);
+         line->portal = R_GetLinkedPortal(s, line - lines, planez, group);
          lines[s].portal = portal;
          return;
       }
@@ -4881,23 +4854,16 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    }
 
    // attach portal to tagged sector floors/ceilings
+   // SoM: TODO: Why am I not checking groupids?
    for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
    {
       switch(effects)
       {
       case portal_ceiling:
          sectors[s].c_portal = portal;
-/*#ifdef R_LINKEDPORTALS
-         if(portal->type == R_LINKED)
-            P_SetCeilingHeight(sectors + s, sectors[s].ceilingz);
-#endif*/
          break;
       case portal_floor:
          sectors[s].f_portal = portal;
-/*#ifdef R_LINKEDPORTALS
-         if(portal->type == R_LINKED)
-            P_SetFloorHeight(sectors + s, sectors[s].floorz);
-#endif*/
          break;
       case portal_both:
          sectors[s].c_portal = sectors[s].f_portal = portal;
@@ -4931,23 +4897,9 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
       case portal_ceiling:
          lines[s].frontsector->c_portal = portal;
-/*#ifdef R_LINKEDPORTALS
-         if(portal->type == R_LINKED)
-         {
-            P_SetCeilingHeight(lines[s].frontsector, lines[s].frontsector->ceilingz);
-            // Check groupid?
-         }
-#endif*/
          break;
       case portal_floor:
          lines[s].frontsector->f_portal = portal;
-/*#ifdef R_LINKEDPORTALS
-         if(portal->type == R_LINKED)
-         {
-            P_SetFloorHeight(lines[s].frontsector, lines[s].frontsector->floorz);
-            // Check groupid?
-         }
-#endif*/
          break;
       case portal_both:
          lines[s].frontsector->c_portal = lines[s].frontsector->f_portal = portal;

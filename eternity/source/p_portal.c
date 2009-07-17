@@ -263,7 +263,7 @@ static boolean P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
    if(portal->type != R_LINKED)
       return true;
 
-   if(portal->data.camera.groupid == sec->groupid)
+   if(portal->data.link.groupid == sec->groupid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i portal references the "
                "portal group to which it belongs.\n"
@@ -271,8 +271,8 @@ static boolean P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
 
-   if(portal->data.camera.groupid < 0 || 
-      portal->data.camera.groupid >= groupcount)
+   if(portal->data.link.groupid < 0 || 
+      portal->data.link.groupid >= groupcount)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i portal has a groupid out "
                "of range.\nLinked portals are disabled.\a\n", i);
@@ -289,26 +289,26 @@ static boolean P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 
 
    // We've found a linked portal so add the entry to the table
-   if(!(link = P_GetLinkOffset(sec->groupid, portal->data.camera.groupid)))
+   if(!(link = P_GetLinkOffset(sec->groupid, portal->data.link.groupid)))
    {
-      int ret = P_AddLinkOffset(sec->groupid, portal->data.camera.groupid,
-                                portal->data.camera.deltax, 
-                                portal->data.camera.deltay, 
-                                portal->data.camera.deltaz);
+      int ret = P_AddLinkOffset(sec->groupid, portal->data.link.groupid,
+                                portal->data.link.deltax, 
+                                portal->data.link.deltay, 
+                                portal->data.link.deltaz);
       if(ret)
          return false;
    }
    else
    {
       // Check for consistency
-      if(link->x != portal->data.camera.deltax ||
-         link->y != portal->data.camera.deltay ||
-         link->z != portal->data.camera.deltaz)
+      if(link->x != portal->data.link.deltax ||
+         link->y != portal->data.link.deltay ||
+         link->z != portal->data.link.deltaz)
       {
          C_Printf(FC_ERROR "P_BuildLinkTable: sector %i in group %i contains "
                   "inconsistent reference to group %i.\n"
                   "Linked portals are disabled.\a\n", 
-                  i, sec->groupid, portal->data.camera.groupid);
+                  i, sec->groupid, portal->data.link.groupid);
          return false;
       }
    }

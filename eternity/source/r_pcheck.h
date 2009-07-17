@@ -35,7 +35,7 @@ d_inline static boolean R_LinkedFloorActive(sector_t *sector)
    return (useportalgroups && 
            sector->f_portal && 
            sector->f_portal->type == R_LINKED &&
-           sector->floorheight <= sector->f_portal->data.camera.planez);
+           sector->floorheight <= sector->f_portal->data.link.planez);
 }
 
 
@@ -44,7 +44,7 @@ d_inline static boolean R_LinkedCeilingActive(sector_t *sector)
    return (useportalgroups && 
            sector->c_portal && 
            sector->c_portal->type == R_LINKED &&
-           sector->ceilingheight >= sector->c_portal->data.camera.planez);
+           sector->ceilingheight >= sector->c_portal->data.link.planez);
 }
 
 
@@ -56,22 +56,16 @@ d_inline static boolean R_LinkedLineActive(line_t *line)
 
 d_inline static boolean R_FloorPortalActive(sector_t *sector)
 {
-   // FIXME: possible to eliminate branch?
    return 
-      (sector->f_portal && sector->f_portal->type == R_LINKED && 
-       sector->floorheight > sector->f_portal->data.camera.planez) ? 
-      false : 
-      (sector->f_portal != NULL);
+       sector->f_portal && (sector->f_portal->type != R_LINKED || 
+       sector->floorheight <= sector->f_portal->data.link.planez);
 }
 
 d_inline static boolean R_CeilingPortalActive(sector_t *sector)
 {
-   // FIXME: possible to eliminate branch?
    return 
-      (sector->c_portal && sector->c_portal->type == R_LINKED && 
-       sector->ceilingheight < sector->c_portal->data.camera.planez) ? 
-      false : 
-      (sector->c_portal != NULL);
+       sector->c_portal && (sector->c_portal->type != R_LINKED || 
+       sector->ceilingheight >= sector->c_portal->data.link.planez);
 }
 
 d_inline static boolean R_RenderFloorPortal(sector_t *sector)
@@ -84,7 +78,7 @@ d_inline static boolean R_RenderFloorPortal(sector_t *sector)
        ((fp->type != R_TWOWAY && fp->type != R_LINKED) ||
         (fp->type == R_TWOWAY && sector->floorheight < viewz) ||         
         (fp->type == R_LINKED && sector->floorheight <= viewz && 
-                                 sector->floorheight <= fp->data.camera.planez)));
+                                 sector->floorheight <= fp->data.link.planez)));
 #else
    return (fp && (fp->type != R_TWOWAY || sector->floorheight < viewz));
 #endif
@@ -100,7 +94,7 @@ d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
        ((cp->type != R_TWOWAY && cp->type != R_LINKED) ||
         (cp->type == R_TWOWAY && sector->ceilingheight > viewz) ||         
         (cp->type == R_LINKED && sector->ceilingheight > viewz && 
-                                 sector->ceilingheight >= cp->data.camera.planez)));
+                                 sector->ceilingheight >= cp->data.link.planez)));
 #else
    return (cp && (cp->type != R_TWOWAY || sector->ceilingheight > viewz));
 #endif
@@ -111,9 +105,9 @@ d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
 //
 // haleyjd 3/17/08: Convenience routine to clean some shit up.
 //
-d_inline static cameraportal_t *R_FPCam(sector_t *s)
+d_inline static linkdata_t *R_FPLink(sector_t *s)
 {
-   return &(s->f_portal->data.camera);
+   return &(s->f_portal->data.link);
 }
 
 //
@@ -121,9 +115,9 @@ d_inline static cameraportal_t *R_FPCam(sector_t *s)
 //
 // ditto
 //
-d_inline static cameraportal_t *R_CPCam(sector_t *s)
+d_inline static linkdata_t *R_CPLink(sector_t *s)
 {
-   return &(s->c_portal->data.camera);
+   return &(s->c_portal->data.link);
 }
 
 

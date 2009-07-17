@@ -921,7 +921,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
    if(R_LinkedFloorActive(mobj->subsector->sector))
    {
       fixed_t passheight;
-      cameraportal_t *cam = R_FPCam(mobj->subsector->sector);
+      linkdata_t *ldata = R_FPLink(mobj->subsector->sector);
 
       if(mobj->player)
       {
@@ -932,10 +932,10 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          passheight = mobj->z + (mobj->height >> 1);
 
 
-      if(passheight < cam->planez)
+      if(passheight < ldata->planez)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              cam->groupid);
+                                              ldata->groupid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);
@@ -948,7 +948,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
-      cameraportal_t *cam = R_CPCam(mobj->subsector->sector);
+      linkdata_t *ldata = R_CPLink(mobj->subsector->sector);
 
       if(mobj->player)
       {
@@ -958,10 +958,10 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
-      if(passheight >= cam->planez)
+      if(passheight >= ldata->planez)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              cam->groupid);
+                                              ldata->groupid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);

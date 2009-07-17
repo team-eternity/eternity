@@ -585,10 +585,10 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 #ifdef R_LINKEDPORTALS
       if(sec->c_portal->type == R_LINKED)
       {
-         if(sec->ceilingheight < R_CPCam(sec)->planez)
+         if(sec->ceilingheight < R_CPLink(sec)->planez)
             tempsec->c_portal = NULL;
          else
-            P_SetCeilingHeight(tempsec, R_CPCam(sec)->planez);
+            P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
          sec = tempsec;
       }
       else
@@ -604,10 +604,10 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 #ifdef R_LINKEDPORTALS
       if(sec->f_portal->type == R_LINKED)
       {
-         if(sec->floorheight > R_FPCam(sec)->planez)
+         if(sec->floorheight > R_FPLink(sec)->planez)
             tempsec->f_portal = NULL;
          else
-            P_SetFloorHeight(tempsec, R_FPCam(sec)->planez);
+            P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
          sec = tempsec;
       }
       else
@@ -1380,9 +1380,9 @@ static void R_AddLine(seg_t *line)
       seg.frontsec->ceilingpic != skyflatnum &&
       seg.frontsec->ceilingpic != sky2flatnum &&
       !((R_LinkedCeilingActive(seg.frontsec) && 
-        viewz > R_CPCam(seg.frontsec)->planez) || 
+        viewz > R_CPLink(seg.frontsec)->planez) || 
         (R_LinkedFloorActive(seg.frontsec) && 
-        viewz < R_FPCam(seg.frontsec)->planez)))
+        viewz < R_FPLink(seg.frontsec)->planez)))
       return;
 
    // Reject empty two-sided lines used for line specials.

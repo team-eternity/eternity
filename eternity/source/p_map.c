@@ -1362,7 +1362,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             {
                linkoffset_t *link = 
                   P_GetLinkOffset(tm->spechit[tm->numspechit]->frontsector->groupid, 
-                                  tm->spechit[tm->numspechit]->portal->data.camera.groupid);
+                                  tm->spechit[tm->numspechit]->portal->data.link.groupid);
                EV_PortalTeleport(thing, link);
             }
          }

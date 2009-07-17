@@ -121,9 +121,9 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
       other = 
          R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) 
-                             - R_FPCam(sec)->deltax,
+                             - R_FPLink(sec)->deltax,
                             ((check->v1->y + check->v2->y) >> 1) 
-                             - R_FPCam(sec)->deltay)->sector;
+                             - R_FPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -136,8 +136,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-      R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - R_CPCam(sec)->deltax,
-                         ((check->v1->y + check->v2->y) >> 1) - R_CPCam(sec)->deltay)->sector;
+      R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - R_CPLink(sec)->deltax,
+                         ((check->v1->y + check->v2->y) >> 1) - R_CPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -154,8 +154,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
          sector_t *other;
 
          other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - check->portal->data.camera.deltax,
-                            ((check->v1->y + check->v2->y) >> 1) - check->portal->data.camera.deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - check->portal->data.link.deltax,
+                            ((check->v1->y + check->v2->y) >> 1) - check->portal->data.link.deltay)->sector;
 
          P_RecursiveSound(other, soundblocks, soundtarget);
       }

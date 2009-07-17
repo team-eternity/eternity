@@ -56,18 +56,27 @@ typedef enum
 
 #ifdef R_LINKEDPORTALS
 #define R_NOTRAVEL  (R_HIDDEN|R_BLOCKING)
+
+typedef struct
+{
+   // SoM: linked portals are similar to anchored portals
+   fixed_t   deltax, deltay, deltaz;
+   int       groupid;
+   fixed_t   planez;
+   // These are for debug purposes (so mappers can find the portats 
+   // causing problems)
+   int       maker, anchor;
+} linkdata_t;
 #endif
 
 
 typedef struct
 {
-   mobj_t    *mobj;
    fixed_t   deltax, deltay, deltaz;
-#ifdef R_LINKEDPORTALS
-   int       groupid; // SoM: linked portals are camera portals
-   fixed_t   planez;
-#endif
-} cameraportal_t;
+   // These are for debug purposes (so mappers can find the portats 
+   // causing problems)
+   int       maker, anchor;
+} anchordata_t;
 
 
 
@@ -81,7 +90,7 @@ typedef struct
    fixed_t *ceilingxoff, *ceilingyoff;
    float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
    float   *ceilingbaseangle, *ceilingangle;
-} horizonportal_t;
+} horizondata_t;
 
 
 
@@ -93,7 +102,7 @@ typedef struct
    short   *lightlevel;
    fixed_t *xoff, *yoff;
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
-} skyplaneportal_t;
+} skyplanedata_t;
 
 
 
@@ -104,9 +113,11 @@ typedef struct portal_s
 
    union portaldata_u
    {
-      cameraportal_t   camera;
-      horizonportal_t  horizon;
-      skyplaneportal_t plane;
+      skyplanedata_t plane;
+      horizondata_t  horizon;
+      mobj_t         *camera;
+      anchordata_t   anchor;
+      linkdata_t     link;
    } data;
 
    int    flags;
@@ -121,8 +132,8 @@ typedef struct portal_s
 
 
 portal_t *R_GetSkyBoxPortal(mobj_t *camera);
-portal_t *R_GetAnchoredPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
-portal_t *R_GetTwoWayPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz);
+portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum);
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
 
 portal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 
@@ -141,7 +152,7 @@ void R_RenderPortals(void);
 
 
 #ifdef R_LINKEDPORTALS
-portal_t *R_GetLinkedPortal(fixed_t deltax, fixed_t deltay, fixed_t deltaz, 
+portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int groupid);
 #endif
 
