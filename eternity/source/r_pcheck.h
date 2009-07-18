@@ -28,6 +28,8 @@
 #ifndef R_PORTALCHECK_H__
 #define R_PORTALCHECK_H__
 
+#include "r_portal.h"
+
 extern int demo_version;
 
 d_inline static boolean R_LinkedFloorActive(sector_t *sector)

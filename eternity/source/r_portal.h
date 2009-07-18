@@ -44,12 +44,12 @@ typedef enum
 typedef enum
 {
    // If set the portal will be turned off
-   R_HIDDEN = 0x1,
+   R_HIDDEN = 0x01,
 
 #ifdef R_LINKEDPORTALS
    // Linked portal options:
    // If set, the linked portal will not allow travel between 
-   R_BLOCKING = 0x2,
+   R_BLOCKING = 0x02
 #endif
 } rportalflag_e;
 
@@ -66,7 +66,7 @@ typedef struct linkdata_s
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
-} linkeddata_t;
+} linkdata_t;
 #endif
 
 
@@ -113,7 +113,7 @@ typedef struct portal_s
       skyplanedata_t plane;
       horizondata_t  horizon;
       anchordata_t   anchor;
-      linkeddata_t   link;
+      linkdata_t     link;
       mobj_t         *camera;
    } data;
 
