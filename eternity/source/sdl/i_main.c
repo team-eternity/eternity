@@ -107,7 +107,7 @@ int main(int argc, char **argv)
    // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
 #endif
-   
+
    Z_Init();
    atexit(I_Quit);
    

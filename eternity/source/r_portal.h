@@ -57,7 +57,7 @@ typedef enum
 #ifdef R_LINKEDPORTALS
 #define R_NOTRAVEL  (R_HIDDEN|R_BLOCKING)
 
-typedef struct
+typedef struct linkdata_s
 {
    // SoM: linked portals are similar to anchored portals
    fixed_t   deltax, deltay, deltaz;
@@ -117,7 +117,7 @@ typedef struct portal_s
       horizondata_t  horizon;
       mobj_t         *camera;
       anchordata_t   anchor;
-      linkdata_t     link;
+      struct linkdata_s link;
    } data;
 
    int    flags;
