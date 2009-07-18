@@ -694,6 +694,38 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 //
 extern byte *ylookup[MAX_SCREENWIDTH]; 
 extern int  columnofs[MAX_SCREENHEIGHT];
+extern int showtainted;
+
+
+static void R_ShowTainted(pwindow_t *window)
+{
+   static byte taintcolor = 0;
+   int i, y1, y2, count;
+
+   for(i = window->minx; i <= window->maxx; i++)
+   {
+      byte *dest;
+
+      y1 = (int)window->top[i];
+      y2 = (int)window->bottom[i];
+
+      count = y2 - y1 + 1;
+      if(count <= 0)
+         continue;
+
+      dest = ylookup[y1] + columnofs[i];
+
+      while(count > 0)
+      {
+         *dest = taintcolor;
+         dest += video.pitch;
+
+         count--;
+      }
+   }
+   taintcolor += 16;
+}
+
 
 static void R_RenderAnchoredPortal(pwindow_t *window)
 {
@@ -710,31 +742,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > 6)
    {
-#ifdef RANGECHECK
-/*      int i, y1, y2, count;
-
-      for(i = window->minx; i <= window->maxx; i++)
-      {
-         byte *dest;
-
-         y1 = (int)window->top[i];
-         y2 = (int)window->bottom[i];
-
-         count = y2 - y1 + 1;
-         if(count <= 0)
-            continue;
-
-         dest = ylookup[y1] + columnofs[i];
-
-         while(count > 0)
-         {
-            *dest = 176;
-            dest += video.pitch;
-
-            count--;
-         }
-      }*/
-#endif
+      if(showtainted)
+         R_ShowTainted(window);         
 
       portal->tainted++;
       doom_printf("refused to draw portal (line=%i) (t=%d)", 
@@ -829,31 +838,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > 6)
    {
-#ifdef RANGECHECK
-/*      int i, y1, y2, count;
-
-      for(i = window->minx; i <= window->maxx; i++)
-      {
-         byte *dest;
-
-         y1 = (int)window->top[i];
-         y2 = (int)window->bottom[i];
-
-         count = y2 - y1 + 1;
-         if(count <= 0)
-            continue;
-
-         dest = ylookup[y1] + columnofs[i];
-
-         while(count > 0)
-         {
-            *dest = 176;
-            dest += video.pitch;
-
-            count--;
-         }
-      }*/
-#endif
+      if(showtainted)
+         R_ShowTainted(window);         
 
       portal->tainted++;
       doom_printf("refused to draw portal (line=%i) (t=%d)", 

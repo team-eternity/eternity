@@ -84,6 +84,9 @@ int fov = 90;
 // SoM: Used by a hack to fix some hom when traveling through portals.
 int viewgroup;
 
+// SoM: Displays red on the screen if a portal becomes "tainted"
+int showtainted = 0;
+
 extern int screenSize;
 
 extern int global_cmap_index; // haleyjd: NGCS
@@ -977,6 +980,9 @@ VARIABLE_BOOLEAN(c_detailshift,       NULL,         detailstr);
 // SoM: Variable FOV
 VARIABLE_INT(fov, NULL, 20, 179, NULL);
 
+// SoM: Portal tainted
+VARIABLE_BOOLEAN(showtainted, NULL,                 onoff);
+
 VARIABLE_INT(tran_filter_pct, NULL,     0, 100, NULL);
 VARIABLE_INT(screenSize, NULL,          0, 8, NULL);
 VARIABLE_INT(usegamma, NULL,            0, 4, NULL);
@@ -991,6 +997,8 @@ CONSOLE_VARIABLE(r_fov, fov, 0)
    setsizeneeded = true;
 }
 
+
+CONSOLE_VARIABLE(r_showrefused, showtainted, 0) {}
 
 CONSOLE_VARIABLE(gamma, usegamma, 0)
 {
@@ -1117,6 +1125,7 @@ void R_AddCommands(void)
    C_AddCommand(r_spanengine);
    C_AddCommand(r_detail);
    C_AddCommand(r_vissprite_limit);
+   C_AddCommand(r_showrefused);
 
    C_AddCommand(p_dumphubs);
 }
