@@ -1096,7 +1096,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->topmap != seg.backsec->topmap ||
-        seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
+        seg.frontsec->c_portal != seg.backsec->c_portal) ||
+        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope)); // haleyjd
 
    if(heightchange && side->toptexture)
    {
@@ -1133,7 +1134,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.frontsec->floorpic != seg.backsec->floorpic ||
         seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
         seg.frontsec->bottommap != seg.backsec->bottommap ||
-        seg.frontsec->f_portal != seg.backsec->f_portal)); // haleyjd
+        seg.frontsec->f_portal != seg.backsec->f_portal) ||
+        !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope)); // haleyjd
 
 #ifdef R_LINKEDPORTALS
    // SoM: some portal types should be rendered even if the player is above
