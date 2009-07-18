@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2009 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,20 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
+//
+// Native implementation of the zone API. This doesn't have a lot of advantage
+// over the zone heap during normal play, but it shines when the game is
+// under stress, whereas the zone heap chokes doing an O(N) search over the
+// block list and wasting time dumping purgables, causing unnecessary disk IO.
+//
+// This code must be enabled by globally defining ZONE_NATIVE. When running 
+// with this heap, there is no limitation to the amount of memory allocated
+// except what the system will provide.
+//
+// Limitations:
+// Instrumentation is limited to tracking of static and purgable memory.
+// Heap check is limited to a zone ID check.
+// Core dump function is not supported.
 //
 //-----------------------------------------------------------------------------
 
@@ -55,9 +69,6 @@
 
 // size of block header
 #define HEADER_SIZE 32
-
-// Minimum chunk size at which blocks are allocated
-#define CHUNK_SIZE 32
 
 // signature for block header
 #define ZONEID  0x931d4a11
@@ -441,9 +452,6 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 //
 // Z_Realloc
 //
-// haleyjd 05/29/08: *Something* is wrong with my Z_Realloc routine, and I
-// cannot figure out what! So we're back to using Old Faithful for now.
-//
 void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
                   const char *file, int line)
 {
@@ -563,6 +571,7 @@ char *(Z_Strdupa)(const char *s, const char *file, int line)
 
 void (Z_CheckHeap)(const char *file, int line)
 {
+#ifdef ZONEIDCHECK
    memblock_t *block;
    int lowtag;
 
@@ -570,7 +579,7 @@ void (Z_CheckHeap)(const char *file, int line)
    {
       for(block = blockbytag[lowtag]; block; block = block->next)
       {
-#ifdef ZONEIDCHECK
+
          if(block->id != ZONEID)
          {
             I_Error("Z_CheckHeap: Block found without ZONEID\n"
@@ -583,9 +592,9 @@ void (Z_CheckHeap)(const char *file, int line)
 #endif
                     );
          }
-#endif
       }
    }
+#endif
 
 #ifdef ZONEFILE
 #ifndef CHECKHEAP

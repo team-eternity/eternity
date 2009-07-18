@@ -57,6 +57,8 @@ visplane_t *R_FindPlane(fixed_t height,
 
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
+boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
+
 extern int visplane_view;
 
 typedef struct
