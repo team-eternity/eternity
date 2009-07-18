@@ -66,7 +66,7 @@ typedef struct linkdata_s
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
-} linkdata_t;
+} linkeddata_t;
 #endif
 
 
@@ -111,9 +111,9 @@ typedef struct portal_s
    union portaldata_u
    {
       skyplanedata_t plane;
-      horizondata_t  horizon;      
+      horizondata_t  horizon;
       anchordata_t   anchor;
-      linkdata_t     link;
+      linkeddata_t   link;
       mobj_t         *camera;
    } data;
 
