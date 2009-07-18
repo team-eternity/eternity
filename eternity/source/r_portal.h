@@ -111,10 +111,10 @@ typedef struct portal_s
    union portaldata_u
    {
       skyplanedata_t plane;
-      horizondata_t  horizon;
-      mobj_t         *camera;
+      horizondata_t  horizon;      
       anchordata_t   anchor;
       linkdata_t     link;
+      mobj_t         *camera;
    } data;
 
    int    flags;
