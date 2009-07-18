@@ -127,7 +127,6 @@ static memblock_t *zone;                 // pointer to first block
 static memblock_t *zonebase;             // pointer to entire zone memory
 static size_t     zonebase_size;         // zone memory allocated size
 static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
-static double     zoneload;              // haleyjd: how much is allocated
 
 #ifdef INSTRUMENTED
 
@@ -340,11 +339,6 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
       block = block->prev;
    
    start = block;
-
-   // haleyjd 07/17/09: if over critical load factor, don't even bother
-   // looking for a zone block; use C malloc until things calm down.
-   if(zoneload / zonebase_size >= MAXLOADFACTOR)
-      goto usecmalloc;
    
    // haleyjd 01/01/01 (happy new year!):
    // the first if() inside the loop below contains cph's memory
@@ -381,8 +375,6 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
             newb->size = extra - HEADER_SIZE;
             newb->tag = PU_FREE;
             newb->vm = 0;
-
-            zoneload += size;
             
 #ifdef INSTRUMENTED
             inactive_memory += HEADER_SIZE;
@@ -437,7 +429,7 @@ allocated:
    // Although less efficient, we'll just use ordinary malloc.
    // This will squeeze the remaining juice out of this machine
    // and start cutting into virtual memory if it has it.
-usecmalloc:
+
    while(!(block = (malloc)(size + HEADER_SIZE)))
    {
       if(!blockbytag[PU_CACHE])
@@ -540,9 +532,6 @@ void (Z_Free)(void *p, const char *file, int line)
 #endif
 
          block->tag = PU_FREE;       // Mark block freed
-
-         if((zoneload -= block->size) < 0)
-            zoneload = 0;
          
          if(block != zone)
          {
@@ -641,7 +630,8 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 #endif
 
 #ifdef INSTRUMENTED
-         virtual_memory -= block->size;
+         // haleyjd 07/17/09: must subtract HEADER_SIZE here as well
+         virtual_memory -= (block->size + HEADER_SIZE);
 #endif
 
          if(block->user)            // Nullify user if one exists
