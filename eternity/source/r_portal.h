@@ -28,6 +28,8 @@
 #ifndef R_PORTALS_H__
 #define R_PORTALS_H__
 
+#include "m_fixed.h"
+
 typedef enum
 {
    R_NONE,
@@ -117,7 +119,7 @@ typedef struct portal_s
       horizondata_t  horizon;
       mobj_t         *camera;
       anchordata_t   anchor;
-      struct linkdata_s link;
+      linkdata_t     link;
    } data;
 
    int    flags;
