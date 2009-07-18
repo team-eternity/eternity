@@ -32,6 +32,8 @@
 // statistics and tunables.
 //-----------------------------------------------------------------------------
 
+#ifndef ZONE_NATIVE
+
 #include "z_zone.h"
 #include "doomstat.h"
 #include "m_argv.h"
@@ -75,9 +77,6 @@
 
 // Minimum size a block must be to become part of a split
 #define MIN_BLOCK_SPLIT (1024)
-
-// haleyjd: heap load factor at which malloc will be used as a fallback
-#define MAXLOADFACTOR 0.8
 
 // Uncomment this to enable LEAVE_ASIDE
 //#define ZONE_LEAVE_ASIDE
@@ -1322,6 +1321,8 @@ void Z_SysFree(void *p)
    if(p)
       (free)(p);
 }
+
+#endif // !ZONE_NATIVE
 
 //-----------------------------------------------------------------------------
 //
