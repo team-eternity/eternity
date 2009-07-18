@@ -452,20 +452,102 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 //
 // Z_Realloc
 //
+// For the native heap, this can easily behave as a real realloc, and not
+// just an ignorant copy-and-free.
+//
 void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
                   const char *file, int line)
 {
-   void *p = (Z_Malloc)(n, tag, user, file, line);
-   if(ptr)
+   void *p;
+   memblock_t *block;
+
+   // if not allocated at all, defer to Z_Malloc
+   if(!ptr)
+      return (Z_Malloc)(n, tag, user, file, line);
+
+   // size == 0 is a special case that cannot be handled below
+   if(n == 0)
    {
-      memblock_t *block = (memblock_t *)((char *)ptr - HEADER_SIZE);
-      if(p) // haleyjd 09/18/06: allow to return NULL without crashing
-         memcpy(p, ptr, n <= block->size ? n : block->size);
       (Z_Free)(ptr, file, line);
-      if(user) // in case Z_Free nullified same user
-         *user=p;
+      return NULL;
    }
 
+#ifdef CHECKHEAP
+   Z_CheckHeap();
+#endif
+
+   block = (memblock_t *)((char *)ptr - HEADER_SIZE);
+
+#ifdef ZONEIDCHECK
+   if(block->id != ZONEID)
+   {
+      I_Error("Z_Realloc: Reallocated a block without ZONEID"
+              "\nSource: %s:%d"
+#ifdef INSTRUMENTED
+              "\nSource of malloc: %s:%d"
+              , file, line, block->file, block->line
+#else
+              , file, line
+#endif
+              );
+   }
+#endif
+
+   // nullify current user, if any
+   if(block->user)
+      *(block->user) = NULL;
+
+   // detach from list before reallocation
+   if((*(memblock_t **) block->prev = block->next))
+      block->next->prev = block->prev;
+
+   block->next = NULL;
+   block->prev = NULL;
+
+#ifdef INSTRUMENTED
+   if(block->tag >= PU_PURGELEVEL)
+      purgable_memory -= block->size;
+   else
+      active_memory -= block->size;
+#endif
+
+   while(!(block = (realloc)(block, n + HEADER_SIZE)))
+   {
+      if(block->tag == PU_CACHE || !blockbytag[PU_CACHE])
+         I_Error ("Z_Malloc: Failure trying to allocate %lu bytes\n"
+                  "Source: %s:%d", (unsigned long) n, file, line);
+      Z_FreeTags(PU_CACHE, PU_CACHE);
+   }
+
+   block->size = n;
+   block->tag  = tag;
+
+   p = (char *)block + HEADER_SIZE;
+
+   // set new user, if any
+   block->user = user;
+   if(user)
+      *user = p;
+
+   // reattach to list at possibly new address, new tag
+   if((block->next = blockbytag[tag]))
+      block->next->prev = (memblock_t *) &block->next;
+   blockbytag[tag] = block;
+   block->prev = (memblock_t *) &blockbytag[tag];
+
+#ifdef INSTRUMENTED
+   if(block->tag >= PU_PURGELEVEL)
+      purgable_memory += block->size;
+   else
+      active_memory += block->size;
+
+   block->file = file;
+   block->line = line;
+#endif
+
+#ifdef INSTRUMENTED
+   Z_PrintStats();           // print memory allocation stats
+#endif
 #ifdef ZONEFILE
    Z_LogPrintf("* %p = Z_Realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n", 
                p, ptr, n, tag, user, file, line);
@@ -683,8 +765,6 @@ void Z_PrintZoneHeap(void)
             fputs("\tWARNING: purgable block with no user\n", outfile);
          if(block->tag >= PU_MAX)
             fputs("\tWARNING: invalid cache level\n", outfile);
-         if(block->next->prev != block || block->prev->next != block)
-            fputs("\tWARNING: block pointer inconsistency\n", outfile);
          
          fflush(outfile);
       }
