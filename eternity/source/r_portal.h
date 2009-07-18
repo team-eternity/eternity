@@ -104,8 +104,6 @@ typedef struct
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
 } skyplanedata_t;
 
-typedef struct mobj_s mobj_t;
-
 typedef struct portal_s
 {
    rportaltype_e type;
