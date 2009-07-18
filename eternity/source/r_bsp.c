@@ -1060,6 +1060,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    seg.lowstep = (seg.low2 - seg.low) * pstep;
 
    // TODO: Fix for use with portals.
+   // Shouldn't this be after the skyflat check?
    seg.clipsolid = (seg.bottom <= seg.high && seg.bottom2 <= seg.high2) ||
                    (seg.low <= seg.top && seg.low2 <= seg.top2) ||
                    (seg.low <= seg.high && seg.low2 <= seg.high2);
@@ -1076,14 +1077,13 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // -- Ceilings -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->c_slope != seg.backsec->c_slope ?
+   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ?
                   (seg.top != seg.high || seg.top2 != seg.high2) :
-                  (seg.top != seg.high);
+                  (seg.backsec->ceilingheight != seg.frontsec->ceilingheight);
 
-   seg.markcportal = 
-      (seg.c_portal && 
-      (seg.clipsolid || heightchange ||
-       seg.frontsec->c_portal != seg.backsec->c_portal));
+   seg.markcportal = seg.c_portal &&
+      (seg.clipsolid || heightchange || 
+       seg.frontsec->c_portal != seg.backsec->c_portal);
 
    seg.c_window = seg.markcportal ? 
                   R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
@@ -1113,7 +1113,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // -- Floors -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->f_slope != seg.backsec->f_slope ?
+   heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ?
                   (seg.low != seg.bottom || seg.low2 != seg.bottom2) :
                   seg.backsec->floorheight != seg.frontsec->floorheight;
 

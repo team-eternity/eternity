@@ -224,7 +224,7 @@ static void R_RenderSegLoop(void)
       b = segclip.bottom > floorclip[i] ? clipbot : (int)segclip.bottom;
 
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
-      if(segclip.markcportal)
+      if(segclip.markcportal && segclip.c_window)
       {
          line = t - 1;
          
@@ -253,7 +253,7 @@ static void R_RenderSegLoop(void)
       }
 
       // SoM 3/10/2005: Only add to the portal of the floor is marked
-      if(segclip.markfportal)
+      if(segclip.markfportal && segclip.f_window)
       {
          line = b + 1;
 
