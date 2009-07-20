@@ -74,11 +74,17 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
       else
          c = c - font->start;
 
-      if(c >= font->size || (!font->linear && !(patch = font->fontgfx[c])))
+      if(c >= font->size)
          length += font->space;
+      else if(font->linear)
+         length += font->lsize - font->dw;
       else
-         length += font->linear ? font->lsize - font->dw 
-                                : (SHORT(patch->width) - font->dw);
+      {
+         if(!(patch = font->fontgfx[c]))
+            length += font->space;
+         else
+            length += SHORT(patch->width) - font->dw;
+      }
    }   
    
    return length;
@@ -373,11 +379,17 @@ int V_FontStringWidth(vfont_t *font, const char *s)
       else
          c = c - font->start;
 
-      if(c >= font->size || (!font->linear && !(patch = font->fontgfx[c])))
+      if(c >= font->size)
          length += font->space;
+      else if(font->linear)
+         length += font->lsize - font->dw;
       else
-         length += font->linear ? font->lsize - font->dw 
-                                : (SHORT(patch->width) - font->dw);
+      {
+         if(!(patch = font->fontgfx[c]))
+            length += font->space;
+         else
+            length += SHORT(patch->width) - font->dw;
+      }
    }
    
    if(length > longest_width)

@@ -1909,14 +1909,12 @@ void A_HeadAttack(mobj_t *actor)
 
 void A_CyberAttack(mobj_t *actor)
 {
-   mobj_t *mo;
-
    if(!actor->target)
       return;
    A_FaceTarget(actor);
-   mo = P_SpawnMissile(actor, actor->target, 
-                       E_SafeThingType(MT_ROCKET),
-                       actor->z + DEFAULTMISSILEZ);   
+   P_SpawnMissile(actor, actor->target, 
+                  E_SafeThingType(MT_ROCKET),
+                  actor->z + DEFAULTMISSILEZ);   
 }
 
 void A_BruisAttack(mobj_t *actor)

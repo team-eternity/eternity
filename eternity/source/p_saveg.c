@@ -1589,13 +1589,11 @@ static void P_ArchiveCallbacks(void)
 //
 static void P_UnArchiveCallbacks(void)
 {
-   char vm;
-
    // kill any existing callbacks
    SM_RemoveCallbacks(-1);
 
    // read until the end marker is hit
-   while((vm = *save_p) != SC_VM_END)
+   while(*save_p != SC_VM_END)
    {
       sc_callback_t *newCallback = malloc(sizeof(sc_callback_t));
 

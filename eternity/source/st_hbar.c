@@ -199,7 +199,7 @@ static void ST_BlockDrawerS(int x, int y, int startmap, int mapdir)
 {
    byte *dest, *row, *colormap;
    int w, h, i, realx, realy;
-   int cx1, cy1, cx2, cy2, cw, ch;
+   int cx1, cy1, cx2, cy2;
 
    fixed_t mapnum, mapstep;
    
@@ -207,11 +207,7 @@ static void ST_BlockDrawerS(int x, int y, int startmap, int mapdir)
    cy1 = y;
    cx2 = x + SHADOW_BOX_WIDTH  - 1;
    cy2 = y + SHADOW_BOX_HEIGHT - 1;
-      
-   // clipped rect width/height
-   cw = cx2 - cx1 + 1;
-   ch = cy2 - cy1 + 1;
-         
+               
    realx = vbscreen.x1lookup[cx1];
    realy = vbscreen.y1lookup[cy1];
    w     = vbscreen.x2lookup[cx2] - realx + 1;

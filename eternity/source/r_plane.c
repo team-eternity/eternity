@@ -393,9 +393,8 @@ static void R_MapSlope(int y, int x1, int x2)
    slopefunc();
 }
 
-
-
 #define CompFloats(x, y) (fabs(x - y) < 0.001f)
+
 //
 // R_CompareSlopes
 // 

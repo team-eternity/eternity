@@ -1684,9 +1684,7 @@ CONSOLE_COMMAND(mn_options, 0)
 //
 static void MN_InitCustomMenu(void)
 {
-   menu_t *menu;
-
-   if(!(menu = MN_DynamicMenuForName("_MN_Custom")))
+   if(!MN_DynamicMenuForName("_MN_Custom"))
    {
       mn_optionsp2_items[13].type        = it_info;
       mn_optionsp2_items[13].description = FC_BRICK "custom menu";

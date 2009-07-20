@@ -201,8 +201,6 @@ void I_InitSound(void)
 {   
    if(!nosfxparm)
    {
-      int success;
-
       printf("I_InitSound: ");
 
       // FIXME/TODO: initialize sound driver
@@ -211,7 +209,7 @@ void I_InitSound(void)
 #ifdef _SDL_VER
       case -1:
          i_sounddriver = &i_sdlsound_driver;
-         if((success = i_sounddriver->InitSound()))
+         if(i_sounddriver->InitSound())
          {
             atexit(I_ShutdownSound);  
             snd_init = true;
@@ -220,7 +218,7 @@ void I_InitSound(void)
 
       case 1:
          i_sounddriver = &i_pcsound_driver;
-         if((success = i_sounddriver->InitSound()))
+         if(i_sounddriver->InitSound())
          {
             atexit(I_ShutdownSound);
             snd_init = true;
@@ -269,15 +267,13 @@ extern i_musicdriver_t i_sdlmusicdriver;
 //
 void I_InitMusic(void)
 {
-   int success;
-
    switch(mus_card)
    {
 #ifdef _SDL_VER
    case -1:
       printf("I_InitMusic: Using SDL_mixer.\n");
       i_musicdriver = &i_sdlmusicdriver;
-      if((success = i_musicdriver->InitMusic()))
+      if(i_musicdriver->InitMusic())
       {
          atexit(I_ShutdownMusic);
          mus_init = true;

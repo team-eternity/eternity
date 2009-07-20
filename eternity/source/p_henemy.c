@@ -1056,7 +1056,7 @@ void A_MakePod(mobj_t *actor)
    angle_t angle;
    fixed_t move;
    mobj_t *mo;
-   fixed_t x, y, z;
+   fixed_t x, y;
 
    // limit pods per generator to avoid crowding, slow-down
    if(actor->counters[0] >= MAXGENPODS)
@@ -1064,7 +1064,7 @@ void A_MakePod(mobj_t *actor)
 
    x = actor->x;
    y = actor->y;
-   z = actor->z;
+
    mo = P_SpawnMobj(x, y, ONFLOORZ, E_SafeThingType(MT_POD));
    if(!P_CheckPosition(mo, x, y))
    {

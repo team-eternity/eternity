@@ -422,7 +422,7 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
     unsigned long int unumber = 0;
     char numbersigned = 1;
     char iszero = 0; /* bool */
-    int base = 0;
+    int base = 10;   /* haleyjd: default to something valid */
     int len = 0; /* length of number component (no sign or padding) */
     char char10 = 0;
     char sign = 0;

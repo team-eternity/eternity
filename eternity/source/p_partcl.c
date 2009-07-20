@@ -956,17 +956,6 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
    
    switch(kind)
    {
-   case 0:              // Blood
-      color1 = *(mobjBloodColors[bloodcolor].color1);
-      color2 = *(mobjBloodColors[bloodcolor].color2);
-      /*
-      // haleyjd 04/01/05: at random, throw out drops too
-      if(M_Random() < 64)
-         P_BloodDrop(count, x, y, z, angle, updown, color1, color2);
-      */
-      //P_BloodSpray(count, x, y, z, angle, updown, bloodcolor);
-      return;
-      break;
    case 2:		// Smoke
       color1 = grey3;
       color2 = grey1;

@@ -1940,8 +1940,6 @@ void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, mobj_t
    {
       if(bloodsplat_particle != 2)
          th->translucency = 0;
-      //P_DrawSplash2(32, x, y, z, dir, 2,
-      //              target->info->bloodcolor | MBC_BLOODMASK);
       P_BloodSpray(target, 32, x, y, z, dir);
    }
 }

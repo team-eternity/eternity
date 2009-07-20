@@ -1207,9 +1207,6 @@ static void WI_updateDeathmatchStats(void)
 static void WI_drawDeathmatchStats(void)
 {
    int   i, j, x, y, w;  
-   int   lh; // line height
-   
-   lh = WI_SPACINGY;
 
    if(!(fade_applied || cur_pause_time))
    {

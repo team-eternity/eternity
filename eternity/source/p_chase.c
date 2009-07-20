@@ -195,20 +195,23 @@ long zi(Long64 dist, Long64 totaldist, Long64 ztarget, Long64 playerz)
    return (long)thezi;
 }
 
-// go til you hit a wall
-// set the chasecam target x and ys if you hit one
-// originally based on the shooting traverse function in p_maputl.c
-
 // SoM: moved globals into linetracer_t see p_maputil.h
 extern linetracer_t trace;
 
+//
+// PTR_chasetraverse
+//
+// go til you hit a wall
+// set the chasecam target x and ys if you hit one
+// originally based on the shooting traverse function in p_maputl.c
+//
 boolean PTR_chasetraverse(intercept_t *in)
 {
    fixed_t dist, frac;
    subsector_t *ss;
    long x, y;
    long z;
-   sector_t *hitsector, *othersector;
+   sector_t *othersector;
 
    if(in->isaline)
    {
@@ -230,13 +233,10 @@ boolean PTR_chasetraverse(intercept_t *in)
          
          ss = R_PointInSubsector (x, y);
          
-         hitsector = li->frontsector; othersector=li->backsector;
+         othersector = li->backsector;
          
          if(ss->sector==li->backsector)      // other side
-         {
-            hitsector = li->backsector;
             othersector = li->frontsector;
-         }
 
          // interpolate, find z at the point of intersection
          

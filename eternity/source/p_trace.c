@@ -865,9 +865,13 @@ boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
             dist = (in=scan)->frac;
       if(dist > maxfrac)
          return true;    // checked everything in range
-      if(!func(in))
-         return false;           // don't bother going farther
-      in->frac = D_MAXINT;
+
+      if(in) // haleyjd: for safety
+      {
+         if(!func(in))
+            return false;           // don't bother going farther
+         in->frac = D_MAXINT;
+      }
    }
    return true;                  // everything was traversed
 }

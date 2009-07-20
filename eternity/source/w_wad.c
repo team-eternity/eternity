@@ -239,7 +239,7 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
    lumpinfo_t **marked = malloc(sizeof(*marked) * dir->numlumps);
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
-   lumpinfo_t *lump = dir->lumpinfo[0];
+   lumpinfo_t *lump;
   
    for(i = 0; i < (unsigned)dir->numlumps; i++)
    {

@@ -1851,8 +1851,8 @@ void deh_procStrings(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;    // All deh values are ints or longs
-   char *strval;      // holds the string value of the line
+   long value;          // All deh values are ints or longs
+   char *strval = NULL; // holds the string value of the line
    // holds the final result of the string after concatenation
    static char *holdstring = NULL;
    static unsigned int maxstrlen = 128; // maximum string length, bumped 128 at

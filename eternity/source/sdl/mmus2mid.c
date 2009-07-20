@@ -317,7 +317,7 @@ static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
 int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
 {
   UWORD TrackCnt = 0;
-  UBYTE evt, MUSchannel, MIDIchannel, MIDItrack=0, NewEvent;
+  UBYTE evt, MUSchannel, MIDIchannel, MIDItrack=0;
   int i, event, data;
   UBYTE *musptr;
   size_t muslen;
@@ -412,7 +412,7 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
     switch(evt)
     {
       case RELEASE_NOTE:
-      if (!(NewEvent=MidiEvent(mididata,0x90,MIDIchannel,MIDItrack,nocomp)))
+      if (!MidiEvent(mididata,0x90,MIDIchannel,MIDItrack,nocomp))
         goto err;
 
           data = *musptr++;
@@ -424,7 +424,7 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
           break;
 
       case PLAY_NOTE:
-      if (!(NewEvent=MidiEvent(mididata,0x90,MIDIchannel,MIDItrack,nocomp)))
+      if (!MidiEvent(mididata,0x90,MIDIchannel,MIDItrack,nocomp))
         goto err;
 
           data = *musptr++;
@@ -438,7 +438,7 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
           break;
 
       case BEND_NOTE:
-      if (!(NewEvent=MidiEvent(mididata,0xE0,MIDIchannel,MIDItrack,nocomp)))
+      if (!MidiEvent(mididata,0xE0,MIDIchannel,MIDItrack,nocomp))
         goto err;
 
           data = *musptr++;
@@ -451,7 +451,7 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
           break;
 
       case SYS_EVENT:
-      if (!(NewEvent=MidiEvent(mididata,0xB0,MIDIchannel,MIDItrack,nocomp)))
+      if (!MidiEvent(mididata,0xB0,MIDIchannel,MIDItrack,nocomp))
         goto err;
 
           data = *musptr++;
@@ -477,7 +477,7 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
 
           if (data)
           {
-        if (!(NewEvent=MidiEvent(mididata,0xB0,MIDIchannel,MIDItrack,nocomp)))
+        if (!MidiEvent(mididata,0xB0,MIDIchannel,MIDItrack,nocomp))
           goto err;
 
               if (TWriteByte(mididata, MIDItrack, MUS2MIDcontrol[data]))
@@ -485,7 +485,7 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
           }
           else
           {
-        if (!(NewEvent=MidiEvent(mididata,0xC0,MIDIchannel,MIDItrack,nocomp)))
+        if (!MidiEvent(mididata,0xC0,MIDIchannel,MIDItrack,nocomp))
           goto err;
           }
           data = *musptr++;

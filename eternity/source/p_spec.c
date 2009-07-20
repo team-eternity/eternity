@@ -2517,12 +2517,7 @@ void P_SpawnSpecials(int mapformat)
 {
    sector_t *sector;
    int      i;
-   int      episode;
-   
-   episode = 1;
-   if(W_CheckNumForName("TEXTURE2") >= 0)
-      episode = 2;
-   
+      
    // sf: -timer moved to d_main.c
    //     -avg also
    

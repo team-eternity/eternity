@@ -1041,7 +1041,7 @@ void ST_CacheFaces(patch_t **faces, char *facename)
    sprintf(namebuf, "%sGOD0",facename);
    faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
    sprintf(namebuf, "%sDEAD0",facename);
-   faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+   faces[facenum]   = W_CacheLumpName(namebuf, PU_STATIC);
 }
 
 static void ST_loadData(void)

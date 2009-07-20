@@ -470,10 +470,10 @@ static void V_DrawMaskedColumnUnscaled(column_t *column)
 //
 void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 {
-   int        x1, x2, tx, w;
-   fixed_t    scale, iscale, xiscale, startfrac = 0;
+   int        x1, x2, w;
+   fixed_t    iscale, xiscale, startfrac = 0;
    patch_t    *patch = pi->patch;
-   int        maxw, maxh;
+   int        maxw;
    void       (*maskcolfunc)(column_t *);
 
    w = SHORT(patch->width); // haleyjd: holy crap, stop calling this 800 times
@@ -486,31 +486,28 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       // If flipped, then offsets are flipped as well which means they 
       // technically offset from the right side of the patch (x2)
       x2 = pi->x + SHORT(patch->leftoffset);
-      x1 = tx = x2 - (w - 1);
+      x1 = x2 - (w - 1);
    }
    else
    {
-      x1 = tx = pi->x - SHORT(patch->leftoffset);
-      x2 = tx + w - 1;
+      x1 = pi->x - SHORT(patch->leftoffset);
+      x2 = x1 + w - 1;
    }
 
    // haleyjd 08/16/08: scale and step values must come from the VBuffer, NOT
    // the Cardboard video structure...
 
    if(buffer->scaled)
-   {
-      scale         = (buffer->width << FRACBITS) / buffer->scalew;
+   {      
       iscale        = buffer->ixscale;
       patchcol.step = buffer->iyscale;
       maxw          = buffer->scalew;
-      maxh          = buffer->scaleh;
       maskcolfunc   = V_DrawMaskedColumn;
    }
    else
    {
-      scale = iscale = patchcol.step = FRACUNIT;
+      iscale = patchcol.step = FRACUNIT;
       maxw = buffer->width;
-      maxh = buffer->height;
       maskcolfunc   = V_DrawMaskedColumnUnscaled;
    }
 

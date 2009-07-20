@@ -634,7 +634,7 @@ static void C_AddMessage(const char *s)
    const unsigned char *c;
    unsigned char *end;
    unsigned char linecolor = GameModeInfo->colorNormal + 128;
-   boolean lastend;
+   boolean lastend = false;
 
    // haleyjd 09/04/02: set color to default at beginning
    if(V_FontStringWidth(c_font, messages[message_last]) > SCREENWIDTH-9 ||
@@ -739,28 +739,6 @@ static void C_AdjustLineBreaks(char *str)
          }
       }
    }
-
-   /*
-   if(firstspace)
-   {      
-      // temporarily put a \0 in the first space
-      char temp = str[firstspace];
-      str[firstspace] = '\0';
-
-      // if the first segment of the string doesn't fit on the 
-      // current line, move the console up one line in advance
-
-      if(V_FontStringWidth(c_font, str) + 
-         V_FontStringWidth(c_font, messages[message_last]) > SCREENWIDTH - 9
-         || strlen(str) + strlen(messages[message_last]) >= LINELENGTH - 1)
-      {
-         C_ScrollUp();
-      }
-
-      // restore the string to normal
-      str[firstspace] = temp;
-   }
-   */
 }
 
 static void C_AppendToLog(const char *text);

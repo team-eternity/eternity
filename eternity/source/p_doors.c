@@ -486,7 +486,6 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 int EV_VerticalDoor(line_t *line, mobj_t *thing)
 {
    player_t* player;
-   int   secnum;
    sector_t* sec;
    vldoor_t* door;
    
@@ -548,7 +547,6 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
 
    // get the sector on the second side of activating linedef
    sec = sides[line->sidenum[1]].sector;
-   secnum = sec-sectors;
 
    // haleyjd: adapted cph's prboom fix for demo compatibility and
    //          corruption of thinkers

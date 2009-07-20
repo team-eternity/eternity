@@ -350,7 +350,7 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
                           int tl)
 {
    byte *d, *row;
-   int  i, size, tw;
+   int  i, tw;
    int x2, y2;
    unsigned int *fg2rgb, *bg2rgb, col;
 
@@ -390,17 +390,16 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
    if(x > x2 || y > y2)
       return;
 
-   x = dest->x1lookup[x];
+   x  = dest->x1lookup[x];
    x2 = dest->x2lookup[x2];
 
-   y = dest->y1lookup[y];
+   y  = dest->y1lookup[y];
    y2 = dest->y2lookup[y2];
 
    w = x2 - x + 1;
    h = y2 - y + 1;
 
    d = dest->ylut[y] + dest->xlut[x];
-   size = w;
 
    for(i = 0; i < h; i++)
    {

@@ -824,7 +824,7 @@ void T_ACSThinker(acsthinker_t *script)
          }
          break;
       case OP_BRANCHNOTZERO:
-         if((temp = POP()))
+         if(POP())
             ip = (int *)(script->data + IPCURR());
          else
             ++ip;
@@ -947,7 +947,7 @@ void T_ACSThinker(acsthinker_t *script)
          PUSH(-temp);
          break;
       case OP_BRANCHZERO:
-         if(!(temp = POP()))
+         if(!(POP()))
             ip = (int *)(script->data + IPCURR());
          else
             ++ip;

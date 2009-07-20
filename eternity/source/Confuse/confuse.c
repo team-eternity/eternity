@@ -1263,6 +1263,8 @@ static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
    case CFGT_STR:
       strptr = (const char **)array;
       break;
+   default:
+      return;
    }
 
    for(i = 0; i < nvalues; ++i)
@@ -1285,8 +1287,6 @@ static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
          cfg_opt_setnstr(cfg, opt, *strptr, opt->nvalues);
          ++strptr;
          break;
-      case CFGT_FUNC:
-      case CFGT_SEC:
       default:
          break;
       }

@@ -1515,7 +1515,7 @@ enum
 static void R_LoadDoom1(void)
 {
    char *lump;
-   char *startofline, *rover;
+   char *rover;
    int lumplen, lumpnum;
    int state = D1_STATE_SCAN;
    int tx1, tx2;
@@ -1535,7 +1535,7 @@ static void R_LoadDoom1(void)
    
    W_ReadLump(lumpnum, lump);
    
-   startofline = rover = lump;
+   rover = lump;
    numconvs = 0;
    
    while(*rover)

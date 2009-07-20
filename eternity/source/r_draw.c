@@ -1222,7 +1222,7 @@ void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h
 //
 void R_DrawViewBorder(void) 
 { 
-   int side, st_height;
+   int side;
    
    if(scaledviewwidth == SCREENWIDTH) 
       return;
@@ -1238,8 +1238,6 @@ void R_DrawViewBorder(void)
 
    // copy bottom 
    R_VideoErase(0, scaledwindowy + scaledviewheight, SCREENWIDTH, scaledwindowy);
-
-   st_height = GameModeInfo->StatusBar->height;
 } 
 
 // haleyjd: experimental column drawer for masked sky textures

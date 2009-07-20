@@ -1293,7 +1293,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    demo_p[i++] =  cmd->buttons;  
    demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
    demo_p[i++] =  cmd->look & 0xff;
-   demo_p[i++] = (cmd->look >> 8) & 0xff;
+   demo_p[i]   = (cmd->look >> 8) & 0xff;
    
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {
@@ -1811,14 +1811,14 @@ static void G_DoSaveGame(void)
 
 static void G_DoLoadGame(void)
 {
-   int  length, i;
+   int i;
    char vcheck[VERSIONSIZE];
    ULong64 checksum;
 
    gameaction = ga_nothing;
    
    // haleyjd 10/24/06: check for failure
-   if((length = M_ReadFile(savename, &savebuffer)) == -1)
+   if(M_ReadFile(savename, &savebuffer) == -1)
    {
       C_Printf(FC_ERROR "Failed to load savegame %s\n", savename);
       C_SetConsole();
@@ -2520,7 +2520,6 @@ int G_GetMapForName(const char *name)
    
    if(GameModeInfo->flags & GIF_MAPXY)
    {
-      episode = 1;
       map = isMAPxy(normName) ? 
          10 * (normName[3]-'0') + (normName[4]-'0') : 0;
       return map;

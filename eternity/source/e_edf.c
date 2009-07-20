@@ -2202,14 +2202,13 @@ void E_ProcessLastChance(void)
 void E_ProcessEDF(const char *filename)
 {
    cfg_t *cfg;
-   int lnum = -1;
 
    // check for -edfout to enable verbose logging
    if(M_CheckParm("-edfout"))
       E_EDFOpenVerboseLog();
 
    // 02/09/05: check for root EDF lump
-   if((lnum = W_CheckNumForName("EDFROOT")) != -1)
+   if(W_CheckNumForName("EDFROOT") != -1)
    {
       puts("E_ProcessEDF: Loading root lump.\n");
       E_EDFLogPuts("Processing lump EDFROOT\n");

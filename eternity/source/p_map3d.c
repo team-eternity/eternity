@@ -1218,6 +1218,8 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
       iterator  = (amt < 0) ? PIT_FloorDrop : PIT_FloorRaise;
       iterator2 = (amt < 0) ? PIT_CeilingLower : PIT_CeilingRaise;
       midtex_moving = true;
+   default:
+      I_Error("P_ChangeSector3D: unknown movement type %d\n", floorOrCeil);;
    }
 
    // killough 4/4/98: scan list front-to-back until empty or exhausted,

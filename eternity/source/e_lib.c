@@ -536,9 +536,9 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    if(*endptr != '\0')
    {
       byte *palette;
-      int r, g, b, ret;
+      int r, g, b;
 
-      if((ret = sscanf(value, "%d %d %d", &r, &g, &b)) != 3)
+      if(sscanf(value, "%d %d %d", &r, &g, &b) != 3)
       {
          if(cfg)
          {
