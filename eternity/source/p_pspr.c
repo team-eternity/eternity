@@ -77,6 +77,15 @@ int weapon_recoil;      // weapon recoil
 
 int action_from_pspr;
 
+//=============================================================================
+//
+// Gun actions
+//
+// This structure is used to support copying of args between gun and player
+// mobj states during execution of gun codepointer actions so that pointers
+// designed to work with mobj_t's can work seamlessly with guns as well.
+//
+
 typedef struct gunaction_s
 {
    state_t *s;               // state args were copied to
@@ -85,6 +94,41 @@ typedef struct gunaction_s
 } gunaction_t;
 
 static gunaction_t *gunactions;
+static gunaction_t *freegunactions;
+
+//
+// P_GetGunAction
+//
+// haleyjd 07/20/09: Keep gunactions on a freelist to avoid a ton of
+// allocator noise.
+//
+static gunaction_t *P_GetGunAction(void)
+{
+   gunaction_t *ret;
+
+   if(freegunactions)
+   {
+      ret = freegunactions;
+      freegunactions = ret->next;
+   }
+   else
+      ret = calloc(1, sizeof(gunaction_t));
+
+   return ret;
+}
+
+//
+// P_PutGunAction
+//
+// Put a gunaction onto the freelist.
+//
+static void P_PutGunAction(gunaction_t *ga)
+{
+   memset(ga, 0, sizeof(gunaction_t));
+
+   ga->next = freegunactions;
+   freegunactions = ga;
+}
 
 //
 // P_SetupPlayerGunAction
@@ -95,8 +139,10 @@ static gunaction_t *gunactions;
 static void P_SetupPlayerGunAction(player_t *player, pspdef_t *psp)
 {
    // create a new gunaction
-   gunaction_t *ga = calloc(1, sizeof(gunaction_t));
+   gunaction_t *ga;
    mobj_t *mo = player->mo;
+
+   ga = P_GetGunAction();
 
    memcpy(ga->args, mo->state->args, NUMSTATEARGS * sizeof(long));
    memcpy(mo->state->args, psp->state->args, NUMSTATEARGS * sizeof(long));
@@ -133,8 +179,10 @@ static void P_FinishPlayerGunAction(void)
    action_from_pspr--;
 
    // free the gunaction
-   free(ga);
+   P_PutGunAction(ga);
 }
+
+//=============================================================================
 
 //
 // P_SetPsprite
