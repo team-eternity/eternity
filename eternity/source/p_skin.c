@@ -414,7 +414,9 @@ void P_SetSkin(skin_t *skin, int playernum)
    if(gamestate == GS_LEVEL)
    {
       mobj_t *mo = pl->mo;
+      
       mo->skin = skin;
+
       if(mo->state && mo->state->sprite == mo->info->defsprite)
          mo->sprite = skin->sprite;
    }

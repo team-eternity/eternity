@@ -590,6 +590,9 @@ void P_UnArchiveThinkers(void)
       memcpy(mobj, save_p, sizeof(mobj_t));
       save_p += sizeof(mobj_t);
       mobj->state = states[(int)(mobj->state)];
+      
+      // haleyjd 07/23/09: this must be before skin setting!
+      mobj->info  = &mobjinfo[mobj->type];
 
       if(mobj->player)
       {
@@ -606,16 +609,17 @@ void P_UnArchiveThinkers(void)
          // class is set.
          P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
       }
-
-      P_SetThingPosition(mobj);
-
-      mobj->info = &mobjinfo[mobj->type];
-
-      // haleyjd 09/26/04: restore monster skins
-      if(mobj->info->altsprite != NUMSPRITES)
-         mobj->skin = P_GetMonsterSkin(mobj->info->altsprite);
       else
-         mobj->skin = NULL;
+      {
+         // haleyjd 09/26/04: restore monster skins
+         // haleyjd 07/23/09: do not clear player->mo->skin (put into else)
+         if(mobj->info->altsprite != NUMSPRITES)
+            mobj->skin = P_GetMonsterSkin(mobj->info->altsprite);
+         else
+            mobj->skin = NULL;
+      }
+
+      P_SetThingPosition(mobj);      
 
       // killough 2/28/98:
       // Fix for falling down into a wall after savegame loaded:
