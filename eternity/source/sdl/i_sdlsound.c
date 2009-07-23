@@ -75,7 +75,7 @@ typedef struct {
   boolean stopChannel;
   // haleyjd 06/03/06: looping
   int loop;
-  int idnum;
+  unsigned int idnum;
 
   // haleyjd 10/02/08: SDL semaphore to protect channel
   SDL_sem *semaphore;
@@ -125,8 +125,9 @@ static void stopchan(int handle)
          // this channel isn't interested in the sound any more, 
          // even if we didn't free it. This prevented some sounds from
          // getting freed unnecessarily.
-         channelinfo[handle].id   = NULL;
-         channelinfo[handle].data = NULL;
+         channelinfo[handle].id    = NULL;
+         channelinfo[handle].data  = NULL;
+         channelinfo[handle].idnum = 0;
       }
 
       // haleyjd 06/07/09: release the semaphore now. The faster the better.
@@ -168,7 +169,7 @@ static void stopchan(int handle)
 // haleyjd: needs to take a sfxinfo_t ptr, not a sound id num
 // haleyjd 06/03/06: changed to return boolean for failure or success
 //
-static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, int id)
+static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
 {
    size_t lumplen;
    int lump;
@@ -459,7 +460,7 @@ static void I_SDLUpdateSoundParams(int handle, int vol, int sep, int pitch)
 static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep, 
                            int pitch, int pri, int loop)
 {
-   static unsigned int id = 0;
+   static unsigned int id = 1;
    int handle;
    
    // haleyjd: turns out this is too simplistic. see below.

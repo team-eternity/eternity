@@ -32,10 +32,7 @@ void V_InitMisc(void);
 // Mode setting
 //
 
-void V_Mode(void);
-void V_ModeList(void);
 void V_ResetMode(void);
-int  V_NumModes(void); // haleyjd: made global
 
 /////////////////////////////////////////////////////////////////////////////
 //

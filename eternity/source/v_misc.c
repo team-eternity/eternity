@@ -40,18 +40,11 @@
 
 extern int gamma_correct;
 
-/////////////////////////////////////////////////////////////////////////////
 //
-// Console Video Mode Commands
+// Cardboard Video Structure
 //
-// non platform-specific stuff is here in v_misc.c
-// platform-specific stuff is in i_video.c
-// videomode_t is platform specific although it must
-// contain a member of type char* called description:
-// see i_video.c for more info
-
-static int prevmode = 0;
-
+// Holds all metrics related to the current video mode.
+//
 cb_video_t video = 
 {
    8, 1,
@@ -70,23 +63,6 @@ cb_video_t video =
 };
 
 //
-// V_NumModes
-//
-// Counts the number of video modes for the build platform.
-// Used various places, including the -v_mode code and the
-// menus.
-//
-int V_NumModes(void)
-{
-   int count = 0;
-   
-   while(videomodes[count].description)
-      ++count;
-   
-   return count;
-}
-
-//
 // V_ResetMode
 //
 // Called after changing video mode
@@ -96,14 +72,14 @@ void V_ResetMode(void)
    I_SetMode(0);
 }
 
-patch_t *bgp[9];        // background for boxes
-
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Box Drawing
 //
 // Originally from the Boom heads up code
 //
+
+static patch_t *bgp[9];        // background for boxes
 
 #define FG 0
 
@@ -111,11 +87,11 @@ void V_DrawBox(int x, int y, int w, int h)
 {
    int xs = SHORT(bgp[0]->width);
    int ys = SHORT(bgp[0]->height);
-   int i,j;
+   int i, j;
    
    // top rows
    V_DrawPatch(x, y, &vbscreen, bgp[0]);    // ul
-   for(j = x+xs; j < x+w-xs; j += xs)     // uc
+   for(j = x+xs; j < x+w-xs; j += xs)       // uc
       V_DrawPatch(j, y, &vbscreen, bgp[1]);
    V_DrawPatch(j, y, &vbscreen, bgp[2]);    // ur
    
@@ -123,14 +99,14 @@ void V_DrawBox(int x, int y, int w, int h)
    for(i = y+ys; i < y+h-ys; i += ys)
    {
       V_DrawPatch(x, i, &vbscreen, bgp[3]);    // cl
-      for(j = x+xs; j < x+w-xs; j += xs)     // cc
+      for(j = x+xs; j < x+w-xs; j += xs)       // cc
          V_DrawPatch(j, i, &vbscreen, bgp[4]);
       V_DrawPatch(j, i, &vbscreen, bgp[5]);    // cr
    }
    
    // bottom row
    V_DrawPatch(x, i, &vbscreen, bgp[6]);    // ll
-   for(j = x+xs; j < x+w-xs; j += xs)     // lc
+   for(j = x+xs; j < x+w-xs; j += xs)       // lc
       V_DrawPatch(j, i, &vbscreen, bgp[7]);
    V_DrawPatch(j, i, &vbscreen, bgp[8]);    // lr
 }
@@ -148,7 +124,7 @@ void V_InitBox(void)
    bgp[8] = (patch_t *) W_CacheLumpName("BOXLR", PU_STATIC);
 }
 
-//////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // "Loading" Box
 //
@@ -157,7 +133,9 @@ static int loading_amount = 0;
 static int loading_total = -1;
 static char *loading_message;
 
-// SoM: ANYRES
+//
+// V_DrawLoading
+//
 void V_DrawLoading(void)
 {
    int x, y;
@@ -196,7 +174,9 @@ void V_DrawLoading(void)
    I_FinishUpdate();
 }
 
-
+//
+// V_SetLoading
+//
 void V_SetLoading(int total, char *mess)
 {
    loading_total = total ? total : 1;
@@ -213,10 +193,12 @@ void V_SetLoading(int total, char *mess)
       for(i=0; i<=total; i++) putchar('\b');    // backspace
    }
    else
-    V_DrawLoading();
+      V_DrawLoading();
 }
 
-
+//
+// V_LoadingIncrease
+//
 void V_LoadingIncrease(void)
 {
    loading_amount++;
@@ -231,13 +213,17 @@ void V_LoadingIncrease(void)
    if(loading_amount == loading_total) loading_message = NULL;
 }
 
+//
+// V_LoadingSetTo
+//
 void V_LoadingSetTo(int amount)
 {
    loading_amount = amount;
-   if(!in_textmode) V_DrawLoading();
+   if(!in_textmode)
+      V_DrawLoading();
 }
 
-/////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Framerate Ticker
 //
@@ -245,6 +231,7 @@ void V_LoadingSetTo(int amount)
 // an approximation to the current fps of doom.
 // moved from i_video.c to make it a bit more
 // system non-specific
+//
 
 // haleyjd 11/30/02: altered BLACK, WHITE defines to use GameModeInfo
 #define BLACK (GameModeInfo->blackIndex)
@@ -261,6 +248,9 @@ int current_count = 0;
 void V_ClassicFPSDrawer(void);
 void V_TextFPSDrawer(void);
 
+//
+// V_FPSDrawer
+//
 void V_FPSDrawer(void)
 {
    int i;
@@ -292,6 +282,9 @@ void V_FPSDrawer(void)
    }
 }
 
+//
+// V_FPSTicker
+//
 void V_FPSTicker(void)
 {
    static int lasttic;
@@ -312,8 +305,11 @@ void V_FPSTicker(void)
    }
 }
 
+//
+// V_ClassicFPSDrawer
+//
 // sf: classic fps ticker kept seperate
-
+//
 void V_ClassicFPSDrawer(void)
 {
   static int lasttic;
@@ -341,6 +337,9 @@ void V_ClassicFPSDrawer(void)
    }
 }
 
+//
+// V_TextFPSDrawer
+//
 void V_TextFPSDrawer(void)
 {
    static char fpsStr[16];
@@ -371,12 +370,19 @@ void V_TextFPSDrawer(void)
    V_FontWriteText(font, fpsStr, 5, 10);
 }
 
-// haleyjd: VBuffer stuff
+//=============================================================================
+//
+// haleyjd: VBuffer
+//
+// VBuffer is Eternity's primary surface type. Patches, block blits, and some
+// other fundamental operations can target a VBuffer in order to benefit from
+// automatic scaling.
+//
 
-VBuffer vbscreen;
-VBuffer backscreen1;
-VBuffer backscreen2;
-VBuffer backscreen3;
+VBuffer vbscreen;    // vbscreen encapsulates the primary video surface
+VBuffer backscreen1; // backscreen1 is a temporary buffer for in_lude, border
+VBuffer backscreen2; // backscreen2 is a temporary buffer for screenshots
+VBuffer backscreen3; // backscreen3 is a temporary buffer for f_wipe
 
 static boolean vbscreenneedsfree = false;
 
@@ -425,17 +431,6 @@ void V_Init(void)
    
    int size = video.width * video.height;
 
-   // SoM: ANYRES is ganna have to work in DJGPP too
-   // haleyjd: why isn't this in i_video.c, anyways? oh well.
-#ifdef DJGPP
-   if(s)
-      free(s), destroy_bitmap(screens0_bitmap);
-
-   video.screens[4] =
-      (video.screens[3] = 
-         (video.screens[2] = 
-            (video.screens[1] = s = calloc(size,4)) + size) + size) + size;
-#else
    // haleyjd 05/30/08: removed screens from zone heap
    if(s)
    {
@@ -447,16 +442,9 @@ void V_Init(void)
       (video.screens[3] =
          (video.screens[2] =
             (video.screens[1] = s = Z_SysCalloc(size, 4)) + size) + size) + size;
-#endif
    
-#ifdef DJGPP
-   screens0_bitmap = create_bitmap_ex(8, video.width, video.height);
-   memset(video.screens[0] = screens0_bitmap->line[0], 0, size);
-   video.pitch = video.width;
-#else
    // SoM: TODO: implement direct to SDL surface drawing.
    I_SetPrimaryBuffer();
-#endif
 
    R_SetupViewScaling();
    

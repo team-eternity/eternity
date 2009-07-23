@@ -1357,8 +1357,7 @@ static void ST_DoomInit(void)
 {
    ST_loadData();
    
-   // SoM: allocate enough for ANYRES
-   //video.screens[4] = Z_Malloc(MAX_SCREENWIDTH * 150, PU_STATIC, 0);
+   // haleyjd: video.screens[4] is now allocated with the others.
 }
 
 //
