@@ -156,13 +156,15 @@ enum
 // Slope Structures
 //
 
-// SoM: Internal plane slope structure
+// SoM: Map-slope struct. Stores both floating point and fixed point versions
+// of the vectors.
 typedef struct
 {
    // --- Information used in clipping/projection ---
    // Origin vector for the plane
    v3fixed_t o;
    v3float_t of;
+
    // The normal of the 3d plane the slope creates.
    v3float_t normalf;
 
@@ -174,17 +176,8 @@ typedef struct
    // The rate at which z changes based on distance from the origin plane.
    fixed_t zdelta;
    float   zdeltaf;
-
-   // --- Information used in texture mapping the plane ---
 } pslope_t;
 
-
-typedef struct
-{
-   v3float_t P, M, N;
-   v3float_t A, B, C;
-   float     zat, plight, shade;
-} rslope_t;
 
 
 //
@@ -617,11 +610,27 @@ typedef struct
   spriteframe_t *spriteframes;
 } spritedef_t;
 
+
+// SoM: Information used in texture mapping sloped planes
+typedef struct
+{
+   v3float_t P, M, N;
+   v3float_t A, B, C;
+   float     zat, plight, shade;
+} rslope_t;
+
+
 //
 // Now what is a visplane, anyway?
 //
 // Go to http://classicgaming.com/doom/editing/ to find out -- killough
 //
+
+// SoM: Or, since that url is no longer valid, you could just explain it here!
+// A visplane is basically a list of columns that a floor or ceiling occupies
+// in screen space. Doom's renderer then rasterizes them (turns them into 
+// horizontal spans) in a rather quick single pass so they can be textured 
+// in a quick, constant-z texture mapping loop.
 
 typedef struct visplane
 {
@@ -633,19 +642,15 @@ typedef struct visplane
    lighttable_t *fixedcolormap;  // haleyjd 10/16/06
    fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
 
-   // SoM: ANYRES this is the biggest waste of ram when running in low resolution.
-   // Fix: allocate buffer on creation and reallocate if needed when used again.
-   /*unsigned short pad1;          // leave pads for [minx-1]/[maxx+1]
-   unsigned short top[MAX_SCREENWIDTH];
-   unsigned short pad2, pad3;    // killough 2/8/98, 4/25/98
-   unsigned short bottom[MAX_SCREENWIDTH];
-   unsigned short pad4;*/
-
+   // SoM: The plain silhouette arrays are allocated based on screen-size now.
    int *pad1;
    int *top;
    int *pad2, *pad3;
    int *bottom, *pad4;
 
+   // This is the width of the above silhouette buffers. If a video mode is set
+   // that is wider than max_width, the visplane's buffers need to be
+   // reallocated to use the wider screen res.
    unsigned int   max_width;
 
    fixed_t viewx, viewy, viewz;
