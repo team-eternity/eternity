@@ -2686,7 +2686,7 @@ static cell AMX_NATIVE_CALL sm_thingspawn(AMX *amx, cell *params)
          ang = ang + 360;
    }
 
-   angle = (angle_t)(((ULong64)ang << 32) / 360);
+   angle = (angle_t)(((uint64_t)ang << 32) / 360);
 
    mo = P_SpawnMobj(x<<FRACBITS, y<<FRACBITS, z<<FRACBITS, type);
 
@@ -2734,7 +2734,7 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
    while(ang < 0)
       ang = ang + 360;
 
-   angle = (angle_t)(((ULong64)ang << 32) / 360);
+   angle = (angle_t)(((uint64_t)ang << 32) / 360);
 
    while((spawnspot = P_FindMobjFromTID(spottid, spawnspot, context)))
    {

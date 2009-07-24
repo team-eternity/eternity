@@ -3159,12 +3159,12 @@ void A_Spawn(mobj_t *mo)
 
 void A_Turn(mobj_t *mo)
 {
-   mo->angle += (angle_t)(((ULong64) mo->state->misc1 << 32) / 360);
+   mo->angle += (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
 }
 
 void A_Face(mobj_t *mo)
 {
-   mo->angle = (angle_t)(((ULong64) mo->state->misc1 << 32) / 360);
+   mo->angle = (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
 }
 
 E_Keyword_t kwds_A_Scratch[] =

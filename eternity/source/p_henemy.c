@@ -421,8 +421,8 @@ void A_HticTracer(mobj_t *actor)
    maxturn   = (angle_t)(actor->state->args[1]);
 
    // convert from integer angle to angle_t
-   threshold = (angle_t)(((ULong64)threshold << 32) / 360);
-   maxturn   = (angle_t)(((ULong64)maxturn << 32) / 360);
+   threshold = (angle_t)(((uint64_t)threshold << 32) / 360);
+   maxturn   = (angle_t)(((uint64_t)maxturn << 32) / 360);
 
    P_HticTracer(actor, threshold, maxturn);
 }
@@ -2156,7 +2156,7 @@ void A_MissileAttack(mobj_t *actor)
    while(a < 0)
       a += 360;
 
-   ang = (angle_t)(((ULong64)a << 32) / 360);
+   ang = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
    z = actor->z + DEFAULTMISSILEZ + z;
@@ -2228,7 +2228,7 @@ void A_MissileSpread(mobj_t *actor)
    while(a < 0)
       a += 360;
 
-   angsweep = (angle_t)(((ULong64)a << 32) / 360);
+   angsweep = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
    z = actor->z + DEFAULTMISSILEZ + z;

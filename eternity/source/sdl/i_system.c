@@ -115,10 +115,11 @@ void I_SetTime(int newtime)
 
 // killough 4/13/98: Make clock rate adjustable by scale factor
 int realtic_clock_rate = 100;
-static Long64 I_GetTime_Scale = 1<<CLOCK_BITS;
+static int64_t I_GetTime_Scale = 1 << CLOCK_BITS;
+
 int I_GetTime_Scaled(void)
 {
-   return (int)(((Long64)I_GetTime_RealTime() * I_GetTime_Scale) >> CLOCK_BITS);
+   return (int)(((int64_t)I_GetTime_RealTime() * I_GetTime_Scale) >> CLOCK_BITS);
 }
 
 
@@ -254,7 +255,7 @@ void I_Init(void)
    {
       if (clock_rate != 100)
       {
-	 I_GetTime_Scale = ((Long64) clock_rate << CLOCK_BITS) / 100;
+	 I_GetTime_Scale = ((int64_t) clock_rate << CLOCK_BITS) / 100;
 	 I_GetTime = I_GetTime_Scaled;
       }
       else
@@ -453,7 +454,7 @@ CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 {
    if (realtic_clock_rate != 100)
    {
-      I_GetTime_Scale = ((Long64) realtic_clock_rate << CLOCK_BITS) / 100;
+      I_GetTime_Scale = ((int64_t) realtic_clock_rate << CLOCK_BITS) / 100;
       I_GetTime = I_GetTime_Scaled;
    }
    else

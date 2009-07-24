@@ -1652,9 +1652,9 @@ void G_SaveGameName(char *name, size_t len, int slot)
 //
 // killough 12/98: use faster algorithm which has less IO
 
-ULong64 G_Signature(void)
+uint64_t G_Signature(void)
 {
-   ULong64 s = 0;
+   uint64_t s = 0;
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
@@ -1711,7 +1711,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    }
   
    {  // killough 3/16/98, 12/98: store lump name checksum
-      ULong64 checksum = G_Signature();
+      uint64_t checksum = G_Signature();
 
       CheckSaveGame(sizeof checksum); // haleyjd: added
       memcpy(save_p, &checksum, sizeof checksum);
@@ -1813,7 +1813,7 @@ static void G_DoLoadGame(void)
 {
    int i;
    char vcheck[VERSIONSIZE];
-   ULong64 checksum;
+   uint64_t checksum;
 
    gameaction = ga_nothing;
    

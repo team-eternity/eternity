@@ -230,7 +230,7 @@ static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
          return false;
       }
 
-      sfx->alen = (Uint32)(((ULong64)samplelen * snd_samplerate) / samplerate);
+      sfx->alen = (Uint32)(((Uint64)samplelen * snd_samplerate) / samplerate);
       sfx->data = Z_Malloc(sfx->alen, PU_STATIC, &sfx->data);
 
       // haleyjd 04/23/08: Convert sound to target samplerate

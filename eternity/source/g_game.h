@@ -68,7 +68,7 @@ void G_PlayerReborn(int player);
 void G_InitNewNum(skill_t skill, int episode, int map);
 void G_InitNew(skill_t skill, char*);
 void G_DoVictory(void);
-ULong64 G_Signature(void);      // killough 12/98
+uint64_t G_Signature(void);      // killough 12/98
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 void G_CopySpeedSet(int destType, int srcType);

@@ -185,9 +185,9 @@ void P_ChaseEnd(void)
 // this function is really just to cast all the
 // variables to 64-bit integers
 
-long zi(Long64 dist, Long64 totaldist, Long64 ztarget, Long64 playerz)
+long zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 {
-   Long64 thezi;
+   int64_t thezi;
    
    thezi = (dist * (ztarget - playerz)) / totaldist;
    thezi += playerz;

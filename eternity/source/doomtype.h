@@ -39,26 +39,6 @@ typedef enum {false, true} boolean;
 typedef unsigned char byte;
 #endif
 
-// haleyjd 09/21/01: early work on portability issues for Windows --
-// need to get rid of use of compiler-specific long long type
-
-// this must be defined for the platform, so add yours if its not
-// here already
-
-// hint: keep MSVC first and the right type will show up in
-//       the IDE :)
-
-#if defined(_MSC_VER)   // MSVC
-  #define D_LONG64_TYPE __int64
-#elif defined(__GNUC__) // GNU C
-  #define D_LONG64_TYPE long long
-#else
-  #error Need a 64-bit integer type for this platform!
-#endif
-
-typedef unsigned D_LONG64_TYPE ULong64;
-typedef D_LONG64_TYPE Long64;
-
 // SoM: resolve platform-specific range symbol issues
 
 #include <limits.h>
