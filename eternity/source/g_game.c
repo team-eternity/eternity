@@ -293,13 +293,13 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else
    {
       if(action_right)
-         cmd->angleturn -= pc->angleturn[tspeed];
+         cmd->angleturn -= (short)pc->angleturn[tspeed];
       if(action_left)
-         cmd->angleturn += pc->angleturn[tspeed];
+         cmd->angleturn += (short)pc->angleturn[tspeed];
       if(joyxmove > 0)
-         cmd->angleturn -= pc->angleturn[tspeed];
+         cmd->angleturn -= (short)pc->angleturn[tspeed];
       if(joyxmove < 0)
-         cmd->angleturn += pc->angleturn[tspeed];
+         cmd->angleturn += (short)pc->angleturn[tspeed];
    }
 
    if(action_forward)
@@ -2117,7 +2117,7 @@ void G_Ticker(void)
                
                // sf: include y as well as x
                if(players[i].mo)
-                  consistancy[i][buf] = players[i].mo->x + players[i].mo->y;
+                  consistancy[i][buf] = (short)(players[i].mo->x + players[i].mo->y);
                else
                   consistancy[i][buf] = 0; // killough 2/14/98
             }

@@ -75,7 +75,7 @@ extern const fixed_t finetangent[FINEANGLES/2];
 
 // PORTABILITY WARNING: angle_t depends on 32-bit math overflow
 
-typedef unsigned long angle_t;
+typedef uint32_t angle_t;
 
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y without additional checking.
@@ -95,12 +95,12 @@ int SlopeDiv(unsigned num, unsigned den);
 //
 d_inline static angle_t FixedToAngle(fixed_t a)
 {
-   return (angle_t)(((ULong64)a * ANGLE_1) >> FRACBITS);
+   return (angle_t)(((uint64_t)a * ANGLE_1) >> FRACBITS);
 }
 
 d_inline static fixed_t AngleToFixed(angle_t a)
 {
-   return (fixed_t)(((ULong64)a << FRACBITS) / ANGLE_1);
+   return (fixed_t)(((uint64_t)a << FRACBITS) / ANGLE_1);
 }
 
 #endif

@@ -30,6 +30,10 @@
 #include "d_keywds.h" // haleyjd 05/22/02
 #include "i_system.h"
 
+#ifndef I_SDL_TYPES_ACTIVE
+#include "pstdint.h"
+#endif
+
 //
 // Fixed point, 32bit as 16.16.
 //
@@ -37,7 +41,7 @@
 #define FRACBITS 16
 #define FRACUNIT (1<<FRACBITS)
 
-typedef int fixed_t;
+typedef int32_t fixed_t;
 
 //
 // Absolute Value
@@ -50,7 +54,7 @@ typedef int fixed_t;
 
 #if defined(__GNUC__)
   #define D_abs(x) ({fixed_t _t = (x), _s = _t >> (8*sizeof _t-1); (_t^_s)-_s;})
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_M_IX86)
 d_inline static int D_abs(int x)
 {
    __asm
@@ -68,7 +72,7 @@ d_inline static int D_abs(int x)
    _s = _t >> (8*sizeof _t-1);
    return (_t^_s) - _s;
 }
-#endif // DJGPP
+#endif
 
 // haleyjd 11/30/02: removed asm const modifiers due to continued
 // problems
@@ -76,115 +80,30 @@ d_inline static int D_abs(int x)
 //
 // Fixed Point Multiplication
 //
-
-#ifdef DJGPP
-
-// killough 5/10/98: In djgpp, use inlined assembly for performance
-
 d_inline static fixed_t FixedMul(fixed_t a, fixed_t b)
 {
-  fixed_t result;
-
-
-  /* Julian 6/7/2001
-
-        1) turned from asm to __asm__ as encouraged in docs for .h
-        2) made asm block const since output depends only on values
-        3) cleansed the constraints (now much simpler)
-        
-	haleyjd 02/16/02: 
-	fix for Joel -- GCC 3.03 seems to not like the const
-  */
-
-
-  __asm__ (
-
-  "  imull %2 \n"
-  "  shrdl $16,%%edx,%0"
-  : "=a" (result)           // eax is always the result
-  : "0"  (a),               // eax is also first operand
-    "rm" (b)                // second operand can be mem or reg
-  : "%edx", "%cc"           // edx and condition codes clobbered
-  );
-
-  return result;
+  return (fixed_t)((int64_t) a*b >> FRACBITS);
 }
-
-#else // DJGPP
-
-d_inline static fixed_t FixedMul(fixed_t a, fixed_t b)
-{
-  return (fixed_t)((Long64) a*b >> FRACBITS);
-}
-
-#endif // DJGPP
 
 //
 // Fixed Point Division
 //
-
-#ifdef DJGPP
-
-// killough 5/10/98: In djgpp, use inlined assembly for performance
-// killough 9/5/98: optimized to reduce the number of branches
-
-d_inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
-{
-  if (D_abs(a) >> 14 < D_abs(b))
-    {
-      fixed_t result;
-
-
-      /* Julian 6/7/2001
-
-            1) turned from asm to __asm__ as encouraged in docs for .h
-            2) made asm block const since output depends only on values
-            3) cleansed the constraints (now much simpler)
-            4) removed edx from clobbered regs as it is used as an input
-               (was useless on old gcc and error maker with modern gcc)
-	    
-	    haleyjd 02/16/02: 
-	    fix for Joel -- GCC 3.03 doesn't like the const
-      */
-
-
-      __asm__ (
-
-      " idivl %3"
-      : "=a" (result)
-      : "0" (a<<16),
-        "d" (a>>16),
-        "rm" (b)
-      : "%cc"
-      );
-
-      return result;
-    }
-  return ((a^b)>>31) ^ D_MAXINT;
-}
-
-#else // DJGPP
-
 d_inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
 {
   return (D_abs(a)>>14) >= D_abs(b) ? ((a^b)>>31) ^ D_MAXINT :
-    (fixed_t)(((Long64) a << FRACBITS) / b);
+    (fixed_t)(((int64_t) a << FRACBITS) / b);
 }
-
-#endif // DJGPP
-
 
 // SoM: this is only the case for 16.16 bit fixed point. If a different 
 // precision is desired, this must be changed accordingly
 #define FPFRACUNIT 65536.0
+
 // SoM 5/10/09: Thses are now macroized for the sake of uniformity
 #define M_FloatToFixed(f) ((fixed_t)((f) * FPFRACUNIT))
 #define M_FixedToFloat(f) ((float)((f) / FPFRACUNIT))
 
 #define M_FixedToDouble(f) ((double)((f) / FPFRACUNIT))
 #define M_DoubleToFixed(f) ((fixed_t)((f) * FPFRACUNIT))
-
-
 
 #endif
 

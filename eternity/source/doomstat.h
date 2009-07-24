@@ -398,8 +398,7 @@ extern int HelperThing;          // type of thing to use for helper
 
 extern int sky2flatnum;          // flat num of F_SKY2
 
-extern int Sky1ColumnOffset;
-extern int Sky2ColumnOffset;
+extern fixed_t Sky1ColumnOffset, Sky2ColumnOffset;
 
 extern boolean cinema_pause;
 extern int drawparticles;
