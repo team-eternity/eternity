@@ -24,7 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-
 #include "SDL.h"
 #include "SDL_net.h"
 #include "SDL_mixer.h"
@@ -35,9 +34,19 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
+#if defined(_WIN32) && !defined(_WIN32_WCE)
+
 // haleyjd: we do not need SDL_main under Win32.
-#if defined(_MSC_VER) && !defined(_WIN32_WCE)
 #undef main
+
+// haleyjd 07/23/09:
+// in release mode, rename this function to common_main and use the main 
+// defined in i_w32main.c, which contains an exception handler to replace
+// the useless SDL parachute.
+#ifndef _DEBUG
+#define main common_main
+#endif
+
 #endif
 
 // SoM 3/13/2001: Use SDL's signal handler
@@ -50,17 +59,16 @@ void I_Quit(void);
 
 #define BASE_INIT_FLAGS (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
 
-#ifdef _DEBUG
+#if defined(_WIN32) || defined(_DEBUG)
 #define INIT_FLAGS (BASE_INIT_FLAGS | SDL_INIT_NOPARACHUTE)
-
-static void VerifySDLVersions(void);
 #else
 #define INIT_FLAGS BASE_INIT_FLAGS
 #endif
 
-//
-// main
-//
+static void VerifySDLVersions(void);
+
+int SDLIsInit;
+
 int main(int argc, char **argv)
 {
    myargc = argc;
@@ -92,7 +100,7 @@ int main(int argc, char **argv)
    // commonly used. Thus, GDI is default.
    if(M_CheckParm("-directx"))
       putenv("SDL_VIDEODRIVER=directx");
-   else if(M_CheckParm("-gdi") > 0 || getenv("SDL_VIDEODRIVER") == NULL)
+   else if(M_CheckParm("-gdi") || getenv("SDL_VIDEODRIVER") == NULL)
       putenv("SDL_VIDEODRIVER=windib");
 #endif
 
@@ -102,6 +110,8 @@ int main(int argc, char **argv)
       puts("Failed to initialize SDL library.\n");
       return -1;
    }
+
+   SDLIsInit = 1;
 
 #ifdef _DEBUG
    // in debug builds, verify SDL versions are the same
@@ -115,7 +125,6 @@ int main(int argc, char **argv)
    
    return 0;
 }
-
 
 #ifdef _DEBUG
 
