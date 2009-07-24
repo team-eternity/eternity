@@ -26,6 +26,7 @@
 
 // haleyjd 11/22/08: I don't understand why this is needed here...
 #define USE_RWOPS
+#define I_SDL_TYPES_ACTIVE
 
 #include "SDL.h"
 #include "SDL_audio.h"

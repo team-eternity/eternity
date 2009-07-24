@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#define I_SDL_TYPES_ACTIVE
+
 #ifdef _MSC_VER
 #include <conio.h>
 #endif

@@ -26,9 +26,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "SDL.h"
+#define I_SDL_TYPES_ACTIVE
 
-#include <stdio.h>
+#include "SDL.h"
 
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
 #include "../doomstat.h"

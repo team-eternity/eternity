@@ -1440,6 +1440,10 @@ SOURCE=.\Source\psnprntf.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\pstdint.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\tables.h
 # End Source File
 # Begin Source File

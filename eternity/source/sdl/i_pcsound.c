@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#define I_SDL_TYPES_ACTIVE
+
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_thread.h"

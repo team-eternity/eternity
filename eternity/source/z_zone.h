@@ -59,6 +59,11 @@
 
 #include "psnprntf.h"
 
+// haleyjd 07/24/09: portable stdint.h - but not where SDL is being included
+#ifndef I_SDL_TYPES_ACTIVE
+#include "pstdint.h"
+#endif
+
 // ZONE MEMORY
 
 // PU - purge tags.

@@ -33,6 +33,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#define I_SDL_TYPES_ACTIVE
+
 #include "SDL_net.h"
 
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
