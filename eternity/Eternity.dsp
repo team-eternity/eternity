@@ -1192,6 +1192,10 @@ SOURCE=.\source\Win32\i_cpu.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\Win32\i_exception.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\i_fnames.c
 # End Source File
 # Begin Source File
@@ -1241,6 +1245,10 @@ SOURCE=.\Source\sdl\i_system.c
 # Begin Source File
 
 SOURCE=.\Source\sdl\i_video.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\Win32\i_w32main.c
 # End Source File
 # Begin Source File
 
