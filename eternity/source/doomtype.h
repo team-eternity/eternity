@@ -28,6 +28,10 @@
 #ifndef DOOMTYPE_H__
 #define DOOMTYPE_H__
 
+#ifndef I_SDL_TYPES_ACTIVE
+#include "pstdint.h"
+#endif
+
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
 // Fixed to use builtin bool type with C++.
@@ -36,7 +40,7 @@ typedef bool boolean;
 #else
 typedef enum {false, true} boolean;
 #endif
-typedef unsigned char byte;
+typedef uint8_t byte;
 #endif
 
 // SoM: resolve platform-specific range symbol issues

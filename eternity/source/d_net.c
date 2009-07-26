@@ -25,6 +25,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "doomstat.h"
