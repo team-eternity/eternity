@@ -64,6 +64,18 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 extern int screenshot_pcx;                                   // killough 10/98
 extern int screenshot_gamma;                                 // haleyjd  03/06
 
+// haleyjd 07/27/09: default file portability fix - separate types for config
+// variables
+
+typedef enum
+{
+   dt_integer,
+   dt_string,
+   dt_float,
+   dt_boolean,
+   dt_numtypes
+} defaulttype_e;
+
 // phares 4/21/98:
 // Moved from m_misc.c so m_menu.c could see it.
 //
@@ -71,23 +83,48 @@ extern int screenshot_gamma;                                 // haleyjd  03/06
 
 typedef struct default_s
 {
-   const char *const name;                   // name
-   int  *const location;                     // default variable
-   int  *const current;                      // possible nondefault variable
-   int  defaultvalue;                        // built-in default value
-   struct {int min, max;} const limit;       // numerical limits
-   enum {dt_number, dt_string} const isstr;  // number or string
-   ss_types const setupscreen;               // setup screen this appears on
-   enum {wad_no, wad_yes} const wad_allowed; // whether it's allowed in wads
-   const char *const help;                   // description of parameter
+   const char *const   name;                 // name
+   const defaulttype_e type;                 // type
+
+   void *const location;                     // default variable
+   void *const current;                      // possible nondefault variable
+   
+   int         defaultvalue_i;               // built-in default value
+   const char *defaultvalue_s;
+   float       defaultvalue_f;
+   boolean     defaultvalue_b;
+
+   struct { int min, max; } const limit;       // numerical limits
+      
+   enum { wad_no, wad_yes } const wad_allowed; // whether it's allowed in wads
+   const char *const help;                     // description of parameter
    
    // internal fields (initialized implicitly to 0) follow
    
    struct default_s *first, *next;           // hash table pointers
    int modified;                             // Whether it's been modified
-   int orig_default;                         // Original default, if modified
-   struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
+   
+   int         orig_default_i;               // Original default, if modified
+   const char *orig_default_s;
+   float       orig_default_f;
+   boolean     orig_default_b;
+   
+   //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 } default_t;
+
+// haleyjd 07/27/09: Macros for defining configuration values.
+
+#define DEFAULT_INT(name, loc, cur, def, min, max, wad, help) \
+   { name, dt_integer, loc, cur, def, NULL, 0.0f, false, { min, max }, wad, help }
+
+#define DEFAULT_STR(name, loc, cur, def, wad, help) \
+   { name, dt_string, loc, cur, 0, def, 0.0f, false, { 0 }, wad, help }
+
+#define DEFAULT_FLOAT(name, loc, cur, def, min, max, wad, help) \
+   { name, dt_float, loc, cur, 0, NULL, def, false, { min, max }, wad, help }
+
+#define DEFAULT_BOOL(name, loc, cur, def, wad, help) \
+   { name, dt_boolean, loc, cur, 0, NULL, 0.0f, def, { 0, 1 }, wad, help }
 
 // haleyjd 03/14/09: defaultfile_t structure
 typedef struct defaultfile_s

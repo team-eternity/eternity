@@ -46,75 +46,35 @@
 
 static default_t sysdefaults[] =
 {
-   {
-      ITEM_USE_DOOM_CONFIG,
-      &use_doom_config, NULL,
-      0, {0,1}, dt_number, ss_none, wad_no,
-      "1 to use base/doom/eternity.cfg for all DOOM gamemodes"
-   },
+   DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, NULL, 0, 0, 1, wad_no,
+               "1 to use base/doom/eternity.cfg for all DOOM gamemodes"),
 
-   {
-      ITEM_IWAD_DOOM_SW,
-      (int *)&gi_path_doomsw, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "DOOM Shareware IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, NULL, "", wad_no,
+               "DOOM Shareware IWAD Path"),
 
-   {
-      ITEM_IWAD_DOOM,
-      (int *)&gi_path_doomreg, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "DOOM Registered IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_DOOM, &gi_path_doomreg, NULL, "", wad_no,
+               "DOOM Registered IWAD Path"),
 
-   {
-      ITEM_IWAD_ULTIMATE_DOOM,
-      (int *)&gi_path_doomu, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Ultimate DOOM IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_ULTIMATE_DOOM, &gi_path_doomu, NULL, "", wad_no,
+               "Ultimate DOOM IWAD Path"),
 
-   {
-      ITEM_IWAD_DOOM2,
-      (int *)&gi_path_doom2, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "DOOM 2 IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_DOOM2, &gi_path_doom2, NULL, "", wad_no,
+               "DOOM 2 IWAD Path"),
 
-   {
-      ITEM_IWAD_TNT,
-      (int *)&gi_path_tnt, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Final DOOM: TNT - Evilution IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_TNT, &gi_path_tnt, NULL, "", wad_no,
+               "Final DOOM: TNT - Evilution IWAD Path"),
 
-   {
-      ITEM_IWAD_PLUTONIA,
-      (int *)&gi_path_plut, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Final DOOM: The Plutonia Experiment IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_PLUTONIA, &gi_path_plut, NULL, "", wad_no,
+               "Final DOOM: The Plutonia Experiment IWAD Path"),
 
-   {
-      ITEM_IWAD_HERETIC_SW,
-      (int *)&gi_path_hticsw, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Heretic Shareware IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_HERETIC_SW, &gi_path_hticsw, NULL, "", wad_no,
+               "Heretic Shareware IWAD Path"),
 
-   {
-      ITEM_IWAD_HERETIC,
-      (int *)&gi_path_hticreg, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Heretic Registered IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_HERETIC, &gi_path_hticreg, NULL, "", wad_no,
+               "Heretic Registered IWAD Path"),
 
-   {
-      ITEM_IWAD_HERETIC_SOSR,
-      (int *)&gi_path_sosr, NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Heretic: Shadow of the Serpent Riders IWAD Path"
-   },
+   DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", wad_no,
+               "Heretic: Shadow of the Serpent Riders IWAD Path"),
 
    { NULL }
 };

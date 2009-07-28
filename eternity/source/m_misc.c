@@ -136,677 +136,351 @@ extern int wipewait;
 
 default_t defaults[] = 
 {
-   { //jff 3/3/98
-      "config_help",
-      &config_help, NULL,
-      1, {0,1}, dt_number, ss_none, wad_no,
-      "1 to show help strings about each variable in config file"
-   },
+   //jff 3/3/98
+   DEFAULT_INT("config_help", &config_help, NULL, 1, 0, 1, wad_no,
+               "1 to show help strings about each variable in config file"),
 
-   {
-      "colour",
-      &default_colour, NULL,
-      0, {0,TRANSLATIONCOLOURS}, dt_number, ss_none, wad_no,
-      "the default player colour (green, indigo, brown, red...)"
-   },
+   DEFAULT_INT("colour", &default_colour, NULL, 0, 0, TRANSLATIONCOLOURS, wad_no,
+               "the default player colour (green, indigo, brown, red...)"),
 
-   {
-      "name",
-      (int*)&default_name, NULL,
-      (int) "player", {0}, dt_string, ss_none, wad_no,
-      "the default player name"
-   },
+   DEFAULT_STR("name", &default_name, NULL, "player", wad_no,
+               "the default player name"),
 
-   { // jff 3/24/98 allow default skill setting
-      "default_skill",
-      &defaultskill, NULL,
-      3, {1,5}, dt_number, ss_none, wad_no,
-      "selects default skill 1=TYTD 2=NTR 3=HMP 4=UV 5=NM"
-   },
+   // jff 3/24/98 allow default skill setting
+   DEFAULT_INT("default_skill", &defaultskill, NULL, 3, 1, 5, wad_no,
+               "selects default skill 1=TYTD 2=NTR 3=HMP 4=UV 5=NM"),
 
    // haleyjd: fixed for cross-platform support -- see m_misc.h
-   { // jff 1/18/98 allow Allegro drivers to be set,  -1 = autodetect
-      "sound_card",
-      &snd_card, NULL,
-      SND_DEFAULT, {SND_MIN,SND_MAX}, dt_number, ss_gen, wad_no,
-      SND_DESCR
-   },
+   // jff 1/18/98 allow Allegro drivers to be set,  -1 = autodetect
+   DEFAULT_INT("sound_card", &snd_card, NULL, SND_DEFAULT, SND_MIN, SND_MAX, wad_no,
+               SND_DESCR),
 
-   {
-      "music_card",
-      &mus_card, NULL,
-      MUS_DEFAULT, {MUS_MIN,MUS_MAX}, dt_number, ss_gen, wad_no,
-      MUS_DESCR
-   },
+   DEFAULT_INT("music_card", &mus_card, NULL, MUS_DEFAULT, MUS_MIN, MUS_MAX, wad_no,
+               MUS_DESCR),
 
 #ifdef _SDL_VER
    // haleyjd 04/15/02: SDL joystick device number
-   {
-      "joystick_num",
-      &i_SDLJoystickNum, NULL,
-      -1, {-1,UL}, dt_number, ss_none, wad_no,
-      "SDL joystick device number, -1 to disable"
-   },
+   DEFAULT_INT("joystick_num", &i_SDLJoystickNum, NULL, -1, -1, UL, wad_no,
+               "SDL joystick device number, -1 to disable"),
     
    // joystick sensitivities
-   {
-      "joystickSens_x",
-      &joystickSens_x, NULL,
-      0, {-32768, 32767}, dt_number, ss_none, wad_no,
-      "SDL joystick horizontal sensitivity"
-   },
+   DEFAULT_INT("joystickSens_x", &joystickSens_x, NULL, 0, -32768, 32767, wad_no,
+               "SDL joystick horizontal sensitivity"),
 
-   {
-      "joystickSens_y",
-      &joystickSens_y, NULL,
-      0, {-32768, 32767}, dt_number, ss_none, wad_no,
-      "SDL joystick vertical sensitivity"
-   },
+   DEFAULT_INT("joystickSens_y", &joystickSens_y, NULL, 0, -32768, 32767, wad_no,
+               "SDL joystick vertical sensitivity"),
 #endif
 
-   {
-      "s_precache",
-      &s_precache, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "precache sounds at startup"
-   },
+   DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, wad_no,
+               "precache sounds at startup"),
 
 #ifdef DJGPP
-   { // jff 3/4/98 detect # voices
-      "detect_voices",
-      &detect_voices, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "1 enables voice detection prior to calling install sound"
-   },
+   // jff 3/4/98 detect # voices
+   DEFAULT_INT("detect_voices", &detect_voices, NULL, 1, 0, 1, wad_no,
+               "1 enables voice detection prior to calling install sound"),
 #endif
 
 #ifdef _SDL_VER
-   {
-      "i_videomode",
-      (int *)&i_default_videomode, (int *)&i_videomode,
-      (int)"640x480w", {0}, dt_string, ss_none, wad_no,
-      "description of video mode parameters (WWWWxHHHH[flags])"
-   },
+   DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", wad_no,
+               "description of video mode parameters (WWWWxHHHH[flags])"),
 #endif
 
-   {
-      "textmode_startup",
-      &textmode_startup, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "start up ETERNITY in text mode"
-   },
-
-   {
-      "use_vsync",
-      &use_vsync, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable wait for vsync to avoid display tearing"
-   },
-
-   {
-      "realtic_clock_rate",
-      &realtic_clock_rate, NULL,
-      100, {10,1000}, dt_number, ss_gen, wad_no,
-      "Percentage of normal speed (35 fps) realtic clock runs at"
-   },
-
-   { // killough 10/98
-      "disk_icon",
-      &disk_icon, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable flashing icon during disk IO"
-   },
   
-   { // killough 2/21/98
-      "pitched_sounds",
-      &pitched_sounds, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_yes,
-      "1 to enable variable pitch in sound effects (from id's original code)"
-   },
+   DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, wad_no,
+               "start up ETERNITY in text mode"),
 
-   { // phares
-      "translucency",
-      &general_translucency, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_yes,
-      "1 to enable translucency for some things"
-   },
+   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, wad_no,
+               "1 to enable wait for vsync to avoid display tearing"),
 
-   { // killough 2/21/98
-      "tran_filter_pct",
-      &tran_filter_pct, NULL,
-      66, {0,100}, dt_number, ss_gen, wad_yes,
-      "set percentage of foreground/background translucency mix"
-   },
+   DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, wad_no,
+               "Percentage of normal speed (35 fps) realtic clock runs at"),
 
-   { // killough 2/8/98
-      "max_player_corpse",
-      &default_bodyquesize, NULL,
-      32, {UL,UL},dt_number, ss_gen, wad_no,
-      "number of dead bodies in view supported (negative value = no limit)"
-   },
+   // killough 10/98
+   DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, wad_no, 
+               "1 to enable flashing icon during disk IO"),
+  
+   // killough 2/21/98
+   DEFAULT_INT("pitched_sounds", &pitched_sounds, NULL, 0, 0, 1, wad_yes,
+               "1 to enable variable pitch in sound effects (from id's original code)"),
 
-   {  // haleyjd: changed default to 0
-      "show_vpo",
-      &show_vpo, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable VPO warning indicator"
-   },
+   // phares
+   DEFAULT_INT("translucency", &general_translucency, NULL, 1, 0, 1, wad_yes,
+               "1 to enable translucency for some things"),
 
-   {
-      "vpo_threshold",
-      &vpo_threshold, NULL,
-      85, {1, 128}, dt_number, ss_gen, wad_no,
-      "VPO warning indicator threshold"
-   },
+   // killough 2/21/98
+   DEFAULT_INT("tran_filter_pct", &tran_filter_pct, NULL, 66, 0, 100, wad_yes,
+               "set percentage of foreground/background translucency mix"),
 
-   { // killough 10/98
-      "flashing_hom",
-      &flashing_hom, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable flashing HOM indicator"
-   },
+   // killough 2/8/98
+   DEFAULT_INT("max_player_corpse", &default_bodyquesize, NULL, 32, UL, UL, wad_no,
+               "number of dead bodies in view supported (negative value = no limit)"),
 
-   { // killough 3/31/98
-      "demo_insurance",
-      &default_demo_insurance, NULL,
-      2, {0,2},dt_number, ss_none, wad_no,
-      "1=take special steps ensuring demo sync, 2=only during recordings"
-   },
+   // haleyjd: changed default to 0
+   DEFAULT_INT("show_vpo", &show_vpo, NULL, 0, 0, 1, wad_no,
+               "1 to enable VPO warning indicator"),
 
-   { // phares
-      "weapon_recoil",
-      &default_weapon_recoil, &weapon_recoil,
-      0, {0,1}, dt_number, ss_weap, wad_yes,
-      "1 to enable recoil from weapon fire"
-   },
+   DEFAULT_INT("vpo_threshold", &vpo_threshold, NULL, 85, 1, 128, wad_no,
+               "VPO warning indicator threshold"),
 
-   { // killough 7/19/98         // sf:changed to bfgtype
-      "bfgtype",
-      (int*)&default_bfgtype, (int*)&bfgtype,
-      0, {0,4}, dt_number, ss_weap, wad_yes,
-      "0 - normal, 1 - classic, 2 - 11k, 3 - bouncing!, 4 - burst"
-   },
+   // killough 10/98
+   DEFAULT_INT("flashing_hom", &flashing_hom, NULL, 1, 0, 1, wad_no,
+               "1 to enable flashing HOM indicator"),
 
-   {             //sf
-      "crosshair",
-      &crosshairnum, NULL,
-      0, {0,CROSSHAIRS}, dt_number, ss_gen, wad_yes,
-      "0 - none, 1 - cross, 2 - angle"
-   },
-
-   {
-      "crosshair_hilite", // haleyjd 06/07/05
-      (int *)&crosshair_hilite, NULL,
-      0, {0, 1}, dt_number, ss_gen, wad_yes,
-      "0 - no highlighting, 1 - aim highlighting enabled"
-   },
-
-   {             // sf
-      "show_scores",
-      &show_scores, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_yes,
-      "show scores in deathmatch"
-   },
-
-   {
-      "lefthanded",
-      &lefthanded, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_yes,
-      "0 - right handed, 1 - left handed"
-   },
-
-   { // killough 10/98
-      "doom_weapon_toggles",
-      &doom_weapon_toggles, NULL,
-      1, {0,1}, dt_number, ss_weap, wad_no,
-      "1 to toggle between SG/SSG and Fist/Chainsaw"
-   },
-
-   { // phares 2/25/98
-      "player_bobbing",
-      &default_player_bobbing, &player_bobbing,
-      1, {0,1}, dt_number, ss_weap, wad_yes,
-      "1 to enable player bobbing (view moving up/down slightly)"
-   },
-
-   { // killough 3/1/98
-      "monsters_remember",
-      &default_monsters_remember, &monsters_remember,
-      1, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable monsters remembering enemies after killing others"
-   },
-
-   { // killough 7/19/98
-      "monster_infighting",
-      &default_monster_infighting, &monster_infighting,
-      1, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable monsters fighting against each other when provoked"
-   },
-
-   { // killough 9/8/98
-      "monster_backing",
-      &default_monster_backing, &monster_backing,
-      0, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable monsters backing away from targets"
-   },
-
-   { //killough 9/9/98:
-      "monster_avoid_hazards",
-      &default_monster_avoid_hazards, &monster_avoid_hazards,
-      1, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable monsters to intelligently avoid hazards"
-   },
+   // killough 3/31/98
+   DEFAULT_INT("demo_insurance", &default_demo_insurance, NULL, 2, 0, 2, wad_no,
+               "1=take special steps ensuring demo sync, 2=only during recordings"),
    
-   {
-      "monkeys",
-      &default_monkeys, &monkeys,
-      0, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable monsters to move up/down steep stairs"
-   },
+   // phares
+   DEFAULT_INT("weapon_recoil", &default_weapon_recoil, &weapon_recoil, 0, 0, 1, wad_yes,
+               "1 to enable recoil from weapon fire"),
+
+   // killough 7/19/98
+   // sf:changed to bfgtype
+   // haleyjd: FIXME - variable is of enum type, non-portable
+   DEFAULT_INT("bfgtype", &default_bfgtype, &bfgtype, 0, 0, 4, wad_yes,
+               "0 - normal, 1 - classic, 2 - 11k, 3 - bouncing!, 4 - burst"),
+
+   //sf
+   DEFAULT_INT("crosshair", &crosshairnum, NULL, 0, 0, CROSSHAIRS, wad_yes,
+               "0 - none, 1 - cross, 2 - angle"),
+
+   // haleyjd 06/07/05
+   DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, NULL, false, wad_yes,
+                "0 - no highlighting, 1 - aim highlighting enabled"),
+
+   // sf
+   DEFAULT_INT("show_scores", &show_scores, NULL, 0, 0, 1, wad_yes,
+               "show scores in deathmatch"),
+
+   DEFAULT_INT("lefthanded", &lefthanded, NULL, 0, 0, 1, wad_yes,
+               "0 - right handed, 1 - left handed"),
+
+   // killough 10/98
+   DEFAULT_INT("doom_weapon_toggles", &doom_weapon_toggles, NULL, 1, 0, 1, wad_no,
+               "1 to toggle between SG/SSG and Fist/Chainsaw"),
+
+   // phares 2/25/98
+   DEFAULT_INT("player_bobbing", &default_player_bobbing, &player_bobbing, 1, 0, 1, wad_yes,
+               "1 to enable player bobbing (view moving up/down slightly)"),
+
+   // killough 3/1/98
+   DEFAULT_INT("monsters_remember", &default_monsters_remember, &monsters_remember,
+               1, 0, 1, wad_yes,
+               "1 to enable monsters remembering enemies after killing others"),
+
+   // killough 7/19/98
+   DEFAULT_INT("monster_infighting", &default_monster_infighting, &monster_infighting,
+               1, 0, 1, wad_yes,
+               "1 to enable monsters fighting against each other when provoked"),
+
+   // killough 9/8/98
+   DEFAULT_INT("monster_backing", &default_monster_backing, &monster_backing, 
+               0, 0, 1, wad_yes, "1 to enable monsters backing away from targets"),
+
+   //killough 9/9/98:
+   DEFAULT_INT("monster_avoid_hazards", &default_monster_avoid_hazards, &monster_avoid_hazards,
+               1, 0, 1, wad_yes, "1 to enable monsters to intelligently avoid hazards"),
    
-   { //killough 9/9/98:
-      "monster_friction",
-      &default_monster_friction, &monster_friction,
-      1, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable monsters to be affected by friction"
-   },
+   DEFAULT_INT("monkeys", &default_monkeys, &monkeys, 0, 0, 1, wad_yes,
+               "1 to enable monsters to move up/down steep stairs"),
    
-   { //killough 9/9/98:
-      "help_friends",
-      &default_help_friends, &help_friends,
-      1, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable monsters to help dying friends"
-   },
+   //killough 9/9/98:
+   DEFAULT_INT("monster_friction", &default_monster_friction, &monster_friction,
+               1, 0, 1, wad_yes, "1 to enable monsters to be affected by friction"),
    
-   { // killough 7/19/98
-      "player_helpers",
-      &default_dogs, &dogs,
-      0, {0,3}, dt_number, ss_enem, wad_yes,
-      "number of single-player helpers"
-   },
+   //killough 9/9/98:
+   DEFAULT_INT("help_friends", &default_help_friends, &help_friends, 1, 0, 1, wad_yes,
+               "1 to enable monsters to help dying friends"),
+   
+   // killough 7/19/98
+   DEFAULT_INT("player_helpers", &default_dogs, &dogs, 0, 0, 3, wad_yes,
+               "number of single-player helpers"),
    
    // CONFIG_FIXME: 999?
-   { // killough 8/8/98
-      "friend_distance",
-      &default_distfriend, &distfriend,
-      128, {0, 999}, dt_number, ss_enem, wad_yes,
-      "distance friends stay away"
-   },
+   // killough 8/8/98
+   DEFAULT_INT("friend_distance", &default_distfriend, &distfriend, 128, 0, 999, wad_yes,
+               "distance friends stay away"),
    
-   { // killough 10/98
-      "dog_jumping",
-      &default_dog_jumping, &dog_jumping,
-      1, {0,1}, dt_number, ss_enem, wad_yes,
-      "1 to enable dogs to jump"
-   },
+   // killough 10/98
+   DEFAULT_INT("dog_jumping", &default_dog_jumping, &dog_jumping, 1, 0, 1, wad_yes,
+               "1 to enable dogs to jump"),
    
-   { // no color changes on status bar
-      "sts_always_red",
-      &sts_always_red, NULL,
-      1, {0,1}, dt_number, ss_stat, wad_yes,
-      "1 to disable use of color on status bar"
-   },
+   // no color changes on status bar
+   DEFAULT_INT("sts_always_red", &sts_always_red, NULL, 1, 0, 1, wad_yes,
+               "1 to disable use of color on status bar"),
    
-   {
-      "sts_pct_always_gray",
-      &sts_pct_always_gray, NULL,
-      0, {0,1}, dt_number, ss_stat, wad_yes,
-      "1 to make percent signs on status bar always gray"
-   },
+   DEFAULT_INT("sts_pct_always_gray", &sts_pct_always_gray, NULL, 0, 0, 1, wad_yes,
+               "1 to make percent signs on status bar always gray"),
    
-   { // killough 2/28/98
-      "sts_traditional_keys",
-      &sts_traditional_keys, NULL,
-      1, {0,1}, dt_number, ss_stat, wad_yes,
-      "1 to disable doubled card and skull key display on status bar"
-   },
+   // killough 2/28/98
+   DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, NULL, 1, 0, 1, wad_yes,
+               "1 to disable doubled card and skull key display on status bar"),
    
    // haleyjd 05/16/04: restored (see mn_menus.c); changed def. to 0
-   { // killough 4/17/98
-      "traditional_menu",
-      &traditional_menu, NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "1 to emulate DOOM's main menu"
-   },
+   // killough 4/17/98
+   DEFAULT_INT("traditional_menu", &traditional_menu, NULL, 0, 0, 1, wad_yes,
+               "1 to emulate DOOM's main menu"),
 
-   { // killough 3/6/98
-      "leds_always_off",
-      &leds_always_off, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to keep keyboard LEDs turned off"
-   },
-
-   { // SoM
-      "powersaver",
-      &cpusaver, NULL,
-      0, {0,15}, dt_number, ss_gen, wad_no,
-      "a value > 0 will call the system delay function and reduce the CPU usage"
-   },
-
-   // CONFIG_FIXME: there are issues with mouse sensitivity range.
-
-   { //jff 4/3/98 allow unlimited sensitivity
-      "mouse_sensitivity_horiz",
-      &mouseSensitivity_horiz, NULL,
-      5, {0,UL}, dt_number, ss_none, wad_no,
-      "adjust horizontal (x) mouse sensitivity"
-   },
-
-   { //jff 4/3/98 allow unlimited sensitivity
-      "mouse_sensitivity_vert",
-      &mouseSensitivity_vert, NULL,
-      5, {0,UL}, dt_number, ss_none, wad_no,
-      "adjust vertical (y) mouse sensitivity"
-   },
+   // killough 3/6/98
+   DEFAULT_INT("leds_always_off", &leds_always_off, NULL, 0, 0, 1, wad_no,
+               "1 to keep keyboard LEDs turned off"),
 
    // SoM
-   {
-      "mouse_accel",
-      &mouseAccel_type, NULL,
-      0, {0, 2}, dt_number, ss_none, wad_no,
-      "0 for no mouse accel, 1 for linear, 2 for choco-doom"
-   },
+   DEFAULT_INT("powersaver", &cpusaver, NULL, 0, 0, 15, wad_no,
+               "a value > 0 will call the system delay function and reduce the CPU usage"),
+
+   //jff 4/3/98 allow unlimited sensitivity
+   DEFAULT_INT("mouse_sensitivity_horiz", &mouseSensitivity_horiz, NULL, 5, 0, UL, wad_no,
+               "adjust horizontal (x) mouse sensitivity"),
+
+   //jff 4/3/98 allow unlimited sensitivity
+   DEFAULT_INT("mouse_sensitivity_vert", &mouseSensitivity_vert, NULL, 5, 0, UL, wad_no,
+               "adjust vertical (y) mouse sensitivity"),
+
+   // SoM
+   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL, 0, 0, 2, wad_no,
+               "0 for no mouse accel, 1 for linear, 2 for choco-doom"),
 
    // haleyjd 10/24/08
-   {
-      "mouse_novert",
-      &novert, NULL,
-      0, {0, 1}, dt_number, ss_none, wad_no,
-      "0 for normal mouse, 1 for no vertical movement"
-   },
+   DEFAULT_INT("mouse_novert", &novert, NULL, 0, 0, 1, wad_no,
+               "0 for normal mouse, 1 for no vertical movement"),
 
-   {
-      "sfx_volume",
-      &snd_SfxVolume, NULL,
-      8, {0,15}, dt_number, ss_none, wad_no,
-      "adjust sound effects volume"
-   },
+   DEFAULT_INT("sfx_volume", &snd_SfxVolume, NULL, 8, 0, 15, wad_no,
+               "adjust sound effects volume"),
 
-   {
-      "music_volume",
-      &snd_MusicVolume, NULL,
-      8, {0,15}, dt_number, ss_none, wad_no,
-      "adjust music volume"
-   },
+   DEFAULT_INT("music_volume", &snd_MusicVolume, NULL, 8, 0, 15, wad_no,
+               "adjust music volume"),
 
-   { // haleyjd 12/08/01
-      "force_flip_pan",
-      &forceFlipPan, NULL,
-      0, {0, 1}, dt_number, ss_none, wad_no,
-      "forces reversal of audio channels: 0 = normal, 1 = reverse"
-   },
+   // haleyjd 12/08/01
+   DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, wad_no,
+               "forces reversal of audio channels: 0 = normal, 1 = reverse"),
 
-   {
-      "show_messages",
-      &showMessages, NULL,
-      1, {0,1}, dt_number, ss_none, wad_no,
-      "1 to enable message display"
-   },
+   DEFAULT_INT("show_messages", &showMessages, NULL, 1, 0, 1, wad_no,
+               "1 to enable message display"),
 
-   {
-      "mess_colour",
-      &mess_colour, NULL,
-      CR_RED, {0,CR_LIMIT-1}, dt_number, ss_none, wad_no,
-      "messages colour"
-   },
+   DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_LIMIT-1, wad_no,
+               "messages colour"),
 
-   { // killough 3/6/98: preserve autorun across games
-      "autorun",
-      &autorun, NULL,
-      0, {0,1}, dt_number, ss_none, wad_no,
-      "1 to enable autorun"
-   },
+   // killough 3/6/98: preserve autorun across games
+   DEFAULT_INT("autorun", &autorun, NULL, 0, 0, 1, wad_no, "1 to enable autorun"),
 
-   { // killough 2/21/98: default to 10
-      // sf: removed screenblocks, screensize only now
-      // changed values down 3
-      "screensize",
-      &screenSize, NULL,
-      7, {0,8}, dt_number, ss_none, wad_no,
-      "initial play screen size"
-   },
+   // killough 2/21/98: default to 10
+   // sf: removed screenblocks, screensize only now - changed values down 3
+   DEFAULT_INT("screensize", &screenSize, NULL, 7, 0, 8, wad_no, 
+               "initial play screen size"),
 
-   { //jff 3/6/98 fix erroneous upper limit in range
-      "usegamma",
-      &usegamma, NULL,
-      0, {0,4}, dt_number, ss_none, wad_no,
-      "screen brightness (gamma correction)"
-   },
+   //jff 3/6/98 fix erroneous upper limit in range
+   DEFAULT_INT("usegamma", &usegamma, NULL, 0, 0, 4, wad_no,
+               "screen brightness (gamma correction)"),
 
-   { // killough 10/98: preloaded files
-      "wadfile_1",
-      (int *) &wad_files[0], NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "WAD file preloaded at program startup"
-   },
+   // killough 10/98: preloaded files
+   DEFAULT_STR("wadfile_1", &wad_files[0], NULL, "", wad_no,
+               "WAD file preloaded at program startup"),
 
-   {
-      "wadfile_2",
-      (int *) &wad_files[1], NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "WAD file preloaded at program startup"
-   },
+   DEFAULT_STR("wadfile_2", &wad_files[1], NULL, "", wad_no,
+               "WAD file preloaded at program startup"),
 
-   {
-      "dehfile_1",
-      (int *) &deh_files[0], NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "DEH/BEX file preloaded at program startup"
-   },
+   DEFAULT_STR("dehfile_1", &deh_files[0], NULL, "", wad_no,
+               "DEH/BEX file preloaded at program startup"),
 
-   {
-      "dehfile_2",
-      (int *) &deh_files[1], NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "DEH/BEX file preloaded at program startup"
-   },
+   DEFAULT_STR("dehfile_2", &deh_files[1], NULL, "", wad_no,
+               "DEH/BEX file preloaded at program startup"),
 
    // haleyjd: auto-loaded console scripts
-   {
-      "cscript_1",
-      (int *) &csc_files[0], NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Console script executed at program startup"
-   },
+   DEFAULT_STR("cscript_1", &csc_files[0], NULL, "", wad_no,
+               "Console script executed at program startup"),
   
-   {
-      "cscript_2",
-      (int *) &csc_files[1], NULL,
-      (int) "", {0}, dt_string, ss_none, wad_no,
-      "Console script executed at program startup"
-   },
+   DEFAULT_STR("cscript_2", &csc_files[1], NULL, "", wad_no,
+               "Console script executed at program startup"),
   
-   {
-      "use_startmap",
-      &use_startmap, NULL,
-      -1, {-1, 1}, dt_number, ss_comp, wad_yes,
-      "use start map instead of menu"
-   },
+   DEFAULT_INT("use_startmap", &use_startmap, NULL, -1, -1, 1, wad_yes,
+               "use start map instead of menu"),
 
    // killough 10/98: compatibility vector:
 
-   {
-      "comp_zombie",
-      &default_comp[comp_zombie], &comp[comp_zombie],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Zombie players can exit levels"
-   },
+   DEFAULT_INT("comp_zombie", &default_comp[comp_zombie], &comp[comp_zombie], 
+               0, 0, 1, wad_yes, "Zombie players can exit levels"),
 
-   {
-      "comp_infcheat",
-      &default_comp[comp_infcheat], &comp[comp_infcheat],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Powerup cheats are not infinite duration"
-   },
+   DEFAULT_INT("comp_infcheat", &default_comp[comp_infcheat], &comp[comp_infcheat],
+               0, 0, 1, wad_yes, "Powerup cheats are not infinite duration"),
 
-   {
-      "comp_stairs",
-      &default_comp[comp_stairs], &comp[comp_stairs],
-      1, {0,1}, dt_number, ss_comp, wad_yes,
-      "Build stairs exactly the same way that Doom does"
-   },
+   DEFAULT_INT("comp_stairs", &default_comp[comp_stairs], &comp[comp_stairs],
+               1, 0, 1, wad_yes, "Build stairs exactly the same way that Doom does"),
 
-   {
-      "comp_telefrag",
-      &default_comp[comp_telefrag], &comp[comp_telefrag],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Monsters can telefrag on MAP30"
-   },
+   DEFAULT_INT("comp_telefrag", &default_comp[comp_telefrag], &comp[comp_telefrag],
+               0, 0, 1, wad_yes, "Monsters can telefrag on MAP30"),
 
-   {
-      "comp_dropoff",
-      &default_comp[comp_dropoff], &comp[comp_dropoff],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Some objects never move over tall ledges"
-   },
+   DEFAULT_INT("comp_dropoff", &default_comp[comp_dropoff], &comp[comp_dropoff],
+               0, 0, 1, wad_yes, "Some objects never move over tall ledges"),
 
-   {
-      "comp_falloff",
-      &default_comp[comp_falloff], &comp[comp_falloff],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Objects don't fall off ledges under their own weight"
-   },
+   DEFAULT_INT("comp_falloff", &default_comp[comp_falloff], &comp[comp_falloff],
+               0, 0, 1, wad_yes, "Objects don't fall off ledges under their own weight"),
 
-   {
-      "comp_staylift",
-      &default_comp[comp_staylift], &comp[comp_staylift],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Monsters randomly walk off of moving lifts"
-   },
+   DEFAULT_INT("comp_staylift", &default_comp[comp_staylift], &comp[comp_staylift],
+               0, 0, 1, wad_yes, "Monsters randomly walk off of moving lifts"),
 
-   {
-      "comp_doorstuck",
-      &default_comp[comp_doorstuck], &comp[comp_doorstuck],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Monsters get stuck on doortracks"
-   },
+   DEFAULT_INT("comp_doorstuck", &default_comp[comp_doorstuck], &comp[comp_doorstuck],
+               0, 0, 1, wad_yes, "Monsters get stuck on doortracks"),
 
-   {
-      "comp_pursuit",
-      &default_comp[comp_pursuit], &comp[comp_pursuit],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Monsters don't give up pursuit of targets"
-   },
+   DEFAULT_INT("comp_pursuit", &default_comp[comp_pursuit], &comp[comp_pursuit],
+               0, 0, 1, wad_yes, "Monsters don't give up pursuit of targets"),
 
-   {
-      "comp_vile",
-      &default_comp[comp_vile], &comp[comp_vile],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Arch-Vile resurrects invincible ghosts"
-   },
+   DEFAULT_INT("comp_vile", &default_comp[comp_vile], &comp[comp_vile],
+               0, 0, 1, wad_yes, "Arch-Vile resurrects invincible ghosts"),
 
-   {
-      "comp_pain",
-      &default_comp[comp_pain], &comp[comp_pain],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Pain Elemental limited to 20 lost souls"
-   },
+   DEFAULT_INT("comp_pain", &default_comp[comp_pain], &comp[comp_pain],
+               0, 0, 1, wad_yes, "Pain Elemental limited to 20 lost souls"),
 
-   {
-      "comp_skull",
-      &default_comp[comp_skull], &comp[comp_skull],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Lost souls get stuck behind walls"
-   },
+   DEFAULT_INT("comp_skull", &default_comp[comp_skull], &comp[comp_skull],
+               0, 0, 1, wad_yes, "Lost souls get stuck behind walls"),
 
-   {
-      "comp_blazing",
-      &default_comp[comp_blazing], &comp[comp_blazing],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Blazing doors make double closing sounds"
-   },
+   DEFAULT_INT("comp_blazing", &default_comp[comp_blazing], &comp[comp_blazing],
+               0, 0, 1, wad_yes, "Blazing doors make double closing sounds"),
 
-   {
-      "comp_doorlight",
-      &default_comp[comp_doorlight], &comp[comp_doorlight],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Tagged doors don't trigger special lighting"
-   },
+   DEFAULT_INT("comp_doorlight", &default_comp[comp_doorlight], &comp[comp_doorlight],
+               0, 0, 1, wad_yes, "Tagged doors don't trigger special lighting"),
 
-   {
-      "comp_god",
-      &default_comp[comp_god], &comp[comp_god],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "God mode isn't absolute"
-   },
+   DEFAULT_INT("comp_god", &default_comp[comp_god], &comp[comp_god],
+               0, 0, 1, wad_yes, "God mode isn't absolute"),
 
-   {
-      "comp_skymap",
-      &default_comp[comp_skymap], &comp[comp_skymap],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Sky is unaffected by invulnerability"
-   },
+   DEFAULT_INT("comp_skymap", &default_comp[comp_skymap], &comp[comp_skymap],
+               0, 0, 1, wad_yes, "Sky is unaffected by invulnerability"),
 
-   {
-      "comp_floors",
-      &default_comp[comp_floors], &comp[comp_floors],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Use exactly Doom's floor motion behavior"
-   },
+   DEFAULT_INT("comp_floors", &default_comp[comp_floors], &comp[comp_floors],
+               0, 0, 1, wad_yes, "Use exactly Doom's floor motion behavior"),
 
-   {
-      "comp_model",
-      &default_comp[comp_model], &comp[comp_model],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Use exactly Doom's linedef trigger model"
-   },
+   DEFAULT_INT("comp_model", &default_comp[comp_model], &comp[comp_model],
+               0, 0, 1, wad_yes, "Use exactly Doom's linedef trigger model"),
 
-   {
-      "comp_zerotags",
-      &default_comp[comp_zerotags], &comp[comp_zerotags],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Linedef effects work with sector tag = 0"
-   },
+   DEFAULT_INT("comp_zerotags", &default_comp[comp_zerotags], &comp[comp_zerotags],
+               0, 0, 1, wad_yes, "Linedef effects work with sector tag = 0"),
 
-   {
-      "comp_terrain", // haleyjd
-      &default_comp[comp_terrain], &comp[comp_terrain],
-      1, {0,1}, dt_number, ss_comp, wad_yes,
-      "Terrain effects not activated on floor contact"
-   },
-  
-   {
-      "comp_respawnfix", // haleyjd
-      &default_comp[comp_respawnfix], &comp[comp_respawnfix],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Creatures with no spawnpoint respawn at (0,0)"
-   },
-  
-   {
-      "comp_fallingdmg", // haleyjd
-      &default_comp[comp_fallingdmg], &comp[comp_fallingdmg],
-      1, {0,1}, dt_number, ss_comp, wad_yes,
-      "Players do not take falling damage"
-   },
-
-   {
-      "comp_soul", // haleyjd
-      &default_comp[comp_soul], &comp[comp_soul],
-      0, {0,1}, dt_number, ss_comp, wad_yes,
-      "Lost souls do not bounce on floors"
-   },
-
+   // haleyjd
+   DEFAULT_INT("comp_terrain", &default_comp[comp_terrain], &comp[comp_terrain], 
+               1, 0, 1, wad_yes, "Terrain effects not activated on floor contact"),
+   
+   // haleyjd
+   DEFAULT_INT("comp_respawnfix", &default_comp[comp_respawnfix], &comp[comp_respawnfix],
+               0, 0, 1, wad_yes, "Creatures with no spawnpoint respawn at (0,0)"),
+   
+   // haleyjd
+   DEFAULT_INT("comp_fallingdmg", &default_comp[comp_fallingdmg], &comp[comp_fallingdmg],
+               1, 0, 1, wad_yes, "Players do not take falling damage"),
+   
+   // haleyjd
+   DEFAULT_INT("comp_soul", &default_comp[comp_soul], &comp[comp_soul],
+               0, 0, 1, wad_yes, "Lost souls do not bounce on floors"),
+   
    // haleyjd 02/15/02: z checks (includes,supercedes comp_scratch)
-   {
-      "comp_overunder",
-      &default_comp[comp_overunder], &comp[comp_overunder],
-      1, {0,1}, dt_number, ss_comp, wad_yes,
-      "Things not fully clipped with respect to z coord"
-   },
-
-   {
-      "comp_theights",
-      &default_comp[comp_theights], &comp[comp_theights],
-      1, {0,1}, dt_number, ss_comp, wad_yes,
-      "DOOM thingtypes use inaccurate height information"
-   },
-
-   {
-      "comp_planeshoot",
-      &default_comp[comp_planeshoot], &comp[comp_planeshoot],
-      1, {0,1}, dt_number, ss_comp, wad_yes,
-      "Tracer shots cannot hit the floor or ceiling"
-   },
+   DEFAULT_INT("comp_overunder", &default_comp[comp_overunder], &comp[comp_overunder],
+               1, 0, 1, wad_yes, "Things not fully clipped with respect to z coord"),
+   
+   DEFAULT_INT("comp_theights", &default_comp[comp_theights], &comp[comp_theights],
+               1, 0, 1, wad_yes, "DOOM thingtypes use inaccurate height information"),
+   
+   DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
+               1, 0, 1, wad_yes, "Tracer shots cannot hit the floor or ceiling"),
+   
 
    // For key bindings, the values stored in the key_* variables       // phares
    // are the internal Doom Codes. The values stored in the default.cfg
@@ -823,862 +497,433 @@ default_t defaults[] =
 
    // TODO/FIXME: make ALL keys dynamically rebindable
 
-   {
-      "key_spy",
-      &key_spy, NULL,
-      KEYD_F12, {0,255}, dt_number, ss_keys, wad_no,
-      "key to view from another player's vantage"
-   },
+   DEFAULT_INT("key_spy", &key_spy, NULL, KEYD_F12, 0, 255, wad_no,
+               "key to view from another player's vantage"),
+   
+   DEFAULT_INT("key_pause", &key_pause, NULL, KEYD_PAUSE, 0, 255, wad_no,
+               "key to pause the game"),
+   
+   DEFAULT_INT("key_chat", &key_chat, NULL, 't', 0, 255, wad_no,
+               "key to enter a chat message"),
+   
+   DEFAULT_INT("key_chatplayer1", &destination_keys[0], NULL, 'g', 0, 255, wad_no,
+               "key to chat with player 1"),
+   
+   // killough 11/98: fix 'i'/'b' reversal
+   DEFAULT_INT("key_chatplayer2", &destination_keys[1], NULL, 'i', 0, 255, wad_no,
+               "key to chat with player 2"),
+   
+   // killough 11/98: fix 'i'/'b' reversal
+   DEFAULT_INT("key_chatplayer3", &destination_keys[2], NULL, 'b', 0, 255, wad_no,
+               "key to chat with player 3"),
+   
+   DEFAULT_INT("key_chatplayer4", &destination_keys[3], NULL, 'r', 0, 255, wad_no,
+               "key to chat with player 4"),
+   
+   DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, wad_no, 
+               "set to 1 to always mouselook"),
+   
+   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 1, 0, 1, wad_no,
+               "set to 1 to invert mouse during mouselooking"),
+   
 
-   {
-      "key_pause",
-      &key_pause, NULL,
-      KEYD_PAUSE, {0,255}, dt_number, ss_keys, wad_no,
-      "key to pause the game"
-   },
+   // jff 3/30/98 add ability to take screenshots in BMP format
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 1, wad_no,
+               "1 to take a screenshot in PCX format, 0 for BMP"),
+   
+   DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, wad_no,
+               "1 to use gamma correction in screenshots"),
+   
 
-   {
-      "key_chat",
-      &key_chat, NULL,
-      't', {0,255}, dt_number, ss_keys, wad_no,
-      "key to enter a chat message"
-   },
+   DEFAULT_INT("use_mouse", &usemouse, NULL, 1, 0, 1, wad_no,
+               "1 to enable use of mouse"),
+   
+   //jff 3/8/98 end of lower range change for -1 allowed in mouse binding
+   // haleyjd: rename these buttons on the user-side to prevent confusion
+   DEFAULT_INT("mouseb_dblc1", &mousebstrafe, NULL, 1, -1, 2, wad_no,
+               "1st mouse button to enable for double-click use action (-1 = disable)"),
+   
+   DEFAULT_INT("mouseb_dblc2", &mousebforward, NULL, 2, -1, 2, wad_no,
+               "2nd mouse button to enable for double-click use action (-1 = disable)"),
 
-   {
-      "key_chatplayer1",
-      &destination_keys[0], NULL,
-      'g', {0,255}, dt_number, ss_keys, wad_no,
-      "key to chat with player 1"
-   },
+   
+   DEFAULT_INT("use_joystick", &usejoystick, NULL, 0, 0, 1, wad_no,
+               "1 to enable use of joystick"),
+   
+   // killough
+   DEFAULT_INT("snd_channels", &default_numChannels, NULL, 32, 1, 128, wad_no,
+               "number of sound effects handled simultaneously"),
+   
+   DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, wad_yes,
+               "chat string associated with 0 key"),
+   
+   DEFAULT_STR("chatmacro1", &chat_macros[1], NULL, HUSTR_CHATMACRO1, wad_yes,
+               "chat string associated with 1 key"),
+   
+   DEFAULT_STR("chatmacro2", &chat_macros[2], NULL, HUSTR_CHATMACRO2, wad_yes,
+               "chat string associated with 2 key"),   
 
-   { // killough 11/98: fix 'i'/'b' reversal
-      "key_chatplayer2",
-      &destination_keys[1], NULL,
-      'i', {0,255}, dt_number, ss_keys, wad_no,
-      "key to chat with player 2"
-   },
+   DEFAULT_STR("chatmacro3", &chat_macros[3], NULL, HUSTR_CHATMACRO3, wad_yes,
+               "chat string associated with 3 key"),
+   
+   DEFAULT_STR("chatmacro4", &chat_macros[4], NULL, HUSTR_CHATMACRO4, wad_yes,
+               "chat string associated with 4 key"),
+   
+   DEFAULT_STR("chatmacro5", &chat_macros[5], NULL, HUSTR_CHATMACRO5, wad_yes,
+               "chat string associated with 5 key"),
 
-   {  // killough 11/98: fix 'i'/'b' reversal
-      "key_chatplayer3",
-      &destination_keys[2], NULL,
-      'b', {0,255}, dt_number, ss_keys, wad_no,
-      "key to chat with player 3"
-   },
-
-   {
-      "key_chatplayer4",
-      &destination_keys[3], NULL,
-      'r', {0,255}, dt_number, ss_keys, wad_no,
-      "key to chat with player 4"
-   },
-
-   {
-      "automlook",
-      &automlook, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "set to 1 to always mouselook"
-   },
-
-   {
-      "invert_mouse",
-      &invert_mouse, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "set to 1 to invert mouse during mouselooking"
-   },
-
-   { // jff 3/30/98 add ability to take screenshots in BMP format
-      "screenshot_pcx",
-      &screenshot_pcx, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to take a screenshot in PCX format, 0 for BMP"
-   },
-
-   {
-      "screenshot_gamma",
-      &screenshot_gamma, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to use gamma correction in screenshots"
-   },
-
-   {
-      "use_mouse",
-      &usemouse, NULL,
-      1, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable use of mouse"
-   },
-
-   // haleyjd: rename these buttons on the user-side to prevent
-   // confusion
-   {
-      "mouseb_dblc1",
-      &mousebstrafe, NULL,
-      1, {-1,2}, dt_number, ss_keys, wad_no,
-      "1st mouse button to enable for double-click use action (-1 = disable)"
-   },
-
-   {
-      "mouseb_dblc2",
-      &mousebforward, NULL,
-      2, {-1,2}, dt_number, ss_keys, wad_no,
-      "2nd mouse button to enable for double-click use action (-1 = disable)"
-   }, //jff 3/8/98 end of lower range change for -1 allowed in mouse binding
-
-   {
-      "use_joystick",
-      &usejoystick, NULL,
-      0, {0,1}, dt_number, ss_gen, wad_no,
-      "1 to enable use of joystick"
-   },
-
-   { // killough
-      "snd_channels",
-      &default_numChannels, NULL,
-      32, {1, 128}, 0, ss_gen, wad_no,
-      "number of sound effects handled simultaneously"
-   },
-
-   {
-      "chatmacro0",
-      (int *) &chat_macros[0], NULL,
-      (int) HUSTR_CHATMACRO0, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 0 key"
-   },
-
-   {
-      "chatmacro1",
-      (int *) &chat_macros[1], NULL,
-      (int) HUSTR_CHATMACRO1, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 1 key"
-   },
-
-   {
-      "chatmacro2",
-      (int *) &chat_macros[2], NULL,
-      (int) HUSTR_CHATMACRO2, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 2 key"
-   },
-
-   {
-      "chatmacro3",
-      (int *) &chat_macros[3], NULL,
-      (int) HUSTR_CHATMACRO3, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 3 key"
-   },
-
-   {
-      "chatmacro4",
-      (int *) &chat_macros[4], NULL,
-      (int) HUSTR_CHATMACRO4, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 4 key"
-   },
-
-   {
-      "chatmacro5",
-      (int *) &chat_macros[5], NULL,
-      (int) HUSTR_CHATMACRO5, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 5 key"
-   },
-
-   {
-      "chatmacro6",
-      (int *) &chat_macros[6], NULL,
-      (int) HUSTR_CHATMACRO6, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 6 key"
-   },
-
-   {
-      "chatmacro7",
-      (int *) &chat_macros[7], NULL,
-      (int) HUSTR_CHATMACRO7, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 7 key"
-   },
-
-   {
-      "chatmacro8",
-      (int *) &chat_macros[8], NULL,
-      (int) HUSTR_CHATMACRO8, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 8 key"
-   },
-
-   {
-      "chatmacro9",
-      (int *) &chat_macros[9], NULL,
-      (int) HUSTR_CHATMACRO9, {0}, dt_string, ss_chat, wad_yes,
-      "chat string associated with 9 key"
-   },
-
+   DEFAULT_STR("chatmacro6", &chat_macros[6], NULL, HUSTR_CHATMACRO6, wad_yes,
+               "chat string associated with 6 key"),
+   
+   DEFAULT_STR("chatmacro7", &chat_macros[7], NULL, HUSTR_CHATMACRO7, wad_yes,
+               "chat string associated with 7 key"),
+   
+   DEFAULT_STR("chatmacro8", &chat_macros[8], NULL, HUSTR_CHATMACRO8, wad_yes,
+               "chat string associated with 8 key"),
+   
+   DEFAULT_STR("chatmacro9", &chat_macros[9], NULL, HUSTR_CHATMACRO9, wad_yes,
+               "chat string associated with 9 key"),
+   
    //jff 1/7/98 defaults for automap colors
    //jff 4/3/98 remove -1 in lower range, 0 now disables new map features
-   { // black //jff 4/6/98 new black
-      "mapcolor_back",
-      &mapcolor_back, NULL,
-      247, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used as background for automap"
-   },
+   // black //jff 4/6/98 new black
+   DEFAULT_INT("mapcolor_back", &mapcolor_back, NULL, 247, 0, 255, wad_yes,
+               "color used as background for automap"),
+   
+   // dk gray
+   DEFAULT_INT("mapcolor_grid", &mapcolor_grid, NULL, 104, 0, 255, wad_yes,
+               "color used for automap grid lines"),
+   
+   // red-brown
+   DEFAULT_INT("mapcolor_wall", &mapcolor_wall, NULL, 181, 0, 255, wad_yes,
+               "color used for one side walls on automap"),
+   
+   // lt brown
+   DEFAULT_INT("mapcolor_fchg", &mapcolor_fchg, NULL, 166, 0, 255, wad_yes,
+               "color used for lines floor height changes across"),
+   
+   // orange
+   DEFAULT_INT("mapcolor_cchg", &mapcolor_cchg, NULL, 231, 0, 255, wad_yes,
+               "color used for lines ceiling height changes across"),
+   
+   // white
+   DEFAULT_INT("mapcolor_clsd", &mapcolor_clsd, NULL, 231, 0, 255, wad_yes,
+               "color used for lines denoting closed doors, objects"),
+   
+   // red
+   DEFAULT_INT("mapcolor_rkey",&mapcolor_rkey, NULL, 175, 0, 255, wad_yes,
+               "color used for red key sprites"),
+   
+   // blue
+   DEFAULT_INT("mapcolor_bkey",&mapcolor_bkey, NULL, 204, 0, 255, wad_yes,
+               "color used for blue key sprites"),
+   
+   // yellow
+   DEFAULT_INT("mapcolor_ykey",&mapcolor_ykey, NULL, 231, 0, 255, wad_yes,
+               "color used for yellow key sprites"),
+   
+   // red
+   DEFAULT_INT("mapcolor_rdor",&mapcolor_rdor, NULL, 175, 0, 255, wad_yes,
+               "color used for closed red doors"),
+   
+   // blue
+   DEFAULT_INT("mapcolor_bdor",&mapcolor_bdor, NULL, 204, 0, 255, wad_yes,
+               "color used for closed blue doors"),
+   
+   // yellow
+   DEFAULT_INT("mapcolor_ydor",&mapcolor_ydor, NULL, 231, 0, 255, wad_yes,
+               "color used for closed yellow doors"),
+   
+   // dk green
+   DEFAULT_INT("mapcolor_tele",&mapcolor_tele, NULL, 119, 0, 255, wad_yes,
+               "color used for teleporter lines"),
+   
+   // purple
+   DEFAULT_INT("mapcolor_secr",&mapcolor_secr, NULL, 176, 0, 255, wad_yes,
+               "color used for lines around secret sectors"),
+   
+   // none
+   DEFAULT_INT("mapcolor_exit",&mapcolor_exit, NULL, 0, 0, 255, wad_yes,
+               "color used for exit lines"),
 
-   {  // dk gray
-      "mapcolor_grid",
-      &mapcolor_grid, NULL,
-      104, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for automap grid lines"
-   },
-
-   { // red-brown
-      "mapcolor_wall",
-      &mapcolor_wall, NULL,
-      181, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for one side walls on automap"
-   },
-
-   { // lt brown
-      "mapcolor_fchg",
-      &mapcolor_fchg, NULL,
-      166, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for lines floor height changes across"
-   },
-
-   { // orange
-      "mapcolor_cchg",
-      &mapcolor_cchg, NULL,
-      231, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for lines ceiling height changes across"
-   },
-
-   { // white
-      "mapcolor_clsd",
-      &mapcolor_clsd, NULL,
-      231, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for lines denoting closed doors, objects"
-   },
-
-   { // red
-      "mapcolor_rkey",
-      &mapcolor_rkey, NULL,
-      175, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for red key sprites"
-   },
-
-   { // blue
-      "mapcolor_bkey",
-      &mapcolor_bkey, NULL,
-      204, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for blue key sprites"
-   },
-
-   { // yellow
-      "mapcolor_ykey",
-      &mapcolor_ykey, NULL,
-      231, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for yellow key sprites"
-   },
-
-   { // red
-      "mapcolor_rdor",
-      &mapcolor_rdor, NULL,
-      175, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for closed red doors"
-   },
-
-   { // blue
-      "mapcolor_bdor",
-      &mapcolor_bdor, NULL,
-      204, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for closed blue doors"
-   },
-
-   { // yellow
-      "mapcolor_ydor",
-      &mapcolor_ydor, NULL,
-      231, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for closed yellow doors"
-   },
-
-   { // dk green
-      "mapcolor_tele",
-      &mapcolor_tele, NULL,
-      119, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for teleporter lines"
-   },
-
-   { // purple
-      "mapcolor_secr",
-      &mapcolor_secr, NULL,
-      176, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for lines around secret sectors"
-   },
-
-   { // none
-      "mapcolor_exit",
-      &mapcolor_exit, NULL,
-      0, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for exit lines"
-   },
-
-   { // dk gray
-      "mapcolor_unsn",
-      &mapcolor_unsn, NULL,
-      96, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for lines not seen without computer map"
-   },
-
-   { // lt gray
-      "mapcolor_flat",
-      &mapcolor_flat, NULL,
-      88, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for lines with no height changes"
-   },
-
-   { // green
-      "mapcolor_sprt",
-      &mapcolor_sprt, NULL,
-      112, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used as things"
-   },
-
-   { // white
-      "mapcolor_hair",
-      &mapcolor_hair, NULL,
-      208, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for dot crosshair denoting center of map"
-   },
-
-   { // white
-      "mapcolor_sngl",
-      &mapcolor_sngl, NULL,
-      208, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for the single player arrow"
-   },
-
-   { // green
-      "mapcolor_ply1",
-      &mapcolor_plyr[0], NULL,
-      112, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for the green player arrow"
-   },
-
-   { // lt gray
-      "mapcolor_ply2",
-      &mapcolor_plyr[1], NULL,
-      88, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for the gray player arrow"
-   },
-
-   { // brown
-      "mapcolor_ply3",
-      &mapcolor_plyr[2], NULL,
-      64, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for the brown player arrow"
-   },
-
-   { // red
-      "mapcolor_ply4",
-      &mapcolor_plyr[3], NULL,
-      176, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for the red player arrow"
-   },
-
-   {  // purple                       // killough 8/8/98
-      "mapcolor_frnd",
-      &mapcolor_frnd, NULL,
-      252, {0,255}, dt_number, ss_auto, wad_yes,
-      "color used for friends"
-   },
+   // dk gray
+   DEFAULT_INT("mapcolor_unsn",&mapcolor_unsn, NULL, 96, 0, 255, wad_yes,
+               "color used for lines not seen without computer map"),
+   
+   // lt gray
+   DEFAULT_INT("mapcolor_flat",&mapcolor_flat, NULL, 88, 0, 255, wad_yes,
+               "color used for lines with no height changes"),
+   
+   // green
+   DEFAULT_INT("mapcolor_sprt",&mapcolor_sprt, NULL, 112, 0, 255, wad_yes,
+               "color used as things"),
+   
+   // white
+   DEFAULT_INT("mapcolor_hair",&mapcolor_hair, NULL, 208, 0, 255, wad_yes,
+               "color used for dot crosshair denoting center of map"),
+   
+   // white
+   DEFAULT_INT("mapcolor_sngl",&mapcolor_sngl, NULL, 208, 0, 255, wad_yes,
+               "color used for the single player arrow"),
+   
+   // green
+   DEFAULT_INT("mapcolor_ply1",&mapcolor_plyr[0], NULL, 112, 0, 255, wad_yes,
+               "color used for the green player arrow"),
+   
+   // lt gray
+   DEFAULT_INT("mapcolor_ply2",&mapcolor_plyr[1], NULL, 88, 0, 255, wad_yes,
+               "color used for the gray player arrow"),
+   
+   // brown
+   DEFAULT_INT("mapcolor_ply3",&mapcolor_plyr[2], NULL, 64, 0, 255, wad_yes,
+               "color used for the brown player arrow"),
+   
+   // red
+   DEFAULT_INT("mapcolor_ply4",&mapcolor_plyr[3], NULL, 176, 0, 255, wad_yes,
+               "color used for the red player arrow"),
+   
+   // purple                       // killough 8/8/98
+   DEFAULT_INT("mapcolor_frnd",&mapcolor_frnd, NULL, 252, 0, 255, wad_yes,
+               "color used for friends"),
+   
 
 #ifdef R_LINKEDPORTALS
-   {
-      "mapcolor_prtl",
-      &mapcolor_prtl, NULL,
-      109, {0, 255}, dt_number, ss_auto, wad_yes,
-      "color for lines not in the player's portal area"
-   },
-
-   {
-      "mapportal_overlay",
-      &mapportal_overlay, NULL,
-      1, {0, 1}, dt_number, ss_auto, wad_yes,
-      "1 to overlay different linked portal areas in the automap"
-   },         
+   DEFAULT_INT("mapcolor_prtl",&mapcolor_prtl, NULL, 109, 0, 255, wad_yes,
+               "color for lines not in the player's portal area"),
+   
+   DEFAULT_INT("mapportal_overlay",&mapportal_overlay, NULL, 1, 0, 1, wad_yes,
+               "1 to overlay different linked portal areas in the automap"),
+            
 #endif
 
-   {
-      "map_point_coord",
-      &map_point_coordinates, NULL,
-      1, {0,1}, dt_number, ss_auto, wad_yes,
-      "1 to show automap pointer coordinates in non-follow mode"
-   },
-
+   DEFAULT_INT("map_point_coord", &map_point_coordinates, NULL, 1, 0, 1, wad_yes,
+               "1 to show automap pointer coordinates in non-follow mode"),
+   
    //jff 3/9/98 add option to not show secrets til after found
    // killough change default, to avoid spoilers and preserve Doom mystery
-   { // show secret after gotten
-      "map_secret_after",
-      &map_secret_after, NULL,
-      1, {0,1}, dt_number, ss_auto, wad_yes,
-      "1 to not show secret sectors till after entered"
-   },
-
+   // show secret after gotten
+   DEFAULT_INT("map_secret_after",&map_secret_after, NULL, 1, 0, 1, wad_yes,
+               "1 to not show secret sectors till after entered"),
+   
    //jff 1/7/98 end additions for automap
 
    //jff 2/16/98 defaults for color ranges in hud and status
 
-   { // 1 line scrolling window
-      "hud_msg_lines",
-      &hud_msg_lines, NULL,
-      1, {1,16}, dt_number, ss_mess, wad_yes,
-      "number of lines in review display"
-   },
+   // 1 line scrolling window
+   DEFAULT_INT("hud_msg_lines",&hud_msg_lines, NULL, 1, 1, 16, wad_yes,
+               "number of lines in review display"),
+   
+   // killough 11/98
+   DEFAULT_INT("hud_msg_scrollup",&hud_msg_scrollup, NULL, 1, 0, 1, wad_yes,
+               "1 enables message review list scrolling upward"),
+   
+   // killough 11/98
+   DEFAULT_INT("message_timer",&message_timer, NULL, 4000, 0, UL, wad_no,
+               "Duration of normal Doom messages (ms)"),
+   
+   //sf : fullscreen hud style
+   DEFAULT_INT("hud_overlaystyle",&hud_overlaystyle, NULL, 1, 0, 4, wad_yes,
+               "fullscreen hud style"),
 
-   { // killough 11/98
-      "hud_msg_scrollup",
-      &hud_msg_scrollup, NULL,
-      1, {0,1}, dt_number, ss_mess, wad_yes,
-      "1 enables message review list scrolling upward"
-   },
+   DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, wad_yes,
+               "fullscreen hud enabled"),
+   
+   DEFAULT_INT("hud_hidestatus",&hud_hidestatus, NULL, 0, 0, 1, wad_yes,
+               "hide kills/items/secrets info on fullscreen hud"),
+   
+   DEFAULT_BOOL("hu_showtime", &hu_showtime, NULL, true, wad_yes,
+                "display current level time on automap"),
+   
+   DEFAULT_BOOL("hu_showcoords", &hu_showcoords, NULL, true, wad_yes,
+                "display player/pointer coordinates on automap"),
+   
+   DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_LIMIT-1, wad_yes,
+               "color of automap level time widget"),
 
-   { // killough 11/98
-      "message_timer",
-      &message_timer, NULL,
-      4000, {0,UL}, 0, ss_mess, wad_no,
-      "Duration of normal Doom messages (ms)"
-   },
+   DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_LIMIT-1, wad_yes,
+               "color of automap level name widget"),
+   
+   DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_LIMIT-1, wad_yes,
+               "color of automap coordinates widget"),
+   
+   // below is red
+   DEFAULT_INT(   "health_red",&health_red, NULL, 25, 0, 200, wad_yes,
+               "amount of health for red to yellow transition"),
 
-   {     //sf : fullscreen hud style
-      "hud_overlaystyle",
-      &hud_overlaystyle, NULL,
-      1, {0,4}, 0, ss_mess, wad_yes,
-      "fullscreen hud style"
-   },
+   // below is yellow
+   DEFAULT_INT("health_yellow", &health_yellow, NULL, 50, 0, 200, wad_yes,
+               "amount of health for yellow to green transition"),
+   
+   // below is green, above blue
+   DEFAULT_INT("health_green",&health_green, NULL, 100, 0, 200, wad_yes,
+               "amount of health for green to blue transition"),
+   
+   // below is red
+   DEFAULT_INT("armor_red",&armor_red, NULL, 25, 0, 200, wad_yes,
+               "amount of armor for red to yellow transition"),
+   
+   // below is yellow
+   DEFAULT_INT("armor_yellow",&armor_yellow, NULL, 50, 0, 200, wad_yes,
+               "amount of armor for yellow to green transition"),
+   
+   // below is green, above blue
+   DEFAULT_INT("armor_green",&armor_green, NULL, 100, 0, 200, wad_yes,
+               "amount of armor for green to blue transition"),
+   
+   // below 25% is red
+   DEFAULT_INT("ammo_red",&ammo_red, NULL, 25, 0, 100, wad_yes,
+               "percent of ammo for red to yellow transition"),
+   
+   // below 50% is yellow, above green
+   DEFAULT_INT("ammo_yellow",&ammo_yellow, NULL, 50, 0, 100, wad_yes,
+               "percent of ammo for yellow to green transition"),
+   
+   // killough 2/8/98: weapon preferences set by user:
+   DEFAULT_INT("weapon_choice_1",&weapon_preferences[0][0], NULL, 6, 1, 9, wad_yes,
+               "first choice for weapon (best)"),
+   
+   DEFAULT_INT("weapon_choice_2",&weapon_preferences[0][1], NULL, 9, 1, 9, wad_yes,
+               "second choice for weapon"),
+   
+   DEFAULT_INT("weapon_choice_3",&weapon_preferences[0][2], NULL, 4, 1, 9, wad_yes,
+               "third choice for weapon"),
+   
+   DEFAULT_INT("weapon_choice_4",&weapon_preferences[0][3], NULL, 3, 1, 9, wad_yes,
+               "fourth choice for weapon"),
+   
+   DEFAULT_INT("weapon_choice_5",&weapon_preferences[0][4], NULL, 2, 1, 9, wad_yes,
+               "fifth choice for weapon"),
+   
+   DEFAULT_INT("weapon_choice_6",&weapon_preferences[0][5], NULL, 8, 1, 9, wad_yes,
+               "sixth choice for weapon"),
+   
+   DEFAULT_INT("weapon_choice_7",&weapon_preferences[0][6], NULL, 5, 1, 9, wad_yes,
+               "seventh choice for weapon"),
+   
+   DEFAULT_INT("weapon_choice_8",&weapon_preferences[0][7], NULL, 7, 1, 9, wad_yes,
+               "eighth choice for weapon"),
+   
+   DEFAULT_INT("weapon_choice_9",&weapon_preferences[0][8], NULL, 1, 1, 9, wad_yes,
+               "ninth choice for weapon (worst)"),
+   
+   DEFAULT_INT("c_speed",&c_speed, NULL, 10, 1, 200, wad_no,
+               "console speed, pixels/tic"),
+   
+   DEFAULT_INT("c_height",&c_height, NULL, 100, 0, 200, wad_no,
+               "console height, pixels"),
+   
+   DEFAULT_INT("obituaries",&obituaries, NULL, 0, 0, 1, wad_yes,
+               "obituaries on/off"),
+   
+   DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_LIMIT-1, wad_no,
+               "obituaries colour"),
+   
+   DEFAULT_INT("draw_particles",&drawparticles, NULL, 0, 0, 1, wad_yes,
+               "toggle particle effects on or off"),
+   
+   DEFAULT_INT("particle_trans",&particle_trans, NULL, 1, 0, 2, wad_yes,
+               "particle translucency (0 = none, 1 = smooth, 2 = general)"),
+   
+   DEFAULT_INT("blood_particles",&bloodsplat_particle, NULL, 0, 0, 2, wad_yes,
+               "use sprites, particles, or both for blood (sprites = 0)"),
+   
+   DEFAULT_INT("bullet_particles",&bulletpuff_particle, NULL, 0, 0, 2, wad_yes,
+               "use sprites, particles, or both for bullet puffs (sprites = 0)"),
+   
+   DEFAULT_INT("rocket_trails",&drawrockettrails, NULL, 0, 0, 1, wad_yes,
+               "draw particle rocket trails"),
 
-   {
-      "hud_enabled",
-      &hud_enabled, NULL,
-      1, {0,1}, 0, ss_mess, wad_yes,
-      "fullscreen hud enabled"
-   },
+   DEFAULT_INT("grenade_trails",&drawgrenadetrails, NULL, 0, 0, 1, wad_yes,
+               "draw particle grenade trails"),
+   
+   DEFAULT_INT("bfg_cloud",&drawbfgcloud, NULL, 0, 0, 1, wad_yes,
+               "draw particle bfg cloud"),
+   
+   DEFAULT_INT("pevent_rexpl",&(particleEvents[P_EVENT_ROCKET_EXPLODE].enabled), NULL,
+               0, 0, 1, wad_yes, "draw particle rocket explosions"),
+   
+   DEFAULT_INT("pevent_bfgexpl",&(particleEvents[P_EVENT_BFG_EXPLODE].enabled), NULL,
+               0, 0, 1, wad_yes, "draw particle bfg explosions"),
 
-   {
-      "hud_hidestatus",
-      &hud_hidestatus, NULL,
-      0, {0,1}, 0, ss_mess, wad_yes,
-      "hide kills/items/secrets info on fullscreen hud"
-   },
-
-   {
-      "hu_showtime",
-      (int *)&hu_showtime, NULL,
-      1, {0,1}, dt_number, ss_mess, wad_yes,
-      "display current level time on automap"
-   },
-
-   {
-      "hu_showcoords",
-      (int *)&hu_showcoords, NULL,
-      1, {0,1}, dt_number, ss_mess, wad_yes,
-      "display player/pointer coordinates on automap"
-   },
-
-   {
-      "hu_timecolor",
-      &hu_timecolor, NULL,
-      CR_RED, {0, CR_LIMIT-1}, dt_number, ss_mess, wad_yes,
-      "color of automap level time widget"
-   },
-
-   {
-      "hu_levelnamecolor",
-      &hu_levelnamecolor, NULL,
-      CR_RED, {0, CR_LIMIT-1}, dt_number, ss_mess, wad_yes,
-      "color of automap level name widget"
-   },
-
-   {
-      "hu_coordscolor",
-      &hu_coordscolor, NULL,
-      CR_RED, {0, CR_LIMIT-1}, dt_number, ss_mess, wad_yes,
-      "color of automap coordinates widget"
-   },
-
-   { // below is red
-      "health_red",
-      &health_red, NULL,
-      25, {0,200}, dt_number, ss_stat, wad_yes,
-      "amount of health for red to yellow transition"
-   },
-
-   { // below is yellow
-      "health_yellow",
-      &health_yellow, NULL,
-      50, {0,200}, dt_number, ss_stat, wad_yes,
-      "amount of health for yellow to green transition"
-   },
-
-   { // below is green, above blue
-      "health_green",
-      &health_green, NULL,
-      100, {0,200}, dt_number, ss_stat, wad_yes,
-      "amount of health for green to blue transition"
-   },
-
-   { // below is red
-      "armor_red",
-      &armor_red, NULL,
-      25, {0,200}, dt_number, ss_stat, wad_yes,
-      "amount of armor for red to yellow transition"
-   },
-
-   { // below is yellow
-      "armor_yellow",
-      &armor_yellow, NULL,
-      50, {0,200}, dt_number, ss_stat, wad_yes,
-      "amount of armor for yellow to green transition"
-   },
-
-   { // below is green, above blue
-      "armor_green",
-      &armor_green, NULL,
-      100, {0,200}, dt_number, ss_stat, wad_yes,
-      "amount of armor for green to blue transition"
-   },
-
-   { // below 25% is red
-      "ammo_red",
-      &ammo_red, NULL,
-      25, {0,100}, dt_number, ss_stat, wad_yes,
-      "percent of ammo for red to yellow transition"
-   },
-
-   { // below 50% is yellow, above green
-      "ammo_yellow",
-      &ammo_yellow, NULL,
-      50, {0,100}, dt_number, ss_stat, wad_yes,
-      "percent of ammo for yellow to green transition"
-   },
-
-   {  // killough 2/8/98: weapon preferences set by user:
-      "weapon_choice_1",
-      &weapon_preferences[0][0], NULL,
-      6, {1,9}, dt_number, ss_weap, wad_yes,
-      "first choice for weapon (best)"
-   },
-
-   {
-      "weapon_choice_2",
-      &weapon_preferences[0][1], NULL,
-      9, {1,9}, dt_number, ss_weap, wad_yes,
-      "second choice for weapon"
-   },
-
-   {
-      "weapon_choice_3",
-      &weapon_preferences[0][2], NULL,
-      4, {1,9}, dt_number, ss_weap, wad_yes,
-      "third choice for weapon"
-   },
-
-   {
-      "weapon_choice_4",
-      &weapon_preferences[0][3], NULL,
-      3, {1,9}, dt_number, ss_weap, wad_yes,
-      "fourth choice for weapon"
-   },
-
-   {
-      "weapon_choice_5",
-      &weapon_preferences[0][4], NULL,
-      2, {1,9}, dt_number, ss_weap, wad_yes,
-      "fifth choice for weapon"
-   },
-
-   {
-      "weapon_choice_6",
-      &weapon_preferences[0][5], NULL,
-      8, {1,9}, dt_number, ss_weap, wad_yes,
-      "sixth choice for weapon"
-   },
-
-   {
-      "weapon_choice_7",
-      &weapon_preferences[0][6], NULL,
-      5, {1,9}, dt_number, ss_weap, wad_yes,
-      "seventh choice for weapon "
-   },
-
-   {
-      "weapon_choice_8",
-      &weapon_preferences[0][7], NULL,
-      7, {1,9}, dt_number, ss_weap, wad_yes,
-      "eighth choice for weapon"
-   },
-
-   {
-      "weapon_choice_9",
-      &weapon_preferences[0][8], NULL,
-      1, {1,9}, dt_number, ss_weap, wad_yes,
-      "ninth choice for weapon (worst)"
-   },
-
-   {
-      "c_speed",
-      &c_speed, NULL,
-      10, {1,200}, dt_number, ss_none, wad_no,
-      "console speed, pixels/tic"
-   },
-
-   {
-      "c_height",
-      &c_height, NULL,
-      100, {0,200}, dt_number, ss_none, wad_no,
-      "console height, pixels"
-   },
-
-   {
-      "obituaries",
-      &obituaries, NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "obituaries on/off"
-   },
-
-   {
-      "obcolour",
-      &obcolour, NULL,
-      0, {0,CR_LIMIT-1}, dt_number, ss_none, wad_no,
-      "obituaries colour"
-   },
-
-   {
-      "draw_particles",
-      &drawparticles, NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "toggle particle effects on or off"
-   },
-
-   {
-      "particle_trans",
-      &particle_trans, NULL,
-      1, {0,2}, dt_number, ss_none, wad_yes,
-      "particle translucency (0 = none, 1 = smooth, 2 = general)"
-   },
-
-   {
-      "blood_particles",
-      &bloodsplat_particle, NULL,
-      0, {0,2}, dt_number, ss_none, wad_yes,
-      "use sprites, particles, or both for blood (sprites = 0)"
-   },
-
-   {
-      "bullet_particles",
-      &bulletpuff_particle, NULL,
-      0, {0,2}, dt_number, ss_none, wad_yes,
-      "use sprites, particles, or both for bullet puffs (sprites = 0)"
-   },
-
-   {
-      "rocket_trails",
-      &drawrockettrails, NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "draw particle rocket trails"
-   },
-
-   {
-      "grenade_trails",
-      &drawgrenadetrails, NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "draw particle grenade trails"
-   },
-
-   {
-      "bfg_cloud",
-      &drawbfgcloud, NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "draw particle bfg cloud"
-   },
-
-   {
-      "pevent_rexpl",
-      &(particleEvents[P_EVENT_ROCKET_EXPLODE].enabled), NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "draw particle rocket explosions"
-   },
-
-   {
-      "pevent_bfgexpl",
-      &(particleEvents[P_EVENT_BFG_EXPLODE].enabled), NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "draw particle bfg explosions"
-   },
-
-   {
-      "stretchsky",
-      &stretchsky, NULL,
-      1, {0,1}, dt_number, ss_none, wad_yes,
-      "stretch short sky textures for mlook"
-   },
-
-   {
-      "startnewmap",
-      &startOnNewMap, NULL,
-      0, {0,1}, dt_number, ss_none, wad_yes,
-      "start game on first new map (DOOM II only)"
-   },
+   DEFAULT_INT("stretchsky",&stretchsky, NULL, 1, 0, 1, wad_yes,
+               "stretch short sky textures for mlook"),
+   
+   DEFAULT_INT("startnewmap",&startOnNewMap, NULL, 0, 0, 1, wad_yes,
+               "start game on first new map (DOOM II only)"),
+   
 
 #ifdef _SDL_VER
-   {
-      "wait_at_exit",
-      &waitAtExit, NULL,
-      0, {0,1}, dt_number, ss_none, wad_no,
-      "always wait for input at exit"
-   },
-
-   {
-      "grabmouse",
-      &grabmouse, NULL,
-      1, {0,1}, dt_number, ss_none, wad_no,
-      "toggle mouse input grabbing"
-   },
-  
-   {
-      "showendoom",
-      &showendoom, NULL,
-      1, {0,1}, dt_number, ss_none, wad_yes,
-      "1 to show ENDOOM at exit"
-	},
-	
-   {
-      "endoomdelay",
-      &endoomdelay, NULL,
-      350, {35, 3500}, dt_number, ss_none, wad_no,
-      "Amount of time to display ENDOOM when shown"
-   },
+   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, wad_no,
+               "always wait for input at exit"),
+   
+   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, wad_no,
+               "toggle mouse input grabbing"),
+   
+   DEFAULT_INT("showendoom",&showendoom, NULL, 1, 0, 1, wad_yes,
+               "1 to show ENDOOM at exit"),
+		
+   DEFAULT_INT("endoomdelay",&endoomdelay, NULL, 350, 35, 3500, wad_no,
+               "Amount of time to display ENDOOM when shown"),
+   
 #endif
 
-   {
-      "autoaim",
-      &default_autoaim, &autoaim,
-      1, {0, 1}, dt_number, ss_none, wad_yes,
-      "1 to enable autoaiming"
-   },
-
-   {
-      "chasecam_height",
-      &chasecam_height, NULL,
-      15, {-31, 100}, dt_number, ss_none, wad_no,
-      "preferred height of chasecam above/below player viewheight"
-   },
-
-   {
-      "chasecam_speed",
-      &chasecam_speed, NULL,
-      33, {1, 100}, dt_number, ss_none, wad_no,
-      "percentage of distance to target chasecam moves per gametic"
-   },
-
-   {
-      "chasecam_dist",
-      &chasecam_dist, NULL,
-      112, {10, 1024}, dt_number, ss_none, wad_no,
-      "preferred distance from chasecam to player"
-   },
-
-   {
-      "allowmlook",
-      &default_allowmlook, &allowmlook,
-      0, {0, 1}, dt_number, ss_none, wad_yes,
-      "1 to allow players to look up/down"
-   },
-
-   {
-      "menu_toggleisback",
-      (int *)&menu_toggleisback, NULL,
-      0, {0, 1}, dt_number, ss_none, wad_no,
-      "1 to make menu toggle action back up one level (like zdoom)"
-   },
-
-   {
-      "mn_classic_menus",
-      &mn_classic_menus, NULL,
-      0, {0, 1}, dt_number, ss_none, wad_yes,
-      "1 to enable use of full classic menu emulation"
-   },
-
-   {
-      "wad_directory",
-      (int *)&wad_directory, NULL,
-      (int) ".", {0}, dt_string, ss_none, wad_no,
-      "user's default wad directory"
-   },
-
-   {
-      "r_columnengine",
-      &r_column_engine_num, NULL,
-      1, {0, NUMCOLUMNENGINES - 1}, dt_number, ss_none, wad_no,
-      "0 = normal, 1 = optimized quad cache"
-   },
-
-   {
-      "r_spanengine",
-      &r_span_engine_num, NULL,
-      0, {0, NUMSPANENGINES - 1}, dt_number, ss_none, wad_no,
-      "0 = high precision, 1 = low optimized, 2 = low"
-   },
-
-   {
-      "r_detail",
-      &c_detailshift, NULL,
-      0, {0, 1}, dt_number, ss_none, wad_no,
-      "0 = high detail, 1 = low detail"
-   },
-
-   {
-      "r_vissprite_limit",
-      &r_vissprite_limit, NULL,
-      -1, {-1, UL}, dt_number, ss_none, wad_yes,
-      "number of vissprites allowed per frame (-1 = no limit)"
-   },
-
-   {
-      "spechits_emulation",
-      &spechits_emulation, NULL,
-      0, {0, 2}, dt_number, ss_none, wad_no,
-      "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"
-   },
-
-   {
-      "wipewait",
-      &wipewait, NULL,
-      2, {0, 2}, dt_number, ss_none, wad_no,
-      "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"
-   },
-
-   {
-      "wipetype",
-      &wipetype, NULL,
-      1, {0, 2}, dt_number, ss_none, wad_yes,
-      "0 = none, 1 = melt, 2 = fade"
-   },
-
+   DEFAULT_INT("autoaim",&default_autoaim, &autoaim, 1, 0, 1, wad_yes,
+               "1 to enable autoaiming"),
+   
+   DEFAULT_INT("chasecam_height",&chasecam_height, NULL, 15, -31, 100, wad_no,
+               "preferred height of chasecam above/below player viewheight"),
+   
+   DEFAULT_INT("chasecam_speed",&chasecam_speed, NULL, 33, 1, 100, wad_no,
+               "percentage of distance to target chasecam moves per gametic"),
+   
+   DEFAULT_INT("chasecam_dist",&chasecam_dist, NULL, 112, 10, 1024, wad_no,
+               "preferred distance from chasecam to player"),
+   
+   DEFAULT_INT("allowmlook",&default_allowmlook, &allowmlook, 0, 0, 1, wad_yes,
+               "1 to allow players to look up/down"),
+   
+   DEFAULT_BOOL("menu_toggleisback", &menu_toggleisback, NULL, false, wad_no,
+                "1 to make menu toggle action back up one level (like zdoom)"),
+   
+   DEFAULT_INT("mn_classic_menus",&mn_classic_menus, NULL, 0, 0, 1, wad_yes,
+               "1 to enable use of full classic menu emulation"),
+   
+   DEFAULT_STR("wad_directory", &wad_directory, NULL, ".", wad_no,
+               "user's default wad directory"),
+   
+   DEFAULT_INT("r_columnengine",&r_column_engine_num, NULL, 
+               1, 0, NUMCOLUMNENGINES - 1, wad_no, "0 = normal, 1 = optimized quad cache"),
+   
+   DEFAULT_INT("r_spanengine",&r_span_engine_num, NULL,
+               0, 0, NUMSPANENGINES - 1, wad_no, "0 = high precision, 1 = low precision"),
+   
+   DEFAULT_INT("r_detail",&c_detailshift, NULL, 0, 0, 1, wad_no,
+               "0 = high detail, 1 = low detail"),
+   
+   DEFAULT_INT("r_vissprite_limit",&r_vissprite_limit, NULL, -1, -1, UL, wad_yes,
+               "number of vissprites allowed per frame (-1 = no limit)"),
+   
+   DEFAULT_INT("spechits_emulation",&spechits_emulation, NULL, 0, 0, 2, wad_no,
+               "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"),
+   
+   DEFAULT_INT("wipewait",&wipewait, NULL, 2, 0, 2, wad_no,
+               "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"),
+   
+   DEFAULT_INT("wipetype",&wipetype, NULL, 1, 0, 2, wad_yes,
+               "0 = none, 1 = melt, 2 = fade"),
+   
 #ifdef HAVE_SPCLIB
-   {
-      "snd_spcpreamp",
-      &spc_preamp, NULL,
-      1, {1, 6}, dt_number, ss_none, wad_yes,
-      "preamp volume factor for SPC music"
-   },
-
-   {
-      "snd_spcbassboost",
-      &spc_bass_boost, NULL,
-      8, {1, 31}, dt_number, ss_none, wad_yes,
-      "bass boost for SPC music (logarithmic scale, 8 = normal)"
-   },
+   DEFAULT_INT("snd_spcpreamp", &spc_preamp, NULL, 1, 1, 6, wad_yes,
+               "preamp volume factor for SPC music"),
+   
+   DEFAULT_INT("snd_spcbassboost", &spc_bass_boost, NULL, 8, 1, 31, wad_yes,
+               "bass boost for SPC music (logarithmic scale, 8 = normal)"),
+   
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
-   {
-      "process_affinity_mask",
-      &process_affinity_mask, NULL,
-      0, {0, UL}, dt_number, ss_none, wad_no,
-      "process affinity mask - warning: expert setting only!"
-   },
+   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 0, 0, UL, wad_no, 
+               "process affinity mask - warning: expert setting only!"),
 #endif
 
    { NULL }         // last entry
@@ -1793,9 +1038,17 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
    {
       default_t *def = M_LookupDefault(df, ovr->name);
 
+#ifdef RANGECHECK
+      // FIXME: allow defaults for all types
+      if(def->type != dt_integer)
+      {
+         I_Error("M_ApplyGameModeDefaults: override for non-integer default %s\n",
+                 def->name);
+      }
+#endif
       // replace the default value
       if(def)
-         def->defaultvalue = ovr->defaultvalue;
+         def->defaultvalue_i = ovr->defaultvalue;
 
       ++ovr;
    }
@@ -1841,7 +1094,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
    for(blanks = 1, line = 0, dp = df->defaults; ; dp++, blanks = 0)
    {
-      int brackets = 0, value;
+      int brackets = 0;
 
       for(; line < df->numcomments && df->comments[line].line <= dp - df->defaults; ++line)
       {
@@ -1876,34 +1129,96 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
       if(config_help && !brackets)
       {
-         if((dp->isstr ? 
-             fprintf(f,"[(\"%s\")]", (char *) dp->defaultvalue) :
-             dp->limit.min == UL ?
-             dp->limit.max == UL ?
-             fprintf(f, "[?-?(%d)]", dp->defaultvalue) :
-             fprintf(f, "[?-%d(%d)]", dp->limit.max, dp->defaultvalue) :
-             dp->limit.max == UL ?
-             fprintf(f, "[%d-?(%d)]", dp->limit.min, dp->defaultvalue) :
-             fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max,
-                     dp->defaultvalue)) == EOF ||
-            fprintf(f," %s %s\n", dp->help, dp->wad_allowed ? "*" :"") == EOF)
-           goto error;
+         boolean printError = false;
+
+         switch(dp->type)
+         {
+         case dt_string:
+            printError = (fprintf(f, "[(\"%s\")]", dp->defaultvalue_s) == EOF);
+            break;
+         case dt_integer:
+            if(dp->limit.min == UL)
+            {
+               if(dp->limit.max == UL)
+                  printError = (fprintf(f, "[?-?(%d)]", dp->defaultvalue_i) == EOF);
+               else 
+               {
+                  printError = 
+                     (fprintf(f, "?-%d(%d)]", dp->limit.max, dp->defaultvalue_i) == EOF);
+               }
+            }
+            else if(dp->limit.max == UL)
+            {
+               printError = 
+                  (fprintf(f, "[%d-?(%d)]", dp->limit.min, dp->defaultvalue_i) == EOF);
+            }
+            else
+            {
+               printError = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max,
+                             dp->defaultvalue_i) == EOF);
+            }
+            break;
+         case dt_float:
+            // TODO
+            break;
+         case dt_boolean:
+            printError = (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
+            break;
+         }
+
+         if(printError ||
+            fprintf(f, " %s %s\n", dp->help, dp->wad_allowed ? "*" : "") == EOF)
+            goto error;
       }
 
       // killough 11/98:
       // Write out original default if .wad file has modified the default
-      
-      value = dp->modified ? dp->orig_default : (int) *dp->location;
 
       //jff 4/10/98 kill super-hack on pointer value
       // killough 3/6/98:
       // use spaces instead of tabs for uniform justification
 
-      if(!dp->isstr ? fprintf(f, "%-25s %5i\n", dp->name, 
-                              strncmp(dp->name, "key_", 4) ? value :
-                              I_DoomCode2ScanCode(value)) == EOF :
-         fprintf(f,"%-25s \"%s\"\n", dp->name, (char *) value) == EOF)
-        goto error;
+      switch(dp->type)
+      {
+      case dt_integer:
+         {
+            int value = 
+               dp->modified ? dp->orig_default_i : *(int *)dp->location;
+
+            if(fprintf(f, "%-25s %5i\n", dp->name,
+                       strncmp(dp->name, "key_", 4) ? value : 
+                       I_DoomCode2ScanCode(value)) == EOF)
+               goto error;
+         }
+         break;
+      case dt_string:
+         {
+            const char *value = 
+               dp->modified ? dp->orig_default_s : *(const char **)dp->location;
+
+            if(fprintf(f, "%-25s \"%s\"\n", dp->name, value) == EOF)
+               goto error;
+         }
+         break;
+      case dt_float:
+         {
+            float value = 
+               dp->modified ? dp->orig_default_f : *(float *)dp->location;
+
+            if(fprintf(f, "%-25s %f\n", dp->name, value) == EOF)
+               goto error;
+         }
+         break;
+      case dt_boolean:
+         {
+            boolean value = 
+               dp->modified ? dp->orig_default_b : *(boolean *)dp->location;
+
+            if(fprintf(f, "%-25s %5i\n", dp->name, !!value) == EOF)
+               goto error;
+         }
+         break;
+      }
    }
 
    if(fclose(f) == EOF)
@@ -1943,6 +1258,7 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
    char name[80], strparm[100];
    default_t *dp;
    int parm;
+   float tmp;
    
    while(isspace(*p))  // killough 10/98: skip leading whitespace
       p++;
@@ -1951,68 +1267,117 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
    // killough 10/98: move to be made part of main test, add comment-handling
 
    if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !isalnum(*name) ||
-      !(dp = M_LookupDefault(df, name)) || (*strparm == '"') == !dp->isstr ||
+      !(dp = M_LookupDefault(df, name)) || 
+      (*strparm == '"') == (dp->type != dt_string) ||
       (wad && !dp->wad_allowed))
    {
       return 1;
    }
 
-   if(dp->isstr)     // get a string default
+   switch(dp->type)
    {
-      int len = strlen(strparm)-1;
-
-      while(isspace(strparm[len]))
-         len--;
-
-      if(strparm[len] == '"')
-         len--;
-
-      strparm[len+1] = 0;
-
-      if (wad && !dp->modified)                 // Modified by wad
-      {                                         // First time modified
-         dp->modified = 1;                      // Mark it as modified
-         dp->orig_default = *dp->location;      // Save original default
-      }
-      else
-         free(*(char **) dp->location);              // Free old value
-
-      *(char **) dp->location = strdup(strparm+1);   // Change default value
-
-      if(dp->current)                                // Current value
+   case dt_integer:
       {
-         free(*(char **) dp->current);               // Free old value
-         *(char **) dp->current = strdup(strparm+1); // Change current value
-      }
-   }
-   else
-   {
-      if(sscanf(strparm, "%i", &parm) != 1)
-         return 1;                       // Not A Number
-
-      if(!strncmp(name, "key_", 4))    // killough
-         parm = I_ScanCode2DoomCode(parm);
-
-      //jff 3/4/98 range check numeric parameters
-      if((dp->limit.min == UL || dp->limit.min <= parm) &&
-         (dp->limit.max == UL || dp->limit.max >= parm))
-      {
-         if(wad)
+         if(sscanf(strparm, "%i", &parm) != 1)
+            return 1;                       // Not A Number
+         
+         if(!strncmp(name, "key_", 4))    // killough
+            parm = I_ScanCode2DoomCode(parm);
+         
+         //jff 3/4/98 range check numeric parameters
+         if((dp->limit.min == UL || dp->limit.min <= parm) &&
+            (dp->limit.max == UL || dp->limit.max >= parm))
          {
-            if(!dp->modified)         // First time it's modified by wad
+            if(wad)
             {
-               dp->modified = 1;      // Mark it as modified
-               dp->orig_default = *dp->location;  // Save original default
+               if(!dp->modified) // First time it's modified by wad
+               {
+                  dp->modified = 1;                           // Mark it as modified
+                  dp->orig_default_i = *(int *)dp->location;  // Save original default
+               }
+               if(dp->current)            // Change current value
+                  *(int *)dp->current = parm;
             }
-            if(dp->current)           // Change current value
-               *dp->current = parm;
+            *(int *)dp->location = parm;  // Change default
          }
-         *dp->location = parm;          // Change default
       }
-   }
+      break;
+   case dt_string:
+      {
+         int len = strlen(strparm) - 1;
 
-//  if (wad && dp->setup_menu)
-//    dp->setup_menu->m_flags |= S_SKIP;
+         while(isspace(strparm[len]))
+            len--;
+
+         if(strparm[len] == '"')
+            len--;
+
+         strparm[len+1] = 0;
+
+         if(wad && !dp->modified)                        // Modified by wad
+         {                                               // First time modified
+            dp->modified = 1;                            // Mark it as modified
+            dp->orig_default_s = *(char **)dp->location; // Save original default
+         }
+         else
+            free(*(char **)dp->location);               // Free old value
+
+         *(char **)dp->location = strdup(strparm+1);    // Change default value
+
+         if(dp->current)                                // Current value
+         {
+            free(*(char **)dp->current);                // Free old value
+            *(char **)dp->current = strdup(strparm+1);  // Change current value
+         }
+      }
+      break;
+   case dt_float:
+      {
+         if(sscanf(strparm, "%f", &tmp) != 1)
+            return 1;                       // Not A Number
+                  
+         //jff 3/4/98 range check numeric parameters
+         if((dp->limit.min == UL || dp->limit.min <= tmp) &&
+            (dp->limit.max == UL || dp->limit.max >= tmp))
+         {
+            if(wad)
+            {
+               if(!dp->modified) // First time it's modified by wad
+               {
+                  dp->modified = 1;                            // Mark it as modified
+                  dp->orig_default_f = *(float *)dp->location; // Save original default
+               }
+               if(dp->current)              // Change current value
+                  *(float *)dp->current = tmp;
+            }
+            *(float *)dp->location = tmp;  // Change default
+         }
+      }
+      break;
+   case dt_boolean:
+      {
+         if(sscanf(strparm, "%i", &parm) != 1)
+            return 1;                       // Not A Number
+                  
+         //jff 3/4/98 range check numeric parameters
+         if((dp->limit.min == UL || dp->limit.min <= parm) &&
+            (dp->limit.max == UL || dp->limit.max >= parm))
+         {
+            if(wad)
+            {
+               if(!dp->modified) // First time it's modified by wad
+               {
+                  dp->modified = 1;                               // Mark it as modified
+                  dp->orig_default_b = *(boolean *)dp->location;  // Save original default
+               }
+               if(dp->current)            // Change current value
+                  *(boolean *)dp->current = parm;
+            }
+            *(boolean *)dp->location = parm;  // Change default
+         }
+      }
+      break;
+   }
 
    return 0;                          // Success
 }
@@ -2070,8 +1435,21 @@ void M_LoadDefaultFile(defaultfile_t *df)
 
    for(dp = df->defaults; dp->name; dp++)
    {
-      *dp->location =
-         dp->isstr ? (int) strdup((char *) dp->defaultvalue) : dp->defaultvalue;
+      switch(dp->type)
+      {
+      case dt_integer:
+         *(int *)dp->location = dp->defaultvalue_i;
+         break;
+      case dt_string:
+         *(char **)dp->location = strdup(dp->defaultvalue_s);
+         break;
+      case dt_float:
+         *(float *)dp->location = dp->defaultvalue_f;
+         break;
+      case dt_boolean:
+         *(boolean *)dp->location = dp->defaultvalue_b;
+         break;
+      }
    }
 
    M_NormalizeSlashes(df->fileName);
