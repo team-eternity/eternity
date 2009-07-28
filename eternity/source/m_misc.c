@@ -998,7 +998,7 @@ static unsigned default_hash(defaultfile_t *df, const char *name)
 // Hashes/looks up defaults in the given defaultfile object by name.
 // Returns the default_t object, or NULL if not found.
 //
-default_t *M_LookupDefault(defaultfile_t *df, const char *name)
+static default_t *M_LookupDefault(defaultfile_t *df, const char *name)
 {
    register default_t *dp;
 
@@ -1144,7 +1144,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
                else 
                {
                   printError = 
-                     (fprintf(f, "?-%d(%d)]", dp->limit.max, dp->defaultvalue_i) == EOF);
+                     (fprintf(f, "[?-%d(%d)]", dp->limit.max, dp->defaultvalue_i) == EOF);
                }
             }
             else if(dp->limit.max == UL)
