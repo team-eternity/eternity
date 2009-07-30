@@ -1,7 +1,7 @@
 
 AM_CFLAGS = -I../ -I../textscreen @SDL_CFLAGS@ -I/usr/local/include/SDL -I/usr/include/SDL \
 -D_SDL_VER -DNDEBUG -DAMX_NODYNALOAD -DR_LINKEDPORTALS \
--D_CONSOLE -DLINUX -fno-strict-aliasing
+-D_CONSOLE -DLINUX -DBROKEN_SYS_TYPES -DSTDINT_H_UINTPTR_T_DEFINED -fno-strict-aliasing
 
 noinst_LIBRARIES = libsdlet.a
 

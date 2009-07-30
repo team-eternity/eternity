@@ -320,7 +320,9 @@
 #endif
 #ifndef int8_t
 # if (SCHAR_MAX == INT8_MAX) || defined (S_SPLINT_S)
+#ifndef BROKEN_SYS_TYPES
     typedef signed char int8_t;
+#endif
 #   define INT8_C(v) ((int8_t) v)
 # else
 #   error "Platform not supported"
@@ -356,13 +358,17 @@
 #endif
 #ifndef int16_t
 #if (INT_MAX == INT16_MAX) || defined (S_SPLINT_S)
+#ifndef BROKEN_SYS_TYPES
   typedef signed int int16_t;
+#endif
 # define INT16_C(v) ((int16_t) (v))
 # ifndef PRINTF_INT16_MODIFIER
 #  define PRINTF_INT16_MODIFIER ""
 # endif
 #elif (SHRT_MAX == INT16_MAX)
+#ifndef BROKEN_SYS_TYPES
   typedef signed short int16_t;
+#endif
 # define INT16_C(v) ((int16_t) (v))
 # ifndef PRINTF_INT16_MODIFIER
 #  define PRINTF_INT16_MODIFIER "h"
@@ -407,19 +413,25 @@
 #endif
 #ifndef int32_t
 #if (LONG_MAX == INT32_MAX) || defined (S_SPLINT_S)
+#ifndef BROKEN_SYS_TYPES
   typedef signed long int32_t;
+#endif
 # define INT32_C(v) v ## L
 # ifndef PRINTF_INT32_MODIFIER
 #  define PRINTF_INT32_MODIFIER "l"
 # endif
 #elif (INT_MAX == INT32_MAX)
+#ifndef BROKEN_SYS_TYPES
   typedef signed int int32_t;
+#endif
 # define INT32_C(v) v
 # ifndef PRINTF_INT32_MODIFIER
 #  define PRINTF_INT32_MODIFIER ""
 # endif
 #elif (SHRT_MAX == INT32_MAX)
+#ifndef BROKEN_SYS_TYPES
   typedef signed short int32_t;
+#endif
 # define INT32_C(v) ((short) (v))
 # ifndef PRINTF_INT32_MODIFIER
 #  define PRINTF_INT32_MODIFIER ""
@@ -440,7 +452,9 @@
 #if (defined(__STDC__) && defined(__STDC_VERSION__)) || defined (S_SPLINT_S)
 # if (__STDC__ && __STDC_VERSION >= 199901L) || defined (S_SPLINT_S)
 #  define stdint_int64_defined
+#ifndef BROKEN_SYS_TYPES
    typedef long long int64_t;
+#endif
    typedef unsigned long long uint64_t;
 #  define UINT64_C(v) v ## ULL
 #  define  INT64_C(v) v ## LL
@@ -453,7 +467,9 @@
 #if !defined (stdint_int64_defined)
 # if defined(__GNUC__)
 #  define stdint_int64_defined
+#ifndef BROKEN_SYS_TYPES
    __extension__ typedef long long int64_t;
+#endif
    __extension__ typedef unsigned long long uint64_t;
 #  define UINT64_C(v) v ## ULL
 #  define  INT64_C(v) v ## LL
@@ -462,7 +478,9 @@
 #  endif
 # elif defined(__MWERKS__) || defined (__SUNPRO_C) || defined (__SUNPRO_CC) || defined (__APPLE_CC__) || defined (_LONG_LONG) || defined (_CRAYC) || defined (S_SPLINT_S)
 #  define stdint_int64_defined
+#ifndef BROKEN_SYS_TYPES
    typedef long long int64_t;
+#endif
    typedef unsigned long long uint64_t;
 #  define UINT64_C(v) v ## ULL
 #  define  INT64_C(v) v ## LL
@@ -471,7 +489,9 @@
 #  endif
 # elif (defined(__WATCOMC__) && defined(__WATCOM_INT64__)) || (defined(_MSC_VER) && _INTEGRAL_MAX_BITS >= 64) || (defined (__BORLANDC__) && __BORLANDC__ > 0x460) || defined (__alpha) || defined (__DECC)
 #  define stdint_int64_defined
+#ifndef BROKEN_SYS_TYPES
    typedef __int64 int64_t;
+#endif
    typedef unsigned __int64 uint64_t;
 #  define UINT64_C(v) v ## UI64
 #  define  INT64_C(v) v ## I64
