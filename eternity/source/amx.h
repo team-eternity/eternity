@@ -32,6 +32,10 @@
 #ifndef AMX_H_INCLUDED
 #define AMX_H_INCLUDED
 
+// haleyjd
+#include "pstdint.h"
+#define HAVE_STDINT_H
+
 #if !defined HAVE_STDINT_H
   #if defined __LCC__ || defined __DMC__ || defined LINUX || defined __MINGW32__
     #if defined HAVE_INTTYPES_H
