@@ -1164,6 +1164,8 @@ void M_SaveDefaultFile(defaultfile_t *df)
          case dt_boolean:
             printError = (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
             break;
+         default:
+            break;
          }
 
          if(printError ||
@@ -1217,6 +1219,8 @@ void M_SaveDefaultFile(defaultfile_t *df)
             if(fprintf(f, "%-25s %5i\n", dp->name, !!value) == EOF)
                goto error;
          }
+         break;
+      default:
          break;
       }
    }
@@ -1377,6 +1381,8 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
          }
       }
       break;
+   default:
+      break;
    }
 
    return 0;                          // Success
@@ -1448,6 +1454,8 @@ void M_LoadDefaultFile(defaultfile_t *df)
          break;
       case dt_boolean:
          *(boolean *)dp->location = dp->defaultvalue_b;
+         break;
+      default:
          break;
       }
    }

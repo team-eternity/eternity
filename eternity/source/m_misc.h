@@ -152,7 +152,6 @@ typedef struct default_or_s
 } default_or_t;
 
 // killough 11/98:
-default_t *M_LookupDefault(defaultfile_t *df, const char *name);
 boolean    M_ParseOption(defaultfile_t *df, const char *name, boolean wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
