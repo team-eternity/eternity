@@ -185,6 +185,10 @@
 #include <limits.h>
 #include <signal.h>
 
+#ifdef BROKEN_SYS_TYPES // haleyjd: GCC bullshit
+#include <sys/types.h>
+#endif
+
 /*
  *  For gcc with _STDINT_H, fill in the PRINTF_INT*_MODIFIER macros, and
  *  do nothing else.  On the Mac OS X version of gcc this is _STDINT_H_.
