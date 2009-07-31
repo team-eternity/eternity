@@ -94,7 +94,7 @@ d_inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
 // precision is desired, this must be changed accordingly
 #define FPFRACUNIT 65536.0
 
-// SoM 5/10/09: Thses are now macroized for the sake of uniformity
+// SoM 5/10/09: These are now macroized for the sake of uniformity
 #define M_FloatToFixed(f) ((fixed_t)((f) * FPFRACUNIT))
 #define M_FixedToFloat(f) ((float)((f) / FPFRACUNIT))
 
