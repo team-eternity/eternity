@@ -89,15 +89,7 @@ int main(int argc, char **argv)
    //
    // Use the Windows GDI driver instead of DirectX.
    //
-   
-   // From the SDL 1.2.10 release notes: 
-   //
-   // > The "windib" video driver is the default now, to prevent 
-   // > problems with certain laptops, 64-bit Windows, and Windows 
-   // > Vista. 
-   //
-   // The hell with that.
-   
+      
    // SoM: the gdi interface is much faster for windowed modes which are more
    // commonly used. Thus, GDI is default.
    if(M_CheckParm("-directx"))
