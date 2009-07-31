@@ -32,10 +32,6 @@
 #ifndef AMX_H_INCLUDED
 #define AMX_H_INCLUDED
 
-// haleyjd
-#include "pstdint.h"
-#define HAVE_STDINT_H
-
 #if !defined HAVE_STDINT_H
   #if defined __LCC__ || defined __DMC__ || defined LINUX || defined __MINGW32__
     #if defined HAVE_INTTYPES_H
@@ -77,6 +73,10 @@
   #if !defined HAVE_STDINT_H
     #define HAVE_STDINT_H
   #endif
+#else
+// haleyjd: wouldn't it make sense to include this in the even thtat we've said
+// we have it, rather than causing 209 errors?
+#include <inttypes.h>
 #endif
 #if defined _LP64 || defined WIN64 || defined _WIN64
   #if !defined __64BIT__

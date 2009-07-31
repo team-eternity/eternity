@@ -28,9 +28,7 @@
 #ifndef DOOMTYPE_H__
 #define DOOMTYPE_H__
 
-#ifndef I_SDL_TYPES_ACTIVE
-#include "pstdint.h"
-#endif
+#include <inttypes.h>
 
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__

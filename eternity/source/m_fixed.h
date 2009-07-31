@@ -30,10 +30,6 @@
 #include "d_keywds.h" // haleyjd 05/22/02
 #include "i_system.h"
 
-#ifndef I_SDL_TYPES_ACTIVE
-#include "pstdint.h"
-#endif
-
 //
 // Fixed point, 32bit as 16.16.
 //

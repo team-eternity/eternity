@@ -24,8 +24,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#define I_SDL_TYPES_ACTIVE
-
 #include "SDL.h"
 #include "SDL_net.h"
 #include "SDL_mixer.h"

@@ -57,12 +57,11 @@
 #include <errno.h>
 #include <float.h>
 
-#include "psnprntf.h"
+// haleyjd: inttypes.h - on Windows, this comes from the source\Win32
+// directory.
+#include <inttypes.h>
 
-// haleyjd 07/24/09: portable stdint.h - but not where SDL is being included
-#ifndef I_SDL_TYPES_ACTIVE
-#include "pstdint.h"
-#endif
+#include "psnprntf.h"
 
 // ZONE MEMORY
 
