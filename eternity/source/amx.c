@@ -500,7 +500,7 @@ static int amx_BrowseRelocate(AMX *amx)
   int debug;
   int last_sym_global = 0;
   #if defined __GNUC__ || defined ASM32 || defined JIT
-    cell *opcode_list;
+    cell *opcode_list = NULL;
   #endif
   #if defined JIT
     int opcode_count = 0;

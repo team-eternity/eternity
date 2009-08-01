@@ -524,7 +524,10 @@ void W_ReadLumpInDir(waddir_t *dir, int lump, void *dest)
 
    c = LumpHandlers[l->type].readLump(l, dest, l->size);
    if(c < l->size)
-      I_Error("W_ReadLump: only read %d of %d on lump %d", c, l->size, lump);
+   {
+      I_Error("W_ReadLump: only read %d of %d on lump %d", 
+              (int)c, (int)l->size, lump);
+   }
 }
 
 void W_ReadLump(int lump, void *dest)
@@ -554,7 +557,10 @@ int W_ReadLumpHeaderInDir(waddir_t *dir, int lump, void *dest, size_t size)
 
    c = LumpHandlers[l->type].readLump(l, dest, size);
    if(c < size)
-      I_Error("W_ReadLumpHeader: only read %d of %d on lump %d", c, size, lump);
+   {
+      I_Error("W_ReadLumpHeader: only read %d of %d on lump %d", 
+              (int)c, (int)size, lump);
+   }
    
    return c;
 }

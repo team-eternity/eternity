@@ -53,7 +53,7 @@ byte *save_p;
 // this makes for smaller savegames
 #define PADSAVEP()      {}
 
-static int num_thinkers; // number of thinkers in level being archived
+static unsigned int num_thinkers; // number of thinkers in level being archived
 
 static mobj_t **mobj_p;  // killough 2/14/98: Translation table
 
@@ -74,12 +74,17 @@ void P_NumberObjects(void)
    // killough 2/14/98:
    // count the number of thinkers, and mark each one with its index, using
    // the prev field as a placeholder, since it can be restored later.
+
+   // haleyjd 08/01/09: GCC doesn't like writing integer values into pointers,
+   // and I always thought it was messy anway. Instead, store the value into
+   // the new ordinal member of thinker_t.
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
       if(th->function == P_MobjThinker)
-         th->prev = (thinker_t *) ++num_thinkers;
+         th->ordinal = ++num_thinkers;
 }
 
+/*
 void P_DeNumberObjects(void)
 {
    thinker_t *prev = &thinkercap;
@@ -88,6 +93,7 @@ void P_DeNumberObjects(void)
    for(th = thinkercap.next; th != &thinkercap; prev = th, th = th->next)
       th->prev = prev;
 }
+*/
 
 // 
 // P_MobjNum
@@ -95,15 +101,15 @@ void P_DeNumberObjects(void)
 // Get the mobj number from the mobj.
 // haleyjd 10/03/03: made static
 //
-static int P_MobjNum(mobj_t *mo)
+static unsigned int P_MobjNum(mobj_t *mo)
 {
-   int l = mo ? (int)mo->thinker.prev : 0;   // 0 = NULL
+   unsigned int n = mo ? mo->thinker.ordinal : 0;   // 0 = NULL
    
    // extra check for invalid thingnum (prob. still ptr)
-   if(l < 0 || l > num_thinkers) 
-      l = 0;
+   if(n < 0 || n > num_thinkers) 
+      n = 0;
    
-   return l;
+   return n;
 }
 
 //
@@ -111,7 +117,7 @@ static int P_MobjNum(mobj_t *mo)
 //
 // haleyjd 10/03/03: made static
 //
-static mobj_t *P_MobjForNum(int n)
+static mobj_t *P_MobjForNum(unsigned int n)
 {
    return mobj_p[n];
 }
@@ -465,23 +471,27 @@ void P_ArchiveThinkers(void)
          // mobj thinker.
          
          if(mobj->target)
-            mobj->target = mobj->target->thinker.function ==
-               P_MobjThinker ?
-               (mobj_t *) mobj->target->thinker.prev : NULL;
+            mobj->target = (mobj_t *)
+              (mobj->target->thinker.function == P_MobjThinker ?
+                mobj->target->thinker.ordinal : 0);
 
          if(mobj->tracer)
-            mobj->tracer = mobj->tracer->thinker.function ==
-               P_MobjThinker ?
-               (mobj_t *) mobj->tracer->thinker.prev : NULL;
+         {
+            mobj->tracer = (mobj_t *)
+               (mobj->tracer->thinker.function == P_MobjThinker ?
+                 mobj->tracer->thinker.ordinal : 0);
+         }
 
          // killough 2/14/98: new field: save last known enemy. Prevents
          // monsters from going to sleep after killing monsters and not
          // seeing player anymore.
 
          if(mobj->lastenemy)
-            mobj->lastenemy = mobj->lastenemy->thinker.function ==
-               P_MobjThinker ?
-               (mobj_t *) mobj->lastenemy->thinker.prev : NULL;
+         {
+            mobj->lastenemy = (mobj_t *)
+              (mobj->lastenemy->thinker.function == P_MobjThinker ?
+               mobj->lastenemy->thinker.ordinal : 0);
+         }
         
          if(mobj->player)
          {
@@ -506,8 +516,9 @@ void P_ArchiveThinkers(void)
             // or player corpses waiting for deferred removal will be saved as
             // raw pointer values instead of twizzled numbers, causing a crash
             // on savegame load!
-            target = target->thinker.function == P_MobjThinker ? 
-                        (mobj_t *)target->thinker.prev : NULL;
+            target = (mobj_t *)
+               (target->thinker.function == P_MobjThinker ? 
+                target->thinker.ordinal : 0);
          }
          memcpy(save_p, &target, sizeof target);
          save_p += sizeof target;
@@ -1801,7 +1812,7 @@ static void P_UnArchiveSndSeq(void)
       newSeq->origin = (mobj_t *)&po->spawnSpot;
       break;
    case SEQ_ORIGIN_OTHER:
-      mo = P_MobjForNum(twizzle);
+      mo = P_MobjForNum((unsigned int)twizzle);
       newSeq->originIdx = -1;
       newSeq->origin = mo;
       break;

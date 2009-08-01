@@ -103,14 +103,14 @@ static int NetbufferSize(void)
 static unsigned int NetbufferChecksum(void)
 {
    unsigned int c;
-   int i, l;
+   int i, len;
    
    c = 0x1234567;
    
-   l = (NetbufferSize() - (int)&(((doomdata_t *)0)->retransmitfrom)) / 4;
+   len = (NetbufferSize() - (int)&(((doomdata_t *)0)->retransmitfrom)) / sizeof(unsigned int);
 
-   for(i = 0; i < l; ++i)
-      c += ((unsigned *)&netbuffer->retransmitfrom)[i] * (i + 1);
+   for(i = 0; i < len; ++i)
+      c += ((unsigned int *)&netbuffer->retransmitfrom)[i] * (i + 1);
    
    return c & NCMD_CHECKSUM;
 }

@@ -7,21 +7,32 @@
 int psnprintf(char *str, size_t n, const char *format, ...);
 int pvsnprintf(char *str, size_t n, const char *format, va_list ap);
 
+/* haleyjd 08/01/09: rewritten to use a structure to get around bizarre
+ * GCC bug with va_list * type.
+ */
+typedef struct psvnfmt_vars_s
+{
+   char       *pinsertion;
+   size_t      nmax;
+   const char *fmt;
+   int         flags;
+   int         width;
+   int         precision;
+   char        prefix;
+   va_list     ap;
+} pvsnfmt_vars;
+
 /* Use these directly if you want to avoid overhead of psnprintf
  * Return value is number of characters printed (or number printed
  * if there had been enough room).
  */
-int pvsnfmt_char(char **pinsertion, size_t *nmax, const char fmt, int flags,
-                 int width, int precision, char prefix, va_list *ap);
+int pvsnfmt_char(pvsnfmt_vars *args);
 
-int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
-                 int width, int precision, char prefix, va_list *ap);
+int pvsnfmt_int(pvsnfmt_vars *args);
 
-int pvsnfmt_str(char **pinsertion, size_t *nmax, const char fmt, int flags,
-                 int width, int precision, char prefix, va_list *ap);
+int pvsnfmt_str(pvsnfmt_vars *args);
 
-int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
-                 int width, int precision, char prefix, va_list *ap);
+int pvsnfmt_double(pvsnfmt_vars *args);
 
 /* These are the flags you need (use logical OR) for the flags parameter of
  * fmt functions above.

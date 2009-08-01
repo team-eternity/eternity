@@ -982,7 +982,7 @@ void R_ClipSegToLPortal(void)
    }
 }
 
-extern R_ClipSegFunc segclipfuncs[] = 
+R_ClipSegFunc segclipfuncs[] = 
 {
    R_ClipSegToFPortal,
    R_ClipSegToCPortal,

@@ -56,7 +56,6 @@ void P_UnArchiveMap(void);
 
 void P_FreeObjTable(void);
 void P_NumberObjects(void);
-void P_DeNumberObjects(void);
 
 extern byte *save_p;
 void CheckSaveGame(size_t);              // killough

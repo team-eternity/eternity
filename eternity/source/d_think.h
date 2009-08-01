@@ -49,7 +49,11 @@ typedef struct thinker_s
 
   // killough 11/98: count of how many other objects reference
   // this one using pointers. Used for garbage collection.
-  unsigned references;
+  unsigned int references;
+
+  // haleyjd 08/01/09: use to number thinkers instead of *prev, which angers
+  // GCC with thoughts of writing pointers into integers.
+  unsigned int ordinal;
 } thinker_t;
 
 #endif

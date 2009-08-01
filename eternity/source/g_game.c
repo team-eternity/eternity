@@ -1746,8 +1746,8 @@ void G_SaveCurrentLevel(char *filename, char *description)
    save_p = G_WriteOptions(save_p);    // killough 3/1/98: save game options
    
    // haleyjd: uses 4 (bytes 3-6)
-   memcpy(save_p, &leveltime, sizeof save_p); //killough 11/98: save entire word
-   save_p += sizeof save_p;
+   memcpy(save_p, &leveltime, sizeof(leveltime)); //killough 11/98: save entire word
+   save_p += sizeof(leveltime);
    
    // haleyjd: uses 1 (byte 7)
    // killough 11/98: save revenant tracer state
@@ -1773,7 +1773,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    P_ArchiveSoundSequences();
    P_ArchiveButtons();
    
-   P_DeNumberObjects();
+   //P_DeNumberObjects();
 
    CheckSaveGame(1); // haleyjd
 
@@ -1913,8 +1913,9 @@ static void G_DoLoadGame(void)
 
    // get the times
    // killough 11/98: save entire word
-   memcpy(&leveltime, save_p, sizeof save_p);
-   save_p += sizeof save_p;
+   // haleyjd  08/01/09: try sizeof variable, not sizeof pointer!
+   memcpy(&leveltime, save_p, sizeof(leveltime));
+   save_p += sizeof(leveltime);
 
    // killough 11/98: load revenant tracer state
    basetic = gametic - (int) *save_p++;

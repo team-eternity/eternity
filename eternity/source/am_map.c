@@ -285,6 +285,8 @@ static boolean stopped = true;
 static byte *am_backdrop = NULL;
 static boolean am_usebackdrop = false;
 
+// haleyjd 08/01/09: this function is unused
+#if 0
 //
 // AM_getIslope()
 //
@@ -310,6 +312,7 @@ static void AM_getIslope(mline_t *ml, islope_t *is )
    else
       is->slp = dy / dx;
 }
+#endif
 
 //
 // AM_activateNewScale()

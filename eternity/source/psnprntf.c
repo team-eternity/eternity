@@ -63,23 +63,23 @@ int psnprintf(char *str, size_t n, const char *format, ...)
  */
 #define CHECK_FLAG \
     case '-':  \
-        flags |= FLAG_LEFT_ALIGN; \
+        info.flags |= FLAG_LEFT_ALIGN; \
         state = STATE_FLAG; \
         break; \
     case '+': \
-        flags |= FLAG_SIGNED; \
+        info.flags |= FLAG_SIGNED; \
         state = STATE_FLAG; \
         break; \
     case '0': \
-        flags |= FLAG_ZERO_PAD; \
+        info.flags |= FLAG_ZERO_PAD; \
         state = STATE_FLAG; \
         break; \
     case ' ': \
-        flags |= FLAG_SIGN_PAD; \
+        info.flags |= FLAG_SIGN_PAD; \
         state = STATE_FLAG; \
         break; \
     case '#': \
-        flags |= FLAG_HASH; \
+        info.flags |= FLAG_HASH; \
         state = STATE_FLAG; \
         break;
 
@@ -93,17 +93,17 @@ int psnprintf(char *str, size_t n, const char *format, ...)
     case '7': \
     case '8': \
     case '9': \
-        width = *pfmt - '0'; /* convert to integer */ \
+        info.width = *info.fmt - '0'; /* convert to integer */ \
         state = STATE_WIDTH; \
         break; \
     case '*': \
-        width = VARIABLE_WIDTH; \
+        info.width = VARIABLE_WIDTH; \
         state = STATE_WIDTH; \
         break;
 
 #define CHECK_PRECISION \
     case '.': \
-        precision = 0; \
+        info.precision = 0; \
         state = STATE_BEFORE_PRECISION; \
         break;
 
@@ -111,15 +111,15 @@ int psnprintf(char *str, size_t n, const char *format, ...)
     case 'h': \
     case 'l': \
     case 'L': \
-        prefix = *pfmt; \
+        info.prefix = *info.fmt; \
         state = STATE_PREFIX; \
         break;
 
 #define GET_VARS \
-    if (width == VARIABLE_WIDTH) \
-        width = va_arg(ap, int); \
-    if (precision == VARIABLE_PRECISION) \
-        precision = va_arg(ap, int);
+    if (info.width == VARIABLE_WIDTH) \
+        info.width = va_arg(ap, int); \
+    if (info.precision == VARIABLE_PRECISION) \
+        info.precision = va_arg(ap, int);
 
 #define CHECK_TYPE \
     case 'd': \
@@ -130,7 +130,7 @@ int psnprintf(char *str, size_t n, const char *format, ...)
     case 'X': \
     case 'p': \
         GET_VARS \
-        ncount += pvsnfmt_int(&pinsertion, &nmax, *pfmt, flags, width, precision, prefix, &ap); \
+        ncount += pvsnfmt_int(&info); \
         state = STATE_NONE; \
         break; \
     case 'e': \
@@ -139,17 +139,17 @@ int psnprintf(char *str, size_t n, const char *format, ...)
     case 'g': \
     case 'G': \
         GET_VARS \
-        ncount += pvsnfmt_double(&pinsertion, &nmax, *pfmt, flags, width, precision, prefix, &ap); \
+        ncount += pvsnfmt_double(&info); \
         state = STATE_NONE; \
         break; \
     case 'c': \
         GET_VARS \
-        ncount += pvsnfmt_char(&pinsertion, &nmax, *pfmt, flags, width, precision, prefix, &ap); \
+        ncount += pvsnfmt_char(&info); \
         state = STATE_NONE; \
         break; \
     case 's': \
         GET_VARS \
-        ncount += pvsnfmt_str(&pinsertion, &nmax, *pfmt, flags, width, precision, prefix, &ap); \
+        ncount += pvsnfmt_str(&info); \
         state = STATE_NONE; \
         break; \
     case 'n': \
@@ -160,7 +160,7 @@ int psnprintf(char *str, size_t n, const char *format, ...)
 #define PUTCHAR(ch) \
     if (nmax > 1) \
     { \
-        *pinsertion++ = ch;  \
+        *info.pinsertion++ = ch;  \
         nmax--; \
     } \
     ncount++;
@@ -172,37 +172,43 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
      * (contrary to C99)
      */
 
-    char *pinsertion = str;
-    const char *pfmt = format;
     int ncount = 0;     /* number of characters printed so far */
     int state = STATE_NONE;
-    char flags = 0;
-    int width = 0;
-    int precision = 0;
-    char prefix = 0;
 
-    while (*pfmt)
+    /* haleyjd 08/01/09: rewrite to use structure */
+    pvsnfmt_vars info;
+
+    info.pinsertion = str;
+    info.nmax       = nmax;
+    info.fmt        = format;
+    info.flags      = 0;
+    info.width      = 0;
+    info.precision  = 0;
+    info.prefix     = 0;
+    info.ap         = ap;
+
+    while(*info.fmt)
     {
         switch (state)
         {
         case STATE_NONE:
-            switch (*pfmt)
+            switch (*(info.fmt))
             {
             case '%':
                 state = STATE_OPERATOR;
-                flags = FLAG_DEFAULT;
-                width = UNKNOWN_WIDTH;
-                precision = UNKNOWN_PRECISION;
-                prefix = '\0';
+                info.flags = FLAG_DEFAULT;
+                info.width = UNKNOWN_WIDTH;
+                info.precision = UNKNOWN_PRECISION;
+                info.prefix = '\0';
                 break;
 
             default:
-                PUTCHAR(*pfmt)
+                PUTCHAR(*(info.fmt))
             }
             break;
 
         case STATE_OPERATOR:
-            switch (*pfmt)
+            switch (*(info.fmt))
             {
                 CHECK_FLAG
                 CHECK_WIDTH
@@ -210,13 +216,13 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
                 CHECK_PREFIX
                 CHECK_TYPE
             default:
-                PUTCHAR(*pfmt) /* Unknown format, just print it (e.g. "%%") */
+                PUTCHAR(*info.fmt) /* Unknown format, just print it (e.g. "%%") */
                 state = STATE_NONE;
             }
             break;
 
         case STATE_FLAG:
-            switch (*pfmt)
+            switch (*info.fmt)
             {
                 CHECK_FLAG
                 CHECK_WIDTH
@@ -227,12 +233,12 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
             break;
 
         case STATE_WIDTH:
-            if (*pfmt >= '0' && *pfmt <= '9' && width != -1)
+            if (*info.fmt >= '0' && *info.fmt <= '9' && info.width != -1)
             {
-                width = width * 10 + (*pfmt - '0');
+                info.width = info.width * 10 + (*info.fmt - '0');
                 break;
             }
-            switch (*pfmt)
+            switch (*info.fmt)
             {
                 CHECK_PRECISION
                 CHECK_PREFIX
@@ -241,17 +247,17 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
             break;
 
         case STATE_BEFORE_PRECISION:
-            if (*pfmt >= '0' && *pfmt <= '9')
+            if (*info.fmt >= '0' && *info.fmt <= '9')
             {
-                precision = *pfmt - '0';
+                info.precision = *info.fmt - '0';
                 state = STATE_PRECISION;
             }
-            else if (*pfmt == '*')
+            else if (*info.fmt == '*')
             {
-                precision = VARIABLE_PRECISION;
+                info.precision = VARIABLE_PRECISION;
                 state = STATE_PRECISION;
             }
-            switch (*pfmt)
+            switch (*info.fmt)
             {
                 CHECK_PREFIX
                 CHECK_TYPE
@@ -259,12 +265,12 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
             break;
 
         case STATE_PRECISION:
-            if (*pfmt >= '0' && *pfmt <= '9' && precision != -1)
+            if (*info.fmt >= '0' && *info.fmt <= '9' && info.precision != -1)
             {
-                precision = precision * 10 + (*pfmt - '0');
+                info.precision = info.precision * 10 + (*info.fmt - '0');
                 break;
             }
-            switch (*pfmt)
+            switch (*info.fmt)
             {
                 CHECK_PREFIX
                 CHECK_TYPE
@@ -272,14 +278,14 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
             break;
 
         case STATE_PREFIX:
-            switch (*pfmt)
+            switch (*info.fmt)
             {
                 CHECK_TYPE
             }
 
 
         } /* switch state */
-        pfmt++;
+        info.fmt++;
 
     } /* while *pfmt */
 
@@ -289,19 +295,18 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
      * always leave at least one free byte at end.
      */
     if (nmax > 0)
-        *pinsertion = '\0';
+        *info.pinsertion = '\0';
 
     return ncount;
 }
 
-int pvsnfmt_char(char **pinsertion, size_t *nmax, const char fmt, int flags,
-                 int width, int precision, char prefix, va_list *ap)
+int pvsnfmt_char(pvsnfmt_vars *info)
 {
-    if (*nmax > 1)
+    if(info->nmax > 1)
     {
-        **pinsertion = (char) va_arg(*ap, int);
-        *pinsertion += 1;
-        *nmax -= 1;
+        *(info->pinsertion) = (char) va_arg(info->ap, int);
+        info->pinsertion += 1;
+        info->nmax -= 1;
     }
     return 1;
 }
@@ -326,33 +331,36 @@ size_t pstrnlen(const char *s, size_t count)
  *   ap             Argument list
  */
 
-int pvsnfmt_str(char **pinsertion, size_t *nmax, const char fmt, int flags,
-                int width, int precision, char prefix, va_list *ap)
+int pvsnfmt_str(pvsnfmt_vars *info)
 {
-    const char *str = va_arg(*ap, const char *);
+    const char *str = va_arg(info->ap, const char *);
     int nprinted;
     int len;
     int pad = 0;
+    int width, flags;
+
+    width = info->width;
+    flags = info->flags;
 
     /* Get width magnitude, set aligment flag */
-    if (width < 0)
+    if(width < 0)
     {
         width = -width;
         flags |= FLAG_LEFT_ALIGN;
     }
 
     /* Truncate due to precision */
-    if (precision < 0)
+    if (info->precision < 0)
         len = strlen(str);
     else
-        len = pstrnlen(str, precision);
+        len = pstrnlen(str, info->precision);
 
     /* Determine padding length */
     if (width > len)
         pad = width - len;
 
     /* Exit if just counting (not printing) */
-    if (*nmax <= 1)
+    if (info->nmax <= 1)
         return len + pad;
 
     /* If right-aligned, print pad */
@@ -364,41 +372,41 @@ int pvsnfmt_str(char **pinsertion, size_t *nmax, const char fmt, int flags,
         else
             padchar = ' ';
 
-        if ((int) *nmax - 1 < pad)
-            nprinted = *nmax - 1;
+        if ((int) info->nmax - 1 < pad)
+            nprinted = info->nmax - 1;
         else
             nprinted = pad;
 
-        memset(*pinsertion, padchar, nprinted);
-        *pinsertion += nprinted;
-        *nmax -= nprinted;
+        memset(info->pinsertion, padchar, nprinted);
+        info->pinsertion += nprinted;
+        info->nmax -= nprinted;
     }
 
     /* Output string */
-    if (*nmax <= 1)
+    if (info->nmax <= 1)
         nprinted = 0;
-    else if ((int) *nmax - 1 < len)
-        nprinted = *nmax - 1;
+    else if ((int) info->nmax - 1 < len)
+        nprinted = info->nmax - 1;
     else
         nprinted = len;
 
-    memcpy(*pinsertion, str, nprinted);
-    *pinsertion += nprinted;
-    *nmax -= nprinted;
+    memcpy(info->pinsertion, str, nprinted);
+    info->pinsertion += nprinted;
+    info->nmax -= nprinted;
 
     /* If left aligned, add pad */
     if (flags & FLAG_LEFT_ALIGN)
     {
-        if (*nmax <= 1)
+        if (info->nmax <= 1)
             nprinted = 0;
-        else if ((int)*nmax - 1 < pad)
-            nprinted = *nmax - 1;
+        else if ((int)info->nmax - 1 < pad)
+            nprinted = info->nmax - 1;
         else
             nprinted = pad;
 
-        memset(*pinsertion, ' ', nprinted);
-        *pinsertion += nprinted;
-        *nmax -= nprinted;
+        memset(info->pinsertion, ' ', nprinted);
+        info->pinsertion += nprinted;
+        info->nmax -= nprinted;
     }
 
     return len + pad; /* Return total length of pad + string even if some
@@ -416,8 +424,7 @@ int pvsnfmt_str(char **pinsertion, size_t *nmax, const char fmt, int flags,
  *   ap             Argument list
  */
 
-int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
-                int width, int precision, char prefix, va_list *ap)
+int pvsnfmt_int(pvsnfmt_vars *info)
 {
     int number = 0;
     unsigned int unumber = 0;
@@ -437,6 +444,10 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
      */
     char numstack[22];    /* largest 64 bit number has 22 octal digits */
     char *stackpos = numstack;
+    
+    char fmt       = *info->fmt;
+    int flags      = info->flags;
+    int precision  = info->precision;
 
 #define PUSH(x) \
     *stackpos++ = (char)(x)
@@ -445,24 +456,24 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
     *(--stackpos)
 
     /* Retrieve value */
-    switch (prefix)
+    switch (info->prefix)
     {
     case 'h':
         switch (fmt)
         {
             case 'd':
             case 'i':
-                number = (signed short int) va_arg(*ap, int);
+                number = (signed short int) va_arg(info->ap, int);
                 break;
             case 'u':
             case 'o':
             case 'x':
             case 'X':
-                unumber = (unsigned short int) va_arg(*ap, int);
+                unumber = (unsigned short int) va_arg(info->ap, int);
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) va_arg(*ap, void *);
+                unumber = (unsigned int) va_arg(info->ap, void *);
                 numbersigned = 0;
         }
         break;
@@ -471,17 +482,17 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
         {
             case 'd':
             case 'i':
-                number = va_arg(*ap, signed int);
+                number = va_arg(info->ap, signed int);
                 break;
             case 'u':
             case 'o':
             case 'x':
             case 'X':
-                unumber = va_arg(*ap, unsigned int);
+                unumber = va_arg(info->ap, unsigned int);
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) va_arg(*ap, void *);
+                unumber = (unsigned int) va_arg(info->ap, void *);
                 numbersigned = numbersigned;
         }
         break;
@@ -490,17 +501,17 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
         {
             case 'd':
             case 'i':
-                number = va_arg(*ap, signed int);
+                number = va_arg(info->ap, signed int);
                 break;
             case 'u':
             case 'o':
             case 'x':
             case 'X':
-                unumber = va_arg(*ap, unsigned int);
+                unumber = va_arg(info->ap, unsigned int);
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) va_arg(*ap, void *);
+                unumber = (unsigned int) va_arg(info->ap, void *);
                 numbersigned = 0;
          }
     } /* switch fmt to retrieve number */
@@ -594,15 +605,15 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
     }
 
 
-    if (len + addprefix < width)
+    if (len + addprefix < info->width)
     {
-        totallen = width;
-        widthpad = width - (len + addprefix);
+        totallen = info->width;
+        widthpad = info->width - (len + addprefix);
     }
     else
         totallen = len + addprefix;
 
-    if (*nmax <= 1)
+    if (info->nmax <= 1)
         return totallen;
 
     /* Write sign or "0x" */
@@ -610,26 +621,26 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
     {
         if (addprefix == 2) /* 0x */
         {
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = '0';
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = '0';
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = fmt;
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = fmt;
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
         }
         else if (addprefix == 1) /* sign */
         {
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = sign;
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = sign;
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
         }
     }
@@ -638,18 +649,18 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
     if ( !(flags & FLAG_LEFT_ALIGN) )
     {
         /* haleyjd 07/19/03: bug fix: nmax + 1 => nmax - 1 */
-        if (*nmax <= 1)
+        if (info->nmax <= 1)
             widthpad = 0;
-        else if ((int) *nmax - 1 < widthpad)
-            widthpad = *nmax - 1;
+        else if ((int) info->nmax - 1 < widthpad)
+            widthpad = info->nmax - 1;
 
         if (flags & FLAG_ZERO_PAD)
-            memset(*pinsertion, '0', widthpad);
+            memset(info->pinsertion, '0', widthpad);
         else
-            memset(*pinsertion, ' ', widthpad);
+            memset(info->pinsertion, ' ', widthpad);
 
-        *pinsertion += widthpad;
-        *nmax -= widthpad;
+        info->pinsertion += widthpad;
+        info->nmax -= widthpad;
     }
 
     /* Write sign or "0x" */
@@ -657,36 +668,36 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
     {
         if (addprefix == 2) /* 0x */
         {
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = '0';
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = '0';
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = fmt;
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = fmt;
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
         }
         else if (addprefix == 1) /* sign */
         {
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = sign;
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = sign;
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
         }
     }
 
     /* haleyjd 07/19/03: bug fix: nmax + 1 => nmax - 1 */
     /* Write number */
-    if (*nmax <= 1)
+    if (info->nmax <= 1)
         len = 0;
-    else if ((int) *nmax - 1 < len)
-        len = *nmax - 1;
+    else if ((int) info->nmax - 1 < len)
+        len = info->nmax - 1;
 
     /* haleyjd 07/19/03: bug fix: Do NOT use len as the counter
      * variable for this loop. This messes up the length calculations
@@ -699,35 +710,35 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
         char n = POP();
         if (n <= 9)
         {
-            **pinsertion = n + '0';
-            *pinsertion += 1;
+            *(info->pinsertion) = n + '0';
+            info->pinsertion += 1;
         }
         else
         {
-            **pinsertion = n - 10 + char10;
-            *pinsertion += 1;
+            *(info->pinsertion) = n - 10 + char10;
+            info->pinsertion += 1;
         }
     }
-    *nmax -= len;
+    info->nmax -= len;
 
     if (flags & FLAG_LEFT_ALIGN)
     {
         /* haleyjd 07/19/03: bug fix: nmax + 1 => nmax - 1 */
-        if (*nmax <= 1)
+        if (info->nmax <= 1)
             widthpad = 0;
-        else if ((int) *nmax - 1 < widthpad)
-            widthpad = *nmax - 1;
+        else if ((int) info->nmax - 1 < widthpad)
+            widthpad = info->nmax - 1;
 
-        memset(*pinsertion, ' ', widthpad);
-        *pinsertion += widthpad;
-        *nmax -= widthpad;
+        memset(info->pinsertion, ' ', widthpad);
+        info->pinsertion += widthpad;
+        info->nmax -= widthpad;
     }
 
     return totallen;
 }
 
 /*
- * WARNING: Assumes 32 bit longs and 64 bit doubles
+ * WARNING: Assumes 64 bit doubles
  */
 typedef union {
     double D;
@@ -772,13 +783,12 @@ typedef union {
  *   ap             Argument list
  */
 
-int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
-                   int width, int precision, char prefix, va_list *ap)
+int pvsnfmt_double(pvsnfmt_vars *info)
 {
     char *digits;
     int sign = 0;
     int dec;
-    double value = va_arg(*ap, double);
+    double value = va_arg(info->ap, double);
 
     int len;
     int pad = 0;
@@ -788,6 +798,11 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
     int leadingzeros = 0;
 
     int printdigits; /* temporary var used in different contexts */
+
+    int flags = info->flags;
+    int width = info->width;
+    const char fmt = *(info->fmt);
+    int precision = info->precision;
 
     /* Check for special values first */
     char *special = 0;
@@ -827,67 +842,67 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
         totallen += pad ;
 
         // haleyjd 05/07/08: this was forgotten!
-        if (*nmax <= 1)
+        if (info->nmax <= 1)
            return totallen;
 
 
         /* Sign now if zeropad */
         if (flags & FLAG_ZERO_PAD && signchar)
         {
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = signchar;
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = signchar;
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
         }
 
         /* Right align */
         if ( !(flags & FLAG_LEFT_ALIGN) )
         {
-            if (*nmax <= 1)
+            if (info->nmax <= 1)
                 pad  = 0;
-            else if ((int) *nmax - 1 < pad )
-                pad  = *nmax - 1;
+            else if ((int) info->nmax - 1 < pad )
+                pad  = info->nmax - 1;
 
             if (flags & FLAG_ZERO_PAD)
-                memset(*pinsertion, '0', pad );
+                memset(info->pinsertion, '0', pad );
             else
-                memset(*pinsertion, ' ', pad );
-            *pinsertion += pad ;
-            *nmax -= pad ;
+                memset(info->pinsertion, ' ', pad );
+            info->pinsertion += pad ;
+            info->nmax -= pad ;
         }
 
         /* Sign now if not zeropad */
         if (!(flags & FLAG_ZERO_PAD) && signchar)
         {
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = signchar;
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = signchar;
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
         }
 
-        if (*nmax <= 0)
+        if (info->nmax <= 0)
             len = 0;
-        else if ((int) *nmax - 1 < len)
-            len = *nmax - 1;
-        memcpy(*pinsertion, special, len);
-        *pinsertion += len;
-        *nmax -= len;
+        else if ((int) info->nmax - 1 < len)
+            len = info->nmax - 1;
+        memcpy(info->pinsertion, special, len);
+        info->pinsertion += len;
+        info->nmax -= len;
 
         /* Left align */
         if (flags & FLAG_LEFT_ALIGN)
         {
-            if (*nmax <= 1)
+            if (info->nmax <= 1)
                 pad  = 0;
-            else if ((int) *nmax - 1 < pad )
-                pad  = *nmax - 1;
+            else if ((int) info->nmax - 1 < pad )
+                pad  = info->nmax - 1;
 
-            memset(*pinsertion, ' ', pad );
-            *pinsertion += pad ;
-            *nmax -= pad ;
+            memset(info->pinsertion, ' ', pad );
+            info->pinsertion += pad ;
+            info->nmax -= pad ;
         }
 
         return totallen;
@@ -943,7 +958,7 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
             pad = width - totallen;
 
         totallen += pad;
-        if (*nmax <= 1)
+        if (info->nmax <= 1)
             return totallen;
 
         /* Now that the length has been calculated, print as much of it
@@ -953,57 +968,57 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
         /* Print sign now if padding with zeros */
         if (flags & FLAG_ZERO_PAD && signchar != 0)
         {
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = signchar;
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = signchar;
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
         }
 
         /* Print width padding if right-aligned */
         if ( !(flags & FLAG_LEFT_ALIGN) )
         {
-            if (*nmax <= 1)
+            if (info->nmax <= 1)
                 pad = 0;
-            else if ((int) *nmax - 1 < pad)
-                pad = *nmax - 1;
+            else if ((int) info->nmax - 1 < pad)
+                pad = info->nmax - 1;
 
             if (flags & FLAG_ZERO_PAD)
-                memset(*pinsertion, '0', pad);
+                memset(info->pinsertion, '0', pad);
             else
-                memset(*pinsertion, ' ', pad);
+                memset(info->pinsertion, ' ', pad);
 
-            *pinsertion += pad;
-            *nmax -= pad;
+            info->pinsertion += pad;
+            info->nmax -= pad;
         }
 
         /* Print sign now if padding was spaces */
         if ( !(flags & FLAG_ZERO_PAD) && signchar != 0 )
         {
-            **pinsertion = signchar;
-            *pinsertion += 1;
-            *nmax -= 1;
+            *(info->pinsertion) = signchar;
+            info->pinsertion += 1;
+            info->nmax -= 1;
         }
 
         /* Print leading zeros */
         if (leadingzeros)
         {
             /* Print "0.", then leadingzeros - 1 */
-            if (*nmax > 1)
+            if (info->nmax > 1)
             {
-                **pinsertion = '0';
-                *pinsertion += 1;
-                *nmax -= 1;
+                *(info->pinsertion) = '0';
+                info->pinsertion += 1;
+                info->nmax -= 1;
             }
 
             if (precision > 0 || flags & FLAG_HASH)
             {
-                if (*nmax > 1)
+                if (info->nmax > 1)
                 {
-                    **pinsertion = '.';
-                    *pinsertion += 1;
-                    *nmax -= 1;
+                    *(info->pinsertion) = '.';
+                    info->pinsertion += 1;
+                    info->nmax -= 1;
                 }
             }
 
@@ -1021,47 +1036,47 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
 
             precision -= leadingzeros - 1;
 
-            if (*nmax <= 1)
+            if (info->nmax <= 1)
                 leadingzeros = 0;
-            else if ((int) *nmax /* - 1 */ < leadingzeros /* -1 */)
-                leadingzeros = *nmax; /* -1 */
+            else if ((int) info->nmax /* - 1 */ < leadingzeros /* -1 */)
+                leadingzeros = info->nmax; /* -1 */
 
             leadingzeros--;
-            memset(*pinsertion, '0', leadingzeros);
-            *pinsertion += leadingzeros;
-            *nmax -= leadingzeros;
+            memset(info->pinsertion, '0', leadingzeros);
+            info->pinsertion += leadingzeros;
+            info->nmax -= leadingzeros;
         }
 
         /* Print digits before decimal place */
         if (dec > 0)
         {
-            if (*nmax <= 1)
+            if (info->nmax <= 1)
                 printdigits = 0;
-            else if ((int) *nmax - 1 < dec)
-                printdigits = *nmax - 1;
+            else if ((int) info->nmax - 1 < dec)
+                printdigits = info->nmax - 1;
             else
                 printdigits = dec;
 
-            memcpy(*pinsertion, digits, printdigits);
-            *pinsertion += printdigits;
-            *nmax -= printdigits;
+            memcpy(info->pinsertion, digits, printdigits);
+            info->pinsertion += printdigits;
+            info->nmax -= printdigits;
 
             if (precision > 0 || flags & FLAG_HASH)
             {
                 /* Print decimal place */
-                if (*nmax > 1)
+                if (info->nmax > 1)
                 {
-                    **pinsertion = '.';
-                    *pinsertion += 1;
-                    *nmax -= 1;
+                    *(info->pinsertion) = '.';
+                    info->pinsertion += 1;
+                    info->nmax -= 1;
                 }
 
                 /* Print trailing zero if no precision but hash given */
-                if (precision == 0 && *nmax > 1)
+                if (precision == 0 && info->nmax > 1)
                 {
-                    **pinsertion = '0';
-                    *pinsertion += 1;
-                    *nmax -= 1;
+                    *(info->pinsertion) = '0';
+                    info->pinsertion += 1;
+                    info->nmax -= 1;
                 }
             }
 
@@ -1074,28 +1089,28 @@ int pvsnfmt_double(char **pinsertion, size_t *nmax, const char fmt, int flags,
         if (len > precision)
             len = precision;
 
-        if (*nmax <= 1)
+        if (info->nmax <= 1)
             printdigits = 0;
-        else if ((int) *nmax - 1 < len)
-            printdigits = *nmax - 1;
+        else if ((int) info->nmax - 1 < len)
+            printdigits = info->nmax - 1;
         else
             printdigits = len;
 
-        memcpy(*pinsertion, digits, printdigits);
-        *pinsertion += printdigits;
-        *nmax -= printdigits;
+        memcpy(info->pinsertion, digits, printdigits);
+        info->pinsertion += printdigits;
+        info->nmax -= printdigits;
 
         /* Print left-aligned pad */
         if (flags & FLAG_LEFT_ALIGN)
         {
-            if (*nmax <= 1)
+            if (info->nmax <= 1)
                 pad = 0;
-            else if ((int) *nmax - 1 < pad)
-                pad = *nmax - 1;
+            else if ((int) info->nmax - 1 < pad)
+                pad = info->nmax - 1;
 
-            memset(*pinsertion, ' ', pad);
-            *pinsertion += pad;
-            *nmax -= pad;
+            memset(info->pinsertion, ' ', pad);
+            info->pinsertion += pad;
+            info->nmax -= pad;
         }
         return totallen;
     }

@@ -278,7 +278,7 @@ void Z_Init(void)
    // Align on cache boundary
    
    zone = (memblock_t *) ((char *) zonebase + CACHE_ALIGN -
-                          ((unsigned) zonebase & (CACHE_ALIGN-1)));
+                          ((uintptr_t) zonebase & (CACHE_ALIGN-1)));
 
    rover = zone;                            // Rover points to base of zone mem
    zone->next = zone->prev = zone;          // Single node
@@ -1275,7 +1275,10 @@ void *Z_SysMalloc(size_t size)
    void *ret;
    
    if(!(ret = (malloc)(size)))
-      I_Error("Z_SysMalloc: failed on allocation of %u bytes\n", size);
+   {
+      I_Error("Z_SysMalloc: failed on allocation of %u bytes\n", 
+              (unsigned int)size);
+   }
 
    return ret;
 }
@@ -1290,7 +1293,10 @@ void *Z_SysCalloc(size_t n1, size_t n2)
    void *ret;
 
    if(!(ret = (calloc)(n1, n2)))
-      I_Error("Z_SysCalloc: failed on allocation of %u bytes\n", n1*n2);
+   {
+      I_Error("Z_SysCalloc: failed on allocation of %u bytes\n", 
+              (unsigned int)n1*n2);
+   }
 
    return ret;
 }
@@ -1306,7 +1312,10 @@ void *Z_SysRealloc(void *ptr, size_t size)
    void *ret;
 
    if(!(ret = (realloc)(ptr, size)))
-      I_Error("Z_SysRealloc: failed on allocation of %u bytes\n", size);
+   {
+      I_Error("Z_SysRealloc: failed on allocation of %u bytes\n", 
+              (unsigned int)size);
+   }
 
    return ret;
 }

@@ -103,7 +103,7 @@ static void lexer_buffer_curfile(void)
    if((foo = D_Fread(lexbuffer, 1, size, currentFile)) != size)
    {
       I_Error("lexer_buffer_curfile: failed on file read (%d of %d bytes)\n", 
-              foo, size);
+              (int)foo, (int)size);
    }
 
    // null-terminate buffer
