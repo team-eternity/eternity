@@ -217,9 +217,9 @@ static const char *BasicTypeNames[] =
 
 typedef struct basicttype_s
 {
-   unsigned long flags;    // goes to: mi->flags
-   unsigned long flags2;   //        : mi->flags2
-   unsigned long flags3;   //        : mi->flags3
+   unsigned int flags;     // goes to: mi->flags
+   unsigned int flags2;    //        : mi->flags2
+   unsigned int flags3;    //        : mi->flags3
    const char *spawnstate; //        : mi->spawnstate
 } basicttype_t;
 
@@ -978,11 +978,11 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
          
-      *(long *)result = lumpnum - markernum + TRANSLATIONCOLOURS;
+      *(int *)result = lumpnum - markernum + TRANSLATIONCOLOURS;
    }
    else
    {
-      *(long *)result = num % TRANSLATIONCOLOURS;
+      *(int *)result = num % TRANSLATIONCOLOURS;
    }
 
    return 0;
@@ -1364,7 +1364,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       }
       else
       {
-         long *results = deh_ParseFlagsCombined(tempstr);
+         int *results = deh_ParseFlagsCombined(tempstr);
 
          mobjinfo[i].flags  = results[0];
          mobjinfo[i].flags2 = results[1];
@@ -1411,7 +1411,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
 
    if(cfg_size(thingsec, ITEM_TNG_ADDFLAGS) > 0)
    {
-      long *results;
+      int *results;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ADDFLAGS);
          
@@ -1424,7 +1424,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
 
    if(cfg_size(thingsec, ITEM_TNG_REMFLAGS) > 0)
    {
-      long *results;
+      int *results;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_REMFLAGS);
 
@@ -1680,7 +1680,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       }
       else if(tempint >= 0) // negative numbers mean no spawn number
       {
-         long flags;
+         int flags;
 
          // get mode flags
          tempstr = cfg_getstr(acs_sec, ITEM_TNG_ACS_MODES);

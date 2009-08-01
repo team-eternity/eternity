@@ -158,13 +158,13 @@ typedef struct mobj_s * mptr;
 typedef struct
 {
    spritenum_t sprite;              // sprite number to show
-   long        frame;               // which frame/subframe of the sprite is shown
-   long        tics;                // number of gametics this frame should last
+   int         frame;               // which frame/subframe of the sprite is shown
+   int         tics;                // number of gametics this frame should last
    void        (*action)(mptr);     // code pointer to function for action if any
    statenum_t  nextstate;           // linked list pointer to next state or zero
-   long        misc1, misc2;        // used for psprite positioning
-   long        particle_evt;        // haleyjd: determines an event to run
-   long        args[NUMSTATEARGS];  // haleyjd: state arguments
+   int         misc1, misc2;        // used for psprite positioning
+   int         particle_evt;        // haleyjd: determines an event to run
+   int         args[NUMSTATEARGS];  // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
    char        name[41]; // name of this state (max 40 chars)

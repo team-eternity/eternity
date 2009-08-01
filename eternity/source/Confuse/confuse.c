@@ -152,7 +152,7 @@ unsigned int cfg_size(cfg_t *cfg, const char *name)
    return 0;
 }
 
-signed long cfg_getnint(cfg_t *cfg, const char *name, unsigned int index)
+signed int cfg_getnint(cfg_t *cfg, const char *name, unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    
@@ -160,7 +160,7 @@ signed long cfg_getnint(cfg_t *cfg, const char *name, unsigned int index)
    {
       cfg_assert(opt->type == CFGT_INT);
       if(opt->nvalues == 0)
-         return (signed long)opt->def;
+         return (signed int)opt->def;
       else
       {
          cfg_assert(index < opt->nvalues);
@@ -171,7 +171,7 @@ signed long cfg_getnint(cfg_t *cfg, const char *name, unsigned int index)
       return 0;
 }
 
-signed long cfg_getint(cfg_t *cfg, const char *name)
+signed int cfg_getint(cfg_t *cfg, const char *name)
 {
    return cfg_getnint(cfg, name, 0);
 }
@@ -332,7 +332,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
    int b;
    char *s;
    double f;
-   long int i;
+   int i;
    char *endptr;
    
    cfg_assert(cfg && opt);
@@ -1080,7 +1080,7 @@ static cfg_value_t *cfg_getval(cfg_opt_t *opt, unsigned int index)
    return val;
 }
 
-void cfg_opt_setnint(cfg_t *cfg, cfg_opt_t *opt, long int value, 
+void cfg_opt_setnint(cfg_t *cfg, cfg_opt_t *opt, int value, 
                      unsigned int index)
 {
    cfg_value_t *val;
@@ -1090,7 +1090,7 @@ void cfg_opt_setnint(cfg_t *cfg, cfg_opt_t *opt, long int value,
    val->number = value;
 }
 
-void cfg_setnint(cfg_t *cfg, const char *name, long int value,
+void cfg_setnint(cfg_t *cfg, const char *name, int value,
                  unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
@@ -1099,7 +1099,7 @@ void cfg_setnint(cfg_t *cfg, const char *name, long int value,
       cfg_opt_setnint(cfg, opt, value, index);
 }
 
-void cfg_setint(cfg_t *cfg, const char *name, long int value)
+void cfg_setint(cfg_t *cfg, const char *name, int value)
 {
    cfg_setnint(cfg, name, value, 0);
 }

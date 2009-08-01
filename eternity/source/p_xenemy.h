@@ -44,7 +44,7 @@ typedef struct quakethinker_s
 } quakethinker_t;
 
 void T_QuakeThinker(quakethinker_t *qt);
-boolean P_StartQuake(long *args);
+boolean P_StartQuake(int *args);
 
 #endif
 

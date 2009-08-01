@@ -868,7 +868,7 @@ extern void R_UntaintPortals(void);
 void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
    boolean quake = false;
-   unsigned long savedflags = 0;
+   unsigned int savedflags = 0;
 
    R_SetupFrame(player, camerapoint);
    

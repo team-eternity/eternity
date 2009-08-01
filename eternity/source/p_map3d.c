@@ -709,7 +709,7 @@ static MobjCollection intersectors; // haleyjd: use MobjCollection
 static boolean P_AdjustFloorCeil(mobj_t *thing, boolean midtex)
 {
    boolean isgood;
-   unsigned long oldfl3 = thing->flags3;
+   unsigned int oldfl3 = thing->flags3;
    
    // haleyjd: ALL things must be treated as PASSMOBJ when moving
    // 3DMidTex lines, otherwise you get stuck in them.

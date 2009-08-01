@@ -219,7 +219,7 @@ static void ACS_addVirtualMachine(acsvm_t *vm)
 }
 
 static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                       int type, long args[5]);
+                                       int type, int args[5]);
 
 //
 // ACS_addThread
@@ -370,9 +370,9 @@ int ACS_indexForNum(acsvm_t *vm, int num)
 // operands on the stack.
 //
 static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
-                             long arg0, long arg1, long arg2, long arg3, long arg4)
+                             int arg0, int arg1, int arg2, int arg3, int arg4)
 {
-   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
    args[0] = arg0;
    args[1] = arg1;
@@ -395,7 +395,7 @@ static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
 static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, short spec, int side,
                                 int argc, int *argv)
 {
-   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i = argc;
 
    // args follow instruction in the code from first to last
@@ -491,7 +491,7 @@ static void ACS_setLineBlocking(int tag, int block)
 //
 // Sets all tagged lines' complete parameterized specials.
 //
-static void ACS_setLineSpecial(short spec, long *args, int tag)
+static void ACS_setLineSpecial(short spec, int *args, int tag)
 {
    line_t *l;
    int linenum = -1;
@@ -502,7 +502,7 @@ static void ACS_setLineSpecial(short spec, long *args, int tag)
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
       l->special = spec;
-      memcpy(l->args, args, 5 * sizeof(long));
+      memcpy(l->args, args, 5 * sizeof(int));
    }
 }
 
@@ -1087,7 +1087,7 @@ void T_ACSThinker(acsthinker_t *script)
          {
             int tag;
             short spec;
-            long args[NUMLINEARGS];
+            int args[NUMLINEARGS];
 
             for(temp = 5; temp > 0; --temp)
                args[temp-1] = POP();
@@ -1194,7 +1194,7 @@ void ACS_InitLevel(void)
 //
 void ACS_LoadScript(acsvm_t *vm, int lump)
 {
-   long *rover;
+   int32_t *rover;
    int i, numstrings;
 
    // zero length or too-short lump?
@@ -1207,14 +1207,14 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
    // load the lump
    vm->data = W_CacheLumpNum(lump, PU_LEVEL);
 
-   rover = (long *)vm->data;
+   rover = (int32_t *)vm->data;
 
    // check magic id string: currently supports Hexen format only
    if(LONG(*rover++) != 0x00534341) // "ACS\0"
       return;
 
    // set rover to information table
-   rover = (long *)(vm->data + LONG(*rover));
+   rover = (int32_t *)(vm->data + LONG(*rover));
 
    // read number of scripts
    vm->numScripts = LONG(*rover++);
@@ -1286,7 +1286,7 @@ void ACS_LoadLevelScript(int lump)
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
 static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                       int type, long args[NUMLINEARGS])
+                                       int type, int args[NUMLINEARGS])
 {
    deferredacs_t *cur = acsDeferred, *newdacs;
 
@@ -1400,7 +1400,7 @@ void ACS_RunDeferredScripts(void)
 //
 // Standard method for starting an ACS script.
 //
-boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args, 
+boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
                           mobj_t *mo, line_t *line, int side,
                           acsthinker_t **scr, boolean always)
 {
@@ -1492,7 +1492,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args,
 //
 // Convenience routine; starts a script in the levelscript vm.
 //
-boolean ACS_StartScript(int scrnum, int map, long *args, 
+boolean ACS_StartScript(int scrnum, int map, int *args, 
                         mobj_t *mo, line_t *line, int side,
                         acsthinker_t **scr)
 {
@@ -1509,7 +1509,7 @@ boolean ACS_StartScript(int scrnum, int map, long *args,
 boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
    boolean ret = false;
-   long foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
    // ACS must be active on the current map or we do nothing
    if(!vm->loaded)
@@ -1559,7 +1559,7 @@ boolean ACS_TerminateScript(int scrnum, int mapnum)
 //
 boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
-   long foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    boolean ret = false;
 
    // ACS must be active on the current map or we do nothing

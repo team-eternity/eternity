@@ -49,8 +49,6 @@
 
 #endif
 
-// SoM 3/13/2001: Use SDL's signal handler
-
 void I_Quit(void);
 
 // SoM 3/11/2002: Disable the parachute for debugging.

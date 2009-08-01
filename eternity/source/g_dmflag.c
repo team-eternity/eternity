@@ -32,11 +32,11 @@
 #include "c_io.h"
 
 // The Deathmatch Flags variable
-unsigned long dmflags;
+unsigned int dmflags;
 
 // Defaults with which the game was started
 // (Needed to preserve through demos et al.)
-unsigned long default_dmflags;
+unsigned int default_dmflags;
 
 //
 // G_SetDefaultDMFlags
@@ -81,7 +81,7 @@ CONSOLE_NETVAR(dmflags, dmflags, cf_server, netcmd_dmflags) {}
 CONSOLE_COMMAND(defdmflags, cf_server)
 {
    int mode;
-   unsigned long flags = 0;
+   unsigned int flags = 0;
    char cmdbuf[64];
    const char *gm;
 

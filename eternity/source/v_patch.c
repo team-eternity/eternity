@@ -736,7 +736,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
    // 3. one post per vertical slice plus 2 padding bytes and 1 byte for
    //    a -1 post to cap the column are required
    size_t total_size = 
-      4 * sizeof(short) + w * (h + sizeof(long) + sizeof(column_t) + 3);
+      4 * sizeof(int16_t) + w * (h + sizeof(int32_t) + sizeof(column_t) + 3);
    
    byte *out = malloc(total_size);
 
@@ -749,10 +749,10 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
    p->leftoffset = 0;
 
    // get pointer to columnofs table
-   columnofs = (int *)(out + 4 * sizeof(short));
+   columnofs = (int *)(out + 4 * sizeof(int16_t));
 
    // skip past columnofs table
-   dest = out + 4 * sizeof(short) + w * sizeof(long);
+   dest = out + 4 * sizeof(int16_t) + w * sizeof(int32_t);
 
    // convert columns of linear graphic into true columns
    for(x = 0; x < w; ++x)

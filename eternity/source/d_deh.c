@@ -72,7 +72,7 @@ boolean deh_loaded = false; // sf
 void    lfstrip(char *);     // strip the \r and/or \n off of a line
 void    rstrip(char *);      // strip trailing whitespace
 char *  ptr_lstrip(char *);  // point past leading whitespace
-boolean deh_GetData(char *, char *, long *, char **);
+boolean deh_GetData(char *, char *, int *, char **);
 boolean deh_procStringSub(char *, char *, char *);
 static char *dehReformatStr(char *);
 
@@ -340,13 +340,13 @@ static dehflagset_t dehacked_flags =
 char *deh_state[] =
 {
   "Sprite number",    // .sprite (spritenum_t) // an enum
-  "Sprite subnumber", // .frame (long)
-  "Duration",         // .tics (long)
+  "Sprite subnumber", // .frame 
+  "Duration",         // .tics 
   "Next frame",       // .nextstate (statenum_t)
   // This is set in a separate "Pointer" block from Dehacked
   "Codep Frame",      // pointer to first use of action (actionf_t)
-  "Unknown 1",        // .misc1 (long)
-  "Unknown 2",        // .misc2 (long)
+  "Unknown 1",        // .misc1 
+  "Unknown 2",        // .misc2 
   "Particle event",   // haleyjd 08/09/02: particle event num
   "Args1",            // haleyjd 08/09/02: arguments
   "Args2",
@@ -751,11 +751,11 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
 void deh_ParseFlags(dehflagset_t *flagset, char **strval)
 {
    dehflags_t *flaglist = flagset->flaglist; // get flag list
-   long       *results  = flagset->results;  // pointer to results array
+   int        *results  = flagset->results;  // pointer to results array
    int        mode      = flagset->mode;     // get mode
 
    // haleyjd: init all results to zero
-   memset(results, 0, MAXFLAGFIELDS * sizeof(long));
+   memset(results, 0, MAXFLAGFIELDS * sizeof(int));
 
    // killough 10/98: replace '+' kludge with strtok() loop
    // Fix error-handling case ('found' var wasn't being reset)
@@ -790,7 +790,7 @@ void deh_ParseFlags(dehflagset_t *flagset, char **strval)
 // the flags data above to be global, and simplifies the external
 // interface.
 //
-long deh_ParseFlagsSingle(const char *strval, int mode)
+int deh_ParseFlagsSingle(const char *strval, int mode)
 {
    char *buffer;
    char *bufferptr;
@@ -806,7 +806,7 @@ long deh_ParseFlagsSingle(const char *strval, int mode)
    return dehacked_flags.results[mode];
 }
 
-long *deh_ParseFlagsCombined(const char *strval)
+int *deh_ParseFlagsCombined(const char *strval)
 {
    char *buffer;
    char *bufferptr;
@@ -827,7 +827,7 @@ long *deh_ParseFlagsCombined(const char *strval)
 #define MOBJTRANSINDEX  24
 #define MOBJFLAGS3INDEX 25
 
-static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, long value)
+static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 {
    mobjinfo_t *mi;
 
@@ -885,7 +885,7 @@ void deh_procThing(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int value;      // All deh values are ints or longs
    int indexnum;
    int ix;
    char *strval;
@@ -1001,7 +1001,7 @@ void deh_procFrame(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int value;      // All deh values are ints or longs
    int indexnum;
 
    strncpy(inbuffer,line,DEH_BUFFERMAX);
@@ -1041,12 +1041,12 @@ void deh_procFrame(DWFILE *fpin, char *line)
       else if(!strcasecmp(key,deh_state[1]))  // Sprite subnumber
       {
          deh_LogPrintf(" - frame = %ld\n", value);
-         states[indexnum]->frame = value; // long
+         states[indexnum]->frame = value;
       }
       else if(!strcasecmp(key,deh_state[2]))  // Duration
       {
          deh_LogPrintf(" - tics = %ld\n", value);
-         states[indexnum]->tics = value; // long
+         states[indexnum]->tics = value;
       }
       else if(!strcasecmp(key,deh_state[3]))  // Next frame
       {
@@ -1064,12 +1064,12 @@ void deh_procFrame(DWFILE *fpin, char *line)
       else if(!strcasecmp(key,deh_state[5]))  // Unknown 1
       {
          deh_LogPrintf(" - misc1 = %ld\n", value);
-         states[indexnum]->misc1 = value; // long
+         states[indexnum]->misc1 = value;
       }
       else if(!strcasecmp(key,deh_state[6]))  // Unknown 2
       {
          deh_LogPrintf(" - misc2 = %ld\n", value);
-         states[indexnum]->misc2 = value; // long
+         states[indexnum]->misc2 = value;
       }
       else if(!strcasecmp(key,deh_state[7])) // Particle event
       {
@@ -1118,7 +1118,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int value;      // All deh values are ints or longs
    int indexnum;
    int i; // looper
    int oldindex; // haleyjd 7/10/03 - preserve for output
@@ -1209,7 +1209,7 @@ void deh_procSounds(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int value;      // All deh values are ints or longs
    int indexnum;
    sfxinfo_t *sfx;  // haleyjd 09/03/03
    
@@ -1297,7 +1297,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int value;      // All deh values are ints or longs
    int indexnum;
    
    strncpy(inbuffer,line,DEH_BUFFERMAX);
@@ -1347,7 +1347,7 @@ void deh_procWeapon(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int value;      // All deh values are ints or longs
    int indexnum;
 
    // haleyjd 08/10/02: significant reformatting
@@ -1539,7 +1539,7 @@ void deh_procCheat(DWFILE *fpin, char *line) // done
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int value;      // All deh values are ints or longs
    char *strval = "";  // pointer to the value area
    int ix, iy;   // array indices
    char *p;  // utility pointer
@@ -1625,7 +1625,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int  value;      // All deh values are ints or longs
    
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
@@ -1851,7 +1851,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;          // All deh values are ints or longs
+   int  value;          // All deh values are ints or longs
    char *strval = NULL; // holds the string value of the line
    // holds the final result of the string after concatenation
    static char *holdstring = NULL;
@@ -2004,7 +2004,7 @@ void deh_procHelperThing(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;      // All deh values are ints or longs
+   int  value;      // All deh values are ints or longs
 
    strncpy(inbuffer,line,DEH_BUFFERMAX);
    while(!D_Feof(fpin) && *inbuffer && (*inbuffer != ' '))
@@ -2041,7 +2041,7 @@ void deh_procBexSprites(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;    // All deh values are ints or longs
+   int  value;    // All deh values are ints or longs
    char *strval;  // holds the string value of the line
    char candidate[5];
    int  rover;
@@ -2098,7 +2098,7 @@ void deh_procBexSounds(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;    // All deh values are ints or longs
+   int  value;    // All deh values are ints or longs
    char *strval;  // holds the string value of the line
    char candidate[9];
    int  len;
@@ -2156,7 +2156,7 @@ void deh_procBexMusic(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
-   long value;    // All deh values are ints or longs
+   int  value;    // All deh values are ints or longs
    char *strval;  // holds the string value of the line
    char candidate[7];
    int  rover, len;
@@ -2285,18 +2285,17 @@ char *ptr_lstrip(char *p)  // point past leading whitespace
 // Purpose: Get a key and data pair from a passed string
 // Args:    s -- the string to be examined
 //          k -- a place to put the key
-//          l -- pointer to a long integer to store the number
+//          l -- pointer to an integer to store the number
 //          strval -- a pointer to the place in s where the number
 //                    value comes from.  Pass NULL to not use this.
 // Notes:   Expects a key phrase, optional space, equal sign,
-//          optional space and a value, mostly an int but treated
-//          as a long just in case.  The passed pointer to hold
-//          the key must be DEH_MAXKEYLEN in size.
+//          optional space and a value, mostly an int. The passed 
+//          pointer to hold the key must be DEH_MAXKEYLEN in size.
 
-boolean deh_GetData(char *s, char *k, long *l, char **strval)
+boolean deh_GetData(char *s, char *k, int *l, char **strval)
 {
    char *t;  // current char
-   long val; // to hold value of pair
+   int  val; // to hold value of pair
    char buffer[DEH_MAXKEYLEN];  // to hold key in progress
    boolean okrc = TRUE;  // assume good unless we have problems
    int i;  // iterator

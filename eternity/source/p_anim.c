@@ -60,8 +60,8 @@ void P_AnimateSurfaces(void)
    //   haleyjd: stored as regular ints in the mapinfo so we need 
    //   to transform these to fixed point values :)
 
-   Sky1ColumnOffset += ((long)LevelInfo.skyDelta)<<8;
-   Sky2ColumnOffset += ((long)LevelInfo.sky2Delta)<<8;
+   Sky1ColumnOffset += ((fixed_t)LevelInfo.skyDelta ) << 8;
+   Sky2ColumnOffset += ((fixed_t)LevelInfo.sky2Delta) << 8;
    
    if(LevelInfo.hasLightning)
    {

@@ -46,8 +46,8 @@ void P_InitThingLists(void);
 extern byte     *rejectmatrix;   // for fast sight rejection
 
 // killough 3/1/98: change blockmap from "short" to "long" offsets:
-extern long     *blockmaplump;   // offsets in blockmap are from here
-extern long     *blockmap;
+extern int      *blockmaplump;   // offsets in blockmap are from here
+extern int      *blockmap;
 extern int      bmapwidth;
 extern int      bmapheight;      // in mapblocks
 extern fixed_t  bmaporgx;

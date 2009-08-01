@@ -922,7 +922,7 @@ static void MN_DMFlagsDrawer(void)
    V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y);
 }
 
-static void toggle_dm_flag(unsigned long flag)
+static void toggle_dm_flag(unsigned int flag)
 {
    char cmdbuf[64];
    dmflags ^= flag;

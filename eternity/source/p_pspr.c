@@ -89,7 +89,7 @@ int action_from_pspr;
 typedef struct gunaction_s
 {
    state_t *s;               // state args were copied to
-   long args[NUMSTATEARGS];  // saved args
+   int    args[NUMSTATEARGS];  // saved args
    struct gunaction_s *next; // next action
 } gunaction_t;
 
@@ -144,8 +144,8 @@ static void P_SetupPlayerGunAction(player_t *player, pspdef_t *psp)
 
    ga = P_GetGunAction();
 
-   memcpy(ga->args, mo->state->args, NUMSTATEARGS * sizeof(long));
-   memcpy(mo->state->args, psp->state->args, NUMSTATEARGS * sizeof(long));
+   memcpy(ga->args, mo->state->args, NUMSTATEARGS * sizeof(int));
+   memcpy(mo->state->args, psp->state->args, NUMSTATEARGS * sizeof(int));
 
    action_from_pspr++;
 
@@ -174,7 +174,7 @@ static void P_FinishPlayerGunAction(void)
    gunactions = ga->next;
 
    // copy saved args back to state
-   memcpy(ga->s->args, ga->args, NUMSTATEARGS * sizeof(long));
+   memcpy(ga->s->args, ga->args, NUMSTATEARGS * sizeof(int));
 
    action_from_pspr--;
 
@@ -1501,7 +1501,7 @@ void A_BFG11KHit(mobj_t *mo)
 {
    int i = 0;
    int j, damage;
-   long origdist;
+   int origdist;
    
    // check the originator and hurt them if too close
    

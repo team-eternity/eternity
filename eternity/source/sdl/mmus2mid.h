@@ -23,10 +23,10 @@ typedef enum
 } error_code_t;
 
 // some names for integers of various sizes, all unsigned 
-typedef unsigned char UBYTE;  // a one-byte int 
-typedef unsigned short UWORD; // a two-byte int 
+typedef uint8_t  UBYTE;  // a one-byte int 
+typedef uint16_t UWORD; // a two-byte int 
 // proff: changed from unsigned int to unsigned long to avoid warning
-typedef unsigned long ULONG;   // a four-byte int (assumes int 4 bytes) 
+typedef uint32_t ULONG;   // a four-byte int (assumes int 4 bytes) 
 
 #ifndef DJGPP // proff: This is from allegro.h
 #define MIDI_TRACKS           32       

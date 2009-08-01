@@ -50,7 +50,7 @@ extern void M_GetFilePath(const char *fn, char *bane, size_t len);
 // GetModuleFileName guarantees a full path will be returned in
 // the provided buffer.
 //
-void WIN_GetExeDir(char *buffer, unsigned long size)
+void WIN_GetExeDir(char *buffer, unsigned int size)
 {
    // get the name of the current process's module
    DWORD nRet = GetModuleFileName(NULL, (LPTSTR)buffer, (DWORD)size);

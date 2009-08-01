@@ -134,7 +134,7 @@ typedef struct deferredacs_s
    int  vmID;              // id # of vm on which to execute the script
    int  targetMap;         // target map number
    int  type;              // type of action to perform...
-   long args[NUMLINEARGS]; // additional arguments from linedef
+   int  args[NUMLINEARGS]; // additional arguments from linedef
 } deferredacs_t;
 
 //
@@ -164,10 +164,10 @@ void    ACS_InitLevel(void);
 void    ACS_LoadScript(acsvm_t *vm, int lump);
 void    ACS_LoadLevelScript(int lump);
 void    ACS_RunDeferredScripts(void);
-boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, long *args, 
+boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
                           mobj_t *mo, line_t *line, int side,
                           acsthinker_t **scr, boolean always);
-boolean ACS_StartScript(int scrnum, int map, long *args, mobj_t *mo, 
+boolean ACS_StartScript(int scrnum, int map, int *args, mobj_t *mo, 
                         line_t *line, int side, acsthinker_t **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
 boolean ACS_SuspendScript(int scrnum, int mapnum);

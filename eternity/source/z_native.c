@@ -107,8 +107,8 @@ void Z_PrintStats(void)           // Print allocation statistics
 {
    if(printstats)
    {
-      unsigned long total_memory = active_memory +
-                                   purgable_memory;
+      unsigned int total_memory = active_memory +
+                                  purgable_memory;
       double s = 100.0 / total_memory;
 
       doom_printf(
@@ -228,8 +228,8 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    while(!(block = (malloc)(size + HEADER_SIZE)))
    {
       if(!blockbytag[PU_CACHE])
-         I_Error ("Z_Malloc: Failure trying to allocate %lu bytes\n"
-                  "Source: %s:%d", (unsigned long) size, file, line);
+         I_Error ("Z_Malloc: Failure trying to allocate %u bytes\n"
+                  "Source: %s:%d", (unsigned int)size, file, line);
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
    
@@ -514,8 +514,8 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    while(!(block = (realloc)(block, n + HEADER_SIZE)))
    {
       if(block->tag == PU_CACHE || !blockbytag[PU_CACHE])
-         I_Error ("Z_Malloc: Failure trying to allocate %lu bytes\n"
-                  "Source: %s:%d", (unsigned long) n, file, line);
+         I_Error ("Z_Malloc: Failure trying to allocate %u bytes\n"
+                  "Source: %s:%d", (unsigned int)n, file, line);
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
 

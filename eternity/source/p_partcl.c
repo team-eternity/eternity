@@ -1325,7 +1325,7 @@ particle_event_t particleEvents[P_EVENT_NUMEVENTS] =
 //
 void P_RunEvent(mobj_t *actor)
 {
-   long effectNum;
+   int effectNum;
 
    // haleyjd: 
    // if actor->state is NULL, the thing has been removed, or

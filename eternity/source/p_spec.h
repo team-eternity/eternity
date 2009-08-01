@@ -1047,7 +1047,7 @@ boolean P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
-void P_ConvertHexenLineSpec(short *special, long *args);
+void P_ConvertHexenLineSpec(short *special, int *args);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1214,7 +1214,7 @@ extern mobj_t *genDoorThing;
 
 // p_things
 
-int EV_ThingSpawn(long *args, boolean fog);
+int EV_ThingSpawn(int *args, boolean fog);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1334,7 +1334,7 @@ enum
 
 boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac);
 boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special, 
-                            long *args, int side, int spac, boolean reuse);
+                            int *args, int side, int spac, boolean reuse);
 
 #endif
 

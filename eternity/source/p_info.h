@@ -58,7 +58,7 @@ typedef struct LevelInfo_s
    int levelType;            // level type used for conversions, etc.
 
    // specials: lines, sectors, etc.
-   unsigned long bossSpecs;  // boss special flags for BossDeath, HticBossDeath
+   unsigned int bossSpecs;  // boss special flags for BossDeath, HticBossDeath
 
    // intermission and finale stuff
    int  partime;              // intermission par time in seconds

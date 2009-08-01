@@ -1373,7 +1373,7 @@ int EV_DoGenDoor(line_t* line)
 // Routine to get a generalized line trigger type for a given
 // parameterized special activation.
 //
-static int pspec_TriggerType(int spac, long tag, boolean reuse)
+static int pspec_TriggerType(int spac, int tag, boolean reuse)
 {
    int trig = 0;
 
@@ -1412,7 +1412,7 @@ static int param_door_kinds[6] =
 //
 // Parses arguments for parameterized Door specials.
 //
-static boolean pspec_Door(line_t *line, mobj_t *thing, long *args, 
+static boolean pspec_Door(line_t *line, mobj_t *thing, int *args, 
                           short special, int trigger_type)
 {
    int kind;
@@ -1514,7 +1514,7 @@ static int fchgdata[7][2] =
 //
 // Parses arguments for parameterized Floor specials.
 //
-static boolean pspec_Floor(line_t *line, long *args, short special, 
+static boolean pspec_Floor(line_t *line, int *args, short special, 
                            int trigger_type)
 {
    floordata_t fd;
@@ -1665,7 +1665,7 @@ static int cchgdata[7][2] =
 //
 // Parses arguments for parameterized Ceiling specials.
 //
-static boolean pspec_Ceiling(line_t *line, long *args, short special, 
+static boolean pspec_Ceiling(line_t *line, int *args, short special, 
                              int trigger_type)
 {
    ceilingdata_t cd;
@@ -1779,7 +1779,7 @@ static boolean pspec_Ceiling(line_t *line, long *args, short special,
 //
 // Parses arguments for parameterized Stair specials.
 //
-static boolean pspec_Stairs(line_t *line, long *args, short special, 
+static boolean pspec_Stairs(line_t *line, int *args, short special, 
                             int trigger_type)
 {
    stairdata_t sd;
@@ -1826,7 +1826,7 @@ static boolean pspec_Stairs(line_t *line, long *args, short special,
 //
 // Parses arguments for parameterized polyobject door types
 //
-static boolean pspec_PolyDoor(long *args, short special)
+static boolean pspec_PolyDoor(int *args, short special)
 {
    polydoordata_t pdd;
 
@@ -1859,7 +1859,7 @@ static boolean pspec_PolyDoor(long *args, short special)
 //
 // Parses arguments for parameterized polyobject move specials
 //
-static boolean pspec_PolyMove(long *args, short special)
+static boolean pspec_PolyMove(int *args, short special)
 {
    polymovedata_t pmd;
 
@@ -1878,7 +1878,7 @@ static boolean pspec_PolyMove(long *args, short special)
 //
 // Parses arguments for parameterized polyobject rotate specials
 //
-static boolean pspec_PolyRotate(long *args, short special)
+static boolean pspec_PolyRotate(int *args, short special)
 {
    polyrotdata_t prd;
 
@@ -1903,7 +1903,7 @@ static boolean pspec_PolyRotate(long *args, short special)
 //
 // haleyjd: rewritten to use pillardata_t struct
 //
-static boolean pspec_Pillar(line_t *line, long *args, short special)
+static boolean pspec_Pillar(line_t *line, int *args, short special)
 {
    pillardata_t pd;
    
@@ -1936,11 +1936,11 @@ static boolean pspec_Pillar(line_t *line, long *args, short special)
 //
 // haleyjd 01/07/07: Runs an ACS script.
 //
-static boolean pspec_ACSExecute(line_t *line, long *args, short special,
+static boolean pspec_ACSExecute(line_t *line, int *args, short special,
                                 int side, mobj_t *thing)
 {
    int snum, mnum;
-   long script_args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int script_args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
 
    snum           = args[0];
@@ -1965,7 +1965,7 @@ static boolean pspec_ACSExecute(line_t *line, long *args, short special,
 // reuse:   if action is repeatable
 //
 boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special, 
-                            long *args, int side, int spac, boolean reuse)
+                            int *args, int side, int spac, boolean reuse)
 {
    boolean success = false;
 
@@ -2110,7 +2110,7 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special,
 boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac)
 {
    boolean success = false, reuse = false;
-   long flags = 0;
+   int flags = 0;
 
    // check player / monster / missile enable flags
    if(thing->player)                   // treat as player?
@@ -2368,7 +2368,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
 //
 static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
 {
-   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numparams = params[0] / sizeof(cell);
    SmallContext_t *ctx;
    line_t *line  = NULL;
@@ -2406,7 +2406,7 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
 CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
 {
    short spec;
-   long args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numargs;
 
    if(!c_argc)

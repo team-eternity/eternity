@@ -37,7 +37,7 @@ extern sector_t *backsector;
 // extern drawseg_t drawsegs[MAXDRAWSEGS];
 // new code -- killough:
 extern drawseg_t *drawsegs;
-extern unsigned long maxdrawsegs;
+extern unsigned int maxdrawsegs;
 
 extern drawseg_t *ds_p;
 

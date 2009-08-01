@@ -1737,10 +1737,10 @@ static boolean WritePCXfile(char *filename, byte *data, int width,
 
 #define BI_RGB 0L
 
-typedef unsigned short uint_t;
-typedef unsigned long dword_t;
-typedef long     long_t;
-typedef unsigned char ubyte_t;
+typedef uint16_t uint_t;
+typedef uint32_t dword_t;
+typedef int32_t  long_t;
+typedef uint8_t  ubyte_t;
 
 // SoM 6/5/02: Chu-Chu-Chu-Chu-Chu-Changes... heh
 #ifdef _MSC_VER

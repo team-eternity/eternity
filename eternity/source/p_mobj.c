@@ -1801,7 +1801,7 @@ spawnit:
    P_AddThingTID(mobj, mthing->tid);
 
    // haleyjd 10/03/05: Hexen-style args
-   memcpy(mobj->args, mthing->args, 5 * sizeof(long));
+   memcpy(mobj->args, mthing->args, 5 * sizeof(int));
 
    // TODO: special
 
@@ -2969,9 +2969,9 @@ static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
 
 static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
 {
-   int tid, op, err;
-   char *flags;
-   long *results;
+   int     tid, op, err;
+   char   *flags;
+   int    *results;
    mobj_t *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 

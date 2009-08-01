@@ -1173,9 +1173,9 @@ void R_InitTranMap(int progress)
          memcmp(cache.playpal, playpal, sizeof cache.playpal) ||
          fread(main_tranmap, 256, 256, cachefp) != 256 ) // killough 4/11/98
       {
-         long pal[3][256], tot[256], pal_w1[3][256];
-         long w1 = ((unsigned long) tran_filter_pct<<TSC)/100;
-         long w2 = (1l<<TSC)-w1;
+         int pal[3][256], tot[256], pal_w1[3][256];
+         int w1 = ((unsigned int) tran_filter_pct<<TSC)/100;
+         int w2 = (1l<<TSC)-w1;
 
          // First, convert playpal into long int type, and transpose array,
          // for fast inner-loop calculations. Precompute tot array.
@@ -1185,7 +1185,7 @@ void R_InitTranMap(int progress)
             register const unsigned char *p = playpal + 255 * 3;
             do
             {
-               register long t,d;
+               register int t,d;
                pal_w1[0][i] = (pal[0][i] = t = p[0]) * w1;
                d = t*t;
                pal_w1[1][i] = (pal[1][i] = t = p[1]) * w1;
@@ -1205,9 +1205,9 @@ void R_InitTranMap(int progress)
             byte *tp = main_tranmap;
             for(i = 0; i < 256; ++i)
             {
-               long r1 = pal[0][i] * w2;
-               long g1 = pal[1][i] * w2;
-               long b1 = pal[2][i] * w2;
+               int r1 = pal[0][i] * w2;
+               int g1 = pal[1][i] * w2;
+               int b1 = pal[2][i] * w2;
                
                if(!(i & 31) && progress)
                   V_LoadingIncrease();        //sf 
@@ -1223,11 +1223,11 @@ void R_InitTranMap(int progress)
                for(j = 0; j < 256; ++j, ++tp)
                {
                   register int color = 255;
-                  register long err;
-                  long r = pal_w1[0][j] + r1;
-                  long g = pal_w1[1][j] + g1;
-                  long b = pal_w1[2][j] + b1;
-                  long best = LONG_MAX;
+                  register int err;
+                  int r = pal_w1[0][j] + r1;
+                  int g = pal_w1[1][j] + g1;
+                  int b = pal_w1[2][j] + b1;
+                  int best = LONG_MAX;
                   do
                   {
                      if((err = tot[color] - pal[0][color]*r

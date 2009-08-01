@@ -611,11 +611,11 @@ void *W_CacheLumpNum(int lump, int tag)
 //
 // sf
 //
-long W_LumpCheckSum(int lumpnum)
+int W_LumpCheckSum(int lumpnum)
 {
-   int i, lumplength;
+   int   i, lumplength;
    char *lump;
-   long checksum = 0;
+   int   checksum = 0;
    
    lump = W_CacheLumpNum(lumpnum, PU_CACHE);
    lumplength = W_LumpLength(lumpnum);

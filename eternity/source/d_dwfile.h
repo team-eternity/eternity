@@ -36,9 +36,9 @@
 typedef struct 
 {
    byte *inp, *lump; // Pointer to string or FILE
-   long size;
-   long origsize;    // for ungetc
-   long lumpnum;     // haleyjd 03/08/06: need to save this
+   int size;
+   int origsize;    // for ungetc
+   int lumpnum;     // haleyjd 03/08/06: need to save this
 } DWFILE;
 
 char  *D_Fgets(char *buf, size_t n, DWFILE *fp);

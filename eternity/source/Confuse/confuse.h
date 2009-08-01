@@ -168,7 +168,7 @@ struct cfg_t
  */
 union cfg_value_t 
 {
-   long int number;        /**< integer value */
+   int number;             /**< integer value */
    double fpnumber;        /**< floating point value */
    cfg_bool_t boolean;     /**< boolean value */
    char *string;           /**< string value */
@@ -386,7 +386,7 @@ void          cfg_error(cfg_t *cfg, const char *fmt, ...);
  * corresponding cfg_opt_t structure is returned. If no option is found
  * with that name, 0 is returned.
  */
-long int      cfg_getint(cfg_t *cfg, const char *name);
+int           cfg_getint(cfg_t *cfg, const char *name);
 
 /** Indexed version of cfg_getint().
  * @param cfg The configuration file context.
@@ -394,7 +394,7 @@ long int      cfg_getint(cfg_t *cfg, const char *name);
  * @param index Index of values. Zero based.
  * @see cfg_getint
  */
-long int      cfg_getnint(cfg_t *cfg, const char *name, unsigned int index);
+int           cfg_getnint(cfg_t *cfg, const char *name, unsigned int index);
 
 /** Returns the value of a floating point option.
  * @param cfg The configuration file context.
@@ -539,7 +539,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name);
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_opt_setnint(cfg_t *cfg, cfg_opt_t *opt, long int value, 
+void cfg_opt_setnint(cfg_t *cfg, cfg_opt_t *opt, int value, 
                      unsigned int index);
 
 /** Set a value of an integer option given its name.
@@ -551,7 +551,7 @@ void cfg_opt_setnint(cfg_t *cfg, cfg_opt_t *opt, long int value,
  * modified. It is an error to set values with indices larger than 0
  * for options without the CFGF_LIST flag set.
  */
-void cfg_setnint(cfg_t *cfg, const char *name, long int value,
+void cfg_setnint(cfg_t *cfg, const char *name, int value,
                  unsigned int index);
 
 /** Set a value of an integer option given its name.
@@ -560,7 +560,7 @@ void cfg_setnint(cfg_t *cfg, const char *name, long int value,
  * @param name The name of the option.
  * @param value The value to set.
  */
-void cfg_setint(cfg_t *cfg, const char *name, long int value);
+void cfg_setint(cfg_t *cfg, const char *name, int value);
 
 /** Set a value of an floating point option.
  *

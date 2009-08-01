@@ -2813,7 +2813,7 @@ static void D_DoomInit(void)
    // check for command-line override of dmflags
    if((p = M_CheckParm("-dmflags")) && p < myargc-1)
    {
-      dmflags = default_dmflags = (unsigned long)atoi(myargv[p+1]);
+      dmflags = default_dmflags = (unsigned int)atoi(myargv[p+1]);
    }
 
    // haleyjd: this SHOULD be late enough...

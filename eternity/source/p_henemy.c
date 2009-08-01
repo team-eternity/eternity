@@ -239,7 +239,7 @@ void P_HticDrop(mobj_t *actor, int special, mobjtype_t type)
 void A_HticDrop(mobj_t *actor)
 {
    int thingtype1, thingtype2, chance1, chance2;
-   long dt;
+   int dt;
    int drop1 = 0, drop2 = 0;
 
    thingtype1 = (int)(actor->state->args[0]);
@@ -923,8 +923,8 @@ void A_HticExplode(mobj_t *actor)
 
 typedef struct
 {
-   unsigned long thing_flag;
-   unsigned long level_flag;
+   unsigned int thing_flag;
+   unsigned int level_flag;
    int flagfield;
 } boss_spec_htic_t;
 
@@ -952,7 +952,7 @@ void A_HticBossDeath(mobj_t *actor)
 
    for(i = 0; i < NUM_HBOSS_SPECS; ++i)
    {
-      unsigned long flags = 
+      unsigned int flags = 
          hboss_specs[i].flagfield == 2 ? actor->flags2 : actor->flags3;
       
       // to activate a special, the thing must be a boss that triggers
@@ -965,7 +965,7 @@ void A_HticBossDeath(mobj_t *actor)
             if(th->function == P_MobjThinker)
             {
                mobj_t *mo = (mobj_t *)th;
-               unsigned long moflags =
+               unsigned int moflags =
                   hboss_specs[i].flagfield == 2 ? mo->flags2 : mo->flags3;
                if(mo != actor && 
                   (moflags & hboss_specs[i].thing_flag) && 

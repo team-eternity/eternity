@@ -311,7 +311,7 @@ int E_StrToNumLinear(const char **strings, int numstrings, const char *value)
 //
 // Parses a single-word options/flags field.
 //
-long E_ParseFlags(const char *str, dehflagset_t *flagset)
+int E_ParseFlags(const char *str, dehflagset_t *flagset)
 {
    char *buffer, *bufptr;
 
@@ -344,13 +344,13 @@ int E_SpriteFrameCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 {
    if(strlen(value) == 1 && value[0] >= 'A' && value[0] <= ']')
    {
-      *(long *)result = value[0] - 'A';
+      *(int *)result = value[0] - 'A';
    }
    else
    {
       char *endptr;
 
-      *(long *)result = strtol(value, &endptr, 0);
+      *(int *)result = strtol(value, &endptr, 0);
       
       if(*endptr != '\0')
       {
@@ -419,12 +419,12 @@ int E_IntOrFixedCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      *(long *)result = (long)(tmp * FRACUNIT);
+      *(int *)result = (int)(tmp * FRACUNIT);
    }
    else
    {
       // process an integer
-      *(long *)result = strtol(value, &endptr, 0);
+      *(int *)result = (int)strtol(value, &endptr, 0);
       
       if(*endptr != '\0')
       {
@@ -466,7 +466,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
    if(pctloc)
    {
-      long pctvalue;
+      int pctvalue;
       
       // get the percentage value (base 10 only)
       pctvalue = strtol(value, &endptr, 10);
@@ -492,12 +492,12 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      *(long *)result = (FRACUNIT * pctvalue) / 100;
+      *(int *)result = (FRACUNIT * pctvalue) / 100;
    }
    else
    {
       // process an integer
-      *(long *)result = strtol(value, &endptr, 0);
+      *(int *)result = (int)strtol(value, &endptr, 0);
       
       if(*endptr != '\0')
       {
@@ -531,7 +531,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 {
    char *endptr;
    
-   *(long *)result = strtol(value, &endptr, 0);
+   *(int *)result = (int)strtol(value, &endptr, 0);
 
    if(*endptr != '\0')
    {
@@ -551,7 +551,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
       palette = W_CacheLumpName("PLAYPAL", PU_STATIC);
 
-      *(long *)result = V_FindBestColor(palette, r, g, b);
+      *(int *)result = V_FindBestColor(palette, r, g, b);
 
       Z_ChangeTag(palette, PU_CACHE);
    }

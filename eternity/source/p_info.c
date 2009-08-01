@@ -513,7 +513,7 @@ static void P_ParseLevelVar(char *cmd)
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
                
-               *(long *)current->variable = E_ParseFlags(equals, flagset);
+               *(int *)current->variable = E_ParseFlags(equals, flagset);
             }
             break;
          default:

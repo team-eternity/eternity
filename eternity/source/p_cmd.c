@@ -332,7 +332,7 @@ CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
 CONSOLE_COMMAND(puke, cf_notnet)
 {
    int i;
-   long args[5] = { 0, 0, 0, 0, 0 };
+   int args[5] = { 0, 0, 0, 0, 0 };
 
    if(c_argc < 1)
       return;

@@ -317,7 +317,8 @@ CONSOLE_COMMAND(cvarhelp, 0)
 
    if(c_argc != 1)
    {
-      C_Printf("Usage: cvarhelp <variablename>\nOutputs a list of possible values for the given variable\n");
+      C_Printf("Usage: cvarhelp <variablename>\n"
+               "Outputs a list of possible values for the given variable\n");
       return;
    }
 
@@ -344,10 +345,16 @@ CONSOLE_COMMAND(cvarhelp, 0)
                   }
                }
                else
-                  C_Printf("Value range for '%s': %i through %i\n", name, var->min, var->max);
+               {
+                  C_Printf("Value range for '%s': %i through %i\n", 
+                           name, var->min, var->max);
+               }
             }
             else
-               C_Printf("Value for '%s': String no more than %i characters long\n", name, var->max);
+            {
+               C_Printf("Value for '%s': String no more than %i characters long\n", 
+                        name, var->max);
+            }
 
             return;
          }

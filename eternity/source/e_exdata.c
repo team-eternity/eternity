@@ -686,7 +686,7 @@ static cfg_opt_t ed_opts[] =
 //
 // Parses a single element of an args list.
 //
-static void E_ParseArg(const char *str, long *dest)
+static void E_ParseArg(const char *str, int *dest)
 {
    // currently only integers are supported
    *dest = strtol(str, NULL, 0);
@@ -1440,7 +1440,7 @@ static short E_ProcessGenSpec(const char *value)
 static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
                         void *result)
 {
-   long num;
+   int  num;
    char *endptr;
 
    num = strtol(value, &endptr, 0);
@@ -1453,9 +1453,9 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
       // if it has a parenthesis, it's a generalized type
       if(bracket_loc)
-         *(long *)result = E_ProcessGenSpec(value);
+         *(int *)result = E_ProcessGenSpec(value);
       else
-         *(long *)result = (long)(E_LineSpecForName(value));
+         *(int *)result = (int)(E_LineSpecForName(value));
    }
    else
    {
@@ -1471,7 +1471,7 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      *(long *)result = num;
+      *(int *)result = num;
    }
 
    return 0;
@@ -1610,7 +1610,7 @@ static unsigned int E_EDSectorForRecordNum(int recnum)
 static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
                           void *result)
 {
-   long num;
+   int  num;
    char *endptr;
 
    num = strtol(value, &endptr, 0);
@@ -1633,7 +1633,7 @@ static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      *(long *)result = num;
+      *(int *)result = num;
    }
 
    return 0;
@@ -1842,7 +1842,7 @@ void E_LoadLineDefExt(line_t *line, boolean applySpecial)
    line->extflags = edline->extflags;
 
    // args
-   memcpy(line->args, edline->args, 5*sizeof(long));
+   memcpy(line->args, edline->args, 5*sizeof(int));
 
    // 03/03/07: id
    if(edline->id != -1) // haleyjd: only use this field when it is specified

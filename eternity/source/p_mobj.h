@@ -389,15 +389,15 @@ struct mobj_s
 
    union
    {
-      long           bfgcount;
+      int            bfgcount;
       backpack_t*    backpack;       // for if its a backpack
    } extradata;
 
    int                 tics;   // state tic counter
    state_t*            state;
-   unsigned long       flags;
-   unsigned long       flags2;    // haleyjd 04/09/99: I know, kill me now
-   unsigned long       flags3;    // haleyjd 11/03/02
+   unsigned int        flags;
+   unsigned int        flags2;    // haleyjd 04/09/99: I know, kill me now
+   unsigned int        flags3;    // haleyjd 11/03/02
    int                 intflags;  // killough 9/15/98: internal flags
    int                 health;
 
@@ -471,7 +471,7 @@ struct mobj_s
    fixed_t passceilz;
 
    // scripting fields
-   long args[NUMMTARGS]; // arguments
+   int args[NUMMTARGS]; // arguments
    unsigned short tid;   // thing id used by scripts
 
    // Note: tid chain pointers are NOT serialized in save games,

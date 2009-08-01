@@ -58,7 +58,7 @@ typedef struct
    int         enableaps;   // haleyjd: enables above field, off by default
    
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
-   long        flags;
+   int         flags;
    int         mod;
    int         recoil;
 } weaponinfo_t;

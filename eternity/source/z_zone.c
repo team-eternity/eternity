@@ -142,9 +142,9 @@ void Z_PrintStats(void)           // Print allocation statistics
 {
    if(printstats)
    {
-      unsigned long total_memory = free_memory + active_memory +
-                                   purgable_memory + inactive_memory +
-                                   virtual_memory;
+      unsigned int total_memory = free_memory + active_memory +
+                                  purgable_memory + inactive_memory +
+                                  virtual_memory;
       double s = 100.0 / total_memory;
 
       doom_printf(
@@ -264,8 +264,8 @@ void Z_Init(void)
       if(size < 
          (MIN_RAM-LEAVE_ASIDE < RETRY_AMOUNT ? RETRY_AMOUNT : MIN_RAM-LEAVE_ASIDE))
       {
-         I_Error("Z_Init: failed on allocation of %lu bytes",
-                 (unsigned long)zonebase_size);
+         I_Error("Z_Init: failed on allocation of %u bytes",
+                 (unsigned int)zonebase_size);
       }
       else
       {
@@ -432,8 +432,8 @@ allocated:
    while(!(block = (malloc)(size + HEADER_SIZE)))
    {
       if(!blockbytag[PU_CACHE])
-         I_Error ("Z_Malloc: Failure trying to allocate %lu bytes\n"
-                  "Source: %s:%d", (unsigned long) size, file, line);
+         I_Error ("Z_Malloc: Failure trying to allocate %u bytes\n"
+                  "Source: %s:%d", (unsigned int) size, file, line);
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
    

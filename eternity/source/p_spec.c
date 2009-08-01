@@ -4401,7 +4401,7 @@ void P_ConvertHereticSpecials(void)
 // from an array, but not until all the Hexen specials are
 // implemented.
 //
-void P_ConvertHexenLineSpec(short *special, long *args)
+void P_ConvertHexenLineSpec(short *special, int *args)
 {
    switch(*special)
    {
@@ -4525,7 +4525,7 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 66:  // floor lower instant x 8
       *special = 321;
       {
-         long tmparg = args[1];
+         int tmparg = args[1];
          args[1] = args[2] * 8; // must move args[2] to args[1] and mul. by 8
          args[2] = tmparg;      // allow change to be specified in unused args[1]
          // TODO: if hexen strict, zero args[2]
@@ -4534,7 +4534,7 @@ void P_ConvertHexenLineSpec(short *special, long *args)
    case 67:  // floor raise instant x 8
       *special = 320;
       {
-         long tmparg = args[1];
+         int tmparg = args[1];
          args[1] = args[2] * 8; // same as above
          args[2] = tmparg;
          // TODO: if hexen strict, zero args[2]

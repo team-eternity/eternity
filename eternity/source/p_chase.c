@@ -42,9 +42,9 @@
 boolean PTR_chasetraverse(intercept_t *in);
 
 camera_t chasecam;
-long chaseviewz;
+int chaseviewz;
 int chasecam_active = 0;
-long targetx, targety, targetz;
+int targetx, targety, targetz;
 #ifdef R_LINKEDPORTALS
 int targetgroupid;
 #endif
@@ -185,14 +185,14 @@ void P_ChaseEnd(void)
 // this function is really just to cast all the
 // variables to 64-bit integers
 
-long zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
+int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 {
    int64_t thezi;
    
    thezi = (dist * (ztarget - playerz)) / totaldist;
    thezi += playerz;
    
-   return (long)thezi;
+   return (int)thezi;
 }
 
 // SoM: moved globals into linetracer_t see p_maputil.h
@@ -209,8 +209,8 @@ boolean PTR_chasetraverse(intercept_t *in)
 {
    fixed_t dist, frac;
    subsector_t *ss;
-   long x, y;
-   long z;
+   int x, y;
+   int z;
    sector_t *othersector;
 
    if(in->isaline)

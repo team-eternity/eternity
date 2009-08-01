@@ -2762,8 +2762,8 @@ void A_Mushroom(mobj_t *actor)
 
 typedef struct
 {
-   unsigned long thing_flag;
-   unsigned long level_flag;
+   unsigned int thing_flag;
+   unsigned int level_flag;
 } boss_spec_t;
 
 #define NUM_BOSS_SPECS 7
@@ -3298,8 +3298,8 @@ void A_LineEffect(mobj_t *mo)
 //
 void A_SetFlags(mobj_t *actor)
 {
-   int flagfield = (int)(actor->state->args[0]);
-   unsigned long flags = (unsigned long)(actor->state->args[1]);
+   int flagfield = actor->state->args[0];
+   unsigned int flags = (unsigned int)(actor->state->args[1]);
 
    switch(flagfield)
    {
@@ -3325,8 +3325,8 @@ void A_SetFlags(mobj_t *actor)
 //
 void A_UnSetFlags(mobj_t *actor)
 {
-   int flagfield = (int)(actor->state->args[0]);
-   unsigned long flags = (unsigned long)(actor->state->args[1]);
+   int flagfield = actor->state->args[0];
+   unsigned int flags = (unsigned int)(actor->state->args[1]);
 
    switch(flagfield)
    {
@@ -4031,7 +4031,7 @@ CONSOLE_COMMAND(spawn, cf_notnet|cf_level|cf_hidden)
 // haleyjd 07/05/03: new console commands that can use
 // EDF thing type names instead of internal type numbers
 
-extern long *deh_ParseFlagsCombined(const char *strval);
+extern int *deh_ParseFlagsCombined(const char *strval);
 
 static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *flags)
 {
@@ -4090,7 +4090,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // tweak the object's flags
    if(flagsmode != -1)
    {
-      long *res = deh_ParseFlagsCombined(flags);
+      int *res = deh_ParseFlagsCombined(flags);
 
       switch(flagsmode)
       {

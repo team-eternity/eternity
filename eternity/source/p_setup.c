@@ -108,10 +108,10 @@ int      numthings;
 int       bmapwidth, bmapheight;  // size in mapblocks
 
 // killough 3/1/98: remove blockmap limit internally:
-long      *blockmap;              // was short -- killough
+int       *blockmap;              // was short -- killough
 
 // offsets in blockmap are from here
-long      *blockmaplump;          // was short -- killough
+int       *blockmaplump;          // was short -- killough
 
 fixed_t   bmaporgx, bmaporgy;     // origin of block map
 
@@ -147,9 +147,9 @@ static int mapformat;
 // Inline routine to convert a short value to a long, preserving the value
 // -1 but treating any other negative value as unsigned.
 //
-d_inline static long ShortToLong(short value)
+d_inline static int ShortToLong(short value)
 {
-   return (value == -1) ? -1l : (long)value & 0xffff;
+   return (value == -1) ? -1l : (int)value & 0xffff;
 }
 
 //
@@ -159,10 +159,10 @@ d_inline static long ShortToLong(short value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static long SafeUintIndex(short input, int limit, const char *func,
-                                   const char *item)
+d_inline static int SafeUintIndex(short input, int limit, const char *func,
+                                  const char *item)
 {
-   long ret = (long)(SHORT(input)) & 0xffff;
+   int ret = (int)(SHORT(input)) & 0xffff;
 
    if(ret >= limit)
    {
@@ -294,9 +294,9 @@ void P_LoadSubsectors(int lump)
 
       // haleyjd 06/19/06: convert indices to unsigned
       subsectors[i].numlines =
-         (long)SHORT(mss->numsegs) & 0xffff;
+         (int)SHORT(mss->numsegs) & 0xffff;
       subsectors[i].firstline =
-         (long)SHORT(mss->firstseg) & 0xffff;
+         (int)SHORT(mss->firstseg) & 0xffff;
    }
    
    Z_Free(data);
@@ -755,7 +755,7 @@ enum
 };
 
 // haleyjd 02/28/07: tablified
-static long spac_flags_tlate[HX_SPAC_NUMSPAC] =
+static int spac_flags_tlate[HX_SPAC_NUMSPAC] =
 {
    EX_ML_CROSS  | EX_ML_PLAYER,                   // SPAC_CROSS
    EX_ML_USE    | EX_ML_PLAYER,                   // SPAC_USE
@@ -831,8 +831,8 @@ void P_LoadHexenLineDefs(int lump)
       ld->tag = -1; // haleyjd 02/27/07
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[(long)SHORT(mld->v1) & 0xffff];
-      v2 = ld->v2 = &vertexes[(long)SHORT(mld->v2) & 0xffff];
+      v1 = ld->v1 = &vertexes[(int)SHORT(mld->v1) & 0xffff];
+      v2 = ld->v2 = &vertexes[(int)SHORT(mld->v2) & 0xffff];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
@@ -1213,7 +1213,7 @@ static void P_CreateBlockMap(void)
 //
 void P_LoadBlockMap(int lump)
 {
-   long count;
+   int count;
    
    // sf: -blockmap checkparm made into variable
    // also checking for levels without blockmaps (0 length)
@@ -1224,7 +1224,7 @@ void P_LoadBlockMap(int lump)
    }
    else
    {
-      long i;
+      int i;
       short *wadblockmaplump = W_CacheLumpNum (lump, PU_LEVEL);
       blockmaplump = Z_Malloc(sizeof(*blockmaplump) * count,
                               PU_LEVEL, NULL);
@@ -1236,13 +1236,13 @@ void P_LoadBlockMap(int lump)
 
       blockmaplump[0] = SHORT(wadblockmaplump[0]);
       blockmaplump[1] = SHORT(wadblockmaplump[1]);
-      blockmaplump[2] = (long)(SHORT(wadblockmaplump[2])) & 0xffff;
-      blockmaplump[3] = (long)(SHORT(wadblockmaplump[3])) & 0xffff;
+      blockmaplump[2] = (int)(SHORT(wadblockmaplump[2])) & 0xffff;
+      blockmaplump[3] = (int)(SHORT(wadblockmaplump[3])) & 0xffff;
 
       for(i = 4; i < count; i++)
       {
          short t = SHORT(wadblockmaplump[i]);          // killough 3/1/98
-         blockmaplump[i] = t == -1 ? -1l : (long) t & 0xffff;
+         blockmaplump[i] = t == -1 ? -1l : (int) t & 0xffff;
       }
 
       Z_Free(wadblockmaplump);

@@ -267,9 +267,9 @@ typedef struct mapthing_s
    short angle;     // angle in wad format
    short type;      // doomednum
    short options;   // bitflags
-   long  special;   // scripting special
+   int   special;   // scripting special
 
-   long  args[NUMMTARGS]; // arguments for special
+   int   args[NUMMTARGS]; // arguments for special
 
    int   recordnum; // for ExtraData hashing
    int   next;

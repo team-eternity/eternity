@@ -1069,9 +1069,9 @@ static void G_DoPlayDemo(void)
       if(demo_version >= 331)
       {
          dmflags  = *demo_p++;
-         dmflags |= ((unsigned long)(*demo_p++)) << 8;
-         dmflags |= ((unsigned long)(*demo_p++)) << 16;
-         dmflags |= ((unsigned long)(*demo_p++)) << 24;
+         dmflags |= ((unsigned int)(*demo_p++)) << 8;
+         dmflags |= ((unsigned int)(*demo_p++)) << 16;
+         dmflags |= ((unsigned int)(*demo_p++)) << 24;
       }
 
       // haleyjd 12/14/01: retrieve gamemapname if in appropriate
@@ -2680,7 +2680,7 @@ void G_ScrambleRand()
    rngseed += tv.tv_sec*1000ul + tv.tv_usec / 1000ul + gametic;*/
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
-   rngseed = (unsigned long) time(NULL);
+   rngseed = (unsigned int) time(NULL);
 
 }
 

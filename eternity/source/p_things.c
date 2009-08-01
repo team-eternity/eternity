@@ -40,7 +40,7 @@
 //
 // Implements Thing_Spawn(tid, type, angle, newtid)
 //
-int EV_ThingSpawn(long *args, boolean fog)
+int EV_ThingSpawn(int *args, boolean fog)
 {
    int tid;
    angle_t angle;

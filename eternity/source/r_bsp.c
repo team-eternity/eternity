@@ -41,7 +41,7 @@ int      doorclosed;
 
 // killough: New code which removes 2s linedef limit
 drawseg_t *drawsegs = NULL;
-unsigned long maxdrawsegs;
+unsigned int maxdrawsegs;
 // drawseg_t drawsegs[MAXDRAWSEGS];       // old code -- killough
 
 

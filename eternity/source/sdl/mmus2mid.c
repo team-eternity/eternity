@@ -27,6 +27,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <inttypes.h> // haleyjd
 #ifndef __FreeBSD__ // [Kate]
 #include <malloc.h>
 #endif
@@ -98,9 +99,9 @@ typedef struct tagMUSheader MUSheader;
 typedef struct Track
 {
   char  velocity;
-  long  deltaT;
+  int   deltaT;
   UBYTE lastEvt;
-  long  alloced;
+  int   alloced;
 } TrackInfo;
 
 // array of info about tracks
@@ -170,7 +171,7 @@ static int TWriteByte(MIDI *mididata, int MIDItrack, unsigned char byte)
 
   pos = mididata->track[MIDItrack].len;
 // proff: Added typecast to avoid warning
-  if (pos >= (unsigned long)track[MIDItrack].alloced)
+  if (pos >= (unsigned int)track[MIDItrack].alloced)
   {
     track[MIDItrack].alloced =        // double allocation
       track[MIDItrack].alloced?       // or set initial TRACKBUFFERSIZE

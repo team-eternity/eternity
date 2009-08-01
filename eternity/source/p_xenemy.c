@@ -119,7 +119,7 @@ void T_QuakeThinker(quakethinker_t *qt)
 //
 // Starts an earthquake at each object with the tid in args[4]
 //
-boolean P_StartQuake(long *args)
+boolean P_StartQuake(int *args)
 {
    mobj_t *mo  = NULL;
    boolean ret = false;

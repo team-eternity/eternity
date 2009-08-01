@@ -391,7 +391,7 @@ typedef struct subsector_s
   sector_t *sector;
 
   // haleyjd 06/19/06: converted from short to long for 65535 segs
-  long  numlines, firstline;
+  int    numlines, firstline;
 
   struct rpolyobj_s *polyList; // haleyjd 05/15/08: list of polyobj fragments
 } subsector_t;

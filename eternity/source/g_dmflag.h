@@ -48,8 +48,8 @@ enum
 #define DMD_DEATHMATCH2 (DM_ITEMRESPAWN)
 #define DMD_DEATHMATCH3 (DM_ITEMRESPAWN|DM_WEAPONSTAY|DM_BARRELRESPAWN|DM_PLAYERDROP)
 
-extern unsigned long dmflags;
-extern unsigned long default_dmflags;
+extern unsigned int dmflags;
+extern unsigned int default_dmflags;
 
 void G_SetDefaultDMFlags(int dmtype, boolean setdefault);
 

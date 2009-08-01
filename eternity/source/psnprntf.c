@@ -2,6 +2,7 @@
 
 #include <string.h> /* for memset */
 #include <stdlib.h> /* for fcvt */
+#include <inttypes.h> /* haleyjd */
 
 /* Windows stdlib defines fcvt differently <sigh> */
 
@@ -418,8 +419,8 @@ int pvsnfmt_str(char **pinsertion, size_t *nmax, const char fmt, int flags,
 int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
                 int width, int precision, char prefix, va_list *ap)
 {
-    long int number = 0;
-    unsigned long int unumber = 0;
+    int number = 0;
+    unsigned int unumber = 0;
     char numbersigned = 1;
     char iszero = 0; /* bool */
     int base = 10;   /* haleyjd: default to something valid */
@@ -461,7 +462,7 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned long) va_arg(*ap, void *);
+                unumber = (unsigned int) va_arg(*ap, void *);
                 numbersigned = 0;
         }
         break;
@@ -470,17 +471,17 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
         {
             case 'd':
             case 'i':
-                number = va_arg(*ap, signed long int);
+                number = va_arg(*ap, signed int);
                 break;
             case 'u':
             case 'o':
             case 'x':
             case 'X':
-                unumber = va_arg(*ap, unsigned long int);
+                unumber = va_arg(*ap, unsigned int);
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned long) va_arg(*ap, void *);
+                unumber = (unsigned int) va_arg(*ap, void *);
                 numbersigned = numbersigned;
         }
         break;
@@ -499,7 +500,7 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned long) va_arg(*ap, void *);
+                unumber = (unsigned int) va_arg(*ap, void *);
                 numbersigned = 0;
          }
     } /* switch fmt to retrieve number */
@@ -731,8 +732,8 @@ int pvsnfmt_int(char **pinsertion, size_t *nmax, char fmt, int flags,
 typedef union {
     double D;
     struct {
-        unsigned long W0;
-        unsigned long W1;
+        uint32_t W0;
+        uint32_t W1;
     } WORDS; /* haleyjd: this must be named */
 } DBLBITS;
 

@@ -424,7 +424,7 @@ static const char *misc_prefixes[NUM_MISC_PREFIXES] =
    "bexptr", "string"
 };
 
-static void E_AssignMiscThing(long *target, int thingnum)
+static void E_AssignMiscThing(int *target, int thingnum)
 {
    // 09/19/03: add check for no dehacked number
    // 03/22/06: auto-allocate dehacked numbers where possible
@@ -438,7 +438,7 @@ static void E_AssignMiscThing(long *target, int thingnum)
    }
 }
 
-static void E_AssignMiscState(long *target, int framenum)
+static void E_AssignMiscState(int *target, int framenum)
 {
    // 09/19/03: add check for no dehacked number
    // 03/22/06: auto-allocate dehacked numbers where possible
@@ -452,7 +452,7 @@ static void E_AssignMiscState(long *target, int framenum)
    }
 }
 
-static void E_AssignMiscSound(long *target, sfxinfo_t *sfx)
+static void E_AssignMiscSound(int *target, sfxinfo_t *sfx)
 {
    // 01/04/09: check for NULL just in case
    if(!sfx)
@@ -469,7 +469,7 @@ static void E_AssignMiscSound(long *target, sfxinfo_t *sfx)
    }
 }
 
-static void E_AssignMiscString(long *target, edf_string_t *str, const char *name)
+static void E_AssignMiscString(int *target, edf_string_t *str, const char *name)
 {
    if(!str || str->numkey < 0)
    {
@@ -480,7 +480,7 @@ static void E_AssignMiscString(long *target, edf_string_t *str, const char *name
       *target = str->numkey;
 }
 
-static void E_AssignMiscBexptr(long *target, deh_bexptr *dp, const char *name)
+static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
 {
    if(!dp)
       E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n", name);
@@ -498,7 +498,7 @@ static void E_AssignMiscBexptr(long *target, deh_bexptr *dp, const char *name)
 // be candidate for generalization, since other fields may need
 // this syntax in the near future.
 //
-static void E_ParseMiscField(char *value, long *target)
+static void E_ParseMiscField(char *value, int *target)
 {
    int i;
    char prefix[16];
@@ -587,8 +587,8 @@ static void E_ParseMiscField(char *value, long *target)
    }
    else
    {
-      char *endptr;
-      long val;
+      char  *endptr;
+      int    val;
       double dval;
 
       // see if it is a number
@@ -705,9 +705,9 @@ static void E_StateNextFrame(const char *tempstr, int i)
    else if((tempint = E_StateNumForName(tempstr)) == NUMSTATES)
    {
       char *endptr = NULL;
-      long result;
+      int result;
 
-      result = strtol(tempstr, &endptr, 0);
+      result = (int)strtol(tempstr, &endptr, 0);
       if(*endptr == '\0')
       {
          // check for DeHackEd num specification;

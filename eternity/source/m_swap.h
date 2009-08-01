@@ -39,29 +39,28 @@
 // Swap 16bit, that is, MSB and LSB byte.
 
 
-d_inline static short SHORT(short x)
+d_inline static int16_t SHORT(int16_t x)
 {
-  return (((unsigned char *) &x)[1] << 8) +
-          ((unsigned char *) &x)[0];
+  return (((uint8_t *) &x)[1] << 8) +
+          ((uint8_t *) &x)[0];
 }
 
 // haleyjd: same routine but for big-endian input
 
-d_inline static short BIGSHORT(short x)
+d_inline static int16_t BIGSHORT(int16_t x)
 {
-   return (((unsigned char *) &x)[0] << 8) +
-           ((unsigned char *) &x)[1];
+   return (((uint8_t *) &x)[0] << 8) +
+           ((uint8_t *) &x)[1];
 }
 
 // Swapping 32bit.
 
-
-d_inline static long LONG(long x)
+d_inline static int32_t LONG(int32_t x)
 {
-  return (((unsigned char *) &x)[3] << 24) +
-         (((unsigned char *) &x)[2] << 16) +
-         (((unsigned char *) &x)[1] <<  8) +
-          ((unsigned char *) &x)[0];
+  return (((uint8_t *) &x)[3] << 24) +
+         (((uint8_t *) &x)[2] << 16) +
+         (((uint8_t *) &x)[1] <<  8) +
+          ((uint8_t *) &x)[0];
 } 
 
 #endif

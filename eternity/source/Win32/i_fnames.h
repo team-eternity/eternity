@@ -28,7 +28,7 @@
 #ifndef I_FNAMES_H__
 #define I_FNAMES_H__
 
-void WIN_GetExeDir(char *buffer, unsigned long size);
+void WIN_GetExeDir(char *buffer, unsigned int size);
 
 #endif
 

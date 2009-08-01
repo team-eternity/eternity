@@ -412,7 +412,7 @@ static int I_TryLoadSPC(void *data, int size)
       return -1;
    }
    
-   if((err = spc_load_spc(snes_spc, data, size)))
+   if((err = spc_load_spc(snes_spc, data, (long)size)))
    {
       spc_delete(snes_spc);
       snes_spc = NULL;
