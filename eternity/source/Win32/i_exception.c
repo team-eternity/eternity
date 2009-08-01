@@ -61,6 +61,7 @@ static TCHAR  crashModulePath[MAX_PATH*2];
 static HANDLE logFile;
 static TCHAR  logbuffer[LOG_BUFFER_SIZE];
 static int    logidx;
+static TCHAR *fileName;
 
 static PEXCEPTION_RECORD exceptionRecord;
 static PCONTEXT          contextRecord;
@@ -115,7 +116,7 @@ static TCHAR *ExtractFileName(LPCTSTR path)
 //
 static void GetModuleName(void)
 {
-   TCHAR *fileName, *dot;
+   TCHAR *dot;
 
    ZeroMemory(moduleFileName, sizeof(moduleFileName));
 
@@ -592,6 +593,40 @@ static void PrintStack(void)
 
 #endif // _M_IX86
 
+//
+// LaunchCrashApp
+//
+// Runs the crash reporter application.
+//
+static int LaunchCrashApp(void)
+{
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
+   TCHAR cmdline[MAX_PATH];
+   
+   // Replace the filename with our crash report exe file name
+   lstrcpy(fileName, _T("eecrashreport.exe"));   
+   lstrcpy(cmdline, moduleFileName);   
+   lstrcat(cmdline, _T(" \""));	// surround app name with quotes
+   
+   ZeroMemory(moduleFileName, sizeof(moduleFileName));
+   
+   GetModuleFileName(0, moduleFileName, charcount(moduleFileName)-2);
+   
+   lstrcat(cmdline, ExtractFileName(moduleFileName));
+   lstrcat(cmdline, _T("\""));
+   
+   ZeroMemory(&si, sizeof(si));
+   ZeroMemory(&pi, sizeof(pi));
+
+   si.cb = sizeof(si);
+   si.dwFlags = STARTF_USESHOWWINDOW;
+   si.wShowWindow = SW_SHOW;   
+
+   return CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 
+                        0, NULL, NULL, &si, &pi) ? 1 : 0;
+}
+
 //=============================================================================
 //
 // Main Routine
@@ -645,7 +680,10 @@ int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep)
    LogFlush(logFile);
    CloseHandle(logFile);
 
-   return EXCEPTION_EXECUTE_HANDLER; // TODO: launch report app?
+   if(LaunchCrashApp())
+      return EXCEPTION_EXECUTE_HANDLER;
+   else
+      return EXCEPTION_CONTINUE_SEARCH;
 }
 
 // EOF
