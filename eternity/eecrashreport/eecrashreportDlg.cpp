@@ -195,8 +195,31 @@ void CEECrashReportDlg::LoadErrorFile()
 {
    char *str;
    FILE *f;
+   char moduleName[2*MAX_PATH];
+   char *filename;
 
-   if(!(f = fopen("crashlog.txt", "rb")))
+   memset(moduleName, 0, sizeof(moduleName));
+
+   GetModuleFileName(NULL, moduleName, MAX_PATH);
+
+   filename = strrchr(moduleName, '\\');
+
+   if(filename)
+   {
+      char *tmp = filename;
+
+      while(*filename != '\0')
+         *filename++ = '\0';
+
+      strcat(moduleName, "\\crashlog.txt");
+   }      
+   else
+   {
+      memset(moduleName, 0, sizeof(moduleName));
+      strcpy(moduleName, "crashlog.txt");
+   }
+
+   if(!(f = fopen(moduleName, "rb")))
    {
       AfxMessageBox("crashlog.txt not found.", MB_OK | MB_ICONEXCLAMATION);
       return;
