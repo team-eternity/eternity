@@ -33,6 +33,7 @@
 #include "e_lib.h"
 #include "e_edf.h"
 #include "e_mod.h"
+#include "e_hash.h"
 
 #include "d_dehtbl.h"
 #include "d_io.h"
@@ -64,7 +65,12 @@ cfg_opt_t edf_dmgtype_opts[] =
 #define NUMMODCHAINS 67
 
 static emod_t *e_mod_namechains[NUMMODCHAINS];
-static emod_t *e_mod_numchains[NUMMODCHAINS];
+
+// haleyjd 08/02/09: use new generic hash
+static ehash_t e_mod_numhash;
+
+// Key retrieval function for generic hash
+E_KEYFUNC(emod_t, num)
 
 // default damage type - "Unknown"
 
@@ -148,21 +154,21 @@ static boolean E_AutoAllocModNum(emod_t *mod)
 //
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
-   unsigned int key = mod->num % NUMMODCHAINS;
+   if(!e_mod_numhash.isinit)
+      E_SintHashInit(&e_mod_numhash, NUMMODCHAINS, E_KEYFUNCNAME(emod_t));
 
    // Auto-assign a numeric key to all damage types which don't have
    // a valid one explicitly specified. This avoids some gigantic, 
    // messy code rewrites by allowing mobjinfo to always store the 
    // numeric key.
-
+   
    if(mod->num <= 0)
    {
       E_AutoAllocModNum(mod);
       return;
    }
 
-   M_DLListInsert((mdllistitem_t *)mod, 
-                  (mdllistitem_t **)(&e_mod_numchains[key]));
+   E_HashAddObject(&e_mod_numhash, mod);
 }
 
 //
@@ -173,7 +179,7 @@ static void E_AddDamageTypeToNumHash(emod_t *mod)
 //
 static void E_DelDamageTypeFromNumHash(emod_t *mod)
 {
-   M_DLListRemove((mdllistitem_t *)mod);
+   E_HashRemoveObject(&e_mod_numhash, mod);
 }
 
 //
@@ -360,13 +366,9 @@ emod_t *E_DamageTypeForName(const char *name)
 //
 emod_t *E_DamageTypeForNum(int num)
 {
-   unsigned int key = num % NUMMODCHAINS;
-   emod_t *mod = e_mod_numchains[key];
-
-   while(mod && mod->num != num)
-      mod = (emod_t *)(mod->numlinks.next);
-
-   if(mod == NULL)
+   emod_t *mod;
+   
+   if((mod = E_HashObjectForKey(&e_mod_numhash, &num)) == NULL)
       mod = &unknown_mod;
 
    return mod;

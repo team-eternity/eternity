@@ -45,6 +45,7 @@ void E_HashInit(ehash_t *table, unsigned int numchains,
    table->hashfunc   = hfunc;
    table->compfunc   = cfunc;
    table->keyfunc    = kfunc;
+   table->isinit     = true;
 }
 
 //
@@ -63,6 +64,7 @@ void E_HashDestroy(ehash_t *table)
    table->numchains  = 0;
    table->numitems   = 0;
    table->loadfactor = 0.0f;
+   table->isinit     = false;
 }
 
 //
@@ -199,9 +201,10 @@ void E_HashRebuild(ehash_t *table, unsigned int newnumchains)
    // run down the old chains
    for(i = 0; i < oldnumchains; ++i)
    {
-      mdllistitem_t *chain = oldchains[i];
+      mdllistitem_t *chain;
 
-      while(chain)
+      // restart from beginning of old chain each time
+      while((chain = oldchains[i]))
       {
          // remove from old hash
          E_HashRemoveObjectNC(chain);
@@ -212,9 +215,6 @@ void E_HashRebuild(ehash_t *table, unsigned int newnumchains)
 
          // add to new hash
          E_HashAddObjectNC(table, chain);
-
-         // restart from beginning of old chain
-         chain = oldchains[i];
       }
    }
 
@@ -243,7 +243,7 @@ void E_HashRebuild(ehash_t *table, unsigned int newnumchains)
 // 
 static unsigned int E_NCStrHashFunc(void *key)
 {
-   return D_HashTableKey((const char *)key);
+   return D_HashTableKey(*(const char **)key);
 }
 
 //
@@ -254,9 +254,9 @@ static unsigned int E_NCStrHashFunc(void *key)
 static boolean E_NCStrCompareFunc(void *table, void *object, void *key)
 {
    ehash_t *hash = (ehash_t *)table;
-   const char *objkey = E_HashKeyForObject(hash, object);
+   const char *objkey = *(const char **)E_HashKeyForObject(hash, object);
 
-   return !strcasecmp(objkey, (const char *)key);
+   return !strcasecmp(objkey, *(const char **)key);
 }
 
 //
@@ -274,7 +274,7 @@ void E_NCStrHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc)
 }
 
 //
-// Integer Hash
+// Unsigned Integer Hash
 //
 
 //
@@ -284,7 +284,7 @@ void E_NCStrHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc)
 //
 static unsigned int E_UintHashFunc(void *key)
 {
-   return (unsigned int)((intptr_t)key);
+   return *(unsigned int *)key;
 }
 
 //
@@ -292,13 +292,12 @@ static unsigned int E_UintHashFunc(void *key)
 //
 // Key comparison function for unsigned integer keys.
 //
-static boolean E_UintCompareFunc(ehash_t *table, void *object, void *key)
+static boolean E_UintCompareFunc(void *table, void *object, void *key)
 {
    ehash_t *hash = (ehash_t *)table;
-   unsigned int objkey = 
-      (unsigned int)((intptr_t)E_HashKeyForObject(hash, object));
+   unsigned int objkey = *(unsigned int *)E_HashKeyForObject(hash, object);
 
-   return objkey == (unsigned int)((intptr_t)key);
+   return objkey == *(unsigned int *)key;
 }
 
 //
@@ -311,6 +310,45 @@ void E_UintHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc)
 {
    E_HashInit(table, numchains, E_UintHashFunc, E_UintCompareFunc, kfunc);
 }
+
+//
+// Signed Integer Hash
+//
+
+//
+// E_SintHashFunc
+//
+// Hash key function for unsigned integer keys.
+//
+static unsigned int E_SintHashFunc(void *key)
+{
+   return *(unsigned int *)key;
+}
+
+//
+// E_SintCompareFunc
+//
+// Key comparison function for unsigned integer keys.
+//
+static boolean E_SintCompareFunc(void *table, void *object, void *key)
+{
+   ehash_t *hash = (ehash_t *)table;
+   int objkey = *(int *)E_HashKeyForObject(hash, object);
+
+   return objkey == *(int *)key;
+}
+
+//
+// E_SintHashInit
+//
+// Creates a hash specialized to deal with structures which use an integer
+// as their key.
+// 
+void E_SintHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc)
+{
+   E_HashInit(table, numchains, E_SintHashFunc, E_SintCompareFunc, kfunc);
+}
+
 
 // EOF
 

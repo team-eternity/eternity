@@ -33,13 +33,14 @@ typedef void *       (*EKeyFunc_t) (void *);                 // key retrieval fu
 
 typedef struct ehash_s
 {
-   mdllistitem_t **chains;
-   unsigned int numchains;
-   unsigned int numitems;
-   float loadfactor;
-   EHashFunc_t hashfunc;
-   ECompFunc_t compfunc;
-   EKeyFunc_t  keyfunc;
+   mdllistitem_t **chains; // hash chains
+   unsigned int numchains; // number of chains
+   unsigned int numitems;  // number of items currently in table
+   float loadfactor;       // load = numitems / numchains
+   EHashFunc_t hashfunc;   // hash computation function
+   ECompFunc_t compfunc;   // object comparison function
+   EKeyFunc_t  keyfunc;    // key retrieval function
+   boolean isinit;         // true if hash is initialized
 
 } ehash_t;
 
@@ -56,11 +57,12 @@ void  E_HashRebuild(ehash_t *, unsigned int);
 // specializations
 void  E_NCStrHashInit(ehash_t *, unsigned int, EKeyFunc_t);
 void  E_UintHashInit(ehash_t *, unsigned int, EKeyFunc_t);
+void  E_SintHashInit(ehash_t *, unsigned int, EKeyFunc_t);
 
 #define E_KEYFUNC(type, field) \
    static void *EHashKeyFunc_ ## type (void *object) \
    { \
-      return (void *)(((type *)object)-> field ); \
+      return &(((type *)object)-> field ); \
    }
 
 #define E_KEYFUNCNAME(type) EHashKeyFunc_ ## type
