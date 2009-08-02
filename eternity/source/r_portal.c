@@ -68,8 +68,7 @@ static void R_ClearPortalWindow(pwindow_t *window)
    window->vx = window->vy = window->vz = 0;
 }
 
-
-static pwindow_t *R_NewPortalWindow()
+static pwindow_t *R_NewPortalWindow(void)
 {
    pwindow_t *ret;
 
@@ -120,8 +119,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    float pbottom = window->bottom[x];
 
 #ifdef RANGECHECK
-   if((ybottom >= view.height || ytop < 0) && 
-      ytop < ybottom)
+   if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
    {
       I_Error("R_WindowAdd portal supplied with bad column data.\n"
               "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
@@ -228,18 +226,13 @@ static portal_t *R_CreatePortal(void)
    return ret;
 }
 
-
-
 //
 // R_CalculateDeltas
+//
 // Calculates the deltas (offset) between two linedefs.
-static void R_CalculateDeltas
-(
-   int markerlinenum, 
-   int anchorlinenum, 
-   fixed_t *dx, fixed_t *dy, fixed_t *dz
-)
-
+//
+static void R_CalculateDeltas(int markerlinenum, int anchorlinenum, 
+                              fixed_t *dx, fixed_t *dy, fixed_t *dz)
 {
    line_t *m = lines + markerlinenum;
    line_t *a = lines + anchorlinenum;
@@ -248,7 +241,6 @@ static void R_CalculateDeltas
    *dy = ((a->v1->y + a->v2->y) / 2) - ((m->v1->y + m->v2->y) / 2);
    *dz = 0; /// ???
 }
-
 
 
 //
@@ -822,9 +814,6 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       R_RenderAnchoredPortal(window->child);
 }
 
-
-
-
 #ifdef R_LINKEDPORTALS
 static void R_RenderLinkedPortal(pwindow_t *window)
 {
@@ -919,9 +908,6 @@ static void R_RenderLinkedPortal(pwindow_t *window)
 }
 #endif
 
-
-
-
 //
 // R_UntaintPortals
 //
@@ -946,37 +932,35 @@ void R_UntaintPortals(void)
    }
 }
 
-
-
 static void R_SetPortalFunction(pwindow_t *window)
 {
    switch(window->portal->type)
    {
    case R_PLANE:
-      window->func = R_RenderPlanePortal;
+      window->func     = R_RenderPlanePortal;
       window->clipfunc = NULL;
       break;
    case R_HORIZON:
-      window->func = R_RenderHorizonPortal;
+      window->func     = R_RenderHorizonPortal;
       window->clipfunc = NULL;
       break;
    case R_SKYBOX:
-      window->func = R_RenderSkyboxPortal;
+      window->func     = R_RenderSkyboxPortal;
       window->clipfunc = NULL;
       break;
    case R_ANCHORED:
    case R_TWOWAY:
-      window->func = R_RenderAnchoredPortal;
+      window->func     = R_RenderAnchoredPortal;
       window->clipfunc = segclipfuncs[window->type];
       break;
 #ifdef R_LINKEDPORTALS
    case R_LINKED:
-      window->func = R_RenderLinkedPortal;
+      window->func     = R_RenderLinkedPortal;
       window->clipfunc = segclipfuncs[window->type];
       break;
 #endif
    default:
-      window->func = R_RenderPortalNOP;
+      window->func     = R_RenderPortalNOP;
       window->clipfunc = NULL;
       break;
    }

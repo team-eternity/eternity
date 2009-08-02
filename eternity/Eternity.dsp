@@ -396,6 +396,10 @@ SOURCE=.\source\e_fonts.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\e_hash.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\e_lib.c
 # End Source File
 # Begin Source File
@@ -441,6 +445,10 @@ SOURCE=.\Source\e_exdata.h
 # Begin Source File
 
 SOURCE=.\source\e_fonts.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_hash.h
 # End Source File
 # Begin Source File
 

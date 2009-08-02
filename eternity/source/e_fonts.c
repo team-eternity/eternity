@@ -496,7 +496,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    unsigned int numchars;
    const char *tempstr;
    char *pos = NULL;
-   int tempnum;
+   int tempnum = 0;
    unsigned int i;
 
    // the filter works in one of two ways:
@@ -639,7 +639,7 @@ static void E_ProcessFont(cfg_t *sec)
    vfont_t *font;
    const char *title, *tempstr;
    boolean def = true;
-   int num, tempnum;
+   int num, tempnum = 0;
 
    title = cfg_title(sec);
    num   = cfg_getint(sec, ITEM_FONT_ID);

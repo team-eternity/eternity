@@ -787,7 +787,7 @@ typedef enum
 
 void R_SectorColormap(sector_t *s)
 {
-   int cm;
+   int cm = 0;
    area_t viewarea;
    
    // killough 3/20/98, 4/4/98: select colormap based on player status
@@ -846,13 +846,13 @@ void R_SectorColormap(sector_t *s)
 
 angle_t R_WadToAngle(int wadangle)
 {
-   if(demo_version < 302)            // maintain compatibility
-      return (wadangle / 45) * ANG45;
-
    // haleyjd: FIXME: needs comp option
    // allows wads to specify angles to
    // the nearest degree, not nearest 45   
-   return wadangle * (ANG45 / 45);     
+
+   return (demo_version < 302) 
+             ? (wadangle / 45) * ANG45 
+             : wadangle * (ANG45 / 45);
 }
 
 static int render_ticker = 0;
