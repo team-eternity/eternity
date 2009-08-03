@@ -27,9 +27,17 @@
 #ifndef E_HASH_H__
 #define E_HASH_H__
 
-typedef unsigned int (*EHashFunc_t)(void *);                 // hash function
-typedef boolean      (*ECompFunc_t)(void *, void *, void *); // comparison function
-typedef void *       (*EKeyFunc_t) (void *);                 // key retrieval function
+// hash computation function prototype
+typedef unsigned int (*EHashFunc_t)(const void *);
+
+// object comparison function prototype
+typedef boolean      (*ECompFunc_t)(void *, void *, const void *);
+
+// key retrieval function prototype
+typedef void *       (*EKeyFunc_t) (void *);
+
+// link retrieval function prototype
+typedef void *       (*ELinkFunc_t)(void *);
 
 typedef struct ehash_s
 {
@@ -40,32 +48,44 @@ typedef struct ehash_s
    EHashFunc_t hashfunc;   // hash computation function
    ECompFunc_t compfunc;   // object comparison function
    EKeyFunc_t  keyfunc;    // key retrieval function
+   ELinkFunc_t linkfunc;   // link-for-object function
    boolean isinit;         // true if hash is initialized
 
 } ehash_t;
 
-void  E_HashInit(ehash_t *, unsigned int, EHashFunc_t, ECompFunc_t, EKeyFunc_t);
+void  E_HashInit(ehash_t *, unsigned int, EHashFunc_t, ECompFunc_t, EKeyFunc_t, ELinkFunc_t);
 void  E_HashAddObject(ehash_t *, void *);
-void  E_HashAddObjectNC(ehash_t *, void *);
 void  E_HashRemoveObject(ehash_t *, void *);
-void  E_HashRemoveObjectNC(void *);
-void *E_HashObjectForKey(ehash_t *, void *);
+void  E_HashRemoveObjectNC(ehash_t *, void *);
+void *E_HashObjectForKey(ehash_t *, const void *);
 void *E_HashKeyForObject(ehash_t *, void *);
-void *E_HashObjectIterator(ehash_t *, void *, void *);
+void *E_HashObjectIterator(ehash_t *, void *, const void *);
 void  E_HashRebuild(ehash_t *, unsigned int);
 
 // specializations
-void  E_NCStrHashInit(ehash_t *, unsigned int, EKeyFunc_t);
-void  E_UintHashInit(ehash_t *, unsigned int, EKeyFunc_t);
-void  E_SintHashInit(ehash_t *, unsigned int, EKeyFunc_t);
+void  E_NCStrHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
+void  E_UintHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
+void  E_SintHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
+
+// Key Function macro - autogenerates a key retrieval function
 
 #define E_KEYFUNC(type, field) \
-   static void *EHashKeyFunc_ ## type (void *object) \
+   static void *EHashKeyFunc_ ## type ## field (void *object) \
    { \
       return &(((type *)object)-> field ); \
    }
 
-#define E_KEYFUNCNAME(type) EHashKeyFunc_ ## type
+#define E_KEYFUNCNAME(type, field) EHashKeyFunc_ ## type ## field
+
+// Link Function macro - autogenerates a link retrieval function
+
+#define E_LINKFUNC(type, field) \
+   static void *EHashLinkFunc_ ## type ## field (void *object) \
+   { \
+      return &(((type *)object)-> field ); \
+   }
+
+#define E_LINKFUNCNAME(type, field) EHashLinkFunc_ ## type ## field
 
 #endif
 

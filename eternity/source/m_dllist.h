@@ -45,6 +45,7 @@ typedef struct mdllistitem_s
 {
    struct mdllistitem_s *next;
    struct mdllistitem_s **prev;
+   void                 *object; // 08/02/09: pointer back to object
 } mdllistitem_t;
 
 d_inline static void M_DLListInsert(mdllistitem_t *item, mdllistitem_t **head)
@@ -55,6 +56,21 @@ d_inline static void M_DLListInsert(mdllistitem_t *item, mdllistitem_t **head)
       next->prev = &item->next;
    item->prev = head;
    *head = item;
+
+   item->object = item; // 08/02/09: defaults to being self-referential
+}
+
+d_inline static void M_DLListInsertWithPtr(mdllistitem_t *item, void *object,
+                                           mdllistitem_t **head)
+{
+   mdllistitem_t *next = *head;
+
+   if((item->next = next))
+      next->prev = &item->next;
+   item->prev = head;
+   *head = item;
+
+   item->object = object; // set to object, which is possibly distinct
 }
 
 d_inline static void M_DLListRemove(mdllistitem_t *item)

@@ -268,7 +268,7 @@ void E_CollectStates(cfg_t *scfg)
    state_t *statestructs;
 
    // 6/18/09: allocate structures
-   statestructs = Z_Malloc(sizeof(state_t) * NUMSTATES, PU_STATIC, NULL);
+   statestructs = calloc(NUMSTATES, sizeof(state_t));
 
    // 6/18/09: allocate pointer array
    states = Z_Malloc(sizeof(state_t *) * NUMSTATES, PU_STATIC, NULL);

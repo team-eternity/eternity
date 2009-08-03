@@ -37,9 +37,10 @@
 //
 typedef struct emod_s
 {
-   mdllistitem_t numlinks; // for numeric hash
+   mdllistitem_t numlinks;  // for numeric hash
+   mdllistitem_t namelinks; // for name hash
 
-   const char *name;
+   char *name;
    int num;
    char *obituary;
    char *selfobituary;
@@ -47,7 +48,7 @@ typedef struct emod_s
    boolean selfObitIsBexString;
    boolean sourceless;
 
-   struct emod_s *nextname; // next by name
+   //struct emod_s *nextname; // next by name
 } emod_t;
 
 emod_t *E_DamageTypeForName(const char *name);

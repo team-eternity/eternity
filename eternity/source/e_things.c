@@ -597,7 +597,7 @@ void E_CollectThings(cfg_t *tcfg)
    int i;
 
    // allocate array
-   mobjinfo = Z_Malloc(sizeof(mobjinfo_t)*NUMMOBJTYPES, PU_STATIC, NULL);
+   mobjinfo = calloc(NUMMOBJTYPES, sizeof(mobjinfo_t));
 
    // initialize hash slots
    for(i = 0; i < NUMTHINGCHAINS; ++i)

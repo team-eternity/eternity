@@ -64,12 +64,15 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-static emod_t *e_mod_namechains[NUMMODCHAINS];
+//static emod_t *e_mod_namechains[NUMMODCHAINS];
+static ehash_t e_mod_namehash;
+
+E_KEYFUNC(emod_t, name)
+E_LINKFUNC(emod_t, namelinks)
 
 // haleyjd 08/02/09: use new generic hash
 static ehash_t e_mod_numhash;
 
-// Key retrieval function for generic hash
 E_KEYFUNC(emod_t, num)
 
 // default damage type - "Unknown"
@@ -77,6 +80,7 @@ E_KEYFUNC(emod_t, num)
 static emod_t unknown_mod =
 {
    { NULL, NULL }, // numlinks
+   { NULL, NULL }, // namelinks
 
    "Unknown",      // name
    0,              // num
@@ -101,10 +105,19 @@ static int edf_alloc_modnum = D_MAXINT;
 //
 static void E_AddDamageTypeToNameHash(emod_t *mod)
 {
+   /*
    unsigned int key = D_HashTableKey(mod->name) % NUMMODCHAINS;
 
    mod->nextname = e_mod_namechains[key];
    e_mod_namechains[key] = mod;
+   */
+   if(!e_mod_namehash.isinit)
+   {
+      E_NCStrHashInit(&e_mod_namehash, NUMMODCHAINS, E_KEYFUNCNAME(emod_t, name),
+                      E_LINKFUNCNAME(emod_t, namelinks));
+   }
+   
+   E_HashAddObject(&e_mod_namehash, mod);
 }
 
 // need forward declaration for E_AutoAllocModNum
@@ -155,7 +168,10 @@ static boolean E_AutoAllocModNum(emod_t *mod)
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
    if(!e_mod_numhash.isinit)
-      E_SintHashInit(&e_mod_numhash, NUMMODCHAINS, E_KEYFUNCNAME(emod_t));
+   {
+      E_SintHashInit(&e_mod_numhash, NUMMODCHAINS, 
+                     E_KEYFUNCNAME(emod_t, num), NULL);
+   }
 
    // Auto-assign a numeric key to all damage types which don't have
    // a valid one explicitly specified. This avoids some gigantic, 
@@ -190,6 +206,7 @@ static void E_DelDamageTypeFromNumHash(emod_t *mod)
 //
 static emod_t *E_EDFDamageTypeForName(const char *name)
 {
+   /*
    unsigned int key = D_HashTableKey(name) % NUMMODCHAINS;
    emod_t *mod = e_mod_namechains[key];
 
@@ -197,6 +214,8 @@ static emod_t *E_EDFDamageTypeForName(const char *name)
       mod = mod->nextname;
 
    return mod;
+   */
+   return E_HashObjectForKey(&e_mod_namehash, &name);
 }
 
 #define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
@@ -346,13 +365,17 @@ void E_ProcessDamageTypes(cfg_t *cfg)
 //
 emod_t *E_DamageTypeForName(const char *name)
 {
+   /*
    unsigned int key = D_HashTableKey(name) % NUMMODCHAINS;
    emod_t *mod = e_mod_namechains[key];
 
    while(mod && strcasecmp(mod->name, name))
       mod = mod->nextname;
+   */
 
-   if(mod == NULL)
+   emod_t *mod;
+
+   if((mod = E_HashObjectForKey(&e_mod_namehash, &name)) == NULL)
       mod = &unknown_mod;
 
    return mod;
