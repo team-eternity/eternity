@@ -29,7 +29,8 @@ m_dllist.h  m_fcvt.c    m_fcvt.h    m_fixed.h   m_misc.c    m_misc.h    mn_emenu
 mn_emenu.h  mn_engin.c  mn_engin.h  mn_files.c  mn_files.h  mn_htic.c   mn_htic.h   \
 mn_menus.c  mn_menus.h  mn_misc.c   mn_misc.h   mn_skinv.c  m_qstr.c    m_qstr.h    \
 m_queue.c   m_queue.h   m_random.c  m_random.h  m_swap.h    m_syscfg.c  m_syscfg.h  \
-m_vector.c  m_vector.h  osdefs.h    p_anim.c    p_anim.h    p_ceilng.c  p_chase.c   \
+m_vector.c  m_vector.h  metaapi.c   metaapi.h   osdefs.h    p_anim.c    p_anim.h    \
+p_ceilng.c  p_chase.c   \
 p_chase.h   p_cmd.c     p_doors.c   p_enemy.c   p_enemy.h   p_floor.c   p_genlin.c  \
 p_henemy.c  p_hubs.c    p_hubs.h    p_info.c    p_info.h    p_inter.c   p_inter.h   \
 p_lights.c  p_map.c     p_map.h     p_map3d.c   p_map3d.h   p_maputl.c  p_maputl.h  \

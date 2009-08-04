@@ -84,7 +84,7 @@ void E_HashAddObject(ehash_t *table, void *object)
 {
    if(table->isinit)
    {
-      void *key = table->keyfunc(object);
+      const void *key = table->keyfunc(object);
       unsigned int hashcode = table->hashfunc(key) % table->numchains;
       
       M_DLListInsertWithPtr(table->linkfunc(object),
@@ -147,11 +147,49 @@ void *E_HashObjectForKey(ehash_t *table, const void *key)
 }
 
 //
+// E_HashChainForKey
+//
+// Returns the first object on the same chain as that used by the given
+// key. The object returned (if any) does not necessarily have the same
+// key, of course.
+//
+void *E_HashChainForKey(ehash_t *table, const void *key)
+{
+   if(table->isinit)
+   {
+      unsigned int hashcode = table->hashfunc(key) % table->numchains;
+      mdllistitem_t *chain = table->chains[hashcode];
+
+      return chain ? chain->object : NULL;
+   }
+   else
+      return NULL;
+}
+
+//
+// E_HashNextOnChain
+//
+// Returns the next object on the same hash chain, which may or may not
+// have the same key as the previous object.
+//
+void *E_HashNextOnChain(ehash_t *table, void *object)
+{
+   if(table->isinit)
+   {
+      mdllistitem_t *link = table->linkfunc(object);
+
+      return link->next ? link->next->object : NULL;
+   }
+   else
+      return NULL;
+}
+
+//
 // E_HashKeyForObject
 //
 // Retrieves a key from an object in the hash table.
 //
-void *E_HashKeyForObject(ehash_t *table, void *object)
+const void *E_HashKeyForObject(ehash_t *table, void *object)
 {
    return table->isinit ? table->keyfunc(object) : NULL;
 }

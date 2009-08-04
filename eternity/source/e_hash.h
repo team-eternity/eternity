@@ -34,7 +34,7 @@ typedef unsigned int (*EHashFunc_t)(const void *);
 typedef boolean      (*ECompFunc_t)(void *, void *, const void *);
 
 // key retrieval function prototype
-typedef void *       (*EKeyFunc_t) (void *);
+typedef const void * (*EKeyFunc_t) (void *);
 
 // link retrieval function prototype
 typedef void *       (*ELinkFunc_t)(void *);
@@ -53,12 +53,15 @@ typedef struct ehash_s
 
 } ehash_t;
 
-void  E_HashInit(ehash_t *, unsigned int, EHashFunc_t, ECompFunc_t, EKeyFunc_t, ELinkFunc_t);
+void  E_HashInit(ehash_t *, unsigned int, EHashFunc_t, ECompFunc_t, EKeyFunc_t, 
+                 ELinkFunc_t);
 void  E_HashAddObject(ehash_t *, void *);
 void  E_HashRemoveObject(ehash_t *, void *);
 void  E_HashRemoveObjectNC(ehash_t *, void *);
 void *E_HashObjectForKey(ehash_t *, const void *);
-void *E_HashKeyForObject(ehash_t *, void *);
+void *E_HashChainForKey(ehash_t *, const void *);
+void *E_HashNextOnChain(ehash_t *, void *);
+const void *E_HashKeyForObject(ehash_t *, void *);
 void *E_HashObjectIterator(ehash_t *, void *, const void *);
 void  E_HashRebuild(ehash_t *, unsigned int);
 
@@ -70,14 +73,17 @@ void  E_SintHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
 // Key Function macro - autogenerates a key retrieval function
 
 #define E_KEYFUNC(type, field) \
-   static void *EHashKeyFunc_ ## type ## field (void *object) \
+   static const void *EHashKeyFunc_ ## type ## field (void *object) \
    { \
       return &(((type *)object)-> field ); \
    }
 
 #define E_KEYFUNCNAME(type, field) EHashKeyFunc_ ## type ## field
 
-// Link Function macro - autogenerates a link retrieval function
+// Link Function macro - autogenerates a link retrieval function.
+// This is only needed if the mdllistitem_t is not the first item
+// in the structure. In that case, pass NULL as the linkfunc and a
+// default function will be used.
 
 #define E_LINKFUNC(type, field) \
    static void *EHashLinkFunc_ ## type ## field (void *object) \
