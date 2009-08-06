@@ -2,6 +2,869 @@
 Changes since Eternity Engine v3.35.92
 ================================================================================
 --------------------------------------------------------------------------------
+08/04/09
+
+Building further on top of the generic hash, I have written the previously
+planned metatable API which will enable EE to associate arbitrary information
+with particular instances of structures such as mobjinfo without having to add
+each object as a native structure field.
+
+It is already possible to make use of the metatables by converting over certain
+problematic, pre-existing EDF features such as damagetype states, nukespecs,
+and fastspeeds to use this instead of their individual list or queue data
+structures.
+
+It will additionally almost certainly prove useful in the implementation of
+UDMF, and in its subsequent exposure via the Aeon API.
+
+A metatable is just an ehash_t which has been sent into MetaInit, initializing
+it as a case-insensitive string hash which functions on metaobject_t structures.
+
+A metaobject_t structure is an mdllistitem_t descendant which additionally
+provides RTTI and an object pointer which may be either self-referential, or may
+point to a different address in the case of metaobject_t's which are not
+contained as the first item in a larger structure, or are not in fact contained
+within the structure they link to at all.
+
+Specializations of metaobject_t are provided for integers and strings as 
+metaint_t and metastring_t. Creating these objects through their respective
+APIs lets the memory management of these otherwise intrinsic data types become
+more automated, and the manipulation of such fields is easier.
+
+Again, as with the underlying hash table class, specializations can be provided
+to store any type of structure or data type in the metatable. But unlike the
+hash by itself, the RTTI and higher-level genericity of the metatable allow 
+objects of multiple types to be in the same table at the same time.
+
+RTTI for metaobjects is implemented with string comparison. Types are passed to
+relevant functions using the METATYPE macro, which simply utilizes the C 
+preprocessor's "stringize" operator, #.
+
+An example of basic metatable usage follows:
+
+   MetaInit(info->meta);
+   MetaAddInt(info->meta, "foo", 10);
+   ...
+   int foo = MetaGetInt(info->meta, "foo");
+   
+This is just illustrative, and very basic. It is capable of a lot more, and
+there are several different ways in which it can be used.
+
+--------------------------------------------------------------------------------
+08/02/09
+
+I have completed an awesomely powerful generic hash data structure, previously
+created for the Experimental Rudimentary Actionscripting system which was
+abandoned in preference to forging ahead with Aeon based on ECMAScript.
+
+This hash table is built on top of the genericity provided by mdllistitem_t,
+giving it chains which are double-linked lists with **prev pointers, like the
+majority of EE's currently innumerable private hash implementations that it
+will eventually replace. Any type of object can be stored inside it via use of
+callback functions registered with the hash table which retrieve the key,
+object, and link pointers and return them as void *.
+
+Specializations are provided for objects keyed to integers, unsigned integers,
+and strings. Any other possible specialization imaginable is possible, but those
+three are all that I can see us needing in the future.
+
+The second Two-Week-Bug-style problem in the last two months has suddenly come
+out of the woodwork. This time it turned out that mobjinfo and states have never
+been initialized to zero after being allocated. Almost all structs in EE are
+now allocated using calloc, but these were still using Z_Malloc directly.
+
+This suddenly caused E_DisposeDamageTypes to access 0xBAADF00D, the value that
+the Win32 heap fills freshly allocated memory with. I guess that until now the
+values in this location were always coincidentally set to zero somehow. I really
+REALLY hate this kind of stuff, and I hope that it will be the last such error
+for quite some time.
+
+I am glad, however, that this stuff is exploding all over me during development,
+and not waiting to spring on our users after the next release. It is a pleasant
+change of pace, I must say :P
+
+This is at least in part thanks to our direct use of the Win32 heap, and more
+importantly, our previous change to eliminate use of the SDLmain library, which
+allows us to use the the Debug Multithreaded runtime library, which has a 
+heap checking system which puts the one implemented in z_zone to utter shame.
+
+--------------------------------------------------------------------------------
+08/01/09
+
+64-bit portability work continues with elimination of almost all instances of
+the "long" data type in preference to "int" or "int32_t" where appropriate.
+Exceptions have had to be made in the Small AMX and in the implementation of
+opendir for Visual C++. The former is not going to be portable to 64-bit, as
+I have positively identified it writing function pointers into integers, and
+the latter is meant to return a "long" in order to be POSIX-compliant. Let us
+hope it doesn't matter ;)
+
+Yet another round of GCC warning fixes have been implemented, this time thanks
+to hobbs. According to CSonicGo, EE has now compiled for the first time under
+GCC with no meaningful warnings (a few remain about unused functions, but these
+are being generated by currently unfinished features such as ExtraData sectors,
+EDF inventory, and the DECORATE states processor...).
+
+--------------------------------------------------------------------------------
+07/30/09 - 07/31/09
+
+After severe problems with pstdint.h on GCC (GCC has non-ISO-compliant
+redundant declarations of inttypes.h types in its sys/types.h file.....), I have
+been forced to remove that file in preference for a Visual C++-specific stdint.h
+and inttypes.h. On GCC, we will use the normal inttypes.h which is always
+available now.
+
+However, thanks to the morons in SDL, I must now globally disable VC++ warning
+4142, "benign redefinition of type," which is caused by SDL_config_win32.h
+unconditionally defining ISO integer types with the same types as those used by
+inttypes.h.
+
+Libraries have no business defining standard library types. SDL should be setup
+to use proper intermediary types rather than defining the ISO names here, and
+at the very least, it should be possible to disable these by defining a symbol
+such as HAVE_STDINT_H. But no, that would be good design, and we can't have
+that!
+
+I have completed and committed the initial version of eecrashreport, which is
+an MFC application that will be launched via the CreateProcess API when 
+Eternity crashes. This dialog app will read crashlog.txt and offer to copy and
+paste it into a new browser tab or window pointing to the Eternity forum on
+Doomworld.
+
+Do note that simply opening such a dialog from Eternity itself is considered
+off-limits. Opening dialogs from inside exception handlers is beyond bad 
+practice into the realm of stuff you should never EVER do. Other port authors
+should take notice...
+
+--------------------------------------------------------------------------------
+07/28/09
+
+More 64-bit portability changes, this time in the configuration file. I have
+rewritten the system entirely to be type-safe, so that string pointers are no
+longer forced into integer variables. Instead, defaults for various types, which
+now include support for float and boolean rather than just ints and strings, are
+all stored in separate variables within the default_t structure.
+
+To keep this clean, items are now defined in the defaults array using macros, in
+a system extremely similar (and in fact entirely redundant) to that used by
+libConfuse.
+
+--------------------------------------------------------------------------------
+07/26/09
+
+"byte" has been changed from a typedef of unsigned char to a typedef of uint8_t.
+
+--------------------------------------------------------------------------------
+07/24/09
+
+Began a massive round of changes which will hopefully bring us all the way to
+64-bit portability. I have begun by adding a portable implementation of stdint.h
+so that we can transition to using size-safe integer types everywhere that this
+is needed.
+
+The first victims were the types fixed_t and angle_t, which have become typedefs
+for int32_t and uint32_t respectively. The latter is especially critical, 
+because the Binary Angle Measure system relies on the behavior of 32-bit 
+integers, but was defined previously as "unsigned long." On x64, long has been
+promoted to 64-bit, so this would immediately cause a number of severe game-
+breaking problems.
+
+The next victims were the Long64 / ULong64 custom typedefs, which were manually
+configured to resolve to various system-dependent 64-bit integer types on our
+supported platforms (__int64 or long long respectively). These two have been
+eliminated entirely in preference for the standard int64_t.
+
+--------------------------------------------------------------------------------
+07/23/09
+
+An incredibly improbably-undetected error which has survived in the code for
+several years suddenly blew up Two-Week-Bug-style on me today when the skin 
+code started to access a NULL pointer. What should it be other than the fact
+that the savegame code didn't initialize mo->info until after calling
+P_SetSkin, which uses the exact same field?  I need somebody to explain to me
+how this never crashed until now, because it makes no sense 6_9
+
+Finished integration of a proper structured exception handler for Windows, to
+replace the totally useless silent SDL parachute. Crash information is now
+dumped in to crashlog.txt in the application's directory using routines which
+are supposed to be safe to call while in an exception handler.
+
+--------------------------------------------------------------------------------
+07/22/09
+
+Cleared out some dead code, tweaked an initialization problem in txt_gui.c found
+by yagisan's analysis in order to match the commit in Choco Doom, and finally,
+we now clear the channel id in the low-level SDL digital sound channel structs
+when a sound is stopped, so that the game engine will see an ID mismatch and 
+will not attempt to further update that sound channel. This is just a safety
+measure, as I've seen nothing to really suggest that this actually causes a 
+problem.
+
+I do however believe there is still a subtle problem somewhere in the sound
+engine, as I swear I am getting occasional phantom cutoffs. We'll see what
+happens.
+
+--------------------------------------------------------------------------------
+07/20/09
+
+Analysis of the game while stress-testing the new native heap implementation
+revealed extreme allocator noise coming from P_SetPSprite. Found out I need to
+keep gunaction_t's on a freelist, so that they're not constantly being malloced
+and freed, sometimes several times per tic.
+
+yagisan sent me the output of a static code analyzer (like a special compiler,
+but it traces through your code and looks for logic errors instead of compiling
+it into a binary).  This found a lot of iffy stuff which I have knocked out.
+
+--------------------------------------------------------------------------------
+07/18/09
+
+After some misguided and unsuccessful attempts to stack a fast-fit system on
+top of the zone heap, I have decided to bite the bullet and provide an optional
+native heap implementation, which can be enabled by globally defining the
+symbol ZONE_NATIVE. This #if's out z_zone.c and compiles z_native.c instead.
+
+During normal play there is virtually no difference. The zone heap and Win32
+heaps have similar overhead, believe it or not. But when the game is under
+stress, such as during nuts.wad, the difference is unbelievable. The native heap
+never dumps cachables unless a system out-of-memory event occurs, so there is no
+constant unloading and reloading of resources, and there is no unnecessary 
+static limit on the amount of memory allocated with a single strategy.
+
+The plain fact of the matter is, BOOM's zone block purging stategy is crap, and
+its extreme-case behavior is pure O(N) garbage. It's a shame because the zone 
+system would otherwise be sustainable.
+
+I may in the future do another attempt at a pure fast-fit heap, but as long as
+the system heap offers superior behavior, I question the need for any futher
+misadventure. I'd have to be pretty arrogant to believe that I could match the
+know-how and manpower that have gone into the heaps used by operating systems
+like Windows and Linux.
+
+After attempting to modify one myself, I have nothing but the utmost respect for
+the people who created and maintain that stuff. They must be geniuses.
+
+After a lot of fighting with GCC, it was discovered, again by Russell, that EE's
+global define values were NOT visible to modules in any directory except the
+main source directory. This was due to joe not coding any way for those defines
+to be propagated downward during the build process.
+
+This means I am now required to duplicate and maintain the list of global 
+define symbols in every Makefile.am individually. What a bitch.
+
+--------------------------------------------------------------------------------
+07/17/09
+
+After being frustrated with the obviously disproportionately bad performance on
+nuts.wad under a 16MB heap, I have been experimenting with the zone system.
+
+My initial idea was to code a load factor over which purgables would stop being
+dumped and the block list would not be searched, but rather the game would go
+immediately to using so-called "virtual" memory. This did offer a 2-3 FPS
+increase, but only once the heap was so saturated with static allocations that 
+the speed of incoming allocations could completely overwhelm the savings 
+offered by dumping cachables.
+
+If the rate of allocation could not exceed the rate of reclamation, then the
+system would see-saw around the load factor, and performance would plummet as
+usual. This heap stuff is exceptionally difficult.
+
+As a result of playing with this stuff, I found not one but TWO places from
+BOOM where an extra BLOCK_HEADER was not being subtracted from virtual_memory,
+the variable tracking the amount of virtual allocations for instrumentation
+purposes. This would cause the program to appear to have a gigantic memory
+leak, when in fact it was just some bad math.
+
+--------------------------------------------------------------------------------
+07/15/09
+
+v_mode has been eliminated entirely. i_videomode now stores the user's video
+mode in the form of a geom string, and the menus have been recoded to present
+this string, and the option to set its current value as the default.
+
+To support this separate default setting required fixing a well-hidden bug in
+the console whose behavior I had previously noticed but could not explain.
+
+By default the console will not set the default value of a variable when 
+changing its value unless the source of the command doing the setting is
+the console itself. However, the menu system has always set the command type to
+c_menu, and yet it was still setting the defaults, which is the expected
+behavior anyway.
+
+Well, the reason this worked was a happy accident. In the console code, the
+c_typed enumeration value was being compared against the wrong variable - cmdsrc
+instead of cmdtype. cmdsrc is the player who issued the command, whereas cmdtype
+represents the game system from which the command emanated. Because in a single
+player game cmdsrc is always 0, this caused it to always match the enumeration
+value c_typed - meaning that the entire console system only worked at all 
+because of an ACCIDENT!
+
+Fixed by comparing against the proper value, but this in turn then required a
+change to the menu system - a new menu widget type is supported which sets the
+command type to c_menu, and default widget types set the command type to c_typed
+instead so that they cause default values to be set.
+
+Otherwise, no changes made via the menu system would stick.
+
+Tweaked I_ParseGeom to handle termination of the lexer while in STATE_HEIGHT.
+If parsing ended here, the height would be set to the default value and you
+would end up trying to set a strange video mode such as 1024x480.
+
+With SoM's completion of the automatic field-of-view adjustment, and my 
+completion of the geom-based video mode setting, widescreen support is now
+finished. I have raised the rescap to its new value of 2560x1600, which we
+expect to be sufficient until the next generation of ATi cards is released ;)
+
+Turns out dynasegs need to attach to the sector of the subsector in which they
+reside, rather than referring to the sector of the original linedef's
+location. Not doing this apparently causes some odd side effects, but only in
+certain situations.
+
+--------------------------------------------------------------------------------
+07/13/09
+
+After getting my butt whipped in a conversation with myk on DWF I fixed the
+behavior of the iwadhandle variable in EE's wad system so that it is only ever
+set to the FIRST IWAD to pass through W_AddFile, and not to every subsequent
+IWAD.
+
+This keeps things like loading DOOM over DOOM II working the way you would 
+expect, rather than having DOOM II's maps mysteriously start to call themselves
+"New Level" even though they exist in the IWAD. This was indeed a bug, inherited
+from SMMU, but amplified by EE's further application of the feature.
+
+--------------------------------------------------------------------------------
+07/11/09
+
+Empty-string filenames provided to the -file command will now be ignored, to
+help abate problems with Doom Builder and other utilities which can sometimes
+accidentally insert empty filenames into command lines when they invoke other
+programs.
+
+This is kind of a bug on their end, but it's also a design issue on ours, and so
+I think correcting it is fine.
+
+--------------------------------------------------------------------------------
+07/10/09
+
+Thanks to Russell Rice for helping me eliminate further instances of undefined
+sprintf behavior in the console. I eliminated them in this case by employing
+qstring_t, which also simultaneously makes this code vastly more secure and
+robust. It's still a fuckin' mess though.
+
+Removed support for comments in console scripts, because they conflicted with
+the ability to use ; as a command separator and as a literal character inside
+strings. I then additionally repaired the keybinding save code to surround ; in
+quotation marks when it occurs as the name of a key. Due to these two problems
+together, it was impossible to have any action bound to ; to survive from one
+play session to the next.
+
+Added graceful handling of errors to I_ParseGeom, in preparation for making it
+Eternity's primary means of setting the screen resolution. Any error in parsing
+will cause the routine to set the resolution info to a reasonable default, which
+is 640x480w.
+
+Added a new deathmatch flag on a whim: INSTAGIB! Try using this in single player
+for an entirely new sort of challenge - the honest no-damage run. You could play
+DOOM in a no-damage run previously, but you had to watch your health very
+carefully. Sometimes it's easy to ignore minor damage in DOOM and not even 
+realize it happened. With instagib, if you take damage, you die. After initial
+testing, I did remove instant death for NULL damage sources, however, since
+this makes it impossible to cross nukage sectors or survive minor fall damage,
+things that some maps require you to suffer in order for them to be playable.
+
+SoM noted that the Boss Brain object had accidentally been given a correct
+height field in EDF. EE's policy on adoption of the correct height data from the
+abandoned BOOM OVER_UNDER implementation was to apply it only to decorative
+objects - nothing shootable except barrels. As a result of this error, it was
+possible for your aim to become distracted by the Boss Brain object on DOOM II
+MAP30, and your rockets would strike the Baphomet in the face instead of going
+into his brain.
+
+Don't ask me how this went unnoticed for so long. I guess nobody has ever played
+MAP30 with comp_overunder off :/
+
+--------------------------------------------------------------------------------
+07/07/09
+
+The old legacy -vwidth / -vheight parameters needed to use MAX_SCREENWIDTH and
+MAX_SCREENHEIGHT for bounds checking rather than using hardcoded constants.
+
+--------------------------------------------------------------------------------
+07/06/09
+
+Added long-overdue save and restore code for acsthinker_t. As a result I had to
+change the location of the call to ACS_RunDeferredScripts, because deferred
+scripts cannot run from G_DoLoadLevel when loading a savegame. This needs a 
+serious fix when the level transfer crap is rewritten for hub support later.
+
+I changed the way that video.screens[4] is allocated. It is now a full-sized
+screen buffer allocated with Z_SysAlloc, even though only a status-bar-sized
+buffer is actually required. This is just the simplest and safest way to ensure
+that the buffer is the appropriate size. If we eliminate buffering of the status
+bar later, screens[4] can be eliminated entirely.
+
+This change helps open the way for the impending change to Eternity's resolution
+system that will enable widescreen support.
+
+Rescap raising has been undertaken: the new cap for testing purposes is
+1280x800, which is the fullscreen resolution of my laptop.
+
+--------------------------------------------------------------------------------
+07/05/09
+
+Added save and restore code for floorwaggle_t thinkers.
+
+--------------------------------------------------------------------------------
+07/03/09 - 07/04/09
+
+Continuing the effort to move more data into GameModeInfo, I have defined a
+GIF_HASEXITSOUNDS flag, and broke up the quitsounds array and mapped it through
+GameModeInfo.
+
+Added a GIF_WOLFHACK flag, which indicates that the gamemode needs the DOOM II
+hack to check for the presence of secret levels. This is technically silly, but
+I am being rigorous about not branching on the value of GameModeInfo->id
+wherever it is practical to avoid it.
+
+Level exit rules, previously implemented as hard coded functions called through
+an array indexed by GameModeInfo->type, are now tablified into arrays of rules
+that function in a cascading manner. Each rule is checked until a match is
+found, and the last rule in the table is always a catch-all which determines
+the default exit destination behavior for that gamemode. The arrays are, of
+course, attached to GameModeInfo.
+
+Added a GIF_SETENDGAME flag and teleEndGameFinale field which control the 
+behavior of the Teleport_EndGame special through GameModeInfo.
+
+Added a GIF_CLASSICMENUS flag which indicates support for the classic menu
+emulation feature. There is no current plan to support emulated menus for any
+gamemodes except DOOM-based ones, so this flag is considered part of the flags
+that define the "DOOM" game type. Fixed a bug as a result of testing this that
+resulted in the value of mn_classic_menus being ignored by the menu system
+until its value had changed at least once during runtime.
+
+Tablified finale defaults in the same manner as level exit rules, applying the
+same design of cascading rule sets.
+
+Fixed another bug: don't try to go to a non-existant E4M2 when exiting E4M1 in
+Heretic registered version. Dunno what was up with this, it was probably just a
+typo or an off-by-one error caused by the annoying fact that level numbers sent
+into the finale code are off-by-one (ROMERO!!!!!!!! >_<)
+
+Music selection routines are now mapped through GameModeInfo, though due to the
+complexity of music selection, these are not tablified but instead handled with
+a function pointer. The music selection methods are completely different for 
+each gamemode, so trying to handle them with rulesets would be overly complex.
+
+The particle blood effect has yet again been significantly improved. The
+particles are smaller, do not accelerate on the x-y plane, spawn higher up,
+fall faster, are more voluminous, can be given greater positive z momentum,
+live longer, and most importantly, can use any color between the two normal
+blood colors if those colors are separated in the palette by fewer than 16
+indices.
+
+--------------------------------------------------------------------------------
+07/02/09
+
+I fixed the cast call caused in DOOM 2 by a call to Teleport_EndGame so that
+the cast call actually occurs ;)
+
+If you summon boss brain spots via the console, the list of boss brain spots
+will now be reinitialized, so that any already active cube spitters will begin
+spitting cubes to that spot. Previously, any such spots added would simply be
+ignored. I'll admit I mainly did this just so that I could see the Seven Portals
+fill up with 5000 DOOM monsters :)  What's the point of writing this program if
+I'm not allowed to have fun? :P
+
+After worrying some more about the fact that all the special linedefs in Hexen 
+seemed to give off switch sounds, even when this was totally inappropriate, I
+decided to find out what the deal was.
+
+Turns out this was actually a bug in Eternity in general, and a result of the
+change to R_TextureNumForName which allows the game to keep running in event of
+missing textures. Under the BOOM switches system, if a non-existant texture is
+resolved in the table, then any texture will start to match the entry for that
+switch, and thus a switch sound will be given off inappropriately.
+
+This was fixed by ignoring texture number 0 in the switch finding routine.
+
+I have begun another massive effort to remap static data in the executable 
+through the GameModeInfo structure, and to eliminate as many uses of the
+gamemode and gamemission id's to branch or select behaviors directly.
+
+This starts with the breakup of the demostates table in d_main.c. Lee
+previously assembled this into one table, but with the way we do things now, it
+makes more sense to have one self-contained table per gamemode, and to select
+them by accessing GameModeInfo->demostates. I think it's actually a lot cleaner
+now, since the tables no longer have to be padded out with NULL pointers so that
+they're all the same length.
+
+--------------------------------------------------------------------------------
+07/01/09
+
+I implemented script wait notification in the ACS interpreter, so that scripts
+waiting on other scripts can resume execution. Yet more Hexen areas have come
+to life.
+
+I also implemented a "puke" console command (in reference to the Hexen cheat
+code of the same name) which can run ACS levelscripts. This has proven useful,
+since missing linedef specials keep some of the more interesting scripts in
+Hexen from executing currently.
+
+Thing_SpawnNoFog and Teleport_EndGame are now implemented.
+
+--------------------------------------------------------------------------------
+06/30/09
+
+I have added a system for specification of gamemode-dependent default overrides,
+which alter the values of defaults stored in the configuration file system.
+This enables Heretic to specify its proper default values for, amongst other
+things, automap and HUD widget colors.
+
+OPEN scripts in the ACS interpreter were being executed too early, leading to
+undefined behavior. Repaired by deferring the call until initialization of the
+virtual machine is complete.
+
+Floor_Waggle (Hexen line type 138, ED type 397) is now implemented.
+
+Added Thing_Spawn for ACS. Zombiemen now warp in all over Hexen maps.
+
+--------------------------------------------------------------------------------
+06/29/09
+
+I finally got around to fixing one of my longest-standing pet peeves left over
+from SMMU, and that's the fact that the automap timer was attached to a 
+redundant variable named levelTime, which is not saved in savegames, instead of
+using the normal leveltime variable that has always existed and is savegame and
+demo safe.
+
+levelTime no longer exists at all, as the automap was the only thing using it.
+
+--------------------------------------------------------------------------------
+06/27/09
+
+I cleaned up a hack in the IWAD picker subsystem which was written to avoid a
+double-free due to two of the IWADs using the same titlescreen resource by
+creating a W_FreeDirectoryLumps routine in w_wad.c. This routine goes down the
+wad directory and frees all loaded lumps, in preparation for the destruction of
+a private directory.
+
+--------------------------------------------------------------------------------
+06/23/09
+
+While looking over the zone heap I noticed that if a malloc or free occurs on
+a gametic ending with the LSB zero, the memory ends up getting memset to 0. This
+is exceptionally harmful for catching errors, as zero is the general default
+value for intialized pointers as well as most other variables and structures.
+
+I modified this by OR'ing 1 with gametic & 0xff, so that at least one bit is
+always set. It's still not fool-proof of course, but it's an improvement.
+
+--------------------------------------------------------------------------------
+06/21/09
+
+I have added a "parent" field to mobjinfo_t which will permanently remember
+EDF thingtype inheritance, which will be necessary to support the virtual
+behavior of the A_Jump pointer defined in DECORATE. EE has never had any such
+concept of runtime inheritance behaviors, but with this addition they will now
+be possible.
+
+--------------------------------------------------------------------------------
+06/19/09
+
+It are my birfday!
+
+I have defined a formal grammar for parsing DECORATE states, and have done
+additional work on the parser for them based on it. I have also modified EDF
+heredocs once again to require matching opening and closing delimiters (either
+@" "@ or @' '@ respectively). This was originally intended, and was to be
+documented as a requirement, but now it is a formal fact in the code as well.
+This enables heredocs to ignore only the specific type of delimiter with which
+they are started.
+
+--------------------------------------------------------------------------------
+06/18/09
+
+states is now finally declared as an array of state_t *, so this opens the door
+for making states fully dynamic and allowing them to be declared outside of the
+root EDF, as most other EDF entities now function. This leaves thingtypes and
+sprites as the remaining critical definitions which are still runtime-static.
+
+--------------------------------------------------------------------------------
+06/17/09
+
+Work continues on the DECORATE state parser.
+
+--------------------------------------------------------------------------------
+06/16/09
+
+I added a call to the I_Sleep routine inside the dedicated screenwipe loop used
+when wipewait is set to "always" or "demos". This should make the screenwipe
+significantly more friendly toward fraps. As it was, fraps' recording would lag
+horribly during any wipe, regardless of the routine being used (though the melt
+wipe was by far the worst, as it's already a CPU muncher on its own).
+
+I have begun tenative work on DECORATE state parsing, laying out an enumeration
+based on my initial draw-up of the FSA required to parse them. This stuff is
+very likely to change as I get deeper into it, though.
+
+--------------------------------------------------------------------------------
+06/15/09
+
+I have eliminated all uses of pointer math on the states array in further
+preparation for DECORATE states. All such statements like state - states,
+states + foo, etc. now either access states directly or use the new state->index
+field as is appropriate.
+
+Added static keywords to all private automap routines. Dave Taylor never used
+that keyword apparently ;)
+
+--------------------------------------------------------------------------------
+06/13/09
+
+The Wu line drawer has been completed, with some modifications demonstrated to
+me by SoM - if sine and cosine lookups are used on the amount of error in the
+pixel and its inverse, for some interesting reason which probably has a deep
+geometric explanation that escapes my grasp, the antialiasing effect becomes
+significantly smoother and somewhat brighter than the normal linear treatment
+of these numbers used in the stock Wu algorithm.
+
+I have titled this modification the Wu-McGranahan line drawing algorithm, since
+I cannot find any literature or hits referring to it, though it seems certain
+somebody else would have thought of this before.
+
+TODO is making Wu antialiasing optional. The Bresenham line drawer is still
+present, since it must be used for special cases in Wu line drawing (horizontal,
+vertical, and perfectly diagonal all collapse to Bresenham), so it should be
+possible to use it directly, for those ultrapurists out there who object to
+having a better looking automap...
+
+--------------------------------------------------------------------------------
+06/12/09
+
+There was a tornado warning, so I threw in a quick commit just in case my house
+ended up somewhere in Oz. I have started work on a Wu line drawing routine for
+the automap which uses the ZDoom-style translucency table rather than the 
+traditional method of precalculated color ramps, which wouldn't work efficiently
+for EE since we allow customization of automap colors.
+
+I have also added an "index" field to state_t, in preparation for support of
+DECORATE state syntax within EDF heredocs. This will require turning states into
+an array of state_t pointers rather than an array of state_t objects as it
+currently is, and when that modification is made, it will be necessary to get
+the index of a state in states[] using state->index, rather than the current
+hackish method of doing state - states. state_t::index is filled in sequentially
+by E_ProcessStates.
+
+--------------------------------------------------------------------------------
+06/10/09
+
+The automap boundary calculation is now sensitive to portal overlays, and thus
+the edges of the map will be consistent with the map when overlays are turned
+on. Previously, the normal map boundaries were always in effect, and this often
+lead to not being able to scroll the map far enough to even see your own
+location.
+
+--------------------------------------------------------------------------------
+06/09/09
+
+Although it is probably largely pointless now, I have repaired a long-standing
+issue with the BOOM (or is it MBF?) tranmap.dat caching code which creates the
+tranmap.dat file in EE's base/game folders. Lee was accidentally saving the
+8-bit 256-color palette, which is 768 bytes long, into a 256-byte buffer - a
+clear and simple logic error. This meant that if a palette was identical to the
+palette used to calculate the tranmap within the first 256 bytes (or the first
+third of the palette, in other words), it would fail to detect any change and
+would use the cached tranmap with an incorrect palette, resulting in weird and
+ugly colors showing up on translucent sprites.
+
+Thanks to esselfortium for catching this in his vapor project, or it probably
+would have gone unnoticed forever.
+
+I took the opportunity to add versioning information to the header of the cached
+tranmap, so that if we ever need to change its format again, EE will know to
+discard files in earlier formats rather than trying to use them. This was
+critical for making sure that the next release doesn't cause a bevy of 
+complaints about supposedly broken translucency.
+
+After a complaint was registered on the Doomworld forums and an email was sent
+to me personally by the same person about the little-known fact that BOOM
+generalized walk-over crusher line types are no-ops, I repaired them for
+demo_version >= 335. It is evident enough that the lines are intended to work
+if they have been placed in a map.
+
+Jim Flynn must have left the case for them out of the switch in 
+P_CrossSpecialLine, and this is not very surprising since they were apparently
+the very last generalized line category implemented by the BOOM team. God rest
+your soul, Jim.
+
+--------------------------------------------------------------------------------
+06/08/09
+
+I have finally gotten around to my long-planned rewrite of the automap to use
+floating-point arithmetic. This brings it up to par with Cardboard for numeric
+stability, so that we can now map overly large levels or overly long linedefs
+with the same precision and unerring grace which we have previously had only
+when rendering them. Plus on modern architectures, floating point is just as
+fast and in some cases (believe it or not) faster than fixed point.
+
+In the process of testing this rewrite, I discovered a hitherto little-known
+vanilla DOOM bug - automap grid lines are lost near the left and bottom edges of
+the map due to some faulty math - a minimum amount (MAPBLOCKUNITS) is added in 
+which causes the drawing loop to start beyond the position of a line that is 
+closer to the edge of the screen than that amount. The proper thing to do is to 
+start at the closest line to the edge of the screen by subtracting the 
+remainder, even if that line is offscreen as a result - an offscreen line will 
+be efficiently rejected by the Cohen-Sutherland clipping algorithm and won't be
+drawn. At most one line can be offscreen on a given edge with this method.
+
+--------------------------------------------------------------------------------
+06/07/09
+
+Another round of GCC warning fixes.
+
+Ever since the thread-safety rewrite of the SDL digital sound update loop in
+3.35.92, I had been hearing sample loss, as if the update loop were being barred
+from modifying sounds for an unacceptable amount of time. After thinking about
+it for a while, I realized that this must have been coming from the positional
+sound update code called via the main loop, which modifies the volume lookup
+ramps for each channel to keep them in sync with changes in the player's
+relative position.
+
+I realized that a critical section is not needed around this code, since 
+changing the volume ramp pointers should not in fact affect the sound update 
+loop in any serious way - at worst, the two stereo channels' volume ramps might
+become out of sync with each other for an unnoticably short amount of time.
+Removing the semaphore acquisition around the volume ramp modfication code
+alleviated all of the sample loss and made the sound engine run smoothly once
+again.
+
+--------------------------------------------------------------------------------
+06/04/09
+
+Modified EDF heredocs so that they do not require a linebreak immediately before
+the terminating sequence. I don't feel this is a good or necessary restriction.
+
+After having followed a similar course with my experimental but ultimately
+abandoned "ERA" parser, I rewrote the libConfuse lexer to use a state table.
+This reduces the core lexer loop to 3 lines of code, whereas it was previously
+several hundred. Each state is now handled on its own, and everything is much
+cleaner as a result.
+
+SoM has completed the core integration of slopes.
+
+--------------------------------------------------------------------------------
+06/02/09
+
+I completed two new gun codepointers for esselfortium, EjectCasing and
+CasingThrust. These are fairly standard object spawn and thrust pointers,
+except that they behave in a way that attempts to keep them consistent with the
+position of the player's gun psprite on screen, and their parameters allow
+extremely fine-tuned adjustment in 32nds of a unit.
+
+These pointers look great in first-person perspective in a single player game,
+but they look pretty ridiculous in multiplayer or with the chasecam active.
+This is what essel wanted though, so who am I to complain? :P
+
+Dynasegs got another smaller optimization. I do not need to calculate the
+sidedness of the polyobject origin point *unless* both of the vertices of the
+seg are within epsilon distance of the partition line, since the calculated
+value is otherwise unused. This was a silly thing just caused by wanting to get
+the code over and done with.
+
+While wrapping up essel's codepointers I also noticed that my previous 
+modification to allow copying of arguments into the player mobj state from the
+player gun state during P_SetPSprite calls was unsafe if P_SetPSprite became
+reentrant. In order to safely operate in this manner, I must store the states
+and their original argument values on a stack, pushing one gunaction_t struct
+for every call, and popping one off the stack afterward. This makes it properly
+recursive.
+
+--------------------------------------------------------------------------------
+05/30/09
+
+I added the "smart" background drawer routine which I had been thinking about
+implementing for a very long time. V_DrawFSBackground will, when given the
+pointer to a cached lump and the lump's size, determine if the lump should be
+drawn as a tiled 64x64 flat, a 320x200 linear graphic, or a screen patch.
+Patch vs. linear determination is not "smart" here - the linear graphic must be
+exactly 64000 bytes, which is not a valid size for 320x200 fullscreen patch
+graphics (they must be larger than that, or else they contain erroneous 
+transparent areas and are not really fullscreen graphics).
+
+I rewrote several functions to call this new routine instead of doing their own
+private determination of resource types. This added support for some of the
+formats where it did not exist before, as well as cutting down on duplicated
+code.
+
+--------------------------------------------------------------------------------
+05/16/09
+
+Line IDs and line tags are now effectively the same thing as far as DOOM-format
+maps are concerned in Eternity now, in order to bring us into compliance with
+UDMF semantics and to fix what could have actually become quite an awful mess.
+It is good, although humbling, to admit when you've made a design error.
+
+--------------------------------------------------------------------------------
+05/13/09
+
+I applied yet another round of GCC warning fixes today.
+
+I also found a massive optimization opportunity in R_IntersectPoint in the
+dynaseg code. The expressions I used to calculate the (a2,b2,c2) values for the
+node line at the beginning of the function turned out to be, under some minor
+mathematical analysis, exactly equivalent to the negation of the node line's
+A,B,C general line equation coefficients.
+
+So instead of calucating these values again, I now just read them out of the
+node and negate them. Should provide a good speed boost to dynaseg splitting,
+since R_IntersectPoint is called every time a seg crosses a node line.
+
+I also added a seg length calculation to dynaseg attachment, to satisfy SoM's
+new Cardboard optimization that caches seg lengths instead of computing them
+every frame.
+
+--------------------------------------------------------------------------------
+05/12/09
+
+Randomized sounds are now supported via EDF sound definitions. A new random
+block inside the sound serves to alias that sound definition to any one of the
+sounds listed by name within the block. Random and alias resolution are 
+performed simultaneously, so that random sounds can both refer to sound aliases,
+and sounds referred to by random sound lists can both be random sounds, or
+aliases of normal sounds, or aliases of random sounds, etc. Yeah, it's kind of
+complicated. There's rarely any need to actually mix the two features, though.
+
+--------------------------------------------------------------------------------
+05/06/09
+
+I changed the behavior of the Heretic deathmatch intermission somewhat from how
+it worked in vanilla because it seemed backward to me.
+
+In vanilla Heretic, if there was a frag leader, the "wpnup" laughing sound would
+play and the player(s)' frag count(s) would then flash. However, at the top, all
+the players' pics except your own would then fade out to indicate who you were.
+
+I have changed this so that your own row of frag counts is instead indicated by
+a pulsing translucent yellow color block beneath the numbers, and when there is
+one or more "slaughterboy," the players who were defeated by him or them will 
+have their pictures fade out to indicate their loserly status. To me this makes
+more sense, and looks awesome.
+
+--------------------------------------------------------------------------------
+04/26/09
+
+Finished the deathmatch intermission, and added a definition for the Heretic
+wpnup sound effect.
+
+--------------------------------------------------------------------------------
+04/25/09
+
+Completed the cooperative-mode intermission statistics for Heretic, and started
+work on the deathmatch-mode frags table.
+
+--------------------------------------------------------------------------------
 04/19/09
 
 I discovered that a subtle problem still existed with my new approach to

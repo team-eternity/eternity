@@ -662,6 +662,10 @@ SOURCE=.\source\m_syscfg.c
 
 SOURCE=.\source\m_vector.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\source\metaapi.c
+# End Source File
 # End Group
 # Begin Group "M_ Headers"
 
@@ -717,6 +721,10 @@ SOURCE=.\source\m_syscfg.h
 # Begin Source File
 
 SOURCE=.\source\m_vector.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\metaapi.h
 # End Source File
 # End Group
 # End Group
