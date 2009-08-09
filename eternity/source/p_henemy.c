@@ -2128,25 +2128,29 @@ void A_MissileAttack(mobj_t *actor)
    angle_t ang;
    mobj_t *mo;
    int sdehnum, statenum;
+   boolean hastarget = true;
 
-   if(!actor->target)
-      return;
+   if(!actor->target || actor->target->health <= 0)
+      hastarget = false;
    
-   type    = E_SafeThingType((int)(actor->state->args[0]));
+   type    = E_SafeThingType(actor->state->args[0]);
    homing  = !!(actor->state->args[1]);
    z       = (fixed_t)(actor->state->args[2] * FRACUNIT);
-   a       = (int)(actor->state->args[3]);
-   sdehnum = (int)(actor->state->args[4]);
+   a       = actor->state->args[3];
+   sdehnum = actor->state->args[4];
 
-   A_FaceTarget(actor);
-
-   if(sdehnum >= 0)
+   if(hastarget)
    {
-      statenum = E_SafeState(sdehnum);
-      if(P_CheckMeleeRange(actor))
+      A_FaceTarget(actor);
+
+      if(sdehnum >= 0)
       {
-         P_SetMobjState(actor, statenum);
-         return;
+         statenum = E_SafeState(sdehnum);
+         if(P_CheckMeleeRange(actor))
+         {
+            P_SetMobjState(actor, statenum);
+            return;
+         }
       }
    }
 
@@ -2161,6 +2165,12 @@ void A_MissileAttack(mobj_t *actor)
    // adjust z coordinate
    z = actor->z + DEFAULTMISSILEZ + z;
 
+   if(!hastarget)
+   {
+      P_SpawnMissileAngle(actor, type, actor->angle + ang, 0, z);
+      return;
+   }
+   
    if(!a)
       mo = P_SpawnMissile(actor, actor->target, type, z);
    else
