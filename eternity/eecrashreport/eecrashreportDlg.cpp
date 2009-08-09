@@ -90,39 +90,39 @@ END_MESSAGE_MAP()
 
 BOOL CEECrashReportDlg::OnInitDialog()
 {
-	CDialog::OnInitDialog();
-
-	// Add "About..." menu item to system menu.
-
-	// IDM_ABOUTBOX must be in the system command range.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-	ASSERT(IDM_ABOUTBOX < 0xF000);
-
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != NULL)
-	{
-		CString strAboutMenu;
-		strAboutMenu.LoadString(IDS_ABOUTBOX);
-		if (!strAboutMenu.IsEmpty())
-		{
-			pSysMenu->AppendMenu(MF_SEPARATOR);
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-		}
-	}
-
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
-	
-	// haleyjd: extra initialization
+   CDialog::OnInitDialog();
+   
+   // Add "About..." menu item to system menu.
+   
+   // IDM_ABOUTBOX must be in the system command range.
+   ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+   ASSERT(IDM_ABOUTBOX < 0xF000);
+   
+   CMenu* pSysMenu = GetSystemMenu(FALSE);
+   if (pSysMenu != NULL)
+   {
+      CString strAboutMenu;
+      strAboutMenu.LoadString(IDS_ABOUTBOX);
+      if (!strAboutMenu.IsEmpty())
+      {
+         pSysMenu->AppendMenu(MF_SEPARATOR);
+         pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+      }
+   }
+   
+   // Set the icon for this dialog.  The framework does this automatically
+   //  when the application's main window is not a dialog
+   SetIcon(m_hIcon, TRUE);			// Set big icon
+   SetIcon(m_hIcon, FALSE);		// Set small icon
+   
+   // haleyjd: extra initialization
    HICON errorIcon = AfxGetApp()->LoadStandardIcon(MAKEINTRESOURCE(IDI_ERROR));
    ((CStatic *)GetDlgItem(IDC_STATIC_ICON))->SetIcon(errorIcon);
-
+   
    // load text from crashlog.txt file
    LoadErrorFile();
-	
-	return TRUE;  // return TRUE  unless you set the focus to a control
+   
+   return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 void CEECrashReportDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -180,10 +180,10 @@ void CEECrashReportDlg::OnOK()
    m_ErrorEditBox.SendMessage(EM_SETSEL, 0, filelen);
    m_ErrorEditBox.SendMessage(WM_COPY,   0, 0);
    m_ErrorEditBox.SendMessage(EM_SETSEL, 0, 0);
-
+   
    LaunchBrowser();
    
-	//CDialog::OnOK();
+   //CDialog::OnOK();
 }
 
 //

@@ -5,3 +5,4 @@ eecrashreport.opt
 crashlog.txt
 Debug
 Release
+*.clw
