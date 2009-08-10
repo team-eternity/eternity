@@ -3361,7 +3361,7 @@ void A_EjectCasing(mobj_t *actor)
       z -= (pitch / ANGLE_1) * ((10 * frontdisti / 256) * FRACUNIT / 32);
    }
    else
-      z = actor->z + actor->state->args[2] * FRACUNIT / 16;
+      z = actor->z + zheight;
 
    x = actor->x + FixedMul(frontdist, finecosine[angle>>ANGLETOFINESHIFT]);
    y = actor->y + FixedMul(frontdist, finesine[angle>>ANGLETOFINESHIFT]);

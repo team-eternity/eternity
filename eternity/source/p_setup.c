@@ -499,16 +499,6 @@ void P_LoadThings(int lump)
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = calloc(numthings, sizeof(mapthing_t));
-
-   // haleyjd: explicitly nullify old player object pointers
-   if(GameType != gt_dm)
-   {
-      for(i = 0; i < MAXPLAYERS; ++i)
-      {
-         if(playeringame[i])
-            players[i].mo = NULL;
-      }
-   }
    
    for(i = 0; i < numthings; ++i)
    {
@@ -581,16 +571,6 @@ void P_LoadHexenThings(int lump)
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = calloc(numthings, sizeof(mapthing_t));
-
-   // haleyjd: explicitly nullify old player object pointers
-   if(GameType != gt_dm)
-   {
-      for(i = 0; i < MAXPLAYERS; ++i)
-      {
-         if(playeringame[i])
-            players[i].mo = NULL;
-      }
-   }
    
    for(i = 0; i < numthings; ++i)
    {
@@ -1641,6 +1621,10 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
+
+   // haleyjd: explicitly nullify old player object pointers here
+   for(i = 0; i < MAXPLAYERS; ++i)
+      players[i].mo = NULL;
 
    P_FreeSecNodeList(); // sf: free the psecnode_t linked list in p_map.c
    P_InitThinkers();   
