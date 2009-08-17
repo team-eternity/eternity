@@ -31,6 +31,7 @@
 
 #include "e_mod.h"
 #include "m_dllist.h"
+#include "e_hash.h"
 
 // haleyjd 07/17/04: sprite constants removed
 
@@ -387,6 +388,9 @@ typedef struct mobjinfo_s
    int dehnum;        // DeHackEd number for fast lookup and comparison
    int namenext;      // next mobjinfo_t in name hash chain
    int dehnext;       // next mobjinfo_t in DEH hash chain
+
+   // 08/17/09: metatable
+   ehash_t *meta;
 
    // 06/04/08: custom damagetype state chains
    emodstatenode_t *dmg_painstates;  // custom pain states

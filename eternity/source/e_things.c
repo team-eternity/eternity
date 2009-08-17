@@ -52,6 +52,8 @@
 #include "e_sound.h"
 #include "e_mod.h"
 
+#include "metaapi.h"
+
 // 7/24/05: This is now global, for efficiency's sake
 
 // The "Unknown" thing type, which is required, has its type
@@ -595,9 +597,13 @@ boolean E_AutoAllocThingDEHNum(int thingnum)
 void E_CollectThings(cfg_t *tcfg)
 {
    int i;
+   ehash_t *metatables;
 
    // allocate array
    mobjinfo = calloc(NUMMOBJTYPES, sizeof(mobjinfo_t));
+
+   // 08/17/09: allocate metatables
+   metatables = calloc(NUMMOBJTYPES, sizeof(ehash_t));
 
    // initialize hash slots
    for(i = 0; i < NUMTHINGCHAINS; ++i)
@@ -650,6 +656,10 @@ void E_CollectThings(cfg_t *tcfg)
          mobjinfo[i].dehnext = thing_dehchains[dehkey];
          thing_dehchains[dehkey] = i;
       }
+
+      // 08/17/09: initialize metatable
+      mobjinfo[i].meta = &metatables[i];
+      MetaInit(mobjinfo[i].meta);
    }
 
    // verify the existance of the Unknown thing type
@@ -1063,15 +1073,16 @@ static void E_CopyThing(int num, int pnum)
 {
    char name[41];
    mobjinfo_t *this_mi;
+   ehash_t    *meta;
    int dehnum, dehnext, namenext;
    
    this_mi = &mobjinfo[num];
 
    // must save the following fields in the destination thing
-   
-   dehnum   = this_mi->dehnum;
-   dehnext  = this_mi->dehnext;
-   namenext = this_mi->namenext;
+   meta       = this_mi->meta;
+   dehnum     = this_mi->dehnum;
+   dehnext    = this_mi->dehnext;
+   namenext   = this_mi->namenext;
    memcpy(name, this_mi->name, 41);
 
    // copy from source to destination
@@ -1104,6 +1115,7 @@ static void E_CopyThing(int num, int pnum)
                         &this_mi->dmg_painstates);
 
    // must restore name and dehacked num data
+   this_mi->meta     = meta;
    this_mi->dehnum   = dehnum;
    this_mi->dehnext  = dehnext;
    this_mi->namenext = namenext;
