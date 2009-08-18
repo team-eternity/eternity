@@ -78,6 +78,7 @@
 #include "e_states.h"
 #include "s_sndseq.h"
 #include "acs_intr.h"
+#include "metaapi.h"
 
 #define SAVEGAMESIZE  0x20000
 #define SAVESTRINGSIZE  24
@@ -2674,11 +2675,6 @@ void G_ReloadDefaults(void)
 void G_ScrambleRand()
 {                            // killough 3/26/98: shuffle random seed
    // haleyjd: restored MBF code
-   /*struct timeval tv;         // use the clock to shuffle random seed
-   struct timezone tz;
-   
-   gettimeofday(&tv,&tz);
-   rngseed += tv.tv_sec*1000ul + tv.tv_usec / 1000ul + gametic;*/
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
    rngseed = (unsigned int) time(NULL);
@@ -2691,10 +2687,10 @@ void G_DoNewGame (void)
    G_ReloadDefaults();            // killough 3/1/98
    P_ClearHubs();                 // sf: clear hubs when starting new game
    
-   netgame = false;               // killough 3/29/98
+   netgame  = false;              // killough 3/29/98
    GameType = DefaultGameType;    // haleyjd  4/10/03
    dmflags  = default_dmflags;    // haleyjd  4/15/03
-   basetic = gametic;             // killough 9/29/98
+   basetic  = gametic;            // killough 9/29/98
    
    G_InitNew(d_skill, d_mapname);
    gameaction = ga_nothing;
@@ -2704,62 +2700,46 @@ void G_DoNewGame (void)
 
 typedef struct speedset_s
 {
+   metaobject_t link;       // metatable link
    int mobjType;            // the type this speedset is for
    int normalSpeed;         // the normal speed of this thing type
    int fastSpeed;           // -fast speed
-   struct speedset_s *next; // linked list field
 } speedset_t;
-
-static speedset_t SpeedSetList;
-
-static speedset_t *find_speedset(int type)
-{
-   speedset_t *rover = SpeedSetList.next;
-
-   while(rover)
-   {
-      if(rover->mobjType == type)
-         return rover;
-      else
-         rover = rover->next;
-   }
-
-   return NULL;
-}
 
 void G_CopySpeedSet(int destType, int srcType)
 {
-   speedset_t *ss;
+   metaobject_t *o;
+   mobjinfo_t   *srcmi  = &mobjinfo[srcType];
 
-   // if a speed set exists for the srcType, create one for the
-   // destType
-   if((ss = find_speedset(srcType)))
+   if((o = MetaGetObjectType(srcmi->meta, "speedset", METATYPE(speedset_t))))
    {
+      speedset_t *ss = (speedset_t *)o->object;
+
       G_SpeedSetAddThing(destType, ss->normalSpeed, ss->fastSpeed);
    }
 }
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
-   speedset_t *ss;
+   metaobject_t *o;
+   mobjinfo_t   *mi = &mobjinfo[thingtype];
 
-   if((ss = find_speedset(thingtype)))
+   if((o = MetaGetObjectType(mi->meta, "speedset", METATYPE(speedset_t))))
    {
+      speedset_t *ss = (speedset_t *)o->object;
       ss->normalSpeed = nspeed;
-      ss->fastSpeed = fspeed;
+      ss->fastSpeed   = fspeed;
    }
    else
    {
-      speedset_t *newSpeedSet = malloc(sizeof(speedset_t));
-      
+      speedset_t *newSpeedSet = calloc(1, sizeof(speedset_t));
+
       newSpeedSet->mobjType    = thingtype;
       newSpeedSet->normalSpeed = nspeed;
       newSpeedSet->fastSpeed   = fspeed;
-      
-      // add the newest type to the beginning so that types
-      // remain sorted from greatest to least
-      newSpeedSet->next = SpeedSetList.next;
-      SpeedSetList.next = newSpeedSet;
+
+      MetaAddObject(mi->meta, "speedset", &newSpeedSet->link, newSpeedSet, 
+                    METATYPE(speedset_t));
    }
 }
 
@@ -2770,7 +2750,6 @@ void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
    int i;
-   speedset_t *rover;
 
    // TODO: Heretic support?
    // EDF FIXME: demon frame speedup difficult to generalize
@@ -2788,13 +2767,17 @@ void G_SetFastParms(int fast_pending)
             if(states[i]->tics != 1 || demo_compatibility)
                states[i]->tics >>= 1;  
          }
-         // haleyjd 07/13/03: use new speed set list to adjust
-         // mobj type speeds for -fast mode
-         rover = SpeedSetList.next;
-         while(rover)
+
+         for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            mobjinfo[rover->mobjType].speed = rover->fastSpeed;
-            rover = rover->next;
+            metaobject_t *o;
+
+            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", METATYPE(speedset_t))))
+            {
+               speedset_t *ss = (speedset_t *)o->object;
+
+               mobjinfo[i].speed = ss->fastSpeed;
+            }
          }
       }
       else
@@ -2803,11 +2786,17 @@ void G_SetFastParms(int fast_pending)
          {
             states[i]->tics <<= 1;
          }
-         rover = SpeedSetList.next;
-         while(rover)
+
+         for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            mobjinfo[rover->mobjType].speed = rover->normalSpeed;
-            rover = rover->next;
+            metaobject_t *o;
+
+            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", METATYPE(speedset_t))))
+            {
+               speedset_t *ss = (speedset_t *)o->object;
+
+               mobjinfo[i].speed = ss->normalSpeed;
+            }
          }
       }
    }
