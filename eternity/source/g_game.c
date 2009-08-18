@@ -2706,27 +2706,34 @@ typedef struct speedset_s
    int fastSpeed;           // -fast speed
 } speedset_t;
 
-void G_CopySpeedSet(int destType, int srcType)
+//
+// G_RegisterSpeedSet
+//
+// Registers a metatype for speedset objects.
+//
+static void G_RegisterSpeedSet(void)
 {
-   metaobject_t *o;
-   mobjinfo_t   *srcmi  = &mobjinfo[srcType];
+   static metatype_t metaspeedset;
 
-   if((o = MetaGetObjectType(srcmi->meta, "speedset", METATYPE(speedset_t))))
-   {
-      speedset_t *ss = (speedset_t *)o->object;
-
-      G_SpeedSetAddThing(destType, ss->normalSpeed, ss->fastSpeed);
-   }
+   MetaRegisterTypeEx(&metaspeedset, METATYPE(speedset_t), sizeof(speedset_t),
+                      NULL, NULL, NULL);
 }
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
+   boolean firsttime = true;
    metaobject_t *o;
    mobjinfo_t   *mi = &mobjinfo[thingtype];
 
+   if(firsttime)
+   {
+      G_RegisterSpeedSet();
+      firsttime = false;
+   }
+
    if((o = MetaGetObjectType(mi->meta, "speedset", METATYPE(speedset_t))))
    {
-      speedset_t *ss = o->object;
+      speedset_t *ss  = o->object;
       ss->normalSpeed = nspeed;
       ss->fastSpeed   = fspeed;
    }
@@ -2750,6 +2757,7 @@ void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
    int i;
+   metaobject_t *o;
 
    // TODO: Heretic support?
    // EDF FIXME: demon frame speedup difficult to generalize
@@ -2770,14 +2778,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            metaobject_t *o;
-
             if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", 
                                       METATYPE(speedset_t))))
             {
-               speedset_t *ss = o->object;
-
-               mobjinfo[i].speed = ss->fastSpeed;
+               mobjinfo[i].speed = ((speedset_t *)o->object)->fastSpeed;
             }
          }
       }
@@ -2788,14 +2792,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            metaobject_t *o;
-
             if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", 
                                       METATYPE(speedset_t))))
             {
-               speedset_t *ss = o->object;
-
-               mobjinfo[i].speed = ss->normalSpeed;
+               mobjinfo[i].speed = ((speedset_t *)o->object)->normalSpeed;
             }
          }
       }

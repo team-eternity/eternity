@@ -278,6 +278,17 @@ metaobject_t *MetaGetNextType(ehash_t *metatable, metaobject_t *object,
    return obj;
 }
 
+//
+// MetaTableIterator
+//
+// Iterates on all objects in the metatable, regardless of key or type.
+//
+metaobject_t *MetaTableIterator(ehash_t *metatable, metaobject_t *object,
+                                unsigned int *index)
+{
+   return E_HashTableIterator(metatable, object, index);
+}
+
 //=============================================================================
 //
 // Metaobject Specializations
@@ -458,28 +469,11 @@ const char *MetaRemoveString(ehash_t *metatable, const char *key)
 static ehash_t metaTypeRegistry;
 
 //
-// MetaRegisterType
-//
-// Registers a metatype, but only if that type isn't already registered.
-//
-void MetaRegisterType(metatype_t *type)
-{
-   if(!metaTypeRegistry.isinit)
-      MetaInit(&metaTypeRegistry);
-
-   if(!MetaGetObject(&metaTypeRegistry, type->name))
-   {
-      MetaAddObject(&metaTypeRegistry, type->name, &type->parent, type, 
-                    METATYPE(metatype_t));
-   }
-}
-
-//
 // MetaAlloc
 //
 // Default method for allocation of an object given its metatype.
 //
-void *MetaAlloc(size_t size)
+static void *MetaAlloc(size_t size)
 {
    return calloc(1, size);
 }
@@ -490,24 +484,69 @@ void *MetaAlloc(size_t size)
 // Default method for copying of an object given its metatype.
 // Performs a shallow copy only.
 //
-void MetaCopy(void *dest, const void *src, size_t size)
+static void MetaCopy(void *dest, const void *src, size_t size)
 {
    memcpy(dest, src, size);
 }
 
 //
 // MetaObjectPtr
-// 
-// Default method for getting the metaobject pointer for an object.
-// This returns the same address it is passed, and thus works only
-// for objects that inherit from a metaobject_t by including it as the
-// first structure member.
 //
-metaobject_t *MetaObjectPtr(void *object)
+// Default method to get the metaobject_t field for an object.
+// Returns the same pointer.
+//
+static metaobject_t *MetaObjectPtr(void *object)
 {
    return object;
 }
 
+//
+// MetaRegisterType
+//
+// Registers a metatype, but only if that type isn't already registered.
+//
+void MetaRegisterType(metatype_t *type)
+{
+   // init table the first time
+   if(!metaTypeRegistry.isinit)
+      MetaInit(&metaTypeRegistry);
+
+   // set default methods if any are NULL
+
+   if(!type->alloc)
+      type->alloc = MetaAlloc;
+
+   if(!type->copy)
+      type->copy = MetaCopy;
+
+   if(!type->objptr)
+      type->objptr = MetaObjectPtr;
+
+   if(!MetaGetObject(&metaTypeRegistry, type->name))
+   {
+      MetaAddObject(&metaTypeRegistry, type->name, &type->parent, type, 
+                    METATYPE(metatype_t));
+   }
+}
+
+//
+// MetaRegisterTypeEx
+//
+// Registers a metatype as above, but takes the information to put into the
+// metatype structure as parameters.
+//
+void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
+                        MetaAllocFn_t alloc, MetaCopyFn_t copy, 
+                        MetaObjPtrFn_t objptr)
+{
+   type->name   = typeName;
+   type->size   = typeSize;
+   type->alloc  = alloc;
+   type->copy   = copy;
+   type->objptr = objptr;
+
+   MetaRegisterType(type);
+}
 
 //
 // MetaCopyTable
@@ -515,8 +554,33 @@ metaobject_t *MetaObjectPtr(void *object)
 // Adds copies of all the objects in the source table to the destination
 // table.
 //
-void MetaCopyTable(ehash_t *dest, ehash_t *src)
+void MetaCopyTable(ehash_t *desttable, ehash_t *srctable)
 {
+   metaobject_t *srcobj = NULL;
+   unsigned int i       = -1;
+
+   // iterate on the source table
+   while((srcobj = MetaTableIterator(srctable, srcobj, &i)))
+   {
+      metatype_t *type;
+
+      // see if the object has a registered metatype
+      if((type = (metatype_t *)MetaGetObject(&metaTypeRegistry, srcobj->type)))
+      {
+         // create the new object
+         void *destobj         = type->alloc(type->size);
+         metaobject_t *newmeta = type->objptr(destobj);
+
+         // copy from the old object
+         type->copy(destobj, srcobj->object, type->size);
+
+         // clear metaobject
+         memset(newmeta, 0, sizeof(metaobject_t));
+
+         // add the new object to the destination table
+         MetaAddObject(desttable, srcobj->key, newmeta, destobj, srcobj->type);
+      }
+   }
 }
 
 // EOF

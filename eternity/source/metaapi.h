@@ -62,14 +62,18 @@ typedef struct metastring_s
    const char *value;
 } metastring_t;
 
+typedef void         *(*MetaAllocFn_t) (size_t);
+typedef void          (*MetaCopyFn_t)  (void *, const void *, size_t);
+typedef metaobject_t *(*MetaObjPtrFn_t)(void *);
+
 typedef struct metatype_s
 {
    metaobject_t parent;
    const char *name;
    size_t size;
-   void *(*alloc)(size_t);
-   void  (*copy)(void *, const void *, size_t);
-   metaobject_t *(*objptr)(void *);
+   MetaAllocFn_t  alloc;
+   MetaCopyFn_t   copy;
+   MetaObjPtrFn_t objptr;
 } metatype_t;
 
 void    MetaInit(ehash_t *metatable);
@@ -98,6 +102,12 @@ int  MetaRemoveInt(ehash_t *metatable, const char *key);
 void        MetaAddString(ehash_t *metatable, const char *key, const char *value);
 const char *MetaGetString(ehash_t *metatable, const char *key);
 const char *MetaRemoveString(ehash_t *metatable, const char *key);
+
+void MetaRegisterType(metatype_t *type);
+void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
+                        MetaAllocFn_t alloc, MetaCopyFn_t copy, 
+                        MetaObjPtrFn_t objptr);
+void MetaCopyTable(ehash_t *desttable, ehash_t *srctable);
 
 #endif
 

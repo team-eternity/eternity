@@ -1096,8 +1096,11 @@ static void E_CopyThing(int num, int pnum)
    if(this_mi->meleeobit)
       this_mi->meleeobit = strdup(this_mi->meleeobit);
 
-   // copy speedset if one exists for parent type
-   G_CopySpeedSet(num, pnum);
+   // restore metatable pointer
+   this_mi->meta = meta;
+
+   // copy metatable
+   MetaCopyTable(this_mi->meta, mobjinfo[pnum].meta);
 
    // copy nukespec if one exists for parent type
    M_CopyNukeSpec(num, pnum);
@@ -1115,7 +1118,6 @@ static void E_CopyThing(int num, int pnum)
                         &this_mi->dmg_painstates);
 
    // must restore name and dehacked num data
-   this_mi->meta     = meta;
    this_mi->dehnum   = dehnum;
    this_mi->dehnext  = dehnext;
    this_mi->namenext = namenext;

@@ -71,7 +71,6 @@ void G_DoVictory(void);
 uint64_t G_Signature(void);      // killough 12/98
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
-void G_CopySpeedSet(int destType, int srcType);
 
 void R_InitPortals();
 
