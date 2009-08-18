@@ -2726,7 +2726,7 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 
    if((o = MetaGetObjectType(mi->meta, "speedset", METATYPE(speedset_t))))
    {
-      speedset_t *ss = (speedset_t *)o->object;
+      speedset_t *ss = o->object;
       ss->normalSpeed = nspeed;
       ss->fastSpeed   = fspeed;
    }
@@ -2772,9 +2772,10 @@ void G_SetFastParms(int fast_pending)
          {
             metaobject_t *o;
 
-            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", METATYPE(speedset_t))))
+            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", 
+                                      METATYPE(speedset_t))))
             {
-               speedset_t *ss = (speedset_t *)o->object;
+               speedset_t *ss = o->object;
 
                mobjinfo[i].speed = ss->fastSpeed;
             }
@@ -2783,17 +2784,16 @@ void G_SetFastParms(int fast_pending)
       else
       {
          for(i = demonRun1; i <= demonPain2; i++)
-         {
             states[i]->tics <<= 1;
-         }
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
             metaobject_t *o;
 
-            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", METATYPE(speedset_t))))
+            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", 
+                                      METATYPE(speedset_t))))
             {
-               speedset_t *ss = (speedset_t *)o->object;
+               speedset_t *ss = o->object;
 
                mobjinfo[i].speed = ss->normalSpeed;
             }
@@ -2802,16 +2802,18 @@ void G_SetFastParms(int fast_pending)
    }
 }
 
-//
-// G_InitNew
-// Can be called by the startup code or the menu task,
-// consoleplayer, displayplayer, playeringame[] should be set.
 
 void G_InitNewNum(skill_t skill, int episode, int map)
 {
    G_InitNew(skill, G_GetNameForMap(episode, map) );
 }
 
+//
+// G_InitNew
+//
+// Can be called by the startup code or the menu task,
+// consoleplayer, displayplayer, playeringame[] should be set.
+//
 void G_InitNew(skill_t skill, char *name)
 {
    int i;

@@ -444,5 +444,80 @@ const char *MetaRemoveString(ehash_t *metatable, const char *key)
    return value;
 }
 
+//=============================================================================
+//
+// Metatypes
+//
+// The metatype registry is used to support operations such as copying of
+// items from one metatable to another, where additional information is needed.
+// Only items with a registered metatype can be copied from one table to
+// another.
+//
+
+// The metatypes registry. This is itself a metatable.
+static ehash_t metaTypeRegistry;
+
+//
+// MetaRegisterType
+//
+// Registers a metatype, but only if that type isn't already registered.
+//
+void MetaRegisterType(metatype_t *type)
+{
+   if(!metaTypeRegistry.isinit)
+      MetaInit(&metaTypeRegistry);
+
+   if(!MetaGetObject(&metaTypeRegistry, type->name))
+   {
+      MetaAddObject(&metaTypeRegistry, type->name, &type->parent, type, 
+                    METATYPE(metatype_t));
+   }
+}
+
+//
+// MetaAlloc
+//
+// Default method for allocation of an object given its metatype.
+//
+void *MetaAlloc(size_t size)
+{
+   return calloc(1, size);
+}
+
+//
+// MetaCopy
+//
+// Default method for copying of an object given its metatype.
+// Performs a shallow copy only.
+//
+void MetaCopy(void *dest, const void *src, size_t size)
+{
+   memcpy(dest, src, size);
+}
+
+//
+// MetaObjectPtr
+// 
+// Default method for getting the metaobject pointer for an object.
+// This returns the same address it is passed, and thus works only
+// for objects that inherit from a metaobject_t by including it as the
+// first structure member.
+//
+metaobject_t *MetaObjectPtr(void *object)
+{
+   return object;
+}
+
+
+//
+// MetaCopyTable
+//
+// Adds copies of all the objects in the source table to the destination
+// table.
+//
+void MetaCopyTable(ehash_t *dest, ehash_t *src)
+{
+}
+
 // EOF
 

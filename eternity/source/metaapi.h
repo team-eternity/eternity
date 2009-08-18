@@ -36,6 +36,7 @@ enum
 {
    META_ERR_NOERR,        // 0 is not an error
    META_ERR_NOSUCHOBJECT,
+   META_ERR_NOSUCHTYPE,
    META_NUMERRS
 };
 
@@ -61,6 +62,15 @@ typedef struct metastring_s
    const char *value;
 } metastring_t;
 
+typedef struct metatype_s
+{
+   metaobject_t parent;
+   const char *name;
+   size_t size;
+   void *(*alloc)(size_t);
+   void  (*copy)(void *, const void *, size_t);
+   metaobject_t *(*objptr)(void *);
+} metatype_t;
 
 void    MetaInit(ehash_t *metatable);
 boolean IsMetaKindOf(metaobject_t *object, const char *type);

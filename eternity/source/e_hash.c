@@ -228,6 +228,43 @@ void *E_HashObjectIterator(ehash_t *table, void *object, const void *key)
 }
 
 //
+// E_HashTableIterator
+//
+// Iterates over all objects in a hash table, in chain order.
+//
+void *E_HashTableIterator(ehash_t *table, void *object, unsigned int *index)
+{
+   void *ret = NULL;
+   unsigned int i = *index;
+
+   if(!table->isinit)
+      return NULL;
+
+   // already searching?
+   if(object)
+   {
+      // is there another object on the same chain?
+      mdllistitem_t *item = table->linkfunc(object);
+
+      if(item->next)
+         ret = item->next->object;
+   }
+
+   // search for the next chain with an object in it
+   while(!ret && ++i < table->numchains)
+   {
+      mdllistitem_t *chain = table->chains[i];
+      
+      if(chain)
+         ret = chain->object;
+   }
+
+   *index = i;
+
+   return ret;
+}
+
+//
 // E_HashRebuild
 //
 // Rehashes all objects in the table, in the event that the load factor has
