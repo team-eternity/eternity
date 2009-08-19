@@ -838,6 +838,7 @@ static const char *gamemission_pathnames[] =
    "doom2",    // doom2
    "tnt",      // tnt
    "plutonia", // plut
+   "hacx",     // hacx standalone version
    "heretic",  // heretic
    "heretic",  // hticsosr
 };
@@ -1119,7 +1120,7 @@ static void CheckIWAD(const char *iwadname,
 		      boolean *hassec)
 {
    FILE *fp;
-   int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0;
+   int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0;
    int raven = 0, sosr = 0;
    filelump_t lump;
    wadinfo_t header;
@@ -1182,6 +1183,8 @@ static void CheckIWAD(const char *iwadname,
          ++sosr;
       else if(!strncmp(n, "FREEDOOM", 8))
          freedoom = true;
+      else if(!strncmp(n, "HACX-R", 6))
+         ++hacx;
    }
 
    fclose(fp);
@@ -1210,15 +1213,17 @@ static void CheckIWAD(const char *iwadname,
    {
       *gmission = doom;
 
-      if(cm >= 30)
+      if(cm >= 30 || (cm && !rg))
       {
          if(tnt >= 4)
             *gmission = pack_tnt;
          else if(plut >= 8)
             *gmission = pack_plut;
+         else if(hacx)
+            *gmission = pack_hacx;
          else
             *gmission = doom2;
-         *hassec = (sc >= 2);
+         *hassec = (sc >= 2) || hacx;
          *gmode = commercial;
       }
       else if(ud >= 9)
@@ -1280,6 +1285,7 @@ static const char *const standard_iwads[]=
    "/freedoom.wad", // Freedoom -- haleyjd 01/31/03
    "/heretic.wad",  // Heretic  -- haleyjd 10/10/05
    "/heretic1.wad", // Shareware Heretic
+   "/hacx.wad",     // HACX standalone version -- haleyjd 08/19/09
 };
 
 static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;

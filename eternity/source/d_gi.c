@@ -80,6 +80,7 @@
 #define VNAME_DOOM2     "DOOM II version"
 #define VNAME_TNT       "Final DOOM: TNT - Evilution version"
 #define VNAME_PLUT      "Final DOOM: The Plutonia Experiment version"
+#define VNAME_HACX      "HACX - Twitch 'n Kill version"
 #define VNAME_HTIC_SW   "Heretic Shareware version"
 #define VNAME_HTIC_REG  "Heretic Registered version"
 #define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
@@ -92,6 +93,7 @@
 #define BANNER_DOOM2     "DOOM 2: Hell on Earth"
 #define BANNER_TNT       "DOOM 2: TNT - Evilution"
 #define BANNER_PLUT      "DOOM 2: Plutonia Experiment"
+#define BANNER_HACX      "HACX - Twitch 'n Kill"
 #define BANNER_HTIC_SW   "Heretic Shareware Startup"
 #define BANNER_HTIC_REG  "Heretic Registered Startup"
 #define BANNER_HTIC_SOSR "Heretic: Shadow of the Serpent Riders"
@@ -598,6 +600,19 @@ static missioninfo_t gmFinalPlutonia =
 };
 
 //
+// HacX Stand-alone version
+//
+static missioninfo_t gmHacx =
+{
+   pack_hacx,     // id
+   VNAME_HACX,    // versionNameOR
+   BANNER_HACX,   // startupBannerOR
+   0,             // numEpisodesOR
+   NULL,          // iwadPathOR -- HACX_FIXME
+   NULL,          // finaleDataOR
+};
+
+//
 // Heretic
 //
 static missioninfo_t gmHeretic =
@@ -644,6 +659,7 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
    &gmDoom2,         // doom2
    &gmFinalTNT,      // pack_tnt
    &gmFinalPlutonia, // pack_plut
+   &gmHacx,          // pack_hacx
    &gmHeretic,       // heretic
    &gmHereticSoSR,   // hticsosr
    &gmUnknown,       // none - ???

@@ -178,6 +178,7 @@ typedef enum
   doom2,        // DOOM 2
   pack_tnt,     // TNT mission pack
   pack_plut,    // Plutonia pack
+  pack_hacx,    // HACX stand-alone IWAD
   heretic,      // Heretic
   hticsosr,     // Heretic - Shadow of the Serpent Riders
   none,
