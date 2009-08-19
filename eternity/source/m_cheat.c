@@ -867,120 +867,62 @@ void A_SorcNukeSpec(mobj_t *actor)
    P_SetMobjStateNF(actor, E_SafeState(S_SRCR1_DIE17));
 }
 
-// Very Small Hash Table (TM)
-#define NUMNSCHAINS 7 
-
-typedef struct nukespec_s
-{
-   int mobjType;            // type of thing
-   void (*func)(mobj_t *);  // codepointer function to call
-   struct nukespec_s *next; // for V.S.H.T. above ^_^
-} nukespec_t;
-
-static nukespec_t *ns_chains[NUMNSCHAINS];
-
-static nukespec_t *M_GetNukeSpec(int mobjType)
-{
-   int code = mobjType % NUMNSCHAINS;
-   nukespec_t *chain = ns_chains[code];
-
-   while(chain)
-   {
-      if(chain->mobjType == mobjType)
-         return chain;
-
-      chain = chain->next;
-   }
-
-   return NULL;
-}
-
-void M_CopyNukeSpec(int destType, int srcType)
-{
-   nukespec_t *source;
-
-   // if the source type has a nukespec, copy it for the
-   // new thing type, otherwise, do nothing
-   if((source = M_GetNukeSpec(srcType)))
-   {
-      M_AddNukeSpec(destType, source->func);
-   }
-}
-
-void M_AddNukeSpec(int mobjType, void (*func)(mobj_t *))
-{
-   int code;
-   nukespec_t *newNukeSpec;
-   
-   if((newNukeSpec = M_GetNukeSpec(mobjType)))
-   {
-      // a nukespec already exists for this type, so just
-      // edit it
-      newNukeSpec->func = func;
-   }
-   else
-   {
-      newNukeSpec = malloc(sizeof(nukespec_t));
-      
-      newNukeSpec->mobjType = mobjType;
-      newNukeSpec->func     = func;
-      
-      // compute hash code and add to table
-      code = mobjType % NUMNSCHAINS;
-      newNukeSpec->next = ns_chains[code];
-      ns_chains[code] = newNukeSpec;
-   }
-}
-
-CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
-{
-   // jff 02/01/98 'em' cheat - kill all monsters
-   // partially taken from Chi's .46 port
-   //
-   // killough 2/7/98: cleaned up code and changed to use doom_printf;
-   // fixed lost soul bug (LSs left behind when PEs are killed)
-   //
-   // haleyjd 01/10/02: reformatted some code
-   
-   int killcount=0;
-   thinker_t *currentthinker=&thinkercap;
-   // killough 7/20/98: kill friendly monsters only if no others to kill
+//
+// M_NukeMonsters
+//
+// jff 02/01/98 'em' cheat - kill all monsters
+// partially taken from Chi's .46 port
+//
+// killough 2/7/98: cleaned up code and changed to use doom_printf;
+//    fixed lost soul bug (LSs left behind when PEs are killed)
+// killough 7/20/98: kill friendly monsters only if no others to kill
+// haleyjd 01/10/02: reformatted some code
+//
+static void M_NukeMonsters(void)
+{   
+   int killcount = 0;
+   thinker_t *currentthinker = &thinkercap;
    int mask = MF_FRIEND;
       
    do
    {
       while((currentthinker = currentthinker->next) != &thinkercap)
       {
-	 mobj_t *mo; // haleyjd: use pointer to clean up code
+	 mobj_t *mo;     // haleyjd: use pointer to clean up code
+         mobjinfo_t *mi;
 	 
 	 if(currentthinker->function != P_MobjThinker)
 	    continue;
 
 	 mo = (mobj_t *)currentthinker;
+         mi = &mobjinfo[mo->type];
 
 	 if(!(mo->flags & mask) && // killough 7/20/98
 	    (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
 	 {
-            nukespec_t *ns;
-
 	    // killough 3/6/98: kill even if PE is dead
 	    if(mo->health > 0)
 	    {
 	       killcount++;
 	       P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
 	    }
+
             // haleyjd: made behavior customizable
-            if((ns = M_GetNukeSpec(mo->type)))
-               ns->func(mo);
+            if(mi->nukespec)
+               mi->nukespec(mo);
 	 }
       }
    }
-   while(!killcount && mask ? mask=0, 1 : 0);  // killough 7/20/98
+   while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98
    
    // killough 3/22/98: make more intelligent about plural
    // Ty 03/27/98 - string(s) *not* externalized
-   doom_printf("%d Monster%s Killed", killcount, 
-               (killcount == 1) ? "" : "s");   
+   doom_printf("%d Monster%s Killed", killcount,  (killcount == 1) ? "" : "s");
+}
+
+CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
+{
+   M_NukeMonsters();
 }
 
 void Cheat_AddCommands()

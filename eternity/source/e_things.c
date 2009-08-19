@@ -1102,9 +1102,6 @@ static void E_CopyThing(int num, int pnum)
    // copy metatable
    MetaCopyTable(this_mi->meta, mobjinfo[pnum].meta);
 
-   // copy nukespec if one exists for parent type
-   M_CopyNukeSpec(num, pnum);
-
    // copy damagetype states
 
    // lists inherited from parent are invalid
@@ -1477,9 +1474,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    }
 
    // 07/13/03: process nukespecial
-   // get the nukespecial, and if not NULL, add the thing
-   // to the nukespec hash table in m_cheat.c
-
    if(IS_SET(ITEM_TNG_NUKESPEC))
    {
       deh_bexptr *dp;
@@ -1494,7 +1488,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       }
       
       if(dp->cptr != NULL)
-         M_AddNukeSpec(i, dp->cptr);
+         mobjinfo[i].nukespec = dp->cptr;
    }
 
    // 07/13/03: process particlefx

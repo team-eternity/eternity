@@ -382,6 +382,8 @@ typedef struct mobjinfo_s
    int topdamage;     // haleyjd 09/22/06: burn damage for 3D clipping :)
    int topdamagemask; // haleyjd 09/23/06: time mask for topdamage
    int alphavelocity; // haleyjd 05/23/08: alpha velocity
+
+   void (*nukespec)(mptr); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
    char name[41];     // name of this thing type (max 40 chars)
