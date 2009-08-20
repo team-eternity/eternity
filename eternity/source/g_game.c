@@ -2721,7 +2721,7 @@ static void G_RegisterSpeedSet(void)
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
-   boolean firsttime = true;
+   static boolean firsttime = true;
    metaobject_t *o;
    mobjinfo_t   *mi = &mobjinfo[thingtype];
 

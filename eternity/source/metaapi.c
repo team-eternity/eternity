@@ -310,7 +310,18 @@ metaobject_t *MetaTableIterator(ehash_t *metatable, metaobject_t *object,
 //
 void MetaAddInt(ehash_t *metatable, const char *key, int value)
 {
+   static boolean firsttime = true;
    metaint_t *newInt = calloc(1, sizeof(metaint_t));
+
+   if(firsttime)
+   {
+      // register metaint type
+      static metatype_t metaIntType;
+
+      MetaRegisterTypeEx(&metaIntType, METATYPE(metaint_t), sizeof(metaint_t),
+                         NULL, NULL, NULL);
+      firsttime = false;
+   }
 
    newInt->value = value;
    MetaAddObject(metatable, key, &newInt->parent, newInt, METATYPE(metaint_t));
@@ -331,7 +342,7 @@ int MetaGetInt(ehash_t *metatable, const char *key)
 {
    metaobject_t *obj;
 
-   metaerrno = 0;
+   metaerrno = META_ERR_NOERR;
 
    if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metaint_t))))
    {
@@ -357,7 +368,7 @@ int MetaRemoveInt(ehash_t *metatable, const char *key)
    metaobject_t *obj;
    int value;
 
-   metaerrno = 0;
+   metaerrno = META_ERR_NOERR;
 
    if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metaint_t))))
    {
@@ -387,7 +398,18 @@ int MetaRemoveInt(ehash_t *metatable, const char *key)
 //
 void MetaAddString(ehash_t *metatable, const char *key, const char *value)
 {
+   static boolean firsttime = true;
    metastring_t *newString = calloc(1, sizeof(metastring_t));
+
+   if(firsttime)
+   {
+      // register metastring type
+      static metatype_t metaStrType;
+
+      MetaRegisterTypeEx(&metaStrType, METATYPE(metastring_t), 
+                         sizeof(metastring_t), NULL, NULL, NULL);
+      firsttime = false;
+   }
 
    newString->value = value;
 
@@ -410,7 +432,7 @@ const char *MetaGetString(ehash_t *metatable, const char *key)
 {
    metaobject_t *obj;
 
-   metaerrno = 0;
+   metaerrno = META_ERR_NOERR;
 
    if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metastring_t))))
    {
@@ -438,7 +460,7 @@ const char *MetaRemoveString(ehash_t *metatable, const char *key)
    metaobject_t *obj;
    const char *value;
 
-   metaerrno = 0;
+   metaerrno = META_ERR_NOERR;
 
    if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metastring_t))))
    {
@@ -493,7 +515,8 @@ static void MetaCopy(void *dest, const void *src, size_t size)
 // MetaObjectPtr
 //
 // Default method to get the metaobject_t field for an object.
-// Returns the same pointer.
+// Returns the same pointer. Works for objects which have the
+// metaobject_t as their first item only.
 //
 static metaobject_t *MetaObjectPtr(void *object)
 {
@@ -551,8 +574,8 @@ void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
 //
 // MetaCopyTable
 //
-// Adds copies of all the objects in the source table to the destination
-// table.
+// Adds copies of all objects with a registered metatype in the source table to
+// the destination table.
 //
 void MetaCopyTable(ehash_t *desttable, ehash_t *srctable)
 {
