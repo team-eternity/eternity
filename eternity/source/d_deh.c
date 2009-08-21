@@ -1734,7 +1734,14 @@ void deh_procText(DWFILE *fpin, char *line)
       unsigned int totlen = 0;
 
       while(totlen < fromlen + tolen && (c = D_Fgetc(fpin)) != EOF)
+      {
+         // haleyjd 08/20/09: eldritch bug from MBF. Wad files are opened
+         // in binary mode, so we must not count 0x0D characters or place
+         // them into the inbuffer.
+         if(D_IsLump(fpin) && c == 0x0D)
+            continue;
          inbuffer[totlen++] = c;
+      }
       inbuffer[totlen]='\0';
    }
 
@@ -1828,8 +1835,9 @@ void deh_procText(DWFILE *fpin, char *line)
       
       deh_procStringSub(NULL, inbuffer, line2);
    }
-   free(line2); // may be NULL, ignored by free()
-   return;
+
+   if(line2)
+      free(line2);
 }
 
 void deh_procError(DWFILE *fpin, char *line)
