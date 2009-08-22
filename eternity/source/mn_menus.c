@@ -106,7 +106,7 @@ void MN_InitMenus(void)
    
    mn_phonenum = Z_Strdup("555-1212", PU_STATIC, 0);
    mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
-   mn_wadname = Z_Strdup("", PU_STATIC, 0);
+   mn_wadname  = Z_Strdup("", PU_STATIC, 0);
    mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory

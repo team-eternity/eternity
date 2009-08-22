@@ -1200,37 +1200,90 @@ void E_ProcessStateDeltas(cfg_t *cfg)
     <eol>   := '\n'
     <frameblock> := <frame><frameblock> | <frame>
       <frame> := <keyword><eol> | <frame_token_list><eol>
-         <keyword> := "stop" | "wait" | "loop" | <goto>
-            <goto> := "goto" | "goto" <jumplabel>
-              <jumplabel> := <jlabel> | <jlabel> '+' number
-                <jlabel> := [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?
-         <frame_token_list> := <sprite><frameletters><tics><action>
-                             | <sprite><frameletters><tics><bright><action>
-           <sprite> := [A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]
-           <frameletters> := [A-Z\[\\\]]+
-           <tics> := [0-9]+
-           <bright> := "bright"
-           <action> := <name>
-                     | <name> '(' <arglist> ')'
-              <name> := [A-Za-z0-9_]+
-              <arglist> := <arg> ',' <arglist> | <arg>
+        <keyword> := "stop" | "wait" | "loop" | "goto" <jumplabel>
+          <jumplabel> := <jlabel> | <jlabel> '+' number
+            <jlabel> := [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?
+        <frame_token_list> := <sprite><frameletters><tics><action>
+                            | <sprite><frameletters><tics><bright><action>
+          <sprite> := [A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]
+          <frameletters> := [A-Z\[\\\]]+
+          <tics> := [0-9]+
+          <bright> := "bright"
+          <action> := <name>
+                    | <name> '(' <arglist> ')'
+            <name> := [A-Za-z0-9_]+
+              <arglist> := <arg> ',' <arglist> | <arg> | nil
                 <arg> := "string" | number
+*/
+
+/*
+   State Transition Diagram
+   ----------------------------------
+   NEEDLABEL: 
+      <label> : NEEDKWORSTATE
+      EOL     : loop
+   NEEDKWORSTATE:
+      "goto"    : NEEDGOTOLABEL
+      <keyword> : NEEDKWEOL
+      <text>    : NEEDSTATEFRAMES
+   NEEDGOTOLABEL:
+      <label> : NEEDGOTOEOLORPLUS
+   NEEDGOTOEOLORPLUS:
+      '+' : NEEDGOTOOFFSET
+      EOL : NEEDLABEL
+   NEEDGOTOOFFSET:
+      <number> : NEEDKWEOL
+   NEEDKWEOL:
+      EOL : NEEDLABEL
+   NEEDSTATEFRAMES:
+      <text> : NEEDSTATETICS
+   NEEDSTATETICS:
+      <number> : NEEDSTATEBRIGHTORACTION
+   NEEDSTATEBRIGHTORACTION:
+      "bright" : NEEDSTATEACTION
+      <text>   : NEEDSTATEEOLORPAREN
+   NEEDSTATEACTION:
+      <text> : NEEDSTATEEOLORPAREN
+   NEEDSTATEEOLORPAREN:
+      EOL : NEEDLABELORKWORSTATE
+      '(' : NEEDSTATEARGORPAREN
+   NEEDSTATEARGORPAREN:
+      <number> | <string> : NEEDSTATECOMMAORPAREN
+      ')' : NEEDSTATEEOL
+   NEEDSTATECOMMAORPAREN:
+      ',' : NEEDSTATEARG
+      ')' : NEEDSTATEEOL
+   NEEDSTATEARG:
+      <number> | <string> : NEEDSTATECOMMAORPAREN
+   NEEDSTATEEOL:
+      EOL : NEEDLABELORKWORSTATE
+   NEEDLABELORKWORSTATE:
+      <label>   : NEEDKWORSTATE
+      "goto"    : NEEDGOTOLABEL
+      <keyword> : NEEDKWEOL
+      <text>    : NEEDSTATEFRAMES
+      EOL       : loop
 */
 
 // parser state enumeration
 enum
 {
-   PSTATE_EXPECTLABEL,
-   PSTATE_EXPECTSTATEORKW,
-   PSTATE_EXPECTFRAMES,
-   PSTATE_EXPECTTICS,
-   PSTATE_EXPECTBRIGHTORACTION,
-   PSTATE_EXPECTACTION,
-   PSTATE_EXPECTPAREN,
-   PSTATE_EXPECTARG,
-   PSTATE_EXPECTCOMMAORPAREN,
-   PSTATE_EXPECTPLUS,
-   PSTATE_EXPECTOFFSET,
+   PSTATE_NEEDLABEL,             // starting state, first token must be a label
+   PSTATE_NEEDKWORSTATE,         // after label, need keyword or state
+   PSTATE_NEEDGOTOLABEL,         // after goto, need goto label
+   PSTATE_NEEDGOTOEOLORPLUS,     // after goto label, need EOL or '+'
+   PSTATE_NEEDGOTOOFFSET,        // after '+', need goto offset number
+   PSTATE_NEEDKWEOL,             // need kw EOL
+   PSTATE_NEEDSTATEFRAMES,       // after state sprite, need frames
+   PSTATE_NEEDSTATETICS,         // after state frames, need tics
+   PSTATE_NEEDBRIGHTORACTION,    // after tics, need "bright" or action name
+   PSTATE_NEEDSTATEACTION,       // after "bright", need action name
+   PSTATE_NEEDSTATEEOLORPAREN,   // after action name, need EOL or '('
+   PSTATE_NEEDSTATEARGORPAREN,   // after '(', need argument or ')'
+   PSTATE_NEEDSTATECOMMAORPAREN, // after argument, need ',' or ')'
+   PSTATE_NEEDSTATEARG,          // after ',', need argument (loop state)
+   PSTATE_NEEDSTATEEOL,          // after ')', need EOL
+   PSTATE_NEEDLABELORKWORSTATE,  // after state EOL, anything (loop state)
    PSTATE_NUMSTATES
 };
 
@@ -1241,6 +1294,9 @@ typedef struct pstate_s
    qstring_t *linebuffer;  // qstring to use as line buffer
    qstring_t *tokenbuffer; // qstring to use as token buffer
    int index; // current index into line buffer for tokenization
+
+   int tokentype;    // current token type, once decided upon
+   int tokenerror;   // current token error code
 } pstate_t;
 
 // tokenization
@@ -1263,18 +1319,21 @@ enum
 // token errors
 enum
 {
-   TERR_NONE,      // not an error
-   TERR_BADSTRING, // malformed string constant
+   TERR_NONE,           // not an error
+   TERR_BADSTRING,      // malformed string constant
+   TERR_UNEXPECTEDCHAR, // weird character
 };
 
 // tokenizer states
 enum
 {
-   TSTATE_SCAN,   // scanning for start of a token
-   TSTATE_TEXT,   // scanning in a label, keyword, or text token
-   TSTATE_LABEL,  // scanning after '.' in a label
-   TSTATE_STRING, // scanning in a string literal
-   TSTATE_DONE    // finished; return token to parser
+   TSTATE_SCAN,    // scanning for start of a token
+   TSTATE_SLASH,   // scanning after a '/'
+   TSTATE_COMMENT, // consume up to next "\n"
+   TSTATE_TEXT,    // scanning in a label, keyword, or text token
+   TSTATE_LABEL,   // scanning after '.' in a label
+   TSTATE_STRING,  // scanning in a string literal
+   TSTATE_DONE     // finished; return token to parser
 };
 
 // tokenizer state structure
@@ -1348,13 +1407,52 @@ static void DoTokenStateScan(tkstate_t *tks)
          tks->tokentype = TOKEN_RPAREN;
          tks->state     = TSTATE_DONE;
          break;
+      case '/':  // forward slash - start of single-line comment?
+         tks->state     = TSTATE_SLASH;
+         break;
       default: // whatever it is, we don't care for it.
          M_QStrPutc(token, str[i]);
-         tks->tokentype = TOKEN_ERROR;
-         tks->state     = TSTATE_DONE;
+         tks->tokentype  = TOKEN_ERROR;
+         tks->tokenerror = TERR_UNEXPECTEDCHAR;
+         tks->state      = TSTATE_DONE;
          break;
       }
    }
+}
+
+//
+// DoTokenStateSlash
+//
+static void DoTokenStateSlash(tkstate_t *tks)
+{
+   const char *str  = tks->line->buffer;
+   int i            = tks->i;
+
+   if(str[i] == '/')
+      tks->state = TSTATE_COMMENT;
+   else
+   {
+      tks->tokentype  = TOKEN_ERROR;
+      tks->tokenerror = TERR_UNEXPECTEDCHAR;
+      tks->state      = TSTATE_DONE;
+   }
+}
+
+//
+// DoTokenStateComment
+//
+static void DoTokenStateComment(tkstate_t *tks)
+{
+   const char *str  = tks->line->buffer;
+   int i            = tks->i;
+
+   // eol?
+   if(str[i] == '\0')
+   {
+      tks->tokentype = TOKEN_EOL;
+      tks->state     = TSTATE_DONE;
+   }
+   // else keep consuming characters
 }
 
 // there are only four keywords, so hashing is pointless.
@@ -1502,10 +1600,12 @@ typedef void (*tksfunc_t)(tkstate_t *);
 // tokenizer state function table
 static tksfunc_t tstatefuncs[] =
 {
-   DoTokenStateScan,   // scanning for start of a token
-   DoTokenStateText,   // scanning inside a label, keyword, or text
-   DoTokenStateLabel,  // scanning inside a label after a dot
-   DoTokenStateString, // scanning inside a string literal
+   DoTokenStateScan,    // scanning for start of a token
+   DoTokenStateSlash,   // scanning inside a single-line comment?
+   DoTokenStateComment, // scanning inside a comment; consume to next EOL
+   DoTokenStateText,    // scanning inside a label, keyword, or text
+   DoTokenStateLabel,   // scanning inside a label after a dot
+   DoTokenStateString,  // scanning inside a string literal
 };
 
 //
@@ -1540,12 +1640,408 @@ static int E_GetDSToken(pstate_t *ps)
       ++tks.i;
    }
 
-   // write back string index
+   // write back info to parser state
    ps->index = tks.i;
+   ps->tokentype  = tks.tokentype;
+   ps->tokenerror = tks.tokenerror;
 
    return tks.tokentype;
 }
 
+//=============================================================================
+//
+// Parser Callbacks
+//
+
+//
+// DoPSNeedLabel
+//
+// Initial state of the parser; we expect a state label, but we'll accept
+// EOL, which means to loop.
+//
+static void DoPSNeedLabel(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   switch(ps->tokentype)
+   {
+   case TOKEN_EOL:
+      // loop until something meaningful appears
+      break;
+   case TOKEN_LABEL:
+      // TODO: record label to associate with next state generated
+      ps->state = PSTATE_NEEDKWORSTATE;
+      break;
+   default:
+      // TODO: anything else is an error
+      break;
+   }
+}
+
+//
+// DoPSNeedKWOrState
+//
+// Expecting a keyword or the first spritename token of a state
+//
+static void DoPSNeedKWOrState(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   switch(ps->tokentype)
+   {
+   case TOKEN_KEYWORD:
+      // TODO: generate appropriate state for keyword
+      if(!strcasecmp(ps->tokenbuffer->buffer, "goto"))
+      {
+         // TODO: handle goto specifics
+         ps->state = PSTATE_NEEDGOTOLABEL;
+      }
+      else
+      {
+         // TODO: handle other keyword specifics
+         ps->state = PSTATE_NEEDKWEOL;
+      }
+      break;
+   case TOKEN_TEXT:
+      // TODO: verify sprite name; generate new state
+      ps->state = PSTATE_NEEDSTATEFRAMES;
+      break;
+   default:
+      // TODO: anything else is an error
+      break;
+   }
+}
+
+//
+// DoPSNeedGotoLabel
+//
+// Expecting the label for a "goto" keyword
+//
+static void DoPSNeedGotoLabel(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype == TOKEN_TEXT)
+   {
+      // TODO: record text into goto destination record for later
+      // resolution pass.
+      ps->state = PSTATE_NEEDGOTOEOLORPLUS;
+   }
+   else
+   {
+      // TODO: anything else is an error
+      ;
+   }
+}
+
+//
+// DoPSNeedGotoEOLOrPlus
+//
+// Expecting EOL or '+' after a goto destination label.
+//
+static void DoPSNeedGotoEOLOrPlus(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   switch(ps->tokentype)
+   {
+   case TOKEN_EOL:
+      // TODO: finalize goto destination record if necessary
+      ps->state = PSTATE_NEEDLABEL;
+      break;
+   case TOKEN_PLUS:
+      // TODO: modify goto destination record to accept offset
+      ps->state = PSTATE_NEEDGOTOOFFSET;
+      break;
+   default:
+      // TODO: anything else is an error
+      break;
+   }
+}
+
+//
+// DoPSNeedGotoOffset
+//
+// Expecting a numeric offset value after the '+' in a goto statement.
+//
+static void DoPSNeedGotoOffset(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype == TOKEN_TEXT)
+   {
+      // TODO: record offset into goto destination record, and finalize
+      // destination record if necessary
+      ps->state = PSTATE_NEEDKWEOL;
+   }
+   else
+   {
+      // TODO: anything else is an error
+      ;
+   }
+}
+
+//
+// DoPSNeedKWEOL
+//
+// Expecting the end of a line after a state transition keyword.
+// The only thing which can come next is a new label.
+//
+static void DoPSNeedKWEOL(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype != TOKEN_EOL)
+      ; // TODO: error
+
+   // return to initial state
+   ps->state = PSTATE_NEEDLABEL;
+}
+
+//
+// DoPSNeedStateFrames
+//
+// Expecting a frames string for the current state.
+// Frames strings are a series of A-Z and [\] chars.
+// If this string is more than one character long, we generate additional
+// states up to the number of characters in the string, and the rest of the
+// properties parsed for the first state apply to those states. The states
+// created this way have their next state fields automatically created to be 
+// consecutive.
+//
+static void DoPSNeedStateFrames(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype != TOKEN_TEXT)
+      ; // TODO: error
+
+   // TODO: create additional states if necessary, beginning as a clone of
+   // this state, and with properly set nextstate fields. Then mark so that
+   // the rest of the parsing process will populate the range of states
+   // rather than just the current state, and then step past them once finished.
+
+   ps->state = PSTATE_NEEDSTATETICS;
+}
+
+//
+// DoPSNeedStateTics
+//
+// Expecting a tics amount for the current state.
+//
+static void DoPSNeedStateTics(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype != TOKEN_TEXT)
+      ; // TODO: error
+
+   // TODO: verify is properly ranged number
+
+   // TODO: record into current range of states
+
+   ps->state = PSTATE_NEEDBRIGHTORACTION;
+}
+
+//
+// DoPSNeedBrightOrAction
+//
+// Expecting either "bright", which modifies the current state block to use
+// fullbright frames, or the action name.
+//
+static void DoPSNeedBrightOrAction(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype != TOKEN_TEXT)
+      ; // TODO: error
+
+   if(!strcasecmp(ps->tokenbuffer->buffer, "bright"))
+   {
+      // TODO: apply fullbright to all states in the current range
+      ps->state = PSTATE_NEEDSTATEACTION;
+   }
+   else
+   {
+      // TODO: verify is valid codepointer name and apply action to all
+      // states in the current range.
+      ps->state = PSTATE_NEEDSTATEEOLORPAREN;
+   }
+}
+
+//
+// DoPSNeedStateAction
+//
+// Expecting an action name after having dealt with the "bright" command.
+//
+static void DoPSNeedStateAction(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype != TOKEN_TEXT)
+      ; // TODO: error
+
+   // TODO: verify is valid codepointer name and apply actionto all
+   // states in the current range.
+   ps->state = PSTATE_NEEDSTATEEOLORPAREN;
+}
+
+//
+// DoPSNeedStateEOLOrParen
+//
+// After parsing the action name, expecting an EOL or '('.
+//
+static void DoPSNeedStateEOLOrParen(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   switch(ps->tokentype)
+   {
+   case TOKEN_EOL:
+      // TODO: finalize state range
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      break;
+   case TOKEN_LPAREN:
+      // TODO: prepare for args parsing if necessary
+      ps->state = PSTATE_NEEDSTATEARGORPAREN;
+      break;
+   default:
+      // TODO: anything else is an error
+      break;
+   }
+}
+
+//
+// DoPSNeedStateArgOrParen
+//
+// After '(' we expect an argument or ')' (which is pointless to have but 
+// is still allowed).
+//
+static void DoPSNeedStateArgOrParen(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   switch(ps->tokentype)
+   {
+   case TOKEN_TEXT:
+      // TODO: parse and populate argument in state range, increment
+      // argument count.
+      ps->state = PSTATE_NEEDSTATECOMMAORPAREN;
+      break;
+   case TOKEN_RPAREN:
+      ps->state = PSTATE_NEEDSTATEEOL;
+      break;
+   default:
+      // TODO: error
+      break;
+   }
+}
+
+//
+// DoPSNeedStateCommaOrParen
+//
+// Expecting ',' or ')' after an action argument.
+//
+static void DoPSNeedStateCommaOrParen(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   switch(ps->tokentype)
+   {
+   case TOKEN_COMMA:
+      ps->state = PSTATE_NEEDSTATEARG;
+      break;
+   case TOKEN_RPAREN:
+      ps->state = PSTATE_NEEDSTATEEOL;
+      break;
+   default:
+      // TODO: error
+      break;
+   }
+}
+
+//
+// DoPSNeedStateArg
+//
+// Expecting an argument, after having seen ','.
+// This state exists because ')' is not allowed here.
+//
+static void DoPSNeedStateArg(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype != TOKEN_TEXT)
+   {
+      // TODO: error
+      ;
+   }
+
+   // TODO: parse and populate argument in state range, increment
+   // argument count.
+   ps->state = PSTATE_NEEDSTATECOMMAORPAREN;
+}
+
+//
+// DoPSNeedStateEOL
+//
+// Expecting end of line after completing state parsing.
+//
+static void DoPSNeedStateEOL(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   if(ps->tokentype != TOKEN_EOL)
+   {
+      // TODO: error
+      ;
+   }
+
+   // TODO: finalize state range
+   ps->state = PSTATE_NEEDLABELORKWORSTATE;
+}
+
+//
+// DoPSNeedLabelOrKWOrState
+//
+// Main looping state, this is jumped to after processing a state,
+// which is the only time that finding *anything* allowed in the states
+// block is valid.
+//
+static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+
+   switch(ps->tokentype)
+   {
+   case TOKEN_EOL:
+      // loop until something meaningful appears
+      break;
+   case TOKEN_LABEL:
+      // TODO: record label to associate with next state generated
+      ps->state = PSTATE_NEEDKWORSTATE;
+      break;
+   case TOKEN_KEYWORD:
+      // TODO: generate appropriate state for keyword
+      if(!strcasecmp(ps->tokenbuffer->buffer, "goto"))
+      {
+         // TODO: handle goto specifics
+         ps->state = PSTATE_NEEDGOTOLABEL;
+      }
+      else
+      {
+         // TODO: handle other keyword specifics
+         ps->state = PSTATE_NEEDKWEOL;
+      }
+      break;
+   case TOKEN_TEXT:
+      // TODO: verify sprite name; generate new state
+      ps->state = PSTATE_NEEDSTATEFRAMES;
+      break;
+   default:
+      // TODO: anything else is an error
+      break;
+   }
+}
 
 // EOF
 

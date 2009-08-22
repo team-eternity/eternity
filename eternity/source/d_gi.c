@@ -604,12 +604,13 @@ static missioninfo_t gmFinalPlutonia =
 //
 static missioninfo_t gmHacx =
 {
-   pack_hacx,     // id
-   VNAME_HACX,    // versionNameOR
-   BANNER_HACX,   // startupBannerOR
-   0,             // numEpisodesOR
-   NULL,          // iwadPathOR -- HACX_FIXME
-   NULL,          // finaleDataOR
+   pack_hacx,      // id
+   VNAME_HACX,     // versionNameOR
+   BANNER_HACX,    // startupBannerOR
+   0,              // numEpisodesOR
+   NULL,           // iwadPathOR -- HACX_FIXME
+   NULL,           // finaleDataOR
+   &menu_old_main, // mainMenuOR
 };
 
 //
@@ -1286,6 +1287,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(numEpisodes,      0);
    OVERRIDE(iwadPath,      NULL);
    OVERRIDE(finaleData,    NULL);
+   OVERRIDE(mainMenu,      NULL);
 }
 
 // EOF

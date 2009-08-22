@@ -218,6 +218,7 @@ typedef struct missioninfo_s
    int           numEpisodesOR;   // if not 0, overrides the number of episodes
    char        **iwadPathOR;      // if not NULL, overrides iwadpath variable
    finaledata_t *finaleDataOR;    // if not NULL, overrides finaleData variable
+   menu_t       *mainMenuOR;      // if not NULL, overrides mainMenu variable
 } missioninfo_t;
 
 //
