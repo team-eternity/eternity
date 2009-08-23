@@ -1691,7 +1691,7 @@ static void DoPSNeedKWOrState(pstate_t *ps)
    {
    case TOKEN_KEYWORD:
       // TODO: generate appropriate state for keyword
-      if(!strcasecmp(ps->tokenbuffer->buffer, "goto"))
+      if(!M_QStrCaseCmp(ps->tokenbuffer, "goto"))
       {
          // TODO: handle goto specifics
          ps->state = PSTATE_NEEDGOTOLABEL;
@@ -1728,10 +1728,7 @@ static void DoPSNeedGotoLabel(pstate_t *ps)
       ps->state = PSTATE_NEEDGOTOEOLORPLUS;
    }
    else
-   {
-      // TODO: anything else is an error
-      ;
-   }
+      ; // TODO: anything else is an error
 }
 
 //
@@ -1775,10 +1772,7 @@ static void DoPSNeedGotoOffset(pstate_t *ps)
       ps->state = PSTATE_NEEDKWEOL;
    }
    else
-   {
-      // TODO: anything else is an error
-      ;
-   }
+      ; // TODO: anything else is an error
 }
 
 //
@@ -1856,7 +1850,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
    if(ps->tokentype != TOKEN_TEXT)
       ; // TODO: error
 
-   if(!strcasecmp(ps->tokenbuffer->buffer, "bright"))
+   if(!M_QStrCaseCmp(ps->tokenbuffer, "bright"))
    {
       // TODO: apply fullbright to all states in the current range
       ps->state = PSTATE_NEEDSTATEACTION;
@@ -1971,10 +1965,7 @@ static void DoPSNeedStateArg(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_TEXT)
-   {
-      // TODO: error
-      ;
-   }
+      ; // TODO: error
 
    // TODO: parse and populate argument in state range, increment
    // argument count.
@@ -1991,10 +1982,7 @@ static void DoPSNeedStateEOL(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_EOL)
-   {
-      // TODO: error
-      ;
-   }
+      ; // TODO: error
 
    // TODO: finalize state range
    ps->state = PSTATE_NEEDLABELORKWORSTATE;

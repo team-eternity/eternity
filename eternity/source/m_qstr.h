@@ -43,23 +43,24 @@ typedef struct qstring_s
    unsigned int size;
 } qstring_t;
 
-qstring_t *M_QStrInitCreate(qstring_t *qstr);
-qstring_t *M_QStrCreateSize(qstring_t *qstr, unsigned int size);
-qstring_t *M_QStrCreate(qstring_t *qstr);
-unsigned int M_QStrLen(qstring_t *qstr);
-unsigned int M_QStrSize(qstring_t *qstr);
-char *M_QStrBuffer(qstring_t *qstr);
-qstring_t *M_QStrGrow(qstring_t *qstr, unsigned int len);
-qstring_t *M_QStrClear(qstring_t *qstr);
-void M_QStrFree(qstring_t *qstr);
-char M_QStrCharAt(qstring_t *qstr, unsigned int idx);
-qstring_t *M_QStrPutc(qstring_t *qstr, char ch);
-qstring_t *M_QStrDelc(qstring_t *qstr);
-qstring_t *M_QStrCat(qstring_t *qstr, const char *str);
-int M_QStrCmp(qstring_t *qstr, const char *str);
-qstring_t *M_QStrCpy(qstring_t *qstr, const char *str);
-qstring_t *M_QStrUpr(qstring_t *qstr);
-qstring_t *M_QStrLwr(qstring_t *qstr);
+qstring_t    *M_QStrInitCreate(qstring_t *qstr);
+qstring_t    *M_QStrCreateSize(qstring_t *qstr, unsigned int size);
+qstring_t    *M_QStrCreate(qstring_t *qstr);
+unsigned int  M_QStrLen(qstring_t *qstr);
+unsigned int  M_QStrSize(qstring_t *qstr);
+char         *M_QStrBuffer(qstring_t *qstr);
+qstring_t    *M_QStrGrow(qstring_t *qstr, unsigned int len);
+qstring_t    *M_QStrClear(qstring_t *qstr);
+void          M_QStrFree(qstring_t *qstr);
+char          M_QStrCharAt(qstring_t *qstr, unsigned int idx);
+qstring_t    *M_QStrPutc(qstring_t *qstr, char ch);
+qstring_t    *M_QStrDelc(qstring_t *qstr);
+qstring_t    *M_QStrCat(qstring_t *qstr, const char *str);
+int           M_QStrCmp(qstring_t *qstr, const char *str);
+int           M_QStrCaseCmp(qstring_t *qstr, const char *str);
+qstring_t    *M_QStrCpy(qstring_t *qstr, const char *str);
+qstring_t    *M_QStrUpr(qstring_t *qstr);
+qstring_t    *M_QStrLwr(qstring_t *qstr);
 
 #endif
 

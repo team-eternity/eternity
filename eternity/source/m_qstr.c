@@ -36,7 +36,8 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_qstr.h"
-#include "m_misc.h" // for M_Strupr/M_Strlwr
+#include "m_misc.h"   // for M_Strupr/M_Strlwr
+#include "d_io.h"     // for strcasecmp
 
 // 32 bytes is the minimum block size currently used by the zone 
 // allocator, so it makes sense to use it as the base default 
@@ -245,6 +246,16 @@ qstring_t *M_QStrCat(qstring_t *qstr, const char *str)
 int M_QStrCmp(qstring_t *qstr, const char *str)
 {
    return strcmp(qstr->buffer, str);
+}
+
+//
+// M_QStrCaseCmp
+//
+// Case-insensitive string compare.
+//
+int M_QStrCaseCmp(qstring_t *qstr, const char *str)
+{
+   return strcasecmp(qstr->buffer, str);
 }
 
 //
