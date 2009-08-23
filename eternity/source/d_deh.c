@@ -1796,9 +1796,8 @@ void deh_procText(DWFILE *fpin, char *line)
          // haleyjd 08/20/09: eldritch bug from MBF. Wad files are opened
          // in binary mode, so we must not count 0x0D characters or place
          // them into the inbuffer.
-         if(D_IsLump(fpin) && c == 0x0D)
-            continue;
-         inbuffer[totlen++] = c;
+         if(c != '\r')
+            inbuffer[totlen++] = c;
       }
       inbuffer[totlen]='\0';
    }
