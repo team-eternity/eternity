@@ -1097,6 +1097,16 @@ SOURCE=.\source\r_span.c
 # Begin Source File
 
 SOURCE=.\Source\r_things.c
+
+!IF  "$(CFG)" == "Eternity - Win32 Release"
+
+# ADD CPP /Ob1
+# SUBTRACT CPP /FA<none>
+
+!ELSEIF  "$(CFG)" == "Eternity - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # End Group
 # Begin Group "R_ Headers"

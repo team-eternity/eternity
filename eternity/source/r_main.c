@@ -548,7 +548,7 @@ void R_SetupViewScaling(void)
    centeryfrac = centery << FRACBITS;
 
    // SoM: Cardboard
-   view.xcenter = (view.width = (float)viewwidth) * 0.5f;
+   view.xcenter = (view.width  = (float)viewwidth ) * 0.5f;
    view.ycenter = (view.height = (float)viewheight) * 0.5f;
 
    R_InitBuffer(scaledviewwidth, scaledviewheight);       // killough 11/98
