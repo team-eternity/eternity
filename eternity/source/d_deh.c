@@ -840,35 +840,93 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 
    switch(keyIndex)
    {
-   case 0: mi->doomednum = (int)value; return;
-   case 1: mi->spawnstate = E_GetStateNumForDEHNum(value); return;
-   case 2: mi->spawnhealth = (int)value; return;
-   case 3: mi->seestate = E_GetStateNumForDEHNum(value); return;
-   case 4: mi->seesound = (int)value; return;
-   case 5: mi->reactiontime = (int)value; return;
-   case 6: mi->attacksound = (int)value; return;
-   case 7: mi->painstate = E_GetStateNumForDEHNum(value); return;
-   case 8: mi->painchance = (int)value; return;
-   case 9: mi->painsound = (int)value; return;
-   case 10: mi->meleestate = E_GetStateNumForDEHNum(value); return;
-   case 11: mi->missilestate = E_GetStateNumForDEHNum(value); return;
-   case 12: mi->deathstate = E_GetStateNumForDEHNum(value); return;
-   case 13: mi->xdeathstate = E_GetStateNumForDEHNum(value); return;
-   case 14: mi->deathsound = (int)value; return;
-   case 15: mi->speed = (int)value; return;
-   case 16: mi->radius = (int)value; return;
-   case 17: mi->height = (int)value; return;
-   case 18: mi->mass = (int)value; return;
-   case 19: mi->damage = (int)value; return;
-   case 20: mi->activesound = (int)value; return;
-   case MOBJFLAGSINDEX: mi->flags = (int)value; return;
-   case MOBJFLAGS2INDEX: mi->flags2 = (int)value; return;
-   case 23: mi->raisestate = E_GetStateNumForDEHNum(value); return;
-   case MOBJTRANSINDEX: mi->translucency = (int)value; return;
-   case MOBJFLAGS3INDEX: mi->flags3 = (int)value; return;
-   case 26: mi->bloodcolor = (int)value; return;
-   default: return;
-   } 
+   case 0: 
+      mi->doomednum = value;
+      break;
+   case 1: 
+      mi->spawnstate = E_GetStateNumForDEHNum(value); 
+      break;
+   case 2: 
+      mi->spawnhealth = value; 
+      break;
+   case 3: 
+      mi->seestate = E_GetStateNumForDEHNum(value); 
+      break;
+   case 4: 
+      mi->seesound = value; 
+      break;
+   case 5: 
+      mi->reactiontime = value; 
+      break;
+   case 6: 
+      mi->attacksound = value; 
+      break;
+   case 7: 
+      mi->painstate = E_GetStateNumForDEHNum(value); 
+      break;
+   case 8: 
+      mi->painchance = value; 
+      break;
+   case 9: 
+      mi->painsound = value; 
+      break;
+   case 10: 
+      mi->meleestate = E_GetStateNumForDEHNum(value); 
+      break;
+   case 11: 
+      mi->missilestate = E_GetStateNumForDEHNum(value); 
+      break;
+   case 12: 
+      mi->deathstate = E_GetStateNumForDEHNum(value); 
+      break;
+   case 13: 
+      mi->xdeathstate = E_GetStateNumForDEHNum(value); 
+      break;
+   case 14: 
+      mi->deathsound = value; 
+      break;
+   case 15: 
+      mi->speed = value; 
+      break;
+   case 16: 
+      mi->radius = value; 
+      break;
+   case 17: 
+      mi->height    = value;
+      mi->c3dheight = 0; // haleyjd 08/23/09
+      break;
+   case 18: 
+      mi->mass = value; 
+      break;
+   case 19: 
+      mi->damage = value; 
+      break;
+   case 20: 
+      mi->activesound = value; 
+      break;
+   case MOBJFLAGSINDEX: 
+      mi->flags = value;
+      if(mi->flags & MF_SPAWNCEILING)
+         mi->c3dheight = 0; // haleyjd 08/23/09
+      break;
+   case MOBJFLAGS2INDEX: 
+      mi->flags2 = value; 
+      break;
+   case 23: 
+      mi->raisestate = E_GetStateNumForDEHNum(value); 
+      break;
+   case MOBJTRANSINDEX: 
+      mi->translucency = value; 
+      break;
+   case MOBJFLAGS3INDEX: 
+      mi->flags3 = value; 
+      break;
+   case 26: 
+      mi->bloodcolor = value; 
+      break;
+   default: 
+      break;
+   }
 }
 
 // ============================================================
@@ -983,7 +1041,7 @@ void deh_procThing(DWFILE *fpin, char *line)
             SetMobjInfoValue(indexnum, ix, value);
          
          deh_LogPrintf("Assigned %d to %s(%d) at index %d\n",
-                       (int)value, key, indexnum, ix);
+                       value, key, indexnum, ix);
 
       }
    }
