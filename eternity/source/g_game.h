@@ -90,6 +90,7 @@ extern int  key_spy;
 extern int  key_pause;
 extern int  destination_keys[MAXPLAYERS];
 extern int  autorun;           // always running?                   // phares
+extern int  runiswalk;
 extern int  automlook;
 extern int  invert_mouse;
 extern int  bfglook;

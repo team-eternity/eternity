@@ -130,8 +130,6 @@ int action_console_backspace;
 // Handler Functions
 //
 
-// haleyjd: removed autorun
-
 //
 // Actions List
 //

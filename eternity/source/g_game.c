@@ -131,6 +131,7 @@ wbstartstruct_t wminfo;               // parms for world map / intermission
 boolean         haswolflevels = false;// jff 4/18/98 wolf levels present
 byte            *savebuffer;
 int             autorun = false;      // always running?          // phares
+int             runiswalk = false;    // haleyjd 08/23/09
 int             automlook = false;
 int             bfglook = 1;
 int             smooth_turning = 0;   // sf
@@ -150,7 +151,6 @@ int             mouseAccel_type = 0;
 // haleyjd: these keys are not dynamically rebindable
 
 int key_escape = KEYD_ESCAPE;
-//int key_autorun;             
 int key_chat;
 int key_help = KEYD_F1;
 int key_spy;
@@ -257,7 +257,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
 
    strafe = action_strafe;
-   speed = autorun || action_speed;
+   //speed = autorun || action_speed;
+   speed = (autorun ? !(runiswalk && action_speed) : action_speed);
    
    forward = side = 0;
 
@@ -810,27 +811,6 @@ boolean G_Responder(event_t* ev)
       action_autorun = 0;
       autorun = !autorun;
    }
-   /*
-#ifdef DJGPP
-   // sf: just what _was_ this doing in m_responder anyway?
-   if(ev->type == ev_keydown && ev->data1 == key_autorun) // Autorun
-   {
-      autorun = !autorun;
-      return true;
-   }
-#else
-   if(ev->type == ev_keydown && ev->data1 == key_autorun)
-   {
-      autorun = true;
-      return true;
-   }
-   if(ev->type == ev_keyup && ev->data1 == key_autorun)
-   {
-      autorun = false;
-      return true;
-   }
-#endif
-   */
 
    switch(ev->type)
    {

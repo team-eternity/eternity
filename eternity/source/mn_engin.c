@@ -591,7 +591,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
 
 void MN_DrawMenu(menu_t *menu)
 {
-   int y, m_y;
+   int x, y, m_y;
    int itemnum;
 
    if(!menu) // haleyjd 04/20/03
@@ -730,7 +730,7 @@ void MN_DrawMenu(menu_t *menu)
       case it_runcmd:
          {
             char *key = G_FirstBoundKey("menu_confirm");
-            psnprintf(msgbuffer, 64, "press %s to execute command", key);
+            psnprintf(msgbuffer, 64, "press %s to execute", key);
             helpmsg = msgbuffer;
          }
          break;
@@ -741,7 +741,9 @@ void MN_DrawMenu(menu_t *menu)
          break;
       }
 
-      MN_WriteTextColoured(helpmsg, CR_GOLD, 10, m_y);
+      x = 160 - MN_StringWidth(helpmsg) / 2;
+
+      MN_WriteTextColoured(helpmsg, CR_GOLD, x, m_y);
    }
 
    // haleyjd 10/07/05: draw next/prev messages for menus that

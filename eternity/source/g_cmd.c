@@ -421,6 +421,9 @@ CONSOLE_VARIABLE(startonnewmap, startOnNewMap, 0) {}
 VARIABLE_BOOLEAN(autorun, NULL, onoff);
 CONSOLE_VARIABLE(autorun, autorun, 0) {}
 
+VARIABLE_BOOLEAN(runiswalk, NULL, onoff);
+CONSOLE_VARIABLE(runiswalk, runiswalk, 0) {}
+
 // haleyjd 03/22/09: iwad cvars
 
 VARIABLE_STRING(gi_path_doomsw,  NULL, UL);
@@ -800,6 +803,7 @@ void G_AddCommands(void)
    C_AddCommand(bfg_cloud);
    C_AddCommand(startonnewmap);
    C_AddCommand(autorun);
+   C_AddCommand(runiswalk);
 
    // haleyjd 03/22/09: iwad paths
    C_AddCommand(iwad_doom_shareware);

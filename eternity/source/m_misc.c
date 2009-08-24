@@ -364,6 +364,10 @@ default_t defaults[] =
    // killough 3/6/98: preserve autorun across games
    DEFAULT_INT("autorun", &autorun, NULL, 0, 0, 1, wad_no, "1 to enable autorun"),
 
+   // haleyjd 08/23/09: allow shift to cancel autorun
+   DEFAULT_INT("runiswalk", &runiswalk, NULL, 0, 0, 1, wad_no, 
+               "1 to walk with shift when autorun is enabled"),
+
    // killough 2/21/98: default to 10
    // sf: removed screenblocks, screensize only now - changed values down 3
    DEFAULT_INT("screensize", &screenSize, NULL, 7, 0, 8, wad_no, 
