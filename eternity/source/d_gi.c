@@ -47,11 +47,13 @@
 
 // menu background flats
 #define DOOMMENUBACK "FLOOR4_6"
+#define HACXMENUBACK "CONS1_5"
 #define HTICMENUBACK "FLOOR04"
 
 // credit background flats
 #define DOOMCREDITBK "NUKAGE1"
 #define DM2CREDITBK  "SLIME05"
+#define HACXCREDITBK "SLIME01"
 #define HTICCREDITBK "FLTWAWA1"
 
 // border flats
@@ -611,6 +613,8 @@ static missioninfo_t gmHacx =
    NULL,           // iwadPathOR -- HACX_FIXME
    NULL,           // finaleDataOR
    &menu_old_main, // mainMenuOR
+   HACXMENUBACK,   // menuBackgroundOR
+   HACXCREDITBK,   // creditBackgroundOR
 };
 
 //
@@ -1282,12 +1286,14 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
       mi = &gmUnknown;
 
    // apply overrides
-   OVERRIDE(versionName,   NULL);
-   OVERRIDE(startupBanner, NULL);
-   OVERRIDE(numEpisodes,      0);
-   OVERRIDE(iwadPath,      NULL);
-   OVERRIDE(finaleData,    NULL);
-   OVERRIDE(mainMenu,      NULL);
+   OVERRIDE(versionName,      NULL);
+   OVERRIDE(startupBanner,    NULL);
+   OVERRIDE(numEpisodes,         0);
+   OVERRIDE(iwadPath,         NULL);
+   OVERRIDE(finaleData,       NULL);
+   OVERRIDE(mainMenu,         NULL);
+   OVERRIDE(menuBackground,   NULL);
+   OVERRIDE(creditBackground, NULL);
 }
 
 // EOF

@@ -125,7 +125,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       else
       {
          // haleyjd: get default text color from GameModeInfo
-         color = (byte *) *(GameModeInfo->defTextTrans); // Note: ptr to ptr
+         color = *(GameModeInfo->defTextTrans); // Note: ptr to ptr
       }
    }
    
@@ -248,17 +248,18 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
       {
          // draw character
          if(tl)
-            V_DrawPatchTL(tx, cy, &vbscreen, patch, (char *)color, FTRANLEVEL);
+            V_DrawPatchTL(tx, cy, &vbscreen, patch, color, FTRANLEVEL);
          else
          {
             // haleyjd 10/04/05: text shadowing
             if(shadowChar)
             {
-               char *cm = (char *)(colormaps[0] + 33*256);
-               V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, FRACUNIT*2/3);
+               //char *cm = (char *)(colormaps[0] + 33*256);
+               //V_DrawPatchTL(tx + 2, cy + 2, &vbscreen, patch, cm, FRACUNIT*2/3);
+               V_DrawPatchShadowed(tx, cy, &vbscreen, patch, color, FRACUNIT);
             }
-            
-            V_DrawPatchTranslated(tx, cy, &vbscreen, patch, (char *)color, false);
+            else
+               V_DrawPatchTranslated(tx, cy, &vbscreen, patch, color, false);
          }
       }
       

@@ -44,20 +44,20 @@
 //jff 2/16/98 palette color ranges for translation
 //jff 2/18/98 conversion to palette lookups for speed
 //jff 4/24/98 now pointers to lumps loaded 
-extern char *cr_brick;
-extern char *cr_tan;
-extern char *cr_gray;
-extern char *cr_green;
-extern char *cr_brown;
-extern char *cr_gold;
-extern char *cr_red;
-extern char *cr_blue;
-extern char *cr_blue_status; //killough 2/28/98
-extern char *cr_orange;
-extern char *cr_yellow;
+extern byte *cr_brick;
+extern byte *cr_tan;
+extern byte *cr_gray;
+extern byte *cr_green;
+extern byte *cr_brown;
+extern byte *cr_gold;
+extern byte *cr_red;
+extern byte *cr_blue;
+extern byte *cr_blue_status; //killough 2/28/98
+extern byte *cr_orange;
+extern byte *cr_yellow;
 
 // array of pointers to color translation tables
-extern char *colrngs[];
+extern byte *colrngs[];
 
 // symbolic indices into color translation table pointer array
 typedef enum
@@ -137,28 +137,28 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but applies
 // The given color translation to the patch.
 void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, 
-                           char *outr, boolean flipped);
+                           byte *outr, boolean flipped);
 
 // V_DrawPatchTL
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with the given opacity. If a color translation table is supplied
 // (outr != NULL) the patch is translated as well.
 void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch, 
-                   char *outr, int tl);
+                   byte *outr, int tl);
 
 // V_DrawPatchAdd
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with additive blending of the given amount. If a color translation
 // table is supplied (outr != NULL) the patch is translated as well.
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
-                    char *outr, int tl);
+                    byte *outr, int tl);
 
 // V_DrawPatchShadowed
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch twice, first 2 units to the left and down using colormap 33, and
 // then again at the specified location with the normal parameters.
 void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
-                         char *outr, int tl);
+                         byte *outr, int tl);
 
 
 // V_DrawBlock

@@ -37,6 +37,7 @@
 #include "v_video.h"
 #include "v_patch.h" // haleyjd
 #include "i_video.h"
+#include "d_gi.h"
 
 // Each screen is [SCREENWIDTH*SCREENHEIGHT];
 // SoM: Moved. See cb_video_t
@@ -46,20 +47,20 @@ int  dirtybox[4];
 //jff 2/18/98 palette color ranges for translation
 //jff 4/24/98 now pointers set to predefined lumps to allow overloading
 
-char *cr_brick;
-char *cr_tan;
-char *cr_gray;
-char *cr_green;
-char *cr_brown;
-char *cr_gold;
-char *cr_red;
-char *cr_blue;
-char *cr_blue_status;
-char *cr_orange;
-char *cr_yellow;
+byte *cr_brick;
+byte *cr_tan;
+byte *cr_gray;
+byte *cr_green;
+byte *cr_brown;
+byte *cr_gold;
+byte *cr_red;
+byte *cr_blue;
+byte *cr_blue_status;
+byte *cr_orange;
+byte *cr_yellow;
 
 //jff 4/24/98 initialize this at runtime
-char *colrngs[10];
+byte *colrngs[10];
 
 // Now where did these came from?
 byte gammatable[5][256] =
@@ -163,7 +164,7 @@ int usegamma;
 
 typedef struct {
   const char *name;
-  char **map1, **map2;
+  byte **map1, **map2;
 } crdef_t;
 
 // killough 5/2/98: table-driven approach
@@ -329,7 +330,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 // haleyjd 04/03/04: rewritten for ANYRES patch system
 //
 void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
-                           char *outr, boolean flipped)
+                           byte *outr, boolean flipped)
 {
    PatchInfo pi;
    
@@ -342,7 +343,7 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLATED;   
-      V_SetPatchColrng((byte *)outr);
+      V_SetPatchColrng(outr);
    }
    else
       pi.drawstyle = PSTYLE_NORMAL;
@@ -360,7 +361,7 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
 // haleyjd 04/03/04: rewritten for ANYRES patch system
 // 
 void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
-                  char *outr, int tl)
+                   byte *outr, int tl)
 {
    PatchInfo pi;
 
@@ -384,7 +385,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLTRANSLUC;
-      V_SetPatchColrng((byte *)outr);
+      V_SetPatchColrng(outr);
    }
    else
       pi.drawstyle = PSTYLE_TRANSLUC;
@@ -409,7 +410,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
 // haleyjd 02/08/05
 // 
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
-                    char *outr, int tl)
+                    byte *outr, int tl)
 {
    PatchInfo pi;
 
@@ -429,7 +430,7 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLADD;
-      V_SetPatchColrng((byte *)outr);
+      V_SetPatchColrng(outr);
    }
    else
       pi.drawstyle = PSTYLE_ADD;
@@ -446,19 +447,33 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
    V_DrawPatchInt(&pi, buffer);
 }
 
+static byte blackmap[256];
+
+static void V_BuildBlackMap(void)
+{
+   memset(blackmap, GameModeInfo->blackIndex, 256);
+}
+
 //
 // V_DrawPatchShadowed
 //
-// Convenience routine; draws the patch twice, first using colormap 33,
+// Convenience routine; draws the patch twice, first using a black colormap,
 // and then normally.
 //
 void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
-                         char *outr, int tl)
+                         byte *outr, int tl)
 {
-   char *cm = (char *)(colormaps[0] + 33*256);
+   static boolean firsttime = true;
+   //char *cm = (char *)(colormaps[0] + 33*256);
 
-   V_DrawPatchTL(x + 2, y + 2, buffer, patch, cm,   FRACUNIT*2/3);
-   V_DrawPatchTL(x,     y,     buffer, patch, outr, tl);
+   if(firsttime)
+   {
+      V_BuildBlackMap();
+      firsttime = false;
+   }
+
+   V_DrawPatchTL(x + 2, y + 2, buffer, patch, blackmap, FRACUNIT*2/3);
+   V_DrawPatchTL(x,     y,     buffer, patch, outr,     tl);
 }
 
 //

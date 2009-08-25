@@ -102,7 +102,7 @@ void HU_FragsDrawer(void)
 	 &vbscreen,
 	 W_CacheLumpName("HU_FRGBX", PU_CACHE),
 	 sortedplayers[i]->colormap ?
-            (char *)translationtables[(sortedplayers[i]->colormap - 1)] :
+            translationtables[(sortedplayers[i]->colormap - 1)] :
 	    NULL,
 	 false
 	 );

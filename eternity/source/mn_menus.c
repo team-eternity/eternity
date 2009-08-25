@@ -1169,7 +1169,7 @@ void MN_PlayerDrawer(void)
        &vbscreen,
        patch,
        players[consoleplayer].colormap ?
-          (char *)translationtables[(players[consoleplayer].colormap - 1)] :
+          translationtables[(players[consoleplayer].colormap - 1)] :
           NULL,
        false
       );

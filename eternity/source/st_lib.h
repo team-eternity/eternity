@@ -157,7 +157,7 @@ void STlib_initNum
 
 void STlib_updateNum
 ( st_number_t* n,
-  char *outrng,           //jff 1/16/98 add color translation to digit output
+  byte *outrng,           //jff 1/16/98 add color translation to digit output
   boolean refresh );
 
 
@@ -175,7 +175,7 @@ void STlib_initPercent
 
 void STlib_updatePercent
 ( st_percent_t* per,
-  char *outrng,          //jff 1/16/98 add color translation to percent output
+  byte *outrng,          //jff 1/16/98 add color translation to percent output
   int refresh );
 
 

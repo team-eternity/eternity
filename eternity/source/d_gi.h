@@ -213,12 +213,14 @@ typedef struct missioninfo_s
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
 
-   const char   *versionNameOR;   // if not NULL, overrides name of the gamemode
-   const char   *startupBannerOR; // if not NULL, overrides the startup banner 
-   int           numEpisodesOR;   // if not 0, overrides the number of episodes
-   char        **iwadPathOR;      // if not NULL, overrides iwadpath variable
-   finaledata_t *finaleDataOR;    // if not NULL, overrides finaleData variable
-   menu_t       *mainMenuOR;      // if not NULL, overrides mainMenu variable
+   const char   *versionNameOR;      // if not NULL, overrides name of the gamemode
+   const char   *startupBannerOR;    // if not NULL, overrides the startup banner 
+   int           numEpisodesOR;      // if not 0, overrides number of episodes
+   char        **iwadPathOR;         // if not NULL, overrides iwadPath
+   finaledata_t *finaleDataOR;       // if not NULL, overrides finaleData
+   menu_t       *mainMenuOR;         // if not NULL, overrides mainMenu
+   const char   *menuBackgroundOR;   // if not NULL, overrides menuBackground
+   const char   *creditBackgroundOR; // if not NULL, overrides creditBackground
 } missioninfo_t;
 
 //
@@ -269,7 +271,7 @@ typedef struct gamemodeinfo_s
    giborder_t *border;        // pointer to a game border
 
    // HU / Video / Console stuff
-   char **defTextTrans;       // default text color rng for msgs
+   byte **defTextTrans;       // default text color rng for msgs
    int colorNormal;           // color # for normal messages
    int colorHigh;             // color # for highlighted messages
    int colorError;            // color # for error messages

@@ -515,7 +515,7 @@ typedef struct hu_patchwidget_s
    hu_widget_t widget; // parent widget
 
    int x, y;           // screen location
-   char *color;        // color range translation to use
+   byte *color;        // color range translation to use
    int tl_level;       // translucency level
    char patchname[9];  // patch name -- haleyjd 06/15/06
    patch_t *patch;     // screen patch

@@ -312,7 +312,7 @@ static void MN_SkinDrawer(void)
    // 01/12/04: changed translation handling
    V_DrawPatchTranslated(160, 120, &vbscreen, patch,
       players[consoleplayer].colormap ?
-        (char *)translationtables[(players[consoleplayer].colormap - 1)] :
+        translationtables[(players[consoleplayer].colormap - 1)] :
         NULL, 
       flip);
 }

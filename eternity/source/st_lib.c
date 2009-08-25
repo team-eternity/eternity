@@ -175,7 +175,7 @@ void STlib_drawNum
 //
 void STlib_updateNum
 ( st_number_t*    n,
-  char *outrng, //jff 2/16/98 add color translation to digit output
+  byte *outrng, //jff 2/16/98 add color translation to digit output
   boolean   refresh )
 {
    if(*n->on)
@@ -216,7 +216,7 @@ void STlib_initPercent
 //
 void STlib_updatePercent
 ( st_percent_t*   per,
-  char *outrng,             //jff 2/16/98 add color translation to digit output
+  byte *outrng,             //jff 2/16/98 add color translation to digit output
   int refresh )
 {
    if(refresh || *per->n.on) // killough 2/21/98: fix percents not updated;

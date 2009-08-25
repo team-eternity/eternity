@@ -336,7 +336,7 @@ static void ST_refreshBackground(void)
       {
          V_DrawPatchTranslated(ST_FX, 0, BG, faceback,
             plyr->colormap ?
-               (char *)translationtables[(plyr->colormap - 1)] :
+               translationtables[(plyr->colormap - 1)] :
                NULL, 
             false);
       }
