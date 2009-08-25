@@ -86,7 +86,7 @@ vfont_t *menu_font_normal;
         // gap from variable description to value
 #define GAP 20
 // haleyjd: changed to use gameModeInfo
-#define background_flat (GameModeInfo->menuBackground)
+//#define background_flat (GameModeInfo->menuBackground)
 #define SKULL_HEIGHT 19
 #define BLINK_TIME 8
 
@@ -112,6 +112,10 @@ static short smallptr_dims[2]; // 0 = width, 1 = height
 static int smallptr_idx;
 static int smallptr_dir = 1;
 static int smallptr_coords[2][2];
+
+// haleyjd 08/25/09
+char *mn_background;
+const char *mn_background_flat;
 
 //
 // MN_DrawSmallPtr
@@ -603,7 +607,7 @@ void MN_DrawMenu(menu_t *menu)
    // draw background
 
    if(menu->flags & mf_background)
-      V_DrawBackground(background_flat, &vbscreen);         
+      V_DrawBackground(mn_background_flat, &vbscreen);         
   
    // menu-specific drawer function
 
@@ -822,6 +826,23 @@ int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
 
 static void MN_InitFonts(void);
 
+//
+// MN_SetBackground
+//
+// Called to change the menu background.
+//
+static void MN_SetBackground(void)
+{
+   // TODO: allow BEX string replacement?
+   if(mn_background && mn_background[0] && strcmp(mn_background, "default") &&
+      (W_CheckNumForName)(mn_background, ns_flats) != -1)
+   {
+      mn_background_flat = mn_background;
+   }
+   else
+      mn_background_flat = GameModeInfo->menuBackground;
+}
+
         // init menu
 void MN_Init(void)
 {
@@ -855,8 +876,9 @@ void MN_Init(void)
    if(GameModeInfo->type == Game_Heretic)
       MN_HInitSkull(); // initialize spinning skulls
    
-   MN_InitMenus();   // create menu commands in mn_menus.c
-   MN_InitFonts();   // create menu fonts
+   MN_InitMenus();     // create menu commands in mn_menus.c
+   MN_InitFonts();     // create menu fonts
+   MN_SetBackground(); // set background
 
    // haleyjd 07/03/09: sync up mn_classic_menus
    MN_LinkClassicMenus(mn_classic_menus);
@@ -1866,6 +1888,12 @@ static void MN_ShowContents(void)
 VARIABLE_BOOLEAN(menu_toggleisback, NULL, yesno);
 CONSOLE_VARIABLE(mn_toggleisback, menu_toggleisback, 0) {}
 
+VARIABLE_STRING(mn_background, NULL, 8);
+CONSOLE_VARIABLE(mn_background, mn_background, 0)
+{
+   MN_SetBackground();
+}
+
 extern void MN_AddMenus(void);              // mn_menus.c
 extern void MN_AddMiscCommands(void);       // mn_misc.c
 
@@ -1875,6 +1903,7 @@ void MN_AddCommands(void)
    C_AddCommand(mn_prevmenu);
    C_AddCommand(forceload);
    C_AddCommand(mn_toggleisback);
+   C_AddCommand(mn_background);
    
    MN_AddMenus();               // add commands to call the menus
    MN_AddMiscCommands();

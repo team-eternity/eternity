@@ -63,8 +63,9 @@ void R_PrecacheLevel(void);
 
 // Retrieval.
 // Floor/ceiling opaque texture tiles,
-// lookup by name. For animation?
-int R_FlatNumForName (const char* name);   // killough -- const added
+// lookup by name.
+int R_FlatNumForName(const char *name);   // killough -- const added
+int R_CheckFlatNumForName(const char *name);
 
 // Called by P_Ticker for switches and animations,
 // returns the texture number for the texture name.

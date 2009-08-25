@@ -718,7 +718,7 @@ CONSOLE_VARIABLE(joySens_y, joystickSens_y, 0) {}
 VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
 CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 
-VARIABLE_STRING(i_videomode, &i_default_videomode, UL);
+VARIABLE_STRING(i_videomode, NULL, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
    V_ResetMode();

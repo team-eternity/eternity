@@ -3352,6 +3352,7 @@ static menuitem_t mn_menus_items[] =
    {it_gap},
    {it_info,     FC_GOLD "general"},
    {it_toggle,   "toggle key backs up",    "mn_toggleisback"},
+   {it_runcmd,   "set background...",      "mn_selectflat"},
    {it_gap},
    {it_info,     FC_GOLD "compatibility"},
    {it_toggle,   "use doom's main menu",   "use_traditional_menu"},

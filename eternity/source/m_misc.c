@@ -891,15 +891,20 @@ default_t defaults[] =
    
    DEFAULT_INT("mn_classic_menus",&mn_classic_menus, NULL, 0, 0, 1, wad_yes,
                "1 to enable use of full classic menu emulation"),
+
+   DEFAULT_STR("mn_background", &mn_background, NULL, "default", wad_yes,
+               "menu background"),
    
    DEFAULT_STR("wad_directory", &wad_directory, NULL, ".", wad_no,
                "user's default wad directory"),
    
    DEFAULT_INT("r_columnengine",&r_column_engine_num, NULL, 
-               1, 0, NUMCOLUMNENGINES - 1, wad_no, "0 = normal, 1 = optimized quad cache"),
+               1, 0, NUMCOLUMNENGINES - 1, wad_no, 
+               "0 = normal, 1 = optimized quad cache"),
    
    DEFAULT_INT("r_spanengine",&r_span_engine_num, NULL,
-               0, 0, NUMSPANENGINES - 1, wad_no, "0 = high precision, 1 = low precision"),
+               0, 0, NUMSPANENGINES - 1, wad_no, 
+               "0 = high precision, 1 = low precision"),
    
    DEFAULT_INT("r_detail",&c_detailshift, NULL, 0, 0, 1, wad_no,
                "0 = high detail, 1 = low detail"),

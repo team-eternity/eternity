@@ -1301,7 +1301,6 @@ int level_error = false;
 //
 // killough 4/17/98: changed to use ns_flats namespace
 //
-
 int R_FlatNumForName(const char *name)    // killough -- const added
 {
    int i = (W_CheckNumForName)(name, ns_flats);
@@ -1316,6 +1315,24 @@ int R_FlatNumForName(const char *name)    // killough -- const added
       return -1;
    }
    return (i - firstflat);
+}
+
+//
+// R_CheckFlatNumForName
+//
+// haleyjd 08/25/09
+//
+int R_CheckFlatNumForName(const char *name)
+{
+   int ret;
+   int i = (W_CheckNumForName)(name, ns_flats);
+
+   if(i != -1)
+      ret = i - firstflat;
+   else
+      ret = -1;
+
+   return ret;
 }
 
 //

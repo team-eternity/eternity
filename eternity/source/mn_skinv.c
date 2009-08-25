@@ -282,7 +282,7 @@ static void MN_SkinDrawer(void)
    patch_t *patch;
 
    // draw the normal menu background
-   V_DrawBackground(GameModeInfo->menuBackground, &vbscreen);
+   V_DrawBackground(mn_background_flat, &vbscreen);
 
    // draw instructions and title
    MN_SkinInstructions();

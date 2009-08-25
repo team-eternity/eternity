@@ -223,6 +223,8 @@ extern boolean menu_toggleisback;
 extern const char *mn_fontname;
 extern const char *mn_bigfontname;
 extern const char *mn_normalfontname;
+extern char *mn_background;
+extern const char *mn_background_flat;
 
 #endif
                             

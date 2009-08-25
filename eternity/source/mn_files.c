@@ -44,6 +44,7 @@
 #include "d_io.h"
 #include "m_misc.h"
 #include "mn_engin.h"
+#include "r_data.h"
 #include "s_sound.h"
 #include "v_font.h"
 #include "w_wad.h"
@@ -168,7 +169,7 @@ static const char *mn_filedir;   // directory the files are in
 //
 // Adds a filename to the reallocating filenames array
 //
-static void MN_addFile(char *filename)
+static void MN_addFile(const char *filename)
 {
    if(num_mn_files >= num_mn_files_alloc)
    {
@@ -179,6 +180,25 @@ static void MN_addFile(char *filename)
    }
 
    mn_filelist[num_mn_files++] = strdup(filename);
+}
+
+//
+// MN_findFile
+//
+// Looks for the given file name in the list of filenames.
+// Returns num_mn_files if not found.
+//
+static int MN_findFile(const char *filename)
+{
+   int i;
+
+   for(i = 0; i < num_mn_files; ++i)
+   {
+      if(!strcasecmp(filename, mn_filelist[i]))
+         break;
+   }
+
+   return i;
 }
 
 //
@@ -301,7 +321,7 @@ static void MN_FileDrawer(void)
                                         // single line
 
    // draw a background
-   V_DrawBackground(GameModeInfo->menuBackground, &vbscreen);
+   V_DrawBackground(mn_background_flat, &vbscreen);
 
    // draw box
    V_DrawBox(16, 16, SCREENWIDTH - 32, SCREENHEIGHT - 32);
@@ -608,12 +628,47 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    select_dismiss = false;
 }
 
+CONSOLE_COMMAND(mn_selectflat, 0)
+{
+   int i;
+   int curnum;
+
+   // clear directory
+   MN_clearDirectory();
+
+   MN_addFile("default");
+
+   // run through flats
+   for(i = 0; i < numflats; ++i)
+   {
+      int lumpnum = i + firstflat;
+
+      // size must be exactly 64x64
+      if(w_GlobalDir.lumpinfo[lumpnum]->size == 4096)
+         MN_addFile(w_GlobalDir.lumpinfo[lumpnum]->name);
+   }
+
+   // sort the list
+   MN_sortFiles();
+   
+   selected_item = 0;
+
+   if((curnum = MN_findFile(mn_background)) != num_mn_files)
+      selected_item = curnum;
+   
+   current_menuwidget = &file_selector;
+   help_description = "select background:";
+   variable_name = "mn_background";
+   select_dismiss = false;
+}
+
 void MN_File_AddCommands(void)
 {
    C_AddCommand(dir);
    C_AddCommand(mn_selectwad);
    C_AddCommand(wad_directory);
    C_AddCommand(mn_selectmusic);
+   C_AddCommand(mn_selectflat);
 }
 
 // EOF
