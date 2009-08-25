@@ -738,16 +738,16 @@ static int I_SDLInitSound(void)
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
    {
       printf("Couldn't initialize SDL audio.\n");
-      snd_card = 0;
-      mus_card = 0;
+      nosfxparm   = true;
+      nomusicparm = true;
       return 0;
    }
    
    if(Mix_OpenAudio(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
    {
       printf("Couldn't open audio with desired format.\n");
-      snd_card = 0;
-      mus_card = 0;
+      nosfxparm   = true;
+      nomusicparm = true;
       return 0;
    }
    
