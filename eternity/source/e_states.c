@@ -1310,8 +1310,7 @@ enum
    TOKEN_LPAREN,  // '('
    TOKEN_COMMA,   // ','
    TOKEN_RPAREN,  // ')'
-   TOKEN_STRING,  // string literal
-   TOKEN_TEXT,    // anything else (numbers, words, etc.)
+   TOKEN_TEXT,    // anything else (numbers, strings, words, etc.)
    TOKEN_EOL,     // end of line
    TOKEN_ERROR,   // an error token
 };
@@ -1384,7 +1383,7 @@ static void DoTokenStateScan(tkstate_t *tks)
          tks->state     = TSTATE_DONE;
          break;
       case '"':  // quoted string
-         tks->tokentype = TOKEN_STRING;
+         tks->tokentype = TOKEN_TEXT;
          tks->state     = TSTATE_STRING;
          break;
       case '+':  // plus - used in relative goto statement
@@ -1580,7 +1579,7 @@ static void DoTokenStateString(tkstate_t *tks)
    switch(str[i])
    {
    case '"': // end of string
-      tks->tokentype = TOKEN_STRING;
+      tks->tokentype = TOKEN_TEXT;
       tks->state     = TSTATE_DONE;
       break;
    case '\0': // EOL - error
@@ -1591,6 +1590,7 @@ static void DoTokenStateString(tkstate_t *tks)
    default:
       // add character and continue scanning
       M_QStrPutc(token, str[i]);
+      break;
    }
 }
 
