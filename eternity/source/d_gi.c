@@ -545,6 +545,7 @@ char *gi_path_sosr;
 //
 extern default_or_t HereticDefaultORs;
 
+//=============================================================================
 //
 // Mission Information Structures
 //
@@ -606,15 +607,16 @@ static missioninfo_t gmFinalPlutonia =
 //
 static missioninfo_t gmHacx =
 {
-   pack_hacx,      // id
-   VNAME_HACX,     // versionNameOR
-   BANNER_HACX,    // startupBannerOR
-   0,              // numEpisodesOR
-   NULL,           // iwadPathOR -- HACX_FIXME
-   NULL,           // finaleDataOR
-   &menu_old_main, // mainMenuOR
-   HACXMENUBACK,   // menuBackgroundOR
-   HACXCREDITBK,   // creditBackgroundOR
+   pack_hacx,       // id
+   VNAME_HACX,      // versionNameOR
+   BANNER_HACX,     // startupBannerOR
+   0,               // numEpisodesOR
+   NULL,            // iwadPathOR -- HACX_FIXME
+   NULL,            // finaleDataOR
+   &menu_old_main,  // mainMenuOR
+   HACXMENUBACK,    // menuBackgroundOR
+   HACXCREDITBK,    // creditBackgroundOR
+   CONBACK_DEFAULT, // consoleBackOR
 };
 
 //
@@ -670,6 +672,7 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
    &gmUnknown,       // none - ???
 };
 
+//=============================================================================
 //
 // Game Mode Information Structures
 //
@@ -1294,6 +1297,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(mainMenu,         NULL);
    OVERRIDE(menuBackground,   NULL);
    OVERRIDE(creditBackground, NULL);
+   OVERRIDE(consoleBack,      NULL);
 }
 
 // EOF

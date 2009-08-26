@@ -215,12 +215,13 @@ typedef struct missioninfo_s
 
    const char   *versionNameOR;      // if not NULL, overrides name of the gamemode
    const char   *startupBannerOR;    // if not NULL, overrides the startup banner 
-   int           numEpisodesOR;      // if not 0, overrides number of episodes
+   int           numEpisodesOR;      // if not    0, overrides number of episodes
    char        **iwadPathOR;         // if not NULL, overrides iwadPath
    finaledata_t *finaleDataOR;       // if not NULL, overrides finaleData
    menu_t       *mainMenuOR;         // if not NULL, overrides mainMenu
    const char   *menuBackgroundOR;   // if not NULL, overrides menuBackground
    const char   *creditBackgroundOR; // if not NULL, overrides creditBackground
+   const char   *consoleBackOR;      // if not NULL, overrides consoleBack
 } missioninfo_t;
 
 //
