@@ -153,13 +153,13 @@ static void C_initBackdrop(void)
    {
       if(darken)
       {
-         char *colormap;
+         byte *colormap;
          int clumpnum, csize;
 
          // 07/02/08: for safety we need to use a temporary copy of the colormap
-         // here, and not alter the cache level of the lump. This could cause the
-         // renderer to lose its hold on the colormap if this routine is called 
-         // during gameplay due to a resolution change.
+         // here, and not alter the cache level of the lump. This could cause 
+         // the renderer to lose its hold on the colormap if this routine is 
+         // called during gameplay due to a resolution change.
          clumpnum = W_GetNumForName("COLORMAP");
          csize    = W_LumpLength(clumpnum);
 

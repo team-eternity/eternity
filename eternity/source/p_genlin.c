@@ -283,6 +283,10 @@ int EV_DoGenFloor(line_t *line)
    fd.speed_type   = (value & FloorSpeed) >> FloorSpeedShift;
    fd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
 
+   // 08/25/09: initialize unused fields
+   fd.height_value = 0;
+   fd.speed_value  = 0;
+
    return EV_DoParamFloor(line, line->tag, &fd);
 }
 
@@ -525,6 +529,10 @@ int EV_DoGenCeiling(line_t *line)
    cd.change_model = (value & CeilingModel) >> CeilingModelShift;
    cd.speed_type   = (value & CeilingSpeed) >> CeilingSpeedShift;
    cd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
+
+   // 08/25/09: initialize unused values
+   cd.height_value = 0;
+   cd.speed_value  = 0;
 
    return EV_DoParamCeiling(line, line->tag, &cd);
 }
@@ -925,9 +933,11 @@ int EV_DoGenStairs(line_t *line)
    sd.trigger_type  = (value & TriggerType) >> TriggerTypeShift;
    
    // haleyjd 10/06/05: generalized stairs don't support the following
-   sd.sync_value    = 0;
-   sd.delay_value   = 0;
-   sd.reset_value   = 0;
+   sd.sync_value     = 0;
+   sd.delay_value    = 0;
+   sd.reset_value    = 0;
+   sd.speed_value    = 0;
+   sd.stepsize_value = 0;
 
    rtn = EV_DoParamStairs(line, line->tag, &sd);
 
@@ -1314,7 +1324,7 @@ manual_door:
 //
 int EV_DoGenLockedDoor(line_t *line)
 {
-   doordata_t dd;
+   doordata_t dd = { 0 };
    unsigned value = (unsigned)line->special - GenLockedBase;
 
    // parse the bit fields in the line's special type
@@ -1340,8 +1350,8 @@ int EV_DoGenLockedDoor(line_t *line)
 //
 int EV_DoGenDoor(line_t* line)
 {
-   doordata_t dd;
-   unsigned value = (unsigned)line->special - GenDoorBase;
+   doordata_t dd = { 0 };
+   unsigned int value = (unsigned int)line->special - GenDoorBase;
 
    // parse the bit fields in the line's special type
    
@@ -1433,6 +1443,10 @@ static boolean pspec_Door(line_t *line, mobj_t *thing, int *args,
    // all param doors support alternate light tagging
    dd.usealtlighttag = true;
 
+   // initialize values that aren't used everywhere:
+   dd.delay_value  = 0;
+   dd.topcountdown = 0;
+
    // OdC and CdO doors support wait as third param.
    // pDCDoor has topcountdown as third param
    // pDOdCDoor has delay and countdown as third and fourth
@@ -1517,7 +1531,7 @@ static int fchgdata[7][2] =
 static boolean pspec_Floor(line_t *line, int *args, short special, 
                            int trigger_type)
 {
-   floordata_t fd;
+   floordata_t fd = { 0 };
    int normspec;
 
 #ifdef RANGECHECK
@@ -1668,7 +1682,7 @@ static int cchgdata[7][2] =
 static boolean pspec_Ceiling(line_t *line, int *args, short special, 
                              int trigger_type)
 {
-   ceilingdata_t cd;
+   ceilingdata_t cd = { 0 };
    int normspec;
 
 #ifdef RANGECHECK
@@ -1782,7 +1796,7 @@ static boolean pspec_Ceiling(line_t *line, int *args, short special,
 static boolean pspec_Stairs(line_t *line, int *args, short special, 
                             int trigger_type)
 {
-   stairdata_t sd;
+   stairdata_t sd = { 0 };
 
    sd.trigger_type  = trigger_type;
    sd.direction     = 0;
@@ -1828,7 +1842,7 @@ static boolean pspec_Stairs(line_t *line, int *args, short special,
 //
 static boolean pspec_PolyDoor(int *args, short special)
 {
-   polydoordata_t pdd;
+   polydoordata_t pdd = { 0 };
 
    pdd.polyObjNum = args[0]; // polyobject id
    

@@ -393,7 +393,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
                     int volumeScale, soundattn_e attenuation, boolean loop,
                     schannel_e subchannel)
 {
-   int sep, pitch, o_priority, priority, singularity, cnum, handle;
+   int sep = 0, pitch, o_priority, priority, singularity, cnum, handle;
    int volume = snd_SfxVolume;
    boolean extcamera = false;
    camera_t playercam;
@@ -745,7 +745,9 @@ void S_ResumeSound(void)
 void S_UpdateSounds(const mobj_t *listener)
 {
    int cnum;
-   camera_t playercam; // sf: a camera_t holding the information about the player
+
+   // sf: a camera_t holding the information about the player
+   camera_t playercam = { 0 }; 
 
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)

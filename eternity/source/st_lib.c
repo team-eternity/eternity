@@ -90,7 +90,7 @@ void STlib_initNum
 //
 void STlib_drawNum
 ( st_number_t*  n,
-  char *outrng,        //jff 2/16/98 add color translation to digit output
+  byte *outrng,        //jff 2/16/98 add color translation to digit output
   boolean refresh )
 {
    int   numdigits = n->width;

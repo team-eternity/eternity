@@ -769,6 +769,7 @@ void R_ProjectSprite(mobj_t *thing)
 #ifdef R_LINKEDPORTALS
    vis->sector = thing->subsector->sector - sectors;
 #endif
+   vis->pcolor = 0;
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
@@ -953,6 +954,7 @@ void R_DrawPSprite(pspdef_t *psp)
 #ifdef R_LINKEDPORTALS
    vis->sector = viewplayer->mo->subsector->sector - sectors;
 #endif
+   vis->pcolor = 0;
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
    if(flip)
@@ -1692,7 +1694,7 @@ void R_ProjectParticle(particle_t *particle)
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;
    //vis->translation = NULL;
-   vis->startfrac = particle->color;
+   vis->pcolor = particle->color;
    vis->patch = -1;
    vis->mobjflags = particle->trans;
    vis->mobjflags3 = 0; // haleyjd
@@ -1790,7 +1792,7 @@ void R_DrawParticle(vissprite_t *vis)
    yl = (int)vis->ytop;
    yh = (int)vis->ybottom;
 
-   color = vis->colormap[vis->startfrac];
+   color = vis->colormap[vis->pcolor];
 
    {
       int xcount, ycount, spacing;

@@ -539,7 +539,6 @@ typedef struct vissprite_s
   int x1, x2;
   fixed_t gx, gy;              // for line side calculation
   fixed_t gz, gzt;             // global bottom / top for silhouette clipping
-  fixed_t startfrac;           // horizontal position of x1
   fixed_t xiscale;             // negative if flipped
   fixed_t texturemid;
   int patch;
@@ -565,6 +564,8 @@ typedef struct vissprite_s
   #ifdef R_LINKEDPORTALS
   int    sector; // SoM: sector the sprite is in.
   #endif
+
+  int pcolor; // haleyjd 08/25/09: for particles
 
 } vissprite_t;
 

@@ -1100,7 +1100,7 @@ static hu_patchwidget_t crosshair_widget;
 
 // globals related to the crosshair
 int crosshairs[CROSSHAIRS];
-char *targetcolour, *notargetcolour, *friendcolour;
+byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
 boolean crosshair_hilite; // haleyjd 06/07/05
 char *cross_str[]= { "none", "cross", "angle" }; // for console
@@ -1155,7 +1155,7 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
 {
    int drawx, drawy, h, w;
    hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
-   char *pal = crosshair->color;
+   byte *pal = crosshair->color;
    patch_t *patch;
    
    // haleyjd 03/03/07: don't display while showing a center message
@@ -1202,8 +1202,8 @@ void HU_InitCrossHair(void)
    crosshairs[1] = W_CheckNumForName("CROSS2");
    
    notargetcolour = cr_red;
-   targetcolour = cr_green;
-   friendcolour = cr_blue;
+   targetcolour   = cr_green;
+   friendcolour   = cr_blue;
 
    // set up widget object
    crosshair_widget.color = notargetcolour;
