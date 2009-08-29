@@ -38,6 +38,7 @@
 #include "c_runcmd.h"
 #include "d_main.h"
 #include "d_deh.h"
+#include "d_gi.h"
 #include "g_game.h"
 #include "m_argv.h"
 #include "mn_engin.h"
@@ -764,12 +765,18 @@ void G_LoadDefaults(void)
    // haleyjd 03/15/03: fix for -cdrom
    // haleyjd 07/03/04: FIXME: doesn't work for linux
    // haleyjd 11/23/06: use basegamepath
+   // haleyjd 08/29/09: allow use_doom_config override
 #ifdef EE_CDROM_SUPPORT
    if(cdrom_mode)
       psnprintf(temp, len, "%s", "c:/doomdata/keys.csc");
    else
 #endif
-      psnprintf(temp, len, "%s/keys.csc", basegamepath);
+   {
+      if(GameModeInfo->type == Game_DOOM && use_doom_config)
+         psnprintf(temp, len, "%s/doom/keys.csc", basepath);
+      else
+         psnprintf(temp, len, "%s/keys.csc", basegamepath);
+   }
    
    cfg_file = strdup(temp);
 

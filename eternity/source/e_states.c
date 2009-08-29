@@ -1212,8 +1212,8 @@ void E_ProcessStateDeltas(cfg_t *cfg)
           <action> := <name>
                     | <name> '(' <arglist> ')'
             <name> := [A-Za-z0-9_]+
-              <arglist> := <arg> ',' <arglist> | <arg> | nil
-                <arg> := "string" | number
+            <arglist> := <arg> ',' <arglist> | <arg> | nil
+              <arg> := "string" | number
 */
 
 /*
