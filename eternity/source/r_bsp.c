@@ -1374,9 +1374,16 @@ static void R_AddLine(seg_t *line)
       seg.backsec = NULL;
    seg.line = line;
 
+   // haleyjd: TEST
+   if(seg.frontsec == seg.backsec &&
+      seg.frontsec->ceilingpic == skyflatnum &&
+      seg.frontsec->ceilingheight == seg.frontsec->floorheight)
+      seg.backsec = NULL;
+
    // If the frontsector is closed, don't render the line!
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
+
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       seg.frontsec->ceilingpic != skyflatnum &&
@@ -1388,7 +1395,7 @@ static void R_AddLine(seg_t *line)
       return;
 
    // Reject empty two-sided lines used for line specials.
-   if(seg.backsec && seg.frontsec 
+   if(seg.backsec && seg.frontsec
       && seg.backsec->ceilingpic == seg.frontsec->ceilingpic 
       && seg.backsec->floorpic   == seg.frontsec->floorpic
       && seg.backsec->lightlevel == seg.frontsec->lightlevel 
@@ -1422,8 +1429,7 @@ static void R_AddLine(seg_t *line)
       && seg.backsec->f_slope == seg.frontsec->f_slope
       && seg.backsec->c_slope == seg.frontsec->c_slope
       )
-      return;
-      
+      return;      
 
    // The first step is to do calculations for the entire wall seg, then
    // send the wall to the clipping functions.
@@ -1599,7 +1605,7 @@ static void R_AddLine(seg_t *line)
 
    seg.f_portalignore = seg.c_portalignore = false;
 
-   if(!seg.backsec)
+   if(!seg.backsec) 
    {
       seg.twosided = false;
       seg.toptex   = seg.bottomtex = 0;
