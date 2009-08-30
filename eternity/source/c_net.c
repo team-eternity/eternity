@@ -139,7 +139,7 @@ void C_SendCmd(int dest, int cmdnum, char *s,...)
    if(!netgame || demoplayback)
    {
       cmdsrc = consoleplayer;
-      cmdtype = c_netcmd;
+      cmdtype = c_typed;      // local commands are typed, not sent
       C_RunCommand(c_netcmds[cmdnum], s);
       return;
    }
@@ -219,6 +219,7 @@ void C_DealWithChar(unsigned char c, int source)
          {
             cmdsrc = source;
             cmdtype = c_netcmd;
+
             // the first byte is the command num
             netcmdnum = *(incomingmsg[source].buffer);
             

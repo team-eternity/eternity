@@ -569,7 +569,16 @@ static char *C_ValueForDefine(variable_t *variable, char *s)
    
    return s;
 }
-        // set a variable
+
+// haleyjd 08/30/09: local-origin netcmds need love too
+#define cmd_setdefault \
+   (cmdtype == c_typed || (cmdtype == c_netcmd && cmdsrc == consoleplayer))
+
+//
+// C_SetVariable
+//
+// Set a variable.
+//
 static void C_SetVariable(command_t *command)
 {
    variable_t* variable;
@@ -650,14 +659,14 @@ static void C_SetVariable(command_t *command)
       {
       case vt_int:
          *(int*)variable->variable = atoi(c_argv[0]);
-         if(variable->v_default && cmdtype != c_menu)  // default
+         if(variable->v_default && cmd_setdefault)  // default
             *(int*)variable->v_default = atoi(c_argv[0]);
          break;
          
       case vt_string:
          free(*(char**)variable->variable);
          *(char**)variable->variable = strdup(c_argv[0]);
-         if(variable->v_default && cmdtype != c_menu)  // default
+         if(variable->v_default && cmd_setdefault)  // default
          {
             free(*(char**)variable->v_default);
             *(char**)variable->v_default = strdup(c_argv[0]);
@@ -668,7 +677,7 @@ static void C_SetVariable(command_t *command)
          // haleyjd 03/13/06: static strings
          memset(variable->variable, 0, variable->max+1);
          strcpy((char *)variable->variable, c_argv[0]);
-         if(variable->v_default && cmdtype != c_netcmd)
+         if(variable->v_default && cmd_setdefault)
          {
             memset(variable->v_default, 0, variable->max+1);
             strcpy((char *)variable->v_default, c_argv[0]);
