@@ -68,12 +68,31 @@ void P_InitSwitchList(void)
    int i, index = 0;
    int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
+   lumpinfo_t *lump;
+   int lumpnum;
 
    episode = GameModeInfo->switchEpisode;
 
-   //jff 3/23/98 read the switch table from a predefined lump             
+   //jff 3/23/98 read the switch table from a predefined lump
+
+   // haleyjd 08/29/09: run down the hash chain for SWITCHES
+   lump = w_GlobalDir.lumpinfo[W_LumpNameHash("SWITCHES") % 
+                               (unsigned)w_GlobalDir.numlumps];   
+   
+   for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
+   {
+      lump = w_GlobalDir.lumpinfo[lumpnum];
+
+      // look for a lump which is of a possibly good size
+      if((lump->size % sizeof(switchlist_t)) == 0)
+         break;
+   }
+
+   if(lumpnum < 0)
+      I_Error("P_InitSwitchList: missing SWITCHES lump\n");
+
    alphSwitchList = 
-      (switchlist_t *)W_CacheLumpName("SWITCHES", PU_STATIC);
+      (switchlist_t *)W_CacheLumpNum(lumpnum, PU_STATIC);
 
    for(i = 0; ; i++)
    {

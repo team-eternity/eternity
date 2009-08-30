@@ -2670,13 +2670,15 @@ CONSOLE_COMMAND(mn_weapons, 0)
 
 extern menu_t menu_compat1;
 extern menu_t menu_compat2;
+extern menu_t menu_compat3;
 
 // table of contents arrays
 
 static const char *mn_compat_contents[] =
 {
    "players / simulation",
-   "monster ai / maps",
+   "monster ai",
+   "maps",
    NULL
 };
 
@@ -2684,6 +2686,7 @@ static menu_t *mn_compat_pages[] =
 {
    &menu_compat1,
    &menu_compat2,
+   &menu_compat3,
    NULL
 };
 
@@ -2723,6 +2726,12 @@ static menuitem_t mn_compat2_items[] =
    {it_toggle, "monsters randomly walk off lifts",          "comp_staylift"},
    {it_toggle, "monsters get stuck on door tracks",         "comp_doorstuck"},
    {it_toggle, "monsters do not give up pursuit",           "comp_pursuit"},
+   {it_end}
+};
+
+static menuitem_t mn_compat3_items[] =
+{
+   {it_title,  FC_GOLD "compatibility", NULL, "m_compat"},
    {it_gap},
    {it_info,   FC_GOLD "maps",       NULL, NULL, MENUITEM_CENTERED},
    {it_toggle, "turbo doors make two closing sounds",       "comp_blazing"},
@@ -2731,6 +2740,7 @@ static menuitem_t mn_compat2_items[] =
    {it_toggle, "use doom's floor motion behavior",          "comp_floors"},
    {it_toggle, "use doom's linedef trigger model",          "comp_model"},
    {it_toggle, "line effects work on sector tag 0",         "comp_zerotags"},
+   {it_toggle, "one-time line effects can break",           "comp_special"},
    {it_end}
 };
 
@@ -2750,9 +2760,23 @@ menu_t menu_compat1 =
 menu_t menu_compat2 =
 {
    mn_compat2_items,    // items
-   &menu_compat1, NULL, // pages
+   &menu_compat1,       // prev page
+   &menu_compat3,       // next page
    &menu_compat1,       // rootpage
    270, 5,              // x,y
+   3,                   // starting item
+   mf_background,       // full screen
+   NULL,                // no drawer
+   mn_compat_contents,  // TOC arrays
+   mn_compat_pages,
+};
+
+menu_t menu_compat3 =
+{
+   mn_compat3_items,    // items
+   &menu_compat2, NULL, // pages
+   &menu_compat1,       // rootpage
+   270, 5,              // x, y
    3,                   // starting item
    mf_background,       // full screen
    NULL,                // no drawer

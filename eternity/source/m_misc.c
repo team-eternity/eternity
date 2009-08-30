@@ -484,6 +484,9 @@ default_t defaults[] =
    
    DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
                1, 0, 1, wad_yes, "Tracer shots cannot hit the floor or ceiling"),
+
+   DEFAULT_INT("comp_special", &default_comp[comp_special], &comp[comp_special],
+               0, 0, 1, wad_yes, "One-time line specials are cleared on failure"),
    
 
    // For key bindings, the values stored in the key_* variables       // phares

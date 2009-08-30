@@ -1161,6 +1161,18 @@ void P_StartLineScript(line_t *line, mobj_t *thing)
 /////////////////////////////////////////////////////////////////////////
 
 //
+// P_ClearSwitchOnFail
+//
+// haleyjd 08/29/09: Replaces demo_compatibility checks for clearing 
+// W1/S1/G1 line actions on action failure, because it makes some maps
+// unplayable if it is disabled unconditionally outside of demos.
+//
+d_inline static boolean P_ClearSwitchOnFail(void)
+{
+   return demo_compatibility || (demo_version >= 335 && comp[comp_special]);
+}
+
+//
 // P_CrossSpecialLine - Walkover Trigger Dispatcher
 //
 // Called every time a thing origin is about
@@ -1351,131 +1363,131 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
 
    case 2:
       // Open Door
-      if(EV_DoDoor(line,doorOpen) || demo_compatibility)
+      if(EV_DoDoor(line,doorOpen) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 3:
       // Close Door
-      if(EV_DoDoor(line,doorClose) || demo_compatibility)
+      if(EV_DoDoor(line,doorClose) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 4:
       // Raise Door
-      if(EV_DoDoor(line,doorNormal) || demo_compatibility)
+      if(EV_DoDoor(line,doorNormal) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 5:
       // Raise Floor
-      if(EV_DoFloor(line,raiseFloor) || demo_compatibility)
+      if(EV_DoFloor(line,raiseFloor) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 6:
       // Fast Ceiling Crush & Raise
-      if(EV_DoCeiling(line,fastCrushAndRaise) || demo_compatibility)
+      if(EV_DoCeiling(line,fastCrushAndRaise) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 8:
       // Build Stairs
-      if(EV_BuildStairs(line,build8) || demo_compatibility)
+      if(EV_BuildStairs(line,build8) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 10:
       // PlatDownWaitUp
-      if(EV_DoPlat(line,downWaitUpStay,0) || demo_compatibility)
+      if(EV_DoPlat(line,downWaitUpStay,0) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 12:
       // Light Turn On - brightest near
-      if(EV_LightTurnOn(line,0) || demo_compatibility)
+      if(EV_LightTurnOn(line,0) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 13:
       // Light Turn On 255
-      if(EV_LightTurnOn(line,255) || demo_compatibility)
+      if(EV_LightTurnOn(line,255) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 16:
       // Close Door 30
-      if(EV_DoDoor(line,close30ThenOpen) || demo_compatibility)
+      if(EV_DoDoor(line,close30ThenOpen) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 17:
       // Start Light Strobing
-      if(EV_StartLightStrobing(line) || demo_compatibility)
+      if(EV_StartLightStrobing(line) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 19:
       // Lower Floor
-      if(EV_DoFloor(line,lowerFloor) || demo_compatibility)
+      if(EV_DoFloor(line,lowerFloor) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 22:
       // Raise floor to nearest height and change texture
-      if(EV_DoPlat(line,raiseToNearestAndChange,0) || demo_compatibility)
+      if(EV_DoPlat(line,raiseToNearestAndChange,0) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 25:
       // Ceiling Crush and Raise
-      if(EV_DoCeiling(line,crushAndRaise) || demo_compatibility)
+      if(EV_DoCeiling(line,crushAndRaise) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 30:
       // Raise floor to shortest texture height
       //  on either side of lines.
-      if(EV_DoFloor(line,raiseToTexture) || demo_compatibility)
+      if(EV_DoFloor(line,raiseToTexture) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 35:
       // Lights Very Dark
-      if(EV_LightTurnOn(line,35) || demo_compatibility)
+      if(EV_LightTurnOn(line,35) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 36:
       // Lower Floor (TURBO)
-      if(EV_DoFloor(line,turboLower) || demo_compatibility)
+      if(EV_DoFloor(line,turboLower) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 37:
       // LowerAndChange
-      if(EV_DoFloor(line,lowerAndChange) || demo_compatibility)
+      if(EV_DoFloor(line,lowerAndChange) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 38:
       // Lower Floor To Lowest
-      if(EV_DoFloor(line, lowerFloorToLowest) || demo_compatibility)
+      if(EV_DoFloor(line, lowerFloorToLowest) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 39:
       // TELEPORT! //jff 02/09/98 fix using up with wrong side crossing
-      if(EV_Teleport(line, side, thing) || demo_compatibility)
+      if(EV_Teleport(line, side, thing) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 40:
       // RaiseCeilingLowerFloor
-      if(demo_compatibility)
+      if(P_ClearSwitchOnFail())
       {
-         EV_DoCeiling( line, raiseToHighest );
-         EV_DoFloor( line, lowerFloorToLowest ); //jff 02/12/98 doesn't work
+         EV_DoCeiling(line, raiseToHighest);
+         EV_DoFloor(line, lowerFloorToLowest); //jff 02/12/98 doesn't work
          line->special = 0;
       }
       else if(EV_DoCeiling(line, raiseToHighest))
@@ -1484,7 +1496,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
 
    case 44:
       // Ceiling Crush
-      if(EV_DoCeiling(line, lowerAndCrush) || demo_compatibility)
+      if(EV_DoCeiling(line, lowerAndCrush) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
@@ -1497,79 +1509,79 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
 
    case 53:
       // Perpetual Platform Raise
-      if(EV_DoPlat(line,perpetualRaise,0) || demo_compatibility)
+      if(EV_DoPlat(line,perpetualRaise,0) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 54:
       // Platform Stop
-      if(EV_StopPlat(line) || demo_compatibility)
+      if(EV_StopPlat(line) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 56:
       // Raise Floor Crush
-      if(EV_DoFloor(line,raiseFloorCrush) || demo_compatibility)
+      if(EV_DoFloor(line,raiseFloorCrush) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 57:
       // Ceiling Crush Stop
-      if(EV_CeilingCrushStop(line) || demo_compatibility)
+      if(EV_CeilingCrushStop(line) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 58:
       // Raise Floor 24
-      if(EV_DoFloor(line,raiseFloor24) || demo_compatibility)
+      if(EV_DoFloor(line,raiseFloor24) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
       
    case 59:
       // Raise Floor 24 And Change
-      if(EV_DoFloor(line,raiseFloor24AndChange) || demo_compatibility)
+      if(EV_DoFloor(line,raiseFloor24AndChange) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
       
    case 100:
       // Build Stairs Turbo 16
-      if(EV_BuildStairs(line,turbo16) || demo_compatibility)
+      if(EV_BuildStairs(line,turbo16) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 104:
       // Turn lights off in sector(tag)
-      if(EV_TurnTagLightsOff(line) || demo_compatibility)
+      if(EV_TurnTagLightsOff(line) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 108:
       // Blazing Door Raise (faster than TURBO!)
-      if(EV_DoDoor(line,blazeRaise) || demo_compatibility)
+      if(EV_DoDoor(line,blazeRaise) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
       
    case 109:
       // Blazing Door Open (faster than TURBO!)
-      if(EV_DoDoor (line,blazeOpen) || demo_compatibility)
+      if(EV_DoDoor (line,blazeOpen) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
       
    case 110:
       // Blazing Door Close (faster than TURBO!)
-      if(EV_DoDoor (line,blazeClose) || demo_compatibility)
+      if(EV_DoDoor (line,blazeClose) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
       
    case 119:
       // Raise floor to nearest surr. floor
-      if(EV_DoFloor(line,raiseFloorToNearest) || demo_compatibility)
+      if(EV_DoFloor(line,raiseFloorToNearest) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
    case 121:
       // Blazing PlatDownWaitUpStay
-      if(EV_DoPlat(line,blazeDWUS,0) || demo_compatibility)
+      if(EV_DoPlat(line,blazeDWUS,0) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
       
@@ -1583,19 +1595,19 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
    case 125:
       // TELEPORT MonsterONLY
       if(!thing->player &&
-         (EV_Teleport(line, side, thing) || demo_compatibility))
+         (EV_Teleport(line, side, thing) || P_ClearSwitchOnFail()))
          line->special = 0;
       break;
       
    case 130:
       // Raise Floor Turbo
-      if(EV_DoFloor(line,raiseFloorTurbo) || demo_compatibility)
+      if(EV_DoFloor(line,raiseFloorTurbo) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
       
    case 141:
       // Silent Ceiling Crush & Raise
-      if(EV_DoCeiling(line,silentCrushAndRaise) || demo_compatibility)
+      if(EV_DoCeiling(line,silentCrushAndRaise) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
@@ -2251,7 +2263,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
    {
    case 24:
       // 24 G1 raise floor to highest adjacent
-      if(EV_DoFloor(line,raiseFloor) || demo_compatibility)
+      if(EV_DoFloor(line,raiseFloor) || P_ClearSwitchOnFail())
          P_ChangeSwitchTexture(line,0,0);
       break;
 
@@ -2263,7 +2275,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
       
    case 47:
       // 47 G1 raise floor to nearest and change texture and type
-      if(EV_DoPlat(line,raiseToNearestAndChange,0) || demo_compatibility)
+      if(EV_DoPlat(line,raiseToNearestAndChange,0) || P_ClearSwitchOnFail())
          P_ChangeSwitchTexture(line,0,0);
       break;
       

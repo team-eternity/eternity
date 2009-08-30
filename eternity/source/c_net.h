@@ -92,6 +92,7 @@ enum
   netcmd_comp_23,   //          thing heights fix
   netcmd_comp_24,   //          extended z clipping
   netcmd_comp_25,   //          plane shooting
+  netcmd_comp_26,   //          special failure
   NUMNETCMDS,
 };
 
