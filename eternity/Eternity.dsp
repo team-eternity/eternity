@@ -766,6 +766,32 @@ SOURCE=.\Source\mn_skinv.c
 # Begin Group "Mn_ Headers"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\mn_emenu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_engin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\mn_files.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_htic.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_menus.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\mn_misc.h
+# End Source File
+# End Group
+# End Group
 # Begin Group "P_"
 
 # PROP Default_Filter ""
@@ -1007,32 +1033,6 @@ SOURCE=.\source\p_xenemy.h
 # Begin Source File
 
 SOURCE=.\source\polyobj.h
-# End Source File
-# End Group
-# End Group
-# Begin Source File
-
-SOURCE=.\source\mn_emenu.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_engin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\source\mn_files.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_htic.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_menus.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\mn_misc.h
 # End Source File
 # End Group
 # End Group
