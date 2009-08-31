@@ -353,7 +353,7 @@ portal_t *R_GetSkyBoxPortal(mobj_t *camera)
 // Either finds an existing horizon portal matching the parameters,
 // or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, 
+portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 
                              short *floorlight, short *ceilinglight, 
                              fixed_t *floorxoff, fixed_t *flooryoff, 
@@ -407,7 +407,7 @@ portal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic,
 // Either finds a plane portal matching the parameters, or creates a
 // new one. Used in p_spec.c.
 //
-portal_t *R_GetPlanePortal(short *pic, fixed_t *delta, 
+portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, 
                            short *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff,
                            float *baseangle, float *angle)

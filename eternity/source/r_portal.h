@@ -83,7 +83,7 @@ typedef struct
 
 typedef struct
 {
-   short   *floorpic, *ceilingpic;
+   int     *floorpic, *ceilingpic;
    fixed_t *floorz, *ceilingz;
    short   *floorlight, *ceilinglight;
    fixed_t *floorxoff, *flooryoff;
@@ -97,7 +97,7 @@ typedef struct
 
 typedef struct
 {
-   short   *pic;
+   int     *pic;
    fixed_t *delta;
    short   *lightlevel;
    fixed_t *xoff, *yoff;
@@ -132,7 +132,7 @@ portal_t *R_GetSkyBoxPortal(mobj_t *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum);
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
 
-portal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic, 
+portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 
                              short *floorlight, short *ceilinglight, 
                              fixed_t *floorxoff, fixed_t *flooryoff, 
@@ -140,7 +140,7 @@ portal_t *R_GetHorizonPortal(short *floorpic, short *ceilingpic,
                              float *floorbaseangle, float *floorangle,
                              float *ceilingbaseangle, float *ceilingangle);
 
-portal_t *R_GetPlanePortal(short *pic, fixed_t *delta, short *lightlevel, 
+portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, short *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
                            float *angle);
 

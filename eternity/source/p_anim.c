@@ -38,12 +38,12 @@
 #include "p_setup.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "p_anim.h"
 #include "p_info.h"
 #include "a_small.h"
 
 int NextLightningFlash;
 int LightningFlash;
-int *LightningLightLevels;
 int LevelSky;
 int LevelTempSky;
 
@@ -66,13 +66,9 @@ void P_AnimateSurfaces(void)
    if(LevelInfo.hasLightning)
    {
       if(!NextLightningFlash || LightningFlash)
-      {
          P_LightningFlash();
-      }
       else
-      { 
          NextLightningFlash--;
-      }
    }
 }
 
@@ -80,93 +76,81 @@ static void P_LightningFlash(void)
 {
    int i;
    sector_t *tempSec;
-   int *tempLight;
    boolean foundSec;
    int flashLight;
 
    if(LightningFlash)
    {
       LightningFlash--;
+
       if(LightningFlash)
       {
-         tempLight = LightningLightLevels;
-         tempSec = sectors;
-         for(i=0; i<numsectors; i++, tempSec++)
+         for(i = 0; i < numsectors; i++)
          {
-            if(tempSec->ceilingpic == skyflatnum ||
-               tempSec->ceilingpic == sky2flatnum)
+            tempSec = &sectors[i];
+
+            if(tempSec->intflags & SIF_SKY &&
+               tempSec->oldlightlevel < tempSec->lightlevel - 4)
             {
-               if(*tempLight < tempSec->lightlevel-4)
-               {
-                  tempSec->lightlevel -= 4;
-               }
-               tempLight++;
+               tempSec->lightlevel -= 4;
             }
          }
       }
       else
       {
-         tempLight = LightningLightLevels;
-         tempSec = sectors;
-         for(i=0; i<numsectors; i++, tempSec++)
+         for(i = 0; i < numsectors; i++)
          {
-            if(tempSec->ceilingpic == skyflatnum ||
-               tempSec->ceilingpic == sky2flatnum)
-            {
-               tempSec->lightlevel = *tempLight;
-               tempLight++;
-            }
+            tempSec = &sectors[i];
+
+            if(tempSec->intflags & SIF_SKY)
+               tempSec->lightlevel = tempSec->oldlightlevel;
          }
+
          if(LevelSky != -1 && LevelTempSky != -1)
-         {
             skytexture = LevelSky;
-         }
       }
-      return;
    }
-   LightningFlash = (P_Random(pr_lightning)&7)+8;
-   flashLight = 200+(P_Random(pr_lightning)&31);
-   tempSec = sectors;
-   tempLight = LightningLightLevels;
-   foundSec = false;
-   for(i=0; i<numsectors; i++, tempSec++)
+   else
    {
-      if(tempSec->ceilingpic == skyflatnum ||
-         tempSec->ceilingpic == sky2flatnum)
+      LightningFlash = (P_Random(pr_lightning) & 7) + 8;
+      flashLight     = 200 + (P_Random(pr_lightning) & 31);
+      
+      foundSec = false;
+
+      for(i = 0; i < numsectors; i++)
       {
-         *tempLight = tempSec->lightlevel;
-         tempSec->lightlevel = flashLight;
-         if(tempSec->lightlevel < *tempLight)
+         tempSec = &sectors[i];
+
+         if(tempSec->intflags & SIF_SKY)
          {
-            tempSec->lightlevel = *tempLight;
+            tempSec->oldlightlevel = tempSec->lightlevel;
+            tempSec->lightlevel    = flashLight;
+
+            if(tempSec->lightlevel < tempSec->oldlightlevel)
+               tempSec->lightlevel = tempSec->oldlightlevel;
+
+            foundSec = true;
          }
-         tempLight++;
-         foundSec = true;
       }
-   }
-   if(foundSec)
-   {
-      if(LevelSky != -1 && LevelTempSky != -1)
+
+      if(foundSec)
       {
-         skytexture = LevelTempSky;
+         if(LevelSky != -1 && LevelTempSky != -1)
+            skytexture = LevelTempSky;
+
+         S_StartSound(NULL, sfx_thundr);
       }
-      S_StartSound(NULL, sfx_thundr);
-   }
-   if(!NextLightningFlash)
-   {
-      if(P_Random(pr_lightning) < 50)
+
+      if(!NextLightningFlash)
       {
-         NextLightningFlash = (P_Random(pr_lightning)&15)+16;
-      }
-      else
-      {
-         if(P_Random(pr_lightning) < 128 && !(leveltime&32))
-         {
-            NextLightningFlash = ((P_Random(pr_lightning)&7)+2)*35;
-         }
+         if(M_Random() < 50)
+            NextLightningFlash = (M_Random() & 15) + 16;
          else
          {
-            NextLightningFlash = ((P_Random(pr_lightning)&15)+5)*35;
+            if(M_Random() < 128 && !(leveltime & 32))
+               NextLightningFlash = ((M_Random() & 7) + 2) * 35;
+            else
+               NextLightningFlash = ((M_Random() & 15) + 5) * 35;
          }
       }
    }
@@ -182,38 +166,21 @@ void P_ForceLightning(void)
 //
 // Called from P_SetupLevel
 //
-// FIXME: array model is space-inefficient;
-// could be chained through the sectors array
-//
 void P_InitLightning(void)
-{
-   int i;
-   int secCount;
-   
-   if(LevelInfo.hasLightning == false)
-   {
+{  
+   if(!LevelInfo.hasLightning)
       LightningFlash = 0;
-      return;
-   }
-   
-   LevelSky = skytexture;
-   
-   if(LevelInfo.altSkyName)
-      LevelTempSky = R_TextureNumForName(LevelInfo.altSkyName);
    else
-      LevelTempSky = -1;
-
-   LightningFlash = 0;
-   secCount = 0;
-   for(i = 0; i < numsectors; ++i)
    {
-      if(sectors[i].ceilingpic == skyflatnum ||
-         sectors[i].ceilingpic == sky2flatnum)
-      {
-         ++secCount;
-      }
-      LightningLightLevels = (int *)Z_Malloc(secCount*sizeof(int), PU_LEVEL, NULL);
-      NextLightningFlash = ((P_Random(pr_nextflash)&15)+5)*35;
+      LevelSky = skytexture;
+      
+      if(LevelInfo.altSkyName)
+         LevelTempSky = R_TextureNumForName(LevelInfo.altSkyName);
+      else
+         LevelTempSky = -1;
+      
+      LightningFlash = 0;      
+      NextLightningFlash = ((M_Random() & 15) + 5) * 35;
    }
 }
 

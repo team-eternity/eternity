@@ -205,9 +205,8 @@ void P_ExplodeMissile(mobj_t *mo)
    // haleyjd: an attempt at fixing explosions on skies (works!)
    if(demo_version >= 329)
    {
-      if((mo->subsector->sector->ceilingpic == skyflatnum ||
-         mo->subsector->sector->ceilingpic == sky2flatnum) &&
-         mo->z >= mo->subsector->sector->ceilingheight-P_ThingInfoHeight(mo->info))
+      if(mo->subsector->sector->intflags & SIF_SKY &&
+         mo->z >= mo->subsector->sector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
          P_RemoveMobj(mo); // don't explode on the actual sky itself
          return;
@@ -391,8 +390,7 @@ void P_XYMovement(mobj_t* mo)
             // explode a missile
 
             if(tm->ceilingline && tm->ceilingline->backsector &&
-               (tm->ceilingline->backsector->ceilingpic == skyflatnum ||
-                tm->ceilingline->backsector->ceilingpic == sky2flatnum))
+               tm->ceilingline->backsector->intflags & SIF_SKY)
             {
                if (demo_compatibility ||  // killough
                   mo->z > tm->ceilingline->backsector->ceilingheight)
@@ -617,8 +615,7 @@ static void P_ZMovement(mobj_t* mo)
          mo->z = mo->ceilingz - mo->height;
          if(mo->momz > 0)
          {
-            if(mo->subsector->sector->ceilingpic != skyflatnum &&
-               mo->subsector->sector->ceilingpic != sky2flatnum)
+            if(!(mo->subsector->sector->intflags & SIF_SKY))
                mo->momz = -mo->momz;    // always bounce off non-sky ceiling
             else
             {
@@ -664,8 +661,7 @@ static void P_ZMovement(mobj_t* mo)
          if(tm->ceilingline &&
             tm->ceilingline->backsector &&
             (mo->z > tm->ceilingline->backsector->ceilingheight) &&
-            (tm->ceilingline->backsector->ceilingpic == skyflatnum ||
-             tm->ceilingline->backsector->ceilingpic == sky2flatnum))
+            tm->ceilingline->backsector->intflags & SIF_SKY)
          {
             P_RemoveMobj(mo);  // don't explode on skies
          }

@@ -415,16 +415,13 @@ int R_DoorClosed(void)
 
      // preserve a kind of transparent door/lift special effect:
      && (seg.backsec->ceilingheight >= seg.frontsec->ceilingheight ||
-      seg.line->sidedef->toptexture)
+         seg.line->sidedef->toptexture)
 
      && (seg.backsec->floorheight <= seg.frontsec->floorheight ||
-      seg.line->sidedef->bottomtexture)
+         seg.line->sidedef->bottomtexture)
 
      // properly render skies (consider door "open" if both ceilings are sky):
-     && ((seg.backsec->ceilingpic != skyflatnum && 
-          seg.backsec->ceilingpic != sky2flatnum) ||
-         (seg.frontsec->ceilingpic != skyflatnum &&
-          seg.frontsec->ceilingpic != sky2flatnum));
+     && (!(seg.backsec->intflags & SIF_SKY) || !(seg.frontsec->intflags & SIF_SKY));
 }
 
 //
@@ -502,7 +499,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->floor_yoffs = s->floor_yoffs;
 
          // haleyjd 03/13/05: removed redundant if(underwater) check
-         if(s->ceilingpic == skyflatnum || s->ceilingpic == sky2flatnum)
+         if(s->intflags & SIF_SKY)
          {
             tempsec->floorheight   = tempsec->ceilingheight+1;
             tempsec->ceilingpic    = tempsec->floorpic;
@@ -1065,10 +1062,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
                    (seg.low <= seg.top && seg.low2 <= seg.top2) ||
                    (seg.low <= seg.high && seg.low2 <= seg.high2);
 
-   if((seg.frontsec->ceilingpic == skyflatnum ||
-           seg.frontsec->ceilingpic == sky2flatnum) &&
-          (seg.backsec->ceilingpic  == skyflatnum ||
-           seg.backsec->ceilingpic  == sky2flatnum))
+   if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
    {
       seg.top = seg.high;
       seg.top2 = seg.high2;
@@ -1221,10 +1215,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
                    seg.side->bottomtexture == 0);
 
-   if((seg.frontsec->ceilingpic == skyflatnum ||
-           seg.frontsec->ceilingpic == sky2flatnum) &&
-          (seg.backsec->ceilingpic  == skyflatnum ||
-           seg.backsec->ceilingpic  == sky2flatnum))
+   if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
    {
       seg.top = seg.high;
       seg.top2 = seg.high2;
@@ -1376,7 +1367,7 @@ static void R_AddLine(seg_t *line)
 
    // haleyjd: TEST
    if(seg.frontsec == seg.backsec &&
-      seg.frontsec->ceilingpic == skyflatnum &&
+      seg.frontsec->intflags & SIF_SKY &&
       seg.frontsec->ceilingheight == seg.frontsec->floorheight)
       seg.backsec = NULL;
 
@@ -1386,8 +1377,7 @@ static void R_AddLine(seg_t *line)
 
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
-      seg.frontsec->ceilingpic != skyflatnum &&
-      seg.frontsec->ceilingpic != sky2flatnum &&
+      !(seg.frontsec->intflags & SIF_SKY) &&
       !((R_LinkedCeilingActive(seg.frontsec) && 
         viewz > R_CPLink(seg.frontsec)->planez) || 
         (R_LinkedFloorActive(seg.frontsec) && 
@@ -1930,9 +1920,8 @@ static void R_Subsector(int num)
    // SoM: If there is an active portal, forget about the floorplane.
    seg.floorplane = !seg.f_portal && 
      (visible || // killough 3/7/98
-     (seg.frontsec->heightsec != -1 &&
-      (sectors[seg.frontsec->heightsec].ceilingpic == skyflatnum ||
-       sectors[seg.frontsec->heightsec].ceilingpic == sky2flatnum))) ?
+      (seg.frontsec->heightsec != -1 &&
+       sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
      R_FindPlane(seg.frontsec->floorheight, 
                  (seg.frontsec->floorpic == skyflatnum ||
                   seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
@@ -1955,14 +1944,12 @@ static void R_Subsector(int num)
 
    seg.ceilingplane = !seg.c_portal &&
      (visible ||
-     (seg.frontsec->ceilingpic == skyflatnum ||
-      seg.frontsec->ceilingpic == sky2flatnum) ||
+      (seg.frontsec->intflags & SIF_SKY) ||
      (seg.frontsec->heightsec != -1 &&
       (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
        sectors[seg.frontsec->heightsec].floorpic == sky2flatnum))) ?
      R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
-                 (seg.frontsec->ceilingpic == skyflatnum ||
-                  seg.frontsec->ceilingpic == sky2flatnum) &&  // kilough 10/98
+                 (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
                  seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
                  seg.frontsec->ceilingpic,
                  ceilinglightlevel,              // killough 4/11/98

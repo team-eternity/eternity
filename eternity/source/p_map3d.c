@@ -78,8 +78,7 @@ static void P_ZMovementTest(mobj_t *mo)
          mo->z = mo->ceilingz - mo->height;
          if(mo->momz > 0)
          {
-            if(!(mo->subsector->sector->ceilingpic != skyflatnum &&
-                 mo->subsector->sector->ceilingpic != sky2flatnum))
+            if(!(mo->subsector->sector->intflags & SIF_SKY))
                if(mo->flags & MF_MISSILE)
                   return;      // missiles don't bounce off skies
 

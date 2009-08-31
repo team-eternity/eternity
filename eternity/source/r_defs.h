@@ -152,6 +152,12 @@ enum
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
 };
 
+// haleyjd 08/30/09: internal sector flags
+enum
+{
+   SIF_SKY = 0x00000001 // sector is sky
+};
+
 //
 // Slope Structures
 //
@@ -190,8 +196,8 @@ struct sector_s
 {
    fixed_t floorheight;
    fixed_t ceilingheight;
-   short floorpic;
-   short ceilingpic;
+   int     floorpic;
+   int     ceilingpic;
    short lightlevel;
    short special;
    short tag;
@@ -296,6 +302,7 @@ struct sector_s
    // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
    // generalized sector types outside of DOOM-format maps.
    unsigned int flags;
+   unsigned int intflags; // internal flags
    
    // haleyjd 12/28/08: replaces oldspecial hack
    boolean wassecret;
@@ -309,6 +316,9 @@ struct sector_s
    // SoM 5/10/09: Happy birthday to me. Err, Slopes!
    pslope_t *f_slope;
    pslope_t *c_slope;
+
+   // haleyjd 08/30/09 - used by the lightning code
+   short oldlightlevel; 
 };
 
 //

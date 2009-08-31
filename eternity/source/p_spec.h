@@ -771,7 +771,7 @@ typedef struct
   //jff 02/04/98 add these to support ceiling changers
   //jff 3/14/98 add to fix bug in change transfers
   spectransfer_t special; // haleyjd 09/06/07: spectransfer
-  short texture;
+  int texture;
 
   // 1 = up, 0 = waiting, -1 = down
   int direction;
@@ -1284,6 +1284,8 @@ void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s);
 void P_FloorSequence(sector_t *s);
 
 // p_ceilng
+
+void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 
 void P_RemoveActiveCeiling(ceiling_t *ceiling);  //jff 2/22/98
 

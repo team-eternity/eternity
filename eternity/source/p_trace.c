@@ -271,18 +271,14 @@ static boolean P_ShootSky(line_t *li, fixed_t z)
    // don't shoot the sky!
    // don't shoot ceiling portals either
 
-   if(fs->ceilingpic == skyflatnum  ||
-      fs->ceilingpic == sky2flatnum || 
-      fs->c_portal)
+   if(fs->intflags & SIF_SKY || fs->c_portal)
    {      
       if(z > fs->ceilingheight)
          return true;
       
       // it's a sky hack wall
       // fix bullet-eaters -- killough:
-      if(bs && 
-         (bs->ceilingpic == skyflatnum ||
-          bs->ceilingpic == sky2flatnum))
+      if(bs && bs->intflags & SIF_SKY)
       {
          if(demo_compatibility || bs->ceilingheight < z)
             return true;
@@ -490,8 +486,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          else if(z > sidesector->ceilingheight)
          {
             fixed_t pfrac = FixedDiv(sidesector->ceilingheight - trace.z, trace.aimslope);
-            if(sidesector->ceilingpic == skyflatnum ||
-               sidesector->ceilingpic == sky2flatnum) // SoM
+            if(sidesector->intflags & SIF_SKY) // SoM
                return false;
             
             if(demo_version < 333)

@@ -344,6 +344,17 @@ CONSOLE_COMMAND(puke, cf_notnet)
                    players[cmdsrc].mo, NULL, 0, NULL);
 }
 
+CONSOLE_COMMAND(enable_lightning, 0)
+{
+   LevelInfo.hasLightning = true;
+   P_InitLightning();
+}
+
+CONSOLE_COMMAND(thunder, 0)
+{
+   P_ForceLightning();
+}
+
 void P_AddCommands(void)
 {
    C_AddCommand(creator);
@@ -384,6 +395,9 @@ void P_AddCommands(void)
 
    C_AddCommand(spacejump);
    C_AddCommand(puke);
+
+   C_AddCommand(enable_lightning);
+   C_AddCommand(thunder);
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();

@@ -65,6 +65,23 @@ void P_CeilingSequence(sector_t *s, int noiseLevel)
    }
 }
 
+//
+// P_SetSectorCeilingPic
+//
+// haleyjd 08/30/09: Call this routine to set a sector's ceiling pic.
+//
+void P_SetSectorCeilingPic(sector_t *sector, int pic)
+{
+   // clear sky flag
+   sector->intflags &= ~SIF_SKY;
+
+   sector->ceilingpic = pic;
+
+   // reset the sky flag
+   if(pic == skyflatnum || pic == sky2flatnum)
+      sector->intflags |= SIF_SKY;
+}
+
 /////////////////////////////////////////////////////////////////
 //
 // Ceiling action routine and linedef type handler
@@ -124,7 +141,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             //jff 3/14/98 transfer old special field as well
             P_TransferSectorSpecial(ceiling->sector, &(ceiling->special));
          case genCeilingChg:
-            ceiling->sector->ceilingpic = ceiling->texture;
+            P_SetSectorCeilingPic(ceiling->sector, ceiling->texture);
             P_RemoveActiveCeiling(ceiling);
             break;
 
@@ -194,7 +211,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
             //jff add to fix bug in special transfers from changes
             P_TransferSectorSpecial(ceiling->sector, &(ceiling->special));
          case genCeilingChg:
-            ceiling->sector->ceilingpic = ceiling->texture;
+            P_SetSectorCeilingPic(ceiling->sector, ceiling->texture);
             P_RemoveActiveCeiling(ceiling);
             break;
 
@@ -489,7 +506,8 @@ void P_RemoveAllActiveCeilings(void)
    }
 }
 
-// EV_ChangeCeilingTex
+//
+// P_ChangeCeilingTex
 //
 // Changes the ceiling flat of all tagged sectors.
 //
@@ -498,12 +516,12 @@ void P_ChangeCeilingTex(const char *name, int tag)
    int flatnum;
    int secnum = -1;
 
-   flatnum = R_FlatNumForName(name);
+   if((flatnum = R_CheckFlatNumForName(name)) == -1)
+      return;
 
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
-      sectors[secnum].ceilingpic = flatnum;
+      P_SetSectorCeilingPic(&sectors[secnum], flatnum);
 }
-
 
 //----------------------------------------------------------------------------
 //

@@ -1754,7 +1754,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    P_ArchiveSoundSequences();
    P_ArchiveButtons();
    
-   //P_DeNumberObjects();
+   P_DeNumberObjects();
 
    CheckSaveGame(1); // haleyjd
 

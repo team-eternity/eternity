@@ -69,7 +69,7 @@ void P_NumberObjects(void)
 {
    thinker_t *th;
    
-   num_thinkers = 0; //init to 0
+   num_thinkers = 0; // init to 0
    
    // killough 2/14/98:
    // count the number of thinkers, and mark each one with its index, using
@@ -84,16 +84,13 @@ void P_NumberObjects(void)
          th->ordinal = ++num_thinkers;
 }
 
-/*
 void P_DeNumberObjects(void)
 {
-   thinker_t *prev = &thinkercap;
    thinker_t *th;
    
-   for(th = thinkercap.next; th != &thinkercap; prev = th, th = th->next)
-      th->prev = prev;
+   for(th = thinkercap.next; th != &thinkercap; th = th->next)
+      th->ordinal = 0;
 }
-*/
 
 // 
 // P_MobjNum
@@ -195,6 +192,11 @@ void P_UnArchivePlayers(void)
    }
 }
 
+// haleyjd 08/30/09: lightning engine variables
+extern int NextLightningFlash;
+extern int LightningFlash;
+extern int LevelSky;
+extern int LevelTempSky;
 
 //
 // P_ArchiveWorld
@@ -218,14 +220,15 @@ void P_ArchiveWorld(void)
    // haleyjd 03/04/07: must save sector colormap indices
    
    size_t size = 
-      (sizeof(short)*5 + 
+      (sizeof(short)*4 + 
        sizeof(sec->floorheight) + sizeof(sec->ceilingheight) + 
        sizeof(sec->friction) + sizeof(sec->movefactor) + 
        sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap) +
-       sizeof(sec->flags) + sizeof(sec->wassecret) +
+       sizeof(sec->flags) + sizeof(sec->intflags) + sizeof(sec->wassecret) +
        sizeof(sec->damage) + sizeof(sec->damageflags) + 
-       sizeof(sec->damagemask) + sizeof(sec->damagemod))
-      * numsectors + sizeof(short)*3*numlines + 4;
+       sizeof(sec->damagemask) + sizeof(sec->damagemod) +
+       sizeof(sec->ceilingpic) + sizeof(sec->floorpic))
+      * numsectors + sizeof(short)*3*numlines + 4 + 4*sizeof(int);
 
    for(i = 0; i < numlines; ++i)
    {
@@ -269,8 +272,11 @@ void P_ArchiveWorld(void)
       put = (void *)((char *) put + sizeof(sec->bottommap));
 
       // haleyjd 12/28/08: save sector flags, wassecret flag
+      // haleyjd 08/30/09: intflags
       memcpy(put, &sec->flags, sizeof(sec->flags));
       put = (void *)((char *) put + sizeof(sec->flags));
+      memcpy(put, &sec->intflags, sizeof(sec->intflags));
+      put = (void *)((char *) put + sizeof(sec->intflags));
       memcpy(put, &sec->wassecret, sizeof(sec->wassecret));
       put = (void *)((char *) put + sizeof(sec->wassecret));
 
@@ -284,9 +290,14 @@ void P_ArchiveWorld(void)
       memcpy(put, &sec->damagemod, sizeof(sec->damagemod));
       put = (void *)((char *) put + sizeof(sec->damagemod));
 
-      *put++ = sec->floorpic;
-      *put++ = sec->ceilingpic;
+      // haleyjd 08/30/09: save floorpic/ceilingpic as ints
+      memcpy(put, &sec->floorpic, sizeof(sec->floorpic));
+      put = (void *)((char *)put + sizeof(sec->floorpic));
+      memcpy(put, &sec->ceilingpic, sizeof(sec->ceilingpic));
+      put = (void *)((char *)put + sizeof(sec->ceilingpic));
+
       *put++ = sec->lightlevel;
+      *put++ = sec->oldlightlevel; // haleyjd
       *put++ = sec->special;       // needed?   yes -- transfer types
       *put++ = sec->tag;           // needed?   need them -- killough
    }
@@ -320,6 +331,17 @@ void P_ArchiveWorld(void)
          }
       }
    }
+
+   // haleyjd 08/30/09: save state of lightning engine
+   memcpy(put, &NextLightningFlash, sizeof(NextLightningFlash));
+   put = (void *)((char *)put + sizeof(NextLightningFlash));
+   memcpy(put, &LightningFlash, sizeof(LightningFlash));
+   put = (void *)((char *)put + sizeof(LightningFlash));
+   memcpy(put, &LevelSky, sizeof(LevelSky));
+   put = (void *)((char *)put + sizeof(LevelSky));
+   memcpy(put, &LevelTempSky, sizeof(LevelTempSky));
+   put = (void *)((char *)put + sizeof(LevelTempSky));
+
    save_p = (byte *)put;
 }
 
@@ -365,8 +387,11 @@ void P_UnArchiveWorld(void)
       get = (void *)((char *) get + sizeof(sec->bottommap));
 
       // haleyjd 12/28/08: retrieve sector flags, wassecret flag
+      // haleyjd 08/30/09: intflags
       memcpy(&sec->flags, get, sizeof(sec->flags));
       get = (void *)((char *) get + sizeof(sec->flags));
+      memcpy(&sec->intflags, get, sizeof(sec->intflags));
+      get = (void *)((char *) get + sizeof(sec->intflags));
       memcpy(&sec->wassecret, get, sizeof(sec->wassecret));
       get = (void *)((char *) get + sizeof(sec->wassecret));
 
@@ -380,12 +405,18 @@ void P_UnArchiveWorld(void)
       memcpy(&sec->damagemod, get, sizeof(sec->damagemod));
       get = (void *)((char *) get + sizeof(sec->damagemod));
 
-      sec->floorpic     = *get++;
-      sec->ceilingpic   = *get++;
-      sec->lightlevel   = *get++;
-      sec->special      = *get++;
-      sec->tag          = *get++;
-      sec->ceilingdata  = NULL; //jff 2/22/98 now three thinker fields, not two
+      memcpy(&sec->floorpic, get, sizeof(sec->floorpic));
+      get = (void *)((char *) get + sizeof(sec->floorpic));
+      memcpy(&sec->ceilingpic, get, sizeof(sec->ceilingpic));
+      get = (void *)((char *) get + sizeof(sec->ceilingpic));
+
+      sec->lightlevel    = *get++;
+      sec->oldlightlevel = *get++; // haleyjd
+      sec->special       = *get++;
+      sec->tag           = *get++;
+      
+      // jff 2/22/98 now three thinker fields, not two
+      sec->ceilingdata  = NULL;
       sec->floordata    = NULL;
       sec->lightingdata = NULL;
       sec->soundtarget  = NULL;
@@ -422,6 +453,17 @@ void P_UnArchiveWorld(void)
          }
       }
    }
+
+   // haleyjd 08/30/09: save state of lightning engine
+   memcpy(&NextLightningFlash, get, sizeof(NextLightningFlash));
+   get = (void *)((char *) get + sizeof(NextLightningFlash));
+   memcpy(&LightningFlash, get, sizeof(LightningFlash));
+   get = (void *)((char *) get + sizeof(LightningFlash));
+   memcpy(&LevelSky, get, sizeof(LevelSky));
+   get = (void *)((char *) get + sizeof(LevelSky));
+   memcpy(&LevelTempSky, get, sizeof(LevelTempSky));
+   get = (void *)((char *) get + sizeof(LevelTempSky));
+
    save_p = (byte *)get;
 }
 

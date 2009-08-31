@@ -314,8 +314,8 @@ void P_LoadSectors(int lump)
    int  defaultSndSeq;
    
    numsectors = W_LumpLength(lump) / sizeof(mapsector_t);
-   sectors = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
-   data = W_CacheLumpNum(lump, PU_STATIC);
+   sectors    = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
+   data       = W_CacheLumpNum(lump, PU_STATIC);
 
    // haleyjd 09/24/06: determine what the default sound sequence is
    defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
@@ -326,14 +326,16 @@ void P_LoadSectors(int lump)
       const mapsector_t *ms = (mapsector_t *)data + i;
       
       ss->floorheight        = SHORT(ms->floorheight)   << FRACBITS;
-      ss->ceilingheight      = SHORT(ms->ceilingheight) << FRACBITS;
+      ss->ceilingheight      = SHORT(ms->ceilingheight) << FRACBITS;      
       ss->floorpic           = R_FlatNumForName(ms->floorpic);
-      ss->ceilingpic         = R_FlatNumForName(ms->ceilingpic);
       ss->lightlevel         = SHORT(ms->lightlevel);
       ss->special            = SHORT(ms->special);
       ss->tag                = SHORT(ms->tag);
       ss->thinglist          = NULL;
       ss->touching_thinglist = NULL;            // phares 3/14/98
+
+      // haleyjd 08/30/09: set ceiling pic using function
+      P_SetSectorCeilingPic(ss, R_FlatNumForName(ms->ceilingpic));      
 
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
@@ -349,8 +351,7 @@ void P_LoadSectors(int lump)
       // killough 4/4/98: colormaps:
       // haleyjd 03/04/07: modifications for per-sector colormap logic
       ss->bottommap = ss->midmap = ss->topmap =
-         ((ss->ceilingpic == skyflatnum || ss->ceilingpic == sky2flatnum) ?
-          global_fog_index : global_cmap_index);
+         ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
             
       // SoM 9/19/02: Initialize the attached sector list for 3dsides
       ss->c_attached = ss->f_attached = NULL;

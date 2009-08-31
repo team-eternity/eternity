@@ -139,7 +139,7 @@ void C_SendCmd(int dest, int cmdnum, char *s,...)
    if(!netgame || demoplayback)
    {
       cmdsrc = consoleplayer;
-      cmdtype = c_typed;      // local commands are typed, not sent
+      cmdtype = c_netcmd;
       C_RunCommand(c_netcmds[cmdnum], s);
       return;
    }
