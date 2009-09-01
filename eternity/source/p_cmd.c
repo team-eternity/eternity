@@ -38,6 +38,7 @@
 #include "f_wipe.h"
 #include "g_game.h"
 #include "m_random.h"
+#include "p_anim.h"
 #include "p_info.h"
 #include "p_map.h"
 #include "p_mobj.h"

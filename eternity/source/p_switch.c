@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "g_game.h"
@@ -84,7 +85,8 @@ void P_InitSwitchList(void)
       lump = w_GlobalDir.lumpinfo[lumpnum];
 
       // look for a lump which is of a possibly good size
-      if((lump->size % sizeof(switchlist_t)) == 0)
+      if(!strcasecmp(lump->name, "SWITCHES") && 
+         lump->size % sizeof(switchlist_t) == 0)
          break;
    }
 

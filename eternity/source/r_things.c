@@ -1180,14 +1180,16 @@ void R_SortVisSpriteRange(int first, int last)
    }
 }
 
+// haleyjd: made static global
+static float clipbot[MAX_SCREENWIDTH];
+static float cliptop[MAX_SCREENWIDTH];
+
 //
 // R_DrawSprite
 //
 void R_DrawSprite(vissprite_t *spr)
 {
    drawseg_t *ds;
-   float     clipbot[MAX_SCREENWIDTH];
-   float     cliptop[MAX_SCREENWIDTH];
    int     x;
    int     r1;
    int     r2;
@@ -1325,8 +1327,8 @@ void R_DrawSprite(vissprite_t *spr)
 void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 {
    drawseg_t *ds;
-   float     clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
-   float     cliptop[MAX_SCREENWIDTH];       // change to MAX_*
+   //float     clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
+   //float     cliptop[MAX_SCREENWIDTH];       // change to MAX_*
    int     x;
    int     r1;
    int     r2;
@@ -1553,6 +1555,7 @@ particle_t *newParticle(void)
       result->next = activeParticles;
       activeParticles = result - Particles;
    }
+
    return result;
 }
 
@@ -1610,6 +1613,10 @@ void R_ProjectParticle(particle_t *particle)
    float tempx, tempy, ty1, tx1, tx2, tz;
    float idist, xscale, yscale;
    float y1, y2;
+
+   // FIXME: particles are bad in low detail...
+   if(detailshift)
+      return;
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = M_FixedToFloat(particle->x) - view.x;
@@ -1775,17 +1782,16 @@ void R_DrawParticle(vissprite_t *vis)
    if(x2 >= viewwidth)
       x2 = viewwidth - 1;
 
-   x1 <<= detailshift;
-   x2 <<= detailshift;
-
    // due to square shape, it is unnecessary to clip the entire
    // particle
+   
    if(vis->ybottom > mfloorclip[ox1])
       vis->ybottom = mfloorclip[ox1];
-   if(vis->ytop < mceilingclip[ox1])
-      vis->ytop = mceilingclip[ox1];
    if(vis->ybottom > mfloorclip[ox2])
       vis->ybottom = mfloorclip[ox2];
+
+   if(vis->ytop < mceilingclip[ox1])
+      vis->ytop = mceilingclip[ox1];
    if(vis->ytop < mceilingclip[ox2])
       vis->ytop = mceilingclip[ox2];
 

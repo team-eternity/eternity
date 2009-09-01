@@ -1965,7 +1965,7 @@ static void D_ProcessDehInWads(void)
 {
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root =
-      w_GlobalDir.lumpinfo[W_LumpNameHash("dehacked") % 
+      w_GlobalDir.lumpinfo[W_LumpNameHash("DEHACKED") % 
                            (unsigned)w_GlobalDir.numlumps];
 
    D_ProcessDehInWad(root->index);
