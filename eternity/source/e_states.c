@@ -1641,7 +1641,7 @@ static int E_GetDSToken(pstate_t *ps)
    }
 
    // write back info to parser state
-   ps->index = tks.i;
+   ps->index      = tks.i;
    ps->tokentype  = tks.tokentype;
    ps->tokenerror = tks.tokenerror;
 
@@ -2029,6 +2029,100 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
       // TODO: anything else is an error
       break;
    }
+}
+
+// parser callback type
+typedef void (*psfunc_t)(pstate_t *);
+
+// parser state function table
+static psfunc_t pstatefuncs[] =
+{
+   DoPSNeedLabel,
+   DoPSNeedKWOrState,
+   DoPSNeedGotoLabel,
+   DoPSNeedGotoEOLOrPlus,
+   DoPSNeedGotoOffset,
+   DoPSNeedKWEOL,
+   DoPSNeedStateFrames,
+   DoPSNeedStateTics,
+   DoPSNeedBrightOrAction,
+   DoPSNeedStateAction,
+   DoPSNeedStateEOLOrParen,
+   DoPSNeedStateArgOrParen,
+   DoPSNeedStateCommaOrParen,
+   DoPSNeedStateArg,
+   DoPSNeedStateEOL,
+   DoPSNeedLabelOrKWOrState,
+};
+
+//
+// E_GetDSLine
+//
+// Gets the next line of DECORATE state input.
+//
+boolean E_GetDSLine(const char **src, pstate_t *ps)
+{
+   boolean isdone = false;
+   const char *srctxt = *src;
+
+   M_QStrClear(ps->linebuffer);
+
+   if(!*srctxt) // at end?
+      isdone = true;
+   else
+   {
+      while(*srctxt && *srctxt != '\n')
+      {
+         M_QStrPutc(ps->linebuffer, *srctxt);
+         ++srctxt;
+      }
+   }
+
+   *src = srctxt;
+
+   return isdone;
+}
+
+//
+// E_ParseDecorateStates
+//
+// Main driver routine for parsing of DECORATE state blocks.
+//
+void E_ParseDecorateStates(const char *input)
+{
+   pstate_t ps;
+   qstring_t linebuffer;
+   qstring_t tokenbuffer;
+   const char *inputstr = input;
+
+   // create line and token buffers
+   M_QStrInitCreate(&linebuffer);
+   M_QStrInitCreate(&tokenbuffer);
+
+   // initialize pstate structure
+   ps.index       = 0;
+   ps.tokentype   = 0;
+   ps.tokenerror  = TERR_NONE;   
+   ps.linebuffer  = &linebuffer;
+   ps.tokenbuffer = &tokenbuffer;
+
+   // set initial state
+   ps.state = PSTATE_NEEDLABEL;
+
+   // loop getting one line of input at a time
+   while(!E_GetDSLine(&inputstr, &ps))
+   {
+#ifdef RANGECHECK
+      if(ps.state < 0 || ps.state >= PSTATE_NUMSTATES)
+         I_Error("E_ParseDecorateStates: Internal error: undefined state\n");
+#endif
+
+      pstatefuncs[ps.state](&ps);
+   }
+
+   // destroy qstrings
+   M_QStrFree(&linebuffer);
+   M_QStrFree(&tokenbuffer);
 }
 
 // EOF
