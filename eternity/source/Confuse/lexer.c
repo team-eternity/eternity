@@ -169,8 +169,9 @@ void lexer_reset(void)
 // for Eternity's applications of the tool in general.
 enum
 {
-   HEREDOC_SINGLE, // uses @' '@
-   HEREDOC_DOUBLE, // uses @" "@
+   HEREDOC_SINGLE,   // uses @' '@
+   HEREDOC_DOUBLE,   // uses @" "@
+   HEREDOC_NUMDELIMS
 };
 
 // lexerstate structure; because lots of arguments annoy me :)

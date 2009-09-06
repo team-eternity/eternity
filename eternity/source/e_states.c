@@ -1144,6 +1144,16 @@ void E_ProcessStates(cfg_t *cfg)
 
       E_EDFLogPrintf("\t\tFinished frame %s(#%d)\n", states[i]->name, i);
    }
+
+#define DS_TEST
+#ifdef DS_TEST
+   {
+      static void TestDSParser(void);
+      
+      // TEMPORARY DEBUG TEST CODE
+      TestDSParser();
+   }
+#endif
 }
 
 //
@@ -1293,7 +1303,8 @@ typedef struct pstate_s
    int state; // state of the parser, as defined by the above enumeration
    qstring_t *linebuffer;  // qstring to use as line buffer
    qstring_t *tokenbuffer; // qstring to use as token buffer
-   int index; // current index into line buffer for tokenization
+   int index;              // current index into line buffer for tokenization
+   boolean needline;       // if true, feed a line from the input
 
    int tokentype;    // current token type, once decided upon
    int tokenerror;   // current token error code
@@ -1689,6 +1700,8 @@ static void DoPSNeedKWOrState(pstate_t *ps)
 
    switch(ps->tokentype)
    {
+   case TOKEN_EOL: // loop until something meaningful appears
+      break;
    case TOKEN_KEYWORD:
       // TODO: generate appropriate state for keyword
       if(!M_QStrCaseCmp(ps->tokenbuffer, "goto"))
@@ -2066,15 +2079,20 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
    const char *srctxt = *src;
 
    M_QStrClear(ps->linebuffer);
+   ps->index = 0;
 
    if(!*srctxt) // at end?
       isdone = true;
    else
    {
-      while(*srctxt && *srctxt != '\n')
+      char c;
+
+      while((c = *srctxt++))
       {
-         M_QStrPutc(ps->linebuffer, *srctxt);
-         ++srctxt;
+         if(c == '\n')
+            break;
+         
+         M_QStrPutc(ps->linebuffer, c);
       }
    }
 
@@ -2109,21 +2127,65 @@ void E_ParseDecorateStates(const char *input)
    // set initial state
    ps.state = PSTATE_NEEDLABEL;
 
-   // loop getting one line of input at a time
-   while(!E_GetDSLine(&inputstr, &ps))
+   // need a line to start
+   ps.needline = true;
+
+   while(1)
    {
+      // need a new line of input?
+      if(ps.needline)
+      {
+         if(E_GetDSLine(&inputstr, &ps))
+            break; // ran out of lines
+
+         ps.needline = false;
+      }
+
 #ifdef RANGECHECK
       if(ps.state < 0 || ps.state >= PSTATE_NUMSTATES)
          I_Error("E_ParseDecorateStates: Internal error: undefined state\n");
 #endif
 
       pstatefuncs[ps.state](&ps);
+
+      // if last token processed was an EOL, we need a new line of input
+      if(ps.tokentype == TOKEN_EOL)
+         ps.needline = true;
    }
 
    // destroy qstrings
    M_QStrFree(&linebuffer);
    M_QStrFree(&tokenbuffer);
 }
+
+#ifdef DS_TEST
+//=============================================================================
+// 
+// TEMPORARY DEBUG TEST CODE
+//
+// This code will dry-run the DECORATE state parser.
+//
+
+static const char *teststr = 
+"Spawn:\n"
+"   SPR1 ABCD 10 bright A_Foobar(0, 1, 2)\n"
+"   loop\n"
+"See:\n"
+"   SPR2 ABCDE 20 A_WalkAround\n"
+"   SPR2 F     5  A_DoNothing() \n"
+"   stop\n"
+"\n"
+"  CustomLabel:\n"
+"     goto See\n"
+"  CustomLabel2: \n"
+"     goto See+6\n";
+
+static void TestDSParser(void)
+{
+   E_ParseDecorateStates(teststr);
+}
+
+#endif
 
 // EOF
 

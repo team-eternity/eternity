@@ -1653,6 +1653,7 @@ void IdentifyVersion(void)
       // haleyjd 08/20/07: improved error message for n00bs
       I_Error("\nIWAD not found!\n"
               "To specify an IWAD, try one of the following:\n"
+              "* Configure IWAD file paths in base/system.cfg\n"
               "* Use -iwad\n"
               "* Set the DOOMWADDIR environment variable.\n"
               "* Place an IWAD in the working directory.\n"
