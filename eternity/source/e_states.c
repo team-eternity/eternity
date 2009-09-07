@@ -1236,6 +1236,7 @@ void E_ProcessStateDeltas(cfg_t *cfg)
       "goto"    : NEEDGOTOLABEL
       <keyword> : NEEDKWEOL
       <text>    : NEEDSTATEFRAMES
+      EOL       : loop ***
    NEEDGOTOLABEL:
       <label> : NEEDGOTOEOLORPLUS
    NEEDGOTOEOLORPLUS:
@@ -1273,6 +1274,9 @@ void E_ProcessStateDeltas(cfg_t *cfg)
       <keyword> : NEEDKWEOL
       <text>    : NEEDSTATEFRAMES
       EOL       : loop
+
+  *** EOL is allowed in PSTATE_NEEDKWORSTATE in a manner more flexible than
+      that specified by the above grammar for matters of convenience.
 */
 
 // parser state enumeration
@@ -1304,6 +1308,7 @@ typedef struct pstate_s
    qstring_t *linebuffer;  // qstring to use as line buffer
    qstring_t *tokenbuffer; // qstring to use as token buffer
    int index;              // current index into line buffer for tokenization
+   int linenum;            // line number (relative to start of state block)
    boolean needline;       // if true, feed a line from the input
 
    int tokentype;    // current token type, once decided upon
@@ -1324,6 +1329,21 @@ enum
    TOKEN_TEXT,    // anything else (numbers, strings, words, etc.)
    TOKEN_EOL,     // end of line
    TOKEN_ERROR,   // an error token
+   TOKEN_NUMTOKENS
+};
+
+// token type names for display in error messages
+static const char *ds_token_names[TOKEN_NUMTOKENS] =
+{
+   "label",
+   "keyword",
+   "character",
+   "character",
+   "character",
+   "character",
+   "text token",
+   "end of line",
+   "error"        // not actually displayed; see below
 };
 
 // token errors
@@ -1332,6 +1352,15 @@ enum
    TERR_NONE,           // not an error
    TERR_BADSTRING,      // malformed string constant
    TERR_UNEXPECTEDCHAR, // weird character
+   TERR_NUMERRORS
+};
+
+// token error strings
+static const char *ds_token_errors[TERR_NUMERRORS] =
+{
+   "not an error",
+   "unterminated string constant",
+   "unexpected character"
 };
 
 // tokenizer states
@@ -1664,6 +1693,41 @@ static int E_GetDSToken(pstate_t *ps)
 // Parser Callbacks
 //
 
+// utilities
+
+// PSConsumeLine: marks a new line as needed
+#define PSConsumeLine(ps) ps->needline = true
+
+// for unnecessarily precise grammatical correctness ;)
+#define hasvowel(str) \
+   (*str == 'a' || *str == 'e' || *str == 'i' || *str == 'o' || *str == 'u')
+
+//
+// PSExpectedErr
+//
+// Called to issue a verbose log message indicating an error consisting of an
+// unexpected token type.
+//
+static void PSExpectedErr(pstate_t *ps, const char *expected, boolean eatline)
+{
+   const char *tokenname = ds_token_names[ps->tokentype];
+
+   // if error is due to a tokenizer error, get the more specific error message
+   // pertaining to that malformed token
+   if(ps->tokenerror)
+      tokenname = ds_token_errors[ps->tokenerror];
+
+   E_EDFLogPrintf("\t\t\tError on line %d of DECORATE state block:\n"
+                  "\t\t\t\tExpected %s %s but found %s %s with value '%s'\n",
+                  ps->linenum, 
+                  hasvowel(expected)  ? "an" : "a", expected, 
+                  hasvowel(tokenname) ? "an" : "a", tokenname, 
+                  ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
+
+   if(eatline)
+      PSConsumeLine(ps);
+}
+
 //
 // DoPSNeedLabel
 //
@@ -1684,7 +1748,8 @@ static void DoPSNeedLabel(pstate_t *ps)
       ps->state = PSTATE_NEEDKWORSTATE;
       break;
    default:
-      // TODO: anything else is an error
+      // anything else is an error; eat the rest of the line
+      PSExpectedErr(ps, "label", true);
       break;
    }
 }
@@ -1720,7 +1785,16 @@ static void DoPSNeedKWOrState(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEFRAMES;
       break;
    default:
-      // TODO: anything else is an error
+      // anything else is an error
+      PSExpectedErr(ps, "keyword or sprite", ps->tokentype != TOKEN_LABEL);
+
+      // a label only issues a warning, and we continue to look for additional
+      // tokens on the same line
+      if(ps->tokentype == TOKEN_LABEL)
+      {
+         E_EDFLogPrintf("\t\t\t\tWarning: superfluous label '%s' ignored\n",
+                        ps->tokenbuffer->buffer);
+      }
       break;
    }
 }
@@ -1741,7 +1815,10 @@ static void DoPSNeedGotoLabel(pstate_t *ps)
       ps->state = PSTATE_NEEDGOTOEOLORPLUS;
    }
    else
-      ; // TODO: anything else is an error
+   {
+      PSExpectedErr(ps, "goto label", true);
+      ps->state = PSTATE_NEEDLABEL;          // return to initial state
+   }
 }
 
 //
@@ -1764,7 +1841,9 @@ static void DoPSNeedGotoEOLOrPlus(pstate_t *ps)
       ps->state = PSTATE_NEEDGOTOOFFSET;
       break;
    default:
-      // TODO: anything else is an error
+      // anything else is an error
+      PSExpectedErr(ps, "end of line or +", true);
+      ps->state = PSTATE_NEEDLABEL;
       break;
    }
 }
@@ -1785,7 +1864,11 @@ static void DoPSNeedGotoOffset(pstate_t *ps)
       ps->state = PSTATE_NEEDKWEOL;
    }
    else
-      ; // TODO: anything else is an error
+   {
+      // anything else is an error
+      PSExpectedErr(ps, "goto offset", true);
+      ps->state = PSTATE_NEEDLABEL;
+   }
 }
 
 //
@@ -1799,7 +1882,7 @@ static void DoPSNeedKWEOL(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_EOL)
-      ; // TODO: error
+      PSExpectedErr(ps, "end of line", true);
 
    // return to initial state
    ps->state = PSTATE_NEEDLABEL;
@@ -1821,14 +1904,23 @@ static void DoPSNeedStateFrames(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_TEXT)
-      ; // TODO: error
+   {
+      PSExpectedErr(ps, "frame string", true);
 
-   // TODO: create additional states if necessary, beginning as a clone of
-   // this state, and with properly set nextstate fields. Then mark so that
-   // the rest of the parsing process will populate the range of states
-   // rather than just the current state, and then step past them once finished.
-
-   ps->state = PSTATE_NEEDSTATETICS;
+      // TODO: finalize state already created
+      
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+   }
+   else
+   {
+      // TODO: create additional states if necessary, beginning as a clone of
+      // this state, and with properly set nextstate fields. Then mark so that
+      // the rest of the parsing process will populate the range of states
+      // rather than just the current state, and then step past them once 
+      // finished.
+      
+      ps->state = PSTATE_NEEDSTATETICS;
+   }
 }
 
 //
@@ -1841,13 +1933,21 @@ static void DoPSNeedStateTics(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_TEXT)
-      ; // TODO: error
+   {
+      PSExpectedErr(ps, "tics value", true);
 
-   // TODO: verify is properly ranged number
+      // TODO: finalize state range
 
-   // TODO: record into current range of states
-
-   ps->state = PSTATE_NEEDBRIGHTORACTION;
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+   }
+   else
+   {
+      // TODO: verify is properly ranged number
+      
+      // TODO: record into current range of states
+      
+      ps->state = PSTATE_NEEDBRIGHTORACTION;
+   }
 }
 
 //
@@ -1861,7 +1961,14 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_TEXT)
-      ; // TODO: error
+   {
+      PSExpectedErr(ps, "bright keyword or action name", true);
+
+      // TODO: finalize state range
+
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
 
    if(!M_QStrCaseCmp(ps->tokenbuffer, "bright"))
    {
@@ -1886,11 +1993,19 @@ static void DoPSNeedStateAction(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_TEXT)
-      ; // TODO: error
+   {
+      PSExpectedErr(ps, "action name", true);
 
-   // TODO: verify is valid codepointer name and apply actionto all
-   // states in the current range.
-   ps->state = PSTATE_NEEDSTATEEOLORPAREN;
+      // TODO: finalize state range
+
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+   }
+   else
+   {
+      // TODO: verify is valid codepointer name and apply action to all
+      // states in the current range.
+      ps->state = PSTATE_NEEDSTATEEOLORPAREN;
+   }
 }
 
 //
@@ -1913,7 +2028,10 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEARGORPAREN;
       break;
    default:
-      // TODO: anything else is an error
+      // anything else is an error
+      PSExpectedErr(ps, "end of line or (", true);
+      // TODO: finalize state range
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
    }
 }
@@ -1939,7 +2057,10 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEEOL;
       break;
    default:
-      // TODO: error
+      // error
+      PSExpectedErr(ps, "argument or )", true);
+      // TODO: finalize state range
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
    }
 }
@@ -1962,7 +2083,10 @@ static void DoPSNeedStateCommaOrParen(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEEOL;
       break;
    default:
-      // TODO: error
+      // error
+      PSExpectedErr(ps, ", or )", true);
+      // TODO: finalize state range
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
    }
 }
@@ -1978,11 +2102,17 @@ static void DoPSNeedStateArg(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_TEXT)
-      ; // TODO: error
-
-   // TODO: parse and populate argument in state range, increment
-   // argument count.
-   ps->state = PSTATE_NEEDSTATECOMMAORPAREN;
+   {
+      PSExpectedErr(ps, "argument", true);
+      // TODO: finalize state range
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+   }
+   else
+   {
+      // TODO: parse and populate argument in state range, increment
+      // argument count.
+      ps->state = PSTATE_NEEDSTATECOMMAORPAREN;
+   }
 }
 
 //
@@ -1995,7 +2125,7 @@ static void DoPSNeedStateEOL(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_EOL)
-      ; // TODO: error
+      PSExpectedErr(ps, "end of line", true);
 
    // TODO: finalize state range
    ps->state = PSTATE_NEEDLABELORKWORSTATE;
@@ -2023,7 +2153,7 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
       break;
    case TOKEN_KEYWORD:
       // TODO: generate appropriate state for keyword
-      if(!strcasecmp(ps->tokenbuffer->buffer, "goto"))
+      if(!M_QStrCaseCmp(ps->tokenbuffer, "goto"))
       {
          // TODO: handle goto specifics
          ps->state = PSTATE_NEEDGOTOLABEL;
@@ -2039,7 +2169,8 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEFRAMES;
       break;
    default:
-      // TODO: anything else is an error
+      // anything else is an error; eat rest of the line
+      PSExpectedErr(ps, "label or keyword or sprite", true);
       break;
    }
 }
@@ -2094,6 +2225,9 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
          
          M_QStrPutc(ps->linebuffer, c);
       }
+
+      // track line numbers
+      ps->linenum++;
    }
 
    *src = srctxt;
@@ -2119,6 +2253,7 @@ void E_ParseDecorateStates(const char *input)
 
    // initialize pstate structure
    ps.index       = 0;
+   ps.linenum     = 0;
    ps.tokentype   = 0;
    ps.tokenerror  = TERR_NONE;   
    ps.linebuffer  = &linebuffer;
