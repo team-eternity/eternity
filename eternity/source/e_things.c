@@ -720,6 +720,9 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 //
 // Meta states
 //
+//
+// With DECORATE state support, it is necessary to allow storage of arbitrary
+// state 
 
 typedef struct metastate_s
 {
@@ -727,6 +730,21 @@ typedef struct metastate_s
    char *name;
    state_t *state;      // the state
 } metastate_t;
+
+//
+// MetaStateCopy
+//
+// Copy method for metastate objects. The name used as the key must be
+// duplicated in the new object.
+//
+static void MetaStateCopy(void *dest, const void *src, size_t size)
+{
+   const metastate_t *srcstate  = (const metastate_t *)src;
+   metastate_t       *deststate = (metastate_t *)dest;
+
+   deststate->state = srcstate->state;
+   deststate->name  = strdup(srcstate->name);
+}
 
 //
 // E_AddMetaState
@@ -745,7 +763,7 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 
       MetaRegisterTypeEx(&metaStateType, 
                          METATYPE(metastate_t), sizeof(metastate_t),
-                         NULL, NULL, NULL);
+                         NULL, MetaStateCopy, NULL);
 
       firsttime = false;
    }
@@ -762,7 +780,7 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 //
 // E_RemoveMetaStatePtr
 //
-// Removes a state from the mobjinfo metatable
+// Removes a state from the mobjinfo metatable given a metastate pointer.
 //
 static void E_RemoveMetaStatePtr(mobjinfo_t *mi, metastate_t *ms)
 {
@@ -772,6 +790,12 @@ static void E_RemoveMetaStatePtr(mobjinfo_t *mi, metastate_t *ms)
    free(ms);
 }
 
+//
+// E_RemoveMetaState
+//
+// Removes a state from the mobjinfo metatable given a name under which
+// it is keyed into the table. If no such state exists, nothing happens.
+//
 static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
    metaobject_t *obj;
