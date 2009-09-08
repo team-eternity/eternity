@@ -887,11 +887,10 @@ void P_KillMobj(mobj_t *source, mobj_t *target, int mod)
    {
       // haleyjd 06/05/08: damagetype death states
       statenum_t st = target->info->deathstate;
-      emodstatenode_t *node;
+      state_t *state;
 
-      if(mod > 0 &&
-         (node = E_StateForModNum(target->info->dmg_deathstates, mod)))
-         st = node->state->index;
+      if(mod > 0 && (state = E_StateForModNum(target->info, "Death", mod)))
+         st = state->index;
 
       P_SetMobjState(target, st);
    }
@@ -1439,12 +1438,11 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       if(damage > 0 || demo_version < 329)
       {
          statenum_t st = target->info->painstate;
-         emodstatenode_t *node = NULL;
+         state_t *state = NULL;
 
          // haleyjd  06/05/08: check for special damagetype painstate
-         if(mod > 0 && 
-            (node = E_StateForModNum(target->info->dmg_painstates, mod)))
-            st = node->state->index;
+         if(mod > 0 && (state = E_StateForModNum(target->info, "Pain", mod)))
+            st = state->index;
 
          P_SetMobjState(target, st);
       }

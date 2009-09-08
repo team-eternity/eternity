@@ -718,24 +718,136 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 }
 
 //
-// E_StateForMod
+// Meta states
 //
-// Returns the state node from the given mobjinfo for the given mod type,
-// if such exists. If not, NULL is returned.
-//
-emodstatenode_t *E_StateForMod(emodstatenode_t *list, emod_t *mod)
+
+typedef struct metastate_s
 {
-   emodstatenode_t *node = list;
+   metaobject_t parent; // metaobject
+   char *name;
+   state_t *state;      // the state
+} metastate_t;
 
-   while(node)
+//
+// E_AddMetaState
+//
+// Adds a state to the mobjinfo metatable.
+//
+static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
+{
+   static boolean firsttime = true;
+   metastate_t *newMetaState = NULL;
+
+   // first time, register a metatype for metastates
+   if(firsttime)
    {
-      if(node->mod == mod)
-         break;
+      static metatype_t metaStateType;
 
-      node = (emodstatenode_t *)(node->links.next);
+      MetaRegisterTypeEx(&metaStateType, 
+                         METATYPE(metastate_t), sizeof(metastate_t),
+                         NULL, NULL, NULL);
+
+      firsttime = false;
    }
 
-   return node;
+   newMetaState = calloc(1, sizeof(metastate_t));
+
+   newMetaState->state = state;
+   newMetaState->name  = strdup(name);
+
+   MetaAddObject(mi->meta, newMetaState->name, &newMetaState->parent, 
+                 newMetaState, METATYPE(metastate_t));
+}
+
+//
+// E_RemoveMetaStatePtr
+//
+// Removes a state from the mobjinfo metatable
+//
+static void E_RemoveMetaStatePtr(mobjinfo_t *mi, metastate_t *ms)
+{
+   MetaRemoveObject(mi->meta, &ms->parent);
+   
+   free(ms->name);
+   free(ms);
+}
+
+static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
+{
+   metaobject_t *obj;
+
+   if((obj = MetaGetObjectType(mi->meta, name, METATYPE(metastate_t))))
+      E_RemoveMetaStatePtr(mi, (metastate_t *)(obj->object));
+}
+
+//
+// E_GetMetaState
+//
+// Gets a state that is stored inside an mobjinfo metatable.
+// Returns NULL if no such object exists.
+//
+static metastate_t *E_GetMetaState(mobjinfo_t *mi, const char *name)
+{
+   metaobject_t *obj = NULL;
+   metastate_t  *ret = NULL;
+   
+   if((obj = MetaGetObjectType(mi->meta, name, METATYPE(metastate_t))))
+      ret = (metastate_t *)(obj->object);
+
+   return ret;
+}
+
+//
+// MOD states
+//
+
+//
+// E_ModStateName
+//
+// Constructs the appropriate label name for a mod state.
+//
+static const char *E_ModStateName(const char *base, emod_t *mod)
+{
+   static qstring_t namebuffer;
+
+   if(!namebuffer.buffer)
+      M_QStrCreate(&namebuffer);
+   else
+      M_QStrClear(&namebuffer);
+
+   M_QStrCat(&namebuffer, base);
+   M_QStrPutc(&namebuffer, '.');
+   M_QStrCat(&namebuffer, mod->name);
+
+   return namebuffer.buffer;
+}
+
+//
+// E_MetaStateForMod
+//
+// Returns the state node from the given mobjinfo for the given mod type and
+// base label, if such exists. If not, NULL is returned.
+//
+static metastate_t *E_MetaStateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
+{
+   return E_GetMetaState(mi, E_ModStateName(base, mod));
+}
+
+//
+// E_StateForMod
+//
+// Returns the state from the given mobjinfo for the given mod type and
+// base label, if such exists. If not, NULL is returned.
+//
+state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
+{
+   state_t *ret = NULL;
+   metastate_t *mstate;
+
+   if((mstate = E_MetaStateForMod(mi, base, mod)))
+      ret = mstate->state;
+
+   return ret;
 }
 
 //
@@ -744,13 +856,13 @@ emodstatenode_t *E_StateForMod(emodstatenode_t *list, emod_t *mod)
 // Convenience wrapper routine to get the state node for a given
 // mod type by number, rather than with a pointer to the damagetype object.
 //
-emodstatenode_t *E_StateForModNum(emodstatenode_t *list, int num)
+state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
 {
-   emod_t *mod = E_DamageTypeForNum(num);
-   emodstatenode_t *ret = NULL;
+   emod_t  *mod = E_DamageTypeForNum(num);
+   state_t *ret = NULL;
 
    if(mod->num != 0)
-      ret = E_StateForMod(list, mod);
+      ret = E_StateForMod(mi, base, mod);
 
    return ret;
 }
@@ -762,25 +874,17 @@ emodstatenode_t *E_StateForModNum(emodstatenode_t *list, int num)
 // mobjinfo. An mobjinfo can only contain one deathstate for each 
 // damagetype.
 //
-static void E_AddDamageTypeState(emodstatenode_t **list, 
+static void E_AddDamageTypeState(mobjinfo_t *info, const char *base, 
                                  state_t *state, emod_t *mod)
 {
-   emodstatenode_t *emsnode;
+   metastate_t *msnode;
    boolean isnew = false;
    
    // if one exists for this mod already, use it, else create a new one.
-   if((emsnode = E_StateForMod(*list, mod)) == NULL)
-   {
-      emsnode = calloc(1, sizeof(emodstatenode_t));
-      isnew = true; // needs to be linked
-   }
-
-   emsnode->state = state;
-   emsnode->mod   = mod;
-
-   // attach to appropriate list in mobjinfo if necessary
-   if(isnew)
-      M_DLListInsert((mdllistitem_t *)emsnode, (mdllistitem_t **)list);
+   if((msnode = E_MetaStateForMod(info, base, mod)))
+      msnode->state = state;
+   else
+      E_AddMetaState(info, state, E_ModStateName(base, mod));
 }
 
 //
@@ -789,19 +893,9 @@ static void E_AddDamageTypeState(emodstatenode_t **list,
 // Removes the specified custom damagetype state from the mobjinfo,
 // if it is attached to it already. If not, this is ignored.
 //
-static void E_RemoveDamageTypeState(emodstatenode_t *list, emod_t *mod)
+static void E_RemoveDamageTypeState(mobjinfo_t *mi, const char *base, emod_t *mod)
 {
-   emodstatenode_t *emsnode;
-
-   // if this object doesn't have a state for this type, ignore this.
-   if((emsnode = E_StateForMod(list, mod)) == NULL)
-      return;
-
-   // detach it
-   M_DLListRemove((mdllistitem_t *)emsnode);
-
-   // delete it
-   free(emsnode);
+   E_RemoveMetaState(mi, E_ModStateName(base, mod));
 }
 
 //
@@ -809,41 +903,29 @@ static void E_RemoveDamageTypeState(emodstatenode_t *list, emod_t *mod)
 //
 // Trashes all the states in the given list.
 //
-static void E_DisposeDamageTypeList(emodstatenode_t *list)
+static void E_DisposeDamageTypeList(mobjinfo_t *mi, const char *base)
 {
-   emodstatenode_t *rover;
+   metaobject_t *obj  = NULL;
+   unsigned int index = -1;
 
-   // restart from the beginning until the list is empty
-   while((rover = list))
+   // iterate on the metatable to look for metastate_t objects with
+   // the base string as the initial part of their name
+
+   while((obj = MetaTableIterator(mi->meta, obj, &index)))
    {
-      M_DLListRemove((mdllistitem_t *)rover);
+      if(IsMetaKindOf(obj, METATYPE(metastate_t)))
+      {
+         if(!strncasecmp(obj->key, base, strlen(base)))
+         {
+            metastate_t *state = (metastate_t *)(obj->object);
 
-      free(rover);
-   }
-}
+            E_RemoveMetaStatePtr(mi, state);
 
-//
-// E_CopyDamageTypeList
-//
-// Copies a damagetype list from one thing to another.
-//
-static void E_CopyDamageTypeList(emodstatenode_t *src, emodstatenode_t **dst)
-{
-   emodstatenode_t *rover = src;
-
-   // destination list should be empty; if not, make it so.
-   if(*dst)
-   {
-      E_DisposeDamageTypeList(*dst);
-      *dst = NULL;
-   }
-
-   // add a copy of all the objects in the source list to the dest list
-   while(rover)
-   {
-      E_AddDamageTypeState(dst, rover->state, rover->mod);
-
-      rover = (emodstatenode_t *)(rover->links.next);
+            // must restart search (this is not very efficient)
+            obj = NULL;
+            index = -1;
+         }
+      }
    }
 }
 
@@ -877,27 +959,25 @@ enum
 static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
                                       mobjinfo_t *mi, int mode, int field)
 {
-   emodstatenode_t **list = NULL;
+   const char *base = "";
 
    switch(field)
    {
    case E_DTS_FIELD_PAIN:
-      list = &mi->dmg_painstates;
+      base = "Pain";
       break;
    case E_DTS_FIELD_DEATH:
-      list = &mi->dmg_deathstates;
+      base = "Death";
       break;
    default:
       I_Error("E_ProcessDamageTypeStates: unknown field type\n");
       break;
    }
+
    // first things first, if we are in overwrite mode, we will dispose of
    // the appropriate list of states if any have been added already.
    if(mode == E_DTS_MODE_OVERWRITE)
-   {
-      E_DisposeDamageTypeList(*list);
-      *list = NULL;
-   }
+      E_DisposeDamageTypeList(mi, base);
 
    // add / overwrite mode
    if(mode == E_DTS_MODE_ADD || mode == E_DTS_MODE_OVERWRITE)
@@ -934,7 +1014,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
             continue;
 
          // add it to the thing
-         E_AddDamageTypeState(list, state, mod);
+         E_AddDamageTypeState(mi, base, state, mod);
       }
    }
    else
@@ -951,7 +1031,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
          if(mod->num == 0) // if this is "Unknown", ignore it.
             continue;
 
-         E_RemoveDamageTypeState(*list, mod);
+         E_RemoveDamageTypeState(mi, base, mod);
       }
    }
 }
@@ -1101,18 +1181,6 @@ static void E_CopyThing(int num, int pnum)
 
    // copy metatable
    MetaCopyTable(this_mi->meta, mobjinfo[pnum].meta);
-
-   // copy damagetype states
-
-   // lists inherited from parent are invalid
-   this_mi->dmg_deathstates = NULL;
-   this_mi->dmg_painstates  = NULL;
-
-   // deep-copy lists from parent
-   E_CopyDamageTypeList(mobjinfo[pnum].dmg_deathstates, 
-                        &this_mi->dmg_deathstates);
-   E_CopyDamageTypeList(mobjinfo[pnum].dmg_painstates,
-                        &this_mi->dmg_painstates);
 
    // must restore name and dehacked num data
    this_mi->dehnum   = dehnum;

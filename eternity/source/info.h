@@ -156,7 +156,7 @@ typedef struct mobj_s * mptr;
 // ********************************************************************
 // Definition of the state (frames) structure
 // ********************************************************************
-typedef struct
+typedef struct state_s
 {
    spritenum_t sprite;              // sprite number to show
    int         frame;               // which frame/subframe of the sprite is shown
@@ -297,17 +297,6 @@ typedef enum {
   //NUMMOBJTYPES  // Counter of how many there are
 } mobjtype_t;
 
-// mod-state node structure
-// used to link together custom damagetype frames for mobjinfo
-// haleyjd: gotta put it here to avoid a chicken-or-egg problem
-// between info.h and e_things.h .... grrr.
-
-typedef struct emodstatenode_s
-{
-   mdllistitem_t links; // links to next, prev->next
-   emod_t  *mod;        // pointer to mod
-   state_t *state;      // pointer to state
-} emodstatenode_t;
 
 // ********************************************************************
 // Definition of the Thing structure
@@ -393,10 +382,6 @@ typedef struct mobjinfo_s
 
    // 08/17/09: metatable
    ehash_t *meta;
-
-   // 06/04/08: custom damagetype state chains
-   emodstatenode_t *dmg_painstates;  // custom pain states
-   emodstatenode_t *dmg_deathstates; // custom death states
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
    struct mobjinfo_s *parent;

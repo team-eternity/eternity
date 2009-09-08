@@ -109,6 +109,8 @@ void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
                         MetaObjPtrFn_t objptr);
 void MetaCopyTable(ehash_t *desttable, ehash_t *srctable);
 
+metaobject_t *MetaTableIterator(ehash_t *metatable, metaobject_t *object, 
+                                unsigned int *index);
 #endif
 
 // EOF

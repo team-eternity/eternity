@@ -67,8 +67,8 @@ int E_GetThingNumForName(const char *name); //   fatal error version
 int E_SafeThingName(const char *name);      //   fallback version
 
 // thingtype custom-damagetype pain/death states
-emodstatenode_t *E_StateForMod(emodstatenode_t *list, emod_t *mod);
-emodstatenode_t *E_StateForModNum(emodstatenode_t *list, int num);
+state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod);
+state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num);
 
 #endif
 

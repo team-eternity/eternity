@@ -1735,7 +1735,7 @@ static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
       if(tspan >= span)
          return false;
       
-      angle2 = -clipangle;
+      angle2 = 0-clipangle;
    }
 
    // Find the first clippost
