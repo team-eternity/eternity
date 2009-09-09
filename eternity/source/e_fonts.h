@@ -41,7 +41,7 @@
 #define ITEM_FONT_FINAL   "f_font"
 #define ITEM_FONT_INTR    "in_font"
 #define ITEM_FONT_INTRB   "in_font_big"
-#define ITEM_FONT_INTRBN "in_font_bignum"
+#define ITEM_FONT_INTRBN  "in_font_bignum"
 #define ITEM_FONT_CONS    "c_font"
 
 extern cfg_opt_t edf_font_opts[];

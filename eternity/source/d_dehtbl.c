@@ -1794,6 +1794,28 @@ unsigned int D_HashTableKey(const char *str)
 }
 
 //
+// D_HashTableKeyCase
+//
+// haleyjd 09/09/09: as above, but case-sensitive
+//
+unsigned int D_HashTableKeyCase(const char *str)
+{
+   const char *c = str;
+   unsigned int h = 0;
+
+   if(!str)
+      I_Error("D_HashTableKeyCase: cannot hash NULL string!\n");
+
+   while(*c)
+   {
+      h = 5 * h + *c;
+      ++c;
+   }
+
+   return h;
+}
+
+//
 // BEX String Hash Table
 //
 // The deh_strs table has two independent hash chains through it,

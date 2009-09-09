@@ -50,6 +50,7 @@ extern char **deh_spritenames;
 extern char **deh_musicnames;
 
 unsigned int D_HashTableKey(const char *str);
+unsigned int D_HashTableKeyCase(const char *str);
 
 dehstr_t *D_GetBEXStr(const char *string);
 dehstr_t *D_GetDEHStr(const char *string);

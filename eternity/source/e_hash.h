@@ -31,7 +31,7 @@
 typedef unsigned int (*EHashFunc_t)(const void *);
 
 // object comparison function prototype
-typedef boolean      (*ECompFunc_t)(void *, void *, const void *);
+typedef boolean      (*ECompFunc_t)(struct ehash_s *, void *, const void *);
 
 // key retrieval function prototype
 typedef const void * (*EKeyFunc_t) (void *);
@@ -50,6 +50,7 @@ typedef struct ehash_s
    EKeyFunc_t  keyfunc;    // key retrieval function
    ELinkFunc_t linkfunc;   // link-for-object function
    boolean isinit;         // true if hash is initialized
+   void *userdata;         // user-provided context for callbacks
 
 } ehash_t;
 
@@ -68,8 +69,9 @@ void  E_HashRebuild(ehash_t *, unsigned int);
 
 // specializations
 void  E_NCStrHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
-void  E_UintHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
-void  E_SintHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
+void  E_StrHashInit  (ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
+void  E_UintHashInit (ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
+void  E_SintHashInit (ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
 
 // Key Function macro - autogenerates a key retrieval function
 

@@ -340,10 +340,9 @@ static unsigned int E_NCStrHashFunc(const void *key)
 //
 // No-case string comparison callback for string-specialized hashes.
 //
-static boolean E_NCStrCompareFunc(void *table, void *object, const void *key)
+static boolean E_NCStrCompareFunc(struct ehash_s *table, void *object, const void *key)
 {
-   ehash_t *hash = (ehash_t *)table;
-   const char *objkey = *(const char **)E_HashKeyForObject(hash, object);
+   const char *objkey = *(const char **)E_HashKeyForObject(table, object);
 
    return !strcasecmp(objkey, *(const char **)key);
 }
@@ -364,6 +363,49 @@ void E_NCStrHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc,
 }
 
 //
+// Case-sensitive String Hash
+//
+
+//
+// E_StrHashFunc
+//
+// string hash key computation function for string-specialized hashes.
+// 
+static unsigned int E_StrHashFunc(const void *key)
+{
+   return D_HashTableKeyCase(*(const char **)key);
+}
+
+
+//
+// E_StrCompareFunc
+//
+// string comparison callback for string-specialized hashes.
+//
+static boolean E_StrCompareFunc(struct ehash_s *table, void *object, const void *key)
+{
+   const char *objkey = *(const char **)E_HashKeyForObject(table, object);
+
+   return !strcmp(objkey, *(const char **)key);
+}
+
+//
+// E_StrHashInit
+//
+// Creates a hash specialized to deal with structures which use a
+// case-sensitive string as their key. The hash computation and comparison
+// functions are provided implicitly, but the key retrieval function must be
+// supplied to this function. It can be created using the E_KEYFUNC macro
+// defined in e_hash.h.
+//
+void E_StrHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc,
+                   ELinkFunc_t lfunc)
+{
+   E_HashInit(table, numchains, E_StrHashFunc, E_StrCompareFunc, kfunc, lfunc);
+}
+
+
+//
 // Unsigned Integer Hash
 //
 
@@ -382,10 +424,9 @@ static unsigned int E_UintHashFunc(const void *key)
 //
 // Key comparison function for unsigned integer keys.
 //
-static boolean E_UintCompareFunc(void *table, void *object, const void *key)
+static boolean E_UintCompareFunc(struct ehash_s *table, void *object, const void *key)
 {
-   ehash_t *hash = (ehash_t *)table;
-   unsigned int objkey = *(unsigned int *)E_HashKeyForObject(hash, object);
+   unsigned int objkey = *(unsigned int *)E_HashKeyForObject(table, object);
 
    return objkey == *(const unsigned int *)key;
 }
@@ -421,10 +462,9 @@ static unsigned int E_SintHashFunc(const void *key)
 //
 // Key comparison function for unsigned integer keys.
 //
-static boolean E_SintCompareFunc(void *table, void *object, const void *key)
+static boolean E_SintCompareFunc(struct ehash_s *table, void *object, const void *key)
 {
-   ehash_t *hash = (ehash_t *)table;
-   int objkey = *(int *)E_HashKeyForObject(hash, object);
+   int objkey = *(int *)E_HashKeyForObject(table, object);
 
    return objkey == *(const int *)key;
 }

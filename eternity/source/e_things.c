@@ -61,64 +61,83 @@
 int UnknownThingType;
 
 // Thing Keywords
-#define ITEM_TNG_INHERITS "inherits"
-#define ITEM_TNG_DOOMEDNUM "doomednum"
-#define ITEM_TNG_SPAWNSTATE "spawnstate"
-#define ITEM_TNG_SPAWNHEALTH "spawnhealth"
-#define ITEM_TNG_SEESTATE "seestate"
-#define ITEM_TNG_SEESOUND "seesound"
-#define ITEM_TNG_REACTTIME "reactiontime"
-#define ITEM_TNG_ATKSOUND "attacksound"
-#define ITEM_TNG_PAINSTATE "painstate"
-#define ITEM_TNG_PAINSTATES "dmg_painstates"
-#define ITEM_TNG_PNSTATESADD "dmg_painstates.add"
-#define ITEM_TNG_PNSTATESREM "dmg_painstates.remove"
-#define ITEM_TNG_PAINCHANCE "painchance"
-#define ITEM_TNG_PAINSOUND "painsound"
-#define ITEM_TNG_MELEESTATE "meleestate"
+
+// ID / Type Info
+#define ITEM_TNG_DOOMEDNUM    "doomednum"
+#define ITEM_TNG_DEHNUM       "dehackednum"
+#define ITEM_TNG_INHERITS     "inherits"
+#define ITEM_TNG_BASICTYPE    "basictype"
+
+// States
+#define ITEM_TNG_SPAWNSTATE   "spawnstate"
+#define ITEM_TNG_SEESTATE     "seestate"
+#define ITEM_TNG_PAINSTATE    "painstate"
+#define ITEM_TNG_PAINSTATES   "dmg_painstates"
+#define ITEM_TNG_PNSTATESADD  "dmg_painstates.add"
+#define ITEM_TNG_PNSTATESREM  "dmg_painstates.remove"
+#define ITEM_TNG_MELEESTATE   "meleestate"
 #define ITEM_TNG_MISSILESTATE "missilestate"
-#define ITEM_TNG_DEATHSTATE "deathstate"
-#define ITEM_TNG_DEATHSTATES "dmg_deathstates"
+#define ITEM_TNG_DEATHSTATE   "deathstate"
+#define ITEM_TNG_DEATHSTATES  "dmg_deathstates"
 #define ITEM_TNG_DTHSTATESADD "dmg_deathstates.add"
 #define ITEM_TNG_DTHSTATESREM "dmg_deathstates.remove"
-#define ITEM_TNG_XDEATHSTATE "xdeathstate"
-#define ITEM_TNG_DEATHSOUND "deathsound"
-#define ITEM_TNG_SPEED "speed"
-#define ITEM_TNG_RADIUS "radius"
-#define ITEM_TNG_HEIGHT "height"
-#define ITEM_TNG_MASS "mass"
-#define ITEM_TNG_DAMAGE "damage"
-#define ITEM_TNG_ACTIVESOUND "activesound"
-#define ITEM_TNG_FLAGS "flags"
-#define ITEM_TNG_FLAGS2 "flags2"
-#define ITEM_TNG_RAISESTATE "raisestate"
-#define ITEM_TNG_TRANSLUC "translucency"
-#define ITEM_TNG_FLAGS3 "flags3"
-#define ITEM_TNG_BLOODCOLOR "bloodcolor"
-#define ITEM_TNG_FASTSPEED "fastspeed"
-#define ITEM_TNG_NUKESPEC  "nukespecial"
-#define ITEM_TNG_PARTICLEFX "particlefx"
-#define ITEM_TNG_DROPTYPE "droptype"
-#define ITEM_TNG_MOD      "mod"
-#define ITEM_TNG_OBIT1  "obituary_normal"
-#define ITEM_TNG_OBIT2  "obituary_melee"
-#define ITEM_TNG_COLOR  "translation"
-#define ITEM_TNG_CFLAGS "cflags"
-#define ITEM_TNG_ADDFLAGS "addflags"
-#define ITEM_TNG_REMFLAGS "remflags"
-#define ITEM_TNG_DMGSPECIAL "dmgspecial"
-#define ITEM_TNG_CRASHSTATE "crashstate"
-#define ITEM_TNG_SKINSPRITE "skinsprite"
-#define ITEM_TNG_DEFSPRITE  "defaultsprite"
-#define ITEM_TNG_C3DHEIGHT "correct_height"
-#define ITEM_TNG_BASICTYPE "basictype"
-#define ITEM_TNG_TOPDAMAGE "topdamage"
-#define ITEM_TNG_TOPDMGMASK "topdamagemask"
-#define ITEM_TNG_AVELOCITY "alphavelocity"
-#define ITEM_TNG_ACS_SPAWN "acs_spawndata"
-#define ITEM_TNG_ACS_NUM "num"
-#define ITEM_TNG_ACS_MODES "modes"
-#define ITEM_TNG_DEHNUM "dehackednum"
+#define ITEM_TNG_XDEATHSTATE  "xdeathstate"
+#define ITEM_TNG_RAISESTATE   "raisestate"
+#define ITEM_TNG_CRASHSTATE   "crashstate"
+
+// Sounds
+#define ITEM_TNG_SEESOUND     "seesound"
+#define ITEM_TNG_ATKSOUND     "attacksound"
+#define ITEM_TNG_PAINSOUND    "painsound"
+#define ITEM_TNG_DEATHSOUND   "deathsound"
+#define ITEM_TNG_ACTIVESOUND  "activesound"
+
+// Basic Stats
+#define ITEM_TNG_SPAWNHEALTH  "spawnhealth"
+#define ITEM_TNG_REACTTIME    "reactiontime"
+#define ITEM_TNG_PAINCHANCE   "painchance"
+#define ITEM_TNG_SPEED        "speed"
+#define ITEM_TNG_FASTSPEED    "fastspeed"
+#define ITEM_TNG_RADIUS       "radius"
+#define ITEM_TNG_HEIGHT       "height"
+#define ITEM_TNG_C3DHEIGHT    "correct_height"
+#define ITEM_TNG_MASS         "mass"
+
+// Damage Properties
+#define ITEM_TNG_DAMAGE       "damage"
+#define ITEM_TNG_DMGSPECIAL   "dmgspecial"
+#define ITEM_TNG_TOPDAMAGE    "topdamage"
+#define ITEM_TNG_TOPDMGMASK   "topdamagemask"
+#define ITEM_TNG_MOD          "mod"
+#define ITEM_TNG_OBIT1        "obituary_normal"
+#define ITEM_TNG_OBIT2        "obituary_melee"
+
+// Pain/Death Properties
+#define ITEM_TNG_BLOODCOLOR   "bloodcolor"
+#define ITEM_TNG_NUKESPEC     "nukespecial"
+#define ITEM_TNG_DROPTYPE     "droptype"
+
+// Flags
+#define ITEM_TNG_CFLAGS       "cflags"
+#define ITEM_TNG_ADDFLAGS     "addflags"
+#define ITEM_TNG_REMFLAGS     "remflags"
+#define ITEM_TNG_FLAGS        "flags"
+#define ITEM_TNG_FLAGS2       "flags2"
+#define ITEM_TNG_FLAGS3       "flags3"
+#define ITEM_TNG_PARTICLEFX   "particlefx"
+
+// Graphic Properites
+#define ITEM_TNG_TRANSLUC     "translucency"
+#define ITEM_TNG_COLOR        "translation"
+#define ITEM_TNG_SKINSPRITE   "skinsprite"
+#define ITEM_TNG_DEFSPRITE    "defaultsprite"
+#define ITEM_TNG_AVELOCITY    "alphavelocity"
+
+// ACS Spawn Data Sub-Block
+#define ITEM_TNG_ACS_SPAWN    "acs_spawndata"
+#define ITEM_TNG_ACS_NUM      "num"
+#define ITEM_TNG_ACS_MODES    "modes"
+
 
 // Thing Delta Keywords
 #define ITEM_DELTA_NAME "name"
@@ -349,61 +368,61 @@ static cfg_opt_t acs_data[] =
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 #define THINGTYPE_FIELDS \
-   CFG_INT(ITEM_TNG_DOOMEDNUM,    -1,        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SPAWNSTATE,   "S_NULL",  CFGF_NONE), \
-   CFG_INT(ITEM_TNG_SPAWNHEALTH,  1000,      CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SEESTATE,     "S_NULL",  CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SEESOUND,     "none",    CFGF_NONE), \
-   CFG_INT(ITEM_TNG_REACTTIME,    8,         CFGF_NONE), \
-   CFG_STR(ITEM_TNG_ATKSOUND,     "none",    CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PAINSTATE,    "S_NULL",  CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PAINSTATES,   0,         CFGF_LIST), \
-   CFG_STR(ITEM_TNG_PNSTATESADD,  0,         CFGF_LIST), \
-   CFG_STR(ITEM_TNG_PNSTATESREM,  0,         CFGF_LIST), \
-   CFG_INT(ITEM_TNG_PAINCHANCE,   0,         CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PAINSOUND,    "none",    CFGF_NONE), \
-   CFG_STR(ITEM_TNG_MELEESTATE,   "S_NULL",  CFGF_NONE), \
-   CFG_STR(ITEM_TNG_MISSILESTATE, "S_NULL",  CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEATHSTATE,   "S_NULL",  CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEATHSTATES,  0,         CFGF_LIST), \
-   CFG_STR(ITEM_TNG_DTHSTATESADD, 0,         CFGF_LIST), \
-   CFG_STR(ITEM_TNG_DTHSTATESREM, 0,         CFGF_LIST), \
-   CFG_STR(ITEM_TNG_XDEATHSTATE,  "S_NULL",  CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEATHSOUND,   "none",    CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_SPEED,     0,         CFGF_NONE, E_IntOrFixedCB), \
-   CFG_FLOAT(ITEM_TNG_RADIUS,     20.0f,     CFGF_NONE), \
-   CFG_FLOAT(ITEM_TNG_HEIGHT,     16.0f,     CFGF_NONE), \
-   CFG_INT(ITEM_TNG_MASS,         100,       CFGF_NONE), \
-   CFG_INT(ITEM_TNG_DAMAGE,       0,         CFGF_NONE), \
-   CFG_STR(ITEM_TNG_ACTIVESOUND,  "none",    CFGF_NONE), \
-   CFG_STR(ITEM_TNG_FLAGS,        "",        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_FLAGS2,       "",        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_RAISESTATE,   "S_NULL",  CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_TRANSLUC,  65536,     CFGF_NONE, E_TranslucCB), \
-   CFG_STR(ITEM_TNG_FLAGS3,       "",        CFGF_NONE), \
-   CFG_INT(ITEM_TNG_BLOODCOLOR,   0,         CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_FASTSPEED, 0,         CFGF_NONE, E_IntOrFixedCB), \
-   CFG_STR(ITEM_TNG_NUKESPEC,     "NULL",    CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PARTICLEFX,   "",        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DROPTYPE,     "NONE",    CFGF_NONE), \
-   CFG_STR(ITEM_TNG_MOD,          "Unknown", CFGF_NONE), \
-   CFG_STR(ITEM_TNG_OBIT1,        "NONE",    CFGF_NONE), \
-   CFG_STR(ITEM_TNG_OBIT2,        "NONE",    CFGF_NONE), \
-   CFG_INT_CB(ITEM_TNG_COLOR,     0,         CFGF_NONE, E_ColorCB), \
-   CFG_STR(ITEM_TNG_CFLAGS,       "",        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_ADDFLAGS,     "",        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_REMFLAGS,     "",        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DMGSPECIAL,   "NONE",    CFGF_NONE), \
-   CFG_STR(ITEM_TNG_CRASHSTATE,   "S_NULL",  CFGF_NONE), \
-   CFG_INT(ITEM_TNG_DEHNUM,       -1,        CFGF_NONE), \
-   CFG_STR(ITEM_TNG_SKINSPRITE,   "noskin",  CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEFSPRITE,    NULL,      CFGF_NONE), \
-   CFG_FLOAT(ITEM_TNG_C3DHEIGHT,  0.0f,      CFGF_NONE), \
-   CFG_STR(ITEM_TNG_BASICTYPE,    "",        CFGF_NONE), \
-   CFG_INT(ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE), \
-   CFG_INT(ITEM_TNG_TOPDMGMASK,   0,         CFGF_NONE), \
-   CFG_FLOAT(ITEM_TNG_AVELOCITY,  0.0f,      CFGF_NONE), \
-   CFG_SEC(ITEM_TNG_ACS_SPAWN,    acs_data,  CFGF_NOCASE), \
+   CFG_INT(   ITEM_TNG_DOOMEDNUM,    -1,        CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_DEHNUM,       -1,        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_BASICTYPE,    "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_SPAWNSTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_SEESTATE,     "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PAINSTATE,    "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PAINSTATES,   0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_PNSTATESADD,  0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_PNSTATESREM,  0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_MELEESTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_MISSILESTATE, "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEATHSTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEATHSTATES,  0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_DTHSTATESADD, 0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_DTHSTATESREM, 0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_XDEATHSTATE,  "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_RAISESTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_CRASHSTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_SEESOUND,     "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ATKSOUND,     "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PAINSOUND,    "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEATHSOUND,   "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ACTIVESOUND,  "none",    CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_SPAWNHEALTH,  1000,      CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_REACTTIME,    8,         CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_PAINCHANCE,   0,         CFGF_NONE                ), \
+   CFG_INT_CB(ITEM_TNG_SPEED,        0,         CFGF_NONE, E_IntOrFixedCB), \
+   CFG_INT_CB(ITEM_TNG_FASTSPEED,    0,         CFGF_NONE, E_IntOrFixedCB), \
+   CFG_FLOAT( ITEM_TNG_RADIUS,       20.0f,     CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_HEIGHT,       16.0f,     CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_C3DHEIGHT,    0.0f,      CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_MASS,         100,       CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_DAMAGE,       0,         CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DMGSPECIAL,   "NONE",    CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_TOPDMGMASK,   0,         CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_MOD,          "Unknown", CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_OBIT1,        "NONE",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_OBIT2,        "NONE",    CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_BLOODCOLOR,   0,         CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_NUKESPEC,     "NULL",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DROPTYPE,     "NONE",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_CFLAGS,       "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ADDFLAGS,     "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_REMFLAGS,     "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS,        "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS2,       "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS3,       "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PARTICLEFX,   "",        CFGF_NONE                ), \
+   CFG_INT_CB(ITEM_TNG_TRANSLUC,     65536,     CFGF_NONE, E_TranslucCB  ), \
+   CFG_INT_CB(ITEM_TNG_COLOR,        0,         CFGF_NONE, E_ColorCB     ), \
+   CFG_STR(   ITEM_TNG_SKINSPRITE,   "noskin",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEFSPRITE,    NULL,      CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_AVELOCITY,    0.0f,      CFGF_NONE                ), \
+   CFG_SEC(   ITEM_TNG_ACS_SPAWN,    acs_data,  CFGF_NOCASE              ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -743,7 +762,7 @@ static void MetaStateCopy(void *dest, const void *src, size_t size)
    metastate_t       *deststate = (metastate_t *)dest;
 
    deststate->state = srcstate->state;
-   deststate->name  = strdup(srcstate->name);
+   deststate->parent.key = deststate->name = strdup(srcstate->name);
 }
 
 //
