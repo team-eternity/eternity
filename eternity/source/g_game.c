@@ -2680,7 +2680,7 @@ void G_DoNewGame (void)
 
 typedef struct speedset_s
 {
-   metaobject_t link;       // metatable link
+   metaobject_t parent;     // metatable link
    int mobjType;            // the type this speedset is for
    int normalSpeed;         // the normal speed of this thing type
    int fastSpeed;           // -fast speed
@@ -2711,7 +2711,7 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
       firsttime = false;
    }
 
-   if((o = MetaGetObjectType(mi->meta, "speedset", METATYPE(speedset_t))))
+   if((o = MetaGetObjectKeyAndType(mi->meta, "speedset", METATYPE(speedset_t))))
    {
       speedset_t *ss  = o->object;
       ss->normalSpeed = nspeed;
@@ -2725,7 +2725,7 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
       newSpeedSet->normalSpeed = nspeed;
       newSpeedSet->fastSpeed   = fspeed;
 
-      MetaAddObject(mi->meta, "speedset", &newSpeedSet->link, newSpeedSet, 
+      MetaAddObject(mi->meta, "speedset", &newSpeedSet->parent, newSpeedSet, 
                     METATYPE(speedset_t));
    }
 }
@@ -2758,8 +2758,8 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", 
-                                      METATYPE(speedset_t))))
+            if((o = MetaGetObjectKeyAndType(mobjinfo[i].meta, "speedset", 
+                                            METATYPE(speedset_t))))
             {
                mobjinfo[i].speed = ((speedset_t *)o->object)->fastSpeed;
             }
@@ -2772,8 +2772,8 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            if((o = MetaGetObjectType(mobjinfo[i].meta, "speedset", 
-                                      METATYPE(speedset_t))))
+            if((o = MetaGetObjectKeyAndType(mobjinfo[i].meta, "speedset", 
+                                            METATYPE(speedset_t))))
             {
                mobjinfo[i].speed = ((speedset_t *)o->object)->normalSpeed;
             }

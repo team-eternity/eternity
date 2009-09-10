@@ -616,13 +616,13 @@ boolean E_AutoAllocThingDEHNum(int thingnum)
 void E_CollectThings(cfg_t *tcfg)
 {
    int i;
-   ehash_t *metatables;
+   metatable_t *metatables;
 
    // allocate array
    mobjinfo = calloc(NUMMOBJTYPES, sizeof(mobjinfo_t));
 
    // 08/17/09: allocate metatables
-   metatables = calloc(NUMMOBJTYPES, sizeof(ehash_t));
+   metatables = calloc(NUMMOBJTYPES, sizeof(metatable_t));
 
    // initialize hash slots
    for(i = 0; i < NUMTHINGCHAINS; ++i)
@@ -762,7 +762,7 @@ static void MetaStateCopy(void *dest, const void *src, size_t size)
    metastate_t       *deststate = (metastate_t *)dest;
 
    deststate->state = srcstate->state;
-   deststate->parent.key = deststate->name = strdup(srcstate->name);
+   deststate->name  = strdup(srcstate->name);
 }
 
 //
@@ -819,7 +819,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
    metaobject_t *obj;
 
-   if((obj = MetaGetObjectType(mi->meta, name, METATYPE(metastate_t))))
+   if((obj = MetaGetObjectKeyAndType(mi->meta, name, METATYPE(metastate_t))))
       E_RemoveMetaStatePtr(mi, (metastate_t *)(obj->object));
 }
 
@@ -834,7 +834,7 @@ static metastate_t *E_GetMetaState(mobjinfo_t *mi, const char *name)
    metaobject_t *obj = NULL;
    metastate_t  *ret = NULL;
    
-   if((obj = MetaGetObjectType(mi->meta, name, METATYPE(metastate_t))))
+   if((obj = MetaGetObjectKeyAndType(mi->meta, name, METATYPE(metastate_t))))
       ret = (metastate_t *)(obj->object);
 
    return ret;
@@ -949,25 +949,20 @@ static void E_RemoveDamageTypeState(mobjinfo_t *mi, const char *base, emod_t *mo
 static void E_DisposeDamageTypeList(mobjinfo_t *mi, const char *base)
 {
    metaobject_t *obj  = NULL;
-   unsigned int index = -1;
 
    // iterate on the metatable to look for metastate_t objects with
    // the base string as the initial part of their name
 
-   while((obj = MetaTableIterator(mi->meta, obj, &index)))
+   while((obj = MetaGetNextType(mi->meta, obj, METATYPE(metastate_t))))
    {
-      if(IsMetaKindOf(obj, METATYPE(metastate_t)))
+      if(!strncasecmp(obj->key, base, strlen(base)))
       {
-         if(!strncasecmp(obj->key, base, strlen(base)))
-         {
-            metastate_t *state = (metastate_t *)(obj->object);
+         metastate_t *state = (metastate_t *)(obj->object);
 
-            E_RemoveMetaStatePtr(mi, state);
+         E_RemoveMetaStatePtr(mi, state);
 
-            // must restart search (this is not very efficient)
-            obj = NULL;
-            index = -1;
-         }
+         // must restart search (iterator invalidated)
+         obj = NULL;
       }
    }
 }
@@ -1196,7 +1191,7 @@ static void E_CopyThing(int num, int pnum)
 {
    char name[41];
    mobjinfo_t *this_mi;
-   ehash_t    *meta;
+   metatable_t *meta;
    int dehnum, dehnext, namenext;
    
    this_mi = &mobjinfo[num];

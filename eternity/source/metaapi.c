@@ -35,8 +35,9 @@
 // Macros
 
 // Tunables
-#define METANUMCHAINS  53
-#define METALOADFACTOR 0.667f
+#define METANUMCHAINS     53
+#define METANUMTYPECHAINS 31
+#define METALOADFACTOR    0.667f
 
 // These primes roughly double in size.
 static const unsigned int metaPrimes[] =
@@ -58,18 +59,31 @@ int metaerrno = 0;
 // General Utilities
 //
 
-// key retrieval function for metatable hashing
+// key retrieval function for metatable hashing by key
 E_KEYFUNC(metaobject_t, key)
+
+// key and link retrieval function for metatable hashing by type
+E_KEYFUNC(metaobject_t, type)
+E_LINKFUNC(metaobject_t, typelinks)
 
 //
 // MetaInit
 //
-// Initializes an ehash_t into a metatable.
+// Initializes a metatable.
 //
-void MetaInit(ehash_t *metatable)
+void MetaInit(metatable_t *metatable)
 {
-   E_NCStrHashInit(metatable, METANUMCHAINS, E_KEYFUNCNAME(metaobject_t, key),
-                   NULL);
+   // the key hash is growable.
+   // keys are case-insensitive.
+   E_NCStrHashInit(&metatable->keyhash, METANUMCHAINS, 
+                   E_KEYFUNCNAME(metaobject_t, key), NULL);
+
+   // the type hash is fixed size since there are a limited number of types
+   // defined in the source code.
+   // types are case sensitive, because they are based on C types.
+   E_StrHashInit(&metatable->typehash, METANUMTYPECHAINS,
+                 E_KEYFUNCNAME(metaobject_t, type), 
+                 E_LINKFUNCNAME(metaobject_t, typelinks));
 }
 
 //
@@ -84,52 +98,63 @@ boolean IsMetaKindOf(metaobject_t *object, const char *type)
 }
 
 //
-// MetaHas
+// MetaHasKey
 //
 // Returns true or false if an object of the same key is in the metatable.
 // No type checking is done, so it will match any object with that key.
 //
-boolean MetaHas(ehash_t *metatable, const char *key)
+boolean MetaHasKey(metatable_t *metatable, const char *key)
 {
-   return (E_HashObjectForKey(metatable, key) != NULL);
+   return (E_HashObjectForKey(&metatable->keyhash, key) != NULL);
 }
 
 //
 // MetaHasType
 //
-// As above, but returns true only if there is a match for both key and
-// type in the table. Because this has to search down the hash chain until
-// it finds an object of the proper type, it is potentially slower than the
-// routine above.
+// Returns true or false if an object of the same type is in the metatable.
 //
-boolean MetaHasType(ehash_t *metatable, const char *key, const char *type)
+boolean MetaHasType(metatable_t *metatable, const char *type)
+{
+   return (E_HashObjectForKey(&metatable->typehash, type) != NULL);
+}
+
+//
+// MetaHasKeyAndType
+//
+// Returns true if an object exists in the table of both the specified key
+// and type, and it is the same object. This is naturally slower as it must
+// search down the key hash chain for a type match.
+//
+boolean MetaHasKeyAndType(metatable_t *metatable, const char *key, 
+                          const char *type)
 {
    metaobject_t *obj = NULL;
-   boolean objfound = false;
+   boolean found = false;
 
-   while((obj = E_HashObjectIterator(metatable, obj, &key)))
+   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
    {
+      // for each object that matches the key, test the type
       if(IsMetaKindOf(obj, type))
       {
-         objfound = true;
+         found = true;
          break;
       }
    }
 
-   return objfound;
+   return found;
 }
 
 //
-// MetaCountOf
+// MetaCountOfKey
 //
 // Returns the count of objects in the metatable with the given key.
 //
-int MetaCountOf(ehash_t *metatable, const char *key)
+int MetaCountOf(metatable_t *metatable, const char *key)
 {
    metaobject_t *obj = NULL;
    int count = 0;
 
-   while((obj = E_HashObjectIterator(metatable, obj, &key)))
+   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
       ++count;
 
    return count;
@@ -138,15 +163,31 @@ int MetaCountOf(ehash_t *metatable, const char *key)
 //
 // MetaCountOfType
 //
-// Returns the count of objects in the metatable with the given key and
-// of the specified type only.
+// Returns the count of objects in the metatable with the given type.
 //
-int MetaCountOfType(ehash_t *metatable, const char *key, const char *type)
+int MetaCountOfType(metatable_t *metatable, const char *type)
 {
    metaobject_t *obj = NULL;
    int count = 0;
 
-   while((obj = E_HashObjectIterator(metatable, obj, &key)))
+   while((obj = E_HashObjectIterator(&metatable->typehash, obj, &type)))
+      ++count;
+
+   return count;
+}
+
+//
+// MetaCountOfKeyAndType
+//
+// As above, but satisfying both conditions at once.
+//
+int MetaCountOfKeyAndType(metatable_t *metatable, const char *key, 
+                          const char *type)
+{
+   metaobject_t *obj = NULL;
+   int count = 0;
+
+   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
    {
       if(IsMetaKindOf(obj, type))
          ++count;
@@ -170,34 +211,40 @@ int MetaCountOfType(ehash_t *metatable, const char *key, const char *type)
 // responsibility for the memory management of metaobjects, key strings, or
 // type strings.
 //
-void MetaAddObject(ehash_t *metatable, const char *key, metaobject_t *object,
+void MetaAddObject(metatable_t *metatable, const char *key, metaobject_t *object,
                    void *data, const char *type)
 {
+   ehash_t *keyhash = &metatable->keyhash;
+
    object->key    = key;
    object->type   = type;
    object->object = data; // generally, a pointer back to the owning structure
 
-   // check for table overload
-   if(metatable->loadfactor > METALOADFACTOR)
+   // check for key table overload
+   if(keyhash->loadfactor > METALOADFACTOR)
    {
       int newnumchains = 0;
 
-      if(metatable->numchains < metaPrimes[METANUMPRIMES - 1])
+      if(keyhash->numchains < metaPrimes[METANUMPRIMES - 1])
       {
          int i;
 
          // find a prime larger than the current number of chains
-         for(i = 0; metatable->numchains < metaPrimes[i]; ++i);
+         for(i = 0; keyhash->numchains < metaPrimes[i]; ++i);
          
          newnumchains = metaPrimes[i];
       }
       else
-         newnumchains = metatable->numchains * 2; // too big, just double it.
+         newnumchains = keyhash->numchains * 2; // too big, just double it.
 
-      E_HashRebuild(metatable, newnumchains);
+      E_HashRebuild(keyhash, newnumchains);
    }
 
-   E_HashAddObject(metatable, object);
+   // Add the object to the key table
+   E_HashAddObject(keyhash, object);
+
+   // Add the object to the type table, which is static in size
+   E_HashAddObject(&metatable->typehash, object);
 }
 
 //
@@ -205,9 +252,10 @@ void MetaAddObject(ehash_t *metatable, const char *key, metaobject_t *object,
 //
 // Removes the provided object from the given metatable.
 //
-void MetaRemoveObject(ehash_t *metatable, metaobject_t *object)
+void MetaRemoveObject(metatable_t *metatable, metaobject_t *object)
 {
-   E_HashRemoveObject(metatable, object);
+   E_HashRemoveObject(&metatable->keyhash,  object);
+   E_HashRemoveObject(&metatable->typehash, object);
 }
 
 //
@@ -216,23 +264,33 @@ void MetaRemoveObject(ehash_t *metatable, metaobject_t *object)
 // Returns the first object found in the metatable with the given key, 
 // regardless of its type. Returns NULL if no such object exists.
 //
-metaobject_t *MetaGetObject(ehash_t *metatable, const char *key)
+metaobject_t *MetaGetObject(metatable_t *metatable, const char *key)
 {
-   return E_HashObjectForKey(metatable, &key);
+   return E_HashObjectForKey(&metatable->keyhash, &key);
 }
 
 //
 // MetaGetObjectType
 //
-// Returns the first object found in the metatable which matches both the
-// key and type. Returns NULL if no such object exists.
+// Returns the first object found in the metatable which matches the type. 
+// Returns NULL if no such object exists.
 //
-metaobject_t *MetaGetObjectType(ehash_t *metatable, const char *key,
-                                const char *type)
+metaobject_t *MetaGetObjectType(metatable_t *metatable, const char *type)
+{
+   return E_HashObjectForKey(&metatable->typehash, &type);
+}
+
+//
+// MetaGetObjectKeyAndType
+//
+// As above, but satisfying both conditions at once.
+//
+metaobject_t *MetaGetObjectKeyAndType(metatable_t *metatable, const char *key,
+                                      const char *type)
 {
    metaobject_t *obj = NULL;
 
-   while((obj = E_HashObjectIterator(metatable, obj, &key)))
+   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
    {
       if(IsMetaKindOf(obj, type))
          break;
@@ -252,10 +310,10 @@ metaobject_t *MetaGetObjectType(ehash_t *metatable, const char *key,
 // call this anyway if you want to pretend you don't know how the
 // metatable is implemented.
 //
-metaobject_t *MetaGetNextObject(ehash_t *metatable, metaobject_t *object,
+metaobject_t *MetaGetNextObject(metatable_t *metatable, metaobject_t *object,
                                 const char *key)
 {
-   return E_HashObjectIterator(metatable, object, &key);
+   return E_HashObjectIterator(&metatable->keyhash, object, &key);
 }
 
 //
@@ -264,12 +322,23 @@ metaobject_t *MetaGetNextObject(ehash_t *metatable, metaobject_t *object,
 // Similar to above, but this returns the next object which also matches
 // the specified type.
 //
-metaobject_t *MetaGetNextType(ehash_t *metatable, metaobject_t *object,
-                              const char *key, const char *type)
+metaobject_t *MetaGetNextType(metatable_t *metatable, metaobject_t *object,
+                              const char *type)
+{
+   return E_HashObjectIterator(&metatable->typehash, object, &type);
+}
+
+//
+// MetaGetNextKeyAndType
+//
+// As above, but satisfying both conditions at once.
+//
+metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object,
+                                    const char *key, const char *type)
 {
    metaobject_t *obj = object;
 
-   while((obj = E_HashObjectIterator(metatable, obj, &key)))
+   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
    {
       if(IsMetaKindOf(obj, type))
          break;
@@ -283,10 +352,10 @@ metaobject_t *MetaGetNextType(ehash_t *metatable, metaobject_t *object,
 //
 // Iterates on all objects in the metatable, regardless of key or type.
 //
-metaobject_t *MetaTableIterator(ehash_t *metatable, metaobject_t *object,
+metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object,
                                 unsigned int *index)
 {
-   return E_HashTableIterator(metatable, object, index);
+   return E_HashTableIterator(&metatable->keyhash, object, index);
 }
 
 //=============================================================================
@@ -308,7 +377,7 @@ metaobject_t *MetaTableIterator(ehash_t *metatable, metaobject_t *object,
 //
 // Add an integer to the metatable.
 //
-void MetaAddInt(ehash_t *metatable, const char *key, int value)
+void MetaAddInt(metatable_t *metatable, const char *key, int value)
 {
    static boolean firsttime = true;
    metaint_t *newInt = calloc(1, sizeof(metaint_t));
@@ -338,13 +407,13 @@ void MetaAddInt(ehash_t *metatable, const char *key, int value)
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-int MetaGetInt(ehash_t *metatable, const char *key)
+int MetaGetInt(metatable_t *metatable, const char *key)
 {
    metaobject_t *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metaint_t))))
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metaint_t))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return 0;
@@ -363,14 +432,14 @@ int MetaGetInt(ehash_t *metatable, const char *key)
 //
 // The value of the object is returned in case it is needed.
 //
-int MetaRemoveInt(ehash_t *metatable, const char *key)
+int MetaRemoveInt(metatable_t *metatable, const char *key)
 {
    metaobject_t *obj;
    int value;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metaint_t))))
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metaint_t))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return 0;
@@ -396,7 +465,7 @@ int MetaRemoveInt(ehash_t *metatable, const char *key)
 //
 // MetaAddString
 //
-void MetaAddString(ehash_t *metatable, const char *key, const char *value)
+void MetaAddString(metatable_t *metatable, const char *key, const char *value)
 {
    static boolean firsttime = true;
    metastring_t *newString = calloc(1, sizeof(metastring_t));
@@ -428,13 +497,13 @@ void MetaAddString(ehash_t *metatable, const char *key, const char *value)
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-const char *MetaGetString(ehash_t *metatable, const char *key)
+const char *MetaGetString(metatable_t *metatable, const char *key)
 {
    metaobject_t *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metastring_t))))
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metastring_t))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return NULL;
@@ -455,14 +524,14 @@ const char *MetaGetString(ehash_t *metatable, const char *key)
 // if the string is dynamically allocated, you will need to then
 // free it yourself using the proper routine.
 //
-const char *MetaRemoveString(ehash_t *metatable, const char *key)
+const char *MetaRemoveString(metatable_t *metatable, const char *key)
 {
    metaobject_t *obj;
    const char *value;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = MetaGetObjectType(metatable, key, METATYPE(metastring_t))))
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metastring_t))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return NULL;
@@ -488,7 +557,7 @@ const char *MetaRemoveString(ehash_t *metatable, const char *key)
 //
 
 // The metatypes registry. This is itself a metatable.
-static ehash_t metaTypeRegistry;
+static metatable_t metaTypeRegistry;
 
 //
 // MetaAlloc
@@ -531,7 +600,7 @@ static metaobject_t *MetaObjectPtr(void *object)
 void MetaRegisterType(metatype_t *type)
 {
    // init table the first time
-   if(!metaTypeRegistry.isinit)
+   if(!metaTypeRegistry.keyhash.isinit)
       MetaInit(&metaTypeRegistry);
 
    // set default methods if any are NULL
@@ -577,7 +646,7 @@ void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
 // Adds copies of all objects with a registered metatype in the source table to
 // the destination table.
 //
-void MetaCopyTable(ehash_t *desttable, ehash_t *srctable)
+void MetaCopyTable(metatable_t *desttable, metatable_t *srctable)
 {
    metaobject_t *srcobj = NULL;
    unsigned int i       = -1;

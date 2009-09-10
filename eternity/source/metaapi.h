@@ -29,6 +29,8 @@
 #ifndef METAAPI_H__
 #define METAAPI_H__
 
+#include "e_hash.h"
+
 #define METATYPE(type) #type
 
 // enumeration for metaerrno
@@ -42,9 +44,16 @@ enum
 
 extern int metaerrno;
 
+typedef struct metatable_s
+{
+   ehash_t keyhash;  // hash of objects by key
+   ehash_t typehash; // hash of objects by type
+} metatable_t;
+
 typedef struct metaobject_s
 {
    mdllistitem_t links;
+   mdllistitem_t typelinks;
    const char *key;
    const char *type;
    void *object;
@@ -76,40 +85,48 @@ typedef struct metatype_s
    MetaObjPtrFn_t objptr;
 } metatype_t;
 
-void    MetaInit(ehash_t *metatable);
+void    MetaInit(metatable_t *metatable);
 boolean IsMetaKindOf(metaobject_t *object, const char *type);
-boolean MetaHas(ehash_t *metatable, const char *key);
-boolean MetaHasType(ehash_t *metatable, const char *key, const char *type);
-int     MetaCountOf(ehash_t *metatable, const char *key);
-int     MetaCountOfType(ehash_t *metatable, const char *key, const char *type);
 
-void MetaAddObject(ehash_t *metatable, const char *key, metaobject_t *object, 
+boolean MetaHasKey(metatable_t *metatable, const char *key);
+boolean MetaHasType(metatable_t *metatable, const char *type);
+boolean MetaHasKeyAndType(metatable_t *metatable, const char *key, const char *type);
+
+int MetaCountOfKey(metatable_t *metatable, const char *key);
+int MetaCountOfType(metatable_t *metatable, const char *type);
+int MetaCountOfKeyAndType(metatable_t *metatable, const char *key, const char *type);
+
+void MetaAddObject(metatable_t *metatable, const char *key, metaobject_t *object, 
                    void *data, const char *type);
-void MetaRemoveObject(ehash_t *metatable, metaobject_t *object);
+void MetaRemoveObject(metatable_t *metatable, metaobject_t *object);
 
-metaobject_t *MetaGetObject(ehash_t *metatable, const char *key);
-metaobject_t *MetaGetObjectType(ehash_t *metatable, const char *key, 
-                                const char *type);
-metaobject_t *MetaGetNextObject(ehash_t *metatable, metaobject_t *object, 
+metaobject_t *MetaGetObject(metatable_t *metatable, const char *key);
+metaobject_t *MetaGetObjectType(metatable_t *metatable, const char *type);
+metaobject_t *MetaGetObjectKeyAndType(metatable_t *metatable, const char *key,
+                                      const char *type);
+
+metaobject_t *MetaGetNextObject(metatable_t *metatable, metaobject_t *object, 
                                 const char *key);
-metaobject_t *MetaGetNextType(ehash_t *metatable, metaobject_t *object, 
-                              const char *key, const char *type);
+metaobject_t *MetaGetNextType(metatable_t *metatable, metaobject_t *object, 
+                              const char *type);
+metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object,
+                                    const char *key, const char *type);
 
-void MetaAddInt(ehash_t *metatable, const char *key, int value);
-int  MetaGetInt(ehash_t *metatable, const char *key);
-int  MetaRemoveInt(ehash_t *metatable, const char *key);
+void MetaAddInt(metatable_t *metatable, const char *key, int value);
+int  MetaGetInt(metatable_t *metatable, const char *key);
+int  MetaRemoveInt(metatable_t *metatable, const char *key);
 
-void        MetaAddString(ehash_t *metatable, const char *key, const char *value);
-const char *MetaGetString(ehash_t *metatable, const char *key);
-const char *MetaRemoveString(ehash_t *metatable, const char *key);
+void        MetaAddString(metatable_t *metatable, const char *key, const char *value);
+const char *MetaGetString(metatable_t *metatable, const char *key);
+const char *MetaRemoveString(metatable_t *metatable, const char *key);
 
 void MetaRegisterType(metatype_t *type);
 void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
                         MetaAllocFn_t alloc, MetaCopyFn_t copy, 
                         MetaObjPtrFn_t objptr);
-void MetaCopyTable(ehash_t *desttable, ehash_t *srctable);
+void MetaCopyTable(metatable_t *desttable, metatable_t *srctable);
 
-metaobject_t *MetaTableIterator(ehash_t *metatable, metaobject_t *object, 
+metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object, 
                                 unsigned int *index);
 #endif
 

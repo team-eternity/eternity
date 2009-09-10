@@ -31,7 +31,7 @@
 
 #include "e_mod.h"
 #include "m_dllist.h"
-#include "e_hash.h"
+#include "metaapi.h"
 
 // haleyjd 07/17/04: sprite constants removed
 
@@ -381,7 +381,7 @@ typedef struct mobjinfo_s
    int dehnext;       // next mobjinfo_t in DEH hash chain
 
    // 08/17/09: metatable
-   ehash_t *meta;
+   metatable_t *meta;
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
    struct mobjinfo_s *parent;

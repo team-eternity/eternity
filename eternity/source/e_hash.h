@@ -50,8 +50,6 @@ typedef struct ehash_s
    EKeyFunc_t  keyfunc;    // key retrieval function
    ELinkFunc_t linkfunc;   // link-for-object function
    boolean isinit;         // true if hash is initialized
-   void *userdata;         // user-provided context for callbacks
-
 } ehash_t;
 
 void  E_HashInit(ehash_t *, unsigned int, EHashFunc_t, ECompFunc_t, EKeyFunc_t, 
