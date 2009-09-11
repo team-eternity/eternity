@@ -1205,9 +1205,10 @@ void E_ProcessStateDeltas(cfg_t *cfg)
 /*
   Grammar
 
-  <labeledunit> := <label><eol><frameblock><labeledunit> | nil
-    <label> := [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?':'
-    <eol>   := '\n'
+  <labeledunit> := <labelblock><frameblock><labeledunit> | nil
+    <labelblock> := <label><eol><labelblock>
+      <label> := [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?':'
+      <eol>   := '\n'
     <frameblock> := <frame><frameblock> | <frame>
       <frame> := <keyword><eol> | <frame_token_list><eol>
         <keyword> := "stop" | "wait" | "loop" | "goto" <jumplabel>
@@ -1230,9 +1231,10 @@ void E_ProcessStateDeltas(cfg_t *cfg)
    State Transition Diagram
    ----------------------------------
    NEEDLABEL: 
-      <label> : NEEDKWORSTATE
+      <label> : NEEDLABELORKWORSTATE
       EOL     : loop
-   NEEDKWORSTATE:
+   NEEDLABELORKWORSTATE:
+      <label>   : NEEDLABELORKWORSTATE
       "goto"    : NEEDGOTOLABEL
       <keyword> : NEEDKWEOL
       <text>    : NEEDSTATEFRAMES
@@ -1283,7 +1285,7 @@ void E_ProcessStateDeltas(cfg_t *cfg)
 enum
 {
    PSTATE_NEEDLABEL,             // starting state, first token must be a label
-   PSTATE_NEEDKWORSTATE,         // after label, need keyword or state
+   PSTATE_NEEDLABELORKWORSTATE,  // after label, need label or keyword or state
    PSTATE_NEEDGOTOLABEL,         // after goto, need goto label
    PSTATE_NEEDGOTOEOLORPLUS,     // after goto label, need EOL or '+'
    PSTATE_NEEDGOTOOFFSET,        // after '+', need goto offset number
@@ -1297,7 +1299,6 @@ enum
    PSTATE_NEEDSTATECOMMAORPAREN, // after argument, need ',' or ')'
    PSTATE_NEEDSTATEARG,          // after ',', need argument (loop state)
    PSTATE_NEEDSTATEEOL,          // after ')', need EOL
-   PSTATE_NEEDLABELORKWORSTATE,  // after state EOL, anything (loop state)
    PSTATE_NUMSTATES
 };
 
@@ -1745,7 +1746,7 @@ static void DoPSNeedLabel(pstate_t *ps)
       break;
    case TOKEN_LABEL:
       // TODO: record label to associate with next state generated
-      ps->state = PSTATE_NEEDKWORSTATE;
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
    default:
       // anything else is an error; eat the rest of the line
@@ -1755,17 +1756,24 @@ static void DoPSNeedLabel(pstate_t *ps)
 }
 
 //
-// DoPSNeedKWOrState
+// DoPSNeedLabelOrKWOrState
 //
-// Expecting a keyword or the first spritename token of a state
+// Main looping state. This is gone to after finding the first label,
+// as well as returned to after processing a state.
 //
-static void DoPSNeedKWOrState(pstate_t *ps)
+static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
 {
    E_GetDSToken(ps);
 
    switch(ps->tokentype)
    {
-   case TOKEN_EOL: // loop until something meaningful appears
+   case TOKEN_EOL:
+      // loop until something meaningful appears
+      break;
+   case TOKEN_LABEL:
+      // TODO: record label to associate with next state generated
+      // TODO: if not first label encountered, push.
+      // remain in the current state
       break;
    case TOKEN_KEYWORD:
       // TODO: generate appropriate state for keyword
@@ -1785,16 +1793,8 @@ static void DoPSNeedKWOrState(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEFRAMES;
       break;
    default:
-      // anything else is an error
-      PSExpectedErr(ps, "keyword or sprite", ps->tokentype != TOKEN_LABEL);
-
-      // a label only issues a warning, and we continue to look for additional
-      // tokens on the same line
-      if(ps->tokentype == TOKEN_LABEL)
-      {
-         E_EDFLogPrintf("\t\t\t\tWarning: superfluous label '%s' ignored\n",
-                        ps->tokenbuffer->buffer);
-      }
+      // anything else is an error; eat rest of the line
+      PSExpectedErr(ps, "label or keyword or sprite", true);
       break;
    }
 }
@@ -2131,50 +2131,6 @@ static void DoPSNeedStateEOL(pstate_t *ps)
    ps->state = PSTATE_NEEDLABELORKWORSTATE;
 }
 
-//
-// DoPSNeedLabelOrKWOrState
-//
-// Main looping state, this is jumped to after processing a state,
-// which is the only time that finding *anything* allowed in the states
-// block is valid.
-//
-static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
-{
-   E_GetDSToken(ps);
-
-   switch(ps->tokentype)
-   {
-   case TOKEN_EOL:
-      // loop until something meaningful appears
-      break;
-   case TOKEN_LABEL:
-      // TODO: record label to associate with next state generated
-      ps->state = PSTATE_NEEDKWORSTATE;
-      break;
-   case TOKEN_KEYWORD:
-      // TODO: generate appropriate state for keyword
-      if(!M_QStrCaseCmp(ps->tokenbuffer, "goto"))
-      {
-         // TODO: handle goto specifics
-         ps->state = PSTATE_NEEDGOTOLABEL;
-      }
-      else
-      {
-         // TODO: handle other keyword specifics
-         ps->state = PSTATE_NEEDKWEOL;
-      }
-      break;
-   case TOKEN_TEXT:
-      // TODO: verify sprite name; generate new state
-      ps->state = PSTATE_NEEDSTATEFRAMES;
-      break;
-   default:
-      // anything else is an error; eat rest of the line
-      PSExpectedErr(ps, "label or keyword or sprite", true);
-      break;
-   }
-}
-
 // parser callback type
 typedef void (*psfunc_t)(pstate_t *);
 
@@ -2182,7 +2138,7 @@ typedef void (*psfunc_t)(pstate_t *);
 static psfunc_t pstatefuncs[] =
 {
    DoPSNeedLabel,
-   DoPSNeedKWOrState,
+   DoPSNeedLabelOrKWOrState,
    DoPSNeedGotoLabel,
    DoPSNeedGotoEOLOrPlus,
    DoPSNeedGotoOffset,
@@ -2196,7 +2152,6 @@ static psfunc_t pstatefuncs[] =
    DoPSNeedStateCommaOrParen,
    DoPSNeedStateArg,
    DoPSNeedStateEOL,
-   DoPSNeedLabelOrKWOrState,
 };
 
 //
