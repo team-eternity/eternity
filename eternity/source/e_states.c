@@ -1371,6 +1371,7 @@ enum
    TSTATE_SLASH,   // scanning after a '/'
    TSTATE_COMMENT, // consume up to next "\n"
    TSTATE_TEXT,    // scanning in a label, keyword, or text token
+   TSTATE_COLON,   // scanning after ':'
    TSTATE_LABEL,   // scanning after '.' in a label
    TSTATE_STRING,  // scanning in a string literal
    TSTATE_DONE     // finished; return token to parser
@@ -1557,9 +1558,11 @@ static void DoTokenStateText(tkstate_t *tks)
    }
    else if(str[i] == ':')
    {
-      // colon at the end means this is a label, and we are at the end of it.
-      tks->tokentype = TOKEN_LABEL;
-      tks->state     = TSTATE_DONE;
+      // colon either means:
+      // A. this is a label, and we are at the end of it.
+      // B. this is a namespace declarator in a goto label - next char is ':'
+      // We must use another state to determine which is which.
+      tks->state     = TSTATE_COLON;
    }
    else // anything else ends this token, and steps back
    {
@@ -1568,6 +1571,34 @@ static void DoTokenStateText(tkstate_t *tks)
          tks->tokentype = TOKEN_KEYWORD;
       tks->state = TSTATE_DONE;
       --tks->i; // the char we're on is the start of a new token, so back up.
+   }
+}
+
+//
+// DoTokenStateColon
+//
+// When a ':' is found in a text token we must defer the decision on whether
+// to call that the end of the token or not until we see the next character.
+//
+static void DoTokenStateColon(tkstate_t *tks)
+{
+   const char *str  = tks->line->buffer;
+   int i            = tks->i;
+   qstring_t *token = tks->token;
+
+   if(str[i] == ':')
+   {
+      // Two colons in a row means we've found the namespace declarator.
+      // Add two colons to the token buffer, and return to TSTATE_TEXT to
+      // parse out the rest of the token.
+      M_QStrCat(token, "::");
+      tks->state = TSTATE_TEXT;
+   }
+   else // anything else means this was a label
+   {
+      tks->tokentype = TOKEN_LABEL;
+      tks->state     = TSTATE_DONE;
+      --tks->i; // the char we're on is the start of a new token, so back up
    }
 }
 
@@ -1645,6 +1676,7 @@ static tksfunc_t tstatefuncs[] =
    DoTokenStateSlash,   // scanning inside a single-line comment?
    DoTokenStateComment, // scanning inside a comment; consume to next EOL
    DoTokenStateText,    // scanning inside a label, keyword, or text
+   DoTokenStateColon,   // scanning after a ':' encountered in a text token
    DoTokenStateLabel,   // scanning inside a label after a dot
    DoTokenStateString,  // scanning inside a string literal
 };
@@ -2256,6 +2288,7 @@ void E_ParseDecorateStates(const char *input)
 // This code will dry-run the DECORATE state parser.
 //
 
+/*
 static const char *teststr = 
 "Spawn:\n"
 "   SPR1 ABCD 10 bright A_Foobar(0, 1, 2)\n"
@@ -2269,6 +2302,11 @@ static const char *teststr =
 "     goto See\n"
 "  CustomLabel2: \n"
 "     goto See+6\n";
+*/
+
+static const char *teststr =
+"Spawn:\n"
+"   goto Super::Spawn\n";
 
 static void TestDSParser(void)
 {
