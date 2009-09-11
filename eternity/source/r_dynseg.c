@@ -401,10 +401,10 @@ void R_AttachPolyObject(polyobj_t *poly)
    int i;
 
    // never attach a bad polyobject
-   if(poly->isBad)
+   if(poly->flags & POF_ISBAD)
       return;
 
-   if(poly->attached) // already attached?
+   if(poly->flags & POF_ATTACHED) // already attached?
       return;
 
    // iterate on the polyobject lines array
@@ -440,7 +440,7 @@ void R_AttachPolyObject(polyobj_t *poly)
       R_SplitLine(idseg, numnodes - 1);
    }
 
-   poly->attached = true;
+   poly->flags |= POF_ATTACHED;
 }
 
 //
@@ -455,11 +455,11 @@ void R_DetachPolyObject(polyobj_t *poly)
    int i;
 
    // a bad polyobject should never have been attached in the first place
-   if(poly->isBad)
+   if(poly->flags & POF_ISBAD)
       return;
 
    // not attached?
-   if(!poly->attached)
+   if(!(poly->flags & POF_ATTACHED))
       return;
    
    // no dynaseg-containing subsecs?
@@ -517,8 +517,8 @@ void R_DetachPolyObject(polyobj_t *poly)
    }
 
    // no longer tracking any subsectors
-   poly->numDSS = 0;
-   poly->attached = false;
+   poly->numDSS = 0;   
+   poly->flags &= ~POF_ATTACHED;
 }
 
 //

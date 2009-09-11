@@ -41,12 +41,24 @@
 
 // haleyjd: use zdoom-compatible doomednums
 
-#define POLYOBJ_ANCHOR_DOOMEDNUM     9300
-#define POLYOBJ_SPAWN_DOOMEDNUM      9301
-#define POLYOBJ_SPAWNCRUSH_DOOMEDNUM 9302
+#define POLYOBJ_ANCHOR_DOOMEDNUM      9300
+#define POLYOBJ_SPAWN_DOOMEDNUM       9301
+#define POLYOBJ_SPAWNCRUSH_DOOMEDNUM  9302
+#define POLYOBJ_SPAWNDAMAGE_DOOMEDNUM 9303
 
 #define POLYOBJ_START_LINE    348
 #define POLYOBJ_EXPLICIT_LINE 349
+
+//
+// Polyobject Flags
+//
+enum
+{
+   POF_ATTACHED, // is attached to the world for rendering (has dynasegs)
+   POF_LINKED,   // is attached to the world for clipping
+   POF_ISBAD,    // is bad; should not be attached/linked/moved/rendered
+   POF_DAMAGING, // does damage just by touching objects
+};
 
 //
 // Polyobject Structure
@@ -78,10 +90,8 @@ typedef struct polyobj_s
    struct vertex_s    centerPt;  // center point
    fixed_t zdist;                // viewz distance for sorting
    angle_t angle;                // for rotation
-   boolean attached;             // if true, is attached to a subsector
 
    fixed_t blockbox[4];            // bounding box for clipping
-   boolean linked;                 // is linked to blockmap
    struct polymaplink_s *linkhead; // haleyjd 05/18/06: unlink optimization
    int validcount;                 // for clipping: prevents multiple checks
    int damage;                     // damage to inflict on stuck things
@@ -91,7 +101,7 @@ typedef struct polyobj_s
 
    thinker_t *thinker;  // pointer to a thinker affecting this polyobj
 
-   boolean isBad; // a bad polyobject: should not be rendered/manipulated
+   unsigned int flags;  // 09/11/09: polyobject flags
 
 } polyobj_t;
 

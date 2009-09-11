@@ -1491,7 +1491,7 @@ static void P_UnArchivePolyObj(polyobj_t *po)
 
    // if the object is bad or isn't in the id hash, we can do nothing more
    // with it, so return now
-   if(po->isBad || po != Polyobj_GetForNum(id))
+   if((po->flags & POF_ISBAD) || po != Polyobj_GetForNum(id))
       return;
 
    // rotate and translate polyobject

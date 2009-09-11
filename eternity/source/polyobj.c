@@ -299,7 +299,7 @@ newline:
 
    // error: if we reach here, the line search never found another line to
    // continue the loop, and thus the polyobject is open. This isn't allowed.
-   po->isBad = true;
+   po->flags |= POF_ISBAD;
    doom_printf(FC_ERROR "polyobject %d is not closed", po->id);
 }
 
@@ -358,7 +358,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
    // make sure array isn't empty
    if(numLineItems == 0)
    {
-      po->isBad = true;
+      po->flags |= POF_ISBAD;
       doom_printf(FC_ERROR "polyobject %d is empty", po->id);
       return;
    }
@@ -400,6 +400,13 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    if(spawnSpot->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM)
       po->damage = 3;
 
+   // haleyjd 09/11/09: damage-by-touch polyobjects
+   if(spawnSpot->info->doomednum == POLYOBJ_SPAWNDAMAGE_DOOMEDNUM)
+   {
+      po->damage = 3;
+      po->flags |= POF_DAMAGING;
+   }
+
    // set to default thrust; may be modified by attached thinkers
    // TODO: support customized thrust?
    po->thrust = FRACUNIT;
@@ -426,7 +433,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    }
 
    // if an error occurred above, quit processing this object
-   if(po->isBad)
+   if(po->flags & POF_ISBAD)
       return;
 
    // 2. If no such line existed in the first step, look for a line with the 
@@ -438,7 +445,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    {
       Polyobj_findExplicit(po);
       // if an error occurred above, quit processing this object
-      if(po->isBad)
+      if(po->flags & POF_ISBAD)
          return;
       po->mirror = po->lines[0]->args[2];
       if(po->mirror == po->id) // do not allow a self-reference
@@ -458,7 +465,7 @@ static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
    if(Polyobj_GetForNum(po->id))
    {
       // bad polyobject due to id conflict
-      po->isBad = true;
+      po->flags |= POF_ISBAD;
       doom_printf(FC_ERROR "polyobject id conflict: %d", id);
    }
    else
@@ -490,11 +497,11 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    }
 
    // don't move any bad polyobject that may have gotten through
-   if(po->isBad)
+   if(po->flags & POF_ISBAD)
       return;
 
    // don't move any polyobject more than once
-   if(po->attached)
+   if(po->flags & POF_ATTACHED)
    {
       doom_printf(FC_ERROR "polyobj %d has more than one anchor", po->id);
       return;
@@ -542,7 +549,7 @@ static void Polyobj_setCenterPt(polyobj_t *po)
    int i;
 
    // never attach a bad polyobject
-   if(po->isBad)
+   if(po->flags & POF_ISBAD)
       return;
 
    for(i = 0; i < po->numVertices; ++i)
@@ -613,7 +620,7 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
    int i, x, y;
    
    // never link a bad polyobject or a polyobject already linked
-   if(po->isBad || po->linked)
+   if(po->flags & (POF_ISBAD | POF_LINKED))
       return;
    
    // 2/26/06: start line box with values of first vertex, not MININT/MAXINT
@@ -651,7 +658,7 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
       }
    }
 
-   po->linked = true;
+   po->flags |= POF_LINKED;
 }
 
 //
@@ -670,7 +677,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
    polymaplink_t *l = po->linkhead;
 
    // don't bother trying to unlink one that's not linked
-   if(!po->linked)
+   if(!(po->flags & POF_LINKED))
       return;
 
    while(l)
@@ -683,7 +690,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
 
    po->linkhead = NULL;
 
-   po->linked = false;
+   po->flags &= ~POF_LINKED;
 }
 
 
@@ -731,8 +738,11 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
    // if object doesn't fit at desired location, possibly hurt it
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
-      if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
+      if((po->flags & POF_DAMAGING) || 
+         !P_CheckPosition(mo, mo->x + momx, mo->y + momy))
+      {
          P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+      }
    }
 }
 
@@ -797,7 +807,7 @@ static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
    vec.y = y;
 
    // don't move bad polyobjects
-   if(po->isBad)
+   if(po->flags & POF_ISBAD)
       return false;
 
    // translate vertices
@@ -928,7 +938,7 @@ static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
    boolean hitthing = false;
 
    // don't move bad polyobjects
-   if(po->isBad)
+   if(po->flags & POF_ISBAD)
       return false;
 
    angle = (po->angle + delta) >> ANGLETOFINESHIFT;
@@ -1058,7 +1068,8 @@ void Polyobj_InitLevel(void)
          mobj_t *mo = (mobj_t *)th;
 
          if(mo->info->doomednum == POLYOBJ_SPAWN_DOOMEDNUM ||
-            mo->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM)
+            mo->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM ||
+            mo->info->doomednum == POLYOBJ_SPAWNDAMAGE_DOOMEDNUM)
          {
             ++numPolyObjects;
             
@@ -1455,7 +1466,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    }
 
    // don't allow line actions to affect bad polyobjects
-   if(po->isBad)
+   if(po->flags & POF_ISBAD)
       return 0;
 
    // check for override if this polyobj already has a thinker
@@ -1493,7 +1504,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    // apply action to mirroring polyobjects as well
    while((po = Polyobj_GetMirror(po)))
    {
-      if(po->isBad)
+      if(po->flags & POF_ISBAD)
          break;
 
       // check for override if this polyobj already has a thinker
@@ -1550,7 +1561,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    }
 
    // don't allow line actions to affect bad polyobjects
-   if(po->isBad)
+   if(po->flags & POF_ISBAD)
       return 0;
 
    // check for override if this polyobj already has a thinker
@@ -1584,7 +1595,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    // apply action to mirroring polyobjects as well
    while((po = Polyobj_GetMirror(po)))
    {
-      if(po->isBad)
+      if(po->flags & POF_ISBAD)
          break;
 
       // check for override if this polyobject already has a thinker
@@ -1667,7 +1678,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    {
       // don't allow line actions to affect bad polyobjects;
       // polyobject doors don't allow action overrides
-      if(po->isBad || po->thinker)
+      if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
       th = Z_Malloc(sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
@@ -1740,7 +1751,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    {
       // don't allow line actions to affect bad polyobjects;
       // polyobject doors don't allow action overrides
-      if(po->isBad || po->thinker)
+      if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
       th = Z_Malloc(sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
@@ -1787,7 +1798,7 @@ int EV_DoPolyDoor(polydoordata_t *doordata)
 
    // don't allow line actions to affect bad polyobjects;
    // polyobject doors don't allow action overrides
-   if(po->isBad || po->thinker)
+   if((po->flags & POF_ISBAD) || po->thinker)
       return 0;
 
    switch(doordata->doorType)

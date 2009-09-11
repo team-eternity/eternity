@@ -1,4 +1,4 @@
-// EDF for Eternity Engine v3.35.00
+// EDF for Eternity Engine v3.35.93
 //  Thing types define monsters, fireballs, decorations, etc.
 //  Thing types may be defined elsewhere, and order is unimportant.
 //  User-defined thing types should use DeHackEd numbers greater
@@ -38,7 +38,7 @@ thingtype TeleportSpot
   dehackednum = 42
 }
 
-//  BOOM Objects ---------------------------------------------------------------
+// BOOM Objects ----------------------------------------------------------------
 
 thingtype BoomPushPoint 
 {
@@ -280,6 +280,14 @@ thingtype EEPolyObjSpawnSpotCrush
   spawnstate = S_TNT1
   cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
   dehackednum = 156
+}
+
+thingtype EEPolyObjSpawnSpotDamage
+{
+  doomednum = 9303
+  spawnstate = S_TNT1
+  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
+  dehackednum = 157
 }
 
 // Ambience object
