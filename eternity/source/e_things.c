@@ -762,7 +762,7 @@ static void MetaStateCopy(void *dest, const void *src, size_t size)
    metastate_t       *deststate = (metastate_t *)dest;
 
    deststate->state = srcstate->state;
-   deststate->name  = strdup(srcstate->name);
+   deststate->parent.key = deststate->name = strdup(srcstate->name);
 }
 
 //

@@ -666,11 +666,12 @@ void MetaCopyTable(metatable_t *desttable, metatable_t *srctable)
          // copy from the old object
          type->copy(destobj, srcobj->object, type->size);
 
-         // clear metaobject
-         memset(newmeta, 0, sizeof(metaobject_t));
+         // clear metaobject links for safety
+         memset(&newmeta->links,     0, sizeof(newmeta->links));
+         memset(&newmeta->typelinks, 0, sizeof(newmeta->typelinks));
 
          // add the new object to the destination table
-         MetaAddObject(desttable, srcobj->key, newmeta, destobj, srcobj->type);
+         MetaAddObject(desttable, newmeta->key, newmeta, destobj, type->name);
       }
    }
 }
