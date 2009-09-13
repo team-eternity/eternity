@@ -317,6 +317,9 @@ dehflags_t deh_mobjflags[] =
   {"CYCLEALPHA",       0x40000000, 2}, // alpha cycles perpetually
   {"RIP",              0x80000000, 2}, // ripper projectile
 
+  // flags4 bits
+  {"AUTOTRANSLATE",    0x00000001, 3}, // automatic translation for non-DOOM modes
+
   { NULL,              0 }             // NULL terminator
 };
 

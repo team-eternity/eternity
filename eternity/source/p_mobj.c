@@ -1240,6 +1240,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    mobj->flags   = info->flags;
    mobj->flags2  = info->flags2; // haleyjd
    mobj->flags3  = info->flags3; // haleyjd
+   mobj->flags4  = info->flags4; // haleyjd
    mobj->effects = info->particlefx;  // haleyjd 07/13/03
    mobj->damage  = info->damage;      // haleyjd 08/02/04
 
@@ -1346,7 +1347,17 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    if(mobj->info->colour)
       mobj->colour = mobj->info->colour;
    else
-      mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
+   {
+      // haleyjd 09/13/09: automatic DOOM->etc. translation
+      if(mobj->flags4 & MF4_AUTOTRANSLATE && GameModeInfo->defTranslate)
+      {
+         // cache in mobj->info for next time
+         mobj->info->colour = R_TranslationNumForName(GameModeInfo->defTranslate);
+         mobj->colour = mobj->info->colour;
+      }
+      else
+         mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
+   }
 
    return mobj;
 }
@@ -2997,16 +3008,19 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
          mo->flags  = results[0];
          mo->flags2 = results[1];
          mo->flags3 = results[2];
+         mo->flags4 = results[3];
          break;
       case 1: // add flags
          mo->flags  |= results[0];
          mo->flags2 |= results[1];
          mo->flags3 |= results[2];
+         mo->flags4 |= results[3];
          break;
       case 2: // remove flags
          mo->flags  &= ~(results[0]);
          mo->flags2 &= ~(results[1]);
          mo->flags3 &= ~(results[2]);
+         mo->flags4 &= ~(results[3]);
          break;
       }
    }

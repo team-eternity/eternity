@@ -124,6 +124,7 @@ int UnknownThingType;
 #define ITEM_TNG_FLAGS        "flags"
 #define ITEM_TNG_FLAGS2       "flags2"
 #define ITEM_TNG_FLAGS3       "flags3"
+#define ITEM_TNG_FLAGS4       "flags4"
 #define ITEM_TNG_PARTICLEFX   "particlefx"
 
 // Graphic Properites
@@ -416,6 +417,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(   ITEM_TNG_FLAGS,        "",        CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_FLAGS2,       "",        CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_FLAGS3,       "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS4,       "",        CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_PARTICLEFX,   "",        CFGF_NONE                ), \
    CFG_INT_CB(ITEM_TNG_TRANSLUC,     65536,     CFGF_NONE, E_TranslucCB  ), \
    CFG_INT_CB(ITEM_TNG_COLOR,        0,         CFGF_NONE, E_ColorCB     ), \
@@ -1094,19 +1096,16 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    // try lump name
    if(*endptr != '\0')
    {
-      int markernum = W_GetNumForName("T_START");
-      int lumpnum   = (W_CheckNumForName)(value, ns_translations);
+      int tlnum = R_TranslationNumForName(value);
 
-      if(lumpnum == -1)
+      if(tlnum == -1)
       {
          if(cfg)
-         {
             cfg_error(cfg, "bad translation lump '%s'", value);
-         }
          return -1;
       }
          
-      *(int *)result = lumpnum - markernum + TRANSLATIONCOLOURS;
+      *(int *)result = tlnum;
    }
    else
    {
@@ -1486,6 +1485,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
          mobjinfo[i].flags  = results[0];
          mobjinfo[i].flags2 = results[1];
          mobjinfo[i].flags3 = results[2];
+         mobjinfo[i].flags4 = results[3];
          
          cflags = true; // values were set from cflags
       }
@@ -1522,6 +1522,16 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
          else
             mobjinfo[i].flags3 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE3);
       }
+
+      // process flags4
+      if(IS_SET(ITEM_TNG_FLAGS4))
+      {
+         tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS4);
+         if(*tempstr == '\0')
+            mobjinfo[i].flags4 = 0;
+         else
+            mobjinfo[i].flags4 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE4);
+      }
    }
 
    // process addflags and remflags modifiers
@@ -1537,6 +1547,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       mobjinfo[i].flags  |= results[0];
       mobjinfo[i].flags2 |= results[1];
       mobjinfo[i].flags3 |= results[2];
+      mobjinfo[i].flags4 |= results[3];
    }
 
    if(cfg_size(thingsec, ITEM_TNG_REMFLAGS) > 0)
@@ -1550,6 +1561,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       mobjinfo[i].flags  &= ~(results[0]);
       mobjinfo[i].flags2 &= ~(results[1]);
       mobjinfo[i].flags3 &= ~(results[2]);
+      mobjinfo[i].flags4 &= ~(results[3]);
    }
 
    // process raisestate

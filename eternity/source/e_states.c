@@ -413,6 +413,7 @@ enum
    PREFIX_FLAGS,
    PREFIX_FLAGS2,
    PREFIX_FLAGS3,
+   PREFIX_FLAGS4,
    PREFIX_BEXPTR,
    PREFIX_STRING,
    NUM_MISC_PREFIXES
@@ -420,7 +421,7 @@ enum
 
 static const char *misc_prefixes[NUM_MISC_PREFIXES] =
 {
-   "frame",  "thing",  "sound", "flags", "flags2", "flags3",
+   "frame",  "thing",  "sound", "flags", "flags2", "flags3", "flags4",
    "bexptr", "string"
 };
 
@@ -565,6 +566,9 @@ static void E_ParseMiscField(char *value, int *target)
          break;
       case PREFIX_FLAGS3:
          *target = deh_ParseFlagsSingle(strval, DEHFLAGS_MODE3);
+         break;
+      case PREFIX_FLAGS4:
+         *target = deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
          break;
       case PREFIX_BEXPTR:
          {
@@ -1213,7 +1217,7 @@ void E_ProcessStateDeltas(cfg_t *cfg)
       <frame> := <keyword><eol> | <frame_token_list><eol>
         <keyword> := "stop" | "wait" | "loop" | "goto" <jumplabel>
           <jumplabel> := <jlabel> | <jlabel> '+' number
-            <jlabel> := [A-Za-z0-9_]+('.'[A-Za-z0-9_]+)?
+            <jlabel> := [A-Za-z0-9_:]+('.'[A-Za-z0-9_]+)?
         <frame_token_list> := <sprite><frameletters><tics><action>
                             | <sprite><frameletters><tics><bright><action>
           <sprite> := [A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]
@@ -1270,14 +1274,8 @@ void E_ProcessStateDeltas(cfg_t *cfg)
       <number> | <string> : NEEDSTATECOMMAORPAREN
    NEEDSTATEEOL:
       EOL : NEEDLABELORKWORSTATE
-   NEEDLABELORKWORSTATE:
-      <label>   : NEEDKWORSTATE
-      "goto"    : NEEDGOTOLABEL
-      <keyword> : NEEDKWEOL
-      <text>    : NEEDSTATEFRAMES
-      EOL       : loop
 
-  *** EOL is allowed in PSTATE_NEEDKWORSTATE in a manner more flexible than
+  *** EOL is allowed in PSTATE_NEEDLABELORKWORSTATE in a manner more flexible than
       that specified by the above grammar for matters of convenience.
 */
 
@@ -1468,11 +1466,13 @@ static void DoTokenStateSlash(tkstate_t *tks)
 {
    const char *str  = tks->line->buffer;
    int i            = tks->i;
+   qstring_t *token = tks->token;
 
    if(str[i] == '/')
       tks->state = TSTATE_COMMENT;
    else
    {
+      M_QStrPutc(token, str[i]);
       tks->tokentype  = TOKEN_ERROR;
       tks->tokenerror = TERR_UNEXPECTEDCHAR;
       tks->state      = TSTATE_DONE;

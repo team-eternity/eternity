@@ -108,6 +108,9 @@ void R_InitBuffer(int width, int height);
 // Initialize color translation tables, for player rendering etc.
 void R_InitTranslationTables(void);
 
+// haleyjd 09/13/09: translation num-for-name lookup function
+int R_TranslationNumForName(const char *name);
+
 // Rendering function.
 void R_FillBackScreen(void);
 

@@ -82,7 +82,7 @@ thingtype MBFHelperDog
   radius = 12.0
   height = 28.0
   activesound = dgact
-  cflags = SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  cflags = SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ|AUTOTRANSLATE
   raisestate = S_DOGS_RAISE1
   obituary_melee = "was chased down by a rabid puppy"
   dehackednum = 140

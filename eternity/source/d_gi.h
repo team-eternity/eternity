@@ -303,6 +303,7 @@ typedef struct gamemodeinfo_s
    int teleSound;             // sound id for teleportation
    short thrustFactor;        // damage thrust factor
    const char *defPClassName; // default playerclass name
+   const char *defTranslate;  // default translation for AUTOTRANSLATE
 
    // Intermission and Finale stuff
    int interMusNum;           // intermission music number

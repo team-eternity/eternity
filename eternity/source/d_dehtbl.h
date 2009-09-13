@@ -73,13 +73,14 @@ typedef struct
    int  index;
 } dehflags_t;
 
-#define MAXFLAGFIELDS 3
+#define MAXFLAGFIELDS 4
 
 enum
 {
    DEHFLAGS_MODE1,
    DEHFLAGS_MODE2,
    DEHFLAGS_MODE3,
+   DEHFLAGS_MODE4,
    DEHFLAGS_MODE_ALL
 };
 

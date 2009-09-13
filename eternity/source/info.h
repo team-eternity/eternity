@@ -30,8 +30,6 @@
 #define __INFO__
 
 #include "e_mod.h"
-#include "m_dllist.h"
-#include "metaapi.h"
 
 // haleyjd 07/17/04: sprite constants removed
 
@@ -351,11 +349,12 @@ typedef struct mobjinfo_s
                       //  in a while.  Chance is 3/256 it will.
    int flags;         // Bit masks for lots of things.  See p_mobj.h
    int flags2;        // More bit masks for lots of other things -- haleyjd
+   int flags3;        // haleyjd 11/03/02: flags3
+   int flags4;        // haleyjd 09/13/09: flags4
    int raisestate;    // The first state for an Archvile or respawn
                       //  resurrection.  Zero means it won't come
                       //  back to life.
    int translucency;  // haleyjd 09/01/02: zdoom-style translucency
-   int flags3;        // haleyjd 11/03/02: flags3
    int bloodcolor;    // haleyjd 05/08/03: particle blood color
    int particlefx;    // haleyjd 07/13/03: particle effects
    int droptype;      // haleyjd 07/13/03: item drop type
@@ -381,7 +380,7 @@ typedef struct mobjinfo_s
    int dehnext;       // next mobjinfo_t in DEH hash chain
 
    // 08/17/09: metatable
-   metatable_t *meta;
+   struct metatable_s *meta;
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
    struct mobjinfo_s *parent;

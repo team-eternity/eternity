@@ -105,6 +105,10 @@
 #define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
 #define DEF_HTIC_FINALE  FINALE_HTIC_CREDITS
 
+// Default translations for MF4_AUTOTRANSLATE flag.
+// Graphic is assumed to be in the DOOM palette.
+#define DEFTL_HERETIC  "TR_DINH"
+
 //
 // Common Flags
 //
@@ -742,6 +746,7 @@ static gamemodeinfo_t giDoomSW =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
+   NULL,             // defTranslate
 
    mus_inter,         // interMusNum
    &giDoomFText,      // ftextinfo
@@ -832,6 +837,7 @@ static gamemodeinfo_t giDoomReg =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
+   NULL,             // defTranslate
 
    mus_inter,        // interMusNum
    &giDoomFText,     // ftextinfo
@@ -922,6 +928,7 @@ static gamemodeinfo_t giDoomRetail =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
+   NULL,             // defTranslate
 
    mus_inter,         // interMusNum
    &giDoomFText,      // ftextinfo
@@ -1012,6 +1019,7 @@ static gamemodeinfo_t giDoomCommercial =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
+   NULL,             // defTranslate
 
    mus_dm2int,        // interMusNum
    &giDoomFText,      // ftextinfo
@@ -1102,6 +1110,7 @@ static gamemodeinfo_t giHereticSW =
    sfx_htelept,      // teleSound
    150,              // thrustFactor
    "Corvus",         // defPClassName
+   DEFTL_HERETIC,    // defTranslate
 
    hmus_intr,         // interMusNum
    &giHticFText,      // ftextinfo
@@ -1196,6 +1205,7 @@ static gamemodeinfo_t giHereticReg =
    sfx_htelept,      // teleSound
    150,              // thrustFactor
    "Corvus",         // defPClassName
+   DEFTL_HERETIC,    // defTranslate
 
    hmus_intr,         // interMusNum
    &giHticFText,      // ftextinfo

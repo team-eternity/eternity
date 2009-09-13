@@ -207,7 +207,7 @@ typedef enum
     MF_FRIEND = 0x40000000,        // killough 7/18/98: friendly monsters
 
     // Translucent sprite?                                          // phares
-    MF_TRANSLUCENT      = 0x80000000,                               // phares
+    MF_TRANSLUCENT      = 0x80000000                                // phares
 } mobjflag_t;
 
 typedef enum
@@ -245,7 +245,7 @@ typedef enum
   MF2_DORMANT       = 0x10000000,  // dormant (internal)
   MF2_SEEKERMISSILE = 0x20000000,  // might use tracer effects
   MF2_DEFLECTIVE    = 0x40000000,  // deflects projectiles
-  MF2_REFLECTIVE    = 0x80000000,  // reflects projectiles
+  MF2_REFLECTIVE    = 0x80000000   // reflects projectiles
 } mobjflag2_t;
 
 // haleyjd 11/03/02: flags3 -- even more stuff!
@@ -282,8 +282,13 @@ typedef enum
    MF3_PASSMOBJ     = 0x10000000,  // haleyjd: OVER_UNDER
    MF3_DONTOVERLAP  = 0x20000000,  // haleyjd: OVER_UNDER
    MF3_CYCLEALPHA   = 0x40000000,  // alpha cycles from 0 to 65536 perpetually
-   MF3_RIP          = 0x80000000,  // ripper - goes through everything
+   MF3_RIP          = 0x80000000   // ripper - goes through everything
 } mobjflag3_t;
+
+typedef enum
+{
+   MF4_AUTOTRANSLATE = 0x00000001, // DOOM sprite is automatically translated
+} mobjflag4_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
 // (some degree of opaqueness is good, to avoid compatibility woes)
@@ -398,6 +403,7 @@ struct mobj_s
    unsigned int        flags;
    unsigned int        flags2;    // haleyjd 04/09/99: I know, kill me now
    unsigned int        flags3;    // haleyjd 11/03/02
+   unsigned int        flags4;    // haleyjd 09/13/09
    int                 intflags;  // killough 9/15/98: internal flags
    int                 health;
 
