@@ -1148,7 +1148,7 @@ void E_ProcessStates(cfg_t *cfg)
 #define DS_TEST
 #ifdef DS_TEST
    {
-      static void TestDSParser(void);
+      extern void TestDSParser(void); // stupid GCC...
       
       // TEMPORARY DEBUG TEST CODE
       TestDSParser();
@@ -2308,7 +2308,7 @@ static const char *teststr =
 "Spawn:\n"
 "   goto Super::Spawn\n";
 
-static void TestDSParser(void)
+void TestDSParser(void)
 {
    E_ParseDecorateStates(teststr);
 }
