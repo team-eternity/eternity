@@ -923,7 +923,6 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
                                  state_t *state, emod_t *mod)
 {
    metastate_t *msnode;
-   boolean isnew = false;
    
    // if one exists for this mod already, use it, else create a new one.
    if((msnode = E_MetaStateForMod(info, base, mod)))
