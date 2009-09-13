@@ -27,11 +27,13 @@
 #ifndef E_HASH_H__
 #define E_HASH_H__
 
+typedef struct ehash_s ehash_t;
+
 // hash computation function prototype
 typedef unsigned int (*EHashFunc_t)(const void *);
 
 // object comparison function prototype
-typedef boolean      (*ECompFunc_t)(struct ehash_s *, void *, const void *);
+typedef boolean      (*ECompFunc_t)(ehash_t *, void *, const void *);
 
 // key retrieval function prototype
 typedef const void * (*EKeyFunc_t) (void *);
@@ -39,7 +41,7 @@ typedef const void * (*EKeyFunc_t) (void *);
 // link retrieval function prototype
 typedef void *       (*ELinkFunc_t)(void *);
 
-typedef struct ehash_s
+struct ehash_s
 {
    mdllistitem_t **chains; // hash chains
    unsigned int numchains; // number of chains
@@ -50,7 +52,7 @@ typedef struct ehash_s
    EKeyFunc_t  keyfunc;    // key retrieval function
    ELinkFunc_t linkfunc;   // link-for-object function
    boolean isinit;         // true if hash is initialized
-} ehash_t;
+};
 
 void  E_HashInit(ehash_t *, unsigned int, EHashFunc_t, ECompFunc_t, EKeyFunc_t, 
                  ELinkFunc_t);
