@@ -246,6 +246,21 @@ void A_PlaySoundEx(mobj_t *mo)
    S_StartSfxInfo(mo, sfx, volume, attn, loop, channel);
 }
 
+//
+// A_DetonateEx
+//
+// Equivalent to ZDoom A_Explode extensions.
+//
+// args[0] : damage
+// args[1] : radius
+// args[2] : hurt self?
+// args[3] : alert?
+// args[4] : full damage radius
+//
+void A_DetonateEx(mobj_t *actor)
+{
+}
+
 //==============================================================================
 // 
 // Hexen Codepointers

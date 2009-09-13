@@ -66,6 +66,12 @@ typedef struct metaint_s
    int value;
 } metaint_t;
 
+typedef struct metadouble_s
+{
+   metaobject_t parent;
+   double value;
+} metadouble_t;
+
 typedef struct metastring_s
 {
    metaobject_t parent;
@@ -114,11 +120,15 @@ metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object
                                     const char *key, const char *type);
 
 void MetaAddInt(metatable_t *metatable, const char *key, int value);
-int  MetaGetInt(metatable_t *metatable, const char *key);
+int  MetaGetInt(metatable_t *metatable, const char *key, int defvalue);
 int  MetaRemoveInt(metatable_t *metatable, const char *key);
 
+void   MetaAddDouble(metatable_t *metatable, const char *key, double value);
+double MetaGetDouble(metatable_t *metatable, const char *key, double defvalue);
+double MetaRemoveDouble(metatable_t *metatable, const char *key);
+
 void        MetaAddString(metatable_t *metatable, const char *key, const char *value);
-const char *MetaGetString(metatable_t *metatable, const char *key);
+const char *MetaGetString(metatable_t *metatable, const char *key, const char *defvalue);
 const char *MetaRemoveString(metatable_t *metatable, const char *key);
 
 void MetaRegisterType(metatype_t *type);

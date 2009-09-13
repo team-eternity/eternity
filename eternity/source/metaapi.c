@@ -401,14 +401,15 @@ void MetaAddInt(metatable_t *metatable, const char *key, int value)
 //
 // Get an integer from the metatable. This routine returns the value
 // rather than a pointer to a metaint_t. If an object of the requested
-// name doesn't exist in the table, 0 is returned and metaerrno is set
-// to indicate the problem.
+// name doesn't exist in the table, defvalue is returned and metaerrno 
+// is set to indicate the problem.
 //
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-int MetaGetInt(metatable_t *metatable, const char *key)
+int MetaGetInt(metatable_t *metatable, const char *key, int defvalue)
 {
+   int retval;
    metaobject_t *obj;
 
    metaerrno = META_ERR_NOERR;
@@ -416,10 +417,12 @@ int MetaGetInt(metatable_t *metatable, const char *key)
    if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metaint_t))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
-      return 0;
+      retval = defvalue;
    }
+   else
+      retval = ((metaint_t *)obj->object)->value;
 
-   return ((metaint_t *)obj->object)->value;
+   return retval;
 }
 
 //
@@ -448,6 +451,96 @@ int MetaRemoveInt(metatable_t *metatable, const char *key)
    MetaRemoveObject(metatable, obj);
 
    value = ((metaint_t *)obj->object)->value;
+
+   free(obj->object);
+
+   return value;
+}
+
+//
+// Double
+//
+
+//
+// MetaAddDouble
+//
+// Add a double-precision float to the metatable.
+//
+void MetaAddDouble(metatable_t *metatable, const char *key, double value)
+{
+   static boolean firsttime = true;
+   metadouble_t *newDouble = calloc(1, sizeof(metadouble_t));
+
+   if(firsttime)
+   {
+      // register metaint type
+      static metatype_t metaDoubleType;
+
+      MetaRegisterTypeEx(&metaDoubleType, 
+                         METATYPE(metadouble_t), sizeof(metadouble_t),
+                         NULL, NULL, NULL);
+      firsttime = false;
+   }
+
+   newDouble->value = value;
+   MetaAddObject(metatable, key, &newDouble->parent, newDouble, METATYPE(metadouble_t));
+}
+
+//
+// MetaGetDouble
+//
+// Get a double from the metatable. This routine returns the value
+// rather than a pointer to a metadouble_t. If an object of the requested
+// name doesn't exist in the table, defvalue is returned and metaerrno is set
+// to indicate the problem.
+//
+// Use of this routine only returns the first such value in the table.
+// This routine is meant for singleton fields.
+//
+double MetaGetDouble(metatable_t *metatable, const char *key, double defvalue)
+{
+   double retval;
+   metaobject_t *obj;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metadouble_t))))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      retval = defvalue;
+   }
+   else
+      retval = ((metadouble_t *)obj->object)->value;
+
+   return retval;
+}
+
+//
+// MetaRemoveDouble
+//
+// Removes the given field if it exists as a metadouble_t.
+// Only one object will be removed. If more than one such object 
+// exists, you would need to call this routine until metaerrno is
+// set to META_ERR_NOSUCHOBJECT.
+//
+// The value of the object is returned in case it is needed.
+//
+double MetaRemoveDouble(metatable_t *metatable, const char *key)
+{
+   metaobject_t *obj;
+   double value;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metadouble_t))))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      return 0.0;
+   }
+
+   MetaRemoveObject(metatable, obj);
+
+   value = ((metadouble_t *)obj->object)->value;
 
    free(obj->object);
 
@@ -491,14 +584,15 @@ void MetaAddString(metatable_t *metatable, const char *key, const char *value)
 //
 // Get a string from the metatable. This routine returns the value
 // rather than a pointer to a metastring_t. If an object of the requested
-// name doesn't exist in the table, NULL is returned and metaerrno is set
+// name doesn't exist in the table, defvalue is returned and metaerrno is set
 // to indicate the problem.
 //
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-const char *MetaGetString(metatable_t *metatable, const char *key)
+const char *MetaGetString(metatable_t *metatable, const char *key, const char *defvalue)
 {
+   const char *retval;
    metaobject_t *obj;
 
    metaerrno = META_ERR_NOERR;
@@ -506,10 +600,12 @@ const char *MetaGetString(metatable_t *metatable, const char *key)
    if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metastring_t))))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
-      return NULL;
+      retval = defvalue;
    }
+   else
+      retval = ((metastring_t *)obj->object)->value;
 
-   return ((metastring_t *)obj->object)->value;
+   return retval;
 }
 
 //
