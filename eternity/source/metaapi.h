@@ -29,6 +29,7 @@
 #ifndef METAAPI_H__
 #define METAAPI_H__
 
+#include "z_zone.h"
 #include "e_hash.h"
 
 #define METATYPE(type) #type
