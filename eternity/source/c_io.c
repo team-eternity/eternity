@@ -317,6 +317,10 @@ boolean C_Responder(event_t *ev)
    static int shiftdown;
    char ch;
 
+   // haleyjd 09/15/09: do not respond to events while the menu is up
+   if(menuactive)
+      return false;
+
    // haleyjd 05/29/06: dynamic console bindings
    G_KeyResponder(ev, kac_console);
    

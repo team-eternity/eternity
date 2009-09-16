@@ -336,9 +336,9 @@ void D_Display(void)
          else
             Wipe_Drawer();
       }
-      
+
       C_Drawer();
-      
+
    } // if(!MN_CheckFullScreen())
 
    // menus go directly to the screen

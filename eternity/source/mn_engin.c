@@ -982,7 +982,7 @@ boolean MN_Responder(event_t *ev)
    {
       return
          current_menuwidget->responder ?
-         current_menuwidget->responder(ev) : false;
+            current_menuwidget->responder(ev) : false;
    }
 
    // are we inputting a new value into a variable?
@@ -1426,17 +1426,8 @@ void MN_ActivateMenu(void)
 //
 void MN_StartMenu(menu_t *menu)
 {
-   // haleyjd 10/20/08: no menus in console mode!
-   if(gamestate == GS_CONSOLE)
-   {
-      C_Printf(FC_ERROR "Menus cannot be opened during console gamestate.\a\n");
-      return;
-   }
-
    if(!menuactive)
    {
-      C_InstaPopup();          // haleyjd 03/11/06: get rid of console...
-      console_enabled = false; // ...and don't allow it to be reopened
       MN_ActivateMenu();
       current_menu = menu;      
       menu_history_num = 0;  // reset history
