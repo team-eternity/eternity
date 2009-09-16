@@ -155,6 +155,7 @@ enum
    GIF_WOLFHACK      = 0x00000200, // is subject to German-edition restriction
    GIF_SETENDOFGAME  = 0x00000400, // Teleport_EndGame sets LevelInfo.endOfGame
    GIF_CLASSICMENUS  = 0x00000800, // supports classic/traditional menu emulation
+   GIF_SKILL5RESPAWN = 0x00001000, // monsters respawn by default on skill 5
 };
 
 // Game mode handling - identify IWAD version

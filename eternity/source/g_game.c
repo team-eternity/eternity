@@ -2818,7 +2818,9 @@ void G_InitNew(skill_t skill, char *name)
 
    M_ClearRandom();
    
-   respawnmonsters = skill == sk_nightmare || respawnparm;
+   respawnmonsters = 
+      (GameModeInfo->flags & GIF_SKILL5RESPAWN && skill == sk_nightmare) 
+      || respawnparm;
 
    // force players to be initialized upon first level load
    for(i = 0; i < MAXPLAYERS; i++)
