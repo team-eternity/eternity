@@ -929,16 +929,20 @@ frame S_BLOODYTWITCH  { cmp = "GOR1| *|*|10|*|@next";          dehackednum = 888
 frame S_BLOODYTWITCH2 { cmp = "GOR1| 1|*|15|*|@next";          dehackednum = 889 }
 frame S_BLOODYTWITCH3 { cmp = "GOR1| 2|*| 8|*|@next";          dehackednum = 890 }
 frame S_BLOODYTWITCH4 { cmp = "GOR1| 1|*| 6|*|S_BLOODYTWITCH"; dehackednum = 891 }
+
 frame S_DEADTORSO     { cmp = "PLAY|13|*|-1"; dehackednum = 892 }
 frame S_DEADBOTTOM    { cmp = "PLAY|18|*|-1"; dehackednum = 893 }
 frame S_HEADSONSTICK  { cmp = "POL2| *|*|-1"; dehackednum = 894 }
 frame S_GIBS          { cmp = "POL5| *|*|-1"; dehackednum = 895 }
 frame S_HEADONASTICK  { cmp = "POL4| *|*|-1"; dehackednum = 896 }
+
 frame S_HEADCANDLES   { cmp = "POL3| *|T| 6|*|@next"; dehackednum = 897 }
 frame S_HEADCANDLES2  { cmp = "POL3| 1|T| 6|*|@prev"; dehackednum = 898 }
+
 frame S_DEADSTICK     { cmp = "POL1| *|*|-1";         dehackednum = 899 }
 frame S_LIVESTICK     { cmp = "POL6| *|*| 6|*|@next"; dehackednum = 900 }
 frame S_LIVESTICK2    { cmp = "POL6| 1|*| 8|*|@prev"; dehackednum = 901 }
+
 frame S_MEAT2         { cmp = "GOR2|*|*|-1"; dehackednum = 902 }
 frame S_MEAT3         { cmp = "GOR3|*|*|-1"; dehackednum = 903 }
 frame S_MEAT4         { cmp = "GOR4|*|*|-1"; dehackednum = 904 }
@@ -956,13 +960,16 @@ frame S_SKULLCOL    { cmp = "COL6|*|*|-1"; dehackednum = 913 }
 frame S_TORCHTREE   { cmp = "TRE1|*|*|-1"; dehackednum = 914 }
 frame S_BIGTREE     { cmp = "TRE2|*|*|-1"; dehackednum = 915 }
 frame S_TECHPILLAR  { cmp = "ELEC|*|*|-1"; dehackednum = 916 }
+
 frame S_EVILEYE     { cmp = "CEYE|*|T| 6|*|@next";     dehackednum = 917 }
 frame S_EVILEYE2    { cmp = "CEYE|1|T| 6|*|@next";     dehackednum = 918 }
 frame S_EVILEYE3    { cmp = "CEYE|2|T| 6|*|@next";     dehackednum = 919 }
 frame S_EVILEYE4    { cmp = "CEYE|1|T| 6|*|S_EVILEYE"; dehackednum = 920 }
+
 frame S_FLOATSKULL  { cmp = "FSKU|*|T| 6|*|@next";        dehackednum = 921 }
 frame S_FLOATSKULL2 { cmp = "FSKU|1|T| 6|*|@next";        dehackednum = 922 }
 frame S_FLOATSKULL3 { cmp = "FSKU|2|T| 6|*|S_FLOATSKULL"; dehackednum = 923 }
+
 frame S_HEARTCOL    { cmp = "COL5|*|*|14|*|@next"; dehackednum = 924 }
 frame S_HEARTCOL2   { cmp = "COL5|1|*|14|*|@prev"; dehackednum = 925 }
 

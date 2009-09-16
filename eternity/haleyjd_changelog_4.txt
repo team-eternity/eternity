@@ -2,6 +2,353 @@
 Changes since Eternity Engine v3.35.92
 ================================================================================
 --------------------------------------------------------------------------------
+09/16/09
+
+Defined a new GameModeInfo flag, GIF_SKILL5RESPAWN, which controls whether or
+not a gamemode's fifth skill level has -respawn behavior enabled by default.
+This flag is now given to all DOOM gamemodes, but not to Heretic, so that Black
+Plague skill level no longer has respawning monsters, as expected. Do note that
+at no point had I forgotten about this - it's been on my 3-mile-long TODO list
+for an age and half ;)
+
+--------------------------------------------------------------------------------
+09/15/09
+
+I have removed the console-menu interlock and made some fixes that enable the
+menus to operate over the console with absolute priority, after the scope of
+problems caused by the interlock was revealed to me by some users. This stuff
+has been a nagging problem since SMMU, so hopefully it is fixed now.
+
+--------------------------------------------------------------------------------
+09/13/09
+
+Adjustments for Catoptromancy:
+1. The typedef for ehash_t has to be placed before the ECompFunc_t typedef
+   because apparently GCC cannot understand that "struct foo *" as a function
+   pointer parameter type is not a declaration of the structure type but is
+   just an incomplete type. I don't *think* this is correct behavior out of
+   the compiler, but it wouldn't be the first time I was wrong either. C 
+   seems to be getting harder to write every few months...
+   
+2. z_zone.h needs to be made visible through metaapi.h due to use of size_t.
+
+3. The temporary TestDSParser function had to be changed from static to
+   extern because apparently you also cannot forward prototype a static
+   function inside a local scope block (this doesn't sound right either but
+   who am I to argue with a bunch of neckbeards).
+   
+After all that unnecessary annoyance was out of the way, I also found time to
+work on new features:
+
+The flags4 field is now available. After adding an R_TranslationNumForName
+routine and cleaning up some EDF code to use it, I defined the first new
+flag for this field, MF4_AUTOTRANSLATE. This flag will kick in if an object
+using it is spawned in a non-DOOM gamemode. The thing will then have its
+translation (if it does not have a valid one already, anyway) changed to the
+gamemode's default palette-conversion translation (for Heretic, this is the
+TR_DINH lump provided in eternity.wad). This flag has been given to the MBF
+helper dog, and lets me avoid translating its sprites into the Heretic palette
+by hand. This flag is only useful for sprites that are in the DOOM palette, and
+thus may not find a lot of end-user application.
+
+I added a double floating-point specialization for metaobjects to the metaapi
+preemptively, and after observing ZDoom's code a little more closely (note that
+I did NOT use its implementation as a reference while creating EE's metatable),
+I made an important alteration to the specialization MetaGet* routines that
+causes them to take a default value as a parameter. If the metatable does not
+contain that field, then the default value is returned, instead of the previous
+behavior of returning 0. metaerrno is still set to META_ERR_NOSUCHOBJECT when
+this happens, however, in order to enable testing of this if and where it may
+be needed.
+
+--------------------------------------------------------------------------------
+09/11/09
+
+I have added support for the ZDoom 9303 Polyobject spawn spot, which enables
+polyobjects that do damage simply by touching an object rather than by requiring
+it to be stuck (ie, crushing damage).
+
+--------------------------------------------------------------------------------
+09/10/09
+
+Turns out the oh-so-wonderfully-explicit documentation, if you can call it 
+documentation, of the DECORATE states format that I got from the ZDoom wiki
+was incomplete in some very important ways.
+
+Chiefly, it turns out that consecutive labels are not only allowed, but actually
+important in some ways. So apparently I will now have to throw labels onto a
+stack of sorts until I see a state, and then create metastates for that first
+state for each label that I have put on the stack. A little bit more complicated
+but certainly nothing I cannot handle. It just would have been nice to know that
+this was possible before I assumed that it wasn't and ended up having to rewrite
+a bunch of code and restring portions of my state table.
+
+The other feature it so kindly skipped over mentioning was the namespace
+operator, which is apparently only used for goto targeting of super-class
+states where the child class has overridden the named state (as this is
+unnecessary otherwise, since the child class has inherited all the metastates
+from its parent type already). This required addition of another state to the
+lexer, since the decision of whether a : is just a : or a :: must be deferred
+until the next character has been seen.
+
+I have slightly modified the way that metatable object copying is carried out
+through the metatype system in order to reassign responsibility for the copying
+of the key from the source object to the destination object to the copy method
+of the metatype. This enables us to get around what would otherwise be an
+intractible issue for metaobjects with dynamically allocated key strings. I
+realized this problem while creating the metastate type earlier, but had to
+give it a lot of thought.
+
+--------------------------------------------------------------------------------
+09/09/09
+
+I added a case-sensitive specialization of the ehash_t in order to support a
+new independent by-type hash within metatables, to fully support hashing and
+lookups by either field name or type with full efficiency. This did necessitate
+the creation of an independent metatable_t type, though, which now consists of
+two ehash_t's - one fixed in size for types, and the other growable for field
+names.
+
+--------------------------------------------------------------------------------
+09/08/09
+
+Custom damagetype pain and death states have now been converted into
+metaproperties, with the addition of code which will manage the addition and
+removal of metastates (metaobject wrappers for state_t) to/from mobjinfo.
+
+--------------------------------------------------------------------------------
+09/07/09
+
+An initial design of error handling for the DECORATE parser is in place. It
+will currently always attempt to keep parsing, usually by discarding the
+remainder of the current line and returning to an appropriate state such as
+EXPECTLABEL or EXPECTKWORSTATE. We will see how practical this turns out once
+real-life examples are being turned into state lists.
+
+--------------------------------------------------------------------------------
+09/06/09
+
+The DECORATE state parser has now passed its first successful dry run after
+some minor modifications.
+
+--------------------------------------------------------------------------------
+09/04/09
+
+The DECORATE state parser's core loop is now functional, so I am prepared to
+give it its first dry run. I'm confident that many problems will be revealed,
+such is the nature of these things.
+
+--------------------------------------------------------------------------------
+09/01/09
+
+I had to tweak my fix to the SWITCHES problem a bit - the lump has to actually
+be named SWITCHES before I can decide whether or not it is a SWITCHES lump. 
+I sort of forgot that the hash chain could have other lumps on it as well ;)
+
+I have had to disable particles in low detail mode until the root cause of their
+bizarre undefined behaviors is rooted out. Any attempts to modify the way they
+work cause the game to crash hard currently. I also have no idea where exactly
+the particle system is getting its clipping information from. To me, it seems
+that it is completely incorrect. An overhaul is apparently overdue.
+
+Because they seem to be referenced after return-of-call, and because very
+large arrays shouldn't be on the stack anyway, I have moved the clipping
+arrays outside of the R_DrawSprite-style functions and made them into static
+globals.
+
+--------------------------------------------------------------------------------
+08/30/09
+
+I have made an experimental change to R_AddLine to fix a weird Cardboard 
+incompatibility with fiffy5.wad which causes a gigantic HOM in the first room.
+Seems that DOOM treats at least SOME closed self-referencing lines as solid,
+so I remove the second side of the line for rendering purposes, in order to
+force it to be treated like a 1S line for rendering. This smacks of a hack, 
+but to implement it lower down might be messy and a lot more dangerous.
+
+Console netcommand variables can now correctly be saved to the configuration
+file and modified via the menu again.
+
+I have changed the way that sky is handled in the engine by creating an internal
+sector flags field, and creating a handler function that must be called to
+safely change a sector's ceiling pic. Any time that pic is changed to or from
+sky, the SIF_SKY flag will be set or cleared on the sector.
+
+With this fix, I have finally rewritten and cleaned up the old Hexen lightning
+engine so that it is savegame safe (lightning strikes are saved and restored
+properly), and so that it affects ALL sky sectors, not just sectors that had
+sky at the start of the level. I added some new console commands that can
+enable lightning and force a lightning strike in order to easily test this code
+without having to make a dummy EMAPINFO lump.
+
+--------------------------------------------------------------------------------
+08/29/09
+
+The use_doom_config variable will also now remap the path to the keys.csc file,
+which is considered part of the configuration. This was an oversight in the
+earlier implementation of this feature - one which I noticed a while ago but put
+off fixing ;)
+
+I had to manually repair the VC++ 6.0 project file because I somehow dragged the
+P_ folder into the M_ folder 9_9
+
+A round of compatibility fixes have been implemented in order to fix some
+interesting problems in the difficult-to-support spcial1b.wad by Jens 
+Hykkelbjerg, which was a special effects tutorial level. This required a 
+major modification to the BOOM SWITCHES code to cause it to walk down the wad
+lump hash chain for "SWITCHES" lumps until it finds one that looks valid. This
+problem was necessitated by spcial1b containing a patch named "SWITCHES".
+
+This also required addition of a new compatibility variable, comp_special, to
+allow toggling of the BOOM change to the behavior of one-time-use line specials
+at runtime, instead of having it be solely contingent on demo_compatibility.
+Turns out spcial1b actually exploits the use of a one-time-use gun action line
+that is tagged to a non-existent sector to enable a blastable shield switch
+over a switch that is deeper inside. With the BOOM bug fix active, it becomes
+impossible to activate either switch.
+
+With these tweaks, EE has restored 100% support for spcial1b.wad, and is to my
+knowledge one of the only source ports, along with Choco Doom, that can claim
+that currently. This thing is a true litmus test for compatibility, and it's
+pretty amazing IMO that Cardboard is able to replicate all of the special
+effects with no problems.
+
+--------------------------------------------------------------------------------
+08/26/09
+
+Modified the DECORATE state parser to elimiate the difference between "text" and
+"quoted string" token types, as either can be accepted in any location. This is
+mainly important for allowing frame strings to contain [\] characters, as when
+they do, they are required to be contained inside quotation marks.
+
+--------------------------------------------------------------------------------
+08/25/09
+
+Added the ability to set the menu background flat and a selection box in which
+flats can be picked.
+
+Catoptromancy pointed out that the old problem of snd_card/mus_card being set
+to 0 on SDL_mixer initialization failure was still acting up, particularly on
+Linux, so I have eliminated that behavior entirely. nosfxparm or nomusicparm
+are now set instead, to cause the game to act as if though -nosfx or -nomusic
+have been used.
+
+Menu and credit screen backgrounds, as well as the console backgroudn, can now
+be overridden in missioninfo structures in order to give HacX appropriate 
+defaults.
+
+Began a new massive round of GCC warning fixes. That thing is utterly impossible
+to please.
+
+--------------------------------------------------------------------------------
+08/23/09
+
+The EDF correct_height field will now be removed from certain classes of thing
+types when those types are modified by DeHackEd patches, in order to improve
+the default presentation of multiple wads, including HacX and Aliens TC, which
+put previously grounded objects on the ceiling using the SPAWNCEILING flag.
+
+It was always possible to avoid this by turning on comp_theights, but you
+won't know it's a problem until you see things hanging in midair.
+
+Added an overlooked and sorely needed M_QStrCaseCmp routine to clean up some
+dodginess in the DECORATE state parser.
+
+Added a "runiswalk" configuration and console variable by popular demand that
+makes the shift key cause you to walk if autorun is enabled. Personally, I
+can't stand this, since I often hold down shift unnecessarily out of years of
+ingrained habit, but some people swear by it.
+
+Menu help and error messages on the bottom will now be centered, because it
+looks much better.
+
+--------------------------------------------------------------------------------
+08/22/09
+
+A skeletal outline of the DECORATE state parser is now in place, with complete
+state transition logic (that is to say, the functions will soon be capable of
+doing a "dry run" on a string so that I can watch the state machine run through
+the motions without anything important such as state generation happening).
+
+ZONE_NATIVE and HAVE_SCHED_SETAFFINITY have been added to the Linux makefiles by
+user request, so that users no longer have to enable these settings after
+doing a SVN checkout. If either of them prove to be a problem, users will now
+need to disable them, but I don't anticipate this.
+
+I found an unnecessary conversion of int to float for purposes of doing a
+comparison against the viewwidth in the core loop of R_DrawMaskedColumn which
+was causing some major register motion in the generated assembly. Eliminating
+this provided a small boost to sprite rendering, adding approximately 3 or 4
+sprites before a noticeable dip in FPS occurs due to overdraw.
+
+--------------------------------------------------------------------------------
+08/20/09
+
+Metatypes are now registered for provided metaobject specializations such as
+metaint and metastring. I also did an audit of the source for "firsttime"
+guard booleans that were missing their "static" keyword, which is the only
+thing that makes them work in the first place, but is painfully easy to forget.
+
+While testing HacX 1.2 I also discovered the consequences of an ancient MBF
+bug relating to support of DEHACKED lumps in WAD files - \r characters must be
+manually skipped over when reading in DEH-style string values, or the count of
+characters is messed up completely, causing none of the multiline string matches
+to work properly.
+
+The reason this only matters for deh-in-wad support is, obviously, the fact that
+WAD file i/o is actually binary, no matter how much the DWFILE system wants to
+pretend that it is emulating a FILE pointer. Stripping \r's in the DWFILE 
+system is neither practical nor particularly safe, so it is better to have any
+concerned parsers simply skip over that character.
+
+--------------------------------------------------------------------------------
+08/19/09
+
+I have begun work on adding native support for the new HacX 1.2 stand-alone
+IWAD as a gamemission under the DOOM II gamemode (similar to Final Doom).
+
+--------------------------------------------------------------------------------
+08/18/09
+
+The metatype registry has been completed with addition of the supporting
+E_HashTableIterator, MetaRegisterType(Ex), and MetaCopyTable routines. It works
+like functional magic, and is almost scary ;) I have converted nukespecials into
+a native property of mobjinfo, since I see no current value in making them a
+metaproperty.
+
+--------------------------------------------------------------------------------
+08/17/09
+
+Began integration of the metatable with mobjinfo. -fast speedsets are the first
+code to be rewritten to use them. This rewrite however has revealed the need for
+a metatable copying mechanism, in order to achieve the desired streamlining of
+mobjinfo inheritance that was envisioned during my initial conception of the 
+metatable.
+
+The only way I can see of enabling objects in the metatable to be copied 
+through a single routine is to establish a secondary cache of type information,
+which I will call the metatype table. This will be a global hash (a metatable
+itself, in fact), and types will be registered with it one time each, before
+the first object of that type is added to any metatable. Only objects with a
+registered metatype will be capable of being copied between tables in this
+automated manner.
+
+If designed properly, this should approach the power of copy constructors in
+C++.
+
+--------------------------------------------------------------------------------
+08/09/09
+
+I made a long-requested tweak to the A_MissileAttack parameterized codepointer
+that enables the function to call P_SpawnMissileAngle when the thing does not
+have a valid target. Missiles will simply be fired from the thing's direction
+plus or minus the provided offset in this instance.
+
+Another critical long-existing bug was uncovered by use of the native heap -
+player mobj pointers are left dangling after Z_FreeTags, and this could cause
+a random crash in the sound code.
+
+--------------------------------------------------------------------------------
 08/04/09
 
 Building further on top of the generic hash, I have written the previously
