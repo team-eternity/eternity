@@ -401,7 +401,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
       skill = atoi(c_argv[0]);
 
    // haleyjd 07/27/05: restored nightmare behavior
-   if(skill == sk_nightmare)
+   if(GameModeInfo->flags & GIF_SKILL5WARNING && skill == sk_nightmare)
    {
       MN_QuestionFunc(DEH_String("NIGHTMARE"), MN_DoNightmare);
       return;
