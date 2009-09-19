@@ -1812,21 +1812,24 @@ void A_CPosRefire(mobj_t *actor)
    
    // killough 12/98: Stop firing if a friend has gotten in the way
    if(actor->flags & MF_FRIEND && P_HitFriend(actor))
-      goto stop;
+   {
+      P_SetMobjState(actor, actor->info->seestate);
+      return;
+   }
    
    // killough 11/98: prevent refiring on friends continuously
-   if (P_Random(pr_cposrefire) < 40)
+   if(P_Random(pr_cposrefire) < 40)
    {
-      if(actor->target && 
-         actor->flags & actor->target->flags & MF_FRIEND)
-         goto stop;
-      else
-         return;
+      if(actor->target && (actor->flags & actor->target->flags & MF_FRIEND))
+         P_SetMobjState(actor, actor->info->seestate);
+      return;
    }
 
    if(!actor->target || actor->target->health <= 0 ||
       !P_CheckSight(actor, actor->target))
-stop: P_SetMobjState(actor, actor->info->seestate);
+   {
+      P_SetMobjState(actor, actor->info->seestate);
+   }
 }
 
 void A_SpidRefire(mobj_t* actor)
@@ -1836,7 +1839,10 @@ void A_SpidRefire(mobj_t* actor)
    
    // killough 12/98: Stop firing if a friend has gotten in the way
    if(actor->flags & MF_FRIEND && P_HitFriend(actor))
-      goto stop;
+   {
+      P_SetMobjState(actor, actor->info->seestate);
+      return;
+   }
    
    if(P_Random(pr_spidrefire) < 10)
       return;
@@ -1845,7 +1851,9 @@ void A_SpidRefire(mobj_t* actor)
    if(!actor->target || actor->target->health <= 0    ||
       actor->flags & actor->target->flags & MF_FRIEND ||
       !P_CheckSight(actor, actor->target))
-stop: P_SetMobjState(actor, actor->info->seestate);
+   {
+      P_SetMobjState(actor, actor->info->seestate);
+   }
 }
 
 void A_BspiAttack(mobj_t *actor)
@@ -3293,7 +3301,7 @@ void A_LineEffect(mobj_t *mo)
 //
 // A parameterized codepointer that turns on thing flags
 //
-// args[0] == 1, 2, 3 -- flags field to affect
+// args[0] == 1, 2, 3, 4 -- flags field to affect
 // args[1] == flags value to OR with thing flags
 //
 void A_SetFlags(mobj_t *actor)
@@ -3312,6 +3320,9 @@ void A_SetFlags(mobj_t *actor)
    case 3:
       actor->flags3 |= flags;
       break;
+   case 4:
+      actor->flags4 |= flags;
+      break;
    }
 }
 
@@ -3320,7 +3331,7 @@ void A_SetFlags(mobj_t *actor)
 //
 // A parameterized codepointer that turns off thing flags
 //
-// args[0] == 1, 2, 3 -- flags field to affect
+// args[0] == 1, 2, 3, 4 -- flags field to affect
 // args[1] == flags value to inverse AND with thing flags
 //
 void A_UnSetFlags(mobj_t *actor)
@@ -3339,6 +3350,9 @@ void A_UnSetFlags(mobj_t *actor)
    case 3:
       actor->flags3 &= ~flags;
       break;
+   case 4:
+      actor->flags4 &= ~flags;
+      break;
    }
 }
 
@@ -3347,9 +3361,9 @@ void A_UnSetFlags(mobj_t *actor)
 
 //
 // A_BetaSkullAttack()
+//
 // killough 10/98: this emulates the beta version's lost soul attacks
 //
-
 void A_BetaSkullAttack(mobj_t *actor)
 {
    int damage;
@@ -3514,63 +3528,46 @@ void A_FaceMoveDir(mobj_t *actor)
       actor->angle = moveangles[actor->movedir] << 24;
 }
 
+//
+// A_GenRefire
+//
+// Generalized refire check pointer, requested by Kate.
+//
+// args[0] : state to branch to when ceasing to fire
+// args[1] : random chance of still firing if target out of sight
+//
+void A_GenRefire(mobj_t *actor)
+{
+   int statenum;
+
+   statenum = E_SafeState(actor->state->args[0]);
+
+   A_FaceTarget(actor);
+
+   // check for friends in the way
+   if(actor->flags & MF_FRIEND && P_HitFriend(actor))
+   {
+      P_SetMobjState(actor, statenum);
+      return;
+   }
+
+   // random chance of continuing to fire
+   if(P_Random(pr_genrefire) < actor->state->args[1])
+      return;
+
+   if(!actor->target || actor->target->health <= 0 ||
+      (actor->flags & actor->target->flags & MF_FRIEND) ||
+      !P_CheckSight(actor, actor->target))
+   {
+      P_SetMobjState(actor, statenum);
+   }
+}
+
 
 //
 // haleyjd: Start Eternity TC Action Functions
 // TODO: possibly eliminate some of these
 //
-
-//
-// A_ClericAtk()
-//
-void A_ClericAtk(mobj_t *actor)
-{
-   /*
-   mobj_t* mo;
-   fixed_t momz;
-   angle_t angle;
-   fixed_t z = actor->z + DEFAULTMISSILEZ;
-
-   if(!actor->target)
-   {
-      return;
-   }
-
-   A_FaceTarget(actor);
-
-   if(P_CheckMeleeRange(actor))
-   {
-      int damage;
-      S_StartSound(actor, sfx_clratk);
-      damage = ((P_Random(pr_clrattack)%8)+1)*4;
-      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
-      return;
-   }
-   else if(actor->health*3 < actor->info->spawnhealth)
-   {  // Limit break if under 1/3 life
-      int clrballType = E_SafeThingType(MT_CLRBALL);
-
-      mo = P_SpawnMissile(actor, actor->target, clrballType, z);
-
-      if(mo)
-      {
-         momz = mo->momz;
-         angle = mo->angle;
-         P_SpawnMissileAngle(actor, clrballType, angle-(ANG45/8), momz, z);
-         P_SpawnMissileAngle(actor, clrballType, angle+(ANG45/8), momz, z);
-         P_SpawnMissileAngle(actor, clrballType, angle-(ANG45/16), momz, z);
-         P_SpawnMissileAngle(actor, clrballType, angle+(ANG45/16), momz, z);
-      }
-      return;
-
-   }
-   else
-   {
-      P_SpawnMissile(actor, actor->target, 
-                     E_SafeThingType(MT_CLRBALL), z);
-   }
-   */
-}
 
 //
 // A_FogSpawn
@@ -3649,143 +3646,9 @@ void A_FogMove(mobj_t *actor)
    actor->momy = FixedMul(speed, finesine[angle]);
 }
 
-
-//=====================================================
-// Leader Cleric Boss
-//
-// counters[0] --------- counter to teleport time
-// counters[1] --------- count-down to end of defense
-// counters[2] --------- boolean, currently defending
-// 
-// args[0]  --------- time to run to evade missile
-//
-//=====================================================
-
-#define CLERICSTRAFETIME 3
-
-// Attempted missile avoidance with approx. 1/3 probability
-
-void A_Cleric2Chase(mobj_t *actor)
-{
-   /*
-   mobj_t *target = actor->target;
-
-   // decrement teleport and defend countdown timers
-   // while walking
-   if(actor->counters[0] && !actor->args[0]) // not when strafing
-     actor->counters[0]--;
-   if(actor->counters[1])
-     actor->counters[1]--;
-
-   // sparkle if invulnerable
-   if(actor->flags2&MF2_INVULNERABLE)
-     P_ClericSparkle(actor);
-
-   // Try to evade missile attack!
-   if(actor->args[0])
-   {
-      actor->args[0]--;  // count-down to end of current evasion
-   }
-   else if(target && (P_Random(pr_clericevade) < 85) &&
-           P_CheckSight(actor, target) &&
-           !(target->flags & MF_CORPSE) &&
-           !(actor->flags & target->flags & MF_FRIEND) &&
-           !(actor->flags2 & MF2_INVULNERABLE))
-   {
-      P_AimLineAttack(target, target->angle, 16*64*FRACUNIT, 0);
-
-      if(!tm->linetarget)
-      {
-         A_Chase(actor);
-         return;
-      }
-
-      // if aiming at cleric, or at something nearby...
-      if(tm->linetarget == actor ||
-         tm->linetarget->subsector == actor->subsector)
-      {
-         angle_t ang;
-         
-         ang = R_PointToAngle2(actor->x, actor->y,
-#ifdef R_LINKEDPORTALS
-                               getTargetX(actor), getTargetY(actor));
-#else
-                               target->x, target->y);
-#endif
-         if(P_Random(pr_clericevade)<128)
-            ang += ANG90;
-         else
-            ang -= ANG90;
-         
-         ang >>= ANGLETOFINESHIFT;
-         actor->momx = FixedMul(8*FRACUNIT, finecosine[ang]);
-         actor->momy = FixedMul(8*FRACUNIT, finesine[ang]);
-         actor->args[0] = CLERICSTRAFETIME;            // strafe time
-      }
-   }
-
-   if(!actor->args[0])
-     A_Chase(actor);
-   */
-}
-
-boolean P_ClericDefense(mobj_t *actor)
-{
-   /*
-   if(actor->counters[1] == 0 && actor->counters[2] == 0 &&
-      (P_Random(pr_clr2attack) < 128))
-   {
-      if(!actor->health)
-       return false;
-
-      P_SetMobjStateNF(actor, E_SafeState(S_LCLER_SPEC));
-
-      if(LevelInfo.hasLightning) // call down lightning from heaven!
-        P_ForceLightning();
-
-      S_StartSound(actor, sfx_clrdef);  // haleyjd 07/13/99: new sound
-
-      switch(P_Random(pr_clr2attack)%3)
-      {
-         case 0:  // invisibility spell 1
-            actor->flags3 |= MF3_GHOST;
-            break;
-         case 1:  // invisibility spell 2
-            actor->flags |= MF_SHADOW;
-            break;
-         case 2:  // invulnerability spell
-            actor->flags2 |= MF2_INVULNERABLE;
-            actor->flags2 |= MF2_REFLECTIVE;
-         default:   // just incase
-            break; 
-      }
-      actor->counters[1] = (P_Random(pr_clr2attack)&0x7f)+32;
-      actor->counters[2] = 1;
-      return true;  // defended this turn
-   }
-   else if(actor->counters[1] == 0 && actor->counters[2] == 1)
-   {
-      actor->flags3 &= ~MF3_GHOST;
-      actor->flags &= ~MF_SHADOW;
-      if(actor->flags2 & MF2_INVULNERABLE)
-      {
-        actor->flags2 &= ~MF2_INVULNERABLE;
-        actor->flags2 &= ~MF2_REFLECTIVE;
-      }
-      actor->counters[1] = (P_Random(pr_clr2attack)&0x7f)+1; // reset count
-      actor->counters[2] = 0;                                // not defending
-   }
-   */
-   return false; // no defense this turn
-}
-
-void A_Cleric2Attack(mobj_t *actor)
-{
-}
-
+#if 0
 void P_ClericTeleport(mobj_t *actor)
 {
-   /*
    bossteleport_t bt;
 
    if(actor->flags2&MF2_INVULNERABLE)
@@ -3801,232 +3664,25 @@ void P_ClericTeleport(mobj_t *actor)
    bt.soundNum  = sfx_itmbk;                // use item respawn sound
 
    P_BossTeleport(&bt);
-   */
 }
-
-void A_Cleric2Decide(mobj_t *actor)
-{
-   /*
-   if(actor->flags2&MF2_INVULNERABLE)
-     P_ClericSparkle(actor);
-
-   if(actor->counters[0] == 0 && !P_CollectionIsEmpty(&braintargets))
-   {
-      P_ClericTeleport(actor);
-      actor->counters[0] = (P_Random(pr_clericteleport)&0x7f)+1;
-   }
-   // fall through to attack state
-   */
-}
-
-void A_ClericBreak(mobj_t *actor)
-{
-   /*
-   angle_t ang, an1;
-   mobj_t *target = actor->target;
-
-   if(!target)
-     return;
-
-   if(actor->flags2&MF2_INVULNERABLE)
-     P_ClericSparkle(actor);
-
-   A_FaceTarget(actor);
-
-   // Limit break         
-   // Limit break 
-#ifdef R_LINKEDPORTALS
-   ang = R_PointToAngle2(actor->x, actor->y, 
-                         getTargetX(actor), getTargetY(actor));
-#else        
-   ang = R_PointToAngle2(actor->x, actor->y, target->x, target->y);
 #endif
-   an1 = ((P_Random(pr_clr2attack)&127) - 64) * (ANG90/768) + ang;
-
-   P_SpawnMissileAngle(actor, E_SafeThingType(MT_CLRBALL), an1, 0, 
-                       actor->z + DEFAULTMISSILEZ);
-   */
-}
-
-//==================================================
-//
-// Halif Swordsmythe -- Helper Dwarf Extraordinaire
-//
-//==================================================
-
-void A_DwarfLDOCMagic(mobj_t *actor)
-{
-}
-
-void A_DwarfFWAEMagic(mobj_t *actor)
-{
-}
-
-void A_DwarfDie(mobj_t *actor)
-{
-}
-
-// Dwarf Alterego Routines -- Halif Daemonica / Summoned Golem
-
-// 3/23/00: extended to spawn golem as well
-
-void P_SpawnDwarfAlterego(mobj_t *actor, mobjtype_t type)
-{
-}
-
-boolean P_CheckAlterEgo(mobjtype_t type)
-{
-   return true;
-}
 
 void A_DwarfAlterEgoChase(mobj_t *actor)
 {
    if(actor->counters[0])
-    actor->counters[0]--;
+      actor->counters[0]--;
    else
    {
-     A_Die(actor);
-     return;
+      A_Die(actor);
+      return;
    }
    A_Chase(actor);
 }
 
-void A_DwarfAlterEgoAttack(mobj_t *actor)
-{
-}
-
-// used by dwarf fire spell
-
-void A_PhoenixTracer(mobj_t *actor)
-{
-}
-
-//==============================
+//=============================================================================
 //
-// Cyberdemon Guard functions
-//
-//==============================
-void A_CyberGuardSigh(mobj_t *actor)
-{
-}
-
-//==============================
 // Console Commands for Things
-//==============================
-
-/*
-CONSOLE_COMMAND(spawn, cf_notnet|cf_level|cf_hidden)
-{
-   fixed_t       x,y,z;
-   mobj_t        *newmobj;
-   angle_t       an;
-   int           type, prestep;
-   static int    teleManType = -1;
-   static int    fountainType = -1;
-   static int    playerType = -1;
-   static int    dripType = -1;
-
-   player_t *plyr = &players[consoleplayer];
-
-   if(teleManType == -1)
-   {
-      teleManType  = E_ThingNumForDEHNum(MT_TELEPORTMAN);
-      fountainType = E_ThingNumForName("EEParticleFountain");
-      playerType   = E_ThingNumForDEHNum(MT_PLAYER);
-      dripType     = E_ThingNumForName("EEParticleDrip");
-   }
-
-   if(!c_argc)
-   {
-      return;
-   }
-   if(c_argc >= 1)
-   {
-      type = atoi(c_argv[0]);
-      if(type < 0 || type >= NUMMOBJTYPES)
-      {
-         C_Printf(FC_ERROR "Invalid mobj type\n");
-         return;
-      }
-      // weed out always-disallowed types
-      if(type == teleManType)
-      {
-         C_Printf(FC_ERROR "Disallowed spawn\n");
-         return;
-      }
-            
-      if(plyr->health <= 0)
-        return;
-
-      // if its a missile, shoot it
-      if(mobjinfo[type].flags & MF_MISSILE)
-      {
-         P_SpawnPlayerMissile(plyr->mo, type);
-         return;
-      }
-
-      an = plyr->mo->angle >> ANGLETOFINESHIFT;
-      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
-
-      x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
-      y = plyr->mo->y + FixedMul(prestep, finesine[an]);
-
-      z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
-
-      if(Check_Sides(plyr->mo, x, y))
-        return;
-
-      newmobj = P_SpawnMobj(x, y, z, type);
-
-      if(!newmobj)
-        return;
-
-      if(c_argc >= 2)
-      {
-         int arg2 = atoi(c_argv[1]);
-         
-         if(type == fountainType)
-         {
-            if(arg2 < 9027) arg2 = 9027;
-            if(arg2 > 9033) arg2 = 9033;
-
-            newmobj->effects |= (arg2 - 9026) << FX_FOUNTAINSHIFT;
-         }
-         else
-         {
-            if(arg2)
-               newmobj->flags |= MF_FRIEND;
-         }
-      }
-
-      // drip: random parameters
-      if(type == dripType)
-      {
-         newmobj->args[0] = M_Random();
-         newmobj->args[1] = (M_Random() % 8) + 1;
-         newmobj->args[2] = M_Random() + 35;
-         newmobj->args[3] = 1;
-      }
-
-      // killough 8/29/98: add to appropriate thread
-      P_UpdateThinker(&newmobj->thinker);
-
-      // not such a great idea, makes it unkillable by cheat code
-      // if(newmobj->flags & MF_COUNTKILL)
-      //  newmobj->flags &= ~MF_COUNTKILL;
-      
-      // this, however, is fine
-      if(newmobj->flags & MF_COUNTITEM)
-        newmobj->flags &= ~MF_COUNTITEM;
-
-      if(newmobj->type == playerType)
-      {
-         // 06/09/02: set player field for voodoo dolls
-         newmobj->player = plyr;
-      }
-   }
-}
-*/
+//
 
 // haleyjd 07/05/03: new console commands that can use
 // EDF thing type names instead of internal type numbers

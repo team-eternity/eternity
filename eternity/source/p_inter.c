@@ -882,7 +882,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, int mod)
 
    if(target->health < -target->info->spawnhealth &&
       target->info->xdeathstate != NullStateNum)
-      P_SetMobjState (target, target->info->xdeathstate);
+      P_SetMobjState(target, target->info->xdeathstate);
    else
    {
       // haleyjd 06/05/08: damagetype death states

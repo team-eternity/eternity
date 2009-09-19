@@ -1244,6 +1244,7 @@ void A_UnSetFlags(mobj_t *);
 void A_BetaSkullAttack(mobj_t *);
 void A_StartScript(mobj_t *); // haleyjd 1/25/00: Script wrapper
 void A_PlayerStartScript(mobj_t *);
+void A_GenRefire(mobj_t *);
 void A_FireGrenade(mobj_t *);
 void A_FireCustomBullets(mobj_t *);
 void A_FirePlayerMissile(mobj_t *);
@@ -1466,7 +1467,7 @@ EXTKWDS(A_PlaySoundEx);
 
 // haleyjd 10/04/08: macros to save my wrists
 #define POINTER(name)  { A_ ## name , #name }
-#define POINTERK(name)  { A_ ## name , #name , KWDS( A_ ## name ) }
+#define POINTERK(name) { A_ ## name , #name , KWDS( A_ ## name ) }
 
 deh_bexptr deh_bexptrs[] =
 {
@@ -1565,6 +1566,7 @@ deh_bexptr deh_bexptrs[] =
   POINTER(SetFlags),
   POINTER(UnSetFlags),
   POINTER(BetaSkullAttack),
+  POINTER(GenRefire),
   POINTER(FireGrenade),
   POINTERK(FireCustomBullets),
   POINTERK(FirePlayerMissile),

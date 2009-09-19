@@ -36,6 +36,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <stdio.h>
 
 //=============================================================================
 //
@@ -600,15 +601,15 @@ static void PrintStack(void)
 //
 static int LaunchCrashApp(void)
 {
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;
-   TCHAR cmdline[MAX_PATH];
+   static STARTUPINFO si;
+   static PROCESS_INFORMATION pi;
+   static TCHAR cmdline[MAX_PATH];
    
    // Replace the filename with our crash report exe file name
    lstrcpy(fileName, _T("eecrashreport.exe"));   
    lstrcpy(cmdline, moduleFileName);   
    lstrcat(cmdline, _T(" \""));	// surround app name with quotes
-   
+
    ZeroMemory(moduleFileName, sizeof(moduleFileName));
    
    GetModuleFileName(0, moduleFileName, charcount(moduleFileName)-2);
@@ -679,6 +680,16 @@ int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep)
    LogPrintf(_T("\r\n===== [end of %s] =====\r\n"), _T("CRASHLOG.TXT"));
    LogFlush(logFile);
    CloseHandle(logFile);
+
+   // The crash reporter app won't run on a stack overflow.
+   // Stupid CreateProcess uses too much stack space.
+   if(ep->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW)
+   {
+      // Naughty, but too bad. There's no other way to get a message
+      // to the user!
+      puts("Stack Overflow Exception. See CRASHLOG.TXT\n");
+      return EXCEPTION_EXECUTE_HANDLER;
+   }
 
    if(LaunchCrashApp())
       return EXCEPTION_EXECUTE_HANDLER;
