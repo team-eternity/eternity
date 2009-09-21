@@ -1209,7 +1209,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       if(target->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
          return;
 
-      if(target->flags3 & MF3_NOFRIENDDMG && source && 
+      if(target->flags3 & MF3_NOFRIENDDMG && source && source != target &&
          source->flags & MF_FRIEND)
          return;
 
