@@ -319,6 +319,8 @@ dehflags_t deh_mobjflags[] =
 
   // flags4 bits
   {"AUTOTRANSLATE",    0x00000001, 3}, // automatic translation for non-DOOM modes
+  {"NORADIUSDMG",      0x00000002, 3}, // doesn't take radius damage
+  {"FORCERADIUSDMG",   0x00000004, 3}, // forces radius damage despite other flags
 
   { NULL,              0 }             // NULL terminator
 };

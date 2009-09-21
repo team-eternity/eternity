@@ -287,7 +287,9 @@ typedef enum
 
 typedef enum
 {
-   MF4_AUTOTRANSLATE = 0x00000001, // DOOM sprite is automatically translated
+   MF4_AUTOTRANSLATE  = 0x00000001, // DOOM sprite is automatically translated
+   MF4_NORADIUSDMG    = 0x00000002, // Doesn't take damage from blast radii
+   MF4_FORCERADIUSDMG = 0x00000004, // Does radius damage to everything, no exceptions
 } mobjflag4_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

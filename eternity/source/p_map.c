@@ -1886,12 +1886,6 @@ static int bombmod; // haleyjd 07/13/03
 static boolean PIT_RadiusAttack(mobj_t *thing)
 {
    fixed_t dx, dy, dist;
-
-   // EDF FIXME: temporary solution
-   static int cyberType = -1;
-   
-   if(cyberType == -1)
-      cyberType = E_ThingNumForDEHNum(MT_CYBORG);
    
    // killough 8/20/98: allow bouncers to take damage 
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
@@ -1903,13 +1897,28 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
    // take no damage from concussion.
    
    // killough 8/10/98: allow grenades to hurt anyone, unless
-   // fired by Cyberdemons, in which case it won't hurt Cybers.
-   // haleyjd 05/22/99: exclude all bosses
+   // fired by Cyberdemons, in which case it won't hurt Cybers.   
+   // haleyjd 09/21/09: do this only in old demos because it really
+   // doesn't make sense with our newer features.
 
-   if(bombspot->flags & MF_BOUNCES ?
-      thing->type == cyberType && bombsource->type == cyberType :
-      thing->flags2 & MF2_BOSS)
+   if(demo_version < 335 && bombspot->flags & MF_BOUNCES)
+   {
+      static int cyberType = -1;
+      
+      if(cyberType == -1)
+         cyberType = E_ThingNumForDEHNum(MT_CYBORG);
+
+      if(thing->type == cyberType && bombsource->type == cyberType)
+         return true;
+   }
+   else if((thing->flags2 & MF2_BOSS || thing->flags4 & MF4_NORADIUSDMG) &&
+           !(bombspot->flags4 && MF4_FORCERADIUSDMG))
+   {      
+      // haleyjd 05/22/99: exclude all bosses
+      // haleyjd 09/21/09: support separate MF4_NORADIUSDMG flag and
+      //                   force radius damage flag
       return true;
+   }
 
    dx = D_abs(thing->x - bombspot->x);
    dy = D_abs(thing->y - bombspot->y);
