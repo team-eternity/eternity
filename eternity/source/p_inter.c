@@ -1071,7 +1071,10 @@ static void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor,
    doom_printf("%c%s %s", obcolour+128, target->player->name, message);
 }
 
+//=============================================================================
+//
 // Special damage type code -- see codepointer table below.
+//
 
 typedef struct dmgspecdata_s
 {
@@ -1175,6 +1178,7 @@ static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
 
 //
 // P_DamageMobj
+//
 // Damages both enemies and players
 // "inflictor" is the thing that caused the damage
 //  creature or missile, can be NULL (slime, etc)
@@ -1204,6 +1208,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    // Invulnerability -- telestomp can still kill to avoid getting stuck
    // Dormancy -- things are invulnerable until they are awakened
    // No Friend Damage -- some things aren't hurt by friends
+   // Invuln-Charge -- skullflying objects won't take damage (for Maulotaur)
    if(damage < 10000)
    {
       if(target->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
@@ -1213,7 +1218,6 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
          source->flags & MF_FRIEND)
          return;
 
-      // haleyjd 07/30/04: generalized
       if(target->flags & MF_SKULLFLY && target->flags3 & MF3_INVULNCHARGE)
          return;
    }
@@ -1453,6 +1457,9 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    // killough 9/9/98: cleaned up, made more consistent:
    // haleyjd 11/24/02: added MF3_DMGIGNORED and MF3_BOSSIGNORE flags
 
+   // EDF_FIXME: replace BOSSIGNORE with generalized infighting controls.
+   // BOSSIGNORE flag will be made obsolete.
+
    // haleyjd: set bossignore
    if(source && (source->type != target->type) &&
       ((source->flags3 & target->flags3) & MF3_BOSSIGNORE))
@@ -1462,12 +1469,24 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    }
    else
       bossignore = false;
+
+   // Set target based on the following criteria:
+   // * Damage is sourced and source is not self.
+   // * Source damage is not ignored via MF3_DMGIGNORED.
+   // * Threshold is expired, or target has no threshold via MF3_NOTHRESHOLD.
+   // * Things are not friends, or monster infighting is enabled.
+   // * Things are not both friends while target is not a SUPERFRIEND
+
+   // TODO: add fine-grained infighting control as metadata
    
-   if(source && source != target && 
-      !(source->flags3 & MF3_DMGIGNORED) && !bossignore &&
-      (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD)) &&
-      ((source->flags ^ target->flags) & MF_FRIEND || 
-       monster_infighting || demo_version < 203))
+   if(source && source != target                                     // source checks
+      && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
+      && !bossignore                                                 // EDF_FIXME!
+      && (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD))  // threshold?
+      && ((source->flags ^ target->flags) & MF_FRIEND ||             // friendliness?
+           monster_infighting || demo_version < 203)
+      && !(source->flags & target->flags & MF_FRIEND &&              // superfriend?
+           target->flags3 & MF3_SUPERFRIEND))
    {
       // if not intent on another player, chase after this one
       //
@@ -1485,8 +1504,9 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
       P_SetTarget(&target->target, source);       // killough 11/98
       target->threshold = BASETHRESHOLD;
-      if(target->state == states[target->info->spawnstate]
-         && target->info->seestate != NullStateNum)
+
+      if(target->state == states[target->info->spawnstate] && 
+         target->info->seestate != NullStateNum)
       {
          // haleyjd 01/15/06: a problem occurs here because the first
          // call to the object's seestate may need MF_JUSTHIT set

@@ -1276,6 +1276,7 @@ static boolean P_HelpFriend(mobj_t *actor)
 //
 void A_Look(mobj_t *actor)
 {
+   static boolean recursion;
    mobj_t *targ;
    
    // haleyjd 1/25/00:  isolated assignment of targ to test earlier
@@ -1335,8 +1336,17 @@ void A_Look(mobj_t *actor)
       else
          S_StartSound(actor, sound);
    }
+
+   // haleyjd 09/21/09: guard against A_Look recursion
+   if(recursion)
+   {
+      doom_printf("Warning: Look recursion detected");
+      return;
+   }
    
+   recursion = true;
    P_SetMobjState(actor, actor->info->seestate);
+   recursion = false;
 }
 
 //
@@ -1388,7 +1398,7 @@ static void P_MakeActiveSound(mobj_t *actor)
 
       // haleyjd: some heretic enemies use their seesound on
       // occasion, so I've made this a general feature
-      if(demo_version >= 331 && actor->flags3 & MF3_ACTSEESOUND)
+      if(actor->flags3 & MF3_ACTSEESOUND)
       {
          if(P_Random(pr_lookact) < 128 && actor->info->seesound)
             sound = actor->info->seesound;
@@ -1449,7 +1459,7 @@ void A_Chase(mobj_t *actor)
       }
    }
 
-   if(!actor->target || !(actor->target->flags&MF_SHOOTABLE))
+   if(!actor->target || !(actor->target->flags & MF_SHOOTABLE))
    {
       // haleyjd 07/26/04: Detect and prevent infinite recursion if
       // Chase is called from a thing's spawnstate.
