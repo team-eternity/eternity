@@ -218,25 +218,40 @@ boolean P_CheckMeleeRange(mobj_t *actor)
 // This function tries to prevent shooting at friends
 //
 // haleyjd 09/22/02: reformatted
+// haleyjd 09/22/09: rewrote to de-Killoughify ;)
+//                   also added ignoring of things with NOFRIENDDMG flag
 //
 static boolean P_HitFriend(mobj_t *actor)
 {
-   return actor->target &&
-      (P_AimLineAttack(actor,
-                       R_PointToAngle2(actor->x, actor->y,
+   boolean hitfriend = false;
+
+   if(actor->target)
+   {
+      angle_t angle;
+      fixed_t dist, tx, ty;
+
 #ifdef R_LINKEDPORTALS
-                          getTargetX(actor), getTargetY(actor)),
-                       P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor)),
+      tx = getTargetX(actor);
+      ty = getTargetY(actor);
 #else
-                          actor->target->x, actor->target->y),
-                       P_AproxDistance(actor->x - actor->target->x, 
-                          actor->y - actor->target->y),
+      tx = actor->target->x;
+      ty = actor->target->y;
 #endif
-                       0),
-       tm->linetarget) &&
-      tm->linetarget != actor->target &&
-      !((tm->linetarget->flags ^ actor->flags) & MF_FRIEND);
+      angle = R_PointToAngle2(actor->x, actor->y, tx, ty);
+      dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
+
+      P_AimLineAttack(actor, angle, dist, 0);
+
+      if(tm->linetarget 
+         && tm->linetarget != actor->target 
+         && !((tm->linetarget->flags ^ actor->flags) & MF_FRIEND) 
+         && !(tm->linetarget->flags3 & MF3_NOFRIENDDMG))
+      {
+         hitfriend = true;
+      }
+   }
+
+   return hitfriend;
 }
 
 //
