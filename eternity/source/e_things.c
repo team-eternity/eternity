@@ -102,6 +102,8 @@ int UnknownThingType;
 #define ITEM_TNG_HEIGHT       "height"
 #define ITEM_TNG_C3DHEIGHT    "correct_height"
 #define ITEM_TNG_MASS         "mass"
+#define ITEM_TNG_RESPAWNTIME  "respawntime"
+#define ITEM_TNG_RESPCHANCE   "respawnchance"
 
 // Damage Properties
 #define ITEM_TNG_DAMAGE       "damage"
@@ -401,6 +403,8 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_FLOAT( ITEM_TNG_HEIGHT,       16.0f,     CFGF_NONE                ), \
    CFG_FLOAT( ITEM_TNG_C3DHEIGHT,    0.0f,      CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_MASS,         100,       CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_RESPAWNTIME,  (12*35),   CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_RESPCHANCE,   4,         CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_DAMAGE,       0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_DMGSPECIAL,   "NONE",    CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE                ), \
@@ -1456,6 +1460,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    // process mass
    if(IS_SET(ITEM_TNG_MASS))
       mobjinfo[i].mass = cfg_getint(thingsec, ITEM_TNG_MASS);
+
+   // 09/23/09: respawn properties
+   if(IS_SET(ITEM_TNG_RESPAWNTIME))
+      mobjinfo[i].respawntime = cfg_getint(thingsec, ITEM_TNG_RESPAWNTIME);
+
+   if(IS_SET(ITEM_TNG_RESPCHANCE))
+      mobjinfo[i].respawnchance = cfg_getint(thingsec, ITEM_TNG_RESPCHANCE);
 
    // process damage
    if(IS_SET(ITEM_TNG_DAMAGE))

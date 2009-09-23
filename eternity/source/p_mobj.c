@@ -1194,8 +1194,8 @@ void P_MobjThinker(mobj_t *mobj)
       if(mobj->flags2 & (MF2_DORMANT | MF2_NORESPAWN))
          return;
 
-      if(can_respawn && mobj->movecount >= 12*35 &&
-         !(leveltime & 31) && P_Random(pr_respawn) <= 4)
+      if(can_respawn && mobj->movecount >= mobj->info->respawntime &&
+         !(leveltime & 31) && P_Random(pr_respawn) <= mobj->info->respawnchance)
       { 
          // check for nightmare respawn
          if(mobj->flags2 & MF2_REMOVEDEAD)

@@ -2824,7 +2824,7 @@ void A_CounterJump(mobj_t *mo)
    boolean branch = false;
    int statenum   = mo->state->args[0];
    int checktype  = mo->state->args[1];
-   short value    = (short)(mo->state->args[2]);
+   int value      = mo->state->args[2];
    int cnum       = mo->state->args[3];
    int *counter;
    
