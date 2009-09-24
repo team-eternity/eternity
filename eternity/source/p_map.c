@@ -1874,9 +1874,24 @@ void P_SlideMove(mobj_t *mo)
 // RADIUS ATTACK
 //
 
-static mobj_t *bombsource, *bombspot;
-static int bombdamage;
-static int bombmod; // haleyjd 07/13/03
+// haleyjd 09/23/09: repair to non-reentrancy and stack-fault issues in
+// PIT_RadiusAttack - information is grouped into a structure, and outside
+// of old demos, the following are true:
+// * bombdata_t's will be pushed and popped for recursive explosions
+// * a limit of 128 recursive explosions is enforced
+
+typedef struct bombdata_s
+{
+   mobj_t *bombsource;
+   mobj_t *bombspot;
+   int     bombdamage;
+   int     bombmod;    // haleyjd 07/13/03
+} bombdata_t;
+
+#define MAXBOMBS 128               // a static limit to prevent stack faults.
+static int bombindex;              // current index into bombs array
+static bombdata_t bombs[MAXBOMBS]; // bombs away!
+static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion)
 
 //
 // PIT_RadiusAttack
@@ -1886,6 +1901,8 @@ static int bombmod; // haleyjd 07/13/03
 static boolean PIT_RadiusAttack(mobj_t *thing)
 {
    fixed_t dx, dy, dist;
+   mobj_t *bombspot   = theBomb->bombspot;
+   mobj_t *bombsource = theBomb->bombsource;
    
    // killough 8/20/98: allow bouncers to take damage 
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
@@ -1920,19 +1937,22 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
       return true;
    }
 
-   dx = D_abs(thing->x - bombspot->x);
-   dy = D_abs(thing->y - bombspot->y);
-   dist = dx>dy ? dx : dy;
+   dx   = D_abs(thing->x - bombspot->x);
+   dy   = D_abs(thing->y - bombspot->y);
+   dist = dx > dy ? dx : dy;
    dist = (dist - thing->radius) >> FRACBITS;
 
    if(dist < 0)
       dist = 0;
 
-   if(dist >= bombdamage)
+   if(dist >= theBomb->bombdamage)
       return true;  // out of range
 
    if(P_CheckSight(thing, bombspot))      // must be in direct path
-      P_DamageMobj(thing, bombspot, bombsource, bombdamage - dist, bombmod);
+   {
+      P_DamageMobj(thing, bombspot, bombsource, theBomb->bombdamage - dist, 
+                   theBomb->bombmod);
+   }
    
    return true;
 }
@@ -1942,6 +1962,7 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
 //
 // Source is the creature that caused the explosion at spot.
 //   haleyjd 07/13/03: added method of death flag
+//   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
 //
 void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
 {
@@ -1952,14 +1973,33 @@ void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
    int xl = (spot->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
    int x, y;
 
-   bombspot = spot;
-   bombsource = source;
-   bombdamage = damage;
-   bombmod = mod;       // haleyjd
+   if(demo_version >= 335)
+   {
+      // woops! let's not stack-fault.
+      if(bombindex >= MAXBOMBS)
+      {
+         doom_printf(FC_ERROR "P_RadiusAttack: too many bombs!");
+         return;
+      }
+
+      // set bomb pointer and increment index
+      theBomb = &bombs[bombindex++];
+   }
+   else
+      theBomb = &bombs[0]; // otherwise, we use bomb 0 for everything :(
+
+   // set up us the bomb!
+   theBomb->bombspot   = spot;
+   theBomb->bombsource = source;
+   theBomb->bombdamage = damage;
+   theBomb->bombmod    = mod;
    
    for(y = yl; y <= yh; ++y)
       for(x = xl; x <= xh; ++x)
          P_BlockThingsIterator(x, y, PIT_RadiusAttack);
+
+   if(demo_version >= 335 && bombindex > 0)
+      theBomb = &bombs[--bombindex];
 }
 
 //
