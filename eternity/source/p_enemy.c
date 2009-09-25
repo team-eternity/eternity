@@ -1066,12 +1066,13 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
 #endif
 
       // Go back to a player, no matter whether it's visible or not
-      for(anyone=0; anyone<=1; anyone++)
+      for(anyone = 0; anyone <= 1; ++anyone)
       {
-         for(c=0; c<MAXPLAYERS; c++)
+         for(c = 0; c < MAXPLAYERS; ++c)
          {
-            if(playeringame[c] && players[c].playerstate==PST_LIVE &&
-               (anyone || P_IsVisible(actor, players[c].mo, allaround)))
+            if(playeringame[c] 
+               && players[c].playerstate == PST_LIVE 
+               && (anyone || P_IsVisible(actor, players[c].mo, allaround)))
             {
                P_SetTarget(&actor->target, players[c].mo);
 
@@ -1100,14 +1101,14 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
    }
 
    // Change mask of 3 to (MAXPLAYERS-1) -- killough 2/15/98:
-   stop = (actor->lastlook-1)&(MAXPLAYERS-1);
+   stop = (actor->lastlook - 1) & (MAXPLAYERS - 1);
 
    c = 0;
 
    stopc = demo_version < 203 && !demo_compatibility && monsters_remember ?
            MAXPLAYERS : 2;       // killough 9/9/98
 
-   for(;; actor->lastlook = (actor->lastlook+1)&(MAXPLAYERS-1))
+   for(;; actor->lastlook = (actor->lastlook + 1) & (MAXPLAYERS - 1))
    {
       if(!playeringame[actor->lastlook])
          continue;
@@ -1292,19 +1293,8 @@ static boolean P_HelpFriend(mobj_t *actor)
 void A_Look(mobj_t *actor)
 {
    static boolean recursion;
-   mobj_t *targ;
-   
-   // haleyjd 1/25/00:  isolated assignment of targ to test earlier
-   //  for "deaf" enemies seeing totally invisible players after the
-   //  sector soundtarget is activated, which looks crazy and should
-   //  NOT happen.  The if below is simply deplorable to try to read!
-   
-   targ = actor->subsector->sector->soundtarget;
-
-   if(targ && 
-      (targ->flags2 & MF2_DONTDRAW) && 
-      (actor->flags & MF_AMBUSH))
-      return;
+   mobj_t *sndtarget = actor->subsector->sector->soundtarget;
+   boolean allaround = false;
 
    // killough 7/18/98:
    // Friendly monsters go after other monsters first, but 
@@ -1312,13 +1302,45 @@ void A_Look(mobj_t *actor)
    // cannot find any targets. A marine's best friend :)
    
    actor->threshold = actor->pursuecount = 0;
-   if(!(actor->flags & MF_FRIEND && P_LookForTargets(actor, false)) &&
-      !((targ) &&  // haleyjd: removed assignment here
-        targ->flags & MF_SHOOTABLE &&
-        (P_SetTarget(&actor->target, targ),
-         !(actor->flags & MF_AMBUSH) || P_CheckSight(actor, targ))) &&
-      (actor->flags & MF_FRIEND || !P_LookForTargets(actor, false)))
-         return;
+
+   if(actor->flags4 & MF4_LOOKALLAROUND)
+      allaround = true;
+
+   // If a friend, look for targets immediately.
+   // If a monster, go on to check soundtarget first.
+   if(!(actor->flags & MF_FRIEND) || !P_LookForTargets(actor, allaround))
+   {
+      if(!sndtarget || !(sndtarget->flags & MF_SHOOTABLE))
+      {
+         // There is no valid soundtarget.
+         // If a friend, return.
+         // If a monster, look for players.
+         if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
+            return;
+      }
+      else
+      {
+         // haleyjd 1/25/00: test for AMBUSH enemies seeing totally invisible
+         // players after the soundtarget is activated.
+         if(actor->flags & MF_AMBUSH && sndtarget->flags2 & MF2_DONTDRAW)
+            return;
+
+         // soundtarget is valid, acquire it.
+         P_SetTarget(&actor->target, sndtarget);
+
+         // If an ambush monster, we must additionally be able to see it.
+         if(actor->flags & MF_AMBUSH && !P_CheckSight(actor, sndtarget))
+         {
+            // We couldn't see the soundtarget.
+            // If a friend, return.
+            // If a monster, look for other players.
+            if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
+               return;
+         }
+      }
+
+      // Target is now valid, so the monster will awaken.
+   }
 
    // go into chase state
    
@@ -3991,7 +4013,9 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 
    slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
-   if(tm->linetarget)
+   if(tm->linetarget
+      && !(tm->linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
+      && !(tm->linetarget->flags4 & MF4_NODAMAGE))    // defeat special flags
       damage = tm->linetarget->health;
 
    P_LineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);

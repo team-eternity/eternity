@@ -290,6 +290,8 @@ typedef enum
    MF4_AUTOTRANSLATE  = 0x00000001, // DOOM sprite is automatically translated
    MF4_NORADIUSDMG    = 0x00000002, // Doesn't take damage from blast radii
    MF4_FORCERADIUSDMG = 0x00000004, // Does radius damage to everything, no exceptions
+   MF4_LOOKALLAROUND  = 0x00000008, // Looks all around (like an AMBUSH monster)
+   MF4_NODAMAGE       = 0x00000010, // Takes no damage but still reacts normally
 } mobjflag4_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

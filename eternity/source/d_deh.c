@@ -248,7 +248,6 @@ dehflags_t deh_mobjflags[] =
   {"TRANSLUCENT",      0x80000000}, // apply translucency to sprite (BOOM)
 
   // flags2 bits
-
   {"LOGRAV",           0x00000001, 1}, // low gravity
   {"NOSPLASH",         0x00000002, 1}, // no splash object
   {"NOSTRAFE",         0x00000004, 1}, // never uses strafing logic
@@ -283,7 +282,6 @@ dehflags_t deh_mobjflags[] =
   {"REFLECTIVE",       0x80000000, 1}, // mobj reflects projectiles
 
   // flags3 bits
-
   {"GHOST",            0x00000001, 2}, // heretic-style ghost
   {"THRUGHOST",        0x00000002, 2}, // passes through ghosts
   {"NODMGTHRUST",      0x00000004, 2}, // doesn't inflict thrust
@@ -321,6 +319,8 @@ dehflags_t deh_mobjflags[] =
   {"AUTOTRANSLATE",    0x00000001, 3}, // automatic translation for non-DOOM modes
   {"NORADIUSDMG",      0x00000002, 3}, // doesn't take radius damage
   {"FORCERADIUSDMG",   0x00000004, 3}, // forces radius damage despite other flags
+  {"LOOKALLAROUND",    0x00000008, 3}, // looks all around for targets
+  {"NODAMAGE",         0x00000010, 3}, // takes no damage but reacts normally
 
   { NULL,              0 }             // NULL terminator
 };

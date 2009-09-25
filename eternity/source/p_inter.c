@@ -1387,7 +1387,11 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    }
 
    // do the damage
-   if((target->health -= damage) <= 0)
+   if(!(target->flags4 & MF4_NODAMAGE) || damage >= 10000)
+      target->health -= damage;
+
+   // check for death
+   if(target->health <= 0)
    {
       // death messages for players
       if(player)
