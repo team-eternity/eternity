@@ -108,6 +108,7 @@ int UnknownThingType;
 // Damage Properties
 #define ITEM_TNG_DAMAGE       "damage"
 #define ITEM_TNG_DMGSPECIAL   "dmgspecial"
+#define ITEM_TNG_DAMAGEFACTOR "damagefactor"
 #define ITEM_TNG_TOPDAMAGE    "topdamage"
 #define ITEM_TNG_TOPDMGMASK   "topdamagemask"
 #define ITEM_TNG_MOD          "mod"

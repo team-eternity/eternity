@@ -668,9 +668,9 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          } 
          else if(tok != '=')
          {
-            cfg_error(cfg, _("missing equal sign after option '%s'"),
-               opt->name);
-            return STATE_ERROR;
+            // haleyjd 09/26/09: move forward anyway, and don't read a token.
+            // This makes ='s optional!
+            skip_token = 1;
          }
          if(is_set(CFGF_LIST, opt->flags))
          {
