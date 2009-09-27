@@ -297,7 +297,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
   
       // create a new ceiling thinker
       rtn = 1;
-      ceiling = Z_Malloc (sizeof(*ceiling), PU_LEVSPEC, 0);
+      ceiling = Z_Calloc(1, sizeof(*ceiling), PU_LEVSPEC, 0);
       P_AddThinker (&ceiling->thinker);
       sec->ceilingdata = ceiling;               //jff 2/22/98
       ceiling->thinker.function = T_MoveCeiling;

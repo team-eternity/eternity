@@ -55,7 +55,7 @@ typedef struct metaobject_s
 {
    mdllistitem_t links;
    mdllistitem_t typelinks;
-   const char *key;
+   char *key;
    const char *type;
    void *object;
 } metaobject_t;
@@ -81,6 +81,7 @@ typedef struct metastring_s
 typedef void         *(*MetaAllocFn_t) (size_t);
 typedef void          (*MetaCopyFn_t)  (void *, const void *, size_t);
 typedef metaobject_t *(*MetaObjPtrFn_t)(void *);
+typedef const char   *(*MetaToStrFn_t) (void *);
 
 typedef struct metatype_s
 {
@@ -90,6 +91,7 @@ typedef struct metatype_s
    MetaAllocFn_t  alloc;
    MetaCopyFn_t   copy;
    MetaObjPtrFn_t objptr;
+   MetaToStrFn_t  toString;
 } metatype_t;
 
 void    MetaInit(metatable_t *metatable);
@@ -134,8 +136,10 @@ const char *MetaRemoveString(metatable_t *metatable, const char *key);
 void MetaRegisterType(metatype_t *type);
 void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
                         MetaAllocFn_t alloc, MetaCopyFn_t copy, 
-                        MetaObjPtrFn_t objptr);
+                        MetaObjPtrFn_t objptr, MetaToStrFn_t tostr);
 void MetaCopyTable(metatable_t *desttable, metatable_t *srctable);
+
+const char *MetaToString(metaobject_t *obj);
 
 metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object, 
                                 unsigned int *index);

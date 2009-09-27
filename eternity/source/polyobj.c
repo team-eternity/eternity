@@ -1474,7 +1474,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       return 0;
 
    // create a new thinker
-   th = Z_Malloc(sizeof(polyrotate_t), PU_LEVSPEC, NULL);
+   th = Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL);
    th->thinker.function = T_PolyObjRotate;
    P_AddThinker(&th->thinker);
    po->thinker = &th->thinker;
@@ -1512,7 +1512,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
          break;
       
       // create a new thinker
-      th = Z_Malloc(sizeof(polyrotate_t), PU_LEVSPEC, NULL);
+      th = Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL);
       th->thinker.function = T_PolyObjRotate;
       P_AddThinker(&th->thinker);
       po->thinker = &th->thinker;
@@ -1569,7 +1569,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       return 0;
 
    // create a new thinker
-   th = Z_Malloc(sizeof(polymove_t), PU_LEVSPEC, NULL);
+   th = Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL);
    th->thinker.function = T_PolyObjMove;
    P_AddThinker(&th->thinker);
    po->thinker = &th->thinker;
@@ -1603,7 +1603,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
          break;
 
       // create a new thinker
-      th = Z_Malloc(sizeof(polymove_t), PU_LEVSPEC, NULL);
+      th = Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL);
       th->thinker.function = T_PolyObjMove;
       P_AddThinker(&th->thinker);
       po->thinker = &th->thinker;
@@ -1640,7 +1640,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    unsigned int angtemp, angadd = ANG180;
 
    // allocate and add a new slide door thinker
-   th = Z_Malloc(sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
+   th = Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
    th->thinker.function = T_PolyDoorSlide;
    P_AddThinker(&th->thinker);
    
@@ -1681,7 +1681,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = Z_Malloc(sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
+      th = Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
       th->thinker.function = T_PolyDoorSlide;
       P_AddThinker(&th->thinker);
 
@@ -1721,7 +1721,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    int diracc = -1;
 
    // allocate and add a new swing door thinker
-   th = Z_Malloc(sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
+   th = Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
    th->thinker.function = T_PolyDoorSwing;
    P_AddThinker(&th->thinker);
    
@@ -1754,7 +1754,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = Z_Malloc(sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
+      th = Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
       th->thinker.function = T_PolyDoorSwing;
       P_AddThinker(&th->thinker);
 

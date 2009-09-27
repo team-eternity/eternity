@@ -291,6 +291,36 @@ cfg_t *cfg_getsec(cfg_t *cfg, const char *name)
    return cfg_getnsec(cfg, name, 0);
 }
 
+//
+// cfg_getnmvprop
+//
+// haleyjd 09/26/09: multi-valued properties, which are in effect
+// fixed-order sections, or lists of values with expected types.
+//
+cfg_t *cfg_getnmvprop(cfg_t *cfg, const char *name, unsigned int index)
+{
+   cfg_opt_t *opt = cfg_getopt(cfg, name);
+   
+   if(opt) 
+   {
+      cfg_assert(opt->type == CFGT_MVPROP);
+      cfg_assert(opt->values);
+      cfg_assert(index < opt->nvalues);
+      return opt->values[index]->section;
+   }
+   return 0;
+}
+
+//
+// cfg_getmvprop
+//
+// haleyjd 09/26/09
+//
+cfg_t *cfg_getmvprop(cfg_t *cfg, const char *name)
+{
+   return cfg_getnmvprop(cfg, name, 0);
+}
+
 static cfg_value_t *cfg_addval(cfg_opt_t *opt)
 {
    opt->values = (cfg_value_t **)realloc(opt->values,
@@ -446,19 +476,19 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
          val->string = strdup(value);
       break;
    case CFGT_SEC:
+   case CFGT_MVPROP: // haleyjd
       // haleyjd 07/11/03: CVS bug fix for section overwrite mem. leak
       cfg_free(val->section);
-      val->section = (cfg_t *)malloc(sizeof(cfg_t));
+      val->section = (cfg_t *)calloc(1, sizeof(cfg_t));
       cfg_assert(val->section);
-      memset(val->section, 0, sizeof(cfg_t));
-      val->section->name = strdup(opt->name);
-      val->section->opts = cfg_dupopts(opt->subopts);
-      val->section->flags = cfg->flags;
-      val->section->flags |= CFGF_ALLOCATED;
+      val->section->name     = strdup(opt->name);
+      val->section->opts     = cfg_dupopts(opt->subopts);
+      val->section->flags    = cfg->flags;
+      val->section->flags   |= CFGF_ALLOCATED;
       val->section->filename = cfg->filename;
-      val->section->line = cfg->line;
-      val->section->errfunc = cfg->errfunc;
-      val->section->title = value;
+      val->section->line     = cfg->line;
+      val->section->errfunc  = cfg->errfunc;
+      val->section->title    = value;
       break;
    case CFGT_BOOL:
       if(opt->cb)
@@ -498,7 +528,7 @@ void cfg_free_value(cfg_opt_t *opt)
    {
       if(opt->type == CFGT_STR || opt->type == CFGT_STRFUNC) // haleyjd
          free(opt->values[i]->string);
-      else if(opt->type == CFGT_SEC)
+      else if(opt->type == CFGT_SEC || opt->type == CFGT_MVPROP) // haleyjd
          cfg_free(opt->values[i]->section);
       free(opt->values[i]);
    }
@@ -574,6 +604,7 @@ enum
    STATE_EXPECT_ARGUMENT,  // state 8
    STATE_EXPECT_ARGNEXT,   // state 9
    STATE_EXPECT_LOOKFOR,   // state 10
+   STATE_EXPECT_PROPNEXT,  // state 11
 };
 
 static int cfg_parse_internal(cfg_t *cfg, int level)
@@ -586,7 +617,8 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
    cfg_opt_t funcopt = CFG_STR(0,0,0);
    cfg_bool_t found_func = cfg_false; // haleyjd
    int tok;
-   int skip_token = 0; // haleyjd
+   int skip_token = 0;     // haleyjd
+   int propindex = 0;      // haleyjd: for multi-value properties
    
    while(1)
    {
@@ -672,7 +704,27 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             // This makes ='s optional!
             skip_token = 1;
          }
-         if(is_set(CFGF_LIST, opt->flags))
+
+         if(opt->type == CFGT_MVPROP) // haleyjd
+         {
+            val = cfg_setopt(cfg, opt, opttitle);
+            opttitle = 0;
+            if(!val || !val->section || !val->section->opts)
+               return STATE_ERROR;
+
+            // start at opts[0]
+            propindex = 0;
+
+            // set the new option
+            opt = &(val->section->opts[propindex++]);
+
+            // must have at least one valid option
+            cfg_assert(opt->type != CFGT_NONE);
+
+            state = STATE_EXPECT_VALUE;
+            next_state = STATE_EXPECT_PROPNEXT;
+         }
+         else if(is_set(CFGF_LIST, opt->flags))
          {
             if(!append_value)
                cfg_free_value(opt);
@@ -707,6 +759,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          
          if(cfg_setopt(cfg, opt, mytext) == 0)
             return STATE_ERROR;
+
          state = next_state;
          break;
 
@@ -882,6 +935,28 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
                cfg_error(cfg, "internal error");
                return STATE_ERROR;
             }
+         }
+         break;
+
+      case STATE_EXPECT_PROPNEXT:
+         // haleyjd 09/26/09: step to next value for a multi-value property
+         if(tok == ',')
+         {
+            // step to next option in the section
+            opt = &(val->section->opts[propindex++]);
+
+            if(opt->type == CFGT_NONE) // reached CFG_END?
+               state = STATE_EXPECT_OPTION;
+            else
+            {
+               state = STATE_EXPECT_VALUE;
+               next_state = STATE_EXPECT_PROPNEXT;
+            }
+         } 
+         else
+         {
+            skip_token = 1; // reprocess the current token
+            state = STATE_EXPECT_OPTION;
          }
          break;
 
@@ -1201,6 +1276,7 @@ static void cfg_addlist_internal(cfg_t *cfg, cfg_opt_t *opt,
          break;
       case CFGT_FUNC:
       case CFGT_SEC:
+      case CFGT_MVPROP:
       default:
          break;
       }

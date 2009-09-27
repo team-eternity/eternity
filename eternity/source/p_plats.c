@@ -239,7 +239,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       
       // Create a thinker
       rtn = 1;
-      plat = Z_Malloc( sizeof(*plat), PU_LEVSPEC, 0);
+      plat = Z_Calloc(1, sizeof(*plat), PU_LEVSPEC, 0);
       P_AddThinker(&plat->thinker);
       
       plat->type = type;

@@ -64,7 +64,6 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-//static emod_t *e_mod_namechains[NUMMODCHAINS];
 static ehash_t e_mod_namehash;
 
 E_KEYFUNC(emod_t, name)
@@ -105,12 +104,6 @@ static int edf_alloc_modnum = D_MAXINT;
 //
 static void E_AddDamageTypeToNameHash(emod_t *mod)
 {
-   /*
-   unsigned int key = D_HashTableKey(mod->name) % NUMMODCHAINS;
-
-   mod->nextname = e_mod_namechains[key];
-   e_mod_namechains[key] = mod;
-   */
    if(!e_mod_namehash.isinit)
    {
       E_NCStrHashInit(&e_mod_namehash, NUMMODCHAINS, E_KEYFUNCNAME(emod_t, name),
@@ -206,15 +199,6 @@ static void E_DelDamageTypeFromNumHash(emod_t *mod)
 //
 static emod_t *E_EDFDamageTypeForName(const char *name)
 {
-   /*
-   unsigned int key = D_HashTableKey(name) % NUMMODCHAINS;
-   emod_t *mod = e_mod_namechains[key];
-
-   while(mod && strcasecmp(mod->name, name))
-      mod = mod->nextname;
-
-   return mod;
-   */
    return E_HashObjectForKey(&e_mod_namehash, &name);
 }
 
@@ -365,14 +349,6 @@ void E_ProcessDamageTypes(cfg_t *cfg)
 //
 emod_t *E_DamageTypeForName(const char *name)
 {
-   /*
-   unsigned int key = D_HashTableKey(name) % NUMMODCHAINS;
-   emod_t *mod = e_mod_namechains[key];
-
-   while(mod && strcasecmp(mod->name, name))
-      mod = mod->nextname;
-   */
-
    emod_t *mod;
 
    if((mod = E_HashObjectForKey(&e_mod_namehash, &name)) == NULL)

@@ -218,7 +218,7 @@ void P_SpawnFireFlicker(sector_t *sector)
    // Nothing special about it during gameplay.
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
    
-   flick = Z_Malloc(sizeof(*flick), PU_LEVSPEC, 0);
+   flick = Z_Calloc(1, sizeof(*flick), PU_LEVSPEC, 0);
    
    P_AddThinker(&flick->thinker);
    
@@ -244,7 +244,7 @@ void P_SpawnLightFlash(sector_t *sector)
    // nothing special about it during gameplay
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
    
-   flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
+   flash = Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0);
    
    P_AddThinker(&flash->thinker);
    
@@ -272,7 +272,7 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 {
    strobe_t *flash;
    
-   flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
+   flash = Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0);
    
    P_AddThinker(&flash->thinker);
    
@@ -307,7 +307,7 @@ void P_SpawnGlowingLight(sector_t *sector)
 {
    glow_t *g;
    
-   g = Z_Malloc(sizeof(*g), PU_LEVSPEC, 0);
+   g = Z_Calloc(1, sizeof(*g), PU_LEVSPEC, 0);
    
    P_AddThinker(&g->thinker);
    
@@ -571,7 +571,7 @@ int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
 dobackside:
       rtn = 1;
 
-      lf = Z_Malloc(sizeof(*lf), PU_LEVSPEC, NULL);
+      lf = Z_Calloc(1, sizeof(*lf), PU_LEVSPEC, NULL);
       lf->thinker.function = T_LightFade;
       
       P_AddThinker(&lf->thinker);       // add thinker
@@ -633,7 +633,7 @@ int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
 dobackside:
       rtn = 1;
 
-      lf = Z_Malloc(sizeof(*lf), PU_LEVSPEC, NULL);
+      lf = Z_Calloc(1, sizeof(*lf), PU_LEVSPEC, NULL);
       lf->thinker.function = T_LightFade;
 
       P_AddThinker(&lf->thinker);
@@ -686,7 +686,7 @@ int EV_StrobeLight(line_t *line, int tag,
    {
 dobackside:
       rtn = 1;
-      flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
+      flash = Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0);
       
       flash->thinker.function = T_StrobeFlash;
       P_AddThinker(&flash->thinker);
@@ -734,7 +734,7 @@ int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
    {
 dobackside:
       rtn = 1;
-      flash = Z_Malloc(sizeof(*flash), PU_LEVSPEC, 0);
+      flash = Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0);
       
       flash->thinker.function = T_LightFlash;
       P_AddThinker(&flash->thinker);      

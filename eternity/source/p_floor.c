@@ -769,7 +769,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
       
       // new floor thinker
       rtn = 1;
-      floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
+      floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
       P_AddThinker (&floor->thinker);
       sec->floordata = floor; //jff 2/22/98
       floor->thinker.function = T_MoveFloor;
@@ -1100,7 +1100,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
 
          // create new floor thinker for first step
          rtn = 1;
-         floor = Z_Malloc(sizeof(*floor), PU_LEVSPEC, 0);
+         floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
          P_AddThinker(&floor->thinker);
          sec->floordata = floor;
          floor->thinker.function = T_MoveFloor;
@@ -1183,7 +1183,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
                secnum = newsecnum;
 
                // create and initialize a thinker for the next step
-               floor = Z_Malloc(sizeof(*floor), PU_LEVSPEC, 0);
+               floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
                P_AddThinker(&floor->thinker);
 
                sec->floordata = floor; //jff 2/22/98
@@ -1289,7 +1289,7 @@ int EV_DoDonut(line_t*  line)
          s3 = s2->lines[i]->backsector;
         
          //  Spawn rising slime
-         floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
+         floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
          P_AddThinker (&floor->thinker);
          s2->floordata = floor; //jff 2/22/98
          floor->thinker.function = T_MoveFloor;
@@ -1304,7 +1304,7 @@ int EV_DoDonut(line_t*  line)
          P_FloorSequence(floor->sector);
         
          //  Spawn lowering donut-hole pillar
-         floor = Z_Malloc (sizeof(*floor), PU_LEVSPEC, 0);
+         floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
          P_AddThinker (&floor->thinker);
          s1->floordata = floor; //jff 2/22/98
          floor->thinker.function = T_MoveFloor;
@@ -1352,7 +1352,7 @@ int EV_DoElevator
       
       // create and initialize new elevator thinker
       rtn = 1;
-      elevator = Z_Malloc (sizeof(*elevator), PU_LEVSPEC, 0);
+      elevator = Z_Calloc(1, sizeof(*elevator), PU_LEVSPEC, 0);
       P_AddThinker (&elevator->thinker);
       sec->floordata = elevator; //jff 2/22/98
       sec->ceilingdata = elevator; //jff 2/22/98
@@ -1444,7 +1444,7 @@ manual_pillar:
             continue;
       }
             
-      pillar = Z_Malloc(sizeof(pillar_t), PU_LEVSPEC, 0);
+      pillar = Z_Calloc(1, sizeof(pillar_t), PU_LEVSPEC, 0);
       sector->floordata = pillar;
       sector->ceilingdata = pillar;
       P_AddThinker(&pillar->thinker);
@@ -1533,7 +1533,7 @@ manual_pillar:
             continue;
       }
 
-      pillar = Z_Malloc(sizeof(pillar_t), PU_LEVSPEC, 0);
+      pillar = Z_Calloc(1, sizeof(pillar_t), PU_LEVSPEC, 0);
       sector->floordata   = pillar;
       sector->ceilingdata = pillar;
       P_AddThinker(&pillar->thinker);
@@ -1698,7 +1698,7 @@ manual_waggle:
       }
 
       retCode = 1;
-      waggle = Z_Malloc(sizeof(*waggle), PU_LEVSPEC, 0);
+      waggle = Z_Calloc(1, sizeof(*waggle), PU_LEVSPEC, 0);
       sector->floordata = waggle;      
       waggle->thinker.function = T_FloorWaggle;
       P_AddThinker(&waggle->thinker);

@@ -54,6 +54,7 @@ enum cfg_type_t
    CFGT_SEC,     /**< section */
    CFGT_FUNC,    /**< function */
    CFGT_STRFUNC, /**< function-valued string */
+   CFGT_MVPROP,  /**< multi-valued property */
 };
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
@@ -276,8 +277,7 @@ struct cfg_opt_t
 /** Initialize a section
  *
  * @param name The name of the option
- * @param opts Array of options that are valid within this section
- 
+ * @param opts Array of options that are valid within this section 
  * @param flags Flags, specify CFGF_MULTI if it should be possible to
  * have multiples of the same section, and CFGF_TITLE if the 
  * section(s) must have a title (which can be used in the 
@@ -302,6 +302,15 @@ struct cfg_opt_t
  */
 #define CFG_STRFUNC(name, def, func) \
            {name, CFGT_STRFUNC, 0, 0, CFGF_NONE, 0, (void *)def, 0, func, 0, 0}
+
+/** Initialize a multi-valued property option.
+ *
+ * @param name The name of the option.
+ * @param opts Array of options in order they must appear listed.
+ * @param flags Similar to CFG_SEC. Titles are not supported however.
+ */
+#define CFG_MVPROP(name, opts, flags) \
+                   {name, CFGT_MVPROP, 0, 0, flags, opts, 0, 0, 0, 0, 0}
 
 /** Terminate list of options. This must be the last initializer in
  * the option list.
@@ -354,7 +363,7 @@ int           cfg_parse(cfg_t *cfg, const char *filename);
  * errors, CFG_PARSE_ERROR is returned and cfg_error() was called with
  * a descriptive error message.
  */
-int          cfg_parselump(cfg_t *cfg, const char *lumpname);
+int           cfg_parselump(cfg_t *cfg, const char *lumpname);
 
 /** Free the memory allocated for the values of a given option. Only
  * the values are freed, not the option itself (it is often statically
@@ -437,6 +446,17 @@ cfg_bool_t     cfg_getbool(cfg_t *cfg, const char *name);
  */
 cfg_t *       cfg_getsec(cfg_t *cfg, const char *name);
 
+/** Returns the value of a multi-valued property. The returned value is
+ * another cfg_t structure that can be used in following calls to
+ * cfg_getint, cfg_getstr, or other get-functions.
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @return The requested value is returned. If no property is found
+ * with that name, 0 is returned. Note that there can be no default
+ * values for a multi-valued property.
+ */
+cfg_t *       cfg_getmvprop(cfg_t *cfg, const char *name);
+
 cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
 
 /** Return the number of values this option has. If the option does
@@ -497,6 +517,17 @@ cfg_t *       cfg_gettsec(cfg_t *cfg, const char *name, const char *title);
  * should not be modified.
  */
 const char *  cfg_title(cfg_t *cfg);
+
+/** Indexed version of cfg_getmvprop().
+ *
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param index Index of values. Zero based.
+ * @see cfg_getsec
+ */
+cfg_t *       cfg_getnmvprop(cfg_t *cfg, const char *name, unsigned int index);
+
+
 
 extern const char *confuse_copyright;
 extern const char *confuse_version;

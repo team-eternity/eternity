@@ -33,6 +33,7 @@
 #include "e_things.h"
 #include "e_exdata.h"
 #include "e_sound.h"
+#include "metaapi.h"
 
 //
 // e_dumpthings
@@ -148,9 +149,48 @@ CONSOLE_COMMAND(e_thingtype, 0)
    C_Printf(FC_ERROR "Flags:\n"
             FC_HI "Flags 1: " FC_NORMAL "0x%08x\n"
             FC_HI "Flags 2: " FC_NORMAL "0x%08x\n"
-            FC_HI "Flags 3: " FC_NORMAL "0x%08x\n",
+            FC_HI "Flags 3: " FC_NORMAL "0x%08x\n"
+            FC_HI "Flags 4: " FC_NORMAL "0x%08x\n",
             mobjinfo[num].flags, mobjinfo[num].flags2,
-            mobjinfo[num].flags3);
+            mobjinfo[num].flags3, mobjinfo[num].flags4);
+}
+
+//
+// e_dumpmeta
+//
+// Displays the properties stored in the metatable for the given thingtype.
+//
+CONSOLE_COMMAND(e_dumpmeta, 0)
+{
+   metatable_t  *meta;
+   metaobject_t *obj = NULL;
+   unsigned int index = -1;
+   int num;
+
+   if(!c_argc)
+   {
+      C_Printf("usage: e_dumpmeta mnemonic\n");
+      return;
+   }
+
+   num = E_ThingNumForName(c_argv[0]);
+
+   if(num == NUMMOBJTYPES)
+   {
+      C_Printf("Thing type not found\n");
+      return;
+   }
+
+   C_Printf(FC_HI "Metadata for Thing Type %s:\n", mobjinfo[num].name);
+
+   meta = mobjinfo[num].meta;
+
+   while((obj = MetaTableIterator(meta, obj, &index)))
+   {
+      C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
+               FC_NORMAL "%s", obj->key, obj->type,
+               MetaToString(obj));
+   }
 }
 
 //
@@ -352,6 +392,7 @@ void E_AddCommands(void)
 {
    C_AddCommand(e_dumpthings);
    C_AddCommand(e_thingtype);
+   C_AddCommand(e_dumpmeta);
    C_AddCommand(e_dumpitems);
    C_AddCommand(e_playsound);
    C_AddCommand(e_listmapthings);

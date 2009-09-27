@@ -2696,7 +2696,7 @@ static void G_RegisterSpeedSet(void)
    static metatype_t metaspeedset;
 
    MetaRegisterTypeEx(&metaspeedset, METATYPE(speedset_t), sizeof(speedset_t),
-                      NULL, NULL, NULL);
+                      NULL, NULL, NULL, NULL);
 }
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)

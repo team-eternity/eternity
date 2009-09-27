@@ -30,6 +30,7 @@
 #include "doomtype.h"
 #include "m_dllist.h"
 #include "e_hash.h"
+#include "m_qstr.h"
 #include "metaapi.h"
 
 // Macros
@@ -208,15 +209,16 @@ int MetaCountOfKeyAndType(metatable_t *metatable, const char *key,
 // MetaAddObject
 //
 // Adds a generic metaobject to the table. The metatable does not assume
-// responsibility for the memory management of metaobjects, key strings, or
-// type strings.
+// responsibility for the memory management of metaobjects or type strings.
+// Key strings are managed, however, to avoid serious problems with mutual
+// references between metaobjects.
 //
 void MetaAddObject(metatable_t *metatable, const char *key, metaobject_t *object,
                    void *data, const char *type)
 {
    ehash_t *keyhash = &metatable->keyhash;
 
-   object->key    = key;
+   object->key    = strdup(key);
    object->type   = type;
    object->object = data; // generally, a pointer back to the owning structure
 
@@ -250,12 +252,19 @@ void MetaAddObject(metatable_t *metatable, const char *key, metaobject_t *object
 //
 // MetaRemoveObject
 //
-// Removes the provided object from the given metatable.
+// Removes the provided object from the given metatable. The key 
+// string will be freed.
 //
 void MetaRemoveObject(metatable_t *metatable, metaobject_t *object)
 {
    E_HashRemoveObject(&metatable->keyhash,  object);
    E_HashRemoveObject(&metatable->typehash, object);
+
+   if(object->key)
+   {
+      free(object->key);
+      object->key = NULL;
+   }
 }
 
 //
@@ -373,6 +382,23 @@ metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object,
 //
 
 //
+// metaIntToString
+//
+// toString method for metaint objects.
+//
+static const char *metaIntToString(void *obj)
+{
+   metaint_t *mi = (metaint_t *)obj;
+   static char str[33];
+
+   memset(str, 0, sizeof(str));
+
+   itoa(mi->value, str, 10);
+
+   return str;
+}
+
+//
 // MetaAddInt
 //
 // Add an integer to the metatable.
@@ -388,7 +414,7 @@ void MetaAddInt(metatable_t *metatable, const char *key, int value)
       static metatype_t metaIntType;
 
       MetaRegisterTypeEx(&metaIntType, METATYPE(metaint_t), sizeof(metaint_t),
-                         NULL, NULL, NULL);
+                         NULL, NULL, NULL, metaIntToString);
       firsttime = false;
    }
 
@@ -478,7 +504,7 @@ void MetaAddDouble(metatable_t *metatable, const char *key, double value)
 
       MetaRegisterTypeEx(&metaDoubleType, 
                          METATYPE(metadouble_t), sizeof(metadouble_t),
-                         NULL, NULL, NULL);
+                         NULL, NULL, NULL, NULL);
       firsttime = false;
    }
 
@@ -554,6 +580,19 @@ double MetaRemoveDouble(metatable_t *metatable, const char *key)
 // string. If the string is dynamically allocated, you are responsible for
 // releasing its storage after destroying the metastring.
 //
+// If the metatable has been copied, more than one object may point to the
+// string in question.
+//
+
+//
+// metaStringToString
+//
+// toString method for metastrings
+//
+static const char *metaStringToString(void *obj)
+{
+   return ((metastring_t *)obj)->value;
+}
 
 //
 // MetaAddString
@@ -568,8 +607,9 @@ void MetaAddString(metatable_t *metatable, const char *key, const char *value)
       // register metastring type
       static metatype_t metaStrType;
 
-      MetaRegisterTypeEx(&metaStrType, METATYPE(metastring_t), 
-                         sizeof(metastring_t), NULL, NULL, NULL);
+      MetaRegisterTypeEx(&metaStrType, 
+                         METATYPE(metastring_t), sizeof(metastring_t), 
+                         NULL, NULL, NULL, metaStringToString);
       firsttime = false;
    }
 
@@ -688,6 +728,46 @@ static metaobject_t *MetaObjectPtr(void *object)
    return object;
 }
 
+// data for MetaDefToString
+static size_t metaobjlen;
+
+//
+// MetaDefToString
+//
+// Default method for string display of a metaobject_t via a registered
+// metatype.
+//
+static const char *MetaDefToString(void *object)
+{
+   static qstring_t qstr;
+   byte *data = (byte *)object;
+   size_t bytestoprint = metaobjlen;
+
+   if(!qstr.buffer)
+      M_QStrInitCreate(&qstr);
+   else
+      M_QStrClear(&qstr);
+
+   while(bytestoprint)
+   {
+      int i;
+
+      // print up to 12 bytes on each line
+      for(i = 0; i < 12 && bytestoprint; ++i, --bytestoprint)
+      {
+         byte val = *data++;
+         char bytes[4] = { 0 };
+
+         sprintf(bytes, "%02x ", val);
+
+         M_QStrCat(&qstr, bytes);
+      }
+      M_QStrPutc(&qstr, '\n');
+   }
+
+   return qstr.buffer;
+}
+
 //
 // MetaRegisterType
 //
@@ -710,6 +790,9 @@ void MetaRegisterType(metatype_t *type)
    if(!type->objptr)
       type->objptr = MetaObjectPtr;
 
+   if(!type->toString)
+      type->toString = MetaDefToString;
+
    if(!MetaGetObject(&metaTypeRegistry, type->name))
    {
       MetaAddObject(&metaTypeRegistry, type->name, &type->parent, type, 
@@ -725,13 +808,14 @@ void MetaRegisterType(metatype_t *type)
 //
 void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
                         MetaAllocFn_t alloc, MetaCopyFn_t copy, 
-                        MetaObjPtrFn_t objptr)
+                        MetaObjPtrFn_t objptr, MetaToStrFn_t tostr)
 {
-   type->name   = typeName;
-   type->size   = typeSize;
-   type->alloc  = alloc;
-   type->copy   = copy;
-   type->objptr = objptr;
+   type->name     = typeName;
+   type->size     = typeSize;
+   type->alloc    = alloc;
+   type->copy     = copy;
+   type->objptr   = objptr;
+   type->toString = tostr;
 
    MetaRegisterType(type);
 }
@@ -762,14 +846,36 @@ void MetaCopyTable(metatable_t *desttable, metatable_t *srctable)
          // copy from the old object
          type->copy(destobj, srcobj->object, type->size);
 
-         // clear metaobject links for safety
-         memset(&newmeta->links,     0, sizeof(newmeta->links));
-         memset(&newmeta->typelinks, 0, sizeof(newmeta->typelinks));
+         // clear metaobject for safety
+         memset(newmeta, 0, sizeof(metaobject_t));
 
          // add the new object to the destination table
-         MetaAddObject(desttable, newmeta->key, newmeta, destobj, type->name);
+         MetaAddObject(desttable, srcobj->key, newmeta, destobj, type->name);
       }
    }
+}
+
+//
+// MetaToString
+//
+// Call this function to convert a metaobject with a registered metatype into
+// a printable string.
+//
+const char *MetaToString(metaobject_t *obj)
+{
+   const char *ret;
+   metatype_t *type;
+
+   // see if the object has a registered metatype
+   if((type = (metatype_t *)MetaGetObject(&metaTypeRegistry, obj->type)))
+   {
+      metaobjlen = type->size; // needed by default method
+      ret = type->toString(obj->object);
+   }
+   else
+      ret = "(unregistered object type)";
+
+   return ret;
 }
 
 // EOF

@@ -142,6 +142,10 @@ int UnknownThingType;
 #define ITEM_TNG_ACS_NUM      "num"
 #define ITEM_TNG_ACS_MODES    "modes"
 
+// Damage factor multi-value property internal fields
+#define ITEM_TNG_DMGF_MODNAME "mod"
+#define ITEM_TNG_DMGF_FACTOR  "factor"
+
 
 // Thing Delta Keywords
 #define ITEM_DELTA_NAME "name"
@@ -368,6 +372,14 @@ static cfg_opt_t acs_data[] =
    CFG_END()
 };
 
+// damage factor multi-value property options
+static cfg_opt_t dmgf_opts[] =
+{
+   CFG_STR(  ITEM_TNG_DMGF_MODNAME, "Unknown", CFGF_NONE),
+   CFG_FLOAT(ITEM_TNG_DMGF_FACTOR,  0.0,       CFGF_NONE),
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
@@ -408,6 +420,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(   ITEM_TNG_RESPCHANCE,   4,         CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_DAMAGE,       0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_DMGSPECIAL,   "NONE",    CFGF_NONE                ), \
+   CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts, CFGF_MULTI               ), \
    CFG_INT(   ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_TOPDMGMASK,   0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_MOD,          "Unknown", CFGF_NONE                ), \
@@ -748,28 +761,24 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 //
 //
 // With DECORATE state support, it is necessary to allow storage of arbitrary
-// state 
+// states in mobjinfo.
+//
 
 typedef struct metastate_s
 {
    metaobject_t parent; // metaobject
-   char *name;
    state_t *state;      // the state
 } metastate_t;
 
 //
-// MetaStateCopy
+// metaStateToString
 //
-// Copy method for metastate objects. The name used as the key must be
-// duplicated in the new object.
-//
-static void MetaStateCopy(void *dest, const void *src, size_t size)
+// toString method for nice display of metastate properties.
+static const char *metaStateToString(void *obj)
 {
-   const metastate_t *srcstate  = (const metastate_t *)src;
-   metastate_t       *deststate = (metastate_t *)dest;
+   metastate_t *ms = (metastate_t *)obj;
 
-   deststate->state = srcstate->state;
-   deststate->parent.key = deststate->name = strdup(srcstate->name);
+   return ms->state->name;
 }
 
 //
@@ -789,7 +798,7 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 
       MetaRegisterTypeEx(&metaStateType, 
                          METATYPE(metastate_t), sizeof(metastate_t),
-                         NULL, MetaStateCopy, NULL);
+                         NULL, NULL, NULL, metaStateToString);
 
       firsttime = false;
    }
@@ -797,10 +806,9 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
    newMetaState = calloc(1, sizeof(metastate_t));
 
    newMetaState->state = state;
-   newMetaState->name  = strdup(name);
 
-   MetaAddObject(mi->meta, newMetaState->name, &newMetaState->parent, 
-                 newMetaState, METATYPE(metastate_t));
+   MetaAddObject(mi->meta, name, &newMetaState->parent, newMetaState, 
+                 METATYPE(metastate_t));
 }
 
 //
@@ -812,7 +820,6 @@ static void E_RemoveMetaStatePtr(mobjinfo_t *mi, metastate_t *ms)
 {
    MetaRemoveObject(mi->meta, &ms->parent);
    
-   free(ms->name);
    free(ms);
 }
 
@@ -1079,6 +1086,28 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
       }
    }
 }
+
+//
+// Damage Factors
+//
+// haleyjd 09/26/09: damage factors are also stored in the mobjinfo
+// metatable. These floating point properties adjust the amount of damage 
+// done to objects by specific damage types.
+//
+
+typedef struct metadamagefactor_s
+{
+   metaobject_t parent; // parent metaobject
+   double factor;       // factor by which to multiply damage
+} metadamagefactor_t;
+
+//
+// E_GetMetaDamageFactor
+//
+// Retrieve a metadamagefactor object for a given MOD.
+//
+
+
 
 //
 // E_ColorCB
