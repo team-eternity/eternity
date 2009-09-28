@@ -31,6 +31,7 @@
 #include "m_dllist.h"
 #include "e_hash.h"
 #include "m_qstr.h"
+#include "m_misc.h"
 #include "metaapi.h"
 
 // Macros
@@ -393,7 +394,7 @@ static const char *metaIntToString(void *obj)
 
    memset(str, 0, sizeof(str));
 
-   itoa(mi->value, str, 10);
+   M_Itoa(mi->value, str, 10);
 
    return str;
 }
