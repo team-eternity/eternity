@@ -759,7 +759,6 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 //
 // Meta states
 //
-//
 // With DECORATE state support, it is necessary to allow storage of arbitrary
 // states in mobjinfo.
 //
@@ -774,11 +773,10 @@ typedef struct metastate_s
 // metaStateToString
 //
 // toString method for nice display of metastate properties.
+//
 static const char *metaStateToString(void *obj)
 {
-   metastate_t *ms = (metastate_t *)obj;
-
-   return ms->state->name;
+   return ((metastate_t *)obj)->state->name;
 }
 
 //
@@ -862,6 +860,7 @@ static metastate_t *E_GetMetaState(mobjinfo_t *mi, const char *name)
 // E_ModStateName
 //
 // Constructs the appropriate label name for a mod state.
+// Don't cache the return value.
 //
 static const char *E_ModStateName(const char *base, emod_t *mod)
 {
@@ -880,17 +879,6 @@ static const char *E_ModStateName(const char *base, emod_t *mod)
 }
 
 //
-// E_MetaStateForMod
-//
-// Returns the state node from the given mobjinfo for the given mod type and
-// base label, if such exists. If not, NULL is returned.
-//
-static metastate_t *E_MetaStateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
-{
-   return E_GetMetaState(mi, E_ModStateName(base, mod));
-}
-
-//
 // E_StateForMod
 //
 // Returns the state from the given mobjinfo for the given mod type and
@@ -901,7 +889,7 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
    state_t *ret = NULL;
    metastate_t *mstate;
 
-   if((mstate = E_MetaStateForMod(mi, base, mod)))
+   if((mstate = E_GetMetaState(mi, E_ModStateName(base, mod))))
       ret = mstate->state;
 
    return ret;
@@ -937,21 +925,10 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
    metastate_t *msnode;
    
    // if one exists for this mod already, use it, else create a new one.
-   if((msnode = E_MetaStateForMod(info, base, mod)))
+   if((msnode = E_GetMetaState(info, E_ModStateName(base, mod))))
       msnode->state = state;
    else
       E_AddMetaState(info, state, E_ModStateName(base, mod));
-}
-
-//
-// E_RemoveDamageTypeState
-//
-// Removes the specified custom damagetype state from the mobjinfo,
-// if it is attached to it already. If not, this is ignored.
-//
-static void E_RemoveDamageTypeState(mobjinfo_t *mi, const char *base, emod_t *mod)
-{
-   E_RemoveMetaState(mi, E_ModStateName(base, mod));
 }
 
 //
@@ -1082,7 +1059,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
          if(mod->num == 0) // if this is "Unknown", ignore it.
             continue;
 
-         E_RemoveDamageTypeState(mi, base, mod);
+         E_RemoveMetaState(mi, E_ModStateName(base, mod));
       }
    }
 }
