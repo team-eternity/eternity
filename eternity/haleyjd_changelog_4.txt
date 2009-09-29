@@ -2,6 +2,202 @@
 Changes since Eternity Engine v3.35.92
 ================================================================================
 --------------------------------------------------------------------------------
+09/28/09
+
+After the rewrite of damagetype pain and death states to utilize the new
+metastate maintenance code (which stores states into the mobjinfo metatable),
+several functions were reduced to single lines of code. I eliminated these
+unnecessary middle-man functions and replaced them with direct calls to the
+metastate functions. Overall the code still didn't get smaller than it was
+originally, but the dividends will pay off when metastate management is employed
+for DECORATE state support.
+
+--------------------------------------------------------------------------------
+09/27/09
+
+I had to make an accidental megacommit after the finding of yet another serious
+issue:
+
+1. I have added the ability to parse "multi-valued properties" to libConfuse.
+   These are properties in this form:
+   
+   field [=] <value> [, <value>]*
+   
+   The equal sign is optional, as per yesterday's extension, and the list of
+   values is managed by an independent cfg_opt_t array, which functions the
+   same way internally as a libConfuse section. CFG_MVPROP items are basically
+   identical to CFG_SEC items, except that they cannot have titles, may only
+   contain basic options (no sections or lists), and the items must be present
+   in the same order specified in the MVPROP's cfg_opt_t.
+   
+   This matches syntax used by DECORATE for items such as damagefactors.
+   
+2. Started addition of meta damagefactors, but this has stalled out for the
+   time being while I worked on other problems.
+   
+3. I broke down and reassigned the ownership of metaobject keys to the
+   metaobjects themselves, due to persistant problems with the copying of keys
+   between objects when copying the metatable. My initial design was made under
+   the assumption that metaobject keys would largely be static strings, and that
+   dynamically allocated ones would be the exception. It is increasingly obvious
+   that dynamically allocated key strings are going to be the rule after all,
+   since so many of the features I want to use the metatable for rely on names
+   generated via concatenation of strings derived from EDF definitions which
+   may have arbitrary length.
+   
+4. I added another incredibly powerful C++-like mechanism to the metatype 
+   system: a toString method. If not defined, the default metatype::toString
+   method prints out a hex dump representation of the object. Otherwise, the
+   toString method may be overridden by passing a function to MetaRegisterTypeEx
+   and it will be called for objects of that type.
+   
+   Metaobjects without a registered metatype will not be printed; instead a 
+   message is given that the object is not a registered metatype object.
+   
+   This was added to support the new e_dumpmeta command, which allows me to look
+   at an mobjinfo's metatable in the console. This is a pretty critical thing to
+   have for debugging new metatable-reliant EDF features, which are going to be
+   popping up like weeds for a good while now.
+   
+5. Aaaand finally, as alluded to above, a new extremely serious issue abruptly
+   appeared while I was trying to work on the metatable. EE started crashing 
+   during P_SetupLevel on Heretic E1M3 with approximately 10% reliability. The
+   crash initially only seemed to work in the release build, so I was forced to
+   try to reconstruct the call stack from the crash reporter output, and I found
+   something extremely disturbing:
+   
+   The game was crashing in P_UpdateThinker.
+   
+   That such reliable, "finished" code that hasn't changed for years would 
+   suddenly manifest a segmentation violation was very troubling to me, so I
+   wasn't about to give up on trying to find the root cause of this. I finally
+   got the bug to occur in the debug build by idclev'ing between E1M2 and E1M3
+   repeatedly, and captured the crash in the debugger, in the exact same locale
+   it had crashed before - P_UpdateThinker as called for the addition of a 
+   "strobe light" thinker for a particular sector.
+   
+   For *some strange reason*, it turned out that this strobe light thinker had
+   the function P_MobjThinker in its thinker->function field. Why? Because it
+   turns out that none of the thinker classes were initialized before being
+   sent to P_UpdateThinker. This wasn't a problem before EE, but became such
+   because of the addition of the PrBoom fix to MBF's thinkerclass list
+   corruption bug, which has to test the value of thinker->function.
+   
+   How this managed to survive so long is troubling, but even more troubling is
+   why the Windows debug heap was not doing its job. When memory is freed in a
+   Windows debug program, the system contractually guarantees you that the
+   memory will be overwritten with the value 0xDEADBEEF before being reused.
+   
+   This did not happen, however.
+   
+   Instead, an mobj_t's memory block freed during Z_FreeTags from the previous 
+   level was handed back to me during the request for a strobe light thinker. 
+   Because both structures have the thinker->function field at the exact same 
+   offset, this allowed a "perfect storm" bug to occur that would otherwise be 
+   impossible.
+   
+   While I am glad that this enabled me to find the problem, which has been
+   fixed by changing all thinkers to use Z_Calloc instead of Z_Malloc, I am
+   not pleased in learning that I cannot count on the protections afforded by
+   use of the Windows debug heap.
+
+--------------------------------------------------------------------------------
+09/26/09
+
+I have introduced a relaxation into the libConfuse grammar/state machine which
+makes equals signs optional by simply proceeding to the "expect value" state
+without reading a new token when the token just read is not an '='.  This makes
+EDF a bit more DECORATE-ish in that it now has less unnecessary yet mandatory 
+syntactic sugar.
+
+--------------------------------------------------------------------------------
+09/25/09
+
+I defined some additional new flags4 bits:
+
+* NODAMAGE prevents objects from taking damage from normal sources, although
+  they still behave as if they take the damage, including being thrust and 
+  entering their painstate. I am told that in ZDoom this is completely
+  unconditional, but I have made it inapplicable to telefrag-level damage in EE
+  so that nuke, mdk, and telefragging can still destroy such objects.
+  
+* LOOKALLAROUND causes a monster to be able to see targets 360 degrees around it
+  in the same manner as AMBUSH monsters after their sectors' soundtargets have
+  been activated. Normal monsters only have a 180 degree field of vision.
+
+--------------------------------------------------------------------------------
+09/23/09
+
+Added new thingtype properties respawntime and respawnchance, matching ZDoom, to
+allow fine-tuned control of Nightmare (or ALWAYSRESPAWN) respawn behavior.
+Respawn time is in tics, and is the minimum amount of time that a thing must 
+stay still in its death state before it can get a chance to respawn. Respawn 
+chance is a number from 0 to 255 (ideally, at least) representing a chance 
+similar to the pain chance. If a random number is less than respawnchance, then
+the object will respawn provided that it can fit at the location at which it 
+wants to respawn. Using 0 would mean that it never respawns, whereas using 256 
+or anything higher would mean that it will always respawn as soon as it gets 
+the first chance. Defaults are 12*35 tics, and 4, respectively.
+
+Modified P_RadiusAttack to make it reentrant outside of old demos by adding a
+bombdata_t structure which is "pushed" and "popped" via the incrementing or
+decrementing of a pointer over a fixed-size array of objects. The static limit
+is introduced in order to eliminate the possibility of stack faults when
+recursive explosions occur. The limit is currently 128, which is actually a lot
+lower than what can be theoretically allowed, but which is already a very
+lenient number considering the number of barrels this implies going off in a
+single event.
+
+While in p_map.c I took the long-neglected opportunity to fix blood effects for
+crushers while the particle system is enabled, by getting rid of the code to
+draw a particle effect altogether. The effects we have don't even come close to
+matching the blood spray which is caused by crushers, so we'll just draw blood
+sprites here unconditionally, for now at least.
+
+--------------------------------------------------------------------------------
+09/22/09
+
+I refactored the mess that was P_HitFriend to de-Killoughify it (in other words,
+to eliminate a single-expression function with tons of side effects in every
+branch). I then added a check in this function that makes it return false if the
+object in the way has the NOFRIENDDMG flag, since such objects won't take damage
+if the caller continues to fire.
+
+--------------------------------------------------------------------------------
+09/21/09
+
+Added new flags4 bits NORADIUSDMG and FORCERADIUSDMG (matching ZDoom) to allow
+more control over explosions.
+
+Corrected behavior of the NOFRIENDDMG flag so that objects can still cause
+damage to themselves if they have this flag.
+
+Also tweaked the behavior of the SUPERFRIEND flag so that superfriend objects
+can *never* acquire friends as attack targets at all, since the checks in
+A_Chase are evidently insufficient to prevent retaliation in some odd cases.
+
+The BOSSIGNORE flag is now officially deprecated, in anticipation of addition of
+fine-tunable infighting control via the mobjinfo metatable. Do not use this 
+flag, and if you have already used it in an in-progress mod, phase it out now.
+
+--------------------------------------------------------------------------------
+09/19/09
+
+The crash report app will no longer be executed for stack faults, since the
+stack is still trashed during execution of the exception routine. Somehow there
+is enough space to execute writing of the log file, but not enough for the
+CreateProcess routine, which apparently generates an exceptionally deep call
+stack.
+
+In case you wonder why EE would have a stack fault, I have been experimenting
+with the P_RadiusAttack code after finding out that it is both non-reentrant,
+and can be forced to recurse to an arbitrary depth simply by modifying barrels
+to call A_Explode during their first death frame.
+
+Also added a new A_GenRefire codepointer for Kate, which allows customization of
+refiring behavior exhibited by monsters like the chaingunner and Spiderdemon.
+
+--------------------------------------------------------------------------------
 09/16/09
 
 Defined a new GameModeInfo flag, GIF_SKILL5RESPAWN, which controls whether or
@@ -10,6 +206,12 @@ This flag is now given to all DOOM gamemodes, but not to Heretic, so that Black
 Plague skill level no longer has respawning monsters, as expected. Do note that
 at no point had I forgotten about this - it's been on my 3-mile-long TODO list
 for an age and half ;)
+
+Added another flag, GIF_SKILL5WARNING, which controls the presence of the
+warning message given when starting a game on skill level 5. Only DOOM games
+give this message, as apparently Raven felt their games were more fair (I 
+would beg to differ, however, given how much I suck at Black Plague in Heretic
+despite owning much face in Smite-meister).
 
 --------------------------------------------------------------------------------
 09/15/09
