@@ -1292,7 +1292,6 @@ static boolean P_HelpFriend(mobj_t *actor)
 //
 void A_Look(mobj_t *actor)
 {
-   static int recursion;
    mobj_t *sndtarget = actor->subsector->sector->soundtarget;
    boolean allaround = false;
 
@@ -1374,16 +1373,7 @@ void A_Look(mobj_t *actor)
          S_StartSound(actor, sound);
    }
 
-   // haleyjd 09/21/09: guard against A_Look recursion
-   if(demo_version >= 335 && recursion > 10)
-   {
-      doom_printf("Warning: Look recursion detected");
-      return;
-   }
-   
-   ++recursion;
    P_SetMobjState(actor, actor->info->seestate);
-   --recursion;
 }
 
 //

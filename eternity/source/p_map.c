@@ -740,9 +740,16 @@ boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing)
       // operation occurs -- P_SetMobjState causes a call to A_Look, which
       // causes another state-set to the seestate, which calls A_Chase.
       // A_Chase in turn calls P_TryMove and that can cause a lot of shit
-      // to explode... fixing it in a compatible manner is nigh impossible.
+      // to explode.
+      //
+      // 09/29/09: Repair outside of old demos by calling P_SetMobjStateNF.
+      // This function cannot cause recursion, since it does not execute the
+      // state's action function. This actually fixes a lot of problems.
 
-      P_SetMobjState(tmthing, tmthing->info->spawnstate);
+      if(demo_version >= 335)
+         P_SetMobjStateNF(tmthing, tmthing->info->spawnstate);
+      else
+         P_SetMobjState(tmthing, tmthing->info->spawnstate);
 
       tm->BlockingMobj = NULL; // haleyjd: from zdoom
 

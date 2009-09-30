@@ -188,9 +188,48 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 }
 
 //
+// P_SetMobjStateNF
+//
+// haleyjd: Like P_SetMobjState, but this function does not execute the
+// action function in the state, nor does it loop through states with 0-tic
+// durations. Because of this, no recursion detection is needed in this
+// function.
+//
+// This function was originally added by Raven in Heretic for the Maulotaur,
+// but it has proven itself useful elsewhere.
+//
+boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
+{
+   state_t *st;
+
+   if(state == NullStateNum)
+   {
+      // remove mobj
+      mobj->state = NULL;
+      P_RemoveMobj(mobj);
+      return false;
+   }
+
+   st = states[state];
+   mobj->state = st;
+
+   // haleyjd 09/29/09: don't leave an object in a state with 0 tics
+   mobj->tics = (st->tics > 0) ? st->tics : 1;
+   
+   if(mobj->skin && st->sprite == mobj->info->defsprite)
+      mobj->sprite = mobj->skin->sprite;
+   else
+      mobj->sprite = st->sprite;
+
+   mobj->frame = st->frame;
+
+   return true;
+}
+
+
+//
 // P_ExplodeMissile
 //
-
 void P_ExplodeMissile(mobj_t *mo)
 {
    // haleyjd 08/02/04: EXPLOCOUNT flag
@@ -2156,30 +2195,6 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
 //
 // Start new Eternity mobj functions
 //
-
-boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
-{
-   state_t *st;
-
-   if(state == NullStateNum)
-   {
-      // remove mobj
-      mobj->state = NULL;
-      P_RemoveMobj(mobj);
-      return false;
-   }
-
-   st = states[state];
-   mobj->state = st;
-   mobj->tics = st->tics;
-   if(mobj->skin && st->sprite == mobj->info->defsprite)
-      mobj->sprite = mobj->skin->sprite;
-   else
-      mobj->sprite = st->sprite;
-   mobj->frame = st->frame;
-
-   return true;
-}
 
 mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
                             angle_t angle, fixed_t momz, fixed_t z)
