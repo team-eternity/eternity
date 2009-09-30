@@ -298,7 +298,10 @@ void P_XYMovement(mobj_t* mo)
          mo->flags &= ~MF_SKULLFLY;
          mo->momz = 0;
 
-         P_SetMobjState(mo, mo->info->spawnstate);
+         if(demo_version >= 335)
+            P_SetMobjStateNF(mo, mo->info->spawnstate);
+         else
+            P_SetMobjState(mo, mo->info->spawnstate);
       }
 
       return;
