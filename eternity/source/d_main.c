@@ -1391,7 +1391,7 @@ char *FindIWADFile(void)
          M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), iwad), ".wad");
       }
    }
-   else // try wad picker
+   else if(!gamepathset) // try wad picker
    {
       const char *name = D_DoIWADMenu();
       if(name && *name)
