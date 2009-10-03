@@ -151,6 +151,7 @@ void startupmsg(char *func, char *desc)
            func, desc);
 }
 
+//=============================================================================
 //
 // EVENT HANDLING
 //
@@ -192,9 +193,11 @@ void D_ProcessEvents(void)
    }
 }
 
+//=============================================================================
 //
-// D_Display
-//  draw current display, possibly wiping it from the previous
+// Display
+//
+// All drawing starts here.
 //
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
@@ -208,6 +211,10 @@ boolean        redrawsbar;      // sf: globaled
 boolean        redrawborder;    // sf: cleaned up border redraw
 int            wipewait;        // haleyjd 10/09/07
 
+//
+// D_Display
+//  draw current display, possibly wiping it from the previous
+//
 void D_Display(void)
 {
    if(nodrawers)                // for comparative timing / profiling
@@ -355,6 +362,7 @@ void D_Display(void)
    I_FinishUpdate();              // page flip or blit buffer
 }
 
+//=============================================================================
 //
 //  DEMO LOOP
 //
@@ -552,6 +560,13 @@ void D_StartTitle(void)
    D_AdvanceDemo();
 }
 
+//=============================================================================
+//
+// WAD File Loading
+//
+
+static int numwadfiles, numwadfiles_alloc;
+
 //
 // D_AddFile
 //
@@ -559,9 +574,6 @@ void D_StartTitle(void)
 //
 // killough 11/98: remove limit on number of files
 //
-
-static int numwadfiles, numwadfiles_alloc;
-
 void D_AddFile(char *file)
 {
    // sf: allocate for +2 for safety
@@ -583,7 +595,18 @@ void D_ListWads(void)
       C_Printf("%s\n", wadfiles[i]);
 }
 
+//=============================================================================
+//
+// EXE Path / Name Functions
+//
+
+//
+// D_DoomExeDir
+//
 // Return the path where the executable lies -- Lee Killough
+//
+// FIXME: call an I_DoomExeDir function to get rid of #ifndef
+//
 char *D_DoomExeDir(void)
 {
    static char *base = NULL;
@@ -611,7 +634,11 @@ char *D_DoomExeDir(void)
    return base;
 }
 
+//
+// D_DoomExeName
+//
 // killough 10/98: return the name of the program the exe was invoked as
+//
 char *D_DoomExeName(void)
 {
    static char *name;    // cache multiple requests
@@ -632,6 +659,11 @@ char *D_DoomExeName(void)
    }
    return name;
 }
+
+//=============================================================================
+//
+// Base and Game Path Determination Code
+//
 
 //
 //  D_ExpandTilde
@@ -898,6 +930,11 @@ static char *D_CheckGameEDF(void)
    return NULL; // return NULL to indicate the file doesn't exist
 }
 
+//=============================================================================
+//
+// Gamepath Autoload Directory Handling
+//
+
 // haleyjd 08/20/07: gamepath autload directory structure
 static DIR *autoloads;
 static char *autoload_dirname;
@@ -1032,6 +1069,11 @@ static void D_CloseAutoloadDir(void)
       autoloads = NULL;
    }
 }
+
+//=============================================================================
+//
+// IWAD Detection / Verification Code
+//
 
 // variable-for-index lookup for D_DoIWADMenu
 static char **iwadVarForNum[] =
@@ -1618,8 +1660,7 @@ void IdentifyVersion(void)
          
          basedefault = malloc(len);
          
-         psnprintf(basedefault, len, "%s/%s.cfg", 
-                   basegamepath, D_DoomExeName());
+         psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
       }
 
       // haleyjd 11/23/06: set basesavegame here, and use basegamepath
@@ -1662,6 +1703,11 @@ void IdentifyVersion(void)
               "  the -game parameter.");
    }
 }
+
+//=============================================================================
+//
+// Response File Parsing
+//
 
 // MAXARGVS: a reasonable(?) limit on response file arguments
 
@@ -1722,7 +1768,8 @@ void FindResponseFile(void)
          }
 
          // keep all cmdline args following @responsefile arg
-         memcpy((void *)moreargs,&myargv[i+1],(index = myargc - i - 1) * sizeof(myargv[0]));
+         memcpy((void *)moreargs, &myargv[i+1],
+                (index = myargc - i - 1) * sizeof(myargv[0]));
 
          firstargv = myargv[0];
          newargv = calloc(sizeof(char *),MAXARGVS);
@@ -1788,6 +1835,13 @@ void FindResponseFile(void)
       }
    }
 }
+
+//=============================================================================
+//
+// Misc. File Stuff
+// * DEHACKED Loading
+// * MBF-Style Autoloads
+//
 
 // killough 10/98: moved code to separate function
 
@@ -1972,7 +2026,10 @@ static void D_ProcessDehInWads(void)
    D_ProcessDehInWad(root->index);
 }
 
+//=============================================================================
+//
 // haleyjd 03/10/03: GFS functions
+//
 
 static void D_ProcessGFSDeh(gfs_t *gfs)
 {
@@ -2082,6 +2139,11 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
    }
 }
 
+//=============================================================================
+//
+// EDF Loading
+//
+
 //
 // D_LooseEDF
 //
@@ -2178,8 +2240,11 @@ static void D_LoadEDF(gfs_t *gfs)
    D_InitWeaponInfo();
 }
 
+//=============================================================================
+//
 // loose file support functions -- these enable drag-and-drop support
 // for Windows and possibly other OSes
+//
 
 static void D_LooseWads(void)
 {
@@ -2261,6 +2326,11 @@ static gfs_t *D_LooseGFS(void)
 
    return NULL;
 }
+
+//=============================================================================
+//
+// Primary Initialization Routines
+//
 
 // I am not going to make an entire header just for this :P
 extern void M_LoadSysConfig(const char *filename);
@@ -3017,6 +3087,10 @@ static void D_DoomInit(void)
    Z_FreeAlloca();
 }
 
+//=============================================================================
+//
+// Main Routine
+//
 
 //
 // D_DoomMain
@@ -3072,6 +3146,11 @@ void D_DoomMain(void)
       I_Delay();
    }
 }
+
+//=============================================================================
+//
+// SMMU Runtime WAD File Loading
+//
 
 // re init everything after loading a wad
 

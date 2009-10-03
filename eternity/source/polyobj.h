@@ -54,10 +54,10 @@
 //
 enum
 {
-   POF_ATTACHED, // is attached to the world for rendering (has dynasegs)
-   POF_LINKED,   // is attached to the world for clipping
-   POF_ISBAD,    // is bad; should not be attached/linked/moved/rendered
-   POF_DAMAGING, // does damage just by touching objects
+   POF_ATTACHED = 0x01, // is attached to the world for rendering (has dynasegs)
+   POF_LINKED   = 0x02, // is attached to the world for clipping
+   POF_ISBAD    = 0x04, // is bad; should not be attached/linked/moved/rendered
+   POF_DAMAGING = 0x08, // does damage just by touching objects
 };
 
 //
