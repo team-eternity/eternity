@@ -500,7 +500,7 @@ void MetaAddDouble(metatable_t *metatable, const char *key, double value)
 
    if(firsttime)
    {
-      // register metaint type
+      // register metadouble type
       static metatype_t metaDoubleType;
 
       MetaRegisterTypeEx(&metaDoubleType, 

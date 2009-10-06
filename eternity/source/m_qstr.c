@@ -293,5 +293,69 @@ qstring_t *M_QStrLwr(qstring_t *qstr)
    return qstr;
 }
 
+static byte qstr_repltable[256];
+
+//
+// M_QStrReplaceInternal
+//
+// Static routine for replacement functions.
+//
+static unsigned int M_QStrReplaceInternal(qstring_t *qstr, char repl)
+{
+   unsigned int repcount = 0;
+   unsigned char *rptr = (unsigned char *)(qstr->buffer);
+
+   // now scan through the qstring buffer and replace any characters that
+   // match characters in the filter table.
+   while(*rptr)
+   {
+      if(qstr_repltable[*rptr])
+      {
+         *rptr = (unsigned char)repl;
+         ++repcount; // count characters replaced
+      }
+      ++rptr;
+   }
+
+   return repcount;
+}
+
+//
+// M_QStrReplace
+//
+// Replaces characters in the qstring that match any character in the filter
+// string with the character specified by the final parameter.
+//
+unsigned int M_QStrReplace(qstring_t *qstr, const char *filter, char repl)
+{
+   const unsigned char *fptr = (unsigned char *)filter;
+
+   memset(qstr_repltable, 0, sizeof(qstr_repltable));
+
+   // first scan the filter string and build the replacement filter table
+   while(*fptr)
+      qstr_repltable[*fptr++] = 1;
+
+   return M_QStrReplaceInternal(qstr, repl);
+}
+
+//
+// M_QStrReplaceNotOf
+//
+// As above, but replaces all characters NOT in the filter string.
+//
+unsigned int M_QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl)
+{
+   const unsigned char *fptr = (unsigned char *)filter;
+
+   memset(qstr_repltable, 1, sizeof(qstr_repltable));
+
+   // first scan the filter string and build the replacement filter table
+   while(*fptr)
+      qstr_repltable[*fptr++] = 0;
+
+   return M_QStrReplaceInternal(qstr, repl);
+}
+
 // EOF
 

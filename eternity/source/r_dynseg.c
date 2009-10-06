@@ -307,8 +307,8 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       seg_t  *seg = &dseg->seg;
 
       // test vertices against node line
-      int side_v1   = R_PointOnSide(seg->v1->x, seg->v1->y, bsp);
-      int side_v2   = R_PointOnSide(seg->v2->x, seg->v2->y, bsp);
+      int side_v1 = R_PointOnSide(seg->v1->x, seg->v1->y, bsp);
+      int side_v2 = R_PointOnSide(seg->v2->x, seg->v2->y, bsp);
 
       // get distance of vertices from partition line
       double dist_v1 = R_PartitionDistance(seg->v1->fx, seg->v1->fy, bsp);
@@ -384,7 +384,7 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       P_CalcSegLength(&dseg->seg);
 
       // 07/15/09: rendering consistency - set frontsector/backsector here
-      dseg->seg.frontsector = dseg->seg.backsector  = subsectors[num].sector;
+      dseg->seg.frontsector = dseg->seg.backsector = subsectors[num].sector;
 
       // add the subsector if it hasn't been added already
       R_AddDynaSubsec(&subsectors[num], dseg->polyobj);

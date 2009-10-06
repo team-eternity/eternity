@@ -61,6 +61,8 @@ int           M_QStrCaseCmp(qstring_t *qstr, const char *str);
 qstring_t    *M_QStrCpy(qstring_t *qstr, const char *str);
 qstring_t    *M_QStrUpr(qstring_t *qstr);
 qstring_t    *M_QStrLwr(qstring_t *qstr);
+unsigned int  M_QStrReplace(qstring_t *qstr, const char *filter, char repl);
+unsigned int  M_QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
 
 #endif
 
