@@ -800,10 +800,6 @@ SOURCE=.\Source\mn_misc.h
 # PROP Default_Filter "c"
 # Begin Source File
 
-SOURCE=.\source\linkoffs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\p_anim.c
 # End Source File
 # Begin Source File
@@ -946,6 +942,10 @@ SOURCE=.\source\polyobj.c
 # Begin Group "P_ Headers"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\linkoffs.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\p_anim.h

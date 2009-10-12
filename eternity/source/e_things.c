@@ -420,7 +420,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(   ITEM_TNG_RESPCHANCE,   4,         CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_DAMAGE,       0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_DMGSPECIAL,   "NONE",    CFGF_NONE                ), \
-   CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts, CFGF_MULTI               ), \
+   CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_INT(   ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE                ), \
    CFG_INT(   ITEM_TNG_TOPDMGMASK,   0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_MOD,          "Unknown", CFGF_NONE                ), \
@@ -857,12 +857,13 @@ static metastate_t *E_GetMetaState(mobjinfo_t *mi, const char *name)
 //
 
 //
-// E_ModStateName
+// E_ModFieldName
 //
-// Constructs the appropriate label name for a mod state.
+// Constructs the appropriate label name for a metaproperty that
+// uses a mod name as a prefix.
 // Don't cache the return value.
 //
-static const char *E_ModStateName(const char *base, emod_t *mod)
+const char *E_ModFieldName(const char *base, emod_t *mod)
 {
    static qstring_t namebuffer;
 
@@ -889,7 +890,7 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
    state_t *ret = NULL;
    metastate_t *mstate;
 
-   if((mstate = E_GetMetaState(mi, E_ModStateName(base, mod))))
+   if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
       ret = mstate->state;
 
    return ret;
@@ -925,10 +926,10 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
    metastate_t *msnode;
    
    // if one exists for this mod already, use it, else create a new one.
-   if((msnode = E_GetMetaState(info, E_ModStateName(base, mod))))
+   if((msnode = E_GetMetaState(info, E_ModFieldName(base, mod))))
       msnode->state = state;
    else
-      E_AddMetaState(info, state, E_ModStateName(base, mod));
+      E_AddMetaState(info, state, E_ModFieldName(base, mod));
 }
 
 //
@@ -1059,7 +1060,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
          if(mod->num == 0) // if this is "Unknown", ignore it.
             continue;
 
-         E_RemoveMetaState(mi, E_ModStateName(base, mod));
+         E_RemoveMetaState(mi, E_ModFieldName(base, mod));
       }
    }
 }
@@ -1072,19 +1073,29 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 // done to objects by specific damage types.
 //
 
-typedef struct metadamagefactor_s
+//
+// E_ProcessDamageFactors
+//
+// Processes the damage factor objects for a thingtype definition.
+//
+static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 {
-   metaobject_t parent; // parent metaobject
-   double factor;       // factor by which to multiply damage
-} metadamagefactor_t;
+   unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
+   unsigned int i;
 
-//
-// E_GetMetaDamageFactor
-//
-// Retrieve a metadamagefactor object for a given MOD.
-//
+   for(i = 0; i < numfactors; ++i)
+   {
+      cfg_t  *sec = cfg_getnmvprop(cfg, ITEM_TNG_DAMAGEFACTOR, i);
+      emod_t *mod = E_DamageTypeForName(cfg_getstr(sec, ITEM_TNG_DMGF_MODNAME));
 
-
+      // we don't add damage factors for the unknown damage type
+      if(mod->num != 0)
+      {
+         MetaSetDouble(info->meta, E_ModFieldName("damagefactor", mod),
+                       cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR));
+      }
+   }
+}
 
 //
 // E_ColorCB
@@ -1807,6 +1818,9 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       E_ProcessDamageTypeStates(thingsec, ITEM_TNG_DTHSTATESREM, &mobjinfo[i],
                                 E_DTS_MODE_REMOVE, E_DTS_FIELD_DEATH);
    }
+
+   // 10/11/09: process damagefactors
+   E_ProcessDamageFactors(&mobjinfo[i], thingsec);
 
    // 01/17/07: process acs_spawndata
    if(cfg_size(thingsec, ITEM_TNG_ACS_SPAWN) > 0)

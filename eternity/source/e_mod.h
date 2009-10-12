@@ -47,13 +47,14 @@ typedef struct emod_s
    boolean obitIsBexString;
    boolean selfObitIsBexString;
    boolean sourceless;
-
-   //struct emod_s *nextname; // next by name
 } emod_t;
 
 emod_t *E_DamageTypeForName(const char *name);
 emod_t *E_DamageTypeForNum(int num);
 int     E_DamageTypeNumForName(const char *name);
+
+// This is actually in e_things.c but should be prototyped here.
+const char *E_ModFieldName(const char *base, emod_t *mod);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

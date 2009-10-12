@@ -127,6 +127,7 @@ int  MetaRemoveInt(metatable_t *metatable, const char *key);
 
 void   MetaAddDouble(metatable_t *metatable, const char *key, double value);
 double MetaGetDouble(metatable_t *metatable, const char *key, double defvalue);
+void   MetaSetDouble(metatable_t *metatable, const char *key, double newvalue);
 double MetaRemoveDouble(metatable_t *metatable, const char *key);
 
 void        MetaAddString(metatable_t *metatable, const char *key, const char *value);

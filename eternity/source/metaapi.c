@@ -543,6 +543,27 @@ double MetaGetDouble(metatable_t *metatable, const char *key, double defvalue)
 }
 
 //
+// MetaSetDouble
+//
+// If the metatable already contains a metadouble of the given name, it will
+// be edited to have the provided value. Otherwise, a new metadouble will be
+// added to the table with that value.
+//
+void MetaSetDouble(metatable_t *metatable, const char *key, double newvalue)
+{
+   metaobject_t *obj;
+
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metadouble_t))))
+      MetaAddDouble(metatable, key, newvalue);
+   else
+   {
+      metadouble_t *md = (metadouble_t *)(obj->object);
+
+      md->value = newvalue;
+   }
+}
+
+//
 // MetaRemoveDouble
 //
 // Removes the given field if it exists as a metadouble_t.

@@ -48,6 +48,7 @@
 #include "a_small.h"
 #include "e_mod.h"
 #include "e_things.h"
+#include "metaapi.h"
 
 #define BONUSADD        6
 
@@ -819,7 +820,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 //
 // P_KillMobj
 //
-void P_KillMobj(mobj_t *source, mobj_t *target, int mod)
+static void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
 {
    mobjtype_t item;
    mobj_t     *mo;
@@ -889,7 +890,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, int mod)
       statenum_t st = target->info->deathstate;
       state_t *state;
 
-      if(mod > 0 && (state = E_StateForModNum(target->info, "Death", mod)))
+      if(mod->num > 0 && (state = E_StateForMod(target->info, "Death", mod)))
          st = state->index;
 
       P_SetMobjState(target, st);
@@ -981,20 +982,13 @@ static const char *P_GetDeathMessageString(emod_t *mod, boolean self)
 // Implements obituaries based on the type of damage which killed a player.
 //
 static void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor, 
-                           int MeansOfDeath)
+                           emod_t *mod)
 {
    boolean friendly = false;
    const char *message = NULL;
-   emod_t *mod;
 
    if(!target->player || !obituaries)
       return;
-
-   // voodoo doll death?
-   //if(inflictor && inflictor != target && inflictor->player == target->player)
-   //   MeansOfDeath = MOD_UNKNOWN;
-
-   mod = E_DamageTypeForNum(MeansOfDeath);
 
    if(GameType == gt_coop)
       friendly = true;
@@ -1016,7 +1010,7 @@ static void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor,
       {
          // monster kills
 
-         switch(MeansOfDeath)
+         switch(mod->num)
          {
          case MOD_HIT: // melee attack
             message = source->info->meleeobit;
@@ -1042,15 +1036,6 @@ static void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor,
 
    if(source && source->player)
    {
-      if(MeansOfDeath == MOD_PLAYERMISC)
-      {
-         weaponinfo_t *weapon = P_GetReadyWeapon(source->player);
-
-         // redirect based on weapon mod
-         MeansOfDeath = weapon->mod;
-         mod = E_DamageTypeForNum(MeansOfDeath);
-      }
-
       if(friendly)
       {
          // in coop mode, player kills are bad
@@ -1177,6 +1162,43 @@ static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
 };
 
 //
+// P_AdjustDamageType
+//
+// haleyjd 10/12/09: Handles special cases for damage types.
+//
+static int P_AdjustDamageType(mobj_t *source, mobj_t *inflictor, int mod)
+{
+   int newmod = mod;
+
+   // inflictor-based adjustments
+
+   if(inflictor)
+   {
+      // haleyjd 06/05/08: special adjustments to mod type based on inflictor
+      // thingtype flags (I'd rather not do this at all, but it's necessary
+      // since the FIREDAMAGE flag has been around forever).
+      if(inflictor->flags3 & MF3_FIREDAMAGE)
+         newmod = MOD_FIRE;
+   }
+
+   // source-based adjustments
+
+   if(source)
+   {
+      // players
+      if(source->player && mod == MOD_PLAYERMISC)
+      {
+         weaponinfo_t *weapon = P_GetReadyWeapon(source->player);
+
+         // redirect based on weapon mod
+         newmod = weapon->mod;
+      }
+   }
+
+   return newmod;
+}
+
+//
 // P_DamageMobj
 //
 // Damages both enemies and players
@@ -1193,6 +1215,7 @@ static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
 void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, 
                   int damage, int mod)
 {
+   emod_t *emod;
    player_t *player;
    boolean justhit;          // killough 11/98
    boolean bossignore;       // haleyjd
@@ -1252,6 +1275,19 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
       // damage may be modified by the handler
       damage = dmgspec.damage;
+   }
+
+   // haleyjd 10/12/09: do all adjustments to mod now, and look up emod_t once
+   mod  = P_AdjustDamageType(source, inflictor, mod);
+   emod = E_DamageTypeForNum(mod);
+
+   // haleyjd 10/12/09: damage factors
+   if(mod != MOD_UNKNOWN)
+   {
+      double df = MetaGetDouble(target->info->meta, 
+                                E_ModFieldName("damagefactor", emod), 
+                                1.0);
+      damage = (int)(damage * df);
    }
 
    // Some close combat weapons should not
@@ -1377,15 +1413,6 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       
    }
 
-   // haleyjd 06/05/08: special adjustments to mod type based on inflictor
-   // thingtype flags (I'd rather not do this at all, but it's necessary
-   // since the FIREDAMAGE flag has been around forever).
-   if(inflictor)
-   {
-      if(inflictor->flags3 & MF3_FIREDAMAGE)
-         mod = MOD_FIRE;
-   }
-
    // do the damage
    if(!(target->flags4 & MF4_NODAMAGE) || damage >= 10000)
       target->health -= damage;
@@ -1395,13 +1422,13 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    {
       // death messages for players
       if(player)
-         P_DeathMessage(source, target, inflictor, mod);
+         P_DeathMessage(source, target, inflictor, emod);
 
       // haleyjd 09/29/07: wimpy death?
       if(damage <= 10)
          target->intflags |= MIF_WIMPYDEATH;
 
-      P_KillMobj(source, target, mod);
+      P_KillMobj(source, target, emod);
       return;
    }
 
@@ -1449,7 +1476,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
          state_t *state = NULL;
 
          // haleyjd  06/05/08: check for special damagetype painstate
-         if(mod > 0 && (state = E_StateForModNum(target->info, "Pain", mod)))
+         if(mod > 0 && (state = E_StateForMod(target->info, "Pain", emod)))
             st = state->index;
 
          P_SetMobjState(target, st);
