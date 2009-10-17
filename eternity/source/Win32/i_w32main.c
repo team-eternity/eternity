@@ -37,7 +37,7 @@
 
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
-extern int SDLIsInit;
+extern void I_Error(const char *error, ...);
 
 #ifndef _DEBUG
 int main(int argc, char **argv)
@@ -48,8 +48,7 @@ int main(int argc, char **argv)
    }
    __except(I_W32ExceptionHandler(GetExceptionInformation()))
    {
-      if(SDLIsInit)
-         SDL_Quit();
+      I_Error("Exception caught in main: see CRASHLOG.TXT for info\n");
    }
 
    return 0;

@@ -500,19 +500,34 @@ static int untouched(line_t *ld)
 //
 static void SpechitOverrun(line_t *ld)
 {
+   static boolean firsttime = true;
+   static boolean spechitparm = false;
    static unsigned int baseaddr = 0;
    unsigned int addr;
-
+   
    // first time through, set the desired base address;
    // this is where magic number support comes in
-   if(baseaddr == 0)
+   if(firsttime)
    {
       int p;
 
       if((p = M_CheckParm("-spechit")) && p < myargc - 1)
-         baseaddr = atoi(myargv[p + 1]);
+      {
+         baseaddr = (unsigned int)strtol(myargv[p + 1], NULL, 0);
+         spechitparm = true;
+      }
       else
          baseaddr = spechits_emulation == 2 ? 0x01C09C98 : 0x84F968E8;
+
+      firsttime = false;
+   }
+
+   // if -spechit used, always emulate even outside of demos
+   if(!spechitparm)
+   {
+      // otherwise, only during demos and when so specified
+      if(!(demo_compatibility && spechits_emulation))
+         return;
    }
 
    // What's this? The baseaddr is a value suitably close to the address of the
@@ -652,8 +667,7 @@ boolean PIT_CheckLine(line_t *ld)
       tm->spechit[tm->numspechit++] = ld;
 
       // haleyjd 09/20/06: spechit overflow emulation
-      if(demo_compatibility && spechits_emulation && 
-         tm->numspechit > MAXSPECHIT_OLD)
+      if(tm->numspechit > MAXSPECHIT_OLD)
          SpechitOverrun(ld);
    }
    

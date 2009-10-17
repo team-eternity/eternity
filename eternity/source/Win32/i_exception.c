@@ -36,7 +36,6 @@
 
 #include <windows.h>
 #include <tchar.h>
-#include <stdio.h>
 
 //=============================================================================
 //
@@ -684,12 +683,7 @@ int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep)
    // The crash reporter app won't run on a stack overflow.
    // Stupid CreateProcess uses too much stack space.
    if(ep->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW)
-   {
-      // Naughty, but too bad. There's no other way to get a message
-      // to the user!
-      puts("Stack Overflow Exception. See CRASHLOG.TXT\n");
       return EXCEPTION_EXECUTE_HANDLER;
-   }
 
    if(LaunchCrashApp())
       return EXCEPTION_EXECUTE_HANDLER;

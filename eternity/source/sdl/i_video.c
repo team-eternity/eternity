@@ -332,6 +332,12 @@ enum
    STATE_FLAGS
 };
 
+//
+// I_ParseGeom
+//
+// Function to parse geometry description strings in the form [wwww]x[hhhh][f].
+// This is now the primary way in which Eternity stores its video mode setting.
+//
 static void I_ParseGeom(const char *geom, 
                         int *w, int *h, boolean *fs, boolean *vs, boolean *hw)
 {
@@ -438,6 +444,15 @@ static void I_ParseGeom(const char *geom,
    M_QStrFree(&qstr);
 }
 
+//
+// I_CheckVideoCmds
+//
+// Checks for all video-mode-related command-line parameters in one
+// convenient location. Though called from I_InitGraphicsMode, this
+// function will only run once at startup. Resolution changes made at
+// runtime want to use the precise settings specified through the UI
+// instead.
+//
 static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs, 
                              boolean *hw)
 {
@@ -477,10 +492,11 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
 }
 
 //
-// killough 11/98: New routine, for setting hires and page flipping
+// I_InitGraphicsMode
 //
-
+// killough 11/98: New routine, for setting hires and page flipping
 // sf: now returns true if an error occurred
+//
 static boolean I_InitGraphicsMode(void)
 {
    boolean  wantfullscreen = false;
@@ -550,6 +566,9 @@ static boolean I_InitGraphicsMode(void)
       v_h = 200;
    }
 
+   // haleyjd 10/14/09: wait for a bit so the screen can settle
+   I_Sleep(2000);
+
    R_ResetFOV(v_w, v_h);
 
    // haleyjd 10/09/05: keep track of fullscreen state
@@ -587,34 +606,44 @@ static boolean I_InitGraphicsMode(void)
    return false;
 }
 
+//
+// I_ResetScreen
+//
+// Changes the resolution by getting out of the old mode and into the new one,
+// and then waking up any interested game-code modules that need to know about
+// the screen resolution.
+//
 static void I_ResetScreen(void)
-{
+{  
    // Switch out of old graphics mode
-   
    // haleyjd 10/15/05: WOOPS!
    I_ShutdownGraphicsPartway();
    
    // Switch to new graphics mode
    // check for errors -- we may be setting to a different mode instead
-   
    if(I_InitGraphicsMode())
       return;
    
    // reset other modules
    
+   // Reset automap dimensions
    if(automapactive)
-      AM_Start();             // Reset automap dimensions
+      AM_Start();
    
-   ST_Start();               // Reset palette
+   // Reset palette
+   ST_Start();
    
+   // Redraw cached intermission buffer if needed
    if(gamestate == GS_INTERMISSION)
    {
       IN_DrawBackground();
       V_CopyRect(0, 0, &backscreen1, SCREENWIDTH, SCREENHEIGHT, 0, 0, &vbscreen);
    }
 
-   Wipe_ScreenReset(); // haleyjd: reset wipe engine
+   // haleyjd: reset wipe engine
+   Wipe_ScreenReset();
    
+   // A LOT of heap activity just happened, so check it.
    Z_CheckHeap();
 }
 

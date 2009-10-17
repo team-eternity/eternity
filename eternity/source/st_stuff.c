@@ -725,8 +725,10 @@ static void ST_doPaletteStuff(void)
    else
       palette = 0;
 
-   if(camera) 
-      palette = 0;     //sf
+   // sf: no palette flashes for camera
+   // haleyjd 10/14/09: never access negative palette indices
+   if(camera || palette < 0) 
+      palette = 0;
   
    if(palette != st_palette)
    {

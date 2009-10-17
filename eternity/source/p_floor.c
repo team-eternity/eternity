@@ -35,6 +35,7 @@
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
+#include "m_argv.h"
 
 boolean P_ChangeSector(sector_t *, int);
 
@@ -1228,6 +1229,57 @@ int EV_BuildStairs(line_t *line, stair_e type)
    return rtn;
 }
 
+boolean donut_emulation;
+
+//
+// DonutOverflow
+//
+// haleyjd 10/16/09: enables emulation of undefined behavior by donut actions
+// when no proper reference sector is found outside the pool (ie, line is 
+// marked as two-sided but is really one-sided).
+//
+// Thanks to entryway for discovering and coding a fix to this.
+//
+static boolean DonutOverflow(fixed_t *pfloorheight, short *pfloorpic)
+{
+   static boolean firsttime = true;
+   static boolean donutparm = false;
+   static int floorpic      = 0x16;
+   static int floorheight   = 0;
+
+   if(firsttime)
+   {
+      int p;
+
+      if((p = M_CheckParm("-donut")) && p < myargc - 2)
+      {
+         floorheight = (int)strtol(myargv[p + 1], NULL, 0);
+         floorpic    = (int)strtol(myargv[p + 2], NULL, 0);
+
+         // bounds-check floorpic
+         if(floorpic <= 0 || floorpic >= numflats)
+            floorpic = 0x16;
+
+         donutparm = true;
+      }
+
+      firsttime = false;
+   }
+
+   // if -donut used, always emulate
+   if(!donutparm)
+   {
+      // otherwise, only in demos and only when so requested
+      if(!(demo_compatibility && donut_emulation))
+         return false;
+   }
+
+   *pfloorheight = (fixed_t)floorheight;
+   *pfloorpic    = (short)floorpic;
+
+   return true;
+}
+
 //
 // EV_DoDonut()
 //
@@ -1237,15 +1289,15 @@ int EV_BuildStairs(line_t *line, stair_e type)
 // Passed the linedef that triggered the donut
 // Returns whether a thinker was created
 //
-int EV_DoDonut(line_t*  line)
+int EV_DoDonut(line_t *line)
 {
-   sector_t* s1;
-   sector_t* s2;
-   sector_t* s3;
-   int       secnum;
-   int       rtn;
-   int       i;
-   floormove_t* floor;
+   sector_t    *s1, *s2, *s3;
+   int          secnum;
+   int          rtn;
+   int          i;
+   floormove_t *floor;
+   fixed_t      s3_floorheight;
+   short        s3_floorpic;
 
    secnum = -1;
    rtn = 0;
@@ -1287,6 +1339,19 @@ int EV_DoDonut(line_t*  line)
          
          // s3 is model sector for changes
          s3 = s2->lines[i]->backsector;
+
+         // haleyjd: donut "overflow" emulation courtesy of entryway,
+         // as opposed to just committing an access violation.
+         if(!s3)
+         {
+            if(!DonutOverflow(&s3_floorheight, &s3_floorpic))
+               break;
+         }
+         else
+         {
+            s3_floorheight = s3->floorheight;
+            s3_floorpic    = s3->floorpic;
+         }
         
          //  Spawn rising slime
          floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
@@ -1298,9 +1363,9 @@ int EV_DoDonut(line_t*  line)
          floor->direction = plat_up;
          floor->sector = s2;
          floor->speed = FLOORSPEED / 2;
-         floor->texture = s3->floorpic;
+         floor->texture = s3_floorpic;
          P_ZeroSpecialTransfer(&(floor->special));
-         floor->floordestheight = s3->floorheight;
+         floor->floordestheight = s3_floorheight;
          P_FloorSequence(floor->sector);
         
          //  Spawn lowering donut-hole pillar
@@ -1313,7 +1378,7 @@ int EV_DoDonut(line_t*  line)
          floor->direction = plat_down;
          floor->sector = s1;
          floor->speed = FLOORSPEED / 2;
-         floor->floordestheight = s3->floorheight;
+         floor->floordestheight = s3_floorheight;
          P_FloorSequence(floor->sector);
          break;
       }

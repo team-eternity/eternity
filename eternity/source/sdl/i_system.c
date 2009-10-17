@@ -284,14 +284,16 @@ void I_Init(void)
    }
 }
 
-//
-// I_Quit
-//
 
 static char errmsg[2048];    // buffer of error message -- killough
 
 static int has_exited;
 
+//
+// I_Quit
+//
+// Primary atexit routine for shutting down the game engine.
+//
 void I_Quit(void)
 {
    has_exited = 1;   /* Prevent infinitely recursive exits -- killough */

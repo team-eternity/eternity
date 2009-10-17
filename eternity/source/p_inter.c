@@ -1395,6 +1395,10 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       if(player->damagecount > 100)
          player->damagecount = 100;  // teleport stomp does 10k points...
 
+      // haleyjd 10/14/09: we do not allow negative damagecount
+      if(player->damagecount < 0)
+         player->damagecount = 0;
+
 #if 0
       // killough 11/98: 
       // This is unused -- perhaps it was designed for

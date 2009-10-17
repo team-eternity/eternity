@@ -177,8 +177,8 @@ void P_PopTMStack();
 extern doom_mapinter_t  *tm;
 
 
-extern int spechits_emulation; // haleyjd 09/20/06
-
+extern int spechits_emulation;  // haleyjd 09/20/06
+extern boolean donut_emulation; // haleyjd 10/16/09
 
 
 

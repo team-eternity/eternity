@@ -909,14 +909,17 @@ default_t defaults[] =
                0, 0, NUMSPANENGINES - 1, wad_no, 
                "0 = high precision, 1 = low precision"),
    
-   DEFAULT_INT("r_detail",&c_detailshift, NULL, 0, 0, 1, wad_no,
+   DEFAULT_INT("r_detail", &c_detailshift, NULL, 0, 0, 1, wad_no,
                "0 = high detail, 1 = low detail"),
    
-   DEFAULT_INT("r_vissprite_limit",&r_vissprite_limit, NULL, -1, -1, UL, wad_yes,
+   DEFAULT_INT("r_vissprite_limit", &r_vissprite_limit, NULL, -1, -1, UL, wad_yes,
                "number of vissprites allowed per frame (-1 = no limit)"),
    
-   DEFAULT_INT("spechits_emulation",&spechits_emulation, NULL, 0, 0, 2, wad_no,
+   DEFAULT_INT("spechits_emulation", &spechits_emulation, NULL, 0, 0, 2, wad_no,
                "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"),
+
+   DEFAULT_BOOL("donut_emulation", &donut_emulation, NULL, false, wad_no,
+                "emulate undefined EV_DoDonut behavior"),
    
    DEFAULT_INT("wipewait",&wipewait, NULL, 2, 0, 2, wad_no,
                "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"),
