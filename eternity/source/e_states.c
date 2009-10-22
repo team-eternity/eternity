@@ -175,6 +175,22 @@ int E_SafeState(int dehnum)
 }
 
 //
+// E_SafeStateName
+//
+// As above, but returns index of S_NULL if result of a name lookup
+// is not found.
+//
+int E_SafeStateName(const char *name)
+{
+   int statenum = E_StateNumForName(name);
+
+   if(statenum == NUMSTATES)
+      statenum = NullStateNum;
+
+   return statenum;
+}
+
+//
 // E_StateNumForName
 //
 // Returns the number of a state given its name. Returns NUMSTATES

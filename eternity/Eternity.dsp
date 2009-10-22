@@ -380,6 +380,10 @@ SOURCE=.\Source\dstrings.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\source\e_args.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\e_cmd.c
 # End Source File
 # Begin Source File
@@ -434,6 +438,10 @@ SOURCE=.\Source\e_ttypes.c
 # Begin Group "E_ Headers"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\source\e_args.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\e_edf.h

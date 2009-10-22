@@ -31,6 +31,7 @@
 int E_StateNumForDEHNum(int dehnum);        // dehnum lookup
 int E_GetStateNumForDEHNum(int dehnum);     //    fatal error version
 int E_SafeState(int dehnum);                //    fallback version
+int E_SafeStateName(const char *name);      //    fallback by name
 int E_StateNumForName(const char *name);    // mnemonic lookup
 int E_GetStateNumForName(const char *name); //    fatal error version
 
