@@ -26,9 +26,14 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "e_args.h"
-#include "e_things.h"
+#include "info.h"
+#include "e_lib.h"
+#include "e_mod.h"
 #include "e_states.h"
+#include "e_things.h"
+#include "e_sound.h"
+#include "e_string.h"
+#include "e_args.h"
 
 
 //
@@ -48,6 +53,17 @@ boolean E_AddArgToList(arglist_t *al, const char *value)
    }
 
    return added;
+}
+
+//
+// E_ArgAsString
+//
+// This is just a safe method to get the argument string at the given
+// index. If the argument doesn't exist, defvalue is returned.
+//
+const char *E_ArgAsString(arglist_t *al, int index, const char *defvalue)
+{
+   return (al && index < al->numargs) ? al->args[index] : defvalue;
 }
 
 //
@@ -261,6 +277,152 @@ int *E_ArgAsThingFlags(arglist_t *al, int index)
    }
 
    return eval->value.flags;
+}
+
+//
+// E_ArgAsSound
+//
+// Gets the arg value at index i as a sound, if such argument exists.
+// The evaluated value will be cached so that it can be returned on subsequent
+// calls. If the arg does not exist, NULL is returned.
+//
+sfxinfo_t *E_ArgAsSound(arglist_t *al, int index)
+{
+   evalcache_t *eval;
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return NULL;
+
+   eval = &(al->values[index]);
+
+   if(eval->type != EVALTYPE_SOUND)
+   {
+      char *pos = NULL;
+      long num;
+
+      eval->type = EVALTYPE_SOUND;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(pos && *pos != '\0')
+      {
+         // it is a name
+         eval->value.s = E_SoundForName(al->args[index]);
+      }
+      else
+      {
+         // it is a DeHackEd number
+         eval->value.s = E_SoundForDEHNum((int)num);
+      }
+   }
+
+   return eval->value.s;
+}
+
+//
+// E_ArgAsBexptr
+//
+// Gets the arg value at index i as a bexptr index, if such argument exists.
+// The evaluated value will be cached so that it can be returned on subsequent
+// calls. If the arg does not exist, -1 is returned.
+//
+int E_ArgAsBexptr(arglist_t *al, int index)
+{
+   evalcache_t *eval;
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return -1;
+
+   eval = &(al->values[index]);
+
+   if(eval->type != EVALTYPE_BEXPTR)
+   {
+      deh_bexptr *ptr = D_GetBexPtr(al->args[index]);
+
+      eval->type    = EVALTYPE_BEXPTR;
+      eval->value.i = ptr ? ptr - deh_bexptrs : -1;
+   }
+
+   return eval->value.i;
+}
+
+//
+// E_ArgAsEDFString
+//
+// Gets the arg value at index i as an EDF string, if such argument exists.
+// The evaluated value will be cached so that it can be returned on subsequent
+// calls. If the arg does not exist, NULL is returned.
+//
+edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
+{
+   evalcache_t *eval;
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return NULL;
+
+   eval = &(al->values[index]);
+
+   if(eval->type != EVALTYPE_EDFSTRING)
+   {
+      eval->type       = EVALTYPE_EDFSTRING;
+      eval->value.estr = E_StringForName(al->args[index]);
+   }
+
+   return eval->value.estr;
+}
+
+//
+// E_ArgAsKeywordValue
+//
+// Gets the argument at index i as the corresponding enumeration value for a
+// keyword string, given the provided keyword set. Returns the default value
+// if the argument doesn't exist, or the keyword is not matched.
+//
+int E_ArgAsKeywordValue(arglist_t *al, int index, const char **keywords, 
+                        int numkwds, int defvalue)
+{
+   evalcache_t *eval;
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return defvalue;
+
+   eval = &(al->values[index]);
+
+   if(eval->type != EVALTYPE_KEYWORD)
+   {
+      char *pos = NULL;
+      long num;
+
+      eval->type = EVALTYPE_KEYWORD;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(pos && *pos != '\0')
+      {
+         // it is a name
+         eval->value.i = E_StrToNumLinear(keywords, numkwds, al->args[index]);
+
+         if(eval->value.i == numkwds)
+            eval->value.i = defvalue;
+      }
+      else
+      {
+         // it is just a number
+         eval->value.i = (int)num;
+      }
+   }
+
+   return eval->value.i;
 }
 
 // EOF

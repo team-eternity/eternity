@@ -49,7 +49,7 @@ enum
 {
    E_AMBIENCE_CONTINUOUS,
    E_AMBIENCE_PERIODIC,
-   E_AMBIENCE_RANDOM,
+   E_AMBIENCE_RANDOM
 };
 
 // haleyjd 05/30/06: EDF ambience objects

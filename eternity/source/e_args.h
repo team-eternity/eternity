@@ -43,6 +43,10 @@ typedef enum
    EVALTYPE_THINGNUM,  // evaluated to a thing number
    EVALTYPE_STATENUM,  // evaluated to a state number
    EVALTYPE_THINGFLAG, // evaluated to a thing flag bitmask
+   EVALTYPE_SOUND,     // evaluated to a sound
+   EVALTYPE_BEXPTR,    // evaluated to a bexptr
+   EVALTYPE_EDFSTRING, // evaluated to an edf string
+   EVALTYPE_KEYWORD,   // evaluated to a keyword enumeration value
    EVALTYPE_NUMTYYPES
 } evaltype_e;
 
@@ -51,10 +55,12 @@ typedef struct evalcache_s
    evaltype_e type;
    union evalue_s
    {
-      int     i;
-      fixed_t x;
-      double  d;
-      int     flags[MAXFLAGFIELDS];
+      int           i;
+      fixed_t       x;
+      double        d;
+      sfxinfo_t    *s;
+      edf_string_t *estr;
+      int           flags[MAXFLAGFIELDS];
    } value;
 } evalcache_t;
 
@@ -64,6 +70,20 @@ typedef struct arglist_s
    evalcache_t values[EMAXARGS]; // if type != EVALTYPE_NONE, cached value
    int numargs;                  // number of arguments
 } arglist_t;
+
+boolean       E_AddArgToList(arglist_t *al, const char *value);
+const char   *E_ArgAsString(arglist_t *al, int index, const char *defvalue);
+int           E_ArgAsInt(arglist_t *al, int index, int defvalue);
+fixed_t       E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue);
+double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
+int           E_ArgAsThingNum(arglist_t *al, int index);
+int           E_ArgAsStateNum(arglist_t *al, int index);
+int          *E_ArgAsThingFlags(arglist_t *al, int index);
+sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
+int           E_ArgAsBexptr(arglist_t *al, int index);
+edf_string_t *E_ArgAsEDFString(arglist_t *al, int index);
+int           E_ArgAsKeywordValue(arglist_t *al, int index, const char **keywords,
+                                  int numkwds, int defvalue);
 
 #endif
 
