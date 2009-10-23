@@ -49,6 +49,7 @@
 #include "hu_stuff.h"
 #include "c_io.h"
 #include "e_lib.h"
+#include "e_args.h"
 
 // external prototypes from p_enemy.c
 
@@ -79,17 +80,14 @@ void A_SpawnGlitter(mobj_t *actor)
    fixed_t initMomentum;
    fixed_t x, y, z;
 
-   glitterType  = (int)(actor->state->args[0]);
-   initMomentum = (fixed_t)(actor->state->args[1]) * FRACUNIT / 8;
+   glitterType  = E_ArgAsThingNum(actor->state->args, 0);
+   initMomentum = (fixed_t)(E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 8);
 
    // special defaults
 
    // default momentum of zero == 1/4 unit per tic
    if(!initMomentum)
       initMomentum = FRACUNIT >> 2;
-
-   // haleyjd 07/05/03: adjusted for EDF
-   glitterType = E_SafeThingType(glitterType);
 
    // randomize spawning coordinates within a 32-unit square
    x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
@@ -130,20 +128,14 @@ void A_SpawnAbove(mobj_t *actor)
    fixed_t zamt;
    mobj_t *mo;
 
-   thingtype = (int)(actor->state->args[0]);
-   statenum  = (int)(actor->state->args[1]);
-   zamt      = (actor->state->args[2]) * FRACUNIT;
-
-   // haleyjd 07/05/03: adjusted for EDF
-   thingtype = E_SafeThingType(thingtype);
+   thingtype = E_ArgAsThingNum(actor->state->args, 0);
+   statenum  = E_ArgAsStateNumG0(actor->state->args, 1);
+   zamt      = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
 
-   if(statenum >= 0)
-   {
-      statenum = E_SafeState(statenum);
+   if(statenum >= 0 && statenum < NUMSTATES)
       P_SetMobjState(mo, statenum);
-   }
 }
 
 //
@@ -213,16 +205,21 @@ void P_HticDrop(mobj_t *actor, int special, mobjtype_t type)
    item->momy = P_SubRandom(pr_hdropmom) << 8;
    item->momz = (P_Random(pr_hdropmom) << 10) + 5*FRACUNIT;
 
+   /*
+   // GROSS! We are not doing this in EE.
    if(special)
    {
       item->health = special;
    }
+   */
 
    item->flags |= MF_DROPPED;
 }
 
 //
 // A_HticDrop
+//
+// DEPRECATED! DO NOT USE!!!
 //
 // HTIC_FIXME / HTIC_TODO: Just get rid of this and make item
 // drops a sole property of thing types, where it belongs.
@@ -233,42 +230,37 @@ void P_HticDrop(mobj_t *actor, int special, mobjtype_t type)
 // args[1] -- thing type 1 drop chance
 // args[2] -- thing type 2 (0 == none)
 // args[3] -- thing type 2 drop chance
-// args[4] -- modify ammo drop amounts for HTICAMMO flag things
-//            (type2<<16|type1)
 //
 void A_HticDrop(mobj_t *actor)
 {
    int thingtype1, thingtype2, chance1, chance2;
-   int dt;
    int drop1 = 0, drop2 = 0;
 
-   thingtype1 = (int)(actor->state->args[0]);
-   chance1    = (int)(actor->state->args[1]);
-   thingtype2 = (int)(actor->state->args[2]);
-   chance2    = (int)(actor->state->args[3]);
+   thingtype1 = E_ArgAsThingNumG0(actor->state->args, 0);
+   chance1    = E_ArgAsInt(actor->state->args,      1, 0);
+   thingtype2 = E_ArgAsThingNumG0(actor->state->args, 2);
+   chance2    = E_ArgAsInt(actor->state->args,      3, 0);
 
    // this is hackish, but it'll work
+   /*
    if((dt = actor->state->args[4]))
    {
       drop1 = (int)(dt & 0x00007fff);
       drop2 = (int)((dt & 0x7fff0000) >> 16);
    }
+   */
 
    A_Fall(actor);
 
    // haleyjd 07/05/03: adjusted for EDF
-   if(thingtype1)
+   if(thingtype1 >= 0 && thingtype1 < NUMMOBJTYPES)
    {
-      thingtype1 = E_SafeThingType(thingtype1);
-      
       if(P_Random(pr_hdrop1) <= chance1)
          P_HticDrop(actor, drop1, thingtype1);
    }
 
-   if(thingtype2)
+   if(thingtype2 >= 0 && thingtype2 < NUMMOBJTYPES)
    {
-      thingtype2 = E_SafeThingType(thingtype2);
-
       if(P_Random(pr_hdrop2) <= chance2)
          P_HticDrop(actor, drop2, thingtype2);
    }
@@ -417,8 +409,8 @@ void A_HticTracer(mobj_t *actor)
 {
    angle_t threshold, maxturn;
 
-   threshold = (angle_t)(actor->state->args[0]);
-   maxturn   = (angle_t)(actor->state->args[1]);
+   threshold = (angle_t)(E_ArgAsInt(actor->state->args, 0, 0));
+   maxturn   = (angle_t)(E_ArgAsInt(actor->state->args, 1, 0));
 
    // convert from integer angle to angle_t
    threshold = (angle_t)(((uint64_t)threshold << 32) / 360);
@@ -878,13 +870,18 @@ void A_Sor2DthLoop(mobj_t *actor)
    }
 }
 
-E_Keyword_t kwds_A_HticExplode[] =
+static const char *kwds_A_HticExplode[] =
 {
-   { "default",            0  },
-   { "dsparilbspark",      1  },
-   { "floorfire",          2  },
-   { "timebomb",           3  },
-   { NULL }
+   "default",       //    0
+   "dsparilbspark", //    1
+   "floorfire",     //    2
+   "timebomb",      //    3   
+};
+
+static argkeywd_t hticexpkwds = 
+{
+   kwds_A_HticExplode,
+   sizeof(kwds_A_HticExplode)/sizeof(const char *)
 };
 
 //
@@ -897,7 +894,7 @@ void A_HticExplode(mobj_t *actor)
 {
    int damage = 128;
 
-   int action = (int)(actor->state->args[0]);
+   int action = E_ArgAsKwd(actor->state->args, 0, &hticexpkwds, 0);
 
    switch(action)
    {
@@ -1091,11 +1088,16 @@ void A_MakePod(mobj_t *actor)
 // Volcano Actions
 //
 
-E_Keyword_t kwds_A_SetTics[] =
+static const char *kwds_A_SetTics[] =
 {
-   { "constant",           0  },
-   { "counter",            1  },
-   { NULL }
+   "constant", //          0
+   "counter",  //          1
+};
+
+static argkeywd_t settickwds =
+{
+   kwds_A_SetTics,
+   sizeof(kwds_A_SetTics)/sizeof(const char *)
 };
 
 //
@@ -1108,11 +1110,12 @@ E_Keyword_t kwds_A_SetTics[] =
 //
 void A_SetTics(mobj_t *actor)
 {
-   int baseamt = (int)(actor->state->args[0]);
-   int rnd     = (int)(actor->state->args[1]);
+   int baseamt = E_ArgAsInt(actor->state->args, 0, 0);
+   int rnd     = E_ArgAsInt(actor->state->args, 1, 0);
+   int counter = E_ArgAsKwd(actor->state->args, 2, &settickwds, 0);
 
    // if counter toggle is set, args[0] is a counter number
-   if(actor->state->args[2])
+   if(counter)
    {
       if(baseamt < 0 || baseamt >= NUMMOBJCOUNTERS)
          return; // invalid
@@ -1299,17 +1302,22 @@ void A_BeastAttack(mobj_t *actor)
                      actor->z + DEFAULTMISSILEZ);
 }
 
-E_Keyword_t kwds_A_BeastPuff[] =
+static const char *kwds_A_BeastPuff[] =
 {
-   { "momentum",        0  },
-   { "nomomentum",      1  },
-   { NULL }
+   "momentum",       // 0
+   "nomomentum",     // 1
+};
+
+static argkeywd_t beastkwds =
+{
+   kwds_A_BeastPuff,
+   sizeof(kwds_A_BeastPuff) / sizeof(const char *)
 };
 
 void A_BeastPuff(mobj_t *actor)
 {
    // 07/29/04: allow momentum to be disabled
-   int momentumToggle = (int)(actor->state->args[0]);
+   int momentumToggle = E_ArgAsKwd(actor->state->args, 0, &beastkwds, 0);
 
    if(P_Random(pr_puffy) > 64)
    {
@@ -2077,9 +2085,11 @@ void A_PlayerSkull(mobj_t *actor)
 //
 void A_PhoenixPuff(mobj_t *actor)
 {
-   int thingtype = E_SafeThingType(actor->state->args[0]);
+   int thingtype;
    mobj_t *puff;
    angle_t angle;
+
+   thingtype = E_ArgAsThingNum(actor->state->args, 0);
    
    P_HticTracer(actor, ANGLE_1 * 5, ANGLE_1 * 10);
    
@@ -2102,11 +2112,16 @@ void A_PhoenixPuff(mobj_t *actor)
 // Other Parameterized Codepointer Functions
 //
 
-E_Keyword_t kwds_A_MissileAttack[] =
+static const char *kwds_A_MissileAttack[] =
 {
-   { "normal",          0  },
-   { "homing",          1  },
-   { NULL }
+   "normal",        //  0
+   "homing",        //  1
+};
+
+static argkeywd_t missileatkkwds =
+{
+   kwds_A_MissileAttack,
+   sizeof(kwds_A_MissileAttack) / sizeof(const char *)
 };
 
 //
@@ -2127,25 +2142,24 @@ void A_MissileAttack(mobj_t *actor)
    boolean homing;
    angle_t ang;
    mobj_t *mo;
-   int sdehnum, statenum;
+   int statenum;
    boolean hastarget = true;
 
    if(!actor->target || actor->target->health <= 0)
       hastarget = false;
-   
-   type    = E_SafeThingType(actor->state->args[0]);
-   homing  = !!(actor->state->args[1]);
-   z       = (fixed_t)(actor->state->args[2] * FRACUNIT);
-   a       = actor->state->args[3];
-   sdehnum = actor->state->args[4];
+
+   type     = E_ArgAsThingNum(actor->state->args,      0);   
+   homing   = E_ArgAsKwd(actor->state->args,  1, &missileatkkwds, 0);   
+   z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
+   a        = E_ArgAsInt(actor->state->args,           3, 0);
+   statenum = E_ArgAsStateNumG0(actor->state->args,    4);
 
    if(hastarget)
    {
       A_FaceTarget(actor);
 
-      if(sdehnum >= 0)
+      if(statenum >= 0 && statenum < NUMSTATES)
       {
-         statenum = E_SafeState(sdehnum);
          if(P_CheckMeleeRange(actor))
          {
             P_SetMobjState(actor, statenum);
@@ -2206,25 +2220,24 @@ void A_MissileSpread(mobj_t *actor)
    int type, num, a, i;
    fixed_t z, momz;
    angle_t angsweep, ang, astep;
-   int sdehnum, statenum;
+   int statenum;
 
    if(!actor->target)
       return;
-   
-   type    = E_SafeThingType((int)(actor->state->args[0]));
-   num     = (int)(actor->state->args[1]);
-   z       = (fixed_t)(actor->state->args[2] * FRACUNIT);
-   a       = (int)(actor->state->args[3]);
-   sdehnum = (int)(actor->state->args[4]);
+
+   type     = E_ArgAsThingNum(actor->state->args,      0);
+   num      = E_ArgAsInt(actor->state->args,           1, 0);
+   z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
+   a        = E_ArgAsInt(actor->state->args,           3, 0);
+   statenum = E_ArgAsStateNumG0(actor->state->args,    4);
 
    if(num < 2)
       return;
 
    A_FaceTarget(actor);
 
-   if(sdehnum >= 0)
+   if(statenum >= 0 && statenum < NUMSTATES)
    {
-      statenum = E_SafeState(sdehnum);
       if(P_CheckMeleeRange(actor))
       {
          P_SetMobjState(actor, statenum);
@@ -2266,13 +2279,36 @@ void A_MissileSpread(mobj_t *actor)
    }
 }
 
-E_Keyword_t kwds_A_BulletAttack[] =
+// old keywords - deprecated
+static const char *kwds_A_BulletAttack[] =
 {
-   { "ba_always",            1  },
-   { "ba_never",             2  },
-   { "ba_ssg",               3  },
-   { "ba_monster",           4  },
-   { NULL }
+   "{DUMMY}",
+   "ba_always",   // 1
+   "ba_never",    // 2
+   "ba_ssg",      // 3
+   "ba_monster",  // 4
+};
+
+static argkeywd_t bulletkwdsold =
+{
+   kwds_A_BulletAttack,
+   sizeof(kwds_A_BulletAttack) / sizeof(const char *)
+};
+
+// new keywords - preferred
+static const char *kwds_A_BulletAttack2[] =
+{
+   "{DUMMY}",
+   "always",   // 1
+   "never",    // 2
+   "ssg",      // 3
+   "monster",  // 4
+};
+
+static argkeywd_t bulletkwdsnew =
+{
+   kwds_A_BulletAttack2,
+   sizeof(kwds_A_BulletAttack2) / sizeof(const char *)
 };
 
 //
@@ -2288,17 +2324,28 @@ E_Keyword_t kwds_A_BulletAttack[] =
 //
 void A_BulletAttack(mobj_t *actor)
 {
-   int i, sound, accurate, numbullets, damage, dmgmod, slope;
+   int i, accurate, numbullets, damage, dmgmod, slope;
    sfxinfo_t *sfx;
 
    if(!actor->target)
       return;
 
-   sound      = (int)(actor->state->args[0]);
-   accurate   = (int)(actor->state->args[1]);
-   numbullets = (int)(actor->state->args[2]);
-   damage     = (int)(actor->state->args[3]);
-   dmgmod     = (int)(actor->state->args[4]);
+   sfx        = E_ArgAsSound(actor->state->args, 0);
+   numbullets = E_ArgAsInt(actor->state->args,   2, 0);
+   damage     = E_ArgAsInt(actor->state->args,   3, 0);
+   dmgmod     = E_ArgAsInt(actor->state->args,   4, 0);
+
+   // handle accuracy
+
+   // try old keywords first
+   accurate = E_ArgAsKwd(actor->state->args, 1, &bulletkwdsold, -1);
+
+   // try new keywords second
+   if(accurate == -1)
+   {
+      E_ResetArgEval(actor->state->args, 1);
+      accurate = E_ArgAsKwd(actor->state->args, 1, &bulletkwdsnew, 0);
+   }
 
    if(!accurate)
       accurate = 1;
@@ -2307,8 +2354,6 @@ void A_BulletAttack(mobj_t *actor)
       dmgmod = 1;
    else if(dmgmod > 256)
       dmgmod = 256;
-
-   sfx = E_SoundForDEHNum(sound);
 
    A_FaceTarget(actor);
    S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
@@ -2343,13 +2388,28 @@ void A_BulletAttack(mobj_t *actor)
    }
 }
 
-E_Keyword_t kwds_A_ThingSummon[] =
+static const char *kwds_A_ThingSummon_KR[] =
 {
-   { "kill",               0  },
-   { "remove",             1  },
-   { "normal",             0  },
-   { "makechild",          1  },
-   { NULL }
+   "kill",           //  0
+   "remove",         //  1
+};
+
+static argkeywd_t killremovekwds =
+{
+   kwds_A_ThingSummon_KR,
+   2
+};
+
+static const char *kwds_A_ThingSummon_MC[] =
+{
+   "normal",         //  0
+   "makechild",      //  1
+};
+
+static argkeywd_t makechildkwds =
+{
+   kwds_A_ThingSummon_MC,
+   2
 };
 
 void A_ThingSummon(mobj_t *actor)
@@ -2359,12 +2419,12 @@ void A_ThingSummon(mobj_t *actor)
    angle_t an;
    int     type, prestep, deltaz, kill_or_remove, make_child;
 
-   type    = E_SafeThingType((int)(actor->state->args[0]));
-   prestep = (int)(actor->state->args[1]) << FRACBITS;
-   deltaz  = (int)(actor->state->args[2]) << FRACBITS;
+   type    = E_ArgAsThingNum(actor->state->args, 0);
+   prestep = E_ArgAsInt(actor->state->args,      1, 0) << FRACBITS;
+   deltaz  = E_ArgAsInt(actor->state->args,      2, 0) << FRACBITS;
 
-   kill_or_remove = !!(actor->state->args[3]);
-   make_child     = !!(actor->state->args[4]);
+   kill_or_remove = !!E_ArgAsKwd(actor->state->args, 3, &killremovekwds, 0);
+   make_child     = !!E_ArgAsKwd(actor->state->args, 4, &makechildkwds, 0);
    
    // good old-fashioned pain elemental style spawning
    
@@ -2440,17 +2500,10 @@ void A_ThingSummon(mobj_t *actor)
    }
 }
 
-E_Keyword_t kwds_A_KillChildren[] =
-{
-   { "kill",               0  },
-   { "remove",             1  },
-   { NULL }
-};
-
 void A_KillChildren(mobj_t *actor)
 {
    thinker_t *th;
-   int kill_or_remove = !!(actor->state->args[0]);
+   int kill_or_remove = !!E_ArgAsKwd(actor->state->args, 0, &killremovekwds, 0);
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
@@ -2490,7 +2543,7 @@ void A_AproxDistance(mobj_t *actor)
    fixed_t distance;
    int cnum;
 
-   cnum = actor->state->args[0];
+   cnum = E_ArgAsInt(actor->state->args, 0, 0);
 
    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
       return; // invalid
@@ -2513,12 +2566,17 @@ void A_AproxDistance(mobj_t *actor)
    *dest = distance >> FRACBITS;
 }
 
-E_Keyword_t kwds_A_ShowMessage[] =
+static const char *kwds_A_ShowMessage[] =
 {
-   { "msg_console",            0  },
-   { "msg_normal",             1  },
-   { "msg_center",             2  },
-   { NULL }
+   "msg_console",          //  0
+   "msg_normal",           //  1
+   "msg_center",           //  2
+};
+
+static argkeywd_t messagekwds =
+{
+   kwds_A_ShowMessage,
+   sizeof(kwds_A_ShowMessage) / sizeof(const char *)
 };
 
 //
@@ -2532,13 +2590,14 @@ E_Keyword_t kwds_A_ShowMessage[] =
 //
 void A_ShowMessage(mobj_t *actor)
 {
-   int msgnum = (int)(actor->state->args[0]);
-   int type   = (int)(actor->state->args[1]);
    edf_string_t *msg;
+   int type;
 
    // find the message
-   if(!(msg = E_StringForNum(msgnum)))
+   if(!(msg = E_ArgAsEDFString(actor->state->args, 0)))
       return;
+
+   type = E_ArgAsKwd(actor->state->args, 1, &messagekwds, 0);
 
    switch(type)
    {
@@ -2604,18 +2663,18 @@ void A_SteamSpawn(mobj_t *mo)
    fixed_t speed, angularspeed;
    
    // Get the thingtype of the thing we're spewing (a steam cloud for example)
-   thingtype = E_SafeThingType((int)(mo->state->args[0]));
+   thingtype = E_ArgAsThingNum(mo->state->args, 0);
    
    // And the speed to fire it out at
-   speed = mo->state->args[4] << FRACBITS;
+   speed = (fixed_t)(E_ArgAsInt(mo->state->args, 4, 0) << FRACBITS);
 
    // Make our angles byteangles
    hangle = (mo->angle / (ANG90/64));
    thangle = hangle;
-   tvangle = (mo->state->args[2] * 256) / 360;
+   tvangle = (E_ArgAsInt(mo->state->args, 2, 0) * 256) / 360;
    // As well as the spread ranges
-   hrange = (mo->state->args[1] * 256) / 360;
-   vrange = (mo->state->args[3] * 256) / 360;
+   hrange = (E_ArgAsInt(mo->state->args, 1, 0) * 256) / 360;
+   vrange = (E_ArgAsInt(mo->state->args, 3, 0) * 256) / 360;
    
    // Get the angles we'll be firing the things in, factoring in 
    // where within the range it will lie
@@ -2708,23 +2767,28 @@ enum
    CPOP_INVERT,
 };
 
-E_Keyword_t kwds_A_HealthJump[] =
+static const char *kwds_CPCOps[] =
 {
-   { "less",                   0  },
-   { "lessorequal",            1  },
-   { "greater",                2  },
-   { "greaterorequal",         3  },
-   { "equal",                  4  },
-   { "notequal",               5  },
-   { "and",                    6  },
-   { "less_counter",           7  },
-   { "lessorequal_counter",    8  },
-   { "greater_counter",        9  },
-   { "greaterorequal_counter", 10 },
-   { "equal_counter",          11 },
-   { "notequal_counter",       12 },
-   { "and_counter",            13 },
-   { NULL }
+   "less",                   // 0
+   "lessorequal",            // 1
+   "greater",                // 2
+   "greaterorequal",         // 3
+   "equal",                  // 4
+   "notequal",               // 5
+   "and",                    // 6
+   "less_counter",           // 7
+   "lessorequal_counter",    // 8
+   "greater_counter",        // 9
+   "greaterorequal_counter", // 10
+   "equal_counter",          // 11
+   "notequal_counter",       // 12
+   "and_counter",            // 13
+};
+
+static argkeywd_t cpckwds =
+{
+   kwds_CPCOps,
+   sizeof(kwds_CPCOps) / sizeof(const char *)
 };
 
 //
@@ -2739,16 +2803,17 @@ E_Keyword_t kwds_A_HealthJump[] =
 //
 void A_HealthJump(mobj_t *mo)
 {
-   boolean branch  = false;
-   int statenum    = mo->state->args[0];
-   int checktype   = mo->state->args[1];
-   int checkhealth = mo->state->args[2];
-   
-   // validate state number
-   statenum = E_StateNumForDEHNum(statenum);
+   boolean branch  = false;   
+   int statenum, checktype, checkhealth;
+
+   statenum    = E_ArgAsStateNumNI(mo->state->args, 0);
+   checktype   = E_ArgAsKwd(mo->state->args, 1, &cpckwds, 0);
+   checkhealth = E_ArgAsInt(mo->state->args, 2, 0);
+
+   // validate state
    if(statenum == NUMSTATES)
       return;
-
+   
    // 08/02/04:
    // support getting check value from a counter
    // if checktype is greater than the last immediate operator,
@@ -2789,25 +2854,6 @@ void A_HealthJump(mobj_t *mo)
       P_SetMobjState(mo, statenum);
 }
 
-E_Keyword_t kwds_A_CounterJump[] =
-{
-   { "less",                   0  },
-   { "lessorequal",            1  },
-   { "greater",                2  },
-   { "greaterorequal",         3  },
-   { "equal",                  4  },
-   { "notequal",               5  },
-   { "and",                    6  },
-   { "less_counter",           7  },
-   { "lessorequal_counter",    8  },
-   { "greater_counter",        9  },
-   { "greaterorequal_counter", 10 },
-   { "equal_counter",          11 },
-   { "notequal_counter",       12 },
-   { "and_counter",            13 },
-   { NULL }
-};
-
 //
 // A_CounterJump
 //
@@ -2822,14 +2868,15 @@ E_Keyword_t kwds_A_CounterJump[] =
 void A_CounterJump(mobj_t *mo)
 {
    boolean branch = false;
-   int statenum   = mo->state->args[0];
-   int checktype  = mo->state->args[1];
-   int value      = mo->state->args[2];
-   int cnum       = mo->state->args[3];
+   int statenum, checktype, value, cnum;
    int *counter;
+
+   statenum  = E_ArgAsStateNumNI(mo->state->args, 0);
+   checktype = E_ArgAsKwd(mo->state->args, 1, &cpckwds, 0);
+   value     = E_ArgAsInt(mo->state->args, 2, 0);
+   cnum      = E_ArgAsInt(mo->state->args, 3, 0);
    
-   // validate state number
-   statenum = E_StateNumForDEHNum(statenum);
+   // validate state
    if(statenum == NUMSTATES)
       return;
 
@@ -2892,10 +2939,12 @@ void A_CounterJump(mobj_t *mo)
 //
 void A_CounterSwitch(mobj_t *mo)
 {
-   int cnum = mo->state->args[0];
-   int startstate = mo->state->args[1];
-   int numstates  = mo->state->args[2] - 1;
+   int cnum, startstate, numstates;
    int *counter;
+
+   cnum       = E_ArgAsInt(mo->state->args,        0, 0);
+   startstate = E_ArgAsStateNumNI(mo->state->args, 1);
+   numstates  = E_ArgAsInt(mo->state->args,        2, 0) - 1;
 
    // get counter
    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
@@ -2904,7 +2953,6 @@ void A_CounterSwitch(mobj_t *mo)
    counter = &(mo->counters[cnum]);
 
    // verify startstate
-   startstate = E_StateNumForDEHNum(startstate);
    if(startstate == NUMSTATES)
       return;
 
@@ -2920,23 +2968,28 @@ void A_CounterSwitch(mobj_t *mo)
    P_SetMobjState(mo, startstate + *counter);
 }
 
-E_Keyword_t kwds_A_SetCounter[] =
+static const char *kwds_CPSetOps[] =
 {
-   { "assign",             0  },
-   { "add",                1  },
-   { "sub",                2  },
-   { "mul",                3  },
-   { "div",                4  },
-   { "mod",                5  },
-   { "and",                6  },
-   { "andnot",             7  },
-   { "or",                 8  },
-   { "xor",                9  },
-   { "rand",               10 },
-   { "randmod",            11 },
-   { "rshift",             13 },
-   { "lshift",             14 },
-   { NULL }
+   "assign",         //  0
+   "add",            //  1
+   "sub",            //  2
+   "mul",            //  3
+   "div",            //  4
+   "mod",            //  5
+   "and",            //  6
+   "andnot",         //  7
+   "or",             //  8
+   "xor",            //  9
+   "rand",           //  10
+   "randmod",        //  11
+   "{DUMMY}",        //  12
+   "rshift",         //  13
+   "lshift",         //  14
+};
+
+static argkeywd_t cpsetkwds =
+{
+   kwds_CPSetOps, sizeof(kwds_CPSetOps) / sizeof(const char *)
 };
 
 //
@@ -2952,10 +3005,12 @@ E_Keyword_t kwds_A_SetCounter[] =
 //
 void A_SetCounter(mobj_t *mo)
 {
-   int cnum = mo->state->args[0];
-   short value = (short)(mo->state->args[1]);
-   int specialop = mo->state->args[2];
+   int cnum, value, specialop;
    int *counter;
+
+   cnum      = E_ArgAsInt(mo->state->args, 0, 0);
+   value     = E_ArgAsInt(mo->state->args, 1, 0);
+   specialop = E_ArgAsKwd(mo->state->args, 2, &cpsetkwds, 0);
 
    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
       return; // invalid
@@ -3002,24 +3057,32 @@ void A_SetCounter(mobj_t *mo)
    }
 }
 
-E_Keyword_t kwds_A_CounterOp[] =
+static const char *kwds_CPOps[] =
 {
-   { "add",                1  },
-   { "sub",                2  },
-   { "mul",                3  },
-   { "div",                4  },
-   { "mod",                5  },
-   { "and",                6  },
-   { "or",                 8  },
-   { "xor",                9  },
-   { "hitdice",            12 },
-   { "rshift",             13 },
-   { "lshift",             14 },
-   { "abs",                15 },
-   { "negate",             16 },
-   { "not",                17 },
-   { "invert",             18 },
-   { NULL }
+   "{DUMMY}",        //  0
+   "add",            //  1
+   "sub",            //  2
+   "mul",            //  3
+   "div",            //  4
+   "mod",            //  5
+   "and",            //  6
+   "{DUMMY}",        //  7
+   "or",             //  8
+   "xor",            //  9
+   "{DUMMY}",        //  10
+   "{DUMMY}",        //  11
+   "hitdice",        //  12
+   "rshift",         //  13
+   "lshift",         //  14
+   "abs",            //  15
+   "negate",         //  16
+   "not",            //  17
+   "invert",         //  18
+};
+
+static argkeywd_t cpopkwds =
+{
+   kwds_CPOps, sizeof(kwds_CPOps) / sizeof(const char *)
 };
 
 //
@@ -3035,12 +3098,13 @@ E_Keyword_t kwds_A_CounterOp[] =
 //
 void A_CounterOp(mobj_t *mo)
 {
-   int c_oper1_num = mo->state->args[0];
-   int c_oper2_num = mo->state->args[1];
-   int c_dest_num  = mo->state->args[2];   
-   int specialop   = mo->state->args[3];
-   
+   int c_oper1_num, c_oper2_num, c_dest_num, specialop;
    int *c_oper1, *c_oper2, *c_dest;
+
+   c_oper1_num = E_ArgAsInt(mo->state->args, 0, 0);
+   c_oper2_num = E_ArgAsInt(mo->state->args, 1, 0);
+   c_dest_num  = E_ArgAsInt(mo->state->args, 2, 0);   
+   specialop   = E_ArgAsKwd(mo->state->args, 3, &cpopkwds, 0);
 
    if(c_oper1_num < 0 || c_oper1_num >= NUMMOBJCOUNTERS)
       return; // invalid
@@ -3113,9 +3177,11 @@ void A_CounterOp(mobj_t *mo)
 //
 void A_CopyCounter(mobj_t *mo)
 {
-   int cnum1 = mo->state->args[0];
-   int cnum2 = mo->state->args[1];
+   int cnum1, cnum2;
    int *src, *dest;
+
+   cnum1 = E_ArgAsInt(mo->state->args, 0, 0);
+   cnum2 = E_ArgAsInt(mo->state->args, 1, 0);
 
    if(cnum1 < 0 || cnum1 >= NUMMOBJCOUNTERS)
       return; // invalid
@@ -3140,12 +3206,11 @@ void A_CopyCounter(mobj_t *mo)
 //
 void A_TargetJump(mobj_t *mo)
 {
-   int statenum   = mo->state->args[0];
+   int statenum;
    
-   // validate state number
-   if((statenum = E_StateNumForDEHNum(statenum)) == NUMSTATES)
+   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
       return;
-
+   
    // 1) must be valid
    // 2) must be alive
    // 3) if a super friend, target cannot be a friend
@@ -3181,10 +3246,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      statenum = pspr->state->args[0];
-
-      // validate state number
-      if((statenum = E_StateNumForDEHNum(statenum)) == NUMSTATES)
+      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0)) == NUMSTATES)
          return;
 
       P_SetPsprite(player, player->curpsprite, statenum);
@@ -3192,11 +3254,13 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
    else
    {
       mobj_t *target = mo->target;
+      int seek = !!E_ArgAsInt(mo->state->args, 2, 0);
+      int ifov =   E_ArgAsInt(mo->state->args, 1, 0);
 
       // if a missile, determine what to do from args[2]
       if(mo->flags & MF_MISSILE)
       {
-         switch(mo->state->args[2])
+         switch(seek)
          {
          default:
          case 0: // 0 == use originator (mo->target)
@@ -3212,9 +3276,9 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // check fov if one is specified
-      if(mo->state->args[1])
+      if(ifov)
       {
-         angle_t fov  = FixedToAngle(mo->state->args[1]);
+         angle_t fov  = FixedToAngle(ifov);
          angle_t tang = R_PointToAngle2(mo->x, mo->y,
 #ifdef R_LINKEDPORTALS
                                         getThingX(mo, target), 
@@ -3238,10 +3302,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      statenum = mo->state->args[0];
-
-      // validate state number
-      if((statenum = E_StateNumForDEHNum(statenum)) == NUMSTATES)
+      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
          return;
       
       P_SetMobjState(mo, statenum);
@@ -3259,8 +3320,8 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
 //
 void A_SetTranslucent(mobj_t *mo)
 {
-   fixed_t alpha = (fixed_t)(mo->state->args[0]);
-   int     mode  = mo->state->args[1];
+   fixed_t alpha = (fixed_t)(E_ArgAsInt(mo->state->args, 0, 0));
+   int     mode  = E_ArgAsInt(mo->state->args, 1, 0);
 
    // rangecheck alpha
    if(alpha < 0)
@@ -3313,14 +3374,13 @@ void A_AlertMonsters(mobj_t *mo)
 //
 void A_CheckPlayerDone(mobj_t *mo)
 {
-   int statenum = mo->state->args[0];
+   int statenum;
+   
+   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
+      return;
 
    if(!mo->player)
-   {
-      if((statenum = E_StateNumForDEHNum(statenum)) == NUMSTATES)
-         return;
       P_SetMobjState(mo, statenum);
-   }
 }
 
 //
@@ -3344,11 +3404,11 @@ void A_EjectCasing(mobj_t *actor)
    int     thingtype;
    mobj_t *mo;
 
-   frontdisti = actor->state->args[0];
+   frontdisti = E_ArgAsInt(actor->state->args, 0, 0);
    
    frontdist  = frontdisti * FRACUNIT / 16;
-   sidedist   = actor->state->args[1] * FRACUNIT / 16;
-   zheight    = actor->state->args[2] * FRACUNIT / 16;
+   sidedist   = E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 16;
+   zheight    = E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT / 16;
 
    // account for mlook - EXPERIMENTAL
    if(actor->player)
@@ -3372,7 +3432,7 @@ void A_EjectCasing(mobj_t *actor)
    x += FixedMul(sidedist, finecosine[angle>>ANGLETOFINESHIFT]);
    y += FixedMul(sidedist, finesine[angle>>ANGLETOFINESHIFT]);
 
-   thingtype = E_SafeThingType(actor->state->args[3]);
+   thingtype = E_ArgAsThingNum(actor->state->args, 3);
 
    mo = P_SpawnMobj(x, y, z, thingtype);
 
@@ -3390,8 +3450,8 @@ void A_CasingThrust(mobj_t *actor)
 {
    fixed_t moml, momz;
 
-   moml = actor->state->args[0] * FRACUNIT / 16;
-   momz = actor->state->args[1] * FRACUNIT / 16;
+   moml = E_ArgAsInt(actor->state->args, 0, 0) * FRACUNIT / 16;
+   momz = E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 16;
    
    actor->momx = FixedMul(moml, finecosine[actor->angle>>ANGLETOFINESHIFT]);
    actor->momy = FixedMul(moml, finesine[actor->angle>>ANGLETOFINESHIFT]);
@@ -3410,25 +3470,38 @@ void A_CasingThrust(mobj_t *actor)
 // haleyjd 03/31/06
 //
 
-E_Keyword_t kwds_A_WeaponCtrJump[] =
+static const char *kwds_A_WeaponCtrJump[] =
 {
-   { "less",                   0  },
-   { "lessorequal",            1  },
-   { "greater",                2  },
-   { "greaterorequal",         3  },
-   { "equal",                  4  },
-   { "notequal",               5  },
-   { "and",                    6  },
-   { "less_counter",           7  },
-   { "lessorequal_counter",    8  },
-   { "greater_counter",        9  },
-   { "greaterorequal_counter", 10 },
-   { "equal_counter",          11 },
-   { "notequal_counter",       12 },
-   { "and_counter",            13 },
-   { "weapon",                 0  },
-   { "flash",                  1  },
-   { NULL }
+   "less",                   // 0 
+   "lessorequal",            // 1 
+   "greater",                // 2 
+   "greaterorequal",         // 3 
+   "equal",                  // 4 
+   "notequal",               // 5 
+   "and",                    // 6 
+   "less_counter",           // 7 
+   "lessorequal_counter",    // 8 
+   "greater_counter",        // 9 
+   "greaterorequal_counter", // 10
+   "equal_counter",          // 11
+   "notequal_counter",       // 12
+   "and_counter",            // 13
+};
+
+static argkeywd_t weapctrkwds =
+{
+   kwds_A_WeaponCtrJump, sizeof(kwds_A_WeaponCtrJump) / sizeof(const char *)
+};
+
+static const char *kwds_pspr_choice[] =
+{
+   "weapon",                // 0
+   "flash",                 // 1
+};
+
+static argkeywd_t psprkwds =
+{
+   kwds_pspr_choice, sizeof(kwds_pspr_choice) / sizeof(const char *)
 };
 
 //
@@ -3456,14 +3529,13 @@ void A_WeaponCtrJump(mobj_t *mo)
 
    pspr = &(player->psprites[player->curpsprite]);
 
-   statenum  = pspr->state->args[0];
-   checktype = pspr->state->args[1];
-   value     = (short)(pspr->state->args[2]);
-   cnum      = pspr->state->args[3];
-   psprnum   = pspr->state->args[4];
+   statenum  = E_ArgAsStateNumNI(pspr->state->args, 0);
+   checktype = E_ArgAsKwd(pspr->state->args, 1, &weapctrkwds, 0);
+   value     = (short)E_ArgAsInt(pspr->state->args, 2, 0);
+   cnum      = E_ArgAsInt(pspr->state->args, 3, 0);
+   psprnum   = E_ArgAsKwd(pspr->state->args, 4, &psprkwds, 0);
    
-   // validate state number
-   statenum = E_StateNumForDEHNum(statenum);
+   // validate state
    if(statenum == NUMSTATES)
       return;
 
@@ -3528,13 +3600,6 @@ void A_WeaponCtrJump(mobj_t *mo)
       
 }
 
-E_Keyword_t kwds_A_WeaponCtrSwitch[] =
-{
-   { "weapon",             0  },
-   { "flash",              1  },
-   { NULL }
-};
-
 //
 // A_WeaponCtrSwitch
 //
@@ -3560,12 +3625,12 @@ void A_WeaponCtrSwitch(mobj_t *mo)
 
    pspr = &(player->psprites[player->curpsprite]);
 
-   cnum       = pspr->state->args[0];
-   startstate = pspr->state->args[1];
-   numstates  = pspr->state->args[2] - 1;
-   psprnum    = pspr->state->args[3];
+   cnum       = E_ArgAsInt(pspr->state->args, 0, 0);
+   startstate = E_ArgAsStateNumNI(pspr->state->args, 1);
+   numstates  = E_ArgAsInt(pspr->state->args, 2, 0) - 1;
+   psprnum    = E_ArgAsKwd(pspr->state->args, 3, &psprkwds, 0);
 
-      // validate psprite number
+   // validate psprite number
    if(psprnum < 0 || psprnum >= NUMPSPRITES)
       return;
 
@@ -3582,7 +3647,6 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    }
 
    // verify startstate
-   startstate = E_StateNumForDEHNum(startstate);
    if(startstate == NUMSTATES)
       return;
 
@@ -3598,23 +3662,28 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    P_SetPsprite(player, psprnum, startstate + *counter);
 }
 
-E_Keyword_t kwds_A_WeaponSetCtr[] =
+static const char *kwds_A_WeaponSetCtr[] =
 {
-   { "assign",             0  },
-   { "add",                1  },
-   { "sub",                2  },
-   { "mul",                3  },
-   { "div",                4  },
-   { "mod",                5  },
-   { "and",                6  },
-   { "andnot",             7  },
-   { "or",                 8  },
-   { "xor",                9  },
-   { "rand",               10 },
-   { "randmod",            11 },
-   { "rshift",             13 },
-   { "lshift",             14 },
-   { NULL }
+   "assign",           //  0
+   "add",              //  1
+   "sub",              //  2
+   "mul",              //  3
+   "div",              //  4
+   "mod",              //  5
+   "and",              //  6
+   "andnot",           //  7
+   "or",               //  8
+   "xor",              //  9
+   "rand",             //  10
+   "randmod",          //  11
+   "{DUMMY}",          //  12
+   "rshift",           //  13
+   "lshift",           //  14
+};
+
+static argkeywd_t weapsetkwds =
+{
+   kwds_A_WeaponSetCtr, sizeof(kwds_A_WeaponSetCtr) / sizeof(const char *)
 };
 
 //
@@ -3642,9 +3711,9 @@ void A_WeaponSetCtr(mobj_t *mo)
 
    pspr = &(player->psprites[player->curpsprite]);
 
-   cnum      = pspr->state->args[0];
-   value     = (short)(pspr->state->args[1]);
-   specialop = pspr->state->args[2];
+   cnum      = E_ArgAsInt(pspr->state->args, 0, 0);
+   value     = (short)E_ArgAsInt(pspr->state->args, 1, 0);
+   specialop = E_ArgAsKwd(pspr->state->args, 2, &weapsetkwds, 0);
 
    switch(cnum)
    {
@@ -3696,24 +3765,32 @@ void A_WeaponSetCtr(mobj_t *mo)
    }
 }
 
-E_Keyword_t kwds_A_WeaponCtrOp[] =
+static const char *kwds_A_WeaponCtrOp[] =
 {
-   { "add",                1  },
-   { "sub",                2  },
-   { "mul",                3  },
-   { "div",                4  },
-   { "mod",                5  },
-   { "and",                6  },
-   { "or",                 8  },
-   { "xor",                9  },
-   { "hitdice",            12 },
-   { "rshift",             13 },
-   { "lshift",             14 },
-   { "abs",                15 },
-   { "negate",             16 },
-   { "not",                17 },
-   { "invert",             18 },
-   { NULL }
+   "{DUMMY}",           // 0
+   "add",               // 1 
+   "sub",               // 2 
+   "mul",               // 3 
+   "div",               // 4 
+   "mod",               // 5 
+   "and",               // 6
+   "{DUMMY}",           // 7
+   "or",                // 8 
+   "xor",               // 9
+   "{DUMMY}",           // 10
+   "{DUMMY}",           // 11
+   "hitdice",           // 12
+   "rshift",            // 13
+   "lshift",            // 14
+   "abs",               // 15
+   "negate",            // 16
+   "not",               // 17
+   "invert",            // 18
+};
+
+static argkeywd_t weapctropkwds =
+{
+   kwds_A_WeaponCtrOp, sizeof(kwds_A_WeaponCtrOp) / sizeof(const char *)
 };
 
 //
@@ -3743,10 +3820,10 @@ void A_WeaponCtrOp(mobj_t *mo)
 
    pspr = &(player->psprites[player->curpsprite]);
 
-   c_oper1_num = pspr->state->args[0];
-   c_oper2_num = pspr->state->args[1];
-   c_dest_num  = pspr->state->args[2];
-   specialop   = pspr->state->args[3];
+   c_oper1_num = E_ArgAsInt(pspr->state->args, 0, 0);
+   c_oper2_num = E_ArgAsInt(pspr->state->args, 1, 0);
+   c_dest_num  = E_ArgAsInt(pspr->state->args, 2, 0);
+   specialop   = E_ArgAsKwd(pspr->state->args, 3, &weapctropkwds, 0);
 
    switch(c_oper1_num)
    {
@@ -3845,8 +3922,9 @@ void A_WeaponCopyCtr(mobj_t *mo)
       return;
 
    pspr  = &(player->psprites[player->curpsprite]);
-   cnum1 = pspr->state->args[0];
-   cnum2 = pspr->state->args[1];
+
+   cnum1 = E_ArgAsInt(pspr->state->args, 0, 0);
+   cnum2 = E_ArgAsInt(pspr->state->args, 1, 0);
 
    switch(cnum1)
    {
@@ -3883,10 +3961,11 @@ void A_JumpIfNoAmmo(mobj_t *mo)
    {
       player_t *p     = mo->player;
       state_t  *s     = p->psprites[p->curpsprite].state;
-      int statenum    = E_StateNumForDEHNum(s->args[0]);
+      int statenum    = E_ArgAsStateNumNI(s->args, 0);
       weaponinfo_t *w = P_GetReadyWeapon(p);
 
-      if(statenum == NUMSTATES) // bad state?
+      // validate state
+      if(statenum == NUMSTATES)
          return;
 
       if(w->ammo < NUMAMMO && p->ammo[w->ammo] < w->ammopershot)
@@ -3929,13 +4008,13 @@ void A_CheckReloadEx(mobj_t *mo)
 
    pspr = &(player->psprites[player->curpsprite]);
 
-   statenum  = pspr->state->args[0];
-   checktype = pspr->state->args[1];
-   value     = (short)(pspr->state->args[2]);
-   psprnum   = pspr->state->args[3];
+   statenum  = E_ArgAsStateNumNI(pspr->state->args, 0);
+   checktype = E_ArgAsKwd(pspr->state->args, 1, &weapctrkwds, 0);
+   value     = (short)E_ArgAsInt(pspr->state->args, 2, 0);
+   psprnum   = E_ArgAsKwd(pspr->state->args, 3, &psprkwds, 0);
    
+
    // validate state number
-   statenum = E_StateNumForDEHNum(statenum);
    if(statenum == NUMSTATES)
       return;
 

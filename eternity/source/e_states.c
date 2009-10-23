@@ -44,6 +44,7 @@
 #include "e_sound.h"
 #include "e_string.h"
 #include "e_states.h"
+#include "e_args.h"
 
 // 7/24/05: This is now global, for efficiency's sake
 
@@ -52,18 +53,18 @@
 int NullStateNum;
 
 // Frame section keywords
-#define ITEM_FRAME_SPRITE "sprite"
-#define ITEM_FRAME_SPRFRAME "spriteframe"
-#define ITEM_FRAME_FULLBRT "fullbright"
-#define ITEM_FRAME_TICS "tics"
-#define ITEM_FRAME_ACTION "action"
+#define ITEM_FRAME_SPRITE    "sprite"
+#define ITEM_FRAME_SPRFRAME  "spriteframe"
+#define ITEM_FRAME_FULLBRT   "fullbright"
+#define ITEM_FRAME_TICS      "tics"
+#define ITEM_FRAME_ACTION    "action"
 #define ITEM_FRAME_NEXTFRAME "nextframe"
-#define ITEM_FRAME_MISC1 "misc1"
-#define ITEM_FRAME_MISC2 "misc2"
+#define ITEM_FRAME_MISC1     "misc1"
+#define ITEM_FRAME_MISC2     "misc2"
 #define ITEM_FRAME_PTCLEVENT "particle_event"
-#define ITEM_FRAME_ARGS "args"
-#define ITEM_FRAME_DEHNUM "dehackednum"
-#define ITEM_FRAME_CMP "cmp"
+#define ITEM_FRAME_ARGS      "args"
+#define ITEM_FRAME_DEHNUM    "dehackednum"
+#define ITEM_FRAME_CMP       "cmp"
 
 #define ITEM_DELTA_NAME "name"
 
@@ -76,17 +77,17 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 //
 
 #define FRAME_FIELDS \
-   CFG_STR(ITEM_FRAME_SPRITE,      "BLANK",     CFGF_NONE), \
-   CFG_INT_CB(ITEM_FRAME_SPRFRAME, 0,           CFGF_NONE, E_SpriteFrameCB), \
-   CFG_BOOL(ITEM_FRAME_FULLBRT,    cfg_false,   CFGF_NONE), \
-   CFG_INT(ITEM_FRAME_TICS,        1,           CFGF_NONE), \
-   CFG_STRFUNC(ITEM_FRAME_ACTION,  "NULL",      E_ActionFuncCB), \
-   CFG_STR(ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
-   CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
+   CFG_STR(    ITEM_FRAME_SPRITE,      "BLANK",     CFGF_NONE), \
+   CFG_INT_CB( ITEM_FRAME_SPRFRAME,    0,           CFGF_NONE, E_SpriteFrameCB), \
+   CFG_BOOL(   ITEM_FRAME_FULLBRT,     cfg_false,   CFGF_NONE), \
+   CFG_INT(    ITEM_FRAME_TICS,        1,           CFGF_NONE), \
+   CFG_STRFUNC(ITEM_FRAME_ACTION,      "NULL",      E_ActionFuncCB), \
+   CFG_STR(    ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
+   CFG_STR(    ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
+   CFG_STR(    ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
+   CFG_STR(    ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
+   CFG_STR(    ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
+   CFG_INT(    ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_frame_opts[] =
@@ -354,6 +355,20 @@ void E_CollectStates(cfg_t *scfg)
    NullStateNum = E_StateNumForName("S_NULL");
    if(NullStateNum == NUMSTATES)
       E_EDFLoggedErr(2, "E_CollectStates: 'S_NULL' frame must be defined!\n");
+}
+
+//
+// E_CreateArgList
+//
+// haleyjd 10/22/09: Creates an arglist object for the state, if it does not
+// already have one. Otherwise, the existing arguments are disposed of.
+//
+static void E_CreateArgList(state_t *state)
+{
+   if(!state->args)
+      state->args = calloc(1, sizeof(arglist_t)); // create one
+   else
+      E_DisposeArgs(state->args);                 // clear it out
 }
 
 // frame field parsing routines
@@ -644,12 +659,28 @@ static void E_ParseMiscField(char *value, int *target)
             E_AssignMiscString(target, str, value);
          else if((dp = D_GetBexPtr(value)) != NULL)              // bexptr???
             E_AssignMiscBexptr(target, dp, value);
-         else                                                    // try a keyword!
-            *target = E_ValueForKeyword(value);
       }
       else
          *target = val;
    }
+}
+
+//
+// E_GetArgument
+//
+// haleyjd 10/22/09: Skip over any prefix in the argument string.
+//
+static char *E_GetArgument(char *value)
+{
+   char prefix[16];
+   char *colonloc;
+   
+   memset(prefix, 0, 16);
+
+   // look for a colon ending a possible prefix
+   colonloc = E_ExtractPrefix(value, prefix, 16);
+
+   return colonloc ? colonloc + 1 : value;
 }
 
 enum
@@ -956,23 +987,18 @@ static void E_ProcessCmpState(const char *value, int i)
    // haleyjd 04/03/08: check for early args found by tokenizer
    if(early_args_found)
    {
-      int argcount = 0;
-
-      for(j = 0; j < NUMSTATEARGS; ++j)
-         states[i]->args[j] = 0;
+      // give the frame an arg list, or clear it out if it has one already
+      E_CreateArgList(states[i]);
 
       // process args
       while(!early_args_end)
       {
          NEXTTOKEN();
-         if(argcount < NUMSTATEARGS)
-         {
-            if(DEFAULTS(curtoken))
-               states[i]->args[argcount] = 0;
-            else
-               E_ParseMiscField(curtoken, &(states[i]->args[argcount]));
-         }
-         ++argcount;
+         
+         if(DEFAULTS(curtoken))
+            E_AddArgToList(states[i]->args, "");
+         else
+            E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
 
@@ -1005,16 +1031,26 @@ static void E_ProcessCmpState(const char *value, int i)
    else
       E_ParseMiscField(curtoken, &(states[i]->misc2));
 
+   // NOTE: Argument specification at the end of cmp frames is deprecated!
+   // Do not use this syntax any more. It will not be extended to support
+   // more than 5 arguments.
+   // Use DECORATE-style specification inside parentheses after the action
+   // function name instead.
+
    if(!early_args_found) // do not do if early args specified
    {
+      // give the frame an args list, or clear out its existing one
+      E_CreateArgList(states[i]);
+
       // process args
-      for(j = 0; j < NUMSTATEARGS; ++j)
+      for(j = 0; j < 5; ++j) // Only 5 args are supported here. Deprecated.
       {
          NEXTTOKEN();
+
          if(DEFAULTS(curtoken))
-            states[i]->args[j] = 0;
+            E_AddArgToList(states[i]->args, "");
          else
-            E_ParseMiscField(curtoken, &(states[i]->args[j]));
+            E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
 
@@ -1135,12 +1171,15 @@ hitcmp:
    if(IS_SET(ITEM_FRAME_ARGS))
    {
       tempint = cfg_size(framesec, ITEM_FRAME_ARGS);
-      for(j = 0; j < NUMSTATEARGS; ++j)
-         states[i]->args[j] = 0;
-      for(j = 0; j < tempint && j < NUMSTATEARGS; ++j)
+
+      // create an arg list for the state, or clear out the existing one
+      E_CreateArgList(states[i]);
+
+      for(j = 0; j < tempint; ++j)
       {
          tempstr = cfg_getnstr(framesec, ITEM_FRAME_ARGS, j);
-         E_ParseMiscField(tempstr, &(states[i]->args[j]));
+         
+         E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
       }
    }
 }

@@ -45,6 +45,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_sound.h"
+#include "e_args.h"
 #include "d_dehtbl.h"
 
 #ifndef TRUE
@@ -1054,6 +1055,19 @@ void deh_procThing(DWFILE *fpin, char *line)
 }
 
 // ====================================================================
+// deh_createArgList
+// Purpose: Create an argument list object for a frame that doesn't
+//          already have one.
+// Args:    state -- state to modify
+// Returns: void
+//
+static void deh_createArgList(state_t *state)
+{
+   if(!state->args)
+      state->args = calloc(1, sizeof(arglist_t));
+}
+
+// ====================================================================
 // deh_procFrame
 // Purpose: Handle DEH Frame block
 // Args:    fpin  -- input file stream
@@ -1143,27 +1157,37 @@ void deh_procFrame(DWFILE *fpin, char *line)
       else if(!strcasecmp(key,deh_state[8])) // Args1
       {
          deh_LogPrintf(" - args[0] = %ld\n", value);
-         states[indexnum]->args[0] = value;
+
+         deh_createArgList(states[indexnum]);
+         E_SetArgFromNumber(states[indexnum]->args, 0, value);
       }
       else if(!strcasecmp(key,deh_state[9])) // Args2
       {
          deh_LogPrintf(" - args[1] = %ld\n", value);
-         states[indexnum]->args[1] = value;
+         
+         deh_createArgList(states[indexnum]);
+         E_SetArgFromNumber(states[indexnum]->args, 1, value);
       }
       else if(!strcasecmp(key,deh_state[10])) // Args3
       {
          deh_LogPrintf(" - args[2] = %ld\n", value);
-         states[indexnum]->args[2] = value;
+         
+         deh_createArgList(states[indexnum]);
+         E_SetArgFromNumber(states[indexnum]->args, 2, value);
       }
       else if(!strcasecmp(key,deh_state[11])) // Args4
       {
          deh_LogPrintf(" - args[3] = %ld\n", value);
-         states[indexnum]->args[3] = value;
+         
+         deh_createArgList(states[indexnum]);
+         E_SetArgFromNumber(states[indexnum]->args, 3, value);
       }
       else if(!strcasecmp(key,deh_state[12])) // Args5
       {
          deh_LogPrintf(" - args[4] = %ld\n", value);
-         states[indexnum]->args[4] = value;
+         
+         deh_createArgList(states[indexnum]);
+         E_SetArgFromNumber(states[indexnum]->args, 4, value);
       }
       else
          deh_LogPrintf("Invalid frame string index for '%s'\n", key);

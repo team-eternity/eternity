@@ -27,12 +27,12 @@
 
 #include "z_zone.h"
 #include "info.h"
+#include "m_misc.h"
 #include "e_lib.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_sound.h"
-#include "e_string.h"
 #include "e_args.h"
 
 
@@ -53,6 +53,76 @@ boolean E_AddArgToList(arglist_t *al, const char *value)
    }
 
    return added;
+}
+
+//
+// E_SetArg
+//
+// Sets the argument at the given index to a new value. If that argument
+// does not exist already, empty arguments will be added until that index 
+// is valid.
+//
+boolean E_SetArg(arglist_t *al, int index, const char *value)
+{
+   if(index >= EMAXARGS)
+      return false;
+
+   while(index >= al->numargs)
+   {
+      if(!E_AddArgToList(al, ""))
+         return false;
+   }
+
+   // dispose of old argument and set new value
+   free(al->args[index]);
+   al->args[index] = strdup(value);
+
+   // any cached evaluation is now invalid
+   al->values[index].type = EVALTYPE_NONE;
+
+   return true;
+}
+
+//
+// E_SetArgFromNumber
+//
+// Calls E_SetArg after performing an itoa operation on the argument.
+// This is for convenience in DeHackEd, which is not very smart about 
+// setting arguments.
+//
+boolean E_SetArgFromNumber(arglist_t *al, int index, int value)
+{
+   char numbuffer[33];
+
+   M_Itoa(value, numbuffer, 10);
+
+   return E_SetArg(al, index, numbuffer);
+}
+
+//
+// E_DisposeArgs
+//
+// Resets an arglist_t to its initial state.
+//
+void E_DisposeArgs(arglist_t *al)
+{
+   int i;
+
+   for(i = 0; i < al->numargs; ++i)
+      free(al->args[i]);
+
+   memset(al, 0, sizeof(arglist_t));
+}
+
+//
+// E_ResetArgEval
+//
+// Marks an arg (if it exists) as unevaluated.
+//
+void E_ResetArgEval(arglist_t *al, int index)
+{
+   if(al && index < al->numargs)
+      al->values[index].type = EVALTYPE_NONE;
 }
 
 //
@@ -201,6 +271,52 @@ int E_ArgAsThingNum(arglist_t *al, int index)
 }
 
 //
+// E_ArgAsThingNumG0
+//
+// Only converts numbers to things if the number is greater than zero.
+// G0 == "greater than zero"
+//
+int E_ArgAsThingNumG0(arglist_t *al, int index)
+{
+   evalcache_t *eval;
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return NUMMOBJTYPES;
+
+   eval = &(al->values[index]);
+
+   if(eval->type != EVALTYPE_THINGNUM)
+   {
+      char *pos = NULL;
+      long num;
+
+      eval->type = EVALTYPE_THINGNUM;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(pos && *pos != '\0')
+      {
+         // it is a name
+         eval->value.i = E_ThingNumForName(al->args[index]);
+      }
+      else
+      {
+         // it is a DeHackEd number
+         if(num > 0)
+            eval->value.i = E_ThingNumForDEHNum((int)num);
+         else
+            eval->value.i = -1;
+      }
+   }
+
+   return eval->value.i;
+}
+
+
+//
 // E_ArgAsStateNum
 //
 // Gets the arg value at index i as a state number, if such argument exists.
@@ -237,6 +353,97 @@ int E_ArgAsStateNum(arglist_t *al, int index)
       {
          // it is a DeHackEd number
          eval->value.i = E_SafeState((int)num);
+      }
+   }
+
+   return eval->value.i;
+}
+
+//
+// E_ArgAsStateNumNI
+//
+// Gets the arg value at index i as a state number, if such argument exists.
+// The evaluated value will be cached so that it can be returned on subsequent
+// calls. If the arg does not exist, NUMSTATES is returned.
+//
+// NI == No Invalid, because invalid states are not converted to the null state.
+//
+int E_ArgAsStateNumNI(arglist_t *al, int index)
+{
+   evalcache_t *eval;
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return NUMSTATES;
+
+   eval = &(al->values[index]);
+
+   if(eval->type != EVALTYPE_STATENUM)
+   {
+      char *pos = NULL;
+      long num;
+
+      eval->type = EVALTYPE_STATENUM;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(pos && *pos != '\0')
+      {
+         // it is a name
+         eval->value.i = E_StateNumForName(al->args[index]);
+      }
+      else
+      {
+         // it is a DeHackEd number
+         eval->value.i = E_StateNumForDEHNum((int)num);
+      }
+   }
+
+   return eval->value.i;
+}
+
+//
+// E_ArgAsStateNumG0
+//
+// Only converts numbers to states if the number is greater than or
+// equal to zero.
+// G0 == "greater than or equal to zero"
+//
+int E_ArgAsStateNumG0(arglist_t *al, int index)
+{
+   evalcache_t *eval;
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return NUMSTATES;
+
+   eval = &(al->values[index]);
+
+   if(eval->type != EVALTYPE_STATENUM)
+   {
+      char *pos = NULL;
+      long num;
+
+      eval->type = EVALTYPE_STATENUM;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(pos && *pos != '\0')
+      {
+         // it is a name
+         eval->value.i = E_StateNumForName(al->args[index]);
+      }
+      else
+      {
+         // it is a DeHackEd number if it is >= 0
+         if(num >= 0)
+            eval->value.i = E_StateNumForDEHNum((int)num);
+         else
+            eval->value.i = (int)num;
       }
    }
 
@@ -371,22 +578,37 @@ edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
 
    if(eval->type != EVALTYPE_EDFSTRING)
    {
-      eval->type       = EVALTYPE_EDFSTRING;
-      eval->value.estr = E_StringForName(al->args[index]);
+      char *pos = NULL;
+      long num;
+
+      eval->type = EVALTYPE_EDFSTRING;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(pos && *pos != '\0')
+      {
+         // it is a name
+         eval->value.estr = E_StringForName(al->args[index]);
+      }
+      else
+      {
+         // it is a string number
+         eval->value.estr = E_StringForNum((int)num);
+      }
    }
 
    return eval->value.estr;
 }
 
 //
-// E_ArgAsKeywordValue
+// E_ArgAsKwd
 //
 // Gets the argument at index i as the corresponding enumeration value for a
 // keyword string, given the provided keyword set. Returns the default value
 // if the argument doesn't exist, or the keyword is not matched.
 //
-int E_ArgAsKeywordValue(arglist_t *al, int index, const char **keywords, 
-                        int numkwds, int defvalue)
+int E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue)
 {
    evalcache_t *eval;
 
@@ -410,9 +632,11 @@ int E_ArgAsKeywordValue(arglist_t *al, int index, const char **keywords,
       if(pos && *pos != '\0')
       {
          // it is a name
-         eval->value.i = E_StrToNumLinear(keywords, numkwds, al->args[index]);
+         eval->value.i = E_StrToNumLinear(kw->keywords, 
+                                          kw->numkeywords,
+                                          al->args[index]);
 
-         if(eval->value.i == numkwds)
+         if(eval->value.i == kw->numkeywords)
             eval->value.i = defvalue;
       }
       else

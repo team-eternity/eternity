@@ -30,6 +30,7 @@
 
 // needed for MAXFLAGFIELDS:
 #include "d_dehtbl.h"
+#include "e_string.h"
 
 // 16 arguments ought to be enough for anybody.
 #define EMAXARGS 16
@@ -66,24 +67,37 @@ typedef struct evalcache_s
 
 typedef struct arglist_s
 {
-   const char *args[EMAXARGS];   // argument strings stored from EDF
+   char *args[EMAXARGS];         // argument strings stored from EDF
    evalcache_t values[EMAXARGS]; // if type != EVALTYPE_NONE, cached value
    int numargs;                  // number of arguments
 } arglist_t;
 
+typedef struct argkeywd_s
+{
+   const char **keywords;
+   int        numkeywords;
+} argkeywd_t;
+
 boolean       E_AddArgToList(arglist_t *al, const char *value);
+boolean       E_SetArg(arglist_t *al, int index, const char *value);
+boolean       E_SetArgFromNumber(arglist_t *al, int index, int value);
+void          E_DisposeArgs(arglist_t *al);
+void          E_ResetArgEval(arglist_t *al, int index);
+
 const char   *E_ArgAsString(arglist_t *al, int index, const char *defvalue);
 int           E_ArgAsInt(arglist_t *al, int index, int defvalue);
 fixed_t       E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue);
 double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
+int           E_ArgAsThingNumG0(arglist_t *al, int index);
 int           E_ArgAsStateNum(arglist_t *al, int index);
+int           E_ArgAsStateNumNI(arglist_t *al, int index);
+int           E_ArgAsStateNumG0(arglist_t *al, int index);
 int          *E_ArgAsThingFlags(arglist_t *al, int index);
 sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
 int           E_ArgAsBexptr(arglist_t *al, int index);
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index);
-int           E_ArgAsKeywordValue(arglist_t *al, int index, const char **keywords,
-                                  int numkwds, int defvalue);
+int           E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue);
 
 #endif
 

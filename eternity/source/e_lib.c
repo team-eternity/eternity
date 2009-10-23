@@ -616,6 +616,7 @@ char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen)
    return colonloc;
 }
 
+/*
 //
 // Keywords
 //
@@ -713,6 +714,7 @@ void E_AddKeywords(E_Keyword_t *kw)
       }
    }
 }
+*/
 
 // EOF
 

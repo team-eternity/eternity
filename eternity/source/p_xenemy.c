@@ -40,6 +40,7 @@
 #include "e_sound.h"
 #include "s_sound.h"
 #include "e_lib.h"
+#include "e_args.h"
 
 // action routines from other modules
 void A_Look(mobj_t *actor);
@@ -159,7 +160,7 @@ boolean P_StartQuake(int *args)
 //
 void A_FadeIn(mobj_t *mo)
 {
-   mo->translucency += mo->state->args[0];
+   mo->translucency += E_ArgAsInt(mo->state->args, 0, 0);
    
    if(mo->translucency < 0)
       mo->translucency = 0;
@@ -176,7 +177,7 @@ void A_FadeIn(mobj_t *mo)
 //
 void A_FadeOut(mobj_t *mo)
 {
-   mo->translucency -= mo->state->args[0];
+   mo->translucency -= E_ArgAsInt(mo->state->args, 0, 0);
    
    if(mo->translucency < 0)
       mo->translucency = 0;
@@ -195,19 +196,51 @@ void A_ClearSkin(mobj_t *mo)
    mo->sprite = mo->state->sprite;
 }
 
-E_Keyword_t kwds_A_PlaySoundEx[] =
+// Old keywords: deprecated
+
+static const char *kwds_channel_old[] =
 {
-   { "chan_auto",   0 },
-   { "chan_weapon", 1 },
-   { "chan_voice",  2 },
-   { "chan_item",   3 },
-   { "chan_body",   4 },
-   { "attn_normal", 0 },
-   { "attn_idle",   1 },
-   { "attn_static", 2 },
-   { "attn_none",   3 },
-   { NULL }
+   "chan_auto",   // 0 },
+   "chan_weapon", // 1 },
+   "chan_voice",  // 2 },
+   "chan_item",   // 3 },
+   "chan_body",   // 4 },
 };
+
+static argkeywd_t channelkwdsold = { kwds_channel_old, NUMSCHANNELS };
+
+static const char *kwds_attn_old[] =
+{
+   "attn_normal", // 0
+   "attn_idle",   // 1
+   "attn_static", // 2
+   "attn_none",   // 3
+};
+
+static argkeywd_t attnkwdsold = { kwds_attn_old, ATTN_NUM };
+
+// New keywords: preferred
+
+static const char *kwds_channel_new[] =
+{
+   "auto",   // 0
+   "weapon", // 1
+   "voice",  // 2
+   "item",   // 3
+   "body",   // 4
+};
+
+static argkeywd_t channelkwdsnew = { kwds_channel_new, NUMSCHANNELS };
+
+static const char *kwds_attn_new[] =
+{
+   "normal", // 0
+   "idle",   // 1
+   "static", // 2
+   "none",   // 3
+};
+
+static argkeywd_t attnkwdsnew = { kwds_attn_new, ATTN_NUM };
 
 //
 // A_PlaySoundEx
@@ -222,14 +255,34 @@ E_Keyword_t kwds_A_PlaySoundEx[] =
 //
 void A_PlaySoundEx(mobj_t *mo)
 {
-   int sound    =   mo->state->args[0];
-   int channel  =   mo->state->args[1];
-   boolean loop = !!mo->state->args[2];
-   int attn     =   mo->state->args[3];
-   int volume   =   mo->state->args[4];
    sfxinfo_t *sfx = NULL;
+   int channel, attn, volume;
+   boolean loop;
 
-   if(!(sfx = E_SoundForDEHNum(sound)))
+   sfx = E_ArgAsSound(mo->state->args, 0);
+   
+   // handle channel
+   channel = E_ArgAsKwd(mo->state->args, 1, &channelkwdsold, -1);
+   if(channel == -1)
+   {
+      E_ResetArgEval(mo->state->args, 1);
+      channel = E_ArgAsKwd(mo->state->args, 1, &channelkwdsnew, 0);
+   }
+
+   loop = !!E_ArgAsInt(mo->state->args, 2, 0);
+
+   // handle attenuation
+   attn = E_ArgAsKwd(mo->state->args, 3, &attnkwdsold, -1);
+   
+   if(attn == -1)
+   {
+      E_ResetArgEval(mo->state->args, 3);
+      attn = E_ArgAsKwd(mo->state->args, 3, &attnkwdsnew, 0);
+   }
+
+   volume = E_ArgAsInt(mo->state->args, 4, 0);
+
+   if(!sfx)
       return;
 
    // rangechecking
@@ -411,7 +464,7 @@ void A_SerpentChase(mobj_t *actor)
 //
 void A_RaiseFloorClip(mobj_t *actor)
 {
-   fixed_t amt = actor->state->args[0] * FRACUNIT / 8;
+   fixed_t amt = E_ArgAsInt(actor->state->args, 0, 0) * FRACUNIT / 8;
 
    actor->floorclip -= amt;
 }
@@ -425,7 +478,7 @@ void A_RaiseFloorClip(mobj_t *actor)
 //
 void A_LowerFloorClip(mobj_t *actor)
 {
-   fixed_t amt = actor->state->args[0] * FRACUNIT / 8;
+   fixed_t amt = E_ArgAsInt(actor->state->args, 0, 0) * FRACUNIT / 8;
 
    actor->floorclip += amt;
 }
@@ -496,8 +549,8 @@ void A_SerpentSpawnGibs(mobj_t *actor)
 //
 void A_SubTics(mobj_t *actor)
 {
-   int mode = (int)(actor->state->args[0]);
-   int amt  = (int)(actor->state->args[1]);
+   int mode = E_ArgAsInt(actor->state->args, 0, 0);
+   int amt  = E_ArgAsInt(actor->state->args, 1, 0);
 
    switch(mode)
    {
@@ -577,23 +630,21 @@ static void P_TossEquipmentItem(mobj_t *mo, angle_t angle, int momshift,
 //
 void A_DropEquipment(mobj_t *actor)
 {
-   int moType1    = (int)(actor->state->args[0]);
-   int moType2    = (int)(actor->state->args[1]);
-   int xyMomShift = (int)(actor->state->args[2]);
+   int moType1    = E_ArgAsThingNum(actor->state->args, 0);
+   int moType2    = E_ArgAsThingNum(actor->state->args, 1);
+   int xyMomShift = E_ArgAsInt(actor->state->args, 2, 0);
    
-   fixed_t baseZMom = (int)(actor->state->args[3]) * FRACUNIT;
-   fixed_t zHeight  = (int)(actor->state->args[4]) * FRACUNIT;
+   fixed_t baseZMom = E_ArgAsInt(actor->state->args, 3, 0) * FRACUNIT;
+   fixed_t zHeight  = E_ArgAsInt(actor->state->args, 4, 0) * FRACUNIT;
 
    mobj_t  *mo;
 
-   mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight,
-                    E_SafeThingType(moType1));
+   mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType1);
 
    P_TossEquipmentItem(mo, actor->angle + ANG90, xyMomShift, baseZMom);
    P_SetTarget(&mo->target, actor);
 
-   mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight,
-                    E_SafeThingType(moType2));
+   mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType2);
 
    P_TossEquipmentItem(mo, actor->angle - ANG90, xyMomShift, baseZMom);
    P_SetTarget(&mo->target, actor);
@@ -700,9 +751,9 @@ void A_BishopDoBlur(mobj_t *actor)
 void A_SpawnBlur(mobj_t *actor)
 {
    mobj_t *mo;
-   int walkState = E_SafeState(actor->state->args[0]);
-   int atkState  = E_SafeState(actor->state->args[1]);
-   int thingType = E_SafeThingType(actor->state->args[2]);
+   int walkState = E_ArgAsStateNum(actor->state->args, 0);
+   int atkState  = E_ArgAsStateNum(actor->state->args, 1);
+   int thingType = E_ArgAsThingNum(actor->state->args, 2);
    
    if(!--actor->counters[0])
    {
@@ -775,7 +826,7 @@ void A_DragonFlap(mobj_t *actor)
 //
 void A_DragonFX2(mobj_t *actor)
 {
-   int thingType = (int)(actor->state->args[0]);
+   int thingType = E_ArgAsThingNum(actor->state->args, 0);
    mobj_t *mo;
    int i;
    int delay;
@@ -787,7 +838,7 @@ void A_DragonFX2(mobj_t *actor)
       mo = P_SpawnMobj(actor->x + ((P_Random(pr_dragonfx) - 128) << 14), 
                        actor->y + ((P_Random(pr_dragonfx) - 128) << 14), 
                        actor->z + ((P_Random(pr_dragonfx) - 128) << 12),
-                       E_SafeThingType(thingType));
+                       thingType);
 
       mo->tics = delay + (P_Random(pr_dragonfx) & 3) * i * 2;
       P_SetTarget(&mo->target, actor->target);
@@ -806,8 +857,8 @@ void A_DragonFX2(mobj_t *actor)
 //
 void A_PainCounterBEQ(mobj_t *actor)
 {
-   int stateNum   = E_SafeState(actor->state->args[0]);
-   int counterNum = (int)(actor->state->args[1]);
+   int stateNum   = E_ArgAsStateNum(actor->state->args, 0);
+   int counterNum = E_ArgAsInt(actor->state->args, 1, 0);
    int *counter;
 
    A_Pain(actor);
@@ -940,7 +991,7 @@ void A_WraithMissile(mobj_t *actor)
 //
 void A_WraithFX2(mobj_t *actor)
 {
-   int thingType = E_SafeThingType(actor->state->args[0]);
+   int thingType = E_ArgAsThingNum(actor->state->args, 0);
    mobj_t *mo;
    angle_t angle;
    int i;
@@ -973,7 +1024,7 @@ void A_WraithFX2(mobj_t *actor)
 //
 void A_WraithFX3(mobj_t *actor)
 {
-   int thingType = E_SafeThingType(actor->state->args[0]);
+   int thingType = E_ArgAsThingNum(actor->state->args, 0);
    mobj_t *mo;
    int numdropped = P_Random(pr_wraithfx3) % 15;
    int i;
@@ -1004,8 +1055,8 @@ enum
 //
 void A_WraithFX4(mobj_t *actor)
 {
-   int thingType1 = E_SafeThingType(actor->state->args[0]);
-   int thingType2 = E_SafeThingType(actor->state->args[1]);
+   int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
+   int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    mobj_t *mo;
    int chance = P_Random(pr_wraithfx4a);
    int spawnflags;
@@ -1082,9 +1133,9 @@ void A_EttinAttack(mobj_t *actor)
 //
 void A_DropMace(mobj_t *actor)
 {
-   int thingType    = E_SafeThingType(actor->state->args[0]);
-   int momShift     = (int)(actor->state->args[1]);
-   fixed_t baseMomZ = (int)(actor->state->args[2]) * FRACUNIT;
+   int thingType    = E_ArgAsThingNum(actor->state->args, 0);
+   int momShift     = E_ArgAsInt(actor->state->args, 1, 0);
+   fixed_t baseMomZ = E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT;
    mobj_t *mo;
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + (actor->height >> 1), 
@@ -1110,7 +1161,7 @@ void A_AffritSpawnRock(mobj_t *actor)
    int thingTypes[5];
 
    for(i = 0; i < 5; ++i)
-      thingTypes[i] = E_SafeThingType(actor->state->args[i]);
+      thingTypes[i] = E_ArgAsThingNum(actor->state->args, i);
    
    rtype = thingTypes[P_Random(pr_affritrock) % 5];
    
@@ -1173,8 +1224,8 @@ void A_AffritChase(mobj_t *actor)
 //
 void A_AffritSplotch(mobj_t *actor)
 {
-   int thingType1 = E_SafeThingType(actor->state->args[0]);
-   int thingType2 = E_SafeThingType(actor->state->args[1]);
+   int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
+   int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    mobj_t *mo;
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType1);
@@ -1199,8 +1250,8 @@ void A_AffritSplotch(mobj_t *actor)
 //
 void A_IceGuyLook(mobj_t *actor)
 {
-   int thingType1 = E_SafeThingType(actor->state->args[0]);
-   int thingType2 = E_SafeThingType(actor->state->args[1]);
+   int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
+   int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    fixed_t dist;
    fixed_t an;
    
@@ -1227,8 +1278,8 @@ void A_IceGuyLook(mobj_t *actor)
 //
 void A_IceGuyChase(mobj_t *actor)
 {
-   int thingType1 = E_SafeThingType(actor->state->args[0]);
-   int thingType2 = E_SafeThingType(actor->state->args[1]);
+   int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
+   int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    fixed_t dist;
    fixed_t an;
    mobj_t *mo;

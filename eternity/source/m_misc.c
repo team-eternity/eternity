@@ -2218,9 +2218,9 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
       
       while(numstrs != 0)
       {
-         const char *str = va_arg(args, const char *);
+         const char *argstr = va_arg(args, const char *);
          
-         len += strlen(str);
+         len += strlen(argstr);
          
          --numstrs;
       }

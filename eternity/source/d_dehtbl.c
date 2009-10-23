@@ -1433,41 +1433,11 @@ void A_FogMove(mobj_t *);
 void A_PainNukeSpec(mobj_t *);
 void A_SorcNukeSpec(mobj_t *);
 
-// Keyword sets for parameterized codepointers
-#define EXTKWDS(a) extern E_Keyword_t kwds_ ## a []
-#define KWDS(a)    kwds_ ## a
-
-EXTKWDS(A_FireCustomBullets);
-EXTKWDS(A_FirePlayerMissile);
-EXTKWDS(A_CustomPlayerMelee);
-EXTKWDS(A_PlayerThunk);
-EXTKWDS(A_WeaponCtrJump);
-EXTKWDS(A_WeaponCtrSwitch);
-EXTKWDS(A_WeaponSetCtr);
-EXTKWDS(A_WeaponCtrOp);
-EXTKWDS(A_PlaySound);
-EXTKWDS(A_HticExplode);
-EXTKWDS(A_Scratch);
-EXTKWDS(A_MissileAttack);
-EXTKWDS(A_BulletAttack);
-EXTKWDS(A_ThingSummon);
-EXTKWDS(A_KillChildren);
-EXTKWDS(A_HealthJump);
-EXTKWDS(A_CounterJump);
-EXTKWDS(A_SetCounter);
-EXTKWDS(A_CounterOp);
-EXTKWDS(A_SetTics);
-EXTKWDS(A_StartScript);
-EXTKWDS(A_PlayerStartScript);
-EXTKWDS(A_ShowMessage);
-EXTKWDS(A_PlaySoundEx);
-
 // haleyjd 03/14/03: moved here, added hashing, eliminated useless
 // A_ prefixes on mnemonics
 
 // haleyjd 10/04/08: macros to save my wrists
 #define POINTER(name)  { A_ ## name , #name }
-#define POINTERK(name) { A_ ## name , #name , KWDS( A_ ## name ) }
 
 deh_bexptr deh_bexptrs[] =
 {
@@ -1553,24 +1523,24 @@ deh_bexptr deh_bexptrs[] =
   POINTER(Spawn),         
   POINTER(Turn),          
   POINTER(Face),          
-  POINTERK(Scratch),
-  POINTERK(PlaySound),
+  POINTER(Scratch),
+  POINTER(PlaySound),
   POINTER(RandomJump),
   POINTER(LineEffect),
   
   POINTER(Nailbomb),
 
   // haleyjd: start new eternity codeptrs
-  POINTERK(StartScript),
-  POINTERK(PlayerStartScript),
+  POINTER(StartScript),
+  POINTER(PlayerStartScript),
   POINTER(SetFlags),
   POINTER(UnSetFlags),
   POINTER(BetaSkullAttack),
   POINTER(GenRefire),
   POINTER(FireGrenade),
-  POINTERK(FireCustomBullets),
-  POINTERK(FirePlayerMissile),
-  POINTERK(CustomPlayerMelee),
+  POINTER(FireCustomBullets),
+  POINTER(FirePlayerMissile),
+  POINTER(CustomPlayerMelee),
   POINTER(GenTracer),
   POINTER(BFG11KHit),
   POINTER(BouncingBFG),
@@ -1578,28 +1548,28 @@ deh_bexptr deh_bexptrs[] =
   POINTER(FireOldBFG),        
   POINTER(KeepChasing),       
   POINTER(Stop),              
-  POINTERK(PlayerThunk),
-  POINTERK(MissileAttack),
+  POINTER(PlayerThunk),
+  POINTER(MissileAttack),
   POINTER(MissileSpread),
-  POINTERK(BulletAttack),
-  POINTERK(HealthJump),
-  POINTERK(CounterJump),
+  POINTER(BulletAttack),
+  POINTER(HealthJump),
+  POINTER(CounterJump),
   POINTER(CounterSwitch),
-  POINTERK(SetCounter),
+  POINTER(SetCounter),
   POINTER(CopyCounter),
-  POINTERK(CounterOp),
-  POINTERK(SetTics),
+  POINTER(CounterOp),
+  POINTER(SetTics),
   POINTER(AproxDistance),
-  POINTERK(ShowMessage),
+  POINTER(ShowMessage),
   POINTER(RandomWalk),
   POINTER(TargetJump),
-  POINTERK(ThingSummon),
-  POINTERK(KillChildren),
-  POINTERK(WeaponCtrJump),
-  POINTERK(WeaponCtrSwitch),
-  POINTERK(WeaponSetCtr),
+  POINTER(ThingSummon),
+  POINTER(KillChildren),
+  POINTER(WeaponCtrJump),
+  POINTER(WeaponCtrSwitch),
+  POINTER(WeaponSetCtr),
   POINTER(WeaponCopyCtr),
-  POINTERK(WeaponCtrOp),
+  POINTER(WeaponCtrOp),
   POINTER(AmbientThinker),
   POINTER(SteamSpawn),
   POINTER(EjectCasing),
@@ -1630,7 +1600,7 @@ deh_bexptr deh_bexptrs[] =
   POINTER(GenWizard),         
   POINTER(Sor2DthInit),       
   POINTER(Sor2DthLoop),       
-  POINTERK(HticExplode),
+  POINTER(HticExplode),
   POINTER(HticBossDeath),     
   POINTER(PodPain),           
   POINTER(RemovePod),         
@@ -1748,7 +1718,7 @@ deh_bexptr deh_bexptrs[] =
   POINTER(FadeIn),            
   POINTER(FadeOut),           
   POINTER(JumpIfTargetInLOS), 
-  POINTERK(PlaySoundEx),
+  POINTER(PlaySoundEx),
   POINTER(SetTranslucent),    
 
   // ETERNITY TC ptrs -- TODO: eliminate these
@@ -1988,8 +1958,10 @@ static void D_BEXPtrHashInit(void)
       bexcpchains[key] = i;
 
       // haleyjd 06/12/08: also add EDF keywords if defined
+      /*
       if(deh_bexptrs[i].kwds)
          E_AddKeywords((E_Keyword_t *)deh_bexptrs[i].kwds);
+      */
    }
 }
 

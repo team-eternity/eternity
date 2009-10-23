@@ -53,6 +53,7 @@
 #include "p_info.h"
 #include "d_gi.h"
 #include "e_lib.h"
+#include "e_args.h"
 
 int weapon_speed = 6;
 int default_weapon_speed = 6;
@@ -89,7 +90,7 @@ int action_from_pspr;
 typedef struct gunaction_s
 {
    state_t *s;               // state args were copied to
-   int    args[NUMSTATEARGS];  // saved args
+   arglist_t *args;          // pointer to args object
    struct gunaction_s *next; // next action
 } gunaction_t;
 
@@ -144,8 +145,8 @@ static void P_SetupPlayerGunAction(player_t *player, pspdef_t *psp)
 
    ga = P_GetGunAction();
 
-   memcpy(ga->args, mo->state->args, NUMSTATEARGS * sizeof(int));
-   memcpy(mo->state->args, psp->state->args, NUMSTATEARGS * sizeof(int));
+   ga->args        = mo->state->args;  // save the original args
+   mo->state->args = psp->state->args; // copy from the psprite frame
 
    action_from_pspr++;
 
@@ -173,8 +174,8 @@ static void P_FinishPlayerGunAction(void)
    ga = gunactions;
    gunactions = ga->next;
 
-   // copy saved args back to state
-   memcpy(ga->s->args, ga->args, NUMSTATEARGS * sizeof(int));
+   // restore saved args object to the state
+   ga->s->args = ga->args;
 
    action_from_pspr--;
 
@@ -1646,14 +1647,20 @@ void A_FireGrenade(mobj_t *mo)
 {
 }
 
-E_Keyword_t kwds_A_FireCustomBullets[] =
+static const char *kwds_A_FireCustomBullets[] =
 {
-   { "always",             1  },
-   { "first",              2  },
-   { "never",              3  },
-   { "ssg",                4  },
-   { "monster",            5  },
-   { NULL }
+   "{DUMMY}",           // 0
+   "always",            // 1
+   "first",             // 2
+   "never",             // 3
+   "ssg",               // 4
+   "monster",           // 5
+};
+
+static argkeywd_t fcbkwds =
+{
+   kwds_A_FireCustomBullets, 
+   sizeof(kwds_A_FireCustomBullets) / sizeof(const char *)
 };
 
 //
@@ -1669,7 +1676,7 @@ E_Keyword_t kwds_A_FireCustomBullets[] =
 //
 void A_FireCustomBullets(mobj_t *mo)
 {
-   int i, sound, accurate, numbullets, damage, dmgmod;
+   int i, accurate, numbullets, damage, dmgmod;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
@@ -1679,11 +1686,11 @@ void A_FireCustomBullets(mobj_t *mo)
 
    psp = &player->psprites[player->curpsprite];
 
-   sound      = (int)(psp->state->args[0]);
-   accurate   = (int)(psp->state->args[1]);
-   numbullets = (int)(psp->state->args[2]);
-   damage     = (int)(psp->state->args[3]);
-   dmgmod     = (int)(psp->state->args[4]);
+   sfx        = E_ArgAsSound(psp->state->args, 0);
+   accurate   = E_ArgAsKwd(psp->state->args, 1, &fcbkwds, 0);
+   numbullets = E_ArgAsInt(psp->state->args, 2, 0);
+   damage     = E_ArgAsInt(psp->state->args, 3, 0);
+   dmgmod     = E_ArgAsInt(psp->state->args, 4, 0);
 
    if(!accurate)
       accurate = 1;
@@ -1693,12 +1700,7 @@ void A_FireCustomBullets(mobj_t *mo)
    else if(dmgmod > 256)
       dmgmod = 256;
 
-   // haleyjd 12/08/03: changed to use sound dehacked num
-   sfx = E_SoundForDEHNum(sound);
-
    P_WeaponSoundInfo(mo, sfx);
-
-   // PCLASS_FIXME: secondary attack state
 
    P_SetMobjState(mo, player->pclass->altattack);
 
@@ -1743,11 +1745,16 @@ void A_FireCustomBullets(mobj_t *mo)
    }
 }
 
-E_Keyword_t kwds_A_FirePlayerMissile[] =
+static const char *kwds_A_FirePlayerMissile[] =
 {
-   { "normal",             0  },
-   { "homing",             1  },
-   { NULL }
+   "normal",           //  0
+   "homing",           //  1
+};
+
+static argkeywd_t seekkwds =
+{
+   kwds_A_FirePlayerMissile,
+   sizeof(kwds_A_FirePlayerMissile) / sizeof(const char *)
 };
 
 //
@@ -1773,11 +1780,11 @@ void A_FirePlayerMissile(mobj_t *actor)
    player = actor->player;
    psp    = &player->psprites[player->curpsprite];
 
-   //. haleyjd 07/05/03: adjusted for EDF
-   thingnum =    (int)(psp->state->args[0]); 
-   seek     = !!((int)(psp->state->args[1]));
+   thingnum = E_ArgAsThingNumG0(psp->state->args, 0);
+   seek     = !!E_ArgAsKwd(psp->state->args, 1, &seekkwds, 0);
 
-   if((thingnum = E_ThingNumForDEHNum(thingnum)) == NUMMOBJTYPES)
+   // validate thingtype
+   if(thingnum < 0 || thingnum == NUMMOBJTYPES)
       return;
 
    // decrement ammo if appropriate
@@ -1798,12 +1805,18 @@ void A_FirePlayerMissile(mobj_t *actor)
    }
 }
 
-E_Keyword_t kwds_A_CustomPlayerMelee[] =
+const char *kwds_A_CustomPlayerMelee[] =
 {
-   { "none",               1  },
-   { "punch",              2  },
-   { "chainsaw",           3  },
-   { NULL }
+   "{DUMMY}",          //  0
+   "none",             //  1
+   "punch",            //  2
+   "chainsaw",         //  3
+};
+
+static argkeywd_t cpmkwds =
+{
+   kwds_A_CustomPlayerMelee,
+   sizeof(kwds_A_CustomPlayerMelee) / sizeof(const char *)
 };
 
 //
@@ -1820,7 +1833,7 @@ E_Keyword_t kwds_A_CustomPlayerMelee[] =
 void A_CustomPlayerMelee(mobj_t *mo)
 {
    angle_t angle;
-   int slope, damage, dmgfactor, dmgmod, berzerkmul, deftype, sound;
+   int slope, damage, dmgfactor, dmgmod, berzerkmul, deftype;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
@@ -1830,11 +1843,11 @@ void A_CustomPlayerMelee(mobj_t *mo)
 
    psp = &player->psprites[player->curpsprite];
 
-   dmgfactor  = (int)(psp->state->args[0]);
-   dmgmod     = (int)(psp->state->args[1]);
-   berzerkmul = (int)(psp->state->args[2]);
-   deftype    = (int)(psp->state->args[3]);
-   sound      = (int)(psp->state->args[4]);
+   dmgfactor  = E_ArgAsInt(psp->state->args, 0, 0);
+   dmgmod     = E_ArgAsInt(psp->state->args, 1, 0);
+   berzerkmul = E_ArgAsInt(psp->state->args, 2, 0);
+   deftype    = E_ArgAsKwd(psp->state->args, 3, &cpmkwds, 0);
+   sfx        = E_ArgAsSound(psp->state->args, 4);
 
    // adjust parameters
 
@@ -1842,9 +1855,6 @@ void A_CustomPlayerMelee(mobj_t *mo)
       dmgmod = 1;
    else if(dmgmod > 256)
       dmgmod = 256;
-
-   // haleyjd 12/08/03: changed sound parameter to DeHackEd number
-   sfx = E_SoundForDEHNum(sound);
 
    // calculate damage
    damage = dmgfactor * ((P_Random(pr_custompunch)%dmgmod) + 1);
@@ -1877,7 +1887,7 @@ void A_CustomPlayerMelee(mobj_t *mo)
    if(!tm->linetarget)
    {
       // assume they want sawful on miss if sawhit specified
-      if(sound == sfx_sawhit)
+      if(sfx && sfx->dehackednum == sfx_sawhit)
          P_WeaponSound(mo, sfx_sawful);
       return;
    }
@@ -1911,16 +1921,29 @@ void A_CustomPlayerMelee(mobj_t *mo)
    }
 }
 
-E_Keyword_t kwds_A_PlayerThunk[] =
+static const char *kwds_A_PlayerThunk1[] =
 {
-   { "noface",             0  },
-   { "face",               1  },
-   { "attacker",           0  },
-   { "aimtarget",          1  },
-   { "nouseammo",          0  },
-   { "useammo",            1  },
-   { NULL }
+   "noface", // 0
+   "face",   // 1
 };
+
+static argkeywd_t facekwds = { kwds_A_PlayerThunk1, 2 };
+
+static const char *kwds_A_PlayerThunk2[] =
+{
+   "attacker",  // 0
+   "aimtarget", // 1
+};
+
+static argkeywd_t targetkwds = { kwds_A_PlayerThunk2, 2};
+
+static const char *kwds_A_PlayerThunk3[] =
+{
+   "nouseammo", // 0
+   "useammo",   // 1
+};
+
+static argkeywd_t ammokwds = { kwds_A_PlayerThunk3, 2 };
 
 //
 // A_PlayerThunk
@@ -1951,23 +1974,15 @@ void A_PlayerThunk(mobj_t *mo)
 
    psp    = &player->psprites[player->curpsprite];
 
-   cptrnum   =    (int)(psp->state->args[0]);
-   face      = !!((int)(psp->state->args[1]));
-   statenum  =    (int)(psp->state->args[2]);
-   settarget = !!((int)(psp->state->args[3]));
-   useammo   = !!((int)(psp->state->args[4]));
+   cptrnum   =   E_ArgAsBexptr(psp->state->args, 0);
+   face      = !!E_ArgAsKwd(psp->state->args, 1, &facekwds, 0);
+   statenum  =   E_ArgAsStateNumG0(psp->state->args, 2);
+   settarget = !!E_ArgAsKwd(psp->state->args, 3, &targetkwds, 0);
+   useammo   = !!E_ArgAsKwd(psp->state->args, 4, &ammokwds, 0);
 
    // validate codepointer index
-   if(cptrnum < 0 || cptrnum >= num_bexptrs)
+   if(cptrnum < 0)
       return;
-
-   // validate and resolve state
-   if(statenum >= 0)
-   {
-      statenum = E_StateNumForDEHNum(statenum);
-      if(statenum == NUMSTATES)
-         return;
-   }
 
    // set player's target to thing being autoaimed at if this
    // behavior is requested.
@@ -1991,7 +2006,7 @@ void A_PlayerThunk(mobj_t *mo)
 
    // If a state has been provided, place the player into it. This
    // allows use of parameterized codepointers.
-   if(statenum >= 0)
+   if(statenum >= 0 && statenum < NUMSTATES)
    {
       oldstate = mo->state;
       mo->state = states[statenum];
@@ -2020,7 +2035,7 @@ void A_PlayerThunk(mobj_t *mo)
    }
 
    // put player back into his normal state
-   if(statenum >= 0)
+   if(statenum >= 0 && statenum < NUMSTATES)
    {
       mo->state = oldstate;
    }

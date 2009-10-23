@@ -56,6 +56,7 @@
 #include "r_main.h"
 #include "e_lib.h"
 #include "e_sound.h"
+#include "e_args.h"
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -2767,7 +2768,7 @@ void A_Detonate(mobj_t *mo)
 void A_Mushroom(mobj_t *actor)
 {
    int i, j, n = actor->damage;
-   int arg0, ShotType;
+   int ShotType;
    
    // Mushroom parameters are part of code pointer's state
    fixed_t misc1 = 
@@ -2775,15 +2776,13 @@ void A_Mushroom(mobj_t *actor)
    fixed_t misc2 = 
       actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
 
-   if(FatShotType == -1)
-      FatShotType = E_SafeThingType(MT_FATSHOT);
-
    // haleyjd: extended parameter support requested by Mordeth:
-   // allow specification of thing type in args[0]   
-   if((arg0 = actor->state->args[0]))
-      ShotType = E_SafeThingType(arg0);
-   else
-      ShotType = FatShotType;
+   // allow specification of thing type in args[0]
+
+   ShotType = E_ArgAsThingNumG0(actor->state->args, 0);
+
+   if(ShotType < 0 || ShotType == NUMMOBJTYPES)
+      ShotType = E_SafeThingType(MT_FATSHOT);
    
    A_Explode(actor);               // make normal explosion
 
@@ -3212,12 +3211,17 @@ void A_Face(mobj_t *mo)
    mo->angle = (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
 }
 
-E_Keyword_t kwds_A_Scratch[] =
+static const char *kwds_A_Scratch[] =
 {
-   { "usemisc1",           0  },
-   { "usedamage",          1  },
-   { "usecounter",         2  },
-   { NULL }
+   "usemisc1",
+   "usedamage",
+   "usecounter"
+};
+
+static argkeywd_t scratchkwds =
+{
+   kwds_A_Scratch,
+   sizeof(kwds_A_Scratch) / sizeof(const char *)
 };
 
 //
@@ -3237,13 +3241,16 @@ E_Keyword_t kwds_A_Scratch[] =
 void A_Scratch(mobj_t *mo)
 {
    int damage, cnum;
+   int mode;
 
    // haleyjd: demystified
    if(!mo->target)
       return;
 
+   mode = E_ArgAsKwd(mo->state->args, 0, &scratchkwds, 0);
+
    // haleyjd 08/02/04: extensions to get damage from multiple sources
-   switch(mo->state->args[0])
+   switch(mode)
    {
    default:
    case 0: // default, compatibility mode
@@ -3253,7 +3260,7 @@ void A_Scratch(mobj_t *mo)
       damage = mo->damage;
       break;
    case 2: // use a counter
-      cnum = mo->state->args[1];
+      cnum = E_ArgAsInt(mo->state->args, 1, 0);
 
       if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
          return; // invalid
@@ -3272,13 +3279,6 @@ void A_Scratch(mobj_t *mo)
       P_DamageMobj(mo->target, mo, mo, damage, MOD_HIT);
    }
 }
-
-E_Keyword_t kwds_A_PlaySound[] =
-{
-   { "normal",             0  },
-   { "fullvolume",         1  },
-   { NULL }
-};
 
 void A_PlaySound(mobj_t *mo)
 {
@@ -3338,27 +3338,37 @@ void A_LineEffect(mobj_t *mo)
 //
 // A parameterized codepointer that turns on thing flags
 //
-// args[0] == 1, 2, 3, 4 -- flags field to affect
+// args[0] == 0, 1, 2, 3, 4 -- flags field to affect (0 == combined)
 // args[1] == flags value to OR with thing flags
 //
 void A_SetFlags(mobj_t *actor)
 {
-   int flagfield = actor->state->args[0];
-   unsigned int flags = (unsigned int)(actor->state->args[1]);
+   int flagfield;
+   int *flags;
 
+   flagfield = E_ArgAsInt(actor->state->args, 0, 0);
+
+   flags = E_ArgAsThingFlags(actor->state->args, 1);
+   
    switch(flagfield)
    {
+   case 0:
+      actor->flags  |= (unsigned int)flags[0];
+      actor->flags2 |= (unsigned int)flags[1];
+      actor->flags3 |= (unsigned int)flags[2];
+      actor->flags4 |= (unsigned int)flags[3];
+      break;
    case 1:
-      actor->flags |= flags;
+      actor->flags  |= (unsigned int)flags[0];
       break;
    case 2:
-      actor->flags2 |= flags;
+      actor->flags2 |= (unsigned int)flags[1];
       break;
    case 3:
-      actor->flags3 |= flags;
+      actor->flags3 |= (unsigned int)flags[2];
       break;
    case 4:
-      actor->flags4 |= flags;
+      actor->flags4 |= (unsigned int)flags[3];
       break;
    }
 }
@@ -3368,27 +3378,37 @@ void A_SetFlags(mobj_t *actor)
 //
 // A parameterized codepointer that turns off thing flags
 //
-// args[0] == 1, 2, 3, 4 -- flags field to affect
+// args[0] == 0, 1, 2, 3, 4 -- flags field to affect (0 == combined)
 // args[1] == flags value to inverse AND with thing flags
 //
 void A_UnSetFlags(mobj_t *actor)
 {
-   int flagfield = actor->state->args[0];
-   unsigned int flags = (unsigned int)(actor->state->args[1]);
+   int flagfield;
+   int *flags;
+
+   flagfield = E_ArgAsInt(actor->state->args, 0, 0);
+
+   flags = E_ArgAsThingFlags(actor->state->args, 1);
 
    switch(flagfield)
    {
+   case 0:
+      actor->flags  &= ~((unsigned int)flags[0]);
+      actor->flags2 &= ~((unsigned int)flags[1]);
+      actor->flags3 &= ~((unsigned int)flags[2]);
+      actor->flags4 &= ~((unsigned int)flags[3]);
+      break;
    case 1:
-      actor->flags &= ~flags;
+      actor->flags  &= ~((unsigned int)flags[0]);
       break;
    case 2:
-      actor->flags2 &= ~flags;
+      actor->flags2 &= ~((unsigned int)flags[1]);
       break;
    case 3:
-      actor->flags3 &= ~flags;
+      actor->flags3 &= ~((unsigned int)flags[2]);
       break;
    case 4:
-      actor->flags4 &= ~flags;
+      actor->flags4 &= ~((unsigned int)flags[3]);
       break;
    }
 }
@@ -3417,11 +3437,16 @@ void A_BetaSkullAttack(mobj_t *actor)
    P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
 }
 
-E_Keyword_t kwds_A_StartScript[] =
+static const char *kwds_A_StartScript[] =
 {
-   { "gamescript",         0  },
-   { "levelscript",        1  },
-   { NULL }
+   "gamescript", // 0
+   "levelscript" // 1
+};
+
+static argkeywd_t sscriptkwds =
+{
+   kwds_A_StartScript,
+   sizeof(kwds_A_StartScript) / sizeof(const char *)
 };
 
 //
@@ -3437,15 +3462,16 @@ void A_StartScript(mobj_t *actor)
 {
    SmallContext_t *rootContext, *useContext;
    SmallContext_t newContext;
-   int scriptnum = (int)(actor->state->args[0]);
-   int selectvm  = (int)(actor->state->args[1]);
+   int scriptnum;
+   int selectvm;
+   cell params[3];
 
-   cell params[3] =
-   {
-      (cell)(actor->state->args[2]),
-      (cell)(actor->state->args[3]),
-      (cell)(actor->state->args[4]),
-   };
+   scriptnum = E_ArgAsInt(actor->state->args, 0, 0);
+   selectvm  = E_ArgAsKwd(actor->state->args, 1, &sscriptkwds, 0);
+
+   params[0] = (cell)(E_ArgAsInt(actor->state->args, 2, 0));
+   params[1] = (cell)(E_ArgAsInt(actor->state->args, 3, 0));
+   params[2] = (cell)(E_ArgAsInt(actor->state->args, 4, 0));
 
    // determine root context to use
    switch(selectvm)
@@ -3480,11 +3506,16 @@ void A_StartScript(mobj_t *actor)
    SM_DestroyChildContext(useContext);
 }
 
-E_Keyword_t kwds_A_PlayerStartScript[] =
+static const char *kwds_A_PlayerStartScript[] =
 {
-   { "gamescript",         0  },
-   { "levelscript",        1  },
-   { NULL }
+   "gamescript",  // 0
+   "levelscript", // 1
+};
+
+static argkeywd_t psskwds =
+{
+   kwds_A_PlayerStartScript,
+   sizeof(kwds_A_PlayerStartScript) / sizeof(const char *)
 };
 
 //
@@ -3511,11 +3542,11 @@ void A_PlayerStartScript(mobj_t *mo)
 
    psp = &player->psprites[player->curpsprite];
 
-   scriptnum =  (int)(psp->state->args[0]);
-   selectvm  =  (int)(psp->state->args[1]);
-   params[0] = (cell)(psp->state->args[2]);
-   params[1] = (cell)(psp->state->args[3]);
-   params[2] = (cell)(psp->state->args[4]);
+   scriptnum = E_ArgAsInt(mo->state->args, 0, 0);
+   selectvm  = E_ArgAsKwd(mo->state->args, 1, &psskwds, 0);
+   params[0] = (cell)(E_ArgAsInt(mo->state->args, 2, 0));
+   params[1] = (cell)(E_ArgAsInt(mo->state->args, 3, 0));
+   params[2] = (cell)(E_ArgAsInt(mo->state->args, 4, 0));
 
    // determine root context to use
    switch(selectvm)
@@ -3576,8 +3607,10 @@ void A_FaceMoveDir(mobj_t *actor)
 void A_GenRefire(mobj_t *actor)
 {
    int statenum;
+   int chance;
 
-   statenum = E_SafeState(actor->state->args[0]);
+   statenum = E_ArgAsStateNum(actor->state->args, 0);
+   chance   = E_ArgAsInt(actor->state->args, 1, 0);
 
    A_FaceTarget(actor);
 
@@ -3589,7 +3622,7 @@ void A_GenRefire(mobj_t *actor)
    }
 
    // random chance of continuing to fire
-   if(P_Random(pr_genrefire) < actor->state->args[1])
+   if(P_Random(pr_genrefire) < chance)
       return;
 
    if(!actor->target || actor->target->health <= 0 ||
