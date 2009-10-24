@@ -1115,7 +1115,7 @@ boolean P_IsSecret(sector_t *sec)
 //
 boolean P_WasSecret(sector_t *sec)
 {
-   return sec->wassecret;
+   return (sec->intflags & SIF_WASSECRET) == SIF_WASSECRET;
 }
 
 //
@@ -2344,9 +2344,9 @@ void P_PlayerInSpecialSector(player_t *player)
    // much more smartly (and permanently).
    if(sector->flags & SECF_SECRET)
    {
-      player->secretcount++;         // credit the player
-      sector->wassecret = true;      // remember secretness for automap
-      sector->flags &= ~SECF_SECRET; // clear the flag
+      player->secretcount++;             // credit the player
+      sector->intflags |= SIF_WASSECRET; // remember secretness for automap
+      sector->flags &= ~SECF_SECRET;     // clear the flag
    }
 
    // Has hit ground

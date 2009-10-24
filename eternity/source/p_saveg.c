@@ -224,7 +224,7 @@ void P_ArchiveWorld(void)
        sizeof(sec->floorheight) + sizeof(sec->ceilingheight) + 
        sizeof(sec->friction) + sizeof(sec->movefactor) + 
        sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap) +
-       sizeof(sec->flags) + sizeof(sec->intflags) + sizeof(sec->wassecret) +
+       sizeof(sec->flags) + sizeof(sec->intflags) +
        sizeof(sec->damage) + sizeof(sec->damageflags) + 
        sizeof(sec->damagemask) + sizeof(sec->damagemod) +
        sizeof(sec->ceilingpic) + sizeof(sec->floorpic))
@@ -271,14 +271,12 @@ void P_ArchiveWorld(void)
       memcpy(put, &sec->bottommap, sizeof(sec->bottommap));
       put = (void *)((char *) put + sizeof(sec->bottommap));
 
-      // haleyjd 12/28/08: save sector flags, wassecret flag
+      // haleyjd 12/28/08: save sector flags
       // haleyjd 08/30/09: intflags
       memcpy(put, &sec->flags, sizeof(sec->flags));
       put = (void *)((char *) put + sizeof(sec->flags));
       memcpy(put, &sec->intflags, sizeof(sec->intflags));
       put = (void *)((char *) put + sizeof(sec->intflags));
-      memcpy(put, &sec->wassecret, sizeof(sec->wassecret));
-      put = (void *)((char *) put + sizeof(sec->wassecret));
 
       // haleyjd 03/02/09: save sector damage properties
       memcpy(put, &sec->damage, sizeof(sec->damage));
@@ -386,14 +384,12 @@ void P_UnArchiveWorld(void)
       memcpy(&sec->bottommap, get, sizeof(sec->bottommap));
       get = (void *)((char *) get + sizeof(sec->bottommap));
 
-      // haleyjd 12/28/08: retrieve sector flags, wassecret flag
+      // haleyjd 12/28/08: retrieve sector flags
       // haleyjd 08/30/09: intflags
       memcpy(&sec->flags, get, sizeof(sec->flags));
       get = (void *)((char *) get + sizeof(sec->flags));
       memcpy(&sec->intflags, get, sizeof(sec->intflags));
       get = (void *)((char *) get + sizeof(sec->intflags));
-      memcpy(&sec->wassecret, get, sizeof(sec->wassecret));
-      get = (void *)((char *) get + sizeof(sec->wassecret));
 
       // haleyjd 03/02/09: retrieve sector damage info
       memcpy(&sec->damage, get, sizeof(sec->damage));

@@ -155,7 +155,8 @@ enum
 // haleyjd 08/30/09: internal sector flags
 enum
 {
-   SIF_SKY = 0x00000001 // sector is sky
+   SIF_SKY       = 0x00000001, // sector is sky
+   SIF_WASSECRET = 0x00000002, // sector was previously secret
 };
 
 //
@@ -304,9 +305,6 @@ struct sector_s
    unsigned int flags;
    unsigned int intflags; // internal flags
    
-   // haleyjd 12/28/08: replaces oldspecial hack
-   boolean wassecret;
-
    // haleyjd 12/31/08: sector damage properties
    int damage;      // if > 0, sector is damaging
    int damagemask;  // damage is done when !(leveltime & mask)
