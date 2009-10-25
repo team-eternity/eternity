@@ -651,30 +651,47 @@ static void cheat_ammo()
 static void cheat_ammox(buf)
 char buf[1];
 {
-  int a = *buf - '1';
-  if (*buf == 'b')  // Ty 03/27/98 - strings *not* externalized
-    if ((plyr->backpack = !plyr->backpack))
-    {
-      doom_printf("Backpack Added"); // sf: reorganised for doom_printf
-      for (a=0 ; a<NUMAMMO ; a++)
-        plyr->maxammo[a] <<= 1;
-    }
-    else
-    {           // sf : same here
-      doom_printf("Backpack removed");
-      for (a=0 ; a<NUMAMMO ; a++)
-        {
-          if (plyr->ammo[a] > (plyr->maxammo[a] >>= 1))
-            plyr->ammo[a] = plyr->maxammo[a];
-        }
-    }
-  else
-    if (a>=0 && a<NUMAMMO)  // Ty 03/27/98 - *not* externalized
-      { // killough 5/5/98: switch plasma and rockets for now -- KLUDGE 
-        a = a==am_cell ? am_misl : a==am_misl ? am_cell : a;  // HACK
-        doom_printf("%s", (plyr->ammo[a] = !plyr->ammo[a]) ? 
-          plyr->ammo[a] = plyr->maxammo[a], "Ammo Added" : "Ammo Removed");
+   int a = *buf - '1';
+
+   if(*buf == 'b')
+   {
+      if((plyr->backpack = !plyr->backpack))
+      {
+         doom_printf("Backpack Added");
+         
+         for(a = 0; a < NUMAMMO; ++a)
+            plyr->maxammo[a] <<= 1;
       }
+      else
+      {
+         doom_printf("Backpack removed");
+
+         for(a = 0; a < NUMAMMO; ++a)
+         {
+            if(plyr->ammo[a] > (plyr->maxammo[a] >>= 1))
+               plyr->ammo[a] = plyr->maxammo[a];
+         }
+      }
+   }
+   else if(a >= 0 && a < NUMAMMO)
+   { 
+      // killough 5/5/98: switch plasma and rockets for now -- KLUDGE 
+      a = (a == am_cell ? am_misl : a == am_misl ? am_cell : a);  // HACK
+
+      // haleyjd 10/24/09: altered behavior:
+      // * Add ammo if ammo is not at maxammo.
+      // * Remove ammo otherwise.
+      if(plyr->ammo[a] != plyr->maxammo[a])
+      {
+         plyr->ammo[a] = plyr->maxammo[a];
+         doom_printf("Ammo Added");
+      }
+      else
+      {
+         plyr->ammo[a] = 0;
+         doom_printf("Ammo Removed");
+      }
+   }
 }
 
 static void cheat_nuke()
