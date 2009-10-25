@@ -451,7 +451,7 @@ static void I_GetEvent(void)
 #endif
          if(event.key.keysym.sym > 31 && event.key.keysym.sym < 127 &&
             unicodeinput)
-            d_event.character = event.key.keysym.unicode & 0xFF80;
+            d_event.character = event.key.keysym.unicode & 0x7f;
          else
             d_event.character = 0;
 
