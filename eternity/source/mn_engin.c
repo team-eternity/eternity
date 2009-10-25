@@ -988,7 +988,7 @@ boolean MN_Responder(event_t *ev)
    // are we inputting a new value into a variable?
    if(input_command)
    {
-      unsigned char ch = ev->data1;
+      unsigned char ch = 0;
       variable_t *var = input_command->variable;
       
       if(ev->data1 == KEYD_ESCAPE)        // cancel input
@@ -1017,14 +1017,19 @@ boolean MN_Responder(event_t *ev)
          input_buffer[strlen((char *)input_buffer)-1] = '\0';
          return true; // eatkey
       }
+      
       // probably just a normal character
       
       // only care about valid characters
       // dont allow too many characters on one command line
-      if(ch > 31 && ch < 127)
-      {
+
+      if(ev->character)
+         ch = (unsigned char)(ev->character);
+      else if(ev->data1 > 31 && ev->data1 < 127)
          ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
 
+      if(ch > 31 && ch < 127)
+      {
          if(strlen((char *)input_buffer) <=
             ((var->type == vt_string) ? (unsigned)var->max :
              (var->type == vt_int) ? 33 : 20))
@@ -1369,8 +1374,12 @@ boolean MN_Responder(event_t *ev)
    }
 
    // search for matching item in menu
+
+   if(ev->character)
+      ch = tolower((unsigned char)(ev->character));
+   else
+      ch = tolower(ev->data1);
    
-   ch = tolower(ev->data1);
    if(ch >= 'a' && ch <= 'z')
    {  
       // sf: experimented with various algorithms for this

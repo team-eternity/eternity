@@ -229,9 +229,14 @@ boolean I_SetJoystickDevice(int deviceNum)
    }
 }
 
+extern boolean unicodeinput;
+
 void I_InitKeyboard(void)
 {   
-   keyboard_installed = 1;   
+   keyboard_installed = 1;
+
+   if(unicodeinput)
+      SDL_EnableUNICODE(1);
 }
 
 void I_Init(void)

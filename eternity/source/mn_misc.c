@@ -132,9 +132,15 @@ void MN_PopupDrawer(void)
 boolean MN_PopupResponder(event_t *ev)
 {
    int *menuSounds = GameModeInfo->menuSounds;
+   char ch;
    
    if(ev->type != ev_keydown)
       return false;
+
+   if(ev->character)
+      ch = tolower(ev->character);
+   else
+      ch = ev->data1;
    
    switch(popup_message_type)
    {
@@ -150,7 +156,7 @@ boolean MN_PopupResponder(event_t *ev)
       break;
 
    case popup_question:
-      if(tolower(ev->data1) == 'y')     // yes!
+      if(ch == 'y')     // yes!
       {
          // run command and kill message
          // haleyjd 02/24/02: restore saved menuactive state
@@ -169,8 +175,7 @@ boolean MN_PopupResponder(event_t *ev)
          redrawsbar = redrawborder = true; // need redraw
          current_menuwidget = NULL;  // kill message
       }
-      if(tolower(ev->data1) == 'n' || action_menu_toggle
-         || action_menu_previous)     // no!
+      if(ch == 'n' || action_menu_toggle || action_menu_previous) // no!
       {
          // kill message
          // haleyjd 02/24/02: restore saved menuactive state

@@ -315,7 +315,7 @@ static void C_addToHistory(const char *s)
 boolean C_Responder(event_t *ev)
 {
    static int shiftdown;
-   char ch;
+   char ch = 0;
 
    // haleyjd 09/15/09: do not respond to events while the menu is up
    if(menuactive)
@@ -466,8 +466,10 @@ boolean C_Responder(event_t *ev)
 
    // none of these, probably just a normal character
    
-   // FIXME/TODO: eliminate shiftxform
-   ch = (shiftdown ? shiftxform[ev->data1] : ev->data1); // shifted?
+   if(ev->character)
+      ch = ev->character;
+   else if(ev->data1 > 31 && ev->data1 < 127)
+      ch = (shiftdown ? shiftxform[ev->data1] : ev->data1); // shifted?
 
    // only care about valid characters
    // dont allow too many characters on one command line

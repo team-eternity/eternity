@@ -316,6 +316,7 @@ void G_InitKeyBindings(void)
    keybindings[KEYD_SCROLLLOCK].name  = "scrolllock";
    keybindings[KEYD_SPACEBAR].name    = "space";
    keybindings[KEYD_NUMLOCK].name     = "numlock";
+   keybindings[KEYD_DEL].name         = "delete";
    
    keybindings[KEYD_MOUSE1].name      = "mouse1";
    keybindings[KEYD_MOUSE2].name      = "mouse2";
@@ -331,6 +332,24 @@ void G_InitKeyBindings(void)
    keybindings[KEYD_JOY6].name        = "joy6";
    keybindings[KEYD_JOY7].name        = "joy7";
    keybindings[KEYD_JOY8].name        = "joy8";
+
+   keybindings[KEYD_KP0].name         = "kp_0";
+   keybindings[KEYD_KP1].name         = "kp_1";
+   keybindings[KEYD_KP2].name         = "kp_2";
+   keybindings[KEYD_KP3].name         = "kp_3";
+   keybindings[KEYD_KP4].name         = "kp_4";
+   keybindings[KEYD_KP5].name         = "kp_5";
+   keybindings[KEYD_KP6].name         = "kp_6";
+   keybindings[KEYD_KP7].name         = "kp_7";
+   keybindings[KEYD_KP8].name         = "kp_8";
+   keybindings[KEYD_KP9].name         = "kp_9";
+   keybindings[KEYD_KPPERIOD].name    = "kp_period";
+   keybindings[KEYD_KPDIVIDE].name    = "kp_slash";
+   keybindings[KEYD_KPMULTIPLY].name  = "kp_star";
+   keybindings[KEYD_KPMINUS].name     = "kp_minus";
+   keybindings[KEYD_KPPLUS].name      = "kp_plus";
+   keybindings[KEYD_KPENTER].name     = "kp_enter";
+   keybindings[KEYD_KPEQUALS].name    = "kp_equals";
    
    keybindings[','].name = "<";
    keybindings['.'].name = ">";
@@ -572,6 +591,10 @@ boolean G_KeyResponder(event_t *ev, int bclass)
 {
    static boolean ctrldown;
    boolean ret = false;
+
+   // do not index out of bounds
+   if(ev->data1 >= NUM_KEYS)
+      return ret;
    
    if(ev->data1 == KEYD_RCTRL)      // ctrl
       ctrldown = (ev->type == ev_keydown);
@@ -698,6 +721,10 @@ boolean G_BindResponder(event_t *ev)
    keyaction_t *action;
    
    if(ev->type != ev_keydown)
+      return false;
+
+   // do not index out of bounds
+   if(ev->data1 >= NUM_KEYS)
       return false;
    
    // got a key - close box

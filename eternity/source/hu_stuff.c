@@ -1419,7 +1419,7 @@ static void HU_InitChat(void)
 //
 static boolean HU_ChatRespond(event_t *ev)
 {
-   char ch;
+   char ch = 0;
    static boolean shiftdown;
 
    // haleyjd 06/11/08: get HUD actions
@@ -1475,7 +1475,10 @@ static boolean HU_ChatRespond(event_t *ev)
       return true;
    }
 
-   ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+   if(ev->character)
+      ch = ev->character;
+   else if(ev->data1 > 31 && ev->data1 < 127)
+      ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
    
    if(ch > 31 && ch < 127)
    {
@@ -1632,7 +1635,7 @@ const char english_shiftxform[] =
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
   'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
   '[', // shift-[
-  '!', // shift-backslash - OH MY GOD DOES WATCOM SUCK
+  '|', // shift-backslash - OH MY GOD DOES WATCOM SUCK
   ']', // shift-]
   '"', '_',
   '\'', // shift-`

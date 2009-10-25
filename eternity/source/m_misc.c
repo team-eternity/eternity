@@ -112,6 +112,7 @@ extern int  showendoom;
 extern int  endoomdelay;
 extern char *i_videomode;
 extern char *i_default_videomode;
+extern boolean unicodeinput;
 #endif
 
 #ifdef HAVE_SPCLIB
@@ -503,6 +504,10 @@ default_t defaults[] =
    // a compromise.
 
    // TODO/FIXME: make ALL keys dynamically rebindable
+#ifdef _SDL_VER
+   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, wad_no,
+                "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
+#endif
 
    DEFAULT_INT("key_spy", &key_spy, NULL, KEYD_F12, 0, 255, wad_no,
                "key to view from another player's vantage"),
@@ -868,7 +873,7 @@ default_t defaults[] =
    
    DEFAULT_INT("showendoom",&showendoom, NULL, 1, 0, 1, wad_yes,
                "1 to show ENDOOM at exit"),
-		
+
    DEFAULT_INT("endoomdelay",&endoomdelay, NULL, 350, 35, 3500, wad_no,
                "Amount of time to display ENDOOM when shown"),
    

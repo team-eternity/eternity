@@ -496,7 +496,12 @@ static boolean MN_FileResponder(event_t *ev)
    }
 
    // search for matching item in file list
-   ch = tolower(ev->data1);
+
+   if(ev->character)
+      ch = tolower((unsigned char)(ev->character));
+   else
+      ch = tolower(ev->data1);
+
    if(ch >= 'a' && ch <= 'z')
    {  
       int n = selected_item;

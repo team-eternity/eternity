@@ -43,6 +43,9 @@ boolean screenvisible;
 boolean window_focused;
 boolean fullscreen;
 
+// haleyjd 10/25/09
+boolean unicodeinput;
+
 void    I_InitKeyboard();      // i_system.c
 
 boolean MouseShouldBeGrabbed(void);
@@ -140,70 +143,69 @@ void UpdateFocus(void)
 static int I_TranslateKey(int sym)
 {
    int rc = 0;
-   switch (sym) 
+
+   switch(sym) 
    {  
-   case SDLK_LEFT:     rc = KEYD_LEFTARROW;  break;
-   case SDLK_RIGHT:    rc = KEYD_RIGHTARROW; break;
-   case SDLK_DOWN:     rc = KEYD_DOWNARROW;  break;
-   case SDLK_UP:       rc = KEYD_UPARROW;    break;
-   case SDLK_ESCAPE:   rc = KEYD_ESCAPE;     break;
-   case SDLK_RETURN:   rc = KEYD_ENTER;      break;
-   case SDLK_TAB:      rc = KEYD_TAB;        break;
-   case SDLK_F1:       rc = KEYD_F1;         break;
-   case SDLK_F2:       rc = KEYD_F2;         break;
-   case SDLK_F3:       rc = KEYD_F3;         break;
-   case SDLK_F4:       rc = KEYD_F4;         break;
-   case SDLK_F5:       rc = KEYD_F5;         break;
-   case SDLK_F6:       rc = KEYD_F6;         break;
-   case SDLK_F7:       rc = KEYD_F7;         break;
-   case SDLK_F8:       rc = KEYD_F8;         break;
-   case SDLK_F9:       rc = KEYD_F9;         break;
-   case SDLK_F10:      rc = KEYD_F10;        break;
-   case SDLK_F11:      rc = KEYD_F11;        break;
-   case SDLK_F12:      rc = KEYD_F12;        break;
-   case SDLK_BACKSPACE:
-   // FIXME/TODO: delete
-   case SDLK_DELETE:   rc = KEYD_BACKSPACE;  break;
-   case SDLK_PAUSE:    rc = KEYD_PAUSE;      break;
-   case SDLK_EQUALS:   rc = KEYD_EQUALS;     break;
-   case SDLK_MINUS:    rc = KEYD_MINUS;      break;
+   case SDLK_LEFT:        rc = KEYD_LEFTARROW;  break;
+   case SDLK_RIGHT:       rc = KEYD_RIGHTARROW; break;
+   case SDLK_DOWN:        rc = KEYD_DOWNARROW;  break;
+   case SDLK_UP:          rc = KEYD_UPARROW;    break;
+   case SDLK_ESCAPE:      rc = KEYD_ESCAPE;     break;
+   case SDLK_RETURN:      rc = KEYD_ENTER;      break;
+   case SDLK_TAB:         rc = KEYD_TAB;        break;
+   case SDLK_F1:          rc = KEYD_F1;         break;
+   case SDLK_F2:          rc = KEYD_F2;         break;
+   case SDLK_F3:          rc = KEYD_F3;         break;
+   case SDLK_F4:          rc = KEYD_F4;         break;
+   case SDLK_F5:          rc = KEYD_F5;         break;
+   case SDLK_F6:          rc = KEYD_F6;         break;
+   case SDLK_F7:          rc = KEYD_F7;         break;
+   case SDLK_F8:          rc = KEYD_F8;         break;
+   case SDLK_F9:          rc = KEYD_F9;         break;
+   case SDLK_F10:         rc = KEYD_F10;        break;
+   case SDLK_F11:         rc = KEYD_F11;        break;
+   case SDLK_F12:         rc = KEYD_F12;        break;
+   case SDLK_BACKSPACE:   rc = KEYD_BACKSPACE;  break;
+   case SDLK_PAUSE:       rc = KEYD_PAUSE;      break;
+   case SDLK_EQUALS:      rc = KEYD_EQUALS;     break;
+   case SDLK_MINUS:       rc = KEYD_MINUS;      break;
       
-   // FIXME/TODO: numeric keypad
-   //  case SDLK_KP0:      rc = KEYD_KEYPAD0;	break;
-   //  case SDLK_KP1:      rc = KEYD_KEYPAD1;	break;
-   //  case SDLK_KP2:      rc = KEYD_KEYPAD2;	break;
-   //  case SDLK_KP3:      rc = KEYD_KEYPAD3;	break;
-   //  case SDLK_KP4:      rc = KEYD_KEYPAD4;	break;
-   //  case SDLK_KP5:      rc = KEYD_KEYPAD0;	break;
-   //  case SDLK_KP6:      rc = KEYD_KEYPAD6;	break;
-   //  case SDLK_KP7:      rc = KEYD_KEYPAD7;	break;
-   //  case SDLK_KP8:      rc = KEYD_KEYPAD8;	break;
-   //  case SDLK_KP9:      rc = KEYD_KEYPAD9;	break;
-   //  case SDLK_KP_PLUS:  rc = KEYD_KEYPADPLUS;	break;
-   //  case SDLK_KP_MINUS: rc = KEYD_KEYPADMINUS;	break;
-   //  case SDLK_KP_DIVIDE:	rc = KEYD_KEYPADDIVIDE;	break;
-   //  case SDLK_KP_MULTIPLY: rc = KEYD_KEYPADMULTIPLY; break;
-   //  case SDLK_KP_ENTER:	rc = KEYD_KEYPADENTER;	break;
-   //  case SDLK_KP_PERIOD:	rc = KEYD_KEYPADPERIOD;	break;
+   case SDLK_KP0:         rc = KEYD_KP0;        break;
+   case SDLK_KP1:         rc = KEYD_KP1;        break;
+   case SDLK_KP2:         rc = KEYD_KP2;        break;
+   case SDLK_KP3:         rc = KEYD_KP3;        break;
+   case SDLK_KP4:         rc = KEYD_KP4;        break;
+   case SDLK_KP5:         rc = KEYD_KP5;        break;
+   case SDLK_KP6:         rc = KEYD_KP6;        break;
+   case SDLK_KP7:         rc = KEYD_KP7;        break;
+   case SDLK_KP8:         rc = KEYD_KP8;        break;
+   case SDLK_KP9:         rc = KEYD_KP9;        break;
+   case SDLK_KP_PERIOD:   rc = KEYD_KPPERIOD;   break;
+   case SDLK_KP_DIVIDE:   rc = KEYD_KPDIVIDE;   break;
+   case SDLK_KP_MULTIPLY: rc = KEYD_KPMULTIPLY; break;
+   case SDLK_KP_MINUS:    rc = KEYD_KPMINUS;    break;
+   case SDLK_KP_PLUS:     rc = KEYD_KPPLUS;     break;
+   case SDLK_KP_ENTER:    rc = KEYD_KPENTER;    break;
+   case SDLK_KP_EQUALS:   rc = KEYD_KPEQUALS;   break;
       
-   case SDLK_NUMLOCK:    rc = KEYD_NUMLOCK;  break;
-   case SDLK_SCROLLOCK:  rc = KEYD_SCROLLLOCK; break;
-   case SDLK_CAPSLOCK:   rc = KEYD_CAPSLOCK; break;
+   case SDLK_NUMLOCK:     rc = KEYD_NUMLOCK;    break;
+   case SDLK_SCROLLOCK:   rc = KEYD_SCROLLLOCK; break;
+   case SDLK_CAPSLOCK:    rc = KEYD_CAPSLOCK;   break;
    case SDLK_LSHIFT:
-   case SDLK_RSHIFT:     rc = KEYD_RSHIFT;   break;
+   case SDLK_RSHIFT:      rc = KEYD_RSHIFT;     break;
    case SDLK_LCTRL:
-   case SDLK_RCTRL:      rc = KEYD_RCTRL;    break;
+   case SDLK_RCTRL:       rc = KEYD_RCTRL;      break;
       
    case SDLK_LALT:
    case SDLK_RALT:
    case SDLK_LMETA:
-   case SDLK_RMETA:      rc = KEYD_RALT;     break;
-   case SDLK_PAGEUP:     rc = KEYD_PAGEUP;   break;
-   case SDLK_PAGEDOWN:   rc = KEYD_PAGEDOWN; break;
-   case SDLK_HOME:       rc = KEYD_HOME;     break;
-   case SDLK_END:        rc = KEYD_END;      break;
-   case SDLK_INSERT:     rc = KEYD_INSERT;   break;
-   // FIXME/TODO: delete
+   case SDLK_RMETA:       rc = KEYD_RALT;       break;
+   case SDLK_PAGEUP:      rc = KEYD_PAGEUP;     break;
+   case SDLK_PAGEDOWN:    rc = KEYD_PAGEDOWN;   break;
+   case SDLK_HOME:        rc = KEYD_HOME;       break;
+   case SDLK_END:         rc = KEYD_END;        break;
+   case SDLK_INSERT:      rc = KEYD_INSERT;     break;
+   case SDLK_DELETE:      rc = KEYD_DEL;        break;
    default:
       rc = sym;
       break;
@@ -447,10 +449,13 @@ static void I_GetEvent(void)
          if(d_event.data1 == KEYD_CAPSLOCK)
             capslocktic = gametic;
 #endif
-         // haleyjd 08/29/03: don't post out-of-range keys
-         // FIXME/TODO: eliminate shiftxform, etc.
-         if(d_event.data1 > 0 && d_event.data1 < 256)
-            D_PostEvent(&d_event);
+         if(event.key.keysym.sym > 31 && event.key.keysym.sym < 127 &&
+            unicodeinput)
+            d_event.character = event.key.keysym.unicode & 0xFF80;
+         else
+            d_event.character = 0;
+
+         D_PostEvent(&d_event);
          break;
       
       case SDL_KEYUP:
@@ -463,10 +468,7 @@ static void I_GetEvent(void)
             capslocktic = gametic;
          }
 #endif
-         // haleyjd 08/29/03: don't post out-of-range keys
-         // FIXME/TODO: eliminate shiftxform, etc.
-         if(d_event.data1 > 0 && d_event.data1 < 256)
-            D_PostEvent(&d_event);
+         D_PostEvent(&d_event);
          break;
       
       case SDL_MOUSEMOTION:       
