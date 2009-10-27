@@ -339,7 +339,8 @@ enum
 // This is now the primary way in which Eternity stores its video mode setting.
 //
 static void I_ParseGeom(const char *geom, 
-                        int *w, int *h, boolean *fs, boolean *vs, boolean *hw)
+                        int *w, int *h, boolean *fs, boolean *vs, boolean *hw,
+                        boolean *wf)
 {
    const char *c = geom;
    int state = STATE_WIDTH;
@@ -412,6 +413,9 @@ static void I_ParseGeom(const char *geom,
          case 'h': // hardware 
             *hw = true;
             break;
+         case 'n': // noframe
+            *wf = false;
+            break;
          default:
             break;
          }
@@ -454,7 +458,7 @@ static void I_ParseGeom(const char *geom,
 // instead.
 //
 static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs, 
-                             boolean *hw)
+                             boolean *hw, boolean *wf)
 {
    static boolean firsttime = true;
    int p;
@@ -464,7 +468,7 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
       firsttime = false;
 
       if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw);
+         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
@@ -488,6 +492,11 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
          *hw = true;
       if(M_CheckParm("-software"))
          *hw = false;
+
+      if(M_CheckParm("-frame"))
+         *wf = true;
+      if(M_CheckParm("-noframe"))
+         *wf = false;
    }
 }
 
@@ -502,6 +511,7 @@ static boolean I_InitGraphicsMode(void)
    boolean  wantfullscreen = false;
    boolean  wantvsync      = false;
    boolean  wanthardware   = false;
+   boolean  wantframe      = true;
    int      v_w            = 640;
    int      v_h            = 480;
    int      v_bd           = 8;
@@ -533,11 +543,13 @@ static boolean I_InitGraphicsMode(void)
       wantvsync = true;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware);
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
+               &wanthardware, &wantframe);
    
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware);
+   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
+                    &wantframe);
 
    if(wanthardware)
       flags = SDL_HWSURFACE;
@@ -547,6 +559,10 @@ static boolean I_InitGraphicsMode(void)
 
    if(wantfullscreen)
       flags |= SDL_FULLSCREEN;
+
+   // haleyjd 10/27/09
+   if(!wantframe)
+      flags |= SDL_NOFRAME;
      
    if(!SDL_VideoModeOK(v_w, v_h, v_bd, flags) ||
       !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
