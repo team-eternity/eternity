@@ -1644,11 +1644,56 @@ static void R_AddLine(seg_t *line)
          R_2S_Normal(pstep, i1, i2, textop, texbottom);
    }
 
+
+
+   // SoM: This really needs to be handled here. The float values need to be 
+   // clipped to sane values here because floats have a higher range of values
+   // than ints do. If the clipping is done after the casting, the step values
+   // will no longer be accurate. This ensures more correct projection and 
+   // texturing.
+   if(x1 < 0)
+   {
+      float clipx = -x1;
+
+      seg.dist += clipx * seg.diststep;
+      seg.len += clipx * seg.lenstep;
+
+      seg.top += clipx * seg.topstep;
+      seg.bottom += clipx * seg.bottomstep;
+
+      if(seg.toptex)
+         seg.high += clipx * seg.highstep;
+      if(seg.bottomtex)
+         seg.low += clipx * seg.lowstep;
+
+      x1 = floorx1 = 0;
+   }
+
+   if(x2 >= view.width)
+   {
+      float clipx = x2 - (view.width - 1.0f);
+
+      seg.dist2 -= clipx * seg.diststep;
+      seg.len2 -= clipx * seg.lenstep;
+
+      seg.top2 -= clipx * seg.topstep;
+      seg.bottom2 -= clipx * seg.bottomstep;
+
+      if(seg.toptex)
+         seg.high2 -= clipx * seg.highstep;
+      if(seg.bottomtex)
+         seg.low2 -= clipx * seg.lowstep;
+
+      x2 = floorx2 = (view.width - 1.0f);
+   }
+
    seg.x1 = (int)floorx1;
    seg.x1frac = x1;
    seg.x2 = (int)floorx2;
    seg.x2frac = x2;
 
+
+#if 0 // SoM: See above comments
    // [Kate] Since some really wacky math in part of Visual Studio 2008 can
    // result in these values being "corrupted" (read: terribly out of range for
    // an integer), we need to bump them a digit so they're never INT_MIN or
@@ -1664,6 +1709,7 @@ static void R_AddLine(seg_t *line)
       seg.x1 = INT_MIN + 1;
    if(seg.x2 == INT_MAX)
       seg.x2 = INT_MAX - 1;
+#endif
 
    if(portalrender.active && portalrender.segClipFunc)
       portalrender.segClipFunc();
