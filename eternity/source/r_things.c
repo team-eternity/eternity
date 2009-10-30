@@ -942,8 +942,8 @@ void R_DrawPSprite(pspdef_t *psp)
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
                       (psp->sy - spritetopoffset[lump]);
 
-   vis->x1 = (int)(x1 < 0.0f ? 0.0f : x1);
-   vis->x2 = (int)(x2 >= view.width ? view.width - 1 : x2);
+   vis->x1 = x1 < 0.0f ? 0 : (int)x1;
+   vis->x2 = x2 >= view.width ? viewwidth - 1 : (int)x2;
    vis->ystep = view.pspriteystep; // ANYRES
    vis->colour = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT; // haleyjd: default zdoom trans.

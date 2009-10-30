@@ -198,10 +198,17 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 //
 static void R_RenderSegLoop(void)
 {
-   int t, b, h, l, line;
+   int t, b, line;
    int cliptop, clipbot;
    int i, texx;
    float basescale;
+
+#ifdef RANGECHECK
+   if(segclip.x1 < 0 || segclip.x2 >= viewwidth || segclip.x1 > segclip.x2)
+   {
+      I_Error("Invalid seg x values! x1=%i, x2=%i, linenum=%i\n", segclip.x1, segclip.x2, segclip.line->linedef - lines);
+   }
+#endif
 
    // haleyjd 06/30/07: cardboard invuln fix.
    // haleyjd 10/21/08: moved up loop-invariant calculation
@@ -338,10 +345,8 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.toptex)
             {
-               h = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
-
                column.y1 = t;
-               column.y2 = h;
+               column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
 
                if(column.y2 >= column.y1)
                {
@@ -352,7 +357,7 @@ static void R_RenderSegLoop(void)
 
                   colfunc();
 
-                  ceilingclip[i] = (float)(h + 1);
+                  ceilingclip[i] = (float)(column.y2 + 1);
                }
                else
                   ceilingclip[i] = (float)t;
@@ -365,9 +370,7 @@ static void R_RenderSegLoop(void)
 
             if(segclip.bottomtex)
             {
-               l = (int)(segclip.low < ceilingclip[i] ? ceilingclip[i] : segclip.low);
-
-               column.y1 = l;
+               column.y1 = (int)(segclip.low < ceilingclip[i] ? ceilingclip[i] : segclip.low);
                column.y2 = b;
 
                if(column.y2 >= column.y1)
@@ -379,7 +382,7 @@ static void R_RenderSegLoop(void)
 
                   colfunc();
 
-                  floorclip[i] = (float)(l - 1);
+                  floorclip[i] = (float)(column.y1 - 1);
                }
                else
                   floorclip[i] = (float)b;
@@ -432,9 +435,6 @@ static void R_CheckDSAlloc()
       maxdrawsegs = newmax;
    }
 }
-
-
-
 
 // Simply sets ds_p's properties to that of a closed drawseg.
 static void R_CloseDSP()
