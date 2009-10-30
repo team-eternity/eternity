@@ -231,6 +231,10 @@ static void R_RenderSegLoop(void)
          if(line > clipbot)
             line = clipbot;
          
+         // haleyjd 10/29 DEBUG
+         printf("R_WindowAdd call 1: segclip.c_window = %p, x = %i,"
+                "ytop = %d, ybottom = %d\n", segclip.c_window, i, 
+                cliptop, line);
          if(line >= cliptop)
             R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
 
@@ -260,6 +264,10 @@ static void R_RenderSegLoop(void)
          if(line < cliptop)
             line = cliptop;
 
+         // haleyjd 10/29 DEBUG
+         printf("R_WindowAdd call 2: segclip.f_window = %p, x = %i,"
+                "ytop = %d, ybottom = %d\n", segclip.f_window, i, 
+                line, clipbot);
          if(line <= clipbot)
             R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
 
@@ -313,6 +321,10 @@ static void R_RenderSegLoop(void)
 
          if(segclip.twosided == false && segclip.l_window)
          {
+            // haleyjd 10/29 DEBUG
+            printf("R_WindowAdd call 3: segclip.l_window = %p, x = %i,"
+                   "ytop = %d, ybottom = %d\n", segclip.l_window, i, 
+                   t, b);
             R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
             ceilingclip[i] = view.height - 1.0f;
             floorclip[i] = 0.0f;
@@ -390,6 +402,10 @@ static void R_RenderSegLoop(void)
 
             if(segclip.l_window)
             {
+               // haleyjd 10/29 DEBUG
+               printf("R_WindowAdd call 4: segclip.l_window = %p, x = %i,"
+                      "ytop = %d, ybottom = %d\n", segclip.f_window, i, 
+                line, clipbot);
                R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -398,6 +414,10 @@ static void R_RenderSegLoop(void)
       }
       else if(segclip.l_window)
       {
+         // haleyjd 10/29 DEBUG
+         printf("R_WindowAdd call 5: segclip.f_window = %p, x = %i,"
+                "ytop = %d, ybottom = %d\n", segclip.f_window, i, 
+                line, clipbot);
          R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
