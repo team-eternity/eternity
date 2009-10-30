@@ -319,10 +319,10 @@ static void R_ClipPassWallSegment(int x1, int x2)
 //
 void R_ClearClipSegs(void)
 {
-   solidsegs[0].first = D_MININT;
+   solidsegs[0].first = D_MININT + 1;
    solidsegs[0].last = -1;
    solidsegs[1].first = viewwidth;
-   solidsegs[1].last = D_MAXINT;
+   solidsegs[1].last = D_MAXINT - 1;
    newend = solidsegs+2;
    addend = addedsegs;
 

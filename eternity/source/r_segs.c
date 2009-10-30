@@ -222,8 +222,6 @@ static void R_RenderSegLoop(void)
          column.colormap = walllights[MAXLIGHTSCALE-1];
    }
 
-   printf("x1 = %d, x2 = %d\n", segclip.x1, segclip.x2);
-
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       cliptop = (int)ceilingclip[i];
