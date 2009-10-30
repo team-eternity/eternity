@@ -206,7 +206,8 @@ static void R_RenderSegLoop(void)
 #ifdef RANGECHECK
    if(segclip.x1 < 0 || segclip.x2 >= viewwidth || segclip.x1 > segclip.x2)
    {
-      I_Error("Invalid seg x values! x1=%i, x2=%i, linenum=%i\n", segclip.x1, segclip.x2, segclip.line->linedef - lines);
+      I_Error("Invalid seg x values! x1 = %d, x2 = %d, linenum = %d\n", 
+              segclip.x1, segclip.x2, segclip.line->linedef - lines);
    }
 #endif
 
