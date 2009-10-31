@@ -1644,8 +1644,6 @@ static void R_AddLine(seg_t *line)
          R_2S_Normal(pstep, i1, i2, textop, texbottom);
    }
 
-
-
    // SoM: This really needs to be handled here. The float values need to be 
    // clipped to sane values here because floats have a higher range of values
    // than ints do. If the clipping is done after the casting, the step values
@@ -1691,25 +1689,6 @@ static void R_AddLine(seg_t *line)
    seg.x1frac = x1;
    seg.x2 = (int)floorx2;
    seg.x2frac = x2;
-
-
-#if 0 // SoM: See above comments
-   // [Kate] Since some really wacky math in part of Visual Studio 2008 can
-   // result in these values being "corrupted" (read: terribly out of range for
-   // an integer), we need to bump them a digit so they're never INT_MIN or
-   // INT_MAX exactly, since R_RenderSegLoop (which is invoked by
-   // R_ClipSolidWallSegment) may accidentally wrap them in it's main loop,
-   // causing it to loop an insane number of times and eventually throw an
-   // Access Violation in R_WindowAdd, which tries to read garbage data. Oops.
-   //
-   // haleyjd 10/30/09: addendum - yes, casting out-of-range floats to ints is 
-   //                   undefined :)
-
-   if(seg.x1 == INT_MIN)
-      seg.x1 = INT_MIN + 1;
-   if(seg.x2 == INT_MAX)
-      seg.x2 = INT_MAX - 1;
-#endif
 
    if(portalrender.active && portalrender.segClipFunc)
       portalrender.segClipFunc();
