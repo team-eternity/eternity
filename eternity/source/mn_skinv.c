@@ -280,6 +280,7 @@ static void MN_SkinDrawer(void)
    int lump;
    boolean flip;
    patch_t *patch;
+   int pctype;
 
    // draw the normal menu background
    V_DrawBackground(mn_background_flat, &vbscreen);
@@ -287,10 +288,21 @@ static void MN_SkinDrawer(void)
    // draw instructions and title
    MN_SkinInstructions();
 
-   // get the player skin sprite definition
-   sprdef = &sprites[players[consoleplayer].skin->sprite];
-   if(!(sprdef->spriteframes))
-      return;
+   pctype = players[consoleplayer].pclass->type;
+
+   if(skview_state->sprite == mobjinfo[pctype].defsprite)
+   {
+      // get the player skin sprite definition
+      sprdef = &sprites[players[consoleplayer].skin->sprite];
+      if(!(sprdef->spriteframes))
+         return;
+   }
+   else
+   {
+      sprdef = &sprites[skview_state->sprite];
+      if(!(sprdef->spriteframes))
+         return;
+   }
 
    // get the current frame, using the skin state and rotation vars
    sprframe = &sprdef->spriteframes[skview_state->frame&FF_FRAMEMASK];

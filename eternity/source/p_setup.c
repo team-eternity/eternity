@@ -188,7 +188,7 @@ void P_LoadVertexes(int lump)
    numvertexes = W_LumpLength(lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
-   vertexes = Z_Malloc(numvertexes * sizeof(vertex_t), PU_LEVEL, 0);
+   vertexes = Z_Calloc(numvertexes, sizeof(vertex_t), PU_LEVEL, 0);
    
    // Load data into cache.
    data = W_CacheLumpNum(lump, PU_STATIC);
@@ -234,7 +234,7 @@ void P_LoadSegs(int lump)
       li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "vertex", "vertex")];
       li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "vertex", "vertex")];
 
-      li->angle  = (SHORT(ml->angle))  << 16;
+      //li->angle  = (SHORT(ml->angle))  << 16;
       li->offset = (SHORT(ml->offset)) << 16;
 
       // haleyjd 06/19/06: convert indices to unsigned

@@ -236,7 +236,6 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->polyobj     = proto->polyobj;
    ret->seg.linedef = proto->seg.linedef;
    ret->seg.sidedef = proto->seg.sidedef;
-   ret->seg.angle   = proto->seg.angle;
 
    // vertices
    ret->seg.v1      = v1;
@@ -430,16 +429,6 @@ void R_AttachPolyObject(polyobj_t *poly)
 
       *(idseg->seg.v1) = *(line->v1);
       *(idseg->seg.v2) = *(line->v2);
-
-      idseg->seg.v1->dynafree = false;
-      idseg->seg.v1->dynanext = NULL;
-      idseg->seg.v2->dynafree = false;
-      idseg->seg.v2->dynanext = NULL;
-
-      // Thank god we only do this once. All child segs will have the
-      // same angle and so they copy it from this one.
-      idseg->seg.angle = R_PointToAngle2(idseg->seg.v1->x, idseg->seg.v1->y,
-                                         idseg->seg.v2->x, idseg->seg.v2->y);
 
       // Split seg into BSP tree to generate more dynasegs;
       // The dynasegs are stored in the subsectors in which they finally end up.
