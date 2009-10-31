@@ -233,14 +233,14 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    dynaseg_t *ret = R_GetFreeDynaSeg();
 
    // properties inherited from prototype seg
-   ret->polyobj         = proto->polyobj;
-   ret->seg.linedef     = proto->seg.linedef;
-   ret->seg.sidedef     = proto->seg.sidedef;
-   ret->seg.angle       = proto->seg.angle;
+   ret->polyobj     = proto->polyobj;
+   ret->seg.linedef = proto->seg.linedef;
+   ret->seg.sidedef = proto->seg.sidedef;
+   ret->seg.angle   = proto->seg.angle;
 
    // vertices
-   ret->seg.v1          = v1;
-   ret->seg.v2          = v2;
+   ret->seg.v1      = v1;
+   ret->seg.v2      = v2;
 
    // calculate texture offset
    R_DynaSegOffset(&ret->seg, proto->seg.linedef);
@@ -384,7 +384,13 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       P_CalcSegLength(&dseg->seg);
 
       // 07/15/09: rendering consistency - set frontsector/backsector here
-      dseg->seg.frontsector = dseg->seg.backsector = subsectors[num].sector;
+      dseg->seg.frontsector = subsectors[num].sector;
+
+      // 10/30/09: only set backsector if line is 2S (it really shouldn't be...)
+      if(dseg->seg.linedef->backsector)
+         dseg->seg.backsector = subsectors[num].sector;
+      else
+         dseg->seg.backsector = NULL;
 
       // add the subsector if it hasn't been added already
       R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
@@ -415,12 +421,12 @@ void R_AttachPolyObject(polyobj_t *poly)
       // create initial dseg representing the entire linedef
       dynaseg_t *idseg = R_GetFreeDynaSeg();
 
-      idseg->polyobj         = poly;
-      idseg->seg.linedef     = line;
-      idseg->seg.offset      = 0;
-      idseg->seg.sidedef     = &sides[line->sidenum[0]];
-      idseg->seg.v1          = R_GetFreeDynaVertex();
-      idseg->seg.v2          = R_GetFreeDynaVertex();
+      idseg->polyobj     = poly;
+      idseg->seg.linedef = line;
+      idseg->seg.offset  = 0;
+      idseg->seg.sidedef = &sides[line->sidenum[0]];
+      idseg->seg.v1      = R_GetFreeDynaVertex();
+      idseg->seg.v2      = R_GetFreeDynaVertex();
 
       *(idseg->seg.v1) = *(line->v1);
       *(idseg->seg.v2) = *(line->v2);

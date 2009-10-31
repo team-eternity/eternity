@@ -1851,6 +1851,17 @@ static void R_SortPolyObjects(rpolyobj_t *rpo)
    qsort(po_ptrs, numpolys, sizeof(rpolyobj_t *), R_PolyobjCompare);
 }
 
+//
+// R_AddDynaSegs
+//
+// haleyjd: Adds dynamic segs contained in all of the rpolyobj_t fragments
+// contained inside the given subsector, after z-sorting the polyobject
+// fragments if necessary. This is the ultimate heart of the polyobject
+// code.
+//
+// See r_dynseg.c to see how dynasegs get attached to a subsector in the
+// first place :)
+//
 static void R_AddDynaSegs(subsector_t *sub)
 {
    rpolyobj_t *rpo = (rpolyobj_t *)(sub->polyList->link.next);
@@ -1868,7 +1879,7 @@ static void R_AddDynaSegs(subsector_t *sub)
    // allocate twice the number needed to minimize allocations
    if(num_po_ptrs < numpolys*2)
    {
-      // use free instead realloc since faster (thanks Lee ^_^)
+      // use free instead of realloc since faster (thanks Lee ^_^)
       free(po_ptrs);
       po_ptrs = malloc((num_po_ptrs = numpolys*2) * sizeof(*po_ptrs));
    }
