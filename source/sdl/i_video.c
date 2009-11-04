@@ -583,7 +583,8 @@ static boolean I_InitGraphicsMode(void)
    }
 
    // haleyjd 10/14/09: wait for a bit so the screen can settle
-   I_Sleep(2000);
+   if(flags & SDL_FULLSCREEN)
+      I_Sleep(2000);
 
    R_ResetFOV(v_w, v_h);
 

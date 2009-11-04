@@ -87,7 +87,7 @@ static const char *mnitem_types[] =
    "gap",
    "runcmd",
    "variable",
-   "variable_nd",
+   "varnodefault",
    "toggle",
    "title",
    "info",

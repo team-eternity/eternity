@@ -48,7 +48,7 @@ typedef enum
    EVALTYPE_BEXPTR,    // evaluated to a bexptr
    EVALTYPE_EDFSTRING, // evaluated to an edf string
    EVALTYPE_KEYWORD,   // evaluated to a keyword enumeration value
-   EVALTYPE_NUMTYYPES
+   EVALTYPE_NUMTYPES
 } evaltype_e;
 
 typedef struct evalcache_s
