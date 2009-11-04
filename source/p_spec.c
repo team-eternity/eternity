@@ -2817,6 +2817,38 @@ void P_SpawnSpecials(int mapformat)
    Polyobj_InitLevel();
 }
 
+
+
+
+// 
+// P_SpawnDeferredSpecials
+//
+// SoM: Specials that copy slopes, ect., need to be collected in a separate 
+// pass
+void P_SpawnDeferredSpecials(int mapformat)
+{
+   int      i;
+   line_t   *line;
+
+   for(i = 0; i < numlines; i++)
+   {
+      line = lines + i;
+
+      switch(line->special)
+      {
+         // SoM: Copy slopes
+         case 394:
+         case 395:
+         case 396:
+            P_CopySectorSlope(line);
+            break;
+      }
+   }
+}
+
+
+
+
 // killough 2/28/98:
 //
 // This function, with the help of r_plane.c and r_bsp.c, supports generalized

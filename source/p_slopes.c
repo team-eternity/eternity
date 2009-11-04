@@ -167,7 +167,7 @@ float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
 void P_SpawnSlope_Line(int linenum)
 {
    line_t *line = lines + linenum;
-   int i, special = line->special;
+   int special = line->special;
    pslope_t *fslope = NULL, *cslope = NULL;
    v3float_t origin, point;
    v2float_t direction;
@@ -177,6 +177,9 @@ void P_SpawnSlope_Line(int linenum)
    boolean backfloor  = (special == 389 || special == 391 || special == 392);
    boolean frontceil  = (special == 387 || special == 388 || special == 392);
    boolean backceil   = (special == 390 || special == 391 || special == 393);
+
+   // SoM: We don't need the line to retain its special type
+   line->special = 0;
 
    if(!frontfloor && !backfloor && !frontceil && !backceil)
    {
@@ -270,21 +273,34 @@ void P_SpawnSlope_Line(int linenum)
 
    if(!line->tag)
       return;
+}
+
+
+
+//
+// P_CopySectorSlope
+//
+// Searches through tagged sectors and copies
+//
+void P_CopySectorSlope(line_t *line)
+{
+   sector_t *fsec = line->frontsector;
+   int i, special = line->special;
 
    // Check for copy linedefs
-   for(i = -1; (i = P_FindLineFromLineTag(line, i)) >= 0; )
+   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
    {
-      line_t *dline = lines + i;
+      sector_t *srcsec = sectors + i;
 
-      if(!dline->frontsector || dline->special < 394 || dline->special > 396)
-         continue;
-
-      if((dline->special - 393) & 1 && fslope)
-         dline->frontsector->f_slope = P_CopySlope(fslope);
-      if((dline->special - 393) & 2 && cslope)
-         dline->frontsector->c_slope = P_CopySlope(cslope);
+      if((special - 393) & 1 && !fsec->f_slope && srcsec->f_slope)
+         fsec->f_slope = P_CopySlope(srcsec->f_slope);
+      if((special - 393) & 2 && !fsec->c_slope && srcsec->c_slope)
+         fsec->c_slope = P_CopySlope(srcsec->c_slope);
    }
+
+   line->special = 0;
 }
+
 
 // ============================================================================
 //

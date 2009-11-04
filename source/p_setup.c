@@ -1758,6 +1758,9 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // set up world state
    P_SpawnSpecials(mapformat);
 
+   // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
+   P_SpawnDeferredSpecials(mapformat);
+
    // haleyjd
    P_InitLightning();
 

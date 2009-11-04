@@ -1230,6 +1230,13 @@ void P_InitSwitchList(void);
 // at map load
 void P_SpawnSpecials(int);
 
+// 
+// P_SpawnDeferredSpecials
+//
+// SoM: Specials that copy slopes, ect., need to be collected in a separate 
+// pass
+void P_SpawnDeferredSpecials(int mapformat);
+
 // every tic
 void P_UpdateSpecials(void);
 
