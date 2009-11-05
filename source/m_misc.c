@@ -36,39 +36,38 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "doomstat.h"
-#include "m_argv.h"
-#include "g_game.h"
-#include "mn_engin.h"
-#include "mn_files.h"
-#include "am_map.h"
-#include "w_wad.h"
-#include "i_system.h"
-#include "i_sound.h"
-#include "i_video.h"
-#include "v_video.h"
-#include "hu_stuff.h"
-#include "hu_over.h"
-#include "st_stuff.h"
-#include "dstrings.h"
-#include "m_misc.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "d_main.h"
-#include "p_map.h"
-#include "r_main.h"
-#include "r_sky.h"
-#include "r_draw.h"
-#include "c_io.h"
-#include "c_net.h"
-#include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
-#include "p_partcl.h"
-#include "r_things.h"
+#include "z_zone.h"
 #include "d_gi.h"
-#include "f_wipe.h"
+#include "m_misc.h"
+#include "m_argv.h"
+#include "w_wad.h"
 
 #include <errno.h>
 #include <sys/stat.h>
+
+// headers needed for externs:
+#include "am_map.h"
+#include "c_io.h"
+#include "c_net.h"
+#include "d_englsh.h"
+#include "d_io.h"
+#include "d_main.h"
+#include "f_wipe.h"
+#include "g_game.h"
+#include "hu_over.h"
+#include "hu_stuff.h"
+#include "i_sound.h"
+#include "i_video.h"
+#include "mn_engin.h"
+#include "mn_files.h"
+#include "mn_menus.h"
+#include "p_map.h"
+#include "r_draw.h"
+#include "r_main.h"
+#include "r_sky.h"
+#include "r_things.h"
+#include "s_sound.h"
+#include "v_video.h"
 
 //
 // DEFAULTS
@@ -85,9 +84,7 @@ extern int mousebforward;
 extern int viewwidth;
 extern int viewheight;
 extern int mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
-extern int realtic_clock_rate;         // killough 4/13/98: adjustable timer
 extern int leds_always_off;            // killough 3/6/98
-extern int cpusaver;
 extern int showMessages;
 extern int screenSize;
 
@@ -102,26 +99,17 @@ extern int show_scores;
 extern int show_vpo;
 extern int vpo_threshold;   // haleyjd 11/15/04
 
-extern int textmode_startup;
-
 // haleyjd: SDL-specific configuration values
 #ifdef _SDL_VER
-extern int  waitAtExit;
-extern int  grabmouse;
 extern int  showendoom;
 extern int  endoomdelay;
 extern char *i_videomode;
 extern char *i_default_videomode;
-extern boolean unicodeinput;
 #endif
 
 #ifdef HAVE_SPCLIB
 extern int spc_preamp;
 extern int spc_bass_boost;
-#endif
-
-#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
-extern unsigned int process_affinity_mask;
 #endif
 
 // haleyjd 10/09/07: wipe waiting
@@ -185,17 +173,7 @@ default_t defaults[] =
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", wad_no,
                "description of video mode parameters (WWWWxHHHH[flags])"),
 #endif
-
   
-   DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, wad_no,
-               "start up ETERNITY in text mode"),
-
-   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, wad_no,
-               "1 to enable wait for vsync to avoid display tearing"),
-
-   DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, wad_no,
-               "Percentage of normal speed (35 fps) realtic clock runs at"),
-
    // killough 10/98
    DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, wad_no, 
                "1 to enable flashing icon during disk IO"),
@@ -326,10 +304,6 @@ default_t defaults[] =
    DEFAULT_INT("leds_always_off", &leds_always_off, NULL, 0, 0, 1, wad_no,
                "1 to keep keyboard LEDs turned off"),
 
-   // SoM
-   DEFAULT_INT("powersaver", &cpusaver, NULL, 0, 0, 15, wad_no,
-               "a value > 0 will call the system delay function and reduce the CPU usage"),
-
    //jff 4/3/98 allow unlimited sensitivity
    DEFAULT_INT("mouse_sensitivity_horiz", &mouseSensitivity_horiz, NULL, 5, 0, UL, wad_no,
                "adjust horizontal (x) mouse sensitivity"),
@@ -351,10 +325,6 @@ default_t defaults[] =
 
    DEFAULT_INT("music_volume", &snd_MusicVolume, NULL, 8, 0, 15, wad_no,
                "adjust music volume"),
-
-   // haleyjd 12/08/01
-   DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, wad_no,
-               "forces reversal of audio channels: 0 = normal, 1 = reverse"),
 
    DEFAULT_INT("show_messages", &showMessages, NULL, 1, 0, 1, wad_no,
                "1 to enable message display"),
@@ -504,10 +474,6 @@ default_t defaults[] =
    // a compromise.
 
    // TODO/FIXME: make ALL keys dynamically rebindable
-#ifdef _SDL_VER
-   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, wad_no,
-                "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
-#endif
 
    DEFAULT_INT("key_spy", &key_spy, NULL, KEYD_F12, 0, 255, wad_no,
                "key to view from another player's vantage"),
@@ -537,16 +503,7 @@ default_t defaults[] =
    
    DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 1, 0, 1, wad_no,
                "set to 1 to invert mouse during mouselooking"),
-   
-
-   // jff 3/30/98 add ability to take screenshots in BMP format
-   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 1, wad_no,
-               "1 to take a screenshot in PCX format, 0 for BMP"),
-   
-   DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, wad_no,
-               "1 to use gamma correction in screenshots"),
-   
-
+      
    DEFAULT_INT("use_mouse", &usemouse, NULL, 1, 0, 1, wad_no,
                "1 to enable use of mouse"),
    
@@ -557,7 +514,6 @@ default_t defaults[] =
    
    DEFAULT_INT("mouseb_dblc2", &mousebforward, NULL, 2, -1, 2, wad_no,
                "2nd mouse button to enable for double-click use action (-1 = disable)"),
-
    
    DEFAULT_INT("use_joystick", &usejoystick, NULL, 0, 0, 1, wad_no,
                "1 to enable use of joystick"),
@@ -759,7 +715,7 @@ default_t defaults[] =
                "color of automap coordinates widget"),
    
    // below is red
-   DEFAULT_INT(   "health_red",&health_red, NULL, 25, 0, 200, wad_yes,
+   DEFAULT_INT("health_red",&health_red, NULL, 25, 0, 200, wad_yes,
                "amount of health for red to yellow transition"),
 
    // below is yellow
@@ -864,19 +820,12 @@ default_t defaults[] =
                "start game on first new map (DOOM II only)"),
    
 
-#ifdef _SDL_VER
-   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, wad_no,
-               "always wait for input at exit"),
-   
-   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, wad_no,
-               "toggle mouse input grabbing"),
-   
+#ifdef _SDL_VER   
    DEFAULT_INT("showendoom",&showendoom, NULL, 1, 0, 1, wad_yes,
                "1 to show ENDOOM at exit"),
 
    DEFAULT_INT("endoomdelay",&endoomdelay, NULL, 350, 35, 3500, wad_no,
                "Amount of time to display ENDOOM when shown"),
-   
 #endif
 
    DEFAULT_INT("autoaim",&default_autoaim, &autoaim, 1, 0, 1, wad_yes,
@@ -939,11 +888,6 @@ default_t defaults[] =
    DEFAULT_INT("snd_spcbassboost", &spc_bass_boost, NULL, 8, 1, 31, wad_yes,
                "bass boost for SPC music (logarithmic scale, 8 = normal)"),
    
-#endif
-
-#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
-   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 0, 0, UL, wad_no, 
-               "process affinity mask - warning: expert setting only!"),
 #endif
 
    { NULL }         // last entry

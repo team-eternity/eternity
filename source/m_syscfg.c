@@ -32,6 +32,25 @@
 #include "m_misc.h"
 #include "d_gi.h"
 
+// External variables configured here:
+
+extern int textmode_startup;
+extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
+extern int screenshot_pcx;     // jff 3/30/98: option to output screenshot as pcx or bmp
+extern int screenshot_gamma;   // haleyjd 11/16/04: allow disabling gamma correction in shots
+
+#ifdef _SDL_VER
+extern int waitAtExit;
+extern int grabmouse;
+extern int cpusaver;
+extern int use_vsync;
+extern boolean unicodeinput;
+#endif
+
+#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+extern unsigned int process_affinity_mask;
+#endif
+
 #define ITEM_USE_DOOM_CONFIG    "use_doom_config"
 
 #define ITEM_IWAD_DOOM_SW       "iwad_doom_shareware"
@@ -75,6 +94,48 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", wad_no,
                "Heretic: Shadow of the Serpent Riders IWAD Path"),
+
+   // 11/04/09: system-level options moved here from the main config
+
+   DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, wad_no,
+               "Start up ETERNITY in text mode"),
+
+   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, wad_no,
+               "1 to enable wait for vsync to avoid display tearing"),
+
+   DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, wad_no,
+               "Percentage of normal speed (35 fps) realtic clock runs at"),
+
+   // haleyjd 12/08/01
+   DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, wad_no,
+               "Force reversal of stereo audio channels: 0 = normal, 1 = reverse"),
+
+   // jff 3/30/98 add ability to take screenshots in BMP format
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 1, wad_no,
+               "1 to take a screenshot in PCX format, 0 for BMP"),
+   
+   DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, wad_no,
+               "1 to use gamma correction in screenshots"),
+
+#ifdef _SDL_VER
+   // SoM
+   DEFAULT_INT("powersaver", &cpusaver, NULL, 0, 0, 15, wad_no,
+               "Value > 0 will call system delay function to reduce CPU usage"),
+
+   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, wad_no,
+                "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
+
+   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, wad_no,
+               "Always wait for input at exit"),
+   
+   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, wad_no,
+               "Toggle mouse input grabbing"),
+#endif
+
+#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 0, 0, UL, wad_no, 
+               "process affinity mask - warning: expert setting only!"),
+#endif
 
    { NULL }
 };
