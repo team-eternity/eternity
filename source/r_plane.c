@@ -484,7 +484,7 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->zat = P_GetZAtf(pl->pslope, pl->viewxf, pl->viewyf);
 
    // More help from randy. I was totally lost on this... 
-   ixscale = iyscale = 1.0f / tsizef;
+   ixscale = iyscale = view.tan / tsizef;
 
    rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - pl->viewzf);
    rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
