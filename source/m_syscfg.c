@@ -51,6 +51,8 @@ extern boolean unicodeinput;
 extern unsigned int process_affinity_mask;
 #endif
 
+// option name defines
+
 #define ITEM_USE_DOOM_CONFIG    "use_doom_config"
 
 #define ITEM_IWAD_DOOM_SW       "iwad_doom_shareware"
@@ -63,10 +65,14 @@ extern unsigned int process_affinity_mask;
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
 #define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
 
+// system defaults array
+
 static default_t sysdefaults[] =
 {
    DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, NULL, 0, 0, 1, wad_no,
                "1 to use base/doom/eternity.cfg for all DOOM gamemodes"),
+
+   // IWAD paths
 
    DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, NULL, "", wad_no,
                "DOOM Shareware IWAD Path"),

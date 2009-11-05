@@ -406,17 +406,14 @@ static const char *metaIntToString(void *obj)
 //
 void MetaAddInt(metatable_t *metatable, const char *key, int value)
 {
-   static boolean firsttime = true;
+   static metatype_t metaIntType;
    metaint_t *newInt = calloc(1, sizeof(metaint_t));
 
-   if(firsttime)
+   if(!metaIntType.isinit)
    {
       // register metaint type
-      static metatype_t metaIntType;
-
       MetaRegisterTypeEx(&metaIntType, METATYPE(metaint_t), sizeof(metaint_t),
                          NULL, NULL, NULL, metaIntToString);
-      firsttime = false;
    }
 
    newInt->value = value;
@@ -489,24 +486,37 @@ int MetaRemoveInt(metatable_t *metatable, const char *key)
 //
 
 //
+// metaDoubleToString
+//
+// toString method for metadouble objects.
+//
+static const char *metaDoubleToString(void *obj)
+{
+   static char str[64];
+   metadouble_t *md = (metadouble_t *)obj;
+
+   memset(str, 0, sizeof(str));
+   psnprintf(str, sizeof(str), "%+.5g", md->value);
+
+   return str;
+}
+
+//
 // MetaAddDouble
 //
 // Add a double-precision float to the metatable.
 //
 void MetaAddDouble(metatable_t *metatable, const char *key, double value)
 {
-   static boolean firsttime = true;
+   static metatype_t metaDoubleType;
    metadouble_t *newDouble = calloc(1, sizeof(metadouble_t));
 
-   if(firsttime)
+   if(!metaDoubleType.isinit)
    {
       // register metadouble type
-      static metatype_t metaDoubleType;
-
       MetaRegisterTypeEx(&metaDoubleType, 
                          METATYPE(metadouble_t), sizeof(metadouble_t),
-                         NULL, NULL, NULL, NULL);
-      firsttime = false;
+                         NULL, NULL, NULL, metaDoubleToString);
    }
 
    newDouble->value = value;
@@ -621,18 +631,15 @@ static const char *metaStringToString(void *obj)
 //
 void MetaAddString(metatable_t *metatable, const char *key, const char *value)
 {
-   static boolean firsttime = true;
+   static metatype_t metaStrType;
    metastring_t *newString = calloc(1, sizeof(metastring_t));
 
-   if(firsttime)
+   if(!metaStrType.isinit)
    {
       // register metastring type
-      static metatype_t metaStrType;
-
       MetaRegisterTypeEx(&metaStrType, 
                          METATYPE(metastring_t), sizeof(metastring_t), 
                          NULL, NULL, NULL, metaStringToString);
-      firsttime = false;
    }
 
    newString->value = value;
@@ -797,6 +804,10 @@ static const char *MetaDefToString(void *object)
 //
 void MetaRegisterType(metatype_t *type)
 {
+   // early check for an already-initialized metatype
+   if(type->isinit)
+      return;
+
    // init table the first time
    if(!metaTypeRegistry.keyhash.isinit)
       MetaInit(&metaTypeRegistry);
@@ -815,11 +826,14 @@ void MetaRegisterType(metatype_t *type)
    if(!type->toString)
       type->toString = MetaDefToString;
 
-   if(!MetaGetObject(&metaTypeRegistry, type->name))
-   {
-      MetaAddObject(&metaTypeRegistry, type->name, &type->parent, type, 
-                    METATYPE(metatype_t));
-   }
+   // sanity check: we do not allow multiple metatypes of the same name
+   if(MetaGetObject(&metaTypeRegistry, type->name))
+      I_Error("MetaRegisterType: type %s is non-singleton", type->name);
+
+   MetaAddObject(&metaTypeRegistry, type->name, &type->parent, type, 
+                 METATYPE(metatype_t));
+
+   type->isinit = true;
 }
 
 //
@@ -832,6 +846,10 @@ void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
                         MetaAllocFn_t alloc, MetaCopyFn_t copy, 
                         MetaObjPtrFn_t objptr, MetaToStrFn_t tostr)
 {
+   // early check for already-initialized metatype
+   if(type->isinit)
+      return;
+
    type->name     = typeName;
    type->size     = typeSize;
    type->alloc    = alloc;

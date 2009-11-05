@@ -45,11 +45,15 @@ enum
 
 extern int metaerrno;
 
+// metatable
+
 typedef struct metatable_s
 {
    ehash_t keyhash;  // hash of objects by key
    ehash_t typehash; // hash of objects by type
 } metatable_t;
+
+// metaobject
 
 typedef struct metaobject_s
 {
@@ -59,6 +63,8 @@ typedef struct metaobject_s
    const char *type;
    void *object;
 } metaobject_t;
+
+// metaobject specializations for basic types
 
 typedef struct metaint_s
 {
@@ -78,6 +84,9 @@ typedef struct metastring_s
    const char *value;
 } metastring_t;
 
+// metatypes
+
+// metatype method prototypes
 typedef void         *(*MetaAllocFn_t) (size_t);
 typedef void          (*MetaCopyFn_t)  (void *, const void *, size_t);
 typedef metaobject_t *(*MetaObjPtrFn_t)(void *);
@@ -85,14 +94,17 @@ typedef const char   *(*MetaToStrFn_t) (void *);
 
 typedef struct metatype_s
 {
-   metaobject_t parent;
-   const char *name;
-   size_t size;
-   MetaAllocFn_t  alloc;
-   MetaCopyFn_t   copy;
-   MetaObjPtrFn_t objptr;
-   MetaToStrFn_t  toString;
+   metaobject_t   parent;   // metatypes are also metaobjects
+   const char    *name;     // name of metatype (derived from C type)
+   size_t         size;     // size of type for allocation purposes
+   boolean        isinit;   // if true, this type has been registered
+   MetaAllocFn_t  alloc;    // allocation method
+   MetaCopyFn_t   copy;     // copy method
+   MetaObjPtrFn_t objptr;   // object pointer method (returns metaobject)
+   MetaToStrFn_t  toString; // string conversion method
 } metatype_t;
+
+// global functions
 
 void    MetaInit(metatable_t *metatable);
 boolean IsMetaKindOf(metaobject_t *object, const char *type);

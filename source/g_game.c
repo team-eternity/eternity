@@ -2686,29 +2686,18 @@ typedef struct speedset_s
    int fastSpeed;           // -fast speed
 } speedset_t;
 
-//
-// G_RegisterSpeedSet
-//
-// Registers a metatype for speedset objects.
-//
-static void G_RegisterSpeedSet(void)
-{
-   static metatype_t metaspeedset;
-
-   MetaRegisterTypeEx(&metaspeedset, METATYPE(speedset_t), sizeof(speedset_t),
-                      NULL, NULL, NULL, NULL);
-}
-
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
-   static boolean firsttime = true;
+   static metatype_t metaSpeedSetType;
    metaobject_t *o;
    mobjinfo_t   *mi = &mobjinfo[thingtype];
 
-   if(firsttime)
+   // first time, register a metatype for speedsets
+   if(!metaSpeedSetType.isinit)
    {
-      G_RegisterSpeedSet();
-      firsttime = false;
+      MetaRegisterTypeEx(&metaSpeedSetType, 
+                         METATYPE(speedset_t), sizeof(speedset_t),
+                         NULL, NULL, NULL, NULL);
    }
 
    if((o = MetaGetObjectKeyAndType(mi->meta, "speedset", METATYPE(speedset_t))))

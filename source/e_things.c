@@ -786,19 +786,15 @@ static const char *metaStateToString(void *obj)
 //
 static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 {
-   static boolean firsttime = true;
+   static metatype_t metaStateType;
    metastate_t *newMetaState = NULL;
 
    // first time, register a metatype for metastates
-   if(firsttime)
+   if(!metaStateType.isinit)
    {
-      static metatype_t metaStateType;
-
       MetaRegisterTypeEx(&metaStateType, 
                          METATYPE(metastate_t), sizeof(metastate_t),
                          NULL, NULL, NULL, metaStateToString);
-
-      firsttime = false;
    }
 
    newMetaState = calloc(1, sizeof(metastate_t));
