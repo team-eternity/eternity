@@ -3320,7 +3320,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
 //
 void A_SetTranslucent(mobj_t *mo)
 {
-   fixed_t alpha = (fixed_t)(E_ArgAsInt(mo->state->args, 0, 0));
+   fixed_t alpha = E_ArgAsFixed(mo->state->args, 0, 0);
    int     mode  = E_ArgAsInt(mo->state->args, 1, 0);
 
    // rangecheck alpha

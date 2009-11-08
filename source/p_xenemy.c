@@ -160,7 +160,7 @@ boolean P_StartQuake(int *args)
 //
 void A_FadeIn(mobj_t *mo)
 {
-   mo->translucency += E_ArgAsInt(mo->state->args, 0, 0);
+   mo->translucency += E_ArgAsFixed(mo->state->args, 0, 0);
    
    if(mo->translucency < 0)
       mo->translucency = 0;
@@ -177,7 +177,7 @@ void A_FadeIn(mobj_t *mo)
 //
 void A_FadeOut(mobj_t *mo)
 {
-   mo->translucency -= E_ArgAsInt(mo->state->args, 0, 0);
+   mo->translucency -= E_ArgAsFixed(mo->state->args, 0, 0);
    
    if(mo->translucency < 0)
       mo->translucency = 0;
