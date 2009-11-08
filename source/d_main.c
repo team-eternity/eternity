@@ -3238,22 +3238,22 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
 
 void usermsg(const char *s, ...)
 {
-  static char msg[1024];
-  va_list v;
-
-  va_start(v,s);
-  pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
-  va_end(v);
-
-  if(in_textmode)
-  {
-     puts(msg);
-  }
-  else
-  {
-     C_Puts(msg);
-     C_Update();
-  }
+   static char msg[1024];
+   va_list v;
+   
+   va_start(v,s);
+   pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
+   va_end(v);
+   
+   if(in_textmode)
+   {
+      puts(msg);
+   }
+   else
+   {
+      C_Puts(msg);
+      C_Update();
+   }
 }
 
 // add a new .wad file
@@ -3261,14 +3261,14 @@ void usermsg(const char *s, ...)
 
 boolean D_AddNewFile(char *s)
 {
-  c_showprompt = false;
-  if(W_AddNewFile(&w_GlobalDir, s))
-     return false;
-  modifiedgame = true;
-  D_AddFile(s);   // add to the list of wads
-  C_SetConsole();
-  D_ReInitWadfiles();
-  return true;
+   c_showprompt = false;
+   if(W_AddNewFile(&w_GlobalDir, s))
+      return false;
+   modifiedgame = true;
+   D_AddFile(s);   // add to the list of wads
+   C_SetConsole();
+   D_ReInitWadfiles();
+   return true;
 }
 
 //----------------------------------------------------------------------------

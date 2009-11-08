@@ -449,9 +449,9 @@ static void I_GetEvent(void)
          if(d_event.data1 == KEYD_CAPSLOCK)
             capslocktic = gametic;
 #endif
-         if(event.key.keysym.sym > 31 && event.key.keysym.sym < 127 &&
-            unicodeinput)
-            d_event.character = event.key.keysym.unicode & 0x7f;
+         if(unicodeinput &&
+            event.key.keysym.unicode > 31 && event.key.keysym.unicode < 127)
+            d_event.character = (char)(event.key.keysym.unicode);
          else
             d_event.character = 0;
 
