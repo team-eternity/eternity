@@ -78,8 +78,14 @@ static void my_assert(const char *msg, const char *file, int line)
    I_Error("Assertion failed at %s line %d: %s\n", file, line, msg);
 }
 
-#ifndef HAVE_STRNDUP
-static char *strndup(const char *s, size_t n)
+//
+// cfg_strndup
+//
+// haleyjd 11/08/09: just use this unconditionally, because I cannot be
+// bothered to build GCC version detection into the makefiles for Linux
+// now that GCC 4.4.x has this function.
+//
+static char *cfg_strndup(const char *s, size_t n)
 {
    char *r;
    
@@ -91,7 +97,6 @@ static char *strndup(const char *s, size_t n)
    r[n] = 0;
    return r;
 }
-#endif
 
 cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
 {
@@ -110,7 +115,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
          break;
       if(len)
       {
-         secname = strndup(name, len);
+         secname = cfg_strndup(name, len);
          sec = cfg_getsec(sec, secname);
          if(sec == 0)
             cfg_error(cfg, _("no such option '%s'"), secname);
