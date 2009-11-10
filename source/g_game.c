@@ -895,13 +895,31 @@ static void G_DoPlayDemo(void)
    int demover;
    char basename[9];
    byte *option_p = NULL;      // killough 11/98
+   int lumpnum;
   
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
       basetic = gametic;  // killough 9/29/98
       
-   M_ExtractFileBase(defdemoname,basename);         // killough
+   M_ExtractFileBase(defdemoname, basename);         // killough
    
-   demobuffer = demo_p = W_CacheLumpName (basename, PU_STATIC);  // killough
+   // haleyjd 11/09/09: check ns_demos namespace first
+   if((lumpnum = (W_CheckNumForName)(basename, ns_demos)) < 0)
+   {
+      if((lumpnum = W_CheckNumForName(basename)) < 0)
+      {
+         if(singledemo)
+            I_Error("G_DoPlayDemo: no such demo %s\n", basename);
+         else
+         {
+            C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
+            gameaction = ga_nothing;
+            D_AdvanceDemo();
+         }
+         return;
+      }
+   }
+
+   demobuffer = demo_p = W_CacheLumpNum(lumpnum, PU_STATIC); // killough
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -931,10 +949,15 @@ static void G_DoPlayDemo(void)
         (demover >= 200 && demover <= 203) || // BOOM, MBF
         (demover == 255)))                    // Eternity
    {
-      C_Printf("Unsupported demo format\n");
-      gameaction = ga_nothing;
-      Z_ChangeTag(demobuffer, PU_CACHE);
-      D_AdvanceDemo();
+      if(singledemo)
+         I_Error("G_DoPlayDemo: unsupported demo format\n");
+      else
+      {
+         C_Printf(FC_ERROR "Unsupported demo format\n");
+         gameaction = ga_nothing;
+         Z_ChangeTag(demobuffer, PU_CACHE);
+         D_AdvanceDemo();
+      }
       return;
    }
    
@@ -1653,6 +1676,8 @@ uint64_t G_Signature(void)
    return s;
 }
 
+extern wfileadd_t *wadfiles;       // killough 11/98
+
 // sf: split into two functions
 
 void G_SaveCurrentLevel(char *filename, char *description)
@@ -1701,13 +1726,15 @@ void G_SaveCurrentLevel(char *filename, char *description)
 
    // killough 3/16/98: store pwad filenames in savegame
    {
-      char **w = wadfiles;
-      for(*save_p = 0; *w; w++)
+      wfileadd_t *file = wadfiles;
+
+      for(*save_p = 0; file->filename; ++file)
       {
-         CheckSaveGame(strlen(*w)+2);
-         strcat(strcat((char *)save_p, *w), "\n");
+         const char *fn = file->filename;
+         CheckSaveGame(strlen(fn) + 2);
+         strcat(strcat((char *)save_p, fn), "\n");
       }
-      save_p += strlen((char *)save_p)+1;
+      save_p += strlen((char *)save_p) + 1;
    }
 
    CheckSaveGame(GAME_OPTION_SIZE+MIN_MAXPLAYERS+11);
@@ -1924,7 +1951,7 @@ static void G_DoLoadGame(void)
    if(*save_p != 0xe6)
    {
       C_SetConsole();
-      C_Printf(FC_ERROR"bad savegame: offset 0x%x is 0x%x\n",
+      C_Printf(FC_ERROR "bad savegame: offset 0x%x is 0x%x\n",
          save_p-savebuffer, *save_p);
       Z_Free(savebuffer);
       return; 

@@ -30,13 +30,10 @@
 #include "d_event.h"
 #include "p_chase.h"
 
-extern char **wadfiles;       // killough 11/98
-
 // jff make startskill globally visible
 extern skill_t startskill;
 extern char *startlevel;
 
-void D_AddFile(char *file);
 void D_ListWads(void);
 void D_ReInitWadfiles(void);
 void D_NewWadLumps(FILE *handle, int sound_update_type);

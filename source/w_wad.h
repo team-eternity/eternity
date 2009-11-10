@@ -71,7 +71,8 @@ typedef struct
       ns_flats,
       ns_colormaps,
       ns_translations,
-      ns_fonts
+      ns_fonts,
+      ns_demos
    } li_namespace;
    
    void *cache;  //sf
@@ -105,9 +106,22 @@ typedef struct waddir_s
    int        ispublic;   // if false, don't call D_NewWadLumps
 } waddir_t;
 
+//
+// haleyjd 10/09/09: wfileadd_t
+//
+// This structure is used to pass info down to W_InitMultipleFiles now so that
+// certain files being added can be treated specially while being linked into
+// the global wad directory.
+//
+typedef struct wfileadd_s
+{
+   const char *filename; // name of file
+   int li_namespace;     // if not 0, special namespace to add file under
+} wfileadd_t;
+
 extern waddir_t w_GlobalDir; // the global wad directory
 
-void W_InitMultipleFiles(waddir_t *dir, char *const*filenames);
+void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files);
 
 // sf: add a new wad file after the game has already begun
 int W_AddNewFile(waddir_t *dir, char *filename);

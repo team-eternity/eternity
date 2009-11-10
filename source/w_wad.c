@@ -88,8 +88,9 @@ void D_NewWadLumps(FILE *handle, int sound_update_type);
 // Other files are single lumps with the base filename for the lump name.
 //
 // Reload hack removed by Lee Killough
+// killough 1/31/98: static, const
 //
-static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: static, const
+static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
 {
    wadinfo_t   header;
    lumpinfo_t* lump_p;
@@ -201,13 +202,14 @@ static int W_AddFile(waddir_t *dir, const char *name) // killough 1/31/98: stati
       lump_p->size     = (size_t)(LONG(fileinfo->size));
       
       lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
-      lump_p->li_namespace = ns_global;            // killough 4/17/98
+      lump_p->li_namespace = li_namespace;         // killough 4/17/98
       
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
    }
    
-   free(fileinfo2free); // killough
+   if(fileinfo2free)
+      free(fileinfo2free); // killough
    
    if(dir->ispublic)
       D_NewWadLumps(handle, w_sound_update_type);
@@ -453,23 +455,26 @@ static void W_InitResources(waddir_t *dir) // sf
 // Lump names can appear multiple times.
 // The name searcher looks backwards, so a later file overrides earlier ones.
 //
-void W_InitMultipleFiles(waddir_t *dir, char *const *filenames)
+void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files)
 {
+   wfileadd_t *curfile;
    dir->numlumps = 0;
    
    dir->lumpinfo = NULL;
 
    // haleyjd 09/13/03: set new sound lump parsing to deferred
    w_sound_update_type = 0;
+
+   curfile = files;
    
    // open all the files, load headers, and count lumps
-   while(*filenames)
+   while(curfile->filename)
    {
       // haleyjd 07/11/09: ignore empty filenames
-      if((*filenames)[0])
-         W_AddFile(dir, *filenames);
+      if((curfile->filename)[0])
+         W_AddFile(dir, curfile->filename, curfile->li_namespace);
 
-      ++filenames;
+      ++curfile;
    }
    
    if(!dir->numlumps)
@@ -482,7 +487,7 @@ int W_AddNewFile(waddir_t *dir, char *filename)
 {
    // haleyjd 09/13/03: use S_UpdateSound here
    w_sound_update_type = 1;
-   if(W_AddFile(dir, filename)) 
+   if(W_AddFile(dir, filename, ns_global)) 
       return true;
    W_InitResources(dir);         // reinit lump lookups etc
    return false;
