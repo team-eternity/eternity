@@ -971,7 +971,7 @@ static void G_DoPlayDemo(void)
       compatibility = true;
       memset(comp, 0xff, sizeof comp);  // killough 10/98: a vector now
 
-      // haleyjd 03/17/09: in old Heretic demos, some should be true
+      // haleyjd 03/17/09: in old Heretic demos, some should be false
       if(GameModeInfo->type == Game_Heretic)
       {
          comp[comp_terrain]   = false; // terrain on

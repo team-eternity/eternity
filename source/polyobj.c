@@ -272,35 +272,40 @@ static void Polyobj_findLines(polyobj_t *po, line_t *line)
 
    Polyobj_addLine(po, line);
 
-   // on first seg, save the initial vertex
+   // on first line, save the initial vertex as the starting position
    startx = line->v1->x;
    starty = line->v1->y;
 
-   // use goto instead of recursion for maximum efficiency - thanks to lament
-newline:
-
-   // terminal case: we have reached a seg where v2 is the same as v1 of the
-   // initial seg
-   if(line->v2->x == startx && line->v2->y == starty)
-      return;
-      
-   // search the lines for one whose starting vertex is equal to the current
-   // line's ending vertex.
-   for(i = 0; i < numlines; ++i)
+   // Loop around, starting a search through the lines array from scratch each
+   // time to find the next connecting linedef, until one of two things happens:
+   // A. We find a line that ends where the first line began.
+   // B. We search through the entire lines array and do not find a line to
+   //    continue the search process (this is an error condition).
+   do
    {
-      if(lines[i].v1->x == line->v2->x && lines[i].v1->y == line->v2->y)
+      // terminal case: we have reached a line where v2 is the same as v1 of the
+      // initial line
+      if(line->v2->x == startx && line->v2->y == starty)
+         return;
+      
+      // search the lines for one whose starting vertex is equal to the current
+      // line's ending vertex.
+      for(i = 0; i < numlines; ++i)
       {
-         // add the new line and recurse
-         Polyobj_addLine(po, &lines[i]);
-         line = &lines[i];
-         goto newline;
+         if(lines[i].v1->x == line->v2->x && lines[i].v1->y == line->v2->y)
+         {
+            Polyobj_addLine(po, &lines[i]); // add the new line
+            line = &lines[i];               // set new line as current line
+            break;                          // restart the search
+         }
       }
    }
+   while(i < numlines); // if i >= numlines, an error has occured.
 
-   // error: if we reach here, the line search never found another line to
+   // Error: if we reach here, the line search never found another line to
    // continue the loop, and thus the polyobject is open. This isn't allowed.
    po->flags |= POF_ISBAD;
-   doom_printf(FC_ERROR "polyobject %d is not closed", po->id);
+   doom_printf(FC_ERROR "Polyobject %d is not closed", po->id);
 }
 
 // structure used to store linedefs during explicit search process
@@ -359,7 +364,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
    if(numLineItems == 0)
    {
       po->flags |= POF_ISBAD;
-      doom_printf(FC_ERROR "polyobject %d is empty", po->id);
+      doom_printf(FC_ERROR "Polyobject %d is empty", po->id);
       return;
    }
 
