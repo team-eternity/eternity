@@ -1582,12 +1582,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    SM_RemoveCallbacks(SC_VM_LEVELSCRIPT);
    ACS_InitLevel();
 
-   if(debugfile)
-   {
-      fprintf(debugfile, "P_SetupLevel: got here\n mapname: %s\n",mapname);
-      fflush(debugfile);
-   }
-
    // get the map name lump number
    if((lumpnum = W_CheckNumForName(mapname)) == -1)
    {
@@ -1611,8 +1605,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    strncpy(levelmapname, mapname, 8);
    leveltime = 0;
    
-   DEBUGMSG("stop sounds\n");
-
    // Make sure all sounds are stopped before Z_FreeTags. - sf: why?
    //  sf: s_start split into s_start, s_stopsounds because of this requirement
    S_StopSounds();
@@ -1636,8 +1628,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_LoadLevelInfo(lumpnum);  // load MapInfo
    E_LoadExtraData();         // haleyjd 10/08/03: load ExtraData
 
-   DEBUGMSG("P_SetupLevel: loaded level info\n");
-
    // haleyjd: set global colormap -- see r_data.c
    R_SetGlobalLevelColormap();
 
@@ -1650,7 +1640,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_NewLevelMsg();
    
    // wake up heads-up display
-   DEBUGMSG("HU_Start\n");
    HU_Start();
    
    // must be after p_loadlevelinfo as the music lump name is gotten there
@@ -1659,8 +1648,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // load the sky
    R_StartSky();
 
-   DEBUGMSG("P_SetupLevel: sky done\n");
-   
    // note: most of this ordering is important
    
    // killough 3/1/98: P_LoadBlockMap call moved down to below
@@ -1702,8 +1689,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    P_LoadNodes     (lumpnum + ML_NODES);
    P_LoadSegs      (lumpnum + ML_SEGS);
 
-   DEBUGMSG("loaded level\n");
-   
 #if 0
    V_LoadingIncrease();
 #endif
@@ -1730,8 +1715,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
       break;
    }
 
-   DEBUGMSG("ok, things loaded, spawn players\n");
-   
    // if deathmatch, randomly spawn the active players
    if(GameType == gt_dm)
    {
@@ -1768,14 +1751,10 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    V_LoadingIncrease();
 #endif
 
-   DEBUGMSG("Precaching graphics...\n");
-   
    // preload graphics
    if(precache)
       R_PrecacheLevel();
 
-   DEBUGMSG("...done\n");
-   
    R_SetViewSize(screenSize+3, c_detailshift); //sf
 
 #if 0
@@ -1794,8 +1773,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    if(mapformat == LEVEL_FORMAT_HEXEN)
       ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
-
-   DEBUGMSG("P_SetupLevel: finished\n");
 }
 
 //

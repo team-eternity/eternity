@@ -124,7 +124,6 @@ int     startepisode;
 int     startmap;
 char    *startlevel;
 boolean autostart;
-FILE    *debugfile;
 
 boolean advancedemo;
 
@@ -2369,12 +2368,8 @@ static void D_LoadSysConfig(void)
 //
 static void D_SetGraphicsMode(void)
 {
-   DEBUGMSG("** set graphics mode\n");
-
    // set graphics mode
    I_InitGraphics();
-
-   DEBUGMSG("done\n");
 
    // set up the console to display startup messages
    gamestate = GS_CONSOLE;
@@ -2714,21 +2709,6 @@ static void D_DoomInit(void)
    nodrawers = !!M_CheckParm("-nodraw");
    noblit    = !!M_CheckParm("-noblit");
 
-   if(M_CheckParm("-debugfile")) // sf: debugfile check earlier
-   {
-      char filename[20];
-      psnprintf(filename, sizeof(filename),
-                "debug%i.txt", consoleplayer);
-      usermsg("debug output to: %s\n", filename);
-      debugfile = fopen(filename, "w");
-   }
-
-   if(M_CheckParm("-debugstd"))
-   {
-      usermsg("debug output to stdout\n");
-      debugfile = stdout;
-   }
-
    // haleyjd: need to do this before M_LoadDefaults
    C_InitPlayerName();
 
@@ -2994,7 +2974,7 @@ static void D_DoomInit(void)
 
 #if 0
    // check for a driver that wants intermission stats
-   if((p = M_CheckParm("-statcopy")) && p<myargc-1)
+   if((p = M_CheckParm("-statcopy")) && p < myargc-1)
    {
       // for statistics driver
       extern void *statcopy;
@@ -3046,8 +3026,6 @@ static void D_DoomInit(void)
       G_DeferedPlayDemo(myargv[p]);
       singledemo = true;          // quit after one demo
    }
-
-   DEBUGMSG("start gamestate: title screen etc.\n");
 
    startlevel = strdup(G_GetNameForMap(startepisode, startmap));
 
@@ -3109,8 +3087,6 @@ void D_DoomMain(void)
 {
    D_DoomInit();
 
-   DEBUGMSG("start main loop\n");
-
    oldgamestate = wipegamestate = gamestate;
 
    // haleyjd 02/23/04: fix problems with -warp
@@ -3127,20 +3103,13 @@ void D_DoomMain(void)
       // frame synchronous IO operations
       I_StartFrame();
 
-      DEBUGMSG("tics\n");
       TryRunTics(); // will run at least one tic
-
-      DEBUGMSG("sound\n");
 
       // killough 3/16/98: change consoleplayer to displayplayer
       S_UpdateSounds(players[displayplayer].mo);// move positional sounds
 
-      DEBUGMSG("display\n");
-
       // Update display, next frame, with current state.
       D_Display();
-
-      DEBUGMSG("more sound\n");
 
       // Sound mixing for the buffer is synchronous.
       I_UpdateSound();

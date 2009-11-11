@@ -299,10 +299,6 @@ extern angle_t consoleangle;
 extern  char   *basedefault;
 extern  char   *basepath;
 extern  char   *basegamepath;
-extern  FILE   *debugfile;
-                // sf:
-#define DEBUGMSG(s) if(debugfile) { fprintf(debugfile, s);    \
-                                    fflush(debugfile); }
 
 // if true, load all graphics at level load
 extern  boolean precache;

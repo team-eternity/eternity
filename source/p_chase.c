@@ -167,7 +167,6 @@ CONSOLE_VARIABLE(chasecam_speed, chasecam_speed, 0) {}
 void P_ChaseStart(void)
 {
    // if(chasecam_active) return;     // already active
-   DEBUGMSG("activate chasecam\n");
    chasecam_active = true;
    camera = &chasecam;
    P_ResetChasecam();
@@ -176,7 +175,6 @@ void P_ChaseStart(void)
 void P_ChaseEnd(void)
 {
    // if(!chasecam_active) return;
-   DEBUGMSG("deactivate chasecam\n");
    chasecam_active = false;
    camera = NULL;
 }
@@ -272,8 +270,6 @@ void P_ResetChasecam(void)
    if(!chasecam_active) return;
    if(gamestate != GS_LEVEL) return;       // only in level
 
-   DEBUGMSG("reset chasecam\n");
-   
    // find the chasecam target
    P_GetChasecamTarget();
    

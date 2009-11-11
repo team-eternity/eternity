@@ -214,8 +214,6 @@ void IN_Ticker(void)
    // counter for general background animation
    intertime++;  
    
-   DEBUGMSG("in_ticker\n");
-
    // intermission music
    if(intertime == 1)
       S_ChangeMusicNum(GameModeInfo->interMusNum, true);

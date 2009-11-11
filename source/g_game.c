@@ -2176,8 +2176,6 @@ void G_Ticker(void)
          G_CoolViewPoint();
    }
 
-   DEBUGMSG("  g_ticker: main actions\n");
-
    // do main actions
    
    // killough 9/29/98: split up switch statement
@@ -3313,8 +3311,6 @@ boolean G_CheckDemoStatus(void)
 void G_StopDemo(void)
 {
    extern boolean advancedemo;
-   
-   DEBUGMSG("    stop demo\n");
    
    if(!demorecording && !demoplayback)
       return;
