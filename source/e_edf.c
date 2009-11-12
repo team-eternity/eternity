@@ -141,7 +141,6 @@
 
 // sprite variables (global)
 
-int playerSpriteNum;
 int blankSpriteNum;
 
 // pickup variables
@@ -1518,16 +1517,9 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
 
    E_EDFLogPuts("\t* Processing sprite variables\n");
 
-   // load player and blank sprite numbers
-   str = cfg_getstr(cfg, ITEM_PLAYERSPRITE);
-   sprnum = E_SpriteNumForName(str);
-   if(sprnum == NUMSPRITES)
-   {
-      E_EDFLoggedErr(2, 
-         "E_ProcessSpriteVars: invalid player sprite name: '%s'\n", str);
-   }
-   E_EDFLogPrintf("\t\tSet sprite %s(#%d) as player sprite\n", str, sprnum);
-   playerSpriteNum = sprnum;
+   // haleyjd 11/11/09: removed processing of obsolete playersprite variable
+
+   // load blank sprite number
 
    str = cfg_getstr(cfg, ITEM_BLANKSPRITE);
    sprnum = E_SpriteNumForName(str);

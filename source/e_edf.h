@@ -30,7 +30,6 @@
 
 // sprite variables
 
-extern int playerSpriteNum;
 extern int blankSpriteNum;
 
 // pickup effects enumeration

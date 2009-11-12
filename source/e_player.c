@@ -273,15 +273,19 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    {
       if(newSkin->spritename)
          free(newSkin->spritename);
-      newSkin->spritename = strdup(cfg_getstr(skinsec, ITEM_SKIN_SPRITE));
+
+      tempstr = cfg_getstr(skinsec, ITEM_SKIN_SPRITE);
 
       // check sprite for validity
-      if(E_SpriteNumForName(newSkin->spritename) == NUMSPRITES)
+      if(E_SpriteNumForName(tempstr) == NUMSPRITES)
       {
          E_EDFLogPrintf("\t\tWarning: skin '%s' references unknown sprite '%s'\n",
-                        newSkin->skinname, newSkin->spritename);
-         newSkin->spritename = sprnames[playerSpriteNum];
+                        newSkin->skinname, tempstr);
+         tempstr = sprnames[blankSpriteNum];
       }
+
+      // set it
+      newSkin->spritename = strdup(tempstr);
 
       // sprite has been reset, so reset the sprite number
       newSkin->sprite = E_SpriteNumForName(newSkin->spritename);
