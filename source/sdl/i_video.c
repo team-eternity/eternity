@@ -513,7 +513,6 @@ static boolean I_InitGraphicsMode(void)
    int      v_h            = 480;
    int      v_bd           = 8;
    int      flags          = SDL_SWSURFACE;
-   SDL_Event dummy;
 
    if(!i_default_videomode)
       i_default_videomode = strdup("640x480w");
@@ -612,11 +611,7 @@ static boolean I_InitGraphicsMode(void)
    
    I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
    I_InitDiskFlash();        // Initialize disk icon
- 
-   // haleyjd 10/09/05: from Chocolate DOOM:
-   // clear out any events waiting at the start   
-   while(SDL_PollEvent(&dummy));
-   
+    
    return false;
 }
 

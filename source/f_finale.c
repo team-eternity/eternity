@@ -241,7 +241,7 @@ void F_TextWrite(void)
    int         lumpnum;
    
    // haleyjd: get finale font metrics
-   gitextmetric_t *fontmetrics = GameModeInfo->ftextinfo;
+   giftextpos_t *textpos = GameModeInfo->fTextPos;
 
    if(f_font->linear) // FIXME/TODO: linear font support here
       return;
@@ -263,8 +263,8 @@ void F_TextWrite(void)
    }
 
    // draw some of the text onto the screen
-   cx = fontmetrics->x;
-   cy = fontmetrics->y;
+   cx = textpos->x;
+   cy = textpos->y;
    ch = LevelInfo.interText;
       
    count = (int)((finalecount - 10)/Get_TextSpeed()); // phares
@@ -278,7 +278,7 @@ void F_TextWrite(void)
       
       if(c == '\n')
       {
-         cx = fontmetrics->x;
+         cx = textpos->x;
          cy += f_font->cy;
          continue;
       }

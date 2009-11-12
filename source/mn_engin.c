@@ -687,7 +687,7 @@ void MN_DrawMenu(menu_t *menu)
       // make it flash
 
       // haleyjd: fix y coordinate to use appropriate text metrics
-      m_y = SCREENHEIGHT - GameModeInfo->vtextinfo->absh;
+      m_y = SCREENHEIGHT - menu_font->absh;
 
       if((menu_error_time / 8) % 2)
          MN_WriteTextColoured(menu_error_message, CR_TAN, 10, m_y);
@@ -699,7 +699,7 @@ void MN_DrawMenu(menu_t *menu)
       char *helpmsg = "";
       menuitem_t *menuitem;
       
-      m_y = SCREENHEIGHT - GameModeInfo->vtextinfo->absh;
+      m_y = SCREENHEIGHT - menu_font->absh;
 
       // write some help about the item
       menuitem = &menu->menuitems[menu->selected];
@@ -762,7 +762,7 @@ void MN_DrawMenu(menu_t *menu)
 
       psnprintf(msgbuffer, 64, "<- %s", key);
 
-      m_y = SCREENHEIGHT - (2*GameModeInfo->vtextinfo->absh + 1);
+      m_y = SCREENHEIGHT - (2 * menu_font->absh + 1);
 
       MN_WriteTextColoured(msgbuffer, CR_GOLD, 10, m_y);
    }
@@ -777,7 +777,7 @@ void MN_DrawMenu(menu_t *menu)
 
       psnprintf(msgbuffer, 64, "%s ->", key);
 
-      m_y = SCREENHEIGHT - (2*GameModeInfo->vtextinfo->absh + 1);
+      m_y = SCREENHEIGHT - (2 * menu_font->absh + 1);
 
       MN_WriteTextColoured(msgbuffer, CR_GOLD, 310 - MN_StringWidth(msgbuffer), m_y);
    }

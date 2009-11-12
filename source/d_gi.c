@@ -175,68 +175,11 @@ static giborder_t giHticBorder =
 };
 
 //
-// V-Font metrics
+// Finale text locations
 //
 
-static gitextmetric_t giDoomVText =
-{
-   0, 0, // x,y (not used)
-   8,    // cy
-   4,    // space
-   0,    // dw
-   8,    // absh
-};
-
-static gitextmetric_t giHticVText =
-{
-   0, 0, // x,y (not used)
-   9,    // cy
-   5,    // space
-   1,    // dw
-   10,   // absh
-};
-
-//
-// Finale font metrics
-//
-
-static gitextmetric_t giDoomFText =
-{
-   10, 10, // x,y
-   11,     // cy
-   4,      // space
-   0,      // dw
-};
-
-static gitextmetric_t giHticFText =
-{
-   20, 5, // x,y
-   9,     // cy
-   5,     // space
-   0,     // dw
-};
-
-//
-// Big Font metrics
-//
-
-static gitextmetric_t giDoomBigText =
-{
-   0, 0, // x, y, (not used)
-   12,   // cy
-   8,    // space
-   1,    // dw
-   12,   // absh
-};
-
-static gitextmetric_t giHticBigText = 
-{
-   0, 0, // x, y (not used)
-   20,   // cy
-   8,    // space
-   1,    // dw
-   20,   // absh -- FIXME: may not be correct
-};
+static giftextpos_t giDoomFText = { 10, 10 };
+static giftextpos_t giHticFText = { 20, 5  };
 
 //
 // Menu Sounds
@@ -600,12 +543,17 @@ static missioninfo_t gmFinalTNT =
 //
 static missioninfo_t gmFinalPlutonia =
 {
-   pack_plut,     // id
-   VNAME_PLUT,    // versionNameOR
-   BANNER_PLUT,   // startupBannerOR
-   0,             // numEpisodesOR
-   &gi_path_plut, // iwadPathOR
-   &PlutFinale,   // finaleDataOR
+   pack_plut,         // id
+   VNAME_PLUT,        // versionNameOR
+   BANNER_PLUT,       // startupBannerOR
+   0,                 // numEpisodesOR
+   &gi_path_plut,     // iwadPathOR
+   &PlutFinale,       // finaleDataOR
+   NULL,              // mainMenuOR
+   NULL,              // menuBackgroundOR
+   NULL,              // creditBackgroundOR
+   NULL,              // consoleBackOR
+   demostates_udoom,  // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
 };
 
 //
@@ -696,7 +644,7 @@ static gamemodeinfo_t giDoomSW =
    BANNER_DOOM_SW,   // startupBanner
    &gi_path_doomsw,  // iwadPath
    
-   demostates_doom,  // demostates
+   demostates_doom,  // demoStates
    170,              // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -729,8 +677,6 @@ static gamemodeinfo_t giDoomSW =
    sfx_tink,         // c_BellSound
    sfx_tink,         // c_ChatSound
    CONBACK_DEFAULT,  // consoleBack
-   &giDoomVText,     // vtextinfo
-   &giDoomBigText,   // btextinfo
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
@@ -751,7 +697,7 @@ static gamemodeinfo_t giDoomSW =
    NULL,             // defTranslate
 
    mus_inter,         // interMusNum
-   &giDoomFText,      // ftextinfo
+   &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
    &DoomFinale,       // finaleData
@@ -787,7 +733,7 @@ static gamemodeinfo_t giDoomReg =
    BANNER_DOOM_REG,  // startupBanner
    &gi_path_doomreg, // iwadPath
    
-   demostates_doom,  // demostates
+   demostates_doom,  // demoStates
    170,              // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -820,8 +766,6 @@ static gamemodeinfo_t giDoomReg =
    sfx_tink,         // c_BellSound
    sfx_tink,         // c_ChatSound
    CONBACK_DEFAULT,  // consoleBack
-   &giDoomVText,     // vtextinfo
-   &giDoomBigText,   // btextinfo
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
@@ -842,7 +786,7 @@ static gamemodeinfo_t giDoomReg =
    NULL,             // defTranslate
 
    mus_inter,        // interMusNum
-   &giDoomFText,     // ftextinfo
+   &giDoomFText,     // fTextPos
    &DoomIntermission,// interfuncs
    DEF_DOOM_FINALE,  // teleEndGameFinaleType
    &DoomFinale,      // finaleData
@@ -878,7 +822,7 @@ static gamemodeinfo_t giDoomRetail =
    BANNER_DOOM_RET,  // startupBanner
    &gi_path_doomu,   // iwadPath
    
-   demostates_udoom, // demostates
+   demostates_udoom, // demoStates
    170,              // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -911,8 +855,6 @@ static gamemodeinfo_t giDoomRetail =
    sfx_tink,         // c_BellSound
    sfx_tink,         // c_ChatSound
    CONBACK_COMRET,   // consoleBack
-   &giDoomVText,     // vtextinfo
-   &giDoomBigText,   // btextinfo
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
@@ -933,7 +875,7 @@ static gamemodeinfo_t giDoomRetail =
    NULL,             // defTranslate
 
    mus_inter,         // interMusNum
-   &giDoomFText,      // ftextinfo
+   &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
    &DoomFinale,       // finaleData
@@ -969,7 +911,7 @@ static gamemodeinfo_t giDoomCommercial =
    BANNER_DOOM2,     // startupBanner
    &gi_path_doom2,   // iwadPath
 
-   demostates_doom2, // demostates
+   demostates_doom2, // demoStates
    11*TICRATE,       // titleTics
    0,                // advisorTics
    11*TICRATE,       // pageTics
@@ -1002,8 +944,6 @@ static gamemodeinfo_t giDoomCommercial =
    sfx_tink,         // c_BellSound
    sfx_radio,        // c_ChatSound
    CONBACK_COMRET,   // consoleBack
-   &giDoomVText,     // vtextinfo
-   &giDoomBigText,   // btextinfo
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
@@ -1024,7 +964,7 @@ static gamemodeinfo_t giDoomCommercial =
    NULL,             // defTranslate
 
    mus_dm2int,        // interMusNum
-   &giDoomFText,      // ftextinfo
+   &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    FINALE_TEXT,       // teleEndGameFinaleType
    &Doom2Finale,      // finaleData
@@ -1060,7 +1000,7 @@ static gamemodeinfo_t giHereticSW =
    BANNER_HTIC_SW,   // startupBanner
    &gi_path_hticsw,  // iwadPath
 
-   demostates_hsw,   // demostates
+   demostates_hsw,   // demoStates
    210,              // titleTics
    140,              // advisorTics
    200,              // pageTics
@@ -1093,8 +1033,6 @@ static gamemodeinfo_t giHereticSW =
    sfx_chat,         // c_BellSound
    sfx_chat,         // c_ChatSound
    CONBACK_HERETIC,  // consoleBack
-   &giHticVText,     // vtextinfo
-   &giHticBigText,   // btextinfo
    0,                // blackIndex
    35,               // whiteIndex
    3,                // numHUDKeys
@@ -1115,7 +1053,7 @@ static gamemodeinfo_t giHereticSW =
    DEFTL_HERETIC,    // defTranslate
 
    hmus_intr,         // interMusNum
-   &giHticFText,      // ftextinfo
+   &giHticFText,      // fTextPos
    &HticIntermission, // interfuncs
    DEF_HTIC_FINALE,   // teleEndGameFinaleType
    &HereticFinale,    // finaleData
@@ -1155,7 +1093,7 @@ static gamemodeinfo_t giHereticReg =
    BANNER_HTIC_REG,  // startupBanner
    &gi_path_hticreg, // iwadPath
 
-   demostates_hreg,  // demostates
+   demostates_hreg,  // demoStates
    210,              // titleTics
    140,              // advisorTics
    200,              // pageTics
@@ -1188,8 +1126,6 @@ static gamemodeinfo_t giHereticReg =
    sfx_chat,         // c_BellSound
    sfx_chat,         // c_ChatSound
    CONBACK_HERETIC,  // consoleBack
-   &giHticVText,     // vtextinfo
-   &giHticBigText,   // btextinfo
    0,                // blackIndex
    35,               // whiteIndex
    3,                // numHUDKeys
@@ -1210,7 +1146,7 @@ static gamemodeinfo_t giHereticReg =
    DEFTL_HERETIC,    // defTranslate
 
    hmus_intr,         // interMusNum
-   &giHticFText,      // ftextinfo
+   &giHticFText,      // fTextPos
    &HticIntermission, // interfuncs
    DEF_HTIC_FINALE,   // teleEndGameFinaleType
    &HereticFinale,    // finaleData
@@ -1310,6 +1246,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(menuBackground,   NULL);
    OVERRIDE(creditBackground, NULL);
    OVERRIDE(consoleBack,      NULL);
+   OVERRIDE(demoStates,       NULL);
 }
 
 // EOF

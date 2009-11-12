@@ -527,7 +527,7 @@ const demostate_t demostates_unknown[] =
 //
 void D_DoAdvanceDemo(void)
 {
-   const demostate_t *demostates = GameModeInfo->demostates;
+   const demostate_t *demostates = GameModeInfo->demoStates;
    const demostate_t *state;
 
    players[consoleplayer].playerstate = PST_LIVE;  // not reborn

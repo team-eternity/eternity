@@ -63,14 +63,10 @@ typedef struct giborder_s
    char *c_br;
 } giborder_t;
 
-typedef struct gitextmetric_s
+typedef struct giftextpos_s
 {
    int x, y;   // initial coordinates (for finale)
-   int cy;     // step amount for \n
-   int space;  // blank character step
-   int dw;     // amount to subtract from character width
-   int absh;   // absolute maximum height of any character
-} gitextmetric_t;
+} giftextpos_t;
 
 //
 // enum for menu sounds
@@ -224,6 +220,7 @@ typedef struct missioninfo_s
    const char   *menuBackgroundOR;   // if not NULL, overrides menuBackground
    const char   *creditBackgroundOR; // if not NULL, overrides creditBackground
    const char   *consoleBackOR;      // if not NULL, overrides consoleBack
+   const demostate_t *demoStatesOR;  // if not NULL, overrides demostates
 } missioninfo_t;
 
 //
@@ -246,7 +243,7 @@ typedef struct gamemodeinfo_s
    char **iwadPath;           // iwad path variable
    
    // demo state information
-   const demostate_t *demostates; // demostates table
+   const demostate_t *demoStates; // demostates table
    int titleTics;             // length of time to show title
    int advisorTics;           // for Heretic, len. to show advisory
    int pageTics;              // length of general demo state pages
@@ -282,8 +279,6 @@ typedef struct gamemodeinfo_s
    int c_BellSound;           // sound used for \a in console
    int c_ChatSound;           // sound used by say command
    const char *consoleBack;   // lump to use for default console backdrop
-   gitextmetric_t *vtextinfo; // v_font text info
-   gitextmetric_t *btextinfo; // big font text info
    unsigned char blackIndex;  // palette index for black {0,0,0}
    unsigned char whiteIndex;  // palette index for white {255,255,255}
    int numHUDKeys;            // number of keys to show in HUD
@@ -309,7 +304,7 @@ typedef struct gamemodeinfo_s
 
    // Intermission and Finale stuff
    int interMusNum;           // intermission music number
-   gitextmetric_t *ftextinfo; // finale text info
+   giftextpos_t *fTextPos;    // finale text info
    interfns_t *interfuncs;    // intermission function pointers
    int teleEndGameFinaleType; // Teleport_EndGame causes this finale by default
    finaledata_t *finaleData;  // Default finale data for MapInfo
