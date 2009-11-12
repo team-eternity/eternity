@@ -51,6 +51,7 @@ struct ehash_s
    ECompFunc_t compfunc;   // object comparison function
    EKeyFunc_t  keyfunc;    // key retrieval function
    ELinkFunc_t linkfunc;   // link-for-object function
+   int iteratorPos;        // iterator index
    boolean isinit;         // true if hash is initialized
 };
 
@@ -64,7 +65,7 @@ void *E_HashChainForKey(ehash_t *, const void *);
 void *E_HashNextOnChain(ehash_t *, void *);
 const void *E_HashKeyForObject(ehash_t *, void *);
 void *E_HashObjectIterator(ehash_t *, void *, const void *);
-void *E_HashTableIterator(ehash_t *table, void *object, unsigned int *index);
+void *E_HashTableIterator(ehash_t *table, void *object);
 void  E_HashRebuild(ehash_t *, unsigned int);
 
 // specializations

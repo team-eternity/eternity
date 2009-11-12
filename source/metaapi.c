@@ -362,10 +362,9 @@ metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object
 //
 // Iterates on all objects in the metatable, regardless of key or type.
 //
-metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object,
-                                unsigned int *index)
+metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object)
 {
-   return E_HashTableIterator(&metatable->keyhash, object, index);
+   return E_HashTableIterator(&metatable->keyhash, object);
 }
 
 //=============================================================================
@@ -869,10 +868,9 @@ void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
 void MetaCopyTable(metatable_t *desttable, metatable_t *srctable)
 {
    metaobject_t *srcobj = NULL;
-   unsigned int i       = -1;
 
    // iterate on the source table
-   while((srcobj = MetaTableIterator(srctable, srcobj, &i)))
+   while((srcobj = MetaTableIterator(srctable, srcobj)))
    {
       metatype_t *type;
 

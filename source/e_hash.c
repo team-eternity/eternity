@@ -51,15 +51,16 @@ void E_HashInit(ehash_t *table, unsigned int numchains,
                 EHashFunc_t hfunc, ECompFunc_t cfunc, EKeyFunc_t kfunc, 
                 ELinkFunc_t lfunc)
 {
-   table->chains     = calloc(numchains, sizeof(mdllistitem_t *));
-   table->numchains  = numchains;
-   table->numitems   = 0;
-   table->loadfactor = 0.0f;
-   table->hashfunc   = hfunc;
-   table->compfunc   = cfunc;
-   table->keyfunc    = kfunc;
-   table->linkfunc   = lfunc ? lfunc : E_LinkForObject;
-   table->isinit     = true;
+   table->chains      = calloc(numchains, sizeof(mdllistitem_t *));
+   table->numchains   = numchains;
+   table->numitems    = 0;
+   table->loadfactor  = 0.0f;
+   table->hashfunc    = hfunc;
+   table->compfunc    = cfunc;
+   table->keyfunc     = kfunc;
+   table->linkfunc    = lfunc ? lfunc : E_LinkForObject;
+   table->iteratorPos = -1;
+   table->isinit      = true;
 }
 
 //
@@ -234,10 +235,9 @@ void *E_HashObjectIterator(ehash_t *table, void *object, const void *key)
 // Pass NULL in object and -1 in *index to start a new search.
 // NULL is returned when the entire table has been iterated over.
 //
-void *E_HashTableIterator(ehash_t *table, void *object, unsigned int *index)
+void *E_HashTableIterator(ehash_t *table, void *object)
 {
    void *ret = NULL;
-   unsigned int i = *index;
 
    if(!table->isinit)
       return NULL;
@@ -251,17 +251,17 @@ void *E_HashTableIterator(ehash_t *table, void *object, unsigned int *index)
       if(item->next)
          ret = item->next->object;
    }
+   else
+      table->iteratorPos = -1; // starting a new search, reset position
 
    // search for the next chain with an object in it
-   while(!ret && ++i < table->numchains)
+   while(!ret && ++table->iteratorPos < (signed int)(table->numchains))
    {
-      mdllistitem_t *chain = table->chains[i];
+      mdllistitem_t *chain = table->chains[table->iteratorPos];
       
       if(chain)
          ret = chain->object;
    }
-
-   *index = i;
 
    return ret;
 }

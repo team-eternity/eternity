@@ -74,7 +74,6 @@ SDL_Surface *sdlscreen;
 // ----------------------------------------------------------------------------
 // Graphics Code
 
-
 int      use_vsync;     // killough 2/8/98: controls whether vsync is called
 boolean  noblit;
 
@@ -100,8 +99,9 @@ void I_UpdateNoBlit(void)
 {
 }
 
-
-
+//
+// I_FinishUpdate
+//
 void I_FinishUpdate(void)
 {
    if(noblit || !in_graphics_mode)
@@ -118,10 +118,7 @@ void I_FinishUpdate(void)
       return;
 
    if(primary_surface)
-   {
       SDL_BlitSurface(primary_surface, NULL, sdlscreen, NULL);
-   }
-
 
    if(setpalette)
    {
@@ -281,8 +278,8 @@ void I_SetPrimaryBuffer(void)
    if(sdlscreen)
    {
       primary_surface = 
-         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height, 8, 
-                              0, 0, 0, 0);
+         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
+                              8, 0, 0, 0, 0);
       video.screens[0] = (byte *)primary_surface->pixels;
       video.pitch = primary_surface->pitch;
    }
@@ -615,7 +612,7 @@ static boolean I_InitGraphicsMode(void)
    
    I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
    I_InitDiskFlash();        // Initialize disk icon
-   
+ 
    // haleyjd 10/09/05: from Chocolate DOOM:
    // clear out any events waiting at the start   
    while(SDL_PollEvent(&dummy));

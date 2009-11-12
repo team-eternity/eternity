@@ -164,7 +164,6 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
 {
    metatable_t  *meta;
    metaobject_t *obj = NULL;
-   unsigned int index = -1;
    int num;
 
    if(!c_argc)
@@ -185,7 +184,7 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
 
    meta = mobjinfo[num].meta;
 
-   while((obj = MetaTableIterator(meta, obj, &index)))
+   while((obj = MetaTableIterator(meta, obj)))
    {
       C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
                FC_NORMAL "%s", obj->key, obj->type,

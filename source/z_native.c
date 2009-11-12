@@ -514,7 +514,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    while(!(block = (realloc)(block, n + HEADER_SIZE)))
    {
       if(block->tag == PU_CACHE || !blockbytag[PU_CACHE])
-         I_Error ("Z_Malloc: Failure trying to allocate %u bytes\n"
+         I_Error ("Z_Realloc: Failure trying to allocate %u bytes\n"
                   "Source: %s:%d", (unsigned int)n, file, line);
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
@@ -846,7 +846,7 @@ void *Z_SysRealloc(void *ptr, size_t size)
 //
 // Z_SysFree
 //
-// For use with Z_SysAlloc.
+// For use with Z_SysMalloc.
 //
 void Z_SysFree(void *p)
 {

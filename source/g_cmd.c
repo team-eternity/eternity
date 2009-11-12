@@ -137,7 +137,8 @@ CONSOLE_COMMAND(animshot, 0)
 
 CONSOLE_COMMAND(screenshot, 0)
 {
-   C_InstaPopup();
+   if(cmdtype != c_typed)
+      C_InstaPopup();
    G_ScreenShot();
 }
 

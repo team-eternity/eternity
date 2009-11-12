@@ -154,8 +154,8 @@ void MetaCopyTable(metatable_t *desttable, metatable_t *srctable);
 
 const char *MetaToString(metaobject_t *obj);
 
-metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object, 
-                                unsigned int *index);
+metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object);
+
 #endif
 
 // EOF

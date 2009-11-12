@@ -2731,10 +2731,6 @@ static void D_DoomInit(void)
 
    // 1/18/98 killough: Z_Init call moved to i_main.c
 
-   // init subsystems
-   // startupmsg("V_Init", "Allocate screens.");    // killough 11/98: moved down to here
-   // V_Init();
-
    D_ProcessWadPreincludes(); // killough 10/98: add preincluded wads at the end
 
    // haleyjd 08/20/07: also, enumerate and load wads from base/game/autoload
