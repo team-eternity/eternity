@@ -141,19 +141,20 @@ void I_ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, vbscreen.width, video.bitdepth, scr);
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, 
+                     vbscreen.width, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
    V_FreeVBuffer(&temp);
 }
 
-//
-// killough 10/98: init disk icon
-//
 
 int disk_icon;
 static SDL_Rect drect;
 static SDL_Surface *disk = NULL, *disk_bg = NULL;
 
+//
+// killough 10/98: init disk icon
+//
 static void I_InitDiskFlash(void)
 {
    VBuffer diskvb;
@@ -205,7 +206,6 @@ static void I_InitDiskFlash(void)
 //
 // killough 10/98: draw disk icon
 //
-
 void I_BeginRead(void)
 {
    if(!disk_icon || !disk || !disk_bg || !in_graphics_mode)
@@ -219,7 +219,6 @@ void I_BeginRead(void)
 //
 // killough 10/98: erase disk icon
 //
-
 void I_EndRead(void)
 {
    if(!disk_icon || !disk_bg || !in_graphics_mode)
@@ -229,7 +228,32 @@ void I_EndRead(void)
    SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
 
+//
+// I_SetPaletteDirect
+//
+// haleyjd 11/12/09: make sure surface palettes are set at startup.
+//
+static void I_SetPaletteDirect(byte *palette)
+{
+   int i;
 
+   for(i = 0; i < 256; ++i)
+   {
+      colors[i].r = gammatable[usegamma][*palette++];
+      colors[i].g = gammatable[usegamma][*palette++];
+      colors[i].b = gammatable[usegamma][*palette++];
+   }
+
+   if(sdlscreen && !crossbitdepth)
+      SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+
+   if(primary_surface)
+      SDL_SetPalette(primary_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+}
+
+//
+// I_SetPalette
+//
 void I_SetPalette(byte *palette)
 {
    int i;
@@ -609,7 +633,9 @@ static boolean I_InitGraphicsMode(void)
    
    setsizeneeded = true;
    
-   I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+   // haleyjd 11/12/09: set surface palettes immediately
+   I_SetPaletteDirect(W_CacheLumpName("PLAYPAL", PU_CACHE));
+
    I_InitDiskFlash();        // Initialize disk icon
     
    return false;

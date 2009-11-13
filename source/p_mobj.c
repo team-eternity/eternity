@@ -1565,11 +1565,11 @@ void P_RespawnSpecials (void)
 
 //
 // P_SpawnPlayer
+//
 // Called when a player is spawned on the level.
 // Most of the player structure stays unchanged
 //  between levels.
 //
-
 void P_SpawnPlayer(mapthing_t* mthing)
 {
    player_t* p;
@@ -1644,6 +1644,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
 //
 // P_SpawnMapThing
+//
 // The fields of the mapthing should
 // already be in host byte order.
 //

@@ -1455,6 +1455,10 @@ void MN_StartMenu(menu_t *menu)
    
    menu_error_time = 0;      // clear error message
    redrawsbar = redrawborder = true;  // need redraw
+
+   // haleyjd 11/12/09: custom menu open actions
+   if(current_menu->open)
+      current_menu->open();
 }
 
 //

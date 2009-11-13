@@ -134,7 +134,7 @@ void MN_InitMenus(void)
 // Main Menu
 //
 
-void MN_MainMenuDrawer();
+void MN_MainMenuDrawer(void);
 
 static menuitem_t mn_main_items[] =
 {
@@ -344,6 +344,19 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
 // New Game Menu: Skill Level Selection
 //
 
+//
+// MN_openNewGameMenu
+//
+// haleyjd 11/12/09: special initialization method for the newgame menu.
+//
+static void MN_openNewGameMenu(void)
+{
+   extern menu_t menu_newgame; // actually just right below...
+   
+   // start on defaultskill setting
+   menu_newgame.selected = (defaultskill - 1) + 4;
+}
+
 static menuitem_t mn_newgame_items[] =
 {
    {it_title,  "new game",             NULL,                "M_NEWG"},
@@ -360,11 +373,15 @@ static menuitem_t mn_newgame_items[] =
 
 menu_t menu_newgame =
 {
-   mn_newgame_items,     // menu items
-   NULL, NULL, NULL,     // pages
-   40, 15,               // x,y offsets
-   6,                    // starting item: hurt me plenty
-   mf_skullmenu,         // is a skull menu
+   mn_newgame_items,   // menu items
+   NULL, NULL, NULL,   // pages
+   40, 15,             // x,y offsets
+   6,                  // starting item (overridden by open method)
+   mf_skullmenu,       // is a skull menu
+   NULL,               // drawer method
+   NULL, NULL,         // toc
+   0,                  // gap override
+   MN_openNewGameMenu, // open method
 };
 
 static void MN_DoNightmare(void)
@@ -1801,7 +1818,7 @@ static menu_t *mn_vidpage_menus[] =
    NULL
 };
 
-void MN_VideoModeDrawer();
+void MN_VideoModeDrawer(void);
 
 static menuitem_t mn_video_items[] =
 {
