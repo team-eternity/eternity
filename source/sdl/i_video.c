@@ -108,7 +108,6 @@ void I_FinishUpdate(void)
       return;
 
    // haleyjd 10/08/05: from Chocolate DOOM:
-
    UpdateGrab();
 
    // Don't update the screen if the window isn't visible.
@@ -116,9 +115,6 @@ void I_FinishUpdate(void)
    // while fullscreen.   
    if(!(SDL_GetAppState() & SDL_APPACTIVE))
       return;
-
-   if(primary_surface)
-      SDL_BlitSurface(primary_surface, NULL, sdlscreen, NULL);
 
    if(setpalette)
    {
@@ -130,8 +126,14 @@ void I_FinishUpdate(void)
 
       setpalette = false;
    }
-   else if(!setpalette || crossbitdepth || (sdlscreen->flags & SDL_DOUBLEBUF))
-      SDL_Flip(sdlscreen);
+
+   // haleyjd 11/12/09: blit *after* palette set improves behavior.
+   if(primary_surface)
+      SDL_BlitSurface(primary_surface, NULL, sdlscreen, NULL);
+
+   // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
+   // types otherwise.
+   SDL_Flip(sdlscreen);
 }
 
 //
