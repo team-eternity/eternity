@@ -2536,7 +2536,7 @@ static void D_DoomInit(void)
    G_SetDefaultDMFlags(dmtype, true);
 
 #ifdef GAMEBAR
-   psnprintf(title, sizeof(title), GameModeInfo->startupBanner);
+   psnprintf(title, sizeof(title), "%s", GameModeInfo->startupBanner);
    printf("%s\n", title);
    printf("%s\nBuilt on %s at %s\n", title, version_date,
           version_time);    // killough 2/1/98
@@ -2748,6 +2748,10 @@ static void D_DoomInit(void)
    // that kludge
    if(modifiedgame && (GameModeInfo->flags & GIF_SHAREWARE))
       I_Error("\nYou cannot -file with the shareware version. Register!");
+
+   // haleyjd 11/12/09: Initialize post-W_InitMultipleFiles GameModeInfo
+   // overrides and adjustments here.
+   D_InitGMIPostWads();
 
    // haleyjd 10/20/03: use D_ProcessDehInWads again
    D_ProcessDehInWads();

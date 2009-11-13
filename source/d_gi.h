@@ -197,6 +197,13 @@ enum
    NumGameModeTypes
 };
 
+
+// mission flags
+enum
+{
+   MI_DEMOIFDEMO4 = 0x00000001, // use demoStates override iff DEMO4 exists
+};
+
 //
 // missioninfo_t
 //
@@ -207,6 +214,7 @@ enum
 typedef struct missioninfo_s
 {
    GameMission_t id;            // mission id - replaces "gamemission" variable
+   unsigned int  flags;         // missioninfo flags
    
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
@@ -354,6 +362,7 @@ extern char *gi_path_sosr;
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
 void D_InitGameInfo(void);
+void D_InitGMIPostWads(void);
 
 #endif
 

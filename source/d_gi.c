@@ -28,6 +28,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "w_wad.h"
 #include "doomstat.h"
 #include "doomdef.h"
 #include "sounds.h"
@@ -505,6 +507,7 @@ extern default_or_t HereticDefaultORs;
 static missioninfo_t gmDoom =
 {
    doom, // id
+   0,    // flags
    NULL, // versionNameOR
    NULL, // startupBannerOR
    0,    // numEpisodesOR
@@ -518,6 +521,7 @@ static missioninfo_t gmDoom =
 static missioninfo_t gmDoom2 =
 {
    doom2, // id
+   0,     // flags
    NULL,  // versionNameOR
    NULL,  // startupBannerOR
    0,     // numEpisodesOR
@@ -530,12 +534,18 @@ static missioninfo_t gmDoom2 =
 //
 static missioninfo_t gmFinalTNT =
 {
-   pack_tnt,     // id
-   VNAME_TNT,    // versionNameOR
-   BANNER_TNT,   // startupBannerOR
-   0,            // numEpisodesOR
-   &gi_path_tnt, // iwadPathOR
-   &TNTFinale,   // finaleDataOR
+   pack_tnt,          // id
+   MI_DEMOIFDEMO4,    // flags
+   VNAME_TNT,         // versionNameOR
+   BANNER_TNT,        // startupBannerOR
+   0,                 // numEpisodesOR
+   &gi_path_tnt,      // iwadPathOR
+   &TNTFinale,        // finaleDataOR
+   NULL,              // mainMenuOR
+   NULL,              // menuBackgroundOR
+   NULL,              // creditBackgroundOR
+   NULL,              // consoleBackOR
+   demostates_udoom,  // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
 };
 
 //
@@ -544,6 +554,7 @@ static missioninfo_t gmFinalTNT =
 static missioninfo_t gmFinalPlutonia =
 {
    pack_plut,         // id
+   MI_DEMOIFDEMO4,    // flags
    VNAME_PLUT,        // versionNameOR
    BANNER_PLUT,       // startupBannerOR
    0,                 // numEpisodesOR
@@ -562,6 +573,7 @@ static missioninfo_t gmFinalPlutonia =
 static missioninfo_t gmHacx =
 {
    pack_hacx,       // id
+   0,               // flags
    VNAME_HACX,      // versionNameOR
    BANNER_HACX,     // startupBannerOR
    0,               // numEpisodesOR
@@ -579,6 +591,7 @@ static missioninfo_t gmHacx =
 static missioninfo_t gmHeretic =
 {
    heretic, // id
+   0,       // flags
    NULL,    // versionNameOR
    NULL,    // startupBannerOR
    0,       // numEpisodesOR
@@ -592,6 +605,7 @@ static missioninfo_t gmHeretic =
 static missioninfo_t gmHereticSoSR =
 {
    hticsosr,         // id
+   0,                // flags
    VNAME_HTIC_SOSR,  // versionNameOR
    BANNER_HTIC_SOSR, // startupBannerOR
    6,                // numEpisodesOR
@@ -605,6 +619,7 @@ static missioninfo_t gmHereticSoSR =
 static missioninfo_t gmUnknown =
 {
    none,           // id
+   0,              // flags
    VNAME_UNKNOWN,  // versionNameOR
    BANNER_UNKNOWN, // startupBannerOR
    0,              // numEpisodesOR
@@ -1246,7 +1261,28 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(menuBackground,   NULL);
    OVERRIDE(creditBackground, NULL);
    OVERRIDE(consoleBack,      NULL);
-   OVERRIDE(demoStates,       NULL);
+   
+   // Note: demostates are not overridden here, see below.
+}
+
+//
+// D_InitGMIPostWads
+//
+// haleyjd 11/12/09: Conditionally applies missioninfo overrides which are
+// contingent upon the presence of certain lumps. This must be called after
+// W_InitMultipleFiles (and is done so immediately afterward), in order to
+// account for any PWADs loaded.
+//
+void D_InitGMIPostWads(void)
+{
+   gamemodeinfo_t *gi = GameModeInfo;
+   missioninfo_t  *mi = gi->missionInfo;
+
+   // apply the demoStates override from the missioninfo conditionally:
+   // * if MI_DEMOIFDEMO4 is not set, then always override.
+   // * if MI_DEMOIFDEMO4 IS set, then only if DEMO4 actually exists.
+   if(!(mi->flags & MI_DEMOIFDEMO4) || W_CheckNumForName("DEMO4") >= 0)
+      OVERRIDE(demoStates, NULL);
 }
 
 // EOF
