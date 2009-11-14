@@ -31,13 +31,13 @@
 #endif
 
 #include <windows.h>
-#include "SDL.h"
-
-#undef main
+#include "SDL_syswm.h"
 
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
 extern void I_Error(const char *error, ...);
+
+int disable_sysmenu;
 
 #ifndef _DEBUG
 int main(int argc, char **argv)
@@ -54,5 +54,30 @@ int main(int argc, char **argv)
    return 0;
 }
 #endif
+
+//
+// I_DisableSysMenu
+//
+// haleyjd 11/13/09: Optional disabling of the system menu in Windows after
+// video init to avoid problems with the alt+space key combo. Without this
+// option, the default control scheme for DOOM becomes broken in windowed
+// mode under the default SDL setup.
+//
+void I_DisableSysMenu(void)
+{
+   if(disable_sysmenu)
+   {
+      SDL_SysWMinfo info;
+      
+      SDL_VERSION(&info.version); // this is important!
+      
+      if(SDL_GetWMInfo(&info))
+      {
+         LONG window_style = GetWindowLong(info.window, GWL_STYLE);
+         window_style &= ~WS_SYSMENU;
+         SetWindowLong(info.window, GWL_STYLE, window_style);
+      }
+   }
+}
 
 // EOF

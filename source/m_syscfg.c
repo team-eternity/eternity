@@ -51,6 +51,10 @@ extern boolean unicodeinput;
 extern unsigned int process_affinity_mask;
 #endif
 
+#if defined _MSC_VER
+extern int disable_sysmenu;
+#endif
+
 // option name defines
 
 #define ITEM_USE_DOOM_CONFIG    "use_doom_config"
@@ -141,6 +145,11 @@ static default_t sysdefaults[] =
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
    DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 0, 0, UL, wad_no, 
                "process affinity mask - warning: expert setting only!"),
+#endif
+
+#ifdef _MSC_VER
+   DEFAULT_INT("disable_sysmenu", &disable_sysmenu, NULL, 0, 0, 1, wad_no,
+               "1 to disable Windows system menu for alt+space compatibility"),
 #endif
 
    { NULL }

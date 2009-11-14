@@ -523,6 +523,10 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
    }
 }
 
+#ifdef _MSC_VER
+extern void I_DisableSysMenu(void);
+#endif
+
 //
 // I_InitGraphicsMode
 //
@@ -619,6 +623,11 @@ static boolean I_InitGraphicsMode(void)
       crossbitdepth = false;
 
    SDL_WM_SetCaption(ee_wmCaption, NULL);
+
+#ifdef _MSC_VER
+   // Win32 specific hack: disable system menu
+   I_DisableSysMenu();
+#endif
 
    UpdateFocus();
    UpdateGrab();
