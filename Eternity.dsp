@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "C:\Software Dev\SDL-1.2.12\include" /I "source\win32" /D "NDEBUG" /D "R_LINKEDPORTALS" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "_SDL_VER" /D "AMX_NODYNALOAD" /D "EE_CDROM_SUPPORT" /D "HAVE_SPCLIB" /D "ZONE_NATIVE" /D "HAVE_STDINT_H" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "C:\Software Dev\SDL-1.2.14\include" /I "source\win32" /D "NDEBUG" /D "R_LINKEDPORTALS" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "_SDL_VER" /D "AMX_NODYNALOAD" /D "EE_CDROM_SUPPORT" /D "HAVE_SPCLIB" /D "ZONE_NATIVE" /D "HAVE_STDINT_H" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "C:\Software Dev\SDL-1.2.12\include" /I "source\win32" /D "_DEBUG" /D "RANGECHECK" /D "INSTRUMENTED" /D "ZONEIDCHECK" /D "R_PORTALS" /D "R_LINKEDPORTALS" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "_SDL_VER" /D "AMX_NODYNALOAD" /D "EE_CDROM_SUPPORT" /D "HAVE_SPCLIB" /D "ZONE_NATIVE" /D "HAVE_STDINT_H" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "C:\Software Dev\SDL-1.2.14\include" /I "source\win32" /D "_DEBUG" /D "RANGECHECK" /D "INSTRUMENTED" /D "ZONEIDCHECK" /D "R_PORTALS" /D "R_LINKEDPORTALS" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "_SDL_VER" /D "AMX_NODYNALOAD" /D "EE_CDROM_SUPPORT" /D "HAVE_SPCLIB" /D "ZONE_NATIVE" /D "HAVE_STDINT_H" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -1460,7 +1460,15 @@ SOURCE=.\Source\info.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\Win32\inttypes.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\psnprntf.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\Win32\stdint.h
 # End Source File
 # Begin Source File
 
