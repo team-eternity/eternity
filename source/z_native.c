@@ -43,6 +43,11 @@
 #include "doomstat.h"
 #include "m_argv.h"
 
+//=============================================================================
+//
+// Macros
+//
+
 // Uncomment this to see real-time memory allocation statistics.
 //#define INSTRUMENTED
 
@@ -65,7 +70,10 @@
 // Uncomment this to log all memory operations to a file
 //#define ZONEFILE
 
+//=============================================================================
+//
 // Tunables
+//
 
 // size of block header
 #define HEADER_SIZE 32
@@ -75,8 +83,13 @@
 
 // End Tunables
 
-typedef struct memblock {
+//=============================================================================
+//
+// Memblock Structure
+// 
 
+typedef struct memblock
+{
 #ifdef ZONEIDCHECK
   unsigned id;
 #endif
@@ -90,21 +103,91 @@ typedef struct memblock {
   const char *file;
   int line;
 #endif
-
 } memblock_t;
 
 static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
 
+//=============================================================================
+//
+// Debug Macros
+//
+// haleyjd 11/18/09
+// These help clean up the #ifdef hell.
+//
+
+// Instrumentation macros
 #ifdef INSTRUMENTED
+#define INSTRUMENT(a) a
+#define INSTRUMENT_IF(opt, a, b) ((void)((opt) ? (a) : (b)))
+#else
+#define INSTRUMENT(a)
+#define INSTRUMENT_IF(opt, a, b)
+#endif
+
+// ID Check macros
+#ifdef ZONEIDCHECK
+
+#define IDCHECK(a) a
+#define IDBOOL(a) (a)
+
+static void Z_IDCheckNB(boolean err, const char *errmsg,
+                        const char *file, int line)
+{
+   if(err)
+      I_Error("%s\nSource: %s, %d\n",errmsg, file, line);
+}
+
+static void Z_IDCheck(boolean err, const char *errmsg, 
+                      memblock_t *block, const char *file, int line)
+{
+   if(err)
+   {
+      I_Error("%s\nSource: %s, %d\nSource of malloc: %s, %d",
+              errmsg, file, line,
+#ifdef INSTRUMENTED
+              block->file, block->line
+#else
+              "(not available)", 0
+#endif
+             );
+   }
+}
+#else
+
+#define IDCHECK(a)
+#define IDBOOL(a) false
+#define Z_IDCheckNB(err, errmsg, file, line)
+#define Z_IDCheck(err, errmsg, block, file, line)
+
+#endif
+
+// Heap checking macro
+#ifdef CHECKHEAP
+   #define DEBUG_CHECKHEAP() Z_CheckHeap()
+#else
+   #define DEBUG_CHECKHEAP()
+#endif
+
+// Zone scrambling macro
+#ifdef ZONESCRAMBLE
+#define SCRAMBLER(b, s) memset((b), 1 | (gametic & 0xff), (s))
+#else
+#define SCRAMBLER(b, s)
+#endif
+
+//=============================================================================
+//
+// Instrumentation Statistics
+//
 
 // statistics for evaluating performance
-static size_t active_memory;
-static size_t purgable_memory;
-
-int printstats = 0;                    // killough 8/23/98
+INSTRUMENT(static size_t active_memory);
+INSTRUMENT(static size_t purgable_memory);
+INSTRUMENT(int printstats = 0);            // killough 8/23/98
 
 void Z_PrintStats(void)           // Print allocation statistics
 {
+#ifdef INSTRUMENTED
    if(printstats)
    {
       unsigned int total_memory = active_memory +
@@ -122,34 +205,44 @@ void Z_PrintStats(void)           // Print allocation statistics
          total_memory
          );
    }
-}
 #endif
+}
 
 // haleyjd 06/20/09: removed unused, crashy, and non-useful Z_DumpHistory
 
+//=============================================================================
+//
+// Zone Log File
+//
+// haleyjd 09/16/06
+//
+
 #ifdef ZONEFILE
-
-// haleyjd 09/16/06: zone logging file
-
 static FILE *zonelog;
+#endif
 
 static void Z_OpenLogFile(void)
 {
+#ifdef ZONEFILE
    zonelog = fopen("zonelog.txt", "w");
+#endif
 }
 
 static void Z_CloseLogFile(void)
 {
+#ifdef ZONEFILE
    if(zonelog)
    {
       fputs("Closing zone log", zonelog);
       fclose(zonelog);
       zonelog = NULL;
    }
+#endif
 }
 
 static void Z_LogPrintf(const char *msg, ...)
 {
+#ifdef ZONEFILE
    if(zonelog)
    {
       va_list ap;
@@ -160,22 +253,26 @@ static void Z_LogPrintf(const char *msg, ...)
       // flush after every message
       fflush(zonelog);
    }
+#endif
 }
 
 static void Z_LogPuts(const char *msg)
 {
+#ifdef ZONEFILE
    if(zonelog)
       fputs(msg, zonelog);
+#endif
 }
 
-#endif
-
+//=============================================================================
+//
+// Initialization and Shutdown
+//
 
 static void Z_Close(void)
 {
-#ifdef ZONEFILE
    Z_CloseLogFile();
-#endif
+
 #ifdef DUMPONEXIT
    Z_PrintZoneHeap();
 #endif
@@ -189,15 +286,16 @@ void Z_Init(void)
       
    atexit(Z_Close);            // exit handler
    
-#ifdef INSTRUMENTED
-   active_memory = purgable_memory = 0;
-#endif
+   INSTRUMENT(active_memory = purgable_memory = 0);
 
-#ifdef ZONEFILE
    Z_OpenLogFile();
    Z_LogPrintf("Initialized zone heap (using native implementation)\n");
-#endif
 }
+
+//=============================================================================
+//
+// Core Memory Management Routines
+//
 
 //
 // Z_Malloc
@@ -208,19 +306,13 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 {
    register memblock_t *block;  
    
-#ifdef INSTRUMENTED
-   size_t size_orig = size;   
-#endif
+   INSTRUMENT(size_t size_orig = size);   
 
-#ifdef CHECKHEAP
-   Z_CheckHeap();
-#endif
+   DEBUG_CHECKHEAP();
 
-#ifdef ZONEIDCHECK
-   if(tag >= PU_PURGELEVEL && !user)
-      I_Error("Z_Malloc: an owner is required for purgable blocks\n"
-              "Source: %s:%d", file, line);
-#endif
+   Z_IDCheckNB(IDBOOL(tag >= PU_PURGELEVEL && !user),
+               "Z_Malloc: an owner is required for purgable blocks", 
+               file, line);
 
    if(!size)
       return user ? *user = NULL : NULL;          // malloc(0) returns NULL
@@ -239,20 +331,14 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
       block->next->prev = (memblock_t *) &block->next;
    blockbytag[tag] = block;
    block->prev = (memblock_t *) &blockbytag[tag];
+           
+   INSTRUMENT_IF(tag >= PU_PURGELEVEL, 
+                 purgable_memory += size_orig,
+                 active_memory += size_orig);
+   INSTRUMENT(block->file = file);
+   INSTRUMENT(block->line = line);
          
-#ifdef INSTRUMENTED
-   if(tag >= PU_PURGELEVEL)
-      purgable_memory += size_orig;
-   else
-      active_memory += size_orig;
-
-   block->file = file;
-   block->line = line;
-#endif
-         
-#ifdef ZONEIDCHECK
-   block->id = ZONEID;         // signature required in block header
-#endif
+   IDCHECK(block->id = ZONEID); // signature required in block header
    
    block->tag = tag;           // tag
    block->user = user;         // user
@@ -260,46 +346,32 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    if(user)                    // if there is a user
       *user = block;           // set user to point to new block
 
-#ifdef INSTRUMENTED
    Z_PrintStats();           // print memory allocation stats
-#endif
-#ifdef ZONESCRAMBLE
+
    // scramble memory -- weed out any bugs
-   memset(block, 1 | (gametic & 0xff), size);
-#endif
-#ifdef ZONEFILE
+   SCRAMBLER(block, size);
+
    Z_LogPrintf("* %p = Z_Malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", 
                block, size, tag, user, file, line);
-#endif
 
    return block;
 }
 
+//
+// Z_Free
+//
 void (Z_Free)(void *p, const char *file, int line)
 {
-#ifdef CHECKHEAP
-   Z_CheckHeap();
-#endif
+   DEBUG_CHECKHEAP();
 
    if(p)
    {
       memblock_t *block = (memblock_t *)((char *) p - HEADER_SIZE);
 
-#ifdef ZONEIDCHECK
-      if(block->id != ZONEID)
-      {
-         I_Error("Z_Free: freed a pointer without ZONEID\n"
-                 "Source: %s:%d\n"
-#ifdef INSTRUMENTED
-                 "Source of malloc: %s:%d\n"
-                 , file, line, block->file, block->line
-#else
-                 , file, line
-#endif
-                );
-      }
-      block->id = 0;              // Nullify id so another free fails
-#endif
+      Z_IDCheck(IDBOOL(block->id != ZONEID),
+                "Z_Free: freed a pointer without ZONEID", block, file, line);
+      
+      IDCHECK(block->id = 0); // Nullify id so another free fails
 
       // haleyjd 01/20/09: check invalid tags
       // catches double frees and possible selective heap corruption
@@ -317,10 +389,8 @@ void (Z_Free)(void *p, const char *file, int line)
       }
       block->tag = PU_FREE;       // Mark block freed
 
-#ifdef ZONESCRAMBLE
       // scramble memory -- weed out any bugs
-      memset(p, 1 | (gametic & 0xff), block->size);
-#endif
+      SCRAMBLER(p, block->size);
 
       if(block->user)            // Nullify user if one exists
          *block->user = NULL;
@@ -328,24 +398,21 @@ void (Z_Free)(void *p, const char *file, int line)
       if((*(memblock_t **) block->prev = block->next))
          block->next->prev = block->prev;
 
-#ifdef INSTRUMENTED
-      if(block->tag >= PU_PURGELEVEL)
-         purgable_memory -= block->size;
-      else
-         active_memory -= block->size;
-#endif
+      INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
+         purgable_memory -= block->size,
+         active_memory -= block->size);
          
       (free)(block);
          
-#ifdef INSTRUMENTED
       Z_PrintStats();           // print memory allocation stats
-#endif
-#ifdef ZONEFILE
+
       Z_LogPrintf("* Z_Free(p=%p, file=%s:%d)\n", p, file, line);
-#endif
    }
 }
 
+//
+// Z_FreeTags
+//
 void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 {
    memblock_t *block;
@@ -362,64 +429,34 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
       {
          memblock_t *next = block->next;
 
-#ifdef ZONEIDCHECK
-         if(block->id != ZONEID)
-            I_Error("Z_FreeTags: Changed a tag without ZONEID\n"
-                    "Source: %s:%d"
-
-#ifdef INSTRUMENTED
-                    "\nSource of malloc: %s:%d"
-                    , file, line, block->file, block->line
-#else
-                    , file, line
-#endif
-                    );
-#endif
+         Z_IDCheck(IDBOOL(block->id != ZONEID),
+                   "Z_FreeTags: Changed a tag without ZONEID", 
+                   block, file, line);
 
          (Z_Free)((char *)block + HEADER_SIZE, file, line);
          block = next;               // Advance to next block
       }
    }
 
-#ifdef ZONEFILE
    Z_LogPrintf("* Z_FreeTags(lowtag=%d, hightag=%d, file=%s:%d)\n",
                lowtag, hightag, file, line);
-#endif
 }
 
+//
+// Z_ChangeTag
+//
 void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 {
    memblock_t *block = (memblock_t *)((char *) ptr - HEADER_SIZE);
    
-#ifdef CHECKHEAP
-   Z_CheckHeap();
-#endif
+   DEBUG_CHECKHEAP();
 
-#ifdef ZONEIDCHECK
-   if(block->id != ZONEID)
-      I_Error("Z_ChangeTag: Changed a tag without ZONEID"
-              "\nSource: %s:%d"
+   Z_IDCheck(IDBOOL(block->id != ZONEID),
+             "Z_ChangeTag: Changed a tag without ZONEID", block, file, line);
 
-#ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
-#else
-              , file, line
-#endif
-              );
-
-   if(tag >= PU_PURGELEVEL && !block->user)
-      I_Error("Z_ChangeTag: an owner is required for purgable blocks\n"
-              "Source: %s:%d"
-#ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
-#else
-              , file, line
-#endif
-              );
-
-#endif // ZONEIDCHECK
+   Z_IDCheck(IDBOOL(tag >= PU_PURGELEVEL && !block->user),
+             "Z_ChangeTag: an owner is required for purgable blocks",
+             block, file, line);
 
    if((*(memblock_t **) block->prev = block->next))
       block->next->prev = block->prev;
@@ -443,10 +480,8 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 
    block->tag = tag;
 
-#ifdef ZONEFILE
    Z_LogPrintf("* Z_ChangeTag(p=%p, tag=%d, file=%s:%d)\n",
                ptr, tag, file, line);
-#endif
 }
 
 //
@@ -472,26 +507,13 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
       return NULL;
    }
 
-#ifdef CHECKHEAP
-   Z_CheckHeap();
-#endif
+   DEBUG_CHECKHEAP();
 
    block = (memblock_t *)((char *)ptr - HEADER_SIZE);
 
-#ifdef ZONEIDCHECK
-   if(block->id != ZONEID)
-   {
-      I_Error("Z_Realloc: Reallocated a block without ZONEID"
-              "\nSource: %s:%d"
-#ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
-#else
-              , file, line
-#endif
-              );
-   }
-#endif
+   Z_IDCheck(IDBOOL(block->id != ZONEID),
+             "Z_Realloc: Reallocated a block without ZONEID", 
+             block, file, line);
 
    // nullify current user, if any
    if(block->user)
@@ -504,12 +526,9 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    block->next = NULL;
    block->prev = NULL;
 
-#ifdef INSTRUMENTED
-   if(block->tag >= PU_PURGELEVEL)
-      purgable_memory -= block->size;
-   else
-      active_memory -= block->size;
-#endif
+   INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
+                 purgable_memory -= block->size,
+                 active_memory -= block->size);
 
    while(!(block = (realloc)(block, n + HEADER_SIZE)))
    {
@@ -535,23 +554,16 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    blockbytag[tag] = block;
    block->prev = (memblock_t *) &blockbytag[tag];
 
-#ifdef INSTRUMENTED
-   if(block->tag >= PU_PURGELEVEL)
-      purgable_memory += block->size;
-   else
-      active_memory += block->size;
+   INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
+                 purgable_memory += block->size,
+                 active_memory += block->size);
+   INSTRUMENT(block->file = file);
+   INSTRUMENT(block->line = line);
 
-   block->file = file;
-   block->line = line;
-#endif
-
-#ifdef INSTRUMENTED
    Z_PrintStats();           // print memory allocation stats
-#endif
-#ifdef ZONEFILE
+
    Z_LogPrintf("* %p = Z_Realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n", 
                p, ptr, n, tag, user, file, line);
-#endif
 
    return p;
 }
@@ -574,8 +586,11 @@ char *(Z_Strdup)(const char *s, int tag, void **user,
    return strcpy((Z_Malloc)(strlen(s)+1, tag, user, file, line), s);
 }
 
+//=============================================================================
 //
-// haleyjd 12/06/06: Zone alloca functions
+// Zone Alloca
+//
+// haleyjd 12/06/06
 //
 
 typedef struct alloca_header_s
@@ -594,9 +609,7 @@ void Z_FreeAlloca(void)
 {
    alloca_header_t *hdr = alloca_root, *next;
 
-#ifdef ZONEFILE
    Z_LogPuts("* Freeing alloca blocks\n");
-#endif
 
    while(hdr)
    {
@@ -627,9 +640,7 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
    // add an alloca_header_t to the requested allocation size
    ptr = (Z_Calloc)(n + sizeof(alloca_header_t), 1, PU_STATIC, NULL, file, line);
 
-#ifdef ZONEFILE
    Z_LogPrintf("* %p = Z_Alloca(n = %lu, file = %s, line = %d)\n", ptr, n, file, line);
-#endif
 
    // add to linked list
    hdr = (alloca_header_t *)ptr;
@@ -650,7 +661,14 @@ char *(Z_Strdupa)(const char *s, const char *file, int line)
    return strcpy((Z_Alloca)(strlen(s)+1, file, line), s);
 }
 
+//=============================================================================
+//
+// Heap Verification
+//
 
+//
+// Z_CheckHeap
+//
 void (Z_CheckHeap)(const char *file, int line)
 {
 #ifdef ZONEIDCHECK
@@ -661,27 +679,15 @@ void (Z_CheckHeap)(const char *file, int line)
    {
       for(block = blockbytag[lowtag]; block; block = block->next)
       {
-
-         if(block->id != ZONEID)
-         {
-            I_Error("Z_CheckHeap: Block found without ZONEID\n"
-                    "Source: %s:%d"
-#ifdef INSTRUMENTED
-                    "\nSource of malloc: %s:%d"
-                    , file, line, block->file, block->line
-#else
-                    , file, line
-#endif
-                    );
-         }
+         Z_IDCheck(IDBOOL(block->id != ZONEID),
+                   "Z_CheckHeap: Block found without ZONEID", 
+                   block, file, line);
       }
    }
 #endif
 
-#ifdef ZONEFILE
 #ifndef CHECKHEAP
    Z_LogPrintf("* Z_CheckHeap(file=%s:%d)\n", file, line);
-#endif
 #endif
 }
 
@@ -696,30 +702,18 @@ void (Z_CheckHeap)(const char *file, int line)
 int (Z_CheckTag)(void *ptr, const char *file, int line)
 {
    memblock_t *block = (memblock_t *)((char *) ptr - HEADER_SIZE);
-   
-#ifdef CHECKHEAP
-   Z_CheckHeap();
-#endif
 
-#ifdef ZONEIDCHECK
-   if(block->id != ZONEID)
-   {
-      I_Error("Z_CheckTag: block doesn't have ZONEID"
-              "\nSource: %s:%d"
+   DEBUG_CHECKHEAP();
 
-#ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
-#else
-              , file, line
-#endif
-              );
-   }
-#endif // ZONEIDCHECK
+   Z_IDCheck(IDBOOL(block->id != ZONEID),
+             "Z_CheckTag: block doesn't have ZONEID", block, file, line);
    
    return block->tag;
 }
 
+//
+// Z_PrintZoneHeap
+//
 void Z_PrintZoneHeap(void)
 {
    memblock_t *block;
@@ -782,6 +776,16 @@ void Z_DumpCore(void)
 {
    // FIXME
 }
+
+//=============================================================================
+//
+// System Allocator Functions
+//
+// Guaranteed access to system malloc and free, regardless of the heap in use.
+//
+// Note: these are now redundant with the native heap in place.
+// Eliminate if z_zone is permanently removed.
+//
 
 //
 // Z_SysMalloc

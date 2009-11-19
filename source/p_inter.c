@@ -210,11 +210,23 @@ boolean P_GiveWeapon(player_t *player, weapontype_t weapon, boolean dropped)
 //
 boolean P_GiveBody(player_t *player, int num)
 {
-   if(player->health >= maxhealth)
+   int maxhealthtouse;
+
+   // haleyjd 11/14/09: compatibility fix.
+   // The DeHackEd maxhealth setting was only supposed to affect health
+   // potions, but when Ty replaced the MAXHEALTH define in this module,
+   // he replaced all uses of it, including here. We need to handle 
+   // multiple cases for demo compatibility.
+   if(demo_version >= 200 && demo_version < 335) 
+      maxhealthtouse = maxhealth;
+   else
+      maxhealthtouse = 100;
+
+   if(player->health >= maxhealthtouse)
       return false; // Ty 03/09/98 externalized MAXHEALTH to maxhealth
    player->health += num;
-   if(player->health > maxhealth)
-      player->health = maxhealth;
+   if(player->health > maxhealthtouse)
+      player->health = maxhealthtouse;
    player->mo->health = player->health;
    return true;
 }
@@ -351,7 +363,6 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 
       // bonus items
    case PFX_POTION:
-      
       // sf: removed beta
       player->health++;               // can go over 100%
       if(player->health > (maxhealth * 2))
