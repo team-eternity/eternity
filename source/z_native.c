@@ -118,7 +118,7 @@ static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
 // Instrumentation macros
 #ifdef INSTRUMENTED
 #define INSTRUMENT(a) a
-#define INSTRUMENT_IF(opt, a, b) ((void)((opt) ? (a) : (b)))
+#define INSTRUMENT_IF(opt, a, b) if((opt)) (a); else (b)
 #else
 #define INSTRUMENT(a)
 #define INSTRUMENT_IF(opt, a, b)
@@ -130,19 +130,32 @@ static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
 #define IDCHECK(a) a
 #define IDBOOL(a) (a)
 
+//
+// Z_IDCheckNB
+// 
+// Performs a fatal error condition check contingent on the definition
+// of ZONEIDCHECK, in any context where a memblock pointer is not available.
+//
 static void Z_IDCheckNB(boolean err, const char *errmsg,
                         const char *file, int line)
 {
    if(err)
-      I_Error("%s\nSource: %s, %d\n",errmsg, file, line);
+      I_Error("%s\nSource: %s:%d\n",errmsg, file, line);
 }
 
+//
+// Z_IDCheck
+//
+// Performs a fatal error condition check contingent on the definition
+// of ZONEIDCHECK, and accepts a memblock pointer for provision of additional
+// malloc source information available when INSTRUMENTED is also defined.
+//
 static void Z_IDCheck(boolean err, const char *errmsg, 
                       memblock_t *block, const char *file, int line)
 {
    if(err)
    {
-      I_Error("%s\nSource: %s, %d\nSource of malloc: %s, %d",
+      I_Error("%s\nSource: %s:%d\nSource of malloc: %s:%d",
               errmsg, file, line,
 #ifdef INSTRUMENTED
               block->file, block->line
