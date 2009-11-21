@@ -1265,19 +1265,22 @@ void R_InitTranMap(int progress)
 
 //
 // R_InitData
+//
 // Locates all the lumps
 //  that will be used by all views
 // Must be called after W_Init.
 //
-
 void R_InitData(void)
 {
+   static boolean firsttime = true;
+
    P_InitSkins();
    R_InitColormaps();                    // killough 3/20/98
    R_ClearSkyTextures();                 // haleyjd  8/30/02
    R_InitTextures();
    R_InitFlats();
    R_InitSpriteLumps();
+
    if(general_translucency)             // killough 3/1/98, 10/98
    {
       R_InitTranMap(1);          // killough 2/21/98, 3/6/98
@@ -1288,6 +1291,15 @@ void R_InitData(void)
       int i;
       for(i = 0; i < 8; ++i)
          V_LoadingIncrease();    // 8 '.'s
+   }
+
+   // haleyjd 11/21/09: first time through here, set DOOM thingtype translucency
+   // styles. Why only the first time? We don't need to do this if R_Init is 
+   // invoked through adding a new wad file.
+   if(firsttime)
+   {
+      R_DoomTLStyle();
+      firsttime = false;
    }
    
    R_LoadDoom1();

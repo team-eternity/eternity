@@ -868,6 +868,9 @@ default_t defaults[] =
    
    DEFAULT_INT("r_vissprite_limit", &r_vissprite_limit, NULL, -1, -1, UL, wad_yes,
                "number of vissprites allowed per frame (-1 = no limit)"),
+
+   DEFAULT_INT("r_tlstyle", &r_tlstyle, NULL, 1, 0, R_TLSTYLE_NUM - 1, wad_yes,
+               "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),
    
    DEFAULT_INT("spechits_emulation", &spechits_emulation, NULL, 0, 0, 2, wad_no,
                "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"),

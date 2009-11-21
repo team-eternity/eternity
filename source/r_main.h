@@ -103,6 +103,19 @@ extern lighttable_t *fixedcolormap;
 
 #define NUMCOLORMAPS 32
 
+// haleyjd 11/21/09: enumeration for R_DoomTLStyle
+enum
+{
+   R_TLSTYLE_NONE,
+   R_TLSTYLE_BOOM,
+   R_TLSTYLE_NEW,
+   R_TLSTYLE_NUM
+};
+
+extern int r_tlstyle;
+
+void R_DoomTLStyle(void);
+
 //
 // Function pointer to switch refresh/drawing functions.
 //

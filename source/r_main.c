@@ -50,6 +50,7 @@
 #include "d_deh.h"
 #include "d_gi.h"
 #include "c_io.h"
+#include "e_things.h"
 
 // SoM: Cardboard
 const float PI = 3.14159265f;
@@ -955,15 +956,152 @@ void R_ResetTrans(void)
    }
 }
 
+// action code flags for R_DoomTLStyle
+enum
+{
+   R_CLEARTL  = 0x01, // clears TRANSLUCENCY flag
+   R_SETTL    = 0x02, // sets TRANSLUCENCY flag
+   R_CLEARADD = 0x04, // clears TLSTYLEADD flag
+   R_SETADD   = 0x08, // sets TLSTYLEADD flag
+
+   // special flag combos
+   R_MAKENONE   = R_CLEARTL|R_CLEARADD,
+   R_MAKEBOOM   = R_SETTL|R_CLEARADD,
+   R_MAKENEWADD = R_CLEARTL|R_SETADD
+
+};
+
+// tlstyle struct for R_DoomTLStyle
+typedef struct r_tlstyle_s
+{
+   const char *className; // name of the thingtype
+   int actions[3];        // actions
+} r_tlstyle_t;
+
+static r_tlstyle_t DoomThingStyles[] =
+{
+   // "Additive" items - these all change to additive in "new" style
+   { "VileFire",        { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "MancubusShot",    { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "BaronShot",       { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "BossSpawnFire",   { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "DoomImpShot",     { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "CacodemonShot",   { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "PlasmaShot",      { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "BFGShot",         { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "ArachnotronShot", { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "DoomTeleFog",     { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+   { "DoomItemFog",     { R_MAKENONE, R_MAKEBOOM, R_MAKENEWADD } },
+
+   // "TL" items - these stay translucent in "new" style
+   { "TracerSmoke",     { R_MAKENONE, R_MAKEBOOM, R_MAKEBOOM   } },
+   { "BulletPuff",      { R_MAKENONE, R_MAKEBOOM, R_MAKEBOOM   } },
+   { "InvisiSphere",    { R_MAKENONE, R_MAKEBOOM, R_MAKEBOOM   } },
+   
+   // "Normal" items - these return to no blending in "new" style
+   { "SoulSphere",      { R_MAKENONE, R_MAKEBOOM, R_MAKENONE   } },
+   { "InvulnSphere",    { R_MAKENONE, R_MAKEBOOM, R_MAKENONE   } },
+   { "MegaSphere",      { R_MAKENONE, R_MAKEBOOM, R_MAKENONE   } },
+};
+
+#define NUMDOOMTHINGSTYLES (sizeof(DoomThingStyles) / sizeof(r_tlstyle_t))
+
+// Translucency style setting for DOOM thingtypes.
+int r_tlstyle;
+
+//
+// R_DoomTLStyle
+//
+// haleyjd 11/21/09: Selects alternate translucency styles for certain
+// DOOM gamemode thingtypes which were originally altered in BOOM.
+// We support the following styles:
+// * None - all things are restored to no blending.
+// * Boom - all things use the TRANSLUCENT flag
+// * New  - some things are additive, others are TL, others are normal.
+//
+void R_DoomTLStyle(void)
+{
+   static boolean firsttime = true;
+   int i;
+
+   // If the first style set is to BOOM-style, then we don't actually need
+   // to do anything at all here. This is safest for older mods that might
+   // have removed the TRANSLUCENT flag from any thingtypes. This way only
+   // a user set of the r_tlstyle variable from the UI will result in the
+   // modification of such things.
+   if(firsttime && r_tlstyle == R_TLSTYLE_BOOM)
+   {
+      firsttime = false;
+      return;
+   }
+   
+   for(i = 0; i < NUMDOOMTHINGSTYLES; ++i)
+   {
+      int tnum   = E_ThingNumForName(DoomThingStyles[i].className);
+      int action = DoomThingStyles[i].actions[r_tlstyle];
+      
+      if(tnum == NUMMOBJTYPES)
+         continue;
+
+      // Do not modify any flags if TLSTYLEADD was set in EDF initially.
+      // None of the target thingtypes normally start out with this flag,
+      // so if they already have it, then we know an older mod (essel's
+      // Eternity enhancement pack, probably) is active.
+      if(firsttime && mobjinfo[tnum].flags3 & MF3_TLSTYLEADD)
+         continue;
+      
+      // Do the action
+      if(action & R_CLEARTL)
+         mobjinfo[tnum].flags &= ~MF_TRANSLUCENT;
+      else if(action & R_SETTL)
+         mobjinfo[tnum].flags |= MF_TRANSLUCENT;
+      
+      if(action & R_CLEARADD)
+         mobjinfo[tnum].flags3 &= ~MF3_TLSTYLEADD;
+      else if(action & R_SETADD)
+         mobjinfo[tnum].flags3 |= MF3_TLSTYLEADD;
+      
+      // if we are in-level, update all things of the corresponding type too
+      if(gamestate == GS_LEVEL)
+      {
+         thinker_t *th;
+         
+         for(th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            if(th->function == P_MobjThinker)
+            {
+               mobj_t *mo = (mobj_t *)th;
+               
+               if(mo->type == tnum)
+               {
+                  if(action & R_CLEARTL)
+                     mo->flags &= ~MF_TRANSLUCENT;
+                  else if(action & R_SETTL)
+                     mo->flags |= MF_TRANSLUCENT;
+                  
+                  if(action & R_CLEARADD)
+                     mo->flags3 &= ~MF3_TLSTYLEADD;
+                  else if(action & R_SETADD)
+                     mo->flags3 |= MF3_TLSTYLEADD;
+               }
+            }
+         } // end thinker loop
+      }
+   } // end main loop
+
+   firsttime = false;
+}
+
 //
 //  Console Commands
 //
 
-static char *handedstr[] = { "right", "left" };
-static char *ptranstr[]  = { "none", "smooth", "general" };
-static char *coleng[]    = { "normal", "quad" };
-static char *spaneng[]   = { "highprecision", "lowprecision" }; // SoM: Removed old.
-static char *detailstr[] = { "high", "low" };
+static char *handedstr[]  = { "right", "left" };
+static char *ptranstr[]   = { "none", "smooth", "general" };
+static char *coleng[]     = { "normal", "quad" };
+static char *spaneng[]    = { "highprecision", "lowprecision" }; // SoM: Removed old.
+static char *detailstr[]  = { "high", "low" };
+static char *tlstylestr[] = { "none", "boom", "new" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
 VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
@@ -983,20 +1121,18 @@ VARIABLE_INT(fov, NULL, 20, 179, NULL);
 // SoM: Portal tainted
 VARIABLE_BOOLEAN(showtainted, NULL,                 onoff);
 
-VARIABLE_INT(tran_filter_pct, NULL,     0, 100, NULL);
-VARIABLE_INT(screenSize, NULL,          0, 8, NULL);
-VARIABLE_INT(usegamma, NULL,            0, 4, NULL);
-VARIABLE_INT(particle_trans, NULL,      0, 2, ptranstr);
+VARIABLE_INT(tran_filter_pct,     NULL, 0, 100,                  NULL);
+VARIABLE_INT(screenSize,          NULL, 0, 8,                    NULL);
+VARIABLE_INT(usegamma,            NULL, 0, 4,                    NULL);
+VARIABLE_INT(particle_trans,      NULL, 0, 2,                    ptranstr);
 VARIABLE_INT(r_column_engine_num, NULL, 0, NUMCOLUMNENGINES - 1, coleng);
-VARIABLE_INT(r_span_engine_num,   NULL, 0, NUMSPANENGINES - 1,  spaneng);
-
-
+VARIABLE_INT(r_span_engine_num,   NULL, 0, NUMSPANENGINES - 1,   spaneng);
+VARIABLE_INT(r_tlstyle,           NULL, 0, R_TLSTYLE_NUM - 1,    tlstylestr);
 
 CONSOLE_VARIABLE(r_fov, fov, 0)
 {
    setsizeneeded = true;
 }
-
 
 CONSOLE_VARIABLE(r_showrefused, showtainted, 0) {}
 
@@ -1104,6 +1240,11 @@ CONSOLE_COMMAND(p_dumphubs, 0)
    P_DumpHubs();
 }
 
+CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0) 
+{
+   R_DoomTLStyle();
+}
+
 void R_AddCommands(void)
 {
    C_AddCommand(r_fov);
@@ -1126,6 +1267,7 @@ void R_AddCommands(void)
    C_AddCommand(r_detail);
    C_AddCommand(r_vissprite_limit);
    C_AddCommand(r_showrefused);
+   C_AddCommand(r_tlstyle);
 
    C_AddCommand(p_dumphubs);
 }
