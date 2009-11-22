@@ -1309,6 +1309,10 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->flags &= ~MF_TRANSLUCENT;
    }
 
+   // haleyjd 11/22/09: scaling
+   mobj->xscale = info->xscale;
+   mobj->yscale = info->yscale;
+
    //sf: not friends in deathmatch!
 
    // killough 8/23/98: no friends, bouncers, or touchy things in old demos

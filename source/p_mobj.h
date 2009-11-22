@@ -470,6 +470,9 @@ struct mobj_s
    int damage;        // haleyjd 08/02/04: copy damage to mobj now
    fixed_t floorclip; // haleyjd 08/07/04: floor clip amount
 
+   float xscale;      // haleyjd 11/22/09: x scaling
+   float yscale;      // haleyjd 11/22/09: y scaling
+
    fixed_t secfloorz;
    fixed_t secceilz;
 

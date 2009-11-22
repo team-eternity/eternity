@@ -370,7 +370,9 @@ typedef struct mobjinfo_s
    int topdamagemask; // haleyjd 09/23/06: time mask for topdamage
    int alphavelocity; // haleyjd 05/23/08: alpha velocity
    int respawntime;   // haleyjd 09/23/09: minimum time before respawn
-   int respawnchance; // haleyjd 09/23/09: chance of respawn (out of 255)
+   int respawnchance; // haleyjd 09/23/09: chance of respawn (out of 255)   
+   float xscale;      // haleyjd 11/22/09: x scaling
+   float yscale;      // haleyjd 11/22/09: y scaling
 
    void (*nukespec)(mptr); // haleyjd 08/18/09: nukespec made a native property
    

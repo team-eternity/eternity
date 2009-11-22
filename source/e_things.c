@@ -136,6 +136,8 @@ int UnknownThingType;
 #define ITEM_TNG_SKINSPRITE   "skinsprite"
 #define ITEM_TNG_DEFSPRITE    "defaultsprite"
 #define ITEM_TNG_AVELOCITY    "alphavelocity"
+#define ITEM_TNG_XSCALE       "xscale"
+#define ITEM_TNG_YSCALE       "yscale"
 
 // ACS Spawn Data Sub-Block
 #define ITEM_TNG_ACS_SPAWN    "acs_spawndata"
@@ -442,6 +444,8 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(   ITEM_TNG_SKINSPRITE,   "noskin",  CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_DEFSPRITE,    NULL,      CFGF_NONE                ), \
    CFG_FLOAT( ITEM_TNG_AVELOCITY,    0.0f,      CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_XSCALE,       1.0f,      CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_YSCALE,       1.0f,      CFGF_NONE                ), \
    CFG_SEC(   ITEM_TNG_ACS_SPAWN,    acs_data,  CFGF_NOCASE              ), \
    CFG_END()
 
@@ -1780,6 +1784,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_AVELOCITY);
       mobjinfo[i].alphavelocity = (fixed_t)(tempfloat * FRACUNIT);
    }
+
+   // 11/22/09: scaling properties
+   if(IS_SET(ITEM_TNG_XSCALE))
+      mobjinfo[i].xscale = (float)cfg_getfloat(thingsec, ITEM_TNG_XSCALE);
+
+   if(IS_SET(ITEM_TNG_YSCALE))
+      mobjinfo[i].yscale = (float)cfg_getfloat(thingsec, ITEM_TNG_YSCALE);
 
    // 06/05/08: process custom-damage painstates
    if(IS_SET(ITEM_TNG_PAINSTATES))

@@ -630,6 +630,9 @@ void R_ProjectSprite(mobj_t *thing)
       // haleyjd 08/12/02: modified error handling
       doom_printf(FC_ERROR "R_ProjectSprite: bad sprite number %i\n",
                   thing->sprite);
+
+      // blank the thing's state sprite and frame so that this error does not
+      // occur perpetually, flooding the message widget and console.
       if(thing->state)
       {
          thing->state->sprite = blankSpriteNum;
@@ -688,11 +691,11 @@ void R_ProjectSprite(mobj_t *thing)
 
    idist = 1.0f / ty1;
 
-   x1 = (view.xcenter + (tx1 * idist * view.xfoc));
+   x1 = view.xcenter + (tx1 * idist * view.xfoc);
    if(x1 >= view.width)
       return;
 
-   x2 = (view.xcenter + (tx2 * idist * view.xfoc));
+   x2 = view.xcenter + (tx2 * idist * view.xfoc);
    if(x2 < 0.0f)
       return;
 
@@ -701,12 +704,12 @@ void R_ProjectSprite(mobj_t *thing)
 
    // SoM: forgot about footclipping
    tz1 = M_FixedToFloat(thing->z + spritetopoffset[lump] - thing->floorclip) - view.z;
-   y1 = (view.ycenter - (tz1 * idist * view.yfoc));
+   y1  = view.ycenter - (tz1 * idist * view.yfoc);
    if(y1 >= view.height)
       return;
 
    tz2 = tz1 - spriteheight[lump];
-   y2 = (view.ycenter - (tz2 * idist * view.yfoc) - 1.0f);
+   y2  = view.ycenter - (tz2 * idist * view.yfoc) - 1.0f;
    if(y2 < 0.0f)
       return;
 
