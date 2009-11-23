@@ -688,10 +688,6 @@ void R_ProjectSprite(mobj_t *thing)
    //stopoffset = spritetopoffset[lump] / FPFRACUNIT;
    sleftoffset = M_FixedToFloat(spriteoffset[lump]);
 
-#if 0
-   // SoM: Test
-   thing->xscale = 1.25f;
-#endif
 
    tx1 = rotx - (flip ? swidth - sleftoffset : sleftoffset) * thing->xscale;
    tx2 = tx1 + swidth * thing->xscale;
@@ -711,14 +707,9 @@ void R_ProjectSprite(mobj_t *thing)
    intx2 = (int)(x2 - 0.001f);
 
 
-#if 0
-   // SoM: Test
-   thing->yscale = 2.0f;
-#endif
-
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
-   tz1 = thing->yscale * M_FixedToFloat(thing->z + spritetopoffset[lump] - thing->floorclip) - view.z;
+   tz1 = thing->yscale * M_FixedToFloat(spritetopoffset[lump]) + M_FixedToFloat(thing->z - thing->floorclip) - view.z;
    y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
@@ -806,7 +797,8 @@ void R_ProjectSprite(mobj_t *thing)
    vis->footclip = thing->floorclip;
 
    // haleyjd: moved this down, added footclip term
-   vis->texturemid = gzt - viewz - vis->footclip;
+   // This needs to be scaled down (?) I don't get why this works...
+   vis->texturemid = (fixed_t)((gzt - viewz - vis->footclip) / thing->yscale);
 
    vis->patch = lump;
 
