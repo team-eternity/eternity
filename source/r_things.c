@@ -601,7 +601,9 @@ void R_ProjectSprite(mobj_t *thing)
    int           heightsec;      // killough 3/27/98
 
    float tempx, tempy;
-   float tx1, tx2, ty1, tz1, tz2;
+   float rotx, roty;
+   float distxscale, distyscale;
+   float tx1, tx2, tz1, tz2;
    float idist;
    float swidth, sleftoffset;
    float x1, x2, y1, y2;
@@ -616,13 +618,13 @@ void R_ProjectSprite(mobj_t *thing)
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = M_FixedToFloat(thing->x) - view.x;
    tempy = M_FixedToFloat(thing->y) - view.y;
-   ty1   = (tempy * view.cos) + (tempx * view.sin);
+   roty  = (tempy * view.cos) + (tempx * view.sin);
 
    // lies in front of the front view plane
-   if(ty1 < 1.0f)
+   if(roty < 1.0f)
       return;
 
-   tx1 = (tempx * view.cos) - (tempy * view.sin);
+   rotx = (tempx * view.cos) - (tempy * view.sin);
 
    // decide which patch to use for sprite relative to player
    if((unsigned)thing->sprite >= (unsigned)numsprites)
@@ -686,30 +688,37 @@ void R_ProjectSprite(mobj_t *thing)
    //stopoffset = spritetopoffset[lump] / FPFRACUNIT;
    sleftoffset = M_FixedToFloat(spriteoffset[lump]);
 
-   tx1 -= flip ? swidth - sleftoffset : sleftoffset;
-   tx2 = tx1 + swidth;
+#if 0
+   // SoM: Test
+   thing->xscale = 1.25f;
+#endif
 
-   idist = 1.0f / ty1;
+   tx1 = rotx - (flip ? swidth - sleftoffset : sleftoffset) * thing->xscale;
+   tx2 = tx1 + swidth * thing->xscale;
 
-   x1 = view.xcenter + (tx1 * idist * view.xfoc);
+   idist = 1.0f / roty;
+   distxscale = idist * view.xfoc;
+
+   x1 = view.xcenter + (tx1 * distxscale);
    if(x1 >= view.width)
       return;
 
-   x2 = view.xcenter + (tx2 * idist * view.xfoc);
+   x2 = view.xcenter + (tx2 * distxscale);
    if(x2 < 0.0f)
       return;
 
    intx1 = (int)(x1 + 0.999f);
    intx2 = (int)(x2 - 0.001f);
 
+   distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
    tz1 = M_FixedToFloat(thing->z + spritetopoffset[lump] - thing->floorclip) - view.z;
-   y1  = view.ycenter - (tz1 * idist * view.yfoc);
+   y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
 
    tz2 = tz1 - spriteheight[lump];
-   y2  = view.ycenter - (tz2 * idist * view.yfoc) - 1.0f;
+   y2  = view.ycenter - (tz2 * distyscale) - 1.0f;
    if(y2 < 0.0f)
       return;
 
@@ -759,16 +768,20 @@ void R_ProjectSprite(mobj_t *thing)
    vis->gy = thing->y;
    vis->gz = thing->z;
    vis->gzt = gzt;                          // killough 3/27/98
+
    // Cardboard
    vis->x1 = x1 < 0.0f ? 0 : intx1;
    vis->x2 = x2 >= view.width ? viewwidth - 1 : intx2;
+
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
+
    vis->dist = idist;
-   vis->ystep = 1.0f / (idist * view.yfoc);
+   vis->scale = distyscale;
+   vis->ystep = 1.0f / (distyscale);
+
    vis->ytop = y1;
    vis->ybottom = y2;
-   vis->scale = vis->dist * view.yfoc;
 #ifdef R_LINKEDPORTALS
    vis->sector = thing->subsector->sector - sectors;
 #endif
