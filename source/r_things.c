@@ -710,14 +710,20 @@ void R_ProjectSprite(mobj_t *thing)
    intx1 = (int)(x1 + 0.999f);
    intx2 = (int)(x2 - 0.001f);
 
+
+#if 0
+   // SoM: Test
+   thing->yscale = 2.0f;
+#endif
+
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
-   tz1 = M_FixedToFloat(thing->z + spritetopoffset[lump] - thing->floorclip) - view.z;
+   tz1 = thing->yscale * M_FixedToFloat(thing->z + spritetopoffset[lump] - thing->floorclip) - view.z;
    y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
 
-   tz2 = tz1 - spriteheight[lump];
+   tz2 = tz1 - spriteheight[lump] * thing->yscale;
    y2  = view.ycenter - (tz2 * distyscale) - 1.0f;
    if(y2 < 0.0f)
       return;
@@ -727,7 +733,7 @@ void R_ProjectSprite(mobj_t *thing)
 
    // Cardboard
    // SoM: Block of old code that stays
-   gzt = thing->z + spritetopoffset[lump];
+   gzt = thing->z + (fixed_t)((float)spritetopoffset[lump] * thing->yscale);
 
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
@@ -777,8 +783,8 @@ void R_ProjectSprite(mobj_t *thing)
    vis->startx = flip ? swidth - 1.0f : 0.0f;
 
    vis->dist = idist;
-   vis->scale = distyscale;
-   vis->ystep = 1.0f / (distyscale);
+   vis->scale = distyscale * thing->yscale;
+   vis->ystep = 1.0f / (vis->scale);
 
    vis->ytop = y1;
    vis->ybottom = y2;
