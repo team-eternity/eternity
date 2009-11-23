@@ -605,7 +605,7 @@ void R_ProjectSprite(mobj_t *thing)
    float distxscale, distyscale;
    float tx1, tx2, tz1, tz2;
    float idist;
-   float swidth, sleftoffset;
+   float swidth, stopoffset, sleftoffset;
    float x1, x2, y1, y2;
    float pstep = 0.0f;
    int   intx1, intx2;
@@ -685,7 +685,7 @@ void R_ProjectSprite(mobj_t *thing)
 
    // Calculate the edges of the shape
    swidth = M_FixedToFloat(spritewidth[lump]);
-   //stopoffset = spritetopoffset[lump] / FPFRACUNIT;
+   stopoffset = M_FixedToFloat(spritetopoffset[lump]);
    sleftoffset = M_FixedToFloat(spriteoffset[lump]);
 
 
@@ -709,7 +709,7 @@ void R_ProjectSprite(mobj_t *thing)
 
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
-   tz1 = thing->yscale * M_FixedToFloat(spritetopoffset[lump]) + M_FixedToFloat(thing->z - thing->floorclip) - view.z;
+   tz1 = thing->yscale * stopoffset + M_FixedToFloat(thing->z - thing->floorclip) - view.z;
    y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
@@ -724,7 +724,7 @@ void R_ProjectSprite(mobj_t *thing)
 
    // Cardboard
    // SoM: Block of old code that stays
-   gzt = thing->z + (fixed_t)((float)spritetopoffset[lump] * thing->yscale);
+   gzt = thing->z + (fixed_t)(spritetopoffset[lump] * thing->yscale);
 
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
