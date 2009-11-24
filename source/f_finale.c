@@ -562,7 +562,7 @@ void F_CastDrawer(void)
    sprdef = sprites + caststate->sprite;
    
    // override for alternate monster sprite?
-   if((altsprite = mobjinfo[castorder[castnum].type].altsprite) != NUMSPRITES)
+   if((altsprite = mobjinfo[castorder[castnum].type].altsprite) != -1)
       sprdef = &sprites[altsprite];
    
    // override for player skin?

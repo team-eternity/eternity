@@ -2240,7 +2240,7 @@ void A_VileChase(mobj_t *actor)
 
                // haleyjd 09/26/04: need to restore monster skins here
                // in case they were cleared by the thing being crushed
-               if(info->altsprite != NUMSPRITES)
+               if(info->altsprite != -1)
                   corpsehit->skin = P_GetMonsterSkin(info->altsprite);
                
                P_SetMobjState(corpsehit, info->raisestate);

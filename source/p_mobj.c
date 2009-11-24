@@ -1292,7 +1292,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 #endif
 
    // haleyjd 09/26/04: rudimentary support for monster skins
-   if(info->altsprite != NUMSPRITES)
+   if(info->altsprite != -1)
       mobj->skin = P_GetMonsterSkin(info->altsprite);
    else
       mobj->skin = NULL;

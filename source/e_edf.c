@@ -1424,9 +1424,9 @@ static void E_ProcessSprites(cfg_t *cfg)
 
    // initialize the sprite hash table
    for(i = 0; i < NUMSPRCHAINS; ++i)
-      sprchains[i] = NUMSPRITES;
+      sprchains[i] = -1;
    for(i = 0; i < NUMSPRITES + 1; ++i)
-      sprnext[i] = NUMSPRITES;
+      sprnext[i] = -1;
 
    for(i = 0; i < NUMSPRITES; ++i)
    {
@@ -1523,7 +1523,7 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
 
    str = cfg_getstr(cfg, ITEM_BLANKSPRITE);
    sprnum = E_SpriteNumForName(str);
-   if(sprnum == NUMSPRITES)
+   if(sprnum == -1)
    {
       E_EDFLoggedErr(2, 
          "E_ProcessSpriteVars: invalid blank sprite name: '%s'\n", str);
@@ -1565,7 +1565,7 @@ static void E_ProcessItems(cfg_t *cfg)
       // resolve to a sprite number (hashed)
       sprnum = E_SpriteNumForName(title);
 
-      if(sprnum == NUMSPRITES)
+      if(sprnum == -1)
       {
          // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
          E_EDFLogPrintf(
@@ -2302,7 +2302,7 @@ void E_ProcessEDF(const char *filename)
 // E_SpriteNumForName
 //
 // Sprite hashing function. Returns the index of "name" in the sprnames array,
-// if found. If not, returns NUMSPRITES.
+// if found. If not, returns -1.
 //
 int E_SpriteNumForName(const char *name)
 {
@@ -2310,7 +2310,7 @@ int E_SpriteNumForName(const char *name)
    unsigned int sprkey = D_HashTableKey(name) % NUMSPRCHAINS;
 
    sprnum = sprchains[sprkey];
-   while(sprnum != NUMSPRITES && strcasecmp(name, sprnames[sprnum]))
+   while(sprnum != -1 && strcasecmp(name, sprnames[sprnum]))
       sprnum = sprnext[sprnum];
 
    return sprnum;

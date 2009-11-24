@@ -387,7 +387,7 @@ static void E_StateSprite(const char *tempstr, int i)
    {
       // resolve normal sprite name
       int sprnum = E_SpriteNumForName(tempstr);
-      if(sprnum == NUMSPRITES)
+      if(sprnum == -1)
       {
          // haleyjd 05/31/06: downgraded to warning
          E_EDFLogPrintf("\t\tWarning: frame '%s': invalid sprite '%s'\n",

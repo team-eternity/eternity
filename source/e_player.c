@@ -277,7 +277,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       tempstr = cfg_getstr(skinsec, ITEM_SKIN_SPRITE);
 
       // check sprite for validity
-      if(E_SpriteNumForName(tempstr) == NUMSPRITES)
+      if(E_SpriteNumForName(tempstr) == -1)
       {
          E_EDFLogPrintf("\t\tWarning: skin '%s' references unknown sprite '%s'\n",
                         newSkin->skinname, tempstr);

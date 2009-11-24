@@ -662,7 +662,7 @@ void P_UnArchiveThinkers(void)
       {
          // haleyjd 09/26/04: restore monster skins
          // haleyjd 07/23/09: do not clear player->mo->skin (put into else)
-         if(mobj->info->altsprite != NUMSPRITES)
+         if(mobj->info->altsprite != -1)
             mobj->skin = P_GetMonsterSkin(mobj->info->altsprite);
          else
             mobj->skin = NULL;

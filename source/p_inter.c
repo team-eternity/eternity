@@ -342,7 +342,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       return;
 
    // haleyjd 05/11/03: EDF pickups modifications
-   if(special->sprite >= NUMSPRITES)
+   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
       return;
 
    // Identify by sprite.
