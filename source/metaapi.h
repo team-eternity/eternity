@@ -135,6 +135,7 @@ metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object
 
 void MetaAddInt(metatable_t *metatable, const char *key, int value);
 int  MetaGetInt(metatable_t *metatable, const char *key, int defvalue);
+void MetaSetInt(metatable_t *metatable, const char *key, int newvalue);
 int  MetaRemoveInt(metatable_t *metatable, const char *key);
 
 void   MetaAddDouble(metatable_t *metatable, const char *key, double value);

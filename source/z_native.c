@@ -176,9 +176,9 @@ static void Z_IDCheck(boolean err, const char *errmsg,
 
 // Heap checking macro
 #ifdef CHECKHEAP
-   #define DEBUG_CHECKHEAP() Z_CheckHeap()
+#define DEBUG_CHECKHEAP() Z_CheckHeap()
 #else
-   #define DEBUG_CHECKHEAP()
+#define DEBUG_CHECKHEAP()
 #endif
 
 // Zone scrambling macro
@@ -203,8 +203,7 @@ void Z_PrintStats(void)           // Print allocation statistics
 #ifdef INSTRUMENTED
    if(printstats)
    {
-      unsigned int total_memory = active_memory +
-                                  purgable_memory;
+      unsigned int total_memory = active_memory + purgable_memory;
       double s = 100.0 / total_memory;
 
       doom_printf(

@@ -449,6 +449,27 @@ int MetaGetInt(metatable_t *metatable, const char *key, int defvalue)
 }
 
 //
+// MetaSetInt
+//
+// If the metatable already contains a metaint of the given name, it will
+// be edited to have the provided value. Otherwise, a new metaint will be
+// added to the table with that value.
+//
+void MetaSetInt(metatable_t *metatable, const char *key, int newvalue)
+{
+   metaobject_t *obj;
+
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metaint_t))))
+      MetaAddInt(metatable, key, newvalue);
+   else
+   {
+      metaint_t *md = (metaint_t *)(obj->object);
+
+      md->value = newvalue;
+   }
+}
+
+//
 // MetaRemoveInt
 //
 // Removes the given field if it exists as a metaint_t.
