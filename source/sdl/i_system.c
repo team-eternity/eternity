@@ -258,11 +258,11 @@ void I_Init(void)
    {
       if (clock_rate != 100)
       {
-	 I_GetTime_Scale = ((int64_t) clock_rate << CLOCK_BITS) / 100;
-	 I_GetTime = I_GetTime_Scaled;
+         I_GetTime_Scale = ((int64_t) clock_rate << CLOCK_BITS) / 100;
+         I_GetTime = I_GetTime_Scaled;
       }
       else
-	 I_GetTime = I_GetTime_RealTime;
+         I_GetTime = I_GetTime_RealTime;
    }
 
    // haleyjd 04/15/02: initialize joystick
@@ -285,7 +285,7 @@ void I_Init(void)
    { 
       extern boolean nomusicparm, nosfxparm;
       if(!(nomusicparm && nosfxparm))
-	 I_InitSound();
+         I_InitSound();
    }
 }
 

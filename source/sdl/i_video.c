@@ -159,6 +159,7 @@ static SDL_Surface *disk = NULL, *disk_bg = NULL;
 //
 static void I_InitDiskFlash(void)
 {
+   SDL_Surface *disktmp = NULL;
    VBuffer diskvb;
 
    // haleyjd 05/21/06: no disk in some game modes...
@@ -186,23 +187,28 @@ static void I_InitDiskFlash(void)
       drect.h = 15;
    }
 
-   disk = SDL_CreateRGBSurface(0, drect.w, drect.h, video.bitdepth, 0, 0, 0, 0);
-   disk_bg = SDL_CreateRGBSurface(0, drect.w, drect.h, video.bitdepth, 0, 0, 0, 0);
-   
-   if(sdlscreen->format->palette)
-   {
-      SDL_SetPalette(disk, SDL_LOGPAL, colors, 0, 256);
-      SDL_SetPalette(disk_bg, SDL_LOGPAL, colors, 0, 256);
-   }
+   // haleyjd 12/26/09: create disk in a temporary 8-bit surface, unconditionally
+   disktmp = SDL_CreateRGBSurface(0, drect.w, drect.h, 8, 0, 0, 0, 0);
+   SDL_SetPalette(disktmp, SDL_LOGPAL, colors, 0, 256);
 
-   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disk->pitch, 
-                     disk->format->BitsPerPixel, disk->pixels);
+   // setup VBuffer and point it into the SDL_Surface
+   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8, disktmp->pixels);
    V_SetScaling(&diskvb, 16, 15);
 
+   // draw the disk graphic into the VBuffer
    V_DrawPatch(0, -1, &diskvb,
                W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", PU_CACHE));
 
+   // Done with VBuffer object
    V_FreeVBuffer(&diskvb);
+
+   // Convert 8-bit disk into a surface-format surface - let SDL handle the 
+   // specifics of the process, as it's designed for it.
+   disk    = SDL_DisplayFormat(disktmp);
+   disk_bg = SDL_DisplayFormat(disktmp);
+
+   // Done with the temporary 8-bit disk.
+   SDL_FreeSurface(disktmp);
 }
 
 //
@@ -610,7 +616,7 @@ static boolean I_InitGraphicsMode(void)
 
    // haleyjd 10/14/09: wait for a bit so the screen can settle
    if(flags & SDL_FULLSCREEN)
-      I_Sleep(2000);
+      I_Sleep(500);
 
    R_ResetFOV(v_w, v_h);
 

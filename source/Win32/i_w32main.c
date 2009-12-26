@@ -73,9 +73,9 @@ void I_DisableSysMenu(void)
       
       if(SDL_GetWMInfo(&info))
       {
-         LONG window_style = GetWindowLong(info.window, GWL_STYLE);
+         LONG window_style = GetWindowLongPtr(info.window, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
-         SetWindowLong(info.window, GWL_STYLE, window_style);
+         SetWindowLongPtr(info.window, GWL_STYLE, window_style);
       }
    }
 }
