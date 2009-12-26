@@ -622,7 +622,7 @@ static boolean I_InitGraphicsMode(void)
    if(sdlscreen->format->BitsPerPixel != 32)
       crossbitdepth = false;
 
-   SDL_WM_SetCaption(ee_wmCaption, NULL);
+   SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
 
 #ifdef _MSC_VER
    // Win32 specific hack: disable system menu
