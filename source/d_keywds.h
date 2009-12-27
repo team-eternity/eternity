@@ -78,6 +78,11 @@
   #endif
 #endif
 
+#ifdef _MSC_VER
+#define strcasecmp  stricmp
+#define strncasecmp strnicmp
+#endif
+
 #endif // D_KEYWDS_H__
 
 // EOF

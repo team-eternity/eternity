@@ -374,11 +374,6 @@ typedef enum {
 #define isMAPxy(s) ( (s)[0] == 'M' && (s)[1] == 'A' && (s)[2] == 'P'   \
                 && isnumchar((s)[3]) && isnumchar((s)[4]) && !(s)[5] )  
 
-#ifndef DJGPP
-  #define stricmp strcasecmp
-  #define strnicmp strncasecmp
-#endif
-
 #define HTIC_GHOST_TRANS 26624
 
 #endif          // __DOOMDEF__

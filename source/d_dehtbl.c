@@ -1883,7 +1883,7 @@ dehstr_t *D_GetDEHStr(const char *string)
    dehstr = &deh_strlookup[dehstrhashchains[key]];
 
    // while string doesn't match lookup, go down hash chain
-   while(stricmp(dehstr->original, string))
+   while(strcasecmp(dehstr->original, string))
    {
       // end of hash chain -- not found
       if(dehstr->dnext == -1)

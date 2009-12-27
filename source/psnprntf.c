@@ -130,7 +130,11 @@ int psnprintf(char *str, size_t n, const char *format, ...)
     case 'X': \
     case 'p': \
         GET_VARS \
-        ncount += pvsnfmt_int(&info); \
+        if(*info.fmt == 'p') \
+           ip.p = va_arg(ap, void *); \
+        else \
+           ip.i = va_arg(ap, int); \
+        ncount += pvsnfmt_int(&info, &ip); \
         state = STATE_NONE; \
         break; \
     case 'e': \
@@ -139,17 +143,17 @@ int psnprintf(char *str, size_t n, const char *format, ...)
     case 'g': \
     case 'G': \
         GET_VARS \
-        ncount += pvsnfmt_double(&info); \
+        ncount += pvsnfmt_double(&info, (double)(va_arg(ap, double))); \
         state = STATE_NONE; \
         break; \
     case 'c': \
         GET_VARS \
-        ncount += pvsnfmt_char(&info); \
+        ncount += pvsnfmt_char(&info, (char)(va_arg(ap, int))); \
         state = STATE_NONE; \
         break; \
     case 's': \
         GET_VARS \
-        ncount += pvsnfmt_str(&info); \
+        ncount += pvsnfmt_str(&info, (const char *)(va_arg(ap, const char *))); \
         state = STATE_NONE; \
         break; \
     case 'n': \
@@ -177,6 +181,7 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
 
     /* haleyjd 08/01/09: rewrite to use structure */
     pvsnfmt_vars info;
+    pvsnfmt_intparm_t ip;
 
     info.pinsertion = str;
     info.nmax       = nmax;
@@ -185,7 +190,6 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
     info.width      = 0;
     info.precision  = 0;
     info.prefix     = 0;
-    info.ap         = ap;
 
     while(*info.fmt)
     {
@@ -300,11 +304,11 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
     return ncount;
 }
 
-int pvsnfmt_char(pvsnfmt_vars *info)
+int pvsnfmt_char(pvsnfmt_vars *info, char c)
 {
     if(info->nmax > 1)
     {
-        *(info->pinsertion) = (char) va_arg(info->ap, int);
+        *(info->pinsertion) = c;
         info->pinsertion += 1;
         info->nmax -= 1;
     }
@@ -331,9 +335,9 @@ size_t pstrnlen(const char *s, size_t count)
  *   ap             Argument list
  */
 
-int pvsnfmt_str(pvsnfmt_vars *info)
+int pvsnfmt_str(pvsnfmt_vars *info, const char *s)
 {
-    const char *str = va_arg(info->ap, const char *);
+    const char *str = s;
     int nprinted;
     int len;
     int pad = 0;
@@ -424,7 +428,7 @@ int pvsnfmt_str(pvsnfmt_vars *info)
  *   ap             Argument list
  */
 
-int pvsnfmt_int(pvsnfmt_vars *info)
+int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
 {
     int number = 0;
     unsigned int unumber = 0;
@@ -463,17 +467,17 @@ int pvsnfmt_int(pvsnfmt_vars *info)
         {
             case 'd':
             case 'i':
-                number = (signed short int) va_arg(info->ap, int);
+                number = (signed short int) ip->i;
                 break;
             case 'u':
             case 'o':
             case 'x':
             case 'X':
-                unumber = (unsigned short int) va_arg(info->ap, int);
+                unumber = (unsigned short int) ip->i;
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) va_arg(info->ap, void *);
+                unumber = (unsigned int) ip->p;
                 numbersigned = 0;
         }
         break;
@@ -482,17 +486,17 @@ int pvsnfmt_int(pvsnfmt_vars *info)
         {
             case 'd':
             case 'i':
-                number = va_arg(info->ap, signed int);
+                number = ip->i;
                 break;
             case 'u':
             case 'o':
             case 'x':
             case 'X':
-                unumber = va_arg(info->ap, unsigned int);
+                unumber = (unsigned int) ip->i;
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) va_arg(info->ap, void *);
+                unumber = (unsigned int) ip->p;
                 numbersigned = numbersigned;
         }
         break;
@@ -501,17 +505,17 @@ int pvsnfmt_int(pvsnfmt_vars *info)
         {
             case 'd':
             case 'i':
-                number = va_arg(info->ap, signed int);
+                number = ip->i;
                 break;
             case 'u':
             case 'o':
             case 'x':
             case 'X':
-                unumber = va_arg(info->ap, unsigned int);
+                unumber = (unsigned int) ip->i;
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) va_arg(info->ap, void *);
+                unumber = (unsigned int) ip->p;
                 numbersigned = 0;
          }
     } /* switch fmt to retrieve number */
@@ -783,12 +787,12 @@ typedef union {
  *   ap             Argument list
  */
 
-int pvsnfmt_double(pvsnfmt_vars *info)
+int pvsnfmt_double(pvsnfmt_vars *info, double d)
 {
     char *digits;
     int sign = 0;
     int dec;
-    double value = va_arg(info->ap, double);
+    double value = d;
 
     int len;
     int pad = 0;

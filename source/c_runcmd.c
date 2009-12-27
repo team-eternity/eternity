@@ -38,7 +38,7 @@
 
 #include "z_zone.h"
 
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "d_io.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "c_net.h"

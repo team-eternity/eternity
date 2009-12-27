@@ -336,7 +336,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
       {
          // avoid short prefix erroneous match
          if(strlen(cursfx->mnemonic) == fromlen &&
-            !strnicmp(cursfx->mnemonic, inbuffer, fromlen))
+            !strncasecmp(cursfx->mnemonic, inbuffer, fromlen))
             return cursfx;
 
          cursfx = cursfx->next;

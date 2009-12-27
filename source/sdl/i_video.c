@@ -192,7 +192,8 @@ static void I_InitDiskFlash(void)
    SDL_SetPalette(disktmp, SDL_LOGPAL, colors, 0, 256);
 
    // setup VBuffer and point it into the SDL_Surface
-   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8, disktmp->pixels);
+   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8, 
+                     disktmp->pixels);
    V_SetScaling(&diskvb, 16, 15);
 
    // draw the disk graphic into the VBuffer

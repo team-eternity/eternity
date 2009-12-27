@@ -1309,7 +1309,7 @@ boolean WadFileStatus(char *filename,boolean *isdir)
 
    i = strlen(filename);          //get length of path
    if(i >= 4)
-      if(!strnicmp(filename + i - 4, ".wad", 4))
+      if(!strncasecmp(filename + i - 4, ".wad", 4))
          return false;            //if already ends in .wad, not found
 
    strcat(filename,".wad");       //try it with .wad added
@@ -1629,7 +1629,7 @@ void IdentifyVersion(void)
          if(gamemission == doom2)
          {
             i = strlen(iwad);
-            if(i >= 10 && !strnicmp(iwad+i-10, "doom2f.wad", 10))
+            if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
             {
                language = french;
                game_name = "DOOM II version, French language";

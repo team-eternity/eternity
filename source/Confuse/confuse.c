@@ -350,13 +350,13 @@ static cfg_opt_t *cfg_dupopts(cfg_opt_t *opts)
 
 int cfg_parse_boolean(const char *s)
 {
-   if(strcasecmp(s, "true") == 0
-      || strcasecmp(s, "on") == 0
-      || strcasecmp(s, "yes") == 0)
+   if(strcasecmp(s, "true") == 0 || 
+      strcasecmp(s, "on")   == 0 || 
+      strcasecmp(s, "yes")  == 0)
       return 1;
-   else if(strcasecmp(s, "false") == 0
-      || strcasecmp(s, "off") == 0
-      || strcasecmp(s, "no") == 0)
+   else if(strcasecmp(s, "false") == 0 || 
+           strcasecmp(s, "off")   == 0 || 
+           strcasecmp(s, "no")    == 0)
       return 0;
    return -1;
 }
