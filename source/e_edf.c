@@ -641,21 +641,23 @@ void E_EDFLogPrintf(const char *msg, ...)
 //
 void E_EDFLoggedErr(int lv, const char *msg, ...)
 {
-   va_list v;
-      
-   va_start(v, msg);
+   static char msgbuffer[1024];
+   va_list va;
+   
+   // haleyjd 12/27/2009: eliminated non-portable reuse of va_list
+   va_start(va, msg);
+   pvsnprintf(msgbuffer, sizeof(msgbuffer), msg, va);
+   va_end(va);
 
    if(edf_output)
    {
       while(lv--)
          putc('\t', edf_output);
       
-      vfprintf(edf_output, msg, v);
+      fprintf(edf_output, "%s", msgbuffer);
    }
 
-   I_ErrorVA(msg, v);
-
-   va_end(v); // for formality only, is unreachable.
+   I_Error("%s", msgbuffer);
 }
 
 //
