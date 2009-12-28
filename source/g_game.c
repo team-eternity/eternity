@@ -41,6 +41,7 @@
 #include "f_wipe.h"
 #include "m_argv.h"
 #include "m_misc.h"
+#include "m_shots.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
 #include "m_random.h"

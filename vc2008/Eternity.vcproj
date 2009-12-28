@@ -1703,6 +1703,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\m_buffer.c"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_cheat.c"
 						>
 						<FileConfiguration
@@ -1835,6 +1839,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\m_shots.c"
+						>
+					</File>
+					<File
 						RelativePath="..\source\m_syscfg.c"
 						>
 						<FileConfiguration
@@ -1913,6 +1921,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_buffer.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_cheat.h"
 						>
 					</File>
@@ -1942,6 +1954,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\m_random.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\m_shots.h"
 						>
 					</File>
 					<File
