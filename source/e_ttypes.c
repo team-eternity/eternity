@@ -580,7 +580,7 @@ static void E_LoadTerrainTypeDefs(void)
    lump = W_CacheLumpNum(lumpnum, PU_STATIC);
    
    shrtptr = (short *)lump;   
-   numterraindefs = SHORT(*shrtptr);
+   numterraindefs = SwapShort(*shrtptr);
    shrtptr++;
    
    chrptr = (char *)shrtptr;
@@ -593,7 +593,7 @@ static void E_LoadTerrainTypeDefs(void)
       
       // read short terrain type index
       shrtptr = (short *)chrptr;
-      temp = SHORT(*shrtptr);
+      temp = SwapShort(*shrtptr);
       shrtptr++;
       
       if(temp < 0 || temp >= MAXTERRAINDEF)

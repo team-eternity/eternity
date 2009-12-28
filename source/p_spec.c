@@ -197,7 +197,7 @@ void P_InitPicAnims(void)
 
       lastanim->istexture = animdefs[i].istexture;
       lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
-      lastanim->speed = LONG(animdefs[i].speed); // killough 5/5/98: add LONG()
+      lastanim->speed = SwapLong(animdefs[i].speed); // killough 5/5/98: add LONG()
 
       // sf: include support for swirly water hack
       if(lastanim->speed < 65536 && lastanim->numpics != 1)

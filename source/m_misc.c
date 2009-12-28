@@ -1645,14 +1645,14 @@ static boolean WritePCXfile(char *filename, byte *data, int width,
    pcx->bits_per_pixel = 8;    // 256 color
    pcx->xmin = 0;
    pcx->ymin = 0;
-   pcx->xmax = SHORT((short)(width-1));
-   pcx->ymax = SHORT((short)(height-1));
-   pcx->hres = SHORT((short)width);
-   pcx->vres = SHORT((short)height);
+   pcx->xmax = SwapShort((short)(width-1));
+   pcx->ymax = SwapShort((short)(height-1));
+   pcx->hres = SwapShort((short)width);
+   pcx->vres = SwapShort((short)height);
    memset(pcx->palette, 0, sizeof(pcx->palette));
    pcx->color_planes   = 1;        // chunky image
-   pcx->bytes_per_line = SHORT((short)width);
-   pcx->palette_type   = SHORT(1); // not a grey scale
+   pcx->bytes_per_line = SwapShort((short)width);
+   pcx->palette_type   = SwapShort(1); // not a grey scale
    memset(pcx->filler, 0, sizeof(pcx->filler));
 
    // pack the image
@@ -1775,23 +1775,23 @@ static boolean WriteBMPfile(char *filename, byte *data, int width,
    ihsiz = sizeof(BITMAPINFOHEADER);
    wid = 4*((width+3)/4);
    //jff 4/22/98 add endian macros
-   bmfh.bfType = SHORT(19778);
-   bmfh.bfSize = LONG(fhsiz+ihsiz+256L*4+width*height);
-   bmfh.bfReserved1 = SHORT(0);
-   bmfh.bfReserved2 = SHORT(0);
-   bmfh.bfOffBits   = LONG(fhsiz+ihsiz+256L*4);
+   bmfh.bfType = SwapShort(19778);
+   bmfh.bfSize = SwapLong(fhsiz+ihsiz+256L*4+width*height);
+   bmfh.bfReserved1 = SwapShort(0);
+   bmfh.bfReserved2 = SwapShort(0);
+   bmfh.bfOffBits   = SwapLong(fhsiz+ihsiz+256L*4);
 
-   bmih.biSize   = LONG(ihsiz);
-   bmih.biWidth  = LONG(width);
-   bmih.biHeight = LONG(height);
-   bmih.biPlanes   = SHORT(1);
-   bmih.biBitCount = SHORT(8);
-   bmih.biCompression = LONG(BI_RGB);
-   bmih.biSizeImage   = LONG(wid*height);
-   bmih.biXPelsPerMeter = LONG(0);
-   bmih.biYPelsPerMeter = LONG(0);
-   bmih.biClrUsed      = LONG(256);
-   bmih.biClrImportant = LONG(256);
+   bmih.biSize   = SwapLong(ihsiz);
+   bmih.biWidth  = SwapLong(width);
+   bmih.biHeight = SwapLong(height);
+   bmih.biPlanes   = SwapShort(1);
+   bmih.biBitCount = SwapShort(8);
+   bmih.biCompression = SwapLong(BI_RGB);
+   bmih.biSizeImage   = SwapLong(wid*height);
+   bmih.biXPelsPerMeter = SwapLong(0);
+   bmih.biYPelsPerMeter = SwapLong(0);
+   bmih.biClrUsed      = SwapLong(256);
+   bmih.biClrImportant = SwapLong(256);
 
    st = fopen(filename, "wb");
 

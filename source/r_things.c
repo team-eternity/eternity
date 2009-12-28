@@ -542,7 +542,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       baseclip = vis->ybottom - M_FixedToFloat(vis->footclip) * maskedcolumn.scale;
    }
 
-   w = SHORT(patch->width);
+   w = SwapShort(patch->width);
 
    // haleyjd: use a separate loop for footclip things, to minimize
    // overhead for regular sprites and to require no separate loop
@@ -563,7 +563,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch +
-            LONG(patch->columnofs[texturecolumn]));
+            SwapLong(patch->columnofs[texturecolumn]));
          R_DrawMaskedColumn(tcolumn);
       }
    }
@@ -578,7 +578,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch +
-            LONG(patch->columnofs[texturecolumn]));
+            SwapLong(patch->columnofs[texturecolumn]));
          R_DrawMaskedColumn(tcolumn);
       }
    }

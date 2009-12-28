@@ -196,7 +196,7 @@ static void R_GenerateComposite(int texnum)
       patch_t *realpatch = W_CacheLumpNum(patch->patch, PU_CACHE);
       int x;
       int x1 = patch->originx;
-      int x2 = x1 + SHORT(realpatch->width);
+      int x2 = x1 + SwapShort(realpatch->width);
       const int *cofs = realpatch->columnofs - x1;
       
       if(x1 < 0)
@@ -211,7 +211,7 @@ static void R_GenerateComposite(int texnum)
          if(collump[x] == -1)
          {
             // killough 1/25/98, 4/9/98: Fix medusa bug.
-            R_DrawColumnInCache((column_t *)((byte *) realpatch + LONG(cofs[x])),
+            R_DrawColumnInCache((column_t *)((byte *) realpatch + SwapLong(cofs[x])),
                                 block + colofs[x], 
                                 patch->originy,
                                 texture->height, 
@@ -308,7 +308,7 @@ static void R_GenerateLookup(int texnum, int *const errors)
       const patch_t *realpatch = W_CacheLumpNum(pat, PU_CACHE);
       int x;
       int x1 = patch++->originx;
-      int x2 = x1 + SHORT(realpatch->width);
+      int x2 = x1 + SwapShort(realpatch->width);
       const int *cofs = realpatch->columnofs - x1;
       
       if(x2 > texture->width)
@@ -321,7 +321,7 @@ static void R_GenerateLookup(int texnum, int *const errors)
       {
          count[x].patches++;
          collump[x] = pat;
-         colofs[x] = LONG(cofs[x]) + 3;
+         colofs[x] = SwapLong(cofs[x]) + 3;
       }
    }
 
@@ -347,7 +347,7 @@ static void R_GenerateLookup(int texnum, int *const errors)
       {
          int pat = patch->patch;
          const patch_t *realpatch = W_CacheLumpNum(pat, PU_CACHE);
-         int x, x1 = patch++->originx, x2 = x1 + SHORT(realpatch->width);
+         int x, x1 = patch++->originx, x2 = x1 + SwapShort(realpatch->width);
          const int *cofs = realpatch->columnofs - x1;
          
          if(x2 > texture->width)
@@ -360,7 +360,7 @@ static void R_GenerateLookup(int texnum, int *const errors)
             if(count[x].patches > 1)        // Only multipatched columns
             {
                const column_t *col =
-                  (column_t*)((byte*) realpatch+LONG(cofs[x]));
+                  (column_t*)((byte*) realpatch+SwapLong(cofs[x]));
                const byte *base = (const byte *) col;
 
                // count posts
@@ -800,7 +800,7 @@ static int *R_LoadPNames(void)
    // Load the patch names from pnames.lmp.
    name[8] = 0;
    names = W_CacheLumpName("PNAMES", PU_STATIC);
-   nummappatches = LONG(*((int *)names));
+   nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
    patchlookup = malloc(nummappatches * sizeof(*patchlookup)); // killough
    
@@ -1037,10 +1037,10 @@ void R_InitSpriteLumps(void)
       
       patch = W_CacheLumpNum(firstspritelump + i, PU_CACHE);
 
-      spritewidth[i]     = SHORT(patch->width) << FRACBITS;
-      spriteoffset[i]    = SHORT(patch->leftoffset) << FRACBITS;
-      spritetopoffset[i] = SHORT(patch->topoffset) << FRACBITS;
-      spriteheight[i]    = (float)(SHORT(patch->height));
+      spritewidth[i]     = SwapShort(patch->width) << FRACBITS;
+      spriteoffset[i]    = SwapShort(patch->leftoffset) << FRACBITS;
+      spritetopoffset[i] = SwapShort(patch->topoffset) << FRACBITS;
+      spriteheight[i]    = (float)(SwapShort(patch->height));
    }
 }
 

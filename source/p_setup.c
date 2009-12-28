@@ -162,7 +162,7 @@ d_inline static int ShortToLong(short value)
 d_inline static int SafeUintIndex(short input, int limit, const char *func,
                                   const char *item)
 {
-   int ret = (int)(SHORT(input)) & 0xffff;
+   int ret = (int)(SwapShort(input)) & 0xffff;
 
    if(ret >= limit)
    {
@@ -196,8 +196,8 @@ void P_LoadVertexes(int lump)
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(i = 0; i < numvertexes; ++i)
    {
-      vertexes[i].x = SHORT(((mapvertex_t *) data)[i].x) << FRACBITS;
-      vertexes[i].y = SHORT(((mapvertex_t *) data)[i].y) << FRACBITS;
+      vertexes[i].x = SwapShort(((mapvertex_t *) data)[i].x) << FRACBITS;
+      vertexes[i].y = SwapShort(((mapvertex_t *) data)[i].y) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
@@ -234,14 +234,14 @@ void P_LoadSegs(int lump)
       li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "vertex", "vertex")];
       li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "vertex", "vertex")];
 
-      //li->angle  = (SHORT(ml->angle))  << 16;
-      li->offset = (SHORT(ml->offset)) << 16;
+      //li->angle  = (SwapShort(ml->angle))  << 16;
+      li->offset = (SwapShort(ml->offset)) << 16;
 
       // haleyjd 06/19/06: convert indices to unsigned
       linedef = SafeUintIndex(ml->linedef, numlines, "vertex", "line");
       ldef = &lines[linedef];
       li->linedef = ldef;
-      side = SHORT(ml->side);
+      side = SwapShort(ml->side);
       li->sidedef = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
@@ -294,9 +294,9 @@ void P_LoadSubsectors(int lump)
 
       // haleyjd 06/19/06: convert indices to unsigned
       subsectors[i].numlines =
-         (int)SHORT(mss->numsegs) & 0xffff;
+         (int)SwapShort(mss->numsegs) & 0xffff;
       subsectors[i].firstline =
-         (int)SHORT(mss->firstseg) & 0xffff;
+         (int)SwapShort(mss->firstseg) & 0xffff;
    }
    
    Z_Free(data);
@@ -325,12 +325,12 @@ void P_LoadSectors(int lump)
       sector_t *ss = sectors + i;
       const mapsector_t *ms = (mapsector_t *)data + i;
       
-      ss->floorheight        = SHORT(ms->floorheight)   << FRACBITS;
-      ss->ceilingheight      = SHORT(ms->ceilingheight) << FRACBITS;      
+      ss->floorheight        = SwapShort(ms->floorheight)   << FRACBITS;
+      ss->ceilingheight      = SwapShort(ms->ceilingheight) << FRACBITS;      
       ss->floorpic           = R_FlatNumForName(ms->floorpic);
-      ss->lightlevel         = SHORT(ms->lightlevel);
-      ss->special            = SHORT(ms->special);
-      ss->tag                = SHORT(ms->tag);
+      ss->lightlevel         = SwapShort(ms->lightlevel);
+      ss->special            = SwapShort(ms->special);
+      ss->tag                = SwapShort(ms->tag);
       ss->thinglist          = NULL;
       ss->touching_thinglist = NULL;            // phares 3/14/98
 
@@ -444,10 +444,10 @@ void P_LoadNodes(int lump)
       mapnode_t *mn = (mapnode_t *)data + i;
       int j;
 
-      no->x  = SHORT(mn->x);
-      no->y  = SHORT(mn->y);
-      no->dx = SHORT(mn->dx);
-      no->dy = SHORT(mn->dy);
+      no->x  = SwapShort(mn->x);
+      no->y  = SwapShort(mn->y);
+      no->dx = SwapShort(mn->dx);
+      no->dy = SwapShort(mn->dy);
 
       // haleyjd 05/16/08: keep floating point versions as well for dynamic
       // seg splitting operations
@@ -470,9 +470,9 @@ void P_LoadNodes(int lump)
       for(j = 0; j < 2; ++j)
       {
          int k;
-         no->children[j] = SHORT(mn->children[j]);
+         no->children[j] = SwapShort(mn->children[j]);
          for(k = 0; k < 4; ++k)
-            no->bbox[j][k] = SHORT(mn->bbox[j][k]) << FRACBITS;
+            no->bbox[j][k] = SwapShort(mn->bbox[j][k]) << FRACBITS;
       }
    }
    
@@ -507,7 +507,7 @@ void P_LoadThings(int lump)
       mapthing_t     *ft = &mapthings[i];
       
       // haleyjd 09/11/06: wow, this should be up here.
-      ft->type = SHORT(mt->type);
+      ft->type = SwapShort(mt->type);
 
       // Do not spawn cool, new monsters if !commercial
       // haleyjd: removing this for Heretic and DeHackEd
@@ -531,10 +531,10 @@ void P_LoadThings(int lump)
       }
       
       // Do spawn all other stuff.
-      ft->x       = SHORT(mt->x);
-      ft->y       = SHORT(mt->y);
-      ft->angle   = SHORT(mt->angle);      
-      ft->options = SHORT(mt->options);
+      ft->x       = SwapShort(mt->x);
+      ft->y       = SwapShort(mt->y);
+      ft->angle   = SwapShort(mt->angle);      
+      ft->options = SwapShort(mt->options);
 
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
@@ -578,13 +578,13 @@ void P_LoadHexenThings(int lump)
       mapthinghexen_t *mt = (mapthinghexen_t *)data + i;
       mapthing_t      *ft = &mapthings[i];
       
-      ft->tid     = SHORT(mt->tid);
-      ft->x       = SHORT(mt->x);
-      ft->y       = SHORT(mt->y);
-      ft->height  = SHORT(mt->height);
-      ft->angle   = SHORT(mt->angle);
-      ft->type    = SHORT(mt->type);
-      ft->options = SHORT(mt->options);
+      ft->tid     = SwapShort(mt->tid);
+      ft->x       = SwapShort(mt->x);
+      ft->y       = SwapShort(mt->y);
+      ft->height  = SwapShort(mt->height);
+      ft->angle   = SwapShort(mt->angle);
+      ft->type    = SwapShort(mt->type);
+      ft->options = SwapShort(mt->options);
 
       // note: args are already in order since they're just bytes
 
@@ -636,9 +636,9 @@ void P_LoadLineDefs(int lump)
       line_t *ld = lines + i;
       vertex_t *v1, *v2;
 
-      ld->flags   = SHORT(mld->flags);
-      ld->special = SHORT(mld->special);
-      ld->tag     = SHORT(mld->tag);
+      ld->flags   = SwapShort(mld->flags);
+      ld->special = SwapShort(mld->special);
+      ld->tag     = SwapShort(mld->tag);
 
       // haleyjd 06/19/06: convert indices to unsigned
       v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", "vertex")];
@@ -677,8 +677,8 @@ void P_LoadLineDefs(int lump)
       }
 
       // haleyjd 06/19/06: convert indices, except -1, to unsigned
-      ld->sidenum[0] = ShortToLong(SHORT(mld->sidenum[0]));
-      ld->sidenum[1] = ShortToLong(SHORT(mld->sidenum[1]));
+      ld->sidenum[0] = ShortToLong(SwapShort(mld->sidenum[0]));
+      ld->sidenum[1] = ShortToLong(SwapShort(mld->sidenum[1]));
 
       // haleyjd 12/04/08: rangechecking for safety
       if(ld->sidenum[0] >= numsides)
@@ -795,7 +795,7 @@ void P_LoadHexenLineDefs(int lump)
       vertex_t *v1, *v2;
       int argnum;
 
-      ld->flags = SHORT(mld->flags);
+      ld->flags = SwapShort(mld->flags);
 
       ld->special = mld->special;
       
@@ -812,8 +812,8 @@ void P_LoadHexenLineDefs(int lump)
       ld->tag = -1; // haleyjd 02/27/07
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[(int)SHORT(mld->v1) & 0xffff];
-      v2 = ld->v2 = &vertexes[(int)SHORT(mld->v2) & 0xffff];
+      v1 = ld->v1 = &vertexes[(int)SwapShort(mld->v1) & 0xffff];
+      v2 = ld->v2 = &vertexes[(int)SwapShort(mld->v2) & 0xffff];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
@@ -848,8 +848,8 @@ void P_LoadHexenLineDefs(int lump)
       }
 
       // haleyjd 06/19/06: convert indices, except -1, to unsigned
-      ld->sidenum[0] = ShortToLong(SHORT(mld->sidenum[0]));
-      ld->sidenum[1] = ShortToLong(SHORT(mld->sidenum[1]));
+      ld->sidenum[0] = ShortToLong(SwapShort(mld->sidenum[0]));
+      ld->sidenum[1] = ShortToLong(SwapShort(mld->sidenum[1]));
 
       // killough 4/4/98: support special sidedef interpretation below
       if(ld->sidenum[0] != -1 && ld->special)
@@ -950,8 +950,8 @@ void P_LoadSideDefs2(int lump)
       register sector_t *sec;
       int cmap;
 
-      sd->textureoffset = SHORT(msd->textureoffset) << FRACBITS;
-      sd->rowoffset     = SHORT(msd->rowoffset)     << FRACBITS;
+      sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
+      sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
       // killough 4/11/98: refined to allow colormaps to work as wall
@@ -1215,14 +1215,14 @@ void P_LoadBlockMap(int lump)
       // them. This potentially doubles the size of blockmaps allowed,
       // because Doom originally considered the offsets as always signed.
 
-      blockmaplump[0] = SHORT(wadblockmaplump[0]);
-      blockmaplump[1] = SHORT(wadblockmaplump[1]);
-      blockmaplump[2] = (int)(SHORT(wadblockmaplump[2])) & 0xffff;
-      blockmaplump[3] = (int)(SHORT(wadblockmaplump[3])) & 0xffff;
+      blockmaplump[0] = SwapShort(wadblockmaplump[0]);
+      blockmaplump[1] = SwapShort(wadblockmaplump[1]);
+      blockmaplump[2] = (int)(SwapShort(wadblockmaplump[2])) & 0xffff;
+      blockmaplump[3] = (int)(SwapShort(wadblockmaplump[3])) & 0xffff;
 
       for(i = 4; i < count; i++)
       {
-         short t = SHORT(wadblockmaplump[i]);          // killough 3/1/98
+         short t = SwapShort(wadblockmaplump[i]);          // killough 3/1/98
          blockmaplump[i] = t == -1 ? -1l : (int) t & 0xffff;
       }
 

@@ -573,8 +573,8 @@ void MN_MapColourDrawer(void)
    
    patch = W_CacheLumpName("M_COLORS", PU_CACHE);
    
-   x = (SCREENWIDTH  - SHORT(patch->width )) / 2;
-   y = (SCREENHEIGHT - SHORT(patch->height)) / 2;
+   x = (SCREENWIDTH  - SwapShort(patch->width )) / 2;
+   y = (SCREENHEIGHT - SwapShort(patch->height)) / 2;
    
    V_DrawPatch(x, y, &vbscreen, patch);
    

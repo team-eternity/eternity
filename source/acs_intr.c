@@ -400,7 +400,7 @@ static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, short spec, int side,
 
    // args follow instruction in the code from first to last
    for(; i > 0; --i)
-      args[argc-i] = LONG(*argv++);
+      args[argc-i] = SwapLong(*argv++);
 
    // translate line specials & args for Hexen maps
    P_ConvertHexenLineSpec(&spec, args);
@@ -523,8 +523,8 @@ static void ACS_setLineSpecial(short spec, int *args, int tag)
 #define DECSTP4() stp -= 4
 #define DECSTP5() stp -= 5
 
-#define IPCURR()  LONG(*ip)
-#define IPNEXT()  LONG(*ip++)
+#define IPCURR()  SwapLong(*ip)
+#define IPNEXT()  SwapLong(*ip++)
 
 // for binary operations: ++ and -- mess these up
 #define ST_OP1      stack[stp-2]
@@ -1210,14 +1210,14 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
    rover = (int32_t *)vm->data;
 
    // check magic id string: currently supports Hexen format only
-   if(LONG(*rover++) != 0x00534341) // "ACS\0"
+   if(SwapLong(*rover++) != 0x00534341) // "ACS\0"
       return;
 
    // set rover to information table
-   rover = (int32_t *)(vm->data + LONG(*rover));
+   rover = (int32_t *)(vm->data + SwapLong(*rover));
 
    // read number of scripts
-   vm->numScripts = LONG(*rover++);
+   vm->numScripts = SwapLong(*rover++);
 
    if(vm->numScripts <= 0) // no scripts defined?
       return;
@@ -1230,9 +1230,9 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
    // read script information entries
    for(i = 0; i < vm->numScripts; ++i)
    {
-      vm->scripts[i].number  = LONG(*rover++); // read script number
-      vm->scripts[i].code    = (int *)(vm->data + LONG(*rover++)); // set entry pt
-      vm->scripts[i].numArgs = LONG(*rover++); // number of args
+      vm->scripts[i].number  = SwapLong(*rover++); // read script number
+      vm->scripts[i].code    = (int *)(vm->data + SwapLong(*rover++)); // set entry pt
+      vm->scripts[i].numArgs = SwapLong(*rover++); // number of args
 
       // handle open scripts: scripts > 1000 should start at the
       // beginning of the level      
@@ -1244,7 +1244,7 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
    }
 
    // we are now positioned at the string table; read number of strings
-   numstrings = LONG(*rover++);
+   numstrings = SwapLong(*rover++);
 
    // allocate string table
    if(numstrings > 0)
@@ -1254,7 +1254,7 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
       
       // set string pointers
       for(i = 0; i < numstrings; ++i)
-         vm->stringtable[i] = (char *)(vm->data + LONG(*rover++));
+         vm->stringtable[i] = (char *)(vm->data + SwapLong(*rover++));
    }
 
    // haleyjd 06/30/09: open scripts must be started *here*, not above.

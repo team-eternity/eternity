@@ -224,9 +224,9 @@ static void MN_DrawSlider(int x, int y, int pct)
    slider_gfx[slider_mid]    = W_CacheLumpName("M_SLIDEM", PU_STATIC);
    slider_gfx[slider_slider] = W_CacheLumpName("M_SLIDEO", PU_STATIC);
 
-   wl = SHORT(slider_gfx[slider_left]->width);
-   wm = SHORT(slider_gfx[slider_mid]->width);
-   ws = SHORT(slider_gfx[slider_slider]->width);
+   wl = SwapShort(slider_gfx[slider_left]->width);
+   wm = SwapShort(slider_gfx[slider_mid]->width);
+   ws = SwapShort(slider_gfx[slider_slider]->width);
   
    V_DrawPatch(draw_x, y, &vbscreen, slider_gfx[slider_left]);
    draw_x += wl;
@@ -365,8 +365,8 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       {
          short width;
          patch = W_CacheLumpNum(lumpnum, PU_CACHE);
-         item_height = SHORT(patch->height) + 1;
-         width  = SHORT(patch->width);
+         item_height = SwapShort(patch->height) + 1;
+         width  = SwapShort(patch->width);
          
          // check for left-aligned
          if(!leftaligned) 
@@ -866,8 +866,8 @@ void MN_Init(void)
    // get width and height from first patch
    {
       patch_t *ptr0 = W_CacheLumpNum(smallptrs[0], PU_CACHE);
-      smallptr_dims[0] = SHORT(ptr0->width);
-      smallptr_dims[1] = SHORT(ptr0->height);
+      smallptr_dims[0] = SwapShort(ptr0->width);
+      smallptr_dims[1] = SwapShort(ptr0->height);
    }
       
    quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet

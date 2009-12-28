@@ -292,11 +292,11 @@ void F_TextWrite(void)
          continue;
       }
       
-      w = SHORT(f_font->fontgfx[c]->width);
+      w = SwapShort(f_font->fontgfx[c]->width);
       if(cx + w > SCREENWIDTH)
          continue; // haleyjd: continue if text off right side
 
-      h = SHORT(f_font->fontgfx[c]->height);
+      h = SwapShort(f_font->fontgfx[c]->height);
       if(cy + h > SCREENHEIGHT)
          break; // haleyjd: break if text off bottom
 

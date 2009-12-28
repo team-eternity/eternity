@@ -1171,10 +1171,10 @@ void MN_PlayerDrawer(void)
    
    patch = W_CacheLumpNum(lump + firstspritelump, PU_CACHE);
 
-   w    = SHORT(patch->width);
-   h    = SHORT(patch->height);
-   toff = SHORT(patch->topoffset);
-   loff = SHORT(patch->leftoffset);
+   w    = SwapShort(patch->width);
+   h    = SwapShort(patch->height);
+   toff = SwapShort(patch->topoffset);
+   loff = SwapShort(patch->leftoffset);
    
    V_DrawBox(SPRITEBOX_X, SPRITEBOX_Y, w + 16, h + 16);
 
@@ -1338,12 +1338,12 @@ void MN_DrawLoadBox(int x, int y)
    patch_right = W_CacheLumpName("M_LSRGHT", PU_STATIC);
 
    V_DrawPatch(x, y, &vbscreen, patch_left);
-   x += SHORT(patch_left->width);
+   x += SwapShort(patch_left->width);
    
    for(i=0; i<24; i++)
    {
       V_DrawPatch(x, y, &vbscreen, patch_mid);
-      x += SHORT(patch_mid->width);
+      x += SwapShort(patch_mid->width);
    }
    
    V_DrawPatch(x, y, &vbscreen, patch_right);
@@ -2367,10 +2367,10 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      short w  = SHORT(patch->width);
-      short h  = SHORT(patch->height);
-      short to = SHORT(patch->topoffset);
-      short lo = SHORT(patch->leftoffset);
+      short w  = SwapShort(patch->width);
+      short h  = SwapShort(patch->height);
+      short to = SwapShort(patch->topoffset);
+      short lo = SwapShort(patch->leftoffset);
 
       V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
                     y + 12 - (h >> 1) + to, 

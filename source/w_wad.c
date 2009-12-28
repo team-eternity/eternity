@@ -140,7 +140,7 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
       isWad = false; // haleyjd 05/23/04
       fileinfo = &singleinfo;
       singleinfo.filepos = 0;
-      singleinfo.size = LONG(M_FileLength(fileno(handle)));
+      singleinfo.size = SwapLong(M_FileLength(fileno(handle)));
       M_ExtractFileBase(filename, singleinfo.name);
       dir->numlumps++;
    }
@@ -158,8 +158,8 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
          I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename);
       }
       
-      header.numlumps     = LONG(header.numlumps);
-      header.infotableofs = LONG(header.infotableofs);
+      header.numlumps     = SwapLong(header.numlumps);
+      header.infotableofs = SwapLong(header.infotableofs);
       
       length = header.numlumps * sizeof(filelump_t);
       fileinfo2free = fileinfo = malloc(length);    // killough
@@ -198,8 +198,8 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
       dir->lumpinfo[i] = lump_p;
       lump_p->type     = lump_direct; // haleyjd
       lump_p->file     = handle;
-      lump_p->position = (size_t)(LONG(fileinfo->filepos));
-      lump_p->size     = (size_t)(LONG(fileinfo->size));
+      lump_p->position = (size_t)(SwapLong(fileinfo->filepos));
+      lump_p->size     = (size_t)(SwapLong(fileinfo->size));
       
       lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
       lump_p->li_namespace = li_namespace;         // killough 4/17/98

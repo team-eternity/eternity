@@ -476,7 +476,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    int        maxw;
    void       (*maskcolfunc)(column_t *);
 
-   w = SHORT(patch->width); // haleyjd: holy crap, stop calling this 800 times
+   w = SwapShort(patch->width); // haleyjd: holy crap, stop calling this 800 times
    
    patchcol.buffer = buffer;
 
@@ -485,12 +485,12 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    {
       // If flipped, then offsets are flipped as well which means they 
       // technically offset from the right side of the patch (x2)
-      x2 = pi->x + SHORT(patch->leftoffset);
+      x2 = pi->x + SwapShort(patch->leftoffset);
       x1 = x2 - (w - 1);
    }
    else
    {
-      x1 = pi->x - SHORT(patch->leftoffset);
+      x1 = pi->x - SwapShort(patch->leftoffset);
       x2 = x1 + w - 1;
    }
 
@@ -582,7 +582,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          I_Error("V_DrawPatchInt: unknown patch drawstyle %d\n", pi->drawstyle);
       }
 
-      ytop = pi->y - SHORT(patch->topoffset);
+      ytop = pi->y - SwapShort(patch->topoffset);
       
       for(; patchcol.x <= x2; patchcol.x++, startfrac += xiscale)
       {
@@ -594,7 +594,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 #endif
          
          column = (column_t *)((byte *)patch +
-            LONG(patch->columnofs[texturecolumn]));
+            SwapLong(patch->columnofs[texturecolumn]));
          maskcolfunc(column);
       }
    }
@@ -639,8 +639,8 @@ void V_SetupBufferFuncs(VBuffer *buffer, int drawtype)
 byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
                       int *width, int *height)
 {
-   int w = SHORT(patch->width);
-   int h = SHORT(patch->height);
+   int w = SwapShort(patch->width);
+   int h = SwapShort(patch->height);
    int col = w - 1, colstop = -1, colstep = -1;
 
    byte *desttop;
@@ -656,7 +656,7 @@ byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
    for(; col != colstop; col += colstep, ++desttop)
    {
       const column_t *column = 
-         (const column_t *)((byte *)patch + LONG(patch->columnofs[col]));
+         (const column_t *)((byte *)patch + SwapLong(patch->columnofs[col]));
       
       // step through the posts in a column
       while(column->topdelta != 0xff)

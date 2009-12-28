@@ -113,7 +113,7 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    for(i = 0; i < count; i++, texpatch++)
    {
       W_ReadLumpHeader(texpatch->patch, &wpatch, sizeof(patch_t));
-      wpatch.height = SHORT(wpatch.height);
+      wpatch.height = SwapShort(wpatch.height);
 
       if(wpatch.height > p_height)
          p_height = wpatch.height;

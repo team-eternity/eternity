@@ -293,7 +293,7 @@ void D_Display(void)
          // haleyjd 03/12/03: changed to work
          // in heretic, and with user pause patches
          patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
-         int width = SHORT(patch->width);
+         int width = SwapShort(patch->width);
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
          int y = 4 + (automapactive ? 0 : scaledwindowy);
@@ -1193,13 +1193,13 @@ static void CheckIWAD(const char *iwadname,
          usermsg("Warning: IWAD tag not present: %s\n", iwadname);
    }
 
-   fseek(fp, LONG(header.infotableofs), SEEK_SET);
+   fseek(fp, SwapLong(header.infotableofs), SEEK_SET);
 
    // Determine game mode from levels present
    // Must be a full set for whichever mode is present
    // Lack of wolf-3d levels also detected here
 
-   header.numlumps = LONG(header.numlumps);
+   header.numlumps = SwapLong(header.numlumps);
 
    for(; header.numlumps; header.numlumps--)
    {

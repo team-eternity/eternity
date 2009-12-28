@@ -85,8 +85,8 @@ static patch_t *bgp[9];        // background for boxes
 
 void V_DrawBox(int x, int y, int w, int h)
 {
-   int xs = SHORT(bgp[0]->width);
-   int ys = SHORT(bgp[0]->height);
+   int xs = SwapShort(bgp[0]->width);
+   int ys = SwapShort(bgp[0]->height);
    int i, j;
    
    // top rows

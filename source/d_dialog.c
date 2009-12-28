@@ -349,7 +349,7 @@ void DLG_Ticker(void)
 	 return;
       }
 
-      cmd = LONG(*(currentdialog->ip));
+      cmd = SwapLong(*(currentdialog->ip));
       if(cmd < 0 || cmd >= NUMDIALOGKEYWORDS)
       {
 	 // invalid op code
@@ -358,7 +358,7 @@ void DLG_Ticker(void)
       }
       currentdialog->ip += 1;
 
-      arg = LONG(*(currentdialog->ip));
+      arg = SwapLong(*(currentdialog->ip));
       currentdialog->ip += 1;
 
       // call appropriate handler with retrieved argument
@@ -473,7 +473,7 @@ void DLG_WriteText(void)
 	 continue;
       }
 
-      w = SHORT(v_font[c]->width);
+      w = SwapShort(v_font[c]->width);
       if(cx + w > TEXTWIDTH)
 	 continue; // keep looking in case of \n later
       if(cy > TEXTHEIGHT)

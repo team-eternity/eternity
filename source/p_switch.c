@@ -103,9 +103,9 @@ void P_InitSwitchList(void)
          switchlist = realloc(switchlist, sizeof(*switchlist) *
          (max_numswitches = max_numswitches ? max_numswitches * 2 : 8));
       }
-      if(SHORT(alphSwitchList[i].episode) <= episode) //jff 5/11/98 endianess
+      if(SwapShort(alphSwitchList[i].episode) <= episode) //jff 5/11/98 endianess
       {
-         if(!SHORT(alphSwitchList[i].episode))
+         if(!SwapShort(alphSwitchList[i].episode))
             break;
          switchlist[index++] =
             R_TextureNumForName(alphSwitchList[i].name1);

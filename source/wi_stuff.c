@@ -91,7 +91,7 @@ extern char gamemapname[9];
 
 // NET GAME STUFF
 #define NG_STATSY     50
-#define NG_STATSX     (32 + SHORT(star->width)/2 + 32*!dofrags)
+#define NG_STATSX     (32 + SwapShort(star->width)/2 + 32*!dofrags)
 
 #define NG_SPACINGX   64
 
@@ -438,13 +438,13 @@ static void WI_drawLF(void)
       }
       else
       {
-         V_DrawPatch((SCREENWIDTH - SHORT(patch->width))/2,
+         V_DrawPatch((SCREENWIDTH - SwapShort(patch->width))/2,
                      y, &vbscreen, patch);
-         y += (5 * SHORT(patch->height)) / 4;
+         y += (5 * SwapShort(patch->height)) / 4;
       }
       
       // draw "Finished!"
-      V_DrawPatch((SCREENWIDTH - SHORT(finished->width))/2,
+      V_DrawPatch((SCREENWIDTH - SwapShort(finished->width))/2,
                   y, &vbscreen, finished);
    }
 
@@ -488,11 +488,11 @@ static void WI_drawEL(void)
    if(patch || nextMapName)
    {
       // draw "Entering"
-      V_DrawPatch((SCREENWIDTH - SHORT(entering->width))/2,
+      V_DrawPatch((SCREENWIDTH - SwapShort(entering->width))/2,
                   y, &vbscreen, entering);
 
       // haleyjd: corrected to use height of entering, not map name
-      y += (5 * SHORT(entering->height))/4;
+      y += (5 * SwapShort(entering->height))/4;
 
       // draw level
       if(nextMapName)
@@ -503,7 +503,7 @@ static void WI_drawEL(void)
       }
       else
       {
-         V_DrawPatch((SCREENWIDTH - SHORT(patch->width))/2,
+         V_DrawPatch((SCREENWIDTH - SwapShort(patch->width))/2,
                      y, &vbscreen, patch);
       }
    }
@@ -536,10 +536,10 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
    i = 0;
    do
    {
-      left = lnodes[wbs->epsd][n].x - SHORT(c[i]->leftoffset);
-      top = lnodes[wbs->epsd][n].y - SHORT(c[i]->topoffset);
-      right = left + SHORT(c[i]->width);
-      bottom = top + SHORT(c[i]->height);
+      left = lnodes[wbs->epsd][n].x - SwapShort(c[i]->leftoffset);
+      top = lnodes[wbs->epsd][n].y - SwapShort(c[i]->topoffset);
+      right = left + SwapShort(c[i]->width);
+      bottom = top + SwapShort(c[i]->height);
       
       if(left >= 0
          && right < SCREENWIDTH
@@ -702,7 +702,7 @@ static void WI_drawAnimatedBack(void)
 //
 static int WI_drawNum(int x, int y, int n, int digits)
 {
-   int neg, temp, fontwidth = SHORT(num[0]->width);
+   int neg, temp, fontwidth = SwapShort(num[0]->width);
 
    neg = n < 0;    // killough 11/98: move up to here, for /= 10 division below
    if(neg)
@@ -789,7 +789,7 @@ static void WI_drawTime(int x, int y, int t)
       do
       {
          n = (t / div) % 60;
-         x = WI_drawNum(x, y, n, 2) - SHORT(colon->width);
+         x = WI_drawNum(x, y, n, 2) - SwapShort(colon->width);
          div *= 60;
          
          // draw
@@ -801,7 +801,7 @@ static void WI_drawTime(int x, int y, int t)
    else
    {
       // "sucks"
-      V_DrawPatch(x - SHORT(sucks->width), y, &vbscreen, sucks); 
+      V_DrawPatch(x - SwapShort(sucks->width), y, &vbscreen, sucks); 
    }
 }
 
@@ -1226,7 +1226,7 @@ static void WI_drawDeathmatchStats(void)
    WI_drawLF();
 
    // draw stat titles (top line)
-   V_DrawPatch(DM_TOTALSX-SHORT(total->width)/2,
+   V_DrawPatch(DM_TOTALSX-SwapShort(total->width)/2,
                DM_MATRIXY-WI_SPACINGY+10,
                &vbscreen,
                total);
@@ -1242,24 +1242,24 @@ static void WI_drawDeathmatchStats(void)
    {
       if (playeringame[i])
       {
-         V_DrawPatch(x-SHORT(p[i]->width)/2,
+         V_DrawPatch(x-SwapShort(p[i]->width)/2,
                      DM_MATRIXY - WI_SPACINGY,
                      &vbscreen,
                      p[i]);
       
-         V_DrawPatch(DM_MATRIXX-SHORT(p[i]->width)/2,
+         V_DrawPatch(DM_MATRIXX-SwapShort(p[i]->width)/2,
                      y,
                      &vbscreen,
                      p[i]);
 
          if(i == me)
          {
-            V_DrawPatch(x-SHORT(p[i]->width)/2,
+            V_DrawPatch(x-SwapShort(p[i]->width)/2,
                         DM_MATRIXY - WI_SPACINGY,
                         &vbscreen,
                         bstar);
 
-            V_DrawPatch(DM_MATRIXX-SHORT(p[i]->width)/2,
+            V_DrawPatch(DM_MATRIXX-SwapShort(p[i]->width)/2,
                         y,
                         &vbscreen,
                         star);
@@ -1271,7 +1271,7 @@ static void WI_drawDeathmatchStats(void)
 
    // draw stats
    y = DM_MATRIXY + 10;
-   w = SHORT(num[0]->width);
+   w = SwapShort(num[0]->width);
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
@@ -1520,7 +1520,7 @@ static void WI_updateNetgameStats(void)
 //
 static void WI_drawNetgameStats(void)
 {
-   int i, x, y, pwidth = SHORT(percent->width);
+   int i, x, y, pwidth = SwapShort(percent->width);
 
    if(!(fade_applied || cur_pause_time))
    {
@@ -1540,21 +1540,21 @@ static void WI_drawNetgameStats(void)
    WI_drawLF();
 
    // draw stat titles (top line)
-   V_DrawPatch(NG_STATSX+NG_SPACINGX-SHORT(kills->width),
+   V_DrawPatch(NG_STATSX+NG_SPACINGX-SwapShort(kills->width),
                NG_STATSY, &vbscreen, kills);
 
-   V_DrawPatch(NG_STATSX+2*NG_SPACINGX-SHORT(items->width),
+   V_DrawPatch(NG_STATSX+2*NG_SPACINGX-SwapShort(items->width),
                NG_STATSY, &vbscreen, items);
 
-   V_DrawPatch(NG_STATSX+3*NG_SPACINGX-SHORT(secret->width),
+   V_DrawPatch(NG_STATSX+3*NG_SPACINGX-SwapShort(secret->width),
                NG_STATSY, &vbscreen, secret);
   
    if(dofrags)
-      V_DrawPatch(NG_STATSX+4*NG_SPACINGX-SHORT(frags->width),
+      V_DrawPatch(NG_STATSX+4*NG_SPACINGX-SwapShort(frags->width),
                   NG_STATSY, &vbscreen, frags);
 
    // draw stats
-   y = NG_STATSY + SHORT(kills->height);
+   y = NG_STATSY + SwapShort(kills->height);
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
@@ -1562,10 +1562,10 @@ static void WI_drawNetgameStats(void)
          continue;
       
       x = NG_STATSX;
-      V_DrawPatch(x-SHORT(p[i]->width), y, &vbscreen, p[i]);
+      V_DrawPatch(x-SwapShort(p[i]->width), y, &vbscreen, p[i]);
       
       if(i == me)
-         V_DrawPatch(x-SHORT(p[i]->width), y, &vbscreen, star);
+         V_DrawPatch(x-SwapShort(p[i]->width), y, &vbscreen, star);
       
       x += NG_SPACINGX;
       WI_drawPercent(x-pwidth, y+10, cnt_kills[i]); x += NG_SPACINGX;
@@ -1745,7 +1745,7 @@ static void WI_drawStats(void)
    // line height
    int lh; 
    
-   lh = (3*SHORT(num[0]->height))/2;
+   lh = (3*SwapShort(num[0]->height))/2;
 
    if(!(fade_applied || cur_pause_time))
    {

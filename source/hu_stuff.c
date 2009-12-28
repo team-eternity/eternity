@@ -556,10 +556,10 @@ static void HU_PatchWidgetErase(hu_widget_t *widget)
    if(patch && pw->tl_level != 0)
    {
       // haleyjd 06/08/05: must adjust for patch offsets
-      x = pw->x - SHORT(patch->leftoffset);
-      y = pw->y - SHORT(patch->topoffset);
-      w = SHORT(patch->width);
-      h = SHORT(patch->height);
+      x = pw->x - SwapShort(patch->leftoffset);
+      y = pw->y - SwapShort(patch->topoffset);
+      w = SwapShort(patch->width);
+      h = SwapShort(patch->height);
       
       x2 = x + w - 1;
       y2 = y + h - 1;
@@ -1167,8 +1167,8 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
 
    // where to draw??
 
-   w = SHORT(patch->width);
-   h = SHORT(patch->height);
+   w = SwapShort(patch->width);
+   h = SwapShort(patch->height);
    
    drawx = (SCREENWIDTH - w) / 2;
 
