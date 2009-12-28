@@ -640,6 +640,10 @@ SOURCE=.\Source\m_bbox.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\m_buffer.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\m_cheat.c
 # End Source File
 # Begin Source File
@@ -664,6 +668,10 @@ SOURCE=.\Source\m_random.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\m_shots.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\source\m_syscfg.c
 # End Source File
 # Begin Source File
@@ -685,6 +693,10 @@ SOURCE=.\Source\m_argv.h
 # Begin Source File
 
 SOURCE=.\Source\m_bbox.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\m_buffer.h
 # End Source File
 # Begin Source File
 
@@ -717,6 +729,10 @@ SOURCE=.\Source\m_queue.h
 # Begin Source File
 
 SOURCE=.\Source\m_random.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\m_shots.h
 # End Source File
 # Begin Source File
 
