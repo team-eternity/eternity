@@ -38,17 +38,28 @@
 // haleyjd 12/28/09: selects from any number of formats now.
 int screenshot_pcx; 
 
+// jff 3/30/98 binary file write with error detection
+// killough 10/98: changed into macro to return failure instead of aborting
+
+#define SafeWrite(ob, data, size) \
+   do { if(!M_BufferWrite(ob, data, size)) return false; } while(0)
+
+#define SafeWrite32(ob, data) \
+   do { if(!M_BufferWriteUint32(ob, data)) return false; } while(0)
+
+#define SafeWrite16(ob, data) \
+   do { if(!M_BufferWriteUint16(ob, data)) return false; } while(0)
+
+#define SafeWrite8(ob, data) \
+   do { if(!M_BufferWriteUint8(ob, data)) return false; } while(0)
+
 //=============================================================================
 //
 // PCX
 //
 
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif
-
 // PCX header structure
-struct pcx_s
+typedef struct pcx_s
 {
    uint8_t  manufacturer;
    uint8_t  version;
@@ -66,21 +77,15 @@ struct pcx_s
    uint16_t bytes_per_line;
    uint16_t palette_type;
    uint8_t  filler[58];
-} __attribute__((packed));
-
-typedef struct pcx_s pcx_t;
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
+} pcx_t;
 
 //
 // pcx_Writer
 //
-static boolean pcx_Writer(outbuffer_t *ob, byte *data, int width, int height, 
-                          byte *palette)
+static boolean pcx_Writer(outbuffer_t *ob, byte *data, 
+                          uint32_t width, uint32_t height, byte *palette)
 {
-   int     i;
+   unsigned int i;
    pcx_t   pcx;
    byte    temppal[768], *palptr;
 
@@ -96,25 +101,37 @@ static boolean pcx_Writer(outbuffer_t *ob, byte *data, int width, int height,
    pcx.bits_per_pixel = 8;    // 8-bit
    pcx.xmin           = 0;
    pcx.ymin           = 0;
-   pcx.xmax           = SwapShort((short)(width-1));
-   pcx.ymax           = SwapShort((short)(height-1));
-   pcx.hres           = SwapShort((short)width);
-   pcx.vres           = SwapShort((short)height);
+   pcx.xmax           = (short)(width - 1);
+   pcx.ymax           = (short)(height - 1);
+   pcx.hres           = (short)width;
+   pcx.vres           = (short)height;
    pcx.color_planes   = 1; // chunky image
-   pcx.bytes_per_line = SwapShort((short)width);
-   pcx.palette_type   = SwapShort(1); // not a gray scale
+   pcx.bytes_per_line = (short)width;
+   pcx.palette_type   = 1; // not a gray scale
    
-   // Write header to buffer
-   if(!M_BufferWrite(ob, &pcx, sizeof(pcx_t)))
-      return false;
+   SafeWrite8( ob, pcx.manufacturer);
+   SafeWrite8( ob, pcx.version);
+   SafeWrite8( ob, pcx.encoding);
+   SafeWrite8( ob, pcx.bits_per_pixel);
+   SafeWrite16(ob, pcx.xmin);
+   SafeWrite16(ob, pcx.ymin);
+   SafeWrite16(ob, pcx.xmax);
+   SafeWrite16(ob, pcx.ymax);
+   SafeWrite16(ob, pcx.hres);
+   SafeWrite16(ob, pcx.vres);
+   SafeWrite(  ob, pcx.palette, sizeof(pcx.palette));
+   SafeWrite8( ob, pcx.reserved);
+   SafeWrite8( ob, pcx.color_planes);
+   SafeWrite16(ob, pcx.bytes_per_line);
+   SafeWrite16(ob, pcx.palette_type);
+   SafeWrite(  ob, pcx.filler, sizeof(pcx.filler));
 
    // Pack the image
    for(i = 0; i < width*height; ++i)
    {
       if((*data & 0xc0) != 0xc0)
       {
-         if(!M_BufferWriteUint8(ob, *data))
-            return false;
+         SafeWrite8(ob, *data);
          ++data;
       }
       else
@@ -127,25 +144,23 @@ static boolean pcx_Writer(outbuffer_t *ob, byte *data, int width, int height,
    }
 
    // Write the palette   
-   if(!M_BufferWriteUint8(ob, 0x0c)) // palette ID byte
-      return false;
+   SafeWrite8(ob, 0x0c); // palette ID byte
 
    // haleyjd 11/16/04: make gamma correction optional
    if(screenshot_gamma)
    {
-      palptr = temppal;
-      for(i = 0; i < 768; ++i)
+      for(i = 0; i < 768; i += 3)
       {
-         *palptr++ = gammatable[usegamma][*palette];   // killough
-         ++palette;
+         temppal[i+0] = gammatable[usegamma][palette[i+0]]; // killough
+         temppal[i+1] = gammatable[usegamma][palette[i+1]];
+         temppal[i+2] = gammatable[usegamma][palette[i+2]];
       }
-      palptr = temppal; // reset to beginning
+      palptr = temppal;
    }
    else
       palptr = palette;
 
-   if(!M_BufferWrite(ob, palptr, 768))
-      return false;
+   SafeWrite(ob, palptr, 768);
      
    // Done!
    return true;
@@ -163,103 +178,88 @@ static boolean pcx_Writer(outbuffer_t *ob, byte *data, int width, int height,
 #define BI_RGB 0L
 
 // SoM 6/5/02: Chu-Chu-Chu-Chu-Chu-Changes... heh
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif
 
-struct tagBITMAPFILEHEADER
+typedef struct tagBITMAPFILEHEADER
 {
   uint16_t bfType;
   uint32_t bfSize;
   uint16_t bfReserved1;
   uint16_t bfReserved2;
   uint32_t bfOffBits;
-} __attribute__((packed));
+} BITMAPFILEHEADER;
 
-typedef struct tagBITMAPFILEHEADER BITMAPFILEHEADER;
-
-struct tagBITMAPINFOHEADER
+typedef struct tagBITMAPINFOHEADER
 {
   uint32_t biSize;
-  int32_t  biWidth;
-  int32_t  biHeight;
+  uint32_t biWidth;
+  uint32_t biHeight;
   uint16_t biPlanes;
   uint16_t biBitCount;
   uint32_t biCompression;
   uint32_t biSizeImage;
-  int32_t  biXPelsPerMeter;
-  int32_t  biYPelsPerMeter;
+  uint32_t biXPelsPerMeter;
+  uint32_t biYPelsPerMeter;
   uint32_t biClrUsed;
   uint32_t biClrImportant;
-} __attribute__((packed));
-
-typedef struct tagBITMAPINFOHEADER BITMAPINFOHEADER;
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
-
-// jff 3/30/98 binary file write with error detection
-// killough 10/98: changed into macro to return failure instead of aborting
-
-#define SafeWrite(ob, data, size) \
-   do { if(!M_BufferWrite(ob, data, size)) return false; } while(0)
+} BITMAPINFOHEADER;
 
 //
 // bmp_Writer
 //
 // jff 3/30/98 Add capability to write a .BMP file (256 color uncompressed)
 //
-static boolean bmp_Writer(outbuffer_t *ob, byte *data, int width, int height, 
-                          byte *palette)
+static boolean bmp_Writer(outbuffer_t *ob, byte *data, 
+                          uint32_t width, uint32_t height, byte *palette)
 {
-   int i, j, wid;
+   unsigned int i, j, wid;
    BITMAPFILEHEADER bmfh;
    BITMAPINFOHEADER bmih;
-   int fhsiz, ihsiz;
+   unsigned int fhsiz, ihsiz;
    byte temppal[1024];
 
-   fhsiz = sizeof(BITMAPFILEHEADER);
-   ihsiz = sizeof(BITMAPINFOHEADER);
+   // haleyjd: use precomputed packed structure sizes
+   fhsiz = 14; // sizeof(BITMAPFILEHEADER)
+   ihsiz = 40; // sizeof(BITMAPINFOHEADER)
    wid   = 4 * ((width + 3) / 4);
 
    //jff 4/22/98 add endian macros
-   bmfh.bfType      = SwapShort(19778);
-   bmfh.bfSize      = SwapLong(fhsiz + ihsiz + 256L * 4 + width * height);
+   bmfh.bfType      = 19778;
+   bmfh.bfSize      = fhsiz + ihsiz + 256L * 4 + width * height;
    bmfh.bfReserved1 = 0;
    bmfh.bfReserved2 = 0;
-   bmfh.bfOffBits   = SwapLong(fhsiz + ihsiz + 256L * 4);
+   bmfh.bfOffBits   = fhsiz + ihsiz + 256L * 4;
 
-   bmih.biSize          = SwapLong(ihsiz);
-   bmih.biWidth         = SwapLong(width);
-   bmih.biHeight        = SwapLong(height);
-   bmih.biPlanes        = SwapShort(1);
-   bmih.biBitCount      = SwapShort(8);
+   bmih.biSize          = ihsiz;
+   bmih.biWidth         = width;
+   bmih.biHeight        = height;
+   bmih.biPlanes        = 1;
+   bmih.biBitCount      = 8;
    bmih.biCompression   = BI_RGB;
-   bmih.biSizeImage     = SwapLong(wid*height);
+   bmih.biSizeImage     = wid * height;
    bmih.biXPelsPerMeter = 0;
    bmih.biYPelsPerMeter = 0;
-   bmih.biClrUsed       = SwapLong(256);
-   bmih.biClrImportant  = SwapLong(256);
+   bmih.biClrUsed       = 256;
+   bmih.biClrImportant  = 256;
 
-   // Write the header
-   SafeWrite(ob, &bmfh.bfType,      sizeof(bmfh.bfType));
-   SafeWrite(ob, &bmfh.bfSize,      sizeof(bmfh.bfSize));
-   SafeWrite(ob, &bmfh.bfReserved1, sizeof(bmfh.bfReserved1));
-   SafeWrite(ob, &bmfh.bfReserved2, sizeof(bmfh.bfReserved2));
-   SafeWrite(ob, &bmfh.bfOffBits,   sizeof(bmfh.bfOffBits));
+   // Write the file header
+   SafeWrite16(ob, bmfh.bfType);
+   SafeWrite32(ob, bmfh.bfSize);
+   SafeWrite16(ob, bmfh.bfReserved1);
+   SafeWrite16(ob, bmfh.bfReserved2);
+   SafeWrite32(ob, bmfh.bfOffBits);
       
-   SafeWrite(ob, &bmih.biSize,          sizeof(bmih.biSize));
-   SafeWrite(ob, &bmih.biWidth,         sizeof(bmih.biWidth));
-   SafeWrite(ob, &bmih.biHeight,        sizeof(bmih.biHeight));
-   SafeWrite(ob, &bmih.biPlanes,        sizeof(bmih.biPlanes));
-   SafeWrite(ob, &bmih.biBitCount,      sizeof(bmih.biBitCount));
-   SafeWrite(ob, &bmih.biCompression,   sizeof(bmih.biCompression));
-   SafeWrite(ob, &bmih.biSizeImage,     sizeof(bmih.biSizeImage));
-   SafeWrite(ob, &bmih.biXPelsPerMeter, sizeof(bmih.biXPelsPerMeter));
-   SafeWrite(ob, &bmih.biYPelsPerMeter, sizeof(bmih.biYPelsPerMeter));
-   SafeWrite(ob, &bmih.biClrUsed,       sizeof(bmih.biClrUsed));
-   SafeWrite(ob, &bmih.biClrImportant,  sizeof(bmih.biClrImportant));
+   // Write the info header
+   SafeWrite32(ob, bmih.biSize);
+   SafeWrite32(ob, bmih.biWidth);
+   SafeWrite32(ob, bmih.biHeight);
+   SafeWrite16(ob, bmih.biPlanes);
+   SafeWrite16(ob, bmih.biBitCount);
+   SafeWrite32(ob, bmih.biCompression);
+   SafeWrite32(ob, bmih.biSizeImage);
+   SafeWrite32(ob, bmih.biXPelsPerMeter);
+   SafeWrite32(ob, bmih.biYPelsPerMeter);
+   SafeWrite32(ob, bmih.biClrUsed);
+   SafeWrite32(ob, bmih.biClrImportant);
 
    // haleyjd 11/16/04: make gamma correction optional
    if(screenshot_gamma)
@@ -286,7 +286,7 @@ static boolean bmp_Writer(outbuffer_t *ob, byte *data, int width, int height,
    SafeWrite(ob, temppal, 1024);
 
    for(i = 0; i < height; ++i)
-      SafeWrite(ob, data + (height-1-i)*width, (unsigned)wid);
+      SafeWrite(ob, data + (height-1-i)*width, wid);
 
    return true; // killough 10/98
 }
@@ -296,11 +296,12 @@ static boolean bmp_Writer(outbuffer_t *ob, byte *data, int width, int height,
 // Shared Code
 //
 
-typedef boolean (*ShotWriter_t)(outbuffer_t *, byte *, int, int, byte *);
+typedef boolean (*ShotWriter_t)(outbuffer_t *, byte *, uint32_t, uint32_t, byte *);
 
 typedef struct shotformat_s
 {
    const char   *extension; // file extension
+   int           endian;    // endianness of file format
    ShotWriter_t  writer;    // writing method
 } shotformat_t;
 
@@ -313,8 +314,8 @@ enum
 
 static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 {
-   { "bmp", bmp_Writer }, // Windows / OS/2 Bitmap (BMP)
-   { "pcx", pcx_Writer }, // ZSoft PC Paint (PCX)
+   { "bmp", OUTBUFFER_LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap (BMP)
+   { "pcx", OUTBUFFER_LENDIAN, pcx_Writer }, // ZSoft PC Paint (PCX)
 };
 
 //
@@ -360,7 +361,7 @@ void M_ScreenShot(void)
       }
       while(!access(lbmname, F_OK) && --tries);
 
-      if(tries && M_BufferCreateFile(&ob, lbmname, 512*1024))
+      if(tries && M_BufferCreateFile(&ob, lbmname, 512*1024, format->endian))
       {
          // killough 4/18/98: make palette stay around
          // (PU_CACHE could cause crash)         
@@ -374,7 +375,9 @@ void M_ScreenShot(void)
 
          // killough 10/98: detect failure and remove file if error
          success = format->writer(&ob, backscreen2.data, 
-                                  backscreen2.width, backscreen2.height, pal);
+                                  (uint32_t)(backscreen2.width), 
+                                  (uint32_t)(backscreen2.height), 
+                                  pal);
 
          // haleyjd: close the buffer
          M_BufferClose(&ob);

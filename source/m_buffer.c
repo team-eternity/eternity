@@ -27,6 +27,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_buffer.h"
+#include "m_swap.h"
 
 //
 // M_BufferCreateFile
@@ -35,7 +36,7 @@
 // size is determined by the len parameter.
 //
 boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename, 
-                           unsigned int len)
+                           unsigned int len, int endian)
 {
    if(!(ob->f = fopen(filename, "wb")))
       return false;
@@ -44,6 +45,8 @@ boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename,
 
    ob->len = len;
    ob->idx = 0;
+
+   ob->endian = endian;
 
    return true;
 }
@@ -135,9 +138,20 @@ boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size)
 //
 // Convenience routine to write an unsigned integer into the buffer.
 //
-void M_BufferWriteUint32(outbuffer_t *ob, uint32_t num)
+boolean M_BufferWriteUint32(outbuffer_t *ob, uint32_t num)
 {
-   M_BufferWrite(ob, &num, sizeof(uint32_t));
+   switch(ob->endian)
+   {
+   case OUTBUFFER_LENDIAN:
+      num = SwapULong(num);
+      break;
+   case OUTBUFFER_BENDIAN:
+      num = SwapBigULong(num);
+      break;
+   default:
+      break;
+   }
+   return M_BufferWrite(ob, &num, sizeof(uint32_t));
 }
 
 //
@@ -145,9 +159,20 @@ void M_BufferWriteUint32(outbuffer_t *ob, uint32_t num)
 //
 // Convenience routine to write an unsigned short int into the buffer.
 //
-void M_BufferWriteUint16(outbuffer_t *ob, uint16_t num)
+boolean M_BufferWriteUint16(outbuffer_t *ob, uint16_t num)
 {
-   M_BufferWrite(ob, &num, sizeof(uint16_t));
+   switch(ob->endian)
+   {
+   case OUTBUFFER_LENDIAN:
+      num = SwapUShort(num);
+      break;
+   case OUTBUFFER_BENDIAN:
+      num = SwapBigUShort(num);
+      break;
+   default:
+      break;
+   }
+   return M_BufferWrite(ob, &num, sizeof(uint16_t));
 }
 
 //

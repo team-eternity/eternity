@@ -27,22 +27,31 @@
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
 
+// endianness values
+enum
+{
+   OUTBUFFER_NENDIAN, // doesn't swap shorts or ints
+   OUTBUFFER_LENDIAN, // swaps shorts/ints to little endian
+   OUTBUFFER_BENDIAN  // swaps shorts/ints to big endian
+};
+
 typedef struct outbuffer_s
 {
-   FILE *f;          // destination file
-   byte *buffer;     // buffer
-   unsigned int len; // total buffer length
-   unsigned int idx; // current index
+   FILE *f;            // destination file
+   byte *buffer;       // buffer
+   unsigned int len;   // total buffer length
+   unsigned int idx;   // current index
+   int endian;         // endianness indicator
 } outbuffer_t;
 
 boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename, 
-                           unsigned int len);
+                           unsigned int len, int endian);
 boolean M_BufferFlush(outbuffer_t *ob);
 void    M_BufferClose(outbuffer_t *ob);
 long    M_BufferTell(outbuffer_t *ob);
 boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size);
-void    M_BufferWriteUint32(outbuffer_t *ob, uint32_t num);
-void    M_BufferWriteUint16(outbuffer_t *ob, uint16_t num);
+boolean M_BufferWriteUint32(outbuffer_t *ob, uint32_t num);
+boolean M_BufferWriteUint16(outbuffer_t *ob, uint16_t num);
 boolean M_BufferWriteUint8(outbuffer_t *ob, uint8_t num);
 
 #endif
