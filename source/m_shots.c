@@ -293,6 +293,97 @@ static boolean bmp_Writer(outbuffer_t *ob, byte *data,
 
 //=============================================================================
 //
+// TGA
+//
+// haleyjd 12/28/09: Targa is such a simple format, there's basically no reason
+// to not support it :)
+//
+
+typedef struct tgaheader_s
+{
+   uint8_t  idlength;        // size of image id field
+   uint8_t  colormaptype;    // color map type
+   uint8_t  imagetype;       // image type code
+   uint16_t cmapstart;       // color map origin
+   uint16_t cmaplength;      // color map length
+   uint8_t  cmapdepth;       // depth of color map entries
+   uint16_t xoffset;         // x origin of image
+   uint16_t yoffset;         // y origin of image
+   uint16_t width;           // width of image
+   uint16_t height;          // height of image
+   uint8_t  pixeldepth;      // image pixel size
+   uint8_t  imagedescriptor; // image descriptor byte
+} tgaheader_t;
+
+//
+// tga_Writer
+//
+// haleyjd 12/28/09
+//
+static boolean tga_Writer(outbuffer_t *ob, byte *data, 
+                          uint32_t width, uint32_t height, byte *palette)
+{
+   tgaheader_t tga;
+   unsigned int i;
+   byte temppal[768];
+
+   tga.idlength        = 0;                // no image identification field
+   tga.colormaptype    = 1;                // colormapped image, palette is present
+   tga.imagetype       = 1;                // data type 1 - uncompressed colormapped
+   tga.cmapstart       = 0;                // palette begins at index 0
+   tga.cmaplength      = 256;              // 256 color palette
+   tga.cmapdepth       = 24;               // colormap entry bitdepth (24-bit)
+   tga.xoffset         = 0;                // x offset 0
+   tga.yoffset         = 0;                // y offset 0
+   tga.width           = (uint16_t)width;  // width
+   tga.height          = (uint16_t)height; // height
+   tga.pixeldepth      = 8;                // 8 bits per pixel
+   tga.imagedescriptor = 0;                // no special properties
+
+   // Write header
+   SafeWrite8( ob, tga.idlength);
+   SafeWrite8( ob, tga.colormaptype);
+   SafeWrite8( ob, tga.imagetype);
+   SafeWrite16(ob, tga.cmapstart);
+   SafeWrite16(ob, tga.cmaplength);
+   SafeWrite8( ob, tga.cmapdepth);
+   SafeWrite16(ob, tga.xoffset);
+   SafeWrite16(ob, tga.yoffset);
+   SafeWrite16(ob, tga.width);
+   SafeWrite16(ob, tga.height);
+   SafeWrite8( ob, tga.pixeldepth);
+   SafeWrite8( ob, tga.imagedescriptor);
+
+   // Write colormap
+   if(screenshot_gamma)
+   {
+      for(i = 0; i < 768; i += 3)
+      {
+         temppal[i+0] = gammatable[usegamma][palette[i+2]];
+         temppal[i+1] = gammatable[usegamma][palette[i+1]];
+         temppal[i+2] = gammatable[usegamma][palette[i+0]];
+      }
+   }
+   else
+   {
+      for(i = 0; i < 768; i += 3)
+      {
+         temppal[i+0] = palette[i+2];
+         temppal[i+1] = palette[i+1];
+         temppal[i+2] = palette[i+0];
+      }
+   }
+   SafeWrite(ob, temppal, 768);
+
+   // Write image data
+   for(i = 0; i < height; ++i)
+      SafeWrite(ob, data + (height-1-i)*width, width);
+
+   return true;
+}
+
+//=============================================================================
+//
 // Shared Code
 //
 
@@ -309,13 +400,15 @@ enum
 {
    SHOT_BMP,
    SHOT_PCX,
+   SHOT_TGA,
    SHOT_NUMSHOTFORMATS
 };
 
 static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 {
-   { "bmp", OUTBUFFER_LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap (BMP)
-   { "pcx", OUTBUFFER_LENDIAN, pcx_Writer }, // ZSoft PC Paint (PCX)
+   { "bmp", OUTBUFFER_LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap
+   { "pcx", OUTBUFFER_LENDIAN, pcx_Writer }, // ZSoft PC Paint
+   { "tga", OUTBUFFER_LENDIAN, tga_Writer }, // Truevision TARGA
 };
 
 //
