@@ -28,20 +28,20 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 335;
+int version = 337;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char SUBVERSION = 92;
+unsigned char SUBVERSION = 0;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Nekhbet";
+const char version_name[] = "Sekhmet";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.35.92 \"Nekhbet\"";
+const char ee_wmCaption[] = "Eternity Engine v3.37.00 \"Sekhmet\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -68,6 +68,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.35.92 \"Nekhbet\"";
 // 3.33.50 'Phoenix'   -- 10/23/06
 // 3.35.90 'Simorgh'   -- 01/11/09
 // 3.35.92 'Nekhbet'   -- 03/22/09
+// 3.37.00 'Sekhmet'   -- 01/01/10
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
