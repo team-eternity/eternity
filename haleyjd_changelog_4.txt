@@ -2,6 +2,524 @@
 Changes since Eternity Engine v3.35.92
 ================================================================================
 --------------------------------------------------------------------------------
+12/29/09
+
+As an exercise of the new screenshot module, and because doing so requires 
+fewer than 100 lines of code, I added Targa as a supported screenshot format.
+Targa, although relatively very old, is still in extensive use in the graphics
+and game industries due to its simplicity of implementation, as well as 
+features it offers that make it useful for display on TV screens (obviously
+not a factor to EE of course).
+
+Hopefully PNG support is not far off :)
+
+--------------------------------------------------------------------------------
+12/28/09
+
+I have rewritten the screenshot code into a new mini-screenshot engine that
+can support multiple formats with minimum addition of code, and also makes use
+of a new buffered file output module which was initially written as part of my
+experimental zip file writing code that will eventually become part of our new
+savegame code, which is still in the planning stages.
+
+--------------------------------------------------------------------------------
+12/27/09
+
+EE is now internally consistent with its use of strcasecmp and strncasecmp 
+versus the nonstandard stricmp and strnicmp that Visual Studio expects. This was
+getting totally out of hand, and our defines were bordering on circularity under
+GCC.
+
+_CRT_SECURE_NO_WARNINGS and _CRT_NONSTDC_NO_WARNINGS have been added to the
+VS2008 project to prevent 394 some-odd warnings of no consequence. I actually
+attempted to address the NONSTDC warnings by providing some defines, but
+Visual Studio predictably threw a fit since its headers contain defines for
+those function names already which cannot be sorted out in preference for our
+own without a major bunch of work that is completely not worth it.
+
+Thanks, Microsoft, for supporting portable development so well....
+
+psvnsprintf has been hacked up once again to avoid undefined behavior with 
+respect to the passing down of va_list objects to multiple functions, to which
+GCC 64-bit strongly objects due to some standards-acceptable but highly 
+questionable implementation decisions on that platform.
+
+Protip: To avoid breaking 90% of C programs, do not make varargs functions use
+        the AMD64 fastcall convention....
+        
+A similarly undefined use of va_list was also eliminated from the E_EDFLoggedErr
+routine, although doing this imposed a static limit on the error message length
+that I would have rather avoided. C'est la vie.
+        
+Linebreak styles have been made consistent in multiple files, as it seems
+some of our more Linux-minded developers in the past have used tools that are
+not DOS linebreak-aware, and added Linux linebreaks into their new lines 
+without first converting the existing ones. I have no opinion as to whether
+the majority of the code should use Linux or DOS linebreaks, so long as the
+individual files remain self-consistent. To me, that is an absolute must.
+
+--------------------------------------------------------------------------------
+12/26/09
+
+A Visual Studio 2008 project has now been added for Eternity, currently 
+supporting 32-bit builds only. I added a tools directory to the SVN project,
+and wrote up a qbin2c tool that creates C header files from binary files, as
+part of an attempt to get EE to have an icon on its titlebar. However, SDL's
+support for this seems to be unacceptably out of date and possibly even glitchy,
+so for now EE's icon will only display on the taskbar when built with the VS
+2008 project. The 6.0 project doesn't currently provide an icon, but I hope to
+be able to rectify that as well soon.
+
+As per a recommendation on MSDN, I have changed the use of GetWindowLong and
+SetWindowLong used in the code to support disabling of Alt+Space to use
+GetWindowLongPtr and SetWindowLongPtr instead, as these routines are 64-bit
+compatible. Sadly, this has caused problems for Visual Studio 6.0, because it
+is missing these functions from its headers, even though MSDN states that these
+functions have been supported since Windows 95.
+
+This has introduced the need for Eternity to build with the Windows Server 2003
+Platform SDK installed and active when using Visual Studio 6.0, something that
+I had previously hoped to avoid. This is especially unfortunate because the
+PSDK will no longer install properly due to a bug in either the ridiculous
+ActiveX installer it uses, or in Internet Explorer 8.0. This requires the
+enduser to do a run-around the installer by clicking on the proper .msi files
+that are "hidden" in the setup directory.
+
+Doing this precludes any future use of the PSDK update feature, according to
+Microsoft, so don't do it if you are using a box on which you intend to do 
+active future development with newer SDKs. This would probably be best reserved
+for that XP box you have over in the corner for a back-up system, or maybe a
+virtual machine specifically set up for the purpose of supporting VS6.0-based
+development.
+
+--------------------------------------------------------------------------------
+12/22/09
+
+Implemented a MetaSetInt routine to match MetaSetDouble, as it might be useful
+in the implementation of features such as droptypes and bloodtypes.
+
+--------------------------------------------------------------------------------
+11/24/09
+
+I made some important changes to sprite handling so that NUMSPRITES is no longer
+used as a value to mean "no sprite" or "no next sprite," but instead the value
+-1 is used for the same purpose. This is required to move sprites toward a 
+fully dynamic model so that they can be implicitly defined in DECORATE states.
+This will eventually almost entirely obsolete the EDF spritenames array,
+though it will probably have to be retained for definition of the original
+DOOM sprites in order to guarantee retention of DeHackEd compatibility.
+
+--------------------------------------------------------------------------------
+11/22/09
+
+SoM and I have cooperated to add sprite scaling.
+
+--------------------------------------------------------------------------------
+11/21/09
+
+Got around to another long-standing TODO, which was the addition of an r_tlstyle
+variable which controls the default presentation of thingtypes that were
+modified by BOOM to be translucent, a change some people object to, and others
+feel was not radical enough.
+
+Under the current system, which is based on a list of EDF thingtype mnemonics
+and tries to avoid stepping on the toes of any existing mods, you can set
+r_tlstyle to one of three values, which are explained here:
+
+* None - this value makes all BOOM translucent thingtypes opaque again. This
+  is vanilla DOOM's presentation mode.
+  
+* Boom - pretty obvious I think. The things use BOOM-style translucency.
+
+* New - The thingtypes are selectively set to opaque, translucent, or additive
+  blending depending on what I myself, with advice taken from others, believe
+  looks the best. This is Eternity's presentation mode, and is very similar to
+  the behavior of ZDoom in fact.
+
+--------------------------------------------------------------------------------
+11/18/09
+
+Applied a long needed compatibility fix: DeHackEd's maxhealth property is only
+supposed to affect the behavior of health potions, not *ALL* health items as
+it did in BOOM. This broke HacX, amongst other mods.
+
+z_native.c has been extensively cleaned up via the use of some intelligent new
+macros near the head of the file that get rid of what was previously #ifdef
+hell (this can still be seen in z_zone.c if you are curious). The code is now
+infinitely more readable.
+
+--------------------------------------------------------------------------------
+11/13/09
+
+EE now expects to build and link against SDL 1.2.14 and SDL_mixer 1.2.10, which
+may prove to be the final 1.2 versions of SDL if what is written on the website
+is to be believed.
+
+After doing this, I found the need for a new option to disable Alt+Space in
+Windows, since SDL makes no effort to intercept this event. It causes the 
+window system menu to open, making the game pause and any active keys get 
+stuck in the down state. This is controlled by a new system.cfg option.
+
+--------------------------------------------------------------------------------
+11/12/09
+
+I wiped out the last remaining uses of gitextmetric_t objects, which stored
+metrics for game fonts and mapped their access through the GameModeInfo
+structure. This was previously replaced by the addition of EDF dynamic fonts,
+which store the exact same information, but within the font objects instead of
+a separate global location.
+
+After adding the ability to have post-W_InitMultipleFiles adjustments made to
+GameModeInfo based on the missioninfo object in effect, I added support for the
+playing of DEMO4 in TNT and Plutonia game modes, contingent upon the presence
+of an actual DEMO4 lump.
+
+TNT and Plutonia were based on Ultimate DOOM instead of DOOM II as one would
+ordinarily suspect, and because of this they used the Ultimate DOOM demo loop
+which showed demos for the four episodes. However id evidently forgot about
+this and only provided 3 demos in each IWAD. This means that watching the
+demo loops of those games in the vanilla engines would result in a 
+W_CacheLumpNum error upon reaching the fourth demo.
+
+Eternity would not error out, because Eternity used the DOOM II demo sequence
+for these modes, and additionally because Eternity ignores non-existent demo
+lumps (a message simply appears in the console, and the demo sequence, if it
+is running, is auto-advanced to the next state). However, Eternity would also
+not display the fourth demo even if it existed, which was technically incorrect
+behavior.
+
+A DEMO4 lump is provided in the Plutonia 2 mod, which is what prompted this
+adjustment.
+
+A new "open" method has been added to menu objects which allows individual
+menus to have customized opening behaviors. This was needed to restore support
+for the defaultskill variable from BOOM, which, although it still existed in
+the configuration file, was "lost" in SMMU and has been ignored ever since.
+
+In an effort to fix bizarre palette issues that are plaguing DirectX modes on
+startup, I have added an I_SetPaletteDirect routine which ducks under our
+relatively new palette caching scheme to set the palette to the video
+surface immediately. This is needed at startup, as we need a palette on the
+surface before any drawing is done, otherwise SDL decides to do an improper
+remapping operation once the palette IS set, resulting in a REALLY 
+attractive screen full of what can only properly be described as technicolor 
+puke.
+
+Some additional modifications were made that seem to improve the behavior of
+DirectX modes under older SDL versions. Mainly, blits should be done after any
+pending palette sets and not before, and second, the screen should always be
+flipped even if the palette is set, as some types of surfaces violently object
+to the missing update otherwise.
+
+--------------------------------------------------------------------------------
+11/11/09
+
+I eliminated the irritating need for an "index" parameter to the full table
+iteration method (MetaTableIterator) of the metatable and its corresponding
+underlying e_hash method, E_HashTableIterator. The index of the current chain
+being searched is now cached inside the ehash_t structure itself. This does
+require a search to be primed with the proper value in order to restart from
+the beginning, of course.
+
+Screenshots no longer pop up the console, so that you can actually take a 
+screenshot of the console.
+
+The obsolete playersprite variable's processing code has been removed from EDF
+(it is still syntactically accepted, but is ignored). The only place using it
+has been rewritten to avoid the need for it. This is a necessary change in
+preparation for DECORATE state support.
+
+--------------------------------------------------------------------------------
+11/10/09
+
+At fraggle's urging I refactored Polyobj_findLines to avoid an unnecessary
+goto, and to give the algorithm better documentation.
+
+I have eliminated the old -debugfile and all code related to it, which was
+probably added late in id's development cycle while ironing out the network
+code. The file was nearly useless to us now, and I have not employed it since
+sometime around 2001, making it dead code.
+
+--------------------------------------------------------------------------------
+11/09/09
+
+Kate got a confusing error when trying to play a demo named MAP01.LMP - to my
+dismay it caused the map it was meant to play with to disappear from visibility,
+since demos added with the -playdemo command are linked into the wad directory
+as individual file lumps.
+
+I chose to solve this problem (which has existed since vanilla Doom) by placing
+such demo lumps into their own new namespace, ns_demos. The lump namespace,
+added by BOOM as part of the fix for allowing sprites and flats in PWADs, is
+tailor-made to fix this type of problem.
+
+I understand that PrBoom has repaired this by simply not adding demo lumps into
+the wad directory, but that requires significantly more code change in g_game.c
+than the tweak I came up with, so I am quite happy with it the way it is :)
+
+--------------------------------------------------------------------------------
+11/08/09
+
+Unicode input should be supported from ANY key that sends a character within the
+ASCII range, not just such keys which also have SDL keysym codes in that same
+range. Adding this tweak allows typing numbers with the numeric keypad so long
+as the Num Lock key is turned off. This change/fix was requested by SoM ;)
+
+Seems GCC 4.4.2 has added a strndup routine, which causes a conflict with
+libConfuse. I renamed libConfuse's routine to cfg_strndup to avoid this.
+
+--------------------------------------------------------------------------------
+11/07/09
+
+Essel found that the codepointers A_FadeIn, A_FadeOut, and A_SetTranslucent 
+were broken due to the argument evaluation rewrite - I accidentally used 
+E_ArgAsInt where I needed to use E_ArgAsFixed, having forgotten that these
+codepointers accepted floating-point argument values to represent alpha levels.
+
+--------------------------------------------------------------------------------
+11/05/09
+
+I reformatted mmus2mid.c in the SDL directory after noticing that it was still
+a mess from hell. It probably still is even with my changes, but at least it
+is readable now.
+
+--------------------------------------------------------------------------------
+11/04/09
+
+I have migrated many of Eternity's low-level options to system.cfg so that they
+are now universal amongst all supported games, meaning that they do not have to
+be set individually for each one.
+
+There may be other options which would be best stored here, and I will continue
+to evaluate all of the settings for the best location in which to put them.
+
+I got around to programming a toString method handler function for metadouble
+objects. I also added an "isinit" field into the metatype_t structure, which
+allowed me to eliminate a couple dozen checks in the source code that were
+using "firsttime" guard booleans in order to ensure that metatypes were only
+initialized once.
+
+As a result of that change, non-singleton metatypes are now be treated as an
+error in MetaRegisterType.
+
+SoM fixed slopes so that they light uniformly in all fields of view.
+
+--------------------------------------------------------------------------------
+11/03/09
+
+I made the I_Sleep call on video mode sets exclusive to fullscreen, since it
+was bothering SoM in windowed mode.
+
+--------------------------------------------------------------------------------
+11/01/09
+
+I finally got rid of that ridiculous extraneous "eternity" directory inside of
+our SVN trunk, without managing to screw up the entire repo (I will note it did
+cause the untimely death of my principal working copy, however :P )
+
+Took the opportunity created by this change to create tags for all of Eternity's
+releases that have occurred since the SVN repository was established.
+
+--------------------------------------------------------------------------------
+10/31/09
+
+Using calloc on vertexes array loaded from the map allows me to get rid of some
+useless assignments to zero in the dynaseg code when copying vertices from
+linedefs into dynasegs.
+
+I have wiped out all remaining traces of seg_t::angle, which is never used in
+Cardboard, and a corresponding R_PointToAngle2 call in the dynaseg code which
+was now a total waste of CPU cycles.
+
+The skin viewer now has additional safety code when remapping sprites, due to a
+bug Kate was able to trigger with an odd barrel skin which caused the skin
+viewer to begin showing graphics from all over memory before crashing the game.
+Woops!
+
+--------------------------------------------------------------------------------
+10/30/09
+
+Kate seems to believe the crash has to do with the conversion of floats to
+integers in R_AddLine. Initial testing with a bandaid patch indicates that the
+crash is indeed stemming from here. Seems conversion of out-of-range floats to
+integers has undefined results.
+
+Once SoM came back, he figured out the problem definitively and worked out the
+best way to fix it :)  No more crashes!
+
+I made a minor possible fix to the dynaseg system that will hopefully fix the
+recently observed problem of automap rendering continuing beyond them. 
+Basically, the backsector of the dynamic seg should not be set to a sector 
+unless the dynamic seg's parent linedef is actually two-sided (it really
+shouldn't be, but people have found ways to get away with 2S polyobjects in
+some circumstances ;)
+
+--------------------------------------------------------------------------------
+10/29/09
+
+3DMidTex movers have been broken for a very long time evidently, as I missed a
+break statement in P_ChangeSector3D which caused it to fall through into the
+default case and malfunction.
+
+Eternity has developed a new extremely random and difficult-to-trigger crashing
+error somewhere in the renderer in the neighborhood of R_RenderSegLoop. Time
+to call up SoM ;)
+
+--------------------------------------------------------------------------------
+10/27/09
+
+Inspired by Chocolate Doom, I added a -noframe command line parameter and a
+matching "n" flag character for geom resolution-setting strings that allows
+the creation of Eternity's main graphics window without a window border.
+Note that frameless windows cannot be moved, at least not in Windows XP.
+
+Example of use:
+eternity -geom 1024x768wn
+
+--------------------------------------------------------------------------------
+10/25/09
+
+I decided to finally bite the bullet and revamp portions of Eternity's low-level
+input system so that we can support the smart Unicode mapping provided by SDL
+which properly reflects international keyboards. This mapping must be enabled by
+the end user.
+
+The changes made to allow this also allowed me to instantly add support for
+binding to the numeric keypad and the delete key, as the DOSisms that were
+holding these features back have either been eliminated entirely or confined to
+processing of events within the proper ASCII range when using the original
+shiftxform keyboard mapping.
+
+Pipes can also now be typed into the console, even when using the shiftxform
+mapping. We may never know exactly what prompted the infamous "Oh my GOD
+does Watcom suck!" comment in hu_stuff.c, but it's pretty irrelevant now,
+seeing how we have never supported compilation on Watcom ;)
+
+--------------------------------------------------------------------------------
+10/24/09
+
+Now that Eternity has sector flags, I removed my previously added wassecret
+field from sector_t and changed it into a SIF_WASSECRET internal sector flag
+value. No use having an entire boolean do the job of a single bit!
+
+By user request, I have modified the behavior of the BOOM "ammo" cheat so that
+it gives max ammo if the user is currently not at max, and removes the ammo
+otherwise. The behavior in BOOM was to take away the ammo if you had any at all,
+which was obviously somewhat confusing and less useful.
+
+--------------------------------------------------------------------------------
+10/23/09
+
+Integration of the new argument evaluation system has been completed, along with
+a change in the way that EDF keywords are stored and evaluated, and the rewrite
+of ALL parameterized codepointers to support the new system (this was NOT a 
+trivial undertaking either...)
+
+Individual codepointers will require testing to verify that I have not broken
+anything, as I most certainly have, since it was 4:30 am by the time I finished
+this.
+
+--------------------------------------------------------------------------------
+10/22/09
+
+I have begun work on converting EDF to a runtime evaluation model for the 
+arguments to parameterized codepointers, which will be necessary to properly 
+support some of the advanced features of DECORATE states. This also simultaneously
+solves Eternity's problem of having a limited number of arguments per state.
+
+The argument evaluation engine provides evaluator functions for various data types
+including int, fixed, double, thing types, states, EDF string objects, etc. Note
+that there is not currently any support for expressions, but such support should
+be simple to add once the Aeon scripting system is in place (note that such
+expressions will then need to be valid ECMAScript, rather than a bespoke
+expression language like the one currently used by ZDoom).
+
+--------------------------------------------------------------------------------
+10/16/09
+
+I added an I_Sleep call to video mode setting to allow the screen to settle when
+the engine changes into a fullscreen video mode.
+
+Out-of-bounds palette changes in ST_Ticker are no longer performed, and 
+P_DamageMobj will no longer allow mobj_t damagecounts to become negative. These
+together were the cause of the undefined behavior exhibited in vanilla Doom when
+doing negative damage to the player via DeHackEd patches. This instead crashes
+in Eternity and other modern ports without these modifications.
+
+I also took time to add entryway's new emulation code for the undefined behavior
+exhibited by donut linedef actions which have no valid model sector. Under
+vanilla Doom they infact read the target movement height from the interrupt
+vector as it is stored at memory offset 0. Why does DOS4GW not catch those
+invalid accesses? I have never figured out why it sucked so badly as a DPMI
+provider. 
+
+Of course if it had worked even half-way properly, DOOM would have almost 
+certainly missed its release date by a couple of months ;)
+
+--------------------------------------------------------------------------------
+10/12/09
+
+EDF damagefactors are now implemented, using the new multi-valued property syntax.
+This allows monsters to take different amounts of damage from different types of
+attacks.
+
+Added a new kind of routine to the metatable - MetaSetDouble. This routine will
+add the field to the metatable if it doesn't exist already, but if it does, it
+instead changes the value of the existing metadouble object to the new provided
+value. This is very useful, and I will be adding matching routines for the other
+basic data types as they are needed.
+
+--------------------------------------------------------------------------------
+
+10/06/09
+
+Added a couple of methods to the qstring pseudoclass:
+
+M_QStrReplace
+M_QStrReplaceNotOf
+
+These allow replacement of specific characters inside a qstring with other
+characters. I have noticed this operation being carried out on some qstrings,
+so I'll need to find those and replace them with calls to these nicer functions.
+
+--------------------------------------------------------------------------------
+10/03/09
+
+I have added separating header comments to distinct sections in d_main.c to 
+outline the different regions of functionality. This module, along with several
+others in the source code, has become too large and will probably be split up
+in the future.
+
+To my dismay, after essel pointed out some mysterious polyobject issues, I found
+that I completely failed to define any values for the polyobject flags added
+previously. This was causing massive malfunctions throughout the entire
+polyobject system, not limited to the constant addition of more and more
+dynasegs to the subsector dynaseg lists until the game was running at a grand
+1 FPS or less. Woops!
+
+--------------------------------------------------------------------------------
+10/01/09
+
+The IWAD picker was firing up when the -game parameter was in use, which
+prevented the use of normal IWAD searchinig inside of the specified base/game
+directory. Fixed by turning off the IWAD picker under this circumstance.
+
+--------------------------------------------------------------------------------
+09/29/09
+
+I removed A_Look recursion detection entirely because it is too difficult to do
+in a way that will retain compatibility (Lost Souls can theoretically recurse
+through A_Look to any possible depth when colliding with something, although
+due to the way the engine works it typically only recurses 1 or 2 times).
+
+However, outside of playing old demos, EE will no longer allow Lost Souls to do
+this. They will now call the function P_SetMobjStateNF, which does not call the
+state's action routine, when resetting to their spawnstate upon a collision.
+This prevents recursion through the non-reentrant P_Move codepath by SKULLFLY 
+objects. The soul will still call A_Look upon its next state transition, so at
+most it might simply sit there for a couple of tics.
+
+--------------------------------------------------------------------------------
 09/28/09
 
 After the rewrite of damagetype pain and death states to utilize the new
