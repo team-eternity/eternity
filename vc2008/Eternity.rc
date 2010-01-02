@@ -54,7 +54,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "C:\\Users\\Quasar\\Code\\Eternity\\vc2008\\res\\ee.ico"
+IDI_ICON1               ICON                    ".\\res\\ee.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
