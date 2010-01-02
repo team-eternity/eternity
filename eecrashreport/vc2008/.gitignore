@@ -1,5 +1,7 @@
-eecrashreport.vcproj.PC863512472119.James Haley.user
+*.suo
+*.user
 Debug
+Release
 crashlog.txt
 eecrashreport.ncb
-*.suo
+eecrashreport.vcproj.PC863512472119.James Haley.user

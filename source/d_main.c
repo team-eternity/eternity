@@ -274,6 +274,8 @@ void D_Display(void)
          break;
       case GS_CONSOLE:
          break;
+      default:
+         break;
       }
          
       redrawsbar = false; // reset this now
@@ -2422,6 +2424,8 @@ static void D_DoomInit(void)
    int dmtype = 0;             // haleyjd 04/14/03
    boolean haveGFS = false;    // haleyjd 03/10/03
    gfs_t *gfs = NULL;
+
+   gamestate = GS_STARTUP; // haleyjd 01/01/10
 
    D_StartupMessage();
 

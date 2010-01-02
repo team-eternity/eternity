@@ -128,7 +128,8 @@ typedef enum {
   GS_INTERMISSION,
   GS_FINALE,
   GS_DEMOSCREEN,
-  GS_CONSOLE
+  GS_CONSOLE,
+  GS_STARTUP
 } gamestate_t;
 
 //
