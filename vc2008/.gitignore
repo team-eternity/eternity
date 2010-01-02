@@ -2,4 +2,5 @@
 *.ncb
 *.suo
 *.user
+Debug
 Release
