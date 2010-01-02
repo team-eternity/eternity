@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="snes_spc"
 	ProjectGUID="{8B8CBCA2-21D3-4C23-A397-A4D084F649D3}"
+	RootNamespace="snes_spc"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -76,7 +77,7 @@
 				OutputFile=".\Debug/snes_spc.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile=".\snes_spc.def"
+				ModuleDefinitionFile="..\snes_spc\snes_spc.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/snes_spc.pdb"
 				RandomizedBaseAddress="1"
