@@ -872,7 +872,10 @@ boolean opensocket;
 
 extern boolean advancedemo;
 
-static void RunGameTics(void)
+// Run new game tics.  Returns true if at least one tic
+// was run.
+
+static boolean RunGameTics(void)
 {
    static int  oldentertic;
    int         i;
@@ -962,7 +965,7 @@ static void RunGameTics(void)
       G_Ticker();
       gametic++;
       maketic++;
-      return;
+      return true;
    }
 
    // sf: reorganised to stop doom locking up
@@ -986,7 +989,7 @@ static void RunGameTics(void)
       // Sleep until a tic is available, so we don't hog the CPU.
       I_Sleep(1);
 
-      return;
+      return false;
    }
    
    opensocket_count = 0;
@@ -1025,43 +1028,47 @@ static void RunGameTics(void)
       }
       NetUpdate();   // check for new console commands
    }
+
+   return true;
 }
 
 void TryRunTics(void)
 {
-   /*
-   static int exittime = 0;
-   // gettime_realtime is used because the game speed can be changed
-   int realtics = I_GetTime_RealTime() - exittime;
-   int i;
-   
-   exittime = I_GetTime_RealTime();  // save for next time
-   */
-
    int i;
    static int oldentertic;
-   int entertic = I_GetTime() / ticdup;
-   int realtics = entertic - oldentertic;
-   oldentertic = entertic;
-   
-   // sf: run the menu and console regardless of 
-   // game time. to prevent lockups
-   
-   // NETCODE_FIXME: fraggle change #3
-   
-   I_StartTic();        // run these here now to get keyboard
-   D_ProcessEvents();   // input for console/menu
-   
-   for(i = 0; i < realtics; ++i)   // run tics
+   int entertic, realtics;
+   boolean game_advanced;
+
+   // Loop until we have done some kind of useful work.  If no
+   // game tics are run, RunGameTics() will send the game to
+   // sleep in 1ms increments until we advance.
+
+   do
    {
-      // all independent tickers here
-      MN_Ticker();
-      C_Ticker();
-      V_FPSTicker();
-   }
-   
-   // run the game tickers
-   RunGameTics();
+       entertic = I_GetTime() / ticdup;
+       realtics = entertic - oldentertic;
+       oldentertic = entertic;
+
+       // sf: run the menu and console regardless of 
+       // game time. to prevent lockups
+
+       // NETCODE_FIXME: fraggle change #3
+
+       I_StartTic();        // run these here now to get keyboard
+       D_ProcessEvents();   // input for console/menu
+
+       for(i = 0; i < realtics; ++i)   // run tics
+       {
+          // all independent tickers here
+          MN_Ticker();
+          C_Ticker();
+          V_FPSTicker();
+       }
+
+       // run the game tickers
+       game_advanced = RunGameTics();
+
+    } while (realtics <= 0 && !game_advanced);
 }
 
 /////////////////////////////////////////////////////
