@@ -983,6 +983,9 @@ static void RunGameTics(void)
          D_ProcessEvents();
       }
       
+      // Sleep until a tic is available, so we don't hog the CPU.
+      I_Sleep(1);
+
       return;
    }
    
