@@ -384,7 +384,7 @@ extern void       AM_AddCommands(void);        // am_color.c
 extern void       PE_AddCommands(void);        // p_enemy.c  -- haleyjd
 extern void   G_Bind_AddCommands(void);        // g_bind.c   -- haleyjd
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 extern void       SM_AddCommands(void);        // a_small.c  -- haleyjd
 #endif
 
@@ -431,7 +431,7 @@ void C_AddCommands()
   PE_AddCommands();  // haleyjd
   G_Bind_AddCommands();
   
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
   SM_AddCommands();
 #endif
   
@@ -440,7 +440,7 @@ void C_AddCommands()
   P_AddGenLineCommands();
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 static cell AMX_NATIVE_CALL sm_version(AMX *amx, cell *params)
 {
    return version;

@@ -400,7 +400,7 @@ void E_AddCommands(void)
    C_AddCommand(e_linedef);
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 
 //
 // Script functions

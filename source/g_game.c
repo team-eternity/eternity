@@ -2187,7 +2187,7 @@ void G_Ticker(void)
    if(inwipe)
       Wipe_Ticker();
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    // haleyjd 03/15/03: execute scheduled Small callbacks
    SM_ExecuteCallbacks();
 #endif
@@ -3436,7 +3436,7 @@ void G_CoolViewPoint(void)
    cooldemo_tics = (7 + M_Random() % 13) * TICRATE;
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 
 //
 // Small native functions

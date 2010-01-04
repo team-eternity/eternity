@@ -1648,7 +1648,7 @@ void P_Whistle(mobj_t *actor, int mobjtype)
    }
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Small natives
 //

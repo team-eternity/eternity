@@ -3460,7 +3460,7 @@ static argkeywd_t sscriptkwds =
 //
 void A_StartScript(mobj_t *actor)
 {
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    SmallContext_t *rootContext, *useContext;
    SmallContext_t newContext;
    int scriptnum;
@@ -3532,7 +3532,7 @@ static argkeywd_t psskwds =
 //
 void A_PlayerStartScript(mobj_t *mo)
 {
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    SmallContext_t *rootContext, *useContext;
    SmallContext_t newContext;
    int scriptnum, selectvm;

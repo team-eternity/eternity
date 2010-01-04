@@ -613,7 +613,7 @@ void P_PlayerThink(player_t *player)
    player->quake = 0;
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 // Small native functions for player stuff
 
 static cell AMX_NATIVE_CALL sm_getplayername(AMX *amx, cell *params)

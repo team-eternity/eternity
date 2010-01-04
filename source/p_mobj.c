@@ -2667,7 +2667,7 @@ mobj_t *P_CollectionGetRandom(MobjCollection *mc, pr_class_t rngnum)
    return (mc->ptrarray)[P_Random(rngnum) % mc->num];
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Small natives
 //

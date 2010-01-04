@@ -948,7 +948,7 @@ void C_InstaPopup(void)
       current_target = current_height = 0;
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Small native functions
 //

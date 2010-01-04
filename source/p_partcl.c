@@ -1438,7 +1438,7 @@ void P_AddEventVars(void)
    }
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Script functions
 //

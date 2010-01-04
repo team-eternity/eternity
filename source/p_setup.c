@@ -1579,7 +1579,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    // haleyjd 03/15/03: clear levelscript callbacks
    // haleyjd 01/07/07: reset ACS interpreter state
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    SM_RemoveCallbacks(SC_VM_LEVELSCRIPT);
 #endif
    ACS_InitLevel();
@@ -1769,7 +1769,7 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
    else
       camera = NULL;        // camera off
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    // haleyjd 03/15/03: load and initialize any level scripts
    SM_InitLevelScript();
 #endif

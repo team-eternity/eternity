@@ -1436,7 +1436,7 @@ void S_AddCommands(void)
   C_AddCommand(s_playmusic);
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Small native functions
 //

@@ -1540,7 +1540,7 @@ void P_UnArchivePolyObjects(void)
 //
 // Saves the size and contents of a Small AMX's data segment.
 //
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 static void P_ArchiveSmallAMX(AMX *amx)
 {
 
@@ -1573,7 +1573,7 @@ static void P_ArchiveSmallAMX(AMX *amx)
 // This will avoid most problems with maps that have had their
 // scripts recompiled since last being used.
 //
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 static void P_UnArchiveSmallAMX(AMX *amx)
 {
    long cur_amx_size, arch_amx_size;
@@ -1615,7 +1615,7 @@ static void P_UnArchiveSmallAMX(AMX *amx)
 //
 static void P_ArchiveCallbacks(void)
 {
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    int callback_count = 0;
    sc_callback_t *list = SM_GetCallbackList();
    sc_callback_t *rover;
@@ -1649,7 +1649,7 @@ static void P_ArchiveCallbacks(void)
 //
 static void P_UnArchiveCallbacks(void)
 {
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    // kill any existing callbacks
    SM_RemoveCallbacks(-1);
 
@@ -1688,7 +1688,7 @@ static void P_UnArchiveCallbacks(void)
 //
 void P_ArchiveScripts(void)
 {
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    CheckSaveGame(2 * sizeof(unsigned char));
 
    // save gamescript/levelscript presence flags
@@ -1718,7 +1718,7 @@ void P_ArchiveScripts(void)
 //
 void P_UnArchiveScripts(void)
 {
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    boolean hadGameScript, hadLevelScript;
 
    // get saved presence flags

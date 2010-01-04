@@ -387,7 +387,7 @@ void P_Chase_AddCommands(void)
    C_AddCommand(walkcam);
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
 {
    int onoff = (int)params[1];

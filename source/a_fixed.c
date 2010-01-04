@@ -25,7 +25,7 @@
 //
 //----------------------------------------------------------------------------
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 
 #include "a_small.h"
 #include "m_fixed.h"

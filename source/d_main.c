@@ -2934,7 +2934,7 @@ static void D_DoomInit(void)
    if(in_textmode)
       D_SetGraphicsMode();
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    // initialize Small, load game scripts; 01/07/07: init ACS
    SM_InitSmall();
    SM_InitGameScript();

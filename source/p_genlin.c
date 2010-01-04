@@ -2226,7 +2226,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean us
    }
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Small Natives
 //
@@ -2446,7 +2446,7 @@ void P_AddGenLineCommands(void)
    C_AddCommand(p_linespec);
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Small Param Line Special Wrappers
 //

@@ -230,7 +230,7 @@ void HU_Start(void)
       }
    }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDStart");
@@ -250,7 +250,7 @@ void HU_Drawer(void)
    int i;
    hu_widget_t *widget;
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDPreDraw");
@@ -1728,7 +1728,7 @@ void HU_AddCommands(void)
    HU_OverAddCommands();
 }
 
-#ifdef EE_SMALL_SUPPORT
+#ifndef EE_NO_SMALL_SUPPORT
 //
 // Script functions
 //
