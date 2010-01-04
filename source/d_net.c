@@ -863,6 +863,9 @@ void D_QuitNetGame(void)
 // NETCODE_FIXME: Need to handle stuff besides ticcmds too.
 //
 
+// haleyjd 01/04/2010
+boolean d_fastrefresh;
+
 int     frametics[4];
 int     frameon;
 int     frameskip[4];
@@ -1045,30 +1048,30 @@ void TryRunTics(void)
 
    do
    {
-       entertic = I_GetTime() / ticdup;
-       realtics = entertic - oldentertic;
-       oldentertic = entertic;
+      entertic = I_GetTime() / ticdup;
+      realtics = entertic - oldentertic;
+      oldentertic = entertic;
 
-       // sf: run the menu and console regardless of 
-       // game time. to prevent lockups
+      // sf: run the menu and console regardless of 
+      // game time. to prevent lockups
 
-       // NETCODE_FIXME: fraggle change #3
+      // NETCODE_FIXME: fraggle change #3
 
-       I_StartTic();        // run these here now to get keyboard
-       D_ProcessEvents();   // input for console/menu
+      I_StartTic();        // run these here now to get keyboard
+      D_ProcessEvents();   // input for console/menu
 
-       for(i = 0; i < realtics; ++i)   // run tics
-       {
-          // all independent tickers here
-          MN_Ticker();
-          C_Ticker();
-          V_FPSTicker();
-       }
+      for(i = 0; i < realtics; ++i)   // run tics
+      {
+         // all independent tickers here
+         MN_Ticker();
+         C_Ticker();
+         V_FPSTicker();
+      }
 
-       // run the game tickers
-       game_advanced = RunGameTics();
-
-    } while (realtics <= 0 && !game_advanced);
+      // run the game tickers
+      game_advanced = RunGameTics();
+   } 
+   while(!d_fastrefresh && realtics <= 0 && !game_advanced);
 }
 
 /////////////////////////////////////////////////////
@@ -1110,11 +1113,15 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
 }
 */
 
+VARIABLE_BOOLEAN(d_fastrefresh, NULL, onoff);
+CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
+
 void net_AddCommands()
 {
    //C_AddCommand(kick);
    //C_AddCommand(disconnect);
    C_AddCommand(playerinfo);
+   C_AddCommand(d_fastrefresh);
 }
 
 //----------------------------------------------------------------------------

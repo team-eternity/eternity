@@ -38,6 +38,7 @@ extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
 extern int screenshot_pcx;     // jff 3/30/98: option to output screenshot as pcx or bmp
 extern int screenshot_gamma;   // haleyjd 11/16/04: allow disabling gamma correction in shots
+extern boolean d_fastrefresh;  // haleyjd 01/04/10
 
 #ifdef _SDL_VER
 extern int waitAtExit;
@@ -126,6 +127,9 @@ static default_t sysdefaults[] =
    
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, wad_no,
                "1 to use gamma correction in screenshots"),
+
+   DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, wad_no,
+                "1 to refresh as fast as possible (uses high CPU)"),
 
 #ifdef _SDL_VER
    // SoM

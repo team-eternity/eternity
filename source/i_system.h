@@ -44,6 +44,8 @@ int I_GetTime_Adaptive(void); // killough 4/10/98
 void I_SetTime(int newtime);
 extern int GetTime_Scale;
 
+unsigned int I_GetTicks(void);
+
 //
 // Called by D_DoomLoop,
 // called before processing any tics in a frame
