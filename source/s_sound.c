@@ -1436,6 +1436,7 @@ void S_AddCommands(void)
   C_AddCommand(s_playmusic);
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Small native functions
 //
@@ -1531,6 +1532,7 @@ AMX_NATIVE_INFO sound_Natives[] =
    { "_SectorSoundNum", sm_sectorsoundnum },
    { NULL, NULL }
 };
+#endif
 
 //----------------------------------------------------------------------------
 //

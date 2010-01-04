@@ -1540,8 +1540,10 @@ void P_UnArchivePolyObjects(void)
 //
 // Saves the size and contents of a Small AMX's data segment.
 //
+#ifdef EE_SMALL_SUPPORT
 static void P_ArchiveSmallAMX(AMX *amx)
 {
+
    long amx_size = 0;
    byte *data;
 
@@ -1560,6 +1562,7 @@ static void P_ArchiveSmallAMX(AMX *amx)
    memcpy(save_p, data, amx_size);
    save_p += amx_size;
 }
+#endif
 
 //
 // P_UnArchiveSmallAMX
@@ -1570,6 +1573,7 @@ static void P_ArchiveSmallAMX(AMX *amx)
 // This will avoid most problems with maps that have had their
 // scripts recompiled since last being used.
 //
+#ifdef EE_SMALL_SUPPORT
 static void P_UnArchiveSmallAMX(AMX *amx)
 {
    long cur_amx_size, arch_amx_size;
@@ -1593,6 +1597,7 @@ static void P_UnArchiveSmallAMX(AMX *amx)
    memcpy(data, save_p, arch_amx_size);
    save_p += arch_amx_size;
 }
+#endif
 
 //
 // P_ArchiveCallbacks
@@ -1610,6 +1615,7 @@ static void P_UnArchiveSmallAMX(AMX *amx)
 //
 static void P_ArchiveCallbacks(void)
 {
+#ifdef EE_SMALL_SUPPORT
    int callback_count = 0;
    sc_callback_t *list = SM_GetCallbackList();
    sc_callback_t *rover;
@@ -1629,6 +1635,7 @@ static void P_ArchiveCallbacks(void)
 
    // save an end marker
    *save_p++ = SC_VM_END;
+#endif
 }
 
 //
@@ -1642,6 +1649,7 @@ static void P_ArchiveCallbacks(void)
 //
 static void P_UnArchiveCallbacks(void)
 {
+#ifdef EE_SMALL_SUPPORT
    // kill any existing callbacks
    SM_RemoveCallbacks(-1);
 
@@ -1663,6 +1671,7 @@ static void P_UnArchiveCallbacks(void)
    
    // move past the last sentinel byte
    ++save_p;
+#endif
 }
 
 //=============================================================================
@@ -1679,6 +1688,7 @@ static void P_UnArchiveCallbacks(void)
 //
 void P_ArchiveScripts(void)
 {
+#ifdef EE_SMALL_SUPPORT
    CheckSaveGame(2 * sizeof(unsigned char));
 
    // save gamescript/levelscript presence flags
@@ -1695,6 +1705,7 @@ void P_ArchiveScripts(void)
 
    // save callbacks
    P_ArchiveCallbacks();
+#endif
 }
 
 //
@@ -1707,6 +1718,7 @@ void P_ArchiveScripts(void)
 //
 void P_UnArchiveScripts(void)
 {
+#ifdef EE_SMALL_SUPPORT
    boolean hadGameScript, hadLevelScript;
 
    // get saved presence flags
@@ -1730,6 +1742,7 @@ void P_UnArchiveScripts(void)
    P_UnArchiveCallbacks();
 
    // TODO: execute load game event callbacks?
+#endif
 }
 
 //============================================================================

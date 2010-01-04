@@ -230,12 +230,14 @@ void HU_Start(void)
       }
    }
 
+#ifdef EE_SMALL_SUPPORT
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDStart");
 
    if(levelScriptLoaded)
       SM_OptScriptCallback(&LevelScript, "OnHUDStart");
+#endif
 }
 
 //
@@ -248,12 +250,14 @@ void HU_Drawer(void)
    int i;
    hu_widget_t *widget;
 
+#ifdef EE_SMALL_SUPPORT
    // execute script event handlers
    if(gameScriptLoaded)
       SM_OptScriptCallback(&GameScript, "OnHUDPreDraw");
 
    if(levelScriptLoaded)
       SM_OptScriptCallback(&LevelScript, "OnHUDPreDraw");
+#endif
 
    // call all widget drawer functions
    for(i = 0; i < NUMWIDGETCHAINS; ++i)
@@ -1724,6 +1728,7 @@ void HU_AddCommands(void)
    HU_OverAddCommands();
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Script functions
 //
@@ -2059,5 +2064,6 @@ AMX_NATIVE_INFO hustuff_Natives[] =
    { "_InAutomap",          sm_inautomap        },
    { NULL, NULL }
 };
+#endif
 
 // EOF

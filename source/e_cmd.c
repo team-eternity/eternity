@@ -400,6 +400,8 @@ void E_AddCommands(void)
    C_AddCommand(e_linedef);
 }
 
+#ifdef EE_SMALL_SUPPORT
+
 //
 // Script functions
 //
@@ -439,6 +441,8 @@ AMX_NATIVE_INFO edf_Natives[] =
    { "_ThingUnknown",      sm_unknownthing },
    { NULL,                NULL }
 };
+
+#endif
 
 // EOF
 

@@ -34,6 +34,9 @@
 #define __A_SMALL_H__
 
 #include "p_mobj.h"
+
+#ifdef EE_SMALL_SUPPORT
+
 #include "amx.h"
 
 // custom app-defined errors
@@ -185,8 +188,10 @@ extern SmallContext_t *curGSContext;
 extern SmallContext_t LevelScript;
 extern SmallContext_t *curLSContext;
 
+#endif // EE_SMALL_SUPPORT
+
 // haleyjd 07/06/04: FINE put it here!
-mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, struct SmallContext_s *context);
+mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, mobj_t *trigger);
 
 #endif
 

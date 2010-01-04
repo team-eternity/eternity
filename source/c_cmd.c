@@ -383,7 +383,11 @@ extern void       AM_AddCommands(void);        // am_color.c
 
 extern void       PE_AddCommands(void);        // p_enemy.c  -- haleyjd
 extern void   G_Bind_AddCommands(void);        // g_bind.c   -- haleyjd
+
+#ifdef EE_SMALL_SUPPORT
 extern void       SM_AddCommands(void);        // a_small.c  -- haleyjd
+#endif
+
 extern void      G_DMAddCommands(void);        // g_dmflag.c -- haleyjd
 extern void        E_AddCommands(void);        // e_cmd.c    -- haleyjd
 extern void P_AddGenLineCommands(void);        // p_genlin.c -- haleyjd
@@ -426,12 +430,17 @@ void C_AddCommands()
   AM_AddCommands();
   PE_AddCommands();  // haleyjd
   G_Bind_AddCommands();
+  
+#ifdef EE_SMALL_SUPPORT
   SM_AddCommands();
+#endif
+  
   G_DMAddCommands();
   E_AddCommands();
   P_AddGenLineCommands();
 }
 
+#ifdef EE_SMALL_SUPPORT
 static cell AMX_NATIVE_CALL sm_version(AMX *amx, cell *params)
 {
    return version;
@@ -442,6 +451,7 @@ AMX_NATIVE_INFO ccmd_Natives[] =
    {"_EngineVersion", sm_version },
    { NULL, NULL }
 };
+#endif
 
 // EOF
 

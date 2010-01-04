@@ -2187,8 +2187,10 @@ void G_Ticker(void)
    if(inwipe)
       Wipe_Ticker();
 
+#ifdef EE_SMALL_SUPPORT
    // haleyjd 03/15/03: execute scheduled Small callbacks
    SM_ExecuteCallbacks();
+#endif
    
    if(gamestate == GS_LEVEL)
    {
@@ -3434,9 +3436,12 @@ void G_CoolViewPoint(void)
    cooldemo_tics = (7 + M_Random() % 13) * TICRATE;
 }
 
+#ifdef EE_SMALL_SUPPORT
+
 //
 // Small native functions
 //
+
 
 static cell AMX_NATIVE_CALL sm_exitlevel(AMX *amx, cell *params)
 {
@@ -3511,6 +3516,8 @@ AMX_NATIVE_INFO game_Natives[] =
    { "_GameType",   sm_gametype },
    { NULL, NULL }
 };
+
+#endif
 
 //----------------------------------------------------------------------------
 //

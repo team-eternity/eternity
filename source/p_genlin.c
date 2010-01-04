@@ -2226,6 +2226,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean us
    }
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Small Natives
 //
@@ -2412,6 +2413,7 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
    // FIXME: spac important?
    return P_ExecParamLineSpec(line, thing, spec, args, 0, SPAC_CROSS, true);
 }
+#endif
 
 //
 // Console Command to execute line specials
@@ -2444,6 +2446,7 @@ void P_AddGenLineCommands(void)
    C_AddCommand(p_linespec);
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Small Param Line Special Wrappers
 //
@@ -2602,6 +2605,7 @@ AMX_NATIVE_INFO genlin_Natives[] =
    { "_Thing_SpawnNoFog",            sm_thing_spawnnofog            },
    { NULL, NULL }
 };
+#endif
 
 //----------------------------------------------------------------------------
 //

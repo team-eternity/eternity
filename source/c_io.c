@@ -948,6 +948,7 @@ void C_InstaPopup(void)
       current_target = current_height = 0;
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Small native functions
 //
@@ -1052,6 +1053,7 @@ AMX_NATIVE_INFO cons_io_Natives[] =
    { "_ConsoleBeep",  sm_consolebeep },
    { NULL, NULL }
 };
+#endif
 
 //
 // Egg

@@ -2934,9 +2934,11 @@ static void D_DoomInit(void)
    if(in_textmode)
       D_SetGraphicsMode();
 
+#ifdef EE_SMALL_SUPPORT
    // initialize Small, load game scripts; 01/07/07: init ACS
    SM_InitSmall();
    SM_InitGameScript();
+#endif
    ACS_Init();
 
    // haleyjd: updated for eternity

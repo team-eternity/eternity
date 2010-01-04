@@ -2470,7 +2470,7 @@ void P_RemoveThingTID(mobj_t *mo)
 //
 // haleyjd 06/10/06: eliminated infinite loop for TID_TRIGGER
 //
-mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, SmallContext_t *context)
+mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, mobj_t *trigger)
 {
    switch(tid)
    {
@@ -2489,7 +2489,7 @@ mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, SmallContext_t *context)
       }
 
    case -10: // script trigger object (may be NULL, which is fine)
-      return (!rover && context) ? context->invocationData.trigger : NULL;
+      return (!rover && trigger) ? trigger : NULL;
 
    // Normal TIDs
    default:
@@ -2667,6 +2667,7 @@ mobj_t *P_CollectionGetRandom(MobjCollection *mc, pr_class_t rngnum)
    return (mc->ptrarray)[P_Random(rngnum) % mc->num];
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Small natives
 //
@@ -2766,7 +2767,7 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
 
    angle = (angle_t)(((uint64_t)ang << 32) / 360);
 
-   while((spawnspot = P_FindMobjFromTID(spottid, spawnspot, context)))
+   while((spawnspot = P_FindMobjFromTID(spottid, spawnspot, context->invocationData.trigger)))
    {
       mo = P_SpawnMobj(spawnspot->x, spawnspot->y, spawnspot->z, type);
 
@@ -2805,7 +2806,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
    // get tid
    tid = (int)params[2];
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
       S_StartSoundName(mo, sndname);
 
    Z_Free(sndname);
@@ -2832,7 +2833,7 @@ static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
    sndnum = (int)params[1];
    tid    = (int)params[2];
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       S_StartSound(mo, sndnum);
    }
@@ -2862,7 +2863,7 @@ static cell AMX_NATIVE_CALL sm_thinginfosound(AMX *amx, cell *params)
    typenum = (int)params[1];
    tid     = (int)params[2];
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       int sndnum = 0;
 
@@ -2941,7 +2942,7 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
    tid   = (int)params[1];
    field = (int)params[2];
 
-   if((mo = P_FindMobjFromTID(tid, mo, context)))
+   if((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       switch(field)
       {
@@ -2980,7 +2981,7 @@ static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
    field      = (int)params[2];
    value      = (int)params[3];
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       switch(field)
       {
@@ -3023,7 +3024,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
 
    results = deh_ParseFlagsCombined(flags);
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       switch(op)
       {
@@ -3072,7 +3073,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
    tid      = params[1];
    friendly = params[2];
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       switch(friendly)
       {
@@ -3112,7 +3113,7 @@ static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 
    tid = params[1];
 
-   if((mo = P_FindMobjFromTID(tid, mo, ctx)))
+   if((mo = P_FindMobjFromTID(tid, mo, ctx->invocationData.trigger)))
       friendly = ((mo->flags & MF_FRIEND) == MF_FRIEND);
 
    return friendly;
@@ -3142,7 +3143,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
    y   = (fixed_t)params[3];
    z   = (fixed_t)params[4];
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       mo->momx += x;
       mo->momy += y;
@@ -3172,7 +3173,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust(AMX *amx, cell *params)
       return -1;
    }
 
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
       P_ThrustMobj(mo, angle, force);
 
    return 0;
@@ -3211,7 +3212,7 @@ static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
    tid = params[1];
    valuetoget = params[2];
 
-   if((mo = P_FindMobjFromTID(tid, mo, context)))
+   if((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       switch(valuetoget)
       {
@@ -3296,7 +3297,7 @@ static cell sm_thingteleport(AMX *amx, cell *params)
    }
 
    // work on all mobjs of the given tid
-   while((mo = P_FindMobjFromTID(tid, mo, context)))
+   while((mo = P_FindMobjFromTID(tid, mo, context->invocationData.trigger)))
    {
       oldx = mo->x;
       oldy = mo->y;
@@ -3349,6 +3350,7 @@ AMX_NATIVE_INFO mobj_Natives[] =
    { "_ThingTeleport",     sm_thingteleport },
    { NULL,                 NULL }
 };
+#endif
 
 //----------------------------------------------------------------------------
 //

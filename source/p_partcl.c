@@ -1438,6 +1438,7 @@ void P_AddEventVars(void)
    }
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Script functions
 //
@@ -1481,7 +1482,7 @@ static cell AMX_NATIVE_CALL sm_ptclexplosionthing(AMX *amx, cell *params)
    col1 = (byte)params[2];
    col2 = (byte)params[3];
 
-   while((mo = P_FindMobjFromTID(tid, mo, ctx)))
+   while((mo = P_FindMobjFromTID(tid, mo, ctx->invocationData.trigger)))
       P_ExplosionParticles(mo->x, mo->y, mo->z, col1, col2);
 
    return 0;
@@ -1493,6 +1494,7 @@ AMX_NATIVE_INFO ptcl_Natives[] =
    { "_PtclExplosionThing", sm_ptclexplosionthing },
    { NULL, NULL }
 };
+#endif
 
 // EOF
 

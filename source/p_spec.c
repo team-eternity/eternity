@@ -1125,6 +1125,7 @@ boolean P_WasSecret(sector_t *sec)
 //
 void P_StartLineScript(line_t *line, mobj_t *thing)
 {
+#ifdef EE_SMALL_SUPPORT
    if(levelScriptLoaded)
    {
       SmallContext_t *useContext;
@@ -1149,6 +1150,7 @@ void P_StartLineScript(line_t *line, mobj_t *thing)
    }
    else
       doom_printf(FC_ERROR "P_StartLineScript: No Levelscript.\n");
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -4949,7 +4951,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    }
 }
 
-
+#ifdef EE_SMALL_SUPPORT
 //
 // Small Natives
 //
@@ -5033,6 +5035,7 @@ AMX_NATIVE_INFO pspec_Natives[] =
    { "_SectorColormap", sm_sectorcolormap },
    { NULL,               NULL }
 };
+#endif
 
 //----------------------------------------------------------------------------
 //

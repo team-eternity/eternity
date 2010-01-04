@@ -189,6 +189,7 @@ void M_ClearRandom(void)
    rng.prndindex = rng.rndindex = 0;     // clear two compatibility indices
 }
 
+#ifdef EE_SMALL_SUPPORT
 static cell AMX_NATIVE_CALL sm_random(AMX *amx, cell *params)
 {
    return P_Random(pr_script);
@@ -213,6 +214,7 @@ AMX_NATIVE_INFO random_Natives[] =
    { "_M_Random", sm_mrandom },
    { NULL, NULL }
 };
+#endif
 
 //----------------------------------------------------------------------------
 //

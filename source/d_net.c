@@ -926,8 +926,8 @@ static boolean RunGameTics(void)
       // if we are consistantly slower, speed up time
       for(i = 0; i < MAXPLAYERS; ++i)
       {
-        if (playeringame[i])
-	  break;
+         if(playeringame[i])
+            break;
       }
 
       // the key player does not adapt

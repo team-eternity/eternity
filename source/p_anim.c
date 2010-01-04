@@ -184,6 +184,7 @@ void P_InitLightning(void)
    }
 }
 
+#ifdef EE_SMALL_SUPPORT
 static cell AMX_NATIVE_CALL sm_lightning(AMX *amx, cell *params)
 {
    if(gamestate != GS_LEVEL)
@@ -201,6 +202,7 @@ AMX_NATIVE_INFO panim_Natives[] =
    { "_ForceLightning", sm_lightning },
    { NULL, NULL }
 };
+#endif
 
 // EOF
 

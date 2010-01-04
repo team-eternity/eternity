@@ -25,6 +25,8 @@
 //
 //----------------------------------------------------------------------------
 
+#ifdef EE_SMALL_SUPPORT
+
 #include "a_small.h"
 #include "m_fixed.h"
 
@@ -88,6 +90,7 @@ AMX_NATIVE_INFO fixed_Natives[] =
    { "_fcos",           sm_fcos },
    { NULL,              NULL }
 };
+#endif
 
 // EOF
 

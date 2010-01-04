@@ -1648,6 +1648,7 @@ void P_Whistle(mobj_t *actor, int mobjtype)
    }
 }
 
+#ifdef EE_SMALL_SUPPORT
 //
 // Small natives
 //
@@ -1668,7 +1669,8 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
       return -1;
    }
 
-   while((rover = P_FindMobjFromTID(params[1], rover, context)))
+   while((rover = P_FindMobjFromTID(params[1], rover, 
+                                    context->invocationData.trigger)))
    {
       int damage;
       
@@ -1707,12 +1709,18 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
    }
 
    if(params[4] != 0)
-      inflictor = P_FindMobjFromTID(params[4], inflictor, context);
+   {
+      inflictor = P_FindMobjFromTID(params[4], inflictor, 
+                                    context->invocationData.trigger);
+   }
 
    if(params[5] != 0)
-      source = P_FindMobjFromTID(params[5], source, context);
+   {
+      source = P_FindMobjFromTID(params[5], source, 
+                                 context->invocationData.trigger);
+   }
 
-   while((rover = P_FindMobjFromTID(params[1], rover, context)))
+   while((rover = P_FindMobjFromTID(params[1], rover, context->invocationData.trigger)))
    {
       P_DamageMobj(rover, inflictor, source, params[2], params[3]);
    }
@@ -1737,9 +1745,9 @@ static cell AMX_NATIVE_CALL sm_thinghate(AMX *amx, cell *params)
    }
 
    if(params[2] != 0)
-      targ = P_FindMobjFromTID(params[2], targ, context);
+      targ = P_FindMobjFromTID(params[2], targ, context->invocationData.trigger);
 
-   while((obj = P_FindMobjFromTID(params[1], obj, context)))
+   while((obj = P_FindMobjFromTID(params[1], obj, context->invocationData.trigger)))
    {
       P_SetTarget(&(obj->target), targ);
    }
@@ -1754,6 +1762,7 @@ AMX_NATIVE_INFO pinter_Natives[] =
    { "_ThingHate", sm_thinghate },
    { NULL, NULL }
 };
+#endif
 
 //----------------------------------------------------------------------------
 //

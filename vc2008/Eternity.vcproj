@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="Eternity"
 	ProjectGUID="{233045E2-53A6-4579-A272-3D3CF6D97405}"
+	RootNamespace="Eternity"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -46,7 +47,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include,..\source\win32"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_SMALL_SUPPORT"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -138,7 +139,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32"
-				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_SMALL_SUPPORT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"

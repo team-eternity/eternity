@@ -30,6 +30,8 @@
 //
 //----------------------------------------------------------------------------
 
+#ifdef EE_SMALL_SUPPORT
+
 #include "z_zone.h"
 #include "doomtype.h"
 #include "w_wad.h"
@@ -1692,6 +1694,8 @@ AMX_NATIVE_INFO local_Natives[] =
    { "_Printf",        sm_printf },
    { NULL, NULL }
 };
+
+#endif // EE_SMALL_SUPPORT
 
 // EOF
 
