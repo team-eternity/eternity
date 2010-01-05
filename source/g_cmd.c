@@ -40,7 +40,9 @@
 #include "hu_stuff.h"
 #include "mn_engin.h"
 #include "mn_misc.h"  // haleyjd
+#include "m_shots.h"
 #include "m_random.h"
+#include "m_syscfg.h"
 #include "p_inter.h"
 #include "p_setup.h"
 #include "w_wad.h"
@@ -55,8 +57,6 @@ extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 
 extern int automlook;
 extern int invert_mouse;
-extern int screenshot_pcx;
-extern int screenshot_gamma;
 extern int keylookspeed;
 
 ////////////////////////////////////////////////////////////////////////
@@ -499,6 +499,12 @@ CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    0)
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
 CONSOLE_VARIABLE(use_doom_config, use_doom_config, 0) {}
 
+CONSOLE_COMMAND(m_resetcomments, 0)
+{
+   M_ResetDefaultComments();
+   M_ResetSysComments();
+}
+
 ////////////////////////////////////////////////////////////////
 //
 // Chat Macros
@@ -806,6 +812,7 @@ void G_AddCommands(void)
    C_AddCommand(startonnewmap);
    C_AddCommand(autorun);
    C_AddCommand(runiswalk);
+   C_AddCommand(m_resetcomments);
 
    // haleyjd 03/22/09: iwad paths
    C_AddCommand(iwad_doom_shareware);

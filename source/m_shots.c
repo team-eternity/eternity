@@ -38,6 +38,9 @@
 // haleyjd 12/28/09: selects from any number of formats now.
 int screenshot_pcx; 
 
+// haleyjd 11/16/04: allow disabling gamma correction in screenshots
+int screenshot_gamma;
+
 // jff 3/30/98 binary file write with error detection
 // killough 10/98: changed into macro to return failure instead of aborting
 

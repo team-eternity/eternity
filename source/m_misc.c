@@ -70,10 +70,9 @@
 // DEFAULTS
 //
 
-static int config_help;         //jff 3/3/98
+int config_help;         //jff 3/3/98
 int usemouse;
 int usejoystick;
-int screenshot_gamma; // haleyjd 11/16/04: allow disabling gamma correction in screenshots
 
 extern int mousebstrafe;
 extern int mousebforward;
@@ -121,10 +120,6 @@ extern int wipewait;
 
 default_t defaults[] = 
 {
-   //jff 3/3/98
-   DEFAULT_INT("config_help", &config_help, NULL, 1, 0, 1, wad_no,
-               "1 to show help strings about each variable in config file"),
-
    DEFAULT_INT("colour", &default_colour, NULL, 0, 0, TRANSLATIONCOLOURS, wad_no,
                "the default player colour (green, indigo, brown, red...)"),
 
@@ -1028,8 +1023,6 @@ void M_SaveDefaultFile(defaultfile_t *df)
    unsigned int line, blanks;
    FILE *f;
 
-   //memset(tmpfile, 0, sizeof(tmpfile));
-
    // killough 10/98: for when exiting early
    if(!df->loaded || !df->fileName)
       return;
@@ -1338,9 +1331,9 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
                   dp->orig_default_b = *(boolean *)dp->location;  // Save original default
                }
                if(dp->current)            // Change current value
-                  *(boolean *)dp->current = parm;
+                  *(boolean *)dp->current = !!parm;
             }
-            *(boolean *)dp->location = parm;  // Change default
+            *(boolean *)dp->location = !!parm;  // Change default
          }
       }
       break;
@@ -1381,7 +1374,6 @@ void M_LoadOptions(void)
       Z_ChangeTag(options, PU_CACHE);
    }
 
-   //  M_Trans();           // reset translucency in case of change
    //  MN_ResetMenu();       // reset menu in case of change
 }
 
@@ -1503,6 +1495,31 @@ void M_LoadDefaults(void)
    M_LoadDefaultFile(df);
 }
 
+//
+// M_ResetDefaultFileComments
+//
+// haleyjd 01/04/10: Removes any saved comments from the given defaults file
+//
+void M_ResetDefaultFileComments(defaultfile_t *df)
+{
+   if(df->comments)
+   {
+      free(df->comments);
+      df->comments = NULL;
+      df->numcomments = df->numcommentsalloc = 0;
+   }
+}
+
+//
+// M_ResetDefaultComments
+//
+// haleyjd 01/04/10: Removes saved comments from the game config file.
+//
+void M_ResetDefaultComments(void)
+{
+   M_ResetDefaultFileComments(&maindefaults);
+}
+
 //=============================================================================
 //
 // File IO Routines
@@ -1575,15 +1592,19 @@ int M_ReadFile(char const *name, byte **buffer)
 // M_FileLength
 //
 // Gets the length of a file given its handle.
-// FIXME/TODO: don't use POSIX fstat; is slower and less portable
 // haleyjd 03/09/06: made global
+// haleyjd 01/04/10: use fseek/ftell
 //
-int M_FileLength(int handle)
+int M_FileLength(FILE *f)
 {
-   struct stat fileinfo;
-   if(fstat(handle, &fileinfo) == -1)
-      I_Error("M_FileLength: failure in fstat\n");
-   return fileinfo.st_size;
+   long curpos, len;
+
+   curpos = ftell(f);
+   fseek(f, 0, SEEK_END);
+   len = ftell(f);
+   fseek(f, curpos, SEEK_SET);
+
+   return (int)len;
 }
 
 //=============================================================================

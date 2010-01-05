@@ -179,7 +179,7 @@ size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file)
 size_t D_FileLength(DWFILE *file)
 {
    return 
-      !file->lump ? M_FileLength(fileno((FILE *)(file->inp))) :
+      !file->lump ? M_FileLength((FILE *)(file->inp)) :
                     W_LumpLength(file->lumpnum);
 }
 

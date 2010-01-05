@@ -140,7 +140,7 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
       isWad = false; // haleyjd 05/23/04
       fileinfo = &singleinfo;
       singleinfo.filepos = 0;
-      singleinfo.size = SwapLong(M_FileLength(fileno(handle)));
+      singleinfo.size = SwapLong(M_FileLength(handle));
       M_ExtractFileBase(filename, singleinfo.name);
       dir->numlumps++;
    }

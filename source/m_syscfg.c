@@ -30,14 +30,13 @@
 #include "doomstat.h"
 #include "d_main.h"
 #include "m_misc.h"
+#include "m_shots.h"
 #include "d_gi.h"
 
 // External variables configured here:
 
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
-extern int screenshot_pcx;     // jff 3/30/98: option to output screenshot as pcx or bmp
-extern int screenshot_gamma;   // haleyjd 11/16/04: allow disabling gamma correction in shots
 extern boolean d_fastrefresh;  // haleyjd 01/04/10
 
 #ifdef _SDL_VER
@@ -74,6 +73,10 @@ extern int disable_sysmenu;
 
 static default_t sysdefaults[] =
 {
+      //jff 3/3/98
+   DEFAULT_INT("config_help", &config_help, NULL, 1, 0, 1, wad_no,
+               "1 to show help strings about each variable in config file"),
+
    DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, NULL, 0, 0, 1, wad_no,
                "1 to use base/doom/eternity.cfg for all DOOM gamemodes"),
 
@@ -190,6 +193,16 @@ void M_LoadSysConfig(const char *filename)
 void M_SaveSysConfig(void)
 {
    M_SaveDefaultFile(&sysdeffile);
+}
+
+//
+// M_ResetSysComments
+//
+// Resets comments in the system config file
+//
+void M_ResetSysComments(void)
+{
+   M_ResetDefaultFileComments(&sysdeffile);
 }
 
 // EOF

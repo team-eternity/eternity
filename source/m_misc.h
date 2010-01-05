@@ -36,8 +36,6 @@
 
 boolean M_WriteFile(const char *name, void *source, unsigned int length);
 int     M_ReadFile(const char *name, byte **buffer);
-void    M_LoadDefaults(void);
-void    M_SaveDefaults(void);
 int     M_DrawText(int x,int y,boolean direct, char *string);
 void    M_LoadOptions(void);                             // killough 11/98
 
@@ -53,15 +51,14 @@ char *M_Itoa(int value, char *string, int radix);
 // haleyjd: moved a number of these here from w_wad module.
 
 void  M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
-int   M_FileLength(int handle);
+int   M_FileLength(FILE *f);
 void  M_ExtractFileBase(const char *, char *);               // killough
 char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void  M_NormalizeSlashes(char *);                            // killough 11/98
 
 int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...);
 
-extern int screenshot_pcx;                                   // killough 10/98
-extern int screenshot_gamma;                                 // haleyjd  03/06
+extern int config_help;
 
 // haleyjd 07/27/09: default file portability fix - separate types for config
 // variables
@@ -154,6 +151,10 @@ typedef struct default_or_s
 boolean    M_ParseOption(defaultfile_t *df, const char *name, boolean wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
+void       M_ResetDefaultFileComments(defaultfile_t *df);
+void       M_LoadDefaults(void);
+void       M_SaveDefaults(void);
+void       M_ResetDefaultComments(void);
 
 #define UL (-123456789) /* magic number for no min or max for parameter */
 
