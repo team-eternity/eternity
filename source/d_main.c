@@ -3126,9 +3126,6 @@ void D_DoomMain(void)
 
       // haleyjd 12/06/06: garbage-collect all alloca blocks
       Z_FreeAlloca();
-
-      // SoM: Option to use less CPU       
-      I_Delay();
    }
 }
 

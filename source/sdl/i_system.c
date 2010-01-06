@@ -66,18 +66,8 @@ void I_WaitVBL(int count)
 }
 
 
-// SoM: Optionally use less CPU
-int cpusaver = 0;
-
-void I_Delay(void)
-{
-   if(cpusaver)
-   {
-      SDL_Delay(cpusaver);
-   }
-}
-
 // Most of the following has been rewritten by Lee Killough
+
 //
 // I_GetTime
 //
@@ -452,9 +442,6 @@ int leds_always_off;
 VARIABLE_BOOLEAN(leds_always_off, NULL,     yesno);
 VARIABLE_INT(realtic_clock_rate, NULL,  0, 500, NULL);
 
-VARIABLE_INT(cpusaver, NULL, 0, 10, NULL);
-CONSOLE_VARIABLE(powersaver, cpusaver, 0) {}
-
 CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 {
    if (realtic_clock_rate != 100)
@@ -510,7 +497,6 @@ void I_AddCommands()
    C_AddCommand(i_ledsoff);
    C_AddCommand(i_gamespeed);
    C_AddCommand(i_joystick);
-   C_AddCommand(powersaver);
 
 #ifdef _SDL_VER
    C_AddCommand(i_waitatexit);

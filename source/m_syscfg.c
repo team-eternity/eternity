@@ -42,7 +42,6 @@ extern boolean d_fastrefresh;  // haleyjd 01/04/10
 #ifdef _SDL_VER
 extern int waitAtExit;
 extern int grabmouse;
-extern int cpusaver;
 extern int use_vsync;
 extern boolean unicodeinput;
 #endif
@@ -83,31 +82,31 @@ static default_t sysdefaults[] =
    // IWAD paths
 
    DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, NULL, "", wad_no,
-               "DOOM Shareware IWAD Path"),
+               "IWAD path for DOOM Shareware"),
 
    DEFAULT_STR(ITEM_IWAD_DOOM, &gi_path_doomreg, NULL, "", wad_no,
-               "DOOM Registered IWAD Path"),
+               "IWAD path for DOOM Registered"),
 
    DEFAULT_STR(ITEM_IWAD_ULTIMATE_DOOM, &gi_path_doomu, NULL, "", wad_no,
-               "Ultimate DOOM IWAD Path"),
+               "IWAD path for The Ultimate DOOM"),
 
    DEFAULT_STR(ITEM_IWAD_DOOM2, &gi_path_doom2, NULL, "", wad_no,
-               "DOOM 2 IWAD Path"),
+               "IWAD path for DOOM 2"),
 
    DEFAULT_STR(ITEM_IWAD_TNT, &gi_path_tnt, NULL, "", wad_no,
-               "Final DOOM: TNT - Evilution IWAD Path"),
+               "IWAD path for Final DOOM: TNT - Evilution"),
 
    DEFAULT_STR(ITEM_IWAD_PLUTONIA, &gi_path_plut, NULL, "", wad_no,
-               "Final DOOM: The Plutonia Experiment IWAD Path"),
+               "IWAD path for Final DOOM: The Plutonia Experiment"),
 
    DEFAULT_STR(ITEM_IWAD_HERETIC_SW, &gi_path_hticsw, NULL, "", wad_no,
-               "Heretic Shareware IWAD Path"),
+               "IWAD path for Heretic Shareware"),
 
    DEFAULT_STR(ITEM_IWAD_HERETIC, &gi_path_hticreg, NULL, "", wad_no,
-               "Heretic Registered IWAD Path"),
+               "IWAD path for Heretic Registered"),
 
    DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", wad_no,
-               "Heretic: Shadow of the Serpent Riders IWAD Path"),
+               "IWAD path for Heretic: Shadow of the Serpent Riders"),
 
    // 11/04/09: system-level options moved here from the main config
 
@@ -135,10 +134,6 @@ static default_t sysdefaults[] =
                 "1 to refresh as fast as possible (uses high CPU)"),
 
 #ifdef _SDL_VER
-   // SoM
-   DEFAULT_INT("powersaver", &cpusaver, NULL, 0, 0, 15, wad_no,
-               "Value > 0 will call system delay function to reduce CPU usage"),
-
    DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, wad_no,
                 "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
 
