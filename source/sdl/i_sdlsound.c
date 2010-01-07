@@ -55,7 +55,8 @@ static int SAMPLECOUNT = 512;
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
 static int snd_samplerate = 44100;
 
-typedef struct {
+typedef struct channel_info_s
+{
   // SFX id of the playing sound effect.
   // Used to catch duplicates (like chainsaw).
   sfxinfo_t *id;

@@ -804,40 +804,40 @@ default_t defaults[] =
    DEFAULT_INT("pevent_bfgexpl",&(particleEvents[P_EVENT_BFG_EXPLODE].enabled), NULL,
                0, 0, 1, wad_yes, "draw particle bfg explosions"),
 
-   DEFAULT_INT("stretchsky",&stretchsky, NULL, 1, 0, 1, wad_yes,
+   DEFAULT_INT("stretchsky", &stretchsky, NULL, 0, 0, 1, wad_yes,
                "stretch short sky textures for mlook"),
    
-   DEFAULT_INT("startnewmap",&startOnNewMap, NULL, 0, 0, 1, wad_yes,
+   DEFAULT_INT("startnewmap", &startOnNewMap, NULL, 0, 0, 1, wad_yes,
                "start game on first new map (DOOM II only)"),
    
 
 #ifdef _SDL_VER   
-   DEFAULT_INT("showendoom",&showendoom, NULL, 1, 0, 1, wad_yes,
+   DEFAULT_INT("showendoom", &showendoom, NULL, 1, 0, 1, wad_yes,
                "1 to show ENDOOM at exit"),
 
-   DEFAULT_INT("endoomdelay",&endoomdelay, NULL, 350, 35, 3500, wad_no,
+   DEFAULT_INT("endoomdelay", &endoomdelay, NULL, 350, 35, 3500, wad_no,
                "Amount of time to display ENDOOM when shown"),
 #endif
 
-   DEFAULT_INT("autoaim",&default_autoaim, &autoaim, 1, 0, 1, wad_yes,
+   DEFAULT_INT("autoaim", &default_autoaim, &autoaim, 1, 0, 1, wad_yes,
                "1 to enable autoaiming"),
    
-   DEFAULT_INT("chasecam_height",&chasecam_height, NULL, 15, -31, 100, wad_no,
+   DEFAULT_INT("chasecam_height", &chasecam_height, NULL, 15, -31, 100, wad_no,
                "preferred height of chasecam above/below player viewheight"),
    
-   DEFAULT_INT("chasecam_speed",&chasecam_speed, NULL, 33, 1, 100, wad_no,
+   DEFAULT_INT("chasecam_speed", &chasecam_speed, NULL, 33, 1, 100, wad_no,
                "percentage of distance to target chasecam moves per gametic"),
    
-   DEFAULT_INT("chasecam_dist",&chasecam_dist, NULL, 112, 10, 1024, wad_no,
+   DEFAULT_INT("chasecam_dist", &chasecam_dist, NULL, 112, 10, 1024, wad_no,
                "preferred distance from chasecam to player"),
    
-   DEFAULT_INT("allowmlook",&default_allowmlook, &allowmlook, 0, 0, 1, wad_yes,
+   DEFAULT_INT("allowmlook", &default_allowmlook, &allowmlook, 0, 0, 1, wad_yes,
                "1 to allow players to look up/down"),
    
    DEFAULT_BOOL("menu_toggleisback", &menu_toggleisback, NULL, false, wad_no,
                 "1 to make menu toggle action back up one level (like zdoom)"),
    
-   DEFAULT_INT("mn_classic_menus",&mn_classic_menus, NULL, 0, 0, 1, wad_yes,
+   DEFAULT_INT("mn_classic_menus", &mn_classic_menus, NULL, 0, 0, 1, wad_yes,
                "1 to enable use of full classic menu emulation"),
 
    DEFAULT_STR("mn_background", &mn_background, NULL, "default", wad_yes,
