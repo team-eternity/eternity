@@ -52,7 +52,7 @@ int EV_ThingSpawn(int *args, boolean fog)
    
    tid = args[0];
    
-   if(args[1] >= 0 && args[1] <= ACS_NUM_THINGTYPES)
+   if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
       moType = ACS_thingtypes[args[1]];
    else
       moType = UnknownThingType;
