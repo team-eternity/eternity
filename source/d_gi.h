@@ -134,6 +134,27 @@ typedef struct finaledata_s
    finalerule_t *rules;   // rules array
 } finaledata_t;
 
+// Default sky data
+
+// sky ops
+enum
+{
+   GI_SKY_IFEPISODE,     // rules test episode #'s
+   GI_SKY_IFMAPLESSTHAN  // rules test map #'s with <
+};
+
+typedef struct skyrule_s
+{
+   int data;               // data for rule; -1 == match any; -2 == end
+   const char *skyTexture; // name of default sky texture
+} skyrule_t;
+
+typedef struct skydata_s
+{
+   int testtype;     // if tests maps or episodes
+   skyrule_t *rules; // rules array
+} skydata_t;
+
 //
 // Game Mode Flags
 //
@@ -330,6 +351,7 @@ typedef struct gamemodeinfo_s
 
    // Renderer stuff
    int switchEpisode;         // "episode" number for switch texture defs
+   skydata_t *skyData;        // default sky data for MapInfo
 
    // Configuration
    default_or_t *defaultORs;  // default overrides for configuration file

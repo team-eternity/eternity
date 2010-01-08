@@ -469,6 +469,63 @@ static finaledata_t UnknownFinale =
 };
 
 //
+// Default Sky Data
+//
+
+// Doom Gamemodes
+
+static skyrule_t DoomSkyRules[] =
+{
+   {  1, "SKY1" },
+   {  2, "SKY2" },
+   {  3, "SKY3" },
+   {  4, "SKY4" },
+   { -1, "SKY4" },
+   { -2 }
+};
+
+static skydata_t DoomSkyData =
+{
+   GI_SKY_IFEPISODE,
+   DoomSkyRules
+};
+
+// Doom II Gamemodes
+
+static skyrule_t Doom2SkyRules[] =
+{
+   { 12, "SKY1" },
+   { 21, "SKY2" },
+   { -1, "SKY3" },
+   { -2 }
+};
+
+static skydata_t Doom2SkyData =
+{
+   GI_SKY_IFMAPLESSTHAN,
+   Doom2SkyRules
+};
+
+// Heretic Gamemodes
+
+static skyrule_t HereticSkyRules[] =
+{
+   {  1, "SKY1" },
+   {  2, "SKY2" },
+   {  3, "SKY3" },
+   {  4, "SKY1" },
+   {  5, "SKY3" },
+   { -1, "SKY1" },
+   { -2 }
+};
+
+static skydata_t HereticSkyData =
+{
+   GI_SKY_IFEPISODE,
+   HereticSkyRules
+};
+
+//
 // Music Selection Routines - defined in s_sound.c
 //
 
@@ -728,6 +785,7 @@ static gamemodeinfo_t giDoomSW =
    doom_soundnums,    // playerSounds
 
    1,                // switchEpisode
+   &DoomSkyData,     // skyData
 
    NULL,             // defaultORs
 
@@ -817,6 +875,7 @@ static gamemodeinfo_t giDoomReg =
    doom_soundnums,    // playerSounds
 
    2,                // switchEpisode
+   &DoomSkyData,     // skyData
 
    NULL,             // defaultORs
 
@@ -906,6 +965,7 @@ static gamemodeinfo_t giDoomRetail =
    doom_soundnums,    // playerSounds
 
    2,                // switchEpisode
+   &DoomSkyData,     // skyData
 
    NULL,             // defaultORs
 
@@ -995,6 +1055,7 @@ static gamemodeinfo_t giDoomCommercial =
    doom_soundnums,     // playerSounds
 
    3,                // switchEpisode
+   &Doom2SkyData,    // skyData
 
    NULL,             // defaultORs
 
@@ -1084,6 +1145,7 @@ static gamemodeinfo_t giHereticSW =
    htic_soundnums,    // playerSounds
 
    1,                // switchEpisode
+   &HereticSkyData,  // skyData
 
    &HereticDefaultORs, // defaultORs
 
@@ -1176,7 +1238,8 @@ static gamemodeinfo_t giHereticReg =
    htic_skindefs,     // skinSounds
    htic_soundnums,    // playerSounds
 
-   2,                  // switchEpisode
+   2,                 // switchEpisode
+   &HereticSkyData,   // skyData
    
    &HereticDefaultORs, // defaultORs
 

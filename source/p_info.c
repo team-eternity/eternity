@@ -828,56 +828,39 @@ static void P_InfoDefaultFinale(void)
 //
 static void P_InfoDefaultSky(void)
 {
+   skydata_t *sd      = GameModeInfo->skyData;
+   skyrule_t *rule    = sd->rules;
+   skyrule_t *theRule = NULL;
+
    // DOOM determines the sky texture to be used
    // depending on the current episode, and the game version.
+   // haleyjd 01/07/10: use GameModeInfo ruleset
 
-   if(GameModeInfo->id == commercial)
-   {      
-      if(gamemap < 12)
-         LevelInfo.skyName = "SKY1";
-      else if(gamemap < 21) 
-         LevelInfo.skyName = "SKY2";
-      else
-         LevelInfo.skyName = "SKY3";
-   }
-   else if(GameModeInfo->type == Game_Heretic)
+   for(; rule->data != -2; ++rule)
    {
-      // haleyjd: heretic skies
-      switch(gameepisode)
+      switch(sd->testtype)
       {
-      default: // haleyjd: episode 6, and default to avoid NULL
-      case 1:
-      case 4:
-         LevelInfo.skyName = "SKY1";
+      case GI_SKY_IFEPISODE:
+         if(rule->data == gameepisode || rule->data == -1)
+            theRule = rule;
          break;
-      case 2:
-         LevelInfo.skyName = "SKY2";
+      case GI_SKY_IFMAPLESSTHAN:
+         if(gamemap < rule->data || rule->data == -1)
+            theRule = rule;
          break;
-      case 3:
-      case 5:
-         LevelInfo.skyName = "SKY3";
-         break;
+      default:
+         I_Error("P_InfoDefaultSky: bad microcode %d in skyrule set\n", sd->testtype);
       }
+
+      if(theRule) // break out if we've found one
+         break;
    }
-   else //jff 3/27/98 and lets not forget about DOOM and Ultimate DOOM huh?
-   {
-      switch(gameepisode)
-      {
-      case 1:
-         LevelInfo.skyName = "SKY1";
-         break;
-      case 2:
-         LevelInfo.skyName = "SKY2";
-         break;
-      case 3:
-         LevelInfo.skyName = "SKY3";
-         break;
-      case 4:  // Special Edition sky
-      default: // haleyjd: don't let sky name end up NULL
-         LevelInfo.skyName = "SKY4";
-         break;
-      }//jff 3/27/98 end sky setting fix
-   }
+
+   // we MUST have a default sky rule
+   if(theRule)
+      LevelInfo.skyName = theRule->skyTexture;
+   else
+      I_Error("P_InfoDefaultSky: no default rule in skyrule set\n");
 
    // set sky2Name to NULL now, we'll test it later
    LevelInfo.sky2Name = NULL;
