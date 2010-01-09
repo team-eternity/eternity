@@ -155,6 +155,15 @@ typedef struct skydata_s
    skyrule_t *rules; // rules array
 } skydata_t;
 
+// Default boss specs
+
+typedef struct bspecrule_s
+{
+   int episode;
+   int map;
+   unsigned int flags;
+} bspecrule_t;
+
 //
 // Game Mode Flags
 //
@@ -330,6 +339,7 @@ typedef struct gamemodeinfo_s
    short thrustFactor;        // damage thrust factor
    const char *defPClassName; // default playerclass name
    const char *defTranslate;  // default translation for AUTOTRANSLATE
+   bspecrule_t *bossRules;    // default boss specials
 
    // Intermission and Finale stuff
    int interMusNum;           // intermission music number

@@ -526,6 +526,44 @@ static skydata_t HereticSkyData =
 };
 
 //
+// Default boss spec rules
+//
+
+// Doom gamemodes
+
+static bspecrule_t DoomBossSpecs[] =
+{
+   {  1,  8, BSPEC_E1M8 },
+   {  2,  8, BSPEC_E2M8 },
+   {  3,  8, BSPEC_E3M8 },
+   {  4,  6, BSPEC_E4M6 },
+   {  4,  8, BSPEC_E4M8 },
+   {  5,  8, BSPEC_E5M8 }, // for compatibility with earlier EE's
+   { -1 }
+};
+
+// Doom II gamemodes
+
+static bspecrule_t Doom2BossSpecs[] =
+{
+   {  1,  7, BSPEC_MAP07_1 | BSPEC_MAP07_2 }, // DOOM II MAP07 has two specials
+   { -1 }
+};
+
+// Heretic gamemodes
+
+static bspecrule_t HereticBossSpecs[] =
+{
+   {  1,  8, BSPEC_E1M8 },
+   {  2,  8, BSPEC_E2M8 },
+   {  3,  8, BSPEC_E3M8 },
+   {  4,  6, BSPEC_E4M6 }, // for compatibility with earlier EE's
+   {  4,  8, BSPEC_E4M8 },
+   {  5,  8, BSPEC_E5M8 }, 
+   { -1 }
+};
+
+//
 // Music Selection Routines - defined in s_sound.c
 //
 
@@ -767,6 +805,7 @@ static gamemodeinfo_t giDoomSW =
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
+   DoomBossSpecs,    // bossRules
 
    mus_inter,         // interMusNum
    &giDoomFText,      // fTextPos
@@ -857,6 +896,7 @@ static gamemodeinfo_t giDoomReg =
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
+   DoomBossSpecs,    // bossRules
 
    mus_inter,        // interMusNum
    &giDoomFText,     // fTextPos
@@ -947,6 +987,7 @@ static gamemodeinfo_t giDoomRetail =
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
+   DoomBossSpecs,    // bossRules
 
    mus_inter,         // interMusNum
    &giDoomFText,      // fTextPos
@@ -1037,6 +1078,7 @@ static gamemodeinfo_t giDoomCommercial =
    100,              // thrustFactor
    "DoomMarine",     // defPClassName
    NULL,             // defTranslate
+   Doom2BossSpecs,   // bossRules
 
    mus_dm2int,        // interMusNum
    &giDoomFText,      // fTextPos
@@ -1127,6 +1169,7 @@ static gamemodeinfo_t giHereticSW =
    150,              // thrustFactor
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
+   HereticBossSpecs, // bossRules
 
    hmus_intr,         // interMusNum
    &giHticFText,      // fTextPos
@@ -1221,6 +1264,7 @@ static gamemodeinfo_t giHereticReg =
    150,              // thrustFactor
    "Corvus",         // defPClassName
    DEFTL_HERETIC,    // defTranslate
+   HereticBossSpecs, // bossRules
 
    hmus_intr,         // interMusNum
    &giHticFText,      // fTextPos

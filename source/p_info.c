@@ -885,51 +885,20 @@ static void P_InfoDefaultSky(void)
 //
 static void P_InfoDefaultBossSpecials(void)
 {
+   bspecrule_t *rule = GameModeInfo->bossRules;
+
    // most maps have no specials, so set to zero here
    LevelInfo.bossSpecs = 0;
 
-   if(GameModeInfo->id == commercial)
+   // look for a level-specific default
+   for(; rule->episode != -1; ++rule)
    {
-      // DOOM II -- MAP07 has two specials
-      if(gamemap == 7)
-         LevelInfo.bossSpecs = BSPEC_MAP07_1 | BSPEC_MAP07_2;
-   }
-   else
-   {
-      // Ultimate DOOM and Heretic can use the same settings,
-      // since the monsters use different codepointers.
-      // E4M6 isn't triggered by HticBossDeath, and E5M8 isn't
-      // triggered by BossDeath.
-      if(gamemap == 8 || (gameepisode == 4 && gamemap == 6))
+      if(gameepisode == rule->episode && gamemap == rule->map)
       {
-         switch(gameepisode)
-         {
-         case 1:
-            LevelInfo.bossSpecs = BSPEC_E1M8;
-            break;
-         case 2:
-            LevelInfo.bossSpecs = BSPEC_E2M8;
-            break;
-         case 3:
-            LevelInfo.bossSpecs = BSPEC_E3M8;
-            break;
-         case 4:
-            switch(gamemap)
-            {
-            case 6:
-               LevelInfo.bossSpecs = BSPEC_E4M6;
-               break;
-            case 8:
-               LevelInfo.bossSpecs = BSPEC_E4M8;
-               break;
-            }
-            break;
-         case 5:
-            LevelInfo.bossSpecs = BSPEC_E5M8;
-            break;
-         } // end switch
-      } // end if
-   } // end else
+         LevelInfo.bossSpecs = rule->flags;
+         return;
+      }
+   }
 }
 
 //
