@@ -355,11 +355,12 @@ static exitrule_t HereticExitRules[] =
 
 static finalerule_t DoomFinaleRules[] =
 {
-   {  1,  8, "BGFLATE1", "E1TEXT" },
-   {  2,  8, "BGFLATE2", "E2TEXT" },
-   {  3,  8, "BGFLATE3", "E3TEXT" },
-   {  4,  8, "BGFLATE4", "E4TEXT" },
-   { -1, -1, "BGFLATE1", NULL     },
+   {  1,  8, "BGFLATE1", "E1TEXT", FINALE_DOOM_CREDITS },
+   {  2,  8, "BGFLATE2", "E2TEXT", FINALE_DOOM_DEIMOS  },
+   {  3,  8, "BGFLATE3", "E3TEXT", FINALE_DOOM_BUNNY   },
+   {  4,  8, "BGFLATE4", "E4TEXT", FINALE_DOOM_MARINE  },
+   { -1,  8, "BGFLATE1", "E1TEXT", FINALE_DOOM_CREDITS }, // ExM8 default
+   { -1, -1, "BGFLATE1", NULL,     FINALE_TEXT         }, // other default
    { -2 }
 };
 
@@ -374,13 +375,13 @@ static finaledata_t DoomFinale =
 
 static finalerule_t Doom2FinaleRules[] =
 {
-   {  1,  6, "BGFLAT06", "C1TEXT"              },
-   {  1, 11, "BGFLAT11", "C2TEXT"              },
-   {  1, 20, "BGFLAT20", "C3TEXT"              },
-   {  1, 30, "BGFLAT30", "C4TEXT", true        }, // end of game
-   {  1, 15, "BGFLAT15", "C5TEXT", false, true }, // only after secret
-   {  1, 31, "BGFLAT31", "C6TEXT", false, true }, // only after secret
-   { -1, -1, "BGFLAT06", NULL                  },
+   {  1,  6, "BGFLAT06", "C1TEXT", FINALE_TEXT },
+   {  1, 11, "BGFLAT11", "C2TEXT", FINALE_TEXT },
+   {  1, 20, "BGFLAT20", "C3TEXT", FINALE_TEXT },
+   {  1, 30, "BGFLAT30", "C4TEXT", FINALE_TEXT, true        }, // end of game
+   {  1, 15, "BGFLAT15", "C5TEXT", FINALE_TEXT, false, true }, // only after secret
+   {  1, 31, "BGFLAT31", "C6TEXT", FINALE_TEXT, false, true }, // only after secret
+   { -1, -1, "BGFLAT06", NULL,     FINALE_TEXT },
    { -2 }
 };
 
@@ -395,13 +396,13 @@ static finaledata_t Doom2Finale =
 
 static finalerule_t TNTFinaleRules[] =
 {
-   {  1,  6, "BGFLAT06", "T1TEXT"              },
-   {  1, 11, "BGFLAT11", "T2TEXT"              },
-   {  1, 20, "BGFLAT20", "T3TEXT"              },
-   {  1, 30, "BGFLAT30", "T4TEXT", true        }, // end of game
-   {  1, 15, "BGFLAT15", "T5TEXT", false, true }, // only after secret
-   {  1, 31, "BGFLAT31", "T6TEXT", false, true }, // only after secret
-   { -1, -1, "BGFLAT06", NULL                  },
+   {  1,  6, "BGFLAT06", "T1TEXT", FINALE_TEXT },
+   {  1, 11, "BGFLAT11", "T2TEXT", FINALE_TEXT },
+   {  1, 20, "BGFLAT20", "T3TEXT", FINALE_TEXT },
+   {  1, 30, "BGFLAT30", "T4TEXT", FINALE_TEXT, true        }, // end of game
+   {  1, 15, "BGFLAT15", "T5TEXT", FINALE_TEXT, false, true }, // only after secret
+   {  1, 31, "BGFLAT31", "T6TEXT", FINALE_TEXT, false, true }, // only after secret
+   { -1, -1, "BGFLAT06", NULL,     FINALE_TEXT },
    { -2 }
 };
 
@@ -416,13 +417,13 @@ static finaledata_t TNTFinale =
 
 static finalerule_t PlutFinaleRules[] =
 {
-   {  1,  6, "BGFLAT06", "P1TEXT"              },
-   {  1, 11, "BGFLAT11", "P2TEXT"              },
-   {  1, 20, "BGFLAT20", "P3TEXT"              },
-   {  1, 30, "BGFLAT30", "P4TEXT", true        }, // end of game
-   {  1, 15, "BGFLAT15", "P5TEXT", false, true }, // only after secret
-   {  1, 31, "BGFLAT31", "P6TEXT", false, true }, // only after secret
-   { -1, -1, "BGFLAT06", NULL                  },
+   {  1,  6, "BGFLAT06", "P1TEXT", FINALE_TEXT },
+   {  1, 11, "BGFLAT11", "P2TEXT", FINALE_TEXT },
+   {  1, 20, "BGFLAT20", "P3TEXT", FINALE_TEXT },
+   {  1, 30, "BGFLAT30", "P4TEXT", FINALE_TEXT, true        }, // end of game
+   {  1, 15, "BGFLAT15", "P5TEXT", FINALE_TEXT, false, true }, // only after secret
+   {  1, 31, "BGFLAT31", "P6TEXT", FINALE_TEXT, false, true }, // only after secret
+   { -1, -1, "BGFLAT06", NULL,     FINALE_TEXT },
    { -2 }
 };
 
@@ -437,12 +438,13 @@ static finaledata_t PlutFinale =
 
 static finalerule_t HereticFinaleRules[] =
 {
-   {  1,  8, "BGFLATHE1", "H1TEXT" },
-   {  2,  8, "BGFLATHE2", "H2TEXT" },
-   {  3,  8, "BGFLATHE3", "H3TEXT" },
-   {  4,  8, "BGFLATHE4", "H4TEXT" },
-   {  5,  8, "BGFLATHE5", "H5TEXT" },
-   { -1, -1, "BGFLATHE1", NULL     },
+   {  1,  8, "BGFLATHE1", "H1TEXT", FINALE_HTIC_CREDITS },
+   {  2,  8, "BGFLATHE2", "H2TEXT", FINALE_HTIC_WATER   },
+   {  3,  8, "BGFLATHE3", "H3TEXT", FINALE_HTIC_DEMON   },
+   {  4,  8, "BGFLATHE4", "H4TEXT", FINALE_HTIC_CREDITS },
+   {  5,  8, "BGFLATHE5", "H5TEXT", FINALE_HTIC_CREDITS },
+   { -1,  8, "BGFLATHE1", "H1TEXT", FINALE_HTIC_CREDITS }, // ExM8 default
+   { -1, -1, "BGFLATHE1", NULL,     FINALE_TEXT         }, // other default
    { -2 }
 };
 
@@ -457,7 +459,7 @@ static finaledata_t HereticFinale =
 
 static finalerule_t UnknownFinaleRules[] =
 {
-   { -1, -1, "F_SKY2", NULL },
+   { -1, -1, "F_SKY2", NULL, FINALE_TEXT },
    { -2 }
 };
 

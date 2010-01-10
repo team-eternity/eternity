@@ -746,10 +746,8 @@ static void P_LoadInterTextLump(void)
 // Sets up default MapInfo values related to f_finale.c code.
 // Moved here from f_finale.c and altered for new features, etc.
 //
-// Note: The newer finale type is handled somewhat differently and is thus
-// in a different function below.
-//
 // haleyjd: rewritten 07/03/09 to tablify info through GameModeInfo.
+// haleyjd: merged finaleType here 01/09/10
 //
 static void P_InfoDefaultFinale(void)
 {
@@ -793,9 +791,10 @@ static void P_InfoDefaultFinale(void)
 
    if(theRule)
    {
-      // set backdrop graphic and intertext
-      LevelInfo.backDrop  = DEH_String(rule->backDrop);
-      LevelInfo.interText = DEH_String(rule->interText);
+      // set backdrop graphic, intertext, and finale type
+      LevelInfo.backDrop   = DEH_String(rule->backDrop);
+      LevelInfo.interText  = DEH_String(rule->interText);
+      LevelInfo.finaleType = rule->finaleType;
 
       // check for endOfGame flag
       if(rule->endOfGame)
@@ -814,8 +813,9 @@ static void P_InfoDefaultFinale(void)
       // because heretic.wad contains an invalid F_SKY1 flat. This 
       // caused crashes during development of Heretic support, so now
       // it uses the F_SKY2 flat which is provided in eternity.wad.
-      LevelInfo.backDrop  = "F_SKY2";
-      LevelInfo.interText = NULL;
+      LevelInfo.backDrop   = "F_SKY2";
+      LevelInfo.interText  = NULL;
+      LevelInfo.finaleType = FINALE_TEXT;
    }
 }
 
@@ -900,68 +900,6 @@ static void P_InfoDefaultBossSpecials(void)
       }
    }
 }
-
-//
-// P_InfoDefaultFinaleType
-//
-// haleyjd 05/26/06: sets the default finale type for concerned maps in
-// DOOM, DOOM II, and Heretic.
-//
-static void P_InfoDefaultFinaleType(void)
-{
-   switch(GameModeInfo->id)
-   {
-   case shareware:    // DOOM 1
-   case registered:
-   case retail:
-      if(gamemap == 8)
-      {
-         switch(gameepisode)
-         {
-         default:
-         case 1:
-            LevelInfo.finaleType = FINALE_DOOM_CREDITS;
-            break;
-         case 2:
-            LevelInfo.finaleType = FINALE_DOOM_DEIMOS;
-            break;
-         case 3:
-            LevelInfo.finaleType = FINALE_DOOM_BUNNY;
-            break;
-         case 4:
-            LevelInfo.finaleType = FINALE_DOOM_MARINE;
-            break;
-         }
-      }
-      else
-         LevelInfo.finaleType = FINALE_TEXT; // for non-ExM8, default to just text
-      break;
-   case hereticsw:    // Heretic
-   case hereticreg:
-      if(gamemap == 8)
-      {
-         switch(gameepisode)
-         {
-         default: // note: includes E4, E5 for SoSR
-         case 1:
-            LevelInfo.finaleType = FINALE_HTIC_CREDITS;
-            break;
-         case 2:
-            LevelInfo.finaleType = FINALE_HTIC_WATER;
-            break;
-         case 3:
-            LevelInfo.finaleType = FINALE_HTIC_DEMON;
-            break;
-         }
-      }
-      else
-         LevelInfo.finaleType = FINALE_TEXT;
-      break;
-   default:
-      LevelInfo.finaleType = FINALE_TEXT; // default for most maps, inc. DOOM II
-   }
-}
-
 
 //
 // P_SetSky2Texture
@@ -1083,7 +1021,6 @@ static void P_ClearLevelVars(void)
    P_InfoDefaultFinale();
    P_InfoDefaultSky();
    P_InfoDefaultBossSpecials();
-   P_InfoDefaultFinaleType();
    
    // special handling for ExMy maps under DOOM II
    if(GameModeInfo->id == commercial && isExMy(levelmapname))

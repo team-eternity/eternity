@@ -123,6 +123,7 @@ typedef struct finalerule_s
    int gamemap;           // map where applies, or -1 to match all
    const char *backDrop;  // BEX mnemonic of background graphic string
    const char *interText; // BEX mnemonic of intertext string
+   int finaleType;        // transferred to LevelInfo.finaleType
    boolean endOfGame;     // if true, LevelInfo.endOfGame is set
    boolean secretOnly;    // if true, LevelInfo.finaleSecretOnly is set
 } finalerule_t;
@@ -206,7 +207,7 @@ typedef enum
   doom2,        // DOOM 2
   pack_tnt,     // TNT mission pack
   pack_plut,    // Plutonia pack
-  pack_hacx,    // HACX stand-alone IWAD
+  pack_hacx,    // HacX stand-alone IWAD
   heretic,      // Heretic
   hticsosr,     // Heretic - Shadow of the Serpent Riders
   none,
