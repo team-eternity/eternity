@@ -1992,6 +1992,31 @@ static void G_DoLoadGame(void)
 }
 
 //
+// G_CameraTicker
+//
+// haleyjd 01/10/2010: SMMU was calling camera tickers too early, so I turned
+// it into a separate function to call from below.
+//
+static void G_CameraTicker(void)
+{
+   // run special cameras
+   if((walkcam_active = (camera == &walkcamera)))
+      P_WalkTicker();
+
+   if((chasecam_active = (camera == &chasecam)))
+      P_ChaseTicker();
+
+   // cooldemo countdown   
+   if(demoplayback && cooldemo)
+   {
+      if(cooldemo_tics)
+         cooldemo_tics--;
+      else
+         G_CoolViewPoint();
+   }
+}
+
+//
 // G_Ticker
 //
 // Make ticcmd_ts for the players.
@@ -2161,22 +2186,6 @@ void G_Ticker(void)
       }
    }
 
-   // run special cameras
-   if((walkcam_active = (camera == &walkcamera)))
-      P_WalkTicker();
-
-   if((chasecam_active = (camera == &chasecam)))
-      P_ChaseTicker();
-
-   // cooldemo countdown   
-   if(demoplayback && cooldemo)
-   {
-      if(cooldemo_tics)
-         cooldemo_tics--;
-      else
-         G_CoolViewPoint();
-   }
-
    // do main actions
    
    // killough 9/29/98: split up switch statement
@@ -2195,6 +2204,7 @@ void G_Ticker(void)
    if(gamestate == GS_LEVEL)
    {
       P_Ticker();
+      G_CameraTicker(); // haleyjd: move cameras
       ST_Ticker(); 
       AM_Ticker(); 
       HU_Ticker();

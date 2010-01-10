@@ -108,8 +108,8 @@ void P_GetChasecamTarget(void)
       targetz = floorheight + 10*FRACUNIT;
 }
 
-        // the 'speed' of the chasecam: the percentage closer we
-        // get to the target each tic
+// the 'speed' of the chasecam: the percentage closer we
+// get to the target each tic
 int chasecam_speed;
 
 void P_ChaseTicker(void)
