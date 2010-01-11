@@ -76,7 +76,6 @@ LevelInfo_t LevelInfo;
 static void P_ParseLevelInfo(int lumpnum);
 
 static void P_StripSpaces(char *line);
-static void P_RemoveEqualses(char *line);
 static void P_CleanLine(char *line);
 
 static int  P_ParseInfoCmd(char *line);
@@ -345,7 +344,7 @@ static int P_ParseInfoCmd(char *line)
 //  Takes the form:
 //     [variable name] = [value]
 //
-//  '=' sign is optional: all equals signs are internally turned to spaces
+//  '=' sign is optional
 //
 
 enum
@@ -358,7 +357,7 @@ enum
    IVT_END
 };
 
-typedef struct
+typedef struct levelvar_s
 {
    int type;
    char *name;
@@ -431,7 +430,7 @@ static void P_ParseLevelVar(char *cmd)
 {
    int state = 0;
    qstring_t var, value;
-   char c, *varname, *equals, *rover = cmd;
+   char c, *rover = cmd;
    levelvar_t *current = levelvars;
 
    // haleyjd 03/12/05: seriously restructured to remove possible
@@ -441,8 +440,6 @@ static void P_ParseLevelVar(char *cmd)
    if(!*cmd)
       return;
 
-   P_RemoveEqualses(cmd);
-
    // create qstrings to hold the tokens
    M_QStrInitCreate(&var);
    M_QStrInitCreate(&value);
@@ -451,14 +448,14 @@ static void P_ParseLevelVar(char *cmd)
    {
       switch(state)
       {
-      case 0: // beginning: variable -- read until whitespace is hit
-         if(c == ' ')
+      case 0: // beginning: variable -- read until whitespace or = is hit
+         if(c == ' ' || c == '=')
             state = 1;
          else
             M_QStrPutc(&var, c);
          continue;
-      case 1: // between: skip whitespace -- read until non-whitespace
-         if(c != ' ')
+      case 1: // between: skip whitespace or = -- read until non-whitespace
+         if(c != ' ' && c != '=')
          {
             state = 2;
             M_QStrPutc(&value, c);
@@ -470,26 +467,22 @@ static void P_ParseLevelVar(char *cmd)
       }
    }
 
-   // get pointers to qstring buffers to do some C lib stuff below
-   varname = M_QStrBuffer(&var);
-   equals  = M_QStrBuffer(&value);
-
    // TODO: improve linear search? fixed small set, so may not matter
    while(current->type != IVT_END)
    {
-      if(!strcmp(current->name, varname))
+      if(!M_QStrCmp(&var, current->name))
       {
          switch(current->type)
          {
          case IVT_STRING:
-            *(char**)current->variable = Z_Strdup(equals, PU_LEVEL, NULL);
+            *(char**)current->variable = M_QStrCDup(&value, PU_LEVEL);
             break;
 
             // haleyjd 10/05/05: named value support
          case IVT_STRNUM:
             {
                textvals_t *tv = (textvals_t *)current->extra;
-               int val = E_StrToNumLinear(tv->vals, tv->numvals, equals);
+               int val = E_StrToNumLinear(tv->vals, tv->numvals, value.buffer);
 
                if(val >= tv->numvals)
                   val = tv->defaultval;
@@ -499,13 +492,13 @@ static void P_ParseLevelVar(char *cmd)
             break;
             
          case IVT_INT:
-            *(int*)current->variable = atoi(equals);
+            *(int*)current->variable = M_QStrAtoi(&value);
             break;
             
             // haleyjd 03/15/03: boolean support
          case IVT_BOOLEAN:
             *(boolean *)current->variable = 
-               !strcasecmp(equals, "true") ? true : false;
+               !M_QStrCaseCmp(&value, "true") ? true : false;
             break;
 
             // haleyjd 03/14/05: flags support
@@ -513,7 +506,7 @@ static void P_ParseLevelVar(char *cmd)
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
                
-               *(int *)current->variable = E_ParseFlags(equals, flagset);
+               *(int *)current->variable = E_ParseFlags(value.buffer, flagset);
             }
             break;
          default:
@@ -1074,27 +1067,6 @@ static void P_StripSpaces(char *line)
    {
       *temp = 0;
       temp--;
-   }
-}
-
-//
-// P_RemoveEqualses
-//
-// Weirdly-named routine to turn optional = chars into spaces.
-//
-static void P_RemoveEqualses(char *line)
-{
-   char *temp;
-   
-   temp = line;
-   
-   while(*temp)
-   {
-      if(*temp == '=')
-      {
-         *temp = ' ';
-      }
-      temp++;
    }
 }
 

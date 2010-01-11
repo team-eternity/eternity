@@ -63,6 +63,8 @@ qstring_t    *M_QStrUpr(qstring_t *qstr);
 qstring_t    *M_QStrLwr(qstring_t *qstr);
 unsigned int  M_QStrReplace(qstring_t *qstr, const char *filter, char repl);
 unsigned int  M_QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
+char *        M_QStrCDup(qstring_t *qstr, int tag);
+int           M_QStrAtoi(qstring_t *qstr);
 
 #endif
 

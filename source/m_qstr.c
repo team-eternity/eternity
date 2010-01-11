@@ -357,5 +357,25 @@ unsigned int M_QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl)
    return M_QStrReplaceInternal(qstr, repl);
 }
 
+//
+// M_QStrCDup
+//
+// Creates a C string duplicate of a qstring's contents.
+//
+char *M_QStrCDup(qstring_t *qstr, int tag)
+{
+   return (char *)Z_Strdup(qstr->buffer, tag, NULL);
+}
+
+//
+// M_QStrAtoi
+//
+// Returns the qstring converted to an integer via atoi.
+//
+int M_QStrAtoi(qstring_t *qstr)
+{
+   return atoi(qstr->buffer);
+}
+
 // EOF
 
