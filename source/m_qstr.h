@@ -65,6 +65,10 @@ unsigned int  M_QStrReplace(qstring_t *qstr, const char *filter, char repl);
 unsigned int  M_QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
 char *        M_QStrCDup(qstring_t *qstr, int tag);
 int           M_QStrAtoi(qstring_t *qstr);
+const char   *M_QStrChr(qstring_t *qstr, char c);
+const char   *M_QStrRChr(qstring_t *qstr, char c);
+qstring_t    *M_QStrLStrip(qstring_t *qstr, char c);
+qstring_t    *M_QStrRStrip(qstring_t *qstr, char c);
 
 #endif
 

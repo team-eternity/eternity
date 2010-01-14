@@ -368,6 +368,19 @@ char *M_QStrCDup(qstring_t *qstr, int tag)
 }
 
 //
+// M_QStrSwap
+//
+// Exchanges the contents of two qstrings.
+//
+void M_QStrSwap(qstring_t *str1, qstring_t *str2)
+{
+   qstring_t temp = *str1; // make a shallow copy of string 1
+
+   *str1 = *str2;
+   *str2 = temp;
+}
+
+//
 // M_QStrAtoi
 //
 // Returns the qstring converted to an integer via atoi.
@@ -375,6 +388,67 @@ char *M_QStrCDup(qstring_t *qstr, int tag)
 int M_QStrAtoi(qstring_t *qstr)
 {
    return atoi(qstr->buffer);
+}
+
+//
+// M_QStrChr
+//
+// Calls strchr on the qstring.
+//
+const char *M_QStrChr(qstring_t *qstr, char c)
+{
+   return strchr(qstr->buffer, c);
+}
+
+//
+// M_QStrRChr
+//
+// Calls strrchr on the qstring.
+//
+const char *M_QStrRChr(qstring_t *qstr, char c)
+{
+   return strrchr(qstr->buffer, c);
+}
+
+//
+// M_QStrLStrip
+//
+// Removes occurrences of a specified character at the beginning of a qstring.
+//
+qstring_t *M_QStrLStrip(qstring_t *qstr, char c)
+{
+   unsigned int i = 0;
+   size_t len = strlen(qstr->buffer);
+
+   while(qstr->buffer[i] != '\0' && qstr->buffer[i] == c)
+      ++i;
+
+   if(i)
+   {
+      if((len -= i) == 0)
+         M_QStrClear(qstr);
+      else
+      {
+         memmove(qstr->buffer, qstr->buffer + i, len);
+         memset(qstr->buffer + len, 0, qstr->size - len);
+         qstr->index -= i;
+      }
+   }
+
+   return qstr;
+}
+
+//
+// M_QStrRStrip
+//
+// Removes occurrences of a specified character at the end of a qstring.
+//
+qstring_t *M_QStrRStrip(qstring_t *qstr, char c)
+{
+   while(qstr->index && qstr->buffer[qstr->index - 1] == c)
+      M_QStrDelc(qstr);
+
+   return qstr;
 }
 
 // EOF

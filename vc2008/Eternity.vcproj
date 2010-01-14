@@ -164,7 +164,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../snes_spc/Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"

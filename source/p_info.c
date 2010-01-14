@@ -75,11 +75,8 @@ LevelInfo_t LevelInfo;
 
 static void P_ParseLevelInfo(int lumpnum);
 
-static void P_StripSpaces(char *line);
-static void P_CleanLine(char *line);
-
-static int  P_ParseInfoCmd(char *line);
-static void P_ParseLevelVar(char *cmd);
+static int  P_ParseInfoCmd(qstring_t *line);
+static void P_ParseLevelVar(qstring_t *cmd);
 
 static void P_ClearLevelVars(void);
 static void P_InitWeapons(void);
@@ -263,7 +260,7 @@ static void P_ParseLevelInfo(int lumpnum)
       {
          // hack for global MapInfo: if P_ParseInfoCmd returns -1,
          // we can break out of parsing early
-         if(P_ParseInfoCmd(M_QStrBuffer(&line)) == -1)
+         if(P_ParseInfoCmd(&line) == -1)
             break;
          M_QStrClear(&line); // clear line buffer
       }
@@ -285,25 +282,27 @@ static void P_ParseLevelInfo(int lumpnum)
 //
 // Parses a single line of a MapInfo lump.
 //
-static int P_ParseInfoCmd(char *line)
+static int P_ParseInfoCmd(qstring_t *line)
 {
-   P_CleanLine(line);
-   P_StripSpaces(line);
-   M_Strlwr(line);
+   unsigned int len;
+   const char *label = NULL;
+
+   M_QStrReplace(line, "\t\r\n", ' '); // erase any control characters
+   M_QStrLwr(line);                    // make everything lowercase
+   M_QStrLStrip(line, ' ');            // strip spaces at beginning
+   M_QStrRStrip(line, ' ');            // strip spaces at end
    
-   while(*line == ' ') 
-      line++;
-   
-   if(!*line) 
+   if(!(len = M_QStrLen(line)))                // ignore totally empty lines
       return 0;
-   
-   if((line[0] == '/' && line[1] == '/') ||     // comment
-       line[0] == '#' || line[0] == ';') 
+
+   // detect comments at beginning
+   if(line->buffer[0] == '#' || line->buffer[0] == ';' || 
+      (len > 1 && line->buffer[0] == '/' && line->buffer[1] == '/'))
       return 0;
-  
-   if(*line == '[')                // a new section seperator
+     
+   if((label = M_QStrChr(line, '[')))  // a new section separator
    {
-      ++line;
+      ++label;
 
       if(limode == LI_MODE_GLOBAL)
       {
@@ -312,7 +311,7 @@ static int P_ParseInfoCmd(char *line)
          if(foundGlobalMap)
             return -1;
 
-         if(!strncasecmp(line, gamemapname, strlen(gamemapname)))
+         if(!strncasecmp(label, gamemapname, strlen(gamemapname)))
          {
             foundGlobalMap = true;
             readtype = RT_LEVELINFO;
@@ -320,9 +319,12 @@ static int P_ParseInfoCmd(char *line)
       }
       else
       {
-         if(!strncmp(line, "level info", 10))
+         if(!strncmp(label, "level info", 10))
             readtype = RT_LEVELINFO;
       }
+
+      // go to next line immediately
+      return 0;
    }
   
    switch(readtype)
@@ -419,6 +421,14 @@ levelvar_t levelvars[]=
    { IVT_END,     0,                0 } // must be last
 };
 
+// lexer state enumeration for P_ParseLevelVar
+enum
+{
+   STATE_VAR,
+   STATE_BETWEEN,
+   STATE_VAL
+};
+
 //
 // P_ParseLevelVar
 //
@@ -426,19 +436,17 @@ levelvar_t levelvars[]=
 // any appropriate matching MapInfo variable to the retrieved
 // value.
 //
-static void P_ParseLevelVar(char *cmd)
+static void P_ParseLevelVar(qstring_t *cmd)
 {
    int state = 0;
    qstring_t var, value;
-   char c, *rover = cmd;
+   char c;
+   const char *rover = cmd->buffer;
    levelvar_t *current = levelvars;
 
    // haleyjd 03/12/05: seriously restructured to remove possible
    // overflow of static buffer and bad kludges used to separate
    // the variable and value tokens -- now uses qstring_t.
-
-   if(!*cmd)
-      return;
 
    // create qstrings to hold the tokens
    M_QStrInitCreate(&var);
@@ -448,23 +456,33 @@ static void P_ParseLevelVar(char *cmd)
    {
       switch(state)
       {
-      case 0: // beginning: variable -- read until whitespace or = is hit
+      case STATE_VAR: // in variable -- read until whitespace or = is hit
          if(c == ' ' || c == '=')
-            state = 1;
+            state = STATE_BETWEEN;
          else
             M_QStrPutc(&var, c);
          continue;
-      case 1: // between: skip whitespace or = -- read until non-whitespace
+      case STATE_BETWEEN: // between -- skip whitespace or =
          if(c != ' ' && c != '=')
          {
-            state = 2;
+            state = STATE_VAL;
             M_QStrPutc(&value, c);
          }
          continue;
-      case 2: // end: value -- everything else goes into the value
+      case STATE_VAL: // value -- everything else goes here
          M_QStrPutc(&value, c);
          continue;
+      default:
+         I_Error("P_ParseLevelVar: undefined state in lexer\n");
       }
+   }
+
+   // detect some syntax errors
+   if(state != STATE_VAL || !M_QStrLen(&var) || !M_QStrLen(&value))
+   {
+      M_QStrFree(&var);
+      M_QStrFree(&value);
+      return;
    }
 
    // TODO: improve linear search? fixed small set, so may not matter
@@ -1033,41 +1051,6 @@ static void P_ClearLevelVars(void)
    }
    else
       LevelInfo.nextLevel = "";
-}
-
-//
-// Parsing Utility Functions
-//
-
-//
-// P_CleanLine
-//
-// Gets rid of control characters such as \t or \n.
-// 
-static void P_CleanLine(char *line)
-{
-   char *temp;
-   
-   for(temp = line; *temp; ++temp)
-      *temp = *temp < 32 ? ' ' : *temp;
-}
-
-//
-// P_StripSpaces
-//
-// Strips whitespace from the end of the line.
-//
-static void P_StripSpaces(char *line)
-{
-   char *temp;
-   
-   temp = line + strlen(line) - 1;
-   
-   while(*temp == ' ')
-   {
-      *temp = 0;
-      temp--;
-   }
 }
 
 boolean default_weaponowned[NUMWEAPONS];
