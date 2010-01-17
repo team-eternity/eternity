@@ -479,48 +479,6 @@ char *str_startmap[] = {"ask", "no", "yes"};
 VARIABLE_INT(use_startmap, NULL, -1, 1, str_startmap);
 CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 
-/////////////////////////////////////////////////////
-//
-// Features Menu
-//
-// Access to new SMMU features
-//
-
-/*
-static menuitem_t mn_features_items[] =
-{
-   {it_title, FC_GOLD "features", NULL,         "M_FEAT"},
-   {it_gap},
-   {it_gap},
-   {it_runcmd, "player setup",    "mn_player",  "M_PLAYER", MENUITEM_BIGFONT},
-   {it_gap},
-   {it_runcmd, "game settings",   "mn_gset",    "M_GSET",   MENUITEM_BIGFONT},
-   {it_gap},
-   {it_runcmd, "multiplayer",     "mn_multi",   "M_MULTI",  MENUITEM_BIGFONT},
-   {it_gap},
-   {it_runcmd, "load wad",        "mn_loadwad", "M_WAD",    MENUITEM_BIGFONT},
-   {it_gap},
-   {it_runcmd, "demos",           "mn_demos",   "M_DEMOS",  MENUITEM_BIGFONT},
-   {it_gap},
-   {it_runcmd, "about",           "credits",    "M_ABOUT",  MENUITEM_BIGFONT},
-   {it_end},
-};
-
-menu_t menu_features =
-{
-   mn_features_items,
-   NULL, NULL, NULL,           // pages
-   100, 15,
-   3,
-   mf_leftaligned | mf_skullmenu
-};
-
-CONSOLE_COMMAND(mn_features, 0)
-{
-   MN_StartMenu(&menu_features);
-}
-
-*/
 
 ////////////////////////////////////////////////
 //
@@ -1017,103 +975,6 @@ menu_t menu_chatmacros =
 CONSOLE_COMMAND(mn_chatmacros, 0)
 {
    MN_StartMenu(&menu_chatmacros);
-}
-*/
-
-/////////////////////////////////////////////////////////////////
-//
-// TCP/IP Menu
-//
-// When its done!
-//
-
-//
-// NETCODE_FIXME: Ditch this.
-//
-
-/*
-static menuitem_t mn_tcpip_items[] =
-{
-   {it_title,  FC_GOLD "TCP/IP",            NULL,           "M_TCPIP"},
-   {it_gap},
-   {it_info,   "not implemented yet. :)"},
-   {it_runcmd, "return...",                       "mn_prevmenu"},
-   {it_end}
-};
-
-menu_t menu_tcpip =
-{
-   mn_tcpip_items,
-   NULL, NULL, NULL,             // pages
-   180,15,                       // x,y offset
-   3,
-   mf_background,                // full-screen
-};
-
-CONSOLE_COMMAND(mn_tcpip, 0)
-{
-   MN_StartMenu(&menu_tcpip);
-}
-*/
-
-/////////////////////////////////////////////////////////////////
-//
-// Serial/Modem Game
-//
-
-//
-// NETCODE_FIXME: Ditch this.
-//
-
-/*
-static menuitem_t mn_serial_items[] =
-{
-   {it_title,  FC_GOLD "Serial/modem",          NULL,           "M_SERIAL"},
-   {it_gap},
-   {it_info,           FC_GOLD "settings"},
-   {it_toggle,         "com port to use",      "com"},
-   {it_variable,       "phone number",         "mn_phonenum"},
-   {it_gap},
-   {it_info,           FC_GOLD "connect:"},
-   {it_runcmd,         "null modem link",      "mn_ser_connect"},
-   {it_runcmd,         "dial",                 "dial %mn_phonenum"},
-   {it_runcmd,         "wait for call",        "mn_ser_answer"},
-   {it_end}
-};
-
-menu_t menu_serial =
-{
-   mn_serial_items,
-   NULL, NULL, NULL,             // pages
-   180,15,                       // x,y offset
-   3,
-   mf_background,                // fullscreen
-};
-
-CONSOLE_COMMAND(mn_serial, 0)
-{
-   MN_StartMenu(&menu_serial);
-}
-
-VARIABLE_STRING(mn_phonenum,     NULL,           126);
-CONSOLE_VARIABLE(mn_phonenum,    mn_phonenum,     0) {}
-
-CONSOLE_COMMAND(mn_ser_answer, 0)           // serial wait-for-call
-{
-   C_SetConsole();               // dont want demos interfering
-   C_RunTextCmd("answer");
-}
-
-CONSOLE_COMMAND(mn_ser_connect, 0)          // serial nullmodem
-{
-   C_SetConsole();               // dont want demos interfering
-   C_RunTextCmd("nullmodem");
-}
-
-CONSOLE_COMMAND(mn_udpserv, 0)              // udp start server
-{
-   C_SetConsole();               // dont want demos interfering
-   C_RunTextCmd("connect");
 }
 */
 
@@ -2806,34 +2667,6 @@ CONSOLE_COMMAND(mn_compat, 0)
    MN_StartMenu(&menu_compat1);
 }
 
-
-/*
-static menuitem_t mn_etccompat_items[] =
-{
-   {it_title, FC_GOLD "eternity options", NULL, "M_ETCOPT" },
-   {it_gap},
-   {it_toggle, "text mode startup",                "textmode_startup"},
-   {it_end}
-};
-*/
-
-/*
-// haleyjd: New compatibility/functionality options for Eternity
-menu_t menu_etccompat =
-{
-   mn_etccompat_items,  // menu items
-   NULL, NULL, NULL,    // pages
-   270, 5,              // x, y
-   2,                   // starting item
-   mf_background,	// full screen
-};
-
-CONSOLE_COMMAND(mn_etccompat, 0)
-{
-   MN_StartMenu(&menu_etccompat);
-}
-*/
-
 /////////////////////////////////////////////////////////////////
 //
 // Enemies
@@ -3683,17 +3516,9 @@ void MN_AddMenus(void)
    C_AddCommand(mn_wadname);
    C_AddCommand(mn_demos);
    C_AddCommand(mn_demoname);
-   
-   //C_AddCommand(mn_multi);
-   //C_AddCommand(mn_serial);
-   //C_AddCommand(mn_phonenum);
-   //C_AddCommand(mn_tcpip);
-   //C_AddCommand(mn_chatmacros);
    C_AddCommand(mn_player);
-   //C_AddCommand(mn_advanced);
 
    // haleyjd: dmflags
-   //C_AddCommand(mn_dmflags);
    C_AddCommand(mn_dfitem);
    C_AddCommand(mn_dfweapstay);
    C_AddCommand(mn_dfbarrel);
@@ -3702,9 +3527,6 @@ void MN_AddMenus(void)
    C_AddCommand(mn_dfinstagib);
    
    // different connect types
-   //C_AddCommand(mn_ser_answer);
-   //C_AddCommand(mn_ser_connect);
-   //C_AddCommand(mn_udpserv);
    C_AddCommand(mn_gset);
    
    C_AddCommand(mn_options);
@@ -3717,7 +3539,6 @@ void MN_AddMenus(void)
    C_AddCommand(mn_sound);
    C_AddCommand(mn_weapons);
    C_AddCommand(mn_compat);
-   //C_AddCommand(mn_etccompat); // haleyjd: new eternity options menu
    C_AddCommand(mn_enemies);
    C_AddCommand(mn_hud);
    C_AddCommand(mn_status);

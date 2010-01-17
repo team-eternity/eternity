@@ -130,8 +130,6 @@ static void Wipe_meltDrawer(void)
          dest += vbscreen.pitch;
       }
    }
- 
-   redrawsbar = true; // clean up status bar
 }
 
 static boolean Wipe_meltTicker(void)
@@ -326,6 +324,8 @@ void Wipe_Drawer(void)
       return;
 
    wipers[current_wipetype].Drawer();
+
+   redrawsbar = true; // clean up status bar
 }
 
 void Wipe_Ticker(void)
