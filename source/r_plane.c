@@ -591,12 +591,10 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       // mapping with floors.
       if(height > viewz)
          height = 1;
-      
-      //height = (height > viewz) ? 1 : 0;
    }
 
    // New visplane algorithm uses hash table -- killough
-   hash = visplane_hash(picnum, lightlevel, height);
+   hash = visplane_hash(picnum, lightlevel, height >> 16);
 
    for(check = visplanes[hash]; check; check = check->next)  // killough
    {

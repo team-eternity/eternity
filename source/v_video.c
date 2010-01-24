@@ -447,8 +447,17 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
    V_DrawPatchInt(&pi, buffer);
 }
 
+// blackmap is used by V_DrawPatchShadowed; see below.
 static byte blackmap[256];
 
+//
+// V_BuildBlackMap
+//
+// Builds an all-black colormap using GameModeInfo->blackIndex, to provide a
+// map useful for patch shadowing. This is much more reliable than using level
+// 33 of colormap 0, into which some wads seem to place some data which could
+// be called interesting, to say the least.
+//
 static void V_BuildBlackMap(void)
 {
    memset(blackmap, GameModeInfo->blackIndex, 256);
@@ -464,7 +473,6 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
                          byte *outr, int tl)
 {
    static boolean firsttime = true;
-   //char *cm = (char *)(colormaps[0] + 33*256);
 
    if(firsttime)
    {

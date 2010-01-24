@@ -150,7 +150,7 @@ static int TWriteVarLen(MIDI *mididata, int MIDItrack, register ULONG value);
 static ULONG ReadTime(UBYTE **musptrp);
 static char FirstChannelAvailable(signed char MUS2MIDchannel[]);
 static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
-               UBYTE MIDItrack,int nocomp);
+                       UBYTE MIDItrack,int nocomp);
 
 //
 // TWriteByte()
@@ -287,7 +287,7 @@ static char FirstChannelAvailable(signed char MUS2MIDchannel[])
 // MidiEvent()
 //
 // Constructs a MIDI event code, and writes it to the current MIDI track
-// unless its the same as the last event code and compressio is enabled
+// unless its the same as the last event code and compression is enabled
 // in which case nothing is written.
 //
 // Passed the Allegro MIDI structure, the midi event code, the current
@@ -517,7 +517,8 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
          for(i = 0;i < MIDI_TRACKS; i++) //jff 3/13/98 update all tracks
             track[i].deltaT += DeltaTime; //whether allocated yet or not
       }
-   } while ((evt != SCORE_END) && (size_t)(musptr-mus) < muslen);
+   }
+   while ((evt != SCORE_END) && (size_t)(musptr-mus) < muslen);
 
    if(evt!=SCORE_END)
       return MUSDATACOR;
