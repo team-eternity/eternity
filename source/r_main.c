@@ -238,7 +238,91 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 //  checking.
 //
 // killough 5/2/98: reformatted, cleaned up
+// haleyjd 01/28/10: restored to Vanilla and made some modifications
 //
+
+angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
+{	
+   x -= viewx;
+   y -= viewy;
+
+   if((x | y) == 0)
+      return 0;
+
+   if(x >= 0)
+   {
+      if (y>= 0)
+      {
+         if(x > y)
+         {
+            // octant 0
+            return tantoangle[SlopeDiv(y, x)];
+         }
+         else
+         {
+            // octant 1
+            return ANG90 - 1 - tantoangle[SlopeDiv(x, y)];
+         }
+      }
+      else
+      {
+         y = -y;
+
+         if(x > y)
+         {
+            // octant 8
+            return -tantoangle[SlopeDiv(y, x)];
+         }
+         else
+         {
+            // octant 7
+            return ANG270 + tantoangle[SlopeDiv(x, y)];
+         }
+      }
+   }
+   else
+   {
+      x = -x;
+
+      if(y >= 0)
+      {
+         if(x > y)
+         {
+            // octant 3
+            return ANG180 - 1 - tantoangle[SlopeDiv(y, x)];
+         }
+         else
+         {
+            // octant 2
+            return ANG90 + tantoangle[SlopeDiv(x,y)];
+         }
+      }
+      else
+      {
+         y = -y;
+
+         if(x > y)
+         {
+            // octant 4
+            return ANG180 + tantoangle[SlopeDiv(y, x)];
+         }
+         else
+         {
+            // octant 5
+            return ANG270 - 1 - tantoangle[SlopeDiv(x, y)];
+         }
+      }
+   }
+
+   return 0;
+}
+
+angle_t R_PointToAngle(fixed_t x, fixed_t y)
+{
+   return R_PointToAngle2(viewx, viewy, x, y);
+}
+
+/*
 angle_t R_PointToAngle(fixed_t x, fixed_t y)
 {       
   return (y -= viewy, (x -= viewx) || y) ?
@@ -270,6 +354,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
                               ANG270-1-tantoangle[SlopeDiv(x,y)] : // octant 5
     0;
 }
+*/
 
 float maxtangent = 1.0f;
 
