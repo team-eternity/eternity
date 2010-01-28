@@ -164,7 +164,7 @@ void I_ShutdownSound(void)
    if(snd_init)
    {
       i_sounddriver->ShutdownSound();
-      snd_init = 0;
+      snd_init = false;
    }
 }
 

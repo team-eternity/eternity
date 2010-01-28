@@ -1371,6 +1371,9 @@ static void R_AddLine(seg_t *line)
       seg.frontsec->ceilingheight == seg.frontsec->floorheight)
       seg.backsec = NULL;
 
+   if(line->nodraw) // haleyjd
+      return;
+
    // If the frontsector is closed, don't render the line!
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
@@ -2031,10 +2034,7 @@ static void R_Subsector(int num)
       R_AddDynaSegs(sub);
 
    while(count--)
-   {
-      if(!line->nodraw) // haleyjd
-         R_AddLine(line++);
-   }
+      R_AddLine(line++);
 }
 
 //
