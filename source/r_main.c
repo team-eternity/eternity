@@ -226,6 +226,23 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 }
 
 //
+// SlopeDiv
+//
+// Utility routine for R_PointToAngle
+//
+static int SlopeDiv(unsigned int num, unsigned int den)
+{
+   unsigned int ans;
+
+   if(den < 512)
+      return SLOPERANGE;
+   
+   ans = (num << 3) / (den >> 8);
+   
+   return ans <= SLOPERANGE ? ans : SLOPERANGE;
+}
+
+//
 // R_PointToAngle
 //
 // To get a global angle from cartesian coordinates,
@@ -240,7 +257,6 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 // killough 5/2/98: reformatted, cleaned up
 // haleyjd 01/28/10: restored to Vanilla and made some modifications
 //
-
 angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 {	
    x -= viewx;
@@ -251,7 +267,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
 
    if(x >= 0)
    {
-      if (y>= 0)
+      if (y >= 0)
       {
          if(x > y)
          {
@@ -294,7 +310,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
          else
          {
             // octant 2
-            return ANG90 + tantoangle[SlopeDiv(x,y)];
+            return ANG90 + tantoangle[SlopeDiv(x, y)];
          }
       }
       else

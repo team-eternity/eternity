@@ -41,16 +41,6 @@
 
 // killough 5/3/98: reformatted
 
-int SlopeDiv(unsigned num, unsigned den)
-{
-  unsigned ans;
-
-  if (den < 512)
-    return SLOPERANGE;
-  ans = (num<<3)/(den>>8);
-  return ans <= SLOPERANGE ? ans : SLOPERANGE;
-}
-
 const fixed_t finetangent[4096] = { -170910304,
   -56965752,-34178904,-24413316,-18988036,-15535599,-13145455,-11392683,
   -10052327,-8994149,-8137527,-7429880,-6835455,-6329090,-5892567,-5512368,
