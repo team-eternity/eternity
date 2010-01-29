@@ -1453,7 +1453,7 @@ static boolean PIT_ApplyTorque(line_t *ld)
             y = t;
          }
 
-         y = finesine[(tantoangle[FixedDiv(y,x)>>DBITS] +
+         y = finesine[(p_tantoangle[FixedDiv(y,x)>>DBITS] +
                       ANG90) >> ANGLETOFINESHIFT];
 
          // Momentum is proportional to distance between the

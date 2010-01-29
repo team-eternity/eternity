@@ -1114,17 +1114,17 @@ void A_FireOldBFG(mobj_t *mo)
          // he is prone to mistakes. seems negative numbers
          // won't survive a bitshift!
          if(slope < 0 && demo_version >= 303)
-            an2 -= tantoangle[-slope >> DBITS];
+            an2 -= p_tantoangle[-slope >> DBITS];
          else
-            an2 += tantoangle[slope >> DBITS];
+            an2 += p_tantoangle[slope >> DBITS];
       }
       else
       {
          slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
          if(slope < 0 && demo_version >= 303)
-            an2 -= tantoangle[-slope >> DBITS];
+            an2 -= p_tantoangle[-slope >> DBITS];
          else
-            an2 += tantoangle[slope >> DBITS];
+            an2 += p_tantoangle[slope >> DBITS];
       }
 
       th = P_SpawnMobj(mo->x, mo->y,
@@ -1503,11 +1503,14 @@ void A_BFG11KHit(mobj_t *mo)
    int i = 0;
    int j, damage;
    int origdist;
+
+   if(!mo->target)
+      return;
    
    // check the originator and hurt them if too close
+   origdist = P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo));
    
-   if((origdist = R_PointToDist2(mo->target->x, mo->target->y, mo->x, mo->y))
-      < 96*FRACUNIT)
+   if(origdist < 96*FRACUNIT)
    {
       // decide on damage
       // damage decreases with distance

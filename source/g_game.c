@@ -930,8 +930,8 @@ static void G_DoPlayDemo(void)
    // test the signature and then get the new version number after it
    // if the signature matches the eedemosig array declared above.
 
-   demo_version =      // killough 7/19/98: use the version id stored in demo
-      demover = *demo_p++;
+   // killough 7/19/98: use the version id stored in demo
+   demo_version = demover = *demo_p++;
 
    // Supported demo formats:
    // * 0.99 - 1.2:  first byte is skill level, 0-5; support is minimal.
@@ -975,8 +975,8 @@ static void G_DoPlayDemo(void)
       // haleyjd 03/17/09: in old Heretic demos, some should be false
       if(GameModeInfo->type == Game_Heretic)
       {
-         comp[comp_terrain]   = false; // terrain on
-         comp[comp_overunder] = false; // 3D clipping on
+         comp[comp_terrain]   = 0; // terrain on
+         comp[comp_overunder] = 0; // 3D clipping on
       }
 
       // killough 3/2/98: force these variables to be 0 in demo_compatibility
@@ -1058,6 +1058,9 @@ static void G_DoPlayDemo(void)
          // subversion is always 0 for demo versions < 329
          demo_subversion = 0;
       }
+
+      // haleyjd 01/28/10: reset p_tantoangle for new demo_version
+      Table_SetTanToAngle(demo_version);
       
       compatibility = *demo_p++;       // load old compatibility flag
       skill = *demo_p++;
@@ -1854,6 +1857,8 @@ static void G_DoLoadGame(void)
    compatibility = *save_p++;
    demo_version = version;     // killough 7/19/98: use this version's id
    demo_subversion = SUBVERSION; // haleyjd 06/17/01
+
+   Table_SetTanToAngle(demo_version);
    
    gameskill = *save_p++;
    
@@ -2665,8 +2670,8 @@ void G_ReloadDefaults(void)
    
    //jff 3/24/98 set startskill from defaultskill in config file, unless
    // it has already been set by a -skill parameter
-   if (startskill==sk_none)
-      startskill = (skill_t)(defaultskill-1);
+   if(startskill == sk_none)
+      startskill = (skill_t)(defaultskill - 1);
    
    demoplayback = false;
    singledemo = false; // haleyjd: restore from MBF
@@ -2682,6 +2687,8 @@ void G_ReloadDefaults(void)
    
    demo_version = version;     // killough 7/19/98: use this version's id
    demo_subversion = SUBVERSION; // haleyjd 06/17/01
+
+   Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
    
    // killough 3/31/98, 4/5/98: demo sync insurance
    demo_insurance = default_demo_insurance == 1;
@@ -3196,6 +3203,8 @@ void G_BeginRecording(void)
    
    demo_version = version;     // killough 7/19/98: use this version's id
    demo_subversion = SUBVERSION; // haleyjd 06/17/01
+
+   Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
    
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;

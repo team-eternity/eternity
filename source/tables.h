@@ -80,7 +80,13 @@ typedef uint32_t angle_t;
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y without additional checking.
 
-extern const angle_t tantoangle[SLOPERANGE+1];
+extern const angle_t tantoangle[2049];
+extern angle_t tantoangle_acc[2049];
+
+extern const angle_t *p_tantoangle;
+
+void Table_InitTanToAngle(void);
+void Table_SetTanToAngle(int version);
 
 //
 // haleyjd 06/07/06:

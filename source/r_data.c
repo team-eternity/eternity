@@ -1296,12 +1296,17 @@ void R_InitData(void)
    // haleyjd 11/21/09: first time through here, set DOOM thingtype translucency
    // styles. Why only the first time? We don't need to do this if R_Init is 
    // invoked through adding a new wad file.
+   
+   // haleyjd 01/28/10: also initialize tantoangle_acc table
+   
    if(firsttime)
    {
+      Table_InitTanToAngle();
       R_DoomTLStyle();
       firsttime = false;
    }
    
+   // process SMMU Doom->Doom2 texture conversion table
    R_LoadDoom1();
 }
 

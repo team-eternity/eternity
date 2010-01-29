@@ -2429,11 +2429,6 @@ static void D_DoomInit(void)
 
    D_StartupMessage();
 
-#ifdef GAMEBAR
-   // haleyjd 01/17/05: I think this is only needed for the "gamebar" option
-   setbuf(stdout, NULL);
-#endif
-
    FindResponseFile(); // Append response file arguments to command-line
 
    // haleyjd 11/12/05: moved -cdrom check up and made status global

@@ -239,7 +239,7 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    if(ady > adx)
       dist = adx, adx = ady, ady = dist;
 
-   dist = adx ? FixedDiv(adx, finesine[(tantoangle[FixedDiv(ady,adx) >> DBITS]
+   dist = adx ? FixedDiv(adx, finesine[(tantoangle_acc[FixedDiv(ady,adx) >> DBITS]
                                         + ANG90) >> ANGLETOFINESHIFT]) : 0;   
    
    // haleyjd 05/29/06: allow per-channel volume scaling
