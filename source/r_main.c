@@ -242,6 +242,8 @@ int SlopeDiv(unsigned int num, unsigned int den)
    return ans <= SLOPERANGE ? ans : SLOPERANGE;
 }
 
+#define R_P2ATHRESHOLD (INT_MAX / 4)
+
 //
 // R_PointToAngle
 //
@@ -265,69 +267,77 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
    if((x | y) == 0)
       return 0;
 
-   if(x >= 0)
+   if(x < R_P2ATHRESHOLD && x > -R_P2ATHRESHOLD && 
+      y < R_P2ATHRESHOLD && y > -R_P2ATHRESHOLD)
    {
-      if (y >= 0)
+      if(x >= 0)
       {
-         if(x > y)
+         if (y >= 0)
          {
-            // octant 0
-            return tantoangle_acc[SlopeDiv(y, x)];
+            if(x > y)
+            {
+               // octant 0
+               return tantoangle_acc[SlopeDiv(y, x)];
+            }
+            else
+            {
+               // octant 1
+               return ANG90 - 1 - tantoangle_acc[SlopeDiv(x, y)];
+            }
          }
-         else
+         else // y < 0
          {
-            // octant 1
-            return ANG90 - 1 - tantoangle_acc[SlopeDiv(x, y)];
+            y = -y;
+
+            if(x > y)
+            {
+               // octant 8
+               return 0 - tantoangle_acc[SlopeDiv(y, x)];
+            }
+            else
+            {
+               // octant 7
+               return ANG270 + tantoangle_acc[SlopeDiv(x, y)];
+            }
          }
       }
-      else
+      else // x < 0
       {
-         y = -y;
+         x = -x;
 
-         if(x > y)
+         if(y >= 0)
          {
-            // octant 8
-            return 0 - tantoangle_acc[SlopeDiv(y, x)];
+            if(x > y)
+            {
+               // octant 3
+               return ANG180 - 1 - tantoangle_acc[SlopeDiv(y, x)];
+            }
+            else
+            {
+               // octant 2
+               return ANG90 + tantoangle_acc[SlopeDiv(x, y)];
+            }
          }
-         else
+         else // y < 0
          {
-            // octant 7
-            return ANG270 + tantoangle_acc[SlopeDiv(x, y)];
+            y = -y;
+
+            if(x > y)
+            {
+               // octant 4
+               return ANG180 + tantoangle_acc[SlopeDiv(y, x)];
+            }
+            else
+            {
+               // octant 5
+               return ANG270 - 1 - tantoangle_acc[SlopeDiv(x, y)];
+            }
          }
       }
    }
    else
    {
-      x = -x;
-
-      if(y >= 0)
-      {
-         if(x > y)
-         {
-            // octant 3
-            return ANG180 - 1 - tantoangle_acc[SlopeDiv(y, x)];
-         }
-         else
-         {
-            // octant 2
-            return ANG90 + tantoangle_acc[SlopeDiv(x, y)];
-         }
-      }
-      else
-      {
-         y = -y;
-
-         if(x > y)
-         {
-            // octant 4
-            return ANG180 + tantoangle_acc[SlopeDiv(y, x)];
-         }
-         else
-         {
-            // octant 5
-            return ANG270 - 1 - tantoangle_acc[SlopeDiv(x, y)];
-         }
-      }
+      return (angle_t)(atan2(y, x) * (ANG180 / PI));
    }
 
    return 0;
