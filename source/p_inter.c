@@ -49,6 +49,7 @@
 #include "e_mod.h"
 #include "e_things.h"
 #include "metaapi.h"
+#include "p_maputl.h"
 
 #define BONUSADD        6
 
@@ -1097,7 +1098,7 @@ static boolean P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
       
       // SoM: TODO figure out if linked portals needs to worry about this. It 
       // looks like target might not always be source->target
-      angle = R_PointToAngle2(source->x, source->y, target->x, target->y);
+      angle = P_PointToAngle(source->x, source->y, target->x, target->y);
       thrust = 16*FRACUNIT + (P_Random(pr_mincharge) << 10);
 
       P_ThrustMobj(target, angle, thrust);
@@ -1324,17 +1325,17 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
          if(inflictor->groupid == target->groupid ||
             !(link = P_GetLinkOffset(inflictor->groupid, target->groupid)))
          {
-            ang = R_PointToAngle2 (inflictor->x, inflictor->y, 
+            ang = P_PointToAngle (inflictor->x, inflictor->y, 
                                    target->x, target->y);
          }
          else
          {
-            ang = R_PointToAngle2(inflictor->x, inflictor->y, 
+            ang = P_PointToAngle(inflictor->x, inflictor->y, 
                                   target->x + link->x, target->y + link->y);
          }
       }
 #else
-      unsigned ang = R_PointToAngle2 (inflictor->x, inflictor->y,
+      unsigned ang = P_PointToAngle (inflictor->x, inflictor->y,
                                       target->x, target->y);
 #endif
 

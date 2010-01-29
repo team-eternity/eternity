@@ -238,7 +238,7 @@ static boolean P_HitFriend(mobj_t *actor)
       tx = actor->target->x;
       ty = actor->target->y;
 #endif
-      angle = R_PointToAngle2(actor->x, actor->y, tx, ty);
+      angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
       P_AimLineAttack(actor, angle, dist, 0);
@@ -776,13 +776,13 @@ static boolean PIT_AvoidDropoff(line_t *line)
       if(back == floorz && front < floorz - FRACUNIT*24)
       {
          // front side dropoff
-         angle = R_PointToAngle2(0,0,line->dx,line->dy);
+         angle = P_PointToAngle(0,0,line->dx,line->dy);
       }
       else
       {
          // back side dropoff
          if(front == floorz && back < floorz - FRACUNIT*24)
-            angle = R_PointToAngle2(line->dx,line->dy,0,0);
+            angle = P_PointToAngle(line->dx,line->dy,0,0);
          else
             return true;
       }
@@ -937,7 +937,7 @@ static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, boolean allaround)
 
    if(!allaround)
    {
-      angle_t an = R_PointToAngle2(actor->x, actor->y, 
+      angle_t an = P_PointToAngle(actor->x, actor->y, 
                                    mo->x, mo->y) - actor->angle;
       if(an > ANG90 && an < ANG270 &&
          P_AproxDistance(mo->x-actor->x, mo->y-actor->y) > MELEERANGE)
@@ -1765,7 +1765,7 @@ void A_FaceTarget(mobj_t *actor)
       return;
 
    actor->flags &= ~MF_AMBUSH;
-   actor->angle = R_PointToAngle2(actor->x, actor->y,
+   actor->angle = P_PointToAngle(actor->x, actor->y,
 #ifdef R_LINKEDPORTALS
                                   getTargetX(actor), getTargetY(actor));
 #else
@@ -2049,7 +2049,7 @@ void A_Tracer(mobj_t *actor)
       return;
 
    // change angle
-   exact = R_PointToAngle2(actor->x, actor->y, dest->x, dest->y);
+   exact = P_PointToAngle(actor->x, actor->y, dest->x, dest->y);
 
    if(exact != actor->angle)
    {

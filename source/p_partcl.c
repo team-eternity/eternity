@@ -36,6 +36,7 @@
 #include "a_small.h"
 #include "s_sound.h"
 #include "e_ttypes.h"
+#include "p_maputl.h"
 
 // static integers to hold particle color values
 static byte grey1, grey2, grey3, grey4, red, green, blue, yellow, black,
@@ -549,7 +550,7 @@ static void MakeFountain(mobj_t *actor, byte color1, byte color2)
 
 static void P_RunEffect(mobj_t *actor, int effects)
 {
-   angle_t moveangle = R_PointToAngle2(0,0,actor->momx,actor->momy);
+   angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
    particle_t *particle;
 
    if(effects & FX_FLIES || 

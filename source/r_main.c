@@ -230,7 +230,7 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
 //
 // Utility routine for R_PointToAngle
 //
-static int SlopeDiv(unsigned int num, unsigned int den)
+int SlopeDiv(unsigned int num, unsigned int den)
 {
    unsigned int ans;
 
@@ -287,7 +287,7 @@ angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
          if(x > y)
          {
             // octant 8
-            return -tantoangle[SlopeDiv(y, x)];
+            return 0 - tantoangle[SlopeDiv(y, x)];
          }
          else
          {

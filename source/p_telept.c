@@ -173,7 +173,7 @@ int EV_SilentTeleport(line_t *line, int side, mobj_t *thing)
             // teleporter linedef causes thing to exit in the direction
             // indicated by the exit thing.
             angle_t angle =
-               R_PointToAngle2(0, 0, line->dx, line->dy) - m->angle + ANG90;
+               P_PointToAngle(0, 0, line->dx, line->dy) - m->angle + ANG90;
 
             // Sine, cosine of angle adjustment
             fixed_t s = finesine[angle>>ANGLETOFINESHIFT];
@@ -261,8 +261,8 @@ int EV_SilentLineTeleport(line_t *line, int side, mobj_t *thing,
          // orientation and momentum. Rotate 180 degrees, and flip
          // the position across the exit linedef, if reversed.
          angle_t angle = (reverse ? pos = FRACUNIT-pos, 0 : ANG180) +
-            R_PointToAngle2(0, 0, l->dx, l->dy) -
-            R_PointToAngle2(0, 0, line->dx, line->dy);
+            P_PointToAngle(0, 0, l->dx, l->dy) -
+            P_PointToAngle(0, 0, line->dx, line->dy);
 
          // Interpolate position across the exit linedef
          fixed_t x = l->v2->x - FixedMul(pos, l->dx);

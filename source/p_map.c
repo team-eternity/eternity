@@ -1667,10 +1667,10 @@ static void P_HitSlideLine(line_t *ld)
 
    side = P_PointOnLineSide (slidemo->x, slidemo->y, ld);
    
-   lineangle = R_PointToAngle2 (0,0, ld->dx, ld->dy);
+   lineangle = P_PointToAngle (0,0, ld->dx, ld->dy);
    if(side == 1)
       lineangle += ANG180;
-   moveangle = R_PointToAngle2 (0,0, tmxmove, tmymove);
+   moveangle = P_PointToAngle (0,0, tmxmove, tmymove);
 
    // killough 3/2/98:
    // The moveangle+=10 breaks v1.9 demo compatibility in

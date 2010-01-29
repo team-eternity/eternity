@@ -943,7 +943,7 @@ void A_Punch(mobj_t *mo)
    P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
 
    // turn to face target
-   mo->angle = R_PointToAngle2(mo->x, mo->y, tm->linetarget->x, tm->linetarget->y);
+   mo->angle = P_PointToAngle(mo->x, mo->y, tm->linetarget->x, tm->linetarget->y);
 }
 
 //
@@ -976,7 +976,7 @@ void A_Saw(mobj_t *mo)
    P_WeaponSound(mo, sfx_sawhit);
    
    // turn to face target
-   angle = R_PointToAngle2(mo->x, mo->y, tm->linetarget->x, tm->linetarget->y);
+   angle = P_PointToAngle(mo->x, mo->y, tm->linetarget->x, tm->linetarget->y);
 
    if(angle - mo->angle > ANG180)
    {
@@ -1465,7 +1465,7 @@ void A_BouncingBFG(mobj_t *mo)
       newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
       S_StartSound(newmo, newmo->info->seesound);
       P_SetTarget(&newmo->target, mo->target); // pass on the player
-      an2 = R_PointToAngle2(newmo->x, newmo->y, tm->linetarget->x, tm->linetarget->y);
+      an2 = P_PointToAngle(newmo->x, newmo->y, tm->linetarget->x, tm->linetarget->y);
       newmo->angle = an2;
       
       an2 >>= ANGLETOFINESHIFT;
@@ -1896,7 +1896,7 @@ void A_CustomPlayerMelee(mobj_t *mo)
    P_WeaponSoundInfo(mo, sfx);
    
    // turn to face target   
-   player->mo->angle = R_PointToAngle2(mo->x, mo->y,
+   player->mo->angle = P_PointToAngle(mo->x, mo->y,
                                        tm->linetarget->x, tm->linetarget->y);
 
    // apply chainsaw deflection if selected

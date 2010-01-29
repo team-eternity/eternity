@@ -287,7 +287,7 @@ void A_GenTracer(mobj_t *actor)
       return;
 
    // change angle
-   exact = R_PointToAngle2(actor->x, actor->y, dest->x, dest->y);
+   exact = P_PointToAngle(actor->x, actor->y, dest->x, dest->y);
 
    if(exact != actor->angle)
    {
@@ -338,7 +338,7 @@ void P_HticTracer(mobj_t *actor, angle_t threshold, angle_t maxturn)
    if(!dest || dest->health <= 0)
       return;
 
-   exact = R_PointToAngle2(actor->x, actor->y, dest->x, dest->y);
+   exact = P_PointToAngle(actor->x, actor->y, dest->x, dest->y);
 
    if(exact > actor->angle)
    {
@@ -3279,7 +3279,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
       if(ifov)
       {
          angle_t fov  = FixedToAngle(ifov);
-         angle_t tang = R_PointToAngle2(mo->x, mo->y,
+         angle_t tang = P_PointToAngle(mo->x, mo->y,
 #ifdef R_LINKEDPORTALS
                                         getThingX(mo, target), 
                                         getThingY(mo, target));

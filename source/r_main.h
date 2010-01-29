@@ -128,6 +128,7 @@ extern void (*colfunc)(void);
 
 int R_PointOnSide(fixed_t x, fixed_t y, node_t *node);
 int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line);
+int SlopeDiv(unsigned int num, unsigned int den);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);

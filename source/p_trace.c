@@ -335,13 +335,13 @@ static boolean P_ShootThing(intercept_t *in)
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
       P_SpawnPuff(x, y, z, 
-         R_PointToAngle2(0, 0, trace.dx, trace.dy) - ANG180,
+         P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180,
          2, true);
    }
    else
    {
       P_SpawnBlood(x, y, z,
-         R_PointToAngle2(0, 0, trace.dx, trace.dy) - ANG180,
+         P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180,
          trace.la_damage, th);
    }
    
@@ -395,7 +395,7 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
             
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, 
-                  R_PointToAngle2(0, 0, li->dx, li->dy) - ANG90,
+                  P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
                   2, true);
       
       // don't go any farther
@@ -521,7 +521,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
       
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, 
-                  R_PointToAngle2(0, 0, li->dx, li->dy) - ANG90,
+                  P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
                   updown, true);
       
       // don't go any farther

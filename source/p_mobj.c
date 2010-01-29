@@ -399,7 +399,7 @@ void P_XYMovement(mobj_t* mo)
                tm->BlockingMobj->flags2 & MF2_REFLECTIVE)
             {
                angle_t refangle =
-                  R_PointToAngle2(tm->BlockingMobj->x, tm->BlockingMobj->y, mo->x, mo->y);
+                  P_PointToAngle(tm->BlockingMobj->x, tm->BlockingMobj->y, mo->x, mo->y);
 
                // Change angle for reflection
                if(tm->BlockingMobj->flags2 & MF2_DEFLECTIVE)
@@ -2108,7 +2108,7 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
    S_StartSound(th, th->info->seesound);
 
    P_SetTarget(&th->target, source); // where it came from // killough 11/98
-   an = R_PointToAngle2(source->x, source->y, dest->x, dest->y);
+   an = P_PointToAngle(source->x, source->y, dest->x, dest->y);
 
    // fuzzy player --  haleyjd: add total invisibility, ghost
    if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||

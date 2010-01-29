@@ -733,7 +733,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
    fixed_t momx, momy;
    
    // calculate angle of line and subtract 90 degrees to get normal
-   lineangle = R_PointToAngle2(0, 0, line->dx, line->dy) - ANG90;
+   lineangle = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
    lineangle >>= ANGLETOFINESHIFT;
    momx = FixedMul(po->thrust, finecosine[lineangle]);
    momy = FixedMul(po->thrust, finesine[lineangle]);

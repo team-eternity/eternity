@@ -3343,7 +3343,7 @@ boolean PIT_PushThing(mobj_t* thing)
 
       if(speed > 0 && P_CheckSight(thing, tmpusher->source))
       {
-         pushangle = R_PointToAngle2(thing->x, thing->y, sx, sy);
+         pushangle = P_PointToAngle(thing->x, thing->y, sx, sy);
          
          if(tmpusher->source->type == E_ThingNumForDEHNum(MT_PUSH))
             pushangle += ANG180;    // away
@@ -3572,7 +3572,7 @@ static void P_SpawnHereticWind(line_t *line)
    angle_t lineangle;
    fixed_t magnitude;
 
-   lineangle = R_PointToAngle2(0, 0, line->dx, line->dy);
+   lineangle = P_PointToAngle(0, 0, line->dx, line->dy);
    magnitude = (P_AproxDistance(line->dx, line->dy)>>FRACBITS) * 512;
 
    for(s = -1; (s = P_FindSectorFromLineTag(line,s)) >= 0; )

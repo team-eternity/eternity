@@ -34,6 +34,7 @@
 #include "p_map.h"
 #include "p_spec.h"
 #include "p_user.h"
+#include "p_maputl.h"
 
 // haleyjd
 #include "sounds.h"
@@ -275,7 +276,7 @@ void P_DeathThink(player_t *player)
    
    if(player->attacker && player->attacker != player->mo)
    {
-      angle = R_PointToAngle2(player->mo->x,
+      angle = P_PointToAngle(player->mo->x,
                               player->mo->y,
                               player->attacker->x,
                               player->attacker->y);
