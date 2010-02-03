@@ -1417,7 +1417,7 @@ static void E_ProcessSprites(cfg_t *cfg)
 
    // 10/17/03: allocate a single sprite string instead of a bunch
    // of separate ones to save tons of memory and some time
-   spritestr = Z_Calloc(NUMSPRITES, 5, PU_STATIC, 0);
+   spritestr = Z_Calloc(NUMSPRITES, 8, PU_STATIC, 0);
 
    // allocate with size+1 for the NULL terminator
    sprnames  = Z_Malloc((NUMSPRITES + 1) * sizeof(char *),PU_STATIC,0);
@@ -1444,7 +1444,7 @@ static void E_ProcessSprites(cfg_t *cfg)
 
       // initialize sprnames[i] to point into the single string
       // allocation above, then copy the EDF value into that location
-      sprnames[i] = spritestr + i * 5;
+      sprnames[i] = spritestr + i * 8;
       
       strncpy(sprnames[i], sprname, 4);
       

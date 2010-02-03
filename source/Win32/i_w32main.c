@@ -55,6 +55,14 @@ int main(int argc, char **argv)
 }
 #endif
 
+#if _MSC_VER >= 1400
+#define EEGETWINDOWLONG GetWindowLongPtr
+#define EESETWINDOWLONG SetWindowLongPtr
+#else
+#define EEGETWINDOWLONG GetWindowLong
+#define EESETWINDOWLONG SetWindowLong
+#endif
+
 //
 // I_DisableSysMenu
 //
@@ -73,9 +81,9 @@ void I_DisableSysMenu(void)
       
       if(SDL_GetWMInfo(&info))
       {
-         LONG window_style = GetWindowLongPtr(info.window, GWL_STYLE);
+         LONG window_style = EEGETWINDOWLONG(info.window, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
-         SetWindowLongPtr(info.window, GWL_STYLE, window_style);
+         EESETWINDOWLONG(info.window, GWL_STYLE, window_style);
       }
    }
 }

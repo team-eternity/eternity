@@ -199,7 +199,7 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 void R_InitSpriteDefs(char **namelist)
 {
    size_t numentries = lastspritelump-firstspritelump+1;
-   struct { int index, next; } *hash;
+   struct rsprhash_s { int index, next; } *hash;
    unsigned int i;
       
    if(!numentries || !*namelist)
@@ -209,7 +209,7 @@ void R_InitSpriteDefs(char **namelist)
    for(i = 0; namelist[i]; ++i)
       ; // do nothing
    
-   numsprites = (signed)i;
+   numsprites = (signed int)i;
 
    sprites = Z_Malloc(numsprites *sizeof(*sprites), PU_STATIC, NULL);
    
@@ -275,8 +275,8 @@ void R_InitSpriteDefs(char **namelist)
                {
                case -1:
                   // no rotations were found for that frame at all
-                  I_Error ("R_InitSprites: No patches found "
-                     "for %.8s frame %c", namelist[i], frame+'A');
+                  I_Error("R_InitSprites: No patches found "
+                          "for %.8s frame %c", namelist[i], frame+'A');
                   break;
                   
                case 0:
@@ -308,12 +308,11 @@ void R_InitSpriteDefs(char **namelist)
       else
       {
          // haleyjd 08/15/02: problem here.
-         // If j was -1 above, meaning that there are no lumps for
-         // the sprite present, the sprite is left uninitialized.
-         // This creates major problems in R_PrecacheLevel if a 
-         // thing tries to subsequently use that sprite. Instead,
-         // set numframes to 0 and spriteframes to NULL. Then,
-         // check for these values before loading any sprite.
+         // If j was -1 above, meaning that there are no lumps for the sprite
+         // present, the sprite is left uninitialized. This creates major 
+         // problems in R_PrecacheLevel if a thing tries to subsequently use
+         // that sprite. Instead, set numframes to 0 and spriteframes to NULL.
+         // Then, check for these values before loading any sprite.
          
          sprites[i].numframes = 0;
          sprites[i].spriteframes = NULL;
@@ -630,8 +629,7 @@ void R_ProjectSprite(mobj_t *thing)
    if((unsigned)thing->sprite >= (unsigned)numsprites)
    {
       // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "R_ProjectSprite: bad sprite number %i\n",
-                  thing->sprite);
+      doom_printf(FC_ERROR "Bad sprite number %i\n", thing->sprite);
 
       // blank the thing's state sprite and frame so that this error does not
       // occur perpetually, flooding the message widget and console.
@@ -651,7 +649,7 @@ void R_ProjectSprite(mobj_t *thing)
       !(sprdef->spriteframes))
    {
       // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "R_ProjectSprite: bad frame %i for sprite %s",
+      doom_printf(FC_ERROR "Bad frame %i for sprite %s",
                   thing->frame & FF_FRAMEMASK, 
                   spritelist[thing->sprite]);
       if(thing->state)
@@ -895,7 +893,7 @@ void R_DrawPSprite(pspdef_t *psp)
    
    if((unsigned)psp->state->sprite >= (unsigned)numsprites)
    {
-      doom_printf(FC_ERROR"R_DrawPSprite: bad sprite number %i", 
+      doom_printf(FC_ERROR "Bad sprite number %i", 
                   psp->state->sprite);
       psp->state->sprite = blankSpriteNum;
       psp->state->frame = 0;
@@ -906,7 +904,7 @@ void R_DrawPSprite(pspdef_t *psp)
    if(((psp->state->frame&FF_FRAMEMASK) >= sprdef->numframes) ||
       !(sprdef->spriteframes))
    {
-      doom_printf(FC_ERROR"R_DrawPSprite: bad frame %d for sprite %s",
+      doom_printf(FC_ERROR "Bad frame %d for sprite %s",
                  (int)(psp->state->frame & FF_FRAMEMASK), 
                  spritelist[psp->state->sprite]);
       psp->state->sprite = blankSpriteNum;
