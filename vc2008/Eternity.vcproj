@@ -1142,6 +1142,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_sprite.c"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\e_states.c"
 						>
 						<FileConfiguration
@@ -1267,6 +1271,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\e_sound.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_sprite.h"
 						>
 					</File>
 					<File
