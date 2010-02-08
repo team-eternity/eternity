@@ -43,9 +43,10 @@
 
 typedef struct mdllistitem_s
 {
-   struct mdllistitem_s *next;
+   struct mdllistitem_s  *next;
    struct mdllistitem_s **prev;
-   void                 *object; // 08/02/09: pointer back to object
+   void                  *object; // 08/02/09: pointer back to object
+   unsigned int           data;   // 02/07/10: arbitrary data cached at node
 } mdllistitem_t;
 
 d_inline static void M_DLListInsert(mdllistitem_t *item, mdllistitem_t **head)

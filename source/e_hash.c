@@ -85,17 +85,33 @@ void E_HashAddObject(ehash_t *table, void *object)
 {
    if(table->isinit)
    {
-      const void *key = table->keyfunc(object);
-      unsigned int hashcode = table->hashfunc(key) % table->numchains;
-      
-      M_DLListInsertWithPtr(table->linkfunc(object),
-                            object,
-                            &(table->chains[hashcode]));
+      unsigned int hashcode;
+      const void *key     = table->keyfunc(object);
+      mdllistitem_t *link = table->linkfunc(object);
+      link->data          = table->hashfunc(key);   // cache hash value in node
+      hashcode            = link->data % table->numchains;
+
+      M_DLListInsertWithPtr(link, object, &(table->chains[hashcode]));
 
       table->numitems++;
 
       table->loadfactor = (float)table->numitems / table->numchains;
    }
+}
+
+//
+// E_HashReAddObject
+//
+// 02/07/10: static method to add an object into the table assuming that the
+// link->data field already contains a valid hash code for the object. This 
+// is a considerably cheaper operation.
+//
+static void E_HashReAddObject(ehash_t *table, void *object)
+{
+   mdllistitem_t *link   = table->linkfunc(object);
+   unsigned int hashcode = link->data % table->numchains;
+
+   M_DLListInsertWithPtr(link, object, &(table->chains[hashcode]));
 }
 
 //
@@ -302,8 +318,10 @@ void E_HashRebuild(ehash_t *table, unsigned int newnumchains)
          chain->next = NULL;
          chain->prev = NULL;
 
-         // add to new hash
-         E_HashAddObject(table, chain->object);
+         // re-add to new hash
+         E_HashReAddObject(table, chain->object);
+
+         table->numitems++;
       }
    }
 
