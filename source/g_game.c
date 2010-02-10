@@ -1975,6 +1975,9 @@ static void G_DoLoadGame(void)
    // draw the pattern into the back screen
    R_FillBackScreen();
 
+   // haleyjd 02/09/10: wake up status bar again
+   ST_Start();
+
    // killough 12/98: support -recordfrom and -loadgame -playdemo
    if(!command_loadgame)
       singledemo = false;         // Clear singledemo flag if loading from menu

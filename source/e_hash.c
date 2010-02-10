@@ -132,17 +132,6 @@ void E_HashRemoveObject(ehash_t *table, void *object)
 }
 
 //
-// E_HashRemoveObjectNC
-//
-// Removes the object but doesn't modify the hash loadfactor.
-//
-static void E_HashRemoveObjectNC(ehash_t *table, void *object)
-{
-   if(table->isinit)
-      M_DLListRemove(table->linkfunc(object));
-}
-
-//
 // E_HashObjectForKey
 //
 // Tries to find an object for the given key in the hash table
@@ -301,27 +290,28 @@ void E_HashRebuild(ehash_t *table, unsigned int newnumchains)
    table->chains    = calloc(newnumchains, sizeof(mdllistitem_t *));
    table->numchains = newnumchains;
 
-   table->numitems = 0;
-
    // run down the old chains
    for(i = 0; i < oldnumchains; ++i)
    {
-      mdllistitem_t *chain;
+      mdllistitem_t *chain, *prevobj = NULL;
+      unsigned int hashcode;
 
       // restart from beginning of old chain each time
       while((chain = oldchains[i]))
       {
          // remove from old hash
-         E_HashRemoveObjectNC(table, chain->object);
+         M_DLListRemove(chain);
 
-         // clear out fields
+         // clear out fields for safety
          chain->next = NULL;
          chain->prev = NULL;
 
-         // re-add to new hash
-         E_HashReAddObject(table, chain->object);
-
-         table->numitems++;
+         // re-add to new hash at end of list
+         hashcode = chain->data % table->numchains;
+         M_DLListInsertWithPtr(chain, chain->object, 
+                               prevobj ? &prevobj->next : 
+                                         &(table->chains[hashcode]));
+         prevobj = chain;
       }
    }
 
