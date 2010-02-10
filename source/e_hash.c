@@ -136,7 +136,7 @@ void E_HashRemoveObject(ehash_t *table, void *object)
 //
 // Removes the object but doesn't modify the hash loadfactor.
 //
-void E_HashRemoveObjectNC(ehash_t *table, void *object)
+static void E_HashRemoveObjectNC(ehash_t *table, void *object)
 {
    if(table->isinit)
       M_DLListRemove(table->linkfunc(object));

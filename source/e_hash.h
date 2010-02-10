@@ -55,24 +55,28 @@ struct ehash_s
    boolean isinit;         // true if hash is initialized
 };
 
-void  E_HashInit(ehash_t *, unsigned int, EHashFunc_t, ECompFunc_t, EKeyFunc_t, 
-                 ELinkFunc_t);
-void  E_HashAddObject(ehash_t *, void *);
-void  E_HashRemoveObject(ehash_t *, void *);
-void  E_HashRemoveObjectNC(ehash_t *, void *);
-void *E_HashObjectForKey(ehash_t *, const void *);
-void *E_HashChainForKey(ehash_t *, const void *);
-void *E_HashNextOnChain(ehash_t *, void *);
-const void *E_HashKeyForObject(ehash_t *, void *);
-void *E_HashObjectIterator(ehash_t *, void *, const void *);
+void E_HashInit(ehash_t *table, unsigned int numchains,
+                EHashFunc_t hfunc, ECompFunc_t cfunc, EKeyFunc_t kfunc, 
+                ELinkFunc_t lfunc);
+void  E_HashAddObject(ehash_t *table, void *object);
+void  E_HashRemoveObject(ehash_t *table, void *object);
+void *E_HashObjectForKey(ehash_t *table, const void *key);
+void *E_HashChainForKey(ehash_t *table, const void *key);
+void *E_HashNextOnChain(ehash_t *table, void *object);
+const void *E_HashKeyForObject(ehash_t *table, void *object);
+void *E_HashObjectIterator(ehash_t *table, void *object, const void *key);
 void *E_HashTableIterator(ehash_t *table, void *object);
-void  E_HashRebuild(ehash_t *, unsigned int);
+void  E_HashRebuild(ehash_t *table, unsigned int newnumchains);
 
 // specializations
-void  E_NCStrHashInit(ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
-void  E_StrHashInit  (ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
-void  E_UintHashInit (ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
-void  E_SintHashInit (ehash_t *, unsigned int, EKeyFunc_t, ELinkFunc_t);
+void  E_NCStrHashInit(ehash_t *table, unsigned int numchains, 
+                      EKeyFunc_t kfunc, ELinkFunc_t lfunc);
+void  E_StrHashInit  (ehash_t *table, unsigned int numchains, 
+                      EKeyFunc_t kfunc, ELinkFunc_t lfunc);
+void  E_UintHashInit (ehash_t *table, unsigned int numchains, 
+                      EKeyFunc_t kfunc, ELinkFunc_t lfunc);
+void  E_SintHashInit (ehash_t *table, unsigned int numchains, 
+                      EKeyFunc_t kfunc, ELinkFunc_t lfunc);
 
 // Key Function macro - autogenerates a key retrieval function
 
