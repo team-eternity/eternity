@@ -1055,9 +1055,6 @@ static void G_DoPlayDemo(void)
          // subversion is always 0 for demo versions < 329
          demo_subversion = 0;
       }
-
-      // haleyjd 01/28/10: reset p_tantoangle for new demo_version
-      Table_SetTanToAngle(demo_version);
       
       compatibility = *demo_p++;       // load old compatibility flag
       skill = *demo_p++;
@@ -1101,6 +1098,9 @@ static void G_DoPlayDemo(void)
       if(demover == 200)        // killough 6/3/98: partially fix v2.00 demos
          demo_p += 256-GAME_OPTION_SIZE;
    }
+
+   // haleyjd 01/28/10: reset p_tantoangle for new demo_version
+   Table_SetTanToAngle(demo_version);
 
    if(demo_compatibility)  // only 4 players can exist in old demos
    {
