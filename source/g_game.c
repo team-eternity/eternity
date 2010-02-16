@@ -2015,6 +2015,10 @@ static void G_CameraTicker(void)
    // cooldemo countdown   
    if(demoplayback && cooldemo)
    {
+      // force refresh on death of displayed player
+      if(players[displayplayer].health <= 0)
+         cooldemo_tics = 0;
+
       if(cooldemo_tics)
          cooldemo_tics--;
       else
@@ -3416,6 +3420,9 @@ void G_CoolViewPoint(void)
       S_UpdateSounds(players[displayplayer].mo);
       P_ResetChasecam();      // reset the chasecam
    }
+
+   if(players[displayplayer].health <= 0)
+      viewtype = 1; // use chasecam when player is dead
   
    // turn off the chasecam?
    if(chasecam_active && viewtype != 1)
@@ -3436,13 +3443,9 @@ void G_CoolViewPoint(void)
    }
    else if(viewtype == 2) // camera view
    {
-      //mobj_t *cam = P_CollectionGetRandom(&camerathings, pr_misc);
-      
-      //P_ResetChasecam(); // turn off the chasecam if its still on
-
       int spotnum;
       
-      if(M_Random() > 127 && numdmspots > 0)
+      if((M_Random() & 1) && numdmspots > 0)
       {
          spotnum = M_Random() % numdmspots;
 
@@ -3466,7 +3469,7 @@ void G_CoolViewPoint(void)
    }
   
    // pic a random number of tics until changing the viewpoint
-   cooldemo_tics = (6 + M_Random() % 4) * TICRATE; //(7 + M_Random() % 13) * TICRATE;
+   cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
 
 #ifndef EE_NO_SMALL_SUPPORT
