@@ -1075,7 +1075,7 @@ int R_TranslationNumForName(const char *name)
 {
    int result    = -1;
    int markernum = W_GetNumForName("T_START");
-   int lumpnum   = (W_CheckNumForName)(name, ns_translations);
+   int lumpnum   = W_CheckNumForNameNS(name, ns_translations);
 
    if(lumpnum != -1)
       result = lumpnum - markernum + TRANSLATIONCOLOURS;

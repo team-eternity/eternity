@@ -820,7 +820,7 @@ static int *R_LoadPNames(void)
          // appear first in a wad. This is a kludgy solution to the wad
          // lump namespace problem.
          
-         patchlookup[i] = (W_CheckNumForName)(name, ns_sprites);
+         patchlookup[i] = W_CheckNumForNameNS(name, ns_sprites);
          
          if(patchlookup[i] == -1 && devparm)    // killough 8/8/98
             usermsg("\nWarning: patch %.8s, index %d does not exist", name, i);
@@ -1097,7 +1097,7 @@ int R_ColormapNumForName(const char *name)
 {
    register int i = 0;
    if(strncasecmp(name, "COLORMAP", 8))     // COLORMAP predefined to return 0
-      if((i = (W_CheckNumForName)(name, ns_colormaps)) != -1)
+      if((i = W_CheckNumForNameNS(name, ns_colormaps)) != -1)
          i -= firstcolormaplump;
    return i;
 }
@@ -1320,7 +1320,7 @@ int level_error = false;
 //
 int R_FlatNumForName(const char *name)    // killough -- const added
 {
-   int i = (W_CheckNumForName)(name, ns_flats);
+   int i = W_CheckNumForNameNS(name, ns_flats);
    if(i == -1)
    {
       if(!level_error)
@@ -1342,7 +1342,7 @@ int R_FlatNumForName(const char *name)    // killough -- const added
 int R_CheckFlatNumForName(const char *name)
 {
    int ret;
-   int i = (W_CheckNumForName)(name, ns_flats);
+   int i = W_CheckNumForNameNS(name, ns_flats);
 
    if(i != -1)
       ret = i - firstflat;

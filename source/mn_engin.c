@@ -835,7 +835,7 @@ static void MN_SetBackground(void)
 {
    // TODO: allow BEX string replacement?
    if(mn_background && mn_background[0] && strcmp(mn_background, "default") &&
-      (W_CheckNumForName)(mn_background, ns_flats) != -1)
+      W_CheckNumForNameNS(mn_background, ns_flats) != -1)
    {
       mn_background_flat = mn_background;
    }

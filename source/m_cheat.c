@@ -905,29 +905,29 @@ static void M_NukeMonsters(void)
    {
       while((currentthinker = currentthinker->next) != &thinkercap)
       {
-	 mobj_t *mo;     // haleyjd: use pointer to clean up code
+         mobj_t *mo;     // haleyjd: use pointer to clean up code
          mobjinfo_t *mi;
-	 
-	 if(currentthinker->function != P_MobjThinker)
-	    continue;
 
-	 mo = (mobj_t *)currentthinker;
+         if(currentthinker->function != P_MobjThinker)
+            continue;
+
+         mo = (mobj_t *)currentthinker;
          mi = &mobjinfo[mo->type];
 
-	 if(!(mo->flags & mask) && // killough 7/20/98
-	    (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
-	 {
-	    // killough 3/6/98: kill even if PE is dead
-	    if(mo->health > 0)
-	    {
-	       killcount++;
-	       P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
-	    }
+         if(!(mo->flags & mask) && // killough 7/20/98
+            (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
+         {
+            // killough 3/6/98: kill even if PE is dead
+            if(mo->health > 0)
+            {
+               killcount++;
+               P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
+            }
 
             // haleyjd: made behavior customizable
             if(mi->nukespec)
                mi->nukespec(mo);
-	 }
+         }
       }
    }
    while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98

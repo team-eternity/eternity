@@ -903,21 +903,18 @@ static void G_DoPlayDemo(void)
       
    M_ExtractFileBase(defdemoname, basename);         // killough
    
-   // haleyjd 11/09/09: check ns_demos namespace first
-   if((lumpnum = (W_CheckNumForName)(basename, ns_demos)) < 0)
+   // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
+   if((lumpnum = W_CheckNumForNameNSG(basename, ns_demos)) < 0)
    {
-      if((lumpnum = W_CheckNumForName(basename)) < 0)
+      if(singledemo)
+         I_Error("G_DoPlayDemo: no such demo %s\n", basename);
+      else
       {
-         if(singledemo)
-            I_Error("G_DoPlayDemo: no such demo %s\n", basename);
-         else
-         {
-            C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
-            gameaction = ga_nothing;
-            D_AdvanceDemo();
-         }
-         return;
+         C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
       }
+      return;
    }
 
    demobuffer = demo_p = W_CacheLumpNum(lumpnum, PU_STATIC); // killough
@@ -3260,7 +3257,7 @@ void G_TimeDemo(char *name, boolean showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(W_CheckNumForName(name) == -1)
+   if(W_CheckNumForNameNSG(name, ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;

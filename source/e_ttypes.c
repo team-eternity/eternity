@@ -755,7 +755,7 @@ void E_InitTerrainTypes(void)
 
       while(floor)
       {
-         int lump = (W_CheckNumForName)(floor->name, ns_flats);
+         int lump = W_CheckNumForNameNS(floor->name, ns_flats);
 
          if(lump != -1)
             TerrainTypes[lump - firstflat] = floor->terrain;

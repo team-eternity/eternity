@@ -957,7 +957,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 
    if((lumpnum = W_CheckNumForName(namebuf)) == -1)
    {
-      doom_printf(FC_ERROR"bad music name '%s'\n",
+      doom_printf(FC_ERROR "bad music name '%s'\n",
                   music->name);
       return;
    }
