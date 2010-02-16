@@ -2007,9 +2007,10 @@ static void G_CameraTicker(void)
    // run special cameras
    if((walkcam_active = (camera == &walkcamera)))
       P_WalkTicker();
-
-   if((chasecam_active = (camera == &chasecam)))
+   else if((chasecam_active = (camera == &chasecam)))
       P_ChaseTicker();
+   else if(camera == &followcam)
+      P_FollowCamTicker();
 
    // cooldemo countdown   
    if(demoplayback && cooldemo)
@@ -3273,14 +3274,12 @@ void G_TimeDemo(char *name, boolean showmenu)
    timingdemo = true;      // show stats after quit   
 }
 
-//===================
-//=
-//= G_CheckDemoStatus
-//=
-//= Called after a death or level completion to allow demos to be cleaned up
-//= Returns true if a new demo loop action will take place
-//===================
-
+//
+// G_CheckDemoStatus
+//
+// Called after a death or level completion to allow demos to be cleaned up
+// Returns true if a new demo loop action will take place
+//
 boolean G_CheckDemoStatus(void)
 {
    if(demorecording)
@@ -3389,16 +3388,18 @@ void player_printf(player_t *player, const char *s, ...)
 
 extern camera_t intercam;
 
+//
 // G_CoolViewPoint
 //
-// change to new viewpoint
+// Change to new viewpoint
 //
 void G_CoolViewPoint(void)
 {
    int viewtype;
    int old_displayplayer = displayplayer;
+   int numdmspots = deathmatch_p - deathmatchstarts;
 
-   viewtype = M_Random() % (P_CollectionIsEmpty(&camerathings) ? 2 : 3);
+   viewtype = M_Random() % 3;
    
    // pick the next player
    do
@@ -3422,6 +3423,11 @@ void G_CoolViewPoint(void)
       chasecam_active = false;
       P_ChaseEnd();
    }
+
+   // turn off followcam
+   P_FollowCamOff();
+   if(camera == &followcam)
+      camera = NULL;
   
    if(viewtype == 1)  // view from the chasecam
    {
@@ -3430,29 +3436,37 @@ void G_CoolViewPoint(void)
    }
    else if(viewtype == 2) // camera view
    {
-      mobj_t *cam = P_CollectionGetRandom(&camerathings, pr_misc);
+      //mobj_t *cam = P_CollectionGetRandom(&camerathings, pr_misc);
       
-      P_ResetChasecam(); // turn off the chasecam if its still on
+      //P_ResetChasecam(); // turn off the chasecam if its still on
+
+      int spotnum;
       
-      intercam.x = cam->x;
-      intercam.y = cam->y;
-      intercam.angle = cam->angle;
-      intercam.pitch = 0;
-#ifdef R_LINKEDPORTALS
-      intercam.groupid = cam->groupid;
-#endif
-      
-      // haleyjd: fix for deep water sectors
+      if(M_Random() > 127 && numdmspots > 0)
       {
-         subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
-         intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
-         intercam.heightsec = subsec->sector->heightsec;
+         spotnum = M_Random() % numdmspots;
+
+         P_SetFollowCam(deathmatchstarts[spotnum].x << FRACBITS,
+                        deathmatchstarts[spotnum].y << FRACBITS,
+                        players[displayplayer].mo);
       }
-      camera = &intercam;
+      else
+      {
+         // sometimes check out the player's enemies
+         mobj_t *spot = players[displayplayer].attacker;
+
+         // no enemy? check out the player's current location then.
+         if(!spot)
+            spot = players[displayplayer].mo;
+
+         P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
+      }
+      
+      camera = &followcam;
    }
   
    // pic a random number of tics until changing the viewpoint
-   cooldemo_tics = (7 + M_Random() % 13) * TICRATE;
+   cooldemo_tics = (6 + M_Random() % 4) * TICRATE; //(7 + M_Random() % 13) * TICRATE;
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

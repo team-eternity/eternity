@@ -1613,6 +1613,9 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
 
    // haleyjd 05/16/08: must clear dynamic segs before Z_FreeTags
    R_ClearDynaSegs();
+
+   // haleyjd 02/16/10: clear followcam pointers before Z_FreeTags
+   P_FollowCamOff();
    
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_LEVSPEC);

@@ -38,6 +38,7 @@
 #include "r_main.h"
 #include "g_game.h"
 #include "a_small.h"
+#include "p_tick.h"
 
 boolean PTR_chasetraverse(intercept_t *in);
 
@@ -287,12 +288,12 @@ void P_ResetChasecam(void)
 }
 
 
-/*******************
- WALK AROUND CAMERA
- *******************/
-
-// walk around inside demos without
-// upsetting demo sync
+//==============================================================================
+//
+// WALK AROUND CAMERA
+//
+// Walk around inside demos without upsetting demo sync.
+//
 
 camera_t walkcamera;
 int walkcam_active = 0;
@@ -351,6 +352,16 @@ void P_WalkTicker(void)
    } // end local block
 }
 
+void P_ResetWalkcam(void)
+{
+   walkcamera.x = playerstarts[0].x << FRACBITS;
+   walkcamera.y = playerstarts[0].y << FRACBITS;
+   walkcamera.angle = R_WadToAngle(playerstarts[0].angle);
+   // haleyjd
+   walkcamera.heightsec =
+      R_PointInSubsector(walkcamera.x, walkcamera.y)->sector->heightsec;
+}
+
 VARIABLE_BOOLEAN(walkcam_active, NULL,              onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
@@ -368,14 +379,44 @@ CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
       camera = NULL;
 }
 
-void P_ResetWalkcam(void)
+//==============================================================================
+//
+// Follow Cam
+//
+// Follows a designated target.
+//
+
+camera_t followcam;
+static mobj_t *followtarget;
+
+void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target)
 {
-   walkcamera.x = playerstarts[0].x << FRACBITS;
-   walkcamera.y = playerstarts[0].y << FRACBITS;
-   walkcamera.angle = R_WadToAngle(playerstarts[0].angle);
-   // haleyjd
-   walkcamera.heightsec =
-      R_PointInSubsector(walkcamera.x, walkcamera.y)->sector->heightsec;
+   followcam.x = x;
+   followcam.y = y;
+   P_SetTarget(&followtarget, target);
+
+   followcam.angle = P_PointToAngle(followcam.x, followcam.y,
+                                    followtarget->x, followtarget->y);
+}
+
+void P_FollowCamOff(void)
+{
+   P_SetTarget(&followtarget, NULL);
+}
+
+void P_FollowCamTicker(void)
+{
+   subsector_t *subsec;
+
+   if(!followtarget)
+      return;
+
+   followcam.angle = P_PointToAngle(followcam.x, followcam.y,
+                                    followtarget->x, followtarget->y);
+
+   subsec = R_PointInSubsector(followcam.x, followcam.y);
+   followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.heightsec = subsec->sector->heightsec;
 }
 
 void P_Chase_AddCommands(void)

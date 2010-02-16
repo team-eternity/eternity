@@ -55,6 +55,7 @@ extern int walkcam_active;
 
 extern camera_t chasecam;
 extern camera_t walkcamera;
+extern camera_t followcam;
 
 void P_ChaseSetupFrame();
 void P_ChaseTicker();
@@ -64,6 +65,10 @@ void P_ResetChasecam();
 
 void P_WalkTicker();
 void P_ResetWalkcam();
+
+void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target);
+void P_FollowCamOff(void);
+void P_FollowCamTicker(void);
 
 #endif
 
