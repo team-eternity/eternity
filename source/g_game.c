@@ -80,6 +80,7 @@
 #include "s_sndseq.h"
 #include "acs_intr.h"
 #include "metaapi.h"
+#include "p_maputl.h"
 
 #define SAVEGAMESIZE  0x20000
 #define SAVESTRINGSIZE  24
@@ -2408,6 +2409,38 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
 }
 
 //
+// G_ClosestDMSpot
+//
+// haleyjd 02/16/10: finds the closest deathmatch start to a given
+// location. Returns -1 if a spot wasn't found.
+//
+// Will not return the spot marked in "notspot" if notspot is >= 0.
+//
+int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
+{
+   int j, numspots = deathmatch_p - deathmatchstarts;
+   int closestspot = -1;
+   fixed_t closestdist = 32767*FRACUNIT;
+
+   if(numspots <= 0)
+      return -1;
+
+   for(j = 0; j < numspots; ++j)
+   {
+      fixed_t dist = P_AproxDistance(x - deathmatchstarts[j].x * FRACUNIT,
+                                     y - deathmatchstarts[j].y * FRACUNIT);
+      
+      if(dist < closestdist && j != notspot)
+      {
+         closestdist = dist;
+         closestspot = j;
+      }
+   }
+
+   return closestspot;
+}
+
+//
 // G_DeathMatchSpawnPlayer
 //
 // Spawns a player at one of the random death match spots
@@ -3443,27 +3476,14 @@ void G_CoolViewPoint(void)
    }
    else if(viewtype == 2) // camera view
    {
-      int spotnum;
-      
-      if((M_Random() & 1) && numdmspots > 0)
-      {
-         spotnum = M_Random() % numdmspots;
+      // sometimes check out the player's enemies
+      mobj_t *spot = players[displayplayer].attacker;
 
-         P_SetFollowCam(deathmatchstarts[spotnum].x << FRACBITS,
-                        deathmatchstarts[spotnum].y << FRACBITS,
-                        players[displayplayer].mo);
-      }
-      else
-      {
-         // sometimes check out the player's enemies
-         mobj_t *spot = players[displayplayer].attacker;
+      // no enemy? check out the player's current location then.
+      if(!spot || spot->health <= 0)
+         spot = players[displayplayer].mo;
 
-         // no enemy? check out the player's current location then.
-         if(!spot)
-            spot = players[displayplayer].mo;
-
-         P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
-      }
+      P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
       
       camera = &followcam;
    }
