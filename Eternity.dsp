@@ -420,6 +420,10 @@ SOURCE=.\Source\e_sound.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\e_sprite.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\e_states.c
 # End Source File
 # Begin Source File
@@ -473,6 +477,10 @@ SOURCE=.\source\e_player.h
 # Begin Source File
 
 SOURCE=.\Source\e_sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_sprite.h
 # End Source File
 # Begin Source File
 
