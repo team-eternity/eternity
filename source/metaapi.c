@@ -44,8 +44,8 @@
 // These primes roughly double in size.
 static const unsigned int metaPrimes[] =
 {
-     53,    97,   193,   389,   769,   1543,   3079,
-   6151, 12289, 24593, 49157, 98317, 393241, 786433
+     53,    97,   193,   389,   769,  1543,   
+   3079,  6151, 12289, 24593, 49157, 98317
 };
 
 #define METANUMPRIMES (sizeof(metaPrimes) / sizeof(unsigned int))
@@ -224,23 +224,15 @@ void MetaAddObject(metatable_t *metatable, const char *key, metaobject_t *object
    object->object = data; // generally, a pointer back to the owning structure
 
    // check for key table overload
-   if(keyhash->loadfactor > METALOADFACTOR)
+   if(keyhash->loadfactor > METALOADFACTOR && 
+      keyhash->numchains < metaPrimes[METANUMPRIMES - 1])
    {
-      int newnumchains = 0;
+      int i;
 
-      if(keyhash->numchains < metaPrimes[METANUMPRIMES - 1])
-      {
-         int i;
-
-         // find a prime larger than the current number of chains
-         for(i = 0; keyhash->numchains < metaPrimes[i]; ++i);
+      // find a prime larger than the current number of chains
+      for(i = 0; keyhash->numchains < metaPrimes[i]; ++i);
          
-         newnumchains = metaPrimes[i];
-      }
-      else
-         newnumchains = keyhash->numchains * 2; // too big, just double it.
-
-      E_HashRebuild(keyhash, newnumchains);
+      E_HashRebuild(keyhash, metaPrimes[i]);
    }
 
    // Add the object to the key table

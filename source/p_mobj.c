@@ -1492,7 +1492,6 @@ void P_RemoveMobj (mobj_t *mobj)
 //
 // killough 8/24/98: rewrote to use hashing
 //
-
 int P_FindDoomedNum(int type)
 {
    static struct dnumhash_s { int first, next; } *hash;
