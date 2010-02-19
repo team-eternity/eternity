@@ -39,7 +39,7 @@ enum
 
 int P_CheckLevel(int lumpnum); // haleyjd: now used in d_main.c
 
-void P_SetupLevel(char*, int playermask, skill_t skill);
+void P_SetupLevel(const char *mapname, int playermask, skill_t skill);
 void P_Init(void);               // Called by startup code.
 void P_InitThingLists(void);
 

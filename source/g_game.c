@@ -646,21 +646,6 @@ static void G_DoLoadLevel(void)
 
    gamestate = GS_LEVEL;
 
-   // haleyjd 12/27/03: this should be BEFORE P_SetupLevel!
-   for(i = 0; i < MAXPLAYERS; ++i)
-   {
-      if(playeringame[i] && players[i].playerstate == PST_DEAD)
-         players[i].playerstate = PST_REBORN;
-
-      memset(players[i].frags, 0, sizeof(players[i].frags));
-   }
-
-   S_StopAllSequences(); // haleyjd 06/06/06
-   S_StopLoopedSounds(); // haleyjd 10/19/06
-   R_ClearParticles();
-
-   R_InitPortals();
-
    P_SetupLevel(gamemapname, 0, gameskill);
 
    if(gamestate != GS_LEVEL)       // level load error
@@ -2440,6 +2425,8 @@ int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
    return closestspot;
 }
 
+extern const char *level_error;
+
 //
 // G_DeathMatchSpawnPlayer
 //
@@ -2452,9 +2439,11 @@ void G_DeathMatchSpawnPlayer(int playernum)
    
    if(selections < MAXPLAYERS)
    {
-      C_Printf(FC_ERROR"\aOnly %i deathmatch spots, %d required\n",
-               selections, MAXPLAYERS);
-      C_SetConsole();
+      static char errormsg[64];
+      psnprintf(errormsg, sizeof(errormsg), 
+                "Only %d deathmatch spots, %d required", 
+                selections, MAXPLAYERS);
+      level_error = errormsg;
       return;
    }
 
@@ -2500,12 +2489,20 @@ void G_DoReborn(int playernum)
       if(GameType == gt_dm)
       {
          G_DeathMatchSpawnPlayer(playernum);
+         
+         // haleyjd: G_DeathMatchSpawnPlayer may set level_error
+         if(level_error)
+         {
+            C_Printf(FC_ERROR "G_DeathMatchSpawnPlayer: %s\a\n", level_error);
+            C_SetConsole();
+         }
+
          return;
       }
 
       if(G_CheckSpot(playernum, &playerstarts[playernum]))
       {
-         P_SpawnPlayer (&playerstarts[playernum]);
+         P_SpawnPlayer(&playerstarts[playernum]);
          return;
       }
 

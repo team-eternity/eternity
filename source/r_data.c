@@ -1310,7 +1310,7 @@ void R_InitData(void)
    R_LoadDoom1();
 }
 
-int level_error = false;
+const char *level_error = NULL;
 
 //
 // R_FlatNumForName
@@ -1320,14 +1320,15 @@ int level_error = false;
 //
 int R_FlatNumForName(const char *name)    // killough -- const added
 {
+   static char errormsg[64];
    int i = W_CheckNumForNameNS(name, ns_flats);
    if(i == -1)
    {
       if(!level_error)
       {
-         C_Printf(FC_ERROR"R_FlatNumForName: %.8s not found\n", 
-                  name);
-         level_error = true;
+         psnprintf(errormsg, sizeof(errormsg), 
+                   "R_FlatNumForName: %.8s not found\n", name);
+         level_error = errormsg;
       }
       return -1;
    }
