@@ -1602,21 +1602,19 @@ static void P_ClearPlayerVars(void)
       if(playeringame[i] && players[i].playerstate == PST_DEAD)
          players[i].playerstate = PST_REBORN;
 
+      players[i].killcount = players[i].secretcount = players[i].itemcount = 0;
+
       memset(players[i].frags, 0, sizeof(players[i].frags));
+
+      // haleyjd: explicitly nullify old player object pointers
+      players[i].mo = NULL;
    }
 
    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
    wminfo.partime = 180;
 
-   for(i = 0; i < MAXPLAYERS; ++i)
-      players[i].killcount = players[i].secretcount = players[i].itemcount = 0;
-
    // Initial height of PointOfView will be set by player think.
    players[consoleplayer].viewz = 1;
-
-   // haleyjd: explicitly nullify old player object pointers here
-   for(i = 0; i < MAXPLAYERS; ++i)
-      players[i].mo = NULL;
 }
 
 //
@@ -1673,6 +1671,56 @@ static void P_PreZoneFreeLevel(void)
 }
 
 //
+// P_InitNewLevel
+//
+// Performs (re)initialization of subsystems after Z_FreeTags.
+//
+static void P_InitNewLevel(int lumpnum)
+{
+   //==============================================
+   // Playsim
+
+   // re-initialize thinker list
+   P_InitThinkers();   
+   
+   // haleyjd 02/02/04 -- clear the TID hash table
+   P_InitTIDHash();     
+
+   // SoM: I can't believe I forgot to call this!
+   P_InitPortals(); 
+
+   //==============================================
+   // Map data scripts
+
+   // load MapInfo
+   P_LoadLevelInfo(lumpnum);
+   
+   // haleyjd 10/08/03: load ExtraData
+   E_LoadExtraData();         
+
+   //==============================================
+   // Renderer
+
+   // load the sky
+   R_StartSky();
+
+   // haleyjd: set global colormap -- see r_data.c
+   R_SetGlobalLevelColormap();
+   
+   //==============================================
+   // Wake up subsystems
+
+   // wake up heads-up display
+   HU_Start();
+   
+   // must be after P_LoadLevelInfo as the music lump name is gotten there
+   S_Start();
+   
+   // console message
+   P_NewLevelMsg();
+}
+
+//
 // P_DeathMatchSpawnPlayers
 //
 // If deathmatch, randomly spawn the active players
@@ -1716,6 +1764,13 @@ void P_InitThingLists(void)
    S_InitEnviroSpots();
 }
 
+//
+// CHECK_ERROR
+//
+// Checks to see if level_error has been set to a valid error message.
+// If so, P_SetupLevelError is called with the message and P_SetupLevel
+// will return. The game will enter GS_CONSOLE state.
+//
 #define CHECK_ERROR() \
    do { \
       if(level_error) \
@@ -1749,7 +1804,7 @@ void P_SetupLevel(const char *mapname, int playermask, skill_t skill)
    }
 
    // haleyjd 07/22/04: moved up
-   newlevel = (w_GlobalDir.lumpinfo[lumpnum]->file != iwadhandle);
+   newlevel   = (w_GlobalDir.lumpinfo[lumpnum]->file != iwadhandle);
    doom1level = false;
 
    strncpy(levelmapname, mapname, 8);
@@ -1764,35 +1819,8 @@ void P_SetupLevel(const char *mapname, int playermask, skill_t skill)
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
 
-   // re-initialize thinker list
-   P_InitThinkers();   
-   
-   // haleyjd 02/02/04 -- clear the TID hash table
-   P_InitTIDHash();     
-
-   // SoM: I can't believe I forgot to call this!
-   P_InitPortals(); 
-
-   // load MapInfo
-   P_LoadLevelInfo(lumpnum);
-   
-   // haleyjd 10/08/03: load ExtraData
-   E_LoadExtraData();         
-
-   // haleyjd: set global colormap -- see r_data.c
-   R_SetGlobalLevelColormap();
-
-   // console message
-   P_NewLevelMsg();
-   
-   // wake up heads-up display
-   HU_Start();
-   
-   // must be after P_LoadLevelInfo as the music lump name is gotten there
-   S_Start();
-   
-   // load the sky
-   R_StartSky();
+   // perform post-Z_FreeTags actions
+   P_InitNewLevel(lumpnum);
 
    // note: most of this ordering is important
    
@@ -1800,7 +1828,7 @@ void P_SetupLevel(const char *mapname, int playermask, skill_t skill)
    // killough 4/4/98: split load of sidedefs into two parts,
    // to allow texture names to be used in special linedefs
 
-   level_error = NULL;  // reset
+   level_error = NULL; // reset
    
    P_LoadVertexes(lumpnum + ML_VERTEXES);
    P_LoadSectors (lumpnum + ML_SECTORS);
@@ -1821,20 +1849,17 @@ void P_SetupLevel(const char *mapname, int playermask, skill_t skill)
       break;
    }
 
-   P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
-   P_LoadLineDefs2();                     // killough 4/4/98
-
-   P_LoadBlockMap  (lumpnum + ML_BLOCKMAP);     // killough 3/1/98
+   P_LoadSideDefs2 (lumpnum + ML_SIDEDEFS);
+   P_LoadLineDefs2 ();                      // killough 4/4/98
+   P_LoadBlockMap  (lumpnum + ML_BLOCKMAP); // killough 3/1/98
    P_LoadSubsectors(lumpnum + ML_SSECTORS);
    P_LoadNodes     (lumpnum + ML_NODES);
    
    // possible error: missing nodes
    CHECK_ERROR();
    
-   P_LoadSegs(lumpnum + ML_SEGS);
-
-   // haleyjd 01/26/04: call new P_LoadReject
-   P_LoadReject(lumpnum + ML_REJECT);
+   P_LoadSegs  (lumpnum + ML_SEGS);   
+   P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
    P_GroupLines();
 
    // killough 10/98: remove slime trails from wad
