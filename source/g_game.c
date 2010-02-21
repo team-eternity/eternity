@@ -618,23 +618,25 @@ void G_SetGameMap(void)
       gamemap = 9;
 }
 
+//
+// G_SetGameMapName
+//
 // haleyjd: set and normalize gamemapname
-// called various places
+//
 void G_SetGameMapName(const char *s)
 {
    strncpy(gamemapname, s, 8);
    M_Strupr(gamemapname);
 }
 
-//
-// G_DoLoadLevel
-//
-
 extern gamestate_t wipegamestate;
 extern gamestate_t oldgamestate;
 
 extern void R_InitPortals(void);
 
+//
+// G_DoLoadLevel
+//
 static void G_DoLoadLevel(void)
 {
    int i;
@@ -1253,7 +1255,6 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 //
 // Demo limits removed -- killough
 //
-//
 // NETCODE_FIXME: This will have to change as well, but maintaining
 // compatibility is not necessary for demo writing, making this function
 // much simpler to handle. Like reading, writing of other types of
@@ -1281,10 +1282,16 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    else
       demo_p[i++] = (cmd->angleturn + 128) >> 8; 
 
-   demo_p[i++] =  cmd->buttons;  
-   demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
-   demo_p[i++] =  cmd->look & 0xff;
-   demo_p[i]   = (cmd->look >> 8) & 0xff;
+   demo_p[i++] =  cmd->buttons;
+
+   if(demo_version >= 335)
+      demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
+
+   if(demo_version >= 333)
+   {
+      demo_p[i++] =  cmd->look & 0xff;
+      demo_p[i]   = (cmd->look >> 8) & 0xff;
+   }
    
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {
@@ -2930,12 +2937,9 @@ void G_InitNew(skill_t skill, char *name)
 //
 // G_RecordDemo
 //
-
-//
 // NETCODE_FIXME -- DEMO_FIXME: See the comment above where demos
 // are read. Some of the same issues may apply here.
 //
-
 void G_RecordDemo(char *name)
 {
    int i;
@@ -3183,6 +3187,44 @@ byte *G_ReadOptions(byte *demo_p)
    return target;
 }
 
+//
+// G_BeginRecordingOld
+//
+// haleyjd 02/21/10: Support recording of vanilla demos.
+//
+static void G_BeginRecordingOld(void)
+{
+   int i;
+
+   // support -longtics when recording vanilla format demos
+   longtics_demo = (M_CheckParm("-longtics") != 0);
+
+   // set demo version appropriately
+   if(longtics_demo)
+      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
+   else
+      demo_version = 109;              // v1.9
+
+   demo_subversion = 0;
+
+   Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
+
+   demo_p = demobuffer;
+
+   *demo_p++ = demo_version;    
+   *demo_p++ = gameskill;
+   *demo_p++ = gameepisode;
+   *demo_p++ = gamemap;
+   *demo_p++ = (GameType == gt_dm);
+   *demo_p++ = respawnparm;
+   *demo_p++ = fastparm;
+   *demo_p++ = nomonsters;
+   *demo_p++ = consoleplayer;
+
+   for(i = 0; i < MAXPLAYERS; ++i)
+      *demo_p++ = playeringame[i];
+}
+
 /*
   haleyjd 06/17/01: new demo format changes
 
@@ -3205,6 +3247,13 @@ byte *G_ReadOptions(byte *demo_p)
 void G_BeginRecording(void)
 {
    int i;
+
+   // haleyjd 02/21/10: -vanilla will record v1.9-format demos
+   if(M_CheckParm("-vanilla"))
+   {
+      G_BeginRecordingOld();
+      return;
+   }
    
    demo_p = demobuffer;
 

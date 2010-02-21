@@ -3060,16 +3060,7 @@ static void D_DoomInit(void)
          if(demorecording)
             G_BeginRecording();
       }
-      else if(autostart)
-      {
-         G_InitNew(startskill, startlevel);
-
-         if(demorecording)
-            G_BeginRecording();
-      }
-      else
-         D_StartTitle(); // start up intro loop
-         */
+      */
    }
 
    // a lot of alloca calls are made during startup; kill them all now.
