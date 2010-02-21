@@ -3066,20 +3066,20 @@ byte *G_WriteOptions(byte *demo_p)
 byte *G_ReadOptions(byte *demo_p)
 {
    byte *target = demo_p + GAME_OPTION_SIZE;
-   
+
    monsters_remember = *demo_p++;
-   
+
    variable_friction = *demo_p;  // ice & mud
    demo_p++;
-   
+
    weapon_recoil = *demo_p;      // weapon recoil
    demo_p++;
-   
+
    allow_pushers = *demo_p;      // PUSH Things
    demo_p++;
-   
+
    demo_p++;
-   
+
    // haleyjd: restored bobbing to proper sync critical status
    player_bobbing = *demo_p;     // whether player bobs or not
    demo_p++;
@@ -3088,11 +3088,11 @@ byte *G_ReadOptions(byte *demo_p)
    respawnparm = *demo_p++;
    fastparm = *demo_p++;
    nomonsters = *demo_p++;
-   
+
    demo_insurance = *demo_p++;              // killough 3/31/98
 
    // killough 3/26/98: Added rngseed to demos; 3/31/98: moved here
-   
+
    rngseed  = *demo_p++ & 0xff;
    rngseed <<= 8;
    rngseed += *demo_p++ & 0xff;
@@ -3188,6 +3188,39 @@ byte *G_ReadOptions(byte *demo_p)
 }
 
 //
+// G_SetOldDemoOptions
+//
+// haleyjd 02/21/10: Configure everything to run for an old demo.
+//
+static void G_SetOldDemoOptions(void)
+{
+   int i;
+
+   for(i = 0; i <= comp_zerotags; ++i)
+      comp[i] = 1;
+      
+   monsters_remember     = 0;
+   variable_friction     = 0;
+   weapon_recoil         = 0;
+   allow_pushers         = 0;
+   player_bobbing        = 1;
+   demo_insurance        = 0;
+   monster_infighting    = 1;
+   monster_backing       = 0;
+   monster_avoid_hazards = 0;
+   monster_friction      = 0;
+   help_friends          = 0;
+   bfgtype               = bfg_normal;
+   dogs                  = 0;
+   dog_jumping           = 0;
+   monkeys               = 0;
+   default_autoaim       = autoaim;
+   autoaim               = 1;
+   default_allowmlook    = allowmlook;
+   allowmlook            = 0;
+}
+
+//
 // G_BeginRecordingOld
 //
 // haleyjd 02/21/10: Support recording of vanilla demos.
@@ -3208,6 +3241,7 @@ static void G_BeginRecordingOld(void)
    demo_subversion = 0;
 
    Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
+   G_SetOldDemoOptions();
 
    demo_p = demobuffer;
 
