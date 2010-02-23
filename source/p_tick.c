@@ -84,17 +84,24 @@ void P_InitThinkers(void)
 void P_UpdateThinker(thinker_t *thinker)
 {
    register thinker_t *th;
+   int tclass = th_misc; // haleyjd 07/12/03: don't use "class" as a variable name
    
-   // find the class the thinker belongs to
+   // find the class to which the thinker belongs
+   if(thinker->function == P_RemoveThinkerDelayed)
+      tclass = th_delete;
+   else if(thinker->function == P_MobjThinker)
+   {
+      mobj_t *mo = (mobj_t *)thinker;
 
-   // haleyjd 07/12/03: don't use "class" as a variable name
-   int tclass = thinker->function == P_RemoveThinkerDelayed ? th_delete :
-     thinker->function == P_MobjThinker && 
-     ((mobj_t *) thinker)->health > 0 && 
-     (((mobj_t *) thinker)->flags & MF_COUNTKILL ||
-      ((mobj_t *) thinker)->flags3 & MF3_KILLABLE) ?
-     ((mobj_t *) thinker)->flags & MF_FRIEND ?
-     th_friends : th_enemies : th_misc;
+      if(mo->health > 0 && 
+         (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
+      {
+         if(mo->flags & MF_FRIEND)
+            tclass = th_friends;
+         else
+            tclass = th_enemies;
+      }
+   }
 
    // Remove from current thread, if in one -- haleyjd: from PrBoom
    if((th = thinker->cnext) != NULL)
@@ -110,6 +117,7 @@ void P_UpdateThinker(thinker_t *thinker)
 
 //
 // P_AddThinker
+//
 // Adds a new thinker at the end of the list.
 //
 void P_AddThinker(thinker_t* thinker)

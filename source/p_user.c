@@ -259,7 +259,7 @@ void P_DeathThink(player_t *player)
    player->deltaviewheight = 0;
 
    // haleyjd: never bob player view when dead, and always treat player like
-   //          he is on the ground; FIXME: needs comp flag? pretty minor...
+   //          he is on the ground
    if(demo_version >= 333)
    {
       onground = true;
