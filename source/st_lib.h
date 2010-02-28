@@ -40,98 +40,60 @@
 extern VBuffer backscreen4;
 
 //
-// Typedefs of widgets
+// Widget Types
 //
 
+//
 // Number widget
-
-typedef struct
+//
+typedef struct st_number_s
 {
-  // upper right-hand corner
-  //  of the number (right-justified)
-  int   x;
-  int   y;
-
-  // max # of digits in number
-  int width;    
-
-  // last number value
-  int oldnum;
-  
-  // pointer to current value
-  int *num;
-
-  // pointer to boolean stating
-  //  whether to update number
-  boolean *on;
-
-  // pointer to boolean stating
-  //  whether to copy background behind number
-  boolean *bg_on;
-
-  // list of patches for 0-9
-  patch_t **p;
-
-  // user data
-  int data;
+   int       x;      // upper right-hand corner
+   int       y;      //  of the number (right-justified)
+   int       width;  // max # of digits in number
+   int       oldnum; // last number value
+   int      *num;    // pointer to current value
+   boolean  *on;     // pointer to boolean stating whether to update number
+   boolean  *bg_on;  // pointer to boolean stating whether to copy background
+   patch_t **p;      // list of patches for 0-9
+   int       data;   // user data
 } st_number_t;
 
+//
 // Percent widget ("child" of number widget,
 //  or, more precisely, contains a number widget.)
-typedef struct
+//
+typedef struct st_percent_s
 {
-  // number information
-  st_number_t   n;
-
-  // percent sign graphic
-  patch_t*    p;
+   st_number_t  n; // number information
+   patch_t     *p; // percent sign graphic
 } st_percent_t;
 
 // Multiple Icon widget
-typedef struct
+typedef struct st_multicon_s
 {
-  // center-justified location of icons
-  int     x;
-  int     y;
-
-  // last icon number
-  int     oldinum;
-
-  // pointer to current icon
-  int*    inum;
-
-  // pointer to boolean stating
-  //  whether to update icon
-  boolean*    on;
-
-  // list of icons
-  patch_t**   p;
-  
-  // user data
-  int     data;
-  
+   int       x;       // center-justified location of icons
+   int       y;
+   int       oldinum; // last icon number
+   int      *inum;    // pointer to current icon
+   boolean  *on;      // pointer to boolean stating whether to update icon
+   boolean  *bg_on;   // pointer to boolean stating whether to draw background
+   patch_t **p;       // list of icons
+   int       data;    // user data
 } st_multicon_t;
 
+//
 // Binary Icon widget
-
-typedef struct
+//
+typedef struct st_binicon_s
 {
-  // center-justified location of icon
-  int     x;
-  int     y;
-
-  // last icon value
-  int     oldval;
-
-  // pointer to current icon status
-  boolean*    val;
-
-  // pointer to boolean
-  //  stating whether to update icon
-  boolean*    on;  
-
-  patch_t*    p;  // icon
-  int     data;   // user data
+   int      x;      // center-justified location of icon
+   int      y;
+   int      oldval; // last icon value
+   boolean *val;    // pointer to current icon status
+   boolean *on;     // pointer to boolean stating whether to update icon
+   patch_t *p;      // icon
+   int      data;   // user data
 } st_binicon_t;
 
 //
@@ -141,71 +103,34 @@ typedef struct
 // Initializes widget library.
 // More precisely, initialize STMINUS,
 //  everything else is done somewhere else.
-//
 void STlib_init(void);
 
 // Number widget routines
-void STlib_initNum
-( st_number_t *n,
-  int x,
-  int y,
-  patch_t **pl,
-  int *num,
-  boolean *on,
-  boolean *bg_on,
-  int width );
+void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num, 
+                   boolean *on, boolean *bg_on, int width);
 
-void STlib_updateNum
-( st_number_t* n,
-  byte *outrng,           //jff 1/16/98 add color translation to digit output
-  boolean refresh );
-
+// jff 1/16/98 add color translation to digit output
+void STlib_updateNum(st_number_t *n, byte *outrng, boolean refresh, int alpha);
 
 // Percent widget routines
-void STlib_initPercent
-( st_percent_t *p,
-  int x,
-  int y,
-  patch_t **pl,
-  int *num,
-  boolean *on,
-  boolean *bg_on,
-  patch_t *percent );
+void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
+                       boolean *on, boolean *bg_on, patch_t *percent);
 
-
-void STlib_updatePercent
-( st_percent_t* per,
-  byte *outrng,          //jff 1/16/98 add color translation to percent output
-  int refresh );
+// jff 1/16/98 add color translation to percent output
+void STlib_updatePercent(st_percent_t *per, byte *outrng, int refresh, int alpha);
 
 
 // Multiple Icon widget routines
-void STlib_initMultIcon
-( st_multicon_t* mi,
-  int x,
-  int y,
-  patch_t**   il,
-  int* inum,
-  boolean* on );
+void STlib_initMultIcon(st_multicon_t *mi, int x, int y, patch_t **il, int *inum,
+                        boolean* on, boolean *bg_on);
 
-
-void STlib_updateMultIcon
-( st_multicon_t* mi,
-  boolean refresh );
+void STlib_updateMultIcon(st_multicon_t *mi, boolean refresh, int alpha);
 
 // Binary Icon widget routines
+void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i, boolean *val,
+                       boolean *on);
 
-void STlib_initBinIcon
-( st_binicon_t* b,
-  int x,
-  int y,
-  patch_t* i,
-  boolean* val,
-  boolean* on );
-
-void STlib_updateBinIcon
-( st_binicon_t* bi,
-  boolean refresh );
+void STlib_updateBinIcon(st_binicon_t *bi, boolean refresh);
 
 #endif
 

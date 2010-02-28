@@ -736,6 +736,9 @@ default_t defaults[] =
    // below 50% is yellow, above green
    DEFAULT_INT("ammo_yellow",&ammo_yellow, NULL, 50, 0, 100, wad_yes,
                "percent of ammo for yellow to green transition"),
+
+   DEFAULT_INT("st_fsalpha", &st_fsalpha, NULL, 100, 0, 100, wad_yes,
+               "fullscreen HUD translucency level"),
    
    // killough 2/8/98: weapon preferences set by user:
    DEFAULT_INT("weapon_choice_1",&weapon_preferences[0][0], NULL, 6, 1, 9, wad_yes,
