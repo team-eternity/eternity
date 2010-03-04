@@ -1509,7 +1509,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
    // haleyjd: set bossignore
    if(source && (source->type != target->type) &&
-      ((source->flags3 & target->flags3) & MF3_BOSSIGNORE))
+      (source->flags3 & target->flags3 & MF3_BOSSIGNORE))
    {
       // ignore if friendliness matches
       bossignore = !((source->flags ^ target->flags) & MF_FRIEND);

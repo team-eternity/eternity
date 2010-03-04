@@ -1190,6 +1190,81 @@ static void P_CreateBlockMap(void)
    }
 }
 
+static const char *bmaperrormsg;
+
+//
+// P_VerifyBlockMap
+//
+// haleyjd 03/04/10: do verification on validity of blockmap.
+//
+static boolean P_VerifyBlockMap(int count)
+{
+   boolean isvalid = true;
+   int x, y;
+   int *maxoffs = blockmaplump + count;
+
+   bmaperrormsg = NULL;
+
+   for(x = 0; x < bmapwidth; ++x)
+   {
+      for(y = 0; y < bmapheight; ++y)
+      {
+         int offset;
+         int *list, *tmplist;
+         int *blockoffset;
+
+         offset = y * bmapwidth + x;
+         blockoffset = blockmaplump + offset + 4;
+         
+         // check that block offset is in bounds
+         if(blockoffset >= maxoffs)
+         {
+            isvalid = false;
+            bmaperrormsg = "block offset overflow";
+            break;
+         }
+         
+         offset = *blockoffset;         
+         list   = blockmaplump + offset;
+
+         // scan forward for a -1 terminator before maxoffs
+         for(tmplist = list; ; ++tmplist)
+         {
+            // we have overflowed the lump?
+            if(tmplist >= maxoffs)
+            {
+               isvalid = false;
+               bmaperrormsg = "unterminated blocklist";
+               break;
+            }
+            if(*tmplist == -1) // found -1
+               break;
+         }
+         if(!isvalid) // if the list is not terminated, break now
+            break;
+
+         // scan the list for out-of-range linedef indicies in list
+         for(tmplist = list; *tmplist != -1; ++tmplist)
+         {
+            if(*tmplist < 0 || *tmplist >= numlines)
+            {
+               isvalid = false;
+               bmaperrormsg = "line index >= numlines";
+               break;
+            }
+         }
+         if(!isvalid) // if a list has a bad linedef index, break now
+            break;
+      }
+
+      // break out early on any error
+      if(!isvalid)
+         break;
+   }
+
+   return isvalid;
+}
+
 //
 // P_LoadBlockMap
 //
@@ -1200,12 +1275,13 @@ static void P_CreateBlockMap(void)
 //
 void P_LoadBlockMap(int lump)
 {
-   int count;
+   int len   = W_LumpLength(lump);
+   int count = len / 2;
    
    // sf: -blockmap checkparm made into variable
    // also checking for levels without blockmaps (0 length)
-   if(r_blockmap || W_LumpLength(lump) == 0 || 
-      (count = W_LumpLength(lump) / 2) >= 0x10000)
+   // haleyjd 03/04/10: blockmaps of less than 8 bytes cannot be valid
+   if(r_blockmap || len < 8 || count >= 0x10000)
    {
       P_CreateBlockMap();
    }
@@ -1238,6 +1314,15 @@ void P_LoadBlockMap(int lump)
       bmaporgy   = blockmaplump[1] << FRACBITS;
       bmapwidth  = blockmaplump[2];
       bmapheight = blockmaplump[3];
+
+      // haleyjd 03/04/10: check for blockmap problems
+      if(!(demo_compatibility || P_VerifyBlockMap(count)))
+      {
+         C_Printf(FC_ERROR "Blockmap error: %s\a\n", bmaperrormsg);
+         Z_Free(blockmaplump);
+         blockmaplump = NULL;
+         P_CreateBlockMap();
+      }
    }
 
    // clear out mobj chains

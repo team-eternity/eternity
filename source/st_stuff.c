@@ -791,9 +791,6 @@ static void ST_drawWidgets(boolean refresh)
 
    STlib_updateMultIcon(&w_faces, refresh, FRACUNIT);
 
-   //for(i = 0; i < 3; i++)
-   //   STlib_updateMultIcon(&w_keyboxes[i], refresh, FRACUNIT);
-
    STlib_updateNum(&w_frags, NULL, refresh, FRACUNIT);
 }
 
@@ -814,6 +811,8 @@ static void ST_diffDraw(void)
    ST_drawWidgets(false);
 }
 
+// Locations for graphical HUD elements
+
 #define ST_FS_X 85
 #define ST_FS_HEALTHY 154
 #define ST_FS_BY 176
@@ -822,6 +821,12 @@ static void ST_diffDraw(void)
 
 #define ST_FSGFX_X 5
 
+//
+// ST_moveWidgets
+//
+// Moves widgets shared between the DOOM status bar and full-screen
+// graphical HUD between their two possible locations.
+//
 static void ST_moveWidgets(boolean fs)
 {
    if(fs)
