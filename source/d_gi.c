@@ -90,6 +90,11 @@
 #define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
 #define VNAME_UNKNOWN   "Unknown Game version. May not work."
 
+// FreeDoom/Blasphemer/Etc override names
+#define FNAME_DOOM_SW   "FreeDoom demo version"
+#define FNAME_DOOM_R    "FreeDoom version"
+#define FNAME_DOOM2     "FreeDoom II version"
+
 // Startup banners
 #define BANNER_DOOM_SW   "DOOM Shareware Startup"
 #define BANNER_DOOM_REG  "DOOM Registered Startup"
@@ -753,6 +758,7 @@ static gamemodeinfo_t giDoomSW =
    GIF_SHAREWARE | DOOM_GIFLAGS, // flags
    
    VNAME_DOOM_SW,    // versionName
+   FNAME_DOOM_SW,    // freeVerName
    BANNER_DOOM_SW,   // startupBanner
    &gi_path_doomsw,  // iwadPath
    
@@ -844,6 +850,7 @@ static gamemodeinfo_t giDoomReg =
    DOOM_GIFLAGS,     // flags
    
    VNAME_DOOM_REG,   // versionName
+   FNAME_DOOM_R,     // freeVerName
    BANNER_DOOM_REG,  // startupBanner
    &gi_path_doomreg, // iwadPath
    
@@ -935,6 +942,7 @@ static gamemodeinfo_t giDoomRetail =
    DOOM_GIFLAGS,     // flags
    
    VNAME_DOOM_RET,   // versionName
+   FNAME_DOOM_R,     // freeVerName
    BANNER_DOOM_RET,  // startupBanner
    &gi_path_doomu,   // iwadPath
    
@@ -1026,6 +1034,7 @@ static gamemodeinfo_t giDoomCommercial =
    DOOM_GIFLAGS | GIF_MAPXY | GIF_WOLFHACK | GIF_SETENDOFGAME, // flags
 
    VNAME_DOOM2,      // versionName
+   FNAME_DOOM2,      // freeVerName
    BANNER_DOOM2,     // startupBanner
    &gi_path_doom2,   // iwadPath
 
@@ -1117,6 +1126,7 @@ static gamemodeinfo_t giHereticSW =
    GIF_SHAREWARE | HERETIC_GIFLAGS, // flags
 
    VNAME_HTIC_SW,    // versionName
+   NULL,             // freeVerName
    BANNER_HTIC_SW,   // startupBanner
    &gi_path_hticsw,  // iwadPath
 
@@ -1212,6 +1222,7 @@ static gamemodeinfo_t giHereticReg =
    HERETIC_GIFLAGS,  // flags
    
    VNAME_HTIC_REG,   // versionName
+   NULL,             // freeVerName
    BANNER_HTIC_REG,  // startupBanner
    &gi_path_hticreg, // iwadPath
 

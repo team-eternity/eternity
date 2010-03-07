@@ -1205,9 +1205,9 @@ static boolean P_VerifyBlockMap(int count)
 
    bmaperrormsg = NULL;
 
-   for(x = 0; x < bmapwidth; ++x)
+   for(y = 0; y < bmapheight; ++y)
    {
-      for(y = 0; y < bmapheight; ++y)
+      for(x = 0; x < bmapwidth; ++x)
       {
          int offset;
          int *list, *tmplist;
@@ -1220,7 +1220,7 @@ static boolean P_VerifyBlockMap(int count)
          if(blockoffset >= maxoffs)
          {
             isvalid = false;
-            bmaperrormsg = "block offset overflow";
+            bmaperrormsg = "offset overflow";
             break;
          }
          
@@ -1234,7 +1234,7 @@ static boolean P_VerifyBlockMap(int count)
             if(tmplist >= maxoffs)
             {
                isvalid = false;
-               bmaperrormsg = "unterminated blocklist";
+               bmaperrormsg = "open blocklist";
                break;
             }
             if(*tmplist == -1) // found -1
@@ -1249,7 +1249,7 @@ static boolean P_VerifyBlockMap(int count)
             if(*tmplist < 0 || *tmplist >= numlines)
             {
                isvalid = false;
-               bmaperrormsg = "line index >= numlines";
+               bmaperrormsg = "index >= numlines";
                break;
             }
          }

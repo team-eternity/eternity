@@ -1268,14 +1268,19 @@ static void CheckIWAD(const char *iwadname,
 
       if(cm >= 30 || (cm && !rg))
       {
-         if(tnt >= 4)
-            *gmission = pack_tnt;
-         else if(plut >= 8)
-            *gmission = pack_plut;
-         else if(hacx)
-            *gmission = pack_hacx;
-         else
+         if(freedoom) // FreeDoom is meant to be Doom II, not TNT
             *gmission = doom2;
+         else
+         {
+            if(tnt >= 4)
+               *gmission = pack_tnt;
+            else if(plut >= 8)
+               *gmission = pack_plut;
+            else if(hacx)
+               *gmission = pack_hacx;
+            else
+               *gmission = doom2;
+         }
          *hassec = (sc >= 2) || hacx;
          *gmode = commercial;
       }
@@ -1325,20 +1330,25 @@ boolean WadFileStatus(char *filename,boolean *isdir)
    return false;                  //and report doesn't exist
 }
 
-//jff 4/19/98 list of standard IWAD names
+// jff 4/19/98 list of standard IWAD names
 static const char *const standard_iwads[]=
 {
-   "/doom2f.wad",   // DOOM II, French Version
-   "/doom2.wad",    // DOOM II
-   "/plutonia.wad", // Final DOOM: Plutonia
-   "/tnt.wad",      // Final DOOM: TNT
-   "/doom.wad",     // Registered/Ultimate DOOM
-   "/doom1.wad",    // Shareware DOOM
-   "/doomu.wad",    // CPhipps - allow doomu.wad
-   "/freedoom.wad", // Freedoom -- haleyjd 01/31/03
-   "/heretic.wad",  // Heretic  -- haleyjd 10/10/05
-   "/heretic1.wad", // Shareware Heretic
-   "/hacx.wad",     // HACX standalone version -- haleyjd 08/19/09
+   // Official IWADs
+   "/doom2f.wad",    // DOOM II, French Version
+   "/doom2.wad",     // DOOM II
+   "/plutonia.wad",  // Final DOOM: Plutonia
+   "/tnt.wad",       // Final DOOM: TNT
+   "/doom.wad",      // Registered/Ultimate DOOM
+   "/doomu.wad",     // CPhipps - allow doomu.wad
+   "/doom1.wad",     // Shareware DOOM
+   "/heretic.wad",   // Heretic  -- haleyjd 10/10/05
+   "/heretic1.wad",  // Shareware Heretic
+
+   // Unofficial IWADs
+   "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03
+   "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10
+   "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
+   "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
 };
 
 static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
@@ -1640,11 +1650,11 @@ void IdentifyVersion(void)
                game_name = "DOOM II version, German edition, no Wolf levels";
          }
          // joel 10/16/98 end Final DOOM fix
-
-         // haleyjd 10/13/05: freedoom override :)
-         if(freedoom)
-            game_name = "DOOM II, FreeDoom version";
       }
+
+      // haleyjd 03/07/10: Special FreeDoom overrides :)
+      if(freedoom && GameModeInfo->freeVerName)
+         game_name = GameModeInfo->freeVerName;
 
       puts(game_name);
 

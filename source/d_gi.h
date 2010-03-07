@@ -278,6 +278,7 @@ typedef struct gamemodeinfo_s
    
    // startup stuff
    const char *versionName;   // descriptive version name
+   const char *freeVerName;   // FreeDoom override name, if such exists
    const char *startupBanner; // startup banner text
    char **iwadPath;           // iwad path variable
    
