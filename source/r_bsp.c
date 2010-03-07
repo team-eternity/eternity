@@ -1251,7 +1251,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
         seg.frontsec->topmap != seg.backsec->topmap ||
         seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
 
-   if(seg.high > seg.top && side->toptexture)
+   if((seg.high > seg.top || seg.high2 > seg.top2) && side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
       seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
@@ -1310,7 +1310,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
    texlow = seg.line->backsector->floorheightf - view.z;
-   if(seg.bottom > seg.low && side->bottomtexture)
+   if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
       seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
