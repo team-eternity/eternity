@@ -988,7 +988,7 @@ R_ClipSegFunc segclipfuncs[] =
 
 #define NEARCLIP 0.05f
 #define PNEARCLIP 0.001f
-extern int       *texturewidthmask;
+extern int32_t *texturewidthmask;
 
 static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
                         float texbottom, vertex_t *v1, vertex_t *v2, 

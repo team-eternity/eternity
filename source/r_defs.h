@@ -175,7 +175,7 @@ typedef struct
    // The normal of the 3d plane the slope creates.
    v3float_t normalf;
 
-   // 2-Dimentional vector (x, y) normalized. Used to determine distance from
+   // 2-Dimensional vector (x, y) normalized. Used to determine distance from
    // the origin in 2d mapspace.
    v2fixed_t d;
    v2float_t df;
@@ -539,13 +539,21 @@ typedef struct drawseg_s
 // of patches.
 //
 
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
 struct patch_s
 { 
-  short width, height;  // bounding box size 
-  short leftoffset;     // pixels to the left of origin 
-  short topoffset;      // pixels below the origin 
-  int columnofs[8];     // only [width] used
-};
+  int16_t width, height;  // bounding box size 
+  int16_t leftoffset;     // pixels to the left of origin 
+  int16_t topoffset;      // pixels below the origin 
+  int32_t columnofs[8];   // only [width] used
+} __attribute__((packed));
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 //
 // A vissprite_t is a thing that will be drawn during a refresh.
@@ -684,8 +692,6 @@ typedef struct visplane
    pslope_t *pslope;
    rslope_t rslope;
 } visplane_t;
-
-
 
 #endif
 
