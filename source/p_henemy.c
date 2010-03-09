@@ -3155,7 +3155,7 @@ void A_CounterOp(mobj_t *mo)
 
       // unary operations (c_oper2 is unused for these)
    case CPOP_ABS:
-      *c_dest = (short)(abs(*c_oper1)); break;
+      *c_dest = abs(*c_oper1); break;
    case CPOP_NEGATE:
       *c_dest = -(*c_oper1); break;
    case CPOP_NOT:
@@ -3520,7 +3520,7 @@ void A_WeaponCtrJump(mobj_t *mo)
 {
    boolean branch = false;
    int statenum, checktype, cnum, psprnum;
-   short value, *counter;
+   int value, *counter;
    player_t *player;
    pspdef_t *pspr;
 
@@ -3531,7 +3531,7 @@ void A_WeaponCtrJump(mobj_t *mo)
 
    statenum  = E_ArgAsStateNumNI(pspr->state->args, 0);
    checktype = E_ArgAsKwd(pspr->state->args, 1, &weapctrkwds, 0);
-   value     = (short)E_ArgAsInt(pspr->state->args, 2, 0);
+   value     = E_ArgAsInt(pspr->state->args, 2, 0);
    cnum      = E_ArgAsInt(pspr->state->args, 3, 0);
    psprnum   = E_ArgAsKwd(pspr->state->args, 4, &psprkwds, 0);
    
@@ -3616,7 +3616,7 @@ void A_WeaponCtrJump(mobj_t *mo)
 void A_WeaponCtrSwitch(mobj_t *mo)
 {
    int cnum, startstate, numstates, psprnum;
-   short *counter;
+   int *counter;
    player_t *player;
    pspdef_t *pspr;
 
@@ -3700,9 +3700,9 @@ static argkeywd_t weapsetkwds =
 void A_WeaponSetCtr(mobj_t *mo)
 {
    int cnum;
-   short value;
+   int value;
    int specialop;
-   short *counter;
+   int *counter;
    player_t *player;
    pspdef_t *pspr;
 
@@ -3712,7 +3712,7 @@ void A_WeaponSetCtr(mobj_t *mo)
    pspr = &(player->psprites[player->curpsprite]);
 
    cnum      = E_ArgAsInt(pspr->state->args, 0, 0);
-   value     = (short)E_ArgAsInt(pspr->state->args, 1, 0);
+   value     = E_ArgAsInt(pspr->state->args, 1, 0);
    specialop = E_ArgAsKwd(pspr->state->args, 2, &weapsetkwds, 0);
 
    switch(cnum)
@@ -3813,7 +3813,7 @@ void A_WeaponCtrOp(mobj_t *mo)
    int c_dest_num;
    int specialop;
 
-   short *c_oper1, *c_oper2, *c_dest;
+   int *c_oper1, *c_oper2, *c_dest;
 
    if(!(player = mo->player))
       return;
@@ -3891,7 +3891,7 @@ void A_WeaponCtrOp(mobj_t *mo)
 
       // unary operations (c_oper2 is unused for these)
    case CPOP_ABS:
-      *c_dest = (short)(abs(*c_oper1)); break;
+      *c_dest = abs(*c_oper1); break;
    case CPOP_NEGATE:
       *c_dest = -(*c_oper1); break;
    case CPOP_NOT:
@@ -3914,7 +3914,7 @@ void A_WeaponCtrOp(mobj_t *mo)
 void A_WeaponCopyCtr(mobj_t *mo)
 {
    int cnum1, cnum2;
-   short *src, *dest;
+   int *src, *dest;
    player_t *player;
    pspdef_t *pspr;
 
@@ -3990,7 +3990,7 @@ void A_CheckReloadEx(mobj_t *mo)
 {
    boolean branch = false;
    int statenum, checktype, psprnum;
-   short value;
+   int value;
    player_t *player;
    pspdef_t *pspr;
    weaponinfo_t *w;
@@ -4010,7 +4010,7 @@ void A_CheckReloadEx(mobj_t *mo)
 
    statenum  = E_ArgAsStateNumNI(pspr->state->args, 0);
    checktype = E_ArgAsKwd(pspr->state->args, 1, &weapctrkwds, 0);
-   value     = (short)E_ArgAsInt(pspr->state->args, 2, 0);
+   value     = E_ArgAsInt(pspr->state->args, 2, 0);
    psprnum   = E_ArgAsKwd(pspr->state->args, 3, &psprkwds, 0);
    
 

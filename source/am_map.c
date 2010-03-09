@@ -1436,12 +1436,12 @@ static void AM_drawFlineWu(fline_t *fl, int color)
    if(dy > dx)
    {
       // line is y-axis major.
-      unsigned short erroracc = 0, 
-         erroradj = (unsigned short)(((unsigned int)dx << 16) / (unsigned int)dy);
+      uint16_t erroracc = 0, 
+         erroradj = (uint16_t)(((uint32_t)dx << 16) / (uint32_t)dy);
 
       while(--dy)
       {
-         unsigned short erroracctmp = erroracc;
+         uint16_t erroracctmp = erroracc;
 
          erroracc += erroradj;
 
@@ -1461,12 +1461,12 @@ static void AM_drawFlineWu(fline_t *fl, int color)
    else
    {
       // line is x-axis major.
-      unsigned short erroracc = 0, 
-         erroradj = (unsigned short)(((unsigned int)dy << 16) / (unsigned int)dx);
+      uint16_t erroracc = 0, 
+         erroradj = (uint16_t)(((uint32_t)dy << 16) / (uint32_t)dx);
 
       while(--dx)
       {
-         unsigned short erroracctmp = erroracc;
+         uint16_t erroracctmp = erroracc;
 
          erroracc += erroradj;
 

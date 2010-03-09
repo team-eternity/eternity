@@ -104,12 +104,12 @@ static boolean pcx_Writer(outbuffer_t *ob, byte *data,
    pcx.bits_per_pixel = 8;    // 8-bit
    pcx.xmin           = 0;
    pcx.ymin           = 0;
-   pcx.xmax           = (short)(width - 1);
-   pcx.ymax           = (short)(height - 1);
-   pcx.hres           = (short)width;
-   pcx.vres           = (short)height;
+   pcx.xmax           = (uint16_t)(width - 1);
+   pcx.ymax           = (uint16_t)(height - 1);
+   pcx.hres           = (uint16_t)width;
+   pcx.vres           = (uint16_t)height;
    pcx.color_planes   = 1; // chunky image
-   pcx.bytes_per_line = (short)width;
+   pcx.bytes_per_line = (uint16_t)width;
    pcx.palette_type   = 1; // not a gray scale
    
    SafeWrite8( ob, pcx.manufacturer);

@@ -211,7 +211,7 @@ typedef struct
    float bottom, bottom2, bottomstep;
 
    boolean twosided, clipsolid, maskedtex;
-   short toptex, midtex, bottomtex;
+   int16_t toptex, midtex, bottomtex;
    boolean markfloor, markceiling;
    boolean markfportal, markcportal;
    boolean segtextured;

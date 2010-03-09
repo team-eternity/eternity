@@ -1240,7 +1240,7 @@ boolean donut_emulation;
 //
 // Thanks to entryway for discovering and coding a fix to this.
 //
-static boolean DonutOverflow(fixed_t *pfloorheight, short *pfloorpic)
+static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 {
    static boolean firsttime = true;
    static boolean donutparm = false;
@@ -1275,7 +1275,7 @@ static boolean DonutOverflow(fixed_t *pfloorheight, short *pfloorpic)
    }
 
    *pfloorheight = (fixed_t)floorheight;
-   *pfloorpic    = (short)floorpic;
+   *pfloorpic    = (int16_t)floorpic;
 
    return true;
 }
@@ -1297,7 +1297,7 @@ int EV_DoDonut(line_t *line)
    int          i;
    floormove_t *floor;
    fixed_t      s3_floorheight;
-   short        s3_floorpic;
+   int16_t      s3_floorpic;
 
    secnum = -1;
    rtn = 0;

@@ -2420,7 +2420,7 @@ void P_AddThingTID(mobj_t *mo, int tid)
    {
       int key = tid % TIDCHAINS;
 
-      mo->tid = (unsigned short)tid;
+      mo->tid = (uint16_t)tid;
 
       // insert at head of chain
       mo->tid_next  = tidhash[key];

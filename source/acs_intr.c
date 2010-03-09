@@ -369,7 +369,7 @@ int ACS_indexForNum(acsvm_t *vm, int num)
 // Executes a line special that has been encoded in the script with
 // operands on the stack.
 //
-static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
+static void ACS_execLineSpec(line_t *l, mobj_t *mo, int16_t spec, int side,
                              int arg0, int arg1, int arg2, int arg3, int arg4)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -392,7 +392,7 @@ static void ACS_execLineSpec(line_t *l, mobj_t *mo, short spec, int side,
 // Executes a line special that has been encoded in the script with
 // immediate operands.
 //
-static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, short spec, int side,
+static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, int16_t spec, int side,
                                 int argc, int *argv)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -491,7 +491,7 @@ static void ACS_setLineBlocking(int tag, int block)
 //
 // Sets all tagged lines' complete parameterized specials.
 //
-static void ACS_setLineSpecial(short spec, int *args, int tag)
+static void ACS_setLineSpecial(int16_t spec, int *args, int tag)
 {
    line_t *l;
    int linenum = -1;
@@ -594,62 +594,62 @@ void T_ACSThinker(acsthinker_t *script)
          PUSH(IPNEXT());
          break;
       case OP_LINESPEC1:
-         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
                           script->lineSide,
                           STACK_AT(1), 0, 0, 0, 0);
          DECSTP();
          break;
       case OP_LINESPEC2:
-         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
                           script->lineSide,
                           STACK_AT(2), STACK_AT(1), 0, 0, 0);
          DECSTP2();
          break;
       case OP_LINESPEC3:
-         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
                           script->lineSide,
                           STACK_AT(3), STACK_AT(2), STACK_AT(1), 0, 0);
          DECSTP3();
          break;
       case OP_LINESPEC4:
-         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
                           script->lineSide,
                           STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1), 0);
          DECSTP4();
          break;
       case OP_LINESPEC5:
-         ACS_execLineSpec(script->line, script->trigger, (short) IPNEXT(), 
+         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
                           script->lineSide,
                           STACK_AT(5), STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1));
          DECSTP5();
          break;
       case OP_LINESPEC1_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (short) temp, 
+         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp, 
                              script->lineSide, 1, ip);
          ++ip; // skip past arg
          break;
       case OP_LINESPEC2_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
                              script->lineSide, 2, ip);
          ip += 2; // skip past args
          break;
       case OP_LINESPEC3_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
                              script->lineSide, 3, ip);
          ip += 3; // skip past args
          break;
       case OP_LINESPEC4_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
                              script->lineSide, 4, ip);
          ip += 4; // skip past args
          break;
       case OP_LINESPEC5_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (short) temp,
+         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
                              script->lineSide, 5, ip);
          ip += 5; // skip past args
          break;
@@ -1086,7 +1086,7 @@ void T_ACSThinker(acsthinker_t *script)
       case OP_SETLINESPECIAL:
          {
             int tag;
-            short spec;
+            int16_t spec;
             int args[NUMLINEARGS];
 
             for(temp = 5; temp > 0; --temp)

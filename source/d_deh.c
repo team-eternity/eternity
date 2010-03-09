@@ -1787,12 +1787,12 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
 void deh_procText(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
-   char inbuffer[DEH_BUFFERMAX*2];  // can't use line -- double size buffer too.
-   int i;               // loop variable
-   unsigned int fromlen, tolen;  // as specified on the text block line
-   int usedlen;         // shorter of fromlen and tolen if not matched
-   boolean found = FALSE;  // to allow early exit once found
-   char* line2 = NULL;     // duplicate line for rerouting
+   char inbuffer[DEH_BUFFERMAX*2]; // can't use line -- double size buffer too.
+   int i;                          // loop variable
+   unsigned int fromlen, tolen;    // as specified on the text block line
+   int usedlen;                    // shorter of fromlen and tolen if not matched
+   boolean found = FALSE;          // to allow early exit once found
+   char* line2 = NULL;             // duplicate line for rerouting
    sfxinfo_t *sfx;
 
    // Ty 04/11/98 - Included file may have NOTEXT skip flag set

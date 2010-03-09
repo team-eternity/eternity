@@ -172,7 +172,7 @@ void T_LightFade(lightfade_t *lf)
    }
 
    // write light level back to sector
-   lf->sector->lightlevel = (short)(lf->lightlevel / FRACUNIT);
+   lf->sector->lightlevel = (int16_t)(lf->lightlevel / FRACUNIT);
 
    if(lf->sector->lightlevel < 0)
       lf->sector->lightlevel = 0;

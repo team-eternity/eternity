@@ -1423,7 +1423,7 @@ static int param_door_kinds[6] =
 // Parses arguments for parameterized Door specials.
 //
 static boolean pspec_Door(line_t *line, mobj_t *thing, int *args, 
-                          short special, int trigger_type)
+                          int16_t special, int trigger_type)
 {
    int kind;
    doordata_t dd;
@@ -1528,7 +1528,7 @@ static int fchgdata[7][2] =
 //
 // Parses arguments for parameterized Floor specials.
 //
-static boolean pspec_Floor(line_t *line, int *args, short special, 
+static boolean pspec_Floor(line_t *line, int *args, int16_t special, 
                            int trigger_type)
 {
    floordata_t fd = { 0 };
@@ -1679,7 +1679,7 @@ static int cchgdata[7][2] =
 //
 // Parses arguments for parameterized Ceiling specials.
 //
-static boolean pspec_Ceiling(line_t *line, int *args, short special, 
+static boolean pspec_Ceiling(line_t *line, int *args, int16_t special, 
                              int trigger_type)
 {
    ceilingdata_t cd = { 0 };
@@ -1793,7 +1793,7 @@ static boolean pspec_Ceiling(line_t *line, int *args, short special,
 //
 // Parses arguments for parameterized Stair specials.
 //
-static boolean pspec_Stairs(line_t *line, int *args, short special, 
+static boolean pspec_Stairs(line_t *line, int *args, int16_t special, 
                             int trigger_type)
 {
    stairdata_t sd = { 0 };
@@ -1840,7 +1840,7 @@ static boolean pspec_Stairs(line_t *line, int *args, short special,
 //
 // Parses arguments for parameterized polyobject door types
 //
-static boolean pspec_PolyDoor(int *args, short special)
+static boolean pspec_PolyDoor(int *args, int16_t special)
 {
    polydoordata_t pdd = { 0 };
 
@@ -1873,7 +1873,7 @@ static boolean pspec_PolyDoor(int *args, short special)
 //
 // Parses arguments for parameterized polyobject move specials
 //
-static boolean pspec_PolyMove(int *args, short special)
+static boolean pspec_PolyMove(int *args, int16_t special)
 {
    polymovedata_t pmd;
 
@@ -1892,7 +1892,7 @@ static boolean pspec_PolyMove(int *args, short special)
 //
 // Parses arguments for parameterized polyobject rotate specials
 //
-static boolean pspec_PolyRotate(int *args, short special)
+static boolean pspec_PolyRotate(int *args, int16_t special)
 {
    polyrotdata_t prd;
 
@@ -1917,7 +1917,7 @@ static boolean pspec_PolyRotate(int *args, short special)
 //
 // haleyjd: rewritten to use pillardata_t struct
 //
-static boolean pspec_Pillar(line_t *line, int *args, short special)
+static boolean pspec_Pillar(line_t *line, int *args, int16_t special)
 {
    pillardata_t pd;
    
@@ -1950,7 +1950,7 @@ static boolean pspec_Pillar(line_t *line, int *args, short special)
 //
 // haleyjd 01/07/07: Runs an ACS script.
 //
-static boolean pspec_ACSExecute(line_t *line, int *args, short special,
+static boolean pspec_ACSExecute(line_t *line, int *args, int16_t special,
                                 int side, mobj_t *thing)
 {
    int snum, mnum;
@@ -1978,7 +1978,7 @@ static boolean pspec_ACSExecute(line_t *line, int *args, short special,
 // side:    Side of line activated. May be ignored.
 // reuse:   if action is repeatable
 //
-boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special, 
+boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special, 
                             int *args, int side, int spac, boolean reuse)
 {
    boolean success = false;
@@ -2381,7 +2381,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
 // the indicated special. All functions using this must take the
 // same arguments in the same order as the line special.
 //
-static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
+static boolean P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numparams = params[0] / sizeof(cell);
@@ -2421,7 +2421,7 @@ static boolean P_ScriptSpec(short spec, AMX *amx, cell *params)
 
 CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
 {
-   short spec;
+   int16_t spec;
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numargs;
 

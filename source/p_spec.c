@@ -4447,7 +4447,7 @@ void P_ConvertHereticSpecials(void)
 // from an array, but not until all the Hexen specials are
 // implemented.
 //
-void P_ConvertHexenLineSpec(short *special, int *args)
+void P_ConvertHexenLineSpec(int16_t *special, int *args)
 {
    switch(*special)
    {

@@ -367,7 +367,7 @@ static void CenterMouse(void)
 {
    // Warp the the screen center
    
-   SDL_WarpMouse((short)(video.width / 2), (short)(video.height / 2));
+   SDL_WarpMouse((Uint16)(video.width / 2), (Uint16)(video.height / 2));
    
    // Clear any relative movement caused by warping
    

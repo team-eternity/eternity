@@ -64,7 +64,7 @@ enum {
 // A single Vertex.
 struct mapvertex_s
 {
-  short x,y;
+   int16_t x, y;
 } __attribute__((packed));
 
 typedef struct mapvertex_s mapvertex_t;
@@ -267,12 +267,12 @@ typedef struct mapthing_s
    int16_t angle;     // angle in wad format
    int16_t type;      // doomednum
    int16_t options;   // bitflags
-   int   special;   // scripting special
+   int     special;   // scripting special
 
-   int   args[NUMMTARGS]; // arguments for special
+   int     args[NUMMTARGS]; // arguments for special
 
-   int   recordnum; // for ExtraData hashing
-   int   next;
+   int     recordnum; // for ExtraData hashing
+   int     next;
 } mapthing_t;
 
 #ifdef _MSC_VER

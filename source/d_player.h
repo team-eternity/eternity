@@ -131,7 +131,7 @@ struct player_s
    boolean        weaponowned[NUMWEAPONS];
    int            ammo[NUMAMMO];
    int            maxammo[NUMAMMO];
-   short          weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
+   int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.
    

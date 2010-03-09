@@ -197,9 +197,9 @@ static dehflagset_t ld_flagset =
 
 static struct exlinespec
 {
-   short special;     // line special number
-   const char *name;  // descriptive name
-   unsigned int next; // for hashing
+   int16_t special;     // line special number
+   const char *name;    // descriptive name
+   unsigned int next;   // for hashing
 } exlinespecs[] =
 {
    // Normal DOOM/BOOM extended specials.
@@ -832,7 +832,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
 
       // type
       tempstr = cfg_getstr(thingsec, FIELD_TYPE);
-      EDThings[i].type = (short)(E_ParseTypeField(tempstr));
+      EDThings[i].type = (int16_t)(E_ParseTypeField(tempstr));
 
       // it is not allowed to spawn an ExtraData control object via
       // ExtraData, but the error is tolerated by changing it to an 
@@ -845,12 +845,12 @@ static void E_ProcessEDThings(cfg_t *cfg)
       if(*tempstr == '\0')
          EDThings[i].options = 0;
       else
-         EDThings[i].options = (short)(E_ParseFlags(tempstr, &mt_flagset));
+         EDThings[i].options = (int16_t)(E_ParseFlags(tempstr, &mt_flagset));
 
       // extended fields
 
       // get TID field
-      EDThings[i].tid = (short)cfg_getint(thingsec, FIELD_TID);
+      EDThings[i].tid = (int16_t)cfg_getint(thingsec, FIELD_TID);
       if(EDThings[i].tid < 0)
          EDThings[i].tid = 0; // you cannot specify a reserved TID
 
@@ -858,7 +858,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       E_ParseThingArgs(&EDThings[i], thingsec);
 
       // get height
-      EDThings[i].height = (short)cfg_getint(thingsec, FIELD_HEIGHT);
+      EDThings[i].height = (int16_t)cfg_getint(thingsec, FIELD_HEIGHT);
 
       // TODO: any other new fields
    }
@@ -920,7 +920,7 @@ static void E_InitLineSpecHash(void)
 //
 // Gets a line special for a name.
 //
-short E_LineSpecForName(const char *name)
+int16_t E_LineSpecForName(const char *name)
 {
    static boolean hash_init = false;
    unsigned int key = D_HashTableKey(name) % NUMLSPECCHAINS;
@@ -946,15 +946,15 @@ short E_LineSpecForName(const char *name)
 //
 // Returns a base generalized line type for a name.
 //
-static short E_GenTypeForName(const char *name)
+static int16_t E_GenTypeForName(const char *name)
 {
-   short i = 0;
+   int16_t i = 0;
    static const char *names[] =
    {
       "GenFloor", "GenCeiling", "GenDoor", "GenLockedDoor",
       "GenLift", "GenStairs", "GenCrusher", NULL
    };
-   static short bases[] =
+   static int16_t bases[] =
    {
       GenFloorBase, GenCeilingBase, GenDoorBase, GenLockedBase,
       GenLiftBase, GenStairsBase, GenCrusherBase, 0
@@ -1043,9 +1043,9 @@ static boolean E_BooleanArg(const char *str)
 //
 // Parses a generalized speed argument.
 //
-static short E_SpeedArg(const char *str)
+static int16_t E_SpeedArg(const char *str)
 {
-   short i = 0;
+   int16_t i = 0;
    static const char *speeds[] =
    {
       "slow", "normal", "fast", "turbo", NULL
@@ -1062,9 +1062,9 @@ static short E_SpeedArg(const char *str)
 //
 // Parses a floor/ceiling changer type argument.
 //
-static short E_ChangeArg(const char *str)
+static int16_t E_ChangeArg(const char *str)
 {
-   short i = 0;
+   int16_t i = 0;
    static const char *changes[] =
    {
       "none", "zero", "texture", "texturetype", NULL
@@ -1081,7 +1081,7 @@ static short E_ChangeArg(const char *str)
 //
 // Parses a floor/ceiling changer model argument.
 //
-static short E_ModelArg(const char *str)
+static int16_t E_ModelArg(const char *str)
 {
    if(!strcasecmp(str, "numeric"))
       return 1;
@@ -1095,9 +1095,9 @@ static short E_ModelArg(const char *str)
 //
 // Parses the target argument for a generalized floor type.
 //
-static short E_FloorTarget(const char *str)
+static int16_t E_FloorTarget(const char *str)
 {
-   short i = 0;
+   int16_t i = 0;
    static const char *targs[] =
    {
       "HnF", "LnF", "NnF", "LnC", "C", "sT", "24", "32", NULL
@@ -1114,9 +1114,9 @@ static short E_FloorTarget(const char *str)
 //
 // Parses the target argument for a generalized ceiling type.
 //
-static short E_CeilingTarget(const char *str)
+static int16_t E_CeilingTarget(const char *str)
 {
-   short i = 0;
+   int16_t i = 0;
    static const char *targs[] =
    {
       "HnC", "LnC", "NnC", "HnF", "F", "sT", "24", "32", NULL
@@ -1133,7 +1133,7 @@ static short E_CeilingTarget(const char *str)
 //
 // Parses a direction argument.
 //
-static short E_DirArg(const char *str)
+static int16_t E_DirArg(const char *str)
 {
    if(!strcasecmp(str, "up"))
       return 1;
@@ -1147,7 +1147,7 @@ static short E_DirArg(const char *str)
 //
 // Parses a generalized door type argument.
 //
-static short E_DoorTypeArg(const char *str)
+static int16_t E_DoorTypeArg(const char *str)
 {
    if(!strcasecmp(str, "Open"))
       return 1;
@@ -1165,7 +1165,7 @@ static short E_DoorTypeArg(const char *str)
 //
 // Parses a generalized door delay argument.
 //
-static short E_DoorDelay(const char *str)
+static int16_t E_DoorDelay(const char *str)
 {
    if(*str == '4')
       return 1;
@@ -1183,7 +1183,7 @@ static short E_DoorDelay(const char *str)
 //
 // Parses a generalized locked door type argument.
 //
-static short E_LockedType(const char *str)
+static int16_t E_LockedType(const char *str)
 {
    if(!strcasecmp(str, "Open"))
       return 1;
@@ -1197,9 +1197,9 @@ static short E_LockedType(const char *str)
 //
 // Parses the key argument for a locked door.
 //
-static short E_LockedKey(const char *str)
+static int16_t E_LockedKey(const char *str)
 {
-   short i = 0;
+   int16_t i = 0;
    static const char *keys[] =
    {
       "Any", "RedCard", "BlueCard", "YellowCard", "RedSkull", "BlueSkull",
@@ -1217,7 +1217,7 @@ static short E_LockedKey(const char *str)
 //
 // Parses the target argument for a generalized lift.
 //
-static short E_LiftTarget(const char *str)
+static int16_t E_LiftTarget(const char *str)
 {
    if(!strcasecmp(str, "NnF"))
       return 1;
@@ -1235,7 +1235,7 @@ static short E_LiftTarget(const char *str)
 //
 // Parses the delay argument for a generalized lift.
 //
-static short E_LiftDelay(const char *str)
+static int16_t E_LiftDelay(const char *str)
 {
    if(*str == '3')
       return 1;
@@ -1253,7 +1253,7 @@ static short E_LiftDelay(const char *str)
 //
 // Parses the step size argument for generalized stairs.
 //
-static short E_StepSize(const char *str)
+static int16_t E_StepSize(const char *str)
 {
    if(*str == '8')
       return 1;
@@ -1271,9 +1271,9 @@ static short E_StepSize(const char *str)
 //
 // Parses the trigger type of a generalized line special.
 //
-static short E_GenTrigger(const char *str)
+static int16_t E_GenTrigger(const char *str)
 {
-   short i = 0;
+   int16_t i = 0;
    static const char *trigs[] =
    {
       "W1", "WR", "S1", "SR", "G1", "GR", "D1", "DR", NULL
@@ -1313,12 +1313,12 @@ static short E_GenTrigger(const char *str)
 // line system. Hence, not a lot of time has been spent making it
 // fast or clean.
 //
-static short E_ProcessGenSpec(const char *value)
+static int16_t E_ProcessGenSpec(const char *value)
 {
    qstring_t buffer;
    const char *curtoken = NULL;
    int t, forc = 0, tok_index = 0;
-   short trigger;
+   int16_t trigger;
 
    // first things first, we have to initialize the qstring
    M_QStrInitCreate(&buffer);
@@ -1550,10 +1550,10 @@ static void E_ProcessEDLines(cfg_t *cfg)
       // standard fields
 
       // special
-      EDLines[i].stdfields.special = (short)cfg_getint(linesec, FIELD_LINE_SPECIAL);
+      EDLines[i].stdfields.special = (int16_t)cfg_getint(linesec, FIELD_LINE_SPECIAL);
 
       // tag
-      EDLines[i].stdfields.tag = (short)cfg_getint(linesec, FIELD_LINE_TAG);
+      EDLines[i].stdfields.tag = (int16_t)cfg_getint(linesec, FIELD_LINE_TAG);
       if(cfg_size(linesec, FIELD_LINE_TAG) > 0)
          tagset = true;
 
@@ -1689,10 +1689,10 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       // standard fields
 
       // special
-      sec->stdfields.special = (short)cfg_getint(section, FIELD_SECTOR_SPECIAL);
+      sec->stdfields.special = (int16_t)cfg_getint(section, FIELD_SECTOR_SPECIAL);
 
       // tag
-      sec->stdfields.tag = (short)cfg_getint(section, FIELD_SECTOR_TAG);
+      sec->stdfields.tag = (int16_t)cfg_getint(section, FIELD_SECTOR_TAG);
 
       // extended fields
 
@@ -1782,7 +1782,7 @@ mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
    // The record number is stored in the control thing's options field.
    // Check to see if the record exists, and that ExtraData is loaded.
    if(!LevelInfo.extraData || numEDMapThings == 0 ||
-      (edThingIdx = E_EDThingForRecordNum((unsigned short)(mt->options))) == numEDMapThings)
+      (edThingIdx = E_EDThingForRecordNum((uint16_t)(mt->options))) == numEDMapThings)
    {
       // spawn an Unknown thing
       return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ, 
@@ -1817,7 +1817,7 @@ void E_LoadLineDefExt(line_t *line, boolean applySpecial)
 
    // ExtraData record number is stored in line tag
    if(!LevelInfo.extraData || numEDLines == 0 ||
-      (edLineIdx = E_EDLineForRecordNum((unsigned short)(line->tag))) == numEDLines)
+      (edLineIdx = E_EDLineForRecordNum((uint16_t)(line->tag))) == numEDLines)
    {
       // if no ExtraData or no such record, zero special and clear tag,
       // and we're finished here.
@@ -1859,7 +1859,7 @@ void E_LoadSectorExt(sector_t *sector)
 
    // ExtraData record number is stored in sector tag
    if(!LevelInfo.extraData || numEDSectors == 0 ||
-      (edSectorIdx = E_EDSectorForRecordNum((unsigned short)(sector->tag))) == numEDSectors)
+      (edSectorIdx = E_EDSectorForRecordNum((uint16_t)(sector->tag))) == numEDSectors)
    {
       // if no ExtraData or no such record, zero special and tag,
       // and we're finished here.
@@ -1906,7 +1906,7 @@ void E_LoadSectorExt(sector_t *sector)
 //
 // Tests if a given line special is parameterized.
 //
-boolean E_IsParamSpecial(short special)
+boolean E_IsParamSpecial(int16_t special)
 {
    // no param line specs in old demos
    if(demo_version < 333)

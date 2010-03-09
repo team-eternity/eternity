@@ -355,7 +355,7 @@ portal_t *R_GetSkyBoxPortal(mobj_t *camera)
 //
 portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 
-                             short *floorlight, short *ceilinglight, 
+                             int16_t *floorlight, int16_t *ceilinglight, 
                              fixed_t *floorxoff, fixed_t *flooryoff, 
                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
                              float *floorbaseangle, float *floorangle,
@@ -408,7 +408,7 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
 // new one. Used in p_spec.c.
 //
 portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, 
-                           short *lightlevel, 
+                           int16_t *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff,
                            float *baseangle, float *angle)
 {

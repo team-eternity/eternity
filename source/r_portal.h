@@ -85,7 +85,7 @@ typedef struct
 {
    int     *floorpic, *ceilingpic;
    fixed_t *floorz, *ceilingz;
-   short   *floorlight, *ceilinglight;
+   int16_t *floorlight, *ceilinglight;
    fixed_t *floorxoff, *flooryoff;
    fixed_t *ceilingxoff, *ceilingyoff;
    float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
@@ -99,7 +99,7 @@ typedef struct
 {
    int     *pic;
    fixed_t *delta;
-   short   *lightlevel;
+   int16_t *lightlevel;
    fixed_t *xoff, *yoff;
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
 } skyplanedata_t;
@@ -122,7 +122,7 @@ typedef struct portal_s
    struct portal_s *next;
 
    // haleyjd: temporary debug
-   short tainted;
+   int16_t tainted;
 } portal_t;
 
 
@@ -134,13 +134,13 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
 
 portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 
-                             short *floorlight, short *ceilinglight, 
+                             int16_t *floorlight, int16_t *ceilinglight, 
                              fixed_t *floorxoff, fixed_t *flooryoff, 
                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
                              float *floorbaseangle, float *floorangle,
                              float *ceilingbaseangle, float *ceilingangle);
 
-portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, short *lightlevel, 
+portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
                            float *angle);
 

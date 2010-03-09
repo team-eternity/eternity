@@ -61,14 +61,14 @@
 // plus a checksum for internal state consistency.
 struct ticcmd_s
 {
-   char  forwardmove; // *2048 for move
-   char  sidemove;    // *2048 for move
-   short look;        // haleyjd: <<16 for look delta
-   short angleturn;   // <<16 for angle delta
-   short consistancy; // checks for net game
-   byte  chatchar;
-   byte  buttons;
-   byte  actions;
+   int8_t  forwardmove; // *2048 for move
+   int8_t  sidemove;    // *2048 for move
+   int16_t look;        // haleyjd: <<16 for look delta
+   int16_t angleturn;   // <<16 for angle delta
+   int16_t consistancy; // checks for net game
+   byte    chatchar;
+   byte    buttons;
+   byte    actions;
 } __attribute__((packed));
 
 typedef struct ticcmd_s ticcmd_t;

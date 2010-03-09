@@ -567,7 +567,7 @@ static const char *oldtnames[MAXTERRAINDEF] =
 static void E_LoadTerrainTypeDefs(void)
 {
    byte *lump;
-   short *shrtptr, temp;
+   int16_t *shrtptr, temp;
    int lumpnum, i, j, numterraindefs;
    char *chrptr, name[9];
    EFloor *floor;
@@ -579,7 +579,7 @@ static void E_LoadTerrainTypeDefs(void)
 
    lump = W_CacheLumpNum(lumpnum, PU_STATIC);
    
-   shrtptr = (short *)lump;   
+   shrtptr = (int16_t *)lump;   
    numterraindefs = SwapShort(*shrtptr);
    shrtptr++;
    
@@ -592,7 +592,7 @@ static void E_LoadTerrainTypeDefs(void)
          name[j] = *chrptr++;
       
       // read short terrain type index
-      shrtptr = (short *)chrptr;
+      shrtptr = (int16_t *)chrptr;
       temp = SwapShort(*shrtptr);
       shrtptr++;
       

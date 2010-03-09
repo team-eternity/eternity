@@ -108,7 +108,7 @@ static int skulls[2];
 // haleyjd 02/04/06: small menu pointer
 #define NUMSMALLPTRS 5
 static int smallptrs[NUMSMALLPTRS];
-static short smallptr_dims[2]; // 0 = width, 1 = height
+static int16_t smallptr_dims[2]; // 0 = width, 1 = height
 static int smallptr_idx;
 static int smallptr_dir = 1;
 static int smallptr_coords[2][2];
@@ -216,7 +216,7 @@ static void MN_DrawSlider(int x, int y, int pct)
    int i;
    int draw_x = x;
    int slider_width = 0;       // find slider width in pixels
-   short wl, wm, ws;
+   int16_t wl, wm, ws;
 
    // load slider gfx
    slider_gfx[slider_left]   = W_CacheLumpName("M_SLIDEL", PU_STATIC);
@@ -363,7 +363,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       // default to text-based message if patch missing
       if(lumpnum >= 0)
       {
-         short width;
+         int16_t width;
          patch = W_CacheLumpNum(lumpnum, PU_CACHE);
          item_height = SwapShort(patch->height) + 1;
          width  = SwapShort(patch->width);

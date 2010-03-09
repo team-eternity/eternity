@@ -3028,7 +3028,7 @@ void A_BrainSpit(mobj_t *mo)
    newmobj = P_SpawnMissile(mo, targ, SpawnShotType, 
                             mo->z + DEFAULTMISSILEZ);
    P_SetTarget(&newmobj->target, targ);
-   newmobj->reactiontime = (short)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
+   newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
 
    // killough 7/18/98: brain friendliness is transferred
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
@@ -3314,12 +3314,12 @@ void A_LineEffect(mobj_t *mo)
    if(!(mo->intflags & MIF_LINEDONE))                // Unless already used up
    {
       junk = *lines;                                 // Fake linedef set to 1st
-      if((junk.special = (short)mo->state->misc1))   // Linedef type
+      if((junk.special = (int16_t)mo->state->misc1))   // Linedef type
       {
          player_t player, *oldplayer = mo->player;   // Remember player status
          mo->player = &player;                       // Fake player
          player.health = 100;                        // Alive player
-         junk.tag = (short)mo->state->misc2;         // Sector tag for linedef
+         junk.tag = (int16_t)mo->state->misc2;         // Sector tag for linedef
          if(!P_UseSpecialLine(mo, &junk, 0))         // Try using it
             P_CrossSpecialLine(&junk, 0, mo);        // Try crossing it
          if(!junk.special)                           // If type cleared,
@@ -4106,9 +4106,9 @@ static void P_ResurrectPlayer(void)
 
       memset(&mthing, 0, sizeof(mapthing_t));
 
-      mthing.x     = (short)(p->mo->x >> FRACBITS);
-      mthing.y     = (short)(p->mo->y >> FRACBITS);
-      mthing.angle = (short)(p->mo->angle / ANGLE_1);
+      mthing.x     = (int16_t)(p->mo->x >> FRACBITS);
+      mthing.y     = (int16_t)(p->mo->y >> FRACBITS);
+      mthing.angle = (int16_t)(p->mo->angle / ANGLE_1);
       mthing.type  = (p - players) + 1;
 
       p->health = 100;

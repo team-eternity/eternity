@@ -1493,7 +1493,7 @@ void R_PrecacheLevel(void)
          
          while (--j >= 0)
          {
-            short *sflump = sprites[i].spriteframes[j].lump;
+            int16_t *sflump = sprites[i].spriteframes[j].lump;
             int k = 7;
             do
                W_CacheLumpNum(firstspritelump + sflump[k], PU_CACHE);

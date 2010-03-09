@@ -199,9 +199,9 @@ struct sector_s
    fixed_t ceilingheight;
    int     floorpic;
    int     ceilingpic;
-   short lightlevel;
-   short special;
-   short tag;
+   int16_t lightlevel;
+   int16_t special;
+   int16_t tag;
    int nexttag, firsttag; // killough 1/30/98: improves searches for tags.
    int soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
    mobj_t *soundtarget;   // thing that made a sound (or null)
@@ -316,7 +316,7 @@ struct sector_s
    pslope_t *c_slope;
 
    // haleyjd 08/30/09 - used by the lightning code
-   short oldlightlevel; 
+   int16_t oldlightlevel; 
 };
 
 //
@@ -327,9 +327,9 @@ typedef struct
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
-  short toptexture;      // Texture indices. We do not maintain names here. 
-  short bottomtexture;
-  short midtexture;
+  int16_t toptexture;      // Texture indices. We do not maintain names here. 
+  int16_t bottomtexture;
+  int16_t midtexture;
   sector_t* sector;      // Sector the SideDef is facing.
 
   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
@@ -356,8 +356,8 @@ typedef struct line_s
 {
    vertex_t *v1, *v2;     // Vertices, from v1 to v2.
    fixed_t dx, dy;        // Precalculated v2 - v1 for side checking.
-   short flags;           // Animation related.
-   short special;         
+   int16_t flags;           // Animation related.
+   int16_t special;         
    int   tag;             // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
@@ -463,8 +463,8 @@ typedef struct seg_s
 typedef struct
 {
   fixed_t  x,  y, dx, dy;        // Partition line.
-  fixed_t bbox[2][4];            // Bounding box for each child.
-  unsigned short children[2];    // If NF_SUBSECTOR its a subsector.
+  fixed_t  bbox[2][4];           // Bounding box for each child.
+  uint16_t children[2];          // If NF_SUBSECTOR its a subsector.
 
   double fx, fy, fdx, fdy;       // haleyjd 05/16/08: float versions
   double a, b, c;                // haleyjd 05/20/08: coefficients for
@@ -619,7 +619,7 @@ typedef struct
   boolean rotate;
 
   // Lump to use for view angles 0-7.
-  short lump[8];
+  int16_t lump[8];
 
   // Flip bit (1 = flip) to use for view angles 0-7.
   byte  flip[8];

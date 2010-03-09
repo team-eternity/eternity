@@ -209,7 +209,7 @@ void P_ArchiveWorld(void)
    const sector_t *sec;
    const line_t   *li;
    const side_t   *si;
-   short          *put;
+   int16_t        *put;
    
    // killough 3/22/98: fix bug caused by hoisting save_p too early
    // killough 10/98: adjust size for changes below
@@ -220,7 +220,7 @@ void P_ArchiveWorld(void)
    // haleyjd 03/04/07: must save sector colormap indices
    
    size_t size = 
-      (sizeof(short)*4 + 
+      (sizeof(int16_t)*4 + 
        sizeof(sec->floorheight) + sizeof(sec->ceilingheight) + 
        sizeof(sec->friction) + sizeof(sec->movefactor) + 
        sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap) +
@@ -228,17 +228,17 @@ void P_ArchiveWorld(void)
        sizeof(sec->damage) + sizeof(sec->damageflags) + 
        sizeof(sec->damagemask) + sizeof(sec->damagemod) +
        sizeof(sec->ceilingpic) + sizeof(sec->floorpic))
-      * numsectors + sizeof(short)*3*numlines + 4 + 4*sizeof(int);
+      * numsectors + sizeof(int16_t)*3*numlines + 4 + 4*sizeof(int);
 
    for(i = 0; i < numlines; ++i)
    {
       if(lines[i].sidenum[0] != -1)
          size +=
-          (sizeof(short)*3 + sizeof si->textureoffset + 
+          (sizeof(int16_t)*3 + sizeof si->textureoffset + 
            sizeof si->rowoffset);
       if(lines[i].sidenum[1] != -1)
          size +=
-          (sizeof(short)*3 + sizeof si->textureoffset + 
+          (sizeof(int16_t)*3 + sizeof si->textureoffset + 
            sizeof si->rowoffset);
    }
 
@@ -246,7 +246,7 @@ void P_ArchiveWorld(void)
    
    PADSAVEP();                // killough 3/22/98
    
-   put = (short *)save_p;
+   put = (int16_t *)save_p;
 
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
@@ -352,14 +352,14 @@ void P_ArchiveWorld(void)
 //
 void P_UnArchiveWorld(void)
 {
-   int          i;
-   sector_t     *sec;
-   line_t       *li;
-   const short  *get;
+   int            i;
+   sector_t      *sec;
+   line_t        *li;
+   const int16_t *get;
    
    PADSAVEP();                // killough 3/22/98
    
-   get = (short *)save_p;
+   get = (int16_t *)save_p;
 
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; i++, sec++)

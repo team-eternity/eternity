@@ -321,8 +321,8 @@ enum
 
 typedef struct
 {
-        short ammo[NUMAMMO];
-        char weapon;
+   int16_t ammo[NUMAMMO];
+   char weapon;
 } backpack_t;
   
 // Map Object definition.
@@ -412,9 +412,9 @@ struct mobj_s
    int                 health;
 
    // Movement direction, movement generation (zig-zagging).
-   short               movedir;        // 0-7
-   short               movecount;      // when 0, select a new dir
-   short               strafecount;    // killough 9/8/98: monster strafing
+   int16_t             movedir;        // 0-7
+   int16_t             movecount;      // when 0, select a new dir
+   int16_t             strafecount;    // killough 9/8/98: monster strafing
 
    // Thing being chased/attacked (or NULL),
    // also the originator for missiles.
@@ -422,24 +422,24 @@ struct mobj_s
 
    // Reaction time: if non 0, don't attack yet.
    // Used by player to freeze a bit after teleporting.
-   short               reactiontime;   
+   int16_t             reactiontime;   
 
    // If >0, the current target will be chased no
    // matter what (even if shot by another object)
-   short               threshold;
+   int16_t             threshold;
 
    // killough 9/9/98: How long a monster pursues a target.
-   short               pursuecount;
+   int16_t             pursuecount;
 
-   short               gear; // killough 11/98: used in torque simulation
+   int16_t             gear; // killough 11/98: used in torque simulation
 
    // Additional info record for player avatars only.
    // Only valid if thing is a player
    struct player_s*    player;
-   skin_t *           skin;   //sf: skin
+   skin_t *            skin;   //sf: skin
 
    // Player number last looked for.
-   short               lastlook;       
+   int16_t             lastlook;       
 
    // For nightmare respawn.
    mapthing_t          spawnpoint;     
@@ -485,7 +485,7 @@ struct mobj_s
 
    // scripting fields
    int args[NUMMTARGS]; // arguments
-   unsigned short tid;   // thing id used by scripts
+   uint16_t tid;        // thing id used by scripts
 
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are

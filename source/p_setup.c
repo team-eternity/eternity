@@ -762,7 +762,7 @@ static int spac_flags_tlate[HX_SPAC_NUMSPAC] =
 static void P_ConvertHexenLineFlags(line_t *line)
 {
    // extract Hexen special activation information
-   short spac = HX_GET_SPAC(line->flags);
+   int16_t spac = HX_GET_SPAC(line->flags);
 
    // translate into ExtraData extended line flags
    line->extflags = spac_flags_tlate[spac];
@@ -1288,7 +1288,7 @@ void P_LoadBlockMap(int lump)
    else
    {
       int i;
-      short *wadblockmaplump = W_CacheLumpNum (lump, PU_LEVEL);
+      int16_t *wadblockmaplump = W_CacheLumpNum (lump, PU_LEVEL);
       blockmaplump = Z_Malloc(sizeof(*blockmaplump) * count,
                               PU_LEVEL, NULL);
 
@@ -1304,7 +1304,7 @@ void P_LoadBlockMap(int lump)
 
       for(i = 4; i < count; i++)
       {
-         short t = SwapShort(wadblockmaplump[i]);          // killough 3/1/98
+         int16_t t = SwapShort(wadblockmaplump[i]);          // killough 3/1/98
          blockmaplump[i] = t == -1 ? -1l : (int) t & 0xffff;
       }
 

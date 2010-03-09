@@ -583,9 +583,9 @@ typedef enum
 
 struct switchlist_s
 {
-  char name1[9];
-  char name2[9];
-  short episode;
+  char    name1[9];
+  char    name2[9];
+  int16_t episode;
 } __attribute__((packed)); //jff 3/23/98 pack to read from memory
 
 typedef struct switchlist_s switchlist_t;
@@ -819,7 +819,7 @@ typedef struct
   // haleyjd 09/06/07: spectransfer
   spectransfer_t special;
 
-  short texture;
+  int16_t texture;
   fixed_t floordestheight;
   fixed_t speed;
   int resetTime;       // haleyjd 10/13/05: resetting stairs
@@ -1047,7 +1047,7 @@ boolean P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
-void P_ConvertHexenLineSpec(short *special, int *args);
+void P_ConvertHexenLineSpec(int16_t *special, int *args);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1342,7 +1342,7 @@ enum
 };
 
 boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac);
-boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special, 
+boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special, 
                             int *args, int side, int spac, boolean reuse);
 
 #endif

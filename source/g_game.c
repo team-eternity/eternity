@@ -94,7 +94,7 @@ static boolean  netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
-static short    consistancy[MAXPLAYERS][BACKUPTICS];
+static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -278,7 +278,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // turn 180 degrees in one keystroke? -- phares
    if(action_flip)
    {
-      cmd->angleturn += (short)QUICKREVERSE;
+      cmd->angleturn += (int16_t)QUICKREVERSE;
       action_flip = false;
    }
 
@@ -297,13 +297,13 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else
    {
       if(action_right)
-         cmd->angleturn -= (short)pc->angleturn[tspeed];
+         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
       if(action_left)
-         cmd->angleturn += (short)pc->angleturn[tspeed];
+         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
       if(joyxmove > 0)
-         cmd->angleturn -= (short)pc->angleturn[tspeed];
+         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
       if(joyxmove < 0)
-         cmd->angleturn += (short)pc->angleturn[tspeed];
+         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
    }
 
    if(action_forward)
@@ -2155,7 +2155,7 @@ void G_Ticker(void)
                
                // sf: include y as well as x
                if(players[i].mo)
-                  consistancy[i][buf] = (short)(players[i].mo->x + players[i].mo->y);
+                  consistancy[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
                else
                   consistancy[i][buf] = 0; // killough 2/14/98
             }
