@@ -472,12 +472,22 @@ typedef struct
   double len;                    //  length of partition line, for normalization
 } node_t;
 
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
 // posts are runs of non masked source pixels
-typedef struct
+struct post_s
 {
   byte topdelta; // -1 is the last post in a column
   byte length;   // length data bytes follows
-} post_t;
+} __attribute__((packed));
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
+
+typedef struct post_s post_t;
 
 // column_t is a list of 0 or more post_t, (byte)-1 terminated
 typedef post_t column_t;
