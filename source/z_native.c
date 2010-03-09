@@ -75,8 +75,8 @@
 // Tunables
 //
 
-// size of block header
-#define HEADER_SIZE 32
+// haleyjd 03/08/10: dynamically calculated header size
+static size_t header_size;
 
 // signature for block header
 #define ZONEID  0x931d4a11
@@ -91,7 +91,7 @@
 typedef struct memblock
 {
 #ifdef ZONEIDCHECK
-  unsigned id;
+  unsigned int id;
 #endif
 
   struct memblock *next,*prev;
@@ -292,9 +292,11 @@ static void Z_Close(void)
 
 void Z_Init(void)
 {   
-   // haleyjd 01/20/04: changed to prboom version:
-   if(!(HEADER_SIZE >= sizeof(memblock_t)))
-      I_Error("Z_Init: Sanity check failed");
+   // haleyjd 03/08/10: dynamically calculate block header size;
+   // round sizeof(memblock_t) up to nearest 16-byte boundary. This should work
+   // just about everywhere, and keeps the assumption of a 32-byte header on 
+   // 32-bit. 64-bit will use a 64-byte header.
+   header_size = (sizeof(memblock_t) + 15) & ~15;
       
    atexit(Z_Close);            // exit handler
    
@@ -329,7 +331,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    if(!size)
       return user ? *user = NULL : NULL;          // malloc(0) returns NULL
    
-   while(!(block = (malloc)(size + HEADER_SIZE)))
+   while(!(block = (malloc)(size + header_size)))
    {
       if(!blockbytag[PU_CACHE])
          I_Error ("Z_Malloc: Failure trying to allocate %u bytes\n"
@@ -354,7 +356,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    
    block->tag = tag;           // tag
    block->user = user;         // user
-   block = (memblock_t *)((char *) block + HEADER_SIZE);
+   block = (memblock_t *)((char *) block + header_size);
    if(user)                    // if there is a user
       *user = block;           // set user to point to new block
 
@@ -378,7 +380,7 @@ void (Z_Free)(void *p, const char *file, int line)
 
    if(p)
    {
-      memblock_t *block = (memblock_t *)((char *) p - HEADER_SIZE);
+      memblock_t *block = (memblock_t *)((char *) p - header_size);
 
       Z_IDCheck(IDBOOL(block->id != ZONEID),
                 "Z_Free: freed a pointer without ZONEID", block, file, line);
@@ -445,7 +447,7 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
                    "Z_FreeTags: Changed a tag without ZONEID", 
                    block, file, line);
 
-         (Z_Free)((char *)block + HEADER_SIZE, file, line);
+         (Z_Free)((char *)block + header_size, file, line);
          block = next;               // Advance to next block
       }
    }
@@ -459,7 +461,7 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 //
 void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 {
-   memblock_t *block = (memblock_t *)((char *) ptr - HEADER_SIZE);
+   memblock_t *block = (memblock_t *)((char *) ptr - header_size);
    
    DEBUG_CHECKHEAP();
 
@@ -521,7 +523,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    DEBUG_CHECKHEAP();
 
-   block = (memblock_t *)((char *)ptr - HEADER_SIZE);
+   block = (memblock_t *)((char *)ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_Realloc: Reallocated a block without ZONEID", 
@@ -542,7 +544,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
                  purgable_memory -= block->size,
                  active_memory -= block->size);
 
-   while(!(block = (realloc)(block, n + HEADER_SIZE)))
+   while(!(block = (realloc)(block, n + header_size)))
    {
       if(block->tag == PU_CACHE || !blockbytag[PU_CACHE])
          I_Error ("Z_Realloc: Failure trying to allocate %u bytes\n"
@@ -553,7 +555,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    block->size = n;
    block->tag  = tag;
 
-   p = (char *)block + HEADER_SIZE;
+   p = (char *)block + header_size;
 
    // set new user, if any
    block->user = user;
@@ -713,7 +715,7 @@ void (Z_CheckHeap)(const char *file, int line)
 //
 int (Z_CheckTag)(void *ptr, const char *file, int line)
 {
-   memblock_t *block = (memblock_t *)((char *) ptr - HEADER_SIZE);
+   memblock_t *block = (memblock_t *)((char *) ptr - header_size);
 
    DEBUG_CHECKHEAP();
 
