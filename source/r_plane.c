@@ -521,7 +521,7 @@ void R_ClearPlanes(void)
    lastopening = openings;
 
    // texture calculation
-   memset (cachedheight, 0, sizeof(cachedheight));
+   memset(cachedheight, 0, sizeof(cachedheight));
    
    num_visplanes = 0;    // reset
 }
@@ -660,7 +660,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    // SoM: memset should use the check->max_width
    //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
    {
-      register unsigned i = 0;
+      register unsigned int i = 0;
       register int *p = check->top;
       while(i < check->max_width) p[i++] = 0x7FFFFFFF;
    }
