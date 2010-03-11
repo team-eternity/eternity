@@ -937,7 +937,7 @@ static void do_draw_plane(visplane_t *pl)
          // to make it easier to use the new feature, while to still
          // allow old sky textures to be used.
          
-         flip = l->special==272 ? 0u : ~0u;
+         flip = l->special == 272 ? 0u : ~0u;
       }
       else 	 // Normal Doom sky, only one allowed per level
       {
@@ -966,11 +966,15 @@ static void do_draw_plane(visplane_t *pl)
       else
          column.step = M_FloatToFixed(view.pspriteystep);
 
-
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
-      for(x = pl->minx; (column.x = x) <= pl->maxx; ++x)
+      for(x = pl->minx; x <= pl->maxx; ++x)
       {
-         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
+         column.x = x;
+
+         column.y1 = pl->top[x];
+         column.y2 = pl->bottom[x];
+
+         if(column.y1 <= column.y2)
          {
             column.source = R_GetColumn(texture,
                ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
@@ -1041,7 +1045,7 @@ static void do_draw_plane(visplane_t *pl)
       stop = pl->maxx + 1;
       pl->top[pl->minx-1] = pl->top[stop] = 0x7FFFFFFF;
 
-      plane.planezlight = pl->colormap[light];//zlight[light];
+      plane.planezlight = pl->colormap[light]; //zlight[light];
       plane.colormap = pl->fullcolormap;
       // haleyjd 10/16/06
       plane.fixedcolormap = pl->fixedcolormap;
@@ -1065,7 +1069,7 @@ static void do_draw_plane(visplane_t *pl)
       plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 
       for(x = pl->minx ; x <= stop ; x++)
-         R_MakeSpans(x,pl->top[x-1],pl->bottom[x-1],pl->top[x],pl->bottom[x]);
+         R_MakeSpans(x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
    }
 }
 

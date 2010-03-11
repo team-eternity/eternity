@@ -115,16 +115,23 @@ static void R_CreateChildWindow(pwindow_t *parent)
 //
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 {
-   float ptop = window->top[x];
-   float pbottom = window->bottom[x];
+   float ptop, pbottom;
 
 #ifdef RANGECHECK
+   if(!window)
+      I_Error("R_WindowAdd: null portal window\n");
+
    if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
    {
       I_Error("R_WindowAdd portal supplied with bad column data.\n"
               "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
    }
-   
+#endif
+
+   ptop    = window->top[x];
+   pbottom = window->bottom[x];
+
+#ifdef RANGECHECK
    if(pbottom > ptop && 
       (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
    {
@@ -136,7 +143,6 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    if(ybottom < 0.0f || ytop >= view.height)
       return;
 
-
    if(x <= window->maxx && x >= window->minx)
    {
       // column falls inside the range of the portal.
@@ -144,7 +150,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       // check to see if the portal column isn't occupied
       if(ptop > pbottom)
       {
-         window->top[x] = ytop;
+         window->top[x]    = ytop;
          window->bottom[x] = ybottom;
          return;
       }
@@ -174,7 +180,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       // Portal is empty so place the column anywhere (first column added to 
       // the portal)
       window->minx = window->maxx = x;
-      window->top[x] = ytop;
+      window->top[x]    = ytop;
       window->bottom[x] = ybottom;
 
       // SoM 3/10/2005: store the viewz in the portal struct for later use
@@ -188,7 +194,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    {
       window->maxx = x;
 
-      window->top[x] = ytop;
+      window->top[x]    = ytop;
       window->bottom[x] = ybottom;
       return;
    }
@@ -197,7 +203,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    {
       window->minx = x;
 
-      window->top[x] = ytop;
+      window->top[x]    = ytop;
       window->bottom[x] = ybottom;
       return;
    }

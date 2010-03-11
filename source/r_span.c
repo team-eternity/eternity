@@ -49,9 +49,7 @@ extern int  columnofs[MAXWIDTH];
 //
 // SPAN_PROLOGUE_8
 //
-// 8-bit prologue code. This is shared between all span drawers. It should be
-// immediately followed by the prologue macro for the particular blending mode,
-// if one exists
+// 8-bit prologue code. This is shared between all span drawers.
 //
 #define SPAN_PROLOGUE_8() \
    unsigned xf = span.xfrac, xs = span.xstep; \

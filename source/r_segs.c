@@ -40,18 +40,17 @@
 // OPTIMIZE: closed two sided lines as single sided
 // SoM: Done.
 // SoM: Cardboard globals
-cb_column_t       column;
-cb_seg_t          seg;
-cb_seg_t          segclip;
+cb_column_t column;
+cb_seg_t    seg;
+cb_seg_t    segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
-lighttable_t    **walllights;
-static int *maskedtexturecol;
+lighttable_t **walllights;
+static int    *maskedtexturecol;
 
 //
 // R_RenderMaskedSegRange
 //
-
 void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 {
    column_t *col;
@@ -69,19 +68,21 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
    segclip.line = ds->curline;
    
-   // killough 4/11/98: draw translucent 2s normal textures
    colfunc = r_column_engine->DrawColumn;
+
+   // killough 4/11/98: draw translucent 2s normal textures
    if(segclip.line->linedef->tranlump >= 0 && general_translucency)
    {
       colfunc = r_column_engine->DrawTLColumn;
-      tranmap = main_tranmap;
       if(segclip.line->linedef->tranlump > 0)
          tranmap = W_CacheLumpNum(segclip.line->linedef->tranlump-1, PU_STATIC);
+      else
+         tranmap = main_tranmap;
    }
    // killough 4/11/98: end translucent 2s normal code
 
    segclip.frontsec = segclip.line->frontsector;
-   segclip.backsec = segclip.line->backsector;
+   segclip.backsec  = segclip.line->backsector;
 
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
    
@@ -142,9 +143,9 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    }
 
    // SoM: performance tuning (tm Lee Killough 1998)
-   scale = dist * view.yfoc;
+   scale     = dist * view.yfoc;
    scalestep = diststep * view.yfoc;
-   texmidf = M_FixedToFloat(column.texmid);
+   texmidf   = M_FixedToFloat(column.texmid);
 
    // draw the columns
    for(column.x = x1; column.x <= x2; ++column.x, dist += diststep, scale += scalestep)
@@ -192,6 +193,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
 //
 // R_RenderSegLoop
+//
 // Draws zero, one, or two textures (and possibly a masked texture) for walls.
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
@@ -228,23 +230,11 @@ static void R_RenderSegLoop(void)
       cliptop = (int)ceilingclip[i];
       clipbot = (int)floorclip[i];
 
-      t = segclip.top < ceilingclip[i] ? cliptop : (int)segclip.top;
-      b = segclip.bottom > floorclip[i] ? clipbot : (int)segclip.bottom;
+      t = segclip.top    < ceilingclip[i] ? cliptop : (int)segclip.top;
+      b = segclip.bottom > floorclip[i]   ? clipbot : (int)segclip.bottom;
 
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
-      if(segclip.markcportal && segclip.c_window)
-      {
-         line = t - 1;
-         
-         if(line > clipbot)
-            line = clipbot;
-         
-         if(line >= cliptop)
-            R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
-
-         ceilingclip[i] = (float)t;
-      }
-      else if(segclip.markceiling && segclip.ceilingplane)
+      if(segclip.markflags & (SEG_MARKCPORTAL|SEG_MARKCEILING))
       {
          line = t - 1;
          
@@ -253,27 +243,20 @@ static void R_RenderSegLoop(void)
          
          if(line >= cliptop)
          {
-            segclip.ceilingplane->top[i] = cliptop;
-            segclip.ceilingplane->bottom[i] = line;
+            if(segclip.markflags & SEG_MARKCPORTAL)
+               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+            else
+            {
+               segclip.ceilingplane->top[i]    = cliptop;
+               segclip.ceilingplane->bottom[i] = line;
+            }
          }
-   
+
          ceilingclip[i] = (float)t;
       }
 
       // SoM 3/10/2005: Only add to the portal of the floor is marked
-      if(segclip.markfportal && segclip.f_window)
-      {
-         line = b + 1;
-
-         if(line < cliptop)
-            line = cliptop;
-
-         if(line <= clipbot)
-            R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
-
-         floorclip[i] = (float)b;
-      }
-      else if(segclip.markfloor && segclip.floorplane)
+      if(segclip.markflags & (SEG_MARKFPORTAL|SEG_MARKFLOOR))
       {
          line = b + 1;
 
@@ -282,13 +265,17 @@ static void R_RenderSegLoop(void)
 
          if(line <= clipbot)
          {
-            segclip.floorplane->top[i] = line;
-            segclip.floorplane->bottom[i] = clipbot;
+            if(segclip.markflags & SEG_MARKFPORTAL)
+               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+            else
+            {
+               segclip.floorplane->top[i]    = line;
+               segclip.floorplane->bottom[i] = clipbot;
+            }
          }
 
          floorclip[i] = (float)b;
       }
-
 
       if(segclip.segtextured)
       {
@@ -319,28 +306,31 @@ static void R_RenderSegLoop(void)
             column.colormap = segclip.walllights[index];
          }
 
-         if(segclip.twosided == false && segclip.l_window)
+         if(!segclip.twosided)
          {
-            R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
-            ceilingclip[i] = view.height - 1.0f;
-            floorclip[i] = 0.0f;
+            if(segclip.l_window)
+            {
+               R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+               ceilingclip[i] = view.height - 1.0f;
+               floorclip[i] = 0.0f;
+            }
+            else if(segclip.midtex)
+            {
+               column.y1 = t;
+               column.y2 = b;
+
+               column.texmid = segclip.midtexmid;
+
+               column.source = R_GetColumn(segclip.midtex, texx);
+               column.texheight = segclip.midtexh;
+
+               colfunc();
+
+               ceilingclip[i] = view.height - 1.0f;
+               floorclip[i] = 0.0f;
+            }
          }
-         else if(segclip.twosided == false && segclip.midtex)
-         {
-            column.y1 = t;
-            column.y2 = b;
-
-            column.texmid = segclip.midtexmid;
-
-            column.source = R_GetColumn(segclip.midtex, texx);
-            column.texheight = segclip.midtexh;
-
-            colfunc();
-
-            ceilingclip[i] = view.height - 1.0f;
-            floorclip[i] = 0.0f;
-         }
-         else if(segclip.twosided)
+         else
          {
             if(segclip.toptex)
             {
@@ -363,7 +353,7 @@ static void R_RenderSegLoop(void)
 
                segclip.high += segclip.highstep;
             }
-            else if(segclip.markceiling)
+            else if(segclip.markflags & SEG_MARKCEILING)
                ceilingclip[i] = (float)t;
 
 
@@ -388,7 +378,7 @@ static void R_RenderSegLoop(void)
 
                segclip.low += segclip.lowstep;
             }
-            else if(segclip.markfloor)
+            else if(segclip.markflags & SEG_MARKFLOOR)
                floorclip[i] = (float)b;
 
 
@@ -408,8 +398,10 @@ static void R_RenderSegLoop(void)
       }
       else
       {
-         if(segclip.markfloor) floorclip[i] = (float)b;
-         if(segclip.markceiling) ceilingclip[i] = (float)t;
+         if(segclip.markflags & SEG_MARKFLOOR) 
+            floorclip[i] = (float)b;
+         if(segclip.markflags & SEG_MARKCEILING) 
+            ceilingclip[i] = (float)t;
       }
 
       segclip.len += segclip.lenstep;
@@ -419,46 +411,58 @@ static void R_RenderSegLoop(void)
    }
 }
 
-
-
+//
+// R_CheckDSAlloc
+//
 // SoM: This function is needed in multiple places now to fix some cases
 // of sprites showing up behind walls in some portal areas.
-static void R_CheckDSAlloc()
+//
+static void R_CheckDSAlloc(void)
 {
    // drawsegs need to be taken care of here
    if(ds_p == drawsegs + maxdrawsegs)
    {
-      unsigned newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
-      drawsegs = realloc(drawsegs, sizeof(drawseg_t) * newmax);
-      ds_p = drawsegs + maxdrawsegs;
+      unsigned int newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
+      drawsegs    = realloc(drawsegs, sizeof(drawseg_t) * newmax);
+      ds_p        = drawsegs + maxdrawsegs;
       maxdrawsegs = newmax;
    }
 }
 
+//
+// R_CloseDSP
+//
 // Simply sets ds_p's properties to that of a closed drawseg.
-static void R_CloseDSP()
+//
+static void R_CloseDSP(void)
 {
-   ds_p->silhouette = SIL_BOTH;
-   ds_p->sprtopclip = screenheightarray;
-   ds_p->sprbottomclip = zeroarray;
-   ds_p->bsilheight = D_MAXINT;
-   ds_p->tsilheight = D_MININT;
+   ds_p->silhouette       = SIL_BOTH;
+   ds_p->sprtopclip       = screenheightarray;
+   ds_p->sprbottomclip    = zeroarray;
+   ds_p->bsilheight       = D_MAXINT;
+   ds_p->tsilheight       = D_MININT;
    ds_p->maskedtexturecol = NULL;
 }
 
+#define NEXTDSP(model, newx1) \
+   ds_p++; \
+   R_CheckDSAlloc(); \
+   *ds_p = model; \
+   ds_p->x1 = newx1; \
+   ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
 
+#define SETX2(model, newx2) \
+   ds_p->dist2 -= segclip.diststep * (model.x2 - (newx2)); \
+   ds_p->x2 = newx2
 
-
-#define NEXTDSP(model, newx1) ds_p++; R_CheckDSAlloc(); *ds_p = model; ds_p->x1 = newx1; ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
-#define SETX2(model, newx2) ds_p->dist2 -= segclip.diststep * (model.x2 - (newx2)); ds_p->x2 = newx2
-
-
-
-
+//
+// R_DetectClosedColumns
+//
 // This function iterates through the x range of segclip, and checks for columns
 // that became closed in the clipping arrays after the segclip is rendered. Any
-// new closed regions are then added to the solidsegs array to speed up rejection
-// of new segs trying to render to closed areas of clipping space.
+// new closed regions are then added to the solidsegs array to speed up 
+// rejection of new segs trying to render to closed areas of clipping space.
+//
 static void R_DetectClosedColumns()
 {
    drawseg_t model  = *ds_p;
@@ -491,7 +495,8 @@ static void R_DetectClosedColumns()
    for(; i < stop; i++)
    {
       // Find the first closed column
-      while(i < stop && floorclip[i] >= ceilingclip[i]) i++;
+      while(i < stop && floorclip[i] >= ceilingclip[i]) 
+         ++i;
 
       // End open
       if(i == stop)
@@ -505,14 +510,18 @@ static void R_DetectClosedColumns()
       R_CloseDSP();
 
       startx = i;
+
       // Find the first open column
-      while(i < stop && floorclip[i] < ceilingclip[i]) i++;
+      while(i < stop && floorclip[i] < ceilingclip[i]) 
+         ++i;
 
       // from startx to i - 1 is solid.
 #ifdef RANGECHECK
-      if(startx > i - 1 || startx < 0 || i - 1 >= viewwidth || startx >= viewwidth || i - 1 < 0)
+      if(startx > i - 1 || startx < 0 || i - 1 >= viewwidth || 
+         startx >= viewwidth || i - 1 < 0)
          I_Error("R_DetectClosedColumns bad range %i, %i\n", startx, i - 1);
 #endif
+
       // SoM: This creates a bug clipping sprites:
       // What happens when there is a solid seg created, but no drawseg marked
       // as solid? Sprites appear through architecture. The solution is to
@@ -534,7 +543,6 @@ static void R_DetectClosedColumns()
 #undef NEXTDSP
 #undef SETX2
 
-
 static void R_StoreTextureColumns(void)
 {
    int i, texx;
@@ -553,11 +561,16 @@ static void R_StoreTextureColumns(void)
    }
 }
 
+//
+// R_PointToDist2
+//
 // killough 5/2/98: move from r_main.c, made static, simplified
+//
 fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 {
    fixed_t dx = D_abs(x2 - x1);
    fixed_t dy = D_abs(y2 - y1);
+
    if(dy > dx)
    {
       fixed_t t = dx;
@@ -567,8 +580,6 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
    return dx ? FixedDiv(dx, finesine[(tantoangle_acc[FixedDiv(dy,dx) >> DBITS]
                                       + ANG90) >> ANGLETOFINESHIFT]) : 0;
 }
-
-
 
 //
 // R_StoreWallRange
@@ -688,13 +699,13 @@ void R_StoreWallRange(const int start, const int stop)
    // drawsegs need to be taken care of here
    R_CheckDSAlloc();
 
-   ds_p->x1 = start;
-   ds_p->x2 = stop;
-   ds_p->viewx = viewx;
-   ds_p->viewy = viewy;
-   ds_p->viewz = viewz;
-   ds_p->curline = segclip.line;
-   ds_p->dist2 = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
+   ds_p->x1       = start;
+   ds_p->x2       = stop;
+   ds_p->viewx    = viewx;
+   ds_p->viewy    = viewy;
+   ds_p->viewz    = viewz;
+   ds_p->curline  = segclip.line;
+   ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
    ds_p->colormap = scalelight;
    
@@ -728,7 +739,6 @@ void R_StoreWallRange(const int start, const int stop)
          ds_p->tsilheight = D_MININT;
       }
 
-
       if(segclip.maskedtex)
       {
          register int i, *mtc;
@@ -749,13 +759,17 @@ void R_StoreWallRange(const int start, const int stop)
          ds_p->maskedtexturecol = NULL;
    }
 
-   usesegloop = !seg.backsec || seg.clipsolid || 
-                seg.markceiling || seg.markfloor || 
-                seg.toptex || seg.midtex || seg.bottomtex || 
-                seg.f_portalignore || seg.c_portalignore ||
-                seg.markfportal || seg.markcportal || 
-                segclip.line->linedef->portal || 
-                ds_p->silhouette || !ds_p->maskedtexturecol;
+   usesegloop = !seg.backsec        || 
+                 seg.clipsolid      || 
+                 seg.markflags      ||
+                 seg.toptex         || 
+                 seg.midtex         || 
+                 seg.bottomtex      || 
+                 seg.f_portalignore || 
+                 seg.c_portalignore ||
+                 segclip.line->linedef->portal || 
+                 ds_p->silhouette   || 
+                 !ds_p->maskedtexturecol;
 
    if(usesegloop)
       R_RenderSegLoop();
@@ -796,9 +810,6 @@ void R_StoreWallRange(const int start, const int stop)
 
    ++ds_p;
 }
-
-
-
 
 //----------------------------------------------------------------------------
 //

@@ -196,6 +196,15 @@ typedef struct
    float pspritexstep, pspriteystep;
 } cb_view_t;
 
+// haleyjd 3/11/10: markflags
+enum
+{
+   SEG_MARKCEILING = 0x01,
+   SEG_MARKCPORTAL = 0x02,
+   SEG_MARKFLOOR   = 0x04,
+   SEG_MARKFPORTAL = 0x08
+};
+
 typedef struct
 {
    int x1, x2;
@@ -212,8 +221,10 @@ typedef struct
 
    boolean twosided, clipsolid, maskedtex;
    int16_t toptex, midtex, bottomtex;
-   boolean markfloor, markceiling;
-   boolean markfportal, markcportal;
+   //boolean markfloor, markceiling;
+   //boolean markfportal, markcportal;
+   unsigned int markflags; // haleyjd 03/11/10
+
    boolean segtextured;
 
    int toptexmid, midtexmid, bottomtexmid;
