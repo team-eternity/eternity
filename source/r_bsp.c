@@ -443,6 +443,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      int *floorlightlevel, int *ceilinglightlevel,
                      boolean back)
 {
+   if(!sec)
+      return NULL;
+
    if(floorlightlevel)
    {
       *floorlightlevel = sec->floorlightsec == -1 ?
@@ -1365,7 +1368,7 @@ static void R_AddLine(seg_t *line)
    static sector_t tempsec;
 
    float x1, x2;
-   float toffsetx, toffsety;
+   float toffsetx = 0.0f, toffsety = 0.0f;
    float i1, i2, pstep;
    float length, lclip1, lclip2;
    float nearclip = NEARCLIP;
@@ -1373,6 +1376,7 @@ static void R_AddLine(seg_t *line)
    side_t *side;
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
+
    // SoM: one of the byproducts of the portal height enforcement: The top 
    // silhouette should be drawn at ceilingheight but the actual texture 
    // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE 
@@ -1380,13 +1384,12 @@ static void R_AddLine(seg_t *line)
    float textop, texbottom;
 
    seg.clipsolid = false;
-   if(line->backsector)
-      seg.backsec = R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true);
-   else
-      seg.backsec = NULL;
    seg.line = line;
 
+   seg.backsec = R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true);
+
    // haleyjd: TEST
+   // This seems to fix fiffy5, but smells like a hack to me.
    if(seg.frontsec == seg.backsec &&
       seg.frontsec->intflags & SIF_SKY &&
       seg.frontsec->ceilingheight == seg.frontsec->floorheight)
@@ -1455,12 +1458,12 @@ static void R_AddLine(seg_t *line)
 
    temp.fx = v1->fx - view.x;
    temp.fy = v1->fy - view.y;
-   t1.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t1.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+   t1.fx   = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t1.fy   = (temp.fy * view.cos) + (temp.fx * view.sin);
    temp.fx = v2->fx - view.x;
    temp.fy = v2->fy - view.y;
-   t2.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t2.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+   t2.fx   = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t2.fy   = (temp.fy * view.cos) + (temp.fx * view.sin);
 
    // SoM: Portal lines are not texture and as a result can be clipped MUCH 
    // closer to the camera than normal lines can. This closer clipping 
@@ -1469,15 +1472,13 @@ static void R_AddLine(seg_t *line)
    if(line->linedef->portal)
       nearclip = PNEARCLIP;
 
-   // Simple reject for lines entirely behind the view plane.
-   if(t1.fy < nearclip && t2.fy < nearclip)
-      return;
-
-   toffsetx = toffsety = 0;
-
    if(t1.fy < nearclip)
-   {
+   {      
       float move, movey;
+
+      // Simple reject for lines entirely behind the view plane.
+      if(t2.fy < nearclip)
+         return;
 
       movey = nearclip - t1.fy;
       t1.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
@@ -1488,7 +1489,6 @@ static void R_AddLine(seg_t *line)
 
    i1 = 1.0f / t1.fy;
    x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
-
 
    if(t2.fy < nearclip)
    {
@@ -1525,12 +1525,12 @@ static void R_AddLine(seg_t *line)
 
    side = line->sidedef;
    
-   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset + line->offset); 
+   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset) + line->offset; 
    seg.toffsety = toffsety + M_FixedToFloat(side->rowoffset);
 
    if(seg.toffsetx < 0)
    {
-      float maxtexw;
+      float maxtexw = 0.0f;
 
       // SoM: ok, this was driving me crazy. It seems that when the offset is 
       // less than 0, the fractional part will cause the texel at 
@@ -1541,7 +1541,6 @@ static void R_AddLine(seg_t *line)
       // the textures will start at the same column when the offsets are 
       // adjusted.
 
-      maxtexw = 0.0f;
       if(side->toptexture)
          maxtexw = (float)texturewidthmask[side->toptexture];
       if(side->midtexture && texturewidthmask[side->midtexture] > maxtexw)

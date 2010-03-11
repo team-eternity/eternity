@@ -1202,6 +1202,8 @@ void R_FillBackScreen (void)
 } 
 
 //
+// R_VideoErase
+//
 // Copy a screen buffer.
 //
 // SoM: why the hell was this written to only take an offset and size parameter?

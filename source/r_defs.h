@@ -437,7 +437,7 @@ typedef struct msecnode_s
 typedef struct seg_s
 {
   vertex_t *v1, *v2;
-  fixed_t offset;
+  float offset;
   //angle_t angle;
   side_t* sidedef;
   line_t* linedef;

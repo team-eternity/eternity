@@ -237,8 +237,7 @@ void P_LoadSegs(int lump)
       li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "vertex", "vertex")];
       li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "vertex", "vertex")];
 
-      //li->angle  = (SwapShort(ml->angle))  << 16;
-      li->offset = (SwapShort(ml->offset)) << 16;
+      li->offset = (float)(SwapShort(ml->offset));
 
       // haleyjd 06/19/06: convert indices to unsigned
       linedef = SafeUintIndex(ml->linedef, numlines, "vertex", "line");
