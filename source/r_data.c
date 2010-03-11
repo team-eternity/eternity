@@ -65,7 +65,7 @@ static char *error_filename;
 // and possibly other attributes.
 //
 
-typedef struct
+typedef struct mappatch_s
 {
    int16_t originx;
    int16_t originy;
@@ -79,7 +79,7 @@ typedef struct
 // A DOOM wall texture is a list of patches
 // which are to be combined in a predefined order.
 //
-typedef struct
+typedef struct maptexture_s
 {
    int8_t     name[8];
    int32_t    masked;
@@ -1523,7 +1523,7 @@ void R_FreeData(void)
 // convert old doom I levels so they will
 // work under doom II
 
-typedef struct
+typedef struct doom1text_s
 {
    char doom1[9];
    char doom2[9];

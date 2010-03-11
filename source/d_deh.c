@@ -103,7 +103,7 @@ void deh_procBexSprites(DWFILE *, char *);
 // Structure deh_block is used to hold the block names that can
 // be encountered, and the routines to use to decipher them
 
-typedef struct
+typedef struct deh_block_s
 {
   char *key;       // a mnemonic block code name
   void (*const fptr)(DWFILE *, char *); // handler

@@ -319,7 +319,7 @@ enum
 
 // ammo + weapon in a dropped backpack 
 
-typedef struct
+typedef struct backpack_s
 {
    int16_t ammo[NUMAMMO];
    char weapon;

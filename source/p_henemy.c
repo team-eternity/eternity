@@ -918,7 +918,7 @@ void A_HticExplode(mobj_t *actor)
       E_HitWater(actor, actor->subsector->sector);
 }
 
-typedef struct
+typedef struct boss_spec_htic_s
 {
    unsigned int thing_flag;
    unsigned int level_flag;

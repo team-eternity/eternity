@@ -32,7 +32,8 @@
 #include "d_event.h"
 
 // haleyjd: this stuff is now needed in e_edf.c
-typedef struct {
+typedef struct castinfo_s
+{
    const char  *name;
    mobjtype_t  type;   
    boolean     stopattack;

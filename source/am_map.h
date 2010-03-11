@@ -68,7 +68,7 @@ void AM_clearMarks(void);
 
 void AM_Coordinates(const mobj_t *, fixed_t *, fixed_t *, fixed_t *);
 
-typedef struct
+typedef struct mpoint_s
 {
    double x, y;
 } mpoint_t;

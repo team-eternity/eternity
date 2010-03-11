@@ -179,7 +179,7 @@ void R_SetSpanEngine(void);
 // haleyjd 09/19/07: missing extern!
 extern const float PI;
 
-typedef struct
+typedef struct cb_view_s
 {
    float x, y, z;
    float angle, pitch;
@@ -205,7 +205,7 @@ enum
    SEG_MARKFPORTAL = 0x08
 };
 
-typedef struct
+typedef struct cb_seg_s
 {
    int x1, x2;
    float x1frac, x2frac;

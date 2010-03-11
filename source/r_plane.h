@@ -61,7 +61,7 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 
 extern int visplane_view;
 
-typedef struct
+typedef struct cb_span_s
 {
    int x1, x2, y;
    unsigned xfrac, yfrac, xstep, ystep;
@@ -70,7 +70,7 @@ typedef struct
    unsigned int *fg2rgb, *bg2rgb; // haleyjd 06/20/08: tl lookups
 } cb_span_t;
 
-typedef struct
+typedef struct cb_plane_s
 {
    float xoffset, yoffset;
    float height;
@@ -95,8 +95,7 @@ typedef struct
    void (*MapFunc)(int, int, int);
 } cb_plane_t;
 
-
-typedef struct
+typedef struct cb_slopespan_s
 {
    int y, x1, x2;
 

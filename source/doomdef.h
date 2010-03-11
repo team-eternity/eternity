@@ -77,7 +77,7 @@ typedef enum {
 #define MAX_SCREENHEIGHT 1600
 
 // SoM: replaced globals with a struct and a single global
-typedef struct
+typedef struct cb_video_s
 {
    // SoM: Not implemented (yet)
    int         bitdepth, pixelsize;

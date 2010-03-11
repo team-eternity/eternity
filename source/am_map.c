@@ -110,22 +110,22 @@ boolean map_draw_nodelines;
 #define CXMTOF(x)  (f_x + (int)(MTOF((x) - m_x)))
 #define CYMTOF(y)  (f_y + (f_h - (int)(MTOF((y) - m_y))))
 
-typedef struct
+typedef struct fpoint_s
 {
    int x, y;
 } fpoint_t;
 
-typedef struct
+typedef struct fline_s
 {
    fpoint_t a, b;
 } fline_t;
 
-typedef struct
+typedef struct mline_s
 {
    mpoint_t a, b;
 } mline_t;
 
-typedef struct
+typedef struct islope_s
 {
    double slp, islp;
 } islope_t;

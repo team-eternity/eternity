@@ -31,7 +31,7 @@
 #include "txt_main.h"
 #include "txt_window.h"
 
-typedef struct 
+typedef struct callback_data_s
 {
     txt_window_t *window;
     txt_dropdown_list_t *list;

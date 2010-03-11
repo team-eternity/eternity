@@ -2804,7 +2804,7 @@ void A_Mushroom(mobj_t *actor)
    }
 }
 
-typedef struct
+typedef struct boss_spec_s
 {
    unsigned int thing_flag;
    unsigned int level_flag;

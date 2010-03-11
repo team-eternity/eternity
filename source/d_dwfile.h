@@ -33,7 +33,7 @@
 #include "doomtype.h"
 #include "d_keywds.h"
 
-typedef struct 
+typedef struct DWFILE_s
 {
    byte *inp, *lump; // Pointer to string or FILE
    int size;

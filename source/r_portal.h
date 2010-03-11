@@ -69,8 +69,7 @@ typedef struct linkdata_s
 } linkdata_t;
 #endif
 
-
-typedef struct
+typedef struct anchordata_s
 {
    fixed_t   deltax, deltay, deltaz;
    // These are for debug purposes (so mappers can find the portats 
@@ -78,10 +77,7 @@ typedef struct
    int       maker, anchor;
 } anchordata_t;
 
-
-
-
-typedef struct
+typedef struct horizondata_s
 {
    int     *floorpic, *ceilingpic;
    fixed_t *floorz, *ceilingz;
@@ -92,10 +88,7 @@ typedef struct
    float   *ceilingbaseangle, *ceilingangle;
 } horizondata_t;
 
-
-
-
-typedef struct
+typedef struct skyplanedata_s
 {
    int     *pic;
    fixed_t *delta;
@@ -195,7 +188,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, struct line_s *line);
 
 
 // SoM 3/14/2004: flag if we are rendering portals.
-typedef struct
+typedef struct portalrender_s
 {
    boolean active;
    int     minx, maxx;

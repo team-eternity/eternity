@@ -271,7 +271,7 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
 
 void MN_DrawCredits(void);
 
-typedef struct
+typedef struct helpscreen_s
 {
    int lumpnum;
    void (*Drawer)(); // alternate drawer

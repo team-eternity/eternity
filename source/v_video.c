@@ -162,25 +162,27 @@ int usegamma;
 // provided in v_video.h.
 //
 
-typedef struct {
+typedef struct crdef_s
+{
   const char *name;
   byte **map1, **map2;
 } crdef_t;
 
 // killough 5/2/98: table-driven approach
-static const crdef_t crdefs[] = {
-  {"CRBRICK",  &cr_brick,   &colrngs[CR_BRICK ]},
-  {"CRTAN",    &cr_tan,     &colrngs[CR_TAN   ]},
-  {"CRGRAY",   &cr_gray,    &colrngs[CR_GRAY  ]},
-  {"CRGREEN",  &cr_green,   &colrngs[CR_GREEN ]},
-  {"CRBROWN",  &cr_brown,   &colrngs[CR_BROWN ]},
-  {"CRGOLD",   &cr_gold,    &colrngs[CR_GOLD  ]},
-  {"CRRED",    &cr_red,     &colrngs[CR_RED   ]},
-  {"CRBLUE",   &cr_blue,    &colrngs[CR_BLUE  ]},
-  {"CRORANGE", &cr_orange,  &colrngs[CR_ORANGE]},
-  {"CRYELLOW", &cr_yellow,  &colrngs[CR_YELLOW]},
-  {"CRBLUE2",  &cr_blue_status, &cr_blue_status},
-  {NULL}
+static const crdef_t crdefs[] = 
+{
+   { "CRBRICK",  &cr_brick,   &colrngs[CR_BRICK ] },
+   { "CRTAN",    &cr_tan,     &colrngs[CR_TAN   ] },
+   { "CRGRAY",   &cr_gray,    &colrngs[CR_GRAY  ] },
+   { "CRGREEN",  &cr_green,   &colrngs[CR_GREEN ] },
+   { "CRBROWN",  &cr_brown,   &colrngs[CR_BROWN ] },
+   { "CRGOLD",   &cr_gold,    &colrngs[CR_GOLD  ] },
+   { "CRRED",    &cr_red,     &colrngs[CR_RED   ] },
+   { "CRBLUE",   &cr_blue,    &colrngs[CR_BLUE  ] },
+   { "CRORANGE", &cr_orange,  &colrngs[CR_ORANGE] },
+   { "CRYELLOW", &cr_yellow,  &colrngs[CR_YELLOW] },
+   { "CRBLUE2",  &cr_blue_status, &cr_blue_status },
+   { NULL }
 };
 
 // killough 5/2/98: tiny engine driven by table above

@@ -33,14 +33,14 @@
 // TYPES
 //
 
-typedef struct
+typedef struct wadinfo_s
 {
   char identification[4];                  // Should be "IWAD" or "PWAD".
   int  numlumps;
   int  infotableofs;
 } wadinfo_t;
 
-typedef struct
+typedef struct filelump_s
 {
   int  filepos;
   int  size;
@@ -54,7 +54,7 @@ typedef struct
 // haleyjd 07/12/07: altered lumpinfo_t for separation of logical and physical
 // lump fields.
 
-typedef struct
+typedef struct lumpinfo_s
 {
    // haleyjd: logical lump data
    char   name[9];

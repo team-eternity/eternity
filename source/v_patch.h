@@ -70,7 +70,7 @@ void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data);
 // SoM: In my continual effort to weed out multiple column drawers I discovered
 // the new patch system is derrived from the old screen sprite code. I've 
 // cleaned it up a bit.
-typedef struct
+typedef struct cb_patch_column_s
 {
    int x;
    int y1, y2;

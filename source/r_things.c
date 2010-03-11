@@ -48,7 +48,8 @@
 
 extern int columnofs[];
 
-typedef struct {
+typedef struct maskdraw_s
+{
   int x1;
   int x2;
   int column;

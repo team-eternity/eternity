@@ -744,12 +744,14 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
 /*
  * WARNING: Assumes 64 bit doubles
  */
-typedef union {
-    double D;
-    struct {
-        uint32_t W0;
-        uint32_t W1;
-    } WORDS; /* haleyjd: this must be named */
+typedef union DBLBITS_u 
+{
+   double D;
+   struct word_s 
+   {
+      uint32_t W0;
+      uint32_t W1;
+   } WORDS; /* haleyjd: this must be named */
 } DBLBITS;
 
 #define EXP_MASK  0x7FF00000

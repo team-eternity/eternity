@@ -126,7 +126,7 @@ typedef enum
    AS_MIRRORCEILING  = 0x08,
 } attachedtype_e;
 
-typedef struct
+typedef struct attachedsurface_s
 {
    sector_t        *sector;
    int             type;
@@ -165,7 +165,7 @@ enum
 
 // SoM: Map-slope struct. Stores both floating point and fixed point versions
 // of the vectors.
-typedef struct
+typedef struct pslope_s
 {
    // --- Information used in clipping/projection ---
    // Origin vector for the plane
@@ -323,7 +323,7 @@ struct sector_s
 // The SideDef.
 //
 
-typedef struct
+typedef struct side_s
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
@@ -460,7 +460,7 @@ typedef struct seg_s
 //
 // BSP node.
 //
-typedef struct
+typedef struct node_s
 {
   fixed_t  x,  y, dx, dy;        // Partition line.
   fixed_t  bbox[2][4];           // Bounding box for each child.
@@ -611,7 +611,7 @@ typedef struct vissprite_s
 // for all views: NNNNF0
 //
 
-typedef struct
+typedef struct spriteframe_s
 {
   // If false use 0 for any position.
   // Note: as eight entries are available,
@@ -631,7 +631,7 @@ typedef struct
 //  a number of animation frames.
 //
 
-typedef struct
+typedef struct spritedef_s
 {
   int numframes;
   spriteframe_t *spriteframes;
@@ -639,7 +639,7 @@ typedef struct
 
 
 // SoM: Information used in texture mapping sloped planes
-typedef struct
+typedef struct rslope_s
 {
    v3float_t P, M, N;
    v3float_t A, B, C;

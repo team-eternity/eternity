@@ -989,7 +989,7 @@ columndrawer_t r_normal_drawer =
 // Could be read from a lump instead.
 //
 
-typedef struct
+typedef struct translat_s
 {
   int start;      // start of the sequence of colours
   int number;     // number of colours
