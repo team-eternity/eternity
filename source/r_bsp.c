@@ -1231,8 +1231,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
    {
-      seg.top = seg.high;
-      seg.top2 = seg.high2;
+      seg.top = (seg.high += 1.0f);
+      seg.top2 = (seg.high2 += 1.0f);
       seg.topstep = seg.highstep;
       frontc = backc;
       //uppermissing = false;
@@ -1271,7 +1271,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.markflags |= SEG_MARKCEILING;
    }
 
-   if(seg.frontsec->ceilingheight > seg.backsec->ceilingheight && side->toptexture)
+   if(seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
+     !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
+      side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
       seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
