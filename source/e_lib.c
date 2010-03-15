@@ -39,14 +39,13 @@
 #include <errno.h>
 
 #include "e_lib.h"
+#include "e_edf.h"
 
 // prototype of libConfuse parser inclusion function
 extern int cfg_lexer_include(cfg_t *cfg, const char *filename, int data);
 
 // 02/09/05: prototype of custom source type query function
 extern int cfg_lexer_source_type(cfg_t *cfg);
-
-extern void E_EDFLoggedErr(int lv, const char *msg, ...);
 
 //
 // Basic Functionality
@@ -215,6 +214,15 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    {
       cfg_error(cfg, "wrong number of args to stdinclude()");
       return 1;
+   }
+
+   // haleyjd 03/15/2010: Using stdinclude on anything other than root.edf is
+   // now considered deprecated because of problems it creates with forward
+   // compatibility of EDF mods when new EDF modules are added.
+   if(!strstr(argv[0], "root.edf"))
+   {
+      E_EDFLogPuts("Warning: stdinclude() is deprecated except for the "
+                   "inclusion of file 'root.edf'.\n");
    }
 
    filename = E_BuildDefaultFn(argv[0]);
@@ -615,106 +623,6 @@ char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen)
 
    return colonloc;
 }
-
-/*
-//
-// Keywords
-//
-
-#define NUMKEYWORDCHAINS 127
-
-static E_Keyword_t *e_keyword_chains[NUMKEYWORDCHAINS];
-
-//
-// E_FindKeyword
-//
-// Returns an E_Keyword_t for the given keyword.
-// Returns NULL if not defined.
-//
-E_Keyword_t *E_FindKeyword(const char *keyword)
-{
-   unsigned int key = D_HashTableKey(keyword) % NUMKEYWORDCHAINS;
-   E_Keyword_t *curkw = e_keyword_chains[key];
-
-   while(curkw)
-   {
-      // found a match for keyword?
-      if(!strcasecmp(keyword, curkw->keyword))
-         break;
-
-      curkw = curkw->next;
-   }
-
-   return curkw;
-}
-
-//
-// E_ValueForKeyword
-//
-// Returns an integer value associated with the given keyword.
-//
-int E_ValueForKeyword(const char *keyword)
-{
-   int ret = 0;
-   E_Keyword_t *kw = NULL;
-
-   if((kw = E_FindKeyword(keyword)) != NULL)
-      ret = kw->value;
-
-   return ret;
-}
-
-static E_Keyword_t builtin_keywords[] =
-{
-   { "false", 0 },
-   { "true",  1 },
-   { NULL }
-};
-
-//
-// E_AddKeywords
-//
-// Passed a NULL-terminated list of keyword objects, the array of keyword 
-// objects will be added to the global hash.
-//
-void E_AddKeywords(E_Keyword_t *kw)
-{
-   static boolean firsttime = true;
-   E_Keyword_t *curkw = kw;
-   E_Keyword_t *oldkw = NULL;
-
-   // on first call, also add builtin keywords
-   if(firsttime)
-   {
-      firsttime = false;
-      E_AddKeywords(builtin_keywords);
-   }
-
-   for(; curkw->keyword; ++curkw)
-   {
-      if((oldkw = E_FindKeyword(curkw->keyword)) != NULL)
-      {
-         // value is the same, this is ok.
-         if(curkw->value == oldkw->value)
-            continue;
-
-         // Internal error - two action funcs are defining the same
-         // keyword with different values. We must prevent this.
-         I_Error("E_AddKeywords: internal error: keyword %s "
-                 "redefined to have value %d\n"
-                 "\t(previously defined with value %d)\n", 
-                 curkw->keyword, curkw->value, oldkw->value);
-      }
-      else
-      {
-         unsigned int key = D_HashTableKey(curkw->keyword) % NUMKEYWORDCHAINS;
-         
-         curkw->next = e_keyword_chains[key];
-         e_keyword_chains[key] = curkw;
-      }
-   }
-}
-*/
 
 // EOF
 

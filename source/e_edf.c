@@ -720,8 +720,8 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
       return 1;
    }
 
-   currentpath = Z_Alloca(strlen(cfg->filename));
-   M_GetFilePath(cfg->filename, currentpath, strlen(currentpath) + 1);
+   currentpath = Z_Alloca(strlen(cfg->filename) + 1);
+   M_GetFilePath(cfg->filename, currentpath, strlen(cfg->filename) + 1);
 
    len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
       
