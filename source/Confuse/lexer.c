@@ -245,7 +245,6 @@ static int lexer_state_string(lexerstate_t *ls)
 
    switch(ls->c)
    {
-   case '\f':
    case '\n': // free linebreak -- not allowed
       lexer_error(ls->cfg, "unterminated string constant");
       ret = 0;
@@ -369,10 +368,10 @@ static int lexer_state_unquotedstring(lexerstate_t *ls)
    char c = ls->c;
 
    if((!unquoted_spaces && (c == ' ' || c == '\t'))    || 
-      c == '"'  || c == '\'' || c == '\n' || c == '\f' || 
-      c == '='  || c == '{'  || c == '}'  || c == '('  || 
-      c == ')'  || c == '+'  || c == ','  || c == '#'  || 
-      c == '/'  || c == ';')
+      c == '"'  || c == '\'' || c == '\n' || c == '='  || 
+      c == '{'  || c == '}'  || c == '('  || c == ')'  || 
+      c == '+'  || c == ','  || c == '#'  || c == '/'  || 
+      c == ';')
    {
       // any special character ends an unquoted string
       --bufferpos; // put it back
