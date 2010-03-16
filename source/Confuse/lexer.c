@@ -38,15 +38,12 @@
 #define _(str) str
 #define N_(str) str
 
-static DWFILE *currentFile; // haleyjd
-
 // file include stack
 
 #define MAX_INCLUDE_DEPTH 16
 
 static struct cfginclude_s
 {
-   DWFILE *dwfile; // haleyjd
    char *filename;
    int lumpnum;    // haleyjd
    unsigned int line;
@@ -93,14 +90,14 @@ void lexer_set_unquoted_spaces(boolean us)
 static char *lexbuffer; // current file buffer
 static char *bufferpos; // position in buffer
 
-static void lexer_buffer_curfile(void)
+static void lexer_buffer_curfile(DWFILE *dwfile)
 {
-   size_t size = D_FileLength(currentFile);
+   size_t size = D_FileLength(dwfile);
    size_t foo;
 
    lexbuffer = malloc(size + 1);
 
-   if((foo = D_Fread(lexbuffer, 1, size, currentFile)) != size)
+   if((foo = D_Fread(lexbuffer, 1, size, dwfile)) != size)
    {
       I_Error("lexer_buffer_curfile: failed on file read (%d of %d bytes)\n", 
               (int)foo, (int)size);
@@ -129,8 +126,7 @@ static void lexer_free_buffer(void)
 void lexer_init(DWFILE *file)
 {
    M_QStrCreate(&qstring);
-   currentFile = file;
-   lexer_buffer_curfile();
+   lexer_buffer_curfile(file);
 }
 
 //
@@ -596,11 +592,7 @@ include:
       }      
       else
       {
-         // done with an include file
-         D_Fclose(currentFile); // haleyjd
-         free(currentFile);
-         
-         currentFile   = include_stack[include_stack_ptr].dwfile;
+         // done with an include file      
          free(cfg->filename);
          lexer_free_buffer();
          lexbuffer     = include_stack[include_stack_ptr].buffer;
@@ -619,7 +611,7 @@ include:
 
 int cfg_lexer_include(cfg_t *cfg, const char *filename, int data)
 {
-   DWFILE *temp;
+   DWFILE dwfile;
    char *xfilename;
 
    if(include_stack_ptr >= MAX_INCLUDE_DEPTH)
@@ -629,7 +621,6 @@ int cfg_lexer_include(cfg_t *cfg, const char *filename, int data)
    }
 
    // haleyjd
-   include_stack[include_stack_ptr].dwfile   = currentFile;
    include_stack[include_stack_ptr].filename = cfg->filename;
    include_stack[include_stack_ptr].line     = cfg->line;
    include_stack[include_stack_ptr].lumpnum  = cfg->lumpnum;
@@ -639,22 +630,16 @@ int cfg_lexer_include(cfg_t *cfg, const char *filename, int data)
 
    xfilename = cfg_tilde_expand(filename);
 
-   // haleyjd: DWFILE handling
-   temp = malloc(sizeof(DWFILE));
-
    // haleyjd 02/09/05: revised include handling for data vs file
    if(data >= 0)
-      D_OpenLump(temp, data);
+      D_OpenLump(&dwfile, data);
    else
-      D_OpenFile(temp, xfilename, "rb");
+      D_OpenFile(&dwfile, xfilename, "rb");
 
-   currentFile = temp;
-
-   if(!D_IsOpen(currentFile)) // haleyjd
+   if(!D_IsOpen(&dwfile)) // haleyjd
    {
       cfg_error(cfg, "Error including file %s:\n%s", xfilename, 
                 errno ? strerror(errno) : "unknown error"); // haleyjd
-      free(temp); // haleyjd
       free(xfilename);
       return 1;
    }
@@ -664,7 +649,10 @@ int cfg_lexer_include(cfg_t *cfg, const char *filename, int data)
    cfg->lumpnum = data;
 
    // haleyjd 03/18/08
-   lexer_buffer_curfile();
+   lexer_buffer_curfile(&dwfile);
+
+   // haleyjd 3/16/10
+   D_Fclose(&dwfile);
 
    return 0;
 }
@@ -678,12 +666,6 @@ int cfg_lexer_include(cfg_t *cfg, const char *filename, int data)
 //
 int cfg_lexer_source_type(cfg_t *cfg)
 {
-   if(!currentFile)
-   {
-      cfg_error(cfg, "cfg_lexer_source_type: no file is open");
-      return 0;
-   }
-
    return cfg->lumpnum;
 }
 

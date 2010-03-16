@@ -47,6 +47,7 @@ extern int cfg_lexer_include(cfg_t *cfg, const char *filename, int data);
 // 02/09/05: prototype of custom source type query function
 extern int cfg_lexer_source_type(cfg_t *cfg);
 
+//=============================================================================
 //
 // Basic Functionality
 //
@@ -59,7 +60,7 @@ void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap)
    I_ErrorVA(fmt, ap);
 }
 
-
+//=============================================================================
 //
 // Parser File/Lump Include Callback Functions
 //
@@ -255,6 +256,7 @@ int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       return 0;
 }
 
+//=============================================================================
 //
 // Enables
 //
@@ -293,6 +295,7 @@ int E_Endif(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    return 0;
 }
 
+//=============================================================================
 //
 // Resolution Functions
 //

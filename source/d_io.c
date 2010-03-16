@@ -102,6 +102,7 @@ int D_Ungetc(int c, DWFILE *fp)
 //
 void D_OpenFile(DWFILE *infile, const char *filename, char *mode)
 {
+   memset(infile, 0, sizeof(*infile));
    infile->inp  = (byte *)fopen(filename, mode);
    infile->lump = NULL;
    infile->lumpnum = -1;
@@ -116,7 +117,7 @@ void D_OpenFile(DWFILE *infile, const char *filename, char *mode)
 void D_OpenLump(DWFILE *infile, int lumpnum)
 {
    // haleyjd 04/03/03: added origsize field for D_Ungetc
-
+   memset(infile, 0, sizeof(*infile));
    infile->size = infile->origsize = W_LumpLength(lumpnum);
    infile->inp = infile->lump = W_CacheLumpNum(lumpnum, PU_STATIC);
    infile->lumpnum = lumpnum;

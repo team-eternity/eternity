@@ -1032,10 +1032,10 @@ int cfg_parse(cfg_t *cfg, const char *filename)
    // haleyjd: initialize the lexer
    lexer_init(&dwfile);
 
-   ret = cfg_parse_internal(cfg, 0);
-
    // haleyjd: wow, should probably close the file huh?
    D_Fclose(&dwfile);
+
+   ret = cfg_parse_internal(cfg, 0);
 
    // haleyjd: reset the lexer state
    lexer_reset();
@@ -1080,11 +1080,11 @@ int cfg_parselump(cfg_t *cfg, const char *lumpname)
 
    // haleyjd 02/28/05: woops, forgot this!
    lexer_init(&dwfile);
-   
-   ret = cfg_parse_internal(cfg, 0);
 
    // haleyjd: wow, should probably close the file huh?
    D_Fclose(&dwfile);
+   
+   ret = cfg_parse_internal(cfg, 0);
 
    // reset the lexer state
    lexer_reset();
