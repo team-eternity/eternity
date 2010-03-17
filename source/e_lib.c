@@ -41,8 +41,10 @@
 #include "e_lib.h"
 #include "e_edf.h"
 
-// prototype of libConfuse parser inclusion function
-extern int cfg_lexer_include(cfg_t *cfg, const char *filename, int data);
+// prototypes of libConfuse parser inclusion functions
+extern char *cfg_lexer_open(const char *filename, int data);
+extern char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int data);
+extern int   cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int data);
 
 // 02/09/05: prototype of custom source type query function
 extern int cfg_lexer_source_type(cfg_t *cfg);
@@ -78,7 +80,9 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    char *currentpath = NULL;
    char *filename = NULL;
-   size_t len;
+   char *data = NULL;
+   size_t len = 0;
+   int lumpnum = -1;
 
    if(argc != 1)
    {
@@ -101,7 +105,9 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
       psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
       M_NormalizeSlashes(filename);
-      return cfg_lexer_include(cfg, filename, -1);
+      if(!(data = cfg_lexer_mustopen(cfg, filename, -1)))
+         return 1;
+      return cfg_lexer_include(cfg, data, filename, -1);
    
    default: // data source
       if(strlen(argv[0]) > 8)
@@ -109,7 +115,10 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
          cfg_error(cfg, "include: %s is not a valid lump name", argv[0]);
          return 1;
       }
-      return cfg_lexer_include(cfg, argv[0], W_GetNumForName(argv[0]));
+      lumpnum = W_GetNumForName(argv[0]);
+      if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum)))
+         return 1;
+      return cfg_lexer_include(cfg, data, argv[0], lumpnum);
    }
 }
 
@@ -121,6 +130,9 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
+   char *data = NULL;
+   int lumpnum;
+
    if(argc != 1)
    {
       cfg_error(cfg, "wrong number of args to lumpinclude()");
@@ -132,7 +144,12 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       return 1;
    }
 
-   return cfg_lexer_include(cfg, argv[0], W_GetNumForName(argv[0]));
+   lumpnum = W_GetNumForName(argv[0]);
+
+   if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum)))
+      return 1;
+
+   return cfg_lexer_include(cfg, data, argv[0], lumpnum);
 }
 
 //
@@ -170,7 +187,12 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       if(w_GlobalDir.lumpinfo[i]->li_namespace == ns_global &&
          !strncasecmp(w_GlobalDir.lumpinfo[i]->name, cfg->filename, 8))
       {
-         return cfg_lexer_include(cfg, cfg->filename, i);
+         char *data = NULL;
+
+         if(!(data = cfg_lexer_mustopen(cfg, cfg->filename, i)))
+            return 1;
+
+         return cfg_lexer_include(cfg, data, cfg->filename, i);
       }
    }
 
@@ -186,14 +208,10 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 const char *E_BuildDefaultFn(const char *filename)
 {
-   static char *buffer;
-   size_t len;
+   char *buffer = NULL;
+   size_t len = 0;
 
-   if(buffer)
-      free(buffer);
-
-   len = strlen(basepath) + strlen(filename) + 2;
-   buffer = malloc(len);
+   len = M_StringAlloca(&buffer, 2, 2, basepath, filename);
 
    psnprintf(buffer, len, "%s/%s", basepath, filename);
    M_NormalizeSlashes(buffer);
@@ -210,6 +228,7 @@ const char *E_BuildDefaultFn(const char *filename)
 int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    const char *filename;
+   char *data = NULL;
 
    if(argc != 1)
    {
@@ -228,7 +247,10 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    filename = E_BuildDefaultFn(argv[0]);
 
-   return cfg_lexer_include(cfg, filename, -1);
+   if(!(data = cfg_lexer_mustopen(cfg, filename, -1)))
+      return 1;
+
+   return cfg_lexer_include(cfg, data, filename, -1);
 }
 
 //
@@ -241,6 +263,7 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    const char *filename;
+   char *data = NULL;
 
    if(argc != 1)
    {
@@ -251,7 +274,12 @@ int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    filename = E_BuildDefaultFn(argv[0]);
 
    if(!access(filename, R_OK))
-      return cfg_lexer_include(cfg, filename, -1);
+   {
+      if(!(data = cfg_lexer_mustopen(cfg, filename, -1)))
+         return 1;
+
+      return cfg_lexer_include(cfg, data, filename, -1);
+   }
    else
       return 0;
 }

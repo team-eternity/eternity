@@ -90,23 +90,21 @@ void lexer_set_unquoted_spaces(boolean us)
 static char *lexbuffer; // current file buffer
 static char *bufferpos; // position in buffer
 
-static void lexer_buffer_curfile(DWFILE *dwfile)
+static char *lexer_buffer_file(DWFILE *dwfile)
 {
-   size_t size = D_FileLength(dwfile);
-   size_t foo;
+   size_t  foo, size = D_FileLength(dwfile);
+   char   *buffer    = malloc(size + 1);
 
-   lexbuffer = malloc(size + 1);
-
-   if((foo = D_Fread(lexbuffer, 1, size, dwfile)) != size)
+   if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
    {
-      I_Error("lexer_buffer_curfile: failed on file read (%d of %d bytes)\n", 
+      I_Error("lexer_buffer_file: failed on file read (%d of %d bytes)\n", 
               (int)foo, (int)size);
    }
 
    // null-terminate buffer
-   lexbuffer[size] = '\0';
+   buffer[size] = '\0';
 
-   bufferpos = lexbuffer;
+   return buffer;
 }
 
 static void lexer_free_buffer(void)
@@ -126,7 +124,7 @@ static void lexer_free_buffer(void)
 void lexer_init(DWFILE *file)
 {
    M_QStrCreate(&qstring);
-   lexer_buffer_curfile(file);
+   bufferpos = lexbuffer = lexer_buffer_file(file);
 }
 
 //
@@ -609,7 +607,41 @@ include:
    return EOF; // probably not reachable, but whatever
 }
 
-int cfg_lexer_include(cfg_t *cfg, const char *filename, int data)
+char *cfg_lexer_open(const char *filename, int data)
+{
+   DWFILE dwfile;
+   char *ret = NULL;
+
+   // haleyjd 02/09/05: revised include handling for data vs file
+   if(data >= 0)
+      D_OpenLump(&dwfile, data);
+   else
+      D_OpenFile(&dwfile, filename, "rb");
+
+   if(!D_IsOpen(&dwfile))
+      return NULL;
+
+   ret = lexer_buffer_file(&dwfile);
+
+   D_Fclose(&dwfile);
+
+   return ret;
+}
+
+char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int data)
+{
+   char *ret = NULL;
+   
+   if(!(ret = cfg_lexer_open(filename, data)))
+   {
+      cfg_error(cfg, "Error including file %s:\n%s", filename, 
+                errno ? strerror(errno) : "unknown error"); // haleyjd
+   }
+
+   return ret;
+}
+
+int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int data)
 {
    DWFILE dwfile;
    char *xfilename;
@@ -628,31 +660,11 @@ int cfg_lexer_include(cfg_t *cfg, const char *filename, int data)
    include_stack[include_stack_ptr].pos      = bufferpos;
    include_stack_ptr++;
 
-   xfilename = cfg_tilde_expand(filename);
+   cfg->filename = cfg_tilde_expand(filename);
+   cfg->line     = 1;
+   cfg->lumpnum  = data;
 
-   // haleyjd 02/09/05: revised include handling for data vs file
-   if(data >= 0)
-      D_OpenLump(&dwfile, data);
-   else
-      D_OpenFile(&dwfile, xfilename, "rb");
-
-   if(!D_IsOpen(&dwfile)) // haleyjd
-   {
-      cfg_error(cfg, "Error including file %s:\n%s", xfilename, 
-                errno ? strerror(errno) : "unknown error"); // haleyjd
-      free(xfilename);
-      return 1;
-   }
-
-   cfg->filename = xfilename;
-   cfg->line = 1;
-   cfg->lumpnum = data;
-
-   // haleyjd 03/18/08
-   lexer_buffer_curfile(&dwfile);
-
-   // haleyjd 3/16/10
-   D_Fclose(&dwfile);
+   bufferpos = lexbuffer = buffer;
 
    return 0;
 }

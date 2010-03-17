@@ -52,8 +52,9 @@ const char *confuse_version   = "Eternity version";
 const char *confuse_copyright = "libConfuse by Martin Hedenfalk <mhe@home.se>";
 const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
 
-// haleyjd: added data param
-extern int cfg_lexer_include(cfg_t *cfg, const char *fname, int data);
+extern char *cfg_lexer_open(const char *filename, int data);
+extern char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int data);
+extern int   cfg_lexer_include(cfg_t *cfg, char *buffer, const char *fname, int data);
 
 #if defined(NDEBUG)
 #define cfg_assert(test) ((void)0)
@@ -1119,13 +1120,18 @@ void cfg_free(cfg_t *cfg)
 
 int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
+   char *data;
+
    if(argc != 1)      
    {
       cfg_error(cfg, _("wrong number of arguments to cfg_include()"));
       return 1;
    }
-   
-   return cfg_lexer_include(cfg, argv[0], -1); // haleyjd
+
+   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1)))
+      return 1;
+
+   return cfg_lexer_include(cfg, data, argv[0], -1);
 }
 
 // haleyjd 04/03/08: added cfg_t value-setting functions from libConfuse 2.0

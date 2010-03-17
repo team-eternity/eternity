@@ -228,9 +228,6 @@ int *pickupfx = NULL;
 static int *sprchains = NULL;
 static int *sprnext = NULL;
 
-// prototype of libConfuse parser inclusion function
-extern int cfg_lexer_include(cfg_t *cfg, const char *filename, int data);
-
 // 02/09/05: prototype of custom source type query function
 extern int cfg_lexer_source_type(cfg_t *cfg);
 
