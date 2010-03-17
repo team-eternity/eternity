@@ -107,7 +107,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
    maskedtexturecol = ds->maskedtexturecol;
 
-   mfloorclip = ds->sprbottomclip;
+   mfloorclip   = ds->sprbottomclip;
    mceilingclip = ds->sprtopclip;
 
    diststep = ds->diststep;
@@ -178,7 +178,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
          // draw the texture
          col = (column_t *)((byte *)
-                            R_GetColumn(texnum,maskedtexturecol[column.x]) - 3);
+                            R_GetColumn(texnum, maskedtexturecol[column.x]) - 3);
          R_DrawMaskedColumn(col);
          
          maskedtexturecol[column.x] = 0x7fffffff;

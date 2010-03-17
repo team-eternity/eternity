@@ -504,7 +504,7 @@ void R_ClearPlanes(void)
    a = (float)(consoleactive ? 
          (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
 
-   floorclip = floorcliparray;
+   floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
 
    // opening / clipping determination
