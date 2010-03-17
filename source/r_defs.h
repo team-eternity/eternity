@@ -526,7 +526,7 @@ typedef struct drawseg_s
 
   float *sprtopclip, *sprbottomclip;
   // SoM: this still needs to be int
-  int   *maskedtexturecol;
+  float *maskedtexturecol;
 
   fixed_t viewx, viewy, viewz;
 } drawseg_t;
