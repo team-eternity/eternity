@@ -33,12 +33,7 @@
 #include "../w_wad.h"
 
 #include "confuse.h"
-
-extern char *mytext; // haleyjd
-int mylex(cfg_t *cfg);
-void lexer_init(DWFILE *);
-void lexer_reset(void);
-void lexer_set_unquoted_spaces(boolean);
+#include "lexer.h"
 
 // haleyjd 03/08/03: Modifications for Eternity
 // #define PACKAGE_VERSION "Eternity version"
@@ -51,10 +46,6 @@ void lexer_set_unquoted_spaces(boolean);
 const char *confuse_version   = "Eternity version";
 const char *confuse_copyright = "libConfuse by Martin Hedenfalk <mhe@home.se>";
 const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
-
-extern char *cfg_lexer_open(const char *filename, int data);
-extern char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int data);
-extern int   cfg_lexer_include(cfg_t *cfg, char *buffer, const char *fname, int data);
 
 #if defined(NDEBUG)
 #define cfg_assert(test) ((void)0)

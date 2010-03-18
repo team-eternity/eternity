@@ -556,6 +556,10 @@
 						/>
 					</FileConfiguration>
 				</File>
+				<File
+					RelativePath="..\source\Confuse\lexer.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="D_"

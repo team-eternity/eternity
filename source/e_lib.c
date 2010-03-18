@@ -35,19 +35,12 @@
 #include "v_video.h"
 
 #include "Confuse/confuse.h"
+#include "Confuse/lexer.h"
 
 #include <errno.h>
 
 #include "e_lib.h"
 #include "e_edf.h"
-
-// prototypes of libConfuse parser inclusion functions
-extern char *cfg_lexer_open(const char *filename, int data);
-extern char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int data);
-extern int   cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int data);
-
-// 02/09/05: prototype of custom source type query function
-extern int cfg_lexer_source_type(cfg_t *cfg);
 
 //=============================================================================
 //
