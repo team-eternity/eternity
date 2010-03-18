@@ -51,7 +51,7 @@ typedef struct hashdata_s
 } hashdata_t;
 
 void    M_HashInitialize(hashdata_t *hash, hashtype_e type);
-void    M_HashData(hashdata_t *hash, uint8_t *data, uint32_t size);
+void    M_HashData(hashdata_t *hash, const uint8_t *data, uint32_t size);
 void    M_HashWrapUp(hashdata_t *hash);
 boolean M_HashCompare(hashdata_t *h1, hashdata_t *h2);
 void    M_HashStrToDigest(hashdata_t *hash, const char *str);

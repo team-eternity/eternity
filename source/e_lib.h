@@ -40,6 +40,10 @@ typedef struct E_Enable_s
 // basic stuff
 void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap);
 
+// include tracking
+boolean E_CheckInclude(const char *data, size_t size);
+int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum);
+
 // function callbacks
 int E_Include    (cfg_t *, cfg_opt_t *, int, const char **);
 int E_LumpInclude(cfg_t *, cfg_opt_t *, int, const char **);
@@ -56,6 +60,8 @@ int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 
 #endif
 
+boolean E_CheckInclude(const char *data, size_t size);
+
 const char *E_BuildDefaultFn(const char *filename);
 
 // misc utilities
@@ -63,22 +69,6 @@ int E_EnableNumForName(const char *name, E_Enable_t *enables);
 int E_StrToNumLinear(const char **strings, int numstrings, const char *value);
 int E_ParseFlags(const char *str, dehflagset_t *flagset);
 char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen);
-
-/*
-// keywords
-
-typedef struct E_Keyword_s
-{
-   const char *keyword;
-   int value;
-
-   // for hashing
-   struct E_Keyword_s *next;
-} E_Keyword_t;
-
-void E_AddKeywords(E_Keyword_t *kw);
-int E_ValueForKeyword(const char *keyword);
-*/
 
 #endif
 

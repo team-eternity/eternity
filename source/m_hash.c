@@ -96,7 +96,7 @@ static void M_CRC32Initialize(hashdata_t *hash)
 //
 // Calculates a running CRC32 for the provided block of data.
 //
-static void M_CRC32HashData(hashdata_t *hash, uint8_t *data, uint32_t len)
+static void M_CRC32HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
 {
    uint32_t crc = hash->digest[0];
    
@@ -141,7 +141,7 @@ static void M_Adler32Initialize(hashdata_t *hash)
 //
 // Calculates a running Adler32 checksum for the provided block of data.
 //
-static void M_Adler32HashData(hashdata_t *hash, uint8_t *data, uint32_t len)
+static void M_Adler32HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
 {
    uint32_t a, b, idx;
 
@@ -309,7 +309,7 @@ static void M_MD5Initialize(hashdata_t *hash)
 // hash for that block. If data is > 512 bits, it will be processed 512
 // bits at a time. Call this routine until your input is exhausted.
 //
-static void M_MD5HashData(hashdata_t *hash, uint8_t *data, uint32_t len)
+static void M_MD5HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
 {
    if(!len || hash->gonebad)
       return;
@@ -520,7 +520,7 @@ static void M_SHA1Initialize(hashdata_t *hash)
 // hash for that block. If data is > 512 bits, it will be processed 512
 // bits at a time. Call this routine until your input is exhausted.
 //
-static void M_SHA1HashData(hashdata_t *hash, uint8_t *data, uint32_t len)
+static void M_SHA1HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
 {
    if(!len || hash->gonebad)
       return;
@@ -610,7 +610,7 @@ static void M_SHA1WrapUp(hashdata_t *hash)
 typedef struct hashalgorithm_s
 {
    void (*Initialize)(hashdata_t *);
-   void (*HashData)(hashdata_t *, uint8_t *, uint32_t);
+   void (*HashData)(hashdata_t *, const uint8_t *, uint32_t);
    void (*WrapUp)(hashdata_t *);
    int numdigest;
 } hashalgorithm_t;
@@ -647,7 +647,7 @@ void M_HashInitialize(hashdata_t *hash, hashtype_e type)
 // digest. You can call this with all your data in one chunk, or call it
 // repeatedly until data provided in smaller chunks is exhausted.
 //
-void M_HashData(hashdata_t *hash, uint8_t *data, uint32_t size)
+void M_HashData(hashdata_t *hash, const uint8_t *data, uint32_t size)
 {
    HashAlgorithms[hash->type].HashData(hash, data, size);
 }

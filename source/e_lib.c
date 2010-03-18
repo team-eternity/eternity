@@ -71,9 +71,78 @@ static hashdata_t *eincludes;
 static int numincludes;
 static int numincludesalloc;
 
-boolean E_CheckInclude(char *data, size_t size)
+//
+// E_CheckInclude
+//
+// Pass a pointer to some cached data and the size of that data. The SHA-1
+// hash will be calculated and compared against the SHA-1 hashes of all other
+// data sources that have been sent into this function. Returns true if the
+// data should be included, and false otherwise (ie there was a match).
+//
+boolean E_CheckInclude(const char *data, size_t size)
 {
-   return false;
+   int i;
+   hashdata_t newhash;
+
+   M_HashInitialize(&newhash, HASH_SHA1);
+   M_HashData(&newhash, (const uint8_t *)data, (uint32_t)size);
+   M_HashWrapUp(&newhash);
+
+   // compare against existing includes
+   for(i = 0; i < numincludes; ++i)
+   {
+      // found a match?
+      if(M_HashCompare(&newhash, &eincludes[i]))
+         return false;
+   }
+
+   // this source has not been processed before, so add its hash to the list
+   if(numincludes == numincludesalloc)
+   {
+      numincludesalloc = numincludesalloc ? 2 * numincludesalloc : 8;
+      eincludes = realloc(eincludes, numincludesalloc * sizeof(*eincludes));
+   }
+   eincludes[numincludes++] = newhash;
+
+   return true;
+}
+
+//
+// E_OpenAndCheckInclude
+//
+// Performs the following actions:
+// 1. Caches the indicated file or lump (lump only if lumpnum >= 0).
+//    If the file cannot be opened, the libConfuse error code 1 is
+//    returned.
+// 2. Calls E_CheckInclude on the cached data.
+// 3. If there is a hash collision, the data is freed. The libConfuse 
+//    "ok" code 0 will be returned.
+// 4. If there is not a hash collision, the data is included through a
+//    call to cfg_lexer_include. The return value of that function will
+//    be propagated.
+//
+int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
+{
+   size_t len;
+   char *data;
+   int code = 1;
+
+   // must open the data source
+   if((data = cfg_lexer_mustopen(cfg, fn, lumpnum, &len)))
+   {
+      // see if we already parsed this data source
+      if(E_CheckInclude(data, len))
+         code = cfg_lexer_include(cfg, data, fn, lumpnum);
+      else
+      {
+         // we already parsed it, but this is not an error;
+         // we ignore the include and return 0 to indicate success.
+         free(data);
+         code = 0;
+      }
+   }
+
+   return code;
 }
 
 //=============================================================================
@@ -92,11 +161,9 @@ boolean E_CheckInclude(char *data, size_t size)
 //
 int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   char *currentpath = NULL;
-   char *filename = NULL;
-   char *data = NULL;
-   size_t len = 0;
-   int lumpnum = -1;
+   char  *currentpath = NULL;
+   char  *filename    = NULL;
+   size_t len         = 0;
 
    if(argc != 1)
    {
@@ -119,9 +186,8 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
       psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
       M_NormalizeSlashes(filename);
-      if(!(data = cfg_lexer_mustopen(cfg, filename, -1, NULL)))
-         return 1;
-      return cfg_lexer_include(cfg, data, filename, -1);
+      
+      return E_OpenAndCheckInclude(cfg, filename, -1);
    
    default: // data source
       if(strlen(argv[0]) > 8)
@@ -129,10 +195,8 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
          cfg_error(cfg, "include: %s is not a valid lump name", argv[0]);
          return 1;
       }
-      lumpnum = W_GetNumForName(argv[0]);
-      if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum, NULL)))
-         return 1;
-      return cfg_lexer_include(cfg, data, argv[0], lumpnum);
+
+      return E_OpenAndCheckInclude(cfg, argv[0], W_GetNumForName(argv[0]));
    }
 }
 
@@ -144,9 +208,6 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   char *data = NULL;
-   int lumpnum;
-
    if(argc != 1)
    {
       cfg_error(cfg, "wrong number of args to lumpinclude()");
@@ -158,12 +219,7 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       return 1;
    }
 
-   lumpnum = W_GetNumForName(argv[0]);
-
-   if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum, NULL)))
-      return 1;
-
-   return cfg_lexer_include(cfg, data, argv[0], lumpnum);
+   return E_OpenAndCheckInclude(cfg, argv[0], W_GetNumForName(argv[0]));
 }
 
 //
@@ -201,12 +257,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       if(w_GlobalDir.lumpinfo[i]->li_namespace == ns_global &&
          !strncasecmp(w_GlobalDir.lumpinfo[i]->name, cfg->filename, 8))
       {
-         char *data = NULL;
-
-         if(!(data = cfg_lexer_mustopen(cfg, cfg->filename, i, NULL)))
-            return 1;
-
-         return cfg_lexer_include(cfg, data, cfg->filename, i);
+         return E_OpenAndCheckInclude(cfg, cfg->filename, i);
       }
    }
 
@@ -242,7 +293,6 @@ const char *E_BuildDefaultFn(const char *filename)
 int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    const char *filename;
-   char *data = NULL;
 
    if(argc != 1)
    {
@@ -261,10 +311,7 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    filename = E_BuildDefaultFn(argv[0]);
 
-   if(!(data = cfg_lexer_mustopen(cfg, filename, -1, NULL)))
-      return 1;
-
-   return cfg_lexer_include(cfg, data, filename, -1);
+   return E_OpenAndCheckInclude(cfg, filename, -1);
 }
 
 //
@@ -287,15 +334,7 @@ int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    filename = E_BuildDefaultFn(argv[0]);
 
-   if(!access(filename, R_OK))
-   {
-      if(!(data = cfg_lexer_mustopen(cfg, filename, -1, NULL)))
-         return 1;
-
-      return cfg_lexer_include(cfg, data, filename, -1);
-   }
-   else
-      return 0;
+   return !access(filename, R_OK) ? E_OpenAndCheckInclude(cfg, filename, -1) : 0;
 }
 
 //=============================================================================

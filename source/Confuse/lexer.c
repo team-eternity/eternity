@@ -92,8 +92,11 @@ static char *bufferpos; // position in buffer
 
 static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
 {
-   size_t  foo, size = D_FileLength(dwfile);
-   char   *buffer    = malloc(size + 1);
+   size_t  foo, size; 
+   char   *buffer;
+   
+   size   = D_FileLength(dwfile);
+   buffer = malloc(size + 1);
 
    if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
    {
