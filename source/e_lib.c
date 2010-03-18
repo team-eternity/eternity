@@ -25,7 +25,9 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "doomtype.h"
 #include "d_io.h"
+#include "m_hash.h"
 #include "m_misc.h"
 #include "w_wad.h"
 #include "psnprntf.h"
@@ -53,6 +55,25 @@
 void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap)
 {
    I_ErrorVA(fmt, ap);
+}
+
+//=============================================================================
+//
+// Include Tracking
+//
+// haleyjd 3/17/10: Under the new architecture for single-pass parsing and
+// processing of all EDF data sources, it becomes necessary to make sure that
+// no given data source is parsed/processed more than once. To that end, we 
+// calculate the SHA-1 checksum of each EDF data source and record it here.
+//
+
+static hashdata_t *eincludes;
+static int numincludes;
+static int numincludesalloc;
+
+boolean E_CheckInclude(char *data, size_t size)
+{
+   return false;
 }
 
 //=============================================================================
@@ -98,7 +119,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
       psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
       M_NormalizeSlashes(filename);
-      if(!(data = cfg_lexer_mustopen(cfg, filename, -1)))
+      if(!(data = cfg_lexer_mustopen(cfg, filename, -1, NULL)))
          return 1;
       return cfg_lexer_include(cfg, data, filename, -1);
    
@@ -109,7 +130,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
          return 1;
       }
       lumpnum = W_GetNumForName(argv[0]);
-      if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum)))
+      if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum, NULL)))
          return 1;
       return cfg_lexer_include(cfg, data, argv[0], lumpnum);
    }
@@ -139,7 +160,7 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    lumpnum = W_GetNumForName(argv[0]);
 
-   if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum)))
+   if(!(data = cfg_lexer_mustopen(cfg, argv[0], lumpnum, NULL)))
       return 1;
 
    return cfg_lexer_include(cfg, data, argv[0], lumpnum);
@@ -182,7 +203,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       {
          char *data = NULL;
 
-         if(!(data = cfg_lexer_mustopen(cfg, cfg->filename, i)))
+         if(!(data = cfg_lexer_mustopen(cfg, cfg->filename, i, NULL)))
             return 1;
 
          return cfg_lexer_include(cfg, data, cfg->filename, i);
@@ -240,7 +261,7 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    filename = E_BuildDefaultFn(argv[0]);
 
-   if(!(data = cfg_lexer_mustopen(cfg, filename, -1)))
+   if(!(data = cfg_lexer_mustopen(cfg, filename, -1, NULL)))
       return 1;
 
    return cfg_lexer_include(cfg, data, filename, -1);
@@ -268,7 +289,7 @@ int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    if(!access(filename, R_OK))
    {
-      if(!(data = cfg_lexer_mustopen(cfg, filename, -1)))
+      if(!(data = cfg_lexer_mustopen(cfg, filename, -1, NULL)))
          return 1;
 
       return cfg_lexer_include(cfg, data, filename, -1);

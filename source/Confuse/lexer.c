@@ -90,7 +90,7 @@ void lexer_set_unquoted_spaces(boolean us)
 static char *lexbuffer; // current file buffer
 static char *bufferpos; // position in buffer
 
-static char *lexer_buffer_file(DWFILE *dwfile)
+static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
 {
    size_t  foo, size = D_FileLength(dwfile);
    char   *buffer    = malloc(size + 1);
@@ -103,6 +103,10 @@ static char *lexer_buffer_file(DWFILE *dwfile)
 
    // null-terminate buffer
    buffer[size] = '\0';
+
+   // write back size
+   if(len)
+      *len = size;
 
    return buffer;
 }
@@ -124,7 +128,7 @@ static void lexer_free_buffer(void)
 void lexer_init(DWFILE *file)
 {
    M_QStrCreate(&qstring);
-   bufferpos = lexbuffer = lexer_buffer_file(file);
+   bufferpos = lexbuffer = lexer_buffer_file(file, NULL);
 }
 
 //
@@ -607,32 +611,32 @@ include:
    return EOF; // probably not reachable, but whatever
 }
 
-char *cfg_lexer_open(const char *filename, int data)
+char *cfg_lexer_open(const char *filename, int lumpnum, size_t *len)
 {
    DWFILE dwfile;
    char *ret = NULL;
 
    // haleyjd 02/09/05: revised include handling for data vs file
-   if(data >= 0)
-      D_OpenLump(&dwfile, data);
+   if(lumpnum >= 0)
+      D_OpenLump(&dwfile, lumpnum);
    else
       D_OpenFile(&dwfile, filename, "rb");
 
    if(!D_IsOpen(&dwfile))
       return NULL;
 
-   ret = lexer_buffer_file(&dwfile);
+   ret = lexer_buffer_file(&dwfile, len);
 
    D_Fclose(&dwfile);
 
    return ret;
 }
 
-char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int data)
+char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int lumpnum, size_t *len)
 {
    char *ret = NULL;
    
-   if(!(ret = cfg_lexer_open(filename, data)))
+   if(!(ret = cfg_lexer_open(filename, lumpnum, len)))
    {
       cfg_error(cfg, "Error including file %s:\n%s", filename, 
                 errno ? strerror(errno) : "unknown error"); // haleyjd
@@ -641,11 +645,8 @@ char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int data)
    return ret;
 }
 
-int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int data)
+int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int lumpnum)
 {
-   DWFILE dwfile;
-   char *xfilename;
-
    if(include_stack_ptr >= MAX_INCLUDE_DEPTH)
    {
       cfg_error(cfg, "Error: includes nested too deeply.");
@@ -662,7 +663,7 @@ int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int data)
 
    cfg->filename = cfg_tilde_expand(filename);
    cfg->line     = 1;
-   cfg->lumpnum  = data;
+   cfg->lumpnum  = lumpnum;
 
    bufferpos = lexbuffer = buffer;
 

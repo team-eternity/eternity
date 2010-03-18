@@ -1119,7 +1119,7 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       return 1;
    }
 
-   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1)))
+   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1, NULL)))
       return 1;
 
    return cfg_lexer_include(cfg, data, argv[0], -1);
