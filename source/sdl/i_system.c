@@ -280,9 +280,11 @@ void I_Init(void)
 }
 
 
-static char errmsg[2048];    // buffer of error message -- killough
+static char errmsg[2048];  // buffer of error message -- killough
 
 static int has_exited;
+
+static boolean error_exit; // haleyjd: if true, an error has occurred.
 
 //
 // I_Quit
@@ -297,7 +299,7 @@ void I_Quit(void)
       G_CheckDemoStatus();
    
    // sf : rearrange this so the errmsg doesn't get messed up
-   if(*errmsg)
+   if(error_exit)
       puts(errmsg);   // killough 8/8/98
    else
       I_EndDoom();
@@ -306,14 +308,18 @@ void I_Quit(void)
    // haleyjd 10/09/05: moved down here
    SDL_Quit();
 
-   M_SaveDefaults();
-   M_SaveSysConfig();
-   G_SaveDefaults(); // haleyjd
+   // haleyjd 03/18/10: none of these should be called in error situations.
+   if(!error_exit)
+   {
+      M_SaveDefaults();
+      M_SaveSysConfig();
+      G_SaveDefaults(); // haleyjd
+   }
    
    // Under Visual C++, the console window likes to rudely slam
    // shut -- this can stop it, but is now optional
 #ifdef _MSC_VER
-   if(*errmsg || waitAtExit)
+   if(error_exit || waitAtExit)
    {
       puts("\nPress any key to continue");
       getch();
@@ -336,7 +342,8 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
    
    if(!has_exited)    // If it hasn't exited yet, exit now -- killough
    {
-      has_exited=1;   // Prevent infinitely recursive exits -- killough
+      has_exited = 1;    // Prevent infinitely recursive exits -- killough
+      error_exit = true; // haleyjd: flag an error appropriately
       exit(-1);
    }
 }
@@ -349,6 +356,7 @@ void I_ErrorVA(const char *error, va_list args)
    if(!has_exited)
    {
       has_exited = 1;
+      error_exit = true; // haleyjd: flag an error appopriately
       exit(-1);
    }
 }
