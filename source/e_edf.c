@@ -702,7 +702,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    size_t len;
 
    // haleyjd 03/18/10: deprecation warning
-   E_EDFLogPuts("Warning: bex_include is deprecated. Please use a GFS or DEHACKED lump instead.\n");
+   E_EDFLogPuts("Warning: bexinclude is deprecated. Please use a GFS or DEHACKED lump instead.\n");
 
    if(argc != 1)
    {

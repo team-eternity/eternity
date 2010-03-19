@@ -188,7 +188,6 @@ static boolean I_Pick_OpenWad(void)
 // failsafe in case initialization of the picker subsystem fails partway
 // through.
 //
-//
 static void I_Pick_FreeWad(void)
 {
    // close the wad file if it is open
@@ -202,6 +201,8 @@ static void I_Pick_FreeWad(void)
 
       // free the private wad directory
       Z_Free(pickwad.lumpinfo);
+
+      pickwad.lumpinfo = NULL;
    }
 }
 
@@ -379,7 +380,7 @@ static void I_Pick_DoLeft(void)
    }
    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
    
-   SDL_WM_SetCaption(titles[currentiwad], NULL);
+   SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
 }
 
 //
@@ -400,7 +401,7 @@ static void I_Pick_DoRight(void)
    }
    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
    
-   SDL_WM_SetCaption(titles[currentiwad], NULL);
+   SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
 }
 
 //
@@ -586,7 +587,7 @@ static void I_Pick_Shutdown(void)
 // in the system.cfg file under the Eternity base directory. The valid IWAD
 // paths are marked in the haveIWADs array as "true" values.
 //
-int I_Pick_DoPicker(boolean haveIWADs[])
+int I_Pick_DoPicker(boolean haveIWADs[], int startchoice)
 {
    haveIWADArray = haveIWADs;
 
@@ -609,23 +610,29 @@ int I_Pick_DoPicker(boolean haveIWADs[])
    // clear the screen
    I_Pick_ClearScreen();
 
-   // find first valid iwad
-   currentiwad = -1;
-   do
+   // see if prior choice is valid
+   if(startchoice != -1 && haveIWADs[startchoice])
+      currentiwad = startchoice;
+   else
    {
-      ++currentiwad;
+      // find first valid iwad
+      currentiwad = -1;
+      do
+      {
+         ++currentiwad;
+      }
+      while(!haveIWADs[currentiwad] && currentiwad < NUMPICKIWADS);
    }
-   while(!haveIWADs[currentiwad] && currentiwad < NUMPICKIWADS);
 
    // this really shouldn't happen, but I check for safety
-   if(currentiwad == NUMPICKIWADS)
+   if(currentiwad < 0 || currentiwad >= NUMPICKIWADS)
    {
       I_Pick_Shutdown();
       return -1;
    }
 
    // set window title to currently selected game
-   SDL_WM_SetCaption(titles[currentiwad], NULL);
+   SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
 
    // run the program
    I_Pick_MainLoop();

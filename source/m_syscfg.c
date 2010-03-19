@@ -38,6 +38,7 @@
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
 extern boolean d_fastrefresh;  // haleyjd 01/04/10
+extern int iwad_choice;        // haleyjd 03/19/10
 
 #ifdef _SDL_VER
 extern int waitAtExit;
@@ -67,6 +68,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_HERETIC_SW    "iwad_heretic_shareware"
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
 #define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
+#define ITEM_IWAD_CHOICE        "iwad_choice"
 
 // system defaults array
 
@@ -107,6 +109,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", wad_no,
                "IWAD path for Heretic: Shadow of the Serpent Riders"),
+
+   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, 8, wad_no,
+               "Number of last IWAD chosen from the IWAD picker"),
 
    // 11/04/09: system-level options moved here from the main config
 

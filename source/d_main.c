@@ -677,8 +677,8 @@ char *D_DoomExeName(void)
 //
 
 //
-//  D_ExpandTilde
-//      expand tilde in base path name for linux home dir
+// D_ExpandTilde
+//     expand tilde in base path name for linux home dir
 //
 static char *D_ExpandTilde(char *basedir)
 {
@@ -1086,6 +1086,8 @@ static void D_CloseAutoloadDir(void)
 // IWAD Detection / Verification Code
 //
 
+int iwad_choice; // haleyjd 03/19/10: remember choice
+
 // variable-for-index lookup for D_DoIWADMenu
 static char **iwadVarForNum[] =
 {
@@ -1107,7 +1109,7 @@ static const char *D_DoIWADMenu(void)
    const char *iwadToUse = NULL;
 
 #ifdef _SDL_VER
-   extern int I_Pick_DoPicker(boolean haveIWADs[]);
+   extern int I_Pick_DoPicker(boolean haveIWADs[], int startchoice);
    boolean haveIWADs[9];
    int i, choice = -1;
    boolean foundone = false;
@@ -1122,11 +1124,14 @@ static const char *D_DoIWADMenu(void)
    if(foundone) // at least one IWAD must be specified!
    {
       startupmsg("D_DoIWADMenu", "Init IWAD choice subsystem.");
-      choice = I_Pick_DoPicker(haveIWADs);
+      choice = I_Pick_DoPicker(haveIWADs, iwad_choice);
    }
 
    if(choice >= 0)
+   {
+      iwad_choice = choice;               // 03/19/10: remember selection
       iwadToUse = *iwadVarForNum[choice];
+   }
 #endif
 
    return iwadToUse;
