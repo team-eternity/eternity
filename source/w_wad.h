@@ -84,6 +84,8 @@ typedef struct lumpinfo_s
       lump_memory,  // lump is a memory buffer
       lump_numtypes
    } type;
+
+   int source; // haleyjd: unique id # for source of this lump
    
    // haleyjd: physical lump data
    
@@ -121,31 +123,26 @@ typedef struct wfileadd_s
 
 extern waddir_t w_GlobalDir; // the global wad directory
 
-void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files);
-
-// sf: add a new wad file after the game has already begun
-int W_AddNewFile(waddir_t *dir, char *filename);
-
-// killough 4/17/98: if W_CheckNumForName() called with only
-// one argument, pass ns_global as the default namespace
-
-int     W_CheckNumForNameInDir(waddir_t *dir, const char *name, int);
-int     W_CheckNumForName(const char *name);   // killough 4/17/98
-int     W_CheckNumForNameNS(const char *name, int li_namespace);
-int     W_CheckNumForNameNSG(const char *name, int ns);
-int     W_GetNumForName(const char* name);
-int     W_LumpLength(int lump);
-void    W_ReadLump(int lump, void *dest);
-void   *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag);
-void   *W_CacheLumpNum(int lump, int tag);
-int     W_LumpCheckSum(int lumpnum);
-int     W_ReadLumpHeader(int lump, void *dest, size_t size);
+void        W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files);
+int         W_AddNewFile(waddir_t *dir, char *filename); // sf: add a new wad file
+int         W_CheckNumForNameInDir(waddir_t *dir, const char *name, int);
+int         W_CheckNumForName(const char *name);   // killough 4/17/98
+int         W_CheckNumForNameNS(const char *name, int li_namespace);
+int         W_CheckNumForNameNSG(const char *name, int ns);
+int         W_GetNumForName(const char* name);
+lumpinfo_t *W_GetLumpNameChainInDir(waddir_t *dir, const char *name);
+lumpinfo_t *W_GetLumpNameChain(const char *name);
+int         W_LumpLength(int lump);
+void        W_ReadLump(int lump, void *dest);
+void       *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag);
+void       *W_CacheLumpNum(int lump, int tag);
+int         W_LumpCheckSum(int lumpnum);
+int         W_ReadLumpHeader(int lump, void *dest, size_t size);
+void        W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
 
 #define W_CacheLumpName(name,tag) W_CacheLumpNum (W_GetNumForName(name),(tag))
 
-unsigned W_LumpNameHash(const char *s);           // killough 1/31/98
-
-void W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
+unsigned int W_LumpNameHash(const char *s);           // killough 1/31/98
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
 

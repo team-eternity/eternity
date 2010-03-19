@@ -77,8 +77,7 @@ void P_InitSwitchList(void)
    //jff 3/23/98 read the switch table from a predefined lump
 
    // haleyjd 08/29/09: run down the hash chain for SWITCHES
-   lump = w_GlobalDir.lumpinfo[W_LumpNameHash("SWITCHES") % 
-                               (unsigned)w_GlobalDir.numlumps];   
+   lump = W_GetLumpNameChain("SWITCHES");
    
    for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
    {

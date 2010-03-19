@@ -145,6 +145,44 @@ int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
    return code;
 }
 
+//
+// E_FindLumpInclude
+//
+// Finds a lump from the same data source as the including lump.
+// Returns -1 if no such lump can be found.
+// 
+int E_FindLumpInclude(cfg_t *src, const char *name)
+{
+   lumpinfo_t *lump, *inclump;
+   int includinglumpnum;
+   int i;
+
+   // this is not for files
+   if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
+      return -1;
+
+   // get a pointer to the including lump's lumpinfo
+   inclump = w_GlobalDir.lumpinfo[includinglumpnum];
+
+   // get a pointer to the hash chain for this lump name
+   lump = W_GetLumpNameChain(name);
+
+   // walk down the hash chain
+   for(i = lump->index; i >= 0; i = lump->next)
+   {
+      lump = w_GlobalDir.lumpinfo[i];
+
+      if(!strncasecmp(lump->name, name, 8) && // name matches specified
+         lump->li_namespace == ns_global &&   // is in global namespace
+         lump->source == inclump->source)     // is from same source
+      {
+         return lump->index;
+      }
+   }
+
+   return -1; // not found
+}
+
 //=============================================================================
 //
 // Parser File/Lump Include Callback Functions
@@ -163,7 +201,8 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    char  *currentpath = NULL;
    char  *filename    = NULL;
-   size_t len         = 0;
+   size_t len         =  0;
+   int    lumpnum     = -1;
 
    if(argc != 1)
    {
@@ -196,7 +235,15 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
          return 1;
       }
 
-      return E_OpenAndCheckInclude(cfg, argv[0], W_GetNumForName(argv[0]));
+      // haleyjd 03/19/10:
+      // find a lump of the requested name in the same data source only
+      if((lumpnum = E_FindLumpInclude(cfg, argv[0])) < 0)
+      {
+         cfg_error(cfg, "include: %s not found\n", argv[0]);
+         return 1;
+      }
+
+      return E_OpenAndCheckInclude(cfg, argv[0], lumpnum);
    }
 }
 
@@ -208,6 +255,8 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
+   int lumpnum = -1;
+
    if(argc != 1)
    {
       cfg_error(cfg, "wrong number of args to lumpinclude()");
@@ -219,7 +268,18 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       return 1;
    }
 
-   return E_OpenAndCheckInclude(cfg, argv[0], W_GetNumForName(argv[0]));
+   switch(cfg_lexer_source_type(cfg))
+   {
+   case -1: // from a file - include the newest lump
+      return E_OpenAndCheckInclude(cfg, argv[0], W_GetNumForName(argv[0]));
+   default: // lump
+      if((lumpnum = E_FindLumpInclude(cfg, argv[0])) < 0)
+      {
+         cfg_error(cfg, "lumpinclude: %s not found", argv[0]);
+         return 1;
+      }
+      return E_OpenAndCheckInclude(cfg, argv[0], lumpnum);
+   }
 }
 
 //
@@ -233,6 +293,9 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    int i;
+
+   // haleyjd 03/18/10: deprecation warning
+   E_EDFLogPuts("Warning: include_prev is deprecated\n");
 
    if(argc != 0)
    {

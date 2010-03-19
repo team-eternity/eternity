@@ -701,6 +701,9 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    char *filename = NULL;
    size_t len;
 
+   // haleyjd 03/18/10: deprecation warning
+   E_EDFLogPuts("Warning: bex_include is deprecated. Please use a GFS or DEHACKED lump instead.\n");
+
    if(argc != 1)
    {
       cfg_error(cfg, "wrong number of args to bexinclude()");

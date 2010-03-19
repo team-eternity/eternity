@@ -2031,7 +2031,7 @@ static void D_ProcessDehInWad(int i)
    if(i >= 0)
    {
       D_ProcessDehInWad(w_GlobalDir.lumpinfo[i]->next);
-      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "dehacked", 8) &&
+      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "DEHACKED", 8) &&
          w_GlobalDir.lumpinfo[i]->li_namespace == ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
    }
@@ -2040,9 +2040,7 @@ static void D_ProcessDehInWad(int i)
 static void D_ProcessDehInWads(void)
 {
    // haleyjd: start at the top of the hash chain
-   lumpinfo_t *root =
-      w_GlobalDir.lumpinfo[W_LumpNameHash("DEHACKED") % 
-                           (unsigned)w_GlobalDir.numlumps];
+   lumpinfo_t *root = W_GetLumpNameChain("DEHACKED");
 
    D_ProcessDehInWad(root->index);
 }
