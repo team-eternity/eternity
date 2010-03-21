@@ -292,253 +292,69 @@ static cfg_opt_t cast_opts[] =
 // EDF Root Options
 //
 
+#define EDF_TSEC_FLAGS (CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE)
+#define EDF_NSEC_FLAGS (CFGF_MULTI | CFGF_NOCASE)
+
 static cfg_opt_t edf_opts[] =
 {
-   CFG_STR(SEC_SPRITE,        0,                 CFGF_LIST),
-   CFG_STR(ITEM_PLAYERSPRITE, "PLAY",            CFGF_NONE),
-   CFG_STR(ITEM_BLANKSPRITE,  "TNT1",            CFGF_NONE),
-   CFG_SEC(SEC_PICKUPFX,      pickup_opts,       CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_MOD,       edf_dmgtype_opts,  CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FRAME,     edf_frame_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_THING,     edf_thing_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SKIN,      edf_skin_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_PCLASS,    edf_pclass_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(SEC_CAST,          cast_opts,         CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SPLASH,    edf_splash_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_MENU,      edf_menu_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(SEC_CASTORDER,     0,                 CFGF_LIST),
-   CFG_STR(SEC_BOSSTYPES,     0,                 CFGF_LIST),
-   CFG_INT(SEC_BOSSPROBS,     0,                 CFGF_LIST), // schepe
-   CFG_SEC(EDF_SEC_FRMDELTA,  edf_fdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TNGDELTA,  edf_tdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SDELTA,    edf_sdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_STRING,    edf_string_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_INT(ITEM_D2TITLETICS,  0,                 CFGF_NONE),
-   CFG_INT(ITEM_INTERPAUSE,   0,                 CFGF_NONE),
-   CFG_INT(ITEM_INTERFADE,   -1,                 CFGF_NONE),
-   CFG_INT_CB(ITEM_INTERTL,   0,                 CFGF_NONE, E_TranslucCB),
-   CFG_STR(ITEM_MN_EPISODE,   NULL,              CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
-   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,   "ee_finalefont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
-   CFG_FUNC("include",        E_Include),
-   CFG_FUNC("lumpinclude",    E_LumpInclude),
-   CFG_FUNC("include_prev",   E_IncludePrev),
-   CFG_FUNC("stdinclude",     E_StdInclude),
-   CFG_FUNC("userinclude",    E_UserInclude),
-   CFG_FUNC("bexinclude",     bex_include),
-   CFG_FUNC("ifenabled",      edf_ifenabled),
-   CFG_FUNC("ifenabledany",   edf_ifenabledany),
-   CFG_FUNC("ifdisabled",     edf_ifdisabled),
-   CFG_FUNC("ifdisabledany",  edf_ifdisabledany),
-   CFG_FUNC("endif",          E_Endif),
-   CFG_FUNC("enable",         edf_enable),
-   CFG_FUNC("disable",        edf_disable),
+   CFG_STR(SEC_SPRITE,          0,                 CFGF_LIST),
+   CFG_STR(ITEM_PLAYERSPRITE,   "PLAY",            CFGF_NONE),
+   CFG_STR(ITEM_BLANKSPRITE,    "TNT1",            CFGF_NONE),
+   CFG_SEC(SEC_PICKUPFX,        pickup_opts,       EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SOUND,       edf_sound_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_AMBIENCE,    edf_ambience_opts, EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SNDSEQ,      edf_sndseq_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_ENVIROMGR,   edf_seqmgr_opts,   CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_MOD,         edf_dmgtype_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_TERRAIN,     edf_terrn_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_TERDELTA,    edf_terdelta_opts, EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_FLOOR,       edf_floor_opts,    EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_MENU,        edf_menu_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
+   CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
+   CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
+   CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
+   CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SDELTA,      edf_sdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_INT(ITEM_D2TITLETICS,    0,                 CFGF_NONE),
+   CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
+   CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
+   CFG_INT_CB(ITEM_INTERTL,     0,                 CFGF_NONE, E_TranslucCB),
+   CFG_STR(ITEM_MN_EPISODE,     NULL,              CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUD,       "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUDO,      "ee_hudfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_MENU,      "ee_menufont",     CFGF_NONE),
+   CFG_STR(ITEM_FONT_BMENU,     "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_NMENU,     "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_FINAL,     "ee_finalefont",   CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTR,      "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRB,     "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRBN,    "ee_bignumfont",   CFGF_NONE),
+   CFG_STR(ITEM_FONT_CONS,      "ee_consolefont",  CFGF_NONE),
+   CFG_FUNC("include",          E_Include),
+   CFG_FUNC("lumpinclude",      E_LumpInclude),
+   CFG_FUNC("include_prev",     E_IncludePrev),
+   CFG_FUNC("stdinclude",       E_StdInclude),
+   CFG_FUNC("userinclude",      E_UserInclude),
+   CFG_FUNC("bexinclude",       bex_include),
+   CFG_FUNC("ifenabled",        edf_ifenabled),
+   CFG_FUNC("ifenabledany",     edf_ifenabledany),
+   CFG_FUNC("ifdisabled",       edf_ifdisabled),
+   CFG_FUNC("ifdisabledany",    edf_ifdisabledany),
+   CFG_FUNC("endif",            E_Endif),
+   CFG_FUNC("enable",           edf_enable),
+   CFG_FUNC("disable",          edf_disable),
    CFG_FUNC("includeifenabled", edf_includeifenabled),
-   CFG_FUNC("ifgametype",     edf_ifgametype),
-   CFG_FUNC("ifngametype",    edf_ifngametype),
-   CFG_END()
-};
-
-// These EDF functions should be available in all defaults
-#define DEF_FUNCTIONS \
-   CFG_FUNC("include",       E_Include), \
-   CFG_FUNC("lumpinclude",   E_LumpInclude), \
-   CFG_FUNC("include_prev",  E_IncludePrev), \
-   CFG_FUNC("stdinclude",    E_StdInclude), \
-   CFG_FUNC("userinclude",   E_UserInclude), \
-   CFG_FUNC("bexinclude",    bex_include), \
-   CFG_FUNC("ifenabled",     edf_ifenabled), \
-   CFG_FUNC("ifenabledany",  edf_ifenabledany), \
-   CFG_FUNC("ifdisabled",    edf_ifdisabled), \
-   CFG_FUNC("ifdisabledany", edf_ifdisabledany), \
-   CFG_FUNC("endif",         E_Endif), \
-   CFG_FUNC("enable",        edf_enable), \
-   CFG_FUNC("disable",       edf_disable), \
-   CFG_FUNC("includeifenabled", edf_includeifenabled), \
-   CFG_FUNC("ifgametype",    edf_ifgametype), \
-   CFG_FUNC("ifngametype",   edf_ifngametype)
-
-// Default opt arrays -- these are for detection and correction
-// of missing required definitions. They rely on the documented
-// structure and presence of the default EDF files.
-
-// Options for stuff in sprites.edf only.
-static cfg_opt_t sprite_only_opts[] =
-{
-   CFG_STR(SEC_SPRITE,   0,           CFGF_LIST),
-   CFG_SEC(SEC_PICKUPFX, pickup_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in frames.edf only.
-static cfg_opt_t frame_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_FRAME, edf_frame_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in things.edf only.
-static cfg_opt_t thing_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_THING, edf_thing_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in cast.edf only
-static cfg_opt_t cast_only_opts[] =
-{
-   CFG_SEC(SEC_CAST,      cast_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(SEC_CASTORDER, 0,         CFGF_LIST),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in sounds.edf only
-static cfg_opt_t sound_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_SOUND,  edf_sound_opts,  CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SNDSEQ, edf_sndseq_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in terrain.edf only
-static cfg_opt_t terrain_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_SPLASH,    edf_splash_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in player.edf only
-static cfg_opt_t pclass_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_SKIN,      edf_skin_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_PCLASS,    edf_pclass_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in fonts.edf only
-static cfg_opt_t font_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
-   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-
-//
-// Separate Lump opt Arrays. These are for lumps that can be parsed
-// on their own to add some types of definitions to EDF.
-//
-
-// These EDF functions should be available in all separate lumps.
-#define LUMP_FUNCTIONS \
-   CFG_FUNC("include",       E_Include), \
-   CFG_FUNC("lumpinclude",   E_LumpInclude), \
-   CFG_FUNC("include_prev",  E_IncludePrev), \
-   CFG_FUNC("stdinclude",    E_StdInclude), \
-   CFG_FUNC("userinclude",   E_UserInclude), \
-   CFG_FUNC("ifenabled",     edf_ifenabled), \
-   CFG_FUNC("ifenabledany",  edf_ifenabledany), \
-   CFG_FUNC("ifdisabled",    edf_ifdisabled), \
-   CFG_FUNC("ifdisabledany", edf_ifdisabledany), \
-   CFG_FUNC("endif",         E_Endif), \
-   CFG_FUNC("enable",        edf_enable), \
-   CFG_FUNC("disable",       edf_disable), \
-   CFG_FUNC("includeifenabled", edf_includeifenabled), \
-   CFG_FUNC("ifgametype",    edf_ifgametype), \
-   CFG_FUNC("ifngametype",   edf_ifngametype)
-
-
-// Options for stuff in ESTRINGS lump
-static cfg_opt_t string_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_STRING, edf_string_opts, CFGF_MULTI|CFGF_TITLE|CFGF_NOCASE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in ETERRAIN lump
-static cfg_opt_t terrain_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_SPLASH,    edf_splash_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in EMENUS lump
-static cfg_opt_t menu_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_MENU,    edf_menu_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(ITEM_MN_EPISODE, NULL,          CFGF_NONE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in ESNDSEQ and ESNDINFO lumps
-static cfg_opt_t sndseq_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SDELTA,    edf_sdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in EFONTS lump
-static cfg_opt_t font_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
-   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
-   LUMP_FUNCTIONS,
+   CFG_FUNC("ifgametype",       edf_ifgametype),
+   CFG_FUNC("ifngametype",      edf_ifngametype),
    CFG_END()
 };
 
@@ -1247,7 +1063,7 @@ static void E_ProcessStringLump(void)
 
    E_EDFLogPuts("\t* Parsing ESTRINGS lump...\n");
    
-   if(!(cfg = E_ParseEDFLumpOptional("ESTRINGS", string_only_opts)))
+   if(!(cfg = E_ParseEDFLumpOptional("ESTRINGS", edf_opts)))
    {
       E_EDFLogPuts("\t\tNo ESTRINGS lump found\n");
       return;
@@ -1272,7 +1088,7 @@ static void E_ProcessTerrainLump(void)
 
    E_EDFLogPuts("\t* Parsing ETERRAIN lump...\n");
    
-   if(!(cfg = E_ParseEDFLumpOptional("ETERRAIN", terrain_lump_opts)))
+   if(!(cfg = E_ParseEDFLumpOptional("ETERRAIN", edf_opts)))
    {
       E_EDFLogPuts("\t\tNo ETERRAIN lump found.\n");
       return;
@@ -1298,7 +1114,7 @@ static void E_ProcessMenuLump(void)
 
    E_EDFLogPuts("\t* Parsing EMENUS lump...\n");
 
-   if(!(cfg = E_ParseEDFLumpOptional("EMENUS", menu_lump_opts)))
+   if(!(cfg = E_ParseEDFLumpOptional("EMENUS", edf_opts)))
    {
       E_EDFLogPuts("\t\tNo EMENUS lump found.\n");
       return;
@@ -1322,7 +1138,7 @@ static void E_ProcessSoundLumps(void)
 
    E_EDFLogPuts("\t* Parsing ESNDSEQ lump...\n");
 
-   if(!(cfg = E_ParseEDFLumpOptional("ESNDSEQ", sndseq_lump_opts)))
+   if(!(cfg = E_ParseEDFLumpOptional("ESNDSEQ", edf_opts)))
       E_EDFLogPuts("\t\tNo ESNDSEQ lump found.\n");
    else
    {
@@ -1335,7 +1151,7 @@ static void E_ProcessSoundLumps(void)
 
    E_EDFLogPuts("\t* Parsing ESNDINFO lump...\n");
 
-   if(!(cfg = E_ParseEDFLumpOptional("ESNDINFO", sndseq_lump_opts)))
+   if(!(cfg = E_ParseEDFLumpOptional("ESNDINFO", edf_opts)))
       E_EDFLogPuts("\t\tNo ESNDINFO lump found.\n");
    else
    {
@@ -1358,7 +1174,7 @@ void E_ProcessFontLump(void)
 
    E_EDFLogPuts("\t* Parsing EFONTS lump...\n");
 
-   if(!(cfg = E_ParseEDFLumpOptional("EFONTS", font_lump_opts)))
+   if(!(cfg = E_ParseEDFLumpOptional("EFONTS", edf_opts)))
       E_EDFLogPuts("\t\tNo EFONTS lump found.\n");
    else
    {
@@ -1381,7 +1197,7 @@ void E_TryDefaultTerrain(void)
    E_EDFLogPuts("\t\tAttempting to load default terrain.edf\n");
 
    tfn  = E_BuildDefaultFn("terrain.edf");
-   tcfg = E_ParseEDFFile(tfn, terrain_only_opts);
+   tcfg = E_ParseEDFFile(tfn, edf_opts);
 
    E_ProcessTerrainTypes(tcfg);
 
@@ -1493,7 +1309,7 @@ static void E_TryDefaultSprites(void)
 
    sprfn = E_BuildDefaultFn("sprites.edf");
 
-   sprcfg = E_ParseEDFFile(sprfn, sprite_only_opts);
+   sprcfg = E_ParseEDFFile(sprfn, edf_opts);
 
    // Test NUMSPRITES again -- if it's still zero, fatal error time.
    NUMSPRITES = cfg_size(sprcfg, SEC_SPRITE);
@@ -1614,7 +1430,7 @@ static void E_TryDefaultSounds(void)
 
    soundfn = E_BuildDefaultFn("sounds.edf");
 
-   soundcfg = E_ParseEDFFile(soundfn, sound_only_opts);
+   soundcfg = E_ParseEDFFile(soundfn, edf_opts);
 
    numsfx = cfg_size(soundcfg, EDF_SEC_SOUND);
 
@@ -1694,7 +1510,7 @@ static cfg_t *E_TryDefaultStates(void)
 
    statefn = E_BuildDefaultFn("frames.edf");
 
-   statecfg = E_ParseEDFFile(statefn, frame_only_opts);
+   statecfg = E_ParseEDFFile(statefn, edf_opts);
 
    // Reset NUMSTATES -- it will be tested again below
    NUMSTATES = cfg_size(statecfg, EDF_SEC_FRAME);
@@ -1718,7 +1534,7 @@ static cfg_t *E_TryDefaultThings(void)
 
    thingfn = E_BuildDefaultFn("things.edf");
 
-   thingcfg = E_ParseEDFFile(thingfn, thing_only_opts);
+   thingcfg = E_ParseEDFFile(thingfn, edf_opts);
 
    // Reset NUMMOBJTYPES -- it will be tested again below
    NUMMOBJTYPES = cfg_size(thingcfg, EDF_SEC_THING);
@@ -1810,7 +1626,7 @@ static void E_TryDefaultPlayerData(void)
    E_EDFLogPuts("\t\tAttempting to load default player.edf\n");
 
    pfn  = E_BuildDefaultFn("player.edf");
-   pcfg = E_ParseEDFFile(pfn, pclass_only_opts);
+   pcfg = E_ParseEDFFile(pfn, edf_opts);
 
    E_ProcessPlayerData(pcfg);
 
@@ -1831,7 +1647,7 @@ static void E_TryDefaultFonts(void)
    E_EDFLogPuts("\t\tAttempting to load default fonts.edf\n");
 
    ffn  = E_BuildDefaultFn("fonts.edf");
-   fcfg = E_ParseEDFFile(ffn, font_only_opts);
+   fcfg = E_ParseEDFFile(ffn, edf_opts);
 
    E_ProcessFonts(fcfg);
 
@@ -1999,7 +1815,7 @@ static void E_TryDefaultCast(void)
 
    castfn = E_BuildDefaultFn("cast.edf");
 
-   castcfg = E_ParseEDFFile(castfn, cast_only_opts);
+   castcfg = E_ParseEDFFile(castfn, edf_opts);
 
    max_castorder = cfg_size(castcfg, SEC_CAST);
 
