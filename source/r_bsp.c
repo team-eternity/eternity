@@ -1007,6 +1007,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    side_t *side = seg.side;
    seg_t  *line = seg.line;
 
+   int    h, h2, l, l2, t, t2, b, b2;
+
    seg.twosided = true;
 
    // haleyjd 03/04/07: reformatted and eliminated numerous unnecessary
@@ -1018,6 +1020,11 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
            seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
+
+   t = (int)seg.top;
+   t2 = (int)seg.top2;
+   b = (int)seg.bottom;
+   b2 = (int)seg.bottom2;
 
    if(seg.backsec->c_slope)
    {
@@ -1063,23 +1070,42 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    seg.lowstep = (seg.low2 - seg.low) * pstep;
 
+
+   h = (int)seg.high;
+   h2 = (int)seg.high2;
+   l = (int)seg.low;
+   l2 = (int)seg.low2;
+
    // TODO: Fix for use with portals.
    // Shouldn't this be after the skyflat check?
-   seg.clipsolid = (seg.bottom <= seg.high && seg.bottom2 <= seg.high2) ||
-                   (seg.low <= seg.top && seg.low2 <= seg.top2) ||
-                   (seg.low <= seg.high && seg.low2 <= seg.high2);
+   // ^ No, because the opening is checked against either top or high,
+   // and the behavior of the sky hack needs to change if the line is closed.
+   seg.clipsolid = (b <= h && b2 <= h2) ||
+                   (l <= t && l2 <= t2) ||
+                   (l <= h && l2 <= h2);
 
    if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
    {
+      // If the line is clipped solid, it can't be assumed that the upper 
+      // texture portion meets up with an adjacent ceiling flat.
+      if(seg.clipsolid)
+      {
+         seg.high += 1.0f;
+         seg.high2 += 1.0f;
+         h++; h2++;
+      }
+
       seg.top = seg.high;
       seg.top2 = seg.high2;
       seg.topstep = seg.highstep;
+      t = h; t2 = h2;
    }
+
 
    // -- Ceilings -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ?
-                  (seg.top != seg.high || seg.top2 != seg.high2) :
+   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ? 
+                  (t > h || t2 > h2) :
                   (seg.backsec->ceilingheight != seg.frontsec->ceilingheight);
 
    seg.markflags = 0;
@@ -1122,8 +1148,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // -- Floors -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ?
-                  (seg.low != seg.bottom || seg.low2 != seg.bottom2) :
+   heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ? (l != b || l2 != b2) :
                   seg.backsec->floorheight != seg.frontsec->floorheight;
 
    if(seg.f_portal &&
@@ -1172,8 +1197,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
    texlow = seg.line->backsector->floorheightf - view.z;
-   
-   if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
+   if((b > l || b2 > l2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
       seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
@@ -1234,15 +1258,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
                    seg.side->bottomtexture == 0);
 
-   if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
-   {
-      seg.top  = (seg.high += 1.0f);
-      seg.top2 = (seg.high2 += 1.0f);
-      seg.topstep = seg.highstep;
-      frontc = backc;
-      //uppermissing = false;
-   }
-
    // New clipsolid code will emulate the old doom behavior and still manages to 
    // keep valid closed door cases handled.
    seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
@@ -1251,6 +1266,25 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
         seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
         (seg.backsec->ceilingheight <= seg.backsec->floorheight && 
          !uppermissing && !lowermissing)));
+
+   // This was moved here because the behavior changes based on the value of seg.clipsolid.
+   if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
+   {
+      if(seg.clipsolid)
+      {
+         // SoM: Because this is solid, the upper texture can't be assumed to be
+         // connecting to any further ceiling flats.
+         seg.high += 1.0f;
+         seg.high2 += 1.0f;
+      }
+
+      seg.top = seg.high;
+      seg.top2 = seg.high2;
+
+      seg.topstep = seg.highstep;
+      frontc = backc;
+      //uppermissing = false;
+   }
 
    seg.markflags = 0;
    
