@@ -29,7 +29,7 @@
 extern char *mytext; // haleyjd
 
 int   mylex(cfg_t *cfg);
-void  lexer_init(struct DWFILE_s *);
+int   lexer_init(cfg_t *cfg, struct DWFILE_s *);
 void  lexer_reset(void);
 void  lexer_set_unquoted_spaces(boolean);
 char *cfg_lexer_open(const char *filename, int lumpnum, size_t *len);

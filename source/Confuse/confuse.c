@@ -544,6 +544,21 @@ cfg_errfunc_t cfg_set_error_function(cfg_t *cfg, cfg_errfunc_t errfunc)
    return old;
 }
 
+//
+// cfg_set_lexer_callback
+//
+// haleyjd 03/21/10
+//
+cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc)
+{
+   cfg_lexfunc_t old;
+
+   cfg_assert(cfg);
+   old = cfg->lexfunc;
+   cfg->lexfunc = lexfunc;
+   return old;
+}
+
 void cfg_error(cfg_t *cfg, const char *fmt, ...)
 {
    va_list ap;
@@ -974,14 +989,15 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
    cfg_assert(cfg);
    memset(cfg, 0, sizeof(cfg_t));
 
-   cfg->name = "root";
-   cfg->opts = opts;
-   cfg->flags = flags;
+   cfg->name     = "root";
+   cfg->opts     = opts;
+   cfg->flags    = flags;
    cfg->filename = 0;
-   cfg->line = 0;
-   cfg->lumpnum = -1; // haleyjd
-   cfg->errfunc = 0;
-   cfg->lookfor = NULL; // haleyjd
+   cfg->line     = 0;
+   cfg->lumpnum  = -1;   // haleyjd
+   cfg->errfunc  = 0;
+   cfg->lexfunc  = 0;    // haleyjd
+   cfg->lookfor  = NULL; // haleyjd
 
    // haleyjd: removed ENABLE_NLS
 
@@ -996,7 +1012,7 @@ char *cfg_tilde_expand(const char *filename)
 
 int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
 {
-   int ret; // haleyjd
+   int ret = CFG_SUCCESS; // haleyjd
 
    cfg_assert(cfg && filename);
  
@@ -1016,9 +1032,8 @@ int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
    cfg->lumpnum = file->lumpnum;
 
    // haleyjd: initialize the lexer
-   lexer_init(file);
-
-   ret = cfg_parse_internal(cfg, 0);
+   if(lexer_init(cfg, file) == 0)
+      ret = cfg_parse_internal(cfg, 0);
 
    // haleyjd: reset the lexer state
    lexer_reset();

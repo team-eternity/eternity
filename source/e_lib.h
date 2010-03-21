@@ -43,6 +43,7 @@ void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap);
 // include tracking
 boolean E_CheckInclude(const char *data, size_t size);
 int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum);
+int E_CheckRoot(cfg_t *cfg, const char *data, int size);
 
 // function callbacks
 int E_Include    (cfg_t *, cfg_opt_t *, int, const char **);

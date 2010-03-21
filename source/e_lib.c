@@ -188,11 +188,12 @@ int E_FindLumpInclude(cfg_t *src, const char *name)
 // E_CheckRoot
 //
 // haleyjd 03/21/10: Checks a root data source to see if it has already been
-// processed.
+// processed. This is installed as a lexer file open callback in the cfg_t.
+// The convention is to return 0 if the file should be parsed.
 //
-boolean E_CheckRoot(DWFILE *f)
+int E_CheckRoot(cfg_t *cfg, const char *data, int size)
 {
-   return false;
+   return !E_CheckInclude(data, (size_t)size);
 }
 
 //=============================================================================

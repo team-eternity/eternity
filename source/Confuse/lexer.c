@@ -126,10 +126,25 @@ static void lexer_free_buffer(void)
 //
 // Initializes the lexer.
 //
-void lexer_init(DWFILE *file)
+int lexer_init(cfg_t *cfg, DWFILE *file)
 {
-   M_QStrCreate(&qstring);
-   bufferpos = lexbuffer = lexer_buffer_file(file, NULL);
+   char   *buf;
+   size_t len;
+   int    code = 0;
+
+   buf = lexer_buffer_file(file, &len);
+
+   // haleyjd 03/21/10: optional cfg_t lexer callback
+   if(cfg && cfg->lexfunc)
+      code = cfg->lexfunc(cfg, buf, (int)len);
+
+   if(!code)
+   {
+      M_QStrCreate(&qstring);
+      bufferpos = lexbuffer = buf;
+   }
+
+   return code;
 }
 
 //

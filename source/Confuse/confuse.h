@@ -143,6 +143,9 @@ typedef enum {cfg_false, cfg_true} cfg_bool_t;
 /** Error reporting function. */
 typedef void (*cfg_errfunc_t)(cfg_t *cfg, const char *fmt, va_list ap);
 
+/** Lexer open callback */
+typedef int (*cfg_lexfunc_t)(cfg_t *cfg, const char *data, int size);
+
 /** Data structure holding information about a "section". Sections can
  * be nested. A section has a list of options (strings, numbers,
  * booleans or other sections) grouped together.
@@ -162,6 +165,8 @@ struct cfg_t
    cfg_errfunc_t errfunc;  /**< This function (set with
                                 * cfg_set_error_function) is called for
                                 * any error message. */
+   cfg_lexfunc_t lexfunc;  /**< haleyjd: A callback dispatched by the lexer
+                                * when initially opening a file. */
    const char *lookfor;    /**< Name of a function to look for. */
 };
 
@@ -381,6 +386,11 @@ void          cfg_free(cfg_t *cfg);
  * @return The old error reporting function is returned.
  */
 cfg_errfunc_t cfg_set_error_function(cfg_t *cfg, cfg_errfunc_t errfunc);
+
+/** Install a user-defined lexer callback function.
+ * @return The old lexer callback function is returned.
+ */
+cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc);
 
 /** Show a parser error. Any user-defined error reporting function is called.
  * @see cfg_set_error_function

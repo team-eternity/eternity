@@ -1175,6 +1175,7 @@ static cfg_t *E_ParseEDFFile(const char *filename, cfg_opt_t *opts)
 
    cfg = cfg_init(opts, CFGF_NOCASE);
    cfg_set_error_function(cfg, edf_error);
+   cfg_set_lexer_callback(cfg, E_CheckRoot);
 
    if((err = cfg_parse(cfg, filename)))
    {
@@ -1199,6 +1200,7 @@ static cfg_t *E_ParseEDFLump(const char *lumpname, cfg_opt_t *opts)
 
    cfg = cfg_init(opts, CFGF_NOCASE);
    cfg_set_error_function(cfg, edf_error);
+   cfg_set_lexer_callback(cfg, E_CheckRoot);
 
    if((lumpnum = W_CheckNumForName(lumpname)) < 0)
    {
