@@ -74,6 +74,7 @@
 #include "z_zone.h"
 
 #include "Confuse/confuse.h"
+#include "Confuse/lexer.h"
 
 #include "w_wad.h"
 #include "i_system.h"
@@ -227,9 +228,6 @@ int *pickupfx = NULL;
 #define NUMSPRCHAINS 257
 static int *sprchains = NULL;
 static int *sprnext = NULL;
-
-// 02/09/05: prototype of custom source type query function
-extern int cfg_lexer_source_type(cfg_t *cfg);
 
 // function prototypes for libConfuse callbacks (aka EDF functions)
 
@@ -1196,13 +1194,19 @@ static cfg_t *E_ParseEDFFile(const char *filename, cfg_opt_t *opts)
 //
 static cfg_t *E_ParseEDFLump(const char *lumpname, cfg_opt_t *opts)
 {
-   int err;
+   int err, lumpnum;
    cfg_t *cfg;
 
    cfg = cfg_init(opts, CFGF_NOCASE);
    cfg_set_error_function(cfg, edf_error);
 
-   if((err = cfg_parselump(cfg, lumpname)))
+   if((lumpnum = W_CheckNumForName(lumpname)) < 0)
+   {
+      E_EDFLoggedErr(1,
+         "E_ParseEDFLump: lump %s not found\n", lumpname);
+   }
+
+   if((err = cfg_parselump(cfg, lumpname, lumpnum)))
    {
       E_EDFLoggedErr(1, 
          "E_ParseEDFLump: failed to parse EDF lump %s (code %d)\n",

@@ -994,13 +994,8 @@ char *cfg_tilde_expand(const char *filename)
    return strdup(filename);
 }
 
-int cfg_parse_data(cfg_t *cfg, char *data, uint8_t len)
+int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
 {
-}
-
-int cfg_parse(cfg_t *cfg, const char *filename)
-{
-   DWFILE dwfile; // haleyjd
    int ret; // haleyjd
 
    cfg_assert(cfg && filename);
@@ -1018,18 +1013,10 @@ int cfg_parse(cfg_t *cfg, const char *filename)
 
    cfg->line = 1;
 
-   cfg->lumpnum = -1; // haleyjd 07/20/05
-
-   D_OpenFile(&dwfile, filename, "rb");
-   
-   if(!D_IsOpen(&dwfile))
-      return CFG_FILE_ERROR;
+   cfg->lumpnum = file->lumpnum;
 
    // haleyjd: initialize the lexer
-   lexer_init(&dwfile);
-
-   // haleyjd: wow, should probably close the file huh?
-   D_Fclose(&dwfile);
+   lexer_init(file);
 
    ret = cfg_parse_internal(cfg, 0);
 
@@ -1042,53 +1029,45 @@ int cfg_parse(cfg_t *cfg, const char *filename)
    return CFG_SUCCESS;
 }
 
+int cfg_parse(cfg_t *cfg, const char *filename)
+{
+   DWFILE dwfile; // haleyjd
+   int ret;
+
+   D_OpenFile(&dwfile, filename, "rb");
+   
+   if(!D_IsOpen(&dwfile))
+      return CFG_FILE_ERROR;
+
+   ret = cfg_parse_dwfile(cfg, filename, &dwfile);
+
+   // haleyjd: wow, should probably close the file huh?
+   D_Fclose(&dwfile);
+
+   return ret;
+}
+
 // 
 // cfg_parselump
 // 
 // haleyjd 04/03/03: allow input from WAD lumps
 //
-int cfg_parselump(cfg_t *cfg, const char *lumpname)
+int cfg_parselump(cfg_t *cfg, const char *lumpname, int lumpnum)
 {
    DWFILE dwfile; // haleyjd
    int ret; // haleyjd
 
-   cfg_assert(cfg && lumpname);
-
-   // haleyjd 07/11/03: CVS fix
-   if(cfg->filename)
-      free(cfg->filename);
-   
-   cfg->filename = cfg_tilde_expand(lumpname);
-   if(cfg->filename == 0)
-   {
-      cfg_error(cfg, _("%s: can't expand home directory"), lumpname);
-      return CFG_FILE_ERROR;
-   }
-
-   cfg->line = 1;
-
-   cfg->lumpnum = W_GetNumForName(cfg->filename); // haleyjd 07/20/05
-
-   D_OpenLump(&dwfile, cfg->lumpnum);
+   D_OpenLump(&dwfile, lumpnum);
    
    if(!D_IsOpen(&dwfile))
       return CFG_FILE_ERROR;
 
-   // haleyjd 02/28/05: woops, forgot this!
-   lexer_init(&dwfile);
+   ret = cfg_parse_dwfile(cfg, lumpname, &dwfile);
 
    // haleyjd: wow, should probably close the file huh?
    D_Fclose(&dwfile);
-   
-   ret = cfg_parse_internal(cfg, 0);
 
-   // reset the lexer state
-   lexer_reset();
-
-   if(ret == STATE_ERROR)
-      return CFG_PARSE_ERROR;
-   
-   return CFG_SUCCESS;
+   return ret;
 }
 
 void cfg_free(cfg_t *cfg)

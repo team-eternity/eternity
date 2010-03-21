@@ -1729,6 +1729,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
 void E_LoadExtraData(void)
 {
    cfg_t *cfg;
+   int lumpnum;
 
    // reset ExtraData variables (allocations are at PU_LEVEL
    // cache level, so anything from any earlier level has been
@@ -1748,9 +1749,12 @@ void E_LoadExtraData(void)
    cfg = cfg_init(ed_opts, CFGF_NOCASE);
    cfg_set_error_function(cfg, E_ErrorCB);
 
+   if((lumpnum = W_CheckNumForName(LevelInfo.extraData)) <  0)
+      I_Error("E_LoadExtraData: Error finding lump %s\n", LevelInfo.extraData);
+
    // load and parse the ED lump
-   if(cfg_parselump(cfg, LevelInfo.extraData))
-      I_Error("E_LoadExtraData: Error finding or parsing lump\n");
+   if(cfg_parselump(cfg, LevelInfo.extraData, lumpnum))
+      I_Error("E_LoadExtraData: Error parsing lump %s\n", LevelInfo.extraData);
 
    // processing
 

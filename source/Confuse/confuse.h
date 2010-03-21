@@ -356,14 +356,15 @@ int           cfg_parse(cfg_t *cfg, const char *filename);
 /** Parse a configuration lump. By James Haley.
  *
  * @param cfg The configuration file context.
- * @param lumpname The name of the lump to parse.
+ * @param lumpname The name of the lump to parse (for reference only).
+ * @param lumpnum The number of the lump to parse.
  *
  * @return On success, CFG_SUCCESS is returned. If the file couldn't
  * be opened for reading, CFG_FILE_ERROR is returned. On all other
  * errors, CFG_PARSE_ERROR is returned and cfg_error() was called with
  * a descriptive error message.
  */
-int           cfg_parselump(cfg_t *cfg, const char *lumpname);
+int           cfg_parselump(cfg_t *cfg, const char *lumpname, int lumpnum);
 
 /** Free the memory allocated for the values of a given option. Only
  * the values are freed, not the option itself (it is often statically
