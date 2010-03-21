@@ -33,12 +33,22 @@
 #include "doomtype.h"
 #include "d_keywds.h"
 
+// haleyjd 03/21/10
+enum
+{
+   DWF_FILE,
+   DWF_LUMP,
+   DWF_DATA,
+   DWF_NUMTYPES
+};
+
 typedef struct DWFILE_s
 {
-   byte *inp, *lump; // Pointer to string or FILE
+   int type;
+   byte *inp, *lump, *data; // Pointer to lump, FILE, or data
    int size;
-   int origsize;    // for ungetc
-   int lumpnum;     // haleyjd 03/08/06: need to save this
+   int origsize;            // for ungetc
+   int lumpnum;             // haleyjd 03/08/06: need to save this
 } DWFILE;
 
 char  *D_Fgets(char *buf, size_t n, DWFILE *fp);
@@ -59,6 +69,11 @@ d_inline static boolean D_IsOpen(DWFILE *dwfile)
 d_inline static boolean D_IsLump(DWFILE *dwfile)
 {
    return !!(dwfile->lump);
+}
+
+d_inline static boolean D_IsData(DWFILE *dwfile)
+{
+   return !!(dwfile->data);
 }
 
 #endif

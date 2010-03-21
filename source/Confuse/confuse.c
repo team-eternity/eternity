@@ -994,6 +994,10 @@ char *cfg_tilde_expand(const char *filename)
    return strdup(filename);
 }
 
+int cfg_parse_data(cfg_t *cfg, char *data, uint8_t len)
+{
+}
+
 int cfg_parse(cfg_t *cfg, const char *filename)
 {
    DWFILE dwfile; // haleyjd
