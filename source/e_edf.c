@@ -111,20 +111,20 @@
 
 // Sprite variables
 #define ITEM_PLAYERSPRITE "playersprite"
-#define ITEM_BLANKSPRITE "blanksprite"
+#define ITEM_BLANKSPRITE  "blanksprite"
 
 // Sprite pick-up effects
-#define SEC_PICKUPFX "pickupitem"
+#define SEC_PICKUPFX  "pickupitem"
 #define ITEM_PICKUPFX "effect"
 
 // Cast call
-#define SEC_CAST "castinfo"
-#define ITEM_CAST_TYPE "type"
-#define ITEM_CAST_NAME "name"
-#define ITEM_CAST_SA   "stopattack"
-#define ITEM_CAST_SOUND "sound"
+#define SEC_CAST             "castinfo"
+#define ITEM_CAST_TYPE       "type"
+#define ITEM_CAST_NAME       "name"
+#define ITEM_CAST_SA         "stopattack"
+#define ITEM_CAST_SOUND      "sound"
 #define ITEM_CAST_SOUNDFRAME "frame"
-#define ITEM_CAST_SOUNDNAME "sfx"
+#define ITEM_CAST_SOUNDNAME  "sfx"
 
 // Cast order array
 #define SEC_CASTORDER "castorder"
@@ -261,10 +261,12 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                            const char **argv);
 
+//=============================================================================
+//
 // EDF libConfuse option structures
+//
 
 // sprite-based pickup items
-
 static cfg_opt_t pickup_opts[] =
 {
    CFG_STR(ITEM_PICKUPFX, "PFX_NONE", CFGF_NONE),
@@ -288,6 +290,7 @@ static cfg_opt_t cast_opts[] =
    CFG_END()
 };
 
+//=============================================================================
 //
 // EDF Root Options
 //
@@ -341,10 +344,10 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(ITEM_FONT_CONS,      "ee_consolefont",  CFGF_NONE),
    CFG_FUNC("include",          E_Include),
    CFG_FUNC("lumpinclude",      E_LumpInclude),
-   CFG_FUNC("include_prev",     E_IncludePrev),
+   CFG_FUNC("include_prev",     E_IncludePrev),    // DEPRECATED
    CFG_FUNC("stdinclude",       E_StdInclude),
    CFG_FUNC("userinclude",      E_UserInclude),
-   CFG_FUNC("bexinclude",       bex_include),
+   CFG_FUNC("bexinclude",       bex_include),      // DEPRECATED
    CFG_FUNC("ifenabled",        edf_ifenabled),
    CFG_FUNC("ifenabledany",     edf_ifenabledany),
    CFG_FUNC("ifdisabled",       edf_ifdisabled),
@@ -358,6 +361,7 @@ static cfg_opt_t edf_opts[] =
    CFG_END()
 };
 
+//=============================================================================
 //
 // Error Reporting and Logging
 //
@@ -471,6 +475,7 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
    I_Error("%s", msgbuffer);
 }
 
+//=============================================================================
 //
 // EDF-Specific Callback Functions
 //
@@ -548,6 +553,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    return 0;
 }
 
+//=============================================================================
 //
 // "Enables" code
 //
@@ -882,8 +888,9 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 }
 
 
+//=============================================================================
 //
-// Game type functions
+// Game Type Functions
 //
 // haleyjd 09/06/05:
 // These are for things which must vary strictly on game type and not 
@@ -973,25 +980,39 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
    return 0;
 }
 
-
+//=============================================================================
 //
 // EDF processing routines, mostly in order of execution in E_ProcessEDF
 //
 
 //
-// E_ParseEDFFile
+// E_CreateCfg
 //
-// Initializes a libConfuse cfg object, and then loads and parses
-// the requested EDF file. Returns a pointer to the cfg object.
+// haleyjd 03/21/10: Separated from E_ParseEDF[File|Lump]. Creates and 
+// initializes a libConfuse cfg_t object for use by EDF. All definitions
+// are now accumulated into this singular cfg_t, as opposed to being
+// merged from separately allocated ones for secondary EDF sources such
+// as wad lumps.
 //
-static cfg_t *E_ParseEDFFile(const char *filename, cfg_opt_t *opts)
+static cfg_t *E_CreateCfg(cfg_opt_t *opts)
 {
-   int err;
    cfg_t *cfg;
 
    cfg = cfg_init(opts, CFGF_NOCASE);
    cfg_set_error_function(cfg, edf_error);
    cfg_set_lexer_callback(cfg, E_CheckRoot);
+
+   return cfg;
+}
+
+//
+// E_ParseEDFFile
+//
+// Parses the specified file.
+//
+static void E_ParseEDFFile(cfg_t *cfg, const char *filename)
+{
+   int err;
 
    if((err = cfg_parse(cfg, filename)))
    {
@@ -999,54 +1020,73 @@ static cfg_t *E_ParseEDFFile(const char *filename, cfg_opt_t *opts)
          "E_ParseEDFFile: failed to parse %s (code %d)\n",
          filename, err);
    }
+}
 
-   return cfg;
+//
+// E_ParseLumpRecursive
+//
+// haleyjd 03/21/10: helper routine for E_ParseEDFLump.
+// Recursively descends the lump hash chain.
+//
+static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
+{
+   if(ln >= 0) // terminal case - lumpnum is -1
+   {
+      // recurse on next item
+      E_ParseLumpRecursive(cfg, name, w_GlobalDir.lumpinfo[ln]->next);
+
+      // handle this lump
+      if(!strncasecmp(w_GlobalDir.lumpinfo[ln]->name, name, 8) && // name match
+         w_GlobalDir.lumpinfo[ln]->li_namespace == ns_global)     // is global
+      {
+         int err;
+
+         // try to parse it
+         if((err = cfg_parselump(cfg, name, ln)))
+         {
+            E_EDFLoggedErr(1, 
+               "E_ParseEDFLump: failed to parse EDF lump %s (#%d, code %d)\n",
+               name, ln, err);
+         }
+      }
+   }
 }
 
 //
 // E_ParseEDFLump
 //
-// Initializes a libConfuse cfg object, and then loads and parses
-// the requested EDF lump. Returns a pointer to the cfg object.
+// Parses the specified lump. All lumps of the given name will be parsed
+// recursively from oldest to newest.
 //
-static cfg_t *E_ParseEDFLump(const char *lumpname, cfg_opt_t *opts)
+static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
 {
-   int err, lumpnum;
-   cfg_t *cfg;
+   lumpinfo_t *root;
 
-   cfg = cfg_init(opts, CFGF_NOCASE);
-   cfg_set_error_function(cfg, edf_error);
-   cfg_set_lexer_callback(cfg, E_CheckRoot);
+   // make sure there is at least one lump before starting recursive parsing
+   if(W_CheckNumForName(lumpname) < 0)
+      E_EDFLoggedErr(1, "E_ParseEDFLump: lump %s not found\n", lumpname);
 
-   if((lumpnum = W_CheckNumForName(lumpname)) < 0)
-   {
-      E_EDFLoggedErr(1,
-         "E_ParseEDFLump: lump %s not found\n", lumpname);
-   }
+   // get root of the hash chain for the indicated name
+   root = W_GetLumpNameChain(lumpname);
 
-   if((err = cfg_parselump(cfg, lumpname, lumpnum)))
-   {
-      E_EDFLoggedErr(1, 
-         "E_ParseEDFLump: failed to parse EDF lump %s (code %d)\n",
-         lumpname, err);
-   }
-
-   return cfg;
+   // parse all lumps of this name recursively in last-to-first order
+   E_ParseLumpRecursive(cfg, lumpname, root->index);
 }
 
 //
 // E_ParseEDFLumpOptional
 //
 // Calls the function above, but checks to make sure the lump exists
-// first so that an error will not occur. Returns NULL if the lump
-// wasn't found, so you must check the return value before using it.
+// first so that an error will not occur. Returns immediately if the 
+// lump wasn't found.
 //
-static cfg_t *E_ParseEDFLumpOptional(const char *lumpname, cfg_opt_t *opts)
+static void E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
 {
+   // check first and return without an error
    if(W_CheckNumForName(lumpname) == -1)
-      return NULL;
+      return;
 
-   return E_ParseEDFLump(lumpname, opts);
+   E_ParseEDFLump(cfg, lumpname);
 }
 
 //
