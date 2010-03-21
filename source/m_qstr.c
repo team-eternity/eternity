@@ -166,7 +166,8 @@ qstring_t *M_QStrClear(qstring_t *qstr)
 //
 void M_QStrFree(qstring_t *qstr)
 {
-   free(qstr->buffer);
+   if(qstr->buffer)
+      free(qstr->buffer);
    qstr->buffer = NULL;
    qstr->index = qstr->size = 0;
 }

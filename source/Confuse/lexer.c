@@ -117,10 +117,8 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
 static void lexer_free_buffer(void)
 {
    if(lexbuffer)
-   {
       free(lexbuffer);
-      lexbuffer = bufferpos = NULL;
-   }
+   lexbuffer = bufferpos = NULL;
 }
 
 //

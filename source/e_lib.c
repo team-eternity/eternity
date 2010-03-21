@@ -27,6 +27,7 @@
 #include "z_zone.h"
 #include "doomtype.h"
 #include "d_io.h"
+#include "d_dwfile.h"
 #include "m_hash.h"
 #include "m_misc.h"
 #include "w_wad.h"
@@ -181,6 +182,17 @@ int E_FindLumpInclude(cfg_t *src, const char *name)
    }
 
    return -1; // not found
+}
+
+//
+// E_CheckRoot
+//
+// haleyjd 03/21/10: Checks a root data source to see if it has already been
+// processed.
+//
+boolean E_CheckRoot(DWFILE *f)
+{
+   return false;
 }
 
 //=============================================================================
