@@ -814,8 +814,6 @@ static void E_ProcessFontVars(cfg_t *cfg)
 // Global Routines
 //
 
-static unsigned int edf_num_fonts;
-
 //
 // E_ProcessFonts
 //
@@ -826,9 +824,6 @@ void E_ProcessFonts(cfg_t *cfg)
    unsigned int i;
    unsigned int numfonts = cfg_size(cfg, EDF_SEC_FONT);
 
-   // track number processed for defaults processing
-   edf_num_fonts += numfonts;
-
    E_EDFLogPrintf("\t* Processing fonts\n"
                   "\t\t%d fonts(s) defined\n", numfonts);
 
@@ -836,17 +831,6 @@ void E_ProcessFonts(cfg_t *cfg)
       E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i));
 
    E_ProcessFontVars(cfg);
-}
-
-//
-// E_NeedDefaultFonts
-//
-// Returns true if EDF needs to do last-chance defaults processing
-// on fonts.edf
-//
-boolean E_NeedDefaultFonts(void)
-{
-   return (edf_num_fonts == 0);
 }
 
 //

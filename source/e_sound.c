@@ -790,17 +790,6 @@ void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
    }
 }
 
-//
-// E_NeedDefaultSounds
-//
-// haleyjd 04/13/08: Returns true if EDF needs to load sounds.edf for
-// default fallbacks.
-//
-boolean E_NeedDefaultSounds(void)
-{
-   return (e_sound_count == 0);
-}
-
 //=============================================================================
 //
 // Sound Sequences
@@ -1590,17 +1579,6 @@ void E_ProcessSndSeqs(cfg_t *cfg)
    // process the environment sequence manager
    E_ProcessEnviroMgr(cfg);
 }
-
-//
-// E_NeedDefaultSequences
-//
-// haleyjd 04/13/08: Returns true if no sequences exist.
-//
-boolean E_NeedDefaultSequences(void)
-{
-   return (e_sequence_count == 0);
-}
-
 
 //=============================================================================
 //

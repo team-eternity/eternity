@@ -710,20 +710,6 @@ void E_ProcessTerrainTypes(cfg_t *cfg)
    E_ProcessFloors(cfg);
 }
 
-//
-// E_NeedDefaultTerrain
-//
-// Returns true if EDF should try loading the default terrain.edf
-// file. This will only be done after all other processing, and when
-// all three types of definitions remain at zero. If a user wants to
-// forbid default loading, they can just define a dummy floor. The
-// "Solid" terrain is not counted for this purpose.
-//
-boolean E_NeedDefaultTerrain(void)
-{
-   return !(numsplashes || numterrains || numfloors);
-}
-
 // TerrainTypes lookup array
 static ETerrain **TerrainTypes = NULL;
 

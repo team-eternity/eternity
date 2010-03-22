@@ -122,8 +122,6 @@ void    E_ProcessSoundDeltas(cfg_t *cfg, boolean add);
 void    E_ProcessSndSeqs(cfg_t *cfg);
 void    E_ProcessAmbience(cfg_t *cfg);
 boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
-boolean E_NeedDefaultSounds(void);
-boolean E_NeedDefaultSequences(void);
 
 #define EDF_SEC_SOUND     "sound"
 #define EDF_SEC_SDELTA    "sounddelta"

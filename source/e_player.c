@@ -523,19 +523,6 @@ void E_ProcessPlayerClasses(cfg_t *cfg)
       E_ProcessPlayerClass(cfg_getnsec(cfg, EDF_SEC_PCLASS, i));
 }
 
-//
-// E_NeedDefaultPlayerData
-//
-// Returns true if EDF needs to perform last-chance defaults parsing for
-// player.edf. This is true in the event that the number of ANY of the
-// sections processed in this file is zero (at least one of each is
-// required).
-//
-boolean E_NeedDefaultPlayerData(void)
-{
-   return !(num_edf_skins && num_edf_pclasses);
-}
-
 //==============================================================================
 //
 // Game Engine Interface for Player Classes

@@ -100,7 +100,6 @@ enum
 extern int *pickupfx;
 
 void E_ProcessEDF(const char *filename);
-void E_ProcessEDFLumps(void);
 
 void E_EDFSetEnableValue(const char *, int); // enables
 

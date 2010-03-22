@@ -3138,7 +3138,8 @@ void D_DoomMain(void)
 void D_ReInitWadfiles(void)
 {
    R_FreeData();
-   E_ProcessEDFLumps(); // haleyjd 07/24/05: reproc. optional EDF lumps
+   // EDF_FIXME:
+   //E_ProcessEDFLumps(); // haleyjd 07/24/05: reproc. optional EDF lumps
    D_ProcessDEHQueue(); // haleyjd 09/12/03: run any queued DEHs
    R_Init();
    P_Init();
