@@ -230,9 +230,16 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
 
 CONSOLE_COMMAND(playdemo, cf_notnet)
 {
-   if(W_CheckNumForName(c_argv[0]) == -1)
+   if(c_argc < 1)
    {
-      C_Printf("%s not found\n",c_argv[0]);
+      C_Printf("usage: playdemo demoname\n");
+      return;
+   }
+
+   // haleyjd 02/15/10: check in both ns_demos and ns_global
+   if(W_CheckNumForNameNSG(c_argv[0], ns_demos) < 0)
+   {
+      C_Printf(FC_ERROR "%s not found\n", c_argv[0]);
       return;
    }
    

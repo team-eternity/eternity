@@ -1,4 +1,225 @@
 ================================================================================
+Changes since Eternity Engine v3.37.00
+================================================================================
+--------------------------------------------------------------------------------
+02/23/10
+
+I have de-Killoughified the branches in P_UpdateThinker that determine the
+thinker class, and removed a minor FIXME on something that I consider a 
+non-issue in p_user.c.
+
+--------------------------------------------------------------------------------
+02/21/10
+
+I have added preliminary support for the recording of v1.9-compatible demos, a
+long-requested feature. There is still some work to be done in making sure that
+EE only executes compatibility codepaths while recording, and that all optional
+overflow emulation code is enabled for maximum fidelity.
+
+--------------------------------------------------------------------------------
+02/19/10
+
+I changed E_HashInit so that functions passed to it as methods are all passed
+inside a new sort of structure I call an interface which only consists of 
+function pointer members.
+
+I have reorganized a lot of the code in P_SetupLevel to clean up that function
+considerably, as it was way too long (several hundred lines). Several operations
+that need to be performed pre-Z_FreeTags had found their way into the
+G_DoLoadLevel function rather than P_SetupLevel, where they really belonged,
+so I have moved all of them there and into their own function, 
+P_PreZoneFreeLevel. This way they will all stay together from now on.
+
+--------------------------------------------------------------------------------
+02/18/10
+
+I have placed a more reasonable limitation on the growth of metatables so that
+each individual table will not grow to more than 400 KB on 32-bit platforms.
+At the number of hash chains this implies (around 96000), there would need to be
+around 65000 objects in the table to cause another overload condition with the 
+current rehash criterion of 66% loadfactor. If EE is hashing 65000 objects per
+metatable, there are going to be worse concerns for performance than the load
+factors :/  I do not anticipate that even with Aeon, table loads should ever
+become so vast.
+
+--------------------------------------------------------------------------------
+02/16/10
+
+I have improved the cooldemo feature from SMMU so that it creates its own 
+dynamic camera spots which follow the target player  from one of his own
+previous viewpoints or from the viewpoint of his current attacker.
+
+I found out that EE's demosync was trashed because I accidentally called
+Table_SetTanToAngle at the wrong place in G_DoPlayDemo.
+
+--------------------------------------------------------------------------------
+02/15/10
+
+I have rewritten W_CheckNumForName and split off a new W_CheckNumForNameNS
+function, which eliminates the macroziation of W_CheckNumForName. The new
+function is now called everywhere that a specific namespace needs to be searched
+for a lumpname, which is how BOOM team should have done it in the first place
+rather than being lazy.
+
+An additional function, W_CheckNumForNameNSG, has been added to support 
+searching first inside a specific namespace, and then in ns_global if the lump
+was not found in the first search. This is used by the new code I have put inside
+the playdemo console command handler to correct a problem caused by the previous
+change that puts command-line-added demos into their own ns_demos namespace
+which caused this command to be unable to play such demos.
+
+--------------------------------------------------------------------------------
+02/09/10
+
+E_HashRebuild has been rewritten so that it maintains the original order of
+objects on each hash chain when resizing the table. This is required to make
+sure that modules that expect newer defintions to precede older ones in the
+hash table continue to work when they are converted over to use e_hash.
+
+This was made possible by my realization that the m_dllist data structure
+could support tail insertion simply by passing the address of the previous
+object's next pointer into M_DLListInsert as the list head pointer, which makes
+sense when you think about the inductive definition of a list.
+
+I fixed the old vanilla bug where the Doomguy would evilgrin on the status bar
+when picking up any item after loading a savegame. This was caused by the game
+failing to wake up the status bar again after loading the saved state over the
+blank-slate state created by the previous call to P_SetupLevel.
+
+--------------------------------------------------------------------------------
+02/07/10
+
+SoM suggested an optimization to e_hash table rebuilding which involves caching
+the unmodulated key value in each node. This removes the necessity of
+recomputing hash keys for every object in the table when it is grown.
+
+--------------------------------------------------------------------------------
+02/07/10
+
+I have added an e_sprite module, which is currently unused. This will become the
+new home of sprite processing and maintenance once it is rewritten for DECORATE
+state support.
+
+--------------------------------------------------------------------------------
+02/03/10
+
+In order to make test-building Eternity under my XP Pro virtual machine less of
+a pain , I went ahead and used some macros to re-enable building under Visual
+Studio 6 without the Win2k3 PSDK installed.
+
+I am preparing for a rewrite of sprite name handling in order to support
+implicit definition of sprite names in DECORATE states. The first thing I have
+done in this regard is to change coallocated sprite names to align to an 8-byte
+boundary, which should make accessing them faster, particularly on 64-bit
+architectures which care about this kind of thing a lot more than x86.
+
+--------------------------------------------------------------------------------
+01/28/10
+
+I moved the test on the line->nodraw field, which is used to keep PolyObject's
+parent linedef's segs from rendering, as they are replaced at runtime by 
+dynasegs, down into R_AddLine and out of the main loop in R_Subsector. This
+kind of virtually-always-false branch should usually *not* be moved up, contrary
+to your normal expectations, as it causes more overhead than making a few
+unnecessary function calls.
+
+I figured out that the rendering glitches in Sunder MAP10 were due to numeric
+overflow, and used intuition to figure out that the overflow must have been
+coming from the R_PointToAngle2 function. I have adapted similar changes to
+those in PrBoom+ and ZDoom that allow this function to call the numerically
+stable standard atan2 function when its parameters would cause an overflow.
+
+This has necessitated the splitting off of a P_PointToAngle function that is
+used by the playsim only. That function will continue to use the old imprecise
+tantoangle table unconditionally during old demo playback.
+
+--------------------------------------------------------------------------------
+01/24/10
+
+SoM noted a long time ago that Lee Killough's visplane hash function, though
+touted for being well-tuned and tested empirically, did not take any bits of 
+the visplane's height into account, by virtue of more or less all visplanes
+having integral fixed-point heights, meaning the first 16 low bits were all 0.
+
+I got around to fixing this by shifting the height down by FRACBITS before 
+adding it to the hash key.
+
+--------------------------------------------------------------------------------
+01/11/10
+
+CSonicGo found ANOTHER bug, this time the problem was that the status bar would
+not be woken up after a screenwipe unless the wipe engine was set to use the
+normal DOOM melt wipe. I fixed this by moving the wake up from wipe_MeltDrawer
+to Wipe_Drawer.
+
+I deleted most of the left-over dead SMMU menus which were commented out during
+the previous menu system redesign.
+
+--------------------------------------------------------------------------------
+01/10/10
+
+CSonicGo found an interesting SMMU bug by changing the value of the chasecam
+variable during a screenwipe. Turns out SMMU could run the camera thinker code
+outside of GS_LEVEL gamestate, which would crash when the chasecam would try
+to access the displayplayer's currently invalid body.
+
+--------------------------------------------------------------------------------
+01/09/10
+
+Rulesets have been added to GameModeInfo to determine boss special defaults.
+Defaults for finale types have been merged into the pre-existing finale
+rulesets, and the code to set finale type has been merged in p_info.
+
+--------------------------------------------------------------------------------
+01/07/10
+
+Fixed an oversight in EV_ThingSpawn that would have let 256 pass as an ACS
+spawn number. Until UDMF is implemented, 255 is the limit on spawn ids.
+
+Rulesets have been added to GameModeInfo for determination of default sky 
+textures, to replace more branches on gamemode and mission ids.
+
+--------------------------------------------------------------------------------
+01/06/10
+
+stretchsky now defaults to off since mlook and keylook are disabled by default.
+
+--------------------------------------------------------------------------------
+01/04/10
+
+All xrefs to the Small scripting engine have been corralled into conditional
+statements, using the symbol EE_NO_SMALL_SUPPORT. Defining this when building 
+will result in an EE exe with no Small scripting support. This will be required
+for 64-bit builds.
+
+Resolved a long-standing TODO by changing M_FileLength to use fseek and ftell
+to determine file sizes rather than using the POSIX fstat routine, which is less
+portable and is actually usually slower due to its need to populate the stat
+structure fields by calling mulitple operating-system-specific functions.
+
+As a better solution to the problem of BOOM's jumbling up of comments in the
+configuration file whenever variables are added or removed from it, I have added
+an m_resetcomments console command. Issuing this command will clear all comments
+cached from the configuration file at startup, and this will cause the proper
+comments to then be written on exit so long as config_help is enabled.
+
+--------------------------------------------------------------------------------
+01/02/10
+
+Fraggle has tweaked our main loop so that it can be limited to running at 35 Hz,
+consuming less than 100% CPU. However, this is causing bad frame skipping on my
+Windows 7 box, so I have had to make it optional on the value of the 
+d_fastrefresh variable. The older powersaver variable has been eliminated.
+
+--------------------------------------------------------------------------------
+01/01/10
+
+Added a new GS_STARTUP gamestate to prevent the gamestate from starting out set
+to GS_LEVEL, which could cause any code checking for that state to malfunction
+during startup. This was causing a crash in R_DoomTLStyle when the -devparm
+command line parameter was issued.
+
+================================================================================
 Changes since Eternity Engine v3.35.92
 ================================================================================
 --------------------------------------------------------------------------------

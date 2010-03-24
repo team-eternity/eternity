@@ -64,6 +64,9 @@
 #include "s_sndseq.h"
 #include "r_dynseg.h"
 #include "p_slopes.h"
+
+extern const char *level_error;
+
 //
 // MAP related Lookup tables.
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
@@ -234,8 +237,7 @@ void P_LoadSegs(int lump)
       li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "vertex", "vertex")];
       li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "vertex", "vertex")];
 
-      //li->angle  = (SwapShort(ml->angle))  << 16;
-      li->offset = (SwapShort(ml->offset)) << 16;
+      li->offset = (float)(SwapShort(ml->offset));
 
       // haleyjd 06/19/06: convert indices to unsigned
       linedef = SafeUintIndex(ml->linedef, numlines, "vertex", "line");
@@ -433,7 +435,10 @@ void P_LoadNodes(int lump)
    // haleyjd 09/01/02:
    // Long-needed fix: bomb out on zero-length nodes
    if(!numnodes)
-      I_Error("P_LoadNodes: no nodes defined for level");
+   {
+      level_error = "No nodes defined for level";
+      return;
+   }
 
    nodes = Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0);
    data  = W_CacheLumpNum(lump, PU_STATIC);
@@ -549,7 +554,7 @@ void P_LoadThings(int lump)
       for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(playeringame[i] && !players[i].mo)
-            I_Error("P_LoadThings: Missing required player start %i\n", i+1);
+            level_error = "Missing required player start";
       }
    }
 
@@ -602,7 +607,7 @@ void P_LoadHexenThings(int lump)
       for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(playeringame[i] && !players[i].mo)
-            I_Error("P_LoadThings: Missing required player start %i", i+1);
+            level_error = "Missing required player start";
       }
    }
 
@@ -683,12 +688,12 @@ void P_LoadLineDefs(int lump)
       // haleyjd 12/04/08: rangechecking for safety
       if(ld->sidenum[0] >= numsides)
       {
-         C_Printf(FC_ERROR "line error: bad side 0 #%d\a\n", ld->sidenum[0]);
+         C_Printf(FC_ERROR "Line error: bad side 0 #%d\a\n", ld->sidenum[0]);
          ld->sidenum[0] = 0;
       }
       if(ld->sidenum[1] >= numsides)
       {
-         C_Printf(FC_ERROR "line error: bad side 1 #%d\a\n", ld->sidenum[1]);
+         C_Printf(FC_ERROR "Line error: bad side 1 #%d\a\n", ld->sidenum[1]);
          ld->sidenum[1] = 0;
       }
 
@@ -756,7 +761,7 @@ static int spac_flags_tlate[HX_SPAC_NUMSPAC] =
 static void P_ConvertHexenLineFlags(line_t *line)
 {
    // extract Hexen special activation information
-   short spac = HX_GET_SPAC(line->flags);
+   int16_t spac = HX_GET_SPAC(line->flags);
 
    // translate into ExtraData extended line flags
    line->extflags = spac_flags_tlate[spac];
@@ -931,7 +936,7 @@ void P_LoadLineDefs2(void)
 void P_LoadSideDefs(int lump)
 {
    numsides = W_LumpLength(lump) / sizeof(mapsidedef_t);
-   sides = Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0);
+   sides    = Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0);
 }
 
 // killough 4/4/98: delay using texture names until
@@ -1008,9 +1013,9 @@ void P_LoadSideDefs2(int lump)
 }
 
 //
-// killough 10/98:
+// P_CreateBlockMap
 //
-// Rewritten to use faster algorithm.
+// killough 10/98: Rewritten to use faster algorithm.
 //
 // New procedure uses Bresenham-like algorithm on the linedefs, adding the
 // linedef to each block visited from the beginning to the end of the linedef.
@@ -1019,7 +1024,7 @@ void P_LoadSideDefs2(int lump)
 //
 // Please note: This section of code is not interchangable with TeamTNT's
 // code which attempts to fix the same problem.
-
+//
 static void P_CreateBlockMap(void)
 {
    register unsigned int i;
@@ -1184,6 +1189,81 @@ static void P_CreateBlockMap(void)
    }
 }
 
+static const char *bmaperrormsg;
+
+//
+// P_VerifyBlockMap
+//
+// haleyjd 03/04/10: do verification on validity of blockmap.
+//
+static boolean P_VerifyBlockMap(int count)
+{
+   boolean isvalid = true;
+   int x, y;
+   int *maxoffs = blockmaplump + count;
+
+   bmaperrormsg = NULL;
+
+   for(y = 0; y < bmapheight; ++y)
+   {
+      for(x = 0; x < bmapwidth; ++x)
+      {
+         int offset;
+         int *list, *tmplist;
+         int *blockoffset;
+
+         offset = y * bmapwidth + x;
+         blockoffset = blockmaplump + offset + 4;
+         
+         // check that block offset is in bounds
+         if(blockoffset >= maxoffs)
+         {
+            isvalid = false;
+            bmaperrormsg = "offset overflow";
+            break;
+         }
+         
+         offset = *blockoffset;         
+         list   = blockmaplump + offset;
+
+         // scan forward for a -1 terminator before maxoffs
+         for(tmplist = list; ; ++tmplist)
+         {
+            // we have overflowed the lump?
+            if(tmplist >= maxoffs)
+            {
+               isvalid = false;
+               bmaperrormsg = "open blocklist";
+               break;
+            }
+            if(*tmplist == -1) // found -1
+               break;
+         }
+         if(!isvalid) // if the list is not terminated, break now
+            break;
+
+         // scan the list for out-of-range linedef indicies in list
+         for(tmplist = list; *tmplist != -1; ++tmplist)
+         {
+            if(*tmplist < 0 || *tmplist >= numlines)
+            {
+               isvalid = false;
+               bmaperrormsg = "index >= numlines";
+               break;
+            }
+         }
+         if(!isvalid) // if a list has a bad linedef index, break now
+            break;
+      }
+
+      // break out early on any error
+      if(!isvalid)
+         break;
+   }
+
+   return isvalid;
+}
+
 //
 // P_LoadBlockMap
 //
@@ -1194,19 +1274,20 @@ static void P_CreateBlockMap(void)
 //
 void P_LoadBlockMap(int lump)
 {
-   int count;
+   int len   = W_LumpLength(lump);
+   int count = len / 2;
    
    // sf: -blockmap checkparm made into variable
    // also checking for levels without blockmaps (0 length)
-   if(r_blockmap || W_LumpLength(lump) == 0 || 
-      (count = W_LumpLength(lump) / 2) >= 0x10000)
+   // haleyjd 03/04/10: blockmaps of less than 8 bytes cannot be valid
+   if(r_blockmap || len < 8 || count >= 0x10000)
    {
       P_CreateBlockMap();
    }
    else
    {
       int i;
-      short *wadblockmaplump = W_CacheLumpNum (lump, PU_LEVEL);
+      int16_t *wadblockmaplump = W_CacheLumpNum (lump, PU_LEVEL);
       blockmaplump = Z_Malloc(sizeof(*blockmaplump) * count,
                               PU_LEVEL, NULL);
 
@@ -1222,7 +1303,7 @@ void P_LoadBlockMap(int lump)
 
       for(i = 4; i < count; i++)
       {
-         short t = SwapShort(wadblockmaplump[i]);          // killough 3/1/98
+         int16_t t = SwapShort(wadblockmaplump[i]);          // killough 3/1/98
          blockmaplump[i] = t == -1 ? -1l : (int) t & 0xffff;
       }
 
@@ -1232,6 +1313,15 @@ void P_LoadBlockMap(int lump)
       bmaporgy   = blockmaplump[1] << FRACBITS;
       bmapwidth  = blockmaplump[2];
       bmapheight = blockmaplump[3];
+
+      // haleyjd 03/04/10: check for blockmap problems
+      if(!(demo_compatibility || P_VerifyBlockMap(count)))
+      {
+         C_Printf(FC_ERROR "Blockmap error: %s\a\n", bmaperrormsg);
+         Z_Free(blockmaplump);
+         blockmaplump = NULL;
+         P_CreateBlockMap();
+      }
    }
 
    // clear out mobj chains
@@ -1259,6 +1349,7 @@ static void AddLineToSector(sector_t *s, line_t *l)
 
 //
 // P_GroupLines
+//
 // Builds sector line lists and subsector sector numbers.
 // Finds block bounding boxes for sectors.
 //
@@ -1354,9 +1445,9 @@ void P_GroupLines(void)
 }
 
 //
-// killough 10/98
+// P_RemoveSlimeTrails
 //
-// Remove slime trails.
+// killough 10/98: Remove slime trails.
 //
 // Slime trails are inherent to Doom's coordinate system -- i.e. there is
 // nothing that a node builder can do to prevent slime trails ALL of the time,
@@ -1398,41 +1489,50 @@ void P_GroupLines(void)
 //
 // Firelines (TM) is a Rezistered Trademark of MBF Productions
 //
-
 void P_RemoveSlimeTrails(void)             // killough 10/98
 {
-   byte *hit = calloc(1, numvertexes);     // Hitlist for vertices
+   byte *hit; 
    int i;
    
-   for(i=0; i<numsegs; i++)                // Go through each seg
+   // haleyjd: don't mess with vertices in old demos, for safety.
+   if(demo_version < 203)
+      return;
+
+   hit = calloc(1, numvertexes);           // Hitlist for vertices
+
+   for(i = 0; i < numsegs; ++i)            // Go through each seg
    {
       const line_t *l = segs[i].linedef;   // The parent linedef
-      if (l->dx && l->dy)                  // We can ignore orthogonal lines
+      if(l->dx && l->dy)                   // We can ignore orthogonal lines
       {
          vertex_t *v = segs[i].v1;
+
          do
          {
-            if(!hit[v - vertexes])         // If we haven't processed vertex
+            if(!hit[v - vertexes])           // If we haven't processed vertex
             {
                hit[v - vertexes] = 1;        // Mark this vertex as processed
                if(v != l->v1 && v != l->v2)  // Exclude endpoints of linedefs
-               { // Project the vertex back onto the parent linedef
+               { 
+                  // Project the vertex back onto the parent linedef
                   int64_t dx2 = (l->dx >> FRACBITS) * (l->dx >> FRACBITS);
                   int64_t dy2 = (l->dy >> FRACBITS) * (l->dy >> FRACBITS);
                   int64_t dxy = (l->dx >> FRACBITS) * (l->dy >> FRACBITS);
-                  int64_t s = dx2 + dy2;
-                  int x0 = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
-                  v->x = (int)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
-                  v->y = (int)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
+                  int64_t s   = dx2 + dy2;
+                  int     x0  = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
+                  v->x = (fixed_t)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
+                  v->y = (fixed_t)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
                   // Cardboard store float versions of vertices.
                   v->fx = M_FixedToFloat(v->x);
                   v->fy = M_FixedToFloat(v->y);
                }
-            }  // Obfuscated C contest entry:   :)
-         }
+            }  
+         } // Obfuscated C contest entry:   :)
          while((v != segs[i].v2) && (v = segs[i].v2));
       }
    }
+
+   // free hit list
    free(hit);
 }
 
@@ -1505,10 +1605,8 @@ static const char *levellumps[] =
 //
 // P_CheckLevel
 //
-// sf 11/9/99
-// we need to do this now because we no longer have to
-// conform to the MAPxy or ExMy standard previously
-// imposed
+// sf 11/9/99: We need to do this now because we no longer have to conform to
+// the MAPxy or ExMy standard previously imposed.
 //
 int P_CheckLevel(int lumpnum)
 {
@@ -1539,9 +1637,26 @@ int P_CheckLevel(int lumpnum)
 void P_ConvertHereticSpecials(void); // haleyjd
 
 void P_LoadOlo(void);
-extern int level_error;
 
 void P_InitThingLists(void); // haleyjd
+
+//=============================================================================
+//
+// P_SetupLevel - Main Level Setup Routines
+//
+
+// P_SetupLevel subroutines
+
+//
+// P_SetupLevelError
+// 
+// haleyjd 02/18/10: Error handling routine for P_SetupLevel
+//
+static void P_SetupLevelError(const char *msg, const char *levelname)
+{
+   C_Printf(FC_ERROR "%s: '%s'\n", msg, levelname);
+   C_SetConsole();
+}
 
 //
 // P_NewLevelMsg
@@ -1558,168 +1673,148 @@ static void P_NewLevelMsg(void)
 }
 
 //
-// P_SetupLevel
+// P_ClearPlayerVars
 //
-// killough 5/3/98: reformatted, cleaned up
+// haleyjd 2/18/10: clears various player-related data.
 //
-void P_SetupLevel(char *mapname, int playermask, skill_t skill)
+static void P_ClearPlayerVars(void)
 {
-   int i, lumpnum;
-   
-   totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
-   wminfo.partime = 180;
-   c_showprompt = false;      // kill console prompt as nothing can
-                              // be typed at the moment
+   int i;
 
    for(i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(playeringame[i] && players[i].playerstate == PST_DEAD)
+         players[i].playerstate = PST_REBORN;
+
       players[i].killcount = players[i].secretcount = players[i].itemcount = 0;
+
+      memset(players[i].frags, 0, sizeof(players[i].frags));
+
+      // haleyjd: explicitly nullify old player object pointers
+      players[i].mo = NULL;
+   }
+
+   totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
+   wminfo.partime = 180;
 
    // Initial height of PointOfView will be set by player think.
    players[consoleplayer].viewz = 1;
+}
 
-   // haleyjd 03/15/03: clear levelscript callbacks
-   // haleyjd 01/07/07: reset ACS interpreter state
+//
+// P_PreZoneFreeLevel
+//
+// haleyjd 2/18/10: actions that must be performed immediately prior to 
+// Z_FreeTags should be kept here.
+//
+static void P_PreZoneFreeLevel(void)
+{
+   //==============================================
+   // Scripting
+
 #ifndef EE_NO_SMALL_SUPPORT
+   // haleyjd 03/15/03: clear levelscript callbacks
    SM_RemoveCallbacks(SC_VM_LEVELSCRIPT);
 #endif
+
+   // haleyjd 01/07/07: reset ACS interpreter state
    ACS_InitLevel();
 
-   // get the map name lump number
-   if((lumpnum = W_CheckNumForName(mapname)) == -1)
-   {
-      C_Printf(FC_ERROR"Map not found: '%s'\n", mapname);
-      C_SetConsole();
-      return;
-   }
+   //==============================================
+   // Sound Engine
 
-   // determine map format; if invalid, abort
-   if((mapformat = P_CheckLevel(lumpnum)) == LEVEL_FORMAT_INVALID)
-   {
-      C_Printf(FC_ERROR "Not a level: '%s'\n", mapname);
-      C_SetConsole();
-      return;
-   }
-
-   // haleyjd 07/22/04: moved up
-   newlevel = (w_GlobalDir.lumpinfo[lumpnum]->file != iwadhandle);
-   doom1level = false;
-
-   strncpy(levelmapname, mapname, 8);
-   leveltime = 0;
+   // haleyjd 06/06/06: stop sound sequences
+   S_StopAllSequences();
    
-   // Make sure all sounds are stopped before Z_FreeTags. - sf: why?
-   //  sf: s_start split into s_start, s_stopsounds because of this requirement
+   // haleyjd 10/19/06: stop looped sounds
+   S_StopLoopedSounds();
+
+   // Make sure all sourced sounds are stopped
    S_StopSounds();
 
-   // haleyjd 05/16/08: must clear dynamic segs before Z_FreeTags
+   //==============================================
+   // Renderer
+
+   // haleyjd: stop particle engine
+   R_ClearParticles();
+
+   // SoM: initialize portals
+   R_InitPortals();
+
+   // haleyjd 05/16/08: clear dynamic segs
    R_ClearDynaSegs();
-   
-   // free the old level
-   Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
 
-   // haleyjd: explicitly nullify old player object pointers here
-   for(i = 0; i < MAXPLAYERS; ++i)
-      players[i].mo = NULL;
+   //==============================================
+   // Playsim
 
-   P_FreeSecNodeList(); // sf: free the psecnode_t linked list in p_map.c
+   // haleyjd 02/16/10: clear followcam pointers
+   P_FollowCamOff();
+
+   // sf: free the psecnode_t linked list in p_map.c
+   P_FreeSecNodeList(); 
+}
+
+//
+// P_InitNewLevel
+//
+// Performs (re)initialization of subsystems after Z_FreeTags.
+//
+static void P_InitNewLevel(int lumpnum)
+{
+   //==============================================
+   // Playsim
+
+   // re-initialize thinker list
    P_InitThinkers();   
-   P_InitTIDHash();     // haleyjd 02/02/04 -- clear the TID hash table
-
-   P_InitPortals(); // SoM: I can't believe I forgot to call this!
-
-   P_LoadLevelInfo(lumpnum);  // load MapInfo
-   E_LoadExtraData();         // haleyjd 10/08/03: load ExtraData
-
-   // haleyjd: set global colormap -- see r_data.c
-   R_SetGlobalLevelColormap();
-
-#if 0
-   // when loading a hub level, display a 'loading' box
-   if(hub_changelevel)
-      V_SetLoading(4, "Loading");
-#endif
-
-   P_NewLevelMsg();
    
-   // wake up heads-up display
-   HU_Start();
+   // haleyjd 02/02/04 -- clear the TID hash table
+   P_InitTIDHash();     
+
+   // SoM: I can't believe I forgot to call this!
+   P_InitPortals(); 
+
+   //==============================================
+   // Map data scripts
+
+   // load MapInfo
+   P_LoadLevelInfo(lumpnum);
    
-   // must be after p_loadlevelinfo as the music lump name is gotten there
-   S_Start();
-   
+   // haleyjd 10/08/03: load ExtraData
+   E_LoadExtraData();         
+
+   //==============================================
+   // Renderer
+
    // load the sky
    R_StartSky();
 
-   // note: most of this ordering is important
+   // haleyjd: set global colormap -- see r_data.c
+   R_SetGlobalLevelColormap();
    
-   // killough 3/1/98: P_LoadBlockMap call moved down to below
-   // killough 4/4/98: split load of sidedefs into two parts,
-   // to allow texture names to be used in special linedefs
+   //==============================================
+   // Wake up subsystems
 
-   level_error = false;  // reset
+   // wake up heads-up display
+   HU_Start();
    
-   P_LoadVertexes(lumpnum + ML_VERTEXES);
-   P_LoadSectors (lumpnum + ML_SECTORS);
-   P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
+   // must be after P_LoadLevelInfo as the music lump name is gotten there
+   S_Start();
+   
+   // console message
+   P_NewLevelMsg();
+}
 
-   // haleyjd 10/03/05: handle multiple map formats
-   switch(mapformat)
-   {
-   case LEVEL_FORMAT_DOOM:
-      P_LoadLineDefs(lumpnum + ML_LINEDEFS);
-      break;
-   case LEVEL_FORMAT_HEXEN:
-      P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);
-      break;
-   }
-
-#if 0
-   V_LoadingIncrease();  // update
-#endif
-
-   P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
-   P_LoadLineDefs2();                     // killough 4/4/98
-
-   if(level_error)       // drop to the console
-   {             
-      C_SetConsole();
-      return;
-   }
-
-   P_LoadBlockMap  (lumpnum + ML_BLOCKMAP);     // killough 3/1/98
-   P_LoadSubsectors(lumpnum + ML_SSECTORS);
-   P_LoadNodes     (lumpnum + ML_NODES);
-   P_LoadSegs      (lumpnum + ML_SEGS);
-
-#if 0
-   V_LoadingIncrease();
-#endif
-
-   // haleyjd 01/26/04: call new P_LoadReject
-   P_LoadReject(lumpnum + ML_REJECT);
-   P_GroupLines();
-
-   P_RemoveSlimeTrails(); // killough 10/98: remove slime trails from wad
-
-   // Note: you don't need to clear player queue slots --
-   // a much simpler fix is in g_game.c -- killough 10/98   
-   bodyqueslot = 0;
-   deathmatch_p = deathmatchstarts;
-
-   // haleyjd 10/03/05: handle multiple map formats
-   switch(mapformat)
-   {
-   case LEVEL_FORMAT_DOOM:
-      P_LoadThings(lumpnum + ML_THINGS);
-      break;
-   case LEVEL_FORMAT_HEXEN:
-      P_LoadHexenThings(lumpnum + ML_THINGS);
-      break;
-   }
-
-   // if deathmatch, randomly spawn the active players
+//
+// P_DeathMatchSpawnPlayers
+//
+// If deathmatch, randomly spawn the active players
+//
+static void P_DeathMatchSpawnPlayers(void)
+{
    if(GameType == gt_dm)
    {
+      int i;
+
       for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(playeringame[i])
@@ -1729,54 +1824,6 @@ void P_SetupLevel(char *mapname, int playermask, skill_t skill)
          }
       }
    }
-
-   // haleyjd: init all thing lists (boss brain spots, etc)
-   P_InitThingLists(); 
-
-   // clear special respawning que
-   iquehead = iquetail = 0;
-   
-   // haleyjd 10/05/05: convert heretic specials
-   if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
-      P_ConvertHereticSpecials();
-   
-   // set up world state
-   P_SpawnSpecials(mapformat);
-
-   // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
-   P_SpawnDeferredSpecials(mapformat);
-
-   // haleyjd
-   P_InitLightning();
-
-#if 0
-   V_LoadingIncrease();
-#endif
-
-   // preload graphics
-   if(precache)
-      R_PrecacheLevel();
-
-   R_SetViewSize(screenSize+3, c_detailshift); //sf
-
-#if 0
-   V_LoadingIncrease();
-#endif
-
-   // haleyjd: keep the chasecam on between levels
-   if(camera == &chasecam)
-      P_ResetChasecam();
-   else
-      camera = NULL;        // camera off
-
-#ifndef EE_NO_SMALL_SUPPORT
-   // haleyjd 03/15/03: load and initialize any level scripts
-   SM_InitLevelScript();
-#endif
-
-   // haleyjd 01/07/07: initialize ACS for Hexen maps
-   if(mapformat == LEVEL_FORMAT_HEXEN)
-      ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
 }
 
 //
@@ -1799,6 +1846,170 @@ void P_InitThingLists(void)
 
    // haleyjd 06/06/06: initialize environmental sequences
    S_InitEnviroSpots();
+}
+
+//
+// CHECK_ERROR
+//
+// Checks to see if level_error has been set to a valid error message.
+// If so, P_SetupLevelError is called with the message and P_SetupLevel
+// will return. The game will enter GS_CONSOLE state.
+//
+#define CHECK_ERROR() \
+   do { \
+      if(level_error) \
+      { \
+         P_SetupLevelError(level_error, mapname); \
+         return; \
+      } \
+   } while(0)
+
+//
+// P_SetupLevel
+//
+// killough 5/3/98: reformatted, cleaned up
+//
+void P_SetupLevel(const char *mapname, int playermask, skill_t skill)
+{
+   int lumpnum;
+   
+   // get the map name lump number
+   if((lumpnum = W_CheckNumForName(mapname)) == -1)
+   {
+      P_SetupLevelError("Map not found", mapname);
+      return;
+   }
+
+   // determine map format; if invalid, abort
+   if((mapformat = P_CheckLevel(lumpnum)) == LEVEL_FORMAT_INVALID)
+   {
+      P_SetupLevelError("Not a level", mapname);
+      return;
+   }
+
+   // haleyjd 07/22/04: moved up
+   newlevel   = (w_GlobalDir.lumpinfo[lumpnum]->file != iwadhandle);
+   doom1level = false;
+
+   strncpy(levelmapname, mapname, 8);
+   leveltime = 0;
+
+   // clear player data
+   P_ClearPlayerVars();
+
+   // perform pre-Z_FreeTags actions
+   P_PreZoneFreeLevel();
+   
+   // free the old level
+   Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
+
+   // perform post-Z_FreeTags actions
+   P_InitNewLevel(lumpnum);
+
+   // note: most of this ordering is important
+   
+   // killough 3/1/98: P_LoadBlockMap call moved down to below
+   // killough 4/4/98: split load of sidedefs into two parts,
+   // to allow texture names to be used in special linedefs
+
+   level_error = NULL; // reset
+   
+   P_LoadVertexes(lumpnum + ML_VERTEXES);
+   P_LoadSectors (lumpnum + ML_SECTORS);
+   
+   // possible error: missing flats
+   CHECK_ERROR();
+
+   P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
+
+   // haleyjd 10/03/05: handle multiple map formats
+   switch(mapformat)
+   {
+   case LEVEL_FORMAT_DOOM:
+      P_LoadLineDefs(lumpnum + ML_LINEDEFS);
+      break;
+   case LEVEL_FORMAT_HEXEN:
+      P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);
+      break;
+   }
+
+   P_LoadSideDefs2 (lumpnum + ML_SIDEDEFS);
+   P_LoadLineDefs2 ();                      // killough 4/4/98
+   P_LoadBlockMap  (lumpnum + ML_BLOCKMAP); // killough 3/1/98
+   P_LoadSubsectors(lumpnum + ML_SSECTORS);
+   P_LoadNodes     (lumpnum + ML_NODES);
+   
+   // possible error: missing nodes
+   CHECK_ERROR();
+   
+   P_LoadSegs  (lumpnum + ML_SEGS);   
+   P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
+   P_GroupLines();
+
+   // killough 10/98: remove slime trails from wad
+   P_RemoveSlimeTrails(); 
+
+   // Note: you don't need to clear player queue slots --
+   // a much simpler fix is in g_game.c -- killough 10/98   
+   bodyqueslot = 0;
+   deathmatch_p = deathmatchstarts;
+
+   // haleyjd 10/03/05: handle multiple map formats
+   switch(mapformat)
+   {
+   case LEVEL_FORMAT_DOOM:
+      P_LoadThings(lumpnum + ML_THINGS);
+      break;
+   case LEVEL_FORMAT_HEXEN:
+      P_LoadHexenThings(lumpnum + ML_THINGS);
+      break;
+   }
+
+   // spawn players randomly in deathmatch
+   P_DeathMatchSpawnPlayers();
+
+   // possible error: missing player or deathmatch spots
+   CHECK_ERROR();
+
+   // haleyjd: init all thing lists (boss brain spots, etc)
+   P_InitThingLists(); 
+
+   // clear special respawning queue
+   iquehead = iquetail = 0;
+   
+   // haleyjd 10/05/05: convert heretic specials
+   if(mapformat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
+      P_ConvertHereticSpecials();
+   
+   // set up world state
+   P_SpawnSpecials(mapformat);
+
+   // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
+   P_SpawnDeferredSpecials(mapformat);
+
+   // haleyjd
+   P_InitLightning();
+
+   // preload graphics
+   if(precache)
+      R_PrecacheLevel();
+
+   R_SetViewSize(screenSize+3, c_detailshift); //sf
+
+   // haleyjd: keep the chasecam on between levels
+   if(camera == &chasecam)
+      P_ResetChasecam();
+   else
+      camera = NULL;        // camera off
+
+#ifndef EE_NO_SMALL_SUPPORT
+   // haleyjd 03/15/03: load and initialize any level scripts
+   SM_InitLevelScript();
+#endif
+
+   // haleyjd 01/07/07: initialize ACS for Hexen maps
+   if(mapformat == LEVEL_FORMAT_HEXEN)
+      ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
 }
 
 //

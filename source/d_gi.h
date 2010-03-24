@@ -278,6 +278,7 @@ typedef struct gamemodeinfo_s
    
    // startup stuff
    const char *versionName;   // descriptive version name
+   const char *freeVerName;   // FreeDoom override name, if such exists
    const char *startupBanner; // startup banner text
    char **iwadPath;           // iwad path variable
    
@@ -337,7 +338,7 @@ typedef struct gamemodeinfo_s
    int teleFogType;           // DeHackEd number of telefog object
    fixed_t teleFogHeight;     // amount to add to telefog z coord
    int teleSound;             // sound id for teleportation
-   short thrustFactor;        // damage thrust factor
+   int16_t thrustFactor;      // damage thrust factor
    const char *defPClassName; // default playerclass name
    const char *defTranslate;  // default translation for AUTOTRANSLATE
    bspecrule_t *bossRules;    // default boss specials

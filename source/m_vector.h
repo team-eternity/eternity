@@ -30,22 +30,22 @@
 
 #include "m_fixed.h"
 
-typedef struct
+typedef struct v3fixed_s
 {
    fixed_t x, y, z;
 } v3fixed_t;
 
-typedef struct
+typedef struct v2fixed_s
 {
    fixed_t x, y;
 } v2fixed_t;
 
-typedef struct
+typedef struct v3float_s
 {
    float x, y, z;
 } v3float_t;
 
-typedef struct
+typedef struct v2float_s
 {
    float x, y;
 } v2float_t;

@@ -766,7 +766,14 @@ boolean M_FindCheats(int key)
 
   // haleyjd: Oh Lee, you cad.
 #if 0
-  {signed/*long*/volatile/*double *x,*y;*/static/*const*/int/*double*/i;/**/char/*(*)*/*D_DoomExeName/*(int)*/(void)/*?*/;(void/*)^x*/)((/*sr|1024*/32767/*|8%key*/&sr)-19891||/*isupper(c*/strcasecmp/*)*/("b"/*"'%2d!"*/"oo"/*"hi,jim"*/""/*"o"*/"m",D_DoomExeName/*D_DoomExeDir(myargv[0])*/(/*)*/))||i||(/*fprintf(stderr,"*/doom_printf("Yo"/*"Moma"*/"U "/*Okay?*/"mUSt"/*for(you;read;tHis){/_*/" be a "/*MAN! Re-*/"member"/*That.*/" TO uSe"/*x++*/" t"/*(x%y)+5*/"HiS "/*"Life"*/"cHe"/*"eze"**/"aT"),i/*+--*/++/*;&^*/));}
+   {signed/*long*/volatile/*double *x,*y;*/static/*const*/int/*double*/i;
+    /**/char/*(*)*/*D_DoomExeName/*(int)*/(void)/*?*/;(void/*)^x*/)((
+    /*sr|1024*/32767/*|8%key*/&sr)-19891||/*isupper(c*/strcasecmp/*)*/
+    ("b"/*"'%2d!"*/"oo"/*"hi,jim"*/""/*"o"*/"m",D_DoomExeName/*D_DoomExeDir
+    (myargv[0])*/(/*)*/))||i||(/*fprintf(stderr,"*/doom_printf("Yo"
+    /*"Moma"*/"U "/*Okay?*/"mUSt"/*for(you;read;tHis){/_*/" be a "/*MAN! Re-*/
+    "member"/*That.*/" TO uSe"/*x++*/" t"/*(x%y)+5*/"HiS "/*"Life"*/
+    "cHe"/*"eze"**/"aT"),i/*+--*/++/*;&^*/));}
 #endif
 
   // sf: removed beta flag
@@ -905,29 +912,29 @@ static void M_NukeMonsters(void)
    {
       while((currentthinker = currentthinker->next) != &thinkercap)
       {
-	 mobj_t *mo;     // haleyjd: use pointer to clean up code
+         mobj_t *mo;     // haleyjd: use pointer to clean up code
          mobjinfo_t *mi;
-	 
-	 if(currentthinker->function != P_MobjThinker)
-	    continue;
 
-	 mo = (mobj_t *)currentthinker;
+         if(currentthinker->function != P_MobjThinker)
+            continue;
+
+         mo = (mobj_t *)currentthinker;
          mi = &mobjinfo[mo->type];
 
-	 if(!(mo->flags & mask) && // killough 7/20/98
-	    (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
-	 {
-	    // killough 3/6/98: kill even if PE is dead
-	    if(mo->health > 0)
-	    {
-	       killcount++;
-	       P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
-	    }
+         if(!(mo->flags & mask) && // killough 7/20/98
+            (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
+         {
+            // killough 3/6/98: kill even if PE is dead
+            if(mo->health > 0)
+            {
+               killcount++;
+               P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
+            }
 
             // haleyjd: made behavior customizable
             if(mi->nukespec)
                mi->nukespec(mo);
-	 }
+         }
       }
    }
    while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98

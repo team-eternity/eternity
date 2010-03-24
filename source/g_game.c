@@ -80,6 +80,7 @@
 #include "s_sndseq.h"
 #include "acs_intr.h"
 #include "metaapi.h"
+#include "p_maputl.h"
 
 #define SAVEGAMESIZE  0x20000
 #define SAVESTRINGSIZE  24
@@ -93,7 +94,7 @@ static boolean  netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
-static short    consistancy[MAXPLAYERS][BACKUPTICS];
+static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -277,7 +278,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // turn 180 degrees in one keystroke? -- phares
    if(action_flip)
    {
-      cmd->angleturn += (short)QUICKREVERSE;
+      cmd->angleturn += (int16_t)QUICKREVERSE;
       action_flip = false;
    }
 
@@ -296,13 +297,13 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else
    {
       if(action_right)
-         cmd->angleturn -= (short)pc->angleturn[tspeed];
+         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
       if(action_left)
-         cmd->angleturn += (short)pc->angleturn[tspeed];
+         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
       if(joyxmove > 0)
-         cmd->angleturn -= (short)pc->angleturn[tspeed];
+         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
       if(joyxmove < 0)
-         cmd->angleturn += (short)pc->angleturn[tspeed];
+         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
    }
 
    if(action_forward)
@@ -617,23 +618,25 @@ void G_SetGameMap(void)
       gamemap = 9;
 }
 
+//
+// G_SetGameMapName
+//
 // haleyjd: set and normalize gamemapname
-// called various places
+//
 void G_SetGameMapName(const char *s)
 {
    strncpy(gamemapname, s, 8);
    M_Strupr(gamemapname);
 }
 
-//
-// G_DoLoadLevel
-//
-
 extern gamestate_t wipegamestate;
 extern gamestate_t oldgamestate;
 
 extern void R_InitPortals(void);
 
+//
+// G_DoLoadLevel
+//
 static void G_DoLoadLevel(void)
 {
    int i;
@@ -644,21 +647,6 @@ static void G_DoLoadLevel(void)
       basetic = gametic;
 
    gamestate = GS_LEVEL;
-
-   // haleyjd 12/27/03: this should be BEFORE P_SetupLevel!
-   for(i = 0; i < MAXPLAYERS; ++i)
-   {
-      if(playeringame[i] && players[i].playerstate == PST_DEAD)
-         players[i].playerstate = PST_REBORN;
-
-      memset(players[i].frags, 0, sizeof(players[i].frags));
-   }
-
-   S_StopAllSequences(); // haleyjd 06/06/06
-   S_StopLoopedSounds(); // haleyjd 10/19/06
-   R_ClearParticles();
-
-   R_InitPortals();
 
    P_SetupLevel(gamemapname, 0, gameskill);
 
@@ -903,21 +891,18 @@ static void G_DoPlayDemo(void)
       
    M_ExtractFileBase(defdemoname, basename);         // killough
    
-   // haleyjd 11/09/09: check ns_demos namespace first
-   if((lumpnum = (W_CheckNumForName)(basename, ns_demos)) < 0)
+   // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
+   if((lumpnum = W_CheckNumForNameNSG(basename, ns_demos)) < 0)
    {
-      if((lumpnum = W_CheckNumForName(basename)) < 0)
+      if(singledemo)
+         I_Error("G_DoPlayDemo: no such demo %s\n", basename);
+      else
       {
-         if(singledemo)
-            I_Error("G_DoPlayDemo: no such demo %s\n", basename);
-         else
-         {
-            C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
-            gameaction = ga_nothing;
-            D_AdvanceDemo();
-         }
-         return;
+         C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
       }
+      return;
    }
 
    demobuffer = demo_p = W_CacheLumpNum(lumpnum, PU_STATIC); // killough
@@ -1058,9 +1043,6 @@ static void G_DoPlayDemo(void)
          // subversion is always 0 for demo versions < 329
          demo_subversion = 0;
       }
-
-      // haleyjd 01/28/10: reset p_tantoangle for new demo_version
-      Table_SetTanToAngle(demo_version);
       
       compatibility = *demo_p++;       // load old compatibility flag
       skill = *demo_p++;
@@ -1104,6 +1086,9 @@ static void G_DoPlayDemo(void)
       if(demover == 200)        // killough 6/3/98: partially fix v2.00 demos
          demo_p += 256-GAME_OPTION_SIZE;
    }
+
+   // haleyjd 01/28/10: reset p_tantoangle for new demo_version
+   Table_SetTanToAngle(demo_version);
 
    if(demo_compatibility)  // only 4 players can exist in old demos
    {
@@ -1270,7 +1255,6 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 //
 // Demo limits removed -- killough
 //
-//
 // NETCODE_FIXME: This will have to change as well, but maintaining
 // compatibility is not necessary for demo writing, making this function
 // much simpler to handle. Like reading, writing of other types of
@@ -1298,10 +1282,16 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    else
       demo_p[i++] = (cmd->angleturn + 128) >> 8; 
 
-   demo_p[i++] =  cmd->buttons;  
-   demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
-   demo_p[i++] =  cmd->look & 0xff;
-   demo_p[i]   = (cmd->look >> 8) & 0xff;
+   demo_p[i++] =  cmd->buttons;
+
+   if(demo_version >= 335)
+      demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
+
+   if(demo_version >= 333)
+   {
+      demo_p[i++] =  cmd->look & 0xff;
+      demo_p[i]   = (cmd->look >> 8) & 0xff;
+   }
    
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {
@@ -2010,13 +2000,18 @@ static void G_CameraTicker(void)
    // run special cameras
    if((walkcam_active = (camera == &walkcamera)))
       P_WalkTicker();
-
-   if((chasecam_active = (camera == &chasecam)))
+   else if((chasecam_active = (camera == &chasecam)))
       P_ChaseTicker();
+   else if(camera == &followcam)
+      P_FollowCamTicker();
 
    // cooldemo countdown   
    if(demoplayback && cooldemo)
    {
+      // force refresh on death of displayed player
+      if(players[displayplayer].health <= 0)
+         cooldemo_tics = 0;
+
       if(cooldemo_tics)
          cooldemo_tics--;
       else
@@ -2160,7 +2155,7 @@ void G_Ticker(void)
                
                // sf: include y as well as x
                if(players[i].mo)
-                  consistancy[i][buf] = (short)(players[i].mo->x + players[i].mo->y);
+                  consistancy[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
                else
                   consistancy[i][buf] = 0; // killough 2/14/98
             }
@@ -2406,6 +2401,40 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
 }
 
 //
+// G_ClosestDMSpot
+//
+// haleyjd 02/16/10: finds the closest deathmatch start to a given
+// location. Returns -1 if a spot wasn't found.
+//
+// Will not return the spot marked in "notspot" if notspot is >= 0.
+//
+int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
+{
+   int j, numspots = deathmatch_p - deathmatchstarts;
+   int closestspot = -1;
+   fixed_t closestdist = 32767*FRACUNIT;
+
+   if(numspots <= 0)
+      return -1;
+
+   for(j = 0; j < numspots; ++j)
+   {
+      fixed_t dist = P_AproxDistance(x - deathmatchstarts[j].x * FRACUNIT,
+                                     y - deathmatchstarts[j].y * FRACUNIT);
+      
+      if(dist < closestdist && j != notspot)
+      {
+         closestdist = dist;
+         closestspot = j;
+      }
+   }
+
+   return closestspot;
+}
+
+extern const char *level_error;
+
+//
 // G_DeathMatchSpawnPlayer
 //
 // Spawns a player at one of the random death match spots
@@ -2417,9 +2446,11 @@ void G_DeathMatchSpawnPlayer(int playernum)
    
    if(selections < MAXPLAYERS)
    {
-      C_Printf(FC_ERROR"\aOnly %i deathmatch spots, %d required\n",
-               selections, MAXPLAYERS);
-      C_SetConsole();
+      static char errormsg[64];
+      psnprintf(errormsg, sizeof(errormsg), 
+                "Only %d deathmatch spots, %d required", 
+                selections, MAXPLAYERS);
+      level_error = errormsg;
       return;
    }
 
@@ -2465,12 +2496,20 @@ void G_DoReborn(int playernum)
       if(GameType == gt_dm)
       {
          G_DeathMatchSpawnPlayer(playernum);
+         
+         // haleyjd: G_DeathMatchSpawnPlayer may set level_error
+         if(level_error)
+         {
+            C_Printf(FC_ERROR "G_DeathMatchSpawnPlayer: %s\a\n", level_error);
+            C_SetConsole();
+         }
+
          return;
       }
 
       if(G_CheckSpot(playernum, &playerstarts[playernum]))
       {
-         P_SpawnPlayer (&playerstarts[playernum]);
+         P_SpawnPlayer(&playerstarts[playernum]);
          return;
       }
 
@@ -2898,12 +2937,9 @@ void G_InitNew(skill_t skill, char *name)
 //
 // G_RecordDemo
 //
-
-//
 // NETCODE_FIXME -- DEMO_FIXME: See the comment above where demos
 // are read. Some of the same issues may apply here.
 //
-
 void G_RecordDemo(char *name)
 {
    int i;
@@ -3030,20 +3066,20 @@ byte *G_WriteOptions(byte *demo_p)
 byte *G_ReadOptions(byte *demo_p)
 {
    byte *target = demo_p + GAME_OPTION_SIZE;
-   
+
    monsters_remember = *demo_p++;
-   
+
    variable_friction = *demo_p;  // ice & mud
    demo_p++;
-   
+
    weapon_recoil = *demo_p;      // weapon recoil
    demo_p++;
-   
+
    allow_pushers = *demo_p;      // PUSH Things
    demo_p++;
-   
+
    demo_p++;
-   
+
    // haleyjd: restored bobbing to proper sync critical status
    player_bobbing = *demo_p;     // whether player bobs or not
    demo_p++;
@@ -3052,11 +3088,11 @@ byte *G_ReadOptions(byte *demo_p)
    respawnparm = *demo_p++;
    fastparm = *demo_p++;
    nomonsters = *demo_p++;
-   
+
    demo_insurance = *demo_p++;              // killough 3/31/98
 
    // killough 3/26/98: Added rngseed to demos; 3/31/98: moved here
-   
+
    rngseed  = *demo_p++ & 0xff;
    rngseed <<= 8;
    rngseed += *demo_p++ & 0xff;
@@ -3151,6 +3187,78 @@ byte *G_ReadOptions(byte *demo_p)
    return target;
 }
 
+//
+// G_SetOldDemoOptions
+//
+// haleyjd 02/21/10: Configure everything to run for an old demo.
+//
+static void G_SetOldDemoOptions(void)
+{
+   int i;
+
+   for(i = 0; i <= comp_zerotags; ++i)
+      comp[i] = 1;
+      
+   monsters_remember     = 0;
+   variable_friction     = 0;
+   weapon_recoil         = 0;
+   allow_pushers         = 0;
+   player_bobbing        = 1;
+   demo_insurance        = 0;
+   monster_infighting    = 1;
+   monster_backing       = 0;
+   monster_avoid_hazards = 0;
+   monster_friction      = 0;
+   help_friends          = 0;
+   bfgtype               = bfg_normal;
+   dogs                  = 0;
+   dog_jumping           = 0;
+   monkeys               = 0;
+   default_autoaim       = autoaim;
+   autoaim               = 1;
+   default_allowmlook    = allowmlook;
+   allowmlook            = 0;
+}
+
+//
+// G_BeginRecordingOld
+//
+// haleyjd 02/21/10: Support recording of vanilla demos.
+//
+static void G_BeginRecordingOld(void)
+{
+   int i;
+
+   // support -longtics when recording vanilla format demos
+   longtics_demo = (M_CheckParm("-longtics") != 0);
+
+   // set demo version appropriately
+   if(longtics_demo)
+      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
+   else
+      demo_version = 109;              // v1.9
+
+   demo_subversion = 0;
+
+   Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
+   G_SetOldDemoOptions();
+
+   demo_p = demobuffer;
+
+   *demo_p++ = demo_version;    
+   *demo_p++ = gameskill;
+   *demo_p++ = gameepisode;
+   *demo_p++ = gamemap;
+   *demo_p++ = (GameType == gt_dm);
+   *demo_p++ = respawnparm;
+   *demo_p++ = fastparm;
+   *demo_p++ = nomonsters;
+   *demo_p++ = consoleplayer;
+
+   for(i = 0; i < MAXPLAYERS; ++i)
+      *demo_p++ = playeringame[i];
+}
+
 /*
   haleyjd 06/17/01: new demo format changes
 
@@ -3173,6 +3281,13 @@ byte *G_ReadOptions(byte *demo_p)
 void G_BeginRecording(void)
 {
    int i;
+
+   // haleyjd 02/21/10: -vanilla will record v1.9-format demos
+   if(M_CheckParm("-vanilla"))
+   {
+      G_BeginRecordingOld();
+      return;
+   }
    
    demo_p = demobuffer;
 
@@ -3260,7 +3375,7 @@ void G_TimeDemo(char *name, boolean showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(W_CheckNumForName(name) == -1)
+   if(W_CheckNumForNameNSG(name, ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;
@@ -3276,14 +3391,12 @@ void G_TimeDemo(char *name, boolean showmenu)
    timingdemo = true;      // show stats after quit   
 }
 
-//===================
-//=
-//= G_CheckDemoStatus
-//=
-//= Called after a death or level completion to allow demos to be cleaned up
-//= Returns true if a new demo loop action will take place
-//===================
-
+//
+// G_CheckDemoStatus
+//
+// Called after a death or level completion to allow demos to be cleaned up
+// Returns true if a new demo loop action will take place
+//
 boolean G_CheckDemoStatus(void)
 {
    if(demorecording)
@@ -3392,16 +3505,18 @@ void player_printf(player_t *player, const char *s, ...)
 
 extern camera_t intercam;
 
+//
 // G_CoolViewPoint
 //
-// change to new viewpoint
+// Change to new viewpoint
 //
 void G_CoolViewPoint(void)
 {
    int viewtype;
    int old_displayplayer = displayplayer;
+   int numdmspots = deathmatch_p - deathmatchstarts;
 
-   viewtype = M_Random() % (P_CollectionIsEmpty(&camerathings) ? 2 : 3);
+   viewtype = M_Random() % 3;
    
    // pick the next player
    do
@@ -3418,6 +3533,9 @@ void G_CoolViewPoint(void)
       S_UpdateSounds(players[displayplayer].mo);
       P_ResetChasecam();      // reset the chasecam
    }
+
+   if(players[displayplayer].health <= 0)
+      viewtype = 1; // use chasecam when player is dead
   
    // turn off the chasecam?
    if(chasecam_active && viewtype != 1)
@@ -3425,6 +3543,11 @@ void G_CoolViewPoint(void)
       chasecam_active = false;
       P_ChaseEnd();
    }
+
+   // turn off followcam
+   P_FollowCamOff();
+   if(camera == &followcam)
+      camera = NULL;
   
    if(viewtype == 1)  // view from the chasecam
    {
@@ -3433,29 +3556,20 @@ void G_CoolViewPoint(void)
    }
    else if(viewtype == 2) // camera view
    {
-      mobj_t *cam = P_CollectionGetRandom(&camerathings, pr_misc);
+      // sometimes check out the player's enemies
+      mobj_t *spot = players[displayplayer].attacker;
+
+      // no enemy? check out the player's current location then.
+      if(!spot || spot->health <= 0)
+         spot = players[displayplayer].mo;
+
+      P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
       
-      P_ResetChasecam(); // turn off the chasecam if its still on
-      
-      intercam.x = cam->x;
-      intercam.y = cam->y;
-      intercam.angle = cam->angle;
-      intercam.pitch = 0;
-#ifdef R_LINKEDPORTALS
-      intercam.groupid = cam->groupid;
-#endif
-      
-      // haleyjd: fix for deep water sectors
-      {
-         subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
-         intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
-         intercam.heightsec = subsec->sector->heightsec;
-      }
-      camera = &intercam;
+      camera = &followcam;
    }
   
    // pic a random number of tics until changing the viewpoint
-   cooldemo_tics = (7 + M_Random() % 13) * TICRATE;
+   cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

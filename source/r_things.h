@@ -77,8 +77,7 @@ void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
-
-typedef struct
+typedef struct cb_maskedcolumn_s
 {
    float ytop;
    float scale;

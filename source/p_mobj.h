@@ -223,18 +223,18 @@ typedef enum
   MF2_NOTHRUST      = 0x00000040,  // not affected by push/pull/wind/current
   MF2_NOCROSS       = 0x00000080,  // cannot trigger special lines
   MF2_JUMPDOWN      = 0x00000100,  // if friend, can jump down
-  MF2_PUSHABLE 	    = 0x00000200,  // can be pushed by moving things
+  MF2_PUSHABLE      = 0x00000200,  // can be pushed by moving things
   MF2_MAP07BOSS1    = 0x00000400,  // is a MAP07 boss type 1
   MF2_MAP07BOSS2    = 0x00000800,  // is a MAP07 boss type 2
   MF2_E1M8BOSS      = 0x00001000,  // is an E1M8 boss 
   MF2_E2M8BOSS      = 0x00002000,  // is an E2M8 boss
   MF2_E3M8BOSS      = 0x00004000,  // is an E3M8 boss
-  MF2_BOSS 	    = 0x00008000,  // is a boss
+  MF2_BOSS          = 0x00008000,  // is a boss
   MF2_E4M6BOSS      = 0x00010000,  // is an E4M6 boss
   MF2_E4M8BOSS      = 0x00020000,  // is an E4M8 boss
   MF2_FOOTCLIP      = 0x00040000,  // feet are clipped by liquids
-  MF2_FLOATBOB 	    = 0x00080000,  // uses floatbob z movement
-  MF2_DONTDRAW 	    = 0x00100000,  // doesn't generate vissprite
+  MF2_FLOATBOB      = 0x00080000,  // uses floatbob z movement
+  MF2_DONTDRAW      = 0x00100000,  // doesn't generate vissprite
   MF2_SHORTMRANGE   = 0x00200000,  // has short missile range
   MF2_LONGMELEE     = 0x00400000,  // has long melee range
   MF2_RANGEHALF     = 0x00800000,  // uses half actual distance
@@ -319,10 +319,10 @@ enum
 
 // ammo + weapon in a dropped backpack 
 
-typedef struct
+typedef struct backpack_s
 {
-        short ammo[NUMAMMO];
-        char weapon;
+   int16_t ammo[NUMAMMO];
+   char weapon;
 } backpack_t;
   
 // Map Object definition.
@@ -412,9 +412,9 @@ struct mobj_s
    int                 health;
 
    // Movement direction, movement generation (zig-zagging).
-   short               movedir;        // 0-7
-   short               movecount;      // when 0, select a new dir
-   short               strafecount;    // killough 9/8/98: monster strafing
+   int16_t             movedir;        // 0-7
+   int16_t             movecount;      // when 0, select a new dir
+   int16_t             strafecount;    // killough 9/8/98: monster strafing
 
    // Thing being chased/attacked (or NULL),
    // also the originator for missiles.
@@ -422,24 +422,24 @@ struct mobj_s
 
    // Reaction time: if non 0, don't attack yet.
    // Used by player to freeze a bit after teleporting.
-   short               reactiontime;   
+   int16_t             reactiontime;   
 
    // If >0, the current target will be chased no
    // matter what (even if shot by another object)
-   short               threshold;
+   int16_t             threshold;
 
    // killough 9/9/98: How long a monster pursues a target.
-   short               pursuecount;
+   int16_t             pursuecount;
 
-   short               gear; // killough 11/98: used in torque simulation
+   int16_t             gear; // killough 11/98: used in torque simulation
 
    // Additional info record for player avatars only.
    // Only valid if thing is a player
    struct player_s*    player;
-   skin_t *           skin;   //sf: skin
+   skin_t *            skin;   //sf: skin
 
    // Player number last looked for.
-   short               lastlook;       
+   int16_t             lastlook;       
 
    // For nightmare respawn.
    mapthing_t          spawnpoint;     
@@ -485,7 +485,7 @@ struct mobj_s
 
    // scripting fields
    int args[NUMMTARGS]; // arguments
-   unsigned short tid;   // thing id used by scripts
+   uint16_t tid;        // thing id used by scripts
 
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are

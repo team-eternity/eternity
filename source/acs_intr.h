@@ -36,8 +36,8 @@
 // Defines
 //
 
-#define ACS_STACK_LEN 128 
-#define ACS_NUMLOCALS 10
+#define ACS_STACK_LEN      128 
+#define ACS_NUMLOCALS      10
 #define ACS_NUM_THINGTYPES 256
 
 //

@@ -168,7 +168,7 @@ static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
 //
 static int TWriteByte(MIDI *mididata, int MIDItrack, unsigned char byte)
 {
-   ULONG pos ;
+   ULONG pos;
    
    pos = mididata->track[MIDItrack].len;
    

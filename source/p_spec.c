@@ -69,7 +69,7 @@
 // Animating textures and planes
 // There is another anim_t used in wi_stuff, unrelated.
 //
-typedef struct
+typedef struct anim_s
 {
   boolean     istexture;
   int         picnum;
@@ -188,7 +188,7 @@ void P_InitPicAnims(void)
       }
       else
       {
-         if((W_CheckNumForName)(animdefs[i].startname, ns_flats) == -1)  // killough 4/17/98
+         if(W_CheckNumForNameNS(animdefs[i].startname, ns_flats) == -1)  // killough 4/17/98
             continue;
          
          lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
@@ -4447,7 +4447,7 @@ void P_ConvertHereticSpecials(void)
 // from an array, but not until all the Hexen specials are
 // implemented.
 //
-void P_ConvertHexenLineSpec(short *special, int *args)
+void P_ConvertHexenLineSpec(int16_t *special, int *args)
 {
    switch(*special)
    {

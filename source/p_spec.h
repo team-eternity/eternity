@@ -583,9 +583,9 @@ typedef enum
 
 struct switchlist_s
 {
-  char name1[9];
-  char name2[9];
-  short episode;
+  char    name1[9];
+  char    name2[9];
+  int16_t episode;
 } __attribute__((packed)); //jff 3/23/98 pack to read from memory
 
 typedef struct switchlist_s switchlist_t;
@@ -594,7 +594,7 @@ typedef struct switchlist_s switchlist_t;
 #pragma pack(pop)
 #endif
 
-typedef struct
+typedef struct button_s
 {
    int      line;
    int      side;
@@ -610,7 +610,7 @@ extern int numbuttonsalloc;
 
 // p_lights
 
-typedef struct
+typedef struct fireflicker_s
 {
   thinker_t thinker;
   sector_t *sector;
@@ -619,7 +619,7 @@ typedef struct
   int minlight;
 } fireflicker_t;
 
-typedef struct
+typedef struct lightflash_s
 {
   thinker_t thinker;
   sector_t *sector;
@@ -630,7 +630,7 @@ typedef struct
   int mintime;
 } lightflash_t;
 
-typedef struct
+typedef struct strobe_s
 {
   thinker_t thinker;
   sector_t *sector;
@@ -641,7 +641,7 @@ typedef struct
   int brighttime;
 } strobe_t;
 
-typedef struct
+typedef struct glow_s
 {
   thinker_t thinker;
   sector_t *sector;
@@ -654,7 +654,7 @@ typedef struct
 // sf 13/10/99
 // haleyjd 01/10/06: revised for parameterized line specs
 
-typedef struct
+typedef struct lightfade_s
 {
   thinker_t thinker;
   sector_t *sector;
@@ -669,7 +669,7 @@ typedef struct
 
 // p_plats
 
-typedef struct
+typedef struct plat_s
 {
   thinker_t thinker;
   sector_t *sector;
@@ -703,7 +703,7 @@ enum
    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
-typedef struct
+typedef struct vldoor_s
 {
   thinker_t thinker;
   vldoor_e type;
@@ -727,7 +727,7 @@ typedef struct
 } vldoor_t;
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
-typedef struct
+typedef struct doordata_s
 {
    // generalized values
    int delay_type;
@@ -745,7 +745,7 @@ typedef struct
 
 // haleyjd 09/06/07: sector special transfer structure
 
-typedef struct
+typedef struct spectransfer_s
 {
    int newspecial;
    unsigned int flags;
@@ -757,7 +757,7 @@ typedef struct
 
 // p_doors
 
-typedef struct
+typedef struct ceiling_s
 {
   thinker_t thinker;
   ceiling_e type;
@@ -782,13 +782,14 @@ typedef struct
   struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
 } ceiling_t;
 
-typedef struct ceilinglist {
+typedef struct ceilinglist 
+{
   ceiling_t *ceiling; 
   struct ceilinglist *next,**prev;
 } ceilinglist_t;
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
-typedef struct
+typedef struct ceilingdata_s
 {   
    // generalized values
    int trigger_type;
@@ -807,7 +808,7 @@ typedef struct
 
 // p_floor
 
-typedef struct
+typedef struct floormove_s
 {
   thinker_t thinker;
   floor_e type;
@@ -819,7 +820,7 @@ typedef struct
   // haleyjd 09/06/07: spectransfer
   spectransfer_t special;
 
-  short texture;
+  int16_t texture;
   fixed_t floordestheight;
   fixed_t speed;
   int resetTime;       // haleyjd 10/13/05: resetting stairs
@@ -830,7 +831,7 @@ typedef struct
 } floormove_t;
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
-typedef struct
+typedef struct floordata_s
 {   
    // generalized values
    int trigger_type;
@@ -847,7 +848,7 @@ typedef struct
 } floordata_t;
 
 // haleyjd 10/06/05: extended data struct for parameterized stairs
-typedef struct
+typedef struct stairdata_s
 {   
    // generalized values
    int trigger_type;
@@ -864,7 +865,7 @@ typedef struct
    int sync_value;
 } stairdata_t;
 
-typedef struct
+typedef struct elevator_s
 {
   thinker_t thinker;
   elevator_e type;
@@ -876,7 +877,7 @@ typedef struct
 } elevator_t;
 
 // joek: pillars
-typedef struct
+typedef struct pillar_s
 {
   thinker_t thinker;
   sector_t *sector;
@@ -889,7 +890,7 @@ typedef struct
 } pillar_t;
 
 // haleyjd 10/21/06: data struct for param pillars
-typedef struct
+typedef struct pillardata_s
 {
    fixed_t speed;  // speed of furthest moving surface
    fixed_t fdist;  // for open, how far to open floor
@@ -900,7 +901,7 @@ typedef struct
 } pillardata_t;
 
 // haleyjd 06/30/09: waggle floors
-typedef struct
+typedef struct floorwaggle_s
 {
    thinker_t thinker;
    sector_t *sector;
@@ -918,7 +919,8 @@ typedef struct
 
 // killough 3/7/98: Add generalized scroll effects
 
-typedef struct {
+typedef struct scroll_s
+{
   thinker_t thinker;   // Thinker structure for scrolling
   fixed_t dx, dy;      // (dx,dy) scroll speeds
   int affectee;        // Number of affected sidedef, sector, tag, or whatever
@@ -941,7 +943,8 @@ typedef struct {
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
-typedef struct {
+typedef struct pusher_s
+{
   thinker_t thinker;   // Thinker structure for Pusher
   enum
   {
@@ -1047,7 +1050,7 @@ boolean P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
-void P_ConvertHexenLineSpec(short *special, int *args);
+void P_ConvertHexenLineSpec(int16_t *special, int *args);
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1342,7 +1345,7 @@ enum
 };
 
 boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac);
-boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, short special, 
+boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special, 
                             int *args, int side, int spac, boolean reuse);
 
 #endif

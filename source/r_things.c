@@ -48,7 +48,8 @@
 
 extern int columnofs[];
 
-typedef struct {
+typedef struct maskdraw_s
+{
   int x1;
   int x2;
   int column;
@@ -211,12 +212,12 @@ void R_InitSpriteDefs(char **namelist)
    
    numsprites = (signed int)i;
 
-   sprites = Z_Malloc(numsprites *sizeof(*sprites), PU_STATIC, NULL);
+   sprites = Z_Malloc(numsprites * sizeof(*sprites), PU_STATIC, NULL);
    
    // Create hash table based on just the first four letters of each sprite
    // killough 1/31/98
    
-   hash = malloc(sizeof(*hash)*numentries); // allocate hash table
+   hash = malloc(sizeof(*hash) * numentries); // allocate hash table
 
    for(i = 0; i < numentries; ++i) // initialize hash table as empty
       hash[i].index = -1;

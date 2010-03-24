@@ -989,7 +989,7 @@ columndrawer_t r_normal_drawer =
 // Could be read from a lump instead.
 //
 
-typedef struct
+typedef struct translat_s
 {
   int start;      // start of the sequence of colours
   int number;     // number of colours
@@ -1075,7 +1075,7 @@ int R_TranslationNumForName(const char *name)
 {
    int result    = -1;
    int markernum = W_GetNumForName("T_START");
-   int lumpnum   = (W_CheckNumForName)(name, ns_translations);
+   int lumpnum   = W_CheckNumForNameNS(name, ns_translations);
 
    if(lumpnum != -1)
       result = lumpnum - markernum + TRANSLATIONCOLOURS;
@@ -1201,6 +1201,8 @@ void R_FillBackScreen (void)
               W_CacheLumpName(border->c_br, PU_CACHE));
 } 
 
+//
+// R_VideoErase
 //
 // Copy a screen buffer.
 //

@@ -128,7 +128,7 @@ extern const int fuzzoffset[];
 extern int fuzzpos;
 
 // Cardboard
-typedef struct
+typedef struct cb_column_s
 {
    int x, y1, y2;
 

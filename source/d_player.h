@@ -131,7 +131,7 @@ struct player_s
    boolean        weaponowned[NUMWEAPONS];
    int            ammo[NUMAMMO];
    int            maxammo[NUMAMMO];
-   short          weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
+   int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.
    
@@ -174,7 +174,7 @@ struct player_s
 // INTERMISSION
 // Structure passed e.g. to WI_Start(wb)
 //
-typedef struct
+typedef struct wbplayerstruct_s
 {
   boolean     in;     // whether the player is in game
     
@@ -188,7 +188,7 @@ typedef struct
   
 } wbplayerstruct_t;
 
-typedef struct
+typedef struct wbstartstruct_s
 {
   int         epsd;   // episode # (0-2)
 

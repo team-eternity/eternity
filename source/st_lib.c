@@ -58,24 +58,17 @@ void STlib_init(void)
 // to the value displayed, a pointer to the on/off control, and the width
 // Returns nothing
 //
-void STlib_initNum
-( st_number_t *n,
-  int x,
-  int y,
-  patch_t **pl,
-  int *num,
-  boolean *on,
-  boolean *bg_on,
-  int     width )
+void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num,
+                   boolean *on, boolean *bg_on, int width)
 {
-   n->x  = x;
-   n->y  = y;
+   n->x      = x;
+   n->y      = y;
    n->oldnum = 0;
    n->width  = width;
-   n->num  = num;
-   n->on = on;
-   n->bg_on = bg_on; // haleyjd
-   n->p  = pl;
+   n->num    = num;
+   n->on     = on;
+   n->bg_on  = bg_on; // haleyjd
+   n->p      = pl;
 }
 
 //
@@ -88,10 +81,9 @@ void STlib_initNum
 // indicating whether refresh is needed.
 // Returns nothing
 //
-void STlib_drawNum
-( st_number_t*  n,
-  byte *outrng,        //jff 2/16/98 add color translation to digit output
-  boolean refresh )
+// jff 2/16/98 add color translation to digit output
+//
+static void STlib_drawNum(st_number_t *n, byte *outrng, boolean refresh, int alpha)
 {
    int   numdigits = n->width;
    int   num = *n->num;
@@ -136,10 +128,9 @@ void STlib_drawNum
    // in the special case of 0, you draw 0
    if(!num)
    {
-      if(outrng && !sts_always_red)
-         V_DrawPatchTranslated(x - w, n->y, &vbscreen, n->p[ 0 ],outrng,0);
-      else //jff 2/18/98 allow use of faster draw routine from config
-         V_DrawPatch(x - w, n->y, &vbscreen, n->p[ 0 ]);
+      //jff 2/18/98 allow use of faster draw routine from config
+      V_DrawPatchTL(x - w, n->y, &vbscreen, n->p[0], 
+                    sts_always_red ? NULL : outrng, alpha);
    }
 
    // draw the new number
@@ -147,10 +138,9 @@ void STlib_drawNum
    while(num && numdigits--)
    {
       x -= w;
-      if(outrng && !sts_always_red)
-         V_DrawPatchTranslated(x, n->y, &vbscreen, n->p[ num % 10 ],outrng,0);
-      else //jff 2/18/98 allow use of faster draw routine from config
-         V_DrawPatch(x, n->y, &vbscreen, n->p[ num % 10 ]);
+      //jff 2/18/98 allow use of faster draw routine from config
+      V_DrawPatchTL(x, n->y, &vbscreen, n->p[ num % 10 ],
+                    sts_always_red ? NULL : outrng, alpha);
       num /= 10;
    }
 
@@ -158,10 +148,9 @@ void STlib_drawNum
    //jff 2/16/98 add color translation to digit output
    if(neg)
    {
-      if(outrng && !sts_always_red)
-         V_DrawPatchTranslated(x - 8, n->y, &vbscreen, sttminus,outrng,0);
-      else //jff 2/18/98 allow use of faster draw routine from config
-         V_DrawPatch(x - 8, n->y, &vbscreen, sttminus);
+      //jff 2/18/98 allow use of faster draw routine from config
+      V_DrawPatchTL(x - 8, n->y, &vbscreen, sttminus,
+                    sts_always_red ? NULL : outrng, alpha);
    }
 }
 
@@ -173,13 +162,12 @@ void STlib_drawNum
 // Passed a number widget, the output color range, and a refresh flag
 // Returns nothing
 //
-void STlib_updateNum
-( st_number_t*    n,
-  byte *outrng, //jff 2/16/98 add color translation to digit output
-  boolean   refresh )
+// jff 2/16/98 add color translation to digit output
+//
+void STlib_updateNum(st_number_t *n, byte *outrng, boolean refresh, int alpha)
 {
    if(*n->on)
-      STlib_drawNum(n, outrng, refresh);
+      STlib_drawNum(n, outrng, refresh, alpha);
 }
 
 //
@@ -192,15 +180,8 @@ void STlib_updateNum
 // for the percent sign.
 // Returns nothing.
 //
-void STlib_initPercent
-( st_percent_t *p,
-  int x,
-  int y,
-  patch_t **pl,
-  int *num,
-  boolean *on,
-  boolean *bg_on,
-  patch_t *percent )
+void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
+                       boolean *on, boolean *bg_on, patch_t *percent)
 {
    STlib_initNum(&p->n, x, y, pl, num, on, bg_on, 3);
    p->p = percent;
@@ -214,30 +195,23 @@ void STlib_initPercent
 // Passed a precent widget, the output color range, and a refresh flag
 // Returns nothing
 //
-void STlib_updatePercent
-( st_percent_t*   per,
-  byte *outrng,             //jff 2/16/98 add color translation to digit output
-  int refresh )
+// jff 2/16/98 add color translation to digit output
+//
+void STlib_updatePercent(st_percent_t *per, byte *outrng, int refresh, int alpha)
 {
    if(refresh || *per->n.on) // killough 2/21/98: fix percents not updated;
    {
-      if(!sts_always_red)     // also support gray-only percents
-      {
-         V_DrawPatchTranslated
-            (
-             per->n.x,
-             per->n.y,
-             &vbscreen,
-             per->p,
-             sts_pct_always_gray ? cr_gray : outrng,
-             0
-            );
-      }
-      else   //jff 2/18/98 allow use of faster draw routine from config
-         V_DrawPatch(per->n.x, per->n.y, &vbscreen, per->p);
+      byte *tlate = NULL;
+
+      // jff 2/18/98 allow use of faster draw routine from config
+      // also support gray-only percents
+      if(!sts_always_red)
+         tlate = sts_pct_always_gray ? cr_gray : outrng;
+
+      V_DrawPatchTL(per->n.x, per->n.y, &vbscreen, per->p, tlate, alpha);
    }
    
-   STlib_updateNum(&per->n, outrng, refresh);
+   STlib_updateNum(&per->n, outrng, refresh, alpha);
 }
 
 //
@@ -250,20 +224,16 @@ void STlib_updatePercent
 // to the numbers representing what to display, and pointer to the enable flag
 // Returns nothing.
 //
-void STlib_initMultIcon
-( st_multicon_t* i,
-  int x,
-  int y,
-  patch_t** il,
-  int* inum,
-  boolean* on )
+void STlib_initMultIcon(st_multicon_t *i, int x, int y, patch_t **il, int *inum,
+                        boolean *on, boolean *bg_on)
 {
-   i->x  = x;
-   i->y  = y;
-   i->oldinum  = -1;
-   i->inum = inum;
-   i->on = on;
-   i->p  = il;
+   i->x       = x;
+   i->y       = y;
+   i->oldinum = -1;
+   i->inum    = inum;
+   i->on      = on;
+   i->bg_on   = bg_on;
+   i->p       = il;
 }
 
 //
@@ -276,13 +246,13 @@ void STlib_initMultIcon
 // Passed a st_multicon_t widget, and a refresh flag
 // Returns nothing.
 //
-void STlib_updateMultIcon(st_multicon_t *mi, boolean refresh )
+void STlib_updateMultIcon(st_multicon_t *mi, boolean refresh, int alpha)
 {
    int w, h, x, y;
 
    if(*mi->on && (mi->oldinum != *mi->inum || refresh))
    {
-      if (mi->oldinum != -1)
+      if(mi->oldinum != -1 && *mi->bg_on)
       {
          x = mi->x - SwapShort(mi->p[mi->oldinum]->leftoffset);
          y = mi->y - SwapShort(mi->p[mi->oldinum]->topoffset);
@@ -294,8 +264,11 @@ void STlib_updateMultIcon(st_multicon_t *mi, boolean refresh )
 	  
          V_CopyRect(x, y-ST_Y, BG, w, h, x, y, FG);
       }
-      if(*mi->inum != -1)  // killough 2/16/98: redraw only if != -1
-         V_DrawPatch(mi->x, mi->y, &vbscreen, mi->p[*mi->inum]);
+
+      // killough 2/16/98: redraw only if != -1
+      if(*mi->inum != -1)
+         V_DrawPatchTL(mi->x, mi->y, &vbscreen, mi->p[*mi->inum], NULL, alpha);
+
       mi->oldinum = *mi->inum;
    }
 }
@@ -310,20 +283,15 @@ void STlib_updateMultIcon(st_multicon_t *mi, boolean refresh )
 // to the flags representing what is displayed, and pointer to the enable flag
 // Returns nothing.
 //
-void STlib_initBinIcon
-( st_binicon_t* b,
-  int x,
-  int y,
-  patch_t* i,
-  boolean* val,
-  boolean* on )
+void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i, 
+                       boolean *val, boolean *on)
 {
-   b->x  = x;
-   b->y  = y;
+   b->x      = x;
+   b->y      = y;
    b->oldval = 0;
-   b->val  = val;
-   b->on = on;
-   b->p  = i;
+   b->val    = val;
+   b->on     = on;
+   b->p      = i;
 }
 
 //
@@ -336,7 +304,7 @@ void STlib_initBinIcon
 // Passed a st_binicon_t widget, and a refresh flag
 // Returns nothing.
 //
-void STlib_updateBinIcon(st_binicon_t *bi, boolean refresh )
+void STlib_updateBinIcon(st_binicon_t *bi, boolean refresh)
 {
    int x, y, w, h;
 

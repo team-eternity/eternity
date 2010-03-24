@@ -2228,10 +2228,10 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      short w  = SwapShort(patch->width);
-      short h  = SwapShort(patch->height);
-      short to = SwapShort(patch->topoffset);
-      short lo = SwapShort(patch->leftoffset);
+      int16_t w  = SwapShort(patch->width);
+      int16_t h  = SwapShort(patch->height);
+      int16_t to = SwapShort(patch->topoffset);
+      int16_t lo = SwapShort(patch->leftoffset);
 
       V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
                     y + 12 - (h >> 1) + to, 

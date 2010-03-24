@@ -220,7 +220,7 @@ static void R_DynaSegOffset(seg_t *seg, line_t *line)
    else
       t = sqrt((dx * dx) + (dy * dy));
 
-   seg->offset = M_DoubleToFixed(t);
+   seg->offset = (float)t;
 }
 
 //
@@ -409,7 +409,8 @@ void R_AttachPolyObject(polyobj_t *poly)
    if(poly->flags & POF_ISBAD)
       return;
 
-   if(poly->flags & POF_ATTACHED) // already attached?
+   // already attached?
+   if(poly->flags & POF_ATTACHED) 
       return;
 
    // iterate on the polyobject lines array
@@ -422,7 +423,6 @@ void R_AttachPolyObject(polyobj_t *poly)
 
       idseg->polyobj     = poly;
       idseg->seg.linedef = line;
-      idseg->seg.offset  = 0;
       idseg->seg.sidedef = &sides[line->sidenum[0]];
       idseg->seg.v1      = R_GetFreeDynaVertex();
       idseg->seg.v2      = R_GetFreeDynaVertex();

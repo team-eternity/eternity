@@ -38,7 +38,7 @@
 
 extern void AddIWADDir(char *dir);
 
-typedef struct 
+typedef struct registry_value_s
 {
    HKEY root;
    char *path;

@@ -110,22 +110,22 @@ boolean map_draw_nodelines;
 #define CXMTOF(x)  (f_x + (int)(MTOF((x) - m_x)))
 #define CYMTOF(y)  (f_y + (f_h - (int)(MTOF((y) - m_y))))
 
-typedef struct
+typedef struct fpoint_s
 {
    int x, y;
 } fpoint_t;
 
-typedef struct
+typedef struct fline_s
 {
    fpoint_t a, b;
 } fline_t;
 
-typedef struct
+typedef struct mline_s
 {
    mpoint_t a, b;
 } mline_t;
 
-typedef struct
+typedef struct islope_s
 {
    double slp, islp;
 } islope_t;
@@ -1436,12 +1436,12 @@ static void AM_drawFlineWu(fline_t *fl, int color)
    if(dy > dx)
    {
       // line is y-axis major.
-      unsigned short erroracc = 0, 
-         erroradj = (unsigned short)(((unsigned int)dx << 16) / (unsigned int)dy);
+      uint16_t erroracc = 0, 
+         erroradj = (uint16_t)(((uint32_t)dx << 16) / (uint32_t)dy);
 
       while(--dy)
       {
-         unsigned short erroracctmp = erroracc;
+         uint16_t erroracctmp = erroracc;
 
          erroracc += erroradj;
 
@@ -1461,12 +1461,12 @@ static void AM_drawFlineWu(fline_t *fl, int color)
    else
    {
       // line is x-axis major.
-      unsigned short erroracc = 0, 
-         erroradj = (unsigned short)(((unsigned int)dy << 16) / (unsigned int)dx);
+      uint16_t erroracc = 0, 
+         erroradj = (uint16_t)(((uint32_t)dy << 16) / (uint32_t)dx);
 
       while(--dx)
       {
-         unsigned short erroracctmp = erroracc;
+         uint16_t erroracctmp = erroracc;
 
          erroracc += erroradj;
 

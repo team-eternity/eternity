@@ -1492,7 +1492,6 @@ void P_RemoveMobj (mobj_t *mobj)
 //
 // killough 8/24/98: rewrote to use hashing
 //
-
 int P_FindDoomedNum(int type)
 {
    static struct dnumhash_s { int first, next; } *hash;
@@ -2421,7 +2420,7 @@ void P_AddThingTID(mobj_t *mo, int tid)
    {
       int key = tid % TIDCHAINS;
 
-      mo->tid = (unsigned short)tid;
+      mo->tid = (uint16_t)tid;
 
       // insert at head of chain
       mo->tid_next  = tidhash[key];

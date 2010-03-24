@@ -126,7 +126,7 @@ typedef enum
    AS_MIRRORCEILING  = 0x08,
 } attachedtype_e;
 
-typedef struct
+typedef struct attachedsurface_s
 {
    sector_t        *sector;
    int             type;
@@ -165,7 +165,7 @@ enum
 
 // SoM: Map-slope struct. Stores both floating point and fixed point versions
 // of the vectors.
-typedef struct
+typedef struct pslope_s
 {
    // --- Information used in clipping/projection ---
    // Origin vector for the plane
@@ -175,7 +175,7 @@ typedef struct
    // The normal of the 3d plane the slope creates.
    v3float_t normalf;
 
-   // 2-Dimentional vector (x, y) normalized. Used to determine distance from
+   // 2-Dimensional vector (x, y) normalized. Used to determine distance from
    // the origin in 2d mapspace.
    v2fixed_t d;
    v2float_t df;
@@ -199,9 +199,9 @@ struct sector_s
    fixed_t ceilingheight;
    int     floorpic;
    int     ceilingpic;
-   short lightlevel;
-   short special;
-   short tag;
+   int16_t lightlevel;
+   int16_t special;
+   int16_t tag;
    int nexttag, firsttag; // killough 1/30/98: improves searches for tags.
    int soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
    mobj_t *soundtarget;   // thing that made a sound (or null)
@@ -316,20 +316,20 @@ struct sector_s
    pslope_t *c_slope;
 
    // haleyjd 08/30/09 - used by the lightning code
-   short oldlightlevel; 
+   int16_t oldlightlevel; 
 };
 
 //
 // The SideDef.
 //
 
-typedef struct
+typedef struct side_s
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
-  short toptexture;      // Texture indices. We do not maintain names here. 
-  short bottomtexture;
-  short midtexture;
+  int16_t toptexture;      // Texture indices. We do not maintain names here. 
+  int16_t bottomtexture;
+  int16_t midtexture;
   sector_t* sector;      // Sector the SideDef is facing.
 
   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
@@ -356,8 +356,8 @@ typedef struct line_s
 {
    vertex_t *v1, *v2;     // Vertices, from v1 to v2.
    fixed_t dx, dy;        // Precalculated v2 - v1 for side checking.
-   short flags;           // Animation related.
-   short special;         
+   int16_t flags;           // Animation related.
+   int16_t special;         
    int   tag;             // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
@@ -437,7 +437,7 @@ typedef struct msecnode_s
 typedef struct seg_s
 {
   vertex_t *v1, *v2;
-  fixed_t offset;
+  float offset;
   //angle_t angle;
   side_t* sidedef;
   line_t* linedef;
@@ -460,11 +460,11 @@ typedef struct seg_s
 //
 // BSP node.
 //
-typedef struct
+typedef struct node_s
 {
   fixed_t  x,  y, dx, dy;        // Partition line.
-  fixed_t bbox[2][4];            // Bounding box for each child.
-  unsigned short children[2];    // If NF_SUBSECTOR its a subsector.
+  fixed_t  bbox[2][4];           // Bounding box for each child.
+  uint16_t children[2];          // If NF_SUBSECTOR its a subsector.
 
   double fx, fy, fdx, fdy;       // haleyjd 05/16/08: float versions
   double a, b, c;                // haleyjd 05/20/08: coefficients for
@@ -472,12 +472,22 @@ typedef struct
   double len;                    //  length of partition line, for normalization
 } node_t;
 
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
 // posts are runs of non masked source pixels
-typedef struct
+struct post_s
 {
   byte topdelta; // -1 is the last post in a column
   byte length;   // length data bytes follows
-} post_t;
+} __attribute__((packed));
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
+
+typedef struct post_s post_t;
 
 // column_t is a list of 0 or more post_t, (byte)-1 terminated
 typedef post_t column_t;
@@ -529,13 +539,21 @@ typedef struct drawseg_s
 // of patches.
 //
 
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
+
 struct patch_s
 { 
-  short width, height;  // bounding box size 
-  short leftoffset;     // pixels to the left of origin 
-  short topoffset;      // pixels below the origin 
-  int columnofs[8];     // only [width] used
-};
+  int16_t width, height;  // bounding box size 
+  int16_t leftoffset;     // pixels to the left of origin 
+  int16_t topoffset;      // pixels below the origin 
+  int32_t columnofs[8];   // only [width] used
+} __attribute__((packed));
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
 
 //
 // A vissprite_t is a thing that will be drawn during a refresh.
@@ -593,7 +611,7 @@ typedef struct vissprite_s
 // for all views: NNNNF0
 //
 
-typedef struct
+typedef struct spriteframe_s
 {
   // If false use 0 for any position.
   // Note: as eight entries are available,
@@ -601,7 +619,7 @@ typedef struct
   boolean rotate;
 
   // Lump to use for view angles 0-7.
-  short lump[8];
+  int16_t lump[8];
 
   // Flip bit (1 = flip) to use for view angles 0-7.
   byte  flip[8];
@@ -613,7 +631,7 @@ typedef struct
 //  a number of animation frames.
 //
 
-typedef struct
+typedef struct spritedef_s
 {
   int numframes;
   spriteframe_t *spriteframes;
@@ -621,7 +639,7 @@ typedef struct
 
 
 // SoM: Information used in texture mapping sloped planes
-typedef struct
+typedef struct rslope_s
 {
    v3float_t P, M, N;
    v3float_t A, B, C;
@@ -674,8 +692,6 @@ typedef struct visplane
    pslope_t *pslope;
    rslope_t rslope;
 } visplane_t;
-
-
 
 #endif
 

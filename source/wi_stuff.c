@@ -119,7 +119,7 @@ typedef enum
    ANIM_LEVEL     // continuous
 } animenum_t;
 
-typedef struct
+typedef struct point_s
 {
    int   x;       // x/y coordinate pair structure
    int   y;
@@ -129,7 +129,7 @@ typedef struct
 // Animation.
 // There is another anim_t used in p_spec.
 //
-typedef struct
+typedef struct anim_s
 {
    animenum_t  type;
    

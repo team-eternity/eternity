@@ -179,7 +179,7 @@ void R_SetSpanEngine(void);
 // haleyjd 09/19/07: missing extern!
 extern const float PI;
 
-typedef struct
+typedef struct cb_view_s
 {
    float x, y, z;
    float angle, pitch;
@@ -196,7 +196,16 @@ typedef struct
    float pspritexstep, pspriteystep;
 } cb_view_t;
 
-typedef struct
+// haleyjd 3/11/10: markflags
+enum
+{
+   SEG_MARKCEILING = 0x01,
+   SEG_MARKCPORTAL = 0x02,
+   SEG_MARKFLOOR   = 0x04,
+   SEG_MARKFPORTAL = 0x08
+};
+
+typedef struct cb_seg_s
 {
    int x1, x2;
    float x1frac, x2frac;
@@ -211,9 +220,11 @@ typedef struct
    float bottom, bottom2, bottomstep;
 
    boolean twosided, clipsolid, maskedtex;
-   short toptex, midtex, bottomtex;
-   boolean markfloor, markceiling;
-   boolean markfportal, markcportal;
+   int16_t toptex, midtex, bottomtex;
+   //boolean markfloor, markceiling;
+   //boolean markfportal, markcportal;
+   unsigned int markflags; // haleyjd 03/11/10
+
    boolean segtextured;
 
    int toptexmid, midtexmid, bottomtexmid;

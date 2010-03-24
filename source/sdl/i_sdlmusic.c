@@ -97,7 +97,7 @@ static void I_EffectSPC(int chan, void *stream, int len, void *udata)
    if(spcsamples != lastspcsamples)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
-      spc_buffer = (short *)Z_SysRealloc(spc_buffer, 
+      spc_buffer = (Sint16 *)Z_SysRealloc(spc_buffer, 
                                          (spcsamples + 2) * 2 * sizeof(Sint16));
       lastspcsamples = spcsamples;
    }

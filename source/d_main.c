@@ -677,8 +677,8 @@ char *D_DoomExeName(void)
 //
 
 //
-//  D_ExpandTilde
-//      expand tilde in base path name for linux home dir
+// D_ExpandTilde
+//     expand tilde in base path name for linux home dir
 //
 static char *D_ExpandTilde(char *basedir)
 {
@@ -1086,6 +1086,8 @@ static void D_CloseAutoloadDir(void)
 // IWAD Detection / Verification Code
 //
 
+int iwad_choice; // haleyjd 03/19/10: remember choice
+
 // variable-for-index lookup for D_DoIWADMenu
 static char **iwadVarForNum[] =
 {
@@ -1107,7 +1109,7 @@ static const char *D_DoIWADMenu(void)
    const char *iwadToUse = NULL;
 
 #ifdef _SDL_VER
-   extern int I_Pick_DoPicker(boolean haveIWADs[]);
+   extern int I_Pick_DoPicker(boolean haveIWADs[], int startchoice);
    boolean haveIWADs[9];
    int i, choice = -1;
    boolean foundone = false;
@@ -1122,11 +1124,14 @@ static const char *D_DoIWADMenu(void)
    if(foundone) // at least one IWAD must be specified!
    {
       startupmsg("D_DoIWADMenu", "Init IWAD choice subsystem.");
-      choice = I_Pick_DoPicker(haveIWADs);
+      choice = I_Pick_DoPicker(haveIWADs, iwad_choice);
    }
 
    if(choice >= 0)
+   {
+      iwad_choice = choice;               // 03/19/10: remember selection
       iwadToUse = *iwadVarForNum[choice];
+   }
 #endif
 
    return iwadToUse;
@@ -1268,14 +1273,19 @@ static void CheckIWAD(const char *iwadname,
 
       if(cm >= 30 || (cm && !rg))
       {
-         if(tnt >= 4)
-            *gmission = pack_tnt;
-         else if(plut >= 8)
-            *gmission = pack_plut;
-         else if(hacx)
-            *gmission = pack_hacx;
-         else
+         if(freedoom) // FreeDoom is meant to be Doom II, not TNT
             *gmission = doom2;
+         else
+         {
+            if(tnt >= 4)
+               *gmission = pack_tnt;
+            else if(plut >= 8)
+               *gmission = pack_plut;
+            else if(hacx)
+               *gmission = pack_hacx;
+            else
+               *gmission = doom2;
+         }
          *hassec = (sc >= 2) || hacx;
          *gmode = commercial;
       }
@@ -1325,20 +1335,25 @@ boolean WadFileStatus(char *filename,boolean *isdir)
    return false;                  //and report doesn't exist
 }
 
-//jff 4/19/98 list of standard IWAD names
+// jff 4/19/98 list of standard IWAD names
 static const char *const standard_iwads[]=
 {
-   "/doom2f.wad",   // DOOM II, French Version
-   "/doom2.wad",    // DOOM II
-   "/plutonia.wad", // Final DOOM: Plutonia
-   "/tnt.wad",      // Final DOOM: TNT
-   "/doom.wad",     // Registered/Ultimate DOOM
-   "/doom1.wad",    // Shareware DOOM
-   "/doomu.wad",    // CPhipps - allow doomu.wad
-   "/freedoom.wad", // Freedoom -- haleyjd 01/31/03
-   "/heretic.wad",  // Heretic  -- haleyjd 10/10/05
-   "/heretic1.wad", // Shareware Heretic
-   "/hacx.wad",     // HACX standalone version -- haleyjd 08/19/09
+   // Official IWADs
+   "/doom2f.wad",    // DOOM II, French Version
+   "/doom2.wad",     // DOOM II
+   "/plutonia.wad",  // Final DOOM: Plutonia
+   "/tnt.wad",       // Final DOOM: TNT
+   "/doom.wad",      // Registered/Ultimate DOOM
+   "/doomu.wad",     // CPhipps - allow doomu.wad
+   "/doom1.wad",     // Shareware DOOM
+   "/heretic.wad",   // Heretic  -- haleyjd 10/10/05
+   "/heretic1.wad",  // Shareware Heretic
+
+   // Unofficial IWADs
+   "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03
+   "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10
+   "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
+   "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
 };
 
 static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
@@ -1640,11 +1655,11 @@ void IdentifyVersion(void)
                game_name = "DOOM II version, German edition, no Wolf levels";
          }
          // joel 10/16/98 end Final DOOM fix
-
-         // haleyjd 10/13/05: freedoom override :)
-         if(freedoom)
-            game_name = "DOOM II, FreeDoom version";
       }
+
+      // haleyjd 03/07/10: Special FreeDoom overrides :)
+      if(freedoom && GameModeInfo->freeVerName)
+         game_name = GameModeInfo->freeVerName;
 
       puts(game_name);
 
@@ -3060,16 +3075,7 @@ static void D_DoomInit(void)
          if(demorecording)
             G_BeginRecording();
       }
-      else if(autostart)
-      {
-         G_InitNew(startskill, startlevel);
-
-         if(demorecording)
-            G_BeginRecording();
-      }
-      else
-         D_StartTitle(); // start up intro loop
-         */
+      */
    }
 
    // a lot of alloca calls are made during startup; kill them all now.

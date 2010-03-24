@@ -26,7 +26,7 @@
 #include "d_think.h" // for actionf_t
 #include "p_mobj.h"
 
-typedef struct
+typedef struct deh_bexptr_s
 {
    void (*cptr)(mobj_t *); // actual pointer to the subroutine
    char *lookup;           // mnemonic lookup string to be specified in BEX

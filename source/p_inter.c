@@ -1312,7 +1312,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       !(inflictor->flags3 & MF3_NODMGTHRUST)) // haleyjd 11/14/02
    {
       // haleyjd: thrust factor differs for Heretic
-      short tf = GameModeInfo->thrustFactor;
+      int16_t tf = GameModeInfo->thrustFactor;
 
       // SoM: restructured a bit
       fixed_t thrust = damage*(FRACUNIT>>3)*tf/target->info->mass;
@@ -1509,7 +1509,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
    // haleyjd: set bossignore
    if(source && (source->type != target->type) &&
-      ((source->flags3 & target->flags3) & MF3_BOSSIGNORE))
+      (source->flags3 & target->flags3 & MF3_BOSSIGNORE))
    {
       // ignore if friendliness matches
       bossignore = !((source->flags ^ target->flags) & MF_FRIEND);

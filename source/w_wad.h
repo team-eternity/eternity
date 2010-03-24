@@ -33,14 +33,14 @@
 // TYPES
 //
 
-typedef struct
+typedef struct wadinfo_s
 {
   char identification[4];                  // Should be "IWAD" or "PWAD".
   int  numlumps;
   int  infotableofs;
 } wadinfo_t;
 
-typedef struct
+typedef struct filelump_s
 {
   int  filepos;
   int  size;
@@ -54,7 +54,7 @@ typedef struct
 // haleyjd 07/12/07: altered lumpinfo_t for separation of logical and physical
 // lump fields.
 
-typedef struct
+typedef struct lumpinfo_s
 {
    // haleyjd: logical lump data
    char   name[9];
@@ -129,9 +129,10 @@ int W_AddNewFile(waddir_t *dir, char *filename);
 // killough 4/17/98: if W_CheckNumForName() called with only
 // one argument, pass ns_global as the default namespace
 
-#define W_CheckNumForName(name) (W_CheckNumForName)(name, ns_global)
 int     W_CheckNumForNameInDir(waddir_t *dir, const char *name, int);
-int     (W_CheckNumForName)(const char* name, int);   // killough 4/17/98
+int     W_CheckNumForName(const char *name);   // killough 4/17/98
+int     W_CheckNumForNameNS(const char *name, int li_namespace);
+int     W_CheckNumForNameNSG(const char *name, int ns);
 int     W_GetNumForName(const char* name);
 int     W_LumpLength(int lump);
 void    W_ReadLump(int lump, void *dest);

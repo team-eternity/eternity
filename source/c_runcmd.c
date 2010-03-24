@@ -975,7 +975,7 @@ struct bufferedcmd_s
    bufferedcmd *next;      // next in list
 };
 
-typedef struct
+typedef struct cmdbuffer_s
 {
    // NULL once list empty
    bufferedcmd *cmdbuffer;

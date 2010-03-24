@@ -271,6 +271,8 @@ int armor_red;     // armor amount less than which status is red
 int armor_yellow;  // armor amount less than which status is yellow
 int armor_green;   // armor amount above is blue, below is green
 
+int st_fsalpha;    // haleyjd 02/27/10: alpha level for fullscreen HUD
+
  // in deathmatch only, summary of frags stats
 static st_number_t w_frags;
 
@@ -346,7 +348,7 @@ static void ST_refreshBackground(void)
       // faces
       STlib_initMultIcon(&w_faces,  ST_FACESX, ST_FACESY,
                          players[displayplayer].skin->faces, 
-                         &st_faceindex, &st_statusbaron);
+                         &st_faceindex, &st_statusbaron, &st_backgroundon);
    }
 }
 
@@ -613,27 +615,12 @@ static void ST_updateWidgets(void)
    int         i;
 
    // must redirect the pointer if the ready weapon has changed.
-   //  if (w_ready.data != plyr->readyweapon)
-   //  {
    if(weaponinfo[plyr->readyweapon].ammo == am_noammo)
       w_ready.num = &largeammo;
    else
       w_ready.num = &plyr->ammo[weaponinfo[plyr->readyweapon].ammo];
-   //{
-   // static int tic=0;
-   // static int dir=-1;
-   // if (!(tic&15))
-   //   plyr->ammo[weaponinfo[plyr->readyweapon].ammo]+=dir;
-   // if (plyr->ammo[weaponinfo[plyr->readyweapon].ammo] == -100)
-   //   dir = 1;
-   // tic++;
-   // }
-   w_ready.data = plyr->readyweapon;
 
-   // if (*w_ready.on)
-   //  STlib_updateNum(&w_ready, true);
-   // refresh weapon change
-   //  }
+   w_ready.data = plyr->readyweapon;
 
    // update keycard multiple widgets
    for(i = 0; i < 3; i++)
@@ -739,37 +726,43 @@ static void ST_doPaletteStuff(void)
    }
 }
 
-static void ST_drawCommonWidgets(boolean refresh)
+static void ST_drawCommonWidgets(boolean refresh, int alpha)
 {
+   int i;
+
    //jff 2/16/98 make color of ammo depend on amount
    if(*w_ready.num*100 < ammo_red*plyr->maxammo[weaponinfo[w_ready.data].ammo])
-      STlib_updateNum(&w_ready, cr_red, refresh);
+      STlib_updateNum(&w_ready, cr_red, refresh, alpha);
    else
     if(*w_ready.num*100 <
        ammo_yellow*plyr->maxammo[weaponinfo[w_ready.data].ammo])
-      STlib_updateNum(&w_ready, cr_gold, refresh);
+      STlib_updateNum(&w_ready, cr_gold, refresh, alpha);
     else
-      STlib_updateNum(&w_ready, cr_green, refresh);
+      STlib_updateNum(&w_ready, cr_green, refresh, alpha);
 
    //jff 2/16/98 make color of health depend on amount
    if(*w_health.n.num < health_red)
-      STlib_updatePercent(&w_health, cr_red, refresh);
+      STlib_updatePercent(&w_health, cr_red, refresh, alpha);
    else if(*w_health.n.num < health_yellow)
-      STlib_updatePercent(&w_health, cr_gold, refresh);
+      STlib_updatePercent(&w_health, cr_gold, refresh, alpha);
    else if(*w_health.n.num <= health_green)
-      STlib_updatePercent(&w_health, cr_green, refresh);
+      STlib_updatePercent(&w_health, cr_green, refresh, alpha);
    else
-      STlib_updatePercent(&w_health, cr_blue_status, refresh); //killough 2/28/98
+      STlib_updatePercent(&w_health, cr_blue_status, refresh, alpha); //killough 2/28/98
 
    //jff 2/16/98 make color of armor depend on amount
    if(*w_armor.n.num < armor_red)
-      STlib_updatePercent(&w_armor, cr_red, refresh);
+      STlib_updatePercent(&w_armor, cr_red, refresh, alpha);
    else if (*w_armor.n.num < armor_yellow)
-      STlib_updatePercent(&w_armor, cr_gold, refresh);
+      STlib_updatePercent(&w_armor, cr_gold, refresh, alpha);
    else if (*w_armor.n.num <= armor_green)
-      STlib_updatePercent(&w_armor, cr_green, refresh);
+      STlib_updatePercent(&w_armor, cr_green, refresh, alpha);
    else
-      STlib_updatePercent(&w_armor, cr_blue_status, refresh); //killough 2/28/98
+      STlib_updatePercent(&w_armor, cr_blue_status, refresh, alpha); //killough 2/28/98
+
+   // test
+   for(i = 0; i < 3; i++)
+      STlib_updateMultIcon(&w_keyboxes[i], refresh, alpha);
 }
 
 static void ST_drawWidgets(boolean refresh)
@@ -783,25 +776,22 @@ static void ST_drawWidgets(boolean refresh)
    st_fragson = st_statusbaron && GameType == gt_dm;
 
    // haleyjd: draw widgets common to status bar and fullscreen 
-   ST_drawCommonWidgets(refresh);
+   ST_drawCommonWidgets(refresh, FRACUNIT);
 
    for(i = 0; i < 4; i++)
    {
-      STlib_updateNum(&w_ammo[i], NULL, refresh);   //jff 2/16/98 no xlation
-      STlib_updateNum(&w_maxammo[i], NULL, refresh);
+      STlib_updateNum(&w_ammo[i], NULL, refresh, FRACUNIT);   //jff 2/16/98 no xlation
+      STlib_updateNum(&w_maxammo[i], NULL, refresh, FRACUNIT);
    }
 
    STlib_updateBinIcon(&w_armsbg, refresh);
 
    for(i = 0; i < 6; i++)
-      STlib_updateMultIcon(&w_arms[i], refresh);
+      STlib_updateMultIcon(&w_arms[i], refresh, FRACUNIT);
 
-   STlib_updateMultIcon(&w_faces, refresh);
+   STlib_updateMultIcon(&w_faces, refresh, FRACUNIT);
 
-   for(i = 0; i < 3; i++)
-      STlib_updateMultIcon(&w_keyboxes[i], refresh);
-
-   STlib_updateNum(&w_frags, NULL, refresh);
+   STlib_updateNum(&w_frags, NULL, refresh, FRACUNIT);
 }
 
 static void ST_doRefresh(void)
@@ -821,13 +811,22 @@ static void ST_diffDraw(void)
    ST_drawWidgets(false);
 }
 
+// Locations for graphical HUD elements
+
 #define ST_FS_X 85
 #define ST_FS_HEALTHY 154
 #define ST_FS_BY 176
 #define ST_FS_AMMOX 315
+#define ST_FS_KEYX (ST_KEY0X - 10)
 
 #define ST_FSGFX_X 5
 
+//
+// ST_moveWidgets
+//
+// Moves widgets shared between the DOOM status bar and full-screen
+// graphical HUD between their two possible locations.
+//
 static void ST_moveWidgets(boolean fs)
 {
    if(fs)
@@ -841,6 +840,10 @@ static void ST_moveWidgets(boolean fs)
          w_armor.n.y  = ST_FS_BY;
          w_ready.x    = ST_FS_AMMOX;
          w_ready.y    = ST_FS_BY;
+
+         w_keyboxes[0].x = ST_FS_KEYX;
+         w_keyboxes[1].x = ST_FS_KEYX;
+         w_keyboxes[2].x = ST_FS_KEYX;
          
          // must refresh all widgets when moving them
          st_firsttime = true;
@@ -857,6 +860,11 @@ static void ST_moveWidgets(boolean fs)
          w_armor.n.y  = ST_ARMORY;
          w_ready.x    = ST_AMMOX;
          w_ready.y    = ST_AMMOY;
+
+         w_keyboxes[0].x = ST_KEY0X;
+         w_keyboxes[1].x = ST_KEY1X;
+         w_keyboxes[2].x = ST_KEY2X;
+
          
          // must refresh all widgets when moving them
          st_firsttime = true;
@@ -880,6 +888,8 @@ static void ST_DoomDrawer(void)
       ST_diffDraw();      // Otherwise, update as little as possible
 }
 
+#define ST_ALPHA (st_fsalpha * FRACUNIT / 100)
+
 //
 // ST_DoomFSDrawer
 //
@@ -895,20 +905,21 @@ static void ST_DoomFSDrawer(void)
    // draw graphics
 
    // health
-   V_DrawPatchGeneral(ST_FSGFX_X, 152, &vbscreen, fs_health, false);
+   V_DrawPatchTL(ST_FSGFX_X, 152, &vbscreen, fs_health, NULL, ST_ALPHA);
    
    // armor
    if(plyr->armortype == 2)
-      V_DrawPatchGeneral(ST_FSGFX_X, ST_FS_BY, &vbscreen, fs_armorb, false);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &vbscreen, fs_armorb, NULL, ST_ALPHA);
    else
-      V_DrawPatchGeneral(ST_FSGFX_X, ST_FS_BY, &vbscreen, fs_armorg, false);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &vbscreen, fs_armorg, NULL, ST_ALPHA);
 
    // ammo
    if((ammo = weaponinfo[w_ready.data].ammo) < NUMAMMO)
-      V_DrawPatchGeneral(256, ST_FS_BY, &vbscreen, fs_ammo[ammo], false);
+      V_DrawPatchTL(256, ST_FS_BY, &vbscreen, fs_ammo[ammo], NULL, ST_ALPHA);
+
 
    // draw common number widgets (always refresh since no background)
-   ST_drawCommonWidgets(true);
+   ST_drawCommonWidgets(true, ST_ALPHA);
 }
 
 //
@@ -1027,7 +1038,7 @@ void ST_CacheFaces(patch_t **faces, char *facename)
       int j;
       for(j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
-         sprintf(namebuf, "%sST%d%d",facename, i, j);
+         sprintf(namebuf, "%sST%d%d", facename, i, j);
          faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
       }
       sprintf(namebuf, "%sTR%d0", facename, i);        // turn right
@@ -1168,7 +1179,7 @@ static void ST_createWidgets(void)
                          ST_ARMSX+(i%3)*ST_ARMSXSPACE,
                          ST_ARMSY+(i/3)*ST_ARMSYSPACE,
                          arms[i], (int *) &plyr->weaponowned[i+1],
-                         &st_armson);
+                         &st_armson, &st_backgroundon);
    }
 
    // frags sum
@@ -1187,7 +1198,8 @@ static void ST_createWidgets(void)
                       ST_FACESY,
                       default_faces,
                       &st_faceindex,
-                      &st_statusbaron);
+                      &st_statusbaron,
+                      &st_backgroundon);
 
    // armor percentage - should be colored later
    STlib_initPercent(&w_armor,
@@ -1205,21 +1217,24 @@ static void ST_createWidgets(void)
                       ST_KEY0Y,
                       keys,
                       &keyboxes[0],
-                      &st_statusbaron);
+                      &st_statusbaron,
+                      &st_backgroundon);
 
    STlib_initMultIcon(&w_keyboxes[1],
                       ST_KEY1X,
                       ST_KEY1Y,
                       keys,
                       &keyboxes[1],
-                      &st_statusbaron);
+                      &st_statusbaron,
+                      &st_backgroundon);
 
    STlib_initMultIcon(&w_keyboxes[2],
                       ST_KEY2X,
                       ST_KEY2Y,
                       keys,
                       &keyboxes[2],
-                      &st_statusbaron);
+                      &st_statusbaron,
+                      &st_backgroundon);
 
    // ammo count (all four kinds)
    STlib_initNum(&w_ammo[0],
@@ -1396,6 +1411,8 @@ VARIABLE_BOOLEAN(sts_pct_always_gray,      NULL,   yesno);
 VARIABLE_BOOLEAN(sts_always_red,           NULL,   yesno);
 VARIABLE_BOOLEAN(sts_traditional_keys,     NULL,   yesno);
 
+VARIABLE_INT(st_fsalpha, NULL,             0, 100, NULL);
+
 CONSOLE_VARIABLE(ammo_red, ammo_red, 0) { }
 CONSOLE_VARIABLE(ammo_yellow, ammo_yellow, 0) { }
 CONSOLE_VARIABLE(health_red, health_red, 0) { }
@@ -1408,6 +1425,7 @@ CONSOLE_VARIABLE(armor_green, armor_green, 0) { }
 CONSOLE_VARIABLE(st_graypct, sts_pct_always_gray, 0) {}
 CONSOLE_VARIABLE(st_rednum, sts_always_red, 0) {}
 CONSOLE_VARIABLE(st_singlekey, sts_traditional_keys, 0) {}
+CONSOLE_VARIABLE(st_fsalpha, st_fsalpha, 0) {}
 
 void ST_AddCommands(void)
 {
@@ -1425,6 +1443,7 @@ void ST_AddCommands(void)
    C_AddCommand(st_graypct);
    C_AddCommand(st_rednum);
    C_AddCommand(st_singlekey);
+   C_AddCommand(st_fsalpha);
 }
 
 //----------------------------------------------------------------------------

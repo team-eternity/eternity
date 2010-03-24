@@ -99,6 +99,7 @@ extern int ammo_yellow;    // ammo percent less is yellow more green
 extern int sts_always_red; // status numbers do not change colors
 extern int sts_pct_always_gray;  // status percents do not change colors
 extern int sts_traditional_keys; // display keys the traditional way
+extern int st_fsalpha;     // haleyjd 02/27/10: fullscreen hud alpha
 
 // Number of status faces.
 #define ST_NUMPAINFACES         5

@@ -47,18 +47,17 @@ static void *E_LinkForObject(void *object)
 //
 // Initializes a hash table.
 //
-void E_HashInit(ehash_t *table, unsigned int numchains,
-                EHashFunc_t hfunc, ECompFunc_t cfunc, EKeyFunc_t kfunc, 
-                ELinkFunc_t lfunc)
+void E_HashInit(ehash_t *table, unsigned int numchains, ehashable_i *hinterface)
 {
    table->chains      = calloc(numchains, sizeof(mdllistitem_t *));
    table->numchains   = numchains;
    table->numitems    = 0;
    table->loadfactor  = 0.0f;
-   table->hashfunc    = hfunc;
-   table->compfunc    = cfunc;
-   table->keyfunc     = kfunc;
-   table->linkfunc    = lfunc ? lfunc : E_LinkForObject;
+   table->hashfunc    = hinterface->hashKey;
+   table->compfunc    = hinterface->compare;
+   table->keyfunc     = hinterface->getKey;
+   table->linkfunc    = hinterface->getLink ? hinterface->getLink 
+                                            : E_LinkForObject;
    table->iteratorPos = -1;
    table->isinit      = true;
 }
@@ -97,21 +96,6 @@ void E_HashAddObject(ehash_t *table, void *object)
 
       table->loadfactor = (float)table->numitems / table->numchains;
    }
-}
-
-//
-// E_HashReAddObject
-//
-// 02/07/10: static method to add an object into the table assuming that the
-// link->data field already contains a valid hash code for the object. This 
-// is a considerably cheaper operation.
-//
-static void E_HashReAddObject(ehash_t *table, void *object)
-{
-   mdllistitem_t *link   = table->linkfunc(object);
-   unsigned int hashcode = link->data % table->numchains;
-
-   M_DLListInsertWithPtr(link, object, &(table->chains[hashcode]));
 }
 
 //
@@ -367,7 +351,14 @@ static boolean E_NCStrCompareFunc(ehash_t *table, void *object, const void *key)
 void E_NCStrHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc,
                      ELinkFunc_t lfunc)
 {
-   E_HashInit(table, numchains, E_NCStrHashFunc, E_NCStrCompareFunc, kfunc, lfunc);
+   ehashable_i ncstrhashi;
+
+   ncstrhashi.hashKey = E_NCStrHashFunc;
+   ncstrhashi.compare = E_NCStrCompareFunc;
+   ncstrhashi.getKey  = kfunc;
+   ncstrhashi.getLink = lfunc;
+
+   E_HashInit(table, numchains, &ncstrhashi);
 }
 
 //
@@ -409,7 +400,14 @@ static boolean E_StrCompareFunc(ehash_t *table, void *object, const void *key)
 void E_StrHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc,
                    ELinkFunc_t lfunc)
 {
-   E_HashInit(table, numchains, E_StrHashFunc, E_StrCompareFunc, kfunc, lfunc);
+   ehashable_i estrhashi;
+
+   estrhashi.hashKey = E_StrHashFunc;
+   estrhashi.compare = E_StrCompareFunc;
+   estrhashi.getKey  = kfunc;
+   estrhashi.getLink = lfunc;
+
+   E_HashInit(table, numchains, &estrhashi);
 }
 
 
@@ -448,7 +446,14 @@ static boolean E_UintCompareFunc(ehash_t *table, void *object, const void *key)
 void E_UintHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc,
                     ELinkFunc_t lfunc)
 {
-   E_HashInit(table, numchains, E_UintHashFunc, E_UintCompareFunc, kfunc, lfunc);
+   ehashable_i uinthashi;
+
+   uinthashi.hashKey = E_UintHashFunc;
+   uinthashi.compare = E_UintCompareFunc;
+   uinthashi.getKey  = kfunc;
+   uinthashi.getLink = lfunc;
+
+   E_HashInit(table, numchains, &uinthashi);
 }
 
 //
@@ -486,7 +491,14 @@ static boolean E_SintCompareFunc(ehash_t *table, void *object, const void *key)
 void E_SintHashInit(ehash_t *table, unsigned int numchains, EKeyFunc_t kfunc,
                     ELinkFunc_t lfunc)
 {
-   E_HashInit(table, numchains, E_SintHashFunc, E_SintCompareFunc, kfunc, lfunc);
+   ehashable_i sinthashi;
+
+   sinthashi.hashKey = E_SintHashFunc;
+   sinthashi.compare = E_SintCompareFunc;
+   sinthashi.getKey  = kfunc;
+   sinthashi.getLink = lfunc;
+
+   E_HashInit(table, numchains, &sinthashi);
 }
 
 

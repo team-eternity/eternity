@@ -69,8 +69,7 @@ typedef struct linkdata_s
 } linkdata_t;
 #endif
 
-
-typedef struct
+typedef struct anchordata_s
 {
    fixed_t   deltax, deltay, deltaz;
    // These are for debug purposes (so mappers can find the portats 
@@ -78,28 +77,22 @@ typedef struct
    int       maker, anchor;
 } anchordata_t;
 
-
-
-
-typedef struct
+typedef struct horizondata_s
 {
    int     *floorpic, *ceilingpic;
    fixed_t *floorz, *ceilingz;
-   short   *floorlight, *ceilinglight;
+   int16_t *floorlight, *ceilinglight;
    fixed_t *floorxoff, *flooryoff;
    fixed_t *ceilingxoff, *ceilingyoff;
    float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
    float   *ceilingbaseangle, *ceilingangle;
 } horizondata_t;
 
-
-
-
-typedef struct
+typedef struct skyplanedata_s
 {
    int     *pic;
    fixed_t *delta;
-   short   *lightlevel;
+   int16_t *lightlevel;
    fixed_t *xoff, *yoff;
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
 } skyplanedata_t;
@@ -122,7 +115,7 @@ typedef struct portal_s
    struct portal_s *next;
 
    // haleyjd: temporary debug
-   short tainted;
+   int16_t tainted;
 } portal_t;
 
 
@@ -134,13 +127,13 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
 
 portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 
-                             short *floorlight, short *ceilinglight, 
+                             int16_t *floorlight, int16_t *ceilinglight, 
                              fixed_t *floorxoff, fixed_t *flooryoff, 
                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
                              float *floorbaseangle, float *floorangle,
                              float *ceilingbaseangle, float *ceilingangle);
 
-portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, short *lightlevel, 
+portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
                            float *angle);
 
@@ -195,7 +188,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, struct line_s *line);
 
 
 // SoM 3/14/2004: flag if we are rendering portals.
-typedef struct
+typedef struct portalrender_s
 {
    boolean active;
    int     minx, maxx;

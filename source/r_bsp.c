@@ -68,7 +68,7 @@ void R_ClearDrawSegs(void)
 // clip based on solidsegs because the first solidseg is from MININT, -1
 // to viewwidth, MAXINT
 
-typedef struct 
+typedef struct cliprange_s
 {
   int first, last;
 } cliprange_t;
@@ -443,6 +443,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      int *floorlightlevel, int *ceilinglightlevel,
                      boolean back)
 {
+   if(!sec)
+      return NULL;
+
    if(floorlightlevel)
    {
       *floorlightlevel = sec->floorlightsec == -1 ?
@@ -454,7 +457,6 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       *ceilinglightlevel = sec->ceilinglightsec == -1 ? // killough 4/11/98
          sec->lightlevel : sectors[sec->ceilinglightsec].lightlevel;
    }
-
 
    if(sec->heightsec != -1 || sec->f_portal || sec->c_portal)
    {
@@ -479,8 +481,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       heightsec = camera ? camera->heightsec
                          : viewplayer->mo->subsector->sector->heightsec;
             
-      underwater = 
-	 (heightsec != -1 && viewz <= sectors[heightsec].floorheight);
+      underwater = (heightsec != -1 && viewz <= sectors[heightsec].floorheight);
 
       // Replace floor and ceiling height with other sector's heights.
       tempsec->floorheight   = s->floorheight;
@@ -512,6 +513,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->ceiling_xoffs = s->ceiling_xoffs;
             tempsec->ceiling_yoffs = s->ceiling_yoffs;
          }
+
+         // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec!
+         tempsec->intflags &= ~SIF_SKY;
 
          tempsec->lightlevel  = s->lightlevel;
          
@@ -549,6 +553,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->floor_xoffs   = s->floor_xoffs;
             tempsec->floor_yoffs   = s->floor_yoffs;
          }
+
+         // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec
+         tempsec->intflags &= ~SIF_SKY;
          
          tempsec->lightlevel  = s->lightlevel;
          
@@ -988,7 +995,7 @@ R_ClipSegFunc segclipfuncs[] =
 
 #define NEARCLIP 0.05f
 #define PNEARCLIP 0.001f
-extern int       *texturewidthmask;
+extern int32_t *texturewidthmask;
 
 static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
                         float texbottom, vertex_t *v1, vertex_t *v2, 
@@ -999,6 +1006,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    float texhigh, texlow;
    side_t *side = seg.side;
    seg_t  *line = seg.line;
+
+   int    h, h2, l, l2, t, t2, b, b2;
 
    seg.twosided = true;
 
@@ -1011,6 +1020,11 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
            seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap); // haleyjd
+
+   t = (int)seg.top;
+   t2 = (int)seg.top2;
+   b = (int)seg.bottom;
+   b2 = (int)seg.bottom2;
 
    if(seg.backsec->c_slope)
    {
@@ -1056,34 +1070,57 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    seg.lowstep = (seg.low2 - seg.low) * pstep;
 
+
+   h = (int)seg.high;
+   h2 = (int)seg.high2;
+   l = (int)seg.low;
+   l2 = (int)seg.low2;
+
    // TODO: Fix for use with portals.
    // Shouldn't this be after the skyflat check?
-   seg.clipsolid = (seg.bottom <= seg.high && seg.bottom2 <= seg.high2) ||
-                   (seg.low <= seg.top && seg.low2 <= seg.top2) ||
-                   (seg.low <= seg.high && seg.low2 <= seg.high2);
+   // ^ No, because the opening is checked against either top or high,
+   // and the behavior of the sky hack needs to change if the line is closed.
+   seg.clipsolid = (b <= h && b2 <= h2) ||
+                   (l <= t && l2 <= t2) ||
+                   (l <= h && l2 <= h2);
 
    if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
    {
+      // If the line is clipped solid, it can't be assumed that the upper 
+      // texture portion meets up with an adjacent ceiling flat.
+      if(seg.clipsolid)
+      {
+         seg.high += 1.0f;
+         seg.high2 += 1.0f;
+         h++; h2++;
+      }
+
       seg.top = seg.high;
       seg.top2 = seg.high2;
       seg.topstep = seg.highstep;
+      t = h; t2 = h2;
    }
+
 
    // -- Ceilings -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ?
-                  (seg.top != seg.high || seg.top2 != seg.high2) :
+   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ? 
+                  (t > h || t2 > h2) :
                   (seg.backsec->ceilingheight != seg.frontsec->ceilingheight);
 
-   seg.markcportal = seg.c_portal &&
+   seg.markflags = 0;
+
+   if(seg.c_portal &&
       (seg.clipsolid || heightchange || 
-       seg.frontsec->c_portal != seg.backsec->c_portal);
+       seg.frontsec->c_portal != seg.backsec->c_portal))
+   {
+      seg.markflags |= SEG_MARKCPORTAL;
+      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+   }
+   else
+      seg.c_window   = NULL;
 
-   seg.c_window = seg.markcportal ? 
-                  R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
-
-   seg.markceiling = 
-      (seg.ceilingplane && 
+   if(seg.ceilingplane && 
        (mark || seg.clipsolid || heightchange ||
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
@@ -1091,7 +1128,10 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->topmap != seg.backsec->topmap ||
         seg.frontsec->c_portal != seg.backsec->c_portal ||
-        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope))); // haleyjd
+        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope))) // haleyjd
+   {
+      seg.markflags |= SEG_MARKCEILING;
+   }
 
    if(heightchange && side->toptexture)
    {
@@ -1108,28 +1148,31 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // -- Floors -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ?
-                  (seg.low != seg.bottom || seg.low2 != seg.bottom2) :
+   heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ? (l != b || l2 != b2) :
                   seg.backsec->floorheight != seg.frontsec->floorheight;
 
-   seg.markfportal = 
-      (seg.f_portal &&
+   if(seg.f_portal &&
       (seg.clipsolid || heightchange ||
-       seg.frontsec->f_portal != seg.backsec->f_portal));
+       seg.frontsec->f_portal != seg.backsec->f_portal))
+   {
+      seg.markflags |= SEG_MARKFPORTAL;
+      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+   }
+   else
+      seg.f_window = NULL;
 
-   seg.f_window = seg.markfportal ? 
-                  R_GetFloorPortalWindow(seg.frontsec->f_portal) : NULL;
-
-   seg.markfloor = 
-      (seg.floorplane && 
-       (mark || seg.clipsolid || heightchange ||
-        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
-        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
-        seg.frontsec->floorpic != seg.backsec->floorpic ||
-        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
-        seg.frontsec->bottommap != seg.backsec->bottommap ||
-        seg.frontsec->f_portal != seg.backsec->f_portal ||
-        !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope))); // haleyjd
+   if(seg.floorplane && 
+      (mark || seg.clipsolid || heightchange ||
+       seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
+       seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+       seg.frontsec->floorpic != seg.backsec->floorpic ||
+       seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+       seg.frontsec->bottommap != seg.backsec->bottommap ||
+       seg.frontsec->f_portal != seg.backsec->f_portal ||
+       !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope))) // haleyjd
+   {
+      seg.markflags |= SEG_MARKFLOOR;
+   }
 
 #ifdef R_LINKEDPORTALS
    // SoM: some portal types should be rendered even if the player is above
@@ -1154,7 +1197,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
    texlow = seg.line->backsector->floorheightf - view.z;
-   if((seg.bottom > seg.low || seg.bottom2 > seg.low2) && side->bottomtexture)
+   if((b > l || b2 > l2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
       seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
@@ -1202,7 +1245,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    frontc = seg.frontsec->ceilingheight;
    backc = seg.backsec->ceilingheight;
 
-   seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
+   seg.high  = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
    seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
@@ -1215,15 +1258,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
                    seg.side->bottomtexture == 0);
 
-   if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
-   {
-      seg.top = seg.high;
-      seg.top2 = seg.high2;
-      seg.topstep = seg.highstep;
-      frontc = backc;
-      //uppermissing = false;
-   }
-
    // New clipsolid code will emulate the old doom behavior and still manages to 
    // keep valid closed door cases handled.
    seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
@@ -1233,25 +1267,52 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
         (seg.backsec->ceilingheight <= seg.backsec->floorheight && 
          !uppermissing && !lowermissing)));
 
-   seg.markcportal = 
-      (seg.c_portal && 
+   // This was moved here because the behavior changes based on the value of seg.clipsolid.
+   if(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY)
+   {
+      if(seg.clipsolid)
+      {
+         // SoM: Because this is solid, the upper texture can't be assumed to be
+         // connecting to any further ceiling flats.
+         seg.high += 1.0f;
+         seg.high2 += 1.0f;
+      }
+
+      seg.top = seg.high;
+      seg.top2 = seg.high2;
+
+      seg.topstep = seg.highstep;
+      frontc = backc;
+      //uppermissing = false;
+   }
+
+   seg.markflags = 0;
+   
+   if(seg.c_portal && 
       (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
-       seg.frontsec->c_portal != seg.backsec->c_portal));
+       seg.frontsec->c_portal != seg.backsec->c_portal))
+   {
+      seg.markflags |= SEG_MARKCPORTAL;
+      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+   }
+   else
+      seg.c_window = NULL;
 
-   seg.c_window = seg.markcportal ? 
-                  R_GetCeilingPortalWindow(seg.frontsec->c_portal) : NULL;
+   if(seg.ceilingplane && 
+      (mark || seg.clipsolid || frontc != backc || 
+       seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
+       seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+       seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
+       seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+       seg.frontsec->topmap != seg.backsec->topmap ||
+       seg.frontsec->c_portal != seg.backsec->c_portal)) // haleyjd
+   {
+      seg.markflags |= SEG_MARKCEILING;
+   }
 
-   seg.markceiling = 
-      (seg.ceilingplane && 
-       (mark || seg.clipsolid || frontc != backc || 
-        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
-        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
-        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
-        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
-        seg.frontsec->topmap != seg.backsec->topmap ||
-        seg.frontsec->c_portal != seg.backsec->c_portal)); // haleyjd
-
-   if(seg.high > seg.top && side->toptexture)
+   if(seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
+     !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
+      side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
       seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
@@ -1264,24 +1325,28 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    else
       seg.toptex = 0;
 
-   seg.markfportal = 
-      (seg.f_portal &&
+   if(seg.f_portal &&
       (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
-       seg.frontsec->f_portal != seg.backsec->f_portal));
+       seg.frontsec->f_portal != seg.backsec->f_portal))
+   {
+      seg.markflags |= SEG_MARKFPORTAL;
+      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+   }
+   else
+      seg.f_window = NULL;
 
-   seg.f_window = seg.markfportal ? 
-                  R_GetFloorPortalWindow(seg.frontsec->f_portal) : NULL;
-
-   seg.markfloor = 
-      (seg.floorplane && 
-       (mark || seg.clipsolid ||  
-        seg.frontsec->floorheight != seg.backsec->floorheight ||
-        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
-        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
-        seg.frontsec->floorpic != seg.backsec->floorpic ||
-        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
-        seg.frontsec->bottommap != seg.backsec->bottommap ||
-        seg.frontsec->f_portal != seg.backsec->f_portal)); // haleyjd
+   if(seg.floorplane && 
+      (mark || seg.clipsolid ||  
+       seg.frontsec->floorheight != seg.backsec->floorheight ||
+       seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
+       seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+       seg.frontsec->floorpic != seg.backsec->floorpic ||
+       seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+       seg.frontsec->bottommap != seg.backsec->bottommap ||
+       seg.frontsec->f_portal != seg.backsec->f_portal)) // haleyjd
+   {
+      seg.markflags |= SEG_MARKFLOOR;
+   }
 
 #ifdef R_LINKEDPORTALS
    // SoM: some portal types should be rendered even if the player is above
@@ -1304,15 +1369,15 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    }
 #endif
 
-   seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
+   seg.low  = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
    seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
    seg.lowstep = (seg.low2 - seg.low) * pstep;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
    texlow = seg.line->backsector->floorheightf - view.z;
-   if(seg.bottom > seg.low && side->bottomtexture)
+   if(seg.frontsec->floorheight < seg.backsec->floorheight && side->bottomtexture)
    {
-      seg.bottomtex = texturetranslation[side->bottomtexture];
+      seg.bottomtex  = texturetranslation[side->bottomtexture];
       seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
@@ -1344,7 +1409,7 @@ static void R_AddLine(seg_t *line)
    static sector_t tempsec;
 
    float x1, x2;
-   float toffsetx, toffsety;
+   float toffsetx = 0.0f, toffsety = 0.0f;
    float i1, i2, pstep;
    float length, lclip1, lclip2;
    float nearclip = NEARCLIP;
@@ -1352,6 +1417,7 @@ static void R_AddLine(seg_t *line)
    side_t *side;
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
+
    // SoM: one of the byproducts of the portal height enforcement: The top 
    // silhouette should be drawn at ceilingheight but the actual texture 
    // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE 
@@ -1359,13 +1425,12 @@ static void R_AddLine(seg_t *line)
    float textop, texbottom;
 
    seg.clipsolid = false;
-   if(line->backsector)
-      seg.backsec = R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true);
-   else
-      seg.backsec = NULL;
    seg.line = line;
 
+   seg.backsec = R_FakeFlat(line->backsector, &tempsec, NULL, NULL, true);
+
    // haleyjd: TEST
+   // This seems to fix fiffy5, but smells like a hack to me.
    if(seg.frontsec == seg.backsec &&
       seg.frontsec->intflags & SIF_SKY &&
       seg.frontsec->ceilingheight == seg.frontsec->floorheight)
@@ -1434,12 +1499,12 @@ static void R_AddLine(seg_t *line)
 
    temp.fx = v1->fx - view.x;
    temp.fy = v1->fy - view.y;
-   t1.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t1.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+   t1.fx   = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t1.fy   = (temp.fy * view.cos) + (temp.fx * view.sin);
    temp.fx = v2->fx - view.x;
    temp.fy = v2->fy - view.y;
-   t2.fx = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t2.fy = (temp.fy * view.cos) + (temp.fx * view.sin);
+   t2.fx   = (temp.fx * view.cos) - (temp.fy * view.sin);
+   t2.fy   = (temp.fy * view.cos) + (temp.fx * view.sin);
 
    // SoM: Portal lines are not texture and as a result can be clipped MUCH 
    // closer to the camera than normal lines can. This closer clipping 
@@ -1448,15 +1513,13 @@ static void R_AddLine(seg_t *line)
    if(line->linedef->portal)
       nearclip = PNEARCLIP;
 
-   // Simple reject for lines entirely behind the view plane.
-   if(t1.fy < nearclip && t2.fy < nearclip)
-      return;
-
-   toffsetx = toffsety = 0;
-
    if(t1.fy < nearclip)
-   {
+   {      
       float move, movey;
+
+      // Simple reject for lines entirely behind the view plane.
+      if(t2.fy < nearclip)
+         return;
 
       movey = nearclip - t1.fy;
       t1.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
@@ -1467,7 +1530,6 @@ static void R_AddLine(seg_t *line)
 
    i1 = 1.0f / t1.fy;
    x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
-
 
    if(t2.fy < nearclip)
    {
@@ -1504,12 +1566,12 @@ static void R_AddLine(seg_t *line)
 
    side = line->sidedef;
    
-   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset + line->offset); 
+   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset) + line->offset; 
    seg.toffsety = toffsety + M_FixedToFloat(side->rowoffset);
 
    if(seg.toffsetx < 0)
    {
-      float maxtexw;
+      float maxtexw = 0.0f;
 
       // SoM: ok, this was driving me crazy. It seems that when the offset is 
       // less than 0, the fractional part will cause the texel at 
@@ -1520,7 +1582,6 @@ static void R_AddLine(seg_t *line)
       // the textures will start at the same column when the offsets are 
       // adjusted.
 
-      maxtexw = 0.0f;
       if(side->toptexture)
          maxtexw = (float)texturewidthmask[side->toptexture];
       if(side->midtexture && texturewidthmask[side->midtexture] > maxtexw)
@@ -1586,15 +1647,15 @@ static void R_AddLine(seg_t *line)
    }
    else
    {      
-      seg.bottom = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
+      seg.bottom  = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
       seg.bottom2 = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i2) - 1.0f;
    }
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
    // Get these from the actual sectors because R_FakeFlat could have changed the actual heights.
-   textop = seg.line->frontsector->ceilingheightf - view.z;
-   texbottom = seg.line->frontsector->floorheightf - view.z;
+   textop    = seg.line->frontsector->ceilingheightf - view.z;
+   texbottom = seg.line->frontsector->floorheightf   - view.z;
 
    seg.f_portalignore = seg.c_portalignore = false;
 
@@ -1610,19 +1671,26 @@ static void R_AddLine(seg_t *line)
       else
          seg.midtexmid = M_FloatToFixed(textop + seg.toffsety);
 
+      seg.markflags = 0;
+      seg.c_window = seg.f_window = NULL;
+
       // SoM: these should be treated differently! 
-      seg.markcportal = R_RenderCeilingPortal(seg.frontsec);
-      seg.c_window    = seg.markcportal ?
-                        R_GetCeilingPortalWindow(seg.frontsec->c_portal) :
-                        NULL;
+      if(R_RenderCeilingPortal(seg.frontsec))
+      {
+         seg.markflags |= SEG_MARKCPORTAL;
+         seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+      }
 
-      seg.markfportal = R_RenderFloorPortal(seg.frontsec);
-      seg.f_window    = seg.markfportal ?
-                        R_GetFloorPortalWindow(seg.frontsec->f_portal) :
-                        NULL;
+      if(R_RenderFloorPortal(seg.frontsec))
+      {
+         seg.markflags |= SEG_MARKFPORTAL;
+         seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+      }
 
-      seg.markceiling = (seg.ceilingplane != NULL);
-      seg.markfloor   = (seg.floorplane != NULL);
+      if(seg.ceilingplane != NULL)
+         seg.markflags |= SEG_MARKCEILING;
+      if(seg.floorplane != NULL)
+         seg.markflags |= SEG_MARKFLOOR;
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
       seg.l_window    = line->linedef->portal ?

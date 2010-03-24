@@ -374,10 +374,41 @@ int W_CheckNumForNameInDir(waddir_t *dir, const char *name, int li_namespace)
 //
 // haleyjd: Now a global directory convenience routine.
 //
-int (W_CheckNumForName)(register const char *name, register int li_namespace)
+int W_CheckNumForName(register const char *name)
+{
+   return W_CheckNumForNameInDir(&w_GlobalDir, name, ns_global);
+}
+
+//
+// W_CheckNumForNameNS
+//
+// haleyjd: Separated from W_CheckNumForName. Looks in a specific namespace.
+//
+int W_CheckNumForNameNS(register const char *name, register int li_namespace)
 {
    return W_CheckNumForNameInDir(&w_GlobalDir, name, li_namespace);
 }
+
+//
+// W_CheckNumForNameNSG
+//
+// haleyjd 02/15/10: Looks in specified namespace and if not found, then looks
+// in the global namespace.
+//
+int W_CheckNumForNameNSG(const char *name, int ns)
+{
+   int num = -1;
+   int curnamespace = ns;
+
+   do
+   {
+      num = W_CheckNumForNameInDir(&w_GlobalDir, name, curnamespace);
+   }
+   while(num < 0 && curnamespace == ns ? curnamespace = ns_global, 1 : 0);
+
+   return num;
+}
+
 
 //
 // W_InitLumpHash

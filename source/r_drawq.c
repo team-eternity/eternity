@@ -931,7 +931,7 @@ static void R_QDrawColumn(void)
 
    // Determine scaling, which is the only mapping to be done.
 
-   fracstep = column.step;    
+   fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    // Inner loop that does the actual texture mapping,
@@ -941,9 +941,10 @@ static void R_QDrawColumn(void)
    // killough 2/1/98: more performance tuning
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = column.source;
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
+
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1014,7 +1015,8 @@ static void R_QDrawTLColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
+
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1089,7 +1091,7 @@ static void R_QDrawTLTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1195,7 +1197,8 @@ static void R_QDrawTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
+
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1268,7 +1271,8 @@ static void R_QDrawFlexColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
+
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1345,7 +1349,8 @@ static void R_QDrawFlexTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
+
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1418,7 +1423,8 @@ static void R_QDrawAddColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
+
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1494,7 +1500,8 @@ static void R_QDrawAddTRColumn(void)
    {
       register const byte *source = column.source;            
       register const lighttable_t *colormap = column.colormap; 
-      register unsigned heightmask = column.texheight-1;
+      register int heightmask = column.texheight-1;
+
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;

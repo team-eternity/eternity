@@ -123,7 +123,7 @@ static dehflagset_t boss_flagset =
    0,               // mode: single flags word
 };
 
-typedef struct
+typedef struct textvals_s
 {
    const char **vals;
    int numvals;

@@ -35,29 +35,29 @@
 
 // A single patch from a texture definition, basically
 // a rectangular area within the texture rectangle.
-typedef struct
+typedef struct texpatch_s
 {
-  int originx, originy;  // Block origin, which has already accounted
-  int patch;             // for the internal origin of the patch.
+   int32_t originx, originy;  // Block origin, which has already accounted
+   int32_t patch;             // for the internal origin of the patch.
 } texpatch_t;
 
 // A maptexturedef_t describes a rectangular texture, which is composed
 // of one or more mappatch_t structures that arrange graphic patches.
 
-typedef struct
+typedef struct texture_s
 {
-  char  name[8];         // Keep name for switch changing, etc.
-  int   next, index;     // killough 1/31/98: used in hashing algorithm
-  short width, height;
-  short patchcount;      // All the patches[patchcount] are drawn
-  texpatch_t patches[1]; // back-to-front into the cached texture.
+   char    name[8];       // Keep name for switch changing, etc.
+   int     next, index;   // killough 1/31/98: used in hashing algorithm
+   int16_t width, height;
+   int16_t patchcount;    // All the patches[patchcount] are drawn
+   texpatch_t patches[1]; // back-to-front into the cached texture.
 } texture_t;
 
 // Retrieve column data for span blitting.
-byte *R_GetColumn(int tex, int col);
+byte *R_GetColumn(int tex, int32_t col);
 
 // I/O, setting up the stuff.
-void R_InitData (void);
+void R_InitData(void);
 void R_FreeData(void);
 void R_PrecacheLevel(void);
 
@@ -69,7 +69,7 @@ int R_CheckFlatNumForName(const char *name);
 
 // Called by P_Ticker for switches and animations,
 // returns the texture number for the texture name.
-int R_TextureNumForName (const char *name);    // killough -- const added
+int R_TextureNumForName(const char *name);       // killough -- const added
 int R_CheckTextureNumForName (const char *name); 
 
 void R_InitTranMap(int);      // killough 3/6/98: translucency initialization

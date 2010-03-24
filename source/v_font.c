@@ -404,10 +404,10 @@ int V_FontStringWidth(vfont_t *font, const char *s)
 //
 // haleyjd 05/25/06: finds the widest character in the font.
 //
-short V_FontMaxWidth(vfont_t *font)
+int16_t V_FontMaxWidth(vfont_t *font)
 {
    unsigned int i;
-   short w = 0, pw;
+   int16_t w = 0, pw;
 
    if(font->linear)
       return font->lsize;
