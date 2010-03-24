@@ -36,12 +36,14 @@
 #include "e_hash.h"
 #include "e_sprite.h"
 
-// Sprite hashing
-#define NUMSPRCHAINS 257
-static int *sprchains = NULL;
-static int *sprnext = NULL;
+// Data
 
-// utility functions
+static int     numspritesalloc; // number of sprites allocated
+static ehash_t spritehash;      // sprite hash table
+
+// Sprite hashing
+
+E_KEYFUNC(esprite_t, name)
 
 //
 // E_SpriteNumForName
@@ -51,84 +53,110 @@ static int *sprnext = NULL;
 //
 int E_SpriteNumForName(const char *name)
 {
-   int sprnum;
-   unsigned int sprkey = D_HashTableKey(name) % NUMSPRCHAINS;
+   void *obj;
+   int spritenum = -1;
 
-   sprnum = sprchains[sprkey];
-   while(sprnum != -1 && strcasecmp(name, sprnames[sprnum]))
-      sprnum = sprnext[sprnum];
+   if((obj = E_HashObjectForKey(&spritehash, &name)))
+      spritenum = ((esprite_t *)obj)->num;
 
-   return sprnum;
+   return spritenum;
+}
+
+//
+// E_AddSprite
+//
+// haleyjd 03/23/10: Add a sprite name to sprnames, if such is not already 
+// present. The sprnames array will take ownership of the pointer passed into
+// this function.
+//
+void E_AddSprite(char *name)
+{
+   esprite_t *sprite;
+
+   // initialize the sprite hash if it has not been initialized
+   if(!spritehash.isinit)
+      E_NCStrHashInit(&spritehash, 257, E_KEYFUNCNAME(esprite_t, name), NULL);
+   else if(E_HashObjectForKey(&spritehash, &name))
+      return; // don't add the same sprite name twice
+
+   E_EDFLogPrintf("\t\tAdding spritename %s\n", name);
+
+   if(NUMSPRITES + 1 >= numspritesalloc)
+   {
+      numspritesalloc = numspritesalloc ? numspritesalloc + 128 : 256;
+      sprnames = realloc(sprnames, numspritesalloc * sizeof(const char *));
+   }
+   sprnames[NUMSPRITES]     = name;
+   sprnames[NUMSPRITES + 1] = NULL;
+
+   // create an esprite object
+   sprite = calloc(1, sizeof(esprite_t));
+   sprite->name = name;
+   sprite->num  = NUMSPRITES;
+
+   // add esprite to hash
+   E_HashAddObject(&spritehash, sprite);
+
+   ++NUMSPRITES;
 }
 
 //
 // E_ProcessSprites
 //
-// Sets NUMSPRITES, allocates sprnames, sprchains, and sprnext,
-// initializes the sprite hash table, and reads in all sprite names,
-// adding each to the hash table as it is read.
+// haleyjd 03/23/10: Processes the EDF spritenames array, which is now largely
+// only provided for the purpose of giving DOOM's sprites their proper DeHackEd
+// numbers. Sprites defined through DECORATE-format state definitions will be
+// added separately.
+//
+// When loading sprites from wad lumps at runtime, they will be added to any that
+// already exist, rather than overwriting them. This shouldn't make any practical
+// difference.
 //
 void E_ProcessSprites(cfg_t *cfg)
 {
    char *spritestr;
+   int numarraysprites;
    int i;
 
-   E_EDFLogPuts("\t* Processing sprites\n");
+   E_EDFLogPuts("\t* Processing spritenames array\n");
 
-   // set NUMSPRITES and allocate tables
-   NUMSPRITES = cfg_size(cfg, SEC_SPRITE);
+   // get number of sprites in the spritenames array
+   numarraysprites = cfg_size(cfg, SEC_SPRITE);
 
-   E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", NUMSPRITES);
+   E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", numarraysprites);
 
-   // At least one sprite is required
-   if(!NUMSPRITES)
+   // At least one sprite is required to be defined through the 
+   // spritenames array
+   if(!numarraysprites)
       E_EDFLoggedErr(2, "E_ProcessSprites: no sprite names defined.\n");
 
    // 10/17/03: allocate a single sprite string instead of a bunch
    // of separate ones to save tons of memory and some time
-   spritestr = calloc(NUMSPRITES, 8);
+   spritestr = calloc(numarraysprites, 8);
 
-   // allocate with size+1 for the NULL terminator
-   sprnames  = malloc((NUMSPRITES + 1) * sizeof(char *));
-   sprchains = malloc(NUMSPRCHAINS * sizeof(int));
-   sprnext   = malloc((NUMSPRITES + 1) * sizeof(int));
-
-   // initialize the sprite hash table
-   for(i = 0; i < NUMSPRCHAINS; ++i)
-      sprchains[i] = -1;
-   for(i = 0; i < NUMSPRITES + 1; ++i)
-      sprnext[i] = -1;
-
-   for(i = 0; i < NUMSPRITES; ++i)
+   // process each spritename
+   for(i = 0; i < numarraysprites; ++i)
    {
-      unsigned int key;
-      // read in all sprite names
+      char *dest;
       const char *sprname = cfg_getnstr(cfg, SEC_SPRITE, i);
 
+      // spritenames must be exactly 4 characters long
       if(strlen(sprname) != 4)
       {
          E_EDFLoggedErr(2, 
-            "E_ProcessSprites: invalid sprite mnemonic '%s'\n", sprname);
+            "E_ProcessSprites: invalid sprite name '%s'\n", sprname);
       }
 
-      // initialize sprnames[i] to point into the single string
-      // allocation above, then copy the EDF value into that location
-      sprnames[i] = spritestr + i * 8;
-      
-      strncpy(sprnames[i], sprname, 4);
-      
-      // build sprite name hash table
-      key = D_HashTableKey(sprnames[i]) % NUMSPRCHAINS;
-      sprnext[i] = sprchains[key];
-      sprchains[key] = i;
+      // copy the libConfuse value into the proper space, which is aligned
+      // to an 8-byte boundary for efficiency.
+      dest = spritestr + i * 8;
+      strncpy(dest, sprname, 4);
+
+      // add the sprite
+      E_AddSprite(dest);
    }
 
-   // set the pointer at index NUMSPRITES to NULL (used by the
-   // renderer when it iterates over the sprites)
-   sprnames[NUMSPRITES] = NULL;
-
-   E_EDFLogPrintf("\t\tFirst sprite = %s\n\t\tLast sprite = %s\n",
-                  sprnames[0], sprnames[NUMSPRITES-1]);
+   E_EDFLogPuts("\t\tFinished spritenames\n");
 }
 
 // EOF
