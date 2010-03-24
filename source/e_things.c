@@ -47,6 +47,7 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_sound.h"

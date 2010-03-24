@@ -95,6 +95,7 @@
 #include "e_lib.h"
 #include "e_edf.h"
 #include "e_sound.h"
+#include "e_sprite.h"
 #include "e_string.h"
 #include "e_things.h"
 #include "e_states.h"
@@ -105,9 +106,6 @@
 #include "e_fonts.h"
 
 // EDF Keywords used by features implemented in this module
-
-// Sprite names list
-#define SEC_SPRITE "spritenames"
 
 // Sprite variables
 #define ITEM_PLAYERSPRITE "playersprite"
@@ -214,20 +212,6 @@ const char *pickupnames[PFX_NUMFX] =
 // pickupfx lookup table used in P_TouchSpecialThing (is allocated
 // with size NUMSPRITES)
 int *pickupfx = NULL;
-
-// Hash tables
-//
-// Note:
-// For maximum efficiency, the number of chains in these hash tables
-// should be a prime number at least as large as the number of
-// elements to be contained in each respective table. Since definitions
-// can be added by the user, it is best to choose a number a bit larger
-// than necessary, which allows more of a buffer for user-defined types.
-
-// Sprite hashing
-#define NUMSPRCHAINS 257
-static int *sprchains = NULL;
-static int *sprnext = NULL;
 
 // function prototypes for libConfuse callbacks (aka EDF functions)
 
@@ -1129,81 +1113,6 @@ static void E_ParseIndividualLumps(cfg_t *cfg)
    }
 }
 
-// These are needed by E_ProcessSprites:
-static void E_ProcessItems(cfg_t *);
-
-int E_SpriteNumForName(const char *name);
-
-//
-// E_ProcessSprites
-//
-// Sets NUMSPRITES, allocates sprnames, sprchains, and sprnext,
-// initializes the sprite hash table, and reads in all sprite names,
-// adding each to the hash table as it is read.
-//
-static void E_ProcessSprites(cfg_t *cfg)
-{
-   char *spritestr;
-   int i;
-
-   E_EDFLogPuts("\t* Processing sprites\n");
-
-   // set NUMSPRITES and allocate tables
-   NUMSPRITES = cfg_size(cfg, SEC_SPRITE);
-
-   E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", NUMSPRITES);
-
-   // At least one sprite is required
-   if(!NUMSPRITES)
-      E_EDFLoggedErr(2, "E_ProcessSprites: no sprite names defined.\n");
-
-   // 10/17/03: allocate a single sprite string instead of a bunch
-   // of separate ones to save tons of memory and some time
-   spritestr = Z_Calloc(NUMSPRITES, 8, PU_STATIC, 0);
-
-   // allocate with size+1 for the NULL terminator
-   sprnames  = Z_Malloc((NUMSPRITES + 1) * sizeof(char *),PU_STATIC,0);
-   sprchains = Z_Malloc(NUMSPRCHAINS * sizeof(int),PU_STATIC,0);
-   sprnext   = Z_Malloc((NUMSPRITES + 1) * sizeof(int),PU_STATIC,0);
-
-   // initialize the sprite hash table
-   for(i = 0; i < NUMSPRCHAINS; ++i)
-      sprchains[i] = -1;
-   for(i = 0; i < NUMSPRITES + 1; ++i)
-      sprnext[i] = -1;
-
-   for(i = 0; i < NUMSPRITES; ++i)
-   {
-      unsigned int key;
-      // read in all sprite names
-      const char *sprname = cfg_getnstr(cfg, SEC_SPRITE, i);
-
-      if(strlen(sprname) != 4)
-      {
-         E_EDFLoggedErr(2, 
-            "E_ProcessSprites: invalid sprite mnemonic '%s'\n", sprname);
-      }
-
-      // initialize sprnames[i] to point into the single string
-      // allocation above, then copy the EDF value into that location
-      sprnames[i] = spritestr + i * 8;
-      
-      strncpy(sprnames[i], sprname, 4);
-      
-      // build sprite name hash table
-      key = D_HashTableKey(sprnames[i]) % NUMSPRCHAINS;
-      sprnext[i] = sprchains[key];
-      sprchains[key] = i;
-   }
-
-   // set the pointer at index NUMSPRITES to NULL (used by the
-   // renderer when it iterates over the sprites)
-   sprnames[NUMSPRITES] = NULL;
-
-   E_EDFLogPrintf("\t\tFirst sprite = %s\n\t\tLast sprite = %s\n",
-                  sprnames[0], sprnames[NUMSPRITES-1]);
-}
-
 //
 // E_ProcessSpriteVars
 //
@@ -1784,26 +1693,6 @@ void E_ProcessEDF(const char *filename)
 
    // close the verbose log file
    E_EDFCloseVerboseLog();
-}
-
-// utility functions
-
-//
-// E_SpriteNumForName
-//
-// Sprite hashing function. Returns the index of "name" in the sprnames array,
-// if found. If not, returns -1.
-//
-int E_SpriteNumForName(const char *name)
-{
-   int sprnum;
-   unsigned int sprkey = D_HashTableKey(name) % NUMSPRCHAINS;
-
-   sprnum = sprchains[sprkey];
-   while(sprnum != -1 && strcasecmp(name, sprnames[sprnum]))
-      sprnum = sprnext[sprnum];
-
-   return sprnum;
 }
 
 // EOF
