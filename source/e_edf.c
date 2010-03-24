@@ -1550,34 +1550,31 @@ static void E_ProcessMiscVars(cfg_t *cfg)
 
 //=============================================================================
 //
-// Main EDF Routine
+// Main EDF Routines
 //
 
 //
-// E_ProcessEDF
+// E_InitEDF
 //
-// Public function to parse the root EDF file. Called by D_DoomInit. 
-// Assumes that certain BEX data structures, especially the 
-// codepointer hash table, have already been built.
+// Shared initialization code for E_ProcessEDF and E_ProcessNewEDF
 //
-void E_ProcessEDF(const char *filename)
+static cfg_t *E_InitEDF(void)
 {
-   cfg_t *cfg;
-
    // Check for -edfout to enable verbose logging
    if(M_CheckParm("-edfout"))
       E_EDFOpenVerboseLog();
 
    // Create the one and only cfg_t
-   cfg = E_CreateCfg(edf_opts);
+   return E_CreateCfg(edf_opts);
+}
 
-   //
-   // PARSING
-   //
-   // haleyjd 03/21/10: All parsing is now streamlined into a single process,
-   // using the unified cfg_t object created above.
-   //
-
+//
+// E_ParseEDF
+//
+// Shared parsing phase code for E_ProcessEDF and E_ProcessNewEDF
+//
+static void E_ParseEDF(cfg_t *cfg, const char *filename)
+{
    E_EDFLogPuts("\n===================== Parsing Phase =====================\n");
 
    // Parse the "root" EDF, which is either a chain of wad lumps named EDFROOT;
@@ -1592,7 +1589,7 @@ void E_ProcessEDF(const char *filename)
 
       E_ParseEDFLump(cfg, "EDFROOT");
    }
-   else
+   else if(filename)
    {
       printf("E_ProcessEDF: Loading root file %s\n", filename);
       E_EDFLogPrintf("\t* Parsing EDF file %s\n", filename);
@@ -1604,9 +1601,53 @@ void E_ProcessEDF(const char *filename)
    // through any of the above (though if they have been, this is now accounted
    // for via the SHA-1 hashing mechanism which avoids reparses).
    E_ParseIndividualLumps(cfg);
+}
+
+//
+// E_CleanUpEDF
+//
+// Shared shutdown phase code for E_ProcessEDF and E_ProcessNewEDF
+//
+static void E_CleanUpEDF(cfg_t *cfg)
+{
+   E_EDFLogPuts("\n==================== Shutdown Phase =====================\n");
+
+   // Free the cfg_t object.
+   E_EDFLogPuts("\t* Freeing main cfg object\n");
+   cfg_free(cfg);
+
+   // check heap integrity for safety
+   E_EDFLogPuts("\t* Checking zone heap integrity\n");
+   Z_CheckHeap();
+
+   // close the verbose log file
+   E_EDFCloseVerboseLog();
+}
+
+//
+// E_ProcessEDF
+//
+// Public function to parse the root EDF file. Called by D_DoomInit. 
+// Assumes that certain BEX data structures, especially the 
+// codepointer hash table, have already been built.
+//
+void E_ProcessEDF(const char *filename)
+{
+   cfg_t *cfg;
+   
+   // Initialization - open log and create a cfg_t
+   cfg = E_InitEDF();
 
    //
-   // PROCESSING
+   // Parsing
+   //
+   // haleyjd 03/21/10: All parsing is now streamlined into a single process,
+   // using the unified cfg_t object created above.
+   //
+   E_ParseEDF(cfg, filename);
+
+   //
+   // Processing
    //
    // Now we chew on all of the data accumulated from the various sources.
    //
@@ -1674,25 +1715,81 @@ void E_ProcessEDF(const char *filename)
    E_ProcessStateDeltas(cfg); // see e_states.c
    E_ProcessThingDeltas(cfg); // see e_things.c
 
-   //
-   // SHUTDOWN AND CLEANUP
-   //
-   
-   E_EDFLogPuts("\n==================== Shutdown Phase =====================\n");
-
-   // Free the cfg_t object.
-   E_EDFLogPuts("\t* Freeing main cfg object\n");
-   cfg_free(cfg);
-
-   // check heap integrity for safety
-   E_EDFLogPuts("\t* Checking zone heap integrity\n");
-   Z_CheckHeap();
-
    // post-processing routines
    E_SetThingDefaultSprites();
 
-   // close the verbose log file
-   E_EDFCloseVerboseLog();
+   //
+   // Shutdown and Cleanup
+   //
+   E_CleanUpEDF(cfg);
+}
+
+//
+// E_ProcessNewEDF
+//
+// haleyjd 03/24/10: This routine is called to do parsing and processing of new
+// EDF lumps when loading wad files at runtime. Ideally the processing phase
+// will be shared with the routine above, but currently not all EDF definitions
+// are runtime additive - chiefly, states and things. These will be individually
+// remedied in the future, at which time a separate routine can be created to
+// do the shared processing phase.
+//
+void E_ProcessNewEDF(void)
+{
+   cfg_t *cfg;
+   
+   //
+   // Initialization - open log and create a cfg_t
+   //
+   cfg = E_InitEDF();
+
+   //
+   // Parsing - parse only EDFROOT lumps, not root.edf
+   //
+   E_ParseEDF(cfg, NULL);
+
+   //
+   // Processing
+   //
+
+   E_EDFLogPuts("\n=================== Processing Phase ====================\n");
+   
+   // process strings
+   E_ProcessStrings(cfg);
+
+   // process sprites
+   E_ProcessSprites(cfg);
+
+   // process sounds
+   E_ProcessSounds(cfg);
+
+   // process ambience information
+   E_ProcessAmbience(cfg);
+
+   // process sound sequences
+   E_ProcessSndSeqs(cfg);
+
+   // process damage types
+   E_ProcessDamageTypes(cfg);
+
+   // process TerrainTypes
+   E_ProcessTerrainTypes(cfg);
+
+   // process dynamic menus
+   MN_ProcessMenus(cfg);
+
+   // process fonts
+   E_ProcessFonts(cfg);
+
+   // 08/30/03: apply deltas
+   E_ProcessSoundDeltas(cfg, true);
+   E_ProcessStateDeltas(cfg); // see e_states.c
+   E_ProcessThingDeltas(cfg); // see e_things.c
+
+   //
+   // Shutdown and Cleanup
+   //
+   E_CleanUpEDF(cfg);
 }
 
 // EOF
