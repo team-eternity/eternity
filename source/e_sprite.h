@@ -35,13 +35,6 @@ void E_ProcessSprites(cfg_t *cfg);
 
 #endif
 
-typedef struct esprite_s
-{
-   struct mdllistitem_s link; // hash links
-   const char *name;          // sprite name
-   int num;                   // sprite number
-} esprite_t;
-
 int E_SpriteNumForName(const char *name);
 
 #endif

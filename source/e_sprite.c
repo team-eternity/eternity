@@ -43,6 +43,13 @@ static ehash_t spritehash;      // sprite hash table
 
 // Sprite hashing
 
+typedef struct esprite_s
+{
+   struct mdllistitem_s link; // hash links
+   const char *name;          // sprite name
+   int num;                   // sprite number
+} esprite_t;
+
 E_KEYFUNC(esprite_t, name)
 
 //

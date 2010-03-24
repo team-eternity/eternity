@@ -78,23 +78,35 @@ static int numincludesalloc;
 // Pass a pointer to some cached data and the size of that data. The SHA-1
 // hash will be calculated and compared against the SHA-1 hashes of all other
 // data sources that have been sent into this function. Returns true if the
-// data should be included, and false otherwise (ie there was a match).
+// data should be included, and false otherwise (ie. there was a match).
 //
-boolean E_CheckInclude(const char *data, size_t size)
+static boolean E_CheckInclude(const char *data, size_t size)
 {
    int i;
    hashdata_t newhash;
+   char *digest;
 
+   // calculate the SHA-1 hash of the data
    M_HashInitialize(&newhash, HASH_SHA1);
    M_HashData(&newhash, (const uint8_t *)data, (uint32_t)size);
    M_HashWrapUp(&newhash);
+
+   // output digest string
+   digest = M_HashDigestToStr(&newhash);
+
+   E_EDFLogPrintf("\t\t  SHA-1 = %s\n", digest);
+
+   free(digest);
 
    // compare against existing includes
    for(i = 0; i < numincludes; ++i)
    {
       // found a match?
       if(M_HashCompare(&newhash, &eincludes[i]))
+      {
+         E_EDFLogPuts("\t\t\tDeclined, SHA-1 match detected.\n");
          return false;
+      }
    }
 
    // this source has not been processed before, so add its hash to the list
@@ -122,11 +134,13 @@ boolean E_CheckInclude(const char *data, size_t size)
 //    call to cfg_lexer_include. The return value of that function will
 //    be propagated.
 //
-int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
+static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 {
    size_t len;
    char *data;
    int code = 1;
+
+   E_EDFLogPrintf("\t\t* Including %s\n", fn);
 
    // must open the data source
    if((data = cfg_lexer_mustopen(cfg, fn, lumpnum, &len)))
@@ -152,7 +166,7 @@ int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 // Finds a lump from the same data source as the including lump.
 // Returns -1 if no such lump can be found.
 // 
-int E_FindLumpInclude(cfg_t *src, const char *name)
+static int E_FindLumpInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t *lump, *inclump;
    int includinglumpnum;
