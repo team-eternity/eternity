@@ -29,6 +29,7 @@
 //--------------------------------------------------------------------
 
 // killough 5/2/98: fixed headers, removed rendunant external declarations:
+#include "z_zone.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "d_io.h"
@@ -47,14 +48,6 @@
 #include "e_sound.h"
 #include "e_args.h"
 #include "d_dehtbl.h"
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 // haleyjd 11/01/02: moved deh file/wad stdio emulation to d_io.c
 // and generalized, strengthened encapsulation
@@ -1791,7 +1784,7 @@ void deh_procText(DWFILE *fpin, char *line)
    int i;                          // loop variable
    unsigned int fromlen, tolen;    // as specified on the text block line
    int usedlen;                    // shorter of fromlen and tolen if not matched
-   boolean found = FALSE;          // to allow early exit once found
+   boolean found = false;          // to allow early exit once found
    char* line2 = NULL;             // duplicate line for rerouting
    sfxinfo_t *sfx;
 
@@ -1855,7 +1848,7 @@ void deh_procText(DWFILE *fpin, char *line)
             // sprnames[i] = strdup(sprnames[i]);
 
             strncpy(sprnames[i],&inbuffer[fromlen],tolen);
-            found = TRUE;
+            found = true;
             break;  // only one will match--quit early
          }
          ++i;  // next array element
@@ -1881,7 +1874,7 @@ void deh_procText(DWFILE *fpin, char *line)
          // haleyjd 09/03/03: changed to strncpy
          memset(sfx->name, 0, 9);
          strncpy(sfx->name, &inbuffer[fromlen], usedlen);
-         found = TRUE;
+         found = true;
       }
 
       if(!found)  // not yet
@@ -1898,7 +1891,7 @@ void deh_procText(DWFILE *fpin, char *line)
                              S_music[i].name, usedlen, &inbuffer[fromlen]);
 
                S_music[i].name = strdup(&inbuffer[fromlen]);
-               found = TRUE;
+               found = true;
                break;  // only one matches, quit early
             }
          }
@@ -2391,7 +2384,7 @@ boolean deh_GetData(char *s, char *k, int *l, char **strval)
    char *t;  // current char
    int  val; // to hold value of pair
    char buffer[DEH_MAXKEYLEN];  // to hold key in progress
-   boolean okrc = TRUE;  // assume good unless we have problems
+   boolean okrc = true;  // assume good unless we have problems
    int i;  // iterator
 
    *buffer = '\0';
@@ -2407,13 +2400,13 @@ boolean deh_GetData(char *s, char *k, int *l, char **strval)
    buffer[--i] = '\0';  // terminate the key before the '='
    
    if(!*t)  // end of string with no equal sign
-      okrc = FALSE;
+      okrc = false;
    else
    {
       if(!*++t)
       {
          val = 0;  // in case "thiskey =" with no value
-         okrc = FALSE;
+         okrc = false;
       }
       // we've incremented t
       val = strtol(t, NULL, 0);  // killough 8/9/98: allow hex or octal input

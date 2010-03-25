@@ -231,7 +231,6 @@ int E_GetStateNumForName(const char *name)
 // parameterized codepointers without having had a DeHackEd number explicitly
 // assigned to them by the EDF author. This was requested by several users
 // after v3.33.02.
-//
 
 // allocation starts at D_MAXINT and works toward 0
 static int edf_alloc_state_dehnum = D_MAXINT;
