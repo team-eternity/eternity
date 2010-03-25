@@ -78,17 +78,17 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 //
 
 #define FRAME_FIELDS \
-   CFG_STR(    ITEM_FRAME_SPRITE,      "BLANK",     CFGF_NONE), \
-   CFG_INT_CB( ITEM_FRAME_SPRFRAME,    0,           CFGF_NONE, E_SpriteFrameCB), \
-   CFG_BOOL(   ITEM_FRAME_FULLBRT,     cfg_false,   CFGF_NONE), \
-   CFG_INT(    ITEM_FRAME_TICS,        1,           CFGF_NONE), \
-   CFG_STRFUNC(ITEM_FRAME_ACTION,      "NULL",      E_ActionFuncCB), \
-   CFG_STR(    ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
-   CFG_STR(    ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
-   CFG_STR(    ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
-   CFG_STR(    ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
-   CFG_STR(    ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
-   CFG_INT(    ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
+   CFG_STR(ITEM_FRAME_SPRITE,      "BLANK",     CFGF_NONE), \
+   CFG_INT_CB(ITEM_FRAME_SPRFRAME, 0,           CFGF_NONE, E_SpriteFrameCB), \
+   CFG_BOOL(ITEM_FRAME_FULLBRT,    cfg_false,   CFGF_NONE), \
+   CFG_INT(ITEM_FRAME_TICS,        1,           CFGF_NONE), \
+   CFG_STRFUNC(ITEM_FRAME_ACTION,  "NULL",      E_ActionFuncCB), \
+   CFG_STR(ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
+   CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
+   CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
+   CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
+   CFG_STR(ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
+   CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_frame_opts[] =
@@ -386,14 +386,19 @@ static void E_StateSprite(const char *tempstr, int i)
       states[i]->sprite = blankSpriteNum;
    else
    {
-      // resolve normal sprite name
       int sprnum = E_SpriteNumForName(tempstr);
+
       if(sprnum == -1)
       {
-         // haleyjd 05/31/06: downgraded to warning
-         E_EDFLogPrintf("\t\tWarning: frame '%s': invalid sprite '%s'\n",
-                        states[i]->name, tempstr);
-         sprnum = blankSpriteNum;
+         // haleyjd 03/24/10: add implicitly-defined sprite
+         if(!E_ProcessSingleSprite(tempstr))
+         {
+            E_EDFLogPrintf("\t\tWarning: frame '%s': couldn't implicitly "
+                           "define sprite '%s'\n", states[i]->name, tempstr);
+            sprnum = blankSpriteNum;
+         }
+         else
+            sprnum = E_SpriteNumForName(tempstr);
       }
       states[i]->sprite = sprnum;
    }

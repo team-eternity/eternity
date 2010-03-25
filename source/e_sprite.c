@@ -73,10 +73,9 @@ int E_SpriteNumForName(const char *name)
 // E_AddSprite
 //
 // haleyjd 03/23/10: Add a sprite name to sprnames, if such is not already 
-// present. The sprnames array will take ownership of the pointer passed into
-// this function.
+// present. Returns true if successful and false otherwise.
 //
-void E_AddSprite(char *name)
+static boolean E_AddSprite(char *name)
 {
    esprite_t *sprite;
 
@@ -84,14 +83,14 @@ void E_AddSprite(char *name)
    if(!spritehash.isinit)
       E_NCStrHashInit(&spritehash, 257, E_KEYFUNCNAME(esprite_t, name), NULL);
    else if(E_HashObjectForKey(&spritehash, &name))
-      return; // don't add the same sprite name twice
+      return false; // don't add the same sprite name twice
 
    E_EDFLogPrintf("\t\tAdding spritename %s\n", name);
 
    if(NUMSPRITES + 1 >= numspritesalloc)
    {
       numspritesalloc = numspritesalloc ? numspritesalloc + 128 : 256;
-      sprnames = realloc(sprnames, numspritesalloc * sizeof(const char *));
+      sprnames = realloc(sprnames, numspritesalloc * sizeof(char *));
    }
    sprnames[NUMSPRITES]     = name;
    sprnames[NUMSPRITES + 1] = NULL;
@@ -105,6 +104,8 @@ void E_AddSprite(char *name)
    E_HashAddObject(&spritehash, sprite);
 
    ++NUMSPRITES;
+
+   return true;
 }
 
 //
@@ -130,12 +131,12 @@ void E_ProcessSprites(cfg_t *cfg)
    // get number of sprites in the spritenames array
    numarraysprites = cfg_size(cfg, SEC_SPRITE);
 
-   E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", numarraysprites);
-
    // At least one sprite is required to be defined through the 
    // spritenames array
    if(!numarraysprites)
       E_EDFLoggedErr(2, "E_ProcessSprites: no sprite names defined.\n");
+
+   E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", numarraysprites);
 
    // 10/17/03: allocate a single sprite string instead of a bunch
    // of separate ones to save tons of memory and some time
@@ -164,6 +165,34 @@ void E_ProcessSprites(cfg_t *cfg)
    }
 
    E_EDFLogPuts("\t\tFinished spritenames\n");
+}
+
+//
+// E_ProcessSingleSprite
+//
+// haleyjd 03/24/10: Adds a single sprite, such as one being implicitly defined
+// by an EDF frame or DECORATE state. Returns true if successful and false if
+// there is any kind of problem during the process.
+//
+boolean E_ProcessSingleSprite(const char *sprname)
+{
+   char *dest;
+
+   // must be exactly 4 characters
+   if(strlen(sprname) != 4)
+      return false;
+
+   // allocate separate storage for implicit sprites
+   dest = strdup(sprname);
+
+   // try adding it; if this fails, we need to free dest
+   if(!E_AddSprite(dest))
+   {
+      free(dest);
+      return false;
+   }
+   
+   return true;
 }
 
 // EOF

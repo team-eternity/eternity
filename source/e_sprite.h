@@ -31,7 +31,8 @@
 
 #define SEC_SPRITE "spritenames"
 
-void E_ProcessSprites(cfg_t *cfg);
+void    E_ProcessSprites(cfg_t *cfg);
+boolean E_ProcessSingleSprite(const char *sprname);
 
 #endif
 
