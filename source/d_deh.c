@@ -443,13 +443,15 @@ char *deh_misc[] =
   "IDKFA Armor Class", // idkfa_armor_class
   "BFG Cells/Shot",    // BFGCELLS
   "Monsters Infight"   // Unknown--not a specific number it seems, but
-  // the logic has to be here somewhere or
-  // it'd happen always
+                       // the logic has to be here somewhere or
+                       // it'd happen always
 };
 
 // TEXT - Dehacked block name = "Text"
 // Usage: Text fromlen tolen
 // Dehacked allows a bit of adjustment to the length (why?)
+//   haleyjd 03/25/10: Because Watcom aligns strings to 4-byte boundaries,
+//   leaving as many as 3 unused bytes before the next string in the binary.
 
 // haleyjd: moved text table to d_dehtbl.c
 
@@ -459,9 +461,8 @@ char *deh_misc[] =
 
 // haleyjd: moved BEX ptr table to d_dehtbl.c
 
-// to hold startup code pointers from INFO.C
-// haleyjd: now dynamic for EDF
-void (**deh_codeptr)(mobj_t *);
+// haleyjd 03/25/10: eliminated deh_codeptr cache by storing original
+// codepointer values in the states themselves.
 
 // haleyjd 10/08/06: DeHackEd log file made module-global
 static FILE *fileout;
@@ -560,20 +561,6 @@ void ProcessDehFile(char *filename, const char *outfilename, int lumpnum)
    usermsg("Loading DEH file %s",filename);
    
    deh_LogPrintf("\nLoading DEH file %s\n\n", filename);
-
-   {
-      static int i;   // killough 10/98: only run once, by keeping index static
-
-      if(!i)
-      {
-         // haleyjd: allocate dynamically for EDF support
-         deh_codeptr = Z_Malloc(sizeof(void (*)(mobj_t *)) * NUMSTATES,
-                                PU_STATIC, NULL);
-      }
-
-      for(; i < NUMSTATES; ++i)  // remember what they start as for deh xref
-         deh_codeptr[i] = states[i]->action;
-   }
 
    deh_loaded = true;
    
@@ -1249,9 +1236,9 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
       if(!strcasecmp(key, deh_state[4])) // Codep frame (not set in Frame deh block)
       {
-         states[indexnum]->action = deh_codeptr[value];
+         states[indexnum]->action = states[value]->oldaction;;
          deh_LogPrintf(" - applied %p from codeptr[%ld] to states[%d]\n",
-                       deh_codeptr[value], value, indexnum);
+                       states[value]->oldaction, value, indexnum);
          
          // Write BEX-oriented line to match:
          
@@ -1263,7 +1250,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
          
          for(i = 0; i < num_bexptrs; ++i)
          {
-            if(deh_bexptrs[i].cptr == deh_codeptr[value])
+            if(deh_bexptrs[i].cptr == states[value]->oldaction)
             {
                // haleyjd 07/05/03: use oldindex for proper #
                deh_LogPrintf("BEX [CODEPTR] -> FRAME %d = %s\n",
@@ -1273,8 +1260,10 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
          }
       }
       else
+      {
          deh_LogPrintf("Invalid frame pointer index for '%s' at %ld, xref %p\n",
-                       key, value, deh_codeptr[value]);
+                       key, value, states[value]->oldaction);
+      }
    }
 }
 

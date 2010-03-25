@@ -438,7 +438,7 @@ static void E_StateAction(const char *tempstr, int i)
                      states[i]->name, tempstr);
    }
 
-   states[i]->action = dp->cptr;
+   states[i]->action = states[i]->oldaction = dp->cptr;
 }
 
 enum

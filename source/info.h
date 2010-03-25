@@ -158,6 +158,7 @@ typedef struct state_s
    int         frame;               // which frame/subframe of the sprite is shown
    int         tics;                // number of gametics this frame should last
    void        (*action)(mptr);     // code pointer to function for action if any
+   void        (*oldaction)(mptr);  // haleyjd: original action, for DeHackEd
    statenum_t  nextstate;           // linked list pointer to next state or zero
    int         misc1, misc2;        // used for psprite positioning
    int         particle_evt;        // haleyjd: determines an event to run
