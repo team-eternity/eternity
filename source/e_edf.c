@@ -1627,15 +1627,17 @@ static void E_CleanUpEDF(cfg_t *cfg)
 //
 // E_ProcessEDF
 //
-// Public function to parse the root EDF file. Called by D_DoomInit. 
-// Assumes that certain BEX data structures, especially the 
+// Public function to parse and process the root EDF file. Called by 
+// D_DoomInit.  Assumes that certain BEX data structures, especially the
 // codepointer hash table, have already been built.
 //
 void E_ProcessEDF(const char *filename)
 {
    cfg_t *cfg;
    
+   //
    // Initialization - open log and create a cfg_t
+   //
    cfg = E_InitEDF();
 
    //

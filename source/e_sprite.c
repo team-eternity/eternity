@@ -46,11 +46,12 @@ static ehash_t spritehash;      // sprite hash table
 typedef struct esprite_s
 {
    struct mdllistitem_s link; // hash links
-   const char *name;          // sprite name
    int num;                   // sprite number
+   char name[5];              // sprite name
+   char *nameptr;             // pointer to name
 } esprite_t;
 
-E_KEYFUNC(esprite_t, name)
+E_KEYFUNC(esprite_t, nameptr)
 
 //
 // E_SpriteNumForName
@@ -75,33 +76,34 @@ int E_SpriteNumForName(const char *name)
 // haleyjd 03/23/10: Add a sprite name to sprnames, if such is not already 
 // present. Returns true if successful and false otherwise.
 //
-static boolean E_AddSprite(char *name)
+static boolean E_AddSprite(const char *name, esprite_t *sprite)
 {
-   esprite_t *sprite;
+   // initialize the esprite object   
+   strncpy(sprite->name, name, 4);
+   sprite->num = NUMSPRITES;
+   sprite->nameptr = sprite->name;
 
    // initialize the sprite hash if it has not been initialized
    if(!spritehash.isinit)
-      E_NCStrHashInit(&spritehash, 257, E_KEYFUNCNAME(esprite_t, name), NULL);
+      E_NCStrHashInit(&spritehash, 257, E_KEYFUNCNAME(esprite_t, nameptr), NULL);
    else if(E_HashObjectForKey(&spritehash, &name))
       return false; // don't add the same sprite name twice
-
+   
    E_EDFLogPrintf("\t\tAdding spritename %s\n", name);
+   
+   // add esprite to hash
+   E_HashAddObject(&spritehash, sprite);
 
+   // reallocate sprnames if necessary
    if(NUMSPRITES + 1 >= numspritesalloc)
    {
       numspritesalloc = numspritesalloc ? numspritesalloc + 128 : 256;
       sprnames = realloc(sprnames, numspritesalloc * sizeof(char *));
    }
-   sprnames[NUMSPRITES]     = name;
+
+   // set the new sprnames entry, and make the next one NULL
+   sprnames[NUMSPRITES]     = sprite->name;
    sprnames[NUMSPRITES + 1] = NULL;
-
-   // create an esprite object
-   sprite = calloc(1, sizeof(esprite_t));
-   sprite->name = name;
-   sprite->num  = NUMSPRITES;
-
-   // add esprite to hash
-   E_HashAddObject(&spritehash, sprite);
 
    ++NUMSPRITES;
 
@@ -122,7 +124,7 @@ static boolean E_AddSprite(char *name)
 //
 void E_ProcessSprites(cfg_t *cfg)
 {
-   char *spritestr;
+   esprite_t *sprites;
    int numarraysprites;
    int i;
 
@@ -130,22 +132,26 @@ void E_ProcessSprites(cfg_t *cfg)
 
    // get number of sprites in the spritenames array
    numarraysprites = cfg_size(cfg, SEC_SPRITE);
-
-   // At least one sprite is required to be defined through the 
-   // spritenames array
-   if(!numarraysprites)
-      E_EDFLoggedErr(2, "E_ProcessSprites: no sprite names defined.\n");
-
+   
    E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", numarraysprites);
+   
+   // At least one sprite is required to be defined through the 
+   // spritenames array, but only when no sprites have been defined
+   // already.
+   if(!numarraysprites)
+   {
+      if(!NUMSPRITES)
+         E_EDFLoggedErr(2, "E_ProcessSprites: no sprite names defined.\n");
+      return;
+   }
 
-   // 10/17/03: allocate a single sprite string instead of a bunch
-   // of separate ones to save tons of memory and some time
-   spritestr = calloc(numarraysprites, 8);
+   // 10/17/03: allocate a single array of sprite objects to save a lot of
+   // memory and some time.
+   sprites = calloc(numarraysprites, sizeof(*sprites));
 
    // process each spritename
    for(i = 0; i < numarraysprites; ++i)
    {
-      char *dest;
       const char *sprname = cfg_getnstr(cfg, SEC_SPRITE, i);
 
       // spritenames must be exactly 4 characters long
@@ -155,13 +161,8 @@ void E_ProcessSprites(cfg_t *cfg)
             "E_ProcessSprites: invalid sprite name '%s'\n", sprname);
       }
 
-      // copy the libConfuse value into the proper space, which is aligned
-      // to an 8-byte boundary for efficiency.
-      dest = spritestr + i * 8;
-      strncpy(dest, sprname, 4);
-
       // add the sprite
-      E_AddSprite(dest);
+      E_AddSprite(sprname, &sprites[i]);
    }
 
    E_EDFLogPuts("\t\tFinished spritenames\n");
@@ -176,19 +177,19 @@ void E_ProcessSprites(cfg_t *cfg)
 //
 boolean E_ProcessSingleSprite(const char *sprname)
 {
-   char *dest;
+   esprite_t *spr;
 
    // must be exactly 4 characters
    if(strlen(sprname) != 4)
       return false;
 
    // allocate separate storage for implicit sprites
-   dest = strdup(sprname);
+   spr = calloc(1, sizeof(*spr));
 
-   // try adding it; if this fails, we need to free dest
-   if(!E_AddSprite(dest))
+   // try adding it; if this fails, we need to free spr
+   if(!E_AddSprite(sprname, spr))
    {
-      free(dest);
+      free(spr);
       return false;
    }
    
