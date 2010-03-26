@@ -3292,7 +3292,7 @@ void A_RandomJump(mobj_t *mo)
    int statenum = mo->state->misc1;
 
    statenum = E_StateNumForDEHNum(statenum);
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
 
    if(P_Random(pr_randomjump) < mo->state->misc2)

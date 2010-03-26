@@ -124,7 +124,7 @@ static int state_dehchains[NUMSTATECHAINS];
 // State DeHackEd numbers *were* simply the actual, internal state
 // number, but we have to actually store and hash them for EDF to
 // remain cross-version compatible. If a state with the requested
-// dehnum isn't found, NUMSTATES is returned.
+// dehnum isn't found, -1 is returned.
 //
 int E_StateNumForDEHNum(int dehnum)
 {
@@ -137,7 +137,7 @@ int E_StateNumForDEHNum(int dehnum)
       return NullStateNum;
 
    statenum = state_dehchains[statekey];
-   while(statenum != NUMSTATES && states[statenum]->dehnum != dehnum)
+   while(statenum >= 0 && states[statenum]->dehnum != dehnum)
       statenum = states[statenum]->dehnext;
 
    return statenum;
@@ -147,14 +147,14 @@ int E_StateNumForDEHNum(int dehnum)
 // E_GetStateNumForDEHNum
 //
 // As above, but causes a fatal error if the state isn't found,
-// rather than returning NUMSTATES. This keeps error checking code
+// rather than returning -1. This keeps error checking code
 // from being necessitated all over the source code.
 //
 int E_GetStateNumForDEHNum(int dehnum)
 {
    int statenum = E_StateNumForDEHNum(dehnum);
 
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       I_Error("E_GetStateNumForDEHNum: invalid deh num %d\n", dehnum);
 
    return statenum;
@@ -170,7 +170,7 @@ int E_SafeState(int dehnum)
 {
    int statenum = E_StateNumForDEHNum(dehnum);
 
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       statenum = NullStateNum;
 
    return statenum;
@@ -186,7 +186,7 @@ int E_SafeStateName(const char *name)
 {
    int statenum = E_StateNumForName(name);
 
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       statenum = NullStateNum;
 
    return statenum;
@@ -195,7 +195,7 @@ int E_SafeStateName(const char *name)
 //
 // E_StateNumForName
 //
-// Returns the number of a state given its name. Returns NUMSTATES
+// Returns the number of a state given its name. Returns -1
 // if the state is not found.
 //
 int E_StateNumForName(const char *name)
@@ -204,7 +204,7 @@ int E_StateNumForName(const char *name)
    unsigned int statekey = D_HashTableKey(name) % NUMSTATECHAINS;
    
    statenum = state_namechains[statekey];
-   while(statenum != NUMSTATES && strcasecmp(name, states[statenum]->name))
+   while(statenum >= 0 && strcasecmp(name, states[statenum]->name))
       statenum = states[statenum]->namenext;
    
    return statenum;
@@ -219,7 +219,7 @@ int E_GetStateNumForName(const char *name)
 {
    int statenum = E_StateNumForName(name);
 
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       I_Error("E_GetStateNumForName: bad frame %s\n", name);
 
    return statenum;
@@ -254,7 +254,7 @@ boolean E_AutoAllocStateDEHNum(int statenum)
    {
       dehnum = edf_alloc_state_dehnum--;
    } 
-   while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) != NUMSTATES);
+   while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) >= 0);
 
    // ran out while looking for an unused number?
    if(dehnum < 0)
@@ -297,7 +297,7 @@ void E_CollectStates(cfg_t *scfg)
 
    // initialize hash slots
    for(i = 0; i < NUMSTATECHAINS; ++i)
-      state_namechains[i] = state_dehchains[i] = NUMSTATES;
+      state_namechains[i] = state_dehchains[i] = -1;
 
    // build hash table
    E_EDFLogPuts("\t* Building state hash tables\n");
@@ -335,7 +335,7 @@ void E_CollectStates(cfg_t *scfg)
          int cnum;
          
          // make sure it doesn't exist yet
-         if((cnum = E_StateNumForDEHNum(tempint)) != NUMSTATES)
+         if((cnum = E_StateNumForDEHNum(tempint)) >= 0)
          {
             E_EDFLoggedErr(2, 
                "E_CollectStates: frame '%s' reuses dehackednum %d\n"
@@ -353,7 +353,7 @@ void E_CollectStates(cfg_t *scfg)
 
    // verify the existence of the S_NULL frame
    NullStateNum = E_StateNumForName("S_NULL");
-   if(NullStateNum == NUMSTATES)
+   if(NullStateNum < 0)
       E_EDFLoggedErr(2, "E_CollectStates: 'S_NULL' frame must be defined!\n");
 }
 
@@ -558,7 +558,7 @@ static void E_ParseMiscField(char *value, int *target)
       case PREFIX_FRAME:
          {
             int framenum = E_StateNumForName(strval);
-            if(framenum == NUMSTATES)
+            if(framenum < 0)
             {
                E_EDFLogPrintf("\t\tWarning: invalid state '%s' in misc field\n",
                               strval);
@@ -654,15 +654,15 @@ static void E_ParseMiscField(char *value, int *target)
          edf_string_t *str;
          deh_bexptr *dp;
          
-         if((temp = E_ThingNumForName(value)) != NUMMOBJTYPES)   // thingtype?
+         if((temp = E_ThingNumForName(value)) != NUMMOBJTYPES) // thingtype?
             E_AssignMiscThing(target, temp);
-         else if((temp = E_StateNumForName(value)) != NUMSTATES) // frame?
+         else if((temp = E_StateNumForName(value)) >= 0)       // frame?
             E_AssignMiscState(target, temp);
-         else if((sfx = E_EDFSoundForName(value)) != NULL)       // sound?
+         else if((sfx = E_EDFSoundForName(value)) != NULL)     // sound?
             E_AssignMiscSound(target, sfx);
-         else if((str = E_StringForName(value)) != NULL)         // string?
+         else if((str = E_StringForName(value)) != NULL)       // string?
             E_AssignMiscString(target, str, value);
-         else if((dp = D_GetBexPtr(value)) != NULL)              // bexptr???
+         else if((dp = D_GetBexPtr(value)) != NULL)            // bexptr???
             E_AssignMiscBexptr(target, dp, value);
       }
       else
@@ -758,7 +758,7 @@ static void E_StateNextFrame(const char *tempstr, int i)
    {
       tempint = E_SpecialNextState(tempstr, i);
    }
-   else if((tempint = E_StateNumForName(tempstr)) == NUMSTATES)
+   else if((tempint = E_StateNumForName(tempstr)) < 0)
    {
       char *endptr = NULL;
       int result;

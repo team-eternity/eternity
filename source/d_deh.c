@@ -689,12 +689,6 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
 
       deh_LogPrintf("Processing pointer at index %d: %s\n", indexnum, mnemonic);
       
-      if(indexnum < 0 || indexnum >= NUMSTATES)
-      {
-         deh_LogPrintf("Bad pointer number %d of %d\n", indexnum, NUMSTATES);
-         return; // killough 10/98: fix SegViol
-      }
-
       // haleyjd 03/14/03: why do this? how wasteful and useless...
       //strcpy(key,"A_");  // reusing the key area to prefix the mnemonic
 
@@ -1065,14 +1059,12 @@ void deh_procFrame(DWFILE *fpin, char *line)
    
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%s %i",key, &indexnum);
+
    // haleyjd: resolve state number through EDF
    indexnum = E_GetStateNumForDEHNum(indexnum);
    
    deh_LogPrintf("Processing Frame at index %d: %s\n", indexnum, key);
-   
-   if(indexnum < 0 || indexnum >= NUMSTATES)
-      deh_LogPrintf("Bad frame number %d of %d\n", indexnum, NUMSTATES);
-   
+      
    while(!D_Feof(fpin) && *inbuffer && (*inbuffer != ' '))
    {
       if(!D_Fgets(inbuffer, sizeof(inbuffer), fpin))
@@ -1206,12 +1198,6 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
    deh_LogPrintf("Processing Pointer at index %d: %s\n", indexnum, key);
    
-   if(indexnum < 0 || indexnum >= NUMSTATES)
-   {
-      deh_LogPrintf("Bad pointer number %d of %d\n", indexnum, NUMSTATES);
-      return;
-   }
-
    while(!D_Feof(fpin) && *inbuffer && (*inbuffer != ' '))
    {
       if(!D_Fgets(inbuffer, sizeof(inbuffer), fpin))
@@ -1227,12 +1213,6 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
       // haleyjd: resolve xref state number through EDF
       value = E_GetStateNumForDEHNum(value);
-
-      if(value < 0 || value >= NUMSTATES)
-      {
-         deh_LogPrintf("Bad pointer number %ld of %d\n", value, NUMSTATES);
-         return;
-      }
 
       if(!strcasecmp(key, deh_state[4])) // Codep frame (not set in Frame deh block)
       {

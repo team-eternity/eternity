@@ -1411,7 +1411,7 @@ static void E_ProcessCast(cfg_t *cfg)
 
          // name of frame that triggers sound event
          name = cfg_getstr(soundsec, ITEM_CAST_SOUNDFRAME);
-         if((num = E_StateNumForName(name)) == NUMSTATES)
+         if((num = E_StateNumForName(name)) < 0)
             num = 0;
          castorder[i].sounds[j].frame = num;
       }

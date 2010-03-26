@@ -2811,7 +2811,7 @@ void A_HealthJump(mobj_t *mo)
    checkhealth = E_ArgAsInt(mo->state->args, 2, 0);
 
    // validate state
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
    
    // 08/02/04:
@@ -2877,7 +2877,7 @@ void A_CounterJump(mobj_t *mo)
    cnum      = E_ArgAsInt(mo->state->args, 3, 0);
    
    // validate state
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
 
    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
@@ -2953,7 +2953,7 @@ void A_CounterSwitch(mobj_t *mo)
    counter = &(mo->counters[cnum]);
 
    // verify startstate
-   if(startstate == NUMSTATES)
+   if(startstate < 0)
       return;
 
    // verify last state is < NUMSTATES
@@ -3208,7 +3208,7 @@ void A_TargetJump(mobj_t *mo)
 {
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
+   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
       return;
    
    // 1) must be valid
@@ -3246,7 +3246,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0)) == NUMSTATES)
+      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0)) < 0)
          return;
 
       P_SetPsprite(player, player->curpsprite, statenum);
@@ -3302,7 +3302,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
+      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
          return;
       
       P_SetMobjState(mo, statenum);
@@ -3376,7 +3376,7 @@ void A_CheckPlayerDone(mobj_t *mo)
 {
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
+   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
       return;
 
    if(!mo->player)
@@ -3536,7 +3536,7 @@ void A_WeaponCtrJump(mobj_t *mo)
    psprnum   = E_ArgAsKwd(pspr->state->args, 4, &psprkwds, 0);
    
    // validate state
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
 
    // validate psprite number
@@ -3647,7 +3647,7 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    }
 
    // verify startstate
-   if(startstate == NUMSTATES)
+   if(startstate < 0)
       return;
 
    // verify last state is < NUMSTATES
@@ -3965,7 +3965,7 @@ void A_JumpIfNoAmmo(mobj_t *mo)
       weaponinfo_t *w = P_GetReadyWeapon(p);
 
       // validate state
-      if(statenum == NUMSTATES)
+      if(statenum < 0)
          return;
 
       if(w->ammo < NUMAMMO && p->ammo[w->ammo] < w->ammopershot)
@@ -4015,7 +4015,7 @@ void A_CheckReloadEx(mobj_t *mo)
    
 
    // validate state number
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
 
    // validate psprite number

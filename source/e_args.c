@@ -364,7 +364,7 @@ int E_ArgAsStateNum(arglist_t *al, int index)
 //
 // Gets the arg value at index i as a state number, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
-// calls. If the arg does not exist, NUMSTATES is returned.
+// calls. If the arg does not exist, -1 is returned.
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
@@ -375,7 +375,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index)
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NUMSTATES;
+      return -1;
 
    eval = &(al->values[index]);
 
@@ -418,7 +418,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index)
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NUMSTATES;
+      return -1;
 
    eval = &(al->values[index]);
 

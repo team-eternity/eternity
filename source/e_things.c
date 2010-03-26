@@ -753,7 +753,7 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 {
    int index;
 
-   if((index = E_StateNumForName(data)) == NUMSTATES)
+   if((index = E_StateNumForName(data)) < 0)
    {
       E_EDFLoggedErr(2, "E_ThingFrame: thing '%s': invalid %s '%s'\n",
                      mobjinfo[thingnum].name, fieldname, data);
@@ -1035,7 +1035,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
          statenum = E_StateNumForName(statename);
 
          // unknown state? ignore
-         if(statenum == NUMSTATES)
+         if(statenum < 0)
             continue;
 
          state = states[statenum];
@@ -1345,7 +1345,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
          mobjinfo[i].flags3 = basicType->flags3;
 
          if(basicType->spawnstate &&
-            (tempint = E_StateNumForName(basicType->spawnstate)) != NUMSTATES)
+            (tempint = E_StateNumForName(basicType->spawnstate)) >= 0)
             mobjinfo[i].spawnstate = tempint;
          else if(!inherits) // don't init to default if the thingtype inherits
             mobjinfo[i].spawnstate = NullStateNum;
