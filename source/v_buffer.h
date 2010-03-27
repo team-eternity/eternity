@@ -48,7 +48,7 @@ typedef struct VBuffer_s
 
    // SoM: Include the screen size
    boolean  scaled, freelookups;
-   int  scalew, scaleh;
+   int  unscaledw, unscaledh;
    int  *x1lookup;
    int  *y1lookup;
    int  *x2lookup;
