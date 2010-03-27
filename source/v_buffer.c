@@ -295,7 +295,7 @@ void V_UnsetScaling(VBuffer *buffer)
       return;
 
    buffer->scaled = false;
-   buffer->scalew = buffer->scaleh = 0;
+   buffer->unscaledw = buffer->unscaledh = 0;
    buffer->ixscale = buffer->iyscale = 0;
 
    if(buffer->freelookups)
@@ -315,7 +315,7 @@ void V_UnsetScaling(VBuffer *buffer)
 //
 // V_SetScaling
 //
-void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
+void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
 {
    int     i;
    fixed_t frac, lastfrac;
@@ -325,7 +325,7 @@ void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
 
    if(buffer->scaled)
    {
-      if(buffer->scalew == scalew && buffer->scaleh == scaleh)
+      if(buffer->unscaledw == unscaledw && buffer->unscaledh == unscaledh)
          return;
 
       V_UnsetScaling(buffer);
@@ -333,10 +333,10 @@ void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
    else
       buffer->scaled = true;
 
-   buffer->scalew = scalew;
-   buffer->scaleh = scaleh;
+   buffer->unscaledw = unscaledw;
+   buffer->unscaledh = unscaledh;
 
-   if(scalew == SCREENWIDTH && scaleh == SCREENHEIGHT 
+   if(unscaledw == SCREENWIDTH && unscaledh == SCREENHEIGHT 
       && buffer->width == video.width && buffer->height == video.height)
    {
       buffer->x1lookup = video.x1lookup;
@@ -347,7 +347,7 @@ void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
    }
    else
    {
-      int size = sizeof(int) * (scalew + 1);
+      int size = sizeof(int) * (unscaledw + 1);
 
       buffer->x1lookup = Z_SysCalloc(size, 1);
       buffer->x2lookup = Z_SysCalloc(size, 1);
@@ -356,8 +356,8 @@ void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
       buffer->freelookups = true;
    }
 
-   buffer->ixscale = ((scalew << FRACBITS) / buffer->width) + 1;
-   buffer->iyscale = ((scaleh << FRACBITS) / buffer->height) + 1;
+   buffer->ixscale = ((unscaledw << FRACBITS) / buffer->width) + 1;
+   buffer->iyscale = ((unscaledh << FRACBITS) / buffer->height) + 1;
 
 
    buffer->x1lookup[0] = 0;
@@ -373,8 +373,8 @@ void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
 
       frac += buffer->ixscale;
    }
-   buffer->x2lookup[scalew - 1] = buffer->width - 1;
-   buffer->x1lookup[scalew] = buffer->x2lookup[scalew] = buffer->width;
+   buffer->x2lookup[unscaledw - 1] = buffer->width - 1;
+   buffer->x1lookup[unscaledw] = buffer->x2lookup[unscaledw] = buffer->width;
 
    buffer->y1lookup[0] = 0;
    lastfrac = frac = 0;
@@ -389,8 +389,8 @@ void V_SetScaling(VBuffer *buffer, int scalew, int scaleh)
 
       frac += buffer->iyscale;
    }
-   buffer->y2lookup[scaleh - 1] = buffer->height - 1;
-   buffer->y1lookup[scaleh] = buffer->y2lookup[scaleh] = buffer->height;
+   buffer->y2lookup[unscaledh - 1] = buffer->height - 1;
+   buffer->y1lookup[unscaledh] = buffer->y2lookup[unscaledh] = buffer->height;
 
    V_SetupBufferFuncs(buffer, DRAWTYPE_GENSCALED);
 }
