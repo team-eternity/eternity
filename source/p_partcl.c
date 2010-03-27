@@ -1328,6 +1328,9 @@ void P_RunEvent(mobj_t *actor)
 {
    int effectNum;
 
+   if(!drawparticles)
+      return;
+
    // haleyjd: 
    // if actor->state is NULL, the thing has been removed, or
    // if MIF_NOPTCLEVTS is set, don't run events for this thing

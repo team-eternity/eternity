@@ -97,6 +97,116 @@ fixed_t FloatBobDiffs[64] =
    48444, 49909, 50895
 };
 
+// haleyjd 03/27/10: new solution for state cycle detection
+typedef struct seenstate_s
+{
+   mdllistitem_t link;
+   int statenum;
+} seenstate_t;
+
+// haleyjd 03/27/10: freelist of seenstate objects
+static mdllistitem_t *seenstate_freelist;
+
+//
+// P_InitSeenStates
+//
+// haleyjd 03/27/10: creates an initial pool of seenstate objects.
+//
+static void P_InitSeenStates(void)
+{
+   seenstate_t *newss;
+   int i;
+
+   newss = calloc(32, sizeof(seenstate_t));
+
+   for(i = 0; i < 32; ++i)
+      M_DLListInsert(&(newss[i].link), &seenstate_freelist);
+}
+
+//
+// P_FreeSeenStates
+//
+// haleyjd 03/27/10: puts a set of seenstates back onto the freelist
+//
+static void P_FreeSeenStates(seenstate_t *list)
+{
+   mdllistitem_t *oldhead = seenstate_freelist;
+   mdllistitem_t *newtail = &list->link;
+
+   // find tail of list of objects to free
+   while(newtail->next)
+      newtail = newtail->next;
+
+   // attach current freelist to tail
+   newtail->next = oldhead;
+   if(oldhead)
+      oldhead->prev = &newtail->next;
+
+   // attach new list to seenstate_freelist
+   seenstate_freelist = &list->link;
+   list->link.prev = &seenstate_freelist;
+}
+
+//
+// P_GetSeenState
+//
+// Gets a seenstate from the free list if one is available, or creates a
+// new one.
+//
+static seenstate_t *P_GetSeenState(void)
+{
+   seenstate_t *ret;
+
+   if(seenstate_freelist)
+   {
+      mdllistitem_t *item = seenstate_freelist;
+
+      M_DLListRemove(item);
+
+      ret = (seenstate_t *)item;
+
+      memset(ret, 0, sizeof(seenstate_t));
+   }
+   else
+      ret = calloc(1, sizeof(seenstate_t));
+
+   return ret;
+}
+
+//
+// P_AddSeenState
+//
+// Marks a new state as having been seen.
+//
+static void P_AddSeenState(int statenum, seenstate_t **list)
+{
+   seenstate_t *newss = P_GetSeenState();
+
+   newss->statenum = statenum;
+
+   M_DLListInsert(&newss->link, (mdllistitem_t **)list);
+}
+
+//
+// P_CheckSeenState
+//
+// Checks if the given state has been seen
+//
+static boolean P_CheckSeenState(int statenum, seenstate_t *list)
+{
+   seenstate_t *curstate = list;
+
+   while(curstate)
+   {
+      if(statenum == curstate->statenum)
+         return true;
+
+      curstate = (seenstate_t *)(curstate->link.next);
+   }
+
+   return false;
+}
+
 //
 // P_SetMobjState
 //
@@ -106,30 +216,15 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 {
    state_t *st;
 
-   // haleyjd 07/05/03: adjusted for EDF
-   // killough 4/9/98: remember states seen, to detect cycles:
-   static statenum_t *seenstate_tab;           // fast transition table
-   statenum_t *seenstate;                      // pointer to table
-
-   static int recursion;                       // detects recursion
-   statenum_t i = state;                       // initial state
+   // haleyjd 03/27/10: new state cycle detection
+   static boolean firsttime = true; // for initialization
+   seenstate_t *seenstates  = NULL; // list of seenstates for this instance
    boolean ret = true;                         // return value
 
-   // EDF FIXME: may be too slow, is there another solution?
-   // for use with recursion
-   statenum_t *tempstate = NULL;
-
-   // EDF FIXME: might should move to an initialization function
-   if(!seenstate_tab)
-      seenstate_tab = calloc(NUMSTATES, sizeof(statenum_t));
-
-   seenstate = seenstate_tab;
-
-   // if recursion detected, clear state table
-   if(recursion++)
+   if(firsttime)
    {
-      tempstate = calloc(NUMSTATES, sizeof(statenum_t));
-      seenstate=tempstate;
+      P_InitSeenStates();
+      firsttime = false;
    }
 
    do
@@ -162,27 +257,21 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
          st->action(mobj);
 
       // haleyjd 05/20/02: run particle events
-      if(drawparticles && st->particle_evt)
+      if(st->particle_evt)
          P_RunEvent(mobj);
 
-      seenstate[state] = 1 + st->nextstate;   // killough 4/9/98
+      P_AddSeenState(state, &seenstates);
 
       state = st->nextstate;
    }
-   while(!mobj->tics && !seenstate[state]);   // killough 4/9/98
-
+   while(!mobj->tics && !P_CheckSeenState(state, seenstates));
+   
    if(ret && !mobj->tics)  // killough 4/9/98: detect state cycles
-      doom_printf(FC_ERROR"Warning: State Cycle Detected");
+      doom_printf(FC_ERROR "Warning: State Cycle Detected");
 
-   if(!--recursion)
-   {
-      for(;(state=seenstate[i]);i=state-1)
-         seenstate[i] = 0;  // killough 4/9/98: erase memory of states
-   }
-
-   // haleyjd: free temporary state table (see notes above)
-   if(tempstate)
-      free(tempstate);
+   // haleyjd 03/27/10: put seenstates onto freelist
+   if(seenstates)
+      P_FreeSeenStates(seenstates);
 
    return ret;
 }

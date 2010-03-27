@@ -1998,7 +1998,9 @@ static void AM_drawNodeLines(int bspnum)
 static void AM_rotate(double *x, double *y, angle_t a)
 {
    double tmpx;
-   double angle = (double)a * 1.4629180792671596811e-9; // a little magic
+
+   // a little magic: a * (PI / ANG180) converts angle_t to radians
+   double angle = (double)a * 1.4629180792671596811e-9; 
 
    tmpx = *x * cos(angle) - *y * sin(angle);
    *y   = *x * sin(angle) + *y * cos(angle);
