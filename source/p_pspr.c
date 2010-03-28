@@ -804,9 +804,11 @@ void A_Lower(mobj_t *mo)
       P_SetPsprite(player,  ps_weapon, NullStateNum);
       return;
    }
-   
-   player->readyweapon = player->pendingweapon;
-   
+
+   // haleyjd 03/28/10: do not assume pendingweapon is valid
+   if(player->pendingweapon < NUMWEAPONS)
+      player->readyweapon = player->pendingweapon;
+
    P_BringUpWeapon(player);
 }
 
