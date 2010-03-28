@@ -395,6 +395,10 @@ static void V_DrawMaskedColumn(column_t *column)
 
       if(columntop >= 0)
       {
+         // SoM: Make sure the lut is never referenced out of range
+         if(columntop >= patchcol.buffer->unscaledh)
+            return;
+            
          patchcol.y1 = patchcol.buffer->y1lookup[columntop];
          patchcol.frac = 0;
       }
@@ -404,11 +408,14 @@ static void V_DrawMaskedColumn(column_t *column)
          patchcol.y1 = 0;
       }
 
-      if(columntop + column->length - 1 < patchcol.buffer->scaleh)
+      if(columntop + column->length - 1 < 0)
+         continue;
+      if(columntop + column->length - 1 < patchcol.buffer->unscaledh)
          patchcol.y2 = patchcol.buffer->y2lookup[columntop + column->length - 1];
       else
-         patchcol.y2 = patchcol.buffer->y2lookup[patchcol.buffer->scaleh - 1];
+         patchcol.y2 = patchcol.buffer->y2lookup[patchcol.buffer->unscaledh - 1];
 
+      // SoM: The failsafes should be completely redundant now...
       // haleyjd 05/13/08: fix clipping; y2lookup not clamped properly
       if((column->length > 0 && patchcol.y2 < patchcol.y1) ||
          patchcol.y2 >= patchcol.buffer->height)
@@ -501,7 +508,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    {      
       iscale        = buffer->ixscale;
       patchcol.step = buffer->iyscale;
-      maxw          = buffer->scalew;
+      maxw          = buffer->unscaledw;
       maskcolfunc   = V_DrawMaskedColumn;
    }
    else
@@ -526,10 +533,10 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       else
          x1 = -buffer->x2lookup[-x1 - 1];
 
-      if(x2 < buffer->scalew)
+      if(x2 < buffer->unscaledw)
          x2 = buffer->x2lookup[x2];
       else
-         x2 = buffer->x2lookup[buffer->scalew - 1];
+         x2 = buffer->x2lookup[buffer->unscaledw - 1];
    }
 
    patchcol.x  = x1 < 0 ? 0 : x1;

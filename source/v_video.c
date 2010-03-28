@@ -218,12 +218,12 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
    if(dest->scaled)
    {
       if (srcx<0
-           ||srcx+width > dest->scalew
+           ||srcx+width > dest->unscaledw
            || srcy<0
-           || srcy+height > dest->scaleh
-           ||destx<0||destx+width > dest->scalew
+           || srcy+height > dest->unscaledh
+           ||destx<0||destx+width > dest->unscaledw
            || desty<0
-           || desty+height > dest->scaleh
+           || desty+height > dest->unscaledh
            || !src || !dest)
          I_Error ("Bad V_CopyRect");
    }

@@ -94,7 +94,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    // clip to screen within scaled coordinate space
    
    // entirely off-screen?
-   if(x + width < 0 || y + height < 0 || x >= buffer->scalew || y >= buffer->scaleh)
+   if(x + width < 0 || y + height < 0 || x >= buffer->unscaledw || y >= buffer->unscaledh)
       return;
    
    cx1 = x >= 0 ? x : 0;
@@ -102,11 +102,11 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    cx2 = x + width - 1;
    cy2 = y + height - 1;
 
-   if(cx2 >= buffer->scalew)
-      cx2 = buffer->scalew - 1;
+   if(cx2 >= buffer->unscaledw)
+      cx2 = buffer->unscaledw - 1;
 
-   if(cy2 >= buffer->scaleh)
-      cy2 = buffer->scaleh - 1;
+   if(cy2 >= buffer->unscaledh)
+      cy2 = buffer->unscaledh - 1;
    
    // change in origin due to clipping
    dx = cx1 - x;
@@ -231,7 +231,7 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    // clip to screen within scaled coordinate space
    
    // entirely off-screen?
-   if(x + width < 0 || y + height < 0 || x >= buffer->scalew || y >= buffer->scaleh)
+   if(x + width < 0 || y + height < 0 || x >= buffer->unscaledw || y >= buffer->unscaledh)
       return;
    
    cx1 = x >= 0 ? x : 0;
@@ -239,11 +239,11 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    cx2 = x + width - 1;
    cy2 = y + height - 1;
 
-   if(cx2 >= buffer->scalew)
-      cx2 = buffer->scalew - 1;
+   if(cx2 >= buffer->unscaledw)
+      cx2 = buffer->unscaledw - 1;
 
-   if(cy2 >= buffer->scaleh)
-      cy2 = buffer->scaleh - 1;
+   if(cy2 >= buffer->unscaledh)
+      cy2 = buffer->unscaledh - 1;
    
    // change in origin due to clipping
    dx = cx1 - x;
@@ -318,11 +318,11 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    if(y < 0)
       y = 0;
 
-   if(x2 >= dest->scalew)
-      x2 = dest->scalew - 1;
+   if(x2 >= dest->unscaledw)
+      x2 = dest->unscaledw - 1;
 
-   if(y2 >= dest->scaleh)
-      y2 = dest->scaleh - 1;
+   if(y2 >= dest->unscaledh)
+      y2 = dest->unscaledh - 1;
 
    if(x > x2 || y > y2)
       return;
@@ -381,11 +381,11 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
    if(y < 0)
       y = 0;
 
-   if(x2 >= dest->scalew)
-      x2 = dest->scalew - 1;
+   if(x2 >= dest->unscaledw)
+      x2 = dest->unscaledw - 1;
 
-   if(y2 >= dest->scaleh)
-      y2 = dest->scaleh - 1;
+   if(y2 >= dest->unscaledh)
+      y2 = dest->unscaledh - 1;
 
    if(x > x2 || y > y2)
       return;

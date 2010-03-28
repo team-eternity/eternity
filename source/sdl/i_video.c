@@ -174,10 +174,10 @@ static void I_InitDiskFlash(void)
 
    if(vbscreen.scaled)
    {
-      drect.x = vbscreen.x1lookup[vbscreen.scalew - 16];
-      drect.y = vbscreen.y1lookup[vbscreen.scaleh - 15];
-      drect.w = vbscreen.x2lookup[vbscreen.scalew - 1] - drect.x + 1;
-      drect.h = vbscreen.y2lookup[vbscreen.scaleh - 1] - drect.y + 1;
+      drect.x = vbscreen.x1lookup[vbscreen.unscaledw - 16];
+      drect.y = vbscreen.y1lookup[vbscreen.unscaledh - 15];
+      drect.w = vbscreen.x2lookup[vbscreen.unscaledw - 1] - drect.x + 1;
+      drect.h = vbscreen.y2lookup[vbscreen.unscaledh - 1] - drect.y + 1;
    }
    else
    {
