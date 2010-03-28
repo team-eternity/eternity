@@ -33,24 +33,74 @@
 
 // haleyjd 08/30/02: externalized these structures
 
-// A single patch from a texture definition, basically
-// a rectangular area within the texture rectangle.
-typedef struct texpatch_s
+typedef enum
 {
-   int32_t originx, originy;  // Block origin, which has already accounted
-   int32_t patch;             // for the internal origin of the patch.
-} texpatch_t;
+   TC_PATCH,
+   TC_FLAT,
+} cmptype_e;
+
+// Generalized graphic
+typedef struct tcomponent_s
+{
+   int32_t   originx, originy;  // Block origin, which has already accounted
+   uint32_t  width, height;     // Unscaled dimensions of the graphic. These 
+                                // are only used by flat type resources.
+   
+   int32_t   lump;              // Lump number of the
+    
+   cmptype_e type;              // Type of lump
+} tcomponent_t;
+
+
+// SoM: Columns are used inside the texture struct to reference the linear
+// buffer the textures are painted to.
+typedef struct texcol_s
+{
+   uint16_t yoff, len;
+   uint32_t ptroff;
+   
+   struct texcol_s *next;
+} texcol_t;
+
 
 // A maptexturedef_t describes a rectangular texture, which is composed
 // of one or more mappatch_t structures that arrange graphic patches.
+// Redesigned by SoM so that the same textures can be used by both walls
+// and flats.
+typedef enum
+{
+   // Set if the texture contains see-thru portions
+   TF_MASKED    = 0x1,
+   // Set if the texture can be used by the optimized flat drawers
+   TF_SQUAREFLAT = 0x2,
+} texflag_e;
 
 typedef struct texture_s
 {
-   char    name[8];       // Keep name for switch changing, etc.
-   int     next, index;   // killough 1/31/98: used in hashing algorithm
-   int16_t width, height;
-   int16_t patchcount;    // All the patches[patchcount] are drawn
-   texpatch_t patches[1]; // back-to-front into the cached texture.
+   // SoM: New dog's in town
+   mdllistitem_t link;
+
+   char       name[9];       // Keep name for switch changing, etc.
+   int16_t    width, height;
+   
+   // SoM: These are no longer kept in separate arrays
+   int32_t    widthmask;
+   int32_t    heightfrac;
+   
+   // SoM: texture attributes
+   uint32_t   flags;
+   // SoM: If the texture can be used as an optimized flat, this is the size
+   // of the flat
+   byte       flatsize;
+   
+   texcol_t   **columns;     // SoM: width length list of columns
+   byte       *buffer;       // SoM: Linear buffer the texture occupies
+   
+   // New texture system can put either textures or flats (or anything, really)
+   // into a texture, so the old patches idea has been scrapped for 'graphics'
+   // which can be either patch graphics or linear graphics.
+   int16_t        ccount;
+   tcomponent_t   components[1]; // back-to-front into the cached texture.
 } texture_t;
 
 // Retrieve column data for span blitting.
