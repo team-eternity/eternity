@@ -709,7 +709,6 @@ static void I_SDLShutdownSound(void)
 // I_SDLCacheSound
 //
 // haleyjd 11/05/03: fixed for SDL sound engine
-// haleyjd 09/24/06: added sound aliases
 //
 static void I_SDLCacheSound(sfxinfo_t *sound)
 {

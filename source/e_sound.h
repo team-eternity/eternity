@@ -43,6 +43,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen);
 
 void E_NewWadSound(const char *);
 void E_PreCacheSounds(void);
+void E_UpdateSoundCache(void);
 
 // haleyjd: EDF ambience types
 enum

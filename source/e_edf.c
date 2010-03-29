@@ -94,6 +94,7 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_args.h"
 #include "e_sound.h"
 #include "e_sprite.h"
 #include "e_string.h"
@@ -1792,6 +1793,12 @@ void E_ProcessNewEDF(void)
    // Shutdown and Cleanup
    //
    E_CleanUpEDF(cfg);
+
+   // clear cached state argument evaluations
+   E_ResetAllArgEvals();
+
+   // clear cached sounds
+   E_UpdateSoundCache();
 }
 
 // EOF

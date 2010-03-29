@@ -171,19 +171,19 @@ void I_ShutdownSound(void)
 //
 // I_CacheSound
 //
-// haleyjd 11/05/03: fixed for SDL sound engine
-// haleyjd 09/24/06: added sound aliases
+// Precache sound lumps for faster loading.
 //
 void I_CacheSound(sfxinfo_t *sound)
 {
    if(!snd_init)
       return;
 
-   if(sound->alias)
-      I_CacheSound(sound->alias);
-   else if(sound->link)
-      I_CacheSound(sound->link);
-   else
+   // Note that the entire sound directory is swept by the EDF code when it
+   // calls this function, so it shouldn't be necessary to deal with sound
+   // aliases, links, or random redirections, as those all refer to other
+   // sounds. So will will simply ignore such sounds here.
+
+   if(!(sound->alias || sound->link || sound->randomsounds))
       i_sounddriver->CacheSound(sound);
 }
 

@@ -325,9 +325,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
    int i;
    sfxinfo_t *cursfx;
 
-   // run down all the mnemonic hash chains so that we precache 
-   // all sounds, not just ones stored in S_sfx
-
+   // run down all the mnemonic hash chains
    for(i = 0; i < NUMSFXCHAINS; ++i)
    {
       cursfx = sfxchains[i];
@@ -459,6 +457,40 @@ void E_PreCacheSounds(void)
          cursfx = cursfx->next;
       }
    }
+}
+
+//
+// E_UpdateSoundCache
+//
+// haleyjd 03/28/10: For loading EDF definitions at runtime, we need to purge
+// the sound cache.
+//
+void E_UpdateSoundCache(void)
+{
+   int i;
+   sfxinfo_t *cursfx;
+
+   // be sure all sounds are stopped
+   S_StopSounds(true);
+
+   for(i = 0; i < NUMSFXCHAINS; ++i)
+   {
+      cursfx = sfxchains[i];
+
+      while(cursfx)
+      {
+         if(cursfx->data)
+         {
+            free(cursfx->data);
+            cursfx->data = NULL;
+         }
+         cursfx = cursfx->next;
+      }
+   }
+
+   // recache sounds if so requested
+   if(s_precache)
+      E_PreCacheSounds();
 }
 
 //

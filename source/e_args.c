@@ -126,6 +126,30 @@ void E_ResetArgEval(arglist_t *al, int index)
 }
 
 //
+// E_ResetAllArgEvals
+//
+// haleyjd 03/28/10: Reset the evaluation state of all state argument lists,
+// to flush the state of the system after a runtime modification to EDF.
+//
+void E_ResetAllArgEvals(void)
+{
+   int stnum;
+
+   for(stnum = 0; stnum < NUMSTATES; ++stnum)
+   {
+      arglist_t *args = states[stnum]->args;
+
+      if(args)
+      {
+         int argnum;
+
+         for(argnum = 0; argnum < args->numargs; ++argnum)
+            args->values[argnum].type = EVALTYPE_NONE;
+      }
+   }
+}
+
+//
 // E_ArgAsString
 //
 // This is just a safe method to get the argument string at the given
