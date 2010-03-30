@@ -572,6 +572,8 @@ static void StartTexture(texture_t *tex, boolean mask)
 
 
 
+// Returns either the next element in the chain or a new element which is
+// then added to the chain.
 static texcol_t *NextTempCol(texcol_t *current)
 {
    if(!current && !tempmask.tempcols)
@@ -579,7 +581,7 @@ static texcol_t *NextTempCol(texcol_t *current)
    
    if(!current->next)
       return current->next = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
-      
+   
    return current->next;
 }
 
@@ -634,7 +636,7 @@ static void FinishTexture(texture_t *tex)
                maskp++; y++;
             }
             
-            len = y - col->yoff;
+            col->len = y - col->yoff;
          }
       }
       
