@@ -610,6 +610,16 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
       for(i = 0; i < sfx->numrandomsounds; ++i)
          sfx->randomsounds[i] = E_SoundForName(cfg_getnstr(section, ITEM_SND_RANDOM, i));
    }
+   else if(def)
+   {
+      // if defining and a randomsound list is already defined, we need to destroy it,
+      // as the new definition has not specified any random sounds.
+      if(sfx->randomsounds)
+         free(sfx->randomsounds);
+
+      sfx->randomsounds    = NULL;
+      sfx->numrandomsounds = 0;
+   }
    
    // process the skin index
    if(IS_SET(ITEM_SND_SKININDEX))
