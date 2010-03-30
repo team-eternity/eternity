@@ -402,28 +402,47 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
 // Texture caching code
 
 
+// Note:
+// For rotated buffers (the tex->buffer is actually rotated 90 degrees CCW)
+// the calculations for x and y coords are a bit different. Consider:
+//       y+ -->
+//       0  1  2  3
+// x  0  x  o  o  x
+// +  1  o  o  o  o
+// |  2  o  x  x  o
+// v  3  x  o  o  x
+//
+// The address for a column would actually be:
+//    x * texture->height
+// and the address for a pixel in the buffer would be:
+//    x * texture->height + y
+
+
 // This struct holds the temporary structure of a masked texture while it is
 // build assembled. When a texture is complete, new col structs are allocated 
 // in a single block to ensure linearity within memory.
 struct
 {
-   int    bufferlen;
-   byte   *buffer;
-
-   texcol_t *tempcols;
-} tempmask = {0, NULL, NULL};
+   // This is the buffer used for masking
+   boolean   mask;       // If set to true, FinishTexture should create columns
+   int       buffermax;  // size of allocated buffer
+   byte      *buffer;    // mask buffer.
+   texture_t *tex;
+   
+   texcol_t  *tempcols;
+} tempmask = {false, 0, NULL, NULL, NULL, NULL};
 
 
 
 //
-// R_AddTexColumn
+// AddTexColumn
 //
-// Copys from src to the tex buffer and optionally marks the temporary mask
-static void R_AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len, boolean mark)
+// Copies from src to the tex buffer and optionally marks the temporary mask
+static void AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len)
 {
    byte *dest = tex->buffer + ptroff;
    
-   if(mark)
+   if(tempmask.mask && tex == tempmask.tex)
    {
       byte *mask = tempmask.buffer + ptroff;
       
@@ -449,29 +468,63 @@ static void R_AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len,
 
 
 
-// Note:
-// For rotated buffers (the tex->buffer is actually rotated 90 degrees CCW)
-// the calculations for x and y coords are a bit different. Consider:
-//       y+ -->
-//       0  1  2  3
-// ^  3  x  o  o  x
-// |  2  o  o  o  o
-// +  1  o  x  x  o
-// x  0  x  o  o  x
-//
-// The address for a column would actually be:
-//    (texture->width - 1 - x) * texture->height
-// and the address for a pixel in the buffer would be:
-//    (texture->width - 1 - x) * texture->height + y
-
 //
 // AddTexFlat
 // 
 // Paints the given flat-based component to the texture and marks mask info
-static void AddTexFlat(texture_t *tex, tcomponent_t *component, boolean mark)
+static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
    byte      *src = W_CacheLumpNum(component->lump, PU_CACHE);
+   byte      *dest = tex->buffer;
+   int       destoff, srcoff, deststep, srcstep, wcount, hcount;
+   
+   // Make sure component is not entirely off of the texture (should this count
+   // as a texture error?)
+   if(component->originx + component->width <= 0 || 
+      component->originx >= tex->width ||
+      component->originy + component->height <= 0 ||
+      component->originy >= tex->height)
+      return;
+      
+   wcount = component->width;
+   hcount = component->height;
+   
+   if(component->originx < 0)
+   {
+      destoff = (tex->width - 1) * tex->height;
+      srcoff = (-component->originx) * component->width;
+      
+      // component->originx is negative, so this subtracts!
+      wcount += component->originx;
+   }
+   else
+   {
+      destoff = (tex->width - 1 - component->originx) * tex->height;
+      srcoff = 0;
+   }
+   if(component->originx + (int)component->width > tex->width)
+      wcount -= component->originx + component->width - tex->width;
 
+   srcstep = component->width;
+   deststep = -tex->height;
+   
+   
+   if(component->originy < 0)
+   {
+      // Remember that component->originy is negative in this case
+      srcoff -= component->originy;
+      hcount += component->originy;
+   }
+   
+   if(component->originy + (int)component->height > tex->height)
+      hcount -= component->originy + component->height - tex->height;
+      
+   while(wcount > 0)
+   {
+      AddTexColumn(tex, src + srcoff, destoff, hcount);
+      srcoff += srcstep;
+      destoff += deststep;
+   }
 }
 
 
@@ -480,11 +533,132 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component, boolean mark)
 // AddTexPatch
 // 
 // Paints the given flat-based component to the texture and marks mask info
-static void AddTexFlat(texture_t *tex, tcomponent_t *component, boolean mark)
+static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 {
    patch_t    *patch = W_CacheLumpNum(component->lump, PU_CACHE);
    column_t   *col;
 
+}
+
+
+
+//
+// StartTexture
+//
+// Allocates the texture buffer, as well as managing the temporary structs and
+// the mask buffer.
+static void StartTexture(texture_t *tex, boolean mask)
+{
+   int bufferlen = tex->width * tex->height;
+   
+   // Static for now
+   tex->buffer = Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer);
+   memset(tex->buffer, 0, sizeof(byte) * bufferlen);
+   
+   if(tempmask.mask = mask)
+   {
+      tempmask.tex = tex;
+      
+      // Setup the temprary mask
+      if(bufferlen > tempmask.buffermax || !tempmask.buffer)
+      {
+         tempmask.buffermax = bufferlen;
+         tempmask.buffer = Z_Realloc(tempmask.buffer, bufferlen, 
+                                     PU_RENDERER, (void **)&tempmask.buffer);
+      }
+      memset(tempmask.buffer, 0, buffermax);
+   }
+}
+
+
+
+static texcol_t *NextTempCol(texcol_t *current)
+{
+   if(!current && !tempmask.tempcols)
+      return tempmask.tempcols = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
+   
+   if(!current->next)
+      return current->next = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
+      
+   return current->next;
+}
+
+
+
+static void FinishTexture(texture_t *tex)
+{
+   int        x, y, i, colcount;
+   texcol_t   *col, *tcol;
+   byte       *maskp;
+   
+   Z_ChangeTag(tex->buffer, PU_CACHE);
+   
+   if(!tempmask.mask)
+      return;
+      
+   if(tempmask.tex != tex)
+   {
+      // SoM: ERROR?
+      return;
+   }
+   
+   maskp = tempmask.buffer;
+   
+   // Build the columsn based on mask info
+   for(x = 0; x < tex->width; x++)
+   {
+      y = 0;
+      col = NULL;
+      colcount = 0;
+      
+      while(y < tex->height)
+      {
+         // Skip transparent pixels
+         while(y < tex->height && !*maskp)
+         {
+            maskp++;
+            y++;
+         }
+         
+         // Build a column
+         if(y < tex->height && *maskp > 0)
+         {
+            colcount++;
+            col = NextTempCol(col);
+            
+            col->yoff = y;
+            col->ptroff = maskp - tempmask.buffer;
+            
+            while(y < tex->height && *maskp > 0)
+            {
+               maskp++; y++;
+            }
+            
+            len = y - col->yoff;
+         }
+      }
+      
+      // No columns? No problem!
+      if(!colcount)
+      {
+         tex->columns[x] = NULL;
+         continue;
+      }
+         
+      // Now allocate and build the actual column structs in the texture
+      tcol = tex->columns[x] 
+           = Z_Calloc(sizeof(tempcol_t), colcount, PU_RENDERER, NULL);
+           
+      col = NULL;
+      for(i = 0; i < colcount; i++)
+      {
+         col = NextTempCol(col);
+         memcpy(tcol, col, sizeof(texcol_t));
+         
+         tcol->next = i + 1 < colcount ? tcol + 1 : NULL;
+         tcol = tcol->next;
+      }
+   }
 }
 
 
@@ -506,13 +680,7 @@ void R_CacheTexture(int num)
    tex = textures[num];
    if(tex->buffer)
       return;
-   
-   // Static for now
-   bufferlen = tex->width * tex->height;
-   tex->buffer = Z_Malloc(sizeof(byte) * bufferlen, 
-      PU_STATIC, (void **)&tex->buffer);
-   memset(tex->buffer, 0, sizeof(byte) * bufferlen);
-   
+
    // This function has two primary branches:
    // 1. There is no buffer, and there are no columns which means the texture
    //    has never been built before and needs a full treatment
@@ -522,14 +690,7 @@ void R_CacheTexture(int num)
    
    if(!tex->columns)
    {
-      // Setup the temprary mask
-      if(bufferlen > tempmask.bufferlen)
-      {
-         tempmask.bufferlen = bufferlen;
-         tempmask.buffer = Z_Realloc(tempmask.buffer, bufferlen, PU_RENDERER, 0);
-      }
-      
-      memset(tempmask.buffer, 0, bufferlen);
+      StartTexture(tex, true);
       
       // Cache the graphics used
       for(i = 0; i < tex->ccount; i++)
@@ -554,6 +715,7 @@ void R_CacheTexture(int num)
    }
    else
    {
+      StartTexture(tex, false);
       // Just rebuild the buffer (much faster)
       for(i = 0; i < tex->ccount; i++)
       {
