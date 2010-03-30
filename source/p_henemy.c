@@ -1644,15 +1644,12 @@ void A_MntrFloorFire(mobj_t *actor)
 //
 void A_LichFire(mobj_t *actor)
 {
-   static int headfxType = -1, frameNum = -1;
+   int headfxType, frameNum;
    mobj_t *target, *baseFire, *fire;
    int i;
 
-   if(headfxType == -1)
-   {
-      headfxType = E_SafeThingType(MT_LICHFX3);
-      frameNum   = E_SafeState(S_LICHFX3_4);
-   }
+   headfxType = E_SafeThingType(MT_LICHFX3);
+   frameNum   = E_SafeState(S_LICHFX3_4);
 
    if(!(target = actor->target))
       return;
@@ -1864,10 +1861,7 @@ void A_LichIceImpact(mobj_t *actor)
 //
 void A_LichFireGrow(mobj_t *actor)
 {
-   static int frameNum = -1;
-
-   if(frameNum == -1)
-      frameNum = E_SafeState(S_LICHFX3_4);
+   int frameNum = E_SafeState(S_LICHFX3_4);
 
    actor->z += 9*FRACUNIT;
    
@@ -2003,7 +1997,7 @@ void A_ImpXDeath2(mobj_t *actor)
 //
 void A_ImpExplode(mobj_t *actor)
 {
-   static int fxType1 = -1, fxType2 = -1, stateNum = -1;
+   int fxType1, fxType2, stateNum;
    mobj_t *mo;
 
    // haleyjd 09/13/04: it's possible for an imp to enter its
@@ -2013,12 +2007,9 @@ void A_ImpExplode(mobj_t *actor)
 
    actor->flags &= ~MF_NOGRAVITY;
 
-   if(fxType1 == -1)
-   {
-      fxType1 = E_SafeThingType(MT_IMPCHUNK1);
-      fxType2 = E_SafeThingType(MT_IMPCHUNK2);
-      stateNum = E_SafeState(S_IMP_XCRASH1);
-   }
+   fxType1  = E_SafeThingType(MT_IMPCHUNK1);
+   fxType2  = E_SafeThingType(MT_IMPCHUNK2);
+   stateNum = E_SafeState(S_IMP_XCRASH1);
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, fxType1);
    mo->momx = P_SubRandom(pr_impcrash) << 10;
