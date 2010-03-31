@@ -435,6 +435,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
 //    x * texture->height + y
 
 
+
 // This struct holds the temporary structure of a masked texture while it is
 // build assembled. When a texture is complete, new col structs are allocated 
 // in a single block to ensure linearity within memory.
@@ -493,7 +494,8 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
    byte      *src = W_CacheLumpNum(component->lump, PU_CACHE);
    byte      *dest = tex->buffer;
-   int       destoff, srcoff, deststep, srcstep, wcount, hcount;
+   int       destoff, srcoff, deststep, srcstep;
+   int       xstart, ystart, xstop, ystop, wcount, hcount;
    
    // Make sure component is not entirely off of the texture (should this count
    // as a texture error?)
@@ -502,39 +504,38 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
       component->originy + component->height <= 0 ||
       component->originy >= tex->height)
       return;
-      
-   wcount = component->width;
-   hcount = component->height;
    
-   if(component->originx < 0)
-   {
-      destoff = (tex->width - 1) * tex->height;
-      srcoff = (-component->originx) * component->width;
-      
-      // component->originx is negative, so this subtracts!
-      wcount += component->originx;
-   }
-   else
-   {
-      destoff = (tex->width - 1 - component->originx) * tex->height;
-      srcoff = 0;
-   }
-   if(component->originx + (int)component->width > tex->width)
-      wcount -= component->originx + component->width - tex->width;
+   // Determine starts and stops
+   xstart = component->originx;
+   ystart = component->originy;
+   xstop = xstart + component->width;
+   ystop = ystart + component->height;
+   
+   // Offset src or dest based on the x offset first.
+   srcoff = xstart < 0 ? -xstart * component->width : 0;
+   destoff = xstart >= 0 ? xstart * tex->height : 0;
+   xstart = xstart >= 0 ? xstart : 0;
 
-   srcstep = component->width;
-   deststep = -tex->height;
-   
-   
-   if(component->originy < 0)
+   // Adjust offsets based on y-offset.
+   if(ystart < 0)
    {
       // Remember that component->originy is negative in this case
-      srcoff -= component->originy;
-      hcount += component->originy;
+      srcoff -= ystart;
+      ystart = 0;
    }
+   else
+      destoff += ystart;
+
+   srcstep = component->width;
+   deststep = tex->height;
    
-   if(component->originy + (int)component->height > tex->height)
-      hcount -= component->originy + component->height - tex->height;
+   if(xstop > tex->width)
+      xstop = tex->width;
+   if(ystop > tex->height)
+      ystop = tex->height;
+      
+   wcount = xstop - xstart;
+   hcount = ystop - ystart;
       
    while(wcount > 0)
    {
