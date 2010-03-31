@@ -490,7 +490,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len)
 // AddTexFlat
 // 
 // Paints the given flat-based component to the texture and marks mask info
-static void AddTexFlat(texture_t *tex, tcomponent_t *component)
+static void AddTexFlat(texture_t *tex, tcomponent_t *component, int *errornum)
 {
    byte      *src = W_CacheLumpNum(component->lump, PU_CACHE);
    byte      *dest = tex->buffer;
@@ -551,13 +551,13 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 // AddTexPatch
 // 
 // Paints the given flat-based component to the texture and marks mask info
-static void AddTexPatch(texture_t *tex, tcomponent_t *component)
+static void AddTexPatch(texture_t *tex, tcomponent_t *component, int *errornum)
 {
    patch_t    *patch = W_CacheLumpNum(component->lump, PU_CACHE);
    byte       *dest = tex->buffer;
    int        destoff;
    int        xstart, ystart, xstop;
-   int        colstart, yoff;
+   int        colindex, colstep;
    int        x, xstep;
    
    // Make sure component is not entirely off of the texture (should this count
@@ -568,10 +568,8 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
       component->originy >= tex->height)
       return;
    
-   colstart = component->originx < 0 ? -component->originx : 0;
-   yoff = component->originy < 0 ? -component->originy : 0;
-   
    // Determine starts and stops
+   colindex = component->originx < 0 ? -component->originx : 0;
    xstart = component->originx >= 0 ? component->originx : 0;
    xstop = component->originx + component->width;
    
@@ -583,11 +581,11 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
    // if flipped, do so here.
    xstep = 1;
       
-   for(x = xstart; x < xstop; x += xstep)
+   for(x = xstart; x < xstop; x += xstep, colindex += colstep)
    {
-      int top, bot, count, destbase;
+      int top, bot, destbase;
       const column_t *column = 
-         (const column_t *)((byte *)patch + SwapLong(patch->columnofs[x]));
+         (const column_t *)((byte *)patch + SwapLong(patch->columnofs[colindex]));
          
       top = 0;
       destbase = x * tex->height;
@@ -605,7 +603,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
                
          if(bot <= 0)
          {
-            column = (const column_t *)(src + count + 1);
+            column = (const column_t *)(src + column->length + 1);
             continue;
          }
          
@@ -619,10 +617,11 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
             destoff += ystart + top;
             
          if(bot > tex->height)
-            count = tex->height;
+            bot = tex->height;
             
-         if((count = bot - ystart - top) > 0)
-            AddTexColumn(tex, src, destbase + destoff, count);
+         if((bot - ystart - top) > 0)
+            AddTexColumn(tex, src + srcoff, destbase + destoff, 
+                         bot - ystart - top);
             
          column = (const column_t *)(src + column->length + 1);
       }
