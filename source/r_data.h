@@ -43,8 +43,7 @@ typedef enum
 typedef struct tcomponent_s
 {
    int32_t   originx, originy;  // Block origin, which has already accounted
-   uint32_t  width, height;     // Unscaled dimensions of the graphic. These 
-                                // are only used by flat type resources.
+   uint32_t  width, height;     // Unscaled dimensions of the graphic. 
    
    int32_t   lump;              // Lump number of the
     

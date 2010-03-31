@@ -368,12 +368,25 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
 
       for(j = 0; j < texture->ccount; ++j, ++component)
       {
+         patch_t   pheader;
+         
          rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
 
          component->originx = tp.originx;
          component->originy = tp.originy;
          component->lump    = patchlookup[tp.patch];
          component->type    = TC_PATCH;
+
+         W_ReadLumpHeader(component->lump, &pheader, sizeof(patch_t));
+         component->width = SwapShort(pheader.width);
+         component->height = SwapShort(pheader.height);
+         
+         if(texture->height >= 128 && 
+            component->originy + component->height > texture->height)
+         {
+            // SoM: Sadly, I must hack even this system
+            texture->height = component->originy + component->height;
+         }
          
          if(component->lump == -1)
          {
@@ -592,6 +605,12 @@ static texcol_t *NextTempCol(texcol_t *current)
 
 
 
+
+//
+// FinishTexture
+//
+// Called after R_CacheTexture is finished drawing a texture. This function
+// builds the columns (if needed) of a texture from the temporary mask buffer.
 static void FinishTexture(texture_t *tex)
 {
    int        x, y, i, colcount;
@@ -697,51 +716,28 @@ void R_CacheTexture(int num, int *errornum)
    // 2. There is no buffer, but there are columns which means that the buffer
    //    (PU_CACHE) has been freed but the columns (PU_RENDERER) have not. 
    //    This case means we only have to rebuilt the buffer.
+
+   // Start the texture. Check the size of the mask buffer if needed.   
+   StartTexture(tex, tex->columns == NULL);
    
-   if(!tex->columns)
+   // Add the components to the buffer/mask
+   for(i = 0; i < tex->ccount; i++)
    {
-      StartTexture(tex, true);
+      tcomponent_t *component = tex->components + i;
       
-      // Cache the graphics used
-      for(i = 0; i < tex->ccount; i++)
+      switch(component->type)
       {
-         tcomponent_t *component = tex->components + i;
-         
-         switch(component->type)
-         {
-            case TC_FLAT:
-               AddTexFlat(tex, component);
-               break;
-            case TC_PATCH:
-               AddTexPatch(tex, component);
-               break;
-            default:
-               break;
-         }
+         case TC_FLAT:
+            AddTexFlat(tex, component, errornum);
+            break;
+         case TC_PATCH:
+            AddTexPatch(tex, component, errornum);
+            break;
+         default:
+            break;
       }
    }
-   else
-   {
-      StartTexture(tex, false);
-      // Just rebuild the buffer (much faster)
-      for(i = 0; i < tex->ccount; i++)
-      {
-         tcomponent_t *component = tex->components + i;
-         
-         switch(component->type)
-         {
-            case TC_FLAT:
-               AddTexFlat(tex, component);
-               break;
-            case TC_PATCH:
-               AddTexPatch(tex, component);
-               break;
-            default:
-               break;
-         }         
-      }
-   }
-      
+
    // Finish texture
    FinishTexture(tex);
 }
