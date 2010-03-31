@@ -25,8 +25,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <time.h>
-
 #include "z_zone.h"
 #include "doomstat.h"
 #include "c_io.h"
@@ -42,9 +40,8 @@
 #include "m_misc.h"
 #include "e_hash.h"
 
-
-static void R_LoadDoom1();
-static int R_Doom1Texture(const char *name);
+// SoM: This has moved to r_textur.c
+void R_LoadDoom1();
 
 //
 // Graphics.
@@ -494,158 +491,6 @@ void R_FreeData(void)
    Z_FreeTags(PU_RENDERER, PU_RENDERER);
 }
 
-/********************************
-        Doom I texture conversion
- *********************************/
-
-// convert old doom I levels so they will
-// work under doom II
-
-typedef struct doom1text_s
-{
-   char doom1[9];
-   char doom2[9];
-} doom1text_t;
-
-doom1text_t *txtrconv;
-int numconvs = 0;
-int numconvsalloc = 0;
-
-// haleyjd 01/27/09: state table for proper FSA parsing
-enum
-{
-   D1_STATE_COMMENT,
-   D1_STATE_SCAN,
-   D1_STATE_TEX1,
-   D1_STATE_TEX2,
-};
-
-//
-// R_LoadDoom1
-//
-// Parses the DOOM -> DOOM II texture conversion table.
-// haleyjd: rewritten 01/27/09 to remove heap corruption.
-//
-static void R_LoadDoom1(void)
-{
-   char *lump;
-   char *rover;
-   int lumplen, lumpnum;
-   int state = D1_STATE_SCAN;
-   int tx1, tx2;
-
-   char texture1[9];
-   char texture2[9];
-   
-   if((lumpnum = W_CheckNumForName("TXTRCONV")) == -1)
-      return;
-
-   memset(texture1, 0, sizeof(texture1));
-   memset(texture2, 0, sizeof(texture2));
-   tx1 = tx2 = 0;
-
-   lumplen = W_LumpLength(lumpnum);
-   lump    = calloc(1, lumplen + 1);
-   
-   W_ReadLump(lumpnum, lump);
-   
-   rover = lump;
-   numconvs = 0;
-   
-   while(*rover)
-   {
-      switch(state)
-      {
-      case D1_STATE_SCAN:
-         if(*rover == ';')
-            state = D1_STATE_COMMENT;
-         else if(isalnum(*rover))
-         {
-            texture1[tx1++] = *rover;
-            state = D1_STATE_TEX1;
-         }
-         break;
-
-      case D1_STATE_COMMENT:
-         if(*rover == 0x0D || *rover == 0x0A)
-            state = D1_STATE_SCAN;
-         break;
-
-      case D1_STATE_TEX1:
-         if(*rover == 0x0D || *rover == 0x0A) // no linebreak during this state
-            I_Error("R_LoadDoom1: malformed TXTRCONV lump: bad linebreak\n");
-
-         if(isspace(*rover))
-            state = D1_STATE_TEX2;
-         else
-         {
-            if(tx1 >= 8)
-               I_Error("R_LoadDoom1: malformed TXTRCONV lump: tx1 >= 8 chars\n");
-            texture1[tx1++] = *rover;
-         }
-         break;
-
-      case D1_STATE_TEX2:
-          // finished with this entry?
-         if(*rover == 0x0D || *rover == 0x0A || *(rover+1) == '\0')
-         {
-            // haleyjd 09/07/05: this was wasting tons of memory before with
-            // lots of little mallocs; make the whole thing dynamic
-            if(numconvs >= numconvsalloc)
-            {
-               txtrconv = realloc(txtrconv, 
-                                  (numconvsalloc = numconvsalloc ?
-                                   numconvsalloc*2 : 56) * sizeof *txtrconv);
-            }
-            
-            strncpy(txtrconv[numconvs].doom1, texture1, 9);
-            strncpy(txtrconv[numconvs].doom2, texture2, 9);
-            
-            numconvs++;
-
-            // clear out temps
-            memset(texture1, 0, sizeof(texture1));
-            memset(texture2, 0, sizeof(texture2));
-            tx1 = tx2 = 0;
-
-            state = D1_STATE_SCAN;
-         }
-         else if(!isspace(*rover)) // skip spaces
-         {
-            if(tx2 >= 8)
-               I_Error("R_LoadDoom1: malformed TXTRCONV lump: tx2 >= 8 chars\n");
-            texture2[tx2++] = *rover;
-         }
-         break;
-      }
-
-      rover++;
-   }
-   
-   // finished with lump
-   free(lump);
-}
-
-static int R_Doom1Texture(const char *name)
-{
-   int i;
-   
-   // slow i know; should be hash tabled
-   // mind you who cares? it's only going to be
-   // used by a few people and only at the start of 
-   // the level
-   
-   for(i = 0; i < numconvs; i++)
-   {
-      if(!strncasecmp(name, txtrconv[i].doom1, 8))   // found it
-      {
-         doom1level = true;
-         return R_CheckTextureNumForName(txtrconv[i].doom2);
-      }
-   }
-   
-   return -1;
-}
 
 
 //-----------------------------------------------------------------------------
