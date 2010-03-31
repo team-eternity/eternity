@@ -45,9 +45,6 @@
 
 static void R_LoadDoom1();
 static int R_Doom1Texture(const char *name);
-static void error_printf(char *s, ...);
-static FILE *error_file = NULL;
-static char *error_filename;
 
 //
 // Graphics.
@@ -379,10 +376,10 @@ void R_InitData(void)
    R_LoadDoom1();
 }
 
-const char *level_error = NULL;
 
-
+// ============================================================================
 // SoM: Moved texture/flat lookup functions to r_textur.c
+// ============================================================================
 
 
 int r_precache = 1;     //sf: option not to precache the levels
@@ -650,29 +647,6 @@ static int R_Doom1Texture(const char *name)
    return -1;
 }
 
-// sf: error printf
-// for use w/graphical startup
-
-// SoM: This is used in the split off texture module.
-void error_printf(char *s, ...)
-{
-   va_list v;
-   
-   if(!error_file)
-   {
-      time_t nowtime = time(NULL);
-      
-      error_filename = "etrn_err.txt";
-      error_file = fopen(error_filename, "w");
-      fprintf(error_file, "Eternity textures error file\n%s\n",
-         ctime(&nowtime));
-   }
-   
-   // haleyjd 09/30/03: changed to vfprintf
-   va_start(v, s);
-   vfprintf(error_file, s, v);
-   va_end(v);
-}
 
 //-----------------------------------------------------------------------------
 //

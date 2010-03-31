@@ -27,14 +27,18 @@
 
 
 #include "r_data.h"
+#include "r_draw.h"
+#include "doomstat.h"
 #include "e_hash.h"
 #include "w_wad.h"
 #include "v_video.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "d_io.h"
+#include "d_main.h"
 
 
-void error_printf(char *s, ...);
-
+static void error_printf(char *s, ...);
+static FILE *error_file = NULL;
+static char *error_filename;
 
 //
 // Texture definition.
@@ -430,7 +434,7 @@ struct
    texture_t *tex;
    
    texcol_t  *tempcols;
-} tempmask = {false, 0, NULL, NULL, NULL, NULL};
+} tempmask = {false, 0, NULL, NULL, NULL};
 
 
 
@@ -538,6 +542,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
    patch_t    *patch = W_CacheLumpNum(component->lump, PU_CACHE);
    column_t   *col;
 
+   
 }
 
 
@@ -566,7 +571,7 @@ static void StartTexture(texture_t *tex, boolean mask)
          tempmask.buffer = Z_Realloc(tempmask.buffer, bufferlen, 
                                      PU_RENDERER, (void **)&tempmask.buffer);
       }
-      memset(tempmask.buffer, 0, buffermax);
+      memset(tempmask.buffer, 0, bufferlen);
    }
 }
 
@@ -604,9 +609,12 @@ static void FinishTexture(texture_t *tex)
       return;
    }
    
-   maskp = tempmask.buffer;
+   // Allocate column pointers
+   tex->columns = Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0);
    
    // Build the columsn based on mask info
+   maskp = tempmask.buffer;
+
    for(x = 0; x < tex->width; x++)
    {
       y = 0;
@@ -649,7 +657,7 @@ static void FinishTexture(texture_t *tex)
          
       // Now allocate and build the actual column structs in the texture
       tcol = tex->columns[x] 
-           = Z_Calloc(sizeof(tempcol_t), colcount, PU_RENDERER, NULL);
+           = Z_Calloc(sizeof(texcol_t), colcount, PU_RENDERER, NULL);
            
       col = NULL;
       for(i = 0; i < colcount; i++)
@@ -669,10 +677,10 @@ static void FinishTexture(texture_t *tex)
 // R_CacheTexture
 // 
 // Caches a texture in memory, building it from component parts.
-void R_CacheTexture(int num)
+void R_CacheTexture(int num, int *errornum)
 {
    texture_t  *tex;
-   int        i, bufferlen;
+   int        i;
    
 #ifdef RANGECHECK
    if(num < 0 || num >= texturecount)
@@ -697,23 +705,20 @@ void R_CacheTexture(int num)
       // Cache the graphics used
       for(i = 0; i < tex->ccount; i++)
       {
-         tcomponent_t *component = tex->components[i];
+         tcomponent_t *component = tex->components + i;
          
          switch(component->type)
          {
             case TC_FLAT:
-               AddTexFlat(tex, component, true);
+               AddTexFlat(tex, component);
                break;
             case TC_PATCH:
-               AddTexPatch(tex, component, true);
+               AddTexPatch(tex, component);
                break;
             default:
                break;
          }
       }
-      
-      // Finish texture
-      FinishTexture(tex);
    }
    else
    {
@@ -721,15 +726,15 @@ void R_CacheTexture(int num)
       // Just rebuild the buffer (much faster)
       for(i = 0; i < tex->ccount; i++)
       {
-         tcomponent_t *component = tex->components[i];
+         tcomponent_t *component = tex->components + i;
          
          switch(component->type)
          {
             case TC_FLAT:
-               AddTexFlat(tex, component, false);
+               AddTexFlat(tex, component);
                break;
             case TC_PATCH:
-               AddTexPatch(tex, component, false);
+               AddTexPatch(tex, component);
                break;
             default:
                break;
@@ -737,8 +742,8 @@ void R_CacheTexture(int num)
       }
    }
       
-   // All done!
-   Z_ChangeTag(tex->buffer, PU_CACHE);
+   // Finish texture
+   FinishTexture(tex);
 }
 
 
@@ -883,9 +888,9 @@ static void R_CountFlats()
 // Second half of the old R_InitFlats. This is also called by R_InitTextures
 void R_AddFlats(void)
 {
-   int      i, p;
-   byte     flatsize;
-   uint16_t width, height;
+   int       i;
+   byte      flatsize;
+   uint16_t  width, height;
    
    for(i = 0; i < numflats; ++i)
    {
@@ -917,10 +922,10 @@ void R_AddFlats(void)
      
       tex->flags = TF_SQUAREFLAT;
       tex->flatsize = flatsize;
-      tex->graphics[0].lump = i + firstflat;
-      tex->graphics[0].type = TC_FLAT;
-      tex->graphics[0].width = width;
-      tex->graphics[0].height = height;
+      tex->components[0].lump = i + firstflat;
+      tex->components[0].type = TC_FLAT;
+      tex->components[0].width = width;
+      tex->components[0].height = height;
    }
 }
 
@@ -935,9 +940,7 @@ void R_InitTextures(void)
    int *patchlookup;
    int errors = 0;
    int texnum = 0;
-   
-   // Setup the texcols
-   R_InitTexCol();
+   int i;   
    
    texturelump_t *maptex1;
    texturelump_t *maptex2;
@@ -991,7 +994,7 @@ void R_InitTextures(void)
    }
 
    // Precache textures
-   for(i = 0; i < numtextures; ++i)
+   for(i = 0; i < numwalls; ++i)
       R_CacheTexture(i, &errors);
    
    if(errors)
@@ -1009,6 +1012,8 @@ void R_InitTextures(void)
 
 // ============================================================================
 // Texture/flat lookup
+
+const char *level_error = NULL;
 
 //
 // R_FlatNumForName
@@ -1068,7 +1073,7 @@ int R_CheckTextureNumForName(const char *name)
    int i = 0;
    if(*name != '-')     // "NoTexture" marker.
    {
-      i = textures[W_LumpNameHash(name) % (unsigned)numtextures]->index;
+      i = textures[W_LumpNameHash(name) % (unsigned)texturecount]->index;
       while(i >= 0 && strncasecmp(textures[i]->name,name,8))
          i = textures[i]->next;
    }
@@ -1099,4 +1104,28 @@ int R_TextureNumForName(const char *name)  // const added -- killough
    }
 
    return i;
+}
+
+
+
+// sf: error printf
+// for use w/graphical startup
+void error_printf(char *s, ...)
+{
+   va_list v;
+   
+   if(!error_file)
+   {
+      time_t nowtime = time(NULL);
+      
+      error_filename = "etrn_err.txt";
+      error_file = fopen(error_filename, "w");
+      fprintf(error_file, "Eternity textures error file\n%s\n",
+         ctime(&nowtime));
+   }
+   
+   // haleyjd 09/30/03: changed to vfprintf
+   va_start(v, s);
+   vfprintf(error_file, s, v);
+   va_end(v);
 }
