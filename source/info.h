@@ -154,23 +154,25 @@ typedef struct mobj_s * mptr;
 // ********************************************************************
 typedef struct state_s
 {
+   mdllistitem_t namelinks;         // haleyjd 03/30/10: new hashing: by name
+   mdllistitem_t numlinks;          // haleyjd 03/30/10: new hashing: by dehnum
+
    spritenum_t sprite;              // sprite number to show
    int         frame;               // which frame/subframe of the sprite is shown
    int         tics;                // number of gametics this frame should last
    void        (*action)(mptr);     // code pointer to function for action if any
    void        (*oldaction)(mptr);  // haleyjd: original action, for DeHackEd
-   statenum_t  nextstate;           // linked list pointer to next state or zero
+   statenum_t  nextstate;           // index of next state, or -1
    int         misc1, misc2;        // used for psprite positioning
    int         particle_evt;        // haleyjd: determines an event to run
    
    struct arglist_s *args;          // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
-   char        name[41]; // name of this state (max 40 chars)
-   int         dehnum;   // DeHackEd number for fast access, comp.
-   int         namenext; // index of next state in name hash chain
-   int         dehnext;  // index of next state in DEH hash chain
-   int         index;    // 06/12/09: number of state in states array
+   char       *name;        // pointer to name of this state
+   char        namebuf[41]; // buffer for name (max 40 chars)
+   int         dehnum;      // DeHackEd number for fast access, comp.
+   int         index;       // 06/12/09: number of state in states array
 } state_t;
 
 // these are in info.c

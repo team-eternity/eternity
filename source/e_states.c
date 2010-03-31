@@ -40,6 +40,7 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_hash.h"
 #include "e_things.h"
 #include "e_sound.h"
 #include "e_sprite.h"
@@ -67,7 +68,7 @@ int NullStateNum;
 #define ITEM_FRAME_DEHNUM    "dehackednum"
 #define ITEM_FRAME_CMP       "cmp"
 
-#define ITEM_DELTA_NAME "name"
+#define ITEM_DELTA_NAME      "name"
 
 // forward prototype for action function dispatcher
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -108,15 +109,19 @@ cfg_opt_t edf_fdelta_opts[] =
 //
 
 // State hash tables
-// Note: Keep some buffer space between this prime number and the
-// number of default states defined, so that users can add a number 
-// of types without causing significant hash collisions. I do not 
-// recommend changing the hash table to be dynamically allocated.
 
 // State Hashing
 #define NUMSTATECHAINS 2003
-static int state_namechains[NUMSTATECHAINS];
-static int state_dehchains[NUMSTATECHAINS];
+
+static ehash_t state_namehash; // hash by name
+static ehash_t state_numhash;  // hash by DeHackEd number
+
+// Key retrieval function for hashing by name
+E_KEYFUNC(state_t, name)
+
+// Key and link retrieval functions for hashing by number
+E_KEYFUNC(state_t, dehnum)
+E_LINKFUNC(state_t, numlinks);
 
 //
 // E_StateNumForDEHNum
@@ -128,19 +133,17 @@ static int state_dehchains[NUMSTATECHAINS];
 //
 int E_StateNumForDEHNum(int dehnum)
 {
-   int statenum;
-   int statekey = dehnum % NUMSTATECHAINS;
+   state_t *st = NULL;
+   int ret = -1;
 
    // 08/31/03: return null state for negative numbers, to
    // please some old, incorrect DeHackEd patches
    if(dehnum < 0)
-      return NullStateNum;
+      ret = NullStateNum;
+   else if((st = (state_t *)E_HashObjectForKey(&state_numhash, &dehnum)))
+      ret = st->index;
 
-   statenum = state_dehchains[statekey];
-   while(statenum >= 0 && states[statenum]->dehnum != dehnum)
-      statenum = states[statenum]->dehnext;
-
-   return statenum;
+   return ret;
 }
 
 //
@@ -177,22 +180,6 @@ int E_SafeState(int dehnum)
 }
 
 //
-// E_SafeStateName
-//
-// As above, but returns index of S_NULL if result of a name lookup
-// is not found.
-//
-int E_SafeStateName(const char *name)
-{
-   int statenum = E_StateNumForName(name);
-
-   if(statenum < 0)
-      statenum = NullStateNum;
-
-   return statenum;
-}
-
-//
 // E_StateNumForName
 //
 // Returns the number of a state given its name. Returns -1
@@ -200,14 +187,13 @@ int E_SafeStateName(const char *name)
 //
 int E_StateNumForName(const char *name)
 {
-   int statenum;
-   unsigned int statekey = D_HashTableKey(name) % NUMSTATECHAINS;
-   
-   statenum = state_namechains[statekey];
-   while(statenum >= 0 && strcasecmp(name, states[statenum]->name))
-      statenum = states[statenum]->namenext;
-   
-   return statenum;
+   state_t *st = NULL;
+   int ret = -1;
+
+   if((st = (state_t *)E_HashObjectForKey(&state_namehash, &name)))
+      ret = st->index;
+
+   return ret;
 }
 
 //
@@ -225,6 +211,22 @@ int E_GetStateNumForName(const char *name)
    return statenum;
 }
 
+//
+// E_SafeStateName
+//
+// As above, but returns index of S_NULL if result of a name lookup
+// is not found.
+//
+int E_SafeStateName(const char *name)
+{
+   int statenum = E_StateNumForName(name);
+
+   if(statenum < 0)
+      statenum = NullStateNum;
+
+   return statenum;
+}
+
 // haleyjd 03/22/06: automatic dehnum allocation
 //
 // Automatic allocation of dehacked numbers allows states to be used with
@@ -237,7 +239,6 @@ static int edf_alloc_state_dehnum = D_MAXINT;
 
 boolean E_AutoAllocStateDEHNum(int statenum)
 {
-   unsigned int key;
    int dehnum;
    state_t *st = states[statenum];
 
@@ -262,9 +263,7 @@ boolean E_AutoAllocStateDEHNum(int statenum)
 
    // assign it!
    st->dehnum = dehnum;
-   key = dehnum % NUMSTATECHAINS;
-   st->dehnext = state_dehchains[key];
-   state_dehchains[key] = statenum;
+   E_HashAddObject(&state_numhash, st);
 
    return true;
 }
@@ -288,26 +287,27 @@ void E_CollectStates(cfg_t *scfg)
    statestructs = calloc(NUMSTATES, sizeof(state_t));
 
    // 6/18/09: allocate pointer array
-   states = Z_Malloc(sizeof(state_t *) * NUMSTATES, PU_STATIC, NULL);
+   states = malloc(NUMSTATES * sizeof(state_t *));
 
    // set pointers in states[] to proper state structure;
    // must be done first, unfortunately.
    for(i = 0; i < NUMSTATES; ++i)
       states[i] = &statestructs[i];
 
-   // initialize hash slots
-   for(i = 0; i < NUMSTATECHAINS; ++i)
-      state_namechains[i] = state_dehchains[i] = -1;
+   // initialize hash tables
+   E_StrHashInit(&state_namehash, NUMSTATECHAINS, 
+                 E_KEYFUNCNAME(state_t, name), NULL);
+   E_SintHashInit(&state_numhash, NUMSTATECHAINS,
+                  E_KEYFUNCNAME(state_t, dehnum), 
+                  E_LINKFUNCNAME(state_t, numlinks));
 
    // build hash table
    E_EDFLogPuts("\t* Building state hash tables\n");
 
    for(i = 0; i < NUMSTATES; ++i)
    {
-      unsigned int key;
       cfg_t *statecfg = cfg_getnsec(scfg, EDF_SEC_FRAME, i);
       const char *name = cfg_title(statecfg);
-      int tempint;
 
       // verify length
       if(strlen(name) > 40)
@@ -317,35 +317,15 @@ void E_CollectStates(cfg_t *scfg)
       }
 
       // copy it to the state
-      memset(states[i]->name, 0, 41);
-      strncpy(states[i]->name, name, 41);
+      strncpy(states[i]->namebuf, name, 41);
+      states[i]->name = states[i]->namebuf;
 
       // hash it
-      key = D_HashTableKey(name) % NUMSTATECHAINS;
-      states[i]->namenext = state_namechains[key];
-      state_namechains[key] = i;
+      E_HashAddObject(&state_namehash, states[i]);
 
-      // process dehackednum and add state to dehacked hash table,
-      // if appropriate
-      tempint = cfg_getint(statecfg, ITEM_FRAME_DEHNUM);
-      states[i]->dehnum = tempint;
-      if(tempint >= 0)
-      {
-         int dehkey = tempint % NUMSTATECHAINS;
-         int cnum;
-         
-         // make sure it doesn't exist yet
-         if((cnum = E_StateNumForDEHNum(tempint)) >= 0)
-         {
-            E_EDFLoggedErr(2, 
-               "E_CollectStates: frame '%s' reuses dehackednum %d\n"
-               "                 Conflicting frame: '%s'\n",
-               states[i]->name, tempint, states[cnum]->name);
-         }
-         
-         states[i]->dehnext = state_dehchains[dehkey];
-         state_dehchains[dehkey] = i;
-      }
+      // get dehackednum and add state to dehacked hash table if valid
+      if((states[i]->dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM)) >= 0)
+         E_HashAddObject(&state_numhash, states[i]);
 
       // haleyjd 06/15/09: set state index
       states[i]->index = i;

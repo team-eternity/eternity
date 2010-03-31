@@ -1216,8 +1216,7 @@ static void E_AllocSounds(cfg_t *cfg)
    strcpy(NullSound.name,     "none");
    strcpy(NullSound.mnemonic, "none");
 
-   // 08/10/05: must call this from here now, so that defaults
-   // can kick in when no sounds exist
+   // 08/10/05: must call this from here now
 
    E_ProcessSounds(cfg); // see e_sounds.c
 }
