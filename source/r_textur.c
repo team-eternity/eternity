@@ -382,7 +382,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
          component->height = SwapShort(pheader.height);
          
          if(texture->height >= 128 && 
-            component->originy + component->height > texture->height)
+            component->originy + (int)component->height > texture->height)
          {
             // SoM: Sadly, I must hack even this system
             texture->height = component->originy + component->height;
@@ -554,9 +554,79 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 {
    patch_t    *patch = W_CacheLumpNum(component->lump, PU_CACHE);
-   column_t   *col;
-
+   byte       *dest = tex->buffer;
+   int        destoff;
+   int        xstart, ystart, xstop;
+   int        colstart, yoff;
+   int        x, xstep;
    
+   // Make sure component is not entirely off of the texture (should this count
+   // as a texture error?)
+   if(component->originx + component->width <= 0 || 
+      component->originx >= tex->width ||
+      component->originy + component->height <= 0 ||
+      component->originy >= tex->height)
+      return;
+   
+   colstart = component->originx < 0 ? -component->originx : 0;
+   yoff = component->originy < 0 ? -component->originy : 0;
+   
+   // Determine starts and stops
+   xstart = component->originx >= 0 ? component->originx : 0;
+   xstop = component->originx + component->width;
+   
+   ystart = component->originy;
+   
+   if(xstop > tex->width)
+      xstep = tex->width;
+     
+   // if flipped, do so here.
+   xstep = 1;
+      
+   for(x = xstart; x < xstop; x += xstep)
+   {
+      int top, bot, count, destbase;
+      const column_t *column = 
+         (const column_t *)((byte *)patch + SwapLong(patch->columnofs[x]));
+         
+      top = 0;
+      destbase = x * tex->height;
+      
+      while(column->topdelta != 0xff)
+      {
+         const byte *src = (const byte *)column + 3;
+         int        srcoff = 0;
+         
+         top = column->topdelta <= top ? 
+               column->topdelta + top :
+               column->topdelta;
+         
+         bot = ystart + top + column->length;
+               
+         if(bot <= 0)
+         {
+            column = (const column_t *)(src + count + 1);
+            continue;
+         }
+         
+         // Done if this happens
+         if(ystart + top >= tex->height)
+            break;
+            
+         if(ystart + top < 0)
+            srcoff += -(ystart + top);
+         else
+            destoff += ystart + top;
+            
+         if(bot > tex->height)
+            count = tex->height;
+            
+         if((count = bot - ystart - top) > 0)
+            AddTexColumn(tex, src, destbase + destoff, count);
+            
+         column = (const column_t *)(src + column->length + 1);
+      }
+   }
 }
 
 
