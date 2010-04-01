@@ -36,6 +36,7 @@
 #include "d_main.h"
 #include "c_io.h"
 #include "p_setup.h"
+#include "r_ripple.h"
 
 
 static void error_printf(char *s, ...);
@@ -1052,7 +1053,6 @@ static void R_AddFlats(void)
       tex = textures[i + numwalls] = 
          R_AllocTexStruct(lump->name, width, height, 1);
      
-      tex->flags = TF_SQUAREFLAT;
       tex->flatsize = flatsize;
       tex->index = i + numwalls;
       tex->components[0].lump = i + firstflat;
@@ -1157,15 +1157,15 @@ static char *tname = tnamebuf;
 //
 byte *R_GetRawColumn(int tex, int32_t col)
 {
-   texture_t *t = textures[tex];
-   
-   if(!t->buffer)
-      R_CacheTexture(tex);
-   
-   col &= t->widthmask;
-   
-   return t->buffer + col * t->height;
-   //return t->columns[col & t->widthmask];
+   texture_t  *t = textures[tex];
+
+   col = (col & t->widthmask) * t->height;
+
+   // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
+   return (t->flags & TF_SWIRLY && t->flatsize == FLAT_64) ?
+          R_DistortedFlat(tex) + col :
+          !t->buffer ? R_GetLinearBuffer(tex) + col :
+          t->buffer + col;
 }
 
 
@@ -1234,7 +1234,7 @@ int R_FindFlat(const char *name)    // killough -- const added
                    "R_FindFlat: %.8s not found\n", name);
          level_error = errormsg;
       }
-      return -1;
+      return 0;
    }
    return tex->index;
 }
@@ -1278,7 +1278,7 @@ int R_CheckForWall(const char *name)
    if(!(tex = R_SearchWalls(name)))
       tex = R_SearchFlats(name);
       
-   return tex ? tex->index : 0;
+   return tex ? tex->index : -1;
 }
 
 //

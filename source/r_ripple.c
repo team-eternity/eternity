@@ -68,23 +68,31 @@ static void R_DrawLines(void)
 #define AMP2 2
 #define SPEED 40
 
+
 //
 // R_DistortedFlat
 //
 // Generates a distorted flat from a normal one using a two-dimensional
 // sine wave pattern.
 //
-byte *R_DistortedFlat(int flatnum)
+byte *R_DistortedFlat(int texnum)
 {
+   static int lasttex = -1;
    static int swirltic = -1;
    static int offset[4096];
    int i;
    int leveltic = gametic;
-   texture_t *tex = R_CacheTexture(flatnum);
+   texture_t *tex = R_CacheTexture(texnum);
    
    // SoM: different flat sizes?
    if(tex->flatsize != FLAT_64)
       return tex->buffer;
+      
+   // Already swirled this one?
+   if(gametic == swirltic && lasttex == texnum)
+      return distortedflat;
+      
+   lasttex = texnum;
 
    // built this tic?
    if(gametic != swirltic)

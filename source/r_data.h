@@ -70,8 +70,8 @@ typedef enum
 {
    // Set if the texture contains see-thru portions
    TF_MASKED    = 0x1,
-   // Set if the texture can be used by the optimized flat drawers
-   TF_SQUAREFLAT = 0x2,
+   // Set by animation code marks this texture as being swirly
+   TF_SWIRLY    = 0x2,
 } texflag_e;
 
 typedef struct texture_s

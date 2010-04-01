@@ -2474,16 +2474,13 @@ void P_UpdateSpecials(void)
       for(i = anim->basepic; i < anim->basepic + anim->numpics; ++i)
       {
          pic = anim->basepic + 
-               ((leveltime/anim->speed + i)%anim->numpics);
+               ((leveltime/anim->speed + i) % anim->numpics);
                
-         if(anim->istexture)
-            texturetranslation[i] = pic;
-         else                    // sf: swirly water hack
-            texturetranslation[i] = r_swirl ? -1 : pic;
+         texturetranslation[i] = pic;
             
          // sf: > 65535 : swirly hack 
          if(anim->speed > 65535 || anim->numpics == 1)
-            texturetranslation[i] = -1;
+            textures[i]->flags |= TF_SWIRLY;
       }
    }
    

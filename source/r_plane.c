@@ -986,18 +986,14 @@ static void do_draw_plane(visplane_t *pl)
    else      // regular flat
    {
       int stop, light;
-      int swirling;
       byte fs;
       texture_t *tex;
 
-      int picnum = texturetranslation[pl->picnum] == -1 
-                      ? pl->picnum : texturetranslation[pl->picnum];
+      int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      swirling = (texturetranslation[pl->picnum] == -1) 
-                    && textures[pl->picnum]->flatsize == FLAT_64;
-
-      if(swirling)
+      if(textures[pl->picnum]->flags & TF_SWIRLY 
+         && textures[pl->picnum]->flatsize == FLAT_64)
       {
          plane.source = R_DistortedFlat(pl->picnum);
          tex = textures[pl->picnum];
