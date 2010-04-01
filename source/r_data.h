@@ -120,7 +120,9 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col);
 // Returns the texture for chaining.
 texture_t *R_CacheTexture(int num);
 
-// SoM: all textures/flats are now stored in a single array (textures) with the 
+// SoM: all textures/flats are now stored in a single array (textures)
+// Walls start from 0 to numwalls - 1 and flats go from numwalls to
+// texturecount - 1
 extern int         numwalls, numflats;
 extern int         texturecount;
 extern texture_t   **textures;

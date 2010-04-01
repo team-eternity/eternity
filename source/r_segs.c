@@ -118,7 +118,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    {
       column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
          ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
-      column.texmid = column.texmid + textures[texnum]->height - ds->viewz;
+      column.texmid = column.texmid + textures[texnum]->heightfrac - ds->viewz;
    }
    else
    {
