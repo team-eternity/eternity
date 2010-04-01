@@ -1650,7 +1650,7 @@ void P_ChangeFloorTex(const char *name, int tag)
    int flatnum;
    int secnum = -1;
 
-   flatnum = R_FlatNumForName(name);
+   flatnum = R_FindFlat(name);
 
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
       sectors[secnum].floorpic = flatnum;

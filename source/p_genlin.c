@@ -2203,7 +2203,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean us
    line_t *l = NULL;
    int linenum = -1, texnum;
    
-   texnum = R_TextureNumForName(texture);
+   texnum = R_FindWall(texture);
    linenum = -1;
 
    while((l = P_FindLine(tag, &linenum)) != NULL)

@@ -108,9 +108,9 @@ void P_InitSwitchList(void)
          if(!SwapShort(alphSwitchList[i].episode))
             break;
          switchlist[index++] =
-            R_TextureNumForName(alphSwitchList[i].name1);
+            R_FindWall(alphSwitchList[i].name1);
          switchlist[index++] =
-            R_TextureNumForName(alphSwitchList[i].name2);
+            R_FindWall(alphSwitchList[i].name2);
       }
    }
 

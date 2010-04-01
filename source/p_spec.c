@@ -180,19 +180,19 @@ void P_InitPicAnims(void)
       if (animdefs[i].istexture)
       {
          // different episode ?
-         if(R_CheckTextureNumForName(animdefs[i].startname) == -1)
+         if(R_CheckForWall(animdefs[i].startname) == -1)
             continue;
          
-         lastanim->picnum = R_TextureNumForName(animdefs[i].endname);
-         lastanim->basepic = R_TextureNumForName(animdefs[i].startname);
+         lastanim->picnum = R_FindWall(animdefs[i].endname);
+         lastanim->basepic = R_FindWall(animdefs[i].startname);
       }
       else
       {
-         if(W_CheckNumForNameNS(animdefs[i].startname, ns_flats) == -1)  // killough 4/17/98
+         if(R_CheckForFlat(animdefs[i].startname) == -1)
             continue;
          
-         lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
-         lastanim->basepic = R_FlatNumForName (animdefs[i].startname);
+         lastanim->picnum = R_FindFlat(animdefs[i].endname);
+         lastanim->basepic = R_FindFlat(animdefs[i].startname);
       }
 
       lastanim->istexture = animdefs[i].istexture;
@@ -2479,11 +2479,11 @@ void P_UpdateSpecials(void)
          if(anim->istexture)
             texturetranslation[i] = pic;
          else                    // sf: swirly water hack
-            texturetranslation[numwalls + i] = r_swirl ? -1 : pic;
+            texturetranslation[i] = r_swirl ? -1 : pic;
             
          // sf: > 65535 : swirly hack 
          if(anim->speed > 65535 || anim->numpics == 1)
-            texturetranslation[numwalls + i] = -1;
+            texturetranslation[i] = -1;
       }
    }
    

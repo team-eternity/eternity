@@ -63,15 +63,15 @@ void R_StartSky(void)
    //  we look for an actual index, instead of simply
    //  setting one.
 
-   skyflatnum  = R_FlatNumForName(SKYFLATNAME);   
-   sky2flatnum = R_FlatNumForName(SKY2FLATNAME); // haleyjd
+   skyflatnum  = R_FindFlat(SKYFLATNAME);   
+   sky2flatnum = R_FindFlat(SKY2FLATNAME); // haleyjd
 
    // haleyjd 01/22/04: added error checking
    
-   if((skytexture = R_TextureNumForName(LevelInfo.skyName)) == -1)
+   if((skytexture = R_FindWall(LevelInfo.skyName)) == -1)
       I_Error("R_StartSky: bad sky texture '%s'\n", LevelInfo.skyName);
       
-   if((sky2texture = R_TextureNumForName(LevelInfo.sky2Name)) == -1)
+   if((sky2texture = R_FindWall(LevelInfo.sky2Name)) == -1)
       I_Error("R_StartSky: bad sky2 texture '%s'\n", LevelInfo.sky2Name);
 }
 

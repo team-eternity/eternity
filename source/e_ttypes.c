@@ -755,7 +755,7 @@ void E_InitTerrainTypes(void)
 
       while(floor)
       {
-         int tnum = R_CheckFlatNumForName(floor->name);
+         int tnum = R_CheckForFlat(floor->name);
 
          if(tnum != -1)
             TerrainTypes[tnum] = floor->terrain;

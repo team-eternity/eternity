@@ -116,6 +116,9 @@ typedef struct texture_s
 byte *R_GetRawColumn(int tex, int32_t col);
 texcol_t *R_GetMaskedColumn(int tex, int32_t col);
 
+// SoM: This function returns the linear texture buffer (recache if needed)
+byte *R_GetLinearBuffer(int tex);
+
 // Cache a given texture
 // Returns the texture for chaining.
 texture_t *R_CacheTexture(int num);
@@ -139,13 +142,13 @@ void R_PrecacheLevel(void);
 // Retrieval.
 // Floor/ceiling opaque texture tiles,
 // lookup by name.
-int R_FlatNumForName(const char *name);   // killough -- const added
-int R_CheckFlatNumForName(const char *name);
+int R_FindFlat(const char *name);   // killough -- const added
+int R_CheckForFlat(const char *name);
 
 // Called by P_Ticker for switches and animations,
 // returns the texture number for the texture name.
-int R_TextureNumForName(const char *name);       // killough -- const added
-int R_CheckTextureNumForName (const char *name); 
+int R_FindWall(const char *name);       // killough -- const added
+int R_CheckForWall(const char *name); 
 
 void R_InitTranMap(int);      // killough 3/6/98: translucency initialization
 int R_ColormapNumForName(const char *name);      // killough 4/4/98

@@ -516,7 +516,7 @@ void P_ChangeCeilingTex(const char *name, int tag)
    int flatnum;
    int secnum = -1;
 
-   if((flatnum = R_CheckFlatNumForName(name)) == -1)
+   if((flatnum = R_CheckForFlat(name)) == -1)
       return;
 
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)

@@ -401,7 +401,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
          component->height = SwapShort(pheader.height);
          
          if(texture->height >= 128 && 
-            component->originy + (int)component->height > texture->height)
+            (int)component->height > texture->height)
          {
             // SoM: Sadly, I must hack even this system
             texture->height = component->originy + component->height;
@@ -473,7 +473,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len)
    byte *dest = tex->buffer + ptroff;
    
 #ifdef RANGECHECK
-   if(ptroff + len > tex->width * tex->height ||
+   if(ptroff < 0 || ptroff + len > tex->width * tex->height ||
       ptroff + len > tempmask.buffermax)
    {
       I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", tex->name, 
@@ -559,6 +559,10 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
       
    while(wcount > 0)
    {
+#ifdef RANGECHECK
+      if(srcoff < 0 || srcoff + hcount > tex->width * tex->height)
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, tex->width * tex->height);
+#endif
       AddTexColumn(tex, src + srcoff, destoff, hcount);
       srcoff += srcstep;
       destoff += deststep;
@@ -645,6 +649,11 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
             
          if(y2 > tex->height)
             y2 = tex->height;
+
+#ifdef RANGECHECK
+      if(srcoff < 0 || srcoff + y2 - y1 > column->length)
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, column->length);
+#endif
             
          if(y2 - y1 > 0)
             AddTexColumn(tex, src + srcoff, destoff, y2 - y1);
@@ -960,8 +969,8 @@ static void R_InitTextureHash(void)
    for(i = 0; i < numwalls; i++)
       E_HashAddObject(&walltable, textures[i]);
       
-   for(i = 0; i < numflats; i++)
-      E_HashAddObject(&flattable, textures[i + numwalls]);
+   for(; i < texturecount; i++)
+      E_HashAddObject(&flattable, textures[i]);
 }
 
 
@@ -1175,6 +1184,21 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 
 
 
+//
+// R_GetLinearBuffer
+//
+byte *R_GetLinearBuffer(int tex)
+{
+   texture_t *t = textures[tex];
+   
+   if(!t->buffer)
+      R_CacheTexture(tex);
+
+   return t->buffer;
+}
+
+
+
 static texture_t *R_SearchFlats(const char *name)
 {
    strncpy(tname, name, 8);
@@ -1189,12 +1213,10 @@ static texture_t *R_SearchWalls(const char *name)
 }
 
 //
-// R_FlatNumForName
+// R_FindFlat
 // Retrieval, get a flat number for a flat name.
 //
-// killough 4/17/98: changed to use ns_flats namespace
-//
-int R_FlatNumForName(const char *name)    // killough -- const added
+int R_FindFlat(const char *name)    // killough -- const added
 {
    static char errormsg[64];
    
@@ -1209,7 +1231,7 @@ int R_FlatNumForName(const char *name)    // killough -- const added
       if(!level_error)
       {
          psnprintf(errormsg, sizeof(errormsg), 
-                   "R_FlatNumForName: %.8s not found\n", name);
+                   "R_FindFlat: %.8s not found\n", name);
          level_error = errormsg;
       }
       return -1;
@@ -1218,11 +1240,11 @@ int R_FlatNumForName(const char *name)    // killough -- const added
 }
 
 //
-// R_CheckFlatNumForName
+// R_CheckForFlat
 //
 // haleyjd 08/25/09
 //
-int R_CheckFlatNumForName(const char *name)
+int R_CheckForFlat(const char *name)
 {
    texture_t *tex;
 
@@ -1234,7 +1256,7 @@ int R_CheckFlatNumForName(const char *name)
 }
 
 //
-// R_CheckTextureNumForName
+// R_CheckForWall
 // Check whether texture is available.
 // Filter out NoTexture indicator.
 //
@@ -1245,7 +1267,7 @@ int R_CheckFlatNumForName(const char *name)
 // killough 1/21/98, 1/31/98
 //
 
-int R_CheckTextureNumForName(const char *name)
+int R_CheckForWall(const char *name)
 {
    texture_t *tex;
    
@@ -1260,16 +1282,16 @@ int R_CheckTextureNumForName(const char *name)
 }
 
 //
-// R_TextureNumForName
+// R_FindWall
 //
-// Calls R_CheckTextureNumForName,
+// Calls R_CheckForWall,
 //
 // haleyjd 06/08/06: no longer aborts and causes HOMs instead.
 // The user can look at the console to see missing texture errors.
 //
-int R_TextureNumForName(const char *name)  // const added -- killough
+int R_FindWall(const char *name)  // const added -- killough
 {
-   int i = R_CheckTextureNumForName(name);
+   int i = R_CheckForWall(name);
 
    if(i == -1)
    {
@@ -1457,7 +1479,7 @@ static int R_Doom1Texture(const char *name)
       if(!strncasecmp(name, txtrconv[i].doom1, 8))   // found it
       {
          doom1level = true;
-         return R_CheckTextureNumForName(txtrconv[i].doom2);
+         return R_CheckForWall(txtrconv[i].doom2);
       }
    }
    
