@@ -1229,11 +1229,6 @@ static void E_AllocSounds(cfg_t *cfg)
 //
 static void E_CollectNames(cfg_t *cfg)
 {
-   E_EDFLogPuts("\t* Allocating states and things\n");
-
-   E_EDFLogPrintf("\t\tNUMSTATES = %d, NUMMOBJTYPES = %d\n",
-                  NUMSTATES, NUMMOBJTYPES);
-
    E_CollectStates(cfg); // see e_states.c
    E_CollectThings(cfg); // see e_things.c
 }
@@ -1251,10 +1246,6 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
    boolean thingdefs = false, framedefs = false;
 
    E_EDFLogPuts("\t* Beginning state and thing processing\n");
-
-   // check number of states
-   if((NUMSTATES = cfg_size(cfg, EDF_SEC_FRAME)) == 0)
-      E_EDFLoggedErr(2, "E_ProcessStatesAndThings: no frames defined\n");
 
    // check number of things
    if((NUMMOBJTYPES = cfg_size(cfg, EDF_SEC_THING)) == 0)

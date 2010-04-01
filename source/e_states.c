@@ -273,68 +273,160 @@ boolean E_AutoAllocStateDEHNum(int statenum)
 //
 
 //
+// E_CountUniqueStates
+//
+// haleyjd 03/31/10: counts the number of states in a cfg which do not overwrite
+// any pre-existing states by virtue of having the same name.
+//
+static unsigned int E_CountUniqueStates(cfg_t *cfg, unsigned int numstates)
+{
+   unsigned int i;
+   unsigned int count = 0;
+
+   // if the state name hash is empty, short-circuit for efficiency
+   if(!state_namehash.numitems)
+      return numstates;
+
+   for(i = 0; i < numstates; ++i)
+   {
+      cfg_t *statecfg  = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
+      const char *name = cfg_title(statecfg);
+
+      // if not in the name table, count it
+      if(E_StateNumForName(name) < 0)
+         ++count;
+   }
+
+   return count;
+}
+
+
+//
 // E_CollectStates
 //
 // Pre-creates and hashes by name the states, for purpose of mutual 
 // and forward references.
 //
-void E_CollectStates(cfg_t *scfg)
+void E_CollectStates(cfg_t *cfg)
 {
-   int i;
-   state_t *statestructs;
+   unsigned int i;
+   unsigned int numstates;         // number of states defined by the cfg
+   unsigned int numnew;            // number of states that are new
+   unsigned int firstnewstate = 0; // index of first new state
+   unsigned int curnewstate = 0;   // index of current new state being used
+   state_t *statestructs = NULL;
+   static boolean firsttime = true;
 
-   // 6/18/09: allocate structures
-   statestructs = calloc(NUMSTATES, sizeof(state_t));
-
-   // 6/18/09: allocate pointer array
-   states = malloc(NUMSTATES * sizeof(state_t *));
-
-   // set pointers in states[] to proper state structure;
-   // must be done first, unfortunately.
-   for(i = 0; i < NUMSTATES; ++i)
-      states[i] = &statestructs[i];
-
-   // initialize hash tables
-   E_StrHashInit(&state_namehash, NUMSTATECHAINS, 
-                 E_KEYFUNCNAME(state_t, name), NULL);
-   E_SintHashInit(&state_numhash, NUMSTATECHAINS,
-                  E_KEYFUNCNAME(state_t, dehnum), 
-                  E_LINKFUNCNAME(state_t, numlinks));
-
-   // build hash table
-   E_EDFLogPuts("\t* Building state hash tables\n");
-
-   for(i = 0; i < NUMSTATES; ++i)
+   // initialize hash tables if needed
+   if(!state_namehash.isinit)
    {
-      cfg_t *statecfg = cfg_getnsec(scfg, EDF_SEC_FRAME, i);
-      const char *name = cfg_title(statecfg);
-
-      // verify length
-      if(strlen(name) > 40)
-      {
-         E_EDFLoggedErr(2, 
-            "E_CollectStates: invalid frame mnemonic '%s'\n", name);
-      }
-
-      // copy it to the state
-      strncpy(states[i]->namebuf, name, 41);
-      states[i]->name = states[i]->namebuf;
-
-      // hash it
-      E_HashAddObject(&state_namehash, states[i]);
-
-      // get dehackednum and add state to dehacked hash table if valid
-      if((states[i]->dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM)) >= 0)
-         E_HashAddObject(&state_numhash, states[i]);
-
-      // haleyjd 06/15/09: set state index
-      states[i]->index = i;
+      E_StrHashInit(&state_namehash, NUMSTATECHAINS, 
+                    E_KEYFUNCNAME(state_t, name), NULL);   
+      E_SintHashInit(&state_numhash, NUMSTATECHAINS,
+                     E_KEYFUNCNAME(state_t, dehnum), 
+                     E_LINKFUNCNAME(state_t, numlinks));
    }
 
-   // verify the existence of the S_NULL frame
-   NullStateNum = E_StateNumForName("S_NULL");
-   if(NullStateNum < 0)
-      E_EDFLoggedErr(2, "E_CollectStates: 'S_NULL' frame must be defined!\n");
+   // get number of states defined by the cfg
+   numstates = cfg_size(cfg, EDF_SEC_FRAME);
+
+   // get number of new states in the cfg
+   numnew = E_CountUniqueStates(cfg, numstates);
+
+   // echo counts
+   E_EDFLogPrintf("\t\t%u states defined (%u new)\n", numstates, numnew);
+
+   if(numnew)
+   {
+      // allocate state_t structures for the new states
+      statestructs = calloc(numnew, sizeof(state_t));
+
+      // add space to the states array
+      curnewstate = firstnewstate = NUMSTATES;
+      NUMSTATES += (int)numnew;
+      states = realloc(states, NUMSTATES * sizeof(state_t *));
+
+      // set pointers in states[] to the proper structures
+      for(i = firstnewstate; i < (unsigned int)NUMSTATES; ++i)
+      {
+         states[i] = &statestructs[i - firstnewstate];
+
+         // haleyjd 06/15/09: set state index
+         states[i]->index = i;
+      }
+   }
+
+   // build hash tables
+   E_EDFLogPuts("\t\tBuilding state hash tables\n");
+
+   // cycle through the states defined in the cfg
+   for(i = 0; i < numstates; ++i)
+   {
+      cfg_t *statecfg  = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
+      const char *name = cfg_title(statecfg);
+      int statenum;
+
+      if((statenum = E_StateNumForName(name)) >= 0)
+      {
+         int dehnum;
+
+         // a state already exists by this name
+         state_t *st = states[statenum];
+
+         // get dehackednum of libConfuse definition
+         dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM);
+
+         // if not equal to current state dehnum...
+         if(dehnum != st->dehnum)
+         {
+            // if state has a valid dehnum, remove it from the deh hash
+            if(st->dehnum >= 0)
+               E_HashRemoveObject(&state_numhash, st);
+
+            // assign the new dehnum
+            st->dehnum = dehnum;
+
+            // if valid, add it back to the hash with the new id #
+            if(st->dehnum >= 0)
+               E_HashAddObject(&state_numhash, st);
+         }
+      }
+      else
+      {
+         // this is a new state
+         state_t *st = states[curnewstate++];
+
+         // check name for validity
+         if(strlen(name) > 40)
+            E_EDFLoggedErr(2, "E_CollectStates: bad frame name '%s'\n", name);
+
+         // initialize name
+         strncpy(st->namebuf, name, 41);
+         st->name = st->namebuf;
+
+         // add to name hash
+         E_HashAddObject(&state_namehash, st);
+
+         // get dehackednum and add state to dehacked hash table if valid
+         if((st->dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM)) >= 0)
+            E_HashAddObject(&state_numhash, st);
+      }
+   }
+
+   // first-time-only events
+   if(firsttime)
+   {
+      // check that at least one frame was defined
+      if(!NUMSTATES)
+         E_EDFLoggedErr(2, "E_CollectStates: no frames defined.\n");
+
+      // verify the existence of the S_NULL frame
+      NullStateNum = E_StateNumForName("S_NULL");
+      if(NullStateNum < 0)
+         E_EDFLoggedErr(2, "E_CollectStates: 'S_NULL' frame must be defined.\n");
+
+      firsttime = false;
+   }
 }
 
 //
@@ -1176,17 +1268,22 @@ hitcmp:
 //
 void E_ProcessStates(cfg_t *cfg)
 {
-   int i;
+   unsigned int i, numstates;
 
    E_EDFLogPuts("\t* Processing frame data\n");
 
-   for(i = 0; i < NUMSTATES; ++i)
+   numstates = cfg_size(cfg, EDF_SEC_FRAME);
+
+   for(i = 0; i < numstates; ++i)
    {
-      cfg_t *framesec = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
+      cfg_t *framesec  = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
+      const char *name = cfg_title(framesec);
+      int statenum     = E_StateNumForName(name);
 
-      E_ProcessState(i, framesec, true);
+      E_ProcessState(statenum, framesec, true);
 
-      E_EDFLogPrintf("\t\tFinished frame %s(#%d)\n", states[i]->name, i);
+      E_EDFLogPrintf("\t\tFinished frame %s (#%d)\n", 
+                     states[statenum]->name, statenum);
    }
 
 #define DS_TEST

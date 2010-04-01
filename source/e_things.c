@@ -654,7 +654,7 @@ void E_CollectThings(cfg_t *tcfg)
       thing_namechains[i] = thing_dehchains[i] = NUMMOBJTYPES;
 
    // build hash tables
-   E_EDFLogPuts("\t* Building thing hash tables\n");
+   E_EDFLogPuts("\t\tBuilding thing hash tables\n");
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
