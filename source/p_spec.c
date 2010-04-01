@@ -609,11 +609,11 @@ fixed_t P_FindShortestTextureAround(int secnum)
       {
          const side_t *side;
          if((side = getSide(secnum,i,0))->bottomtexture >= lowtexnum &&
-            textureheight[side->bottomtexture] < minsize)
-            minsize = textureheight[side->bottomtexture];
+            textures[side->bottomtexture]->heightfrac < minsize)
+            minsize = textures[side->bottomtexture]->heightfrac;
          if((side = getSide(secnum,i,1))->bottomtexture >= lowtexnum &&
-            textureheight[side->bottomtexture] < minsize)
-            minsize = textureheight[side->bottomtexture];
+            textures[side->bottomtexture]->heightfrac < minsize)
+            minsize = textures[side->bottomtexture]->heightfrac;
       }
    }
    
@@ -654,11 +654,11 @@ fixed_t P_FindShortestUpperAround(int secnum)
       {
          const side_t *side;
          if((side = getSide(secnum,i,0))->toptexture >= lowtexnum)
-            if(textureheight[side->toptexture] < minsize)
-               minsize = textureheight[side->toptexture];
+            if(textures[side->toptexture]->heightfrac < minsize)
+               minsize = textures[side->toptexture]->heightfrac;
          if((side = getSide(secnum,i,1))->toptexture >= lowtexnum)
-            if(textureheight[side->toptexture] < minsize)
-               minsize = textureheight[side->toptexture];
+            if(textures[side->toptexture]->heightfrac < minsize)
+               minsize = textures[side->toptexture]->heightfrac;
       }
    }
 
@@ -2475,13 +2475,15 @@ void P_UpdateSpecials(void)
       {
          pic = anim->basepic + 
                ((leveltime/anim->speed + i)%anim->numpics);
+               
          if(anim->istexture)
             texturetranslation[i] = pic;
          else                    // sf: swirly water hack
-            flattranslation[i] = r_swirl ? -1 : pic;
+            texturetranslation[numwalls + i] = r_swirl ? -1 : pic;
+            
          // sf: > 65535 : swirly hack 
          if(anim->speed > 65535 || anim->numpics == 1)
-            flattranslation[i] = -1;
+            texturetranslation[numwalls + i] = -1;
       }
    }
    

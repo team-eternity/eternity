@@ -382,12 +382,12 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
       if(line->flags & ML_DONTPEGBOTTOM)
       {
          texbot = sidedef->rowoffset + openbottom;
-         textop = texbot + textureheight[sidedef->midtexture];
+         textop = texbot + textures[sidedef->midtexture]->heightfrac;
       }
       else
       {
          textop = opentop + sidedef->rowoffset;
-         texbot = textop - textureheight[sidedef->midtexture];
+         texbot = textop - textures[sidedef->midtexture]->heightfrac;
       }
 
       if(thing->z > textop || thing->z + thing->height < texbot)

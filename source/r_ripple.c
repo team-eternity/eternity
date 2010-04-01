@@ -80,10 +80,11 @@ byte *R_DistortedFlat(int flatnum)
    static int offset[4096];
    int i;
    int leveltic = gametic;
+   texture_t *tex = R_CacheTexture(flatnum);
    
    // SoM: different flat sizes?
-   if(flatsize[flatnum] != FLAT_64)
-      return W_CacheLumpNum(firstflat + flatnum, PU_CACHE);
+   if(tex->flatsize != FLAT_64)
+      return tex->buffer;
 
    // built this tic?
    if(gametic != swirltic)
@@ -119,8 +120,8 @@ byte *R_DistortedFlat(int flatnum)
       swirltic = gametic;
    }
    
-   normalflat = W_CacheLumpNum(firstflat + flatnum, PU_CACHE);
-
+   normalflat = tex->buffer;
+   
    for(i = 0; i < 4096; ++i)
       distortedflat[i] = normalflat[offset[i]];
    

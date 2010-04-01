@@ -995,7 +995,6 @@ R_ClipSegFunc segclipfuncs[] =
 
 #define NEARCLIP 0.05f
 #define PNEARCLIP 0.001f
-extern int32_t *texturewidthmask;
 
 static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
                         float texbottom, vertex_t *v1, vertex_t *v2, 
@@ -1136,7 +1135,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    if(heightchange && side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
-      seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
+      seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
          seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
@@ -1200,7 +1199,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    if((b > l || b2 > l2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
-      seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
+      seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
          seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
@@ -1315,7 +1314,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
-      seg.toptexh = textureheight[side->toptexture] >> FRACBITS;
+      seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
          seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
@@ -1378,7 +1377,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(seg.frontsec->floorheight < seg.backsec->floorheight && side->bottomtexture)
    {
       seg.bottomtex  = texturetranslation[side->bottomtexture];
-      seg.bottomtexh = textureheight[side->bottomtexture] >> FRACBITS;
+      seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
          seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
@@ -1583,11 +1582,11 @@ static void R_AddLine(seg_t *line)
       // adjusted.
 
       if(side->toptexture)
-         maxtexw = (float)texturewidthmask[side->toptexture];
-      if(side->midtexture && texturewidthmask[side->midtexture] > maxtexw)
-         maxtexw = (float)texturewidthmask[side->midtexture];
-      if(side->bottomtexture && texturewidthmask[side->bottomtexture] > maxtexw)
-         maxtexw = (float)texturewidthmask[side->bottomtexture];
+         maxtexw = (float)textures[side->toptexture]->widthmask;
+      if(side->midtexture && textures[side->midtexture]->widthmask > maxtexw)
+         maxtexw = (float)textures[side->midtexture]->widthmask;
+      if(side->bottomtexture && textures[side->bottomtexture]->widthmask > maxtexw)
+         maxtexw = (float)textures[side->bottomtexture]->widthmask;
 
       // Then adjust the offset to zero or the first positive value that will 
       // repeat correctly with the largest texture on the line.
@@ -1664,7 +1663,7 @@ static void R_AddLine(seg_t *line)
       seg.twosided = false;
       seg.toptex   = seg.bottomtex = 0;
       seg.midtex   = texturetranslation[side->midtexture];
-      seg.midtexh  = textureheight[side->midtexture] >> FRACBITS;
+      seg.midtexh  = textures[side->midtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
          seg.midtexmid = M_FloatToFixed(texbottom + seg.midtexh + seg.toffsety);

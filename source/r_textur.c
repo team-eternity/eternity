@@ -101,6 +101,7 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width, uint16_t he
 {
    size_t    size;
    texture_t *ret;
+   int       j;
   
 #ifdef RANGECHECK
    if(!width || !height || !name || compcount <= 0)
@@ -111,10 +112,19 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width, uint16_t he
    
    ret = Z_Malloc(size, PU_RENDERER, NULL);
    memset(ret, 0, size);
-      
+   
+   ret->name = ret->namebuf;
+   strncpy(ret->name, name, 8);
    ret->width = width;
    ret->height = height;
    ret->ccount = compcount;
+   
+   // SoM: no longer use global lists. This is now done for every texture.
+   for(j = 1; j * 2 <= ret->width; j <<= 1)
+     ;
+     
+   ret->widthmask = j - 1;
+   ret->heightfrac = ret->height << FRACBITS;
    
    return ret;
 }
@@ -369,6 +379,8 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
       texture = textures[texnum] = 
          R_AllocTexStruct(tt.name, tt.width, tt.height, tt.patchcount);
          
+      texture->index = texnum;
+         
       R_DetermineFlatSize(texture);
 
       component = texture->components;
@@ -404,13 +416,6 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
             ++*errors;
          }
       }
-
-      // SoM: no longer use global lists.
-      for(j = 1; j * 2 <= texture->width; j <<= 1)
-        ;
-        
-      texture->widthmask = j - 1;
-      texture->heightfrac = texture->height << FRACBITS;
    }
 
    return texnum;
@@ -467,6 +472,14 @@ static void AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len)
 {
    byte *dest = tex->buffer + ptroff;
    
+#ifdef RANGECHECK
+   if(ptroff + len > tex->width * tex->height ||
+      ptroff + len > tempmask.buffermax)
+   {
+      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", tex->name, 
+              ptroff + len, tex->width * tex->height, tempmask.buffermax);
+   }
+#endif
    if(tempmask.mask && tex == tempmask.tex)
    {
       byte *mask = tempmask.buffer + ptroff;
@@ -497,7 +510,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len)
 // AddTexFlat
 // 
 // Paints the given flat-based component to the texture and marks mask info
-static void AddTexFlat(texture_t *tex, tcomponent_t *component, int *errornum)
+static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
    byte      *src = W_CacheLumpNum(component->lump, PU_CACHE);
    byte      *dest = tex->buffer;
@@ -549,6 +562,7 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component, int *errornum)
       AddTexColumn(tex, src + srcoff, destoff, hcount);
       srcoff += srcstep;
       destoff += deststep;
+      wcount--;
    }
 }
 
@@ -558,7 +572,7 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component, int *errornum)
 // AddTexPatch
 // 
 // Paints the given flat-based component to the texture and marks mask info
-static void AddTexPatch(texture_t *tex, tcomponent_t *component, int *errornum)
+static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 {
    patch_t    *patch = W_CacheLumpNum(component->lump, PU_CACHE);
    byte       *dest = tex->buffer;
@@ -583,19 +597,20 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component, int *errornum)
    ystart = component->originy;
    
    if(xstop > tex->width)
-      xstep = tex->width;
+      xstop = tex->width;
      
    // if flipped, do so here.
    xstep = 1;
+   colstep = 1;
       
    for(x = xstart; x < xstop; x += xstep, colindex += colstep)
    {
-      int top, bot, destbase;
+      int top, y1, y2, destbase;
       const column_t *column = 
          (const column_t *)((byte *)patch + SwapLong(patch->columnofs[colindex]));
          
-      top = 0;
       destbase = x * tex->height;
+      top = 0;
       
       while(column->topdelta != 0xff)
       {
@@ -606,29 +621,33 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component, int *errornum)
                column->topdelta + top :
                column->topdelta;
          
-         bot = ystart + top + column->length;
+         y1 = ystart + top;
+         y2 = y1 + column->length;
+         destoff = destbase;
                
-         if(bot <= 0)
+         if(y2 <= 0)
          {
             column = (const column_t *)(src + column->length + 1);
             continue;
          }
          
          // Done if this happens
-         if(ystart + top >= tex->height)
+         if(y1 >= tex->height)
             break;
             
-         if(ystart + top < 0)
-            srcoff += -(ystart + top);
+         if(y1 < 0)
+         {
+            srcoff += -(y1);
+            y1 = 0;
+         }
          else
-            destoff += ystart + top;
+            destoff += y1;
             
-         if(bot > tex->height)
-            bot = tex->height;
+         if(y2 > tex->height)
+            y2 = tex->height;
             
-         if((bot - ystart - top) > 0)
-            AddTexColumn(tex, src + srcoff, destbase + destoff, 
-                         bot - ystart - top);
+         if(y2 - y1 > 0)
+            AddTexColumn(tex, src + srcoff, destoff, y2 - y1);
             
          column = (const column_t *)(src + column->length + 1);
       }
@@ -671,8 +690,13 @@ static void StartTexture(texture_t *tex, boolean mask)
 // then added to the chain.
 static texcol_t *NextTempCol(texcol_t *current)
 {
-   if(!current && !tempmask.tempcols)
-      return tempmask.tempcols = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
+   if(!current)
+   {
+      if(!tempmask.tempcols)
+         return tempmask.tempcols = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
+      else
+         return tempmask.tempcols;
+   }
    
    if(!current->next)
       return current->next = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
@@ -773,7 +797,7 @@ static void FinishTexture(texture_t *tex)
 // R_CacheTexture
 // 
 // Caches a texture in memory, building it from component parts.
-void R_CacheTexture(int num, int *errornum)
+texture_t *R_CacheTexture(int num)
 {
    texture_t  *tex;
    int        i;
@@ -785,7 +809,7 @@ void R_CacheTexture(int num, int *errornum)
 
    tex = textures[num];
    if(tex->buffer)
-      return;
+      return tex;
 
    // This function has two primary branches:
    // 1. There is no buffer, and there are no columns which means the texture
@@ -805,10 +829,10 @@ void R_CacheTexture(int num, int *errornum)
       switch(component->type)
       {
          case TC_FLAT:
-            AddTexFlat(tex, component, errornum);
+            AddTexFlat(tex, component);
             break;
          case TC_PATCH:
-            AddTexPatch(tex, component, errornum);
+            AddTexPatch(tex, component);
             break;
          default:
             break;
@@ -817,6 +841,7 @@ void R_CacheTexture(int num, int *errornum)
 
    // Finish texture
    FinishTexture(tex);
+   return tex;
 }
 
 
@@ -1020,6 +1045,7 @@ static void R_AddFlats(void)
      
       tex->flags = TF_SQUAREFLAT;
       tex->flatsize = flatsize;
+      tex->index = i + numwalls;
       tex->components[0].lump = i + firstflat;
       tex->components[0].type = TC_FLAT;
       tex->components[0].width = width;
@@ -1093,7 +1119,7 @@ void R_InitTextures(void)
 
    // Precache textures
    for(i = 0; i < numwalls; ++i)
-      R_CacheTexture(i, &errors);
+      R_CacheTexture(i);
    
    if(errors)
       I_Error("\n\n%d texture errors.", errors); 
@@ -1113,6 +1139,54 @@ void R_InitTextures(void)
 
 static int R_Doom1Texture(const char *name);
 const char *level_error = NULL;
+static char tnamebuf[9];
+static char *tname = tnamebuf;
+
+
+//
+// R_GetRawColumn
+//
+byte *R_GetRawColumn(int tex, int32_t col)
+{
+   texture_t *t = textures[tex];
+   
+   if(!t->buffer)
+      R_CacheTexture(tex);
+   
+   col &= t->widthmask;
+   
+   return t->buffer + col * t->height;
+   //return t->columns[col & t->widthmask];
+}
+
+
+//
+// R_GetMaskedColumn
+//
+texcol_t *R_GetMaskedColumn(int tex, int32_t col)
+{
+   texture_t *t = textures[tex];
+   
+   if(!t->buffer)
+      R_CacheTexture(tex);
+   
+   return t->columns[col & t->widthmask];
+}
+
+
+
+static texture_t *R_SearchFlats(const char *name)
+{
+   strncpy(tname, name, 8);
+   return E_HashObjectForKey(&flattable, &tname);
+}
+
+
+static texture_t *R_SearchWalls(const char *name)
+{
+   strncpy(tname, name, 8);
+   return E_HashObjectForKey(&walltable, &tname);
+}
 
 //
 // R_FlatNumForName
@@ -1123,8 +1197,14 @@ const char *level_error = NULL;
 int R_FlatNumForName(const char *name)    // killough -- const added
 {
    static char errormsg[64];
-   int i = W_CheckNumForNameNS(name, ns_flats);
-   if(i == -1)
+   
+   texture_t *tex;
+
+   // Search flats first   
+   if(!(tex = R_SearchFlats(name)))
+      tex = R_SearchWalls(name);
+   
+   if(!tex)
    {
       if(!level_error)
       {
@@ -1134,7 +1214,7 @@ int R_FlatNumForName(const char *name)    // killough -- const added
       }
       return -1;
    }
-   return (i - firstflat);
+   return tex->index;
 }
 
 //
@@ -1144,15 +1224,13 @@ int R_FlatNumForName(const char *name)    // killough -- const added
 //
 int R_CheckFlatNumForName(const char *name)
 {
-   int ret;
-   int i = W_CheckNumForNameNS(name, ns_flats);
+   texture_t *tex;
 
-   if(i != -1)
-      ret = i - firstflat;
-   else
-      ret = -1;
-
-   return ret;
+   // Search flats first   
+   if(!(tex = R_SearchFlats(name)))
+      tex = R_SearchWalls(name);
+      
+   return tex ? tex->index : -1;
 }
 
 //
@@ -1169,14 +1247,16 @@ int R_CheckFlatNumForName(const char *name)
 
 int R_CheckTextureNumForName(const char *name)
 {
-   int i = 0;
-   if(*name != '-')     // "NoTexture" marker.
-   {
-      i = textures[W_LumpNameHash(name) % (unsigned)texturecount]->index;
-      while(i >= 0 && strncasecmp(textures[i]->name,name,8))
-         i = textures[i]->next;
-   }
-   return i;
+   texture_t *tex;
+   
+   if(*name == '-')     // "NoTexture" marker.
+      return 0;
+
+   // Search walls before flats.
+   if(!(tex = R_SearchWalls(name)))
+      tex = R_SearchFlats(name);
+      
+   return tex ? tex->index : 0;
 }
 
 //
@@ -1263,7 +1343,7 @@ enum
 // Parses the DOOM -> DOOM II texture conversion table.
 // haleyjd: rewritten 01/27/09 to remove heap corruption.
 //
-static void R_LoadDoom1(void)
+void R_LoadDoom1(void)
 {
    char *lump;
    char *rover;

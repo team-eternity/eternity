@@ -392,7 +392,6 @@ void R_PrecacheLevel(void)
 {
    register int i;
    register byte *hitlist;
-   unsigned int unumtextures = (unsigned int)numtextures;
 
    if(demoplayback)
       return;
@@ -400,28 +399,17 @@ void R_PrecacheLevel(void)
    if(!r_precache)
       return;
 
-   {
-      size_t size = numflats > numsprites  ? numflats : numsprites;
-      hitlist = malloc(unumtextures > size ? unumtextures : size);
-   }
-
-   // Precache flats.
-   
-   memset(hitlist, 0, numflats);
-   
-   for(i = numsectors; --i >= 0; )
-      hitlist[sectors[i].floorpic] = hitlist[sectors[i].ceilingpic] = 1;
-
-   for(i = numflats; --i >= 0; )
-   {
-      if(hitlist[i])
-         W_CacheLumpNum(firstflat + i, PU_CACHE);
-   }
+   // SoM: Hey, you never know, it could happen....
+   hitlist = malloc(texturecount > numsprites ? texturecount : numsprites);
 
    // Precache textures.
+   memset(hitlist, 0, texturecount);
    
-   memset(hitlist, 0, numtextures);
-
+   // Mark floors and ceilings
+   for(i = numsectors; --i >= 0; )
+      hitlist[sectors[i].floorpic] = hitlist[sectors[i].ceilingpic] = 1;
+      
+   // Mark walls
    for(i = numsides; --i >= 0; )
    {
       hitlist[sides[i].bottomtexture] =
@@ -439,16 +427,13 @@ void R_PrecacheLevel(void)
    hitlist[skytexture] = 1;
    hitlist[sky2texture] = 1; // haleyjd
 
-   for(i = numtextures; --i >= 0; )
+   // Precache textures.
+   for(i = texturecount; --i >= 0; )
    {
       if(hitlist[i])
-      {
-         texture_t *texture = textures[i];
-         int j = texture->patchcount;
-         while(--j >= 0)
-            W_CacheLumpNum(texture->patches[j].patch, PU_CACHE);
-      }
+         R_CacheTexture(i);
    }
+
 
    // Precache sprites.
    memset(hitlist, 0, numsprites);

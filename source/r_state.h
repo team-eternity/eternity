@@ -37,9 +37,6 @@
 //  for rendering.
 //
 
-// needed for texture pegging
-extern fixed_t *textureheight;
-
 // needed for pre rendering (fracs)
 extern fixed_t *spritewidth;
 extern fixed_t *spriteoffset;
@@ -57,12 +54,9 @@ extern int scaledviewheight;              // killough 11/98
 
 extern int firstflat;
 
-// for global animation
-extern int *flattranslation;    
-extern int *texturetranslation;
-
-// SoM: flat lump size
-extern byte *flatsize;
+// SoM: Because all textures and flats are stored in the same array, the 
+// translation tables are now combined.
+extern int         *texturetranslation;
 
 // Sprite....
 extern int firstspritelump;

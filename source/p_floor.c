@@ -913,15 +913,15 @@ int EV_DoFloor(line_t *line, floor_e floortype )
                   if(side->bottomtexture >= 0      //killough 10/98
                      && (side->bottomtexture || comp[comp_model]))
                   {
-                     if(textureheight[side->bottomtexture] < minsize)
-                        minsize = textureheight[side->bottomtexture];
+                     if(textures[side->bottomtexture]->heightfrac < minsize)
+                        minsize = textures[side->bottomtexture]->heightfrac;
                   }
                   side = getSide(secnum,i,1);
                   if(side->bottomtexture >= 0      //killough 10/98
                      && (side->bottomtexture || comp[comp_model]))
                   {
-                     if(textureheight[side->bottomtexture] < minsize)
-                        minsize = textureheight[side->bottomtexture];
+                     if(textures[side->bottomtexture]->heightfrac < minsize)
+                        minsize = textures[side->bottomtexture]->heightfrac;
                   }
                }
             }
@@ -1257,14 +1257,16 @@ static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
          floorpic    = (int)strtol(myargv[p + 2], NULL, 0);
 
          // bounds-check floorpic
-         if(floorpic <= 0 || floorpic >= numflats)
-            floorpic = 0x16;
+         if(floorpic <= numwalls || floorpic >= texturecount)
+            floorpic = numwalls + 0x16;
 
          donutparm = true;
       }
 
       firsttime = false;
    }
+   else
+      floorpic = numwalls + 0x16;
 
    // if -donut used, always emulate
    if(!donutparm)

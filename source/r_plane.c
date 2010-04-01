@@ -435,8 +435,8 @@ static void R_CalcSlope(visplane_t *pl)
    if(!pl->pslope)
       return;
 
-   tsizei = flatdims[flatsize[pl->picnum]].i;
-   tsizef = flatdims[flatsize[pl->picnum]].f;
+   tsizei = flatdims[textures[pl->picnum]->flatsize].i;
+   tsizef = flatdims[textures[pl->picnum]->flatsize].f;
 
    x = (int)pl->pslope->of.x;
    y = (int)pl->pslope->of.y;
@@ -798,7 +798,7 @@ void do_draw_newsky(visplane_t *pl)
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
             column.source =
-               R_GetColumn(skyTexture2,
+               R_GetRawColumn(skyTexture2,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
             
             colfunc();
@@ -820,7 +820,7 @@ void do_draw_newsky(visplane_t *pl)
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
             column.source =
-               R_GetColumn(skyTexture,
+               R_GetRawColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
             
             colfunc();
@@ -860,7 +860,7 @@ void do_draw_newsky(visplane_t *pl)
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
             column.source =
-               R_GetColumn(skyTexture,
+               R_GetRawColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
 
             colfunc();
@@ -976,7 +976,7 @@ static void do_draw_plane(visplane_t *pl)
 
          if(column.y1 <= column.y2)
          {
-            column.source = R_GetColumn(texture,
+            column.source = R_GetRawColumn(texture,
                ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
             
             colfunc();
@@ -988,28 +988,29 @@ static void do_draw_plane(visplane_t *pl)
       int stop, light;
       int swirling;
       byte fs;
+      texture_t *tex;
 
-      int picnum = flattranslation[pl->picnum] == -1 
-                      ? pl->picnum : flattranslation[pl->picnum];
+      int picnum = texturetranslation[pl->picnum] == -1 
+                      ? pl->picnum : texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      swirling = (flattranslation[pl->picnum] == -1) 
-                    && flatsize[pl->picnum] == FLAT_64;
+      swirling = (texturetranslation[pl->picnum] == -1) 
+                    && textures[pl->picnum]->flatsize == FLAT_64;
 
       if(swirling)
+      {
          plane.source = R_DistortedFlat(pl->picnum);
+         tex = textures[pl->picnum];
+      }
       else
       {
-         // haleyjd 09/16/06: this was being allocated at PU_STATIC and changed
-         // to PU_CACHE below, generating a lot of unnecessary allocator noise.
-         // As long as no other memory ops are needed between here and the end
-         // of this function (including called functions), this can be PU_CACHE.
-         plane.source = 
-            W_CacheLumpNum(firstflat + picnum, PU_CACHE);
+         // SoM: Handled outside
+         tex = R_CacheTexture(picnum);
+         plane.source = tex->buffer;
       }
 
       // SoM: support for flats of different sizes!!
-      fs = flatsize[picnum];
+      fs = tex->flatsize;
       
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
@@ -1063,8 +1064,8 @@ static void do_draw_plane(visplane_t *pl)
 
       R_PlaneLight();
 
-      plane.tsizei = flatdims[flatsize[pl->picnum]].i;
-      plane.tsizef = flatdims[flatsize[pl->picnum]].f;
+      plane.tsizei = flatdims[tex->flatsize].i;
+      plane.tsizef = flatdims[tex->flatsize].f;
 
       plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 

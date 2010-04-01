@@ -78,8 +78,13 @@ typedef struct texture_s
 {
    // SoM: New dog's in town
    mdllistitem_t link;
+   
+   // Index within the texture array of this object.
+   int           index;
 
-   char       name[9];       // Keep name for switch changing, etc.
+   // For use with ehash stuff
+   char       *name;
+   char       namebuf[9];       // Keep name for switch changing, etc.
    int16_t    width, height;
    
    // SoM: These are no longer kept in separate arrays
@@ -103,7 +108,26 @@ typedef struct texture_s
 } texture_t;
 
 // Retrieve column data for span blitting.
-byte *R_GetColumn(int tex, int32_t col);
+//byte *R_GetColumn(int tex, int32_t col);
+
+// SoM: This is replaced with two functions. For solid walls/skies, we only 
+// need the raw column data (direct buffer ptr). For masked mid-textures, we
+// need to return columns from the column list
+byte *R_GetRawColumn(int tex, int32_t col);
+texcol_t *R_GetMaskedColumn(int tex, int32_t col);
+
+// Cache a given texture
+// Returns the texture for chaining.
+texture_t *R_CacheTexture(int num);
+
+// SoM: all textures/flats are now stored in a single array (textures) with the 
+extern int         numwalls, numflats;
+extern int         texturecount;
+extern texture_t   **textures;
+
+// SoM: Because all textures and flats are stored in the same array, the 
+// translation tables are now combined.
+extern int         *texturetranslation;
 
 // I/O, setting up the stuff.
 void R_InitData(void);
@@ -133,12 +157,8 @@ extern byte *main_tranmap, *tranmap;
 
 extern int r_precache;
 
-extern int numflats; // haleyjd
-
 extern int global_cmap_index; // haleyjd
 extern int global_fog_index;
-
-extern texture_t **textures;
 
 #endif
 

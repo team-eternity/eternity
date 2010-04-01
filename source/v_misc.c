@@ -468,10 +468,10 @@ void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
 //
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
-   byte *src = W_CacheLumpNum(firstflat + R_FlatNumForName(patchname),
-                              PU_CACHE);
+   int         tnum = R_FlatNumForName(patchname);
+   texture_t   *tex = R_CacheTexture(tnum);
 
-   back_dest->TileBlock64(back_dest, src);
+   back_dest->TileBlock64(back_dest, tex->buffer);
 }
 
 byte *R_DistortedFlat(int);

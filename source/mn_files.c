@@ -644,13 +644,11 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    MN_addFile("default");
 
    // run through flats
-   for(i = 0; i < numflats; ++i)
+   for(i = numwalls; i < texturecount; ++i)
    {
-      int lumpnum = i + firstflat;
-
       // size must be exactly 64x64
-      if(w_GlobalDir.lumpinfo[lumpnum]->size == 4096)
-         MN_addFile(w_GlobalDir.lumpinfo[lumpnum]->name);
+      if(textures[i]->width == textures[i]->height == 64)
+         MN_addFile(textures[i]->name);
    }
 
    // sort the list

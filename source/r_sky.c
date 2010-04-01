@@ -95,34 +95,15 @@ skytexture_t *skytextures[NUMSKYCHAINS];
 static skytexture_t *R_AddSkyTexture(int texturenum)
 {
    skytexture_t *newSky;
-   texpatch_t *texpatch;
-   patch_t wpatch;
-   int i, count, p_height, key, t_height;
+   int key;
 
-   count = textures[texturenum]->patchcount;
-
-   texpatch = &(textures[texturenum]->patches[0]);
-
-   // 02/11/04: get height of texture
-   t_height = textures[texturenum]->height;
-   p_height = 0;
-
+   // SoM: The new texture system handles tall patches in textures.
    newSky = Z_Malloc(sizeof(skytexture_t), PU_STATIC, NULL);
-
-   // find the tallest patch in the texture
-   for(i = 0; i < count; i++, texpatch++)
-   {
-      W_ReadLumpHeader(texpatch->patch, &wpatch, sizeof(patch_t));
-      wpatch.height = SwapShort(wpatch.height);
-
-      if(wpatch.height > p_height)
-         p_height = wpatch.height;
-   }
 
    // 02/11/04: only if patch height is greater than texture height
    // should we use it
    newSky->texturenum = texturenum;
-   newSky->height = p_height > t_height ? p_height : t_height;
+   newSky->height = textures[texturenum]->height;
    
    if(newSky->height >= 200)
       newSky->texturemid = 200*FRACUNIT;
