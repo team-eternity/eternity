@@ -2885,7 +2885,7 @@ static void D_DoomInit(void)
    D_CheckNetGame();
 
    // haleyjd 04/10/03
-   if(netgame && GameType == gt_single)
+   if((netgame || M_CheckParm("-solo-net")) && GameType == gt_single)
    {
       GameType = DefaultGameType = gt_coop;
       G_SetDefaultDMFlags(0, true);
