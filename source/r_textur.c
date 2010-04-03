@@ -1485,3 +1485,6 @@ static int R_Doom1Texture(const char *name)
    
    return -1;
 }
+
+
+// EOF
