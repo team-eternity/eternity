@@ -1257,16 +1257,14 @@ static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
          floorpic    = (int)strtol(myargv[p + 2], NULL, 0);
 
          // bounds-check floorpic
-         if(floorpic <= numwalls || floorpic >= texturecount)
-            floorpic = numwalls + 0x16;
+         if(floorpic <= 0 || floorpic >= numflats)
+            floorpic = 0x16;
 
          donutparm = true;
       }
 
       firsttime = false;
    }
-   else
-      floorpic = numwalls + 0x16;
 
    // if -donut used, always emulate
    if(!donutparm)
@@ -1276,8 +1274,10 @@ static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
          return false;
    }
 
+   // SoM: Add the offset for the flats after all the calculations are done to 
+   // preserve the old behavior in all cases.
    *pfloorheight = (fixed_t)floorheight;
-   *pfloorpic    = (int16_t)floorpic;
+   *pfloorpic    = (int16_t)floorpic + numwalls;
 
    return true;
 }

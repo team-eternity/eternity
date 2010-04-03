@@ -721,7 +721,7 @@ void E_ProcessTerrainTypes(cfg_t *cfg)
 //
 boolean E_NeedDefaultTerrain(void)
 {
-   return !(numsplashes || numterrains || texturecount);
+   return !(numsplashes || numterrains || numfloors);
 }
 
 // TerrainTypes lookup array
