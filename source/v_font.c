@@ -389,7 +389,7 @@ int V_FontStringWidth(vfont_t *font, const char *s)
          if(!(patch = font->fontgfx[c]))
             length += font->space;
          else
-            length += SwapShort(patch->width) - font->dw;
+            length += (SwapShort(patch->width) - font->dw);
       }
    }
    
