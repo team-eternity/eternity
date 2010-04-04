@@ -2882,7 +2882,8 @@ static void D_DoomInit(void)
    startupmsg("D_CheckNetGame","Check netgame status.");
    D_CheckNetGame();
 
-   // haleyjd 04/10/03
+   // haleyjd 04/10/03: set coop gametype
+   // haleyjd 04/01/10: support -solo-net parameter
    if((netgame || M_CheckParm("-solo-net")) && GameType == gt_single)
    {
       GameType = DefaultGameType = gt_coop;

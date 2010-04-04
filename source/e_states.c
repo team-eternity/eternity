@@ -300,6 +300,44 @@ static unsigned int E_CountUniqueStates(cfg_t *cfg, unsigned int numstates)
    return count;
 }
 
+//
+// E_ReallocStates
+//
+// haleyjd 04/04/10: Function to reallocate the states array safely.
+//
+static void E_ReallocStates(int numnewstates)
+{
+   static int numstatesalloc = 0;
+
+   // only realloc when needed
+   if(!numstatesalloc || (NUMSTATES >= numstatesalloc + numnewstates))
+   {
+      int i;
+
+      // First time, just allocate the requested number of states.
+      // Afterward:
+      // * If the number of states requested is small, add 2 times as many
+      //   requested, plus a small constant amount.
+      // * If the number is large, just add that number.
+
+      if(!numstatesalloc)
+         numstatesalloc = numnewstates;
+      else if(numnewstates <= 50)
+         numstatesalloc += numnewstates * 2 + 32;
+      else
+         numstatesalloc += numnewstates;
+
+      // reallocate states[]
+      states = realloc(states, numstatesalloc * sizeof(state_t *));
+
+      // set the new state pointers to NULL
+      for(i = NUMSTATES; i < numstatesalloc; ++i)
+         states[i] = NULL;
+   }
+
+   // increment NUMSTATES
+   NUMSTATES += numnewstates;
+}
 
 //
 // E_CollectStates
@@ -343,9 +381,9 @@ void E_CollectStates(cfg_t *cfg)
 
       // add space to the states array
       curnewstate = firstnewstate = NUMSTATES;
-      NUMSTATES += (int)numnew;
-      states = realloc(states, NUMSTATES * sizeof(state_t *));
 
+      E_ReallocStates((int)numnew);
+      
       // set pointers in states[] to the proper structures
       for(i = firstnewstate; i < (unsigned int)NUMSTATES; ++i)
       {
@@ -1334,7 +1372,137 @@ void E_ProcessStateDeltas(cfg_t *cfg)
    }
 }
 
-//=============================================================================
+//==============================================================================
+//
+// DECORATE State Management
+//
+// haleyjd 04/03/10: This code manages the creation of DECORATE state sets and
+// is used by the parser below.
+//
+
+typedef struct edslabel_s
+{
+   mdllistitem_t links; // for linked list
+   const char *text;    // label text
+   state_t *state;      // pointer to state referred to by this label
+} edslabel_t;
+
+typedef struct estateset_s
+{
+   int firststate;
+   int laststate;
+} estateset_t;
+
+// dslabels are kept on this linked list during processing. When the first state
+// is encountered after a series of labels, the local (not relocated relative to
+// states[]) index of the state will be written into all labels from the current
+// root of the list up to the label pointed to by the labelstack pointer.
+
+static edslabel_t *dslabels;   // list of all labels
+static edslabel_t *labelstack; // pointer to first label in current working set
+
+//
+// E_CreateLabel
+//
+// Pushes a DECORATE state label onto the list of labels in the currently
+// processed DECORATE state block. If "first" is true, the label is the first
+// encountered for a given phase of parsing, and will refer to a subsequent
+// state.
+//
+static void E_CreateLabel(const char *text, boolean first)
+{
+   edslabel_t *newlabel = calloc(1, sizeof(edslabel_t));
+
+   newlabel->text = strdup(text);
+
+   M_DLListInsert(&newlabel->links, (mdllistitem_t **)&dslabels);
+
+   if(first)
+      labelstack = newlabel;
+}
+
+//
+// E_SetLabelStates
+//
+// Sets the state pointer of all labels on the dslabels list from the head
+// of the list up to and including the label pointed to by "labelstack".
+// Clears labelstack.
+//
+static void E_SetLabelStates(state_t *state)
+{
+   edslabel_t *curlabel = dslabels;
+
+#ifdef RANGECHECK
+   // error checks: pointers should be valid before calling this
+   if(!dslabels)
+      I_Error("E_SetLabelIndexLocal: internal error - label underflow\n");
+   if(!labelstack)
+      I_Error("E_SetLabelIndexLocal: internal error - labelstack undefined\n");
+#endif
+
+   // go down the list
+   while(curlabel)
+   {
+      curlabel->state = state;
+
+      // stop after reaching labelstack object
+      if(curlabel == labelstack)
+         break;
+
+      curlabel = (edslabel_t *)(curlabel->links.next);
+   }
+
+   labelstack = NULL;
+}
+
+//
+// E_CreateDECORATEStates
+//
+// Creates a set of DECORATE states.
+//
+static estateset_t E_CreateDECORATEStates(int numstates)
+{
+   static int dscounter;
+   estateset_t ret;
+   int i;
+   state_t *statestructs;
+
+   // allocate the states
+   statestructs = calloc(numstates, sizeof(state_t));
+
+   // record indices of states in new range
+   ret.firststate = NUMSTATES;
+   ret.laststate  = ret.firststate + numstates - 1;
+
+   // reallocate states[]
+   E_ReallocStates(numstates);
+
+   // initialize the new states
+   for(i = ret.firststate; i <= ret.laststate; ++i)
+   {
+      states[i] = &statestructs[i - ret.firststate];
+      states[i]->index = i;
+
+      // autogenerate a state name
+      psnprintf(states[i]->namebuf, 41, "EEDS#%d", dscounter);
+      states[i]->name = states[i]->namebuf;
+
+      // no dehacked num
+      states[i]->dehnum = -1;
+
+      // default nextstate is the next state, unless this is the last state,
+      // in which case the default is the null state
+      states[i]->nextstate = (i != ret.laststate ? i + 1 : NullStateNum);
+
+      // keep count of states
+      ++dscounter;
+   }
+
+   // return index data
+   return ret;
+}
+
+//==============================================================================
 //
 // DECORATE State Parser
 //
@@ -1913,10 +2081,13 @@ static void DoPSNeedLabel(pstate_t *ps)
    case TOKEN_EOL:
       // loop until something meaningful appears
       break;
+
    case TOKEN_LABEL:
-      // TODO: record label to associate with next state generated
+      // record label to associate with next state generated
+      E_CreateLabel(ps->tokenbuffer->buffer, true);
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
+
    default:
       // anything else is an error; eat the rest of the line
       PSExpectedErr(ps, "label", true);
@@ -1939,11 +2110,16 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
    case TOKEN_EOL:
       // loop until something meaningful appears
       break;
+
    case TOKEN_LABEL:
-      // TODO: record label to associate with next state generated
-      // TODO: if not first label encountered, push.
+      // record label to associate with next state generated.
+      // if not the first label (labelstack is valid), then this is added to the
+      // currently accumulating list of unresolved labels.
+      E_CreateLabel(ps->tokenbuffer->buffer, !labelstack);
+
       // remain in the current state
       break;
+
    case TOKEN_KEYWORD:
       // TODO: generate appropriate state for keyword
       if(!M_QStrCaseCmp(ps->tokenbuffer, "goto"))
@@ -1957,10 +2133,12 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
          ps->state = PSTATE_NEEDKWEOL;
       }
       break;
+
    case TOKEN_TEXT:
       // TODO: verify sprite name; generate new state
       ps->state = PSTATE_NEEDSTATEFRAMES;
       break;
+
    default:
       // anything else is an error; eat rest of the line
       PSExpectedErr(ps, "label or keyword or sprite", true);
@@ -2005,10 +2183,12 @@ static void DoPSNeedGotoEOLOrPlus(pstate_t *ps)
       // TODO: finalize goto destination record if necessary
       ps->state = PSTATE_NEEDLABEL;
       break;
+
    case TOKEN_PLUS:
       // TODO: modify goto destination record to accept offset
       ps->state = PSTATE_NEEDGOTOOFFSET;
       break;
+
    default:
       // anything else is an error
       PSExpectedErr(ps, "end of line or +", true);

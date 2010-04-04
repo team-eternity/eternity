@@ -43,6 +43,18 @@ extern int NullStateNum;
 #define EDF_SEC_FRAME    "frame"
 #define EDF_SEC_FRMDELTA "framedelta"
 
+//
+// estatereloc
+//
+// haleyjd 04/03/10: This structure is a relocated state entry, which is
+// generated in sets by the DECORATE state processor.
+//
+typedef struct estatereloc_s
+{
+   const char *label; // DECORATE label for this state
+   int statenum;      // relocated state number, relative to states[]
+} estatereloc_t;
+
 extern cfg_opt_t edf_frame_opts[];
 extern cfg_opt_t edf_fdelta_opts[];
 
