@@ -305,6 +305,7 @@ typedef struct gamemodeinfo_s
    int unselectColor;         // color of unselected menu item text
    int selectColor;           // color of selected menu item text
    int variableColor;         // color of variable text
+   int menuOffset;            // an amount to subtract from menu y coords
 
    // border stuff
    const char *borderFlat;    // name of flat to fill backscreen
