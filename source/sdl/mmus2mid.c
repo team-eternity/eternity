@@ -28,9 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <inttypes.h> // haleyjd
-#ifndef __FreeBSD__ // [Kate]
-#include <malloc.h>
-#endif
+
 #ifdef DJGPP // proff: I don't use allegro in windows
 #include <allegro.h>
 #endif // DJGPP
