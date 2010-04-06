@@ -3008,7 +3008,7 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
    if(y > x)
       d = x, x = y, y = d;
    d = FixedDiv(x,
-      finesine[(p_tantoangle[FixedDiv(y,x)>>DBITS]+ANG90) >> ANGLETOFINESHIFT]);
+      finesine[(tantoangle[FixedDiv(y,x)>>DBITS]+ANG90) >> ANGLETOFINESHIFT]);
 
    x = (int)((dy * -l->dy - dx * l->dx) / d);  // killough 10/98:
    y = (int)((dy * l->dx - dx * l->dy) / d);   // Use 64-bit arithmetic

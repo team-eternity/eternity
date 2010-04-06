@@ -1116,17 +1116,17 @@ void A_FireOldBFG(mobj_t *mo)
          // he is prone to mistakes. seems negative numbers
          // won't survive a bitshift!
          if(slope < 0 && demo_version >= 303)
-            an2 -= p_tantoangle[-slope >> DBITS];
+            an2 -= tantoangle[-slope >> DBITS];
          else
-            an2 += p_tantoangle[slope >> DBITS];
+            an2 += tantoangle[slope >> DBITS];
       }
       else
       {
          slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
          if(slope < 0 && demo_version >= 303)
-            an2 -= p_tantoangle[-slope >> DBITS];
+            an2 -= tantoangle[-slope >> DBITS];
          else
-            an2 += p_tantoangle[slope >> DBITS];
+            an2 += tantoangle[slope >> DBITS];
       }
 
       th = P_SpawnMobj(mo->x, mo->y,
