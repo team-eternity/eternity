@@ -2104,14 +2104,12 @@ const angle_t tantoangle[2049] = {
 
 angle_t tantoangle_acc[2049]; // haleyjd 01/28/10: calculated at runtime
 
-const angle_t *p_tantoangle = tantoangle;
-
 //
 // Table_InitTanToAngle
 //
 // haleyjd 01/28/2010:
-// Initializes a more accurate tantoangle table for use outside of old demos and
-// unconditionally within the renderer using the atan2 function.
+// Initializes a more accurate tantoangle table for within the renderer using the 
+// atan2 function.
 //
 void Table_InitTanToAngle(void)
 {
@@ -2123,20 +2121,6 @@ void Table_InitTanToAngle(void)
 
       tantoangle_acc[i] = (angle_t)(angle * ANG360);
    }
-}
-
-//
-// Table_SetTanToAngle
-//
-// haleyjd 01/28/2010: Call when demo_version is set to select the appropriate
-// table to access through the p_tantoangle pointer used by game code.
-//
-void Table_SetTanToAngle(int version)
-{
-   if(version < 337)
-      p_tantoangle = tantoangle;     // old demo, use old table
-   else
-      p_tantoangle = tantoangle_acc; // newer versions use the more accurate one
 }
 
 //----------------------------------------------------------------------------

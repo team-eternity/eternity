@@ -28,9 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <inttypes.h> // haleyjd
-#ifndef __FreeBSD__ // [Kate]
-#include <malloc.h>
-#endif
+
 #ifdef DJGPP // proff: I don't use allegro in windows
 #include <allegro.h>
 #endif // DJGPP
@@ -314,7 +312,7 @@ static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
 //
 // mmus2mid()
 //
-// Convert a memory buffer contain MUS data to an Allegro MIDI structure
+// Convert a memory buffer containing MUS data to an Allegro MIDI structure
 // with specified time division and compression.
 //
 // Passed a pointer to the buffer containing MUS data, a pointer to the
@@ -322,12 +320,12 @@ static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
 //
 // Returns 0 if successful, otherwise an error code (see mmus2mid.h).
 //
-int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
+int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
 {
    UWORD TrackCnt = 0;
    UBYTE evt, MUSchannel, MIDIchannel, MIDItrack=0;
    int i, event, data;
-   UBYTE *musptr;
+   UBYTE *musptr, *hptr;
    size_t muslen;
    static MUSheader MUSh;
    ULONG DeltaTime, TotalTime = 0;
@@ -337,9 +335,27 @@ int mmus2mid(UBYTE *mus, MIDI *mididata, UWORD division, int nocomp)
    UBYTE MIDIchan2track[MIDI_TRACKS];
    signed char MUS2MIDchannel[MIDI_TRACKS];
 
+   // haleyjd 04/04/10: don't bite off more than you can chew
+   if(size < sizeof(MUSheader))
+      return MUSDATAMT;
+
+   // haleyjd 04/04/10: scan forward for a MUS header. Evidently DMX was 
+   // capable of doing this, and would skip over any intervening data. That, 
+   // or DMX doesn't use the MUS header at all somehow.
+   hptr = mus;
+   while(hptr < mus + size - sizeof(MUSheader) && 
+         strncmp((const char *)hptr, "MUS\x1a", 4))
+      ++hptr;
+
+   // if we found a likely header start, reset the mus pointer to that location,
+   // otherwise just leave it alone and pray.
+   if(hptr < mus + size - sizeof(MUSheader) && 
+      !strncmp((const char *)hptr, "MUS\x1a", 4))
+      mus = hptr;
+
    // copy the MUS header from the MUS buffer to the MUSh header structure
    
-   memcpy(&MUSh,mus,sizeof(MUSheader));
+   memcpy(&MUSh, mus, sizeof(MUSheader));
    
    // check some things and set length of MUS buffer from internal data
    

@@ -466,7 +466,7 @@ static int I_SDLRegisterSong(void *data, int size)
 
       memset(&mididata, 0, sizeof(MIDI));
       
-      if((err = mmus2mid((byte *)data, &mididata, 89, 0))) 
+      if((err = mmus2mid((byte *)data, size, &mididata, 89, 0))) 
       {         
          // Nope, not a mus.
 
