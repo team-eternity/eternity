@@ -2360,7 +2360,7 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
       static mobj_t **bodyque;
       static size_t queuesize;
 
-      if(queuesize < (unsigned)bodyquesize)
+      if(queuesize < (unsigned int)bodyquesize)
       {
          bodyque = realloc(bodyque, bodyquesize*sizeof*bodyque);
          memset(bodyque+queuesize, 0, 

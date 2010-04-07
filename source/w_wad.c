@@ -193,7 +193,7 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
          iwadhandle = handle;
    }
   
-   for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
+   for(i = startlump; i < (unsigned int)dir->numlumps; i++, lump_p++, fileinfo++)
    {
       dir->lumpinfo[i] = lump_p;
       lump_p->type     = lump_direct; // haleyjd
@@ -243,7 +243,7 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
   
-   for(i = 0; i < (unsigned)dir->numlumps; i++)
+   for(i = 0; i < (unsigned int)dir->numlumps; i++)
    {
       lump = dir->lumpinfo[i];
       
@@ -353,7 +353,7 @@ int W_CheckNumForNameInDir(waddir_t *dir, const char *name, int li_namespace)
    // It has been tuned so that the average chain length never exceeds 2.
    
    register int i = dir->lumpinfo[W_LumpNameHash(name) % 
-                                  (unsigned)dir->numlumps]->index;
+                                  (unsigned int)dir->numlumps]->index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -428,7 +428,7 @@ void W_InitLumpHash(waddir_t *dir)
 
    for(i = 0; i < dir->numlumps; i++)
    {                                           // hash function:
-      int j = W_LumpNameHash(dir->lumpinfo[i]->name) % (unsigned)dir->numlumps;
+      int j = W_LumpNameHash(dir->lumpinfo[i]->name) % (unsigned int)dir->numlumps;
       dir->lumpinfo[i]->next = dir->lumpinfo[j]->index;     // Prepend to list
       dir->lumpinfo[j]->index = i;
    }

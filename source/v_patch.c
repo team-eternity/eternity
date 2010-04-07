@@ -47,8 +47,8 @@ static void V_DrawPatchColumn(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
-      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
       I_Error("V_DrawPatchColumn: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
@@ -98,8 +98,8 @@ static void V_DrawPatchColumnTR(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
-      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
       I_Error("V_DrawPatchColumnTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
@@ -157,8 +157,8 @@ void V_DrawPatchColumnTL(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
-      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
       I_Error("V_DrawPatchColumnTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
@@ -217,8 +217,8 @@ void V_DrawPatchColumnTRTL(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
-      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
       I_Error("V_DrawPatchColumnTRTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
@@ -282,8 +282,8 @@ void V_DrawPatchColumnAdd(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
-      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
       I_Error("V_DrawPatchColumnAdd: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
@@ -347,8 +347,8 @@ void V_DrawPatchColumnAddTR(void)
       return; // Zero length, column does not exceed a pixel.
                                  
 #ifdef RANGECHECK 
-   if((unsigned)patchcol.x  >= (unsigned)patchcol.buffer->width || 
-      (unsigned)patchcol.y1 >= (unsigned)patchcol.buffer->height) 
+   if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
+      (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
       I_Error("V_DrawPatchColumnAddTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 

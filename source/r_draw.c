@@ -1271,7 +1271,7 @@ void R_DrawNewSkyColumn(void)
     return; 
                                  
 #ifdef RANGECHECK 
-  if ((unsigned)column.x >= MAX_SCREENWIDTH
+  if ((unsigned int)column.x >= MAX_SCREENWIDTH
       || column.y1 < 0
       || column.y2 >= MAX_SCREENHEIGHT) 
     I_Error ("R_DrawNewSkyColumn: %i to %i at %i", column.y1, column.y2, column.x); 
