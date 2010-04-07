@@ -1033,7 +1033,7 @@ static void P_CreateBlockMap(void)
 
    // First find limits of map
    
-   for(i = 0; i < (unsigned)numvertexes; ++i)
+   for(i = 0; i < (unsigned int)numvertexes; ++i)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
          minx = vertexes[i].x >> FRACBITS;
@@ -1078,7 +1078,7 @@ static void P_CreateBlockMap(void)
       unsigned tot = bmapwidth * bmapheight;            // size of blockmap
       bmap_t *bmap = calloc(sizeof *bmap, tot);         // array of blocklists
 
-      for(i = 0; i < (unsigned)numlines; ++i)
+      for(i = 0; i < (unsigned int)numlines; ++i)
       {
          // starting coordinates
          int x = (lines[i].v1->x >> FRACBITS) - minx;
@@ -1111,7 +1111,7 @@ static void P_CreateBlockMap(void)
          ady <<= MAPBTOFRAC;
 
          // Now we simply iterate block-by-block until we reach the end block.
-         while((unsigned) b < tot)    // failsafe -- should ALWAYS be true
+         while((unsigned int) b < tot)    // failsafe -- should ALWAYS be true
          {
             // Increase size of allocated list if necessary
             if(bmap[b].n >= bmap[b].nalloc)

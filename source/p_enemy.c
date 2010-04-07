@@ -444,7 +444,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    }
 
 #ifdef RANGECHECK
-   if((unsigned)actor->movedir >= 8)
+   if((unsigned int)actor->movedir >= 8)
       I_Error ("Weird actor->movedir!");
 #endif
    

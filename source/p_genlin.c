@@ -271,7 +271,7 @@ manual_floor:
 int EV_DoGenFloor(line_t *line)
 {
    floordata_t fd;
-   unsigned value = (unsigned)line->special - GenFloorBase;
+   unsigned value = (unsigned int)line->special - GenFloorBase;
 
    // parse the bit fields in the line's special type
    
@@ -518,7 +518,7 @@ manual_ceiling:
 int EV_DoGenCeiling(line_t *line)
 {
    ceilingdata_t cd;
-   unsigned value = (unsigned)line->special - GenCeilingBase;
+   unsigned value = (unsigned int)line->special - GenCeilingBase;
 
    // parse the bit fields in the line's special type
    
@@ -552,7 +552,7 @@ int EV_DoGenLift(line_t *line)
    int      rtn;
    boolean  manual;
    sector_t *sec;
-   unsigned value = (unsigned)line->special - GenLiftBase;
+   unsigned value = (unsigned int)line->special - GenLiftBase;
 
    // parse the bit fields in the line's special type
    
@@ -922,7 +922,7 @@ int EV_DoGenStairs(line_t *line)
 {
    stairdata_t sd;
    int         rtn;
-   unsigned    value = (unsigned)line->special - GenStairsBase;
+   unsigned    value = (unsigned int)line->special - GenStairsBase;
 
    // parse the bit fields in the line's special type
    
@@ -963,7 +963,7 @@ int EV_DoGenCrusher(line_t *line)
    boolean   manual;
    sector_t  *sec;
    ceiling_t *ceiling;
-   unsigned  value = (unsigned)line->special - GenCrusherBase;
+   unsigned  value = (unsigned int)line->special - GenCrusherBase;
    
    // parse the bit fields in the line's special type
    
@@ -1325,7 +1325,7 @@ manual_door:
 int EV_DoGenLockedDoor(line_t *line)
 {
    doordata_t dd = { 0 };
-   unsigned value = (unsigned)line->special - GenLockedBase;
+   unsigned value = (unsigned int)line->special - GenLockedBase;
 
    // parse the bit fields in the line's special type
    

@@ -52,8 +52,8 @@ extern int  columnofs[MAXWIDTH];
 // 8-bit prologue code. This is shared between all span drawers.
 //
 #define SPAN_PROLOGUE_8() \
-   unsigned xf = span.xfrac, xs = span.xstep; \
-   unsigned yf = span.yfrac, ys = span.ystep; \
+   unsigned int xf = span.xfrac, xs = span.xstep; \
+   unsigned int yf = span.yfrac, ys = span.ystep; \
    register byte *dest; \
    byte *source = (byte *)span.source; \
    lighttable_t *colormap = span.colormap; \
@@ -340,14 +340,14 @@ SPAN_FUNC(R_DrawSpanCB_8_512, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00
 // This is the optimized version of the original flat drawing function.
 static void R_DrawSpan_OLD(void) 
 { 
-   register unsigned position;
-   unsigned step;
+   register unsigned int position;
+   unsigned int step;
    
    byte *source;
    byte *colormap;
    byte *dest;
    
-   unsigned count;
+   unsigned int count;
    
    position = ((span.yfrac<<10)&0xffff0000) | ((span.xfrac>>6)&0xffff);
    step = ((span.ystep<<10)&0xffff0000) | ((span.xstep>>6)&0xffff);
@@ -522,7 +522,7 @@ void R_DrawSlope_8_64(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       // TODO: 
@@ -556,7 +556,7 @@ void R_DrawSlope_8_64(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned  ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       mulstart = 65536.0f / id;
@@ -607,7 +607,7 @@ void R_DrawSlope_8_128(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       // TODO: 
@@ -641,7 +641,7 @@ void R_DrawSlope_8_128(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned  ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       mulstart = 65536.0f / id;
@@ -690,7 +690,7 @@ void R_DrawSlope_8_256(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       // TODO: 
@@ -724,7 +724,7 @@ void R_DrawSlope_8_256(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned  ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       mulstart = 65536.0f / id;
@@ -773,7 +773,7 @@ void R_DrawSlope_8_512(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       // TODO: 
@@ -807,7 +807,7 @@ void R_DrawSlope_8_512(void)
       float ustart, uend;
       float vstart, vend;
       float mulstart, mulend;
-      unsigned  ustep, vstep, ufrac, vfrac;
+      unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
       mulstart = 65536.0f / id;

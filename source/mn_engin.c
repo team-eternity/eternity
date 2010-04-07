@@ -1028,7 +1028,7 @@ boolean MN_Responder(event_t *ev)
       if(ch > 31 && ch < 127)
       {
          if(strlen((char *)input_buffer) <=
-            ((var->type == vt_string) ? (unsigned)var->max :
+            ((var->type == vt_string) ? (unsigned int)var->max :
              (var->type == vt_int) ? 33 : 20))
          {
             input_buffer[strlen((char *)input_buffer) + 1] = 0;

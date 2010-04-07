@@ -366,7 +366,7 @@ static void R_GenerateLookup(int texnum, int *const errors)
                // count posts
                for(; col->topdelta != 0xff; count[x].posts++)
                {
-                  if((unsigned)((byte *) col - base) <= limit)
+                  if((unsigned int)((byte *) col - base) <= limit)
                      col = (column_t *)((byte *) col + col->length + 4);
                   else
                   { 
@@ -886,7 +886,7 @@ static void R_InitTextureHash(void)
 
    while(--i >= 0)
    {
-      int j = W_LumpNameHash(textures[i]->name) % (unsigned)numtextures;
+      int j = W_LumpNameHash(textures[i]->name) % (unsigned int)numtextures;
       textures[i]->next  = textures[j]->index;   // Prepend to chain
       textures[j]->index = i;
    }
@@ -1371,7 +1371,7 @@ int R_CheckTextureNumForName(const char *name)
    int i = 0;
    if(*name != '-')     // "NoTexture" marker.
    {
-      i = textures[W_LumpNameHash(name) % (unsigned)numtextures]->index;
+      i = textures[W_LumpNameHash(name) % (unsigned int)numtextures]->index;
       while(i >= 0 && strncasecmp(textures[i]->name,name,8))
          i = textures[i]->next;
    }
