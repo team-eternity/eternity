@@ -531,7 +531,8 @@ void C_Drawer(void)
    
    // offset starting point up by 8 if we are showing input prompt
    
-   y = current_height - ((c_showprompt && message_pos==message_last) ? 8 : 0);
+   y = current_height - 
+         ((c_showprompt && message_pos==message_last) ? c_font->absh : 0) - 1;
 
    // start at our position in the message history
    count = message_pos;
@@ -546,7 +547,7 @@ void C_Drawer(void)
       if(y <= -c_font->absh) break; // past top of screen?
       
       // draw this line
-      V_FontWriteText(c_font, messages[count], 0, y);
+      V_FontWriteText(c_font, messages[count], 1, y);
    }
 
    //////////////////////////////////
@@ -555,7 +556,7 @@ void C_Drawer(void)
   
    // input line on screen, not scrolled back in history?
    
-   if(current_height > 8 && c_showprompt && message_pos == message_last)
+   if(current_height > c_font->absh && c_showprompt && message_pos == message_last)
    {
       const char *a_prompt;
       char tempstr[LINELENGTH];
@@ -572,7 +573,7 @@ void C_Drawer(void)
                    "%s%s_", a_prompt, input_point);
       }
       
-      V_FontWriteText(c_font, tempstr, 0, current_height-8);
+      V_FontWriteText(c_font, tempstr, 1, current_height-c_font->absh-1);
    }
 }
 

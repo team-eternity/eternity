@@ -70,7 +70,7 @@ int num_visplanes;      // sf: count visplanes
 // Empirically verified to be fairly uniform:
 
 #define visplane_hash(picnum,lightlevel,height) \
-  (((unsigned)(picnum)*3+(unsigned)(lightlevel)+(unsigned)(height)*7) & (MAXVISPLANES-1))
+  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) & (MAXVISPLANES-1))
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
@@ -206,12 +206,14 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewsin * slope * view.focratio;
    ystep = plane.pviewcos * slope * view.focratio;
 
-   span.xfrac = (unsigned)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy) 
-                            + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy) 
-                            + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
-   span.xstep = (unsigned)(xstep * plane.fixedunit);
-   span.ystep = (unsigned)(ystep * plane.fixedunit);
+   span.xfrac = 
+      (unsigned int)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
+                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
+   span.yfrac = 
+      (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
+                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
+   span.xstep = (unsigned int)(xstep * plane.fixedunit);
+   span.ystep = (unsigned int)(ystep * plane.fixedunit);
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
@@ -269,12 +271,12 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = view.sin * slope * view.focratio * scale;
    ystep = view.cos * slope * view.focratio * scale;
 
-   span.xfrac = (unsigned)((((-plane.pviewy + plane.yoffset) * scale) + (-view.cos * realy) 
+   span.xfrac = (unsigned int)((((-plane.pviewy + plane.yoffset) * scale) + (-view.cos * realy) 
                             + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned)((((plane.pviewx + plane.xoffset) * scale) + (view.sin * realy) 
+   span.yfrac = (unsigned int)((((plane.pviewx + plane.xoffset) * scale) + (view.sin * realy) 
                             + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
-   span.xstep = (unsigned)(xstep * plane.fixedunit);
-   span.ystep = (unsigned)(ystep * plane.fixedunit);
+   span.xstep = (unsigned int)(xstep * plane.fixedunit);
+   span.ystep = (unsigned int)(ystep * plane.fixedunit);
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
@@ -545,7 +547,7 @@ static visplane_t *new_visplane(unsigned hash)
    check->next = visplanes[hash];
    visplanes[hash] = check;
 
-   if(check->max_width < (unsigned)video.width)
+   if(check->max_width < (unsigned int)video.width)
    {
       if(check->pad1)
          free(check->pad1);

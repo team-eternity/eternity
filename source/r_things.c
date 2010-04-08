@@ -195,7 +195,7 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 // Empirically verified to have excellent hash
 // properties across standard Doom sprites:
 
-#define R_SpriteNameHash(s) ((unsigned)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
+#define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
 
 void R_InitSpriteDefs(char **namelist)
 {
@@ -232,7 +232,7 @@ void R_InitSpriteDefs(char **namelist)
    // scan all the lump names for each of the names,
    //  noting the highest frame letter.
 
-   for(i = 0; i < (unsigned)numsprites; ++i)
+   for(i = 0; i < (unsigned int)numsprites; ++i)
    {
       const char *spritename = namelist[i];
       int j = hash[R_SpriteNameHash(spritename) % numentries].index;
@@ -662,7 +662,7 @@ void R_ProjectSprite(mobj_t *thing)
    rotx = (tempx * view.cos) - (tempy * view.sin);
 
    // decide which patch to use for sprite relative to player
-   if((unsigned)thing->sprite >= (unsigned)numsprites)
+   if((unsigned int)thing->sprite >= (unsigned int)numsprites)
    {
       // haleyjd 08/12/02: modified error handling
       doom_printf(FC_ERROR "Bad sprite number %i\n", thing->sprite);
@@ -705,7 +705,7 @@ void R_ProjectSprite(mobj_t *thing)
       // SoM: Use old rotation code
       // choose a different rotation based on player view
       angle_t ang = R_PointToAngle(thing->x, thing->y);
-      unsigned rot = (ang - thing->angle + (unsigned)(ANG45/2)*9) >> 29;
+      unsigned int rot = (ang - thing->angle + (unsigned int)(ANG45/2)*9) >> 29;
       lump = sprframe->lump[rot];
       flip = (boolean)sprframe->flip[rot];
    }
@@ -927,7 +927,7 @@ void R_DrawPSprite(pspdef_t *psp)
    // haleyjd 08/14/02: should not be rangecheck, modified error
    // handling
    
-   if((unsigned)psp->state->sprite >= (unsigned)numsprites)
+   if((unsigned int)psp->state->sprite >= (unsigned int)numsprites)
    {
       doom_printf(FC_ERROR "Bad sprite number %i", 
                   psp->state->sprite);

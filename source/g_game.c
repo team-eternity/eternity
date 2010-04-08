@@ -1087,9 +1087,6 @@ static void G_DoPlayDemo(void)
          demo_p += 256-GAME_OPTION_SIZE;
    }
 
-   // haleyjd 01/28/10: reset p_tantoangle for new demo_version
-   Table_SetTanToAngle(demo_version);
-
    if(demo_compatibility)  // only 4 players can exist in old demos
    {
       for(i=0; i<4; i++)  // intentionally hard-coded 4 -- killough
@@ -1846,9 +1843,7 @@ static void G_DoLoadGame(void)
    // killough 2/14/98: load compatibility mode
    compatibility = *save_p++;
    demo_version = version;     // killough 7/19/98: use this version's id
-   demo_subversion = SUBVERSION; // haleyjd 06/17/01
-
-   Table_SetTanToAngle(demo_version);
+   demo_subversion = SUBVERSION; // haleyjd 06/17/01   
    
    gameskill = *save_p++;
    
@@ -2365,7 +2360,7 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
       static mobj_t **bodyque;
       static size_t queuesize;
 
-      if(queuesize < (unsigned)bodyquesize)
+      if(queuesize < (unsigned int)bodyquesize)
       {
          bodyque = realloc(bodyque, bodyquesize*sizeof*bodyque);
          memset(bodyque+queuesize, 0, 
@@ -2729,8 +2724,6 @@ void G_ReloadDefaults(void)
    
    demo_version = version;     // killough 7/19/98: use this version's id
    demo_subversion = SUBVERSION; // haleyjd 06/17/01
-
-   Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
    
    // killough 3/31/98, 4/5/98: demo sync insurance
    demo_insurance = default_demo_insurance == 1;
@@ -3240,7 +3233,6 @@ static void G_BeginRecordingOld(void)
 
    demo_subversion = 0;
 
-   Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
    G_SetOldDemoOptions();
 
    demo_p = demobuffer;
@@ -3321,8 +3313,6 @@ void G_BeginRecording(void)
    
    demo_version = version;     // killough 7/19/98: use this version's id
    demo_subversion = SUBVERSION; // haleyjd 06/17/01
-
-   Table_SetTanToAngle(demo_version); // haleyjd 01/28/10
    
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;

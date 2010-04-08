@@ -184,7 +184,7 @@ void P_LoadLevelInfo(int lumpnum)
 
    // run down the hash chain for EMAPINFO
    lump = w_GlobalDir.lumpinfo[W_LumpNameHash("EMAPINFO") % 
-                               (unsigned)w_GlobalDir.numlumps];   
+                               (unsigned int)w_GlobalDir.numlumps];   
    
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {

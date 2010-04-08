@@ -1506,7 +1506,7 @@ int P_FindDoomedNum(int type)
       {
          if(mobjinfo[i].doomednum != -1)
          {
-            unsigned h = (unsigned) mobjinfo[i].doomednum % NUMMOBJTYPES;
+            unsigned h = (unsigned int) mobjinfo[i].doomednum % NUMMOBJTYPES;
             hash[i].next = hash[h].first;
             hash[h].first = i;
          }

@@ -750,7 +750,7 @@ int P_FindSectorFromLineTag(const line_t *line, int start)
 {
    start = 
       (start >= 0 ? sectors[start].nexttag :
-       sectors[(unsigned)line->tag % (unsigned)numsectors].firsttag);
+       sectors[(unsigned int)line->tag % (unsigned int)numsectors].firsttag);
   
    while(start >= 0 && sectors[start].tag != line->tag)
       start = sectors[start].nexttag;
@@ -764,7 +764,7 @@ int P_FindLineFromLineTag(const line_t *line, int start)
 {
    start = 
       (start >= 0 ? lines[start].nexttag :
-       lines[(unsigned)line->tag % (unsigned)numlines].firsttag);
+       lines[(unsigned int)line->tag % (unsigned int)numlines].firsttag);
   
    while(start >= 0 && lines[start].tag != line->tag)
       start = lines[start].nexttag;
@@ -778,7 +778,7 @@ int P_FindSectorFromTag(const int tag, int start)
 {
    start = 
       (start >= 0 ? sectors[start].nexttag :
-       sectors[(unsigned)tag % (unsigned)numsectors].firsttag);
+       sectors[(unsigned int)tag % (unsigned int)numsectors].firsttag);
   
    while(start >= 0 && sectors[start].tag != tag)
       start = sectors[start].nexttag;
@@ -800,7 +800,7 @@ static void P_InitTagLists(int mapformat)
    
    for(i = numsectors; --i >= 0; )   // Proceed from last to first sector
    {                                 // so that lower sectors appear first
-      int j = (unsigned)sectors[i].tag % (unsigned)numsectors; // Hash func
+      int j = (unsigned int)sectors[i].tag % (unsigned int)numsectors; // Hash func
       sectors[i].nexttag = sectors[j].firsttag;   // Prepend sector to chain
       sectors[j].firsttag = i;
    }
@@ -816,7 +816,7 @@ static void P_InitTagLists(int mapformat)
       // added mapformat parameter to test here:
       if(mapformat == LEVEL_FORMAT_DOOM || lines[i].tag != -1)
       {
-         int j = (unsigned)lines[i].tag % (unsigned)numlines; // Hash func
+         int j = (unsigned int)lines[i].tag % (unsigned int)numlines; // Hash func
          lines[i].nexttag = lines[j].firsttag;   // Prepend linedef to chain
          lines[j].firsttag = i;
       }
@@ -1215,7 +1215,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
       int (*linefunc)(line_t *)=NULL;
 
       // check each range of generalized linedefs
-      if((unsigned)line->special >= GenFloorBase)
+      if((unsigned int)line->special >= GenFloorBase)
       {
          if(!thing->player)
          {
@@ -1227,7 +1227,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
             return;
          linefunc = EV_DoGenFloor;
       }
-      else if((unsigned)line->special >= GenCeilingBase)
+      else if((unsigned int)line->special >= GenCeilingBase)
       {
          if(!thing->player)
          {
@@ -1238,7 +1238,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
             return;
          linefunc = EV_DoGenCeiling;
       }
-      else if((unsigned)line->special >= GenDoorBase)
+      else if((unsigned int)line->special >= GenDoorBase)
       {
          if (!thing->player)
          {
@@ -1252,7 +1252,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
          genDoorThing = thing;
          linefunc = EV_DoGenDoor;
       }
-      else if((unsigned)line->special >= GenLockedBase)
+      else if((unsigned int)line->special >= GenLockedBase)
       {
          if(!thing->player)
             return;                     // monsters disallowed from unlocking doors
@@ -1267,7 +1267,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
          genDoorThing = thing;
          linefunc = EV_DoGenLockedDoor;
       }
-      else if((unsigned)line->special >= GenLiftBase)
+      else if((unsigned int)line->special >= GenLiftBase)
       {
          if(!thing->player)
          {
@@ -1278,7 +1278,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
             return;
          linefunc = EV_DoGenLift;
       }
-      else if((unsigned)line->special >= GenStairsBase)
+      else if((unsigned int)line->special >= GenStairsBase)
       {
          if(!thing->player)
          {
@@ -1289,7 +1289,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
             return;
          linefunc = EV_DoGenStairs;
       }
-      else if(demo_version >= 335 && (unsigned)line->special >= GenCrusherBase)
+      else if(demo_version >= 335 && (unsigned int)line->special >= GenCrusherBase)
       {
          // haleyjd 06/09/09: This was completely forgotten in BOOM, disabling
          // all generalized walk-over crusher types!
@@ -2137,7 +2137,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
       int (*linefunc)(line_t *line)=NULL;
 
       // check each range of generalized linedefs
-      if((unsigned)line->special >= GenFloorBase)
+      if((unsigned int)line->special >= GenFloorBase)
       {
          if(!thing->player)
          {
@@ -2150,7 +2150,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
          
          linefunc = EV_DoGenFloor;
       }
-      else if((unsigned)line->special >= GenCeilingBase)
+      else if((unsigned int)line->special >= GenCeilingBase)
       {
          if(!thing->player)
          {
@@ -2161,7 +2161,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
             return;
          linefunc = EV_DoGenCeiling;
       }
-      else if((unsigned)line->special >= GenDoorBase)
+      else if((unsigned int)line->special >= GenDoorBase)
       {
          if(!thing->player)
          {
@@ -2175,7 +2175,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
          genDoorThing = thing;
          linefunc = EV_DoGenDoor;
       }
-      else if((unsigned)line->special >= GenLockedBase)
+      else if((unsigned int)line->special >= GenLockedBase)
       {
          if(!thing->player)
             return;   // monsters disallowed from unlocking doors
@@ -2193,7 +2193,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
          genDoorThing = thing;
          linefunc = EV_DoGenLockedDoor;
       }
-      else if((unsigned)line->special >= GenLiftBase)
+      else if((unsigned int)line->special >= GenLiftBase)
       {
          if(!thing->player)
          {
@@ -2202,7 +2202,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
          }
          linefunc = EV_DoGenLift;
       }
-      else if((unsigned)line->special >= GenStairsBase)
+      else if((unsigned int)line->special >= GenStairsBase)
       {
          if(!thing->player)
          {
@@ -2213,7 +2213,7 @@ void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
             return;
          linefunc = EV_DoGenStairs;
       }
-      else if((unsigned)line->special >= GenCrusherBase)
+      else if((unsigned int)line->special >= GenCrusherBase)
       {
          if(!thing->player)
          {
@@ -3007,7 +3007,7 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
    if(y > x)
       d = x, x = y, y = d;
    d = FixedDiv(x,
-      finesine[(p_tantoangle[FixedDiv(y,x)>>DBITS]+ANG90) >> ANGLETOFINESHIFT]);
+      finesine[(tantoangle[FixedDiv(y,x)>>DBITS]+ANG90) >> ANGLETOFINESHIFT]);
 
    x = (int)((dy * -l->dy - dx * l->dx) / d);  // killough 10/98:
    y = (int)((dy * l->dx - dx * l->dy) / d);   // Use 64-bit arithmetic
@@ -3612,7 +3612,7 @@ line_t *P_FindLine(int tag, int *searchPosition)
    
    int start = 
       (*searchPosition >= 0 ? lines[*searchPosition].nexttag :
-       lines[(unsigned)tag % (unsigned)numlines].firsttag);
+       lines[(unsigned int)tag % (unsigned int)numlines].firsttag);
   
    while(start >= 0 && lines[start].tag != tag)
       start = lines[start].nexttag;
@@ -3635,7 +3635,7 @@ void P_SetLineID(line_t *line, int id)
    // remove from any chain it's already in
    if(line->tag >= 0)
    {
-      int chain = (unsigned)line->tag % (unsigned)numlines;
+      int chain = (unsigned int)line->tag % (unsigned int)numlines;
       int i;
       line_t *prevline = NULL;
 
@@ -3663,7 +3663,7 @@ void P_SetLineID(line_t *line, int id)
 
    if(line->tag >= 0)
    {
-      int chain = (unsigned)line->tag % (unsigned)numlines; // Hash func
+      int chain = (unsigned int)line->tag % (unsigned int)numlines; // Hash func
    
       line->nexttag = lines[chain].firsttag;   // Prepend linedef to chain
       lines[chain].firsttag = line - lines;

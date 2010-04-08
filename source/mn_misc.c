@@ -359,21 +359,21 @@ static const char *cat_strs[NUMCATS] =
    FC_HI "Programming:",
    FC_HI "Based On:",
    FC_HI "Graphics:",
-   FC_HI "Start map:",
+   FC_HI "Start Map:",
    FC_HI "Special Thanks:",
 };
 
 static const char *val_strs[NUMCATS] =
 {
-   "James Haley\nStephen McGranahan\nJoe Kennedy\n",
+   "James Haley\nStephen McGranahan\n",
    
    FC_HI "SMMU" FC_NORMAL " by Simon Howard\n"
    FC_HI "MBF " FC_NORMAL " by Lee Killough\n"
    FC_HI "BOOM" FC_NORMAL " by Team TNT\n",
 
-   "Bob Satori",
+   "Sven Ruthner",
    "Derek MacDonald",
-   "Julian Aubourg\nJoel Murdoch\nAnders Astrand\nSargeBaldy\n",
+   "Joe Kennedy\nJulian Aubourg\nJoel Murdoch\nAnders Astrand\nSargeBaldy\n",
 };
 
 void MN_DrawCredits(void)

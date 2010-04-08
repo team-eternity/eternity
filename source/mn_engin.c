@@ -106,11 +106,10 @@ static menu_t *drawing_menu;
 static int skulls[2];
 
 // haleyjd 02/04/06: small menu pointer
-#define NUMSMALLPTRS 5
+#define NUMSMALLPTRS 8
 static int smallptrs[NUMSMALLPTRS];
 static int16_t smallptr_dims[2]; // 0 = width, 1 = height
 static int smallptr_idx;
-static int smallptr_dir = 1;
 static int smallptr_coords[2][2];
 
 // haleyjd 08/25/09
@@ -433,7 +432,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
       smallptr_coords[0][0] = item_x - (smallptr_dims[0] + 1);
       smallptr_coords[0][1] = y + ((item_height - smallptr_dims[1]) >> 1);
       // right pointer:
-      smallptr_coords[1][0] = item_x + desc_width + 1;
+      smallptr_coords[1][0] = item_x + desc_width + 2;
       smallptr_coords[1][1] = smallptr_coords[0][1];
    }
 
@@ -602,12 +601,16 @@ void MN_DrawMenu(menu_t *menu)
       return;
 
    drawing_menu = menu;    // needed by DrawMenuItem
-   y = menu->y;
-   
+   y = menu->y; 
+      
    // draw background
 
    if(menu->flags & mf_background)
-      V_DrawBackground(mn_background_flat, &vbscreen);         
+   {
+      // haleyjd 04/04/10: draw menus higher in some game modes
+      y -= GameModeInfo->menuOffset;
+      V_DrawBackground(mn_background_flat, &vbscreen);
+   }
   
    // menu-specific drawer function
 
@@ -670,7 +673,8 @@ void MN_DrawMenu(menu_t *menu)
 
             // draw right pointer
             V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &vbscreen, 
-                        W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE));
+                        W_CacheLumpNum(smallptrs[(NUMSMALLPTRS - 1) - smallptr_idx], 
+                                       PU_CACHE));
          }
       }
       
@@ -897,14 +901,7 @@ void MN_Ticker(void)
 
    // haleyjd 02/04/06: determine small pointer index
    if((menutime & 3) == 0)
-   {
-      if(smallptr_dir ==  1 && smallptr_idx == NUMSMALLPTRS - 1)
-         smallptr_dir = -1;
-      if(smallptr_dir == -1 && smallptr_idx == 0)
-         smallptr_dir = 1;
-      
-      smallptr_idx += smallptr_dir;
-   }
+      smallptr_idx = (smallptr_idx + 1) % NUMSMALLPTRS;
 
    // haleyjd 05/29/06: tick for any widgets
    if(current_menuwidget && current_menuwidget->ticker)
@@ -1031,7 +1028,7 @@ boolean MN_Responder(event_t *ev)
       if(ch > 31 && ch < 127)
       {
          if(strlen((char *)input_buffer) <=
-            ((var->type == vt_string) ? (unsigned)var->max :
+            ((var->type == vt_string) ? (unsigned int)var->max :
              (var->type == vt_int) ? 33 : 20))
          {
             input_buffer[strlen((char *)input_buffer) + 1] = 0;
