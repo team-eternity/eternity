@@ -158,7 +158,7 @@ thingtype Unknown
   spawnstate = S_UNKNOWN
   radius = 32.0
   height = 56.0
-  flags = NOBLOCKMAP|NOGRAVITY
+  cflags = NOBLOCKMAP|NOGRAVITY
 }
 
 thingtype EESkyboxCam 
