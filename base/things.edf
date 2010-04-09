@@ -332,7 +332,6 @@ thingtype EERavenObj
 thingtype DoomBuilderCameraSpot
 {
   inherits = Unknown
-  doomednum = 32000
   translucency = 33%
 }
 

@@ -57,9 +57,7 @@ thingtype Pod
   deathsound = ht_podexp
   radius = 16.0
   height = 54.0
-  flags = SOLID|SHOOTABLE|DROPOFF|NOBLOOD
-  flags2 = NORESPAWN|PUSHABLE
-  flags3 = SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER
+  cflags = SOLID|SHOOTABLE|DROPOFF|NOBLOOD|NORESPAWN|PUSHABLE|SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER
   mod = Barrel
   acs_spawndata { num = 125; modes = heretic }
   dehackednum = 305
@@ -71,9 +69,7 @@ thingtype PodGoo
   deathstate = S_PODGOOX
   radius = 2.0
   height = 4.0
-  flags = NOBLOCKMAP|DROPOFF|MISSILE
-  flags2 = LOGRAV|NOCROSS|NOSPLASH
-  flags3 = CANNOTPUSH
+  cflags = NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE
   dehackednum = 306
 }
 
@@ -320,7 +316,7 @@ thingtype TeleGlitterGenBlue
 thingtype TeleGlitterRed 
 {
   spawnstate = S_TELEGLITTER1_1
-  flags = NOBLOCKMAP|NOGRAVITY|MISSILE
+  cflags = NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
   acs_spawndata { num = 166; modes = heretic }
   dehackednum = 332
 }
@@ -328,7 +324,7 @@ thingtype TeleGlitterRed
 thingtype TeleGlitterBlue 
 {
   spawnstate = S_TELEGLITTER2_1
-  flags = NOBLOCKMAP|NOGRAVITY|MISSILE
+  cflags = NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE
   acs_spawndata { num = 167; modes = heretic }
   dehackednum = 333
 }
@@ -467,7 +463,7 @@ thingtype GolemShot
   radius = 8.0
   height = 14.0
   damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SEEKERMISSILE
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SEEKERMISSILE|NORANDOMIZE
   acs_spawndata { num = 131; modes = heretic }
   dehackednum = 341
 }
@@ -508,7 +504,7 @@ thingtype WeredragonShot
   radius = 9.0
   height = 8.0
   damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
   acs_spawndata { num = 120; modes = heretic }
   dehackednum = 343
 }
@@ -521,7 +517,7 @@ thingtype WeredragonSmoke
   radius = 6.0
   height = 8.0
   damage = 2
-  cflags = NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH
+  cflags = NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH|NORANDOMIZE
   dehackednum = 344
 }
 
@@ -558,7 +554,7 @@ thingtype OphidianShotA
   radius = 12.0
   height = 8.0
   damage = 1
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE
   acs_spawndata { num = 138; modes = heretic }
   dehackednum = 346
 }
@@ -572,7 +568,7 @@ thingtype OphidianShotB
   radius = 12.0
   height = 8.0
   damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
   acs_spawndata { num = 139; modes = heretic }
   dehackednum = 347
 }
@@ -636,7 +632,7 @@ thingtype DiscipleShot
   radius = 10.0
   height = 6.0
   damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
   acs_spawndata { num = 140; modes = heretic }
   dehackednum = 350
 }
@@ -705,9 +701,7 @@ thingtype KnightAxe
   radius = 10.0
   height = 8.0
   damage = 2
-  flags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE
-  flags2 = NOCROSS
-  flags3 = THRUGHOST|WINDTHRUST
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NORANDOMIZE|NOCROSS|THRUGHOST|WINDTHRUST
   acs_spawndata { num = 127; modes = heretic }
   dehackednum = 353
 }
@@ -722,7 +716,7 @@ thingtype KnightAxeRed
   radius = 10.0
   height = 8.0
   damage = 7
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|THRUGHOST
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|THRUGHOST|NORANDOMIZE
   acs_spawndata { num = 128; modes = heretic }
   dehackednum = 354
 }
@@ -763,7 +757,7 @@ thingtype SRDsparilShot1
   radius = 10.0
   height = 10.0
   damage = 10
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
   acs_spawndata { num = 144; modes = heretic }
   dehackednum = 356
 }
@@ -785,9 +779,7 @@ thingtype Dsparil
   height = 70.0
   mass = 300
   activesound = ht_soract
-  flags  = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
-  flags2 = E3M8BOSS|BOSS|FOOTCLIP
-  flags3 = LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
+  cflags  = SOLID|SHOOTABLE|DROPOFF|COUNTKILL|E3M8BOSS|BOSS|FOOTCLIP|LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 143; modes = heretic }
   obituary_normal = "brought about the end of Parthoris"
   obituary_melee  = "utterly failed to save Parthoris"
@@ -803,7 +795,7 @@ thingtype DsparilShot1
   radius = 10.0
   height = 6.0
   damage = 1
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
   acs_spawndata { num = 146; modes = heretic }
   dehackednum = 358
 }
@@ -823,7 +815,7 @@ thingtype DsparilShot2
   radius = 10.0
   height = 6.0
   damage = 10
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE
   acs_spawndata { num = 145; modes = heretic }
   dehackednum = 360
 }
@@ -909,7 +901,7 @@ thingtype VolcanoBall
   radius = 8.0
   height = 8.0
   damage = 2
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
   acs_spawndata { num = 123; modes = heretic }
   dehackednum = 369
 }
@@ -922,7 +914,7 @@ thingtype VolcanoBallSmall
   radius = 8.0
   height = 6.0
   damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|LOGRAV|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
   acs_spawndata { num = 124; modes = heretic }
   dehackednum = 370
 }
@@ -949,9 +941,7 @@ thingtype Maulotaur
   damage = 7
   dmgspecial = MinotaurCharge
   activesound = ht_minact
-  flags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL
-  flags2 = BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE
-  flags3 = INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
+  cflags = SOLID|SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 114; modes = heretic } // note: different from zdoom
   obituary_normal = "bowed down before the Maulotaur"
   obituary_melee  = "was pounded flat by the Maulotaur"
@@ -967,7 +957,7 @@ thingtype MaulotaurShot
   radius = 10.0
   height = 6.0
   damage = 3
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE
   acs_spawndata { num = 115; modes = heretic } // note: different from zdoom  
   dehackednum = 372
 }
@@ -982,7 +972,7 @@ thingtype MaulotaurFloorFire
   radius = 5.0
   height = 12.0
   damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FLOORMISSILE|FIREDAMAGE|NOSPLASH
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FLOORMISSILE|FIREDAMAGE|NOSPLASH|NORANDOMIZE
   acs_spawndata { num = 116; modes = heretic } // note: different from zdoom
   dehackednum = 373
 }
@@ -994,7 +984,7 @@ thingtype MaulotaurFloorFlame
   deathsound = ht_phohit
   radius = 8.0
   damage = 4
-  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH
+  cflags = NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE
   acs_spawndata { num = 117; modes = heretic } // note : different from zdoom
   dehackednum = 374
 }
@@ -1026,9 +1016,7 @@ thingtype IronLich
   radius = 40.0
   height = 72.0
   mass = 325
-  flags = SOLID|SHOOTABLE|COUNTKILL|NOBLOOD
-  flags2 = E1M8BOSS|E4M8BOSS|NOSPLASH
-  flags3 = SPACMONSTER|PASSMOBJ
+  cflags = SOLID|SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
   acs_spawndata { num = 20; modes = heretic }
   obituary_normal = "was punished by the Iron Lich"
   obituary_melee  = "was bitten by the Iron Lich"
@@ -1044,7 +1032,7 @@ thingtype IronLichShot1
   radius = 12.0
   height = 6.0
   damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST|NORANDOMIZE
   acs_spawndata { num = 164; modes = heretic }
   dehackednum = 377
 }
@@ -1057,7 +1045,7 @@ thingtype IronLichShot2
   radius = 12.0
   height = 6.0
   damage = 3
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NORANDOMIZE
   dehackednum = 378
 }
 
@@ -1070,7 +1058,7 @@ thingtype IronLichShot3
   radius = 14.0
   height = 12.0
   damage = 5
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST|NORANDOMIZE
   dehackednum = 379
 }
 
@@ -1082,7 +1070,7 @@ thingtype LichWhirlwind
   radius = 16.0
   height = 74.0
   damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|SEEKERMISSILE|EXPLOCOUNT
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|SEEKERMISSILE|EXPLOCOUNT|NORANDOMIZE
   translucency = 26624
   dmgspecial = Whirlwind
   acs_spawndata { num = 165; modes = heretic }
@@ -1231,9 +1219,7 @@ thingtype HereticImp
   height = 36.0
   mass = 50
   activesound = ht_impsit
-  flags = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL
-  flags2 = NOSTRAFE|SPAWNFLOAT|RANGEHALF
-  flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  cflags = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|NOSTRAFE|SPAWNFLOAT|RANGEHALF|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   acs_spawndata { num = 5; modes = heretic }
   obituary_melee = "was scratched by a Gargoyle"
   dehackednum = 393
@@ -1260,9 +1246,7 @@ thingtype HereticImpLeader
   height = 36.0
   mass = 50
   activesound = ht_impsit
-  flags  = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL
-  flags2 = SPAWNFLOAT
-  flags3 = SPACMONSTER|PASSMOBJ|DONTOVERLAP
+  cflags  = SOLID|SHOOTABLE|FLOAT|NOGRAVITY|COUNTKILL|SPAWNFLOAT|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   acs_spawndata { num = 7; modes = heretic }
   obituary_normal = "was burned by a Gargoyle Leader"
   obituary_melee  = "was scratched by a Gargoyle Leader"
@@ -1290,7 +1274,7 @@ thingtype HereticImpShot
   radius = 8.0
   height = 8.0
   damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS|NORANDOMIZE
   acs_spawndata { num = 10; modes = heretic }
   dehackednum = 397
 }
@@ -1316,9 +1300,7 @@ thingtype HereticPlayer
   deathsound = ht_plrdth
   radius = 16.0
   height = 56.0
-  flags  = SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
-  flags2 = FOOTCLIP
-  flags3 = SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
+  cflags  = SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
   droptype = BagOfHolding // this is currently disabled due to bugs!
   mod = PlayerMisc
   dehackednum = 398
@@ -1527,7 +1509,7 @@ thingtype HereticRipper
   radius = 8.0
   height = 6.0
   damage = 1
-  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP
+  cflags = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP|NORANDOMIZE
   dehackednum = 422
 }
 
@@ -1555,7 +1537,7 @@ thingtype HereticHornRodFX1
   radius      = 12.0
   height      = 8.0
   damage      = 3
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NORANDOMIZE
   dehackednum = 425
 }
 
@@ -1568,7 +1550,7 @@ thingtype HereticGoldWandFX1
   radius      = 10.0
   height      = 6.0
   damage      = 2
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
   dehackednum = 426
 }
 
@@ -1580,7 +1562,7 @@ thingtype HereticGoldWandFX2
   radius      = 10.0
   height      = 6.0
   damage      = 1
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE
   dehackednum = 427
 }
 
@@ -1608,7 +1590,7 @@ thingtype HereticPhoenixFX1
   radius      = 11.0
   height      = 8.0
   damage      = 20
-  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST
+  cflags      = NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST|NORANDOMIZE
   dehackednum = 430
 }
 

@@ -254,7 +254,7 @@ void P_ExplodeMissile(mobj_t *mo)
 
    P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
 
-   if(GameModeInfo->type == Game_DOOM)
+   if(!(mo->flags4 & MF4_NORANDOMIZE))
    {
       mo->tics -= P_Random(pr_explode) & 3;
 
@@ -1799,16 +1799,25 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing)
 
    if(i == NUMMOBJTYPES)
    {
-      doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
-                  mthing->type, mthing->x, mthing->y);
-
-      // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
-      // at user's discretion, but not when recording/playing demos or in
-      // netgames.
-      if(markUnknowns && !(netgame || demorecording || demoplayback))
-         i = UnknownThingType;
+      // haleyjd: handle Doom Builder camera spots specially here, so that they
+      // cannot desync demos recorded in BOOM-compatible ports
+      if(mthing->type == 32000 && !(netgame || demorecording || demoplayback))
+      {
+         i = E_SafeThingName("DoomBuilderCameraSpot");
+      }
       else
-         return NULL;  // sf
+      {
+         doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
+                     mthing->type, mthing->x, mthing->y);
+
+         // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
+         // at user's discretion, but not when recording/playing demos or in
+         // netgames.
+         if(markUnknowns && !(netgame || demorecording || demoplayback))
+            i = UnknownThingType;
+         else
+            return NULL;  // sf
+      }
    }
 
    // don't spawn keycards and players in deathmatch
@@ -1860,7 +1869,7 @@ spawnit:
 
    mobj->spawnpoint = *mthing;
 
-   if(mobj->tics > 0)
+   if(mobj->tics > 0 && !(mobj->flags4 & MF4_SYNCHRONIZED))
       mobj->tics = 1 + (P_Random(pr_spawnthing) % mobj->tics);
 
    if(!(mobj->flags & MF_FRIEND) &&
@@ -2041,7 +2050,7 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 
 void P_CheckMissileSpawn(mobj_t* th)
 {
-   if(GameModeInfo->type == Game_DOOM)
+   if(!(th->flags4 & MF4_NORANDOMIZE))
    {
       th->tics -= P_Random(pr_missile)&3;
       if(th->tics < 1)
