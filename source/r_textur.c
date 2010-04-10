@@ -469,7 +469,7 @@ struct
 // AddTexColumn
 //
 // Copies from src to the tex buffer and optionally marks the temporary mask
-static void AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len)
+static void AddTexColumn(texture_t *tex, const byte *src, int srcstep, int ptroff, int len)
 {
    byte *dest = tex->buffer + ptroff;
    
@@ -488,7 +488,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int ptroff, int len)
       while(len > 0)
       {
          *dest = *src;
-         dest++; src++; 
+         dest++; src += srcstep; 
          
          *mask = 255; mask++;
          len--;
@@ -515,25 +515,35 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
    byte      *src = W_CacheLumpNum(component->lump, PU_CACHE);
    byte      *dest = tex->buffer;
-   int       destoff, srcoff, deststep, srcstep;
-   int       xstart, ystart, xstop, ystop, wcount, hcount;
+   int       destoff, srcoff, deststep, srcxstep, srcystep;
+   int       xstart, ystart, xstop, ystop;
+   int       width, height, wcount, hcount;
    
-   // Make sure component is not entirely off of the texture (should this count
-   // as a texture error?)
-   if(component->originx + component->width <= 0 || 
-      component->originx >= tex->width ||
-      component->originy + component->height <= 0 ||
-      component->originy >= tex->height)
-      return;
+   // If the flat is supposed to be flipped or rotated, do that here
+   // For now, just setup the normal way
+   {
+      width = component->height;
+      height = component->width;
+      srcystep = component->width;
+      srcxstep = 1;
+      
+      srcoff = 0;//component->width * (component->height - 1);
+   }
    
    // Determine starts and stops
    xstart = component->originx;
    ystart = component->originy;
-   xstop = xstart + component->width;
-   ystop = ystart + component->height;
+   xstop = xstart + width;
+   ystop = ystart + height;
+   
+   // Make sure component is not entirely off of the texture (should this count
+   // as a texture error?)
+   if(xstop <= 0 || xstart >= tex->width ||
+      ystop <= 0 || ystart >= tex->height)
+      return;
    
    // Offset src or dest based on the x offset first.
-   srcoff = xstart < 0 ? -xstart * component->width : 0;
+   srcoff += xstart < 0 ? -xstart * srcxstep : 0;
    destoff = xstart >= 0 ? xstart * tex->height : 0;
    xstart = xstart >= 0 ? xstart : 0;
 
@@ -541,13 +551,12 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    if(ystart < 0)
    {
       // Remember that component->originy is negative in this case
-      srcoff -= ystart;
+      srcoff -= ystart * srcystep;
       ystart = 0;
    }
    else
       destoff += ystart;
 
-   srcstep = component->width;
    deststep = tex->height;
    
    if(xstop > tex->width)
@@ -561,11 +570,11 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    while(wcount > 0)
    {
 #ifdef RANGECHECK
-      if(srcoff < 0 || srcoff + hcount > tex->width * tex->height)
+      if(srcoff < 0 || srcoff + (hcount - 1) * srcystep > tex->width * tex->height)
          I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, tex->width * tex->height);
 #endif
-      AddTexColumn(tex, src + srcoff, destoff, hcount);
-      srcoff += srcstep;
+      AddTexColumn(tex, src + srcoff, srcystep, destoff, hcount);
+      srcoff += srcxstep;
       destoff += deststep;
       wcount--;
    }
@@ -657,7 +666,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 #endif
             
          if(y2 - y1 > 0)
-            AddTexColumn(tex, src + srcoff, destoff, y2 - y1);
+            AddTexColumn(tex, src + srcoff, 1, destoff, y2 - y1);
             
          column = (const column_t *)(src + column->length + 1);
       }
