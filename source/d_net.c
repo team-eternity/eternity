@@ -484,14 +484,18 @@ static void D_InitPlayers(void)
 {
    int i;
 
-   // PCLASS_FIXME: not necessarily the most logical place for default
-   // verfication; subject to NETCODE_FIXME.
-   E_VerifyDefaultPlayerClass();
+   // haleyjd 04/10/10: brougt up out of defunct console net init for now
+   players[consoleplayer].colormap = default_colour;
+   strncpy(players[consoleplayer].name, default_name, 20);
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
-      sprintf(players[i].name, "player %i", i+1);
-      players[i].colormap = i % TRANSLATIONCOLOURS;
+      // FIXME / TODO: BRAINDEAD!
+      if(i != consoleplayer)
+      {
+         sprintf(players[i].name, "player %i", i+1);
+         players[i].colormap = i % TRANSLATIONCOLOURS;
+      }
 
       // PCLASS_FIXME: subject to the NETCODE_FIXME above; only allows
       // player class to be set to default. Must change!
@@ -505,121 +509,11 @@ static void D_InitPlayers(void)
 //
 static void D_ArbitrateNetStart(void)
 {
-   int     i /*, j*/;
+   int     i;
    boolean gotinfo[MAXNETNODES];
-   //int     numgot = 0;
    
    autostart = true;
    memset(gotinfo, 0, sizeof(gotinfo));
-   
-   /*
-   if(doomcom->consoleplayer == 0)      // key player
-   {
-      usermsg("waiting for players..");
-
-      //
-      // NETCODE_FIXME: Send rngseed like other ports? This is haphazard.
-      //
-      G_ScrambleRand();
-      rngseed = rngseed & 255;
-      
-      V_SetLoading(doomcom->numnodes, "players:");
-      numgot = 0;
-      
-      // send a packet to all nodes first to get replies going
-      // we don't want to overdo it though: too many packets
-      // will flood the other nodes who may still be in r_init
-      
-      netbuffer->starttic = 0;
-      netbuffer->numtics = 0;
-      netbuffer->player = numgot; 
-      for(j=0; j<4; j++)
-	for(i=0; i<doomcom->numnodes; i++)
-         HSendPacket(i, NCMD_SETUP);
-
-        //
-        // NETCODE_FIXME: Sloppy, needs big rewrite.
-        // Remove loading box bullshit and other cruft.
-        //
-      while(1)
-	{
-	  CheckAbort();
-	  netbuffer->starttic = 0;
-	  netbuffer->numtics = 0;
-	  netbuffer->player = numgot;     // tell the other nodes how many
-
-	  // computers are ready to start
-	  // send packet to nodes
-	  for(i=0; i<doomcom->numnodes; i++)
-	    {
-	      if(!gotinfo[i]) continue;       // ignore nodes not ready
-	      HSendPacket(i, NCMD_SETUP);
-	    }
-	  
-	  while(HGetPacket())
-	    {
-	      if(!gotinfo[doomcom->remotenode])       // new node
-                {
-		  gotinfo[doomcom->remotenode] = true;
-		  V_LoadingIncrease();
-		  numgot++;
-                }
-	    }
-
-	  if(numgot == doomcom->numnodes) // got all players
-	    {
-	      netbuffer->starttic = 1;     // 'start'
-	      netbuffer->numtics = 1;
-	      netbuffer->retransmitfrom = (unsigned char)rngseed;
-	      
-              // start the game
-	      for(i=0; i<doomcom->numnodes; i++)
-		{
-		  HSendPacket(i, NCMD_SETUP);
-		  HSendPacket(i, NCMD_SETUP);
-		}
-	      C_Printf("%i\n", netbuffer->retransmitfrom);
-	      //            ResetNet();
-	      break;      // all done, start game now
-	    }
-	}
-    }
-  else
-    {
-      int waitingserver = true;     // waiting for server ?
-      
-      usermsg("waiting for key player..");
-      while(1)
-	{
-	  CheckAbort();
-	  if(HGetPacket())
-	    {
-	      if(waitingserver)
-		{
-		  usermsg("waiting for game start signal..");
-		  V_SetLoading(doomcom->numnodes, "players:");
-		  numgot = 1;
-		  waitingserver = false;
-		  continue;
-		}
-	      
-	      if(netbuffer->starttic)  // start the game, all players ready
-		{
-		  C_Printf("%i\n", netbuffer->retransmitfrom);
-		  rngseed = netbuffer->retransmitfrom;
-		  //              ResetNet();
-		  break;
-		}
-	      V_LoadingSetTo(netbuffer->player);  // update loading box
-	      
-	      // acknowledge key player: 'im here'
-	      netbuffer->numtics = 0;
-	      for(j=0; j<4; j++)
-		HSendPacket(doomcom->remotenode, NCMD_SETUP);
-	    }
-	}
-    }
-    */
 
    if(doomcom->consoleplayer)
    {
@@ -698,35 +592,20 @@ static void D_ArbitrateNetStart(void)
       }
       while(i < doomcom->numnodes);
    }
-
-   /*
-   usermsg("random seed: %i", rngseed);
-   */
    
    //
    // NETCODE_FIXME: See note above about D_InitPlayers
    //
    
-   D_InitPlayers();
-   
-   /*
-   //
-   // NETCODE_FIXME: what's this??
-   //
-   
-   // wait a bit
-   for(i=I_GetTime_RealTime()+20; I_GetTime_RealTime()<i;);
-   */
+   D_InitPlayers();   
 }
 
 extern int viewangleoffset;
 
 //
 // D_CheckNetGame
+//
 // Works out player numbers among the net participants
-//
-//
-// NETCODE_FIXME: Handle this more like other ports.
 //
 void D_CheckNetGame(void)
 {
@@ -748,7 +627,7 @@ void D_CheckNetGame(void)
    D_InitPlayers();      
    
    //C_NetInit();
-   //atexit(D_QuitNetGame);       // killough
+   atexit(D_QuitNetGame);       // killough
 }
 
 void D_InitNetGame(void)
@@ -782,6 +661,7 @@ void D_InitNetGame(void)
 
 //
 // D_QuitNetGame
+//
 // Called before quitting to leave a net game
 // without hanging the other players
 //
@@ -804,40 +684,7 @@ void D_QuitNetGame(void)
             HSendPacket(j, NCMD_EXIT);
       }
       I_WaitVBL(1);
-   }
-  
-   /*
-   //
-   // NETCODE_FIXME: part of the old driver system, probably not
-   // needed any longer.
-   //
-   if(netdisconnect)
-   {
-      netdisconnect();                // disconnect (hang up modem etc)
-      netdisconnect = NULL;
-   }
-
-   //
-   // NETCODE_FIXME: As noted above, unless this proves to be stable
-   // and reliable, I think we should go back to kicking out after a
-   // net game. fraggle never tested this kind of stuff and it may
-   // have serious problems.
-   //
-   consoleplayer = 0;
-   netgame = 0; 
-   GameType = DefaultGameType = gt_single; // haleyjd 04/10/03
-
-   G_SetDefaultDMFlags(0, true);
-   
-   for(i=0;i<MAXPLAYERS;i++)
-   {
-      playeringame[i] = !i;
-   }
-   
-   doomcom = &singleplayer;
-   ResetNet();
-   C_SetConsole();
-   */
+   }  
 }
 
 //
