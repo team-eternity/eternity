@@ -70,6 +70,10 @@
 // Uncomment this to log all memory operations to a file
 //#define ZONEFILE
 
+// Uncomment this to enable more verbose - but dangerous - error messages
+// that could cause crashes
+//#define ZONEVERBOSE
+
 //=============================================================================
 //
 // Tunables
@@ -157,7 +161,7 @@ static void Z_IDCheck(boolean err, const char *errmsg,
    {
       I_Error("%s\nSource: %s:%d\nSource of malloc: %s:%d",
               errmsg, file, line,
-#ifdef INSTRUMENTED
+#if defined(ZONEVERBOSE) && defined(INSTRUMENTED)
               block->file, block->line
 #else
               "(not available)", 0

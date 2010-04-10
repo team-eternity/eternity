@@ -292,6 +292,8 @@ typedef enum
    MF4_FORCERADIUSDMG = 0x00000004, // Does radius damage to everything, no exceptions
    MF4_LOOKALLAROUND  = 0x00000008, // Looks all around (like an AMBUSH monster)
    MF4_NODAMAGE       = 0x00000010, // Takes no damage but still reacts normally
+   MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
+   MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
 } mobjflag4_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

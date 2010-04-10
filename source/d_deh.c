@@ -315,6 +315,8 @@ dehflags_t deh_mobjflags[] =
   {"FORCERADIUSDMG",   0x00000004, 3}, // forces radius damage despite other flags
   {"LOOKALLAROUND",    0x00000008, 3}, // looks all around for targets
   {"NODAMAGE",         0x00000010, 3}, // takes no damage but reacts normally
+  {"SYNCHRONIZED",     0x00000020, 3}, // spawn state tics are not randomized
+  {"NORANDOMIZE",      0x00000040, 3}, // missile spawn and death not randomized
 
   { NULL,              0 }             // NULL terminator
 };

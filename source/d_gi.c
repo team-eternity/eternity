@@ -50,7 +50,7 @@
 // menu background flats
 #define DOOMMENUBACK "FLOOR4_6"
 #define HACXMENUBACK "CONS1_5"
-#define HTICMENUBACK "FLOOR04"
+#define HTICMENUBACK "FLOOR16"
 
 // credit background flats
 #define DOOMCREDITBK "NUKAGE1"

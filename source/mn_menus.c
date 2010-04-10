@@ -2097,20 +2097,17 @@ static void MN_HUDPg2Drawer(void);
 static const char *mn_hud_names[] =
 {
    "messages / BOOM HUD",
-   "crosshair / automap",
-   "miscellaneous",
+   "crosshair / automap / misc",
    NULL
 };
 
 extern menu_t menu_hud;
 extern menu_t menu_hud_pg2;
-extern menu_t menu_hud_pg3;
 
 static menu_t *mn_hud_pages[] =
 {
    &menu_hud,
    &menu_hud_pg2,
-   &menu_hud_pg3,
    NULL
 };
 
@@ -2148,20 +2145,11 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_toggle,     "show level time widget",       "hu_showtime"},
    {it_toggle,     "level time color",             "hu_timecolor"},
    {it_toggle,     "level name color",             "hu_levelnamecolor"},
-   {it_end}
-};
-
-static menuitem_t mn_hud_pg3_items[] =
-{
-   {it_title,      FC_GOLD "hud settings",         NULL,     "m_hud"},
    {it_gap},
    {it_info,       FC_GOLD "miscellaneous"},
-   {it_toggle,     "show frags in DM",             "show_scores"},
-   {it_toggle,     "show vpo indicator",           "hu_showvpo"},
-   {it_variable,   "vpo threshold",                "hu_vpo_threshold"},
+   {it_toggle,     "show frags in deathmatch",     "show_scores"},
    {it_end}
 };
-
 
 menu_t menu_hud =
 {
@@ -2181,26 +2169,12 @@ menu_t menu_hud_pg2 =
 {
    mn_hud_pg2_items,
    &menu_hud,             // previous page
-   &menu_hud_pg3,         // next page
-   &menu_hud,             // rootpage
-   200, 15,               // x,y offset
-   3,
-   mf_background,
-   MN_HUDPg2Drawer,       // drawer
-   mn_hud_names,          // TOC stuff
-   mn_hud_pages,
-};
-
-menu_t menu_hud_pg3 =
-{
-   mn_hud_pg3_items,
-   &menu_hud_pg2,         // previous page
    NULL,                  // next page
    &menu_hud,             // rootpage
    200, 15,               // x,y offset
    3,
    mf_background,
-   NULL,                  // no drawer
+   MN_HUDPg2Drawer,       // drawer
    mn_hud_names,          // TOC stuff
    mn_hud_pages,
 };
@@ -2235,7 +2209,7 @@ static void MN_HUDPg2Drawer(void)
 
       V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
                     y + 12 - (h >> 1) + to, 
-                    &vbscreen, patch, NULL, FTRANLEVEL);
+                    &vbscreen, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
 

@@ -660,20 +660,6 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
 
 static hu_patchwidget_t opensocket_widget;
 
-// VPO Warning indicator
-//
-// most ports nowadays have removed the visplane overflow problem.
-// however, many developers still make wads for plain vanilla doom.
-// this should give them a warning for when they have 'a few
-// planes too many'
-
-static hu_patchwidget_t vpo_widget;
-
-// globals needed for VPO widget
-extern int num_visplanes;
-int show_vpo = 0;
-int vpo_threshold; // haleyjd 09/29/04: customizable VPO threshold
-
 //
 // HU_WarningsDrawer
 //
@@ -686,12 +672,7 @@ static void HU_WarningsDrawer(hu_widget_t *widget)
 {
    hu_patchwidget_t *pw = (hu_patchwidget_t *)widget;
 
-   if(pw == &vpo_widget)
-   {
-      if(show_vpo && num_visplanes > vpo_threshold)
-         HU_PatchWidgetDraw(widget);
-   }
-   else if(pw == &opensocket_widget)
+   if(pw == &opensocket_widget)
    {
       if(opensocket)
          HU_PatchWidgetDraw(widget);
@@ -704,25 +685,7 @@ static void HU_WarningsDrawer(hu_widget_t *widget)
 // Sets up the VPO and open socket warning patch widgets.
 //
 static void HU_InitWarnings(void)
-{
-   // set up VPO
-   strcpy(vpo_widget.widget.name, "_HU_VPOWidget");
-
-   vpo_widget.widget.type = WIDGET_PATCH;
-
-   vpo_widget.widget.drawer = HU_WarningsDrawer;
-   vpo_widget.widget.eraser = HU_PatchWidgetErase;
-
-   // add to hash
-   HU_AddWidgetToHash((hu_widget_t *)&vpo_widget);
-
-   strncpy(vpo_widget.patchname, "VPO", 9);
-   vpo_widget.patch = W_CacheLumpName("VPO", PU_CACHE);
-   vpo_widget.color = NULL;
-   vpo_widget.tl_level = FRACUNIT;
-   vpo_widget.x = 250;
-   vpo_widget.y = 10;
-   
+{   
    // set up socket
    strcpy(opensocket_widget.widget.name, "_HU_OpenSocketWidget");
 
@@ -1659,8 +1622,6 @@ VARIABLE_INT(mess_colour,       NULL, 0, CR_LIMIT-1,    textcolours);
 VARIABLE_BOOLEAN(obituaries,    NULL,                   onoff);
 VARIABLE_INT(obcolour,          NULL, 0, CR_LIMIT-1,    textcolours);
 VARIABLE_INT(crosshairnum,      NULL, 0, CROSSHAIRS-1,  cross_str);
-VARIABLE_BOOLEAN(show_vpo,      NULL,                   yesno);
-VARIABLE_INT(vpo_threshold,     NULL, 1, 128,      NULL);
 VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
 VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
 
@@ -1678,8 +1639,6 @@ CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
-CONSOLE_VARIABLE(hu_showvpo, show_vpo, 0) {}
-CONSOLE_VARIABLE(hu_vpo_threshold, vpo_threshold, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
@@ -1710,8 +1669,6 @@ void HU_AddCommands(void)
    C_AddCommand(hu_obitcolor);
    C_AddCommand(hu_crosshair);
    C_AddCommand(hu_crosshair_hilite);
-   C_AddCommand(hu_showvpo);
-   C_AddCommand(hu_vpo_threshold);
    C_AddCommand(hu_messages);
    C_AddCommand(hu_messagecolor);
    C_AddCommand(say);   

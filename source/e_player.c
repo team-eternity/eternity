@@ -522,6 +522,8 @@ void E_ProcessPlayerClasses(cfg_t *cfg)
 
    for(i = 0; i < count; ++i)
       E_ProcessPlayerClass(cfg_getnsec(cfg, EDF_SEC_PCLASS, i));
+
+   E_VerifyDefaultPlayerClass();
 }
 
 //==============================================================================

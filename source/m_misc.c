@@ -91,8 +91,6 @@ extern int hud_msg_lines;   // number of message lines in window up to 16
 extern int hud_msg_scrollup;// killough 11/98: whether message list scrolls up
 extern int message_timer;   // killough 11/98: timer used for normal messages
 extern int show_scores;
-extern int show_vpo;
-extern int vpo_threshold;   // haleyjd 11/15/04
 
 // haleyjd: SDL-specific configuration values
 #ifdef _SDL_VER
@@ -184,13 +182,6 @@ default_t defaults[] =
    // killough 2/8/98
    DEFAULT_INT("max_player_corpse", &default_bodyquesize, NULL, 32, UL, UL, wad_no,
                "number of dead bodies in view supported (negative value = no limit)"),
-
-   // haleyjd: changed default to 0
-   DEFAULT_INT("show_vpo", &show_vpo, NULL, 0, 0, 1, wad_no,
-               "1 to enable VPO warning indicator"),
-
-   DEFAULT_INT("vpo_threshold", &vpo_threshold, NULL, 85, 1, 128, wad_no,
-               "VPO warning indicator threshold"),
 
    // killough 10/98
    DEFAULT_INT("flashing_hom", &flashing_hom, NULL, 1, 0, 1, wad_no,
