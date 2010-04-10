@@ -50,7 +50,6 @@ typedef struct hu_widget_s
    boolean prevdisabled;     // previous state of disable flag
 } hu_widget_t;
 
-extern int show_vpo;
 extern boolean chat_on;
 extern int obituaries;
 extern int obcolour;       // the colour of death messages
