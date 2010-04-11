@@ -865,6 +865,66 @@ static boolean longtics_demo; // if true, demo playing is longtics format
 static const char *defdemoname;
 
 //
+// complevels
+//
+// haleyjd 04/10/10: compatibility matrix for properly setting comp vars based
+// on the current demoversion. Derived from PrBoom.
+//
+struct complevel_s
+{
+   int fix; // first version that contained a fix
+   int opt; // first version that made the fix an option
+} complevels[] =
+{
+   { 203, 203 }, // comp_telefrag
+   { 203, 203 }, // comp_dropoff
+   { 201, 203 }, // comp_vile
+   { 201, 203 }, // comp_pain
+   { 201, 203 }, // comp_skull
+   { 201, 203 }, // comp_blazing
+   { 201, 203 }, // comp_doorlight
+   { 201, 203 }, // comp_model
+   { 201, 203 }, // comp_god
+   { 203, 203 }, // comp_falloff
+   { 200, 203 }, // comp_floors - FIXME
+   { 201, 203 }, // comp_skymap
+   { 203, 203 }, // comp_pursuit
+   { 202, 203 }, // comp_doorstuck
+   { 203, 203 }, // comp_staylift
+   { 203, 203 }, // comp_zombie
+   { 202, 203 }, // comp_stairs
+   { 203, 203 }, // comp_infcheat
+   { 201, 203 }, // comp_zerotags
+   { 329, 329 }, // comp_terrain
+   { 329, 329 }, // comp_respawnfix
+   { 329, 329 }, // comp_fallingdmg
+   { 329, 329 }, // comp_soul
+   { 329, 329 }, // comp_theights
+   { 329, 329 }, // comp_overunder
+   { 329, 329 }, // comp_planeshoot
+   { 335, 335 }, // comp_special
+   { 0,   0   }
+};
+
+//
+// G_SetCompatibility
+//
+// haleyjd 04/10/10
+//
+static void G_SetCompatibility(void)
+{
+   int i = 0;
+
+   while(complevels[i].fix > 0)
+   {
+      if(demo_version < complevels[i].opt)
+         comp[i] = (demo_version < complevels[i].fix);
+
+      ++i;
+   }
+}
+
+//
 // NETCODE_FIXME -- DEMO_FIXME
 //
 // More demo-related stuff here, for playing back demos. Will need more
@@ -954,8 +1014,7 @@ static void G_DoPlayDemo(void)
 
       demo_subversion = 0; // haleyjd: always 0 for old demos
 
-      compatibility = true;
-      memset(comp, 0xff, sizeof comp);  // killough 10/98: a vector now
+      G_SetCompatibility();
 
       // haleyjd 03/17/09: in old Heretic demos, some should be false
       if(GameModeInfo->type == Game_Heretic)
@@ -3146,9 +3205,7 @@ byte *G_ReadOptions(byte *demo_p)
       for(i = 0; i <= comp_zerotags; ++i)
          comp[i] = compatibility;
 
-      // haleyjd 03/31/09: nothing above comp_zerotags existed pre-EE
-      for(i = comp_zerotags + 1; i < COMP_TOTAL; ++i)
-         comp[i] = true;
+      G_SetCompatibility();
 
       // haleyjd 05/18/06: BOOM fix: allow zombie exits
       if(demo_version >= 200 && demo_version <= 202)

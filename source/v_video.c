@@ -205,9 +205,9 @@ void V_InitColorTranslation(void)
 // Marks the destination rectangle on the screen dirty.
 //
 // No return value.
-
+//
 void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
-		int height, int destx, int desty, VBuffer *dest)
+		          int height, int destx, int desty, VBuffer *dest)
 {
    byte *srcp;
    byte *destp;
