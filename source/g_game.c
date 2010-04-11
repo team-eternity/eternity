@@ -3183,6 +3183,8 @@ byte *G_ReadOptions(byte *demo_p)
          for(i = 0; i < COMP_TOTAL; ++i)
             comp[i] = *demo_p++;
       }
+
+      G_SetCompatibility();
      
       // Options new to v2.04, etc.
 
