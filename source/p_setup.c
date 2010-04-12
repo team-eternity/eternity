@@ -1031,6 +1031,8 @@ static void P_CreateBlockMap(void)
    fixed_t minx = INT_MAX, miny = INT_MAX,
            maxx = INT_MIN, maxy = INT_MIN;
 
+   C_Printf("P_CreateBlockMap: rebuilding blockmap for level\n");
+
    // First find limits of map
    
    for(i = 0; i < (unsigned int)numvertexes; ++i)

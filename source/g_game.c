@@ -3201,7 +3201,7 @@ byte *G_ReadOptions(byte *demo_p)
          allowmlook = *demo_p++;
       }
    }
-   else  // defaults for versions < 2.02
+   else  // defaults for versions <= 2.02
    {
       int i;  // killough 10/98: a compatibility vector now
       for(i = 0; i <= comp_zerotags; ++i)

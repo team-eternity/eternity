@@ -1132,7 +1132,7 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
          // There are no more desyncs on Donce's demos on horror.wad
          if(demo_version < 203 && !demo_compatibility && monsters_remember)
          {
-            if (actor->lastenemy && actor->lastenemy->health > 0)
+            if(actor->lastenemy && actor->lastenemy->health > 0)
             {
                actor->target = actor->lastenemy;
                actor->lastenemy = NULL;

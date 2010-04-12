@@ -454,6 +454,9 @@ struct mobj_s
 
    // killough 8/2/98: friction properties part of sectors,
    // not objects -- removed friction properties from here
+   // haleyjd 04/11/10: added back for compatibility code segments
+   int friction;
+   int movefactor;
 
    // a linked list of sectors where this object appears
    struct msecnode_s* touching_sectorlist;                 // phares 3/14/98

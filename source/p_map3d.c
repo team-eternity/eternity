@@ -489,6 +489,11 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    mobj_t  *fakedblocker;
    fixed_t realheight = thing->height;
 
+#ifdef RANGECHECK
+   if(demo_version < 329)
+      I_Error("P_CheckPosition3D: called in an old demo!\n");
+#endif
+
    tm->thing = thing;
    tm->flags = thing->flags;
    

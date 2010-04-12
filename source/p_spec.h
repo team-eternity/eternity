@@ -938,8 +938,16 @@ typedef struct scroll_s
   } type;              // Type of scroll effect
 } scroll_t;
 
+// haleyjd 04/11/10: friction_t restored
 // phares 3/12/98: added new model of friction for ice/sludge effects
-// haleyjd 05/02/04: friction_t removed, unused
+
+typedef struct friction_s
+{
+   thinker_t thinker; // Thinker structure for friction
+   int friction;      // friction value (E800 = normal)
+   int movefactor;    // inertia factor when adding to momentum
+   int affectee;      // Number of affected sector
+} friction_t;
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
