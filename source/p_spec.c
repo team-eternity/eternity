@@ -2473,14 +2473,18 @@ void P_UpdateSpecials(void)
    {
       for(i = anim->basepic; i < anim->basepic + anim->numpics; ++i)
       {
-         pic = anim->basepic + 
-               ((leveltime/anim->speed + i) % anim->numpics);
-               
-         texturetranslation[i] = pic;
-            
-         // sf: > 65535 : swirly hack 
-         if(anim->speed > 65535 || anim->numpics == 1)
+         if((i > numwalls && r_swirl) || anim->speed > 65535 || anim->numpics == 1)
+         {
             textures[i]->flags |= TF_SWIRLY;
+            texturetranslation[i] = i;
+         }
+         else
+         {
+            pic = anim->basepic + 
+                  ((leveltime/anim->speed + i) % anim->numpics);
+
+            texturetranslation[i] = pic;
+         }
       }
    }
    

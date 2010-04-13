@@ -381,11 +381,11 @@ static void R_MapSlope(int y, int x1, int x2)
    // Setup lighting
    base = 4.0f * (plane.lightlevel) - 448.0f;
 
-   map1 = base - (256.0f - (slope->shade - slope->plight * slopespan.idfrac));
+   map1 = 256.0f - (slope->shade - slope->plight * slopespan.idfrac);
    if(count > 0)
    {
       float id = slopespan.idfrac + slopespan.idstep * (x2 - x1);
-      map2 = base - (256.0f - (slope->shade - slope->plight * id));
+      map2 = 256.0f - (slope->shade - slope->plight * id);
    }
    else
       map2 = map1;
@@ -451,12 +451,12 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->P.z = (float)y;
    rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
 
-   rslope->M.x = rslope->P.x - tsizef;
-   rslope->M.z = rslope->P.z;
+   rslope->M.x = rslope->P.x;
+   rslope->M.z = rslope->P.z + tsizef;
    rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
 
-   rslope->N.x = rslope->P.x;
-   rslope->N.z = rslope->P.z - tsizef;
+   rslope->N.x = rslope->P.x + tsizef;
+   rslope->N.z = rslope->P.z;
    rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
 
    M_TranslateVec3f(&rslope->P);
@@ -471,6 +471,7 @@ static void R_CalcSlope(visplane_t *pl)
    M_CrossProduct3f(&rslope->C, &rslope->M, &rslope->N);
 
    // This is helpful for removing some of the muls when calculating light.
+
    rslope->A.x *= 0.5f;
    rslope->A.y *= 0.5f / view.focratio;
    rslope->A.z *= 0.5f;
