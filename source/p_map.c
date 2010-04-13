@@ -1343,15 +1343,15 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
                 (floorz - tm->dropoffz > 128*FRACUNIT || 
                  !thing->target || thing->target->z > tm->dropoffz)))
             {
-               fixed_t zdist;
+               boolean toobig;
 
                if(!monkeys || demo_version < 203)
-                  zdist = floorz - tm->dropoffz;
+                  toobig = (floorz - tm->dropoffz > 24 * FRACUNIT);
                else
-                  zdist = thing->floorz - floorz;
+                  toobig = (thing->floorz - floorz > 24 * FRACUNIT || 
+                            thing->dropoffz - tm->dropoffz > 24*FRACUNIT);
                
-               if(zdist > 24*FRACUNIT || 
-                  thing->dropoffz - tm->dropoffz > 24*FRACUNIT)
+               if(toobig)
                   return false;
             }
             else  // dropoff allowed -- check for whether it fell more than 24

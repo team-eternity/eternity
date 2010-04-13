@@ -692,19 +692,15 @@ static void P_DoNewChaseDir(mobj_t *actor, fixed_t deltax, fixed_t deltay)
    dirtype_t turnaround = olddir;
    
    if(turnaround != DI_NODIR)         // find reverse direction
-   {
       turnaround ^= 4;
-   }
 
-   {
-      xdir = 
-         (deltax >  10*FRACUNIT ? DI_EAST :
-          deltax < -10*FRACUNIT ? DI_WEST : DI_NODIR);
+   xdir = 
+      (deltax >  10*FRACUNIT ? DI_EAST :
+       deltax < -10*FRACUNIT ? DI_WEST : DI_NODIR);
    
-      ydir =
-         (deltay < -10*FRACUNIT ? DI_SOUTH :
-          deltay >  10*FRACUNIT ? DI_NORTH : DI_NODIR);
-   }
+   ydir =
+      (deltay < -10*FRACUNIT ? DI_SOUTH :
+       deltay >  10*FRACUNIT ? DI_NORTH : DI_NODIR);
 
    // try direct route
    if(xdir != DI_NODIR && ydir != DI_NODIR && turnaround != 
@@ -1134,8 +1130,9 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
          {
             if(actor->lastenemy && actor->lastenemy->health > 0)
             {
-               actor->target = actor->lastenemy;
-               actor->lastenemy = NULL;
+               // haleyjd: must use P_SetTarget...
+               P_SetTarget(&actor->target, actor->lastenemy);
+               P_SetTarget(&actor->lastenemy, NULL);
                return true;
             }
          }
@@ -2334,7 +2331,7 @@ void A_FireCrackle(mobj_t* actor)
 
 void A_Fire(mobj_t *actor)
 {
-   unsigned an;
+   angle_t an;
    mobj_t *dest = actor->tracer;
    
    if(!dest)
