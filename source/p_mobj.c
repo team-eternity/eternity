@@ -254,7 +254,7 @@ void P_ExplodeMissile(mobj_t *mo)
 
    P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
 
-   if(GameModeInfo->type == Game_DOOM)
+   if(!(mo->flags4 & MF4_NORANDOMIZE))
    {
       mo->tics -= P_Random(pr_explode) & 3;
 
@@ -289,6 +289,9 @@ void P_XYMovement(mobj_t* mo)
    player_t *player = mo->player;
    fixed_t xmove, ymove;
 
+   //e6y
+   fixed_t oldx, oldy; // phares 9/10/98: reducing bobbing/momentum on ice
+
    if(!(mo->momx | mo->momy)) // Any momentum?
    {
       if(mo->flags & MF_SKULLFLY)
@@ -319,6 +322,10 @@ void P_XYMovement(mobj_t* mo)
 
    xmove = mo->momx;
    ymove = mo->momy;
+
+   oldx = mo->x; // phares 9/10/98: new code to reduce bobbing/momentum
+   oldy = mo->y; // when on ice & up against wall. These will be compared
+                 // to your x,y values later to see if you were able to move
 
    do
    {
@@ -472,11 +479,14 @@ void P_XYMovement(mobj_t* mo)
    }
 #endif
 
-   // no friction for missiles or skulls ever, no friction when airborne
-   if(mo->flags & (MF_MISSILE | MF_SKULLFLY) ||
-      (mo->z > mo->floorz &&
-       (comp[comp_overunder] ||
-        !(mo->intflags & MIF_ONMOBJ)))) // haleyjd: OVER_UNDER
+   // no friction for missiles or skulls ever
+   if(mo->flags & (MF_MISSILE | MF_SKULLFLY))
+      return;
+   
+   // no friction when airborne
+   // haleyjd: OVER_UNDER
+   if(mo->z > mo->floorz && 
+      (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
    // killough 8/11/98: add bouncers
@@ -516,33 +526,53 @@ void P_XYMovement(mobj_t* mo)
    }
    else
    {
-      // phares 3/17/98
-      //
-      // Friction will have been adjusted by friction thinkers for
-      // icy or muddy floors. Otherwise it was never touched and
-      // remained set at ORIG_FRICTION
-      //
-      // killough 8/28/98: removed inefficient thinker algorithm,
-      // instead using touching_sectorlist in P_GetFriction() to
-      // determine friction (and thus only when it is needed).
-      //
-      // killough 10/98: changed to work with new bobbing method.
-      // Reducing player momentum is no longer needed to reduce
-      // bobbing, so ice works much better now.
-
-      fixed_t friction = P_GetFriction(mo, NULL);
-
-      mo->momx = FixedMul(mo->momx, friction);
-      mo->momy = FixedMul(mo->momy, friction);
-
-      // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
-      // This prevents problems with bobbing on ice, where it was not being
-      // reduced fast enough, leading to all sorts of kludges being developed.
-
-      if(player && player->mo == mo)     //  Not voodoo dolls
+      // haleyjd 04/11/10: BOOM friction compatibility 
+      if(demo_version <= 201)
       {
-         player->momx = FixedMul(player->momx, ORIG_FRICTION);
-         player->momy = FixedMul(player->momy, ORIG_FRICTION);
+         // phares 3/17/98
+         // Friction will have been adjusted by friction thinkers for icy
+         // or muddy floors. Otherwise it was never touched and
+         // remained set at ORIG_FRICTION
+         mo->momx = FixedMul(mo->momx, mo->friction);
+         mo->momy = FixedMul(mo->momy, mo->friction);
+         mo->friction = ORIG_FRICTION; // reset to normal for next tic
+      }
+      else if(demo_version <= 202)
+      {
+         // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
+
+         if ((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
+         { 
+            // No. Use original friction. This allows you to not bob so much
+            // if you're on ice, but keeps enough momentum around to break free
+            // when you're mildly stuck in a wall.
+            mo->momx = FixedMul(mo->momx, ORIG_FRICTION);
+            mo->momy = FixedMul(mo->momy, ORIG_FRICTION);
+         }
+         else
+         { 
+            // Yes. Use stored friction.
+            mo->momx = FixedMul(mo->momx,mo->friction);
+            mo->momy = FixedMul(mo->momy,mo->friction);
+         }
+         mo->friction = ORIG_FRICTION; // reset to normal for next tic
+      }
+      else
+      {
+         fixed_t friction = P_GetFriction(mo, NULL);
+
+         mo->momx = FixedMul(mo->momx, friction);
+         mo->momy = FixedMul(mo->momy, friction);
+
+         // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
+         // This prevents problems with bobbing on ice, where it was not being
+         // reduced fast enough, leading to all sorts of kludges being developed.
+
+         if(player && player->mo == mo) // Not voodoo dolls
+         {
+            player->momx = FixedMul(player->momx, ORIG_FRICTION);
+            player->momy = FixedMul(player->momy, ORIG_FRICTION);
+         }
       }
    }
 }
@@ -808,9 +838,9 @@ floater:
    else if(mo->flags2 & MF2_LOGRAV) // haleyjd 04/09/99
    {
       if(!mo->momz)
-         mo->momz = -(LevelInfo.gravity >> 3) * 2;
+         mo->momz = -(LevelInfo.gravity / 8) * 2;
       else
-         mo->momz -= LevelInfo.gravity >> 3;
+         mo->momz -= LevelInfo.gravity / 8;
    }
    else // still above the floor
    {
@@ -1389,6 +1419,9 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    P_AddThinker(&mobj->thinker);
 
+   // e6y
+   mobj->friction = ORIG_FRICTION;
+
    // haleyjd 01/12/04: support translation lumps
    if(mobj->info->colour)
       mobj->colour = mobj->info->colour;
@@ -1799,16 +1832,25 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing)
 
    if(i == NUMMOBJTYPES)
    {
-      doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
-                  mthing->type, mthing->x, mthing->y);
-
-      // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
-      // at user's discretion, but not when recording/playing demos or in
-      // netgames.
-      if(markUnknowns && !(netgame || demorecording || demoplayback))
-         i = UnknownThingType;
+      // haleyjd: handle Doom Builder camera spots specially here, so that they
+      // cannot desync demos recorded in BOOM-compatible ports
+      if(mthing->type == 32000 && !(netgame || demorecording || demoplayback))
+      {
+         i = E_SafeThingName("DoomBuilderCameraSpot");
+      }
       else
-         return NULL;  // sf
+      {
+         doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
+                     mthing->type, mthing->x, mthing->y);
+
+         // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
+         // at user's discretion, but not when recording/playing demos or in
+         // netgames.
+         if(markUnknowns && !(netgame || demorecording || demoplayback))
+            i = UnknownThingType;
+         else
+            return NULL;  // sf
+      }
    }
 
    // don't spawn keycards and players in deathmatch
@@ -1860,7 +1902,7 @@ spawnit:
 
    mobj->spawnpoint = *mthing;
 
-   if(mobj->tics > 0)
+   if(mobj->tics > 0 && !(mobj->flags4 & MF4_SYNCHRONIZED))
       mobj->tics = 1 + (P_Random(pr_spawnthing) % mobj->tics);
 
    if(!(mobj->flags & MF_FRIEND) &&
@@ -2041,7 +2083,7 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 
 void P_CheckMissileSpawn(mobj_t* th)
 {
-   if(GameModeInfo->type == Game_DOOM)
+   if(!(th->flags4 & MF4_NORANDOMIZE))
    {
       th->tics -= P_Random(pr_missile)&3;
       if(th->tics < 1)
@@ -2336,7 +2378,7 @@ void P_AdjustFloorClip(mobj_t *thing)
       player_t *p = thing->player;
 
       p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) >> 3;
+      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
    }
 }
 

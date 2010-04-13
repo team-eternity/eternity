@@ -215,7 +215,7 @@ static void MN_DrawSlider(int x, int y, int pct)
    int i;
    int draw_x = x;
    int slider_width = 0;       // find slider width in pixels
-   int16_t wl, wm, ws;
+   int16_t wl, wm, ws, hs;
 
    // load slider gfx
    slider_gfx[slider_left]   = W_CacheLumpName("M_SLIDEL", PU_STATIC);
@@ -226,6 +226,19 @@ static void MN_DrawSlider(int x, int y, int pct)
    wl = SwapShort(slider_gfx[slider_left]->width);
    wm = SwapShort(slider_gfx[slider_mid]->width);
    ws = SwapShort(slider_gfx[slider_slider]->width);
+   hs = SwapShort(slider_gfx[slider_slider]->height);
+
+   // haleyjd 04/09/2010: offset y relative to menu font
+   if(menu_font->absh > hs + 1)
+   {
+      int yamt = menu_font->absh - hs;
+
+      // tend toward the higher pixel when amount is odd
+      if(yamt % 2)
+         ++yamt;
+
+      y += yamt / 2;
+   }
   
    V_DrawPatch(draw_x, y, &vbscreen, slider_gfx[slider_left]);
    draw_x += wl;

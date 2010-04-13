@@ -74,11 +74,14 @@ void P_Thrust(player_t* player,angle_t angle,fixed_t move)
 // occur on conveyors, unless the player walks on one, and bobbing should be
 // reduced at a regular rate, even on ice (where the player coasts).
 //
-
 void P_Bob(player_t *player, angle_t angle, fixed_t move)
 {
-  player->momx += FixedMul(move,finecosine[angle >>= ANGLETOFINESHIFT]);
-  player->momy += FixedMul(move,finesine[angle]);
+   // e6y
+   if(demo_version < 203)
+      return;
+
+   player->momx += FixedMul(move,finecosine[angle >>= ANGLETOFINESHIFT]);
+   player->momy += FixedMul(move,finesine[angle]);
 }
 
 //
@@ -107,15 +110,38 @@ void P_CalcHeight(player_t *player)
    // haleyjd: cph found out this can affect demo sync due to
    // differences it introduces in firing height etc. so it needs to be
    // optioned.
+   // 04/11/10: refactored
 
-   player->bob = demo_compatibility ?
-      (FixedMul(player->mo->momx, player->mo->momx) +
-       FixedMul(player->mo->momy, player->mo->momy)) >> 2 :
-      player_bobbing ? (FixedMul(player->momx, player->momx) + 
-                        FixedMul(player->momy, player->momy)) >> 2 : 0;
+   player->bob = 0;
+   if(demo_version >= 203)
+   {
+      if(player_bobbing)
+      {
+         player->bob = (FixedMul(player->momx, player->momx) +
+                        FixedMul(player->momy, player->momy)) >> 2;
+      }
+   }
+   else
+   {
+      if(demo_compatibility || player_bobbing)
+      {
+         player->bob = (FixedMul(player->mo->momx, player->mo->momx) +
+                        FixedMul(player->mo->momy, player->mo->momy)) >> 2;
+      }
+   }
 
-   if(player->bob > MAXBOB)
-      player->bob = MAXBOB;
+   // haleyjd 04/11/10:
+   // e6y
+   if(demo_version == 202 && player->mo->friction > ORIG_FRICTION) // ice?
+   {
+      if(player->bob > (MAXBOB>>2))
+         player->bob = MAXBOB>>2;
+   }
+   else
+   {
+      if(player->bob > MAXBOB)
+         player->bob = MAXBOB;
+   }
 
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
@@ -183,7 +209,7 @@ void P_CalcHeight(player_t *player)
 // Adds momentum if the player is not in the air
 //
 // killough 10/98: simplified
-
+//
 void P_MovePlayer(player_t* player)
 {
    ticcmd_t *cmd = &player->cmd;
@@ -202,7 +228,8 @@ void P_MovePlayer(player_t* player)
    // ice, because the player still "works just as hard" to move, while the
    // thrust applied to the movement varies with 'movefactor'.
    
-   if (cmd->forwardmove | cmd->sidemove) // killough 10/98
+   if((!demo_compatibility && demo_version < 203) || 
+      (cmd->forwardmove | cmd->sidemove)) // killough 10/98
    {
       if (onground || mo->flags & MF_BOUNCES) // killough 8/9/98
       {

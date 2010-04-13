@@ -65,10 +65,13 @@ void HU_FragsInit(void)
 
 extern vfont_t *hud_font;
 
+static boolean fragsdrawn;
+
 void HU_FragsDrawer(void)
 {
-   int i, y;
+   int i, x, y;
    char tempstr[50];
+   patch_t *fragtitle;
 
    if(!show_scores)
       return;
@@ -76,11 +79,16 @@ void HU_FragsDrawer(void)
    if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active)
       && !action_frags) || GameType != gt_dm || automapactive)
       return;
-      
+
    // "frags"
-   V_DrawPatch(FRAGSX, FRAGSY, &vbscreen, 
-               W_CacheLumpName("HU_FRAGS", PU_CACHE));
-   
+
+   // haleyjd 04/08/10: draw more intelligently
+   fragtitle = (patch_t *)(W_CacheLumpName("HU_FRAGS", PU_CACHE));
+   x = (SCREENWIDTH - SwapShort(fragtitle->width)) / 2;
+   y = (NAMEY - SwapShort(fragtitle->height)) / 2;
+
+   V_DrawPatch(x, y, &vbscreen, fragtitle);
+
    y = NAMEY;
    
    for(i = 0; i < num_players; ++i)
@@ -96,83 +104,80 @@ void HU_FragsDrawer(void)
       // box behind frag pic
       // haleyjd 01/12/04: changed translation handling
 
-      V_DrawPatchTranslated
-	(
-	 FRAGNUMX, y,
-	 &vbscreen,
-	 W_CacheLumpName("HU_FRGBX", PU_CACHE),
-	 sortedplayers[i]->colormap ?
-            translationtables[(sortedplayers[i]->colormap - 1)] :
-	    NULL,
-	 false
-	 );
-
-       // draw the frags
-       psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
-       V_FontWriteText(hud_font, tempstr, 
-                       FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr)/2, y);
-       y += 10;
+      V_DrawPatchTranslated(FRAGNUMX, y, &vbscreen,
+                            W_CacheLumpName("HU_FRGBX", PU_CACHE),
+                            sortedplayers[i]->colormap ?
+                            translationtables[(sortedplayers[i]->colormap - 1)] :
+                            NULL, false);
+      // draw the frags
+      psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
+      V_FontWriteText(hud_font, tempstr, 
+                      FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr)/2, y);
+      y += 10;
    }
+
+   fragsdrawn = true;
 }
 
 void HU_FragsUpdate(void)
 {
-  int i,j;
-  int change;
-  player_t *temp;
-  
-  num_players = 0;
-  
-  for(i=0; i<MAXPLAYERS; i++)
-    {
+   int i,j;
+   int change;
+   player_t *temp;
+
+   num_players = 0;
+
+   for(i=0; i<MAXPLAYERS; i++)
+   {
       if(!playeringame[i]) continue;
-      
+
       // found a real player
       // add to list
-      
+
       sortedplayers[num_players] = &players[i];
       num_players++;
 
       players[i].totalfrags = 0; // reset frag count
 
       for(j=0; j<MAXPLAYERS; j++)  // add all frags for this player
-	{
-	  if(!playeringame[j]) continue;
-	  if(i==j) players[i].totalfrags-=players[i].frags[j];
-	  else players[i].totalfrags+=players[i].frags[j];
-	}
-    }
+      {
+         if(!playeringame[j]) continue;
+         if(i==j) players[i].totalfrags-=players[i].frags[j];
+         else players[i].totalfrags+=players[i].frags[j];
+      }
+   }
 
-  // use the bubble sort algorithm to sort the players
-  
-  change = true;
-  while(change)
-    {
+   // use the bubble sort algorithm to sort the players
+
+   change = true;
+   while(change)
+   {
       change = false;
       for(i=0; i<num_players-1; i++)
-	{
-	  if(sortedplayers[i]->totalfrags <
-	     sortedplayers[i+1]->totalfrags)
-	    {
-	      temp = sortedplayers[i];
-	      sortedplayers[i] = sortedplayers[i+1];
-	      sortedplayers[i+1] = temp;
-	      change = true;
-	    }
-	}
-    }
+      {
+         if(sortedplayers[i]->totalfrags <
+            sortedplayers[i+1]->totalfrags)
+         {
+            temp = sortedplayers[i];
+            sortedplayers[i] = sortedplayers[i+1];
+            sortedplayers[i+1] = temp;
+            change = true;
+         }
+      }
+   }
 }
 
 void HU_FragsErase(void)
 {
-   int top_y;
-   
-   if(!(GameType == gt_dm))
+   if(GameType != gt_dm)
       return;
-   
-   top_y = SCREENHEIGHT - GameModeInfo->StatusBar->height;
-   
-   R_VideoErase(0, FRAGSY, SCREENWIDTH, FRAGSY - top_y); // ANYRES
+
+   if(fragsdrawn)
+   {
+      // FIXME: SUBOPTIMAL
+      R_VideoErase(0, 0, SCREENWIDTH, SCREENHEIGHT);
+      fragsdrawn = false;
+   }
 }
 
 ////////////////////////////////////

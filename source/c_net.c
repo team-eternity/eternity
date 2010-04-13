@@ -164,10 +164,7 @@ void C_NetInit(void)
   {
      incomingdest[i] = -1;
      M_QStrInitCreate(&incomingmsg[i]);
-  }
-  
-  players[consoleplayer].colormap = default_colour;
-  strcpy(players[consoleplayer].name, default_name);
+  }  
 }
 
 void C_DealWithChar(unsigned char c, int source);

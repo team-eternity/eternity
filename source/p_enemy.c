@@ -121,9 +121,9 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) 
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
                              - R_FPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) >> 1) 
+                            ((check->v1->y + check->v2->y) / 2) 
                              - R_FPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
@@ -137,8 +137,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-      R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - R_CPLink(sec)->deltax,
-                         ((check->v1->y + check->v2->y) >> 1) - R_CPLink(sec)->deltay)->sector;
+      R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - R_CPLink(sec)->deltax,
+                         ((check->v1->y + check->v2->y) / 2) - R_CPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -155,8 +155,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
          sector_t *other;
 
          other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - check->portal->data.link.deltax,
-                            ((check->v1->y + check->v2->y) >> 1) - check->portal->data.link.deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - check->portal->data.link.deltax,
+                            ((check->v1->y + check->v2->y) / 2) - check->portal->data.link.deltay)->sector;
 
          P_RecursiveSound(other, soundblocks, soundtarget);
       }
@@ -433,7 +433,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(!comp[comp_overunder])
    {
-      if(!(actor->flags & MF_NOGRAVITY) && actor->z > actor->floorz && 
+      if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
       {
          if (actor->z > actor->floorz + 24*FRACUNIT)
@@ -564,8 +564,18 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
       // haleyjd 01/09/07: do not leave numspechit == -1
       tm->numspechit = 0;
 
+      // haleyjd 04/11/10: wider compatibility range
+      if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
+         return good;
+      else if(demo_version == 202) // BOOM 2.02
+         return (P_Random(pr_trywalk) & 3);
+      else // MBF or higher
+         return ((P_Random(pr_opendoor) >= 230) ^ (good & 1));
+
+      /*
       return good && (demo_version < 203 || comp[comp_doorstuck] ||
                       (P_Random(pr_opendoor) >= 230) ^ (good & 1));
+      */
    }
    else
    {
@@ -1116,7 +1126,22 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
 
       // killough 2/15/98, 9/9/98:
       if(c++ == stopc || actor->lastlook == stop)  // done looking
+      {
+         // e6y
+         // Fixed Boom incompatibilities. The following code was missed.
+         // There are no more desyncs on Donce's demos on horror.wad
+         if(demo_version < 203 && !demo_compatibility && monsters_remember)
+         {
+            if(actor->lastenemy && actor->lastenemy->health > 0)
+            {
+               actor->target = actor->lastenemy;
+               actor->lastenemy = NULL;
+               return true;
+            }
+         }
+
          return false;
+      }
       
       player = &players[actor->lastlook];
       

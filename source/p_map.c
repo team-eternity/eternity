@@ -214,7 +214,7 @@ static boolean PIT_StompThing(mobj_t *thing)
 // P_GetFriction()
 //
 // Returns the friction associated with a particular mobj.
-
+//
 int P_GetFriction(const mobj_t *mo, int *frictionfactor)
 {
    int friction = ORIG_FRICTION;
@@ -259,10 +259,52 @@ int P_GetFriction(const mobj_t *mo, int *frictionfactor)
 // movements are multiplied to add to player movement.
 //
 // killough 8/28/98: rewritten
-
-int P_GetMoveFactor(const mobj_t *mo, int *frictionp)
+//
+int P_GetMoveFactor(mobj_t *mo, int *frictionp)
 {
    int movefactor, friction;
+
+   // haleyjd 04/11/10: restored BOOM friction code for compatibility
+   if(demo_version < 203)
+   {
+      int momentum;
+
+      movefactor = ORIG_FRICTION_FACTOR;
+
+      if(!compatibility && variable_friction && 
+         !(mo->flags & (MF_NOGRAVITY | MF_NOCLIP)))
+      {
+         friction = mo->friction;
+
+         if (friction == ORIG_FRICTION)            // normal floor
+            ;
+         else if (friction > ORIG_FRICTION)        // ice
+         {
+            movefactor = mo->movefactor;
+            mo->movefactor = ORIG_FRICTION_FACTOR;  // reset
+         }
+         else                                      // sludge
+         {
+            // phares 3/11/98: you start off slowly, then increase as
+            // you get better footing
+
+            momentum = (P_AproxDistance(mo->momx, mo->momy));
+            movefactor = mo->movefactor;
+            if (momentum > MORE_FRICTION_MOMENTUM<<2)
+               movefactor <<= 3;
+
+            else if (momentum > MORE_FRICTION_MOMENTUM<<1)
+               movefactor <<= 2;
+
+            else if (momentum > MORE_FRICTION_MOMENTUM)
+               movefactor <<= 1;
+
+            mo->movefactor = ORIG_FRICTION_FACTOR;  // reset
+         }
+      }
+
+      return movefactor;
+   }
    
    // If the floor is icy or muddy, it's harder to get moving. This is where
    // the different friction factors are applied to 'trying to move'. In
@@ -1624,13 +1666,25 @@ static void P_HitSlideLine(line_t *ld)
    //
    // Check for the special cases of horz or vert walls.
 
-   // killough 10/98: only bounce if hit hard (prevents wobbling)
-   icyfloor = 
-      (demo_version >= 203 ? 
-       P_AproxDistance(tmxmove, tmymove) > 4*FRACUNIT : !compatibility) &&
-      variable_friction &&  // killough 8/28/98: calc friction on demand
-      slidemo->z <= slidemo->floorz &&
-      P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
+   // haleyjd 04/11/10: BOOM friction compatibility fixes
+   if(demo_version >= 203)
+   {
+      // killough 10/98: only bounce if hit hard (prevents wobbling)
+      icyfloor =
+         P_AproxDistance(tmxmove, tmymove) > 4*FRACUNIT &&
+         variable_friction &&  // killough 8/28/98: calc friction on demand
+         slidemo->z <= slidemo->floorz &&
+         P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
+   }
+   else
+   {
+      extern boolean onground;
+      icyfloor = !compatibility &&
+         variable_friction &&
+         slidemo->player &&
+         onground && 
+         slidemo->friction > ORIG_FRICTION;
+   }
 
    if(ld->slopetype == ST_HORIZONTAL)
    {

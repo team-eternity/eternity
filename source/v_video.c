@@ -205,19 +205,19 @@ void V_InitColorTranslation(void)
 // Marks the destination rectangle on the screen dirty.
 //
 // No return value.
-
+//
 void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
-		int height, int destx, int desty, VBuffer *dest)
+		          int height, int destx, int desty, VBuffer *dest)
 {
    byte *srcp;
    byte *destp;
    int  p1, p2, x2, y2, maxw, maxh;
 
    // SoM: Do not attempt to copy across scaled buffers with different scales
-   if(src->scaled != dest->scaled || 
+   if(src->scaled  != dest->scaled  || 
       src->ixscale != dest->ixscale || 
       src->iyscale != dest->iyscale)
-      I_Error("V_CopyRect: attempted to copy a rect between two VBuffer objects with different scaling systems.");
+      I_Error("V_CopyRect: src and dest VBuffers have different scaling.");
 
    // Maxw is the widest of the two buffers.
    maxw = src->unscaledw > dest->unscaledw ? dest->unscaledw : src->unscaledw;
@@ -226,34 +226,40 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
    x2 = srcx + width;
    y2 = srcy + height;
 
-   if(srcx < 0) srcx = 0;
-   if(x2 > maxw) x2 = maxw;
-   if(srcy < 0) srcy = 0;
-   if(y2 > maxh) y2 = maxh;
+   if(srcx < 0) 
+      srcx = 0;
+   if(x2 > maxw) 
+      x2 = maxw;
+   if(srcy < 0) 
+      srcy = 0;
+   if(y2 > maxh) 
+      y2 = maxh;
 
    if(x2 <= srcx || y2 <= srcy)
       return;
       
    // SoM: Adjust the width and height.
-   width = x2 - srcx;
+   width  = x2 - srcx;
    height = y2 - srcy;
-  
   
    x2 = destx + width;
    y2 = desty + height;
   
-   if(destx < 0) destx = 0;
-   if(x2 > maxw) x2 = maxw;
-   if(desty < 0) desty = 0;
-   if(y2 > maxh) y2 = maxh;
+   if(destx < 0) 
+      destx = 0;
+   if(x2 > maxw) 
+      x2 = maxw;
+   if(desty < 0) 
+      desty = 0;
+   if(y2 > maxh) 
+      y2 = maxh;
   
    if(x2 <= destx || y2 <= destx)
       return;
 
    // This can only be smaller after clipping.
-   width = x2 - destx;
+   width  = x2 - destx;
    height = y2 - desty;
-   
 
    // This stuff is no longer current anyway
 #ifdef RANGECHECK

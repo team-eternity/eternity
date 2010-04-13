@@ -292,6 +292,8 @@ typedef enum
    MF4_FORCERADIUSDMG = 0x00000004, // Does radius damage to everything, no exceptions
    MF4_LOOKALLAROUND  = 0x00000008, // Looks all around (like an AMBUSH monster)
    MF4_NODAMAGE       = 0x00000010, // Takes no damage but still reacts normally
+   MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
+   MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
 } mobjflag4_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -452,6 +454,9 @@ struct mobj_s
 
    // killough 8/2/98: friction properties part of sectors,
    // not objects -- removed friction properties from here
+   // haleyjd 04/11/10: added back for compatibility code segments
+   int friction;
+   int movefactor;
 
    // a linked list of sectors where this object appears
    struct msecnode_s* touching_sectorlist;                 // phares 3/14/98
