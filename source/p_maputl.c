@@ -144,12 +144,11 @@ fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
 
 //
 // P_LineOpening
+//
 // Sets opentop and openbottom to the window
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
 //
-
-
 void P_LineOpening(line_t *linedef, mobj_t *mo)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
@@ -163,39 +162,45 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    }
    
    tm->openfrontsector = linedef->frontsector;
-   tm->openbacksector = linedef->backsector;
+   tm->openbacksector  = linedef->backsector;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openfrontsector) &&
+      if(mo && demo_version >= 333 && 
+         R_LinkedCeilingActive(tm->openfrontsector) &&
          R_LinkedCeilingActive(tm->openbacksector) && 
          tm->openfrontsector->c_portal == tm->openbacksector->c_portal)
+      {
          frontceilz = backceilz = tm->openfrontsector->ceilingheight + (1024 * FRACUNIT);
+      }
       else
 #endif
       {
          frontceilz = tm->openfrontsector->ceilingheight;
-         backceilz = tm->openbacksector->ceilingheight;
+         backceilz  = tm->openbacksector->ceilingheight;
       }
       
       frontcz = tm->openfrontsector->ceilingheight;
-      backcz = tm->openbacksector->ceilingheight;
+      backcz  = tm->openbacksector->ceilingheight;
    }
 
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openfrontsector) &&
+      if(mo && demo_version >= 333 && 
+         R_LinkedFloorActive(tm->openfrontsector) &&
          R_LinkedFloorActive(tm->openbacksector) && 
          tm->openfrontsector->f_portal == tm->openbacksector->f_portal)
+      {
          frontfloorz = backfloorz = tm->openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+      }
       else 
 #endif
       {
          frontfloorz = tm->openfrontsector->floorheight;
-         backfloorz = tm->openbacksector->floorheight;
+         backfloorz  = tm->openbacksector->floorheight;
       }
 
       frontfz = tm->openfrontsector->floorheight;
@@ -234,7 +239,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       obot = backfz;
 
    tm->opensecfloor = tm->openbottom;
-   tm->opensecceil = tm->opentop;
+   tm->opensecceil  = tm->opentop;
 
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
@@ -244,10 +249,6 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       fixed_t textop, texbot, texmid;
       side_t *side = &sides[linedef->sidenum[0]];
       
-      if(linedef - lines == 1882 && mo->player)
-      {
-         linedef = linedef;
-      }
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
          texbot = side->rowoffset + obot;
@@ -296,15 +297,48 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 //
 
 //
+// P_LogThingPosition
+//
+// haleyjd 04/15/2010: thing position logging for debugging demo problems.
+// Pass a NULL mobj to close the log.
+//
+void P_LogThingPosition(mobj_t *mo, const char *caller)
+{
+#ifdef THING_LOGGING
+   static FILE *thinglog;
+
+   if(!thinglog)
+      thinglog = fopen("thinglog.txt", "w");
+
+   if(!mo)
+   {
+      if(thinglog)
+         fclose(thinglog);
+      thinglog = NULL;
+      return;
+   }
+
+   if(thinglog)
+   {
+      fprintf(thinglog,
+         "%010d:%s:%p:%20s:%+010d:%+010d:%+010d:%+010d\n",
+         gametic, caller, mo, mo->info->name, mo->x, mo->y, mo->z, mo->flags);
+   }
+#endif
+}
+
+
+//
 // P_UnsetThingPosition
 // Unlinks a thing from block map and sectors.
 // On each position change, BLOCKMAP and other
 // lookups maintaining lists ot things inside
 // these structures need to be updated.
 //
-
 void P_UnsetThingPosition (mobj_t *thing)
 {
+   P_LogThingPosition(thing, "unset");
+
    if(!(thing->flags & MF_NOSECTOR))
    {
       // invisible things don't need to be in sector list
@@ -368,6 +402,8 @@ void P_SetThingPosition(mobj_t *thing)
 {                                                      // link into subsector
    subsector_t *ss = thing->subsector = 
       R_PointInSubsector(thing->x, thing->y);
+
+   P_LogThingPosition(thing, " set ");
 
 #ifdef R_LINKEDPORTALS
    thing->groupid = ss->sector->groupid;

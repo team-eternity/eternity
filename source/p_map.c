@@ -345,7 +345,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
    telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-      (comp[comp_telefrag] || demo_version < 203 ? gamemap==30 : boss);
+              (!comp[comp_telefrag] ? boss : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -360,7 +360,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    tm->bbox[BOXRIGHT]  = x + tm->thing->radius;
    tm->bbox[BOXLEFT]   = x - tm->thing->radius;
    
-   newsubsec = R_PointInSubsector (x,y);
+   newsubsec = R_PointInSubsector(x,y);
    tm->ceilingline = NULL;
    
    // The base floor/ceiling is from the subsector
@@ -369,15 +369,17 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    // will adjust them.
    
 #ifdef R_LINKEDPORTALS
+    //newsubsec->sector->floorheight - tm->thing->height;
    if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector))
-      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS); //newsubsec->sector->floorheight - tm->thing->height;
+      tm->floorz = tm->dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS);
    else
 #endif
       tm->floorz = tm->dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
+    //newsubsec->sector->ceilingheight + tm->thing->height;
    if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector))
-      tm->ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS); //newsubsec->sector->ceilingheight + tm->thing->height;
+      tm->ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS);
    else
 #endif
       tm->ceilingz = newsubsec->sector->ceilingheight;
@@ -402,34 +404,33 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 #endif
       func = PIT_StompThing;
    
-   xl = (tm->bbox[BOXLEFT] - bmaporgx - MAXRADIUS)>>MAPBLOCKSHIFT;
-   xh = (tm->bbox[BOXRIGHT] - bmaporgx + MAXRADIUS)>>MAPBLOCKSHIFT;
-   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS)>>MAPBLOCKSHIFT;
-   yh = (tm->bbox[BOXTOP] - bmaporgy + MAXRADIUS)>>MAPBLOCKSHIFT;
+   xl = (tm->bbox[BOXLEFT  ] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT ] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP   ] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
-   for(bx=xl ; bx<=xh ; bx++)
+   for(bx = xl; bx <= xh; bx++)
    {
-      for(by=yl ; by<=yh ; by++)
+      for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockThingsIterator(bx,by,func))
+         if(!P_BlockThingsIterator(bx, by, func))
             return false;
       }
    }
-
 
    // the move is ok,
    // so unlink from the old position & link into the new position
    
    P_UnsetThingPosition(thing);
    
-   thing->floorz = tm->floorz;
+   thing->floorz   = tm->floorz;
    thing->ceilingz = tm->ceilingz;
    thing->dropoffz = tm->dropoffz;        // killough 11/98
 
    thing->passfloorz = tm->passfloorz;
-   thing->passceilz = tm->passceilz;
-   thing->secfloorz = tm->secfloorz;
-   thing->secceilz = tm->secceilz;
+   thing->passceilz  = tm->passceilz;
+   thing->secfloorz  = tm->secfloorz;
+   thing->secceilz   = tm->secceilz;
    
    thing->x = x;
    thing->y = y;
@@ -890,8 +891,8 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    // missiles can hit other things
    // killough 8/10/98: bouncing non-solid things can hit other things too
    
-   if(tm->thing->flags & MF_MISSILE || (tm->thing->flags & MF_BOUNCES &&
-                                      !(tm->thing->flags & MF_SOLID)))
+   if(tm->thing->flags & MF_MISSILE || 
+      (tm->thing->flags & MF_BOUNCES && !(tm->thing->flags & MF_SOLID)))
    {
       // haleyjd 07/06/05: some objects may use info->height instead
       // of their current height value in this situation, to avoid
@@ -1007,8 +1008,12 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
    // despite another solid thing being in the way.
    // killough 4/11/98: Treat no-clipping things as not blocking
 
-   return !((thing->flags & MF_SOLID && !(thing->flags & MF_NOCLIP))
-          && (tm->thing->flags & MF_SOLID || demo_compatibility));
+   // haleyjd: needed for old demos after all?
+   if(demo_compatibility)
+      return !(thing->flags & MF_SOLID);
+   else
+      return !((thing->flags & MF_SOLID && !(thing->flags & MF_NOCLIP))
+               && (tm->thing->flags & MF_SOLID || demo_compatibility));
 
    //return !(thing->flags & MF_SOLID);   // old code -- killough
 }
@@ -1184,6 +1189,162 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 }
 
 //
+// P_CheckDropOffVanilla
+//
+// haleyjd 04/15/2010: Dropoff check for vanilla DOOM compatibility
+//
+static boolean P_CheckDropOffVanilla(mobj_t *thing, boolean dropoff)
+{
+   if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
+      tm->floorz - tm->dropoffz > 24 * FRACUNIT)
+      return false; // don't stand over a dropoff
+
+   return true;
+}
+
+//
+// P_CheckDropOffBOOM
+//
+// haleyjd 04/15/2010: Dropoff check for BOOM compatibility
+//
+static boolean P_CheckDropOffBOOM(mobj_t *thing, boolean dropoff)
+{
+   // killough 3/15/98: Allow certain objects to drop off
+   if(compatibility || !dropoff)
+   {
+      if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
+         tm->floorz - tm->dropoffz > 24 * FRACUNIT)
+         return false; // don't stand over a dropoff
+   }
+
+   return true;
+}
+
+//
+// P_CheckDropOffMBF
+//
+// haleyjd 04/15/2010: Dropoff check for MBF compatibility
+//
+// I am of the opinion that this is the single most-butchered segment of code
+// in the entire engine.
+//
+static boolean P_CheckDropOffMBF(mobj_t *thing, boolean dropoff)
+{
+   // killough 3/15/98: Allow certain objects to drop off
+   // killough 7/24/98, 8/1/98: 
+   // Prevent monsters from getting stuck hanging off ledges
+   // killough 10/98: Allow dropoffs in controlled circumstances
+   // killough 11/98: Improve symmetry of clipping on stairs
+
+   if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
+   {
+      if(comp[comp_dropoff])
+      {
+         // haleyjd: note missing 202 compatibility... WOOPS!
+         if(tm->floorz - tm->dropoffz > 24 * FRACUNIT)
+            return false;
+      }
+      else if(!dropoff || (dropoff == 2 &&
+                           (tm->floorz - tm->dropoffz > 128 * FRACUNIT ||
+                            !thing->target || thing->target->z > tm->dropoffz)))
+      {
+         // haleyjd: I can't even mentally parse this statement with 
+         // any certainty.
+         if(!monkeys || demo_version < 203 ?
+            tm->floorz - tm->dropoffz > 24 * FRACUNIT :
+            thing->floorz - tm->floorz > 24 * FRACUNIT ||
+            thing->dropoffz - tm->dropoffz > 24 * FRACUNIT)
+            return false;
+      }
+      else
+      {
+         tm->felldown = !(thing->flags & MF_NOGRAVITY) && 
+                        thing->z - tm->floorz > 24 * FRACUNIT;
+      }
+   }
+
+   return true;
+}
+
+static boolean on3dmidtex;
+
+//
+// P_CheckDropOffEE
+//
+// haleyjd 04/15/2010: Dropoff checking code for Eternity.
+//
+static boolean P_CheckDropOffEE(mobj_t *thing, boolean dropoff)
+{
+   fixed_t floorz = tm->floorz;
+
+   // haleyjd: OVER_UNDER:
+   // [RH] If the thing is standing on something, use its current z as 
+   // the floorz. This is so that it does not walk off of things onto a 
+   // drop off.
+   if(!comp[comp_overunder] && thing->intflags & MIF_ONMOBJ)
+      floorz = thing->z > tm->floorz ? thing->z : tm->floorz;
+
+   if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
+   {
+      // haleyjd 11/10/04: 3dMidTex: you are never allowed to pass 
+      // over a tall dropoff when on 3DMidTex lines. Note tmfloorz
+      // considers 3DMidTex, so you can still move across 3DMidTex
+      // lines that pass over sector dropoffs, as long as the dropoff
+      // between the 3DMidTex lines is <= 24 units.
+
+      if(on3dmidtex)
+      {
+         // allow appropriate forced dropoff behavior
+         if(!dropoff || (dropoff == 2 && 
+                         (thing->z - tm->floorz > 128*FRACUNIT ||
+                          !thing->target || thing->target->z > tm->floorz)))
+         {
+            // deny any move resulting in a difference > 24
+            if(thing->z - tm->floorz > 24*FRACUNIT)
+               return false;
+         }
+         else  // dropoff allowed
+         {
+            tm->felldown = !(thing->flags & MF_NOGRAVITY) &&
+                           thing->z - tm->floorz > 24*FRACUNIT;
+         }
+         
+         return true;
+      }
+
+      if(comp[comp_dropoff])
+      {
+         if(tm->floorz - tm->dropoffz > 24*FRACUNIT)
+            return false; // don't stand over a dropoff
+      }
+      else if(!dropoff || 
+              (dropoff == 2 &&  // large jump down (e.g. dogs)
+               (floorz - tm->dropoffz > 128*FRACUNIT || 
+                !thing->target || thing->target->z > tm->dropoffz)))
+      {
+         // haleyjd 04/14/10: This is so impossible to read that I have
+         // had to restore it, because I cannot be confident that any of 
+         // my interpretations of it are correct relative to C grammar.
+
+         if(!monkeys || demo_version < 203 ?
+            floorz - tm->dropoffz > 24*FRACUNIT :
+            thing->floorz  - floorz > 24*FRACUNIT ||
+            thing->dropoffz - tm->dropoffz > 24*FRACUNIT)
+            return false;
+      }
+      else  // dropoff allowed -- check for whether it fell more than 24
+      {
+         tm->felldown = !(thing->flags & MF_NOGRAVITY) &&
+                        thing->z - floorz > 24*FRACUNIT;
+      }
+   }
+
+   return true;
+}
+
+typedef boolean (*dropoff_func_t)(mobj_t *, boolean);
+
+//
 // P_TryMove
 //
 // Attempt to move to a new position,
@@ -1194,6 +1355,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
 {
    fixed_t oldx, oldy, oldz;
+   dropoff_func_t dropofffunc;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
    // passfloorz is the floor as determined from sectors and 3DMidTex.
@@ -1202,9 +1364,9 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
    // the thing is at its floorz, then it is on a 3DMidTex line.
    // Complicated. x_x
 
-   boolean on3dmidtex = (thing->passfloorz == thing->floorz &&
-                         thing->passfloorz != thing->secfloorz &&
-                         thing->z == thing->floorz);
+   on3dmidtex = (thing->passfloorz == thing->floorz &&
+                 thing->passfloorz != thing->secfloorz &&
+                 thing->z == thing->floorz);
    
    tm->felldown = tm->floatok = false;               // killough 11/98
 
@@ -1286,81 +1448,19 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
          }
       }
       
-      // killough 3/15/98: Allow certain objects to drop off
-      // killough 7/24/98, 8/1/98: 
-      // Prevent monsters from getting stuck hanging off ledges
-      // killough 10/98: Allow dropoffs in controlled circumstances
-      // killough 11/98: Improve symmetry of clipping on stairs
+      // haleyjd: dropoff handling moved to functions above for my sanity.
+      // May I NEVER have to do something like this, ever again.
+      if(demo_version < 200)                 // DOOM 1.9
+         dropofffunc = P_CheckDropOffVanilla;
+      else if(demo_version <= 202)           // BOOM
+         dropofffunc = P_CheckDropOffBOOM;
+      else if(demo_version == 203)           // MBF
+         dropofffunc = P_CheckDropOffMBF;
+      else                                   // EE
+         dropofffunc = P_CheckDropOffEE;
 
-      // haleyjd 11/10/04: 3dMidTex: eliminated old code
-      if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
-      {
-         // haleyjd 11/10/04: 3dMidTex: you are never allowed to pass 
-         // over a tall dropoff when on 3DMidTex lines. Note tmfloorz
-         // considers 3DMidTex, so you can still move across 3DMidTex
-         // lines that pass over sector dropoffs, as long as the dropoff
-         // between the 3DMidTex lines is <= 24 units.
-
-         if(demo_version >= 331 && on3dmidtex)
-         {
-            // allow appropriate forced dropoff behavior
-            if(!dropoff || 
-               (dropoff == 2 && 
-                (thing->z - tm->floorz > 128*FRACUNIT ||
-                 !thing->target || thing->target->z > tm->floorz)))
-            {
-               // deny any move resulting in a difference > 24
-               if(thing->z - tm->floorz > 24*FRACUNIT)
-                  return false;
-            }
-            else  // dropoff allowed
-            {
-               tm->felldown = !(thing->flags & MF_NOGRAVITY) &&
-                      thing->z - tm->floorz > 24*FRACUNIT;
-            }
-         }
-         else if(comp[comp_dropoff])
-         {
-            if(tm->floorz - tm->dropoffz > 24*FRACUNIT)
-               return false;                      // don't stand over a dropoff
-         }
-         else
-         {
-            fixed_t floorz = tm->floorz;
-
-            // haleyjd: OVER_UNDER:
-            // [RH] If the thing is standing on something, use its current z as 
-            // the floorz. This is so that it does not walk off of things onto a 
-            // drop off.
-            if(!comp[comp_overunder] &&
-               thing->intflags & MIF_ONMOBJ)
-            {
-               floorz = thing->z > tm->floorz ? thing->z : tm->floorz;
-            }
-
-            if(!dropoff || 
-               (dropoff == 2 &&  // large jump down (e.g. dogs)
-                (floorz - tm->dropoffz > 128*FRACUNIT || 
-                 !thing->target || thing->target->z > tm->dropoffz)))
-            {
-               boolean toobig;
-
-               if(!monkeys || demo_version < 203)
-                  toobig = (floorz - tm->dropoffz > 24 * FRACUNIT);
-               else
-                  toobig = (thing->floorz - floorz > 24 * FRACUNIT || 
-                            thing->dropoffz - tm->dropoffz > 24*FRACUNIT);
-               
-               if(toobig)
-                  return false;
-            }
-            else  // dropoff allowed -- check for whether it fell more than 24
-            {
-               tm->felldown = !(thing->flags & MF_NOGRAVITY) &&
-                      thing->z - floorz > 24*FRACUNIT;
-            }
-         }
-      }
+      if(!dropofffunc(thing, dropoff))
+         return false; // don't stand over a dropoff
 
       if(thing->flags & MF_BOUNCES &&    // killough 8/13/98
          !(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
@@ -2499,17 +2599,17 @@ void P_CreateSecNodeList(mobj_t *thing,fixed_t x,fixed_t y)
    tm->x = x;
    tm->y = y;
    
-   tm->bbox[BOXTOP]  = y + tm->thing->radius;
+   tm->bbox[BOXTOP]    = y + tm->thing->radius;
    tm->bbox[BOXBOTTOM] = y - tm->thing->radius;
    tm->bbox[BOXRIGHT]  = x + tm->thing->radius;
    tm->bbox[BOXLEFT]   = x - tm->thing->radius;
 
    validcount++; // used to make sure we only process a line once
    
-   xl = (tm->bbox[BOXLEFT] - bmaporgx)>>MAPBLOCKSHIFT;
-   xh = (tm->bbox[BOXRIGHT] - bmaporgx)>>MAPBLOCKSHIFT;
-   yl = (tm->bbox[BOXBOTTOM] - bmaporgy)>>MAPBLOCKSHIFT;
-   yh = (tm->bbox[BOXTOP] - bmaporgy)>>MAPBLOCKSHIFT;
+   xl = (tm->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
+   xh = (tm->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
+   yl = (tm->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   yh = (tm->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
 
    for(bx=xl ; bx<=xh ; bx++)
       for(by=yl ; by<=yh ; by++)
