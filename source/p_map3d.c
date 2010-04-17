@@ -495,7 +495,6 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #endif
 
    clip.thing = thing;
-   clip.flags = thing->flags;
    
    clip.x = x;
    clip.y = y;
@@ -533,7 +532,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
 
-   clip.secfloorz = clip.passfloorz = clip.stepupfloorz = clip.floorz;
+   clip.secfloorz = clip.passfloorz = clip.floorz;
    clip.secceilz = clip.passceilz = clip.ceilingz;
 
    // haleyjd
@@ -545,7 +544,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    clip.numspechit = 0;
 
    // haleyjd 06/28/06: skullfly check from zdoom
-   if(clip.flags & MF_NOCLIP && !(clip.flags & MF_SKULLFLY))
+   if(clip.thing->flags & MF_NOCLIP && !(clip.thing->flags & MF_SKULLFLY))
       return true;
 
    // Check things first, possibly picking things up.
@@ -634,7 +633,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thing->height = realheight;
-   if(clip.flags & MF_NOCLIP)
+   if(clip.thing->flags & MF_NOCLIP)
       return (clip.BlockingMobj = thingblocker) == NULL;
    
    xl = (clip.bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;

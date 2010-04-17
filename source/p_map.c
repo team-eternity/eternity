@@ -351,7 +351,6 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    // kill anything occupying the position
    
    clip.thing = thing;
-   clip.flags = thing->flags;
    
    clip.x = x;
    clip.y = y;
@@ -385,7 +384,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 #endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
 
-   clip.secfloorz = clip.stepupfloorz = clip.passfloorz = clip.floorz;
+   clip.secfloorz = clip.passfloorz = clip.floorz;
    clip.secceilz = clip.passceilz = clip.ceilingz;
 
    // haleyjd
@@ -766,7 +765,7 @@ boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing)
 {
    int solid = thing->flags & MF_SOLID;
 
-   if(clip.flags & MF_PICKUP)
+   if(clip.thing->flags & MF_PICKUP)
       P_TouchSpecialThing(thing, tmthing); // can remove thing
 
    return !solid;
@@ -1107,7 +1106,6 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
       return P_CheckPosition3D(thing, x, y);
    
    clip.thing = thing;
-   clip.flags = thing->flags;
    
    clip.x = x;
    clip.y = y;
@@ -1133,7 +1131,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
    clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
    clip.ceilingz = newsubsec->sector->ceilingheight;
 
-   clip.secfloorz = clip.passfloorz = clip.stepupfloorz = clip.floorz;
+   clip.secfloorz = clip.passfloorz = clip.floorz;
    clip.secceilz = clip.passceilz = clip.ceilingz;
 
    // haleyjd
@@ -1143,7 +1141,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
    validcount++;
    clip.numspechit = 0;
 
-   if(clip.flags & MF_NOCLIP)
+   if(clip.thing->flags & MF_NOCLIP)
       return true;
 
    // Check things first, possibly picking things up.
@@ -2588,7 +2586,6 @@ msecnode_t *P_CreateSecNodeList(mobj_t *thing, fixed_t x, fixed_t y)
       node->m_thing = NULL;
 
    pClip->thing = thing;
-   pClip->flags = thing->flags;
 
    pClip->x = x;
    pClip->y = y;
