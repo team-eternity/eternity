@@ -459,7 +459,8 @@ struct mobj_s
    int movefactor;
 
    // a linked list of sectors where this object appears
-   struct msecnode_s* touching_sectorlist;                 // phares 3/14/98
+   struct msecnode_s *touching_sectorlist;                 // phares 3/14/98
+   struct msecnode_s *old_sectorlist;                      // haleyjd 04/16/10
 
    // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
 
@@ -589,8 +590,6 @@ void P_AdjustFloorClip(mobj_t *thing);
 
 int P_ThingInfoHeight(mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
-
-void P_MobjSetZPos(mobj_t *mobj, fixed_t delta);
 
 // Thing Collections
 

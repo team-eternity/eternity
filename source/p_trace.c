@@ -105,7 +105,7 @@ static boolean P_AimAtThing(intercept_t *in)
       thingbottomslope = trace.bottomslope;
    
    trace.aimslope = (thingtopslope + thingbottomslope) / 2;
-   tm->linetarget = th;
+   clip.linetarget = th;
 
    // We hit a thing so stop any furthur TPTs
    trace.finished = true;
@@ -136,21 +136,21 @@ static boolean PTR_AimTraverse(intercept_t *in)
       
       P_LineOpening(li, NULL);
       
-      if(tm->openbottom >= tm->opentop)
+      if(clip.openbottom >= clip.opentop)
          return false;   // stop
 
       dist = FixedMul(trace.attackrange, in->frac);
       
       if(li->frontsector->floorheight != li->backsector->floorheight)
       {
-         slope = FixedDiv(tm->openbottom - trace.z , dist);
+         slope = FixedDiv(clip.openbottom - trace.z , dist);
          if(slope > trace.bottomslope)
             trace.bottomslope = slope;
       }
 
       if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
       {
-         slope = FixedDiv(tm->opentop - trace.z , dist);
+         slope = FixedDiv(clip.opentop - trace.z , dist);
          if(slope < trace.topslope)
             trace.topslope = slope;
       }
@@ -204,8 +204,8 @@ static boolean P_Shoot2SLine(line_t *li, int side, fixed_t dist)
       (li->frontsector->ceilingheight == li->backsector->ceilingheight &&
        (demo_version < 333 || comp[comp_planeshoot]));
 
-   if((floorsame   || FixedDiv(tm->openbottom - trace.z , dist) <= trace.aimslope) &&
-      (ceilingsame || FixedDiv(tm->opentop - trace.z , dist) >= trace.aimslope))
+   if((floorsame   || FixedDiv(clip.openbottom - trace.z , dist) <= trace.aimslope) &&
+      (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
    {
       if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
          P_ShootSpecialLine(shootthing, li, side);
@@ -583,14 +583,14 @@ fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
    }
    
    trace.attackrange = distance;
-   tm->linetarget = NULL;
+   clip.linetarget = NULL;
 
    // killough 8/2/98: prevent friends from aiming at friends
    aim_flags_mask = mask;
    
    P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse);
    
-   return tm->linetarget ? trace.aimslope : lookslope;
+   return clip.linetarget ? trace.aimslope : lookslope;
 }
 
 //
@@ -642,7 +642,7 @@ static boolean PTR_UseTraverse(intercept_t *in)
    else
    {
       P_LineOpening(in->d.line, NULL);
-      if(tm->openrange <= 0)
+      if(clip.openrange <= 0)
       {
          // can't use through a wall
          S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
@@ -672,9 +672,9 @@ static boolean PTR_NoWayTraverse(intercept_t *in)
    return ld->special ||                          // Ignore specials
      !(ld->flags & ML_BLOCKING ||                 // Always blocking
        (P_LineOpening(ld, NULL),                  // Find openings
-        tm->openrange <= 0 ||                         // No opening
-        tm->openbottom > usething->z+24*FRACUNIT ||   // Too high it blocks
-        tm->opentop < usething->z+usething->height)); // Too low it blocks
+        clip.openrange <= 0 ||                         // No opening
+        clip.openbottom > usething->z+24*FRACUNIT ||   // Too high it blocks
+        clip.opentop < usething->z+usething->height)); // Too low it blocks
 }
 
 //

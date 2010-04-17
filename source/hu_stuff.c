@@ -1095,18 +1095,18 @@ static void HU_CrossHairTick(hu_widget_t *widget)
                    players[displayplayer].mo->angle, 
                    16*64*FRACUNIT, 0);
 
-   if(tm->linetarget)
+   if(clip.linetarget)
    {
       // target found
       crosshair->color = targetcolour; // default
       
       // haleyjd 06/06/09: some special behaviors
-      if(tm->linetarget->flags & MF_FRIEND)
+      if(clip.linetarget->flags & MF_FRIEND)
          crosshair->color = friendcolour;
 
-      if(((tm->linetarget->flags  & MF_SHADOW || 
-           tm->linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
-         tm->linetarget->flags2 & MF2_DONTDRAW)
+      if(((clip.linetarget->flags  & MF_SHADOW || 
+           clip.linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
+         clip.linetarget->flags2 & MF2_DONTDRAW)
       {
          crosshair->color = notargetcolour;
       }

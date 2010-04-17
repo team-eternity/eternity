@@ -3485,15 +3485,15 @@ void T_Pusher(pusher_t *p)
 
       tmpusher = p; // PUSH/PULL point source
       radius = p->radius; // where force goes to zero
-      tm->bbox[BOXTOP]    = p->y + radius;
-      tm->bbox[BOXBOTTOM] = p->y - radius;
-      tm->bbox[BOXRIGHT]  = p->x + radius;
-      tm->bbox[BOXLEFT]   = p->x - radius;
+      clip.bbox[BOXTOP]    = p->y + radius;
+      clip.bbox[BOXBOTTOM] = p->y - radius;
+      clip.bbox[BOXRIGHT]  = p->x + radius;
+      clip.bbox[BOXLEFT]   = p->x - radius;
       
-      xl = (tm->bbox[BOXLEFT] - bmaporgx - MAXRADIUS)>>MAPBLOCKSHIFT;
-      xh = (tm->bbox[BOXRIGHT] - bmaporgx + MAXRADIUS)>>MAPBLOCKSHIFT;
-      yl = (tm->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS)>>MAPBLOCKSHIFT;
-      yh = (tm->bbox[BOXTOP] - bmaporgy + MAXRADIUS)>>MAPBLOCKSHIFT;
+      xl = (clip.bbox[BOXLEFT] - bmaporgx - MAXRADIUS)>>MAPBLOCKSHIFT;
+      xh = (clip.bbox[BOXRIGHT] - bmaporgx + MAXRADIUS)>>MAPBLOCKSHIFT;
+      yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS)>>MAPBLOCKSHIFT;
+      yh = (clip.bbox[BOXTOP] - bmaporgy + MAXRADIUS)>>MAPBLOCKSHIFT;
       for (bx = xl; bx <= xh; bx++)
       {
          for(by = yl; by <= yh; by++)

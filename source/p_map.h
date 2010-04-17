@@ -64,15 +64,15 @@ void    P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod);
 boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y);
 
 //jff 3/19/98 P_CheckSector(): new routine to replace P_ChangeSector()
-boolean P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
-void    P_DelSeclist(msecnode_t*);                          // phares 3/16/98
-void    P_FreeSecNodeList();    // sf
-void    P_CreateSecNodeList(mobj_t*,fixed_t,fixed_t);       // phares 3/14/98
-boolean Check_Sides(mobj_t *, int, int);                    // phares
+boolean     P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
+void        P_DelSeclist(msecnode_t *);                      // phares 3/16/98
+void        P_FreeSecNodeList(void);                         // sf
+msecnode_t *P_CreateSecNodeList(mobj_t *,fixed_t, fixed_t);  // phares 3/14/98
+boolean     Check_Sides(mobj_t *, int, int);                 // phares
 
-int     P_GetMoveFactor(mobj_t *mo, int *friction);         // killough 8/28/98
-int     P_GetFriction(const mobj_t *mo, int *factor);       // killough 8/28/98
-void    P_ApplyTorque(mobj_t *mo);                          // killough 9/12/98
+int         P_GetMoveFactor(mobj_t *mo, int *friction);      // killough 8/28/98
+int         P_GetFriction(const mobj_t *mo, int *factor);    // killough 8/28/98
+void        P_ApplyTorque(mobj_t *mo);                       // killough 9/12/98
 
 
 typedef struct doom_mapinter_s
@@ -168,13 +168,13 @@ typedef struct doom_mapinter_s
 
 
 // Pushes the tm stack, clearing the new element
-void P_PushTMStack();
+void P_PushClipStack(void);
 
 // Pops the tm stack, storing the discarded element for later re-insertion.
-void P_PopTMStack();
+void P_PopClipStack(void);
 
-
-extern doom_mapinter_t  *tm;
+extern doom_mapinter_t clip;   // haleyjd 04/16/10: made global, renamed
+extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
 
 
 extern int spechits_emulation;  // haleyjd 09/20/06
