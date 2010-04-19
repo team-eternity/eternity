@@ -440,6 +440,9 @@ default_t defaults[] =
 
    DEFAULT_INT("comp_special", &default_comp[comp_special], &comp[comp_special],
                0, 0, 1, wad_yes, "One-time line specials are cleared on failure"),
+
+   DEFAULT_INT("comp_ninja", &default_comp[comp_ninja], &comp[comp_ninja],
+               0, 0, 1, wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
    
 
    // For key bindings, the values stored in the key_* variables       // phares

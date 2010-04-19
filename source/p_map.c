@@ -1258,7 +1258,7 @@ static boolean P_CheckDropOffMBF(mobj_t *thing, boolean dropoff)
       else
       {
          clip.felldown = !(thing->flags & MF_NOGRAVITY) && 
-                        thing->z - clip.floorz > 24 * FRACUNIT;
+                         thing->z - clip.floorz > 24 * FRACUNIT;
       }
    }
 

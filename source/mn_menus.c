@@ -2528,8 +2528,8 @@ extern menu_t menu_compat3;
 
 static const char *mn_compat_contents[] =
 {
-   "players / simulation",
-   "monster ai",
+   "players / monster ai",
+   "simulation",
    "maps",
    NULL
 };
@@ -2545,55 +2545,57 @@ static menu_t *mn_compat_pages[] =
 
 static menuitem_t mn_compat1_items[] =
 {
-   {it_title,  FC_GOLD "compatibility", NULL, "m_compat"},
-   {it_gap},   
-   {it_info,   FC_GOLD "players", NULL, NULL, MENUITEM_CENTERED},
-   {it_toggle, "god mode is not absolute",                  "comp_god"},
-   {it_toggle, "powerup cheats not infinite duration",      "comp_infcheat"},
-   {it_toggle, "sky unaffected by invulnerability",         "comp_skymap"},
-   {it_toggle, "zombie players can exit levels",            "comp_zombie"},
-   {it_toggle, "players do not take falling damage",        "comp_fallingdmg"},
-   {it_gap},
-   {it_info,   FC_GOLD "simulation",    NULL, NULL, MENUITEM_CENTERED},
-   {it_toggle, "objects never hang over tall ledges",       "comp_dropoff"},
-   {it_toggle, "objects do not fall under own weight",      "comp_falloff"},
-   {it_toggle, "terraintype effects inactive",              "comp_terrain"},
-   {it_toggle, "monsters can telefrag on MAP30",            "comp_telefrag"},
-   {it_toggle, "monsters may respawn outside map",          "comp_respawnfix"},
-   {it_toggle, "disable 3d object clipping",                "comp_overunder"},
-   {it_toggle, "doom thing heights may be inaccurate",      "comp_theights"},
-   {it_toggle, "bullets cannot hit floors / ceilings",      "comp_planeshoot"},
-   {it_end}
+   { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
+   { it_gap },   
+   { it_info,   FC_GOLD "Players", NULL, NULL, MENUITEM_CENTERED        },
+   { it_toggle, "God mode is not absolute",            "comp_god"       },
+   { it_toggle, "Powerup cheats are time limited",     "comp_infcheat"  },
+   { it_toggle, "Sky is normal when invulnerable",     "comp_skymap"    },
+   { it_toggle, "Zombie players can exit levels",      "comp_zombie"    },
+   { it_gap },
+   { it_info,   FC_GOLD "Monster AI", NULL, NULL, MENUITEM_CENTERED     },
+   { it_toggle, "Arch-viles can create ghosts",        "comp_vile"      },
+   { it_toggle, "Pain elemental lost souls limited",   "comp_pain"      },
+   { it_toggle, "Lost souls get stuck in walls",       "comp_skull"     },
+   { it_toggle, "Lost souls never bounce on floors",   "comp_soul"      },
+   { it_toggle, "Monsters randomly walk off lifts",    "comp_staylift"  },
+   { it_toggle, "Monsters get stuck on door tracks",   "comp_doorstuck" },
+   { it_toggle, "Monsters give up pursuit",            "comp_pursuit"   },
+   { it_end }
+
 };
  
 static menuitem_t mn_compat2_items[] =
 { 
-   {it_title,  FC_GOLD "compatibility", NULL, "m_compat"},
-   {it_gap},   
-   {it_info,   FC_GOLD "monster ai", NULL, NULL, MENUITEM_CENTERED},
-   {it_toggle, "archvile can resurrect ghosts",             "comp_vile"},
-   {it_toggle, "pain elemental limit of 21 lost souls",     "comp_pain"},
-   {it_toggle, "lost souls get stuck behind walls",         "comp_skull"},
-   {it_toggle, "lost souls do not bounce on floors",        "comp_soul"},
-   {it_toggle, "monsters randomly walk off lifts",          "comp_staylift"},
-   {it_toggle, "monsters get stuck on door tracks",         "comp_doorstuck"},
-   {it_toggle, "monsters do not give up pursuit",           "comp_pursuit"},
-   {it_end}
+   { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
+   { it_gap },   
+   { it_info,   FC_GOLD "Simulation",    NULL, NULL, MENUITEM_CENTERED   },
+   { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff"    },
+   { it_toggle, "Actors never fall off ledges",        "comp_falloff"    },
+   { it_toggle, "Monsters can telefrag on MAP30",      "comp_telefrag"   },
+   { it_toggle, "Monsters can respawn outside map",    "comp_respawnfix" },
+   { it_toggle, "Disable terrain types",               "comp_terrain"    },
+   { it_toggle, "Disable falling damage",              "comp_fallingdmg" },
+   { it_toggle, "Actors have infinite height",         "comp_overunder"  },
+   { it_toggle, "Doom actor heights are inaccurate",   "comp_theights"   },
+   { it_toggle, "Bullets never hit floors & ceilings", "comp_planeshoot" },
+   { it_toggle, "Respawns are sometimes silent in DM", "comp_ninja"      },
+   { it_end }
 };
 
 static menuitem_t mn_compat3_items[] =
 {
-   {it_title,  FC_GOLD "compatibility", NULL, "m_compat"},
-   {it_gap},
-   {it_info,   FC_GOLD "maps",       NULL, NULL, MENUITEM_CENTERED},
-   {it_toggle, "turbo doors make two closing sounds",       "comp_blazing"},
-   {it_toggle, "no tagged door lighting effects",           "comp_doorlight"},
-   {it_toggle, "use doom's stairbuilding method",           "comp_stairs"},
-   {it_toggle, "use doom's floor motion behavior",          "comp_floors"},
-   {it_toggle, "use doom's linedef trigger model",          "comp_model"},
-   {it_toggle, "line effects work on sector tag 0",         "comp_zerotags"},
-   {it_toggle, "one-time line effects can break",           "comp_special"},
-   {it_end}
+   { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
+   { it_gap },
+   { it_info,   FC_GOLD "Maps",       NULL, NULL, MENUITEM_CENTERED      },
+   { it_toggle, "Turbo doors make two closing sounds",  "comp_blazing"   },
+   { it_toggle, "Disable tagged door light fading",     "comp_doorlight" },
+   { it_toggle, "Use DOOM stairbuilding method",        "comp_stairs"    },
+   { it_toggle, "Use DOOM floor motion behavior",       "comp_floors"    },
+   { it_toggle, "Use DOOM linedef trigger model",       "comp_model"     },
+   { it_toggle, "Line effects work on sector tag 0",    "comp_zerotags"  },
+   { it_toggle, "One-time line effects can break",      "comp_special"   },
+   { it_end }
 };
 
 menu_t menu_compat1 =

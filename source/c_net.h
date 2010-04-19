@@ -87,12 +87,13 @@ enum
   netcmd_comp_18,
   netcmd_comp_19,   // haleyjd: TerrainTypes
   netcmd_comp_20,   //          respawn fix
-  netcmd_comp_21,   //		falling damage
+  netcmd_comp_21,   //          falling damage
   netcmd_comp_22,   //          lost soul bouncing
   netcmd_comp_23,   //          thing heights fix
   netcmd_comp_24,   //          extended z clipping
   netcmd_comp_25,   //          plane shooting
   netcmd_comp_26,   //          special failure
+  netcmd_comp_27,   //          ninja spawn
   NUMNETCMDS,
 };
 
