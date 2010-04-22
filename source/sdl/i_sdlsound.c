@@ -493,10 +493,16 @@ static double do_3band(EQSTATE *es, double sample)
    return rational_tanh(l + m + h);
 }
 
+
+
 //
 // End Equalizer Code
 //
 //============================================================================
+
+#define SND_PI 3.14159265
+
+static double preampmul;
 
 //
 // I_SetChannels
@@ -546,14 +552,16 @@ static void I_SetChannels(void)
 
    // Set Low/Mid/High gains 
    // TODO: make configurable, add more parameters
-   eqstate[0].lg = eqstate[1].lg = 1.2;
-   eqstate[0].mg = eqstate[1].mg = 1.0;
-   eqstate[0].hg = eqstate[1].hg = 0.8;
+   eqstate[0].lg = eqstate[1].lg = s_lowgain;
+   eqstate[0].mg = eqstate[1].mg = s_midgain;
+   eqstate[0].hg = eqstate[1].hg = s_highgain;
 
    // Calculate filter cutoff frequencies
-   eqstate[0].lf = eqstate[1].lf = 2 * sin(3.14159265 * (880.0  / (double)snd_samplerate));
-   eqstate[0].hf = eqstate[1].hf = 2 * sin(3.14159265 * (5000.0 / (double)snd_samplerate));
+   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
+   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
 
+   // Calculate preamplification factor
+   preampmul = s_eqpreamp / 32767.0;
 }
 
 //
@@ -582,6 +590,29 @@ static int I_GetSfxLumpNum(sfxinfo_t *sfx)
 // 
 // Driver Routines
 //
+
+//
+// I_SDLUpdateEQParams
+//
+// haleyjd 04/21/10
+//
+static void I_SDLUpdateEQParams(void)
+{
+   // flush out state of equalizers
+   memset(eqstate, 0, sizeof(eqstate));
+
+   // Set Low/Mid/High gains 
+   eqstate[0].lg = eqstate[1].lg = s_lowgain;
+   eqstate[0].mg = eqstate[1].mg = s_midgain;
+   eqstate[0].hg = eqstate[1].hg = s_highgain;
+
+   // Calculate filter cutoff frequencies
+   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
+   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
+
+   // Calculate preamp factor
+   preampmul = s_eqpreamp / 32767.0;
+}
 
 //
 // I_SDLUpdateSoundParams
@@ -825,22 +856,25 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    }
 
    // haleyjd 04/21/10: equalization pass
-   leftout  = (Sint16 *)stream;
-   rightout = leftout + 1;
-
-   while(leftout != leftend)
+   if(s_equalizer)
    {
-      double sl = (double)*leftout  * 2.865576e-5;
-      double sr = (double)*rightout * 2.865576e-5;
+      leftout  = (Sint16 *)stream;
+      rightout = leftout + 1;
 
-      sl = do_3band(&eqstate[0], sl);
-      sr = do_3band(&eqstate[1], sr);
+      while(leftout != leftend)
+      {
+         double sl = (double)*leftout  * preampmul;
+         double sr = (double)*rightout * preampmul;
 
-      *leftout  = (Sint16)(sl * 32767.0);
-      *rightout = (Sint16)(sr * 32767.0);
+         sl = do_3band(&eqstate[0], sl);
+         sr = do_3band(&eqstate[1], sr);
 
-      leftout  += STEP;
-      rightout += STEP;
+         *leftout  = (Sint16)(sl * 32767.0);
+         *rightout = (Sint16)(sr * 32767.0);
+
+         leftout  += STEP;
+         rightout += STEP;
+      }
    }
 }
 
@@ -934,6 +968,7 @@ i_sounddriver_t i_sdlsound_driver =
    I_SDLStopSound,         // StopSound
    I_SDLSoundIsPlaying,    // SoundIsPlaying
    I_SDLUpdateSoundParams, // UpdateSoundParams
+   I_SDLUpdateEQParams,    // UpdateEQParams
 };
 
 // EOF

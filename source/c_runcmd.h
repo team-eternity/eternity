@@ -139,7 +139,7 @@ typedef struct variable_s variable_t;
 // haleyjd 04/21/10: support for vt_float
 
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
-        variable_t var_ ## name = { name, defaultvar,        \
+        variable_t var_ ## name = { &name, defaultvar,       \
                         vt_float, 0, 0, NULL, min, max };
 
 // basic variable_t creators for constants.

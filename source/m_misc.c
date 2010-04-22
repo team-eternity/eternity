@@ -1112,7 +1112,30 @@ void M_SaveDefaultFile(defaultfile_t *df)
             }
             break;
          case dt_float:
-            // TODO
+            if(dp->limit.min == UL)
+            {
+               if(dp->limit.max == UL)
+                  printError = (fprintf(f, "[?-?](%g)]", dp->defaultvalue_f) == EOF);
+               else
+               {
+                  printError =
+                     (fprintf(f, "[?-%g(%g)]", (double)dp->limit.max / 100.0, 
+                              dp->defaultvalue_f) == EOF);
+               }
+            }
+            else if(dp->limit.max == UL)
+            {
+               printError = 
+                  (fprintf(f, "[%g-?(%g)]", (double)dp->limit.min / 100.0,
+                           dp->defaultvalue_f) == EOF);
+            }
+            else
+            {
+               printError = (fprintf(f, "[%g-%g(%g)]",
+                             (double)dp->limit.min / 100.0,
+                             (double)dp->limit.max / 100.0,
+                             dp->defaultvalue_f) == EOF);
+            }
             break;
          case dt_boolean:
             printError = (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
@@ -1157,10 +1180,10 @@ void M_SaveDefaultFile(defaultfile_t *df)
          break;
       case dt_float:
          {
-            float value = 
-               dp->modified ? dp->orig_default_f : *(float *)dp->location;
+            double value = 
+               dp->modified ? dp->orig_default_f : *(double *)dp->location;
 
-            if(fprintf(f, "%-25s %f\n", dp->name, value) == EOF)
+            if(fprintf(f, "%-25s %g\n", dp->name, value) == EOF)
                goto error;
          }
          break;
@@ -1215,7 +1238,7 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
    char name[80], strparm[100];
    default_t *dp;
    int parm;
-   float tmp;
+   double tmp;
    
    while(isspace(*p))  // killough 10/98: skip leading whitespace
       p++;
@@ -1290,24 +1313,24 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
       break;
    case dt_float:
       {
-         if(sscanf(strparm, "%f", &tmp) != 1)
+         if(sscanf(strparm, "%g", &tmp) != 1)
             return 1;                       // Not A Number
                   
          //jff 3/4/98 range check numeric parameters
-         if((dp->limit.min == UL || dp->limit.min <= tmp) &&
-            (dp->limit.max == UL || dp->limit.max >= tmp))
+         if((dp->limit.min == UL || (double)dp->limit.min / 100.0 <= tmp) &&
+            (dp->limit.max == UL || (double)dp->limit.max / 100.0 >= tmp))
          {
             if(wad)
             {
                if(!dp->modified) // First time it's modified by wad
                {
-                  dp->modified = 1;                            // Mark it as modified
-                  dp->orig_default_f = *(float *)dp->location; // Save original default
+                  dp->modified = 1;                             // Mark it as modified
+                  dp->orig_default_f = *(double *)dp->location; // Save original default
                }
                if(dp->current)              // Change current value
-                  *(float *)dp->current = tmp;
+                  *(double *)dp->current = tmp;
             }
-            *(float *)dp->location = tmp;  // Change default
+            *(double *)dp->location = tmp;  // Change default
          }
       }
       break;
@@ -1402,7 +1425,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
          *(char **)dp->location = strdup(dp->defaultvalue_s);
          break;
       case dt_float:
-         *(float *)dp->location = dp->defaultvalue_f;
+         *(double *)dp->location = dp->defaultvalue_f;
          break;
       case dt_boolean:
          *(boolean *)dp->location = dp->defaultvalue_b;

@@ -508,7 +508,7 @@ static const char *metaDoubleToString(void *obj)
    metadouble_t *md = (metadouble_t *)obj;
 
    memset(str, 0, sizeof(str));
-   psnprintf(str, sizeof(str), "%+.5g", md->value);
+   psnprintf(str, sizeof(str), "%+.5f", md->value);
 
    return str;
 }

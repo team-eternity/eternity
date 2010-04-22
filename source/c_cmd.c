@@ -199,86 +199,7 @@ CONSOLE_COMMAND(flood, 0)
     C_Printf("%c\n", a%64 + 32);
 }
 
-// ... the most important of all console commands
-char *quotes[] =
-{
-"* DooMWiz whips out DCK and fixes the problem.\n<DvlPup> Whipps out WHAT?!?",
-"<citrus-> well how great, ionstorm.com crashed netscape... they really dont want me, the bastards",
-"<\\dev\\null> i'm a black hole",
-"<DVS01> i'd /finger lewinsky",
-"<Ansi[c]> Kong didn't even have a penis",
-"<Satori> like uh... grabbing her saggy titties and shaking thim at you while flapping her legs so the stench of her demonic femininity overpowers you (complete with a Hexen-like fog cloud, of course)??",
-"<OJ> I didnt do it\n<Ito> YOU FUCKING DID IT OJ!",
-"<Kirk> very funny scotty, now beam down my clothes!",
-"* Mordeth powers up his full ethernet bastard capabilities",
-"<Endura> ASCII porn is the best shit\n<Endura> almost as good as braille porn",
-"<Spike> dont u DARE ping me",
-"<prower> wtf is prowerland?",
-"*** unnukeabl has quit IRC (Connection timed out)",
-"<[Vicious]> Radio turns on when I get up, can't live without it....unless you've got Spike to wake u up first",
-"<ricrob> hector's in a beer bottle in my freezer",
-"<mystican> this channel is pro-nato rather than pro-ruski\n<mewse> but i'm communist!\n<mewse> i'm a pinko actually\n<Afterglow> i'm a lesbian",
-"* DVS01 saw breasts today\n<DVS01> KFC",
-"<Rethcir> \"And now, 26 more hours of 'The best of #doomroom'\"",
-"<cph> Error 1337: j00 4r3 n07 31337 3n0ugh7 70 pr0gr4m",
-"<BrV-Zokum> ms monoploy: this is where u will go today",
-"<mystican> the sun shines out of your ass?\n<DVS01> myst: yes!\n<DVS01> (__0__) -- where da sun shines",
-"<Cyb> Thundercats HO!",
-"<DVS01> 486 is too slow to suck ass\n<DVS01> 486 nibbles ass",
-"<prowlin> \"mystican saw Bessie and was amazed.  He slowly unbuttoned his pants, his cock already hardened to its full three inches.\"",
-"<kern_proc> has it occured to anyone else that \"aol for dummies\" is an extremely redundant name for a book",
-"<ninjaworf> today is a good day to hide",
-"<Rethcir> Quake's bad guys' names were too hard to pronounce, that's why it wasn't as good as doom",
-"<endura> I was drawn to the Imac, I had this incredible huge urge to go pop the back of it off then fill it full of water and put goldfish in them",
-"<Linguica> There is a http://hector.ml.org\n<Hector> where?",
-"<prower> <Lyfe> Alright, I quit Crypt TC!\n<FlyatWork> Oh no you don't",
-"<Endura> JFL go put ice down your pants\n<Endura> it helps in more ways than one\n<JFL> <<Endura>> i can't im naked",
-"<prower> \"dont eat pork, not even with a fork CAN'T TOUCH THIS\"",
-"<DVS01> hmm, myst you gave me an idea.. New OS: FradBSD",
-"<Mud_Shark> the page is fucked up\n* Prower points all fingers at Covaro \n<Mud_Shark> Covaro fucked up doomworld!\n<Arno> now we see how rumors start\n<Mud_Shark> Arno fucked up doomworld!",
-"<aurikan> SMMU is like the coolest name for a port",
-"<Linguica> We should have a freaking Doom pilgrimage to ION Storm... it's like that Muslim big black box",
-"* Arno^QS tries to imagine a cyberdemon in a skimpy bra and some lace panties",
-"I haven't pinged Romero in a while -- maybe I should. -- Lee Killough",
-"<[GOD]> we have parties there\n<[GOD]> but dont tell jesus",
-"<Endura> my sister's moustache is bigger than mine",
-"<Cybrdemon> rofdl? Rolling on the FLoor Downloading?",
-"<EyeArsy> there, my nick is IRC",
-"* citrus owns an ass \n<citrus> it's attatched to my lower spine",
-"<Kayin`> Its Mystican, like Mohican!\n<Kayin`> He's the Last of the Mysticans!",
-"<prower> i never see \"h3y 9uyZ h00k m3 uP w17h f0n7 jU4r3Z\" in the warez channels",
-"<{BFGspaz}> i like prower\n<SSGbitch> i love prower man\n<prower> awww, come on bots... group hug!",
-"* DVS01 pats _prower_ on the head (not of his cock)",
-"<DVS01> uhh, what th fuck happnd to my  ky?",
-"<DVS01> <mystican> hrrrrr     <--- hell really really really really revealed?",
-"<_GoodKo_> I am BahdKo's evil twin\n<_BahdKo_> What do you do, play quake?",
-"<DooMWiz> Aur: No. Nark is the best idler.\n<Nark> how about I put my idle foot up your idle ass",
-"<Endura> man I hate when my dad comes in my room and farts\n<Endura> then leaves",
-"<Ricrob> I'm such a frad at times",
-"<DVS01> Bill Gate's wife understanded what \"microsoft\" really mean, when they were on honeymoon.... :)",
-"<Fradman> Frad Flinstone",
-"<fake^myst> i am not myst!!",
-"<prower> [19:48] <_Prower_> Hi! I dig men! I like to stick foreign objects up my ass!\n<prower> i'm still killing my dad for that thing",
-"<ola_mail> I think they should have merged Village People and NiN instead.",
-"<prower> CHASECAM ROCKS!!\n<prower> now i can see myself suck in the 3rd person!",
-"<ricrob> I touched Half-Life in the mall yesterday and almost came",
-"<LeRomero> je suis le grand fromage",
-"<fod> i was doin 110 mph up the motorway last night and a Yamaha 1250 sn20x passed me!\n<fod> i wouldnt mind but thats a KEYBOARD!",
-"<DGevert> My cats straferun into doors and walls a lot",
-"<LlamaServ> pop tarts (n.) See \"Spice Girls\".",
-"<NickBaker> How about playing Doom whilst having sex?\n<NickBaker> na, it'd be like \"ooh, yes... DIE IMP! aaah, come on baby... EAT THIS DEMON FUCKER!\" etc",
-"<Katarhyne> Wow....\n<Katarhyne> That's hard.",
-"<Quasar`> well now the game goes straight from initialization to showing the ENDOOM lump\n<chrozoron> three years of work.. and now i proudly present .. the ENDOOM screen",
-};
-
-CONSOLE_COMMAND(quote, 0)
-{
-   int quotenum;
-   
-   quotenum = M_Random() % (sizeof quotes / sizeof(char*));
-   
-   C_Printf("%s\n", quotes[quotenum]);
-}
+CONSOLE_COMMAND(quote, 0) {}
 
 // haleyjd: dumplog command to write out the console to file
 
@@ -378,17 +299,17 @@ CONSOLE_COMMAND(cvarhelp, 0)
                   }
                   else if(var->dmin == UL)
                   {
-                     C_Printf("Value range for '%s': any float <= %g\n", 
+                     C_Printf("Value range for '%s': any float <= %f\n", 
                               name, var->dmax);
                   }
                   else if(var->dmax == UL)
                   {
-                     C_Printf("Value range for '%s': any float >= %g\n",
+                     C_Printf("Value range for '%s': any float >= %f\n",
                               name, var->dmin);
                   }
                   else
                   {
-                     C_Printf("Value range for '%s': %g through %g\n", 
+                     C_Printf("Value range for '%s': %f through %f\n", 
                               name, var->dmin, var->dmax);
                   }
                   break;

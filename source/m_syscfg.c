@@ -32,6 +32,7 @@
 #include "m_misc.h"
 #include "m_shots.h"
 #include "d_gi.h"
+#include "i_sound.h"
 
 // External variables configured here:
 
@@ -127,6 +128,29 @@ static default_t sysdefaults[] =
    // haleyjd 12/08/01
    DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, wad_no,
                "Force reversal of stereo audio channels: 0 = normal, 1 = reverse"),
+
+   // haleyjd 04/21/10
+   DEFAULT_INT("s_equalizer", &s_equalizer, NULL, 1, 0, 1, wad_no,
+               "1 to enable three-band equalizer"),
+
+   DEFAULT_FLOAT("s_lowfreq", &s_lowfreq, NULL, 880.0, 0, UL, wad_no,
+                 "High end of low pass band"),
+   
+   DEFAULT_FLOAT("s_highfreq", &s_highfreq, NULL, 5000.0, 0, UL, wad_no,
+                 "Low end of high pass band"),
+
+   DEFAULT_FLOAT("s_eqpreamp", &s_eqpreamp, NULL, 0.93896, 10, 100, wad_no,
+                 "Preamplification factor"),
+
+   DEFAULT_FLOAT("s_lowgain", &s_lowgain, NULL, 1.2, 0, 290, wad_no,
+                 "Low pass gain"),
+
+   DEFAULT_FLOAT("s_midgain", &s_midgain, NULL, 1.0, 0, 290, wad_no,
+                 "Midrange gain"),
+
+   DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 290, wad_no,
+                 "High pass gain"),
+                 
 
    // jff 3/30/98 add ability to take screenshots in BMP format
    DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, wad_no,

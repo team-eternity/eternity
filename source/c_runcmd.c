@@ -449,7 +449,7 @@ const char *C_VariableValue(variable_t *variable)
 
    case vt_float:
       // haleyjd 04/21/10: implemented vt_float
-      psnprintf(value, sizeof(value), "%+.5g", *(double *)variable->variable);
+      psnprintf(value, sizeof(value), "%+.5f", *(double *)variable->variable);
       break;
       
    default:
