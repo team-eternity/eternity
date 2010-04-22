@@ -156,143 +156,6 @@ static void stopchan(int handle)
    }
 }
 
-
-typedef struct EQSTATE_s
-{
-  // Filter #1 (Low band)
-
-  double  lf;       // Frequency
-  double  f1p0;     // Poles ...
-  double  f1p1;    
-  double  f1p2;
-  double  f1p3;
-
-  // Filter #2 (High band)
-
-  double  hf;       // Frequency
-  double  f2p0;     // Poles ...
-  double  f2p1;
-  double  f2p2;
-  double  f2p3;
-
-  // Sample history buffer
-
-  double  sdm1;     // Sample data minus 1
-  double  sdm2;     //                   2
-  double  sdm3;     //                   3
-
-  // Gain Controls
-
-  double  lg;       // low  gain
-  double  mg;       // mid  gain
-  double  hg;       // high gain
-  
-} EQSTATE;  
-
-//
-// do_eq
-//
-// haleyjd 04/20/10: 
-//
-static double do_eq(EQSTATE *es, double sample)
-{
-   //static double vsa = (1.0 / 4294967295.0);
-
-   // Locals
-   double  l, m, h;    // Low / Mid / High - Sample Values
-
-   // Filter #1 (lowpass)
-   es->f1p0  += (es->lf * (sample   - es->f1p0)) /*+ vsa*/;
-   es->f1p1  += (es->lf * (es->f1p0 - es->f1p1));
-   es->f1p2  += (es->lf * (es->f1p1 - es->f1p2));
-   es->f1p3  += (es->lf * (es->f1p2 - es->f1p3));
-
-   l          = es->f1p3;
-
-   // Filter #2 (highpass)
-   es->f2p0  += (es->hf * (sample   - es->f2p0)) /*+ vsa*/;
-   es->f2p1  += (es->hf * (es->f2p0 - es->f2p1));
-   es->f2p2  += (es->hf * (es->f2p1 - es->f2p2));
-   es->f2p3  += (es->hf * (es->f2p2 - es->f2p3));
-
-   h          = es->sdm3 - es->f2p3;
-
-   // Calculate midrange (signal - (low + high))
-   //m          = es->sdm3 - (h + l);
-   m          = sample - (h + l);
-
-   // Scale, Combine and store
-   l         *= es->lg;
-   m         *= es->mg;
-   h         *= es->hg;
-
-   // Shuffle history buffer
-   es->sdm3   = es->sdm2;
-   es->sdm2   = es->sdm1;
-   es->sdm1   = sample;                
-
-   // Return result
-   return (l + m + h);
-}
-
-//
-// filter_eq
-//
-// haleyjd 04/20/10: sound equalization filter
-//
-static void filter_eq(sfxinfo_t *sfx)
-{
-   unsigned int i;
-   byte *data;
-
-   double lowfreq = 880.0, highfreq = 5000.0; // TODO: dynamic?
-   EQSTATE es;
-
-   // Clear state
-   memset(&es, 0, sizeof(EQSTATE));
-
-   // Set Low/Mid/High gains to unity -- TODO: dynamic
-   es.lg = 1.2;
-   es.mg = 1.0;
-   es.hg = 0.8;
-
-   // Calculate filter cutoff frequencies
-   es.lf = 2 * sin(3.14159265 * (lowfreq  / (double)snd_samplerate));
-   es.hf = 2 * sin(3.14159265 * (highfreq / (double)snd_samplerate));
-
-   data = (byte *)(sfx->data);
-
-   for(i = 0; i < sfx->alen; ++i)
-   {
-      double sample = (double)((int)data[i] - 128) / 136.0;
-
-      do_eq(&es, sample);
-
-      sample = sample * 128.0 + 128.0;
-
-      if(sample > 255.0)
-         sample = 255.0;
-      else if(sample < 0.0)
-         sample = 0.0;
-
-      data[i] = (byte)(sample);
-   }
-
-   /*
-   for(i = 0; i < sfx->alen; ++i)
-   {
-      double sample = do_eq(&es, data[i]);
-
-      if(sample > 255.0)
-         sample = 255.0;
-      else if(sample < 0.0)
-         sample = 0.0;
-
-      data[i] = (byte)sample;
-   }
-   */
-}
-
 #define SOUNDHDRSIZE 8
 
 //
@@ -407,8 +270,6 @@ static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
          memcpy(sfx->data, data + SOUNDHDRSIZE, samplelen);
       }
 
-      filter_eq(sfx);
-
       // haleyjd 06/03/06: don't need original lump data any more
       Z_ChangeTag(data, PU_CACHE);
    }
@@ -511,6 +372,132 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    channelinfo[slot].rightvol_lookup = &vol_lookup[rightvol*256];
 }
 
+//=============================================================================
+//
+// Three-Band Equalization
+//
+
+typedef struct EQSTATE_s
+{
+  // Filter #1 (Low band)
+
+  double  lf;       // Frequency
+  double  f1p0;     // Poles ...
+  double  f1p1;    
+  double  f1p2;
+  double  f1p3;
+
+  // Filter #2 (High band)
+
+  double  hf;       // Frequency
+  double  f2p0;     // Poles ...
+  double  f2p1;
+  double  f2p2;
+  double  f2p3;
+
+  // Sample history buffer
+
+  double  sdm1;     // Sample data minus 1
+  double  sdm2;     //                   2
+  double  sdm3;     //                   3
+
+  // Gain Controls
+
+  double  lg;       // low  gain
+  double  mg;       // mid  gain
+  double  hg;       // high gain
+  
+} EQSTATE;  
+
+// haleyjd 04/21/10: equalizers for each stereo channel
+static EQSTATE eqstate[2];
+
+//
+// rational_tanh
+//
+// cschueler
+// http://www.musicdsp.org/showone.php?id=238
+//
+// Notes :
+// This is a rational function to approximate a tanh-like soft clipper. It is
+// based on the pade-approximation of the tanh function with tweaked 
+// coefficients.
+// The function is in the range x=-3..3 and outputs the range y=-1..1. Beyond
+// this range the output must be clamped to -1..1.
+// The first two derivatives of the function vanish at -3 and 3, so the 
+// transition to the hard clipped region is C2-continuous.
+//
+static double rational_tanh(double x)
+{
+   if(x < -3)
+      return -1;
+   else if(x > 3)
+      return 1;
+   else
+      return x * ( 27 + x * x ) / ( 27 + 9 * x * x );
+}
+
+//
+// do_3band
+//
+// EQ.C - Main Source file for 3 band EQ
+// http://www.musicdsp.org/showone.php?id=236
+//
+// (c) Neil C / Etanza Systems / 2K6
+// Shouts / Loves / Moans = etanza at lycos dot co dot uk
+//
+// This work is hereby placed in the public domain for all purposes, including
+// use in commercial applications.
+// The author assumes NO RESPONSIBILITY for any problems caused by the use of
+// this software.
+//
+static double do_3band(EQSTATE *es, double sample)
+{
+   //static double vsa = (1.0 / 4294967295.0);
+
+   // Locals
+   double l, m, h;    // Low / Mid / High - Sample Values
+
+   // Filter #1 (lowpass)
+   es->f1p0  += (es->lf * (sample   - es->f1p0)); // + vsa;
+   es->f1p1  += (es->lf * (es->f1p0 - es->f1p1));
+   es->f1p2  += (es->lf * (es->f1p1 - es->f1p2));
+   es->f1p3  += (es->lf * (es->f1p2 - es->f1p3));
+
+   l          = es->f1p3;
+
+   // Filter #2 (highpass)
+   es->f2p0  += (es->hf * (sample   - es->f2p0)); // + vsa;
+   es->f2p1  += (es->hf * (es->f2p0 - es->f2p1));
+   es->f2p2  += (es->hf * (es->f2p1 - es->f2p2));
+   es->f2p3  += (es->hf * (es->f2p2 - es->f2p3));
+
+   h          = es->sdm3 - es->f2p3;
+
+   // Calculate midrange (signal - (low + high))
+   //m          = es->sdm3 - (h + l);
+   m          = sample - (h + l);
+
+   // Scale, Combine and store
+   l         *= es->lg;
+   m         *= es->mg;
+   h         *= es->hg;
+
+   // Shuffle history buffer
+   es->sdm3   = es->sdm2;
+   es->sdm2   = es->sdm1;
+   es->sdm1   = sample;                
+
+   // Return result
+   // haleyjd: use rational_tanh for soft clipping
+   return rational_tanh(l + m + h);
+}
+
+//
+// End Equalizer Code
+//
+//============================================================================
+
 //
 // I_SetChannels
 //
@@ -554,6 +541,19 @@ static void I_SetChannels(void)
       if(!channelinfo[i].semaphore)
          I_Error("I_SetChannels: failed to create semaphore for channel %d\n", i);
    }
+
+   // haleyjd 04/21/10: initialize equalizers
+
+   // Set Low/Mid/High gains 
+   // TODO: make configurable, add more parameters
+   eqstate[0].lg = eqstate[1].lg = 1.2;
+   eqstate[0].mg = eqstate[1].mg = 1.0;
+   eqstate[0].hg = eqstate[1].hg = 0.8;
+
+   // Calculate filter cutoff frequencies
+   eqstate[0].lf = eqstate[1].lf = 2 * sin(3.14159265 * (880.0  / (double)snd_samplerate));
+   eqstate[0].hf = eqstate[1].hf = 2 * sin(3.14159265 * (5000.0 / (double)snd_samplerate));
+
 }
 
 //
@@ -701,7 +701,7 @@ static void I_SDLUpdateSound(void)
    }
 }
 
-#define STEP sizeof(Sint16)
+#define STEP      2
 #define STEPSHIFT 1
 
 //
@@ -711,13 +711,7 @@ static void I_SDLUpdateSound(void)
 // We do our own mixing on up to 32 digital sound channels.
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
-{
-   // Mix current sound data.
-   // Data, from raw sound, for right and left.
-   Uint8  sample;
-   Sint32 dl;
-   Sint32 dr;
-   
+{   
    // Pointers in audio stream, left, right, end.
    Sint16 *leftout, *rightout, *leftend;
    
@@ -761,6 +755,11 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       //  that is 512 values for two channels.
       while(leftout != leftend)
       {
+         // Mix current sound data.
+         // Data, from raw sound, for right and left.
+         Uint8  sample;
+         Sint32 dl, dr;
+
          // Get the raw data from the channel. 
          // Sounds are now prefiltered.
          sample = *(chan->data);
@@ -823,6 +822,25 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       
       // release semaphore and move on to the next channel
       SDL_SemPost(chan->semaphore);
+   }
+
+   // haleyjd 04/21/10: equalization pass
+   leftout  = (Sint16 *)stream;
+   rightout = leftout + 1;
+
+   while(leftout != leftend)
+   {
+      double sl = (double)*leftout  * 2.865576e-5;
+      double sr = (double)*rightout * 2.865576e-5;
+
+      sl = do_3band(&eqstate[0], sl);
+      sr = do_3band(&eqstate[1], sr);
+
+      *leftout  = (Sint16)(sl * 32767.0);
+      *rightout = (Sint16)(sr * 32767.0);
+
+      leftout  += STEP;
+      rightout += STEP;
    }
 }
 

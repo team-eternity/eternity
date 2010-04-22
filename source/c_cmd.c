@@ -334,8 +334,9 @@ CONSOLE_COMMAND(cvarhelp, 0)
          {
             var = current->variable;
 
-            if(var->type == vt_int)
+            switch(var->type)
             {
+            case vt_int:
                if(var->defines && var->min <= var->max)
                {
                   C_Printf("Possible values for '%s': ", name);
@@ -346,12 +347,53 @@ CONSOLE_COMMAND(cvarhelp, 0)
                }
                else
                {
-                  C_Printf("Value range for '%s': %i through %i\n", 
-                           name, var->min, var->max);
+                  // haleyjd 04/21/10: respect use of UL
+                  if(var->min == UL && var->max == UL)
+                  {
+                     C_Printf("'%s' accepts any integer value\n", name);
+                  }
+                  else if(var->min == UL)
+                  {
+                     C_Printf("Value range for '%s': any integer <= %d\n", 
+                              name, var->max);
+                  }
+                  else if(var->max == UL)
+                  {
+                     C_Printf("Value range for '%s': any integer >= %d\n",
+                              name, var->min);
+                  }
+                  else
+                  {
+                     C_Printf("Value range for '%s': %d through %d\n", 
+                              name, var->min, var->max);
+                  }
                }
-            }
-            else
-            {
+               break;
+
+            case vt_float:
+               // haleyjd 04/21/10: implemented vt_float
+                  if(var->dmin == UL && var->dmax == UL)
+                  {
+                     C_Printf("'%s' accepts any float value\n", name);
+                  }
+                  else if(var->dmin == UL)
+                  {
+                     C_Printf("Value range for '%s': any float <= %g\n", 
+                              name, var->dmax);
+                  }
+                  else if(var->dmax == UL)
+                  {
+                     C_Printf("Value range for '%s': any float >= %g\n",
+                              name, var->dmin);
+                  }
+                  else
+                  {
+                     C_Printf("Value range for '%s': %g through %g\n", 
+                              name, var->dmin, var->dmax);
+                  }
+                  break;
+
+            default:
                C_Printf("Value for '%s': String no more than %i characters long\n", 
                         name, var->max);
             }
@@ -361,7 +403,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
       }
    }
 
-   C_Printf("variable %s not found\n", name);
+   C_Printf("Variable %s not found\n", name);
 }
 
         /******** add commands *******/
