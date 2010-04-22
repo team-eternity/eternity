@@ -394,8 +394,13 @@ CONSOLE_COMMAND(cvarhelp, 0)
                   break;
 
             default:
-               C_Printf("Value for '%s': String no more than %i characters long\n", 
-                        name, var->max);
+               if(var->max != UL)
+               {
+                  C_Printf("Value for '%s': String no more than %d characters long\n", 
+                           name, var->max);
+               }
+               else
+                  C_Printf("Value for '%s': Unlimited-length string\n", name);
             }
 
             return;
