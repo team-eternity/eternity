@@ -94,6 +94,33 @@ int         *texturetranslation;
 // ============================================================================
 // SoM: Allocator for texture_t
 
+static void R_DetermineFlatSize(texture_t *t)
+{
+   // If not powers of two, it can't be a flat.
+   if((t->width != 1 && t->width & (t->width - 1)) ||
+      (t->height != 1 && t->height & (t->height - 1)))
+      return;
+      
+   t->flags |= TF_CANBEFLAT;
+   
+   switch(t->width * t->height)
+   {
+   case 16384: // 128x128
+      t->flatsize = FLAT_128;
+      break;
+   case 65536: // 256x256
+      t->flatsize = FLAT_256;
+      break;
+   case 262144: // 512x512
+      t->flatsize = FLAT_512;
+      break;
+   default: // all other sizes get the generalized drawers
+      t->flatsize = FLAT_GENERALIZED;
+      break;
+   }
+}
+
+
 //
 // R_AllocTexStruct
 //
@@ -127,6 +154,8 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width, uint16_t he
      
    ret->widthmask = j - 1;
    ret->heightfrac = ret->height << FRACBITS;
+
+   R_DetermineFlatSize(ret);
    
    return ret;
 }
@@ -350,10 +379,6 @@ static void R_DetectTextureFormat(texturelump_t *tlump)
 }
 
 
-static void R_DetermineFlatSize(texture_t *t);
-
-
-
 static void R_TextureHacks(texture_t *t)
 {
    // SoM: This function determines special cases for some textures with known 
@@ -443,8 +468,6 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
          
       texture->index = texnum;
          
-      R_DetermineFlatSize(texture);
-
       component = texture->components;
 
       for(j = 0; j < texture->ccount; ++j, ++component)
@@ -1054,32 +1077,6 @@ static void R_CountFlats()
 }
 
 
-static void R_DetermineFlatSize(texture_t *t)
-{
-   if(t->width != t->height)
-   {
-      t->flatsize = FLAT_64;
-      return;
-   }
-   
-   switch(t->width * t->height)
-   {
-   case 16384: // 128x128
-      t->flatsize = FLAT_128;
-      break;
-   case 65536: // 256x256
-      t->flatsize = FLAT_256;
-      break;
-   case 262144: // 512x512
-      t->flatsize = FLAT_512;
-      break;
-   default: // all other sizes are treated as 64x64
-      t->flatsize = FLAT_64;
-      break;
-   }
-}
-
-
 //
 // R_AddFlats
 //
@@ -1291,6 +1288,10 @@ int R_FindFlat(const char *name)    // killough -- const added
    if(!(tex = R_SearchFlats(name)))
       tex = R_SearchWalls(name);
    
+   // SoM: Check here for flat-ness!
+   if(tex && !(tex->flags & TF_CANBEFLAT))
+      tex = NULL;
+      
    if(!tex)
    {
       if(!level_error)
@@ -1317,7 +1318,7 @@ int R_CheckForFlat(const char *name)
    if(!(tex = R_SearchFlats(name)))
       tex = R_SearchWalls(name);
       
-   return tex ? tex->index : -1;
+   return (tex && tex->flags & TF_CANBEFLAT) ? tex->index : -1;
 }
 
 //

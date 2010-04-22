@@ -75,10 +75,11 @@ enum
 // haleyjd 06/22/08: Flat sizes enumeration
 enum
 {
-   FLAT_64,
-   FLAT_128,
-   FLAT_256,
-   FLAT_512,
+   FLAT_64,           // 64x64
+   FLAT_128,          // 128x128
+   FLAT_256,          // 256x256
+   FLAT_512,          // 512x512
+   FLAT_GENERALIZED,  // rectangular texture, power of two dims.
    FLAT_NUMSIZES
 };
 

@@ -72,6 +72,8 @@ typedef enum
    TF_MASKED    = 0x1,
    // Set by animation code marks this texture as being swirly
    TF_SWIRLY    = 0x2,
+   // Set if the texture can be used as a flat. 
+   TF_CANBEFLAT = 0x4,
 } texflag_e;
 
 typedef struct texture_s
