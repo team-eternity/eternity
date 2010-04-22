@@ -742,7 +742,9 @@ static void I_SDLUpdateSound(void)
 // We do our own mixing on up to 32 digital sound channels.
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
-{   
+{
+   boolean wrotesound = false;
+
    // Pointers in audio stream, left, right, end.
    Sint16 *leftout, *rightout, *leftend;
    
@@ -851,12 +853,14 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          }
       }
       
+      wrotesound = true;
+
       // release semaphore and move on to the next channel
       SDL_SemPost(chan->semaphore);
    }
 
    // haleyjd 04/21/10: equalization pass
-   if(s_equalizer)
+   if(s_equalizer && wrotesound)
    {
       leftout  = (Sint16 *)stream;
       rightout = leftout + 1;
