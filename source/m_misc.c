@@ -1183,7 +1183,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
             double value = 
                dp->modified ? dp->orig_default_f : *(double *)dp->location;
 
-            if(fprintf(f, "%-25s %g\n", dp->name, value) == EOF)
+            if(fprintf(f, "%-25s %#g\n", dp->name, value) == EOF)
                goto error;
          }
          break;
@@ -1313,7 +1313,7 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
       break;
    case dt_float:
       {
-         if(sscanf(strparm, "%g", &tmp) != 1)
+         if(sscanf(strparm, "%lg", &tmp) != 1)
             return 1;                       // Not A Number
                   
          //jff 3/4/98 range check numeric parameters

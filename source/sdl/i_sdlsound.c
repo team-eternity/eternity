@@ -732,8 +732,11 @@ static void I_SDLUpdateSound(void)
    }
 }
 
-#define STEP      2
-#define STEPSHIFT 1
+// size of a single sample
+#define SAMPLESIZE sizeof(Sint16) 
+
+// step to next stereo sample pair (2 samples)
+#define STEP 2
 
 //
 // I_SDLUpdateSound
@@ -753,7 +756,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          
    // Determine end, for left channel only
    //  (right channel is implicit).
-   leftend = (Sint16 *)(stream) + len / STEP;
+   leftend = (Sint16 *)(stream + len);
 
    // Love thy L2 cache - made this a loop.
    // Now more channels could be set at compile time

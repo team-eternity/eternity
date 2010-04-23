@@ -27,10 +27,6 @@
 #ifndef I_SOUND_H__
 #define I_SOUND_H__
 
-#ifdef DJGPP
-  #include <allegro.h>
-#endif
-
 typedef struct i_sounddriver_s
 {
    int  (*InitSound)(void);

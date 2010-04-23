@@ -453,7 +453,7 @@ const char *C_VariableValue(variable_t *variable)
       break;
       
    default:
-      I_Error("C_VariableValue: unknown command type %d\n", variable->type);
+      I_Error("C_VariableValue: unknown variable type %d\n", variable->type);
    }
    
    return value;

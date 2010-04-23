@@ -1856,40 +1856,91 @@ CONSOLE_COMMAND(mn_particle, 0)
 // Sound Options
 //
 
+extern menu_t menu_sound;
+extern menu_t menu_soundeq;
+
+static const char *mn_sndpage_names[] =
+{
+   "Volume / Setup / Misc",
+   "Equalizer",
+   NULL
+};
+
+static menu_t *mn_sndpage_menus[] =
+{
+   &menu_sound,
+   &menu_soundeq,
+   NULL
+};
+
 static menuitem_t mn_sound_items[] =
 {
-   {it_title,      FC_GOLD "sound options",       NULL, "m_sound"},
+   {it_title,      FC_GOLD "Sound Options",       NULL, "m_sound"},
    {it_gap},
-   {it_info,       FC_GOLD "volume"},
-   {it_slider,     "sfx volume",                   "sfx_volume"},
-   {it_slider,     "music volume",                 "music_volume"},
+   {it_info,       FC_GOLD "Volume"},
+   {it_slider,     "Sfx volume",                   "sfx_volume"},
+   {it_slider,     "Music volume",                 "music_volume"},
    {it_gap},
-   {it_info,       FC_GOLD "setup"},
-   {it_toggle,     "sound card",                   "snd_card"},
-   {it_toggle,     "music card",                   "mus_card"},
-   {it_toggle,     "autodetect voices",            "detect_voices"},
-   {it_toggle,     "sound channels",               "snd_channels"},
-   {it_toggle,     "force reverse stereo",         "s_flippan"},
+   {it_info,       FC_GOLD "Setup"},
+   {it_toggle,     "Sound card",                   "snd_card"},
+   {it_toggle,     "Music card",                   "mus_card"},
+   {it_toggle,     "Autodetect voices",            "detect_voices"},
+   {it_toggle,     "Sound channels",               "snd_channels"},
+   {it_toggle,     "Force reverse stereo",         "s_flippan"},
    {it_gap},
-   {it_info,       FC_GOLD "misc"},
-   {it_toggle,     "precache sounds",              "s_precache"},
-   {it_toggle,     "pitched sounds",               "s_pitched"},
+   {it_info,       FC_GOLD "Misc"},
+   {it_toggle,     "Precache sounds",              "s_precache"},
+   {it_toggle,     "Pitched sounds",               "s_pitched"},
    {it_end}
 };
 
 menu_t menu_sound =
 {
    mn_sound_items,
-   NULL, NULL, NULL,            // pages
-   180, 15,                     // x, y offset
-   3,                           // first selectable
-   mf_background,               // full-screen menu
+   NULL,                 // previous page
+   &menu_soundeq,        // next page
+   &menu_sound,          // root page
+   180, 15,              // x, y offset
+   3,                    // first selectable
+   mf_background,        // full-screen menu
+   NULL,
+   mn_sndpage_names,
+   mn_sndpage_menus
 };
 
 CONSOLE_COMMAND(mn_sound, 0)
 {
    MN_StartMenu(&menu_sound);
 }
+
+static menuitem_t mn_soundeq_items[] =
+{
+   { it_title,      FC_GOLD "Sound Options",  NULL, "m_sound" },
+   { it_gap },
+   { it_info,       FC_GOLD "Equalizer"                       },
+   { it_toggle,     "Enable equalizer",       "s_equalizer"   },
+   { it_slider,     "Low band gain",          "s_lowgain"     },
+   { it_slider,     "Midrange gain",          "s_midgain"     },
+   { it_slider,     "High band gain",         "s_highgain"    },
+   { it_slider,     "Preamp",                 "s_eqpreamp"    },
+   { it_variable,   "Low pass cutoff",        "s_lowfreq"     },
+   { it_variable,   "High pass cutoff",       "s_highfreq"    },
+   { it_end }
+};
+
+menu_t menu_soundeq =
+{
+   mn_soundeq_items,
+   &menu_sound,          // previous page
+   NULL,                 // next page
+   &menu_sound,          // root page
+   180, 15,              // x, y offset
+   3,                    // first selectable
+   mf_background,        // full-screen menu
+   NULL,
+   mn_sndpage_names,
+   mn_sndpage_menus
+};
 
 /////////////////////////////////////////////////////////////////
 //

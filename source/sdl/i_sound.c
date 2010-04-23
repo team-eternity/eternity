@@ -399,6 +399,8 @@ VARIABLE_INT(spc_preamp,     NULL,       1,  6, NULL);
 VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
 #endif
 
+// Equalizer variables
+
 VARIABLE_BOOLEAN(s_equalizer, NULL, onoff);
 
 VARIABLE_FLOAT(s_lowfreq,  NULL, 0.0, UL);
