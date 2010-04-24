@@ -208,12 +208,12 @@ static void R_MapPlane(int y, int x1, int x2)
 
    span.xfrac = 
       (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
+                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunitx);
    span.yfrac = 
       (unsigned int)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
-   span.xstep = (unsigned int)(xstep * plane.fixedunit);
-   span.ystep = (unsigned int)(ystep * plane.fixedunit);
+                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunity);
+   span.xstep = (unsigned int)(xstep * plane.fixedunitx);
+   span.ystep = (unsigned int)(ystep * plane.fixedunity);
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
@@ -437,8 +437,8 @@ static void R_CalcSlope(visplane_t *pl)
    if(!pl->pslope)
       return;
 
-   tsizei = flatdims[textures[pl->picnum]->flatsize].i;
-   tsizef = flatdims[textures[pl->picnum]->flatsize].f;
+   tsizei = textures[pl->picnum]->width;
+   tsizef = (float)textures[pl->picnum]->width;
 
    x = (int)pl->pslope->of.x;
    y = (int)pl->pslope->of.y;
@@ -872,6 +872,17 @@ void do_draw_newsky(visplane_t *pl)
    }
 }
 
+
+
+
+// Log base 2 LUT
+static const int MultiplyDeBruijnBitPosition2[32] = 
+{
+  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
+  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+};
+
+
 //
 // do_draw_plane
 //
@@ -989,7 +1000,6 @@ static void do_draw_plane(visplane_t *pl)
    else      // regular flat
    {
       int stop, light;
-      byte fs;
       texture_t *tex;
 
       int picnum = texturetranslation[pl->picnum];
@@ -1008,15 +1018,32 @@ static void do_draw_plane(visplane_t *pl)
          plane.source = tex->buffer;
       }
 
-      // SoM: support for flats of different sizes!!
-      fs = tex->flatsize;
-      
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      flatfunc        = r_span_engine->DrawSpan[0][fs];
-      slopefunc       = r_span_engine->DrawSlope[0][fs];
-      plane.fixedunit = r_span_engine->fixedunits[0][fs];
+      flatfunc        = r_span_engine->DrawSpan[0][tex->flatsize];
+      slopefunc       = r_span_engine->DrawSlope[0][tex->flatsize];
+
+	   if(tex->flatsize != FLAT_GENERALIZED)
+	   {
+         plane.fixedunitx = plane.fixedunity = 
+            r_span_engine->fixedunits[0][tex->flatsize];
+      }
+      else
+      {
+         int r;
+         
+         r = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->height * 0x077CB531U) >> 27];
+         span.yshift = 32 - r;
+         
+         r = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->width * 0x077CB531U) >> 27];
+         span.xshift = span.yshift - r;
+         span.xmask = (tex->width - 1) << (32 - r - span.xshift);
+         
+         plane.fixedunitx = (float)(1 << (32 - r));
+         plane.fixedunity = (float)(1 << span.yshift);
+      }
+       
         
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
@@ -1063,8 +1090,8 @@ static void do_draw_plane(visplane_t *pl)
 
       R_PlaneLight();
 
-      plane.tsizei = flatdims[tex->flatsize].i;
-      plane.tsizef = flatdims[tex->flatsize].f;
+      plane.tsizei = tex->width;
+      plane.tsizef = (float)tex->width;
 
       plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 

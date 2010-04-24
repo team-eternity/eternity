@@ -95,7 +95,7 @@ int         *texturetranslation;
 // SoM: Allocator for texture_t
 
 static void R_DetermineFlatSize(texture_t *t)
-{
+{   
    // If not powers of two, it can't be a flat.
    if((t->width != 1 && t->width & (t->width - 1)) ||
       (t->height != 1 && t->height & (t->height - 1)))
@@ -105,6 +105,9 @@ static void R_DetermineFlatSize(texture_t *t)
    
    switch(t->width * t->height)
    {
+   case 4096:  // 64x64
+      t->flatsize = FLAT_64;
+	  break;
    case 16384: // 128x128
       t->flatsize = FLAT_128;
       break;

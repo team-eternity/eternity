@@ -336,6 +336,9 @@ SPAN_FUNC(R_DrawSpanCB_8_256, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00,
 SPAN_FUNC(R_DrawSpanCB_8_512, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
           PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
+SPAN_FUNC(R_DrawSpanCB_8_GEN, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
+          (span.yshift), (span.xmask), PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
 static void R_DrawSpan_OLD(void) 
@@ -410,6 +413,8 @@ SPAN_FUNC(R_DrawSpanTL_8_256, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF
 SPAN_FUNC(R_DrawSpanTL_8_512, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
           TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
+SPAN_FUNC(R_DrawSpanTL_8_GEN, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
+          (span.yshift), (span.xmask), TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 // Additive blending
 
 SPAN_FUNC(R_DrawSpanAdd_8_64,  ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
@@ -424,6 +429,8 @@ SPAN_FUNC(R_DrawSpanAdd_8_256, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0x
 SPAN_FUNC(R_DrawSpanAdd_8_512, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
           ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
+SPAN_FUNC(R_DrawSpanAdd_8_GEN, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
+          (span.yshift), (span.xmask), ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
 
 //==============================================================================
 //
@@ -835,6 +842,12 @@ void R_DrawSlope_8_512(void)
    }
 }
 
+
+// NOP
+void R_DrawSpan_CB_NOP(void)
+{
+}
+
 #undef SPANJUMP
 #undef INTERPSTEP
 
@@ -856,23 +869,23 @@ void R_DrawSlope_8_512(void)
 spandrawer_t r_lpspandrawer =
 {
    {
-      { R_DrawSpan_OLD,     R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512  },
-      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512  },
-      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512 },
+      { R_DrawSpan_OLD,     R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512,  R_DrawSpanCB_8_GEN},
+      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512,  R_DrawSpanTL_8_GEN},
+      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512, R_DrawSpanAdd_8_GEN},
    },
 
    // SoM: Sloped span drawers
    // TODO: TL and ADD drawers
    {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
    },
 
    {
-      { XSOLD, XS128, XS256, XS512 },
-      { XS64,  XS128, XS256, XS512 },
-      { XS64,  XS128, XS256, XS512 },
+      { XSOLD, XS128, XS256, XS512, 0},
+      { XS64,  XS128, XS256, XS512, 0},
+      { XS64,  XS128, XS256, XS512, 0},
    },
 };
 
@@ -880,23 +893,23 @@ spandrawer_t r_lpspandrawer =
 spandrawer_t r_spandrawer =
 {
    {
-      { R_DrawSpanCB_8_64,  R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512  },
-      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512  },
-      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512 },
+      { R_DrawSpanCB_8_64,  R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512,  R_DrawSpanCB_8_GEN},
+      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512,  R_DrawSpanTL_8_GEN},
+      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512, R_DrawSpanAdd_8_GEN},
    },
 
    // SoM: Sloped span drawers
    // TODO: TL and ADD drawers
    {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
    },
 
    {
-      { XS64, XS128, XS256, XS512 },
-      { XS64, XS128, XS256, XS512 },
-      { XS64, XS128, XS256, XS512 },
+      { XS64,  XS128, XS256, XS512, 0},
+      { XS64,  XS128, XS256, XS512, 0},
+      { XS64,  XS128, XS256, XS512, 0},
    },
 };
 
@@ -904,23 +917,23 @@ spandrawer_t r_spandrawer =
 spandrawer_t r_lowspandrawer =
 {
    {
-      { R_DrawSpan_LD64,    R_DrawSpan_LD128,    R_DrawSpan_LD256,    R_DrawSpan_LD512    },
-      { R_DrawSpanTL_LD64,  R_DrawSpanTL_LD128,  R_DrawSpanTL_LD256,  R_DrawSpanTL_LD512  },
-      { R_DrawSpanAdd_LD64, R_DrawSpanAdd_LD128, R_DrawSpanAdd_LD256, R_DrawSpanAdd_LD512 },
+      { R_DrawSpan_LD64,    R_DrawSpan_LD128,    R_DrawSpan_LD256,    R_DrawSpan_LD512,    R_DrawSpan_CB_NOP},
+      { R_DrawSpanTL_LD64,  R_DrawSpanTL_LD128,  R_DrawSpanTL_LD256,  R_DrawSpanTL_LD512,  R_DrawSpan_CB_NOP},
+      { R_DrawSpanAdd_LD64, R_DrawSpanAdd_LD128, R_DrawSpanAdd_LD256, R_DrawSpanAdd_LD512, R_DrawSpan_CB_NOP},
    },
 
    // SoM: Sloped span drawers
    // TODO: TL and ADD drawers
    {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512   },
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
    },
 
    {
-      { XS64, XS128, XS256, XS512 },
-      { XS64, XS128, XS256, XS512 },
-      { XS64, XS128, XS256, XS512 },
+      { XS64, XS128, XS256, XS512, 0},
+      { XS64, XS128, XS256, XS512, 0},
+      { XS64, XS128, XS256, XS512, 0},
    },
 };
 

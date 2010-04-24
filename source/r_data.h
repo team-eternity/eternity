@@ -95,6 +95,7 @@ typedef struct texture_s
    
    // SoM: texture attributes
    uint32_t   flags;
+   
    // SoM: If the texture can be used as an optimized flat, this is the size
    // of the flat
    byte       flatsize;
