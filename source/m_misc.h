@@ -87,7 +87,7 @@ typedef struct default_s
    
    int         defaultvalue_i;               // built-in default value
    const char *defaultvalue_s;
-   float       defaultvalue_f;
+   double      defaultvalue_f;
    boolean     defaultvalue_b;
 
    struct { int min, max; } const limit;       // numerical limits
@@ -102,7 +102,7 @@ typedef struct default_s
    
    int         orig_default_i;               // Original default, if modified
    const char *orig_default_s;
-   float       orig_default_f;
+   double      orig_default_f;
    boolean     orig_default_b;
    
    //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any

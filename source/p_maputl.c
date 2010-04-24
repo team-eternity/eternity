@@ -144,12 +144,11 @@ fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
 
 //
 // P_LineOpening
+//
 // Sets opentop and openbottom to the window
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
 //
-
-
 void P_LineOpening(line_t *linedef, mobj_t *mo)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
@@ -158,69 +157,75 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 
    if(linedef->sidenum[1] == -1)      // single sided line
    {
-      tm->openrange = 0;
+      clip.openrange = 0;
       return;
    }
    
-   tm->openfrontsector = linedef->frontsector;
-   tm->openbacksector = linedef->backsector;
+   clip.openfrontsector = linedef->frontsector;
+   clip.openbacksector  = linedef->backsector;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedCeilingActive(tm->openfrontsector) &&
-         R_LinkedCeilingActive(tm->openbacksector) && 
-         tm->openfrontsector->c_portal == tm->openbacksector->c_portal)
-         frontceilz = backceilz = tm->openfrontsector->ceilingheight + (1024 * FRACUNIT);
+      if(mo && demo_version >= 333 && 
+         R_LinkedCeilingActive(clip.openfrontsector) &&
+         R_LinkedCeilingActive(clip.openbacksector) && 
+         clip.openfrontsector->c_portal == clip.openbacksector->c_portal)
+      {
+         frontceilz = backceilz = clip.openfrontsector->ceilingheight + (1024 * FRACUNIT);
+      }
       else
 #endif
       {
-         frontceilz = tm->openfrontsector->ceilingheight;
-         backceilz = tm->openbacksector->ceilingheight;
+         frontceilz = clip.openfrontsector->ceilingheight;
+         backceilz  = clip.openbacksector->ceilingheight;
       }
       
-      frontcz = tm->openfrontsector->ceilingheight;
-      backcz = tm->openbacksector->ceilingheight;
+      frontcz = clip.openfrontsector->ceilingheight;
+      backcz  = clip.openbacksector->ceilingheight;
    }
 
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && R_LinkedFloorActive(tm->openfrontsector) &&
-         R_LinkedFloorActive(tm->openbacksector) && 
-         tm->openfrontsector->f_portal == tm->openbacksector->f_portal)
-         frontfloorz = backfloorz = tm->openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+      if(mo && demo_version >= 333 && 
+         R_LinkedFloorActive(clip.openfrontsector) &&
+         R_LinkedFloorActive(clip.openbacksector) && 
+         clip.openfrontsector->f_portal == clip.openbacksector->f_portal)
+      {
+         frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+      }
       else 
 #endif
       {
-         frontfloorz = tm->openfrontsector->floorheight;
-         backfloorz = tm->openbacksector->floorheight;
+         frontfloorz = clip.openfrontsector->floorheight;
+         backfloorz  = clip.openbacksector->floorheight;
       }
 
-      frontfz = tm->openfrontsector->floorheight;
-      backfz = tm->openbacksector->floorheight;
+      frontfz = clip.openfrontsector->floorheight;
+      backfz = clip.openbacksector->floorheight;
    }
    
    if(frontceilz < backceilz)
-      tm->opentop = frontceilz;
+      clip.opentop = frontceilz;
    else
-      tm->opentop = backceilz;
+      clip.opentop = backceilz;
 
    
    if(frontfloorz > backfloorz)
    {
-      tm->openbottom = frontfloorz;
-      tm->lowfloor = backfloorz;
+      clip.openbottom = frontfloorz;
+      clip.lowfloor = backfloorz;
       // haleyjd
-      tm->floorpic = tm->openfrontsector->floorpic;
+      clip.floorpic = clip.openfrontsector->floorpic;
    }
    else
    {
-      tm->openbottom = backfloorz;
-      tm->lowfloor = frontfloorz;
+      clip.openbottom = backfloorz;
+      clip.lowfloor = frontfloorz;
       // haleyjd
-      tm->floorpic = tm->openbacksector->floorpic;
+      clip.floorpic = clip.openbacksector->floorpic;
    }
 
    if(frontcz < backcz)
@@ -233,8 +238,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    else
       obot = backfz;
 
-   tm->opensecfloor = tm->openbottom;
-   tm->opensecceil = tm->opentop;
+   clip.opensecfloor = clip.openbottom;
+   clip.opensecceil  = clip.opentop;
 
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
@@ -244,10 +249,6 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       fixed_t textop, texbot, texmid;
       side_t *side = &sides[linedef->sidenum[0]];
       
-      if(linedef - lines == 1882 && mo->player)
-      {
-         linedef = linedef;
-      }
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
          texbot = side->rowoffset + obot;
@@ -266,34 +267,67 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
          D_abs(mo->z - textop) <= 24*FRACUNIT)
       {
-         tm->opentop = tm->openbottom;
-         tm->openrange = 0;
+         clip.opentop = clip.openbottom;
+         clip.openrange = 0;
          return;
       }
       
       if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
       {
-         if(texbot < tm->opentop)
-            tm->opentop = texbot;
+         if(texbot < clip.opentop)
+            clip.opentop = texbot;
       }
       else
       {
-         if(textop > tm->openbottom)
-            tm->openbottom = textop;
+         if(textop > clip.openbottom)
+            clip.openbottom = textop;
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
          if(abs(mo->z - textop) <= 24*FRACUNIT)
-            tm->touch3dside = 1;
+            clip.touch3dside = 1;
       }
    }
 
-   tm->openrange = tm->opentop - tm->openbottom;
+   clip.openrange = clip.opentop - clip.openbottom;
 }
 
 //
 // THING POSITION SETTING
 //
+
+//
+// P_LogThingPosition
+//
+// haleyjd 04/15/2010: thing position logging for debugging demo problems.
+// Pass a NULL mobj to close the log.
+//
+#ifdef THING_LOGGING
+void P_LogThingPosition(mobj_t *mo, const char *caller)
+{
+   static FILE *thinglog;
+
+   if(!thinglog)
+      thinglog = fopen("thinglog.txt", "w");
+
+   if(!mo)
+   {
+      if(thinglog)
+         fclose(thinglog);
+      thinglog = NULL;
+      return;
+   }
+
+   if(thinglog)
+   {
+      fprintf(thinglog,
+         "%010d:%s:%p:%20s:%+010d:%+010d:%+010d:%+010d\n",
+         gametic, caller, mo, mo->info->name, mo->x, mo->y, mo->z, mo->flags);
+   }
+}
+#else
+#define P_LogThingPosition(a, b)
+#endif
 
 //
 // P_UnsetThingPosition
@@ -302,9 +336,10 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 // lookups maintaining lists ot things inside
 // these structures need to be updated.
 //
-
-void P_UnsetThingPosition (mobj_t *thing)
+void P_UnsetThingPosition(mobj_t *thing)
 {
+   P_LogThingPosition(thing, "unset");
+
    if(!(thing->flags & MF_NOSECTOR))
    {
       // invisible things don't need to be in sector list
@@ -330,8 +365,8 @@ void P_UnsetThingPosition (mobj_t *thing)
       // If this Thing is being removed entirely, then the calling
       // routine will clear out the nodes in sector_list.
       
-      tm->sector_list = thing->touching_sectorlist;
-      thing->touching_sectorlist = NULL; //to be restored by P_SetThingPosition
+      thing->old_sectorlist = thing->touching_sectorlist;
+      thing->touching_sectorlist = NULL; // to be restored by P_SetThingPosition
    }
 
    if(!(thing->flags & MF_NOBLOCKMAP))
@@ -363,11 +398,13 @@ void P_UnsetThingPosition (mobj_t *thing)
 // Sets thing->subsector properly
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 void P_SetThingPosition(mobj_t *thing)
 {                                                      // link into subsector
    subsector_t *ss = thing->subsector = 
       R_PointInSubsector(thing->x, thing->y);
+
+   P_LogThingPosition(thing, " set ");
 
 #ifdef R_LINKEDPORTALS
    thing->groupid = ss->sector->groupid;
@@ -391,18 +428,17 @@ void P_SetThingPosition(mobj_t *thing)
       //
       // If sector_list isn't NULL, it has a collection of sector
       // nodes that were just removed from this Thing.
-
+      //
       // Collect the sectors the object will live in by looking at
       // the existing sector_list and adding new nodes and deleting
       // obsolete ones.
-
+      //
       // When a node is deleted, its sector links (the links starting
       // at sector_t->touching_thinglist) are broken. When a node is
       // added, new sector links are created.
 
-      P_CreateSecNodeList(thing, thing->x, thing->y);
-      thing->touching_sectorlist = tm->sector_list; // Attach to Thing's mobj_t
-      tm->sector_list = NULL; // clear for next time
+      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y);
+      thing->old_sectorlist = NULL;
    }
 
    // link into blockmap

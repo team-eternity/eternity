@@ -32,7 +32,7 @@
 // is the support of defaults for ALL archived console variables and
 // a way to set a variable's value without changing its default.
 
-typedef struct command_s command_t;
+typedef struct command_s  command_t;
 typedef struct variable_s variable_t;
 
 /******************************** #defines ********************************/
@@ -136,6 +136,12 @@ typedef struct variable_s variable_t;
         variable_t var_ ## name = { &name, defaultvar,       \
                         vt_int, 0, 1, strings };
 
+// haleyjd 04/21/10: support for vt_float
+
+#define VARIABLE_FLOAT(name, defaultvar, min, max)           \
+        variable_t var_ ## name = { &name, defaultvar,       \
+                        vt_float, 0, 0, NULL, min, max };
+
 // basic variable_t creators for constants.
 
 #define CONST_INT(name)                                      \
@@ -188,35 +194,35 @@ enum    // command flag
 
 enum    // variable type
 {
-  vt_int,                // normal integer 
-  vt_float,              // decimal               NOT IMPLEMENTED
-  vt_string,             // string
-  vt_chararray,          // char array -- haleyjd 03/13/06
-  vt_toggle              // on/off value          NOT IMPLEMENTED
+  vt_int,      // normal integer 
+  vt_float,    // decimal
+  vt_string,   // string
+  vt_chararray // char array -- haleyjd 03/13/06
 };
 
 /******************************** STRUCTS ********************************/
 
 struct variable_s
-{
-  // NB: for strings, this is char ** not char *
-  void *variable;
-  void *v_default;         // the default 
-  int type;       // vt_?? variable type: int, string
-  int min;        // minimum value or string length
-  int max;        // maximum value/length
+{  
+  void *variable;  // NB: for strings, this is char ** not char *
+  void *v_default; // the default 
+  int type;        // vt_?? variable type: int, string
+  int min;         // minimum value or string length
+  int max;         // maximum value/length
   char **defines;  // strings representing the value: eg "on" not "1"
+  double dmin;     // haleyjd 04/21/10: min for double vars
+  double dmax;     //                   max for double vars
 };
 
 struct command_s
 {
   char *name;
-  int type;               // ct_?? command type
-  int flags;              // cf_??
+  int type;              // ct_?? command type
+  int flags;             // cf_??
   variable_t *variable;
-  void (*handler)(void);  // handler
-  int netcmd;     // network command number
-  command_t *next;        // for hashing
+  void (*handler)(void); // handler
+  int netcmd;            // network command number
+  command_t *next;       // for hashing
 };
 
 typedef struct alias_s

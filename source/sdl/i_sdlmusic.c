@@ -74,7 +74,8 @@ void I_SDLMusicSetSPCBass(void)
 //
 // SDL_mixer effect processor; mixes SPC data into the postmix stream.
 //
-static void I_EffectSPC(int chan, void *stream, int len, void *udata)
+//static void I_EffectSPC(int chan, void *stream, int len, void *udata)
+static void I_EffectSPC(void *udata, Uint8 *stream, int len)
 {
    Sint16 *leftout, *rightout, *leftend, *datal, *datar;
    int numsamples, spcsamples;
@@ -254,11 +255,14 @@ static void I_SDLPlaySong(int handle, int looping)
    // if a SPC is set up, play it.
    if(snes_spc)
    {
-      if(!Mix_RegisterEffect(MIX_CHANNEL_POST, I_EffectSPC, NULL, NULL))
+      /*
+      if(!Mix_RegisterEffect(MIX_CHANNEL_POST, I_EffectSPC, NULL, NULL))      
       {
          doom_printf("I_PlaySong: Mix_RegisterEffect failed\n");
          return;
       }
+      */
+      Mix_HookMusic(I_EffectSPC, NULL);
    }
    else
 #endif
@@ -306,10 +310,12 @@ static void I_SDLPauseSong(int handle)
       }
    }
 
+   /*
 #ifdef HAVE_SPCLIB
    if(snes_spc)
       Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
 #endif
+   */
 }
 
 //
@@ -326,10 +332,12 @@ static void I_SDLResumeSong(int handle)
          Mix_VolumeMusic(paused_midi_volume);
    }
 
+   /*
 #ifdef HAVE_SPCLIB
    if(snes_spc)
       Mix_RegisterEffect(MIX_CHANNEL_POST, I_EffectSPC, NULL, NULL);
 #endif
+   */
 }
 
 //
@@ -341,8 +349,12 @@ static void I_SDLStopSong(int handle)
       Mix_HaltMusic();
 
 #ifdef HAVE_SPCLIB
+   /*
    if(snes_spc)
       Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+   */
+   if(snes_spc)
+      Mix_HookMusic(NULL, NULL);
 #endif
 }
 
@@ -377,7 +389,8 @@ static void I_SDLUnRegisterSong(int handle)
    if(snes_spc)
    {
       // be certain the callback is unregistered first
-      Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+      //Mix_UnregisterEffect(MIX_CHANNEL_POST, I_EffectSPC);
+      Mix_HookMusic(NULL, NULL);
 
       // free the spc and filter objects
       spc_delete(snes_spc);

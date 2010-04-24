@@ -87,8 +87,8 @@ int P_Random(pr_class_t pr_class)
    // except pr_misc into pr_all_in_one
 
    compat = pr_class == pr_misc ?     // sf: moved here
-             (rng.prndindex = (rng.prndindex + 1) & 255) :
-             (rng.rndindex  = (rng.rndindex  + 1) & 255) ;
+      (rng.prndindex = (rng.prndindex + 1) & 255) :
+      (rng.rndindex  = (rng.rndindex  + 1) & 255);
 
    if(pr_class != pr_misc && !demo_insurance)      // killough 3/31/98
       pr_class = pr_all_in_one;

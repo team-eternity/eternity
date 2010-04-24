@@ -529,13 +529,25 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int colour)
 
    case it_slider:
       MN_GetItemVariable(item);
-       // draw slider -- ints only
-      if(item->var && item->var->type == vt_int)
+       // draw slider -- ints or floats (haleyjd 04/22/10)
+      if(item->var)
       {
-         int range = item->var->max - item->var->min;
-         int posn = *(int *)item->var->variable - item->var->min;
-         
-         MN_DrawSlider(x + GAP, y, (posn*100) / range);
+         variable_t *var = item->var;
+
+         if(var->type == vt_int)
+         {
+            int range = var->max - var->min;
+            int posn  = *(int *)var->variable - var->min;
+
+            MN_DrawSlider(x + GAP, y, (posn*100) / range);
+         }
+         else if(var->type == vt_float)
+         {
+            double range = var->dmax - var->dmin;
+            double posn  = *(double *)var->variable - var->dmin;
+
+            MN_DrawSlider(x + GAP, y, (int)((posn*100) / range));
+         }
       }
       break;
 
@@ -1285,12 +1297,14 @@ boolean MN_Responder(event_t *ev)
       case it_bigslider: // haleyjd 08/31/06: old-school big slider
       case it_toggle:
          // no on-off int values
-         if(menuitem->var->type == vt_int &&
-            menuitem->var->max - menuitem->var->min == 1) 
-            break;
-         
-         // change variable
-         psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
+         if(menuitem->var->type == vt_int)
+         {
+            if(menuitem->var->max - menuitem->var->min == 1) 
+               break;
+
+            // change variable
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
+         }
          cmdtype = c_menu;
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);

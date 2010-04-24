@@ -431,26 +431,29 @@ const char *C_VariableValue(variable_t *variable)
    switch(variable->type)
    {
    case vt_int:
-   case vt_toggle:
-      sprintf(value, "%i", *(int*)variable->variable);
+      psnprintf(value, sizeof(value), "%i", *(int*)variable->variable);
       break;
       
    case vt_string:
       // haleyjd 01/24/03: added null check from prboom
       if(*(char **)variable->variable)
-         sprintf(value, "%s", *(char**)variable->variable);
+         psnprintf(value, sizeof(value), "%s", *(char**)variable->variable);
       else
          return "null";
       break;
 
    case vt_chararray:
       // haleyjd 03/13/06: static string support
-      sprintf(value, "%s", (char *)variable->variable);
+      psnprintf(value, sizeof(value), "%s", (char *)variable->variable);
+      break;
+
+   case vt_float:
+      // haleyjd 04/21/10: implemented vt_float
+      psnprintf(value, sizeof(value), "%+.5f", *(double *)variable->variable);
       break;
       
    default:
-      return "(unknown)";
-      break;
+      I_Error("C_VariableValue: unknown variable type %d\n", variable->type);
    }
    
    return value;
@@ -583,6 +586,7 @@ static void C_SetVariable(command_t *command)
 {
    variable_t* variable;
    int size = 0;
+   double fs = 0.0;
    char *errormsg;
    char *temp;
    
@@ -621,6 +625,11 @@ static void C_SetVariable(command_t *command)
    case vt_chararray:
       size = strlen(c_argv[0]);
       break;
+
+   case vt_float:
+      // haleyjd 04/21/10: vt_float
+      fs = strtod(c_argv[0], NULL);
+      break;
       
    default:
       return;
@@ -631,10 +640,23 @@ static void C_SetVariable(command_t *command)
    errormsg = NULL;
    
    // haleyjd 03/22/09: allow unlimited bounds
-   if(variable->max != UL && size > variable->max)
-      errormsg = "value too big";
-   if(variable->min != UL && size < variable->min)
-      errormsg = "value too small";
+   // haleyjd 04/21/10: implement vt_float
+   
+   if(variable->type == vt_float)
+   {
+      // float requires a different check
+      if(variable->dmax != UL && fs > variable->dmax)
+         errormsg = "value too big";
+      if(variable->dmin != UL && fs < variable->dmin)
+         errormsg = "value too small";
+   }
+   else
+   {
+      if(variable->max != UL && size > variable->max)
+         errormsg = "value too big";
+      if(variable->min != UL && size < variable->min)
+         errormsg = "value too small";
+   }
    
    if(errormsg)
    {
@@ -658,9 +680,9 @@ static void C_SetVariable(command_t *command)
       switch(variable->type)  // implicitly set the variable
       {
       case vt_int:
-         *(int*)variable->variable = atoi(c_argv[0]);
+         *(int*)variable->variable = size;
          if(variable->v_default && cmd_setdefault)  // default
-            *(int*)variable->v_default = atoi(c_argv[0]);
+            *(int*)variable->v_default = size;
          break;
          
       case vt_string:
@@ -683,9 +705,16 @@ static void C_SetVariable(command_t *command)
             strcpy((char *)variable->v_default, c_argv[0]);
          }
          break;
+
+      case vt_float:
+         // haleyjd 04/21/10: implemented vt_float
+         *(double *)variable->variable = fs;
+         if(variable->v_default && cmd_setdefault)
+            *(double *)variable->v_default = fs;
+         break;
          
       default:
-         return;
+         I_Error("C_SetVariable: unknown variable type %d\n", variable->type);
       }
    }
    

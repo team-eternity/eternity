@@ -903,6 +903,7 @@ struct complevel_s
    { 329, 329 }, // comp_overunder
    { 329, 329 }, // comp_planeshoot
    { 335, 335 }, // comp_special
+   { 337, 337 }, // comp_ninja
    { 0,   0   }
 };
 
@@ -2374,13 +2375,14 @@ void P_SpawnPlayer(mapthing_t *mthing);
 // at the given mapthing_t spot
 // because something is occupying it
 //
-static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
+static boolean G_CheckSpot(int playernum, mapthing_t *mthing, mobj_t **fog)
 {
-   fixed_t     x,y;
+   fixed_t     x, y;
    subsector_t *ss;
    unsigned    an;
    mobj_t      *mo;
    int         i;
+   fixed_t     mtcos, mtsin;
 
    if(!players[playernum].mo)
    {
@@ -2437,19 +2439,70 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);
-   an = (ANG45 * (mthing->angle/45)) >> ANGLETOFINESHIFT;
 
-   mo = P_SpawnMobj(x + 20*finecosine[an], 
-                    y + 20*finesine[an],
+   // haleyjd: There was a weird bug with this statement:
+   //
+   // an = (ANG45 * (mthing->angle/45)) >> ANGLETOFINESHIFT;
+   //
+   // Even though this code stores the result into an unsigned variable, most
+   // compilers seem to ignore that fact in the optimizer and use the resulting
+   // value directly in a lea instruction. This causes the signed mapthing_t
+   // angle value to generate an out-of-bounds access into the fine trig
+   // lookups. In vanilla, this accesses the finetangent table and other parts
+   // of the finesine table, and the result is what I call the "ninja spawn,"
+   // which is missing the fog and sound, as it spawns somewhere out in the
+   // far reaches of the void.
+
+   if(!comp[comp_ninja])
+   {
+      an = ANG45 * (angle_t)(mthing->angle / 45);
+      mtcos = finecosine[an >> ANGLETOFINESHIFT];
+      mtsin = finesine[an >> ANGLETOFINESHIFT];
+   }
+   else
+   {
+      // emulate out-of-bounds access to finecosine / finesine tables
+      angle_t mtangle = (angle_t)(mthing->angle / 45);
+      
+      an = ANG45 * mtangle;
+
+      switch(mtangle)
+      {
+      case 4: // 180 degrees (0x80000000 >> 19 == -4096)
+         mtcos = finetangent[2048];
+         mtsin = finetangent[0];
+         break;
+      case 5: // 225 degrees (0xA0000000 >> 19 == -3072)
+         mtcos = finetangent[3072];
+         mtsin = finetangent[1024];
+         break;
+      case 6: // 270 degrees (0xC0000000 >> 19 == -2048)
+         mtcos = finesine[0];
+         mtsin = finetangent[2048];
+         break;
+      case 7: // 315 degrees (0xE0000000 >> 19 == -1024)
+         mtcos = finesine[1024];
+         mtsin = finetangent[3072];
+         break;
+      default: // everything else works properly
+         mtcos = finecosine[an >> ANGLETOFINESHIFT];
+         mtsin = finesine[an >> ANGLETOFINESHIFT];
+         break;
+      }
+   }
+
+   mo = P_SpawnMobj(x + 20 * mtcos, 
+                    y + 20 * mtsin,
                     ss->sector->floorheight + 
                        GameModeInfo->teleFogHeight, 
                     GameModeInfo->teleFogType);
 
-   if(players[consoleplayer].viewz != 1)
-   {
-      // don't start sound on first frame
-      S_StartSound(mo, GameModeInfo->teleSound);
-   }
+   // haleyjd: There was a hack here trying to avoid playing the sound on the
+   // "first frame"; but if this is done, then you miss your own spawn sound
+   // quite often, due to the fact your sound origin hasn't been moved yet.
+   // So instead, I'll return the fog in *fog and play the sound at the caller.
+   if(fog)
+      *fog = mo;
 
    return true;
 }
@@ -2497,6 +2550,7 @@ extern const char *level_error;
 void G_DeathMatchSpawnPlayer(int playernum)
 {
    int j, selections = deathmatch_p - deathmatchstarts;
+   mobj_t *fog = NULL;
    
    if(selections < MAXPLAYERS)
    {
@@ -2512,10 +2566,12 @@ void G_DeathMatchSpawnPlayer(int playernum)
    {
       int i = P_Random(pr_dmspawn) % selections;
       
-      if(G_CheckSpot(playernum, &deathmatchstarts[i]))
+      if(G_CheckSpot(playernum, &deathmatchstarts[i], &fog))
       {
          deathmatchstarts[i].type = playernum + 1;
          P_SpawnPlayer(&deathmatchstarts[i]);
+         if(fog)
+            S_StartSound(fog, GameModeInfo->teleSound);
          return;
       }
    }
@@ -2542,6 +2598,7 @@ void G_DoReborn(int playernum)
    else
    {                               // respawn at the start
       int i;
+      mobj_t *fog = NULL;
       
       // first dissasociate the corpse
       players[playernum].mo->player = NULL;
@@ -2561,19 +2618,25 @@ void G_DoReborn(int playernum)
          return;
       }
 
-      if(G_CheckSpot(playernum, &playerstarts[playernum]))
+      if(G_CheckSpot(playernum, &playerstarts[playernum], &fog))
       {
          P_SpawnPlayer(&playerstarts[playernum]);
+         if(fog)
+            S_StartSound(fog, GameModeInfo->teleSound);
          return;
       }
 
       // try to spawn at one of the other players spots
       for(i = 0; i < MAXPLAYERS; i++)
       {
-         if(G_CheckSpot(playernum, &playerstarts[i]))
+         mobj_t *fog = NULL;
+
+         if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {
             playerstarts[i].type = playernum + 1; // fake as other player
             P_SpawnPlayer(&playerstarts[i]);
+            if(fog)
+               S_StartSound(fog, GameModeInfo->teleSound);
             playerstarts[i].type = i+1;   // restore
             return;
          }
@@ -3248,7 +3311,9 @@ static void G_SetOldDemoOptions(void)
 {
    int i;
 
-   for(i = 0; i <= comp_zerotags; ++i)
+   compatibility = 1;
+
+   for(i = 0; i < COMP_TOTAL; ++i)
       comp[i] = 1;
       
    monsters_remember     = 0;

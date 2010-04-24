@@ -27,10 +27,6 @@
 #ifndef I_SOUND_H__
 #define I_SOUND_H__
 
-#ifdef DJGPP
-  #include <allegro.h>
-#endif
-
 typedef struct i_sounddriver_s
 {
    int  (*InitSound)(void);
@@ -43,6 +39,7 @@ typedef struct i_sounddriver_s
    void (*StopSound)(int);
    int  (*SoundIsPlaying)(int);
    void (*UpdateSoundParams)(int, int, int, int);
+   void (*UpdateEQParams)(void);
 } i_sounddriver_t;
 
 // Init at program start...
@@ -129,6 +126,15 @@ void I_UnRegisterSong(int handle);
 extern  int snd_card;
 extern  int mus_card;
 extern  int detect_voices; // jff 3/4/98 option to disable voice detection
+
+// haleyjd 04/21/10: equalization parameters
+extern int     s_equalizer; // if true, use equalizer
+extern double  s_lowfreq;   // low band cutoff frequency
+extern double  s_highfreq;  // high band cutoff frequency
+extern double  s_eqpreamp;  // preamp factor
+extern double  s_lowgain;   // low band gain
+extern double  s_midgain;   // mid band gain
+extern double  s_highgain;  // high band gain
 
 #endif
 

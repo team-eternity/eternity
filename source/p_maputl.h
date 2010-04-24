@@ -111,7 +111,7 @@ boolean P_BlockLinesIterator (int x, int y, boolean func(line_t *));
 boolean P_BlockThingsIterator(int x, int y, boolean func(mobj_t *));
 boolean ThingIsOnLine(mobj_t *t, line_t *l);  // killough 3/15/98
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                       int flags, boolean trav(intercept_t *));
+                           int flags, boolean trav(intercept_t *));
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 

@@ -114,8 +114,6 @@ typedef struct degenmobj_s
 
 #include "polyobj.h"
 
-
-
 // SoM: for attaching surfaces (floors and ceilings) to each other
 // SoM: these are flags now
 typedef enum

@@ -474,6 +474,7 @@ i_sounddriver_t i_pcsound_driver =
    I_PCSStopSound,         // StopSound
    I_PCSSoundIsPlaying,    // SoundIsPlaying
    I_PCSUpdateSoundParams, // UpdateSoundParams
+   NULL,                   // UpdateEQParams
 };
 
 // EOF

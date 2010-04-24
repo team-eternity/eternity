@@ -1104,7 +1104,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    // -- Ceilings -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
    heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ? 
-                  (t > h || t2 > h2) :
+                  (t != h || t2 != h2) :
                   (seg.backsec->ceilingheight != seg.frontsec->ceilingheight);
 
    seg.markflags = 0;

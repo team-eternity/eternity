@@ -64,117 +64,103 @@ void    P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod);
 boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y);
 
 //jff 3/19/98 P_CheckSector(): new routine to replace P_ChangeSector()
-boolean P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
-void    P_DelSeclist(msecnode_t*);                          // phares 3/16/98
-void    P_FreeSecNodeList();    // sf
-void    P_CreateSecNodeList(mobj_t*,fixed_t,fixed_t);       // phares 3/14/98
-boolean Check_Sides(mobj_t *, int, int);                    // phares
+boolean     P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
+void        P_DelSeclist(msecnode_t *);                      // phares 3/16/98
+void        P_FreeSecNodeList(void);                         // sf
+msecnode_t *P_CreateSecNodeList(mobj_t *,fixed_t, fixed_t);  // phares 3/14/98
+boolean     Check_Sides(mobj_t *, int, int);                 // phares
 
-int     P_GetMoveFactor(mobj_t *mo, int *friction);         // killough 8/28/98
-int     P_GetFriction(const mobj_t *mo, int *factor);       // killough 8/28/98
-void    P_ApplyTorque(mobj_t *mo);                          // killough 9/12/98
-
+int         P_GetMoveFactor(mobj_t *mo, int *friction);      // killough 8/28/98
+int         P_GetFriction(const mobj_t *mo, int *factor);    // killough 8/28/98
+void        P_ApplyTorque(mobj_t *mo);                       // killough 9/12/98
 
 typedef struct doom_mapinter_s
 {
-   // SoM: These are at the front of the struct because they need to be set initially
-   // Temporary holder for thing_sectorlist threads
    struct doom_mapinter_s *prev; // SoM: previous entry in stack (for pop)
-   msecnode_t *sector_list;      // phares 3/16/98
-   mobj_t *BlockingMobj;         // haleyjd 1/17/00: global hit reference
 
-   // -----------------------------------------------------------------------
+   //==========================================================================
    // The tm* items are used to hold information globally, usually for
    // line or object intersection checking
    // SoM: These used to be prefixed with tm
-
 
    // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
    // haleyjd: values for tmtouch3dside:
    // 0 == no 3DMidTex involved in clipping
    // 1 == 3DMidTex involved but not responsible for floorz
    // 2 == 3DMidTex responsible for floorz
-   int touch3dside; // Moved to the top of the struct because it needs an initial value
+   int        touch3dside;
 
-   mobj_t    *thing;
-   int       flags;
-   fixed_t   x;
-   fixed_t   y;
+   mobj_t     *thing;    // current thing being clipped
+   fixed_t    x;         // x position, usually where we want to move
+   fixed_t    y;         // y position, usually where we want to move
 
-   fixed_t   bbox[4];  // bounding box for line intersection checks
-   fixed_t   floorz;   // floor you'd hit if free to fall
-   fixed_t   ceilingz; // ceiling of sector you're in
-   fixed_t   dropoffz; // dropoff on other side of line you're crossing
+   fixed_t    bbox[4];   // bounding box for thing/line intersection checks
+   fixed_t    floorz;    // floor you'd hit if free to fall
+   fixed_t    ceilingz;  // ceiling of sector you're in
+   fixed_t    dropoffz;  // dropoff on other side of line you're crossing
 
-   // SoM : the floorz and ceilingz of the sectors.
-   fixed_t   secfloorz;
-   fixed_t   secceilz;
-
-   // SoM: Stepup floorz from a thing... Not sure if it should be used?
-   // set this instead of tmfloorz
-   fixed_t   stepupfloorz;
-
-   // SoM 11/6/02: UGHAH
-   fixed_t   passfloorz;
-   fixed_t   passceilz;
-
-   // haleyjd
-   int       floorpic;
-
-   int       unstuck;     // killough 8/1/98: whether to allow unsticking
-   // SoM: End of tm* list
-   // -----------------------------------------------------------------------
+   fixed_t    secfloorz; // SoM: floorz considering only sector heights
+   fixed_t    secceilz;  // SoM: ceilingz considering only sector heights
    
-   // If "floatok" true, move would be ok
-   // if within "tmfloorz - tmceilingz".
-   boolean   floatok;
+   fixed_t    passfloorz; // SoM 11/6/02: UGHAH
+   fixed_t    passceilz;
 
-   // killough 11/98: if "felldown" true, object was pushed down ledge
-   boolean   felldown;
+   int        floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
+
+   int        unstuck;   // killough 8/1/98: whether to allow unsticking
+
+   // SoM: End of tm* list
+   //==========================================================================
+   
+   boolean    floatok;   // If "floatok" true, move ok if within floorz - ceilingz   
+   boolean    felldown;  // killough 11/98: if "felldown" true, object was pushed down ledge
 
    // keep track of the line that lowers the ceiling,
    // so missiles don't explode against sky hack walls
-   line_t    *ceilingline;
-   line_t    *blockline;    // killough 8/11/98: blocking linedef
-   line_t    *floorline;    // killough 8/1/98: Highest touched floor
+   line_t     *ceilingline;
+   line_t     *blockline;   // killough 8/11/98: blocking linedef
+   line_t     *floorline;   // killough 8/1/98: Highest touched floor
 
-   mobj_t    *linetarget; // who got hit (or NULL)
+   mobj_t     *linetarget;  // who got hit (or NULL)
 
    // keep track of special lines as they are hit,
    // but don't process them until the move is proven valid
    // 1/11/98 killough: removed limit on special lines crossed
-   line_t **spechit;    // new code -- killough
-   int spechit_max;     // killough
-   int numspechit;
+   line_t     **spechit;    // new code -- killough
+   int        spechit_max;  // killough
+   int        numspechit;
 
+   // P_LineOpening
+   fixed_t    opentop;      // top of line opening
+   fixed_t    openbottom;   // bottom of line opening
+   fixed_t    openrange;    // height of opening: top - bottom
+   fixed_t    lowfloor;     // lowest floorheight involved   
+   fixed_t    opensecfloor; // SoM 11/3/02: considering only sector floor
+   fixed_t    opensecceil;  // SoM 11/3/02: considering only sector ceiling
 
-   // See P_LineOpening
-   fixed_t opentop;
-   fixed_t openbottom;
-   fixed_t openrange;
-   fixed_t lowfloor;
-
-   // SoM 11/3/02: opensecfloor, opensecceil.
-   fixed_t opensecfloor;
-   fixed_t opensecceil;
-
-   // moved front and back outside P_LineOpening and changed    // phares 3/7/98
+   // moved front and back outside P_LineOpening and changed -- phares 3/7/98
    // them to these so we can pick up the new friction value
    // in PIT_CheckLine()
-   sector_t *openfrontsector; // made global                    // phares
-   sector_t *openbacksector;  // made global
+   sector_t   *openfrontsector; // made global
+   sector_t   *openbacksector;  // made global
+
+   // Temporary holder for thing_sectorlist threads
+   // haleyjd: this is now *only* used inside P_CreateSecNodeList and callees
+   msecnode_t *sector_list;     // phares 3/16/98
+   
+   mobj_t     *BlockingMobj;    // haleyjd 1/17/00: global hit reference
 
 } doom_mapinter_t;
 
 
 // Pushes the tm stack, clearing the new element
-void P_PushTMStack();
+void P_PushClipStack(void);
 
 // Pops the tm stack, storing the discarded element for later re-insertion.
-void P_PopTMStack();
+void P_PopClipStack(void);
 
-
-extern doom_mapinter_t  *tm;
+extern doom_mapinter_t clip;   // haleyjd 04/16/10: made global, renamed
+extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
 
 
 extern int spechits_emulation;  // haleyjd 09/20/06
