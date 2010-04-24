@@ -89,12 +89,13 @@ typedef struct cb_plane_s
    lighttable_t **planezlight;
    lighttable_t *colormap;
    lighttable_t *fixedcolormap;
-   void *source;
+
+   // SoM: Texture that covers the plane
+   texture_t *tex;
+   void      *source;
 
    // SoM: slopes.
    rslope_t *slope;
-   int      tsizei;
-   float    tsizef;
 
    void (*MapFunc)(int, int, int);
 } cb_plane_t;

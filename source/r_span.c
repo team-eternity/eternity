@@ -843,6 +843,91 @@ void R_DrawSlope_8_512(void)
 }
 
 
+
+void R_DrawSlope_8_GEN(void)
+{
+   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   float ius = slopespan.iustep, ivs = slopespan.ivstep;
+   float id = slopespan.idfrac, ids = slopespan.idstep;
+   
+   byte *src, *dest, *colormap;
+   int count;
+   fixed_t mapindex = 0;
+
+   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+      return;
+
+   src = (byte *)slopespan.source;
+   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
+
+   while(count >= SPANJUMP)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      // TODO: 
+      mulstart = 65536.0f / id;
+      id += ids * SPANJUMP;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * SPANJUMP;
+      iv += ivs * SPANJUMP;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) * INTERPSTEP);
+      vstep = (int)((vend - vstart) * INTERPSTEP);
+
+      incount = SPANJUMP;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> span.xshift) & span.xmask) | ((ufrac >> 16) & span.ymask)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+
+      count -= SPANJUMP;
+   }
+   if(count > 0)
+   {
+      float ustart, uend;
+      float vstart, vend;
+      float mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * count;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * count;
+      iv += ivs * count;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) / count);
+      vstep = (int)((vend - vstart) / count);
+
+      incount = count;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex ++];
+         *dest++ = colormap[src[((vfrac >> span.xshift) & span.xmask) | ((ufrac >> 16) & span.ymask)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+   }
+}
+
+
 // NOP
 void R_DrawSpan_CB_NOP(void)
 {
@@ -877,9 +962,9 @@ spandrawer_t r_lpspandrawer =
    // SoM: Sloped span drawers
    // TODO: TL and ADD drawers
    {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
    },
 
    {
@@ -901,9 +986,9 @@ spandrawer_t r_spandrawer =
    // SoM: Sloped span drawers
    // TODO: TL and ADD drawers
    {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
+      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
    },
 
    {

@@ -365,12 +365,12 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3f(&s, &slope->A) * plane.tsizef;
-   slopespan.ivfrac = M_DotVec3f(&s, &slope->B) * plane.tsizef;
+   slopespan.iufrac = M_DotVec3f(&s, &slope->A) * (float)plane.tex->width;
+   slopespan.ivfrac = M_DotVec3f(&s, &slope->B) * (float)plane.tex->height;
    slopespan.idfrac = M_DotVec3f(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * plane.tsizef;
-   slopespan.ivstep = slope->B.x * plane.tsizef;
+   slopespan.iustep = slope->A.x * (float)plane.tex->width;
+   slopespan.ivstep = slope->B.x * (float)plane.tex->height;
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -430,21 +430,19 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 static void R_CalcSlope(visplane_t *pl)
 {
    // This is where the crap gets calculated. Yay
-   int x, y, tsizei;
-   float ixscale, iyscale, tsizef;
-   rslope_t *rslope = &pl->rslope;
+   int            x, y;
+   float          ixscale, iyscale;
+   rslope_t       *rslope = &pl->rslope;
+   texture_t      *tex = textures[pl->picnum];
 
    if(!pl->pslope)
       return;
 
-   tsizei = textures[pl->picnum]->width;
-   tsizef = (float)textures[pl->picnum]->width;
-
    x = (int)pl->pslope->of.x;
    y = (int)pl->pslope->of.y;
 
-   x -= x % tsizei;
-   y -= y % tsizei;
+   x -= x % tex->height;
+   y -= y % tex->width;
 
    // TODO: rotation/offsets
    rslope->P.x = (float)x;
@@ -452,10 +450,10 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
 
    rslope->M.x = rslope->P.x;
-   rslope->M.z = rslope->P.z + tsizef;
+   rslope->M.z = rslope->P.z + (float)tex->width;
    rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
 
-   rslope->N.x = rslope->P.x + tsizef;
+   rslope->N.x = rslope->P.x + (float)tex->height;
    rslope->N.z = rslope->P.z;
    rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
 
@@ -487,7 +485,7 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->zat = P_GetZAtf(pl->pslope, pl->viewxf, pl->viewyf);
 
    // More help from randy. I was totally lost on this... 
-   ixscale = iyscale = view.tan / tsizef;
+   ixscale = iyscale = view.tan / (float)tex->width;
 
    rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - pl->viewzf);
    rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
@@ -998,9 +996,9 @@ static void do_draw_plane(visplane_t *pl)
       }
    }
    else      // regular flat
-   {
-      int stop, light;
+   {  
       texture_t *tex;
+      int stop, light;
 
       int picnum = texturetranslation[pl->picnum];
 
@@ -1009,12 +1007,12 @@ static void do_draw_plane(visplane_t *pl)
          && textures[pl->picnum]->flatsize == FLAT_64)
       {
          plane.source = R_DistortedFlat(pl->picnum);
-         tex = textures[pl->picnum];
+         tex = plane.tex = textures[pl->picnum];
       }
       else
       {
          // SoM: Handled outside
-         tex = R_CacheTexture(picnum);
+         tex = plane.tex = R_CacheTexture(picnum);
          plane.source = tex->buffer;
       }
 
@@ -1024,24 +1022,40 @@ static void do_draw_plane(visplane_t *pl)
       flatfunc        = r_span_engine->DrawSpan[0][tex->flatsize];
       slopefunc       = r_span_engine->DrawSlope[0][tex->flatsize];
 
-	   if(tex->flatsize != FLAT_GENERALIZED)
+      if(pl->pslope)
+         plane.slope = &pl->rslope;
+      else
+         plane.slope = NULL;
+         
+      if(tex->flatsize != FLAT_GENERALIZED)
 	   {
          plane.fixedunitx = plane.fixedunity = 
             r_span_engine->fixedunits[0][tex->flatsize];
       }
       else
       {
-         int r;
+         int rw, rh;
          
-         r = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->height * 0x077CB531U) >> 27];
-         span.yshift = 32 - r;
-         
-         r = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->width * 0x077CB531U) >> 27];
-         span.xshift = span.yshift - r;
-         span.xmask = (tex->width - 1) << (32 - r - span.xshift);
-         
-         plane.fixedunitx = (float)(1 << (32 - r));
-         plane.fixedunity = (float)(1 << span.yshift);
+         rh = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->height * 0x077CB531U) >> 27];
+         rw = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->width * 0x077CB531U) >> 27];
+
+         if(plane.slope)
+         {
+            span.ymask = tex->height - 1;
+            
+            span.xshift = 16 - rh;
+            span.xmask = (tex->width - 1) << (16 - span.xshift);
+         }
+         else
+         {
+            span.yshift = 32 - rh;
+            
+            span.xshift = span.yshift - rw;
+            span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
+            
+            plane.fixedunitx = (float)(1 << (32 - rw));
+            plane.fixedunity = (float)(1 << span.yshift);
+         }
       }
        
         
@@ -1077,21 +1091,9 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd 10/16/06
       plane.fixedcolormap = pl->fixedcolormap;
 
-      // SoM: slopes
-#if 1
-      if(pl->pslope)
-         plane.slope = &pl->rslope;
-      else
-         plane.slope = NULL;
-#else
-      plane.slope = pl->pslope ? &pl->rslope : NULL;
-#endif
       plane.lightlevel = pl->lightlevel;
 
       R_PlaneLight();
-
-      plane.tsizei = tex->width;
-      plane.tsizef = (float)tex->width;
 
       plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 
