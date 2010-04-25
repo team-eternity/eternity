@@ -206,7 +206,7 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio;
    ystep = plane.pviewsin * slope * view.focratio;
 
-#if 1//__APPLE__
+#ifdef __APPLE__
    {
       double value;
       
@@ -1075,7 +1075,7 @@ static void do_draw_plane(visplane_t *pl)
             span.xshift = span.yshift - rw;
             span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
             
-#if 1 //__APPLE__
+#ifdef __APPLE__
             plane.fixedunitx = (float)(1 << (30 - rw));
             plane.fixedunity = (float)(1 << (30 - rh));
 #else
