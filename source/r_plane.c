@@ -203,45 +203,17 @@ static void R_MapPlane(int y, int x1, int x2)
    slope = (float)fabs(plane.height / dy);
    realy = slope * view.yfoc;
 
-   xstep = plane.pviewcos * slope * view.focratio;
-   ystep = plane.pviewsin * slope * view.focratio;
+   xstep = plane.pviewsin * slope * view.focratio;
+   ystep = plane.pviewcos * slope * view.focratio;
 
-#ifdef __APPLE__
-   {
-      double value;
-      
-      value = fmod(plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                   + (x1 - view.xcenter) * xstep, (double)plane.tex->width); 
-      if(value < 0) value += plane.tex->width;
-      span.xfrac = (int)(value * plane.fixedunitx);
-      span.xfrac <<= 2;
-
-      value = fmod(-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                   + (x1 - view.xcenter) * ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.yfrac = (int)(value * plane.fixedunity);
-      span.yfrac <<= 2;
-      
-      value = fmod(xstep, (double)plane.tex->width);
-      if(value < 0) value += plane.tex->width;
-      span.xstep = (int)(value * plane.fixedunitx);
-      span.xstep <<= 2;
-            
-      value = fmod(ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.ystep = (int)(value * plane.fixedunity);
-      span.ystep <<= 2;
-   }
-#else
    span.xfrac = 
-      (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunitx);
-   span.yfrac = 
       (unsigned int)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunity);
-   span.xstep = (unsigned int)(xstep * plane.fixedunitx);
-   span.ystep = (unsigned int)(ystep * plane.fixedunity);
-#endif
+                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
+   span.yfrac = 
+      (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
+                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
+   span.xstep = (unsigned int)(xstep * plane.fixedunit);
+   span.ystep = (unsigned int)(ystep * plane.fixedunit);
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
@@ -393,12 +365,12 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3f(&s, &slope->A) * (float)plane.tex->width;
-   slopespan.ivfrac = M_DotVec3f(&s, &slope->B) * (float)plane.tex->height;
+   slopespan.iufrac = M_DotVec3f(&s, &slope->A) * plane.tsizef;
+   slopespan.ivfrac = M_DotVec3f(&s, &slope->B) * plane.tsizef;
    slopespan.idfrac = M_DotVec3f(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * (float)plane.tex->width;
-   slopespan.ivstep = slope->B.x * (float)plane.tex->height;
+   slopespan.iustep = slope->A.x * plane.tsizef;
+   slopespan.ivstep = slope->B.x * plane.tsizef;
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -409,11 +381,11 @@ static void R_MapSlope(int y, int x1, int x2)
    // Setup lighting
    base = 4.0f * (plane.lightlevel) - 448.0f;
 
-   map1 = 256.0f - (slope->shade - slope->plight * slopespan.idfrac);
+   map1 = base - (256.0f - (slope->shade - slope->plight * slopespan.idfrac));
    if(count > 0)
    {
       float id = slopespan.idfrac + slopespan.idstep * (x2 - x1);
-      map2 = 256.0f - (slope->shade - slope->plight * id);
+      map2 = base - (256.0f - (slope->shade - slope->plight * id));
    }
    else
       map2 = map1;
@@ -458,31 +430,33 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 static void R_CalcSlope(visplane_t *pl)
 {
    // This is where the crap gets calculated. Yay
-   int            x, y;
-   float          ixscale, iyscale;
-   rslope_t       *rslope = &pl->rslope;
-   texture_t      *tex = textures[pl->picnum];
+   int x, y, tsizei;
+   float ixscale, iyscale, tsizef;
+   rslope_t *rslope = &pl->rslope;
 
    if(!pl->pslope)
       return;
 
+   tsizei = flatdims[flatsize[pl->picnum]].i;
+   tsizef = flatdims[flatsize[pl->picnum]].f;
+
    x = (int)pl->pslope->of.x;
    y = (int)pl->pslope->of.y;
 
-   x -= x % tex->height;
-   y -= y % tex->width;
+   x -= x % tsizei;
+   y -= y % tsizei;
 
    // TODO: rotation/offsets
    rslope->P.x = (float)x;
    rslope->P.z = (float)y;
    rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
 
-   rslope->M.x = rslope->P.x;
-   rslope->M.z = rslope->P.z + (float)tex->width;
+   rslope->M.x = rslope->P.x - tsizef;
+   rslope->M.z = rslope->P.z;
    rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
 
-   rslope->N.x = rslope->P.x + (float)tex->height;
-   rslope->N.z = rslope->P.z;
+   rslope->N.x = rslope->P.x;
+   rslope->N.z = rslope->P.z - tsizef;
    rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
 
    M_TranslateVec3f(&rslope->P);
@@ -497,7 +471,6 @@ static void R_CalcSlope(visplane_t *pl)
    M_CrossProduct3f(&rslope->C, &rslope->M, &rslope->N);
 
    // This is helpful for removing some of the muls when calculating light.
-
    rslope->A.x *= 0.5f;
    rslope->A.y *= 0.5f / view.focratio;
    rslope->A.z *= 0.5f;
@@ -513,7 +486,7 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->zat = P_GetZAtf(pl->pslope, pl->viewxf, pl->viewyf);
 
    // More help from randy. I was totally lost on this... 
-   ixscale = iyscale = view.tan / (float)tex->width;
+   ixscale = iyscale = view.tan / tsizef;
 
    rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - pl->viewzf);
    rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
@@ -827,7 +800,7 @@ void do_draw_newsky(visplane_t *pl)
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
             column.source =
-               R_GetRawColumn(skyTexture2,
+               R_GetColumn(skyTexture2,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
             
             colfunc();
@@ -849,7 +822,7 @@ void do_draw_newsky(visplane_t *pl)
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
             column.source =
-               R_GetRawColumn(skyTexture,
+               R_GetColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
             
             colfunc();
@@ -889,7 +862,7 @@ void do_draw_newsky(visplane_t *pl)
          if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
          {
             column.source =
-               R_GetRawColumn(skyTexture,
+               R_GetColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
 
             colfunc();
@@ -897,17 +870,6 @@ void do_draw_newsky(visplane_t *pl)
       }
    }
 }
-
-
-
-
-// Log base 2 LUT
-static const int MultiplyDeBruijnBitPosition2[32] = 
-{
-  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
-  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
-};
-
 
 //
 // do_draw_plane
@@ -1016,7 +978,7 @@ static void do_draw_plane(visplane_t *pl)
 
          if(column.y1 <= column.y2)
          {
-            column.source = R_GetRawColumn(texture,
+            column.source = R_GetColumn(texture,
                ((an + xtoviewangle[x])^flip) >> (ANGLETOSKYSHIFT));
             
             colfunc();
@@ -1024,68 +986,39 @@ static void do_draw_plane(visplane_t *pl)
       }
    }
    else      // regular flat
-   {  
-      texture_t *tex;
+   {
       int stop, light;
+      int swirling;
+      byte fs;
 
-      int picnum = texturetranslation[pl->picnum];
+      int picnum = flattranslation[pl->picnum] == -1 
+                      ? pl->picnum : flattranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      if(textures[pl->picnum]->flags & TF_SWIRLY 
-         && textures[pl->picnum]->flatsize == FLAT_64)
-      {
+      swirling = (flattranslation[pl->picnum] == -1) 
+                    && flatsize[pl->picnum] == FLAT_64;
+
+      if(swirling)
          plane.source = R_DistortedFlat(pl->picnum);
-         tex = plane.tex = textures[pl->picnum];
-      }
       else
       {
-         // SoM: Handled outside
-         tex = plane.tex = R_CacheTexture(picnum);
-         plane.source = tex->buffer;
+         // haleyjd 09/16/06: this was being allocated at PU_STATIC and changed
+         // to PU_CACHE below, generating a lot of unnecessary allocator noise.
+         // As long as no other memory ops are needed between here and the end
+         // of this function (including called functions), this can be PU_CACHE.
+         plane.source = 
+            W_CacheLumpNum(firstflat + picnum, PU_CACHE);
       }
 
+      // SoM: support for flats of different sizes!!
+      fs = flatsize[picnum];
+      
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      flatfunc        = r_span_engine->DrawSpan[0][tex->flatsize];
-      slopefunc       = r_span_engine->DrawSlope[0][tex->flatsize];
-
-      if(pl->pslope)
-         plane.slope = &pl->rslope;
-      else
-         plane.slope = NULL;
-         
-      {
-         int rw, rh;
-         
-         rh = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->height * 0x077CB531U) >> 27];
-         rw = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->width * 0x077CB531U) >> 27];
-
-         if(plane.slope)
-         {
-            span.ymask = tex->height - 1;
-            
-            span.xshift = 16 - rh;
-            span.xmask = (tex->width - 1) << (16 - span.xshift);
-         }
-         else
-         {
-            span.yshift = 32 - rh;
-            
-            span.xshift = span.yshift - rw;
-            span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
-            
-#ifdef __APPLE__
-            plane.fixedunitx = (float)(1 << (30 - rw));
-            plane.fixedunity = (float)(1 << (30 - rh));
-#else
-            plane.fixedunitx = (float)(1 << (32 - rw));
-            plane.fixedunity = (float)(1 << span.yshift);
-#endif
-
-         }
-      }
-       
+      flatfunc        = r_span_engine->DrawSpan[0][fs];
+      slopefunc       = r_span_engine->DrawSlope[0][fs];
+      plane.fixedunit = r_span_engine->fixedunits[0][fs];
         
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
@@ -1119,9 +1052,21 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd 10/16/06
       plane.fixedcolormap = pl->fixedcolormap;
 
+      // SoM: slopes
+#if 1
+      if(pl->pslope)
+         plane.slope = &pl->rslope;
+      else
+         plane.slope = NULL;
+#else
+      plane.slope = pl->pslope ? &pl->rslope : NULL;
+#endif
       plane.lightlevel = pl->lightlevel;
 
       R_PlaneLight();
+
+      plane.tsizei = flatdims[flatsize[pl->picnum]].i;
+      plane.tsizef = flatdims[flatsize[pl->picnum]].f;
 
       plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
 
