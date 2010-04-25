@@ -68,6 +68,9 @@ typedef struct cb_span_s
    void *source;
    lighttable_t *colormap;
    unsigned int *fg2rgb, *bg2rgb; // haleyjd 06/20/08: tl lookups
+
+   // SoM: some values for the generalizede span drawers
+   unsigned int xshift, xmask, yshift, ymask;
 } cb_span_t;
 
 typedef struct cb_plane_s
@@ -78,19 +81,20 @@ typedef struct cb_plane_s
    int   picnum;
 
    // SoM: we use different fixed point numbers for different flat sizes
-   float fixedunit;
-
+   float fixedunitx, fixedunity;
+   
    int lightlevel;
    float startmap;
    lighttable_t **planezlight;
    lighttable_t *colormap;
    lighttable_t *fixedcolormap;
-   void *source;
+
+   // SoM: Texture that covers the plane
+   texture_t *tex;
+   void      *source;
 
    // SoM: slopes.
    rslope_t *slope;
-   int      tsizei;
-   float    tsizef;
 
    void (*MapFunc)(int, int, int);
 } cb_plane_t;
