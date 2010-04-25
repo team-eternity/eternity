@@ -473,15 +473,15 @@ static void R_CalcSlope(visplane_t *pl)
    y -= y % tex->width;
 
    // TODO: rotation/offsets
-   rslope->P.x = (float)x;
-   rslope->P.z = (float)y;
+   rslope->P.x = x - pl->xoffsf;
+   rslope->P.z = y + pl->yoffsf;
    rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
 
    rslope->M.x = rslope->P.x;
-   rslope->M.z = rslope->P.z + (float)tex->width;
+   rslope->M.z = rslope->P.z + tex->width;
    rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
 
-   rslope->N.x = rslope->P.x + (float)tex->height;
+   rslope->N.x = rslope->P.x + tex->height;
    rslope->N.z = rslope->P.z;
    rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
 
