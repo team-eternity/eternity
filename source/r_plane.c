@@ -206,6 +206,33 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio;
    ystep = plane.pviewsin * slope * view.focratio;
 
+#ifdef __APPLE__
+   {
+      double value;
+      
+      value = fmod(plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
+                   + (x1 - view.xcenter) * xstep, (double)plane.tex->width); 
+      if(value < 0) value += plane.tex->width;
+      span.xfrac = (int)(value * plane.fixedunitx);
+      span.xfrac <<= 2;
+
+      value = fmod(-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
+                   + (x1 - view.xcenter) * ystep, (double)plane.tex->height);
+      if(value < 0) value += plane.tex->height;
+      span.yfrac = (int)(value * plane.fixedunity);
+      span.yfrac <<= 2;
+      
+      value = fmod(xstep, (double)plane.tex->width);
+      if(value < 0) value += plane.tex->width;
+      span.xstep = (int)(value * plane.fixedunitx);
+      span.xstep <<= 2;
+            
+      value = fmod(ystep, (double)plane.tex->height);
+      if(value < 0) value += plane.tex->height;
+      span.ystep = (int)(value * plane.fixedunity);
+      span.ystep <<= 2;
+   }
+#else
    span.xfrac = 
       (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
                       + ((x1 - view.xcenter) * xstep)) * plane.fixedunitx);
@@ -214,6 +241,7 @@ static void R_MapPlane(int y, int x1, int x2)
                       + ((x1 - view.xcenter) * ystep)) * plane.fixedunity);
    span.xstep = (unsigned int)(xstep * plane.fixedunitx);
    span.ystep = (unsigned int)(ystep * plane.fixedunity);
+#endif
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
@@ -1027,12 +1055,6 @@ static void do_draw_plane(visplane_t *pl)
       else
          plane.slope = NULL;
          
-      if(tex->flatsize != FLAT_GENERALIZED)
-	   {
-         plane.fixedunitx = plane.fixedunity = 
-            r_span_engine->fixedunits[0][tex->flatsize];
-      }
-      else
       {
          int rw, rh;
          
@@ -1053,8 +1075,14 @@ static void do_draw_plane(visplane_t *pl)
             span.xshift = span.yshift - rw;
             span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
             
+#ifdef __APPLE__
+            plane.fixedunitx = (float)(1 << (30 - rw));
+            plane.fixedunity = (float)(1 << (30 - rh));
+#else
             plane.fixedunitx = (float)(1 << (32 - rw));
             plane.fixedunity = (float)(1 << span.yshift);
+#endif
+
          }
       }
        

@@ -81,8 +81,7 @@ typedef struct cb_plane_s
    int   picnum;
 
    // SoM: we use different fixed point numbers for different flat sizes
-   float fixedunitx;
-   float fixedunity;
+   float fixedunitx, fixedunity;
    
    int lightlevel;
    float startmap;
