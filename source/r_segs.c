@@ -93,9 +93,9 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
    {  
-      if(ds->curline->linedef->v1->y == ds->curline->linedef->v2->y)
+      if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
          lightnum -= LIGHTBRIGHT;
-      else if(ds->curline->linedef->v1->x == ds->curline->linedef->v2->x)
+      else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
          lightnum += LIGHTBRIGHT;
    }
 

@@ -67,7 +67,7 @@ static float *ptop, *pbottom;
 int r_vissprite_limit;
 static int r_vissprite_count;
 
-// haleyjd 04/25/10: DS_TEST
+// haleyjd 04/25/10: drawsegs optimization
 typedef struct drawsegs_xrange_s
 {
    int x1, x2;
@@ -1207,6 +1207,7 @@ void R_SortVisSpriteRange(int first, int last)
 static float clipbot[MAX_SCREENWIDTH];
 static float cliptop[MAX_SCREENWIDTH];
 
+#if 0
 //
 // R_DrawSprite
 //
@@ -1340,7 +1341,7 @@ void R_DrawSprite(vissprite_t *spr)
    mceilingclip = cliptop;
    R_DrawVisSprite(spr, spr->x1, spr->x2);
 }
-
+#endif
 
 //
 // R_DrawSpriteInDSRange
@@ -1361,7 +1362,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    for(x = spr->x1; x <= spr->x2; ++x)
       clipbot[x] = cliptop[x] = -2;
 
-   // haleyjd 04/25/10: DS_TEST
+   // haleyjd 04/25/10:
    // e6y: optimization
    if(drawsegs_xrange_count)
    {
