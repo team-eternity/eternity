@@ -502,11 +502,7 @@ default_t defaults[] =
    
    DEFAULT_INT("use_joystick", &usejoystick, NULL, 0, 0, 1, wad_no,
                "1 to enable use of joystick"),
-   
-   // killough
-   DEFAULT_INT("snd_channels", &default_numChannels, NULL, 32, 1, 32, wad_no,
-               "number of sound effects handled simultaneously"),
-   
+      
    DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, wad_yes,
                "chat string associated with 0 key"),
    
