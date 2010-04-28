@@ -865,6 +865,35 @@ static boolean longtics_demo; // if true, demo playing is longtics format
 static const char *defdemoname;
 
 //
+// G_DemoStartMessage
+//
+// haleyjd 04/27/10: prints a nice startup message when playing a demo.
+//
+static void G_DemoStartMessage(const char *basename)
+{
+   if(demo_version < 200) // Vanilla demos
+   {
+      C_Printf("Playing demo '%s'\n"
+               FC_HI "\tVersion %d.%d\n",
+               basename, demo_version / 100, demo_version % 100);
+   }
+   else if(demo_version >= 200 && demo_version <= 203) // Boom & MBF demos
+   {
+      C_Printf("Playing demo '%s'\n"
+               FC_HI "\tVersion %d.%02d%s\n",
+               basename, demo_version / 100, demo_version % 100,
+               demo_version >= 200 && demo_version <= 202 ? 
+                  (compatibility ? "; comp=on" : "; comp=off") : "");
+   }
+   else // Eternity demos
+   {
+      C_Printf("Playing demo '%s'\n"
+               FC_HI "\tVersion %d.%02d.%02d\n",
+               basename, demo_version / 100, demo_version % 100, demo_subversion);
+   }
+}
+
+//
 // complevels
 //
 // haleyjd 04/10/10: compatibility matrix for properly setting comp vars based
@@ -1220,11 +1249,7 @@ static void G_DoPlayDemo(void)
    
    gameaction = ga_nothing;
 
-   C_Printf("Playing demo \'%s\'\n"
-            FC_HI "\tVersion %d.%02d.%02d%s\n",
-            basename, demo_version / 100, demo_version % 100, demo_subversion,
-            demo_version >= 200 && demo_version <= 202 ? 
-               (compatibility ? "; comp=on" : "; comp=off") : "");
+   G_DemoStartMessage(basename);
    
    if(timingdemo)
    {

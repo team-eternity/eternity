@@ -1369,7 +1369,7 @@ void S_UpdateMusic(int lumpnum)
 
 VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
 VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
-VARIABLE_INT(default_numChannels, NULL, 1, 128, NULL);
+VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
 VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
 VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
 
