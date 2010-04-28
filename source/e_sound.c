@@ -533,9 +533,8 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
    {
       sfx->priority = cfg_getint(section, ITEM_SND_PRIORITY);
 
-      // haleyjd 09/27/06: force into range of 0 to 255
-      if(sfx->priority < 0)
-         sfx->priority = 0;
+      // haleyjd 09/27/06: force max 255
+      // haleyjd 04/27/10: negative priority is now allowed (absolute)
       if(sfx->priority > 255)
          sfx->priority = 255;
    }

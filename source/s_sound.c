@@ -298,7 +298,9 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
       basevolume * ((clipping_dist >> FRACBITS) - dist) / attenuator;
 
    // haleyjd 09/27/06: decrease priority with volume attenuation
-   *pri = *pri + (127 - *vol);
+   // haleyjd 04/27/10: special treatment for priorities <= 0
+   if(*pri > 0)
+      *pri = *pri + (127 - *vol);
    
    if(*pri > 255) // cap to 255
       *pri = 255;
@@ -307,7 +309,7 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 }
 
 //
-// S_getChannel :
+// S_getChannel
 //
 //   If none available, return -1.  Otherwise channel #.
 //   haleyjd 09/27/06: fixed priority/singularity bugs
@@ -318,7 +320,7 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
 {
    // channel number to use
    int cnum;
-   int lowestpriority = -1; // haleyjd
+   int lowestpriority = D_MININT; // haleyjd
    int lpcnum = -1;
 
    // haleyjd 09/28/06: moved this here. If we kill a sound already
@@ -393,7 +395,8 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
                     int volumeScale, soundattn_e attenuation, boolean loop,
                     schannel_e subchannel)
 {
-   int sep = 0, pitch, o_priority, priority, singularity, cnum, handle;
+   int sep = 0, pitch, singularity, cnum, handle, o_priority, priority;
+   boolean priority_boost = false;
    int volume = snd_SfxVolume;
    boolean extcamera = false;
    camera_t playercam;
@@ -429,26 +432,33 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 
    // haleyjd:  we must weed out degenmobj_t's before trying to 
    // dereference these fields -- a thinker check perhaps?
-
-   // haleyjd: monster skins don't support sound replacements
-
-   if(sfx->skinsound) // check for skin sounds
+   if(origin && origin->thinker.function == P_MobjThinker)
    {
-      const char *sndname = "";
-
-      if(origin && 
-         origin->thinker.function == P_MobjThinker &&       // haleyjd
-         origin->skin && origin->skin->type == SKIN_PLAYER) // haleyjd
-      {         
-         sndname = origin->skin->sounds[sfx->skinsound - 1];
-         sfx = S_SfxInfoForName(sndname);
-      }
-      
-      if(!sfx)
+      if(sfx->skinsound) // check for skin sounds
       {
-         doom_printf(FC_ERROR "S_StartSfxInfo: skin sound %s not found\n",
-                     sndname);
-         return;
+         const char *sndname = "";
+
+         // haleyjd: monster skins don't support sound replacements
+         if(origin->skin && origin->skin->type == SKIN_PLAYER)
+         {         
+            sndname = origin->skin->sounds[sfx->skinsound - 1];
+            sfx = S_SfxInfoForName(sndname);
+         }
+
+         if(!sfx)
+         {
+            doom_printf(FC_ERROR "S_StartSfxInfo: skin sound %s not found\n",
+               sndname);
+            return;
+         }
+      }
+
+      // haleyjd: give local client sounds high priority
+      if(origin == players[displayplayer].mo || 
+         (origin->flags & MF_MISSILE && 
+          origin->target == players[displayplayer].mo))
+      {
+         priority_boost = true;
       }
    }
 
@@ -469,7 +479,8 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
    
    // haleyjd: modified so that priority value is always used
    // haleyjd: also modified to get and store proper singularity value
-   o_priority = priority = sfx->priority;
+   // haleyjd: allow priority boost for local client sounds
+   o_priority = priority = priority_boost ? 0 : sfx->priority;
    singularity = sfx->singularity;
 
    // haleyjd: setup playercam
@@ -1138,11 +1149,12 @@ void S_Start(void)
 }
 
 //
+// S_Init
+// 
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
 //  allocates channel buffer, sets S_sfx lookup.
 //
-
 void S_Init(int sfxVolume, int musicVolume)
 {
    // haleyjd 09/03/03: the sound hash is now maintained by
@@ -1180,7 +1192,7 @@ void S_Init(int sfxVolume, int musicVolume)
    mus_paused = 0;
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Sound Hashing
 //
