@@ -1219,6 +1219,12 @@ static void G_DoPlayDemo(void)
       players[i].cheats = 0;
    
    gameaction = ga_nothing;
+
+   C_Printf("Playing demo \'%s\'\n"
+            FC_HI "\tVersion %d.%02d.%02d%s\n",
+            basename, demo_version / 100, demo_version % 100, demo_subversion,
+            demo_version >= 200 && demo_version <= 202 ? 
+               (compatibility ? "; comp=on" : "; comp=off") : "");
    
    if(timingdemo)
    {
