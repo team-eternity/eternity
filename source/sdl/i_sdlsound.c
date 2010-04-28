@@ -823,7 +823,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             *rightout = SHRT_MIN;
          else
             *rightout = (Sint16)dr;
-
+         
          // Increment current pointers in stream
          leftout  += STEP;
          rightout += STEP;

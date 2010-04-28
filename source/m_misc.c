@@ -265,6 +265,9 @@ default_t defaults[] =
    // killough 10/98
    DEFAULT_INT("dog_jumping", &default_dog_jumping, &dog_jumping, 1, 0, 1, wad_yes,
                "1 to enable dogs to jump"),
+
+   DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, wad_no,
+               "1 to mark unknown thingtype locations"),
    
    // no color changes on status bar
    DEFAULT_INT("sts_always_red", &sts_always_red, NULL, 1, 0, 1, wad_yes,

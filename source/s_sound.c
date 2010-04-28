@@ -790,6 +790,9 @@ void S_UpdateSounds(const mobj_t *listener)
       channel_t *c = &channels[cnum];
       sfxinfo_t *sfx = c->sfxinfo;
 
+      if(!sfx)
+         continue;
+
       // haleyjd: has this software channel lost its hardware channel?
       if(c->idnum != I_SoundID(c->handle))
       {
@@ -798,49 +801,48 @@ void S_UpdateSounds(const mobj_t *listener)
          continue;
       }
 
-      if(sfx)
+      if(I_SoundIsPlaying(c->handle))
       {
-         if(I_SoundIsPlaying(c->handle))
+         // initialize parameters
+         int volume = snd_SfxVolume; // haleyjd: this gets scaled below.
+         int pitch = c->pitch; // haleyjd 06/03/06: use channel's pitch!
+         int sep = NORM_SEP;
+         int pri = c->o_priority; // haleyjd 09/27/06: priority
+
+         // check non-local sounds for distance clipping
+         // or modify their params
+
+         // sf again: use external camera if there is one
+         // fix afterglows bug: segv because of NULL listener
+
+         // haleyjd 09/29/06: major bug fix. fraggle's change to remove the
+         // listener != origin check here causes player sounds to be adjusted
+         // inappropriately. The only reason he changed this was to get to
+         // the code in S_AdjustSoundParams that checks for sector sound
+         // killing. We do that here now instead.
+         if(listener && S_CheckSectorKill(&playercam, c->origin))
+            S_StopChannel(cnum);
+         else if(c->origin && listener != c->origin) // killough 3/20/98
          {
-            // initialize parameters
-            int volume = snd_SfxVolume; // haleyjd: this gets scaled below.
-            int pitch = c->pitch; // haleyjd 06/03/06: use channel's pitch!
-            int sep = NORM_SEP;
-            int pri = c->o_priority; // haleyjd 09/27/06: priority
-
-            // check non-local sounds for distance clipping
-            // or modify their params
-            
-            // sf again: use external camera if there is one
-            // fix afterglows bug: segv because of NULL listener
-
-            // haleyjd 09/29/06: major bug fix. fraggle's change to remove the
-            // listener != origin check here causes player sounds to be adjusted
-            // inappropriately. The only reason he changed this was to get to
-            // the code in S_AdjustSoundParams that checks for sector sound
-            // killing. We do that here now instead.
-            if(listener && S_CheckSectorKill(&playercam, c->origin))
-               S_StopChannel(cnum);
-            else if(c->origin && listener != c->origin) // killough 3/20/98
+            // haleyjd 05/29/06: allow per-channel volume scaling
+            // and attenuation type selection
+            if(!S_AdjustSoundParams(listener ? &playercam : NULL,
+                                    c->origin,
+                                    c->volume,
+                                    c->attenuation,
+                                    &volume, &sep, &pitch, &pri, sfx))
             {
-               // haleyjd 05/29/06: allow per-channel volume scaling
-               // and attenuation type selection
-               if(!S_AdjustSoundParams(listener ? &playercam : NULL,
-                                       c->origin,
-                                       c->volume,
-                                       c->attenuation,
-                                       &volume, &sep, &pitch, &pri, sfx))
-                  S_StopChannel(cnum);
-               else
-               {
-                  I_UpdateSoundParams(c->handle, volume, sep, pitch);
-                  c->priority = pri; // haleyjd
-               }
+               S_StopChannel(cnum);
+            }
+            else
+            {
+               I_UpdateSoundParams(c->handle, volume, sep, pitch);
+               c->priority = pri; // haleyjd
             }
          }
-         else   // if channel is allocated but sound has stopped, free it
-            S_StopChannel(cnum);
       }
+      else   // if channel is allocated but sound has stopped, free it
+         S_StopChannel(cnum);
    }
 }
 
@@ -877,11 +879,6 @@ void S_SetMusicVolume(int volume)
 #ifdef RANGECHECK
    if(volume < 0 || volume > 16)
       I_Error("Attempt to set music volume at %d\n", volume);
-#endif
-
-   // haleyjd: I don't think it should do this in SDL
-#ifndef _SDL_VER
-   I_SetMusicVolume(127);
 #endif
 
    I_SetMusicVolume(volume);
@@ -968,8 +965,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 
    if((lumpnum = W_CheckNumForName(namebuf)) == -1)
    {
-      doom_printf(FC_ERROR "bad music name '%s'\n",
-                  music->name);
+      doom_printf(FC_ERROR "bad music name '%s'\n", music->name);
       return;
    }
 
@@ -977,7 +973,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data = W_CacheLumpNum(lumpnum, PU_STATIC);   
+   music->data   = W_CacheLumpNum(lumpnum, PU_STATIC);   
    music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
 
    // play it
