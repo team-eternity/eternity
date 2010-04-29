@@ -383,6 +383,23 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
 }
 
 //
+// S_countChannels
+//
+// haleyjd 04/28/10: gets a count of the currently active sound channels.
+//
+static int S_countChannels(void)
+{
+   int cnum;
+   int numchannels = 0;
+
+   for(cnum = 0; cnum < numChannels; ++cnum)
+      if(channels[cnum].sfxinfo)
+         ++numchannels;
+
+   return numchannels;
+}
+
+//
 // S_StartSfxInfo
 //
 // The main sound starting function.
@@ -395,7 +412,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
                     int volumeScale, soundattn_e attenuation, boolean loop,
                     schannel_e subchannel)
 {
-   int sep = 0, pitch, singularity, cnum, handle, o_priority, priority;
+   int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
    boolean priority_boost = false;
    int volume = snd_SfxVolume;
    boolean extcamera = false;
@@ -476,6 +493,14 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       volumeScale = 0;
    else if(volumeScale > 127)
       volumeScale = 127;
+
+   // haleyjd 04/28/10: adjust volume for channel overload
+   if((chancount = S_countChannels()) >= 4)
+   {
+      // don't make 0
+      if(volumeScale > chancount)
+         volumeScale -= chancount;
+   }
    
    // haleyjd: modified so that priority value is always used
    // haleyjd: also modified to get and store proper singularity value
