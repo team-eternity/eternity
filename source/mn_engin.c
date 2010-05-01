@@ -698,7 +698,7 @@ void MN_DrawMenu(menu_t *menu)
 
             // draw right pointer
             V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &vbscreen, 
-                        W_CacheLumpNum(smallptrs[(NUMSMALLPTRS - 1) - smallptr_idx], 
+                        W_CacheLumpNum(smallptrs[(NUMSMALLPTRS - smallptr_idx) % NUMSMALLPTRS], 
                                        PU_CACHE));
          }
       }
