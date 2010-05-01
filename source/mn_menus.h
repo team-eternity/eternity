@@ -19,11 +19,11 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef MN_MENUS_H
-#define MN_MENUS_H
+#ifndef MN_MENUS_H__
+#define MN_MENUS_H__
 
 void MN_InitMenus(void);
-/*void MN_ShowFrameRate(int);*/
+void MN_LinkClassicMenus(int link);
 
 extern menu_t menu_main;
 extern menu_t menu_old_main; // haleyjd
@@ -33,6 +33,7 @@ extern int traditional_menu; // haleyjd
 
 extern int mn_classic_menus;
 
-#endif          /** MN_MENUS_H **/
+#endif
 
 // EOF
+

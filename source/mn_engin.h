@@ -54,7 +54,7 @@
 typedef struct menuitem_s
 {
   // item types
-  enum
+  enum itemtype_e
   {
     it_gap,              // empty line
     it_runcmd,           // run console command
