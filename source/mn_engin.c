@@ -844,6 +844,63 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
 }
 
 //
+// MN_drawPageIndicator
+//
+// Draws a prev or next page indicator near the bottom of the screen for
+// multipage menus.
+// Pass false to draw a prev indicator, or true to draw a next indicator.
+//
+static void MN_drawPageIndicator(boolean next)
+{
+   char msgbuffer[64];
+   const char *actionname, *speckeyname, *replkeyname, *fmtstr, *key;
+   
+   if(next) // drawing a next indicator
+   {
+      actionname  = "menu_pagedown"; // name of action
+      speckeyname = "pgdn";          // special default key to check for
+      replkeyname = "page down";     // pretty name to replace with
+      fmtstr      = "%s ->";         // format string for indicator
+   }
+   else     // drawing a prev indicator
+   {
+      actionname  = "menu_pageup";
+      speckeyname = "pgup";
+      replkeyname = "page up";
+      fmtstr      = "<- %s";
+   }
+
+   // get name of first key bound to the prev or next menu action
+   key = G_FirstBoundKey(actionname);
+
+   // replace pgup / pgdn with prettier names, since they are the defaults
+   if(!strcasecmp(key, speckeyname))
+      key = replkeyname;
+
+   psnprintf(msgbuffer, sizeof(msgbuffer), fmtstr, key);
+
+   MN_WriteTextColoured(msgbuffer, CR_GOLD, 
+                        next ? 310 - MN_StringWidth(msgbuffer) : 10, 
+                        SCREENHEIGHT - (2 * menu_font->absh + 1));
+}
+
+//
+// MN_drawStatusText
+//
+// Draws the help and error messages centered at the bottom of options menus.
+//
+static void MN_drawStatusText(const char *text, int color)
+{
+   int x, y;
+
+   // haleyjd: fix y coordinate to use appropriate text metrics
+   x = 160 - MN_StringWidth(text) / 2;
+   y = SCREENHEIGHT - menu_font->absh;
+
+   MN_WriteTextColoured(text, color, x, y);
+}
+
+//
 // MN_DrawMenu
 //
 // MAIN FUNCTION
@@ -852,7 +909,7 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
 //
 void MN_DrawMenu(menu_t *menu)
 {
-   int x, y, m_y;
+   int y;
    int itemnum;
 
    if(!menu) // haleyjd 04/20/03
@@ -910,24 +967,17 @@ void MN_DrawMenu(menu_t *menu)
 
    // choose help message to print
    
-   if(menu_error_time)             // error message takes priority
+   if(menu_error_time) // error message takes priority
    {
       // make it flash
-
-      // haleyjd: fix y coordinate to use appropriate text metrics
-      m_y = SCREENHEIGHT - menu_font->absh;
-
       if((menu_error_time / 8) % 2)
-         MN_WriteTextColoured(menu_error_message, CR_TAN, 10, m_y);
+         MN_drawStatusText(menu_error_message, CR_TAN);
    }
    else
    {
-      // haleyjd: fix y coordinate to use appropriate text metrics
       char msgbuffer[64];
       const char *helpmsg = "";
       menuitem_t *menuitem;
-      
-      m_y = SCREENHEIGHT - menu_font->absh;
 
       // write some help about the item
       menuitem = &menu->menuitems[menu->selected];
@@ -935,42 +985,16 @@ void MN_DrawMenu(menu_t *menu)
       if(MN_helpStrFuncs[menuitem->type])
          helpmsg = MN_helpStrFuncs[menuitem->type](menuitem, msgbuffer);
 
-      x = 160 - MN_StringWidth(helpmsg) / 2;
-
-      MN_WriteTextColoured(helpmsg, CR_GOLD, x, m_y);
+      MN_drawStatusText(helpmsg, CR_GOLD);
    }
 
    // haleyjd 10/07/05: draw next/prev messages for menus that
    // have multiple pages.
    if(menu->prevpage)
-   {
-      char msgbuffer[64];
-      char *key = G_FirstBoundKey("menu_pageup");
-
-      if(!strcasecmp(key, "pgup"))
-         key = "page up";
-
-      psnprintf(msgbuffer, 64, "<- %s", key);
-
-      m_y = SCREENHEIGHT - (2 * menu_font->absh + 1);
-
-      MN_WriteTextColoured(msgbuffer, CR_GOLD, 10, m_y);
-   }
+      MN_drawPageIndicator(false);
 
    if(menu->nextpage)
-   {
-      char msgbuffer[64];
-      char *key = G_FirstBoundKey("menu_pagedown");
-
-      if(!strcasecmp(key, "pgdn"))
-         key = "page down";
-
-      psnprintf(msgbuffer, 64, "%s ->", key);
-
-      m_y = SCREENHEIGHT - (2 * menu_font->absh + 1);
-
-      MN_WriteTextColoured(msgbuffer, CR_GOLD, 310 - MN_StringWidth(msgbuffer), m_y);
-   }
+      MN_drawPageIndicator(true);
 }
 
 //

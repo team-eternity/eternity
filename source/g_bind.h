@@ -34,7 +34,7 @@ typedef void (*binding_handler)(event_t *ev);
 
 void G_EditBinding(char *action);
 char *G_BoundKeys(char *action);
-char *G_FirstBoundKey(char *action);
+char *G_FirstBoundKey(const char *action);
 
 // default file loading
 
