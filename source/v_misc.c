@@ -152,6 +152,9 @@ void V_DrawLoading(void)
 
    if(!loading_message)
       return;
+
+   // 05/02/10: update console
+   C_Drawer();
   
    V_DrawBox((SCREENWIDTH/2)-50, (SCREENHEIGHT/2)-30, 100, 40);
 
