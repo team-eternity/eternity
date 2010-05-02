@@ -3233,7 +3233,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
 
       // see if the player has an autoaim target
       P_BulletSlope(mo);
-      if(!tm->linetarget)
+      if(!clip.linetarget)
          return;
 
       // prepare to jump!

@@ -265,6 +265,9 @@ default_t defaults[] =
    // killough 10/98
    DEFAULT_INT("dog_jumping", &default_dog_jumping, &dog_jumping, 1, 0, 1, wad_yes,
                "1 to enable dogs to jump"),
+
+   DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, wad_no,
+               "1 to mark unknown thingtype locations"),
    
    // no color changes on status bar
    DEFAULT_INT("sts_always_red", &sts_always_red, NULL, 1, 0, 1, wad_yes,
@@ -440,6 +443,9 @@ default_t defaults[] =
 
    DEFAULT_INT("comp_special", &default_comp[comp_special], &comp[comp_special],
                0, 0, 1, wad_yes, "One-time line specials are cleared on failure"),
+
+   DEFAULT_INT("comp_ninja", &default_comp[comp_ninja], &comp[comp_ninja],
+               0, 0, 1, wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
    
 
    // For key bindings, the values stored in the key_* variables       // phares
@@ -499,11 +505,7 @@ default_t defaults[] =
    
    DEFAULT_INT("use_joystick", &usejoystick, NULL, 0, 0, 1, wad_no,
                "1 to enable use of joystick"),
-   
-   // killough
-   DEFAULT_INT("snd_channels", &default_numChannels, NULL, 32, 1, 128, wad_no,
-               "number of sound effects handled simultaneously"),
-   
+      
    DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, wad_yes,
                "chat string associated with 0 key"),
    
@@ -1109,7 +1111,30 @@ void M_SaveDefaultFile(defaultfile_t *df)
             }
             break;
          case dt_float:
-            // TODO
+            if(dp->limit.min == UL)
+            {
+               if(dp->limit.max == UL)
+                  printError = (fprintf(f, "[?-?](%g)]", dp->defaultvalue_f) == EOF);
+               else
+               {
+                  printError =
+                     (fprintf(f, "[?-%g(%g)]", (double)dp->limit.max / 100.0, 
+                              dp->defaultvalue_f) == EOF);
+               }
+            }
+            else if(dp->limit.max == UL)
+            {
+               printError = 
+                  (fprintf(f, "[%g-?(%g)]", (double)dp->limit.min / 100.0,
+                           dp->defaultvalue_f) == EOF);
+            }
+            else
+            {
+               printError = (fprintf(f, "[%g-%g(%g)]",
+                             (double)dp->limit.min / 100.0,
+                             (double)dp->limit.max / 100.0,
+                             dp->defaultvalue_f) == EOF);
+            }
             break;
          case dt_boolean:
             printError = (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
@@ -1154,10 +1179,10 @@ void M_SaveDefaultFile(defaultfile_t *df)
          break;
       case dt_float:
          {
-            float value = 
-               dp->modified ? dp->orig_default_f : *(float *)dp->location;
+            double value = 
+               dp->modified ? dp->orig_default_f : *(double *)dp->location;
 
-            if(fprintf(f, "%-25s %f\n", dp->name, value) == EOF)
+            if(fprintf(f, "%-25s %#g\n", dp->name, value) == EOF)
                goto error;
          }
          break;
@@ -1212,7 +1237,7 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
    char name[80], strparm[100];
    default_t *dp;
    int parm;
-   float tmp;
+   double tmp;
    
    while(isspace(*p))  // killough 10/98: skip leading whitespace
       p++;
@@ -1287,24 +1312,24 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
       break;
    case dt_float:
       {
-         if(sscanf(strparm, "%f", &tmp) != 1)
+         if(sscanf(strparm, "%lg", &tmp) != 1)
             return 1;                       // Not A Number
                   
          //jff 3/4/98 range check numeric parameters
-         if((dp->limit.min == UL || dp->limit.min <= tmp) &&
-            (dp->limit.max == UL || dp->limit.max >= tmp))
+         if((dp->limit.min == UL || (double)dp->limit.min / 100.0 <= tmp) &&
+            (dp->limit.max == UL || (double)dp->limit.max / 100.0 >= tmp))
          {
             if(wad)
             {
                if(!dp->modified) // First time it's modified by wad
                {
-                  dp->modified = 1;                            // Mark it as modified
-                  dp->orig_default_f = *(float *)dp->location; // Save original default
+                  dp->modified = 1;                             // Mark it as modified
+                  dp->orig_default_f = *(double *)dp->location; // Save original default
                }
                if(dp->current)              // Change current value
-                  *(float *)dp->current = tmp;
+                  *(double *)dp->current = tmp;
             }
-            *(float *)dp->location = tmp;  // Change default
+            *(double *)dp->location = tmp;  // Change default
          }
       }
       break;
@@ -1399,7 +1424,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
          *(char **)dp->location = strdup(dp->defaultvalue_s);
          break;
       case dt_float:
-         *(float *)dp->location = dp->defaultvalue_f;
+         *(double *)dp->location = dp->defaultvalue_f;
          break;
       case dt_boolean:
          *(boolean *)dp->location = dp->defaultvalue_b;

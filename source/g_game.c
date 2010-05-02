@@ -865,6 +865,96 @@ static boolean longtics_demo; // if true, demo playing is longtics format
 static const char *defdemoname;
 
 //
+// G_DemoStartMessage
+//
+// haleyjd 04/27/10: prints a nice startup message when playing a demo.
+//
+static void G_DemoStartMessage(const char *basename)
+{
+   if(demo_version < 200) // Vanilla demos
+   {
+      C_Printf("Playing demo '%s'\n"
+               FC_HI "\tVersion %d.%d\n",
+               basename, demo_version / 100, demo_version % 100);
+   }
+   else if(demo_version >= 200 && demo_version <= 203) // Boom & MBF demos
+   {
+      C_Printf("Playing demo '%s'\n"
+               FC_HI "\tVersion %d.%02d%s\n",
+               basename, demo_version / 100, demo_version % 100,
+               demo_version >= 200 && demo_version <= 202 ? 
+                  (compatibility ? "; comp=on" : "; comp=off") : "");
+   }
+   else // Eternity demos
+   {
+      C_Printf("Playing demo '%s'\n"
+               FC_HI "\tVersion %d.%02d.%02d\n",
+               basename, demo_version / 100, demo_version % 100, demo_subversion);
+   }
+}
+
+//
+// complevels
+//
+// haleyjd 04/10/10: compatibility matrix for properly setting comp vars based
+// on the current demoversion. Derived from PrBoom.
+//
+struct complevel_s
+{
+   int fix; // first version that contained a fix
+   int opt; // first version that made the fix an option
+} complevels[] =
+{
+   { 203, 203 }, // comp_telefrag
+   { 203, 203 }, // comp_dropoff
+   { 201, 203 }, // comp_vile
+   { 201, 203 }, // comp_pain
+   { 201, 203 }, // comp_skull
+   { 201, 203 }, // comp_blazing
+   { 201, 203 }, // comp_doorlight
+   { 201, 203 }, // comp_model
+   { 201, 203 }, // comp_god
+   { 203, 203 }, // comp_falloff
+   { 200, 203 }, // comp_floors - FIXME
+   { 201, 203 }, // comp_skymap
+   { 203, 203 }, // comp_pursuit
+   { 202, 203 }, // comp_doorstuck
+   { 203, 203 }, // comp_staylift
+   { 203, 203 }, // comp_zombie
+   { 202, 203 }, // comp_stairs
+   { 203, 203 }, // comp_infcheat
+   { 201, 203 }, // comp_zerotags
+   { 329, 329 }, // comp_terrain
+   { 329, 329 }, // comp_respawnfix
+   { 329, 329 }, // comp_fallingdmg
+   { 329, 329 }, // comp_soul
+   { 329, 329 }, // comp_theights
+   { 329, 329 }, // comp_overunder
+   { 329, 329 }, // comp_planeshoot
+   { 335, 335 }, // comp_special
+   { 337, 337 }, // comp_ninja
+   { 0,   0   }
+};
+
+//
+// G_SetCompatibility
+//
+// haleyjd 04/10/10
+//
+static void G_SetCompatibility(void)
+{
+   int i = 0;
+
+   while(complevels[i].fix > 0)
+   {
+      if(demo_version < complevels[i].opt)
+         comp[i] = (demo_version < complevels[i].fix);
+
+      ++i;
+   }
+}
+
+//
 // NETCODE_FIXME -- DEMO_FIXME
 //
 // More demo-related stuff here, for playing back demos. Will need more
@@ -954,8 +1044,7 @@ static void G_DoPlayDemo(void)
 
       demo_subversion = 0; // haleyjd: always 0 for old demos
 
-      compatibility = true;
-      memset(comp, 0xff, sizeof comp);  // killough 10/98: a vector now
+      G_SetCompatibility();
 
       // haleyjd 03/17/09: in old Heretic demos, some should be false
       if(GameModeInfo->type == Game_Heretic)
@@ -1159,6 +1248,8 @@ static void G_DoPlayDemo(void)
       players[i].cheats = 0;
    
    gameaction = ga_nothing;
+
+   G_DemoStartMessage(basename);
    
    if(timingdemo)
    {
@@ -2315,13 +2406,14 @@ void P_SpawnPlayer(mapthing_t *mthing);
 // at the given mapthing_t spot
 // because something is occupying it
 //
-static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
+static boolean G_CheckSpot(int playernum, mapthing_t *mthing, mobj_t **fog)
 {
-   fixed_t     x,y;
+   fixed_t     x, y;
    subsector_t *ss;
    unsigned    an;
    mobj_t      *mo;
    int         i;
+   fixed_t     mtcos, mtsin;
 
    if(!players[playernum].mo)
    {
@@ -2378,19 +2470,70 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing)
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);
-   an = (ANG45 * (mthing->angle/45)) >> ANGLETOFINESHIFT;
 
-   mo = P_SpawnMobj(x + 20*finecosine[an], 
-                    y + 20*finesine[an],
+   // haleyjd: There was a weird bug with this statement:
+   //
+   // an = (ANG45 * (mthing->angle/45)) >> ANGLETOFINESHIFT;
+   //
+   // Even though this code stores the result into an unsigned variable, most
+   // compilers seem to ignore that fact in the optimizer and use the resulting
+   // value directly in a lea instruction. This causes the signed mapthing_t
+   // angle value to generate an out-of-bounds access into the fine trig
+   // lookups. In vanilla, this accesses the finetangent table and other parts
+   // of the finesine table, and the result is what I call the "ninja spawn,"
+   // which is missing the fog and sound, as it spawns somewhere out in the
+   // far reaches of the void.
+
+   if(!comp[comp_ninja])
+   {
+      an = ANG45 * (angle_t)(mthing->angle / 45);
+      mtcos = finecosine[an >> ANGLETOFINESHIFT];
+      mtsin = finesine[an >> ANGLETOFINESHIFT];
+   }
+   else
+   {
+      // emulate out-of-bounds access to finecosine / finesine tables
+      angle_t mtangle = (angle_t)(mthing->angle / 45);
+      
+      an = ANG45 * mtangle;
+
+      switch(mtangle)
+      {
+      case 4: // 180 degrees (0x80000000 >> 19 == -4096)
+         mtcos = finetangent[2048];
+         mtsin = finetangent[0];
+         break;
+      case 5: // 225 degrees (0xA0000000 >> 19 == -3072)
+         mtcos = finetangent[3072];
+         mtsin = finetangent[1024];
+         break;
+      case 6: // 270 degrees (0xC0000000 >> 19 == -2048)
+         mtcos = finesine[0];
+         mtsin = finetangent[2048];
+         break;
+      case 7: // 315 degrees (0xE0000000 >> 19 == -1024)
+         mtcos = finesine[1024];
+         mtsin = finetangent[3072];
+         break;
+      default: // everything else works properly
+         mtcos = finecosine[an >> ANGLETOFINESHIFT];
+         mtsin = finesine[an >> ANGLETOFINESHIFT];
+         break;
+      }
+   }
+
+   mo = P_SpawnMobj(x + 20 * mtcos, 
+                    y + 20 * mtsin,
                     ss->sector->floorheight + 
                        GameModeInfo->teleFogHeight, 
                     GameModeInfo->teleFogType);
 
-   if(players[consoleplayer].viewz != 1)
-   {
-      // don't start sound on first frame
-      S_StartSound(mo, GameModeInfo->teleSound);
-   }
+   // haleyjd: There was a hack here trying to avoid playing the sound on the
+   // "first frame"; but if this is done, then you miss your own spawn sound
+   // quite often, due to the fact your sound origin hasn't been moved yet.
+   // So instead, I'll return the fog in *fog and play the sound at the caller.
+   if(fog)
+      *fog = mo;
 
    return true;
 }
@@ -2438,6 +2581,7 @@ extern const char *level_error;
 void G_DeathMatchSpawnPlayer(int playernum)
 {
    int j, selections = deathmatch_p - deathmatchstarts;
+   mobj_t *fog = NULL;
    
    if(selections < MAXPLAYERS)
    {
@@ -2453,10 +2597,12 @@ void G_DeathMatchSpawnPlayer(int playernum)
    {
       int i = P_Random(pr_dmspawn) % selections;
       
-      if(G_CheckSpot(playernum, &deathmatchstarts[i]))
+      if(G_CheckSpot(playernum, &deathmatchstarts[i], &fog))
       {
          deathmatchstarts[i].type = playernum + 1;
          P_SpawnPlayer(&deathmatchstarts[i]);
+         if(fog)
+            S_StartSound(fog, GameModeInfo->teleSound);
          return;
       }
    }
@@ -2483,6 +2629,7 @@ void G_DoReborn(int playernum)
    else
    {                               // respawn at the start
       int i;
+      mobj_t *fog = NULL;
       
       // first dissasociate the corpse
       players[playernum].mo->player = NULL;
@@ -2502,19 +2649,25 @@ void G_DoReborn(int playernum)
          return;
       }
 
-      if(G_CheckSpot(playernum, &playerstarts[playernum]))
+      if(G_CheckSpot(playernum, &playerstarts[playernum], &fog))
       {
          P_SpawnPlayer(&playerstarts[playernum]);
+         if(fog)
+            S_StartSound(fog, GameModeInfo->teleSound);
          return;
       }
 
       // try to spawn at one of the other players spots
       for(i = 0; i < MAXPLAYERS; i++)
       {
-         if(G_CheckSpot(playernum, &playerstarts[i]))
+         mobj_t *fog = NULL;
+
+         if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {
             playerstarts[i].type = playernum + 1; // fake as other player
             P_SpawnPlayer(&playerstarts[i]);
+            if(fog)
+               S_StartSound(fog, GameModeInfo->teleSound);
             playerstarts[i].type = i+1;   // restore
             return;
          }
@@ -3124,6 +3277,8 @@ byte *G_ReadOptions(byte *demo_p)
          for(i = 0; i < COMP_TOTAL; ++i)
             comp[i] = *demo_p++;
       }
+
+      G_SetCompatibility();
      
       // Options new to v2.04, etc.
 
@@ -3140,15 +3295,13 @@ byte *G_ReadOptions(byte *demo_p)
          allowmlook = *demo_p++;
       }
    }
-   else  // defaults for versions < 2.02
+   else  // defaults for versions <= 2.02
    {
       int i;  // killough 10/98: a compatibility vector now
       for(i = 0; i <= comp_zerotags; ++i)
          comp[i] = compatibility;
 
-      // haleyjd 03/31/09: nothing above comp_zerotags existed pre-EE
-      for(i = comp_zerotags + 1; i < COMP_TOTAL; ++i)
-         comp[i] = true;
+      G_SetCompatibility();
 
       // haleyjd 05/18/06: BOOM fix: allow zombie exits
       if(demo_version >= 200 && demo_version <= 202)
@@ -3189,7 +3342,9 @@ static void G_SetOldDemoOptions(void)
 {
    int i;
 
-   for(i = 0; i <= comp_zerotags; ++i)
+   compatibility = 1;
+
+   for(i = 0; i < COMP_TOTAL; ++i)
       comp[i] = 1;
       
    monsters_remember     = 0;

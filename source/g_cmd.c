@@ -716,6 +716,7 @@ const char *comp_strings[] =
   "overunder",  //          10/19/02: z checking
   "planeshoot", //          09/22/07: plane shooting
   "special",    //          08/29/09: special failure behavior
+  "ninja",      //          04/18/10: ninja spawn
 };
 
 static void Handler_CompTHeights(void)
@@ -727,7 +728,7 @@ void G_AddCompat(void)
 {
    int i;
    
-   for(i = 0; i <= comp_special; i++)   // haleyjd: update this regularly
+   for(i = 0; i <= comp_ninja; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
       command_t *command;

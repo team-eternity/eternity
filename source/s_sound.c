@@ -298,7 +298,9 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
       basevolume * ((clipping_dist >> FRACBITS) - dist) / attenuator;
 
    // haleyjd 09/27/06: decrease priority with volume attenuation
-   *pri = *pri + (127 - *vol);
+   // haleyjd 04/27/10: special treatment for priorities <= 0
+   if(*pri > 0)
+      *pri = *pri + (127 - *vol);
    
    if(*pri > 255) // cap to 255
       *pri = 255;
@@ -307,7 +309,7 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 }
 
 //
-// S_getChannel :
+// S_getChannel
 //
 //   If none available, return -1.  Otherwise channel #.
 //   haleyjd 09/27/06: fixed priority/singularity bugs
@@ -318,7 +320,7 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
 {
    // channel number to use
    int cnum;
-   int lowestpriority = -1; // haleyjd
+   int lowestpriority = D_MININT; // haleyjd
    int lpcnum = -1;
 
    // haleyjd 09/28/06: moved this here. If we kill a sound already
@@ -381,6 +383,23 @@ static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
 }
 
 //
+// S_countChannels
+//
+// haleyjd 04/28/10: gets a count of the currently active sound channels.
+//
+static int S_countChannels(void)
+{
+   int cnum;
+   int numchannels = 0;
+
+   for(cnum = 0; cnum < numChannels; ++cnum)
+      if(channels[cnum].sfxinfo)
+         ++numchannels;
+
+   return numchannels;
+}
+
+//
 // S_StartSfxInfo
 //
 // The main sound starting function.
@@ -393,7 +412,8 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
                     int volumeScale, soundattn_e attenuation, boolean loop,
                     schannel_e subchannel)
 {
-   int sep = 0, pitch, o_priority, priority, singularity, cnum, handle;
+   int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
+   boolean priority_boost = false;
    int volume = snd_SfxVolume;
    boolean extcamera = false;
    camera_t playercam;
@@ -429,26 +449,33 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 
    // haleyjd:  we must weed out degenmobj_t's before trying to 
    // dereference these fields -- a thinker check perhaps?
-
-   // haleyjd: monster skins don't support sound replacements
-
-   if(sfx->skinsound) // check for skin sounds
+   if(origin && origin->thinker.function == P_MobjThinker)
    {
-      const char *sndname = "";
-
-      if(origin && 
-         origin->thinker.function == P_MobjThinker &&       // haleyjd
-         origin->skin && origin->skin->type == SKIN_PLAYER) // haleyjd
-      {         
-         sndname = origin->skin->sounds[sfx->skinsound - 1];
-         sfx = S_SfxInfoForName(sndname);
-      }
-      
-      if(!sfx)
+      if(sfx->skinsound) // check for skin sounds
       {
-         doom_printf(FC_ERROR "S_StartSfxInfo: skin sound %s not found\n",
-                     sndname);
-         return;
+         const char *sndname = "";
+
+         // haleyjd: monster skins don't support sound replacements
+         if(origin->skin && origin->skin->type == SKIN_PLAYER)
+         {         
+            sndname = origin->skin->sounds[sfx->skinsound - 1];
+            sfx = S_SfxInfoForName(sndname);
+         }
+
+         if(!sfx)
+         {
+            doom_printf(FC_ERROR "S_StartSfxInfo: skin sound %s not found\n",
+               sndname);
+            return;
+         }
+      }
+
+      // haleyjd: give local client sounds high priority
+      if(origin == players[displayplayer].mo || 
+         (origin->flags & MF_MISSILE && 
+          origin->target == players[displayplayer].mo))
+      {
+         priority_boost = true;
       }
    }
 
@@ -466,10 +493,19 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       volumeScale = 0;
    else if(volumeScale > 127)
       volumeScale = 127;
+
+   // haleyjd 04/28/10: adjust volume for channel overload
+   if((chancount = S_countChannels()) >= 4)
+   {
+      // don't make 0
+      if(volumeScale > chancount)
+         volumeScale -= chancount;
+   }
    
    // haleyjd: modified so that priority value is always used
    // haleyjd: also modified to get and store proper singularity value
-   o_priority = priority = sfx->priority;
+   // haleyjd: allow priority boost for local client sounds
+   o_priority = priority = priority_boost ? 0 : sfx->priority;
    singularity = sfx->singularity;
 
    // haleyjd: setup playercam
@@ -779,6 +815,9 @@ void S_UpdateSounds(const mobj_t *listener)
       channel_t *c = &channels[cnum];
       sfxinfo_t *sfx = c->sfxinfo;
 
+      if(!sfx)
+         continue;
+
       // haleyjd: has this software channel lost its hardware channel?
       if(c->idnum != I_SoundID(c->handle))
       {
@@ -787,49 +826,48 @@ void S_UpdateSounds(const mobj_t *listener)
          continue;
       }
 
-      if(sfx)
+      if(I_SoundIsPlaying(c->handle))
       {
-         if(I_SoundIsPlaying(c->handle))
+         // initialize parameters
+         int volume = snd_SfxVolume; // haleyjd: this gets scaled below.
+         int pitch = c->pitch; // haleyjd 06/03/06: use channel's pitch!
+         int sep = NORM_SEP;
+         int pri = c->o_priority; // haleyjd 09/27/06: priority
+
+         // check non-local sounds for distance clipping
+         // or modify their params
+
+         // sf again: use external camera if there is one
+         // fix afterglows bug: segv because of NULL listener
+
+         // haleyjd 09/29/06: major bug fix. fraggle's change to remove the
+         // listener != origin check here causes player sounds to be adjusted
+         // inappropriately. The only reason he changed this was to get to
+         // the code in S_AdjustSoundParams that checks for sector sound
+         // killing. We do that here now instead.
+         if(listener && S_CheckSectorKill(&playercam, c->origin))
+            S_StopChannel(cnum);
+         else if(c->origin && listener != c->origin) // killough 3/20/98
          {
-            // initialize parameters
-            int volume = snd_SfxVolume; // haleyjd: this gets scaled below.
-            int pitch = c->pitch; // haleyjd 06/03/06: use channel's pitch!
-            int sep = NORM_SEP;
-            int pri = c->o_priority; // haleyjd 09/27/06: priority
-
-            // check non-local sounds for distance clipping
-            // or modify their params
-            
-            // sf again: use external camera if there is one
-            // fix afterglows bug: segv because of NULL listener
-
-            // haleyjd 09/29/06: major bug fix. fraggle's change to remove the
-            // listener != origin check here causes player sounds to be adjusted
-            // inappropriately. The only reason he changed this was to get to
-            // the code in S_AdjustSoundParams that checks for sector sound
-            // killing. We do that here now instead.
-            if(listener && S_CheckSectorKill(&playercam, c->origin))
-               S_StopChannel(cnum);
-            else if(c->origin && listener != c->origin) // killough 3/20/98
+            // haleyjd 05/29/06: allow per-channel volume scaling
+            // and attenuation type selection
+            if(!S_AdjustSoundParams(listener ? &playercam : NULL,
+                                    c->origin,
+                                    c->volume,
+                                    c->attenuation,
+                                    &volume, &sep, &pitch, &pri, sfx))
             {
-               // haleyjd 05/29/06: allow per-channel volume scaling
-               // and attenuation type selection
-               if(!S_AdjustSoundParams(listener ? &playercam : NULL,
-                                       c->origin,
-                                       c->volume,
-                                       c->attenuation,
-                                       &volume, &sep, &pitch, &pri, sfx))
-                  S_StopChannel(cnum);
-               else
-               {
-                  I_UpdateSoundParams(c->handle, volume, sep, pitch);
-                  c->priority = pri; // haleyjd
-               }
+               S_StopChannel(cnum);
+            }
+            else
+            {
+               I_UpdateSoundParams(c->handle, volume, sep, pitch);
+               c->priority = pri; // haleyjd
             }
          }
-         else   // if channel is allocated but sound has stopped, free it
-            S_StopChannel(cnum);
       }
+      else   // if channel is allocated but sound has stopped, free it
+         S_StopChannel(cnum);
    }
 }
 
@@ -903,11 +941,6 @@ void S_SetMusicVolume(int volume)
 #ifdef RANGECHECK
    if(volume < 0 || volume > 16)
       I_Error("Attempt to set music volume at %d\n", volume);
-#endif
-
-   // haleyjd: I don't think it should do this in SDL
-#ifndef _SDL_VER
-   I_SetMusicVolume(127);
 #endif
 
    I_SetMusicVolume(volume);
@@ -994,8 +1027,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 
    if((lumpnum = W_CheckNumForName(namebuf)) == -1)
    {
-      doom_printf(FC_ERROR "bad music name '%s'\n",
-                  music->name);
+      doom_printf(FC_ERROR "bad music name '%s'\n", music->name);
       return;
    }
 
@@ -1003,7 +1035,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data = W_CacheLumpNum(lumpnum, PU_STATIC);   
+   music->data   = W_CacheLumpNum(lumpnum, PU_STATIC);   
    music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
 
    // play it
@@ -1145,11 +1177,12 @@ void S_Start(void)
 }
 
 //
+// S_Init
+// 
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
 //  allocates channel buffer, sets S_sfx lookup.
 //
-
 void S_Init(int sfxVolume, int musicVolume)
 {
    // haleyjd 09/03/03: the sound hash is now maintained by
@@ -1187,7 +1220,7 @@ void S_Init(int sfxVolume, int musicVolume)
    mus_paused = 0;
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Sound Hashing
 //
@@ -1376,7 +1409,7 @@ void S_UpdateMusic(int lumpnum)
 
 VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
 VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
-VARIABLE_INT(default_numChannels, NULL, 1, 128, NULL);
+VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
 VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
 VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
 

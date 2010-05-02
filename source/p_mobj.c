@@ -378,6 +378,9 @@ void P_XYMovement(mobj_t* mo)
    player_t *player = mo->player;
    fixed_t xmove, ymove;
 
+   //e6y
+   fixed_t oldx, oldy; // phares 9/10/98: reducing bobbing/momentum on ice
+
    if(!(mo->momx | mo->momy)) // Any momentum?
    {
       if(mo->flags & MF_SKULLFLY)
@@ -408,6 +411,10 @@ void P_XYMovement(mobj_t* mo)
 
    xmove = mo->momx;
    ymove = mo->momy;
+
+   oldx = mo->x; // phares 9/10/98: new code to reduce bobbing/momentum
+   oldy = mo->y; // when on ice & up against wall. These will be compared
+                 // to your x,y values later to see if you were able to move
 
    do
    {
@@ -445,18 +452,18 @@ void P_XYMovement(mobj_t* mo)
 
          if(!(mo->flags & MF_MISSILE) && demo_version >= 203 &&
             (mo->flags & MF_BOUNCES ||
-             (!player && tm->blockline &&
+             (!player && clip.blockline &&
               variable_friction && mo->z <= mo->floorz &&
               P_GetFriction(mo, NULL) > ORIG_FRICTION)))
          {
-            if (tm->blockline)
+            if (clip.blockline)
             {
-               fixed_t r = ((tm->blockline->dx >> FRACBITS) * mo->momx +
-                            (tm->blockline->dy >> FRACBITS) * mo->momy) /
-                    ((tm->blockline->dx >> FRACBITS)*(tm->blockline->dx >> FRACBITS)+
-                     (tm->blockline->dy >> FRACBITS)*(tm->blockline->dy >> FRACBITS));
-               fixed_t x = FixedMul(r, tm->blockline->dx);
-               fixed_t y = FixedMul(r, tm->blockline->dy);
+               fixed_t r = ((clip.blockline->dx >> FRACBITS) * mo->momx +
+                            (clip.blockline->dy >> FRACBITS) * mo->momy) /
+                    ((clip.blockline->dx >> FRACBITS)*(clip.blockline->dx >> FRACBITS)+
+                     (clip.blockline->dy >> FRACBITS)*(clip.blockline->dy >> FRACBITS));
+               fixed_t x = FixedMul(r, clip.blockline->dx);
+               fixed_t y = FixedMul(r, clip.blockline->dy);
 
                // reflect momentum away from wall
 
@@ -484,14 +491,14 @@ void P_XYMovement(mobj_t* mo)
          else if(mo->flags & MF_MISSILE)
          {
             // haleyjd 1/17/00: feel the might of reflection!
-            if(tm->BlockingMobj &&
-               tm->BlockingMobj->flags2 & MF2_REFLECTIVE)
+            if(clip.BlockingMobj &&
+               clip.BlockingMobj->flags2 & MF2_REFLECTIVE)
             {
                angle_t refangle =
-                  P_PointToAngle(tm->BlockingMobj->x, tm->BlockingMobj->y, mo->x, mo->y);
+                  P_PointToAngle(clip.BlockingMobj->x, clip.BlockingMobj->y, mo->x, mo->y);
 
                // Change angle for reflection
-               if(tm->BlockingMobj->flags2 & MF2_DEFLECTIVE)
+               if(clip.BlockingMobj->flags2 & MF2_DEFLECTIVE)
                {
                   // deflect it fully
                   if(P_Random(pr_reflect) < 128)
@@ -515,16 +522,16 @@ void P_XYMovement(mobj_t* mo)
                      P_SetTarget(&mo->tracer, mo->target);
                }
 
-               P_SetTarget(&mo->target, tm->BlockingMobj);
+               P_SetTarget(&mo->target, clip.BlockingMobj);
                return;
             }
             // explode a missile
 
-            if(tm->ceilingline && tm->ceilingline->backsector &&
-               tm->ceilingline->backsector->intflags & SIF_SKY)
+            if(clip.ceilingline && clip.ceilingline->backsector &&
+               clip.ceilingline->backsector->intflags & SIF_SKY)
             {
                if (demo_compatibility ||  // killough
-                  mo->z > tm->ceilingline->backsector->ceilingheight)
+                  mo->z > clip.ceilingline->backsector->ceilingheight)
                {
                   // Hack to prevent missiles exploding
                   // against the sky.
@@ -561,11 +568,14 @@ void P_XYMovement(mobj_t* mo)
    }
 #endif
 
-   // no friction for missiles or skulls ever, no friction when airborne
-   if(mo->flags & (MF_MISSILE | MF_SKULLFLY) ||
-      (mo->z > mo->floorz &&
-       (comp[comp_overunder] ||
-        !(mo->intflags & MIF_ONMOBJ)))) // haleyjd: OVER_UNDER
+   // no friction for missiles or skulls ever
+   if(mo->flags & (MF_MISSILE | MF_SKULLFLY))
+      return;
+   
+   // no friction when airborne
+   // haleyjd: OVER_UNDER
+   if(mo->z > mo->floorz && 
+      (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
    // killough 8/11/98: add bouncers
@@ -605,33 +615,53 @@ void P_XYMovement(mobj_t* mo)
    }
    else
    {
-      // phares 3/17/98
-      //
-      // Friction will have been adjusted by friction thinkers for
-      // icy or muddy floors. Otherwise it was never touched and
-      // remained set at ORIG_FRICTION
-      //
-      // killough 8/28/98: removed inefficient thinker algorithm,
-      // instead using touching_sectorlist in P_GetFriction() to
-      // determine friction (and thus only when it is needed).
-      //
-      // killough 10/98: changed to work with new bobbing method.
-      // Reducing player momentum is no longer needed to reduce
-      // bobbing, so ice works much better now.
-
-      fixed_t friction = P_GetFriction(mo, NULL);
-
-      mo->momx = FixedMul(mo->momx, friction);
-      mo->momy = FixedMul(mo->momy, friction);
-
-      // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
-      // This prevents problems with bobbing on ice, where it was not being
-      // reduced fast enough, leading to all sorts of kludges being developed.
-
-      if(player && player->mo == mo)     //  Not voodoo dolls
+      // haleyjd 04/11/10: BOOM friction compatibility 
+      if(demo_version <= 201)
       {
-         player->momx = FixedMul(player->momx, ORIG_FRICTION);
-         player->momy = FixedMul(player->momy, ORIG_FRICTION);
+         // phares 3/17/98
+         // Friction will have been adjusted by friction thinkers for icy
+         // or muddy floors. Otherwise it was never touched and
+         // remained set at ORIG_FRICTION
+         mo->momx = FixedMul(mo->momx, mo->friction);
+         mo->momy = FixedMul(mo->momy, mo->friction);
+         mo->friction = ORIG_FRICTION; // reset to normal for next tic
+      }
+      else if(demo_version <= 202)
+      {
+         // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
+
+         if ((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
+         { 
+            // No. Use original friction. This allows you to not bob so much
+            // if you're on ice, but keeps enough momentum around to break free
+            // when you're mildly stuck in a wall.
+            mo->momx = FixedMul(mo->momx, ORIG_FRICTION);
+            mo->momy = FixedMul(mo->momy, ORIG_FRICTION);
+         }
+         else
+         { 
+            // Yes. Use stored friction.
+            mo->momx = FixedMul(mo->momx,mo->friction);
+            mo->momy = FixedMul(mo->momy,mo->friction);
+         }
+         mo->friction = ORIG_FRICTION; // reset to normal for next tic
+      }
+      else
+      {
+         fixed_t friction = P_GetFriction(mo, NULL);
+
+         mo->momx = FixedMul(mo->momx, friction);
+         mo->momy = FixedMul(mo->momy, friction);
+
+         // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
+         // This prevents problems with bobbing on ice, where it was not being
+         // reduced fast enough, leading to all sorts of kludges being developed.
+
+         if(player && player->mo == mo) // Not voodoo dolls
+         {
+            player->momx = FixedMul(player->momx, ORIG_FRICTION);
+            player->momy = FixedMul(player->momy, ORIG_FRICTION);
+         }
       }
    }
 }
@@ -789,10 +819,10 @@ static void P_ZMovement(mobj_t* mo)
 
       if (mo->flags & MF_MISSILE)
       {
-         if(tm->ceilingline &&
-            tm->ceilingline->backsector &&
-            (mo->z > tm->ceilingline->backsector->ceilingheight) &&
-            tm->ceilingline->backsector->intflags & SIF_SKY)
+         if(clip.ceilingline &&
+            clip.ceilingline->backsector &&
+            (mo->z > clip.ceilingline->backsector->ceilingheight) &&
+            clip.ceilingline->backsector->intflags & SIF_SKY)
          {
             P_RemoveMobj(mo);  // don't explode on skies
          }
@@ -897,9 +927,9 @@ floater:
    else if(mo->flags2 & MF2_LOGRAV) // haleyjd 04/09/99
    {
       if(!mo->momz)
-         mo->momz = -(LevelInfo.gravity >> 3) * 2;
+         mo->momz = -(LevelInfo.gravity / 8) * 2;
       else
-         mo->momz -= LevelInfo.gravity >> 3;
+         mo->momz -= LevelInfo.gravity / 8;
    }
    else // still above the floor
    {
@@ -1132,7 +1162,7 @@ void P_MobjThinker(mobj_t *mobj)
       }
    }
 
-   tm->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
 
    // haleyjd 08/07/04: handle deep water plane hits
    if(mobj->subsector->sector->heightsec != -1)
@@ -1153,7 +1183,7 @@ void P_MobjThinker(mobj_t *mobj)
    }
 
    // momentum movement
-   tm->BlockingMobj = NULL;
+   clip.BlockingMobj = NULL;
    if(mobj->momx | mobj->momy || mobj->flags & MF_SKULLFLY)
    {
       P_XYMovement(mobj);
@@ -1162,7 +1192,7 @@ void P_MobjThinker(mobj_t *mobj)
    }
 
    if(comp[comp_overunder])
-      tm->BlockingMobj = NULL;
+      clip.BlockingMobj = NULL;
 
    z = mobj->z;
 
@@ -1175,7 +1205,7 @@ void P_MobjThinker(mobj_t *mobj)
    }
 
    // haleyjd: OVER_UNDER: major changes
-   if(mobj->momz || tm->BlockingMobj || z != mobj->floorz)
+   if(mobj->momz || clip.BlockingMobj || z != mobj->floorz)
    {
       if(!comp[comp_overunder]  &&
          ((mobj->flags3 & MF3_PASSMOBJ) || (mobj->flags & MF_SPECIAL)))
@@ -1341,19 +1371,6 @@ extern fixed_t tmsecfloorz;
 extern fixed_t tmsecceilz;
 
 //
-// P_MobjSetZPos
-//
-// This function sets all the fields pertaining to z position
-// information in an mobj when its z position is being changed
-// during spawning.
-//
-void P_MobjSetZPos(mobj_t *mobj, fixed_t delta)
-{
-   // haleyjd 08/07/04: new floorclip system
-   P_AdjustFloorClip(mobj);
-}
-
-//
 // P_SpawnMobj
 //
 mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
@@ -1362,10 +1379,10 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    mobjinfo_t *info = &mobjinfo[type];
    state_t    *st;
 
-   mobj->type = type;
-   mobj->info = info;
-   mobj->x = x;
-   mobj->y = y;
+   mobj->type    = type;
+   mobj->info    = info;
+   mobj->x       = x;
+   mobj->y       = y;
    mobj->radius  = info->radius;
    mobj->height  = P_ThingInfoHeight(info); // phares
    mobj->flags   = info->flags;
@@ -1377,14 +1394,11 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
 #ifdef R_LINKEDPORTALS
    mobj->groupid = R_NOGROUP;
-   mobj->dummyto = mobj->portaldummy = NULL;
 #endif
 
    // haleyjd 09/26/04: rudimentary support for monster skins
    if(info->altsprite != -1)
       mobj->skin = P_GetMonsterSkin(info->altsprite);
-   else
-      mobj->skin = NULL;
 
    // haleyjd: zdoom-style translucency level
    mobj->translucency  = info->translucency;
@@ -1435,9 +1449,6 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->sprite = st->sprite;
    mobj->frame  = st->frame;
 
-   // NULL head of sector list // phares 3/13/98
-   mobj->touching_sectorlist = NULL;
-
    // set subsector and/or block links
 
    P_SetThingPosition(mobj);
@@ -1471,12 +1482,15 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->z += FloatBobOffsets[(mobj->floatbob + leveltime - 1) & 63];
    }
 
-   // haleyjd: call new function to set mobj z information
-   P_MobjSetZPos(mobj, 0);
+   // haleyjd 08/07/04: new floorclip system
+   P_AdjustFloorClip(mobj);
 
    mobj->thinker.function = P_MobjThinker;
 
    P_AddThinker(&mobj->thinker);
+
+   // e6y
+   mobj->friction = ORIG_FRICTION;
 
    // haleyjd 01/12/04: support translation lumps
    if(mobj->info->colour)
@@ -1504,7 +1518,6 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-
 void P_RemoveMobj (mobj_t *mobj)
 {
    // haleyjd 04/14/03: restructured
@@ -1544,11 +1557,8 @@ void P_RemoveMobj (mobj_t *mobj)
    P_UnsetThingPosition(mobj);
 
    // Delete all nodes on the current sector_list               phares 3/16/98
-   if(tm->sector_list)
-   {
-      P_DelSeclist(tm->sector_list);
-      tm->sector_list = NULL;
-   }
+   if(mobj->old_sectorlist)
+      P_DelSeclist(mobj->old_sectorlist);
 
    // stop any playing sound
 
@@ -1611,8 +1621,7 @@ int P_FindDoomedNum(int type)
 //
 // P_RespawnSpecials
 //
-
-void P_RespawnSpecials (void)
+void P_RespawnSpecials(void)
 {
    fixed_t x, y, z;
    subsector_t*  ss;
@@ -1930,13 +1939,13 @@ spawnit:
    z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    // haleyjd 10/13/02: float rand z
-   if(demo_version >= 331 && (mobjinfo[i].flags2 & MF2_SPAWNFLOAT))
+   if(mobjinfo[i].flags2 & MF2_SPAWNFLOAT)
       z = FLOATRANDZ;
 
    mobj = P_SpawnMobj(x, y, z, i);
 
    // haleyjd 10/03/05: Hexen-format mapthing support
-
+   
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
@@ -1945,7 +1954,8 @@ spawnit:
       if(z == ONCEILINGZ)
          rheight = -rheight;
 
-      P_MobjSetZPos(mobj, rheight);
+      mobj->z += rheight;
+      P_AdjustFloorClip(mobj);
    }
 
    // haleyjd 10/03/05: Hexen-style TID
@@ -1963,7 +1973,7 @@ spawnit:
 
    if(!(mobj->flags & MF_FRIEND) &&
       mthing->options & MTF_FRIEND &&
-      demo_version>=203)
+      demo_version >= 203)
    {
       mobj->flags |= MF_FRIEND;            // killough 10/98:
       P_UpdateThinker(&mobj->thinker);     // transfer friendliness flag
@@ -2024,7 +2034,6 @@ spawnit:
 //
 // P_SpawnPuff
 //
-
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
                  int updown, boolean ptcl)
 {
@@ -2133,10 +2142,10 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 
 //
 // P_CheckMissileSpawn
+//
 // Moves the missile forward a bit
 //  and possibly explodes it right there.
 //
-
 void P_CheckMissileSpawn(mobj_t* th)
 {
    if(!(th->flags4 & MF4_NORANDOMIZE))
@@ -2190,7 +2199,6 @@ fixed_t P_MissileMomz(fixed_t dx, fixed_t dy, fixed_t dz, int speed)
 //
 // P_SpawnMissile
 //
-
 mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
                        fixed_t z)
 {
@@ -2232,6 +2240,7 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 
 //
 // P_SpawnPlayerMissile
+//
 // Tries to aim at a nearby monster
 //
 mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
@@ -2252,18 +2261,18 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!tm->linetarget)
+         if(!clip.linetarget)
             slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!tm->linetarget)
+         if(!clip.linetarget)
             slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
-         if(!tm->linetarget)
+         if(!clip.linetarget)
          {
             an = source->angle;
             // haleyjd: use true slope angle
             slope = finetangent[(ANG90 - source->player->pitch)>>ANGLETOFINESHIFT];
          }
       }
-      while(mask && (mask=0, !tm->linetarget));  // killough 8/2/98
+      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
@@ -2434,11 +2443,10 @@ void P_AdjustFloorClip(mobj_t *thing)
       player_t *p = thing->player;
 
       p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) >> 3;
+      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
    }
 }
 
-//
 //
 // P_ThingInfoHeight
 //

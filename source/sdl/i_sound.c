@@ -46,6 +46,15 @@ boolean mus_init = false;
 int detect_voices; //jff 3/4/98 enables voice detection prior to install_sound
 //jff 1/22/98 make these visible here to disable sound/music on install err
 
+// haleyjd 04/21/10: equalization parameters
+int     s_equalizer; // if true, use equalizer
+double  s_lowfreq;   // low band cutoff frequency
+double  s_highfreq;  // high band cutoff frequency
+double  s_eqpreamp;  // preamp factor
+double  s_lowgain;   // low band gain
+double  s_midgain;   // mid band gain
+double  s_highgain;  // high band gain
+
 // haleyjd 11/07/08: driver objects
 static i_sounddriver_t *i_sounddriver;
 static i_musicdriver_t *i_musicdriver;
@@ -390,6 +399,17 @@ VARIABLE_INT(spc_preamp,     NULL,       1,  6, NULL);
 VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
 #endif
 
+// Equalizer variables
+
+VARIABLE_BOOLEAN(s_equalizer, NULL, onoff);
+
+VARIABLE_FLOAT(s_lowfreq,  NULL, 0.0, UL);
+VARIABLE_FLOAT(s_highfreq, NULL, 0.0, UL);
+VARIABLE_FLOAT(s_eqpreamp, NULL, 0.1, 1.0);
+VARIABLE_FLOAT(s_lowgain,  NULL, 0.0, 2.9);
+VARIABLE_FLOAT(s_midgain,  NULL, 0.0, 2.9);
+VARIABLE_FLOAT(s_highgain, NULL, 0.0, 2.9);
+
 CONSOLE_VARIABLE(snd_card, snd_card, 0) 
 {
    if(snd_card != 0 && menuactive)
@@ -420,11 +440,39 @@ CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0)
 #endif
 #endif
 
+//
+// I_UpdateEQ
+//
+// haleyjd 04/21/10: mini routine to update the sound driver's equalizer, if it
+// has one, when a console command is issued to change one of its parameters.
+//
+static void I_UpdateEQ(void)
+{
+   if(snd_init && i_sounddriver->UpdateEQParams)
+      i_sounddriver->UpdateEQParams();
+}
+
+CONSOLE_VARIABLE(s_equalizer, s_equalizer, 0) { I_UpdateEQ(); }
+CONSOLE_VARIABLE(s_lowfreq,   s_lowfreq,   0) { I_UpdateEQ(); }
+CONSOLE_VARIABLE(s_highfreq,  s_highfreq,  0) { I_UpdateEQ(); }
+CONSOLE_VARIABLE(s_eqpreamp,  s_eqpreamp,  0) { I_UpdateEQ(); }
+CONSOLE_VARIABLE(s_lowgain,   s_lowgain,   0) { I_UpdateEQ(); }
+CONSOLE_VARIABLE(s_midgain,   s_midgain,   0) { I_UpdateEQ(); }
+CONSOLE_VARIABLE(s_highgain,  s_highgain,  0) { I_UpdateEQ(); }
+
 void I_Sound_AddCommands(void)
 {
    C_AddCommand(snd_card);
    C_AddCommand(mus_card);
    C_AddCommand(detect_voices);
+
+   C_AddCommand(s_equalizer);
+   C_AddCommand(s_lowfreq);
+   C_AddCommand(s_highfreq);
+   C_AddCommand(s_eqpreamp);
+   C_AddCommand(s_lowgain);
+   C_AddCommand(s_midgain);
+   C_AddCommand(s_highgain);
 
 #ifdef _SDL_VER
 #ifdef HAVE_SPCLIB

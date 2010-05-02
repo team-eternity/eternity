@@ -1031,6 +1031,8 @@ static void P_CreateBlockMap(void)
    fixed_t minx = INT_MAX, miny = INT_MAX,
            maxx = INT_MIN, maxy = INT_MIN;
 
+   C_Printf("P_CreateBlockMap: rebuilding blockmap for level\n");
+
    // First find limits of map
    
    for(i = 0; i < (unsigned int)numvertexes; ++i)
@@ -1410,11 +1412,16 @@ void P_GroupLines(void)
       // adjust pointers to point back to the beginning of each list
       sector->lines -= sector->linecount;
       
+      // haleyjd 04/28/10: divide before add to lessen chance of overflow;
+      //    this only affects sounds, so there is no compatibility check.
+      //    EE does not bother with presentation compatibility for sounds
+      //    except where playability is a concern (ie. in deathmatch).
+
       // set the degenmobj_t to the middle of the bounding box
-      sector->soundorg.x = (sector->blockbox[BOXRIGHT] + 
-                            sector->blockbox[BOXLEFT])/2;
-      sector->soundorg.y = (sector->blockbox[BOXTOP] + 
-                            sector->blockbox[BOXBOTTOM])/2;
+      sector->soundorg.x = sector->blockbox[BOXRIGHT] / 2 + 
+                           sector->blockbox[BOXLEFT] / 2;
+      sector->soundorg.y = sector->blockbox[BOXTOP] / 2 + 
+                           sector->blockbox[BOXBOTTOM] / 2;
 #ifdef R_LINKEDPORTALS
       // SoM: same for group id.
       // haleyjd: note - groups have not been built yet, so this is just for

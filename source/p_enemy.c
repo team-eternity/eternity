@@ -121,9 +121,9 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) 
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
                              - R_FPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) >> 1) 
+                            ((check->v1->y + check->v2->y) / 2) 
                              - R_FPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
@@ -137,8 +137,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-      R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - R_CPLink(sec)->deltax,
-                         ((check->v1->y + check->v2->y) >> 1) - R_CPLink(sec)->deltay)->sector;
+      R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - R_CPLink(sec)->deltax,
+                         ((check->v1->y + check->v2->y) / 2) - R_CPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -155,8 +155,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
          sector_t *other;
 
          other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) >> 1) - check->portal->data.link.deltax,
-                            ((check->v1->y + check->v2->y) >> 1) - check->portal->data.link.deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - check->portal->data.link.deltax,
+                            ((check->v1->y + check->v2->y) / 2) - check->portal->data.link.deltay)->sector;
 
          P_RecursiveSound(other, soundblocks, soundtarget);
       }
@@ -166,7 +166,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
       P_LineOpening(check, NULL);
       
-      if(tm->openrange <= 0)
+      if(clip.openrange <= 0)
          continue;       // closed door
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
@@ -243,10 +243,10 @@ static boolean P_HitFriend(mobj_t *actor)
 
       P_AimLineAttack(actor, angle, dist, 0);
 
-      if(tm->linetarget 
-         && tm->linetarget != actor->target 
-         && !((tm->linetarget->flags ^ actor->flags) & MF_FRIEND) 
-         && !(tm->linetarget->flags3 & MF3_NOFRIENDDMG))
+      if(clip.linetarget 
+         && clip.linetarget != actor->target 
+         && !((clip.linetarget->flags ^ actor->flags) & MF_FRIEND) 
+         && !(clip.linetarget->flags3 & MF3_NOFRIENDDMG))
       {
          hitfriend = true;
       }
@@ -433,7 +433,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(!comp[comp_overunder])
    {
-      if(!(actor->flags & MF_NOGRAVITY) && actor->z > actor->floorz && 
+      if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
       {
          if (actor->z > actor->floorz + 24*FRACUNIT)
@@ -501,11 +501,11 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    {      // open any specials
       int good;
       
-      if(actor->flags & MF_FLOAT && tm->floatok)
+      if(actor->flags & MF_FLOAT && clip.floatok)
       {
          fixed_t savedz = actor->z;
 
-         if(actor->z < tm->floorz)          // must adjust height
+         if(actor->z < clip.floorz)          // must adjust height
             actor->z += FLOATSPEED;
          else
             actor->z -= FLOATSPEED;
@@ -528,13 +528,13 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
          }
       }
 
-      if(!tm->numspechit)
+      if(!clip.numspechit)
          return false;
 
 #ifdef RANGECHECK
       // haleyjd 01/09/07: SPECHIT_DEBUG
-      if(tm->numspechit < 0)
-         I_Error("P_Move: numspechit == %d\n", tm->numspechit);
+      if(clip.numspechit < 0)
+         I_Error("P_Move: numspechit == %d\n", clip.numspechit);
 #endif
 
       actor->movedir = DI_NODIR;
@@ -555,17 +555,27 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
       // Do NOT simply return false 1/4th of the time (causes monsters to
       // back out when they shouldn't, and creates secondary stickiness).
 
-      for(good = false; tm->numspechit--; )
+      for(good = false; clip.numspechit--; )
       {
-         if(P_UseSpecialLine(actor, tm->spechit[tm->numspechit], 0))
-            good |= (tm->spechit[tm->numspechit] == tm->blockline ? 1 : 2);
+         if(P_UseSpecialLine(actor, clip.spechit[clip.numspechit], 0))
+            good |= (clip.spechit[clip.numspechit] == clip.blockline ? 1 : 2);
       }
 
       // haleyjd 01/09/07: do not leave numspechit == -1
-      tm->numspechit = 0;
+      clip.numspechit = 0;
 
+      // haleyjd 04/11/10: wider compatibility range
+      if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
+         return good;
+      else if(demo_version == 202) // BOOM 2.02
+         return (P_Random(pr_trywalk) & 3);
+      else // MBF or higher
+         return ((P_Random(pr_opendoor) >= 230) ^ (good & 1));
+
+      /*
       return good && (demo_version < 203 || comp[comp_doorstuck] ||
                       (P_Random(pr_opendoor) >= 230) ^ (good & 1));
+      */
    }
    else
    {
@@ -576,7 +586,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
    if(comp[comp_overunder])
    {
-      if(!(actor->flags & MF_FLOAT) && (!tm->felldown || demo_version < 203))
+      if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
       {
          fixed_t oldz = actor->z;
          actor->z = actor->floorz;
@@ -682,19 +692,15 @@ static void P_DoNewChaseDir(mobj_t *actor, fixed_t deltax, fixed_t deltay)
    dirtype_t turnaround = olddir;
    
    if(turnaround != DI_NODIR)         // find reverse direction
-   {
       turnaround ^= 4;
-   }
 
-   {
-      xdir = 
-         (deltax >  10*FRACUNIT ? DI_EAST :
-          deltax < -10*FRACUNIT ? DI_WEST : DI_NODIR);
+   xdir = 
+      (deltax >  10*FRACUNIT ? DI_EAST :
+       deltax < -10*FRACUNIT ? DI_WEST : DI_NODIR);
    
-      ydir =
-         (deltay < -10*FRACUNIT ? DI_SOUTH :
-          deltay >  10*FRACUNIT ? DI_NORTH : DI_NODIR);
-   }
+   ydir =
+      (deltay < -10*FRACUNIT ? DI_SOUTH :
+       deltay >  10*FRACUNIT ? DI_NORTH : DI_NODIR);
 
    // try direct route
    if(xdir != DI_NODIR && ydir != DI_NODIR && turnaround != 
@@ -760,11 +766,11 @@ static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 static boolean PIT_AvoidDropoff(line_t *line)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
-      tm->bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
-      tm->bbox[BOXLEFT]   < line->bbox[BOXRIGHT]  &&
-      tm->bbox[BOXTOP]    > line->bbox[BOXBOTTOM] && // Linedef must be contacted
-      tm->bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
-      P_BoxOnLineSide(tm->bbox, line) == -1)
+      clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
+      clip.bbox[BOXLEFT]   < line->bbox[BOXRIGHT]  &&
+      clip.bbox[BOXTOP]    > line->bbox[BOXBOTTOM] && // Linedef must be contacted
+      clip.bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
+      P_BoxOnLineSide(clip.bbox, line) == -1)
    {
       fixed_t front = line->frontsector->floorheight;
       fixed_t back  = line->backsector->floorheight;
@@ -803,10 +809,10 @@ static boolean PIT_AvoidDropoff(line_t *line)
 //
 static fixed_t P_AvoidDropoff(mobj_t *actor)
 {
-   int yh=((tm->bbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
-   int yl=((tm->bbox[BOXBOTTOM]= actor->y-actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
-   int xh=((tm->bbox[BOXRIGHT] = actor->x+actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
-   int xl=((tm->bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int yh=((clip.bbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int yl=((clip.bbox[BOXBOTTOM]= actor->y-actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int xh=((clip.bbox[BOXRIGHT] = actor->x+actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int xl=((clip.bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
    int bx, by;
 
    floorz = actor->z;            // remember floor height
@@ -1116,7 +1122,23 @@ static boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
 
       // killough 2/15/98, 9/9/98:
       if(c++ == stopc || actor->lastlook == stop)  // done looking
+      {
+         // e6y
+         // Fixed Boom incompatibilities. The following code was missed.
+         // There are no more desyncs on Donce's demos on horror.wad
+         if(demo_version < 203 && !demo_compatibility && monsters_remember)
+         {
+            if(actor->lastenemy && actor->lastenemy->health > 0)
+            {
+               // haleyjd: must use P_SetTarget...
+               P_SetTarget(&actor->target, actor->lastenemy);
+               P_SetTarget(&actor->lastenemy, NULL);
+               return true;
+            }
+         }
+
          return false;
+      }
       
       player = &players[actor->lastlook];
       
@@ -2309,7 +2331,7 @@ void A_FireCrackle(mobj_t* actor)
 
 void A_Fire(mobj_t *actor)
 {
-   unsigned an;
+   angle_t an;
    mobj_t *dest = actor->tracer;
    
    if(!dest)
@@ -3795,8 +3817,8 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
 
       // set the tracer target in case it is a homing missile
       P_BulletSlope(plyr->mo);
-      if(tm->linetarget)
-         P_SetTarget(&newmobj->tracer, tm->linetarget);
+      if(clip.linetarget)
+         P_SetTarget(&newmobj->tracer, clip.linetarget);
    }
    else
    {
@@ -3851,10 +3873,10 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    if(type == vileFireType)
    {
       P_BulletSlope(plyr->mo);
-      if(tm->linetarget)
+      if(clip.linetarget)
       {
          P_SetTarget(&newmobj->target, plyr->mo);
-         P_SetTarget(&newmobj->tracer, tm->linetarget);
+         P_SetTarget(&newmobj->tracer, clip.linetarget);
          A_Fire(newmobj);
       }
    }
@@ -4040,10 +4062,10 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 
    slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
-   if(tm->linetarget
-      && !(tm->linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
-      && !(tm->linetarget->flags4 & MF4_NODAMAGE))    // defeat special flags
-      damage = tm->linetarget->health;
+   if(clip.linetarget
+      && !(clip.linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
+      && !(clip.linetarget->flags4 & MF4_NODAMAGE))    // defeat special flags
+      damage = clip.linetarget->health;
 
    P_LineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);
 }
@@ -4061,8 +4083,8 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
       
       slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
 
-      if(tm->linetarget)
-         damage = tm->linetarget->health;
+      if(clip.linetarget)
+         damage = clip.linetarget->health;
 
       P_LineAttack(plyr->mo, an, MISSILERANGE, slope, damage);
    }
@@ -4074,8 +4096,8 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 
    P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
-   if(tm->linetarget)
-      P_RemoveMobj(tm->linetarget);
+   if(clip.linetarget)
+      P_RemoveMobj(clip.linetarget);
 }
 
 CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
@@ -4083,14 +4105,14 @@ CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
    player_t *plyr = &players[consoleplayer];
 
    P_BulletSlope(plyr->mo);
-   if(!tm->linetarget)
+   if(!clip.linetarget)
       return;
    
    S_StartSound(plyr->mo, sfx_barexp);
-   P_DamageMobj(tm->linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
-   tm->linetarget->momz = 1000*FRACUNIT/tm->linetarget->info->mass;
+   P_DamageMobj(clip.linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
+   clip.linetarget->momz = 1000*FRACUNIT/clip.linetarget->info->mass;
 
-   P_RadiusAttack(tm->linetarget, plyr->mo, 70, MOD_UNKNOWN);
+   P_RadiusAttack(clip.linetarget, plyr->mo, 70, MOD_UNKNOWN);
 }
 
 void P_SpawnPlayer(mapthing_t* mthing);

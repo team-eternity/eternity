@@ -1229,7 +1229,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 {
    emod_t *emod;
    player_t *player;
-   boolean justhit;          // killough 11/98
+   boolean justhit = false;  // killough 11/98
    boolean bossignore;       // haleyjd
    
    // killough 8/31/98: allow bouncers to take damage
@@ -1476,12 +1476,13 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       }
    }
 
-   if((justhit = (P_Random(pr_painchance) < target->info->painchance 
-      && !(target->flags & MF_SKULLFLY)))) //killough 11/98: see below
+   if(P_Random(pr_painchance) < target->info->painchance &&
+      !(target->flags & MF_SKULLFLY))
    { 
-      // haleyjd 01/15/06: fix for demo comp problem introduced in MBF
-      // For BOOM and versions older: always set MF_JUSTHIT here
-      if(demo_version <= 202)
+      //killough 11/98: see below
+      if(demo_version >= 203)
+         justhit = true;
+      else
          target->flags |= MF_JUSTHIT;    // fight back!
 
       // haleyjd 10/06/99: remove pain for zero-damage projectiles
@@ -1555,19 +1556,6 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       if(target->state == states[target->info->spawnstate] && 
          target->info->seestate != NullStateNum)
       {
-         // haleyjd 01/15/06: a problem occurs here because the first
-         // call to the object's seestate may need MF_JUSTHIT set
-         // already. So we have to set it here now if it needs to be
-         // set. This is really messy but is the only universally 
-         // compatible solution.
-         if(demo_version >= 333 && justhit && 
-            (target->target == source || !target->target ||
-            !(target->flags & target->target->flags & MF_FRIEND)))
-         {
-            justhit = false;                // don't set it again below
-            target->flags |= MF_JUSTHIT;    // fight back!
-         }
-
          P_SetMobjState(target, target->info->seestate);
       }
    }
@@ -1575,7 +1563,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    // haleyjd 01/15/06: Fix for demo comp problem introduced in MBF
    // For MBF and above, set MF_JUSTHIT here
    // killough 11/98: Don't attack a friend, unless hit by that friend.
-   if(demo_version >= 203 && justhit && 
+   if(!demo_compatibility && justhit && 
       (target->target == source || !target->target ||
        !(target->flags & target->target->flags & MF_FRIEND)))
    {

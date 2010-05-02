@@ -114,8 +114,6 @@ typedef struct degenmobj_s
 
 #include "polyobj.h"
 
-
-
 // SoM: for attaching surfaces (floors and ceilings) to each other
 // SoM: these are flags now
 typedef enum
@@ -510,25 +508,25 @@ typedef byte  lighttable_t;
 
 typedef struct drawseg_s
 {
-  seg_t *curline;
-  int x1, x2;
-  float dist1, dist2, diststep;
-  int silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
-  fixed_t bsilheight;                   // do not clip sprites above this
-  fixed_t tsilheight;                   // do not clip sprites below this
+   seg_t *curline;
+   int x1, x2;
+   float dist1, dist2, diststep;
+   int silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
+   fixed_t bsilheight;                   // do not clip sprites above this
+   fixed_t tsilheight;                   // do not clip sprites below this
 
-        // sf: colormap to be used when drawing the drawseg
-        // for coloured lighting
-  lighttable_t *(*colormap)[MAXLIGHTSCALE];
+   // sf: colormap to be used when drawing the drawseg
+   // for coloured lighting
+   lighttable_t *(*colormap)[MAXLIGHTSCALE];
 
-  // Pointers to lists for sprite clipping,
-  // all three adjusted so [x1] is first value.
+   // Pointers to lists for sprite clipping,
+   // all three adjusted so [x1] is first value.
 
-  float *sprtopclip, *sprbottomclip;
-  // SoM: this still needs to be int
-  float *maskedtexturecol;
+   float *sprtopclip, *sprbottomclip;
+   // SoM: this still needs to be int
+   float *maskedtexturecol;
 
-  fixed_t viewx, viewy, viewz;
+   fixed_t viewx, viewy, viewz;
 } drawseg_t;
 
 //

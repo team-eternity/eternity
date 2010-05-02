@@ -348,7 +348,7 @@ static void MN_FileDrawer(void)
 
    // draw the dialog title
    if(help_description)
-      MN_WriteTextColoured(help_description, CR_GOLD, 16 + 8, 16 + 8);
+      MN_WriteTextColored(help_description, CR_GOLD, 16 + 8, 16 + 8);
 
    // add one to the line height for the remaining lines to leave a gap
    lheight += 1;
@@ -401,7 +401,7 @@ static void MN_FileDrawer(void)
          text = mn_filelist[i];
       
       // draw it!
-      MN_WriteTextColoured(text, color, x + 11, y);
+      MN_WriteTextColored(text, color, x + 11, y);
 
       // step by the height of one line
       y += lheight;

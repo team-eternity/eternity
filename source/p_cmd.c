@@ -53,8 +53,8 @@
                 'defines': string values for variables
 ***************************************************************************/
 
-char *yesno[]={"no","yes"};
-char *onoff[]={"off","on"};
+char *yesno[] = { "no",  "yes" };
+char *onoff[] = { "off", "on"  };
 
 char *colournames[]= {"green","indigo","brown","red","tomato","dirt","blue",
                       "gold","sea","black","purple","vomit", "pink", "cream","white"};
