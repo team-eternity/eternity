@@ -457,7 +457,7 @@ static void MN_genericDescription(menuitem_t *item,
       *item_height = V_FontStringHeight(menu_font_big, item->description);
    }
    else
-      MN_WriteTextColoured(item->description, color, x, y);
+      MN_WriteTextColored(item->description, color, x, y);
 
    // haleyjd 02/04/06: set coordinates for small pointers
    // left pointer:
@@ -492,8 +492,8 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
    }
          
    // write variable value text
-   MN_WriteTextColoured(boundkeys, color, 
-                        x + (alignment == ALIGNMENT_LEFT ? desc_width: 0), y);
+   MN_WriteTextColored(boundkeys, color, 
+                       x + (alignment == ALIGNMENT_LEFT ? desc_width: 0), y);
 }
 
 //
@@ -533,8 +533,8 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
    }
 
    // draw it
-   MN_WriteTextColoured(varvalue, color,
-                        x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
+   MN_WriteTextColored(varvalue, color,
+                       x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
 }
 
 //
@@ -814,15 +814,15 @@ static mn_helpfunc_t MN_helpStrFuncs[] =
 static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
 {
    if(menu->flags & mf_skullmenu)
-   {
-      // haleyjd 05/16/04: hack for traditional menu support
+   {      
       int item_x = menu->x - 30;                         // 30 left
       int item_y = y + (item_height - SKULL_HEIGHT) / 2; // midpoint
 
+      // haleyjd 05/16/04: hack for traditional menu support
       if(menu->flags & mf_emulated)
       {
          item_x = menu->x - 32;
-         item_y = menu->y - 5 + itemnum * 16;
+         item_y = menu->y - 5 + itemnum * 16; // fixed-height items
       }
 
       V_DrawPatch(item_x, item_y, &vbscreen,
@@ -879,9 +879,9 @@ static void MN_drawPageIndicator(boolean next)
 
    psnprintf(msgbuffer, sizeof(msgbuffer), fmtstr, key);
 
-   MN_WriteTextColoured(msgbuffer, CR_GOLD, 
-                        next ? 310 - MN_StringWidth(msgbuffer) : 10, 
-                        SCREENHEIGHT - (2 * menu_font->absh + 1));
+   MN_WriteTextColored(msgbuffer, CR_GOLD, 
+                       next ? 310 - MN_StringWidth(msgbuffer) : 10, 
+                       SCREENHEIGHT - (2 * menu_font->absh + 1));
 }
 
 //
@@ -897,7 +897,7 @@ static void MN_drawStatusText(const char *text, int color)
    x = 160 - MN_StringWidth(text) / 2;
    y = SCREENHEIGHT - menu_font->absh;
 
-   MN_WriteTextColoured(text, color, x, y);
+   MN_WriteTextColored(text, color, x, y);
 }
 
 //
@@ -1016,13 +1016,12 @@ boolean MN_CheckFullScreen(void)
    return true;
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Menu Module Functions
 //
 // Drawer, ticker etc.
 //
-/////////////////////////////////////////////////////////////////////////
 
 #define MENU_HISTORY 128
 
@@ -1057,7 +1056,11 @@ static void MN_SetBackground(void)
       mn_background_flat = GameModeInfo->menuBackground;
 }
 
-        // init menu
+//
+// MN_Init
+//
+// Primary menu initialization. Called at startup.
+//
 void MN_Init(void)
 {
    char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
@@ -1781,7 +1784,7 @@ void MN_StartControlPanel(void)
       MN_StartMenu(GameModeInfo->mainMenu);
 }
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Menu Font Drawing
 //
@@ -1792,45 +1795,73 @@ void MN_StartControlPanel(void)
 // haleyjd: duplicate code eliminated via use of vfont engine.
 //
 
-// haleyjd 02/25/09: font name set by EDF:
+// haleyjd 02/25/09: font names set by EDF:
 const char *mn_fontname;
 const char *mn_normalfontname;
 const char *mn_bigfontname;
 
+//
+// MN_InitFonts
+//
+// Called at startup from MN_Init. Sets global references to the menu fonts
+// defined via EDF.
+//
 static void MN_InitFonts(void)
 {
    if(!(menu_font = E_FontForName(mn_fontname)))
-      I_Error("MN_InitFont: bad EDF font name %s\n", mn_fontname);
+      I_Error("MN_InitFonts: bad EDF font name %s\n", mn_fontname);
 
    if(!(menu_font_big = E_FontForName(mn_bigfontname)))
-      I_Error("MN_InitFont: bad EDF font name %s\n", mn_bigfontname);
+      I_Error("MN_InitFonts: bad EDF font name %s\n", mn_bigfontname);
 
    if(!(menu_font_normal = E_FontForName(mn_normalfontname)))
-      I_Error("MN_InitFont: bad EDF font name %s\n", mn_normalfontname);
+      I_Error("MN_InitFonts: bad EDF font name %s\n", mn_normalfontname);
 }
 
+//
+// MN_WriteText
+//
+// haleyjd: This is now just a thunk for convenience's sake.
+//
 void MN_WriteText(const char *s, int x, int y)
 {
    V_FontWriteText(menu_font, s, x, y);
 }
 
-void MN_WriteTextColoured(const char *s, int colour, int x, int y)
+//
+// MN_WriteTextColored
+//
+// haleyjd: Ditto.
+//   05/02/10: finally renamed from MN_WriteTextColoured. Sorry fraggle ;)
+//
+void MN_WriteTextColored(const char *s, int colour, int x, int y)
 {
    V_FontWriteTextColored(menu_font, s, colour, x, y);
 }
 
+//
+// MN_StringWidth
+//
+// haleyjd: And this too.
+//
 int MN_StringWidth(const char *s)
 {
    return V_FontStringWidth(menu_font, s);
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 // 
 // Box Widget
 //
 // haleyjd 10/15/05: Generalized code for box widgets.
 //
 
+//
+// box_widget_t
+//
+// "Inherits" from menuwidget_t and extends it to contain a list of commands
+// or menu pages.
+//
 typedef struct box_widget_s
 {
    menuwidget_t widget;      // the actual menu widget object
@@ -1848,7 +1879,7 @@ typedef struct box_widget_s
    int        height;        // precalculated height
    int        selection_idx; // currently selected item index
    int        maxidx;        // precalculated maximum index value
-} box_widget;
+} box_widget_t;
 
 //
 // MN_BoxSetDimensions
@@ -1856,7 +1887,7 @@ typedef struct box_widget_s
 // Calculates the box width, height, and maxidx by considering all
 // strings contained in the box.
 //
-static void MN_BoxSetDimensions(box_widget *box)
+static void MN_BoxSetDimensions(box_widget_t *box)
 {
    int width, i = 0;
    const char *curname = box->item_names[0];
@@ -1905,10 +1936,10 @@ static void MN_BoxWidgetDrawer(void)
 {
    int x, y, i = 0;
    const char *curname;
-   box_widget *box;
+   box_widget_t *box;
 
    // get a pointer to the box_widget
-   box = (box_widget *)current_menuwidget;
+   box = (box_widget_t *)current_menuwidget;
 
    // draw the menu in the background
    MN_DrawMenu(current_menu);
@@ -1926,7 +1957,7 @@ static void MN_BoxWidgetDrawer(void)
    y += 4;
 
    // write title
-   MN_WriteTextColoured(box->title, CR_GOLD, x, y);
+   MN_WriteTextColored(box->title, CR_GOLD, x, y);
 
    // leave a gap
    y += V_FontStringHeight(menu_font_normal, box->title) + 8;
@@ -1946,7 +1977,7 @@ static void MN_BoxWidgetDrawer(void)
                          y + ((height - smallptr_dims[1]) >> 1));
       }
 
-      MN_WriteTextColoured(curname, color, x, y);
+      MN_WriteTextColored(curname, color, x, y);
 
       y += height + 1;
       
@@ -1962,13 +1993,14 @@ static void MN_BoxWidgetDrawer(void)
 static boolean MN_BoxWidgetResponder(event_t *ev)
 {
    // get a pointer to the box widget
-   box_widget *box = (box_widget *)current_menuwidget;
+   box_widget_t *box = (box_widget_t *)current_menuwidget;
 
    // toggle and previous dismiss the widget
    if(action_menu_toggle || action_menu_previous)
    {
       action_menu_toggle = action_menu_previous = false;
       current_menuwidget = NULL;
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
       return true;
    }
 
@@ -2012,14 +2044,19 @@ static boolean MN_BoxWidgetResponder(event_t *ev)
          break;
       }
       
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]); // pow!
       return true;
    }
 
    return false;
 }
 
-static box_widget menu_box_widget =
+//
+// Global box widget object. There can only be one box widget active at a
+// time, unless the type was to be made global and initialized via a different
+// routine. There's not any need for that currently.
+//
+static box_widget_t menu_box_widget =
 {
    // widget:
    {
@@ -2083,17 +2120,39 @@ void MN_ShowBoxWidget(void)
 //
 static void MN_ShowContents(void)
 {
+   int i = 0;
+   menu_t *rover;
+
    if(!menuactive)
       return;
 
    MN_SetupBoxWidget("contents", current_menu->content_names, 0,
                      current_menu->content_pages, NULL);
 
+   // haleyjd 05/02/10: try to find the current menu in the list of pages
+   // (it should be there unless something really screwy is going on).
+
+   rover = current_menu->content_pages[0];
+
+   while(rover)
+   {
+      if(rover == current_menu)
+         break; // found it
+
+      // try next one
+      rover = current_menu->content_pages[++i];
+   }
+
+   if(rover) // only if valid (should always be...)
+      menu_box_widget.selection_idx = i;
+
    current_menuwidget = &(menu_box_widget.widget);
+
+   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
 }
 
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Console Commands
 //
