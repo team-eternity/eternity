@@ -320,6 +320,10 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
    // clip source rect on source surface
    V_clipRect(&srcrect, src);
 
+   // clipped away completely?
+   if(srcrect.cw <= 0 || srcrect.ch <= 0)
+      return;
+
    // populate dest rect
    dstrect.x = destx;
    dstrect.y = desty;
@@ -328,6 +332,10 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 
    // clip dest rect on dest surface
    V_clipRect(&dstrect, dest);
+
+   // clipped away completely?
+   if(dstrect.cw <= 0 || dstrect.ch <= 0)
+      return;
 
    // find smallest width and height between the two rects
    smallestw = srcrect.cw < dstrect.cw ? srcrect.cw : dstrect.cw;
