@@ -193,6 +193,82 @@ void V_InitColorTranslation(void)
     *p->map1 = *p->map2 = W_CacheLumpName(p->name, PU_STATIC);
 }
 
+//
+// vrect_t
+//
+// haleyjd 05/04/10: clippable and scalable rect structure.
+// TODO: make available to v_block.c
+//
+typedef struct vrect_s
+{
+   int x;   // original x coordinate for upper left corner
+   int y;   // original y coordinate for upper left corner
+   int w;   // original width
+   int h;   // original height
+
+   int cx1; // clipped x coordinate for left edge
+   int cx2; // clipped x coordinate for right edge
+   int cy1; // clipped y coordinate for upper edge
+   int cy2; // clipped y coordinate for lower edge
+   int cw;  // clipped width
+   int ch;  // clipped height
+
+   int sx;  // scaled x
+   int sy;  // scaled y
+   int sw;  // scaled width
+   int sh;  // scaled height
+} vrect_t;
+
+//
+// V_clipRect
+//
+// haleyjd 05/04/10: OO rect clipping.
+// TODO: use this in v_block.c, which does identical logic.
+//
+static void V_clipRect(vrect_t *r, VBuffer *buffer)
+{
+   // clip to left and top edges
+   r->cx1 = r->x >= 0 ? r->x : 0;
+   r->cy1 = r->y >= 0 ? r->y : 0;
+
+   // determine right and bottom edges
+   r->cx2 = r->x + r->w - 1;
+   r->cy2 = r->y + r->h - 1;
+
+   // clip right and bottom edges
+   if(r->cx2 >= buffer->unscaledw)
+      r->cx2 = buffer->unscaledw - 1;
+   if(r->cy2 >= buffer->unscaledh)
+      r->cy2 = buffer->unscaledh - 1;
+
+   // determine clipped width and height
+   r->cw = r->cx2 - r->cx1 + 1;
+   r->ch = r->cy2 - r->cy1 + 1;
+}
+
+//
+// V_scaleRect
+//
+// haleyjd 05/04/10: OO rect scaling.
+// TODO: use this in v_block.c, which does identical logic.
+//
+static void V_scaleRect(vrect_t *r, VBuffer *buffer)
+{
+   r->sx = buffer->x1lookup[r->cx1];
+   r->sy = buffer->y1lookup[r->cy1];
+   r->sw = buffer->x2lookup[r->cx2] - r->sx + 1;
+   r->sh = buffer->y2lookup[r->cy2] - r->sy + 1;
+
+#ifdef RANGECHECK
+   // sanity check - out-of-bounds values should not come out of the scaling
+   // arrays so long as they are accessed within bounds.
+   if(r->sx < 0 || r->sx + r->sw > buffer->width ||
+      r->sy < 0 || r->sy + r->sh > buffer->height)
+   {
+      I_Error("V_scaleRect: internal error - invalid scaling lookups\n");
+   }
+#endif
+}
 
 //
 // V_CopyRect
@@ -206,131 +282,106 @@ void V_InitColorTranslation(void)
 //
 // No return value.
 //
+// haleyjd 05/04/10: rewritten definitively.
+//
 void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 		          int height, int destx, int desty, VBuffer *dest)
 {
-   byte *srcp;
-   byte *destp;
-   int  p1, p2, x2, y2, maxw, maxh;
+   vrect_t srcrect, dstrect;
+   int smallestw, smallesth, usew, useh;
+   byte *srcp, *dstp;
 
+#ifdef RANGECHECK
    // SoM: Do not attempt to copy across scaled buffers with different scales
    if(src->scaled  != dest->scaled  || 
       src->ixscale != dest->ixscale || 
       src->iyscale != dest->iyscale)
-      I_Error("V_CopyRect: src and dest VBuffers have different scaling.");
-
-   // Maxw is the widest of the two buffers.
-   maxw = src->unscaledw > dest->unscaledw ? dest->unscaledw : src->unscaledw;
-   maxh = src->unscaledh > dest->unscaledh ? dest->unscaledh : src->unscaledh;
-
-   x2 = srcx + width;
-   y2 = srcy + height;
-
-   if(srcx < 0) 
-      srcx = 0;
-   if(x2 > maxw) 
-      x2 = maxw;
-   if(srcy < 0) 
-      srcy = 0;
-   if(y2 > maxh) 
-      y2 = maxh;
-
-   if(x2 <= srcx || y2 <= srcy)
-      return;
-      
-   // SoM: Adjust the width and height.
-   width  = x2 - srcx;
-   height = y2 - srcy;
-  
-   x2 = destx + width;
-   y2 = desty + height;
-  
-   if(destx < 0) 
-      destx = 0;
-   if(x2 > maxw) 
-      x2 = maxw;
-   if(desty < 0) 
-      desty = 0;
-   if(y2 > maxh) 
-      y2 = maxh;
-  
-   if(x2 <= destx || y2 <= destx)
-      return;
-
-   // This can only be smaller after clipping.
-   width  = x2 - destx;
-   height = y2 - desty;
-
-   // This stuff is no longer current anyway
-#ifdef RANGECHECK
-   if(dest->scaled)
    {
-      if (srcx<0
-           ||srcx+width > dest->unscaledw
-           || srcy<0
-           || srcy+height > dest->unscaledh
-           ||destx<0||destx+width > dest->unscaledw
-           || desty<0
-           || desty+height > dest->unscaledh
-           || !src || !dest)
-         I_Error ("Bad V_CopyRect");
-   }
-   else
-   {
-      if (srcx<0
-           ||srcx+width > src->width
-           || srcy<0
-           || srcy+height > src->height
-           ||destx<0||destx+width > dest->width
-           || desty<0
-           || desty+height > dest->height
-           || !src || !dest)
-         I_Error ("Bad V_CopyRect");
+      I_Error("V_CopyRect: src and dest VBuffers have different scaling\n");
    }
 #endif
 
-   p1 = src->pitch;
-   p2 = dest->pitch;
+   // quick rejection if source rect is off-screen
+   if(srcx + width < 0 || srcy + height < 0 || 
+      srcx >= src->unscaledw || srcy >= src->unscaledh)
+      return;
 
-   if(dest->scaled)
+   // quick rejection if dest rect is off-screen
+   if(destx + width < 0 || desty + height < 0 ||
+      destx >= dest->unscaledw || desty >= dest->unscaledh)
+      return;
+
+   // populate source rect
+   srcrect.x = srcx;
+   srcrect.y = srcy;
+   srcrect.w = width;
+   srcrect.h = height;
+
+   // clip source rect on source surface
+   V_clipRect(&srcrect, src);
+
+   // clipped away completely?
+   if(srcrect.cw <= 0 || srcrect.ch <= 0)
+      return;
+
+   // populate dest rect
+   dstrect.x = destx;
+   dstrect.y = desty;
+   dstrect.w = width;
+   dstrect.h = height;
+
+   // clip dest rect on dest surface
+   V_clipRect(&dstrect, dest);
+
+   // clipped away completely?
+   if(dstrect.cw <= 0 || dstrect.ch <= 0)
+      return;
+
+   // find smallest width and height between the two rects
+   smallestw = srcrect.cw < dstrect.cw ? srcrect.cw : dstrect.cw;
+   smallesth = srcrect.ch < dstrect.ch ? srcrect.ch : dstrect.ch;
+
+   // set widths/heights of both rects equal
+   srcrect.cw = dstrect.cw = smallestw;
+   srcrect.ch = dstrect.ch = smallesth;
+
+   // scale rects?
+   if(src->scaled)
    {
-      int realx, realy;
+      V_scaleRect(&srcrect, src);
+      V_scaleRect(&dstrect, dest);
 
-      realx = dest->x1lookup[srcx];
-      realy = dest->y1lookup[srcy];
+      srcp = src->ylut[srcrect.sy]  + src->xlut[srcrect.sx];
+      dstp = dest->ylut[dstrect.sy] + dest->xlut[dstrect.sx];
 
-      srcp = src->ylut[realy] + src->xlut[realx];
-
-      realx = video.x1lookup[destx];
-      realy = video.y1lookup[desty];
-      
-      destp = dest->ylut[realy] + dest->xlut[realx];
-
-      // I HOPE this will not extend the array bounds HEHE
-      width = video.x2lookup[width + destx - 1] - realx + 1;
-      height = video.y2lookup[height + desty - 1] - realy + 1;
+      // set width and height to use in drawing loop
+      usew = srcrect.sw;
+      useh = srcrect.sh;
    }
    else
    {
-      srcp = src->ylut[srcy] + src->xlut[srcx];
-      destp = dest->ylut[desty] + src->xlut[destx];
+      srcp = src->ylut[srcrect.cy1]  + src->xlut[srcrect.cx1];
+      dstp = dest->ylut[dstrect.cy1] + dest->xlut[dstrect.cx1];
+
+      usew = srcrect.cw;
+      useh = srcrect.ch;
    }
 
-   if(p1 == p2 && width == src->width && width == dest->width)
+   // block copy
+   if(src->pitch == dest->pitch && usew == src->width && usew == dest->width)
    {
-      memcpy(destp, srcp, p1 * height);
+      memcpy(dstp, srcp, src->pitch * useh);
    }
    else
    {
-      while(height--)
+      while(useh--)
       {
-         memcpy(destp, srcp, width);
-         srcp += p1;
-         destp += p2;
+         memcpy(dstp, srcp, usew);
+         srcp += src->pitch;
+         dstp += dest->pitch;
       }
    }
 }
-
 
 //
 // V_DrawPatch
@@ -352,7 +403,7 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 // haleyjd  04/04: rewritten to use new ANYRES patch system
 //
 void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
-			boolean flipped)
+			               boolean flipped)
 {
    PatchInfo pi;
 

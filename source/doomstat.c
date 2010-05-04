@@ -140,7 +140,7 @@ int waitAtExit = 0;
 #endif
 
 // haleyjd 01/24/07: spawn <!>'s for missing objects?
-boolean markUnknowns;
+int markUnknowns;
 
 //----------------------------------------------------------------------------
 //

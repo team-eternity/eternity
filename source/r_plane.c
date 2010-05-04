@@ -458,7 +458,7 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 static void R_CalcSlope(visplane_t *pl)
 {
    // This is where the crap gets calculated. Yay
-   int            x, y;
+   float          x, y, tsin, tcos;
    float          ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
    texture_t      *tex = textures[pl->picnum];
@@ -466,24 +466,37 @@ static void R_CalcSlope(visplane_t *pl)
    if(!pl->pslope)
       return;
 
-   x = (int)pl->pslope->of.x;
-   y = (int)pl->pslope->of.y;
+   
+   tsin = (float)sin(pl->angle);
+   tcos = (float)cos(pl->angle);
 
-   x -= x % tex->height;
-   y -= y % tex->width;
+#if 1
+   // SoM: To change the origin of rotation, add an offset to P.x and P.z
+   rslope->P.x = 0;
+   rslope->P.z = 0;
+   rslope->P.y = P_GetZAtf(pl->pslope, 0, 0);
 
-   // TODO: rotation/offsets
-   rslope->P.x = x - pl->xoffsf;
-   rslope->P.z = y + pl->yoffsf;
-   rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
-
-   rslope->M.x = rslope->P.x;
-   rslope->M.z = rslope->P.z + tex->width;
+   rslope->M.x = rslope->P.x - tex->width * tsin;
+   rslope->M.z = rslope->P.z + tex->width * tcos;
    rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
 
-   rslope->N.x = rslope->P.x + tex->height;
-   rslope->N.z = rslope->P.z;
+   rslope->N.x = rslope->P.x + tex->height * tcos;
+   rslope->N.z = rslope->P.z + tex->height * tsin;
    rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
+#else
+   // TODO: rotation/offsets
+   rslope->P.x = x * tcos + y * tsin;
+   rslope->P.z = y * tcos - x * tsin;
+   rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
+
+   rslope->M.x = rslope->P.x - tex->width * tsin;
+   rslope->M.z = rslope->P.z + tex->width * tcos;
+   rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
+
+   rslope->N.x = rslope->P.x + tex->height * tcos;
+   rslope->N.z = rslope->P.z + tex->height * tsin;
+   rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
+#endif
 
    M_TranslateVec3f(&rslope->P);
    M_TranslateVec3f(&rslope->M);
@@ -491,7 +504,7 @@ static void R_CalcSlope(visplane_t *pl)
 
    M_SubVec3f(&rslope->M, &rslope->M, &rslope->P);
    M_SubVec3f(&rslope->N, &rslope->N, &rslope->P);
-
+   
    M_CrossProduct3f(&rslope->A, &rslope->P, &rslope->N);
    M_CrossProduct3f(&rslope->B, &rslope->P, &rslope->M);
    M_CrossProduct3f(&rslope->C, &rslope->M, &rslope->N);
@@ -609,7 +622,10 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    visplane_t *check;
    unsigned int hash;                      // killough
    float tsin, tcos;
-   
+
+   // SoM: TEST
+   angle = 2*3.14159265f * (gametic % 512) / 512.0f;
+      
    // killough 10/98: PL_SKYFLAT
    if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)
    {
@@ -658,33 +674,39 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
    check->fullcolormap = fullcolormap;
-
+   
    check->viewx = viewx;
    check->viewy = viewy;
    check->viewz = viewz;
-   
-   // haleyjd 01/05/08: rotate viewpoint by flat angle.
-   // note that the signs of the sine terms must be reversed in order to flip
-   // the y-axis of the flat relative to world coordinates
-
-   tsin = (float) sin(check->angle);
-   tcos = (float) cos(check->angle);
-   check->viewxf =  view.x * tcos + view.y * tsin;
-   check->viewyf = -view.x * tsin + view.y * tcos;
-   check->viewzf =  view.z;
-
-   // haleyjd 01/05/08: modify viewing angle with respect to flat angle
-   check->viewsin = (float) sin(view.angle + check->angle);
-   check->viewcos = (float) cos(view.angle + check->angle);
    
    check->heightf = M_FixedToFloat(height);
    check->xoffsf  = M_FixedToFloat(xoffs);
    check->yoffsf  = M_FixedToFloat(yoffs);
 
+   // haleyjd 01/05/08: modify viewing angle with respect to flat angle
+   check->viewsin = (float) sin(view.angle + check->angle);
+   check->viewcos = (float) cos(view.angle + check->angle);
+   
    // SoM: set up slope type stuff
-   check->pslope = slope;
-   if(slope)
+   if((check->pslope = slope))
+   {
+      check->viewxf = view.x;
+      check->viewyf = view.y;
+      check->viewzf = view.z;
       R_CalcSlope(check);
+   }
+   else
+   {
+      // haleyjd 01/05/08: rotate viewpoint by flat angle.
+      // note that the signs of the sine terms must be reversed in order to flip
+      // the y-axis of the flat relative to world coordinates
+
+      tsin = (float) sin(check->angle);
+      tcos = (float) cos(check->angle);
+      check->viewxf =  view.x * tcos + view.y * tsin;
+      check->viewyf = -view.x * tsin + view.y * tcos;
+      check->viewzf =  view.z;
+   }
    
    // SoM: memset should use the check->max_width
    //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);

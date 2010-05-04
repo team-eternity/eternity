@@ -33,6 +33,7 @@
 #include "m_shots.h"
 #include "d_gi.h"
 #include "i_sound.h"
+#include "s_sound.h"
 
 // External variables configured here:
 
@@ -125,6 +126,10 @@ static default_t sysdefaults[] =
    DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, wad_no,
                "Percentage of normal speed (35 fps) realtic clock runs at"),
 
+   // killough
+   DEFAULT_INT("snd_channels", &default_numChannels, NULL, 32, 1, 32, wad_no,
+               "number of sound effects handled simultaneously"),
+
    // haleyjd 12/08/01
    DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, wad_no,
                "Force reversal of stereo audio channels: 0 = normal, 1 = reverse"),
@@ -149,8 +154,7 @@ static default_t sysdefaults[] =
                  "Midrange gain"),
 
    DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 290, wad_no,
-                 "High pass gain"),
-                 
+                 "High pass gain"),                 
 
    // jff 3/30/98 add ability to take screenshots in BMP format
    DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, wad_no,

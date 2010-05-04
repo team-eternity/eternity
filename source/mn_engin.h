@@ -54,7 +54,7 @@
 typedef struct menuitem_s
 {
   // item types
-  enum
+  enum itemtype_e
   {
     it_gap,              // empty line
     it_runcmd,           // run console command
@@ -195,7 +195,7 @@ void MN_ClearMenus(void);                    // sf 10/99
 
 // font functions
 void MN_WriteText(const char *s, int x, int y);
-void MN_WriteTextColoured(const char *s, int colour, int x, int y);
+void MN_WriteTextColored(const char *s, int colour, int x, int y);
 int MN_StringWidth(const char *s);
 
 void MN_ErrorMsg(const char *s, ...);

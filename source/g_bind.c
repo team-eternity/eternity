@@ -557,7 +557,7 @@ char *G_BoundKeys(char *action)
 // Get an ascii description of the first key bound to a particular 
 // action.
 //
-char *G_FirstBoundKey(char *action)
+char *G_FirstBoundKey(const char *action)
 {
    int i;
    static char ret[1024];

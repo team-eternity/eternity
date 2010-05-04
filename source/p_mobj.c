@@ -1429,7 +1429,6 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-
 void P_RemoveMobj (mobj_t *mobj)
 {
    // haleyjd 04/14/03: restructured
@@ -1533,8 +1532,7 @@ int P_FindDoomedNum(int type)
 //
 // P_RespawnSpecials
 //
-
-void P_RespawnSpecials (void)
+void P_RespawnSpecials(void)
 {
    fixed_t x, y, z;
    subsector_t*  ss;
@@ -1947,7 +1945,6 @@ spawnit:
 //
 // P_SpawnPuff
 //
-
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
                  int updown, boolean ptcl)
 {
@@ -2056,10 +2053,10 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 
 //
 // P_CheckMissileSpawn
+//
 // Moves the missile forward a bit
 //  and possibly explodes it right there.
 //
-
 void P_CheckMissileSpawn(mobj_t* th)
 {
    if(!(th->flags4 & MF4_NORANDOMIZE))
@@ -2113,7 +2110,6 @@ fixed_t P_MissileMomz(fixed_t dx, fixed_t dy, fixed_t dz, int speed)
 //
 // P_SpawnMissile
 //
-
 mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
                        fixed_t z)
 {
@@ -2155,6 +2151,7 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 
 //
 // P_SpawnPlayerMissile
+//
 // Tries to aim at a nearby monster
 //
 mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
@@ -2361,7 +2358,6 @@ void P_AdjustFloorClip(mobj_t *thing)
    }
 }
 
-//
 //
 // P_ThingInfoHeight
 //

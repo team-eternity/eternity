@@ -78,6 +78,7 @@ static void P_LightningFlash(void)
    sector_t *tempSec;
    boolean foundSec;
    int flashLight;
+   static degenmobj_t thunderSndOrigin;
 
    if(LightningFlash)
    {
@@ -138,7 +139,8 @@ static void P_LightningFlash(void)
          if(LevelSky != -1 && LevelTempSky != -1)
             skytexture = LevelTempSky;
 
-         S_StartSound(NULL, sfx_thundr);
+         S_StartSoundAtVolume((mobj_t *)&thunderSndOrigin, sfx_thundr,
+                              127, ATTN_NONE, CHAN_AUTO);
       }
 
       if(!NextLightningFlash)

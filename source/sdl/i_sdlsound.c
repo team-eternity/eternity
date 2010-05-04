@@ -642,7 +642,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    */
 
    // haleyjd 06/03/06: look for an unused hardware channel
-   for(handle = 0; handle < MAX_CHANNELS; ++handle)
+   for(handle = 0; handle < numChannels; ++handle)
    {
       if(channelinfo[handle].data == NULL)
          break;
@@ -650,7 +650,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
 
    // all used? don't play the sound. It's preferable to miss a sound
    // than it is to cut off one already playing, which sounds weird.
-   if(handle == MAX_CHANNELS)
+   if(handle == numChannels)
       return -1;
  
    if(addsfx(sound, handle, loop, id))
@@ -725,7 +725,7 @@ static void I_SDLUpdateSound(void)
 {
    int chan;
 
-   for(chan = 0; chan < MAX_CHANNELS; ++chan)
+   for(chan = 0; chan < numChannels; ++chan)
    {
       if(channelinfo[chan].stopChannel == true)
          stopchan(chan);
@@ -761,7 +761,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    // Love thy L2 cache - made this a loop.
    // Now more channels could be set at compile time
    //  as well. Thus loop those channels.
-   for(chan = channelinfo; chan != &channelinfo[MAX_CHANNELS]; ++chan)
+   for(chan = channelinfo; chan != &channelinfo[numChannels]; ++chan)
    {
       // fast rejection before semaphore lock
       if(!chan->data || chan->stopChannel)
@@ -823,7 +823,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             *rightout = SHRT_MIN;
          else
             *rightout = (Sint16)dr;
-
+         
          // Increment current pointers in stream
          leftout  += STEP;
          rightout += STEP;
