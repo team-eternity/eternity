@@ -458,7 +458,7 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 static void R_CalcSlope(visplane_t *pl)
 {
    // This is where the crap gets calculated. Yay
-   float          x, y, tsin, tcos;
+   float          xl, yl, tsin, tcos;
    float          ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
    texture_t      *tex = textures[pl->picnum];
@@ -469,19 +469,23 @@ static void R_CalcSlope(visplane_t *pl)
    
    tsin = (float)sin(pl->angle);
    tcos = (float)cos(pl->angle);
+   
+   xl = tex->width;
+   yl = tex->height;
 
 #if 1
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
-   rslope->P.x = 0;
-   rslope->P.z = 0;
-   rslope->P.y = P_GetZAtf(pl->pslope, 0, 0);
+   // SoM: Add offsets? YAH!
+   rslope->P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
+   rslope->P.z = -pl->xoffsf * tsin + pl->yoffsf * tcos;
+   rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
 
-   rslope->M.x = rslope->P.x - tex->width * tsin;
-   rslope->M.z = rslope->P.z + tex->width * tcos;
+   rslope->M.x = rslope->P.x - xl * tsin;
+   rslope->M.z = rslope->P.z + xl * tcos;
    rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
 
-   rslope->N.x = rslope->P.x + tex->height * tcos;
-   rslope->N.z = rslope->P.z + tex->height * tsin;
+   rslope->N.x = rslope->P.x + yl * tcos;
+   rslope->N.z = rslope->P.z + yl * tsin;
    rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
 #else
    // TODO: rotation/offsets
@@ -526,7 +530,8 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->zat = P_GetZAtf(pl->pslope, pl->viewxf, pl->viewyf);
 
    // More help from randy. I was totally lost on this... 
-   ixscale = iyscale = view.tan / (float)tex->width;
+   ixscale = view.tan / (float)xl;
+   iyscale = view.tan / (float)yl;
 
    rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - pl->viewzf);
    rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
@@ -624,7 +629,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    float tsin, tcos;
 
    // SoM: TEST
-   angle = 2*3.14159265f * (gametic % 512) / 512.0f;
+   //angle = 2 * 3.14159265f * ((gametic % 512) / 512.0f);
       
    // killough 10/98: PL_SKYFLAT
    if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)
