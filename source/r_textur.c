@@ -596,7 +596,6 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep, int ptrof
 static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
    byte      *src = W_CacheLumpNum(component->lump, PU_CACHE);
-   byte      *dest = tex->buffer;
    int       destoff, srcoff, deststep, srcxstep, srcystep;
    int       xstart, ystart, xstop, ystop;
    int       width, height, wcount, hcount;
@@ -671,7 +670,6 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 {
    patch_t    *patch = W_CacheLumpNum(component->lump, PU_CACHE);
-   byte       *dest = tex->buffer;
    int        destoff;
    int        xstart, ystart, xstop;
    int        colindex, colstep;
@@ -770,7 +768,7 @@ static void StartTexture(texture_t *tex, boolean mask)
    tex->buffer = Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer);
    memset(tex->buffer, 0, sizeof(byte) * bufferlen);
    
-   if(tempmask.mask = mask)
+   if((tempmask.mask = mask))
    {
       tempmask.tex = tex;
       
