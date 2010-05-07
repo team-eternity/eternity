@@ -128,7 +128,7 @@ VBuffer *V_CreateVBuffer(int width, int height, int bitdepth)
    if(bitdepth != 8)
       I_Error("V_CreateVBuffer: Invalid bitdepth. %i", bitdepth);
 
-   ret = Z_SysMalloc(sizeof(VBuffer));
+   ret = Z_SysCalloc(1, sizeof(VBuffer));
 
    V_InitVBuffer(ret, width, height, bitdepth);
    ret->needfree = true;
@@ -193,7 +193,7 @@ VBuffer *V_CreateVBufferFrom(int width, int height, int pitch,
    if(bitdepth != 8)
       I_Error("V_CreateVBufferFrom: Invalid bitdepth. %i", bitdepth);
 
-   ret = Z_SysMalloc(sizeof(VBuffer));
+   ret = Z_SysCalloc(1, sizeof(VBuffer));
 
    V_InitVBufferFrom(ret, width, height, pitch, bitdepth, data);
    ret->needfree = true;
@@ -254,7 +254,7 @@ VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height)
 {
    VBuffer *ret;
 
-   ret = Z_SysMalloc(sizeof(VBuffer));
+   ret = Z_SysCalloc(1, sizeof(VBuffer));
    V_InitSubVBuffer(ret, parent, x, y, width, height);
    ret->needfree = true;
 
@@ -273,12 +273,23 @@ void V_FreeVBuffer(VBuffer *buffer)
    V_UnsetScaling(buffer);
 
    if(buffer->owndata)
+   {
       Z_SysFree(buffer->data);
+      buffer->data = NULL;
+      buffer->owndata = false;
+   }
 
    if(buffer->ylut)
+   {
       Z_SysFree(buffer->ylut);
+      buffer->ylut = NULL;
+   }
+
    if(buffer->xlut)
+   {
       Z_SysFree(buffer->xlut);
+      buffer->xlut = NULL;
+   }
 
    if(buffer->needfree)
       Z_SysFree(buffer);
