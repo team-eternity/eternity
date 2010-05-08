@@ -69,7 +69,7 @@ typedef struct mappatch_s
 //
 typedef struct maptexture_s
 {
-   int8_t     name[8];
+   char       name[8];
    int32_t    masked;
    int16_t    width;
    int16_t    height;
@@ -136,7 +136,7 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width, uint16_t he
    int       j;
   
 #ifdef RANGECHECK
-   if(!width || !height || !name || compcount <= 0)
+   if(!width || !height || !name || compcount < 0)
       I_Error("R_AllocTexStruct: Invalid parameters: %s, %i, %i, %i\n", name, width, height, compcount);
 #endif
 
@@ -909,6 +909,10 @@ texture_t *R_CacheTexture(int num)
    tex = textures[num];
    if(tex->buffer)
       return tex;
+   
+   // SoM: This situation would most certainly require an abort.
+   if(tex->ccount == 0)
+      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", tex->name);
 
    // This function has two primary branches:
    // 1. There is no buffer, and there are no columns which means the texture
@@ -941,6 +945,40 @@ texture_t *R_CacheTexture(int num)
    // Finish texture
    FinishTexture(tex);
    return tex;
+}
+
+
+
+static void R_MakeMissingTexture(int count)
+{
+   texture_t   *tex;
+   int         i;
+   byte        c1, c2;
+   
+   if(count >= texturecount)
+      return count;
+   
+   textures[count] = tex = R_AllocTexStruct("BAADF00D", 64, 64, 0);
+   tex->buffer = Z_Malloc(64*64, PU_RENDERER, NULL);
+   
+   // Allocate column pointers
+   tex->columns = Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0);
+
+   // Make columns
+   for(i = 0; i < tex->width; i++)
+   {
+      tex->columns[i] = Z_Calloc(sizeof(texcol_t **), 1, PU_RENDERER, 0);
+      tex->columns[i]->next = NULL;
+      tex->columns[i]->yoff = 0;
+      tex->columns[i]->len = tex->height;
+      tex->columns[i]->ptroff = i * tex->height;
+   }
+   
+   // Fill pixels
+   c1 = GameModeInfo->whiteIndex;
+   c2 = GameModeInfo->blackIndex;
+   for(i = 0; i < 4096; i++)
+      tex->buffer[i] = ((i & 8) == 8) != ((i & 512) == 512) ? c1 : c2;
 }
 
 
@@ -1059,7 +1097,7 @@ static void R_InitTextureHash(void)
    for(i = 0; i < numwalls; i++)
       E_HashAddObject(&walltable, textures[i]);
       
-   for(; i < texturecount; i++)
+   for(; i < numwalls + numflats; i++)
       E_HashAddObject(&flattable, textures[i]);
 }
 
@@ -1156,7 +1194,8 @@ void R_InitTextures(void)
    // Count flats
    R_CountFlats();
    
-   texturecount = numwalls + numflats;
+   // SoM: Add one more for the missing texture texture
+   texturecount = numwalls + numflats + 1;
    
    // Allocate textures
    textures = Z_Malloc(sizeof(texture_t *) * texturecount, PU_RENDERER, NULL);
@@ -1199,6 +1238,9 @@ void R_InitTextures(void)
    // Load flats
    R_AddFlats();     
 
+   // Create the bad texture texture
+   R_MakeMissingTexture(texturecount - 1);
+   
    // initialize texture hashing
    R_InitTextureHash();
 }
@@ -1299,9 +1341,11 @@ int R_FindFlat(const char *name)    // killough -- const added
       {
          psnprintf(errormsg, sizeof(errormsg), 
                    "R_FindFlat: %.8s not found\n", name);
-         level_error = errormsg;
+         //level_error = errormsg;
       }
-      return 0;
+      
+      // SoM: Return missing texture index
+      return texturecount - 1;
    }
    return tex->index;
 }
@@ -1367,7 +1411,9 @@ int R_FindWall(const char *name)  // const added -- killough
       if(i == -1)
       {
          C_Printf(FC_ERROR "Texture %.8s not found\n", name);
-         return 0; // haleyjd: zero means no texture
+         
+         // SoM: Return index of missing texture texture.
+         return texturecount - 1; // haleyjd: zero means no texture
       }
    }
 
