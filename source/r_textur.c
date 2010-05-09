@@ -967,7 +967,7 @@ static void R_MakeMissingTexture(int count)
    // Make columns
    for(i = 0; i < tex->width; i++)
    {
-      tex->columns[i] = Z_Calloc(sizeof(texcol_t **), 1, PU_RENDERER, 0);
+      tex->columns[i] = Z_Calloc(sizeof(texcol_t), 1, PU_RENDERER, 0);
       tex->columns[i]->next = NULL;
       tex->columns[i]->yoff = 0;
       tex->columns[i]->len = tex->height;
