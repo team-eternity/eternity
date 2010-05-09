@@ -273,7 +273,11 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
          // ignore sprite lumps smaller than 8 bytes (the smallest possible)
          // in size -- this was used by some dmadds wads
          // as an 'empty' graphics resource
-         if(li_namespace != ns_sprites || lump->size > 8)
+         
+         // SoM: Ignore marker lumps inside F_START and F_END
+         if((li_namespace == ns_sprites && lump->size > 8) ||
+            (li_namespace == ns_flats && lump->size > 0) ||
+            (li_namespace != ns_sprites && li_namespace != ns_flats))
          {
             marked[num_marked] = lump;
             marked[num_marked]->li_namespace = li_namespace;
