@@ -43,7 +43,8 @@ p_tick.h    p_trace.c   p_user.c    p_user.h    p_xenemy.c  p_xenemy.h  r_bsp.c 
 r_bsp.h     r_data.c    r_data.h    r_defs.h    r_draw.c    r_draw.h    r_drawl.c   \
 r_drawl.h   r_drawq.c   r_dynseg.h  r_main.c    r_main.h    r_plane.c   r_pcheck.h  \
 r_drawq.h   r_dynseg.c  r_plane.h   r_portal.c  r_portal.h  r_ripple.c  r_ripple.h  \
-r_segs.c    r_segs.h    r_sky.c     r_sky.h     r_span.c    r_state.h   r_things.c  \
+r_segs.c    r_segs.h    r_sky.c     r_sky.h     r_span.c    r_state.h   r_textur.c  \
+r_things.c  \
 r_things.h  rules.make  sclinux.h   sounds.c    sounds.h    s_sndseq.c  s_sndseq.h  \
 s_sound.c   s_sound.h   st_hbar.c   st_lib.c    st_lib.h    st_stuff.c  st_stuff.h  \
 tables.c    tables.h    v_block.c   v_block.h   v_buffer.c  v_buffer.h  version.c   \

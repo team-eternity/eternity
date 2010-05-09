@@ -33,28 +33,109 @@
 
 // haleyjd 08/30/02: externalized these structures
 
-// A single patch from a texture definition, basically
-// a rectangular area within the texture rectangle.
-typedef struct texpatch_s
+typedef enum
 {
-   int32_t originx, originy;  // Block origin, which has already accounted
-   int32_t patch;             // for the internal origin of the patch.
-} texpatch_t;
+   TC_PATCH,
+   TC_FLAT,
+} cmptype_e;
+
+// Generalized graphic
+typedef struct tcomponent_s
+{
+   int32_t   originx, originy;  // Block origin, which has already accounted
+   uint32_t  width, height;     // Unscaled dimensions of the graphic. 
+   
+   int32_t   lump;              // Lump number of the
+    
+   cmptype_e type;              // Type of lump
+} tcomponent_t;
+
+
+// SoM: Columns are used inside the texture struct to reference the linear
+// buffer the textures are painted to.
+typedef struct texcol_s
+{
+   uint16_t yoff, len;
+   uint32_t ptroff;
+   
+   struct texcol_s *next;
+} texcol_t;
+
 
 // A maptexturedef_t describes a rectangular texture, which is composed
 // of one or more mappatch_t structures that arrange graphic patches.
+// Redesigned by SoM so that the same textures can be used by both walls
+// and flats.
+typedef enum
+{
+   // Set if the texture contains see-thru portions
+   TF_MASKED    = 0x1,
+   // Set by animation code marks this texture as being swirly
+   TF_SWIRLY    = 0x2,
+   // Set if the texture can be used as a flat. 
+   TF_CANBEFLAT = 0x4,
+} texflag_e;
 
 typedef struct texture_s
 {
-   char    name[8];       // Keep name for switch changing, etc.
-   int     next, index;   // killough 1/31/98: used in hashing algorithm
-   int16_t width, height;
-   int16_t patchcount;    // All the patches[patchcount] are drawn
-   texpatch_t patches[1]; // back-to-front into the cached texture.
+   // SoM: New dog's in town
+   mdllistitem_t link;
+   
+   // Index within the texture array of this object.
+   int           index;
+
+   // For use with ehash stuff
+   char       *name;
+   char       namebuf[9];       // Keep name for switch changing, etc.
+   int16_t    width, height;
+   
+   // SoM: These are no longer kept in separate arrays
+   int32_t    widthmask;
+   int32_t    heightfrac;
+   
+   // SoM: texture attributes
+   uint32_t   flags;
+   
+   // SoM: If the texture can be used as an optimized flat, this is the size
+   // of the flat
+   byte       flatsize;
+   
+   texcol_t   **columns;     // SoM: width length list of columns
+   byte       *buffer;       // SoM: Linear buffer the texture occupies
+   
+   // New texture system can put either textures or flats (or anything, really)
+   // into a texture, so the old patches idea has been scrapped for 'graphics'
+   // which can be either patch graphics or linear graphics.
+   int16_t        ccount;
+   tcomponent_t   components[1]; // back-to-front into the cached texture.
 } texture_t;
 
 // Retrieve column data for span blitting.
-byte *R_GetColumn(int tex, int32_t col);
+//byte *R_GetColumn(int tex, int32_t col);
+
+// SoM: This is replaced with two functions. For solid walls/skies, we only 
+// need the raw column data (direct buffer ptr). For masked mid-textures, we
+// need to return columns from the column list
+byte *R_GetRawColumn(int tex, int32_t col);
+texcol_t *R_GetMaskedColumn(int tex, int32_t col);
+
+// SoM: This function returns the linear texture buffer (recache if needed)
+byte *R_GetLinearBuffer(int tex);
+
+// Cache a given texture
+// Returns the texture for chaining.
+texture_t *R_CacheTexture(int num);
+
+// SoM: all textures/flats are now stored in a single array (textures)
+// Walls start from 0 to numwalls - 1 and flats go from numwalls to
+// texturecount - 1
+extern int         numwalls, numflats;
+extern int         texturecount;
+extern texture_t   **textures;
+
+// SoM: Because all textures and flats are stored in the same array, the 
+// translation tables are now combined.
+extern int         *texturetranslation;
 
 // I/O, setting up the stuff.
 void R_InitData(void);
@@ -64,13 +145,13 @@ void R_PrecacheLevel(void);
 // Retrieval.
 // Floor/ceiling opaque texture tiles,
 // lookup by name.
-int R_FlatNumForName(const char *name);   // killough -- const added
-int R_CheckFlatNumForName(const char *name);
+int R_FindFlat(const char *name);   // killough -- const added
+int R_CheckForFlat(const char *name);
 
 // Called by P_Ticker for switches and animations,
 // returns the texture number for the texture name.
-int R_TextureNumForName(const char *name);       // killough -- const added
-int R_CheckTextureNumForName (const char *name); 
+int R_FindWall(const char *name);       // killough -- const added
+int R_CheckForWall(const char *name); 
 
 void R_InitTranMap(int);      // killough 3/6/98: translucency initialization
 int R_ColormapNumForName(const char *name);      // killough 4/4/98
@@ -84,12 +165,8 @@ extern byte *main_tranmap, *tranmap;
 
 extern int r_precache;
 
-extern int numflats; // haleyjd
-
 extern int global_cmap_index; // haleyjd
 extern int global_fog_index;
-
-extern texture_t **textures;
 
 #endif
 

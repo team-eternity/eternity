@@ -739,7 +739,7 @@ void E_InitTerrainTypes(void)
       free(TerrainTypes);
 
    // allocate the TerrainTypes lookup
-   numf = (numflats + 1);
+   numf = (texturecount + 1);
    size = numf * sizeof(ETerrain *);
    TerrainTypes = (ETerrain **)malloc(size);
 
@@ -755,10 +755,10 @@ void E_InitTerrainTypes(void)
 
       while(floor)
       {
-         int lump = W_CheckNumForNameNS(floor->name, ns_flats);
+         int tnum = R_CheckForFlat(floor->name);
 
-         if(lump != -1)
-            TerrainTypes[lump - firstflat] = floor->terrain;
+         if(tnum != -1)
+            TerrainTypes[tnum] = floor->terrain;
 
          floor = floor->next;
       }

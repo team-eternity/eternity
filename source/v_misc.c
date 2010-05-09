@@ -471,10 +471,12 @@ void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
 //
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
-   byte *src = W_CacheLumpNum(firstflat + R_FlatNumForName(patchname),
-                              PU_CACHE);
+   int         tnum = R_FindFlat(patchname);
 
-   back_dest->TileBlock64(back_dest, src);
+   if(textures[tnum]->width != textures[tnum]->height || textures[tnum]->width != 64)
+      return;
+      
+   back_dest->TileBlock64(back_dest, R_GetLinearBuffer(tnum));
 }
 
 byte *R_DistortedFlat(int);
@@ -487,7 +489,7 @@ byte *R_DistortedFlat(int);
 //
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
-   byte *src = R_DistortedFlat(R_FlatNumForName(patchname));
+   byte *src = R_DistortedFlat(R_FindFlat(patchname));
    
    back_dest->TileBlock64(back_dest, src);
 }

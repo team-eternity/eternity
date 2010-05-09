@@ -53,7 +53,7 @@ static int    *maskedtexturecol;
 //
 void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 {
-   column_t *col;
+   texcol_t *col;
    int      lightnum;
    int      texnum;
    sector_t tempsec;      // killough 4/13/98
@@ -118,7 +118,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    {
       column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
          ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
-      column.texmid = column.texmid + textureheight[texnum] - ds->viewz;
+      column.texmid = column.texmid + textures[texnum]->heightfrac - ds->viewz;
    }
    else
    {
@@ -177,9 +177,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          // when forming multipatched textures (see r_data.c).
 
          // draw the texture
-         col = (column_t *)((byte *)
-                            R_GetColumn(texnum,maskedtexturecol[column.x]) - 3);
-         R_DrawMaskedColumn(col);
+         col = R_GetMaskedColumn(texnum, maskedtexturecol[column.x]);
+         R_DrawNewMaskedColumn(textures[texnum], col);
          
          maskedtexturecol[column.x] = 0x7fffffff;
       }
@@ -321,7 +320,7 @@ static void R_RenderSegLoop(void)
 
                column.texmid = segclip.midtexmid;
 
-               column.source = R_GetColumn(segclip.midtex, texx);
+               column.source = R_GetRawColumn(segclip.midtex, texx);
                column.texheight = segclip.midtexh;
 
                colfunc();
@@ -341,7 +340,7 @@ static void R_RenderSegLoop(void)
                {
                   column.texmid = segclip.toptexmid;
 
-                  column.source = R_GetColumn(segclip.toptex, texx);
+                  column.source = R_GetRawColumn(segclip.toptex, texx);
                   column.texheight = segclip.toptexh;
 
                   colfunc();
@@ -366,7 +365,7 @@ static void R_RenderSegLoop(void)
                {
                   column.texmid = segclip.bottomtexmid;
 
-                  column.source = R_GetColumn(segclip.bottomtex, texx);
+                  column.source = R_GetRawColumn(segclip.bottomtex, texx);
                   column.texheight = segclip.bottomtexh;
 
                   colfunc();
