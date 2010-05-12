@@ -956,7 +956,10 @@ static void R_MakeMissingTexture(int count)
    byte        c1, c2;
    
    if(count >= texturecount)
-      return count;
+   {
+      usermsg("R_MakeMissingTexture: count >= texturecount\n");
+      return;
+   }
    
    textures[count] = tex = R_AllocTexStruct("BAADF00D", 64, 64, 0);
    tex->buffer = Z_Malloc(64*64, PU_RENDERER, NULL);
@@ -1599,5 +1602,5 @@ static int R_Doom1Texture(const char *name)
    return -1;
 }
 
-
 // EOF
+

@@ -1128,6 +1128,10 @@ SOURCE=.\source\r_span.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\r_textur.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\r_things.c
 # End Source File
 # End Group
