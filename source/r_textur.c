@@ -80,9 +80,21 @@ typedef struct maptexture_s
 
 int         firstflat, lastflat;
 
-// SoM: all textures/flats are now stored in a single array (textures) with the 
-// flats indexed from i = numwalls to numwalls + numflats - 1
+// SoM: all textures/flats are now stored in a single array (textures)
+// Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
+// to (flatstop - 1)
+int         wallstart, wallstop;
+int         flatstart, flatstop;
 int         numwalls, numflats;
+
+// SoM: This is the number of textures/flats loaded from wads
+// this distinction is important because any textures that EE generates
+// will not be cachable. 
+int         numwadtex;
+
+// SoM: Index of the BAADF00D invalid texture marker
+int         badtex;
+
 int         texturecount;
 texture_t   **textures;
 
@@ -961,7 +973,8 @@ static void R_MakeMissingTexture(int count)
       return;
    }
    
-   textures[count] = tex = R_AllocTexStruct("BAADF00D", 64, 64, 0);
+   badtex = count;
+   textures[badtex] = tex = R_AllocTexStruct("BAADF00D", 64, 64, 0);
    tex->buffer = Z_Malloc(64*64, PU_RENDERER, NULL);
    
    // Allocate column pointers
@@ -1097,10 +1110,10 @@ static void R_InitTextureHash(void)
    E_NCStrHashInit(&walltable, 599, E_KEYFUNCNAME(texture_t, name), NULL);
    E_NCStrHashInit(&flattable, 599, E_KEYFUNCNAME(texture_t, name), NULL);
    
-   for(i = 0; i < numwalls; i++)
+   for(i = wallstart; i < wallstop; i++)
       E_HashAddObject(&walltable, textures[i]);
       
-   for(; i < numwalls + numflats; i++)
+   for(i = flatstart; i < flatstop; i++)
       E_HashAddObject(&flattable, textures[i]);
 }
 
@@ -1154,11 +1167,11 @@ static void R_AddFlats(void)
          break;
       }
       
-      tex = textures[i + numwalls] = 
+      tex = textures[i + flatstart] = 
          R_AllocTexStruct(lump->name, width, height, 1);
      
       tex->flatsize = flatsize;
-      tex->index = i + numwalls;
+      tex->index = i + flatstart;
       tex->components[0].lump = i + firstflat;
       tex->components[0].type = TC_FLAT;
       tex->components[0].width = width;
@@ -1192,12 +1205,17 @@ void R_InitTextures(void)
    maptex2 = R_InitTextureLump("TEXTURE2", false);
 
    // calculate total textures
-   numwalls = maptex1->numtextures + maptex2->numtextures;
+   numwalls  = maptex1->numtextures + maptex2->numtextures;
+   wallstart = 0;
+   wallstop  = wallstart + numwalls;
    
    // Count flats
    R_CountFlats();
-   
+   flatstart = numwalls;
+   flatstop = flatstart + numflats;
+      
    // SoM: Add one more for the missing texture texture
+   numwadtex = numwalls + numflats;
    texturecount = numwalls + numflats + 1;
    
    // Allocate textures
@@ -1231,8 +1249,10 @@ void R_InitTextures(void)
       I_Error("\n\n%d texture errors.\nerrors dumped to %s\n", errors, error_filename);
    }
 
+   // SoM: This REALLY hits us when starting EE with large wads. Caching 
+   // textures on map start would probably be preferable 99.9% of the time...
    // Precache textures
-   for(i = 0; i < numwalls; ++i)
+   for(i = wallstart; i < wallstop; ++i)
       R_CacheTexture(i);
    
    if(errors)

@@ -127,9 +127,20 @@ byte *R_GetLinearBuffer(int tex);
 texture_t *R_CacheTexture(int num);
 
 // SoM: all textures/flats are now stored in a single array (textures)
-// Walls start from 0 to numwalls - 1 and flats go from numwalls to
-// texturecount - 1
+// Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
+// to (flatstop - 1)
+extern int         wallstart, wallstop;
+extern int         flatstart, flatstop;
 extern int         numwalls, numflats;
+
+// SoM: This is the number of textures/flats loaded from wads
+// this distinction is important because any textures that EE generates
+// will not be cachable. 
+extern int         numwadtex;
+
+// SoM: Index of the BAADF00D invalid texture marker
+extern int         badtex;
+
 extern int         texturecount;
 extern texture_t   **textures;
 

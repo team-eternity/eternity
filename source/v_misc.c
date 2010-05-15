@@ -471,8 +471,14 @@ void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
 //
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
-   int         tnum = R_FindFlat(patchname) - numwalls;
-   byte        *src = W_CacheLumpNum(firstflat + tnum, PU_CACHE);
+   int         tnum = R_FindFlat(patchname) - flatstart;
+   byte        *src;
+   
+   // SoM: Extra protection, I don't think this should ever actually happen.
+   if(tnum < 0 || tnum >= numflats)   
+      src = R_GetLinearBuffer(badtex);
+   else
+      src = W_CacheLumpNum(firstflat + tnum, PU_CACHE);
 
    back_dest->TileBlock64(back_dest, src);
 }

@@ -1277,7 +1277,7 @@ static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
    // SoM: Add the offset for the flats after all the calculations are done to 
    // preserve the old behavior in all cases.
    *pfloorheight = (fixed_t)floorheight;
-   *pfloorpic    = (int16_t)floorpic + numwalls;
+   *pfloorpic    = (int16_t)floorpic + flatstart;
 
    return true;
 }
