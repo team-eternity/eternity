@@ -74,6 +74,8 @@ typedef enum
    TF_SWIRLY    = 0x2,
    // Set if the texture can be used as a flat. 
    TF_CANBEFLAT = 0x4,
+   // Set if the texture is animated
+   TF_ANIMATED  = 0x8,
 } texflag_e;
 
 typedef struct texture_s

@@ -158,8 +158,9 @@ static void P_SpawnPortal(line_t *, portal_type, portal_effect);
 //
 void P_InitPicAnims(void)
 {
-   int         i;
+   int         i, p;
    animdef_t   *animdefs; //jff 3/23/98 pointer to animation lump
+   int         flags;
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
@@ -168,6 +169,8 @@ void P_InitPicAnims(void)
    lastanim = anims;
    for(i=0 ; animdefs[i].istexture != -1 ; i++)
    {
+      flags = TF_ANIMATED;
+      
       // 1/11/98 killough -- removed limit by array-doubling
       if(lastanim >= anims + maxanims)
       {
@@ -194,10 +197,14 @@ void P_InitPicAnims(void)
          lastanim->picnum = R_FindFlat(animdefs[i].endname);
          lastanim->basepic = R_FindFlat(animdefs[i].startname);
       }
-
+      
       lastanim->istexture = animdefs[i].istexture;
       lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
       lastanim->speed = SwapLong(animdefs[i].speed); // killough 5/5/98: add LONG()
+
+      // SoM: just to make sure
+      if(lastanim->numpics <= 0)
+         continue;
 
       // sf: include support for swirly water hack
       if(lastanim->speed < 65536 && lastanim->numpics != 1)
@@ -207,6 +214,15 @@ void P_InitPicAnims(void)
                      animdefs[i].startname,
                      animdefs[i].endname);
       }
+      else
+      {
+         // SoM: it's swirly water
+         flags |= TF_SWIRLY;
+      }
+      
+      // SoM: add flags
+      for(p = lastanim->basepic; p <= lastanim->picnum; p++)
+         textures[p]->flags |= flags;
 
       lastanim++;
    }
@@ -2474,10 +2490,7 @@ void P_UpdateSpecials(void)
       for(i = anim->basepic; i < anim->basepic + anim->numpics; ++i)
       {
          if((i >= flatstart && i < flatstop && r_swirl) || anim->speed > 65535 || anim->numpics == 1)
-         {
-            textures[i]->flags |= TF_SWIRLY;
             texturetranslation[i] = i;
-         }
          else
          {
             pic = anim->basepic + 
