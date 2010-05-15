@@ -644,7 +644,7 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    MN_addFile("default");
 
    // run through flats
-   for(i = numwalls; i < texturecount; ++i)
+   for(i = numwalls; i < (numwalls + numflats); ++i)
    {
       // size must be exactly 64x64
       if(textures[i]->width == 64 && textures[i]->height == 64)
