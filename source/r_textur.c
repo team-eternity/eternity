@@ -141,7 +141,9 @@ static void R_DetermineFlatSize(texture_t *t)
 //
 // Allocates and initializes a new texture_t struct, filling in all needed data
 // for the given parameters.
-static texture_t *R_AllocTexStruct(const char *name, uint16_t width, uint16_t height, int16_t compcount)
+//
+static texture_t *R_AllocTexStruct(const char *name, uint16_t width, 
+                                   uint16_t height, int16_t compcount)
 {
    size_t    size;
    texture_t *ret;
@@ -149,13 +151,15 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width, uint16_t he
   
 #ifdef RANGECHECK
    if(!width || !height || !name || compcount < 0)
-      I_Error("R_AllocTexStruct: Invalid parameters: %s, %i, %i, %i\n", name, width, height, compcount);
+   {
+      I_Error("R_AllocTexStruct: Invalid parameters: %s, %i, %i, %i\n", 
+              name, width, height, compcount);
+   }
 #endif
 
    size = sizeof(texture_t) + sizeof(tcomponent_t) * (compcount - 1);
    
-   ret = Z_Malloc(size, PU_RENDERER, NULL);
-   memset(ret, 0, size);
+   ret = Z_Calloc(1, size, PU_RENDERER, NULL);
    
    ret->name = ret->namebuf;
    strncpy(ret->name, name, 8);
