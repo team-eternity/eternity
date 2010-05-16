@@ -781,8 +781,8 @@ boolean M_FindCheats(int key)
   for (matchedbefore = ret = i = 0; cheat[i].cheat; i++)
   {
     if ((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
-        !(cheat[i].when & not_dm   && (GameType == gt_dm) && !demoplayback) &&
-        !(cheat[i].when & not_coop && (GameType == gt_coop)) &&
+        !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
+        !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
         !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
         !(cheat[i].when & not_menu && menuactive) &&
         !(cheat[i].when & not_deh  && cheat[i].deh_modified))

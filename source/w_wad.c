@@ -584,25 +584,22 @@ void W_ReadLump(int lump, void *dest)
 //
 int W_ReadLumpHeaderInDir(waddir_t *dir, int lump, void *dest, size_t size)
 {
-   size_t c;
    lumpinfo_t *l;
+   void *data;
    
    if(lump < 0 || lump >= dir->numlumps)
       I_Error("W_ReadLumpHeader: %d >= numlumps", lump);
-   
+
    l = dir->lumpinfo[lump];
 
    if(l->size < size || l->size == 0)
       return 0;
 
-   c = LumpHandlers[l->type].readLump(l, dest, size);
-   if(c < size)
-   {
-      I_Error("W_ReadLumpHeader: only read %d of %d on lump %d", 
-              (int)c, (int)size, lump);
-   }
+   data = W_CacheLumpNumInDir(dir, lump, PU_CACHE);
+
+   memcpy(dest, data, size);
    
-   return c;
+   return size;
 }
 
 int W_ReadLumpHeader(int lump, void *dest, size_t size)
