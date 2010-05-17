@@ -484,8 +484,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
    plane = R_FindPlane(*portal->data.plane.delta + viewz, 
                        *portal->data.plane.pic, 
                        *portal->data.plane.lightlevel, 
-                       *portal->data.plane.xoff - viewx, 
-                       *portal->data.plane.yoff + viewy,
+                       *portal->data.plane.xoff, 
+                       *portal->data.plane.yoff,
                        angle, NULL);
 
    plane = R_CheckPlane(plane, window->minx, window->maxx);

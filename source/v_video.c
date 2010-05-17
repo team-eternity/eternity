@@ -288,7 +288,7 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 		          int height, int destx, int desty, VBuffer *dest)
 {
    vrect_t srcrect, dstrect;
-   int smallestw, smallesth, usew, useh;
+   int usew, useh;
    byte *srcp, *dstp;
 
 #ifdef RANGECHECK
@@ -320,6 +320,10 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
    // clip source rect on source surface
    V_clipRect(&srcrect, src);
 
+   // clipped away completely?
+   if(srcrect.cw <= 0 || srcrect.ch <= 0)
+      return;
+
    // populate dest rect
    dstrect.x = destx;
    dstrect.y = desty;
@@ -329,13 +333,9 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
    // clip dest rect on dest surface
    V_clipRect(&dstrect, dest);
 
-   // find smallest width and height between the two rects
-   smallestw = srcrect.cw < dstrect.cw ? srcrect.cw : dstrect.cw;
-   smallesth = srcrect.ch < dstrect.ch ? srcrect.ch : dstrect.ch;
-
-   // set widths/heights of both rects equal
-   srcrect.cw = dstrect.cw = smallestw;
-   srcrect.ch = dstrect.ch = smallesth;
+   // clipped away completely?
+   if(dstrect.cw <= 0 || dstrect.ch <= 0)
+      return;
 
    // scale rects?
    if(src->scaled)
@@ -346,17 +346,19 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
       srcp = src->ylut[srcrect.sy]  + src->xlut[srcrect.sx];
       dstp = dest->ylut[dstrect.sy] + dest->xlut[dstrect.sx];
 
-      // set width and height to use in drawing loop
-      usew = srcrect.sw;
-      useh = srcrect.sh;
+	  // use the smaller of the two scaled rect widths / heights
+	  usew = (srcrect.sw < dstrect.sw ? srcrect.sw : dstrect.sw);
+	  useh = (srcrect.sh < dstrect.sh ? srcrect.sh : dstrect.sh);
+
    }
    else
    {
       srcp = src->ylut[srcrect.cy1]  + src->xlut[srcrect.cx1];
       dstp = dest->ylut[dstrect.cy1] + dest->xlut[dstrect.cx1];
 
-      usew = srcrect.cw;
-      useh = srcrect.ch;
+	  // use the smaller of the two clipped rect widths / heights
+      usew = (srcrect.cw < dstrect.cw ? srcrect.cw : dstrect.cw);
+      useh = (srcrect.ch < srcrect.ch ? srcrect.ch : dstrect.ch);
    }
 
    // block copy

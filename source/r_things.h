@@ -61,6 +61,7 @@ void R_PopMasked();
 void R_SetMaskedSilhouette(float *top, float *bottom);
 
 void R_DrawMaskedColumn(column_t *tcolumn);
+void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
 void R_SortVisSprites(void);
 void R_AddSprites(sector_t *sec,int); // killough 9/18/98
 void R_AddPSprites(void);

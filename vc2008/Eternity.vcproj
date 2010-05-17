@@ -3357,6 +3357,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\r_textur.c"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\r_things.c"
 						>
 						<FileConfiguration

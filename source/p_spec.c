@@ -158,8 +158,9 @@ static void P_SpawnPortal(line_t *, portal_type, portal_effect);
 //
 void P_InitPicAnims(void)
 {
-   int         i;
+   int         i, p;
    animdef_t   *animdefs; //jff 3/23/98 pointer to animation lump
+   int         flags;
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
@@ -168,6 +169,8 @@ void P_InitPicAnims(void)
    lastanim = anims;
    for(i=0 ; animdefs[i].istexture != -1 ; i++)
    {
+      flags = TF_ANIMATED;
+      
       // 1/11/98 killough -- removed limit by array-doubling
       if(lastanim >= anims + maxanims)
       {
@@ -180,24 +183,28 @@ void P_InitPicAnims(void)
       if (animdefs[i].istexture)
       {
          // different episode ?
-         if(R_CheckTextureNumForName(animdefs[i].startname) == -1)
+         if(R_CheckForWall(animdefs[i].startname) == -1)
             continue;
          
-         lastanim->picnum = R_TextureNumForName(animdefs[i].endname);
-         lastanim->basepic = R_TextureNumForName(animdefs[i].startname);
+         lastanim->picnum = R_FindWall(animdefs[i].endname);
+         lastanim->basepic = R_FindWall(animdefs[i].startname);
       }
       else
       {
-         if(W_CheckNumForNameNS(animdefs[i].startname, ns_flats) == -1)  // killough 4/17/98
+         if(R_CheckForFlat(animdefs[i].startname) == -1)
             continue;
          
-         lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
-         lastanim->basepic = R_FlatNumForName (animdefs[i].startname);
+         lastanim->picnum = R_FindFlat(animdefs[i].endname);
+         lastanim->basepic = R_FindFlat(animdefs[i].startname);
       }
-
+      
       lastanim->istexture = animdefs[i].istexture;
       lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
       lastanim->speed = SwapLong(animdefs[i].speed); // killough 5/5/98: add LONG()
+
+      // SoM: just to make sure
+      if(lastanim->numpics <= 0)
+         continue;
 
       // sf: include support for swirly water hack
       if(lastanim->speed < 65536 && lastanim->numpics != 1)
@@ -207,6 +214,15 @@ void P_InitPicAnims(void)
                      animdefs[i].startname,
                      animdefs[i].endname);
       }
+      else
+      {
+         // SoM: it's swirly water
+         flags |= TF_SWIRLY;
+      }
+      
+      // SoM: add flags
+      for(p = lastanim->basepic; p <= lastanim->picnum; p++)
+         textures[p]->flags |= flags;
 
       lastanim++;
    }
@@ -609,11 +625,11 @@ fixed_t P_FindShortestTextureAround(int secnum)
       {
          const side_t *side;
          if((side = getSide(secnum,i,0))->bottomtexture >= lowtexnum &&
-            textureheight[side->bottomtexture] < minsize)
-            minsize = textureheight[side->bottomtexture];
+            textures[side->bottomtexture]->heightfrac < minsize)
+            minsize = textures[side->bottomtexture]->heightfrac;
          if((side = getSide(secnum,i,1))->bottomtexture >= lowtexnum &&
-            textureheight[side->bottomtexture] < minsize)
-            minsize = textureheight[side->bottomtexture];
+            textures[side->bottomtexture]->heightfrac < minsize)
+            minsize = textures[side->bottomtexture]->heightfrac;
       }
    }
    
@@ -654,11 +670,11 @@ fixed_t P_FindShortestUpperAround(int secnum)
       {
          const side_t *side;
          if((side = getSide(secnum,i,0))->toptexture >= lowtexnum)
-            if(textureheight[side->toptexture] < minsize)
-               minsize = textureheight[side->toptexture];
+            if(textures[side->toptexture]->heightfrac < minsize)
+               minsize = textures[side->toptexture]->heightfrac;
          if((side = getSide(secnum,i,1))->toptexture >= lowtexnum)
-            if(textureheight[side->toptexture] < minsize)
-               minsize = textureheight[side->toptexture];
+            if(textures[side->toptexture]->heightfrac < minsize)
+               minsize = textures[side->toptexture]->heightfrac;
       }
    }
 
@@ -2473,15 +2489,15 @@ void P_UpdateSpecials(void)
    {
       for(i = anim->basepic; i < anim->basepic + anim->numpics; ++i)
       {
-         pic = anim->basepic + 
-               ((leveltime/anim->speed + i)%anim->numpics);
-         if(anim->istexture)
+         if((i >= flatstart && i < flatstop && r_swirl) || anim->speed > 65535 || anim->numpics == 1)
+            texturetranslation[i] = i;
+         else
+         {
+            pic = anim->basepic + 
+                  ((leveltime/anim->speed + i) % anim->numpics);
+
             texturetranslation[i] = pic;
-         else                    // sf: swirly water hack
-            flattranslation[i] = r_swirl ? -1 : pic;
-         // sf: > 65535 : swirly hack 
-         if(anim->speed > 65535 || anim->numpics == 1)
-            flattranslation[i] = -1;
+         }
       }
    }
    

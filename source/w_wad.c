@@ -278,7 +278,11 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
          // ignore sprite lumps smaller than 8 bytes (the smallest possible)
          // in size -- this was used by some dmadds wads
          // as an 'empty' graphics resource
-         if(li_namespace != ns_sprites || lump->size > 8)
+         
+         // SoM: Ignore marker lumps inside F_START and F_END
+         if((li_namespace == ns_sprites && lump->size > 8) ||
+            (li_namespace == ns_flats && lump->size > 0) ||
+            (li_namespace != ns_sprites && li_namespace != ns_flats))
          {
             marked[num_marked] = lump;
             marked[num_marked]->li_namespace = li_namespace;
@@ -609,25 +613,22 @@ void W_ReadLump(int lump, void *dest)
 //
 int W_ReadLumpHeaderInDir(waddir_t *dir, int lump, void *dest, size_t size)
 {
-   size_t c;
    lumpinfo_t *l;
+   void *data;
    
    if(lump < 0 || lump >= dir->numlumps)
       I_Error("W_ReadLumpHeader: %d >= numlumps", lump);
-   
+
    l = dir->lumpinfo[lump];
 
    if(l->size < size || l->size == 0)
       return 0;
 
-   c = LumpHandlers[l->type].readLump(l, dest, size);
-   if(c < size)
-   {
-      I_Error("W_ReadLumpHeader: only read %d of %d on lump %d", 
-              (int)c, (int)size, lump);
-   }
+   data = W_CacheLumpNumInDir(dir, lump, PU_CACHE);
+
+   memcpy(dest, data, size);
    
-   return c;
+   return size;
 }
 
 int W_ReadLumpHeader(int lump, void *dest, size_t size)

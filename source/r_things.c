@@ -452,6 +452,41 @@ void R_DrawMaskedColumn(column_t *tcolumn)
    column.texmid = basetexturemid;
 }
 
+
+void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
+{
+   float y1, y2;
+   fixed_t basetexturemid = column.texmid;
+   
+   column.texheight = 0; // killough 11/98
+
+   while(tcol)
+   {
+      // calculate unclipped screen coordinates for post
+      y1 = maskedcolumn.ytop + (maskedcolumn.scale * tcol->yoff);
+      y2 = y1 + (maskedcolumn.scale * tcol->len) - 1;
+
+      column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
+      column.y2 = (int)(y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2);
+
+      // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
+      if(column.y1 <= column.y2 && column.y2 < viewheight)
+      {
+         column.source = tex->buffer + tcol->ptroff;
+         column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
+
+         // Drawn by either R_DrawColumn
+         //  or (SHADOW) R_DrawFuzzColumn.
+         colfunc();
+      }
+
+      tcol = tcol->next;
+   }
+
+   column.texmid = basetexturemid;
+}
+
+
 //
 // R_DrawVisSprite
 //

@@ -107,9 +107,9 @@ void P_InitSwitchList(void)
          if(!SwapShort(alphSwitchList[i].episode))
             break;
          switchlist[index++] =
-            R_TextureNumForName(alphSwitchList[i].name1);
+            R_FindWall(alphSwitchList[i].name1);
          switchlist[index++] =
-            R_TextureNumForName(alphSwitchList[i].name2);
+            R_FindWall(alphSwitchList[i].name2);
       }
    }
 
@@ -381,12 +381,12 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
       if(line->flags & ML_DONTPEGBOTTOM)
       {
          texbot = sidedef->rowoffset + openbottom;
-         textop = texbot + textureheight[sidedef->midtexture];
+         textop = texbot + textures[sidedef->midtexture]->heightfrac;
       }
       else
       {
          textop = opentop + sidedef->rowoffset;
-         texbot = textop - textureheight[sidedef->midtexture];
+         texbot = textop - textures[sidedef->midtexture]->heightfrac;
       }
 
       if(thing->z > textop || thing->z + thing->height < texbot)

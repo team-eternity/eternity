@@ -329,7 +329,7 @@ void P_LoadSectors(int lump)
       
       ss->floorheight        = SwapShort(ms->floorheight)   << FRACBITS;
       ss->ceilingheight      = SwapShort(ms->ceilingheight) << FRACBITS;      
-      ss->floorpic           = R_FlatNumForName(ms->floorpic);
+      ss->floorpic           = R_FindFlat(ms->floorpic);
       ss->lightlevel         = SwapShort(ms->lightlevel);
       ss->special            = SwapShort(ms->special);
       ss->tag                = SwapShort(ms->tag);
@@ -337,7 +337,7 @@ void P_LoadSectors(int lump)
       ss->touching_thinglist = NULL;            // phares 3/14/98
 
       // haleyjd 08/30/09: set ceiling pic using function
-      P_SetSectorCeilingPic(ss, R_FlatNumForName(ms->ceilingpic));      
+      P_SetSectorCeilingPic(ss, R_FindFlat(ms->ceilingpic));      
 
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
@@ -969,21 +969,21 @@ void P_LoadSideDefs2(int lump)
       {
       case 242:                  // variable colormap via 242 linedef
          if((cmap = R_ColormapNumForName(msd->bottomtexture)) < 0)
-            sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
+            sd->bottomtexture = R_FindWall(msd->bottomtexture);
          else
          {
             sec->bottommap = cmap;
             sd->bottomtexture = 0;
          }
          if((cmap = R_ColormapNumForName(msd->midtexture)) < 0)
-            sd->midtexture = R_TextureNumForName(msd->midtexture);
+            sd->midtexture = R_FindWall(msd->midtexture);
          else
          {
             sec->midmap = cmap;
             sd->midtexture = 0;
          }
          if((cmap = R_ColormapNumForName(msd->toptexture)) < 0)
-            sd->toptexture = R_TextureNumForName(msd->toptexture);
+            sd->toptexture = R_FindWall(msd->toptexture);
          else
          {
             sec->topmap = cmap;
@@ -995,16 +995,16 @@ void P_LoadSideDefs2(int lump)
          sd->midtexture = strncasecmp("TRANMAP", msd->midtexture, 8) ?
             (sd->special = W_CheckNumForName(msd->midtexture)) < 0 ||
             W_LumpLength(sd->special) != 65536 ?
-            sd->special=0, R_TextureNumForName(msd->midtexture) :
+            sd->special=0, R_FindWall(msd->midtexture) :
                (sd->special++, 0) : (sd->special=0);
-         sd->toptexture = R_TextureNumForName(msd->toptexture);
-         sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
+         sd->toptexture = R_FindWall(msd->toptexture);
+         sd->bottomtexture = R_FindWall(msd->bottomtexture);
          break;
 
       default:                        // normal cases
-         sd->midtexture    = R_TextureNumForName(msd->midtexture);
-         sd->toptexture    = R_TextureNumForName(msd->toptexture);
-         sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
+         sd->midtexture    = R_FindWall(msd->midtexture);
+         sd->toptexture    = R_FindWall(msd->toptexture);
+         sd->bottomtexture = R_FindWall(msd->bottomtexture);
          break;
       }
    }

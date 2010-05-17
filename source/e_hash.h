@@ -71,6 +71,9 @@ struct ehash_s
 // Initialize a hash table.
 void  E_HashInit(ehash_t *table, unsigned int numchains, ehashable_i *hinterface);
 
+// Destroy a hash table. Frees hash chains and sets the structure to all zeroes.
+void E_HashDestroy(ehash_t *table);
+
 // Add an object to the table. The object must be an mdllistitem_t descendent.
 void  E_HashAddObject(ehash_t *table, void *object);
 

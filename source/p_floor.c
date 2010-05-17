@@ -913,15 +913,15 @@ int EV_DoFloor(line_t *line, floor_e floortype )
                   if(side->bottomtexture >= 0      //killough 10/98
                      && (side->bottomtexture || comp[comp_model]))
                   {
-                     if(textureheight[side->bottomtexture] < minsize)
-                        minsize = textureheight[side->bottomtexture];
+                     if(textures[side->bottomtexture]->heightfrac < minsize)
+                        minsize = textures[side->bottomtexture]->heightfrac;
                   }
                   side = getSide(secnum,i,1);
                   if(side->bottomtexture >= 0      //killough 10/98
                      && (side->bottomtexture || comp[comp_model]))
                   {
-                     if(textureheight[side->bottomtexture] < minsize)
-                        minsize = textureheight[side->bottomtexture];
+                     if(textures[side->bottomtexture]->heightfrac < minsize)
+                        minsize = textures[side->bottomtexture]->heightfrac;
                   }
                }
             }
@@ -1274,8 +1274,10 @@ static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
          return false;
    }
 
+   // SoM: Add the offset for the flats after all the calculations are done to 
+   // preserve the old behavior in all cases.
    *pfloorheight = (fixed_t)floorheight;
-   *pfloorpic    = (int16_t)floorpic;
+   *pfloorpic    = (int16_t)floorpic + flatstart;
 
    return true;
 }
@@ -1648,7 +1650,7 @@ void P_ChangeFloorTex(const char *name, int tag)
    int flatnum;
    int secnum = -1;
 
-   flatnum = R_FlatNumForName(name);
+   flatnum = R_FindFlat(name);
 
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
       sectors[secnum].floorpic = flatnum;

@@ -252,12 +252,12 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
          texbot = side->rowoffset + obot;
-         textop = texbot + textureheight[side->midtexture];
+         textop = texbot + textures[side->midtexture]->heightfrac;
       }
       else
       {
          textop = otop + side->rowoffset;
-         texbot = textop - textureheight[side->midtexture];
+         texbot = textop - textures[side->midtexture]->heightfrac;
       }
       texmid = (textop + texbot)/2;
 
