@@ -1088,29 +1088,27 @@ int R_TranslationNumForName(const char *name)
 ////////////////////////////////////////////////////////////////
 
 //
-// R_InitBuffer 
-// Creates lookup tables that avoid
-//  multiplies and other hazzles
-//  for getting the framebuffer address
-//  of a pixel to draw.
+// R_InitBuffer
 //
-
-
+// Creates lookup tables that avoid multiplies and other hazzles
+// for getting the framebuffer address of a pixel to draw.
 // SoM: ANYRES
+//
 void R_InitBuffer(int width, int height)
 { 
    int i; 
    int st_height;
    int tviewwidth = viewwidth << detailshift;
    
-   // SoM: use pitch damnyou!
+   // SoM: use pitch damn you!
    linesize = video.pitch;    // killough 11/98
    
    // Handle resize,
    //  e.g. smaller view windows
    //  with border and/or status bar.
    scaledwindowx = (SCREENWIDTH - width) >> 1;
-   viewwindowx = video.x1lookup[scaledwindowx];
+   viewwindowx   = video.x1lookup[scaledwindowx];
+
    // Column offset. For windows.
    for (i = tviewwidth ; i--; )   // killough 11/98
       columnofs[i] = viewwindowx + i;
@@ -1127,78 +1125,75 @@ void R_InitBuffer(int width, int height)
    }
    
    // Precalculate all row offsets.
-   
    for(i = viewheight; i--; )
       ylookup[i] = video.screens[0] + (i + viewwindowy) * linesize; // killough 11/98
 } 
 
 //
 // R_FillBackScreen
-// Fills the back screen with a pattern
-//  for variable screen sizes
+//
+// Fills the back screen with a pattern for variable screen sizes.
 // Also draws a beveled edge.
 //
-
-void R_FillBackScreen (void) 
+void R_FillBackScreen(void) 
 { 
-  // killough 11/98: trick to shadow variables
-  // SoM: ANYRES use scaledwindowx and scaledwindowy instead
-  int x, y; 
-  patch_t *patch;
+   // killough 11/98: trick to shadow variables
+   // SoM: ANYRES use scaledwindowx and scaledwindowy instead
+   int x, y; 
+   patch_t *patch;
+   giborder_t *border = GameModeInfo->border;
 
-  giborder_t *border = GameModeInfo->border;
+   int offset = border->offset;
+   int size   = border->size;
 
-  int offset = border->offset;
-  int size   = border->size;
+   if(scaledviewwidth == SCREENWIDTH)
+      return;
 
-  if(scaledviewwidth == 320)
-    return;
+   // haleyjd 08/16/02: some restructuring to use GameModeInfo
 
-  // haleyjd 08/16/02: some restructuring to use GameModeInfo
+   // killough 11/98: use the function in m_menu.c
+   V_DrawBackground(GameModeInfo->borderFlat, &backscreen1);
 
-  // killough 11/98: use the function in m_menu.c
-  V_DrawBackground(GameModeInfo->borderFlat, &backscreen1);
-        
-  patch = W_CacheLumpName(border->top, PU_CACHE);
+   patch = W_CacheLumpName(border->top, PU_CACHE);
 
-  for(x = 0; x < scaledviewwidth; x += size)
-    V_DrawPatch(scaledwindowx+x,scaledwindowy-offset,&backscreen1,patch);
+   for(x = 0; x < scaledviewwidth; x += size)
+      V_DrawPatch(scaledwindowx+x,scaledwindowy-offset,&backscreen1,patch);
 
-  patch = W_CacheLumpName(border->bottom, PU_CACHE);
+   patch = W_CacheLumpName(border->bottom, PU_CACHE);
 
-  for(x = 0; x < scaledviewwidth; x += size)   // killough 11/98:
-    V_DrawPatch(scaledwindowx+x,scaledwindowy+scaledviewheight,&backscreen1,patch);
+   for(x = 0; x < scaledviewwidth; x += size)   // killough 11/98:
+      V_DrawPatch(scaledwindowx+x,scaledwindowy+scaledviewheight,&backscreen1,patch);
 
-  patch = W_CacheLumpName(border->left, PU_CACHE);
+   patch = W_CacheLumpName(border->left, PU_CACHE);
 
-  for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
-    V_DrawPatch(scaledwindowx-offset,scaledwindowy+y,&backscreen1,patch);
-  
-  patch = W_CacheLumpName(border->right, PU_CACHE);
+   for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
+      V_DrawPatch(scaledwindowx-offset,scaledwindowy+y,&backscreen1,patch);
 
-  for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
-    V_DrawPatch(scaledwindowx+scaledviewwidth,scaledwindowy+y,&backscreen1,patch);
+   patch = W_CacheLumpName(border->right, PU_CACHE);
 
-  // Draw beveled edge. 
-  V_DrawPatch(scaledwindowx-offset,
-              scaledwindowy-offset,
-              &backscreen1,
-              W_CacheLumpName(border->c_tl, PU_CACHE));
-    
-  V_DrawPatch(scaledwindowx+scaledviewwidth,
-              scaledwindowy-offset,
-              &backscreen1,
-              W_CacheLumpName(border->c_tr, PU_CACHE));
-    
-  V_DrawPatch(scaledwindowx-offset,
-              scaledwindowy+scaledviewheight,             // killough 11/98
-              &backscreen1,
-              W_CacheLumpName(border->c_bl, PU_CACHE));
-    
-  V_DrawPatch(scaledwindowx+scaledviewwidth,
-              scaledwindowy+scaledviewheight,             // killough 11/98
-              &backscreen1,
-              W_CacheLumpName(border->c_br, PU_CACHE));
+   for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
+      V_DrawPatch(scaledwindowx+scaledviewwidth,scaledwindowy+y,&backscreen1,patch);
+
+   // Draw beveled edge. 
+   V_DrawPatch(scaledwindowx-offset,
+               scaledwindowy-offset,
+               &backscreen1,
+               W_CacheLumpName(border->c_tl, PU_CACHE));
+
+   V_DrawPatch(scaledwindowx+scaledviewwidth,
+               scaledwindowy-offset,
+               &backscreen1,
+               W_CacheLumpName(border->c_tr, PU_CACHE));
+
+   V_DrawPatch(scaledwindowx-offset,
+               scaledwindowy+scaledviewheight,    // killough 11/98
+               &backscreen1,
+               W_CacheLumpName(border->c_bl, PU_CACHE));
+
+   V_DrawPatch(scaledwindowx+scaledviewwidth,
+               scaledwindowy+scaledviewheight,     // killough 11/98
+               &backscreen1,
+               W_CacheLumpName(border->c_br, PU_CACHE));
 } 
 
 //
