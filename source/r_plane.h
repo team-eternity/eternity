@@ -103,8 +103,8 @@ typedef struct cb_slopespan_s
 {
    int y, x1, x2;
 
-   float iufrac, ivfrac, idfrac;
-   float iustep, ivstep, idstep;
+   double iufrac, ivfrac, idfrac;
+   double iustep, ivstep, idstep;
 
    void *source;
 

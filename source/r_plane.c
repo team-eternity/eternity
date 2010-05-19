@@ -341,7 +341,7 @@ static void R_MapPlane(int y, int x1, int x2)
 //
 // R_SlopeLights
 //
-static void R_SlopeLights(int len, float startmap, float endmap)
+static void R_SlopeLights(int len, double startmap, double endmap)
 {
    int i;
    fixed_t map, map2, step;
@@ -353,8 +353,8 @@ static void R_SlopeLights(int len, float startmap, float endmap)
       return;
    }
 
-   map = M_FloatToFixed((startmap / 256.0f * NUMCOLORMAPS));
-   map2 = M_FloatToFixed((endmap / 256.0f * NUMCOLORMAPS));
+   map = M_FloatToFixed((startmap / 256.0 * NUMCOLORMAPS));
+   map2 = M_FloatToFixed((endmap / 256.0 * NUMCOLORMAPS));
 
    if(len > 1)
       step = (map2 - map) / (len - 1);
@@ -385,20 +385,20 @@ static void R_MapSlope(int y, int x1, int x2)
 {
    rslope_t *slope = plane.slope;
    int count = x2 - x1;
-   v3float_t s;
-   float map1, map2;
-   float base;
+   v3double_t s;
+   double map1, map2;
+   double base;
 
    s.x = x1 - view.xcenter;
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3f(&s, &slope->A) * (float)plane.tex->width;
-   slopespan.ivfrac = M_DotVec3f(&s, &slope->B) * (float)plane.tex->height;
-   slopespan.idfrac = M_DotVec3f(&s, &slope->C);
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width;
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height;
+   slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * (float)plane.tex->width;
-   slopespan.ivstep = slope->B.x * (float)plane.tex->height;
+   slopespan.iustep = slope->A.x * (double)plane.tex->width;
+   slopespan.ivstep = slope->B.x * (double)plane.tex->height;
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -407,18 +407,18 @@ static void R_MapSlope(int y, int x1, int x2)
    slopespan.y = y;
 
    // Setup lighting
-   base = 4.0f * (plane.lightlevel) - 448.0f;
+   base = 4.0 * (plane.lightlevel) - 448.0;
 
-   map1 = 256.0f - (slope->shade - slope->plight * slopespan.idfrac);
+   map1 = 256.0 - (slope->shade - slope->plight * slopespan.idfrac);
    if(count > 0)
    {
-      float id = slopespan.idfrac + slopespan.idstep * (x2 - x1);
-      map2 = 256.0f - (slope->shade - slope->plight * id);
+      double id = slopespan.idfrac + slopespan.idstep * (x2 - x1);
+      map2 = 256.0 - (slope->shade - slope->plight * id);
    }
    else
       map2 = map1;
 
-   R_SlopeLights(x2 - x1 + 1, (256.0f - map1), (256.0f - map2));
+   R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
  
    slopefunc();
 }
@@ -458,8 +458,8 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 static void R_CalcSlope(visplane_t *pl)
 {
    // This is where the crap gets calculated. Yay
-   float          xl, yl, tsin, tcos;
-   float          ixscale, iyscale;
+   double         xl, yl, tsin, tcos;
+   double         ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
    texture_t      *tex = textures[pl->picnum];
 
@@ -467,8 +467,8 @@ static void R_CalcSlope(visplane_t *pl)
       return;
 
    
-   tsin = (float)sin(pl->angle);
-   tcos = (float)cos(pl->angle);
+   tsin = sin(pl->angle);
+   tcos = cos(pl->angle);
    
    xl = tex->width;
    yl = tex->height;
@@ -478,15 +478,15 @@ static void R_CalcSlope(visplane_t *pl)
    // SoM: Add offsets? YAH!
    rslope->P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
    rslope->P.z = -pl->xoffsf * tsin + pl->yoffsf * tcos;
-   rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
+   rslope->P.y = P_GetZAtf(pl->pslope, (float)rslope->P.x, (float)rslope->P.z);
 
    rslope->M.x = rslope->P.x - xl * tsin;
    rslope->M.z = rslope->P.z + xl * tcos;
-   rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
+   rslope->M.y = P_GetZAtf(pl->pslope, (float)rslope->M.x, (float)rslope->M.z);
 
    rslope->N.x = rslope->P.x + yl * tcos;
    rslope->N.z = rslope->P.z + yl * tsin;
-   rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
+   rslope->N.y = P_GetZAtf(pl->pslope, (float)rslope->N.x, (float)rslope->N.z);
 #else
    // TODO: rotation/offsets
    rslope->P.x = x * tcos + y * tsin;
@@ -502,16 +502,16 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
 #endif
 
-   M_TranslateVec3f(&rslope->P);
-   M_TranslateVec3f(&rslope->M);
-   M_TranslateVec3f(&rslope->N);
+   M_TranslateVec3(&rslope->P);
+   M_TranslateVec3(&rslope->M);
+   M_TranslateVec3(&rslope->N);
 
-   M_SubVec3f(&rslope->M, &rslope->M, &rslope->P);
-   M_SubVec3f(&rslope->N, &rslope->N, &rslope->P);
+   M_SubVec3(&rslope->M, &rslope->M, &rslope->P);
+   M_SubVec3(&rslope->N, &rslope->N, &rslope->P);
    
-   M_CrossProduct3f(&rslope->A, &rslope->P, &rslope->N);
-   M_CrossProduct3f(&rslope->B, &rslope->P, &rslope->M);
-   M_CrossProduct3f(&rslope->C, &rslope->M, &rslope->N);
+   M_CrossProduct3(&rslope->A, &rslope->P, &rslope->N);
+   M_CrossProduct3(&rslope->B, &rslope->P, &rslope->M);
+   M_CrossProduct3(&rslope->C, &rslope->M, &rslope->N);
 
    // This is helpful for removing some of the muls when calculating light.
 
