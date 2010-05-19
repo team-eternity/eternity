@@ -492,9 +492,9 @@ SPAN_FUNC(R_DrawSpanAdd_LD512, ADD_SPAN_PROLOGUE_8, LD_SPAN_PRIMEDEST_8, 14, 23,
 
 void R_DrawSlope_8_64(void)
 {
-   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
-   float ius = slopespan.iustep, ivs = slopespan.ivstep;
-   float id = slopespan.idfrac, ids = slopespan.idstep;
+   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -526,9 +526,9 @@ void R_DrawSlope_8_64(void)
 #else
    while(count >= SPANJUMP)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -560,9 +560,9 @@ void R_DrawSlope_8_64(void)
    }
    if(count > 0)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -595,9 +595,9 @@ void R_DrawSlope_8_64(void)
 
 void R_DrawSlope_8_128(void)
 {
-   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
-   float ius = slopespan.iustep, ivs = slopespan.ivstep;
-   float id = slopespan.idfrac, ids = slopespan.idstep;
+   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -611,9 +611,9 @@ void R_DrawSlope_8_128(void)
 
    while(count >= SPANJUMP)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -645,9 +645,9 @@ void R_DrawSlope_8_128(void)
    }
    if(count > 0)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -678,9 +678,9 @@ void R_DrawSlope_8_128(void)
 
 void R_DrawSlope_8_256(void)
 {
-   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
-   float ius = slopespan.iustep, ivs = slopespan.ivstep;
-   float id = slopespan.idfrac, ids = slopespan.idstep;
+   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -694,9 +694,9 @@ void R_DrawSlope_8_256(void)
 
    while(count >= SPANJUMP)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -728,9 +728,9 @@ void R_DrawSlope_8_256(void)
    }
    if(count > 0)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -761,9 +761,9 @@ void R_DrawSlope_8_256(void)
 
 void R_DrawSlope_8_512(void)
 {
-   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
-   float ius = slopespan.iustep, ivs = slopespan.ivstep;
-   float id = slopespan.idfrac, ids = slopespan.idstep;
+   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -777,9 +777,9 @@ void R_DrawSlope_8_512(void)
 
    while(count >= SPANJUMP)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -811,9 +811,9 @@ void R_DrawSlope_8_512(void)
    }
    if(count > 0)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -846,9 +846,9 @@ void R_DrawSlope_8_512(void)
 
 void R_DrawSlope_8_GEN(void)
 {
-   float iu = slopespan.iufrac, iv = slopespan.ivfrac;
-   float ius = slopespan.iustep, ivs = slopespan.ivstep;
-   float id = slopespan.idfrac, ids = slopespan.idstep;
+   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -862,9 +862,9 @@ void R_DrawSlope_8_GEN(void)
 
    while(count >= SPANJUMP)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
@@ -896,9 +896,9 @@ void R_DrawSlope_8_GEN(void)
    }
    if(count > 0)
    {
-      float ustart, uend;
-      float vstart, vend;
-      float mulstart, mulend;
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
