@@ -121,6 +121,12 @@ static void R_DetermineFlatSize(texture_t *t)
       
    t->flags |= TF_CANBEFLAT;
    
+   if(t->width != t->height)
+   {
+      t->flatsize = FLAT_GENERALIZED;
+      return;
+   }
+      
    switch(t->width * t->height)
    {
    case 4096:  // 64x64
