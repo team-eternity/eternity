@@ -1214,7 +1214,7 @@ boolean MN_Responder(event_t *ev)
          free(temp);
          
          // set the command
-         cmdtype = input_cmdtype;
+         Console.cmdtype = input_cmdtype;
          C_RunCommand(input_command, (const char *)input_buffer);
          input_command = NULL;
          input_cmdtype = c_typed;
@@ -1393,7 +1393,7 @@ boolean MN_Responder(event_t *ev)
       {
       case it_runcmd:
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
-         cmdtype = c_menu;
+         Console.cmdtype = c_menu;
          C_RunTextCmd(menuitem->data);
          break;
          
@@ -1405,7 +1405,6 @@ boolean MN_Responder(event_t *ev)
          
          // toggle value now
          psnprintf((char *)tempstr, sizeof(tempstr), "%s /", menuitem->data);
-         cmdtype = c_menu;
          C_RunTextCmd((char *)tempstr);
          
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]); // make sound
@@ -1435,6 +1434,8 @@ boolean MN_Responder(event_t *ev)
          //   default value will not be set by console for type == c_menu.
          if(menuitem->type == it_variable_nd)
             input_cmdtype = c_menu;
+         else
+            input_cmdtype = c_typed;
 
          break;
 
@@ -1493,7 +1494,6 @@ boolean MN_Responder(event_t *ev)
             // change variable
             psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
          }
-         cmdtype = c_menu;
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
@@ -1534,7 +1534,6 @@ boolean MN_Responder(event_t *ev)
          
          // change variable
          psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
-         cmdtype = c_menu;
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
@@ -1720,7 +1719,7 @@ void MN_PrevMenu(void)
 //
 void MN_ClearMenus(void)
 {
-   console_enabled = true; // haleyjd 03/11/06: re-enable console
+   Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
    redrawsbar = redrawborder = true;  // need redraw
 }

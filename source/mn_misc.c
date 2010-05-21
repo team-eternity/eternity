@@ -168,7 +168,7 @@ boolean MN_PopupResponder(event_t *ev)
          }
          else
          {
-            cmdtype = c_menu;
+            Console.cmdtype = c_menu;
             C_RunTextCmd(popup_message_command);
          }
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
@@ -638,7 +638,6 @@ boolean MN_MapColourResponder(event_t *ev)
       sprintf(tempstr, "%i", selected_colour);
      
       // run command
-      cmdtype = c_menu;
       C_RunCommand(colour_command, tempstr);
       
       // kill selector

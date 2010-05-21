@@ -177,10 +177,10 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
 {
    int lumpnum;
 
-   if(!c_argc)
+   if(!Console.argc)
       return;
 
-   lumpnum = W_CheckNumForName(c_argv[0]);
+   lumpnum = W_CheckNumForName(Console.argv[0]);
    
    if(lumpnum == -1 || P_CheckLevel(lumpnum) == LEVEL_FORMAT_INVALID)   
       C_Printf(FC_ERROR "level not found\a\n");
@@ -188,10 +188,10 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    {
       if(mn_start_mapname)
          free(mn_start_mapname);
-      start_mapname = mn_start_mapname = strdup(c_argv[0]);
+      start_mapname = mn_start_mapname = strdup(Console.argv[0]);
    }
 
-   if(cmdtype == c_menu)
+   if(menuactive)
       MN_StartMenu(GameModeInfo->newGameMenu);
 }
 
@@ -287,7 +287,7 @@ void MN_QuitDoom(void)
 
 CONSOLE_COMMAND(mn_quit, 0)
 {
-   if(cmdtype != c_menu && menuactive)
+   if(Console.cmdtype != c_menu && menuactive)
       return;
 
    MN_QuitDoom();
@@ -322,13 +322,13 @@ menu_t menu_episode =
 
 CONSOLE_COMMAND(mn_episode, cf_notnet)
 {
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: mn_episode <epinum>\n");
       return;
    }
    
-   start_episode = atoi(c_argv[0]);
+   start_episode = atoi(Console.argv[0]);
    
    if(GameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
@@ -414,8 +414,8 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    
    // skill level is argv 0
    
-   if(c_argc)
-      skill = atoi(c_argv[0]);
+   if(Console.argc)
+      skill = atoi(Console.argv[0]);
 
    // haleyjd 07/27/05: restored nightmare behavior
    if(GameModeInfo->flags & GIF_SKILL5WARNING && skill == sk_nightmare)
@@ -754,7 +754,7 @@ menu_t menu_gamesettings =
 VARIABLE_STRING(startlevel,    NULL,   9);
 CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
 {
-   char *newvalue = c_argv[0];
+   char *newvalue = Console.argv[0];
    
    // check for a valid level
    if(W_CheckNumForName(newvalue) == -1)
@@ -1080,7 +1080,7 @@ patch_t *patch_left, *patch_mid, *patch_right;
 void MN_SaveGame(void)
 {
    int save_slot = 
-      (char **)c_command->variable->variable - savegamenames;
+      (char **)(Console.command->variable->variable) - savegamenames;
    
    if(gamestate != GS_LEVEL) 
       return; // only save in level
@@ -1299,10 +1299,10 @@ CONSOLE_COMMAND(mn_load, 0)
    int slot;
    size_t len;
    
-   if(c_argc < 1)
+   if(Console.argc < 1)
       return;
    
-   slot = atoi(c_argv[0]);
+   slot = atoi(Console.argv[0]);
    
    // haleyjd 08/25/02: giant bug here
    if(!savegamepresent[slot])

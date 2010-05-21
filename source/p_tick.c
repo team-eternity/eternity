@@ -25,6 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #include "doomstat.h"
+#include "c_runcmd.h"
 #include "c_io.h"
 #include "d_main.h"
 #include "p_user.h"

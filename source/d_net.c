@@ -929,13 +929,13 @@ void TryRunTics(void)
 /*
 CONSOLE_COMMAND(kick, cf_server)
 {
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: kick <playernum>\n"
                " use playerinfo to find playernum\n");
       return;
    }
-   D_KickPlayer(atoi(c_argv[0]));
+   D_KickPlayer(atoi(Console.argv[0]));
 }
 */
 

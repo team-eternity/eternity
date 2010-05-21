@@ -1430,16 +1430,16 @@ CONSOLE_COMMAND(s_playmusic, 0)
    musicinfo_t *music;
    char namebuf[16];
 
-   if(c_argc < 1)
+   if(Console.argc < 1)
    {
       C_Printf(FC_ERROR "A music name is required.\a\n");
       return;
    }
 
    // check to see if there's a music by this name
-   if(!(music = S_MusicForName(c_argv[0])))
+   if(!(music = S_MusicForName(Console.argv[0])))
    {
-      C_Printf(FC_ERROR "Unknown music %s\a\n", c_argv[0]);
+      C_Printf(FC_ERROR "Unknown music %s\a\n", Console.argv[0]);
       return;
    }
 
@@ -1451,7 +1451,7 @@ CONSOLE_COMMAND(s_playmusic, 0)
    if(W_CheckNumForName(namebuf) < 0)
    {
       C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf, 
-               c_argv[0]);
+               Console.argv[0]);
       return;
    }
 

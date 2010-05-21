@@ -78,15 +78,11 @@ static const char *inputprompt = FC_HI "$" FC_NORMAL;
 static const char *altprompt = FC_HI "#" FC_NORMAL;
 int c_height=100;     // the height of the console
 int c_speed=10;       // pixels/tic it moves
-int current_target = 0;
-int current_height = 0;
-boolean c_showprompt;
 static qstring_t inputtext;
 static char *input_point;      // left-most point you see of the command line
 
 // for scrolling command line
 static int pgup_down=0, pgdn_down=0;
-int console_enabled = true;
 
 // haleyjd 09/07/03: true logging capability
 static FILE *console_log = NULL;
@@ -196,6 +192,8 @@ void C_Init(void)
    // haleyjd: initialize console qstrings
    M_QStrCreateSize(&inputtext, 100);
 
+   Console.enabled = true;
+
    if(!(c_font = E_FontForName(c_fontname)))
       I_Error("C_Init: bad EDF font name %s\n", c_fontname);
    
@@ -206,37 +204,37 @@ void C_Init(void)
    C_updateInputPoint();
    
    // haleyjd
-   G_InitKeyBindings();
+   G_InitKeyBindings();   
 }
 
 // called every tic
 
 void C_Ticker(void)
 {
-   c_showprompt = true;
+   Console.showprompt = true;
    
    if(gamestate != GS_CONSOLE)
    {
       // specific to half-screen version only
       
-      if(current_height != current_target)
+      if(Console.current_height != Console.current_target)
          redrawsbar = true;
       
       // move the console toward its target
-      if(D_abs(current_height - current_target) >= c_speed)
+      if(D_abs(Console.current_height - Console.current_target) >= c_speed)
       {
-         current_height +=
-            (current_target < current_height) ? -c_speed : c_speed;
+         Console.current_height +=
+            (Console.current_target < Console.current_height) ? -c_speed : c_speed;
       }
       else
       {
-         current_height = current_target;
+         Console.current_height = Console.current_target;
       }
    }
    else
    {
       // console gamestate: no moving consoles!
-      current_target = current_height;
+      Console.current_target = Console.current_height;
    }
    
    if(consoleactive)  // no scrolling thru messages when fullscreen
@@ -348,14 +346,14 @@ boolean C_Responder(event_t *ev)
    //
    
    // activate console?
-   if(action_console_toggle && console_enabled)
+   if(action_console_toggle && Console.enabled)
    {
-      boolean goingup = current_target == c_height;
+      boolean goingup = Console.current_target == c_height;
 
       // set console
       action_console_toggle = false;
 
-      current_target = goingup ? 0 : c_height;
+      Console.current_target = goingup ? 0 : c_height;
 
       return true;
    }
@@ -364,7 +362,7 @@ boolean C_Responder(event_t *ev)
       return false;
    
    // not til its stopped moving
-   if(current_target < current_height) 
+   if(Console.current_target < Console.current_height) 
       return false;
 
    ///////////////////////////////////////
@@ -397,7 +395,7 @@ boolean C_Responder(event_t *ev)
          Egg(); // shh!
       
       // run the command
-      cmdtype = c_typed;
+      Console.cmdtype = c_typed;
       C_RunTextCmd(inputtext.buffer);
       
       C_InitTab();            // reset tab completion
@@ -517,9 +515,11 @@ void C_Drawer(void)
 
    // fullscreen console for fullscreen mode
    if(gamestate == GS_CONSOLE)
-      current_height = cback.scaled ? SCREENHEIGHT : cback.height;
+      Console.current_height = cback.scaled ? SCREENHEIGHT : cback.height;
 
-   real_height = cback.scaled ? cback.y2lookup[current_height - 1] + 1: current_height;
+   real_height = 
+      cback.scaled ? cback.y2lookup[Console.current_height - 1] + 1 : 
+                     Console.current_height;
 
    // draw backdrop
    // SoM: use the VBuffer
@@ -531,8 +531,8 @@ void C_Drawer(void)
    
    // offset starting point up by 8 if we are showing input prompt
    
-   y = current_height - 
-         ((c_showprompt && message_pos==message_last) ? c_font->absh : 0) - 1;
+   y = Console.current_height - 
+         ((Console.showprompt && message_pos == message_last) ? c_font->absh : 0) - 1;
 
    // start at our position in the message history
    count = message_pos;
@@ -556,7 +556,8 @@ void C_Drawer(void)
   
    // input line on screen, not scrolled back in history?
    
-   if(current_height > c_font->absh && c_showprompt && message_pos == message_last)
+   if(Console.current_height > c_font->absh && Console.showprompt && 
+      message_pos == message_last)
    {
       const char *a_prompt;
       char tempstr[LINELENGTH];
@@ -573,7 +574,8 @@ void C_Drawer(void)
                    "%s%s_", a_prompt, input_point);
       }
       
-      V_FontWriteText(c_font, tempstr, 1, current_height-c_font->absh-1);
+      V_FontWriteText(c_font, tempstr, 1, 
+                      Console.current_height - c_font->absh - 1);
    }
 }
 
@@ -925,8 +927,8 @@ void C_SetConsole(void)
 {
    gamestate = GS_CONSOLE;
    gameaction = ga_nothing;
-   current_height = SCREENHEIGHT;
-   current_target = SCREENHEIGHT;
+   Console.current_height = SCREENHEIGHT;
+   Console.current_target = SCREENHEIGHT;
    
    S_StopMusic();                  // stop music if any
    S_StopSounds();                 // and sounds
@@ -937,7 +939,7 @@ void C_SetConsole(void)
 
 void C_Popup(void)
 {
-   current_target = 0;
+   Console.current_target = 0;
 }
 
 // make the console disappear
@@ -946,7 +948,7 @@ void C_InstaPopup(void)
 {
    // haleyjd 10/20/08: no popup in GS_CONSOLE gamestate!
    if(gamestate != GS_CONSOLE)
-      current_target = current_height = 0;
+      Console.current_target = Console.current_height = 0;
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

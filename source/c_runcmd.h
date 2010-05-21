@@ -236,13 +236,28 @@ typedef struct alias_s
 
 /************************** PROTOTYPES/EXTERNS ****************************/
 
-/***** command running ****/
+//
+// haleyjd 05/20/10
+//
+// Console state is now stored in the console_t structure.
+// 
+typedef struct console_s
+{
+   int current_height; // current height of console
+   int current_target; // target height of console
+   boolean showprompt; // toggles input prompt on or off
+   boolean enabled;    // enabled state of console
+   int cmdsrc;         // player source of current command being run
+   int cmdtype;        // source type of command (console, menu, etc)
+   command_t *command; // current command being run
+   char args[128];     // args as single string   
+   int  argc;          // number of argv's
+   char argv[MAXTOKENS][MAXTOKENLENGTH]; // argument values to current command
+} console_t;
 
-extern command_t *c_command;
-extern int cmdtype;
-extern char c_argv[MAXTOKENS][MAXTOKENLENGTH];
-extern int c_argc;
-extern char c_args[128];
+extern console_t Console; // the one and only Console object
+
+/***** command running ****/
 
 void C_RunCommand(command_t *command, const char *options);
 void C_RunTextCmd(const char *cmdname);

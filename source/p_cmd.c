@@ -115,8 +115,8 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 {
    int playernum, colour;
    
-   playernum = cmdsrc;
-   colour = atoi(c_argv[0]) % TRANSLATIONCOLOURS;
+   playernum = Console.cmdsrc;
+   colour = atoi(Console.argv[0]) % TRANSLATIONCOLOURS;
    
    players[playernum].colormap = colour;
    if(gamestate == GS_LEVEL)
@@ -147,8 +147,8 @@ CONSOLE_NETVAR(gametype, GameType, cf_server, netcmd_deathmatch)
 VARIABLE_INT(gameskill, &defaultskill,          0, 4, skills);
 CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
 {
-   startskill = gameskill = atoi(c_argv[0]);
-   if(cmdsrc == consoleplayer)
+   startskill = gameskill = atoi(Console.argv[0]);
+   if(Console.cmdsrc == consoleplayer)
       defaultskill = gameskill + 1;
 }
 
@@ -338,14 +338,14 @@ CONSOLE_COMMAND(puke, cf_notnet)
    int i;
    int args[5] = { 0, 0, 0, 0, 0 };
 
-   if(c_argc < 1)
+   if(Console.argc < 1)
       return;
 
-   for(i = 1; i < c_argc; ++i)
-      args[i - 1] = atoi(c_argv[i]);
+   for(i = 1; i < Console.argc; ++i)
+      args[i - 1] = atoi(Console.argv[i]);
 
-   ACS_StartScript(atoi(c_argv[0]), gamemap, args,
-                   players[cmdsrc].mo, NULL, 0, NULL);
+   ACS_StartScript(atoi(Console.argv[0]), gamemap, args,
+                   players[Console.cmdsrc].mo, NULL, 0, NULL);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)

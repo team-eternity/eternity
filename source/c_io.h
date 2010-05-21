@@ -19,8 +19,8 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __C_IO_H__
-#define __C_IO_H__
+#ifndef C_IO_H__
+#define C_IO_H__
 
 #include "doomstat.h"
 #include "d_event.h"
@@ -49,16 +49,12 @@ void C_OpenConsoleLog(const char *filename);
 void C_CloseConsoleLog(void);
 void C_DumpMessages(const char *filename);
 
-        // sf 9/99: made a #define
-#define consoleactive (current_height || gamestate == GS_CONSOLE)
+// sf 9/99: made a #define
+#define consoleactive (Console.current_height || gamestate == GS_CONSOLE)
+#define c_moving      (Console.current_height != Console.current_target)
 
 extern int c_height;     // the height of the console
 extern int c_speed;       // pixels/tic it moves
-extern int current_height;
-extern int current_target;
-#define c_moving (current_height != current_target)
-extern boolean c_showprompt;
-extern int console_enabled; // haleyjd: exported
 
 extern const char *c_fontname;
 

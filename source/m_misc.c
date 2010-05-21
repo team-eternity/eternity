@@ -938,12 +938,14 @@ static defaultfile_t maindefaults =
 };
 
 // killough 11/98: hash function for name lookup
-static unsigned default_hash(defaultfile_t *df, const char *name)
+static unsigned int default_hash(defaultfile_t *df, const char *name)
 {
-  unsigned hash = 0;
-  while (*name)
-    hash = hash*2 + toupper(*name++);
-  return hash % df->numdefaults;
+   unsigned int hash = 0;
+   
+   while(*name)
+      hash = hash*2 + toupper(*name++);
+   
+   return hash % df->numdefaults;
 }
 
 //

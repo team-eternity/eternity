@@ -85,7 +85,7 @@ CONSOLE_COMMAND(defdmflags, cf_server)
    char cmdbuf[64];
    const char *gm;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       // no argument means set to default for current game type
       switch(GameType)
@@ -103,7 +103,7 @@ CONSOLE_COMMAND(defdmflags, cf_server)
       }
    }
    else
-      mode = atoi(c_argv[0]);
+      mode = atoi(Console.argv[0]);
 
    switch(mode)
    {

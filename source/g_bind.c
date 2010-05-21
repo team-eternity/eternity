@@ -881,13 +881,13 @@ void G_SaveDefaults(void)
 
 CONSOLE_COMMAND(bind, 0)
 {
-   if(c_argc >= 2)
+   if(Console.argc >= 2)
    {
-      G_BindKeyToAction(c_argv[0], c_argv[1]);
+      G_BindKeyToAction(Console.argv[0], Console.argv[1]);
    }
-   else if(c_argc == 1)
+   else if(Console.argc == 1)
    {
-      int key = G_KeyForName(c_argv[0]);
+      int key = G_KeyForName(Console.argv[0]);
 
       if(key < 0)
          C_Printf(FC_ERROR "no such key!\n");
@@ -938,16 +938,16 @@ CONSOLE_COMMAND(unbind, 0)
    int key;
    int bclass = -1;
 
-   if(c_argc < 1)
+   if(Console.argc < 1)
    {
       C_Printf("usage: unbind key [class]\n");
       return;
    }
 
    // allow specification of a binding class
-   if(c_argc == 2)
+   if(Console.argc == 2)
    {
-      bclass = atoi(c_argv[1]);
+      bclass = atoi(Console.argv[1]);
       if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
       {
          C_Printf(FC_ERROR "invalid action class %d\n", bclass);
@@ -955,14 +955,14 @@ CONSOLE_COMMAND(unbind, 0)
       }
    }
    
-   if((key = G_KeyForName(c_argv[0])) != -1)
+   if((key = G_KeyForName(Console.argv[0])) != -1)
    {
       if(bclass == -1)
       {
          // unbind all actions
          int j;
 
-         C_Printf("unbound key %s from all actions\n", c_argv[0]);
+         C_Printf("unbound key %s from all actions\n", Console.argv[0]);
          
          for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
             keybindings[key].bindings[j] = NULL;
@@ -973,15 +973,15 @@ CONSOLE_COMMAND(unbind, 0)
 
          if(ke)
          {
-            C_Printf("unbound key %s from action %s\n", c_argv[0], ke->name);
+            C_Printf("unbound key %s from action %s\n", Console.argv[0], ke->name);
             keybindings[key].bindings[bclass] = NULL;
          }
          else
-            C_Printf("key %s has no binding in class %d\n", c_argv[0], bclass);
+            C_Printf("key %s has no binding in class %d\n", Console.argv[0], bclass);
       }
    }
    else
-     C_Printf("unknown key %s\n", c_argv[0]);
+     C_Printf("unknown key %s\n", Console.argv[0]);
 }
 
 CONSOLE_COMMAND(unbindall, 0)

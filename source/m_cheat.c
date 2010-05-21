@@ -816,8 +816,8 @@ boolean M_FindCheats(int key)
 CONSOLE_COMMAND(infammo, cf_notnet|cf_level)
 {
   int value=0;
-  if(c_argc)
-    sscanf(c_argv[0], "%i", &value);
+  if(Console.argc)
+    sscanf(Console.argv[0], "%i", &value);
   else
     value = !(players[consoleplayer].cheats & CF_INFAMMO);
 
@@ -831,8 +831,8 @@ CONSOLE_COMMAND(infammo, cf_notnet|cf_level)
 CONSOLE_COMMAND(noclip, cf_notnet|cf_level)
 {
   int value=0;
-  if(c_argc)
-    sscanf(c_argv[0], "%i", &value);
+  if(Console.argc)
+    sscanf(Console.argv[0], "%i", &value);
   else
     value = !(players[consoleplayer].cheats & CF_NOCLIP);
 
@@ -848,8 +848,8 @@ CONSOLE_COMMAND(god, cf_notnet|cf_level)
 {
    int value=0;          // sf: choose to set to 0 or 1 
 
-   if(c_argc)
-      sscanf(c_argv[0], "%i", &value);
+   if(Console.argc)
+      sscanf(Console.argv[0], "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_GODMODE);
    

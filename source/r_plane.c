@@ -546,7 +546,7 @@ void R_ClearPlanes(void)
 {
    int i;
    float a;
-   int scaled_height = consoleactive ? video.x1lookup[current_height] : 0;
+   int scaled_height = consoleactive ? video.x1lookup[Console.current_height] : 0;
 
    a = (float)(consoleactive ? 
          (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);

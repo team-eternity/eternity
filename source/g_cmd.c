@@ -66,7 +66,7 @@ extern int keylookspeed;
 
 CONSOLE_COMMAND(i_error, 0)
 {
-   I_Error("%s", c_args);
+   I_Error("%s\n", Console.args);
 }
 
 CONSOLE_COMMAND(z_print, cf_hidden)
@@ -124,20 +124,20 @@ CONSOLE_COMMAND(quit, 0)
 
 CONSOLE_COMMAND(animshot, 0)
 {
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf(
          "animated screenshot.\n"
          "usage: animshot <frames>\n");
       return;
    }
-   animscreenshot = atoi(c_argv[0]);
+   animscreenshot = atoi(Console.argv[0]);
    C_InstaPopup();    // turn off console
 }
 
 CONSOLE_COMMAND(screenshot, 0)
 {
-   if(cmdtype != c_typed)
+   if(Console.cmdtype != c_typed)
       C_InstaPopup();
    G_ScreenShot();
 }
@@ -217,7 +217,7 @@ CONSOLE_VARIABLE(turbo, turbo_scale, 0)
 CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
 {
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
-   player_t *player = &players[cmdsrc];
+   player_t *player = &players[Console.cmdsrc];
 
    if((player->health > 0) || comp[comp_zombie])
       G_ExitLevel();
@@ -230,20 +230,20 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
 
 CONSOLE_COMMAND(playdemo, cf_notnet)
 {
-   if(c_argc < 1)
+   if(Console.argc < 1)
    {
       C_Printf("usage: playdemo demoname\n");
       return;
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(W_CheckNumForNameNSG(c_argv[0], ns_demos) < 0)
+   if(W_CheckNumForNameNSG(Console.argv[0], ns_demos) < 0)
    {
-      C_Printf(FC_ERROR "%s not found\n", c_argv[0]);
+      C_Printf(FC_ERROR "%s not found\n", Console.argv[0]);
       return;
    }
    
-   G_DeferedPlayDemo(c_argv[0]);
+   G_DeferedPlayDemo(Console.argv[0]);
    singledemo = true;            // quit after one demo
 }
 
@@ -255,12 +255,12 @@ CONSOLE_COMMAND(stopdemo, cf_notnet)
 
 CONSOLE_COMMAND(timedemo, cf_notnet)
 {
-   if(c_argc != 2)
+   if(Console.argc != 2)
    {
       C_Printf("usage: timedemo demoname showmenu\n");
       return;
    }
-   G_TimeDemo(c_argv[0], !!atoi(c_argv[1]));
+   G_TimeDemo(Console.argv[0], !!atoi(Console.argv[1]));
 }
 
 // 'cool' demo
@@ -283,7 +283,7 @@ CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
       C_Printf(FC_ERROR"command not available in shareware games\n");
       return;
    }
-   D_AddNewFile(c_argv[0]);
+   D_AddNewFile(Console.argv[0]);
 }
 
 // list loaded wads
@@ -305,7 +305,7 @@ CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
    mobj_t *mobj;
    int playernum;
    
-   playernum = cmdsrc;
+   playernum = Console.cmdsrc;
    
    mobj = players[playernum].mo;
    P_DamageMobj(mobj, NULL, NULL,
@@ -321,7 +321,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 {
    int lumpnum;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: map <mapname>\n"
          "   or map <wadfile.wad>\n");
@@ -335,13 +335,13 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    // haleyjd 03/12/06: no .wad loading in netgames
    
-   if(!netgame && strlen(c_argv[0]) > 4)
+   if(!netgame && strlen(Console.argv[0]) > 4)
    {
       char *extension;
-      extension = c_argv[0] + strlen(c_argv[0]) - 4;
+      extension = Console.argv[0] + strlen(Console.argv[0]) - 4;
       if(!strcmp(extension, ".wad"))
       {
-         if(D_AddNewFile(c_argv[0]))
+         if(D_AddNewFile(Console.argv[0]))
          {
             G_DeferedInitNew(gameskill, firstlevel);
          }
@@ -350,14 +350,14 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    }
 
    // haleyjd 02/23/04: strict error checking
-   lumpnum = W_CheckNumForName(c_argv[0]);
+   lumpnum = W_CheckNumForName(Console.argv[0]);
 
    if(lumpnum != -1 && P_CheckLevel(lumpnum) != LEVEL_FORMAT_INVALID)
    {   
-      G_DeferedInitNew(gameskill, c_argv[0]);
+      G_DeferedInitNew(gameskill, Console.argv[0]);
    }
    else
-      C_Printf(FC_ERROR"%s not found or is not a valid map\n", c_argv[0]);
+      C_Printf(FC_ERROR"%s not found or is not a valid map\n", Console.argv[0]);
 }
 
         // player name
@@ -366,13 +366,13 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 {
    int playernum;
    
-   playernum = cmdsrc;
+   playernum = Console.cmdsrc;
    
-   strncpy(players[playernum].name, c_argv[0], 20);
+   strncpy(players[playernum].name, Console.argv[0], 20);
    if(playernum == consoleplayer)
    {
       free(default_name);
-      default_name = strdup(c_argv[0]);
+      default_name = strdup(Console.argv[0]);
    }
 }
 
@@ -580,8 +580,8 @@ char *weapon_str[NUMWEAPONS] =
 void G_WeapPrefHandler(void)
 {
    int prefnum = 
-      (int *)c_command->variable->variable - weapon_preferences[0];
-   G_SetWeapPref(prefnum, atoi(c_argv[0]));
+      (int *)(Console.command->variable->variable) - weapon_preferences[0];
+   G_SetWeapPref(prefnum, atoi(Console.argv[0]));
 }
 
 void G_AddWeapPrefs(void)

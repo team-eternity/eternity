@@ -468,10 +468,10 @@ CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 // haleyjd 04/15/02: windows joystick commands
 CONSOLE_COMMAND(i_joystick, 0)
 {
-   if(c_argc != 1)
+   if(Console.argc != 1)
       return;
 
-   i_SDLJoystickNum = atoi(c_argv[0]);
+   i_SDLJoystickNum = atoi(Console.argv[0]);
 
    if(i_SDLJoystickNum != -1)
    {

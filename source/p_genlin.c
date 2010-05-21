@@ -2425,20 +2425,21 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numargs;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: p_linespec name args\n");
       return;
    }
 
-   spec = E_LineSpecForName(c_argv[0]);
+   spec = E_LineSpecForName(Console.argv[0]);
 
-   numargs = c_argc - 1;
+   numargs = Console.argc - 1;
 
    for(i = 0; i < numargs; ++i)
-      args[i] = atoi(c_argv[i + 1]);
+      args[i] = atoi(Console.argv[i + 1]);
 
-   P_ExecParamLineSpec(NULL, players[cmdsrc].mo, spec, args, 0, SPAC_CROSS, true);
+   P_ExecParamLineSpec(NULL, players[Console.cmdsrc].mo, spec, args, 0, 
+                       SPAC_CROSS, true);
 }
 
 void P_AddGenLineCommands(void)

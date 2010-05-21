@@ -1645,7 +1645,7 @@ CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
    S_StartSound(NULL, GameModeInfo->c_ChatSound);
    
-   doom_printf("%s: %s", players[cmdsrc].name, c_args);
+   doom_printf("%s: %s", players[Console.cmdsrc].name, Console.args);
 }
 
 CONSOLE_VARIABLE(hu_messagelines, hud_msg_lines, 0) {}

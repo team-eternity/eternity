@@ -74,7 +74,7 @@ CONSOLE_COMMAND(alias, 0)
 
    // haleyjd 04/14/03: rewritten
    
-   if(!c_argc)
+   if(!Console.argc)
    {
       // list em
       C_Printf(FC_HI"alias list:" FC_NORMAL "\n\n");
@@ -95,19 +95,19 @@ CONSOLE_COMMAND(alias, 0)
       return;
    }
   
-   if(c_argc == 1)  // only one, remove alias
+   if(Console.argc == 1)  // only one, remove alias
    {
-      C_RemoveAlias(c_argv[0]);
+      C_RemoveAlias(Console.argv[0]);
       return;
    }
    
    // find it or make a new one
    
-   temp = c_args + strlen(c_argv[0]);
+   temp = Console.args + strlen(Console.argv[0]);
    while(*temp == ' ')
       temp++;
    
-   C_NewAlias(c_argv[0], temp);
+   C_NewAlias(Console.argv[0], temp);
 }
 
 // %opt for aliases
@@ -129,14 +129,14 @@ CONSOLE_COMMAND(cmdlist, 0)
    // haleyjd 07/08/04: optional filter parameter -- the provided
    // character will be used to make the loop below run only for one
    // letter
-   if(c_argc == 1)
+   if(Console.argc == 1)
    {
-      if(strlen(c_argv[0]) == 1)
-         charnum = maxchar = c_argv[0][0];
+      if(strlen(Console.argv[0]) == 1)
+         charnum = maxchar = Console.argv[0][0];
       else
       {
-         charnum = maxchar = c_argv[0][0];
-         mask = c_argv[0];
+         charnum = maxchar = Console.argv[0][0];
+         mask = Console.argv[0];
          masklen = strlen(mask);
       }
    }
@@ -178,14 +178,14 @@ CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 CONSOLE_COMMAND(echo, 0)
 {
-   C_Puts(c_args);
+   C_Puts(Console.args);
 }
 
 // delay in console
 
 CONSOLE_COMMAND(delay, 0)
 {
-  C_BufferDelay(cmdtype, c_argc ? atoi(c_argv[0]) : 1);
+  C_BufferDelay(Console.cmdtype, Console.argc ? atoi(Console.argv[0]) : 1);
 }
 
 // flood the console with crap
@@ -205,20 +205,20 @@ CONSOLE_COMMAND(quote, 0) {}
 
 CONSOLE_COMMAND(dumplog, 0)
 {
-   if(!c_argc)
+   if(!Console.argc)
       C_Printf("usage: dumplog filename\n");
    else
-      C_DumpMessages(c_argv[0]);
+      C_DumpMessages(Console.argv[0]);
 }
 
 // haleyjd 09/07/03: true console logging commands
 
 CONSOLE_COMMAND(openlog, 0)
 {
-   if(!c_argc)
+   if(!Console.argc)
       C_Printf("usage: openlog filename\n");
    else
-      C_OpenConsoleLog(c_argv[0]);
+      C_OpenConsoleLog(Console.argv[0]);
 }
 
 CONSOLE_COMMAND(closelog, 0)
@@ -236,14 +236,14 @@ CONSOLE_COMMAND(cvarhelp, 0)
    char *name;
 
 
-   if(c_argc != 1)
+   if(Console.argc != 1)
    {
       C_Printf("Usage: cvarhelp <variablename>\n"
                "Outputs a list of possible values for the given variable\n");
       return;
    }
 
-   name = c_argv[0];
+   name = Console.argv[0];
 
    for(i = 0; i < CMDCHAINS; ++i)
    {

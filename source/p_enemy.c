@@ -3949,27 +3949,27 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
    int flagsmode = -1;
    const char *flags = NULL;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: summon thingtype flags mode\n");
       return;
    }
 
-   if(c_argc >= 2)
+   if(Console.argc >= 2)
    {
       flagsmode = 1;
-      flags = c_argv[1];
+      flags = Console.argv[1];
    }
 
-   if(c_argc >= 3)
+   if(Console.argc >= 3)
    {
-      if(!strcasecmp(c_argv[2], "set"))
+      if(!strcasecmp(Console.argv[2], "set"))
          flagsmode = 0; // set
-      else if(!strcasecmp(c_argv[2], "remove"))
+      else if(!strcasecmp(Console.argv[2], "remove"))
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(c_argv[0])) == NUMMOBJTYPES)
+   if((type = E_ThingNumForName(Console.argv[0])) == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -4000,10 +4000,10 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
    int thingnum;
    player_t *plyr = &players[consoleplayer];
 
-   if(!c_argc)
+   if(!Console.argc)
       return;
    
-   thingnum = E_ThingNumForName(c_argv[0]);
+   thingnum = E_ThingNumForName(Console.argv[0]);
    if(thingnum == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
@@ -4014,7 +4014,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       C_Printf("thing type is not a special\n");
       return;
    }
-   itemnum = (c_argc >= 2) ? atoi(c_argv[1]) : 1;
+   itemnum = (Console.argc >= 2) ? atoi(Console.argv[1]) : 1;
 
    for(i = 0; i < itemnum; i++)
    {
@@ -4041,10 +4041,10 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
    int thingnum;
    player_t *plyr = &players[consoleplayer];
 
-   if(!c_argc)
+   if(!Console.argc)
       return;
    
-   thingnum = E_ThingNumForName(c_argv[0]);
+   thingnum = E_ThingNumForName(Console.argv[0]);
    if(thingnum == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");

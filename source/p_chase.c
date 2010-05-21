@@ -150,7 +150,7 @@ VARIABLE_BOOLEAN(chasecam_active, NULL, onoff);
 
 CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
 {
-   if(atoi(c_argv[0]))
+   if(atoi(Console.argv[0]))
       P_ChaseStart();
    else
       P_ChaseEnd();
@@ -365,10 +365,10 @@ void P_ResetWalkcam(void)
 VARIABLE_BOOLEAN(walkcam_active, NULL,              onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
-   if(!c_argc)
+   if(!Console.argc)
       walkcam_active = !walkcam_active;
    else
-      walkcam_active = atoi(c_argv[0]);
+      walkcam_active = atoi(Console.argv[0]);
 
    if(walkcam_active)
    {

@@ -2390,8 +2390,8 @@ static void D_SetGraphicsMode(void)
 
    // set up the console to display startup messages
    gamestate = GS_CONSOLE;
-   current_height = SCREENHEIGHT;
-   c_showprompt = false;
+   Console.current_height = SCREENHEIGHT;
+   Console.showprompt = false;
 
    C_Puts(game_name);    // display description of gamemode
    D_ListWads();         // list wads to the console
@@ -3244,7 +3244,7 @@ void usermsg(const char *s, ...)
 
 boolean D_AddNewFile(char *s)
 {
-   c_showprompt = false;
+   Console.showprompt = false;
    if(W_AddNewFile(&w_GlobalDir, s))
       return false;
    modifiedgame = true;

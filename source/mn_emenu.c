@@ -409,22 +409,22 @@ void MN_ProcessMenus(cfg_t *cfg)
 // mn_dynamenu
 //
 // This console command starts the dynamic menu named in
-// c_argv[0] -- this can even be used within dynamic menus
+// Console.argv[0] -- this can even be used within dynamic menus
 // to reference other dynamic menus from command-type items.
 //
 CONSOLE_COMMAND(mn_dynamenu, 0)
 {
    menu_t *menu;
 
-   if(c_argc != 1)
+   if(Console.argc != 1)
    {
       C_Puts("usage: mn_dynamenu <menu name>");
       return;
    }
 
-   if(!(menu = MN_DynamicMenuForName(c_argv[0])))
+   if(!(menu = MN_DynamicMenuForName(Console.argv[0])))
    {
-      C_Printf(FC_ERROR "no such menu %s\a\n", c_argv[0]);
+      C_Printf(FC_ERROR "no such menu %s\a\n", Console.argv[0]);
       return;
    }
 

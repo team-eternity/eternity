@@ -51,8 +51,6 @@
 int       incomingdest[MAXPLAYERS];
 qstring_t incomingmsg[MAXPLAYERS];
 
-int  cmdsrc = 0;           // the source of a network console command
-
 command_t *c_netcmds[NUMNETCMDS];
 
 /*
@@ -138,8 +136,8 @@ void C_SendCmd(int dest, int cmdnum, char *s,...)
   
    if(!netgame || demoplayback)
    {
-      cmdsrc = consoleplayer;
-      cmdtype = c_netcmd;
+      Console.cmdsrc = consoleplayer;
+      Console.cmdtype = c_netcmd;
       C_RunCommand(c_netcmds[cmdnum], s);
       return;
    }
@@ -169,7 +167,7 @@ void C_NetInit(void)
 
 void C_DealWithChar(unsigned char c, int source);
 
-void C_NetTicker()
+void C_NetTicker(void)
 {
   int i;
   
@@ -214,8 +212,8 @@ void C_DealWithChar(unsigned char c, int source)
          if((incomingdest[source] == consoleplayer)
             || incomingdest[source] == CN_BROADCAST)
          {
-            cmdsrc = source;
-            cmdtype = c_netcmd;
+            Console.cmdsrc = source;
+            Console.cmdtype = c_netcmd;
 
             // the first byte is the command num
             netcmdnum = *(incomingmsg[source].buffer);
