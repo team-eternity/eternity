@@ -131,7 +131,7 @@ static int ExpandTics(int low)
    if(delta < -64)
       return (maketic & ~0xff) + 256 + low;
    
-   I_Error("ExpandTics: strange value %i at maketic %i", low, maketic);
+   I_Error("ExpandTics: strange value %i at maketic %i\n", low, maketic);
 
    return 0;
 }
@@ -185,7 +185,7 @@ static void HSendPacket(int node, int flags)
       return;
 
    if(!netgame)
-      I_Error("Tried to transmit to another node");
+      I_Error("Tried to transmit to another node\n");
 
    doomcom->command    = CMD_SEND;
    doomcom->remotenode = node;
@@ -303,7 +303,7 @@ static void GetPackets(void)
 
       // check for a remote game kill
       if(netbuffer->checksum & NCMD_KILL)
-         I_Error("Killed by network driver");
+         I_Error("Killed by network driver\n");
       
       nodeforplayer[netconsole] = netnode;
       
@@ -420,7 +420,7 @@ void NetUpdate(void)
          netbuffer->starttic = realstart = resendto[i];
          netbuffer->numtics = maketic - realstart;
          if(netbuffer->numtics > BACKUPTICS)
-            I_Error("NetUpdate: netbuffer->numtics > BACKUPTICS");
+            I_Error("NetUpdate: netbuffer->numtics > BACKUPTICS\n");
          
          resendto[i] = maketic - doomcom->extratics;
          
@@ -570,7 +570,7 @@ static void D_ArbitrateNetStart(void)
 
             if(GAME_OPTION_SIZE > sizeof netbuffer->d.data)
                I_Error("D_ArbitrateNetStart: GAME_OPTION_SIZE"
-                       " too large w.r.t. BACKUPTICS");
+                       " too large w.r.t. BACKUPTICS\n");
 
             G_WriteOptions(netbuffer->d.data);    // killough 12/98
             
@@ -851,7 +851,7 @@ static boolean RunGameTics(void)
       for(i = 0; i < ticdup; ++i)
       {
          if(gametic/ticdup > lowtic)
-            I_Error("gametic>lowtic");
+            I_Error("gametic>lowtic\n");
          if(advancedemo)
             D_DoAdvanceDemo();
          //isconsoletic =  gamestate == GS_CONSOLE;

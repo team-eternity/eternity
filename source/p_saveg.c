@@ -619,7 +619,7 @@ void P_UnArchiveThinkers(void)
       }
 
       if(*--save_p != tc_end)
-         I_Error("Unknown tclass %i in savegame", *save_p);
+         I_FatalError(I_ERR_KILL, "Unknown tclass %i in savegame", *save_p);
 
       // first table entry special: 0 maps to NULL
       *(mobj_p = malloc(size * sizeof *mobj_p)) = 0;   // table of pointers
@@ -1371,7 +1371,11 @@ void P_UnArchiveSpecials(void)
          }
 
       default:
-         I_Error("P_UnArchiveSpecials: Unknown tclass %i in savegame", tclass);
+         // haleyjd: savegame read errors can cause heap corruption, so trigger
+         // a fatal error exit.
+         I_FatalError(I_ERR_KILL,
+                      "P_UnArchiveSpecials: Unknown tclass %i in savegame", 
+                      tclass);
       }
    }
 }
@@ -1516,7 +1520,10 @@ void P_UnArchivePolyObjects(void)
    save_p += sizeof(numSavedPolys);
 
    if(numSavedPolys != numPolyObjects)
-      I_Error("P_UnArchivePolyObjects: polyobj count inconsistency\n");
+   {
+      I_FatalError(I_ERR_KILL,
+         "P_UnArchivePolyObjects: polyobj count inconsistency\n");
+   }
 
    for(i = 0; i < numSavedPolys; ++i)
       P_UnArchivePolyObj(&PolyObjects[i]);
@@ -1591,7 +1598,10 @@ static void P_UnArchiveSmallAMX(AMX *amx)
    // exists in the case of a gamescript)
 
    if(arch_amx_size != cur_amx_size)
-      I_Error("P_UnArchiveSmallAMX: data segment consistency error\n");
+   {
+      I_FatalError(I_ERR_KILL,
+         "P_UnArchiveSmallAMX: data segment consistency error\n");
+   }
 
    // copy the archived data segment into the VM
    memcpy(data, save_p, arch_amx_size);
@@ -1728,7 +1738,10 @@ void P_UnArchiveScripts(void)
    // check for presence consistency
    if((hadGameScript && !gameScriptLoaded) ||
       (hadLevelScript && !levelScriptLoaded))
-      I_Error("P_UnArchiveScripts: vm presence inconsistency\n");
+   {
+      I_FatalError(I_ERR_KILL,
+         "P_UnArchiveScripts: vm presence inconsistency\n");
+   }
 
    // restore gamescript
    if(hadGameScript)
@@ -1824,8 +1837,11 @@ static void P_UnArchiveSndSeq(void)
    save_p += 33;
 
    if(!(newSeq->sequence = E_SequenceForName(name)))
-      I_Error("P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
-              name);
+   {
+      I_FatalError(I_ERR_KILL,
+         "P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
+         name);
+   }
 
    newSeq->currentSound = NULL; // not currently playing a sound
 
@@ -1857,8 +1873,11 @@ static void P_UnArchiveSndSeq(void)
       break;
    case SEQ_ORIGIN_POLYOBJ:
       if(!(po = Polyobj_GetForNum(twizzle)))
-         I_Error("P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
-                 twizzle);
+      {
+         I_FatalError(I_ERR_KILL,
+            "P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
+            twizzle);
+      }
       newSeq->originIdx = po->id;
       newSeq->origin = (mobj_t *)&po->spawnSpot;
       break;
@@ -1868,8 +1887,9 @@ static void P_UnArchiveSndSeq(void)
       newSeq->origin = mo;
       break;
    default:
-      I_Error("P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
-              newSeq->originType);
+      I_FatalError(I_ERR_KILL,
+         "P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
+         newSeq->originType);
    }
 
    // restore delay counter

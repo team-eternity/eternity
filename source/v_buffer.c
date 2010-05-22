@@ -87,12 +87,12 @@ void V_InitVBuffer(VBuffer *vb, int width, int height, int bitdepth)
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_InitVBuffer: Invalid dimensions. Width=%i and height=%i",
+      I_Error("V_InitVBuffer: Invalid dimensions %dx%d\n",
               width, height);
    }
 
    if(bitdepth != 8)
-      I_Error("V_InitVBuffer: Invalid bitdepth. %i", bitdepth);
+      I_Error("V_InitVBuffer: Invalid bitdepth %d\n", bitdepth);
 
    psize = bitdepth / 8;
 
@@ -121,12 +121,12 @@ VBuffer *V_CreateVBuffer(int width, int height, int bitdepth)
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_CreateVBuffer: Invalid dimensions. Width=%i and height=%i",
+      I_Error("V_CreateVBuffer: Invalid dimensions %dx%d\n",
               width, height);
    }
 
    if(bitdepth != 8)
-      I_Error("V_CreateVBuffer: Invalid bitdepth. %i", bitdepth);
+      I_Error("V_CreateVBuffer: Invalid bitdepth %d\n", bitdepth);
 
    ret = Z_SysCalloc(1, sizeof(VBuffer));
 
@@ -149,12 +149,12 @@ void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch,
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_CreateVBufferFrom: Invalid dimensions. Width=%i and height=%i", 
+      I_Error("V_CreateVBufferFrom: Invalid dimensions %dx%d\n", 
               width, height);
    }
 
    if(bitdepth != 8)
-      I_Error("V_CreateVBufferFrom: Invalid bitdepth. %i", bitdepth);
+      I_Error("V_CreateVBufferFrom: Invalid bitdepth %d\n", bitdepth);
 
    psize = bitdepth / 8;
    memset(vb, 0, sizeof(VBuffer));
@@ -186,12 +186,12 @@ VBuffer *V_CreateVBufferFrom(int width, int height, int pitch,
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_CreateVBufferFrom: Invalid dimensions. Width=%i and height=%i", 
+      I_Error("V_CreateVBufferFrom: Invalid dimensions %dx%d\n", 
               width, height);
    }
 
    if(bitdepth != 8)
-      I_Error("V_CreateVBufferFrom: Invalid bitdepth. %i", bitdepth);
+      I_Error("V_CreateVBufferFrom: Invalid bitdepth %d\n", bitdepth);
 
    ret = Z_SysCalloc(1, sizeof(VBuffer));
 
@@ -216,14 +216,14 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y,
 
    if(width < 0 || height < 0)
    {
-      I_Error("V_SubVBuffer: Invalid dimensions. Width=%i and height=%i", 
+      I_Error("V_SubVBuffer: Invalid dimensions %dx%d\n", 
               width, height);
    }
 
    if(x < 0 || y < 0 || 
       x + width - 1 > parent->width || y + height - 1 > parent->height)
    {
-      I_Error("V_SubVBuffer: Invalid dimensions. x=%i, y=%i, w=%i, h=%i", 
+      I_Error("V_SubVBuffer: Invalid dimensions: x=%d, y=%d, w=%d, h=%d\n", 
               x, y, width, height);
    }
 

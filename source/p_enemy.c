@@ -445,7 +445,7 @@ static boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 
 #ifdef RANGECHECK
    if((unsigned int)actor->movedir >= 8)
-      I_Error ("Weird actor->movedir!");
+      I_Error ("Weird actor->movedir!\n");
 #endif
    
    // killough 10/98: make monsters get affected by ice and sludge too:

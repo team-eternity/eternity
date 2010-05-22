@@ -264,7 +264,7 @@ static byte *R_ReadStrifePatch(byte *rawpatch)
 
 static byte *R_ReadUnknownPatch(byte *rawpatch)
 {
-   I_Error("R_ReadUnknownPatch called\n");
+   I_FatalError(I_ERR_KILL, "R_ReadUnknownPatch called\n");
 
    return NULL;
 }
@@ -308,7 +308,7 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
 
 static byte *R_ReadUnknownTexture(byte *rawtexture)
 {
-   I_Error("R_ReadUnknownTexture called\n");
+   I_FatalError(I_ERR_KILL, "R_ReadUnknownTexture called\n");
 
    return NULL;
 }
@@ -926,7 +926,7 @@ texture_t *R_CacheTexture(int num)
    
 #ifdef RANGECHECK
    if(num < 0 || num >= texturecount)
-      I_Error("R_CacheTexture given an invalid texture num: %i\n", num);
+      I_Error("R_CacheTexture: invalid texture num %i\n", num);
 #endif
 
    tex = textures[num];
@@ -1273,7 +1273,7 @@ void R_InitTextures(void)
       R_CacheTexture(i);
    
    if(errors)
-      I_Error("\n\n%d texture errors.", errors); 
+      I_Error("\n\n%d texture errors.\n", errors); 
       
    // Load flats
    R_AddFlats();     

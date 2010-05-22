@@ -3202,7 +3202,7 @@ byte *G_WriteOptions(byte *demo_p)
       *demo_p++ = 0;
    
    if(demo_p != target)
-      I_Error("G_WriteOptions: GAME_OPTION_SIZE is too small");
+      I_Error("G_WriteOptions: GAME_OPTION_SIZE is too small\n");
    
    return target;
 }
@@ -3552,13 +3552,13 @@ boolean G_CheckDemoStatus(void)
       if(!M_WriteFile(demoname, demobuffer, demo_p - demobuffer))
       {
          // killough 11/98
-         I_Error("Error recording demo %s: %s", demoname,
+         I_Error("Error recording demo %s: %s\n", demoname,
                  errno ? strerror(errno) : "(Unknown Error)");
       }
       
       free(demobuffer);
       demobuffer = NULL;  // killough
-      I_Error("Demo %s recorded",demoname);
+      I_Error("Demo %s recorded\n", demoname);
       return false;  // killough
    }
 
@@ -3568,7 +3568,7 @@ boolean G_CheckDemoStatus(void)
 
       // killough -- added fps information and made it work for longer demos:
       unsigned int realtics = endtime - starttime;
-      I_Error("Timed %u gametics in %u realtics = %-.1f frames per second",
+      I_Error("Timed %u gametics in %u realtics = %-.1f frames per second\n",
               (unsigned int)(gametic), realtics,
               (unsigned int)(gametic) * (double) TICRATE / realtics);
    }              

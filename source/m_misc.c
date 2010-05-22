@@ -998,8 +998,9 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
       // FIXME: allow defaults for all types
       if(def->type != dt_integer)
       {
-         I_Error("M_ApplyGameModeDefaults: override for non-integer default %s\n",
-                 def->name);
+         I_FatalError(I_ERR_KILL,
+                      "M_ApplyGameModeDefaults: override for non-integer default %s\n",
+                      def->name);
       }
 #endif
       // replace the default value
@@ -1202,19 +1203,26 @@ void M_SaveDefaultFile(defaultfile_t *df)
       }
    }
 
+   // haleyjd: I_FatalError should be called here, since this can be invoked
+   // via an I_Error action already.
+
    if(fclose(f) == EOF)
    {
    error:
-      I_Error("Could not write defaults to %s: %s\n%s left unchanged\n",
-              tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
+      I_FatalError(I_ERR_KILL,
+                   "Could not write defaults to %s: %s\n%s left unchanged\n",
+                   tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
       return;
    }
 
    remove(df->fileName);
 
    if(rename(tmpfile, df->fileName))
-      I_Error("Could not write defaults to %s: %s\n", df->fileName,
-              errno ? strerror(errno) : "(Unknown Error)");
+   {
+      I_FatalError(I_ERR_KILL,
+                   "Could not write defaults to %s: %s\n", df->fileName,
+                   errno ? strerror(errno) : "(Unknown Error)");
+   }
 }
 
 //
@@ -1779,7 +1787,7 @@ void M_ExtractFileBase(const char *path, char *dest)
 
    while(*src && *src != '.')
       if(++length == 9)
-         I_Error("Filename base of %s > 8 chars", path);
+         I_Error("Filename base of %s > 8 chars\n", path);
       else
          *dest++ = toupper(*src++);
 }

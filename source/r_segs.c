@@ -207,7 +207,8 @@ static void R_RenderSegLoop(void)
 #ifdef RANGECHECK
    if(segclip.x1 < 0 || segclip.x2 >= viewwidth || segclip.x1 > segclip.x2)
    {
-      I_Error("Invalid seg x values! x1 = %d, x2 = %d, linenum = %d\n", 
+      I_Error("R_RenderSegLoop: invalid seg x values!\n"
+              "   x1 = %d, x2 = %d, linenum = %d\n", 
               segclip.x1, segclip.x2, segclip.line->linedef - lines);
    }
 #endif
@@ -518,7 +519,7 @@ static void R_DetectClosedColumns()
 #ifdef RANGECHECK
       if(startx > i - 1 || startx < 0 || i - 1 >= viewwidth || 
          startx >= viewwidth || i - 1 < 0)
-         I_Error("R_DetectClosedColumns bad range %i, %i\n", startx, i - 1);
+         I_Error("R_DetectClosedColumns: bad range %i, %i\n", startx, i - 1);
 #endif
 
       // SoM: This creates a bug clipping sprites:

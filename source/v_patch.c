@@ -49,7 +49,7 @@ static void V_DrawPatchColumn(void)
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumn: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_DrawPatchColumn: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
@@ -100,7 +100,7 @@ static void V_DrawPatchColumnTR(void)
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
@@ -159,7 +159,7 @@ void V_DrawPatchColumnTL(void)
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_DrawPatchColumnTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
@@ -219,7 +219,7 @@ void V_DrawPatchColumnTRTL(void)
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTRTL: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_DrawPatchColumnTRTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
@@ -284,7 +284,7 @@ void V_DrawPatchColumnAdd(void)
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnAdd: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_DrawPatchColumnAdd: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
@@ -349,7 +349,7 @@ void V_DrawPatchColumnAddTR(void)
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
@@ -597,7 +597,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          
 #ifdef RANGECHECK
          if(texturecolumn < 0 || texturecolumn >= w)
-            I_Error("V_DrawPatchInt: bad texturecolumn %i", texturecolumn);
+            I_Error("V_DrawPatchInt: bad texturecolumn %d\n", texturecolumn);
 #endif
          
          column = (column_t *)((byte *)patch +

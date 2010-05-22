@@ -119,7 +119,7 @@ void CB_DrawColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawColumn_8: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("CB_DrawColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
 
    dest = ylookup[column.y1] + columnofs[column.x];
@@ -204,7 +204,7 @@ void CB_DrawTLColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawTLColumn_8: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("CB_DrawTLColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
 
    dest = ylookup[column.y1] + columnofs[column.x];
@@ -284,7 +284,7 @@ void CB_DrawTLTRColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawTLTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("CB_DrawTLTRColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    dest = ylookup[column.y1] + columnofs[column.x];
@@ -379,7 +379,7 @@ void CB_DrawFuzzColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawFuzzColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("CB_DrawFuzzColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    dest = ylookup[column.y1] + columnofs[column.x];
@@ -440,7 +440,7 @@ void CB_DrawTRColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("CB_DrawTRColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    dest = ylookup[column.y1] + columnofs[column.x];
@@ -511,7 +511,7 @@ void CB_DrawFlexColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawFlexColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("CB_DrawFlexColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    {
@@ -621,7 +621,7 @@ void CB_DrawFlexTRColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawFlexTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("CB_DrawFlexTRColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    {
@@ -732,7 +732,7 @@ void CB_DrawAddColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawAddColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("CB_DrawAddColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    {
@@ -860,7 +860,7 @@ void CB_DrawAddTRColumn_8(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawAddTRColumn_8: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("CB_DrawAddTRColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    {
@@ -1269,7 +1269,7 @@ void R_DrawNewSkyColumn(void)
   if ((unsigned int)column.x >= MAX_SCREENWIDTH
       || column.y1 < 0
       || column.y2 >= MAX_SCREENHEIGHT) 
-    I_Error ("R_DrawNewSkyColumn: %i to %i at %i", column.y1, column.y2, column.x); 
+    I_Error ("R_DrawNewSkyColumn: %i to %i at %i\n", column.y1, column.y2, column.x); 
 #endif 
 
   // Framebuffer destination address.

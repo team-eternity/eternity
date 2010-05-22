@@ -675,7 +675,7 @@ void V_GetBlock(int x, int y, int scrn, int width, int height, byte *dest)
       || y<0
       || y+height > SCREENHEIGHT
       || (unsigned int)scrn>4 )
-    I_Error ("Bad V_GetBlock");
+    I_Error("Bad V_GetBlock\n");
 #endif
 
    // SoM 1-30-04: ANYRES

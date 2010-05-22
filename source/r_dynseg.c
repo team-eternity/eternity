@@ -359,7 +359,7 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       
 #ifdef RANGECHECK
       if(num >= numsubsectors)
-         I_Error("R_SplitLine: ss %d with numss = %d", num, numsubsectors);
+         I_Error("R_SplitLine: ss %d with numss = %d\n", num, numsubsectors);
 #endif
 
       // see if this subsector already has an rpolyobj_t for this polyobject

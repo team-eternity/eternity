@@ -115,7 +115,7 @@ float slopevis; // SoM: used in slope lighting
 // BIG FLATS
 void R_Throw(void)
 {
-   I_Error("R_Throw called.\n");
+   I_FatalError(I_ERR_KILL, "R_Throw called.\n");
 }
 
 void (*flatfunc)(void) = R_Throw;
@@ -187,7 +187,7 @@ static void R_MapPlane(int y, int x1, int x2)
 
 #ifdef RANGECHECK
    if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
-      I_Error("R_MapPlane: %i, %i at %i", x1, x2, y);
+      I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
   
    // SoM: because ycenter is an actual row of pixels (and it isn't really the 
@@ -280,7 +280,7 @@ static void R_MapPlane(int y, int x1, int x2)
 
 #ifdef RANGECHECK
    if(x2 < x1 || x1 < 0 || x2 >= viewwidth || y < 0 || y >= viewheight)
-      I_Error("R_MapPlane: %i, %i at %i", x1, x2, y);
+      I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
   
    // SoM: because ycenter is an actual row of pixels (and it isn't really the 

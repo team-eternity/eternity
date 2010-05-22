@@ -119,7 +119,7 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
       if((handle = fopen(filename, "rb")) == NULL)
       {
          if(in_textmode)
-            I_Error("Error: couldn't open %s\n",name);  // killough
+            I_Error("Error: couldn't open %s\n", name);  // killough
          else
          {
             C_Printf(FC_ERROR "Couldn't open %s\n", name);
@@ -449,7 +449,7 @@ int W_GetNumForName(const char* name)     // killough -- const added
 {
    int i = W_CheckNumForName(name);
    if(i == -1)
-      I_Error("W_GetNumForName: %.8s not found!", name); // killough .8 added
+      I_Error("W_GetNumForName: %.8s not found!\n", name); // killough .8 added
    return i;
 }
 
@@ -513,7 +513,7 @@ void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files)
    }
    
    if(!dir->numlumps)
-      I_Error("W_InitFiles: no files found");
+      I_Error("W_InitFiles: no files found\n");
    
    W_InitResources(dir);
 }
@@ -536,7 +536,7 @@ int W_AddNewFile(waddir_t *dir, char *filename)
 int W_LumpLengthInDir(waddir_t *dir, int lump)
 {
    if(lump < 0 || lump >= dir->numlumps)
-      I_Error("W_LumpLength: %i >= numlumps", lump);
+      I_Error("W_LumpLength: %i >= numlumps\n", lump);
    return dir->lumpinfo[lump]->size;
 }
 
@@ -556,7 +556,7 @@ void W_ReadLumpInDir(waddir_t *dir, int lump, void *dest)
    lumpinfo_t *l;
    
    if(lump < 0 || lump >= dir->numlumps)
-      I_Error("W_ReadLump: %d >= numlumps", lump);
+      I_Error("W_ReadLump: %d >= numlumps\n", lump);
 
    l = dir->lumpinfo[lump];
 
@@ -565,7 +565,7 @@ void W_ReadLumpInDir(waddir_t *dir, int lump, void *dest)
    c = LumpHandlers[l->type].readLump(l, dest, l->size);
    if(c < l->size)
    {
-      I_Error("W_ReadLump: only read %d of %d on lump %d", 
+      I_Error("W_ReadLump: only read %d of %d on lump %d\n", 
               (int)c, (int)l->size, lump);
    }
 }
@@ -588,7 +588,7 @@ int W_ReadLumpHeaderInDir(waddir_t *dir, int lump, void *dest, size_t size)
    void *data;
    
    if(lump < 0 || lump >= dir->numlumps)
-      I_Error("W_ReadLumpHeader: %d >= numlumps", lump);
+      I_Error("W_ReadLumpHeader: %d >= numlumps\n", lump);
 
    l = dir->lumpinfo[lump];
 
@@ -616,7 +616,7 @@ void *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag)
 {
    // haleyjd 08/14/02: again, should not be RANGECHECK only
    if(lump < 0 || lump >= dir->numlumps)
-      I_Error("W_CacheLumpNum: %i >= numlumps", lump);
+      I_Error("W_CacheLumpNum: %i >= numlumps\n", lump);
    
    if(!(dir->lumpinfo[lump]->cache))      // read the lump in
    {

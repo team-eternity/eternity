@@ -324,7 +324,7 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
 
 #ifdef RANGECHECK
    if(handle < 0 || handle >= MAX_CHANNELS)
-      I_Error("I_UpdateSoundParams: handle out of range");
+      I_Error("I_UpdateSoundParams: handle out of range\n");
 #endif
    
    // Separation, that is, orientation/stereo.
@@ -346,10 +346,10 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
 
    // Sanity check, clamp volume.
    if(rightvol < 0 || rightvol > 127)
-      I_Error("rightvol out of bounds");
+      I_Error("rightvol out of bounds\n");
    
    if(leftvol < 0 || leftvol > 127)
-      I_Error("leftvol out of bounds");
+      I_Error("leftvol out of bounds\n");
 
    // haleyjd 06/07/09: critical section is not needed here because this data
    // can be out of sync without affecting the sound update loop. This may cause
@@ -545,7 +545,11 @@ static void I_SetChannels(void)
       channelinfo[i].semaphore = SDL_CreateSemaphore(1);
 
       if(!channelinfo[i].semaphore)
-         I_Error("I_SetChannels: failed to create semaphore for channel %d\n", i);
+      {
+         I_FatalError(I_ERR_KILL, 
+                      "I_SetChannels: failed to create semaphore for channel %d\n",
+                      i);
+      }
    }
 
    // haleyjd 04/21/10: initialize equalizers
@@ -674,7 +678,7 @@ static void I_SDLStopSound(int handle)
 {
 #ifdef RANGECHECK
    if(handle < 0 || handle >= MAX_CHANNELS)
-      I_Error("I_SDLStopSound: handle out of range");
+      I_Error("I_SDLStopSound: handle out of range\n");
 #endif
    
    stopchan(handle);
@@ -689,7 +693,7 @@ static int I_SDLSoundIsPlaying(int handle)
 {
 #ifdef RANGECHECK
    if(handle < 0 || handle >= MAX_CHANNELS)
-      I_Error("I_SDLSoundIsPlaying: handle out of range");
+      I_Error("I_SDLSoundIsPlaying: handle out of range\n");
 #endif
  
    return (channelinfo[handle].data != NULL);

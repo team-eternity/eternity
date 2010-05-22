@@ -840,7 +840,7 @@ void MetaRegisterType(metatype_t *type)
 
    // sanity check: we do not allow multiple metatypes of the same name
    if(MetaGetObject(&metaTypeRegistry, type->name))
-      I_Error("MetaRegisterType: type %s is non-singleton", type->name);
+      I_Error("MetaRegisterType: type %s is non-singleton\n", type->name);
 
    MetaAddObject(&metaTypeRegistry, type->name, &type->parent, type, 
                  METATYPE(metatype_t));

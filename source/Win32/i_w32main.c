@@ -35,7 +35,7 @@
 
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
-extern void I_Error(const char *error, ...);
+extern void I_FatalError(int code, const char *error, ...);
 
 int disable_sysmenu;
 
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
    }
    __except(I_W32ExceptionHandler(GetExceptionInformation()))
    {
-      I_Error("Exception caught in main: see CRASHLOG.TXT for info\n");
+      I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info\n");
    }
 
    return 0;

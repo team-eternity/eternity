@@ -118,13 +118,13 @@ static int I_GetTime_FastDemo(void)
 }
 
 
-static int I_GetTime_Error()
+static int I_GetTime_Error(void)
 {
-   I_Error("Error: GetTime() used before initialization");
+   I_FatalError(I_ERR_KILL, "Error: GetTime() used before initialization\n");
    return 0;
 }
 
-int (*I_GetTime)() = I_GetTime_Error;  // killough
+int (*I_GetTime)(void) = I_GetTime_Error;  // killough
 
 int mousepresent;
 int joystickpresent;  // phares 4/3/98
@@ -308,7 +308,7 @@ void I_Quit(void)
    // haleyjd 10/09/05: moved down here
    SDL_Quit();
 
-   // haleyjd 03/18/10: none of these should be called in error situations.
+   // haleyjd 03/18/10: none of these should be called in fatal error situations.
    if(!error_exit)
    {
       M_SaveDefaults();
@@ -328,6 +328,38 @@ void I_Quit(void)
 }
 
 //
+// I_FatalError
+//
+// haleyjd 05/21/10: Call this for super-evil errors such as heap corruption,
+// system-related problems, etc.
+//
+void I_FatalError(int code, const char *error, ...)
+{
+   if(code == I_ERR_ABORT)
+   {
+      abort();
+   }
+   else
+   {
+      error_exit = true; // haleyjd: flag an error appropriately
+
+      if(!*errmsg)   // ignore all but the first message -- killough
+      {
+         va_list argptr;
+         va_start(argptr,error);
+         pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
+         va_end(argptr);
+      }
+
+      if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+      {
+         has_exited = 1; // Prevent infinitely recursive exits -- killough
+         exit(-1);
+      }
+   }
+}
+
+//
 // I_Error
 //
 void I_Error(const char *error, ...) // killough 3/20/98: add const
@@ -342,8 +374,7 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
    
    if(!has_exited)    // If it hasn't exited yet, exit now -- killough
    {
-      has_exited = 1;    // Prevent infinitely recursive exits -- killough
-      error_exit = true; // haleyjd: flag an error appropriately
+      has_exited = 1; // Prevent infinitely recursive exits -- killough
       exit(-1);
    }
 }
@@ -356,7 +387,6 @@ void I_ErrorVA(const char *error, va_list args)
    if(!has_exited)
    {
       has_exited = 1;
-      error_exit = true; // haleyjd: flag an error appopriately
       exit(-1);
    }
 }
