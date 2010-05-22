@@ -486,7 +486,6 @@ static boolean MN_FileResponder(event_t *ev)
          char tempstr[128];
          psnprintf(tempstr, sizeof(tempstr), 
             "%s \"%s\"", variable_name, mn_filelist[selected_item]);
-         cmdtype = c_menu;
          C_RunTextCmd(tempstr);
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
@@ -583,8 +582,8 @@ CONSOLE_COMMAND(dir, 0)
    int i;
    char *wildcard;
    
-   if(c_argc)
-      wildcard = c_argv[0];
+   if(Console.argc)
+      wildcard = Console.argv[0];
    else
       wildcard = "*.*";
    

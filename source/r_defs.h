@@ -639,9 +639,9 @@ typedef struct spritedef_s
 // SoM: Information used in texture mapping sloped planes
 typedef struct rslope_s
 {
-   v3float_t P, M, N;
-   v3float_t A, B, C;
-   float     zat, plight, shade;
+   v3double_t P, M, N;
+   v3double_t A, B, C;
+   double     zat, plight, shade;
 } rslope_t;
 
 

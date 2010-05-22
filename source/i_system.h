@@ -82,6 +82,16 @@ void I_Quit(void);
 
 #define I_Tactile(on, off, total)
 
+// haleyjd 05/21/10: error codes for I_FatalError
+enum
+{
+   I_ERR_KILL,  // exit and do not perform shutdown actions
+   I_ERR_ABORT  // call abort()
+};
+
+// haleyjd 05/21/10
+void I_FatalError(int code, const char *error, ...);
+
 // killough 3/20/98: add const
 // killough 4/25/98: add gcc attributes
 #ifdef __GNUC__

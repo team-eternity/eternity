@@ -1871,7 +1871,7 @@ static boolean PTR_SlideTraverse(intercept_t *in)
    
 #ifdef RANGECHECK
    if(!in->isaline)
-      I_Error ("PTR_SlideTraverse: not a line?");
+      I_Error("PTR_SlideTraverse: not a line?\n");
 #endif
 
    li = in->d.line;

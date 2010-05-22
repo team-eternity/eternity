@@ -980,13 +980,13 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
    sc_vm_e vmNum;
    AMX *vm;
 
-   if(c_argc < 2)
+   if(Console.argc < 2)
    {
       C_Printf("usage: a_execv vm scriptname\n");
       return;
    }
 
-   vmNum = atoi(c_argv[0]);
+   vmNum = atoi(Console.argv[0]);
 
    switch(vmNum)
    {
@@ -1012,11 +1012,11 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
    }
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
-   context->invocationData.playernum  = cmdsrc;
-   if(gamestate == GS_LEVEL && players[cmdsrc].mo)
-      context->invocationData.trigger = players[cmdsrc].mo;
+   context->invocationData.playernum  = Console.cmdsrc;
+   if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
+      context->invocationData.trigger = players[Console.cmdsrc].mo;
 
-   SM_ExecScriptNameV(vm, c_argv[1]);
+   SM_ExecScriptNameV(vm, Console.argv[1]);
 
    SM_ClearInvocation(context);
 }
@@ -1035,13 +1035,13 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
    sc_vm_e vmNum;
    int i, argcount;
 
-   if(c_argc < 3)
+   if(Console.argc < 3)
    {
       C_Printf(FC_ERROR "one or more parameters needed\n");
       return;
    }
 
-   vmNum = atoi(c_argv[0]);
+   vmNum = atoi(Console.argv[0]);
 
    switch(vmNum)
    {
@@ -1066,21 +1066,21 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
       break;
    }
 
-   argcount = c_argc - 2;
+   argcount = Console.argc - 2;
 
    params = Z_Malloc(argcount * sizeof(cell), PU_STATIC, NULL);
 
-   for(i = 2; i < c_argc; i++)
+   for(i = 2; i < Console.argc; i++)
    {
-      params[i-2] = (cell)(atoi(c_argv[i]));
+      params[i-2] = (cell)(atoi(Console.argv[i]));
    }
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
-   context->invocationData.playernum  = cmdsrc;
-   if(gamestate == GS_LEVEL && players[cmdsrc].mo)
-      context->invocationData.trigger = players[cmdsrc].mo;
+   context->invocationData.playernum  = Console.cmdsrc;
+   if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
+      context->invocationData.trigger = players[Console.cmdsrc].mo;
 
-   SM_ExecScriptNameI(vm, c_argv[1], argcount, params);
+   SM_ExecScriptNameI(vm, Console.argv[1], argcount, params);
 
    SM_ClearInvocation(context);
 

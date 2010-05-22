@@ -30,7 +30,7 @@
 // 13/12/99: restored movement of columns to being the same as in the
 // original, while retaining the new 'engine'
 
-#include "c_io.h"
+#include "c_runcmd.h"
 #include "doomdef.h"
 #include "d_main.h"
 #include "i_video.h"
@@ -70,7 +70,7 @@ static void Wipe_meltStartScreen(void)
    // use console height
    // SoM: wtf? Why did I scale this before??? This should be within the 320x200
    // space unscaled!
-   starting_height = current_height;
+   starting_height = Console.current_height;
    
    worms[0] = starting_height - (M_Random() & 15);
    

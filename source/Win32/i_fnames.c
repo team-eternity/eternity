@@ -35,7 +35,7 @@
 #include <windows.h>
 #include <winbase.h>
 
-extern void I_Error(const char *error, ...);
+extern void I_FatalError(int code, const char *error, ...);
 extern void M_GetFilePath(const char *fn, char *bane, size_t len);
 
 //
@@ -59,7 +59,7 @@ void WIN_GetExeDir(char *buffer, unsigned int size)
    // if 0 or if the full buffer size, it's not a value we can use
    // and the only available option is to exit the program
    if(!nRet || nRet == size)
-      I_Error("WIN_GetExeDir: could not determine module file name.\n");
+      I_FatalError(0, "WIN_GetExeDir: could not determine module file name.\n");
 
    dupstr = strdup(buffer);
 

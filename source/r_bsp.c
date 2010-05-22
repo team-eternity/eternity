@@ -144,12 +144,14 @@ static void R_AddSolidSeg(int x1, int x2)
    for(rover = solidsegs; (rover + 1) < newend; rover++)
    {
       if(rover->last >= (rover+1)->first)
-         I_Error("R_AddSolidSeg created a seg that overlaps next seg: "
-                 "(%i)->last = %i, (%i)->first = %i\n", 
+      {
+         I_Error("R_AddSolidSeg: created a seg that overlaps next seg:\n"
+                 "   (%i)->last = %i, (%i)->first = %i\n", 
                  rover - solidsegs, 
                  rover->last, 
                  (rover + 1) - solidsegs, 
                  (rover + 1)->last);
+      }
    }
 #else
    return;
@@ -252,12 +254,14 @@ crunch:
    for(start = solidsegs; (start + 1) < newend; start++)
    {
       if(start->last >= (start+1)->first)
-         I_Error("R_ClipSolidWallSegment created a seg that overlaps next seg: "
-                 "(%i)->last = %i, (%i)->first = %i\n", 
+      {
+         I_Error("R_ClipSolidWallSegment: created a seg that overlaps next seg:\n"
+                 "   (%i)->last = %i, (%i)->first = %i\n", 
                  start - solidsegs, 
                  start->last, 
                  (start + 1) - solidsegs, 
                  (start + 1)->last);
+      }
    }
 #else
    return;
@@ -1999,7 +2003,7 @@ static void R_Subsector(int num)
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
-      I_Error("R_Subsector: ss %i with numss = %i", num, numsubsectors);
+      I_Error("R_Subsector: ss %i with numss = %i\n", num, numsubsectors);
 #endif
 
    // haleyjd 09/22/07: clear seg structure

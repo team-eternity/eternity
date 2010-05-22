@@ -144,7 +144,7 @@ void PacketSend(void)
    packet->address = sendaddress[doomcom->remotenode];
 
    if(!SDLNet_UDP_Send(udpsocket, -1, packet))
-      I_Error("Error sending packet: %s", SDLNet_GetError());
+      I_Error("Error sending packet: %s\n", SDLNet_GetError());
 }
 
 //
@@ -159,7 +159,7 @@ void PacketGet(void)
    packets_read = SDLNet_UDP_Recv(udpsocket, packet);
    
    if(packets_read < 0)
-      I_Error("Error reading packet: %s", SDLNet_GetError());
+      I_Error("Error reading packet: %s\n", SDLNet_GetError());
    
    if(packets_read == 0)
    {
@@ -315,7 +315,7 @@ void I_InitNetwork(void)
    while(++i < myargc && myargv[i][0] != '-')
    {
       if(SDLNet_ResolveHost(&sendaddress[doomcom->numnodes], myargv[i], DOOMPORT))
-         I_Error("Unable to resolve %s", myargv[i]);
+         I_Error("Unable to resolve %s\n", myargv[i]);
       
       doomcom->numnodes++;
    }

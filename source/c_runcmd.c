@@ -56,23 +56,23 @@ static void C_EchoValue(command_t *command);
 static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
 static int C_Sync(command_t *command);
-static void C_ArgvtoArgs();
+static void C_ArgvtoArgs(void);
 static boolean C_Strcmp(char *pa, char *pb);
+
+///////////////////////////////////////////////////////////////////////////
+//
+// The Console (TM)
+//
+
+console_t Console;
 
 ///////////////////////////////////////////////////////////////////////////
 //
 // Parsing/Running Commands
 //
 
-int cmdtype;
-
 static char cmdtokens[MAXTOKENS][MAXTOKENLENGTH];
 static int numtokens;
-
-command_t *c_command;
-char c_argv[MAXTOKENS][MAXTOKENLENGTH];   // tokenised list of arguments
-int c_argc;                               // number of arguments
-char c_args[128];                         // raw list of arguments
 
         // break up the command into tokens
 static void C_GetTokens(const char *command)
@@ -182,7 +182,7 @@ static boolean C_CheckFlags(command_t *command)
    if((command->flags & cf_netonly) && !netgame && !demoplayback)
       errormsg = "only available in netgame";
    if((command->flags & cf_server) && consoleplayer && !demoplayback
-      && cmdtype!=c_netcmd)
+      && Console.cmdtype != c_netcmd)
       errormsg = "for server only";
    if((command->flags & cf_level) && gamestate != GS_LEVEL)
       errormsg = "can be run in levels only";
@@ -209,9 +209,9 @@ static boolean C_CheckFlags(command_t *command)
 void C_RunCommand(command_t *command, const char *options)
 {
    // do not run straight away, we might be in the middle of rendering
-   C_BufferCommand(cmdtype, command, options, cmdsrc);
+   C_BufferCommand(Console.cmdtype, command, options, Console.cmdsrc);
    
-   cmdtype = c_typed;  // reset to typed command as default
+   Console.cmdtype = c_typed;  // reset to typed command as default
 }
 
 // actually run a command. Same as C_RunCommand only instant.
@@ -222,35 +222,36 @@ static void C_DoRunCommand(command_t *command, char *options)
    
    C_GetTokens(options);
    
-   memcpy(c_argv, cmdtokens, sizeof cmdtokens);
-   c_argc = numtokens;
-   c_command = command;
+   memcpy(Console.argv, cmdtokens, sizeof cmdtokens);
+   Console.argc = numtokens;
+   Console.command = command;
    
    // perform checks
    
    // check through the tokens for variable names
-   for(i=0 ; i<c_argc ; i++)
+   for(i = 0; i < Console.argc; i++)
    {
-      if(c_argv[i][0]=='%' || c_argv[i][0]=='$') // variable
+      if(Console.argv[i][0] == '%' || Console.argv[i][0] == '$') // variable
       {
          command_t *variable;
          
-         variable = C_GetCmdForName(c_argv[i]+1);
+         variable = C_GetCmdForName(Console.argv[i] + 1);
          if(!variable || !variable->variable)
          {
-            C_Printf("unknown variable '%s'\n",c_argv[i]+1);
+            C_Printf("unknown variable '%s'\n", Console.argv[i] + 1);
             // clear for next time
-            cmdtype = c_typed; cmdsrc = consoleplayer;
+            Console.cmdtype = c_typed; 
+            Console.cmdsrc  = consoleplayer;
             return;
          }
          
-         strcpy(c_argv[i], c_argv[i][0]=='%' ?
-            C_VariableValue(variable->variable) :
-         C_VariableStringValue(variable->variable) );
+         strcpy(Console.argv[i], Console.argv[i][0] == '%' ?
+                C_VariableValue(variable->variable) :
+                C_VariableStringValue(variable->variable) );
       }
    }
    
-   C_ArgvtoArgs();                 // build c_args
+   C_ArgvtoArgs();                 // build Console.args
    
    // actually do this command
    switch(command->type)
@@ -259,7 +260,8 @@ static void C_DoRunCommand(command_t *command, char *options)
       // not to be run ?
       if(C_CheckFlags(command) || C_Sync(command))
       {
-         cmdtype = c_typed; cmdsrc = consoleplayer; 
+         Console.cmdtype = c_typed; 
+         Console.cmdsrc = consoleplayer; 
          return;
       }
       if(command->handler)
@@ -278,11 +280,12 @@ static void C_DoRunCommand(command_t *command, char *options)
       break;
       
    default:
-      C_Printf(FC_ERROR"unknown command type %i\n", command->type);
+      C_Printf(FC_ERROR "unknown command type %i\n", command->type);
       break;
    }
    
-   cmdtype = c_typed; cmdsrc = consoleplayer;   // clear for next time
+   Console.cmdtype = c_typed; 
+   Console.cmdsrc  = consoleplayer;   // clear for next time
 }
 
 //
@@ -300,26 +303,26 @@ static void C_ArgvtoArgs(void)
 
    M_QStrInitCreate(&tempBuf);
    
-   for(i=0; i<c_argc; i++)
+   for(i = 0; i < Console.argc; i++)
    {
-      if(!c_argv[i][0])       // empty string
+      if(!Console.argv[i][0])       // empty string
       {
-         for(n=i; n<c_argc-1; n++)
-            strcpy(c_argv[n],c_argv[n+1]);
-         c_argc--; i--;
+         for(n = i; n < Console.argc - 1; n++)
+            strcpy(Console.argv[n], Console.argv[n+1]);
+         Console.argc--; i--;
       }
    }
    
-   for(i = 0; i < c_argc; ++i)
+   for(i = 0; i < Console.argc; ++i)
    {
       // haleyjd: use qstring_t to avoid sprintf problems and to be secure
-      M_QStrCat(&tempBuf, c_argv[i]);
+      M_QStrCat(&tempBuf, Console.argv[i]);
       M_QStrPutc(&tempBuf, ' ');
    }
 
-   // haleyjd: psnprintf into c_args; ensures string is null-terminated even
+   // haleyjd: psnprintf into Console.args; ensures string is null-terminated even
    // if it has to be truncated.
-   psnprintf(c_args, sizeof(c_args), "%s", tempBuf.buffer);
+   psnprintf(Console.args, sizeof(Console.args), "%s", tempBuf.buffer);
 
    M_QStrFree(&tempBuf);
 }
@@ -345,10 +348,10 @@ static char *C_QuotedArgvToArgs(void)
       M_QStrClear(&returnbuf);
    
    // haleyjd: use qstring to eliminate undefined sprintf behavior
-   for(i = 0; i < c_argc; ++i)
+   for(i = 0; i < Console.argc; ++i)
    {
       M_QStrPutc(&returnbuf, '"');
-      M_QStrCat(&returnbuf, c_argv[i]);
+      M_QStrCat(&returnbuf, Console.argv[i]);
       M_QStrCat(&returnbuf, "\" ");      
    }
    
@@ -363,7 +366,7 @@ static int C_Sync(command_t *command)
    if(command->flags & cf_netvar)
    {
       // dont get stuck repeatedly sending the same command
-      if(cmdtype != c_netcmd)
+      if(Console.cmdtype != c_netcmd)
       {                               // send to sync
          C_SendCmd(CN_BROADCAST, command->netcmd,
                    "%s", C_QuotedArgvToArgs());
@@ -575,7 +578,8 @@ static char *C_ValueForDefine(variable_t *variable, char *s)
 
 // haleyjd 08/30/09: local-origin netcmds need love too
 #define cmd_setdefault \
-   (cmdtype == c_typed || (cmdtype == c_netcmd && cmdsrc == consoleplayer))
+   (Console.cmdtype == c_typed || \
+    (Console.cmdtype == c_netcmd && Console.cmdsrc == consoleplayer))
 
 //
 // C_SetVariable
@@ -592,7 +596,7 @@ static void C_SetVariable(command_t *command)
    
    // cut off the leading spaces
    
-   if(!c_argc)     // asking for value
+   if(!Console.argc)     // asking for value
    {
       C_EchoValue(command);
       return;
@@ -605,10 +609,10 @@ static void C_SetVariable(command_t *command)
    // ok, set the value
    variable = command->variable;
    
-   temp = C_ValueForDefine(variable, c_argv[0]);
+   temp = C_ValueForDefine(variable, Console.argv[0]);
    
    if(temp)
-      strcpy(c_argv[0], temp);
+      strcpy(Console.argv[0], temp);
    else
    {
       C_Printf("not a possible value for '%s'\n", command->name);
@@ -618,17 +622,17 @@ static void C_SetVariable(command_t *command)
    switch(variable->type)
    {
    case vt_int:
-      size = atoi(c_argv[0]);
+      size = atoi(Console.argv[0]);
       break;
       
    case vt_string:
    case vt_chararray:
-      size = strlen(c_argv[0]);
+      size = strlen(Console.argv[0]);
       break;
 
    case vt_float:
       // haleyjd 04/21/10: vt_float
-      fs = strtod(c_argv[0], NULL);
+      fs = strtod(Console.argv[0], NULL);
       break;
       
    default:
@@ -687,22 +691,22 @@ static void C_SetVariable(command_t *command)
          
       case vt_string:
          free(*(char**)variable->variable);
-         *(char**)variable->variable = strdup(c_argv[0]);
+         *(char**)variable->variable = strdup(Console.argv[0]);
          if(variable->v_default && cmd_setdefault)  // default
          {
             free(*(char**)variable->v_default);
-            *(char**)variable->v_default = strdup(c_argv[0]);
+            *(char**)variable->v_default = strdup(Console.argv[0]);
          }
          break;
 
       case vt_chararray:
          // haleyjd 03/13/06: static strings
          memset(variable->variable, 0, variable->max+1);
-         strcpy((char *)variable->variable, c_argv[0]);
+         strcpy((char *)variable->variable, Console.argv[0]);
          if(variable->v_default && cmd_setdefault)
          {
             memset(variable->v_default, 0, variable->max+1);
-            strcpy((char *)variable->v_default, c_argv[0]);
+            strcpy((char *)variable->v_default, Console.argv[0]);
          }
          break;
 
@@ -1018,7 +1022,7 @@ void C_RunBufferedCommand(bufferedcmd *bufcmd)
    // run command
    // restore variables
    
-   cmdsrc = bufcmd->cmdsrc;
+   Console.cmdsrc = bufcmd->cmdsrc;
 
    C_DoRunCommand(bufcmd->command, bufcmd->options);
 }
@@ -1041,7 +1045,7 @@ void C_BufferCommand(int cmtype, command_t *command, const char *options,
    // no need to be buffered: run it now
    if(!(command->flags & cf_buffered) && buffers[cmtype].timer == 0)
    {
-      cmdtype = cmtype;
+      Console.cmdtype = cmtype;
       C_RunBufferedCommand(newbuf);
       
       free(newbuf->options);
@@ -1082,7 +1086,7 @@ void C_RunBuffer(int cmtype)
          break;
       }
       
-      cmdtype = cmtype;
+      Console.cmdtype = cmtype;
       C_RunBufferedCommand(bufcmd);
       
       // save next before freeing
@@ -1099,13 +1103,13 @@ void C_RunBuffer(int cmtype)
    }
 }
 
-void C_RunBuffers()
+void C_RunBuffers(void)
 {
    int i;
    
    // run all buffers
    
-   for(i=0; i<C_CMDTYPES; i++)
+   for(i = 0; i < C_CMDTYPES; i++)
       C_RunBuffer(i);
 }
 
@@ -1266,7 +1270,7 @@ void C_RunScript(DWFILE *dwfile)
       case CSC_COMMAND:
          if(c == '\n' || c == '\f') // end of line - run command
          {
-            cmdtype = c_script;
+            Console.cmdtype = c_script;
             C_RunTextCmd(M_QStrBuffer(&qstring));
             C_RunBuffer(c_script);  // force to run now
             state = CSC_NONE;
@@ -1303,7 +1307,7 @@ void C_RunScript(DWFILE *dwfile)
 
    if(state == CSC_COMMAND) // EOF on command line - run final command
    {
-      cmdtype = c_script;
+      Console.cmdtype = c_script;
       C_RunTextCmd(M_QStrBuffer(&qstring));
       C_RunBuffer(c_script);  // force to run now
    }

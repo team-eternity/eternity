@@ -1835,7 +1835,7 @@ void FindResponseFile(void)
                      }
                   }
                   if(quoted)
-                     I_Error("Runaway quoted string in response file");
+                     I_Error("Runaway quoted string in response file\n");
 
                   // Terminate string, realloc and add to argv
                   *p = 0;
@@ -1905,7 +1905,7 @@ static void D_ProcessDehCommandLine(void)
                {
                   M_AddDefaultExtension(strcpy(file, myargv[p]), ".deh");
                   if(access(file, F_OK))  // still nope
-                     I_Error("Cannot find .deh or .bex file named %s",
+                     I_Error("Cannot find .deh or .bex file named %s\n",
                              myargv[p]);
                }
                // during the beta we have debug output to dehout.txt
@@ -2388,8 +2388,8 @@ static void D_SetGraphicsMode(void)
 
    // set up the console to display startup messages
    gamestate = GS_CONSOLE;
-   current_height = SCREENHEIGHT;
-   c_showprompt = false;
+   Console.current_height = SCREENHEIGHT;
+   Console.showprompt = false;
 
    C_Puts(game_name);    // display description of gamemode
    D_ListWads();         // list wads to the console
@@ -2759,7 +2759,7 @@ static void D_DoomInit(void)
    // especially after user wads have already been linked in, so I've removed
    // that kludge
    if(modifiedgame && (GameModeInfo->flags & GIF_SHAREWARE))
-      I_Error("\nYou cannot -file with the shareware version. Register!");
+      I_Error("\nYou cannot -file with the shareware version. Register!\n");
 
    // haleyjd 11/12/09: Initialize post-W_InitMultipleFiles GameModeInfo
    // overrides and adjustments here.
@@ -3243,7 +3243,7 @@ void usermsg(const char *s, ...)
 
 boolean D_AddNewFile(char *s)
 {
-   c_showprompt = false;
+   Console.showprompt = false;
    if(W_AddNewFile(&w_GlobalDir, s))
       return false;
    modifiedgame = true;

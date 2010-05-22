@@ -69,17 +69,20 @@ static byte   *tempfuzzmap;
 
 static void R_FlushWholeError(void)
 {
-   I_Error("R_FlushWholeColumns called without being initialized.\n");
+   I_FatalError(I_ERR_KILL,
+      "R_FlushWholeColumns called without being initialized.\n");
 }
 
 static void R_FlushHTError(void)
 {
-   I_Error("R_FlushHTColumns called without being initialized.\n");
+   I_FatalError(I_ERR_KILL,
+      "R_FlushHTColumns called without being initialized.\n");
 }
 
 static void R_QuadFlushError(void)
 {
-   I_Error("R_FlushQuadColumn called without being initialized.\n");
+   I_FatalError(I_ERR_KILL,
+      "R_FlushQuadColumn called without being initialized.\n");
 }
 
 //
@@ -919,7 +922,7 @@ static void R_QDrawColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height) 
-      I_Error("R_QDrawColumn: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("R_QDrawColumn: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    // Framebuffer destination address.
@@ -1003,7 +1006,7 @@ static void R_QDrawTLColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height) 
-      I_Error("R_QDrawTLColumn: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("R_QDrawTLColumn: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
    
    // SoM: MAGIC
@@ -1078,7 +1081,7 @@ static void R_QDrawTLTRColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height) 
-      I_Error("R_QDrawTLTRColumn: %i to %i at %i", column.y1, column.y2, column.x);    
+      I_Error("R_QDrawTLTRColumn: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
    // SoM: MAGIC
@@ -1154,7 +1157,7 @@ static void R_QDrawFuzzColumn(void)
    // SoM: DONE
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("R_QDrawFuzzColumn: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("R_QDrawFuzzColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif
 
    // SoM: MAGIC
@@ -1181,7 +1184,7 @@ static void R_QDrawTRColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("R_QDrawTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("R_QDrawTRColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
 
    // SoM: MAGIC
@@ -1259,7 +1262,7 @@ static void R_QDrawFlexColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("R_QDrawFlexColumn: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("R_QDrawFlexColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
    
    // SoM: MAGIC
@@ -1333,7 +1336,7 @@ static void R_QDrawFlexTRColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("R_QDrawFlexTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("R_QDrawFlexTRColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
 
    // MAGIC
@@ -1411,7 +1414,7 @@ static void R_QDrawAddColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("R_QDrawAddColumn: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("R_QDrawAddColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
    
    // SoM: MAGIC
@@ -1484,7 +1487,7 @@ static void R_QDrawAddTRColumn(void)
 #ifdef RANGECHECK 
    if(column.x  < 0 || column.x  >= video.width || 
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("R_QDrawAddTRColumn: %i to %i at %i", column.y1, column.y2, column.x);
+      I_Error("R_QDrawAddTRColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
 
    // MAGIC

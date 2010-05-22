@@ -938,12 +938,14 @@ static defaultfile_t maindefaults =
 };
 
 // killough 11/98: hash function for name lookup
-static unsigned default_hash(defaultfile_t *df, const char *name)
+static unsigned int default_hash(defaultfile_t *df, const char *name)
 {
-  unsigned hash = 0;
-  while (*name)
-    hash = hash*2 + toupper(*name++);
-  return hash % df->numdefaults;
+   unsigned int hash = 0;
+   
+   while(*name)
+      hash = hash*2 + toupper(*name++);
+   
+   return hash % df->numdefaults;
 }
 
 //
@@ -996,8 +998,9 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
       // FIXME: allow defaults for all types
       if(def->type != dt_integer)
       {
-         I_Error("M_ApplyGameModeDefaults: override for non-integer default %s\n",
-                 def->name);
+         I_FatalError(I_ERR_KILL,
+                      "M_ApplyGameModeDefaults: override for non-integer default %s\n",
+                      def->name);
       }
 #endif
       // replace the default value
@@ -1200,19 +1203,26 @@ void M_SaveDefaultFile(defaultfile_t *df)
       }
    }
 
+   // haleyjd: I_FatalError should be called here, since this can be invoked
+   // via an I_Error action already.
+
    if(fclose(f) == EOF)
    {
    error:
-      I_Error("Could not write defaults to %s: %s\n%s left unchanged\n",
-              tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
+      I_FatalError(I_ERR_KILL,
+                   "Could not write defaults to %s: %s\n%s left unchanged\n",
+                   tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
       return;
    }
 
    remove(df->fileName);
 
    if(rename(tmpfile, df->fileName))
-      I_Error("Could not write defaults to %s: %s\n", df->fileName,
-              errno ? strerror(errno) : "(Unknown Error)");
+   {
+      I_FatalError(I_ERR_KILL,
+                   "Could not write defaults to %s: %s\n", df->fileName,
+                   errno ? strerror(errno) : "(Unknown Error)");
+   }
 }
 
 //

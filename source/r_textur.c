@@ -26,19 +26,19 @@
 
 #include <time.h>
 
-#include "r_data.h"
-#include "r_draw.h"
+#include "z_zone.h"
+#include "c_io.h"
 #include "doomstat.h"
-#include "e_hash.h"
-#include "w_wad.h"
-#include "v_video.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
-#include "c_io.h"
+#include "e_hash.h"
 #include "p_setup.h"
+#include "r_data.h"
+#include "r_draw.h"
 #include "r_ripple.h"
-
+#include "w_wad.h"
+#include "v_video.h"
 
 static void error_printf(char *s, ...);
 static FILE *error_file = NULL;
@@ -78,34 +78,40 @@ typedef struct maptexture_s
    mappatch_t patches[1];
 } maptexture_t;
 
-int         firstflat, lastflat;
-
 // SoM: all textures/flats are now stored in a single array (textures)
 // Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
 // to (flatstop - 1)
-int         wallstart, wallstop;
-int         flatstart, flatstop;
-int         numwalls, numflats;
+int       wallstart, wallstop;
+int       flatstart, flatstop;
+int       numwalls, numflats;
+int       firstflat, lastflat;
 
-// SoM: This is the number of textures/flats loaded from wads
-// this distinction is important because any textures that EE generates
+// SoM: This is the number of textures/flats loaded from wads.
+// This distinction is important because any textures that EE generates
 // will not be cachable. 
-int         numwadtex;
+int       numwadtex;
 
 // SoM: Index of the BAADF00D invalid texture marker
-int         badtex;
+int       badtex;
 
-int         texturecount;
-texture_t   **textures;
+int       texturecount;
+texture_t **textures;
 
 // SoM: Because all textures and flats are stored in the same array, the 
 // translation tables are now combined.
-int         *texturetranslation;
+int       *texturetranslation;
 
 
-// ============================================================================
+//=============================================================================
+//
 // SoM: Allocator for texture_t
+//
 
+//
+// R_DetermineFlatSize
+//
+// Figures out the flat dimensions as which a texture may be used.
+//
 static void R_DetermineFlatSize(texture_t *t)
 {   
    // If not powers of two, it can't be a flat.
@@ -115,6 +121,12 @@ static void R_DetermineFlatSize(texture_t *t)
       
    t->flags |= TF_CANBEFLAT;
    
+   if(t->width != t->height)
+   {
+      t->flatsize = FLAT_GENERALIZED;
+      return;
+   }
+      
    switch(t->width * t->height)
    {
    case 4096:  // 64x64
@@ -252,7 +264,7 @@ static byte *R_ReadStrifePatch(byte *rawpatch)
 
 static byte *R_ReadUnknownPatch(byte *rawpatch)
 {
-   I_Error("R_ReadUnknownPatch called\n");
+   I_FatalError(I_ERR_KILL, "R_ReadUnknownPatch called\n");
 
    return NULL;
 }
@@ -296,7 +308,7 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
 
 static byte *R_ReadUnknownTexture(byte *rawtexture)
 {
-   I_Error("R_ReadUnknownTexture called\n");
+   I_FatalError(I_ERR_KILL, "R_ReadUnknownTexture called\n");
 
    return NULL;
 }
@@ -397,12 +409,14 @@ static void R_DetectTextureFormat(texturelump_t *tlump)
    tlump->format = format;
 }
 
-
+//
+// R_TextureHacks
+//
+// SoM: This function determines special cases for some textures with known 
+// erroneous data.
+//
 static void R_TextureHacks(texture_t *t)
-{
-   // SoM: This function determines special cases for some textures with known 
-   // erroneous data.
-   
+{   
    // Adapted from Zdoom's FMultiPatchTexture::CheckForHacks
    if(GameModeInfo->type == Game_DOOM &&
       GameModeInfo->missionInfo->id == doom &&
@@ -454,13 +468,11 @@ static void R_TextureHacks(texture_t *t)
    }
 }
 
-
-
 //
 // R_ReadTextureLump
 //
-static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlookup,
-                             int *errors)
+static int R_ReadTextureLump(texturelump_t *tlump, int startnum, 
+                             int *patchlookup, int *errors)
 {
    int i, j;
    int texnum = startnum;
@@ -525,10 +537,10 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
 //
 //=============================================================================
 
-// ============================================================================
+//=============================================================================
 //
 // Texture caching code
-
+//
 
 // Note:
 // For rotated buffers (the tex->buffer is actually rotated 90 degrees CCW)
@@ -546,11 +558,10 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum, int *patchlooku
 //    x * texture->height + y
 
 
-
 // This struct holds the temporary structure of a masked texture while it is
 // build assembled. When a texture is complete, new col structs are allocated 
 // in a single block to ensure linearity within memory.
-struct
+struct tempmask_s
 {
    // This is the buffer used for masking
    boolean   mask;       // If set to true, FinishTexture should create columns
@@ -559,15 +570,15 @@ struct
    texture_t *tex;
    
    texcol_t  *tempcols;
-} tempmask = {false, 0, NULL, NULL, NULL};
-
-
+} tempmask = { false, 0, NULL, NULL, NULL };
 
 //
 // AddTexColumn
 //
 // Copies from src to the tex buffer and optionally marks the temporary mask
-static void AddTexColumn(texture_t *tex, const byte *src, int srcstep, int ptroff, int len)
+//
+static void AddTexColumn(texture_t *tex, const byte *src, int srcstep, 
+                         int ptroff, int len)
 {
    byte *dest = tex->buffer + ptroff;
    
@@ -603,12 +614,11 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep, int ptrof
    }
 }
 
-
-
 //
 // AddTexFlat
 // 
 // Paints the given flat-based component to the texture and marks mask info
+//
 static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
    byte      *src = W_CacheLumpNum(component->lump, PU_CACHE);
@@ -677,12 +687,11 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    }
 }
 
-
-
 //
 // AddTexPatch
 // 
 // Paints the given flat-based component to the texture and marks mask info
+//
 static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 {
    patch_t    *patch = W_CacheLumpNum(component->lump, PU_CACHE);
@@ -769,13 +778,12 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
    }
 }
 
-
-
 //
 // StartTexture
 //
 // Allocates the texture buffer, as well as managing the temporary structs and
 // the mask buffer.
+//
 static void StartTexture(texture_t *tex, boolean mask)
 {
    int bufferlen = tex->width * tex->height;
@@ -799,10 +807,12 @@ static void StartTexture(texture_t *tex, boolean mask)
    }
 }
 
-
-
+//
+// NextTempCol
+//
 // Returns either the next element in the chain or a new element which is
 // then added to the chain.
+//
 static texcol_t *NextTempCol(texcol_t *current)
 {
    if(!current)
@@ -819,14 +829,12 @@ static texcol_t *NextTempCol(texcol_t *current)
    return current->next;
 }
 
-
-
-
 //
 // FinishTexture
 //
 // Called after R_CacheTexture is finished drawing a texture. This function
 // builds the columns (if needed) of a texture from the temporary mask buffer.
+//
 static void FinishTexture(texture_t *tex)
 {
    int        x, y, i, colcount;
@@ -906,12 +914,11 @@ static void FinishTexture(texture_t *tex)
    }
 }
 
-
-
 //
 // R_CacheTexture
 // 
 // Caches a texture in memory, building it from component parts.
+//
 texture_t *R_CacheTexture(int num)
 {
    texture_t  *tex;
@@ -919,7 +926,7 @@ texture_t *R_CacheTexture(int num)
    
 #ifdef RANGECHECK
    if(num < 0 || num >= texturecount)
-      I_Error("R_CacheTexture given an invalid texture num: %i\n", num);
+      I_Error("R_CacheTexture: invalid texture num %i\n", num);
 #endif
 
    tex = textures[num];
@@ -928,7 +935,10 @@ texture_t *R_CacheTexture(int num)
    
    // SoM: This situation would most certainly require an abort.
    if(tex->ccount == 0)
-      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", tex->name);
+   {
+      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", 
+              tex->name);
+   }
 
    // This function has two primary branches:
    // 1. There is no buffer, and there are no columns which means the texture
@@ -947,14 +957,14 @@ texture_t *R_CacheTexture(int num)
       
       switch(component->type)
       {
-         case TC_FLAT:
-            AddTexFlat(tex, component);
-            break;
-         case TC_PATCH:
-            AddTexPatch(tex, component);
-            break;
-         default:
-            break;
+      case TC_FLAT:
+         AddTexFlat(tex, component);
+         break;
+      case TC_PATCH:
+         AddTexPatch(tex, component);
+         break;
+      default:
+         break;
       }
    }
 
@@ -963,8 +973,11 @@ texture_t *R_CacheTexture(int num)
    return tex;
 }
 
-
-
+//
+// R_MakeMissingTexture
+//
+// Creates a checkerboard texture to fill in for unknown textures.
+//
 static void R_MakeMissingTexture(int count)
 {
    texture_t   *tex;
@@ -1001,10 +1014,10 @@ static void R_MakeMissingTexture(int count)
       tex->buffer[i] = ((i & 8) == 8) != ((i & 512) == 512) ? c1 : c2;
 }
 
-
-// ============================================================================
-// Texture/Flat init code
-
+//=============================================================================
+//
+// Texture/Flat Init Code
+//
 
 //
 // R_InitLoading
@@ -1104,6 +1117,7 @@ static ehash_t walltable, flattable;
 //
 // This function now inits the two ehash tables and inserts the loaded textures
 // into them.
+//
 static void R_InitTextureHash(void)
 {
    int i;
@@ -1121,13 +1135,12 @@ static void R_InitTextureHash(void)
       E_HashAddObject(&flattable, textures[i]);
 }
 
-
-
 //
 // R_CountFlats
 // 
-// SoM: This was split out of R_InitFlats which is going to get combined with 
+// SoM: This was split out of R_InitFlats which has been combined with 
 // R_InitTextures
+//
 static void R_CountFlats()
 {
    firstflat = W_GetNumForName("F_START") + 1;
@@ -1135,11 +1148,11 @@ static void R_CountFlats()
    numflats  = lastflat - firstflat + 1;
 }
 
-
 //
 // R_AddFlats
 //
 // Second half of the old R_InitFlats. This is also called by R_InitTextures
+//
 static void R_AddFlats(void)
 {
    int       i;
@@ -1260,7 +1273,7 @@ void R_InitTextures(void)
       R_CacheTexture(i);
    
    if(errors)
-      I_Error("\n\n%d texture errors.", errors); 
+      I_Error("\n\n%d texture errors.\n", errors); 
       
    // Load flats
    R_AddFlats();     
@@ -1272,11 +1285,10 @@ void R_InitTextures(void)
    R_InitTextureHash();
 }
 
-
-
-
-// ============================================================================
-// Texture/flat lookup
+//=============================================================================
+//
+// Texture/Flat Lookup
+//
 
 static int R_Doom1Texture(const char *name);
 const char *level_error = NULL;
@@ -1315,7 +1327,6 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 }
 
 
-
 //
 // R_GetLinearBuffer
 //
@@ -1328,7 +1339,6 @@ byte *R_GetLinearBuffer(int tex)
 
    return t->buffer;
 }
-
 
 
 static texture_t *R_SearchFlats(const char *name)
@@ -1346,6 +1356,7 @@ static texture_t *R_SearchWalls(const char *name)
 
 //
 // R_FindFlat
+//
 // Retrieval, get a flat number for a flat name.
 //
 int R_FindFlat(const char *name)    // killough -- const added
@@ -1374,6 +1385,7 @@ int R_FindFlat(const char *name)    // killough -- const added
       // SoM: Return missing texture index
       return texturecount - 1;
    }
+
    return tex->index;
 }
 
@@ -1395,6 +1407,7 @@ int R_CheckForFlat(const char *name)
 
 //
 // R_CheckForWall
+//
 // Check whether texture is available.
 // Filter out NoTexture indicator.
 //
@@ -1404,7 +1417,6 @@ int R_CheckForFlat(const char *name)
 //
 // killough 1/21/98, 1/31/98
 //
-
 int R_CheckForWall(const char *name)
 {
    texture_t *tex;
@@ -1440,17 +1452,18 @@ int R_FindWall(const char *name)  // const added -- killough
          C_Printf(FC_ERROR "Texture %.8s not found\n", name);
          
          // SoM: Return index of missing texture texture.
-         return texturecount - 1; // haleyjd: zero means no texture
+         return texturecount - 1;
       }
    }
 
    return i;
 }
 
-
-
-// sf: error printf
-// for use w/graphical startup
+//
+// error_printf
+//
+// sf: error printf for use w/graphical startup
+//
 void error_printf(char *s, ...)
 {
    va_list v;
@@ -1471,14 +1484,12 @@ void error_printf(char *s, ...)
    va_end(v);
 }
 
-
-
-/********************************
-        Doom I texture conversion
- *********************************/
-
-// convert old doom I levels so they will
-// work under doom II
+//=============================================================================
+//
+// Doom I Texture Conversion
+//
+// convert old doom I levels so they will work under doom II
+//
 
 typedef struct doom1text_s
 {

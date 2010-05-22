@@ -153,7 +153,7 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
                                 unsigned rotation, boolean flipped)
 {
    if(frame >= MAX_SPRITE_FRAMES || rotation > 8)
-      I_Error("R_InstallSpriteLump: Bad frame characters in lump %i", lump);
+      I_Error("R_InstallSpriteLump: Bad frame characters in lump %i\n", lump);
 
    if((int)frame > maxframe)
       maxframe = frame;
@@ -287,7 +287,7 @@ void R_InitSpriteDefs(char **namelist)
                case -1:
                   // no rotations were found for that frame at all
                   I_Error("R_InitSprites: No patches found "
-                          "for %.8s frame %c", namelist[i], frame+'A');
+                          "for %.8s frame %c\n", namelist[i], frame+'A');
                   break;
                   
                case 0:
@@ -301,9 +301,11 @@ void R_InitSpriteDefs(char **namelist)
                      for(rotation=0 ; rotation<8 ; rotation++)
                      {
                         if(sprtemp[frame].lump[rotation] == -1)
+                        {
                            I_Error ("R_InitSprites: Sprite %.8s frame %c "
-                                    "is missing rotations",
+                                    "is missing rotations\n",
                                     namelist[i], frame+'A');
+                        }
                      }
                      break;
                   }

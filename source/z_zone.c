@@ -253,7 +253,7 @@ void Z_Init(void)
 
    // haleyjd 01/20/04: changed to prboom version:
    if(!(HEADER_SIZE >= sizeof(memblock_t) && MIN_RAM > LEAVE_ASIDE))
-      I_Error("Z_Init: Sanity check failed");
+      I_FatalError(I_ERR_KILL, "Z_Init: Sanity check failed");
    
    size = (size+CHUNK_SIZE-1) & ~(CHUNK_SIZE-1);  // round to chunk size
    
@@ -264,8 +264,9 @@ void Z_Init(void)
       if(size < 
          (MIN_RAM-LEAVE_ASIDE < RETRY_AMOUNT ? RETRY_AMOUNT : MIN_RAM-LEAVE_ASIDE))
       {
-         I_Error("Z_Init: failed on allocation of %u bytes",
-                 (unsigned int)zonebase_size);
+         I_FatalError(I_ERR_KILL,
+                      "Z_Init: failed on allocation of %u bytes",
+                      (unsigned int)zonebase_size);
       }
       else
       {
@@ -323,8 +324,9 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 
 #ifdef ZONEIDCHECK
    if(tag >= PU_PURGELEVEL && !user)
-      I_Error("Z_Malloc: an owner is required for purgable blocks\n"
-              "Source: %s:%d", file, line);
+      I_FatalError(I_ERR_KILL, 
+                   "Z_Malloc: an owner is required for purgable blocks\n"
+                   "Source: %s:%d", file, line);
 #endif
 
    if(!size)
@@ -432,8 +434,11 @@ allocated:
    while(!(block = (malloc)(size + HEADER_SIZE)))
    {
       if(!blockbytag[PU_CACHE])
-         I_Error ("Z_Malloc: Failure trying to allocate %u bytes\n"
-                  "Source: %s:%d", (unsigned int) size, file, line);
+      {
+         I_FatalError(I_ERR_KILL, 
+                      "Z_Malloc: Failure trying to allocate %u bytes\n"
+                      "Source: %s:%d", (unsigned int) size, file, line);
+      }
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
    
@@ -471,15 +476,16 @@ void (Z_Free)(void *p, const char *file, int line)
 #ifdef ZONEIDCHECK
       if(block->id != ZONEID)
       {
-         I_Error("Z_Free: freed a pointer without ZONEID\n"
-                 "Source: %s:%d\n"
+         I_FatalError(I_ERR_KILL, 
+                      "Z_Free: freed a pointer without ZONEID\n"
+                      "Source: %s:%d\n"
 #ifdef INSTRUMENTED
-                 "Source of malloc: %s:%d\n"
-                 , file, line, block->file, block->line
+                      "Source of malloc: %s:%d\n"
+                      , file, line, block->file, block->line
 #else
-                 , file, line
+                      , file, line
 #endif
-                );
+                     );
       }
       block->id = 0;              // Nullify id so another free fails
 #endif
@@ -488,15 +494,16 @@ void (Z_Free)(void *p, const char *file, int line)
       // catches double frees and possible selective heap corruption
       if(block->tag == PU_FREE || block->tag >= PU_MAX)
       {
-         I_Error("Z_Free: freed a pointer with invalid tag %d\n"
-                 "Source: %s:%d\n"
+         I_FatalError(I_ERR_KILL, 
+                      "Z_Free: freed a pointer with invalid tag %d\n"
+                      "Source: %s:%d\n"
 #ifdef INSTRUMENTED
-                 "Source of malloc: %s:%d\n"
-                 , block->tag, file, line, block->file, block->line
+                      "Source of malloc: %s:%d\n"
+                      , block->tag, file, line, block->file, block->line
 #else
-                 , block->tag, file, line
+                      , block->tag, file, line
 #endif
-                );
+                     );
       }
 
 #ifdef ZONESCRAMBLE
@@ -614,16 +621,17 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 
 #ifdef ZONEIDCHECK
          if(block->id != ZONEID)
-            I_Error("Z_FreeTags: Changed a tag without ZONEID\n"
-                    "Source: %s:%d"
+            I_FatalError(I_ERR_KILL, 
+                         "Z_FreeTags: Changed a tag without ZONEID\n"
+                         "Source: %s:%d"
 
 #ifdef INSTRUMENTED
-                    "\nSource of malloc: %s:%d"
-                    , file, line, block->file, block->line
+                         "\nSource of malloc: %s:%d"
+                         , file, line, block->file, block->line
 #else
-                    , file, line
+                         , file, line
 #endif
-                    );
+                        );
 
          block->id = 0;              // Nullify id so another free fails
 #endif
@@ -658,27 +666,33 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 
 #ifdef ZONEIDCHECK
    if(block->id != ZONEID)
-      I_Error("Z_ChangeTag: Changed a tag without ZONEID"
-              "\nSource: %s:%d"
+   {
+      I_FatalError(I_ERR_KILL, 
+                   "Z_ChangeTag: Changed a tag without ZONEID"
+                   "\nSource: %s:%d"
 
 #ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
+                   "\nSource of malloc: %s:%d"
+                   , file, line, block->file, block->line
 #else
-              , file, line
+                   , file, line
 #endif
-              );
+                  );
+   }
 
    if(tag >= PU_PURGELEVEL && !block->user)
-      I_Error("Z_ChangeTag: an owner is required for purgable blocks\n"
-              "Source: %s:%d"
+   {
+      I_FatalError(I_ERR_KILL, 
+                   "Z_ChangeTag: an owner is required for purgable blocks\n"
+                   "Source: %s:%d"
 #ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
+                   "\nSource of malloc: %s:%d"
+                   , file, line, block->file, block->line
 #else
-              , file, line
+                   , file, line
 #endif
-              );
+                  );
+   }
 
 #endif // ZONEIDCHECK
 
@@ -777,16 +791,19 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
 #ifdef ZONEIDCHECK
    if(block->id != ZONEID)
-      I_Error("Z_Realloc: Tried to realloc a block without ZONEID"
-              "\nSource: %s:%d"
+   {
+      I_FatalError(I_ERR_KILL, 
+                   "Z_Realloc: Tried to realloc a block without ZONEID"
+                   "\nSource: %s:%d"
       
 #ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
+                   "\nSource of malloc: %s:%d"
+                   , file, line, block->file, block->line
 #else
-              , file, line
+                   , file, line
 #endif
-      );
+                  );
+   }
 #endif
 
    if(block->vm) // vm block? go to old realloc (can't mess with it)
@@ -1114,15 +1131,16 @@ void (Z_CheckHeap)(const char *file, int line)
           (memblock_t *)((char *) block+HEADER_SIZE+block->size) != block->next) ||
          block->next->prev != block || block->prev->next != block)
       {
-         I_Error("Z_CheckHeap: Block size does not touch the next block\n"
-                 "Source: %s:%d"
+         I_FatalError(I_ERR_KILL,
+                      "Z_CheckHeap: Block size does not touch the next block\n"
+                      "Source: %s:%d"
 #ifdef INSTRUMENTED
-                 "\nSource of offending block: %s:%d"
-                 , file, line, block->file, block->line
+                      "\nSource of offending block: %s:%d"
+                      , file, line, block->file, block->line
 #else
-                 , file, line
+                      , file, line
 #endif
-                );
+                     );
       }
    }
    while((block = block->next) != zone);
@@ -1153,16 +1171,17 @@ int (Z_CheckTag)(void *ptr, const char *file, int line)
 #ifdef ZONEIDCHECK
    if(block->id != ZONEID)
    {
-      I_Error("Z_CheckTag: block doesn't have ZONEID"
-              "\nSource: %s:%d"
+      I_FatalError(I_ERR_KILL, 
+                   "Z_CheckTag: block doesn't have ZONEID"
+                   "\nSource: %s:%d"
 
 #ifdef INSTRUMENTED
-              "\nSource of malloc: %s:%d"
-              , file, line, block->file, block->line
+                   "\nSource of malloc: %s:%d"
+                   , file, line, block->file, block->line
 #else
-              , file, line
+                   , file, line
 #endif
-              );
+                  );
    }
 #endif // ZONEIDCHECK
    
@@ -1276,8 +1295,9 @@ void *Z_SysMalloc(size_t size)
    
    if(!(ret = (malloc)(size)))
    {
-      I_Error("Z_SysMalloc: failed on allocation of %u bytes\n", 
-              (unsigned int)size);
+      I_FatalError(I_ERR_KILL, 
+                   "Z_SysMalloc: failed on allocation of %u bytes\n", 
+                   (unsigned int)size);
    }
 
    return ret;
@@ -1294,8 +1314,9 @@ void *Z_SysCalloc(size_t n1, size_t n2)
 
    if(!(ret = (calloc)(n1, n2)))
    {
-      I_Error("Z_SysCalloc: failed on allocation of %u bytes\n", 
-              (unsigned int)n1*n2);
+      I_FatalError(I_ERR_KILL, 
+                   "Z_SysCalloc: failed on allocation of %u bytes\n", 
+                   (unsigned int)n1*n2);
    }
 
    return ret;
@@ -1313,8 +1334,9 @@ void *Z_SysRealloc(void *ptr, size_t size)
 
    if(!(ret = (realloc)(ptr, size)))
    {
-      I_Error("Z_SysRealloc: failed on allocation of %u bytes\n", 
-              (unsigned int)size);
+      I_FatalError(I_ERR_KILL, 
+                   "Z_SysRealloc: failed on allocation of %u bytes\n", 
+                   (unsigned int)size);
    }
 
    return ret;

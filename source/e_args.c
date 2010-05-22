@@ -35,6 +35,15 @@
 #include "e_sound.h"
 #include "e_args.h"
 
+// haleyjd 05/21/10: an empty string, to avoid allocating tons of memory for
+// single-byte strings.
+static char e_argemptystr[] = "";
+
+// test if a string is empty
+#define ISEMPTY(s) (*(s) == '\0')
+
+// test if a string is the global arg empty string
+#define ISARGEMPTYSTR(s) ((s) == e_argemptystr)
 
 //
 // E_AddArgToList
@@ -48,7 +57,12 @@ boolean E_AddArgToList(arglist_t *al, const char *value)
    
    if(al->numargs < EMAXARGS)
    {
-      al->args[al->numargs++] = strdup(value);
+      if(ISEMPTY(value))
+         al->args[al->numargs] = e_argemptystr;
+      else
+         al->args[al->numargs] = strdup(value);
+      
+      al->numargs++;
       added = true;
    }
 
@@ -74,8 +88,13 @@ boolean E_SetArg(arglist_t *al, int index, const char *value)
    }
 
    // dispose of old argument and set new value
-   free(al->args[index]);
-   al->args[index] = strdup(value);
+   if(!ISARGEMPTYSTR(al->args[index]))
+      free(al->args[index]);
+
+   if(ISEMPTY(value))
+      al->args[index] = e_argemptystr;
+   else
+      al->args[index] = strdup(value);
 
    // any cached evaluation is now invalid
    al->values[index].type = EVALTYPE_NONE;
@@ -109,7 +128,10 @@ void E_DisposeArgs(arglist_t *al)
    int i;
 
    for(i = 0; i < al->numargs; ++i)
-      free(al->args[i]);
+   {
+      if(!ISARGEMPTYSTR(al->args[i]))
+         free(al->args[i]);
+   }
 
    memset(al, 0, sizeof(arglist_t));
 }

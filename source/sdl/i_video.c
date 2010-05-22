@@ -604,10 +604,11 @@ static boolean I_InitGraphicsMode(void)
       if(!SDL_VideoModeOK(320, 200, 8, SDL_SWSURFACE) ||
          !(sdlscreen = SDL_SetVideoMode(320, 200, 8, SDL_SWSURFACE)))
       {
-         I_Error("I_InitGraphicsMode: couldn't set mode %dx%dx%d;\n"
-                 "   Also failed to set safety mode 320x200x8.\n"
-                 "   Check your SDL video driver settings.\n",
-                 v_w, v_h, v_bd);
+         I_FatalError(I_ERR_KILL,
+                      "I_InitGraphicsMode: couldn't set mode %dx%dx%d;\n"
+                      "   Also failed to set safety mode 320x200x8.\n"
+                      "   Check your SDL video driver settings.\n",
+                      v_w, v_h, v_bd);
       }
 
       // reset these for below population of video struct

@@ -61,13 +61,13 @@ CONSOLE_COMMAND(e_thingtype, 0)
 {
    int num;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: e_thingtype mnemonic\n");
       return;
    }
 
-   num = E_ThingNumForName(c_argv[0]);
+   num = E_ThingNumForName(Console.argv[0]);
 
    if(num == NUMMOBJTYPES)
    {
@@ -166,13 +166,13 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
    metaobject_t *obj = NULL;
    int num;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: e_dumpmeta mnemonic\n");
       return;
    }
 
-   num = E_ThingNumForName(c_argv[0]);
+   num = E_ThingNumForName(Console.argv[0]);
 
    if(num == NUMMOBJTYPES)
    {
@@ -226,17 +226,17 @@ CONSOLE_COMMAND(e_playsound, 0)
 {
    sfxinfo_t *sfx;
 
-   if(c_argc < 1)
+   if(Console.argc < 1)
    {
       C_Printf("Usage: e_playsound name\n");
       return;
    }
 
-   sfx = E_SoundForName(c_argv[0]);
+   sfx = E_SoundForName(Console.argv[0]);
 
    if(!sfx)
    {
-      C_Printf("No such sound '%s'\n", c_argv[0]);
+      C_Printf("No such sound '%s'\n", Console.argv[0]);
       return;
    }
 
@@ -273,13 +273,13 @@ CONSOLE_COMMAND(e_mapthing, cf_level)
    mapthing_t *things;
    int i, numthings, recordnum;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: e_mapthing recordnum\n");
       return;
    }
 
-   recordnum = atoi(c_argv[0]);
+   recordnum = atoi(Console.argv[0]);
 
    E_GetEDMapThings(&things, &numthings);
 
@@ -342,13 +342,13 @@ CONSOLE_COMMAND(e_linedef, cf_level)
    maplinedefext_t *lines;
    int i, numlines, recordnum;
 
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: e_linedef recordnum\n");
       return;
    }
 
-   recordnum = atoi(c_argv[0]);
+   recordnum = atoi(Console.argv[0]);
 
    E_GetEDLines(&lines, &numlines);
 

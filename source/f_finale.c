@@ -657,13 +657,13 @@ void F_DrawUnderwater(void)
       }
       // fall through
    case 3:
-      console_enabled = false; // let console key fall through
+      Console.enabled = false; // let console key fall through
       paused = false;
       menuactive = false;
       break;
    
    case 4:
-      console_enabled = true;
+      Console.enabled = true;
       V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
                   W_CacheLumpName("TITLE", PU_CACHE));
       break;

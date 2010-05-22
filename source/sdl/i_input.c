@@ -30,6 +30,7 @@
 #include "../doomdef.h"
 #include "../doomstat.h"
 #include "../d_main.h"
+#include "../c_runcmd.h"
 #include "../c_io.h"
 
 

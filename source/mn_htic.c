@@ -184,13 +184,13 @@ menu_t menu_hnewgame =
 
 CONSOLE_COMMAND(mn_hepis, cf_notnet)
 {
-   if(!c_argc)
+   if(!Console.argc)
    {
       C_Printf("usage: mn_hepis <epinum>\n");
       return;
    }
    
-   start_episode = atoi(c_argv[0]);
+   start_episode = atoi(Console.argv[0]);
    
    if((GameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {

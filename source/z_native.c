@@ -144,7 +144,7 @@ static void Z_IDCheckNB(boolean err, const char *errmsg,
                         const char *file, int line)
 {
    if(err)
-      I_Error("%s\nSource: %s:%d\n", errmsg, file, line);
+      I_FatalError(I_ERR_KILL, "%s\nSource: %s:%d\n", errmsg, file, line);
 }
 
 //
@@ -159,14 +159,15 @@ static void Z_IDCheck(boolean err, const char *errmsg,
 {
    if(err)
    {
-      I_Error("%s\nSource: %s:%d\nSource of malloc: %s:%d",
-              errmsg, file, line,
+      I_FatalError(I_ERR_KILL,
+                   "%s\nSource: %s:%d\nSource of malloc: %s:%d",
+                   errmsg, file, line,
 #if defined(ZONEVERBOSE) && defined(INSTRUMENTED)
-              block->file, block->line
+                   block->file, block->line
 #else
-              "(not available)", 0
+                   "(not available)", 0
 #endif
-             );
+                  );
    }
 }
 #else
@@ -338,8 +339,11 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    while(!(block = (malloc)(size + header_size)))
    {
       if(!blockbytag[PU_CACHE])
-         I_Error ("Z_Malloc: Failure trying to allocate %u bytes\n"
-                  "Source: %s:%d", (unsigned int)size, file, line);
+      {
+         I_FatalError(I_ERR_KILL,
+                      "Z_Malloc: Failure trying to allocate %u bytes\n"
+                      "Source: %s:%d", (unsigned int)size, file, line);
+      }
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
    
@@ -395,15 +399,16 @@ void (Z_Free)(void *p, const char *file, int line)
       // catches double frees and possible selective heap corruption
       if(block->tag == PU_FREE || block->tag >= PU_MAX)
       {
-         I_Error("Z_Free: freed a pointer with invalid tag %d\n"
-                 "Source: %s:%d\n"
+         I_FatalError(I_ERR_KILL,
+                      "Z_Free: freed a pointer with invalid tag %d\n"
+                      "Source: %s:%d\n"
 #ifdef INSTRUMENTED
-                 "Source of malloc: %s:%d\n"
-                 , block->tag, file, line, block->file, block->line
+                      "Source of malloc: %s:%d\n"
+                      , block->tag, file, line, block->file, block->line
 #else
-                 , block->tag, file, line
+                      , block->tag, file, line
 #endif
-                );
+                     );
       }
       block->tag = PU_FREE;       // Mark block freed
 
@@ -551,8 +556,11 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    while(!(block = (realloc)(block, n + header_size)))
    {
       if(block->tag == PU_CACHE || !blockbytag[PU_CACHE])
-         I_Error ("Z_Realloc: Failure trying to allocate %u bytes\n"
-                  "Source: %s:%d", (unsigned int)n, file, line);
+      {
+         I_FatalError(I_ERR_KILL, 
+                      "Z_Realloc: Failure trying to allocate %u bytes\n"
+                      "Source: %s:%d", (unsigned int)n, file, line);
+      }
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
 
@@ -821,8 +829,9 @@ void *Z_SysMalloc(size_t size)
    
    if(!(ret = (malloc)(size)))
    {
-      I_Error("Z_SysMalloc: failed on allocation of %u bytes\n", 
-              (unsigned int)size);
+      I_FatalError(I_ERR_KILL,
+                   "Z_SysMalloc: failed on allocation of %u bytes\n", 
+                   (unsigned int)size);
    }
 
    return ret;
@@ -839,8 +848,9 @@ void *Z_SysCalloc(size_t n1, size_t n2)
 
    if(!(ret = (calloc)(n1, n2)))
    {
-      I_Error("Z_SysCalloc: failed on allocation of %u bytes\n", 
-              (unsigned int)n1*n2);
+      I_FatalError(I_ERR_KILL,
+                   "Z_SysCalloc: failed on allocation of %u bytes\n", 
+                   (unsigned int)n1*n2);
    }
 
    return ret;
@@ -858,8 +868,9 @@ void *Z_SysRealloc(void *ptr, size_t size)
 
    if(!(ret = (realloc)(ptr, size)))
    {
-      I_Error("Z_SysRealloc: failed on allocation of %u bytes\n", 
-              (unsigned int)size);
+      I_FatalError(I_ERR_KILL,
+                   "Z_SysRealloc: failed on allocation of %u bytes\n", 
+                   (unsigned int)size);
    }
 
    return ret;

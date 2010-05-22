@@ -534,27 +534,27 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
 {
    skin_t *skin;
    
-   if(!c_argc)
+   if(!Console.argc)
    {
-      if(consoleplayer == cmdsrc)
-         C_Printf("%s is %s %s\n", players[cmdsrc].name,
-                  isvowel(players[cmdsrc].skin->skinname[0]) ? "an" : "a",
-                  players[cmdsrc].skin->skinname);
+      if(consoleplayer == Console.cmdsrc)
+         C_Printf("%s is %s %s\n", players[Console.cmdsrc].name,
+                  isvowel(players[Console.cmdsrc].skin->skinname[0]) ? "an" : "a",
+                  players[Console.cmdsrc].skin->skinname);
       return;
    }
 
-   if(!strcmp(c_argv[0], "+"))
-      skin = P_NextSkin(cmdsrc);
-   else if(!strcmp(c_argv[0], "-"))
-      skin = P_PrevSkin(cmdsrc);
-   else if(!(skin = P_SkinForName(c_argv[0])))
+   if(!strcmp(Console.argv[0], "+"))
+      skin = P_NextSkin(Console.cmdsrc);
+   else if(!strcmp(Console.argv[0], "-"))
+      skin = P_PrevSkin(Console.cmdsrc);
+   else if(!(skin = P_SkinForName(Console.argv[0])))
    {
-      if(consoleplayer == cmdsrc)
-         C_Printf("skin not found: '%s'\n", c_argv[0]);
+      if(consoleplayer == Console.cmdsrc)
+         C_Printf("skin not found: '%s'\n", Console.argv[0]);
       return;
    }
 
-   P_SetSkin(skin, cmdsrc);
+   P_SetSkin(skin, Console.cmdsrc);
    // wake up status bar for new face
    redrawsbar = true;
 }

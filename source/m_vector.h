@@ -45,6 +45,14 @@ typedef struct v3float_s
    float x, y, z;
 } v3float_t;
 
+
+
+typedef struct v3double_s
+{
+   double x, y, z;
+} v3double_t;
+
+
 typedef struct v2float_s
 {
    float x, y;
@@ -52,42 +60,38 @@ typedef struct v2float_s
 
 
 // 
-// M_TranslateVec3f
+// M_TranslateVec3
 //
 // Translates the given vector (in doom's coordinate system) to the camera
 // space (in right-handed coordinate system) This function is used for slopes.
 // 
 void M_TranslateVec3f(v3float_t *vec);
-
-
-//
-// M_AddVec3f
-//
-// Adds v2 to v1 stores in dest
-//
-void M_AddVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2);
+void M_TranslateVec3 (v3double_t *vec);
 
 
 // 
-// M_SubVec3f
+// M_SubVec3
 //
 // Subtracts v2 from v1 stores in dest
 //
-void M_SubVec3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2);
+void M_SubVec3f(v3float_t *dest,  const v3float_t *v1,  const v3float_t *v2);
+void M_SubVec3 (v3double_t *dest, const v3double_t *v1, const v3double_t *v2);
 
 // 
-// M_DotVec3f
+// M_DotVec3
 //
 // Returns the dot product of v1 and v2
 //
-float M_DotVec3f(const v3float_t *v1, const v3float_t *v2);
+float  M_DotVec3f(const v3float_t *v1,  const v3float_t *v2);
+double M_DotVec3 (const v3double_t *v1, const v3double_t *v2);
 
 //
 // M_CrossProduct3f
 //
 // Gets the cross product of v1 and v2 and stores in dest
 //
-void M_CrossProduct3f(v3float_t *dest, const v3float_t *v1, const v3float_t *v2);
+void M_CrossProduct3f(v3float_t *dest,  const v3float_t *v1,  const v3float_t *v2);
+void M_CrossProduct3 (v3double_t *dest, const v3double_t *v1, const v3double_t *v2);
 
 #endif
 

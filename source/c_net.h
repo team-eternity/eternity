@@ -109,7 +109,6 @@ void C_UpdateVar(command_t *command);
 extern command_t *c_netcmds[NUMNETCMDS];
 extern char* default_name;
 extern int default_colour;
-extern int cmdsrc;           // the player which started the current command
 
 #define CN_BROADCAST 128
 
