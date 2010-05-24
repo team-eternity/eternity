@@ -512,17 +512,21 @@ static int R_ReadTextureLump(texturelump_t *tlump, int startnum,
          component->lump    = patchlookup[tp.patch];
          component->type    = TC_PATCH;
 
-         W_ReadLumpHeader(component->lump, &pheader, sizeof(patch_t));
-         component->width = SwapShort(pheader.width);
-         component->height = SwapShort(pheader.height);
-         
          if(component->lump == -1)
          {
             // killough 8/8/98
             // sf: error_printf
-            error_printf("\nR_ReadTextureLump: Missing patch %d in texture %.8s",
+            C_Printf(FC_ERROR "R_ReadTextureLump: Missing patch %d in texture %.8s\n",
                          tp.patch, texture->name);
-            ++*errors;
+            //++*errors;
+            
+            component->width = component->height = 0;
+         }
+         else
+         {
+            W_ReadLumpHeader(component->lump, &pheader, sizeof(patch_t));
+            component->width = SwapShort(pheader.width);
+            component->height = SwapShort(pheader.height);
          }
       }
       
@@ -955,6 +959,10 @@ texture_t *R_CacheTexture(int num)
    {
       tcomponent_t *component = tex->components + i;
       
+      // SoM: Do NOT add lumps with a -1 lump
+      if(component->lump == -1)
+         continue;
+         
       switch(component->type)
       {
       case TC_FLAT:
