@@ -118,6 +118,10 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
       name += len;
       name += strspn(name, "|");
    }
+
+   // haleyjd 05/25/10: check for +/- prefixes for flag items
+   if(name[0] == '+' || name[0] == '-')
+      ++name; // skip past it for lookup
    
    for(i = 0; sec->opts[i].name; i++)
    {
@@ -318,6 +322,41 @@ cfg_t *cfg_getmvprop(cfg_t *cfg, const char *name)
    return cfg_getnmvprop(cfg, name, 0);
 }
 
+//
+// cfg_getnflag
+//
+// haleyjd 05/25/10
+//
+signed int cfg_getnflag(cfg_t *cfg, const char *name, unsigned int index)
+{
+   cfg_opt_t *opt = cfg_getopt(cfg, name);
+   
+   if(opt)
+   {
+      cfg_assert(opt->type == CFGT_FLAG);
+      if(opt->nvalues == 0)
+         return (signed int)opt->def;
+      else
+      {
+         cfg_assert(index < opt->nvalues);
+         return opt->values[index]->number;
+      }
+   }
+   else
+      return 0;
+}
+
+//
+// cfg_getflag
+//
+// haleyjd 05/25/10
+//
+signed int cfg_getflag(cfg_t *cfg, const char *name)
+{
+   return cfg_getnflag(cfg, name, 0);
+}
+
+
 static cfg_value_t *cfg_addval(cfg_opt_t *opt)
 {
    opt->values = (cfg_value_t **)realloc(opt->values,
@@ -505,6 +544,26 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
       }
       val->boolean = (cfg_bool_t)b;
       break;
+   case CFGT_FLAG: // haleyjd
+      if(opt->cb)
+      {
+         if((*opt->cb)(cfg, opt, value, &i) != 0)
+            return 0;
+         val->number = i;
+      }
+      else
+      {
+         // If this flag item has the SIGNPREFIX flag, it is expected to begin
+         // with a + or - character. + means to set the value to 1, and - means
+         // to set it to 0.
+         // Otherwise, presence of the option in the input is expected to invert 
+         // the default value of the option.
+         if(is_set(CFGF_SIGNPREFIX, opt->flags))
+            val->number = (value[0] == '+');
+         else
+            val->number = !((signed int)opt->def);
+      }
+      break;
    default:
       cfg_error(cfg, "internal error in cfg_setopt(%s, %s)",
                 opt->name, value);
@@ -681,20 +740,25 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          if((opt = cfg_getopt(cfg, mytext)) == 0) // haleyjd
             return STATE_ERROR;
          
-         if(opt->type == CFGT_SEC)
+         switch(opt->type)
          {
+         case CFGT_SEC:
             if(is_set(CFGF_TITLE, opt->flags))
                state = STATE_EXPECT_TITLE;
             else
                state = STATE_EXPECT_SECBRACE;
-         } 
-         else if(opt->type == CFGT_FUNC)
-         {
+            break;
+         case CFGT_FUNC:
             state = STATE_EXPECT_PAREN;
-         }
-         else
+            break;
+         case CFGT_FLAG: // haleyjd: flag options, which are simple keywords
+            if(cfg_setopt(cfg, opt, mytext) == 0)
+               return STATE_ERROR;
+            // remain in STATE_EXPECT_OPTION
+            break;
+         default:
             state = STATE_EXPECT_ASSIGN;
-
+         }
          break;
 
       case STATE_EXPECT_ASSIGN: /* expecting an equal sign or plus-equal sign */

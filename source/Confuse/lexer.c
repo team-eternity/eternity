@@ -497,8 +497,10 @@ static int lexer_state_none(lexerstate_t *ls)
    case '+':
       if(*bufferpos != '=') // look ahead to next character
       {
-         lexer_error(ls->cfg, "unexpected character after +");
-         ret = 0;
+         // if not '=', start an unquoted string
+         M_QStrClear(&qstring);
+         M_QStrPutc(&qstring, ls->c);
+         ls->state = STATE_UNQUOTEDSTRING;
       }
       else
       {

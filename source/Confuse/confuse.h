@@ -55,21 +55,23 @@ enum cfg_type_t
    CFGT_FUNC,    /**< function */
    CFGT_STRFUNC, /**< function-valued string */
    CFGT_MVPROP,  /**< multi-valued property */
+   CFGT_FLAG     /**< flag property, no value is given */
 };
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
 /** Flags. */
-#define CFGF_NONE 0
-#define CFGF_MULTI 1       /**< option may be specified multiple times */
-#define CFGF_LIST 2        /**< option is a list */
-#define CFGF_NOCASE 4      /**< configuration file is case insensitive */
-#define CFGF_TITLE 8       /**< option has a title (only applies to section) */
-#define CFGF_ALLOCATED 16
-#define CFGF_RESET 32
-#define CFGF_DEFINIT 64
+#define CFGF_NONE          0
+#define CFGF_MULTI         1 /**< option may be specified multiple times */
+#define CFGF_LIST          2 /**< option is a list */
+#define CFGF_NOCASE        4 /**< configuration file is case insensitive */
+#define CFGF_TITLE         8 /**< option has a title (only applies to section) */
+#define CFGF_ALLOCATED    16
+#define CFGF_RESET        32
+#define CFGF_DEFINIT      64
 // haleyjd: custom flags
 #define CFGF_LOOKFORFUNC 128 /**< will do nothing until "lookfor" function is found */
 #define CFGF_STRSPACE    256 /**< unquoted strings within this section may contain spaces */
+#define CFGF_SIGNPREFIX  512 /**< CFGT_FLAG items expect a + or - prefix on the property */
 
 /** Return codes from cfg_parse(). */
 #define CFG_SUCCESS 0
@@ -317,6 +319,14 @@ struct cfg_opt_t
 #define CFG_MVPROP(name, opts, flags) \
                    {name, CFGT_MVPROP, 0, 0, flags, opts, 0, 0, 0, 0, 0}
 
+/** Initialize a flag property option.
+ */
+#define CFG_FLAG(name, def, flags) \
+                 {name, CFGT_FLAG, 0, 0, flags, 0, (void *)def, 0, 0, 0, 0}
+
+#define CFG_FLAG_CB(name, def, flags, cb) \
+                 {name, CFGT_FLAG, 0, 0, flags, 0, (void *)def, 0, 0, 0, cb}
+
 /** Terminate list of options. This must be the last initializer in
  * the option list.
  */
@@ -467,6 +477,26 @@ cfg_t *       cfg_getsec(cfg_t *cfg, const char *name);
  * values for a multi-valued property.
  */
 cfg_t *       cfg_getmvprop(cfg_t *cfg, const char *name);
+
+/** Returns the value of a flag option. This is the same as
+ * calling cfg_getnflag with index 0.
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @return The requested value is returned. If the option was not set
+ * in the configuration file, the default value given in the
+ * corresponding cfg_opt_t structure is returned. If no option is found
+ * with that name, 0 is returned.
+ */
+int           cfg_getflag(cfg_t *cfg, const char *name);
+
+/** Indexed version of cfg_getflag().
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param index Index of values. Zero based.
+ * @see cfg_getflag
+ */
+int           cfg_getnflag(cfg_t *cfg, const char *name, unsigned int index);
+
 
 cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
 
