@@ -176,6 +176,65 @@ d_inline static int SafeUintIndex(short input, int limit, const char *func,
    return ret;
 }
 
+//=============================================================================
+//
+// Lump Data Reading Routines
+//
+// haleyjd 05/26/10: These routines replace direct mapping of structures to
+// lumps in memory where this is needed. Eventually I'd like to replace all
+// such direct mapping.
+//
+
+//
+// GetLevelWord
+//
+// Reads an int16 from the lump data and increments the read pointer.
+//
+static int16_t GetLevelWord(byte **data)
+{
+   int16_t *loc = (int16_t *)(*data);
+   int16_t  val = SwapShort(*loc);
+
+   *data += 2;
+
+   return val;
+}
+
+//
+// GetLevelDWord
+//
+// Reads an int32 from the lump data and increments the read pointer.
+//
+static int32_t GetLevelDWord(byte **data)
+{
+   int32_t *loc = (int32_t *)(*data);
+   int32_t  val = SwapLong(*loc);
+
+   *data += 4;
+
+   return val;
+}
+
+//
+// GetLevelString
+//
+// Reads a "len"-byte string from the lump data and writes it into the 
+// destination buffer. The read pointer is incremented by len bytes.
+//
+static void GetLevelString(byte **data, char *dest, int len)
+{
+   char *loc = (char *)(*data);
+
+   memcpy(dest, loc, len);
+
+   *data += len;
+}
+
+//=============================================================================
+//
+// Level Loading
+//
+
 //
 // P_LoadVertexes
 //
@@ -309,36 +368,40 @@ void P_LoadSubsectors(int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSectors(int lump)
+void P_LoadSectors(int lumpnum)
 {
-   byte *data;
+   byte *lump, *data;
    int  i;
    int  defaultSndSeq;
+   char namebuf[9];
    
-   numsectors = W_LumpLength(lump) / sizeof(mapsector_t);
-   sectors    = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
-   data       = W_CacheLumpNum(lump, PU_STATIC);
+   numsectors  = W_LumpLength(lumpnum) / sizeof(mapsector_t);
+   sectors     = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
+   lump = data = W_CacheLumpNum(lumpnum, PU_STATIC);
 
    // haleyjd 09/24/06: determine what the default sound sequence is
    defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
 
+   // init texture name buffer to ensure null-termination
+   memset(namebuf, 0, sizeof(namebuf));
+
    for(i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
-      const mapsector_t *ms = (mapsector_t *)data + i;
-      
-      ss->floorheight        = SwapShort(ms->floorheight)   << FRACBITS;
-      ss->ceilingheight      = SwapShort(ms->ceilingheight) << FRACBITS;      
-      ss->floorpic           = R_FindFlat(ms->floorpic);
-      ss->lightlevel         = SwapShort(ms->lightlevel);
-      ss->special            = SwapShort(ms->special);
-      ss->tag                = SwapShort(ms->tag);
-      ss->thinglist          = NULL;
-      ss->touching_thinglist = NULL;            // phares 3/14/98
 
+      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
+      GetLevelString(&data, namebuf, 8);
+      ss->floorpic           = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
-      P_SetSectorCeilingPic(ss, R_FindFlat(ms->ceilingpic));      
-
+      GetLevelString(&data, namebuf, 8);
+      P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
+      ss->lightlevel         = GetLevelWord(&data);
+      ss->special            = GetLevelWord(&data);
+      ss->tag                = GetLevelWord(&data);
+      ss->thinglist          = NULL;
+      ss->touching_thinglist = NULL; // phares 3/14/98
+      
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
 
@@ -373,7 +436,7 @@ void P_LoadSectors(int lump)
       ss->c_slope = ss->f_slope = NULL;
 
       // SoM: These are kept current with floorheight and ceilingheight now
-      ss->floorheightf = M_FixedToFloat(ss->floorheight);
+      ss->floorheightf   = M_FixedToFloat(ss->floorheight);
       ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
 
       ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
@@ -416,7 +479,7 @@ void P_LoadSectors(int lump)
       }
    }
 
-   Z_Free(data);
+   Z_Free(lump);
 }
 
 
