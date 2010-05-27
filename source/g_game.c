@@ -1496,8 +1496,11 @@ static void G_DoCompleted(void)
       {
       case 8:
          if(!LevelInfo.killFinale) // haleyjd 05/26/10: long-forgotten
+         {
             gameaction = ga_victory;
-         return;
+            return;
+         }
+         break;
       case 9:
          for(i = 0; i < MAXPLAYERS; ++i)
             players[i].didsecret = true;
