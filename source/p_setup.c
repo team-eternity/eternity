@@ -162,7 +162,7 @@ d_inline static int ShortToLong(short value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static int SafeUintIndex(short input, int limit, const char *func,
+d_inline static int SafeUintIndex(int16_t input, int limit, const char *func,
                                   const char *item)
 {
    int ret = (int)(SwapShort(input)) & 0xffff;
@@ -938,10 +938,12 @@ void P_LoadHexenLineDefs(int lump)
    Z_Free(data);
 }
 
-
+//
+// P_LoadLineDefs2
+//
 // killough 4/4/98: delay using sidedefs until they are loaded
 // killough 5/3/98: reformatted, cleaned up
-
+//
 void P_LoadLineDefs2(void)
 {
    int i = numlines;
@@ -1006,47 +1008,63 @@ void P_LoadSideDefs(int lump)
 // after linedefs are loaded, to allow overloading.
 // killough 5/3/98: reformatted, cleaned up
 
-void P_LoadSideDefs2(int lump)
+void P_LoadSideDefs2(int lumpnum)
 {
-   byte *data = W_CacheLumpNum(lump, PU_STATIC);
+   byte *lump = W_CacheLumpNum(lumpnum, PU_STATIC);
+   byte *data = lump;
    int  i;
+   char toptexture[9], bottomtexture[9], midtexture[9];
+
+   // haleyjd: initialize texture name buffers for null termination
+   memset(toptexture,    0, sizeof(toptexture));
+   memset(bottomtexture, 0, sizeof(bottomtexture));
+   memset(midtexture,    0, sizeof(midtexture));
 
    for(i = 0; i < numsides; ++i)
    {
-      register mapsidedef_t *msd = (mapsidedef_t *)data + i;
+      //register mapsidedef_t *msd = (mapsidedef_t *)data + i;
       register side_t *sd = sides + i;
       register sector_t *sec;
-      int cmap;
+      int cmap, secnum;
 
-      sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
-      sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
+      //sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
+      //sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
+
+      sd->textureoffset = GetLevelWord(&data) << FRACBITS;
+      sd->rowoffset     = GetLevelWord(&data) << FRACBITS; 
+
+      // haleyjd 05/26/10: read texture names into buffers
+      GetLevelString(&data, toptexture,    8);
+      GetLevelString(&data, bottomtexture, 8);
+      GetLevelString(&data, midtexture,    8);
+
+      // haleyjd 06/19/06: convert indices to unsigned
+      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", "sector");
+      sd->sector = sec = &sectors[secnum];
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
       // killough 4/11/98: refined to allow colormaps to work as wall
       // textures if invalid as colormaps but valid as textures.
 
-      // haleyjd 06/19/06: convert indices to unsigned
-      sd->sector = sec = &sectors[SafeUintIndex(msd->sector, numsectors, "side", "sector")];
-
       switch(sd->special)
       {
       case 242:                  // variable colormap via 242 linedef
-         if((cmap = R_ColormapNumForName(msd->bottomtexture)) < 0)
-            sd->bottomtexture = R_FindWall(msd->bottomtexture);
+         if((cmap = R_ColormapNumForName(bottomtexture)) < 0)
+            sd->bottomtexture = R_FindWall(bottomtexture);
          else
          {
             sec->bottommap = cmap;
             sd->bottomtexture = 0;
          }
-         if((cmap = R_ColormapNumForName(msd->midtexture)) < 0)
-            sd->midtexture = R_FindWall(msd->midtexture);
+         if((cmap = R_ColormapNumForName(midtexture)) < 0)
+            sd->midtexture = R_FindWall(midtexture);
          else
          {
             sec->midmap = cmap;
             sd->midtexture = 0;
          }
-         if((cmap = R_ColormapNumForName(msd->toptexture)) < 0)
-            sd->toptexture = R_FindWall(msd->toptexture);
+         if((cmap = R_ColormapNumForName(toptexture)) < 0)
+            sd->toptexture = R_FindWall(toptexture);
          else
          {
             sec->topmap = cmap;
@@ -1055,24 +1073,42 @@ void P_LoadSideDefs2(int lump)
          break;
 
       case 260: // killough 4/11/98: apply translucency to 2s normal texture
-         sd->midtexture = strncasecmp("TRANMAP", msd->midtexture, 8) ?
-            (sd->special = W_CheckNumForName(msd->midtexture)) < 0 ||
-            W_LumpLength(sd->special) != 65536 ?
-            sd->special=0, R_FindWall(msd->midtexture) :
-               (sd->special++, 0) : (sd->special=0);
-         sd->toptexture = R_FindWall(msd->toptexture);
-         sd->bottomtexture = R_FindWall(msd->bottomtexture);
+         if(strncasecmp("TRANMAP", midtexture, 8))
+         {
+            sd->special = W_CheckNumForName(midtexture);
+
+            if(sd->special < 0 || W_LumpLength(sd->special) != 65536)
+            {
+               // not found or not apparently a tranmap lump, try texture.
+               sd->special    = 0;
+               sd->midtexture = R_FindWall(midtexture);
+            }
+            else
+            {
+               // bump it up by one to make a tranmap index; clear texture.
+               sd->special++;
+               sd->midtexture = 0;
+            }
+         }
+         else
+         {
+            // is "TRANMAP", which is generated as tranmap #0
+            sd->special = 0;
+            sd->midtexture = 0;
+         }
+         sd->toptexture    = R_FindWall(toptexture);
+         sd->bottomtexture = R_FindWall(bottomtexture);
          break;
 
       default:                        // normal cases
-         sd->midtexture    = R_FindWall(msd->midtexture);
-         sd->toptexture    = R_FindWall(msd->toptexture);
-         sd->bottomtexture = R_FindWall(msd->bottomtexture);
+         sd->midtexture    = R_FindWall(midtexture);
+         sd->toptexture    = R_FindWall(toptexture);
+         sd->bottomtexture = R_FindWall(bottomtexture);
          break;
       }
    }
 
-   Z_Free(data);
+   Z_Free(lump);
 }
 
 //

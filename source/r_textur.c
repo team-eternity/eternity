@@ -1301,8 +1301,6 @@ void R_InitTextures(void)
 static int R_Doom1Texture(const char *name);
 const char *level_error = NULL;
 static char tnamebuf[9];
-static char *tname = tnamebuf;
-
 
 //
 // R_GetRawColumn
@@ -1320,7 +1318,6 @@ byte *R_GetRawColumn(int tex, int32_t col)
           t->buffer + col;
 }
 
-
 //
 // R_GetMaskedColumn
 //
@@ -1333,7 +1330,6 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
    
    return t->columns[col & t->widthmask];
 }
-
 
 //
 // R_GetLinearBuffer
@@ -1348,18 +1344,24 @@ byte *R_GetLinearBuffer(int tex)
    return t->buffer;
 }
 
-
+//
+// R_SearchFlats
+//
+// Looks up a flat texture object in the hash table.
+//
 static texture_t *R_SearchFlats(const char *name)
 {
-   strncpy(tname, name, 8);
-   return E_HashObjectForKey(&flattable, &tname);
+   return E_HashObjectForKey(&flattable, &name);
 }
 
-
+//
+// R_SearchWalls
+//
+// Looks up a wall texture object in the hash table.
+//
 static texture_t *R_SearchWalls(const char *name)
 {
-   strncpy(tname, name, 8);
-   return E_HashObjectForKey(&walltable, &tname);
+   return E_HashObjectForKey(&walltable, &name);
 }
 
 //
@@ -1369,8 +1371,6 @@ static texture_t *R_SearchWalls(const char *name)
 //
 int R_FindFlat(const char *name)    // killough -- const added
 {
-   static char errormsg[64];
-   
    texture_t *tex;
 
    // Search flats first   
@@ -1380,21 +1380,9 @@ int R_FindFlat(const char *name)    // killough -- const added
    // SoM: Check here for flat-ness!
    if(tex && !(tex->flags & TF_CANBEFLAT))
       tex = NULL;
-      
-   if(!tex)
-   {
-      if(!level_error)
-      {
-         psnprintf(errormsg, sizeof(errormsg), 
-                   "R_FindFlat: %.8s not found\n", name);
-         //level_error = errormsg;
-      }
-      
-      // SoM: Return missing texture index
-      return texturecount - 1;
-   }
 
-   return tex->index;
+   // SoM: Return missing texture index if invalid
+   return tex ? tex->index : texturecount - 1;
 }
 
 //
