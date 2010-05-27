@@ -1465,7 +1465,7 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-                      "integer value for option '%s' is out of range",
+                      "integer value for option '%s' is out of range\n",
                       opt->name);
          }
          return -1;
@@ -1627,7 +1627,7 @@ static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-                      "integer value for option '%s' is out of range",
+                      "integer value for option '%s' is out of range\n",
                       opt->name);
          }
          return -1;

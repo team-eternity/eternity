@@ -510,17 +510,17 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to bexinclude()");
+      cfg_error(cfg, "wrong number of args to bexinclude()\n");
       return 1;
    }
    if(!cfg->filename)
    {
-      cfg_error(cfg, "bexinclude: cfg_t filename is undefined");
+      cfg_error(cfg, "bexinclude: cfg_t filename is undefined\n");
       return 1;
    }
    if(cfg_lexer_source_type(cfg) >= 0)
    {
-      cfg_error(cfg, "bexinclude: cannot call from a wad lump");
+      cfg_error(cfg, "bexinclude: cannot call from a wad lump\n");
       return 1;
    }
 
@@ -617,7 +617,7 @@ static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifenabled()");
+      cfg_error(cfg, "wrong number of args to ifenabled()\n");
       return 1;
    }
 
@@ -625,7 +625,7 @@ static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -660,7 +660,7 @@ static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifenabled()");
+      cfg_error(cfg, "wrong number of args to ifenabledany()\n");
       return 1;
    }
 
@@ -668,7 +668,7 @@ static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -705,7 +705,7 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifdisabled()");
+      cfg_error(cfg, "wrong number of args to ifdisabled()\n");
       return 1;
    }
 
@@ -713,7 +713,7 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -746,7 +746,7 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifdisabledany()");
+      cfg_error(cfg, "wrong number of args to ifdisabledany()\n");
       return 1;
    }
 
@@ -754,7 +754,7 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -786,13 +786,13 @@ static int edf_enable(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to enable()");
+      cfg_error(cfg, "wrong number of args to enable()\n");
       return 1;
    }
 
    if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
    {
-      cfg_error(cfg, "unknown enable value '%s'", argv[0]);
+      cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
       return 1;
    }
 
@@ -812,13 +812,13 @@ static int edf_disable(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to disable()");
+      cfg_error(cfg, "wrong number of args to disable()\n");
       return 1;
    }
 
    if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
    {
-      cfg_error(cfg, "unknown enable value '%s'", argv[0]);
+      cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
       return 1;
    }
 
@@ -846,7 +846,7 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 2)
    {
-      cfg_error(cfg, "wrong number of args to includeifenabled()");
+      cfg_error(cfg, "wrong number of args to includeifenabled()\n");
       return 1;
    }
 
@@ -854,7 +854,7 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -902,7 +902,7 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifgametype()");
+      cfg_error(cfg, "wrong number of args to ifgametype()\n");
       return 1;
    }
 
@@ -940,7 +940,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifngametype()");
+      cfg_error(cfg, "wrong number of args to ifngametype()\n");
       return 1;
    }
 

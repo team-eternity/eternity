@@ -1123,7 +1123,7 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       if(tlnum == -1)
       {
          if(cfg)
-            cfg_error(cfg, "bad translation lump '%s'", value);
+            cfg_error(cfg, "bad translation lump '%s'\n", value);
          return -1;
       }
          

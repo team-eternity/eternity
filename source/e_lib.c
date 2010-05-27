@@ -233,12 +233,12 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to include()");
+      cfg_error(cfg, "wrong number of args to include()\n");
       return 1;
    }
    if(!cfg->filename)
    {
-      cfg_error(cfg, "include: cfg_t filename is undefined");
+      cfg_error(cfg, "include: cfg_t filename is undefined\n");
       return 1;
    }
 
@@ -258,7 +258,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    default: // data source
       if(strlen(argv[0]) > 8)
       {
-         cfg_error(cfg, "include: %s is not a valid lump name", argv[0]);
+         cfg_error(cfg, "include: %s is not a valid lump name\n", argv[0]);
          return 1;
       }
 
@@ -286,12 +286,12 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to lumpinclude()");
+      cfg_error(cfg, "wrong number of args to lumpinclude()\n");
       return 1;
    }
    if(strlen(argv[0]) > 8)
    {
-      cfg_error(cfg, "lumpinclude: %s is not a valid lump name", argv[0]);
+      cfg_error(cfg, "lumpinclude: %s is not a valid lump name\n", argv[0]);
       return 1;
    }
 
@@ -302,7 +302,7 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    default: // lump
       if((lumpnum = E_FindLumpInclude(cfg, argv[0])) < 0)
       {
-         cfg_error(cfg, "lumpinclude: %s not found", argv[0]);
+         cfg_error(cfg, "lumpinclude: %s not found\n", argv[0]);
          return 1;
       }
       return E_OpenAndCheckInclude(cfg, argv[0], lumpnum);
@@ -326,17 +326,17 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    if(argc != 0)
    {
-      cfg_error(cfg, "wrong number of args to include_prev()");
+      cfg_error(cfg, "wrong number of args to include_prev()\n");
       return 1;
    }
    if(!cfg->filename)
    {
-      cfg_error(cfg, "include_prev: cfg_t filename is undefined");
+      cfg_error(cfg, "include_prev: cfg_t filename is undefined\n");
       return 1;
    }
    if((i = cfg_lexer_source_type(cfg)) < 0)
    {
-      cfg_error(cfg, "include_prev: cannot call from file");
+      cfg_error(cfg, "include_prev: cannot call from file\n");
       return 1;
    }
 
@@ -386,7 +386,7 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to stdinclude()");
+      cfg_error(cfg, "wrong number of args to stdinclude()\n");
       return 1;
    }
 
@@ -418,7 +418,7 @@ int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to userinclude()");
+      cfg_error(cfg, "wrong number of args to userinclude()\n");
       return 1;
    }
 
@@ -538,7 +538,7 @@ int E_SpriteFrameCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       {
          if(cfg)
          {
-            cfg_error(cfg, "invalid integer value for option '%s'",
+            cfg_error(cfg, "invalid integer value for option '%s'\n",
                       opt->name);
          }
          return -1;
@@ -548,7 +548,7 @@ int E_SpriteFrameCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-               "integer value for option '%s' is out of range",
+               "integer value for option '%s' is out of range\n",
                opt->name);
          }
          return -1;
@@ -585,7 +585,7 @@ int E_IntOrFixedCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       {
          if(cfg)
          {
-            cfg_error(cfg, "invalid floating point value for option '%s'",
+            cfg_error(cfg, "invalid floating point value for option '%s'\n",
                       opt->name);
          }
          return -1;
@@ -595,7 +595,7 @@ int E_IntOrFixedCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-               "floating point value for option '%s' is out of range",
+               "floating point value for option '%s' is out of range\n",
                opt->name);
          }
          return -1;
@@ -612,7 +612,7 @@ int E_IntOrFixedCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       {
          if(cfg)
          {
-            cfg_error(cfg, "invalid integer value for option '%s'",
+            cfg_error(cfg, "invalid integer value for option '%s'\n",
                       opt->name);
          }
          return -1;
@@ -622,7 +622,7 @@ int E_IntOrFixedCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-               "integer value for option '%s' is out of range",
+               "integer value for option '%s' is out of range\n",
                opt->name);
          }
          return -1;
@@ -658,7 +658,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       {
          if(cfg)
          {
-            cfg_error(cfg, "invalid percentage value for option '%s'",
+            cfg_error(cfg, "invalid percentage value for option '%s'\n",
                       opt->name);
          }
          return -1;
@@ -668,7 +668,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-               "percentage value for option '%s' is out of range",
+               "percentage value for option '%s' is out of range\n",
                opt->name);
          }
          return -1;
@@ -684,7 +684,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       if(*endptr != '\0')
       {
          if(cfg)
-            cfg_error(cfg, "invalid integer value for option '%s'", opt->name);
+            cfg_error(cfg, "invalid integer value for option '%s'\n", opt->name);
          return -1;
       }
       if(errno == ERANGE) 
@@ -692,7 +692,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-                      "integer value for option '%s' is out of range",
+                      "integer value for option '%s' is out of range\n",
                       opt->name);
          }
          return -1;
@@ -725,7 +725,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          if(cfg)
          {
             cfg_error(cfg,
-               "invalid color triplet for option '%s'",
+               "invalid color triplet for option '%s'\n",
                opt->name);
          }
          return -1;
@@ -742,7 +742,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       if(cfg)
       {
          cfg_error(cfg,
-            "integer value for option '%s' is out of range",
+            "integer value for option '%s' is out of range\n",
             opt->name);
       }
       return -1;

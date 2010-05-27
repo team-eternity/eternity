@@ -69,7 +69,7 @@ static qstring_t qstring;
 //
 static void lexer_error(cfg_t *cfg, const char *msg)
 {
-   cfg_error(cfg, "lexer error @ %s:%d:\n\t%s", cfg->filename, cfg->line, msg);
+   cfg_error(cfg, "lexer error @ %s:%d:\n\t%s\n", cfg->filename, cfg->line, msg);
 }
 
 // haleyjd 12/23/06: if true, unquoted strings can contain spaces
@@ -656,7 +656,7 @@ char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int lumpnum, size_t *
    
    if(!(ret = cfg_lexer_open(filename, lumpnum, len)))
    {
-      cfg_error(cfg, "Error including file %s:\n%s", filename, 
+      cfg_error(cfg, "Error including file %s:\n%s\n", filename, 
                 errno ? strerror(errno) : "unknown error"); // haleyjd
    }
 
@@ -667,7 +667,7 @@ int cfg_lexer_include(cfg_t *cfg, char *buffer, const char *filename, int lumpnu
 {
    if(include_stack_ptr >= MAX_INCLUDE_DEPTH)
    {
-      cfg_error(cfg, "Error: includes nested too deeply.");
+      cfg_error(cfg, "Error: includes nested too deeply.\n");
       return 1;
    }
 
