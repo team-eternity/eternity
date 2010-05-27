@@ -162,7 +162,7 @@ d_inline static int ShortToLong(short value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static int SafeUintIndex(short input, int limit, const char *func,
+d_inline static int SafeUintIndex(int16_t input, int limit, const char *func,
                                   const char *item)
 {
    int ret = (int)(SwapShort(input)) & 0xffff;
@@ -175,6 +175,65 @@ d_inline static int SafeUintIndex(short input, int limit, const char *func,
 
    return ret;
 }
+
+//=============================================================================
+//
+// Lump Data Reading Routines
+//
+// haleyjd 05/26/10: These routines replace direct mapping of structures to
+// lumps in memory where this is needed. Eventually I'd like to replace all
+// such direct mapping.
+//
+
+//
+// GetLevelWord
+//
+// Reads an int16 from the lump data and increments the read pointer.
+//
+static int16_t GetLevelWord(byte **data)
+{
+   int16_t *loc = (int16_t *)(*data);
+   int16_t  val = SwapShort(*loc);
+
+   *data += 2;
+
+   return val;
+}
+
+//
+// GetLevelDWord
+//
+// Reads an int32 from the lump data and increments the read pointer.
+//
+static int32_t GetLevelDWord(byte **data)
+{
+   int32_t *loc = (int32_t *)(*data);
+   int32_t  val = SwapLong(*loc);
+
+   *data += 4;
+
+   return val;
+}
+
+//
+// GetLevelString
+//
+// Reads a "len"-byte string from the lump data and writes it into the 
+// destination buffer. The read pointer is incremented by len bytes.
+//
+static void GetLevelString(byte **data, char *dest, int len)
+{
+   char *loc = (char *)(*data);
+
+   memcpy(dest, loc, len);
+
+   *data += len;
+}
+
+//=============================================================================
+//
+// Level Loading
+//
 
 //
 // P_LoadVertexes
@@ -309,36 +368,40 @@ void P_LoadSubsectors(int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSectors(int lump)
+void P_LoadSectors(int lumpnum)
 {
-   byte *data;
+   byte *lump, *data;
    int  i;
    int  defaultSndSeq;
+   char namebuf[9];
    
-   numsectors = W_LumpLength(lump) / sizeof(mapsector_t);
-   sectors    = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
-   data       = W_CacheLumpNum(lump, PU_STATIC);
+   numsectors  = W_LumpLength(lumpnum) / sizeof(mapsector_t);
+   sectors     = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
+   lump = data = W_CacheLumpNum(lumpnum, PU_STATIC);
 
    // haleyjd 09/24/06: determine what the default sound sequence is
    defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
 
+   // init texture name buffer to ensure null-termination
+   memset(namebuf, 0, sizeof(namebuf));
+
    for(i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
-      const mapsector_t *ms = (mapsector_t *)data + i;
-      
-      ss->floorheight        = SwapShort(ms->floorheight)   << FRACBITS;
-      ss->ceilingheight      = SwapShort(ms->ceilingheight) << FRACBITS;      
-      ss->floorpic           = R_FindFlat(ms->floorpic);
-      ss->lightlevel         = SwapShort(ms->lightlevel);
-      ss->special            = SwapShort(ms->special);
-      ss->tag                = SwapShort(ms->tag);
-      ss->thinglist          = NULL;
-      ss->touching_thinglist = NULL;            // phares 3/14/98
 
+      ss->floorheight        = GetLevelWord(&data) << FRACBITS;
+      ss->ceilingheight      = GetLevelWord(&data) << FRACBITS;
+      GetLevelString(&data, namebuf, 8);
+      ss->floorpic           = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
-      P_SetSectorCeilingPic(ss, R_FindFlat(ms->ceilingpic));      
-
+      GetLevelString(&data, namebuf, 8);
+      P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
+      ss->lightlevel         = GetLevelWord(&data);
+      ss->special            = GetLevelWord(&data);
+      ss->tag                = GetLevelWord(&data);
+      ss->thinglist          = NULL;
+      ss->touching_thinglist = NULL; // phares 3/14/98
+      
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
 
@@ -373,7 +436,7 @@ void P_LoadSectors(int lump)
       ss->c_slope = ss->f_slope = NULL;
 
       // SoM: These are kept current with floorheight and ceilingheight now
-      ss->floorheightf = M_FixedToFloat(ss->floorheight);
+      ss->floorheightf   = M_FixedToFloat(ss->floorheight);
       ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
 
       ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
@@ -416,7 +479,7 @@ void P_LoadSectors(int lump)
       }
    }
 
-   Z_Free(data);
+   Z_Free(lump);
 }
 
 
@@ -875,10 +938,12 @@ void P_LoadHexenLineDefs(int lump)
    Z_Free(data);
 }
 
-
+//
+// P_LoadLineDefs2
+//
 // killough 4/4/98: delay using sidedefs until they are loaded
 // killough 5/3/98: reformatted, cleaned up
-
+//
 void P_LoadLineDefs2(void)
 {
    int i = numlines;
@@ -943,47 +1008,63 @@ void P_LoadSideDefs(int lump)
 // after linedefs are loaded, to allow overloading.
 // killough 5/3/98: reformatted, cleaned up
 
-void P_LoadSideDefs2(int lump)
+void P_LoadSideDefs2(int lumpnum)
 {
-   byte *data = W_CacheLumpNum(lump, PU_STATIC);
+   byte *lump = W_CacheLumpNum(lumpnum, PU_STATIC);
+   byte *data = lump;
    int  i;
+   char toptexture[9], bottomtexture[9], midtexture[9];
+
+   // haleyjd: initialize texture name buffers for null termination
+   memset(toptexture,    0, sizeof(toptexture));
+   memset(bottomtexture, 0, sizeof(bottomtexture));
+   memset(midtexture,    0, sizeof(midtexture));
 
    for(i = 0; i < numsides; ++i)
    {
-      register mapsidedef_t *msd = (mapsidedef_t *)data + i;
+      //register mapsidedef_t *msd = (mapsidedef_t *)data + i;
       register side_t *sd = sides + i;
       register sector_t *sec;
-      int cmap;
+      int cmap, secnum;
 
-      sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
-      sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
+      //sd->textureoffset = SwapShort(msd->textureoffset) << FRACBITS;
+      //sd->rowoffset     = SwapShort(msd->rowoffset)     << FRACBITS;
+
+      sd->textureoffset = GetLevelWord(&data) << FRACBITS;
+      sd->rowoffset     = GetLevelWord(&data) << FRACBITS; 
+
+      // haleyjd 05/26/10: read texture names into buffers
+      GetLevelString(&data, toptexture,    8);
+      GetLevelString(&data, bottomtexture, 8);
+      GetLevelString(&data, midtexture,    8);
+
+      // haleyjd 06/19/06: convert indices to unsigned
+      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", "sector");
+      sd->sector = sec = &sectors[secnum];
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
       // killough 4/11/98: refined to allow colormaps to work as wall
       // textures if invalid as colormaps but valid as textures.
 
-      // haleyjd 06/19/06: convert indices to unsigned
-      sd->sector = sec = &sectors[SafeUintIndex(msd->sector, numsectors, "side", "sector")];
-
       switch(sd->special)
       {
       case 242:                  // variable colormap via 242 linedef
-         if((cmap = R_ColormapNumForName(msd->bottomtexture)) < 0)
-            sd->bottomtexture = R_FindWall(msd->bottomtexture);
+         if((cmap = R_ColormapNumForName(bottomtexture)) < 0)
+            sd->bottomtexture = R_FindWall(bottomtexture);
          else
          {
             sec->bottommap = cmap;
             sd->bottomtexture = 0;
          }
-         if((cmap = R_ColormapNumForName(msd->midtexture)) < 0)
-            sd->midtexture = R_FindWall(msd->midtexture);
+         if((cmap = R_ColormapNumForName(midtexture)) < 0)
+            sd->midtexture = R_FindWall(midtexture);
          else
          {
             sec->midmap = cmap;
             sd->midtexture = 0;
          }
-         if((cmap = R_ColormapNumForName(msd->toptexture)) < 0)
-            sd->toptexture = R_FindWall(msd->toptexture);
+         if((cmap = R_ColormapNumForName(toptexture)) < 0)
+            sd->toptexture = R_FindWall(toptexture);
          else
          {
             sec->topmap = cmap;
@@ -992,24 +1073,42 @@ void P_LoadSideDefs2(int lump)
          break;
 
       case 260: // killough 4/11/98: apply translucency to 2s normal texture
-         sd->midtexture = strncasecmp("TRANMAP", msd->midtexture, 8) ?
-            (sd->special = W_CheckNumForName(msd->midtexture)) < 0 ||
-            W_LumpLength(sd->special) != 65536 ?
-            sd->special=0, R_FindWall(msd->midtexture) :
-               (sd->special++, 0) : (sd->special=0);
-         sd->toptexture = R_FindWall(msd->toptexture);
-         sd->bottomtexture = R_FindWall(msd->bottomtexture);
+         if(strncasecmp("TRANMAP", midtexture, 8))
+         {
+            sd->special = W_CheckNumForName(midtexture);
+
+            if(sd->special < 0 || W_LumpLength(sd->special) != 65536)
+            {
+               // not found or not apparently a tranmap lump, try texture.
+               sd->special    = 0;
+               sd->midtexture = R_FindWall(midtexture);
+            }
+            else
+            {
+               // bump it up by one to make a tranmap index; clear texture.
+               sd->special++;
+               sd->midtexture = 0;
+            }
+         }
+         else
+         {
+            // is "TRANMAP", which is generated as tranmap #0
+            sd->special = 0;
+            sd->midtexture = 0;
+         }
+         sd->toptexture    = R_FindWall(toptexture);
+         sd->bottomtexture = R_FindWall(bottomtexture);
          break;
 
       default:                        // normal cases
-         sd->midtexture    = R_FindWall(msd->midtexture);
-         sd->toptexture    = R_FindWall(msd->toptexture);
-         sd->bottomtexture = R_FindWall(msd->bottomtexture);
+         sd->midtexture    = R_FindWall(midtexture);
+         sd->toptexture    = R_FindWall(toptexture);
+         sd->bottomtexture = R_FindWall(bottomtexture);
          break;
       }
    }
 
-   Z_Free(data);
+   Z_Free(lump);
 }
 
 //

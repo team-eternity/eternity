@@ -1495,7 +1495,8 @@ static void G_DoCompleted(void)
       switch(gamemap)
       {
       case 8:
-         gameaction = ga_victory;
+         if(!LevelInfo.killFinale) // haleyjd 05/26/10: long-forgotten
+            gameaction = ga_victory;
          return;
       case 9:
          for(i = 0; i < MAXPLAYERS; ++i)
