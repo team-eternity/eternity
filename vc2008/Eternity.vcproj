@@ -608,6 +608,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\d_diskfile.c"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\d_gi.c"
 						>
 						<FileConfiguration
@@ -753,6 +757,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\d_dialog.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\d_diskfile.h"
 						>
 					</File>
 					<File

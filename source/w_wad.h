@@ -117,6 +117,8 @@ typedef struct wfileadd_s
 {
    const char *filename; // name of file
    int li_namespace;     // if not 0, special namespace to add file under
+   FILE *f;              // pointer to file handle if this is a subfile
+   size_t baseoffset;    // base offset if this is a subfile
 } wfileadd_t;
 
 extern waddir_t w_GlobalDir; // the global wad directory

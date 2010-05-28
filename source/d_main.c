@@ -48,6 +48,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "d_diskfile.h"
 #include "sounds.h"
 #include "c_runcmd.h"
 #include "c_io.h"
@@ -577,8 +578,10 @@ static int numwadfiles, numwadfiles_alloc;
 // Rewritten by Lee Killough
 //
 // killough 11/98: remove limit on number of files
+// haleyjd 05/28/10: added f and baseoffset parameters for subfile support.
 //
-static void D_AddFile(const char *file, int li_namespace)
+static void D_AddFile(const char *file, int li_namespace, FILE *fp, 
+                      size_t baseoffset)
 {
    // sf: allocate for +2 for safety
    if(numwadfiles + 2 >= numwadfiles_alloc)
@@ -590,6 +593,8 @@ static void D_AddFile(const char *file, int li_namespace)
 
    wadfiles[numwadfiles].filename     = strdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
+   wadfiles[numwadfiles].f            = fp;
+   wadfiles[numwadfiles].baseoffset   = baseoffset;
 
    wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
 
@@ -998,7 +1003,7 @@ static void D_GameAutoloadWads(void)
                
             psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
             M_NormalizeSlashes(fn);
-            D_AddFile(fn, ns_global);
+            D_AddFile(fn, ns_global, NULL, 0);
          }
       }
       
@@ -1079,6 +1084,77 @@ static void D_CloseAutoloadDir(void)
       closedir(autoloads);
       autoloads = NULL;
    }
+}
+
+//=============================================================================
+//
+// Disk File Handling
+//
+// haleyjd 05/28/10
+//
+
+static boolean havediskfile;
+static boolean havediskiwad;
+static const char *diskpwad;
+static diskfile_t *diskfile;
+
+//
+// D_CheckDiskFileParm
+//
+// haleyjd 05/28/10: Looks for -disk and sets up diskfile loading.
+//
+static void D_CheckDiskFileParm(void)
+{
+   int p;
+   const char *dfname;
+
+   if((p = M_CheckParm("-disk")) && p < myargc - 1)
+   {
+      havediskfile = true;
+
+      // get diskfile name
+      dfname = myargv[p + 1];
+
+      // have a pwad name as well?
+      if(p < myargc - 2 && *(myargv[p + 2]) != '-')
+         diskpwad = myargv[p + 2];
+
+      // open the diskfile
+      diskfile = D_OpenDiskFile(dfname);
+   }
+}
+
+//
+// D_LoadDiskFileIWAD
+//
+// Loads an IWAD from the disk file.
+//
+static void D_LoadDiskFileIWAD(void)
+{
+   FILE *f = NULL;
+   size_t baseoffset = 0;
+
+   if((f = D_FindWadInDiskFile(diskfile, "doom2.wad", &baseoffset)))
+   {
+      havediskiwad = true;
+      D_AddFile("doom2.wad", ns_global, f, baseoffset);
+   }
+   else
+      havediskiwad = false;
+}
+
+//
+// D_LoadDiskFilePWAD
+//
+// Loads a PWAD from the disk file.
+//
+static void D_LoadDiskFilePWAD(void)
+{
+   FILE *f = NULL;
+   size_t baseoffset = 0;
+
+   if((f = D_FindWadInDiskFile(diskfile, diskpwad, &baseoffset)))
+      D_AddFile(diskpwad, ns_global, f, baseoffset);
 }
 
 //=============================================================================
@@ -1584,7 +1660,7 @@ static void D_LoadResourceWad(void)
       psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, ns_global);
+   D_AddFile(filestr, ns_global, NULL, 0);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -1620,18 +1696,35 @@ void IdentifyVersion(void)
    GameMode_t    gamemode;
    GameMission_t gamemission;
 
+   // haleyjd 05/28/10: check for -disk parameter
+   D_CheckDiskFileParm();
+
+   // if we loaded one, try getting an IWAD from it
+   if(havediskfile)
+      D_LoadDiskFileIWAD();
+
    // locate the IWAD and determine game mode from it
+   if(!havediskiwad)
+      iwad = FindIWADFile();
 
-   iwad = FindIWADFile();
-
-   if(iwad && *iwad)
+   if(havediskiwad || (iwad && *iwad))
    {
-      printf("IWAD found: %s\n",iwad); //jff 4/20/98 print only if found
+      if(!havediskiwad)
+      {
+         printf("IWAD found: %s\n", iwad); //jff 4/20/98 print only if found
 
-      CheckIWAD(iwad,
-		&gamemode,
-		&gamemission,   // joel 10/16/98 gamemission added
-		&haswolflevels);
+         CheckIWAD(iwad,
+                   &gamemode,
+                   &gamemission,   // joel 10/16/98 gamemission added
+                   &haswolflevels);
+      }
+      else
+      {
+         // haleyjd: hardcoded for now
+         gamemode      = commercial;
+         gamemission   = doom2;
+         haswolflevels = true;
+      }
 
       // setup gameModeInfo
       D_SetGameModeInfo(gamemode, gamemission);
@@ -1645,14 +1738,19 @@ void IdentifyVersion(void)
          // joel 10/16/98 Final DOOM fix
          if(gamemission == doom2)
          {
-            i = strlen(iwad);
-            if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
+            if(havediskiwad)
+               game_name = "DOOM II version, disk file";
+            else
             {
-               language = french;
-               game_name = "DOOM II version, French language";
+               i = strlen(iwad);
+               if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
+               {
+                  language = french;
+                  game_name = "DOOM II version, French language";
+               }
+               else if(!haswolflevels)
+                  game_name = "DOOM II version, German edition, no Wolf levels";
             }
-            else if(!haswolflevels)
-               game_name = "DOOM II version, German edition, no Wolf levels";
          }
          // joel 10/16/98 end Final DOOM fix
       }
@@ -1710,10 +1808,22 @@ void IdentifyVersion(void)
       // fraggle -- this allows better compatibility with new IWADs
       D_LoadResourceWad();
 
-      D_AddFile(iwad, ns_global);
+      if(!havediskiwad)
+      {
+         D_AddFile(iwad, ns_global, NULL, 0);
 
-      // done with iwad string
-      free(iwad);
+         // done with iwad string
+         free(iwad);
+      }
+      else
+      {
+         // haleyjd: load disk file pwad here, if one was specified
+         if(diskpwad)
+            D_LoadDiskFilePWAD();
+
+         // done with the diskfile structure
+         D_CloseDiskFile(diskfile, false);
+      }
    }
    else
    {
@@ -1941,7 +2051,7 @@ static void D_ProcessWadPreincludes(void)
 
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
-                  D_AddFile(file, ns_global);
+                  D_AddFile(file, ns_global, NULL, 0);
                else
                   printf("\nWarning: could not open %s\n", file);
             }
@@ -2127,7 +2237,7 @@ static void D_ProcessGFSWads(gfs_t *gfs)
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
 
-      D_AddFile(filename, ns_global);
+      D_AddFile(filename, ns_global, NULL, 0);
    }
 }
 
@@ -2295,7 +2405,7 @@ static void D_LooseWads(void)
       filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
-      D_AddFile(filename, ns_global);
+      D_AddFile(filename, ns_global, NULL, 0);
    }
 }
 
@@ -2618,7 +2728,7 @@ static void D_DoomInit(void)
          else
          {
             if(file)
-               D_AddFile(myargv[p], ns_global);
+               D_AddFile(myargv[p], ns_global, NULL, 0);
          }
       }
    }
@@ -2639,7 +2749,7 @@ static void D_DoomInit(void)
       strncpy(file, myargv[p + 1], len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, ns_demos);
+      D_AddFile(file, ns_demos, NULL, 0);
       usermsg("Playing demo %s\n",file);
    }
 
@@ -3248,7 +3358,7 @@ boolean D_AddNewFile(char *s)
    if(W_AddNewFile(&w_GlobalDir, s))
       return false;
    modifiedgame = true;
-   D_AddFile(s, ns_global);   // add to the list of wads
+   D_AddFile(s, ns_global, NULL, 0);   // add to the list of wads
    C_SetConsole();
    D_ReInitWadfiles();
    return true;
