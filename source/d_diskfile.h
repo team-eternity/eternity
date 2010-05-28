@@ -27,13 +27,33 @@
 #ifndef D_DISK_H__
 #define D_DISK_H__
 
+//
+// diskfile
+//
+// Represents a specific type of "disk" file format which has 72-byte entries
+// in the header for each file, and 2 words of other information including the
+// number of files. This is an opaque type, similar to a FILE *.
+//
 typedef struct diskfile_s
 {
    void *opaque;
 } diskfile_t;
 
+//
+// diskwad
+//
+// This struct is returned from D_FindWadInDiskFile and contains information on a
+// logical wad file found in the physical disk file.
+//
+typedef struct diskwad_s
+{
+   FILE *f;          // file pointer
+   size_t offset;    // offset of wad within physical file
+   const char *name; // canonical file name
+} diskwad_t;
+
 diskfile_t *D_OpenDiskFile(const char *filename);
-FILE *D_FindWadInDiskFile(diskfile_t *df, const char *filename, size_t *offset);
+diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename);
 void D_CloseDiskFile(diskfile_t *df, boolean closefile);
 
 #endif

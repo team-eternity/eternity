@@ -1133,13 +1133,12 @@ static void D_CheckDiskFileParm(void)
 //
 static void D_LoadDiskFileIWAD(void)
 {
-   FILE *f = NULL;
-   size_t baseoffset = 0;
+   diskwad_t wad = D_FindWadInDiskFile(diskfile, "doom2.wad");
 
-   if((f = D_FindWadInDiskFile(diskfile, "doom2.wad", &baseoffset)))
+   if(wad.f)
    {
       havediskiwad = true;
-      D_AddFile("doom2.wad", ns_global, f, baseoffset);
+      D_AddFile(wad.name, ns_global, wad.f, wad.offset);
    }
    else
       havediskiwad = false;
@@ -1152,11 +1151,13 @@ static void D_LoadDiskFileIWAD(void)
 //
 static void D_LoadDiskFilePWAD(void)
 {
-   FILE *f = NULL;
-   size_t baseoffset = 0;
+   diskwad_t wad = D_FindWadInDiskFile(diskfile, diskpwad);
 
-   if((f = D_FindWadInDiskFile(diskfile, diskpwad, &baseoffset)))
-      D_AddFile(diskpwad, ns_global, f, baseoffset);
+   if(wad.f)
+   {
+      if(!strstr(wad.name, "doom2")) // do not add doom2.wad twice
+         D_AddFile(wad.name, ns_global, wad.f, wad.offset);
+   }
 }
 
 //=============================================================================
@@ -1738,21 +1739,16 @@ void IdentifyVersion(void)
       if(gamemode == commercial)
       {
          // joel 10/16/98 Final DOOM fix
-         if(gamemission == doom2)
+         if(iwad && gamemission == doom2)
          {
-            if(havediskiwad)
-               game_name = "DOOM II version, disk file";
-            else
+            i = strlen(iwad);
+            if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
             {
-               i = strlen(iwad);
-               if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
-               {
-                  language = french;
-                  game_name = "DOOM II version, French language";
-               }
-               else if(!haswolflevels)
-                  game_name = "DOOM II version, German edition, no Wolf levels";
+               language = french;
+               game_name = "DOOM II version, French language";
             }
+            else if(!haswolflevels)
+               game_name = "DOOM II version, German edition, no Wolf levels";
          }
          // joel 10/16/98 end Final DOOM fix
       }
@@ -1825,6 +1821,7 @@ void IdentifyVersion(void)
 
          // done with the diskfile structure
          D_CloseDiskFile(diskfile, false);
+         diskfile = NULL;
       }
    }
    else

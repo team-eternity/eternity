@@ -86,6 +86,7 @@
 #define VNAME_TNT       "Final DOOM: TNT - Evilution version"
 #define VNAME_PLUT      "Final DOOM: The Plutonia Experiment version"
 #define VNAME_HACX      "HACX - Twitch 'n Kill version"
+#define VNAME_DISK      "DOOM II disk version"
 #define VNAME_HTIC_SW   "Heretic Shareware version"
 #define VNAME_HTIC_REG  "Heretic Registered version"
 #define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
@@ -692,7 +693,7 @@ static missioninfo_t gmDisk =
 {
    pack_disk,       // id
    MI_CONBACKTITLE, // flags
-   NULL,            // versionNameOR
+   VNAME_DISK,      // versionNameOR
    NULL,            // startupBannerOR
    0,               // numEpisodesOR
    NULL,            // iwadPathOR

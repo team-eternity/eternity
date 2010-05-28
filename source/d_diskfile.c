@@ -124,17 +124,17 @@ diskfile_t *D_OpenDiskFile(const char *filename)
 // D_FindWadInDiskFile
 //
 // Looks for a file of the given filename in the diskfile structure. If it is
-// found, the internal file pointer will be returned, and the offset of the wad
-// within the file will be placed in *offset.
+// found, the diskwad_t returned will have a valid file pointer and a positive
+// offset member. Otherwise, both will be zero.
 //
-// Otherwise, NULL is returned and *offset is not modified.
-//
-FILE *D_FindWadInDiskFile(diskfile_t *df, const char *filename, size_t *offset)
+diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
 {
    size_t i;
+   diskwad_t wad;
    diskfileint_t *dfi = df->opaque;
-   FILE *ret = NULL;
    char *name = strdup(filename);
+
+   memset(&wad, 0, sizeof(wad));
 
    // lower-case a copy of the filename for case-insensitive substring comparison
    M_Strlwr(name);
@@ -148,15 +148,16 @@ FILE *D_FindWadInDiskFile(diskfile_t *df, const char *filename, size_t *offset)
       if(strstr(entry->name, ".wad") && strstr(entry->name, name))
       {
          // entry offsets are relative to the end of the header
-         *offset = entry->offset + 8 + 72 * dfi->numfiles;
-         ret = dfi->f;
+         wad.offset = entry->offset + 8 + 72 * dfi->numfiles;
+         wad.f      = dfi->f;
+         wad.name   = entry->name;         
          break;
       }
    }
 
    free(name);
 
-   return ret;
+   return wad;
 }
 
 //
