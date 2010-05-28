@@ -1007,7 +1007,7 @@ static void P_ClearLevelVars(void)
    LevelInfo.nextSecretPic   = NULL;
    LevelInfo.musicName       = "";
    LevelInfo.creator         = "unknown";
-   LevelInfo.interPic        = "INTERPIC";
+   LevelInfo.interPic        = GameModeInfo->interPic;
    LevelInfo.partime         = -1;
 
    LevelInfo.colorMap        = "COLORMAP";

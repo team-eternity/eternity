@@ -410,9 +410,6 @@ void D_PageDrawer(void)
       t = W_CacheLumpNum(l, PU_CACHE);
 
       // haleyjd 08/15/02: handle Heretic pages
-      // haleyjd 04/22/06: use lump size of 64000 to distinguish raw pages.
-      // Valid fullscreen patch graphics should be larger than this.
-
       V_DrawFSBackground(&vbscreen, t, W_LumpLength(l));
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
@@ -446,7 +443,11 @@ static void D_DrawTitle(const char *name)
 {
    S_StartMusic(GameModeInfo->titleMusNum);
    pagetic = GameModeInfo->titleTics;
-   D_SetPageName(name);
+
+   if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
+      D_SetPageName(GameModeInfo->consoleBack);
+   else
+      D_SetPageName(name);
 }
 
 static void D_DrawTitleA(const char *name)
@@ -886,6 +887,7 @@ static const char *gamemission_pathnames[] =
    "doom2",    // doom2
    "tnt",      // tnt
    "plutonia", // plut
+   "doom2",    // disk
    "hacx",     // hacx standalone version
    "heretic",  // heretic
    "heretic",  // hticsosr
@@ -1722,7 +1724,7 @@ void IdentifyVersion(void)
       {
          // haleyjd: hardcoded for now
          gamemode      = commercial;
-         gamemission   = doom2;
+         gamemission   = pack_disk;
          haswolflevels = true;
       }
 
