@@ -74,6 +74,9 @@ static boolean D_readDiskFileDirectory(diskfileint_t *dfi)
          return false;
       ent->offset = SwapBigULong(temp);
 
+      // adjust offset from file to account for header
+      ent->offset += 8 + 72 * dfi->numfiles;
+
       if(fread(&temp, sizeof(temp), 1, dfi->f) < 1)          // length
          return false;
       ent->length = SwapBigULong(temp);
@@ -147,8 +150,7 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
       // a .wad file, return it.
       if(strstr(entry->name, ".wad") && strstr(entry->name, name))
       {
-         // entry offsets are relative to the end of the header
-         wad.offset = entry->offset + 8 + 72 * dfi->numfiles;
+         wad.offset = entry->offset;
          wad.f      = dfi->f;
          wad.name   = entry->name;         
          break;
@@ -158,6 +160,53 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
    free(name);
 
    return wad;
+}
+
+//
+// D_CacheDiskFileResource
+//
+// Loads a resource from the disk file given the absolute path name.
+// Returns an allocated buffer holding the data, or NULL if the path
+// does not exist. If "text" is set to true, the buffer will be allocated
+// at size+1 and null-terminated, so that it can be treated as a C string.
+//
+void *D_CacheDiskFileResource(diskfile_t *df, const char *path, boolean text)
+{
+   size_t i, len;
+   diskfileint_t *dfi = df->opaque;
+   diskentry_t *entry = NULL;
+   void *buffer;
+
+   // find the resource
+   for(i = 0; i < dfi->numfiles; ++i)
+   {
+      if(!strcasecmp(dfi->entries[i].name, path))
+      {
+         entry = &(dfi->entries[i]);
+         break;
+      }
+   }
+
+   // return if not found
+   if(!entry)
+      return NULL;
+
+   len = entry->length;
+
+   // increment the buffer length by one if we are loading a text resource
+   if(text)
+      len++;
+
+   // allocate a buffer, read the resource, and return it
+   buffer = calloc(1, len);
+
+   if(fseek(dfi->f, entry->offset, SEEK_SET))
+      I_Error("D_CacheDiskFileResource: can't seek to resource %s\n", entry->name);
+
+   if(fread(buffer, entry->length, 1, dfi->f) < 1)
+      I_Error("D_CacheDiskFileResource: can't read resource %s\n", entry->name);
+
+   return buffer;
 }
 
 //

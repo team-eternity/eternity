@@ -54,6 +54,7 @@ typedef struct diskwad_s
 
 diskfile_t *D_OpenDiskFile(const char *filename);
 diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename);
+void *D_CacheDiskFileResource(diskfile_t *df, const char *path, boolean text);
 void D_CloseDiskFile(diskfile_t *df, boolean closefile);
 
 #endif

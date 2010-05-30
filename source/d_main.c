@@ -70,6 +70,7 @@
 #include "am_map.h"
 #include "p_setup.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "d_main.h"
@@ -1130,6 +1131,7 @@ static void D_CheckDiskFileParm(void)
 // D_LoadDiskFileIWAD
 //
 // Loads an IWAD from the disk file.
+// If this fails, the disk file will be closed.
 //
 static void D_LoadDiskFileIWAD(void)
 {
@@ -1141,7 +1143,14 @@ static void D_LoadDiskFileIWAD(void)
       D_AddFile(wad.name, ns_global, wad.f, wad.offset);
    }
    else
+   {
+      // close it up, we can't use it
+      D_CloseDiskFile(diskfile, true);
+      diskfile     = NULL;
+      diskpwad     = NULL;
+      havediskfile = false;
       havediskiwad = false;
+   }
 }
 
 //
@@ -1158,6 +1167,146 @@ static void D_LoadDiskFilePWAD(void)
       if(!strstr(wad.name, "doom2")) // do not add doom2.wad twice
          D_AddFile(wad.name, ns_global, wad.f, wad.offset);
    }
+}
+
+static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
+{
+   int i = *idx;
+
+   // if empty at start, we are finished
+   if(input[i] == '\0')
+      return false;
+
+   M_QStrClear(qstr);
+
+   while(input[i] != '\n' && input[i] != '\0')
+   {
+      if(input[i] == '\\' && input[i+1] == 'n')
+      {
+         // make \n sequence into a \n character
+         ++i;
+         M_QStrPutc(qstr, '\n');
+      }
+      else if(input[i] != '\r')
+         M_QStrPutc(qstr, input[i]);
+
+      ++i;
+   }
+
+   if(input[i] == '\n')
+      ++i;
+
+   // write back input position
+   *idx = i;
+
+   return true;
+}
+
+//
+// D_DiskMetaData
+//
+// Handles metadata in the disk file.
+//
+static void D_DiskMetaData(void)
+{
+   char *name  = NULL, *metatext = NULL;
+   const char *slash = NULL;
+   const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
+   int len = 0, slen = 0, index = 0;
+   int partime = 0, musicnum = 0;
+   int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
+   diskwad_t wad;
+   qstring_t buffer;
+   qstring_t *qstr = &buffer;
+
+   if(!diskpwad)
+      return;
+
+   // find the wad to get the canonical resource name
+   wad = D_FindWadInDiskFile(diskfile, diskpwad);
+
+   if(!wad.f || strstr(wad.name, "doom2"))
+      return;
+
+   // construct the metadata filename
+   len = M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
+   
+   if(!(slash = strrchr(wad.name, '\\')))
+      return;
+
+   slen = slash - wad.name;
+   ++slen;
+   strncpy(name, wad.name, slen);
+   strcpy(name + slen, "metadata.txt");
+
+   // load it up
+   if(!(metatext = D_CacheDiskFileResource(diskfile, name, true)))
+      return;
+
+   // parse it
+
+   // setup qstring
+   M_QStrInitCreate(qstr);
+
+   // get first line, which is an episode id
+   D_metaGetLine(qstr, metatext, &index);
+
+   // get episode name
+   if(D_metaGetLine(qstr, metatext, &index))
+      GameModeInfo->versionName = M_QStrCDup(qstr, PU_STATIC);
+
+   // get end text
+   if(D_metaGetLine(qstr, metatext, &index))
+      endtext = M_QStrCDup(qstr, PU_STATIC);
+
+   // get next level after secret
+   if(D_metaGetLine(qstr, metatext, &index))
+      exitreturn = M_QStrAtoi(qstr);
+
+   // skip next line (wad name)
+   D_metaGetLine(qstr, metatext, &index);
+
+   // get secret level
+   if(D_metaGetLine(qstr, metatext, &index))
+      secretlevel = M_QStrAtoi(qstr);
+
+   // get levels
+   while(D_metaGetLine(qstr, metatext, &index))
+   {
+      switch(linenum)
+      {
+      case 0: // levelname
+         levelname = M_QStrCDup(qstr, PU_STATIC);
+         break;
+      case 1: // music number
+         musicnum = mus_runnin + M_QStrAtoi(qstr) - 1;
+
+         if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
+            musicname = S_music[musicnum].name;
+         else
+            musicname = "";
+         break;
+      case 2: // partime (final field)
+         partime = M_QStrAtoi(qstr);
+
+         // create a metainfo object for LevelInfo
+         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
+                          levelnum == secretlevel ? exitreturn : 0,
+                          levelnum == exitreturn - 1 ? secretlevel : 0,
+                          levelnum == secretlevel - 1, 
+                          (levelnum == secretlevel - 1) ? endtext : NULL);
+         break;
+      }
+      ++linenum;
+
+      if(linenum == 3)
+      {
+         levelnum++;
+         linenum = 0;
+      }
+   }
+   M_QStrFree(qstr);
+   free(metatext);
 }
 
 //=============================================================================
@@ -1731,6 +1880,10 @@ void IdentifyVersion(void)
 
       // setup gameModeInfo
       D_SetGameModeInfo(gamemode, gamemission);
+
+      // haleyjd: load metadata from diskfile
+      if(havediskiwad)
+         D_DiskMetaData();
 
       // get appropriate name for the gamemode/mission
       game_name = GameModeInfo->versionName;

@@ -88,6 +88,25 @@ static void P_SetParTime(void);
 static void P_SetInfoSoundNames(void);
 static void P_SetOutdoorFog(void);
 
+// haleyjd 05/30/10: struct for info read from a metadata file
+typedef struct metainfo_s
+{
+   int level;             // level to use on
+   const char *levelname; // name
+   int partime;           // par time
+   const char *musname;   // music name
+   int nextlevel;         // next level #, only used if non-0
+   int nextsecret;        // next secret #, only used if non-0
+   boolean finale;        // if true, sets LevelInfo.endOfGame
+   const char *intertext; // only used if finale is true
+} metainfo_t;
+
+static int nummetainfo, nummetainfoalloc;
+static metainfo_t *metainfo;
+static metainfo_t *curmetainfo;
+
+static metainfo_t *P_GetMetaInfoForLevel(int mapnum);
+
 static enum lireadtype_e
 {
    RT_LEVELINFO,
@@ -586,6 +605,13 @@ static void P_InfoDefaultLevelName(void)
    boolean synth_type   = false;
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
+   // if we have a current metainfo, use its level name
+   if(curmetainfo)
+   {
+      LevelInfo.levelName = curmetainfo->levelname;
+      return;
+   }
+
    if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= 32)
    {
       // DOOM II
@@ -814,6 +840,18 @@ static void P_InfoDefaultFinale(void)
       // check for secretOnly flag
       if(rule->secretOnly)
          LevelInfo.finaleSecretOnly = true;
+
+      // allow metainfo overrides
+      if(curmetainfo)
+      {
+         if(curmetainfo->finale)
+         {
+            LevelInfo.interText = curmetainfo->intertext;
+            LevelInfo.endOfGame = true;
+         }
+         else
+            LevelInfo.interText = NULL; // disable other levels
+      }
    }
    else
    {
@@ -991,6 +1029,12 @@ static void P_SetOutdoorFog(void)
 //
 static void P_ClearLevelVars(void)
 {
+   static char nextlevel[10];
+   static char nextsecret[10];
+
+   // find a metainfo for the level if one exists
+   curmetainfo = P_GetMetaInfoForLevel(gamemap);
+
    // set default level type depending on game mode
    switch(GameModeInfo->type)
    {
@@ -1005,10 +1049,10 @@ static void P_ClearLevelVars(void)
    LevelInfo.levelPic        = NULL;
    LevelInfo.nextLevelPic    = NULL;
    LevelInfo.nextSecretPic   = NULL;
-   LevelInfo.musicName       = "";
+   LevelInfo.musicName       = curmetainfo ? curmetainfo->musname : "";
    LevelInfo.creator         = "unknown";
    LevelInfo.interPic        = GameModeInfo->interPic;
-   LevelInfo.partime         = -1;
+   LevelInfo.partime         = curmetainfo ? curmetainfo->partime : -1;
 
    LevelInfo.colorMap        = "COLORMAP";
    LevelInfo.outdoorFog      = NULL;
@@ -1036,7 +1080,6 @@ static void P_ClearLevelVars(void)
    // special handling for ExMy maps under DOOM II
    if(GameModeInfo->id == commercial && isExMy(levelmapname))
    {
-      static char nextlevel[10];
       LevelInfo.nextLevel = nextlevel;
       
       // set the next episode
@@ -1050,7 +1093,25 @@ static void P_ClearLevelVars(void)
       LevelInfo.musicName = levelmapname;
    }
    else
-      LevelInfo.nextLevel = "";
+   {
+      // allow metainfo override for nextlevel
+      if(curmetainfo && curmetainfo->nextlevel)
+      {
+         memset(nextlevel, 0, sizeof(nextlevel));
+         psnprintf(nextlevel, sizeof(nextlevel), "MAP%02d", curmetainfo->nextlevel);
+         LevelInfo.nextLevel = nextlevel;
+      }
+      else
+         LevelInfo.nextLevel = "";
+   }
+
+   // allow metainfo override for nextsecret
+   if(curmetainfo && curmetainfo->nextsecret)
+   {
+      memset(nextsecret, 0, sizeof(nextsecret));
+      psnprintf(nextsecret, sizeof(nextsecret), "MAP%02d", curmetainfo->nextsecret);
+      LevelInfo.nextSecret = nextsecret;
+   }
 }
 
 boolean default_weaponowned[NUMWEAPONS];
@@ -1084,6 +1145,55 @@ static void P_InitWeapons(void)
       s++;
    }
 #endif
+}
+
+//=============================================================================
+//
+// Meta Info
+//
+// Meta info is only loaded from diskfiles and may override LevelInfo defaults.
+// 
+
+static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
+{
+   int i;
+   metainfo_t *mi = NULL;
+
+   for(i = 0; i < nummetainfo; ++i)
+   {
+      if(metainfo[i].level == mapnum)
+      {
+         mi = &metainfo[i];
+         break;
+      }
+   }
+
+   return mi;
+}
+
+void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
+                      int next, int secr, boolean finale, const char *intertext)
+{
+   metainfo_t *mi;
+
+   if(nummetainfo >= nummetainfoalloc)
+   {
+      nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
+      metainfo = realloc(metainfo, nummetainfoalloc * sizeof(metainfo_t));
+   }
+
+   mi = &metainfo[nummetainfo];
+
+   mi->level      = map;
+   mi->levelname  = levelname;
+   mi->partime    = par;
+   mi->musname    = mus;
+   mi->nextlevel  = next;
+   mi->nextsecret = secr;
+   mi->finale     = finale;
+   mi->intertext  = intertext;
+
+   ++nummetainfo;
 }
 
 // EOF
