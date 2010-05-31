@@ -1096,10 +1096,18 @@ static void D_CloseAutoloadDir(void)
 // haleyjd 05/28/10
 //
 
-static boolean havediskfile;
-static boolean havediskiwad;
-static const char *diskpwad;
-static diskfile_t *diskfile;
+// known .disk types
+enum
+{
+   DISK_DOOM,
+   DISK_DOOM2
+};
+
+static boolean havediskfile; // if true, -disk loaded a file
+static boolean havediskiwad; // if true, an IWAD was found in the disk file
+static const char *diskpwad; // PWAD name (or substring) to look for
+static diskfile_t *diskfile; // diskfile object (see d_diskfile.c)
+static int disktype;         // type of disk file
 
 //
 // D_CheckDiskFileParm
@@ -1109,21 +1117,21 @@ static diskfile_t *diskfile;
 static void D_CheckDiskFileParm(void)
 {
    int p;
-   const char *dfname;
+   const char *fn;
 
    if((p = M_CheckParm("-disk")) && p < myargc - 1)
    {
       havediskfile = true;
 
       // get diskfile name
-      dfname = myargv[p + 1];
+      fn = myargv[p + 1];
 
       // have a pwad name as well?
       if(p < myargc - 2 && *(myargv[p + 2]) != '-')
          diskpwad = myargv[p + 2];
 
       // open the diskfile
-      diskfile = D_OpenDiskFile(dfname);
+      diskfile = D_OpenDiskFile(fn);
    }
 }
 
@@ -1135,11 +1143,21 @@ static void D_CheckDiskFileParm(void)
 //
 static void D_LoadDiskFileIWAD(void)
 {
-   diskwad_t wad = D_FindWadInDiskFile(diskfile, "doom2.wad");
+   diskwad_t wad;
+   
+   // this will find doom or doom2
+   wad = D_FindWadInDiskFile(diskfile, "doom");
 
    if(wad.f)
    {
       havediskiwad = true;
+      
+      // set type based on canonical resource name
+      if(strstr(wad.name, "doom2.wad"))
+         disktype = DISK_DOOM2;
+      else
+         disktype = DISK_DOOM;
+
       D_AddFile(wad.name, ns_global, wad.f, wad.offset);
    }
    else
@@ -1164,7 +1182,7 @@ static void D_LoadDiskFilePWAD(void)
 
    if(wad.f)
    {
-      if(!strstr(wad.name, "doom2")) // do not add doom2.wad twice
+      if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
          D_AddFile(wad.name, ns_global, wad.f, wad.offset);
    }
 }
@@ -1225,7 +1243,8 @@ static void D_DiskMetaData(void)
    // find the wad to get the canonical resource name
    wad = D_FindWadInDiskFile(diskfile, diskpwad);
 
-   if(!wad.f || strstr(wad.name, "doom2"))
+   // return if not found, or if this is metadata for the IWAD
+   if(!wad.f || strstr(wad.name, "doom"))
       return;
 
    // construct the metadata filename
@@ -1305,7 +1324,11 @@ static void D_DiskMetaData(void)
          linenum = 0;
       }
    }
+   
+   // done with qstring buffer
    M_QStrFree(qstr);
+
+   // done with metadata resource
    free(metatext);
 }
 
@@ -1873,9 +1896,17 @@ void IdentifyVersion(void)
       else
       {
          // haleyjd: hardcoded for now
-         gamemode      = commercial;
-         gamemission   = pack_disk;
-         haswolflevels = true;
+         if(disktype == DISK_DOOM2)
+         {
+            gamemode      = commercial;
+            gamemission   = pack_disk;
+            haswolflevels = true;
+         }
+         else
+         {
+            gamemode    = retail;
+            gamemission = doom;
+         }
       }
 
       // setup gameModeInfo
