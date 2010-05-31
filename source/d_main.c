@@ -1107,6 +1107,7 @@ static boolean havediskfile; // if true, -disk loaded a file
 static boolean havediskiwad; // if true, an IWAD was found in the disk file
 static const char *diskpwad; // PWAD name (or substring) to look for
 static diskfile_t *diskfile; // diskfile object (see d_diskfile.c)
+static diskwad_t   diskiwad; // diskwad object for iwad
 static int disktype;         // type of disk file
 
 //
@@ -1136,29 +1137,23 @@ static void D_CheckDiskFileParm(void)
 }
 
 //
-// D_LoadDiskFileIWAD
+// D_FindDiskFileIWAD
 //
-// Loads an IWAD from the disk file.
+// Finds an IWAD in a disk file.
 // If this fails, the disk file will be closed.
 //
-static void D_LoadDiskFileIWAD(void)
+static void D_FindDiskFileIWAD(void)
 {
-   diskwad_t wad;
-   
-   // this will find doom or doom2
-   wad = D_FindWadInDiskFile(diskfile, "doom");
+   diskiwad = D_FindWadInDiskFile(diskfile, "doom");
 
-   if(wad.f)
+   if(diskiwad.f)
    {
       havediskiwad = true;
-      
-      // set type based on canonical resource name
-      if(strstr(wad.name, "doom2.wad"))
+
+      if(strstr(diskiwad.name, "doom2.wad"))
          disktype = DISK_DOOM2;
       else
          disktype = DISK_DOOM;
-
-      D_AddFile(wad.name, ns_global, wad.f, wad.offset);
    }
    else
    {
@@ -1169,6 +1164,19 @@ static void D_LoadDiskFileIWAD(void)
       havediskfile = false;
       havediskiwad = false;
    }
+}
+
+//
+// D_LoadDiskFileIWAD
+//
+// Loads an IWAD from the disk file.
+//
+static void D_LoadDiskFileIWAD(void)
+{
+   if(diskiwad.f)
+      D_AddFile(diskiwad.name, ns_global, diskiwad.f, diskiwad.offset);
+   else
+      I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
 }
 
 //
@@ -1843,6 +1851,204 @@ static void D_LoadResourceWad(void)
 static const char *game_name; // description of iwad
 
 //
+// D_SetGameName
+//
+// Sets the game_name variable for displaying what version of the game is being
+// played at startup. "iwad" may be NULL. GameModeInfo must be initialized prior
+// to calling this.
+//
+static void D_SetGameName(const char *iwad)
+{
+   // get appropriate name for the gamemode/mission
+   game_name = GameModeInfo->versionName;
+
+   // special hacks for localized DOOM II variants:
+   if(iwad && GameModeInfo->id == commercial)
+   {
+      // joel 10/16/98 Final DOOM fix
+      if(GameModeInfo->missionInfo->id == doom2)
+      {
+         int i = strlen(iwad);
+         if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
+         {
+            language = french;
+            game_name = "DOOM II version, French language";
+         }
+         else if(!haswolflevels)
+            game_name = "DOOM II version, German edition, no Wolf levels";
+      }
+      // joel 10/16/98 end Final DOOM fix
+   }
+
+   // haleyjd 03/07/10: Special FreeDoom overrides :)
+   if(freedoom && GameModeInfo->freeVerName)
+      game_name = GameModeInfo->freeVerName;
+
+   puts(game_name);
+}
+
+//
+// D_InitPaths
+//
+// Initializes important file paths, including the game path, config
+// path, and save path.
+//
+static void D_InitPaths(void)
+{
+   int i;
+
+   // haleyjd 11/23/06: set game path if -game wasn't used
+   if(!gamepathset)
+      D_SetGamePath();
+
+   // haleyjd 11/23/06: set basedefault here, and use basegamepath.
+   // get config file from same directory as executable
+   // killough 10/98
+   if(GameModeInfo->type == Game_DOOM && use_doom_config)
+   {
+      // hack for DOOM modes: optional use of /doom config
+      size_t len = strlen(basepath) + strlen("/doom") +
+                   strlen(D_DoomExeName()) + 8;
+      basedefault = malloc(len);
+
+      psnprintf(basedefault, len, "%s/doom/%s.cfg",
+                basepath, D_DoomExeName());
+   }
+   else
+   {
+      size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
+
+      basedefault = malloc(len);
+
+      psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
+   }
+
+   // haleyjd 11/23/06: set basesavegame here, and use basegamepath
+   // set save path to -save parm or current dir
+   basesavegame = strdup(basegamepath);
+
+   if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
+   {
+      struct stat sbuf; //jff 3/24/98 used to test save path for existence
+
+      if(!stat(myargv[i+1],&sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
+      {
+         if(basesavegame)
+            free(basesavegame);
+         basesavegame = strdup(myargv[i+1]); //jff 3/24/98 use that for savegame
+      }
+      else
+         puts("Error: -save path does not exist, using game path");  // killough 8/8/98
+   }
+}
+
+//
+// IdentifyDisk
+//
+// haleyjd 05/31/10: IdentifyVersion subroutine for dealing with disk files.
+//
+static void IdentifyDisk(void)
+{
+   GameMode_t    gamemode;
+   GameMission_t gamemission;
+
+   // haleyjd: hardcoded for now
+   if(disktype == DISK_DOOM2)
+   {
+      gamemode      = commercial;
+      gamemission   = pack_disk;
+      haswolflevels = true;
+   }
+   else
+   {
+      gamemode    = retail;
+      gamemission = doom;
+   }
+
+   // setup gameModeInfo
+   D_SetGameModeInfo(gamemode, gamemission);
+
+   // haleyjd: load metadata from diskfile
+   D_DiskMetaData();
+
+   // set and display version name
+   D_SetGameName(NULL);
+
+   // initialize game/data paths
+   D_InitPaths();
+
+   // haleyjd 03/10/03: add eternity.wad before the IWAD, at request of
+   // fraggle -- this allows better compatibility with new IWADs
+   D_LoadResourceWad();
+
+   // load disk IWAD
+   D_LoadDiskFileIWAD();
+
+   // haleyjd: load disk file pwad here, if one was specified
+   if(diskpwad)
+      D_LoadDiskFilePWAD();
+
+   // done with the diskfile structure
+   D_CloseDiskFile(diskfile, false);
+   diskfile = NULL;
+}
+
+//
+// IdentifyDisk
+//
+// haleyjd 05/31/10: IdentifyVersion subroutine for dealing with normal IWADs.
+//
+static void IdentifyIWAD(void)
+{
+   char *iwad;
+   GameMode_t    gamemode;
+   GameMission_t gamemission;
+
+   iwad = FindIWADFile();
+
+   if(iwad && *iwad)
+   {
+      printf("IWAD found: %s\n", iwad); //jff 4/20/98 print only if found
+
+      CheckIWAD(iwad,
+                &gamemode,
+                &gamemission,   // joel 10/16/98 gamemission added
+                &haswolflevels);
+
+      // setup GameModeInfo
+      D_SetGameModeInfo(gamemode, gamemission);
+
+      // set and display version name
+      D_SetGameName(iwad);
+
+      // initialize game/data paths
+      D_InitPaths();
+
+      // haleyjd 03/10/03: add eternity.wad before the IWAD, at request of
+      // fraggle -- this allows better compatibility with new IWADs
+      D_LoadResourceWad();
+
+      D_AddFile(iwad, ns_global, NULL, 0);
+
+      // done with iwad string
+      free(iwad);
+   }
+   else
+   {
+      // haleyjd 08/20/07: improved error message for n00bs
+      I_Error("\nIWAD not found!\n"
+              "To specify an IWAD, try one of the following:\n"
+              "* Configure IWAD file paths in base/system.cfg\n"
+              "* Use -iwad\n"
+              "* Set the DOOMWADDIR environment variable.\n"
+              "* Place an IWAD in the working directory.\n"
+              "* Place an IWAD file under the appropriate\n"
+              "  game folder of the base directory and use\n"
+              "  the -game parameter.");
+   }
+}
+
+//
 // IdentifyVersion
 //
 // Set the location of the defaults file and the savegame root
@@ -1865,162 +2071,18 @@ static const char *game_name; // description of iwad
 //
 void IdentifyVersion(void)
 {
-   int         i;    //jff 3/24/98 index of args on commandline
-   struct stat sbuf; //jff 3/24/98 used to test save path for existence
-   char *iwad;
-   GameMode_t    gamemode;
-   GameMission_t gamemission;
-
    // haleyjd 05/28/10: check for -disk parameter
    D_CheckDiskFileParm();
 
-   // if we loaded one, try getting an IWAD from it
+   // if we loaded one, try finding an IWAD in it
    if(havediskfile)
-      D_LoadDiskFileIWAD();
+      D_FindDiskFileIWAD();
 
    // locate the IWAD and determine game mode from it
-   if(!havediskiwad)
-      iwad = FindIWADFile();
-
-   if(havediskiwad || (iwad && *iwad))
-   {
-      if(!havediskiwad)
-      {
-         printf("IWAD found: %s\n", iwad); //jff 4/20/98 print only if found
-
-         CheckIWAD(iwad,
-                   &gamemode,
-                   &gamemission,   // joel 10/16/98 gamemission added
-                   &haswolflevels);
-      }
-      else
-      {
-         // haleyjd: hardcoded for now
-         if(disktype == DISK_DOOM2)
-         {
-            gamemode      = commercial;
-            gamemission   = pack_disk;
-            haswolflevels = true;
-         }
-         else
-         {
-            gamemode    = retail;
-            gamemission = doom;
-         }
-      }
-
-      // setup gameModeInfo
-      D_SetGameModeInfo(gamemode, gamemission);
-
-      // haleyjd: load metadata from diskfile
-      if(havediskiwad)
-         D_DiskMetaData();
-
-      // get appropriate name for the gamemode/mission
-      game_name = GameModeInfo->versionName;
-
-      // special hacks for localized DOOM II variants:
-      if(gamemode == commercial)
-      {
-         // joel 10/16/98 Final DOOM fix
-         if(iwad && gamemission == doom2)
-         {
-            i = strlen(iwad);
-            if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
-            {
-               language = french;
-               game_name = "DOOM II version, French language";
-            }
-            else if(!haswolflevels)
-               game_name = "DOOM II version, German edition, no Wolf levels";
-         }
-         // joel 10/16/98 end Final DOOM fix
-      }
-
-      // haleyjd 03/07/10: Special FreeDoom overrides :)
-      if(freedoom && GameModeInfo->freeVerName)
-         game_name = GameModeInfo->freeVerName;
-
-      puts(game_name);
-
-      // haleyjd 11/23/06: set game path if -game wasn't used
-      if(!gamepathset)
-         D_SetGamePath();
-
-      // haleyjd 11/23/06: set basedefault here, and use basegamepath.
-      // get config file from same directory as executable
-      // killough 10/98
-      if(GameModeInfo->type == Game_DOOM && use_doom_config)
-      {
-         // hack for DOOM modes: optional use of /doom config
-         size_t len = strlen(basepath) + strlen("/doom") +
-                      strlen(D_DoomExeName()) + 8;
-         basedefault = malloc(len);
-         
-         psnprintf(basedefault, len, "%s/doom/%s.cfg",
-                   basepath, D_DoomExeName());
-      }
-      else
-      {
-         size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
-         
-         basedefault = malloc(len);
-         
-         psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
-      }
-
-      // haleyjd 11/23/06: set basesavegame here, and use basegamepath
-      // set save path to -save parm or current dir
-
-      basesavegame = strdup(basegamepath);
-
-      if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
-      {
-         if(!stat(myargv[i+1],&sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
-         {
-            if(basesavegame)
-               free(basesavegame);
-            basesavegame = strdup(myargv[i+1]); //jff 3/24/98 use that for savegame
-         }
-         else
-            puts("Error: -save path does not exist, using game path");  // killough 8/8/98
-      }
-
-      // haleyjd 03/10/03: add eternity.wad before the IWAD, at request of
-      // fraggle -- this allows better compatibility with new IWADs
-      D_LoadResourceWad();
-
-      if(!havediskiwad)
-      {
-         D_AddFile(iwad, ns_global, NULL, 0);
-
-         // done with iwad string
-         free(iwad);
-      }
-      else
-      {
-         // haleyjd: load disk file pwad here, if one was specified
-         if(diskpwad)
-            D_LoadDiskFilePWAD();
-
-         // done with the diskfile structure
-         D_CloseDiskFile(diskfile, false);
-         diskfile = NULL;
-      }
-   }
+   if(havediskiwad)
+      IdentifyDisk();
    else
-   {
-      // haleyjd 08/20/07: improved error message for n00bs
-      I_Error("\nIWAD not found!\n"
-              "To specify an IWAD, try one of the following:\n"
-              "* Configure IWAD file paths in base/system.cfg\n"
-              "* Use -iwad\n"
-              "* Set the DOOMWADDIR environment variable.\n"
-              "* Place an IWAD in the working directory.\n"
-              "* Place an IWAD file under the appropriate\n"
-              "  game folder of the base directory and use\n"
-              "  the -game parameter.");
-   }
+      IdentifyIWAD();
 }
 
 //=============================================================================
