@@ -1584,7 +1584,7 @@ boolean M_WriteFile(char const *name, void *source, unsigned int length)
 // M_ReadFile
 //
 // killough 9/98: rewritten to use stdio and to flash disk icon
-
+//
 int M_ReadFile(char const *name, byte **buffer)
 {
    FILE *fp;

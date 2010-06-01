@@ -963,9 +963,19 @@ CONSOLE_COMMAND(unbind, 0)
          int j;
 
          C_Printf("unbound key %s from all actions\n", Console.argv[0]);
+
+         if(keybindings[key].bindings[kac_menu] ||
+            keybindings[key].bindings[kac_console])
+         {
+            C_Printf(FC_ERROR " console and menu actions ignored\n");
+         }
          
          for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
-            keybindings[key].bindings[j] = NULL;
+         {
+            // do not release menu or console actions in this manner
+            if(j != kac_menu && j != kac_console)
+               keybindings[key].bindings[j] = NULL;
+         }
       }
       else
       {

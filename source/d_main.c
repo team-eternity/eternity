@@ -1952,6 +1952,8 @@ static void IdentifyDisk(void)
    GameMode_t    gamemode;
    GameMission_t gamemission;
 
+   printf("IWAD found: %s\n", diskiwad.name);
+
    // haleyjd: hardcoded for now
    if(disktype == DISK_DOOM2)
    {
