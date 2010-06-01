@@ -321,6 +321,8 @@ void G_InitKeyBindings(void)
    keybindings[KEYD_MOUSE1].name      = "mouse1";
    keybindings[KEYD_MOUSE2].name      = "mouse2";
    keybindings[KEYD_MOUSE3].name      = "mouse3";
+   keybindings[KEYD_MOUSE4].name      = "mouse4";
+   keybindings[KEYD_MOUSE5].name      = "mouse5";
    keybindings[KEYD_MWHEELUP].name    = "wheelup";
    keybindings[KEYD_MWHEELDOWN].name  = "wheeldown";
    
