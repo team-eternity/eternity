@@ -1324,8 +1324,7 @@ void E_ProcessStates(cfg_t *cfg)
                      states[statenum]->name, statenum);
    }
 
-#define DS_TEST
-#if 0
+#if 1
    {
       extern void TestDSParser(void); // stupid GCC...
       
@@ -1385,7 +1384,8 @@ enum
 {
    BUF_LABEL,
    BUF_STATE,
-   BUF_KEYWORD
+   BUF_KEYWORD,
+   BUF_GOTO
 };
 
 //
@@ -1400,6 +1400,10 @@ typedef struct estatebuf_s
    int type;            // type of entry (label, state, etc.)
    int linenum;         // origin line number
    char *name;          // name when needed
+
+   // goto-specific info
+   char *gotodest;      // goto destination
+   char *gotooffset;    // goto offset
 } estatebuf_t;
 
 static estatebuf_t *statebuffer; // temporary data cache
@@ -1410,7 +1414,7 @@ static estatebuf_t *neweststate; // newest buffered state
 //
 // Caches data in the statebuffer list.
 //
-static void E_AddBufferedState(int type, const char *name)
+static void E_AddBufferedState(int type, const char *name, int linenum)
 {
    estatebuf_t *newbuf = calloc(1, sizeof(estatebuf_t));
 
@@ -1419,7 +1423,12 @@ static void E_AddBufferedState(int type, const char *name)
    if(name)
       newbuf->name = strdup(name);
 
-   M_DLListInsert(&newbuf->links, (mdllistitem_t **)&statebuffer);
+   newbuf->linenum = linenum;
+
+   // use tail insertion to keep objects in order generated
+   M_DLListInsert(&newbuf->links,
+                  neweststate ? &(neweststate->links.next) : 
+                                 (mdllistitem_t **)&statebuffer);
 
    neweststate = newbuf;
 }
@@ -2014,7 +2023,7 @@ static void DoPSNeedLabel(pstate_t *ps)
          // count a label
          numdeclabels++; 
          // make a label object
-         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer);
+         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer, ps->linenum);
       }
       else
       {
@@ -2054,7 +2063,7 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
          // count a label
          numdeclabels++;
          // make a label object
-         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer);
+         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer, ps->linenum);
       }
       else
       {
@@ -2066,18 +2075,53 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
       // TODO: generate appropriate state for keyword
       if(!M_QStrCaseCmp(ps->tokenbuffer, "goto"))
       {
-         // TODO: handle goto specifics
+         // handle goto specifics
+         if(ps->principals)
+         {
+            // count a goto
+            numgotos++;
+            // make a goto object
+            E_AddBufferedState(BUF_GOTO, NULL, ps->linenum);
+         }
+         else
+         {
+            // TODO
+         }
          ps->state = PSTATE_NEEDGOTOLABEL;
       }
       else
       {
-         // TODO: handle other keyword specifics
+         // handle other keyword specifics
+         if(ps->principals)
+         {
+            // count a keyword
+            numkeywords++;
+            // make a keyword object
+            E_AddBufferedState(BUF_KEYWORD, ps->tokenbuffer->buffer, ps->linenum);
+         }
+         else
+         {
+            // TODO
+         }
          ps->state = PSTATE_NEEDKWEOL;
       }
       break;
 
    case TOKEN_TEXT:
-      // TODO: verify sprite name; generate new state
+      // verify sprite name; generate new state
+      if(ps->principals)
+      {
+         // make a new sprite if this one doesn't already exist
+         if(E_SpriteNumForName(ps->tokenbuffer->buffer) == -1)
+            E_ProcessSingleSprite(ps->tokenbuffer->buffer);
+
+         // do not count or create a state yet; this will be done when we parse
+         // the frame token, whose strlen is the number of states to count
+      }
+      else
+      {
+         // TODO
+      }
       ps->state = PSTATE_NEEDSTATEFRAMES;
       break;
 
@@ -2099,8 +2143,19 @@ static void DoPSNeedGotoLabel(pstate_t *ps)
 
    if(ps->tokentype == TOKEN_TEXT)
    {
-      // TODO: record text into goto destination record for later
+      // record text into goto destination record for later
       // resolution pass.
+      if(ps->principals)
+      {
+         if(neweststate->type != BUF_GOTO)
+            I_Error("DoPSNeedGotoLabel: internal error - last state != GOTO\n");
+
+         neweststate->gotodest = M_QStrCDup(ps->tokenbuffer, PU_STATIC);
+      }
+      else
+      {
+         // TODO
+      }
       ps->state = PSTATE_NEEDGOTOEOLORPLUS;
    }
    else
@@ -2150,8 +2205,19 @@ static void DoPSNeedGotoOffset(pstate_t *ps)
 
    if(ps->tokentype == TOKEN_TEXT)
    {
-      // TODO: record offset into goto destination record, and finalize
-      // destination record if necessary
+      // record offset into goto destination record
+      if(ps->principals)
+      {
+         if(neweststate->type != BUF_GOTO)
+            I_Error("DoPSNeedGotoOffset: internal error - last state != GOTO\n");
+
+         neweststate->gotooffset = M_QStrCDup(ps->tokenbuffer, PU_STATIC);
+      }
+      else
+      {
+         // TODO
+      }
+      // TODO: finalize destination record if necessary
       ps->state = PSTATE_NEEDKWEOL;
    }
    else
@@ -2197,19 +2263,28 @@ static void DoPSNeedStateFrames(pstate_t *ps)
    if(ps->tokentype != TOKEN_TEXT)
    {
       PSExpectedErr(ps, "frame string");
-
-      // TODO: finalize state already created
-      
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
    else
    {
-      // TODO: create additional states if necessary, beginning as a clone of
-      // this state, and with properly set nextstate fields. Then mark so that
-      // the rest of the parsing process will populate the range of states
-      // rather than just the current state, and then step past them once 
-      // finished.
-      
+      if(ps->principals)
+      {
+         // During parsing for principals, we determine how many states should
+         // be created, and add that many state objects. Each state object created
+         // here will have the same line number as this line in the DECORATE state
+         // block, and when parsing for values, we will apply the values to all
+         // states from the current one to the last one found having the same line
+         // number.
+         unsigned int i;
+         unsigned int numstatestomake = M_QStrLen(ps->tokenbuffer);
+
+         for(i = 0; i < numstatestomake; ++i)
+            E_AddBufferedState(BUF_STATE, NULL, ps->linenum);
+      }
+      else
+      {
+         // TODO
+      }
       ps->state = PSTATE_NEEDSTATETICS;
    }
 }
@@ -2226,9 +2301,6 @@ static void DoPSNeedStateTics(pstate_t *ps)
    if(ps->tokentype != TOKEN_TEXT)
    {
       PSExpectedErr(ps, "tics value");
-
-      // TODO: finalize state range
-
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
    else
@@ -2254,9 +2326,6 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
    if(ps->tokentype != TOKEN_TEXT)
    {
       PSExpectedErr(ps, "bright keyword or action name");
-
-      // TODO: finalize state range
-
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       return;
    }
@@ -2286,9 +2355,6 @@ static void DoPSNeedStateAction(pstate_t *ps)
    if(ps->tokentype != TOKEN_TEXT)
    {
       PSExpectedErr(ps, "action name");
-
-      // TODO: finalize state range
-
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
    else
@@ -2567,7 +2633,7 @@ void E_ParseDecorateStates(const char *input)
    E_DecoratePrincipals(input);
 }
 
-#if 0
+#if 1
 //=============================================================================
 // 
 // TEMPORARY DEBUG TEST CODE
@@ -2575,7 +2641,6 @@ void E_ParseDecorateStates(const char *input)
 // This code will dry-run the DECORATE state parser.
 //
 
-/*
 static const char *teststr = 
 "Spawn:\n"
 "   SPR1 ABCD 10 bright A_Foobar(0, 1, 2)\n"
@@ -2589,15 +2654,49 @@ static const char *teststr =
 "     goto See\n"
 "  CustomLabel2: \n"
 "     goto See+6\n";
-*/
 
+/*
 static const char *teststr =
 "Spawn:\n"
 "   goto Super::Spawn\n";
+*/
 
 void TestDSParser(void)
 {
    E_ParseDecorateStates(teststr);
+
+   // DEBUG: output buffered state objects
+   if(statebuffer)
+   {
+      estatebuf_t *curstate = statebuffer;
+      static const char *bufstatetypes[] =
+      {
+         "label", "state", "keyword", "goto"
+      };
+
+      while(curstate)
+      {
+         printf("%s (line %d): ", bufstatetypes[curstate->type], curstate->linenum);
+
+         switch(curstate->type)
+         {
+         case BUF_LABEL:
+            printf("%s\n", curstate->name);
+            break;
+         case BUF_STATE:
+            printf("(nothing)\n");
+            break;
+         case BUF_KEYWORD:
+            printf("%s\n", curstate->name);
+            break;
+         case BUF_GOTO:
+            printf("%s + %s\n", curstate->gotodest, 
+                   curstate->gotooffset ? curstate->gotooffset : "0");
+            break;
+         }
+         curstate = (estatebuf_t *)(curstate->links.next);
+      }
+   }
 }
 
 #endif
