@@ -1325,7 +1325,7 @@ void E_ProcessStates(cfg_t *cfg)
    }
 
 #define DS_TEST
-#ifdef DS_TEST
+#if 0
    {
       extern void TestDSParser(void); // stupid GCC...
       
@@ -1380,127 +1380,57 @@ void E_ProcessStateDeltas(cfg_t *cfg)
 // is used by the parser below.
 //
 
-typedef struct edslabel_s
+// enumeration for estatebuf types
+enum
 {
-   mdllistitem_t links; // for linked list
-   const char *text;    // label text
-   state_t *state;      // pointer to state referred to by this label
-} edslabel_t;
-
-typedef struct estateset_s
-{
-   int firststate;
-   int laststate;
-} estateset_t;
-
-// dslabels are kept on this linked list during processing. When the first state
-// is encountered after a series of labels, the local (not relocated relative to
-// states[]) index of the state will be written into all labels from the current
-// root of the list up to the label pointed to by the labelstack pointer.
-
-static edslabel_t *dslabels;   // list of all labels
-static edslabel_t *labelstack; // pointer to first label in current working set
+   BUF_LABEL,
+   BUF_STATE,
+   BUF_KEYWORD
+};
 
 //
-// E_CreateLabel
+// estatebuf
 //
-// Pushes a DECORATE state label onto the list of labels in the currently
-// processed DECORATE state block. If "first" is true, the label is the first
-// encountered for a given phase of parsing, and will refer to a subsequent
-// state.
+// This is a temporary structure used to cache data about DECORATE state
+// sequences.
 //
-static void E_CreateLabel(const char *text, boolean first)
+typedef struct estatebuf_s
 {
-   edslabel_t *newlabel = calloc(1, sizeof(edslabel_t));
+   mdllistitem_t links; // linked list links
+   int type;            // type of entry (label, state, etc.)
+   int linenum;         // origin line number
+   char *name;          // name when needed
+} estatebuf_t;
 
-   newlabel->text = strdup(text);
+static estatebuf_t *statebuffer; // temporary data cache
+static estatebuf_t *neweststate; // newest buffered state
 
-   M_DLListInsert(&newlabel->links, (mdllistitem_t **)&dslabels);
+//
+// E_AddBufferedState
+//
+// Caches data in the statebuffer list.
+//
+static void E_AddBufferedState(int type, const char *name)
+{
+   estatebuf_t *newbuf = calloc(1, sizeof(estatebuf_t));
 
-   if(first)
-      labelstack = newlabel;
+   newbuf->type = type;
+
+   if(name)
+      newbuf->name = strdup(name);
+
+   M_DLListInsert(&newbuf->links, (mdllistitem_t **)&statebuffer);
+
+   neweststate = newbuf;
 }
 
 //
-// E_SetLabelStates
+// Parser state globals
 //
-// Sets the state pointer of all labels on the dslabels list from the head
-// of the list up to and including the label pointed to by "labelstack".
-// Clears labelstack.
-//
-static void E_SetLabelStates(state_t *state)
-{
-   edslabel_t *curlabel = dslabels;
-
-#ifdef RANGECHECK
-   // error checks: pointers should be valid before calling this
-   if(!dslabels)
-      I_Error("E_SetLabelIndexLocal: internal error - label underflow\n");
-   if(!labelstack)
-      I_Error("E_SetLabelIndexLocal: internal error - labelstack undefined\n");
-#endif
-
-   // go down the list
-   while(curlabel)
-   {
-      curlabel->state = state;
-
-      // stop after reaching labelstack object
-      if(curlabel == labelstack)
-         break;
-
-      curlabel = (edslabel_t *)(curlabel->links.next);
-   }
-
-   labelstack = NULL;
-}
-
-//
-// E_CreateDECORATEStates
-//
-// Creates a set of DECORATE states.
-//
-static estateset_t E_CreateDECORATEStates(int numstates)
-{
-   static int dscounter;
-   estateset_t ret;
-   int i;
-   state_t *statestructs;
-
-   // allocate the states
-   statestructs = calloc(numstates, sizeof(state_t));
-
-   // record indices of states in new range
-   ret.firststate = NUMSTATES;
-   ret.laststate  = ret.firststate + numstates - 1;
-
-   // reallocate states[]
-   E_ReallocStates(numstates);
-
-   // initialize the new states
-   for(i = ret.firststate; i <= ret.laststate; ++i)
-   {
-      states[i] = &statestructs[i - ret.firststate];
-      states[i]->index = i;
-
-      // autogenerate a state name
-      psnprintf(states[i]->namebuf, 41, "EEDS#%d", dscounter);
-      states[i]->name = states[i]->namebuf;
-
-      // no dehacked num
-      states[i]->dehnum = -1;
-
-      // default nextstate is the next state, unless this is the last state,
-      // in which case the default is the null state
-      states[i]->nextstate = (i != ret.laststate ? i + 1 : NullStateNum);
-
-      // keep count of states
-      ++dscounter;
-   }
-
-   // return index data
-   return ret;
-}
+static int numdeclabels; // number of labels counted
+static int numdecstates; // number of states counted
+static int numkeywords;  // number of keywords counted
+static int numgotos;     // number of goto's counted
 
 //==============================================================================
 //
@@ -1614,6 +1544,7 @@ typedef struct pstate_s
    int index;              // current index into line buffer for tokenization
    int linenum;            // line number (relative to start of state block)
    boolean needline;       // if true, feed a line from the input
+   boolean principals;     // parsing for principals only
 
    int tokentype;    // current token type, once decided upon
    int tokenerror;   // current token error code
@@ -2033,9 +1964,6 @@ static int E_GetDSToken(pstate_t *ps)
 
 // utilities
 
-// PSConsumeLine: marks a new line as needed
-#define PSConsumeLine(ps) ps->needline = true
-
 // for unnecessarily precise grammatical correctness ;)
 #define hasvowel(str) \
    (*str == 'a' || *str == 'e' || *str == 'i' || *str == 'o' || *str == 'u')
@@ -2046,7 +1974,7 @@ static int E_GetDSToken(pstate_t *ps)
 // Called to issue a verbose log message indicating an error consisting of an
 // unexpected token type.
 //
-static void PSExpectedErr(pstate_t *ps, const char *expected, boolean eatline)
+static void PSExpectedErr(pstate_t *ps, const char *expected)
 {
    const char *tokenname = ds_token_names[ps->tokentype];
 
@@ -2055,15 +1983,12 @@ static void PSExpectedErr(pstate_t *ps, const char *expected, boolean eatline)
    if(ps->tokenerror)
       tokenname = ds_token_errors[ps->tokenerror];
 
-   E_EDFLogPrintf("\t\t\tError on line %d of DECORATE state block:\n"
-                  "\t\t\t\tExpected %s %s but found %s %s with value '%s'\n",
-                  ps->linenum, 
-                  hasvowel(expected)  ? "an" : "a", expected, 
-                  hasvowel(tokenname) ? "an" : "a", tokenname, 
-                  ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
-
-   if(eatline)
-      PSConsumeLine(ps);
+   E_EDFLoggedErr(3, "Error on line %d of DECORATE state block:\n"
+                     "\t\t\tExpected %s %s but found %s %s with value '%s'\n",
+                     ps->linenum, 
+                     hasvowel(expected)  ? "an" : "a", expected, 
+                     hasvowel(tokenname) ? "an" : "a", tokenname, 
+                     ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
 }
 
 //
@@ -2084,13 +2009,23 @@ static void DoPSNeedLabel(pstate_t *ps)
 
    case TOKEN_LABEL:
       // record label to associate with next state generated
-      E_CreateLabel(ps->tokenbuffer->buffer, true);
+      if(ps->principals) 
+      {
+         // count a label
+         numdeclabels++; 
+         // make a label object
+         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer);
+      }
+      else
+      {
+         // TODO
+      }
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
 
    default:
-      // anything else is an error; eat the rest of the line
-      PSExpectedErr(ps, "label", true);
+      // anything else is an error
+      PSExpectedErr(ps, "label");
       break;
    }
 }
@@ -2113,11 +2048,18 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
 
    case TOKEN_LABEL:
       // record label to associate with next state generated.
-      // if not the first label (labelstack is valid), then this is added to the
-      // currently accumulating list of unresolved labels.
-      E_CreateLabel(ps->tokenbuffer->buffer, !labelstack);
-
       // remain in the current state
+      if(ps->principals)
+      {
+         // count a label
+         numdeclabels++;
+         // make a label object
+         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer);
+      }
+      else
+      {
+         // TODO
+      }
       break;
 
    case TOKEN_KEYWORD:
@@ -2141,7 +2083,7 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
 
    default:
       // anything else is an error; eat rest of the line
-      PSExpectedErr(ps, "label or keyword or sprite", true);
+      PSExpectedErr(ps, "label or keyword or sprite");
       break;
    }
 }
@@ -2163,7 +2105,7 @@ static void DoPSNeedGotoLabel(pstate_t *ps)
    }
    else
    {
-      PSExpectedErr(ps, "goto label", true);
+      PSExpectedErr(ps, "goto label");
       ps->state = PSTATE_NEEDLABEL;          // return to initial state
    }
 }
@@ -2191,7 +2133,7 @@ static void DoPSNeedGotoEOLOrPlus(pstate_t *ps)
 
    default:
       // anything else is an error
-      PSExpectedErr(ps, "end of line or +", true);
+      PSExpectedErr(ps, "end of line or +");
       ps->state = PSTATE_NEEDLABEL;
       break;
    }
@@ -2215,7 +2157,7 @@ static void DoPSNeedGotoOffset(pstate_t *ps)
    else
    {
       // anything else is an error
-      PSExpectedErr(ps, "goto offset", true);
+      PSExpectedErr(ps, "goto offset");
       ps->state = PSTATE_NEEDLABEL;
    }
 }
@@ -2231,7 +2173,7 @@ static void DoPSNeedKWEOL(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_EOL)
-      PSExpectedErr(ps, "end of line", true);
+      PSExpectedErr(ps, "end of line");
 
    // return to initial state
    ps->state = PSTATE_NEEDLABEL;
@@ -2254,7 +2196,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
 
    if(ps->tokentype != TOKEN_TEXT)
    {
-      PSExpectedErr(ps, "frame string", true);
+      PSExpectedErr(ps, "frame string");
 
       // TODO: finalize state already created
       
@@ -2283,7 +2225,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
 
    if(ps->tokentype != TOKEN_TEXT)
    {
-      PSExpectedErr(ps, "tics value", true);
+      PSExpectedErr(ps, "tics value");
 
       // TODO: finalize state range
 
@@ -2311,7 +2253,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
 
    if(ps->tokentype != TOKEN_TEXT)
    {
-      PSExpectedErr(ps, "bright keyword or action name", true);
+      PSExpectedErr(ps, "bright keyword or action name");
 
       // TODO: finalize state range
 
@@ -2343,7 +2285,7 @@ static void DoPSNeedStateAction(pstate_t *ps)
 
    if(ps->tokentype != TOKEN_TEXT)
    {
-      PSExpectedErr(ps, "action name", true);
+      PSExpectedErr(ps, "action name");
 
       // TODO: finalize state range
 
@@ -2378,7 +2320,7 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
       break;
    default:
       // anything else is an error
-      PSExpectedErr(ps, "end of line or (", true);
+      PSExpectedErr(ps, "end of line or (");
       // TODO: finalize state range
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
@@ -2407,7 +2349,7 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
       break;
    default:
       // error
-      PSExpectedErr(ps, "argument or )", true);
+      PSExpectedErr(ps, "argument or )");
       // TODO: finalize state range
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
@@ -2433,7 +2375,7 @@ static void DoPSNeedStateCommaOrParen(pstate_t *ps)
       break;
    default:
       // error
-      PSExpectedErr(ps, ", or )", true);
+      PSExpectedErr(ps, ", or )");
       // TODO: finalize state range
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
@@ -2452,7 +2394,7 @@ static void DoPSNeedStateArg(pstate_t *ps)
 
    if(ps->tokentype != TOKEN_TEXT)
    {
-      PSExpectedErr(ps, "argument", true);
+      PSExpectedErr(ps, "argument");
       // TODO: finalize state range
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
@@ -2474,7 +2416,7 @@ static void DoPSNeedStateEOL(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_EOL)
-      PSExpectedErr(ps, "end of line", true);
+      PSExpectedErr(ps, "end of line");
 
    // TODO: finalize state range
    ps->state = PSTATE_NEEDLABELORKWORSTATE;
@@ -2540,11 +2482,13 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
 }
 
 //
-// E_ParseDecorateStates
+// E_ParseDecorateInternal
 //
 // Main driver routine for parsing of DECORATE state blocks.
+// Can be called either to collect principals or to run the final collection
+// of data.
 //
-void E_ParseDecorateStates(const char *input)
+static void E_ParseDecorateInternal(const char *input, boolean principals)
 {
    pstate_t ps;
    qstring_t linebuffer;
@@ -2562,6 +2506,7 @@ void E_ParseDecorateStates(const char *input)
    ps.tokenerror  = TERR_NONE;   
    ps.linebuffer  = &linebuffer;
    ps.tokenbuffer = &tokenbuffer;
+   ps.principals  = principals;
 
    // set initial state
    ps.state = PSTATE_NEEDLABEL;
@@ -2582,7 +2527,7 @@ void E_ParseDecorateStates(const char *input)
 
 #ifdef RANGECHECK
       if(ps.state < 0 || ps.state >= PSTATE_NUMSTATES)
-         I_Error("E_ParseDecorateStates: Internal error: undefined state\n");
+         I_Error("E_ParseDecorateInternal: internal error - undefined state\n");
 #endif
 
       pstatefuncs[ps.state](&ps);
@@ -2597,7 +2542,32 @@ void E_ParseDecorateStates(const char *input)
    M_QStrFree(&tokenbuffer);
 }
 
-#ifdef DS_TEST
+//
+// E_DecoratePrincipals
+//
+// Counts and allocates labels, states, etc.
+//
+void E_DecoratePrincipals(const char *input)
+{
+   E_ParseDecorateInternal(input, true);
+}
+
+//
+// E_ParseDecorateStates
+//
+// Main driver routine for parsing of DECORATE state blocks.
+//
+void E_ParseDecorateStates(const char *input)
+{
+   // init variables
+   statebuffer = neweststate = NULL;
+   numdeclabels = numdecstates = numkeywords = numgotos = 0;
+
+   // parse for principals
+   E_DecoratePrincipals(input);
+}
+
+#if 0
 //=============================================================================
 // 
 // TEMPORARY DEBUG TEST CODE

@@ -75,6 +75,7 @@
 // Ultimate DOOM and DOOM II have a suitable graphic in the INTERPIC.
 #define CONBACK_DEFAULT "TITLEPIC"
 #define CONBACK_COMRET  "INTERPIC"
+#define CONBACK_DISK    "DMENUPIC"
 #define CONBACK_HERETIC "TITLE" 
 
 // Version names
@@ -85,6 +86,7 @@
 #define VNAME_TNT       "Final DOOM: TNT - Evilution version"
 #define VNAME_PLUT      "Final DOOM: The Plutonia Experiment version"
 #define VNAME_HACX      "HACX - Twitch 'n Kill version"
+#define VNAME_DISK      "DOOM II disk version"
 #define VNAME_HTIC_SW   "Heretic Shareware version"
 #define VNAME_HTIC_REG  "Heretic Registered version"
 #define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
@@ -107,6 +109,10 @@
 #define BANNER_HTIC_REG  "Heretic Registered Startup"
 #define BANNER_HTIC_SOSR "Heretic: Shadow of the Serpent Riders"
 #define BANNER_UNKNOWN   "Public DOOM"
+
+// Default intermission pics
+#define INTERPIC_DOOM    "INTERPIC"
+#define INTERPIC_DISK    "DMENUPIC"
 
 // Default finales caused by Teleport_EndGame special
 #define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
@@ -336,6 +342,17 @@ static exitrule_t Doom2ExitRules[] =
 {
    {  1, 31, 15, false }, // normal exit: MAP31 -> MAP16
    {  1, 32, 15, false }, // normal exit: MAP32 -> MAP16
+   {  1, 15, 30, true  }, // secret exit: MAP15 -> MAP31
+   {  1, 31, 31, true  }, // secret exit: MAP31 -> MAP32
+   { -2 }
+};
+
+static exitrule_t DiskExitRules[] =
+{
+   {  1, 31, 15, false }, // normal exit: MAP31 -> MAP16
+   {  1, 32, 15, false }, // normal exit: MAP32 -> MAP16
+   {  1, 33, 02, false }, // normal exit: MAP33 -> MAP03
+   {  1, 02, 32, true  }, // secret exit: MAP02 -> MAP33
    {  1, 15, 30, true  }, // secret exit: MAP15 -> MAP31
    {  1, 31, 31, true  }, // secret exit: MAP31 -> MAP32
    { -2 }
@@ -670,6 +687,27 @@ static missioninfo_t gmFinalPlutonia =
 };
 
 //
+// Disk version
+//
+static missioninfo_t gmDisk =
+{
+   pack_disk,       // id
+   MI_CONBACKTITLE, // flags
+   VNAME_DISK,      // versionNameOR
+   NULL,            // startupBannerOR
+   0,               // numEpisodesOR
+   NULL,            // iwadPathOR
+   NULL,            // finaleDataOR
+   NULL,            // mainMenuOR
+   NULL,            // menuBackgroundOR
+   NULL,            // creditBackgroundOR
+   CONBACK_DISK,    // consoleBackOR
+   NULL,            // demoStatesOR
+   INTERPIC_DISK,   // interPicOR
+   DiskExitRules,   // exitRulesOR
+};
+
+//
 // HacX Stand-alone version
 //
 static missioninfo_t gmHacx =
@@ -737,6 +775,7 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
    &gmDoom2,         // doom2
    &gmFinalTNT,      // pack_tnt
    &gmFinalPlutonia, // pack_plut
+   &gmDisk,          // pack_disk
    &gmHacx,          // pack_hacx
    &gmHeretic,       // heretic
    &gmHereticSoSR,   // hticsosr
@@ -816,6 +855,7 @@ static gamemodeinfo_t giDoomSW =
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
 
+   INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
@@ -909,11 +949,12 @@ static gamemodeinfo_t giDoomReg =
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
 
-   mus_inter,        // interMusNum
-   &giDoomFText,     // fTextPos
-   &DoomIntermission,// interfuncs
-   DEF_DOOM_FINALE,  // teleEndGameFinaleType
-   &DoomFinale,      // finaleData
+   INTERPIC_DOOM,     // interPic
+   mus_inter,         // interMusNum
+   &giDoomFText,      // fTextPos
+   &DoomIntermission, // interfuncs
+   DEF_DOOM_FINALE,   // teleEndGameFinaleType
+   &DoomFinale,       // finaleData
 
    S_music,           // s_music
    S_MusicForMapDoom, // MusicForMap
@@ -1002,6 +1043,7 @@ static gamemodeinfo_t giDoomRetail =
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
 
+   INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
@@ -1095,6 +1137,7 @@ static gamemodeinfo_t giDoomCommercial =
    NULL,             // defTranslate
    Doom2BossSpecs,   // bossRules
 
+   INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
@@ -1188,6 +1231,7 @@ static gamemodeinfo_t giHereticSW =
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules
 
+   INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
    &giHticFText,      // fTextPos
    &HticIntermission, // interfuncs
@@ -1285,6 +1329,7 @@ static gamemodeinfo_t giHereticReg =
    DEFTL_HERETIC,    // defTranslate
    HereticBossSpecs, // bossRules
 
+   INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
    &giHticFText,      // fTextPos
    &HticIntermission, // interfuncs
@@ -1387,6 +1432,8 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(menuBackground,   NULL);
    OVERRIDE(creditBackground, NULL);
    OVERRIDE(consoleBack,      NULL);
+   OVERRIDE(interPic,         NULL);
+   OVERRIDE(exitRules,        NULL);
    
    // Note: demostates are not overridden here, see below.
 }

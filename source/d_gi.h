@@ -207,6 +207,7 @@ typedef enum
   doom2,        // DOOM 2
   pack_tnt,     // TNT mission pack
   pack_plut,    // Plutonia pack
+  pack_disk,    // Disk version
   pack_hacx,    // HacX stand-alone IWAD
   heretic,      // Heretic
   hticsosr,     // Heretic - Shadow of the Serpent Riders
@@ -232,7 +233,8 @@ enum
 // mission flags
 enum
 {
-   MI_DEMOIFDEMO4 = 0x00000001, // use demoStates override iff DEMO4 exists
+   MI_DEMOIFDEMO4  = 0x00000001, // use demoStates override iff DEMO4 exists
+   MI_CONBACKTITLE = 0x00000002, // use console backdrop instead of titlepic
 };
 
 //
@@ -260,6 +262,8 @@ typedef struct missioninfo_s
    const char   *creditBackgroundOR; // if not NULL, overrides creditBackground
    const char   *consoleBackOR;      // if not NULL, overrides consoleBack
    const demostate_t *demoStatesOR;  // if not NULL, overrides demostates
+   const char   *interPicOR;         // if not NULL, overrides interPic
+   exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
 } missioninfo_t;
 
 //
@@ -345,6 +349,7 @@ typedef struct gamemodeinfo_s
    bspecrule_t *bossRules;    // default boss specials
 
    // Intermission and Finale stuff
+   const char *interPic;      // default intermission backdrop
    int interMusNum;           // intermission music number
    giftextpos_t *fTextPos;    // finale text info
    interfns_t *interfuncs;    // intermission function pointers

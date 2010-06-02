@@ -222,6 +222,100 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
    return false; // no error
 }
 
+//
+// W_AddSubFile
+//
+// haleyjd 05/28/10: Adds a wad file that is part of a bigger file.
+//
+static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
+                            FILE *handle, size_t baseoffset)
+{
+   wadinfo_t   header;
+   lumpinfo_t* lump_p;
+   unsigned    i;
+   int         length;
+   int         startlump;
+   filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
+   lumpinfo_t  *newlumps;
+       
+   if(dir->ispublic && in_textmode)
+      printf(" adding %s\n", name);   // killough 8/8/98
+   startlump = dir->numlumps;
+
+   // haleyjd: seek to baseoffset first
+   fseek(handle, baseoffset, SEEK_SET);
+      
+   if(fread(&header, sizeof(header), 1, handle) < 1)
+      I_Error("Failed reading header for wad file %s\n", name);
+      
+   if(strncmp(header.identification, "IWAD", 4) && 
+      strncmp(header.identification, "PWAD", 4))
+   {
+      I_Error("Wad file %s doesn't have IWAD or PWAD id\n", name);
+   }
+      
+   header.numlumps     = SwapLong(header.numlumps);
+   header.infotableofs = SwapLong(header.infotableofs);
+      
+   length = header.numlumps * sizeof(filelump_t);
+   fileinfo2free = fileinfo = malloc(length);    // killough
+      
+   fseek(handle, baseoffset + (unsigned int)header.infotableofs, SEEK_SET);
+
+   if(fread(fileinfo, length, 1, handle) < 1)
+      I_Error("Failed reading directory for wad file %s\n", name);
+      
+   dir->numlumps += header.numlumps;
+   
+   // Fill in lumpinfo
+   dir->lumpinfo = realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *));
+
+   // space for new lumps
+   newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
+   lump_p   = newlumps;
+   
+   // update IWAD handle?   
+   if(dir->ispublic)
+   {
+      // haleyjd 06/21/04: track handle of first wad added also
+      if(!firstWadHandle)
+         firstWadHandle = handle;
+
+      // haleyjd 07/13/09: only track the first IWAD found
+      if(!iwadhandle && !strncmp(header.identification, "IWAD", 4))
+         iwadhandle = handle;
+   }
+  
+   for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
+   {
+      dir->lumpinfo[i] = lump_p;
+      lump_p->type     = lump_direct; // haleyjd
+      lump_p->file     = handle;
+      lump_p->position = (size_t)(SwapLong(fileinfo->filepos)) + baseoffset;
+      lump_p->size     = (size_t)(SwapLong(fileinfo->size));
+      //lump_p->source = source;
+      
+      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
+      lump_p->li_namespace = li_namespace;         // killough 4/17/98
+      
+      memset(lump_p->name, 0, 9);
+      strncpy(lump_p->name, fileinfo->name, 8);
+   }
+
+   // NOT IN TRUNK YET:
+   // haleyjd: increment source
+   //++source;
+   
+   if(fileinfo2free)
+      free(fileinfo2free); // killough
+   
+   if(dir->ispublic)
+      D_NewWadLumps(handle, w_sound_update_type);
+   
+   return false; // no error
+}
+
+
 // jff 1/23/98 Create routines to reorder the master directory
 // putting all flats into one marked block, and all sprites into another.
 // This will allow loading of sprites and flats from a PWAD with no
@@ -536,7 +630,19 @@ void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files)
    {
       // haleyjd 07/11/09: ignore empty filenames
       if((curfile->filename)[0])
-         W_AddFile(dir, curfile->filename, curfile->li_namespace);
+      {
+         // haleyjd 05/28/10: if there is a non-zero baseoffset, then this is a
+         // subfile wad, or a wad contained within a larger file in other words.
+         // Open them with a special routine; they can be treated uniformly with
+         // other wad files afterward.
+         if(curfile->baseoffset)
+         {
+            W_AddSubFile(dir, curfile->filename, curfile->li_namespace,
+                         curfile->f, curfile->baseoffset);
+         }
+         else
+            W_AddFile(dir, curfile->filename, curfile->li_namespace);
+      }
 
       ++curfile;
    }

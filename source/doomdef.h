@@ -259,6 +259,10 @@ typedef enum {
 #define KEYD_RIGHTARROW 0xae
 #define KEYD_DOWNARROW  0xaf
 
+// haleyjd: extra mouse buttons
+#define KEYD_MOUSE4     0xb0
+#define KEYD_MOUSE5     0xb1
+
 #define KEYD_RSHIFT     0xb6 //(0x80+0x36)
 #define KEYD_RALT       0xb8 //(0x80+0x38)
 #define KEYD_LALT       KEYD_RALT
