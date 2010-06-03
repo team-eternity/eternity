@@ -32,22 +32,25 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
-#include "c_runcmd.h"
-#include "c_net.h"
-#include "g_game.h"
-#include "r_data.h"
-#include "p_inter.h"
 #include "m_cheat.h"
+
+#include "c_net.h"
+#include "c_runcmd.h"
+#include "d_deh.h"  // Ty 03/27/98 - externalized strings
+#include "d_gi.h"
+#include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "dstrings.h"
+#include "e_states.h"
+#include "g_game.h"
 #include "m_argv.h"
+#include "p_inter.h"
+#include "p_setup.h"
+#include "r_data.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "dstrings.h"
-#include "d_deh.h"  // Ty 03/27/98 - externalized strings
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "d_gi.h"
-#include "e_states.h"
-
+#include "w_wad.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
@@ -448,20 +451,44 @@ static void cheat_behold()
 static void cheat_clev(buf)
 char buf[3];
 {
-   int epsd, map;
+   char mapname[9];
+   int epsd, map, lumpnum;
+
+   // return silently on nonsense input
+   if(buf[0] < '0' || buf[0] > '9' ||
+      buf[1] < '0' || buf[1] > '9')
+      return;
+
+   // haleyjd: build mapname
+   memset(mapname, 0, sizeof(mapname));
 
    if(GameModeInfo->flags & GIF_MAPXY)
    {
       epsd = 1; //jff was 0, but espd is 1-based 
       map = (buf[0] - '0')*10 + buf[1] - '0';
+
+      psnprintf(mapname, sizeof(mapname), "MAP%02d", map);
    }
    else
    {
       epsd = buf[0] - '0';
       map = buf[1] - '0';
+
+      psnprintf(mapname, sizeof(mapname), "E%dM%d", epsd, map);
    }
 
+   // haleyjd: check mapname for existence and validity as a map
+   lumpnum = W_CheckNumForName(mapname);
+
+   if(lumpnum == -1 || P_CheckLevel(lumpnum) == LEVEL_FORMAT_INVALID)
+   {
+      doom_printf("%s not found or is not a valid map", mapname);
+      return;
+   }
+   
+
    // Catch invalid maps.
+   /*
    {
       int maxep = GameModeInfo->numEpisodes;
 
@@ -502,6 +529,7 @@ char buf[3];
          break;
       }
    }
+   */
 
    // So be it.
 
