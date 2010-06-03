@@ -178,7 +178,7 @@ static default_t sysdefaults[] =
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
-   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 0, 0, UL, wad_no, 
+   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, wad_no, 
                "process affinity mask - warning: expert setting only!"),
 #endif
 
