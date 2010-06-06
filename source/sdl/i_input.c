@@ -527,12 +527,14 @@ static void I_GetEvent(void)
             d_event.data1 = KEYD_MWHEELDOWN;
             mwheeldowntic = calltic;
             break;
+#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
+#endif
          }
 
          D_PostEvent(&d_event);
@@ -566,12 +568,14 @@ static void I_GetEvent(void)
             break;
          case SDL_BUTTON_WHEELDOWN:
             break;
+#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
+#endif
          }
 
          if(d_event.data1)
