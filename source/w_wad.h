@@ -104,6 +104,9 @@ typedef struct waddir_s
    lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
    int        numlumps;   // number of lumps
    int        ispublic;   // if false, don't call D_NewWadLumps
+   lumpinfo_t **infoptrs; // 06/06/10: track all allocations
+   int        numallocs;  // number of entries in the infoptrs table
+   int        numallocsa; // number of entries allocated for the infoptrs table
 } waddir_t;
 
 //
@@ -148,6 +151,7 @@ int     W_ReadLumpHeader(int lump, void *dest, size_t size);
 unsigned W_LumpNameHash(const char *s);           // killough 1/31/98
 
 void W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
+void W_FreeDirectoryAllocs(waddir_t *dir);   // haleyjd 06/06/10
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
 

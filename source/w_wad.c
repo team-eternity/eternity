@@ -80,6 +80,29 @@ static int w_sound_update_type;
 void D_NewWadLumps(FILE *handle, int sound_update_type);
 
 //
+// W_addInfoPtr
+//
+// haleyjd 06/06/10: I need to track all lumpinfo_t allocations that are
+// added to a waddir_t's lumpinfo directory, or else these allocations get
+// orphaned when freeing a private wad directory. Oops! ;)
+//
+static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
+{
+   // reallocate if necessary
+   if(dir->numallocs >= dir->numallocsa)
+   {
+      dir->numallocsa = dir->numallocsa ? dir->numallocsa * 2 : 32;
+
+      dir->infoptrs = realloc(dir->infoptrs, dir->numallocsa * sizeof(lumpinfo_t *));
+   }
+   
+   // add it
+   dir->infoptrs[dir->numallocs] = infoptr;
+   dir->numallocs++;
+}
+
+
+//
 // W_AddFile
 //
 // All files are optional, but at least one file must be found (PWAD, if all 
@@ -180,6 +203,9 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
    // space for new lumps
    newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
    lump_p   = newlumps;
+
+   // haleyjd: keep track of this allocation of lumps
+   W_addInfoPtr(dir, newlumps);
    
    // update IWAD handle?   
    if(isWad && dir->ispublic)
@@ -268,6 +294,9 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
    // space for new lumps
    newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
    lump_p   = newlumps;
+
+   // haleyjd: keep track of this allocation of lumps
+   W_addInfoPtr(dir, newlumps);
    
    // update IWAD handle?   
    if(dir->ispublic)
@@ -332,7 +361,7 @@ static int IsMarker(const char *marker, const char *name)
 static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
                                      const char *end_marker, int li_namespace)
 {
-   lumpinfo_t **marked = malloc(sizeof(*marked) * dir->numlumps);
+   lumpinfo_t **marked = calloc(sizeof(*marked), dir->numlumps);
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
@@ -390,11 +419,13 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
 
    free(marked);                                   // free marked list
    
-   dir->numlumps = num_unmarked + num_marked;           // new total number of lumps
+   dir->numlumps = num_unmarked + num_marked;      // new total number of lumps
    
    if(mark_end)                                    // add end marker
    {
-      dir->lumpinfo[dir->numlumps] = malloc(sizeof(lumpinfo_t));
+      lumpinfo_t *newlump = calloc(1, sizeof(lumpinfo_t));
+      W_addInfoPtr(dir, newlump); // haleyjd: track it
+      dir->lumpinfo[dir->numlumps] = newlump;
       dir->lumpinfo[dir->numlumps]->size = 0;  // killough 3/20/98: force size to be 0
       dir->lumpinfo[dir->numlumps]->li_namespace = ns_global;   // killough 4/17/98
       strncpy(dir->lumpinfo[dir->numlumps]->name, end_marker, 8);
@@ -801,6 +832,29 @@ void W_FreeDirectoryLumps(waddir_t *waddir)
          li[i]->cache = NULL;
       }
    }
+}
+
+//
+// W_FreeDirectoryAllocs
+//
+// haleyjd 06/06/10
+// Frees all lumpinfo_t's allocated for a wad directory.
+//
+void W_FreeDirectoryAllocs(waddir_t *dir)
+{
+   int i;
+
+   if(!dir->infoptrs)
+      return;
+
+   // free each lumpinfo_t allocation
+   for(i = 0; i < dir->numallocs; ++i)
+      free(dir->infoptrs[i]);
+
+   // free the allocation tracking table
+   free(dir->infoptrs);
+   dir->infoptrs = NULL;
+   dir->numallocs = dir->numallocsa = 0;
 }
 
 //=============================================================================

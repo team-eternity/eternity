@@ -196,6 +196,9 @@ static void I_Pick_FreeWad(void)
       // free all resources loaded from the wad
       W_FreeDirectoryLumps(&pickwad);
 
+      // free all lumpinfo_t's allocated for the wad
+      W_FreeDirectoryAllocs(&pickwad);
+
       if(pickwad.lumpinfo[0]->file) // kind of redundant, but who knows
          fclose(pickwad.lumpinfo[0]->file);
 
