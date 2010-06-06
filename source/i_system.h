@@ -92,6 +92,9 @@ enum
 // haleyjd 05/21/10
 void I_FatalError(int code, const char *error, ...);
 
+// haleyjd 06/05/10
+void I_ExitWithMessage(const char *msg, ...);
+
 // killough 3/20/98: add const
 // killough 4/25/98: add gcc attributes
 #ifdef __GNUC__

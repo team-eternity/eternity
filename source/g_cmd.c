@@ -64,6 +64,16 @@ extern int keylookspeed;
 // Game Commands
 //
 
+CONSOLE_COMMAND(i_exitwithmessage, 0)
+{
+   I_ExitWithMessage("%s\n", Console.args);
+}
+
+CONSOLE_COMMAND(i_fatalerror, 0)
+{
+   I_FatalError(I_ERR_KILL, "%s\n", Console.args);
+}
+
 CONSOLE_COMMAND(i_error, 0)
 {
    I_Error("%s\n", Console.args);
@@ -771,6 +781,8 @@ void G_AddCompat(void)
 
 void G_AddCommands(void)
 {
+   C_AddCommand(i_exitwithmessage);
+   C_AddCommand(i_fatalerror);
    C_AddCommand(i_error);
    C_AddCommand(z_print);
    C_AddCommand(z_dumpcore);

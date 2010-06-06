@@ -284,7 +284,18 @@ static char errmsg[2048];  // buffer of error message -- killough
 
 static int has_exited;
 
-static boolean error_exit; // haleyjd: if true, an error has occurred.
+enum
+{
+   I_ERRORLEVEL_NONE,    // no error
+   I_ERRORLEVEL_MESSAGE, // not really an error, just an exit message
+   I_ERRORLEVEL_NORMAL,  // a "normal" error (such as a missing patch)
+   I_ERRORLEVEL_FATAL    // kill with a vengeance
+};
+
+// haleyjd: if non-0, an error has occurred. The level of error is set
+// by the function which flagged the error condition, as per the above
+// enumeration.
+static int error_exitcode;
 
 //
 // I_Quit
@@ -295,11 +306,12 @@ void I_Quit(void)
 {
    has_exited = 1;   /* Prevent infinitely recursive exits -- killough */
    
-   if(demorecording)
+   // haleyjd 06/05/10: not in fatal error situations; could cause heap calls
+   if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
       G_CheckDemoStatus();
    
    // sf : rearrange this so the errmsg doesn't get messed up
-   if(error_exit)
+   if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
    else
       I_EndDoom();
@@ -309,7 +321,7 @@ void I_Quit(void)
    SDL_Quit();
 
    // haleyjd 03/18/10: none of these should be called in fatal error situations.
-   if(!error_exit)
+   if(error_exitcode < I_ERRORLEVEL_FATAL)
    {
       M_SaveDefaults();
       M_SaveSysConfig();
@@ -319,9 +331,9 @@ void I_Quit(void)
    // Under Visual C++, the console window likes to rudely slam
    // shut -- this can stop it, but is now optional
 #ifdef _MSC_VER
-   if(error_exit || waitAtExit)
+   if(error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit)
    {
-      puts("\nPress any key to continue");
+      puts("Press any key to continue\n");
       getch();
    }
 #endif
@@ -335,14 +347,19 @@ void I_Quit(void)
 //
 void I_FatalError(int code, const char *error, ...)
 {
+   // Flag a fatal error, so that some shutdown code will not be executed;
+   // chiefly, saving the configuration files, which can malfunction in
+   // unpredictable ways when heap corruption is present.
+   error_exitcode = I_ERRORLEVEL_FATAL;
+
    if(code == I_ERR_ABORT)
    {
+      // kill with utmost contempt (this is for debugging purposes only,
+      // and should generally be avoided in production code).
       abort();
    }
    else
    {
-      error_exit = true; // haleyjd: flag an error appropriately
-
       if(!*errmsg)   // ignore all but the first message -- killough
       {
          va_list argptr;
@@ -360,10 +377,37 @@ void I_FatalError(int code, const char *error, ...)
 }
 
 //
+// I_ExitWithMessage
+//
+// haleyjd 06/05/10: exit with a message which is not technically an error. The
+// code used to call I_Error for this, but it wasn't semantically correct.
+//
+void I_ExitWithMessage(const char *msg, ...)
+{
+   error_exitcode = I_ERRORLEVEL_MESSAGE; // just a message
+
+   if(!*errmsg)   // ignore all but the first message -- killough
+   {
+      va_list argptr;
+      va_start(argptr, msg);
+      pvsnprintf(errmsg, sizeof(errmsg), msg, argptr);
+      va_end(argptr);
+   }
+
+   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+   {
+      has_exited = 1; // Prevent infinitely recursive exits -- killough
+      exit(0);
+   }
+}
+
+//
 // I_Error
 //
 void I_Error(const char *error, ...) // killough 3/20/98: add const
 {
+   error_exitcode = I_ERRORLEVEL_NORMAL; // a normal error
+
    if(!*errmsg)   // ignore all but the first message -- killough
    {
       va_list argptr;
@@ -381,6 +425,8 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
 
 void I_ErrorVA(const char *error, va_list args)
 {
+   error_exitcode = I_ERRORLEVEL_NORMAL;
+
    if(!*errmsg)
       pvsnprintf(errmsg, sizeof(errmsg), error, args);
 

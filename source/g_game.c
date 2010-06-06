@@ -3562,7 +3562,7 @@ boolean G_CheckDemoStatus(void)
       
       free(demobuffer);
       demobuffer = NULL;  // killough
-      I_Error("Demo %s recorded\n", demoname);
+      I_ExitWithMessage("Demo %s recorded\n", demoname);
       return false;  // killough
    }
 
@@ -3572,9 +3572,9 @@ boolean G_CheckDemoStatus(void)
 
       // killough -- added fps information and made it work for longer demos:
       unsigned int realtics = endtime - starttime;
-      I_Error("Timed %u gametics in %u realtics = %-.1f frames per second\n",
-              (unsigned int)(gametic), realtics,
-              (unsigned int)(gametic) * (double) TICRATE / realtics);
+      I_ExitWithMessage("Timed %u gametics in %u realtics = %-.1f frames per second\n",
+                        (unsigned int)(gametic), realtics,
+                        (unsigned int)(gametic) * (double) TICRATE / realtics);
    }              
 
    if(demoplayback)
