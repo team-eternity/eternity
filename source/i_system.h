@@ -89,21 +89,27 @@ enum
    I_ERR_ABORT  // call abort()
 };
 
-// haleyjd 05/21/10
-void I_FatalError(int code, const char *error, ...);
-
 // haleyjd 06/05/10
 void I_ExitWithMessage(const char *msg, ...);
 
+#ifdef __GNUC__
+// haleyjd 05/21/10
+void I_FatalError(int code, const char *error, ...) __attribute__((noreturn, format(printf,2,3)));
+
 // killough 3/20/98: add const
 // killough 4/25/98: add gcc attributes
-#ifdef __GNUC__
-void I_Error(const char *error, ...) __attribute__((format(printf,1,2)));
+void I_Error(const char *error, ...) __attribute__((noreturn, format(printf,1,2)));
+
+void I_ErrorVA(const char *error, va_list args) __attribute__((noreturn));
 #else
-void I_Error(const char *error, ...); //SoM 3/14/2002: vc++ 
-#endif
+// haleyjd 05/21/10
+void I_FatalError(int code, const char *error, ...);
+
+//SoM 3/14/2002: vc++ 
+void I_Error(const char *error, ...);
 
 void I_ErrorVA(const char *error, va_list args);
+#endif
 
 extern int mousepresent;                // killough
 

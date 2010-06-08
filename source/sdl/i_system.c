@@ -359,8 +359,7 @@ void I_FatalError(int code, const char *error, ...)
 
    if(code == I_ERR_ABORT)
    {
-      // kill with utmost contempt (this is for debugging purposes only,
-      // and should generally be avoided in production code).
+      // kill with utmost contempt
       abort();
    }
    else
@@ -378,6 +377,8 @@ void I_FatalError(int code, const char *error, ...)
          has_exited = 1; // Prevent infinitely recursive exits -- killough
          exit(-1);
       }
+      else
+         abort(); // double fault, must abort
    }
 }
 
@@ -432,6 +433,8 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
       has_exited = 1; // Prevent infinitely recursive exits -- killough
       exit(-1);
    }
+   else
+      I_FatalError(I_ERR_ABORT, "I_Error: double faulted\n");
 }
 
 //
@@ -453,6 +456,8 @@ void I_ErrorVA(const char *error, va_list args)
       has_exited = 1;
       exit(-1);
    }
+   else
+      I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");
 }
 
 //
