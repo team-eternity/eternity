@@ -533,7 +533,10 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 #endif
          }
          else
+         {
+            memset(&playercam, 0, sizeof(playercam));
             listener = NULL;
+         }
       }
    }
 

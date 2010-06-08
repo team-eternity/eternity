@@ -3131,81 +3131,81 @@ void G_RecordDemo(char *name)
 // done carefully so as to preserve demo compatibility with previous
 // versions.
 
-byte *G_WriteOptions(byte *demo_p)
+byte *G_WriteOptions(byte *demoptr)
 {
-   byte *target = demo_p + GAME_OPTION_SIZE;
+   byte *target = demoptr + GAME_OPTION_SIZE;
    
-   *demo_p++ = monsters_remember;  // part of monster AI -- byte 1
+   *demoptr++ = monsters_remember;  // part of monster AI -- byte 1
    
-   *demo_p++ = variable_friction;  // ice & mud -- byte 2
+   *demoptr++ = variable_friction;  // ice & mud -- byte 2
    
-   *demo_p++ = weapon_recoil;      // weapon recoil -- byte 3
+   *demoptr++ = weapon_recoil;      // weapon recoil -- byte 3
    
-   *demo_p++ = allow_pushers;      // PUSH Things -- byte 4
+   *demoptr++ = allow_pushers;      // PUSH Things -- byte 4
    
-   *demo_p++ = 0;                  // ??? unused -- byte 5
+   *demoptr++ = 0;                  // ??? unused -- byte 5
    
-   *demo_p++ = player_bobbing;     // whether player bobs or not -- byte 6
+   *demoptr++ = player_bobbing;     // whether player bobs or not -- byte 6
    
    // killough 3/6/98: add parameters to savegame, move around some in demos
-   *demo_p++ = respawnparm; // byte 7
-   *demo_p++ = fastparm;    // byte 8
-   *demo_p++ = nomonsters;  // byte 9
+   *demoptr++ = respawnparm; // byte 7
+   *demoptr++ = fastparm;    // byte 8
+   *demoptr++ = nomonsters;  // byte 9
    
-   *demo_p++ = demo_insurance;        // killough 3/31/98 -- byte 10
+   *demoptr++ = demo_insurance;        // killough 3/31/98 -- byte 10
    
    // killough 3/26/98: Added rngseed. 3/31/98: moved here
-   *demo_p++ = (byte)((rngseed >> 24) & 0xff); // byte 11
-   *demo_p++ = (byte)((rngseed >> 16) & 0xff); // byte 12
-   *demo_p++ = (byte)((rngseed >>  8) & 0xff); // byte 13
-   *demo_p++ = (byte)( rngseed        & 0xff); // byte 14
+   *demoptr++ = (byte)((rngseed >> 24) & 0xff); // byte 11
+   *demoptr++ = (byte)((rngseed >> 16) & 0xff); // byte 12
+   *demoptr++ = (byte)((rngseed >>  8) & 0xff); // byte 13
+   *demoptr++ = (byte)( rngseed        & 0xff); // byte 14
    
    // Options new to v2.03 begin here
-   *demo_p++ = monster_infighting;   // killough 7/19/98 -- byte 15
+   *demoptr++ = monster_infighting;   // killough 7/19/98 -- byte 15
    
-   *demo_p++ = dogs;                 // killough 7/19/98 -- byte 16
+   *demoptr++ = dogs;                 // killough 7/19/98 -- byte 16
    
-   *demo_p++ = bfgtype;              // killough 7/19/98 -- byte 17
+   *demoptr++ = bfgtype;              // killough 7/19/98 -- byte 17
    
-   *demo_p++ = 0;                    // unused - (beta mode) -- byte 18
+   *demoptr++ = 0;                    // unused - (beta mode) -- byte 18
    
-   *demo_p++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
-   *demo_p++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
+   *demoptr++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
+   *demoptr++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
    
-   *demo_p++ = monster_backing;           // killough 9/8/98 -- byte 21
+   *demoptr++ = monster_backing;           // killough 9/8/98 -- byte 21
    
-   *demo_p++ = monster_avoid_hazards;     // killough 9/9/98 -- byte 22
+   *demoptr++ = monster_avoid_hazards;     // killough 9/9/98 -- byte 22
    
-   *demo_p++ = monster_friction;          // killough 10/98  -- byte 23
+   *demoptr++ = monster_friction;          // killough 10/98  -- byte 23
    
-   *demo_p++ = help_friends;              // killough 9/9/98 -- byte 24
+   *demoptr++ = help_friends;              // killough 9/9/98 -- byte 24
    
-   *demo_p++ = dog_jumping; // byte 25
+   *demoptr++ = dog_jumping; // byte 25
    
-   *demo_p++ = monkeys;     // byte 26
+   *demoptr++ = monkeys;     // byte 26
    
    {   // killough 10/98: a compatibility vector now
       int i;
-      for (i=0; i < COMP_TOTAL; i++)
-         *demo_p++ = comp[i] != 0;
+      for(i = 0; i < COMP_TOTAL; i++)
+         *demoptr++ = comp[i] != 0;
    }
    // bytes 27 - 58 : comp
    
    // haleyjd 05/23/04: autoaim is sync critical
-   *demo_p++ = autoaim; // byte 59
+   *demoptr++ = autoaim; // byte 59
 
    // haleyjd 04/06/05: allowmlook is sync critical
-   *demo_p++ = allowmlook; // byte 60
+   *demoptr++ = allowmlook; // byte 60
    
    // CURRENT BYTES LEFT: 3
 
    //----------------
    // Padding at end
    //----------------
-   while(demo_p < target)
-      *demo_p++ = 0;
+   while(demoptr < target)
+      *demoptr++ = 0;
    
-   if(demo_p != target)
+   if(demoptr != target)
       I_Error("G_WriteOptions: GAME_OPTION_SIZE is too small\n");
    
    return target;
@@ -3213,73 +3213,73 @@ byte *G_WriteOptions(byte *demo_p)
 
 // Same, but read instead of write
 
-byte *G_ReadOptions(byte *demo_p)
+byte *G_ReadOptions(byte *demoptr)
 {
-   byte *target = demo_p + GAME_OPTION_SIZE;
+   byte *target = demoptr + GAME_OPTION_SIZE;
 
-   monsters_remember = *demo_p++;
+   monsters_remember = *demoptr++;
 
-   variable_friction = *demo_p;  // ice & mud
-   demo_p++;
+   variable_friction = *demoptr;  // ice & mud
+   demoptr++;
 
-   weapon_recoil = *demo_p;      // weapon recoil
-   demo_p++;
+   weapon_recoil = *demoptr;      // weapon recoil
+   demoptr++;
 
-   allow_pushers = *demo_p;      // PUSH Things
-   demo_p++;
+   allow_pushers = *demoptr;      // PUSH Things
+   demoptr++;
 
-   demo_p++;
+   demoptr++;
 
    // haleyjd: restored bobbing to proper sync critical status
-   player_bobbing = *demo_p;     // whether player bobs or not
-   demo_p++;
+   player_bobbing = *demoptr;     // whether player bobs or not
+   demoptr++;
 
    // killough 3/6/98: add parameters to savegame, move from demo
-   respawnparm = *demo_p++;
-   fastparm = *demo_p++;
-   nomonsters = *demo_p++;
+   respawnparm = *demoptr++;
+   fastparm    = *demoptr++;
+   nomonsters  = *demoptr++;
 
-   demo_insurance = *demo_p++;              // killough 3/31/98
+   demo_insurance = *demoptr++;              // killough 3/31/98
 
    // killough 3/26/98: Added rngseed to demos; 3/31/98: moved here
 
-   rngseed  = *demo_p++ & 0xff;
+   rngseed  = *demoptr++ & 0xff;
    rngseed <<= 8;
-   rngseed += *demo_p++ & 0xff;
+   rngseed += *demoptr++ & 0xff;
    rngseed <<= 8;
-   rngseed += *demo_p++ & 0xff;
+   rngseed += *demoptr++ & 0xff;
    rngseed <<= 8;
-   rngseed += *demo_p++ & 0xff;
+   rngseed += *demoptr++ & 0xff;
 
    // Options new to v2.03
    if(demo_version >= 203)
    {
-      monster_infighting = *demo_p++;   // killough 7/19/98
+      monster_infighting = *demoptr++;   // killough 7/19/98
       
-      dogs = *demo_p++;                 // killough 7/19/98
+      dogs = *demoptr++;                 // killough 7/19/98
       
-      bfgtype = *demo_p++;          // killough 7/19/98
-      demo_p ++;        // sf: where beta was
+      bfgtype = *demoptr++;              // killough 7/19/98
+      demoptr++;                         // sf: where beta was
       
-      distfriend = *demo_p++ << 8;      // killough 8/8/98
-      distfriend+= *demo_p++;
+      distfriend = *demoptr++ << 8;      // killough 8/8/98
+      distfriend+= *demoptr++;
       
-      monster_backing = *demo_p++;     // killough 9/8/98
+      monster_backing = *demoptr++;      // killough 9/8/98
       
-      monster_avoid_hazards = *demo_p++; // killough 9/9/98
+      monster_avoid_hazards = *demoptr++; // killough 9/9/98
       
-      monster_friction = *demo_p++;      // killough 10/98
+      monster_friction = *demoptr++;     // killough 10/98
       
-      help_friends = *demo_p++;          // killough 9/9/98
+      help_friends = *demoptr++;         // killough 9/9/98
       
-      dog_jumping = *demo_p++;           // killough 10/98
+      dog_jumping = *demoptr++;          // killough 10/98
       
-      monkeys = *demo_p++;
+      monkeys = *demoptr++;
       
       {   // killough 10/98: a compatibility vector now
          int i;
          for(i = 0; i < COMP_TOTAL; ++i)
-            comp[i] = *demo_p++;
+            comp[i] = *demoptr++;
       }
 
       G_SetCompatibility();
@@ -3290,13 +3290,13 @@ byte *G_ReadOptions(byte *demo_p)
       if(demo_version > 331 ||
          (demo_version == 331 && demo_subversion > 7))
       {
-         autoaim = *demo_p++;
+         autoaim = *demoptr++;
       }
 
       if(demo_version >= 333)
       {
          // haleyjd 04/06/05: allowmlook is sync-critical
-         allowmlook = *demo_p++;
+         allowmlook = *demoptr++;
       }
    }
    else  // defaults for versions <= 2.02
@@ -3572,9 +3572,9 @@ boolean G_CheckDemoStatus(void)
 
       // killough -- added fps information and made it work for longer demos:
       unsigned int realtics = endtime - starttime;
-      I_ExitWithMessage("Timed %u gametics in %u realtics = %-.1f frames per second\n",
-                        (unsigned int)(gametic), realtics,
-                        (unsigned int)(gametic) * (double) TICRATE / realtics);
+      I_Error("Timed %u gametics in %u realtics = %-.1f frames per second\n",
+              (unsigned int)(gametic), realtics,
+              (unsigned int)(gametic) * (double) TICRATE / realtics);
    }              
 
    if(demoplayback)
@@ -3663,7 +3663,6 @@ void G_CoolViewPoint(void)
 {
    int viewtype;
    int old_displayplayer = displayplayer;
-   int numdmspots = deathmatch_p - deathmatchstarts;
 
    viewtype = M_Random() % 3;
    

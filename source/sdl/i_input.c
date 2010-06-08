@@ -259,7 +259,8 @@ static void I_JoystickEvents(void)
    Sint16 joy_x, joy_y;
    static int old_joyb[8];
    
-   if(!joystickpresent || !usejoystick || !sdlJoystick)
+   if(!joystickpresent || !usejoystick || !sdlJoystick || 
+      !sdlJoystickNumButtons)
       return;
    
    SDL_JoystickUpdate(); // read the current joystick settings

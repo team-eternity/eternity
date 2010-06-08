@@ -2538,7 +2538,6 @@ void A_KillChildren(mobj_t *actor)
 //
 void A_AproxDistance(mobj_t *actor)
 {
-   mobj_t *target;
    int *dest = NULL;
    fixed_t distance;
    int cnum;
@@ -2550,7 +2549,7 @@ void A_AproxDistance(mobj_t *actor)
 
    dest = &(actor->counters[cnum]);
 
-   if(!(target = actor->target))
+   if(!actor->target)
    {
       *dest = -1;
       return;
@@ -2560,7 +2559,8 @@ void A_AproxDistance(mobj_t *actor)
    distance = P_AproxDistance(actor->x - getTargetX(actor), 
                               actor->y - getTargetY(actor));
 #else   
-   distance = P_AproxDistance(actor->x - target->x, actor->y - target->y);
+   distance = P_AproxDistance(actor->x - actor->target->x, 
+                              actor->y - actor->target->y);
 #endif
 
    *dest = distance >> FRACBITS;

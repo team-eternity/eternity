@@ -1324,13 +1324,14 @@ void cfg_addlist(cfg_t *cfg, const char *name, unsigned int nvalues, ...)
 static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
                                     unsigned int nvalues, void *array)
 {
+   const cfg_type_t type = opt->type; // haleyjd: a little compiler sugar ;)
    unsigned int i;
    int        *intptr    = 0;
    double     *doubleptr = 0;
    cfg_bool_t *boolptr   = 0;
    const char **strptr   = 0;
 
-   switch(opt->type)
+   switch(type)
    {
    case CFGT_INT:
       intptr = (int *)array;
@@ -1350,7 +1351,7 @@ static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
 
    for(i = 0; i < nvalues; ++i)
    {
-      switch(opt->type)
+      switch(type)
       {
       case CFGT_INT:
          cfg_opt_setnint(cfg, opt, *intptr, opt->nvalues);

@@ -62,8 +62,8 @@ void G_SaveGameName(char *,size_t,int); // killough 3/22/98: sets savegame filen
 void G_SetFastParms(int);        // killough 4/10/98: sets -fast parameters
 void G_DoNewGame(void);
 void G_DoReborn(int playernum);
-byte *G_ReadOptions(byte *demo_p);         // killough 3/1/98
-byte *G_WriteOptions(byte *demo_p);        // killough 3/1/98
+byte *G_ReadOptions(byte *demoptr);         // killough 3/1/98
+byte *G_WriteOptions(byte *demoptr);        // killough 3/1/98
 void G_PlayerReborn(int player);
 void G_InitNewNum(skill_t skill, int episode, int map);
 void G_InitNew(skill_t skill, char*);

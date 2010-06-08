@@ -387,7 +387,6 @@ static void R_MapSlope(int y, int x1, int x2)
    int count = x2 - x1;
    v3double_t s;
    double map1, map2;
-   double base;
 
    s.x = x1 - view.xcenter;
    s.y = y - view.ycenter + 1;
@@ -407,7 +406,6 @@ static void R_MapSlope(int y, int x1, int x2)
    slopespan.y = y;
 
    // Setup lighting
-   base = 4.0 * (plane.lightlevel) - 448.0;
 
    map1 = 256.0 - (slope->shade - slope->plight * slopespan.idfrac);
    if(count > 0)

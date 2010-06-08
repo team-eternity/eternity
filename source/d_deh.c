@@ -2070,7 +2070,7 @@ boolean deh_procStringSub(char *key, char *lookfor, char *newstring)
 
    if(key)
       deh_LogPrintf("Assigned key %s => '%s'\n", key, newstring);
-   else
+   else if(lookfor)
    {
       deh_LogPrintf("Changed '%.12s%s' to '%.12s%s' at key %s\n",
                     lookfor, (strlen(lookfor) > 12) ? "..." : "",

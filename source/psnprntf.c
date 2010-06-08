@@ -459,6 +459,9 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
 #define POP() \
     *(--stackpos)
 
+    // haleyjd: init this array for safety
+    memset(numstack, 0, sizeof(numstack));
+
     /* Retrieve value */
     switch (info->prefix)
     {

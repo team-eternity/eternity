@@ -1238,7 +1238,7 @@ static void D_DiskMetaData(void)
    char *name  = NULL, *metatext = NULL;
    const char *slash = NULL;
    const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
-   int len = 0, slen = 0, index = 0;
+   int slen = 0, index = 0;
    int partime = 0, musicnum = 0;
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
    diskwad_t wad;
@@ -1256,7 +1256,7 @@ static void D_DiskMetaData(void)
       return;
 
    // construct the metadata filename
-   len = M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
+   M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
    
    if(!(slash = strrchr(wad.name, '\\')))
       return;

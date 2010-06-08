@@ -130,6 +130,13 @@ int P_CreatePortalGroup(sector_t *from)
          (sector_t ***)realloc(grouplist, sizeof(sector_t *) * grouplimit);
    }
 
+   // haleyjd: check for safety
+   if(!list)
+   {
+      I_Error("P_CreatePortalGroup: no list\n");
+      return 0;
+   }
+
    list[count++] = from;
    R_SetSectorGroupID(from, groupcount);
    for(sec = 0; sec < count; ++sec)
@@ -546,9 +553,12 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 // ----------------------------------------------------------------------------
 // SoM: Sector utility functions
 
+//
 // P_SetFloorHeight
+//
 // This function will set the floor height, and update
 // the float version of the floor height as well.
+//
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
    // TODO: Support for diabling a linked portal on a surface
@@ -556,11 +566,12 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
 }
 
-
-
+//
 // P_SetCeilingHeight
+//
 // This function will set the ceiling height, and update
 // the float version of the ceiling height as well.
+//
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
    // TODO: Support for diabling a linked portal on a surface
