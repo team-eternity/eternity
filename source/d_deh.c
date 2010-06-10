@@ -2390,14 +2390,13 @@ char *ptr_lstrip(char *p)  // point past leading whitespace
 
 boolean deh_GetData(char *s, char *k, int *l, char **strval)
 {
-   char *t;  // current char
-   int  val; // to hold value of pair
-   char buffer[DEH_MAXKEYLEN];  // to hold key in progress
-   boolean okrc = TRUE;  // assume good unless we have problems
-   int i;  // iterator
+   char *t;                    // current char
+   int  val = 0;               // to hold value of pair
+   char buffer[DEH_MAXKEYLEN]; // to hold key in progress
+   boolean okrc = TRUE;        // assume good unless we have problems
+   int i;                      // iterator
 
-   *buffer = '\0';
-   val = 0;  // defaults in case not otherwise set
+   memset(buffer, 0, sizeof(buffer));
 
    for(i = 0, t = s; *t && i < DEH_MAXKEYLEN; ++t, ++i)
    {
@@ -2412,11 +2411,9 @@ boolean deh_GetData(char *s, char *k, int *l, char **strval)
       okrc = FALSE;
    else
    {
-      if(!*++t)
-      {
-         val = 0;  // in case "thiskey =" with no value
-         okrc = FALSE;
-      }
+      if(!*++t) // in case "thiskey =" with no value 
+         okrc = FALSE; 
+
       // we've incremented t
       val = strtol(t, NULL, 0);  // killough 8/9/98: allow hex or octal input
    }

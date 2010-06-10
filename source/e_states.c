@@ -1593,7 +1593,6 @@ static void DoTokenStateText(tkstate_t *tks)
    else if(str[i] == '.')
    {
       char *endpos = NULL;
-      long foo;
 
       // we see a '.' which could either be the decimal point in a float
       // value, or the dot name separator in a label. If the token is only
@@ -1601,7 +1600,7 @@ static void DoTokenStateText(tkstate_t *tks)
       // parser can sort this out if the wrong token type appears when it
       // is expecting TOKEN_LABEL.
       
-      foo = strtol(token->buffer, &endpos, 10);
+      strtol(token->buffer, &endpos, 10);
       
       if(*endpos != '\0')
       {      

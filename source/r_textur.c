@@ -471,11 +471,13 @@ static void R_TextureHacks(texture_t *t)
 //
 // R_ReadTextureLump
 //
-static int R_ReadTextureLump(texturelump_t *tlump, int startnum, 
-                             int *patchlookup, int *errors)
+// haleyjd: Reads a TEXTUREx lump, which may be in either DOOM or Strife format.
+// TODO: Walk the wad lump hash chains and support additive logic.
+//
+static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int *errors)
 {
+   static int texnum; // haleyjd 06/09/10: not needed outside this function now
    int i, j;
-   int texnum = startnum;
    byte *directory = tlump->directory;
 
    for(i = 0; i < tlump->numtextures; ++i, ++texnum)
@@ -1214,7 +1216,6 @@ void R_InitTextures(void)
 {
    int *patchlookup;
    int errors = 0;
-   int texnum = 0;
    int i;   
    
    texturelump_t *maptex1;
@@ -1258,8 +1259,8 @@ void R_InitTextures(void)
    R_DetectTextureFormat(maptex2);
 
    // read texture lumps
-   texnum = R_ReadTextureLump(maptex1, texnum, patchlookup, &errors);
-   texnum = R_ReadTextureLump(maptex2, texnum, patchlookup, &errors);
+   R_ReadTextureLump(maptex1, patchlookup, &errors);
+   R_ReadTextureLump(maptex2, patchlookup, &errors);
 
    // done with patch lookup
    free(patchlookup);

@@ -431,20 +431,15 @@ static void R_MapSlope(int y, int x1, int x2)
 //
 boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
-   if(!s1 != !s2)
-      return false;
-   
-   if(s1 == s2)
-      return true;
-   
-   if(!CompFloats(s1->normalf.x, s2->normalf.x) ||
-      !CompFloats(s1->normalf.y, s2->normalf.y) ||
-      !CompFloats(s1->normalf.z, s2->normalf.z) ||
-      fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) >= 0.001f)
-      return false;
-
-   return true;
+   return 
+      (s1 == s2) ||                 // both are equal, including both NULL; OR:
+       (s1 && s2 &&                 // both are valid and...
+        CompFloats(s1->normalf.x, s2->normalf.x) &&  // components are equal and...
+        CompFloats(s1->normalf.y, s2->normalf.y) &&
+        CompFloats(s1->normalf.z, s2->normalf.z) &&
+        fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f); // this.
 }
+
 #undef CompFloats
 
 //
@@ -1052,6 +1047,7 @@ static void do_draw_plane(visplane_t *pl)
    {  
       texture_t *tex;
       int stop, light;
+      boolean   lptex64 = false; // haleyjd 06/09/10
 
       int picnum = texturetranslation[pl->picnum];
 
@@ -1073,8 +1069,12 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      flatfunc        = r_span_engine->DrawSpan[0][tex->flatsize];
-      slopefunc       = r_span_engine->DrawSlope[0][tex->flatsize];
+      flatfunc  = r_span_engine->DrawSpan[0][tex->flatsize];
+      slopefunc = r_span_engine->DrawSlope[0][tex->flatsize];
+
+      // haleyjd: check for combination of low precision and texture size 64x64
+      if(r_span_engine->haslp64 && !tex->flatsize)
+         lptex64 = true;
 
       if(pl->pslope)
          plane.slope = &pl->rslope;
@@ -1101,13 +1101,20 @@ static void do_draw_plane(visplane_t *pl)
             span.xshift = span.yshift - rw;
             span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
             
+            // haleyjd: we must allow for low-precision drawing to affect this
+            // here since it's no longer looked up from an array
+            if(lptex64)
+               plane.fixedunitx = plane.fixedunity = FRACUNIT;
+            else
+            {
 #ifdef __APPLE__
-            plane.fixedunitx = (float)(1 << (30 - rw));
-            plane.fixedunity = (float)(1 << (30 - rh));
+               plane.fixedunitx = (float)(1 << (30 - rw));
+               plane.fixedunity = (float)(1 << (30 - rh)); // haleyjd: SoM: FIXME!
 #else
-            plane.fixedunitx = (float)(1 << (32 - rw));
-            plane.fixedunity = (float)(1 << span.yshift);
+               plane.fixedunitx = (float)(1 << (32 - rw));
+               plane.fixedunity = (float)(1 << span.yshift);
 #endif
+            }
 
          }
       }

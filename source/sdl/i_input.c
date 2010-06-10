@@ -258,6 +258,8 @@ static void I_JoystickEvents(void)
    int i, joyb[8];
    Sint16 joy_x, joy_y;
    static int old_joyb[8];
+
+   memset(joyb, 0, sizeof(joyb));
    
    if(!joystickpresent || !usejoystick || !sdlJoystick || 
       !sdlJoystickNumButtons)

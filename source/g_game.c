@@ -3296,7 +3296,7 @@ byte *G_ReadOptions(byte *demoptr)
       if(demo_version >= 333)
       {
          // haleyjd 04/06/05: allowmlook is sync-critical
-         allowmlook = *demoptr++;
+         allowmlook = *demoptr; // Remember: ADD INCREMENT :)
       }
    }
    else  // defaults for versions <= 2.02
