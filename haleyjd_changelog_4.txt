@@ -2,6 +2,356 @@
 Changes since Eternity Engine v3.37.00
 ================================================================================
 --------------------------------------------------------------------------------
+06/09/10
+
+Static analyzer fixes continue, though they are all very minor now. I fixed the
+low-precision span drawers to use the proper fixedunit (65536). This was lost
+during the experimental rewrite when SoM decoupled the x and y scaling factors
+in order to support non-symmetric flat sizes. The low-precision drawer for
+64x64 flat drawing requires special treatment in do_draw_plane to fix this.
+
+--------------------------------------------------------------------------------
+06/08/10
+
+I have done more work on I_Error-class functions to ensure that they never
+return to the caller. Allowing this to happen in recursive error situations is
+incorrect, as the calling code will almost certainly assume exiting as a post
+condition of I_Error, and will therefore crash when that post condition is
+violated. I_Error etc. will now unconditionally abort if a recursive error
+occurs.
+
+I have also added GNU C's __attribute__((noreturn)) to all of these functions,
+as it is recognized by the Clang analyzer.
+
+--------------------------------------------------------------------------------
+06/07/10
+
+MP2E ran the Clang static analyzer over EE again and it found a new host of 
+issues, mostly minor, most of which I have fixed. One major problem it uncovered
+was an ability to crash in Z_Realloc if the function were invoked on a PU_CACHE
+block.
+
+To fix this, I have made reallocation of all purgable resources illegal, since
+this has never been supported. The fact that reallocation can cause purgable
+resources to be freed makes this inherently unsafe. It may also create issues
+with the user pointers for cachable resources.
+
+--------------------------------------------------------------------------------
+06/06/10
+
+I have continued to work on honing EE's error/shutdown behavior. Error codes
+should only escalate, and not degrade, if reentrancy is detected through any of
+the various shutdown routines. Also, each routine invoked from I_Quit should
+recheck for the occurance of a fatal error, as some of the routines called invoke
+the I_FatalError function.
+
+I found a gigantic memory leak being caused by private wad directories. While I
+have been freeing the lumpinfo array, that array is an array of pointers, and
+the pointers themselves point to lumpinfo_t objects which are allocated in
+separate chunks for each file or group of lumps added to the directory.
+
+This has been repaired by adding a reallocating array to waddir_t which keeps
+track of all lumpinfo_t allocations that belong to the wad's directory. A new
+routine in w_wad.c can then be invoked when closing the wad file which will
+delete all of the lumpinfo_t allocations properly.
+
+
+--------------------------------------------------------------------------------
+06/05/10
+
+SDL_MOUSE_X1 and X2 identifiers don't seem to exist on SDL versions prior to
+the latest few, so I've added a define for people who cannot for some reason
+update their system headers on Linux. Compiling EE under such cirucmstances
+will result in no support for the 6th or 7th mouse buttons.
+
+I fixed a problem caused by my previous I_Error tweaks which was causing any
+non-fatal error message to simply not appear. I also added an I_ExitWithMessage
+function which can quit the game without causing a logical error condition.
+This means that all normal shutdown will proceed in full and the game will not
+wait for input at the console in Windows.
+
+--------------------------------------------------------------------------------
+06/03/10
+
+I have at last crossed off an ancient FIXME/TODO item by eliminating the 
+grotesque use of K&R function declaration syntax in m_cheat.c to circumvent ANSI
+C type checking, which was being done in order to call functions of multiple
+prototypes through the same function pointer member of the cheat_t structure.
+
+Instead, cheat callback functions now accept a void *, which they convert to the
+proper type of data inside. This isn't particularly any more type-safe, but at
+least it colors within the lines of valid language constructs.
+
+K&R function declaration syntax isn't even supported in the C99 standard as far
+as I know, so I have no idea why GCC hasn't been complaining about this for a 
+long time now.
+
+--------------------------------------------------------------------------------
+06/02/10
+
+By user request I have changed the default value of process_affinity_mask to
+1. This will have to remain until SDL_mixer gets its crap in order, which at
+this point may be never.
+
+I have also enabled the idclev cheat to warp you to *any* ExMy or MAPxy level
+(depending on the gamemode), so long as that map actually exists and appears to
+be in a valid directory format. This allows directly visiting such locales as
+SoD MAP33 and Crucified Dreams MAP99 without use of the console.
+
+--------------------------------------------------------------------------------
+06/01/10
+
+The normal "IWAD found" message will now appear when a disk file is in use, and
+the canonical resource path and name from the disk file will appear.
+
+After user complaints, I have disabled the ability for the unbind command to
+automatically release bindings in the kac_menu and kac_console key action
+classes when executing the unbind action with only one argument. It will now
+be necessary to explicitly specify the key action class in order to unbind such
+actions from the console.
+
+This helps avoid a serious problem that could develop if the user inadvertently
+releases both the "toggle console" and "toggle menu" bindings at the same time.
+>_>
+
+I have also added support, by request from Gez, for SDL's MOUSE_X1 and MOUSE_X2
+mouse button identifiers, which support logical mouse buttons #6 and 7. On my
+Logitech Click! mouse, the "application change" button is recognized as X1 under
+the default Windows 7 USB mouse driver.
+
+--------------------------------------------------------------------------------
+05/31/10
+
+Disk file loading and version recognition have been extended for Ultimate DOOM
+disk files.
+
+IdentifyVersion has been split into IdentifyIWAD and IdentifyDisk functions to
+resimplify the logic and to allow the eternity.wad file to be consistently
+loaded before the IWAD, regardless of whether it comes from a disk file or not.
+
+--------------------------------------------------------------------------------
+05/30/10
+
+Support has been added for parsing specific "metadata" files inside disk files,
+which can override defaults for LevelInfo, as well as set certain properties
+such as the episode name.
+
+--------------------------------------------------------------------------------
+05/28/10
+
+I have added support for ".disk" files, which may contain an IWAD and one or
+more additional PWAD files. These files have a 72-byte-entry directory structure
+at file offset 0 which appears as follows:
+
+00000000: DWORD - number of files (big endian)
+00000004: Start of directory
+????????: DWORD - total size of file minus header (big endian)
+
+Directory entry:
+00000000: char[64] - file path/name, null-terminated and extended with junk
+00000040: DWORD - offset of file, relative to end of header (big endian)
+00000044: DWORD - length of file in bytes (big endian)
+
+Game mode and mission recognition characteristics have been extended to the one
+currently known disk file.
+
+--------------------------------------------------------------------------------
+05/27/10
+
+Changes have been made to sidedef loading to match those made to sector loading,
+allowing R_SearchWalls to also avoid using a temporary string buffer.
+
+My previous fix to ga_victory avoidance on ExM8 with LevelInfo.killFinale set
+needed an additional tweak to avoid returning early from G_DoCompleted.
+Otherwise you'd never exit the level, which was quite bizarre.
+
+--------------------------------------------------------------------------------
+05/26/10
+
+A Doomworld user found there was a problem with LevelInfo.killFinale on ExM8
+levels in Doom 1. I needed to add code which overrides the automatic triggering
+of gameaction "ga_victory" in this circumstance.
+
+I have changed the reading of sectors to be done on a field-by-field basis
+rather than via structure mapping, so that the flat names may be stored into
+char [9] arrays rather than char [8]. This allows proper null-termination of
+the strings before they are sent into R_SearchFlats, allowing the hack of 
+copying the argument into a temporary buffer in that function to be removed.
+
+--------------------------------------------------------------------------------
+05/23/10
+
+SoM completed tolerance for missing patches in multipatch textures under the
+new "experimental" texture system.
+
+--------------------------------------------------------------------------------
+05/22/10
+
+I earlier noticed while doing heap debugging for the V_CopyRect problem that
+there were a huge number of 32-byte allocations on the heap stemming from
+e_args.c, and I then realized that all states are being given an argument list,
+which is in itself a problem that still needs to be addressed.
+
+However, on top of that, all the states are being assigned 5 empty argument
+strings when their arguments default via a cmp field. This means that there are
+tons of copies of the empty string "" sitting on the heap doing nothing.
+
+I have fixed this by adding code to the e_args module which interns any empty
+strings added to arglists by setting them equal in value to a private constant
+static empty string. The code to free argument values checks for this before
+freeing anything so that it remains safe. This saves a buttload of memory.
+
+--------------------------------------------------------------------------------
+05/21/10
+
+I have overhauled I_Error further to add an I_FatalError function, which can be
+given an error code as well as a message. This function is now called for
+severe errors such as heap corruption, failures in the config file writing
+process, etc. which must be immediately fatal; ie., the shutdown code in I_Quit
+should not attempt to execute any further.
+
+This restores the ability to save the configuration files when minor errors such
+as W_CacheLumpNum occur.
+
+I also audited all I_Error/I_FatalError message strings for \n's at the end, and
+added them where needed.
+
+--------------------------------------------------------------------------------
+05/20/10
+
+I repaired some more bad problems with interactions between the menu and console
+systems from SMMU that were causing some menu widget types to not result in
+values being saved to the configuration file if the cvars in question had
+default variables.
+
+I have moved almost all c_ variables (such as c_showprompt, currenttarget,
+currentheight, c_argv, c_argc, etc) into a new global Console structure.
+
+--------------------------------------------------------------------------------
+05/18/10
+
+SoM put in some fixes for slope precision, as well as odd-sized flats such as
+some that are found in Heretic and Hexen. Those have to be treated as 64x64
+even though their resources are differently sized.
+
+--------------------------------------------------------------------------------
+05/17/10
+
+redrawborder *must* be set after the screenwipe routines have finished drawing
+for the final time. I have no idea how long this has been broken; possibly
+since SMMU.
+
+--------------------------------------------------------------------------------
+05/15/10
+
+SoM fixed three more problems with the new experimental branch code:
+
+* The BAADF00D placeholder texture is no longer displayed in the menu background
+  selection dialogue.
+  
+* V_DrawBackground now renders flats with the proper orientation again. They
+  were, for a short time, rotated 90 degrees due to change in their storage
+  for interchangeability support.
+  
+* r_swirl can now be toggled off at runtime again. It was previously sticking
+  "on" due to experimental branch changes.
+  
+I fixed -solo-net to allow cheats in the same manner as single-player games.
+
+I also rewrote the W_ReadLumpHeader routine so that it caches the target lump.
+R_Init was significantly slower under experimental branch conditions due to
+constant fseeking through the IWAD to re-read the same patches multiple times.
+This fix should bring it back up to pre-experimental spec.
+
+--------------------------------------------------------------------------------
+05/11/10
+
+I fixed some problems with warnings from experimental branch found by Gez, and
+also fixed a problem with R_MakeMissingTexture having an improper return 
+statement in it. Added support for experimental code files to the Visual C++
+6.0 project as well.
+
+--------------------------------------------------------------------------------
+05/09/10
+
+SoM fixed a bug in the experimental flat code that caused 0-length lumps such
+as F1_START to be treated as 64x64 flats. The menu would crash quite nicely if
+you tried to select such an item as a menu background, since my previous safety
+checks were removed or accidentally cirumvented in experimental branch.
+
+--------------------------------------------------------------------------------
+05/08/10
+
+SoM has merged his experimental branch into trunk, bringing in support for
+flat and texture interchangeability, tall textures (>= 256px), and other
+awesome features. EE's texturing abilities are now about 99% on par with ZDoom
+and PrBoom+, minus the following that may be eventually implemented:
+
+* Support for loading TEXTUREx lumps additively. This is likely to happen very
+  soon.
+  
+* Support for PNG-format textures. This is probably pretty far away right now.
+
+* Support for ZDoom's textual texture definitions. This will probably happen
+  fairly soon. This will include support for exotic features such as texture
+  translations, scaling, etc.
+  
+* Support for TX_START - TX_END. This should be doable immediately. I hope this 
+  will be in place before the next release.
+
+--------------------------------------------------------------------------------
+05/07/10
+
+xlut/ylut pointers are now cleared when freeing VBuffer objects, and are checked
+for validity before trying to free them, to avoid potential problems with 
+dangling pointers and double frees.
+
+--------------------------------------------------------------------------------
+05/05/10
+
+Repaired a problem with massive heap corruption originating from V_CopyRect due
+to a bad assumption I made about the scaling arrays being consistent regardless
+of x/y position (they are not).
+
+
+--------------------------------------------------------------------------------
+05/04/10
+
+I finished a definitive rewrite of SoM's new V_CopyRect after I noticed some
+problems in its scaling and clipping code; this should fix multiple issues.
+
+--------------------------------------------------------------------------------
+05/02/10
+
+Cleanup work on the menu system continues. I have finally gotten around to
+renaming the MN_WriteTextColoured function to MN_WriteTextColored, for 
+consistency with the rest of the source. My apologies to fraggle ;)
+
+The menu contents widget has been modified to give off sounds upon its 
+appearance and dismissal, to give proper auditory feedback matching the rest of
+the menu system.
+
+I also finally got around to adding code to set the initial index of the
+selected item in the contents widget to match the item for the currently
+displayed page of the multipage menu. The pointer previously always began on the
+first item.
+
+My 4/30 change to add drop shadows to the v-box has required a modification to
+V_DrawLoading so that it calls C_Drawer when the game is in startup state.
+Otherwise the translucency adds up over the non-redrawing background and just
+becomes solid black. This is a problem because of the fact that the main
+drawing loop is not yet active while the code is still inside D_DoomInit ;)
+
+--------------------------------------------------------------------------------
+05/01/10
+
+Did some major work in the menu system replacing the gigantic switches on menu
+item types in the responder and drawer code with tables of function pointers.
+After future extension, these modifications may eventually coalesce into a sort
+of menuitem pseudoclass structure, bearing method function pointers similar to
+what the HUD code already does for HUD widgets.
+
+--------------------------------------------------------------------------------
 04/30/10
 
 I added a drop shadow to boxes drawn via the BOOM/SMMU V_DrawBox routine, which
