@@ -1109,7 +1109,7 @@ static void do_draw_plane(visplane_t *pl)
             {
 #ifdef __APPLE__
                plane.fixedunitx = (float)(1 << (30 - rw));
-               plane.fixedunity = (float)(1 << (30 - rh)); // haleyjd: SoM: FIXME!
+               plane.fixedunity = (float)(1 << (30 - rh));
 #else
                plane.fixedunitx = (float)(1 << (32 - rw));
                plane.fixedunity = (float)(1 << span.yshift);

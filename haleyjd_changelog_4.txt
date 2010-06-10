@@ -2,6 +2,482 @@
 Changes since Eternity Engine v3.37.00
 ================================================================================
 --------------------------------------------------------------------------------
+04/30/10
+
+I added a drop shadow to boxes drawn via the BOOM/SMMU V_DrawBox routine, which
+really makes them pop out from the menus, and avoids visual clashes.
+
+The left and right miniskull pointers are now synchronized so that they begin
+and end their rotations (which move in the opposite direction) at the same time.
+
+--------------------------------------------------------------------------------
+04/27/10 - 4/29/10
+
+Consistency in use of segclip vs ds has been added when determining wall
+lighting. I added #if 0 around the now unused R_DrawSprite function which has
+been dead since the integration of portals.
+
+Version information is now printed to the console when starting a demo.
+
+The p_markunknowns variable is now saved in the config file - no clue how I
+missed this.
+
+Further sound engine tweaks:
+
+* The low-level sound engine is now limited to numChannels, so that it
+  responds absolutely to the user's settings, and can't fudge it. This
+  will also allow the variable to offer a real performance improvement
+  potential, as the mixing callback will no longer loop around all 32
+  channels even if it's only using 8 or 16 of them.
+  
+* snd_channels is now stored in system.cfg
+
+* Hexen thunder sounds are now played from a private sound origin object with
+  ATTN_NONE, rather than playing on the "NULL" global sound channel. This means
+  that if, for example, a Heresiarch awakens, thunder will not cut off his
+  wake-up sound.
+  
+* Positioning of sector sound origins is now done in such a way to avoid 
+  numeric overflow when dealing with very large sectors. Thanks to entryway.
+  
+* Avoid calling I_SoundID and potentially memset on all inactive sound 
+  channels during every main loop iteration.
+  
+* Volume limiting is now performed in the high-level sound code to avoid 
+  oversaturation of the sound mixer when too many sounds are playing.
+
+--------------------------------------------------------------------------------
+04/25/10
+
+SoM has attempted to fix flat drawing on MacOS, but we remain unaware of 
+whether or not the fix actually works.
+
+After getting frustrated with EE's framerate in Speed of Doom MAP28, I have
+implemented the drawsegs_xrange optimization from PrBoom+, which cuts down
+the number of cache misses generated during vissprite clipping dramatically
+(it turns out this code is completely cache bound, and cannot be optimized
+effectively in ANY way which does not directly address the motion of cache
+RAM). Saves 6 FPS at a particular spot on the map, making the difference
+between an almost unplayable 11 FPS and a passable 17 FPS.
+
+--------------------------------------------------------------------------------
+04/22/10
+
+3-band EQ should not be run on silence, as it chews a ton of CPU (an amount
+drastically disproportionate to running it on actual sound, which must be some
+weird consequence of floating-point math on x86).
+
+Fixed a serious bug caused by using a %g specifier to sscanf with a double
+variable. Unlike printf, scanf requires explicit notice that the variable it is
+writing into is a double vs a float. This is due to lack of promotion semantics
+when passing by reference.
+
+--------------------------------------------------------------------------------
+04/21/10
+
+After listening to some vanilla Doom sound output and noticing its manly bass
+as compared to EE's horrific harsh rasp, I have implemented an experimental
+3-band equalizer into the SDL digital sound refresh callback which has support
+for bass boost and low-pass filtering.
+
+In order to support this, I have implemented the mythical vt_float console
+variable type, which was declared in SMMU but never implemented or supported in
+any way. Matching support has also been added to the configuration file, though
+groundwork was already laid for this during the previous rewrite to eliminate
+pointer-cramming there.
+
+The cvarhelp command now takes unlimited bounds for float and integer variables
+into account properly when printing the range of values they can take. It would
+previously display the values 123456789 or -123456789 literally. I also added
+proper support for string-type variables.
+
+--------------------------------------------------------------------------------
+04/19/10
+
+I have been forced to finally fix the "ninja spawn" phenomenon, caused by
+integer overflow in G_CheckSpot when spawning players at deathmatch spots. The
+code there treats signed mapthing_t::angle as unsigned, and as a result, 
+generates out-of-bounds indices into the finesine and finecosine table.
+
+Fortunately for purposes of compatibility, this behavior in vanilla has been
+reverse engineered by entryway. This is important because ninja spawns can have
+an impact on gameplay during intense deathmatch rounds.
+
+I have also repaired a problem from vanilla Doom which involves your spawn
+sound getting lost. There was a bizarre hack in G_CheckSpot trying to somehow
+magically defer execution of the S_StartSound call - of course this didn't 
+work, as C doesn't execute in such a way (I really have no idea what they were
+thinking, it's mind-boggling).
+
+Instead the sound must be played after the player has been fully spawned and
+positioned, back in P_SpawnPlayer.
+
+--------------------------------------------------------------------------------
+04/16/10
+
+Changed tmbase and tm to clip and pClip, and then I changed most of the old
+clipping engine to simply use clip directly rather than the clip stack, as SoM
+says the plan for portals no longer involves implementing recursive clipping in
+this code path. This should improve efficiency, as the compiler can compute
+constant addresses for members of the global clip struct which it cannot do
+when dealing with the pClip pointer.
+
+Sector link collection has been modified to use the clip stack, however, outside
+of old demos, replacing the previous fix from PrBoom by cph which simply saved
+several members of the tm* family before overwriting them, and then restored
+them afterward.
+
+Hexen mapthing z position setting has apparently been broken forever. It should
+work now.
+
+I also eliminated the redundant clip.flags field, which is now gotten instead
+from clip.thing->flags, as in PrBoom.
+
+--------------------------------------------------------------------------------
+04/15/10
+
+THE DEMO IS IN SYNC!
+
+* Changed EE's JUSTHIT fix to match PrBoom+'s, possibly breaking support for
+  EE 3.35 demos.
+  
+* P_TeleportMove compatibility check changed to match PrBoom+.
+
+* PrBoom+ PIT_CheckThing return value compatibility fix applied.
+
+* Added an mobj_t position logging system.
+
+* Dropoff logic, which proved to be the problem causing the Cyberdemon's
+  position to be incorrect, has been split up into different functions which
+  are called via a pointer depending on the demo version, because it's simply
+  too complex to combine all of this code into a single path. This alone was
+  what finally fixed the demo.
+
+--------------------------------------------------------------------------------
+04/13/10
+
+I have not yet succeeded in restoring sync to Okuplok's demo. The PrBoom+ fix
+to 2.02/MBF incompatibility in P_LookForPlayers must use the P_SetTarget
+function or else risks corrupting the mobj_t reference counts. This is probably
+a bug in PrBoom+.
+
+I have found that a previous refactoring in P_TryMove has been responsible for
+bad dropoff behavior in EE for quite some time now, so I have had to remove
+the refactoring altogether - this is because I cannot understand the original
+code. It is impossible to read due to impenetrable abuse of conditional
+expressions with side effects, to the point where applying order of operations
+rules doesn't even work unless you are a machine.
+
+--------------------------------------------------------------------------------
+04/11/10
+
+I have set out on a maddening quest to restore/improve BOOM 2.02 demo sync to
+EE, at least well enough that Okuplok's amazing demo of Speed of Doom MAP33
+will remain in sync.
+
+Aggravatingly, this demo stays in perfect sync almost all the way to the end,
+when the Cyberdemon appears on the "descent to nowhere." As the Cyberdemon
+dies, the player appears to become hung up on him for a moment longer than in
+PrBoom+, and then appears to continue on as normal.
+
+However, the player's position being just slightly off alters the behavior of
+the monsters in subtle ways that begin to add up over the next 30 or so seconds
+of gameplay, culminating in an Imp who is in the wrong spot firing a fireball
+which shouldn't have been fired, which knocks the player off course, causing him
+to miss the Soul Sphere in the central pillar. This ensures his untimely death
+shortly thereafter in a hail of Hell Knight plasma balls.
+
+I have started with the following fixes and tweaks:
+
+* G_SetCompatibility has been adapted from PrBoom+ to facilitate tracking of
+  the versions in which various compatibility tweaks were first added to the
+  engine, and first became optional as opposed to being hard-coded to the
+  current demo_version.
+
+* PrBoom+ fixes for incompatibilies between BOOM 2.02 and MBF in P_Move and
+  P_LookForPlayers.
+  
+* BOOM 2.02 friction model code restored for use only during 2.02 demo playback.
+
+* p_map3d functions made to I_Error if ever invoked accidentally during old
+  demo versions.
+  
+* PrBoom+ fixes for incompatibilities between 2.02 and MBF in player bobbing,
+  particularly when related to friction changes and the effects of voodoo
+  dolls.
+
+--------------------------------------------------------------------------------
+04/10/10
+
+Player color and name settings have finally been restored to full functionality.
+Turns out this was accidentally lost by cutting out C_InitNet during the MBF
+netcode restoration.
+
+This fix is only good for single player, though, as EE still lacks any ability
+to multicast settings to all nodes in order to allow variables which have 
+unique values on a per-player basis. This is one of the major deficiencies of
+Eternity's current netcode and needs a fix badly. Players will still have
+auto-generated names and default colors at the start of any netgame.
+
+--------------------------------------------------------------------------------
+04/09/10
+
+I have added support for analogues of two more DECORATE actor flags:
+
+SYNCHRONIZED - things with this flag are not subject to having their first
+               spawnstate's tics randomized in P_SpawnMobj. This is normally
+               done so that monsters don't all start out doing the exact
+               same thing, and torches flicker differently, etc.
+               
+NORANDOMIZE  - As a projectile, a thing marked this way will not have its
+               spawnstate and first death state tics randomized. Unfortunately
+               this flag's name and semantics had to be negated from ZDoom, or
+               else major problems with EDF backward and forward compatibility
+               would have been created. So in EE, this flag disables the
+               randomization of projectiles, whereas in ZDoom, RANDOMIZE is
+               required to enable it.
+
+Because the VPO warning hud widget is entirely inaccurate and has outlived any
+usefulness it may have ever had, I have removed that feature in order to spare
+ptoing the need to make a new graphic for it. I also made some minor fixes for
+menu sliders in Heretic, and drawing of the current crosshair on the HUD options
+menu.
+
+--------------------------------------------------------------------------------
+04/08/10
+
+SoM rewrote V_CopyRect after deficiencies were found in its clipping abilities.
+
+The header for the frags hud widget is now positioned properly regardless of
+the graphic's dimensions, so that ptoing's new graphic for Heretic will appear
+in the proper location.
+
+--------------------------------------------------------------------------------
+04/07/10
+
+The ZONEVERBOSE define has been added in z_native.c in order to control output
+of potentially dangerous fields from the zone memblock structure during error
+conditions, because printing these fields when the heap is in a corrupt state
+generally results in an immediate segmentation violation, obliterating the
+ability to get useful error message output. The primary field in the memblock
+struct which is a culprit in this respect is block->file when INSTRUMENTED is
+defined.
+
+--------------------------------------------------------------------------------
+04/06/10
+
+As I have serious doubts about the sustainability of using floating point code
+in the gamecode as far as demo sync goes, I have eliminated use of 
+tantoangle_acc within the gamecode. It is now only used within the renderer;
+P_TanToAngle uses only the old precalculated (and therefore reliably valued)
+tantoangle table.
+
+I eliminated most uses of "unsigned" as a type by itself without any further
+qualification.
+
+--------------------------------------------------------------------------------
+04/04/10
+
+ptoing has joined the team as a graphics guy, and is setting about improving
+various things in eternity.wad for both Doom and Heretic. He has given me some
+advice that has lead to some minor changes in drawing of systems like the 
+console.
+
+Blzut3 has contributed CMake scripts and code modifications that enable EE to
+successfully build on Mac OS X, though it is currently only functional on x86,
+and furthermore, flat drawing is horribly broken due to some undefined 
+conversion behavior in Cardboard :/
+
+TheGreenHerring found a WAD in which EE played the music incorrectly. This was
+due to the MUS lump in the wad actually being embedded within another wad 
+file - a wad inside a wad. It became obvious to me that DMX must be capable of
+scanning forward at least some distance when looking for the MUS\x1a header,
+because vanilla Doom plays this music normally. I have made this adjustment to
+EE's mmus2mid.
+
+--------------------------------------------------------------------------------
+04/01/10
+
+Once again, there will be no April Fool's jokes in the changelog ;) I have 
+added support for the -solo-net parameter to match PrBoom+. This allows starting
+EE from the command-line with gametype set to cooperative. While it was already
+possible to set this within the game, it required use of the menus before you
+could get started, making it no good for demo recording etc.
+
+This was implemented mainly so that I could play the amazing new UAC Ultra in
+cooperative mode easily.
+
+--------------------------------------------------------------------------------
+03/28/10
+
+Doomworld Forums user Six somehow stumbled onto a brand-new (well, actually 
+ancient) vanilla Doom bug involving voodoo dolls which has a spectacular effect
+in some source ports which I have compared to the Super Metroid Space-Time /
+Murder Beam glitch.
+
+If a voodoo doll is injured by an explosion just enough to kill the real player
+but not the doll, and the doll is then pushed by the force of the explosion
+into a health-imbuing item on the very next gametic, the player's weapon
+changing logic will malfunction.
+
+The weapon change starts on the tic the voodoo doll died on, and the player's
+weapon is set to state S_NULL as usual. However it takes several frames for the
+player's weapon to finish lowering. The voodoo doll picking up health during
+this time causes the player's HP to be replenished. The next call to A_Lower
+sees this and assumes, incorrectly, that the player's current weapon change must
+have been caused by explicit player input.
+
+However, because it was not caused by input, the player_t::pendingweapon value
+is still set to wp_nochange. This is a special-purpose ordinal which is greater
+in value than NUMWEAPONS. Setting player_t::readyweapon to wp_nochange causes
+P_SetPSprite to access the weaponinfo array out of bounds, reading undefined
+data as a weapon.
+
+This includes using undefined values for the maxammo, current ammo, and most
+importantly, the *raisestate* of the weapon.
+
+In PrBoom+ this resulted in the player toting around an Imp with negative 6
+billion maxammo. In Chocolate Doom, the player obtains a "Fist of Death," which
+while it appears like the normal fist, crashes the game should the player try
+to punch or change to a different weapon. In TASDoom, the player obtains an
+exploding Revenant rocket. In Eternity, the game simply crashes immediately due
+to states[] having been changed into an array of state_t pointers for EDF -
+the read automatically goes to a bad address trying to get to the actual state.
+
+This is easily fixed by checking explicitly against wp_nochange in A_Lower
+instead of making an assumption about player input versus forced weapon change
+relying on the player's health value.
+
+--------------------------------------------------------------------------------
+03/27/10
+
+SoM fixed more problems with the clipping of screen patches (it's never-ending,
+I think) which fixed patches with posts that extended off the bottom of the
+screen. The FreeDoom cast call was one such wad that had problems with this -
+columns of garbage would streak up and down the screen while the tiny skeleton
+replacing the Cyberdemon was displayed.
+
+--------------------------------------------------------------------------------
+03/20/10
+
+I finally fixed deep water beneath skies, which had been broken since I changed
+the handling of skies to use an internal sector flag. Because deep water 
+rendering is not compatible with sky hacks in the renderer, it is necessary to
+make sure the SIF_SKY flag is cleared from the temporary sector created by
+R_FakeFlat.
+
+SoM fixed more sky problems, including one with slopes.
+
+--------------------------------------------------------------------------------
+03/19/10
+
+The last IWAD chosen via the IWAD picker will now be remembered in system.cfg,
+as per user request by Gez and others.
+
+--------------------------------------------------------------------------------
+03/18/10
+
+I have tweaked I_Quit so that saving of configuration files is not done when the
+game exits via I_Error. This is necessary because the game may be in an unstable
+state. Even if written successfully, the configuration files could be corrupted
+with incorrect data. More often however, the config saving code crashes the game
+by causing a recursive call to Z_Malloc.
+
+Because Z_Malloc is not reentrant, this can cause it to enter an infinite loop
+attempting to dump PU_CACHE blocks.
+
+--------------------------------------------------------------------------------
+03/12/10
+
+SoM further fixed problems with seg scaling assumptions in Cardboard, as well as
+an off-by-one error which had been causing a single pixel of HOM at the bottom
+of certain skies for a very long time now.
+
+--------------------------------------------------------------------------------
+03/11/10
+
+I have made some minor optimizations to R_AddLine by collapsing the numerous
+mark* variables into a flag field. I also added code which reinforces the
+implicit condition that f_window or c_window must be valid if the corresponding
+mark* flags are set. This allowed elimination of multiple redundant checks on
+the validity of these pointers later on.
+
+I modified R_FakeFlat to return NULL when passed NULL, for safety purposes.
+
+The seg_t::offset field is always being used a float within Cardboard via
+casting, so I have changed it to float, and it is converted to such at map load.
+
+I have also added tag names to 99% of structure types in EE. A shocking number
+were relying only on typedef names, leaving the structures themselves anonymous.
+This is bad when you need to use "struct foo_s" somewhere but end up only having
+the corresponding foo_t typedef.
+
+--------------------------------------------------------------------------------
+03/09/10
+
+Another fix for Linux 64-bit involved changing the heightmask variable in the
+quad column drawer to signed, matching the other column drawers.
+
+--------------------------------------------------------------------------------
+03/08/10
+
+GhostlyDeath helped me figure out why EE was crashing on 64-bit Linux. It was
+in fact dropping out of Z_Init due to failure of the sanity check making sure
+that the zone block header size was greater than or equal to the sizeof the
+memblock_t structure. The error message wasn't appearing in the console because
+it lacked a \n on the end, which is apparently a quirk of stderr in Linux not
+being implicitly flushed when a program exits normally.
+
+I had honestly forgotten about the zone header problem. I fixed this by doing
+away with BLOCKHEADERSIZE entirely and determining the appropriate zone header
+size to use at runtime by rounding up sizeof(memblock_t) to the nearest higher
+multiple of 32 bytes. This formula still gives a 32 byte header on 32-bit, and
+gives a 64-byte header on 64-bit, and should maintain alignment assumptions on
+just about any platform.
+
+I added packing pragmas to the post_t structure, because it is mapped directly
+onto patch lumps loaded into memory. C data type agnosticism has been increased
+throughout texture and map loading code, as well as by replacing most instances
+of "short" with int16_t.
+
+--------------------------------------------------------------------------------
+03/07/10
+
+Version name recognition and game mission tweaks where needed are now in place
+for all of the official FreeDoom IWADs, which are recognized via the FREEDOOM
+lump during IdentifyVersion.
+
+SoM fixed a bug in Cardboard which incorrectly assumed that a seg scaled to
+nothingness at one end would be similarly zero-height at the near end. This
+fixed CSonicGo's school-shooting simulation wad :P
+
+--------------------------------------------------------------------------------
+03/04/10
+
+Catoptromancy found a wad (AMADEUS.WAD) in the /idgames archive which contains
+a corrupt blockmap lump in which several of the block cap words have a single
+bit flipped, making them appear as FF FE in a hex editor rather than the 
+appropriate FF FF. This seems to fly in vanilla DOOM, since it can access just
+about any memory address it wants, but in EE the program crashes trying to
+access the lines array at an outrageous address.
+
+To fix all such wads, several more of which have appeared afterward, I have
+added a P_VerifyBlockMap routine which does complete verification on blockmap
+data read from wads, including checking all linedef references, checking that
+all blocklists terminate before the end of the lump, and that all blocklist
+offsets in the header are within valid range.
+
+If any of these checks fails outside of demo compatibility mode, we will rebuild
+the blockmap using Lee's code from MBF.
+
+--------------------------------------------------------------------------------
+02/27/10
+
+To celebrate SVN r1000 I have enhanced the graphical DOOM HUD with support for
+translucency, controlled by the st_fsalpha variable, as well as long-requested
+support for displaying the keys the player is carrying.
+
+--------------------------------------------------------------------------------
 02/23/10
 
 I have de-Killoughified the branches in P_UpdateThinker that determine the
