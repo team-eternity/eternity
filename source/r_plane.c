@@ -175,6 +175,52 @@ static void R_PlaneLight(void)
    plane.startmap = 2.0f * (30.0f - (plane.lightlevel / 8.0f));
 }
 
+//
+// R_doubleToUint32
+//
+// haleyjd: Derived from Mozilla SpiderMonkey jsnum.c;
+// used under the terms of the GPL.
+//
+// * The Original Code is Mozilla Communicator client code, released
+// * March 31, 1998.
+// *
+// * The Initial Developer of the Original Code is
+// * Netscape Communications Corporation.
+// * Portions created by the Initial Developer are Copyright (C) 1998
+// * the Initial Developer. All Rights Reserved.
+// *
+// * Contributor(s):
+// *   IBM Corp.
+//
+static uint32_t R_doubleToUint32(double d)
+{
+   int32_t i;
+   boolean neg;
+   double  two32;
+
+   // FIXME: should check for finiteness first, but we have no code for 
+   // doing that in EE yet.
+
+   //if (!JSDOUBLE_IS_FINITE(d))
+   //   return 0;
+
+   // We check whether d fits int32, not uint32, as all but the ">>>" bit
+   // manipulation bytecode stores the result as int, not uint. When the
+   // result does not fit int jsval, it will be stored as a negative double.
+   i = (int32_t)d;
+   if((double)i == d)
+      return (int32_t)i;
+
+   neg = (d < 0);
+   d   = floor(neg ? -d : d);
+   d   = neg ? -d : d;
+
+   // haleyjd: This is the important part: reduction modulo UINT_MAX.
+   two32 = 4294967296.0;
+   d     = fmod(d, two32);
+
+   return (uint32_t)(d >= 0 ? d : d + two32);
+}
 
 //
 // R_MapPlane
@@ -206,6 +252,8 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio;
    ystep = plane.pviewsin * slope * view.focratio;
 
+   // haleyjd: #if 0 for test
+#if 0
 #ifdef __APPLE__
    {
       double value;
@@ -242,6 +290,26 @@ static void R_MapPlane(int y, int x1, int x2)
    span.xstep = (unsigned int)(xstep * plane.fixedunitx);
    span.ystep = (unsigned int)(ystep * plane.fixedunity);
 #endif
+#endif
+
+   // haleyjd: TEST
+   // Use Mozilla routine for portable double->uint32 conversion
+   {
+      double value;
+
+      value = (plane.pviewx + plane.xoffset + (plane.pviewsin * realy) +
+               (((double)x1 - view.xcenter) * xstep)) * plane.fixedunitx;
+
+      span.xfrac = R_doubleToUint32(value);
+
+      value = (-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy) +
+               (((double)x1 - view.xcenter) * ystep)) * plane.fixedunity;
+
+      span.yfrac = R_doubleToUint32(value);
+
+      span.xstep = R_doubleToUint32(xstep * plane.fixedunitx);
+      span.ystep = R_doubleToUint32(ystep * plane.fixedunity);
+   }
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
@@ -1107,13 +1175,16 @@ static void do_draw_plane(visplane_t *pl)
                plane.fixedunitx = plane.fixedunity = FRACUNIT;
             else
             {
+               // haleyjd: commented out for TEST
+               /*
 #ifdef __APPLE__
                plane.fixedunitx = (float)(1 << (30 - rw));
                plane.fixedunity = (float)(1 << (30 - rh));
 #else
+               */
                plane.fixedunitx = (float)(1 << (32 - rw));
                plane.fixedunity = (float)(1 << span.yshift);
-#endif
+/*#endif*/
             }
 
          }
