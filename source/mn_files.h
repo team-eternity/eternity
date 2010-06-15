@@ -31,6 +31,14 @@
 #ifndef MN_FILES_H__
 #define MN_FILES_H__
 
+typedef struct mndiskdir_s
+{
+   const char *dirpath; // physical file system path of directory
+   char **filenames;    // array of file names
+   int  numfiles;       // number of files
+   int  numfilesalloc;  // number of files allocated
+} mndiskdir_t;
+
 extern char *wad_directory;
 void MN_File_AddCommands(void);
 
