@@ -44,13 +44,12 @@ r_bsp.h     r_data.c    r_data.h    r_defs.h    r_draw.c    r_draw.h    r_drawl.
 r_drawl.h   r_drawq.c   r_dynseg.h  r_main.c    r_main.h    r_plane.c   r_pcheck.h  \
 r_drawq.h   r_dynseg.c  r_plane.h   r_portal.c  r_portal.h  r_ripple.c  r_ripple.h  \
 r_segs.c    r_segs.h    r_sky.c     r_sky.h     r_span.c    r_state.h   r_textur.c  \
-r_things.c  \
-r_things.h  rules.make  sclinux.h   sounds.c    sounds.h    s_sndseq.c  s_sndseq.h  \
-s_sound.c   s_sound.h   st_hbar.c   st_lib.c    st_lib.h    st_stuff.c  st_stuff.h  \
-tables.c    tables.h    v_block.c   v_block.h   v_buffer.c  v_buffer.h  version.c   \
-version.h   v_font.c    v_font.h    v_misc.c    v_misc.h    v_patch.c   v_patch.h   \
-v_video.c   v_video.h   wi_stuff.c  wi_stuff.h  w_wad.c     w_wad.h     z_native.c  \
-z_zone.c    z_zone.h    d_diskfile.c d_diskfile.h
+r_things.c  r_things.h  rules.make  sclinux.h   sounds.c    sounds.h    s_sndseq.c  \
+s_sndseq.h  s_sound.c   s_sound.h   st_hbar.c   st_lib.c    st_lib.h    st_stuff.c  \
+st_stuff.h  tables.c    tables.h    v_block.c   v_block.h   v_buffer.c  v_buffer.h  \
+version.c   version.h   v_font.c    v_font.h    v_misc.c    v_misc.h    v_patch.c   \
+v_patch.h   v_video.c   v_video.h   wi_stuff.c  wi_stuff.h  w_levels.c  w_levels.h  \
+w_wad.c     w_wad.h     z_native.c  z_zone.c    z_zone.h    d_diskfile.c d_diskfile.h
 
 eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer -lSDL_net sdl/libsdlet.a\
 Confuse/libetconfuse.a textscreen/libtextscreen.a

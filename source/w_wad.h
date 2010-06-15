@@ -106,7 +106,7 @@ typedef struct waddir_s
    int        ispublic;   // if false, don't call D_NewWadLumps
    lumpinfo_t **infoptrs; // 06/06/10: track all allocations
    int        numallocs;  // number of entries in the infoptrs table
-   int        numallocsa; // number of entries allocated for the infoptrs table
+   int        numallocsa; // number of entries allocated for the infoptrs table   
 } waddir_t;
 
 //
@@ -130,6 +130,9 @@ void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files);
 
 // sf: add a new wad file after the game has already begun
 int W_AddNewFile(waddir_t *dir, char *filename);
+
+// haleyjd 06/15/10: special private wad file support
+int W_AddNewPrivateFile(waddir_t *dir, const char *filename);
 
 // killough 4/17/98: if W_CheckNumForName() called with only
 // one argument, pass ns_global as the default namespace
