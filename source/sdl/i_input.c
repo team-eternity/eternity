@@ -479,6 +479,10 @@ static void I_GetEvent(void)
          if(!usemouse || mouseAccel_type == 2)
             continue;
 
+         // haleyjd 06/14/10: no mouse motion at startup.
+         if(gametic == 0)
+            continue;
+
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most 
          // people  like it the most.
          if(mouseAccel_type == 0)
