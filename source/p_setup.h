@@ -37,9 +37,9 @@ enum
    LEVEL_FORMAT_HEXEN
 };
 
-int P_CheckLevel(int lumpnum); // haleyjd: now used in d_main.c
+int P_CheckLevel(struct waddir_s *dir, int lumpnum); // haleyjd: now used in d_main.c
 
-void P_SetupLevel(const char *mapname, int playermask, skill_t skill);
+void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask, skill_t skill);
 void P_Init(void);               // Called by startup code.
 void P_InitThingLists(void);
 

@@ -480,7 +480,7 @@ static void cheat_clev(const void *arg)
    // haleyjd: check mapname for existence and validity as a map
    lumpnum = W_CheckNumForName(mapname);
 
-   if(lumpnum == -1 || P_CheckLevel(lumpnum) == LEVEL_FORMAT_INVALID)
+   if(lumpnum == -1 || P_CheckLevel(&w_GlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)
    {
       doom_printf("%s not found or is not a valid map", mapname);
       return;

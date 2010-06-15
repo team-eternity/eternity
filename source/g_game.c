@@ -648,7 +648,7 @@ static void G_DoLoadLevel(void)
 
    gamestate = GS_LEVEL;
 
-   P_SetupLevel(gamemapname, 0, gameskill);
+   P_SetupLevel(&w_GlobalDir, gamemapname, 0, gameskill);
 
    if(gamestate != GS_LEVEL)       // level load error
    {

@@ -3520,7 +3520,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       // P_CheckLevel call -- this should fix some problems with
       // some crappy wads that have partial levels sitting around
 
-      if((format = P_CheckLevel(i)) != LEVEL_FORMAT_INVALID) // a level
+      if((format = P_CheckLevel(&w_GlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
       {
          char *name = w_GlobalDir.lumpinfo[i]->name;
 

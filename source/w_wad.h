@@ -139,6 +139,7 @@ int     W_CheckNumForName(const char *name);   // killough 4/17/98
 int     W_CheckNumForNameNS(const char *name, int li_namespace);
 int     W_CheckNumForNameNSG(const char *name, int ns);
 int     W_GetNumForName(const char* name);
+int     W_LumpLengthInDir(waddir_t *dir, int lump);
 int     W_LumpLength(int lump);
 void    W_ReadLump(int lump, void *dest);
 void   *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag);

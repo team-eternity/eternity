@@ -144,6 +144,9 @@ mapthing_t playerstarts[MAXPLAYERS];
 // haleyjd 12/28/08: made module-global
 static int mapformat;
 
+// haleyjd 06/14/10: level wad directory
+static waddir_t *setupwad;
+
 //
 // ShortToLong
 //
@@ -321,13 +324,13 @@ void P_LoadVertexes(int lump)
    
    // Determine number of vertexes:
    //  total lump length / vertex record length.
-   numvertexes = W_LumpLength(lump) / sizeof(mapvertex_t);
+   numvertexes = W_LumpLengthInDir(setupwad, lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
    vertexes = Z_Calloc(numvertexes, sizeof(vertex_t), PU_LEVEL, 0);
    
    // Load data into cache.
-   data = W_CacheLumpNum(lump, PU_STATIC);
+   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
    
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(i = 0; i < numvertexes; ++i)
@@ -354,9 +357,9 @@ void P_LoadSegs(int lump)
    int  i;
    byte *data;
    
-   numsegs = W_LumpLength(lump) / sizeof(mapseg_t);
+   numsegs = W_LumpLengthInDir(setupwad, lump) / sizeof(mapseg_t);
    segs = Z_Calloc(numsegs, sizeof(seg_t), PU_LEVEL, NULL);
-   data = W_CacheLumpNum(lump, PU_STATIC);
+   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
    
    for(i = 0; i < numsegs; ++i)
    {
@@ -419,9 +422,9 @@ void P_LoadSubsectors(int lump)
    byte *data;
    int  i;
    
-   numsubsectors = W_LumpLength(lump) / sizeof(mapsubsector_t);
+   numsubsectors = W_LumpLengthInDir(setupwad, lump) / sizeof(mapsubsector_t);
    subsectors = Z_Calloc(numsubsectors, sizeof(subsector_t), PU_LEVEL, 0);
-   data = W_CacheLumpNum(lump, PU_STATIC);
+   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
    
    for(i = 0; i < numsubsectors; ++i)
    {
@@ -447,9 +450,9 @@ void P_LoadSectors(int lumpnum)
    int  defaultSndSeq;
    char namebuf[9];
    
-   numsectors  = W_LumpLength(lumpnum) / sizeof(mapsector_t);
+   numsectors  = W_LumpLengthInDir(setupwad, lumpnum) / sizeof(mapsector_t);
    sectors     = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
-   lump = data = W_CacheLumpNum(lumpnum, PU_STATIC);
+   lump = data = W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC);
 
    // haleyjd 09/24/06: determine what the default sound sequence is
    defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
@@ -587,7 +590,7 @@ void P_LoadNodes(int lump)
    byte *data;
    int  i;
    
-   numnodes = W_LumpLength(lump) / sizeof(mapnode_t);
+   numnodes = W_LumpLengthInDir(setupwad, lump) / sizeof(mapnode_t);
 
    // haleyjd 09/01/02:
    // Long-needed fix: bomb out on zero-length nodes
@@ -598,7 +601,7 @@ void P_LoadNodes(int lump)
    }
 
    nodes = Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0);
-   data  = W_CacheLumpNum(lump, PU_STATIC);
+   data  = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
 
    for(i = 0; i < numnodes; ++i)
    {
@@ -648,11 +651,11 @@ static boolean P_CheckForZDoomUncompressedNodes(int lumpnum)
    boolean result = false;
 
    // haleyjd: be sure something is actually there
-   if(!W_LumpLength(lumpnum + ML_NODES))
+   if(!W_LumpLengthInDir(setupwad, lumpnum + ML_NODES))
       return result;
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
-   data = W_CacheLumpNum(lumpnum + ML_NODES, PU_CACHE);
+   data = W_CacheLumpNumInDir(setupwad, lumpnum + ML_NODES, PU_CACHE);
 
    if(!memcmp(data, "XNOD", 4))
    {
@@ -775,8 +778,8 @@ static void P_LoadZNodes(int lump)
    uint32_t numNodes;
    vertex_t *newvertarray = NULL;
 
-   data = lumpptr = W_CacheLumpNum(lump, PU_STATIC);
-   len  = (unsigned int)(W_LumpLength(lump));
+   data = lumpptr = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   len  = (unsigned int)(W_LumpLengthInDir(setupwad, lump));
 
    // skip header
    CheckZNodesOverflow(len, 4);
@@ -935,10 +938,10 @@ static void P_ConvertHereticThing(mapthing_t *mthing);
 void P_LoadThings(int lump)
 {
    int  i;
-   byte *data = W_CacheLumpNum(lump, PU_STATIC);
+   byte *data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
    mapthing_t *mapthings;
    
-   numthings = W_LumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
+   numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = calloc(numthings, sizeof(mapthing_t));
@@ -1007,10 +1010,10 @@ void P_LoadThings(int lump)
 void P_LoadHexenThings(int lump)
 {
    int  i;
-   byte *data = W_CacheLumpNum(lump, PU_STATIC);
+   byte *data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
    mapthing_t *mapthings;
    
-   numthings = W_LumpLength(lump) / sizeof(mapthinghexen_t);
+   numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthinghexen_t);
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = calloc(numthings, sizeof(mapthing_t));
@@ -1068,9 +1071,9 @@ void P_LoadLineDefs(int lump)
    byte *data;
    int  i;
 
-   numlines = W_LumpLength(lump) / sizeof(maplinedef_t);
+   numlines = W_LumpLengthInDir(setupwad, lump) / sizeof(maplinedef_t);
    lines    = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
-   data     = W_CacheLumpNum(lump, PU_STATIC);
+   data     = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
 
    for(i = 0; i < numlines; ++i)
    {
@@ -1226,9 +1229,9 @@ void P_LoadHexenLineDefs(int lump)
    byte *data;
    int  i;
 
-   numlines = W_LumpLength(lump) / sizeof(maplinedefhexen_t);
+   numlines = W_LumpLengthInDir(setupwad, lump) / sizeof(maplinedefhexen_t);
    lines = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
-   data = W_CacheLumpNum(lump, PU_STATIC);
+   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
 
    for(i = 0; i < numlines; ++i)
    {
@@ -1374,7 +1377,7 @@ void P_LoadLineDefs2(void)
 //
 void P_LoadSideDefs(int lump)
 {
-   numsides = W_LumpLength(lump) / sizeof(mapsidedef_t);
+   numsides = W_LumpLengthInDir(setupwad, lump) / sizeof(mapsidedef_t);
    sides    = Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0);
 }
 
@@ -1384,7 +1387,7 @@ void P_LoadSideDefs(int lump)
 
 void P_LoadSideDefs2(int lumpnum)
 {
-   byte *lump = W_CacheLumpNum(lumpnum, PU_STATIC);
+   byte *lump = W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC);
    byte *data = lump;
    int  i;
    char toptexture[9], bottomtexture[9], midtexture[9];
@@ -1749,7 +1752,7 @@ static boolean P_VerifyBlockMap(int count)
 //
 void P_LoadBlockMap(int lump)
 {
-   int len   = W_LumpLength(lump);
+   int len   = W_LumpLengthInDir(setupwad, lump);
    int count = len / 2;
    
    // sf: -blockmap checkparm made into variable
@@ -1762,7 +1765,7 @@ void P_LoadBlockMap(int lump)
    else
    {
       int i;
-      int16_t *wadblockmaplump = W_CacheLumpNum (lump, PU_LEVEL);
+      int16_t *wadblockmaplump = W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL);
       blockmaplump = Z_Malloc(sizeof(*blockmaplump) * count,
                               PU_LEVEL, NULL);
 
@@ -2032,7 +2035,7 @@ static void P_LoadReject(int lump)
    int size;
    int expectedsize;
 
-   size = W_LumpLength(lump);
+   size = W_LumpLengthInDir(setupwad, lump);
 
    // haleyjd: round numsectors^2 to next higher multiple of 8, then divide by
    // 8 to get the expected reject size for this level
@@ -2043,7 +2046,7 @@ static void P_LoadReject(int lump)
    // 2. if size <  expectedsize, allocate a zero-filled buffer and copy
    //    in whatever exists from the actual lump.
    if(size >= expectedsize)
-      rejectmatrix = W_CacheLumpNum(lump, PU_LEVEL);
+      rejectmatrix = W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL);
    else
    {
       // set to all zeroes so that the reject has no effect
@@ -2051,7 +2054,7 @@ static void P_LoadReject(int lump)
 
       if(size > 0)
       {
-         byte *temp = W_CacheLumpNum(lump, PU_CACHE);
+         byte *temp = W_CacheLumpNumInDir(setupwad, lump, PU_CACHE);
          memcpy(rejectmatrix, temp, size);
       }
    }
@@ -2088,15 +2091,15 @@ static const char *levellumps[] =
 // sf 11/9/99: We need to do this now because we no longer have to conform to
 // the MAPxy or ExMy standard previously imposed.
 //
-int P_CheckLevel(int lumpnum)
+int P_CheckLevel(struct waddir_s *dir, int lumpnum)
 {
    int i, ln;
    
    for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
    {
       ln = lumpnum + i;
-      if(ln >= w_GlobalDir.numlumps ||     // past the last lump?
-         strncmp(w_GlobalDir.lumpinfo[ln]->name, levellumps[i], 8))
+      if(ln >= dir->numlumps ||     // past the last lump?
+         strncmp(dir->lumpinfo[ln]->name, levellumps[i], 8))
       {
          // If "BEHAVIOR" wasn't found, we assume we are dealing with
          // a DOOM-format map, and it is not an error; any other missing
@@ -2349,26 +2352,30 @@ void P_InitThingLists(void)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_SetupLevel(const char *mapname, int playermask, skill_t skill)
+void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask, 
+                  skill_t skill)
 {
    int lumpnum;
+
+   // haleyjd 06/14/10: support loading levels from private wad directories
+   setupwad = dir;
    
    // get the map name lump number
-   if((lumpnum = W_CheckNumForName(mapname)) == -1)
+   if((lumpnum = W_CheckNumForNameInDir(setupwad, mapname, ns_global)) == -1)
    {
       P_SetupLevelError("Map not found", mapname);
       return;
    }
 
    // determine map format; if invalid, abort
-   if((mapformat = P_CheckLevel(lumpnum)) == LEVEL_FORMAT_INVALID)
+   if((mapformat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
    {
       P_SetupLevelError("Not a level", mapname);
       return;
    }
 
    // haleyjd 07/22/04: moved up
-   newlevel   = (w_GlobalDir.lumpinfo[lumpnum]->file != iwadhandle);
+   newlevel   = (setupwad->lumpinfo[lumpnum]->file != iwadhandle);
    doom1level = false;
 
    strncpy(levelmapname, mapname, 8);

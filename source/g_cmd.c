@@ -362,7 +362,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    // haleyjd 02/23/04: strict error checking
    lumpnum = W_CheckNumForName(Console.argv[0]);
 
-   if(lumpnum != -1 && P_CheckLevel(lumpnum) != LEVEL_FORMAT_INVALID)
+   if(lumpnum != -1 && P_CheckLevel(&w_GlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
    {   
       G_DeferedInitNew(gameskill, Console.argv[0]);
    }
