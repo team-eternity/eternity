@@ -103,11 +103,10 @@ fixed_t *yslope;
 fixed_t origyslope[MAX_SCREENHEIGHT*2];
 
 fixed_t distscale[MAX_SCREENWIDTH];
-int     visplane_view=0;
+int     visplane_view = 0;
 
-
-cb_span_t  span;
-cb_plane_t plane;
+cb_span_t      span;
+cb_plane_t     plane;
 cb_slopespan_t slopespan;
 
 float slopevis; // SoM: used in slope lighting
@@ -115,32 +114,11 @@ float slopevis; // SoM: used in slope lighting
 // BIG FLATS
 void R_Throw(void)
 {
-   I_FatalError(I_ERR_KILL, "R_Throw called.\n");
+   I_Error("R_Throw called.\n");
 }
 
-void (*flatfunc)(void) = R_Throw;
+void (*flatfunc)(void)  = R_Throw;
 void (*slopefunc)(void) = R_Throw;
-
-
-
-static struct flatdims_s
-{
-   int i;
-   float f;
-} flatdims[FLAT_NUMSIZES] = {
-   // FLAT_64
-   { 64,  64.0f},
-
-   // FLAT_128
-   {128, 128.0f},
-
-   // FLAT_256
-   {256, 256.0f},
-
-   // FLAT_512
-   {512, 512.0f}
-};
-
 
 //
 // R_InitPlanes

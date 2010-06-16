@@ -40,10 +40,6 @@
 #include "w_wad.h"
 #include "v_video.h"
 
-static void error_printf(char *s, ...);
-static FILE *error_file = NULL;
-static char *error_filename;
-
 //
 // Texture definition.
 // Each texture is composed of one or more patches,
@@ -1270,10 +1266,7 @@ void R_InitTextures(void)
    R_FreeTextureLump(maptex2);
    
    if(errors)
-   {
-      fclose(error_file);
-      I_Error("\n\n%d texture errors.\nerrors dumped to %s\n", errors, error_filename);
-   }
+      I_Error("\n\n%d texture errors.\n", errors);
 
    // SoM: This REALLY hits us when starting EE with large wads. Caching 
    // textures on map start would probably be preferable 99.9% of the time...
@@ -1301,7 +1294,6 @@ void R_InitTextures(void)
 
 static int R_Doom1Texture(const char *name);
 const char *level_error = NULL;
-static char tnamebuf[9];
 
 //
 // R_GetRawColumn
@@ -1454,31 +1446,6 @@ int R_FindWall(const char *name)  // const added -- killough
    }
 
    return i;
-}
-
-//
-// error_printf
-//
-// sf: error printf for use w/graphical startup
-//
-void error_printf(char *s, ...)
-{
-   va_list v;
-   
-   if(!error_file)
-   {
-      time_t nowtime = time(NULL);
-      
-      error_filename = "etrn_err.txt";
-      error_file = fopen(error_filename, "w");
-      fprintf(error_file, "Eternity textures error file\n%s\n",
-         ctime(&nowtime));
-   }
-   
-   // haleyjd 09/30/03: changed to vfprintf
-   va_start(v, s);
-   vfprintf(error_file, s, v);
-   va_end(v);
 }
 
 //=============================================================================

@@ -770,7 +770,8 @@ static void P_LoadZSegs(byte *data)
 static void P_LoadZNodes(int lump)
 {
    byte *data, *lumpptr;
-   unsigned int i, len;
+   unsigned int i;
+   int len;
 
    uint32_t orgVerts, newVerts;
    uint32_t numSubs, currSeg;
@@ -779,7 +780,7 @@ static void P_LoadZNodes(int lump)
    vertex_t *newvertarray = NULL;
 
    data = lumpptr = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
-   len  = (unsigned int)(W_LumpLengthInDir(setupwad, lump));
+   len  = W_LumpLengthInDir(setupwad, lump);
 
    // skip header
    CheckZNodesOverflow(len, 4);
