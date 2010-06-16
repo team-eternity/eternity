@@ -31,16 +31,20 @@
 #ifndef MN_FILES_H__
 #define MN_FILES_H__
 
-typedef struct mndiskdir_s
+typedef struct mndir_s
 {
    const char *dirpath; // physical file system path of directory
    char **filenames;    // array of file names
    int  numfiles;       // number of files
    int  numfilesalloc;  // number of files allocated
-} mndiskdir_t;
+} mndir_t;
 
 extern char *wad_directory;
 void MN_File_AddCommands(void);
+
+int MN_ReadDirectory(mndir_t *dir, const char *read_dir, 
+                     const char *read_wildcard);
+void MN_ClearDirectory(mndir_t *dir);
 
 #endif
 

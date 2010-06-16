@@ -160,19 +160,12 @@ static boolean filecmp(const char *filename, const char *wildcard)
    return res;
 }
 
-/*
-static int  num_mn_files;
-static int  num_mn_files_alloc;
-static char **mn_filelist;
-static const char *mn_filedir;   // directory the files are in
-*/
-
 //
 // MN_addFile
 //
 // Adds a filename to the reallocating filenames array
 //
-static void MN_addFile(mndiskdir_t *dir, const char *filename)
+static void MN_addFile(mndir_t *dir, const char *filename)
 {
    if(dir->numfiles >= dir->numfilesalloc)
    {
@@ -191,7 +184,7 @@ static void MN_addFile(mndiskdir_t *dir, const char *filename)
 // Looks for the given file name in the list of filenames.
 // Returns num_mn_files if not found.
 //
-static int MN_findFile(mndiskdir_t *dir, const char *filename)
+static int MN_findFile(mndir_t *dir, const char *filename)
 {
    int i;
 
@@ -205,11 +198,13 @@ static int MN_findFile(mndiskdir_t *dir, const char *filename)
 }
 
 //
-// MN_clearDirectory
+// MN_ClearDirectory
 //
 // Empties out the reallocating filenames array
 //
-static void MN_clearDirectory(mndiskdir_t *dir)
+// haleyjd 06/15/10: made global
+//
+void MN_ClearDirectory(mndir_t *dir)
 {
    int i;
    
@@ -241,14 +236,14 @@ static int MN_qFileCompare(const void *si1, const void *si2)
 //
 // Sorts the directory listing.
 //
-static void MN_sortFiles(mndiskdir_t *dir)
+static void MN_sortFiles(mndir_t *dir)
 {
    if(dir->numfiles >= 2)
       qsort(dir->filenames, dir->numfiles, sizeof(char *), MN_qFileCompare);
 }
 
 //
-// MN_readDirectory
+// MN_ReadDirectory
 //
 // Uses POSIX opendir to read the indicated directory and saves off all file
 // names within it that match the provided wildcard string.
@@ -256,14 +251,15 @@ static void MN_sortFiles(mndiskdir_t *dir)
 // Note: for Visual C++, customized versions of MinGW's opendir functions
 // are used, which are implemented in i_opndir.c.
 //
-static int MN_readDirectory(mndiskdir_t *dir, const char *read_dir, 
-                            const char *read_wildcard)
+// haleyjd 06/15/10: made global
+//
+int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildcard)
 {
    DIR *directory;
    struct dirent *direntry;
 
    // clear directory
-   MN_clearDirectory(dir);
+   MN_ClearDirectory(dir);
   
    // open directory and read filenames  
    dir->dirpath = read_dir;
@@ -296,7 +292,7 @@ static int MN_readDirectory(mndiskdir_t *dir, const char *read_dir,
 // to load: eg. lmps, wads
 //
 
-static mndiskdir_t *mn_currentdir;
+static mndir_t *mn_currentdir;
 
 static void MN_FileDrawer(void);
 static boolean MN_FileResponder(event_t *ev);
@@ -546,11 +542,11 @@ CONSOLE_VARIABLE(wad_directory, wad_directory, 0)
       if(*a == '\\') *a = '/';
 }
 
-static mndiskdir_t mn_diskdir;
+static mndir_t mn_diskdir;
 
 CONSOLE_COMMAND(mn_selectwad, 0)
 {
-   int ret = MN_readDirectory(&mn_diskdir, wad_directory, "*.wad");
+   int ret = MN_ReadDirectory(&mn_diskdir, wad_directory, "*.wad");
 
    // check for standard errors
    if(ret)
@@ -596,7 +592,7 @@ CONSOLE_COMMAND(dir, 0)
    else
       wildcard = "*.*";
    
-   MN_readDirectory(&mn_diskdir, ".", wildcard);
+   MN_ReadDirectory(&mn_diskdir, ".", wildcard);
    
    for(i = 0; i < mn_diskdir.numfiles; ++i)
    {
@@ -611,7 +607,7 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    int i;
 
    // clear directory
-   MN_clearDirectory(&mn_diskdir);
+   MN_ClearDirectory(&mn_diskdir);
 
    // run down music hash chains and add music to file list
    for(i = 0; i < SOUND_HASHSLOTS; ++i)
@@ -648,7 +644,7 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    int curnum;
 
    // clear directory
-   MN_clearDirectory(&mn_diskdir);
+   MN_ClearDirectory(&mn_diskdir);
 
    MN_addFile(&mn_diskdir, "default");
 

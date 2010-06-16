@@ -105,11 +105,11 @@ static void W_delManagedDir(manageddir_t *dir)
       // free all resources loaded from the wad
       W_FreeDirectoryLumps(waddir);
 
-      // free all lumpinfo_t's allocated for the wad
-      W_FreeDirectoryAllocs(waddir);
-
       if(waddir->lumpinfo[0]->file)
          fclose(waddir->lumpinfo[0]->file);
+
+      // free all lumpinfo_t's allocated for the wad
+      W_FreeDirectoryAllocs(waddir);
 
       // free the private wad directory
       Z_Free(waddir->lumpinfo);
