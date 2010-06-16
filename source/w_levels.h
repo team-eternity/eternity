@@ -27,6 +27,9 @@
 #ifndef W_LEVELS_H__
 #define W_LEVELS_H__
 
+waddir_t   *W_AddManagedWad(const char *filename);
+waddir_t   *W_GetManagedWad(const char *filename);
+const char *W_GetManagedDirFN(waddir_t *waddir);
 
 #endif
 

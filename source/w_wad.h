@@ -93,6 +93,13 @@ typedef struct lumpinfo_s
 
 } lumpinfo_t;
 
+// directory types
+enum
+{
+   WADDIR_NORMAL,
+   WADDIR_MANAGED
+};
+
 //
 // haleyjd 03/01/09: Wad Directory structure
 //
@@ -107,6 +114,8 @@ typedef struct waddir_s
    lumpinfo_t **infoptrs; // 06/06/10: track all allocations
    int        numallocs;  // number of entries in the infoptrs table
    int        numallocsa; // number of entries allocated for the infoptrs table   
+   int        type;       // directory type
+   void       *data;      // user data (mainly for w_levels code)
 } waddir_t;
 
 //
@@ -122,6 +131,7 @@ typedef struct wfileadd_s
    int li_namespace;     // if not 0, special namespace to add file under
    FILE *f;              // pointer to file handle if this is a subfile
    size_t baseoffset;    // base offset if this is a subfile
+   int privatedir;       // if not 0, has a private directory
 } wfileadd_t;
 
 extern waddir_t w_GlobalDir; // the global wad directory

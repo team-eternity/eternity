@@ -58,7 +58,7 @@ extern vfont_t *menu_font_big;
 // behavior
 static boolean popupMenuActive;
 
-static char popup_message[128];
+static char  popup_message[1024];
 static char *popup_message_command; // console command to run
 
 //
@@ -237,7 +237,7 @@ void MN_Question(const char *message, char *command)
    // hook in widget so message will be displayed
    current_menuwidget = &popup_widget;
    
-   strncpy(popup_message, message, 128);
+   strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
    popup_message_command = command;
 }
@@ -259,7 +259,7 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
    // hook in widget so message will be displayed
    current_menuwidget = &popup_widget;
    
-   strncpy(popup_message, message, 128);
+   strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
    popup_callback = handler;
 }

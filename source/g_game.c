@@ -54,6 +54,7 @@
 #include "st_stuff.h"
 #include "am_map.h"
 #include "w_wad.h"
+#include "w_levels.h" // haleyjd
 #include "r_main.h"
 #include "r_draw.h"
 #include "r_things.h" // haleyjd
@@ -95,6 +96,7 @@ static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
 static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
+static waddir_t *g_dir = &w_GlobalDir;
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -648,7 +650,7 @@ static void G_DoLoadLevel(void)
 
    gamestate = GS_LEVEL;
 
-   P_SetupLevel(&w_GlobalDir, gamemapname, 0, gameskill);
+   P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
    if(gamestate != GS_LEVEL)       // level load error
    {
@@ -1735,26 +1737,29 @@ void G_SaveGameName(char *name, size_t len, int slot)
                 basesavegame, savegamename, slot);
 }
 
+//
+// G_Signature
+//
 // killough 12/98:
 // This function returns a signature for the current wad.
 // It is used to distinguish between wads, for the purposes
 // of savegame compatibility warnings, and options lookups.
 //
 // killough 12/98: use faster algorithm which has less IO
-
-uint64_t G_Signature(void)
+//
+static uint64_t G_Signature(waddir_t *dir)
 {
    uint64_t s = 0;
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = W_CheckNumForName(gamemapname);
+   lump = W_CheckNumForNameInDir(dir, gamemapname, ns_global);
    
-   if(lump != -1 && (i = lump + 10) < w_GlobalDir.numlumps)
+   if(lump != -1 && (i = lump + 10) < dir->numlumps)
    {
       do
       {
-         s = s * 2 + W_LumpLength(i);
+         s = s * 2 + W_LumpLengthInDir(dir, i);
       }
       while(--i > lump);
    }
@@ -1770,6 +1775,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
 {
    int  length, i;
    char name2[VERSIONSIZE];
+   const char *fn;
    
    save_p = savebuffer = malloc(savegamesize);
 
@@ -1801,9 +1807,34 @@ void G_SaveCurrentLevel(char *filename, char *description)
       for(i=0; i<8; i++)
          *save_p++ = levelmapname[i];
    }
+
+   // haleyjd 06/16/10: support for saving/loading levels in managed wad
+   // directories.
+   CheckSaveGame(sizeof(int));
+   if((fn = W_GetManagedDirFN(g_dir))) // returns null if g_dir == &w_GlobalDir
+   {
+      int len = strlen(fn) + 1;
+
+      // save length of managed directory filename string
+      memcpy(save_p, &len, sizeof(len));
+      save_p += sizeof(len);
+
+      // save managed directory filename string
+      CheckSaveGame(len);
+      memcpy(save_p, fn, len);
+      save_p += len;
+   }
+   else
+   {
+      int len = 0;
+
+      // just save 0; there is no name to save
+      memcpy(save_p, &len, sizeof(len));
+      save_p += sizeof(len);
+   }
   
    {  // killough 3/16/98, 12/98: store lump name checksum
-      uint64_t checksum = G_Signature();
+      uint64_t checksum = G_Signature(g_dir);
 
       CheckSaveGame(sizeof checksum); // haleyjd: added
       memcpy(save_p, &checksum, sizeof checksum);
@@ -1908,6 +1939,7 @@ static void G_DoLoadGame(void)
    int i;
    char vcheck[VERSIONSIZE];
    uint64_t checksum;
+   int len;
 
    gameaction = ga_nothing;
    
@@ -1953,11 +1985,42 @@ static void G_DoLoadGame(void)
    }
 
    G_SetGameMap();       // get gameepisode, map
+
+   // start out g_dir pointing at w_GlobalDir again
+   g_dir = &w_GlobalDir;
+
+   // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
+   // directory, we need to restore the managed directory to g_dir when loading
+   // the game here. When this is the case, the file name of the managed directory
+   // has been saved into the save game.
+   memcpy(&len, save_p, sizeof(len));
+   save_p += sizeof(len);
+
+   if(len)
+   {
+      waddir_t *dir;
+
+      // read a name of len bytes 
+      char *fn = calloc(1, len);
+      memcpy(fn, save_p, len);
+      save_p += len;
+
+      // Try to get an existing managed wad first. If none such exists, try
+      // adding it now. If that doesn't work, the normal error message appears
+      // for a missing wad.
+      if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
+         g_dir = dir;
+
+      // done with temporary file name
+      free(fn);
+   }
    
    if(!forced_loadgame)
-   {  // killough 3/16/98, 12/98: check lump name checksum
-      checksum = G_Signature();
-      if (memcmp(&checksum, save_p, sizeof checksum))
+   {  
+      // killough 3/16/98, 12/98: check lump name checksum
+      checksum = G_Signature(g_dir);
+
+      if(memcmp(&checksum, save_p, sizeof checksum))
       {
          char *msg = calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128);
          strcpy(msg,"Incompatible Savegame!!!\n");
@@ -2722,10 +2785,11 @@ void G_WorldDone(void)
    }
 }
 
-static skill_t d_skill;
-static int     d_episode;
-static int     d_map;
-static char    d_mapname[10];
+static skill_t   d_skill;
+static int       d_episode;
+static int       d_map;
+static char      d_mapname[10];
+static waddir_t *d_dir;
 
 int G_GetMapForName(const char *name)
 {
@@ -2796,8 +2860,23 @@ void G_DeferedInitNew(skill_t skill, char *levelname)
       d_episode = 1;
    
    d_skill = skill;
+
+   // haleyjd 06/16/10: default to NULL
+   d_dir = NULL;
    
    gameaction = ga_newgame;
+}
+
+//
+// G_DeferedInitNewFromDir
+//
+// haleyjd 06/16/10: Calls G_DeferedInitNew and sets d_dir to the provided wad
+// directory, for use when loading the level.
+//
+void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir)
+{
+   G_DeferedInitNew(skill, levelname);
+   d_dir = dir;
 }
 
 // killough 7/19/98: Marine's best friend :)
@@ -3080,6 +3159,11 @@ void G_InitNew(skill_t skill, char *name)
       M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
   
    //G_StopDemo();
+
+   // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
+   // to the default value.
+   g_dir = d_dir ? d_dir : &w_GlobalDir;
+   d_dir = NULL;
    
    G_DoLoadLevel();
 }

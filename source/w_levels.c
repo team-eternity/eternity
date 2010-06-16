@@ -26,10 +26,22 @@
 
 #include "z_zone.h"
 #include "doomtype.h"
+#include "doomdef.h"
 #include "w_wad.h"
 #include "w_levels.h"
 #include "m_dllist.h"
 #include "e_hash.h"
+#include "c_io.h"
+#include "m_misc.h"
+#include "mn_files.h"
+
+//=============================================================================
+// 
+// Externs
+//
+
+void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
+               int privatedir);
 
 //=============================================================================
 //
@@ -83,6 +95,10 @@ static manageddir_t *W_addManagedDir(const char *filename)
    newdir = calloc(1, sizeof(manageddir_t));
 
    newdir->name = strdup(filename);
+
+   // set type information
+   newdir->waddir.type = WADDIR_MANAGED; // mark as managed
+   newdir->waddir.data = newdir;         // opaque pointer back to parent
 
    // add it to the hash table
    E_HashAddObject(&w_dirhash, newdir);
@@ -138,7 +154,12 @@ static void W_delManagedDir(manageddir_t *dir)
 //
 static boolean W_openWadFile(manageddir_t *dir)
 {
-   return !!W_AddNewPrivateFile(&dir->waddir, dir->name);
+   boolean ret;
+   
+   if((ret = W_AddNewPrivateFile(&dir->waddir, dir->name)))
+      D_AddFile(dir->name, ns_global, NULL, 0, 1);
+
+   return ret;
 }
 
 //=============================================================================
@@ -150,26 +171,26 @@ static boolean W_openWadFile(manageddir_t *dir)
 // W_AddManagedWad
 //
 // Adds a managed directory object and opens a wad file inside of it.
-// Returns true or false to indicate success.
+// Returns the new waddir if one was created, or else returns NULL.
 //
-boolean W_AddManagedWad(const char *filename)
+waddir_t *W_AddManagedWad(const char *filename)
 {
    manageddir_t *newdir = NULL;
 
    // create a new managed wad directory object
    if(!(newdir = W_addManagedDir(filename)))
-      return false;
+      return NULL;
 
    // open the wad file in the new directory
    if(!W_openWadFile(newdir))
    {
       // if failed, delete the new directory object
       W_delManagedDir(newdir);
-      return false;
+      return NULL;
    }
 
    // success!
-   return true;
+   return &(newdir->waddir);
 }
 
 //
@@ -206,6 +227,104 @@ waddir_t *W_GetManagedWad(const char *filename)
       waddir = &(((manageddir_t *)object)->waddir);
 
    return waddir;
+}
+
+//
+// W_GetManagedDirFN
+//
+// If the given waddir_t is a managed directory, the file name corresponding
+// to it will be returned. Otherwise, NULL is returned.
+//
+const char *W_GetManagedDirFN(waddir_t *waddir)
+{
+   const char *name = NULL;
+
+   if(waddir->data && waddir->type == WADDIR_MANAGED)
+      name = ((manageddir_t *)(waddir->data))->name;
+
+   return name;
+}
+
+//=============================================================================
+//
+// Master Levels
+//
+
+// globals
+char *w_masterlevelsdirname;
+
+// statics
+static mndir_t masterlevelsdir;  // menu file loader directory structure
+static boolean masterlevelsenum; // if true, the folder has been enumerated
+
+void W_EnumerateMasterLevels(void)
+{
+   if(masterlevelsenum)
+      return;
+
+   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
+      return;
+
+   if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, "*.wad"))
+   {
+      C_Printf(FC_ERROR "Could not enumerate Master Levels directory: %s\n",
+               errno ? strerror(errno) : "(unknown error)");
+      return;
+   }
+   
+   if(masterlevelsdir.numfiles > 0)
+      masterlevelsenum = true;
+}
+
+waddir_t *W_LoadMasterLevelWad(const char *filename)
+{
+   char *fullpath = NULL;
+   int len = 0;
+   waddir_t *dir = NULL;
+   
+   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
+      return NULL;
+
+   // construct full file path
+   len = M_StringAlloca(&fullpath, 2, 2, w_masterlevelsdirname, filename);
+
+   psnprintf(fullpath, len, "%s/%s", w_masterlevelsdirname, filename);
+
+   // make sure it wasn't already opened
+   if((dir = W_GetManagedWad(fullpath)))
+      return dir;
+
+   // otherwise, add it now
+   return W_AddManagedWad(fullpath);
+}
+
+//
+// W_FindMapInLevelWad
+//
+// Finds the first MAPxy or ExMy map in the given wad directory, assuming it
+// is a single-level wad. Returns NULL if no such map exists. Note that the
+// map is not guaranteed to be valid; code in P_SetupLevel is expected to deal
+// with that possibility.
+//
+const char *W_FindMapInLevelWad(waddir_t *dir, boolean mapxy)
+{
+   int i;
+   char *name = NULL;
+
+   for(i = 0; i < dir->numlumps; ++i)
+   {
+      lumpinfo_t *lump = dir->lumpinfo[i];
+
+      if(mapxy)
+      {
+         if(isMAPxy(lump->name))
+            name = lump->name;
+      }
+      else if(isExMy(lump->name))
+         name = lump->name;
+   }
+
+   return name;
 }
 
 // EOF

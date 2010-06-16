@@ -582,8 +582,8 @@ static int numwadfiles, numwadfiles_alloc;
 // killough 11/98: remove limit on number of files
 // haleyjd 05/28/10: added f and baseoffset parameters for subfile support.
 //
-static void D_AddFile(const char *file, int li_namespace, FILE *fp, 
-                      size_t baseoffset)
+void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
+               int privatedir)
 {
    // sf: allocate for +2 for safety
    if(numwadfiles + 2 >= numwadfiles_alloc)
@@ -597,6 +597,7 @@ static void D_AddFile(const char *file, int li_namespace, FILE *fp,
    wadfiles[numwadfiles].li_namespace = li_namespace;
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
+   wadfiles[numwadfiles].privatedir   = privatedir;
 
    wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
 
@@ -1006,7 +1007,7 @@ static void D_GameAutoloadWads(void)
                
             psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
             M_NormalizeSlashes(fn);
-            D_AddFile(fn, ns_global, NULL, 0);
+            D_AddFile(fn, ns_global, NULL, 0, 0);
          }
       }
       
@@ -1174,7 +1175,7 @@ static void D_FindDiskFileIWAD(void)
 static void D_LoadDiskFileIWAD(void)
 {
    if(diskiwad.f)
-      D_AddFile(diskiwad.name, ns_global, diskiwad.f, diskiwad.offset);
+      D_AddFile(diskiwad.name, ns_global, diskiwad.f, diskiwad.offset, 0);
    else
       I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
 }
@@ -1191,7 +1192,7 @@ static void D_LoadDiskFilePWAD(void)
    if(wad.f)
    {
       if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
-         D_AddFile(wad.name, ns_global, wad.f, wad.offset);
+         D_AddFile(wad.name, ns_global, wad.f, wad.offset, 0);
    }
 }
 
@@ -1843,7 +1844,7 @@ static void D_LoadResourceWad(void)
       psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, ns_global, NULL, 0);
+   D_AddFile(filestr, ns_global, NULL, 0, 0);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -2030,7 +2031,7 @@ static void IdentifyIWAD(void)
       // fraggle -- this allows better compatibility with new IWADs
       D_LoadResourceWad();
 
-      D_AddFile(iwad, ns_global, NULL, 0);
+      D_AddFile(iwad, ns_global, NULL, 0, 0);
 
       // done with iwad string
       free(iwad);
@@ -2298,7 +2299,7 @@ static void D_ProcessWadPreincludes(void)
 
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
-                  D_AddFile(file, ns_global, NULL, 0);
+                  D_AddFile(file, ns_global, NULL, 0, 0);
                else
                   printf("\nWarning: could not open %s\n", file);
             }
@@ -2484,7 +2485,7 @@ static void D_ProcessGFSWads(gfs_t *gfs)
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
 
-      D_AddFile(filename, ns_global, NULL, 0);
+      D_AddFile(filename, ns_global, NULL, 0, 0);
    }
 }
 
@@ -2652,7 +2653,7 @@ static void D_LooseWads(void)
       filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
-      D_AddFile(filename, ns_global, NULL, 0);
+      D_AddFile(filename, ns_global, NULL, 0, 0);
    }
 }
 
@@ -2975,7 +2976,7 @@ static void D_DoomInit(void)
          else
          {
             if(file)
-               D_AddFile(myargv[p], ns_global, NULL, 0);
+               D_AddFile(myargv[p], ns_global, NULL, 0, 0);
          }
       }
    }
@@ -2996,7 +2997,7 @@ static void D_DoomInit(void)
       strncpy(file, myargv[p + 1], len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, ns_demos, NULL, 0);
+      D_AddFile(file, ns_demos, NULL, 0, 0);
       usermsg("Playing demo %s\n",file);
    }
 
@@ -3605,7 +3606,7 @@ boolean D_AddNewFile(char *s)
    if(W_AddNewFile(&w_GlobalDir, s))
       return false;
    modifiedgame = true;
-   D_AddFile(s, ns_global, NULL, 0);   // add to the list of wads
+   D_AddFile(s, ns_global, NULL, 0, 0);   // add to the list of wads
    C_SetConsole();
    D_ReInitWadfiles();
    return true;
