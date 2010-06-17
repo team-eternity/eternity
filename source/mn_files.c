@@ -301,11 +301,12 @@ static boolean MN_FileResponder(event_t *ev);
 
 static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, NULL, true };
 static int selected_item;
-static char *variable_name;
-static char *help_description;
+static const char *variable_name;
+static const char *help_description;
 static int numfileboxlines;
 static boolean select_dismiss;
 extern vfont_t *menu_font;
+static boolean allow_exit = true;
 
 //
 // MN_FileDrawer
@@ -472,9 +473,12 @@ static boolean MN_FileResponder(event_t *ev)
    
    if(action_menu_toggle || action_menu_previous)
    {
-      action_menu_toggle = action_menu_previous = false;
-      current_menuwidget = NULL; // cancel widget
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      if(allow_exit)
+      {
+         action_menu_toggle = action_menu_previous = false;
+         current_menuwidget = NULL; // cancel widget
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      }
       return true;
    }
   
@@ -564,12 +568,34 @@ CONSOLE_COMMAND(mn_selectwad, 0)
       return;
    }
 
-   selected_item = 0;
-   mn_currentdir = &mn_diskdir;
+   selected_item      = 0;
+   mn_currentdir      = &mn_diskdir;
    current_menuwidget = &file_selector;
-   help_description = "select wad file:";
-   variable_name = "mn_wadname";
-   select_dismiss = true;
+   help_description   = "select wad file:";
+   variable_name      = "mn_wadname";
+   select_dismiss     = true;
+   allow_exit         = true;
+}
+
+//
+// MN_DisplayFileSelector
+//
+// haleyjd 06/16/10: for external access to the file selector widget
+//
+void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
+                            const char *command, boolean dismissOnSelect,
+                            boolean allowExit)
+{
+   if(dir->numfiles < 1)
+      return;
+
+   selected_item      = 0;
+   mn_currentdir      = dir;
+   current_menuwidget = &file_selector;
+   help_description   = title;
+   variable_name      = command;
+   select_dismiss     = dismissOnSelect;
+   allow_exit         = allowExit;
 }
 
 //=============================================================================
@@ -636,6 +662,7 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    help_description = "select music to play:";
    variable_name = "s_playmusic";
    select_dismiss = false;
+   allow_exit     = true;
 }
 
 CONSOLE_COMMAND(mn_selectflat, 0)
@@ -669,6 +696,7 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    help_description = "select background:";
    variable_name = "mn_background";
    select_dismiss = false;
+   allow_exit     = true;
 }
 
 void MN_File_AddCommands(void)

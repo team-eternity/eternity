@@ -1784,21 +1784,24 @@ void G_SaveCurrentLevel(char *filename, char *description)
    // buffer starts out large enough by default to handle them,
    // but it should be done properly for safety.
    
-   CheckSaveGame(SAVESTRINGSIZE+VERSIONSIZE+2); // haleyjd: was wrong
-   memcpy (save_p, description, SAVESTRINGSIZE);
+   CheckSaveGame(SAVESTRINGSIZE+VERSIONSIZE+3); // haleyjd: was wrong
+   memcpy(save_p, description, SAVESTRINGSIZE);
    save_p += SAVESTRINGSIZE;
-   memset (name2, 0, sizeof(name2));
+   memset(name2, 0, sizeof(name2));
    
    // killough 2/22/98: "proprietary" version string :-)
-   sprintf (name2, VERSIONID, version);
+   sprintf(name2, VERSIONID, version);
    
-   memcpy (save_p, name2, VERSIONSIZE);
+   memcpy(save_p, name2, VERSIONSIZE);
    save_p += VERSIONSIZE;
    
    // killough 2/14/98: save old compatibility flag:
    *save_p++ = compatibility;
 
    *save_p++ = gameskill;
+
+   // haleyjd 06/16/10: save "inmasterlevels" state
+   *save_p++ = inmasterlevels;
    
    // sf: use string rather than episode, map
    {
@@ -1934,6 +1937,8 @@ static void G_DoSaveGame(void)
    savedescription[0] = 0;
 }
 
+static waddir_t *d_dir;
+
 static void G_DoLoadGame(void)
 {
    int i;
@@ -1973,6 +1978,9 @@ static void G_DoLoadGame(void)
    demo_subversion = SUBVERSION; // haleyjd 06/17/01   
    
    gameskill = *save_p++;
+
+   // haleyjd 06/16/10: reload "inmasterlevels" state
+   inmasterlevels = *save_p++;
    
    // sf: use string rather than episode, map
 
@@ -2008,8 +2016,9 @@ static void G_DoLoadGame(void)
       // Try to get an existing managed wad first. If none such exists, try
       // adding it now. If that doesn't work, the normal error message appears
       // for a missing wad.
+      // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
       if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
-         g_dir = dir;
+         g_dir = d_dir = dir;
 
       // done with temporary file name
       free(fn);
@@ -2773,6 +2782,13 @@ int cpars[34] =
 
 void G_WorldDone(void)
 {
+   if(inmasterlevels)
+   {
+      inmasterlevels = false;
+      W_DoMasterLevels(false);
+      return;
+   }
+
    gameaction = ga_worlddone;
    
    if(secretexit)
@@ -2789,7 +2805,6 @@ static skill_t   d_skill;
 static int       d_episode;
 static int       d_map;
 static char      d_mapname[10];
-static waddir_t *d_dir;
 
 int G_GetMapForName(const char *name)
 {
@@ -2863,6 +2878,7 @@ void G_DeferedInitNew(skill_t skill, char *levelname)
 
    // haleyjd 06/16/10: default to NULL
    d_dir = NULL;
+   inmasterlevels = false;
    
    gameaction = ga_newgame;
 }

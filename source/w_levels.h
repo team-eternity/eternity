@@ -27,9 +27,13 @@
 #ifndef W_LEVELS_H__
 #define W_LEVELS_H__
 
+extern char *w_masterlevelsdirname;
+extern boolean inmasterlevels;          // true if we are playing master levels
+
 waddir_t   *W_AddManagedWad(const char *filename);
 waddir_t   *W_GetManagedWad(const char *filename);
 const char *W_GetManagedDirFN(waddir_t *waddir);
+void        W_DoMasterLevels(boolean allowexit);
 
 #endif
 

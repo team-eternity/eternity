@@ -46,6 +46,7 @@
 #include "p_inter.h"
 #include "p_setup.h"
 #include "w_wad.h"
+#include "w_levels.h"
 
 #include "s_sound.h"  // haleyjd: restored exit sounds
 #include "sounds.h"   // haleyjd: restored exit sounds
@@ -454,6 +455,8 @@ VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
 VARIABLE_STRING(gi_path_hticreg, NULL, UL);
 VARIABLE_STRING(gi_path_sosr,    NULL, UL);
 
+VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
+
 static void G_TestIWADPath(char *path)
 {
    M_NormalizeSlashes(path);
@@ -511,6 +514,11 @@ CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, 0)
 CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    0) 
 {
    G_TestIWADPath(gi_path_sosr);
+}
+
+CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, 0)
+{
+   G_TestIWADPath(w_masterlevelsdirname);
 }
 
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
@@ -844,6 +852,7 @@ void G_AddCommands(void)
    C_AddCommand(iwad_heretic_shareware);
    C_AddCommand(iwad_heretic);
    C_AddCommand(iwad_heretic_sosr);
+   C_AddCommand(master_levels_dir);
    C_AddCommand(use_doom_config);
 
    G_AddChatMacros();

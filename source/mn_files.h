@@ -46,6 +46,10 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
                      const char *read_wildcard);
 void MN_ClearDirectory(mndir_t *dir);
 
+void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
+                            const char *command, boolean dismissOnSelect,
+                            boolean allowExit);
+
 #endif
 
 // EOF

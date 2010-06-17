@@ -88,6 +88,9 @@ static void P_SetParTime(void);
 static void P_SetInfoSoundNames(void);
 static void P_SetOutdoorFog(void);
 
+static char *P_openWadTemplate(const char *wadfile, int *len);
+static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor);
+
 // haleyjd 05/30/10: struct for info read from a metadata file
 typedef struct metainfo_s
 {
@@ -189,13 +192,35 @@ static textvals_t finaleTypeVals =
 // it has any. This is the main external function of this module.
 // Called from P_SetupLevel.
 //
-void P_LoadLevelInfo(int lumpnum)
+// lvname, if non-null, is the filepath of the wad that contains
+// the level when it has been loaded from a managed wad directory.
+//
+void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
    lumpinfo_t *lump;
    int glumpnum;
 
    // set all the level defaults
    P_ClearLevelVars();
+
+   // override with info from text file?
+   if(lvname)
+   {
+      int len = 0;
+      char *text = P_openWadTemplate(lvname, &len);
+      char *str;
+
+      if(text && len > 0)
+      {
+         // look for title
+         if((str = P_findTextInTemplate(text, len, 0)))
+            LevelInfo.levelName = str;
+
+         // look for author
+         if((str = P_findTextInTemplate(text, len, 1)))
+            LevelInfo.creator = str;
+      }
+   }
 
    // parse global lumps
    limode = LI_MODE_GLOBAL;
@@ -1194,6 +1219,245 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    mi->intertext  = intertext;
 
    ++nummetainfo;
+}
+
+//=============================================================================
+//
+// Wad Template Parsing
+//
+// haleyjd 06/16/10: For situations where we can get information from a wad
+// file's corresponding template text file.
+//
+
+//
+// P_openWadTemplate
+//
+// Input:  The filepath to the wad file for the current level.
+// Output: The buffered text from the corresponding wad template file, if the
+//         file was found. NULL otherwise.
+//
+static char *P_openWadTemplate(const char *wadfile, int *len)
+{
+   char *fn = strdup(wadfile);
+   char *dotloc = NULL;
+   char *buffer = NULL;
+
+   // find an extension if it has one, and see that it is ".wad"
+   if((dotloc = strrchr(fn, '.')) && !strcasecmp(dotloc, ".wad"))
+   {
+      strcpy(dotloc, ".txt");    // try replacing .wad with .txt
+
+      if(access(fn, R_OK))       // no?
+      {
+         strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
+         if(access(fn, R_OK))
+            return NULL;         // oh well, tough titties.
+      }
+   }
+
+   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : buffer;
+}
+
+// template parsing states
+enum
+{
+   TMPL_STATE_START,   // at beginning
+   TMPL_STATE_QUOTE,   // saw a quote first off (for Sverre levels)
+   TMPL_STATE_TITLE,   // reading in "Title" identifier
+   TMPL_STATE_SPACE,   // skipping spaces and/or ':' characters
+   TMPL_STATE_INTITLE, // parsing out the title
+   TMPL_STATE_DONE     // finished successfully
+};
+
+typedef struct tmplpstate_s
+{
+   char *text;
+   int i;
+   int len;
+   int state;
+   qstring_t *tokenbuf;
+   int spacecount;
+   int titleOrAuthor; // if non-zero, looking for Author, not title
+} tmplpstate_t;
+
+static void TmplStateStart(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case '"':
+      if(!state->titleOrAuthor) // only when looking for title...
+      {
+         state->spacecount = 0;
+         state->state = TMPL_STATE_QUOTE; // this is a hack for Sverre levels
+      }
+      break;
+   case 'T':
+   case 't':
+      if(state->titleOrAuthor)
+         break;
+      M_QStrPutc(state->tokenbuf, c);
+      state->state = TMPL_STATE_TITLE; // start reading out "Title"
+      break;
+   case 'A':
+   case 'a':
+      if(state->titleOrAuthor)
+      {
+         M_QStrPutc(state->tokenbuf, c);
+         state->state = TMPL_STATE_TITLE; // start reading out "Title"
+      }
+      break;
+   default:
+      break; // stay in same state
+   }
+}
+
+static void TmplStateQuote(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+      if(++state->spacecount == 2)
+      {
+         M_QStrPutc(state->tokenbuf, ' ');
+         state->spacecount = 0;
+      }
+      break;
+   case '\n':
+   case '\r':
+   case '"': // done
+      state->state = TMPL_STATE_DONE;
+      break;
+   default:
+      state->spacecount = 0;
+      M_QStrPutc(state->tokenbuf, c);
+      break;
+   }
+}
+
+static void TmplStateTitle(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+   case '\n':
+   case '\r':
+   case '\t':
+   case ':':
+      // whitespace - check to see if we have "Title" or "Author" in the token buffer
+      if(!M_QStrCaseCmp(state->tokenbuf, state->titleOrAuthor ? "Author" : "Title"))
+      {
+         M_QStrClear(state->tokenbuf);
+         state->state = TMPL_STATE_SPACE;
+      }
+      else
+      {
+         M_QStrClear(state->tokenbuf);
+         state->state = TMPL_STATE_START; // start over
+      }
+      break;
+   default:
+      M_QStrPutc(state->tokenbuf, c);
+      break;
+   }
+}
+
+static void TmplStateSpace(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+   case ':':
+   case '\n':
+   case '\r':
+   case '\t':
+   case '"':
+      break; // stay in same state
+   default:
+      // should be start of title
+      M_QStrPutc(state->tokenbuf, c);
+      state->state = TMPL_STATE_INTITLE;
+      break;
+   }
+}
+
+static void TmplStateInTitle(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case '"':
+      if(state->titleOrAuthor) // for authors, quotes are allowed
+      {
+         M_QStrPutc(state->tokenbuf, c);
+         break;
+      }
+      // intentional fall-through for titles (end of title)
+   case '\n':
+   case '\r':
+      // done
+      state->state = TMPL_STATE_DONE;
+      break;
+   default:
+      M_QStrPutc(state->tokenbuf, c);
+      break;
+   }
+}
+
+typedef void (*tmplstatefunc_t)(tmplpstate_t *state);
+
+// state functions
+static tmplstatefunc_t statefuncs[] =
+{
+   TmplStateStart,  // TMPL_STATE_START
+   TmplStateQuote,  // TMPL_STATE_QUOTE
+   TmplStateTitle,  // TMPL_STATE_TITLE
+   TmplStateSpace,  // TMPL_STATE_SPACE
+   TmplStateInTitle // TMPL_STATE_INTITLE
+};
+
+//
+// P_findTextInTemplate
+//
+// haleyjd 06/16/10: Find the title or author of the wad in the template.
+//
+static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
+{
+   tmplpstate_t state;
+   qstring_t tokenbuffer;
+   char *ret = NULL;
+
+   M_QStrInitCreate(&tokenbuffer);
+
+   state.text          = text;
+   state.len           = len;
+   state.i             = 0;
+   state.state         = TMPL_STATE_START;
+   state.tokenbuf      = &tokenbuffer;
+   state.titleOrAuthor = titleOrAuthor;
+
+   while(state.i != len && state.state != TMPL_STATE_DONE)
+   {
+      statefuncs[state.state](&state);
+      state.i++;
+   }
+
+   // valid termination states are DONE or INTITLE (though it's pretty unlikely
+   // that we would hit EOF in the title string, I'll allow for it)
+   if(state.state == TMPL_STATE_DONE || state.state == TMPL_STATE_INTITLE)
+      ret = M_QStrCDup(&tokenbuffer, PU_LEVEL);
+
+   M_QStrFree(&tokenbuffer);
+
+   return ret;
 }
 
 // EOF

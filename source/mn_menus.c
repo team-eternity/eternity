@@ -242,7 +242,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          else
          {  
             // use start map 
-            G_DeferedInitNew(defaultskill, "START");
+            G_DeferedInitNew(defaultskill - 1, "START");
             MN_ClearMenus();
          }
       }

@@ -24,7 +24,7 @@
 
 #include "doomtype.h"
 
-void P_LoadLevelInfo(int lumpnum);
+void P_LoadLevelInfo(int lumpnum, const char *lvname);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, boolean finale, const char *intertext);

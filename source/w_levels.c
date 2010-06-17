@@ -29,19 +29,26 @@
 #include "doomdef.h"
 #include "w_wad.h"
 #include "w_levels.h"
+#include "d_gi.h"
 #include "m_dllist.h"
 #include "e_hash.h"
 #include "c_io.h"
+#include "c_runcmd.h"
 #include "m_misc.h"
 #include "mn_files.h"
+#include "mn_engin.h"
 
 //=============================================================================
 // 
 // Externs
 //
 
+extern int defaultskill;
+
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                int privatedir);
+
+void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir);
 
 //=============================================================================
 //
@@ -252,6 +259,7 @@ const char *W_GetManagedDirFN(waddir_t *waddir)
 
 // globals
 char *w_masterlevelsdirname;
+boolean inmasterlevels;          // true if we are playing master levels
 
 // statics
 static mndir_t masterlevelsdir;  // menu file loader directory structure
@@ -263,7 +271,10 @@ void W_EnumerateMasterLevels(void)
       return;
 
    if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
+   {
+      C_Printf(FC_ERROR "Set master_levels_dir first\n");
       return;
+   }
 
    if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, "*.wad"))
    {
@@ -306,7 +317,7 @@ waddir_t *W_LoadMasterLevelWad(const char *filename)
 // map is not guaranteed to be valid; code in P_SetupLevel is expected to deal
 // with that possibility.
 //
-const char *W_FindMapInLevelWad(waddir_t *dir, boolean mapxy)
+char *W_FindMapInLevelWad(waddir_t *dir, boolean mapxy)
 {
    int i;
    char *name = NULL;
@@ -325,6 +336,72 @@ const char *W_FindMapInLevelWad(waddir_t *dir, boolean mapxy)
    }
 
    return name;
+}
+
+void W_DoMasterLevels(boolean allowexit)
+{
+   W_EnumerateMasterLevels();
+
+   if(!masterlevelsenum)
+   {
+      if(menuactive)
+         MN_ErrorMsg("Could not list directory");
+      return;
+   }
+
+   MN_DisplayFileSelector(&masterlevelsdir, 
+                          "Select a Master Levels WAD:", 
+                          "w_startlevel", true, allowexit);
+}
+
+//=============================================================================
+//
+// File Selection
+//
+
+CONSOLE_COMMAND(w_masterlevels, cf_notnet)
+{
+   W_DoMasterLevels(true);
+}
+
+CONSOLE_COMMAND(w_startlevel, cf_notnet|cf_hidden)
+{
+   waddir_t *dir = NULL;
+   char *mapname = NULL;
+
+   if(Console.argc < 1)
+      return;
+
+   if(!(dir = W_LoadMasterLevelWad(Console.argv[0])))
+   {
+      if(menuactive)
+         MN_ErrorMsg("Could not load wad");
+      else
+         C_Printf(FC_ERROR "Could not load level %s\n", Console.argv[0]);
+      return;
+   }
+
+   mapname = W_FindMapInLevelWad(dir, !!(GameModeInfo->flags & GIF_MAPXY));
+
+   if(!mapname)
+   {
+      if(menuactive)
+         MN_ErrorMsg("No maps found in wad");
+      else
+         C_Printf(FC_ERROR "No maps found in wad %s\n", Console.argv[0]);
+      return;
+   }
+
+   MN_ClearMenus();
+   G_DeferedInitNewFromDir(defaultskill - 1, mapname, dir);
+
+   inmasterlevels = true;
+}
+
+void W_AddCommands(void)
+{
+   C_AddCommand(w_masterlevels);
+   C_AddCommand(w_startlevel);
 }
 
 // EOF

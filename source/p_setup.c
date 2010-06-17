@@ -36,6 +36,7 @@
 #include "m_argv.h"
 #include "g_game.h"
 #include "w_wad.h"
+#include "w_levels.h"
 #include "p_hubs.h"
 #include "r_main.h"
 #include "r_things.h"
@@ -2243,7 +2244,7 @@ static void P_PreZoneFreeLevel(void)
 //
 // Performs (re)initialization of subsystems after Z_FreeTags.
 //
-static void P_InitNewLevel(int lumpnum)
+static void P_InitNewLevel(int lumpnum, waddir_t *waddir)
 {
    //==============================================
    // Playsim
@@ -2261,7 +2262,7 @@ static void P_InitNewLevel(int lumpnum)
    // Map data scripts
 
    // load MapInfo
-   P_LoadLevelInfo(lumpnum);
+   P_LoadLevelInfo(lumpnum, W_GetManagedDirFN(waddir));
    
    // haleyjd 10/08/03: load ExtraData
    E_LoadExtraData();         
@@ -2392,7 +2393,7 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
    Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
 
    // perform post-Z_FreeTags actions
-   P_InitNewLevel(lumpnum);
+   P_InitNewLevel(lumpnum, dir);
 
    // note: most of this ordering is important
    
