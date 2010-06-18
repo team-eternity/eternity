@@ -252,63 +252,6 @@ const char *W_GetManagedDirFN(waddir_t *waddir)
    return name;
 }
 
-//=============================================================================
-//
-// Master Levels
-//
-
-// globals
-char *w_masterlevelsdirname;
-boolean inmasterlevels;          // true if we are playing master levels
-
-// statics
-static mndir_t masterlevelsdir;  // menu file loader directory structure
-static boolean masterlevelsenum; // if true, the folder has been enumerated
-
-void W_EnumerateMasterLevels(void)
-{
-   if(masterlevelsenum)
-      return;
-
-   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
-   {
-      C_Printf(FC_ERROR "Set master_levels_dir first\n");
-      return;
-   }
-
-   if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, "*.wad"))
-   {
-      C_Printf(FC_ERROR "Could not enumerate Master Levels directory: %s\n",
-               errno ? strerror(errno) : "(unknown error)");
-      return;
-   }
-   
-   if(masterlevelsdir.numfiles > 0)
-      masterlevelsenum = true;
-}
-
-waddir_t *W_LoadMasterLevelWad(const char *filename)
-{
-   char *fullpath = NULL;
-   int len = 0;
-   waddir_t *dir = NULL;
-   
-   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
-      return NULL;
-
-   // construct full file path
-   len = M_StringAlloca(&fullpath, 2, 2, w_masterlevelsdirname, filename);
-
-   psnprintf(fullpath, len, "%s/%s", w_masterlevelsdirname, filename);
-
-   // make sure it wasn't already opened
-   if((dir = W_GetManagedWad(fullpath)))
-      return dir;
-
-   // otherwise, add it now
-   return W_AddManagedWad(fullpath);
-}
-
 //
 // W_FindMapInLevelWad
 //
@@ -338,9 +281,135 @@ char *W_FindMapInLevelWad(waddir_t *dir, boolean mapxy)
    return name;
 }
 
+//=============================================================================
+//
+// Master Levels
+//
+
+// globals
+char *w_masterlevelsdirname;
+boolean inmasterlevels;          // true if we are playing master levels
+
+// statics
+static mndir_t masterlevelsdir;  // menu file loader directory structure
+static boolean masterlevelsenum; // if true, the folder has been enumerated
+
+//
+// W_loadMasterLevelWad
+//
+// Loads a managed wad using the Master Levels directory setting.
+//
+static waddir_t *W_loadMasterLevelWad(const char *filename)
+{
+   char *fullpath = NULL;
+   int len = 0;
+   waddir_t *dir = NULL;
+   
+   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
+      return NULL;
+
+   // construct full file path
+   len = M_StringAlloca(&fullpath, 2, 2, w_masterlevelsdirname, filename);
+
+   psnprintf(fullpath, len, "%s/%s", w_masterlevelsdirname, filename);
+
+   // make sure it wasn't already opened
+   if((dir = W_GetManagedWad(fullpath)))
+      return dir;
+
+   // otherwise, add it now
+   return W_AddManagedWad(fullpath);
+}
+
+//
+// W_doMasterLevelsStart
+//
+// Command handling for starting a level from the Master Levels wad selection
+// menu. Executed by w_startlevel console command.
+//
+static void W_doMasterLevelsStart(const char *filename)
+{
+   waddir_t *dir = NULL;
+   char *mapname = NULL;
+
+   // Try to load the indicated wad from the Master Levels directory
+   if(!(dir = W_loadMasterLevelWad(filename)))
+   {
+      if(menuactive)
+         MN_ErrorMsg("Could not load wad");
+      else
+         C_Printf(FC_ERROR "Could not load level %s\n", filename);
+      return;
+   }
+
+   // Find the first map in the wad file
+   mapname = W_FindMapInLevelWad(dir, !!(GameModeInfo->flags & GIF_MAPXY));
+
+   // none??
+   if(!mapname)
+   {
+      if(menuactive)
+         MN_ErrorMsg("No maps found in wad");
+      else
+         C_Printf(FC_ERROR "No maps found in wad %s\n", filename);
+      return;
+   }
+
+   // Got one. Start playing it!
+   MN_ClearMenus();
+   G_DeferedInitNewFromDir(defaultskill - 1, mapname, dir);
+
+   // set inmasterlevels - this is even saved in savegames :)
+   inmasterlevels = true;
+}
+
+
+//
+// W_EnumerateMasterLevels
+//
+// Enumerates the Master Levels directory. Call this at least once so that
+// opendir/readdir are not required every time the file dialog menu widget
+// is opened.
+//
+// Set forceRefresh to true to cause the listing to be updated even if it
+// was previously cached. This is called from the console variable handler
+// for master_levels_dir when the value is successfully changed.
+//
+void W_EnumerateMasterLevels(boolean forceRefresh)
+{
+   if(masterlevelsenum && !forceRefresh)
+      return;
+
+   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
+   {
+      C_Printf(FC_ERROR "Set master_levels_dir first\n");
+      return;
+   }
+
+   if(MN_ReadDirectory(&masterlevelsdir, w_masterlevelsdirname, "*.wad"))
+   {
+      C_Printf(FC_ERROR "Could not enumerate Master Levels directory: %s\n",
+               errno ? strerror(errno) : "(unknown error)");
+      return;
+   }
+   
+   if(masterlevelsdir.numfiles > 0)
+      masterlevelsenum = true;
+}
+
+//
+// W_DoMasterLevels
+//
+// Command handling for displaying the Master Levels menu widget.
+// If allowexit is false, the menu filebox widget will not allow
+// an exit via menu_toggle or menu_previous actions. This is required
+// when bringing the menu back up after the intermission, because
+// otherwise the player would get stuck (this is done in G_WorldDone
+// if "inmasterlevels" is true).
+//
 void W_DoMasterLevels(boolean allowexit)
 {
-   W_EnumerateMasterLevels();
+   W_EnumerateMasterLevels(false);
 
    if(!masterlevelsenum)
    {
@@ -356,48 +425,42 @@ void W_DoMasterLevels(boolean allowexit)
 
 //=============================================================================
 //
-// File Selection
+// Console Commands
 //
 
+//
+// w_masterlevels
+//
+// Shows the Master Levels menu, assuming master_levels_dir is properly 
+// configured.
+//
 CONSOLE_COMMAND(w_masterlevels, cf_notnet)
 {
    W_DoMasterLevels(true);
 }
 
+//
+// w_startlevel
+// 
+// Internal command, undocumented.
+// Executed by the menu filebox widget when displaying the Master Levels
+// directory listing, in order to load and start the proper map.
+//
 CONSOLE_COMMAND(w_startlevel, cf_notnet|cf_hidden)
 {
-   waddir_t *dir = NULL;
-   char *mapname = NULL;
-
    if(Console.argc < 1)
       return;
 
-   if(!(dir = W_LoadMasterLevelWad(Console.argv[0])))
-   {
-      if(menuactive)
-         MN_ErrorMsg("Could not load wad");
-      else
-         C_Printf(FC_ERROR "Could not load level %s\n", Console.argv[0]);
-      return;
-   }
-
-   mapname = W_FindMapInLevelWad(dir, !!(GameModeInfo->flags & GIF_MAPXY));
-
-   if(!mapname)
-   {
-      if(menuactive)
-         MN_ErrorMsg("No maps found in wad");
-      else
-         C_Printf(FC_ERROR "No maps found in wad %s\n", Console.argv[0]);
-      return;
-   }
-
-   MN_ClearMenus();
-   G_DeferedInitNewFromDir(defaultskill - 1, mapname, dir);
-
-   inmasterlevels = true;
+   W_doMasterLevelsStart(Console.argv[0]);
 }
 
+//
+// W_AddCommands
+//
+// Adds all managed wad directory and Master Levels commands. Note that the
+// master_levels_dir cvar is in g_cmd along with the IWAD settings, because it
+// needs to use some of the same code they use for path verification.
+//
 void W_AddCommands(void)
 {
    C_AddCommand(w_masterlevels);

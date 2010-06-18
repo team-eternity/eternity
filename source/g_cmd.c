@@ -457,7 +457,7 @@ VARIABLE_STRING(gi_path_sosr,    NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
 
-static void G_TestIWADPath(char *path)
+static boolean G_TestIWADPath(char *path)
 {
    M_NormalizeSlashes(path);
 
@@ -468,7 +468,11 @@ static void G_TestIWADPath(char *path)
          MN_ErrorMsg("Warning: cannot access filepath");
       else
          C_Printf(FC_ERROR "Warning: cannot access filepath\n");
+
+      return false;
    }
+
+   return true;
 }
 
 CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  0) 
@@ -518,7 +522,8 @@ CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    0)
 
 CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, 0)
 {
-   G_TestIWADPath(w_masterlevelsdirname);
+   if(G_TestIWADPath(w_masterlevelsdirname))
+      W_EnumerateMasterLevels(true);
 }
 
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
