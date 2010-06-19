@@ -246,8 +246,9 @@ enum
 //
 typedef struct missioninfo_s
 {
-   GameMission_t id;            // mission id - replaces "gamemission" variable
-   unsigned int  flags;         // missioninfo flags
+   GameMission_t  id;            // mission id - replaces "gamemission" variable
+   unsigned int   flags;         // missioninfo flags
+   const char    *gamePathName;  // name of base/game folder used for this mission
    
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
@@ -283,7 +284,7 @@ typedef struct gamemodeinfo_s
    // startup stuff
    const char *versionName;   // descriptive version name
    const char *freeVerName;   // FreeDoom override name, if such exists
-   const char *startupBanner; // startup banner text
+   const char *startupBanner; // startup banner text   
    char **iwadPath;           // iwad path variable
    
    // demo state information

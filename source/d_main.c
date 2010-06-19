@@ -390,12 +390,6 @@ void D_PageTicker(void)
       D_AdvanceDemo();
 }
 
-void D_640PageDrawer(const char *key);
-
-        // titlepic checksums
-#define DOOM1TITLEPIC 382248766
-#define DOOM2TITLEPIC 176650962
-
 //
 // D_PageDrawer
 //
@@ -882,19 +876,6 @@ static void D_CheckGamePathParam(void)
    }
 }
 
-// default gamepath names for each gamemission
-static const char *gamemission_pathnames[] =
-{
-   "doom",     // doom
-   "doom2",    // doom2
-   "tnt",      // tnt
-   "plutonia", // plut
-   "doom2",    // disk
-   "hacx",     // hacx standalone version
-   "heretic",  // heretic
-   "heretic",  // hticsosr
-};
-
 //
 // D_SetGamePath
 //
@@ -906,7 +887,7 @@ static void D_SetGamePath(void)
    struct stat sbuf;
    char *gamedir = NULL;
    size_t len;
-   const char *mstr = gamemission_pathnames[GameModeInfo->missionInfo->id];
+   const char *mstr = GameModeInfo->missionInfo->gamePathName;
 
    len = M_StringAlloca(&gamedir, 2, 2, basepath, mstr);
 
