@@ -65,9 +65,32 @@
 #include "g_game.h"
 #include "m_qstr.h"
 #include "m_misc.h"
+#include "m_dllist.h"
 #include "e_lib.h"
+#include "e_hash.h"
 
 extern char gamemapname[9];
+
+//
+// LevelInfoProto
+//
+// haleyjd 06/21/10: This structure is a prototype for LevelInfo. Information
+// will be stored here from sources of global information such as EMAPINFO or
+// Hexen MAPINFO lumps, and then copied to the normal LevelInfo structure at
+// the start of each level.
+//
+// A single separate prototype object serves as the read destination for the
+// current pass of parsing. This is so that the levelvars array can reference
+// the fields of a static object without overwriting the LevelInfo object 
+// itself.
+//
+typedef struct LevelInfoProto_s
+{
+   mdllistitem_t links;                      // links for hashing
+   char          mapname[9];                 // name of map to which this belongs
+   LevelInfo_t info;                         // the LevelInfo object
+   boolean     modified[LI_FIELD_NUMFIELDS]; // array of bools to track modified fields
+} LevelInfoProto_t;
 
 // haleyjd: moved everything into the LevelInfo struct
 
@@ -262,6 +285,106 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
       LevelInfo.hasScripts = true;
 
    P_InitWeapons();
+}
+
+//=============================================================================
+//
+// LevelInfo Prototypes Implementation
+//
+// haleyjd 06/21/10
+//
+
+static LevelInfoProto_t **levelInfoPrototypes; // reallocating array of pointers
+static int numPrototypes;
+static int numPrototypesAlloc;
+static ehash_t protoHash; // hash table for prototype objects
+
+// key retrieval function for prototype hash table
+E_KEYFUNC(LevelInfoProto_t, mapname)
+
+//
+// P_addLevelInfoPrototype
+//
+// haleyjd 06/21/10: Adds a LevelInfo prototype object to the reallocating
+// pointer list and to the hash table.
+//
+static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
+{
+   LevelInfoProto_t *newProto = calloc(1, sizeof(LevelInfoProto_t));
+
+   // reallocate prototype pointers array if necessary
+   if(numPrototypes >= numPrototypesAlloc)
+   {
+      numPrototypesAlloc = numPrototypesAlloc ? numPrototypesAlloc * 2 : 40;
+
+      levelInfoPrototypes = realloc(levelInfoPrototypes,
+                                    numPrototypesAlloc * sizeof(LevelInfoProto_t *));
+   }
+
+   // add it to the pointer array
+   levelInfoPrototypes[numPrototypes++] = newProto;
+
+   // initialize name
+   strncpy(newProto->mapname, mapname, 8);
+
+   // initialize hash table first time if necessary
+   if(!protoHash.isinit)
+   {
+      E_NCStrHashInit(&protoHash, numPrototypesAlloc, 
+                      E_KEYFUNCNAME(LevelInfoProto_t, mapname), NULL);
+   }
+
+   // add it to the hash table
+   E_HashAddObject(&protoHash, newProto);
+}
+
+//
+// P_clearLevelInfoPrototypes
+//
+// haleyjd 06/21/10: Deletes all existing LevelInfo prototypes in the event that
+// global MAPINFO sources are being reparsed.
+//
+static void P_clearLevelInfoPrototypes(void)
+{
+   int i;
+
+   // destroy the hash table
+   E_HashDestroy(&protoHash);
+
+   // free all the LevelInfo objects
+   for(i = 0; i < numPrototypes; ++i)
+      free(levelInfoPrototypes[i]);
+
+   // free the pointer array
+   free(levelInfoPrototypes);
+   levelInfoPrototypes = NULL;
+   numPrototypes = numPrototypesAlloc = 0;
+}
+
+//
+// P_getLevelInfoPrototype
+//
+// haleyjd 06/21/10: Returns a LevelInfoProto object for the given map name,
+// if such exists. Returns NULL otherwise.
+//
+static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
+{
+   return E_HashObjectForKey(&protoHash, &mapname);
+}
+
+//
+// P_LoadGlobalLevelInfo
+//
+// haleyjd 06/21/10: This function is now responsible for loading and caching
+// global level info into LevelInfoProto objects. If this routine is called
+// more than once (for example, for runtime wad loading), the hive will be
+// dumped and all EMAPINFO lumps will be parsed again.
+//
+void P_LoadGlobalLevelInfo(void)
+{
+   // if any prototypes exist, delete them
+   if(numPrototypes)
+      P_clearLevelInfoPrototypes();
 }
 
 //
