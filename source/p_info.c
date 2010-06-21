@@ -405,64 +405,78 @@ enum
 
 typedef struct levelvar_s
 {
-   int type;
+   int   type;
    char *name;
+   int   fieldenum;
    void *variable;
    void *extra;
 } levelvar_t;
 
+#define LI_STRING(name, enumval, field) \
+   { IVT_STRING, name, LI_FIELD_ ## enumval, (void *)(&(field)) }
+#define LI_STRNUM(name, enumval, field, extra) \
+   { IVT_STRNUM, name, LI_FIELD_ ## enumval, (void *)(&(field)), &(extra) }
+#define LI_INTEGR(name, enumval, field) \
+   { IVT_INT, name, LI_FIELD_ ## enumval, &(field) }
+#define LI_BOOLNF(name, enumval, field) \
+   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(field) }
+#define LI_FLAGSF(name, enumval, field, extra) \
+   { IVT_FLAGS, name, LI_FIELD_ ## enumval, &(field), &(extra) }
+#define LI_END() \
+   { IVT_END, NULL, LI_FIELD_NUMFIELDS }
+
 levelvar_t levelvars[]=
 {
-   { IVT_STRING,  "altskyname",      (void *)&LevelInfo.altSkyName },
-   { IVT_FLAGS,   "boss-specials",   &LevelInfo.bossSpecs,  &boss_flagset }, // haleyjd 03/14/05
-   { IVT_STRING,  "colormap",        (void *)&LevelInfo.colorMap },
-   { IVT_STRING,  "creator",         (void *)&LevelInfo.creator },
-   { IVT_BOOLEAN, "doublesky",       &LevelInfo.doubleSky },
-   { IVT_BOOLEAN, "edf-intername",   &LevelInfo.useEDFInterName },
-   { IVT_BOOLEAN, "endofgame",       &LevelInfo.endOfGame },
-   { IVT_STRING,  "extradata",       &LevelInfo.extraData },     // haleyjd 04/02/03
-   { IVT_BOOLEAN, "finale-secret",   &LevelInfo.finaleSecretOnly },
-   { IVT_STRNUM,  "finaletype",      &LevelInfo.finaleType, &finaleTypeVals },
-   { IVT_BOOLEAN, "fullbright",      &LevelInfo.useFullBright },
-   { IVT_INT,     "gravity",         &LevelInfo.gravity },
-   { IVT_STRING,  "inter-backdrop",  (void *)&LevelInfo.backDrop },
-   { IVT_STRING,  "intermusic",      (void *)&LevelInfo.interMusic },
-   { IVT_STRING,  "interpic",        (void *)&LevelInfo.interPic },
-   { IVT_STRING,  "intertext",       (void *)&LevelInfo.interTextLump }, // haleyjd 12/13/01
-   { IVT_BOOLEAN, "killfinale",      &LevelInfo.killFinale },
-   { IVT_BOOLEAN, "killstats",       &LevelInfo.killStats },     // haleyjd 03/24/05
-   { IVT_STRING,  "levelname",       (void *)&LevelInfo.levelName },
-   { IVT_STRING,  "levelpic",        (void *)&LevelInfo.levelPic },
-   { IVT_STRING,  "levelpicnext",    (void *)&LevelInfo.nextLevelPic },
-   { IVT_STRING,  "levelpicsecret",  (void *)&LevelInfo.nextSecretPic },
-   { IVT_STRING,  "levelscript",     (void *)&LevelInfo.scriptLump },    // haleyjd
-   { IVT_STRNUM,  "leveltype",       (void *)&LevelInfo.levelType,  &levelTypeVals  },
-   { IVT_BOOLEAN, "lightning",       &LevelInfo.hasLightning },
-   { IVT_STRING,  "music",           (void *)&LevelInfo.musicName },
-   { IVT_STRING,  "nextlevel",       (void *)&LevelInfo.nextLevel },
-   { IVT_STRING,  "nextsecret",      (void *)&LevelInfo.nextSecret },
-   { IVT_BOOLEAN, "noautosequences", &LevelInfo.noAutoSequences }, // haleyjd 09/24/06
-   { IVT_STRING,  "outdoorfog",      (void *)&LevelInfo.outdoorFog }, // haleyjd 03/04/07
-   { IVT_INT,     "partime",         &LevelInfo.partime },
-   { IVT_INT,     "skydelta",        &LevelInfo.skyDelta },
-   { IVT_INT,     "sky2delta",       &LevelInfo.sky2Delta },
-   { IVT_STRING,  "skyname",         (void *)&LevelInfo.skyName },
-   { IVT_STRING,  "sky2name",        (void *)&LevelInfo.sky2Name },
-   { IVT_STRING,  "sound-swtchn",    (void *)&LevelInfo.sound_swtchn },
-   { IVT_STRING,  "sound-swtchx",    (void *)&LevelInfo.sound_swtchx },
-   { IVT_STRING,  "sound-stnmov",    (void *)&LevelInfo.sound_stnmov },
-   { IVT_STRING,  "sound-pstop",     (void *)&LevelInfo.sound_pstop },
-   { IVT_STRING,  "sound-bdcls",     (void *)&LevelInfo.sound_bdcls },
-   { IVT_STRING,  "sound-bdopn",     (void *)&LevelInfo.sound_bdopn },
-   { IVT_STRING,  "sound-dorcls",    (void *)&LevelInfo.sound_dorcls },
-   { IVT_STRING,  "sound-doropn",    (void *)&LevelInfo.sound_doropn },
-   { IVT_STRING,  "sound-pstart",    (void *)&LevelInfo.sound_pstart },
-   { IVT_STRING,  "sound-fcmove",    (void *)&LevelInfo.sound_fcmove },
-   { IVT_BOOLEAN, "unevenlight",     (void *)&LevelInfo.unevenLight },
+   LI_STRING("altskyname",      ALTSKYNAME,       LevelInfo.altSkyName),
+   LI_FLAGSF("boss-specials",   BOSSSPECS,        LevelInfo.bossSpecs,        boss_flagset),
+   LI_STRING("colormap",        COLORMAP,         LevelInfo.colorMap),
+   LI_STRING("creator",         CREATOR,          LevelInfo.creator),
+   LI_BOOLNF("doublesky",       DOUBLESKY,        LevelInfo.doubleSky),
+   LI_BOOLNF("edf_intername",   USEEDFINTERNAME,  LevelInfo.useEDFInterName),
+   LI_BOOLNF("endofgame",       ENDOFGAME,        LevelInfo.endOfGame),
+   LI_STRING("extradata",       EXTRADATA,        LevelInfo.extraData),
+   LI_BOOLNF("finale-secret",   FINALESECRETONLY, LevelInfo.finaleSecretOnly), 
+   LI_STRNUM("finaletype",      FINALETYPE,       LevelInfo.finaleType,       finaleTypeVals),
+   LI_BOOLNF("fullbright",      USEFULLBRIGHT,    LevelInfo.useFullBright),
+   LI_INTEGR("gravity",         GRAVITY,          LevelInfo.gravity),
+   LI_STRING("inter-backdrop",  BACKDROP,         LevelInfo.backDrop),
+   LI_STRING("intermusic",      INTERMUSIC,       LevelInfo.interMusic),
+   LI_STRING("interpic",        INTERPIC,         LevelInfo.interPic),
+   LI_STRING("intertext",       INTERTEXTLUMP,    LevelInfo.interTextLump),
+   LI_BOOLNF("killfinale",      KILLFINALE,       LevelInfo.killFinale),
+   LI_BOOLNF("killstats",       KILLSTATS,        LevelInfo.killStats),
+   LI_STRING("levelname",       LEVELNAME,        LevelInfo.levelName),
+   LI_STRING("levelpic",        LEVELPIC,         LevelInfo.levelPic),
+   LI_STRING("levelpicnext",    NEXTLEVELPIC,     LevelInfo.nextLevelPic),
+   LI_STRING("levelpicsecret",  NEXTSECRETPIC,    LevelInfo.nextSecretPic),
+   LI_STRING("levelscript",     SCRIPTLUMP,       LevelInfo.scriptLump),
+   LI_STRNUM("leveltype",       LEVELTYPE,        LevelInfo.levelType,        levelTypeVals),
+   LI_BOOLNF("lightning",       HASLIGHTNING,     LevelInfo.hasLightning),
+   LI_STRING("music",           MUSICNAME,        LevelInfo.musicName),
+   LI_STRING("nextlevel",       NEXTLEVEL,        LevelInfo.nextLevel),
+   LI_STRING("nextsecret",      NEXTSECRET,       LevelInfo.nextSecret),
+   LI_BOOLNF("noautosequences", NOAUTOSEQUENCES,  LevelInfo.noAutoSequences),
+   LI_STRING("outdoorfog",      OUTDOORFOG,       LevelInfo.outdoorFog),
+   LI_INTEGR("partime",         PARTIME,          LevelInfo.partime),
+   LI_INTEGR("skydelta",        SKYDELTA,         LevelInfo.skyDelta),
+   LI_INTEGR("sky2delta",       SKY2DELTA,        LevelInfo.sky2Delta),
+   LI_STRING("skyname",         SKYNAME,          LevelInfo.skyName),
+   LI_STRING("sky2name",        SKY2NAME,         LevelInfo.sky2Name),
+   LI_STRING("sound-swtchn",    SOUNDSWTCHN,      LevelInfo.sound_swtchn),
+   LI_STRING("sound-swtchx",    SOUNDSWTCHX,      LevelInfo.sound_swtchx),
+   LI_STRING("sound-stnmov",    SOUNDSTNMOV,      LevelInfo.sound_stnmov),
+   LI_STRING("sound-pstop",     SOUNDPSTOP,       LevelInfo.sound_pstop),
+   LI_STRING("sound-bdcls",     SOUNDBDCLS,       LevelInfo.sound_bdcls),
+   LI_STRING("sound-bdopn",     SOUNDBDOPN,       LevelInfo.sound_bdopn),
+   LI_STRING("sound-dorcls",    SOUNDDORCLS,      LevelInfo.sound_dorcls),
+   LI_STRING("sound-doropn",    SOUNDDOROPN,      LevelInfo.sound_doropn),
+   LI_STRING("sound-pstart",    SOUNDPSTART,      LevelInfo.sound_pstart),
+   LI_STRING("sound-fcmove",    SOUNDFCMOVE,      LevelInfo.sound_fcmove),
+   LI_BOOLNF("unevenlight",     UNEVENLIGHT,      LevelInfo.unevenLight),
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
    
-   { IVT_END,     0,                0 } // must be last
+   LI_END() // must be last
 };
 
 // lexer state enumeration for P_ParseLevelVar
