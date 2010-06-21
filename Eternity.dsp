@@ -1441,6 +1441,14 @@ SOURCE=.\Source\v_video.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\source\w_levels.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\w_levels.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\w_wad.c
 # End Source File
 # Begin Source File
