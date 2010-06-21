@@ -1179,6 +1179,12 @@ static void P_InitWeapons(void)
 // Meta info is only loaded from diskfiles and may override LevelInfo defaults.
 // 
 
+//
+// P_GetMetaInfoForLevel
+//
+// Finds a metainfo object for the given map number, if one exists (returns 
+// NULL otherwise).
+//
 static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 {
    int i;
@@ -1196,6 +1202,14 @@ static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
    return mi;
 }
 
+//
+// P_CreateMetaInfo
+//
+// Creates a metainfo object for a given map with all of the various data that
+// can be defined in metadata.txt files. This is called from some code in 
+// d_main.c that deals with special ".disk" files that contain an IWAD and
+// possible PWAD(s) that originate from certain console versions of DOOM.
+//
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, boolean finale, const char *intertext)
 {
