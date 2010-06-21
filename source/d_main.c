@@ -1541,11 +1541,14 @@ static void CheckIWAD(const char *iwadname,
    }
 }
 
+//
+// WadFileStatus
+//
 // jff 4/19/98 Add routine to check a pathname for existence as
 // a file or directory. If neither append .wad and check if it
 // exists as a file then. Else return non-existent.
-
-boolean WadFileStatus(char *filename,boolean *isdir)
+//
+static boolean WadFileStatus(char *filename, boolean *isdir)
 {
    struct stat sbuf;
    int i;
@@ -1580,8 +1583,8 @@ boolean WadFileStatus(char *filename,boolean *isdir)
 static const char *const standard_iwads[]=
 {
    // Official IWADs
-   "/doom2f.wad",    // DOOM II, French Version
    "/doom2.wad",     // DOOM II
+   "/doom2f.wad",    // DOOM II, French Version
    "/plutonia.wad",  // Final DOOM: Plutonia
    "/tnt.wad",       // Final DOOM: TNT
    "/doom.wad",      // Registered/Ultimate DOOM
@@ -1676,8 +1679,10 @@ char *FindIWADFile(void)
    {
       baseiwad = strdup(basename);
       M_NormalizeSlashes(baseiwad);
+
       iwad = calloc(1, strlen(baseiwad) + 1024);
       strcpy(iwad, baseiwad);
+      
       if(WadFileStatus(iwad, &isdir))
       {
          if(!isdir)

@@ -1230,6 +1230,28 @@ static void HU_LevelTimeTick(hu_widget_t *widget)
 }
 
 //
+// HU_LevelTimeClear
+//
+// Handles HU_Start actions for the level time widget
+//
+static void HU_LevelTimeClear(hu_widget_t *widget)
+{
+   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
+
+   if(GameModeInfo->flags & GIF_HUDSTATBARNAME && LevelInfo.levelName)
+   {
+      int len = V_FontStringWidth(hud_font, LevelInfo.levelName);
+
+      // If level name is too long, move the timer up one row;
+      // otherwise, restore to the normal position.
+      if(len >= tw->x)
+         tw->y = SCREENHEIGHT - ST_HEIGHT - (hud_font->absh * 2 + 1);
+      else
+         tw->y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
+   }
+}
+
+//
 // HU_InitLevelTime
 //
 // Sets up the level time widget for the automap.
@@ -1244,20 +1266,22 @@ static void HU_InitLevelTime(void)
    // set virtuals
    leveltime_widget.widget.drawer = HU_TextWidgetDraw;
    leveltime_widget.widget.ticker = HU_LevelTimeTick;
+   leveltime_widget.widget.clear  = HU_LevelTimeClear;
    
    // add to hash
    HU_AddWidgetToHash((hu_widget_t *)&leveltime_widget);
 
    // set data
-   if(GameModeInfo->type == Game_Heretic)
+   if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
    {
       leveltime_widget.x = 240;
       leveltime_widget.y = 10;
    }
    else
    {
+      // haleyjd: use proper font metrics
       leveltime_widget.x = SCREENWIDTH - 60;
-      leveltime_widget.y = SCREENHEIGHT - ST_HEIGHT - 8;
+      leveltime_widget.y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
    }
    leveltime_widget.message = NULL;
    leveltime_widget.font = hud_font;
@@ -1307,15 +1331,16 @@ static void HU_InitLevelName(void)
    HU_AddWidgetToHash((hu_widget_t *)&levelname_widget);
 
    // set data
-   if(GameModeInfo->type == Game_Heretic)
+   if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
    {
       levelname_widget.x = 20;
       levelname_widget.y = 145;
    }
    else
    {
+      // haleyjd: use proper font metrics
       levelname_widget.x = 0;
-      levelname_widget.y = SCREENHEIGHT - ST_HEIGHT - 8;
+      levelname_widget.y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
    }
    levelname_widget.message = NULL;
    levelname_widget.font = hud_font;
