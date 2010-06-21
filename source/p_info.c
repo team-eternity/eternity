@@ -86,17 +86,17 @@ extern char gamemapname[9];
 //
 typedef struct LevelInfoProto_s
 {
-   mdllistitem_t links;                      // links for hashing
-   char          mapname[9];                 // name of map to which this belongs
-   LevelInfo_t info;                         // the LevelInfo object
-   boolean     modified[LI_FIELD_NUMFIELDS]; // array of bools to track modified fields
+   mdllistitem_t links;                        // links for hashing
+   char          mapname[9];                   // name of map to which this belongs
+   LevelInfo_t   info;                         // the LevelInfo object
+   boolean       modified[LI_FIELD_NUMFIELDS]; // array of bools to track modified fields
 } LevelInfoProto_t;
 
 // haleyjd: moved everything into the LevelInfo struct
 
 LevelInfo_t LevelInfo;
 
-static void P_ParseLevelInfo(int lumpnum);
+static void P_ParseLevelInfo(waddir_t *dir, int lumpnum);
 
 static int  P_ParseInfoCmd(qstring_t *line);
 static void P_ParseLevelVar(qstring_t *cmd);
@@ -262,7 +262,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
       {
          // reset the parser state         
          readtype = RT_OTHER;
-         P_ParseLevelInfo(glumpnum);
+         P_ParseLevelInfo(&w_GlobalDir, glumpnum); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
@@ -271,7 +271,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    // parse level lump
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
-   P_ParseLevelInfo(lumpnum);
+   P_ParseLevelInfo(&w_GlobalDir, lumpnum); // FIXME
    
    // haleyjd: call post-processing routines
    P_LoadInterTextLump();
@@ -380,11 +380,33 @@ static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
 // more than once (for example, for runtime wad loading), the hive will be
 // dumped and all EMAPINFO lumps will be parsed again.
 //
-void P_LoadGlobalLevelInfo(void)
+void P_LoadGlobalLevelInfo(waddir_t *dir)
 {
+   lumpinfo_t *lump;
+   int glumpnum;
+
    // if any prototypes exist, delete them
    if(numPrototypes)
       P_clearLevelInfoPrototypes();
+
+   limode = LI_MODE_GLOBAL;
+
+   // EDF_FIXME: use new W_ function after EDF branch merger
+   lump = dir->lumpinfo[W_LumpNameHash("EMAPINFO") % 
+                        (unsigned int)dir->numlumps];
+
+   for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
+   {
+      lump = dir->lumpinfo[glumpnum];
+
+      if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
+         lump->li_namespace == ns_global)
+      {
+         // reset parser state
+         readtype = RT_OTHER;
+         P_ParseLevelInfo(dir, glumpnum);
+      }
+   }
 }
 
 //
@@ -392,7 +414,7 @@ void P_LoadGlobalLevelInfo(void)
 //
 // Parses one individual MapInfo lump.
 //
-static void P_ParseLevelInfo(int lumpnum)
+static void P_ParseLevelInfo(waddir_t *dir, int lumpnum)
 {
    qstring_t line;
    char *lump, *rover;
@@ -402,13 +424,13 @@ static void P_ParseLevelInfo(int lumpnum)
    // problem and to use qstring_t to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = w_GlobalDir.lumpinfo[lumpnum]->size))
+   if(!(size = dir->lumpinfo[lumpnum]->size))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
    lump = Z_Malloc(size, PU_STATIC, NULL);
-   W_ReadLump(lumpnum, lump);
+   W_ReadLumpInDir(dir, lumpnum, lump);
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier

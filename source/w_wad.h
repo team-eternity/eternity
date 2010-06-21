@@ -154,6 +154,7 @@ int     W_CheckNumForNameNSG(const char *name, int ns);
 int     W_GetNumForName(const char* name);
 int     W_LumpLengthInDir(waddir_t *dir, int lump);
 int     W_LumpLength(int lump);
+void    W_ReadLumpInDir(waddir_t *dir, int lump, void *dest);
 void    W_ReadLump(int lump, void *dest);
 void   *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag);
 void   *W_CacheLumpNum(int lump, int tag);
