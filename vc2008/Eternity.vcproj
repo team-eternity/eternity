@@ -4228,6 +4228,14 @@
 				Name="W_"
 				>
 				<File
+					RelativePath="..\source\w_levels.c"
+					>
+				</File>
+				<File
+					RelativePath="..\source\w_levels.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Source\w_wad.c"
 					>
 					<FileConfiguration

@@ -170,20 +170,21 @@ typedef struct bspecrule_s
 //
 enum
 {
-   GIF_HASDISK       = 0x00000001, // has flashing io disk
-   GIF_SHAREWARE     = 0x00000002, // shareware game (no -file)
-   GIF_MNBIGFONT     = 0x00000004, // uses big font for menu titles
-   GIF_MAPXY         = 0x00000008, // gamemode uses MAPxy maps by default
-   GIF_SAVESOUND     = 0x00000010, // makes a sound in save & load menus
-   GIF_HASADVISORY   = 0x00000020, // displays advisory popup on title screen
-   GIF_SHADOWTITLES  = 0x00000040, // shadows titles in menus
-   GIF_HASMADMELEE   = 0x00000080, // has mad melee when player dies in SP
-   GIF_HASEXITSOUNDS = 0x00000100, // has sounds at exit
-   GIF_WOLFHACK      = 0x00000200, // is subject to German-edition restriction
-   GIF_SETENDOFGAME  = 0x00000400, // Teleport_EndGame sets LevelInfo.endOfGame
-   GIF_CLASSICMENUS  = 0x00000800, // supports classic/traditional menu emulation
-   GIF_SKILL5RESPAWN = 0x00001000, // monsters respawn by default on skill 5
-   GIF_SKILL5WARNING = 0x00002000, // display menu warning for skill 5
+   GIF_HASDISK        = 0x00000001, // has flashing io disk
+   GIF_SHAREWARE      = 0x00000002, // shareware game (no -file)
+   GIF_MNBIGFONT      = 0x00000004, // uses big font for menu titles
+   GIF_MAPXY          = 0x00000008, // gamemode uses MAPxy maps by default
+   GIF_SAVESOUND      = 0x00000010, // makes a sound in save & load menus
+   GIF_HASADVISORY    = 0x00000020, // displays advisory popup on title screen
+   GIF_SHADOWTITLES   = 0x00000040, // shadows titles in menus
+   GIF_HASMADMELEE    = 0x00000080, // has mad melee when player dies in SP
+   GIF_HASEXITSOUNDS  = 0x00000100, // has sounds at exit
+   GIF_WOLFHACK       = 0x00000200, // is subject to German-edition restriction
+   GIF_SETENDOFGAME   = 0x00000400, // Teleport_EndGame sets LevelInfo.endOfGame
+   GIF_CLASSICMENUS   = 0x00000800, // supports classic/traditional menu emulation
+   GIF_SKILL5RESPAWN  = 0x00001000, // monsters respawn by default on skill 5
+   GIF_SKILL5WARNING  = 0x00002000, // display menu warning for skill 5
+   GIF_HUDSTATBARNAME = 0x00004000, // HUD positions level name above status bar
 };
 
 // Game mode handling - identify IWAD version
@@ -246,8 +247,9 @@ enum
 //
 typedef struct missioninfo_s
 {
-   GameMission_t id;            // mission id - replaces "gamemission" variable
-   unsigned int  flags;         // missioninfo flags
+   GameMission_t  id;            // mission id - replaces "gamemission" variable
+   unsigned int   flags;         // missioninfo flags
+   const char    *gamePathName;  // name of base/game folder used for this mission
    
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
@@ -283,7 +285,7 @@ typedef struct gamemodeinfo_s
    // startup stuff
    const char *versionName;   // descriptive version name
    const char *freeVerName;   // FreeDoom override name, if such exists
-   const char *startupBanner; // startup banner text
+   const char *startupBanner; // startup banner text   
    char **iwadPath;           // iwad path variable
    
    // demo state information

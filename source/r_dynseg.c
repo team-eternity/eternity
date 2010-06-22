@@ -209,11 +209,14 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 // Not terribly fast.
 // Derived from BSP 5.2 SplitDist routine.
 //
-static void R_DynaSegOffset(seg_t *seg, line_t *line)
+// haleyjd 06/14/10: made global for map loading in p_setup.c and added
+//                   side parameter.
+//
+void R_DynaSegOffset(seg_t *seg, line_t *line, int side)
 {
    double t;
-   double dx = line->v1->fx - seg->v1->fx;
-   double dy = line->v1->fy - seg->v1->fy;
+   double dx = (side ? line->v2->fx : line->v1->fx) - seg->v1->fx;
+   double dy = (side ? line->v2->fy : line->v1->fy) - seg->v1->fy;
  
    if(dx == 0.0 && dy == 0.0)
       t = 0;
@@ -242,7 +245,7 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->seg.v2      = v2;
 
    // calculate texture offset
-   R_DynaSegOffset(&ret->seg, proto->seg.linedef);
+   R_DynaSegOffset(&ret->seg, proto->seg.linedef, 0);
 
    return ret;
 }

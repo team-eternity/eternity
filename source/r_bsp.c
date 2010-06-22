@@ -1414,7 +1414,7 @@ static void R_AddLine(seg_t *line)
    float x1, x2;
    float toffsetx = 0.0f, toffsety = 0.0f;
    float i1, i2, pstep;
-   float length, lclip1, lclip2;
+   float lclip1, lclip2;
    float nearclip = NEARCLIP;
    vertex_t  t1, t2, temp;
    side_t *side;
@@ -1497,7 +1497,7 @@ static void R_AddLine(seg_t *line)
    v1 = line->v1;
    v2 = line->v2;
 
-   length = lclip2 = line->len;
+   lclip2 = line->len;
    lclip1 = 0.0f;
 
    temp.fx = v1->fx - view.x;

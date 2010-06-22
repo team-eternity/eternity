@@ -2131,7 +2131,7 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
       const char *basename;
 
       // set current map
-      psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);
+      psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
       mapName = E_StringForName(nameBuffer);
 
       // are we going to a secret level?

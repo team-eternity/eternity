@@ -228,6 +228,10 @@ SOURCE=.\Source\d_dehtbl.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\d_diskfile.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\d_gi.c
 # End Source File
 # Begin Source File
@@ -265,6 +269,10 @@ SOURCE=.\Source\d_dehtbl.h
 # Begin Source File
 
 SOURCE=.\Source\d_dialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\d_diskfile.h
 # End Source File
 # Begin Source File
 
@@ -1433,6 +1441,14 @@ SOURCE=.\Source\v_video.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\source\w_levels.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\w_levels.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\w_wad.c
 # End Source File
 # Begin Source File
@@ -1446,10 +1462,6 @@ SOURCE=.\Source\w_wad.h
 # Begin Source File
 
 SOURCE=.\source\z_native.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\z_zone.c
 # End Source File
 # Begin Source File
 

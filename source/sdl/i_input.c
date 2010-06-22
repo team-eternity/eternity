@@ -258,8 +258,11 @@ static void I_JoystickEvents(void)
    int i, joyb[8];
    Sint16 joy_x, joy_y;
    static int old_joyb[8];
+
+   memset(joyb, 0, sizeof(joyb));
    
-   if(!joystickpresent || !usejoystick || !sdlJoystick)
+   if(!joystickpresent || !usejoystick || !sdlJoystick || 
+      !sdlJoystickNumButtons)
       return;
    
    SDL_JoystickUpdate(); // read the current joystick settings
@@ -476,6 +479,10 @@ static void I_GetEvent(void)
          if(!usemouse || mouseAccel_type == 2)
             continue;
 
+         // haleyjd 06/14/10: no mouse motion at startup.
+         if(gametic == 0)
+            continue;
+
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most 
          // people  like it the most.
          if(mouseAccel_type == 0)
@@ -527,12 +534,14 @@ static void I_GetEvent(void)
             d_event.data1 = KEYD_MWHEELDOWN;
             mwheeldowntic = calltic;
             break;
+#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
+#endif
          }
 
          D_PostEvent(&d_event);
@@ -566,12 +575,14 @@ static void I_GetEvent(void)
             break;
          case SDL_BUTTON_WHEELDOWN:
             break;
+#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
+#endif
          }
 
          if(d_event.data1)

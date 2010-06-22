@@ -54,6 +54,7 @@
 #include "st_stuff.h"
 #include "am_map.h"
 #include "w_wad.h"
+#include "w_levels.h" // haleyjd
 #include "r_main.h"
 #include "r_draw.h"
 #include "r_things.h" // haleyjd
@@ -95,6 +96,7 @@ static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
 static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
+static waddir_t *g_dir = &w_GlobalDir;
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -648,7 +650,7 @@ static void G_DoLoadLevel(void)
 
    gamestate = GS_LEVEL;
 
-   P_SetupLevel(gamemapname, 0, gameskill);
+   P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
    if(gamestate != GS_LEVEL)       // level load error
    {
@@ -1735,26 +1737,29 @@ void G_SaveGameName(char *name, size_t len, int slot)
                 basesavegame, savegamename, slot);
 }
 
+//
+// G_Signature
+//
 // killough 12/98:
 // This function returns a signature for the current wad.
 // It is used to distinguish between wads, for the purposes
 // of savegame compatibility warnings, and options lookups.
 //
 // killough 12/98: use faster algorithm which has less IO
-
-uint64_t G_Signature(void)
+//
+static uint64_t G_Signature(waddir_t *dir)
 {
    uint64_t s = 0;
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = W_CheckNumForName(gamemapname);
+   lump = W_CheckNumForNameInDir(dir, gamemapname, ns_global);
    
-   if(lump != -1 && (i = lump + 10) < w_GlobalDir.numlumps)
+   if(lump != -1 && (i = lump + 10) < dir->numlumps)
    {
       do
       {
-         s = s * 2 + W_LumpLength(i);
+         s = s * 2 + W_LumpLengthInDir(dir, i);
       }
       while(--i > lump);
    }
@@ -1770,6 +1775,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
 {
    int  length, i;
    char name2[VERSIONSIZE];
+   const char *fn;
    
    save_p = savebuffer = malloc(savegamesize);
 
@@ -1778,21 +1784,24 @@ void G_SaveCurrentLevel(char *filename, char *description)
    // buffer starts out large enough by default to handle them,
    // but it should be done properly for safety.
    
-   CheckSaveGame(SAVESTRINGSIZE+VERSIONSIZE+2); // haleyjd: was wrong
-   memcpy (save_p, description, SAVESTRINGSIZE);
+   CheckSaveGame(SAVESTRINGSIZE+VERSIONSIZE+3); // haleyjd: was wrong
+   memcpy(save_p, description, SAVESTRINGSIZE);
    save_p += SAVESTRINGSIZE;
-   memset (name2, 0, sizeof(name2));
+   memset(name2, 0, sizeof(name2));
    
    // killough 2/22/98: "proprietary" version string :-)
-   sprintf (name2, VERSIONID, version);
+   sprintf(name2, VERSIONID, version);
    
-   memcpy (save_p, name2, VERSIONSIZE);
+   memcpy(save_p, name2, VERSIONSIZE);
    save_p += VERSIONSIZE;
    
    // killough 2/14/98: save old compatibility flag:
    *save_p++ = compatibility;
 
    *save_p++ = gameskill;
+
+   // haleyjd 06/16/10: save "inmasterlevels" state
+   *save_p++ = inmasterlevels;
    
    // sf: use string rather than episode, map
    {
@@ -1801,9 +1810,34 @@ void G_SaveCurrentLevel(char *filename, char *description)
       for(i=0; i<8; i++)
          *save_p++ = levelmapname[i];
    }
+
+   // haleyjd 06/16/10: support for saving/loading levels in managed wad
+   // directories.
+   CheckSaveGame(sizeof(int));
+   if((fn = W_GetManagedDirFN(g_dir))) // returns null if g_dir == &w_GlobalDir
+   {
+      int len = strlen(fn) + 1;
+
+      // save length of managed directory filename string
+      memcpy(save_p, &len, sizeof(len));
+      save_p += sizeof(len);
+
+      // save managed directory filename string
+      CheckSaveGame(len);
+      memcpy(save_p, fn, len);
+      save_p += len;
+   }
+   else
+   {
+      int len = 0;
+
+      // just save 0; there is no name to save
+      memcpy(save_p, &len, sizeof(len));
+      save_p += sizeof(len);
+   }
   
    {  // killough 3/16/98, 12/98: store lump name checksum
-      uint64_t checksum = G_Signature();
+      uint64_t checksum = G_Signature(g_dir);
 
       CheckSaveGame(sizeof checksum); // haleyjd: added
       memcpy(save_p, &checksum, sizeof checksum);
@@ -1903,11 +1937,14 @@ static void G_DoSaveGame(void)
    savedescription[0] = 0;
 }
 
+static waddir_t *d_dir;
+
 static void G_DoLoadGame(void)
 {
    int i;
    char vcheck[VERSIONSIZE];
    uint64_t checksum;
+   int len;
 
    gameaction = ga_nothing;
    
@@ -1941,6 +1978,9 @@ static void G_DoLoadGame(void)
    demo_subversion = SUBVERSION; // haleyjd 06/17/01   
    
    gameskill = *save_p++;
+
+   // haleyjd 06/16/10: reload "inmasterlevels" state
+   inmasterlevels = *save_p++;
    
    // sf: use string rather than episode, map
 
@@ -1953,11 +1993,43 @@ static void G_DoLoadGame(void)
    }
 
    G_SetGameMap();       // get gameepisode, map
+
+   // start out g_dir pointing at w_GlobalDir again
+   g_dir = &w_GlobalDir;
+
+   // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
+   // directory, we need to restore the managed directory to g_dir when loading
+   // the game here. When this is the case, the file name of the managed directory
+   // has been saved into the save game.
+   memcpy(&len, save_p, sizeof(len));
+   save_p += sizeof(len);
+
+   if(len)
+   {
+      waddir_t *dir;
+
+      // read a name of len bytes 
+      char *fn = calloc(1, len);
+      memcpy(fn, save_p, len);
+      save_p += len;
+
+      // Try to get an existing managed wad first. If none such exists, try
+      // adding it now. If that doesn't work, the normal error message appears
+      // for a missing wad.
+      // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
+      if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
+         g_dir = d_dir = dir;
+
+      // done with temporary file name
+      free(fn);
+   }
    
    if(!forced_loadgame)
-   {  // killough 3/16/98, 12/98: check lump name checksum
-      checksum = G_Signature();
-      if (memcmp(&checksum, save_p, sizeof checksum))
+   {  
+      // killough 3/16/98, 12/98: check lump name checksum
+      checksum = G_Signature(g_dir);
+
+      if(memcmp(&checksum, save_p, sizeof checksum))
       {
          char *msg = calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128);
          strcpy(msg,"Incompatible Savegame!!!\n");
@@ -2710,6 +2782,13 @@ int cpars[34] =
 
 void G_WorldDone(void)
 {
+   if(inmasterlevels)
+   {
+      inmasterlevels = false;
+      W_DoMasterLevels(false);
+      return;
+   }
+
    gameaction = ga_worlddone;
    
    if(secretexit)
@@ -2722,10 +2801,10 @@ void G_WorldDone(void)
    }
 }
 
-static skill_t d_skill;
-static int     d_episode;
-static int     d_map;
-static char    d_mapname[10];
+static skill_t   d_skill;
+static int       d_episode;
+static int       d_map;
+static char      d_mapname[10];
 
 int G_GetMapForName(const char *name)
 {
@@ -2796,8 +2875,24 @@ void G_DeferedInitNew(skill_t skill, char *levelname)
       d_episode = 1;
    
    d_skill = skill;
+
+   // haleyjd 06/16/10: default to NULL
+   d_dir = NULL;
+   inmasterlevels = false;
    
    gameaction = ga_newgame;
+}
+
+//
+// G_DeferedInitNewFromDir
+//
+// haleyjd 06/16/10: Calls G_DeferedInitNew and sets d_dir to the provided wad
+// directory, for use when loading the level.
+//
+void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir)
+{
+   G_DeferedInitNew(skill, levelname);
+   d_dir = dir;
 }
 
 // killough 7/19/98: Marine's best friend :)
@@ -3080,6 +3175,11 @@ void G_InitNew(skill_t skill, char *name)
       M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
   
    //G_StopDemo();
+
+   // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
+   // to the default value.
+   g_dir = d_dir ? d_dir : &w_GlobalDir;
+   d_dir = NULL;
    
    G_DoLoadLevel();
 }
@@ -3131,81 +3231,81 @@ void G_RecordDemo(char *name)
 // done carefully so as to preserve demo compatibility with previous
 // versions.
 
-byte *G_WriteOptions(byte *demo_p)
+byte *G_WriteOptions(byte *demoptr)
 {
-   byte *target = demo_p + GAME_OPTION_SIZE;
+   byte *target = demoptr + GAME_OPTION_SIZE;
    
-   *demo_p++ = monsters_remember;  // part of monster AI -- byte 1
+   *demoptr++ = monsters_remember;  // part of monster AI -- byte 1
    
-   *demo_p++ = variable_friction;  // ice & mud -- byte 2
+   *demoptr++ = variable_friction;  // ice & mud -- byte 2
    
-   *demo_p++ = weapon_recoil;      // weapon recoil -- byte 3
+   *demoptr++ = weapon_recoil;      // weapon recoil -- byte 3
    
-   *demo_p++ = allow_pushers;      // PUSH Things -- byte 4
+   *demoptr++ = allow_pushers;      // PUSH Things -- byte 4
    
-   *demo_p++ = 0;                  // ??? unused -- byte 5
+   *demoptr++ = 0;                  // ??? unused -- byte 5
    
-   *demo_p++ = player_bobbing;     // whether player bobs or not -- byte 6
+   *demoptr++ = player_bobbing;     // whether player bobs or not -- byte 6
    
    // killough 3/6/98: add parameters to savegame, move around some in demos
-   *demo_p++ = respawnparm; // byte 7
-   *demo_p++ = fastparm;    // byte 8
-   *demo_p++ = nomonsters;  // byte 9
+   *demoptr++ = respawnparm; // byte 7
+   *demoptr++ = fastparm;    // byte 8
+   *demoptr++ = nomonsters;  // byte 9
    
-   *demo_p++ = demo_insurance;        // killough 3/31/98 -- byte 10
+   *demoptr++ = demo_insurance;        // killough 3/31/98 -- byte 10
    
    // killough 3/26/98: Added rngseed. 3/31/98: moved here
-   *demo_p++ = (byte)((rngseed >> 24) & 0xff); // byte 11
-   *demo_p++ = (byte)((rngseed >> 16) & 0xff); // byte 12
-   *demo_p++ = (byte)((rngseed >>  8) & 0xff); // byte 13
-   *demo_p++ = (byte)( rngseed        & 0xff); // byte 14
+   *demoptr++ = (byte)((rngseed >> 24) & 0xff); // byte 11
+   *demoptr++ = (byte)((rngseed >> 16) & 0xff); // byte 12
+   *demoptr++ = (byte)((rngseed >>  8) & 0xff); // byte 13
+   *demoptr++ = (byte)( rngseed        & 0xff); // byte 14
    
    // Options new to v2.03 begin here
-   *demo_p++ = monster_infighting;   // killough 7/19/98 -- byte 15
+   *demoptr++ = monster_infighting;   // killough 7/19/98 -- byte 15
    
-   *demo_p++ = dogs;                 // killough 7/19/98 -- byte 16
+   *demoptr++ = dogs;                 // killough 7/19/98 -- byte 16
    
-   *demo_p++ = bfgtype;              // killough 7/19/98 -- byte 17
+   *demoptr++ = bfgtype;              // killough 7/19/98 -- byte 17
    
-   *demo_p++ = 0;                    // unused - (beta mode) -- byte 18
+   *demoptr++ = 0;                    // unused - (beta mode) -- byte 18
    
-   *demo_p++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
-   *demo_p++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
+   *demoptr++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
+   *demoptr++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
    
-   *demo_p++ = monster_backing;           // killough 9/8/98 -- byte 21
+   *demoptr++ = monster_backing;           // killough 9/8/98 -- byte 21
    
-   *demo_p++ = monster_avoid_hazards;     // killough 9/9/98 -- byte 22
+   *demoptr++ = monster_avoid_hazards;     // killough 9/9/98 -- byte 22
    
-   *demo_p++ = monster_friction;          // killough 10/98  -- byte 23
+   *demoptr++ = monster_friction;          // killough 10/98  -- byte 23
    
-   *demo_p++ = help_friends;              // killough 9/9/98 -- byte 24
+   *demoptr++ = help_friends;              // killough 9/9/98 -- byte 24
    
-   *demo_p++ = dog_jumping; // byte 25
+   *demoptr++ = dog_jumping; // byte 25
    
-   *demo_p++ = monkeys;     // byte 26
+   *demoptr++ = monkeys;     // byte 26
    
    {   // killough 10/98: a compatibility vector now
       int i;
-      for (i=0; i < COMP_TOTAL; i++)
-         *demo_p++ = comp[i] != 0;
+      for(i = 0; i < COMP_TOTAL; i++)
+         *demoptr++ = comp[i] != 0;
    }
    // bytes 27 - 58 : comp
    
    // haleyjd 05/23/04: autoaim is sync critical
-   *demo_p++ = autoaim; // byte 59
+   *demoptr++ = autoaim; // byte 59
 
    // haleyjd 04/06/05: allowmlook is sync critical
-   *demo_p++ = allowmlook; // byte 60
+   *demoptr++ = allowmlook; // byte 60
    
    // CURRENT BYTES LEFT: 3
 
    //----------------
    // Padding at end
    //----------------
-   while(demo_p < target)
-      *demo_p++ = 0;
+   while(demoptr < target)
+      *demoptr++ = 0;
    
-   if(demo_p != target)
+   if(demoptr != target)
       I_Error("G_WriteOptions: GAME_OPTION_SIZE is too small\n");
    
    return target;
@@ -3213,73 +3313,73 @@ byte *G_WriteOptions(byte *demo_p)
 
 // Same, but read instead of write
 
-byte *G_ReadOptions(byte *demo_p)
+byte *G_ReadOptions(byte *demoptr)
 {
-   byte *target = demo_p + GAME_OPTION_SIZE;
+   byte *target = demoptr + GAME_OPTION_SIZE;
 
-   monsters_remember = *demo_p++;
+   monsters_remember = *demoptr++;
 
-   variable_friction = *demo_p;  // ice & mud
-   demo_p++;
+   variable_friction = *demoptr;  // ice & mud
+   demoptr++;
 
-   weapon_recoil = *demo_p;      // weapon recoil
-   demo_p++;
+   weapon_recoil = *demoptr;      // weapon recoil
+   demoptr++;
 
-   allow_pushers = *demo_p;      // PUSH Things
-   demo_p++;
+   allow_pushers = *demoptr;      // PUSH Things
+   demoptr++;
 
-   demo_p++;
+   demoptr++;
 
    // haleyjd: restored bobbing to proper sync critical status
-   player_bobbing = *demo_p;     // whether player bobs or not
-   demo_p++;
+   player_bobbing = *demoptr;     // whether player bobs or not
+   demoptr++;
 
    // killough 3/6/98: add parameters to savegame, move from demo
-   respawnparm = *demo_p++;
-   fastparm = *demo_p++;
-   nomonsters = *demo_p++;
+   respawnparm = *demoptr++;
+   fastparm    = *demoptr++;
+   nomonsters  = *demoptr++;
 
-   demo_insurance = *demo_p++;              // killough 3/31/98
+   demo_insurance = *demoptr++;              // killough 3/31/98
 
    // killough 3/26/98: Added rngseed to demos; 3/31/98: moved here
 
-   rngseed  = *demo_p++ & 0xff;
+   rngseed  = *demoptr++ & 0xff;
    rngseed <<= 8;
-   rngseed += *demo_p++ & 0xff;
+   rngseed += *demoptr++ & 0xff;
    rngseed <<= 8;
-   rngseed += *demo_p++ & 0xff;
+   rngseed += *demoptr++ & 0xff;
    rngseed <<= 8;
-   rngseed += *demo_p++ & 0xff;
+   rngseed += *demoptr++ & 0xff;
 
    // Options new to v2.03
    if(demo_version >= 203)
    {
-      monster_infighting = *demo_p++;   // killough 7/19/98
+      monster_infighting = *demoptr++;   // killough 7/19/98
       
-      dogs = *demo_p++;                 // killough 7/19/98
+      dogs = *demoptr++;                 // killough 7/19/98
       
-      bfgtype = *demo_p++;          // killough 7/19/98
-      demo_p ++;        // sf: where beta was
+      bfgtype = *demoptr++;              // killough 7/19/98
+      demoptr++;                         // sf: where beta was
       
-      distfriend = *demo_p++ << 8;      // killough 8/8/98
-      distfriend+= *demo_p++;
+      distfriend = *demoptr++ << 8;      // killough 8/8/98
+      distfriend+= *demoptr++;
       
-      monster_backing = *demo_p++;     // killough 9/8/98
+      monster_backing = *demoptr++;      // killough 9/8/98
       
-      monster_avoid_hazards = *demo_p++; // killough 9/9/98
+      monster_avoid_hazards = *demoptr++; // killough 9/9/98
       
-      monster_friction = *demo_p++;      // killough 10/98
+      monster_friction = *demoptr++;     // killough 10/98
       
-      help_friends = *demo_p++;          // killough 9/9/98
+      help_friends = *demoptr++;         // killough 9/9/98
       
-      dog_jumping = *demo_p++;           // killough 10/98
+      dog_jumping = *demoptr++;          // killough 10/98
       
-      monkeys = *demo_p++;
+      monkeys = *demoptr++;
       
       {   // killough 10/98: a compatibility vector now
          int i;
          for(i = 0; i < COMP_TOTAL; ++i)
-            comp[i] = *demo_p++;
+            comp[i] = *demoptr++;
       }
 
       G_SetCompatibility();
@@ -3290,13 +3390,13 @@ byte *G_ReadOptions(byte *demo_p)
       if(demo_version > 331 ||
          (demo_version == 331 && demo_subversion > 7))
       {
-         autoaim = *demo_p++;
+         autoaim = *demoptr++;
       }
 
       if(demo_version >= 333)
       {
          // haleyjd 04/06/05: allowmlook is sync-critical
-         allowmlook = *demo_p++;
+         allowmlook = *demoptr; // Remember: ADD INCREMENT :)
       }
    }
    else  // defaults for versions <= 2.02
@@ -3562,7 +3662,7 @@ boolean G_CheckDemoStatus(void)
       
       free(demobuffer);
       demobuffer = NULL;  // killough
-      I_Error("Demo %s recorded\n", demoname);
+      I_ExitWithMessage("Demo %s recorded\n", demoname);
       return false;  // killough
    }
 
@@ -3663,7 +3763,6 @@ void G_CoolViewPoint(void)
 {
    int viewtype;
    int old_displayplayer = displayplayer;
-   int numdmspots = deathmatch_p - deathmatchstarts;
 
    viewtype = M_Random() % 3;
    

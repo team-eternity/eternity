@@ -462,7 +462,7 @@ typedef struct node_s
 {
   fixed_t  x,  y, dx, dy;        // Partition line.
   fixed_t  bbox[2][4];           // Bounding box for each child.
-  uint16_t children[2];          // If NF_SUBSECTOR its a subsector.
+  int      children[2];          // If NF_SUBSECTOR its a subsector.
 
   double fx, fy, fdx, fdy;       // haleyjd 05/16/08: float versions
   double a, b, c;                // haleyjd 05/20/08: coefficients for

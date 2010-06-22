@@ -46,6 +46,7 @@
 #include "p_inter.h"
 #include "p_setup.h"
 #include "w_wad.h"
+#include "w_levels.h"
 
 #include "s_sound.h"  // haleyjd: restored exit sounds
 #include "sounds.h"   // haleyjd: restored exit sounds
@@ -63,6 +64,16 @@ extern int keylookspeed;
 //
 // Game Commands
 //
+
+CONSOLE_COMMAND(i_exitwithmessage, 0)
+{
+   I_ExitWithMessage("%s\n", Console.args);
+}
+
+CONSOLE_COMMAND(i_fatalerror, 0)
+{
+   I_FatalError(I_ERR_KILL, "%s\n", Console.args);
+}
 
 CONSOLE_COMMAND(i_error, 0)
 {
@@ -352,7 +363,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    // haleyjd 02/23/04: strict error checking
    lumpnum = W_CheckNumForName(Console.argv[0]);
 
-   if(lumpnum != -1 && P_CheckLevel(lumpnum) != LEVEL_FORMAT_INVALID)
+   if(lumpnum != -1 && P_CheckLevel(&w_GlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
    {   
       G_DeferedInitNew(gameskill, Console.argv[0]);
    }
@@ -444,7 +455,9 @@ VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
 VARIABLE_STRING(gi_path_hticreg, NULL, UL);
 VARIABLE_STRING(gi_path_sosr,    NULL, UL);
 
-static void G_TestIWADPath(char *path)
+VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
+
+static boolean G_TestIWADPath(char *path)
 {
    M_NormalizeSlashes(path);
 
@@ -455,7 +468,11 @@ static void G_TestIWADPath(char *path)
          MN_ErrorMsg("Warning: cannot access filepath");
       else
          C_Printf(FC_ERROR "Warning: cannot access filepath\n");
+
+      return false;
    }
+
+   return true;
 }
 
 CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  0) 
@@ -501,6 +518,12 @@ CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, 0)
 CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    0) 
 {
    G_TestIWADPath(gi_path_sosr);
+}
+
+CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, 0)
+{
+   if(G_TestIWADPath(w_masterlevelsdirname))
+      W_EnumerateMasterLevels(true);
 }
 
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
@@ -771,6 +794,8 @@ void G_AddCompat(void)
 
 void G_AddCommands(void)
 {
+   C_AddCommand(i_exitwithmessage);
+   C_AddCommand(i_fatalerror);
    C_AddCommand(i_error);
    C_AddCommand(z_print);
    C_AddCommand(z_dumpcore);
@@ -832,6 +857,7 @@ void G_AddCommands(void)
    C_AddCommand(iwad_heretic_shareware);
    C_AddCommand(iwad_heretic);
    C_AddCommand(iwad_heretic_sosr);
+   C_AddCommand(master_levels_dir);
    C_AddCommand(use_doom_config);
 
    G_AddChatMacros();

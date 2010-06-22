@@ -466,7 +466,7 @@ static void CheckAbort(void)
    
    while(I_GetTime() < stoptic)
       if(I_CheckAbort())
-         I_Error("Network game synchronisation aborted.\n");
+         I_ExitWithMessage("Network game synchronisation aborted.\n");
 }
 
 //

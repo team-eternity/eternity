@@ -80,6 +80,29 @@ static int w_sound_update_type;
 void D_NewWadLumps(FILE *handle, int sound_update_type);
 
 //
+// W_addInfoPtr
+//
+// haleyjd 06/06/10: I need to track all lumpinfo_t allocations that are
+// added to a waddir_t's lumpinfo directory, or else these allocations get
+// orphaned when freeing a private wad directory. Oops! ;)
+//
+static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
+{
+   // reallocate if necessary
+   if(dir->numallocs >= dir->numallocsa)
+   {
+      dir->numallocsa = dir->numallocsa ? dir->numallocsa * 2 : 32;
+
+      dir->infoptrs = realloc(dir->infoptrs, dir->numallocsa * sizeof(lumpinfo_t *));
+   }
+   
+   // add it
+   dir->infoptrs[dir->numallocs] = infoptr;
+   dir->numallocs++;
+}
+
+
+//
 // W_AddFile
 //
 // All files are optional, but at least one file must be found (PWAD, if all 
@@ -181,6 +204,9 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
    // space for new lumps
    newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
    lump_p   = newlumps;
+
+   // haleyjd: keep track of this allocation of lumps
+   W_addInfoPtr(dir, newlumps);
    
    // update IWAD handle?   
    if(isWad && dir->ispublic)
@@ -273,6 +299,9 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
    // space for new lumps
    newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
    lump_p   = newlumps;
+
+   // haleyjd: keep track of this allocation of lumps
+   W_addInfoPtr(dir, newlumps);
    
    // update IWAD handle?   
    if(dir->ispublic)
@@ -315,6 +344,99 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
    return false; // no error
 }
 
+//
+// W_AddPrivateFile
+//
+// haleyjd 06/14/10: Adds a file to a strictly private wad directory.
+//
+static boolean W_AddPrivateFile(waddir_t *dir, const char *filename)
+{
+   wadinfo_t   header;
+   lumpinfo_t* lump_p;
+   unsigned    i;
+   int         length;
+   int         startlump;
+   filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
+   lumpinfo_t  *newlumps;
+   FILE        *handle;
+   
+   // open the file and add to directory
+   if((handle = fopen(filename, "rb")) == NULL)
+   {
+      C_Printf(FC_ERROR "Couldn't open %s\n", filename);
+      return false;
+   }
+       
+   startlump = dir->numlumps;
+      
+   if(fread(&header, sizeof(header), 1, handle) < 1)
+   {
+      fclose(handle);
+      C_Printf(FC_ERROR "Failed reading header for wad file %s\n", filename);
+      return false;
+   }
+      
+   if(strncmp(header.identification, "IWAD", 4) && 
+      strncmp(header.identification, "PWAD", 4))
+   {
+      fclose(handle);
+      C_Printf(FC_ERROR "Wad file %s doesn't have IWAD or PWAD id\n", filename);
+      return false;
+   }
+      
+   header.numlumps     = SwapLong(header.numlumps);
+   header.infotableofs = SwapLong(header.infotableofs);
+      
+   length = header.numlumps * sizeof(filelump_t);
+   fileinfo2free = fileinfo = malloc(length);    // killough
+      
+   fseek(handle, (unsigned int)header.infotableofs, SEEK_SET);
+
+   if(fread(fileinfo, length, 1, handle) < 1)
+   {
+      fclose(handle);
+      free(fileinfo2free);
+      C_Printf(FC_ERROR "Failed reading directory for wad file %s\n", filename);
+      return false;
+   }
+      
+   dir->numlumps += header.numlumps;
+   
+   // Fill in lumpinfo
+   dir->lumpinfo = realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *));
+
+   // space for new lumps
+   newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
+   lump_p   = newlumps;
+
+   // haleyjd: keep track of this allocation of lumps
+   W_addInfoPtr(dir, newlumps);
+     
+   for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
+   {
+      dir->lumpinfo[i] = lump_p;
+      lump_p->type     = lump_direct; // haleyjd
+      lump_p->file     = handle;
+      lump_p->position = (size_t)(SwapLong(fileinfo->filepos));
+      lump_p->size     = (size_t)(SwapLong(fileinfo->size));
+      //lump_p->source = source;
+      
+      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
+      lump_p->li_namespace = ns_global;            // killough 4/17/98
+      
+      memset(lump_p->name, 0, 9);
+      strncpy(lump_p->name, fileinfo->name, 8);
+   }
+
+   // NOT IN TRUNK YET:
+   // haleyjd: increment source
+   //++source;
+   
+   if(fileinfo2free)
+      free(fileinfo2free); // killough
+      
+   return true; // no error
+}
 
 // jff 1/23/98 Create routines to reorder the master directory
 // putting all flats into one marked block, and all sprites into another.
@@ -337,7 +459,7 @@ static int IsMarker(const char *marker, const char *name)
 static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
                                      const char *end_marker, int li_namespace)
 {
-   lumpinfo_t **marked = malloc(sizeof(*marked) * dir->numlumps);
+   lumpinfo_t **marked = calloc(sizeof(*marked), dir->numlumps);
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
@@ -395,11 +517,13 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
 
    free(marked);                                   // free marked list
    
-   dir->numlumps = num_unmarked + num_marked;           // new total number of lumps
+   dir->numlumps = num_unmarked + num_marked;      // new total number of lumps
    
    if(mark_end)                                    // add end marker
    {
-      dir->lumpinfo[dir->numlumps] = malloc(sizeof(lumpinfo_t));
+      lumpinfo_t *newlump = calloc(1, sizeof(lumpinfo_t));
+      W_addInfoPtr(dir, newlump); // haleyjd: track it
+      dir->lumpinfo[dir->numlumps] = newlump;
       dir->lumpinfo[dir->numlumps]->size = 0;  // killough 3/20/98: force size to be 0
       dir->lumpinfo[dir->numlumps]->li_namespace = ns_global;   // killough 4/17/98
       strncpy(dir->lumpinfo[dir->numlumps]->name, end_marker, 8);
@@ -663,6 +787,18 @@ int W_AddNewFile(waddir_t *dir, char *filename)
    return false;
 }
 
+int W_AddNewPrivateFile(waddir_t *dir, const char *filename)
+{
+   if(!W_AddPrivateFile(dir, filename))
+      return false;
+
+   // there is no resource coalescence on this particular brand of private
+   // wad file, so just call W_InitLumpHash.
+   W_InitLumpHash(dir);
+
+   return true;
+}
+
 //
 // W_LumpLength
 //
@@ -830,6 +966,29 @@ void W_FreeDirectoryLumps(waddir_t *waddir)
          li[i]->cache = NULL;
       }
    }
+}
+
+//
+// W_FreeDirectoryAllocs
+//
+// haleyjd 06/06/10
+// Frees all lumpinfo_t's allocated for a wad directory.
+//
+void W_FreeDirectoryAllocs(waddir_t *dir)
+{
+   int i;
+
+   if(!dir->infoptrs)
+      return;
+
+   // free each lumpinfo_t allocation
+   for(i = 0; i < dir->numallocs; ++i)
+      free(dir->infoptrs[i]);
+
+   // free the allocation tracking table
+   free(dir->infoptrs);
+   dir->infoptrs = NULL;
+   dir->numallocs = dir->numallocsa = 0;
 }
 
 //=============================================================================

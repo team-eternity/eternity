@@ -34,6 +34,8 @@
 #include "d_gi.h"
 #include "i_sound.h"
 #include "s_sound.h"
+#include "w_wad.h"
+#include "w_levels.h"
 
 // External variables configured here:
 
@@ -115,6 +117,9 @@ static default_t sysdefaults[] =
    DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, 8, wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
 
+   DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, NULL, "", wad_no,
+               "Directory containing Master Levels wad files"),
+
    // 11/04/09: system-level options moved here from the main config
 
    DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, wad_no,
@@ -178,7 +183,7 @@ static default_t sysdefaults[] =
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
-   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 0, 0, UL, wad_no, 
+   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, wad_no, 
                "process affinity mask - warning: expert setting only!"),
 #endif
 

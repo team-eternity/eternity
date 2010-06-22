@@ -95,6 +95,13 @@ typedef struct lumpinfo_s
 
 } lumpinfo_t;
 
+// directory types
+enum
+{
+   WADDIR_NORMAL,
+   WADDIR_MANAGED
+};
+
 //
 // haleyjd 03/01/09: Wad Directory structure
 //
@@ -106,6 +113,11 @@ typedef struct waddir_s
    lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
    int        numlumps;   // number of lumps
    int        ispublic;   // if false, don't call D_NewWadLumps
+   lumpinfo_t **infoptrs; // 06/06/10: track all allocations
+   int        numallocs;  // number of entries in the infoptrs table
+   int        numallocsa; // number of entries allocated for the infoptrs table   
+   int        type;       // directory type
+   void       *data;      // user data (mainly for w_levels code)
 } waddir_t;
 
 //
@@ -121,6 +133,7 @@ typedef struct wfileadd_s
    int li_namespace;     // if not 0, special namespace to add file under
    FILE *f;              // pointer to file handle if this is a subfile
    size_t baseoffset;    // base offset if this is a subfile
+   int privatedir;       // if not 0, has a private directory
 } wfileadd_t;
 
 extern waddir_t w_GlobalDir; // the global wad directory
@@ -134,7 +147,9 @@ int         W_CheckNumForNameNSG(const char *name, int ns);
 int         W_GetNumForName(const char* name);
 lumpinfo_t *W_GetLumpNameChainInDir(waddir_t *dir, const char *name);
 lumpinfo_t *W_GetLumpNameChain(const char *name);
+int         W_LumpLengthInDir(waddir_t *dir, int lump);
 int         W_LumpLength(int lump);
+void        W_ReadLumpInDir(waddir_t *dir, int lump, void *dest);
 void        W_ReadLump(int lump, void *dest);
 void       *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag);
 void       *W_CacheLumpNum(int lump, int tag);
@@ -142,9 +157,18 @@ int         W_LumpCheckSum(int lumpnum);
 int         W_ReadLumpHeader(int lump, void *dest, size_t size);
 void        W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
 
+// sf: add a new wad file after the game has already begun
+int W_AddNewFile(waddir_t *dir, char *filename);
+
+// haleyjd 06/15/10: special private wad file support
+int W_AddNewPrivateFile(waddir_t *dir, const char *filename);
+
 #define W_CacheLumpName(name,tag) W_CacheLumpNum (W_GetNumForName(name),(tag))
 
 unsigned int W_LumpNameHash(const char *s);           // killough 1/31/98
+
+void W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
+void W_FreeDirectoryAllocs(waddir_t *dir);   // haleyjd 06/06/10
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
 

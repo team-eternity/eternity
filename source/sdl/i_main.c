@@ -144,7 +144,7 @@ static void VerifySDLVersions(void)
    static SDL_version ex_vers[3] = 
    {
       { 1, 2, 14 }, // SDL
-      { 1, 2, 10 }, // SDL_mixer
+      { 1, 2, 11 }, // SDL_mixer
       { 1, 2,  7 }, // SDL_net
    };
 

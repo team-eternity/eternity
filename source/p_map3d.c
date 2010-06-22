@@ -486,7 +486,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
    // haleyjd: from zdoom:
    mobj_t  *thingblocker;
-   mobj_t  *fakedblocker;
+   //mobj_t  *fakedblocker;
    fixed_t realheight = thing->height;
 
 #ifdef RANGECHECK
@@ -560,7 +560,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thingblocker = NULL;
-   fakedblocker = NULL;
+   //fakedblocker = NULL;
    stepthing    = NULL;
 
    // [RH] Fake taller height to catch stepping up into things.
@@ -611,7 +611,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
                   }
                   // Nothing is blocking us, but this actor potentially could
                   // if there is something else to step on.
-                  fakedblocker = clip.BlockingMobj;
+                  //fakedblocker = clip.BlockingMobj;
                   robin = clip.BlockingMobj;
                   clip.BlockingMobj = NULL;
                }
@@ -935,19 +935,7 @@ static void P_DoCrunch(mobj_t *thing)
          
          // haleyjd 08/05/04: use new function
          mo->momx = P_SubRandom(pr_crush) << 12;
-         mo->momy = P_SubRandom(pr_crush) << 12;
-         
-         if(drawparticles && bloodsplat_particle)
-         {
-            angle_t an;
-            an = (M_Random() - 128) << 24;
-            
-            if(bloodsplat_particle != 2)
-               mo->translucency = 0;
-            
-            P_DrawSplash2(32, thing->x, thing->y, thing->z + thing->height/2, 
-                          an, 2, thing->info->bloodcolor | MBC_BLOODMASK); 
-         }
+         mo->momy = P_SubRandom(pr_crush) << 12;         
       }
    } // end if
 }

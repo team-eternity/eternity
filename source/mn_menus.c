@@ -182,7 +182,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
 
    lumpnum = W_CheckNumForName(Console.argv[0]);
    
-   if(lumpnum == -1 || P_CheckLevel(lumpnum) == LEVEL_FORMAT_INVALID)   
+   if(lumpnum == -1 || P_CheckLevel(&w_GlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
       C_Printf(FC_ERROR "level not found\a\n");
    else
    {
@@ -242,7 +242,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          else
          {  
             // use start map 
-            G_DeferedInitNew(defaultskill, "START");
+            G_DeferedInitNew(defaultskill - 1, "START");
             MN_ClearMenus();
          }
       }

@@ -749,8 +749,7 @@ void R_StoreWallRange(const int start, const int stop)
          xlen = segclip.x2 - segclip.x1 + 1;
 
          ds_p->maskedtexturecol = lastopening - segclip.x1;
-         i = xlen;
-
+         
          mtc = lastopening;
 
          for(i = 0; i < xlen; i++)

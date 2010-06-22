@@ -944,16 +944,7 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z,
                    angle_t angle, int updown, int kind)
 {   
    byte color1, color2;
-   int zvel, zspread, zadd, bloodcolor = 0;
-
-   // check for blood mask to get proper blood color value
-   if(kind & MBC_BLOODMASK)
-   {
-      bloodcolor = kind & ~MBC_BLOODMASK;
-      if(bloodcolor < 0 || bloodcolor >= NUMBLOODCOLORS)
-         bloodcolor = 0;
-      kind = 0;
-   }
+   int zvel, zspread, zadd;
    
    switch(kind)
    {

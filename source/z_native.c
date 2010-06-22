@@ -519,6 +519,10 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    void *p;
    memblock_t *block;
 
+   // haleyjd: no reallocation under purgable tags
+   if(tag >= PU_PURGELEVEL)
+      I_FatalError(I_ERR_KILL, "Z_Realloc: Reallocated a purgable tag\n");
+
    // if not allocated at all, defer to Z_Malloc
    if(!ptr)
       return (Z_Malloc)(n, tag, user, file, line);
@@ -535,8 +539,12 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    block = (memblock_t *)((byte *)ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
-             "Z_Realloc: Reallocated a block without ZONEID", 
+             "Z_Realloc: Reallocated a block without ZONEID\n", 
              block, file, line);
+
+   // haleyjd: no reallocation of purgable blocks
+   if(block->tag >= PU_PURGELEVEL)
+      I_FatalError(I_ERR_KILL, "Z_Realloc: Reallocated a purgable block\n");
 
    // nullify current user, if any
    if(block->user)
@@ -549,17 +557,15 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    block->next = NULL;
    block->prev = NULL;
 
-   INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
-                 purgable_memory -= block->size,
-                 active_memory -= block->size);
+   INSTRUMENT(active_memory -= block->size);
 
    while(!(block = (realloc)(block, n + header_size)))
    {
-      if(block->tag == PU_CACHE || !blockbytag[PU_CACHE])
+      if(!blockbytag[PU_CACHE])
       {
          I_FatalError(I_ERR_KILL, 
                       "Z_Realloc: Failure trying to allocate %u bytes\n"
-                      "Source: %s:%d", (unsigned int)n, file, line);
+                      "Source: %s:%d\n", (unsigned int)n, file, line);
       }
       Z_FreeTags(PU_CACHE, PU_CACHE);
    }
@@ -580,9 +586,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    blockbytag[tag] = block;
    block->prev = (memblock_t *) &blockbytag[tag];
 
-   INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
-                 purgable_memory += block->size,
-                 active_memory += block->size);
+   INSTRUMENT(active_memory += block->size);
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
 

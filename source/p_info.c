@@ -65,15 +65,38 @@
 #include "g_game.h"
 #include "m_qstr.h"
 #include "m_misc.h"
+#include "m_dllist.h"
 #include "e_lib.h"
+#include "e_hash.h"
 
 extern char gamemapname[9];
+
+//
+// LevelInfoProto
+//
+// haleyjd 06/21/10: This structure is a prototype for LevelInfo. Information
+// will be stored here from sources of global information such as EMAPINFO or
+// Hexen MAPINFO lumps, and then copied to the normal LevelInfo structure at
+// the start of each level.
+//
+// A single separate prototype object serves as the read destination for the
+// current pass of parsing. This is so that the levelvars array can reference
+// the fields of a static object without overwriting the LevelInfo object 
+// itself.
+//
+typedef struct LevelInfoProto_s
+{
+   mdllistitem_t links;                        // links for hashing
+   char          mapname[9];                   // name of map to which this belongs
+   LevelInfo_t   info;                         // the LevelInfo object
+   boolean       modified[LI_FIELD_NUMFIELDS]; // array of bools to track modified fields
+} LevelInfoProto_t;
 
 // haleyjd: moved everything into the LevelInfo struct
 
 LevelInfo_t LevelInfo;
 
-static void P_ParseLevelInfo(int lumpnum);
+static void P_ParseLevelInfo(waddir_t *dir, int lumpnum);
 
 static int  P_ParseInfoCmd(qstring_t *line);
 static void P_ParseLevelVar(qstring_t *cmd);
@@ -87,6 +110,9 @@ static void P_SetSky2Texture(void);
 static void P_SetParTime(void);
 static void P_SetInfoSoundNames(void);
 static void P_SetOutdoorFog(void);
+
+static char *P_openWadTemplate(const char *wadfile, int *len);
+static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor);
 
 // haleyjd 05/30/10: struct for info read from a metadata file
 typedef struct metainfo_s
@@ -189,13 +215,35 @@ static textvals_t finaleTypeVals =
 // it has any. This is the main external function of this module.
 // Called from P_SetupLevel.
 //
-void P_LoadLevelInfo(int lumpnum)
+// lvname, if non-null, is the filepath of the wad that contains
+// the level when it has been loaded from a managed wad directory.
+//
+void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
    lumpinfo_t *lump;
    int glumpnum;
 
    // set all the level defaults
    P_ClearLevelVars();
+
+   // override with info from text file?
+   if(lvname)
+   {
+      int len = 0;
+      char *text = P_openWadTemplate(lvname, &len);
+      char *str;
+
+      if(text && len > 0)
+      {
+         // look for title
+         if((str = P_findTextInTemplate(text, len, 0)))
+            LevelInfo.levelName = str;
+
+         // look for author
+         if((str = P_findTextInTemplate(text, len, 1)))
+            LevelInfo.creator = str;
+      }
+   }
 
    // parse global lumps
    limode = LI_MODE_GLOBAL;
@@ -213,7 +261,7 @@ void P_LoadLevelInfo(int lumpnum)
       {
          // reset the parser state         
          readtype = RT_OTHER;
-         P_ParseLevelInfo(glumpnum);
+         P_ParseLevelInfo(&w_GlobalDir, glumpnum); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
@@ -222,7 +270,7 @@ void P_LoadLevelInfo(int lumpnum)
    // parse level lump
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
-   P_ParseLevelInfo(lumpnum);
+   P_ParseLevelInfo(&w_GlobalDir, lumpnum); // FIXME
    
    // haleyjd: call post-processing routines
    P_LoadInterTextLump();
@@ -238,12 +286,134 @@ void P_LoadLevelInfo(int lumpnum)
    P_InitWeapons();
 }
 
+//=============================================================================
+//
+// LevelInfo Prototypes Implementation
+//
+// haleyjd 06/21/10
+//
+
+static LevelInfoProto_t **levelInfoPrototypes; // reallocating array of pointers
+static int numPrototypes;
+static int numPrototypesAlloc;
+static ehash_t protoHash; // hash table for prototype objects
+
+// key retrieval function for prototype hash table
+E_KEYFUNC(LevelInfoProto_t, mapname)
+
+//
+// P_addLevelInfoPrototype
+//
+// haleyjd 06/21/10: Adds a LevelInfo prototype object to the reallocating
+// pointer list and to the hash table.
+//
+static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
+{
+   LevelInfoProto_t *newProto = calloc(1, sizeof(LevelInfoProto_t));
+
+   // reallocate prototype pointers array if necessary
+   if(numPrototypes >= numPrototypesAlloc)
+   {
+      numPrototypesAlloc = numPrototypesAlloc ? numPrototypesAlloc * 2 : 40;
+
+      levelInfoPrototypes = realloc(levelInfoPrototypes,
+                                    numPrototypesAlloc * sizeof(LevelInfoProto_t *));
+   }
+
+   // add it to the pointer array
+   levelInfoPrototypes[numPrototypes++] = newProto;
+
+   // initialize name
+   strncpy(newProto->mapname, mapname, 8);
+
+   // initialize hash table first time if necessary
+   if(!protoHash.isinit)
+   {
+      E_NCStrHashInit(&protoHash, numPrototypesAlloc, 
+                      E_KEYFUNCNAME(LevelInfoProto_t, mapname), NULL);
+   }
+
+   // add it to the hash table
+   E_HashAddObject(&protoHash, newProto);
+}
+
+//
+// P_clearLevelInfoPrototypes
+//
+// haleyjd 06/21/10: Deletes all existing LevelInfo prototypes in the event that
+// global MAPINFO sources are being reparsed.
+//
+static void P_clearLevelInfoPrototypes(void)
+{
+   int i;
+
+   // destroy the hash table
+   E_HashDestroy(&protoHash);
+
+   // free all the LevelInfo objects
+   for(i = 0; i < numPrototypes; ++i)
+      free(levelInfoPrototypes[i]);
+
+   // free the pointer array
+   free(levelInfoPrototypes);
+   levelInfoPrototypes = NULL;
+   numPrototypes = numPrototypesAlloc = 0;
+}
+
+//
+// P_getLevelInfoPrototype
+//
+// haleyjd 06/21/10: Returns a LevelInfoProto object for the given map name,
+// if such exists. Returns NULL otherwise.
+//
+static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
+{
+   return E_HashObjectForKey(&protoHash, &mapname);
+}
+
+//
+// P_LoadGlobalLevelInfo
+//
+// haleyjd 06/21/10: This function is now responsible for loading and caching
+// global level info into LevelInfoProto objects. If this routine is called
+// more than once (for example, for runtime wad loading), the hive will be
+// dumped and all EMAPINFO lumps will be parsed again.
+//
+void P_LoadGlobalLevelInfo(waddir_t *dir)
+{
+   lumpinfo_t *lump;
+   int glumpnum;
+
+   // if any prototypes exist, delete them
+   if(numPrototypes)
+      P_clearLevelInfoPrototypes();
+
+   limode = LI_MODE_GLOBAL;
+
+   // EDF_FIXME: use new W_ function after EDF branch merger
+   lump = dir->lumpinfo[W_LumpNameHash("EMAPINFO") % 
+                        (unsigned int)dir->numlumps];
+
+   for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
+   {
+      lump = dir->lumpinfo[glumpnum];
+
+      if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
+         lump->li_namespace == ns_global)
+      {
+         // reset parser state
+         readtype = RT_OTHER;
+         P_ParseLevelInfo(dir, glumpnum);
+      }
+   }
+}
+
 //
 // P_ParseLevelInfo
 //
 // Parses one individual MapInfo lump.
 //
-static void P_ParseLevelInfo(int lumpnum)
+static void P_ParseLevelInfo(waddir_t *dir, int lumpnum)
 {
    qstring_t line;
    char *lump, *rover;
@@ -253,13 +423,13 @@ static void P_ParseLevelInfo(int lumpnum)
    // problem and to use qstring_t to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = w_GlobalDir.lumpinfo[lumpnum]->size))
+   if(!(size = dir->lumpinfo[lumpnum]->size))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
    lump = Z_Malloc(size, PU_STATIC, NULL);
-   W_ReadLump(lumpnum, lump);
+   W_ReadLumpInDir(dir, lumpnum, lump);
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier
@@ -379,64 +549,78 @@ enum
 
 typedef struct levelvar_s
 {
-   int type;
+   int   type;
    char *name;
+   int   fieldenum;
    void *variable;
    void *extra;
 } levelvar_t;
 
+#define LI_STRING(name, enumval, field) \
+   { IVT_STRING, name, LI_FIELD_ ## enumval, (void *)(&(field)) }
+#define LI_STRNUM(name, enumval, field, extra) \
+   { IVT_STRNUM, name, LI_FIELD_ ## enumval, (void *)(&(field)), &(extra) }
+#define LI_INTEGR(name, enumval, field) \
+   { IVT_INT, name, LI_FIELD_ ## enumval, &(field) }
+#define LI_BOOLNF(name, enumval, field) \
+   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(field) }
+#define LI_FLAGSF(name, enumval, field, extra) \
+   { IVT_FLAGS, name, LI_FIELD_ ## enumval, &(field), &(extra) }
+#define LI_END() \
+   { IVT_END, NULL, LI_FIELD_NUMFIELDS }
+
 levelvar_t levelvars[]=
 {
-   { IVT_STRING,  "altskyname",      (void *)&LevelInfo.altSkyName },
-   { IVT_FLAGS,   "boss-specials",   &LevelInfo.bossSpecs,  &boss_flagset }, // haleyjd 03/14/05
-   { IVT_STRING,  "colormap",        (void *)&LevelInfo.colorMap },
-   { IVT_STRING,  "creator",         (void *)&LevelInfo.creator },
-   { IVT_BOOLEAN, "doublesky",       &LevelInfo.doubleSky },
-   { IVT_BOOLEAN, "edf-intername",   &LevelInfo.useEDFInterName },
-   { IVT_BOOLEAN, "endofgame",       &LevelInfo.endOfGame },
-   { IVT_STRING,  "extradata",       &LevelInfo.extraData },     // haleyjd 04/02/03
-   { IVT_BOOLEAN, "finale-secret",   &LevelInfo.finaleSecretOnly },
-   { IVT_STRNUM,  "finaletype",      &LevelInfo.finaleType, &finaleTypeVals },
-   { IVT_BOOLEAN, "fullbright",      &LevelInfo.useFullBright },
-   { IVT_INT,     "gravity",         &LevelInfo.gravity },
-   { IVT_STRING,  "inter-backdrop",  (void *)&LevelInfo.backDrop },
-   { IVT_STRING,  "intermusic",      (void *)&LevelInfo.interMusic },
-   { IVT_STRING,  "interpic",        (void *)&LevelInfo.interPic },
-   { IVT_STRING,  "intertext",       (void *)&LevelInfo.interTextLump }, // haleyjd 12/13/01
-   { IVT_BOOLEAN, "killfinale",      &LevelInfo.killFinale },
-   { IVT_BOOLEAN, "killstats",       &LevelInfo.killStats },     // haleyjd 03/24/05
-   { IVT_STRING,  "levelname",       (void *)&LevelInfo.levelName },
-   { IVT_STRING,  "levelpic",        (void *)&LevelInfo.levelPic },
-   { IVT_STRING,  "levelpicnext",    (void *)&LevelInfo.nextLevelPic },
-   { IVT_STRING,  "levelpicsecret",  (void *)&LevelInfo.nextSecretPic },
-   { IVT_STRING,  "levelscript",     (void *)&LevelInfo.scriptLump },    // haleyjd
-   { IVT_STRNUM,  "leveltype",       (void *)&LevelInfo.levelType,  &levelTypeVals  },
-   { IVT_BOOLEAN, "lightning",       &LevelInfo.hasLightning },
-   { IVT_STRING,  "music",           (void *)&LevelInfo.musicName },
-   { IVT_STRING,  "nextlevel",       (void *)&LevelInfo.nextLevel },
-   { IVT_STRING,  "nextsecret",      (void *)&LevelInfo.nextSecret },
-   { IVT_BOOLEAN, "noautosequences", &LevelInfo.noAutoSequences }, // haleyjd 09/24/06
-   { IVT_STRING,  "outdoorfog",      (void *)&LevelInfo.outdoorFog }, // haleyjd 03/04/07
-   { IVT_INT,     "partime",         &LevelInfo.partime },
-   { IVT_INT,     "skydelta",        &LevelInfo.skyDelta },
-   { IVT_INT,     "sky2delta",       &LevelInfo.sky2Delta },
-   { IVT_STRING,  "skyname",         (void *)&LevelInfo.skyName },
-   { IVT_STRING,  "sky2name",        (void *)&LevelInfo.sky2Name },
-   { IVT_STRING,  "sound-swtchn",    (void *)&LevelInfo.sound_swtchn },
-   { IVT_STRING,  "sound-swtchx",    (void *)&LevelInfo.sound_swtchx },
-   { IVT_STRING,  "sound-stnmov",    (void *)&LevelInfo.sound_stnmov },
-   { IVT_STRING,  "sound-pstop",     (void *)&LevelInfo.sound_pstop },
-   { IVT_STRING,  "sound-bdcls",     (void *)&LevelInfo.sound_bdcls },
-   { IVT_STRING,  "sound-bdopn",     (void *)&LevelInfo.sound_bdopn },
-   { IVT_STRING,  "sound-dorcls",    (void *)&LevelInfo.sound_dorcls },
-   { IVT_STRING,  "sound-doropn",    (void *)&LevelInfo.sound_doropn },
-   { IVT_STRING,  "sound-pstart",    (void *)&LevelInfo.sound_pstart },
-   { IVT_STRING,  "sound-fcmove",    (void *)&LevelInfo.sound_fcmove },
-   { IVT_BOOLEAN, "unevenlight",     (void *)&LevelInfo.unevenLight },
+   LI_STRING("altskyname",      ALTSKYNAME,       LevelInfo.altSkyName),
+   LI_FLAGSF("boss-specials",   BOSSSPECS,        LevelInfo.bossSpecs,        boss_flagset),
+   LI_STRING("colormap",        COLORMAP,         LevelInfo.colorMap),
+   LI_STRING("creator",         CREATOR,          LevelInfo.creator),
+   LI_BOOLNF("doublesky",       DOUBLESKY,        LevelInfo.doubleSky),
+   LI_BOOLNF("edf_intername",   USEEDFINTERNAME,  LevelInfo.useEDFInterName),
+   LI_BOOLNF("endofgame",       ENDOFGAME,        LevelInfo.endOfGame),
+   LI_STRING("extradata",       EXTRADATA,        LevelInfo.extraData),
+   LI_BOOLNF("finale-secret",   FINALESECRETONLY, LevelInfo.finaleSecretOnly), 
+   LI_STRNUM("finaletype",      FINALETYPE,       LevelInfo.finaleType,       finaleTypeVals),
+   LI_BOOLNF("fullbright",      USEFULLBRIGHT,    LevelInfo.useFullBright),
+   LI_INTEGR("gravity",         GRAVITY,          LevelInfo.gravity),
+   LI_STRING("inter-backdrop",  BACKDROP,         LevelInfo.backDrop),
+   LI_STRING("intermusic",      INTERMUSIC,       LevelInfo.interMusic),
+   LI_STRING("interpic",        INTERPIC,         LevelInfo.interPic),
+   LI_STRING("intertext",       INTERTEXTLUMP,    LevelInfo.interTextLump),
+   LI_BOOLNF("killfinale",      KILLFINALE,       LevelInfo.killFinale),
+   LI_BOOLNF("killstats",       KILLSTATS,        LevelInfo.killStats),
+   LI_STRING("levelname",       LEVELNAME,        LevelInfo.levelName),
+   LI_STRING("levelpic",        LEVELPIC,         LevelInfo.levelPic),
+   LI_STRING("levelpicnext",    NEXTLEVELPIC,     LevelInfo.nextLevelPic),
+   LI_STRING("levelpicsecret",  NEXTSECRETPIC,    LevelInfo.nextSecretPic),
+   LI_STRING("levelscript",     SCRIPTLUMP,       LevelInfo.scriptLump),
+   LI_STRNUM("leveltype",       LEVELTYPE,        LevelInfo.levelType,        levelTypeVals),
+   LI_BOOLNF("lightning",       HASLIGHTNING,     LevelInfo.hasLightning),
+   LI_STRING("music",           MUSICNAME,        LevelInfo.musicName),
+   LI_STRING("nextlevel",       NEXTLEVEL,        LevelInfo.nextLevel),
+   LI_STRING("nextsecret",      NEXTSECRET,       LevelInfo.nextSecret),
+   LI_BOOLNF("noautosequences", NOAUTOSEQUENCES,  LevelInfo.noAutoSequences),
+   LI_STRING("outdoorfog",      OUTDOORFOG,       LevelInfo.outdoorFog),
+   LI_INTEGR("partime",         PARTIME,          LevelInfo.partime),
+   LI_INTEGR("skydelta",        SKYDELTA,         LevelInfo.skyDelta),
+   LI_INTEGR("sky2delta",       SKY2DELTA,        LevelInfo.sky2Delta),
+   LI_STRING("skyname",         SKYNAME,          LevelInfo.skyName),
+   LI_STRING("sky2name",        SKY2NAME,         LevelInfo.sky2Name),
+   LI_STRING("sound-swtchn",    SOUNDSWTCHN,      LevelInfo.sound_swtchn),
+   LI_STRING("sound-swtchx",    SOUNDSWTCHX,      LevelInfo.sound_swtchx),
+   LI_STRING("sound-stnmov",    SOUNDSTNMOV,      LevelInfo.sound_stnmov),
+   LI_STRING("sound-pstop",     SOUNDPSTOP,       LevelInfo.sound_pstop),
+   LI_STRING("sound-bdcls",     SOUNDBDCLS,       LevelInfo.sound_bdcls),
+   LI_STRING("sound-bdopn",     SOUNDBDOPN,       LevelInfo.sound_bdopn),
+   LI_STRING("sound-dorcls",    SOUNDDORCLS,      LevelInfo.sound_dorcls),
+   LI_STRING("sound-doropn",    SOUNDDOROPN,      LevelInfo.sound_doropn),
+   LI_STRING("sound-pstart",    SOUNDPSTART,      LevelInfo.sound_pstart),
+   LI_STRING("sound-fcmove",    SOUNDFCMOVE,      LevelInfo.sound_fcmove),
+   LI_BOOLNF("unevenlight",     UNEVENLIGHT,      LevelInfo.unevenLight),
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
    
-   { IVT_END,     0,                0 } // must be last
+   LI_END() // must be last
 };
 
 // lexer state enumeration for P_ParseLevelVar
@@ -1153,6 +1337,12 @@ static void P_InitWeapons(void)
 // Meta info is only loaded from diskfiles and may override LevelInfo defaults.
 // 
 
+//
+// P_GetMetaInfoForLevel
+//
+// Finds a metainfo object for the given map number, if one exists (returns 
+// NULL otherwise).
+//
 static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 {
    int i;
@@ -1170,6 +1360,14 @@ static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
    return mi;
 }
 
+//
+// P_CreateMetaInfo
+//
+// Creates a metainfo object for a given map with all of the various data that
+// can be defined in metadata.txt files. This is called from some code in 
+// d_main.c that deals with special ".disk" files that contain an IWAD and
+// possible PWAD(s) that originate from certain console versions of DOOM.
+//
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, boolean finale, const char *intertext)
 {
@@ -1193,6 +1391,245 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    mi->intertext  = intertext;
 
    ++nummetainfo;
+}
+
+//=============================================================================
+//
+// Wad Template Parsing
+//
+// haleyjd 06/16/10: For situations where we can get information from a wad
+// file's corresponding template text file.
+//
+
+//
+// P_openWadTemplate
+//
+// Input:  The filepath to the wad file for the current level.
+// Output: The buffered text from the corresponding wad template file, if the
+//         file was found. NULL otherwise.
+//
+static char *P_openWadTemplate(const char *wadfile, int *len)
+{
+   char *fn = strdup(wadfile);
+   char *dotloc = NULL;
+   char *buffer = NULL;
+
+   // find an extension if it has one, and see that it is ".wad"
+   if((dotloc = strrchr(fn, '.')) && !strcasecmp(dotloc, ".wad"))
+   {
+      strcpy(dotloc, ".txt");    // try replacing .wad with .txt
+
+      if(access(fn, R_OK))       // no?
+      {
+         strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
+         if(access(fn, R_OK))
+            return NULL;         // oh well, tough titties.
+      }
+   }
+
+   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : buffer;
+}
+
+// template parsing states
+enum
+{
+   TMPL_STATE_START,   // at beginning
+   TMPL_STATE_QUOTE,   // saw a quote first off (for Sverre levels)
+   TMPL_STATE_TITLE,   // reading in "Title" identifier
+   TMPL_STATE_SPACE,   // skipping spaces and/or ':' characters
+   TMPL_STATE_INTITLE, // parsing out the title
+   TMPL_STATE_DONE     // finished successfully
+};
+
+typedef struct tmplpstate_s
+{
+   char *text;
+   int i;
+   int len;
+   int state;
+   qstring_t *tokenbuf;
+   int spacecount;
+   int titleOrAuthor; // if non-zero, looking for Author, not title
+} tmplpstate_t;
+
+static void TmplStateStart(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case '"':
+      if(!state->titleOrAuthor) // only when looking for title...
+      {
+         state->spacecount = 0;
+         state->state = TMPL_STATE_QUOTE; // this is a hack for Sverre levels
+      }
+      break;
+   case 'T':
+   case 't':
+      if(state->titleOrAuthor)
+         break;
+      M_QStrPutc(state->tokenbuf, c);
+      state->state = TMPL_STATE_TITLE; // start reading out "Title"
+      break;
+   case 'A':
+   case 'a':
+      if(state->titleOrAuthor)
+      {
+         M_QStrPutc(state->tokenbuf, c);
+         state->state = TMPL_STATE_TITLE; // start reading out "Title"
+      }
+      break;
+   default:
+      break; // stay in same state
+   }
+}
+
+static void TmplStateQuote(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+      if(++state->spacecount == 2)
+      {
+         M_QStrPutc(state->tokenbuf, ' ');
+         state->spacecount = 0;
+      }
+      break;
+   case '\n':
+   case '\r':
+   case '"': // done
+      state->state = TMPL_STATE_DONE;
+      break;
+   default:
+      state->spacecount = 0;
+      M_QStrPutc(state->tokenbuf, c);
+      break;
+   }
+}
+
+static void TmplStateTitle(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+   case '\n':
+   case '\r':
+   case '\t':
+   case ':':
+      // whitespace - check to see if we have "Title" or "Author" in the token buffer
+      if(!M_QStrCaseCmp(state->tokenbuf, state->titleOrAuthor ? "Author" : "Title"))
+      {
+         M_QStrClear(state->tokenbuf);
+         state->state = TMPL_STATE_SPACE;
+      }
+      else
+      {
+         M_QStrClear(state->tokenbuf);
+         state->state = TMPL_STATE_START; // start over
+      }
+      break;
+   default:
+      M_QStrPutc(state->tokenbuf, c);
+      break;
+   }
+}
+
+static void TmplStateSpace(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case ' ':
+   case ':':
+   case '\n':
+   case '\r':
+   case '\t':
+   case '"':
+      break; // stay in same state
+   default:
+      // should be start of title
+      M_QStrPutc(state->tokenbuf, c);
+      state->state = TMPL_STATE_INTITLE;
+      break;
+   }
+}
+
+static void TmplStateInTitle(tmplpstate_t *state)
+{
+   char c = state->text[state->i];
+
+   switch(c)
+   {
+   case '"':
+      if(state->titleOrAuthor) // for authors, quotes are allowed
+      {
+         M_QStrPutc(state->tokenbuf, c);
+         break;
+      }
+      // intentional fall-through for titles (end of title)
+   case '\n':
+   case '\r':
+      // done
+      state->state = TMPL_STATE_DONE;
+      break;
+   default:
+      M_QStrPutc(state->tokenbuf, c);
+      break;
+   }
+}
+
+typedef void (*tmplstatefunc_t)(tmplpstate_t *state);
+
+// state functions
+static tmplstatefunc_t statefuncs[] =
+{
+   TmplStateStart,  // TMPL_STATE_START
+   TmplStateQuote,  // TMPL_STATE_QUOTE
+   TmplStateTitle,  // TMPL_STATE_TITLE
+   TmplStateSpace,  // TMPL_STATE_SPACE
+   TmplStateInTitle // TMPL_STATE_INTITLE
+};
+
+//
+// P_findTextInTemplate
+//
+// haleyjd 06/16/10: Find the title or author of the wad in the template.
+//
+static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
+{
+   tmplpstate_t state;
+   qstring_t tokenbuffer;
+   char *ret = NULL;
+
+   M_QStrInitCreate(&tokenbuffer);
+
+   state.text          = text;
+   state.len           = len;
+   state.i             = 0;
+   state.state         = TMPL_STATE_START;
+   state.tokenbuf      = &tokenbuffer;
+   state.titleOrAuthor = titleOrAuthor;
+
+   while(state.i != len && state.state != TMPL_STATE_DONE)
+   {
+      statefuncs[state.state](&state);
+      state.i++;
+   }
+
+   // valid termination states are DONE or INTITLE (though it's pretty unlikely
+   // that we would hit EOF in the title string, I'll allow for it)
+   if(state.state == TMPL_STATE_DONE || state.state == TMPL_STATE_INTITLE)
+      ret = M_QStrCDup(&tokenbuffer, PU_LEVEL);
+
+   M_QStrFree(&tokenbuffer);
+
+   return ret;
 }
 
 // EOF

@@ -103,11 +103,10 @@ fixed_t *yslope;
 fixed_t origyslope[MAX_SCREENHEIGHT*2];
 
 fixed_t distscale[MAX_SCREENWIDTH];
-int     visplane_view=0;
+int     visplane_view = 0;
 
-
-cb_span_t  span;
-cb_plane_t plane;
+cb_span_t      span;
+cb_plane_t     plane;
 cb_slopespan_t slopespan;
 
 float slopevis; // SoM: used in slope lighting
@@ -115,32 +114,11 @@ float slopevis; // SoM: used in slope lighting
 // BIG FLATS
 void R_Throw(void)
 {
-   I_FatalError(I_ERR_KILL, "R_Throw called.\n");
+   I_Error("R_Throw called.\n");
 }
 
-void (*flatfunc)(void) = R_Throw;
+void (*flatfunc)(void)  = R_Throw;
 void (*slopefunc)(void) = R_Throw;
-
-
-
-static struct flatdims_s
-{
-   int i;
-   float f;
-} flatdims[FLAT_NUMSIZES] = {
-   // FLAT_64
-   { 64,  64.0f},
-
-   // FLAT_128
-   {128, 128.0f},
-
-   // FLAT_256
-   {256, 256.0f},
-
-   // FLAT_512
-   {512, 512.0f}
-};
-
 
 //
 // R_InitPlanes
@@ -175,6 +153,52 @@ static void R_PlaneLight(void)
    plane.startmap = 2.0f * (30.0f - (plane.lightlevel / 8.0f));
 }
 
+//
+// R_doubleToUint32
+//
+// haleyjd: Derived from Mozilla SpiderMonkey jsnum.c;
+// used under the terms of the GPL.
+//
+// * The Original Code is Mozilla Communicator client code, released
+// * March 31, 1998.
+// *
+// * The Initial Developer of the Original Code is
+// * Netscape Communications Corporation.
+// * Portions created by the Initial Developer are Copyright (C) 1998
+// * the Initial Developer. All Rights Reserved.
+// *
+// * Contributor(s):
+// *   IBM Corp.
+//
+static uint32_t R_doubleToUint32(double d)
+{
+   int32_t i;
+   boolean neg;
+   double  two32;
+
+   // FIXME: should check for finiteness first, but we have no code for 
+   // doing that in EE yet.
+
+   //if (!JSDOUBLE_IS_FINITE(d))
+   //   return 0;
+
+   // We check whether d fits int32, not uint32, as all but the ">>>" bit
+   // manipulation bytecode stores the result as int, not uint. When the
+   // result does not fit int jsval, it will be stored as a negative double.
+   i = (int32_t)d;
+   if((double)i == d)
+      return (int32_t)i;
+
+   neg = (d < 0);
+   d   = floor(neg ? -d : d);
+   d   = neg ? -d : d;
+
+   // haleyjd: This is the important part: reduction modulo UINT_MAX.
+   two32 = 4294967296.0;
+   d     = fmod(d, two32);
+
+   return (uint32_t)(d >= 0 ? d : d + two32);
+}
 
 //
 // R_MapPlane
@@ -206,6 +230,8 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio;
    ystep = plane.pviewsin * slope * view.focratio;
 
+   // haleyjd: #if 0 for test
+#if 0
 #ifdef __APPLE__
    {
       double value;
@@ -242,6 +268,26 @@ static void R_MapPlane(int y, int x1, int x2)
    span.xstep = (unsigned int)(xstep * plane.fixedunitx);
    span.ystep = (unsigned int)(ystep * plane.fixedunity);
 #endif
+#endif
+
+   // haleyjd: TEST
+   // Use Mozilla routine for portable double->uint32 conversion
+   {
+      double value;
+
+      value = (plane.pviewx + plane.xoffset + (plane.pviewsin * realy) +
+               (((double)x1 - view.xcenter) * xstep)) * plane.fixedunitx;
+
+      span.xfrac = R_doubleToUint32(value);
+
+      value = (-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy) +
+               (((double)x1 - view.xcenter) * ystep)) * plane.fixedunity;
+
+      span.yfrac = R_doubleToUint32(value);
+
+      span.xstep = R_doubleToUint32(xstep * plane.fixedunitx);
+      span.ystep = R_doubleToUint32(ystep * plane.fixedunity);
+   }
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
@@ -387,7 +433,6 @@ static void R_MapSlope(int y, int x1, int x2)
    int count = x2 - x1;
    v3double_t s;
    double map1, map2;
-   double base;
 
    s.x = x1 - view.xcenter;
    s.y = y - view.ycenter + 1;
@@ -407,7 +452,6 @@ static void R_MapSlope(int y, int x1, int x2)
    slopespan.y = y;
 
    // Setup lighting
-   base = 4.0 * (plane.lightlevel) - 448.0;
 
    map1 = 256.0 - (slope->shade - slope->plight * slopespan.idfrac);
    if(count > 0)
@@ -433,20 +477,15 @@ static void R_MapSlope(int y, int x1, int x2)
 //
 boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
-   if(!s1 != !s2)
-      return false;
-   
-   if(s1 == s2)
-      return true;
-   
-   if(!CompFloats(s1->normalf.x, s2->normalf.x) ||
-      !CompFloats(s1->normalf.y, s2->normalf.y) ||
-      !CompFloats(s1->normalf.z, s2->normalf.z) ||
-      fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) >= 0.001f)
-      return false;
-
-   return true;
+   return 
+      (s1 == s2) ||                 // both are equal, including both NULL; OR:
+       (s1 && s2 &&                 // both are valid and...
+        CompFloats(s1->normalf.x, s2->normalf.x) &&  // components are equal and...
+        CompFloats(s1->normalf.y, s2->normalf.y) &&
+        CompFloats(s1->normalf.z, s2->normalf.z) &&
+        fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f); // this.
 }
+
 #undef CompFloats
 
 //
@@ -1054,6 +1093,7 @@ static void do_draw_plane(visplane_t *pl)
    {  
       texture_t *tex;
       int stop, light;
+      boolean   lptex64 = false; // haleyjd 06/09/10
 
       int picnum = texturetranslation[pl->picnum];
 
@@ -1075,8 +1115,12 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      flatfunc        = r_span_engine->DrawSpan[0][tex->flatsize];
-      slopefunc       = r_span_engine->DrawSlope[0][tex->flatsize];
+      flatfunc  = r_span_engine->DrawSpan[0][tex->flatsize];
+      slopefunc = r_span_engine->DrawSlope[0][tex->flatsize];
+
+      // haleyjd: check for combination of low precision and texture size 64x64
+      if(r_span_engine->haslp64 && !tex->flatsize)
+         lptex64 = true;
 
       if(pl->pslope)
          plane.slope = &pl->rslope;
@@ -1103,13 +1147,23 @@ static void do_draw_plane(visplane_t *pl)
             span.xshift = span.yshift - rw;
             span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
             
+            // haleyjd: we must allow for low-precision drawing to affect this
+            // here since it's no longer looked up from an array
+            if(lptex64)
+               plane.fixedunitx = plane.fixedunity = FRACUNIT;
+            else
+            {
+               // haleyjd: commented out for TEST
+               /*
 #ifdef __APPLE__
-            plane.fixedunitx = (float)(1 << (30 - rw));
-            plane.fixedunity = (float)(1 << (30 - rh));
+               plane.fixedunitx = (float)(1 << (30 - rw));
+               plane.fixedunity = (float)(1 << (30 - rh));
 #else
-            plane.fixedunitx = (float)(1 << (32 - rw));
-            plane.fixedunity = (float)(1 << span.yshift);
-#endif
+               */
+               plane.fixedunitx = (float)(1 << (32 - rw));
+               plane.fixedunity = (float)(1 << span.yshift);
+/*#endif*/
+            }
 
          }
       }

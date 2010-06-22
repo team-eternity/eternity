@@ -42,7 +42,7 @@ extern struct cheat_s {
     beta_only = 32,                  // killough 7/24/98
     not_net = not_dm | not_coop
   } const when;
-  void (*const func)();
+  void (*const func)(const void *);
   const int arg;
   uint64_t code, mask;
   boolean deh_modified;                // killough 9/12/98

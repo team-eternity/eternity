@@ -284,7 +284,20 @@ static char errmsg[2048];  // buffer of error message -- killough
 
 static int has_exited;
 
-static boolean error_exit; // haleyjd: if true, an error has occurred.
+enum
+{
+   I_ERRORLEVEL_NONE,    // no error
+   I_ERRORLEVEL_MESSAGE, // not really an error, just an exit message
+   I_ERRORLEVEL_NORMAL,  // a "normal" error (such as a missing patch)
+   I_ERRORLEVEL_FATAL    // kill with a vengeance
+};
+
+// haleyjd: if non-0, an error has occurred. The level of error is set
+// by the function which flagged the error condition, as per the above
+// enumeration.
+static int error_exitcode;
+
+#define IFNOTFATAL(a) if(error_exitcode < I_ERRORLEVEL_FATAL) a
 
 //
 // I_Quit
@@ -295,11 +308,12 @@ void I_Quit(void)
 {
    has_exited = 1;   /* Prevent infinitely recursive exits -- killough */
    
-   if(demorecording)
+   // haleyjd 06/05/10: not in fatal error situations; causes heap calls
+   if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
       G_CheckDemoStatus();
    
    // sf : rearrange this so the errmsg doesn't get messed up
-   if(error_exit)
+   if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
    else
       I_EndDoom();
@@ -309,19 +323,19 @@ void I_Quit(void)
    SDL_Quit();
 
    // haleyjd 03/18/10: none of these should be called in fatal error situations.
-   if(!error_exit)
-   {
-      M_SaveDefaults();
-      M_SaveSysConfig();
-      G_SaveDefaults(); // haleyjd
-   }
+   //         06/06/10: check each call, as an I_FatalError called from any of this
+   //                   code could escalate the error status.
+
+   IFNOTFATAL(M_SaveDefaults());
+   IFNOTFATAL(M_SaveSysConfig());
+   IFNOTFATAL(G_SaveDefaults()); // haleyjd
    
-   // Under Visual C++, the console window likes to rudely slam
-   // shut -- this can stop it, but is now optional
 #ifdef _MSC_VER
-   if(error_exit || waitAtExit)
+   // Under Visual C++, the console window likes to rudely slam
+   // shut -- this can stop it, but is now optional except when an error occurs
+   if(error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit)
    {
-      puts("\nPress any key to continue");
+      puts("Press any key to continue\n");
       getch();
    }
 #endif
@@ -335,14 +349,21 @@ void I_Quit(void)
 //
 void I_FatalError(int code, const char *error, ...)
 {
+   // Flag a fatal error, so that some shutdown code will not be executed;
+   // chiefly, saving the configuration files, which can malfunction in
+   // unpredictable ways when heap corruption is present. We do this even
+   // if an error has already occurred, since, for example, if a Z_ChangeTag
+   // error happens during M_SaveDefaults, we do not want to subsequently
+   // run M_SaveSysConfig etc. in I_Quit.
+   error_exitcode = I_ERRORLEVEL_FATAL;
+
    if(code == I_ERR_ABORT)
    {
+      // kill with utmost contempt
       abort();
    }
    else
    {
-      error_exit = true; // haleyjd: flag an error appropriately
-
       if(!*errmsg)   // ignore all but the first message -- killough
       {
          va_list argptr;
@@ -356,14 +377,49 @@ void I_FatalError(int code, const char *error, ...)
          has_exited = 1; // Prevent infinitely recursive exits -- killough
          exit(-1);
       }
+      else
+         abort(); // double fault, must abort
+   }
+}
+
+//
+// I_ExitWithMessage
+//
+// haleyjd 06/05/10: exit with a message which is not technically an error. The
+// code used to call I_Error for this, but it wasn't semantically correct.
+//
+void I_ExitWithMessage(const char *msg, ...)
+{
+   // do not demote error level
+   if(error_exitcode < I_ERRORLEVEL_MESSAGE)
+      error_exitcode = I_ERRORLEVEL_MESSAGE; // just a message
+
+   if(!*errmsg)   // ignore all but the first message -- killough
+   {
+      va_list argptr;
+      va_start(argptr, msg);
+      pvsnprintf(errmsg, sizeof(errmsg), msg, argptr);
+      va_end(argptr);
+   }
+
+   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+   {
+      has_exited = 1; // Prevent infinitely recursive exits -- killough
+      exit(0);
    }
 }
 
 //
 // I_Error
 //
+// Normal error reporting / exit routine.
+//
 void I_Error(const char *error, ...) // killough 3/20/98: add const
 {
+   // do not demote error level
+   if(error_exitcode < I_ERRORLEVEL_NORMAL)
+      error_exitcode = I_ERRORLEVEL_NORMAL; // a normal error
+
    if(!*errmsg)   // ignore all but the first message -- killough
    {
       va_list argptr;
@@ -377,10 +433,21 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
       has_exited = 1; // Prevent infinitely recursive exits -- killough
       exit(-1);
    }
+   else
+      I_FatalError(I_ERR_ABORT, "I_Error: double faulted\n");
 }
 
+//
+// I_ErrorVA
+//
+// haleyjd: varargs version of I_Error used chiefly by libConfuse.
+//
 void I_ErrorVA(const char *error, va_list args)
 {
+   // do not demote error level
+   if(error_exitcode < I_ERRORLEVEL_NORMAL)
+      error_exitcode = I_ERRORLEVEL_NORMAL;
+
    if(!*errmsg)
       pvsnprintf(errmsg, sizeof(errmsg), error, args);
 
@@ -389,8 +456,15 @@ void I_ErrorVA(const char *error, va_list args)
       has_exited = 1;
       exit(-1);
    }
+   else
+      I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");
 }
 
+//
+// I_Sleep
+//
+// haleyjd: routine to sleep a fixed number of milliseconds.
+//
 void I_Sleep(int ms)
 {
    SDL_Delay(ms);
@@ -416,7 +490,7 @@ void I_EndDoom(void)
    boolean waiting;
    
    // haleyjd: it's possible to have quit before we even initialized
-   // gameModeInfo, so be sure it's valid before using it here. Also,
+   // GameModeInfo, so be sure it's valid before using it here. Also,
    // allow ENDOOM disable in configuration.
    if(!GameModeInfo || !showendoom)
       return;
@@ -424,7 +498,8 @@ void I_EndDoom(void)
    endoom_data = W_CacheLumpName(GameModeInfo->endTextName, PU_STATIC);
    
    // Set up text mode screen   
-   TXT_Init();
+   if(!TXT_Init())
+      return;
    
    // Make sure the new window has the right title and icon
    SDL_WM_SetCaption("Thanks for using the Eternity Engine!", NULL);

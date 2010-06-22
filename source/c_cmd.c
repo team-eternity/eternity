@@ -359,6 +359,7 @@ extern void       SM_AddCommands(void);        // a_small.c  -- haleyjd
 extern void      G_DMAddCommands(void);        // g_dmflag.c -- haleyjd
 extern void        E_AddCommands(void);        // e_cmd.c    -- haleyjd
 extern void P_AddGenLineCommands(void);        // p_genlin.c -- haleyjd
+extern void        W_AddCommands(void);        // w_levels.c -- haleyjd
 
 void C_AddCommands()
 {
@@ -406,6 +407,7 @@ void C_AddCommands()
   G_DMAddCommands();
   E_AddCommands();
   P_AddGenLineCommands();
+  W_AddCommands();
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

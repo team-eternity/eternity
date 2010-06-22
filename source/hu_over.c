@@ -266,8 +266,9 @@ void HU_DrawAmmo(int x, int y)
 {
    char tempstr[128];
    int fontcolour;
+   int maxammo;
    
-   memset(tempstr, 0, 128);
+   memset(tempstr, 0, sizeof(tempstr));
    
    HU_WriteText(HUDCOLOUR "Ammo", x, y);
    x += GAP;
@@ -275,14 +276,15 @@ void HU_DrawAmmo(int x, int y)
    fontcolour = weapcolour(players[displayplayer].readyweapon);
    psnprintf(tempstr, sizeof(tempstr), "%c", fontcolour);
    
-   if(playermaxammo)
+   maxammo = playermaxammo;
+
+   if(maxammo)
    {
-      HU_TextBar(tempstr, sizeof(tempstr), 
-                 (100 * playerammo) / playermaxammo);
+      HU_TextBar(tempstr, sizeof(tempstr), (100 * playerammo) / maxammo);
       psnprintf(tempstr, sizeof(tempstr), "%s %i/%i", 
                 tempstr, playerammo, playermaxammo);
    }
-   else    // fist or chainsaw
+   else // fist or chainsaw
       psnprintf(tempstr, sizeof(tempstr), "%sN/A", tempstr);
    
    HU_WriteText(tempstr, x, y);

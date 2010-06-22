@@ -131,7 +131,7 @@
 
 #define DOOM_GIFLAGS \
    (GIF_HASDISK | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | GIF_SKILL5RESPAWN | \
-    GIF_SKILL5WARNING)
+    GIF_SKILL5WARNING | GIF_HUDSTATBARNAME)
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
@@ -625,13 +625,15 @@ extern default_or_t HereticDefaultORs;
 //
 static missioninfo_t gmDoom =
 {
-   doom, // id
-   0,    // flags
-   NULL, // versionNameOR
-   NULL, // startupBannerOR
-   0,    // numEpisodesOR
-   NULL, // iwadPathOR
-   NULL, // finaleDataOR
+   doom,   // id
+   0,      // flags
+   "doom", // gamePathName
+
+   NULL,   // versionNameOR
+   NULL,   // startupBannerOR
+   0,      // numEpisodesOR
+   NULL,   // iwadPathOR
+   NULL,   // finaleDataOR
 };
 
 //
@@ -639,13 +641,15 @@ static missioninfo_t gmDoom =
 //
 static missioninfo_t gmDoom2 =
 {
-   doom2, // id
-   0,     // flags
-   NULL,  // versionNameOR
-   NULL,  // startupBannerOR
-   0,     // numEpisodesOR
-   NULL,  // iwadPathOR
-   NULL,  // finaleDataOR
+   doom2,   // id
+   0,       // flags
+   "doom2", // gamePathName
+
+   NULL,    // versionNameOR
+   NULL,    // startupBannerOR
+   0,       // numEpisodesOR
+   NULL,    // iwadPathOR
+   NULL,    // finaleDataOR
 };
 
 //
@@ -655,6 +659,8 @@ static missioninfo_t gmFinalTNT =
 {
    pack_tnt,          // id
    MI_DEMOIFDEMO4,    // flags
+  "tnt",              // gamePathName
+
    VNAME_TNT,         // versionNameOR
    BANNER_TNT,        // startupBannerOR
    0,                 // numEpisodesOR
@@ -674,6 +680,8 @@ static missioninfo_t gmFinalPlutonia =
 {
    pack_plut,         // id
    MI_DEMOIFDEMO4,    // flags
+   "plutonia",        // gamePathName
+
    VNAME_PLUT,        // versionNameOR
    BANNER_PLUT,       // startupBannerOR
    0,                 // numEpisodesOR
@@ -693,6 +701,8 @@ static missioninfo_t gmDisk =
 {
    pack_disk,       // id
    MI_CONBACKTITLE, // flags
+   "doom2",         // gamePathName
+
    VNAME_DISK,      // versionNameOR
    NULL,            // startupBannerOR
    0,               // numEpisodesOR
@@ -714,6 +724,8 @@ static missioninfo_t gmHacx =
 {
    pack_hacx,       // id
    0,               // flags
+   "hacx",          // gamePathName
+
    VNAME_HACX,      // versionNameOR
    BANNER_HACX,     // startupBannerOR
    0,               // numEpisodesOR
@@ -730,13 +742,15 @@ static missioninfo_t gmHacx =
 //
 static missioninfo_t gmHeretic =
 {
-   heretic, // id
-   0,       // flags
-   NULL,    // versionNameOR
-   NULL,    // startupBannerOR
-   0,       // numEpisodesOR
-   NULL,    // iwadPathOR
-   NULL,    // finaleDataOR
+   heretic,   // id
+   0,         // flags
+   "heretic", // gamePathName
+
+   NULL,      // versionNameOR
+   NULL,      // startupBannerOR
+   0,         // numEpisodesOR
+   NULL,      // iwadPathOR
+   NULL,      // finaleDataOR
 };
 
 //
@@ -746,6 +760,8 @@ static missioninfo_t gmHereticSoSR =
 {
    hticsosr,         // id
    0,                // flags
+   "heretic",        // gamePathName
+
    VNAME_HTIC_SOSR,  // versionNameOR
    BANNER_HTIC_SOSR, // startupBannerOR
    6,                // numEpisodesOR
@@ -760,6 +776,8 @@ static missioninfo_t gmUnknown =
 {
    none,           // id
    0,              // flags
+   "doom",         // gamePathName
+
    VNAME_UNKNOWN,  // versionNameOR
    BANNER_UNKNOWN, // startupBannerOR
    0,              // numEpisodesOR

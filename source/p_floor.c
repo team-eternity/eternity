@@ -440,8 +440,7 @@ result_e T_MovePlane
                }
             }
 
-            
-            lastpos = sector->ceilingheight;
+            //lastpos = sector->ceilingheight;
             P_SetCeilingHeight(sector, sector->ceilingheight + speed);
             P_CheckSector(sector,crush,speed,1); //jff 3/19/98 use faster chk
          }

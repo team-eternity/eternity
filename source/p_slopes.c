@@ -168,7 +168,6 @@ void P_SpawnSlope_Line(int linenum)
 {
    line_t *line = lines + linenum;
    int special = line->special;
-   pslope_t *fslope = NULL, *cslope = NULL;
    v3float_t origin, point;
    v2float_t direction;
    float dz, extent;
@@ -181,15 +180,15 @@ void P_SpawnSlope_Line(int linenum)
    // SoM: We don't need the line to retain its special type
    line->special = 0;
 
-   if(!frontfloor && !backfloor && !frontceil && !backceil)
+   if(!(frontfloor || backfloor || frontceil || backceil))
    {
-      C_Printf(FC_ERROR "P_SpawnSlope_Line called with non-slope line special.");
+      C_Printf(FC_ERROR "P_SpawnSlope_Line: called with non-slope line special.");
       return;
    }
 
-   if(!line->frontsector || !line->backsector)
+   if(!line->backsector)
    {
-      C_Printf(FC_ERROR "P_SpawnSlope_Line used on a line without two sides.");
+      C_Printf(FC_ERROR "P_SpawnSlope_Line: used on one-sided line.");
       return;
    }
 
@@ -206,7 +205,7 @@ void P_SpawnSlope_Line(int linenum)
 
       if(extent < 0.0f)
       {
-         C_Printf(FC_ERROR "P_SpawnSlope_Line failed to get frontsector extent on line number %i\n", linenum);
+         C_Printf(FC_ERROR "P_SpawnSlope_Line: no frontsector extent for line %d\n", linenum);
          return;
       }
 
@@ -221,18 +220,17 @@ void P_SpawnSlope_Line(int linenum)
          point.z = line->frontsector->floorheightf;
          dz = (line->backsector->floorheightf - point.z) / extent;
 
-         fslope = line->frontsector->f_slope = 
-            P_MakeSlope(&point, &direction, dz, false);
+         line->frontsector->f_slope = P_MakeSlope(&point, &direction, dz, false);
       }
       if(frontceil)
       {
          point.z = line->frontsector->ceilingheightf;
          dz = (line->backsector->ceilingheightf - point.z) / extent;
 
-         cslope = line->frontsector->c_slope = 
-            P_MakeSlope(&point, &direction, dz, true);
+         line->frontsector->c_slope = P_MakeSlope(&point, &direction, dz, true);
       }
    }
+
    if(backfloor || backceil)
    {
       // Backsector
@@ -243,7 +241,7 @@ void P_SpawnSlope_Line(int linenum)
 
       if(extent < 0.0f)
       {
-         C_Printf(FC_ERROR "P_SpawnSlope_Line failed to get backsector extent on line number %i\n", linenum);
+         C_Printf(FC_ERROR "P_SpawnSlope_Line: no backsector extent for line %d\n", linenum);
          return;
       }
 
@@ -258,21 +256,22 @@ void P_SpawnSlope_Line(int linenum)
          point.z = line->backsector->floorheightf;
          dz = (line->frontsector->floorheightf - point.z) / extent;
 
-         fslope = line->backsector->f_slope = 
-            P_MakeSlope(&point, &direction, dz, false);
+         line->backsector->f_slope = P_MakeSlope(&point, &direction, dz, false);
       }
       if(backceil)
       {
          point.z = line->backsector->ceilingheightf;
          dz = (line->frontsector->ceilingheightf - point.z) / extent;
 
-         cslope = line->backsector->c_slope = 
-            P_MakeSlope(&point, &direction, dz, true);
+         line->backsector->c_slope = P_MakeSlope(&point, &direction, dz, true);
       }
    }
 
+   /*
+   // haleyjd: what's this?? inconsequential.
    if(!line->tag)
       return;
+   */
 }
 
 

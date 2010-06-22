@@ -32,65 +32,67 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
-#include "c_runcmd.h"
-#include "c_net.h"
-#include "g_game.h"
-#include "r_data.h"
-#include "p_inter.h"
 #include "m_cheat.h"
+
+#include "c_net.h"
+#include "c_runcmd.h"
+#include "d_deh.h"  // Ty 03/27/98 - externalized strings
+#include "d_gi.h"
+#include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "dstrings.h"
+#include "e_states.h"
+#include "g_game.h"
 #include "m_argv.h"
+#include "p_inter.h"
+#include "p_setup.h"
+#include "r_data.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "dstrings.h"
-#include "d_deh.h"  // Ty 03/27/98 - externalized strings
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "d_gi.h"
-#include "e_states.h"
-
+#include "w_wad.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
-//-----------------------------------------------------------------------------
+//=============================================================================
 //
 // CHEAT SEQUENCE PACKAGE
 //
-//-----------------------------------------------------------------------------
 
-static void cheat_mus();
-static void cheat_choppers();
-static void cheat_god();
-static void cheat_infammo();
-static void cheat_fa();
-static void cheat_k();
-static void cheat_kfa();
-static void cheat_noclip();
-static void cheat_pw();
-static void cheat_behold();
-static void cheat_clev();
-static void cheat_mypos();
-static void cheat_comp();
-static void cheat_friction();
-static void cheat_pushers();
-static void cheat_tran();
-static void cheat_massacre();
-static void cheat_ddt();
-static void cheat_hom();
-static void cheat_key();
-static void cheat_keyx();
-static void cheat_keyxx();
-static void cheat_weap();
-static void cheat_weapx();
-static void cheat_ammo();
-static void cheat_ammox();
-static void cheat_nuke();
-static void cheat_one();
+static void cheat_mus(const void *);
+static void cheat_choppers(const void *);
+static void cheat_god(const void *);
+static void cheat_infammo(const void *);
+static void cheat_fa(const void *);
+static void cheat_k(const void *);
+static void cheat_kfa(const void *);
+static void cheat_noclip(const void *);
+static void cheat_pw(const void *);
+static void cheat_behold(const void *);
+static void cheat_clev(const void *);
+static void cheat_mypos(const void *);
+static void cheat_comp(const void *);
+static void cheat_friction(const void *);
+static void cheat_pushers(const void *);
+static void cheat_tran(const void *);
+static void cheat_massacre(const void *);
+static void cheat_ddt(const void *);
+static void cheat_hom(const void *);
+static void cheat_key(const void *);
+static void cheat_keyx(const void *);
+static void cheat_keyxx(const void *);
+static void cheat_weap(const void *);
+static void cheat_weapx(const void *);
+static void cheat_ammo(const void *);
+static void cheat_ammox(const void *);
+static void cheat_nuke(const void *);
+static void cheat_one(const void *);
 
 #ifdef INSTRUMENTED
-static void cheat_printstats();   // killough 8/23/98
+static void cheat_printstats(const void *);   // killough 8/23/98
 #endif
 
-//-----------------------------------------------------------------------------
+//=============================================================================
 //
 // List of cheat codes, functions, and special argument indicators.
 //
@@ -109,7 +111,6 @@ static void cheat_printstats();   // killough 8/23/98
 // expected after the cheat code, which are passed to the handler function
 // via a pointer to a buffer (after folding any letters to lowercase).
 //
-//-----------------------------------------------------------------------------
 
 struct cheat_s cheat[] = {
   {"idmus",      "Change music",      always,
@@ -229,8 +230,6 @@ struct cheat_s cheat[] = {
   {"nuke",    NULL,                   not_net | not_demo,
    cheat_nuke       },   // killough 12/98: disable nukage damage
 
- // sf: removed beta emulation cheats
-
 #ifdef INSTRUMENTED
   {"stat",       NULL,                always,
    cheat_printstats},
@@ -259,19 +258,17 @@ struct cheat_s cheat[] = {
 //-----------------------------------------------------------------------------
 
 #ifdef INSTRUMENTED
-static void cheat_printstats(void)    // killough 8/23/98
+static void cheat_printstats(const void *arg)    // killough 8/23/98
 {
-  if (!(printstats=!printstats))
-        doom_printf("Memory stats off");
+   if(!(printstats = !printstats))
+      doom_printf("Memory stats off");
 }
 #endif
 
-// sf: removed beta autoaim
-
-static void cheat_mus(buf)
-char buf[3];
+static void cheat_mus(const void *arg)
 {
    int musnum;
+   const char *buf = (const char *)arg;
    
    //jff 3/20/98 note: this cheat allowed in netgame/demorecord
    
@@ -326,49 +323,50 @@ char buf[3];
 }
 
 // 'choppers' invulnerability & chainsaw
-static void cheat_choppers(void)
+static void cheat_choppers(const void *arg)
 {
    // WEAPON_FIXME: choppers cheat
-  plyr->weaponowned[wp_chainsaw] = true;
-  doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
+   plyr->weaponowned[wp_chainsaw] = true;
+   doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
 
-static void cheat_god()
+static void cheat_god(const void *arg)
 {                                    // 'dqd' cheat for toggleable god mode
-  C_RunTextCmd("god");
+   C_RunTextCmd("god");
 }
 
 // haleyjd 03/18/03: infinite ammo cheat
 
-static void cheat_infammo()
+static void cheat_infammo(const void *arg)
 {
    C_RunTextCmd("infammo");
 }
 
 // haleyjd 04/07/03: super cheat
 
-static void cheat_one()
+static void cheat_one(const void *arg)
 {
+   int pwinv = pw_totalinvis;
+   int pwsil = pw_silencer;
+
    if(!(players[consoleplayer].cheats & CF_GODMODE))
       C_RunTextCmd("god");
    if(!(players[consoleplayer].cheats & CF_INFAMMO))
       C_RunTextCmd("infammo");
-   cheat_fa();
+   cheat_fa(arg);
    if(!players[consoleplayer].powers[pw_totalinvis])
-      cheat_pw(pw_totalinvis);
+      cheat_pw(&pwinv);
    if(!players[consoleplayer].powers[pw_silencer])
-      cheat_pw(pw_silencer);
+      cheat_pw(&pwsil);
 }
 
-        // sf: removed beta godmode
-
-static void cheat_fa()
+static void cheat_fa(const void *arg)
 {
    int i;
    
-   if (!plyr->backpack)
+   if(!plyr->backpack)
    {
-      for (i=0 ; i<NUMAMMO ; i++)
+      for(i = 0; i < NUMAMMO; i++)
          plyr->maxammo[i] *= 2;
       plyr->backpack = true;
    }
@@ -378,7 +376,7 @@ static void cheat_fa()
 
    // WEAPON_FIXME: IDFA cheat
    
-   // You can't own weapons that aren't in the game // phares 02/27/98
+   // You can't own weapons that aren't in the game - phares 02/27/98
    for(i = 0; i < NUMWEAPONS; i++)
    {
       if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
@@ -391,41 +389,46 @@ static void cheat_fa()
       if(i != am_cell || GameModeInfo->id != shareware)
          plyr->ammo[i] = plyr->maxammo[i];
    }
-   //sf : doom_printf
+
    doom_printf("%s", DEH_String("STSTR_FAADDED"));
 }
 
-static void cheat_k()
+static void cheat_k(const void *arg)
 {
-  int i, k=0;
+   int i, k = 0;
 
-  for (i=0; i<NUMCARDS; i++)
-    if (!plyr->cards[i])     // only print message if at least one key added
-      {                      // however, caller may overwrite message anyway
-        plyr->cards[i] = true;
-        k++; // sf: fix multiple 'keys added' messages
+   for(i = 0; i < NUMCARDS; i++)
+   {
+      if(!plyr->cards[i])     // only print message if at least one key added
+      {                       // however, caller may overwrite message anyway
+         plyr->cards[i] = true;
+         k++; // sf: fix multiple 'keys added' messages
       }
-                //sf : doom_printf
-   if(k) doom_printf("Keys Added");
+   }
+
+   if(k)
+      doom_printf("Keys Added");
 }
 
-static void cheat_kfa()
+static void cheat_kfa(const void *arg)
 {
-  cheat_k();
-  cheat_fa();
-        //sf: doom_printf
+  cheat_k(arg);
+  cheat_fa(arg);
+
   doom_printf(STSTR_KFAADDED);
 }
 
-static void cheat_noclip()
+static void cheat_noclip(const void *arg)
 {
-  // Simplified, accepting both "noclip" and "idspispopd".
-  C_RunTextCmd("noclip");
+   // Simplified, accepting both "noclip" and "idspispopd".
+   C_RunTextCmd("noclip");
 }
 
 // 'behold?' power-up cheats (modified for infinite duration -- killough)
-static void cheat_pw(pw)
+static void cheat_pw(const void *arg)
 {
+   int pw = *(const int *)arg;
+
    if(plyr->powers[pw])
       plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap && pw!=pw_silencer;  // killough
    else
@@ -439,70 +442,50 @@ static void cheat_pw(pw)
 }
 
 // 'behold' power-up menu
-static void cheat_behold()
+static void cheat_behold(const void *arg)
 {
    doom_printf("%s", DEH_String("STSTR_BEHOLD")); // Ty 03/27/98 - externalized
 }
 
 // 'clev' change-level cheat
-static void cheat_clev(buf)
-char buf[3];
+static void cheat_clev(const void *arg)
 {
-   int epsd, map;
+   const char *buf = (const char *)arg;
+   char mapname[9];
+   int epsd, map, lumpnum;
+
+   // return silently on nonsense input
+   if(buf[0] < '0' || buf[0] > '9' ||
+      buf[1] < '0' || buf[1] > '9')
+      return;
+
+   // haleyjd: build mapname
+   memset(mapname, 0, sizeof(mapname));
 
    if(GameModeInfo->flags & GIF_MAPXY)
    {
       epsd = 1; //jff was 0, but espd is 1-based 
       map = (buf[0] - '0')*10 + buf[1] - '0';
+
+      psnprintf(mapname, sizeof(mapname), "MAP%02d", map);
    }
    else
    {
       epsd = buf[0] - '0';
       map = buf[1] - '0';
+
+      psnprintf(mapname, sizeof(mapname), "E%dM%d", epsd, map);
    }
 
-   // Catch invalid maps.
+   // haleyjd: check mapname for existence and validity as a map
+   lumpnum = W_CheckNumForName(mapname);
+
+   if(lumpnum == -1 || P_CheckLevel(&w_GlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)
    {
-      int maxep = GameModeInfo->numEpisodes;
-
-      // Ohmygod - this is not going to work.
-      if(epsd < 1 || map < 1 || epsd > maxep)
-         return;
-     
-      switch(GameModeInfo->id)
-      {
-      default:
-      case retail:
-      case registered:
-      case shareware:
-      case hereticsw:
-         if(map > 9)
-            return;
-         break;
-
-      case hereticreg:
-         if(map > 9)
-            return;
-
-         if(GameModeInfo->missionInfo->id == hticsosr)
-         {
-            if(epsd == maxep && map > 3)
-               return;
-         }
-         else
-         {
-            if(epsd == maxep && map > 1)
-               return;
-         }
-         break;
-
-      case commercial:
-         if(map > 32)
-            return;
-         break;
-      }
+      doom_printf("%s not found or is not a valid map", mapname);
+      return;
    }
-
+   
    // So be it.
 
    idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
@@ -514,18 +497,17 @@ char buf[3];
 
 // 'mypos' for player position
 // killough 2/7/98: simplified using doom_printf and made output more user-friendly
-static void cheat_mypos()
+static void cheat_mypos(const void *arg)
 {
-  doom_printf("Position (%d,%d,%d)\tAngle %-.0f", 
-          players[consoleplayer].mo->x >> FRACBITS,
-          players[consoleplayer].mo->y >> FRACBITS,
-          players[consoleplayer].mo->z >> FRACBITS,
-          players[consoleplayer].mo->angle * (90.0/ANG90));
+   doom_printf("Position (%d,%d,%d)\tAngle %-.0f", 
+               players[consoleplayer].mo->x >> FRACBITS,
+               players[consoleplayer].mo->y >> FRACBITS,
+               players[consoleplayer].mo->z >> FRACBITS,
+               players[consoleplayer].mo->angle * (90.0/ANG90));
 }
 
 // compatibility cheat
-
-static void cheat_comp()
+static void cheat_comp(const void *arg)
 {
    int i;
    
@@ -539,7 +521,7 @@ static void cheat_comp()
 }
 
 // variable friction cheat
-static void cheat_friction()
+static void cheat_friction(const void *arg)
 {
    C_RunTextCmd("varfriction /");        //sf
    
@@ -548,10 +530,9 @@ static void cheat_friction()
                                    "Variable Friction disabled" );
 }
 
-
 // Pusher cheat
 // phares 3/10/98
-static void cheat_pushers()
+static void cheat_pushers(const void *arg)
 {
    C_RunTextCmd("pushers /");
    
@@ -560,97 +541,100 @@ static void cheat_pushers()
 }
 
 // translucency cheat
-static void cheat_tran()
+static void cheat_tran(const void *arg)
 {
    C_RunTextCmd("r_trans /");    // sf
 }
 
-static void cheat_massacre()    // jff 2/01/98 kill all monsters
+// jff 2/01/98 kill all monsters
+static void cheat_massacre(const void *arg)
 {
    C_RunTextCmd("nuke");  //sf
 }
 
 // killough 2/7/98: move iddt cheat from am_map.c to here
 // killough 3/26/98: emulate Doom better
-static void cheat_ddt()
+static void cheat_ddt(const void *arg)
 {
    extern int ddt_cheating;
    extern boolean automapactive;
    if(automapactive)
-      ddt_cheating = (ddt_cheating+1) % 3;
+      ddt_cheating = (ddt_cheating + 1) % 3;
 }
 
 // killough 2/7/98: HOM autodetection
-
-static void cheat_hom()
+static void cheat_hom(const void *arg)
 {
    C_RunTextCmd("r_showhom /"); //sf
 }
 
 // killough 2/16/98: keycard/skullkey cheat functions
-static void cheat_key()
+static void cheat_key(const void *arg)
 {
    doom_printf("Red, Yellow, Blue");  // Ty 03/27/98 - *not* externalized
 }
 
-static void cheat_keyx()
+static void cheat_keyx(const void *arg)
 {
    doom_printf("Card, Skull");        // Ty 03/27/98 - *not* externalized
 }
 
-static void cheat_keyxx(key)
+static void cheat_keyxx(const void *arg)
 {
+   int key = *(const int *)arg;
+
    doom_printf((plyr->cards[key] = !plyr->cards[key]) ? 
      "Key Added" : "Key Removed");  // Ty 03/27/98 - *not* externalized
 }
 
 // killough 2/16/98: generalized weapon cheats
-
-static void cheat_weap()
+static void cheat_weap(const void *arg)
 {                                   // Ty 03/27/98 - *not* externalized
    doom_printf(enable_ssg ?           // killough 2/28/98
                "Weapon number 1-9" : "Weapon number 1-8" );
 }
 
-static void cheat_weapx(buf)
-char buf[3];
+static void cheat_weapx(const void *arg)
 {
-  int w = *buf - '1';
+   const char *buf = (const char *)arg;
+   int w = *buf - '1';
+   int pwstr = pw_strength;
 
-  // WEAPON_FIXME: weap cheat
+   // WEAPON_FIXME: weap cheat
 
-  if ((w==wp_supershotgun && !enable_ssg) ||      // killough 2/28/98
-      ((w==wp_bfg || w==wp_plasma) && GameModeInfo->id==shareware))
-    return;
+   if((w == wp_supershotgun && !enable_ssg) ||      // killough 2/28/98
+      ((w == wp_bfg || w == wp_plasma) && GameModeInfo->id == shareware))
+      return;
 
-  if (w==wp_fist)           // make '1' apply beserker strength toggle
-    cheat_pw(pw_strength);
-  else
-  {
-    if (w >= 0 && w < NUMWEAPONS)
-    {
-      if ((plyr->weaponowned[w] = !plyr->weaponowned[w]))
-        doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
-      else 
-        {
-          int P_SwitchWeapon(player_t *player);
-          doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-          if (w==plyr->readyweapon)         // maybe switch if weapon removed
-            plyr->pendingweapon = P_SwitchWeapon(plyr);
-        }
-    }
-  }
+   if(w == wp_fist)           // make '1' apply beserker strength toggle
+      cheat_pw(&pwstr);
+   else
+   {
+      if(w >= 0 && w < NUMWEAPONS)
+      {
+         if((plyr->weaponowned[w] = !plyr->weaponowned[w]))
+            doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
+         else 
+         {
+            int P_SwitchWeapon(player_t *player);
+            
+            doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
+            if(w == plyr->readyweapon)     // maybe switch if weapon removed
+               plyr->pendingweapon = P_SwitchWeapon(plyr);
+         }
+      }
+   }
 }
 
 // killough 2/16/98: generalized ammo cheats
-static void cheat_ammo()
+static void cheat_ammo(const void *arg)
 {
-  doom_printf("Ammo 1-4, Backpack");  // Ty 03/27/98 - *not* externalized
+   doom_printf("Ammo 1-4, Backpack");  // Ty 03/27/98 - *not* externalized
 }
 
-static void cheat_ammox(buf)
-char buf[1];
+static void cheat_ammox(const void *arg)
 {
+   const char *buf = (const char *)arg;
    int a = *buf - '1';
 
    if(*buf == 'b')
@@ -694,11 +678,11 @@ char buf[1];
    }
 }
 
-static void cheat_nuke()
+static void cheat_nuke(const void *arg)
 {
-  extern int enable_nuke;
-  doom_printf( (enable_nuke = !enable_nuke) ? "Nukage Enabled" :
-                                          "Nukage Disabled");
+   extern int enable_nuke;
+   doom_printf((enable_nuke = !enable_nuke) ? "Nukage Enabled" :
+                                              "Nukage Disabled");
 }
 
 //-----------------------------------------------------------------------------
@@ -719,52 +703,57 @@ void M_DoCheat(char *s)
 
 boolean M_FindCheats(int key)
 {
-  static uint64_t sr;
-  static char argbuf[CHEAT_ARGS_MAX+1], *arg;
-  static int init, argsleft, cht;
-  int i, ret, matchedbefore;
+   static uint64_t sr;
+   static char argbuf[CHEAT_ARGS_MAX+1], *arg;
+   static int init, argsleft, cht;
+   int i, ret, matchedbefore;
 
-  // If we are expecting arguments to a cheat
-  // (e.g. idclev), put them in the arg buffer
+   // If we are expecting arguments to a cheat
+   // (e.g. idclev), put them in the arg buffer
 
-  if (argsleft)
-    {
+   if(argsleft)
+   {
       *arg++ = tolower(key);             // store key in arg buffer
-      if (!--argsleft)                   // if last key in arg list,
-        cheat[cht].func(argbuf);         // process the arg buffer
+      if(!--argsleft)                    // if last key in arg list,
+         cheat[cht].func(argbuf);        // process the arg buffer
       return 1;                          // affirmative response
-    }
+   }
 
-  key = tolower(key) - 'a';
-  if (key < 0 || key >= 32)              // ignore most non-alpha cheat letters
-    {
+   key = tolower(key) - 'a';
+   if(key < 0 || key >= 32)              // ignore most non-alpha cheat letters
+   {
       sr = 0;        // clear shift register
       return 0;
-    }
+   }
 
-  if (!init)                             // initialize aux entries of table
-    {
+   if(!init)                             // initialize aux entries of table
+   {
       init = 1;
-      for (i=0;cheat[i].cheat;i++)
-        {
-          uint64_t c=0, m=0;
-          const unsigned char *p;
-          for (p=(const unsigned char *)cheat[i].cheat; *p; p++)
-            {
-              unsigned key = tolower(*p)-'a';  // convert to 0-31
-              if (key >= 32)            // ignore most non-alpha cheat letters
-                continue;
-              c = (c<<5) + key;         // shift key into code
-              m = (m<<5) + 31;          // shift 1's into mask
-            }
-          cheat[i].code = c;            // code for this cheat key
-          cheat[i].mask = m;            // mask for this cheat key
-        }
-    }
 
-  sr = (sr<<5) + key;                   // shift this key into shift register
+      for(i = 0; cheat[i].cheat; i++)
+      {
+         uint64_t c=0, m=0;
+         const unsigned char *p;
 
-  // haleyjd: Oh Lee, you cad.
+         for(p = (const unsigned char *)cheat[i].cheat; *p; p++)
+         {
+            unsigned key = tolower(*p) - 'a'; // convert to 0-31
+
+            if(key >= 32)             // ignore most non-alpha cheat letters
+               continue;
+
+            c = (c << 5) + key;       // shift key into code
+            m = (m << 5) + 31;        // shift 1's into mask
+         }
+
+         cheat[i].code = c;           // code for this cheat key
+         cheat[i].mask = m;           // mask for this cheat key
+      }
+   }
+
+   sr = (sr << 5) + key;               // shift this key into shift register
+
+   // haleyjd: Oh Lee, you cad.
 #if 0
    {signed/*long*/volatile/*double *x,*y;*/static/*const*/int/*double*/i;
     /**/char/*(*)*/*D_DoomExeName/*(int)*/(void)/*?*/;(void/*)^x*/)((
@@ -776,33 +765,31 @@ boolean M_FindCheats(int key)
     "cHe"/*"eze"**/"aT"),i/*+--*/++/*;&^*/));}
 #endif
 
-  // sf: removed beta flag
+   for(matchedbefore = ret = i = 0; cheat[i].cheat; i++)
+   {
+      if((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
+         !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
+         !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
+         !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
+         !(cheat[i].when & not_menu && menuactive) &&
+         !(cheat[i].when & not_deh  && cheat[i].deh_modified))
+      {
+         if(cheat[i].arg < 0)               // if additional args are required
+         {
+            cht = i;                        // remember this cheat code
+            arg = argbuf;                   // point to start of arg buffer
+            argsleft = -cheat[i].arg;       // number of args expected
+            ret = 1;                        // responder has eaten key
+         }
+         else if(!matchedbefore)            // allow only one cheat at a time 
+         {
+            matchedbefore = ret = 1;        // responder has eaten key
+            cheat[i].func(&(cheat[i].arg)); // call cheat handler
+         }
+      }
+   }
 
-  for (matchedbefore = ret = i = 0; cheat[i].cheat; i++)
-  {
-    if ((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
-        !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
-        !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
-        !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
-        !(cheat[i].when & not_menu && menuactive) &&
-        !(cheat[i].when & not_deh  && cheat[i].deh_modified))
-    {
-      if (cheat[i].arg < 0)               // if additional args are required
-        {
-          cht = i;                        // remember this cheat code
-          arg = argbuf;                   // point to start of arg buffer
-          argsleft = -cheat[i].arg;       // number of args expected
-          ret = 1;                        // responder has eaten key
-        }
-      else
-        if (!matchedbefore)               // allow only one cheat at a time 
-          {
-            matchedbefore = ret = 1;      // responder has eaten key
-            cheat[i].func(cheat[i].arg);  // call cheat handler
-          }
-    }
-  }
-  return ret;
+   return ret;
 }
 
 /***************************
@@ -815,38 +802,39 @@ boolean M_FindCheats(int key)
 
 CONSOLE_COMMAND(infammo, cf_notnet|cf_level)
 {
-  int value=0;
-  if(Console.argc)
-    sscanf(Console.argv[0], "%i", &value);
-  else
-    value = !(players[consoleplayer].cheats & CF_INFAMMO);
+   int value = 0;
+   if(Console.argc)
+      sscanf(Console.argv[0], "%i", &value);
+   else
+      value = !(players[consoleplayer].cheats & CF_INFAMMO);
 
-  players[consoleplayer].cheats &= ~CF_INFAMMO;
-  players[consoleplayer].cheats |= value ? CF_INFAMMO : 0;
+   players[consoleplayer].cheats &= ~CF_INFAMMO;
+   players[consoleplayer].cheats |= value ? CF_INFAMMO : 0;
 
-  doom_printf(players[consoleplayer].cheats & CF_INFAMMO ?
-              "Infinite ammo on" : "Infinite ammo off");
+   doom_printf(players[consoleplayer].cheats & CF_INFAMMO ?
+               "Infinite ammo on" : "Infinite ammo off");
 }
 
 CONSOLE_COMMAND(noclip, cf_notnet|cf_level)
 {
-  int value=0;
-  if(Console.argc)
-    sscanf(Console.argv[0], "%i", &value);
-  else
-    value = !(players[consoleplayer].cheats & CF_NOCLIP);
+   int value=0;
 
-  players[consoleplayer].cheats &= ~CF_NOCLIP;
-  players[consoleplayer].cheats |= value ? CF_NOCLIP : 0;
+   if(Console.argc)
+      sscanf(Console.argv[0], "%i", &value);
+   else
+      value = !(players[consoleplayer].cheats & CF_NOCLIP);
 
-  doom_printf("%s",
-     DEH_String(players[consoleplayer].cheats & CF_NOCLIP ?
-                "STSTR_NCON" : "STSTR_NCOFF"));
+   players[consoleplayer].cheats &= ~CF_NOCLIP;
+   players[consoleplayer].cheats |= value ? CF_NOCLIP : 0;
+
+   doom_printf("%s",
+               DEH_String(players[consoleplayer].cheats & CF_NOCLIP ?
+               "STSTR_NCON" : "STSTR_NCOFF"));
 }
 
 CONSOLE_COMMAND(god, cf_notnet|cf_level)
 {
-   int value=0;          // sf: choose to set to 0 or 1 
+   int value = 0;        // sf: choose to set to 0 or 1 
 
    if(Console.argc)
       sscanf(Console.argv[0], "%i", &value);

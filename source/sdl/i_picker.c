@@ -199,6 +199,9 @@ static void I_Pick_FreeWad(void)
       if(pickwad.lumpinfo[0]->file) // kind of redundant, but who knows
          fclose(pickwad.lumpinfo[0]->file);
 
+      // free all lumpinfo_t's allocated for the wad
+      W_FreeDirectoryAllocs(&pickwad);
+
       // free the private wad directory
       Z_Free(pickwad.lumpinfo);
 
@@ -411,7 +414,7 @@ static void I_Pick_DoRight(void)
 //
 static void I_Pick_DoAbort(void)
 {
-   I_Error("Eternity Engine aborted.\n");
+   I_ExitWithMessage("Eternity Engine aborted.\n");
 }
 
 //

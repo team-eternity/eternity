@@ -206,7 +206,7 @@ typedef struct mapseg_s mapseg_t;
 // BSP node structure.
 
 // Indicate a leaf.
-#define NF_SUBSECTOR    0x8000
+#define NF_SUBSECTOR    0x80000000
 
 struct mapnode_s
 {

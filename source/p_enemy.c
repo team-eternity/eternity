@@ -3567,11 +3567,11 @@ void A_PlayerStartScript(mobj_t *mo)
 
    psp = &player->psprites[player->curpsprite];
 
-   scriptnum = E_ArgAsInt(mo->state->args, 0, 0);
-   selectvm  = E_ArgAsKwd(mo->state->args, 1, &psskwds, 0);
-   params[0] = (cell)(E_ArgAsInt(mo->state->args, 2, 0));
-   params[1] = (cell)(E_ArgAsInt(mo->state->args, 3, 0));
-   params[2] = (cell)(E_ArgAsInt(mo->state->args, 4, 0));
+   scriptnum = E_ArgAsInt(psp->state->args, 0, 0);
+   selectvm  = E_ArgAsKwd(psp->state->args, 1, &psskwds, 0);
+   params[0] = (cell)(E_ArgAsInt(psp->state->args, 2, 0));
+   params[1] = (cell)(E_ArgAsInt(psp->state->args, 3, 0));
+   params[2] = (cell)(E_ArgAsInt(psp->state->args, 4, 0));
 
    // determine root context to use
    switch(selectvm)

@@ -45,16 +45,16 @@ int screenshot_gamma;
 // killough 10/98: changed into macro to return failure instead of aborting
 
 #define SafeWrite(ob, data, size) \
-   do { if(!M_BufferWrite(ob, data, size)) return false; } while(0)
+   if(!M_BufferWrite(ob, data, size)) return false
 
 #define SafeWrite32(ob, data) \
-   do { if(!M_BufferWriteUint32(ob, data)) return false; } while(0)
+   if(!M_BufferWriteUint32(ob, data)) return false
 
 #define SafeWrite16(ob, data) \
-   do { if(!M_BufferWriteUint16(ob, data)) return false; } while(0)
+   if(!M_BufferWriteUint16(ob, data)) return false
 
 #define SafeWrite8(ob, data) \
-   do { if(!M_BufferWriteUint8(ob, data)) return false; } while(0)
+   if(!M_BufferWriteUint8(ob, data)) return false
 
 //=============================================================================
 //

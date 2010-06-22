@@ -44,12 +44,13 @@
 #include "d_io.h"
 #include "m_misc.h"
 #include "mn_engin.h"
+#include "mn_files.h"
 #include "r_data.h"
 #include "s_sound.h"
 #include "v_font.h"
 #include "w_wad.h"
 
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Read Directory
 //
@@ -159,27 +160,22 @@ static boolean filecmp(const char *filename, const char *wildcard)
    return res;
 }
 
-static int  num_mn_files;
-static int  num_mn_files_alloc;
-static char **mn_filelist;
-static const char *mn_filedir;   // directory the files are in
-
 //
 // MN_addFile
 //
 // Adds a filename to the reallocating filenames array
 //
-static void MN_addFile(const char *filename)
+static void MN_addFile(mndir_t *dir, const char *filename)
 {
-   if(num_mn_files >= num_mn_files_alloc)
+   if(dir->numfiles >= dir->numfilesalloc)
    {
       // realloc bigger: limitless
-      num_mn_files_alloc = num_mn_files_alloc ? num_mn_files_alloc * 2 : 32;
-      mn_filelist = (char **)realloc(mn_filelist, 
-                                     num_mn_files_alloc * sizeof(char *));
+      dir->numfilesalloc = dir->numfilesalloc ? dir->numfilesalloc * 2 : 32;
+      dir->filenames = (char **)realloc(dir->filenames, 
+                                        dir->numfilesalloc * sizeof(char *));
    }
 
-   mn_filelist[num_mn_files++] = strdup(filename);
+   (dir->filenames)[dir->numfiles++] = strdup(filename);
 }
 
 //
@@ -188,13 +184,13 @@ static void MN_addFile(const char *filename)
 // Looks for the given file name in the list of filenames.
 // Returns num_mn_files if not found.
 //
-static int MN_findFile(const char *filename)
+static int MN_findFile(mndir_t *dir, const char *filename)
 {
    int i;
 
-   for(i = 0; i < num_mn_files; ++i)
+   for(i = 0; i < dir->numfiles; ++i)
    {
-      if(!strcasecmp(filename, mn_filelist[i]))
+      if(!strcasecmp(filename, (dir->filenames)[i]))
          break;
    }
 
@@ -202,22 +198,24 @@ static int MN_findFile(const char *filename)
 }
 
 //
-// MN_clearDirectory
+// MN_ClearDirectory
 //
 // Empties out the reallocating filenames array
 //
-static void MN_clearDirectory(void)
+// haleyjd 06/15/10: made global
+//
+void MN_ClearDirectory(mndir_t *dir)
 {
    int i;
    
    // clear all alloced files   
-   for(i = 0; i < num_mn_files; ++i)
+   for(i = 0; i < dir->numfiles; ++i)
    {
-      free(mn_filelist[i]);
-      mn_filelist[i] = NULL;
+      free((dir->filenames)[i]);
+      (dir->filenames)[i] = NULL;
    }
 
-   num_mn_files = 0;
+   dir->numfiles = 0;
 }
 
 //
@@ -238,14 +236,14 @@ static int MN_qFileCompare(const void *si1, const void *si2)
 //
 // Sorts the directory listing.
 //
-static void MN_sortFiles(void)
+static void MN_sortFiles(mndir_t *dir)
 {
-   if(num_mn_files >= 2)
-      qsort(mn_filelist, num_mn_files, sizeof(char *), MN_qFileCompare);
+   if(dir->numfiles >= 2)
+      qsort(dir->filenames, dir->numfiles, sizeof(char *), MN_qFileCompare);
 }
 
 //
-// MN_readDirectory
+// MN_ReadDirectory
 //
 // Uses POSIX opendir to read the indicated directory and saves off all file
 // names within it that match the provided wildcard string.
@@ -253,17 +251,19 @@ static void MN_sortFiles(void)
 // Note: for Visual C++, customized versions of MinGW's opendir functions
 // are used, which are implemented in i_opndir.c.
 //
-static int MN_readDirectory(const char *read_dir, const char *read_wildcard)
+// haleyjd 06/15/10: made global
+//
+int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildcard)
 {
    DIR *directory;
    struct dirent *direntry;
 
    // clear directory
-   MN_clearDirectory();
+   MN_ClearDirectory(dir);
   
    // open directory and read filenames  
-   mn_filedir = read_dir;
-   directory = opendir(mn_filedir);
+   dir->dirpath = read_dir;
+   directory = opendir(dir->dirpath);
 
    // test for failure
    if(!directory)
@@ -272,25 +272,27 @@ static int MN_readDirectory(const char *read_dir, const char *read_wildcard)
    while((direntry = readdir(directory)))
    {
       if(filecmp(direntry->d_name, read_wildcard))
-         MN_addFile(direntry->d_name); // add file to list
+         MN_addFile(dir, direntry->d_name); // add file to list
    }
 
    // done with directory listing
    closedir(directory);
 
    // sort the list
-   MN_sortFiles();
+   MN_sortFiles(dir);
 
    return 0;
 }
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // File Selector
 //
 // Used as a 'browse' function when we are selecting some kind of file
 // to load: eg. lmps, wads
 //
+
+static mndir_t *mn_currentdir;
 
 static void MN_FileDrawer(void);
 static boolean MN_FileResponder(event_t *ev);
@@ -299,11 +301,12 @@ static boolean MN_FileResponder(event_t *ev);
 
 static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, NULL, true };
 static int selected_item;
-static char *variable_name;
-static char *help_description;
+static const char *variable_name;
+static const char *help_description;
 static int numfileboxlines;
 static boolean select_dismiss;
 extern vfont_t *menu_font;
+static boolean allow_exit = true;
 
 //
 // MN_FileDrawer
@@ -365,9 +368,9 @@ static void MN_FileDrawer(void)
    if(min < 0)
       min = 0;
    max = min + numfileboxlines - 1;
-   if(max >= num_mn_files)
+   if(max >= mn_currentdir->numfiles)
    {
-      max = num_mn_files - 1;
+      max = mn_currentdir->numfiles - 1;
       // haleyjd 11/04/06: reset min when the list end is displayed to
       // keep the box completely full.
       min = max - numfileboxlines + 1;
@@ -395,10 +398,10 @@ static void MN_FileDrawer(void)
          color = GameModeInfo->unselectColor;
 
       // haleyjd 11/04/06: add "more" indicators when box is scrolled :)
-      if((i == min && min > 0) || (i == max && max < num_mn_files - 1))
+      if((i == min && min > 0) || (i == max && max < mn_currentdir->numfiles - 1))
          text = FC_GOLD "More...";
       else
-         text = mn_filelist[i];
+         text = (mn_currentdir->filenames)[i];
       
       // draw it!
       MN_WriteTextColored(text, color, x + 11, y);
@@ -434,7 +437,7 @@ static boolean MN_FileResponder(event_t *ev)
    if(action_menu_down || action_menu_right)
    {
       action_menu_down = action_menu_right = false;
-      if(selected_item < (num_mn_files-1)) 
+      if(selected_item < (mn_currentdir->numfiles - 1)) 
       {
          selected_item++;
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
@@ -461,8 +464,8 @@ static boolean MN_FileResponder(event_t *ev)
       if(numfileboxlines)
       {
          selected_item += numfileboxlines;
-         if(selected_item >= num_mn_files) 
-            selected_item = num_mn_files - 1;
+         if(selected_item >= mn_currentdir->numfiles) 
+            selected_item = mn_currentdir->numfiles - 1;
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
@@ -470,9 +473,12 @@ static boolean MN_FileResponder(event_t *ev)
    
    if(action_menu_toggle || action_menu_previous)
    {
-      action_menu_toggle = action_menu_previous = false;
-      current_menuwidget = NULL; // cancel widget
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      if(allow_exit)
+      {
+         action_menu_toggle = action_menu_previous = false;
+         current_menuwidget = NULL; // cancel widget
+         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      }
       return true;
    }
   
@@ -485,7 +491,7 @@ static boolean MN_FileResponder(event_t *ev)
       {
          char tempstr[128];
          psnprintf(tempstr, sizeof(tempstr), 
-            "%s \"%s\"", variable_name, mn_filelist[selected_item]);
+            "%s \"%s\"", variable_name, (mn_currentdir->filenames)[selected_item]);
          C_RunTextCmd(tempstr);
          S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
@@ -508,10 +514,10 @@ static boolean MN_FileResponder(event_t *ev)
       do
       {
          n++;
-         if(n >= num_mn_files) 
+         if(n >= mn_currentdir->numfiles) 
             n = 0; // loop round
          
-         if(tolower(mn_filelist[n][0]) == ch)
+         if(tolower((mn_currentdir->filenames)[n][0]) == ch)
          {
             // found a matching item!
             if(n != selected_item) // only make sound if actually moving
@@ -540,9 +546,11 @@ CONSOLE_VARIABLE(wad_directory, wad_directory, 0)
       if(*a == '\\') *a = '/';
 }
 
+static mndir_t mn_diskdir;
+
 CONSOLE_COMMAND(mn_selectwad, 0)
 {
-   int ret = MN_readDirectory(wad_directory, "*.wad");
+   int ret = MN_ReadDirectory(&mn_diskdir, wad_directory, "*.wad");
 
    // check for standard errors
    if(ret)
@@ -554,20 +562,43 @@ CONSOLE_COMMAND(mn_selectwad, 0)
    }
 
    // empty directory?
-   if(num_mn_files < 1)
+   if(mn_diskdir.numfiles < 1)
    {
       MN_ErrorMsg("no files found");
       return;
    }
 
-   selected_item = 0;
+   selected_item      = 0;
+   mn_currentdir      = &mn_diskdir;
    current_menuwidget = &file_selector;
-   help_description = "select wad file:";
-   variable_name = "mn_wadname";
-   select_dismiss = true;
+   help_description   = "select wad file:";
+   variable_name      = "mn_wadname";
+   select_dismiss     = true;
+   allow_exit         = true;
 }
 
-//////////////////////////////////////////////////////////////////////////
+//
+// MN_DisplayFileSelector
+//
+// haleyjd 06/16/10: for external access to the file selector widget
+//
+void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
+                            const char *command, boolean dismissOnSelect,
+                            boolean allowExit)
+{
+   if(dir->numfiles < 1)
+      return;
+
+   selected_item      = 0;
+   mn_currentdir      = dir;
+   current_menuwidget = &file_selector;
+   help_description   = title;
+   variable_name      = command;
+   select_dismiss     = dismissOnSelect;
+   allow_exit         = allowExit;
+}
+
+//=============================================================================
 //
 // Misc stuff
 //
@@ -587,11 +618,11 @@ CONSOLE_COMMAND(dir, 0)
    else
       wildcard = "*.*";
    
-   MN_readDirectory(".", wildcard);
+   MN_ReadDirectory(&mn_diskdir, ".", wildcard);
    
-   for(i = 0; i < num_mn_files; ++i)
+   for(i = 0; i < mn_diskdir.numfiles; ++i)
    {
-      C_Printf("%s\n", mn_filelist[i]);
+      C_Printf("%s\n", (mn_diskdir.filenames)[i]);
    }
 }
 
@@ -602,7 +633,7 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
    int i;
 
    // clear directory
-   MN_clearDirectory();
+   MN_ClearDirectory(&mn_diskdir);
 
    // run down music hash chains and add music to file list
    for(i = 0; i < SOUND_HASHSLOTS; ++i)
@@ -616,20 +647,22 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
                    GameModeInfo->musPrefix, music->name);
          
          if(W_CheckNumForName(namebuf) >= 0)
-            MN_addFile(music->name);
+            MN_addFile(&mn_diskdir, music->name);
 
          music = music->next;
       }
    }
 
    // sort the list
-   MN_sortFiles();
+   MN_sortFiles(&mn_diskdir);
 
    selected_item = 0;
+   mn_currentdir = &mn_diskdir;
    current_menuwidget = &file_selector;
    help_description = "select music to play:";
    variable_name = "s_playmusic";
    select_dismiss = false;
+   allow_exit     = true;
 }
 
 CONSOLE_COMMAND(mn_selectflat, 0)
@@ -638,30 +671,32 @@ CONSOLE_COMMAND(mn_selectflat, 0)
    int curnum;
 
    // clear directory
-   MN_clearDirectory();
+   MN_ClearDirectory(&mn_diskdir);
 
-   MN_addFile("default");
+   MN_addFile(&mn_diskdir, "default");
 
    // run through flats
    for(i = flatstart; i < flatstop; ++i)
    {
       // size must be exactly 64x64
       if(textures[i]->width == 64 && textures[i]->height == 64)
-         MN_addFile(textures[i]->name);
+         MN_addFile(&mn_diskdir, textures[i]->name);
    }
 
    // sort the list
-   MN_sortFiles();
+   MN_sortFiles(&mn_diskdir);
    
    selected_item = 0;
 
-   if((curnum = MN_findFile(mn_background)) != num_mn_files)
+   if((curnum = MN_findFile(&mn_diskdir, mn_background)) != mn_diskdir.numfiles)
       selected_item = curnum;
    
+   mn_currentdir = &mn_diskdir;
    current_menuwidget = &file_selector;
    help_description = "select background:";
    variable_name = "mn_background";
    select_dismiss = false;
+   allow_exit     = true;
 }
 
 void MN_File_AddCommands(void)

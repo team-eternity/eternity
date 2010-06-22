@@ -3988,6 +3988,10 @@ void P_AttachLines(line_t *cline, boolean ceiling)
          attached = (int *)realloc(attached, sizeof(int) * maxattach);
       }
 
+      // haleyjd: check for safety
+      if(!attached)
+         I_Error("P_AttachLines: no attached list\n");
+
       memcpy(attached, cline->frontsector->c_attached, sizeof(int) * numattach);
       Z_Free(cline->frontsector->c_attached);
       cline->frontsector->c_attached = NULL;
@@ -4029,6 +4033,11 @@ void P_AttachLines(line_t *cline, boolean ceiling)
          // SoM 12/8/02: Don't attach the backsector.
       }
    } // end for
+
+   // haleyjd: static analyzer says this could happen, so let's just be safe.
+   if(!attached)
+      I_Error("P_AttachLines: nothing to attach to sector %d\n",
+              cline->frontsector - sectors);
 
    // Copy the list to the c_attached or f_attached list.
    if(ceiling)
@@ -4197,6 +4206,10 @@ void P_AttachSectors(line_t *line)
          maxattached = numattached + 5;
          attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
       }
+
+      // haleyjd: check for safety
+      if(!attached)
+         I_Error("P_AttachSector: no attached list\n");
 
       memcpy(attached, sector->f_asurfaces, sizeof(attachedsurface_t) * numattached);
       Z_Free(sector->f_asurfaces);
@@ -4903,10 +4916,6 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          anchortype = 346;
       else
          anchortype = 347;
-
-      frontsector = line->frontsector;
-      if(!frontsector) 
-         frontsector = line->backsector;
 
       // find anchor line
       for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )

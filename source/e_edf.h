@@ -106,7 +106,12 @@ void E_EDFSetEnableValue(const char *, int); // enables
 
 void E_EDFLogPuts(const char *msg);
 void E_EDFLogPrintf(const char *msg, ...);
+
+#ifdef __GNUC__
+void E_EDFLoggedErr(int lv, const char *msg, ...) __attribute__((noreturn));
+#else
 void E_EDFLoggedErr(int lv, const char *msg, ...);
+#endif
 
 #endif
 

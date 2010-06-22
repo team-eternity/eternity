@@ -24,7 +24,7 @@
 
 #include "doomtype.h"
 
-void P_LoadLevelInfo(int lumpnum);
+void P_LoadLevelInfo(int lumpnum, const char *lvname);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, boolean finale, const char *intertext);
@@ -47,6 +47,69 @@ enum
 {
    LI_TYPE_DOOM,
    LI_TYPE_HERETIC,
+};
+
+//
+// LevelInfo Field Enumeration
+//
+// haleyjd 06/21/10: This is needed to keep track of what fields are stored in
+// a LevelInfo prototype. The order does not have to match that in the 
+// structure, but there must be one enumeration value for every structure 
+// field.
+//
+enum
+{
+   LI_FIELD_LEVELTYPE,
+   LI_FIELD_BOSSSPECS,
+   LI_FIELD_PARTIME,
+   LI_FIELD_INTERPIC,
+   LI_FIELD_INTERTEXT,
+   LI_FIELD_INTERTEXTLUMP,
+   LI_FIELD_BACKDROP,
+   LI_FIELD_INTERMUSIC,
+   LI_FIELD_LEVELPIC,
+   LI_FIELD_NEXTLEVELPIC,
+   LI_FIELD_NEXTSECRETPIC,
+   LI_FIELD_FINALETYPE,
+   LI_FIELD_KILLSTATS,
+   LI_FIELD_KILLFINALE,
+   LI_FIELD_FINALESECRETONLY,
+   LI_FIELD_ENDOFGAME,
+   LI_FIELD_USEEDFINTERNAME,
+   LI_FIELD_NEXTLEVEL,
+   LI_FIELD_NEXTSECRET,
+   LI_FIELD_LEVELNAME,
+   LI_FIELD_MUSICNAME,
+   LI_FIELD_COLORMAP,
+   LI_FIELD_OUTDOORFOG,
+   LI_FIELD_USEFULLBRIGHT,
+   LI_FIELD_UNEVENLIGHT,
+   LI_FIELD_SKYNAME,
+   LI_FIELD_ALTSKYNAME,
+   LI_FIELD_SKY2NAME,
+   LI_FIELD_DOUBLESKY,
+   LI_FIELD_HASLIGHTNING,
+   LI_FIELD_SKYDELTA,
+   LI_FIELD_SKY2DELTA,
+   LI_FIELD_GRAVITY,
+   LI_FIELD_CREATOR,
+   LI_FIELD_HASSCRIPT,
+   LI_FIELD_SCRIPTLUMP,
+   LI_FIELD_EXTRADATA,
+   LI_FIELD_SOUNDSWTCHN,
+   LI_FIELD_SOUNDSWTCHX,
+   LI_FIELD_SOUNDSTNMOV,
+   LI_FIELD_SOUNDPSTOP,
+   LI_FIELD_SOUNDBDCLS,
+   LI_FIELD_SOUNDBDOPN,
+   LI_FIELD_SOUNDDOROPN,
+   LI_FIELD_SOUNDDORCLS,
+   LI_FIELD_SOUNDPSTART,
+   LI_FIELD_SOUNDFCMOVE,
+   LI_FIELD_NOAUTOSEQUENCES,
+   
+   // count of fields
+   LI_FIELD_NUMFIELDS
 };
 
 //

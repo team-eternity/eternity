@@ -94,10 +94,8 @@ typedef struct spandrawer_s
 {
    void (*DrawSpan[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
    void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
-   
-   // SoM: store the fixed point units here so the rasterizer can pre-shift 
-   // everything
-   float fixedunits[SPAN_NUMSTYLES][FLAT_NUMSIZES];
+
+   boolean haslp64; // haleyjd: if true, 64x64 flat drawer is low-precision
 } spandrawer_t;
 
 extern spandrawer_t r_lpspandrawer;  // low-precision

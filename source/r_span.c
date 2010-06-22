@@ -353,35 +353,36 @@ static void R_DrawSpan_OLD(void)
    unsigned int count;
    
    position = ((span.yfrac<<10)&0xffff0000) | ((span.xfrac>>6)&0xffff);
-   step = ((span.ystep<<10)&0xffff0000) | ((span.xstep>>6)&0xffff);
+   step     = ((span.ystep<<10)&0xffff0000) | ((span.xstep>>6)&0xffff);
    
-   source = span.source;
+   source   = span.source;
    colormap = span.colormap;
-   dest = ylookup[span.y] + columnofs[span.x1];       
-   count = span.x2 - span.x1 + 1; 
+   dest     = ylookup[span.y] + columnofs[span.x1];       
+   count    = span.x2 - span.x1 + 1; 
    
    // SoM: So I went back and realized the error of ID's ways and this is even
    // faster now! This is by far the fastest way because it uses the exact same
    // number of ops mine does except it only has one addition and one memory 
    // write for the position variable. Now we only have two writes to memory
-   // (one for the pixel, one for position) 
-   while (count >= 4)
+   // (one for the pixel, one for position)
+
+   while(count >= 4)
    { 
       dest[0] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
       position += step;
 
       dest[1] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
       position += step;
-        
+
       dest[2] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
       position += step;
-        
+
       dest[3] = colormap[source[(position>>26) | ((position>>4) & 4032)]]; 
       position += step;
-                
+
       dest += 4;
       count -= 4;
-    } 
+   } 
 
    while (count)
    { 
@@ -967,11 +968,7 @@ spandrawer_t r_lpspandrawer =
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
    },
 
-   {
-      { XSOLD, XS128, XS256, XS512, 0},
-      { XS64,  XS128, XS256, XS512, 0},
-      { XS64,  XS128, XS256, XS512, 0},
-   },
+   true
 };
 
 // the normal, high-precision span drawer
@@ -991,11 +988,7 @@ spandrawer_t r_spandrawer =
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
    },
 
-   {
-      { XS64,  XS128, XS256, XS512, 0},
-      { XS64,  XS128, XS256, XS512, 0},
-      { XS64,  XS128, XS256, XS512, 0},
-   },
+   false
 };
 
 // low-detail spandrawer
@@ -1015,11 +1008,7 @@ spandrawer_t r_lowspandrawer =
       { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSpan_CB_NOP},
    },
 
-   {
-      { XS64, XS128, XS256, XS512, 0},
-      { XS64, XS128, XS256, XS512, 0},
-      { XS64, XS128, XS256, XS512, 0},
-   },
+   false
 };
 
 // EOF
