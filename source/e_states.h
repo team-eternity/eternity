@@ -43,18 +43,6 @@ extern int NullStateNum;
 #define EDF_SEC_FRAME    "frame"
 #define EDF_SEC_FRMDELTA "framedelta"
 
-//
-// estatereloc
-//
-// haleyjd 04/03/10: This structure is a relocated state entry, which is
-// generated in sets by the DECORATE state processor.
-//
-typedef struct estatereloc_s
-{
-   const char *label; // DECORATE label for this state
-   int statenum;      // relocated state number, relative to states[]
-} estatereloc_t;
-
 extern cfg_opt_t edf_frame_opts[];
 extern cfg_opt_t edf_fdelta_opts[];
 
@@ -64,6 +52,63 @@ void    E_ProcessStateDeltas(cfg_t *cfg);
 boolean E_AutoAllocStateDEHNum(int statenum);
 
 #endif
+
+//
+// DECORATE state output structure 1:
+//
+// DECORATE state. This is a label plus a pointer to the state_t to which it 
+// refers (which is already a member of the states array). This can be assigned
+// to either a native state or a metastate by the calling code.
+//
+typedef struct edecstate_s
+{
+   const char *label; // native state name or metastate key (allocated)
+   state_t    *state; // pointer to state
+} edecstate_t;
+
+//
+// DECORATE state output structure 2:
+//
+// Goto record. This is a goto destination label which requires external
+// resolution by the caller because it refers to an ancestral definition
+// (super state, or a label not defined within the current state block).
+// The data consists of the original jump label text, offset, and a pointer
+// to the nextstate field of the state_t which needs to have its nextstate 
+// set.
+//
+typedef struct egoto_s
+{
+   const char *label;     // label text (allocated)
+   int         offset;    // offset, if non-zero
+   statenum_t *nextstate; // pointer to field needing resolved value
+} egoto_t;
+
+//
+// DECORATE state output structure 3:
+//
+// Kill state. This is a state which needs to be removed from the object
+// which is receiving this set of DECORATE states.
+//
+typedef struct ekillstate_s
+{
+   const char *killname; // native state name or metastate key to nullify/delete
+} ekillstate_t;
+
+//
+// Aggregate DECORATE state parsing output
+//
+typedef struct edecstateout_s
+{
+   edecstate_t  *states;     // states to create
+   egoto_t      *gotos;      // gotos to resolve
+   ekillstate_t *killstates; // states to kill
+   int numstates;            // number of states to add
+   int numgotos;             // number of gotos to resolve
+   int numkillstates;        // number of states to kill
+   int numstatesalloc;       // number of state objects allocated
+   int numgotosalloc;        // number of goto objects allocated
+   int numkillsalloc;        // number of kill states allocated
+} edecstateout_t;
 
 #endif
 
