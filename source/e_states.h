@@ -62,8 +62,8 @@ boolean E_AutoAllocStateDEHNum(int statenum);
 //
 typedef struct edecstate_s
 {
-   const char *label; // native state name or metastate key (allocated)
-   state_t    *state; // pointer to state
+   char    *label; // native state name or metastate key (allocated)
+   state_t *state; // pointer to state
 } edecstate_t;
 
 //
@@ -78,7 +78,7 @@ typedef struct edecstate_s
 //
 typedef struct egoto_s
 {
-   const char *label;     // label text (allocated)
+   char       *label;     // label text (allocated)
    int         offset;    // offset, if non-zero
    statenum_t *nextstate; // pointer to field needing resolved value
 } egoto_t;
@@ -91,7 +91,7 @@ typedef struct egoto_s
 //
 typedef struct ekillstate_s
 {
-   const char *killname; // native state name or metastate key to nullify/delete
+   char *killname; // native state name or metastate key to nullify/delete
 } ekillstate_t;
 
 //

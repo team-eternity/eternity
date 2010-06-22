@@ -2127,6 +2127,9 @@ static void doGoto(pstate_t *ps)
       // count a goto
       numgotos++;
 
+      // also counts as a keyword
+      numkeywords++;
+
       // if the previous buffered state is a label, this is a state-generating
       // goto label
       if(neweststate && neweststate->type == BUF_LABEL)
@@ -2304,7 +2307,7 @@ static void doText(pstate_t *ps)
       // set sprite number of all frame objects on the list with the same
       // linenumber as the current buffered state object
       while(state && state->linenum == curbufstate->linenum && 
-         state->type == BUF_STATE)
+            state->type == BUF_STATE)
       {
          states[statenum]->sprite = sprnum;
          state = (estatebuf_t *)(state->links.next);
@@ -2484,11 +2487,11 @@ static void DoPSNeedStateFrames(pstate_t *ps)
       if(ps->principals)
       {
          // During parsing for principals, we determine how many states should
-         // be created, and add that many state objects. Each state object created
-         // here will have the same line number as this line in the DECORATE state
-         // block, and when parsing for values, we will apply the values to all
-         // states from the current one to the last one found having the same line
-         // number.
+         // be created, and add that many state objects. Each state object 
+         // created here will have the same line number as this line in the 
+         // DECORATE state block, and when parsing for values, we will apply the
+         // values to all states from the current one to the last one found 
+         // having the same line number.
          unsigned int i;
          unsigned int numstatestomake = M_QStrLen(ps->tokenbuffer);
 
@@ -2513,7 +2516,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
             if(states[statenum]->frame < 0 || states[statenum]->frame > 28)
             {
                E_EDFLoggedErr(3, 
-                  "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n", 
+                  "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
                   curbufstate->linenum, c);
             }
 
@@ -2877,6 +2880,11 @@ static psfunc_t pstatefuncs[] =
    DoPSNeedStateEOL,
 };
 
+//=============================================================================
+//
+// Parser Core
+//
+
 //
 // E_GetDSLine
 //
@@ -2999,6 +3007,7 @@ static void E_checkPrincipalSemantics(void)
    }
 
    // At least one keyword or one state must be defined.
+   // Note that implicit goto states will be included by the count of keywords.
    if(!numkeywords && !numdecstates)
    {
       E_EDFLoggedErr(3,
@@ -3082,6 +3091,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
          psnprintf(states[i]->namebuf, 41, "{DS %d}", i);
          states[i]->name = states[i]->namebuf;
          states[i]->dehnum = -1;
+         states[i]->sprite = blankSpriteNum;
          states[i]->nextstate = NullStateNum;
       }
    }
@@ -3192,21 +3202,67 @@ static void E_resolveGotos(edecstateout_t *dso)
 }
 
 //
+// E_freeDecorateData
+//
+// Frees all the dynamic structures created to support parsing of DECORATE
+// states.
+//
+static void E_freeDecorateData(void)
+{
+   estatebuf_t *obj = NULL;
+
+   // free the internalgotos list
+   if(internalgotos)
+      free(internalgotos);
+   internalgotos = NULL;
+   numinternalgotos = numinternalgotosalloc = 0;
+
+   // free the buffered state list
+   while((obj = statebuffer))
+   {
+      // remove it
+      M_DLListRemove(&obj->links);
+
+      // free any allocated strings inside
+      if(obj->name)
+         free(obj->name);
+      if(obj->gotodest)
+         free(obj->gotodest);
+
+      // free the object itself
+      free(obj);
+   }
+   statebuffer = curbufstate = neweststate = NULL;
+}
+
+//=============================================================================
+//
+// Global interface for DECORATE state parsing
+//
+
+//
 // E_ParseDecorateStates
 //
 // Main driver routine for parsing of DECORATE state blocks.
+// Call this and it will return the DSO object containing the following:
+//
+// * A list of states and their associated labels for binding
+// * A list of gotos that need external resolution
+// * A list of states to remove from the object
 //
 edecstateout_t *E_ParseDecorateStates(const char *input)
 {
    edecstateout_t *dso = NULL;
 
    // init variables
-   statebuffer = neweststate = NULL;
+   statebuffer = neweststate = curbufstate = NULL;
    numdeclabels = numdecstates = 
       numkeywords = numgotos = numgotostates = numstops = 0;
    firststate = currentstate = -1;
+   internalgotos = NULL;
    numinternalgotos = 0;
    lastlabelstate = NullStateNum;
+   pDSO = NULL;
 
    // parse for principals
    dso = E_DecoratePrincipals(input);
@@ -3217,8 +3273,47 @@ edecstateout_t *E_ParseDecorateStates(const char *input)
    // resolve goto labels
    E_resolveGotos(dso);
 
+   // free temporary parsing structures
+   E_freeDecorateData();
+
    // return the DSO!
    return dso;
+}
+
+//
+// E_FreeDSO
+//
+// Call this when you are finished with the DSO object.
+//
+void E_FreeDSO(edecstateout_t *dso)
+{
+   int i;
+
+   if(dso->states)
+   {
+      for(i = 0; i < dso->numstates; ++i)
+         free(dso->states[i].label);
+      free(dso->states);
+      dso->states = NULL;
+   }
+
+   if(dso->gotos)
+   {
+      for(i = 0; i < dso->numgotos; ++i)
+         free(dso->gotos[i].label);
+      free(dso->gotos);
+      dso->gotos = NULL;
+   }
+
+   if(dso->killstates)
+   {
+      for(i = 0; i < dso->numkillstates; ++i)
+         free(dso->killstates[i].killname);
+      free(dso->killstates);
+      dso->killstates = NULL;
+   }
+
+   free(dso);
 }
 
 #if 1
