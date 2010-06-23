@@ -1517,6 +1517,7 @@ static int numinternalgotosalloc;
    NEEDSTATEBRIGHTORACTION:
       "bright" : NEEDSTATEACTION
       <text>   : NEEDSTATEEOLORPAREN
+      EOL      : NEEDLABELORKWORSTATE
    NEEDSTATEACTION:
       <text> : NEEDSTATEEOLORPAREN
    NEEDSTATEEOLORPAREN:
@@ -2019,6 +2020,32 @@ static void PSExpectedErr(pstate_t *ps, const char *expected)
                      hasvowel(expected)  ? "an" : "a", expected, 
                      hasvowel(tokenname) ? "an" : "a", tokenname, 
                      ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
+}
+
+//
+// PSWrapStates
+//
+// haleyjd 06/23/10: shared logic to handle the end of a set of one or more 
+// DECORATE state definitions. This is invoked from the following states:
+// * PSTATE_NEEDBRIGHTORACTION
+// * PSTATE_NEEDSTATEEOLORPAREN
+// * PSTATE_NEEDSTATEEOL
+//
+static void PSWrapStates(pstate_t *ps)
+{
+   if(!ps->principals)
+   {
+      // Increment curbufstate and currentstate until end of list is reached,
+      // a non-state object is encountered, or the line number changes
+      int curlinenum = curbufstate->linenum;
+
+      while(curbufstate && curbufstate->linenum == curlinenum &&
+            curbufstate->type == BUF_STATE)
+      {
+         curbufstate = (estatebuf_t *)(curbufstate->links.next);
+         ++currentstate;
+      }
+   }
 }
 
 //
@@ -2572,9 +2599,20 @@ static void DoPSNeedStateTics(pstate_t *ps)
 // Expecting either "bright", which modifies the current state block to use
 // fullbright frames, or the action name.
 //
+// 06/23/10: We also accept EOL here so as not to require "Null" on frames 
+//           that use the null action. (woops!)
+//
 static void DoPSNeedBrightOrAction(pstate_t *ps)
 {
    E_GetDSToken(ps);
+
+   // Allow EOL here to indicate null action
+   if(ps->tokentype == TOKEN_EOL)
+   {
+      PSWrapStates(ps);
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
 
    if(ps->tokentype != TOKEN_TEXT)
    {
@@ -2689,19 +2727,7 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
    {
    case TOKEN_EOL:
       // Finalize state range
-      if(!ps->principals)
-      {
-         // Increment curbufstate and currentstate until end of list is reached, a
-         // non-state object is encountered, or the line number changes.
-         int curlinenum = curbufstate->linenum;
-
-         while(curbufstate && curbufstate->linenum == curlinenum &&
-               curbufstate->type == BUF_STATE)
-         {
-            curbufstate = (estatebuf_t *)(curbufstate->links.next);
-            ++currentstate;
-         }
-      }
+      PSWrapStates(ps);
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
    case TOKEN_LPAREN:
@@ -2810,7 +2836,6 @@ static void DoPSNeedStateArg(pstate_t *ps)
    if(ps->tokentype != TOKEN_TEXT)
    {
       PSExpectedErr(ps, "argument");
-      // TODO: finalize state range
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
    else
@@ -2847,19 +2872,7 @@ static void DoPSNeedStateEOL(pstate_t *ps)
       PSExpectedErr(ps, "end of line");
 
    // Finalize state range
-   if(!ps->principals)
-   {
-      // Increment curbufstate and currentstate until end of list is reached, a
-      // non-state object is encountered, or the line number changes.
-      int curlinenum = curbufstate->linenum;
-
-      while(curbufstate && curbufstate->linenum == curlinenum &&
-            curbufstate->type == BUF_STATE)
-      {
-         curbufstate = (estatebuf_t *)(curbufstate->links.next);
-         ++currentstate;
-      }
-   }
+   PSWrapStates(ps);
 
    ps->state = PSTATE_NEEDLABELORKWORSTATE;
 }
