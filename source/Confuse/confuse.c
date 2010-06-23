@@ -816,7 +816,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_VALUE: /* expecting an option value */
          if(tok == '}' && is_set(CFGF_LIST, opt->flags))
          {
-            lexer_set_unquoted_spaces(false); /* haleyjd */
+            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
             state = 0;
             break;
          }
@@ -848,7 +848,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          }
          /* haleyjd 12/23/06: set unquoted string state */
          if(is_set(CFGF_STRSPACE, opt->flags))
-            lexer_set_unquoted_spaces(true);
+            lexer_set_unquoted_spaces(cfg_true);
          state = STATE_EXPECT_VALUE;
          next_state = STATE_EXPECT_LISTNEXT;
          break;
@@ -862,7 +862,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          } 
          else if(tok == '}')
          {
-            lexer_set_unquoted_spaces(false); /* haleyjd */
+            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
             state = STATE_EXPECT_OPTION;
          }
          else
