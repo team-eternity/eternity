@@ -384,6 +384,7 @@ typedef struct mobjinfo_s
    int dehnum;        // DeHackEd number for fast lookup and comparison
    int namenext;      // next mobjinfo_t in name hash chain
    int dehnext;       // next mobjinfo_t in DEH hash chain
+   int index;         // index in mobjinfo
 
    // 08/17/09: metatable
    struct metatable_s *meta;

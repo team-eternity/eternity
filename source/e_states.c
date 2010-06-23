@@ -310,7 +310,7 @@ static void E_ReallocStates(int numnewstates)
    static int numstatesalloc = 0;
 
    // only realloc when needed
-   if(!numstatesalloc || (NUMSTATES >= numstatesalloc + numnewstates))
+   if(!numstatesalloc || (NUMSTATES < numstatesalloc + numnewstates))
    {
       int i;
 
@@ -1323,15 +1323,6 @@ void E_ProcessStates(cfg_t *cfg)
       E_EDFLogPrintf("\t\tFinished frame %s (#%d)\n", 
                      states[statenum]->name, statenum);
    }
-
-#if 1
-   {
-      extern void TestDSParser(void); // stupid GCC...
-      
-      // TEMPORARY DEBUG TEST CODE
-      TestDSParser();
-   }
-#endif
 }
 
 //
@@ -2227,25 +2218,26 @@ static void doKeyword(pstate_t *ps)
       case KWD_LOOP:
          state->nextstate = lastlabelstate;
          break;
+      case KWD_STOP:
+         if(curbufstate->type == BUF_LABEL)
+         {
+            // if we're still on a label and this is a stop keyword, run 
+            // forward through the labels and make kill states for each one
+            while(curbufstate->type != BUF_KEYWORD)
+            {
+               pDSO->killstates[pDSO->numkillstates].killname 
+                  = strdup(curbufstate->name);
+               pDSO->numkillstates++;
+
+               curbufstate = (estatebuf_t *)(curbufstate->links.next);
+            }
+         }
+         else
+            state->nextstate = NullStateNum; // next state is null state
+         break;
       default:
          break;
       }
-
-      // if we're still on a label and this is a stop keyword, run forward 
-      // through the labels and make kill states for each one
-      if(kwdcode == KWD_STOP && curbufstate->type == BUF_LABEL)
-      {
-         while(curbufstate->type != BUF_KEYWORD)
-         {
-            pDSO->killstates[pDSO->numkillstates].killname 
-               = strdup(curbufstate->name);
-            pDSO->numkillstates++;
-
-            curbufstate = (estatebuf_t *)(curbufstate->links.next);
-         }
-      }
-      else
-         state->nextstate = NullStateNum; // next state is null state
 
       // move to next buffered state object
       curbufstate = (estatebuf_t *)(curbufstate->links.next);
@@ -2497,6 +2489,8 @@ static void DoPSNeedStateFrames(pstate_t *ps)
 
          for(i = 0; i < numstatestomake; ++i)
             E_AddBufferedState(BUF_STATE, NULL, ps->linenum);
+
+         numdecstates += numstatestomake;
       }
       else
       {
@@ -2694,7 +2688,20 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
    switch(ps->tokentype)
    {
    case TOKEN_EOL:
-      // TODO: finalize state range
+      // Finalize state range
+      if(!ps->principals)
+      {
+         // Increment curbufstate and currentstate until end of list is reached, a
+         // non-state object is encountered, or the line number changes.
+         int curlinenum = curbufstate->linenum;
+
+         while(curbufstate && curbufstate->linenum == curlinenum &&
+               curbufstate->type == BUF_STATE)
+         {
+            curbufstate = (estatebuf_t *)(curbufstate->links.next);
+            ++currentstate;
+         }
+      }
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
       break;
    case TOKEN_LPAREN:
@@ -2904,8 +2911,12 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
    {
       char c;
 
-      while((c = *srctxt++))
+      while((c = *srctxt))
       {
+         // do not step past the end of the string by doing this in the loop
+         // condition above...
+         ++srctxt;
+
          if(c == '\n')
             break;
          
@@ -3315,73 +3326,6 @@ void E_FreeDSO(edecstateout_t *dso)
 
    free(dso);
 }
-
-#if 1
-//=============================================================================
-// 
-// TEMPORARY DEBUG TEST CODE
-//
-// This code will dry-run the DECORATE state parser.
-//
-
-static const char *teststr = 
-"Spawn:\n"
-"   SPR1 ABCD 10 bright A_Foobar(0, 1, 2)\n"
-"   loop\n"
-"See:\n"
-"   SPR2 ABCDE 20 A_WalkAround\n"
-"   SPR2 F     5  A_DoNothing() \n"
-"   stop\n"
-"\n"
-"  CustomLabel:\n"
-"     goto See\n"
-"  CustomLabel2: \n"
-"     goto See+6\n";
-
-/*
-static const char *teststr =
-"Spawn:\n"
-"   goto Super::Spawn\n";
-*/
-
-void TestDSParser(void)
-{
-   E_ParseDecorateStates(teststr);
-
-   // DEBUG: output buffered state objects
-   if(statebuffer)
-   {
-      estatebuf_t *curstate = statebuffer;
-      static const char *bufstatetypes[] =
-      {
-         "label", "state", "keyword", "goto"
-      };
-
-      while(curstate)
-      {
-         printf("%s (line %d): ", bufstatetypes[curstate->type], curstate->linenum);
-
-         switch(curstate->type)
-         {
-         case BUF_LABEL:
-            printf("%s\n", curstate->name);
-            break;
-         case BUF_STATE:
-            printf("(nothing)\n");
-            break;
-         case BUF_KEYWORD:
-            printf("%s\n", curstate->name);
-            break;
-         case BUF_GOTO:
-            printf("%s + %d\n", curstate->gotodest, curstate->gotooffset);
-            break;
-         }
-         curstate = (estatebuf_t *)(curstate->links.next);
-      }
-   }
-}
-
-#endif
 
 // EOF
 
