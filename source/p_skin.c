@@ -114,7 +114,7 @@ static void P_ResolveSkinSounds(skin_t *skin)
 void P_InitSkins(void)
 {
    int i;
-   const char **currentsprite;
+   char **currentsprite;
    int numskinsprites;
 
    // haleyjd 09/26/04: initialize monster skins list
