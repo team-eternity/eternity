@@ -49,6 +49,7 @@
 #include "e_edf.h"
 #include "e_sprite.h"
 #include "e_states.h"
+#include "e_dstate.h"
 #include "e_things.h"
 #include "e_sound.h"
 #include "e_mod.h"

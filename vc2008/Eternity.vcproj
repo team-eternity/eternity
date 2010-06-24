@@ -978,6 +978,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_dstate.c"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\e_edf.c"
 						>
 						<FileConfiguration
@@ -1251,6 +1255,10 @@
 					>
 					<File
 						RelativePath="..\source\e_args.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_dstate.h"
 						>
 					</File>
 					<File

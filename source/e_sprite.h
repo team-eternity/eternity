@@ -32,9 +32,11 @@
 #define SEC_SPRITE "spritenames"
 
 void    E_ProcessSprites(cfg_t *cfg);
-boolean E_ProcessSingleSprite(const char *sprname);
 
 #endif
+
+// For DECORATE states in particular:
+boolean E_ProcessSingleSprite(const char *sprname);
 
 int E_SpriteNumForName(const char *name);
 
