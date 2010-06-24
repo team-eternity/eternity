@@ -1424,6 +1424,7 @@ void A_CheckPlayerDone(mobj_t *);
 void A_FadeIn(mobj_t *);
 void A_FadeOut(mobj_t *);
 void A_PlaySoundEx(mobj_t *mo);
+void A_Jump(mobj_t *actor);
 
 // eternity tc ptrs: TODO: remove these?
 void A_FogSpawn(mobj_t *);
@@ -1719,7 +1720,8 @@ deh_bexptr deh_bexptrs[] =
   POINTER(FadeOut),           
   POINTER(JumpIfTargetInLOS), 
   POINTER(PlaySoundEx),
-  POINTER(SetTranslucent),    
+  POINTER(SetTranslucent),
+  POINTER(Jump),
 
   // ETERNITY TC ptrs -- TODO: eliminate these
   POINTER(FogSpawn),

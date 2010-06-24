@@ -217,6 +217,8 @@ typedef enum {
   pr_rip,        // ripper missile damage
   pr_casing,     // A_CasingThrust
   pr_genrefire,  // A_GenRefire
+  pr_decjump,    // A_Jump
+  pr_decjump2,
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
