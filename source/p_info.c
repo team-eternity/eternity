@@ -390,9 +390,7 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
 
    limode = LI_MODE_GLOBAL;
 
-   // EDF_FIXME: use new W_ function after EDF branch merger
-   lump = dir->lumpinfo[W_LumpNameHash("EMAPINFO") % 
-                        (unsigned int)dir->numlumps];
+   lump = W_GetLumpNameChain("EMAPINFO");
 
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
@@ -407,6 +405,11 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
       }
    }
 }
+
+//
+// End of Prototypes
+//
+//=============================================================================
 
 //
 // P_ParseLevelInfo

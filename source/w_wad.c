@@ -101,6 +101,7 @@ static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
    dir->numallocs++;
 }
 
+static int source; // haleyjd 03/18/10
 
 //
 // W_AddFile
@@ -115,7 +116,6 @@ static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
 //
 static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
 {
-   static int  source; // haleyjd 03/18/10
    wadinfo_t   header;
    lumpinfo_t* lump_p;
    unsigned    i;
@@ -322,7 +322,7 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
       lump_p->file     = handle;
       lump_p->position = (size_t)(SwapLong(fileinfo->filepos)) + baseoffset;
       lump_p->size     = (size_t)(SwapLong(fileinfo->size));
-      //lump_p->source = source;
+      lump_p->source   = source;
       
       lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
       lump_p->li_namespace = li_namespace;         // killough 4/17/98
@@ -331,9 +331,8 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
       strncpy(lump_p->name, fileinfo->name, 8);
    }
 
-   // NOT IN TRUNK YET:
    // haleyjd: increment source
-   //++source;
+   ++source;
    
    if(fileinfo2free)
       free(fileinfo2free); // killough
@@ -419,7 +418,7 @@ static boolean W_AddPrivateFile(waddir_t *dir, const char *filename)
       lump_p->file     = handle;
       lump_p->position = (size_t)(SwapLong(fileinfo->filepos));
       lump_p->size     = (size_t)(SwapLong(fileinfo->size));
-      //lump_p->source = source;
+      lump_p->source   = source;
       
       lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
       lump_p->li_namespace = ns_global;            // killough 4/17/98
@@ -428,9 +427,8 @@ static boolean W_AddPrivateFile(waddir_t *dir, const char *filename)
       strncpy(lump_p->name, fileinfo->name, 8);
    }
 
-   // NOT IN TRUNK YET:
    // haleyjd: increment source
-   //++source;
+   ++source;
    
    if(fileinfo2free)
       free(fileinfo2free); // killough
