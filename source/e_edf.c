@@ -73,6 +73,7 @@
 
 #include "z_zone.h"
 #include "d_io.h"
+#include "d_dwfile.h"
 
 #include "Confuse/confuse.h"
 #include "Confuse/lexer.h"
