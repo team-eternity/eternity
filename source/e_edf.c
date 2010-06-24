@@ -72,6 +72,7 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+#include "d_io.h"
 
 #include "Confuse/confuse.h"
 #include "Confuse/lexer.h"
@@ -81,7 +82,6 @@
 #include "d_main.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
-#include "d_io.h"
 #include "doomdef.h"
 #include "info.h"
 #include "m_argv.h"
@@ -1243,8 +1243,6 @@ static void E_CollectNames(cfg_t *cfg)
 //
 static void E_ProcessStatesAndThings(cfg_t *cfg)
 {
-   boolean thingdefs = false, framedefs = false;
-
    E_EDFLogPuts("\t* Beginning state and thing processing\n");
 
    // check number of things

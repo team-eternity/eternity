@@ -414,7 +414,6 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    const char *filename;
-   char *data = NULL;
 
    if(argc != 1)
    {

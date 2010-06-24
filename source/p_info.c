@@ -1415,7 +1415,7 @@ static char *P_openWadTemplate(const char *wadfile, int *len)
 {
    char *fn = strdup(wadfile);
    char *dotloc = NULL;
-   char *buffer = NULL;
+   byte *buffer = NULL;
 
    // find an extension if it has one, and see that it is ".wad"
    if((dotloc = strrchr(fn, '.')) && !strcasecmp(dotloc, ".wad"))
@@ -1430,7 +1430,7 @@ static char *P_openWadTemplate(const char *wadfile, int *len)
       }
    }
 
-   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : buffer;
+   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : (char *)buffer;
 }
 
 // template parsing states

@@ -125,7 +125,7 @@ void D_OpenLump(DWFILE *infile, int lumpnum)
    infile->type = DWF_LUMP;
 }
 
-void D_OpenData(DWFILE *infile, char *data, int size)
+void D_OpenData(DWFILE *infile, byte *data, int size)
 {
    memset(infile, 0, sizeof(*infile));
    infile->size = infile->origsize = size;
